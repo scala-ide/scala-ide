@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project name="scala-eclipse" default="build">
+  
+  <description>
+    I build the Scala Eclipse plugin from a pre-existing Scala distribution
+  </description>
+  
+  <property name="properties.file" value="${basedir}/build.properties"/>
+  <property file="${properties.file}"/>
+  
+  <property name="scala.dir" value="${basedir}/../scala/dists/latest"/>
+  <property name="eclipse.dir" value="${basedir}/eclipse_library"/>
+  
+  <property name="core.dir" value="${basedir}/lampion.core"/>
+  <property name="plugin.dir" value="${basedir}/scala.plugin"/>
+  
+  <property name="build.dir" value="${basedir}/build"/>
+  <property name="dist.dir" value="${basedir}/dist"/>
+  
+  <property name="update-site.url" value="http://www.scala-lang.org/downloads/distrib/files/nightly/scala.update/"/>
+  
+<!-- ===========================================================================
+INITIALISE BUILD
+============================================================================ -->
+  
+  <target name="init">
+    
+    <fail message="Folder '${scala.dir}' does not contain a suitable Scala distribution">
+      <condition><not><and>
+        <available file="${scala.dir}/lib/scala-compiler.jar"/>
+        <available file="${scala.dir}/lib/scala-library.jar"/>
+        <available file="${scala.dir}/src/scala-library-src.jar"/>
+      </and></not></condition>
+    </fail>
+    
+    <path id="scala.classpath">
+      <pathelement location="${scala.dir}/lib/scala-compiler.jar"/>
+      <pathelement location="${scala.dir}/lib/scala-library.jar"/>
+    </path>
+    
+    <path id="eclipse.classpath">
+      <fileset dir="${eclipse.dir}/">
+        <include name="**/*.jar"/>
+      </fileset>
+    </path>
+    
+    <taskdef
+      name="scalac"
+      classname="scala.tools.ant.Scalac"
+      classpathref="scala.classpath"
+    />
+    
+    <taskdef
+      resource="net/sf/antcontrib/antlib.xml"
+      classpath="${basedir}/lib/ant-contrib.jar"
+    />
+    <java
+      classname="scala.util.Properties"
+      classpathref="scala.classpath"
+      outputproperty="version.string"
+    />
+    <echo message="${version.string}"/>
+    <propertyregex
+      property="version.number" input="${version.string}" select="\1"
+      regexp="[^0-9]*([1-9]+\.[0-9]+\.[0-9]+\.[a-zA-Z0-9\-]+).*"
+    />
+    
+    <property name="feature.name" value="ch.epfl.lamp.sdt_${version.number}"/>
+    <property name="plugin.name" value="ch.epfl.lamp.sdt.core_${version.number}"/>
+    
+  </target>
+  
+<!-- ===========================================================================
+BUILD THE CORE LIBRARY
+============================================================================ -->
+  
+  <target name="build.core" depends="init">
+    
+    <mkdir dir="${build.dir}/core"/>
+    
+    <scalac
+      srcdir="${core.dir}/src"
+      destdir="${build.dir}/core"
+      target="jvm-1.5">
+      <classpath>
+        <path refid="scala.classpath"/>
+      </classpath>
+      <include name="**/*.scala"/>
+    </scalac>
+    
+  </target>
+  
+<!-- ===========================================================================
+BUILD THE PLUGIN
+============================================================================ -->
+  
+  <target name="build.plugin" depends="init, build.core">
+    
+    <mkdir dir="${build.dir}/plugin"/>
+    
+    <scalac
+      srcdir="${plugin.dir}/src"
+      destdir="${build.dir}/plugin"
+      target="jvm-1.5">
+      <classpath>
+        <path refid="scala.classpath"/>
+        <path refid="eclipse.classpath"/>
+        <pathelement location="${build.dir}/core"/>
+      </classpath>
+      <include name="**/*.scala"/>
+    </scalac>
+    
+  </target>
+  
+<!-- ===========================================================================
+BUILD EVERYTHING
+============================================================================ -->
+  
+  <target name="build" depends="build.plugin, build.core"/>
+  
+<!-- ===========================================================================
+PACKAGE BINARIES INTO PLUGIN
+============================================================================ -->
+  
+  <target name="dist" depends="init, build">
+    
+    <mkdir dir="${build.dir}/lib"/>
+    
+    <copy file="${scala.dir}/lib/scala-compiler.jar" toDir="${build.dir}/lib"/>
+    <copy file="${scala.dir}/lib/scala-library.jar" toDir="${build.dir}/lib"/>
+    <copy file="${scala.dir}/src/scala-library-src.jar" toDir="${build.dir}/lib"/>
+    
+    <jar
+      destfile="${build.dir}/lib/lampion.jar"
+      basedir="${build.dir}/core"
+    />
+    
+    <jar
+      destfile="${build.dir}/lib/scala-plugin.jar"
+      basedir="${build.dir}/plugin"
+    />
+    
+    <filter token="VERSION" value="${version.number}"/>
+    <filter token="UPDATE_SITE" value="${update-site.url}"/>
+    
+    <mkdir dir="${dist.dir}/scala.update/features"/>
+    
+    <copy file="${plugin.dir}/feature.xml" todir="${build.dir}" filtering="true"/>
+    
+    <mkdir dir="${build.dir}/META-INF"/>
+    <copy
+      file="${plugin.dir}/META-INF/MANIFEST-DEPLOY.MF"
+      toFile="${build.dir}/META-INF/MANIFEST.MF"
+      overwrite="yes"
+    />
+    
+    <jar
+      destfile="${dist.dir}/scala.update/features/${feature.name}.jar"
+      basedir="${build.dir}"
+      manifest="${build.dir}/META-INF/MANIFEST.MF">
+      <include name="feature.xml"/>
+    </jar>
+    
+    <mkdir dir="${dist.dir}/scala.update/plugins"/>
+    
+    <copy toDir="${build.dir}/icons">
+      <fileset dir="${plugin.dir}/icons"/>
+    </copy>
+    <copy toDir="${build.dir}/docs">
+      <fileset dir="${plugin.dir}/docs"/>
+    </copy>
+    <copy file="${plugin.dir}/plugin.xml" toDir="${build.dir}"/>
+    <copy file="${plugin.dir}/toc.xml" toDir="${build.dir}"/>
+    
+    <manifest file="${build.dir}/META-INF/MANIFEST.MF" mode="update">
+      <attribute name="Bundle-Version" value="${version.number}"/>
+    </manifest>
+    
+    <jar
+      destfile="${dist.dir}/scala.update/plugins/${plugin.name}.jar"
+      basedir="${build.dir}"
+      manifest="${build.dir}/META-INF/MANIFEST.MF">
+      <include name="lib/**"/>
+      <include name="icons/**"/>
+      <include name="docs/**"/>
+      <include name="plugin.xml"/>
+      <include name="toc.xml"/>
+    </jar>
+    
+    <copy file="${plugin.dir}/site.xml" todir="${dist.dir}/scala.update" filtering="true"/>
+    
+    <zip
+      destfile="${dist.dir}/${feature.name}.zip"
+      basedir="${dist.dir}/scala.update"
+    />
+    
+  </target>
+  
+<!-- ===========================================================================
+CLEAN ALL BUILT FILES
+============================================================================ -->
+  
+  <target name="clean">
+    <delete dir="${build.dir}" includeemptydirs="yes" quiet="yes" failonerror="no"/>
+    <delete dir="${dist.dir}" includeemptydirs="yes" quiet="yes" failonerror="no"/>
+  </target>
+  
+</project>
