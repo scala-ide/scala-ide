@@ -1,0 +1,101 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<script language="JavaScript" src="../../org.eclipse.help/livehelp.js"> </script>
+<title>Getting Started</title>
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+<LINK REL="STYLESHEET" HREF="book.css" CHARSET="ISO-8859-1" TYPE="text/css">
+<body bgcolor=FFFFFF>
+
+</head>
+<body>
+
+
+
+<p>
+
+To use the Scala Plugin, switch to the Scala perspective (Window/Open Perspective/Other/Scala).  
+In this perspective, the following wizards are available in your File/New menu:
+
+<ul>
+
+<li><b>Scala Project</b>: creates an empty Scala project with a source directory called "src."
+
+<li><b>Scala Package</b>: creates an empty Scala package in the selected project's source directory.
+
+<li><b>Scala Class/Object/Trait/Application</b>: creates a top-level Scala class or object in a new source file of the selected package.
+
+</ul>
+
+<p>
+
+Note that the use of these wizards is optional and an entire Scala source 
+tree can be copied into the "src" directory of a project. If you do this, ensure 
+that the paths of the source files only include their packages relative from the "src" directory, 
+and remember to manually "refresh" (F5 or File/Refresh) the "src" directory after the copy is completed.
+
+<h2>Building</h2>
+
+
+Any Scala source file that exists in the source directory will be compiled when the project is built. 
+If "Project/Build Automatically" is enabled, Scala source files will be recompiled whenever they are saved.
+Alternatively, otherwise, Scala source files are recompiled when "Project/Build Project" and "Project/Build All" are selected.
+By default, class files are saved in the project's "bin" directory. "Project/Clean" will delete all classfiles in 
+the bin directory, as well as get rid of all project error markers. As in the Java development tool, compilation errors 
+will appear as markers and as rows in the "Problems" view.
+
+<h2>Editing</h2>
+
+The Scala plugin enhances the editing of Scala source files with compilation information. 
+This information is continuously updated during editng. 
+The following editing services are supported:
+
+<ul>
+
+<li><b>Hover Help</b>: when the mouse pointer hovers over an identifier, the Scala editor will display 
+the type of the identifier as well as any available Scala or Java documentation.
+
+<li><b>Hyperlink Navigation</b>: holding down the control/command key and clicking on an identifier will reveal 
+the identifier's definition in a Scala or Java editor. Goto declaration (usually F5) can be used to go to the identifier's definition from the keyboard.
+
+<li><b>Content Assist</b>: holding control/command and typing space will popup a list of identifiers that can be 
+used in the current editing context.  Content assist resolves any identifier in an editor buffer, but does not resolve keywords.
+For example, typing control-space after "to" in "list.to" will replace "to" with "toString", 
+which is the only list method that begins with "to." 
+
+</ul>
+
+Compilation information is also used to implement syntax coloring. The coloring scheme used to highlight a file 
+can be configured at "Window/Preferences/Scala/Editor."
+
+<h2>Running</h2>
+
+Given an object that extends "scala.Application", the object can be executed as an application inside Eclipse.
+To do this, select the "Run/Run..." menu option, select the "Scala Application" option, enter the name of the 
+project that includes the executable object in the "Project" field, and type the package-qualified name of the 
+object in the "Scala application object" field.
+
+Although the Scala application can be executed inside Eclipse's debugger, debugging of a Scala application 
+is not supported yet (i.e., there is no way to step through code in Scala files). Alternatively, you can 
+use an Interpreter shell to evaluate Scala expressions that can access Scala code in your project.
+  
+<h2>Debugging</h2>  
+
+You can also debug a running Scala application. To do this, select the "Run/Debug..." menu item and choose the 
+Scala application you want to debug. The following debugging services are supported:
+
+<ul>
+
+<li><b>Breakpoints</b>: double-click the left ruler on the line where you want to stop the program execution. Alternatively,
+ you can use the "Run/Toggle line breakpoint" menu item. When the program execution will be stopped at a breakpoint, 
+ Eclipse will switch to the Debug perspective wich will allow you to step the execution, view call stack and variables
+ values.
+
+<li><b>Hot Code Replace</b>: while debugging a program you can modify it and the running program will be updated automatically.
+If the modifications are too important, Eclipse will notify you. Welcome to powerful debugging!
+
+</ul>
+  
+</body>
+</html>

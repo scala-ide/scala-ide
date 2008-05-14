@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<site>
+   <feature url="features/ch.epfl.lamp.sdt_@VERSION@.jar" id="ch.epfl.lamp.sdt" version="@VERSION@"/>
+</site>

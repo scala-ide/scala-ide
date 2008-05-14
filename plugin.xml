@@ -1,0 +1,613 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.2"?>
+<plugin>
+	<extension point="org.eclipse.core.runtime.adapters">
+		<factory
+			class="scala.tools.eclipse.debug.BreakpointAdapterFactory"
+			adaptableType="org.eclipse.ui.texteditor.ITextEditor">
+			<adapter
+				type="org.eclipse.debug.ui.actions.IToggleBreakpointsTarget">
+			</adapter>
+		</factory>
+	</extension>
+	<extension point="org.eclipse.debug.core.watchExpressionDelegates">
+		<watchExpressionDelegate debugModel="org.eclipse.jdt.debug"
+			delegateClass="scala.tools.eclipse.debug.WatchExpressionDelegate" />
+	</extension> 
+   <extension
+         point="org.eclipse.ui.propertyPages">
+      <page
+            class="scala.tools.eclipse.properties.CompilerSettings"
+            id="ch.epfl.lamp.sdt.core.properties.compilerPropertyPage"
+            name="Scala Compiler Properties">
+         <filter
+               name="nature"
+               value="ch.epfl.lamp.sdt.core.scalanature"/>
+         <enabledWhen>
+         <or> <instanceof value="org.eclipse.jdt.core.IJavaProject"/>
+              <instanceof value="org.eclipse.core.resources.IProject"/>
+         </or>
+         </enabledWhen>
+      </page>
+   </extension>
+   <extension point="org.eclipse.ui.preferencePages">
+      <page class="scala.tools.eclipse.properties.ScalaPreferences"
+            name="Scala"
+            id="ch.epfl.lamp.sdt.core.preferences"/>
+      <page class="scala.tools.eclipse.properties.EditorPreferences"
+            category="ch.epfl.lamp.sdt.core.preferences"
+            name="Scala Editor Preferences"
+            id="ch.epfl.lamp.sdt.core.preferences.EditorPreferences"/>
+   </extension>
+   
+   <extension
+         point="org.eclipse.ui.editors">
+      <editor
+            class="scala.tools.eclipse.Editor"
+            extensions="scala"
+            icon="icons/scala.png"
+            contributorClass="scala.tools.eclipse.ActionContributor"
+            id="scala.tools.eclipse.Editor"
+            name="Scala Editor"/>
+   </extension>
+	<extension point="org.eclipse.ui.editorActions">
+      <editorContribution
+            targetID="scala.tools.eclipse.Editor"
+            id="org.eclipse.ui.texteditor.ruler.actions">
+         <action label="Not Used"
+               class="scala.tools.eclipse.SelectRulerAction"
+               actionID="RulerClick"
+               id="scala.tools.eclipse.SelectRulerAction">
+         </action>
+      </editorContribution>
+	      <editorContribution
+			targetID="scala.tools.eclipse.Editor"
+			id="ch.epfl.lamp.sdt.ui.scalaeditor.rulerActions">
+			<action label="Not Used"
+				class="org.eclipse.debug.ui.actions.RulerToggleBreakpointActionDelegate"
+				style="push" 
+				actionID="RulerDoubleClick"
+				id="scala.doubleClickBreakpointAction" />
+		</editorContribution>
+	</extension>
+   <extension point="org.eclipse.ui.perspectives">
+      <perspective
+            class="scala.tools.eclipse.PerspectiveFactory"
+            name="Scala"
+            icon="icons/full/eview16/sperspective.gif"
+            id="ch.epfl.lamp.sdt.core.perspective">
+      </perspective>
+   </extension>
+     <extension
+         point="org.eclipse.ui.newWizards">
+      <category
+            id="ch.epfl.lamp.sdt.core.wizards"
+            name="Scala Wizards"/>
+      <wizard
+            icon="icons/full/etool16/newsprj_wiz.gif"
+            class="scala.tools.eclipse.wizards.NewProjectWizard"
+            finalPerspective="ch.epfl.lamp.sdt.core.perspective"
+            category="ch.epfl.lamp.sdt.core.wizards"
+            project="true"
+            name="Scala Project"
+            id="ch.epfl.lamp.sdt.core.wizards.newProject">
+            <description>Create a Scala project</description>
+      </wizard>
+      <!-- <wizard
+            icon="icons/full/etool16/newsprj_wiz.gif"
+            class="scala.tools.eclipse.net.NewProjectWizard"
+            finalPerspective="ch.epfl.lamp.sdt.core.perspective"
+            category="ch.epfl.lamp.sdt.core.wizards"
+            project="true"
+            name="Scala.NET Project"
+            id="ch.epfl.lamp.sdt.core.wizards.newNetProject">
+            <description>Create a Scala.NET project</description>
+      </wizard> -->
+      <wizard
+            class="scala.tools.eclipse.wizards.NewClassWizard"
+            icon="icons/full/etool16/newclass_wiz.gif"
+            finalPerspective="ch.epfl.lamp.sdt.core.perspective"
+            category="ch.epfl.lamp.sdt.core.wizards"
+            project="false"
+            name="Scala Class"
+            id="ch.epfl.lamp.sdt.core.wizards.newClass">
+            <description>Create a Scala class</description>
+            <selection class="java.lang.Object"/>       
+      </wizard>
+      <wizard
+            class="scala.tools.eclipse.wizards.NewObjectWizard"
+            icon="icons/full/etool16/newobject_wiz.gif"
+            finalPerspective="ch.epfl.lamp.sdt.core.perspective"
+            category="ch.epfl.lamp.sdt.core.wizards"
+            project="false"
+            name="Scala Object"
+            id="ch.epfl.lamp.sdt.core.wizards.newObject">
+            <description>Create a Scala object</description>
+            <selection class="java.lang.Object"/>       
+      </wizard>
+      <wizard
+            class="scala.tools.eclipse.wizards.NewTraitWizard"
+            icon="icons/full/etool16/newtrait_wiz.gif"
+            finalPerspective="ch.epfl.lamp.sdt.core.perspective"
+            category="ch.epfl.lamp.sdt.core.wizards"
+            project="false"
+            name="Scala Trait"
+            id="ch.epfl.lamp.sdt.core.wizards.newTrait">
+            <description>Create a Scala trait</description>
+            <selection class="java.lang.Object"/>       
+      </wizard>
+      <wizard
+            class="scala.tools.eclipse.wizards.NewApplicationWizard"
+            icon="icons/full/etool16/scala_app.gif"
+            finalPerspective="ch.epfl.lamp.sdt.core.perspective"
+            category="ch.epfl.lamp.sdt.core.wizards"
+            project="false"
+            name="Scala Application"
+            id="ch.epfl.lamp.sdt.core.wizards.newApplication">
+            <description>Create a Scala application</description>
+            <selection class="java.lang.Object"/>       
+      </wizard>
+   </extension>
+   <extension
+         point="org.eclipse.ui.ide.projectNatureImages">
+      <image
+            natureId="ch.epfl.lamp.sdt.core.scalanature"
+            icon="icons/full/ovr16/scala_co.gif"
+            id="ch.epfl.lamp.sdt.core.scalaNatureImage"/>
+   </extension>
+   
+   <extension
+         id="marker"
+         name="Scala Problem"
+         point="org.eclipse.core.resources.markers">
+      <super type="org.eclipse.core.resources.problemmarker"/>
+      <persistent value="true"/>
+   </extension>
+   <extension
+         point="org.eclipse.ui.editors.annotationTypes">
+      <type
+            markerSeverity="1"
+            name="lampion.error"/>
+      <type
+            markerSeverity="1"
+            name="lampion.error.match"
+            super="lampion.error"/>
+   </extension>
+   
+    <extension
+         point="org.eclipse.jdt.core.classpathContainerInitializer">
+      <classpathContainerInitializer
+            class="scala.tools.eclipse.launching.ContainerInitializer"
+            id="ch.epfl.lamp.sdt.launching.SCALA_CONTAINER">
+      </classpathContainerInitializer>
+      <classpathContainerInitializer
+            class="scala.tools.eclipse.launching.ContainerInitializer"
+            id="ch.epfl.lamp.sdt.launching.SCALA_HOME">
+      </classpathContainerInitializer>
+   </extension>
+   <extension
+         point="org.eclipse.jdt.launching.runtimeClasspathEntryResolvers">
+      <runtimeClasspathEntryResolver
+            container="ch.epfl.lamp.sdt.launching.SCALA_CONTAINER"
+            variable="SCALA_LIB"
+            class="scala.tools.eclipse.launching.RuntimeClasspathEntryResolver"
+            id="ch.epfl.lamp.sdt.launching.SCALA_RESOLVER">
+      </runtimeClasspathEntryResolver>      
+      <runtimeClasspathEntryResolver
+            container="ch.epfl.lamp.sdt.launching.SCALA_HOME"
+            variable="SCALA_HOME"
+            class="scala.tools.eclipse.launching.RuntimeClasspathEntryResolver"
+            id="ch.epfl.lamp.sdt.launching.SCALA_HOME_RESOLVER">
+      </runtimeClasspathEntryResolver>      
+  </extension>   
+   <extension point = "org.eclipse.debug.core.launchConfigurationTypes">
+     <launchConfigurationType
+           delegate="org.eclipse.jdt.launching.JavaLaunchDelegate"
+           delegateDescription="The Scala JVM Launcher supports running and debugging of local Scala applications compiled to the JVM"
+           delegateName="Scala JVM Launcher"
+           id="scala.application"
+           modes="run, debug"
+           name="Scala Application"
+           public="true"
+           sourceLocatorId="org.eclipse.jdt.launching.sourceLocator.JavaSourceLookupDirector"
+           sourcePathComputerId="org.eclipse.jdt.launching.sourceLookup.javaSourcePathComputer">
+     </launchConfigurationType>
+   </extension>
+   <extension point="org.eclipse.debug.ui.launchConfigurationTypeImages">
+     <launchConfigurationTypeImage
+        icon="icons/full/etool16/scala_app.gif"
+        configTypeID="scala.application"
+        id="scala.application.images">
+     </launchConfigurationTypeImage>
+   </extension>
+   <extension point="org.eclipse.debug.ui.launchConfigurationTabGroups">
+    <launchConfigurationTabGroup
+        type="scala.application"
+        class="scala.tools.eclipse.launching.ApplicationTabGroup"
+        id="scala.application.tabGroup">
+    </launchConfigurationTabGroup>
+   </extension>
+   <extension id="scalanature"
+         name="Scala Nature"
+         point="org.eclipse.core.resources.natures">
+      <runtime>
+         <run class="scala.tools.eclipse.Nature"/>
+      </runtime>
+      <builder id="ch.epfl.lamp.sdt.core.scalabuilder"/>
+      <requires-nature id="org.eclipse.jdt.core.javanature"/>
+   </extension>
+   <extension id="scalamsilnature"
+         name="Scala.NET Nature"
+         point="org.eclipse.core.resources.natures">
+      <runtime>
+         <run class="scala.tools.eclipse.net.Nature"/>
+      </runtime>
+      <requires-nature id="ch.epfl.lamp.sdt.core.scalanature"/>
+   </extension>
+   <extension id="scalabuilder"
+         name="Scala Builder"
+         point="org.eclipse.core.resources.builders">
+      <builder hasNature="true">
+         <run class="scala.tools.eclipse.Builder"/>
+      </builder>
+   </extension>
+   <extension
+         point="org.eclipse.ui.editors.markerAnnotationSpecification">
+      <specification
+            annotationType="lampion.error"
+            label="Transient edit errors"
+            textPreferenceKey="lampionIndication"
+            textPreferenceValue="true"
+            textStylePreferenceKey="lampionStyle"
+            textStylePreferenceValue="SQUIGGLES"
+            highlightPreferenceValue="false"
+            contributesToHeader="false"
+            overviewRulerPreferenceKey="lampionIndicationInOverviewRuler"
+            overviewRulerPreferenceValue="true"
+            verticalRulerPreferenceKey="lampionIndicationInVerticalRuler"
+            verticalRulerPreferenceValue="false"
+            colorPreferenceKey="lampionIndicationColor"
+            colorPreferenceValue="255,86,255"
+            presentationLayer="4"
+            includeOnPreferencePage="true">
+      </specification>
+      <specification
+            annotationType="scala.overrideIndicator"
+            label="Override indicator"
+            icon="icons/full/ovr16/over_co.gif"
+            textPreferenceKey="overrideIndicator"
+            textPreferenceValue="false"
+            highlightPreferenceKey="overrideIndicatorHighlighting"
+            highlightPreferenceValue="false"
+            contributesToHeader="false"
+            overviewRulerPreferenceKey="overrideIndicatorInOverviewRuler"
+            overviewRulerPreferenceValue="false"
+            verticalRulerPreferenceKey="overrideIndicatorInVerticalRuler"
+            verticalRulerPreferenceValue="true"
+            colorPreferenceKey="overrideIndicatorColor"
+            colorPreferenceValue="180,207,205"
+            presentationLayer="3"
+            showInNextPrevDropdownToolbarActionKey="showoverrideIndicatorInNextPrevDropdownToolbarAction"
+            showInNextPrevDropdownToolbarAction="false"
+            isGoToNextNavigationTargetKey="isOverrideIndicatorGoToNextNavigationTarget"
+		    isGoToNextNavigationTarget="false"
+            isGoToPreviousNavigationTargetKey="isOverrideIndicatorGoToPreviousNavigationTarget"
+	        isGoToPreviousNavigationTarget="false">
+	  </specification>
+   </extension>
+   <!-- debugging -->
+   <extension point="org.eclipse.debug.ui.debugModelPresentations">
+      <debugModelPresentation
+            detailsViewerConfiguration="org.eclipse.jdt.internal.debug.ui.display.DetailsViewerConfiguration"
+            class="scala.tools.eclipse.debug.ScalaModelPresentation"
+            id="org.eclipse.jdt.debug">
+      </debugModelPresentation>
+   </extension>
+   <extension
+         point="org.eclipse.ui.perspectiveExtensions">
+      <perspectiveExtension targetID="org.eclipse.jdt.ui.JavaPerspective">
+         <perspectiveShortcut id="ch.epfl.lamp.sdt.core.perspective"/>
+      </perspectiveExtension>
+      <perspectiveExtension targetID="org.eclipse.ui.resourcePerspective">
+         <perspectiveShortcut id="ch.epfl.lamp.sdt.core.perspective"/>
+      </perspectiveExtension>
+      <perspectiveExtension targetID="org.eclipse.debug.ui.DebugPerspective">
+         <perspectiveShortcut id="ch.epfl.lamp.sdt.core.perspective"/>
+      </perspectiveExtension>
+      <perspectiveExtension targetID="ch.epfl.lamp.sdt.core.perspective">
+         <perspectiveShortcut id="org.eclipse.debug.ui.DebugPerspective"/>
+      </perspectiveExtension>
+   </extension>
+   <!--
+	<extension point="org.eclipse.ui.navigator.viewer">
+		<viewerContentBinding viewerId="org.eclipse.ui.navigator.ProjectExplorer">
+			<includes>
+				<contentExtension pattern="ch.epfl.lamp.sdt.core.content" />
+			</includes>
+		</viewerContentBinding>
+	</extension>
+   <extension point="org.eclipse.ui.navigator.navigatorContent">
+		<navigatorContent
+				activeByDefault="true"
+				contentProvider="scala.tools.eclipse.navigator.ScalaNavigatorContentProvider"
+				icon="icons/full/eview16/sperspective.gif"
+				id="ch.epfl.lamp.sdt.core.content"
+				labelProvider="org.eclipse.jdt.internal.ui.navigator.JavaNavigatorLabelProvider"
+				name="Scala Project Navigator"
+				priority="higher">
+			<triggerPoints>
+				<or> 
+				    <adapt type="org.eclipse.core.resources.IProject" >
+						<test property="org.eclipse.core.resources.projectNature" value="ch.epfl.lamp.sdt.core.scalanature"/>
+					</adapt>
+					<instanceof	value="org.eclipse.core.resources.IResource" />
+					<instanceof value="org.eclipse.jdt.core.IJavaElement" />
+					<instanceof value="org.eclipse.jdt.core.IJarEntryResource" />
+					<instanceof value="org.eclipse.jdt.internal.ui.packageview.PackageFragmentRootContainer" />
+ 				</or>
+			</triggerPoints>
+			<possibleChildren>
+				<or>
+					<instanceof	value="org.eclipse.core.resources.IResource" />
+					<instanceof value="org.eclipse.jdt.core.IJavaElement" />
+					<instanceof value="org.eclipse.jdt.core.IJarEntryResource" />
+				</or>
+			</possibleChildren> 
+			<actionProvider
+					class="org.eclipse.jdt.internal.ui.navigator.JavaNavigatorViewActionProvider"
+					id="org.eclipse.jdt.ui.navigator.actions.ViewActions"> 
+				<enablement>
+					<or>  
+						<instanceof value="org.eclipse.core.resources.IWorkspaceRoot" /> 
+						<adapt type="java.util.Collection"> 
+							<count value="0" />
+						</adapt>		
+					</or>
+				</enablement>
+			</actionProvider>				
+			<actionProvider
+					class="org.eclipse.jdt.internal.ui.navigator.JavaNavigatorActionProvider"
+					id="org.eclipse.jdt.ui.navigator.actions.StandardActions"
+					overrides="org.eclipse.ui.navigator.resources.actions.EditActions"> 
+				<enablement>
+					<or>   
+						<and>
+							<instanceof value="org.eclipse.core.resources.IProject" />
+          					<test property="org.eclipse.core.resources.projectNature" value="ch.epfl.lamp.sdt.core.scalanature" />
+						</and>
+						<instanceof value="org.eclipse.jdt.core.IJavaElement" />
+						<instanceof value="org.eclipse.jdt.core.IJarEntryResource" /> 
+						<instanceof	value="org.eclipse.jdt.internal.ui.packageview.PackageFragmentRootContainer" /> 
+						<adapt type="java.util.Collection"> 
+							<count value="0" />
+						</adapt>
+					</or>
+				</enablement>
+			</actionProvider> 
+			
+		   <actionProvider
+		         class="scala.tools.eclipse.navigator.OpenActionProvider"
+		         id="org.eclipse.jdt.ui.navigator.actions.OpenActions"
+		         overrides="org.eclipse.ui.navigator.resources.OpenActions"> 
+		   </actionProvider> 
+			<override
+					policy="InvokeAlwaysRegardlessOfSuppressedExt"
+					suppressedExtensionId="org.eclipse.jdt.java.ui.javaContent"/>
+			<commonSorter
+					class="org.eclipse.jdt.ui.JavaElementSorter"
+					id="org.eclipse.jdt.ui.javaElementSorter"/>
+		   <commonWizard
+		        menuGroupId="scala"
+		        type="new"
+		        wizardId="ch.epfl.lamp.sdt.core.wizards.newProject">
+		     <enablement>
+		     </enablement>
+		  </commonWizard>
+		   <commonWizard
+		        menuGroupId="scala"
+		        type="new"
+		        wizardId="org.eclipse.jdt.ui.wizards.NewPackageCreationWizard">
+		     <enablement>
+		        <or>
+		           <instanceof value="org.eclipse.jdt.core.IPackageFragment"/>
+		           <instanceof value="org.eclipse.jdt.core.IPackageFragmentRoot"/>
+		           <instanceof value="org.eclipse.jdt.core.ICompilationUnit"/>
+		           <adapt type="org.eclipse.core.resources.IProject">
+		              <test property="org.eclipse.core.resources.projectNature" value="ch.epfl.lamp.sdt.core.scalanature"/>
+		           </adapt>
+		        </or>
+		     </enablement>
+		  </commonWizard>
+   	      <commonWizard
+		        menuGroupId="scala"
+		        type="new"
+		        wizardId="ch.epfl.lamp.sdt.core.wizards.newClass">
+		     <enablement>
+		        <or>
+		           <instanceof value="org.eclipse.jdt.core.IPackageFragment"/>
+		           <instanceof value="org.eclipse.jdt.core.IPackageFragmentRoot"/>
+		           <instanceof value="org.eclipse.jdt.core.ICompilationUnit"/>
+		           <adapt type="org.eclipse.core.resources.IProject">
+		              <test property="org.eclipse.core.resources.projectNature" value="ch.epfl.lamp.sdt.core.scalanature"/>
+		           </adapt>
+		        </or>
+		     </enablement>
+		  </commonWizard>		  
+   	      <commonWizard
+		        menuGroupId="scala"
+		        type="new"
+		        wizardId="ch.epfl.lamp.sdt.core.wizards.newTrait">
+		     <enablement>
+		        <or>
+		           <instanceof value="org.eclipse.jdt.core.IPackageFragment"/>
+		           <instanceof value="org.eclipse.jdt.core.IPackageFragmentRoot"/>
+		           <instanceof value="org.eclipse.jdt.core.ICompilationUnit"/>
+		           <adapt type="org.eclipse.core.resources.IProject">
+		              <test property="org.eclipse.core.resources.projectNature" value="ch.epfl.lamp.sdt.core.scalanature"/>
+		           </adapt>
+		        </or>
+		     </enablement>
+		  </commonWizard>		  
+   	      <commonWizard
+		        menuGroupId="scala"
+		        type="new"
+		        wizardId="ch.epfl.lamp.sdt.core.wizards.newObject">
+		     <enablement>
+		        <or>
+		           <instanceof value="org.eclipse.jdt.core.IPackageFragment"/>
+		           <instanceof value="org.eclipse.jdt.core.IPackageFragmentRoot"/>
+		           <instanceof value="org.eclipse.jdt.core.ICompilationUnit"/>
+		           <adapt type="org.eclipse.core.resources.IProject">
+		              <test property="org.eclipse.core.resources.projectNature" value="ch.epfl.lamp.sdt.core.scalanature"/>
+		           </adapt>
+		        </or>
+		     </enablement>
+		  </commonWizard>		  
+   	      <commonWizard
+		        menuGroupId="scala"
+		        type="new"
+		        wizardId="ch.epfl.lamp.sdt.core.wizards.newApplication">
+		     <enablement>
+		        <or>
+		           <instanceof value="org.eclipse.jdt.core.IPackageFragment"/>
+		           <instanceof value="org.eclipse.jdt.core.IPackageFragmentRoot"/>
+		           <adapt type="org.eclipse.core.resources.IProject">
+		              <test property="org.eclipse.core.resources.projectNature" value="ch.epfl.lamp.sdt.core.scalanature"/>
+		           </adapt>
+		        </or>
+		     </enablement>
+		  </commonWizard>		  
+		    <commonWizard
+		          menuGroupId="scala"
+		          type="new"
+		          wizardId="org.eclipse.jdt.ui.wizards.NewSourceFolderCreationWizard">
+				<enablement>
+					<or> 
+						<instanceof value="org.eclipse.jdt.core.IPackageFragmentRoot"/> 
+						<adapt type="org.eclipse.core.resources.IProject">
+							<test property="org.eclipse.core.resources.projectNature" value="ch.epfl.lamp.sdt.core.scalanature"/>
+						</adapt>
+					</or>
+				</enablement>
+			</commonWizard>
+			<!**
+  			<dropAssistant
+    			class="org.eclipse.jdt.internal.ui.navigator.JavaDropAdapterAssistant"
+   				id="org.eclipse.jdt.ui.dropAssistant">
+ 				<possibleDropTargets>
+    				<or>
+       					<instanceof value="org.eclipse.core.resources.IResource"/>
+       					<instanceof value="org.eclipse.jdt.core.IJavaElement"/>
+    				</or>
+ 				</possibleDropTargets>
+ 			</dropAssistant> 
+		</navigatorContent>
+		<!**
+  		<commonFilter
+		        activeByDefault="false"
+		        class="org.eclipse.jdt.internal.ui.navigator.NonEssentialEmptyPackageFilter"
+		        name="%HideEmptyPackages.label"
+		        description="%HideEmptyPackages.description"
+		        id="org.eclipse.jdt.java.ui.filters.HideEmptyPackages"/>
+  		<commonFilter
+		        activeByDefault="true"
+		        class="org.eclipse.jdt.internal.ui.navigator.NonEssentialEmptyInnerPackageFilter"
+		        name="%HideEmptyInnerPackages.label"
+		        description="%HideEmptyInnerPackages.description"
+		        id="org.eclipse.jdt.java.ui.filters.HideEmptyInnerPackages"/>
+  		<commonFilter 
+		        class="org.eclipse.jdt.internal.ui.filters.AnnotationFilter"
+		        name="%HideAnnotation.label"
+		        description="%HideAnnotation.description"
+		        id="org.eclipse.jdt.java.ui.filters.HideAnnotations"/>
+  		<commonFilter 
+		        class="org.eclipse.jdt.internal.ui.filters.EnumFilter"
+		        name="%HideEnum.label"
+		        description="%HideEnum.description"
+		        id="org.eclipse.jdt.java.ui.filters.HideAnnotations"/>
+  		<commonFilter 
+		        class="org.eclipse.jdt.internal.ui.filters.InterfaceFilter"
+		        name="%HideInterface.label"
+		        description="%HideInterface.description"
+		        id="org.eclipse.jdt.java.ui.filters.HideInterface"/>		        		        
+  		<commonFilter 
+		        class="org.eclipse.jdt.internal.ui.filters.FieldsFilter"
+		        name="%HideFields.label"
+		        description="%HideFields.description"
+		        id="org.eclipse.jdt.java.ui.filters.HideFields"/>
+  		<commonFilter
+		        activeByDefault="true"
+		        class="org.eclipse.jdt.internal.ui.filters.ImportDeclarationFilter"
+		        name="%HideImportDeclaration.label"
+		        description="%HideImportDeclaration.description"
+		        id="org.eclipse.jdt.java.ui.filters.HideImportDeclaration"/> 
+  		<commonFilter
+		        activeByDefault="true"
+		        class="org.eclipse.jdt.internal.ui.filters.InnerClassFilesFilter"
+		        name="%HideInnerClassFiles.label"
+		        description="%HideInnerClassFiles.description"
+		        id="org.eclipse.jdt.java.ui.filters.HideInnerClassFiles"/>
+  		<commonFilter 
+		        class="org.eclipse.jdt.internal.ui.filters.JavaFileFilter"
+		        name="%HideJavaFiles.label"
+		        description="%HideJavaFiles.description"
+		        id="org.eclipse.jdt.java.ui.filters.HideJavaFiles"/> 		 
+  		<commonFilter 
+		        class="org.eclipse.jdt.internal.ui.filters.LocalTypesFilter"
+		        name="%HideLocalTypes.label"
+		        description="%HideLocalTypes.description"
+		        id="org.eclipse.jdt.java.ui.filters.HideLocalTypes"/>
+  		<commonFilter 
+		        class="org.eclipse.jdt.internal.ui.filters.NonJavaElementFilter"
+		        name="%HideNonJavaElements.label"
+		        description="%HideNonJavaElements.description"
+		        id="org.eclipse.jdt.java.ui.filters.HideNonJavaElements"/>   		
+  		<commonFilter 
+		        class="org.eclipse.jdt.internal.ui.filters.NonJavaProjectsFilter"
+		        name="%HideNonJavaProjects.label"
+		        description="%HideNonJavaProjects.description"
+		        id="org.eclipse.jdt.java.ui.filters.HideNonJavaProjects"/>   
+  		<commonFilter 
+		        class="org.eclipse.jdt.internal.ui.filters.NonPublicFilter"
+		        name="%HideNonPublic.label"
+		        description="%HideNonPublic.description"
+		        id="org.eclipse.jdt.java.ui.filters.HideNonPublic"/>   
+  		<commonFilter 
+		        class="org.eclipse.jdt.internal.ui.filters.NonSharedProjectFilter"
+		        name="%HideNonSharedProjects.label"
+		        description="%HideNonSharedProjects.description"
+		        id="org.eclipse.jdt.java.ui.filters.HideNonSharedProjects"/>   
+  		<commonFilter
+		        activeByDefault="true"
+		        class="org.eclipse.jdt.internal.ui.filters.PackageDeclarationFilter"
+		        name="%HidePackageDeclaration.label"
+		        description="%HidePackageDeclaration.description"
+		        id="org.eclipse.jdt.java.ui.filters.HidePackageDeclaration"/>   
+  		<commonFilter 
+		        class="org.eclipse.jdt.internal.ui.filters.LibraryFilter"
+		        name="%HideReferencedLibraries.label"
+		        description="%HideReferencedLibraries.description"
+		        id="org.eclipse.jdt.java.ui.filters.HideReferencedLibraries"/>   
+  		<commonFilter 
+		        class="org.eclipse.jdt.internal.ui.filters.StaticsFilter"
+		        name="%HideStatics.label"
+		        description="%HideStatics.description"
+		        id="org.eclipse.jdt.java.ui.filters.HideStatics"/>
+  		<commonFilter
+		        activeByDefault="true"
+		        class="org.eclipse.jdt.internal.ui.filters.SyntheticMembersFilter"
+		        name="%HideSyntheticMembers.label"
+		        description="%HideSyntheticMembers.description"
+		        id="org.eclipse.jdt.java.ui.filters.HideSyntheticMembers"/>
+   </extension>
+   -->
+   <extension point="org.eclipse.ui.actionSetPartAssociations">
+      <actionSetPartAssociation targetID="org.eclipse.jdt.ui.A_OpenActionSet">
+	    <part id="scala.tools.eclipse.Editor"></part>
+      </actionSetPartAssociation>
+   </extension>
+   <extension point="org.eclipse.help.toc">
+      <toc file="toc.xml"
+           primary="true"/>
+   </extension>
+</plugin>
