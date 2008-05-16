@@ -8,6 +8,7 @@ package scala.tools.eclipse.launching
 import org.eclipse.jdt.core._
 import org.eclipse.jdt.launching._
 import org.eclipse.core.runtime._
+import org.osgi.framework.Bundle
 
 object ContainerInitializer {
   def plugin = ScalaPlugin.plugin
@@ -50,9 +51,16 @@ object ContainerInitializer {
       }
       (ce, "Scala Home")
     case plugin.scalaLib =>
-      val classes = Path.fromPortableString(libPath + "scala-library.jar")
-      val sources = Path.fromPortableString(libPath + "scala-library-src.jar")
-      ((classes, sources) :: Nil, "Scala Library " + scala.util.Properties.versionString)
+      def pathInBundle(bundle: Bundle, portablePath: String) : Option[IPath] = {
+        val url = FileLocator.find(bundle, Path.fromPortableString(portablePath), null)
+        if(url == null) None else Some(Path.fromOSString(FileLocator.toFileURL(url).getPath))
+      }
+      val scalaLibBundle = Platform.getBundle("scala.library")
+      val libClasses = pathInBundle(scalaLibBundle, "/lib/scala-library.jar").get 
+      val libSources = pathInBundle(scalaLibBundle, "/lib/scala-library-src.jar").get 
+      val dbcClasses = pathInBundle(scalaLibBundle, "/lib/scala-dbc.jar").get 
+      val dbcSources = pathInBundle(scalaLibBundle, "/lib/scala-dbc-src.jar").get 
+      ((libClasses, libSources) :: (dbcClasses, dbcSources) :: Nil, "Scala Library " + scala.util.Properties.versionString)
     }
   }
 }

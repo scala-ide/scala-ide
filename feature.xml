@@ -2,7 +2,7 @@
 <feature
       id="ch.epfl.lamp.sdt"
       label="Lampion Scala Plugin (BETA)"
-      version="@VERSION@"
+      version="@PLUGIN_VERSION@"
       provider-name="EPFL Lamp">
 
    <description url="http://scala-lang.org/">
@@ -54,7 +54,7 @@ SUCH DAMAGE.
    </license>
 
    <url>
-      <update label="Scala update site" url="@UPDATE_SITE@"/>
+      <update label="Scala update site"/>
    </url>
 
    <requires>
@@ -80,12 +80,28 @@ SUCH DAMAGE.
       <import plugin="org.eclipse.ui.forms"/>
       <import plugin="org.eclipse.ui.navigator"/>
       <import plugin="org.eclipse.ui.navigator.resources"/>
+      <import plugin="org.apache.ant"/>
    </requires>
+
+   <plugin
+         id="scala.library"
+         download-size="0"
+         install-size="0"
+         version="@LIBRARY_VERSION@"
+         unpack="false"/>
+
+   <plugin
+         id="scala.tools.nsc"
+         download-size="0"
+         install-size="0"
+         version="@COMPILER_VERSION@"
+         unpack="false"/>
 
    <plugin
          id="ch.epfl.lamp.sdt.core"
          download-size="0"
          install-size="0"
-         version="@VERSION@"/>
+         version="@PLUGIN_VERSION@"
+         unpack="false"/>
 
 </feature>
