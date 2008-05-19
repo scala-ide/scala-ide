@@ -108,7 +108,6 @@ TARGETS SUPPORTING DEVELOPMENT WITHIN ECLIPSE
   
   <target name="devel.dist">
     <ant dir="${scala.dir}" antfile="build.xml" target="dist"/>
-    <ant dir="${scala.dir}" antfile="build.xml" target="plugin.quick"/>
     <ant dir="${scala.lib.dir}" antfile="build.xml" target="clean"/>
     <ant dir="${scala.lib.dir}" antfile="build.xml" target="dist"/>
     <antcall target="clean"/>
