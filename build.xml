@@ -96,21 +96,19 @@ TARGETS SUPPORTING DEVELOPMENT WITHIN ECLIPSE
 ============================================================================ -->
 
   <target name="devel.prep">
-    <ant dir="${scala.dir}" antfile="build.xml" target="plugin.quick"/>
-    <ant dir="${scala.lib.dir}" antfile="build.xml" target="build"/>
+    <ant dir="${scala.dir}" antfile="build.xml" target="plugin.quick" inheritall="false"/>
+    <ant dir="${scala.lib.dir}" antfile="build.xml" target="build" inheritall="false"/>
   </target>
   
   <target name="devel.clean">
-    <ant dir="${scala.dir}" antfile="build.xml" target="all.clean"/>
-    <ant dir="${scala.lib.dir}" antfile="build.xml" target="clean"/>
+    <ant dir="${scala.dir}" antfile="build.xml" target="all.clean" inheritall="false"/>
+    <ant dir="${scala.lib.dir}" antfile="build.xml" target="clean" inheritall="false"/>
     <antcall target="clean"/>
   </target>
   
-  <target name="devel.dist">
-    <ant dir="${scala.dir}" antfile="build.xml" target="dist"/>
-    <ant dir="${scala.lib.dir}" antfile="build.xml" target="clean"/>
-    <ant dir="${scala.lib.dir}" antfile="build.xml" target="dist"/>
-    <antcall target="clean"/>
+  <target name="devel.dist" depends="devel.clean">
+    <ant dir="${scala.dir}" antfile="build.xml" target="dist" inheritall="false"/>
+    <ant dir="${scala.lib.dir}" antfile="build.xml" target="dist" inheritall="false"/>
     <antcall target="dist"/>
   </target>
   
