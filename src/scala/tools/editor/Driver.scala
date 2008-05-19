@@ -4,13 +4,13 @@
  */
 // $Id$
 
-package scala.tools.editor
+package scala.tools.editor 
 
 trait PresentationForDriver extends TypersPresentations 
 trait Driver extends TypersPresentations {
   type Project <: ProjectImpl
   trait ProjectImpl extends super.ProjectImpl {  
-    trait Node extends NodeImpl 
+    trait Node extends NodeImpl   
     trait ParseNode extends Node with ParseNodeImpl {
       def self : ParseNode
     } 

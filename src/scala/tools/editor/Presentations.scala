@@ -200,8 +200,8 @@ trait Presentations extends lampion.presentation.Matchers {
         case _ => false
         }
         override def indentFrom(offset : Int, sentry : Token) : RandomAccessSeq[Char]= {
-	  code match {
-	  case ELSE => 
+          code match {
+          case ELSE => 
             var depth = 0
             findWithMatch(PREV)(_.code match {
             case ELSE => depth = depth + 1; false
@@ -216,14 +216,14 @@ trait Presentations extends lampion.presentation.Matchers {
               }
             case None => 
             }
-	  case CASE if !isFollowedBy(tokIsDefLike) => // real case statement
-	    findWithMatch(PREV)(tok => tok.code match {
-	    case CASE if !isFollowedBy(tokIsDefLike) => true
+          case CASE if !isFollowedBy(tokIsDefLike) => // real case statement
+            findWithMatch(PREV)(tok => tok.code match {
+                                case CASE if !isFollowedBy(tokIsDefLike) => true
             case LBRACE => true
             case _ => false
             }).map(tok => (tok,tok.code)) match {
             case Some((tok,CASE)) => return tok.spaceBefore
-            case Some((tok,LBRACE)) => return tok.statementIndent 
+            case Some((tok,LBRACE)) => return tok.indentOfThisLine 
             case None => 
 	    }
           case RBRACE|RPAREN|RBRACKET => 
@@ -235,10 +235,10 @@ trait Presentations extends lampion.presentation.Matchers {
           sentry.code match {
           case LBRACE|LPAREN|LBRACKET => return sentry.statementBegin.indentOfThisLine ++ indentBy
           case ARROW if sentry.inCase =>
-            return sentry.statementBegin.spaceBefore ++ indentBy
+            return sentry.statementBegin.indentOfThisLine ++ indentBy
           case ARROW =>
             sentry.getSelf match {
-            case Some(lbrace) => return lbrace.statementBegin.spaceBefore ++ indentBy
+            case Some(lbrace) => return lbrace.statementBegin.indentOfThisLine ++ indentBy
             case _ =>
             }
           case _ => 
