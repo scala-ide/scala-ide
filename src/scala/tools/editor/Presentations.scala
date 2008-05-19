@@ -316,7 +316,7 @@ trait Presentations extends lampion.presentation.Matchers {
           }
         } else if (edit.length == 0 && edit.text.length == 1 && isSpace(edit.text(0))) enclosing(edit.offset) match {
         case Some(Match(kind,begin,end)) if kind == MultiLineComment && edit.offset == end - 1 => 
-          return new Edit(edit.offset, 0, edit.text + '*') {
+          return new Edit(edit.offset, 0, edit.text ++ Seq.singleton('*')) {
             override def moveCursorTo = edit.offset + 1
           }
         case _ =>          
@@ -327,7 +327,7 @@ trait Presentations extends lampion.presentation.Matchers {
             return if (edit.text(0) == '{') 
 	      new Edit(edit.offset, 0, "{}>") {
 	        override def moveCursorTo = edit.offset + 1
-	      } else new Edit(edit.offset, 0, edit.text + '>') {
+	      } else new Edit(edit.offset, 0, edit.text ++ Seq.singleton('>')) {
                 override def moveCursorTo = edit.offset + 1
 	      }
         }
