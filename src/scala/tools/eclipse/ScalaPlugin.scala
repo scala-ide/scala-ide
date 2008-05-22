@@ -44,6 +44,9 @@ trait ScalaPlugin extends ScalaPluginSuperA with scala.tools.editor.Driver {
   def scalaHomeId = launchId + "." + scalaHome
   def launchTypeId = "scala.application"
   override def problemMarkerId = Some(pluginId + ".marker")
+  val scalaFileExtn = ".scala"
+  val javaFileExtn = ".java"
+  val jarFileExtn = ".jar"
 
   def sourceFolders(javaProject : IJavaProject) : Iterable[IFolder] = {
     val isOpen = javaProject.isOpen
@@ -415,20 +418,20 @@ trait ScalaPlugin extends ScalaPluginSuperA with scala.tools.editor.Driver {
 
   }
   override protected def canBeConverted(file : IFile) : Boolean = 
-    super.canBeConverted(file) && file.getName.endsWith(".scala")
+    super.canBeConverted(file) && (file.getName.endsWith(scalaFileExtn) || file.getName.endsWith(javaFileExtn))
   override protected def canBeConverted(project : IProject) : Boolean = 
     super.canBeConverted(project) && project.hasNature(natureId)
   
   private[eclipse] def scalaSourceFile(classFile : IClassFile) : Option[(Project,AbstractFile)] = {
     val source = classFile.getType.asInstanceOf[BinaryType].getSourceFileName(null)
     val project = projectSafe(classFile.getJavaProject.getProject)
-    if (source != null && source.endsWith(".scala") && project.isDefined) {
+    if (source != null && source.endsWith(scalaFileExtn) && project.isDefined) {
       val pkgFrag = classFile.getType.getPackageFragment.asInstanceOf[PackageFragment]
       val rootSource = pkgFrag.getPackageFragmentRoot.getSourceAttachmentPath.toOSString
       val fullSource = pkgFrag.names.mkString("", "" + java.io.File.separatorChar, "") + java.io.File.separatorChar + source
       import scala.tools.nsc.io._
       import java.io
-      val file = if (rootSource.endsWith(".jar")) {
+      val file = if (rootSource.endsWith(jarFileExtn)) {
         val jf = new io.File(rootSource)
         assert(jf.exists && !jf.isDirectory)
         val archive = ZipArchive.fromFile(jf)

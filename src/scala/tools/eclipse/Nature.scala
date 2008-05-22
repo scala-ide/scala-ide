@@ -15,14 +15,15 @@ class Nature extends lampion.eclipse.Nature {
   protected def plugin : ScalaPlugin = ScalaPlugin.plugin
   override protected def requiredBuilders =
     plugin.builderId :: Nil
-  override protected def unrequiredBuilders =
-    JavaCore.BUILDER_ID :: Nil
+  override protected def unrequiredBuilders = Nil
 
   override def configure = {
     super.configure
     plugin.check{
     //val project = plugin.projects(getProject)
     val jp = plugin.javaProject(getProject).get
+    jp.setOption(JavaCore.CORE_JAVA_BUILD_CLEAN_OUTPUT_FOLDER, "ignore")
+    jp.setOption(JavaCore.CORE_JAVA_BUILD_RESOURCE_COPY_FILTER, "*.scala")
     val buf = new ArrayBuffer[IClasspathEntry]
     buf ++= jp.getRawClasspath.map{e => 
       if (e.getEntryKind == IClasspathEntry.CPE_SOURCE) {
