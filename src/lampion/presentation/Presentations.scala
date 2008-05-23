@@ -284,11 +284,12 @@ trait Presentations extends lampion.core.Plugin {
         }
         def doPresentation(implicit txt : PresentationContext) : Unit = {
           ((computeFold,currentFold) match {
-          case (x0,y0) if x0 == y0 => None
-          case (None,Some(_)) => destroyCollapseRegion(fold.get); None
+          case (x0,y0) if x0 == y0 =>
+          case (None,Some(_)) => destroyCollapseRegion(fold.get)
           case (Some((from,to)),_) => 
             fold = Some(createCollapseRegion(from,to,fold))
             //invalidate(from,to)
+          case (None, None) =>
           })
         }
       }

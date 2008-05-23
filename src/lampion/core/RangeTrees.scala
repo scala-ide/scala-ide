@@ -399,8 +399,8 @@ trait RangeTrees extends Positions {
           ActualRange(absolute, self)
         }
         else super.find(absolute, offset, adjacent) match {
-        case x if x == NoRange => ActualRange(absolute, self)
-        case ret @ ActualRange(_,_) => ret
+        case NoRange => ActualRange(absolute, self)
+        case ret => ret
         }
       }
     }

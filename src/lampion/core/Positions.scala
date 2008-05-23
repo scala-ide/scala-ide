@@ -178,6 +178,9 @@ trait Positions extends Files with Dirs {
           assert(at.offset >= 0)
           at.offset = -at.offset
           true
+        case `head` | _ : PositionImpl =>
+          assert(dir != NEXT && dir != PREV) // Would be nice if the match compiler could rule this case out
+          false
         }}}
         def seek(pos : Position) : Int = /*PositionBank.this.synchronized*/ {
           assert(pos.isValid)
