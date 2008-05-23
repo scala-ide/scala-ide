@@ -20,7 +20,7 @@ import org.eclipse.swt.graphics
 import org.eclipse.swt.widgets.Display
 import org.eclipse.swt.custom.StyleRange
 import org.eclipse.swt.SWT
-import org.eclipse.ui.{IPersistableElement,IEditorInput,IFileEditorInput,PlatformUI,IEditorReference,IWorkbenchPage}
+import org.eclipse.ui.{ IEditorInput, IEditorReference, IFileEditorInput, IPathEditorInput, IPersistableElement, IWorkbenchPage, PlatformUI }
 import org.eclipse.ui.ide.IDE
 import org.eclipse.ui.editors.text.FileDocumentProvider
 import org.eclipse.core.runtime.{IPath,Status,IProgressMonitor}
@@ -464,7 +464,8 @@ trait UIPlugin extends org.eclipse.ui.plugin.AbstractUIPlugin with Plugin with l
   }
   def fileFor(input : IEditorInput) : Option[File] = input match {
   case input : FixedInput => Some(input.neutralFile)
-  case input : IFileEditorInput => fileFor(input.getFile);
+  case input : IFileEditorInput => fileFor(input.getFile)
+  case _ => None
   }
   def Style(key : String) : StyleFactory = new StyleFactory {
     def style : Style = KeyStyle(key, this)
