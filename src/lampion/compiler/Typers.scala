@@ -23,7 +23,7 @@ trait Typers extends Tokenizers {
       protected def doType0 : T
       def apply : T = {
         //assert(!typer.analyzed.contains(self))
-        val head = typer.analyzed.headOption
+        val head = typer.analyzed.firstOption
         if (head.isDefined  && head.get.makeNoChanges) {}
         else typer.analyzed = TypedElementImpl.this.self :: typer.analyzed
         try {
@@ -46,7 +46,7 @@ trait Typers extends Tokenizers {
     var typed : LinkedHashMap[ParseNode,TypeInfo] = null
   }
   def analyzed = typer.analyzed
-  def currentTyped = typer.analyzed.headOption
+  def currentTyped = typer.analyzed.firstOption
   
   trait ParseNodeTypedElement extends TypedElementImpl {
     def parseNode : ParseNode
