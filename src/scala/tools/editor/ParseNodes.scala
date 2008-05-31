@@ -4,13 +4,13 @@
  */
 // $Id$
 
-package scala.tools.editor;
+package scala.tools.editor 
 import scala.tools.nsc.ast.parser.Tokens._
 import scala.tools.nsc.util
 trait ParseNodes extends Tokenizers with lampion.compiler.Parsers {
   import compiler.Tree
   override type ParseTree = Tree
-
+  
   type ParseNode <: Node with ParseNodeImpl
   trait ParseNodeImpl extends super[Tokenizers].ParseNodeImpl with super[Parsers].ParseNodeImpl with util.Position {selfX : ParseNode =>
     def self : ParseNode
@@ -18,15 +18,9 @@ trait ParseNodes extends Tokenizers with lampion.compiler.Parsers {
     private[ParseNodes] def prefix0 : String
     protected override def destroy0 = {
       assert(true)
-      super.destroy0
+      super.destroy0 
     } 
     override def dbgString = "XXX"
-      /*
-        def stubIsType : Boolean = false
-        def stubIsTerm : Boolean = false
-        def stubIsDef : Boolean = false 
-        def stubHasSymbol : Boolean = false
-    */
     override def source = Some(file.unit.source)
     override def offset = Some(absolute)
   }

@@ -36,6 +36,16 @@ trait ScalaUIPlugin extends lampion.eclipse.UIPlugin with ScalaPlugin {
       case ClassFileSpec(source,clazz) => page.openEditor(new ClassFileInput(project,source,clazz), editorId)
       case _ => super.doLoad0(page)
       }
+      // Miles: edit this code to re-synch the outline during editing. 
+      override def parseChanged(node : ParseNode) = {
+        super.parseChanged(node)
+        Console.println("PARSE_CHANGED: " + node)
+      }
+      // Miles: edit this code to manage the transition from unloaded to loaded file
+      override def loaded = {
+        super.loaded
+        
+      }
     }
     override def imageFor(style : Style) : Option[Image] = {
       val middle = style match {

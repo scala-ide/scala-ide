@@ -3,7 +3,7 @@
  * @author Sean McDirmid
  */
 // $Id$
-
+ 
 package scala.tools.eclipse
 import scala.tools.nsc._
 import org.eclipse.jdt.core._
@@ -130,7 +130,7 @@ trait ScalaPlugin extends ScalaPluginSuperA with scala.tools.editor.Driver {
       buildCompiler = null
       // XXX: nothing we can do for presentation compiler.
     } 
-    // needed to make the type gods happy
+    // needed to make the type gods happy 
     object compiler0 extends nsc.Global(new Settings(null), new CompilerReporter) with super.Compiler with eclipse.Compiler {
       def plugin = ScalaPlugin.this
       override def logError(msg : String, t : Throwable) =

@@ -3,7 +3,7 @@
  * @author Sean McDirmid
  */
 // $Id$
-
+ 
 package scala.tools.editor
 import scala.collection.jcl._
 import scala.tools.nsc.util
@@ -78,7 +78,8 @@ trait TypersPresentations extends scala.tools.editor.Presentations {
         super.loadSource(file) match {
         case None => None 
         case ret @ Some(unit) =>
-          val map = sourceMap(file)
+          val map = sourceMap(file)._2
+          sourceMap(file) = (unit.body,map)
           map.clear // populate the map.
           class visitor extends walker.Visitor {
             def contains(pos : Position) = map.contains(pos.offset.get)
@@ -87,18 +88,18 @@ trait TypersPresentations extends scala.tools.editor.Presentations {
               assert(pos.source.get.file == file)
               map(pos.offset.get) = sym
             }
-          }
+          }  
           walker.walk(unit.body, new visitor)(offset => unit.source.identifier(offset, compiler))
           ret
         }
       }
     }
     import compiler._
-    private val sourceMap = new LinkedHashMap[AbstractFile,LinkedHashMap[Int,Symbol]] {
+    private val sourceMap = new LinkedHashMap[AbstractFile,(Tree,LinkedHashMap[Int,Symbol])] {
       override def default(file : AbstractFile) = {
         val map = new LinkedHashMap[Int,Symbol]
-        this(file) = map
-        map
+        this(file) = (EmptyTree,map)
+        (null,map)
       }
     }
     private def strip(string : RandomAccessSeq[Char]) : RandomAccessSeq[Char] = {
@@ -123,7 +124,7 @@ trait TypersPresentations extends scala.tools.editor.Presentations {
     private def magicName = {
       if (magicName0 == null) magicName0 = compiler.newTermName("__magic__sauce__")
       magicName0
-    }
+    } 
     import scala.tools.nsc.symtab.SymbolWalker
     private object walker extends SymbolWalker {
       lazy val global : compiler.type = compiler
@@ -174,7 +175,6 @@ trait TypersPresentations extends scala.tools.editor.Presentations {
       private var data : List[(IdentifierPosition,Symbol)] = null
       private var ovr : TypersPresentations.this.Annotation = _
 
-      
       protected def overriding : Option[Symbol] = {
         import compiler.MemberDef
         import compiler.NoSymbol
@@ -236,6 +236,26 @@ trait TypersPresentations extends scala.tools.editor.Presentations {
         sourceMap.removeKey(nscFile) // force refresh.
         super.loaded
       }
+      def unloadedBody : Tree = {
+        if (!isLoaded && !sourceMap.contains(nscFile)) loadSource(nscFile)
+        sourceMap.get(nscFile).map(_._1).getOrElse(EmptyTree)
+      }
+      
+      def parseChanged(parseNode : ParseNode) = {}
+      def topSymbols : List[compiler.Symbol] = {
+        var ret : List[compiler.Symbol] = Nil
+        var c : ScopeClient = null;
+        def f(tree : compiler.Tree) : Unit = tree match {
+        case compiler.PackageDef(_,body) => body.foreach(f)
+        case compiler.ClassDef(_,_,_,_) | compiler.ModuleDef(_,_,_) => 
+          if (tree.symbol != null && tree.symbol != compiler.NoSymbol) 
+            ret = tree.symbol :: ret
+        case _ =>
+        }
+        if (!isLoaded) f(unloadedBody)
+        else rootParse.resultTypeInfo.foreach{_.foreach{f}}
+        ret
+      }
     
     
       type ParseNode <: ProjectImpl.this.ParseNode with ParseNodeImpl
@@ -253,6 +273,10 @@ trait TypersPresentations extends scala.tools.editor.Presentations {
             dirtyPresentation
           }
         }
+        override def parseChanged = {
+          super.parseChanged
+          FileImpl.this.parseChanged(self)
+        } 
         override def doPresentation(implicit txt : PresentationContext) : Unit = {
           refreshData
           super.doPresentation(txt)
@@ -338,7 +362,7 @@ trait TypersPresentations extends scala.tools.editor.Presentations {
         // so we keep a map of all symbols.
         def asSymbol(owner : parses.Range) : Option[Symbol] = if (owner.isEmpty) {
           if (!sourceMap.contains(nscFile)) loadSource(nscFile)
-          sourceMap(nscFile).get(offset)
+          sourceMap(nscFile)._2.get(offset)
         } else {
           import scala.tools.nsc.ast.parser.Tokens._
           if (code != IDENTIFIER && code != BACKQUOTED_IDENT) return None

@@ -3,13 +3,13 @@
  * @author Sean McDirmid
  */
 // $Id$
-
+ 
 package scala.tools.editor
 
 import scala.tools.nsc
 import nsc.{util,io}
 import scala.collection.jcl._
-
+ 
 trait Typers extends Parsers with lampion.compiler.Typers {
   final override type TypeInfo = List[compiler.Tree]
 
@@ -31,7 +31,7 @@ trait Typers extends Parsers with lampion.compiler.Typers {
       analyzer0.finishTyping
     }
     override def currentClient : ScopeClient = 
-      currentTyped.getOrElse(super.currentClient)
+      (currentTyped).getOrElse(super.currentClient)
   }
   override def finishTyping = {
     super.finishTyping
@@ -100,11 +100,10 @@ trait Typers extends Parsers with lampion.compiler.Typers {
         (oldInfo.last.tpe,newInfo.last.tpe) match {
         case (tpe,compiler.NoType|null) => if (tpe != null && tpe != compiler.NoType && !tpe.isError) newInfo.last.tpe = tpe
         case _ =>
-        }
+        } 
         newInfo
       }
     }
-    
     private[Typers] def initAsFirst = {
       mode = analyzer0.EXPRmode
       pt = compiler.WildcardType
@@ -132,6 +131,8 @@ trait Typers extends Parsers with lampion.compiler.Typers {
       val node : ParseNode = parses.create(0)
       node.initAsFirst
     }
+    
+    
     // since editing has begun
     override def doUnload = {
       lockTyper0{ //

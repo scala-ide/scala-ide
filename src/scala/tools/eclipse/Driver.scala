@@ -4,8 +4,8 @@
  */
 // $Id$
 
-package scala.tools.eclipse;
-import org.eclipse.core.resources._;
+package scala.tools.eclipse 
+import org.eclipse.core.resources._ 
 
 object Driver { 
   private[eclipse] var driver : Driver = _

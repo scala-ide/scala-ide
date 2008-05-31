@@ -6,7 +6,7 @@
 
 package scala.tools.editor
 import scala.tools.nsc.util
-
+ 
 trait Parsers extends Matchers with ParseNodes {
   trait Compiler extends super.Compiler with scala.tools.nsc.ast.parser.Parsers{self : compiler.type =>
   }
@@ -231,13 +231,6 @@ trait Parsers extends Matchers with ParseNodes {
         def isValid = self.isValid
         def owner = self
       }
-      
-      /*
-      override def stubIsType = parseContext.pinfo.isType
-      override def stubIsTerm = parseContext.pinfo.isTerm
-      override def stubIsDef = parseContext.pinfo.isDef
-      override def stubHasSymbol = parseContext.pinfo.hasSymbol
-      */
       override def prefix = parseContext.pinfo.prefix
       trait Scanner extends FileImpl.this.Scanner
       
@@ -433,7 +426,6 @@ trait Parsers extends Matchers with ParseNodes {
     def getParseTrees = parseTrees
     protected var lastCode : Boolean = false
     protected override def destroy0 = {
-      assert(true)
       super.destroy0
     }
   }

@@ -46,7 +46,7 @@ trait Parsers extends NewMatchers with core.RangeTrees  {
       if (context != this.context) {
         this.context = context
         dirtyParse
-      }        
+      }         
       doParse
       asParseTree
     }
@@ -71,8 +71,7 @@ trait Parsers extends NewMatchers with core.RangeTrees  {
     def hasParseErrors = hasErrors(_.isInstanceOf[ParseError])
     protected def error(position : ErrorPosition, error : ErrorKind) : Unit // can specify errors at absolute
 
-    protected def parseChanged = {} //presentationChanged
-    //protected def presentationChanged = {}
+    protected def parseChanged = {}
     protected def destroy0 : Unit = {}
     def isValid = true
     protected def parseInner(parser : Parser) = parser.doParse
@@ -93,10 +92,12 @@ trait Parsers extends NewMatchers with core.RangeTrees  {
     protected def initialContext : ParseContext
     override def prepareForEditing = {
       super.prepareForEditing
-      val node = parses.create(0)
+      val node = rootParse 
       node.context = initialContext
       node.dirtyParse
     }
+    def rootParse : ParseNode = parses.create(0)
+    
     protected def noParse(kind : Match, offset : Int, added : Int, removed : Int) : Boolean = false
     protected def noParse(offset : Int, added : Int, removed : Int) : Boolean = {
       var enclosing = FileImpl.this.enclosing(offset, offset + removed)
@@ -158,7 +159,6 @@ trait Parsers extends NewMatchers with core.RangeTrees  {
             if (doDestroy) indirect0.get.destroy(indirect0.get.absolute)
             if (next == null) None else Some(next)
           }
-          
           while (indirect0.isDefined && 
                  indirect0.get.relative < relative0 &&
                  ((indirect0.get.next0 != null && 

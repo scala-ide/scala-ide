@@ -50,7 +50,7 @@ trait Matchers extends AutoEdits {
       protected override def autoIndent(sentry : Int, leading : Int) : RandomAccessSeq[Char] = {
         enclosing(sentry,leading).map(m => indentFor(m,sentry,leading)) getOrElse None getOrElse
           super.autoIndent(sentry, leading)
-      } 
+      }  
       protected def completeOpen(offset : Int, kind : OpenMatch) = offset + kind.open.length
       override def afterEdit(offset : Int, added : Int, removed : Int) : Edits = {
         var edits = super.afterEdit(offset, added, removed)
