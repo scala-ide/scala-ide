@@ -127,12 +127,16 @@ trait ScalaPlugin extends ScalaPluginSuperA with scala.tools.editor.Driver {
       }
     }
     def resetCompiler = {
-      buildCompiler = null
+      buildCompiler = null 
       // XXX: nothing we can do for presentation compiler.
     } 
     // needed to make the type gods happy 
-    object compiler0 extends nsc.Global(new Settings(null), new CompilerReporter) with super.Compiler with eclipse.Compiler {
+    trait Compiler2 extends super.Compiler{ self : compiler.type =>}
+    object compiler0 extends nsc.Global(new Settings(null), new CompilerReporter) with Compiler2 with eclipse.Compiler {
       def plugin = ScalaPlugin.this
+      def project = ProjectImpl.this.self
+      override def computeDepends(from : loaders.PackageLoader) = super[Compiler2].computeDepends(from)
+      
       override def logError(msg : String, t : Throwable) =
         ScalaPlugin.this.logError(msg, t)
       override def stale(path : IPath) : Seq[Symbol] = {
@@ -284,6 +288,34 @@ trait ScalaPlugin extends ScalaPluginSuperA with scala.tools.editor.Driver {
       override def plugin : ScalaPlugin = ScalaPlugin.this
       override val project : ProjectImpl.this.type = ProjectImpl.this
     }
+    private[eclipse] val scalaDepends = new LinkedHashMap[IPath,ScalaDependMap] {
+      override def default(key : IPath) = {
+        val ret = new ScalaDependMap
+        this(key) = ret; ret
+      }
+    }
+    private[eclipse] class ScalaDependMap extends LinkedHashMap[String,LinkedHashSet[IPath]] {
+      val mirrors = new LinkedHashSet[Global#Symbol]
+      def asDependMap(compiler : Global, pkg : Global#Symbol) : Global#PackageScopeDependMap = {
+        mirrors += pkg
+        return new compiler.PackageScopeDependMap {
+          def createDepend(sym : compiler.Symbol, name : compiler.Name) = {
+            val top = sym.toplevelClass.sourceFile
+            top match {
+            case top : PlainFile => 
+              val path = Path.fromOSString(top.file.getAbsolutePath)
+              ScalaDependMap.this.apply(name.toString) += path
+            case _ =>
+            }
+          }
+        }
+      }
+      override def default(key : String) = {
+        val ret = new LinkedHashSet[IPath]
+        this(key) = ret; ret
+      }
+    }
+    
     private var buildCompiler : BuildCompiler = _
     override def build(toBuild : LinkedHashSet[File])(implicit monitor : IProgressMonitor) : Seq[File] = {
       checkClasspath
@@ -292,7 +324,7 @@ trait ScalaPlugin extends ScalaPluginSuperA with scala.tools.editor.Driver {
       }
       buildCompiler.build(toBuild)
     }
-    // XXX: what about the presentation compiler?????
+
     override def stale(path : IPath) : Unit = {
       super.stale(path)
       compiler.stale(path)
@@ -433,9 +465,13 @@ trait ScalaPlugin extends ScalaPluginSuperA with scala.tools.editor.Driver {
       import java.io
       val file = if (rootSource.endsWith(jarFileExtn)) {
         val jf = new io.File(rootSource)
-        assert(jf.exists && !jf.isDirectory)
-        val archive = ZipArchive.fromFile(jf)
-        archive.lookupPath(fullSource,false)
+        if (jf.exists && !jf.isDirectory) {
+          val archive = ZipArchive.fromFile(jf)
+          archive.lookupPath(fullSource,false)
+        } else {
+          logError("could not find jar file " + jf, null)
+          return None
+        } // xxxx.
       } else {
         val jf = new io.File(rootSource)
         assert(jf.exists && jf.isDirectory)

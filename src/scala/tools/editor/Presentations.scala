@@ -44,7 +44,7 @@ trait Presentations extends lampion.presentation.Matchers {
           val idx = firstOfLine
           if (idx.isDefined) edits * FileImpl.this.reIndent(idx.get, from.extent + 1)
           else super.doSpace(edits)
-        }
+        } 
         override def doSpace(edits : Edits) : Edits = code match {
         case CASE => doCaseSpace(self, edits)
         case CLASS|OBJECT => // could be in a mis-indented case
@@ -225,13 +225,13 @@ trait Presentations extends lampion.presentation.Matchers {
             case Some((tok,CASE)) => return tok.spaceBefore
             case Some((tok,LBRACE)) => return tok.indentOfThisLine 
             case None => 
-	    }
+            }
           case RBRACE|RPAREN|RBRACKET => 
             val matching = border(PREV)
             if (!matching.isEmpty)
               return tokenFor(matching.get).indentOfThisLine
           case _ => 
-	  }
+          }
           sentry.code match {
           case LBRACE|LPAREN|LBRACKET => return sentry.statementBegin.indentOfThisLine ++ indentBy
           case ARROW if sentry.inCase =>

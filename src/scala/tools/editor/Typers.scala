@@ -53,7 +53,7 @@ trait Typers extends Parsers with lampion.compiler.Typers {
       if (!isValid) None else offset match {
       case Some(offset) => Some((offset,file.nscFile))
       case None => None
-      }
+      } 
   } 
   trait TypedElement extends TypedElementImpl with compiler.ScopeClient
   override def typed = super.typed

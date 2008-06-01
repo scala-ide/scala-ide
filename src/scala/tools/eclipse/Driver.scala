@@ -9,7 +9,7 @@ import org.eclipse.core.resources._
 
 object Driver { 
   private[eclipse] var driver : Driver = _
-}  
+}   
 class Driver extends ScalaUIPlugin with net.ScalaMSILPlugin { 
   Driver.driver = this 
   def Project(underlying : IProject) = new Project(underlying)

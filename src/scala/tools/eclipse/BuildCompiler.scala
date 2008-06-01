@@ -14,12 +14,15 @@ import org.eclipse.core.runtime._
 import org.eclipse.core.resources._
 import org.eclipse.jdt.internal.core._
 import java.nio.charset._
-
+  
 abstract class BuildCompiler extends Global(new Settings) with Compiler {
   def plugin : ScalaPlugin
   def project : ScalaPlugin#ProjectImpl
   private[eclipse] val javaDepends = new LinkedHashSet[IProject]
-
+  override val loaders : symtab.SymbolLoaders { val global : BuildCompiler.this.type } = new symtab.SymbolLoaders {
+    val global : BuildCompiler.this.type = BuildCompiler.this
+    override def computeDepends(loader : PackageLoader) = BuildCompiler.this.computeDepends(loader.asInstanceOf[loaders.PackageLoader])
+  }
   private val readers = new LinkedHashMap[String,SourceReader] {
     override def default(encoding : String) : SourceReader = {
       val charset =
@@ -126,6 +129,47 @@ abstract class BuildCompiler extends Global(new Settings) with Compiler {
       val file = project.nscToLampion(unit.source.file.asInstanceOf[PlainFile]).asInstanceOf[File]
       toBuild += file // because it might not be there already.
       if (!file.hasBuildErrors) {
+        ()
+        val efile = file.underlying match {
+        case plugin.NormalFile(file) => file
+        }
+        val ppath = efile.getParent.getLocation
+        if (project.scalaDepends.contains(ppath)) {
+          val depends = project.scalaDepends(ppath)
+          val root = plugin.workspace.getLocation.toOSString
+          def f(tree : Tree) : Unit = tree match {
+          case PackageDef(_,body) => body.foreach(f)
+          case tree@ ClassDef(_,_,_,_) if tree.symbol != NoSymbol => g(tree.symbol)
+          case tree@ModuleDef(_,_,_)   if tree.symbol != NoSymbol => g(tree.symbol)
+          case _ =>
+          }
+          def g(sym : Symbol) = {
+            val name = sym.name.toString
+            depends.removeKey(name) match {
+            case None=>
+            case Some(set) => set.foreach{path=>
+                assert(path.toOSString.startsWith(root))
+                val path0 = Path.fromOSString(path.toOSString.substring(root.length))
+                val dpnd = plugin.workspace.getFile(path0)
+                if (dpnd.exists) plugin.fileFor(dpnd) match {
+                case None =>
+                case Some(file) => 
+                  assert(true)
+                  changed = file.asInstanceOf[File] :: changed
+                }
+              }
+            }
+          }
+          f(unit.body)
+          depends.mirrors.foreach{mirror =>
+            assert(true)
+            val info = mirror.info
+            if (info.isInstanceOf[PackageClassInfoType]) { // not now
+              //mirror.info.asInstanceOf[PackageClassInfoType].lazyLoader.asInstanceOf[symtab.SymbolLoaders#PackageLoader].refresh
+            }
+          }
+          
+        }
         file.resetDependencies 
         if (file.signature != unit.pickleHash) {
           assert(true)

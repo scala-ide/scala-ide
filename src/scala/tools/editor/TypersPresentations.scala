@@ -11,7 +11,7 @@ import scala.collection.jcl.{LinkedHashMap,LinkedHashSet}
 import scala.tools.nsc.ast.parser.Tokens
 import scala.tools.nsc.io.{AbstractFile,PlainFile,ZipArchive}
 import scala.tools.nsc.util._
-
+ 
 trait TypersPresentations extends scala.tools.editor.Presentations {
   private val closeComment = "*/"
   val OverrideIndicator : AnnotationKind
@@ -78,6 +78,7 @@ trait TypersPresentations extends scala.tools.editor.Presentations {
         super.loadSource(file) match {
         case None => None 
         case ret @ Some(unit) =>
+          var keys = sourceMap.keySet
           val map = sourceMap(file)._2
           sourceMap(file) = (unit.body,map)
           map.clear // populate the map.
@@ -124,7 +125,7 @@ trait TypersPresentations extends scala.tools.editor.Presentations {
     private def magicName = {
       if (magicName0 == null) magicName0 = compiler.newTermName("__magic__sauce__")
       magicName0
-    } 
+    }   
     import scala.tools.nsc.symtab.SymbolWalker
     private object walker extends SymbolWalker {
       lazy val global : compiler.type = compiler
@@ -237,7 +238,7 @@ trait TypersPresentations extends scala.tools.editor.Presentations {
         super.loaded
       }
       def unloadedBody : Tree = {
-        if (!isLoaded && !sourceMap.contains(nscFile)) loadSource(nscFile)
+        if (!editing && !sourceMap.contains(nscFile)) loadSource(nscFile)
         sourceMap.get(nscFile).map(_._1).getOrElse(EmptyTree)
       }
       
@@ -252,7 +253,7 @@ trait TypersPresentations extends scala.tools.editor.Presentations {
             ret = tree.symbol :: ret
         case _ =>
         }
-        if (!isLoaded) f(unloadedBody)
+        if (!editing) f(unloadedBody)
         else rootParse.resultTypeInfo.foreach{_.foreach{f}}
         ret
       }

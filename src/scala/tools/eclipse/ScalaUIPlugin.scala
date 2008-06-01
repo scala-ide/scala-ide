@@ -41,10 +41,9 @@ trait ScalaUIPlugin extends lampion.eclipse.UIPlugin with ScalaPlugin {
         super.parseChanged(node)
         Console.println("PARSE_CHANGED: " + node)
       }
-      // Miles: edit this code to manage the transition from unloaded to loaded file
-      override def loaded = {
-        super.loaded
-        
+      // Miles: edit this code to manage the transition to editing
+      override  def prepareForEditing = {
+        super.prepareForEditing
       }
     }
     override def imageFor(style : Style) : Option[Image] = {
