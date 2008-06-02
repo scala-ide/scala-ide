@@ -101,7 +101,8 @@ abstract class Editor extends TextEditor with IAutoEditStrategy  {
     }
   } finally { modifying = false }
 
-  object SourceViewerConfiguration extends SourceViewer.Configuration {
+  object SourceViewerConfiguration extends SourceViewer.Configuration( null ) {
+    
     override def getAutoEditStrategies(sv : ISourceViewer, contentType : String) = 
       Array(Editor.this : IAutoEditStrategy);
     override def getContentAssistant(sv : ISourceViewer) = {
@@ -121,8 +122,11 @@ abstract class Editor extends TextEditor with IAutoEditStrategy  {
       assistant.setContentAssistProcessor(contentAssistProcessor, IDocument.DEFAULT_CONTENT_TYPE);
       assistant;
     }
-  }
-  setSourceViewerConfiguration(SourceViewerConfiguration);
+    import org.eclipse.jface.preference.IPreferenceStore;
+    def setPreferenceStore(store : IPreferenceStore) = {
+      fPreferenceStore = store;
+    }
+  }  
   setPartName("Lampion Editor");
 
   override protected def createActions : Unit = {
@@ -367,6 +371,9 @@ abstract class Editor extends TextEditor with IAutoEditStrategy  {
     super.initializeEditor
   }
   def intializeAfterPlugin = {
+    //we have to wait until after "plugin" is defined to set the preference store on the sourceviewerconfiguration
+    SourceViewerConfiguration.setPreferenceStore(plugin.editorPreferenceStore)
+    setSourceViewerConfiguration(SourceViewerConfiguration);
     setDocumentProvider(new plugin.DocumentProvider)
   }
   def catchUp = getSourceViewer0.catchUp

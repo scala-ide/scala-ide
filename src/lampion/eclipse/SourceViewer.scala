@@ -11,6 +11,7 @@ import org.eclipse.jface.text.hyperlink.{IHyperlink,IHyperlinkDetector};
 import org.eclipse.jface.text.presentation.{IPresentationDamager,IPresentationRepairer,PresentationReconciler};
 import org.eclipse.jface.text.source._;
 import org.eclipse.jface.text.source.projection.{ProjectionAnnotationModel,ProjectionSupport,ProjectionViewer,IProjectionListener};
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.ui.{IFileEditorInput};
 import org.eclipse.ui.editors.text.{TextEditor};
 import org.eclipse.ui.texteditor.{ContentAssistAction,SourceViewerDecorationSupport,ITextEditorActionDefinitionIds};
@@ -20,6 +21,7 @@ import org.eclipse.swt.custom.{ExtendedModifyEvent,ExtendedModifyListener};
 import org.eclipse.swt.events.{KeyListener,KeyEvent,FocusListener,FocusEvent,VerifyEvent};
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.resources.{IWorkspaceRunnable,IMarker,IResource};
+import org.eclipse.ui.editors.text.TextSourceViewerConfiguration;
 
 abstract class SourceViewer(parent : Composite, vertical : IVerticalRuler, overview : IOverviewRuler, x : Boolean, y : Int) extends 
   ProjectionViewer(parent,vertical,overview,x,y) with IAnnotationModelListener with FocusListener with ITextInputListener {
@@ -186,7 +188,7 @@ abstract class SourceViewer(parent : Composite, vertical : IVerticalRuler, overv
   
 }
 object SourceViewer {
-  class Configuration extends SourceViewerConfiguration {
+  class Configuration(store : IPreferenceStore) extends TextSourceViewerConfiguration(store) {
     implicit def coerce(sv : ISourceViewer) = sv.asInstanceOf[SourceViewer]
     override def getPresentationReconciler(sv : ISourceViewer) = sv.reconciler
     override def getTextHover(sv : ISourceViewer, contentType : String) = sv.textHover;

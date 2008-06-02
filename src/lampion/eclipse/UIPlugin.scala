@@ -634,7 +634,7 @@ trait UIPlugin extends org.eclipse.ui.plugin.AbstractUIPlugin with Plugin with l
     image(ImageDescriptor.createFromURL(new URL(getBundle.getEntry("/icons/full/"), name)))
     
   def editorPreferenceStore = 
-    org.eclipse.ui.internal.editors.text.EditorsPlugin.getDefault.getPreferenceStore
+    org.eclipse.ui.editors.text.EditorsUI.getPreferenceStore
   def bundle : java.util.ResourceBundle = MyBundle
   protected object MyBundle extends java.util.ResourceBundle {
     def getKeys = new java.util.Enumeration[String] {
