@@ -3,7 +3,7 @@
  * @author Sean McDirmid
  */
 // $Id$
- 
+
 package scala.tools.eclipse
 import scala.tools.nsc._
 import org.eclipse.jdt.core._
@@ -15,6 +15,13 @@ import scala.tools.nsc.io.{AbstractFile,PlainFile,ZipArchive}
 
 object ScalaPlugin { 
   private[eclipse] var plugin : ScalaPlugin = _
+
+  def isScalaProject(project : IProject) =
+    try {
+      project != null && project.isOpen && project.hasNature(plugin.natureId)
+    } catch {
+      case _ : CoreException => false
+    }
 }
 
 /** stuff needed to get the non-UI parts of the plugin going */
@@ -99,10 +106,17 @@ trait ScalaPlugin extends ScalaPluginSuperA with scala.tools.editor.Driver {
     
     def outputPath = outputPath0.toOSString
     def outputPath0 = check {
+      def createParentFolder(parent : IContainer) {
+        if(!parent.exists()) {
+          createParentFolder(parent.getParent)
+          parent.asInstanceOf[IFolder].create(true, true, null)
+          parent.setDerived(true)
+        }
+      }
       val fldr = workspace.getFolder(javaProject.getOutputLocation)
-      if (!fldr.exists()) {
-        fldr.create(true, true, null)
-        fldr.setDerived(true)
+      if(!fldr.exists()) {
+        createParentFolder(fldr.getParent)
+        fldr.create(IResource.FORCE | IResource.DERIVED, true, null)
       }
       fldr.getLocation
     } getOrElse underlying.getLocation
@@ -127,10 +141,10 @@ trait ScalaPlugin extends ScalaPluginSuperA with scala.tools.editor.Driver {
       }
     }
     def resetCompiler = {
-      buildCompiler = null 
+      buildCompiler = null
       // XXX: nothing we can do for presentation compiler.
     } 
-    // needed to make the type gods happy 
+    // needed to make the type gods happy
     trait Compiler2 extends super.Compiler{ self : compiler.type =>}
     object compiler0 extends nsc.Global(new Settings(null), new CompilerReporter) with Compiler2 with eclipse.Compiler {
       def plugin = ScalaPlugin.this
@@ -466,9 +480,9 @@ trait ScalaPlugin extends ScalaPluginSuperA with scala.tools.editor.Driver {
       val file = if (rootSource.endsWith(jarFileExtn)) {
         val jf = new io.File(rootSource)
         if (jf.exists && !jf.isDirectory) {
-          val archive = ZipArchive.fromFile(jf)
-          archive.lookupPath(fullSource,false)
-        } else {
+        val archive = ZipArchive.fromFile(jf)
+        archive.lookupPath(fullSource,false)
+      } else {
           logError("could not find jar file " + jf, null)
           return None
         } // xxxx.
