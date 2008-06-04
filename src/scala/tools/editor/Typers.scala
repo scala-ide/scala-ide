@@ -3,13 +3,13 @@
  * @author Sean McDirmid
  */
 // $Id$
- 
+  
 package scala.tools.editor
 
 import scala.tools.nsc
 import nsc.{util,io}
 import scala.collection.jcl._
- 
+
 trait Typers extends Parsers with lampion.compiler.Typers {
   final override type TypeInfo = List[compiler.Tree]
 
