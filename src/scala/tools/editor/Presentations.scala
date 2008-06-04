@@ -223,7 +223,7 @@ trait Presentations extends lampion.presentation.Matchers {
             case _ => false
             }).map(tok => (tok,tok.code)) match {
             case Some((tok,CASE)) => return tok.spaceBefore
-            case Some((tok,LBRACE)) => return tok.indentOfThisLine 
+            case Some((tok,LBRACE)) => return tok.indentOfThisLine  ++ indentBy
             case None => 
             }
           case RBRACE|RPAREN|RBRACKET => 
