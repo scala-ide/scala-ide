@@ -610,4 +610,52 @@
       <toc file="toc.xml"
            primary="true"/>
    </extension>
+
+  <extension point="org.eclipse.ui.popupMenus">
+    <objectContribution
+      id="ch.epfl.lamp.sdt.ui.interperter.start"
+      objectClass="org.eclipse.jdt.core.IJavaElement">
+      <action
+        class="scala.tools.eclipse.interpreter.Action"
+        enablesFor="1"
+        icon="icons/full/etool16/scala_app.gif"
+        id="ch.epfl.lamp.sdt.ui.createInt"
+        label="Create Scala Interperter"
+        tooltip="Create a Scala interpreter"/>
+
+      <visibility>
+        <and>
+          <objectState
+            name="projectNature"
+            value="ch.epfl.lamp.sdt.core.scalanature"/>
+          <or>
+            <objectClass name="org.eclipse.jdt.core.IJavaProject"/>
+            <objectClass name="org.eclipse.jdt.core.IPackageFragment"/>
+          </or>
+        </and>
+      </visibility>
+      <enablement>
+        <and>
+          <objectState
+            name="projectNature"
+            value="ch.epfl.lamp.sdt.core.scalanature"/>
+          <or>
+            <objectClass name="org.eclipse.jdt.core.IJavaProject"/>
+            <objectClass name="org.eclipse.jdt.core.IPackageFragment"/>
+          </or>
+        </and>
+      </enablement>
+    </objectContribution>
+  </extension>
+
+  <extension point="org.eclipse.ui.console.consolePageParticipants">
+    <consolePageParticipant
+      class="scala.tools.eclipse.interpreter.PageParticipant"
+      id="ch.epfl.lamp.sdt.ui.interpreter.PP">
+      <enablement>
+        <instanceof value="scala.tools.eclipse.interpreter.Console"/>
+      </enablement>
+    </consolePageParticipant>
+  </extension>
+
 </plugin>
