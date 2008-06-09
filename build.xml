@@ -96,7 +96,7 @@ TARGETS SUPPORTING DEVELOPMENT WITHIN ECLIPSE
 ============================================================================ -->
 
   <target name="devel.prep">
-    <ant dir="${scala.dir}" antfile="build.xml" target="plugin.quick" inheritall="false"/>
+    <ant dir="${scala.dir}" antfile="build.xml" target="dist.done" inheritall="false"/>
     <ant dir="${scala.lib.dir}" antfile="build.xml" target="build" inheritall="false"/>
   </target>
   
