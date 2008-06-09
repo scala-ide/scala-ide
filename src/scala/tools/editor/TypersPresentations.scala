@@ -386,13 +386,13 @@ trait TypersPresentations extends scala.tools.editor.Presentations {
         case Some(sym) => 
           val buf = new StringBuilder
           if (sym.tpe != null) {
-            buf append sym.fullNameString
-            buf append header(sym).getOrElse("")
+            buf append ("<code><b>" + sym.fullNameString + "</b></code>")
+            buf append ("<code>" + header(sym).getOrElse("") + "</code>")
             buf append "<br>"
           }
           try {
             val result = decode(sym).hover.map(strip)
-            if (!result.isEmpty) buf ++= result.get
+            if (!result.isEmpty) buf ++= (result.get)
           } catch {
             case t => logError(t)
           }
