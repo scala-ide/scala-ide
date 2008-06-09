@@ -79,7 +79,7 @@ abstract class SourceViewer(parent : Composite, vertical : IVerticalRuler, overv
   import org.eclipse.jface.text.information.IInformationProviderExtension2;
 
   object textHover extends ITextHover with ITextHoverExtension with IInformationProviderExtension2 {
-    override def getHoverInfo(viewer : ITextViewer, region : IRegion) = try { 
+    override def getHoverInfo(viewer : ITextViewer, region : IRegion) = try {
       val project = SourceViewer.this.file.get.project
       val file = SourceViewer.this.file.get.asInstanceOf[project.File]
       project.hover(file, region.getOffset) match {
@@ -95,20 +95,13 @@ abstract class SourceViewer(parent : Composite, vertical : IVerticalRuler, overv
     def getHoverRegion(viewer : ITextViewer, offset : Int) = new Region(offset, 0); 
     def getHoverControlCreator = new IInformationControlCreator {
       def createInformationControl(parent : Shell) = try {
-        import org.eclipse.jface.internal.text.html._
-        import org.eclipse.jdt.ui._
-        val ret0 = new BrowserInformationControl(parent, PreferenceConstants.APPEARANCE_JAVADOC_FONT, false)
-        if (true) ret0 else {
-          val ret = new DefaultInformationControl(parent, SWT.NONE, new HTMLTextPresenter(false))
-          ret.setBackgroundColor(parent.getDisplay.getSystemColor(SWT.COLOR_WHITE));
-          ret.setForegroundColor(parent.getDisplay.getSystemColor(SWT.COLOR_BLACK));
-          ret
-        }
-      } catch {
-      case t : Throwable => 
-        var ret = new DefaultInformationControl(parent)
-        assert(true)
+        import org.eclipse.jface.internal.text.html.HTMLTextPresenter;
+        val ret = new DefaultInformationControl(parent, new HTMLTextPresenter)
+        ret.setBackgroundColor(parent.getDisplay.getSystemColor(SWT.COLOR_WHITE));
+        ret.setForegroundColor(parent.getDisplay.getSystemColor(SWT.COLOR_BLACK));
         ret
+      } catch {
+      case t : Throwable => new DefaultInformationControl(parent)
       }
     }
     def getInformationPresenterControlCreator = getHoverControlCreator
