@@ -95,14 +95,23 @@ abstract class SourceViewer(parent : Composite, vertical : IVerticalRuler, overv
     def getHoverRegion(viewer : ITextViewer, offset : Int) = new Region(offset, 0); 
     def getHoverControlCreator = new IInformationControlCreator {
       def createInformationControl(parent : Shell) = try {
+        import org.eclipse.jface.internal.text.html._;
+        import org.eclipse.jdt.ui._;
+        var clazz = classOf[BrowserInformationControl]
+        var c = clazz.getConstructor(classOf[Shell], classOf[String], java.lang.Boolean.TYPE)
+        val ret0 = c.newInstance(parent, PreferenceConstants.APPEARANCE_JAVADOC_FONT, new java.lang.Boolean(false)).asInstanceOf[BrowserInformationControl];
+        ret0
+      } catch {
+      case t : Throwable => try {
         import org.eclipse.jface.internal.text.html.HTMLTextPresenter;
+        //val ret0 = new BrowserInformationControl(parent, PreferenceConstants.APPEARANCE_JAVADOC_FONT, false)
         val ret = new DefaultInformationControl(parent, new HTMLTextPresenter)
         ret.setBackgroundColor(parent.getDisplay.getSystemColor(SWT.COLOR_WHITE));
         ret.setForegroundColor(parent.getDisplay.getSystemColor(SWT.COLOR_BLACK));
         ret
       } catch {
-      case t : Throwable => new DefaultInformationControl(parent)
-      }
+        case t : Throwable => new DefaultInformationControl(parent)
+      }}
     }
     def getInformationPresenterControlCreator = getHoverControlCreator
   }
