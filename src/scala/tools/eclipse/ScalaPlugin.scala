@@ -150,7 +150,7 @@ trait ScalaPlugin extends ScalaPluginSuperA with scala.tools.editor.Driver {
       def plugin = ScalaPlugin.this
       def project = ProjectImpl.this.self
       override def computeDepends(from : loaders.PackageLoader) = super[Compiler2].computeDepends(from)
-      
+       
       override def logError(msg : String, t : Throwable) =
         ScalaPlugin.this.logError(msg, t)
       override def stale(path : IPath) : Seq[Symbol] = {
@@ -309,7 +309,7 @@ trait ScalaPlugin extends ScalaPluginSuperA with scala.tools.editor.Driver {
       }
     }
     private[eclipse] class ScalaDependMap extends LinkedHashMap[String,LinkedHashSet[IPath]] {
-      val mirrors = new LinkedHashSet[Global#Symbol]
+      val mirrors = new LinkedHashSet[Global#Symbol] 
       def asDependMap(compiler : Global, pkg : Global#Symbol) : Global#PackageScopeDependMap = {
         mirrors += pkg
         return new compiler.PackageScopeDependMap {

@@ -7,9 +7,9 @@
 package scala.tools.editor
 
 import scala.tools.nsc
-import nsc.{util,io}
+import nsc.{util,io} 
 import scala.collection.jcl._
-
+ 
 trait Typers extends Parsers with lampion.compiler.Typers {
   final override type TypeInfo = List[compiler.Tree]
 
@@ -32,6 +32,12 @@ trait Typers extends Parsers with lampion.compiler.Typers {
     }
     override def currentClient : ScopeClient = 
       (currentTyped).getOrElse(super.currentClient)
+    override def check(condition : Boolean, msg : =>String) = {
+      if (!condition) { 
+        Typers.this.logError(msg, null)
+      }
+      condition
+    }
   }
   override def finishTyping = {
     super.finishTyping
@@ -94,11 +100,11 @@ trait Typers extends Parsers with lampion.compiler.Typers {
         assert(true)
         if (newInfo.last.hasSymbol) (oldInfo.last.symbol,newInfo.last.symbol) match {
         case (sym,compiler.NoSymbol|null) => if (sym != null && sym != compiler.NoSymbol &&
-                                                 !sym.isError) newInfo.last.symbol = sym
+                                                 sym != compiler.ErrorType) newInfo.last.symbol = sym
         case _ => 
         }
         (oldInfo.last.tpe,newInfo.last.tpe) match {
-        case (tpe,compiler.NoType|null) => if (tpe != null && tpe != compiler.NoType && !tpe.isError) newInfo.last.tpe = tpe
+        case (tpe,compiler.NoType|null) => if (tpe != null && tpe != compiler.NoType && tpe != compiler.ErrorType) newInfo.last.tpe = tpe
         case _ =>
         } 
         newInfo

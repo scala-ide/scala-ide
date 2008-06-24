@@ -10,7 +10,7 @@ import scala.tools.nsc.util
 trait ParseNodes extends Tokenizers with lampion.compiler.Parsers {
   import compiler.Tree
   override type ParseTree = Tree
-  
+
   type ParseNode <: Node with ParseNodeImpl
   trait ParseNodeImpl extends super[Tokenizers].ParseNodeImpl with super[Parsers].ParseNodeImpl with util.Position {selfX : ParseNode =>
     def self : ParseNode

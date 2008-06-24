@@ -75,7 +75,11 @@ trait Plugin extends runtime.Plugin with IResourceChangeListener with lampion.co
         val bos = new ByteArrayOutputStream
         file.saveBuildInfo(new DataOutputStream(bos))
         val bis = new ByteArrayInputStream(bos.toByteArray)
-        if (useFile.exists) useFile.delete(true, monitor)
+        if (useFile.exists) try {
+          useFile.delete(true, monitor)
+        } catch {case t =>
+          logError("file: " + useFile,t)
+        }
         useFile.create(bis, true, monitor)
         useFile.setDerived(true)
       }

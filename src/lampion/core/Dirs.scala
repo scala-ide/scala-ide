@@ -6,25 +6,25 @@
 
 package lampion.core;
 
-object Dirs {
+object Dirs { 
   abstract class Dir {
-    def reverse : Dir;
-    def select[T](a : T, b : T) : T;
+    def reverse : Dir
+    def select[T](a : T, b : T) : T
 
   }
   object PREV extends Dir { 
-    override def toString() = "prev";
-    def reverse = NEXT; 
-    def select[T](a : T, b : T) = a; 
+    override def toString() = "prev"
+    def reverse = NEXT
+    def select[T](a : T, b : T) = a 
   }
   object NEXT extends Dir { 
-    override def toString() = "next";
-    def reverse = PREV; def select[T](a : T, b : T) = b; 
+    override def toString() = "next"
+    def reverse = PREV; def select[T](a : T, b : T) = b
   }
 }
 
 trait Dirs {
-  val PREV = Dirs.PREV;
-  val NEXT = Dirs.NEXT;
-  type Dir = Dirs.Dir;
+  val PREV = Dirs.PREV
+  val NEXT = Dirs.NEXT
+  type Dir = Dirs.Dir
 }
