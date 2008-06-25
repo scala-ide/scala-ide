@@ -19,7 +19,7 @@ abstract class BuildCompiler extends Global(new Settings) with Compiler {
   def plugin : ScalaPlugin
   def project : ScalaPlugin#ProjectImpl
   private[eclipse] val javaDepends = new LinkedHashSet[IProject]
-  override val loaders : symtab.SymbolLoaders { val global : BuildCompiler.this.type } = new symtab.SymbolLoaders {
+  override lazy val loaders : symtab.SymbolLoaders { val global : BuildCompiler.this.type } = new symtab.SymbolLoaders {
     val global : BuildCompiler.this.type = BuildCompiler.this
     override def computeDepends(loader : PackageLoader) = BuildCompiler.this.computeDepends(loader.asInstanceOf[loaders.PackageLoader])
   }
