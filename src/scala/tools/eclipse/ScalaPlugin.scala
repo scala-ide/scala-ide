@@ -300,7 +300,7 @@ trait ScalaPlugin extends ScalaPluginSuperA with scala.tools.editor.Driver {
     } 
     class BuildCompiler extends eclipse.BuildCompiler {
       override def plugin : ScalaPlugin = ScalaPlugin.this
-      override val project : ProjectImpl.this.type = ProjectImpl.this
+      override lazy val project : ProjectImpl.this.type = ProjectImpl.this
     }
     private[eclipse] val scalaDepends = new LinkedHashMap[IPath,ScalaDependMap] {
       override def default(key : IPath) = {
