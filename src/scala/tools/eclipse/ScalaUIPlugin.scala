@@ -18,10 +18,11 @@ object ScalaUIPlugin {
   var plugin : ScalaUIPlugin = _ 
 }
 
-trait ScalaUIPlugin extends lampion.eclipse.UIPlugin with ScalaPlugin {
+trait ScalaUIPlugin extends {
+  override val OverrideIndicator = "scala.overrideIndicator"  
+} with lampion.eclipse.UIPlugin with ScalaPlugin {
   assert(ScalaUIPlugin.plugin == null)
   ScalaUIPlugin.plugin = this
-  override val OverrideIndicator = "scala.overrideIndicator"  
   override def editorId : String = "scala.tools.eclipse.Editor"
 
   type Project <: ProjectImpl

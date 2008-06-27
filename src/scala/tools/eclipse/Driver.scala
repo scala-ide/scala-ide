@@ -13,12 +13,15 @@ object Driver {
 class Driver extends ScalaUIPlugin with net.ScalaMSILPlugin { 
   Driver.driver = this 
   def Project(underlying : IProject) = new Project(underlying)
-  class Project(override val underlying : IProject) extends super[ScalaUIPlugin].ProjectImpl with super[ScalaMSILPlugin].ProjectImpl {
+  class Project(underlying0 : IProject) extends {
+    override val underlying = underlying0 
+  } with super[ScalaUIPlugin].ProjectImpl with super[ScalaMSILPlugin].ProjectImpl {
     def self = this
     def File(underlying : FileSpec) = new File(underlying)
-    class File(override val underlying : FileSpec) extends FileImpl {
+    class File(underlying0 : FileSpec) extends {
+      override val underlying = underlying0
+    } with FileImpl {
       def self = this
     } 
   } 
 }
- 

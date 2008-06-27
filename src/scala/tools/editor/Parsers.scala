@@ -332,7 +332,7 @@ trait Parsers extends Matchers with ParseNodes {
         } 
         protected def   adjust(offset : Int) = offset
         protected def unadjust(offset : Int) = offset
-        override val in = new compiler.ParserScanner with ParseNodeImpl.this.Scanner {
+        override lazy val in = new compiler.ParserScanner with ParseNodeImpl.this.Scanner {
           override def in = in1
           init
           override def   adjust(offset : Int)  = Parser.this.  adjust(offset)

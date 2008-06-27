@@ -470,7 +470,7 @@ trait UIPlugin extends org.eclipse.ui.plugin.AbstractUIPlugin with Plugin with l
   def Style(key : String) : StyleFactory = new StyleFactory {
     def style : Style = KeyStyle(key, this)
   }
-  override val noStyle = new Style {
+  override lazy val noStyle = new Style {
     def underline = false
     def italics = false
     def strikeout = false

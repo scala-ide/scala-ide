@@ -16,7 +16,7 @@ object Observer {
   /** hash-able weak reference */
   abstract class Weak[T <: Observer](that : T) extends WeakReference[T](that) with Observer {
     def invalidate : Unit = get.map(_.invalidate)  
-    override val hashCode = get.get.hashCode
+    override def hashCode = get.get.hashCode
     override def equals(that : Any) = that match {
     case that : Weak[_] => get equals that.get
     case that : Observer => get.map(_ equals that).getOrElse(false)

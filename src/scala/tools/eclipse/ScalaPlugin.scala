@@ -298,9 +298,10 @@ trait ScalaPlugin extends ScalaPluginSuperA with scala.tools.editor.Driver {
       val file1 = fileSafe(file0).get
       file1
     } 
-    class BuildCompiler extends eclipse.BuildCompiler {
+    class BuildCompiler extends {
+      override val project : ProjectImpl.this.type = ProjectImpl.this
+    } with eclipse.BuildCompiler {
       override def plugin : ScalaPlugin = ScalaPlugin.this
-      override lazy val project : ProjectImpl.this.type = ProjectImpl.this
     }
     private[eclipse] val scalaDepends = new LinkedHashMap[IPath,ScalaDependMap] {
       override def default(key : IPath) = {

@@ -264,8 +264,9 @@ abstract class Editor extends TextEditor with IAutoEditStrategy  {
 
   //override def getAdapter(required : Class[_]) = super.getAdapter(required)
   override protected def createSourceViewer(parent : Composite, ruler : IVerticalRuler, styles : Int) = {
-    val viewer = new lampion.eclipse.SourceViewer(parent, ruler, getOverviewRuler, isOverviewRulerVisible, styles) {
+    val viewer = new {
       override val plugin : Editor.this.plugin.type = Editor.this.plugin
+    } with lampion.eclipse.SourceViewer(parent, ruler, getOverviewRuler, isOverviewRulerVisible, styles) {
       override def doCreatePresentation = 
         super.doCreatePresentation && !modifying
       

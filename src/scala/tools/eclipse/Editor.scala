@@ -5,16 +5,7 @@
 // $Id$
 
 package scala.tools.eclipse;
-import lampion.eclipse._;
-import org.eclipse.core.runtime._;
-import org.eclipse.core.resources._;
 
-class Editor extends lampion.eclipse.Editor {
-  override val plugin = {
-    assert(Driver.driver != null)
-    Driver.driver 
-  }
+class Editor extends { override val plugin = Driver.driver } with lampion.eclipse.Editor {
   intializeAfterPlugin
-  
-  protected def BUNDLE = java.util.ResourceBundle.getBundle("scala.tools.eclipse.messages")
 }
