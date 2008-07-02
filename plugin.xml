@@ -634,17 +634,7 @@
           </or>
         </and>
       </visibility>
-      <enablement>
-        <and>
-          <objectState
-            name="projectNature"
-            value="ch.epfl.lamp.sdt.core.scalanature"/>
-          <or>
-            <objectClass name="org.eclipse.jdt.core.IJavaProject"/>
-            <objectClass name="org.eclipse.jdt.core.IPackageFragment"/>
-          </or>
-        </and>
-      </enablement>
+      
     </objectContribution>
   </extension>
 
