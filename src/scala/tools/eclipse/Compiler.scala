@@ -8,7 +8,7 @@ package scala.tools.eclipse;
 import scala.tools.nsc._
 import scala.collection.jcl.{LinkedHashMap,LinkedHashSet}
 import scala.tools.nsc.io.{AbstractFile,PlainFile}
-import scala.tools.nsc.reporters.Severity
+
 
 trait CompilerProject {
   def charSet(file : PlainFile) : String

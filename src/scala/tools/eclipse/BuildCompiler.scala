@@ -67,7 +67,7 @@ class BuildCompiler(val project : CompilerProject) extends Global(new Settings) 
     //val reader = readers(file.getCharset)
     new BatchSourceFile(f, reader.read(f))
   }
-  
+
 
   override def doPickleHash = true
   //import project._
