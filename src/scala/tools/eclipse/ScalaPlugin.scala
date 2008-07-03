@@ -10,9 +10,10 @@ import org.eclipse.jdt.core._
 import org.eclipse.jdt.internal.core._
 import org.eclipse.core.runtime._
 import org.eclipse.core.resources._
+import org.eclipse.core.resources
 import scala.collection.jcl.{LinkedHashMap,LinkedHashSet}
 import scala.tools.nsc.io.{AbstractFile,PlainFile,ZipArchive}
-
+   
 object ScalaPlugin { 
   private[eclipse] var plugin : ScalaPlugin = _
 
@@ -54,7 +55,7 @@ trait ScalaPlugin extends ScalaPluginSuperA with scala.tools.editor.Driver {
   val scalaFileExtn = ".scala"
   val javaFileExtn = ".java"
   val jarFileExtn = ".jar"
-
+ 
   def sourceFolders(javaProject : IJavaProject) : Iterable[IFolder] = {
     val isOpen = javaProject.isOpen
     if (!isOpen) javaProject.open(null)
@@ -91,11 +92,13 @@ trait ScalaPlugin extends ScalaPluginSuperA with scala.tools.editor.Driver {
   type Project <: ProjectImpl
   trait ProjectA extends super[ScalaPluginSuperA].ProjectImpl
   trait ProjectB extends super[Driver].ProjectImpl
-  trait ProjectImpl extends ProjectA with ProjectB {
+  trait ProjectImpl extends ProjectA with ProjectB with CompilerProject {
+    private[eclipse] val javaDepends = new LinkedHashSet[IProject]
+
     override def externalDepends = 
       if (buildCompiler eq null) Nil
-      else buildCompiler.javaDepends
-      
+      else /*buildCompiler.*/javaDepends
+       
 
     def self : Project
     assert(underlying != null) // already initialized, I hope!
@@ -149,11 +152,11 @@ trait ScalaPlugin extends ScalaPluginSuperA with scala.tools.editor.Driver {
     object compiler0 extends nsc.Global(new Settings(null), new CompilerReporter) with Compiler2 with eclipse.Compiler {
       def plugin = ScalaPlugin.this
       def project = ProjectImpl.this.self
-      override def computeDepends(from : loaders.PackageLoader) = super[Compiler2].computeDepends(from)
+      override def computeDepends(from : loaders.PackageLoader) = super[Compiler].computeDepends(from)
        
       override def logError(msg : String, t : Throwable) =
         ScalaPlugin.this.logError(msg, t)
-      override def stale(path : IPath) : Seq[Symbol] = {
+      override def stale(path : String) : Seq[Symbol] = {
         val ret = super.stale(path)
         ret.foreach{sym => 
           assert(!sym.isModuleClass)
@@ -166,13 +169,69 @@ trait ScalaPlugin extends ScalaPluginSuperA with scala.tools.editor.Driver {
         }
         ret
       } 
-      initialize(this)
+      ProjectImpl.this.initialize(this)
     }
     lazy val compiler : compiler0.type = compiler0
     import java.io.File.pathSeparator 
     
     private implicit def r2o[T <: AnyRef](x : T) = if (x == null) None else Some(x)
-    def initialize(global : nsc.Global) = {
+    override def charSet(file : PlainFile) : String = nscToEclipse(file).getCharset
+
+    //override def logError(msg : String, e : Throwable) : Unit =
+    //  ScalaPlugin.this.logError(msg,e)
+    override def buildError(file : PlainFile, severity0 : Int, msg : String, offset : Int, identifier : Int) : Unit =
+      nscToLampion(file).buildError({
+        import IMarker._
+        severity0 match { //hard coded constants from reporters
+          case 2 => SEVERITY_ERROR
+          case 1 => SEVERITY_WARNING
+          case 0 => SEVERITY_INFO
+        }
+      }, msg, offset, identifier)(null)
+    override def clearBuildErrors(file : AbstractFile) : Unit  = 
+      nscToLampion(file.asInstanceOf[PlainFile]).clearBuildErrors(null)
+    override def hasBuildErrors(file : PlainFile) : Boolean = 
+      nscToLampion(file).hasBuildErrors
+
+    override def projectFor(path : String) : Option[Project] = {
+      val root = ResourcesPlugin.getWorkspace.getRoot.getLocation.toOSString
+      if (!path.startsWith(root)) return None
+      val path1 = path.substring(root.length)
+      
+      val file = ResourcesPlugin.getWorkspace.getRoot.getFolder(Path.fromOSString(path1))
+      //if (!file.) return None
+      projectSafe(file.getProject)
+    }
+    override def fileFor(path : String) : PlainFile = {
+      val root = ResourcesPlugin.getWorkspace.getRoot.getLocation.toOSString
+      assert(path.startsWith(root))
+      val path1 = path.substring(root.length)
+      val file = ResourcesPlugin.getWorkspace.getRoot.getFile(Path.fromOSString(path1))
+      assert(file.exists)
+      new PlainFile(new java.io.File(file.getLocation.toOSString))
+    }
+    override def signature(file : PlainFile) : Long = {
+      nscToLampion(file).signature
+    }
+    override def setSignature(file : PlainFile, value : Long) : Unit = {
+      nscToLampion(file).signature = value
+    }
+    override def refreshOutput : Unit = {
+      val fldr = workspace.getFolder(javaProject.getOutputLocation)
+      fldr.refreshLocal(IResource.DEPTH_INFINITE, null)
+    }
+    override def dependsOn(file : PlainFile, what : PlainFile) : Unit = {
+      val f0 = nscToLampion(file)
+      val p1 = what.file.getAbsolutePath
+      val p2 = Path.fromOSString(p1)
+      f0.dependsOn(p2)
+    }
+    override def resetDependencies(file : PlainFile) = {
+      nscToLampion(file).resetDependencies
+    }
+  
+    
+    override def initialize(global : eclipse.Compiler) = {
       val settings = new Settings(null)
       val sourceFolders = this.sourceFolders
       val sourcePath = sourceFolders.map(_.getLocation.toOSString).mkString("", pathSeparator, "")
@@ -298,54 +357,45 @@ trait ScalaPlugin extends ScalaPluginSuperA with scala.tools.editor.Driver {
       val file1 = fileSafe(file0).get
       file1
     } 
-    class BuildCompiler extends {
-      override val project : ProjectImpl.this.type = ProjectImpl.this
-    } with eclipse.BuildCompiler {
-      override def plugin : ScalaPlugin = ScalaPlugin.this
+    def nscToEclipse(file : AbstractFile) = nscToLampion(file.asInstanceOf[PlainFile]).underlying match {
+      case NormalFile(file) => file
     }
-    private[eclipse] val scalaDepends = new LinkedHashMap[IPath,ScalaDependMap] {
-      override def default(key : IPath) = {
-        val ret = new ScalaDependMap
-        this(key) = ret; ret
+    
+    
+    def lampionToNSC(file : File) : PlainFile = {
+      file.underlying match {
+        case NormalFile(file) => 
+          val ioFile = new java.io.File(file.getLocation.toOSString)
+          assert(ioFile.exists)
+          new PlainFile(ioFile) 
       }
     }
-    private[eclipse] class ScalaDependMap extends LinkedHashMap[String,LinkedHashSet[IPath]] {
-      val mirrors = new LinkedHashSet[Global#Symbol] 
-      def asDependMap(compiler : Global, pkg : Global#Symbol) : Global#PackageScopeDependMap = {
-        mirrors += pkg
-        return new compiler.PackageScopeDependMap {
-          def createDepend(sym : compiler.Symbol, name : compiler.Name) = {
-            val top = sym.toplevelClass.sourceFile
-            top match {
-            case top : PlainFile => 
-              val path = Path.fromOSString(top.file.getAbsolutePath)
-              ScalaDependMap.this.apply(name.toString) += path
-            case _ =>
-            }
-          }
-        }
-      }
-      override def default(key : String) = {
-        val ret = new LinkedHashSet[IPath]
-        this(key) = ret; ret
-      }
-    }
+    
     
     private var buildCompiler : BuildCompiler = _
     override def build(toBuild : LinkedHashSet[File])(implicit monitor : IProgressMonitor) : Seq[File] = {
       checkClasspath
       if (buildCompiler == null) {
-        buildCompiler = new BuildCompiler // causes it to initialize.
+        buildCompiler = new BuildCompiler(this) // causes it to initialize.
       }
-      buildCompiler.build(toBuild)
+      val toBuild0 = new LinkedHashSet[AbstractFile]
+      toBuild.foreach{file =>
+        toBuild0 += lampionToNSC(file)
+      }
+      val changed = buildCompiler.build(toBuild0)(if (monitor == null) null else new BuildProgressMonitor {
+        def isCanceled = monitor.isCanceled
+        def worked(howMuch : Int) = monitor.worked(howMuch)
+      })
+      toBuild0.foreach{file => toBuild += nscToLampion(file.asInstanceOf[PlainFile])}
+      changed.map(file => nscToLampion(file.asInstanceOf[PlainFile]))
     }
 
     override def stale(path : IPath) : Unit = {
       super.stale(path)
-      compiler.stale(path)
+      compiler.stale(path.toOSString)
       if (buildCompiler != null) {
         assert(true) 
-        buildCompiler.stale(path)
+        buildCompiler.stale(path.toOSString)
       }
     } 
     override def clean(implicit monitor : IProgressMonitor) = {

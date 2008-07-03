@@ -29,7 +29,7 @@ trait Plugin extends runtime.Plugin with IResourceChangeListener with lampion.co
   }
   case class NormalFile(underlying : IFile) extends FileSpec {
     override def toString = underlying.getName  
-    override def path = Some(underlying.getFullPath)
+    override def path = Some(underlying.getLocation)
   }
   def bundlePath = check{
     val bundle = getBundle 
@@ -131,7 +131,7 @@ trait Plugin extends runtime.Plugin with IResourceChangeListener with lampion.co
       def dependsOn(path : IPath) = (underlying) match {
       case (NormalFile(self)) => 
         dependencies += path
-        reverseDependencies(path) += self.getFullPath
+        reverseDependencies(path) += self.getLocation
       case _ => 
       }
       def clearBuildErrors(implicit monitor : IProgressMonitor) = if (problemMarkerId.isDefined) {

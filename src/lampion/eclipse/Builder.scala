@@ -45,14 +45,14 @@ abstract class Builder extends IncrementalProjectBuilder {
           val file = ifile(delta.getResource)
           if (delta.getKind == IResourceDelta.REMOVED) return true
           if (file == null) return true
-          val paths = plugin.reverseDependencies.get(file.getFullPath)
+          val paths = plugin.reverseDependencies.get(file.getLocation)
           if (paths.isEmpty) return true
           val i = paths.get.elements 
           while (i.hasNext) {
             val path = ipath(i.next)
-            if (project.sourceFolders.exists(_.getFullPath.isPrefixOf(path))) {
+            if (project.sourceFolders.exists(_.getLocation.isPrefixOf(path))) {
               i.remove
-              project.stale(file.getFullPath)
+              project.stale(file.getLocation)
               toBuild += project.fileSafe(plugin.workspace.getFile(path)).get
             }
           }        
@@ -93,7 +93,7 @@ abstract class Builder extends IncrementalProjectBuilder {
       changed.foreach(_.underlying.path match {
         case Some(changed) => plugin.reverseDependencies.get(changed) match {
         case Some(paths) => paths.foreach(path => {
-            val file = plugin.workspace.getFile(path)
+            val file = plugin.workspace.getFileForLocation(path)
             if (file.exists) {
               if (file.getProject == project.underlying) {
                 project.fileSafe(file) match {
