@@ -90,16 +90,20 @@ abstract class Builder extends IncrementalProjectBuilder {
       built ++= toBuild
       project.assert(!built.isEmpty)
       toBuild.clear
-      changed.foreach(_.underlying.path match {
+      
+      def f(changed : project.File) : Unit = changed.underlying.path match {
         case Some(changed) => plugin.reverseDependencies.get(changed) match {
-        case Some(paths) => paths.foreach(path => {
+          case Some(paths) => paths.foreach(path => {
             val file = plugin.workspace.getFileForLocation(path)
             if (file.exists) {
               if (file.getProject == project.underlying) {
                 project.fileSafe(file) match {
-                case Some(file) if !built.contains(file) => toBuild += file
-                case Some(file) => plugin.reverseDependencies(changed) += path
-                case _ => file.touch(monitor)
+                  case Some(file) if !built.contains(file) => 
+                    if (toBuild add file) {
+                      f(file) // transitive colsure of dependencies...sigh.
+                    }
+                  case Some(file) => plugin.reverseDependencies(changed) += path
+                  case _ => file.touch(monitor)
                 }
               } else {
                 plugin.projectSafe(file.getProject).foreach(_.stale(changed))
@@ -108,10 +112,11 @@ abstract class Builder extends IncrementalProjectBuilder {
               }
             }
           })
-        case _ => 
+          case None => 
         }
         case None =>
-      })
+      }
+      changed.foreach(f)
     }
     if (buildAgain) needRebuild
     else project.buildDone(built)

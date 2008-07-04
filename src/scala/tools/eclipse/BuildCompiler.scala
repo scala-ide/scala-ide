@@ -144,7 +144,7 @@ class BuildCompiler(val project : CompilerProject) extends Global(new Settings) 
         val ppath = file.file.getParentFile.getAbsolutePath
         if (project.scalaDepends.contains(ppath)) {
           val depends = project.scalaDepends(ppath)
-          //val root = project.workspacePath // plugin.workspace.getLocation.toOSString
+
           def f(tree : Tree) : Unit = tree match {
           case PackageDef(_,body) => body.foreach(f)
           case tree@ ClassDef(_,_,_,_) if tree.symbol != NoSymbol => g(tree.symbol)
@@ -156,6 +156,7 @@ class BuildCompiler(val project : CompilerProject) extends Global(new Settings) 
             depends.removeKey(name) match {
             case None=>
             case Some(set) => set.foreach{path=>
+              Console.println("BUILD_XXX: " + path)
               //assert(!path.startsWith(root))
               //val path0 = Path.fromOSString(path.toOSString.substring(root.length))
               //val dpnd = plugin.workspace.getFile(path0)
@@ -186,22 +187,15 @@ class BuildCompiler(val project : CompilerProject) extends Global(new Settings) 
           changed = file :: changed
         }
         unit.depends.projection.map(_.sourceFile).filter(_ != null).foreach{
-        case depend : PlainFile =>
-          //val root = plugin.workspace.getLocation.toOSString
-          //val root = project.workspacePath
-          { //if (depend.path.startsWith(root)) {
+          case depend : PlainFile =>
             project.dependsOn(file, depend)
-            /*
-            val path = Path.fromOSString(depend.path.substring(root.length))
-            val dpnd = plugin.workspace.getFile(path)
-            if (dpnd.exists) {
-              file.dependsOn(dpnd.getFullPath)
-              if (JavaProject.hasJavaNature(dpnd.getProject) && !dpnd.getProject.hasNature(plugin.natureId)) 
-                javaDepends += dpnd.getProject
-            } else logError("depend " + path + " does not exist!", null)
-            */
-          }
-        case _ => // in an archive, we can ignore it.  }
+          case _ => 
+        }
+      } else {
+        unit.depends.projection.map(_.sourceFile).filter(_ != null).foreach{
+          case depend : PlainFile =>
+            project.dependsOn(file, depend)
+          case _ => 
         }
       }
     }
