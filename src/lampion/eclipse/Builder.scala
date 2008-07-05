@@ -100,7 +100,7 @@ abstract class Builder extends IncrementalProjectBuilder {
                 project.fileSafe(file) match {
                   case Some(file) if !built.contains(file) => 
                     if (toBuild add file) {
-                      f(file) // transitive colsure of dependencies...sigh.
+                      //f(file) // transitive colsure of dependencies...sigh.
                     }
                   case Some(file) => plugin.reverseDependencies(changed) += path
                   case _ => file.touch(monitor)
