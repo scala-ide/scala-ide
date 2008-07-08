@@ -612,12 +612,37 @@
    </extension>
 
   <extension point="org.eclipse.ui.popupMenus">
+      <objectContribution
+            adaptable="true"
+            objectClass="org.eclipse.jdt.core.IJavaProject"
+            nameFilter="*"
+            id="ch.epfl.lamp.sdt.core.natures.contribution1">
+         <menu
+            label="Scala"
+            path="additions"
+            id="ch.epfl.lamp.sdt.core.natures.naturePopupMenu">
+            <groupMarker name="content"/>
+            <separator name="additions"/>
+        </menu>
+      <visibility>
+        <and>
+          <objectState
+            name="projectNature"
+            value="ch.epfl.lamp.sdt.core.scalanature"/>
+          <or>
+            <objectClass name="org.eclipse.jdt.core.IJavaProject"/>
+            <objectClass name="org.eclipse.jdt.core.IPackageFragment"/>
+          </or>
+        </and>
+      </visibility>
+      </objectContribution>
     <objectContribution
       id="ch.epfl.lamp.sdt.ui.interperter.start"
       objectClass="org.eclipse.jdt.core.IJavaElement">
       <action
         class="scala.tools.eclipse.interpreter.Action"
         enablesFor="1"
+        menubarPath="ch.epfl.lamp.sdt.core.natures.naturePopupMenu/content"
         icon="icons/full/etool16/scala_app.gif"
         id="ch.epfl.lamp.sdt.ui.createInt"
         label="Create Scala Interperter"
@@ -635,7 +660,58 @@
         </and>
       </visibility>
       
-    </objectContribution>
+        
+    </objectContribution>   
+      <objectContribution
+            adaptable="true"
+            objectClass="org.eclipse.jdt.core.IJavaProject"
+            nameFilter="*"
+            id="ch.epfl.lamp.sdt.core.natures.contribution1">
+         <action
+               class="scala.tools.eclipse.ToggleScalaNatureAction"
+               enablesFor="+"
+               id="ch.epfl.lamp.sdt.core.natures.ToggleNatureAction"
+               label="Remove Scala Nature"
+               menubarPath="ch.epfl.lamp.sdt.core.natures.naturePopupMenu/content"
+               tooltip="Removes an Scala Builder/Classpath from a Java project">
+         </action>
+         <visibility>
+         	<objectState name="projectNature" value="ch.epfl.lamp.sdt.core.scalanature"/>
+         </visibility>
+      </objectContribution>
+      
+      
+      <objectContribution
+            adaptable="true"
+            objectClass="org.eclipse.jdt.core.IJavaProject"
+            nameFilter="*"
+            id="ch.epfl.lamp.sdt.core.natures.contribution2">
+         <menu
+            label="Scala"
+            path="additions"
+            id="ch.epfl.lamp.sdt.core.natures.naturePopupMenu">
+            <groupMarker name="content"/>
+            <separator name="additions"/>
+        </menu>
+         <action
+               class="scala.tools.eclipse.ToggleScalaNatureAction"
+               enablesFor="+"
+               id="ch.epfl.lamp.sdt.core.natures.ToggleNatureAction"
+               label="Add Scala Nature"
+               menubarPath="ch.epfl.lamp.sdt.core.natures.naturePopupMenu/content"
+               tooltip="Adds Scala builder / classpath to a project">
+         </action>
+         <visibility>
+            <and>
+         		<not>
+         			<objectState name="projectNature" value="ch.epfl.lamp.sdt.core.scalanature"/>
+         		</not>
+         		<objectClass name="org.eclipse.jdt.core.IJavaProject"/>
+         	</and>
+         </visibility>
+      </objectContribution>
+    
+    
   </extension>
 
   <extension point="org.eclipse.ui.console.consolePageParticipants">
