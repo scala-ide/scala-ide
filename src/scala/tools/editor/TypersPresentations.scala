@@ -242,6 +242,7 @@ trait TypersPresentations extends scala.tools.editor.Presentations {
         sourceMap.get(nscFile).map(_._1).getOrElse(EmptyTree)
       }
       
+      def outlineTrees : List[Tree]
       def parseChanged(parseNode : ParseNode) = {}
       def topSymbols : List[compiler.Symbol] = {
         var ret : List[compiler.Symbol] = Nil

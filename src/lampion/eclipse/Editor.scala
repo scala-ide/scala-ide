@@ -5,29 +5,32 @@
 // $Id$
 
 package lampion.eclipse
+
+import org.eclipse.core.resources.{IWorkspaceRunnable,IMarker,IResource};
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jdt.internal.ui.javaeditor.{ CompilationUnitEditor, JavaEditor }
 import org.eclipse.jface.util.PropertyChangeEvent
+import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.jface.text.{TextPresentation,ITypedRegion,DocumentEvent,DefaultInformationControl,IInformationControlCreator,IDocumentListener,IDocument,DocumentCommand,IAutoEditStrategy,ITextViewer,ITextHover,ITextHoverExtension,IRegion,Region};
 import org.eclipse.jface.text.contentassist.{ContentAssistant,IContentAssistant,IContentAssistProcessor,IContextInformation,IContextInformationPresenter,IContextInformationValidator};
 import org.eclipse.jface.text.hyperlink.{IHyperlink,IHyperlinkDetector};
 import org.eclipse.jface.text.presentation.{IPresentationDamager,IPresentationRepairer,PresentationReconciler};
-import org.eclipse.jface.text.source.{AnnotationModelEvent,IAnnotationModel,ICharacterPairMatcher,ISourceViewer,IVerticalRuler,SourceViewerConfiguration,IAnnotationModelListener};
+import org.eclipse.jface.text.source.{AnnotationModelEvent,IAnnotationModel,ICharacterPairMatcher,IOverviewRuler,ISourceViewer,IVerticalRuler,SourceViewerConfiguration,IAnnotationModelListener};
 import org.eclipse.jface.text.source.projection.{ProjectionAnnotationModel,ProjectionSupport,ProjectionViewer,IProjectionListener};
 import org.eclipse.ui.{IFileEditorInput};
 import org.eclipse.ui.editors.text.{TextEditor};
 import org.eclipse.ui.texteditor.{ContentAssistAction,SourceViewerDecorationSupport,ITextEditorActionDefinitionIds};
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.widgets.{Composite,Shell};
 import org.eclipse.swt.custom.{ExtendedModifyEvent,ExtendedModifyListener};
 import org.eclipse.swt.events.{KeyListener,KeyEvent,FocusListener,FocusEvent};
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.resources.{IWorkspaceRunnable,IMarker,IResource};
+import org.eclipse.swt.widgets.{Composite,Shell};
 
 abstract class Editor extends TextEditor with IAutoEditStrategy  {
   val plugin : UIPlugin
   import lampion.core.Dirs._
-  val e = this
+
   showChangeInformation(true) 
-  
+  setSourceViewerConfiguration(SourceViewerConfiguration)
   
   var file : Option[plugin.File] = None
   
@@ -101,7 +104,7 @@ abstract class Editor extends TextEditor with IAutoEditStrategy  {
     }
   } finally { modifying = false }
 
-  object SourceViewerConfiguration extends SourceViewer.Configuration( null ) {
+  object SourceViewerConfiguration extends SourceViewer.Configuration(plugin.editorPreferenceStore, Editor.this) {
     
     override def getAutoEditStrategies(sv : ISourceViewer, contentType : String) = 
       Array(Editor.this : IAutoEditStrategy);
@@ -122,11 +125,8 @@ abstract class Editor extends TextEditor with IAutoEditStrategy  {
       assistant.setContentAssistProcessor(contentAssistProcessor, IDocument.DEFAULT_CONTENT_TYPE);
       assistant;
     }
-    import org.eclipse.jface.preference.IPreferenceStore;
-    def setPreferenceStore(store : IPreferenceStore) = {
-      fPreferenceStore = store;
-    }
-  }  
+  }
+  
   setPartName("Lampion Editor");
 
   override protected def createActions : Unit = {
@@ -365,17 +365,14 @@ abstract class Editor extends TextEditor with IAutoEditStrategy  {
       true || Math.abs(installOffset - offset) < 5
   }
   override def dispose = {
-    getSourceViewer.setDocument(null)
+    val viewer = getSourceViewer
+    if (viewer != null)
+      viewer.setDocument(null)
+    
     super.dispose
   }
   override protected def initializeEditor = {
     super.initializeEditor
-  }
-  def intializeAfterPlugin = {
-    //we have to wait until after "plugin" is defined to set the preference store on the sourceviewerconfiguration
-    SourceViewerConfiguration.setPreferenceStore(plugin.editorPreferenceStore)
-    setSourceViewerConfiguration(SourceViewerConfiguration);
-    setDocumentProvider(new plugin.DocumentProvider)
   }
   def catchUp = getSourceViewer0.catchUp
   
@@ -390,7 +387,7 @@ abstract class Editor extends TextEditor with IAutoEditStrategy  {
           ck(underlineId) ||
             ck(italicsId) ||
               ck(strikeoutId)) {
-      if (file.isDefined) {
+      if (file != null && file.isDefined) {
         val external = Editor.this.file.get.external
         val file = external.file
         val viewer = getSourceViewer0

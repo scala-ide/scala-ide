@@ -5,23 +5,27 @@
 // $Id$
 
 package lampion.eclipse;
+
+import org.eclipse.core.runtime.{ IProgressMonitor, NullProgressMonitor }
+import org.eclipse.core.resources.{IWorkspaceRunnable,IMarker,IResource};
+import org.eclipse.jdt.internal.ui.javaeditor.JavaSourceViewer
+import org.eclipse.jdt.internal.ui.text.{ JavaColorManager, JavaCompositeReconcilingStrategy, JavaReconciler }
+import org.eclipse.jdt.ui.text.JavaSourceViewerConfiguration
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.text.{TextPresentation,ITextInputListener,ITypedRegion,DocumentEvent,DefaultInformationControl,IInformationControlCreator,IDocumentListener,IDocument,DocumentCommand,IAutoEditStrategy,ITextViewer,ITextHover,ITextHoverExtension,IRegion,Region};
 import org.eclipse.jface.text.contentassist.{ContentAssistant,IContentAssistant,IContentAssistProcessor,IContextInformation,IContextInformationPresenter,IContextInformationValidator};
 import org.eclipse.jface.text.hyperlink.{IHyperlink,IHyperlinkDetector};
 import org.eclipse.jface.text.presentation.{IPresentationDamager,IPresentationRepairer,PresentationReconciler};
+import org.eclipse.jface.text.reconciler.IReconciler
 import org.eclipse.jface.text.source._;
 import org.eclipse.jface.text.source.projection.{ProjectionAnnotationModel,ProjectionSupport,ProjectionViewer,IProjectionListener};
-import org.eclipse.jface.preference.IPreferenceStore;
-import org.eclipse.ui.{IFileEditorInput};
-import org.eclipse.ui.editors.text.{TextEditor};
-import org.eclipse.ui.texteditor.{ContentAssistAction,SourceViewerDecorationSupport,ITextEditorActionDefinitionIds};
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.widgets.{Composite,Shell};
 import org.eclipse.swt.custom.{ExtendedModifyEvent,ExtendedModifyListener};
 import org.eclipse.swt.events.{KeyListener,KeyEvent,FocusListener,FocusEvent,VerifyEvent};
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.resources.{IWorkspaceRunnable,IMarker,IResource};
-import org.eclipse.ui.editors.text.TextSourceViewerConfiguration;
+import org.eclipse.swt.widgets.{Composite,Shell};
+import org.eclipse.ui.{IFileEditorInput};
+import org.eclipse.ui.texteditor.{ContentAssistAction,SourceViewerDecorationSupport,ITextEditor, ITextEditorActionDefinitionIds};
+import org.eclipse.ui.editors.text.{ TextEditor, TextSourceViewerConfiguration };
 
 abstract class SourceViewer(parent : Composite, vertical : IVerticalRuler, overview : IOverviewRuler, x : Boolean, y : Int) extends 
   ProjectionViewer(parent,vertical,overview,x,y) with IAnnotationModelListener with FocusListener with ITextInputListener {
@@ -110,9 +114,9 @@ abstract class SourceViewer(parent : Composite, vertical : IVerticalRuler, overv
         ret.setForegroundColor(parent.getDisplay.getSystemColor(SWT.COLOR_BLACK));
         ret
       } catch {
-        case t : Throwable => new DefaultInformationControl(parent)
+      case t : Throwable => new DefaultInformationControl(parent)
       }}
-    }
+      }
     def getInformationPresenterControlCreator = getHoverControlCreator
   }
   object hyperlinkDetector extends IHyperlinkDetector {
@@ -194,13 +198,27 @@ abstract class SourceViewer(parent : Composite, vertical : IVerticalRuler, overv
   }
   getTextWidget.addFocusListener(this)
   this.addTextInputListener(this)
-  
 }
+
 object SourceViewer {
-  class Configuration(store : IPreferenceStore) extends TextSourceViewerConfiguration(store) {
+  class Configuration(store : IPreferenceStore, editor : ITextEditor) extends TextSourceViewerConfiguration(store) {
     implicit def coerce(sv : ISourceViewer) = sv.asInstanceOf[SourceViewer]
     override def getPresentationReconciler(sv : ISourceViewer) = sv.reconciler
     override def getTextHover(sv : ISourceViewer, contentType : String) = sv.textHover;
     override def getHyperlinkDetectors(sv : ISourceViewer) = Array(sv.hyperlinkDetector : IHyperlinkDetector);
+
+    override def getReconciler(sourceViewer : ISourceViewer) : IReconciler = {
+      if (editor != null && editor.isEditable) {
+        val strategy = new JavaCompositeReconcilingStrategy(sourceViewer, editor, getConfiguredDocumentPartitioning(sourceViewer))
+        val reconciler = new JavaReconciler(editor, strategy, false)
+        reconciler.setIsIncrementalReconciler(false)
+        reconciler.setIsAllowedToModifyDocument(false)
+        reconciler.setProgressMonitor(new NullProgressMonitor)
+        reconciler.setDelay(500)
+        reconciler
+      }
+      else
+        null
+    }
   }
 }

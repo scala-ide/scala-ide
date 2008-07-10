@@ -5,18 +5,22 @@
 // $Id$
 
 package scala.tools.eclipse.wizards
+
+import scala.collection.jcl._
+
 import org.eclipse.ui.wizards.newresource._
 import org.eclipse.ui._
 import org.eclipse.ui.ide._
 import org.eclipse.jface.wizard._
 import org.eclipse.jface.viewers._
 import org.eclipse.jdt.core._
-import scala.collection.jcl._
 import org.eclipse.swt.widgets._
 import org.eclipse.swt.layout._
 import org.eclipse.swt.SWT
 import org.eclipse.core.resources._
 import org.eclipse.core.runtime._
+
+import scala.tools.eclipse.javaelements.ScalaCompilationUnitManager
 
 trait NewResourceWizard extends BasicNewResourceWizard {
   def kind : String
@@ -155,6 +159,7 @@ trait NewResourceWizard extends BasicNewResourceWizard {
       mainPage.setErrorMessage("Resource with same name already exists.")
       return false
     }
+    ScalaCompilationUnitManager.getScalaCompilationUnit(file)
     file.create(new java.io.StringBufferInputStream(
       "package " + pkg.getElementName + "\n\n" +
       kind.toLowerCase + " " + name + " {\n" + body + "\n}\n"

@@ -611,8 +611,40 @@
            primary="true"/>
    </extension>
 
+  <extension
+    id="javaelementfilters"
+    point="org.eclipse.jdt.ui.javaElementFilters">
+    <filter
+      targetId="org.eclipse.jdt.ui.PackageExplorer"
+      enabled="true"
+      class="scala.tools.eclipse.javaelements.ScalaCompilationUnitFilter"
+      description="Prevents .scala files from appearing twice in the Package Explorer"
+      name="Duplicate .scala file filter"
+      id="scala.tools.eclipse.javaelements.ScalaCompilationUnitFilter"/>
+    <filter
+      id="scala.tools.eclipse.javaelements.ScalaElementFilter"
+      name="Scala primary constructor filter"
+      description="Prevents Scala primary constructors from appearing in the Package Explorer"
+      class="scala.tools.eclipse.javaelements.ScalaElementFilter"
+      enabled="false"/>      
+  </extension>
+
+  <extension point="org.eclipse.ui.decorators">
+    <decorator
+      lightweight="false"
+      label="Scala elements"
+      class="scala.tools.eclipse.javaelements.ScalaLabelDecorator"
+      state="true"
+      id="scala.tools.eclipse.javaelements.ScalaLabelDecorator">
+      <description>Shows the structure of Scala files</description>
+      <enablement>
+        <objectClass name="java.lang.Object"/>
+      </enablement>
+    </decorator>
+  </extension>
+   
   <extension point="org.eclipse.ui.popupMenus">
-      <objectContribution
+    <objectContribution
             adaptable="true"
             objectClass="org.eclipse.jdt.core.IJavaProject"
             nameFilter="*"
@@ -678,7 +710,8 @@
          <visibility>
          	<objectState name="projectNature" value="ch.epfl.lamp.sdt.core.scalanature"/>
          </visibility>
-      </objectContribution>
+    </objectContribution>
+
       
       
       <objectContribution
@@ -710,8 +743,19 @@
          	</and>
          </visibility>
       </objectContribution>
-    
-    
+
+    <objectContribution
+      objectClass="scala.tools.eclipse.javaelements.ScalaCompilationUnit"
+      adaptable="true"
+      id="scalfileContribution"> 
+      <action
+        label="Rename Scala Files"
+        class="scala.tools.eclipse.RenameScalaFileAction"
+        menubarPath="org.eclipse.jdt.ui.refactoring.menu"
+        id="renameScalaFile">
+      </action>
+    </objectContribution>
+
   </extension>
 
   <extension point="org.eclipse.ui.console.consolePageParticipants">
@@ -723,5 +767,5 @@
       </enablement>
     </consolePageParticipant>
   </extension>
-
+  
 </plugin>

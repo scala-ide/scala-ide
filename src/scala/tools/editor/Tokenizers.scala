@@ -39,7 +39,7 @@ trait Tokenizers extends lampion.compiler.Tokenizers {
     type IdentifierPosition <: Tokenizers.this.IdentifierPosition with IdentifierPositionImpl
     trait IdentifierPositionImpl extends Tokenizers.this.IdentifierPositionImpl with super.IdentifierPositionImpl {
       def self : IdentifierPosition
-      override def offset : Some[Int] = Some[Int](self.absolute : Int)
+      override def offset : Option[Int] = if(self.isValid) Some[Int](self.absolute : Int) else None
       override def source = Some(FileImpl.this.unit.source)
     }
     def specialPrev(offset : Int) : Option[Token]

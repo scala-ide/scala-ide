@@ -239,7 +239,7 @@ trait Plugin extends runtime.Plugin with IResourceChangeListener with lampion.co
   
   override def start(context : BundleContext) = {
     super.start(context)
-    ResourcesPlugin.getWorkspace.addResourceChangeListener(this, IResourceChangeEvent.PRE_CLOSE)
+    ResourcesPlugin.getWorkspace.addResourceChangeListener(this, IResourceChangeEvent.PRE_CLOSE | IResourceChangeEvent.POST_CHANGE)
   }
   override def stop(context : BundleContext) = {
     super.stop(context)

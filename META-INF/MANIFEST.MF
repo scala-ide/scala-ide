@@ -3,34 +3,36 @@ Bundle-ManifestVersion: 2
 Bundle-Name: Scala Plugin
 Bundle-SymbolicName: ch.epfl.lamp.sdt.core;singleton:=true
 Bundle-Version: 2.7.1.final
-Eclipse-LazyStart: true
+Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: 
  .,
  bin
 Bundle-Activator: 
  scala.tools.eclipse.Driver
 Require-Bundle: 
- org.eclipse.core.runtime,
- org.eclipse.core.resources,
  org.eclipse.core.filesystem,
- org.eclipse.jface.text,
- org.eclipse.ui,
- org.eclipse.ui.ide,
- org.eclipse.ui.editors,
- org.eclipse.ui.workbench.texteditor,
- org.eclipse.ui.views,
- org.eclipse.ui.console,
- org.eclipse.search,
- org.eclipse.text,
- org.eclipse.jdt.core,
- org.eclipse.jdt.ui,
- org.eclipse.jdt.launching,
+ org.eclipse.core.resources,
+ org.eclipse.core.runtime,
  org.eclipse.debug.core,
  org.eclipse.debug.ui,
+ org.eclipse.jdt.core,
  org.eclipse.jdt.debug,
  org.eclipse.jdt.debug.ui,
+ org.eclipse.jdt.launching,
+ org.eclipse.jdt.ui,
+ org.eclipse.jface.text,
+ org.eclipse.ltk.core.refactoring,
+ org.eclipse.ltk.ui.refactoring,
+ org.eclipse.search,
+ org.eclipse.text,
+ org.eclipse.ui,
+ org.eclipse.ui.console,
+ org.eclipse.ui.editors,
  org.eclipse.ui.forms,
+ org.eclipse.ui.ide,
  org.eclipse.ui.navigator,
  org.eclipse.ui.navigator.resources,
+ org.eclipse.ui.views,
+ org.eclipse.ui.workbench.texteditor,
  scala.library,
  scala.tools.nsc

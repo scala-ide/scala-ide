@@ -4,8 +4,8 @@
  */
 // $Id$
 
-package scala.tools.eclipse;
+package scala.tools.eclipse
 
-class Editor extends { override val plugin = Driver.driver } with lampion.eclipse.Editor {
-  intializeAfterPlugin
+class Editor extends { val plugin = Driver.driver } with lampion.eclipse.Editor {
+  setDocumentProvider(new plugin.DocumentProvider)
 }

@@ -6,28 +6,30 @@
 
 package lampion.eclipse
 
-//org.eclipse.jface.text.source
+import scala.collection.jcl._
+import scala.xml.NodeSeq        
+
 import java.net.URL
+
+import org.eclipse.core.resources.{IFile,IProject,IResource,ResourcesPlugin}
+import org.eclipse.core.runtime.{IPath,Status,IProgressMonitor}
 import org.eclipse.jface.dialogs.{ErrorDialog}
 import org.eclipse.jface.resource.{ImageDescriptor}
+import org.eclipse.jface.preference.PreferenceConverter
 import org.eclipse.jface.text.{IRepairableDocument,TextPresentation,IDocument,Document,Position,Region}
 import org.eclipse.jface.text.hyperlink.{IHyperlink}
 import org.eclipse.jface.text.contentassist.{ICompletionProposal}
 import org.eclipse.jface.text.source.{Annotation,IAnnotationModel}
 import org.eclipse.jface.text.source.projection.{ProjectionAnnotation,ProjectionViewer,ProjectionAnnotationModel}
-import org.eclipse.jface.preference.PreferenceConverter
+import org.eclipse.swt.SWT
 import org.eclipse.swt.graphics
 import org.eclipse.swt.widgets.Display
 import org.eclipse.swt.custom.StyleRange
-import org.eclipse.swt.SWT
 import org.eclipse.ui.{ IEditorInput, IEditorReference, IFileEditorInput, IPathEditorInput, IPersistableElement, IWorkbenchPage, PlatformUI }
-import org.eclipse.ui.ide.IDE
 import org.eclipse.ui.editors.text.FileDocumentProvider
-import org.eclipse.core.runtime.{IPath,Status,IProgressMonitor}
-import org.eclipse.core.resources.{IFile,IProject,IResource,ResourcesPlugin}
-import scala.collection.jcl._
+import org.eclipse.ui.ide.IDE
+
 import lampion.presentation.{Presentations}
-import scala.xml.NodeSeq        
 
 trait UIPlugin extends org.eclipse.ui.plugin.AbstractUIPlugin with Plugin with lampion.presentation.Matchers {
   def editorId : String = pluginId + ".Editor"
@@ -444,23 +446,6 @@ trait UIPlugin extends org.eclipse.ui.plugin.AbstractUIPlugin with Plugin with l
     def initialize(doc : IDocument) : Unit
     def neutralFile : File
     def createAnnotationModel : IAnnotationModel = new ProjectionAnnotationModel
-  }
-  class DocumentProvider extends FileDocumentProvider {
-    override def createDocument(element : Object) = element match {
-    case input : FixedInput => 
-      val doc = createEmptyDocument
-      input.initialize(doc)
-      doc
-    case element => super.createDocument(element)  
-    }
-    override def isReadOnly(input : Object) = input match {
-    case input : FixedInput => true
-    case _ => super.isReadOnly(input)
-    }
-    override def createAnnotationModel(element : Object) = element match {
-    case input : FixedInput => input.createAnnotationModel
-    case element => super.createAnnotationModel(element)
-    }
   }
   def fileFor(input : IEditorInput) : Option[File] = input match {
   case input : FixedInput => Some(input.neutralFile)

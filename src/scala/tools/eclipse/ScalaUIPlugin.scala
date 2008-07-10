@@ -5,14 +5,18 @@
 // $Id$
 
 package scala.tools.eclipse;
-import org.eclipse.jface.text.{IDocument,Document,Position,Region}
-import org.eclipse.ui.{IWorkbenchPage,IEditorInput}
-import org.eclipse.jdt.internal.ui.JavaPluginImages
-import scala.tools.nsc.io.{AbstractFile,PlainFile,ZipArchive}
-import org.eclipse.jdt.internal.debug.ui._
-import org.eclipse.jdt.internal.core._
-import org.eclipse.jdt.core._
-import org.eclipse.jdt.internal.compiler.env._
+
+import org.eclipse.core.resources.{ IFile, IResource, IResourceChangeEvent, IResourceDelta, IResourceDeltaVisitor, ResourcesPlugin }
+import org.eclipse.jdt.core.{ IClassFile, IJavaElement }
+import org.eclipse.jdt.internal.ui.javaeditor.CompilationUnitDocumentProvider
+import org.eclipse.jdt.ui.JavaUI
+import org.eclipse.jface.text.IDocument
+import org.eclipse.ui.{ IWorkbenchPage, IEditorInput }
+import org.eclipse.swt.widgets.Display
+import org.osgi.framework.BundleContext
+
+import scala.tools.eclipse.javaelements.{ JDTUtils, ScalaCompilationUnitManager }
+import scala.tools.nsc.io.AbstractFile
 
 object ScalaUIPlugin {
   var plugin : ScalaUIPlugin = _ 
@@ -25,6 +29,63 @@ trait ScalaUIPlugin extends {
   ScalaUIPlugin.plugin = this
   override def editorId : String = "scala.tools.eclipse.Editor"
 
+  override def start(context : BundleContext) = {
+    super.start(context)
+    
+    ScalaCompilationUnitManager.initCompilationUnits(ResourcesPlugin.getWorkspace)
+  }
+  
+  override def stop(context : BundleContext) = {
+    super.stop(context)
+  }
+  
+  override def resourceChanged(event : IResourceChangeEvent) {
+    if(event.getType == IResourceChangeEvent.POST_CHANGE) {
+      event.getDelta.accept(new IResourceDeltaVisitor {
+        def visit(delta : IResourceDelta) : Boolean = {
+          delta.getKind match {
+            case IResourceDelta.ADDED => {
+              // println("Resource added: "+delta.getFullPath)
+              delta.getResource match {
+                case f : IFile => {
+                  if (ScalaCompilationUnitManager.creatingCUisAllowedFor(f)) {
+                    // println("Creating CU for: "+f.getName)
+                    ScalaCompilationUnitManager.getScalaCompilationUnit(f)
+                    JDTUtils.refreshPackageExplorer
+                  }
+                  else
+                    println("Not creating CU for: "+f.getName)
+                }
+                case _ =>
+              }
+            }
+            case IResourceDelta.REMOVED => {
+              // println("Resource removed: "+delta.getFullPath)
+              delta.getResource match {
+                case f : IFile => {
+                  // println("Removing CU for: "+f.getName)
+                  ScalaCompilationUnitManager.removeFileFromModel(f)
+                  JDTUtils.refreshPackageExplorer
+                }
+                case _ =>
+              }
+            }
+            case _ =>
+          }
+          true
+        }
+      })
+    }
+
+    super.resourceChanged(event)
+  }
+  
+  class DocumentProvider extends CompilationUnitDocumentProvider {
+    override def createCompilationUnit(file : IFile) = {
+      ScalaCompilationUnitManager.getScalaCompilationUnit(file)
+    }
+  }
+  
   type Project <: ProjectImpl
   trait ProjectImplA extends super[UIPlugin].ProjectImpl
   trait ProjectImplB extends super[ScalaPlugin].ProjectImpl
@@ -33,18 +94,19 @@ trait ScalaUIPlugin extends {
     type File <: FileImpl
     trait FileImpl extends super[ProjectImplA].FileImpl with super[ProjectImplB].FileImpl {selfX:File=>
       def self : File
+      var outlineTrees : List[compiler.Tree] = List(unloadedBody) 
       override def doLoad0(page : IWorkbenchPage) = underlying match {
       case ClassFileSpec(source,clazz) => page.openEditor(new ClassFileInput(project,source,clazz), editorId)
       case _ => super.doLoad0(page)
       }
-      // Miles: edit this code to re-synch the outline during editing. 
       override def parseChanged(node : ParseNode) = {
         super.parseChanged(node)
         Console.println("PARSE_CHANGED: " + node)
+        outlineTrees = rootParse.lastTyped
       }
-      // Miles: edit this code to manage the transition to editing
       override  def prepareForEditing = {
         super.prepareForEditing
+        outlineTrees = rootParse.lastTyped
       }
     }
     override def imageFor(style : Style) : Option[Image] = {
@@ -121,4 +183,3 @@ trait ScalaUIPlugin extends {
     }
   }
 }
-
