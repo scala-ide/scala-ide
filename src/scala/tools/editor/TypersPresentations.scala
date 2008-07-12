@@ -363,7 +363,12 @@ trait TypersPresentations extends scala.tools.editor.Presentations {
           
         // so we keep a map of all symbols.
         def asSymbol(owner : parses.Range) : Option[Symbol] = if (owner.isEmpty) {
-          if (!sourceMap.contains(nscFile)) loadSource(nscFile)
+          //var keySet = sourceMap.keySet.toList
+          val nscFile0 = nscFile
+          if (!sourceMap.contains(nscFile0)) {
+            assert(true)
+            loadSource(nscFile0)
+          }
           sourceMap(nscFile)._2.get(offset)
         } else {
           import scala.tools.nsc.ast.parser.Tokens._
@@ -590,7 +595,7 @@ trait TypersPresentations extends scala.tools.editor.Presentations {
       else None
     } catch {
       case ex => 
-        Console.println("DOC_ERROR: " + ex)
+        logError("DOC_ERROR", ex)
         None
     }
     private[TypersPresentations] def documentation(sym : compiler.Symbol) : Option[RandomAccessSeq[Char]] =  {

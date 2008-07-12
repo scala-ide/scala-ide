@@ -21,9 +21,6 @@ trait BuildProgressMonitor {
 }
 
 class BuildCompiler(val project : CompilerProject) extends Global(new Settings) with Compiler {
-  //def plugin : ScalaPlugin
-  
-  //private[eclipse] val javaDepends = new LinkedHashSet[JavaProject]
   override lazy val loaders : symtab.SymbolLoaders { val global : BuildCompiler.this.type } = new symtab.SymbolLoaders {
     lazy val global : BuildCompiler.this.type = BuildCompiler.this
     override def computeDepends(loader : PackageLoader) = BuildCompiler.this.computeDepends(loader.asInstanceOf[loaders.PackageLoader])
@@ -46,7 +43,6 @@ class BuildCompiler(val project : CompilerProject) extends Global(new Settings) 
       ret
     }
   } 
-  
   // use workspace specified encoding for each file. 
   override def getSourceFile(f: AbstractFile): SourceFile = {
     // new BatchSourceFile(f, reader.read(f))
@@ -54,17 +50,8 @@ class BuildCompiler(val project : CompilerProject) extends Global(new Settings) 
     case f : PlainFile => f
     case f => return super.getSourceFile(f)
     }
-    //assert(g.file.getAbsolutePath.startsWith(project.workspacePath))
-    //val file = g.file.getAbsolutePath.substring(project.workspacePath.length)
-    
-    //val root = ResourcesPlugin.getWorkspace.getRoot
-    //val path = Path.fromOSString(g.file.getAbsolutePath)
-    //val file = root.getFile(path)
-    //val file0 = project.underlying.getFile(file.getProjectRelativePath)
     val charSet = project.charSet(g) // .getCharset
-    //Console.println("ENCODING0: " + file0 + " " + file0.getProject + " " + charSet + " " + file0.getProject.getDefaultCharset + " " + file0.getCharset(false))
     val reader = readers(charSet)
-    //val reader = readers(file.getCharset)
     new BatchSourceFile(f, reader.read(f))
   }
 
@@ -81,15 +68,12 @@ class BuildCompiler(val project : CompilerProject) extends Global(new Settings) 
       severity.count += 1
       file
       project.buildError(file, severity.id, msg, offset, source.identifier(pos, BuildCompiler.this).getOrElse(" ").length)
-      
-/*      project.nscToLampion(file).buildError(severity match {
-      case ERROR   => SEVERITY_ERROR
-      case WARNING => SEVERITY_WARNING
-      case INFO    => SEVERITY_INFO
-      }, msg, offset, source.identifier(pos, BuildCompiler.this).getOrElse(" ").length)(null) */
     case _ => 
       severity.count += 1
-      System.err.println("XXX " + pos + " " + msg)  
+      pos match {
+        case _ =>
+          project.buildError(severity.id, msg)
+      }
       //assert(false)
     }
   }
@@ -125,6 +109,7 @@ class BuildCompiler(val project : CompilerProject) extends Global(new Settings) 
     //val plugin = this.plugin
     val filenames = toBuild.map(_.file.getAbsolutePath).toList
     reporter.reset
+    project.clearBuildErrors()
     try {
       run.compile(filenames)
     } finally {
@@ -144,7 +129,6 @@ class BuildCompiler(val project : CompilerProject) extends Global(new Settings) 
         val ppath = file.file.getParentFile.getAbsolutePath
         if (project.scalaDepends.contains(ppath)) {
           val depends = project.scalaDepends(ppath)
-
           def f(tree : Tree) : Unit = tree match {
           case PackageDef(_,body) => body.foreach(f)
           case tree@ ClassDef(_,_,_,_) if tree.symbol != NoSymbol => g(tree.symbol)

@@ -188,8 +188,15 @@ trait ScalaPlugin extends ScalaPluginSuperA with scala.tools.editor.Driver {
           case 0 => SEVERITY_INFO
         }
       }, msg, offset, identifier)(null)
-    override def clearBuildErrors(file : AbstractFile) : Unit  = 
+    
+    override def buildError(severity0 : Int, msg : String) = buildError0(severity0, msg)(null)
+    
+    override def clearBuildErrors(file : AbstractFile) : Unit  = {
       nscToLampion(file.asInstanceOf[PlainFile]).clearBuildErrors(null)
+      clearBuildErrors(null:IProgressMonitor)
+    }
+    override def clearBuildErrors() = clearBuildErrors(null:IProgressMonitor)
+    
     override def hasBuildErrors(file : PlainFile) : Boolean = 
       nscToLampion(file).hasBuildErrors
 

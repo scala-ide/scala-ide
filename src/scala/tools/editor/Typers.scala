@@ -19,10 +19,9 @@ trait Typers extends Parsers with lampion.compiler.Typers {
     case pos : IdentifierPositionImpl if pos.isValid && pos.owner != null => 
       pos.owner.typeError(pos, msg, severity == WARNING)
     case pos => 
-      assert(true)
-      Console.println("ERROR " + msg + " @ " + pos)
+      logError("error with bad pos(" + pos + "): " + msg, null)
     }
-  
+   
   }
   override val compiler : Compiler
   trait Compiler extends scala.tools.nsc.IdeSupport with super.Compiler {self : compiler.type =>

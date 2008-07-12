@@ -30,7 +30,9 @@ trait CompilerProject {
   def dependsOn(file : PlainFile, what : PlainFile) : Unit
   
   def buildError(file : PlainFile, severity0 : Int, msg : String, offset : Int, identifier : Int) : Unit
+  def buildError(severity0 : Int, msg : String) : Unit
   def clearBuildErrors(file : AbstractFile) : Unit  
+  def clearBuildErrors() : Unit  
   def hasBuildErrors(file : PlainFile) : Boolean
   
   class ScalaDependMap extends LinkedHashMap[String,LinkedHashSet[String]] {

@@ -101,7 +101,7 @@ trait ScalaUIPlugin extends {
       }
       override def parseChanged(node : ParseNode) = {
         super.parseChanged(node)
-        Console.println("PARSE_CHANGED: " + node)
+        //Console.println("PARSE_CHANGED: " + node)
         outlineTrees = rootParse.lastTyped
       }
       override  def prepareForEditing = {

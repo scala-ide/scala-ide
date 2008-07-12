@@ -17,7 +17,7 @@ import org.eclipse.ui.IActionDelegate;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ltk.core.refactoring.participants.RenameProcessor
 
-
+ 
 import scala.tools.eclipse.javaelements.ScalaCompilationUnit
 
 class RenameScalaFileAction extends IActionDelegate {

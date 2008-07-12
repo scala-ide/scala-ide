@@ -372,7 +372,7 @@ trait Presentations extends lampion.core.Plugin {
             }
             job.synchronized{
               if (state != LOCKED) {
-                Console.println("ERROR in background thread")
+                logError("ERROR in background thread",null)
               }
               state = previous
               job.notifyAll

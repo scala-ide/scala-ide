@@ -84,6 +84,29 @@ trait Plugin extends runtime.Plugin with IResourceChangeListener with lampion.co
         useFile.setDerived(true)
       }
     }
+    def buildError0(severity : Int, msg : String)(implicit monitor : IProgressMonitor) = if (problemMarkerId.isDefined) {
+      underlying.getWorkspace.run(new IWorkspaceRunnable {
+        def run(monitor : IProgressMonitor) = {
+          val mrk = underlying.createMarker(problemMarkerId.get)
+          import IMarker._
+          mrk.setAttribute(SEVERITY, severity)
+          val string = msg.map{
+            case '\n' => ' '
+            case '\r' => ' '
+            case c => c
+          }.mkString("","","")
+          mrk.setAttribute(MESSAGE , msg)
+        }
+      }, monitor)
+    }
+    def clearBuildErrors(implicit monitor : IProgressMonitor) = if (problemMarkerId.isDefined) {
+      underlying.getWorkspace.run(new IWorkspaceRunnable {
+        def run(monitor : IProgressMonitor) = {
+          underlying.deleteMarkers(problemMarkerId.get, true, IResource.DEPTH_ZERO)
+        }
+      }, monitor)
+    }
+    
     protected def File(underlying : FileSpec) : File
     type Path = IPath
     type File <: FileImpl

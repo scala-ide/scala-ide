@@ -6,7 +6,7 @@
 
 package scala.tools.editor
 import scala.tools.nsc.util
- 
+
 trait Parsers extends Matchers with ParseNodes {
   trait Compiler extends super.Compiler with scala.tools.nsc.ast.parser.Parsers{self : compiler.type =>
   }
