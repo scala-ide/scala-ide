@@ -19,7 +19,7 @@ trait Typers extends Parsers with lampion.compiler.Typers {
     case pos : IdentifierPositionImpl if pos.isValid && pos.owner != null => 
       pos.owner.typeError(pos, msg, severity == WARNING)
     case pos => 
-      logError("error with bad pos(" + pos + "): " + msg, null)
+      Console.println("error with bad pos(" + pos + "): " + msg)
     }
    
   }
