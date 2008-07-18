@@ -112,6 +112,10 @@ class BuildCompiler(val project : CompilerProject) extends Global(new Settings) 
     project.clearBuildErrors()
     try {
       run.compile(filenames)
+    } catch  {
+      case e =>
+        project.logError("Build compiler (scalac) crashed", e)
+        return Nil
     } finally {
       ()
     }
