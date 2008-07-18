@@ -8,7 +8,7 @@ package scala.tools.eclipse;
 
 import org.eclipse.core.resources.{ IFile, IResource, IResourceChangeEvent, IResourceDelta, IResourceDeltaVisitor, ResourcesPlugin }
 import org.eclipse.jdt.core.{ IClassFile, IJavaElement }
-import org.eclipse.jdt.internal.ui.javaeditor.CompilationUnitDocumentProvider
+import org.eclipse.jdt.internal.ui.javaeditor.{CompilationUnitDocumentProvider,ClassFileDocumentProvider}
 import org.eclipse.jdt.ui.JavaUI
 import org.eclipse.jface.text.IDocument
 import org.eclipse.ui.{ IWorkbenchPage, IEditorInput }
@@ -85,6 +85,9 @@ trait ScalaUIPlugin extends {
       ScalaCompilationUnitManager.getScalaCompilationUnit(file)
     }
   }
+  class ScalaClassFileDocumentProvider extends ClassFileDocumentProvider {
+    
+  }
   
   type Project <: ProjectImpl
   trait ProjectImplA extends super[UIPlugin].ProjectImpl
@@ -96,7 +99,7 @@ trait ScalaUIPlugin extends {
       def self : File
       var outlineTrees : List[compiler.Tree] = List(unloadedBody) 
       override def doLoad0(page : IWorkbenchPage) = underlying match {
-      case ClassFileSpec(source,clazz) => page.openEditor(new ClassFileInput(project,source,clazz), editorId)
+      case ClassFileSpec(source,clazz) => page.openEditor(new ClassFileInput(project,source,clazz), editorId) 
       case _ => super.doLoad0(page)
       }
       override def parseChanged(node : ParseNode) = {
@@ -154,11 +157,13 @@ trait ScalaUIPlugin extends {
   }
   import org.eclipse.jdt.internal.ui.javaeditor._
   import org.eclipse.jdt.internal.ui._
-  class ClassFileInput(val project : Project, val source : AbstractFile, val classFile : IClassFile) extends InternalClassFileEditorInput(classFile) with FixedInput {
+    import org.eclipse.ui.editors.text._
+  class ClassFileInput(val project : Project, val source : AbstractFile, val classFile : IClassFile) extends InternalClassFileEditorInput(classFile) with FixedInput  {
     assert(source != null)
     override def getAdapter(clazz : java.lang.Class[_]) = clazz match {
-    case clazz if clazz == classOf[AbstractFile] => source
-    case _ => super.getAdapter(clazz)  
+      case clazz if clazz == classOf[AbstractFile] => source
+      //case clazz if clazz == classOf[ILocationProvider] => this : ILocationProviderExtension
+      case _ => super.getAdapter(clazz)  
     }
     override def initialize(doc : IDocument) : Unit = {
       if (doc == null || source == null) {
@@ -171,15 +176,15 @@ trait ScalaUIPlugin extends {
     override def neutralFile = (project.classFile(source,classFile))
     override def createAnnotationModel = {
       (classFile.getAdapter(classOf[IResourceLocator]) match {
-      case null => null
-      case locator : IResourceLocator =>  locator.getContainingResource(classFile)
+        case null => null
+        case locator : IResourceLocator =>  locator.getContainingResource(classFile)
       }) match {
-      case null => super.createAnnotationModel
-      case resource =>
-        val model = new ClassFileMarkerAnnotationModel(resource)
-        model.setClassFile(classFile)
-        model
-      }
+        case null => super.createAnnotationModel
+        case resource =>
+          val model = new ClassFileMarkerAnnotationModel(resource)
+          model.setClassFile(classFile)
+          model
+      }	
     }
   }
 }

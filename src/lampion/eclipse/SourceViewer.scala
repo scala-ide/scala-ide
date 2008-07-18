@@ -26,7 +26,7 @@ import org.eclipse.swt.widgets.{Composite,Shell};
 import org.eclipse.ui.{IFileEditorInput};
 import org.eclipse.ui.texteditor.{ContentAssistAction,SourceViewerDecorationSupport,ITextEditor, ITextEditorActionDefinitionIds};
 import org.eclipse.ui.editors.text.{ TextEditor, TextSourceViewerConfiguration };
-
+ 
 abstract class SourceViewer(parent : Composite, vertical : IVerticalRuler, overview : IOverviewRuler, x : Boolean, y : Int) extends 
   ProjectionViewer(parent,vertical,overview,x,y) with IAnnotationModelListener with FocusListener with ITextInputListener {
   val plugin : UIPlugin
@@ -160,7 +160,7 @@ abstract class SourceViewer(parent : Composite, vertical : IVerticalRuler, overv
   }
   override def inputDocumentChanged(oldInput : IDocument, newInput : IDocument) = {
     if (newInput != null && oldInput != newInput) {
-      load
+      load 
     }
   }
   def editor : Option[Editor] = None

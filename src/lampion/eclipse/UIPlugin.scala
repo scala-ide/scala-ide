@@ -55,7 +55,7 @@ trait UIPlugin extends org.eclipse.ui.plugin.AbstractUIPlugin with Plugin with l
     def getHyperlinkRegion = new Region(offset, length)
   }
   private[eclipse] val viewers = new LinkedHashMap[ProjectImpl#FileImpl,lampion.eclipse.SourceViewer]
-
+ 
   type Project <: ProjectImpl
   trait ProjectA extends super[Plugin].ProjectImpl
   trait ProjectB extends super[Matchers].ProjectImpl
@@ -127,7 +127,10 @@ trait UIPlugin extends org.eclipse.ui.plugin.AbstractUIPlugin with Plugin with l
       file.tokenForFuzzy(offset).hyperlink
     override def openAndSelect(file : File, select : => (Int,Int)) : Unit = {
       file.doLoad
-      assert(file.isLoaded)
+      if (!file.isLoaded) {
+        logError("cannot load " + file, null)
+        return
+      }
       //val tok = file.tokenFor(offset)
       val editor = file.editor.get
       val site = editor.getSite
@@ -266,7 +269,13 @@ trait UIPlugin extends org.eclipse.ui.plugin.AbstractUIPlugin with Plugin with l
         if (!isLoaded) {
           val wb = PlatformUI.getWorkbench
           val page = wb.getActiveWorkbenchWindow.getActivePage
-          doLoad0(page)
+          val editor = doLoad0(page).asInstanceOf[Editor]
+          if (!isLoaded) {
+            if (!isLoaded) {
+              logError("can't load: " + this,null)
+              return
+            }
+          }
           assert(isLoaded)
         }
         super.doLoad
