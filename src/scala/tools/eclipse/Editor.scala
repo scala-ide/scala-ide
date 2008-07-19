@@ -6,6 +6,8 @@
 
 package scala.tools.eclipse
 
+import org.eclipse.jdt.internal.ui.javaeditor.ClassFileDocumentProvider
+
 class Editor extends { val plugin = Driver.driver } with lampion.eclipse.Editor {
   
   import org.eclipse.ui._
@@ -14,7 +16,7 @@ class Editor extends { val plugin = Driver.driver } with lampion.eclipse.Editor 
     input match {
       case null =>
       case input : plugin.ClassFileInput =>
-        setDocumentProvider(new plugin.ScalaClassFileDocumentProvider)
+        setDocumentProvider(new ClassFileDocumentProvider)
       case _ =>
         setDocumentProvider(new plugin.DocumentProvider)
     }

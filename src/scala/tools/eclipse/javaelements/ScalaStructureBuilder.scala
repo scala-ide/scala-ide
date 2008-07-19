@@ -67,6 +67,7 @@ trait ScalaStructureBuilder extends ScalaJavaMapper { self : ScalaCompilationUni
           val parent = self
           val element = pkgElem
           val elementInfo = pkgElemInfo
+          
           override def isPackage = true
         }
       }
@@ -75,22 +76,67 @@ trait ScalaStructureBuilder extends ScalaJavaMapper { self : ScalaCompilationUni
     trait ClassOwner extends Owner { self =>
       override def addClass(c : ClassDef) : Owner = {
         println("Class defn: "+c.name+" ["+this+"]")
+        println("Parents: "+c.impl.parents)
         
         val owner = if (isPackage) compilationUnitBuilder else this
+        val name0 = c.name.toString
+        val isAnon = name0 == "$anon"
+        val name = if (isAnon) "" else name0
+        
+        val parentTree = c.impl.parents.first
+        val superclassType = parentTree.tpe
+        val (superclassName, primaryType, interfaceTrees) =
+          if (superclassType == null)
+            (null, null, c.impl.parents)
+          else if (superclassType.typeSymbol.isTrait)
+            (null, superclassType.typeSymbol, c.impl.parents)
+          else {
+            val interfaceTrees0 = c.impl.parents.drop(1) 
+            val superclassName0 = superclassType.typeSymbol.fullNameString
+            if (superclassName0 == "java.lang.Object") {
+              if (interfaceTrees0.isEmpty)
+                ("java.lang.Object".toCharArray, null, interfaceTrees0)
+              else
+                (null, interfaceTrees0.first.tpe.typeSymbol, interfaceTrees0)
+            }
+            else
+              (superclassName0.toCharArray, superclassType.typeSymbol, interfaceTrees0)   
+          }
+
         val classElem =
           if(c.mods.isTrait)
-            new ScalaTraitElement(owner.element, c.name.toString)
+            new ScalaTraitElement(owner.element, name)
+          else if (isAnon) {
+            val primaryTypeString = if (primaryType != null) primaryType.name.toString else null
+            new ScalaAnonymousClassElement(owner.element, primaryTypeString)
+          }
           else
-            new ScalaClassElement(owner.element, c.name.toString)
+            new ScalaClassElement(owner.element, name)
         
         resolveDuplicates(classElem)
         owner.addChild(classElem)
         
         val classElemInfo = new ScalaElementInfo
         classElemInfo.setHandle(classElem)
-        classElemInfo.setFlags0(mapModifiers(c.mods))
-        val start = c.symbol.pos.offset.getOrElse(0)
-        val end = start + c.name.length - 1
+        val mask = ~(if (isAnon) ClassFileConstants.AccPublic else 0)
+        classElemInfo.setFlags0(mapModifiers(c.mods) & mask)
+        
+        classElemInfo.setSuperclassName(superclassName)
+        
+        val interfaceTypes = interfaceTrees.map(t => (t, t.tpe))
+        val interfaceNames = interfaceTypes.map({ case (tree, tpe) => (if (tpe ne null) tpe.typeSymbol.fullNameString else "null-"+tree).toCharArray })
+        classElemInfo.setSuperInterfaceNames(interfaceNames.toArray)
+        
+        val (start, end) = if (!isAnon) {
+          val start0 = c.symbol.pos.offset.getOrElse(0) 
+          (start0, start0 + name.length - 1)
+        } else if (primaryType != null) {
+          val start0 = parentTree.pos.offset.getOrElse(0)
+          (start0, start0 + primaryType.name.length - 1)
+        } else {
+          val start0 = parentTree.pos.offset.getOrElse(0)
+          (start0, start0 - 1)
+        }
         classElemInfo.setNameSourceStart0(start)
         classElemInfo.setNameSourceEnd0(end)
         newElements0.put(classElem, classElemInfo)
@@ -99,6 +145,7 @@ trait ScalaStructureBuilder extends ScalaJavaMapper { self : ScalaCompilationUni
           val parent = self
           val element = classElem
           val elementInfo = classElemInfo
+          
           override def isTemplate = true
           override def template = this
         }
@@ -110,7 +157,7 @@ trait ScalaStructureBuilder extends ScalaJavaMapper { self : ScalaCompilationUni
         println("Module defn: "+m.name+" ["+this+"]")
         
         val owner = if (isPackage) compilationUnitBuilder else this
-        val moduleElem = new ScalaModuleElement(owner.element, m.name.toString)
+        val moduleElem = new ScalaModuleElement(owner.element, m.name.toString, m.symbol.hasFlag(Flags.SYNTHETIC))
         resolveDuplicates(moduleElem)
         owner.addChild(moduleElem)
         
@@ -123,10 +170,21 @@ trait ScalaStructureBuilder extends ScalaJavaMapper { self : ScalaCompilationUni
         moduleElemInfo.setNameSourceEnd0(end)
         newElements0.put(moduleElem, moduleElemInfo)
         
+        val parentTree = m.impl.parents.first
+        val superclassType = parentTree.tpe
+        val superclassName = (if (superclassType ne null) superclassType.typeSymbol.fullNameString else "null-"+parentTree).toCharArray
+        moduleElemInfo.setSuperclassName(superclassName)
+        
+        val interfaceTrees = m.impl.parents.drop(1)
+        val interfaceTypes = interfaceTrees.map(t => (t, t.tpe))
+        val interfaceNames = interfaceTypes.map({ case (tree, tpe) => (if (tpe ne null) tpe.typeSymbol.fullNameString else "null-"+tree).toCharArray })
+        moduleElemInfo.setSuperInterfaceNames(interfaceNames.toArray)
+        
         val mb = new Builder {
           val parent = self
           val element = moduleElem
           val elementInfo = moduleElemInfo
+          
           override def isTemplate = true
           override def template = this
         }
@@ -137,6 +195,7 @@ trait ScalaStructureBuilder extends ScalaJavaMapper { self : ScalaCompilationUni
         
         val instanceElemInfo = new ScalaSourceFieldElementInfo
         instanceElemInfo.setFlags0(ClassFileConstants.AccPrivate | ClassFileConstants.AccStatic | ClassFileConstants.AccFinal)
+        instanceElemInfo.setTypeName(moduleElem.getFullyQualifiedName('.').toCharArray)
         newElements0.put(instanceElem, instanceElemInfo)
         
         mb
@@ -165,7 +224,6 @@ trait ScalaStructureBuilder extends ScalaJavaMapper { self : ScalaCompilationUni
         valElemInfo.setNameSourceEnd0(end)
         newElements0.put(valElem, valElemInfo)
 
-        
         val tn = manager.intern(mapType(v.tpt).toArray)
         valElemInfo.setTypeName(tn)
         
@@ -173,7 +231,9 @@ trait ScalaStructureBuilder extends ScalaJavaMapper { self : ScalaCompilationUni
           val parent = self
           val element = valElem
           val elementInfo = valElemInfo
-        } 
+          
+          override def addDef(d : DefDef) = this
+        }
       }
     }
     
@@ -230,7 +290,7 @@ trait ScalaStructureBuilder extends ScalaJavaMapper { self : ScalaCompilationUni
           if(d.mods.isAccessor)
             new ScalaAccessorElement(element, nm.toString, paramTypes)
           else if(isTemplate)
-            new ScalaDefElement(element, nm.toString, paramTypes)
+            new ScalaDefElement(element, nm.toString, paramTypes, d.symbol.hasFlag(Flags.SYNTHETIC))
           else
             new ScalaFunctionElement(template.element, element, nm.toString, paramTypes)
         resolveDuplicates(defElem)
@@ -242,15 +302,15 @@ trait ScalaStructureBuilder extends ScalaJavaMapper { self : ScalaCompilationUni
           else
             new ScalaSourceMethodInfo
         
-        if(d.symbol.isGetter) {
-          for (child <- JavaElementInfoUtils.getChildren(elementInfo)) {
-            child match {
-              case f : ScalaFieldElement if f.getElementName == d.name.toString => {
-                val fInfo = f.getElementInfo.asInstanceOf[ScalaSourceFieldElementInfo]
-                fInfo.setFlags0(mapModifiers(d.mods))
-              }
-              case c => println("Skipping: >"+c.getElementName+"< != >"+d.name.toString+"<")
+        if(d.symbol.isGetter || d.symbol.isSetter) {
+          JavaElementInfoUtils.getChildren(elementInfo).
+            dropWhile(x => !x.isInstanceOf[ScalaFieldElement] || x.getElementName != d.name.toString).
+            firstOption match {
+            case Some(f : ScalaFieldElement) => {
+              val fInfo = f.getElementInfo.asInstanceOf[ScalaSourceFieldElementInfo]
+              fInfo.setFlags0(mapModifiers(d.mods))
             }
+            case _ =>
           }
         }
         
@@ -267,7 +327,7 @@ trait ScalaStructureBuilder extends ScalaJavaMapper { self : ScalaCompilationUni
 
         defElemInfo.setFlags0(mods)
         val start = d.symbol.pos.offset.getOrElse(0)
-        val end = start + d.name.length - 1
+        val end = start + defElem.labelName.length - 1
         defElemInfo.setNameSourceStart0(start)
         defElemInfo.setNameSourceEnd0(end)
         
@@ -277,7 +337,9 @@ trait ScalaStructureBuilder extends ScalaJavaMapper { self : ScalaCompilationUni
           val parent = self
           val element = defElem
           val elementInfo = defElemInfo
+
           override def isCtor = isCtor0
+          override def addVal(v : ValDef) = this
         }
       }
     }

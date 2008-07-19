@@ -12,9 +12,9 @@ trait ScalaJavaMapper {
   val proj : plugin.Project
   val compiler : proj.compiler0.type
   
-  import compiler.{ Ident, Tree, TypeTree }
+  import compiler.{ Ident, Modifiers, Tree, TypeTree }
   
-  def mapModifiers(mods : compiler.Modifiers) : Int = {
+  def mapModifiers(mods : Modifiers) : Int = {
     var jdtMods = 0
     if(mods.isPrivate)
       jdtMods = jdtMods | ClassFileConstants.AccPrivate
@@ -35,7 +35,7 @@ trait ScalaJavaMapper {
   def mapType(t : Tree) : String = {
     (t match {
       case tt : TypeTree => {
-        if(tt.symbol == null || tt.symbol.name.toString == compiler.nme.REFINE_CLASS_NAME.toString)
+        if(tt.symbol == null || tt.symbol == compiler.NoSymbol || tt.symbol.isRefinementClass || tt.symbol.owner.isRefinementClass)
           "scala.AnyRef"
         else
           tt.symbol.fullNameString

@@ -16,12 +16,13 @@ import org.eclipse.jdt.core.{ ICompilationUnit, IProblemRequestor, JavaCore, Wor
 import org.eclipse.jdt.internal.core.{
   BecomeWorkingCopyOperation, CompilationUnit, CompilationUnitElementInfo, DefaultWorkingCopyOwner,
   JavaModelManager, JavaModelStatus, OpenableElementInfo, PackageFragment }
+import org.eclipse.swt.graphics.Image
 import org.eclipse.swt.widgets.Display
 
 class ScalaCompilationUnitInfo extends CompilationUnitElementInfo
 
 class ScalaCompilationUnit(fragment : PackageFragment, elementName: String, workingCopyOwner : WorkingCopyOwner)
-  extends CompilationUnit(fragment, elementName, workingCopyOwner) with ScalaStructureBuilder {
+  extends CompilationUnit(fragment, elementName, workingCopyOwner) with ScalaElement with ImageSubstituter with ScalaStructureBuilder {
 
   val plugin = ScalaPlugin.plugin
   val proj = plugin.projectSafe(getResource.getProject).get
@@ -39,16 +40,12 @@ class ScalaCompilationUnit(fragment : PackageFragment, elementName: String, work
   }
   
   override def buildStructure(info : OpenableElementInfo, pm : IProgressMonitor, newElements : Map[_, _], underlyingResource : IResource) : Boolean = {
-    val fileOpt = proj.fileSafe(getResource.asInstanceOf[IFile])
+    val fileOpt = proj.fileSafe(getCorrespondingResource.asInstanceOf[IFile])
     if (fileOpt.isEmpty)  
       return false
-    val file = proj.fileSafe(getResource.asInstanceOf[IFile]).get
+    val file = fileOpt.get
     val root = file.outlineTrees
  
-    import compiler.{ ClassDef, DefDef, Function, Ident, ModuleDef, PackageDef, StubTree, Template, Traverser, Tree, TypeDef, TypeTree, ValDef }
- 
-    val newElements0 = newElements.asInstanceOf[Map[Any, Any]]
-    
     if (!isWorkingCopy) {
       val status = validateCompilationUnit(underlyingResource)
       if (!status.isOK) throw newJavaModelException(status)
@@ -121,7 +118,7 @@ class ScalaCompilationUnit(fragment : PackageFragment, elementName: String, work
     val deletionClass = "org.eclipse.jdt.internal.corext.refactoring.changes.DeleteSourceManipulationChange"
     // are we being called in the context of a delete operation?
     if (callerName == deletionClass) {
-      val file = getResource.asInstanceOf[IFile]
+      val file = getCorrespondingResource.asInstanceOf[IFile]
       ScalaCompilationUnitManager.removeFileFromModel(file)
       
       // Create the substitute compilation unit without tripping name validation checks 
@@ -136,5 +133,17 @@ class ScalaCompilationUnit(fragment : PackageFragment, elementName: String, work
     }
     
     super.getHandleIdentifier
+  }
+  
+  override def mapLabelImage(original : Image) = super.mapLabelImage(original)
+  override def replacementImage = {
+    val file = getCorrespondingResource.asInstanceOf[IFile]
+    if(file == null)
+      null
+    else {
+      import ScalaImages.{ SCALA_FILE, EXCLUDED_SCALA_FILE }
+      val project = JavaCore.create(file.getProject)
+      if(project.isOnClasspath(file)) SCALA_FILE else EXCLUDED_SCALA_FILE
+    }
   }
 }

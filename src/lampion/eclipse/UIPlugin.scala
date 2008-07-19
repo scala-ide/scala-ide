@@ -26,7 +26,6 @@ import org.eclipse.swt.graphics
 import org.eclipse.swt.widgets.Display
 import org.eclipse.swt.custom.StyleRange
 import org.eclipse.ui.{ IEditorInput, IEditorReference, IFileEditorInput, IPathEditorInput, IPersistableElement, IWorkbenchPage, PlatformUI }
-import org.eclipse.ui.editors.text.FileDocumentProvider
 import org.eclipse.ui.ide.IDE
 
 import lampion.presentation.{Presentations}

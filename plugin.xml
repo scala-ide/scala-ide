@@ -623,10 +623,10 @@
       id="scala.tools.eclipse.javaelements.ScalaCompilationUnitFilter"/>
     <filter
       id="scala.tools.eclipse.javaelements.ScalaElementFilter"
-      name="Scala primary constructor filter"
-      description="Prevents Scala primary constructors from appearing in the Package Explorer"
+      name="Scala element filter"
+      description="Prevents Scala elements which are artefacts of the Scala to Java encoding from appearing in the Package Explorer"
       class="scala.tools.eclipse.javaelements.ScalaElementFilter"
-      enabled="false"/>      
+      enabled="true"/>      
   </extension>
 
   <extension point="org.eclipse.ui.decorators">
