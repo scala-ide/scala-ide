@@ -38,6 +38,12 @@
             category="ch.epfl.lamp.sdt.core.preferences"
             name="Scala Editor Preferences"
             id="ch.epfl.lamp.sdt.core.preferences.EditorPreferences"/>
+      <page
+            category="ch.epfl.lamp.sdt.core.preferences"
+            class="scala.tools.eclipse.properties.CompilerSettings"
+            id="ch.epfl.lamp.sdt.core.preferences.CompilerPreferences"
+            name="Scala Compiler Preferences">
+      </page>
    </extension>
    
    <extension
@@ -767,5 +773,12 @@
       </enablement>
     </consolePageParticipant>
   </extension>
-  
+  <extension
+        id="ch.epfl.lamp.sdt.core.preferences"
+        point="org.eclipse.core.runtime.preferences">
+     <initializer
+           class="scala.tools.eclipse.properties.ScalaCompilerPreferenceInitializer">
+     </initializer>
+  </extension>
+
 </plugin>

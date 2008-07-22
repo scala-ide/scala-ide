@@ -251,13 +251,29 @@ trait ScalaPlugin extends ScalaPluginSuperA with scala.tools.editor.Driver {
       }
       settings.deprecation.value = true
       settings.unchecked.value = true
-      settings.allSettings.elements.filter(!_.hiddenToIDE).map{
-      case setting => 
-        (setting,underlying.getPersistentProperty(new QualifiedName(pluginId, setting.name.substring(1))))      
-      }.filter(_._2 != null).foreach{
-      case (setting,value) => 
-        assert(true)  
-        setting.tryToSet(setting.name :: value :: Nil)
+      //First check whether to use preferences or properties
+      import SettingConverterUtil._
+      
+      val useProjectSettings = underlying.getPersistentProperty(new QualifiedName(pluginId, USE_PROJECT_SETTINGS_PREFERNECE))
+      if(useProjectSettings != null && useProjectSettings.equalsIgnoreCase("true")) {
+	      settings.allSettings.elements.filter(!_.hiddenToIDE).map{
+		      case setting => 
+		        (setting,underlying.getPersistentProperty(new QualifiedName(pluginId, convertNameToProperty(setting.name))))      
+		      }.filter(_._2 != null).foreach{
+		      case (setting,value) => 
+		        assert(true)  
+		        setting.tryToSet(setting.name :: value :: Nil)
+	      }
+      } else {
+        settings.allSettings.elements.filter(!_.hiddenToIDE).map{
+		      case setting => 
+		        (setting,getPluginPreferences.getString(convertNameToProperty(setting.name)))      
+		      }.filter(_._2 != null).foreach{
+		      case (setting,value) => 
+		        assert(true)  
+		        setting.tryToSet(setting.name :: value :: Nil)
+        }
+        
       }
       global.settings = settings
       global.classPath.entries.clear
