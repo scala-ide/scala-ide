@@ -228,10 +228,26 @@ class CompilerSettings extends PropertyPage with ProjectSettings with WorkbenchP
   // Eclipse PropertyPage API
   override protected def performDefaults = for (setting <- ideSettings) setting.reset()
 
+  /** Check who needs to rebuild with new compiler flags */
+  private def buildIfNecessary() = {
+    import org.eclipse.core.resources.IncrementalProjectBuilder
+    getElement() match {
+      case project : IProject => 
+            //Make sure project is rebuilt
+		    project.build(IncrementalProjectBuilder.CLEAN_BUILD, null)
+      case javaProject : IJavaProject => 
+            //Make sure project is rebuilt
+		    javaProject.getProject().build(IncrementalProjectBuilder.CLEAN_BUILD, null)
+      case other => None // We're a Preference page!
+      //TODO - FIgure out who needs to rebuild
+    }
+  }
+  
   // Eclipse PropertyPage API
   override def performOk = try {
     for (setting <- ideSettings) setting.apply()
     save()
+    buildIfNecessary()    
     true
   } catch {
     case ex => ScalaPlugin.plugin.logError(ex); false
@@ -267,8 +283,8 @@ class CompilerSettings extends PropertyPage with ProjectSettings with WorkbenchP
   /** This widget should only be used on property pages. */
   class UseProjectSettingsWidget {
     // TODO - Does this belong here?  For now it's the only place we can really check...
-    if(!preferenceStore.contains(USE_PROJECT_SETTINGS_PREFERNECE)) {
-      preferenceStore.setDefault(USE_PROJECT_SETTINGS_PREFERNECE, false)
+    if(!preferenceStore.contains(USE_PROJECT_SETTINGS_PREFERENCE)) {
+      preferenceStore.setDefault(USE_PROJECT_SETTINGS_PREFERENCE, false)
     }
     
     var control : Button = _
@@ -278,7 +294,7 @@ class CompilerSettings extends PropertyPage with ProjectSettings with WorkbenchP
       gd
     }
     /** Pulls our current value from the preference store */
-    private def getValue = preferenceStore.getBoolean(USE_PROJECT_SETTINGS_PREFERNECE)
+    private def getValue = preferenceStore.getBoolean(USE_PROJECT_SETTINGS_PREFERENCE)
     /** Adds our widget to the Proeprty Page */
     def addTo(page : Composite) = {
       val container = new Composite(page, SWT.NONE)
@@ -302,6 +318,7 @@ class CompilerSettings extends PropertyPage with ProjectSettings with WorkbenchP
     def handleToggle = {
      val selected = control.getSelection
      ideSettings foreach { _.setEnabled(selected) }
+     
      updateApplyButton
      
     }
@@ -311,12 +328,12 @@ class CompilerSettings extends PropertyPage with ProjectSettings with WorkbenchP
     }
     
     def isUseEnabled : Boolean = {
-      return preferenceStore.getBoolean(USE_PROJECT_SETTINGS_PREFERNECE)
+      return preferenceStore.getBoolean(USE_PROJECT_SETTINGS_PREFERENCE)
     }
     
     /** Saves our value into the preference store*/
     def save() = {
-      preferenceStore.setValue(USE_PROJECT_SETTINGS_PREFERNECE, control.getSelection)
+      preferenceStore.setValue(USE_PROJECT_SETTINGS_PREFERENCE, control.getSelection)
     }
   }
   
@@ -361,6 +378,9 @@ class CompilerSettings extends PropertyPage with ProjectSettings with WorkbenchP
 
     def setEnabled(value:Boolean) : Unit = {
       control.setEnabled(value)
+      if(!value) {
+        reset
+      }
     }
     
     def isChanged : Boolean = {
@@ -395,6 +415,9 @@ class CompilerSettings extends PropertyPage with ProjectSettings with WorkbenchP
 
     def setEnabled(value:Boolean) : Unit = {
       control.setEnabled(value)
+      if(!value) {
+        reset
+      }
     }
     
     def createControl(page : Composite) {
@@ -429,7 +452,9 @@ class CompilerSettings extends PropertyPage with ProjectSettings with WorkbenchP
 
     def setEnabled(value:Boolean) : Unit = {
       control.setEnabled(value)
-      
+      if(!value) {
+        reset
+      }
     }
     
     def createControl(page : Composite) {

@@ -17,7 +17,6 @@ class ScalaCompilerPreferenceInitializer extends AbstractPreferenceInitializer {
   
     /** Actually initializes preferences */
 	def initializeDefaultPreferences() : Unit = {
-	  System.err.println("Initializing Compiler Preferences!")
 	  
       ScalaPlugin.plugin.check {
 	    val settings = new Settings(null)

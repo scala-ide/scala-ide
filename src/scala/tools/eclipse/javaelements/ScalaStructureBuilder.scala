@@ -422,7 +422,7 @@ trait ScalaStructureBuilder extends ScalaJavaMapper { self : ScalaCompilationUni
         traverseTrees(st.underlying.asInstanceOf[file.ParseNode].lastTyped)
       }
       case u =>
-        println("Unknown type: "+u.getClass.getSimpleName+" "+u)
+        //println("Unknown type: "+u.getClass.getSimpleName+" "+u)
         super.traverse(tree)
     }
 

@@ -16,9 +16,13 @@ import org.eclipse.core.resources._
 /**
  *A wrapper around a Preference store for properties. 
  */
-class PropertyStore( val resource: IResource, val workbenchStore : IPreferenceStore, val pageId : String) 
+class PropertyStore( val project : IProject, val workbenchStore : IPreferenceStore, val pageId : String) 
     extends PreferenceStore {
   
+      
+  lazy val projectNode : IEclipsePreferences = {
+    new ProjectScope(project).getNode(pageId)
+  }
   /** Returns the "default" value of a property (in this case, the workbench value) */
   override def getDefaultString(name : String ) = workbenchStore.getDefaultString(name);
   /**
@@ -61,7 +65,7 @@ class PropertyStore( val resource: IResource, val workbenchStore : IPreferenceSt
    */
   private def insertValue(name :String) : Unit = {
     /** Pulls the value of the property on the resource*/
-    def getProperty(name :String ) = resource.getPersistentProperty(new QualifiedName(pageId, name));
+    def getProperty(name :String ) = projectNode.get(name, null)
     
     this synchronized {
       if (inserting)
@@ -85,7 +89,7 @@ class PropertyStore( val resource: IResource, val workbenchStore : IPreferenceSt
   
   /** Checks to see if we should have a property */
   override def contains(name : String) : Boolean = { 
-    if(resource.getPersistentProperty(new QualifiedName(pageId,name)) == null) {
+    if(projectNode.get(name, null) == null) {
       return workbenchStore.contains(name); 
     } 
     true
@@ -112,7 +116,7 @@ class PropertyStore( val resource: IResource, val workbenchStore : IPreferenceSt
 	  
 	  //Helper method to actually set properties
 	  def setProperty(name : String, value : String) = {
-	    resource.setPersistentProperty(new QualifiedName(pageId, name), value);
+	    projectNode.put(name, value)
       }
 	  
 	  val preferences = super.preferenceNames();
@@ -123,6 +127,8 @@ class PropertyStore( val resource: IResource, val workbenchStore : IPreferenceSt
 	      case e : CoreException => throw new IOException("Cannot write resource property " + preference);
 	    }
 	  }
+   
+      projectNode.flush
 	}
 
 }

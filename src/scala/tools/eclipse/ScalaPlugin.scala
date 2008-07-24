@@ -236,7 +236,6 @@ trait ScalaPlugin extends ScalaPluginSuperA with scala.tools.editor.Driver {
     override def resetDependencies(file : PlainFile) = {
       nscToLampion(file).resetDependencies
     }
-  
     
     override def initialize(global : eclipse.Compiler) = {
       val settings = new Settings(null)
@@ -253,27 +252,24 @@ trait ScalaPlugin extends ScalaPluginSuperA with scala.tools.editor.Driver {
       settings.unchecked.value = true
       //First check whether to use preferences or properties
       import SettingConverterUtil._
+      import scala.tools.eclipse.properties.PropertyStore
+      //TODO - should we rely on ScalaUIPlugin?  Well.. we need these preferences...
+      val workspaceStore = ScalaUIPlugin.plugin.getPreferenceStore
+      val projectStore = new PropertyStore(underlying, workspaceStore, pluginId)
+      val useProjectSettings = projectStore.getBoolean(USE_PROJECT_SETTINGS_PREFERENCE)
       
-      val useProjectSettings = underlying.getPersistentProperty(new QualifiedName(pluginId, USE_PROJECT_SETTINGS_PREFERNECE))
-      if(useProjectSettings != null && useProjectSettings.equalsIgnoreCase("true")) {
-	      settings.allSettings.elements.filter(!_.hiddenToIDE).map{
-		      case setting => 
-		        (setting,underlying.getPersistentProperty(new QualifiedName(pluginId, convertNameToProperty(setting.name))))      
-		      }.filter(_._2 != null).foreach{
-		      case (setting,value) => 
-		        assert(true)  
-		        setting.tryToSet(setting.name :: value :: Nil)
-	      }
-      } else {
-        settings.allSettings.elements.filter(!_.hiddenToIDE).map{
-		      case setting => 
-		        (setting,getPluginPreferences.getString(convertNameToProperty(setting.name)))      
-		      }.filter(_._2 != null).foreach{
-		      case (setting,value) => 
-		        assert(true)  
-		        setting.tryToSet(setting.name :: value :: Nil)
-        }
-        
+      val store = if (useProjectSettings) projectStore else workspaceStore  
+      settings.allSettings.elements.filter(!_.hiddenToIDE).foreach {
+	      setting =>
+          val value = store.getString(convertNameToProperty(setting.name))
+          if (value != null) {
+            if (setting.isInstanceOf[settings.BooleanSetting]) {
+              if (value.equalsIgnoreCase("true"))
+                setting.tryToSet(setting.name :: Nil)
+            }
+            else
+              setting.tryToSet(setting.name :: value :: Nil)
+          }
       }
       global.settings = settings
       global.classPath.entries.clear
