@@ -47,9 +47,21 @@ trait Matchers extends AutoEdits {
           rebalance(edit.offset) match {
             case Some(CompleteBrace(kind, close)) => 
               val at = completeOpen(edit.offset - kind.open.length, kind) + 1
-              val length = 0; //if (isUnmatchedClose(at)) 1 else 0
-              return new Edit(edit.offset, length, edit.text + close) {
-                override def afterEdit = makeCompleted(edit.offset + 2)
+              if (close == "\"") {} 
+              else if (close == "}" && ({ // XXX: also doesn't belong here.
+                var i = edit.offset
+                while (i < content.length && isSpace(content(i))) i += 1
+                i != content.length && !isNewline(content(i))
+              })) {} else if (isNewline(edit.text(0)) && close == "}") { // XXX: doesn't belong here.
+                val id0 = indentOfThisLine(edit.offset)
+                val id1 = id0 + "  ";
+                return new Edit(edit.offset, 0, "\n" + id1.mkString + "\n" + id0.mkString + close) {
+                  override def afterEdit = makeCompleted(offset + 2 + id1.length + id0.length + close.length)
+                  override def moveCursorTo = edit.offset + id1.length + 1
+                }
+                
+              } else return new Edit(edit.offset, 0, edit.text + close) {
+                override def afterEdit = makeCompleted(offset + 1 + close.length)
               }
             case _ =>
           }
