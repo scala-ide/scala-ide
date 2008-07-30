@@ -48,7 +48,12 @@ class ScalaCompilationUnit(fragment : PackageFragment, elementName: String, work
       return false
     val file = fileOpt.get
     val root = file.outlineTrees
- 
+    val unitInfo = info.asInstanceOf[ScalaCompilationUnitInfo]
+    if (root.isEmpty) {
+      unitInfo.setIsStructureKnown(false)
+      return unitInfo.isStructureKnown
+    }
+    
     if (!isWorkingCopy) {
       val status = validateCompilationUnit(underlyingResource)
       if (!status.isOK) throw newJavaModelException(status)
@@ -59,13 +64,12 @@ class ScalaCompilationUnit(fragment : PackageFragment, elementName: String, work
     if (!isPrimary && getPerWorkingCopyInfo == null)
       throw newNotPresentException
 
+    val sourceLength = file.nscFile.size.getOrElse(-1)
     val endPosMap = computeEndPosMap(root)
     
-    new StructureBuilderTraverser(info.asInstanceOf[ScalaCompilationUnitInfo], newElements.asInstanceOf[JMap[AnyRef, AnyRef]], endPosMap).traverseTrees(root)
+    new StructureBuilderTraverser(unitInfo, newElements.asInstanceOf[JMap[AnyRef, AnyRef]], sourceLength, endPosMap).traverseTrees(root)
     
-    val unitInfo = info.asInstanceOf[ScalaCompilationUnitInfo]
-    val length = root.first.pos.source.get.length
-    unitInfo.setSourceLength(root.first.pos.source.get.length)
+    unitInfo.setSourceLength(sourceLength)
     unitInfo.setIsStructureKnown(true)
     unitInfo.isStructureKnown
   }

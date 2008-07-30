@@ -21,7 +21,7 @@ import scala.tools.nsc.util.{ NoPosition, Position }
 trait ScalaStructureBuilder extends ScalaJavaMapper { self : ScalaCompilationUnit =>
   import compiler._
   
-  class StructureBuilderTraverser(unitInfo : ScalaCompilationUnitInfo, newElements0 : JMap[AnyRef, AnyRef], endPosMap : Map[Tree, Position]) extends Traverser {
+  class StructureBuilderTraverser(unitInfo : ScalaCompilationUnitInfo, newElements0 : JMap[AnyRef, AnyRef], sourceLength : Int, endPosMap : Map[Tree, Position]) extends Traverser {
     private var currentBuilder : Owner = new CompilationUnitBuilder
     private val manager = JavaModelManager.getJavaModelManager
     private val file = proj.fileSafe(self.getResource.asInstanceOf[IFile]).get
@@ -377,7 +377,7 @@ trait ScalaStructureBuilder extends ScalaJavaMapper { self : ScalaCompilationUni
       val start0 = if (startPos != NoPosition) startPos.offset.getOrElse(-1) else -1
       val end0 = if (endPos != NoPosition) endPos.offset.getOrElse(-1) else -1
       val start = max(0, min(start0, end0-1))
-      val end = min(startPos.source.get.length, max(start+1, end0))
+      val end = min(sourceLength, max(start+1, end0))
       info.setSourceRangeStart0(start)
       info.setSourceRangeEnd0(end-1)
     }
