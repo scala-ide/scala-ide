@@ -6,13 +6,15 @@
 
 package lampion.eclipse
 
+import scala.util.Sorting
+
 import org.eclipse.core.resources.{IWorkspaceRunnable,IMarker,IResource};
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.internal.ui.javaeditor.{ CompilationUnitEditor, JavaEditor }
 import org.eclipse.jface.util.PropertyChangeEvent
 import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.jface.text.{TextPresentation,ITypedRegion,DocumentEvent,DefaultInformationControl,IInformationControlCreator,IDocumentListener,IDocument,DocumentCommand,IAutoEditStrategy,ITextViewer,ITextHover,ITextHoverExtension,IRegion,Region};
-import org.eclipse.jface.text.contentassist.{ContentAssistant,IContentAssistant,IContentAssistProcessor,IContextInformation,IContextInformationPresenter,IContextInformationValidator};
+import org.eclipse.jface.text.contentassist.{ContentAssistant,ICompletionProposal,IContentAssistant,IContentAssistProcessor,IContextInformation,IContextInformationPresenter,IContextInformationValidator};
 import org.eclipse.jface.text.hyperlink.{IHyperlink,IHyperlinkDetector};
 import org.eclipse.jface.text.presentation.{IPresentationDamager,IPresentationRepairer,PresentationReconciler};
 import org.eclipse.jface.text.source.{AnnotationModelEvent,IAnnotationModel,ICharacterPairMatcher,IOverviewRuler,ISourceViewer,IVerticalRuler,SourceViewerConfiguration,IAnnotationModelListener};
@@ -25,7 +27,7 @@ import org.eclipse.swt.custom.{ExtendedModifyEvent,ExtendedModifyListener};
 import org.eclipse.swt.events.{KeyListener,KeyEvent,FocusListener,FocusEvent};
 import org.eclipse.swt.widgets.{Composite,Shell};
 
-abstract class Editor extends TextEditor with IAutoEditStrategy  {
+abstract class Editor extends JavaEditor with IAutoEditStrategy  {
   val plugin : UIPlugin
   import lampion.core.Dirs._
 
@@ -154,10 +156,6 @@ abstract class Editor extends TextEditor with IAutoEditStrategy  {
     setAction("OpenAction", openAction)
   }
   def getSourceViewer0 = super.getSourceViewer.asInstanceOf[SourceViewer with ProjectionViewer];
-  override def createPartControl(parent : Composite) = {
-    val ret = super.createPartControl(parent)
-    ret
-  }
   private object documentListener extends IDocumentListener {
     def documentAboutToBeChanged(e : DocumentEvent) = {
       assert(e.getDocument == getSourceViewer0.getDocument)
@@ -262,11 +260,11 @@ abstract class Editor extends TextEditor with IAutoEditStrategy  {
   import org.eclipse.ui.texteditor._
   import org.eclipse.swt.dnd._
 
-  //override def getAdapter(required : Class[_]) = super.getAdapter(required)
-  override protected def createSourceViewer(parent : Composite, ruler : IVerticalRuler, styles : Int) = {
+  override def createJavaSourceViewer(parent : Composite, ruler : IVerticalRuler, overviewRuler : IOverviewRuler, isOverviewRulerVisible : Boolean, styles :  Int, store : IPreferenceStore) = {
+  //override protected def createSourceViewer(parent : Composite, ruler : IVerticalRuler, styles : Int) = {
     val viewer = new {
       override val plugin : Editor.this.plugin.type = Editor.this.plugin
-    } with lampion.eclipse.SourceViewer(parent, ruler, getOverviewRuler, isOverviewRulerVisible, styles) {
+    } with lampion.eclipse.SourceViewer(parent, ruler, overviewRuler, isOverviewRulerVisible, styles) {
       override def doCreatePresentation = 
         super.doCreatePresentation && !modifying
       
@@ -340,8 +338,8 @@ abstract class Editor extends TextEditor with IAutoEditStrategy  {
     val EDITOR_MATCHING_BRACKETS_COLOR=  "matchingBracketsColor"; //$NON-NLS-1$
     support.setMatchingCharacterPainterPreferenceKeys("matchingBrackets", "matchingBracketsColor")
     support.setMatchingCharacterPainterPreferenceKeys(EDITOR_MATCHING_BRACKETS, EDITOR_MATCHING_BRACKETS_COLOR)
-    getPreferenceStore.setValue(EDITOR_MATCHING_BRACKETS, true)
-    getPreferenceStore.setValue(EDITOR_MATCHING_BRACKETS_COLOR, "0,100,0")
+    plugin.getPreferenceStore.setValue(EDITOR_MATCHING_BRACKETS, true)
+    plugin.getPreferenceStore.setValue(EDITOR_MATCHING_BRACKETS_COLOR, "0,100,0")
     super.configureSourceViewerDecorationSupport(support)
   }
   object contentAssistProcessor extends IContentAssistProcessor with IContextInformationValidator with IContextInformationPresenter {
@@ -350,7 +348,8 @@ abstract class Editor extends TextEditor with IAutoEditStrategy  {
       val external = Editor.this.file.get.external
       val file = external.file
       val completions = file.doComplete(offset)
-      if (!completions.isEmpty) completions.toList.toArray
+      if (!completions.isEmpty)
+        Sorting.stableSort(completions, (a : ICompletionProposal, b : ICompletionProposal) => a.getDisplayString < b.getDisplayString).toArray
       else null
     }
     override def computeContextInformation(tv : ITextViewer, offset : Int) = null

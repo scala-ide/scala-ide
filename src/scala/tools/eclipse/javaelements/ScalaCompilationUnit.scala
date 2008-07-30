@@ -5,7 +5,7 @@
 
 package scala.tools.eclipse.javaelements
 
-import java.util.{ HashMap, Map }
+import java.util.{ HashMap => JHashMap, Map => JMap }
 
 import org.eclipse.core.resources.{ IFile, IResource }
 import org.eclipse.core.runtime.{ IProgressMonitor, IStatus, Platform }
@@ -14,32 +14,35 @@ import org.eclipse.jdt.core.IJavaProject
 import org.eclipse.jdt.core.dom.AST
 import org.eclipse.jdt.core.{ ICompilationUnit, IProblemRequestor, JavaCore, WorkingCopyOwner }
 import org.eclipse.jdt.internal.core.{
-  BecomeWorkingCopyOperation, CompilationUnit, CompilationUnitElementInfo, DefaultWorkingCopyOwner,
+  BecomeWorkingCopyOperation, CompilationUnit => JDTCompilationUnit, CompilationUnitElementInfo, DefaultWorkingCopyOwner,
   JavaModelManager, JavaModelStatus, OpenableElementInfo, PackageFragment }
 import org.eclipse.swt.graphics.Image
 import org.eclipse.swt.widgets.Display
 
+import scala.tools.nsc.util.{ NoPosition, Position }
+
 class ScalaCompilationUnitInfo extends CompilationUnitElementInfo
 
 class ScalaCompilationUnit(fragment : PackageFragment, elementName: String, workingCopyOwner : WorkingCopyOwner)
-  extends CompilationUnit(fragment, elementName, workingCopyOwner) with ScalaElement with ImageSubstituter with ScalaStructureBuilder {
+  extends JDTCompilationUnit(fragment, elementName, workingCopyOwner) with ScalaElement with ImageSubstituter with ScalaStructureBuilder {
 
   val plugin = ScalaPlugin.plugin
   val proj = plugin.projectSafe(getResource.getProject).get
   val compiler = proj.compiler0
-    
+  import compiler._
+  
   def this(file : IFile) =
     this(JDTUtils.getParentPackage(file).asInstanceOf[PackageFragment], file.getName, ScalaWorkingCopyOwner)
     
   override def getMainTypeName : Array[Char] =
     elementName.substring(0, elementName.length - ".scala".length).toCharArray()
 
-  override def generateInfos(info : Object, newElements : HashMap[_, _],  monitor : IProgressMonitor) = {
+  override def generateInfos(info : Object, newElements : JHashMap[_, _],  monitor : IProgressMonitor) = {
     val sinfo = if (info.isInstanceOf[ScalaCompilationUnitInfo]) info else new ScalaCompilationUnitInfo 
     super.generateInfos(sinfo, newElements, monitor);
   }
   
-  override def buildStructure(info : OpenableElementInfo, pm : IProgressMonitor, newElements : Map[_, _], underlyingResource : IResource) : Boolean = {
+  override def buildStructure(info : OpenableElementInfo, pm : IProgressMonitor, newElements : JMap[_, _], underlyingResource : IResource) : Boolean = {
     val fileOpt = proj.fileSafe(getCorrespondingResource.asInstanceOf[IFile])
     if (fileOpt.isEmpty)  
       return false
@@ -56,13 +59,49 @@ class ScalaCompilationUnit(fragment : PackageFragment, elementName: String, work
     if (!isPrimary && getPerWorkingCopyInfo == null)
       throw newNotPresentException
 
-    new StructureBuilderTraverser(info.asInstanceOf[ScalaCompilationUnitInfo], newElements.asInstanceOf[Map[AnyRef, AnyRef]]).traverseTrees(root)
+    val endPosMap = computeEndPosMap(root)
+    
+    new StructureBuilderTraverser(info.asInstanceOf[ScalaCompilationUnitInfo], newElements.asInstanceOf[JMap[AnyRef, AnyRef]], endPosMap).traverseTrees(root)
     
     val unitInfo = info.asInstanceOf[ScalaCompilationUnitInfo]
+    val length = root.first.pos.source.get.length
+    unitInfo.setSourceLength(root.first.pos.source.get.length)
     unitInfo.setIsStructureKnown(true)
     unitInfo.isStructureKnown
   }
 
+  private def computeEndPosMap(trees : List[Tree]) : Map[Tree, Position] = {
+    val traverser = new Traverser {
+      var map : Map[Tree, Position] = Map.empty
+      var rightmost : Position = NoPosition
+
+      private val file = proj.fileSafe(getResource.asInstanceOf[IFile]).get
+      
+      override def traverse(tree: Tree): Unit = {
+        rightmost = max(rightmost, tree.pos)
+        tree match {
+          case st : StubTree => traverseTrees(st.underlying.asInstanceOf[file.ParseNode].lastTyped)
+          case _ => {
+            super.traverse(tree)
+            map += (tree -> rightmost)
+          }
+        }
+      }
+
+      def max(a : Position, b : Position) = {
+        (a, b) match {
+          case (x, NoPosition) => x
+          case (NoPosition, y) => y
+          case (x, y) => if (x.offset.getOrElse(-1) >= y.offset.getOrElse(-1)) x else y
+        }
+      }
+    }
+    
+    traverser.traverseTrees(trees)
+    traverser.map
+  } 
+
+  
   override def isPrimary = owner eq ScalaWorkingCopyOwner
 
   override def createElementInfo : Object = new ScalaCompilationUnitInfo
@@ -106,7 +145,7 @@ class ScalaCompilationUnit(fragment : PackageFragment, elementName: String, work
     astLevel : Int,
     resolveBindings : Boolean,
     reconcileFlags : Int,
-    problems : HashMap[_,_],
+    problems : JHashMap[_,_],
     monitor : IProgressMonitor) : org.eclipse.jdt.core.dom.CompilationUnit = {
     openWhenClosed(createElementInfo(), monitor)
     null
@@ -124,7 +163,7 @@ class ScalaCompilationUnit(fragment : PackageFragment, elementName: String, work
       // Create the substitute compilation unit without tripping name validation checks 
       val project = JavaCore.create(file.getProject)
       val pkg = JavaModelManager.determineIfOnClasspath(file, project).asInstanceOf[PackageFragment]
-      val cu = new CompilationUnit(pkg, file.getName, DefaultWorkingCopyOwner.PRIMARY)
+      val cu = new JDTCompilationUnit(pkg, file.getName, DefaultWorkingCopyOwner.PRIMARY)
       // Make the compilation unit appear to be a working copy so that the name validation
       // component of the existence check isn't tripped
       JavaModelManager.getJavaModelManager.getPerWorkingCopyInfo(cu, true, false, null)

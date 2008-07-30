@@ -5,8 +5,6 @@
 
 package scala.tools.eclipse.javaelements
 
-import java.lang.Integer
-
 import scala.tools.nsc.util.NameTransformer
 
 import org.eclipse.jdt.core.{ IJavaElement, IType }
@@ -71,16 +69,17 @@ class ScalaModuleElement(parent : JavaElement, name : String, synthetic : Boolea
   override def isVisible = !synthetic
 }
 
-class ScalaDefElement(parent : JavaElement, name: String, paramTypes : Array[String], synthetic : Boolean)
+class ScalaDefElement(parent : JavaElement, name: String, paramTypes : Array[String], synthetic : Boolean, display : String)
   extends SourceMethod(parent, name, paramTypes) with ScalaElement {
   override def labelName = NameTransformer.decode(getElementName)
-  override def mapLabelText(original : String) = original.replace(getElementName, labelName)
+  override def mapLabelText(original : String) = display // original.replace(getElementName, labelName)
   override def isVisible = !synthetic && !getElementInfo.isInstanceOf[ScalaSourceConstructorInfo]
 }
 
-class ScalaFunctionElement(declaringType : JavaElement, parent : JavaElement, name: String, paramTypes : Array[String])
+class ScalaFunctionElement(declaringType : JavaElement, parent : JavaElement, name: String, paramTypes : Array[String], display : String)
   extends SourceMethod(parent, name, paramTypes) with ScalaElement {
   override def getDeclaringType() : IType = declaringType.asInstanceOf[IType]
+  override def mapLabelText(original : String) = display
 }
 
 class ScalaAccessorElement(parent : JavaElement, name: String, paramTypes : Array[String])
@@ -128,6 +127,8 @@ object ScalaMemberElementInfo extends ReflectionUtils {
 
 trait ScalaMemberElementInfo {
   import ScalaMemberElementInfo._
+  import java.lang.Integer
+
   def setFlags0(flags : Int) = setFlagsMethod.invoke(this, new Integer(flags))
   def setNameSourceStart0(start : Int) = setNameSourceStartMethod.invoke(this, new Integer(start)) 
   def setNameSourceEnd0(end : Int) = setNameSourceEndMethod.invoke(this, new Integer(end)) 
@@ -141,17 +142,17 @@ class ScalaElementInfo extends SourceTypeElementInfo with ScalaMemberElementInfo
   override def setSuperInterfaceNames(superInterfaceNames : Array[Array[Char]]) = super.setSuperInterfaceNames(superInterfaceNames)
 }
 
-trait DefInfo extends SourceMethodElementInfo with ScalaMemberElementInfo {
+trait FnInfo extends SourceMethodElementInfo with ScalaMemberElementInfo {
   override def setArgumentNames(argumentNames : Array[Array[Char]]) = super.setArgumentNames(argumentNames)
   def setReturnType(returnType : Array[Char])
   override def setExceptionTypeNames(exceptionTypeNames : Array[Array[Char]]) = super.setExceptionTypeNames(exceptionTypeNames)
 }
 
-class ScalaSourceConstructorInfo extends SourceConstructorInfo with DefInfo {
+class ScalaSourceConstructorInfo extends SourceConstructorInfo with FnInfo {
   override def setReturnType(returnType : Array[Char]) = super.setReturnType(returnType)
 }
 
-class ScalaSourceMethodInfo extends SourceMethodInfo with DefInfo {
+class ScalaSourceMethodInfo extends SourceMethodInfo with FnInfo {
   override def setReturnType(returnType : Array[Char]) = super.setReturnType(returnType)
 }
 

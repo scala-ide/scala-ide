@@ -15,6 +15,13 @@ trait ReflectionUtils {
       method.setAccessible(true)
       method
     }
+
+  def getField[T](clazz : Class[T], name : String) =
+    privileged {
+      val field = clazz.getDeclaredField(name)
+      field.setAccessible(true)
+      field
+    }
   
   def privileged[T](body : => T) = {
     AccessController.doPrivileged(new PrivilegedAction[T] {

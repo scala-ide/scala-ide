@@ -45,5 +45,8 @@ class PerspectiveFactory extends IPerspectiveFactory {
     problemsFolder.addView(IConsoleConstants.ID_CONSOLE_VIEW);
     problemsFolder.addView("org.eclipse.pde.runtime.LogView");
   }
+}
 
+object PerspectiveFactory {
+  val id = "ch.epfl.lamp.sdt.core.perspective"
 }

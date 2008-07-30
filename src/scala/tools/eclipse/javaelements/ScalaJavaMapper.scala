@@ -7,12 +7,8 @@ package scala.tools.eclipse.javaelements
 
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants
 
-trait ScalaJavaMapper {
-  val plugin : ScalaPlugin
-  val proj : plugin.Project
-  val compiler : proj.compiler0.type
-  
-  import compiler.{ Ident, Modifiers, Tree, TypeTree }
+trait ScalaJavaMapper { self : ScalaCompilationUnit =>
+  import compiler._
   
   def mapModifiers(mods : Modifiers) : Int = {
     var jdtMods = 0
@@ -35,7 +31,7 @@ trait ScalaJavaMapper {
   def mapType(t : Tree) : String = {
     (t match {
       case tt : TypeTree => {
-        if(tt.symbol == null || tt.symbol == compiler.NoSymbol || tt.symbol.isRefinementClass || tt.symbol.owner.isRefinementClass)
+        if(tt.symbol == null || tt.symbol == NoSymbol || tt.symbol.isRefinementClass || tt.symbol.owner.isRefinementClass)
           "scala.AnyRef"
         else
           tt.symbol.fullNameString

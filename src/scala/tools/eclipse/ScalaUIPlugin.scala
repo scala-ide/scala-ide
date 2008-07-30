@@ -7,11 +7,13 @@
 package scala.tools.eclipse;
 
 import org.eclipse.core.resources.{ IFile, IResource, IResourceChangeEvent, IResourceDelta, IResourceDeltaVisitor, ResourcesPlugin }
+import org.eclipse.core.runtime.{ IAdapterFactory, Platform }
 import org.eclipse.jdt.core.{ IClassFile, IJavaElement }
 import org.eclipse.jdt.internal.ui.javaeditor.CompilationUnitDocumentProvider
 import org.eclipse.jdt.ui.JavaUI
 import org.eclipse.jface.text.IDocument
 import org.eclipse.ui.{ IWorkbenchPage, IEditorInput }
+import org.eclipse.ui.part.FileEditorInput
 import org.eclipse.swt.widgets.Display
 import org.osgi.framework.BundleContext
 
@@ -33,6 +35,20 @@ trait ScalaUIPlugin extends {
     super.start(context)
     
     ScalaCompilationUnitManager.initCompilationUnits(ResourcesPlugin.getWorkspace)
+
+    val scuAdapter = new IAdapterFactory() {
+      override def getAdapterList = Array(classOf[IJavaElement])
+      override def getAdapter(adaptableObject : AnyRef, adapterType : Class[_]) : AnyRef = {
+        if(adaptableObject.isInstanceOf[FileEditorInput]) {
+          val input = adaptableObject.asInstanceOf[FileEditorInput]
+          ScalaCompilationUnitManager.getScalaCompilationUnit(input.getFile)
+        }
+        else 
+          null
+      }
+    }
+    
+    Platform.getAdapterManager().registerAdapters(scuAdapter, classOf[FileEditorInput])
   }
   
   override def stop(context : BundleContext) = {

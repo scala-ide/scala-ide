@@ -13,15 +13,26 @@ import org.eclipse.jdt.internal.ui.packageview.PackageExplorerPart
 import org.eclipse.ui.progress.UIJob
 
 object JDTUtils {
+  private var refreshPending = false
+  private val lock = new Object
+  
   def refreshPackageExplorer = {
-    new UIJob("Refresh package explorer") {
-      def runInUIThread(monitor : IProgressMonitor) : IStatus  = {
-        val pep = PackageExplorerPart.getFromActivePerspective
-        if (pep != null)
-          pep.getTreeViewer.refresh()
-        Status.OK_STATUS
+    lock.synchronized{
+      if (!refreshPending) {
+        refreshPending = true
+        new UIJob("Refresh package explorer") {
+          def runInUIThread(monitor : IProgressMonitor) : IStatus  = {
+            lock.synchronized {
+              refreshPending = false
+            }
+            val pep = PackageExplorerPart.getFromActivePerspective
+            if (pep != null)
+              pep.getTreeViewer.refresh()
+            Status.OK_STATUS
+          }
+        }.schedule
       }
-    }.schedule
+    }
   }
 
   def getParentPackage(scalaFile : IFile) : IPackageFragment = {
@@ -48,4 +59,15 @@ object JavaElementInfoUtils extends ReflectionUtils {
   def getChildren(info : AnyRef) : Array[IJavaElement] = getChildrenMethod.invoke(info).asInstanceOf[Array[IJavaElement]]
   def removeChild(info : AnyRef, child : IJavaElement) = removeChildMethod.invoke(info, child)
   def setChildren(info : AnyRef, children : Array[IJavaElement]) = setChildrenMethod.invoke(info, children : AnyRef)
+}
+
+object SourceRefElementInfoUtils extends ReflectionUtils {
+  import java.lang.Integer
+
+  private val sreiClazz = Class.forName("org.eclipse.jdt.internal.core.SourceRefElementInfo")
+  private val setSourceRangeStartMethod = getMethod(sreiClazz, "setSourceRangeStart", classOf[Int])
+  private val setSourceRangeEndMethod = getMethod(sreiClazz, "setSourceRangeEnd", classOf[Int])
+  
+  def setSourceRangeStart(start : Int) : Unit = setSourceRangeStartMethod.invoke(this, new Integer(start))
+  def setSourceRangeEnd(end : Int) : Unit = setSourceRangeEndMethod.invoke(this, new Integer(end))
 }

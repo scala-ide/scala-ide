@@ -20,7 +20,6 @@ class ScalaReconcileWorkingCopyOperation(
   var ast : org.eclipse.jdt.core.dom.CompilationUnit = _
     
   protected def executeOperation() {
-    println("executeOperation")
 		if (this.progressMonitor != null) {
 			if (this.progressMonitor.isCanceled()) return
 			this.progressMonitor.beginTask(Messages.element_reconciling, 2)

@@ -263,12 +263,10 @@ trait ScalaPlugin extends ScalaPluginSuperA with scala.tools.editor.Driver {
 	      setting =>
           val value = store.getString(convertNameToProperty(setting.name))
           if (value != null) {
-            if (setting.isInstanceOf[settings.BooleanSetting]) {
-              if (value.equalsIgnoreCase("true"))
-                setting.tryToSet(setting.name :: Nil)
+            setting match {
+              case b : settings.BooleanSetting => b.value = value.equalsIgnoreCase("true")
+              case s : settings.Setting => setting.tryToSet(setting.name :: value :: Nil) 
             }
-            else
-              setting.tryToSet(setting.name :: value :: Nil)
           }
       }
       global.settings = settings

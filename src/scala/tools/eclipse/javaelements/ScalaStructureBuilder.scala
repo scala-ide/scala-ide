@@ -5,19 +5,23 @@
 
 package scala.tools.eclipse.javaelements
 
-import java.util.Map
+import java.io.{ PrintWriter, StringWriter }
+import java.util.{ Map => JMap }
 
 import org.eclipse.core.resources.IFile
-import org.eclipse.jdt.internal.core.{ CompilationUnit, JavaElement, JavaModelManager, SourceRefElement }
+import org.eclipse.jdt.internal.core.{ CompilationUnit => JDTCompilationUnit, JavaElement, JavaModelManager, SourceRefElement }
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants
 import org.eclipse.jdt.core.Signature
 
+import scala.collection.immutable.Map
+import scala.tools.nsc.Global
 import scala.tools.nsc.symtab.Flags
+import scala.tools.nsc.util.{ NoPosition, Position }
 
 trait ScalaStructureBuilder extends ScalaJavaMapper { self : ScalaCompilationUnit =>
-  import compiler.{ ClassDef, DefDef, Function, Ident, ModuleDef, PackageDef, StubTree, Template, Traverser, Tree, TypeDef, TypeTree, ValDef }
-    
-  class StructureBuilderTraverser(unitInfo : ScalaCompilationUnitInfo, newElements0 : Map[AnyRef, AnyRef]) extends Traverser {
+  import compiler._
+  
+  class StructureBuilderTraverser(unitInfo : ScalaCompilationUnitInfo, newElements0 : JMap[AnyRef, AnyRef], endPosMap : Map[Tree, Position]) extends Traverser {
     private var currentBuilder : Owner = new CompilationUnitBuilder
     private val manager = JavaModelManager.getJavaModelManager
     private val file = proj.fileSafe(self.getResource.asInstanceOf[IFile]).get
@@ -56,7 +60,7 @@ trait ScalaStructureBuilder extends ScalaJavaMapper { self : ScalaCompilationUni
       override def addPackage(p : PackageDef) : Owner = {
         println("Package defn: "+p.name+" ["+this+"]")
         
-        val pkgElem = JavaElementFactory.createPackageDeclaration(compilationUnitBuilder.element.asInstanceOf[CompilationUnit], p.symbol.fullNameString)
+        val pkgElem = JavaElementFactory.createPackageDeclaration(compilationUnitBuilder.element.asInstanceOf[JDTCompilationUnit], p.symbol.fullNameString)
         resolveDuplicates(pkgElem)
         JavaElementInfoUtils.addChild(compilationUnitBuilder.elementInfo, pkgElem)
         
@@ -139,6 +143,7 @@ trait ScalaStructureBuilder extends ScalaJavaMapper { self : ScalaCompilationUni
         }
         classElemInfo.setNameSourceStart0(start)
         classElemInfo.setNameSourceEnd0(end)
+        setSourceRange(classElemInfo, c)
         newElements0.put(classElem, classElemInfo)
         
         new Builder {
@@ -168,6 +173,7 @@ trait ScalaStructureBuilder extends ScalaJavaMapper { self : ScalaCompilationUni
         val end = start + m.name.length -1
         moduleElemInfo.setNameSourceStart0(start)
         moduleElemInfo.setNameSourceEnd0(end)
+        setSourceRange(moduleElemInfo, m)
         newElements0.put(moduleElem, moduleElemInfo)
         
         val parentTree = m.impl.parents.first
@@ -204,9 +210,9 @@ trait ScalaStructureBuilder extends ScalaJavaMapper { self : ScalaCompilationUni
     
     trait ValOwner extends Owner { self =>
       override def addVal(v : ValDef) : Owner = {
-        println("Val defn: >"+compiler.nme.getterName(v.name)+"< ["+this+"]")
+        println("Val defn: >"+nme.getterName(v.name)+"< ["+this+"]")
         
-        val elemName = compiler.nme.getterName(v.name)
+        val elemName = nme.getterName(v.name)
         
         val valElem =
           if(v.mods.hasFlag(Flags.MUTABLE))
@@ -222,6 +228,7 @@ trait ScalaStructureBuilder extends ScalaJavaMapper { self : ScalaCompilationUni
         val end = start + elemName.length - 1
         valElemInfo.setNameSourceStart0(start)
         valElemInfo.setNameSourceEnd0(end)
+        setSourceRange(valElemInfo, v)
         newElements0.put(valElem, valElemInfo)
 
         val tn = manager.intern(mapType(v.tpt).toArray)
@@ -251,9 +258,10 @@ trait ScalaStructureBuilder extends ScalaJavaMapper { self : ScalaCompilationUni
         val end = start + t.name.length - 1
         typeElemInfo.setNameSourceStart0(start)
         typeElemInfo.setNameSourceEnd0(end)
+        setSourceRange(typeElemInfo, t)
         newElements0.put(typeElem, typeElemInfo)
         
-        if(t.rhs.symbol == compiler.NoSymbol) {
+        if(t.rhs.symbol == NoSymbol) {
           println("Type is abstract")
           val tn = manager.intern("java.lang.Object".toArray)
           typeElemInfo.setTypeName(tn)
@@ -284,19 +292,27 @@ trait ScalaStructureBuilder extends ScalaJavaMapper { self : ScalaCompilationUni
         val fps = for(vps <- d.vparamss; vp <- vps) yield vp
         
         val paramTypes = Array(fps.map(v => Signature.createTypeSignature(mapType(v.tpt), false)) : _*)
-        val paramNames = Array(fps.map(n => compiler.nme.getterName(n.name).toString.toArray) : _*)
+        val paramNames = Array(fps.map(n => nme.getterName(n.name).toString.toArray) : _*)
+        
+        val sw = new StringWriter
+        val tp = treePrinters.create(new PrintWriter(sw))
+        tp.print(tp.symName(d, d.name))
+        tp.printTypeParams(d.tparams)
+        d.vparamss foreach tp.printValueParams
+        tp.flush
+        val display = sw.toString
         
         val defElem = 
           if(d.mods.isAccessor)
             new ScalaAccessorElement(element, nm.toString, paramTypes)
           else if(isTemplate)
-            new ScalaDefElement(element, nm.toString, paramTypes, d.symbol.hasFlag(Flags.SYNTHETIC))
+            new ScalaDefElement(element, nm.toString, paramTypes, d.symbol.hasFlag(Flags.SYNTHETIC), display)
           else
-            new ScalaFunctionElement(template.element, element, nm.toString, paramTypes)
+            new ScalaFunctionElement(template.element, element, nm.toString, paramTypes, display)
         resolveDuplicates(defElem)
         addChild(defElem)
         
-        val defElemInfo : DefInfo =
+        val defElemInfo : FnInfo =
           if(isCtor0)
             new ScalaSourceConstructorInfo
           else
@@ -317,7 +333,7 @@ trait ScalaStructureBuilder extends ScalaJavaMapper { self : ScalaCompilationUni
         defElemInfo.setArgumentNames(paramNames)
         defElemInfo.setExceptionTypeNames(new Array[Array[Char]](0))
         val tn = manager.intern(mapType(d.tpt).toArray)
-        defElemInfo.asInstanceOf[DefInfo].setReturnType(tn)
+        defElemInfo.asInstanceOf[FnInfo].setReturnType(tn)
         
         val mods =
           if(isTemplate)
@@ -330,7 +346,7 @@ trait ScalaStructureBuilder extends ScalaJavaMapper { self : ScalaCompilationUni
         val end = start + defElem.labelName.length - 1
         defElemInfo.setNameSourceStart0(start)
         defElemInfo.setNameSourceEnd0(end)
-        
+        setSourceRange(defElemInfo, d)
         newElements0.put(defElem, defElemInfo)
         
         new Builder {
@@ -352,6 +368,19 @@ trait ScalaStructureBuilder extends ScalaJavaMapper { self : ScalaCompilationUni
     }
     
     abstract class Builder extends PackageOwner with ClassOwner with ModuleOwner with ValOwner with TypeOwner with DefOwner
+    
+    def setSourceRange(info : ScalaMemberElementInfo, tree : Tree) {
+      import Math.{ max, min }
+      
+      val startPos = tree.pos 
+      val endPos = endPosMap(tree)
+      val start0 = if (startPos != NoPosition) startPos.offset.getOrElse(-1) else -1
+      val end0 = if (endPos != NoPosition) endPos.offset.getOrElse(-1) else -1
+      val start = max(0, min(start0, end0-1))
+      val end = min(startPos.source.get.length, max(start+1, end0))
+      info.setSourceRangeStart0(start)
+      info.setSourceRangeEnd0(end-1)
+    }
     
     override def traverse(tree: Tree): Unit = tree match {
       case pd : PackageDef => atBuilder(currentBuilder.addPackage(pd)) { super.traverse(tree) }
@@ -387,7 +416,7 @@ trait ScalaStructureBuilder extends ScalaJavaMapper { self : ScalaCompilationUni
         }
       }
       case dd : DefDef => {
-        if(dd.name != compiler.nme.MIXIN_CONSTRUCTOR) {
+        if(dd.name != nme.MIXIN_CONSTRUCTOR) {
           val db = currentBuilder.addDef(dd)
           atOwner(tree.symbol) {
             // traverseTrees(dd.mods.annotations)
