@@ -143,6 +143,7 @@ trait InterpreterHelper {
     
     toReturn += addEmbeddedBundleEntry(toReturn, libraryBundleFile, "/lib/scala-library.jar")
     toReturn += addEmbeddedBundleEntry(toReturn, libraryBundleFile, "/lib/scala-dbc.jar")
+    toReturn += addEmbeddedBundleEntry(toReturn, libraryBundleFile, "/lib/scala-swing.jar")
     
     toReturn
   }

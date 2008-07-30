@@ -107,7 +107,7 @@ TARGETS SUPPORTING DEVELOPMENT WITHIN ECLIPSE
   </target>
   
   <target name="devel.dist" depends="devel.clean">
-    <ant dir="${scala.dir}" antfile="build.xml" target="dist" inheritall="false"/>
+    <ant dir="${scala.dir}" antfile="build.xml" target="dist.done" inheritall="false"/>
     <ant dir="${scala.lib.dir}" antfile="build.xml" target="dist" inheritall="false"/>
     <antcall target="dist"/>
   </target>

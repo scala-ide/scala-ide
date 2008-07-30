@@ -60,7 +60,9 @@ object ContainerInitializer {
       val libSources = pathInBundle(scalaLibBundle, "/lib/scala-library-src.jar").get 
       val dbcClasses = pathInBundle(scalaLibBundle, "/lib/scala-dbc.jar").get 
       val dbcSources = pathInBundle(scalaLibBundle, "/lib/scala-dbc-src.jar").get 
-      ((libClasses, libSources) :: (dbcClasses, dbcSources) :: Nil, "Scala Library " + scala.util.Properties.versionString)
+      val swingClasses = pathInBundle(scalaLibBundle, "/lib/scala-swing.jar").get 
+      val swingSources = pathInBundle(scalaLibBundle, "/lib/scala-swing-src.jar").get 
+      ((libClasses, libSources) :: (dbcClasses, dbcSources) :: (swingClasses, swingSources) :: Nil, "Scala Library " + scala.util.Properties.versionString)
     }
   }
 }
