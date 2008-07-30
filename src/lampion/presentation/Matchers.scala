@@ -55,11 +55,10 @@ trait Matchers extends AutoEdits {
       override def afterEdit(offset : Int, added : Int, removed : Int) : Edits = {
         var edits = super.afterEdit(offset, added, removed)
         if (edits ne NoEdit) return edits
-        if (added == 1 && removed == 0) {} else return edits
-        rebalance(offset + added) match {
+        if (!(added == 1 && removed == 0)) return edits
+        if (offset + added - 1 >= 0) rebalance(offset + added - 1) match {
         case Some(CompleteBrace(kind, close)) => 
           val at = completeOpen(offset + 1 - kind.open.length, kind)
-          val content0 = content.drop(at)
           val length = if (isUnmatchedClose(at + 1)) 1 else 0
           return edits * new Edit(at, length, close) {
             override def afterEdit = {
@@ -67,6 +66,9 @@ trait Matchers extends AutoEdits {
               makeCompleted(at + close.length)
             }
           }
+        case _ =>
+        }
+        rebalance(offset + added) match {
         case Some(DeleteClose(from,length)) =>
           if (isCompleted(from)) 
             return edits * new Edit(from - length, length, "")
