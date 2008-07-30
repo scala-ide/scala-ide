@@ -43,6 +43,16 @@ trait Matchers extends AutoEdits {
               }
             }
           }
+        } else if (edit.text.length == 1 && edit.length == 0 && edit.offset > 0) {
+          rebalance(edit.offset) match {
+            case Some(CompleteBrace(kind, close)) => 
+              val at = completeOpen(edit.offset - kind.open.length, kind) + 1
+              val length = 0; //if (isUnmatchedClose(at)) 1 else 0
+              return new Edit(edit.offset, length, edit.text + close) {
+                override def afterEdit = makeCompleted(edit.offset + 2)
+              }
+            case _ =>
+          }
         }
         super.beforeEdit(edit)
       }
@@ -56,18 +66,6 @@ trait Matchers extends AutoEdits {
         var edits = super.afterEdit(offset, added, removed)
         if (edits ne NoEdit) return edits
         if (!(added == 1 && removed == 0)) return edits
-        if (offset + added - 1 >= 0) rebalance(offset + added - 1) match {
-        case Some(CompleteBrace(kind, close)) => 
-          val at = completeOpen(offset + 1 - kind.open.length, kind)
-          val length = if (isUnmatchedClose(at + 1)) 1 else 0
-          return edits * new Edit(at, length, close) {
-            override def afterEdit = {
-              super.afterEdit
-              makeCompleted(at + close.length)
-            }
-          }
-        case _ =>
-        }
         rebalance(offset + added) match {
         case Some(DeleteClose(from,length)) =>
           if (isCompleted(from)) 
