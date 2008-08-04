@@ -38,25 +38,24 @@ class Editor extends { val plugin = Driver.driver } with lampion.eclipse.Editor 
   override def getElementAt(offset : Int) : IJavaElement = getElementAt(offset, true)
 
   override def getElementAt(offset : Int, reconcile : Boolean) : IJavaElement = {
-    val unit = EditorUtils.getInputJavaElement(this).asInstanceOf[ICompilationUnit]
-    if (unit == null)
-      null
-    else {
-      try {
-        if (reconcile) {
-          JavaModelUtil.reconcile(unit)
-          unit.getElementAt(offset)
-        } else if (unit.isConsistent())
-          unit.getElementAt(offset)
-        else
-          null
-      } catch {
-        case ex : JavaModelException => {
-          if (!ex.isDoesNotExist)
-            JavaPlugin.log(ex.getStatus)
-          null
+    EditorUtils.getInputJavaElement(this) match {
+      case unit : ICompilationUnit => 
+        try {
+          if (reconcile) {
+            JavaModelUtil.reconcile(unit)
+            unit.getElementAt(offset)
+          } else if (unit.isConsistent())
+            unit.getElementAt(offset)
+          else
+            null
+        } catch {
+          case ex : JavaModelException => {
+            if (!ex.isDoesNotExist)
+              JavaPlugin.log(ex.getStatus)
+            null
+          }
         }
-      }
+      case _ => null
     }
   }
 
