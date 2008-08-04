@@ -221,7 +221,7 @@ trait ScalaStructureBuilder extends ScalaJavaMapper { self : ScalaCompilationUni
             new ScalaValElement(element, elemName.toString)
         resolveDuplicates(valElem)
         addChild(valElem)
-
+        
         val valElemInfo = new ScalaSourceFieldElementInfo
         valElemInfo.setFlags0(mapModifiers(v.mods))
         val start = v.symbol.pos.offset.getOrElse(0)
@@ -240,6 +240,7 @@ trait ScalaStructureBuilder extends ScalaJavaMapper { self : ScalaCompilationUni
           val elementInfo = valElemInfo
           
           override def addDef(d : DefDef) = this
+          override def addVal(v: ValDef) = this
         }
       }
     }
