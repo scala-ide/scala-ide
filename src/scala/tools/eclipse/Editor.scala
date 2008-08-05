@@ -12,14 +12,15 @@ import org.eclipse.jdt.internal.corext.util.JavaModelUtil
 import org.eclipse.jdt.internal.ui.JavaPlugin
 import org.eclipse.jdt.internal.ui.javaeditor.{ ClassFileDocumentProvider, JavaEditor, SemanticHighlightings }
 import org.eclipse.jdt.internal.ui.javaeditor.breadcrumb.IBreadcrumb
-import org.eclipse.jdt.ui.JavaUI
+import org.eclipse.jdt.ui.{ JavaUI, PreferenceConstants } 
 import org.eclipse.jface.preference.{ IPreferenceStore, PreferenceStore }
 import org.eclipse.jface.util.PropertyChangeEvent
 import org.eclipse.swt.widgets.Composite
 import org.eclipse.ui.IEditorInput
 import org.eclipse.ui.texteditor.ChainedPreferenceStore
 
-import scala.tools.eclipse.javaelements.ReflectionUtils
+import lampion.eclipse.SourceViewer
+import lampion.util.ReflectionUtils
 
 class Editor extends { val plugin = Driver.driver } with lampion.eclipse.Editor {
   override def doSetInput(input : IEditorInput) = {
@@ -65,9 +66,11 @@ class Editor extends { val plugin = Driver.driver } with lampion.eclipse.Editor 
     super.createPartControl(parent)
   }
   
+  // Breadcumb not yet supported for Scala
   override def createBreadcrumb : IBreadcrumb = null
 
-	override def affectsTextPresentation(event : PropertyChangeEvent) = false
+  // Folding not yet supported for Scala
+	override def isFoldingEnabled = false
 }
 
 object EditorUtils extends ReflectionUtils {
@@ -86,6 +89,7 @@ object EditorUtils extends ReflectionUtils {
       store.setValue(key, false)
     }
     
+    // Breadcumb not yet supported for Scala
     val breadcrumbKeys =
       breadcrumbKey + "." + PerspectiveFactory.id ::
       breadcrumbKey + "." + JavaUI.ID_PERSPECTIVE ::
@@ -94,6 +98,10 @@ object EditorUtils extends ReflectionUtils {
       store.setDefault(key, true)
       store.setValue(key, false)
     }
+    
+    // Folding not yet supported for Scala
+    store.setDefault(PreferenceConstants.EDITOR_FOLDING_ENABLED, true)
+    store.setValue(PreferenceConstants.EDITOR_FOLDING_ENABLED, false)
     
     store
   }

@@ -3,7 +3,7 @@
  */
 // $Id$
 
-package scala.tools.eclipse.javaelements
+package lampion.util
 
 import java.lang.reflect.{ AccessibleObject, Constructor }
 import java.security.{ AccessController, PrivilegedAction }

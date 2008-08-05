@@ -61,7 +61,7 @@ abstract class EditorPreferences extends org.eclipse.jface.preference.Preference
       else parent(key).map(key => getColor(key, appendix)) getOrElse null
     case Some(Some(rgb)) => plugin.colorMap(rgb)
     }
-    {
+    { 
       import org.eclipse.ui.texteditor.AbstractTextEditor
       val fg = plugin.colorMap(PreferenceConverter.getColor(store, AbstractTextEditor.PREFERENCE_COLOR_FOREGROUND))
       val bg = plugin.colorMap(PreferenceConverter.getColor(store, AbstractTextEditor.PREFERENCE_COLOR_BACKGROUND))

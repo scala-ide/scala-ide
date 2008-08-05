@@ -12,6 +12,8 @@ import org.eclipse.jdt.internal.core.{ JavaModelManager }
 import org.eclipse.jdt.internal.ui.packageview.PackageExplorerPart
 import org.eclipse.ui.progress.UIJob
 
+import lampion.util.ReflectionUtils
+
 object JDTUtils {
   private var refreshPending = false
   private val lock = new Object

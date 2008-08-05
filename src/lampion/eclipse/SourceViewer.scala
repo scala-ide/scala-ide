@@ -6,33 +6,42 @@
 
 package lampion.eclipse;
 
+import org.eclipse.core.resources.{ IWorkspaceRunnable, IMarker, IResource }
 import org.eclipse.core.runtime.{ IProgressMonitor, NullProgressMonitor }
-import org.eclipse.core.resources.{IWorkspaceRunnable,IMarker,IResource};
+import org.eclipse.core.resources.{IWorkspaceRunnable,IMarker,IResource}
+import org.eclipse.jdt.internal.ui.JavaPlugin
 import org.eclipse.jdt.internal.ui.javaeditor.JavaSourceViewer
 import org.eclipse.jdt.internal.ui.text.{ JavaColorManager, JavaCompositeReconcilingStrategy, JavaReconciler }
 import org.eclipse.jdt.ui.text.JavaSourceViewerConfiguration
-import org.eclipse.jface.preference.IPreferenceStore;
-import org.eclipse.jface.text.{TextPresentation,ITextInputListener,ITypedRegion,DocumentEvent,DefaultInformationControl,IInformationControlCreator,IDocumentListener,IDocument,DocumentCommand,IAutoEditStrategy,ITextViewer,ITextHover,ITextHoverExtension,IRegion,Region};
-import org.eclipse.jface.text.contentassist.{ContentAssistant,IContentAssistant,IContentAssistProcessor,IContextInformation,IContextInformationPresenter,IContextInformationValidator};
-import org.eclipse.jface.text.hyperlink.{IHyperlink,IHyperlinkDetector};
-import org.eclipse.jface.text.presentation.{IPresentationDamager,IPresentationRepairer,PresentationReconciler};
+import org.eclipse.jface.preference.IPreferenceStore
+import org.eclipse.jface.text.{TextPresentation,ITextInputListener,ITypedRegion,DocumentEvent,DefaultInformationControl,IInformationControlCreator,IDocumentListener,IDocument,DocumentCommand,IAutoEditStrategy,ITextViewer,ITextHover,ITextHoverExtension,IRegion,Region}
+import org.eclipse.jface.text.contentassist.{ContentAssistant,IContentAssistant,IContentAssistProcessor,IContextInformation,IContextInformationPresenter,IContextInformationValidator}
+import org.eclipse.jface.text.hyperlink.{IHyperlink,IHyperlinkDetector}
+import org.eclipse.jface.text.presentation.{IPresentationDamager,IPresentationRepairer,PresentationReconciler}
 import org.eclipse.jface.text.reconciler.IReconciler
-import org.eclipse.jface.text.source._;
-import org.eclipse.jface.text.source.projection.{ProjectionAnnotationModel,ProjectionSupport,ProjectionViewer,IProjectionListener};
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.custom.{ExtendedModifyEvent,ExtendedModifyListener};
-import org.eclipse.swt.events.{KeyListener,KeyEvent,FocusListener,FocusEvent,VerifyEvent};
-import org.eclipse.swt.widgets.{Composite,Shell};
-import org.eclipse.ui.{IFileEditorInput};
-import org.eclipse.ui.texteditor.{ContentAssistAction,SourceViewerDecorationSupport,ITextEditor, ITextEditorActionDefinitionIds};
-import org.eclipse.ui.editors.text.{ TextEditor, TextSourceViewerConfiguration };
- 
-abstract class SourceViewer(parent : Composite, vertical : IVerticalRuler, overview : IOverviewRuler, x : Boolean, y : Int) extends 
-  ProjectionViewer(parent,vertical,overview,x,y) with IAnnotationModelListener with FocusListener with ITextInputListener {
+import org.eclipse.jface.text.source._
+import org.eclipse.jface.text.source.projection.{ProjectionAnnotationModel,ProjectionSupport,ProjectionViewer,IProjectionListener}
+import org.eclipse.swt.SWT
+import org.eclipse.swt.custom.{ExtendedModifyEvent,ExtendedModifyListener}
+import org.eclipse.swt.events.{KeyListener,KeyEvent,FocusListener,FocusEvent,VerifyEvent}
+import org.eclipse.swt.widgets.{Composite,Shell}
+import org.eclipse.ui.{IFileEditorInput}
+import org.eclipse.ui.texteditor.{ContentAssistAction,SourceViewerDecorationSupport,ITextEditor, ITextEditorActionDefinitionIds}
+import org.eclipse.ui.editors.text.{ TextEditor, TextSourceViewerConfiguration }
+
+import lampion.util.ReflectionUtils
+
+abstract class SourceViewer(parent : Composite, vertical : IVerticalRuler, overview : IOverviewRuler, showAnnotationsOverview : Boolean, styles : Int, store: IPreferenceStore) extends 
+  JavaSourceViewer(parent,vertical,overview,showAnnotationsOverview,styles, store) with IAnnotationModelListener with FocusListener with ITextInputListener {
   val plugin : UIPlugin
   type File = plugin.ProjectImpl#FileImpl
   def file : Option[File]
   private[eclipse] var busy = false
+  
+  override def configure(configuration : SourceViewerConfiguration) {
+    super.configure(configuration)
+    SourceViewer.setIsSetVisibleDocumentDelayed(this, false)
+  }
   
   override protected def handleVerifyEvent(e : VerifyEvent) = try {
     super.handleVerifyEvent(e)
@@ -144,6 +153,12 @@ abstract class SourceViewer(parent : Composite, vertical : IVerticalRuler, overv
     }
     return getProjectionAnnotationModel;
   }
+  override def canDoOperation(operation : Int) : Boolean = {
+    if (operation == ProjectionViewer.TOGGLE)
+      false
+    else
+      super.canDoOperation(operation)
+	}
   override def modelChanged(model : IAnnotationModel) = {
     assert(model == projection)
   }
@@ -200,12 +215,17 @@ abstract class SourceViewer(parent : Composite, vertical : IVerticalRuler, overv
   this.addTextInputListener(this)
 }
 
-object SourceViewer {
-  class Configuration(store : IPreferenceStore, editor : ITextEditor) extends TextSourceViewerConfiguration(store) {
+object SourceViewer extends ReflectionUtils {
+  val jsvClass = Class.forName("org.eclipse.jdt.internal.ui.javaeditor.JavaSourceViewer")
+  val fIsSetVisibleDocumentDelayedField = getField(jsvClass, "fIsSetVisibleDocumentDelayed")
+
+  class Configuration(store : IPreferenceStore, editor : ITextEditor)
+    //extends TextSourceViewerConfiguration(store) {
+    extends JavaSourceViewerConfiguration(JavaPlugin.getDefault.getJavaTextTools.getColorManager, store, editor, null) {
     implicit def coerce(sv : ISourceViewer) = sv.asInstanceOf[SourceViewer]
     override def getPresentationReconciler(sv : ISourceViewer) = sv.reconciler
-    override def getTextHover(sv : ISourceViewer, contentType : String) = sv.textHover;
-    override def getHyperlinkDetectors(sv : ISourceViewer) = Array(sv.hyperlinkDetector : IHyperlinkDetector);
+    override def getTextHover(sv : ISourceViewer, contentType : String, stateMask : Int) = sv.textHover
+    override def getHyperlinkDetectors(sv : ISourceViewer) = Array(sv.hyperlinkDetector : IHyperlinkDetector)
 
     override def getReconciler(sourceViewer : ISourceViewer) : IReconciler = {
       if (editor != null && editor.isEditable) {
@@ -221,4 +241,6 @@ object SourceViewer {
         null
     }
   }
+    
+  def setIsSetVisibleDocumentDelayed(sv : SourceViewer, value : Boolean) = fIsSetVisibleDocumentDelayedField.set(sv, value)
 }

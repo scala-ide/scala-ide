@@ -8,7 +8,9 @@ package scala.tools.eclipse.javaelements
 import java.lang.reflect.Constructor
 
 import org.eclipse.jdt.internal.core.{ CompilationUnit, SourceRefElement }
-  
+
+import lampion.util.ReflectionUtils
+
 object JavaElementFactory extends ReflectionUtils {
   
   private val (sreiCtor, pdCtor) =

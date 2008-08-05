@@ -32,7 +32,7 @@ abstract class Editor extends JavaEditor with IAutoEditStrategy  {
   import lampion.core.Dirs._
 
   showChangeInformation(true) 
-  setSourceViewerConfiguration(SourceViewerConfiguration)
+  setSourceViewerConfiguration(sourceViewerConfiguration)
   
   var file : Option[plugin.File] = None
   
@@ -106,7 +106,7 @@ abstract class Editor extends JavaEditor with IAutoEditStrategy  {
     }
   } finally { modifying = false }
 
-  object SourceViewerConfiguration extends SourceViewer.Configuration(plugin.editorPreferenceStore, Editor.this) {
+  object sourceViewerConfiguration extends SourceViewer.Configuration(plugin.editorPreferenceStore, Editor.this) {
     
     override def getAutoEditStrategies(sv : ISourceViewer, contentType : String) = 
       Array(Editor.this : IAutoEditStrategy);
@@ -205,7 +205,6 @@ abstract class Editor extends JavaEditor with IAutoEditStrategy  {
     def modifyText(event : ExtendedModifyEvent) : Unit = {
       if (!isDocumentCommand) {
         assert(true)
-        assert(false)
         return
       }
       isDocumentCommand = false
@@ -261,10 +260,9 @@ abstract class Editor extends JavaEditor with IAutoEditStrategy  {
   import org.eclipse.swt.dnd._
 
   override def createJavaSourceViewer(parent : Composite, ruler : IVerticalRuler, overviewRuler : IOverviewRuler, isOverviewRulerVisible : Boolean, styles :  Int, store : IPreferenceStore) = {
-  //override protected def createSourceViewer(parent : Composite, ruler : IVerticalRuler, styles : Int) = {
     val viewer = new {
       override val plugin : Editor.this.plugin.type = Editor.this.plugin
-    } with lampion.eclipse.SourceViewer(parent, ruler, overviewRuler, isOverviewRulerVisible, styles) {
+    } with lampion.eclipse.SourceViewer(parent, ruler, overviewRuler, isOverviewRulerVisible, styles, store) {
       override def doCreatePresentation = 
         super.doCreatePresentation && !modifying
       
@@ -393,5 +391,13 @@ abstract class Editor extends JavaEditor with IAutoEditStrategy  {
         viewer.invalidateTextPresentation(0, file.content.length)
       }
     }
+  }
+  
+  override def setSourceViewerConfiguration(configuration : SourceViewerConfiguration) {
+    super.setSourceViewerConfiguration(
+      configuration match {
+        case svc : SourceViewer.Configuration => svc
+        case _ => sourceViewerConfiguration
+      })
   }
 }
