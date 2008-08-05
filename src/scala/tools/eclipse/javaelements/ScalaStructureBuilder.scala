@@ -241,6 +241,7 @@ trait ScalaStructureBuilder extends ScalaJavaMapper { self : ScalaCompilationUni
           
           override def addDef(d : DefDef) = this
           override def addVal(v: ValDef) = this
+          override def addType(t : TypeDef) = this
         }
       }
     }
@@ -357,6 +358,7 @@ trait ScalaStructureBuilder extends ScalaJavaMapper { self : ScalaCompilationUni
 
           override def isCtor = isCtor0
           override def addVal(v : ValDef) = this
+          override def addType(t : TypeDef) = this
         }
       }
     }
