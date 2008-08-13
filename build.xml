@@ -75,7 +75,7 @@ INITIALISE BUILD
         defaultValue="0"/>
     <property name="init.avail" value="yes"/>
     <!-- Generating version number -->
-    <property file="${basedir}/build.number"/>
+    <property file="${scala.dir}/build.number"/>
     <property
       name="plugin.version.number"
       value="${version.major}.${version.minor}.${version.patch}.r${svn.number}-b${time.short}"/>
@@ -166,6 +166,12 @@ PACKAGE FEATURE AND CREATE UPDATE SITE
 ============================================================================ -->
   
   <target name="dist" depends="init, build">
+
+    <fail message="Folder '${scala.lib.dir}' does not contain a suitable Scala library. Call 'ant dist' on the scala-library project first.">
+      <condition><not><and>
+        <available file="${scala.lib.dir}/scala.library_${library.version.number}.jar"/>
+      </and></not></condition>
+    </fail>
     
     <filter token="PLUGIN_VERSION" value="${plugin.version.number}"/>
     <filter token="LIBRARY_VERSION" value="${library.version.number}"/>
