@@ -57,24 +57,8 @@ class ScalaLabelDecorator extends ILabelDecorator {
   
   def decorateText(text : String, element : AnyRef) : String = {
     try {
-      if (preventRecursion.value)
-        return null
-
       element match {
-        case se : ScalaElement => {
-          val replacement = se.mapLabelText(text)
-          if(replacement == null)
-            null
-          else {
-            // the Java ProblemsDecorator is not registered in the official
-            // decorator list of eclipse, so we need it to call ourself.
-            // Problem: if the JDT includes more decorators, we won't know it.
-            // Also apply standard decorators (eg. CVS)
-            preventRecursion.withValue(true) {
-              decman.decorateText(problemsDecorator.decorateText(replacement, element), element)
-            }
-          }
-        }
+        case se : ScalaElement => se.mapLabelText(text)
         case _ => null
       }
     } catch {
