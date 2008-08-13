@@ -207,8 +207,10 @@ PACKAGE FEATURE AND CREATE UPDATE SITE
     
     <zip
       destfile="${dist.dir}/${feature.name}.zip"
-      basedir="${dist.dir}/scala.update"
-    />
+      basedir="${dist.dir}/scala.update"/>
+    <checksum
+      file="${dist.dir}/${feature.name}.zip"
+      fileext=".md5"/>
     
   </target>
   
