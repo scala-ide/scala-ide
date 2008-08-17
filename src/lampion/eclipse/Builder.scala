@@ -53,7 +53,9 @@ abstract class Builder extends IncrementalProjectBuilder {
             if (project.sourceFolders.exists(_.getLocation.isPrefixOf(path))) {
               i.remove
               project.stale(file.getLocation)
-              toBuild += project.fileSafe(plugin.workspace.getFile(path)).get
+              val p = project.underlying
+              val f = p.getFile(path.removeFirstSegments(path.matchingFirstSegments(p.getLocation)))
+              toBuild += project.fileSafe(f).get
             }
           }        
           true

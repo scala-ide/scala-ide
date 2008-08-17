@@ -20,6 +20,7 @@ import org.eclipse.swt.SWT
 import org.eclipse.core.resources._
 import org.eclipse.core.runtime._
 
+import scala.tools.eclipse.ContentTypeUtils._
 import scala.tools.eclipse.javaelements.ScalaCompilationUnitManager
 
 trait NewResourceWizard extends BasicNewResourceWizard {
@@ -160,10 +161,12 @@ trait NewResourceWizard extends BasicNewResourceWizard {
       return false
     }
     ScalaCompilationUnitManager.getScalaCompilationUnit(file)
-    file.create(new java.io.StringBufferInputStream(
-      "package " + pkg.getElementName + "\n\n" +
-      kind.toLowerCase + " " + name + " {\n" + body + "\n}\n"
-    ), true, null)
+    withoutJavaLikeExtension {
+      file.create(new java.io.StringBufferInputStream(
+        "package " + pkg.getElementName + "\n\n" +
+        kind.toLowerCase + " " + name + " {\n" + body + "\n}\n"
+      ), true, null)
+    }
     // force build!
     file.getProject.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, null)
     getWorkbench.getActiveWorkbenchWindow match {

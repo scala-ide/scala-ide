@@ -16,6 +16,7 @@ class PerspectiveFactory extends IPerspectiveFactory {
     createFolders(layout);
     addShortcuts(layout);
     layout.addActionSet(IDebugUIConstants.LAUNCH_ACTION_SET);
+    layout.addActionSet(JavaUI.ID_ACTION_SET);
   }
   private def addShortcuts(layout : IPageLayout) = {
     layout.addNewWizardShortcut(ScalaPlugin.plugin.projectWizId)

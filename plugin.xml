@@ -45,16 +45,25 @@
             name="Scala Compiler Preferences">
       </page>
    </extension>
+	<extension point="org.eclipse.core.runtime.contentTypes">
+		<content-type id="scalaSource" name="Scala Source File" 
+			base-type="org.eclipse.core.runtime.text"
+			priority="high"				
+			file-extensions="scala"/>
+	</extension>
    
    <extension
          point="org.eclipse.ui.editors">
       <editor
-            class="scala.tools.eclipse.Editor"
-            extensions="scala"
-            icon="icons/scala.png"
+            name="Scala Editor"
+            default="true"
+            icon="icons/full/obj16/scu_obj.gif"
             contributorClass="scala.tools.eclipse.ActionContributor"
-            id="scala.tools.eclipse.Editor"
-            name="Scala Editor"/>
+            class="scala.tools.eclipse.Editor"
+            symbolicFontName="org.eclipse.jdt.ui.editors.textfont"
+            id="scala.tools.eclipse.Editor">
+            <contentTypeBinding contentTypeId="scala.tools.eclipse.scalaSource"/> 
+      </editor>
    </extension>
 	<extension point="org.eclipse.ui.editorActions">
       <editorContribution
@@ -215,9 +224,16 @@
            modes="run, debug"
            name="Scala Application"
            public="true"
-           sourceLocatorId="org.eclipse.jdt.launching.sourceLocator.JavaSourceLookupDirector"
+           sourceLocatorId="scala.tools.eclipse.launching.ScalaSourceLookupDirector"
            sourcePathComputerId="org.eclipse.jdt.launching.sourceLookup.javaSourcePathComputer">
      </launchConfigurationType>
+   </extension>
+   <extension point="org.eclipse.debug.core.sourceLocators">
+   		<sourceLocator
+   			id="scala.tools.eclipse.launching.ScalaSourceLookupDirector"
+   			class="scala.tools.eclipse.launching.ScalaSourceLookupDirector"
+   			name="Scala Source Locator">
+   		</sourceLocator>
    </extension>
    <extension point="org.eclipse.debug.ui.launchConfigurationTypeImages">
      <launchConfigurationTypeImage

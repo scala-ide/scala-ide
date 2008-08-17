@@ -7,6 +7,7 @@ package scala.tools.eclipse.javaelements
 
 import org.eclipse.core.resources.IFile
 import org.eclipse.jdt.core.JavaModelException 
+import org.eclipse.jdt.internal.core.{ CompilationUnit, JavaElement, OpenableElementInfo }
 import org.eclipse.jface.viewers.{ Viewer, ViewerFilter } 
 
 /**
@@ -17,6 +18,9 @@ import org.eclipse.jface.viewers.{ Viewer, ViewerFilter }
 class ScalaCompilationUnitFilter extends ViewerFilter {
   def select(viewer : Viewer, parentElement : AnyRef, element : AnyRef) : Boolean = {
     try {
+      if (element.isInstanceOf[ScalaCompilationUnit])
+        return element.asInstanceOf[ScalaCompilationUnit].exists
+      
       if (!element.isInstanceOf[IFile])
         return true
       
@@ -26,7 +30,7 @@ class ScalaCompilationUnitFilter extends ViewerFilter {
       
       val scu = ScalaCompilationUnitManager.getScalaCompilationUnitFromCache(f)
       if (scu == null)
-        return true
+        return f.exists
       
       if (!ScalaCompilationUnitManager.ensureUnitIsInModel(scu))
           JDTUtils.refreshPackageExplorer

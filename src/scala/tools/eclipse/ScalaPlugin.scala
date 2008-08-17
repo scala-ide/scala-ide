@@ -93,12 +93,8 @@ trait ScalaPlugin extends ScalaPluginSuperA with scala.tools.editor.Driver {
   trait ProjectA extends super[ScalaPluginSuperA].ProjectImpl
   trait ProjectB extends super[Driver].ProjectImpl
   trait ProjectImpl extends ProjectA with ProjectB with CompilerProject {
-    private[eclipse] val javaDepends = new LinkedHashSet[IProject]
 
-    override def externalDepends = 
-      if (buildCompiler eq null) Nil
-      else /*buildCompiler.*/javaDepends
-       
+    override def externalDepends = underlying.getReferencedProjects 
 
     def self : Project
     assert(underlying != null) // already initialized, I hope!

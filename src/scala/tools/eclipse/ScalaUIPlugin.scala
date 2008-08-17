@@ -8,11 +8,13 @@ package scala.tools.eclipse;
 
 import org.eclipse.core.resources.{ IFile, IResource, IResourceChangeEvent, IResourceDelta, IResourceDeltaVisitor, ResourcesPlugin }
 import org.eclipse.core.runtime.{ IAdapterFactory, Platform }
-import org.eclipse.jdt.core.{ IClassFile, IJavaElement }
+import org.eclipse.core.runtime.content.IContentTypeSettings
+import org.eclipse.jdt.core.{ IClassFile, IJavaElement, JavaCore, JavaModelException }
+import org.eclipse.jdt.internal.core.util.Util
 import org.eclipse.jdt.internal.ui.javaeditor.CompilationUnitDocumentProvider
 import org.eclipse.jdt.ui.JavaUI
 import org.eclipse.jface.text.IDocument
-import org.eclipse.ui.{ IWorkbenchPage, IEditorInput }
+import org.eclipse.ui.{ IWorkbenchPage, IEditorInput, PlatformUI }
 import org.eclipse.ui.part.FileEditorInput
 import org.eclipse.swt.widgets.Display
 import org.osgi.framework.BundleContext
@@ -49,6 +51,13 @@ trait ScalaUIPlugin extends {
     }
     
     Platform.getAdapterManager().registerAdapters(scuAdapter, classOf[FileEditorInput])
+    
+    Platform.getContentTypeManager.
+      getContentType(JavaCore.JAVA_SOURCE_CONTENT_TYPE).
+        addFileSpec("scala", IContentTypeSettings.FILE_EXTENSION_SPEC)
+    Util.resetJavaLikeExtensions
+
+    PlatformUI.getWorkbench.getEditorRegistry.setDefaultEditor("*.scala", editorId)
   }
   
   override def stop(context : BundleContext) = {

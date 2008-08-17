@@ -17,7 +17,7 @@ import org.eclipse.ui.IActionDelegate;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ltk.core.refactoring.participants.RenameProcessor
 
- 
+import scala.tools.eclipse.ContentTypeUtils._
 import scala.tools.eclipse.javaelements.ScalaCompilationUnit
 
 class RenameScalaFileAction extends IActionDelegate {
@@ -28,7 +28,9 @@ class RenameScalaFileAction extends IActionDelegate {
       if (sel.isInstanceOf[IStructuredSelection]) {
         val resource = getResource(sel.asInstanceOf[IStructuredSelection])
         if (RefactoringAvailabilityTester.isRenameAvailable(resource))
-          RefactoringExecutionStarter.startRenameResourceRefactoring(resource, window.getShell)
+          withoutJavaLikeExtension {
+            RefactoringExecutionStarter.startRenameResourceRefactoring(resource, window.getShell)
+          }
       }
     }
   }

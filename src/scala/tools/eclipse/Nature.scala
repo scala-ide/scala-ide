@@ -16,7 +16,8 @@ class Nature extends lampion.eclipse.Nature {
   protected def plugin : ScalaPlugin = ScalaPlugin.plugin
   override protected def requiredBuilders =
     plugin.builderId :: Nil
-  override protected def unrequiredBuilders = Nil
+  override protected def unrequiredBuilders =
+    JavaCore.BUILDER_ID :: Nil
 
   override def configure = {
     super.configure

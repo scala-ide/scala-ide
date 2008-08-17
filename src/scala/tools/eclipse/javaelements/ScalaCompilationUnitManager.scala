@@ -9,12 +9,14 @@ import scala.collection.mutable.{ ArrayBuffer, Buffer, HashMap }
 
 import org.eclipse.core.resources.{
   IContainer, IFile, IFolder, IProject, IResource, IResourceVisitor, IWorkspace }
-import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.CoreException
 import org.eclipse.jdt.core.{
   IClasspathEntry, ICompilationUnit, IJavaProject, IPackageFragment,
   IPackageFragmentRoot, JavaCore, JavaModelException, WorkingCopyOwner }
 import org.eclipse.jdt.internal.core.{
   JavaElement, JavaModelManager, OpenableElementInfo }
+
+import scala.tools.eclipse.ContentTypeUtils._
 
 /**
  * Maintains a cache containing ICompilationUnits for .scala files and is
@@ -135,20 +137,24 @@ object ScalaCompilationUnitManager {
       }
       compilationUnitStore -= file
     }
+    //compilationUnitStore -= file
   }
 
   private def createCU(file : IFile) : ScalaCompilationUnit = {
-    val scu = new ScalaCompilationUnit(file)
-
-    try {
-      val info = scu.getParent.asInstanceOf[JavaElement].getElementInfo.asInstanceOf[OpenableElementInfo]
-      info.removeChild(scu) // Remove identical CompilationUnit if it exists
-      info.addChild(scu)
-      compilationUnitStore.put(file, scu)
-    } catch {
-      case _ : JavaModelException =>
+    withoutJavaLikeExtension {
+      val scu = new ScalaCompilationUnit(file)
+  
+      try {
+        val info = scu.getParent.asInstanceOf[JavaElement].getElementInfo.asInstanceOf[OpenableElementInfo]
+        info.removeChild(scu) // Remove identical CompilationUnit if it exists
+        info.addChild(scu)
+        compilationUnitStore.put(file, scu)
+      } catch {
+        case _ : JavaModelException =>
+      }
+      
+      scu
     }
-    scu
   }
 
   def creatingCUisAllowedFor(file : IFile) : Boolean = {

@@ -9,6 +9,13 @@ import java.lang.reflect.{ AccessibleObject, Constructor }
 import java.security.{ AccessController, PrivilegedAction }
 
 trait ReflectionUtils {
+  def getConstructor[T](clazz : Class[T], paramTypes : Class[_]*) =
+    privileged {
+      val ctor = clazz.getDeclaredConstructor(paramTypes : _*)
+      ctor.setAccessible(true)
+      ctor
+    }
+
   def getMethod[T](clazz : Class[T], name : String, paramTypes : Class[_]*) =
     privileged {
       val method = clazz.getDeclaredMethod(name, paramTypes : _*)
