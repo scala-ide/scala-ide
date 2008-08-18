@@ -58,6 +58,7 @@
             name="Scala Editor"
             default="true"
             icon="icons/full/obj16/scu_obj.gif"
+            extensions="scala"
             contributorClass="scala.tools.eclipse.ActionContributor"
             class="scala.tools.eclipse.Editor"
             symbolicFontName="org.eclipse.jdt.ui.editors.textfont"
