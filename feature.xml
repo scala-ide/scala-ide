@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <feature
       id="ch.epfl.lamp.sdt"
-      label="Lampion Scala Plugin (BETA)"
+      label="Scala Eclipse Plugin"
       version="@PLUGIN_VERSION@"
       provider-name="EPFL Lamp">
 
