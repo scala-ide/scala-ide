@@ -6,6 +6,8 @@
 
 package scala.tools.eclipse.debug;
 
-class WatchExpressionDelegate {
+import org.eclipse.jdt.internal.debug.ui.JavaWatchExpressionDelegate
+
+class WatchExpressionDelegate extends JavaWatchExpressionDelegate {
 
 }
