@@ -10,6 +10,9 @@ import org.eclipse.core.runtime.{IProgressMonitor,IPath}
 import scala.collection.jcl._
 
 abstract class Builder extends IncrementalProjectBuilder {
+  
+  org.eclipse.jdt.internal.ui.javaeditor.JavaEditor.EDITOR_SHOW_BREADCRUMB
+  
   def plugin : Plugin
   def ifile(that : AnyRef) : IFile = 
     if (that.isInstanceOf[IFile]) (that.asInstanceOf[IFile])
@@ -40,7 +43,7 @@ abstract class Builder extends IncrementalProjectBuilder {
             true
         }
       })
-      project.externalDepends.map(getDelta).foreach(_.accept(new IResourceDeltaVisitor {
+      project.externalDepends.map(getDelta).foreach(f => if (f != null) f.accept(new IResourceDeltaVisitor {
         override def visit(delta : IResourceDelta) : Boolean = {
           val file = ifile(delta.getResource)
           if (delta.getKind == IResourceDelta.REMOVED) return true
