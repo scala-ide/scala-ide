@@ -16,7 +16,7 @@ trait Plugin {
     override def equals(that : Any) = that match {
     case that : ExternalFile if file == that.file => true
     case _ => false
-    }
+    } 
   }
   trait File {
     def external : ExternalFile
