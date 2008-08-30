@@ -68,11 +68,18 @@ class Editor extends { val plugin = Driver.driver } with lampion.eclipse.Editor 
   override def createPartControl(parent : Composite) {
     val store = getPreferenceStore.asInstanceOf[ChainedPreferenceStore]
     EditorUtils.prependStore(store, EditorUtils.suppressingStore)
+    val perspective= getSite.getPage.getPerspective
+    if (perspective != null && store != null) {
+      val key = JavaEditor.EDITOR_SHOW_BREADCRUMB + "." + perspective.getId
+      val myStore = new PreferenceStore()
+      myStore.setValue(key,false)
+      EditorUtils.prependStore(store, myStore)
+    }
     super.createPartControl(parent)
   }
   
   // Breadcumb not yet supported for Scala
-  override def createBreadcrumb : IBreadcrumb = null
+  //override def createBreadcrumb : IBreadcrumb = null
 
   // Folding not yet supported for Scala
 	override def isFoldingEnabled = false
