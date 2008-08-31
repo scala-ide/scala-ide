@@ -270,7 +270,9 @@ trait Parsers extends NewMatchers with core.RangeTrees  {
         val next = parses.dirty.elements.next
         if (next.isValid) {
           next.doParse
-          assert(next.hasLength)
+          if (!next.hasLength) {
+            logError("no length", null)
+          }
         }
         else parses.dirty remove next
       }
