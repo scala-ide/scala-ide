@@ -97,7 +97,7 @@ abstract class SourceViewer(parent : Composite, vertical : IVerticalRuler, overv
       val file = SourceViewer.this.file.get.asInstanceOf[project.File]
       project.hover(file, region.getOffset) match {
       case None => null
-      case Some(seq) => seq.mkString
+      case Some(seq) => seq.mkString + " <p></p>"
       }
     } catch {
       case ex => 
