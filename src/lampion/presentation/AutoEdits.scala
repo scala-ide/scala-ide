@@ -96,6 +96,7 @@ trait AutoEdits extends Presentations {
       def indentOfThisLine(offset : Int) : RandomAccessSeq[Char] = {
         var length = 0
         var offset0 = offset
+        if (offset0 >= content.length) return ""
         while (offset0 > 0 && isNewline(content(offset0))) offset0 = offset0 - 1
         while (offset0 > 0) content(offset0) match {
           case c if isNewline(c) => return content.slice(offset0 + 1, offset0 + 1 + length)
