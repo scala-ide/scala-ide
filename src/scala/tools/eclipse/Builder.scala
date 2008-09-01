@@ -29,7 +29,7 @@ class Builder extends lampion.eclipse.Builder {
   override def build(kind : Int, ignored : JMap[_, _], monitor : IProgressMonitor) : Array[IProject] = {
     val depends = super.build(kind, ignored, monitor)
     ensureProject
-    val javaDepends = scalaJavaBuilder.build(IncrementalProjectBuilder.FULL_BUILD, ignored, monitor)
+    val javaDepends = scalaJavaBuilder.build(kind, ignored, monitor)
     val modelManager = JavaModelManager.getJavaModelManager
     val state = modelManager.getLastBuiltState(getProject, null).asInstanceOf[State]
     val newState = if (state == null) StateUtils.newState(scalaJavaBuilder) else state
