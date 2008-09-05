@@ -200,7 +200,7 @@ trait ScalaStructureBuilder extends ScalaJavaMapper { self : ScalaCompilationUni
         mb.addChild(instanceElem)
         
         val instanceElemInfo = new ScalaSourceFieldElementInfo
-        instanceElemInfo.setFlags0(ClassFileConstants.AccPrivate | ClassFileConstants.AccStatic | ClassFileConstants.AccFinal)
+        instanceElemInfo.setFlags0(ClassFileConstants.AccPublic | ClassFileConstants.AccStatic | ClassFileConstants.AccFinal)
         instanceElemInfo.setTypeName(moduleElem.getFullyQualifiedName('.').toCharArray)
         newElements0.put(instanceElem, instanceElemInfo)
         

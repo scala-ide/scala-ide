@@ -10,9 +10,6 @@ import org.eclipse.core.runtime.{IProgressMonitor,IPath}
 import scala.collection.jcl._
 
 abstract class Builder extends IncrementalProjectBuilder {
-  
-  org.eclipse.jdt.internal.ui.javaeditor.JavaEditor.EDITOR_SHOW_BREADCRUMB
-  
   def plugin : Plugin
   def ifile(that : AnyRef) : IFile = 
     if (that.isInstanceOf[IFile]) (that.asInstanceOf[IFile])

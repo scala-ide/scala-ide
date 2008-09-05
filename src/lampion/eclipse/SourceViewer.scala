@@ -6,28 +6,23 @@
 
 package lampion.eclipse;
 
-import org.eclipse.core.resources.{ IWorkspaceRunnable, IMarker, IResource }
-import org.eclipse.core.runtime.{ IProgressMonitor, NullProgressMonitor }
-import org.eclipse.core.resources.{IWorkspaceRunnable,IMarker,IResource}
+import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.jdt.internal.ui.JavaPlugin
 import org.eclipse.jdt.internal.ui.javaeditor.JavaSourceViewer
-import org.eclipse.jdt.internal.ui.text.{ JavaColorManager, JavaCompositeReconcilingStrategy, JavaReconciler }
+import org.eclipse.jdt.internal.ui.text.{ JavaCompositeReconcilingStrategy, JavaReconciler }
+import org.eclipse.jdt.internal.ui.text.java.hover.{ JavadocBrowserInformationControlInput, JavadocHover }
 import org.eclipse.jdt.ui.text.JavaSourceViewerConfiguration
+import org.eclipse.jface.internal.text.html.HTMLPrinter
 import org.eclipse.jface.preference.IPreferenceStore
-import org.eclipse.jface.text.{TextPresentation,ITextInputListener,ITypedRegion,DocumentEvent,DefaultInformationControl,IInformationControlCreator,IDocumentListener,IDocument,DocumentCommand,IAutoEditStrategy,ITextViewer,ITextHover,ITextHoverExtension,IRegion,Region}
-import org.eclipse.jface.text.contentassist.{ContentAssistant,IContentAssistant,IContentAssistProcessor,IContextInformation,IContextInformationPresenter,IContextInformationValidator}
-import org.eclipse.jface.text.hyperlink.{IHyperlink,IHyperlinkDetector}
-import org.eclipse.jface.text.presentation.{IPresentationDamager,IPresentationRepairer,PresentationReconciler}
+import org.eclipse.jface.text.{ TextPresentation, ITextInputListener, ITypedRegion, DocumentEvent, IDocument, ITextViewer, IRegion, Region}
+import org.eclipse.jface.text.hyperlink.{ IHyperlink, IHyperlinkDetector }
+import org.eclipse.jface.text.presentation.{ IPresentationDamager, IPresentationRepairer, PresentationReconciler }
 import org.eclipse.jface.text.reconciler.IReconciler
-import org.eclipse.jface.text.source._
-import org.eclipse.jface.text.source.projection.{ProjectionAnnotationModel,ProjectionSupport,ProjectionViewer,IProjectionListener}
-import org.eclipse.swt.SWT
-import org.eclipse.swt.custom.{ExtendedModifyEvent,ExtendedModifyListener}
-import org.eclipse.swt.events.{KeyListener,KeyEvent,FocusListener,FocusEvent,VerifyEvent}
-import org.eclipse.swt.widgets.{Composite,Shell}
-import org.eclipse.ui.{IFileEditorInput}
-import org.eclipse.ui.texteditor.{ContentAssistAction,SourceViewerDecorationSupport,ITextEditor, ITextEditorActionDefinitionIds}
-import org.eclipse.ui.editors.text.{ TextEditor, TextSourceViewerConfiguration }
+import org.eclipse.jface.text.source.{ IAnnotationAccess, IAnnotationModel, IAnnotationModelListener, IOverviewRuler, ISharedTextColors, ISourceViewer, IVerticalRuler, SourceViewerConfiguration }
+import org.eclipse.jface.text.source.projection.{ ProjectionAnnotationModel, ProjectionSupport, ProjectionViewer }
+import org.eclipse.swt.events.{ FocusListener, FocusEvent, VerifyEvent }
+import org.eclipse.swt.widgets.{ Composite, Shell }
+import org.eclipse.ui.texteditor.ITextEditor
 
 import lampion.util.ReflectionUtils
 
@@ -89,45 +84,42 @@ abstract class SourceViewer(parent : Composite, vertical : IVerticalRuler, overv
   }
   def doCreatePresentation = true
   
-  import org.eclipse.jface.text.information.IInformationProviderExtension2;
-
-  object textHover extends ITextHover with ITextHoverExtension with IInformationProviderExtension2 {
-    override def getHoverInfo(viewer : ITextViewer, region : IRegion) = try {
-      val project = SourceViewer.this.file.get.project
-      val file = SourceViewer.this.file.get.asInstanceOf[project.File]
-      project.hover(file, region.getOffset) match {
-      case None => null
-      case Some(seq) => seq.mkString + " <p></p>"
+  object textHover extends JavadocHover with ReflectionUtils {
+    val getStyleSheetMethod = getMethod(classOf[JavadocHover], "getStyleSheet")
+    
+    editor.map(setEditor)
+    
+  	override def getHoverInfo2(textViewer : ITextViewer, hoverRegion :  IRegion) = {
+  		val i = super.getHoverInfo2(textViewer, hoverRegion)
+      if (i != null)
+        i
+      else {
+        val s =
+          try {
+            val project = SourceViewer.this.file.get.project
+            val file = SourceViewer.this.file.get.asInstanceOf[project.File]
+            project.hover(file, hoverRegion.getOffset) match {
+              case Some(seq) => seq.mkString
+              case None => ""
+            }
+          } catch {
+            case ex => {
+              plugin.logError(ex)
+              ""
+            }
+          }
+        
+        val buffer = new StringBuffer(s)
+  			HTMLPrinter.insertPageProlog(buffer, 0, getStyleSheet0)
+  			HTMLPrinter.addPageEpilog(buffer)
+        
+        new JavadocBrowserInformationControlInput(null, null, buffer.toString, 0)
       }
-    } catch {
-      case ex => 
-        plugin.logError(ex)
-        ""
     }
-
-    def getHoverRegion(viewer : ITextViewer, offset : Int) = new Region(offset, 0); 
-    def getHoverControlCreator = new IInformationControlCreator {
-      def createInformationControl(parent : Shell) = try {
-        import org.eclipse.jface.internal.text.html._;
-        import org.eclipse.jdt.ui._;
-        var clazz = classOf[BrowserInformationControl]
-        var c = clazz.getConstructor(classOf[Shell], classOf[String], java.lang.Boolean.TYPE)
-        val ret0 = c.newInstance(parent, PreferenceConstants.APPEARANCE_JAVADOC_FONT, new java.lang.Boolean(false)).asInstanceOf[BrowserInformationControl];
-        ret0
-      } catch {
-      case t : Throwable => try {
-        import org.eclipse.jface.internal.text.html.HTMLTextPresenter;
-        //val ret0 = new BrowserInformationControl(parent, PreferenceConstants.APPEARANCE_JAVADOC_FONT, false)
-        val ret = new DefaultInformationControl(parent, new HTMLTextPresenter)
-        ret.setBackgroundColor(parent.getDisplay.getSystemColor(SWT.COLOR_WHITE));
-        ret.setForegroundColor(parent.getDisplay.getSystemColor(SWT.COLOR_BLACK));
-        ret
-      } catch {
-      case t : Throwable => new DefaultInformationControl(parent)
-      }}
-      }
-    def getInformationPresenterControlCreator = getHoverControlCreator
+    
+    def getStyleSheet0 = getStyleSheetMethod.invoke(null).asInstanceOf[String]
   }
+  
   object hyperlinkDetector extends IHyperlinkDetector {
     override def detectHyperlinks(tv : ITextViewer, region : IRegion, canShowMultiple : Boolean) : Array[IHyperlink] = {
       //Console.println("HYPER: " + region.getOffset + " " + region.getLength)
@@ -220,7 +212,6 @@ object SourceViewer extends ReflectionUtils {
   val fIsSetVisibleDocumentDelayedField = getField(jsvClass, "fIsSetVisibleDocumentDelayed")
 
   class Configuration(store : IPreferenceStore, editor : ITextEditor)
-    //extends TextSourceViewerConfiguration(store) {
     extends JavaSourceViewerConfiguration(JavaPlugin.getDefault.getJavaTextTools.getColorManager, store, editor, null) {
     implicit def coerce(sv : ISourceViewer) = sv.asInstanceOf[SourceViewer]
     override def getPresentationReconciler(sv : ISourceViewer) = sv.reconciler
