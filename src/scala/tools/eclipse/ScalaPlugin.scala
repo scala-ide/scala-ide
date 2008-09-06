@@ -258,11 +258,15 @@ trait ScalaPlugin extends ScalaPluginSuperA with scala.tools.editor.Driver {
       settings.allSettings.elements.filter(!_.hiddenToIDE).foreach {
 	      setting =>
           val value = store.getString(convertNameToProperty(setting.name))
-          if (value != null) {
-            setting match {
-              case b : settings.BooleanSetting => b.value = value.equalsIgnoreCase("true")
-              case s : settings.Setting => setting.tryToSet(setting.name :: value :: Nil) 
+		  try {          
+            if (value != null) {
+              setting match {
+                case b : settings.BooleanSetting => b.value = value.equalsIgnoreCase("true")
+                case s : settings.Setting => setting.tryToSet(setting.name :: value :: Nil) 
+              }
             }
+          } catch {
+            case t : Throwable => logError("Unable to set setting '"+setting.name+"'", t)
           }
       }
       global.settings = settings
