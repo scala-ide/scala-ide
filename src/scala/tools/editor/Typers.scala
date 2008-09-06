@@ -79,7 +79,7 @@ trait Typers extends Parsers with lampion.compiler.Typers {
     } 
     override def asParseTree : compiler.StubTree = new StubTree
     override def activate(f : => Unit) : Unit = {
-      val processor = self
+      @uncheckedStable val processor = self
       (new processor.DoType[Unit] {
         def doType0 = f
       }).apply

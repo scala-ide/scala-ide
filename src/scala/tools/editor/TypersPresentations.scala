@@ -459,7 +459,7 @@ trait TypersPresentations extends scala.tools.editor.Presentations {
           val content = FileImpl.this.content.slice(range.from, range.until + 1).
             patch(replaceAt0, magicName.toString, replaceLength)
           val replaced = magicName.toString.length
-          val node0 = range.get
+          @uncheckedStable val node0 = range.get
           val parser = new node0.Parser(content, node0.parseContext) {
             override protected def doDestroy = {
               //assert(false)
