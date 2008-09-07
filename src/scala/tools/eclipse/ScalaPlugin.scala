@@ -389,7 +389,7 @@ trait ScalaPlugin extends ScalaPluginSuperA with scala.tools.editor.Driver {
     }
     
     
-    private var buildCompiler : BuildCompiler = _
+    private var buildCompiler : BuildCompiler = _ 
     override def build(toBuild : LinkedHashSet[File])(implicit monitor : IProgressMonitor) : Seq[File] = {
       checkClasspath
       if (buildCompiler == null) {
