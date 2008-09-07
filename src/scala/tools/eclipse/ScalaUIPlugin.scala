@@ -118,8 +118,12 @@ trait ScalaUIPlugin extends {
     def self : Project
     type File <: FileImpl
     trait FileImpl extends super[ProjectImplA].FileImpl with super[ProjectImplB].FileImpl {selfX:File=>
-      def self : File
-      var outlineTrees : List[compiler.Tree] = List(unloadedBody) 
+      def self : File 
+      var outlineTrees0 : List[compiler.Tree] = null
+      def outlineTrees = {
+        if (outlineTrees0 == null) outlineTrees0 = List(unloadedBody) 
+        outlineTrees0
+      }
       override def doLoad0(page : IWorkbenchPage) = underlying match {
       case ClassFileSpec(source,clazz) => page.openEditor(new ClassFileInput(project,source,clazz), editorId) 
       case _ => super.doLoad0(page)
@@ -127,11 +131,11 @@ trait ScalaUIPlugin extends {
       override def parseChanged(node : ParseNode) = {
         super.parseChanged(node)
         //Console.println("PARSE_CHANGED: " + node)
-        outlineTrees = rootParse.lastTyped
+        outlineTrees0 = rootParse.lastTyped
       }
       override  def prepareForEditing = {
         super.prepareForEditing
-        outlineTrees = rootParse.lastTyped
+        outlineTrees0 = rootParse.lastTyped
       }
     }
     override def imageFor(style : Style) : Option[Image] = {
