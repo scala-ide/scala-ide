@@ -798,4 +798,28 @@
      </initializer>
   </extension>
 
+  <extension point="org.eclipse.debug.ui.launchShortcuts">
+    <shortcut
+      class="scala.tools.eclipse.launching.ScalaLaunchShortcut"
+      icon="icons/full/obj16/scu_obj.gif"
+      id="org.eclipse.shortcut.scala"
+      label="Scala Application"
+      modes="run,debug">
+      <contextualLaunch>
+        <enablement>
+          <with variable="selection">
+            <count value="1" />
+            <iterate>
+              <or>
+                <test property="org.eclipse.debug.ui.matchesPattern" value="*.scala"/>
+                <test property="org.eclipse.debug.ui.matchesPattern" value="*.class"/>
+                <instanceof value="org.eclipse.jdt.core.IJavaElement"/>
+              </or>
+            </iterate>
+          </with>
+        </enablement>
+      </contextualLaunch>
+    </shortcut>
+  </extension>
+
 </plugin>
