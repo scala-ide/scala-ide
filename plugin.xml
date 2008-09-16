@@ -810,11 +810,7 @@
           <with variable="selection">
             <count value="1" />
             <iterate>
-              <or>
-                <test property="org.eclipse.debug.ui.matchesPattern" value="*.scala"/>
-                <test property="org.eclipse.debug.ui.matchesPattern" value="*.class"/>
-                <instanceof value="org.eclipse.jdt.core.IJavaElement"/>
-              </or>
+              <test property="org.eclipse.debug.ui.matchesPattern" value="*.scala"/>
             </iterate>
           </with>
         </enablement>
