@@ -11,6 +11,7 @@ import scala.collection.jcl.{LinkedHashMap,LinkedHashSet}
 import scala.tools.nsc.ast.parser.Tokens
 import scala.tools.nsc.io.{AbstractFile,PlainFile,ZipArchive}
 import scala.tools.nsc.util._
+import scala.collection.mutable.ListBuffer
  
 trait TypersPresentations extends scala.tools.editor.Presentations {
   private val closeComment = "*/"
