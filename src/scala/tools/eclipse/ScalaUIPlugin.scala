@@ -70,27 +70,33 @@ trait ScalaUIPlugin extends {
         def visit(delta : IResourceDelta) : Boolean = {
           delta.getKind match {
             case IResourceDelta.ADDED => {
-              // println("Resource added: "+delta.getFullPath)
               delta.getResource match {
                 case f : IFile => {
                   if (ScalaCompilationUnitManager.creatingCUisAllowedFor(f)) {
-                    // println("Creating CU for: "+f.getName)
                     ScalaCompilationUnitManager.getScalaCompilationUnit(f)
                     JDTUtils.refreshPackageExplorer
                   }
-                  else
-                    println("Not creating CU for: "+f.getName)
                 }
                 case _ =>
               }
             }
             case IResourceDelta.REMOVED => {
-              // println("Resource removed: "+delta.getFullPath)
               delta.getResource match {
                 case f : IFile => {
-                  // println("Removing CU for: "+f.getName)
                   ScalaCompilationUnitManager.removeFileFromModel(f)
                   JDTUtils.refreshPackageExplorer
+                }
+                case _ =>
+              }
+            }
+            case IResourceDelta.CHANGED => {
+              delta.getResource match {
+                case f : IFile => {
+                  if (f.getFileExtension == "java" &&
+                    ScalaPlugin.isScalaProject(f.getProject) &&
+                    (JavaCore.create(f.getProject).isOnClasspath(f))) {
+                      projectSafe(f.getProject).get.stale(f.getLocation)
+                  }
                 }
                 case _ =>
               }
