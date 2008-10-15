@@ -64,7 +64,7 @@ class ScalaCompilationUnit(fragment : PackageFragment, elementName: String, work
     if (!isPrimary && getPerWorkingCopyInfo == null)
       throw newNotPresentException
 
-    val sourceLength = file.nscFile.size.getOrElse(-1)
+    val sourceLength = file.nscFile.sizeOption.getOrElse(-1)
     val endPosMap = computeEndPosMap(root)
     
     new StructureBuilderTraverser(unitInfo, newElements.asInstanceOf[JMap[AnyRef, AnyRef]], sourceLength, endPosMap).traverseTrees(root)
