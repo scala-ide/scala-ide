@@ -5,13 +5,15 @@
 // $Id$
  
 package scala.tools.editor
-import scala.collection.jcl._
-import scala.tools.nsc.util
+
+import scala.annotation.unchecked.uncheckedStable
 import scala.collection.jcl.{LinkedHashMap,LinkedHashSet}
+import scala.collection.mutable.ListBuffer
+
+import scala.tools.nsc.util
 import scala.tools.nsc.ast.parser.Tokens
 import scala.tools.nsc.io.{AbstractFile,PlainFile,ZipArchive}
 import scala.tools.nsc.util._
-import scala.collection.mutable.ListBuffer
  
 trait TypersPresentations extends scala.tools.editor.Presentations {
   private val closeComment = "*/"

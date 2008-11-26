@@ -6,10 +6,12 @@
   
 package scala.tools.editor
 
-import scala.tools.nsc
-import nsc.{util,io} 
+import scala.annotation.unchecked.uncheckedStable
 import scala.collection.jcl._
- 
+
+import nsc.{util,io} 
+import scala.tools.nsc
+
 trait Typers extends Parsers with lampion.compiler.Typers {
   final override type TypeInfo = List[compiler.Tree]
 
