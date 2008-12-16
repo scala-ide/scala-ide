@@ -113,6 +113,7 @@ trait ScalaPlugin extends ScalaPluginSuperA with scala.tools.editor.Driver {
         }
       }
       val fldr = workspace.getFolder(javaProject.getOutputLocation)
+      fldr.refreshLocal(IResource.DEPTH_ZERO, null)
       if(!fldr.exists()) {
         createParentFolder(fldr.getParent)
         fldr.create(IResource.FORCE | IResource.DERIVED, true, null)
@@ -444,7 +445,12 @@ trait ScalaPlugin extends ScalaPluginSuperA with scala.tools.editor.Driver {
       if (sym == NoSymbol) None
       else if (sym.owner.isPackageClass) {
         val found = javaProject.findType(sym.owner.fullNameString('.'), sym.simpleName.toString, null : IProgressMonitor)
-        if (found eq null) None else Some(found)
+        if (found eq null) None
+        else if (sym.isConstructor) {
+          val params = sym.info.paramTypes.map(signatureFor).toArray
+          found.getMethod(sym.nameString, params)
+        }
+        else Some(found)
       } else {
         findJava(sym.owner) match {
           case Some(owner : IType) =>
@@ -452,7 +458,10 @@ trait ScalaPlugin extends ScalaPluginSuperA with scala.tools.editor.Driver {
             implicit def coerce(c : IJavaElement) : Option[IJavaElement] = if (c eq null) None else Some(c)
             if (ret.isEmpty && sym.isMethod) {
               val params = sym.info.paramTypes.map(signatureFor).toArray
-              ret = owner.getMethod(sym.nameString, params)
+              val name = if (sym.isConstructor) sym.owner.nameString else sym.nameString 
+              val methods = owner.findMethods(owner.getMethod(name, params))
+              if ((methods ne null) && methods.length > 0)
+                ret = methods(0)
             }
             if (ret.isEmpty && sym.isType) ret = owner.getType(sym.nameString)
             if (ret.isEmpty) ret = owner.getField(sym.nameString)

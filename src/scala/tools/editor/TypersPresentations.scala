@@ -13,6 +13,7 @@ import scala.collection.mutable.ListBuffer
 import scala.tools.nsc.util
 import scala.tools.nsc.ast.parser.Tokens
 import scala.tools.nsc.io.{AbstractFile,PlainFile,ZipArchive}
+import scala.tools.nsc.symtab.Flags
 import scala.tools.nsc.util._
  
 trait TypersPresentations extends scala.tools.editor.Presentations {
@@ -148,27 +149,28 @@ trait TypersPresentations extends scala.tools.editor.Presentations {
     }    
     protected def javaRef(symbol : Symbol) : IdeRef
     protected def fileFor(sym : Symbol) : Option[TypersPresentations.this.File]
-    private def decode(symbol : Symbol) : IdeRef = symbol.pos match {
-    case pos : IdentifierPositionImpl => pos
-    case NoPosition => 
+    private def decode(symbol : Symbol) : IdeRef = {
       symbol.info // force completion
       val source = symbol.sourceFile
-      if (source eq null) return NoRef
-      // if a local file, 
-      if (source.name.endsWith(".java")) {
-        return javaRef(symbol)
-      }
-      if (!source.name.endsWith(".scala")) return NoRef
-      // force load the file!
-      loadSource(source)
-      if (symbol.pos == NoPosition) return NoRef
-      else return decode(symbol)
-    case OffsetPosition(source,offset) => fileFor(symbol) match {
-      case None => NoRef
-      case Some(file) => 
-        val e = file.external
-        new e.file.IdeRef(offset,e.project.adapt(Some(symbol)).getOrElse(e.project.compiler.NoSymbol))
-      }
+      if ((symbol hasFlag Flags.JAVA) || ((source ne null) && source.name.endsWith(".java")))
+        javaRef(symbol)
+      else 
+        symbol.pos match {
+          case pos : IdentifierPositionImpl => pos
+          case NoPosition => 
+            if (source eq null) return NoRef
+            if (!source.name.endsWith(".scala")) return NoRef
+            // force load the file!
+            loadSource(source)
+            if (symbol.pos == NoPosition) return NoRef
+            else return decode(symbol)
+          case OffsetPosition(source,offset) => fileFor(symbol) match {
+            case None => NoRef
+            case Some(file) => 
+              val e = file.external
+              new e.file.IdeRef(offset,e.project.adapt(Some(symbol)).getOrElse(e.project.compiler.NoSymbol))
+          }
+        }
     }
     private def isMagicPhase = currentTyped.map[Boolean](_.isInstanceOf[MagicProcessor]).getOrElse(false)
     
@@ -426,10 +428,52 @@ trait TypersPresentations extends scala.tools.editor.Presentations {
           }
           return None
         }
-        override def hyperlink : Option[Hyperlink] = super.hyperlink orElse (asSymbol(enclosingParse).map(decode) match {
-        case None|Some(NoRef) => None 
-        case Some(ref) => Some(Hyperlink(ref.hyperlink)("Go to"))
-        })
+        override def hyperlink : Option[Hyperlink] =
+          super.hyperlink orElse {
+            val node = {
+              val symbol = asSymbol(enclosingParse)
+              if (symbol.isDefined && symbol.get.owner.isPackageClass) {
+                val tree = sourceMap(nscFile)._1
+                object CtorFinderTraverser extends Traverser {
+                  var lastSelect : Option[Symbol] = None
+                  var inLastSelect = false
+                  var rightmost = 0
+                  override def traverse(tree: Tree): Unit = {
+                    if (tree.pos.offset.isDefined && rightmost < tree.pos.offset.get)
+                      rightmost = tree.pos.offset.get
+                    if (rightmost < offset && !inLastSelect)
+                      lastSelect = None
+                    if (rightmost > offset)
+                      return
+                    tree match {
+                      case sel : Select =>
+                        if (rightmost <= offset && sel.symbol.isConstructor) {
+                          sel.symbol.info.complete(sel.symbol)
+                          lastSelect = Some(sel.symbol)
+                          inLastSelect = true
+                          super.traverse(sel)
+                          inLastSelect = false
+                          if ((lastSelect.getOrElse(null) eq sel) && rightmost < offset)
+                            lastSelect = None
+                        }
+                        else
+                          super.traverse(sel)
+                          
+                      case _ => super.traverse(tree)
+                    }
+                  }
+                }
+                CtorFinderTraverser.traverse(tree)
+                CtorFinderTraverser.lastSelect orElse symbol
+              } else symbol
+            }
+            
+            val ref = node.map(decode)
+            ref match {
+              case None|Some(NoRef) => None 
+              case Some(r) => Some(Hyperlink(r.hyperlink)("Go to"))
+            }
+          }
         override def completions(offset : Int) : List[Completion] = {
           if (!editing || jobIsAsync) return Nil // busy
           if (!isMatched) return Nil

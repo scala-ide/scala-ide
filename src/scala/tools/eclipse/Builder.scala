@@ -6,7 +6,7 @@
 
 package scala.tools.eclipse
 
-import java.util.{ Map => JMap }
+import java.{ lang => jl, util => ju }
 
 import org.eclipse.core.resources.{ IncrementalProjectBuilder, IProject }
 import org.eclipse.core.runtime.IProgressMonitor
@@ -14,6 +14,7 @@ import org.eclipse.jdt.internal.core.JavaModelManager
 import org.eclipse.jdt.internal.core.builder.{ JavaBuilder, State }
 
 import lampion.util.ReflectionUtils
+import scala.tools.eclipse.javaelements.JDTUtils
 
 class Builder extends lampion.eclipse.Builder {
   def plugin = ScalaPlugin.plugin
@@ -24,19 +25,29 @@ class Builder extends lampion.eclipse.Builder {
     super.clean(monitor)
     ensureProject
     scalaJavaBuilder.clean(monitor)
+    JDTUtils.refreshPackageExplorer
   }
   
-  override def build(kind : Int, ignored : JMap[_, _], monitor : IProgressMonitor) : Array[IProject] = {
+  override def build(kind : Int, ignored : ju.Map[_, _], monitor : IProgressMonitor) : Array[IProject] = {
     val depends = super.build(kind, ignored, monitor)
-    ensureProject
-    val javaDepends = scalaJavaBuilder.build(kind, ignored, monitor)
-    val modelManager = JavaModelManager.getJavaModelManager
-    val state = modelManager.getLastBuiltState(getProject, null).asInstanceOf[State]
-    val newState = if (state == null) StateUtils.newState(scalaJavaBuilder) else state
-    StateUtils.tagAsStructurallyChanged(state)
-    StateUtils.resetStructurallyChangedTypes(state)
-    modelManager.setLastBuiltState(getProject, newState)
-    (Set.empty ++ depends ++ javaDepends).toArray
+    if (plugin.projectSafe(getProject).get.lastBuildHadBuildErrors)
+      depends
+    else {
+      ensureProject
+      val javaDepends = scalaJavaBuilder.build(kind, ignored, monitor)
+      val modelManager = JavaModelManager.getJavaModelManager
+      val state = modelManager.getLastBuiltState(getProject, null).asInstanceOf[State]
+      val newState = if (state ne null) state
+        else {
+          ScalaJavaBuilder.initializeBuilder(scalaJavaBuilder, 0, false)
+          StateUtils.newState(scalaJavaBuilder)
+        }
+      StateUtils.tagAsStructurallyChanged(newState)
+      StateUtils.resetStructurallyChangedTypes(newState)
+      modelManager.setLastBuiltState(getProject, newState)
+      JDTUtils.refreshPackageExplorer
+      (Set.empty ++ depends ++ javaDepends).toArray
+    }
   }
   
   def ensureProject = {
@@ -55,7 +66,7 @@ class ScalaJavaBuilder extends JavaBuilder {
     withoutJavaLikeExtension { super.clean(monitor) }
   }
   
-  override def build(kind : Int, ignored : JMap[_, _], monitor : IProgressMonitor) : Array[IProject] = {
+  override def build(kind : Int, ignored : ju.Map[_, _], monitor : IProgressMonitor) : Array[IProject] = {
     withoutJavaLikeExtension { super.build(kind, ignored, monitor) }
   }
 }
@@ -63,13 +74,16 @@ class ScalaJavaBuilder extends JavaBuilder {
 object ScalaJavaBuilder extends ReflectionUtils {
   private val ibClazz = Class.forName("org.eclipse.core.internal.events.InternalBuilder")
   private val setProjectMethod = getMethod(ibClazz, "setProject", classOf[IProject])
+  private val jbClazz = Class.forName("org.eclipse.jdt.internal.core.builder.JavaBuilder")
+  private val initializeBuilderMethod = getMethod(jbClazz, "initializeBuilder", classOf[Int], classOf[Boolean])
   
-  def setProject(builder : ScalaJavaBuilder, project : IProject) = setProjectMethod.invoke(builder, project)  
+  def setProject(builder : ScalaJavaBuilder, project : IProject) = setProjectMethod.invoke(builder, project)
+  def initializeBuilder(builder : ScalaJavaBuilder, kind : Int, forBuild : Boolean) = initializeBuilderMethod.invoke(builder, int2Integer(kind), boolean2Boolean(forBuild))
 }
 
 object StateUtils extends ReflectionUtils {
-  private val stateClazz = Class.forName("org.eclipse.jdt.internal.core.builder.State")
-  private val stateCtor = getConstructor(classOf[JavaBuilder])
+  private val stateClazz = Class.forName("org.eclipse.jdt.internal.core.builder.State").asInstanceOf[Class[State]]
+  private val stateCtor = getConstructor(stateClazz, classOf[JavaBuilder])
   private val tagAsStructurallyChangedMethod = getMethod(stateClazz, "tagAsStructurallyChanged")
   private val structurallyChangedTypesField = getField(stateClazz, "structurallyChangedTypes")
   

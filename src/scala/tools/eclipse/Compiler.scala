@@ -70,7 +70,10 @@ trait Compiler extends Global {
   }
 
   def computeDepends(loader : loaders.PackageLoader) = {
-    if (loader.directory.entries.isEmpty || 
+    if (loader == null ||
+        loader.directory == null ||
+        loader.directory.entries == null ||
+        loader.directory.entries.isEmpty || 
         loader.directory.entries.head.source == null ||
         !loader.directory.entries.head.source.location.isInstanceOf[PlainFile]) null else {
       val path = loader.directory.entries.head.source.location.toString;

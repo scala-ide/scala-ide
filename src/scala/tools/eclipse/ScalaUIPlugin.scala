@@ -92,8 +92,7 @@ trait ScalaUIPlugin extends {
             case IResourceDelta.CHANGED => {
               delta.getResource match {
                 case f : IFile => {
-                  if (f.getFileExtension == "java" &&
-                    ScalaPlugin.isScalaProject(f.getProject) &&
+                  if (ScalaPlugin.isScalaProject(f.getProject) &&
                     (JavaCore.create(f.getProject).isOnClasspath(f))) {
                       projectSafe(f.getProject).get.stale(f.getLocation)
                   }
@@ -169,7 +168,8 @@ trait ScalaUIPlugin extends {
         Some("Method added to Java class by Scala compiler.")
       }
       import org.eclipse.jdt.ui._
-      override def hyperlink = JavaUI.openInEditor(elem, true, true)
+      override def hyperlink =
+        JavaUI.openInEditor(elem, true, true)
       override def symbol = Some(symbol0)
     }
     override protected def javaRef(symbol : compiler.Symbol) : IdeRef = {

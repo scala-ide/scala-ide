@@ -11,21 +11,24 @@ import java.util.ResourceBundle
 import org.eclipse.core.internal.runtime.AdapterManager
 import org.eclipse.jdt.core.{ ICompilationUnit, IJavaElement, JavaModelException }
 import org.eclipse.jdt.internal.corext.util.JavaModelUtil
-import org.eclipse.jdt.internal.ui.JavaPlugin
-import org.eclipse.jdt.internal.ui.javaeditor.{ ClassFileDocumentProvider, JavaEditor, SemanticHighlightings }
+import org.eclipse.jdt.internal.ui.{ JavaPlugin, IJavaHelpContextIds }
+import org.eclipse.jdt.internal.ui.actions.IndentAction
+import org.eclipse.jdt.internal.ui.javaeditor.{ ClassFileDocumentProvider, JavaEditor, JavaEditorMessages, SemanticHighlightings, ToggleCommentAction }
 import org.eclipse.jdt.internal.ui.javaeditor.breadcrumb.IBreadcrumb
 import org.eclipse.jdt.ui.{ JavaUI, PreferenceConstants } 
+import org.eclipse.jdt.ui.actions.IJavaEditorActionDefinitionIds
+import org.eclipse.jface.action.IAction
 import org.eclipse.jface.preference.{ IPreferenceStore, PreferenceStore }
 import org.eclipse.jface.text.ITextOperationTarget
 import org.eclipse.jface.util.PropertyChangeEvent
 import org.eclipse.swt.widgets.Composite
-import org.eclipse.ui.IEditorInput
+import org.eclipse.ui.{ IEditorInput, PlatformUI }
 import org.eclipse.ui.texteditor.{ 
   ChainedPreferenceStore, IAbstractTextEditorHelpContextIds, ITextEditorActionConstants, IWorkbenchActionDefinitionIds,
   TextOperationAction}
-
 import lampion.eclipse.SourceViewer
 import lampion.util.ReflectionUtils
+
 
 class Editor extends { val plugin = Driver.driver } with lampion.eclipse.Editor {
   override def doSetInput(input : IEditorInput) = {
@@ -82,27 +85,48 @@ class Editor extends { val plugin = Driver.driver } with lampion.eclipse.Editor 
   //override def createBreadcrumb : IBreadcrumb = null
 
   // Folding not yet supported for Scala
-	override def isFoldingEnabled = false
+  override def isFoldingEnabled = false
  
   override def createActions {
-		super.createActions
+    super.createActions
   
     // Reset cut/copy/paste to default until the 'add imports on paste' behaviour can
     // be extended to support Scala
-    val cutAction = new TextOperationAction(EditorUtils.bundleForConstructedKeys, "Editor.Cut.", this, ITextOperationTarget.CUT)
+    val cutAction = new TextOperationAction(EditorUtils.editorBundleForConstructedKeys, "Editor.Cut.", this, ITextOperationTarget.CUT)
     cutAction.setHelpContextId(IAbstractTextEditorHelpContextIds.CUT_ACTION)
     cutAction.setActionDefinitionId(IWorkbenchActionDefinitionIds.CUT)
     setAction(ITextEditorActionConstants.CUT, cutAction)
 
-    val copyAction = new TextOperationAction(EditorUtils.bundleForConstructedKeys, "Editor.Copy.", this, ITextOperationTarget.COPY, true)
+    val copyAction = new TextOperationAction(EditorUtils.editorBundleForConstructedKeys, "Editor.Copy.", this, ITextOperationTarget.COPY, true)
     copyAction.setHelpContextId(IAbstractTextEditorHelpContextIds.COPY_ACTION)
     copyAction.setActionDefinitionId(IWorkbenchActionDefinitionIds.COPY)
     setAction(ITextEditorActionConstants.COPY, copyAction)
 
-    val pasteAction = new TextOperationAction(EditorUtils.bundleForConstructedKeys, "Editor.Paste.", this, ITextOperationTarget.PASTE)
+    val pasteAction = new TextOperationAction(EditorUtils.editorBundleForConstructedKeys, "Editor.Paste.", this, ITextOperationTarget.PASTE)
     pasteAction.setHelpContextId(IAbstractTextEditorHelpContextIds.PASTE_ACTION)
     pasteAction.setActionDefinitionId(IWorkbenchActionDefinitionIds.PASTE)
     setAction(ITextEditorActionConstants.PASTE, pasteAction)
+
+    val toggleCommentAction = new ToggleCommentAction(EditorUtils.javaEditorBundleForConstructedKeys, "ToggleComment.", this);
+    toggleCommentAction.setActionDefinitionId(IJavaEditorActionDefinitionIds.TOGGLE_COMMENT)
+    setAction("ToggleComment", toggleCommentAction)
+    markAsStateDependentAction("ToggleComment", true)
+    configureToggleCommentAction
+
+    val indentAction= new IndentAction(EditorUtils.javaEditorBundleForConstructedKeys, "Indent.", this, false)
+    indentAction.setActionDefinitionId(IJavaEditorActionDefinitionIds.INDENT)
+    setAction("Indent", indentAction)
+    markAsStateDependentAction("Indent", true)
+    markAsSelectionDependentAction("Indent", true)
+  }
+
+  def configureToggleCommentAction = {
+    val action = getAction("ToggleComment");
+    if (action.isInstanceOf[ToggleCommentAction]) {
+      val sourceViewer = getSourceViewer
+      val configuration = getSourceViewerConfiguration
+      action.asInstanceOf[ToggleCommentAction].configure(sourceViewer, configuration);
+    }
   }
 }
 
@@ -151,6 +175,9 @@ object EditorUtils extends ReflectionUtils {
   // Workaround for continued support for Eclipse 3.3
   def getInputJavaElement(editor : JavaEditor) = getInputJavaElementMethod.invoke(editor)
 
-  private val BUNDLE_FOR_CONSTRUCTED_KEYS = "org.eclipse.ui.texteditor.ConstructedEditorMessages"
-  val bundleForConstructedKeys = ResourceBundle.getBundle(BUNDLE_FOR_CONSTRUCTED_KEYS)
+  private val EDITOR_BUNDLE_FOR_CONSTRUCTED_KEYS = "org.eclipse.ui.texteditor.ConstructedEditorMessages"
+  val editorBundleForConstructedKeys = ResourceBundle.getBundle(EDITOR_BUNDLE_FOR_CONSTRUCTED_KEYS)
+
+  private val JAVA_EDITOR_BUNDLE_FOR_CONSTRUCTED_KEYS = "org.eclipse.jdt.internal.ui.javaeditor.ConstructedJavaEditorMessages"
+  val javaEditorBundleForConstructedKeys = ResourceBundle.getBundle(JAVA_EDITOR_BUNDLE_FOR_CONSTRUCTED_KEYS)
 }

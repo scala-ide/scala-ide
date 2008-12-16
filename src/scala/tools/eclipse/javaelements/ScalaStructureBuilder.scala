@@ -19,7 +19,7 @@ import scala.tools.nsc.symtab.Flags
 import scala.tools.nsc.util.{ NoPosition, Position }
 
 trait ScalaStructureBuilder extends ScalaJavaMapper { self : ScalaCompilationUnit =>
-  import compiler._
+  import proj.compiler._
   
   class StructureBuilderTraverser(unitInfo : ScalaCompilationUnitInfo, newElements0 : JMap[AnyRef, AnyRef], sourceLength : Int, endPosMap : Map[Tree, Position]) extends Traverser {
     private var currentBuilder : Owner = new CompilationUnitBuilder

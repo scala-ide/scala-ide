@@ -53,6 +53,7 @@ trait Plugin extends runtime.Plugin with IResourceChangeListener with lampion.co
     def externalDepends : Iterable[IProject] = Nil
     def build(toBuild : LinkedHashSet[File])(implicit monitor : IProgressMonitor) : Seq[File] = toBuild.toList
     def buildDone(built : LinkedHashSet[File])(implicit monitor : IProgressMonitor) : Unit = if (!built.isEmpty) {
+      lastBuildHadBuildErrors = built.exists(_.hasBuildErrors)
       val manager = (underlying.findMember(".manager") match {
       case null => null 
       case fldr : IFolder => fldr
@@ -106,6 +107,8 @@ trait Plugin extends runtime.Plugin with IResourceChangeListener with lampion.co
         }
       }, monitor)
     }
+    
+    var lastBuildHadBuildErrors = false
     
     protected def File(underlying : FileSpec) : File
     type Path = IPath
@@ -171,9 +174,8 @@ trait Plugin extends runtime.Plugin with IResourceChangeListener with lampion.co
         val file = underlying match {
         case NormalFile(file) => file
         }
-        var result = false
-        result = !file.findMarkers(problemMarkerId.get, true, IResource.DEPTH_INFINITE).isEmpty
-        result
+        import IMarker.{ SEVERITY, SEVERITY_ERROR }
+        file.findMarkers(problemMarkerId.get, true, IResource.DEPTH_INFINITE).exists(_.getAttribute(SEVERITY) == SEVERITY_ERROR)
       }
       
       def buildError(severity : Int, msg : String, offset : Int, length : Int)(implicit monitor : IProgressMonitor) = if (problemMarkerId.isDefined) {

@@ -9,7 +9,7 @@ import java.util.{ HashMap => JHashMap, Map => JMap }
 
 import org.eclipse.core.resources.{ IFile, IResource }
 import org.eclipse.core.runtime.{ IProgressMonitor, IStatus }
-import org.eclipse.jdt.core.IJavaProject
+import org.eclipse.jdt.core.{ IJavaElement, IJavaProject }
 import org.eclipse.jdt.core.dom.AST
 import org.eclipse.jdt.core.{ ICompilationUnit, IProblemRequestor, JavaCore, WorkingCopyOwner }
 import org.eclipse.jdt.internal.core.{
@@ -28,8 +28,7 @@ class ScalaCompilationUnit(fragment : PackageFragment, elementName: String, work
 
   val plugin = ScalaPlugin.plugin
   val proj = plugin.projectSafe(getResource.getProject).get
-  val compiler = proj.compiler0
-  import compiler._
+  import proj.compiler._
   
   def this(file : IFile) =
     this(JDTUtils.getParentPackage(file).asInstanceOf[PackageFragment], file.getName, ScalaWorkingCopyOwner)
@@ -109,6 +108,15 @@ class ScalaCompilationUnit(fragment : PackageFragment, elementName: String, work
   override def isPrimary = owner eq ScalaWorkingCopyOwner
 
   override def createElementInfo : Object = new ScalaCompilationUnitInfo
+  
+  override def getElementAt(position : Int) : IJavaElement = {
+    try {
+      val e = super.getElementAt(position)
+      if (e eq this) null else e
+    } catch {
+      case ex : ClassCastException => null
+    }
+  }
   
   /**
    * @see ICompilationUnit#getWorkingCopy(WorkingCopyOwner, IProblemRequestor, IProgressMonitor)

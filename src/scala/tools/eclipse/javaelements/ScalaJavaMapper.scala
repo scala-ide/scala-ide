@@ -8,7 +8,7 @@ package scala.tools.eclipse.javaelements
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants
 
 trait ScalaJavaMapper { self : ScalaCompilationUnit =>
-  import compiler._
+  import proj.compiler._
   
   def mapModifiers(mods : Modifiers) : Int = {
     var jdtMods = 0

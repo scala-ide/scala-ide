@@ -27,6 +27,7 @@ import org.eclipse.swt.widgets.Display
 import org.eclipse.swt.custom.StyleRange
 import org.eclipse.ui.{ IEditorInput, IEditorReference, IFileEditorInput, IPathEditorInput, IPersistableElement, IWorkbenchPage, PlatformUI }
 import org.eclipse.ui.ide.IDE
+import org.eclipse.ui.texteditor.ITextEditor
 
 import lampion.presentation.{Presentations}
 
@@ -122,16 +123,24 @@ trait UIPlugin extends org.eclipse.ui.plugin.AbstractUIPlugin with Plugin with l
       result.hover
     }
 
-    def hyperlink(file : File, offset : Int) : Option[IHyperlink] = 
-      file.tokenForFuzzy(offset).hyperlink
+    def hyperlink(file : File, offset : Int) : Option[IHyperlink] = {
+      val token = file.tokenForFuzzy(offset)
+      token.hyperlink
+    }
     override def openAndSelect(file : File, select : => (Int,Int)) : Unit = {
       file.doLoad
-      if (!file.isLoaded) {
-        logError("cannot load " + file, null)
-        return
-      }
-      //val tok = file.tokenFor(offset)
-      val editor = file.editor.get
+      val editor =
+        if (file.isLoaded)  file.editor.get else { 
+          val wb = PlatformUI.getWorkbench
+          val page = wb.getActiveWorkbenchWindow.getActivePage
+          val e = file.doLoad0(page)
+          if (e eq null) {
+            logError("cannot load " + file, null)
+            return
+          }
+          e.asInstanceOf[ITextEditor]
+        }
+        
       val site = editor.getSite
       val page = site.getPage
       if (!page.isPartVisible(editor)) file.doLoad0(page)
@@ -268,14 +277,16 @@ trait UIPlugin extends org.eclipse.ui.plugin.AbstractUIPlugin with Plugin with l
         if (!isLoaded) {
           val wb = PlatformUI.getWorkbench
           val page = wb.getActiveWorkbenchWindow.getActivePage
-          val editor = doLoad0(page).asInstanceOf[Editor]
-          if (!isLoaded) {
+          val editor = doLoad0(page)
+          if(editor.isInstanceOf[Editor]) {
             if (!isLoaded) {
-              logError("can't load: " + this,null)
-              return
+              if (!isLoaded) {
+                logError("can't load: " + this,null)
+                return
+              }
             }
+            assert(isLoaded)
           }
-          assert(isLoaded)
         }
         super.doLoad
       }
