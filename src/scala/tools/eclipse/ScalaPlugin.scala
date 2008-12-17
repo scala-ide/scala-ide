@@ -105,18 +105,20 @@ trait ScalaPlugin extends ScalaPluginSuperA with scala.tools.editor.Driver {
     
     def outputPath = outputPath0.toOSString
     def outputPath0 = check {
-      def createParentFolder(parent : IContainer) {
-        if(!parent.exists()) {
-          createParentFolder(parent.getParent)
-          parent.asInstanceOf[IFolder].create(true, true, null)
-          parent.setDerived(true)
-        }
-      }
       val fldr = workspace.getFolder(javaProject.getOutputLocation)
-      fldr.refreshLocal(IResource.DEPTH_ZERO, null)
-      if(!fldr.exists()) {
-        createParentFolder(fldr.getParent)
-        fldr.create(IResource.FORCE | IResource.DERIVED, true, null)
+      if (!ResourcesPlugin.getWorkspace.isTreeLocked) {
+        def createParentFolder(parent : IContainer) {
+          if(!parent.exists()) {
+            createParentFolder(parent.getParent)
+            parent.asInstanceOf[IFolder].create(true, true, null)
+            parent.setDerived(true)
+          }
+        }
+        fldr.refreshLocal(IResource.DEPTH_ZERO, null)
+        if(!fldr.exists()) {
+          createParentFolder(fldr.getParent)
+          fldr.create(IResource.FORCE | IResource.DERIVED, true, null)
+        }
       }
       fldr.getLocation
     } getOrElse underlying.getLocation

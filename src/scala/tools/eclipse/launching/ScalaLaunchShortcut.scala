@@ -12,7 +12,7 @@ import org.eclipse.core.resources.IResource
 import org.eclipse.core.runtime.{ CoreException, IAdaptable }
 import org.eclipse.debug.core.{ DebugPlugin, ILaunchConfiguration, ILaunchConfigurationType }
 import org.eclipse.debug.ui.DebugUITools
-import org.eclipse.jdt.core.{ IMethod, IType }
+import org.eclipse.jdt.core.{ IJavaElement, IMethod, IType }
 import org.eclipse.jdt.debug.ui.launchConfigurations.JavaLaunchShortcut
 import org.eclipse.jdt.internal.debug.ui.launcher.LauncherMessages
 import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants
@@ -56,27 +56,32 @@ class ScalaLaunchShortcut extends JavaLaunchShortcut {
    
    //Get a hold of scala compilation unit for the file and then get all available types
    val adapt: IAdaptable = o.asInstanceOf[IAdaptable]
-   val scu: ScalaCompilationUnit = adapt.getAdapter(classOf[ScalaCompilationUnit]).asInstanceOf[ScalaCompilationUnit]
-   val allTypesFromCU: Array[IType] = scu.getAllTypes   
-
-   //Loop over multiple class/modules in a file
-   for (cuType <- allTypesFromCU) {
-     
-     //if a class or module get all types to include superclass
-     if (cuType.getDeclaringType == null) {       
-       val allTypes = cuType.newSupertypeHierarchy(null).getAllTypes      
+   var je = adapt.getAdapter(classOf[IJavaElement]).asInstanceOf[IJavaElement]
+   while ((je ne null) && !je.isInstanceOf[ScalaCompilationUnit])
+     je = je.getParent
+   if (je.isInstanceOf[ScalaCompilationUnit]) {
+     val scu = je.asInstanceOf[ScalaCompilationUnit]
+     val allTypesFromCU: Array[IType] = scu.getAllTypes   
+  
+     //Loop over multiple class/modules in a file
+     for (cuType <- allTypesFromCU) {
        
-       //loop through main class and all super classes for the class/module in question to find main class
-        for (t <- allTypes){
-          //debugging purposes only
-          //methodDebugInf(meth)                    
-          if (t.getDeclaringType ==null){
-            for (meth <- t.getMethods){                  
-              if (isMainMethod(meth))           
-                a += cuType
-            }
-          }      
-        }
+       //if a class or module get all types to include superclass
+       if (cuType.getDeclaringType == null) {       
+         val allTypes = cuType.newSupertypeHierarchy(null).getAllTypes      
+         
+         //loop through main class and all super classes for the class/module in question to find main class
+          for (t <- allTypes){
+            //debugging purposes only
+            //methodDebugInf(meth)                    
+            if (t.getDeclaringType ==null){
+              for (meth <- t.getMethods){                  
+                if (isMainMethod(meth))           
+                  a += cuType
+              }
+            }      
+          }
+       }
      }
    }
    a.toArray    
