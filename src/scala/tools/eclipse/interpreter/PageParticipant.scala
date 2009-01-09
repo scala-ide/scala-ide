@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2008 LAMP/EPFL
+ * Copyright 2005-2009 LAMP/EPFL
  * @author Sean McDirmid
  * @author Josh Suereth
  */

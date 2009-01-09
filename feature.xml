@@ -11,14 +11,14 @@ to build Scala programs inside the Eclipse Platform.
    </description>
 
    <copyright url="http://scala-lang.org/downloads/">
-      Copyright (c) 2002-2008 EPFL, Lausanne.
+      Copyright (c) 2002-2009 EPFL, Lausanne.
 All rights reserved.
    </copyright>
 
    <license url="http://scala-lang.org/downloads/license.html">
       SCALA LICENSE
 
-Copyright (c) 2002-2008 EPFL, Lausanne, unless otherwise specified.
+Copyright (c) 2002-2009 EPFL, Lausanne, unless otherwise specified.
 All rights reserved.
 
 This software was developed by the Programming Methods Laboratory of the
