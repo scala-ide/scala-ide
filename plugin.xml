@@ -669,7 +669,7 @@
   <extension point="org.eclipse.ui.popupMenus">
     <objectContribution
             adaptable="true"
-            objectClass="org.eclipse.jdt.core.IJavaProject"
+            objectClass="org.eclipse.jdt.core.IJavaElement"
             nameFilter="*"
             id="ch.epfl.lamp.sdt.core.natures.contribution1">
          <menu
@@ -731,7 +731,10 @@
                tooltip="Removes an Scala Builder/Classpath from a Java project">
          </action>
          <visibility>
-         	<objectState name="projectNature" value="ch.epfl.lamp.sdt.core.scalanature"/>
+           <and>
+         	 <objectState name="projectNature" value="ch.epfl.lamp.sdt.core.scalanature"/>
+             <objectClass name="org.eclipse.jdt.core.IJavaProject"/>
+           </and>
          </visibility>
     </objectContribution>
 
