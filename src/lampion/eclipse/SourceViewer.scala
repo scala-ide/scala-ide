@@ -67,9 +67,11 @@ abstract class SourceViewer(parent : Composite, vertical : IVerticalRuler, overv
         val offset = damage.getOffset
         val length = damage.getLength
         val file = SourceViewer.this.file.get
-        //catchUp
-        //Console.out.println("REFRESH: " + offset + " " + length)
-        file.refresh(offset, length, presentation)
+        try {
+          file.refresh(offset, length, presentation)
+        } catch {
+          case t : Throwable => t.printStackTrace 
+        }
       } else {
         assert(true)
         assert(true)

@@ -293,7 +293,6 @@ trait UIPlugin extends org.eclipse.ui.plugin.AbstractUIPlugin with Plugin with l
       override def doUnload : Unit = {
         matchErrors = Nil        
         assert(isLoaded)
-        editor.foreach(_.close(true))
         viewers.removeKey(self)
         assert(!isLoaded)
         super.doUnload
