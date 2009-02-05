@@ -23,8 +23,6 @@ class Nature extends lampion.eclipse.Nature {
     super.configure
     plugin.check {
       val jp = plugin.javaProject(getProject).get
-      jp.setOption(JavaCore.CORE_JAVA_BUILD_CLEAN_OUTPUT_FOLDER, "ignore")
-      jp.setOption(JavaCore.CORE_JAVA_BUILD_RESOURCE_COPY_FILTER, "*.scala")
       val buf = new ArrayBuffer[IClasspathEntry]
       // Scala classpath container before JRE container
       buf ++= jp.getRawClasspath.filter(!_.getPath().equals(Path.fromPortableString(JavaRuntime.JRE_CONTAINER)))

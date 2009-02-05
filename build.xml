@@ -12,7 +12,9 @@
   <property name="scala.dir" value="${basedir}/../scala"/>
   <property name="scala.dist.dir" value="${scala.dir}/dists/latest"/>
   <property name="scala.lib.dir" value="${basedir}/../scala-library"/>
+  <property name="scala.plugin.aspects.dir" value="${basedir}/../scala-plugin-aspects"/>
   <property name="ant.lib.dir" value="${scala.dir}/lib/ant"/>
+  <property name="aspects.lib.dir" value="${basedir}/aspects-libs"/>
 
   <property name="eclipse.dir" value="${basedir}/eclipse-lib"/>
   <property name="build.dir" value="${basedir}/build"/>
@@ -41,6 +43,12 @@ INITIALISE BUILD
       <pathelement location="${scala.dist.dir}/lib/scala-compiler.jar"/>
       <pathelement location="${scala.dist.dir}/lib/scala-library.jar"/>
     </path>
+
+    <path id="scala.plugin.aspects.classpath">
+      <fileset dir="${scala.plugin.aspects.dir}">
+        <include name="ch.epfl.lamp.sdt.aspects_*.jar"/>
+      </fileset>
+    </path>
     
     <taskdef
       name="scalac"
@@ -49,7 +57,7 @@ INITIALISE BUILD
     />
     
     <path id="eclipse.classpath">
-      <fileset dir="${eclipse.dir}/">
+      <fileset dir="${eclipse.dir}/plugins/">
         <include name="**/*.jar"/>
       </fileset>
     </path>
@@ -60,10 +68,9 @@ INITIALISE BUILD
     </tstamp>
 
     <!-- Versions of compiler and library we're including -->
-    <property resource="compiler.properties" classpathref="scala.classpath"/>
-    <property name="compiler.version.number" value="${version.number}"/>
-    <property resource="library.properties" classpathref="scala.classpath"/>
-    <property name="library.version.number" value="${version.number}"/>
+    <property resource="compiler.properties" classpathref="scala.classpath" prefix="compiler"/>
+    <property resource="library.properties" classpathref="scala.classpath" prefix="library"/>
+    <property resource="plugin.aspects.properties" classpathref="scala.plugin.aspects.classpath" prefix="plugin.aspects"/>
 
     <!-- Finding out plugin SVN revision -->
     <exec executable="svn" outputproperty="svn.out">
@@ -82,9 +89,10 @@ INITIALISE BUILD
 
     <!-- And print-out what we are building -->
     <echo level="info" message="Built ${time.human} from revision ${svn.number} with Java ${java.vm.version}"/>
-    <echo level="info" message="Scala plugin version   is '${plugin.version.number}'"/>
-    <echo level="info" message="Scala library version  is '${library.version.number}'"/>
-    <echo level="info" message="Scala compiler version is '${compiler.version.number}'"/>
+    <echo level="info" message="Scala plugin version         is '${plugin.version.number}'"/>
+    <echo level="info" message="Scala plugin aspects version is '${plugin.aspects.version.number}'"/>
+    <echo level="info" message="Scala library version        is '${library.version.number}'"/>
+    <echo level="info" message="Scala compiler version       is '${compiler.version.number}'"/>
     
     <property name="feature.name" value="ch.epfl.lamp.sdt_${plugin.version.number}"/>
     <property name="plugin.name" value="ch.epfl.lamp.sdt.core_${plugin.version.number}"/>
@@ -103,12 +111,14 @@ TARGETS SUPPORTING DEVELOPMENT WITHIN ECLIPSE
   <target name="devel.clean">
     <ant dir="${scala.dir}" antfile="build.xml" target="all.clean" inheritall="false"/>
     <ant dir="${scala.lib.dir}" antfile="build.xml" target="clean" inheritall="false"/>
+    <ant dir="${scala.plugin.aspects.dir}" antfile="build.xml" target="clean" inheritall="false"/>
     <antcall target="clean"/>
   </target>
   
   <target name="devel.dist" depends="devel.clean">
     <ant dir="${scala.dir}" antfile="build.xml" target="dist.done" inheritall="false"/>
     <ant dir="${scala.lib.dir}" antfile="build.xml" target="dist" inheritall="false"/>
+    <ant dir="${scala.plugin.aspects.dir}" antfile="build.xml" target="dist" inheritall="false"/>
     <antcall target="dist"/>
   </target>
   
@@ -127,6 +137,7 @@ BUILD THE PLUGIN
       <classpath>
         <path refid="scala.classpath"/>
         <path refid="eclipse.classpath"/>
+        <path refid="scala.plugin.aspects.classpath"/>
       </classpath>
       <include name="**/*.scala"/>
     </scalac>
@@ -138,6 +149,8 @@ BUILD THE PLUGIN
       <attribute name="Bundle-Version" value="${plugin.version.number}"/>
     </manifest>
     
+    <copy file="${basedir}/META-INF/p2.inf" toDir="${build.dir}/META-INF" overwrite="yes"/>
+
     <copy todir="${build.dir}">
       <fileset dir="${basedir}">
         <include name="icons/**"/>
@@ -151,6 +164,7 @@ BUILD THE PLUGIN
       destfile="${basedir}/${plugin.name}.jar"
       basedir="${build.dir}"
       manifest="${build.dir}/META-INF/MANIFEST.MF">
+      <include name="META-INF/p2.inf"/>
       <include name="**/*.class"/>
       <include name="lib/**"/>
       <include name="icons/**"/>
@@ -174,6 +188,7 @@ PACKAGE FEATURE AND CREATE UPDATE SITE
     </fail>
     
     <filter token="PLUGIN_VERSION" value="${plugin.version.number}"/>
+    <filter token="PLUGIN_ASPECTS_VERSION" value="${plugin.aspects.version.number}"/>
     <filter token="LIBRARY_VERSION" value="${library.version.number}"/>
     <filter token="COMPILER_VERSION" value="${compiler.version.number}"/>
     <filter token="UPDATE_SITE" value="${update-site.url}"/>
@@ -200,10 +215,44 @@ PACKAGE FEATURE AND CREATE UPDATE SITE
     <copy todir="${dist.dir}/scala.update/plugins">
       <fileset dir="${basedir}" file="${plugin.name}.jar"/>
       <fileset dir="${scala.lib.dir}" includes="scala.library_${library.version.number}.jar"/>
+      <fileset dir="${scala.plugin.aspects.dir}" includes="ch.epfl.lamp.sdt.aspects_*.jar"/>
+      <fileset dir="${aspects.lib.dir}" includes="*.jar"/>
     </copy>
     <copy
       file="${scala.dist.dir}/lib/scala-compiler.jar"
       tofile="${dist.dir}/scala.update/plugins/scala.tools.nsc_${compiler.version.number}.jar"/>
+    
+    <java
+      classname="org.eclipse.equinox.launcher.Main"
+      fork="true"
+      dir="${basedir}"
+      failonerror="true"
+      maxmemory="256m"
+      >
+      <classpath>
+        <fileset dir="${eclipse.dir}/plugins">
+          <include name="org.eclipse.equinox.launcher_*.jar"/>
+          <include name="org.eclipse.equinox.p2.metadata.generator_*.jar"/>
+        </fileset>
+      </classpath>
+      <arg value="-application"/>
+      <arg value="org.eclipse.equinox.p2.metadata.generator.EclipseGenerator"/>
+      <arg value="-updateSite"/>
+      <arg value="${dist.dir}/scala.update"/>
+      <arg value="-site"/>
+      <arg value="file:${dist.dir}/scala.update/site.xml"/>
+      <arg value="-metadataRepository"/>
+      <arg value="file:${dist.dir}/scala.update"/>
+      <arg value="-metadataRepositoryName"/>
+      <arg value="Scala Update Site"/>
+      <arg value="-artifactRepository"/>
+      <arg value="file:${dist.dir}/scala.update"/>
+      <arg value="-artifactRepositoryName"/>
+      <arg value="Scala Artifacts"/>
+      <arg value="-compress"/>
+      <arg value="-reusePack200Files"/>
+      <arg value="-noDefaultIUs"/>
+    </java>
     
     <zip
       destfile="${dist.dir}/${feature.name}.zip"
@@ -223,7 +272,13 @@ CLEAN ALL BUILT FILES
     <delete dir="${dist.dir}" includeemptydirs="yes" quiet="yes" failonerror="no"/>
     <delete>
       <fileset dir="${basedir}" includes="ch.epfl.lamp.sdt.core_*.jar"/>
+      <fileset dir="${eclipse.dir}/configuration" includes="*.log"/>
     </delete>
+    <delete dir="${eclipse.dir}/p2" includeemptydirs="yes" quiet="yes" failonerror="no"/>
+    <delete dir="${eclipse.dir}/configuration/.settings" includeemptydirs="yes" quiet="yes" failonerror="no"/>
+    <delete dir="${eclipse.dir}/configuration/org.eclipse.core.runtime" includeemptydirs="yes" quiet="yes" failonerror="no"/>
+    <delete dir="${eclipse.dir}/configuration/org.eclipse.equinox.app" includeemptydirs="yes" quiet="yes" failonerror="no"/>
+    <delete dir="${eclipse.dir}/configuration/org.eclipse.osgi" includeemptydirs="yes" quiet="yes" failonerror="no"/>
   </target>
   
 </project>

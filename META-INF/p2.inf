@@ -1,0 +1,10 @@
+instructions.configure = \
+  setProgramProperty(propName:osgi.framework.extensions, propValue:org.eclipse.equinox.weaving.hook); \
+  setProgramProperty(propName:org.aspectj.weaver.showWeaveInfo, propValue:true); \
+  setProgramProperty(propName:org.aspectj.osgi.verbose, propValue:true); \
+  setProgramProperty(propName:aj.weaving.verbose, propValue:true);
+instructions.unconfigure = \
+  setProgramProperty(propName:osgi.framework.extensions, propValue:); \
+  setProgramProperty(propName:org.aspectj.weaver.showWeaveInfo, propValue:); \
+  setProgramProperty(propName:org.aspectj.osgi.verbose, propValue:); \
+  setProgramProperty(propName:aj.weaving.verbose, propValue:);

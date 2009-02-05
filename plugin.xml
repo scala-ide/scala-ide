@@ -638,13 +638,6 @@
     id="javaelementfilters"
     point="org.eclipse.jdt.ui.javaElementFilters">
     <filter
-      targetId="org.eclipse.jdt.ui.PackageExplorer"
-      enabled="true"
-      class="scala.tools.eclipse.javaelements.ScalaCompilationUnitFilter"
-      description="Prevents .scala files from appearing twice in the Package Explorer"
-      name="Duplicate .scala file filter"
-      id="scala.tools.eclipse.javaelements.ScalaCompilationUnitFilter"/>
-    <filter
       id="scala.tools.eclipse.javaelements.ScalaElementFilter"
       name="Scala element filter"
       description="Prevents Scala elements which are artefacts of the Scala to Java encoding from appearing in the Package Explorer"
@@ -732,7 +725,7 @@
          </action>
          <visibility>
            <and>
-         	 <objectState name="projectNature" value="ch.epfl.lamp.sdt.core.scalanature"/>
+         	<objectState name="projectNature" value="ch.epfl.lamp.sdt.core.scalanature"/>
              <objectClass name="org.eclipse.jdt.core.IJavaProject"/>
            </and>
          </visibility>
@@ -769,18 +762,6 @@
          	</and>
          </visibility>
       </objectContribution>
-
-    <objectContribution
-      objectClass="scala.tools.eclipse.javaelements.ScalaCompilationUnit"
-      adaptable="true"
-      id="scalfileContribution"> 
-      <action
-        label="Rename Scala Files"
-        class="scala.tools.eclipse.RenameScalaFileAction"
-        menubarPath="org.eclipse.jdt.ui.refactoring.menu"
-        id="renameScalaFile">
-      </action>
-    </objectContribution>
 
   </extension>
 
@@ -821,4 +802,26 @@
     </shortcut>
   </extension>
 
+  <extension point="org.eclipse.contribution.weaving.jdt.cuprovider">
+    <provider
+      class="scala.tools.eclipse.javaelements.ScalaCompilationUnitProvider"
+      file_extension="scala">
+    </provider>
+  </extension>
+  
+  <!--
+  <extension point="org.eclipse.contribution.weaving.jdt.sourcetransformer">
+    <transformer
+      class="org.eclipse.ajdt.core.AJSourceTransformer"
+      file_extension="aj">
+    </transformer>
+  </extension>
+  
+  <extension point="org.eclipse.contribution.weaving.jdt.imagedescriptorselector">
+    <selector
+      class="org.eclipse.ajdt.internal.ui.resources.AJImageDescriptorSelector">
+    </selector>
+  </extension>  
+  -->
+  
 </plugin>

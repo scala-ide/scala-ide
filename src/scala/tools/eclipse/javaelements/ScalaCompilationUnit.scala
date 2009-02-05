@@ -9,7 +9,7 @@ import java.util.{ HashMap => JHashMap, Map => JMap }
 
 import org.eclipse.core.resources.{ IFile, IResource }
 import org.eclipse.core.runtime.{ IProgressMonitor, IStatus }
-import org.eclipse.jdt.core.{ IJavaElement, IJavaProject }
+import org.eclipse.jdt.core.{ IJavaElement, IJavaProject, JavaModelException }
 import org.eclipse.jdt.core.dom.AST
 import org.eclipse.jdt.core.{ ICompilationUnit, IProblemRequestor, JavaCore, WorkingCopyOwner }
 import org.eclipse.jdt.internal.core.{
@@ -18,20 +18,19 @@ import org.eclipse.jdt.internal.core.{
 import org.eclipse.swt.graphics.Image
 import org.eclipse.swt.widgets.Display
 
-import scala.tools.eclipse.ContentTypeUtils._
 import scala.tools.nsc.util.{ NoPosition, Position }
 
 class ScalaCompilationUnitInfo extends CompilationUnitElementInfo
 
 class ScalaCompilationUnit(fragment : PackageFragment, elementName: String, workingCopyOwner : WorkingCopyOwner)
-  extends JDTCompilationUnit(fragment, elementName, workingCopyOwner) with ScalaElement with ImageSubstituter with ScalaStructureBuilder {
+  extends JDTCompilationUnit(fragment, elementName, workingCopyOwner) with ScalaElement with ImageSubstituter with ScalaStructureBuilder with ScalaIndexBuilder {
 
   val plugin = ScalaPlugin.plugin
   val proj = plugin.projectSafe(getResource.getProject).get
   import proj.compiler._
   
   def this(file : IFile) =
-    this(JDTUtils.getParentPackage(file).asInstanceOf[PackageFragment], file.getName, ScalaWorkingCopyOwner)
+    this(JDTUtils.getParentPackage(file).asInstanceOf[PackageFragment], file.getName, DefaultWorkingCopyOwner.PRIMARY)
     
   override def getMainTypeName : Array[Char] =
     elementName.substring(0, elementName.length - ".scala".length).toCharArray()
@@ -42,16 +41,21 @@ class ScalaCompilationUnit(fragment : PackageFragment, elementName: String, work
   }
   
   override def buildStructure(info : OpenableElementInfo, pm : IProgressMonitor, newElements : JMap[_, _], underlyingResource : IResource) : Boolean = {
-    val fileOpt = proj.fileSafe(getCorrespondingResource.asInstanceOf[IFile])
-    if (fileOpt.isEmpty)  
-      return false
-    val file = fileOpt.get
-    val root = file.outlineTrees
     val unitInfo = info.asInstanceOf[ScalaCompilationUnitInfo]
+    val (root, fileOpt) = try { 
+      val resource = getCorrespondingResource.asInstanceOf[IFile]
+      val fileOpt0 = proj.fileSafe(resource)
+      (fileOpt0.map(_.outlineTrees).getOrElse(Nil), fileOpt0)
+    } catch {
+      case ex : JavaModelException => (Nil, None)
+    }
+    
     if (root.isEmpty) {
       unitInfo.setIsStructureKnown(false)
       return unitInfo.isStructureKnown
     }
+    
+    val file = fileOpt.get
     
     if (!isWorkingCopy) {
       val status = validateCompilationUnit(underlyingResource)
@@ -72,8 +76,16 @@ class ScalaCompilationUnit(fragment : PackageFragment, elementName: String, work
     unitInfo.setIsStructureKnown(true)
     unitInfo.isStructureKnown
   }
-
+  
+  def addToIndexer(indexer : ScalaSourceIndexer) {
+    val fileOpt = proj.fileSafe(getCorrespondingResource.asInstanceOf[IFile])
+    val root = fileOpt.map(_.outlineTrees).getOrElse(Nil)
+    if (!root.isEmpty)
+      new IndexBuilderTraverser(indexer).traverseTrees(root)
+  }
+  
   private def computeEndPosMap(trees : List[Tree]) : Map[Tree, Position] = {
+    try {
     val traverser = new Traverser {
       var map : Map[Tree, Position] = Map.empty
       var rightmost : Position = NoPosition
@@ -102,11 +114,11 @@ class ScalaCompilationUnit(fragment : PackageFragment, elementName: String, work
     
     traverser.traverseTrees(trees)
     traverser.map
+    } catch {
+      case _ => Map.empty
+    }
   } 
-
   
-  override def isPrimary = owner eq ScalaWorkingCopyOwner
-
   override def createElementInfo : Object = new ScalaCompilationUnitInfo
   
   override def getElementAt(position : Int) : IJavaElement = {
@@ -126,8 +138,7 @@ class ScalaCompilationUnit(fragment : PackageFragment, elementName: String, work
       return this
     
     val manager = JavaModelManager.getJavaModelManager
-    
-    val workingCopy = withoutJavaLikeExtension(new ScalaCompilationUnit(getParent.asInstanceOf[PackageFragment], getElementName, workingCopyOwner))
+    val workingCopy = new ScalaCompilationUnit(getParent.asInstanceOf[PackageFragment], getElementName, workingCopyOwner)
     
     val perWorkingCopyInfo = 
       manager.getPerWorkingCopyInfo(workingCopy, false/*don't create*/, true/*record usage*/, null/*not used since don't create*/)
@@ -139,8 +150,7 @@ class ScalaCompilationUnit(fragment : PackageFragment, elementName: String, work
     workingCopy
   }
 
-  override def validateCompilationUnit(resource : IResource) : IStatus = 
-    withJavaLikeExtension { super.validateCompilationUnit(resource) }
+  override def validateCompilationUnit(resource : IResource) : IStatus = super.validateCompilationUnit(resource)
 
   override def reconcile(
       astLevel : Int,
@@ -148,7 +158,6 @@ class ScalaCompilationUnit(fragment : PackageFragment, elementName: String, work
       workingCopyOwner : WorkingCopyOwner,
       monitor : IProgressMonitor) : org.eclipse.jdt.core.dom.CompilationUnit = {
     if (!isWorkingCopy()) return null // Reconciling is not supported on non working copies
-    val wco = if (workingCopyOwner != null) workingCopyOwner else ScalaWorkingCopyOwner
     
     val op = new ScalaReconcileWorkingCopyOperation(this, astLevel == AST.JLS3, astLevel, true, workingCopyOwner)
     op.runOperation(monitor)

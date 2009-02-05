@@ -19,7 +19,7 @@ import org.eclipse.ui.part.FileEditorInput
 import org.eclipse.swt.widgets.Display
 import org.osgi.framework.BundleContext
 
-import scala.tools.eclipse.javaelements.{ JDTUtils, ScalaCompilationUnitManager }
+import scala.tools.eclipse.javaelements.JDTUtils
 import scala.tools.nsc.io.AbstractFile
 
 object ScalaUIPlugin {
@@ -36,22 +36,8 @@ trait ScalaUIPlugin extends {
   override def start(context : BundleContext) = {
     super.start(context)
     
-    ScalaCompilationUnitManager.initCompilationUnits(ResourcesPlugin.getWorkspace)
+    ScalaIndexManager.initIndex(ResourcesPlugin.getWorkspace)
 
-    val scuAdapter = new IAdapterFactory() {
-      override def getAdapterList = Array(classOf[IJavaElement])
-      override def getAdapter(adaptableObject : AnyRef, adapterType : Class[_]) : AnyRef = {
-        if(adaptableObject.isInstanceOf[FileEditorInput]) {
-          val input = adaptableObject.asInstanceOf[FileEditorInput]
-          ScalaCompilationUnitManager.getScalaCompilationUnit(input.getFile)
-        }
-        else 
-          null
-      }
-    }
-    
-    Platform.getAdapterManager().registerAdapters(scuAdapter, classOf[FileEditorInput])
-    
     Platform.getContentTypeManager.
       getContentType(JavaCore.JAVA_SOURCE_CONTENT_TYPE).
         addFileSpec("scala", IContentTypeSettings.FILE_EXTENSION_SPEC)
@@ -69,26 +55,6 @@ trait ScalaUIPlugin extends {
       event.getDelta.accept(new IResourceDeltaVisitor {
         def visit(delta : IResourceDelta) : Boolean = {
           delta.getKind match {
-            case IResourceDelta.ADDED => {
-              delta.getResource match {
-                case f : IFile => {
-                  if (ScalaCompilationUnitManager.creatingCUisAllowedFor(f)) {
-                    ScalaCompilationUnitManager.getScalaCompilationUnit(f)
-                    JDTUtils.refreshPackageExplorer
-                  }
-                }
-                case _ =>
-              }
-            }
-            case IResourceDelta.REMOVED => {
-              delta.getResource match {
-                case f : IFile => {
-                  ScalaCompilationUnitManager.removeFileFromModel(f)
-                  JDTUtils.refreshPackageExplorer
-                }
-                case _ =>
-              }
-            }
             case IResourceDelta.CHANGED => {
               delta.getResource match {
                 case f : IFile => {
@@ -106,15 +72,11 @@ trait ScalaUIPlugin extends {
         }
       })
     }
-
+    
     super.resourceChanged(event)
   }
   
-  class DocumentProvider extends CompilationUnitDocumentProvider {
-    override def createCompilationUnit(file : IFile) = {
-      ScalaCompilationUnitManager.getScalaCompilationUnit(file)
-    }
-  }
+  class DocumentProvider extends CompilationUnitDocumentProvider
   
   type Project <: ProjectImpl
   trait ProjectImplA extends super[UIPlugin].ProjectImpl
@@ -123,7 +85,7 @@ trait ScalaUIPlugin extends {
     def self : Project
     type File <: FileImpl
     trait FileImpl extends super[ProjectImplA].FileImpl with super[ProjectImplB].FileImpl {selfX:File=>
-      def self : File 
+      def self : File
       var outlineTrees0 : List[compiler.Tree] = null
       def outlineTrees = {
         if (outlineTrees0 == null) outlineTrees0 = List(unloadedBody) 

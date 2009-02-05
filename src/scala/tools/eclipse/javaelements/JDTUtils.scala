@@ -5,9 +5,9 @@
 
 package scala.tools.eclipse.javaelements
 
-import org.eclipse.core.resources.IFile
-import org.eclipse.core.runtime.{ IProgressMonitor, IStatus, Status }
-import org.eclipse.jdt.core.{ IJavaElement, IPackageFragment, JavaCore }
+import org.eclipse.core.resources.{ IFile, IFolder, IProject, IResource }
+import org.eclipse.core.runtime.{ CoreException, IProgressMonitor, IStatus, Status }
+import org.eclipse.jdt.core.{ IClasspathEntry, IJavaElement, IPackageFragment, JavaCore, JavaModelException }
 import org.eclipse.jdt.internal.core.{ JavaModelManager }
 import org.eclipse.jdt.internal.ui.packageview.PackageExplorerPart
 import org.eclipse.ui.progress.UIJob
@@ -46,6 +46,37 @@ object JDTUtils {
       // Not on classpath so use the default package
       val root = jp.getPackageFragmentRoot(scalaFile.getParent)
       root.getPackageFragment(IPackageFragment.DEFAULT_PACKAGE_NAME)
+    }
+  }
+
+  def flattenProject(project : IProject) : Iterator[IFile] = {
+    try {
+      if (!ScalaPlugin.isScalaProject(project))
+        return Iterator.empty
+      
+      val jp = JavaCore.create(project)
+      jp.getRawClasspath.filter(_.getEntryKind == IClasspathEntry.CPE_SOURCE).elements.flatMap{
+        entry => {
+	        val p = entry.getPath
+	        val folder = if (p.segmentCount == 1) project else project.getFolder(p.removeFirstSegments(1)) 
+	        flatten(folder)
+        }
+      }
+    } catch {
+      case _ : JavaModelException => Iterator.empty
+    }
+  }
+
+  def flatten(r : IResource) : Iterator[IFile] = {
+    try {
+      r match {
+        case r if !r.exists => Iterator.empty
+        case folder : IFolder if folder.getType == IResource.FOLDER => folder.members.elements.flatMap{flatten _}
+        case file : IFile if file.getType == IResource.FILE && file.getFileExtension == "scala" => Iterator.single(file)
+        case _ => Iterator.empty
+      }
+    } catch {
+      case _ : CoreException => Iterator.empty
     }
   }
 }

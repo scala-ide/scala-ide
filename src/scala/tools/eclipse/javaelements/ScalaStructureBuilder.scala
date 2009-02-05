@@ -376,7 +376,7 @@ trait ScalaStructureBuilder extends ScalaJavaMapper { self : ScalaCompilationUni
       import Math.{ max, min }
       
       val startPos = tree.pos 
-      val endPos = endPosMap(tree)
+      val endPos = endPosMap.getOrElse(tree, NoPosition)
       val start0 = if (startPos != NoPosition) startPos.offset.getOrElse(-1) else -1
       val end0 = if (endPos != NoPosition) endPos.offset.getOrElse(-1) else -1
       val start = max(0, min(start0, end0-1))

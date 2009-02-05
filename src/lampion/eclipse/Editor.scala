@@ -282,11 +282,15 @@ abstract class Editor extends JavaEditor with IAutoEditStrategy  {
         
           //Editor.this.file.get.clear
           file.underlying match {
-          case Editor.this.plugin.NormalFile(file0) => file0.getWorkspace.run(new IWorkspaceRunnable {
-            def run(monitor : IProgressMonitor) = 
-              file0.deleteMarkers(IMarker.PROBLEM, false, IResource.DEPTH_ZERO)
-          }, null)
-          case _ =>
+            case Editor.this.plugin.NormalFile(file0) => {
+              val workspace = file0.getWorkspace 
+              if (!workspace.isTreeLocked)
+                workspace.run(new IWorkspaceRunnable {
+                  def run(monitor : IProgressMonitor) = 
+                    file0.deleteMarkers(IMarker.PROBLEM, false, IResource.DEPTH_ZERO)
+                }, null)
+            }  
+            case _ =>
           }
         }
         super.load

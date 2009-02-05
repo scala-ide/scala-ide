@@ -13,6 +13,7 @@ import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.jdt.internal.core.JavaModelManager
 import org.eclipse.jdt.internal.core.builder.{ JavaBuilder, State }
 
+import scala.tools.eclipse.contribution.weaving.jdt.builderoptions.ScalaJavaBuilder
 import lampion.util.ReflectionUtils
 import scala.tools.eclipse.javaelements.JDTUtils
 
@@ -39,7 +40,7 @@ class Builder extends lampion.eclipse.Builder {
       val state = modelManager.getLastBuiltState(getProject, null).asInstanceOf[State]
       val newState = if (state ne null) state
         else {
-          ScalaJavaBuilder.initializeBuilder(scalaJavaBuilder, 0, false)
+          ScalaJavaBuilderUtils.initializeBuilder(scalaJavaBuilder, 0, false)
           StateUtils.newState(scalaJavaBuilder)
         }
       StateUtils.tagAsStructurallyChanged(newState)
@@ -56,22 +57,7 @@ class Builder extends lampion.eclipse.Builder {
   }
 }
 
-class ScalaJavaBuilder extends JavaBuilder {
-  import ContentTypeUtils._
-  import ScalaJavaBuilder._  
-  
-  def setProject0(project : IProject) = setProject(this, project)
-
-  override def clean(monitor : IProgressMonitor) {
-    withoutJavaLikeExtension { super.clean(monitor) }
-  }
-  
-  override def build(kind : Int, ignored : ju.Map[_, _], monitor : IProgressMonitor) : Array[IProject] = {
-    withoutJavaLikeExtension { super.build(kind, ignored, monitor) }
-  }
-}
-
-object ScalaJavaBuilder extends ReflectionUtils {
+object ScalaJavaBuilderUtils extends ReflectionUtils {
   private val ibClazz = Class.forName("org.eclipse.core.internal.events.InternalBuilder")
   private val setProjectMethod = getMethod(ibClazz, "setProject", classOf[IProject])
   private val jbClazz = Class.forName("org.eclipse.jdt.internal.core.builder.JavaBuilder")

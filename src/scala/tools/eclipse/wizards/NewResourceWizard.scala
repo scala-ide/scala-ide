@@ -20,9 +20,6 @@ import org.eclipse.swt.SWT
 import org.eclipse.core.resources._
 import org.eclipse.core.runtime._
 
-import scala.tools.eclipse.ContentTypeUtils._
-import scala.tools.eclipse.javaelements.ScalaCompilationUnitManager
-
 trait NewResourceWizard extends BasicNewResourceWizard {
   def kind : String
   def adjective : String = ""
@@ -160,13 +157,12 @@ trait NewResourceWizard extends BasicNewResourceWizard {
       mainPage.setErrorMessage("Resource with same name already exists.")
       return false
     }
-    ScalaCompilationUnitManager.getScalaCompilationUnit(file)
-    withoutJavaLikeExtension {
-      file.create(new java.io.StringBufferInputStream(
-        "package " + pkg.getElementName + "\n\n" +
-        kind.toLowerCase + " " + name + " {\n" + body + "\n}\n"
-      ), true, null)
-    }
+
+    file.create(new java.io.StringBufferInputStream(
+      "package " + pkg.getElementName + "\n\n" +
+      kind.toLowerCase + " " + name + " {\n" + body + "\n}\n"
+    ), true, null)
+    ScalaIndexManager.addToIndex(file)
     // force build!
     file.getProject.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, null)
     getWorkbench.getActiveWorkbenchWindow match {
@@ -186,5 +182,4 @@ trait NewResourceWizard extends BasicNewResourceWizard {
   
   
   protected def body : String = ""
-
 }

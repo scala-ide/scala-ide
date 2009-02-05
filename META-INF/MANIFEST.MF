@@ -36,3 +36,9 @@ Require-Bundle:
  org.eclipse.ui.workbench.texteditor,
  scala.library,
  scala.tools.nsc
+Import-Package: 
+ org.eclipse.contribution.jdt.cuprovider,
+ org.eclipse.contribution.jdt.imagedescriptor,
+ org.eclipse.contribution.jdt.sourceprovider,
+ scala.tools.eclipse.contribution.weaving.jdt,
+ scala.tools.eclipse.contribution.weaving.jdt.builderoptions
