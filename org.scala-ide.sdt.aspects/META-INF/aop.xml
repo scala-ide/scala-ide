@@ -1,0 +1,5 @@
+<aspectj>
+<aspects>
+<aspect name="scala.tools.eclipse.contribution.weaving.jdt.builderoptions.ScalaJavaBuilderAspect"/>
+</aspects>
+</aspectj>
