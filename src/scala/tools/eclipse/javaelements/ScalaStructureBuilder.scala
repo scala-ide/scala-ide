@@ -9,7 +9,7 @@ import java.io.{ PrintWriter, StringWriter }
 import java.util.{ Map => JMap }
 
 import org.eclipse.core.resources.IFile
-import org.eclipse.jdt.internal.core.{ CompilationUnit => JDTCompilationUnit, JavaElement, JavaModelManager, SourceRefElement }
+import org.eclipse.jdt.internal.core.{ CompilationUnit => JDTCompilationUnit, JavaElement, JavaElementInfo, JavaModelManager, OpenableElementInfo, SourceRefElement }
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants
 import org.eclipse.jdt.core.Signature
 
@@ -30,7 +30,7 @@ trait ScalaStructureBuilder extends ScalaJavaMapper { self : ScalaCompilationUni
       def parent : Owner
 
       def element : JavaElement
-      def elementInfo : AnyRef
+      def elementInfo : JavaElementInfo
       def compilationUnitBuilder : Owner = parent.compilationUnitBuilder
       
       def isPackage = false
@@ -47,7 +47,11 @@ trait ScalaStructureBuilder extends ScalaJavaMapper { self : ScalaCompilationUni
       def addFunction(f : Function) : Owner = this
 
       def addChild(child : JavaElement) =
-        JavaElementInfoUtils.addChild(elementInfo, child)
+        elementInfo match {
+          case scalaMember : ScalaMemberElementInfo => scalaMember.addChild(child)
+          case openable : OpenableElementInfo => OpenableElementInfoUtils.addChild(openable, child)
+          case _ =>
+        }
       
       def resolveDuplicates(handle : SourceRefElement) {
         while (newElements0.containsKey(handle)) {
@@ -62,7 +66,7 @@ trait ScalaStructureBuilder extends ScalaJavaMapper { self : ScalaCompilationUni
         
         val pkgElem = JavaElementFactory.createPackageDeclaration(compilationUnitBuilder.element.asInstanceOf[JDTCompilationUnit], p.symbol.fullNameString)
         resolveDuplicates(pkgElem)
-        JavaElementInfoUtils.addChild(compilationUnitBuilder.elementInfo, pkgElem)
+        compilationUnitBuilder.addChild(pkgElem)
         
         val pkgElemInfo = JavaElementFactory.createSourceRefElementInfo
         newElements0.put(pkgElem, pkgElemInfo)
@@ -321,7 +325,7 @@ trait ScalaStructureBuilder extends ScalaJavaMapper { self : ScalaCompilationUni
             new ScalaSourceMethodInfo
         
         if(d.symbol.isGetter || d.symbol.isSetter) {
-          JavaElementInfoUtils.getChildren(elementInfo).
+          elementInfo.getChildren.
             dropWhile(x => !x.isInstanceOf[ScalaFieldElement] || x.getElementName != d.name.toString).
             firstOption match {
             case Some(f : ScalaFieldElement) => {

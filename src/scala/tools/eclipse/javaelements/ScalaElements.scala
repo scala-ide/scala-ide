@@ -10,8 +10,8 @@ import scala.tools.nsc.util.NameTransformer
 import org.eclipse.jdt.core.{ IJavaElement, IType }
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants
 import org.eclipse.jdt.internal.core.{
-  JavaElement, SourceConstructorInfo, SourceField, SourceFieldElementInfo, SourceMethod,
-  SourceMethodElementInfo, SourceMethodInfo, SourceType, SourceTypeElementInfo } 
+  JavaElement, JavaElementInfo, SourceConstructorInfo, SourceField, SourceFieldElementInfo,
+  SourceMethod, SourceMethodElementInfo, SourceMethodInfo, SourceType, SourceTypeElementInfo } 
 import org.eclipse.jdt.internal.ui.JavaPlugin
 import org.eclipse.jdt.internal.ui.viewsupport.{ JavaElementImageProvider }
 import org.eclipse.jdt.ui.JavaElementImageDescriptor
@@ -118,18 +118,46 @@ class ScalaModuleInstanceElement(parent : JavaElement)
 }
 
 object ScalaMemberElementInfo extends ReflectionUtils {
+  val jeiClazz = Class.forName("org.eclipse.jdt.internal.core.JavaElementInfo")
   val meiClazz = Class.forName("org.eclipse.jdt.internal.core.MemberElementInfo")
+  val aiClazz = Class.forName("org.eclipse.jdt.internal.core.AnnotatableInfo")
   val sreiClazz = Class.forName("org.eclipse.jdt.internal.core.SourceRefElementInfo")
-  val setFlagsMethod = getMethod(meiClazz, "setFlags", classOf[Int])
-  val setNameSourceStartMethod = getMethod(meiClazz, "setNameSourceStart", classOf[Int])
-  val setNameSourceEndMethod = getMethod(meiClazz, "setNameSourceEnd", classOf[Int])
-  val setSourceRangeStartMethod = getMethod(sreiClazz, "setSourceRangeStart", classOf[Int])
-  val setSourceRangeEndMethod = getMethod(sreiClazz, "setSourceRangeEnd", classOf[Int])
+  val setFlagsMethod = getDeclaredMethod(meiClazz, "setFlags", classOf[Int])
+  val setNameSourceStartMethod = try {
+    getDeclaredMethod(meiClazz, "setNameSourceStart", classOf[Int])
+  } catch {
+    case _ : NoSuchMethodException => getDeclaredMethod(aiClazz, "setNameSourceStart", classOf[Int])
+  }
+  val setNameSourceEndMethod = try {
+    getDeclaredMethod(meiClazz, "setNameSourceEnd", classOf[Int])
+  } catch {
+    case _ : NoSuchMethodException => getDeclaredMethod(aiClazz, "setNameSourceEnd", classOf[Int])
+  }
+  val setSourceRangeStartMethod = getDeclaredMethod(sreiClazz, "setSourceRangeStart", classOf[Int])
+  val setSourceRangeEndMethod = getDeclaredMethod(sreiClazz, "setSourceRangeEnd", classOf[Int])
+  val hasChildrenField = try {
+    getDeclaredField(jeiClazz, "children")
+    true
+  } catch {
+    case _ : NoSuchFieldException => false 
+  }
 }
 
-trait ScalaMemberElementInfo {
+trait ScalaMemberElementInfo extends JavaElementInfo {
   import ScalaMemberElementInfo._
   import java.lang.Integer
+
+  var auxChildren : Array[IJavaElement] = if (hasChildrenField) null else new Array(0)
+  
+  override def getChildren = if (hasChildrenField) super.getChildren else auxChildren
+  
+  override def addChild(child : IJavaElement) : Unit =
+    if (hasChildrenField)
+      super.addChild(child)
+    else if (auxChildren.length == 0)
+      auxChildren = Array(child)
+    else if (!auxChildren.contains(child))
+      auxChildren = auxChildren ++ Seq.singleton(child)
 
   def setFlags0(flags : Int) = setFlagsMethod.invoke(this, new Integer(flags))
   def setNameSourceStart0(start : Int) = setNameSourceStartMethod.invoke(this, new Integer(start)) 

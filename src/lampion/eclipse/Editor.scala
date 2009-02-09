@@ -10,7 +10,7 @@ import scala.util.Sorting
 
 import org.eclipse.core.resources.{IWorkspaceRunnable,IMarker,IResource};
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.jdt.internal.ui.javaeditor.{ CompilationUnitEditor, JavaEditor }
+import org.eclipse.jdt.internal.ui.javaeditor.{ CompilationUnitEditor, JavaEditor, JavaSourceViewer }
 import org.eclipse.jface.util.PropertyChangeEvent
 import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.jface.text.{TextPresentation,ITypedRegion,DocumentEvent,DefaultInformationControl,IInformationControlCreator,IDocumentListener,IDocument,DocumentCommand,IAutoEditStrategy,ITextViewer,ITextHover,ITextHoverExtension,IRegion,Region};
@@ -259,7 +259,7 @@ abstract class Editor extends JavaEditor with IAutoEditStrategy  {
   import org.eclipse.ui.texteditor._
   import org.eclipse.swt.dnd._
 
-  override def createJavaSourceViewer(parent : Composite, ruler : IVerticalRuler, overviewRuler : IOverviewRuler, isOverviewRulerVisible : Boolean, styles :  Int, store : IPreferenceStore) = {
+  override def createJavaSourceViewer(parent : Composite, ruler : IVerticalRuler, overviewRuler : IOverviewRuler, isOverviewRulerVisible : Boolean, styles :  Int, store : IPreferenceStore) : JavaSourceViewer = {
     val viewer = new {
       override val plugin : Editor.this.plugin.type = Editor.this.plugin
     } with lampion.eclipse.SourceViewer(parent, ruler, overviewRuler, isOverviewRulerVisible, styles, store) {

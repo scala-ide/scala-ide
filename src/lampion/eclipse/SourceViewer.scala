@@ -87,7 +87,7 @@ abstract class SourceViewer(parent : Composite, vertical : IVerticalRuler, overv
   def doCreatePresentation = true
   
   object textHover extends JavadocHover with ReflectionUtils {
-    val getStyleSheetMethod = getMethod(classOf[JavadocHover], "getStyleSheet")
+    val getStyleSheetMethod = getDeclaredMethod(classOf[JavadocHover], "getStyleSheet")
     
     editor.map(setEditor)
     
@@ -211,7 +211,7 @@ abstract class SourceViewer(parent : Composite, vertical : IVerticalRuler, overv
 
 object SourceViewer extends ReflectionUtils {
   val jsvClass = Class.forName("org.eclipse.jdt.internal.ui.javaeditor.JavaSourceViewer")
-  val fIsSetVisibleDocumentDelayedField = getField(jsvClass, "fIsSetVisibleDocumentDelayed")
+  val fIsSetVisibleDocumentDelayedField = getDeclaredField(jsvClass, "fIsSetVisibleDocumentDelayed")
 
   class Configuration(store : IPreferenceStore, editor : ITextEditor)
     extends JavaSourceViewerConfiguration(JavaPlugin.getDefault.getJavaTextTools.getColorManager, store, editor, null) {

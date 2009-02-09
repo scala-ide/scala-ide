@@ -59,9 +59,9 @@ class Builder extends lampion.eclipse.Builder {
 
 object ScalaJavaBuilderUtils extends ReflectionUtils {
   private val ibClazz = Class.forName("org.eclipse.core.internal.events.InternalBuilder")
-  private val setProjectMethod = getMethod(ibClazz, "setProject", classOf[IProject])
+  private val setProjectMethod = getDeclaredMethod(ibClazz, "setProject", classOf[IProject])
   private val jbClazz = Class.forName("org.eclipse.jdt.internal.core.builder.JavaBuilder")
-  private val initializeBuilderMethod = getMethod(jbClazz, "initializeBuilder", classOf[Int], classOf[Boolean])
+  private val initializeBuilderMethod = getDeclaredMethod(jbClazz, "initializeBuilder", classOf[Int], classOf[Boolean])
   
   def setProject(builder : ScalaJavaBuilder, project : IProject) = setProjectMethod.invoke(builder, project)
   def initializeBuilder(builder : ScalaJavaBuilder, kind : Int, forBuild : Boolean) = initializeBuilderMethod.invoke(builder, int2Integer(kind), boolean2Boolean(forBuild))
@@ -69,9 +69,9 @@ object ScalaJavaBuilderUtils extends ReflectionUtils {
 
 object StateUtils extends ReflectionUtils {
   private val stateClazz = Class.forName("org.eclipse.jdt.internal.core.builder.State").asInstanceOf[Class[State]]
-  private val stateCtor = getConstructor(stateClazz, classOf[JavaBuilder])
-  private val tagAsStructurallyChangedMethod = getMethod(stateClazz, "tagAsStructurallyChanged")
-  private val structurallyChangedTypesField = getField(stateClazz, "structurallyChangedTypes")
+  private val stateCtor = getDeclaredConstructor(stateClazz, classOf[JavaBuilder])
+  private val tagAsStructurallyChangedMethod = getDeclaredMethod(stateClazz, "tagAsStructurallyChanged")
+  private val structurallyChangedTypesField = getDeclaredField(stateClazz, "structurallyChangedTypes")
   
   def newState(b : JavaBuilder) = stateCtor.newInstance(b)
   

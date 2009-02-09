@@ -12,7 +12,7 @@ object ScalaIndexManager extends ReflectionUtils {
   private val indexManager = {
     // This is an instance method in 3.3, static in 3.4
     val jmmClazz = Class.forName("org.eclipse.jdt.internal.core.JavaModelManager")
-    val getIndexManagerMethod = getMethod(jmmClazz, "getIndexManager")
+    val getIndexManagerMethod = getDeclaredMethod(jmmClazz, "getIndexManager")
     val jmm = JavaModelManager.getJavaModelManager
     getIndexManagerMethod.invoke(jmm).asInstanceOf[IndexManager]
   }

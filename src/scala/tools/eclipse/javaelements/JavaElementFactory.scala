@@ -7,7 +7,7 @@ package scala.tools.eclipse.javaelements
 
 import java.lang.reflect.Constructor
 
-import org.eclipse.jdt.internal.core.{ CompilationUnit, SourceRefElement }
+import org.eclipse.jdt.internal.core.{ CompilationUnit, JavaElementInfo, SourceRefElement }
 
 import lampion.util.ReflectionUtils
 
@@ -28,7 +28,7 @@ object JavaElementFactory extends ReflectionUtils {
       (sreiCtor0, pdCtor0)
     }
   
-  def createSourceRefElementInfo : AnyRef = sreiCtor.newInstance().asInstanceOf[AnyRef]
+  def createSourceRefElementInfo : JavaElementInfo = sreiCtor.newInstance().asInstanceOf[JavaElementInfo]
   
   def createPackageDeclaration(cu : CompilationUnit, name : String) =
     pdCtor.newInstance(cu, name).asInstanceOf[SourceRefElement]

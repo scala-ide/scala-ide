@@ -8,7 +8,7 @@ package scala.tools.eclipse.javaelements
 import org.eclipse.core.resources.{ IFile, IFolder, IProject, IResource }
 import org.eclipse.core.runtime.{ CoreException, IProgressMonitor, IStatus, Status }
 import org.eclipse.jdt.core.{ IClasspathEntry, IJavaElement, IPackageFragment, JavaCore, JavaModelException }
-import org.eclipse.jdt.internal.core.{ JavaModelManager }
+import org.eclipse.jdt.internal.core.{ JavaModelManager, OpenableElementInfo }
 import org.eclipse.jdt.internal.ui.packageview.PackageExplorerPart
 import org.eclipse.ui.progress.UIJob
 
@@ -81,25 +81,23 @@ object JDTUtils {
   }
 }
 
-object JavaElementInfoUtils extends ReflectionUtils {
-  private val clazz = Class.forName("org.eclipse.jdt.internal.core.JavaElementInfo")
+object OpenableElementInfoUtils extends ReflectionUtils {
+  private val clazz = Class.forName("org.eclipse.jdt.internal.core.OpenableElementInfo")
   private val addChildMethod = getMethod(clazz, "addChild", classOf[IJavaElement])
-  private val getChildrenMethod = getMethod(clazz, "getChildren")
   private val removeChildMethod = getMethod(clazz, "removeChild", classOf[IJavaElement])
   private val setChildrenMethod = getMethod(clazz, "setChildren", classOf[Array[IJavaElement]])
   
-  def addChild(info : AnyRef, child : IJavaElement) = addChildMethod.invoke(info, child)
-  def getChildren(info : AnyRef) : Array[IJavaElement] = getChildrenMethod.invoke(info).asInstanceOf[Array[IJavaElement]]
-  def removeChild(info : AnyRef, child : IJavaElement) = removeChildMethod.invoke(info, child)
-  def setChildren(info : AnyRef, children : Array[IJavaElement]) = setChildrenMethod.invoke(info, children : AnyRef)
+  def addChild(info : OpenableElementInfo, child : IJavaElement) = addChildMethod.invoke(info, child)
+  def removeChild(info : OpenableElementInfo, child : IJavaElement) = removeChildMethod.invoke(info, child)
+  def setChildren(info : OpenableElementInfo, children : Array[IJavaElement]) = setChildrenMethod.invoke(info, children : AnyRef)
 }
 
 object SourceRefElementInfoUtils extends ReflectionUtils {
   import java.lang.Integer
 
   private val sreiClazz = Class.forName("org.eclipse.jdt.internal.core.SourceRefElementInfo")
-  private val setSourceRangeStartMethod = getMethod(sreiClazz, "setSourceRangeStart", classOf[Int])
-  private val setSourceRangeEndMethod = getMethod(sreiClazz, "setSourceRangeEnd", classOf[Int])
+  private val setSourceRangeStartMethod = getDeclaredMethod(sreiClazz, "setSourceRangeStart", classOf[Int])
+  private val setSourceRangeEndMethod = getDeclaredMethod(sreiClazz, "setSourceRangeEnd", classOf[Int])
   
   def setSourceRangeStart(start : Int) : Unit = setSourceRangeStartMethod.invoke(this, new Integer(start))
   def setSourceRangeEnd(end : Int) : Unit = setSourceRangeEndMethod.invoke(this, new Integer(end))

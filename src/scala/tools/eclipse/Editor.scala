@@ -132,9 +132,9 @@ class Editor extends { val plugin = Driver.driver } with lampion.eclipse.Editor 
 
 object EditorUtils extends ReflectionUtils {
   val cpsClass = Class.forName("org.eclipse.ui.texteditor.ChainedPreferenceStore")
-  val fPreferenceStoresField = getField(cpsClass, "fPreferenceStores")
+  val fPreferenceStoresField = getDeclaredField(cpsClass, "fPreferenceStores")
   val jeClass = Class.forName("org.eclipse.jdt.internal.ui.javaeditor.JavaEditor")
-  val getInputJavaElementMethod = getMethod(jeClass, "getInputJavaElement")
+  val getInputJavaElementMethod = getDeclaredMethod(jeClass, "getInputJavaElement")
   val breadcrumbKey = "breadcrumb"
   
   val suppressingStore = {
