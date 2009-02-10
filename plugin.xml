@@ -801,7 +801,35 @@
       </contextualLaunch>
     </shortcut>
   </extension>
-
+  
+  <extension point="org.eclipse.ui.commands">
+    <category
+      description="Scala editor category"
+      id="scala.tools.eclipse.category"
+      name="Scala Editor" />
+    <command
+      categoryId="scala.tools.eclipse.category"
+      description="Run Scala Application"
+      id="org.eclipse.shortcut.scala.run"
+      name="Run Scala Application" />
+    <command
+      categoryId="scala.tools.eclipse.category"
+      description="Debug Scala Application"
+      id="org.eclipse.shortcut.scala.debug"
+      name="Debug Scala Application" />
+  </extension>
+  
+  <extension point="org.eclipse.ui.bindings">
+    <key
+  	  commandId="org.eclipse.shortcut.scala.run"
+  	  schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+  	  sequence="M2+M3+X S" />
+    <key
+  	  commandId="org.eclipse.shortcut.scala.debug"
+  	  schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+  	  sequence="M2+M3+D S" />
+  </extension>
+  
   <extension point="org.eclipse.contribution.weaving.jdt.cuprovider">
     <provider
       class="scala.tools.eclipse.javaelements.ScalaCompilationUnitProvider"
