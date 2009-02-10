@@ -397,7 +397,7 @@ trait TypersPresentations extends scala.tools.editor.Presentations {
         case Some(sym) => 
           val buf = new StringBuilder
           if (sym.tpe != null) {
-            buf append ("<code><b>" + sym.fullNameString + "</b></code>")
+            buf append ("<code><b>" + (if (sym.isValueParameter) sym.simpleName else sym.fullNameString) + "</b></code>")
             buf append ("<code>" + header(sym).getOrElse("") + "</code>")
             buf append "<br>"
           }
