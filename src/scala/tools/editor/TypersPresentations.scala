@@ -548,10 +548,10 @@ trait TypersPresentations extends scala.tools.editor.Presentations {
           node0.doMagic0(magicProcessor, parse){
             node0.doNamer
             node0.doTyper
-          } 
+          }
           val buf = new ListBuffer[Completion]
           def convert(wantHigh : Boolean) = magicProcessor.elements.filter{
-            case (_,(sym,high)) => high == wantHigh
+            case (_,(sym,high)) => high == wantHigh && !sym.isSetter 
           }.foreach{
           case (_,(sym,_)) => 
             val text : runtime.RichString = sym.name.decode 
