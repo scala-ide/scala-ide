@@ -592,15 +592,17 @@ trait TypersPresentations extends scala.tools.editor.Presentations {
         scope.elements.foreach{sym => 
           val name = sym.name
           val str = name.decode
+          val key = if (sym.isMethod) str.trim+header(sym) else str.trim 
           val last = str.last
+
           // TODO: check accessibility. 
           if (name.isTypeName == isType && str.toLowerCase.startsWith(leading.toLowerCase) && 
-              (str.indexOf('$') == -1) && last != ' ' && !contains(str.trim)) {
+              (str.indexOf('$') == -1) && last != ' ' && !contains(key)) {
             val sym0 = if (verify==null) sym else verify(sym)
             if (sym0 != compiler.NoSymbol) {
               val high = if (pt != null) sym0.tpe <:< pt
                          else false
-              this(str) = (sym0,high)
+              this(key) = (sym0,high)
             }
           }
         }
@@ -609,8 +611,10 @@ trait TypersPresentations extends scala.tools.editor.Presentations {
       override def notify(name : Name, sym : Symbol) : Unit = if (name.toTermName == magicName) {
         val name = sym.name
         val str = name.decode
-        if (str.toLowerCase.startsWith(leading.toLowerCase) && !str.endsWith("$") && !contains(str.trim)) 
-          this(str) = (sym,true)
+        val key = if (sym.isMethod) str.trim+header(sym) else str.trim 
+
+        if (str.toLowerCase.startsWith(leading.toLowerCase) && !str.endsWith("$") && !contains(key)) 
+          this(key) = (sym,true)
         super.notify(name, sym)
       }
       override def verifyAndPrioritize[T](verify : Symbol => Symbol)(pt : Type)(f : => T) : T = {
