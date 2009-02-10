@@ -733,7 +733,9 @@ trait TypersPresentations extends scala.tools.editor.Presentations {
       else if (sym.isPackage) (packageStyle)
       else if (sym.isType || sym.isTypeParameter) (typeStyle)
       else if (sym.isModule) (objectStyle)
-      else if (sym.isVariable) (varStyle)
+      else if (sym.isVariable) {
+        if (sym.hasFlag(Flags.LAZY)) valStyle else varStyle
+      }
       else if (sym.isGetter) {
         if (sym.accessed.isVariable) (varStyle)
         else (valStyle)
