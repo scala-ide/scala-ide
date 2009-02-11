@@ -487,19 +487,20 @@ trait TypersPresentations extends scala.tools.editor.Presentations {
                  else text.slice(1, offset))  : RandomAccessSeq[Char], enclosingParse)
           case _ => prev.map(t => (t,t.code)) match {
             case Some((tok,IDENTIFIER)) if offset == 0 => (tok.offset, tok.text.length, tok.text, tok.enclosingParse) 
-            case Some((tok,DOT)) => (this.offset + offset, 0, "" : RandomAccessSeq[Char], tok.enclosingParse)
+            case Some((tok,DOT|WHITESPACE)) => (this.offset + offset, 0, "" : RandomAccessSeq[Char], tok.enclosingParse)
             case Some((tok,COMMENT)) => return Nil
             case _ => 
               var tok = this
-              while (tok.code match {
+              while (tok.next.isDefined && (tok.code match {
                 case WHITESPACE|NEWLINE|NEWLINES => true
                 case _ => false
-              }) tok = tok.next.get
+              })) tok = tok.next.get
               var span = tok.enclosingParse
               while (span.from > this.offset + offset) span = span.enclosing
               (this.offset + offset, 0, "" : RandomAccessSeq[Char], span)
             }
           }
+          
           val replaceAt0 = replaceAt - range.from
           assert(replaceAt0 >= 0)
           if (range.isEmpty || !range.get.hasLength) return Nil

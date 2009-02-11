@@ -13,10 +13,11 @@ import java.net.URL
 
 import org.eclipse.core.resources.{IFile,IProject,IResource,ResourcesPlugin}
 import org.eclipse.core.runtime.{IPath,Status,IProgressMonitor}
+import org.eclipse.jdt.internal.ui.text.java.JavaCompletionProposal;
 import org.eclipse.jface.dialogs.{ErrorDialog}
 import org.eclipse.jface.resource.{ImageDescriptor}
 import org.eclipse.jface.preference.PreferenceConverter
-import org.eclipse.jface.text.{IRepairableDocument,TextPresentation,IDocument,Document,Position,Region}
+import org.eclipse.jface.text.{IRepairableDocument,TextPresentation,IDocument,ITextViewer,Document,Position,Region}
 import org.eclipse.jface.text.hyperlink.{IHyperlink}
 import org.eclipse.jface.text.contentassist.{ICompletionProposal}
 import org.eclipse.jface.text.source.{Annotation,IAnnotationModel}
@@ -350,46 +351,12 @@ trait UIPlugin extends org.eclipse.ui.plugin.AbstractUIPlugin with Plugin with l
       type Completion = ICompletionProposal
       override def Completion(offset : Int, length : Int, text : String, 
           info : Option[String], image : Option[Image], additional : => Option[String]) = {
-          import org.eclipse.jface.text.contentassist._
-          
-          class MyCompletionProposal extends ICompletionProposal with ICompletionProposalExtension3 {
-            def getPrefixCompletionStart(doc : IDocument, offset0 : Int) = offset
-            def getPrefixCompletionText(doc : IDocument, offset0 : Int) = text
-            import org.eclipse.jface.text._
-            import org.eclipse.swt.widgets._
-            import org.eclipse.swt.graphics._
-            import org.eclipse.jface.internal.text.html.HTMLTextPresenter;
-            def getInformationControlCreator = new IInformationControlCreator {
-              def createInformationControl(parent : Shell) = try {
-                val ret = new DefaultInformationControl(parent, new HTMLTextPresenter)
-                ret.setBackgroundColor(parent.getDisplay.getSystemColor(SWT.COLOR_WHITE));
-                ret.setForegroundColor(parent.getDisplay.getSystemColor(SWT.COLOR_BLACK));
-                ret
-              } catch {
-              case t : Throwable => new DefaultInformationControl(parent)
-              }
-            }
-            def getContextInformation = null
-            def getImage = image getOrElse null
-            def getDisplayString = text + info.getOrElse("")
-            def getAdditionalProposalInfo = additional.getOrElse(null)
-            def getSelection(doc : IDocument) : Point = {
-              assert(true)
-              new Point(offset + text.length, 0)
-            }
-            //def getAdditionalProposalInfo(monitor : IProgressMonitor) : String = additional.getOrElse(null)
-            def apply(doc : IDocument) = try { // XXX not used
-              assert(true)
+          new JavaCompletionProposal(text, offset, length, image getOrElse null, text + info.getOrElse(""), 0) {
+            override def apply(viewer : ITextViewer, trigger : Char, stateMask : Int, offset : Int) {
               self.resetConstrict
-              doc.replace(offset, length, text)
-            } catch {
-            case ex : BadLocationException => 
-              logError(ex)
-            case ex : IllegalArgumentException =>
-              logError(ex)
+              super.apply(viewer, trigger, stateMask, offset)
             }
           }
-          new MyCompletionProposal
         }
       private var matchErrors = List[Annotation]() 
       override def removeUnmatched(offset : Int) = if (viewer.isDefined) {

@@ -41,4 +41,5 @@ Import-Package:
  org.eclipse.contribution.jdt.imagedescriptor,
  org.eclipse.contribution.jdt.sourceprovider,
  scala.tools.eclipse.contribution.weaving.jdt,
- scala.tools.eclipse.contribution.weaving.jdt.builderoptions
+ scala.tools.eclipse.contribution.weaving.jdt.builderoptions,
+ scala.tools.eclipse.contribution.weaving.jdt.ui.text.java

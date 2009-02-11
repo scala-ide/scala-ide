@@ -161,7 +161,7 @@ trait Tokenizers extends lampion.compiler.Tokenizers {
       val start = startFor(offset)
       assert(start <= offset)
       var tok = tokenFor(start)
-      while (tok.extent <= offset) tok = tok.next.get
+      while (tok.extent <= offset && tok.next.isDefined) tok = tok.next.get
       tok
     }
     private var unit0 : compiler.CompilationUnit = _

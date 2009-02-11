@@ -28,13 +28,12 @@ trait Matchers extends Tokenizers with lampion.compiler.NewMatchers {
       if (offset > 0 && content(offset-1) == '\"') tryit(STRINGLIT, offset)(_.open(0) == '"')
       else if (offset > 0 && content(offset-1) == '`') tryit(BACKQUOTED_IDENT, offset)(_.open(0) == '`')
       else if (offset > 1 && content.slice(offset - 2, offset).mkString == "*/") tryit(COMMENT, offset)(_.isInstanceOf[Comment])
-      else if (parser.Tokens.isNewLine(content(offset + 1))) {
+      else if (content.length > offset +1 && parser.Tokens.isNewLine(content(offset + 1))) {
         val c = content(offset)
         assert(c != 0)
         tryit(COMMENT, offset + 2)(_ == LineComment)
       } else None
     }
-
     
     override protected def adjustDamage(from : Int, until : Int) = {
       val enclosing = this.enclosing(from, until)

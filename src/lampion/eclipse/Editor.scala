@@ -8,9 +8,12 @@ package lampion.eclipse
 
 import scala.util.Sorting
 
+import java.{ util => ju }
+
 import org.eclipse.core.resources.{IWorkspaceRunnable,IMarker,IResource};
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.internal.ui.javaeditor.{ CompilationUnitEditor, JavaEditor, JavaSourceViewer }
+import org.eclipse.jdt.ui.text.java.ContentAssistInvocationContext
 import org.eclipse.jface.util.PropertyChangeEvent
 import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.jface.text.{TextPresentation,ITypedRegion,DocumentEvent,DefaultInformationControl,IInformationControlCreator,IDocumentListener,IDocument,DocumentCommand,IAutoEditStrategy,ITextViewer,ITextHover,ITextHoverExtension,IRegion,Region};
@@ -19,15 +22,16 @@ import org.eclipse.jface.text.hyperlink.{IHyperlink,IHyperlinkDetector};
 import org.eclipse.jface.text.presentation.{IPresentationDamager,IPresentationRepairer,PresentationReconciler};
 import org.eclipse.jface.text.source.{AnnotationModelEvent,IAnnotationModel,ICharacterPairMatcher,IOverviewRuler,ISourceViewer,IVerticalRuler,SourceViewerConfiguration,IAnnotationModelListener};
 import org.eclipse.jface.text.source.projection.{ProjectionAnnotationModel,ProjectionSupport,ProjectionViewer,IProjectionListener};
-import org.eclipse.ui.{IFileEditorInput};
+import org.eclipse.ui.{IEditorPart,IFileEditorInput};
 import org.eclipse.ui.editors.text.{TextEditor};
 import org.eclipse.ui.texteditor.{ContentAssistAction,SourceViewerDecorationSupport,ITextEditorActionDefinitionIds};
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.{ExtendedModifyEvent,ExtendedModifyListener};
 import org.eclipse.swt.events.{KeyListener,KeyEvent,FocusListener,FocusEvent};
 import org.eclipse.swt.widgets.{Composite,Shell};
+import scala.tools.eclipse.contribution.weaving.jdt.ui.text.java.ScalaCompletionProcessor
 
-abstract class Editor extends JavaEditor with IAutoEditStrategy  {
+abstract class Editor extends JavaEditor with IAutoEditStrategy {
   val plugin : UIPlugin
   import lampion.core.Dirs._
 
@@ -344,27 +348,18 @@ abstract class Editor extends JavaEditor with IAutoEditStrategy  {
     plugin.getPreferenceStore.setValue(EDITOR_MATCHING_BRACKETS_COLOR, "0,100,0")
     super.configureSourceViewerDecorationSupport(support)
   }
-  object contentAssistProcessor extends IContentAssistProcessor with IContextInformationValidator with IContextInformationPresenter {
-    override def computeCompletionProposals(tv : ITextViewer, offset : Int) = {
+  
+  object contentAssistProcessor
+    extends ScalaCompletionProcessor(Editor.this, new ContentAssistant, IDocument.DEFAULT_CONTENT_TYPE) {
+    override def collectProposals0(tv : ITextViewer, offset : Int, monitor : IProgressMonitor,  context : ContentAssistInvocationContext) : ju.List[_] = {
       catchUp
       val external = Editor.this.file.get.external
       val file = external.file
       val completions = file.doComplete(offset)
-      if (!completions.isEmpty)
-        Sorting.stableSort(completions, (a : ICompletionProposal, b : ICompletionProposal) => a.getDisplayString < b.getDisplayString).toArray
-      else null
+      ju.Arrays.asList(completions.toArray : _*)
     }
-    override def computeContextInformation(tv : ITextViewer, offset : Int) = null
-    override def getCompletionProposalAutoActivationCharacters = Array('.')
-    override def getContextInformationAutoActivationCharacters = null
-    override def getContextInformationValidator = this
-    override def getErrorMessage = null
-    private var installOffset = -1
-    override def install(info : IContextInformation, tv : ITextViewer, offset : Int) = installOffset = offset
-    override def updatePresentation(pos : Int, presentation : TextPresentation) = false
-    override def isContextInformationValid(offset : Int) =
-      true || Math.abs(installOffset - offset) < 5
   }
+
   override def dispose = {
     val viewer = getSourceViewer
     if (viewer != null)
