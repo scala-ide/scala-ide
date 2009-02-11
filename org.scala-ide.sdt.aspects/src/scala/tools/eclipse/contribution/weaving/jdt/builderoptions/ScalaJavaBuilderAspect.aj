@@ -1,10 +1,7 @@
 /*
- * Copyright (c) 2008 Miles Sabin
- * All rights reserved
- * ------------------------
- * http://www.milessabin.com
- * mailto:miles@milessabin.com
+ * Copyright 2005-2009 LAMP/EPFL
  */
+// $Id$
 
 package scala.tools.eclipse.contribution.weaving.jdt.builderoptions;
 
@@ -25,12 +22,9 @@ public aspect ScalaJavaBuilderAspect {
   
   void around() : cleanOutputFolders() && cflow(build()) {
     // Just suppress the behaviour
-    System.err.println("around cleanOutputFolders");
   }
   
   boolean around(String fileName) : isJavaLikeFileName(fileName) && (cflow(build()) || cflow(clean())) {
-    System.err.println("around isJavaLikeFileName");
-
     if (fileName != null && fileName.endsWith("scala"))
       return false;
     else

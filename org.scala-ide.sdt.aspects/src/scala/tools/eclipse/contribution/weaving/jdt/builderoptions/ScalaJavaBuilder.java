@@ -1,10 +1,7 @@
 /*
- * Copyright (c) 2008 Miles Sabin
- * All rights reserved
- * ------------------------
- * http://www.milessabin.com
- * mailto:miles@milessabin.com
+ * Copyright 2005-2009 LAMP/EPFL
  */
+// $Id$
 
 package scala.tools.eclipse.contribution.weaving.jdt.builderoptions;
 
