@@ -5,7 +5,7 @@
 
 package scala.tools.eclipse.javaelements
 
-import org.eclipse.core.resources.{ IFile, IFolder, IProject, IResource }
+import org.eclipse.core.resources.{ IFile, IFolder, IProject, IResource, ResourcesPlugin }
 import org.eclipse.core.runtime.{ CoreException, IProgressMonitor, IStatus, Status }
 import org.eclipse.jdt.core.{ IClasspathEntry, IJavaElement, IPackageFragment, JavaCore, JavaModelException }
 import org.eclipse.jdt.internal.core.{ JavaModelManager, OpenableElementInfo }
@@ -55,13 +55,8 @@ object JDTUtils {
         return Iterator.empty
       
       val jp = JavaCore.create(project)
-      jp.getRawClasspath.filter(_.getEntryKind == IClasspathEntry.CPE_SOURCE).elements.flatMap{
-        entry => {
-	        val p = entry.getPath
-	        val folder = if (p.segmentCount == 1) project else project.getFolder(p.removeFirstSegments(1)) 
-	        flatten(folder)
-        }
-      }
+      jp.getRawClasspath.filter(_.getEntryKind == IClasspathEntry.CPE_SOURCE).
+        elements.flatMap(entry => flatten(ResourcesPlugin.getWorkspace.getRoot.findMember(entry.getPath)))
     } catch {
       case _ : JavaModelException => Iterator.empty
     }

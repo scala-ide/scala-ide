@@ -27,7 +27,7 @@ abstract class Builder extends IncrementalProjectBuilder {
     kind match {
     case CLEAN_BUILD => return project.externalDepends.toList.toArray
     case INCREMENTAL_BUILD|AUTO_BUILD if (!project.doFullBuild) =>
-    getDelta(project.underlying).accept(new IResourceDeltaVisitor {
+      getDelta(project.underlying).accept(new IResourceDeltaVisitor {
         def visit(delta : IResourceDelta) = ifile(delta.getResource) match {
           case null => true
           case (file) =>
@@ -64,17 +64,20 @@ abstract class Builder extends IncrementalProjectBuilder {
       true
     case _ => 
       project.doFullBuild = false
-      project.sourceFolders.foreach(_.accept(new IResourceVisitor {
-      def visit(resource : IResource) = ifile(resource) match {
-      case null => true
-      case (file) =>           
-        project.fileSafe(file) match {
-        case Some(file0) => toBuild += file0
-        case _ =>
-        }
-        true
-      }}))
+      val sourceFolders = project.sourceFolders
+      sourceFolders.foreach(_.accept(new IResourceVisitor {
+        def visit(resource : IResource) =
+          ifile(resource) match {
+            case null => true
+            case (file) =>           
+              project.fileSafe(file) match {
+                case Some(file0) => toBuild += file0
+                case _ =>
+              }
+              true
+          }}))
     }
+    
     // everything that needs to be recompiled is in toBuild now. 
     val built = new LinkedHashSet[project.File] // don't recompile twice.
     var buildAgain = false

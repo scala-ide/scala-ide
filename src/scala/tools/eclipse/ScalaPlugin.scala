@@ -56,20 +56,13 @@ trait ScalaPlugin extends ScalaPluginSuperA with scala.tools.editor.Driver {
   val javaFileExtn = ".java"
   val jarFileExtn = ".jar"
  
-  def sourceFolders(javaProject : IJavaProject) : Iterable[IFolder] = {
+  def sourceFolders(javaProject : IJavaProject) : Iterable[IContainer] = {
     val isOpen = javaProject.isOpen
     if (!isOpen) javaProject.open(null)
-    val isConsistent = javaProject.isConsistent
-    val x0 = javaProject.isStructureKnown
-    val x1 = javaProject.isReadOnly
     javaProject.getAllPackageFragmentRoots.filter(p => {
-      check(p.getKind == IPackageFragmentRoot.K_SOURCE && p.getResource.isInstanceOf[IFolder] && {
-        val parent = p.getParent
-        val project = parent.getAdapter(classOf[IProject])
-        val jp = javaProject.getProject
-        parent == javaProject
-      }) getOrElse false
-    }).map(_.getResource.asInstanceOf[IFolder])
+      assert(true)
+      check(p.getKind == IPackageFragmentRoot.K_SOURCE && p.getResource.isInstanceOf[IContainer] && (p == javaProject || p.getParent == javaProject)) getOrElse false
+    }).map(_.getResource.asInstanceOf[IContainer])
   }
   def javaProject(p : IProject) = 
     if (JavaProject.hasJavaNature(p)) Some(JavaCore.create(p))
@@ -79,10 +72,13 @@ trait ScalaPlugin extends ScalaPluginSuperA with scala.tools.editor.Driver {
     assert(path != null)
     import path.lastSegment
     if (lastSegment == null) return path
-    val res = if (lastSegment.endsWith(".jar") || lastSegment.endsWith(".zip"))
-      workspace.getFile(path)
-    else workspace.getFolder(path)
+    val res =
+      if (lastSegment.endsWith(".jar") || lastSegment.endsWith(".zip"))
+        workspace.getFile(path)
+      else
+        workspace.findMember(path)
     assert(res != null)
+
     if (res.exists) res.getLocation else path
   }
   protected case class ClassFileSpec(source : AbstractFile, classFile : IClassFile) extends FileSpec {
@@ -105,22 +101,30 @@ trait ScalaPlugin extends ScalaPluginSuperA with scala.tools.editor.Driver {
     
     def outputPath = outputPath0.toOSString
     def outputPath0 = check {
-      val fldr = workspace.getFolder(javaProject.getOutputLocation)
-      if (!ResourcesPlugin.getWorkspace.isTreeLocked) {
-        def createParentFolder(parent : IContainer) {
-          if(!parent.exists()) {
-            createParentFolder(parent.getParent)
-            parent.asInstanceOf[IFolder].create(true, true, null)
-            parent.setDerived(true)
+      val outputLocation = javaProject.getOutputLocation
+      val cntnr = workspace.findMember(outputLocation)
+      assert(cntnr ne null)
+      
+      val project = javaProject.getProject
+      if (cntnr != project && !ResourcesPlugin.getWorkspace.isTreeLocked) cntnr match {
+        case fldr : IFolder =>
+          def createParentFolder(parent : IContainer) {
+            if(!parent.exists()) {
+              createParentFolder(parent.getParent)
+              parent.asInstanceOf[IFolder].create(true, true, null)
+              parent.setDerived(true)
+            }
           }
-        }
-        fldr.refreshLocal(IResource.DEPTH_ZERO, null)
-        if(!fldr.exists()) {
-          createParentFolder(fldr.getParent)
-          fldr.create(IResource.FORCE | IResource.DERIVED, true, null)
-        }
+        
+          fldr.refreshLocal(IResource.DEPTH_ZERO, null)
+          if(!fldr.exists()) {
+            createParentFolder(fldr.getParent)
+            fldr.create(IResource.FORCE | IResource.DERIVED, true, null)
+          }
+        case _ => 
       }
-      fldr.getLocation
+
+      cntnr.getLocation
     } getOrElse underlying.getLocation
     
     def dependencies = {
@@ -204,9 +208,8 @@ trait ScalaPlugin extends ScalaPluginSuperA with scala.tools.editor.Driver {
       if (!path.startsWith(root)) return None
       val path1 = path.substring(root.length)
       
-      val file = ResourcesPlugin.getWorkspace.getRoot.getFolder(Path.fromOSString(path1))
-      //if (!file.) return None
-      projectSafe(file.getProject)
+      val res = ResourcesPlugin.getWorkspace.getRoot.findMember(Path.fromOSString(path1))
+      projectSafe(res.getProject)
     }
     override def fileFor(path : String) : PlainFile = {
       val root = ResourcesPlugin.getWorkspace.getRoot.getLocation.toOSString
@@ -223,8 +226,8 @@ trait ScalaPlugin extends ScalaPluginSuperA with scala.tools.editor.Driver {
       nscToLampion(file).signature = value
     }
     override def refreshOutput : Unit = {
-      val fldr = workspace.getFolder(javaProject.getOutputLocation)
-      fldr.refreshLocal(IResource.DEPTH_INFINITE, null)
+      val res = workspace.findMember(javaProject.getOutputLocation)
+      res.refreshLocal(IResource.DEPTH_INFINITE, null)
     }
     override def dependsOn(file : PlainFile, what : PlainFile) : Unit = {
       val f0 = nscToLampion(file)
@@ -367,16 +370,18 @@ trait ScalaPlugin extends ScalaPluginSuperA with scala.tools.editor.Driver {
       
       
     }
+    
     import scala.tools.nsc.io.{AbstractFile,PlainFile}
 
     def nscToLampion(file : PlainFile) : File = {
-      val projectPath = underlying.getLocation.toOSString
-      assert(file.path.startsWith(projectPath))
-      val path = Path.fromOSString(file.path.substring(projectPath.length))
-      val file0 = underlying.getFile(path)
+      val path = Path.fromOSString(file.path)
+      val files = workspace.findFilesForLocation(path)
+      assert(!files.isEmpty)
+      val file0 = files(0)
       val file1 = fileSafe(file0).get
       file1
-    } 
+    }
+    
     def nscToEclipse(file : AbstractFile) = nscToLampion(file.asInstanceOf[PlainFile]).underlying match {
       case NormalFile(file) => file
     }
@@ -417,29 +422,50 @@ trait ScalaPlugin extends ScalaPluginSuperA with scala.tools.editor.Driver {
         assert(true) 
         buildCompiler.stale(path.toOSString)
       }
-    } 
+    }
+    
     override def clean(implicit monitor : IProgressMonitor) = {
       super.clean
       buildCompiler = null // throw out the compiler.
       // delete the class files in bin
-      def delete(fldr : IFolder)(f : String => Boolean) : Unit = {
-        if (!fldr.exists()) return
-        fldr.members.foreach{
-        case fldr : IFolder => try {
-          fldr.delete(true, monitor) // might not work.
-        } catch {
-          case t => delete(fldr)(f)
+      def delete(container : IContainer, deleteDirs : Boolean)(f : String => Boolean) : Unit =
+        if (container.exists()) {
+          container.members.foreach {
+            case cntnr : IContainer =>
+              if (deleteDirs) {
+                try {
+                  cntnr.delete(true, monitor) // might not work.
+                } catch {
+                  case _ =>
+                    delete(cntnr, deleteDirs)(f)
+                    if (deleteDirs)
+                      try {
+                        cntnr.delete(true, monitor) // try again
+                      } catch {
+                        case t => logError(t)
+                      }
+                }
+              }
+              else
+                delete(cntnr, deleteDirs)(f)
+            case file : IFile if f(file.getName) =>
+              try {
+                file.delete(true, monitor)
+              } catch {
+                case t => logError(t)
+              }
+            case _ => 
+          }
         }
-        case file : IFile if f(file.getName) => try {
-          file.delete(true, monitor)
-        } catch {
-          case t => logError(t)
-        }
-        case _ => 
-        }
+      
+      val outputLocation = javaProject.getOutputLocation
+      val resource = workspace.findMember(outputLocation)
+      resource match {
+        case container : IContainer => delete(container, container != javaProject.getProject)(_.endsWith(".class"))
+        case _ =>
       }
-      delete(workspace.getFolder(javaProject.getOutputLocation))(_.endsWith(".class"))
     }
+
     import compiler.global._
     import org.eclipse.jdt.core.{IType,IJavaElement}
     import org.eclipse.core.runtime.IProgressMonitor
@@ -517,31 +543,36 @@ trait ScalaPlugin extends ScalaPluginSuperA with scala.tools.editor.Driver {
     }
     
     override def fileFor(sym : Symbol) : Option[ScalaPlugin.this.File] = sym.sourceFile match {
-    case null => None
-    case file : PlainFile => findFileFor(file)
-    case source => classFileFor(sym.toplevelClass) match {
-      case None => None 
-      case Some(clazz) => Some(classFile(source,clazz))
+      case null => None
+      case file : PlainFile => findFileFor(file)
+      case source => classFileFor(sym.toplevelClass) match {
+        case None => None 
+        case Some(clazz) => Some(classFile(source,clazz))
       }
     }
+    
     private def findFileFor(file : PlainFile) : Option[ScalaPlugin.this.File] = {
       import org.eclipse.core.runtime._
-      var path = Path.fromOSString(file.path)
-      val loc = workspace.getLocation
-      if (!loc.isPrefixOf(path)) return None // not even in the workspace
-      path = path.removeFirstSegments(loc.segmentCount)
-      val file0 = workspace.getFile(path)
-      assert(file0.exists)
-      val project = projectSafe(file0.getProject)
-      if (project.isEmpty) return None // not in a valid project.
-      path = file0.getProjectRelativePath
-      val fldr = project.get.sourceFolders.find(_.getProjectRelativePath.isPrefixOf(path))
-      if (fldr.isEmpty) return None 
-      val project0 = project.get
-      return project0.fileSafe(file0)
+      val path = Path.fromOSString(file.path)
+      val files = workspace.findFilesForLocation(path)
+      if (files.isEmpty)
+        None
+      else {
+        val file0 = files(0)   
+        assert(file0.exists)
+        val project = projectSafe(file0.getProject)
+        if (project.isEmpty) return None // not in a valid project.
+        
+        val prPath = file0.getProjectRelativePath
+        val fldr = project.get.sourceFolders.find(_.getProjectRelativePath.isPrefixOf(prPath))
+        if (fldr.isEmpty) return None // Not in a source folder
+        
+        val project0 = project.get
+        return project0.fileSafe(file0)
+      }
     }
-
   }
+
   override protected def canBeConverted(file : IFile) : Boolean = 
     super.canBeConverted(file) && (file.getName.endsWith(scalaFileExtn) || file.getName.endsWith(javaFileExtn))
   override protected def canBeConverted(project : IProject) : Boolean = 

@@ -49,7 +49,7 @@ trait Plugin extends runtime.Plugin with IResourceChangeListener with lampion.co
     override def isOpen = super.isOpen && underlying.isOpen  
     /* when a file needs to be rooted out */
     def stale(path : IPath) : Unit = {}
-    def sourceFolders : Iterable[IFolder] = Nil
+    def sourceFolders : Iterable[IContainer] = Nil
     def externalDepends : Iterable[IProject] = Nil
     def build(toBuild : LinkedHashSet[File])(implicit monitor : IProgressMonitor) : Seq[File] = toBuild.toList
     def buildDone(built : LinkedHashSet[File])(implicit monitor : IProgressMonitor) : Unit = if (!built.isEmpty) {

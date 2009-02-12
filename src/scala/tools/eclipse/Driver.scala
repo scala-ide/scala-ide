@@ -10,12 +10,12 @@ import org.eclipse.core.resources._
 object Driver { 
   private[eclipse] var driver : Driver = _
 }   
-class Driver extends ScalaUIPlugin with net.ScalaMSILPlugin { 
+class Driver extends ScalaUIPlugin { 
   Driver.driver = this 
   def Project(underlying : IProject) = new Project(underlying)
   class Project(underlying0 : IProject) extends {
     override val underlying = underlying0 
-  } with super[ScalaUIPlugin].ProjectImpl with super[ScalaMSILPlugin].ProjectImpl {
+  } with super[ScalaUIPlugin].ProjectImpl {
     def self = this
     def File(underlying : FileSpec) = new File(underlying)
     class File(underlying0 : FileSpec) extends {

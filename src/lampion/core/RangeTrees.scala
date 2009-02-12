@@ -77,7 +77,7 @@ trait RangeTrees extends Positions {
       
       def create(offset : Int) : RangeTree = { // must set length manually.
         //assert(isValid)
-        assert(offset != 0 || this == root)
+        //assert(offset != 0 || this == root)
         var child = this.child
         if (child == NoRangeTree || offset < child.offset0) {
           val ret = RangeTree

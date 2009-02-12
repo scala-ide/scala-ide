@@ -40,9 +40,8 @@ trait NewResourceWizard extends BasicNewResourceWizard {
       case None => return
       case Some(project) => 
         project.javaProject.getAllPackageFragmentRoots.foreach(pkg => if (pkg.getKind == IPackageFragmentRoot.K_SOURCE) {
-          pkg.getChildren.foreach{
-          case e : IPackageFragment if !e.getElementName.trim.isEmpty => packages += e
-          case _ => 
+          pkg.getChildren.foreach {
+            case e : IPackageFragment => packages += e
           }
         })
       }
@@ -80,7 +79,9 @@ trait NewResourceWizard extends BasicNewResourceWizard {
             setErrorMessage("Cannot create top-level Scala " + noun(true) + " without project or package selection.")
             return
           case 1 =>
-            setDescription("Create new top-level Scala " + noun(true) + " in package \"" + packages(0).getElementName + "\" of project \"" + packages(0).getResource.getProject.getName + "\"")
+            val pkgName0 = packages(0).getElementName
+            val pkgName = if (pkgName0.isEmpty) "default package" else "package \""+pkgName0+"\""
+            setDescription("Create new top-level Scala " + noun(true) + " in "+pkgName+" of project \"" + packages(0).getResource.getProject.getName + "\"")
           case _ => 
             val group = label(topLevel, "Package:")
             choose = new Combo(group, SWT.SINGLE | SWT.READ_ONLY)
@@ -158,8 +159,11 @@ trait NewResourceWizard extends BasicNewResourceWizard {
       return false
     }
 
+    val pkgName = pkg.getElementName
+    val pkgDecl = if (pkgName.isEmpty) "" else "package "+pkgName+"\n\n"
+    
     file.create(new java.io.StringBufferInputStream(
-      "package " + pkg.getElementName + "\n\n" +
+      pkgDecl +
       kind.toLowerCase + " " + name + " {\n" + body + "\n}\n"
     ), true, null)
     ScalaIndexManager.addToIndex(file)
