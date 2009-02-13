@@ -77,9 +77,8 @@ trait ScalaPlugin extends ScalaPluginSuperA with scala.tools.editor.Driver {
         workspace.getFile(path)
       else
         workspace.findMember(path)
-    assert(res != null)
 
-    if (res.exists) res.getLocation else path
+    if ((res ne null) && res.exists) res.getLocation else path
   }
   protected case class ClassFileSpec(source : AbstractFile, classFile : IClassFile) extends FileSpec {
     override def toString = source.name
