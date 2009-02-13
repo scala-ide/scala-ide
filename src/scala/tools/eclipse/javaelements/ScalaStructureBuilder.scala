@@ -62,7 +62,7 @@ trait ScalaStructureBuilder extends ScalaJavaMapper { self : ScalaCompilationUni
     
     trait PackageOwner extends Owner { self =>
       override def addPackage(p : PackageDef) : Owner = {
-        println("Package defn: "+p.name+" ["+this+"]")
+        //println("Package defn: "+p.name+" ["+this+"]")
         
         val pkgElem = JavaElementFactory.createPackageDeclaration(compilationUnitBuilder.element.asInstanceOf[JDTCompilationUnit], p.symbol.fullNameString)
         resolveDuplicates(pkgElem)
@@ -83,8 +83,8 @@ trait ScalaStructureBuilder extends ScalaJavaMapper { self : ScalaCompilationUni
     
     trait ClassOwner extends Owner { self =>
       override def addClass(c : ClassDef) : Owner = {
-        println("Class defn: "+c.name+" ["+this+"]")
-        println("Parents: "+c.impl.parents)
+        //println("Class defn: "+c.name+" ["+this+"]")
+        //println("Parents: "+c.impl.parents)
         
         val owner = if (isPackage) compilationUnitBuilder else this
         val name0 = c.name.toString
@@ -163,7 +163,7 @@ trait ScalaStructureBuilder extends ScalaJavaMapper { self : ScalaCompilationUni
     
     trait ModuleOwner extends Owner { self =>
       override def addModule(m : ModuleDef) : Owner = {
-        println("Module defn: "+m.name+" ["+this+"]")
+        //println("Module defn: "+m.name+" ["+this+"]")
         
         val owner = if (isPackage) compilationUnitBuilder else this
         val moduleElem = new ScalaModuleElement(owner.element, m.name.toString, m.symbol.hasFlag(Flags.SYNTHETIC))
@@ -214,7 +214,7 @@ trait ScalaStructureBuilder extends ScalaJavaMapper { self : ScalaCompilationUni
     
     trait ValOwner extends Owner { self =>
       override def addVal(v : ValDef) : Owner = {
-        println("Val defn: >"+nme.getterName(v.name)+"< ["+this+"]")
+        //println("Val defn: >"+nme.getterName(v.name)+"< ["+this+"]")
         
         val elemName = nme.getterName(v.name)
         
@@ -252,7 +252,7 @@ trait ScalaStructureBuilder extends ScalaJavaMapper { self : ScalaCompilationUni
     
     trait TypeOwner extends Owner { self =>
       override def addType(t : TypeDef) : Owner = {
-        println("Type defn: >"+t.name.toString+"< ["+this+"]")
+        //println("Type defn: >"+t.name.toString+"< ["+this+"]")
         
         val typeElem = new ScalaTypeElement(element, t.name.toString)
         resolveDuplicates(typeElem)
@@ -268,11 +268,11 @@ trait ScalaStructureBuilder extends ScalaJavaMapper { self : ScalaCompilationUni
         newElements0.put(typeElem, typeElemInfo)
         
         if(t.rhs.symbol == NoSymbol) {
-          println("Type is abstract")
+          //println("Type is abstract")
           val tn = manager.intern("java.lang.Object".toArray)
           typeElemInfo.setTypeName(tn)
         } else {
-          println("Type has type: "+t.rhs.symbol.fullNameString)
+          //println("Type has type: "+t.rhs.symbol.fullNameString)
           val tn = manager.intern(mapType(t.rhs).toArray)
           typeElemInfo.setTypeName(tn)
         }
@@ -287,7 +287,7 @@ trait ScalaStructureBuilder extends ScalaJavaMapper { self : ScalaCompilationUni
 
     trait DefOwner extends Owner { self =>
       override def addDef(d : DefDef) : Owner = {
-        println("Def defn: "+d.name+" ["+this+"]")
+        //println("Def defn: "+d.name+" ["+this+"]")
         val isCtor0 = d.name.toString == "<init>"
         val nm =
           if(isCtor0)
@@ -440,13 +440,13 @@ trait ScalaStructureBuilder extends ScalaJavaMapper { self : ScalaCompilationUni
         }
       }
       case Template(parents, self, body) => {
-        println("Template: "+parents)
+        //println("Template: "+parents)
         //traverseTrees(parents)
         //if (!self.isEmpty) traverse(self)
         traverseStats(body, tree.symbol)
       }
       case Function(vparams, body) => {
-        println("Anonymous function: "+tree.symbol.simpleName)
+        //println("Anonymous function: "+tree.symbol.simpleName)
       }
       case tt : TypeTree => {
         //println("Type tree: "+tt)
@@ -454,7 +454,7 @@ trait ScalaStructureBuilder extends ScalaJavaMapper { self : ScalaCompilationUni
         super.traverse(tree)            
       }
       case st : StubTree => {
-        println("Stub tree")
+        //println("Stub tree")
         traverseTrees(st.underlying.asInstanceOf[file.ParseNode].lastTyped)
       }
       case u =>
