@@ -12,7 +12,7 @@ import java.{ util => ju }
 
 import org.eclipse.core.resources.{IWorkspaceRunnable,IMarker,IResource};
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.jdt.internal.ui.javaeditor.{ CompilationUnitEditor, JavaEditor, JavaSourceViewer }
+import org.eclipse.jdt.internal.ui.javaeditor.{ CompilationUnitEditor, JavaSourceViewer }
 import org.eclipse.jdt.ui.text.java.ContentAssistInvocationContext
 import org.eclipse.jface.util.PropertyChangeEvent
 import org.eclipse.jface.preference.IPreferenceStore
@@ -29,20 +29,25 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.{ExtendedModifyEvent,ExtendedModifyListener};
 import org.eclipse.swt.events.{KeyListener,KeyEvent,FocusListener,FocusEvent};
 import org.eclipse.swt.widgets.{Composite,Shell};
+
+import scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.ScalaEditor
 import scala.tools.eclipse.contribution.weaving.jdt.ui.text.java.ScalaCompletionProcessor
 
-abstract class Editor extends JavaEditor with IAutoEditStrategy {
-  val plugin : UIPlugin
+abstract class Editor extends ScalaEditor with IAutoEditStrategy {
   import lampion.core.Dirs._
+
+  val plugin : UIPlugin
 
   showChangeInformation(true) 
   setSourceViewerConfiguration(sourceViewerConfiguration)
-  
+  setPartName("Lampion Editor");
+
   var file : Option[plugin.File] = None
+  private var isDocumentCommand = false
+  private var modifying = false
   
   private def w2m(o : Int) = getSourceViewer0.widgetOffset2ModelOffset(o)
   private def m2w(o : Int) = getSourceViewer0.modelOffset2WidgetOffset(o)
-  private var isDocumentCommand = false
   
   def customizeDocumentCommand(document : IDocument, command : DocumentCommand) : Unit = if (!modifying && !file.isEmpty) try {
     //Console.println("BEFORE")
@@ -133,8 +138,6 @@ abstract class Editor extends JavaEditor with IAutoEditStrategy {
     }
   }
   
-  setPartName("Lampion Editor");
-
   override protected def createActions : Unit = {
     super.createActions
     val action = new ContentAssistAction(plugin.bundle, "ContentAssistProposal.", this)
@@ -159,7 +162,9 @@ abstract class Editor extends JavaEditor with IAutoEditStrategy {
     openAction.setActionDefinitionId("org.eclipse.jdt.ui.edit.text.java.open.editor")
     setAction("OpenAction", openAction)
   }
+  
   def getSourceViewer0 = super.getSourceViewer.asInstanceOf[SourceViewer with ProjectionViewer];
+  
   private object documentListener extends IDocumentListener {
     def documentAboutToBeChanged(e : DocumentEvent) = {
       assert(e.getDocument == getSourceViewer0.getDocument)
@@ -197,14 +202,7 @@ abstract class Editor extends JavaEditor with IAutoEditStrategy {
       }
     }
   } 
-  private object keyListener extends KeyListener {
-    override def keyReleased(e : KeyEvent) : Unit = {
-    }
-    override def keyPressed(e : KeyEvent) : Unit = {
-      
-    }
-  }
-  private var modifying = false
+
   private object modifyListener extends ExtendedModifyListener {
     def modifyText(event : ExtendedModifyEvent) : Unit = {
       if (!isDocumentCommand) {
@@ -227,6 +225,7 @@ abstract class Editor extends JavaEditor with IAutoEditStrategy {
       }
     }
   }
+  
   private def doAutoEdit(offset : Int, added : Int, removed : Int) : Unit = {
     val external = Editor.this.file.get.external
     val file = external.file
@@ -259,10 +258,7 @@ abstract class Editor extends JavaEditor with IAutoEditStrategy {
     }
     return
   }
-  import org.eclipse.jface.viewers._
-  import org.eclipse.ui.texteditor._
-  import org.eclipse.swt.dnd._
-
+  
   override def createJavaSourceViewer(parent : Composite, ruler : IVerticalRuler, overviewRuler : IOverviewRuler, isOverviewRulerVisible : Boolean, styles :  Int, store : IPreferenceStore) : JavaSourceViewer = {
     val viewer = new {
       override val plugin : Editor.this.plugin.type = Editor.this.plugin
@@ -311,9 +307,9 @@ abstract class Editor extends JavaEditor with IAutoEditStrategy {
     assert(svds != null);
     val tw = viewer.getTextWidget
     tw.addExtendedModifyListener(modifyListener)
-    tw.addKeyListener(keyListener)
     viewer
   }
+  
   object matcher extends ICharacterPairMatcher {
     import ICharacterPairMatcher._
     def clear = {   }
@@ -335,6 +331,7 @@ abstract class Editor extends JavaEditor with IAutoEditStrategy {
     }
     def dispose = {  }
   }
+  
   //val EDITOR_MATCHING_BRACKETS= "matchingBrackets"; //$NON-NLS-1$
   //val EDITOR_MATCHING_BRACKETS_COLOR=  "matchingBracketsColor"; //$NON-NLS-1$
 
@@ -367,9 +364,11 @@ abstract class Editor extends JavaEditor with IAutoEditStrategy {
     
     super.dispose
   }
+  
   override protected def initializeEditor = {
     super.initializeEditor
   }
+  
   def catchUp = getSourceViewer0.catchUp
   
   override protected def handlePreferenceStoreChanged(event : PropertyChangeEvent) = {
