@@ -1,6 +1,7 @@
 <aspectj>
 <aspects>
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.builderoptions.ScalaJavaBuilderAspect"/>
+<aspect name="scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.ScalaEditorPreferencesAspect"/>
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.ui.text.java.ScalaCompletionProcessorAspect"/>
 </aspects>
 </aspectj>
