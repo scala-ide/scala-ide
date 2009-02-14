@@ -595,10 +595,13 @@ trait TypersPresentations extends scala.tools.editor.Presentations {
           val str = name.decode
           val key = if (sym.isMethod) str.trim+header(sym) else str.trim 
           val last = str.last
+          
+          import org.eclipse.jdt.core.search.SearchPattern
 
           // TODO: check accessibility. 
-          if (name.isTypeName == isType && str.toLowerCase.startsWith(leading.toLowerCase) && 
-              (str.indexOf('$') == -1) && last != ' ' && !contains(key)) {
+          if (name.isTypeName == isType && (str.indexOf('$') == -1) && last != ' ' &&
+                !contains(key) && (str.toLowerCase.startsWith(leading.toLowerCase) || 
+                SearchPattern.camelCaseMatch(leading, str))) {
             val sym0 = if (verify==null) sym else verify(sym)
             if (sym0 != compiler.NoSymbol) {
               val high = if (pt != null) sym0.tpe <:< pt
