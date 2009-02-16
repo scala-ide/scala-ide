@@ -11,7 +11,6 @@ import org.eclipse.core.runtime.{ IAdapterFactory, Platform }
 import org.eclipse.core.runtime.content.IContentTypeSettings
 import org.eclipse.jdt.core.{ IClassFile, IJavaElement, JavaCore, JavaModelException }
 import org.eclipse.jdt.internal.core.util.Util
-import org.eclipse.jdt.internal.ui.javaeditor.CompilationUnitDocumentProvider
 import org.eclipse.jdt.ui.JavaUI
 import org.eclipse.jface.text.IDocument
 import org.eclipse.ui.{ IWorkbenchPage, IEditorInput, PlatformUI }
@@ -75,8 +74,6 @@ trait ScalaUIPlugin extends {
     
     super.resourceChanged(event)
   }
-  
-  class DocumentProvider extends CompilationUnitDocumentProvider
   
   type Project <: ProjectImpl
   trait ProjectImplA extends super[UIPlugin].ProjectImpl

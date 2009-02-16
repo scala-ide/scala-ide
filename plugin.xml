@@ -4,7 +4,7 @@
 	<extension point="org.eclipse.core.runtime.adapters">
 		<factory
 			class="scala.tools.eclipse.debug.BreakpointAdapterFactory"
-			adaptableType="org.eclipse.ui.texteditor.ITextEditor">
+			adaptableType="scala.tools.eclipse.Editor">
 			<adapter
 				type="org.eclipse.debug.ui.actions.IToggleBreakpointsTarget">
 			</adapter>
@@ -13,7 +13,7 @@
 	<extension point="org.eclipse.debug.core.watchExpressionDelegates">
 		<watchExpressionDelegate debugModel="org.eclipse.jdt.debug"
 			delegateClass="scala.tools.eclipse.debug.WatchExpressionDelegate" />
-	</extension> 
+	</extension>
    <extension
          point="org.eclipse.ui.propertyPages">
       <page
@@ -76,15 +76,15 @@
                id="scala.tools.eclipse.SelectRulerAction">
          </action>
       </editorContribution>
-	      <editorContribution
-			targetID="scala.tools.eclipse.Editor"
-			id="ch.epfl.lamp.sdt.ui.scalaeditor.rulerActions">
-			<action label="Not Used"
-				class="org.eclipse.debug.ui.actions.RulerToggleBreakpointActionDelegate"
-				style="push" 
-				actionID="RulerDoubleClick"
-				id="scala.doubleClickBreakpointAction" />
-		</editorContribution>
+	  <editorContribution
+		targetID="scala.tools.eclipse.Editor"
+		id="ch.epfl.lamp.sdt.ui.scalaeditor.rulerActions">
+		<action label="Not Used"
+			class="org.eclipse.debug.ui.actions.RulerToggleBreakpointActionDelegate"
+			style="push" 
+			actionID="RulerDoubleClick"
+		    id="scala.doubleClickBreakpointAction" />
+	  </editorContribution>
 	</extension>
    <extension point="org.eclipse.ui.perspectives">
       <perspective
@@ -837,6 +837,13 @@
     </provider>
   </extension>
   
+  
+  <extension point="org.eclipse.contribution.weaving.jdt.imagedescriptorselector">
+    <selector
+      class="scala.tools.eclipse.javaelements.ScalaImageDescriptorSelector">
+    </selector>
+  </extension>  
+
   <!--
   <extension point="org.eclipse.contribution.weaving.jdt.sourcetransformer">
     <transformer
@@ -844,12 +851,6 @@
       file_extension="aj">
     </transformer>
   </extension>
-  
-  <extension point="org.eclipse.contribution.weaving.jdt.imagedescriptorselector">
-    <selector
-      class="org.eclipse.ajdt.internal.ui.resources.AJImageDescriptorSelector">
-    </selector>
-  </extension>  
   -->
   
 </plugin>

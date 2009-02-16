@@ -213,8 +213,7 @@ trait NewMatchers extends core.Positions {
             stack.head._1.matched
             closing.matched
             stack = stack.tail
-          } else {
-            assert(enclosing.isDefined)
+          } else if (enclosing.isDefined) {
             enclosing.get.disconnect
             closing.disconnect
             enclosing.get.matching = closing

@@ -12,6 +12,8 @@ import org.eclipse.jdt.internal.ui.JavaPlugin
 import org.eclipse.jdt.internal.ui.javaeditor.ClassFileDocumentProvider
 import org.eclipse.ui.IEditorInput
 
+import scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.ScalaCompilationUnitDocumentProvider
+
 class Editor extends { val plugin = Driver.driver } with lampion.eclipse.Editor {
   override def doSetInput(input : IEditorInput) = {
     input match {
@@ -19,7 +21,7 @@ class Editor extends { val plugin = Driver.driver } with lampion.eclipse.Editor 
       case input : plugin.ClassFileInput =>
         setDocumentProvider(new ClassFileDocumentProvider)
       case _ =>
-        setDocumentProvider(new plugin.DocumentProvider)
+        setDocumentProvider(new ScalaCompilationUnitDocumentProvider)
     }
     super.doSetInput(input)
   }
