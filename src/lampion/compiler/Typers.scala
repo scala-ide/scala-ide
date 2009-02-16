@@ -31,10 +31,6 @@ trait Typers extends Tokenizers {
         } finally {
           if (typer.analyzed.head eq TypedElementImpl.this.self)
             typer.analyzed = typer.analyzed.tail
-          else if (head.isDefined && head.get.makeNoChanges) {
-            assert(true)
-            assert(true)
-          }
           else Console.println("BAD: " + typer.analyzed + " " + TypedElementImpl.this)
         }
       } 
@@ -52,8 +48,6 @@ trait Typers extends Tokenizers {
     def parseNode : ParseNode
     protected def migrate(oldInfo : TypeInfo, newInfo : TypeInfo) : TypeInfo = oldInfo
     override def dirtyTyped = if (parseNode.isValid) {
-      assert(true)
-      assert(true)
       typer.synchronized{
         typer.dirty += parseNode
         if (typer.typed != null) 
@@ -128,9 +122,7 @@ trait Typers extends Tokenizers {
   protected def finishTyping = {
     typer.typed.foreach{
     case (node,info) => 
-      if (!node.hasTypeErrors) 
-        assert(true)
-        node.resultTypeInfo0 = info
+      node.resultTypeInfo0 = info
     }
   }
   
@@ -186,10 +178,8 @@ trait Typers extends Tokenizers {
         typer.analyzed = Nil
       }
       iteration += 1
-      if (iteration == 15) {
-        assert(true)
+      if (iteration == 15)
         processed = new LinkedHashSet[ParseNode]
-      }
     }
   }
   protected def typed : LinkedHashMap[ParseNode,TypeInfo] = {

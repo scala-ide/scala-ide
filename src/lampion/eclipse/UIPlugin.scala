@@ -270,7 +270,6 @@ trait UIPlugin extends org.eclipse.ui.plugin.AbstractUIPlugin with Plugin with l
       override def isLoaded = viewers.contains(self)
       def doLoad0(page : IWorkbenchPage) = underlying match {
         case NormalFile(underlying) => 
-          assert(true)
           IDE.openEditor(page, underlying, true)
       }
       override def doLoad : Unit = {
@@ -461,7 +460,6 @@ trait UIPlugin extends org.eclipse.ui.plugin.AbstractUIPlugin with Plugin with l
         def bold = original.bold || style.bold
         def strikeout = original.strikeout || style.strikeout
         def foreground = {
-          assert(true)
           if (original.foreground == noColor) 
             style.foreground else original.foreground
         }

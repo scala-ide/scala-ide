@@ -100,9 +100,7 @@ trait Tokenizers extends lampion.compiler.Tokenizers {
       case SEMI|COMMA => true
       case NULL|TRUE|FALSE|THIS|USCORE => true
       case code if isKeyword || isSymbol(code) => false
-      case RPAREN if isConditionBrace => 
-        assert(true)
-        false
+      case RPAREN if isConditionBrace => false
       case _ => true
       }
       

@@ -43,14 +43,11 @@ trait Plugin {
   }
   
   def assert(b : Boolean) : Unit = {
-    Predef.assert(true);
     if (!b)
        throw new Error();
   }
-  def abort : Nothing = {
-    assert(false);
-    throw new Error;
-  }
+  def abort : Nothing = throw new Error;
+  
   final def logError(t : Throwable) : Unit = logError("No message", t)
   def logError(msg : String, t : Throwable) : Unit = Console.println("ERROR: " + t + " with " + msg)
 }

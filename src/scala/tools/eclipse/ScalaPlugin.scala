@@ -59,10 +59,9 @@ trait ScalaPlugin extends ScalaPluginSuperA with scala.tools.editor.Driver {
   def sourceFolders(javaProject : IJavaProject) : Iterable[IContainer] = {
     val isOpen = javaProject.isOpen
     if (!isOpen) javaProject.open(null)
-    javaProject.getAllPackageFragmentRoots.filter(p => {
-      assert(true)
+    javaProject.getAllPackageFragmentRoots.filter(p =>
       check(p.getKind == IPackageFragmentRoot.K_SOURCE && p.getResource.isInstanceOf[IContainer] && (p == javaProject || p.getParent == javaProject)) getOrElse false
-    }).map(_.getResource.asInstanceOf[IContainer])
+    ).map(_.getResource.asInstanceOf[IContainer])
   }
   def javaProject(p : IProject) = 
     if (JavaProject.hasJavaNature(p)) Some(JavaCore.create(p))
@@ -340,7 +339,6 @@ trait ScalaPlugin extends ScalaPluginSuperA with scala.tools.editor.Driver {
         case None => super.sourcePackage
         }
       case ClassFileSpec(source,classFile) => 
-        assert(true)
         classFile.getParent match {
         case pkg : IPackageFragment => Some(pkg.getElementName)
         case _ => super.sourcePackage
@@ -353,7 +351,6 @@ trait ScalaPlugin extends ScalaPluginSuperA with scala.tools.editor.Driver {
         if (file.isDirectory) Some(file)
         else super.defaultClassDir
       case ClassFileSpec(source,classFile) => 
-        assert(true)
         var p = classFile.getParent
         while (p != null && !p.isInstanceOf[IPackageFragmentRoot]) p = p.getParent
         p match {
@@ -417,10 +414,8 @@ trait ScalaPlugin extends ScalaPluginSuperA with scala.tools.editor.Driver {
     override def stale(path : IPath) : Unit = {
       super.stale(path)
       compiler.stale(path.toOSString)
-      if (buildCompiler != null) {
-        assert(true) 
+      if (buildCompiler != null)
         buildCompiler.stale(path.toOSString)
-      }
     }
     
     override def clean(implicit monitor : IProgressMonitor) = {

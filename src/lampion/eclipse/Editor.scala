@@ -195,20 +195,15 @@ abstract class Editor extends ScalaEditor with IAutoEditStrategy {
         if (timer.elapsed > .05)
           Console.println("REPAIR: " + timer.elapsedString)
       }      
-      if (!isDocumentCommand) { // won't trigger the modified listener.
-        assert(true)
+      if (!isDocumentCommand) // won't trigger the modified listener.
         catchUp
-        assert(true)
-      }
     }
   } 
 
   private object modifyListener extends ExtendedModifyListener {
     def modifyText(event : ExtendedModifyEvent) : Unit = {
-      if (!isDocumentCommand) {
-        assert(true)
+      if (!isDocumentCommand) 
         return
-      }
       isDocumentCommand = false
       //Console.println("MODIFIED")
       if (!modifying) try {

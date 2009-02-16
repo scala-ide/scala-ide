@@ -280,7 +280,6 @@ trait Parsers extends Matchers with ParseNodes {
           val length = in.currentPos
           val length0 = absoluteFor(length)
           if (length0 < FileImpl.this.content.length && tokenFor(length0).offset != length0) {
-            assert(true)
             val tok = tokenFor(length0)
             assert(tok.offset == length0)
             ()
@@ -403,10 +402,7 @@ trait Parsers extends Matchers with ParseNodes {
       placeholderTypes: List[TypeDef], pinfo : ParseInfo) extends ParseContextImpl {
     def compatible(that : ParseContext) = pinfo.compatible(that.pinfo)
     override def equals(that : Any) = that match {
-    case ParseContext(x,y,z,zz,a) => x == sepRegions && {
-      assert(true)
-      a == pinfo
-    } &&
+    case ParseContext(x,y,z,zz,a) => x == sepRegions && a == pinfo &&
       y.equalsWith(implicitClassViews)(_ equalsStructure _) &&
         z.equalsWith(placeholderParams)(_ equalsStructure _) &&
           zz.equalsWith(placeholderTypes)(_ equalsStructure _)

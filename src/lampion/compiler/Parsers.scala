@@ -165,7 +165,6 @@ trait Parsers extends NewMatchers with core.RangeTrees  {
                    indirect0.get.next0.relative <= relative0) ||
                   (!indirect0.get.isOnSameLineAs(relative0) || 
                    !indirect0.get.parseContext.compatible(txt)))) {
-            assert(true)
             indirect0 = doDestroy0  
           }
           indirect0 = if (indirect0.isDefined && indirect0.get.relative <= relative0) {
@@ -179,7 +178,6 @@ trait Parsers extends NewMatchers with core.RangeTrees  {
             indirect0 = doDestroy0
           }
           if (indirect0.isDefined && indirect0.get.relative != relative0) {
-            assert(true)
             indirect0.get.length = indirect0.get.length + (indirect0.get.relative - relative0)
             indirect0.get setRelative relative0
             indirect0.get.dirtyParse
@@ -189,7 +187,6 @@ trait Parsers extends NewMatchers with core.RangeTrees  {
         } 
         protected def indirect(relative0 : Int, indirect0 : Option[ParseNode], txt : ParseContext) = {
           val indirect = indirect0 getOrElse {
-            assert(true)
             this.node.create(relative0)
           }
           assert(indirect.parent0 == this.node)

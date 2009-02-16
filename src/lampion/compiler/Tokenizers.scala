@@ -26,10 +26,6 @@ trait Tokenizers extends Parsers {
   }
   private val orphans = new LinkedHashSet[IdentifierPosition]()
   def destroyOrphans = {
-    if (!orphans.isEmpty) {
-      assert(true)
-        assert(true)
-    } 
     orphans.toList.foreach(t => if (t.file.isMatched) t.doDestroy)
     orphans.clear // reap all non-affiliated identifier positions.
   }

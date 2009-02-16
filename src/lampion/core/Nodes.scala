@@ -19,15 +19,11 @@ trait Nodes {
   }
 
   def assert(b : Boolean) : Unit = {
-    Predef.assert(true)
-    if (!b) {
-      if (this == null) assert(false)
+    if (!b)
       throw new Error
-    }
   }
+  
   def abort : Nothing = {
-    assert(false);
     throw new Error
   }
-
 }

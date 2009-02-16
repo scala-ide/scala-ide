@@ -310,7 +310,6 @@ trait TypersPresentations extends scala.tools.editor.Presentations {
             val code = compiler.ScannerConfiguration.name2token(compiler.newTermName(kw))
             if (code == Tokens.IDENTIFIER) name
             else { 
-              assert(true)
               in.seek(first0)
               compiler.newTermName(name.toString.substring(0, first0 - first))
             }
@@ -370,10 +369,8 @@ trait TypersPresentations extends scala.tools.editor.Presentations {
         def asSymbol(owner : parses.Range) : Option[Symbol] = if (owner.isEmpty) {
           //var keySet = sourceMap.keySet.toList
           val nscFile0 = nscFile
-          if (!sourceMap.contains(nscFile0)) {
-            assert(true)
+          if (!sourceMap.contains(nscFile0))
             loadSource(nscFile0)
-          }
           sourceMap(nscFile)._2.get(offset)
         } else {
           import scala.tools.nsc.ast.parser.Tokens._
@@ -517,7 +514,6 @@ trait TypersPresentations extends scala.tools.editor.Presentations {
               indirect0.map(_.parseContext) match {
               case Some(txt0) if txt == txt0 => return super.indirect(relative0, indirect0, txt)
               case _ => 
-                assert(true)
                 in.nextToken
                 val results = txt.pinfo(this)
                 if (results.isEmpty) compiler.EmptyTree else results.last
@@ -530,7 +526,6 @@ trait TypersPresentations extends scala.tools.editor.Presentations {
             }
             override def adjust(offset : Int) : Int = {
               if (offset <= replaceAt0) return super.adjust(offset)
-              assert(true)
               if (offset <= replaceAt0 + replaced) return replaceAt0
               if (replaced >= replaceLength) return {
                 val ret = offset - (replaced - replaceLength)

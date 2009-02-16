@@ -100,7 +100,6 @@ class BuildCompiler(val project : CompilerProject) extends Global(new Settings) 
         super.compileLate(pfile)
         //val file = project.nscToLampion(pfile.asInstanceOf[PlainFile]).asInstanceOf[File]
         if (toBuild add pfile) {
-          assert(true)
           Console.println("late " + pfile)
           project.clearBuildErrors(pfile) // .clearBuildErrors
         }
@@ -153,7 +152,6 @@ class BuildCompiler(val project : CompilerProject) extends Global(new Settings) 
               /*if (dpnd.file.exists) plugin.fileFor(dpnd) match {
                 case None =>
                 case Some(file) => 
-                  assert(true)
                   changed = file.asInstanceOf[File] :: changed
                 }
               }*/
@@ -161,7 +159,6 @@ class BuildCompiler(val project : CompilerProject) extends Global(new Settings) 
           }
           f(unit.body)
           depends.mirrors.foreach{mirror =>
-            assert(true)
             val info = mirror.info
             if (info.isInstanceOf[PackageClassInfoType]) { // not now
               //mirror.info.asInstanceOf[PackageClassInfoType].lazyLoader.asInstanceOf[symtab.SymbolLoaders#PackageLoader].refresh
@@ -170,7 +167,6 @@ class BuildCompiler(val project : CompilerProject) extends Global(new Settings) 
         }
         project.resetDependencies(file)
         if (project.signature(file) != unit.pickleHash) {
-          assert(true)
           project.setSignature(file, unit.pickleHash)
           changed = file :: changed
         }

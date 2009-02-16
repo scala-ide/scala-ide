@@ -230,10 +230,6 @@ trait Presentations extends lampion.core.Plugin {
         private[Presentations] var errors : List[(ErrorKind,ErrorAnnotation)] = Nil
         protected def errorsDisabled = false
         override protected def error(pos : ErrorPosition, error : ErrorKind) : Unit = if (!errorsDisabled) {
-          if (pos.owner != self) {
-            assert(true)
-            assert(true)
-          }
           val e = newError(error.msg)
           self.synchronized{errors = (error,e) :: errors}
           val pos0 : ErrorPosition = if (pos.owner == self) pos else self

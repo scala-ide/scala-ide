@@ -13,12 +13,8 @@ trait Matchers extends AutoEdits {
     trait FileImpl extends super[ProjectImpl].FileImpl with super[NewMatchers].FileImpl {selfX : File => 
       def self : File
       override def doParsing = {
-        if (isMatched) {
+        if (isMatched)
           super.doParsing
-        } else {
-          assert(true)
-          assert(true)
-        }
       }
       protected def overwriteOk(offset : Int) = !isNewline(content(offset)) && isCompleted(offset + 1)
       override def beforeEdit(edit : Edit) : Edit = {

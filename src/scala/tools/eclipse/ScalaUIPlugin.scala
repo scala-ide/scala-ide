@@ -154,14 +154,7 @@ trait ScalaUIPlugin extends {
     case clazz if clazz == classOf[AbstractFile] => source
     case _ => super.getAdapter(clazz)  
     }
-    override def initialize(doc : IDocument) : Unit = {
-      if (doc == null || source == null) {
-        assert(true)
-        assert(true)
-        assert(true)
-      }
-      doc.set(new String(source.toCharArray))
-    }
+    override def initialize(doc : IDocument) : Unit = doc.set(new String(source.toCharArray))
     override def neutralFile = (project.classFile(source,classFile))
     override def createAnnotationModel = {
       (classFile.getAdapter(classOf[IResourceLocator]) match {

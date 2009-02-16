@@ -42,10 +42,8 @@ abstract class SourceViewer(parent : Composite, vertical : IVerticalRuler, overv
     super.handleVerifyEvent(e)
   } catch {
   case ex : IllegalArgumentException =>
-    assert(true)
     plugin.logError(ex)
   case ex : IllegalStateException =>
-    assert(true)
     plugin.logError(ex)
   }
   
@@ -72,9 +70,6 @@ abstract class SourceViewer(parent : Composite, vertical : IVerticalRuler, overv
         } catch {
           case t : Throwable => t.printStackTrace 
         }
-      } else {
-        assert(true)
-        assert(true)
       }
     }
     private def NO_REGION = new Region(0, 0);

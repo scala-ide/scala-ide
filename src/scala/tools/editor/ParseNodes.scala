@@ -16,10 +16,7 @@ trait ParseNodes extends Tokenizers with lampion.compiler.Parsers {
     def self : ParseNode
     def asParseTree : compiler.StubTree
     private[ParseNodes] def prefix0 : String
-    protected override def destroy0 = {
-      assert(true)
-      super.destroy0 
-    } 
+    protected override def destroy0 = super.destroy0
     override def dbgString = "XXX"
     override def source = Some(file.unit.source)
     override def offset = Some(absolute)

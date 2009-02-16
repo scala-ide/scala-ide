@@ -91,7 +91,6 @@ trait NewMatchers extends core.Positions {
       stack = stack.reverse
       var newStack = List[(Open,List[PositionBank#PositionImpl])]()
       while (enclosing.isDefined && enclosing.get.matching.absolute < damaged.until) {
-        assert(true)
         newStack = (enclosing.get,Nil) :: newStack
         enclosingUp
       }
@@ -251,10 +250,8 @@ trait NewMatchers extends core.Positions {
         case _ =>
         }
       }
-      if (!look.isEmpty) {
-        assert(true)
+      if (!look.isEmpty)
         return repair0(damaged.from, damaged.until) // where we left off
-      }
       else return
     }
     

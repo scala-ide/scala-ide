@@ -391,13 +391,7 @@ trait RangeTrees extends Positions {
       }
       
       override def find(absolute : Int, offset : Int, adjacent : Boolean) : Range = {
-        if (hasLength && offset >= length) {
-          if (!adjacent) {
-            assert(true)
-            assert(true)
-          }
-          ActualRange(absolute, self)
-        }
+        if (hasLength && offset >= length) ActualRange(absolute, self)
         else super.find(absolute, offset, adjacent) match {
         case NoRange => ActualRange(absolute, self)
         case ret => ret
@@ -450,7 +444,7 @@ trait RangeTrees extends Positions {
         // should create a "dead zone"
         if (removed > 0) { // closing or opening brace destroyed
           if (offset < slack || ((offset + removed) > (length - slack))) {
-            assert(true) // works OK but....
+            // works OK but....
             return destroy(absolute)
           }
         }

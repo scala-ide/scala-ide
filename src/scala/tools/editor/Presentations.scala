@@ -134,7 +134,6 @@ trait Presentations extends lampion.presentation.Matchers {
         case NEWLINE|NEWLINES => 
           (tok.find(NEXT)(tok => !tok.isWhitespace && !tok.isNewline).map(t => (t,t.code)) match {
             case Some((tok, IF|ELSE|DO|WHILE|FOR)) if TokenImpl.this.code == LBRACE => 
-              assert(true)
               true 
             case Some((tok, ELSE)) if tok.find(NEXT)(_.isSignificant).map(_.code) != Some(IF) => false
             case Some((_, DOT)) => false
@@ -363,7 +362,6 @@ trait Presentations extends lampion.presentation.Matchers {
         })
       }
       override def canConstrict(offset : Int) = super.canConstrict(offset) && {
-	assert(true)
         val what = enclosing(offset).map(_.kind) 
         if (what.isDefined) {
           (what.get != LineComment && what.get != MultiMatch && what.get != Parens)

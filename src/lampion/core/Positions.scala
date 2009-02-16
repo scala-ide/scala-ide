@@ -71,9 +71,6 @@ trait Positions extends Files with Dirs {
         ret.next = at.next
         ret.offset = offset - atAbsolute
         assert(ret.offset > 0 || (ret.offset == 0 && ret.prev == head))
-        if (ret.offset == 0) {
-          assert(true)
-        }
         
         at.next = ret
         ret.next match {
@@ -89,10 +86,8 @@ trait Positions extends Files with Dirs {
         ret
       }}
       override def repair(offset : Int, added : Int, removed : Int) : Unit = /*synchronized*/ {
-        if (false && added == removed) { // can't do this in all cases!
-          assert(true)
+        if (false && added == removed) // can't do this in all cases!
           return
-        }
         if (removed > 0) {
           while ({ 
             val pos = cursor.position(offset + removed)

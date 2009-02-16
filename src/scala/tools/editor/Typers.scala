@@ -97,8 +97,6 @@ trait Typers extends Parsers with lampion.compiler.Typers {
     protected override def migrate(oldInfo : List[compiler.Tree], newInfo : List[compiler.Tree]) : List[compiler.Tree] = {
       if (oldInfo == null || oldInfo.isEmpty) newInfo
       else {
-        assert(true)
-        assert(true)
         if (newInfo.last.hasSymbol) (oldInfo.last.symbol,newInfo.last.symbol) match {
         case (sym,compiler.NoSymbol|null) => if (sym != null && sym != compiler.NoSymbol &&
                                                  sym != compiler.ErrorType) newInfo.last.symbol = sym
