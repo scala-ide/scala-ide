@@ -24,7 +24,7 @@ import org.eclipse.jface.text.source.{AnnotationModelEvent,IAnnotationModel,ICha
 import org.eclipse.jface.text.source.projection.{ProjectionAnnotationModel,ProjectionSupport,ProjectionViewer,IProjectionListener};
 import org.eclipse.ui.{IEditorPart,IFileEditorInput};
 import org.eclipse.ui.editors.text.{TextEditor};
-import org.eclipse.ui.texteditor.{ContentAssistAction,SourceViewerDecorationSupport,ITextEditorActionDefinitionIds};
+import org.eclipse.ui.texteditor.{ContentAssistAction,SourceViewerDecorationSupport,IAbstractTextEditorHelpContextIds,ITextEditorActionConstants,ITextEditorActionDefinitionIds,IWorkbenchActionDefinitionIds,TextOperationAction};
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.{ExtendedModifyEvent,ExtendedModifyListener};
 import org.eclipse.swt.events.{KeyListener,KeyEvent,FocusListener,FocusEvent};
@@ -158,9 +158,25 @@ abstract class Editor extends ScalaEditor with IAutoEditStrategy {
         }
       }
     }
+    
     // reuse the JDT F3 action.
     openAction.setActionDefinitionId("org.eclipse.jdt.ui.edit.text.java.open.editor")
     setAction("OpenAction", openAction)
+    
+    val cutAction = new TextOperationAction(EditorMessages.bundleForConstructedKeys, "Editor.Cut.", this, ITextOperationTarget.CUT); //$NON-NLS-1$
+    cutAction.setHelpContextId(IAbstractTextEditorHelpContextIds.CUT_ACTION);
+    cutAction.setActionDefinitionId(IWorkbenchActionDefinitionIds.CUT);
+    setAction(ITextEditorActionConstants.CUT, cutAction);
+
+    val copyAction = new TextOperationAction(EditorMessages.bundleForConstructedKeys, "Editor.Copy.", this, ITextOperationTarget.COPY, true); //$NON-NLS-1$
+    copyAction.setHelpContextId(IAbstractTextEditorHelpContextIds.COPY_ACTION);
+    copyAction.setActionDefinitionId(IWorkbenchActionDefinitionIds.COPY);
+    setAction(ITextEditorActionConstants.COPY, copyAction);
+
+    val pasteAction = new TextOperationAction(EditorMessages.bundleForConstructedKeys, "Editor.Paste.", this, ITextOperationTarget.PASTE); //$NON-NLS-1$
+    pasteAction.setHelpContextId(IAbstractTextEditorHelpContextIds.PASTE_ACTION);
+    pasteAction.setActionDefinitionId(IWorkbenchActionDefinitionIds.PASTE);
+    setAction(ITextEditorActionConstants.PASTE, pasteAction);
   }
   
   def getSourceViewer0 = super.getSourceViewer.asInstanceOf[SourceViewer with ProjectionViewer];
@@ -393,4 +409,9 @@ abstract class Editor extends ScalaEditor with IAutoEditStrategy {
         case _ => sourceViewerConfiguration
       })
   }
+}
+
+object EditorMessages {
+  private val EDITOR_BUNDLE_FOR_CONSTRUCTED_KEYS = "org.eclipse.ui.texteditor.ConstructedEditorMessages"
+  val bundleForConstructedKeys = ju.ResourceBundle.getBundle(EDITOR_BUNDLE_FOR_CONSTRUCTED_KEYS)
 }
