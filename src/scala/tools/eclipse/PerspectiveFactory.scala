@@ -37,14 +37,18 @@ class PerspectiveFactory extends IPerspectiveFactory {
   }
   private def createFolders(layout : IPageLayout) = {
     val editorArea = layout.getEditorArea();
+    
     val explorerFolder = layout.createFolder("explorer", IPageLayout.LEFT, 0.25f, editorArea);
     explorerFolder.addView(JavaUI.ID_PACKAGES)
-    //explorerFolder.addView(IPageLayout.ID_OUTLINE);
+
     val problemsFolder = layout.createFolder("problems", IPageLayout.BOTTOM, 0.75f, editorArea);
     problemsFolder.addView(IPageLayout.ID_PROBLEM_VIEW);
     problemsFolder.addView(IPageLayout.ID_TASK_LIST);
     problemsFolder.addView(IConsoleConstants.ID_CONSOLE_VIEW);
     problemsFolder.addView("org.eclipse.pde.runtime.LogView");
+
+    val outlineFolder = layout.createFolder("right", IPageLayout.RIGHT,0.75f,editorArea)
+    outlineFolder.addView(IPageLayout.ID_OUTLINE)  
   }
 }
 
