@@ -23,7 +23,6 @@ public privileged aspect SaveParticipantRegistryAspect {
   
   IPostSaveListener[] around(ScalaCompilationUnitDocumentProvider provider, IProject project) :
     getEnabledPostSaveListeners(project) && cflow(commitWorkingCopy(provider)) {
-    System.err.println("Around getEnabledPostSaveListeners");
     return new IPostSaveListener[0];
   }
 }
