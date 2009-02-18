@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <site>
-   <feature url="features/ch.epfl.lamp.sdt_@PLUGIN_VERSION@.jar" id="ch.epfl.lamp.sdt" version="@PLUGIN_VERSION@"/>
+   <feature url="features/ch.epfl.lamp.sdt_@PLUGIN_VERSION@.jar" id="ch.epfl.lamp.sdt" version="@PLUGIN_VERSION@">
+   	<category name="Scala"/>
+   </feature>
+   <category-def name="Scala" label="Scala"/>
 </site>
