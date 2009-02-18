@@ -8,29 +8,149 @@ package scala.tools.eclipse
 
 import java.{ lang => jl, util => ju }
 
-import org.eclipse.core.resources.{ IncrementalProjectBuilder, IProject }
-import org.eclipse.core.runtime.IProgressMonitor
+import org.eclipse.core.resources.{ IFile, IncrementalProjectBuilder, IProject, IResource, IResourceDelta, IResourceDeltaVisitor, IResourceVisitor }
+import org.eclipse.core.runtime.{ IProgressMonitor, IPath }
 import org.eclipse.jdt.internal.core.JavaModelManager
 import org.eclipse.jdt.internal.core.builder.{ JavaBuilder, State }
 
 import scala.tools.eclipse.contribution.weaving.jdt.builderoptions.ScalaJavaBuilder
 import lampion.util.ReflectionUtils
 import scala.tools.eclipse.javaelements.JDTUtils
+import scala.collection.jcl.LinkedHashSet
 
-class Builder extends lampion.eclipse.Builder {
+class Builder extends IncrementalProjectBuilder {
   def plugin = ScalaPlugin.plugin
+
+  def ifile(that : AnyRef) : IFile = 
+    if (that.isInstanceOf[IFile]) (that.asInstanceOf[IFile])
+    else null
+
+  def ipath(that : AnyRef) =
+    if (that.isInstanceOf[IPath]) (that.asInstanceOf[IPath])
+    else null
 
   private val scalaJavaBuilder = new ScalaJavaBuilder
   
   override def clean(monitor : IProgressMonitor) {
     super.clean(monitor)
+    val project = plugin.projectSafe(getProject).get
+    project.clean(monitor)
+    
     ensureProject
     scalaJavaBuilder.clean(monitor)
     JDTUtils.refreshPackageExplorer
   }
   
   override def build(kind : Int, ignored : ju.Map[_, _], monitor : IProgressMonitor) : Array[IProject] = {
-    val depends = super.build(kind, ignored, monitor)
+    
+    import IncrementalProjectBuilder._
+    val plugin = this.plugin 
+    val project = plugin.projectSafe(getProject).get
+    val toBuild = new LinkedHashSet[project.File]
+    kind match {
+    case CLEAN_BUILD => return project.externalDepends.toList.toArray
+    case INCREMENTAL_BUILD|AUTO_BUILD if (!project.doFullBuild) =>
+      getDelta(project.underlying).accept(new IResourceDeltaVisitor {
+        def visit(delta : IResourceDelta) = ifile(delta.getResource) match {
+          case null => true
+          case (file) =>
+            if (delta.getKind != IResourceDelta.REMOVED) {
+              val file0 = project.fileSafe(file)
+              if (!file0.isEmpty && project.sourceFolders.exists(_.getLocation.isPrefixOf(file.getLocation))) {
+                toBuild.add(file0.get)
+              }
+            }
+            true
+        }
+      })
+      project.externalDepends.map(getDelta).foreach(f => if (f != null) f.accept(new IResourceDeltaVisitor {
+        override def visit(delta : IResourceDelta) : Boolean = {
+          val file = ifile(delta.getResource)
+          if (delta.getKind == IResourceDelta.REMOVED) return true
+          if (file == null) return true
+          val paths = plugin.reverseDependencies.get(file.getLocation)
+          if (paths.isEmpty) return true
+          val i = paths.get.elements 
+          while (i.hasNext) {
+            val path = ipath(i.next)
+            if (project.sourceFolders.exists(_.getLocation.isPrefixOf(path))) {
+              i.remove
+              project.stale(file.getLocation)
+              val p = project.underlying
+              val f = p.getFile(path.removeFirstSegments(path.matchingFirstSegments(p.getLocation)))
+              toBuild.add(project.fileSafe(f).get)
+            }
+          }        
+          true
+        }
+      }))
+      true
+    case _ => 
+      project.doFullBuild = false
+      val sourceFolders = project.sourceFolders
+      sourceFolders.foreach(_.accept(new IResourceVisitor {
+        def visit(resource : IResource) =
+          ifile(resource) match {
+            case null => true
+            case (file) =>           
+              project.fileSafe(file) match {
+                case Some(file0) => toBuild.add(file0)
+                case _ =>
+              }
+              true
+          }}))
+    }
+    
+    // everything that needs to be recompiled is in toBuild now. 
+    val built = new LinkedHashSet[project.File] // don't recompile twice.
+    var buildAgain = false
+    if (monitor != null) monitor.beginTask("build all", 100)
+    while (!toBuild.isEmpty) {
+      toBuild.foreach{f => f.clearBuildErrors(monitor); f.willBuild}
+      project.assert(!toBuild.isEmpty)
+      
+      toBuild.foreach(f => Console.println("build " + f))
+      val changed = project.build(toBuild)(monitor)
+      if (!changed.isEmpty) {
+        changed.foreach(f => Console.println("changed " + f))
+      }
+      project.assert(!toBuild.isEmpty)
+      built ++= toBuild
+      project.assert(!built.isEmpty)
+      toBuild.clear
+      
+      def f(changed : project.File) : Unit = changed.underlying.path match {
+        case Some(changed) => plugin.reverseDependencies.get(changed) match {
+          case Some(paths) => paths.foreach(path => {
+            val file = plugin.workspace.getFileForLocation(path)
+            if (file.exists) {
+              if (file.getProject == project.underlying) {
+                project.fileSafe(file) match {
+                  case Some(file) if !built.contains(file) => 
+                    if (toBuild add file) {
+                      //f(file) // transitive colsure of dependencies...sigh.
+                    }
+                  case Some(file) => plugin.reverseDependencies(changed) += path
+                  case _ => file.touch(monitor)
+                }
+              } else {
+                plugin.projectSafe(file.getProject).foreach(_.stale(changed))
+                if (hasBeenBuilt(file.getProject)) buildAgain = true
+                file.touch(monitor)
+              }
+            }
+          })
+          case None => 
+        }
+        case None =>
+      }
+      changed.foreach(f)
+    }
+    if (buildAgain) needRebuild
+    else project.buildDone(built)(monitor)
+    
+    val depends = project.externalDepends.toList.toArray
+    
     if (plugin.projectSafe(getProject).get.lastBuildHadBuildErrors)
       depends
     else {

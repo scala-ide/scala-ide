@@ -4,7 +4,7 @@
  */
 // $Id$
 
-package lampion.eclipse;
+package scala.tools.eclipse;
 
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.jdt.internal.ui.JavaPlugin
@@ -28,10 +28,10 @@ import lampion.util.ReflectionUtils
 
 abstract class SourceViewer(parent : Composite, vertical : IVerticalRuler, overview : IOverviewRuler, showAnnotationsOverview : Boolean, styles : Int, store: IPreferenceStore) extends 
   JavaSourceViewer(parent,vertical,overview,showAnnotationsOverview,styles, store) with IAnnotationModelListener with FocusListener with ITextInputListener {
-  val plugin : UIPlugin
+  val plugin : lampion.eclipse.UIPlugin
   type File = plugin.ProjectImpl#FileImpl
   def file : Option[File]
-  private[eclipse] var busy = false
+  /* private[eclipse] */ var busy = false
   
   override def configure(configuration : SourceViewerConfiguration) {
     super.configure(configuration)
@@ -131,7 +131,7 @@ abstract class SourceViewer(parent : Composite, vertical : IVerticalRuler, overv
   def getAnnotationAccess : IAnnotationAccess
   def getSharedColors : ISharedTextColors
   
-  private[eclipse] def projection : ProjectionAnnotationModel = {
+  /* private[eclipse] */ def projection : ProjectionAnnotationModel = {
     if (!isProjectionMode()) {
       val projectionSupport = new ProjectionSupport(this,getAnnotationAccess,getSharedColors);
       projectionSupport.install();

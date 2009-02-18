@@ -6,6 +6,7 @@
 
 package scala.tools.eclipse;
 
-class ActionContributor extends lampion.eclipse.ActionContributor {
+import org.eclipse.jdt.internal.ui.javaeditor.CompilationUnitEditorActionContributor
 
-}
+// enables line and column number stuff.
+class ActionContributor extends CompilationUnitEditorActionContributor

@@ -26,7 +26,7 @@ object ScalaPlugin {
 }
 
 /** stuff needed to get the non-UI parts of the plugin going */
-trait ScalaPluginSuperA extends lampion.eclipse.Plugin
+trait ScalaPluginSuperA extends lampion.eclipse.UIPlugin
 trait ScalaPlugin extends ScalaPluginSuperA with scala.tools.editor.Driver {
   assert(ScalaPlugin.plugin == null)
   ScalaPlugin.plugin = this
@@ -44,7 +44,6 @@ trait ScalaPlugin extends ScalaPluginSuperA with scala.tools.editor.Driver {
   //def oldId = "ch.epfl.lamp.sdt.core"  
   def builderId = pluginId + ".scalabuilder"
   def natureId = pluginId + ".scalanature"  
-  def msilNatureId = pluginId + ".scalamsilnature"  
   def launchId = "ch.epfl.lamp.sdt.launching"
   val scalaLib = "SCALA_CONTAINER"
   val scalaHome = "SCALA_HOME"

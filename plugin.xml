@@ -109,16 +109,6 @@
             id="ch.epfl.lamp.sdt.core.wizards.newProject">
             <description>Create a Scala project</description>
       </wizard>
-      <!-- <wizard
-            icon="icons/full/etool16/newsprj_wiz.gif"
-            class="scala.tools.eclipse.net.NewProjectWizard"
-            finalPerspective="ch.epfl.lamp.sdt.core.perspective"
-            category="ch.epfl.lamp.sdt.core.wizards"
-            project="true"
-            name="Scala.NET Project"
-            id="ch.epfl.lamp.sdt.core.wizards.newNetProject">
-            <description>Create a Scala.NET project</description>
-      </wizard> -->
       <wizard
             class="scala.tools.eclipse.wizards.NewClassWizard"
             icon="icons/full/etool16/newclass_wiz.gif"
@@ -258,14 +248,6 @@
       </runtime>
       <builder id="ch.epfl.lamp.sdt.core.scalabuilder"/>
       <requires-nature id="org.eclipse.jdt.core.javanature"/>
-   </extension>
-   <extension id="scalamsilnature"
-         name="Scala.NET Nature"
-         point="org.eclipse.core.resources.natures">
-      <runtime>
-         <run class="scala.tools.eclipse.net.Nature"/>
-      </runtime>
-      <requires-nature id="ch.epfl.lamp.sdt.core.scalanature"/>
    </extension>
    <extension id="scalabuilder"
          name="Scala Builder"

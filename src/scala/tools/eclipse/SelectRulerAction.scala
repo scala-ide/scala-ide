@@ -5,13 +5,68 @@
 // $Id$
 
 package scala.tools.eclipse
-import org.eclipse.jface.text.source._
-class SelectRulerAction extends lampion.eclipse.SelectRulerAction {
+
+import org.eclipse.ui.texteditor.{ AbstractRulerActionDelegate, ITextEditor, SelectMarkerRulerAction }
+import org.eclipse.jface.text.source.{ Annotation, IVerticalRulerInfo }
+import org.eclipse.swt.widgets.Event
+  
+class SelectRulerAction extends AbstractRulerActionDelegate {
+  
   def plugin = ScalaUIPlugin.plugin // i don't understand....
-  override def special(a : Annotation) : Option[Special] = super.special(a).orElse({
+  
+  protected def appendix(a : Annotation) = special(a) match {
+  case Some(a) => a.actionId
+  case _ => "GotoAnnotation."
+  }
+  protected def dispatch(editor : Editor, a : Annotation) : Boolean = special(a) match {
+    case Some(a) => a.dispatch(editor); true
+    case _ => false
+  }
+
+  trait Special extends Annotation {
+    def actionId : String
+    def dispatch(editor : Editor) : Unit  
+  }
+  
+  class SelectAnnotationRulerAction(editor : Editor, ruler : IVerticalRulerInfo) extends 
+    SelectMarkerRulerAction(plugin.bundle, "Ruler.", editor, ruler) {
+    var annotation : Option[Annotation] = None
+    override def update = {
+      findAnnotation
+      setEnabled(true)
+      if (annotation.isDefined)
+        initialize(plugin.bundle, "SelectAnnotationRulerAction." + appendix(annotation.get))
+      super.update
+    }
+    override def run = runWithEvent(null)
+    override def runWithEvent(event : Event) = {
+      if (!annotation.isDefined || !dispatch(editor, annotation.get))
+        super.run
+    }
+    def findAnnotation : Unit = {
+      val model = getAnnotationModel
+      val annotationAccess= getAnnotationAccessExtension
+      val doc = getDocument
+      if (model == null) return
+      val i : java.util.Iterator[Annotation] = model.getAnnotationIterator.asInstanceOf[java.util.Iterator[Annotation]]
+      annotation = None
+      while (i.hasNext) {
+        val a = i.next.asInstanceOf[Annotation]
+        if (!a.isMarkedDeleted && includesRulerLine(model.getPosition(a), doc)) {
+          annotation = Some(a)
+        }
+      }
+    }
+  }
+  override protected def createAction(editor : ITextEditor, rulerInfo : IVerticalRulerInfo) = editor match {
+    case editor : Editor if editor.plugin == plugin => new SelectAnnotationRulerAction(editor, rulerInfo)
+    case _ => null
+  }
+  
+  def special(a : Annotation) : Option[Special] = {
     if (a.getType == plugin.OverrideIndicator) Some(new Special {
       override def actionId = "OpenSuperImplementation."
-      override def dispatch(editor : lampion.eclipse.Editor) = {
+      override def dispatch(editor : Editor) = {
         val plugin = ScalaUIPlugin.plugin
         val file0 = editor.file
         if (!file0.isEmpty) {
@@ -29,5 +84,5 @@ class SelectRulerAction extends lampion.eclipse.SelectRulerAction {
         }
       }
     }) else None
-  })
+  }
 }
