@@ -98,7 +98,7 @@ class BreakpointAdapterFactory extends IAdapterFactory {
             try {
               report(null, part)
               val attributes = new LinkedHashMap[Object,Object]
-              val plugin = ScalaUIPlugin.plugin
+              val plugin = ScalaPlugin.plugin
               editorInput match {
               case input : plugin.ClassFileInput => 
                 BreakpointUtils.addJavaBreakpointAttributesWithMemberDetails(attributes.underlying, input.classFile, -1, -1)

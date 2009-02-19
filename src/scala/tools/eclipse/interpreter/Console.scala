@@ -29,7 +29,7 @@ object ScalaConsoleMgr {
   var consoles  = new scala.collection.mutable.LinkedHashMap[IJavaElement,Console]
   
   def imageDesc = {
-    ImageDescriptor.createFromURL(new URL(ScalaUIPlugin.plugin.getBundle.getEntry("/icons/full/"), "etool16/scala_app.gif"))
+    ImageDescriptor.createFromURL(new URL(ScalaPlugin.plugin.getBundle.getEntry("/icons/full/"), "etool16/scala_app.gif"))
   }
    
   def nameFor(project : ScalaPlugin#Project, pkg:String) = {

@@ -9,7 +9,7 @@ import java.net.{ MalformedURLException, URL }
 
 import org.eclipse.jface.resource.ImageDescriptor
 
-import scala.tools.eclipse.ScalaUIPlugin
+import scala.tools.eclipse.ScalaPlugin
 
 object ScalaImages  {
   val MISSING_ICON = ImageDescriptor.getMissingImageDescriptor
@@ -29,7 +29,7 @@ object ScalaImages  {
   
   private def create(localPath : String) = {
     try {
-      val pluginInstallURL : URL = ScalaUIPlugin.plugin.getBundle.getEntry("/")
+      val pluginInstallURL : URL = ScalaPlugin.plugin.getBundle.getEntry("/")
       val url = new URL(pluginInstallURL, localPath)
       ImageDescriptor.createFromURL(url)
     } catch {

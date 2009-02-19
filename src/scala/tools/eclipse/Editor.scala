@@ -44,7 +44,7 @@ import scala.tools.eclipse.contribution.weaving.jdt.ui.text.java.ScalaCompletion
 class Editor extends ScalaEditor with IAutoEditStrategy {
   import lampion.core.Dirs._
 
-  val plugin : ScalaUIPlugin = Driver.driver
+  val plugin : ScalaPlugin = ScalaPlugin.plugin
 
   showChangeInformation(true) 
   setSourceViewerConfiguration(sourceViewerConfiguration)

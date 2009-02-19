@@ -77,10 +77,96 @@ trait UIPlugin extends AbstractUIPlugin with IResourceChangeListener with lampio
 
   protected def Project(underlying : IProject) : Project
   
-  type Project <: ProjectImpl
+  class DependMap extends LinkedHashMap[IPath,LinkedHashSet[IPath]] {
+    override def default(key : IPath) = {
+      val ret = new LinkedHashSet[IPath]
+      this(key) = ret; ret
+    }
+  }
+  /* private[eclipse] */ object reverseDependencies extends DependMap
+  private val projects = new LinkedHashMap[IProject,Project] {
+    override def default(key : IProject) = synchronized{
+      val ret = Project(key)
+      this(key) = ret; ret
+    }
+    override def apply(key : IProject) = synchronized{super.apply(key)}
+    override def get(key : IProject) = synchronized{super.get(key)}
+    override def removeKey(key : IProject) = synchronized{super.removeKey(key)}
+  }
+  protected def canBeConverted(file : IFile) : Boolean = true
+  protected def canBeConverted(project : IProject) : Boolean = true
   
-  trait ProjectImpl0 extends super[Plugin].ProjectImpl {
+  def projectSafe(project : IProject) = if (project eq null) None else projects.get(project) match {
+  case _ if !project.exists() || !project.isOpen => None
+  case None if canBeConverted(project) => Some(projects(project))
+  case ret => ret
+  }
+  
+  override def start(context : BundleContext) = {
+    super.start(context)
+    ResourcesPlugin.getWorkspace.addResourceChangeListener(this, IResourceChangeEvent.PRE_CLOSE | IResourceChangeEvent.POST_CHANGE)
+  }
+  override def stop(context : BundleContext) = {
+    super.stop(context)
+    ResourcesPlugin.getWorkspace.removeResourceChangeListener(this)
+  }
+  
+  override def resourceChanged(event : IResourceChangeEvent) = (event.getResource, event.getType) match {
+    case (iproject : IProject, IResourceChangeEvent.PRE_CLOSE) => 
+      val project = projects.removeKey(iproject)
+      if (!project.isEmpty) project.get.destroy
+    case _ =>
+  }
+  /** error logging */
+  override final def logError(msg : String, t : Throwable) : Unit = {
+    var tt = t
+    if (tt == null) tt = try {
+      throw new Error
+    } catch {
+      case e : Error => e
+    }
+    val status = new Status(IStatus.ERROR, pluginId, IStatus.ERROR, msg, tt)
+    log(status)
+  }
+  final def check[T](f : => T) = try { Some(f) } catch {
+    case e : Throwable => logError(e); None
+  }
+  //protected def log(status : Status) = getLog.log(status)
+  
+  def getFile(path : IPath) : Option[File] = workspace.getFile(path) match {
+  case file if file.exists =>
+    projectSafe(file.getProject) match {
+    case Some(project) => project.fileSafe(file)
+    case None => None
+    }
+  case _ => None
+  }
+  def fileFor(file0 : IFile) : Option[File] = projectSafe(file0.getProject) match {
+  case None => None
+  case Some(project) =>
+    val file = project.fileSafe(file0)
+    file
+  }
+  
+  class PresentationContext { //(val presentation : TextPresentation) {
+    val invalidate = new TreeMap[Int,Int]
+    var remove = List[ProjectionAnnotation]()
+    var modified = List[ProjectionAnnotation]()
+    val add = new LinkedHashMap[ProjectionAnnotation,Position]
+  }
+  abstract class Hyperlink(offset : Int, length : Int) extends IHyperlink {
+    def getHyperlinkRegion = new Region(offset, length)
+  }
+  
+  /* private[eclipse] */ val viewers = new LinkedHashMap[ProjectImpl#FileImpl,SourceViewer]
+
+  type Project <: ProjectImpl
+  trait ProjectB extends super[Matchers].ProjectImpl
+  trait ProjectImpl extends super[Plugin].ProjectImpl with ProjectB {
     def self : Project
+    val ERROR_TYPE = "lampion.error"
+    val MATCH_ERROR_TYPE = "lampion.error.match"
+
     val underlying : IProject
     override def toString = underlying.getName
     override def isOpen = super.isOpen && underlying.isOpen  
@@ -149,12 +235,131 @@ trait UIPlugin extends AbstractUIPlugin with IResourceChangeListener with lampio
     protected def File(underlying : FileSpec) : File
     type Path = IPath
     type File <: FileImpl
-    trait FileImpl extends super.FileImpl {
+    
+    private val files = new LinkedHashMap[IFile,File] {
+      override def default(key : IFile) = {
+        assert(key != null)
+        val ret = File(NormalFile(key)); this(key) = ret; 
+        val manager = ProjectImpl.this.underlying.getFolder(".manager")
+        ret.checkBuildInfo(manager)
+        ret
+      }
+    }
+    def fileSafe(file : IFile) : Option[File] = files.get(file) match{
+    case _ if !file.exists => None
+    case None if canBeConverted(file) => Some(files(file))
+    case ret => ret
+    }
+    
+    protected def findFile(path : String) = {
+      val file = underlying.getFile(path)
+      if (!file.exists) throw new Error
+      fileSafe(underlying.getFile(path)).get
+    }
+    def clean(implicit monitor : IProgressMonitor) : Unit = {
+      if (!problemMarkerId.isEmpty)                
+        underlying.deleteMarkers(problemMarkerId.get, true, IResource.DEPTH_INFINITE)
+      doFullBuild = true
+      val fldr =underlying.findMember(".manager")
+      if (fldr != null && fldr.exists) {
+        fldr.delete(true, monitor)
+      }
+    }
+    /* private[eclipse] */ var doFullBuild = false
+
+    override protected def checkAccess : checkAccess0.type= {
+      val ret = super.checkAccess
+      import org.eclipse.swt.widgets._
+      assert(inUIThread || jobIsBusy)
+      ret
+    }
+    override def inUIThread = Display.getCurrent != null
+    
+    def initialize(viewer : SourceViewer) : Unit = {
+
+    }
+
+    def Hyperlink(file : File, offset : Int, length : Int)(action : => Unit)(info : String) = new Hyperlink(offset, length) {
+      def open = {
+        action
+        if (file.editing) file.processEdit
+      }
+      def getHyperlinkText = info
+      def getTypeLabel = null
+    }
+    
+              
+    private def sys(code : Int) = Display.getDefault().getSystemColor(code)
+    
+    import org.eclipse.core.runtime.jobs._  
+    import org.eclipse.core.runtime._  
+
+    def highlight(sv : SourceViewer, offset0 : Int, length0 : Int, style0 : Style)(implicit txt : TextPresentation) : Unit = {
+      if (sv == null || sv.getTextWidget == null || sv.getTextWidget.isDisposed) return
+      //val offset = sv.modelOffset2WidgetOffset(offset0)
+      //val length = sv.modelOffset2WidgetOffset(offset0 + length0) - offset
+      val extent = txt.getExtent
+      val offset = offset0
+      if (offset >= extent.getOffset + extent.getLength) return
+      val length = if (offset + length0 <= extent.getOffset + extent.getLength) length0
+                   else return // extent.getOffset + extent.getLength - offset
+        
+      if (offset == -1 || length <= 0) return
+      val range = new StyleRange
+      range.length = length
+      val style = style0.style0 // to perform parent overlays
+      range.foreground = style.foreground // could be null
+      range.background = style.background 
+        
+      range.underline = style.underline
+      range.strikeout = style.strikeout
+      range.fontStyle = (if (style.bold) SWT.BOLD else SWT.NORMAL) |
+        (if (style.italics) SWT.ITALIC else SWT.NORMAL)
+      range.start = offset
+      txt addStyleRange range
+    }
+    def hover(file : File, offset : Int) : Option[RandomAccessSeq[Char]] = {
+      val result = syncUI{
+        file.tokenForFuzzy(offset)
+      } 
+      result.hover
+    }
+
+    def hyperlink(file : File, offset : Int) : Option[IHyperlink] = {
+      val token = file.tokenForFuzzy(offset)
+      token.hyperlink
+    }
+    override def openAndSelect(file : File, select : => (Int,Int)) : Unit = {
+      file.doLoad
+      val editor =
+        if (file.isLoaded)  file.editor.get else { 
+          val wb = PlatformUI.getWorkbench
+          val page = wb.getActiveWorkbenchWindow.getActivePage
+          val e = file.doLoad0(page)
+          if (e eq null) {
+            logError("cannot load " + file, null)
+            return
+          }
+          e.asInstanceOf[ITextEditor]
+        }
+        
+      val site = editor.getSite
+      val page = site.getPage
+      if (!page.isPartVisible(editor)) file.doLoad0(page)
+      val (offset,length) = select
+      editor.selectAndReveal(offset, length)
+    }
+
+    trait FileImpl extends super[ProjectB].FileImpl {selfX : File => 
+      def self : File
+      def viewer : Option[SourceViewer] = viewers.get(self)
+      def editor = viewer.map(_.editor) getOrElse None
+      
       val underlying : FileSpec
       var dependencies = new LinkedHashSet[IPath]
       private var infoLoaded : Boolean = false
-      def project0 : ProjectImpl0 = ProjectImpl0.this
-      override def project : Project = ProjectImpl0.this.self
+      def project0 : ProjectImpl = ProjectImpl.this
+      override def project : Project = ProjectImpl.this.self
       override def toString = underlying.toString
 
       def checkBuildInfo(manager : IFolder) = if (!infoLoaded) {
@@ -241,217 +446,6 @@ trait UIPlugin extends AbstractUIPlugin with IResourceChangeListener with lampio
         }, monitor)
       }
       def toLine(offset : Int) : Option[Int] = None
-    }
-    private val files = new LinkedHashMap[IFile,File] {
-      override def default(key : IFile) = {
-        assert(key != null)
-        val ret = File(NormalFile(key)); this(key) = ret; 
-        val manager = ProjectImpl0.this.underlying.getFolder(".manager")
-        ret.checkBuildInfo(manager)
-        ret
-      }
-    }
-    def fileSafe(file : IFile) : Option[File] = files.get(file) match{
-    case _ if !file.exists => None
-    case None if canBeConverted(file) => Some(files(file))
-    case ret => ret
-    }
-    
-    protected def findFile(path : String) = {
-      val file = underlying.getFile(path)
-      if (!file.exists) throw new Error
-      fileSafe(underlying.getFile(path)).get
-    }
-    def clean(implicit monitor : IProgressMonitor) : Unit = {
-      if (!problemMarkerId.isEmpty)                
-        underlying.deleteMarkers(problemMarkerId.get, true, IResource.DEPTH_INFINITE)
-      doFullBuild = true
-      val fldr =underlying.findMember(".manager")
-      if (fldr != null && fldr.exists) {
-        fldr.delete(true, monitor)
-      }
-    }
-    /* private[eclipse] */ var doFullBuild = false
-  }
-  class DependMap extends LinkedHashMap[IPath,LinkedHashSet[IPath]] {
-    override def default(key : IPath) = {
-      val ret = new LinkedHashSet[IPath]
-      this(key) = ret; ret
-    }
-  }
-  /* private[eclipse] */ object reverseDependencies extends DependMap
-  private val projects = new LinkedHashMap[IProject,Project] {
-    override def default(key : IProject) = synchronized{
-      val ret = Project(key)
-      this(key) = ret; ret
-    }
-    override def apply(key : IProject) = synchronized{super.apply(key)}
-    override def get(key : IProject) = synchronized{super.get(key)}
-    override def removeKey(key : IProject) = synchronized{super.removeKey(key)}
-  }
-  protected def canBeConverted(file : IFile) : Boolean = true
-  protected def canBeConverted(project : IProject) : Boolean = true
-  
-  def projectSafe(project : IProject) = if (project eq null) None else projects.get(project) match {
-  case _ if !project.exists() || !project.isOpen => None
-  case None if canBeConverted(project) => Some(projects(project))
-  case ret => ret
-  }
-  
-  override def start(context : BundleContext) = {
-    super.start(context)
-    ResourcesPlugin.getWorkspace.addResourceChangeListener(this, IResourceChangeEvent.PRE_CLOSE | IResourceChangeEvent.POST_CHANGE)
-  }
-  override def stop(context : BundleContext) = {
-    super.stop(context)
-    ResourcesPlugin.getWorkspace.removeResourceChangeListener(this)
-  }
-  
-  override def resourceChanged(event : IResourceChangeEvent) = (event.getResource, event.getType) match {
-    case (iproject : IProject, IResourceChangeEvent.PRE_CLOSE) => 
-      val project = projects.removeKey(iproject)
-      if (!project.isEmpty) project.get.destroy
-    case _ =>
-  }
-  /** error logging */
-  override final def logError(msg : String, t : Throwable) : Unit = {
-    var tt = t
-    if (tt == null) tt = try {
-      throw new Error
-    } catch {
-      case e : Error => e
-    }
-    val status = new Status(IStatus.ERROR, pluginId, IStatus.ERROR, msg, tt)
-    log(status)
-  }
-  final def check[T](f : => T) = try { Some(f) } catch {
-    case e : Throwable => logError(e); None
-  }
-  //protected def log(status : Status) = getLog.log(status)
-  
-  def getFile(path : IPath) : Option[File] = workspace.getFile(path) match {
-  case file if file.exists =>
-    projectSafe(file.getProject) match {
-    case Some(project) => project.fileSafe(file)
-    case None => None
-    }
-  case _ => None
-  }
-  def fileFor(file0 : IFile) : Option[File] = projectSafe(file0.getProject) match {
-  case None => None
-  case Some(project) =>
-    val file = project.fileSafe(file0)
-    file
-  }
-  
-  class PresentationContext { //(val presentation : TextPresentation) {
-    val invalidate = new TreeMap[Int,Int]
-    var remove = List[ProjectionAnnotation]()
-    var modified = List[ProjectionAnnotation]()
-    val add = new LinkedHashMap[ProjectionAnnotation,Position]
-  }
-  abstract class Hyperlink(offset : Int, length : Int) extends IHyperlink {
-    def getHyperlinkRegion = new Region(offset, length)
-  }
-  
-  /* private[eclipse] */ val viewers = new LinkedHashMap[ProjectImpl#FileImpl,SourceViewer]
- 
-  trait ProjectA extends ProjectImpl0
-  trait ProjectB extends super[Matchers].ProjectImpl
-  trait ProjectImpl extends ProjectA with ProjectB {
-    def self : Project
-    val ERROR_TYPE = "lampion.error"
-    val MATCH_ERROR_TYPE = "lampion.error.match"
-
-      
-    override protected def checkAccess : checkAccess0.type= {
-      val ret = super.checkAccess
-      import org.eclipse.swt.widgets._
-      assert(inUIThread || jobIsBusy)
-      ret
-    }
-    override def inUIThread = Display.getCurrent != null
-    
-    def initialize(viewer : SourceViewer) : Unit = {
-
-    }
-
-    def Hyperlink(file : File, offset : Int, length : Int)(action : => Unit)(info : String) = new Hyperlink(offset, length) {
-      def open = {
-        action
-        if (file.editing) file.processEdit
-      }
-      def getHyperlinkText = info
-      def getTypeLabel = null
-    }
-    
-              
-    private def sys(code : Int) = Display.getDefault().getSystemColor(code)
-    
-    import org.eclipse.core.runtime.jobs._  
-    import org.eclipse.core.runtime._  
-
-    def highlight(sv : SourceViewer, offset0 : Int, length0 : Int, style0 : Style)(implicit txt : TextPresentation) : Unit = {
-      if (sv == null || sv.getTextWidget == null || sv.getTextWidget.isDisposed) return
-      //val offset = sv.modelOffset2WidgetOffset(offset0)
-      //val length = sv.modelOffset2WidgetOffset(offset0 + length0) - offset
-      val extent = txt.getExtent
-      val offset = offset0
-      if (offset >= extent.getOffset + extent.getLength) return
-      val length = if (offset + length0 <= extent.getOffset + extent.getLength) length0
-                   else return // extent.getOffset + extent.getLength - offset
-        
-      if (offset == -1 || length <= 0) return
-      val range = new StyleRange
-      range.length = length
-      val style = style0.style0 // to perform parent overlays
-      range.foreground = style.foreground // could be null
-      range.background = style.background 
-        
-      range.underline = style.underline
-      range.strikeout = style.strikeout
-      range.fontStyle = (if (style.bold) SWT.BOLD else SWT.NORMAL) |
-        (if (style.italics) SWT.ITALIC else SWT.NORMAL)
-      range.start = offset
-      txt addStyleRange range
-    }
-    def hover(file : File, offset : Int) : Option[RandomAccessSeq[Char]] = {
-      val result = syncUI{
-        file.tokenForFuzzy(offset)
-      } 
-      result.hover
-    }
-
-    def hyperlink(file : File, offset : Int) : Option[IHyperlink] = {
-      val token = file.tokenForFuzzy(offset)
-      token.hyperlink
-    }
-    override def openAndSelect(file : File, select : => (Int,Int)) : Unit = {
-      file.doLoad
-      val editor =
-        if (file.isLoaded)  file.editor.get else { 
-          val wb = PlatformUI.getWorkbench
-          val page = wb.getActiveWorkbenchWindow.getActivePage
-          val e = file.doLoad0(page)
-          if (e eq null) {
-            logError("cannot load " + file, null)
-            return
-          }
-          e.asInstanceOf[ITextEditor]
-        }
-        
-      val site = editor.getSite
-      val page = site.getPage
-      if (!page.isPartVisible(editor)) file.doLoad0(page)
-      val (offset,length) = select
-      editor.selectAndReveal(offset, length)
-    }
-
-    type File <: FileImpl
-    trait FileImpl extends super[ProjectA].FileImpl with super[ProjectB].FileImpl {selfX : File => 
-      def self : File
-      def viewer : Option[SourceViewer] = viewers.get(self)
-      def editor = viewer.map(_.editor) getOrElse None
       
       override def readOnly = underlying match {
       case NormalFile(_) => false
@@ -469,11 +463,11 @@ trait UIPlugin extends AbstractUIPlugin with IResourceChangeListener with lampio
         }
         a
       }
+      
       override def delete(a : Annotation) : Unit = asyncUI{
         val model = editor.map(_.getSourceViewer0.getAnnotationModel) getOrElse null
         if (model != null) model.removeAnnotation(a)
       }
-
       
       override def prepareForEditing = {
         super.prepareForEditing

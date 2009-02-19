@@ -182,7 +182,7 @@ trait NewResourceWizard extends BasicNewResourceWizard {
   } catch {
   case ex => ScalaPlugin.plugin.logError(ex); false
   }
-  protected def postFinish(project : ScalaPlugin#ProjectImpl, file : IFile) = {}
+  protected def postFinish(project : ScalaPlugin#Project, file : IFile) = {}
   
   
   protected def body : String = ""

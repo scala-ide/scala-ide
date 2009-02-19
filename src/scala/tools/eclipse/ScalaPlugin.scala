@@ -5,15 +5,23 @@
 // $Id$
 
 package scala.tools.eclipse
-import scala.tools.nsc._
+
+import org.eclipse.core.resources._
+import org.eclipse.core.runtime._
+import org.eclipse.core.runtime.content.IContentTypeSettings
 import org.eclipse.jdt.core._
 import org.eclipse.jdt.internal.core._
-import org.eclipse.core.runtime._
-import org.eclipse.core.resources._
-import org.eclipse.core.resources
+import org.eclipse.jdt.internal.core.util.Util
+import org.eclipse.jface.text.IDocument
+import org.eclipse.ui.{ IWorkbenchPage, IEditorInput, PlatformUI }
+import org.osgi.framework.BundleContext
+
 import scala.collection.jcl.{LinkedHashMap,LinkedHashSet}
+import scala.tools.nsc._
 import scala.tools.nsc.io.{AbstractFile,PlainFile,ZipArchive}
    
+import lampion.eclipse.UIPlugin
+
 object ScalaPlugin { 
   private[eclipse] var plugin : ScalaPlugin = _
 
@@ -25,9 +33,9 @@ object ScalaPlugin {
     }
 }
 
-/** stuff needed to get the non-UI parts of the plugin going */
-trait ScalaPluginSuperA extends lampion.eclipse.UIPlugin
-trait ScalaPlugin extends ScalaPluginSuperA with scala.tools.editor.Driver {
+class ScalaPlugin extends {
+  override val OverrideIndicator = "scala.overrideIndicator"  
+} with UIPlugin with scala.tools.editor.TypersPresentations {
   assert(ScalaPlugin.plugin == null)
   ScalaPlugin.plugin = this
   
@@ -82,14 +90,24 @@ trait ScalaPlugin extends ScalaPluginSuperA with scala.tools.editor.Driver {
     override def toString = source.name
     override def path = None // because they can't change or be recompiled.
   }
-  type Project <: ProjectImpl
-  trait ProjectA extends super[ScalaPluginSuperA].ProjectImpl
-  trait ProjectB extends super[Driver].ProjectImpl
-  trait ProjectImpl extends ProjectA with ProjectB with CompilerProject {
+
+  def Project(underlying : IProject) = new Project(underlying)
+  
+  trait ProjectA extends super[UIPlugin].ProjectImpl
+  trait ProjectB extends super[TypersPresentations].ProjectImpl
+  class Project(underlying0 : IProject) extends {
+    override val underlying = underlying0 
+  } with ProjectA with ProjectB with CompilerProject {
+
+    trait Node extends NodeImpl   
+    trait ParseNode extends Node with ParseNodeImpl {
+      def self : ParseNode
+    } 
+    trait IdentifierPosition extends IdentifierPositionImpl
 
     override def externalDepends = underlying.getReferencedProjects 
 
-    def self : Project
+    def self : Project = this
     assert(underlying != null) // already initialized, I hope!
     assert(underlying.hasNature(natureId))
     assert(JavaProject.hasJavaNature(underlying))
@@ -151,7 +169,7 @@ trait ScalaPlugin extends ScalaPluginSuperA with scala.tools.editor.Driver {
     trait Compiler2 extends super.Compiler{ self : compiler.type =>}
     object compiler0 extends nsc.Global(new Settings(null), new CompilerReporter) with Compiler2 with eclipse.Compiler {
       def plugin = ScalaPlugin.this
-      def project = ProjectImpl.this.self
+      def project = Project.this.self
       override def computeDepends(from : loaders.PackageLoader) = super[Compiler].computeDepends(from)
        
       override def logError(msg : String, t : Throwable) =
@@ -169,7 +187,7 @@ trait ScalaPlugin extends ScalaPluginSuperA with scala.tools.editor.Driver {
         }
         ret
       } 
-      ProjectImpl.this.initialize(this)
+      Project.this.initialize(this)
     }
     lazy val compiler : compiler0.type = compiler0
     import java.io.File.pathSeparator 
@@ -252,8 +270,8 @@ trait ScalaPlugin extends ScalaPluginSuperA with scala.tools.editor.Driver {
       //First check whether to use preferences or properties
       import SettingConverterUtil._
       import scala.tools.eclipse.properties.PropertyStore
-      //TODO - should we rely on ScalaUIPlugin?  Well.. we need these preferences...
-      val workspaceStore = ScalaUIPlugin.plugin.getPreferenceStore
+      //TODO - should we rely on ScalaPlugin?  Well.. we need these preferences...
+      val workspaceStore = ScalaPlugin.plugin.getPreferenceStore
       val projectStore = new PropertyStore(underlying, workspaceStore, pluginId)
       val useProjectSettings = projectStore.getBoolean(USE_PROJECT_SETTINGS_PREFERENCE)
       
@@ -309,11 +327,29 @@ trait ScalaPlugin extends ScalaPluginSuperA with scala.tools.editor.Driver {
       case _ => 
       }})
     }
-    type File <: FileImpl
-    trait FileImpl extends super[ProjectA].FileImpl with super[ProjectB].FileImpl {selfX:File=>
-      def self : File
+    
+    def File(underlying : FileSpec) = new File(underlying)
+    
+    class File(underlying0 : FileSpec) extends {
+      override val underlying = underlying0
+    } with super[ProjectA].FileImpl with super[ProjectB].FileImpl {selfX:File=>
+      def self : File = this
       private[eclipse] var signature : Long = 0
       import java.io._
+      
+      class IdentifierPosition extends Project.this.IdentifierPosition with IdentifierPositionImpl {
+        override def self = this
+      }
+      override def IdentifierPosition = new IdentifierPosition
+      class ParseNode extends Project.this.ParseNode with ParseNodeImpl {
+        def self = this
+        makeNoChanges
+      }
+      def ParseNode = new ParseNode
+      override def Token(offset : Int, text : RandomAccessSeq[Char], code : Int) = new Token(offset : Int, text : RandomAccessSeq[Char], code : Int)
+      class Token(val offset : Int, val text : RandomAccessSeq[Char], val code : Int) extends TokenImpl {
+        def self = this
+      }
       
       override def nscFile : AbstractFile = file.underlying match {
       case NormalFile(file) => new PlainFile(file.getLocation.toFile)
@@ -363,7 +399,24 @@ trait ScalaPlugin extends ScalaPluginSuperA with scala.tools.editor.Driver {
       case _ => super.defaultClassDir
       }
       
-      
+      var outlineTrees0 : List[compiler.Tree] = null
+      def outlineTrees = {
+        if (outlineTrees0 == null) outlineTrees0 = List(unloadedBody) 
+        outlineTrees0
+      }
+      override def doLoad0(page : IWorkbenchPage) = underlying match {
+      case ClassFileSpec(source,clazz) => page.openEditor(new ClassFileInput(project,source,clazz), editorId) 
+      case _ => super.doLoad0(page)
+      }
+      override def parseChanged(node : ParseNode) = {
+        super.parseChanged(node)
+        //Console.println("PARSE_CHANGED: " + node)
+        outlineTrees0 = rootParse.lastTyped
+      }
+      override  def prepareForEditing = {
+        super.prepareForEditing
+        outlineTrees0 = rootParse.lastTyped
+      }
     }
     
     import scala.tools.nsc.io.{AbstractFile,PlainFile}
@@ -381,7 +434,6 @@ trait ScalaPlugin extends ScalaPluginSuperA with scala.tools.editor.Driver {
       case NormalFile(file) => file
     }
     
-    
     def lampionToNSC(file : File) : PlainFile = {
       file.underlying match {
         case NormalFile(file) => 
@@ -390,7 +442,6 @@ trait ScalaPlugin extends ScalaPluginSuperA with scala.tools.editor.Driver {
           new PlainFile(ioFile) 
       }
     }
-    
     
     private var buildCompiler : BuildCompiler = _ 
     override def build(toBuild : LinkedHashSet[File])(implicit monitor : IProgressMonitor) : Seq[File] = {
@@ -491,6 +542,7 @@ trait ScalaPlugin extends ScalaPluginSuperA with scala.tools.editor.Driver {
         }
       }
     }
+    
     def signatureFor(tpe : compiler.Type) : String = {
       import org.eclipse.jdt.core.Signature._
       import compiler._
@@ -564,10 +616,48 @@ trait ScalaPlugin extends ScalaPluginSuperA with scala.tools.editor.Driver {
         return project0.fileSafe(file0)
       }
     }
-  }
 
+    override def imageFor(style : Style) : Option[Image] = {
+      val middle = style match {
+      case x if x == `classStyle` => "class"
+      case x if x == `objectStyle` => "object"
+      case x if x == `traitStyle` => "trait"
+      case x if x == `defStyle` => "defpub"
+      case x if x == `varStyle` => "valpub"
+      case x if x == `valStyle` => "valpub"
+      case x if x == `typeStyle` => "typevariable"
+      case _ => return super.imageFor(style)
+      }
+      return Some(fullIcon("obj16/" + middle + "_obj.gif"))
+    }
+    
+    private case class JavaRef(elem : IJavaElement, symbol0 : compiler.Symbol) extends IdeRef {
+      override def hover = try {
+        val str = elem.getAttachedJavadoc(null)
+        if (str eq null) None
+        else Some(str)
+      } catch {
+      case ex => 
+        logError(ex)
+        Some("Method added to Java class by Scala compiler.")
+      }
+      import org.eclipse.jdt.ui._
+      override def hyperlink =
+        JavaUI.openInEditor(elem, true, true)
+      override def symbol = Some(symbol0)
+    }
+    override protected def javaRef(symbol : compiler.Symbol) : IdeRef = {
+      val elem = findJava(symbol) match {
+        case Some(elem) => elem
+        case None => return NoRef
+      }
+      JavaRef(elem,symbol)
+    }
+  }
+  
   override protected def canBeConverted(file : IFile) : Boolean = 
     super.canBeConverted(file) && (file.getName.endsWith(scalaFileExtn) || file.getName.endsWith(javaFileExtn))
+
   override protected def canBeConverted(project : IProject) : Boolean = 
     super.canBeConverted(project) && project.hasNature(natureId)
   
@@ -597,5 +687,82 @@ trait ScalaPlugin extends ScalaPluginSuperA with scala.tools.editor.Driver {
       }
       Some(project.get, file)
     } else None
+  }
+
+  override def editorId : String = "scala.tools.eclipse.Editor"
+
+  override def start(context : BundleContext) = {
+    super.start(context)
+    
+    ScalaIndexManager.initIndex(ResourcesPlugin.getWorkspace)
+
+    Platform.getContentTypeManager.
+      getContentType(JavaCore.JAVA_SOURCE_CONTENT_TYPE).
+        addFileSpec("scala", IContentTypeSettings.FILE_EXTENSION_SPEC)
+    Util.resetJavaLikeExtensions
+
+    PlatformUI.getWorkbench.getEditorRegistry.setDefaultEditor("*.scala", editorId)
+  }
+  
+  override def stop(context : BundleContext) = {
+    super.stop(context)
+  }
+  
+  override def resourceChanged(event : IResourceChangeEvent) {
+    if(event.getType == IResourceChangeEvent.POST_CHANGE) {
+      event.getDelta.accept(new IResourceDeltaVisitor {
+        def visit(delta : IResourceDelta) : Boolean = {
+          delta.getKind match {
+            case IResourceDelta.CHANGED => {
+              delta.getResource match {
+                case f : IFile => {
+                  if (ScalaPlugin.isScalaProject(f.getProject) &&
+                    (JavaCore.create(f.getProject).isOnClasspath(f))) {
+                      projectSafe(f.getProject).get.stale(f.getLocation)
+                  }
+                }
+                case _ =>
+              }
+            }
+            case _ =>
+          }
+          true
+        }
+      })
+    }
+    
+    super.resourceChanged(event)
+  }
+  
+  def inputFor(that : AnyRef) : Option[IEditorInput] = that match {
+  case that : IClassFile  => 
+    scalaSourceFile(that).map{
+    case (project,source) => new ClassFileInput(project,source,that)
+    }
+  case _ => None
+  }
+  
+  import org.eclipse.jdt.internal.ui.javaeditor._
+  import org.eclipse.jdt.internal.ui._
+  class ClassFileInput(val project : Project, val source : AbstractFile, val classFile : IClassFile) extends InternalClassFileEditorInput(classFile) with FixedInput {
+    assert(source != null)
+    override def getAdapter(clazz : java.lang.Class[_]) = clazz match {
+    case clazz if clazz == classOf[AbstractFile] => source
+    case _ => super.getAdapter(clazz)  
+    }
+    override def initialize(doc : IDocument) : Unit = doc.set(new String(source.toCharArray))
+    override def neutralFile = (project.classFile(source,classFile))
+    override def createAnnotationModel = {
+      (classFile.getAdapter(classOf[IResourceLocator]) match {
+      case null => null
+      case locator : IResourceLocator =>  locator.getContainingResource(classFile)
+      }) match {
+      case null => super.createAnnotationModel
+      case resource =>
+        val model = new ClassFileMarkerAnnotationModel(resource)
+        model.setClassFile(classFile)
+        model
+      }
+    }
   }
 }

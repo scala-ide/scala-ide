@@ -8,7 +8,7 @@ Bundle-ClassPath:
  .,
  bin
 Bundle-Activator: 
- scala.tools.eclipse.Driver
+ scala.tools.eclipse.ScalaPlugin
 Require-Bundle: 
  org.eclipse.core.filesystem,
  org.eclipse.core.resources,

@@ -12,7 +12,7 @@ import org.eclipse.swt.widgets.Event
   
 class SelectRulerAction extends AbstractRulerActionDelegate {
   
-  def plugin = ScalaUIPlugin.plugin // i don't understand....
+  def plugin = ScalaPlugin.plugin // i don't understand....
   
   protected def appendix(a : Annotation) = special(a) match {
   case Some(a) => a.actionId
@@ -67,7 +67,7 @@ class SelectRulerAction extends AbstractRulerActionDelegate {
     if (a.getType == plugin.OverrideIndicator) Some(new Special {
       override def actionId = "OpenSuperImplementation."
       override def dispatch(editor : Editor) = {
-        val plugin = ScalaUIPlugin.plugin
+        val plugin = ScalaPlugin.plugin
         val file0 = editor.file
         if (!file0.isEmpty) {
           val file1 : plugin.File = file0.get.asInstanceOf[plugin.File]

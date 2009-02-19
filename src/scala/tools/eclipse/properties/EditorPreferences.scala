@@ -29,7 +29,7 @@ object EditorPreferences {
 }
 
 class EditorPreferences extends PreferencePage with IWorkbenchPreferencePage {
-  val plugin = ScalaUIPlugin.plugin
+  val plugin = ScalaPlugin.plugin
   val lt = "<"
 
   def sampleCode : NodeSeq = (

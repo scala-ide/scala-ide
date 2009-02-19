@@ -62,8 +62,8 @@ class OpenActionProvider extends CommonActionProvider {
     override def run(elements0 : Array[AnyRef]) : Unit = {
       var elements = elements0
       if (elements != null) elements = elements.filter{
-        case element : IClassFile if ScalaUIPlugin.plugin != null => 
-          val plugin = ScalaUIPlugin.plugin
+        case element : IClassFile if ScalaPlugin.plugin != null => 
+          val plugin = ScalaPlugin.plugin
           plugin.inputFor(element) match { 
             case Some(input) =>
               val page = fSite.getPage

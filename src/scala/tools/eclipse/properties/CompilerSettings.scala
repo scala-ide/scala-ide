@@ -152,7 +152,7 @@ class CompilerSettings extends PropertyPage with ProjectSettings with WorkbenchP
   private lazy val ideSettings = userSettings.map(eclipseSetting)
   /** Pulls the preference store associated with this plugin */
   override def doGetPreferenceStore() : IPreferenceStore = {
-	    ScalaUIPlugin.plugin.getPreferenceStore
+	    ScalaPlugin.plugin.getPreferenceStore
   }
  
   var useProjectSettingsWidget : Option[UseProjectSettingsWidget] = None;
