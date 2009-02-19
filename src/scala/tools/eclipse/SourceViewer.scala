@@ -28,8 +28,8 @@ import lampion.util.ReflectionUtils
 
 abstract class SourceViewer(parent : Composite, vertical : IVerticalRuler, overview : IOverviewRuler, showAnnotationsOverview : Boolean, styles : Int, store: IPreferenceStore) extends 
   JavaSourceViewer(parent,vertical,overview,showAnnotationsOverview,styles, store) with IAnnotationModelListener with FocusListener with ITextInputListener {
-  val plugin : lampion.eclipse.UIPlugin
-  type File = plugin.ProjectImpl#FileImpl
+  val plugin : ScalaPlugin
+  type File = plugin.Project#File
   def file : Option[File]
   /* private[eclipse] */ var busy = false
   
