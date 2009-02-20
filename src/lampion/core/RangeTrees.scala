@@ -435,71 +435,7 @@ trait RangeTrees extends Positions {
       def child0 = child
     }    
   }
-  trait BraceRangeTreeBank extends RangeTreeBank {
-    type RangeTree <: RangeTreeImpl
-    trait RangeTreeImpl extends super.RangeTreeImpl {
-      def self : RangeTree
-      protected def slack = 1
-      override def repair(absolute : Int, offset : Int, added : Int, removed : Int) : Unit = {
-        // should create a "dead zone"
-        if (removed > 0) { // closing or opening brace destroyed
-          if (offset < slack || ((offset + removed) > (length - slack))) {
-            // works OK but....
-            return destroy(absolute)
-          }
-        }
-        super.repair(absolute, offset, added, removed)
-      }
-      override def length_=(length0 : Int) : Unit = {
-        // could consume siblings or release them....
-        val oldLength = this.length0
-        super.length_=(length0)
-        if (length0 > oldLength) { // consume siblings 
-          var last = this.child
-          while (last != NoRangeTree && last.next != NoRangeTree) last = last.next
-          while (next != null && next.offset0 < extent0) {
-            // disconnect next
-            val next = this.next
-            assert(next.prev == this)
-            assert(next.parent == parent)
-            this.next = next.next
-            if (next.next != NoRangeTree) next.next.prev = self
-            next.next = NoRangeTree
-            next.parent = self
-            next.offset0 = next.offset0 - offset0
-            assert(next.offset0 > 0)
-            if (last != NoRangeTree) {
-              last.next = next
-              next.prev = last
-            } else {
-              child = next
-              next.prev = NoRangeTree
-            }
-            last = next
-          }
-        } else if (length0 < oldLength) {
-          // possibly release children
-          var start = child
-          while (start != NoRangeTree && start.offset0 < extent0) start = start.next
-          var end = start
-          while (end != null) {
-            end.offset0 = offset0 + end.offset0
-            end.parent  = parent
-            end = end.next
-          }
-          if (start != null) {
-            start.prev = self
-            end.next   = next
-            if (next != null) {
-              assert(end.offset0 < next.offset0)
-              assert(next.prev == self)
-              next.prev = end
-            }
-            next = start
-          }
-        }
-      }
-    }
-  }
+  
+  
   }
 }
