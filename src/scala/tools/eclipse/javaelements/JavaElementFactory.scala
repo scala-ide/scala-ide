@@ -9,7 +9,7 @@ import java.lang.reflect.Constructor
 
 import org.eclipse.jdt.internal.core.{ CompilationUnit, JavaElementInfo, SourceRefElement }
 
-import lampion.util.ReflectionUtils
+import scala.tools.eclipse.util.ReflectionUtils
 
 object JavaElementFactory extends ReflectionUtils {
   

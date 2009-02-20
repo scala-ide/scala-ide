@@ -16,13 +16,9 @@ trait NewMatchers extends core.Positions {
     override def repair(offset : Int, added : Int, removed : Int) : Unit = {
       super.repair(offset, added, removed)
       look = Nil
-      val timer = new lampion.util.BenchTimer
-      timer.reset
       openMatches .repair(offset, added, removed)
       closeMatches.repair(offset, added, removed)
       repair0(offset, offset + added)
-      val time = timer.elapsed
-      if (time > 0.1) Console.println("MATCH: " + timer.elapsedString)
     }
     override def doUnload = {
       openMatches.destroy

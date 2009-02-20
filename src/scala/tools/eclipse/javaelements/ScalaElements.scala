@@ -18,7 +18,7 @@ import org.eclipse.jdt.ui.JavaElementImageDescriptor
 import org.eclipse.jface.resource.ImageDescriptor
 import org.eclipse.swt.graphics.Image
 
-import lampion.util.ReflectionUtils
+import scala.tools.eclipse.util.ReflectionUtils
 
 trait ScalaElement {
   def getElementInfo : AnyRef

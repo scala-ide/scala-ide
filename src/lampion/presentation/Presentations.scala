@@ -116,14 +116,11 @@ trait Presentations extends lampion.core.Plugin {
         }
       } 
       def refreshHighlightFor(offset : Int, length : Int)(implicit txt : HighlightContext) = if (offset < content.length) {
-        val timer = new lampion.util.BenchTimer
         var tok : Option[Token] = Some(tokenForFuzzy(offset))
         while (!tok.isEmpty && tok.get.offset < offset + length) {
           highlight(tok.get.offset, tok.get.text.length, tok.get.style)
           tok = tok.get.next
         }
-        val time = timer.elapsed
-        if (time > 0.1) Console.println("REFRSH: " + timer.elapsedString)
       }
       def readOnly = true
       def processEdit : Unit = try {
@@ -155,8 +152,6 @@ trait Presentations extends lampion.core.Plugin {
       def doPresentation : Unit = try{ job.synchronized{if (!presentation.synchronized{presentation.dirty.isEmpty && presentation.rehighlight.isEmpty}) {
         if (job.state >= Presentations.ASYNC) return // not now.
         // lock out type checking during presentation. 
-        val timer = new lampion.util.BenchTimer
-        timer.reset
         implicit val txt = createPresentationContext
         def next = presentation.synchronized{
           val i = presentation.dirty.elements
@@ -182,8 +177,6 @@ trait Presentations extends lampion.core.Plugin {
           presentation.rehighlight.clear
         }
         finishPresentationContext
-        var time = timer.elapsed
-        if (time > 0.05) Console.println("PRES: " + timer.elapsedString)
       }}} finally {
 	;
       }
@@ -333,11 +326,7 @@ trait Presentations extends lampion.core.Plugin {
             state >= BUSY
           }
           if (doit) do {
-            val timer = new lampion.util.BenchTimer
-            timer.reset
             afterParsing
-            var time = timer.elapsed
-            if (time > 0.3) Console.println("TYPE: " + timer.elapsedString)
           } while (job.synchronized{
             assert(state >= BUSY)
             if (state == BACKLOG) {
@@ -397,7 +386,6 @@ trait Presentations extends lampion.core.Plugin {
     private var presentFiles : List[File] = Nil
     override protected def doAfterParsing : Unit = try {job.synchronized{
       assert(inUIThread)
-      val timer = new lampion.util.BenchTimer
       if (job.state == LOCKED) {
         Console.println("ERROR in background thread")
         job.state = READY

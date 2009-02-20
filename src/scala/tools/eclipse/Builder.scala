@@ -14,8 +14,8 @@ import org.eclipse.jdt.internal.core.JavaModelManager
 import org.eclipse.jdt.internal.core.builder.{ JavaBuilder, State }
 
 import scala.tools.eclipse.contribution.weaving.jdt.builderoptions.ScalaJavaBuilder
-import lampion.util.ReflectionUtils
 import scala.tools.eclipse.javaelements.JDTUtils
+import scala.tools.eclipse.util.ReflectionUtils
 import scala.collection.jcl.LinkedHashSet
 
 class Builder extends IncrementalProjectBuilder {

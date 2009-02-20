@@ -24,7 +24,7 @@ import org.eclipse.swt.events.{ FocusListener, FocusEvent, VerifyEvent }
 import org.eclipse.swt.widgets.{ Composite, Shell }
 import org.eclipse.ui.texteditor.ITextEditor
 
-import lampion.util.ReflectionUtils
+import scala.tools.eclipse.util.ReflectionUtils
 
 abstract class SourceViewer(parent : Composite, vertical : IVerticalRuler, overview : IOverviewRuler, showAnnotationsOverview : Boolean, styles : Int, store: IPreferenceStore) extends 
   JavaSourceViewer(parent,vertical,overview,showAnnotationsOverview,styles, store) with IAnnotationModelListener with FocusListener with ITextInputListener {
@@ -184,9 +184,7 @@ abstract class SourceViewer(parent : Composite, vertical : IVerticalRuler, overv
     plugin.viewers(file) = this
     assert(file.isLoaded)
     file.clear
-    val timer = new lampion.util.BenchTimer
     file.repair(0, getDocument.getLength, 0)
-    Console.println("LOAD_REPAIR: " + timer.elapsedString)
     file.loaded
     catchUp
   }

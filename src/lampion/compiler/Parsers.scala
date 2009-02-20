@@ -8,8 +8,6 @@ package lampion.compiler
 import scala.collection.jcl._
 
 trait Parsers extends NewMatchers with core.RangeTrees  {
-  protected val ptimer = new lampion.util.BenchTimer
-  
   abstract class ErrorKind {
     val msg : String
     val isWarning : Boolean
@@ -260,9 +258,6 @@ trait Parsers extends NewMatchers with core.RangeTrees  {
     def enclosingParse(offset : Int) = parses.enclosing(offset)
     //implicit def r2p(range : Option[parses.Range]) : Option[ParseNode] = range.map(_.position)
     def doParsing = {
-      ptimer.reset
-      ptimer.disable
-      val timer = new lampion.util.BenchTimer
       while (!parses.dirty.isEmpty) {
         val next = parses.dirty.elements.next
         if (next.isValid) {
@@ -273,8 +268,6 @@ trait Parsers extends NewMatchers with core.RangeTrees  {
         }
         else parses.dirty remove next
       }
-      val time = timer.elapsed
-      if (time > .05) Console.println("PARS: " + ptimer.elapsedString)
     }
     override def repair(offset : Int, added : Int, removed : Int) = {
       super .repair(offset, added, removed)

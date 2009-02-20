@@ -12,7 +12,7 @@ import org.eclipse.jdt.internal.core.{ JavaModelManager, OpenableElementInfo }
 import org.eclipse.jdt.internal.ui.packageview.PackageExplorerPart
 import org.eclipse.ui.progress.UIJob
 
-import lampion.util.ReflectionUtils
+import scala.tools.eclipse.util.ReflectionUtils
 
 object JDTUtils {
   private var refreshPending = false

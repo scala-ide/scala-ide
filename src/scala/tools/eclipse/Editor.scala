@@ -36,8 +36,6 @@ import org.eclipse.swt.custom.{ExtendedModifyEvent,ExtendedModifyListener};
 import org.eclipse.swt.events.{KeyListener,KeyEvent,FocusListener,FocusEvent};
 import org.eclipse.swt.widgets.{Composite,Shell};
 
-
-
 import scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.{ ScalaCompilationUnitDocumentProvider, ScalaEditor } 
 import scala.tools.eclipse.contribution.weaving.jdt.ui.text.java.ScalaCompletionProcessor
 
@@ -210,14 +208,8 @@ class Editor extends ScalaEditor with IAutoEditStrategy {
         val l1 = file.content.length
         val ee = Editor.this
         plugin.assert(e.getDocument.getLength == file.content.length)
-        val timer = new lampion.util.BenchTimer
-        timer.enable
         val txt = if (e.getText == null) "" else e.getText
         file.repair(e.getOffset, txt.length, e.getLength)
-        timer.update
-        timer.disable
-        if (timer.elapsed > .05)
-          Console.println("REPAIR: " + timer.elapsedString)
       }      
       if (!isDocumentCommand) // won't trigger the modified listener.
         catchUp
@@ -232,12 +224,7 @@ class Editor extends ScalaEditor with IAutoEditStrategy {
       //Console.println("MODIFIED")
       if (!modifying) try {
         modifying = true
-        val timer = new lampion.util.BenchTimer
-        timer.enable
         doAutoEdit(w2m(event.start), event.length, event.replacedText.length);
-        timer.update
-        timer.disable
-        //Console.println("AUTO: " + timer.elapsedString)
       } finally {
         modifying = false
         catchUp

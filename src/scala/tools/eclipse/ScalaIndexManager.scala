@@ -5,7 +5,7 @@ import org.eclipse.jdt.internal.core.JavaModelManager
 import org.eclipse.jdt.internal.core.search.indexing.IndexManager
 import org.eclipse.jdt.internal.core.util.Util
 
-import lampion.util.ReflectionUtils
+import scala.tools.eclipse.util.ReflectionUtils
 import scala.tools.eclipse.javaelements.JDTUtils._
 
 object ScalaIndexManager extends ReflectionUtils {

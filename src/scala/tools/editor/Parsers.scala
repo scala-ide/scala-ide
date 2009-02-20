@@ -265,13 +265,12 @@ trait Parsers extends Matchers with ParseNodes {
 
         def self : Parser = this 
         def doParse : (Int,Boolean) = {
-          val timer = new lampion.util.BenchTimer
           val newParseTrees = context.pinfo(this)
           if ((!newParseTrees.isEmpty && !newParseTrees.equalsWith(parseTrees)(_ equalsStructure _))) {
             parseTrees = newParseTrees
             if (!hasParseErrors) parseChanged // we cause re-typing.
           }
-          if (this == null) Console.println("REPARSE: " + ParseNodeImpl.this + (" " + timer.elapsedString))
+          if (this == null) Console.println("REPARSE: " + ParseNodeImpl.this)
           val newLastCode = computeLastCode(in)
           val parentChanged = if (lastCode != newLastCode) {
             lastCode = newLastCode

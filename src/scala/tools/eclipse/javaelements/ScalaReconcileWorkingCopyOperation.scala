@@ -9,7 +9,7 @@ import org.eclipse.jdt.core.{ IJavaElement, IJavaModelStatus, IJavaModelStatusCo
 import org.eclipse.jdt.internal.core.{ CompilationUnit, JavaElementDelta, JavaElementDeltaBuilder, JavaModelOperation, JavaModelStatus }
 import org.eclipse.jdt.internal.core.util.Messages
 
-import lampion.util.ReflectionUtils
+import scala.tools.eclipse.util.ReflectionUtils
 
 class ScalaReconcileWorkingCopyOperation(
   workingCopy : IJavaElement,
