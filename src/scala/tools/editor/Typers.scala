@@ -126,6 +126,10 @@ trait Typers extends Parsers with lampion.compiler.Tokenizers {
         (typer.synchronized{typer.dirty.clear})
       }
     }
+    override protected def parseChanged : Unit = {
+      super.parseChanged
+      asTypedElement.dirtyTyped
+    }
     def hasTypeErrors = hasErrors(_.isInstanceOf[TypeError])
     private[Typers] var resultTypeInfo0 : TypeInfo = null.asInstanceOf[TypeInfo]
     def resultTypeInfo = resultTypeInfo0 match { 
