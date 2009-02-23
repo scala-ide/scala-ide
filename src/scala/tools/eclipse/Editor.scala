@@ -40,8 +40,6 @@ import scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.{ ScalaCompila
 import scala.tools.eclipse.contribution.weaving.jdt.ui.text.java.ScalaCompletionProcessor
 
 class Editor extends ScalaEditor with IAutoEditStrategy {
-  import lampion.core.Dirs._
-
   val plugin : ScalaPlugin = ScalaPlugin.plugin
 
   showChangeInformation(true) 
@@ -328,13 +326,16 @@ class Editor extends ScalaEditor with IAutoEditStrategy {
       val file = external.file
       val project = external.project
       if (offset - 1 >= file.content.length) return null
-      file.findMatch(offset) match {
-        case Some((dir,m)) =>
-          anchor = if (dir == PREV) LEFT else RIGHT
-          return new Region(m.from, m.until - m.from)
-        case _ => return null
+
+      file.findMatchPrev(offset) match {
+        case Some(m) => anchor = LEFT ; return new Region(m.from, m.until - m.from)
+        case None => file.findMatchNext(offset) match {
+          case Some(m) => anchor = RIGHT ; return new Region(m.from, m.until - m.from)
+          case None => return null
+        }
       }
     }
+    
     def dispose = {  }
   }
   

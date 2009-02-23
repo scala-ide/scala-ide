@@ -92,22 +92,36 @@ trait Matchers extends AutoEdits {
         }
 
         // matches are made at the edge
-        def border(dir : Dir) = {
-          if (dir == NEXT) FileImpl.this.border(offset, dir).map(_.until)
-          else FileImpl.this.border(extent, dir).map(_.from)
-        }
-        def findWithMatch(dir : Dir)(f : Token => Boolean) : Option[Token] = {
+        def borderNext = FileImpl.this.borderNext(offset).map(_.until)
+        def borderPrev = FileImpl.this.borderPrev(extent).map(_.from)
+        
+        def findWithMatchNext(f : Token => Boolean) : Option[Token] = {
           var tok : Option[Token] = Some(self)
           while (true) {
             if (tok.isEmpty) return None
             else if (tok.get != self && 
                      f(tok.get)) return tok
-            val nextBorder = tok.get.border(dir) 
-            def prevBorder = tok.get.border(dir.reverse)
+            val nextBorder = tok.get.borderNext 
+            def prevBorder = tok.get.borderPrev
             if (!nextBorder.isEmpty) {
-              tok = tokenFor(nextBorder.get).apply(dir)
+              tok = tokenFor(nextBorder.get).next
             } else if (tok.get != self && !prevBorder.isEmpty) return None 
-            else tok = tok.get.apply(dir)
+            else tok = tok.get.next
+          }
+          None
+        }
+        def findWithMatchPrev(f : Token => Boolean) : Option[Token] = {
+          var tok : Option[Token] = Some(self)
+          while (true) {
+            if (tok.isEmpty) return None
+            else if (tok.get != self && 
+                     f(tok.get)) return tok
+            val nextBorder = tok.get.borderPrev 
+            def prevBorder = tok.get.borderNext
+            if (!nextBorder.isEmpty) {
+              tok = tokenFor(nextBorder.get).prev
+            } else if (tok.get != self && !prevBorder.isEmpty) return None 
+            else tok = tok.get.prev
           }
           None
         }

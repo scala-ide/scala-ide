@@ -252,23 +252,21 @@ trait NewMatchers extends core.Positions {
     }
     
     def isMatched = unmatched.isEmpty
-    def border(offset : Int, dir : Dir) = if (offset < 0) None else {
-      if (dir == NEXT) {
-        val open = openMatches.seek(offset)
-        if (open.isDefined && open.get.absolute == offset && open.get.matching != null) 
-          Some(Match(open.get.kind, open.get.absolute, open.get.matching.absolute))
-        else None
-      } else {
-        val close = closeMatches.seek(offset)
-        if (close.isDefined && close.get.absolute == offset && close.get.matching != null) 
-          Some(Match(close.get.matching.kind, close.get.matching.absolute, close.get.absolute))
-        else None
-      }
+    
+    def borderNext(offset : Int) = if (offset < 0) None else {
+      val open = openMatches.seek(offset)
+      if (open.isDefined && open.get.absolute == offset && open.get.matching != null) 
+        Some(Match(open.get.kind, open.get.absolute, open.get.matching.absolute))
+      else None
     }
-    def border(offset : Int) : Option[(Dir,Match)] = 
-      border(offset,NEXT).map(i => (NEXT,i)) orElse
-      border(offset,PREV).map(i => (PREV,i))
-
+ 
+    def borderPrev(offset : Int) = if (offset < 0) None else {
+      val close = closeMatches.seek(offset)
+      if (close.isDefined && close.get.absolute == offset && close.get.matching != null) 
+        Some(Match(close.get.matching.kind, close.get.matching.absolute, close.get.absolute))
+      else None
+    }
+    
     def unmatchedOpen(offset : Int) : Option[OpenMatch] = if (offset >= 0 && !unmatched.isEmpty) {
       val pos = openMatches.seek(offset)
       if (pos.isDefined && offset == pos.get.absolute + pos.get.kind.open.length - 1 && pos.get.matching == null)
@@ -461,17 +459,22 @@ trait NewMatchers extends core.Positions {
     def enclosing(offset : Int) = enclosing0(offset,false)(null).map(pos => Match(pos.kind, pos.absolute, pos.matching.absolute))
     def  adjacent(offset : Int) = enclosing0(offset, true)(null).map(pos => Match(pos.kind, pos.absolute, pos.matching.absolute))
 
-    def findMatch(offset : Int) : Option[(Dir,Match)] = {
+    def findMatchPrev(offset : Int) : Option[Match] = {
       val open = openMatches.seek(offset)
-      if (open.isDefined && open.get.absolute == offset && open.get.matching != null) {
-        return Some(PREV, Match(open.get.kind, open.get.absolute, open.get.matching.absolute))
-      }
-      val close = closeMatches.seek(offset)
-      if (close.isDefined && close.get.absolute == offset && close.get.matching != null) {
-        return Some(NEXT, Match(close.get.matching.kind, close.get.matching.absolute, close.get.absolute))
-      }
-      return None
+      if (open.isDefined && open.get.absolute == offset && open.get.matching != null)
+        Some(Match(open.get.kind, open.get.absolute, open.get.matching.absolute))
+      else 
+        None
     }
+    
+    def findMatchNext(offset : Int) : Option[Match] = {
+      val close = closeMatches.seek(offset)
+      if (close.isDefined && close.get.absolute == offset && close.get.matching != null)
+        Some(Match(close.get.matching.kind, close.get.matching.absolute, close.get.absolute))
+      else 
+        None
+    }
+
     def enclosing(offset : Int, until : Int) : Option[Match] = {
       var enclosing = FileImpl.this.enclosing(offset)
       while (enclosing.isDefined && (enclosing.get.until <= until)) {

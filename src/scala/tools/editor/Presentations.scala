@@ -74,14 +74,20 @@ trait Presentations extends lampion.presentation.Matchers {
           } else  super.doNewline(edits, added)
         case _ => super.doNewline(edits, added)
         }
-        override def border(dir : Dir) = (code,dir) match {
-        case (RPAREN|RBRACE|RBRACKET,PREV) => super.border(dir)
-        case (LPAREN|LBRACE|LBRACKET,NEXT) => super.border(dir)
-        case _ => None
+        
+        override def borderNext = code match {
+          case LPAREN|LBRACE|LBRACKET => super.borderNext
+          case _ => None
         }
+        
+        override def borderPrev = code match {
+          case RPAREN|RBRACE|RBRACKET => super.borderPrev
+          case _ => None
+        }
+        
         protected def conditionBrace = (code match {
-        case RPAREN|RBRACE|RBRACKET => (border(PREV).map(tokenFor) match {
-          case Some(tok) => tok.find(PREV)(tokIsSignificant).map(t => (t,t.code)) match {
+        case RPAREN|RBRACE|RBRACKET => (borderPrev.map(tokenFor) match {
+          case Some(tok) => tok.findPrev(tokIsSignificant).map(t => (t,t.code)) match {
             case Some((tok,DO|WHILE|FOR|IF)) => Some(tok)
             case _ => None
           }
@@ -123,22 +129,22 @@ trait Presentations extends lampion.presentation.Matchers {
         */
         def isFollowedBy(f : Token => Boolean) = followedBy.map(f) getOrElse false
         def followedBy = {
-          find(NEXT)(!_.isWhitespace) match {
+          findNext(!_.isWhitespace) match {
           case Some(tok) if tok.isNewline => None
           case Some(tok) if tok.code == SEMI => None
           case ret => ret
           }
         }
-        def statementSeparator : Option[Token] = findWithMatch(PREV)(tok => tok.code match {
+        def statementSeparator : Option[Token] = findWithMatchPrev(tok => tok.code match {
         case SEMI|LBRACE|LPAREN|LBRACKET => true
         case NEWLINE|NEWLINES => 
-          (tok.find(NEXT)(tok => !tok.isWhitespace && !tok.isNewline).map(t => (t,t.code)) match {
+          (tok.findNext(tok => !tok.isWhitespace && !tok.isNewline).map(t => (t,t.code)) match {
             case Some((tok, IF|ELSE|DO|WHILE|FOR)) if TokenImpl.this.code == LBRACE => 
               true 
-            case Some((tok, ELSE)) if tok.find(NEXT)(_.isSignificant).map(_.code) != Some(IF) => false
+            case Some((tok, ELSE)) if tok.findNext(_.isSignificant).map(_.code) != Some(IF) => false
             case Some((_, DOT)) => false
             case _ => true
-          }) && (tok.find(PREV)(t => !t.isWhitespace && t.code != COMMENT) match {
+          }) && (tok.findPrev(t => !t.isWhitespace && t.code != COMMENT) match {
           case None => false
           case Some(tok) if tok.isNewline => false
           case Some(tok) if tok.code == RPAREN && tok.isConditionBrace && !TokenImpl.this.isStatementEnd => true
@@ -154,7 +160,7 @@ trait Presentations extends lampion.presentation.Matchers {
           var tok = (tokenFor(0))
           while (!tok.isSignificant && !tok.next.isEmpty) tok = tok.next.get
           tok
-        case Some(tok) => tok.find(NEXT)(_.isSignificant) getOrElse tok
+        case Some(tok) => tok.findNext(_.isSignificant) getOrElse tok
         }; assert(ret != null); ret}
         def statementIndent = statementBegin.spaceBefore
 
@@ -164,7 +170,7 @@ trait Presentations extends lampion.presentation.Matchers {
         }
         def getSelf : Option[Token] = code match {
         case ARROW =>          
-          findWithMatch(PREV)(_.code match {
+          findWithMatchPrev(_.code match {
           case LBRACE|LPAREN|LBRACKET|EQUALS|SEMI|CASE => true
           case _ => false
           }).map(tok => (tok,tok.code)) match {
@@ -175,14 +181,14 @@ trait Presentations extends lampion.presentation.Matchers {
         }
         
         def inCase : Boolean = code match {
-        case CASE => find(NEXT)(tokIsSignificant).map(_.code) match {
+        case CASE => findNext(tokIsSignificant).map(_.code) match {
           case Some(OBJECT|CLASS) => false
           case _ => true
           }
-        case ARROW | IF => findWithMatch(PREV)(tok => tok.code match {
+        case ARROW | IF => findWithMatchPrev(tok => tok.code match {
           case CASE|EQUALS|ARROW|SEMI => true
           case NEWLINE|NEWLINES => 
-            tok.find(PREV)(tokIsSignificant).map(tokIsStatementEnd) getOrElse false
+            tok.findPrev(tokIsSignificant).map(tokIsStatementEnd) getOrElse false
           case code if isDefinition(code) => true
           case _ => false
           }) match {
@@ -202,21 +208,21 @@ trait Presentations extends lampion.presentation.Matchers {
           code match {
           case ELSE => 
             var depth = 0
-            findWithMatch(PREV)(_.code match {
+            findWithMatchPrev(_.code match {
             case ELSE => depth = depth + 1; false
             case IF if depth == 0 => true
             case IF => depth = depth - 1; false
             case _ => false
             }) match {
             case Some(ifn) => 
-              return ifn.find(PREV)(!_.isWhitespace).map(t => (t,t.code)) match {
+              return ifn.findPrev(!_.isWhitespace).map(t => (t,t.code)) match {
               case Some((elsen,ELSE)) => elsen.spaceBefore
               case _ => ifn.spaceBefore
               }
             case None => 
             }
           case CASE if !isFollowedBy(tokIsDefLike) => // real case statement
-            findWithMatch(PREV)(tok => tok.code match {
+            findWithMatchPrev(tok => tok.code match {
                                 case CASE if !isFollowedBy(tokIsDefLike) => true
             case LBRACE => true
             case _ => false
@@ -226,7 +232,7 @@ trait Presentations extends lampion.presentation.Matchers {
             case None => 
             }
           case RBRACE|RPAREN|RBRACKET => 
-            val matching = border(PREV)
+            val matching = borderPrev
             if (!matching.isEmpty)
               return tokenFor(matching.get).indentOfThisLine
           case _ => 
@@ -253,7 +259,7 @@ trait Presentations extends lampion.presentation.Matchers {
           var last : Token = null.asInstanceOf[Token]
           val next = tok.next
           val newLine = if (!next.isDefined || next.get.isNewline) None else
-            next.get.findWithMatch(NEXT){tok =>
+            next.get.findWithMatchNext{tok =>
             if (tok.isSignificant) last  = tok
             if (tok.isNewline) {
               last == null || last.isStatementEnd
@@ -321,7 +327,7 @@ trait Presentations extends lampion.presentation.Matchers {
         case _ =>          
         // make sure >) aren't separated
         } else if (edit.length == 0 && edit.text.length == 1 && edit.text(0) != '>') {
-          val m = border(edit.offset + 1, PREV)
+          val m = borderPrev(edit.offset + 1)
           if (m.isDefined && m.get.kind == XMLParenMatch) 
             return if (edit.text(0) == '{') 
 	      new Edit(edit.offset, 0, "{}>") {

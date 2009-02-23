@@ -147,20 +147,21 @@ trait Tokenizers extends Parsers {
       def next : Option[Token] = if (extent >= content.length) None
                                  else Some(tokenFor(extent))
       override def toString = "t" + offset + ":" + text.mkString
-      def apply(dir : Dir) = dir match {
-      case NEXT => next
-      case PREV => prev
-      }
       def enclosingParse : parses.Range = if (!editing) parses.NoRange else parses.find(offset)
 
       def deflated(enclosing : parses.Range) = {
         assert(!enclosing.isEmpty)
         enclosing.get.deflate(offset - enclosing.from)
       }
-      def find(dir : Dir)(f : Token => Boolean) : Option[Token] = apply(dir) match {
-      case ret @ Some(token) => 
-        if (f(token)) ret else token.find(dir)(f)
-      case None => None
+      def findPrev(f : Token => Boolean) : Option[Token] = prev match {
+        case ret @ Some(token) => 
+          if (f(token)) ret else token.findPrev(f)
+        case None => None
+      }
+      def findNext(f : Token => Boolean) : Option[Token] = next match {
+        case ret @ Some(token) => 
+          if (f(token)) ret else token.findNext(f)
+        case None => None
       }
     }
     // not used!

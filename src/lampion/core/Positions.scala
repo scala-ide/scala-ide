@@ -4,10 +4,11 @@
  */
 // $Id$
 
-package lampion.core;
+package lampion.core
+
 import scala.collection.jcl._
 
-trait Positions extends Files with Dirs {
+trait Positions extends Files {
   trait PositionWithFile {
     def file : File
   }
@@ -41,7 +42,7 @@ trait Positions extends Files with Dirs {
       private def destroy(pos : Position) : Unit = if (pos.isValid) {
         //val absolute = 
         val absolute = cursor.seek(pos)       
-        val ret = cursor.go(PREV)
+        val ret = cursor.goPrev
         assert(ret)
         assert(pos.offset >= 0)
         pos.next match {
@@ -103,7 +104,7 @@ trait Positions extends Files with Dirs {
               while (removed >= pos.get.offset) 
                 pos.get.prev.asInstanceOf[PositionImpl].destroy
               cursor.seek(pos.get)
-              cursor.go(PREV)
+              cursor.goPrev
               pos.get.offset = pos.get.offset - removed
               assert(pos.get.offset > 0 || (pos.get.offset == 0 && pos.get.prev == head))
               false
@@ -128,7 +129,7 @@ trait Positions extends Files with Dirs {
           assert(pos.isEmpty || pos.get.isValid)
           assert(pos.isEmpty || pos.get.absolute <= offset)
           if (pos.isDefined && pos.get.absolute == offset && pushBack) {
-            cursor.go(PREV)
+            cursor.goPrev
             pos.get.offset = pos.get.offset + added
             assert(pos.get.offset > 0 || (pos.get.offset == 0 && pos.get.prev == head))
           } else {
@@ -147,10 +148,10 @@ trait Positions extends Files with Dirs {
       private object cursor {
         private var offset : Int = 0
         private var at : HasNextPosition = head
-        def go(dir : Dir) : Boolean = {checkAccess && {(at) match {
-        case (`head`) if dir == PREV => false
-        case (at) if dir == NEXT && at.next == null => false
-        case (at:PositionImpl) if dir == PREV => 
+        
+        def goPrev : Boolean = {checkAccess && {(at) match {
+        case (`head`) => false
+        case (at:PositionImpl) => 
           // move backwards
           assert(at.offset >= 0)
           this.offset = this.offset - at.offset
@@ -163,28 +164,30 @@ trait Positions extends Files with Dirs {
           }
           this.at = at.prev
           true
-        case (`head`) if dir == NEXT => 
+        }}}
+
+        def goNext : Boolean = {checkAccess && {(at) match {
+        case (at) if at.next == null => false
+        case (`head`) => 
           this.at = head.next
           this.offset = this.offset + head.next.offset
           true
-        case (at : PositionImpl) if dir == NEXT =>   
+        case (at : PositionImpl) =>   
           this.at = at.next
           this.offset = this.offset + at.next.offset
           assert(at.offset >= 0)
           at.offset = -at.offset
           true
-        case `head` | _ : PositionImpl =>
-          assert(dir != NEXT && dir != PREV) // Would be nice if the match compiler could rule this case out
-          false
         }}}
+
         def seek(pos : Position) : Int = /*PositionBank.this.synchronized*/ {
           assert(pos.isValid)
           while (pos.cursorAfter) {
-            val ret = go(PREV)
+            val ret = goPrev
             assert(ret)
           }
           while (at != pos) {
-            val ret = go(NEXT)
+            val ret = goNext
             assert(ret)
           }
           assert(at == pos)
@@ -192,12 +195,12 @@ trait Positions extends Files with Dirs {
         }
         def position(offset : Int) : Option[Position] = /*PositionBank.this.synchronized*/ {
           assert(offset >= 0)
-          while (this.offset < offset && this.go(NEXT)) {}
-          while (this.offset > offset && this.go(PREV)) {}
+          while (this.offset < offset && this.goNext) {}
+          while (this.offset > offset && this.goPrev) {}
           assert(this.offset <= offset)
           if (this.offset == 0) { // patch up the zero case
             if (this.at == head && this.at.next != null && this.at.next.offset == 0)
-              this.go(NEXT)
+              this.goNext
           }
           this.at match {
           case `head` => None

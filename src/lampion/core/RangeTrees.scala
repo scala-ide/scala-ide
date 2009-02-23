@@ -49,18 +49,32 @@ trait RangeTrees extends Positions {
         }
       }
       
-      def border(absolute : Int, offset : Int, dir : Dir) : Range = {
+      def borderNext(absolute : Int, offset : Int) : Range = {
         var child = this.child
         while (true) {
           if (child == NoRangeTree || offset < child.offset0) return NoRange
-          else if (offset == child.offset0 + (if (dir == PREV) 0 else child.length0)) 
+          else if (offset == child.offset0 + child.length0) 
             return new ActualRange(absolute + child.offset0, child)
           else if (offset < child.offset0 + child.length0) 
-            return child.border(absolute + child.offset0, offset - child.offset0, dir)
+            return child.borderNext(absolute + child.offset0, offset - child.offset0)
           else child = child.next
         }
         abort
       }
+      
+      def borderPrev(absolute : Int, offset : Int) : Range = {
+        var child = this.child
+        while (true) {
+          if (child == NoRangeTree || offset < child.offset0) return NoRange
+          else if (offset == child.offset0) 
+            return new ActualRange(absolute + child.offset0, child)
+          else if (offset < child.offset0 + child.length0) 
+            return child.borderPrev(absolute + child.offset0, offset - child.offset0)
+          else child = child.next
+        }
+        abort
+      }
+      
       def find(absolute : Int, offset : Int, adjacent : Boolean) : Range = {
         var child = this.child
         while (true) {
@@ -211,7 +225,10 @@ trait RangeTrees extends Positions {
       def absolute = 0
       private[RangeTrees] def destroy = destroyed(0)
     }
-    def border(offset : Int, dir : Dir) = checkAccess && root.border(0, offset, dir)
+    
+    def borderNext(offset : Int) = checkAccess && root.borderNext(0, offset)
+    def borderPrev(offset : Int) = checkAccess && root.borderPrev(0, offset)
+    
     def find(offset : Int) = checkAccess && root.find(0, offset, false) // start-inc - end-exc
     def adjacent(offset : Int) = checkAccess && root.find(0, offset, true)
     def enclosing(offset : Int) : Range = checkAccess && find(offset) match { // start-exc - end-exc
