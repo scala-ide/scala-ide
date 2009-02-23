@@ -85,7 +85,7 @@ trait Presentations extends lampion.core.Plugin {
   }
   type Fold
   type Project <: ProjectImpl
-  trait ProjectImpl extends super.ProjectImpl with lampion.compiler.Tokenizers with lampion.core.Positions {
+  trait ProjectImpl extends super.ProjectImpl with lampion.compiler.Tokenizers {
     def self : Project
     def Hyperlink(file : File, offset : Int, length : Int)(action : => Unit)(info : String) : Hyperlink
     def openAndSelect(file : File, offset : Int) : Unit = {
@@ -96,7 +96,7 @@ trait Presentations extends lampion.core.Plugin {
     }
     def openAndSelect(file : File, select : => (Int,Int)) : Unit
     type File <: FileImpl
-    trait FileImpl extends super[ProjectImpl].FileImpl with super[Tokenizers].FileImpl with super[Positions].FileImpl {selfX : File =>
+    trait FileImpl extends super[ProjectImpl].FileImpl with super[Tokenizers].FileImpl {selfX : File =>
       def self : File
       def highlight(offset : Int, length : Int, style : Style)(implicit txt : HighlightContext) : Unit
       def invalidate(start : Int, end : Int)(implicit txt : PresentationContext) : Unit

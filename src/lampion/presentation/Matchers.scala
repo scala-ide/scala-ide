@@ -8,9 +8,9 @@ package lampion.presentation;
 
 trait Matchers extends AutoEdits {
   type Project <: ProjectImpl
-  trait ProjectImpl extends super.ProjectImpl with compiler.NewMatchers {
+  trait ProjectImpl extends super.ProjectImpl {
     type File <: FileImpl
-    trait FileImpl extends super[ProjectImpl].FileImpl with super[NewMatchers].FileImpl {selfX : File => 
+    trait FileImpl extends super[ProjectImpl].FileImpl {selfX : File => 
       def self : File
       override def doParsing = {
         if (isMatched)

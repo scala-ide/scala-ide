@@ -10,12 +10,10 @@ import parser.Tokens._
 
 // TODO: handle braces inside quotes
 
-trait Matchers extends Tokenizers with lampion.compiler.NewMatchers {
+trait Matchers extends Tokenizers {
   private implicit def m2m(m : OpenMatch) : MatchAnswer = MatchOpen(m)
   type File <: FileImpl
-  trait FileA extends super[Tokenizers].FileImpl {selfX : File => }
-  trait FileB extends super[NewMatchers].FileImpl {selfX : File => }
-  trait FileImpl extends FileA with FileB {selfX : File => 
+  trait FileImpl extends super.FileImpl {selfX : File => 
     def self : File
     override def defaultMatch = DefaultSegment
     override def specialPrev(offset : Int) : Option[Token] = {
@@ -90,7 +88,7 @@ trait Matchers extends Tokenizers with lampion.compiler.NewMatchers {
       }
     }
     type Token <: TokenImpl
-    trait TokenImpl extends super[FileA].TokenImpl  {
+    trait TokenImpl extends super.TokenImpl  {
       def self : Token
       /*
       override def nextRegion = {

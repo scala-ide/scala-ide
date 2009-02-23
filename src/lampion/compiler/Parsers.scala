@@ -7,7 +7,7 @@
 package lampion.compiler
 import scala.collection.jcl._
 
-trait Parsers extends NewMatchers with core.RangeTrees  {
+trait Parsers extends NewMatchers {
   abstract class ErrorKind {
     val msg : String
     val isWarning : Boolean
@@ -82,10 +82,8 @@ trait Parsers extends NewMatchers with core.RangeTrees  {
     }
     def Parser(content : RandomAccessSeq[Char], context : ParseContext) : Parser
   }
-  trait FileA extends super[NewMatchers].FileImpl
-  trait FileB extends super[RangeTrees].FileImpl
   type File <: FileImpl
-  trait FileImpl extends FileA with FileB {selfX : File =>
+  trait FileImpl extends super.FileImpl {selfX : File =>
     def self : File
     protected def initialContext : ParseContext
     override def prepareForEditing = {

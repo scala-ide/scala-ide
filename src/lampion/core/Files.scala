@@ -6,8 +6,26 @@
 
 package lampion.core
 
-import scala.collection.{Set}
-trait Files extends Nodes {
+trait Files {
+  type Node <: NodeImpl
+  trait NodeImpl {
+    def self : Node
+    protected def prefix : String = "N"
+    def id = {
+      prefix + Integer.toString(hashCode, 10 + ('z' - 'a'))
+    }
+    override def toString = id
+  }
+
+  def assert(b : Boolean) : Unit = {
+    if (!b)
+      throw new Error
+  }
+  
+  def abort : Nothing = {
+    throw new Error
+  }
+  
   def logError(t : Throwable) : Unit
   def logError(msg : String, t : Throwable) : Unit
   implicit def seqToString(seq : Seq[Char]) : String = seq match {
