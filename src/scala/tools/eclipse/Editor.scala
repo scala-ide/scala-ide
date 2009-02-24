@@ -46,7 +46,7 @@ class Editor extends ScalaEditor with IAutoEditStrategy {
   setSourceViewerConfiguration(sourceViewerConfiguration)
   setPartName("Lampion Editor");
 
-  var file : Option[plugin.File] = None
+  var file : Option[plugin.Project#File] = None
   private var isDocumentCommand = false
   private var modifying = false
   
@@ -58,9 +58,7 @@ class Editor extends ScalaEditor with IAutoEditStrategy {
     modifying = true
     isDocumentCommand = true
     val edit = new plugin.Edit(command.offset, command.length, command.text)
-    val external = this.file.get.external
-    val file = external.file
-    val edit0 = file.beforeEdit(edit)
+    val edit0 = file.get.beforeEdit(edit)
     if (edit eq edit0) {
 
       return // no edit
@@ -74,7 +72,7 @@ class Editor extends ScalaEditor with IAutoEditStrategy {
       isDocumentCommand = true
       edit0.afterEdit
       // look at original edit
-      val edits = file.afterEdit(edit.offset, edit.text.length, edit.length)
+      val edits = file.get.afterEdit(edit.offset, edit.text.length, edit.length)
       var offset0 : Int = edit.offset
       assert(isDocumentCommand)
       if (edit0.offset < offset0) offset0 = offset0 + edit0.text.length - edit0.length
@@ -101,7 +99,7 @@ class Editor extends ScalaEditor with IAutoEditStrategy {
       }
       catchUp
     } else {
-      val edits = file.afterEdit(edit.offset, edit.text.length, edit.length)
+      val edits = file.get.afterEdit(edit.offset, edit.text.length, edit.length)
       // XXX: type annotation important or compiler breaks.
       var offset0 : Int = edit.offset
       edits.foreach{e => 
@@ -154,9 +152,9 @@ class Editor extends ScalaEditor with IAutoEditStrategy {
       override def run = {
         getSelectionProvider.getSelection match {
         case region : ITextSelection =>
-          val external = Editor.this.file.get.external
-          val file = external.file
-          val result = external.project.hyperlink(file, region.getOffset)
+          val project = file.get.project
+          val f = file.get.asInstanceOf[project.File]
+          val result = project.hyperlink(f, region.getOffset)
           result.foreach(_.open)
         case _ =>
         }
@@ -189,25 +187,18 @@ class Editor extends ScalaEditor with IAutoEditStrategy {
     def documentAboutToBeChanged(e : DocumentEvent) = {
       assert(e.getDocument == getSourceViewer0.getDocument)
       if (e.getLength != 0 || (e.getText != null && e.getText.length > 0)) {
-        val external = Editor.this.file.get.external
-        val file = external.file
-        file.editing = true
+        file.get.editing = true
         catchUp
       }
     }
     def documentChanged(e : DocumentEvent) = {
       assert(e.getDocument == getSourceViewer0.getDocument)
       if (e.getLength != 0 || (e.getText != null && e.getText.length > 0)) {
-        val external = Editor.this.file.get.external
-        val file = external.file
-        plugin.assert(file.editing)
-        plugin.assert(e.getOffset <= file.content.length)
         val l0 = e.getDocument.getLength
-        val l1 = file.content.length
+        val l1 = file.get.content.length
         val ee = Editor.this
-        plugin.assert(e.getDocument.getLength == file.content.length)
         val txt = if (e.getText == null) "" else e.getText
-        file.repair(e.getOffset, txt.length, e.getLength)
+        file.get.repair(e.getOffset, txt.length, e.getLength)
       }      
       if (!isDocumentCommand) // won't trigger the modified listener.
         catchUp
@@ -231,16 +222,13 @@ class Editor extends ScalaEditor with IAutoEditStrategy {
   }
   
   private def doAutoEdit(offset : Int, added : Int, removed : Int) : Unit = {
-    val external = Editor.this.file.get.external
-    val file = external.file
-    val project = external.project
-    assert(file.editing)    
-    val edits = file.afterEdit(offset, added, removed)
+    val project = file.get.project
+    val edits = file.get.afterEdit(offset, added, removed)
     val isEmpty0 =  edits.isEmpty
     val isEmpty1 = !edits.elements.hasNext
     
     if (edits.isEmpty) return
-    file.resetEdit
+    file.get.resetEdit
     val sv = getSourceViewer0
     var cursorMoved = false
     var newCursor = -1
@@ -281,11 +269,7 @@ class Editor extends ScalaEditor with IAutoEditStrategy {
         val neutral = Editor.this.plugin.fileFor(Editor.this.getEditorInput)
         Editor.this.file = (neutral) 
         if (Editor.this.file.isDefined) {
-          val external = Editor.this.file.get.external
-          val file = external.file
-        
-          //Editor.this.file.get.clear
-          file.underlying match {
+          file.get.underlying match {
             case Editor.this.plugin.NormalFile(file0) => {
               val workspace = file0.getWorkspace 
               if (!workspace.isTreeLocked)
@@ -322,14 +306,12 @@ class Editor extends ScalaEditor with IAutoEditStrategy {
     def `match`(document : IDocument, offset : Int) : IRegion = {
       if (offset < 1 || document == null) return null
       assert(getSourceViewer.getDocument eq document)
-      val external = Editor.this.file.get.external
-      val file = external.file
-      val project = external.project
-      if (offset - 1 >= file.content.length) return null
+      val project = file.get.project
+      if (offset - 1 >= file.get.content.length) return null
 
-      file.findMatchPrev(offset) match {
+      file.get.findMatchPrev(offset) match {
         case Some(m) => anchor = LEFT ; return new Region(m.from, m.until - m.from)
-        case None => file.findMatchNext(offset) match {
+        case None => file.get.findMatchNext(offset) match {
           case Some(m) => anchor = RIGHT ; return new Region(m.from, m.until - m.from)
           case None => return null
         }
@@ -357,9 +339,7 @@ class Editor extends ScalaEditor with IAutoEditStrategy {
     extends ScalaCompletionProcessor(Editor.this, new ContentAssistant, IDocument.DEFAULT_CONTENT_TYPE) {
     override def collectProposals0(tv : ITextViewer, offset : Int, monitor : IProgressMonitor,  context : ContentAssistInvocationContext) : ju.List[_] = {
       catchUp
-      val external = Editor.this.file.get.external
-      val file = external.file
-      val completions = file.doComplete(offset)
+      val completions = file.get.doComplete(offset)
       ju.Arrays.asList(completions.toArray : _*)
     }
   }
@@ -390,10 +370,8 @@ class Editor extends ScalaEditor with IAutoEditStrategy {
             ck(italicsId) ||
               ck(strikeoutId)) {
       if (file != null && file.isDefined) {
-        val external = Editor.this.file.get.external
-        val file = external.file
         val viewer = getSourceViewer0
-        viewer.invalidateTextPresentation(0, file.content.length)
+        viewer.invalidateTextPresentation(0, file.get.content.length)
       }
     }
   }

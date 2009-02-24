@@ -36,21 +36,7 @@ trait TypersPresentations extends scala.tools.editor.Presentations {
     def hover : Option[RandomAccessSeq[Char]]
     def symbol : Option[Global#Symbol]
   }
-  trait FileIdeRef extends IdeRef {
-    def file : File  
-    def refOffset : Option[Int]
-    override def hyperlink = refOffset match {
-      case None =>
-      case Some(offset) => 
-        val e = this.file.external
-        e.project.openAndSelect(e.file, offset)
-    }
-    override def hover = {
-      val e = this.file.external
-      val sym = e.project.adapt(symbol)
-      sym.map(e.project.documentation).getOrElse(None)
-    }
-  }
+
   case object NoRef extends IdeRef {
     def hyperlink : Unit = {}
     def hover : Option[RandomAccessSeq[Char]] = None
@@ -60,9 +46,24 @@ trait TypersPresentations extends scala.tools.editor.Presentations {
   type Project <: ProjectImpl 
   trait ProjectImpl extends super.ProjectImpl with Typers {
     override val compiler : Compiler 
+
+    trait FileIdeRef extends IdeRef {
+      def file : File  
+      def refOffset : Option[Int]
+      override def hyperlink = refOffset match {
+        case None =>
+        case Some(offset) => 
+          openAndSelect(file, offset)
+      }
+      override def hover = {
+        val sym = adapt(symbol)
+        sym.map(documentation).getOrElse(None)
+      }
+    }
     
     import compiler.definitions._
     import compiler.nme
+
     def adapt(sym : Option[Global#Symbol]) : Option[compiler.Symbol] = sym match {
     case None => None
     case Some(sym : compiler.Symbol) => Some(sym)
@@ -148,7 +149,7 @@ trait TypersPresentations extends scala.tools.editor.Presentations {
       flushTyper // just in case we dirtied something.
     }    
     protected def javaRef(symbol : Symbol) : IdeRef
-    protected def fileFor(sym : Symbol) : Option[TypersPresentations.this.File]
+    protected def fileFor(sym : Symbol) : Option[Project#File]
     private def decode(symbol : Symbol) : IdeRef = {
       symbol.info // force completion
       val source = symbol.sourceFile
@@ -166,9 +167,13 @@ trait TypersPresentations extends scala.tools.editor.Presentations {
             else return decode(symbol)
           case OffsetPosition(source,offset) => fileFor(symbol) match {
             case None => NoRef
-            case Some(file) => 
-              val e = file.external
-              new e.file.IdeRef(offset,e.project.adapt(Some(symbol)).getOrElse(e.project.compiler.NoSymbol))
+            case Some(f) => 
+              val symbol0 = symbol
+              new FileIdeRef {
+                override def file = f.asInstanceOf[ProjectImpl.this.File]
+                override def refOffset = Some(offset)
+                override def symbol = Some(adapt(Some(symbol0)).getOrElse(compiler.NoSymbol))
+              }
           }
         }
     }
@@ -325,11 +330,6 @@ trait TypersPresentations extends scala.tools.editor.Presentations {
             val ret = content.patch(offset, ";", 1)
             ret
           }
-      }
-      case class IdeRef(val offset : Int, symbol0 : compiler.Symbol) extends TypersPresentations.this.FileIdeRef {
-        override def file = FileImpl.this.self
-        override def refOffset = Some(offset)
-        override def symbol = Some(symbol0)
       }
       protected override def noParse(range : Match, offset : Int, added : Int, removed : Int) = range.kind match {
       case kind if kind==StringMatch|kind==MultiMatch|(kind.isInstanceOf[Comment]) => 

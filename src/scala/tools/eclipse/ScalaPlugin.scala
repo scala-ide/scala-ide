@@ -101,9 +101,11 @@ class ScalaPlugin extends {
   case project : IProject => Some(projects.apply(project))
   case _ => None;
   }
+  
   trait FileSpec {
     def path : Option[IPath]
   }
+  
   case class NormalFile(underlying : IFile) extends FileSpec {
     override def toString = underlying.getName  
     override def path = Some(underlying.getLocation)
@@ -154,7 +156,7 @@ class ScalaPlugin extends {
   }
   //protected def log(status : Status) = getLog.log(status)
   
-  def getFile(path : IPath) : Option[File] = workspace.getFile(path) match {
+  def getFile(path : IPath) : Option[Project#File] = workspace.getFile(path) match {
   case file if file.exists =>
     projectSafe(file.getProject) match {
     case Some(project) => project.fileSafe(file)
@@ -162,7 +164,7 @@ class ScalaPlugin extends {
     }
   case _ => None
   }
-  def fileFor(file0 : IFile) : Option[File] = projectSafe(file0.getProject) match {
+  def fileFor(file0 : IFile) : Option[Project#File] = projectSafe(file0.getProject) match {
   case None => None
   case Some(project) =>
     val file = project.fileSafe(file0)
@@ -203,10 +205,10 @@ class ScalaPlugin extends {
   trait FixedInput extends IEditorInput {
     val project : Project    
     def initialize(doc : IDocument) : Unit
-    def neutralFile : File
+    def neutralFile : Project#File
     def createAnnotationModel : IAnnotationModel = new ProjectionAnnotationModel
   }
-  def fileFor(input : IEditorInput) : Option[File] = input match {
+  def fileFor(input : IEditorInput) : Option[Project#File] = input match {
   case input : FixedInput => Some(input.neutralFile)
   case input : IFileEditorInput => fileFor(input.getFile)
   case _ => None
@@ -1421,7 +1423,7 @@ class ScalaPlugin extends {
         file
     }
     
-    override def fileFor(sym : Symbol) : Option[ScalaPlugin.this.File] = sym.sourceFile match {
+    override def fileFor(sym : Symbol) : Option[Project#File] = sym.sourceFile match {
       case null => None
       case file : PlainFile => findFileFor(file)
       case source => classFileFor(sym.toplevelClass) match {
@@ -1430,7 +1432,7 @@ class ScalaPlugin extends {
       }
     }
     
-    private def findFileFor(file : PlainFile) : Option[ScalaPlugin.this.File] = {
+    private def findFileFor(file : PlainFile) : Option[Project#File] = {
       import org.eclipse.core.runtime._
       val path = Path.fromOSString(file.path)
       val files = workspace.findFilesForLocation(path)
