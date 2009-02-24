@@ -408,7 +408,7 @@ trait Parsers extends Matchers with ParseNodes {
     case _ => false
     }
   }
-  type ParseNode <: Node with ParseNodeImpl 
+  type ParseNode <: ParseNodeImpl 
   trait ParseNodeImpl extends super.ParseNodeImpl {selfX : ParseNode => 
     def self : ParseNode
     protected var parseTrees : List[Tree] = Nil

@@ -620,8 +620,7 @@ class ScalaPlugin extends {
       if (exc != null) throw exc
     }
     
-    trait Node extends NodeImpl   
-    trait ParseNode extends Node with ParseNodeImpl {
+    trait ParseNode extends ParseNodeImpl {
       def self : ParseNode
     } 
     trait IdentifierPosition extends IdentifierPositionImpl

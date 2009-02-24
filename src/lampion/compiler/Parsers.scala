@@ -33,7 +33,7 @@ trait Parsers extends NewMatchers {
     def owner : ParseNode
     def isValid : Boolean
   }
-  type ParseNode <: Node with ParseNodeImpl
+  type ParseNode <: ParseNodeImpl
   trait ParseNodeImpl extends ErrorPosition {selfX : ParseNode =>
     def self : ParseNode
     def file : File
@@ -121,8 +121,13 @@ trait Parsers extends NewMatchers {
       }
     }
     type ParseNode <: Parsers.this.ParseNode with ParseNodeImpl
-    trait ParseNodeImpl extends NodeImpl with parses.RangeTreeImpl with Parsers.this.ParseNodeImpl { selfX : ParseNode =>
+    trait ParseNodeImpl extends parses.RangeTreeImpl with Parsers.this.ParseNodeImpl { selfX : ParseNode =>
       def self : ParseNode
+
+      protected def prefix : String = "N"
+      def id = prefix + Integer.toString(hashCode, 10 + ('z' - 'a'))
+      override def toString = id
+      
       override def file = FileImpl.this.self
       override def isValid = super[ParseNodeImpl].isValid && super[RangeTreeImpl].isValid
       final def owner = self

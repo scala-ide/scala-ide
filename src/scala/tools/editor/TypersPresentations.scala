@@ -179,7 +179,7 @@ trait TypersPresentations extends scala.tools.editor.Presentations {
     }
     private def isMagicPhase = currentTyped.map[Boolean](_.isInstanceOf[MagicProcessor]).getOrElse(false)
     
-    type ParseNode <: Node with ParseNodeImpl
+    type ParseNode <: ParseNodeImpl
     trait ParseNodeImpl extends super.ParseNodeImpl {selfX:ParseNode=>
       def self : ParseNode
       // some positions are id positions.

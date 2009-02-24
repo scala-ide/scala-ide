@@ -99,7 +99,7 @@ trait Typers extends Parsers with lampion.compiler.Tokenizers {
   def currentTyped = typer.analyzed.firstOption
   
   trait TypedElement extends TypedElementImpl with compiler.ScopeClient
-  type ParseNode <: Node with ParseNodeImpl
+  type ParseNode <: ParseNodeImpl
   trait ParseNodeImpl extends super[Parsers].ParseNodeImpl with analyzer0.MemoizedTree with TypedElement {selfX : ParseNode => 
     def self : ParseNode
     

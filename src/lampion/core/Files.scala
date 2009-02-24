@@ -7,17 +7,6 @@
 package lampion.core
 
 trait Files {
-  
-  type Node <: NodeImpl
-  trait NodeImpl {
-    def self : Node
-    protected def prefix : String = "N"
-    def id = {
-      prefix + Integer.toString(hashCode, 10 + ('z' - 'a'))
-    }
-    override def toString = id
-  }
-  
   type File <: FileImpl
   trait FileImpl {
     def self : File

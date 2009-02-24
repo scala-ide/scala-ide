@@ -18,7 +18,7 @@ trait Tokenizers extends Parsers {
     def absolute : Int
     def isValid : Boolean
   }
-  type ParseNode <: Node with ParseNodeImpl
+  type ParseNode <: ParseNodeImpl
   trait ParseNodeImpl extends super.ParseNodeImpl {selfX : ParseNode =>
     def self : ParseNode
     def identifierPosition(relative : Int) : IdentifierPosition
