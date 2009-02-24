@@ -4,23 +4,23 @@
  */
 // $Id$
 
-package scala.tools.eclipse;
-import scala.tools.nsc._
-import scala.collection.jcl.{LinkedHashMap,LinkedHashSet}
-import scala.tools.nsc.io.{AbstractFile,PlainFile}
+package scala.tools.eclipse
 
+import scala.collection.jcl.{ LinkedHashMap, LinkedHashSet }
+
+import scala.tools.nsc._
+import scala.tools.nsc.io.{ AbstractFile, PlainFile }
 
 trait CompilerProject {
   def charSet(file : PlainFile) : String
   def initialize(compiler : Compiler) : Unit
-  def logError(msg : String, e : Throwable) : Unit
   val scalaDepends = new LinkedHashMap[String,ScalaDependMap] {
     override def default(key : String) = {
       val ret = new ScalaDependMap
       this(key) = ret; ret
     }
   } 
-  //def workspacePath : String
+
   def projectFor(path : String) : Option[CompilerProject]
   def fileFor(path : String) : PlainFile // relative to workspace
   def signature(file : PlainFile) : Long

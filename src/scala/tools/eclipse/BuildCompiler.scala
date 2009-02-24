@@ -4,23 +4,25 @@
  */
 // $Id$
 
-package scala.tools.eclipse;
-import scala.tools.nsc._
-import scala.tools.nsc.reporters._
-import scala.tools.nsc.io._
-import scala.collection.jcl._
-import scala.tools.nsc.util._
-//import org.eclipse.core.runtime._
-//import org.eclipse.core.resources._
-//import org.eclipse.jdt.internal.core._
+package scala.tools.eclipse
+
 import java.nio.charset._ 
-   
+
+import scala.collection.jcl._
+
+import scala.tools.nsc._
+import scala.tools.nsc.io._
+import scala.tools.nsc.util._
+import scala.tools.nsc.reporters._
+
 trait BuildProgressMonitor {
   def isCanceled : Boolean
   def worked(howMuch : Int) : Unit
 }
 
 class BuildCompiler(val project : CompilerProject) extends Global(new Settings) with Compiler {
+  val plugin = ScalaPlugin.plugin
+  
   override lazy val loaders : symtab.SymbolLoaders { val global : BuildCompiler.this.type } = new symtab.SymbolLoaders {
     lazy val global : BuildCompiler.this.type = BuildCompiler.this
     override def computeDepends(loader : PackageLoader) = BuildCompiler.this.computeDepends(loader.asInstanceOf[loaders.PackageLoader])
@@ -32,10 +34,10 @@ class BuildCompiler(val project : CompilerProject) extends Global(new Settings) 
           Charset.forName(encoding)
         } catch {
           case ex: IllegalCharsetNameException =>
-            project.logError("illegal charset name '" + encoding + "'", ex)
+            plugin.logError("illegal charset name '" + encoding + "'", ex)
             Charset.forName(scala.compat.Platform.defaultCharsetName)
           case ex: UnsupportedCharsetException =>
-            project.logError("unsupported charset '" + encoding + "'", ex)
+            plugin.logError("unsupported charset '" + encoding + "'", ex)
             Charset.forName(scala.compat.Platform.defaultCharsetName)
         }
       val ret = new SourceReader(charset.newDecoder(), BuildCompiler.this.reporter)
@@ -113,7 +115,7 @@ class BuildCompiler(val project : CompilerProject) extends Global(new Settings) 
       run.compile(filenames)
     } catch  {
       case e =>
-        project.logError("Build compiler (scalac) crashed", e)
+        plugin.logError("Build compiler (scalac) crashed", e)
         return Nil
     } finally {
       ()

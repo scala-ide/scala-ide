@@ -53,7 +53,7 @@ trait AutoEdits extends Presentations {
       else if (this == edit) 0
       else if (isDelete && edit.isInsert) -1
       else if (isInsert && edit.isDelete) +1
-      else abort
+      else error("Unexpected failure")
   
     private def isDelete = length >  0 && text.length == 0
     private def isInsert = length == 0 && text.length >  0

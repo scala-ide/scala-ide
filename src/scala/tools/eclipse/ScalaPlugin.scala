@@ -141,7 +141,7 @@ class ScalaPlugin extends {
   }
   
   /** error logging */
-  override final def logError(msg : String, t : Throwable) : Unit = {
+  def logError(msg : String, t : Throwable) : Unit = {
     var tt = t
     if (tt == null) tt = try {
       throw new Error
@@ -151,6 +151,9 @@ class ScalaPlugin extends {
     val status = new Status(IStatus.ERROR, pluginId, IStatus.ERROR, msg, tt)
     log(status)
   }
+  
+  final def logError(t : Throwable) : Unit = logError(null, t)
+  
   final def check[T](f : => T) = try { Some(f) } catch {
     case e : Throwable => logError(e); None
   }
@@ -1038,7 +1041,7 @@ class ScalaPlugin extends {
           super.doPresentation
         } catch {
           case ex =>
-            logError(ex)
+            ScalaPlugin.this.logError(ex)
         }
         finally {
           viewer.busy = oldBusy
@@ -1315,7 +1318,7 @@ class ScalaPlugin extends {
                       try {
                         cntnr.delete(true, monitor) // try again
                       } catch {
-                        case t => logError(t)
+                        case t => ScalaPlugin.this.logError(t)
                       }
                 }
               }
@@ -1325,7 +1328,7 @@ class ScalaPlugin extends {
               try {
                 file.delete(true, monitor)
               } catch {
-                case t => logError(t)
+                case t => ScalaPlugin.this.logError(t)
               }
             case _ => 
           }
@@ -1467,7 +1470,7 @@ class ScalaPlugin extends {
         else Some(str)
       } catch {
       case ex => 
-        logError(ex)
+        ScalaPlugin.this.logError(ex)
         Some("Method added to Java class by Scala compiler.")
       }
       import org.eclipse.jdt.ui._

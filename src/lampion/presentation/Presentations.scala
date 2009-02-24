@@ -5,9 +5,14 @@
 // $Id$
 
 package lampion.presentation
+
 import scala.collection.jcl._
 
+import scala.tools.eclipse.ScalaPlugin
+
 trait Presentations extends lampion.core.Plugin {
+  val plugin = ScalaPlugin.plugin
+  
   type Color
   val  noColor : Color
   type Hyperlink
@@ -112,7 +117,7 @@ trait Presentations extends lampion.core.Plugin {
         try {
           tok.completions(offset - tok.offset)
         } catch {
-          case ex => logError(ex); Nil
+          case ex => plugin.logError(ex); Nil
         }
       } 
       def refreshHighlightFor(offset : Int, length : Int)(implicit txt : HighlightContext) = if (offset < content.length) {
@@ -131,7 +136,7 @@ trait Presentations extends lampion.core.Plugin {
         } else {
         }
       } catch {
-      case e => Presentations.this.logError(e)
+      case e => plugin.logError(e)
       }
       override def doUnload = {
         super.doUnload
@@ -313,7 +318,7 @@ trait Presentations extends lampion.core.Plugin {
         try { 
           var presentFiles0 = List[File]()
           def check(b : Boolean, to : Int) = if (!b) {
-            logError("wrong state: " + state, null)
+            plugin.logError("wrong state: " + state, null)
             state = to
           }
           val doit = job.synchronized{
@@ -353,7 +358,7 @@ trait Presentations extends lampion.core.Plugin {
             }
             job.synchronized{
               if (state != LOCKED) {
-                logError("ERROR in background thread",null)
+                plugin.logError("ERROR in background thread",null)
               }
               state = previous
               job.notifyAll
@@ -361,7 +366,7 @@ trait Presentations extends lampion.core.Plugin {
           }
         } catch {
           case ex =>
-            logError(ex) // go on.
+            plugin.logError(ex) // go on.
             job.synchronized{state = READY; job.notifyAll}
         } 
       }

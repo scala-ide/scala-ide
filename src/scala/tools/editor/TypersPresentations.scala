@@ -197,7 +197,7 @@ trait TypersPresentations extends scala.tools.editor.Presentations {
               Some(list.head)
             } else None
           } catch {
-            case ex => logError(ex)
+            case ex => plugin.logError(ex)
             None
           }
         case _ => None
@@ -402,7 +402,7 @@ trait TypersPresentations extends scala.tools.editor.Presentations {
             val result = decode(sym).hover.map(strip)
             if (!result.isEmpty) buf ++= (result.get)
           } catch {
-            case t => logError(t)
+            case t => plugin.logError(t)
           }
           Some(buf)
         }})
@@ -709,7 +709,7 @@ trait TypersPresentations extends scala.tools.editor.Presentations {
         }
         None
       } catch {
-        case ex => logError(ex); None
+        case ex => plugin.logError(ex); None
       }
       while (idx >= 0 && (content(idx) match {
       case '*' if sw(closeComment) => 
