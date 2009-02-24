@@ -40,7 +40,6 @@ import org.osgi.framework.BundleContext
 import scala.tools.nsc.Settings
 import scala.tools.nsc.io.{ AbstractFile, PlainFile, ZipArchive }
    
-import lampion.core.Plugin
 import lampion.presentation.Matchers
 import scala.tools.editor.TypersPresentations
 
@@ -57,7 +56,7 @@ object ScalaPlugin {
 
 class ScalaPlugin extends {
   override val OverrideIndicator = "scala.overrideIndicator"  
-} with AbstractUIPlugin with IResourceChangeListener with Plugin with Matchers with TypersPresentations {
+} with AbstractUIPlugin with IResourceChangeListener with Matchers with TypersPresentations {
   assert(ScalaPlugin.plugin == null)
   ScalaPlugin.plugin = this
   
@@ -420,7 +419,7 @@ class ScalaPlugin extends {
   
   trait ProjectB extends super[TypersPresentations].ProjectImpl
   trait ProjectC extends super[Matchers].ProjectImpl
-  class Project(val underlying : IProject) extends super[Plugin].ProjectImpl with ProjectC with ProjectB with CompilerProject {
+  class Project(val underlying : IProject) extends ProjectC with ProjectB with CompilerProject {
 
     val ERROR_TYPE = "lampion.error"
     val MATCH_ERROR_TYPE = "lampion.error.match"

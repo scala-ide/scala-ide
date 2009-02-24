@@ -67,15 +67,6 @@
       </editor>
    </extension>
 	<extension point="org.eclipse.ui.editorActions">
-      <editorContribution
-            targetID="scala.tools.eclipse.Editor"
-            id="org.eclipse.ui.texteditor.ruler.actions">
-         <action label="Not Used"
-               class="scala.tools.eclipse.SelectRulerAction"
-               actionID="RulerClick"
-               id="scala.tools.eclipse.SelectRulerAction">
-         </action>
-      </editorContribution>
 	  <editorContribution
 		targetID="scala.tools.eclipse.Editor"
 		id="ch.epfl.lamp.sdt.ui.scalaeditor.rulerActions">
