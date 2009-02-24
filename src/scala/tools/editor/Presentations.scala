@@ -64,7 +64,7 @@ trait Presentations extends lampion.presentation.Matchers {
           while (tok.isWhitespace && tok.next.isDefined) tok = tok.next.get
           if (tok.code == RBRACE) {
             val buf = new StringBuilder
-            val indent = statementIndent + indentBy
+            val indent = statementIndent + indentByString
             buf.append(indent + "\n")
             //if (added - 1 - indentBy.length > 0)
             //  1.until(added - indentBy.length).foreach(x => buf append ' ')

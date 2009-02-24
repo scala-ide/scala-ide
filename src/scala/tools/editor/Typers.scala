@@ -11,6 +11,7 @@ import scala.collection.jcl._
 
 import nsc.{util,io} 
 import scala.tools.nsc
+import scala.tools.eclipse.ScalaPlugin
 
 trait Typers extends Parsers with lampion.compiler.Tokenizers {
   final type TypeInfo = List[compiler.Tree]
@@ -38,7 +39,7 @@ trait Typers extends Parsers with lampion.compiler.Tokenizers {
       (currentTyped).getOrElse(super.currentClient)
     override def check(condition : Boolean, msg : =>String) = {
       if (!condition) { 
-        Typers.this.logError(msg, null)
+        plugin.logError(msg, null)
       }
       condition
     }
@@ -107,7 +108,7 @@ trait Typers extends Parsers with lampion.compiler.Tokenizers {
      def doMagic0(processor : TypedElement, info : => TypeInfo)(f : => Unit) = {
       assert(typer.synchronized{typer.dirty.isEmpty})
       if (typer.typed != null) {
-        logError("left over " + typer.typed, null)
+        plugin.logError("left over " + typer.typed, null)
       }
       typer.typed = new LinkedHashMap[ParseNode,TypeInfo] {
         override def default(node : ParseNode) = {
@@ -260,11 +261,11 @@ trait Typers extends Parsers with lampion.compiler.Tokenizers {
     while (!typer.synchronized{typer.dirty.isEmpty}) {
       if (processed != null && typer.dirty.exists{node =>
         if (!processed.add(node)) { 
-          logError("probable infinite typer cycle on " + node, null)
+          plugin.logError("probable infinite typer cycle on " + node, null)
           true
         } else false
       }) {
-        logError("breaking probably infinite loop with " + typer.dirty, null)
+        plugin.logError("breaking probably infinite loop with " + typer.dirty, null)
         typer.dirty.clear
       }
       //probably should already be empty.
@@ -274,9 +275,9 @@ trait Typers extends Parsers with lampion.compiler.Tokenizers {
       if (!typer.analyzed.isEmpty) typer.analyzed = Nil
       if (typer.typed != null) {
         try {
-          logError("TYPED: " + typer.typed, null)
+          plugin.logError("TYPED: " + typer.typed, null)
         } catch {
-          case e => logError(e)
+          case e => plugin.logError(e)
         }
         typer.typed = null
       }
@@ -315,7 +316,7 @@ trait Typers extends Parsers with lampion.compiler.Tokenizers {
     import compiler._
     new compiler.IdeRun
     compiler.phase = new analyzer0.typerFactory.StdPhase(nsc.NoPhase) {
-      def apply(unit : CompilationUnit) = Typers.this.abort
+      def apply(unit : CompilationUnit) = error("phase.apply")
     }
     typed.toList.foreach{
     case (node,info) => node.doNamer

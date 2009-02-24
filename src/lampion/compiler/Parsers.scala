@@ -5,6 +5,7 @@
 // $Id$
 
 package lampion.compiler
+
 import scala.collection.jcl._
 
 trait Parsers extends NewMatchers {
@@ -261,7 +262,7 @@ trait Parsers extends NewMatchers {
         if (next.isValid) {
           next.doParse
           if (!next.hasLength) {
-            logError("no length", null)
+            plugin.logError("no length", null)
           }
         }
         else parses.dirty remove next

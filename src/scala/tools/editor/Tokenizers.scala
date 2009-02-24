@@ -181,18 +181,20 @@ trait Tokenizers extends lampion.compiler.Tokenizers {
         }
         unit0 = new compiler.CompilationUnit(file)
         unit0.fresh = new util.FreshNameCreator {
-          @deprecated def newName = abort
-          @deprecated def newName(prefix : String) = abort
+
+          @deprecated def newName(prefix : String) = newName(util.NoPosition, prefix)
+          @deprecated def newName = newName(util.NoPosition) 
+          
           def newName(pos : util.Position) : String = {
-            if (pos == util.NoPosition) newName()
-            else pos match {
-            case pos : IdentifierPositionImpl => ("id" + Integer.toString(pos.hashCode, 10 + ('z' - 'a')))
+            pos match {
+              case util.NoPosition => error("Unexpected failure")
+              case pos : IdentifierPositionImpl => ("id" + Integer.toString(pos.hashCode, 10 + ('z' - 'a')))
             }
           }
           def newName(pos : util.Position, prefix : String) : String = {
-            if (pos == util.NoPosition) newName(prefix)
-            else pos match {
-            case pos : IdentifierPositionImpl => (prefix + "" + Integer.toString(pos.hashCode, 10 + ('z' - 'a')))
+            pos match {
+              case util.NoPosition => error("Unexpected failure")
+              case pos : IdentifierPositionImpl => (prefix + "" + Integer.toString(pos.hashCode, 10 + ('z' - 'a')))
             }
           }
         }
@@ -202,8 +204,8 @@ trait Tokenizers extends lampion.compiler.Tokenizers {
     private def identifierFor(pos : util.Position) : Option[String] = pos match {
     case util.NoPosition => None
     case pos : ParseNodeImpl => None
-    case scala.tools.nsc.util.OffsetPosition(_,offset) => Some(tokenFor(offset).text)
-    case pos : IdentifierPositionImpl => if (pos.isValid) Some(tokenFor(pos.offset.get).text) else None
+    case scala.tools.nsc.util.OffsetPosition(_,offset) => Some(tokenFor(offset).text.toString)
+    case pos : IdentifierPositionImpl => if (pos.isValid) Some(tokenFor(pos.offset.get).text.toString) else None
     }
     override def loaded = {
       super.loaded

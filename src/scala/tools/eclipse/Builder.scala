@@ -107,16 +107,16 @@ class Builder extends IncrementalProjectBuilder {
     if (monitor != null) monitor.beginTask("build all", 100)
     while (!toBuild.isEmpty) {
       toBuild.foreach{f => f.clearBuildErrors(monitor); f.willBuild}
-      project.assert(!toBuild.isEmpty)
+      assert(!toBuild.isEmpty)
       
       toBuild.foreach(f => Console.println("build " + f))
       val changed = project.build(toBuild)(monitor)
       if (!changed.isEmpty) {
         changed.foreach(f => Console.println("changed " + f))
       }
-      project.assert(!toBuild.isEmpty)
+      assert(!toBuild.isEmpty)
       built ++= toBuild
-      project.assert(!built.isEmpty)
+      assert(!built.isEmpty)
       toBuild.clear
       
       def f(changed : project.File) : Unit = changed.underlying.path match {

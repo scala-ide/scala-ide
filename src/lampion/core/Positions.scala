@@ -12,7 +12,7 @@ trait Positions extends Files {
   type File <: FileImpl
   trait FileImpl extends super.FileImpl {
     def self : File
-    trait PositionBank extends Repairable {
+    trait PositionBank {
       protected def pushBack = true
       def destroy : Unit = { while (head.next != null) destroy(head.next) }
       def clear : Unit =  {
@@ -83,7 +83,7 @@ trait Positions extends Files {
         cursor.seek(ret)
         ret
       }}
-      override def repair(offset : Int, added : Int, removed : Int) : Unit = /*synchronized*/ {
+      def repair(offset : Int, added : Int, removed : Int) : Unit = /*synchronized*/ {
         if (false && added == removed) // can't do this in all cases!
           return
         if (removed > 0) {
@@ -146,7 +146,7 @@ trait Positions extends Files {
         private var offset : Int = 0
         private var at : HasNextPosition = head
         
-        def goPrev : Boolean = {checkAccess && {(at) match {
+        def goPrev : Boolean = at match {
         case (`head`) => false
         case (at:PositionImpl) => 
           // move backwards
@@ -161,9 +161,9 @@ trait Positions extends Files {
           }
           this.at = at.prev
           true
-        }}}
+        }
 
-        def goNext : Boolean = {checkAccess && {(at) match {
+        def goNext : Boolean = at match {
         case (at) if at.next == null => false
         case (`head`) => 
           this.at = head.next
@@ -175,7 +175,7 @@ trait Positions extends Files {
           assert(at.offset >= 0)
           at.offset = -at.offset
           true
-        }}}
+        }
 
         def seek(pos : Position) : Int = /*PositionBank.this.synchronized*/ {
           assert(pos.isValid)
@@ -298,7 +298,7 @@ trait Positions extends Files {
       }
     }
     
-    trait RangeTreeBank extends Repairable {
+    trait RangeTreeBank {
       sealed abstract class Range {
         def get : RangeTree = throw new NoSuchElementException
         def isEmpty : Boolean = true
@@ -346,7 +346,7 @@ trait Positions extends Files {
               return child.borderNext(absolute + child.offset0, offset - child.offset0)
             else child = child.next
           }
-          abort
+          error("Unreached")
         }
         
         def borderPrev(absolute : Int, offset : Int) : Range = {
@@ -359,7 +359,7 @@ trait Positions extends Files {
               return child.borderPrev(absolute + child.offset0, offset - child.offset0)
             else child = child.next
           }
-          abort
+          error("Unreached")
         }
         
         def find(absolute : Int, offset : Int, adjacent : Boolean) : Range = {
@@ -373,7 +373,7 @@ trait Positions extends Files {
               return child.find(absolute + child.offset0, offset - child.offset0, adjacent)
             else child = child.next
           }
-          abort
+          error("Unreached")
         }
         
         def create(offset : Int) : RangeTree = { // must set length manually.
@@ -406,7 +406,7 @@ trait Positions extends Files {
                 return ret
               } else child = child.next
           }
-          abort
+          error("Unreached")
         }
         protected def repairInner(absolute : Int, offset : Int, added : Int, removed : Int) : Unit = {}
         def repair(absolute : Int, offset : Int, added : Int, removed : Int) : Unit = {
@@ -513,12 +513,12 @@ trait Positions extends Files {
         def destroy = destroyed(0)
       }
       
-      def borderNext(offset : Int) = checkAccess && root.borderNext(0, offset)
-      def borderPrev(offset : Int) = checkAccess && root.borderPrev(0, offset)
+      def borderNext(offset : Int) = root.borderNext(0, offset)
+      def borderPrev(offset : Int) = root.borderPrev(0, offset)
       
-      def find(offset : Int) = checkAccess && root.find(0, offset, false) // start-inc - end-exc
-      def adjacent(offset : Int) = checkAccess && root.find(0, offset, true)
-      def enclosing(offset : Int) : Range = checkAccess && find(offset) match { // start-exc - end-exc
+      def find(offset : Int) = root.find(0, offset, false) // start-inc - end-exc
+      def adjacent(offset : Int) = root.find(0, offset, true)
+      def enclosing(offset : Int) : Range = find(offset) match { // start-exc - end-exc
       case NoRange => NoRange
       case ActualRange(`offset`, what) => what.parent match { // boundary case
         case `root` => NoRange
@@ -526,7 +526,7 @@ trait Positions extends Files {
         }
       case ret => ret
       }
-      def withBoundary(offset : Int) : Range = checkAccess && adjacent(offset) match {
+      def withBoundary(offset : Int) : Range = adjacent(offset) match {
       case range @ ActualRange(_,_) if offset >= range.from && offset <= range.until => range
       case _ => NoRange
       }
@@ -535,11 +535,11 @@ trait Positions extends Files {
       def repair(offset : Int, added : Int, removed : Int) = {
         root.repair(0, offset, added, removed)
       }
-      def create(offset : Int) = checkAccess && root.create(offset)
+      def create(offset : Int) = root.create(offset)
   
       def destroy = root.destroy
       def clear = root.clear
-      def wipe(from : Int, until : Int) = checkAccess && root.wipe(0, from, until)
+      def wipe(from : Int, until : Int) = root.wipe(0, from, until)
     
       def RangeTree : RangeTree
       val NoRangeTree = null.asInstanceOf[RangeTree]
@@ -625,7 +625,8 @@ trait Positions extends Files {
             assert(parent.child != this)
             assert(prev.next == this)
             prev.next = next
-          } else abort // would have to be first child
+          } else error("Unexpected failure") // would have to be first child
+          
           if (next != NoRangeTree) {
             assert(next.prev == this)          
             next.prev = prev
@@ -661,7 +662,7 @@ trait Positions extends Files {
             offset = offset + child.length0
             child = child.next
           }
-          abort
+          error("Unreached")
         }
         def deflate(offset : Int) : Int = {
           assert(offset >= 0)
@@ -675,24 +676,10 @@ trait Positions extends Files {
           }
           offset - childLength
         }
+
         def relative = offset0
+        
         def setRelative(offset : Int) = this.offset0 = offset
-        def relative_=(offset0 : Int) : Unit = {
-          if (true) abort
-          val diff = offset0 - this.offset0
-          if (diff == 0) return
-          
-          assert(prev == null || prev.offset0 < offset0)
-          assert(offset0 >= this.offset0 && offset0 < this.extent0)
-          this.length0 = this.length0 - (offset0 - this.offset0)
-          this.offset0 = this.offset0 + diff
-          assert(this.offset0 == offset0)
-          var child = this.child
-          while (child != null) {
-            child.offset0 = child.offset0 + diff
-            assert(child.offset0 >= 0) // could go negative...
-          }
-        }
         
         override def find(absolute : Int, offset : Int, adjacent : Boolean) : Range = {
           if (hasLength && offset >= length) ActualRange(absolute, self)

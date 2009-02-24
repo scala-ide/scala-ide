@@ -44,7 +44,7 @@ import lampion.presentation.Matchers
 import scala.tools.editor.TypersPresentations
 
 object ScalaPlugin { 
-  private[eclipse] var plugin : ScalaPlugin = _
+  var plugin : ScalaPlugin = _
 
   def isScalaProject(project : IProject) =
     try {
@@ -511,12 +511,6 @@ class ScalaPlugin extends {
 
     /* private[eclipse] */ var doFullBuild = false
 
-    override protected def checkAccess : checkAccess0.type= {
-      val ret = super.checkAccess
-      import org.eclipse.swt.widgets._
-      assert(inUIThread || jobIsBusy)
-      ret
-    }
     override def inUIThread = Display.getCurrent != null
     
     def initialize(viewer : SourceViewer) : Unit = {

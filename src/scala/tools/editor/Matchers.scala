@@ -82,8 +82,7 @@ trait Matchers extends Tokenizers {
           Token(offset, content.slice(offset, offset + kind.open.length), STRINGLIT)  
         case Some(kind : MultiLineComment) =>
           Token(offset, content.slice(offset, offset + kind.open.length), COMMENT)  
-        case Some(kind) if kind == StringMatch || kind == MultiMatch || kind.isInstanceOf[MultiLineComment] =>
-          abort
+        case Some(kind) if kind == StringMatch || kind == MultiMatch || kind.isInstanceOf[MultiLineComment] => error("Unsupported")
         case _ => super.tokenFor(offset)
       }
     }

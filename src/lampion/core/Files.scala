@@ -7,6 +7,7 @@
 package lampion.core
 
 trait Files {
+  
   type Node <: NodeImpl
   trait NodeImpl {
     def self : Node
@@ -16,43 +17,14 @@ trait Files {
     }
     override def toString = id
   }
-
-  def assert(b : Boolean) : Unit = {
-    if (!b)
-      throw new Error
-  }
   
-  def abort : Nothing = {
-    throw new Error
-  }
-  
-  def logError(t : Throwable) : Unit
-  def logError(msg : String, t : Throwable) : Unit
-  implicit def seqToString(seq : Seq[Char]) : String = seq match {
-  case string : scala.runtime.RichString => string.self
-  case seq => 
-    val i = seq.elements
-    val buf = new StringBuilder
-    while (i.hasNext) buf.append(i.next)
-    buf.toString
-  }
-  trait Repairable {
-    def repair(offset : Int, added : Int, removed : Int) : Unit
-  }
-  protected def checkAccess : checkAccess0.type = checkAccess0
-  protected object checkAccess0 {
-    final def &&[T](s : T) = s
-  }
-  
-  
-  //type Path
   type File <: FileImpl
-  trait FileImpl extends Repairable {
+  trait FileImpl {
     def self : File
     def file = self
     def content : RandomAccessSeq[Char]
     def willBuild = {}
-    override def repair(offset : Int, added : Int, removed : Int) : Unit = {}
+    def repair(offset : Int, added : Int, removed : Int) : Unit = {}
     def startWith(idx : Int, str : String) = {
       var idx0 = idx
       val str0 : RandomAccessSeq[Char] = (str)
@@ -78,8 +50,6 @@ trait Files {
     }
     def prepareForEditing = {}
     
-    
-    //def path : Path
     def isLoaded : Boolean
     def doLoad : Unit = {}
     def clear = {}

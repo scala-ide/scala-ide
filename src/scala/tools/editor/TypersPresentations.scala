@@ -227,7 +227,7 @@ trait TypersPresentations extends scala.tools.editor.Presentations {
         resultTypeInfo.foreach(_.foreach(t => walker.walk(t, new visitor){
         case pos : IdentifierPositionImpl if pos.isValid => 
           val file = pos.file
-          Some(file.tokenFor(pos.absolute).text)
+          Some(file.tokenFor(pos.absolute).text.toString)
         case _ => None
         }))
       }
@@ -539,7 +539,7 @@ trait TypersPresentations extends scala.tools.editor.Presentations {
               }
             }
           }
-          val magicProcessor = new MagicProcessor(leading)
+          val magicProcessor = new MagicProcessor(leading.toString)
           val parse = node0.parseContext.pinfo(parser)
           node0.doMagic0(magicProcessor, parse){
             node0.doNamer
@@ -659,7 +659,7 @@ trait TypersPresentations extends scala.tools.editor.Presentations {
         if (name.endsWith(".scala")) {
           val e = fileFor(sym)
           assert(!e.isEmpty)  
-        } else if (name.endsWith(".java")) abort // javaDocumentation(sym)
+        } else if (name.endsWith(".java")) error("Not yet implemented") // javaDocumentation(sym)
       }
       if (sym.pos == NoPosition) return None
       val (offset,content) = sym.pos match {

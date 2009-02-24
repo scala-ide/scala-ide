@@ -4,9 +4,13 @@
  */
 // $Id$
 
-package lampion.compiler;
+package lampion.compiler
+
+import scala.tools.eclipse.ScalaPlugin
 
 trait NewMatchers extends core.Positions {
+  val plugin = ScalaPlugin.plugin
+  
   type File <: FileImpl
   trait FileImpl extends super.FileImpl {
     def self : File
@@ -298,7 +302,7 @@ trait NewMatchers extends core.Positions {
     case class DeleteClose(from : Int, length : Int) extends Rebalance
     def makeCompleted(offset : Int) : Unit = {
       val close = closeMatches.find(offset)
-      if (close.isEmpty) return logError("no completed at " + offset, null)
+      if (close.isEmpty) return plugin.logError("no completed at " + offset, null)
       completed.put(close.get,())
     }
     def isCompleted(offset : Int) : Boolean = {
@@ -309,7 +313,7 @@ trait NewMatchers extends core.Positions {
     
     def unmakeCompleted(offset : Int) : Unit = {
       val close = closeMatches.find(offset)
-      if (close.isEmpty) return logError("no completed at " + offset, null)
+      if (close.isEmpty) return plugin.logError("no completed at " + offset, null)
       completed removeKey close.get
     }
     
@@ -350,7 +354,7 @@ trait NewMatchers extends core.Positions {
         }) prev = closeMatches.seek(prev.get.matching.absolute)
         
         if (prev.isDefined && prev.get.matching == null) {
-          if (prev.get != close) logError("parens messed up", null)
+          if (prev.get != close) plugin.logError("parens messed up", null)
           // can erase
           Some(DeleteClose(prev.get.absolute, closeText(at.get).length))
         } else if (prev.isDefined && close == at.get) {
