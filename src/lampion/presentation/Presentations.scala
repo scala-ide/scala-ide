@@ -10,7 +10,7 @@ import scala.collection.jcl._
 
 import scala.tools.eclipse.ScalaPlugin
 
-trait Presentations extends lampion.core.Plugin {
+trait Presentations {
   val plugin = ScalaPlugin.plugin
   
   type Color
@@ -90,7 +90,7 @@ trait Presentations extends lampion.core.Plugin {
   }
   type Fold
   type Project <: ProjectImpl
-  trait ProjectImpl extends super.ProjectImpl with lampion.compiler.Tokenizers {
+  trait ProjectImpl extends lampion.compiler.Tokenizers {
     def self : Project
     def Hyperlink(file : File, offset : Int, length : Int)(action : => Unit)(info : String) : Hyperlink
     def openAndSelect(file : File, offset : Int) : Unit = {
@@ -101,7 +101,7 @@ trait Presentations extends lampion.core.Plugin {
     }
     def openAndSelect(file : File, select : => (Int,Int)) : Unit
     type File <: FileImpl
-    trait FileImpl extends super[ProjectImpl].FileImpl with super[Tokenizers].FileImpl {selfX : File =>
+    trait FileImpl extends super.FileImpl {selfX : File =>
       def self : File
       def highlight(offset : Int, length : Int, style : Style)(implicit txt : HighlightContext) : Unit
       def invalidate(start : Int, end : Int)(implicit txt : PresentationContext) : Unit
@@ -296,8 +296,8 @@ trait Presentations extends lampion.core.Plugin {
       //def doMatch(offset : Int) : Option[(Int,Int)] = None
     }
     import Presentations._
-    override def destroy = {
-      super.destroy
+    def isOpen = true
+    def destroy = {
       job.synchronized{job.state = STOP; job.notifyAll}
     }
     def lockTyper[T](f : => T) : T = {

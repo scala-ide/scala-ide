@@ -864,7 +864,7 @@ class ScalaPlugin extends {
       var dependencies = new LinkedHashSet[IPath]
       private var infoLoaded : Boolean = false
       def project0 : Project = Project.this
-      override def project : Project = Project.this.self
+      def project : Project = Project.this.self
       override def toString = underlying.toString
 
       def checkBuildInfo(manager : IFolder) = if (!infoLoaded) {
