@@ -44,3 +44,12 @@ Import-Package:
  scala.tools.eclipse.contribution.weaving.jdt.builderoptions,
  scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor,
  scala.tools.eclipse.contribution.weaving.jdt.ui.text.java
+Export-Package: 
+ scala.tools.eclipse,
+ scala.tools.eclipse.debug,
+ scala.tools.eclipse.interpreter,
+ scala.tools.eclipse.javaelements,
+ scala.tools.eclipse.launching,
+ scala.tools.eclipse.properties,
+ scala.tools.eclipse.util,
+ scala.tools.eclipse.wizards
