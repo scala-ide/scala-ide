@@ -48,6 +48,13 @@ class Action extends IObjectActionDelegate {
         //TODO - What else do we need to set on the properties for this to work...
         newConfig
     }
+    
+    target match {
+      case x : IPackageFragment =>
+        workingCopy.setAttribute(InterpreterLaunchConstants.PACKAGE_IMPORT, x.getElementName)
+      case _ => //Ignore
+    }
+    
     import org.eclipse.debug.ui.DebugUITools
     import org.eclipse.debug.core.ILaunchManager
     DebugUITools.launch(workingCopy, ILaunchManager.RUN_MODE)
@@ -56,18 +63,16 @@ class Action extends IObjectActionDelegate {
   
   override def selectionChanged(action: IAction, select: ISelection) = {
     if (select.isInstanceOf[IStructuredSelection]) {
-      var target = (select.asInstanceOf[IStructuredSelection]).getFirstElement
-      if (target.isInstanceOf[IJavaProject]) {
-        val item = target.asInstanceOf[IJavaProject]
-        this.target = Some(item)
-        action.setText("Create Scala interpreter in " + item.getElementName)
-      } else if (target.isInstanceOf[IPackageFragment]) {
-        val item = target.asInstanceOf[IPackageFragment]
-        this.target = Some(item)
-        action.setText("Create Scala interpreter in " + item.getElementName)
-      } else {
-        this.target = null
-        action.setText("Create Scala interpreter")
+      (select.asInstanceOf[IStructuredSelection]).getFirstElement match {
+        case item : IJavaProject =>
+          this.target = Some(item)
+          action.setText("Create Scala interpreter in " + item.getElementName)
+        case item : IPackageFragment =>
+          this.target = Some(item)
+          action.setText("Create Scala interpreter in " + item.getElementName)
+        case _ =>
+          this.target = null
+          action.setText("Create Scala interpreter")
       }
     }
   }

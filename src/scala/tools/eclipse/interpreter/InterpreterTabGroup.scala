@@ -38,6 +38,7 @@ class InterpreterTabGroup extends AbstractLaunchConfigurationTabGroup {
 
 /** This class allows selection of scala projects.*/
 class InterpreterMainTab extends JavaLaunchTab {
+  protected var seedScriptText : Text = _
   	/**
 	 * @see ILaunchConfigurationTab#isValid(ILaunchConfiguration)
 	 */
@@ -63,6 +64,7 @@ class InterpreterMainTab extends JavaLaunchTab {
 				return false;
 			}
 		}
+        //TODO - Validate seed script is ok?
 		return true;
 	}
  
@@ -80,6 +82,7 @@ class InterpreterMainTab extends JavaLaunchTab {
 		createProjectEditor(comp);
 		//createVerticalSpacer(comp, 1);
 		//createMainTypeEditor(comp, LauncherMessages.JavaMainTab_Main_cla_ss__4);
+        createSeedScriptEditor(comp)
 		setControl(comp);      
 	}
  
@@ -119,7 +122,14 @@ class InterpreterMainTab extends JavaLaunchTab {
 		   }
 		})
 	}	
- 
+    protected def createSeedScriptEditor(parent : Composite) {
+      val group = new Group(parent, SWT.NONE)
+      group.setText("Interpreter Seed Script")
+      group.setLayoutData(new GridData(GridData.FILL_HORIZONTAL))
+      group.setLayout(new FillLayout)
+      seedScriptText = new Text(group, SWT.MULTI | SWT.BORDER | SWT.H_SCROLL | SWT.V_SCROLL)
+      
+    }
     private def handleProjectButtonSelected() {
       val project = chooseScalaProject();
 		if (project == null) {
@@ -187,6 +197,7 @@ class InterpreterMainTab extends JavaLaunchTab {
 	 */
 	override def initializeFrom(config : ILaunchConfiguration) {
 		updateProjectFromConfig(config);
+        updateSeedScriptFromConfig(config)
 		super.initializeFrom(config);
 	}
 	
@@ -208,7 +219,11 @@ class InterpreterMainTab extends JavaLaunchTab {
           fProjText.setText(projectName)
         }
 	}
-	
+	private def updateSeedScriptFromConfig(config : ILaunchConfiguration) {
+      if(seedScriptText != null) {
+       seedScriptText.setText(config.getAttribute(InterpreterLaunchConstants.SEED_SCRIPT,""))
+      }
+    }
 	/**
 	 * Maps the config to associated java resource
 	 * 
@@ -232,7 +247,8 @@ class InterpreterMainTab extends JavaLaunchTab {
 	 * @see org.eclipse.debug.ui.ILaunchConfigurationTab#performApply(org.eclipse.debug.core.ILaunchConfigurationWorkingCopy)
 	 */
 	override def performApply(config : ILaunchConfigurationWorkingCopy)  {
-	  config.setAttribute(IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME, fProjText.getText().trim())      
+	  config.setAttribute(IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME, fProjText.getText().trim())     
+      config.setAttribute(InterpreterLaunchConstants.SEED_SCRIPT, seedScriptText.getText.trim())
 	  mapResources(config)
 	}
  
@@ -245,6 +261,7 @@ class InterpreterMainTab extends JavaLaunchTab {
 			initializeJavaProject(javaElement, config)
 		} else {
 			config.setAttribute(IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME, "")
+            config.setAttribute(InterpreterLaunchConstants.SEED_SCRIPT,"")
 		}
 	}
 }

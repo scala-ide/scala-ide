@@ -66,17 +66,61 @@ class InterpreterLaunchConfigurationDelegate extends AbstractJavaLaunchConfigura
 		// Launch the configuration
 		vmRunner.run(runConfig, launch, monitor);
 		
+        //send extra commands to the configuraiton
+        if(mon.isCanceled) {
+          return;
+        }
+        runSeedscripts()
+        
 		// check for cancellation
 		if (mon.isCanceled()) {
 			return;
 		}		 
     }
+    /** Helpe5r method to deal with launch configuration */
+    implicit def pimpConfiguration(configuration : ILaunchConfiguration) = new {
+      def getAttributeOption(name : String) : Option[String] = {
+        configuration.getAttribute(name, "") match {
+          case null => None
+          case "" => None
+          case x => Some(x)
+        }
+      }
+    }
+    /** Seeds the interpreter with imports */
+    def runSeedscripts() {
+      import InterpreterLaunchConstants._
+      
+      def seedInterpreter(namespace : Option[String], asNamespace : Boolean) {
+       for {pkg <- namespace
+           process <- launch.getProcesses
+           val streamProxy = process.getStreamsProxy
+           if streamProxy != null
+       } {
+         //TODO - Don't just write, flush!
+         if(asNamespace) {
+           streamProxy.write("import " + pkg + "._")
+         } else {
+           streamProxy.write(pkg)
+         }
+         //TODO - Is this needed?
+         streamProxy.write("\r\n")
+       }
+      }
+      seedInterpreter(configuration.getAttributeOption(SEED_SCRIPT), false)
+      seedInterpreter(configuration.getAttributeOption(PACKAGE_IMPORT), true)
+      seedInterpreter(configuration.getAttributeOption(OBJECT_IMPORT), true)
+    }
+    
     try {
       doTheLaunch()
     } finally {
       mon.done();
     }
   }
+  
+   
+  
   
   /** Retreives the extra classpath needed for the interpreter*/
   def interpreterExtraClassPath : Seq[String] = {
