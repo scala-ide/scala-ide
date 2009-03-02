@@ -209,6 +209,16 @@
            sourceLocatorId="scala.tools.eclipse.launching.ScalaSourceLookupDirector"
            sourcePathComputerId="org.eclipse.jdt.launching.sourceLookup.javaSourcePathComputer">
      </launchConfigurationType>
+     <launchConfigurationType
+           id="scala.interpreter"
+           delegate="scala.tools.eclipse.interpreter.InterpreterLaunchConfigurationDelegate"
+           delegateName="Scala Interpreter Launcher"
+           delegateDescription="The Scala Interpreter launcher supports running and debugging code through a Read-Eval-Print loop"
+           modes="run,debug"
+           sourceLocatorId="scala.tools.eclipse.launching.ScalaSourceLookupDirector"
+           sourcePathComputerId="org.eclipse.jdt.launching.sourceLookup.javaSourcePathComputer"
+           name="Scala Interpreter">
+     </launchConfigurationType>
    </extension>
    <extension point="org.eclipse.debug.core.sourceLocators">
    		<sourceLocator
@@ -223,6 +233,11 @@
         configTypeID="scala.application"
         id="scala.application.images">
      </launchConfigurationTypeImage>
+     <launchConfigurationTypeImage
+           configTypeID="scala.interpreter"
+           icon="icons/full/etool16/scala_app.gif"
+           id="scala.interpreter.image">
+     </launchConfigurationTypeImage>
    </extension>
    <extension point="org.eclipse.debug.ui.launchConfigurationTabGroups">
     <launchConfigurationTabGroup
@@ -230,6 +245,20 @@
         class="scala.tools.eclipse.launching.ApplicationTabGroup"
         id="scala.application.tabGroup">
     </launchConfigurationTabGroup>
+    <launchConfigurationTabGroup
+        type="scala.interpreter"
+        class="scala.tools.eclipse.interpreter.InterpreterTabGroup"
+        id="scala.interpreter.tabGroup">
+        <launchMode
+              mode="run"
+              description="Runs an interpreter">
+        </launchMode>
+        <launchMode
+              mode="debug"
+              description="Runs an interpreter in Debug mode"
+              perspective="Debug">
+        </launchMode>
+    </launchConfigurationTabGroup>    
    </extension>
    <extension id="scalanature"
          name="Scala Nature"

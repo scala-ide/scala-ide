@@ -21,7 +21,7 @@ import org.eclipse.jdt.core._
  */
 class Action extends IObjectActionDelegate {
   var target : Option[IJavaElement] = None
-  
+  val SCALA_INTERPRETER_LAUNCH_ID = "scala.interpreter"
   override def setActivePart(action : IAction, targetpart : IWorkbenchPart) = {}
   
   override def run(action: IAction) = {
@@ -29,8 +29,29 @@ class Action extends IObjectActionDelegate {
       val shell = new Shell
       MessageDialog.openInformation(shell, "Scala Development Tools", "Intepreter could not be created")
     }
-    println("Action.run")
-    ScalaConsoleMgr.mkConsole(target.get)
+    import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants._
+    import org.eclipse.debug.core.DebugPlugin
+    val manager = DebugPlugin.getDefault().getLaunchManager();
+    val launchType = manager.getLaunchConfigurationType(SCALA_INTERPRETER_LAUNCH_ID);
+    val projectName = target.get.getJavaProject.getProject.getName
+    //Pull out the first interpreter configuration we can find for the project.
+    val configuration = manager.getLaunchConfigurations(launchType).filter({ config =>       
+      projectName.equals(config.getAttribute(ATTR_PROJECT_NAME, ""))
+    }).firstOption
+    
+    val workingCopy = configuration match {
+      case Some(config) =>
+        config.getWorkingCopy
+      case None =>
+        val newConfig = launchType.newInstance(null, projectName);
+        newConfig.setAttribute(ATTR_PROJECT_NAME, projectName);
+        //TODO - What else do we need to set on the properties for this to work...
+        newConfig
+    }
+    import org.eclipse.debug.ui.DebugUITools
+    import org.eclipse.debug.core.ILaunchManager
+    DebugUITools.launch(workingCopy, ILaunchManager.RUN_MODE)
+    
   }
   
   override def selectionChanged(action: IAction, select: ISelection) = {
