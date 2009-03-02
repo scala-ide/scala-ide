@@ -104,6 +104,7 @@ class InterpreterLaunchConfigurationDelegate extends AbstractJavaLaunchConfigura
            streamProxy.write(pkg)
          }
          //TODO - Is this needed?
+         
          streamProxy.write("\r\n")
        }
       }

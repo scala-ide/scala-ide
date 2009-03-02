@@ -50,8 +50,10 @@ class Action extends IObjectActionDelegate {
     }
     
     target match {
-      case x : IPackageFragment =>
+      case Some(x : IPackageFragment) =>
         workingCopy.setAttribute(InterpreterLaunchConstants.PACKAGE_IMPORT, x.getElementName)
+      case Some(x : ITypeRoot) =>
+        
       case _ => //Ignore
     }
     

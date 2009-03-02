@@ -125,7 +125,7 @@ class InterpreterMainTab extends JavaLaunchTab {
     protected def createSeedScriptEditor(parent : Composite) {
       val group = new Group(parent, SWT.NONE)
       group.setText("Interpreter Seed Script")
-      group.setLayoutData(new GridData(GridData.FILL_HORIZONTAL))
+      group.setLayoutData(new GridData(GridData.FILL_HORIZONTAL | GridData.FILL_VERTICAL))
       group.setLayout(new FillLayout)
       seedScriptText = new Text(group, SWT.MULTI | SWT.BORDER | SWT.H_SCROLL | SWT.V_SCROLL)
       
