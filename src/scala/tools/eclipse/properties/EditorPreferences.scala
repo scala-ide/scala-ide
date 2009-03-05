@@ -46,7 +46,7 @@ class EditorPreferences extends PreferencePage with IWorkbenchPreferencePage {
   <keyword>def</keyword> <def>aDef</def>(<arg>anArg</arg> : <class>AnyVal</class>) = <symbol>'aSymbol</symbol>
   <keyword>var</keyword> <var>aVar</var> = <char>'c'</char>
 }}
-<keyword>class</keyword> <trait>SomeTrait</trait>
+<keyword>trait</keyword> <trait>SomeTrait</trait>
 <keyword>class</keyword> <object>SomeObject</object>
 </code>
 )
