@@ -29,9 +29,6 @@ class ScalaCompilationUnit(fragment : PackageFragment, elementName: String, work
   val proj = plugin.projectSafe(getResource.getProject).get
   import proj.compiler._
   
-  def this(file : IFile) =
-    this(JDTUtils.getParentPackage(file).asInstanceOf[PackageFragment], file.getName, DefaultWorkingCopyOwner.PRIMARY)
-    
   override def getMainTypeName : Array[Char] =
     elementName.substring(0, elementName.length - ".scala".length).toCharArray()
 
@@ -86,34 +83,34 @@ class ScalaCompilationUnit(fragment : PackageFragment, elementName: String, work
   
   private def computeEndPosMap(trees : List[Tree]) : Map[Tree, Position] = {
     try {
-    val traverser = new Traverser {
-      var map : Map[Tree, Position] = Map.empty
-      var rightmost : Position = NoPosition
-
-      private val file = proj.fileSafe(getResource.asInstanceOf[IFile]).get
-      
-      override def traverse(tree: Tree): Unit = {
-        rightmost = max(rightmost, tree.pos)
-        tree match {
-          case st : StubTree => traverseTrees(st.underlying.asInstanceOf[file.ParseNode].lastTyped)
-          case _ => {
-            super.traverse(tree)
-            map += (tree -> rightmost)
+      val traverser = new Traverser {
+        var map : Map[Tree, Position] = Map.empty
+        var rightmost : Position = NoPosition
+  
+        private val file = proj.fileSafe(getResource.asInstanceOf[IFile]).get
+        
+        override def traverse(tree: Tree): Unit = {
+          rightmost = max(rightmost, tree.pos)
+          tree match {
+            case st : StubTree => traverseTrees(st.underlying.asInstanceOf[file.ParseNode].lastTyped)
+            case _ => {
+              super.traverse(tree)
+              map += (tree -> rightmost)
+            }
+          }
+        }
+  
+        def max(a : Position, b : Position) = {
+          (a, b) match {
+            case (x, NoPosition) => x
+            case (NoPosition, y) => y
+            case (x, y) => if (x.offset.getOrElse(-1) >= y.offset.getOrElse(-1)) x else y
           }
         }
       }
-
-      def max(a : Position, b : Position) = {
-        (a, b) match {
-          case (x, NoPosition) => x
-          case (NoPosition, y) => y
-          case (x, y) => if (x.offset.getOrElse(-1) >= y.offset.getOrElse(-1)) x else y
-        }
-      }
-    }
-    
-    traverser.traverseTrees(trees)
-    traverser.map
+      
+      traverser.traverseTrees(trees)
+      traverser.map
     } catch {
       case _ => Map.empty
     }

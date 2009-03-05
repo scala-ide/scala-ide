@@ -28,11 +28,18 @@ import scala.tools.eclipse.util.ReflectionUtils
 
 abstract class SourceViewer(parent : Composite, vertical : IVerticalRuler, overview : IOverviewRuler, showAnnotationsOverview : Boolean, styles : Int, store: IPreferenceStore) extends 
   JavaSourceViewer(parent,vertical,overview,showAnnotationsOverview,styles, store) with IAnnotationModelListener with FocusListener with ITextInputListener {
+
   val plugin : ScalaPlugin
+  private var hyper = false
+  var busy = false
+  private var thread : Thread = _
+  
+  getTextWidget.addFocusListener(this)
+  this.addTextInputListener(this)
+
   type File = plugin.Project#File
   def file : Option[File]
-  /* private[eclipse] */ var busy = false
-  
+
   override def configure(configuration : SourceViewerConfiguration) {
     super.configure(configuration)
     SourceViewer.setIsSetVisibleDocumentDelayed(this, false)
@@ -41,10 +48,8 @@ abstract class SourceViewer(parent : Composite, vertical : IVerticalRuler, overv
   override protected def handleVerifyEvent(e : VerifyEvent) = try {
     super.handleVerifyEvent(e)
   } catch {
-  case ex : IllegalArgumentException =>
-    plugin.logError(ex)
-  case ex : IllegalStateException =>
-    plugin.logError(ex)
+    case ex : IllegalArgumentException => plugin.logError(ex)
+    case ex : IllegalStateException => plugin.logError(ex)
   }
   
   def catchUp : Unit = {
@@ -55,7 +60,8 @@ abstract class SourceViewer(parent : Composite, vertical : IVerticalRuler, overv
       busy = false
     }
   }
-  private var hyper = false
+
+  def doCreatePresentation = true
   
   object reconciler extends PresentationReconciler with IPresentationDamager with IPresentationRepairer {
     setDamager (this, IDocument.DEFAULT_CONTENT_TYPE);
@@ -79,7 +85,6 @@ abstract class SourceViewer(parent : Composite, vertical : IVerticalRuler, overv
     }
     def setDocument(doc : IDocument) = {}
   }
-  def doCreatePresentation = true
   
   object textHover extends JavadocHover with ReflectionUtils {
     val getStyleSheetMethod = getDeclaredMethod(classOf[JavadocHover], "getStyleSheet")
@@ -128,7 +133,9 @@ abstract class SourceViewer(parent : Composite, vertical : IVerticalRuler, overv
       else (result.get :: Nil).toArray
     }
   }
+  
   def getAnnotationAccess : IAnnotationAccess
+  
   def getSharedColors : ISharedTextColors
   
   /* private[eclipse] */ def projection : ProjectionAnnotationModel = {
@@ -142,33 +149,40 @@ abstract class SourceViewer(parent : Composite, vertical : IVerticalRuler, overv
     }
     return getProjectionAnnotationModel;
   }
+  
   override def canDoOperation(operation : Int) : Boolean = {
     if (operation == ProjectionViewer.TOGGLE)
       false
     else
       super.canDoOperation(operation)
 	}
+ 
   override def modelChanged(model : IAnnotationModel) = {
     assert(model == projection)
   }
+  
   override def focusGained(e : FocusEvent) : Unit = {
     if (!file.isEmpty && file.get.editing) file.get.doPresentation
   }
+  
   override def focusLost  (e : FocusEvent) : Unit = {
     if (!file.isEmpty && file.get.editing) file.get.doPresentation
   }
+  
   override def inputDocumentAboutToBeChanged(oldInput : IDocument, newInput : IDocument) = {
     if (oldInput != null && oldInput != newInput) {
       unload
     }
   }
+  
   override def inputDocumentChanged(oldInput : IDocument, newInput : IDocument) = {
     if (newInput != null && oldInput != newInput) {
       load 
     }
   }
+        
   def editor : Option[Editor] = None
-  private var thread : Thread = _
+
   def load : Unit = {
     thread = Thread.currentThread
     if (this.file.isEmpty) {
@@ -188,6 +202,7 @@ abstract class SourceViewer(parent : Composite, vertical : IVerticalRuler, overv
     file.loaded
     catchUp
   }
+  
   def unload : Unit = {
     if (this.file.isEmpty || !this.file.get.isLoaded) return 
     assert(this.file.get.isLoaded)
@@ -198,8 +213,6 @@ abstract class SourceViewer(parent : Composite, vertical : IVerticalRuler, overv
     file.unloaded
     //catchUp
   }
-  getTextWidget.addFocusListener(this)
-  this.addTextInputListener(this)
 }
 
 object SourceViewer extends ReflectionUtils {

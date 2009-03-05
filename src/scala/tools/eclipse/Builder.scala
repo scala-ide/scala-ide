@@ -106,9 +106,6 @@ class Builder extends IncrementalProjectBuilder {
     var buildAgain = false
     if (monitor != null) monitor.beginTask("build all", 100)
     while (!toBuild.isEmpty) {
-      toBuild.foreach{f => f.clearBuildErrors(monitor); f.willBuild}
-      assert(!toBuild.isEmpty)
-      
       toBuild.foreach(f => Console.println("build " + f))
       val changed = project.build(toBuild)(monitor)
       if (!changed.isEmpty) {

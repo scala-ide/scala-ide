@@ -29,7 +29,7 @@ import org.eclipse.jface.text.presentation.{IPresentationDamager,IPresentationRe
 import org.eclipse.jface.text.source.{AnnotationModelEvent,IAnnotationModel,ICharacterPairMatcher,IOverviewRuler,ISourceViewer,IVerticalRuler,SourceViewerConfiguration,IAnnotationModelListener};
 import org.eclipse.jface.text.source.projection.{ProjectionAnnotationModel,ProjectionSupport,ProjectionViewer,IProjectionListener};
 import org.eclipse.ui.{IEditorPart,IFileEditorInput};
-import org.eclipse.ui.editors.text.{TextEditor};
+import org.eclipse.ui.editors.text.{ EditorsUI, TextEditor };
 import org.eclipse.ui.texteditor.{ContentAssistAction,SourceViewerDecorationSupport,IAbstractTextEditorHelpContextIds,ITextEditorActionConstants,ITextEditorActionDefinitionIds,IWorkbenchActionDefinitionIds,TextOperationAction};
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.{ExtendedModifyEvent,ExtendedModifyListener};
@@ -38,6 +38,7 @@ import org.eclipse.swt.widgets.{Composite,Shell};
 
 import scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.{ ScalaCompilationUnitDocumentProvider, ScalaEditor } 
 import scala.tools.eclipse.contribution.weaving.jdt.ui.text.java.ScalaCompletionProcessor
+import scala.tools.eclipse.util.Style
 
 class Editor extends ScalaEditor with IAutoEditStrategy {
   val plugin : ScalaPlugin = ScalaPlugin.plugin
@@ -117,7 +118,7 @@ class Editor extends ScalaEditor with IAutoEditStrategy {
     }
   } finally { modifying = false }
 
-  object sourceViewerConfiguration extends SourceViewer.Configuration(plugin.editorPreferenceStore, Editor.this) {
+  object sourceViewerConfiguration extends SourceViewer.Configuration(EditorsUI.getPreferenceStore, Editor.this) {
     
     override def getAutoEditStrategies(sv : ISourceViewer, contentType : String) = 
       Array(Editor.this : IAutoEditStrategy);
@@ -363,12 +364,12 @@ class Editor extends ScalaEditor with IAutoEditStrategy {
     val plugin = this.plugin
     import plugin._
     def ck(id :String) = event.getProperty.endsWith(id)
-    if (ck(backgroundId) ||
-      ck(foregroundId) ||
-        ck(boldId) ||
-          ck(underlineId) ||
-            ck(italicsId) ||
-              ck(strikeoutId)) {
+    if (ck(Style.backgroundId) ||
+      ck(Style.foregroundId) ||
+        ck(Style.boldId) ||
+          ck(Style.underlineId) ||
+            ck(Style.italicsId) ||
+              ck(Style.strikeoutId)) {
       if (file != null && file.isDefined) {
         val viewer = getSourceViewer0
         viewer.invalidateTextPresentation(0, file.get.content.length)

@@ -7,30 +7,56 @@
 package lampion.compiler
 
 import scala.tools.eclipse.ScalaPlugin
+import scala.tools.eclipse.util.{ PositionBank, CachedPositionBank }
 
-trait NewMatchers extends core.Positions {
+trait NewMatchers {
   val plugin = ScalaPlugin.plugin
   
   type File <: FileImpl
-  trait FileImpl extends super.FileImpl {
+  trait FileImpl {
+
     def self : File
+    
+    def file = self
+    
+    def content : RandomAccessSeq[Char]
+    
+    private var editing0 = false
+    
+    final def editing = editing0
+    
+    final def editing_=(value : Boolean) =
+      if (!editing0 && value) {
+        editing0 = value
+        prepareForEditing
+      } else if(editing0 && !value)
+        editing0 = value
+    
+    def prepareForEditing = {}
+    
+    def doLoad : Unit = {}
+    
+    def loaded = editing0 = false
+    
+    def unloaded = editing0 = false
+
+    def isLoaded : Boolean
+
     def defaultMatch : OpenMatch
     protected def adjustDamage(from : Int, until : Int) : (Int,Int) = (from,until)
 
-    override def repair(offset : Int, added : Int, removed : Int) : Unit = {
-      super.repair(offset, added, removed)
+    def repair(offset : Int, added : Int, removed : Int) : Unit = {
       look = Nil
       openMatches .repair(offset, added, removed)
       closeMatches.repair(offset, added, removed)
       repair0(offset, offset + added)
     }
-    override def doUnload = {
+    def doUnload = {
       openMatches.destroy
       closeMatches.destroy
-      super.doUnload
+      editing0 = false
     }
-    override def clear = {
-      super.clear
+    def clear = {
       openMatches.clear
       closeMatches.clear
     }

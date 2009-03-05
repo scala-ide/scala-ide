@@ -5,17 +5,15 @@
 // $Id$
 
 package scala.tools.editor
+
 import scala.tools.nsc.ast.parser
 import parser.Tokens
 import parser.Tokens._
 
+import scala.tools.eclipse.util.Colors
+import scala.tools.eclipse.util.Style
+
 trait Presentations extends lampion.presentation.Matchers {
-  val commentStyle = Style("comment").foreground(colors.salmon).style
-  val keywordStyle = Style("keyword").foreground(colors.iron).bold.style
-  val litStyle = Style("literal").foreground(colors.salmon).italics.style
-  val stringStyle  = Style("string").parent(litStyle).style
-  val charStyle = Style("char").parent(litStyle).style
-  val symbolStyle = Style("symbol").parent(litStyle).style
   override protected def isNewline(c : Char) = Tokens.isNewLine(c)
   override protected def isSpace(c : Char) = Tokens.isSpace(c)
 
@@ -95,38 +93,22 @@ trait Presentations extends lampion.presentation.Matchers {
           })  
         case _ => None
         }) 
+        
         override protected def isConditionBrace = super.isConditionBrace || conditionBrace.isDefined
+        
         override def style = {
-          var ret = super.style
-          ret = ret overlay (if (isKeyword) keywordStyle
-          else code match {
-          case STRINGLIT => stringStyle
-          case CHARLIT => charStyle
-          case SYMBOLLIT => symbolStyle
-          case COMMENT => commentStyle
-          case _ => noStyle
-          })
-          ret
+          if (isKeyword)
+            Style.keywordStyle
+          else
+            code match {
+              case STRINGLIT => Style.stringStyle
+              case CHARLIT => Style.charStyle
+              case SYMBOLLIT => Style.symbolStyle
+              case COMMENT => Style.commentStyle
+              case _ => Style.noStyle
+            }
         }
-        /*
-        override def computeFold(owner : FileImpl.this.parses.Range) = (code match {
-        case STRINGLIT if text.startsWith(MultiMatch.open)       => Some(offset, extent)
-        case COMMENT   if text.startsWith(MultiLineComment.open) => Some(offset, extent)
-        case CASE if inCase => 
-          findWithMatch(NEXT)(tok => tok.code match {
-          case RBRACE => true
-          case CASE if (tok.find(NEXT)(tokIsSignificant) match {
-            case Some(tok) if isDefinition(tok.code) => false            
-            case _ => true
-          }) => true
-          case _ => false
-          }) match {
-            case Some(tok) => Some(offset, tok.offset)
-            case None => super.computeFold(owner)
-          }
-        case _ => super.computeFold(owner)
-        })
-        */
+        
         def isFollowedBy(f : Token => Boolean) = followedBy.map(f) getOrElse false
         def followedBy = {
           findNext(!_.isWhitespace) match {

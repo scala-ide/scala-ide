@@ -18,6 +18,10 @@ import org.eclipse.swt.graphics.{ Color, RGB }
 import org.eclipse.swt.layout.{ GridLayout, RowLayout }
 import org.eclipse.swt.widgets.{ Button, Composite, Control }
 import org.eclipse.ui.{ IWorkbench, IWorkbenchPreferencePage }
+import org.eclipse.ui.editors.text.EditorsUI
+
+import scala.tools.eclipse.util.Colors
+import scala.tools.eclipse.util.Style
 
 object EditorPreferences {
   trait Key {
@@ -52,37 +56,30 @@ class EditorPreferences extends PreferencePage with IWorkbenchPreferencePage {
   private var keys : oesw.List = _
   private var text : StyledText = _
   private var widgets : scala.List[Widget[Any]] = _
+  
   private def setText = {
     val plugin = this.plugin
-    import plugin.rgb2color
-    val store = plugin.editorPreferenceStore
+    val store = EditorsUI.getPreferenceStore
     val sc = sampleCode.elements.next
-    def parent(key : Key) = key match {
-    case plugin.KeyStyle(x,y) => y.parent match {
-      case Some(key : plugin.KeyStyle) => Some(key)
-      case None => None
-    } 
-    case _ => None
-    }
+    
     def getAttribute(key : Key, appendix : String) : Boolean = attributes.get((key,appendix)) match {
-    case Some(value) => value
-    case None => store.getBoolean(key.styleKey + appendix) || 
-      (parent(key).map(key => getAttribute(key, appendix)).getOrElse(false))
+      case Some(value) => value
+      case None => store.getBoolean(key.styleKey + appendix)
     }
+    
     def getColor(key : Key, appendix : String) : Color = colors.get((key,appendix)) match {
-    case Some(None) | None => 
-      val clr : Color = PreferenceConverter.getColor(store, key.styleKey + appendix)
-      if (clr != null) clr
-      else parent(key).map(key => getColor(key, appendix)) getOrElse null
-    case Some(Some(rgb)) => plugin.colorMap(rgb)
+      case Some(Some(rgb)) => Colors.colorMap(rgb)
+      case Some(None) | None => Colors.colorMap(PreferenceConverter.getColor(store, key.styleKey + appendix))
     }
+    
     { 
       import org.eclipse.ui.texteditor.AbstractTextEditor
-      val fg = plugin.colorMap(PreferenceConverter.getColor(store, AbstractTextEditor.PREFERENCE_COLOR_FOREGROUND))
-      val bg = plugin.colorMap(PreferenceConverter.getColor(store, AbstractTextEditor.PREFERENCE_COLOR_BACKGROUND))
+      val fg = Colors.colorMap(PreferenceConverter.getColor(store, AbstractTextEditor.PREFERENCE_COLOR_FOREGROUND))
+      val bg = Colors.colorMap(PreferenceConverter.getColor(store, AbstractTextEditor.PREFERENCE_COLOR_BACKGROUND))
       text.setForeground(fg)
       text.setBackground(bg)
     }
+    
     if (sc.label == "code") {
       val buffer = new StringBuilder
       val styles = new ArrayList[StyleRange]
@@ -97,13 +94,13 @@ class EditorPreferences extends PreferencePage with IWorkbenchPreferencePage {
         val idx = keys.indexOf(node.label)
         buffer append text
         if (idx != -1) {
-          val key = plugin.preferences.editorPreferences(idx)        
-          val fg = getColor(key, plugin.foregroundId)
-          val bg = getColor(key, plugin.backgroundId)
-          val italics = getAttribute(key, plugin.italicsId)
-          val underline = getAttribute(key, plugin.underlineId)
-          val bold = getAttribute(key, plugin.boldId)
-          val strikeout = getAttribute(key, plugin.strikeoutId)
+          val key = Style.preferences.editorPreferences(idx)        
+          val fg = getColor(key, Style.foregroundId)
+          val bg = getColor(key, Style.backgroundId)
+          val italics = getAttribute(key, Style.italicsId)
+          val underline = getAttribute(key, Style.underlineId)
+          val bold = getAttribute(key, Style.boldId)
+          val strikeout = getAttribute(key, Style.strikeoutId)
           val range = new StyleRange
           range.start = offset
           range.length = text.length
@@ -135,7 +132,7 @@ class EditorPreferences extends PreferencePage with IWorkbenchPreferencePage {
     composite.setLayout(compositeLayout)
     keys = new oesw.List(composite, SWT.SINGLE|SWT.V_SCROLL)
 
-    plugin.preferences.editorPreferences.foreach{k => 
+    Style.preferences.editorPreferences.foreach{k => 
       val cs = k.styleKey.split('.')
       keys add cs(cs.length - 1)
     }
@@ -144,16 +141,16 @@ class EditorPreferences extends PreferencePage with IWorkbenchPreferencePage {
 
     val fg = new ColorWidget(options)(true)
     val bg = new ColorWidget(options)(false)
-    val bold = new AttributeWidget(options)("bold", plugin.boldId)
-    val italics = new AttributeWidget(options)("italics", plugin.italicsId)
-    val underline = new AttributeWidget(options)("underline", plugin.underlineId)
+    val bold = new AttributeWidget(options)("bold", Style.boldId)
+    val italics = new AttributeWidget(options)("italics", Style.italicsId)
+    val underline = new AttributeWidget(options)("underline", Style.underlineId)
     widgets = fg :: bg :: bold :: italics :: underline :: Nil
     keys.addSelectionListener(new SelectionListener {
       def widgetDefaultSelected(event : SelectionEvent) = widgetSelected(event)
       def widgetSelected(event : SelectionEvent) = {
         val key = keys.getSelectionIndex match {
         case -1 => null 
-        case n => plugin.preferences.editorPreferences(n)
+        case n => Style.preferences.editorPreferences(n)
         }
         widgets.foreach(_ setKey key)
       }
@@ -172,16 +169,16 @@ class EditorPreferences extends PreferencePage with IWorkbenchPreferencePage {
   override def performDefaults : Unit = {
     super.performDefaults
     val plugin = this.plugin
-    val store = plugin.editorPreferenceStore
-    plugin.preferences.editorPreferences.foreach{key =>
-      (plugin.foregroundId::plugin.backgroundId::Nil).foreach{appendix =>
+    val store = EditorsUI.getPreferenceStore
+    Style.preferences.editorPreferences.foreach{key =>
+      (Style.foregroundId::Style.backgroundId::Nil).foreach{appendix =>
         val default = key.default(appendix)
         colors((key,appendix)) = default match {
         case null => None
         case clr : Color => Some(clr.getRGB)
         }
       }
-      (plugin.boldId::plugin.italicsId::plugin.underlineId::Nil).foreach{appendix =>
+      (Style.boldId::Style.italicsId::Style.underlineId::Nil).foreach{appendix =>
         val default = key.default(appendix)
         attributes((key,appendix)) = default.asInstanceOf[Boolean]
       }
@@ -191,7 +188,7 @@ class EditorPreferences extends PreferencePage with IWorkbenchPreferencePage {
   }
   override def performOk : Boolean = {
     val plugin = this.plugin
-    val store = plugin.editorPreferenceStore
+    val store = EditorsUI.getPreferenceStore
     val refresh = new scala.collection.jcl.LinkedHashSet[Key]
     colors.foreach{
       case ((key,appendix),rgb) => 
@@ -220,7 +217,7 @@ class EditorPreferences extends PreferencePage with IWorkbenchPreferencePage {
       this.key = null
     } else {
       this.key = key
-      val store = plugin.editorPreferenceStore
+      val store = EditorsUI.getPreferenceStore
       control.setEnabled(true)
       initialize(key, store)
     }
@@ -246,7 +243,7 @@ class EditorPreferences extends PreferencePage with IWorkbenchPreferencePage {
   }
   class ColorWidget(parent : Composite)(isForeground : Boolean) extends Widget[RGB](parent) {
     val composite = new Composite(parent, 0) // SWT.SHADOW_ETCHED_IN)
-    def appendix = if (isForeground) plugin.foregroundId else plugin.backgroundId
+    def appendix = if (isForeground) Style.foregroundId else Style.backgroundId
 
     {
       val layout= new GridLayout
@@ -276,8 +273,8 @@ class EditorPreferences extends PreferencePage with IWorkbenchPreferencePage {
 
     def initialize(key : Key, store : IPreferenceStore) : Unit = {
       val clr = colors.get((key,appendix)) match {
-      case Some(clr) => clr.map(plugin.colorMap)
-      case _ => plugin.colorMap(PreferenceConverter.getColor(store, key.styleKey + appendix)) match{
+      case Some(clr) => clr.map(Colors.colorMap)
+      case _ => Colors.colorMap(PreferenceConverter.getColor(store, key.styleKey + appendix)) match{
         case null => None
         case clr => Some(clr)
         }

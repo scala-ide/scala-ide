@@ -6,6 +6,10 @@
  
 package scala.tools.editor
 
+import org.eclipse.jface.text.hyperlink.IHyperlink
+import org.eclipse.jface.text.source.Annotation
+import org.eclipse.swt.graphics.Image
+
 import scala.annotation.unchecked.uncheckedStable
 import scala.collection.jcl.{LinkedHashMap,LinkedHashSet}
 import scala.collection.mutable.ListBuffer
@@ -16,19 +20,14 @@ import scala.tools.nsc.io.{AbstractFile,PlainFile,ZipArchive}
 import scala.tools.nsc.symtab.Flags
 import scala.tools.nsc.util._
  
+import scala.tools.eclipse.util.Colors
+import scala.tools.eclipse.util.SeqUtils
+import scala.tools.eclipse.util.Style
+
 trait TypersPresentations extends scala.tools.editor.Presentations {
   private val closeComment = "*/"
-  val OverrideIndicator : AnnotationKind
-  val classStyle = Style("class").foreground(colors.mocha).style
-  val traitStyle = Style("trait").parent(classStyle).italics.style
-  val typeStyle = Style("type").parent(classStyle).bold.style
-  val objectStyle = Style("object").parent(classStyle).underline.style
-  val packageStyle = Style("package").parent(objectStyle).bold.style
-  
-  val valStyle = Style("val").foreground(colors.blueberry).style
-  val varStyle = Style("var").parent(valStyle).underline.style
-  val defStyle = Style("def").foreground(colors.ocean).style
-  val argStyle = Style("arg").parent(valStyle).italics.style
+  val OverrideIndicator : String
+
   import nsc.Global
 
   trait IdeRef {
@@ -136,7 +135,7 @@ trait TypersPresentations extends scala.tools.editor.Presentations {
       lazy val global : compiler.type = compiler
     }
     trait IdentifierPositionImpl extends super.IdentifierPositionImpl with FileIdeRef {
-      override def file = owner.file
+      override def file = if (owner != null) owner.file else null.asInstanceOf[File]
       override def refOffset = if (isValid) Some(absolute) else None
       override def symbol = {
         if (owner != null && owner.isValid) owner.decode(this) else None
@@ -184,7 +183,7 @@ trait TypersPresentations extends scala.tools.editor.Presentations {
       def self : ParseNode
       // some positions are id positions.
       private var data : List[(IdentifierPosition,Symbol)] = null
-      private var ovr : TypersPresentations.this.Annotation = _
+      private var ovr : org.eclipse.jface.text.source.Annotation = _
 
       protected def overriding : Option[Symbol] = {
         import compiler.MemberDef
@@ -214,7 +213,7 @@ trait TypersPresentations extends scala.tools.editor.Presentations {
         val overriding = this.overriding
         ovr = if (overriding.isDefined) {
           file.Annotation(OverrideIndicator, (overriding.get).fullNameString, Some(absolute), length)
-        } else null.asInstanceOf[TypersPresentations.this.Annotation]
+        } else null.asInstanceOf[org.eclipse.jface.text.source.Annotation]
         data = Nil
         class visitor extends walker.Visitor {
           def contains(pos : Position) = data.find(p => p._1 == pos).isDefined
@@ -222,12 +221,11 @@ trait TypersPresentations extends scala.tools.editor.Presentations {
           def update(pos : Position, sym : Symbol) : Unit =
             data = (pos.asInstanceOf[IdentifierPositionImpl].self, sym) :: data
         }
-        //highlightChanged
-        //file.invalidate0(offset.get,offset.get+length)
+        
         resultTypeInfo.foreach(_.foreach(t => walker.walk(t, new visitor){
         case pos : IdentifierPositionImpl if pos.isValid => 
           val file = pos.file
-          Some(file.tokenFor(pos.absolute).text.toString)
+          Some(SeqUtils.seqToString(file.tokenFor(pos.absolute).text))
         case _ => None
         }))
       }
@@ -289,21 +287,9 @@ trait TypersPresentations extends scala.tools.editor.Presentations {
           super.parseChanged
           FileImpl.this.parseChanged(self)
         } 
-        override def doPresentation(implicit txt : PresentationContext) : Unit = {
+        override def doPresentation(txt : PresentationContext) : Unit = {
           refreshData
-          super.doPresentation(txt)
         }        
-        override protected def computeFold = {
-          val doFold = parseContext.pinfo match {
-          case NonLocalDefOrDcl|LocalDef|TopLevelTmplDef|CaseBlock => true
-          case _ => false
-          }
-          if (doFold) {
-            val start = absolute
-            val length = this.length
-            Some(start, start + length)
-          } else None
-        }
         override protected def identifier(in : compiler.ScannerInput, name : Name) = if (isMagicPhase) name else {
           val first = in.offset - name.length
           val first0 = separated(first, name.length)
@@ -335,8 +321,8 @@ trait TypersPresentations extends scala.tools.editor.Presentations {
       case kind if kind==StringMatch|kind==MultiMatch|(kind.isInstanceOf[Comment]) => 
         object noParseStuff extends HasPresentation {
           def isValid : Boolean = true
-          def doPresentation(implicit txt : PresentationContext) : Unit =
-            invalidate(range.from, range.until)
+          def doPresentation(txt : PresentationContext) : Unit =
+            invalidate(range.from, range.until, txt)
         }
         noParseStuff.dirtyPresentation
         true
@@ -352,18 +338,6 @@ trait TypersPresentations extends scala.tools.editor.Presentations {
       type Token <: TokenImpl
       trait TokenImpl extends super.TokenImpl {
         def self : Token
-        /*
-        override def computeFold(owner : parses.Range) = super.computeFold(owner) match {
-        case ret @ Some(_) => ret
-        case None if code == scala.tools.nsc.ast.parser.Tokens.LBRACE => 
-          if (owner == parses.NoRange || ((owner.get:ParseNode).parseContext.pinfo match {
-          case NonLocalDefOrDcl|LocalDef|TopLevelTmplDef => true
-          case _ => false
-          })) {
-            border(NEXT).map(x => (offset,x))
-          } else None
-        case _ => None
-        }*/
           
         // so we keep a map of all symbols.
         def asSymbol(owner : parses.Range) : Option[Symbol] = if (owner.isEmpty) {
@@ -382,12 +356,15 @@ trait TypersPresentations extends scala.tools.editor.Presentations {
           owner.get.decode(pos)
         }
         import scala.tools.nsc.ast.parser.Tokens._
-        override def style : Style = if (code == IDENTIFIER || code == BACKQUOTED_IDENT) 
-          asSymbol(enclosingParse) match {
-        case None => super.style
-        case Some(sym) =>
-          coreStyle(sym) overlay super.style
-        } else super.style
+        
+        override def style : Style =
+          if (code == IDENTIFIER || code == BACKQUOTED_IDENT) 
+            asSymbol(enclosingParse) match {
+              case None => super.style
+              case Some(sym) =>
+              coreStyle(sym)
+            }
+          else super.style
         
         override def hover : Option[RandomAccessSeq[Char]] = super.hover.orElse(syncUI{asSymbol(enclosingParse) match {
         case None => None
@@ -425,7 +402,7 @@ trait TypersPresentations extends scala.tools.editor.Presentations {
           }
           return None
         }
-        override def hyperlink : Option[Hyperlink] =
+        override def hyperlink : Option[IHyperlink] =
           super.hyperlink orElse {
             val node = {
               val symbol = asSymbol(enclosingParse)
@@ -539,7 +516,7 @@ trait TypersPresentations extends scala.tools.editor.Presentations {
               }
             }
           }
-          val magicProcessor = new MagicProcessor(leading.toString)
+          val magicProcessor = new MagicProcessor(SeqUtils.seqToString(leading))
           val parse = node0.parseContext.pinfo(parser)
           node0.doMagic0(magicProcessor, parse){
             node0.doNamer
@@ -728,27 +705,27 @@ trait TypersPresentations extends scala.tools.editor.Presentations {
       })) idx = idx - 1
       giveUp
     }
-    def imageFor(sym : Symbol) : Option[Image] = imageFor(coreStyle(sym))
-    def imageFor(style : Style) : Option[Image] = None
+    def imageFor(sym : Symbol) : Option[Image] = Style.imageFor(coreStyle(sym))
+
     def coreStyle(sym : Symbol) = {
-      if (sym.isTrait) (traitStyle)
-      else if (sym.isClass) (classStyle)
-      else if (sym.isPackage) (packageStyle)
-      else if (sym.isType || sym.isTypeParameter) (typeStyle)
-      else if (sym.isModule) (objectStyle)
+      if (sym.isTrait) (Style.traitStyle)
+      else if (sym.isClass) (Style.classStyle)
+      else if (sym.isPackage) (Style.packageStyle)
+      else if (sym.isType || sym.isTypeParameter) (Style.typeStyle)
+      else if (sym.isModule) (Style.objectStyle)
       else if (sym.isVariable) {
-        if (sym.hasFlag(Flags.LAZY)) valStyle else varStyle
+        if (sym.hasFlag(Flags.LAZY)) Style.valStyle else Style.varStyle
       }
       else if (sym.isGetter) {
-        if (sym.accessed.isVariable) (varStyle)
-        else (valStyle)
+        if (sym.accessed.isVariable) (Style.varStyle)
+        else (Style.valStyle)
       }
-      else if (sym.isSetter) (varStyle)
-      else if (sym.isMethod) (defStyle)
+      else if (sym.isSetter) (Style.varStyle)
+      else if (sym.isMethod) (Style.defStyle)
       else if (sym.isValue)  {
-        if (sym.isValueParameter) argStyle
-        else (valStyle)
-      } else noStyle
+        if (sym.isValueParameter) Style.argStyle
+        else (Style.valStyle)
+      } else Style.noStyle
     }
   } 
 }

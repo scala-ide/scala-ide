@@ -8,6 +8,8 @@ package lampion.compiler
 
 import scala.collection.jcl._
 
+import scala.tools.eclipse.util.{ RangeTreeBank, CachedRangeTreeBank }
+
 trait Parsers extends NewMatchers {
   abstract class ErrorKind {
     val msg : String
