@@ -21,7 +21,6 @@ import scala.tools.nsc.symtab.Flags
 import scala.tools.nsc.util._
  
 import scala.tools.eclipse.util.Colors
-import scala.tools.eclipse.util.SeqUtils
 import scala.tools.eclipse.util.Style
 
 trait TypersPresentations extends scala.tools.editor.Presentations {
@@ -225,7 +224,7 @@ trait TypersPresentations extends scala.tools.editor.Presentations {
         resultTypeInfo.foreach(_.foreach(t => walker.walk(t, new visitor){
         case pos : IdentifierPositionImpl if pos.isValid => 
           val file = pos.file
-          Some(SeqUtils.seqToString(file.tokenFor(pos.absolute).text))
+          Some(file.tokenFor(pos.absolute).text.mkString)
         case _ => None
         }))
       }
@@ -516,7 +515,7 @@ trait TypersPresentations extends scala.tools.editor.Presentations {
               }
             }
           }
-          val magicProcessor = new MagicProcessor(SeqUtils.seqToString(leading))
+          val magicProcessor = new MagicProcessor(leading.mkString)
           val parse = node0.parseContext.pinfo(parser)
           node0.doMagic0(magicProcessor, parse){
             node0.doNamer

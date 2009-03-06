@@ -5,11 +5,13 @@
 // $Id$
 
 package lampion.presentation
+
 import scala.collection.jcl._
 
 trait AutoEdits extends Presentations {
-  def indentBy : RandomAccessSeq[Char] = "  "
-  def indentByString = indentBy.toString
+  val indentBy : RandomAccessSeq[Char] = "  "
+  val indentByString = indentBy.mkString
+  
   protected def combine(t0 : RandomAccessSeq[Char], t1 : RandomAccessSeq[Char]) = (t0,t1) match {
     case (buf : runtime.RichStringBuilder,t1) => 
       buf ++= t1

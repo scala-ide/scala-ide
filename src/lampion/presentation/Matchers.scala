@@ -4,7 +4,7 @@
  */
 // $Id$
 
-package lampion.presentation;
+package lampion.presentation
 
 trait Matchers extends AutoEdits {
   type Project <: ProjectImpl
@@ -50,7 +50,7 @@ trait Matchers extends AutoEdits {
                 i != content.length && !isNewline(content(i))
               })) {} else if (isNewline(edit.text(0)) && close == "}") { // XXX: doesn't belong here.
                 val id0 = indentOfThisLine(edit.offset)
-                val id1 = id0 + "  ";
+                val id1 = id0.mkString + "  ";
                 return new Edit(edit.offset, 0, "\n" + id1.mkString + "\n" + id0.mkString + close) {
                   override def afterEdit = makeCompleted(offset + 2 + id1.length + id0.length + close.length)
                   override def moveCursorTo = edit.offset + id1.length + 1

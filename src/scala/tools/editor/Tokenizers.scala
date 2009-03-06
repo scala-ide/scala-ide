@@ -9,7 +9,6 @@ package scala.tools.editor
 import scala.tools.nsc.ast.parser
 import parser.Tokens._
 import parser.Tokens
-import scala.tools.eclipse.util.SeqUtils
 
 trait Tokenizers extends lampion.compiler.Tokenizers {
   trait Compiler extends scala.tools.nsc.Global with scala.tools.nsc.ast.parser.NewScanners {self : compiler.type =>
@@ -206,8 +205,8 @@ trait Tokenizers extends lampion.compiler.Tokenizers {
     private def identifierFor(pos : util.Position) : Option[String] = pos match {
     case util.NoPosition => None
     case pos : ParseNodeImpl => None
-    case scala.tools.nsc.util.OffsetPosition(_,offset) => Some(SeqUtils.seqToString(tokenFor(offset).text))
-    case pos : IdentifierPositionImpl => if (pos.isValid) Some(SeqUtils.seqToString(tokenFor(pos.offset.get).text)) else None
+    case scala.tools.nsc.util.OffsetPosition(_,offset) => Some(tokenFor(offset).text.mkString)
+    case pos : IdentifierPositionImpl => if (pos.isValid) Some(tokenFor(pos.offset.get).text.mkString) else None
     }
     override def loaded = {
       super.loaded
