@@ -65,7 +65,7 @@ object JDTUtils {
   def flatten(r : IResource) : Iterator[IFile] = {
     try {
       r match {
-        case r if !r.exists => Iterator.empty
+        case r if r == null || !r.exists => Iterator.empty
         case folder : IFolder if folder.getType == IResource.FOLDER => folder.members.elements.flatMap{flatten _}
         case file : IFile if file.getType == IResource.FILE && file.getFileExtension == "scala" => Iterator.single(file)
         case _ => Iterator.empty
