@@ -27,6 +27,15 @@ object Style {
   val underlineId = ".Underline"
   val strikeoutId = ".Strikeout"
 
+  object noStyle extends Style {
+    def underline = false
+    def italics = false
+    def strikeout = false
+    def bold = false
+    def background = Colors.noColor
+    def foreground = Colors.noColor
+  }
+  
   val commentStyle = KeyStyle("comment", Colors.salmon, false, false, false)
   val keywordStyle = KeyStyle("keyword", Colors.iron, true, false, false)
   val litStyle = KeyStyle("literal", Colors.salmon, false, true, false)
@@ -44,15 +53,6 @@ object Style {
   val varStyle = KeyStyle("var", Colors.blueberry, false, false, true)
   val defStyle = KeyStyle("def", Colors.ocean, false, false, false)
   val argStyle = KeyStyle("arg", Colors.blueberry, false, true, false)
-  
-  object noStyle extends Style {
-    def underline = false
-    def italics = false
-    def strikeout = false
-    def bold = false
-    def background = Colors.noColor
-    def foreground = Colors.noColor
-  }
   
   case class KeyStyle(key : String, fgDflt : Color, boldDflt : Boolean, italicDflt : Boolean, ulDflt : Boolean)
     extends Style with EditorPreferences.Key {
@@ -86,8 +86,13 @@ object Style {
         val key = styleKey + what
         if (store.isDefault(key)) {
           val ret = default(what).asInstanceOf[Color]
-          PreferenceConverter.setValue(store, key, ret.getRGB)
-          ret
+          if (ret == null) {
+            store.setValue(key,-1)
+            null
+          } else {
+            PreferenceConverter.setValue(store,key,ret.getRGB)
+            ret
+          }
         } else (Colors.colorMap(PreferenceConverter.getColor(store, key)))
       }
       
