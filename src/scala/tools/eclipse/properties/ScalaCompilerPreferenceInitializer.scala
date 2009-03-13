@@ -25,10 +25,9 @@ class ScalaCompilerPreferenceInitializer extends AbstractPreferenceInitializer {
 	    settings.allSettings.filter({!_.hiddenToIDE}) foreach {
 	      setting =>
 	        val preferenceName = convertNameToProperty(setting.name)
-	        setting match {
-	          case bool : settings.BooleanSetting  => node.put(preferenceName, Boolean.box(bool.value).toString)
-	          case string : settings.StringSetting => node.put(preferenceName, string.value)
-	          case combo : settings.ChoiceSetting  => node.put(preferenceName, combo.value)
+	        setting.value match {
+	          case bool : Boolean  => node.put(preferenceName, bool.toString)
+	          case string : String => node.put(preferenceName, string)
 	        }
 	    }
       }

@@ -615,10 +615,10 @@ class ScalaPlugin extends {
       val settings = new Settings(null)
       val sourceFolders = this.sourceFolders
       val sourcePath = sourceFolders.map(_.getLocation.toOSString).mkString("", pathSeparator, "")
-      settings.sourcepath.tryToSet("-sourcepath" :: sourcePath :: Nil)
-      settings.outdir.tryToSet("-d" :: outputPath :: Nil)
-      settings.classpath.tryToSet("-classpath" :: "" :: Nil)
-      settings.bootclasspath.tryToSet("-bootclasspath" :: "" :: Nil)
+      settings.sourcepath.tryToSetFromPropertyValue(sourcePath)
+      settings.outdir.tryToSetFromPropertyValue(outputPath)
+      settings.classpath.tryToSetFromPropertyValue("")     // Is this really needed?
+      settings.bootclasspath.tryToSetFromPropertyValue("") // Is this really needed?
       if (!sourceFolders.isEmpty) {
         settings.encoding.value = sourceFolders.elements.next.getDefaultCharset
       }
@@ -637,18 +637,14 @@ class ScalaPlugin extends {
 	      setting =>
           val value = store.getString(convertNameToProperty(setting.name))
 		  try {          
-            if (value != null) {
-              setting match {
-                case b : settings.BooleanSetting => b.value = value.equalsIgnoreCase("true")
-                case s : settings.Setting => setting.tryToSet(setting.name :: value :: Nil) 
-              }
-            }
+            if (value != null)
+              setting.tryToSetFromPropertyValue(value)
           } catch {
             case t : Throwable => logError("Unable to set setting '"+setting.name+"'", t)
           }
       }
       global.settings = settings
-      global.classPath.entries.clear
+      global.classPath.entries.clear // Is this really needed? Why not filter out from allSettings?
       // setup the classpaths!
       intializePaths(global)
     }

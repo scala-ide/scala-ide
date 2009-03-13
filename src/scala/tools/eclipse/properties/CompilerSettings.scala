@@ -8,6 +8,8 @@ package scala.tools.eclipse.properties
 
 import org.eclipse.ui.dialogs.PropertyPage
 import scala.tools.nsc.Settings
+import scala.tools.nsc.Settings.Setting
+import scala.tools.nsc.Settings.SettingValue
 import org.eclipse.swt.widgets._
 import org.eclipse.swt.layout._
 import org.eclipse.swt.SWT
@@ -39,11 +41,11 @@ trait ProjectSettings {
   }
 
   /** Function to map a Scala compiler setting to Project setting */
-  def userSetting(setting : settings.Setting) : Option[UserSetting[Any]] = setting match {
-  case setting : settings.BooleanSetting => Some(new BooleanUserSetting(setting))
-  case setting : settings.StringSetting => Some(new StringUserSetting(setting))
-  case setting : settings.ChoiceSetting => Some(new ChoiceUserSetting(setting))
-  case otherSetting => None
+  def userSetting(setting : Setting) : Option[UserSetting[Any]] = setting.value match {
+  case _ : Boolean => Some(new BooleanUserSetting(setting.asInstanceOf[Setting with SettingValue { type T = Boolean }]))
+  case _ : String if !setting.choices.isEmpty => Some(new ChoiceUserSetting(setting.asInstanceOf[Setting with SettingValue { type T = String }]))
+  case _ : String => Some(new StringUserSetting(setting.asInstanceOf[Setting with SettingValue { type T = String }]))
+  case _ => None
   }
 
   /** 
@@ -51,7 +53,7 @@ trait ProjectSettings {
    *
    * Would be a lot easier if <code>scala.tools.nsc.Settings#Setting</code> was a parameterised type!
    */
-  sealed abstract class UserSetting[+A](val underlying : settings.Setting) {
+  sealed abstract class UserSetting[+A](val underlying : Setting) {
 
 
 
@@ -84,19 +86,19 @@ trait ProjectSettings {
     // initialise value to saved value if available, otherwise just keep default}
     if (savedValue ne null) value = savedValue   
   }
-  case class BooleanUserSetting(setting : settings.BooleanSetting) extends UserSetting[Boolean](setting) {
+  case class BooleanUserSetting(setting : Setting with SettingValue { type T = Boolean }) extends UserSetting[Boolean](setting) {
     def value = setting.value
     def adapt(string : String) = string == "true"
     def value_=(string : String) { setting.value = adapt(string) }
   }
 
-  case class StringUserSetting(setting : settings.StringSetting) extends UserSetting[String](setting) {
+  case class StringUserSetting(setting : Setting with SettingValue { type T = String }) extends UserSetting[String](setting) {
     def value = setting.value
     def adapt(string : String) = string
     def value_=(string : String) { setting.value = string }
   }
 
-  case class ChoiceUserSetting(setting : settings.ChoiceSetting) extends UserSetting[String](setting) {
+  case class ChoiceUserSetting(setting : Setting with SettingValue { type T = String }) extends UserSetting[String](setting) {
     def value = setting.value
     def adapt(string : String) = string
     def value_=(string : String) { setting.value = string }
