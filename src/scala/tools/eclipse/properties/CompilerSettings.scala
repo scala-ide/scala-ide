@@ -17,7 +17,9 @@ import org.eclipse.core.resources._
 import org.eclipse.core.runtime.preferences.{ IEclipsePreferences }
 import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.jdt.core.IJavaProject
+
 import scala.tools.eclipse.SettingConverterUtil._
+import scala.tools.eclipse.util.IDESettings
 
 /**
  * Provides a property page to allow Scala compiler settings to be changed.
@@ -28,7 +30,7 @@ trait ProjectSettings {
   val settings = new Settings(null)
 
   /** The settings we may have changed */
-  lazy val userSettings = settings.allSettings.filter(!_.hiddenToIDE).flatMap(userSetting)
+  lazy val userSettings = IDESettings.shownSettings(settings).flatMap(userSetting)
 
   /** Save all the current settings */
   def save() = { 

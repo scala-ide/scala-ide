@@ -41,6 +41,7 @@ import scala.tools.nsc.io.{ AbstractFile, PlainFile, ZipArchive }
 import lampion.presentation.Matchers
 import scala.tools.editor.TypersPresentations
 import scala.tools.eclipse.util.Colors
+import scala.tools.eclipse.util.IDESettings
 import scala.tools.eclipse.util.Style
 
 object ScalaPlugin { 
@@ -633,7 +634,7 @@ class ScalaPlugin extends {
       val useProjectSettings = projectStore.getBoolean(USE_PROJECT_SETTINGS_PREFERENCE)
       
       val store = if (useProjectSettings) projectStore else workspaceStore  
-      settings.allSettings.elements.filter(!_.hiddenToIDE).foreach {
+      IDESettings.shownSettings(settings).foreach {
 	      setting =>
           val value = store.getString(convertNameToProperty(setting.name))
 		  try {          
