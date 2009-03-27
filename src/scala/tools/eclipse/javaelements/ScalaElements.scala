@@ -18,6 +18,7 @@ import org.eclipse.jdt.ui.JavaElementImageDescriptor
 import org.eclipse.jface.resource.ImageDescriptor
 import org.eclipse.swt.graphics.Image
 
+import scala.tools.eclipse.contribution.weaving.jdt.ui.IMethodOverrideInfo
 import scala.tools.eclipse.util.ReflectionUtils
 
 trait ScalaElement {
@@ -71,8 +72,9 @@ class ScalaModuleElement(parent : JavaElement, name : String, synthetic : Boolea
   override def isVisible = !synthetic
 }
 
-class ScalaDefElement(parent : JavaElement, name: String, paramTypes : Array[String], synthetic : Boolean, display : String)
-  extends SourceMethod(parent, name, paramTypes) with ScalaElement {
+
+class ScalaDefElement(parent : JavaElement, name: String, paramTypes : Array[String], synthetic : Boolean, val isOverride : Boolean, display : String)
+  extends SourceMethod(parent, name, paramTypes) with ScalaElement with IMethodOverrideInfo {
   override def labelName = NameTransformer.decode(getElementName)
   override def mapLabelText(original : String) = display // original.replace(getElementName, labelName)
   override def isVisible = !synthetic && !getElementInfo.isInstanceOf[ScalaSourceConstructorInfo]

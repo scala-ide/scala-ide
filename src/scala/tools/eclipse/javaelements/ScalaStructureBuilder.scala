@@ -312,7 +312,7 @@ trait ScalaStructureBuilder extends ScalaJavaMapper { self : ScalaCompilationUni
           if(d.mods.isAccessor)
             new ScalaAccessorElement(element, nm.toString, paramTypes)
           else if(isTemplate)
-            new ScalaDefElement(element, nm.toString, paramTypes, d.symbol.hasFlag(Flags.SYNTHETIC), display)
+            new ScalaDefElement(element, nm.toString, paramTypes, d.symbol.hasFlag(Flags.SYNTHETIC), d.mods.isOverride, display)
           else
             new ScalaFunctionElement(template.element, element, nm.toString, paramTypes, display)
         resolveDuplicates(defElem)
