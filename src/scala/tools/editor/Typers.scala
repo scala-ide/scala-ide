@@ -293,7 +293,7 @@ trait Typers extends Parsers with lampion.compiler.Tokenizers {
         }
       }
       typer.synchronized{
-        typer.dirty.foreach(typer.typed(_))
+        typer.dirty.toList.foreach(typer.typed(_))
       }
       flushTyper0
       finishTyping
