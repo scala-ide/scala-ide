@@ -20,5 +20,6 @@ Bundle-ActivationPolicy: lazy
 Export-Package: 
  scala.tools.eclipse.contribution.weaving.jdt,
  scala.tools.eclipse.contribution.weaving.jdt.builderoptions,
+ scala.tools.eclipse.contribution.weaving.jdt.ui,
  scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor,
  scala.tools.eclipse.contribution.weaving.jdt.ui.text.java
