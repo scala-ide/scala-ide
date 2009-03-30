@@ -700,7 +700,7 @@ class ScalaPlugin extends {
 
       def checkBuildInfo(manager : IFolder) = if (!infoLoaded) {
         infoLoaded = true
-        if (manager.exists) {
+        if (manager.exists()) {
           val useFile = buildInfo(manager)
           if (useFile.exists) {
             loadBuildInfo(new DataInputStream(useFile.getContents(true)))
