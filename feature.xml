@@ -54,7 +54,7 @@ SUCH DAMAGE.
    </license>
 
    <url>
-      <update label="Scala update site"/>
+      <update url="http://www.scala-lang.org/scala-eclipse-plugin-nightly" label="Scala update site"/>
    </url>
 
    <requires>
@@ -87,35 +87,35 @@ SUCH DAMAGE.
          id="org.aspectj.runtime"
          download-size="0"
          install-size="0"
-         version="1.6.4.20090106083800"
+         version="1.6.4.20090304172355"
          unpack="true"/>
 
    <plugin
          id="org.aspectj.weaver"
          download-size="0"
          install-size="0"
-         version="1.6.4.20090106083800"
+         version="1.6.4.20090304172355"
          unpack="true"/>
 
    <plugin
          id="org.eclipse.equinox.weaving.aspectj"
          download-size="0"
          install-size="0"
-         version="1.0.0.200901261628"
+         version="1.0.0.200902241436"
          unpack="false"/>
 
    <plugin
          id="org.eclipse.equinox.weaving.hook"
          download-size="0"
          install-size="0"
-         version="1.0.0.200901261628"
+         version="1.0.0.200902121956"
          unpack="false"/>
 
    <plugin
          id="org.eclipse.contribution.weaving.jdt"
          download-size="0"
          install-size="0"
-         version="1.6.3.20090122141228"
+         version="1.6.4.20090313172428"
          unpack="false"/>
 
    <plugin

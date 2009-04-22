@@ -218,6 +218,14 @@ PACKAGE FEATURE AND CREATE UPDATE SITE
       <fileset dir="${scala.plugin.aspects.dir}" includes="ch.epfl.lamp.sdt.aspects_*.jar"/>
       <fileset dir="${aspects.lib.dir}" includes="*.jar"/>
     </copy>
+    
+    <jar
+      destfile="${dist.dir}/scala.update/plugins/org.eclipse.equinox.weaving.aspectj_1.0.0.200902241436.jar"
+      basedir="${aspects.lib.dir}"
+      includes="META-INF/p2.inf"
+      update="true"
+    />
+    
     <copy
       file="${scala.dist.dir}/lib/scala-compiler.jar"
       tofile="${dist.dir}/scala.update/plugins/scala.tools.nsc_${compiler.version.number}.jar"/>
