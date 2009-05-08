@@ -206,6 +206,10 @@ PACKAGE FEATURE AND CREATE UPDATE SITE
       <include name="feature.xml"/>
     </jar>
     
+    <copy todir="${dist.dir}/scala.update/features">
+      <fileset dir="${aspects.lib.dir}/features" includes="*.jar"/>
+    </copy>
+
     <copy
       file="site.xml"
       todir="${dist.dir}/scala.update"
@@ -216,7 +220,7 @@ PACKAGE FEATURE AND CREATE UPDATE SITE
       <fileset dir="${basedir}" file="${plugin.name}.jar"/>
       <fileset dir="${scala.lib.dir}" includes="scala.library_${library.version.number}.jar"/>
       <fileset dir="${scala.plugin.aspects.dir}" includes="ch.epfl.lamp.sdt.aspects_*.jar"/>
-      <fileset dir="${aspects.lib.dir}" includes="*.jar"/>
+      <fileset dir="${aspects.lib.dir}/plugins" includes="*.jar"/>
     </copy>
     
     <jar
@@ -225,7 +229,7 @@ PACKAGE FEATURE AND CREATE UPDATE SITE
       includes="META-INF/p2.inf"
       update="true"
     />
-    
+
     <copy
       file="${scala.dist.dir}/lib/scala-compiler.jar"
       tofile="${dist.dir}/scala.update/plugins/scala.tools.nsc_${compiler.version.number}.jar"/>

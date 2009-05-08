@@ -84,41 +84,6 @@ SUCH DAMAGE.
    </requires>
 
    <plugin
-         id="org.aspectj.runtime"
-         download-size="0"
-         install-size="0"
-         version="1.6.4.20090304172355"
-         unpack="true"/>
-
-   <plugin
-         id="org.aspectj.weaver"
-         download-size="0"
-         install-size="0"
-         version="1.6.4.20090304172355"
-         unpack="true"/>
-
-   <plugin
-         id="org.eclipse.equinox.weaving.aspectj"
-         download-size="0"
-         install-size="0"
-         version="1.0.0.200902241436"
-         unpack="false"/>
-
-   <plugin
-         id="org.eclipse.equinox.weaving.hook"
-         download-size="0"
-         install-size="0"
-         version="1.0.0.200902121956"
-         unpack="false"/>
-
-   <plugin
-         id="org.eclipse.contribution.weaving.jdt"
-         download-size="0"
-         install-size="0"
-         version="1.6.4.20090313172428"
-         unpack="false"/>
-
-   <plugin
          id="scala.library"
          download-size="0"
          install-size="0"
