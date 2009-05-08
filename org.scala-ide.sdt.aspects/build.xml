@@ -79,6 +79,7 @@ BUILD THE PLUGIN
       target="1.5"
       sourceroots="${basedir}/src"
       destdir="${build.dir}"
+      xlint="ignore"
       >
       <classpath>
         <pathelement path="${basedir}/lib/aspectjrt.jar"/>
