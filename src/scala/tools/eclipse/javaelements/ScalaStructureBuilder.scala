@@ -48,7 +48,7 @@ trait ScalaStructureBuilder extends ScalaJavaMapper { self : ScalaCompilationUni
 
       def addChild(child : JavaElement) =
         elementInfo match {
-          case scalaMember : ScalaMemberElementInfo => scalaMember.addChild(child)
+          case scalaMember : ScalaMemberElementInfo => scalaMember.addChild0(child)
           case openable : OpenableElementInfo => OpenableElementInfoUtils.addChild(openable, child)
           case _ =>
         }

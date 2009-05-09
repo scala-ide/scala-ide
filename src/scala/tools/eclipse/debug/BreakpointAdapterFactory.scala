@@ -8,21 +8,17 @@ package scala.tools.eclipse.debug
 
 import org.eclipse.core.resources.{IFile,IResource,ResourcesPlugin}
 import org.eclipse.core.runtime.{CoreException,IAdaptable,IProgressMonitor,IStatus,Status,IAdapterFactory}
-import org.eclipse.core.runtime.jobs.Job;
-import org.eclipse.debug.core.{DebugException,DebugPlugin,IBreakpointManager}
+import org.eclipse.core.runtime.jobs.Job
+import org.eclipse.debug.core.DebugPlugin
 import org.eclipse.debug.core.model.IBreakpoint;
 import org.eclipse.debug.ui.actions.{IToggleBreakpointsTargetExtension,IToggleBreakpointsTarget}
-import org.eclipse.jdt.ui.{IWorkingCopyManager,JavaUI}
-import org.eclipse.jdt.core.{Flags,IClassFile,ICompilationUnit,IField,IJavaElement,IMember,IMethod,ISourceRange,IType,JavaModelException,Signature}
-import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.eclipse.jdt.debug.core.{IJavaBreakpoint,IJavaFieldVariable,IJavaLineBreakpoint,IJavaMethodBreakpoint,IJavaType,IJavaWatchpoint,JDIDebugModel}
-import org.eclipse.jdt.internal.debug.core.JavaDebugUtils;
-import org.eclipse.jdt.internal.debug.ui.{BreakpointUtils,JDIDebugUIPlugin,LocalFileStorageEditorInput,ZipEntryStorageEditorInput}
-import org.eclipse.jdt.internal.debug.ui.actions.{ActionMessages,BreakpointMethodLocator}
-import org.eclipse.jface.text.{BadLocationException,IDocument,IRegion,ITextSelection}
-import org.eclipse.jface.viewers.{ISelection,IStructuredSelection,StructuredSelection}
-import org.eclipse.ui.{IEditorInput,IEditorPart,IWorkbenchPart}
-import org.eclipse.ui.texteditor.{IDocumentProvider,IEditorStatusLine,ITextEditor}
+import org.eclipse.jdt.core.IJavaElement
+import org.eclipse.jdt.debug.core.JDIDebugModel
+import org.eclipse.jdt.internal.debug.ui.{BreakpointUtils,LocalFileStorageEditorInput,ZipEntryStorageEditorInput}
+import org.eclipse.jface.text.{IDocument,ITextSelection}
+import org.eclipse.jface.viewers.{ISelection,IStructuredSelection}
+import org.eclipse.ui.{IEditorPart,IWorkbenchPart}
+import org.eclipse.ui.texteditor.ITextEditor
 import org.eclipse.ui.editors.text.ILocationProvider
 
 import scala.collection.JavaConversions._

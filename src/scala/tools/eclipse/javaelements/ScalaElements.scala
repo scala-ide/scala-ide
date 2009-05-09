@@ -143,6 +143,7 @@ object ScalaMemberElementInfo extends ReflectionUtils {
   } catch {
     case _ : NoSuchFieldException => false 
   }
+  val addChildMethod = if (hasChildrenField) getDeclaredMethod(jeiClazz, "addChild", classOf[IJavaElement]) else null
 }
 
 trait ScalaMemberElementInfo extends JavaElementInfo {
@@ -153,9 +154,9 @@ trait ScalaMemberElementInfo extends JavaElementInfo {
   
   override def getChildren = if (hasChildrenField) super.getChildren else auxChildren
   
-  override def addChild(child : IJavaElement) : Unit =
+  def addChild0(child : IJavaElement) : Unit =
     if (hasChildrenField)
-      super.addChild(child)
+      addChildMethod.invoke(this, child)
     else if (auxChildren.length == 0)
       auxChildren = Array(child)
     else if (!auxChildren.contains(child))
