@@ -19,7 +19,6 @@ import org.eclipse.core.resources._
 import org.eclipse.core.runtime._
 import org.eclipse.jdt.internal.core._
 
-import scala.collection.jcl._
 import scala.collection.mutable.ArrayBuffer
 
 /** Simple "New Project" Wizard dialog.  Will create accept a project name, and set up the new scala project. */

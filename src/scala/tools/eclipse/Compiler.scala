@@ -6,7 +6,7 @@
 
 package scala.tools.eclipse
 
-import scala.collection.jcl.{ LinkedHashMap, LinkedHashSet }
+import scala.collection.mutable.{ LinkedHashMap, LinkedHashSet }
 
 import scala.tools.nsc._
 import scala.tools.nsc.io.{ AbstractFile, PlainFile }

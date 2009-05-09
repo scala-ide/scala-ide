@@ -6,7 +6,7 @@
 
 package lampion.presentation
 
-import scala.collection.jcl._
+import scala.collection.mutable.LinkedHashSet
 
 import org.eclipse.jface.text.{ Position, TextPresentation }
 import org.eclipse.jface.text.hyperlink.IHyperlink

@@ -6,19 +6,21 @@
 
 package lampion.presentation
 
-import scala.collection.jcl._
+import scala.collection.mutable.HashSet
 
 trait AutoEdits extends Presentations {
   val indentBy : RandomAccessSeq[Char] = "  "
   val indentByString = indentBy.mkString
   
   protected def combine(t0 : RandomAccessSeq[Char], t1 : RandomAccessSeq[Char]) = (t0,t1) match {
+    /*
     case (buf : runtime.RichStringBuilder,t1) => 
       buf ++= t1
       buf.self
     case (t1,buf : runtime.RichStringBuilder) => 
       buf.insertAll(0, t1)
       buf.self
+    */
     case (t0,t1) =>
       val result = new StringBuilder
       result ++= t0
@@ -38,7 +40,7 @@ trait AutoEdits extends Presentations {
   trait Edits extends Iterable[Edit] {
     def *(edit : Edit) : Edits
   }
-  class CompositeEdits(edit0 : Edit, edit1 : Edit) extends TreeSet[Edit] with Edits {
+  class CompositeEdits(edit0 : Edit, edit1 : Edit) extends HashSet[Edit] with Edits {
     this += edit0; this += edit1
     assert(edit0 ne NoEdit)
     assert(edit1 ne NoEdit)

@@ -407,7 +407,7 @@ trait CachedRangeTreeBank extends RangeTreeBank {
     busy = false
     assert(cache.isEmpty)
   }
-  import scala.collection.jcl.LinkedHashMap
+  import scala.collection.mutable.LinkedHashMap
   private val cache = new LinkedHashMap[RangeTree,Int]
   private var busy = false
   type RangeTree <: RangeTreeImpl

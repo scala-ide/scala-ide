@@ -1,6 +1,6 @@
 package scala.tools.eclipse.util
 
-import scala.collection.jcl._
+import scala.collection.mutable.LinkedHashMap
 
 trait PositionBank {
   protected def pushBack = true

@@ -4,7 +4,8 @@
  */
 // $Id$
 
-package scala.tools.eclipse.debug;
+package scala.tools.eclipse.debug
+
 import org.eclipse.core.resources.{IFile,IResource,ResourcesPlugin}
 import org.eclipse.core.runtime.{CoreException,IAdaptable,IProgressMonitor,IStatus,Status,IAdapterFactory}
 import org.eclipse.core.runtime.jobs.Job;
@@ -23,7 +24,9 @@ import org.eclipse.jface.viewers.{ISelection,IStructuredSelection,StructuredSele
 import org.eclipse.ui.{IEditorInput,IEditorPart,IWorkbenchPart}
 import org.eclipse.ui.texteditor.{IDocumentProvider,IEditorStatusLine,ITextEditor}
 import org.eclipse.ui.editors.text.ILocationProvider
-import scala.collection.jcl._
+
+import scala.collection.JavaConversions._
+import scala.collection.mutable.LinkedHashMap
 
 class BreakpointAdapterFactory extends IAdapterFactory {
   def getAdapter(adaptableObject : AnyRef, adapterType : java.lang.Class[_]) = adaptableObject match {
@@ -101,7 +104,7 @@ class BreakpointAdapterFactory extends IAdapterFactory {
               val plugin = ScalaPlugin.plugin
               editorInput match {
               case input : plugin.ClassFileInput => 
-                BreakpointUtils.addJavaBreakpointAttributesWithMemberDetails(attributes.underlying, input.classFile, -1, -1)
+                BreakpointUtils.addJavaBreakpointAttributesWithMemberDetails(attributes, input.classFile, -1, -1)
               case _ => 
               }
               val resource = (editor) : IResource
@@ -169,7 +172,7 @@ class BreakpointAdapterFactory extends IAdapterFactory {
        register : Boolean, attributes : LinkedHashMap[Object,Object], document : IDocument, editorPart : IEditorPart) = {
     val breakpoint = JDIDebugModel.createLineBreakpoint(
         resource, typeName, lineNumber, charStart, charEnd, hitCount, register,
-        attributes.underlying)
+        attributes)
     new BreakpointLocationVerifierJob(document, breakpoint, lineNumber,
         typeName, resource, editorPart).schedule()
   }

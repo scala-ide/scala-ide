@@ -6,8 +6,6 @@
 
 package scala.tools.eclipse.wizards
 
-import scala.collection.jcl._
-
 import org.eclipse.ui.wizards.newresource._
 import org.eclipse.ui._
 import org.eclipse.ui.ide._
@@ -20,6 +18,8 @@ import org.eclipse.swt.SWT
 import org.eclipse.core.resources._
 import org.eclipse.core.runtime._
 
+import scala.collection.mutable.ArrayBuffer
+
 trait NewResourceWizard extends BasicNewResourceWizard {
   def kind : String
   def adjective : String = ""
@@ -30,7 +30,7 @@ trait NewResourceWizard extends BasicNewResourceWizard {
       case str => str + " "
     })+ f(kind)
   }
-  val packages = new ArrayList[IPackageFragment]
+  val packages = new ArrayBuffer[IPackageFragment]
   var text : Text = _
   var choose : Combo = _
   class Page extends WizardPage("New Scala " + kind) {

@@ -11,8 +11,7 @@ import org.eclipse.jface.text.source.Annotation
 import org.eclipse.swt.graphics.Image
 
 import scala.annotation.unchecked.uncheckedStable
-import scala.collection.jcl.{LinkedHashMap,LinkedHashSet}
-import scala.collection.mutable.ListBuffer
+import scala.collection.mutable.{ LinkedHashMap, LinkedHashSet, ListBuffer }
 
 import scala.tools.nsc.util
 import scala.tools.nsc.ast.parser.Tokens
@@ -542,7 +541,7 @@ trait TypersPresentations extends scala.tools.editor.Presentations {
               }
               !(isId || isOp)
             } 
-            buf += FileImpl.this.Completion(replaceAt, replaceLength, if (backquote) '`' + text + '`' else text, header(sym), imageFor(sym), 
+            buf += FileImpl.this.Completion(replaceAt, replaceLength, if (backquote) '`' + text.toString + '`' else text.toString, header(sym), imageFor(sym), 
                 decode(sym).hover.map(_.mkString))
           }
           convert(true)
@@ -693,7 +692,7 @@ trait TypersPresentations extends scala.tools.editor.Presentations {
         idx = idx - 1
         while (idx >= 0 && !(content(idx) == '/' && sw("/*"))) idx = idx - 1
         if (idx < 0 || !sw("/**")) return giveUp
-        return Some(strip(content.slice(idx + 3, close)))
+        return Some(strip(content.slice(idx + 3, close).force))
       case _ if isKeyword => return giveUp
       case '['|']'|'/'|'@'|'-'|'('|')' => true
       case c if compiler.isIdentifierPart(c) => true

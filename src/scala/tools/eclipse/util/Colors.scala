@@ -1,5 +1,7 @@
 package scala.tools.eclipse.util
 
+import scala.collection.mutable.LinkedHashMap
+
 import org.eclipse.jface.preference.PreferenceConverter
 import org.eclipse.swt.widgets.Display
 import org.eclipse.swt.graphics.{ Color, RGB }
@@ -18,7 +20,7 @@ object Colors {
   val iron = rgb(76, 76, 76)
   val mocha = rgb(142, 62, 0)
 
-  object colorMap extends scala.collection.jcl.LinkedHashMap[RGB, Color] {
+  object colorMap extends LinkedHashMap[RGB, Color] {
     override def apply(rgb : RGB) : Color = rgb match {
     case rgb if rgb == PreferenceConverter.COLOR_DEFAULT_DEFAULT => null
     case rgb => super.apply(rgb)

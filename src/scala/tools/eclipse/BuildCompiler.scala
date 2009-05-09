@@ -8,7 +8,7 @@ package scala.tools.eclipse
 
 import java.nio.charset._ 
 
-import scala.collection.jcl._
+import scala.collection.mutable.{ LinkedHashMap, LinkedHashSet }
 
 import scala.tools.nsc._
 import scala.tools.nsc.io._

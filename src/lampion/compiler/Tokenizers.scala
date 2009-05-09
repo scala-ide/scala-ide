@@ -6,7 +6,7 @@
 
 package lampion.compiler
 
-import scala.collection.jcl._
+import scala.collection.mutable.LinkedHashSet
 
 import scala.tools.eclipse.util.CachedPositionBank
 

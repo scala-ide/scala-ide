@@ -2,7 +2,7 @@ package scala.tools.eclipse.util
 
 import java.net.URL
 
-import scala.collection.jcl.LinkedHashMap
+import scala.collection.mutable.LinkedHashMap
 
 import org.eclipse.jface.resource.ImageDescriptor
 import org.eclipse.swt.graphics.Image

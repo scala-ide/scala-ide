@@ -7,7 +7,7 @@
 package scala.tools.eclipse.properties
 
 import scala.xml._
-import scala.collection.jcl.{ ArrayList, LinkedHashMap }
+import scala.collection.mutable.{ ArrayBuffer, LinkedHashMap, LinkedHashSet }
 
 import org.eclipse.jface.preference.{ ColorSelector, IPreferenceStore, PreferenceConverter, PreferencePage }
 import org.eclipse.jface.util.{ IPropertyChangeListener, PropertyChangeEvent }
@@ -82,7 +82,7 @@ class EditorPreferences extends PreferencePage with IWorkbenchPreferencePage {
     
     if (sc.label == "code") {
       val buffer = new StringBuilder
-      val styles = new ArrayList[StyleRange]
+      val styles = new ArrayBuffer[StyleRange]
     
       def f(nodes : Seq[Node]) : Unit = nodes.foreach{
       case node : Elem =>
@@ -189,7 +189,7 @@ class EditorPreferences extends PreferencePage with IWorkbenchPreferencePage {
   override def performOk : Boolean = {
     val plugin = this.plugin
     val store = EditorsUI.getPreferenceStore
-    val refresh = new scala.collection.jcl.LinkedHashSet[Key]
+    val refresh = new LinkedHashSet[Key]
     colors.foreach{
       case ((key,appendix),rgb) => 
         refresh += key

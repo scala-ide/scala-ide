@@ -7,7 +7,7 @@
 package scala.tools.editor
 
 import scala.annotation.unchecked.uncheckedStable
-import scala.collection.jcl._
+import scala.collection.mutable.{ LinkedHashMap, LinkedHashSet }
 
 import nsc.{util,io} 
 import scala.tools.nsc

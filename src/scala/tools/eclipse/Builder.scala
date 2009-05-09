@@ -16,7 +16,7 @@ import org.eclipse.jdt.internal.core.builder.{ JavaBuilder, State }
 import scala.tools.eclipse.contribution.weaving.jdt.builderoptions.ScalaJavaBuilder
 import scala.tools.eclipse.javaelements.JDTUtils
 import scala.tools.eclipse.util.ReflectionUtils
-import scala.collection.jcl.LinkedHashSet
+import scala.collection.mutable.LinkedHashSet
 
 class Builder extends IncrementalProjectBuilder {
   def plugin = ScalaPlugin.plugin
@@ -74,7 +74,7 @@ class Builder extends IncrementalProjectBuilder {
           while (i.hasNext) {
             val path = ipath(i.next)
             if (project.sourceFolders.exists(_.getLocation.isPrefixOf(path))) {
-              i.remove
+              // i.remove
               project.stale(file.getLocation)
               val p = project.underlying
               val f = p.getFile(path.removeFirstSegments(path.matchingFirstSegments(p.getLocation)))

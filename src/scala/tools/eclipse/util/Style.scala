@@ -1,6 +1,6 @@
 package scala.tools.eclipse.util
 
-import scala.collection.jcl.{ ArrayList, LinkedHashSet }
+import scala.collection.mutable.{ ArrayBuffer, LinkedHashSet }
 
 import org.eclipse.jface.preference.PreferenceConverter
 import org.eclipse.swt.graphics.{ Color, Image }
@@ -145,7 +145,7 @@ object Style {
   }
   
   object preferences {
-    val editorPreferences = new ArrayList[scala.tools.eclipse.properties.EditorPreferences.Key]
+    val editorPreferences = new ArrayBuffer[scala.tools.eclipse.properties.EditorPreferences.Key]
     val styles = new LinkedHashSet[KeyStyle]
   }
 }

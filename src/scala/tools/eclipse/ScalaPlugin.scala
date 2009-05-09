@@ -6,7 +6,8 @@
 
 package scala.tools.eclipse
 
-import scala.collection.jcl.{ ArrayList, LinkedHashMap, LinkedHashSet, TreeMap }
+import scala.collection.JavaConversions._
+import scala.collection.mutable.{ LinkedHashMap, LinkedHashSet, HashMap }
 import scala.xml.NodeSeq        
 
 import java.io.{ ByteArrayInputStream, ByteArrayOutputStream, DataInputStream, DataOutputStream, ObjectInputStream, ObjectOutputStream }
@@ -168,7 +169,7 @@ class ScalaPlugin extends {
   }
   
   class PresentationContext { //(val presentation : TextPresentation) {
-    val invalidate = new TreeMap[Int,Int]
+    val invalidate = new HashMap[Int,Int]
     var remove = List[ProjectionAnnotation]()
     var modified = List[ProjectionAnnotation]()
     val add = new LinkedHashMap[ProjectionAnnotation,Position]
@@ -829,7 +830,7 @@ class ScalaPlugin extends {
       override def finishPresentationContext(txt : PresentationContext) : Unit = if (!viewer.isEmpty) {
         val viewer = this.viewer.get
         if (viewer.projection != null) 
-          viewer.projection.replaceAnnotations(txt.remove.toArray,txt.add.underlying)
+          viewer.projection.replaceAnnotations(txt.remove.toArray,txt.add)
         // highlight
         val i = txt.invalidate.elements
         if (!i.hasNext) return

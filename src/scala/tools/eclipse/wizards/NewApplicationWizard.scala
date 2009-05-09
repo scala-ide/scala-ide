@@ -4,12 +4,15 @@
  */
 // $Id$
 
-package scala.tools.eclipse.wizards;
+package scala.tools.eclipse.wizards
+
 import org.eclipse.core.resources._
 import org.eclipse.jdt.core._
 import org.eclipse.jdt.launching._
 import org.eclipse.debug.core._
 import org.eclipse.debug.ui._
+
+import scala.collection.JavaConversions._
 
 class NewApplicationWizard extends NewObjectWizard {
   override def adjective = "Application"
@@ -23,9 +26,9 @@ class NewApplicationWizard extends NewObjectWizard {
     wc.setAttribute(IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME, project.underlying.getName)
     wc.setAttribute(IJavaLaunchConfigurationConstants.ATTR_MAIN_TYPE_NAME, toRun)
 
-    val groups = new scala.collection.jcl.ArrayList[AnyRef]
+    val groups = new scala.collection.mutable.ArrayBuffer[AnyRef]
     groups += IDebugUIConstants.ID_RUN_LAUNCH_GROUP
-    wc.setAttribute(IDebugUIConstants.ATTR_FAVORITE_GROUPS, groups.underlying)
+    wc.setAttribute(IDebugUIConstants.ATTR_FAVORITE_GROUPS, groups)
 	      
     val config = wc.doSave
     assert(config != null)

@@ -6,6 +6,8 @@
 
 package lampion.compiler
 
+import scala.collection.mutable.WeakHashMap
+
 import scala.tools.eclipse.ScalaPlugin
 import scala.tools.eclipse.util.{ PositionBank, CachedPositionBank }
 
@@ -574,7 +576,7 @@ trait NewMatchers {
       def Position = new Position
     }
     private type Close = closeMatches.Position
-    private val completed = new collection.jcl.WeakHashMap[Close,Unit]()
+    private val completed = new WeakHashMap[Close,Unit]
     private object closeMatches extends PositionBank {
       lazy val other : openMatches.type = openMatches
       protected override def pushBack = false
