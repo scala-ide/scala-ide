@@ -541,7 +541,7 @@ trait TypersPresentations extends scala.tools.editor.Presentations {
               }
               !(isId || isOp)
             } 
-            buf += FileImpl.this.Completion(replaceAt, replaceLength, if (backquote) '`' + text.toString + '`' else text.toString, header(sym), imageFor(sym), 
+            buf += FileImpl.this.Completion(replaceAt, replaceLength, if (backquote) '`' + text + '`' else text, header(sym), imageFor(sym), 
                 decode(sym).hover.map(_.mkString))
           }
           convert(true)
@@ -692,7 +692,7 @@ trait TypersPresentations extends scala.tools.editor.Presentations {
         idx = idx - 1
         while (idx >= 0 && !(content(idx) == '/' && sw("/*"))) idx = idx - 1
         if (idx < 0 || !sw("/**")) return giveUp
-        return Some(strip(content.slice(idx + 3, close).force))
+        return Some(strip(content.slice(idx + 3, close).toString))
       case _ if isKeyword => return giveUp
       case '['|']'|'/'|'@'|'-'|'('|')' => true
       case c if compiler.isIdentifierPart(c) => true

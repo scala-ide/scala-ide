@@ -101,7 +101,7 @@ class BuildCompiler(val project : CompilerProject) extends Global(new Settings) 
       override def compileLate(pfile : AbstractFile) = {
         super.compileLate(pfile)
         //val file = project.nscToLampion(pfile.asInstanceOf[PlainFile]).asInstanceOf[File]
-        if (toBuild add pfile) {
+        if (toBuild put pfile) {
           Console.println("late " + pfile)
           project.clearBuildErrors(pfile) // .clearBuildErrors
         }

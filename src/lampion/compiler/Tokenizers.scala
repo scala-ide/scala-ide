@@ -109,7 +109,7 @@ trait Tokenizers extends Parsers {
         if (ret.owner0 != self) {
           ret.ownerSet remove ret
           ret.owner0 = self
-          ret.owner0.positions0.add(ret)
+          ret.owner0.positions0 += ret
         }
         ret
       }
@@ -118,7 +118,7 @@ trait Tokenizers extends Parsers {
         positions0.foreach{p =>
           assert(p.owner0 == self)
           p.owner0 = null.asInstanceOf[ParseNode]
-          orphans add p
+          orphans += p
         }
         positions0.clear
       }
@@ -126,7 +126,7 @@ trait Tokenizers extends Parsers {
         positions0.foreach{p =>
           assert(p.owner0 == self)
           p.owner0 = null.asInstanceOf[ParseNode]
-          orphans add p
+          orphans += p
         }
         positions0.clear
         // will be recomputed during reparsing.

@@ -57,7 +57,7 @@ class Builder extends IncrementalProjectBuilder {
             if (delta.getKind != IResourceDelta.REMOVED) {
               val file0 = project.fileSafe(file)
               if (!file0.isEmpty && project.sourceFolders.exists(_.getLocation.isPrefixOf(file.getLocation))) {
-                toBuild.add(file0.get)
+                toBuild += file0.get
               }
             }
             true
@@ -78,7 +78,7 @@ class Builder extends IncrementalProjectBuilder {
               project.stale(file.getLocation)
               val p = project.underlying
               val f = p.getFile(path.removeFirstSegments(path.matchingFirstSegments(p.getLocation)))
-              toBuild.add(project.fileSafe(f).get)
+              toBuild += project.fileSafe(f).get
             }
           }        
           true
@@ -94,7 +94,7 @@ class Builder extends IncrementalProjectBuilder {
             case null => true
             case (file) =>           
               project.fileSafe(file) match {
-                case Some(file0) => toBuild.add(file0)
+                case Some(file0) => toBuild += file0
                 case _ =>
               }
               true
@@ -125,7 +125,7 @@ class Builder extends IncrementalProjectBuilder {
               if (file.getProject == project.underlying) {
                 project.fileSafe(file) match {
                   case Some(file) if !built.contains(file) => 
-                    if (toBuild add file) {
+                    if (toBuild put file) {
                       //f(file) // transitive colsure of dependencies...sigh.
                     }
                   case Some(file) => plugin.reverseDependencies(changed) += path

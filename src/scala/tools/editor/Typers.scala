@@ -260,7 +260,7 @@ trait Typers extends Parsers with lampion.compiler.Tokenizers {
     // will keep going...
     while (!typer.synchronized{typer.dirty.isEmpty}) {
       if (processed != null && typer.dirty.exists{node =>
-        if (!processed.add(node)) { 
+        if (!processed.put(node)) { 
           plugin.logError("probable infinite typer cycle on " + node, null)
           true
         } else false
