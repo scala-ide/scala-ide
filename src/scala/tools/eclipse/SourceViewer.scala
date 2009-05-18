@@ -7,25 +7,21 @@
 package scala.tools.eclipse;
 
 import org.eclipse.core.resources.{ IMarker, IResource, IWorkspaceRunnable }
-import org.eclipse.core.runtime.{ IProgressMonitor, NullProgressMonitor }
+import org.eclipse.core.runtime.{ IProgressMonitor }
 import org.eclipse.jdt.internal.ui.JavaPlugin
 import org.eclipse.jdt.internal.ui.javaeditor.JavaSourceViewer
-import org.eclipse.jdt.internal.ui.text.{ JavaCompositeReconcilingStrategy, JavaReconciler }
 import org.eclipse.jdt.internal.ui.text.java.hover.{ JavadocBrowserInformationControlInput, JavadocHover }
 import org.eclipse.jdt.ui.text.{ JavaSourceViewerConfiguration, IJavaPartitions }
 import org.eclipse.jface.internal.text.html.HTMLPrinter
 import org.eclipse.jface.preference.IPreferenceStore
-import org.eclipse.jface.text.{ TextPresentation, ITextInputListener, ITypedRegion, DocumentEvent, IAutoEditStrategy, IDocument, ITextViewer, IRegion, Region}
-import org.eclipse.jface.text.contentassist.{ ContentAssistant, IContentAssistant, IContentAssistProcessor }
+import org.eclipse.jface.text.{ TextPresentation, ITextInputListener, ITypedRegion, IDocument, ITextViewer, IRegion }
+import org.eclipse.jface.text.contentassist.{ ContentAssistant, IContentAssistProcessor }
 import org.eclipse.jface.text.hyperlink.{ IHyperlink, IHyperlinkDetector }
-import org.eclipse.jface.text.presentation.{ IPresentationDamager, IPresentationRepairer, PresentationReconciler }
-import org.eclipse.jface.text.reconciler.IReconciler
-import org.eclipse.jface.text.rules.{ DefaultDamagerRepairer, ITokenScanner, RuleBasedScanner }
-import org.eclipse.jface.text.source.{ IAnnotationAccess, IAnnotationModel, IAnnotationModelListener, IOverviewRuler, ISharedTextColors, ISourceViewer, IVerticalRuler, SourceViewerConfiguration }
-import org.eclipse.jface.text.source.projection.{ ProjectionAnnotationModel, ProjectionSupport, ProjectionViewer }
-import org.eclipse.swt.SWT
-import org.eclipse.swt.events.{ FocusListener, FocusEvent, VerifyEvent }
-import org.eclipse.swt.widgets.{ Composite, Shell }
+import org.eclipse.jface.text.presentation.PresentationReconciler
+import org.eclipse.jface.text.rules.{ DefaultDamagerRepairer, ITokenScanner }
+import org.eclipse.jface.text.source.{ IOverviewRuler, ISourceViewer, IVerticalRuler }
+import org.eclipse.swt.events.{ FocusListener, FocusEvent }
+import org.eclipse.swt.widgets.Composite
 import org.eclipse.ui.texteditor.ITextEditor
 
 import scala.tools.eclipse.util.ReflectionUtils

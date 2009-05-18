@@ -1,3 +1,8 @@
+/*
+ * Copyright 2005-2009 LAMP/EPFL
+ */
+// $Id$
+
 package scala.tools.eclipse
 
 import org.eclipse.jdt.core.search.SearchDocument

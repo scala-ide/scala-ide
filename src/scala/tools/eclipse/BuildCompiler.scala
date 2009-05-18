@@ -8,17 +8,14 @@ package scala.tools.eclipse
 
 import java.nio.charset._ 
 
-import scala.collection.mutable.{ LinkedHashMap, LinkedHashSet }
+import scala.collection.mutable.LinkedHashSet
 
-import scala.tools.nsc._
-import scala.tools.nsc.io._
-import scala.tools.nsc.util._
-import scala.tools.nsc.reporters._
+import scala.tools.nsc.{ Global, Settings }
+import scala.tools.nsc.io.{ AbstractFile, PlainFile }
+import scala.tools.nsc.util.Position
+import scala.tools.nsc.reporters.Reporter
 
-trait BuildProgressMonitor {
-  def isCanceled : Boolean
-  def worked(howMuch : Int) : Unit
-}
+import org.eclipse.core.runtime.IProgressMonitor
 
 class BuildCompiler(val project : CompilerProject) extends Global(new Settings) {
   val plugin = ScalaPlugin.plugin
@@ -44,7 +41,7 @@ class BuildCompiler(val project : CompilerProject) extends Global(new Settings) 
     }
   }
   
-  def build(toBuild : LinkedHashSet[AbstractFile])(implicit monitor : BuildProgressMonitor) : List[AbstractFile] = {
+  def build(toBuild : LinkedHashSet[AbstractFile], monitor : IProgressMonitor) : List[AbstractFile] = {
     // build all files, return what files have changed.
     val project = this.project
     val run = new Run {

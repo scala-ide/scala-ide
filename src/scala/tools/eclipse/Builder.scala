@@ -16,18 +16,10 @@ import org.eclipse.jdt.internal.core.builder.{ JavaBuilder, State }
 import scala.tools.eclipse.contribution.weaving.jdt.builderoptions.ScalaJavaBuilder
 import scala.tools.eclipse.javaelements.JDTUtils
 import scala.tools.eclipse.util.ReflectionUtils
-import scala.collection.mutable.LinkedHashSet
+import scala.collection.mutable.HashSet
 
 class Builder extends IncrementalProjectBuilder {
   def plugin = ScalaPlugin.plugin
-
-  def ifile(that : AnyRef) : IFile = 
-    if (that.isInstanceOf[IFile]) (that.asInstanceOf[IFile])
-    else null
-
-  def ipath(that : AnyRef) =
-    if (that.isInstanceOf[IPath]) (that.asInstanceOf[IPath])
-    else null
 
   private val scalaJavaBuilder = new ScalaJavaBuilder
   
@@ -46,14 +38,13 @@ class Builder extends IncrementalProjectBuilder {
     import IncrementalProjectBuilder._
     val plugin = this.plugin 
     val project = plugin.projectSafe(getProject).get
-    val toBuild = new LinkedHashSet[project.File]
+    val toBuild = new HashSet[project.File]
     kind match {
     case CLEAN_BUILD => return project.externalDepends.toList.toArray
     case INCREMENTAL_BUILD|AUTO_BUILD if (!project.doFullBuild) =>
       getDelta(project.underlying).accept(new IResourceDeltaVisitor {
-        def visit(delta : IResourceDelta) = ifile(delta.getResource) match {
-          case null => true
-          case (file) =>
+        def visit(delta : IResourceDelta) = delta.getResource match {
+          case file : IFile =>
             if (delta.getKind != IResourceDelta.REMOVED) {
               val file0 = project.fileSafe(file)
               if (!file0.isEmpty && project.sourceFolders.exists(_.getLocation.isPrefixOf(file.getLocation))) {
@@ -61,18 +52,19 @@ class Builder extends IncrementalProjectBuilder {
               }
             }
             true
+          case _ => true
         }
       })
       project.externalDepends.map(getDelta).foreach(f => if (f != null) f.accept(new IResourceDeltaVisitor {
         override def visit(delta : IResourceDelta) : Boolean = {
-          val file = ifile(delta.getResource)
           if (delta.getKind == IResourceDelta.REMOVED) return true
-          if (file == null) return true
+          if (!delta.getResource.isInstanceOf[IFile]) return true
+          val file = delta.getResource.asInstanceOf[IFile]
           val paths = plugin.reverseDependencies.get(file.getLocation)
           if (paths.isEmpty) return true
           val i = paths.get.elements 
           while (i.hasNext) {
-            val path = ipath(i.next)
+            val path = i.next.asInstanceOf[IPath]
             if (project.sourceFolders.exists(_.getLocation.isPrefixOf(path))) {
               val p = project.underlying
               val f = p.getFile(path.removeFirstSegments(path.matchingFirstSegments(p.getLocation)))
@@ -88,25 +80,25 @@ class Builder extends IncrementalProjectBuilder {
       val sourceFolders = project.sourceFolders
       sourceFolders.foreach(_.accept(new IResourceVisitor {
         def visit(resource : IResource) =
-          ifile(resource) match {
-            case null => true
-            case (file) =>           
+          resource match {
+            case file : IFile =>           
               project.fileSafe(file) match {
                 case Some(file0) => toBuild += file0
                 case _ =>
               }
               true
+            case _ => true
           }}))
     }
     
     // everything that needs to be recompiled is in toBuild now. 
-    val built = new LinkedHashSet[project.File] // don't recompile twice.
+    val built = new HashSet[project.File] // don't recompile twice.
     var buildAgain = false
     if (monitor != null) monitor.beginTask("build all", 100)
     while (!toBuild.isEmpty) {
       toBuild.foreach(_.clearBuildErrors(null))
       toBuild.foreach(f => Console.println("build " + f))
-      val changed = project.build(toBuild)(monitor)
+      val changed = project.build(toBuild, monitor)
       if (!changed.isEmpty) {
         changed.foreach(f => Console.println("changed " + f))
       }
@@ -142,7 +134,7 @@ class Builder extends IncrementalProjectBuilder {
       changed.foreach(f)
     }
     if (buildAgain) needRebuild
-    else project.buildDone(built)(monitor)
+    else project.buildDone(built, monitor)
     
     val depends = project.externalDepends.toList.toArray
     

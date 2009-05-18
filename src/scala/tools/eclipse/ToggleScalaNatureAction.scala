@@ -1,10 +1,15 @@
+/*
+ * Copyright 2005-2009 LAMP/EPFL
+ */
+// $Id$
+
 package scala.tools.eclipse
 
-import org.eclipse.core.resources.{IProject,IProjectDescription};
-import org.eclipse.core.runtime.{CoreException,IAdaptable};
-import org.eclipse.jface.action.IAction;
-import org.eclipse.jface.viewers.{ISelection,IStructuredSelection};
-import org.eclipse.ui.{IObjectActionDelegate,IWorkbenchPart};
+import org.eclipse.core.resources.{ IProject }
+import org.eclipse.core.runtime.IAdaptable
+import org.eclipse.jface.action.IAction
+import org.eclipse.jface.viewers.{ ISelection, IStructuredSelection }
+import org.eclipse.ui.{ IObjectActionDelegate, IWorkbenchPart }
 
 /**
  * This class will add/remove the Scala Nature to a project. 

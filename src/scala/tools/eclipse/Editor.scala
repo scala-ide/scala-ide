@@ -6,36 +6,24 @@
 
 package scala.tools.eclipse
 
+import java.{ util => ju }
+
+import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.jdt.core.{ ICompilationUnit, IJavaElement, JavaModelException }
 import org.eclipse.jdt.internal.corext.util.JavaModelUtil
 import org.eclipse.jdt.internal.ui.JavaPlugin
-import org.eclipse.jdt.internal.ui.javaeditor.ClassFileDocumentProvider
-import org.eclipse.ui.IEditorInput
-
-import scala.util.Sorting
-
-import java.{ util => ju }
-
-import org.eclipse.core.resources.{IWorkspaceRunnable,IMarker,IResource};
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.jdt.internal.ui.javaeditor.{ CompilationUnitEditor, JavaSourceViewer }
+import org.eclipse.jdt.internal.ui.javaeditor.{ ClassFileDocumentProvider, JavaSourceViewer }
 import org.eclipse.jdt.ui.text.JavaSourceViewerConfiguration
 import org.eclipse.jdt.ui.text.java.ContentAssistInvocationContext
-import org.eclipse.jface.util.PropertyChangeEvent
 import org.eclipse.jface.preference.IPreferenceStore
-import org.eclipse.jface.text.{TextPresentation,ITypedRegion,DocumentEvent,DefaultInformationControl,IInformationControlCreator,IDocumentListener,IDocument,DocumentCommand,IAutoEditStrategy,ITextViewer,ITextHover,ITextHoverExtension,ITextOperationTarget,IRegion,Region};
-import org.eclipse.jface.text.contentassist.{ContentAssistant,ICompletionProposal,IContentAssistant,IContentAssistProcessor,IContextInformation,IContextInformationPresenter,IContextInformationValidator};
-import org.eclipse.jface.text.hyperlink.{IHyperlink,IHyperlinkDetector};
-import org.eclipse.jface.text.presentation.{IPresentationDamager,IPresentationRepairer,PresentationReconciler};
-import org.eclipse.jface.text.source.{AnnotationModelEvent,IAnnotationModel,ICharacterPairMatcher,IOverviewRuler,ISourceViewer,IVerticalRuler,SourceViewerConfiguration,IAnnotationModelListener};
-import org.eclipse.jface.text.source.projection.{ProjectionAnnotationModel,ProjectionSupport,ProjectionViewer,IProjectionListener};
-import org.eclipse.ui.{IEditorPart,IFileEditorInput};
-import org.eclipse.ui.editors.text.{ EditorsUI, TextEditor };
-import org.eclipse.ui.texteditor.{ContentAssistAction,SourceViewerDecorationSupport,IAbstractTextEditorHelpContextIds,ITextEditorActionConstants,ITextEditorActionDefinitionIds,IWorkbenchActionDefinitionIds,TextOperationAction};
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.custom.{ExtendedModifyEvent,ExtendedModifyListener};
-import org.eclipse.swt.events.{KeyListener,KeyEvent,FocusListener,FocusEvent};
-import org.eclipse.swt.widgets.{Composite,Shell};
+import org.eclipse.jface.text.{ DocumentEvent, IDocumentListener, IDocument, ITextViewer, ITextOperationTarget }
+import org.eclipse.jface.text.contentassist.ContentAssistant
+import org.eclipse.jface.text.source.{ IOverviewRuler, IVerticalRuler, SourceViewerConfiguration }
+import org.eclipse.jface.text.source.projection.ProjectionViewer
+import org.eclipse.jface.util.PropertyChangeEvent
+import org.eclipse.swt.widgets.Composite
+import org.eclipse.ui.IEditorInput
+import org.eclipse.ui.texteditor.{ IAbstractTextEditorHelpContextIds, ITextEditorActionConstants, IWorkbenchActionDefinitionIds, TextOperationAction }
 
 import scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.{ ScalaCompilationUnitDocumentProvider, ScalaEditor } 
 import scala.tools.eclipse.contribution.weaving.jdt.ui.text.java.ScalaCompletionProcessor

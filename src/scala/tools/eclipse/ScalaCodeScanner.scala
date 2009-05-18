@@ -1,41 +1,22 @@
 /*
  * Copyright 2005-2009 LAMP/EPFL
- * @author Sean McDirmid
  */
 // $Id$
 
 package scala.tools.eclipse
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.{ util => ju }
 
-import org.eclipse.core.runtime.Assert;
+import org.eclipse.core.runtime.Assert
+import org.eclipse.jdt.core.JavaCore
+import org.eclipse.jdt.internal.ui.javaeditor.SemanticHighlightings
+import org.eclipse.jdt.internal.ui.text.{ AbstractJavaScanner, CombinedWordRule, JavaWhitespaceDetector, JavaWordDetector, ISourceVersionDependent }
 
-import org.eclipse.jface.preference.IPreferenceStore;
-import org.eclipse.jface.util.PropertyChangeEvent;
-
-import org.eclipse.jface.text.rules.ICharacterScanner;
-import org.eclipse.jface.text.rules.IRule;
-import org.eclipse.jface.text.rules.IToken;
-import org.eclipse.jface.text.rules.IWhitespaceDetector;
-import org.eclipse.jface.text.rules.IWordDetector;
-import org.eclipse.jface.text.rules.SingleLineRule;
-import org.eclipse.jface.text.rules.Token;
-import org.eclipse.jface.text.rules.WhitespaceRule;
-
-import org.eclipse.jdt.core.JavaCore;
-
-import org.eclipse.jdt.ui.PreferenceConstants;
-import org.eclipse.jdt.ui.text.IColorManager;
-import org.eclipse.jdt.ui.text.IJavaColorConstants;
-
-import org.eclipse.jdt.internal.ui.javaeditor.SemanticHighlightings;
-import org.eclipse.jdt.internal.ui.text.AbstractJavaScanner;
-import org.eclipse.jdt.internal.ui.text.CombinedWordRule;
-import org.eclipse.jdt.internal.ui.text.JavaWhitespaceDetector;
-import org.eclipse.jdt.internal.ui.text.JavaWordDetector;
-import org.eclipse.jdt.internal.ui.text.ISourceVersionDependent;
+import org.eclipse.jdt.ui.PreferenceConstants
+import org.eclipse.jdt.ui.text.{ IColorManager, IJavaColorConstants }
+import org.eclipse.jface.preference.IPreferenceStore
+import org.eclipse.jface.util.PropertyChangeEvent
+import org.eclipse.jface.text.rules.{ ICharacterScanner, IRule, IToken, IWhitespaceDetector, IWordDetector, SingleLineRule, Token, WhitespaceRule }
 
 object ScalaCodeScanner {
 
@@ -312,15 +293,15 @@ object ScalaCodeScanner {
 class ScalaCodeScanner(manager : IColorManager, store : IPreferenceStore) extends AbstractJavaScanner(manager, store) {
   import ScalaCodeScanner._
   
-  private def fVersionDependentRules = new ArrayList[IRule with ISourceVersionDependent](3)
+  private def fVersionDependentRules = new ju.ArrayList[IRule with ISourceVersionDependent](3)
 
   initialize
 
   protected def getTokenProperties = fgTokenProperties
 
-  protected def createRules : List[IRule] = {
+  protected def createRules : ju.List[IRule] = {
 
-    val rules = new ArrayList[IRule]
+    val rules = new ju.ArrayList[IRule]
 
     // Add rule for character constants.
     var token = getToken(IJavaColorConstants.JAVA_STRING)

@@ -7,12 +7,11 @@
 package scala.tools.eclipse
 
 import scala.collection.JavaConversions._
-import scala.collection.mutable.{ LinkedHashMap, LinkedHashSet, HashMap }
-import scala.xml.NodeSeq        
+import scala.collection.mutable.{ LinkedHashMap, LinkedHashSet, HashMap, HashSet }
 
 import java.io.{ ByteArrayInputStream, ByteArrayOutputStream, DataInputStream, DataOutputStream, ObjectInputStream, ObjectOutputStream }
 
-import org.eclipse.core.resources.{ IContainer, IFile, IFolder, IMarker, IProject, IResource, IResourceChangeEvent, IResourceChangeListener, IResourceDelta, IResourceDeltaVisitor, IWorkspaceRunnable, ResourcesPlugin}
+import org.eclipse.core.resources.{ IContainer, IFile, IFolder, IMarker, IProject, IResource, IResourceChangeEvent, IResourceChangeListener, IWorkspaceRunnable, ResourcesPlugin}
 import org.eclipse.core.runtime.{ CoreException, FileLocator, IPath, IProgressMonitor, IStatus, Path, Platform, Status }
 import org.eclipse.core.runtime.content.IContentTypeSettings
 import org.eclipse.jdt.core.{ IClassFile, IClasspathEntry, IJavaProject, IPackageFragment, IPackageFragmentRoot, JavaCore }
@@ -20,26 +19,25 @@ import org.eclipse.jdt.internal.core.{ BinaryType, JavaProject, PackageFragment 
 import org.eclipse.jdt.internal.core.util.Util
 import org.eclipse.jdt.internal.ui.text.java.JavaCompletionProposal
 import org.eclipse.jface.dialogs.ErrorDialog
-import org.eclipse.jface.preference.PreferenceConverter
-import org.eclipse.jface.text.{ Document, IDocument, IRepairableDocument, ITextViewer, Position, Region, TextPresentation }
+import org.eclipse.jface.text.{ IDocument, ITextViewer, Position, Region, TextPresentation }
 import org.eclipse.jface.text.hyperlink.IHyperlink
 import org.eclipse.jface.text.contentassist.ICompletionProposal
 import org.eclipse.jface.text.source.{ Annotation, IAnnotationModel }
-import org.eclipse.jface.text.source.projection.{ ProjectionAnnotation, ProjectionAnnotationModel, ProjectionViewer }
+import org.eclipse.jface.text.source.projection.{ ProjectionAnnotation, ProjectionAnnotationModel }
 import org.eclipse.swt.SWT
-import org.eclipse.swt.graphics.{ Color, Image, RGB }
-import org.eclipse.swt.widgets.Display
 import org.eclipse.swt.custom.StyleRange
-import org.eclipse.ui.{ IEditorInput, IEditorReference, IFileEditorInput, IPathEditorInput, IPersistableElement, IWorkbenchPage, PlatformUI }
+import org.eclipse.swt.graphics.{ Color, Image }
+import org.eclipse.swt.widgets.Display
+import org.eclipse.ui.{ IEditorInput, IFileEditorInput, IWorkbenchPage, PlatformUI }
 import org.eclipse.ui.ide.IDE
 import org.eclipse.ui.plugin.AbstractUIPlugin
 import org.eclipse.ui.texteditor.ITextEditor
 import org.osgi.framework.BundleContext
 
 import scala.tools.nsc.{ Global, Settings }
+import scala.tools.nsc.ast.parser.Scanners
 import scala.tools.nsc.io.{ AbstractFile, PlainFile, ZipArchive }
    
-import scala.tools.eclipse.util.Colors
 import scala.tools.eclipse.util.IDESettings
 import scala.tools.eclipse.util.Style
 
@@ -165,7 +163,7 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener {
     file
   }
   
-  class PresentationContext { //(val presentation : TextPresentation) {
+  class PresentationContext {
     val invalidate = new HashMap[Int,Int]
     var remove = List[ProjectionAnnotation]()
     var modified = List[ProjectionAnnotation]()
@@ -264,7 +262,7 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener {
     def isOpen = underlying.isOpen
     
     /* when a file needs to be rooted out */
-    def buildDone(built : LinkedHashSet[File])(implicit monitor : IProgressMonitor) : Unit = if (!built.isEmpty) {
+    def buildDone(built : HashSet[File], monitor : IProgressMonitor) : Unit = if (!built.isEmpty) {
       lastBuildHadBuildErrors = built.exists(_.hasBuildErrors)
       val manager = (underlying.findMember(".manager") match {
       case null => null 
@@ -297,7 +295,7 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener {
         useFile.setDerived(true)
       }
     }
-    def buildError0(severity : Int, msg : String)(implicit monitor : IProgressMonitor) = if (problemMarkerId.isDefined) {
+    def buildError0(severity : Int, msg : String, monitor : IProgressMonitor) = if (problemMarkerId.isDefined) {
       underlying.getWorkspace.run(new IWorkspaceRunnable {
         def run(monitor : IProgressMonitor) = {
           val mrk = underlying.createMarker(problemMarkerId.get)
@@ -320,8 +318,6 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener {
     }
     
     var lastBuildHadBuildErrors = false
-    
-    type Path = IPath
     
     private val files = new LinkedHashMap[IFile,File] {
       override def default(key : IFile) = {
@@ -509,7 +505,7 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener {
       // XXX: nothing we can do for presentation compiler.
     } 
 
-    object compiler extends nsc.Global(new Settings(null)) with nsc.ast.parser.Scanners {
+    object compiler extends Global(new Settings(null)) with Scanners {
       override val global = this    // For Scanners
       Project.this.initialize(this)
 
@@ -535,9 +531,9 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener {
           case 1 => SEVERITY_WARNING
           case 0 => SEVERITY_INFO
         }
-      }, msg, offset, identifier)(null)
+      }, msg, offset, identifier, null)
     
-    override def buildError(severity0 : Int, msg : String) = buildError0(severity0, msg)(null)
+    override def buildError(severity0 : Int, msg : String) = buildError0(severity0, msg, null)
     
     override def clearBuildErrors(file : AbstractFile) : Unit  = {
       nscToLampion(file.asInstanceOf[PlainFile]).clearBuildErrors(null)
@@ -670,7 +666,7 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener {
       def project : Project = Project.this.self
       override def toString = underlying.toString
 
-      def doComplete(offset : Int) : List[Completion] = Nil // TODO reinstate
+      def doComplete(offset : Int) : List[ICompletionProposal] = Nil // TODO reinstate
       
       def checkBuildInfo(manager : IFolder) = if (!infoLoaded) {
         infoLoaded = true
@@ -724,7 +720,7 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener {
         file.findMarkers(problemMarkerId.get, true, IResource.DEPTH_INFINITE).exists(_.getAttribute(SEVERITY) == SEVERITY_ERROR)
       }
       
-      def buildError(severity : Int, msg : String, offset : Int, length : Int)(implicit monitor : IProgressMonitor) = if (problemMarkerId.isDefined) {
+      def buildError(severity : Int, msg : String, offset : Int, length : Int, monitor : IProgressMonitor) = if (problemMarkerId.isDefined) {
         val file = underlying match {
           case NormalFile(file) => file
         }
@@ -880,7 +876,6 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener {
         }
       }
       
-      type Completion = ICompletionProposal
       def Completion(offset : Int, length : Int, text : String, 
         info : Option[String], image : Option[Image], additional : => Option[String]) = {
         new JavaCompletionProposal(text, offset, length, image getOrElse null, text + info.getOrElse(""), 0) {
@@ -947,8 +942,6 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener {
       }
     }
     
-    import scala.tools.nsc.io.{AbstractFile,PlainFile}
-
     def nscToLampion(file : PlainFile) : File = {
       val path = Path.fromOSString(file.path)
       val files = workspace.findFilesForLocation(path)
@@ -973,7 +966,7 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener {
     
     private var buildCompiler : BuildCompiler = _
     
-    def build(toBuild : LinkedHashSet[File])(implicit monitor : IProgressMonitor) : Seq[File] = {
+    def build(toBuild : HashSet[File], monitor : IProgressMonitor) : Seq[File] = {
       checkClasspath
       if (buildCompiler == null) {
         buildCompiler = new BuildCompiler(this) // causes it to initialize.
@@ -982,15 +975,12 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener {
       toBuild.foreach{file =>
         toBuild0 += lampionToNSC(file)
       }
-      val changed = buildCompiler.build(toBuild0)(if (monitor == null) null else new BuildProgressMonitor {
-        def isCanceled = monitor.isCanceled
-        def worked(howMuch : Int) = monitor.worked(howMuch)
-      })
+      val changed = buildCompiler.build(toBuild0, monitor)
       toBuild0.foreach{file => toBuild += nscToLampion(file.asInstanceOf[PlainFile])}
       changed.map(file => nscToLampion(file.asInstanceOf[PlainFile]))
     }
 
-    def clean(implicit monitor : IProgressMonitor) = {
+    def clean(monitor : IProgressMonitor) = {
       if (!problemMarkerId.isEmpty)                
         underlying.deleteMarkers(problemMarkerId.get, true, IResource.DEPTH_INFINITE)
       doFullBuild = true
@@ -1226,7 +1216,7 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener {
     Platform.getContentTypeManager.
       getContentType(JavaCore.JAVA_SOURCE_CONTENT_TYPE).
         addFileSpec("scala", IContentTypeSettings.FILE_EXTENSION_SPEC)
-    Util.resetJavaLikeExtensions
+    Util.resetJavaLikeExtensions // TODO Is this still needed?
     PlatformUI.getWorkbench.getEditorRegistry.setDefaultEditor("*.scala", editorId)
   }
   

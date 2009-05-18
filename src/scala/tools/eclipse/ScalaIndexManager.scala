@@ -1,3 +1,8 @@
+/*
+ * Copyright 2005-2009 LAMP/EPFL
+ */
+// $Id$
+
 package scala.tools.eclipse
 
 import org.eclipse.core.resources.{ IFile, IProject, IWorkspace }
@@ -6,7 +11,7 @@ import org.eclipse.jdt.internal.core.search.indexing.IndexManager
 import org.eclipse.jdt.internal.core.util.Util
 
 import scala.tools.eclipse.util.ReflectionUtils
-import scala.tools.eclipse.javaelements.JDTUtils._
+import scala.tools.eclipse.javaelements.JDTUtils
 
 object ScalaIndexManager extends ReflectionUtils {
   private val indexManager = {
@@ -33,7 +38,7 @@ object ScalaIndexManager extends ReflectionUtils {
   }
 
   def initIndex(project : IProject) {
-    flattenProject(project).foreach(addToIndex _)
+    JDTUtils.flattenProject(project).foreach(addToIndex _)
   }
 
   def initIndex(workspace : IWorkspace) {

@@ -1,3 +1,8 @@
+/*
+ * Copyright 2005-2009 LAMP/EPFL
+ */
+// $Id$
+
 package scala.tools.eclipse
 
 /** Utility to unify how we convert settings to preference names */
