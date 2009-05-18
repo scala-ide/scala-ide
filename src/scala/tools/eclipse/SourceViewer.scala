@@ -6,90 +6,47 @@
 
 package scala.tools.eclipse;
 
-import org.eclipse.core.runtime.NullProgressMonitor
+import org.eclipse.core.resources.{ IMarker, IResource, IWorkspaceRunnable }
+import org.eclipse.core.runtime.{ IProgressMonitor, NullProgressMonitor }
 import org.eclipse.jdt.internal.ui.JavaPlugin
 import org.eclipse.jdt.internal.ui.javaeditor.JavaSourceViewer
 import org.eclipse.jdt.internal.ui.text.{ JavaCompositeReconcilingStrategy, JavaReconciler }
 import org.eclipse.jdt.internal.ui.text.java.hover.{ JavadocBrowserInformationControlInput, JavadocHover }
-import org.eclipse.jdt.ui.text.JavaSourceViewerConfiguration
+import org.eclipse.jdt.ui.text.{ JavaSourceViewerConfiguration, IJavaPartitions }
 import org.eclipse.jface.internal.text.html.HTMLPrinter
 import org.eclipse.jface.preference.IPreferenceStore
-import org.eclipse.jface.text.{ TextPresentation, ITextInputListener, ITypedRegion, DocumentEvent, IDocument, ITextViewer, IRegion, Region}
+import org.eclipse.jface.text.{ TextPresentation, ITextInputListener, ITypedRegion, DocumentEvent, IAutoEditStrategy, IDocument, ITextViewer, IRegion, Region}
+import org.eclipse.jface.text.contentassist.{ ContentAssistant, IContentAssistant, IContentAssistProcessor }
 import org.eclipse.jface.text.hyperlink.{ IHyperlink, IHyperlinkDetector }
 import org.eclipse.jface.text.presentation.{ IPresentationDamager, IPresentationRepairer, PresentationReconciler }
 import org.eclipse.jface.text.reconciler.IReconciler
+import org.eclipse.jface.text.rules.{ DefaultDamagerRepairer, ITokenScanner, RuleBasedScanner }
 import org.eclipse.jface.text.source.{ IAnnotationAccess, IAnnotationModel, IAnnotationModelListener, IOverviewRuler, ISharedTextColors, ISourceViewer, IVerticalRuler, SourceViewerConfiguration }
 import org.eclipse.jface.text.source.projection.{ ProjectionAnnotationModel, ProjectionSupport, ProjectionViewer }
+import org.eclipse.swt.SWT
 import org.eclipse.swt.events.{ FocusListener, FocusEvent, VerifyEvent }
 import org.eclipse.swt.widgets.{ Composite, Shell }
 import org.eclipse.ui.texteditor.ITextEditor
 
 import scala.tools.eclipse.util.ReflectionUtils
 
-abstract class SourceViewer(parent : Composite, vertical : IVerticalRuler, overview : IOverviewRuler, showAnnotationsOverview : Boolean, styles : Int, store: IPreferenceStore) extends 
-  JavaSourceViewer(parent,vertical,overview,showAnnotationsOverview,styles, store) with IAnnotationModelListener with FocusListener with ITextInputListener {
+class ScalaSourceViewer(val plugin : ScalaPlugin, val editor : Editor, parent : Composite, vertical : IVerticalRuler, overview : IOverviewRuler, showAnnotationsOverview : Boolean, styles : Int, store: IPreferenceStore) extends 
+  JavaSourceViewer(parent,vertical,overview,showAnnotationsOverview,styles, store) with FocusListener with ITextInputListener {
 
-  val plugin : ScalaPlugin
-  private var hyper = false
-  var busy = false
-  private var thread : Thread = _
-  
   getTextWidget.addFocusListener(this)
   this.addTextInputListener(this)
 
   type File = plugin.Project#File
-  def file : Option[File]
 
-  override def configure(configuration : SourceViewerConfiguration) {
-    super.configure(configuration)
-    SourceViewer.setIsSetVisibleDocumentDelayed(this, false)
-  }
-  
-  override protected def handleVerifyEvent(e : VerifyEvent) = try {
-    super.handleVerifyEvent(e)
-  } catch {
-    case ex : IllegalArgumentException => plugin.logError(ex)
-    case ex : IllegalStateException => plugin.logError(ex)
-  }
-  
-  def catchUp : Unit = {
-    if (!busy) try {
-      busy = true
-      file.foreach(_.processEdit)
-    } finally {
-      busy = false
-    }
-  }
-
-  def doCreatePresentation = true
-  
-  object reconciler extends PresentationReconciler with IPresentationDamager with IPresentationRepairer {
-    setDamager (this, IDocument.DEFAULT_CONTENT_TYPE);
-    setRepairer(this, IDocument.DEFAULT_CONTENT_TYPE);
-    override def createPresentation(presentation : TextPresentation, damage : ITypedRegion) : Unit = {
-      if (!file.isEmpty && doCreatePresentation) {
-        val offset = damage.getOffset
-        val length = damage.getLength
-        val file = SourceViewer.this.file.get
-        try {
-          file.refresh(offset, length, presentation)
-        } catch {
-          case t : Throwable => t.printStackTrace 
-        }
-      }
-    }
-    private def NO_REGION = new Region(0, 0);
-    override def getDamageRegion(partition : ITypedRegion, event : DocumentEvent, documentPartitioningChanged : Boolean) : Region = {
-      val text = if (event.getText == null) "" else event.getText
-      new Region(event.getOffset, text.length)
-    }
-    def setDocument(doc : IDocument) = {}
+  class ScalaDamagerRepairer(scanner : ITokenScanner) extends DefaultDamagerRepairer(scanner) {
+    override def createPresentation(presentation : TextPresentation, damage : ITypedRegion) : Unit =
+      super.createPresentation(presentation, damage);
   }
   
   object textHover extends JavadocHover with ReflectionUtils {
     val getStyleSheetMethod = getDeclaredMethod(classOf[JavadocHover], "getStyleSheet")
     
-    editor.map(setEditor)
+    setEditor(editor)
     
   	override def getHoverInfo2(textViewer : ITextViewer, hoverRegion :  IRegion) = {
   		val i = super.getHoverInfo2(textViewer, hoverRegion)
@@ -98,8 +55,8 @@ abstract class SourceViewer(parent : Composite, vertical : IVerticalRuler, overv
       else {
         val s =
           try {
-            val project = SourceViewer.this.file.get.project
-            val file = SourceViewer.this.file.get.asInstanceOf[project.File]
+            val project = ScalaSourceViewer.this.file.get.project
+            val file = ScalaSourceViewer.this.file.get.asInstanceOf[project.File]
             project.hover(file, hoverRegion.getOffset) match {
               case Some(seq) => seq.mkString
               case None => ""
@@ -125,48 +82,20 @@ abstract class SourceViewer(parent : Composite, vertical : IVerticalRuler, overv
   object hyperlinkDetector extends IHyperlinkDetector {
     override def detectHyperlinks(tv : ITextViewer, region : IRegion, canShowMultiple : Boolean) : Array[IHyperlink] = {
       //Console.println("HYPER: " + region.getOffset + " " + region.getLength)
-      val project = SourceViewer.this.file.get.project
-      val file = SourceViewer.this.file.get.asInstanceOf[project.File]
+      val project = ScalaSourceViewer.this.file.get.project
+      val file = ScalaSourceViewer.this.file.get.asInstanceOf[project.File]
       val result = project.hyperlink(file, region.getOffset)
-      hyper = true
       if (result == None) null
       else (result.get :: Nil).toArray
     }
   }
   
-  def getAnnotationAccess : IAnnotationAccess
-  
-  def getSharedColors : ISharedTextColors
-  
-  /* private[eclipse] */ def projection : ProjectionAnnotationModel = {
-    if (!isProjectionMode()) {
-      val projectionSupport = new ProjectionSupport(this,getAnnotationAccess,getSharedColors);
-      projectionSupport.install();
-      //doOperation(ProjectionViewer.TOGGLE);
-      //assert(isProjectionMode());
-      val ee = getProjectionAnnotationModel
-      if (ee != null) ee.addAnnotationModelListener(this)
-    }
-    return getProjectionAnnotationModel;
-  }
-  
-  override def canDoOperation(operation : Int) : Boolean = {
-    if (operation == ProjectionViewer.TOGGLE)
-      false
-    else
-      super.canDoOperation(operation)
-	}
- 
-  override def modelChanged(model : IAnnotationModel) = {
-    assert(model == projection)
-  }
-  
   override def focusGained(e : FocusEvent) : Unit = {
-    if (!file.isEmpty && file.get.editing) file.get.doPresentation
+    if (!file.isEmpty) file.get.doPresentation
   }
   
   override def focusLost  (e : FocusEvent) : Unit = {
-    if (!file.isEmpty && file.get.editing) file.get.doPresentation
+    if (!file.isEmpty) file.get.doPresentation
   }
   
   override def inputDocumentAboutToBeChanged(oldInput : IDocument, newInput : IDocument) = {
@@ -181,65 +110,71 @@ abstract class SourceViewer(parent : Composite, vertical : IVerticalRuler, overv
     }
   }
         
-  def editor : Option[Editor] = None
-
   def load : Unit = {
-    thread = Thread.currentThread
-    if (this.file.isEmpty) {
+    getDocument.addDocumentListener(editor.documentListener)
+
+    editor.file = editor.plugin.fileFor(editor.getEditorInput) 
+    if (file.isEmpty) {
       plugin.logError("file could not be found, please refresh and make sure its in the project! Make sure your kind in the .project file is set to ch.epfl.lamp.sdt.core and not scala.plugin.", null)
       return
     }
-    if (this.file.get.isLoaded)
-      this.file.get.doUnload
-    assert(!this.file.get.isLoaded)
-    val project = this.file.get.project
+
+    file.get.underlying match {
+      case plugin.NormalFile(file0) => {
+        val workspace = file0.getWorkspace 
+        if (!workspace.isTreeLocked)
+          workspace.run(new IWorkspaceRunnable {
+            def run(monitor : IProgressMonitor) = 
+              file0.deleteMarkers(IMarker.PROBLEM, false, IResource.DEPTH_ZERO)
+          }, null)
+      }  
+      case _ =>
+    }
+    
+    if (file.get.isLoaded)
+      file.get.doUnload
+    
+    val project = file.get.project
     project.initialize(this)
-    val file = this.file.get.asInstanceOf[project.File]
-    plugin.viewers(file) = this
-    assert(file.isLoaded)
-    file.clear
-    file.repair(0, getDocument.getLength, 0)
-    file.loaded
-    catchUp
+    
+    val file0 = file.get.asInstanceOf[project.File]
+    plugin.viewers(file0) = this
   }
   
   def unload : Unit = {
-    if (this.file.isEmpty || !this.file.get.isLoaded) return 
-    assert(this.file.get.isLoaded)
-    val project = this.file.get.project
-    val file = this.file.get.asInstanceOf[project.File]
-    //plugin.viewers.removeKey(file)
-    file.doUnload
-    file.unloaded
-    //catchUp
+    getDocument.removeDocumentListener(editor.documentListener)
+    if (file.isDefined && file.get.isLoaded) { 
+      val project = file.get.project
+      val file0 = file.get.asInstanceOf[project.File]
+      file0.doUnload
+    }
+    editor.file = None
   }
+
+  def file = editor.file.asInstanceOf[Option[File]]
 }
 
-object SourceViewer extends ReflectionUtils {
-  val jsvClass = Class.forName("org.eclipse.jdt.internal.ui.javaeditor.JavaSourceViewer")
-  val fIsSetVisibleDocumentDelayedField = getDeclaredField(jsvClass, "fIsSetVisibleDocumentDelayed")
-
-  class Configuration(store : IPreferenceStore, editor : ITextEditor)
-    extends JavaSourceViewerConfiguration(JavaPlugin.getDefault.getJavaTextTools.getColorManager, store, editor, null) {
-    implicit def coerce(sv : ISourceViewer) = sv.asInstanceOf[SourceViewer]
-    override def getPresentationReconciler(sv : ISourceViewer) = sv.reconciler
-    override def getTextHover(sv : ISourceViewer, contentType : String, stateMask : Int) = sv.textHover
-    override def getHyperlinkDetectors(sv : ISourceViewer) = Array(sv.hyperlinkDetector : IHyperlinkDetector)
-
-    override def getReconciler(sourceViewer : ISourceViewer) : IReconciler = {
-      if (editor != null && editor.isEditable) {
-        val strategy = new JavaCompositeReconcilingStrategy(sourceViewer, editor, getConfiguredDocumentPartitioning(sourceViewer))
-        val reconciler = new JavaReconciler(editor, strategy, false)
-        reconciler.setIsIncrementalReconciler(false)
-        reconciler.setIsAllowedToModifyDocument(false)
-        reconciler.setProgressMonitor(new NullProgressMonitor)
-        reconciler.setDelay(500)
-        reconciler
-      }
-      else
-        null
-    }
+class ScalaSourceViewerConfiguration(store : IPreferenceStore, editor : ITextEditor, contentAssistProcessor : IContentAssistProcessor)
+  extends JavaSourceViewerConfiguration(JavaPlugin.getDefault.getJavaTextTools.getColorManager, store, editor, IJavaPartitions.JAVA_PARTITIONING) {
+    
+  private val codeScanner = new ScalaCodeScanner(getColorManager, store);
+  
+  override def getPresentationReconciler(sv : ISourceViewer) = {
+    val reconciler = super.getPresentationReconciler(sv).asInstanceOf[PresentationReconciler]
+    val ssv = sv.asInstanceOf[ScalaSourceViewer]
+    val dr = new ssv.ScalaDamagerRepairer(codeScanner)
+    reconciler.setDamager(dr, IDocument.DEFAULT_CONTENT_TYPE);
+    reconciler.setRepairer(dr, IDocument.DEFAULT_CONTENT_TYPE);
+    reconciler
   }
     
-  def setIsSetVisibleDocumentDelayed(sv : SourceViewer, value : Boolean) = fIsSetVisibleDocumentDelayedField.set(sv, value)
+  override def getTextHover(sv : ISourceViewer, contentType : String, stateMask : Int) = sv.asInstanceOf[ScalaSourceViewer].textHover
+  
+  override def getHyperlinkDetectors(sv : ISourceViewer) = Array(sv.asInstanceOf[ScalaSourceViewer].hyperlinkDetector : IHyperlinkDetector)
+
+  override def getContentAssistant(sv : ISourceViewer) = {
+    val assistant = super.getContentAssistant(sv).asInstanceOf[ContentAssistant]
+    assistant.setContentAssistProcessor(contentAssistProcessor, IDocument.DEFAULT_CONTENT_TYPE)
+    assistant
+  }
 }

@@ -214,10 +214,6 @@ trait ScalaIndexBuilder extends ScalaJavaMapper { self : ScalaCompilationUnit =>
         //atBuilder(currentBuilder.addTypeTree(tt)) { super.traverse(tree) }            
         super.traverse(tree)            
       }
-      case st : StubTree => {
-        println("Stub tree")
-        traverseTrees(st.underlying.asInstanceOf[file.ParseNode].lastTyped)
-      }
       case u =>
         //println("Unknown type: "+u.getClass.getSimpleName+" "+u)
         super.traverse(tree)

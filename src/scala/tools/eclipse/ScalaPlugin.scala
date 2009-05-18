@@ -36,11 +36,9 @@ import org.eclipse.ui.plugin.AbstractUIPlugin
 import org.eclipse.ui.texteditor.ITextEditor
 import org.osgi.framework.BundleContext
 
-import scala.tools.nsc.Settings
+import scala.tools.nsc.{ Global, Settings }
 import scala.tools.nsc.io.{ AbstractFile, PlainFile, ZipArchive }
    
-import lampion.presentation.Matchers
-import scala.tools.editor.TypersPresentations
 import scala.tools.eclipse.util.Colors
 import scala.tools.eclipse.util.IDESettings
 import scala.tools.eclipse.util.Style
@@ -56,12 +54,11 @@ object ScalaPlugin {
     }
 }
 
-class ScalaPlugin extends {
-  override val OverrideIndicator = "scala.overrideIndicator"  
-} with AbstractUIPlugin with IResourceChangeListener with Matchers with TypersPresentations {
+class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener {
   assert(ScalaPlugin.plugin == null)
   ScalaPlugin.plugin = this
   
+  val OverrideIndicator = "scala.overrideIndicator"  
   def pluginId = "ch.epfl.lamp.sdt.core"
   def wizardPath = pluginId + ".wizards"
   def wizardId(name : String) = wizardPath + ".new" + name
@@ -179,7 +176,7 @@ class ScalaPlugin extends {
     def getHyperlinkRegion = new Region(offset, length)
   }
   
-  /* private[eclipse] */ val viewers = new LinkedHashMap[Project#File,SourceViewer]
+  /* private[eclipse] */ val viewers = new LinkedHashMap[Project#File,ScalaSourceViewer]
   
   private var hadErrors = false
 
@@ -257,15 +254,15 @@ class ScalaPlugin extends {
 
   def Project(underlying : IProject) = new Project(underlying)
   
-  trait ProjectB extends super[TypersPresentations].ProjectImpl
-  trait ProjectC extends super[Matchers].ProjectImpl
-  class Project(val underlying : IProject) extends ProjectC with ProjectB with CompilerProject {
+  class Project(val underlying : IProject) extends CompilerProject {
 
     val ERROR_TYPE = "lampion.error"
     val MATCH_ERROR_TYPE = "lampion.error.match"
 
     override def toString = underlying.getName
-    override def isOpen = super.isOpen && underlying.isOpen  
+    
+    def isOpen = underlying.isOpen
+    
     /* when a file needs to be rooted out */
     def buildDone(built : LinkedHashSet[File])(implicit monitor : IProgressMonitor) : Unit = if (!built.isEmpty) {
       lastBuildHadBuildErrors = built.exists(_.hasBuildErrors)
@@ -314,7 +311,7 @@ class ScalaPlugin extends {
         }
       }, monitor)
     }
-    def clearBuildErrors(implicit monitor : IProgressMonitor) = if (problemMarkerId.isDefined) {
+    def clearBuildErrors(monitor : IProgressMonitor) = if (problemMarkerId.isDefined) {
       underlying.getWorkspace.run(new IWorkspaceRunnable {
         def run(monitor : IProgressMonitor) = {
           underlying.deleteMarkers(problemMarkerId.get, true, IResource.DEPTH_ZERO)
@@ -349,16 +346,15 @@ class ScalaPlugin extends {
 
     /* private[eclipse] */ var doFullBuild = false
 
-    override def inUIThread = Display.getCurrent != null
+    def inUIThread = Display.getCurrent != null
     
-    def initialize(viewer : SourceViewer) : Unit = {
+    def initialize(viewer : ScalaSourceViewer) : Unit = {
 
     }
 
     def Hyperlink(file : File, offset : Int, length : Int)(action : => Unit)(info : String) = new Hyperlink(offset, length) {
       def open = {
         action
-        if (file.editing) file.processEdit
       }
       def getHyperlinkText = info
       def getTypeLabel = null
@@ -370,7 +366,7 @@ class ScalaPlugin extends {
     import org.eclipse.core.runtime.jobs._  
     import org.eclipse.core.runtime._  
 
-    def highlight(sv : SourceViewer, offset0 : Int, length0 : Int, style0 : Style, txt : TextPresentation) : Unit = {
+    def highlight(sv : ScalaSourceViewer, offset0 : Int, length0 : Int, style0 : Style, txt : TextPresentation) : Unit = {
       if (sv == null || sv.getTextWidget == null || sv.getTextWidget.isDisposed) return
       //val offset = sv.modelOffset2WidgetOffset(offset0)
       //val length = sv.modelOffset2WidgetOffset(offset0 + length0) - offset
@@ -392,21 +388,18 @@ class ScalaPlugin extends {
       range.fontStyle = (if (style.bold) SWT.BOLD else SWT.NORMAL) |
         (if (style.italics) SWT.ITALIC else SWT.NORMAL)
       range.start = offset
-      txt addStyleRange range
+      txt mergeStyleRange range
     }
     
     def hover(file : File, offset : Int) : Option[RandomAccessSeq[Char]] = {
-      val result = syncUI{
-        file.tokenForFuzzy(offset)
-      } 
-      result.hover
+      Some("Not yet implemented") // TODO reinstate
     }
 
     def hyperlink(file : File, offset : Int) : Option[IHyperlink] = {
-      val token = file.tokenForFuzzy(offset)
-      token.hyperlink
+      None // TODO reinstate
     }
-    override def openAndSelect(file : File, select : => (Int,Int)) : Unit = {
+
+    def openAndSelect(file : File, select : => (Int,Int)) : Unit = {
       file.doLoad
       val editor =
         if (file.isLoaded)  file.editor.get else { 
@@ -427,29 +420,25 @@ class ScalaPlugin extends {
       editor.selectAndReveal(offset, length)
     }
     
-    override def syncUI[T](f : => T) : T = {
-      val display = Display.getDefault
-      if (Display.getCurrent == display) return f
-      var result : T = null.asInstanceOf[T]
+    def syncUI[T](f : => T) : T = {
+      var result : Option[T] = None
       var exc : Throwable = null
-      display.syncExec(new Runnable {
+      Display.getDefault.syncExec(new Runnable {
         override def run = try {
-          result = f
+          result = Some(f)
         } catch {
-        case ex => exc = ex
+          case ex => exc = ex
         }
       })
-      if (exc != null) throw exc
-      else result
+      if (exc != null)
+        throw exc
+      else
+        result.get
     }
-    override def asyncUI(f : => Unit) : Unit = {
-      val display = Display.getDefault
-      if (Display.getCurrent == display) {
-        f
-        return
-      }
+    
+    def asyncUI(f : => Unit) : Unit = {
       var exc : Throwable = null
-      display.asyncExec(new Runnable {
+      Display.getDefault.asyncExec(new Runnable {
         override def run = try {
           f
         } catch {
@@ -459,11 +448,6 @@ class ScalaPlugin extends {
       if (exc != null) throw exc
     }
     
-    trait ParseNode extends ParseNodeImpl {
-      def self : ParseNode
-    } 
-    trait IdentifierPosition extends IdentifierPositionImpl
-
     def externalDepends = underlying.getReferencedProjects 
 
     def self : Project = this
@@ -524,31 +508,18 @@ class ScalaPlugin extends {
       buildCompiler = null
       // XXX: nothing we can do for presentation compiler.
     } 
-    // needed to make the type gods happy
-    trait Compiler2 extends super.Compiler{ self : compiler.type =>}
-    object compiler0 extends nsc.Global(new Settings(null), new CompilerReporter) with Compiler2 with eclipse.Compiler {
+
+    object compiler extends nsc.Global(new Settings(null)) with nsc.ast.parser.Scanners {
+      override val global = this    // For Scanners
+      Project.this.initialize(this)
+
       def plugin = ScalaPlugin.this
       def project = Project.this.self
-      override def computeDepends(from : loaders.PackageLoader) = super[Compiler].computeDepends(from)
        
       override def logError(msg : String, t : Throwable) =
         ScalaPlugin.this.logError(msg, t)
-      override def stale(path : String) : Seq[Symbol] = {
-        val ret = super.stale(path)
-        ret.foreach{sym => 
-          assert(!sym.isModuleClass)
-          assert(sym.owner != NoSymbol)
-          // XXX: won't work.
-          sym.owner.rawInfo.decls match {
-          case scope : PersistentScope => scope.invalidate(sym.name)
-          case _ =>  
-          }
-        }
-        ret
-      } 
-      Project.this.initialize(this)
     }
-    lazy val compiler : compiler0.type = compiler0
+    
     import java.io.File.pathSeparator 
     
     private implicit def r2o[T <: AnyRef](x : T) = if (x == null) None else Some(x)
@@ -570,9 +541,9 @@ class ScalaPlugin extends {
     
     override def clearBuildErrors(file : AbstractFile) : Unit  = {
       nscToLampion(file.asInstanceOf[PlainFile]).clearBuildErrors(null)
-      clearBuildErrors(null:IProgressMonitor)
+      clearBuildErrors(null : IProgressMonitor)
     }
-    override def clearBuildErrors() = clearBuildErrors(null:IProgressMonitor)
+    override def clearBuildErrors() = clearBuildErrors(null : IProgressMonitor)
     
     override def hasBuildErrors(file : PlainFile) : Boolean = 
       nscToLampion(file).hasBuildErrors
@@ -613,7 +584,7 @@ class ScalaPlugin extends {
       nscToLampion(file).resetDependencies
     }
     
-    override def initialize(global : eclipse.Compiler) = {
+    override def initialize(global : Global) = {
       val settings = new Settings(null)
       val sourceFolders = this.sourceFolders
       val sourcePath = sourceFolders.map(_.getLocation.toOSString).mkString("", pathSeparator, "")
@@ -638,7 +609,7 @@ class ScalaPlugin extends {
       IDESettings.shownSettings(settings).foreach {
 	      setting =>
           val value = store.getString(convertNameToProperty(setting.name))
-		  try {          
+          try {          
             if (value != null)
               setting.tryToSetFromPropertyValue(value)
           } catch {
@@ -685,13 +656,13 @@ class ScalaPlugin extends {
     
     def File(underlying : FileSpec) = new File(underlying)
     
-    class File(val underlying : FileSpec) extends super[ProjectC].FileImpl with super[ProjectB].FileImpl {
+    class File(val underlying : FileSpec) {
       def self : File = this
       private[eclipse] var signature : Long = 0
       import java.io._
 
-      def viewer : Option[SourceViewer] = viewers.get(self)
-      def editor = viewer.map(_.editor) getOrElse None
+      def viewer : Option[ScalaSourceViewer] = viewers.get(self)
+      def editor : Option[Editor] = viewer.map(_.editor)
       
       var dependencies = new LinkedHashSet[IPath]
       private var infoLoaded : Boolean = false
@@ -699,6 +670,8 @@ class ScalaPlugin extends {
       def project : Project = Project.this.self
       override def toString = underlying.toString
 
+      def doComplete(offset : Int) : List[Completion] = Nil // TODO reinstate
+      
       def checkBuildInfo(manager : IFolder) = if (!infoLoaded) {
         infoLoaded = true
         if (manager.exists) {
@@ -708,6 +681,7 @@ class ScalaPlugin extends {
           }
         }
       }
+      
       def buildInfo(manager : IFolder) : IFile = {
         var str = underlying.path.get.toString
         var idx = str.indexOf('/')
@@ -723,13 +697,15 @@ class ScalaPlugin extends {
         dependencies.foreach(reverseDependencies(_) -= filePath)
         dependencies.clear
       }
+      
       def dependsOn(path : IPath) = (underlying) match {
-      case (NormalFile(self)) => 
-        dependencies += path
-        reverseDependencies(path) += self.getLocation
-      case _ => 
+        case (NormalFile(self)) => 
+          dependencies += path
+          reverseDependencies(path) += self.getLocation
+        case _ => 
       }
-      def clearBuildErrors(implicit monitor : IProgressMonitor) = if (problemMarkerId.isDefined) {
+      
+      def clearBuildErrors(monitor : IProgressMonitor) = if (problemMarkerId.isDefined) {
         val file = underlying match {
         case NormalFile(file) => file
         }
@@ -739,6 +715,7 @@ class ScalaPlugin extends {
           }
         }, monitor)
       }
+      
       def hasBuildErrors : Boolean = if (problemMarkerId.isEmpty) false else {
         val file = underlying match {
         case NormalFile(file) => file
@@ -773,14 +750,10 @@ class ScalaPlugin extends {
           }
         }, monitor)
       }
+      
       def toLine(offset : Int) : Option[Int] = None
       
-      override def readOnly = underlying match {
-      case NormalFile(_) => false
-      case _ => super.readOnly
-      }
-      
-      override def Annotation(kind : String, text : String, offset : => Option[Int], length : Int) : Annotation = {
+      def Annotation(kind : String, text : String, offset : => Option[Int], length : Int) : Annotation = {
         val a = new Annotation(kind, false, text)
         asyncUI{
           val model = editor.map(_.getSourceViewer0.getAnnotationModel) getOrElse null
@@ -792,19 +765,19 @@ class ScalaPlugin extends {
         a
       }
       
-      override def delete(a : Annotation) : Unit = asyncUI{
+      def delete(a : Annotation) : Unit = asyncUI{
         val model = editor.map(_.getSourceViewer0.getAnnotationModel) getOrElse null
         if (model != null) model.removeAnnotation(a)
       }
       
-      override def highlight(offset0 : Int, length : Int, style : Style, txt : TextPresentation) : Unit = {
+      def highlight(offset0 : Int, length : Int, style : Style, txt : TextPresentation) : Unit = {
         val viewer = this.viewer
         if (viewer.isEmpty) return
         val sv = viewer.get
         Project.this.highlight(sv, offset0, length, style, txt)
       }
 
-      override def invalidate(start : Int, end : Int, txt : PresentationContext) : Unit = {
+      def invalidate(start : Int, end : Int, txt : PresentationContext) : Unit = {
         txt.invalidate.get(start) match {
           case Some(end0) =>
             if (end > end0) txt.invalidate(start) = end
@@ -812,25 +785,21 @@ class ScalaPlugin extends {
         }
       }
 
-      def refresh(offset : Int, length : Int, pres : TextPresentation) = {
-        refreshHighlightFor(offset, length, pres)
-      }
-      
       private object content0 extends RandomAccessSeq[Char] {
         private def doc = viewer.get.getDocument
         def length = doc.getLength
         def apply(idx : Int) = doc.getChar(idx)
       }
 
-      override def content : RandomAccessSeq[Char] = if (viewer.isDefined) content0 else 
+      def content : RandomAccessSeq[Char] = if (viewer.isDefined) content0 else 
         throw new Error(this + " not open for editing")
 
-      override def createPresentationContext : PresentationContext = new PresentationContext
+      def createPresentationContext : PresentationContext = new PresentationContext
 
-      override def finishPresentationContext(txt : PresentationContext) : Unit = if (!viewer.isEmpty) {
+      def finishPresentationContext(txt : PresentationContext) : Unit = if (!viewer.isEmpty) {
         val viewer = this.viewer.get
-        if (viewer.projection != null) 
-          viewer.projection.replaceAnnotations(txt.remove.toArray,txt.add)
+        if (viewer.getProjectionAnnotationModel != null) 
+          viewer.getProjectionAnnotationModel.replaceAnnotations(txt.remove.toArray,txt.add)
         // highlight
         val i = txt.invalidate.elements
         if (!i.hasNext) return
@@ -865,64 +834,44 @@ class ScalaPlugin extends {
           }
           })
         }
-        
       }
-      override def doPresentation : Unit = {
-        if (this.viewer.isEmpty) return
-        val viewer = this.viewer.get
-        val oldBusy = viewer.busy
-        viewer.busy = true
-        try {
-          super.doPresentation
-        } catch {
-          case ex =>
-            ScalaPlugin.this.logError(ex)
-        }
-        finally {
-          viewer.busy = oldBusy
-        }
+        
+      def doPresentation : Unit = {
+        // TODO reinstate
       }
       
-      override def isLoaded = viewers.contains(self)
-      override def doLoad : Unit = {
-        matchErrors = Nil        
+      def isLoaded = viewers.contains(self)
+      
+      def doLoad : Unit =
         if (!isLoaded) {
           val wb = PlatformUI.getWorkbench
           val page = wb.getActiveWorkbenchWindow.getActivePage
           val editor = doLoad0(page)
-          if(editor.isInstanceOf[Editor]) {
-            if (!isLoaded) {
-              if (!isLoaded) {
-                logError("can't load: " + this,null)
-                return
-              }
-            }
-            assert(isLoaded)
-          }
+          if(editor.isInstanceOf[Editor] && !isLoaded)
+            logError("can't load: " + this,null)
         }
-        super.doLoad
-      }
-      override def doUnload : Unit = {
-        matchErrors = Nil        
-        assert(isLoaded)
-        viewers.removeKey(self)
-        assert(!isLoaded)
-        super.doUnload
-      }
-      override def newError(msg : String) = new Annotation(ERROR_TYPE, false, msg)
-      override def isAt(a : Annotation, offset : Int) : Boolean = {
+      
+      def doUnload : Unit =
+        if(isLoaded)
+          viewers.removeKey(self)
+      
+      def newError(msg : String) = new Annotation(ERROR_TYPE, false, msg)
+      
+      def isAt(a : Annotation, offset : Int) : Boolean = {
         val model = editor.get.getSourceViewer0.getAnnotationModel
         if (model != null) {
           val pos = model.getPosition(a)
           pos != null && pos.getOffset == offset
         } else false
       }
-      override def install(offset : Int, length : Int, a : Annotation) = {
+        
+      def install(offset : Int, length : Int, a : Annotation) = {
         val sv = editor.get.getSourceViewer0
         if (sv.getAnnotationModel != null)
           (sv.getAnnotationModel.addAnnotation(a, new org.eclipse.jface.text.Position(offset, length)))
       }
-      override def uninstall(a : Annotation) : Unit = {
+        
+      def uninstall(a : Annotation) : Unit = {
         if (editor.isEmpty) return
         val sv = editor.get.getSourceViewer0
         if (sv.getAnnotationModel != null) {
@@ -932,53 +881,18 @@ class ScalaPlugin extends {
       }
       
       type Completion = ICompletionProposal
-      override def Completion(offset : Int, length : Int, text : String, 
-          info : Option[String], image : Option[Image], additional : => Option[String]) = {
-          new JavaCompletionProposal(text, offset, length, image getOrElse null, text + info.getOrElse(""), 0) {
-            override def apply(viewer : ITextViewer, trigger : Char, stateMask : Int, offset : Int) {
-              self.resetConstrict
-              super.apply(viewer, trigger, stateMask, offset)
-            }
+      def Completion(offset : Int, length : Int, text : String, 
+        info : Option[String], image : Option[Image], additional : => Option[String]) = {
+        new JavaCompletionProposal(text, offset, length, image getOrElse null, text + info.getOrElse(""), 0) {
+          override def apply(viewer : ITextViewer, trigger : Char, stateMask : Int, offset : Int) {
+            super.apply(viewer, trigger, stateMask, offset)
           }
         }
-      private var matchErrors = List[Annotation]() 
-      override def removeUnmatched(offset : Int) = if (viewer.isDefined) {
-        val v = viewer.get.getAnnotationModel
-        matchErrors.find{a=>
-          val pos = v.getPosition(a)
-          pos != null && pos.offset == offset
-        } match {
-        case Some(a) => v.removeAnnotation(a)
-                        matchErrors = matchErrors.filter(_ != a)
-        case None =>
-        }
-      }
-      override def addUnmatched(offset : Int, length : Int) = {
-        val a = new Annotation(ERROR_TYPE, false, "unmatched")
-        matchErrors = a :: matchErrors
-        val v = viewer.get.getAnnotationModel
-        v.addAnnotation(a, new org.eclipse.jface.text.Position(offset, length))
       }
       
-      
-      
-      class IdentifierPosition extends Project.this.IdentifierPosition with IdentifierPositionImpl {
-        override def self = this
-      }
-      override def IdentifierPosition = new IdentifierPosition
-      class ParseNode extends Project.this.ParseNode with ParseNodeImpl {
-        def self = this
-        makeNoChanges
-      }
-      def ParseNode = new ParseNode
-      override def Token(offset : Int, text : RandomAccessSeq[Char], code : Int) = new Token(offset : Int, text : RandomAccessSeq[Char], code : Int)
-      class Token(val offset : Int, val text : RandomAccessSeq[Char], val code : Int) extends TokenImpl {
-        def self = this
-      }
-      
-      override def nscFile : AbstractFile = file.underlying match {
-      case NormalFile(file) => new PlainFile(file.getLocation.toFile)
-      case ClassFileSpec(source,clazz) => source
+      def nscFile : AbstractFile = underlying match {
+        case NormalFile(file) => new PlainFile(file.getLocation.toFile)
+        case ClassFileSpec(source,clazz) => source
       }
       
       def saveBuildInfo(output : DataOutputStream) : Unit = {
@@ -992,64 +906,44 @@ class ScalaPlugin extends {
         list.foreach(dependencies += Path.fromOSString(_))
         signature = input.readLong
       }
-      override def sourcePackage : Option[String] = underlying match {
-      case NormalFile(file) => 
-        sourceFolders.find(_.getLocation.isPrefixOf(file.getLocation)) match {
-        case Some(fldr) =>
-          var path = file.getLocation.removeFirstSegments(fldr.getLocation.segmentCount)
-          path = path.removeLastSegments(1).removeTrailingSeparator
-          Some(path.segments.mkString("", ".", ""))
-        case None => super.sourcePackage
-        }
-      case ClassFileSpec(source,classFile) => 
-        classFile.getParent match {
-        case pkg : IPackageFragment => Some(pkg.getElementName)
-        case _ => super.sourcePackage
-        }
-      case _ => super.sourcePackage
-      }
-      override def defaultClassDir = underlying match {
-      case NormalFile(file) => 
-        val file = new PlainFile(new java.io.File(outputPath))    
-        if (file.isDirectory) Some(file)
-        else super.defaultClassDir
-      case ClassFileSpec(source,classFile) => 
-        var p = classFile.getParent
-        while (p != null && !p.isInstanceOf[IPackageFragmentRoot]) p = p.getParent
-        p match {
-        case null => super.defaultClassDir
-        case p : IPackageFragmentRoot =>
-          val path = p.getPath.toOSString
-          if (path.endsWith(".jar") || path.endsWith(".zip"))
-            Some(ZipArchive.fromFile(new java.io.File(path)))  
-          else Some(new PlainFile(new java.io.File(path)))
-        }
-      case _ => super.defaultClassDir
-      }
       
-      var outlineTrees0 : List[compiler.Tree] = null
-      def outlineTrees = {
-        if (outlineTrees0 == null) outlineTrees0 = List(unloadedBody) 
-        outlineTrees0
+      def sourcePackage : Option[String] = underlying match {
+        case NormalFile(file) => 
+          sourceFolders.find(_.getLocation.isPrefixOf(file.getLocation)) match {
+            case Some(fldr) =>
+              var path = file.getLocation.removeFirstSegments(fldr.getLocation.segmentCount)
+              path = path.removeLastSegments(1).removeTrailingSeparator
+              Some(path.segments.mkString("", ".", ""))
+            case None => None
+          }
+        case ClassFileSpec(source,classFile) => 
+          classFile.getParent match {
+            case pkg : IPackageFragment => Some(pkg.getElementName)
+            case _ => None
+          }
+      }
+        
+      def defaultClassDir = underlying match {
+        case NormalFile(file) => 
+          val file = new PlainFile(new java.io.File(outputPath))    
+          if (file.isDirectory) Some(file) else None
+        case ClassFileSpec(source,classFile) => 
+          var p = classFile.getParent
+          while (p != null && !p.isInstanceOf[IPackageFragmentRoot]) p = p.getParent
+          p match {
+            case null => None
+            case p : IPackageFragmentRoot =>
+              val path = p.getPath.toOSString
+              if (path.endsWith(".jar") || path.endsWith(".zip"))
+                Some(ZipArchive.fromFile(new java.io.File(path)))  
+              else
+                Some(new PlainFile(new java.io.File(path)))
+          }
       }
       
       def doLoad0(page : IWorkbenchPage) = underlying match {
         case ClassFileSpec(source,clazz) => page.openEditor(new ClassFileInput(project,source,clazz), editorId) 
         case NormalFile(underlying) => IDE.openEditor(page, underlying, true)
-      }
-      
-      override def parseChanged(node : ParseNode) = {
-        super.parseChanged(node)
-        //Console.println("PARSE_CHANGED: " + node)
-        outlineTrees0 = rootParse.lastTyped
-      }
-      override def prepareForEditing = {
-        super.prepareForEditing
-        if (!viewer.isEmpty && viewer.get.projection != null) {
-          val p = viewer.get.projection
-          p.removeAllAnnotations
-        }
-        outlineTrees0 = rootParse.lastTyped
       }
     }
     
@@ -1077,7 +971,8 @@ class ScalaPlugin extends {
       }
     }
     
-    private var buildCompiler : BuildCompiler = _ 
+    private var buildCompiler : BuildCompiler = _
+    
     def build(toBuild : LinkedHashSet[File])(implicit monitor : IProgressMonitor) : Seq[File] = {
       checkClasspath
       if (buildCompiler == null) {
@@ -1095,12 +990,6 @@ class ScalaPlugin extends {
       changed.map(file => nscToLampion(file.asInstanceOf[PlainFile]))
     }
 
-    def stale(path : IPath) : Unit = {
-      compiler.stale(path.toOSString)
-      if (buildCompiler != null)
-        buildCompiler.stale(path.toOSString)
-    }
-    
     def clean(implicit monitor : IProgressMonitor) = {
       if (!problemMarkerId.isEmpty)                
         underlying.deleteMarkers(problemMarkerId.get, true, IResource.DEPTH_INFINITE)
@@ -1149,11 +1038,10 @@ class ScalaPlugin extends {
       }
     }
 
-    import compiler.global._
     import org.eclipse.jdt.core.{IType,IJavaElement}
     import org.eclipse.core.runtime.IProgressMonitor
     protected def findJava(sym : compiler.Symbol) : Option[IJavaElement] = {
-      if (sym == NoSymbol) None
+      if (sym == compiler.NoSymbol) None
       else if (sym.owner.isPackageClass) {
         val found = javaProject.findType(sym.owner.fullNameString('.'), sym.simpleName.toString, null : IProgressMonitor)
         if (found eq null) None
@@ -1207,7 +1095,7 @@ class ScalaPlugin extends {
       case tpe => signatureFor0(tpe.typeSymbol)  
       }
     }
-    protected def classFileFor(sym : Symbol) : Option[IClassFile] = {
+    protected def classFileFor(sym : compiler.Symbol) : Option[IClassFile] = {
       findJava(sym).map{e => 
         var p = e
         while (p != null && !p.isInstanceOf[IClassFile]) p = p.getParent
@@ -1226,7 +1114,7 @@ class ScalaPlugin extends {
         file
     }
     
-    override def fileFor(sym : Symbol) : Option[Project#File] = sym.sourceFile match {
+    def fileFor(sym : compiler.Symbol) : Option[Project#File] = sym.sourceFile match {
       case null => None
       case file : PlainFile => findFileFor(file)
       case source => classFileFor(sym.toplevelClass) match {
@@ -1255,23 +1143,37 @@ class ScalaPlugin extends {
         return project0.fileSafe(file0)
       }
     }
+    
+    trait IdeRef {
+      def hyperlink : Unit
+      def hover : Option[RandomAccessSeq[Char]]
+      def symbol : Option[Global#Symbol]
+    }
 
+    case object NoRef extends IdeRef {
+      def hyperlink : Unit = {}
+      def hover : Option[RandomAccessSeq[Char]] = None
+      override def symbol = None
+    }    
+    
     private case class JavaRef(elem : IJavaElement, symbol0 : compiler.Symbol) extends IdeRef {
+      import org.eclipse.jdt.ui._
+
       override def hover = try {
         val str = elem.getAttachedJavadoc(null)
-        if (str eq null) None
-        else Some(str)
+        if (str eq null) None else Some(str)
       } catch {
-      case ex => 
-        ScalaPlugin.this.logError(ex)
-        Some("Method added to Java class by Scala compiler.")
+        case ex => 
+          ScalaPlugin.this.logError(ex)
+          Some("Method added to Java class by Scala compiler.")
       }
-      import org.eclipse.jdt.ui._
-      override def hyperlink =
-        JavaUI.openInEditor(elem, true, true)
+      
+      override def hyperlink = JavaUI.openInEditor(elem, true, true)
+      
       override def symbol = Some(symbol0)
     }
-    override protected def javaRef(symbol : compiler.Symbol) : IdeRef = {
+    
+    protected def javaRef(symbol : compiler.Symbol) : IdeRef = {
       val elem = findJava(symbol) match {
         case Some(elem) => elem
         case None => return NoRef
@@ -1335,54 +1237,35 @@ class ScalaPlugin extends {
   }
   
   override def resourceChanged(event : IResourceChangeEvent) {
-    if(event.getType == IResourceChangeEvent.POST_CHANGE) {
-      event.getDelta.accept(new IResourceDeltaVisitor {
-        def visit(delta : IResourceDelta) : Boolean = {
-          delta.getKind match {
-            case IResourceDelta.CHANGED => {
-              delta.getResource match {
-                case f : IFile => {
-                  if (ScalaPlugin.isScalaProject(f.getProject) &&
-                    (JavaCore.create(f.getProject).isOnClasspath(f))) {
-                      projectSafe(f.getProject).get.stale(f.getLocation)
-                  }
-                }
-                case _ =>
-              }
-            }
-            case _ =>
-          }
-          true
-        }
-      })
-    }
-    
     (event.getResource, event.getType) match {
       case (iproject : IProject, IResourceChangeEvent.PRE_CLOSE) => 
         val project = projects.removeKey(iproject)
-        if (!project.isEmpty) project.get.destroy
       case _ =>
     }
   }
   
   def inputFor(that : AnyRef) : Option[IEditorInput] = that match {
-  case that : IClassFile  => 
-    scalaSourceFile(that).map{
-    case (project,source) => new ClassFileInput(project,source,that)
-    }
-  case _ => None
+    case that : IClassFile  => scalaSourceFile(that).map { case (project,source) => new ClassFileInput(project,source,that) }
+    case _ => None
   }
   
   import org.eclipse.jdt.internal.ui.javaeditor._
   import org.eclipse.jdt.internal.ui._
-  class ClassFileInput(val project : Project, val source : AbstractFile, val classFile : IClassFile) extends InternalClassFileEditorInput(classFile) with FixedInput {
+  
+  class ClassFileInput(val project : Project, val source : AbstractFile, val classFile : IClassFile)
+    extends InternalClassFileEditorInput(classFile) with FixedInput {
+    
     assert(source != null)
+    
     override def getAdapter(clazz : java.lang.Class[_]) = clazz match {
-    case clazz if clazz == classOf[AbstractFile] => source
-    case _ => super.getAdapter(clazz)  
+      case clazz if clazz == classOf[AbstractFile] => source
+      case _ => super.getAdapter(clazz)  
     }
+    
     override def initialize(doc : IDocument) : Unit = doc.set(new String(source.toCharArray))
+    
     override def neutralFile = (project.classFile(source,classFile))
+    
     override def createAnnotationModel = {
       (classFile.getAdapter(classOf[IResourceLocator]) match {
       case null => null

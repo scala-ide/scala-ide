@@ -142,28 +142,37 @@ class BreakpointAdapterFactory extends IAdapterFactory {
     }
   }
   private def getTopLevelTypeName(editor : ITextEditor, offset : Int) : String = editor match {
-  case editor : eclipse.Editor => 
-    val viewer = editor.getSourceViewer0
-    val file = viewer.file.get
-    import scala.tools.editor._
-    val project = file.project.asInstanceOf[TypersPresentations#ProjectImpl]
-    val file0 = file.asInstanceOf[project.FileImpl].self
-    import org.eclipse.swt.widgets.Display
-    var answer : String = null
-    Display.getDefault.syncExec(new Runnable {
-      def run = {
-        val tok = file0.tokenForFuzzy(offset)
-        answer = tok.enclosingDefinition match {
-      case Some(sym) =>  
-        val sym0 = sym.toplevelClass
-        var name = sym0.fullNameString('.') 
-        if (sym0.isModuleClass) name = name + "$"
-        name
-      case None => null
-      }}
-    })
-    answer
+    case editor : eclipse.Editor => 
+      val viewer = editor.getSourceViewer0
+      val file = viewer.file.get
+      import scala.tools.editor._
+      val project = file.project.asInstanceOf[ScalaPlugin#Project]
+      val file0 = file.asInstanceOf[project.File].self
+      import org.eclipse.swt.widgets.Display
+      var answer : String = null
+      
+      // TODO reinstate
+      
+      /*
+      Display.getDefault.syncExec(new Runnable {
+        def run = {
+          
+          val tok = file0.tokenForFuzzy(offset)
+          answer = tok.enclosingDefinition match {
+            case Some(sym) =>  
+              val sym0 = sym.toplevelClass
+              var name = sym0.fullNameString('.') 
+              if (sym0.isModuleClass) name = name + "$"
+              name
+            case None => null
+          }
+        }
+      })
+      */
+      
+      answer
   }
+  
   private def createLineBreakpoint(resource : IResource, typeName : String, lineNumber : Int, charStart : Int, charEnd : Int, hitCount : Int,
        register : Boolean, attributes : LinkedHashMap[Object,Object], document : IDocument, editorPart : IEditorPart) = {
     val breakpoint = JDIDebugModel.createLineBreakpoint(

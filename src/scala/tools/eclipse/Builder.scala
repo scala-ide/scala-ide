@@ -74,8 +74,6 @@ class Builder extends IncrementalProjectBuilder {
           while (i.hasNext) {
             val path = ipath(i.next)
             if (project.sourceFolders.exists(_.getLocation.isPrefixOf(path))) {
-              // i.remove
-              project.stale(file.getLocation)
               val p = project.underlying
               val f = p.getFile(path.removeFirstSegments(path.matchingFirstSegments(p.getLocation)))
               toBuild += project.fileSafe(f).get
@@ -132,7 +130,6 @@ class Builder extends IncrementalProjectBuilder {
                   case _ => file.touch(monitor)
                 }
               } else {
-                plugin.projectSafe(file.getProject).foreach(_.stale(changed))
                 if (hasBeenBuilt(file.getProject)) buildAgain = true
                 file.touch(monitor)
               }

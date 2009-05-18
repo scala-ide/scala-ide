@@ -21,7 +21,7 @@ import scala.tools.nsc.util.{ NoPosition, Position }
 trait ScalaStructureBuilder extends ScalaJavaMapper { self : ScalaCompilationUnit =>
   import proj.compiler._
   
-  class StructureBuilderTraverser(unitInfo : ScalaCompilationUnitInfo, newElements0 : JMap[AnyRef, AnyRef], sourceLength : Int, endPosMap : Map[Tree, Position]) extends Traverser {
+  class StructureBuilderTraverser(unitInfo : ScalaCompilationUnitInfo, newElements0 : JMap[AnyRef, AnyRef], sourceLength : Int) extends Traverser {
     private var currentBuilder : Owner = new CompilationUnitBuilder
     private val manager = JavaModelManager.getJavaModelManager
     private val file = proj.fileSafe(self.getResource.asInstanceOf[IFile]).get
@@ -380,7 +380,7 @@ trait ScalaStructureBuilder extends ScalaJavaMapper { self : ScalaCompilationUni
       import Math.{ max, min }
       
       val startPos = tree.pos 
-      val endPos = endPosMap.getOrElse(tree, NoPosition)
+      val endPos = tree.pos // TODO Use new position info from trees
       val start0 = if (startPos != NoPosition) startPos.offset.getOrElse(-1) else -1
       val end0 = if (endPos != NoPosition) endPos.offset.getOrElse(-1) else -1
       val start = max(0, min(start0, end0-1))
@@ -452,10 +452,6 @@ trait ScalaStructureBuilder extends ScalaJavaMapper { self : ScalaCompilationUni
         //println("Type tree: "+tt)
         //atBuilder(currentBuilder.addTypeTree(tt)) { super.traverse(tree) }            
         super.traverse(tree)            
-      }
-      case st : StubTree => {
-        //println("Stub tree")
-        traverseTrees(st.underlying.asInstanceOf[file.ParseNode].lastTyped)
       }
       case u =>
         //println("Unknown type: "+u.getClass.getSimpleName+" "+u)

@@ -7,8 +7,6 @@
 package scala.tools.eclipse.properties
 
 import org.eclipse.core.runtime.preferences.{ AbstractPreferenceInitializer, DefaultScope }
-//import org.eclipse.core.runtime.preferences._
-//import org.eclipse.jface.preference._
 
 import scala.tools.nsc.Settings
 

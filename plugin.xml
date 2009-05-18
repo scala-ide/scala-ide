@@ -46,7 +46,7 @@
       </page>
    </extension>
 	<extension point="org.eclipse.core.runtime.contentTypes">
-		<content-type id="scalaSource" name="Scala Source File" 
+		<content-type id="scala.tools.eclipse.scalaSource" name="Scala Source File" 
 			base-type="org.eclipse.core.runtime.text"
 			priority="high"				
 			file-extensions="scala"/>
@@ -66,6 +66,23 @@
             <contentTypeBinding contentTypeId="scala.tools.eclipse.scalaSource"/> 
       </editor>
    </extension>
+   
+   <extension point="org.eclipse.core.filebuffers.annotationModelCreation">
+      <factory
+         contentTypeId="scala.tools.eclipse.scalaSource"
+         class="scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.ScalaCompilationUnitDocumentProvider"/>
+   </extension>
+   
+   <extension
+      id="ScalaDocumentSetupParticipant"
+      name="ScalaDocumentSetupParticipant"
+      point="org.eclipse.core.filebuffers.documentSetup">
+      <participant
+         contentTypeId="scala.tools.eclipse.scalaSource"
+         class="org.eclipse.jdt.internal.ui.javaeditor.JavaDocumentSetupParticipant">
+      </participant>
+   </extension>
+   
 	<extension point="org.eclipse.ui.editorActions">
 	  <editorContribution
 		targetID="scala.tools.eclipse.Editor"

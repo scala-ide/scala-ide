@@ -42,7 +42,9 @@ class ScalaCompilationUnit(fragment : PackageFragment, elementName: String, work
     val (root, fileOpt) = try { 
       val resource = getCorrespondingResource.asInstanceOf[IFile]
       val fileOpt0 = proj.fileSafe(resource)
-      (fileOpt0.map(_.outlineTrees).getOrElse(Nil), fileOpt0)
+      // TODO reinstate
+      //(fileOpt0.map(_.outlineTrees).getOrElse(Nil), fileOpt0)
+      (Nil, fileOpt0)
     } catch {
       case ex : JavaModelException => (Nil, None)
     }
@@ -65,9 +67,8 @@ class ScalaCompilationUnit(fragment : PackageFragment, elementName: String, work
       throw newNotPresentException
 
     val sourceLength = file.nscFile.sizeOption.getOrElse(-1)
-    val endPosMap = computeEndPosMap(root)
     
-    new StructureBuilderTraverser(unitInfo, newElements.asInstanceOf[JMap[AnyRef, AnyRef]], sourceLength, endPosMap).traverseTrees(root)
+    new StructureBuilderTraverser(unitInfo, newElements.asInstanceOf[JMap[AnyRef, AnyRef]], sourceLength).traverseTrees(root)
     
     unitInfo.setSourceLength(sourceLength)
     unitInfo.setIsStructureKnown(true)
@@ -76,45 +77,12 @@ class ScalaCompilationUnit(fragment : PackageFragment, elementName: String, work
   
   def addToIndexer(indexer : ScalaSourceIndexer) {
     val fileOpt = proj.fileSafe(getCorrespondingResource.asInstanceOf[IFile])
-    val root = fileOpt.map(_.outlineTrees).getOrElse(Nil)
+    // TODO reinstate
+    // val root = fileOpt.map(_.outlineTrees).getOrElse(Nil)
+    val root = Nil
     if (!root.isEmpty)
       new IndexBuilderTraverser(indexer).traverseTrees(root)
   }
-  
-  private def computeEndPosMap(trees : List[Tree]) : Map[Tree, Position] = {
-    try {
-      val traverser = new Traverser {
-        var map : Map[Tree, Position] = Map.empty
-        var rightmost : Position = NoPosition
-  
-        private val file = proj.fileSafe(getResource.asInstanceOf[IFile]).get
-        
-        override def traverse(tree: Tree): Unit = {
-          rightmost = max(rightmost, tree.pos)
-          tree match {
-            case st : StubTree => traverseTrees(st.underlying.asInstanceOf[file.ParseNode].lastTyped)
-            case _ => {
-              super.traverse(tree)
-              map += (tree -> rightmost)
-            }
-          }
-        }
-  
-        def max(a : Position, b : Position) = {
-          (a, b) match {
-            case (x, NoPosition) => x
-            case (NoPosition, y) => y
-            case (x, y) => if (x.offset.getOrElse(-1) >= y.offset.getOrElse(-1)) x else y
-          }
-        }
-      }
-      
-      traverser.traverseTrees(trees)
-      traverser.map
-    } catch {
-      case _ => Map.empty
-    }
-  } 
   
   override def createElementInfo : Object = new ScalaCompilationUnitInfo
   
