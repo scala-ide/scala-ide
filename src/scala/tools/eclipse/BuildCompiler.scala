@@ -11,13 +11,13 @@ import java.nio.charset._
 import scala.collection.mutable.LinkedHashSet
 
 import scala.tools.nsc.{ Global, Settings }
-import scala.tools.nsc.io.{ AbstractFile, PlainFile }
+import scala.tools.nsc.io.AbstractFile
 import scala.tools.nsc.util.Position
 import scala.tools.nsc.reporters.Reporter
 
 import org.eclipse.core.runtime.IProgressMonitor
 
-class BuildCompiler(val project : CompilerProject) extends Global(new Settings) {
+class BuildCompiler(val project : ScalaPlugin#Project) extends Global(new Settings) {
   val plugin = ScalaPlugin.plugin
   
   project.initialize(this)
@@ -26,7 +26,7 @@ class BuildCompiler(val project : CompilerProject) extends Global(new Settings) 
     override def info0(pos : Position, msg : String, severity : Severity, force : Boolean) = {
       severity.count += 1
       (pos.offset, pos.source.map(_.file)) match {
-        case (Some(offset), Some(file : PlainFile)) => 
+        case (Some(offset), Some(file)) => 
           val source = pos.source.get
           project.buildError(file, severity.id, msg, offset, source.identifier(pos, BuildCompiler.this).getOrElse(" ").length)
         case _ => 
@@ -62,11 +62,11 @@ class BuildCompiler(val project : CompilerProject) extends Global(new Settings) 
       }
     }
     //val plugin = this.plugin
-    val filenames = toBuild.map(_.file.getAbsolutePath).toList
-    reporter.reset
+    val files = toBuild.toList
     project.clearBuildErrors()
+    reporter.reset
     try {
-      run.compile(filenames)
+      run.compileFiles(files)
     } catch  {
       case e =>
         plugin.logError("Build compiler (scalac) crashed", e)

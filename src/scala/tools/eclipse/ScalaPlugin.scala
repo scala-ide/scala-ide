@@ -40,10 +40,10 @@ import org.osgi.framework.BundleContext
 
 import scala.tools.nsc.{ Global, Settings }
 import scala.tools.nsc.ast.parser.Scanners
-import scala.tools.nsc.io.{ AbstractFile, PlainFile, ZipArchive }
-   
+import scala.tools.nsc.io.AbstractFile
+
 import scala.tools.eclipse.properties.PropertyStore
-import scala.tools.eclipse.util.{ IDESettings, Style } 
+import scala.tools.eclipse.util.{ EclipseFile, EclipseResource, IDESettings, Style } 
 
 object ScalaPlugin { 
   var plugin : ScalaPlugin = _
@@ -242,7 +242,7 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener {
 
   def Project(underlying : IProject) = new Project(underlying)
   
-  class Project(val underlying : IProject) extends CompilerProject {
+  class Project(val underlying : IProject) {
 
     val ERROR_TYPE = "lampion.error"
 
@@ -317,6 +317,7 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener {
         ret
       }
     }
+    
     def fileSafe(file : IFile) : Option[File] = files.get(file) match{
     case _ if !file.exists => None
     case None if canBeConverted(file) => Some(files(file))
@@ -439,8 +440,7 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener {
     def javaProject = JavaCore.create(underlying)
     def sourceFolders = ScalaPlugin.this.sourceFolders(javaProject)
     
-    def outputPath = outputPath0.toOSString
-    def outputPath0 = check {
+    def outputPath = check {
       val outputLocation = javaProject.getOutputLocation
       val cntnr = workspace.findMember(outputLocation)
       assert(cntnr ne null)
@@ -502,12 +502,9 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener {
         ScalaPlugin.this.logError(msg, t)
     }
     
-    private implicit def r2o[T <: AnyRef](x : T) = if (x == null) None else Some(x)
-    override def charSet(file : PlainFile) : String = nscToEclipse(file).getCharset
-
-    //override def logError(msg : String, e : Throwable) : Unit =
-    //  ScalaPlugin.this.logError(msg,e)
-    override def buildError(file : PlainFile, severity0 : Int, msg : String, offset : Int, identifier : Int) : Unit =
+    private def nullToOption[T <: AnyRef](x : T) = if (x == null) None else Some(x)
+    
+    def buildError(file : AbstractFile, severity0 : Int, msg : String, offset : Int, identifier : Int) : Unit =
       nscToLampion(file).buildError({
         severity0 match { //hard coded constants from reporters
           case 2 => IMarker.SEVERITY_ERROR
@@ -516,18 +513,19 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener {
         }
       }, msg, offset, identifier, null)
     
-    override def buildError(severity0 : Int, msg : String) = buildError0(severity0, msg, null)
+    def buildError(severity0 : Int, msg : String) = buildError0(severity0, msg, null)
     
-    override def clearBuildErrors(file : AbstractFile) : Unit  = {
-      nscToLampion(file.asInstanceOf[PlainFile]).clearBuildErrors(null)
+    def clearBuildErrors(file : AbstractFile) : Unit  = {
+      nscToLampion(file).clearBuildErrors(null)
       clearBuildErrors(null : IProgressMonitor)
     }
-    override def clearBuildErrors() = clearBuildErrors(null : IProgressMonitor)
     
-    override def hasBuildErrors(file : PlainFile) : Boolean = 
+    def clearBuildErrors() : Unit = clearBuildErrors(null : IProgressMonitor)
+    
+    def hasBuildErrors(file : AbstractFile) : Boolean = 
       nscToLampion(file).hasBuildErrors
 
-    override def projectFor(path : String) : Option[Project] = {
+    def projectFor(path : String) : Option[Project] = {
       val root = ResourcesPlugin.getWorkspace.getRoot.getLocation.toOSString
       if (!path.startsWith(root)) return None
       val path1 = path.substring(root.length)
@@ -535,40 +533,37 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener {
       val res = ResourcesPlugin.getWorkspace.getRoot.findMember(Path.fromOSString(path1))
       projectSafe(res.getProject)
     }
-    override def fileFor(path : String) : PlainFile = {
-      val root = ResourcesPlugin.getWorkspace.getRoot.getLocation.toOSString
-      assert(path.startsWith(root))
-      val path1 = path.substring(root.length)
-      val file = ResourcesPlugin.getWorkspace.getRoot.getFile(Path.fromOSString(path1))
-      assert(file.exists)
-      new PlainFile(new java.io.File(file.getLocation.toOSString))
-    }
-    override def signature(file : PlainFile) : Long = {
+    
+    def signature(file : AbstractFile) : Long = {
       nscToLampion(file).signature
     }
-    override def setSignature(file : PlainFile, value : Long) : Unit = {
+    
+    def setSignature(file : AbstractFile, value : Long) : Unit = {
       nscToLampion(file).signature = value
     }
-    override def refreshOutput : Unit = {
+    
+    def refreshOutput : Unit = {
       val res = workspace.findMember(javaProject.getOutputLocation)
       res.refreshLocal(IResource.DEPTH_INFINITE, null)
     }
-    override def dependsOn(file : PlainFile, what : PlainFile) : Unit = {
+      
+    def dependsOn(file : AbstractFile, what : AbstractFile) : Unit = {
       val f0 = nscToLampion(file)
       val p1 = what.file.getAbsolutePath
       val p2 = Path.fromOSString(p1)
       f0.dependsOn(p2)
     }
-    override def resetDependencies(file : PlainFile) = {
+      
+    def resetDependencies(file : AbstractFile) = {
       nscToLampion(file).resetDependencies
     }
     
-    override def initialize(global : Global) = {
+    def initialize(global : Global) = {
       val settings = new Settings(null)
       val sourceFolders = this.sourceFolders
       val sourcePath = sourceFolders.map(_.getLocation.toOSString).mkString("", pathSeparator, "")
       settings.sourcepath.tryToSetFromPropertyValue(sourcePath)
-      settings.outdir.tryToSetFromPropertyValue(outputPath)
+      settings.outdir.tryToSetFromPropertyValue(outputPath.toOSString)
       settings.classpath.tryToSetFromPropertyValue("")     // Is this really needed?
       settings.bootclasspath.tryToSetFromPropertyValue("") // Is this really needed?
       if (!sourceFolders.isEmpty) {
@@ -601,7 +596,7 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener {
     def intializePaths(global : nsc.Global) = {
       val sourceFolders = this.sourceFolders
       val sourcePath = sourceFolders.map(_.getLocation.toOSString).mkString("", pathSeparator, "")
-      global.classPath.output(outputPath, sourcePath)
+      global.classPath.output(outputPath.toOSString, sourcePath)
       val cps = javaProject.getResolvedClasspath(true)
       cps.foreach(cp => check{cp.getEntryKind match { 
       case IClasspathEntry.CPE_PROJECT => 
@@ -617,14 +612,14 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener {
             val cp = JavaCore.getResolvedClasspathEntry(root.getRawClasspathEntry)
             if (cp.isExported) {
               val classes = resolve(cp.getPath).toOSString
-              val sources = cp.getSourceAttachmentPath.map(p => resolve(p).toOSString).getOrElse(null)
+              val sources = nullToOption(cp.getSourceAttachmentPath).map(p => resolve(p).toOSString).getOrElse(null)
               global.classPath.library(classes, sources)
             }
           }
         }
       case IClasspathEntry.CPE_LIBRARY =>   
         val classes = resolve(cp.getPath).toOSString
-        val sources = cp.getSourceAttachmentPath.map(p => resolve(p).toOSString).getOrElse(null)
+        val sources = nullToOption(cp.getSourceAttachmentPath).map(p => resolve(p).toOSString).getOrElse(null)
         global.classPath.library(classes, sources)
       case IClasspathEntry.CPE_SOURCE =>  
       case _ => 
@@ -675,8 +670,8 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener {
       }
       
       def dependsOn(path : IPath) = {
-          dependencies += path
-          reverseDependencies(path) += underlying.getLocation
+        dependencies += path
+        reverseDependencies(path) += underlying.getLocation
       }
       
       def clearBuildErrors(monitor : IProgressMonitor) =
@@ -849,8 +844,6 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener {
         }
       }
       
-      def nscFile : AbstractFile = new PlainFile(underlying.getLocation.toFile)
-      
       def saveBuildInfo(output : DataOutputStream) : Unit = {
         val output0 = new ObjectOutputStream(output)
         output0.writeObject(dependencies.toList.map(_.toOSString))
@@ -872,29 +865,19 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener {
           case None => None
         }
         
-      def defaultClassDir = {
-          val file = new PlainFile(new java.io.File(outputPath))    
-          if (file.isDirectory) Some(file) else None
-      }
+      def defaultClassDir = EclipseResource(workspace.findMember(outputPath))
       
       def doLoad0(page : IWorkbenchPage) = IDE.openEditor(page, underlying, true)
     }
     
-    def nscToLampion(file : PlainFile) : File = {
-      val path = Path.fromOSString(file.path)
-      val files = workspace.findFilesForLocation(path)
-      assert(!files.isEmpty)
-      val file0 = files(0)
-      val file1 = fileSafe(file0).get
-      file1
+    def nscToLampion(nscFile : AbstractFile) = fileSafe(nscToEclipse(nscFile)).get
+    
+    def nscToEclipse(nscFile : AbstractFile) = nscFile match {
+      case ef : EclipseFile => ef.underlying
+      case f => println(f.getClass.getName) ; throw new MatchError
     }
     
-    def nscToEclipse(file : AbstractFile) = nscToLampion(file.asInstanceOf[PlainFile]).underlying
-    
-    def lampionToNSC(file : File) : PlainFile = {
-      val file = new java.io.File(underlying.getLocation.toOSString)
-      new PlainFile(file) 
-    }
+    def lampionToNSC(file : File) : AbstractFile = EclipseResource(file.underlying)
     
     private var buildCompiler : BuildCompiler = _
     
@@ -967,24 +950,26 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener {
         if (found eq null) None
         else if (sym.isConstructor) {
           val params = sym.info.paramTypes.map(signatureFor).toArray
-          found.getMethod(sym.nameString, params)
+          nullToOption(found.getMethod(sym.nameString, params))
         }
         else Some(found)
       } else {
         findJava(sym.owner) match {
           case Some(owner : IType) =>
-            var ret : Option[IJavaElement] = None
-            implicit def coerce(c : IJavaElement) : Option[IJavaElement] = if (c eq null) None else Some(c)
-            if (ret.isEmpty && sym.isMethod) {
+            var ret : IJavaElement = null
+            if (sym.isMethod) {
               val params = sym.info.paramTypes.map(signatureFor).toArray
               val name = if (sym.isConstructor) sym.owner.nameString else sym.nameString 
               val methods = owner.findMethods(owner.getMethod(name, params))
               if ((methods ne null) && methods.length > 0)
                 ret = methods(0)
             }
-            if (ret.isEmpty && sym.isType) ret = owner.getType(sym.nameString)
-            if (ret.isEmpty) ret = owner.getField(sym.nameString)
-            ret
+            if (ret == null && sym.isType) ret = owner.getType(sym.nameString)
+            if (ret == null) ret = owner.getField(sym.nameString)
+            if (ret != null)
+              Some(ret)
+            else
+              None
           case _ => None
         }
       }
@@ -1014,26 +999,6 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener {
           "[" + signatureFor0(tpe.typeParams(0))
         case tpe : compiler.PolyType => signatureFor(tpe.resultType) 
         case tpe => signatureFor0(tpe.typeSymbol)  
-      }
-    }
-    
-    private def findFileFor(file : PlainFile) : Option[Project#File] = {
-      val path = Path.fromOSString(file.path)
-      val files = workspace.findFilesForLocation(path)
-      if (files.isEmpty)
-        None
-      else {
-        val file0 = files(0)   
-        assert(file0.exists)
-        val project = projectSafe(file0.getProject)
-        if (project.isEmpty) return None // not in a valid project.
-        
-        val prPath = file0.getProjectRelativePath
-        val fldr = project.get.sourceFolders.find(_.getProjectRelativePath.isPrefixOf(prPath))
-        if (fldr.isEmpty) return None // Not in a source folder
-        
-        val project0 = project.get
-        return project0.fileSafe(file0)
       }
     }
     
@@ -1079,32 +1044,6 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener {
   protected def canBeConverted(project : IProject) : Boolean = 
     project.hasNature(natureId)
   
-  private[eclipse] def scalaSourceFile(classFile : IClassFile) : Option[(Project,AbstractFile)] = {
-    val source = classFile.getType.asInstanceOf[BinaryType].getSourceFileName(null)
-    val project = projectSafe(classFile.getJavaProject.getProject)
-    if (source != null && source.endsWith(scalaFileExtn) && project.isDefined) {
-      val pkgFrag = classFile.getType.getPackageFragment.asInstanceOf[PackageFragment]
-      val rootSource = pkgFrag.getPackageFragmentRoot.getSourceAttachmentPath.toOSString
-      val fullSource = pkgFrag.names.mkString("", "" + java.io.File.separatorChar, "") + java.io.File.separatorChar + source
-      val file = if (rootSource.endsWith(jarFileExtn)) {
-        val jf = new java.io.File(rootSource)
-        if (jf.exists && !jf.isDirectory) {
-        val archive = ZipArchive.fromFile(jf)
-        archive.lookupPath(fullSource,false)
-      } else {
-          logError("could not find jar file " + jf, null)
-          return None
-        } // xxxx.
-      } else {
-        val jf = new java.io.File(rootSource)
-        assert(jf.exists && jf.isDirectory)
-        val dir = PlainFile.fromFile(jf)
-        dir.lookupPath(fullSource, false)
-      }
-      Some(project.get, file)
-    } else None
-  }
-
   def editorId : String = "scala.tools.eclipse.Editor"
 
   override def start(context : BundleContext) = {

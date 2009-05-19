@@ -7,6 +7,7 @@ package scala.tools.eclipse.javaelements
 
 import java.util.{ HashMap => JHashMap, Map => JMap }
 
+import org.eclipse.core.filebuffers.FileBuffers
 import org.eclipse.core.resources.{ IFile, IResource }
 import org.eclipse.core.runtime.{ IProgressMonitor, IStatus }
 import org.eclipse.jdt.core.{ IJavaElement, IJavaProject, JavaModelException }
@@ -66,7 +67,13 @@ class ScalaCompilationUnit(fragment : PackageFragment, elementName: String, work
     if (!isPrimary && getPerWorkingCopyInfo == null)
       throw newNotPresentException
 
-    val sourceLength = file.nscFile.sizeOption.getOrElse(-1)
+    val sourceLength = {
+      val fs = FileBuffers.getFileStoreAtLocation(file.underlying.getLocation)
+      if (fs != null)
+        fs.fetchInfo.getLength.toInt
+        else
+        -1
+    }
     
     new StructureBuilderTraverser(unitInfo, newElements.asInstanceOf[JMap[AnyRef, AnyRef]], sourceLength).traverseTrees(root)
     
