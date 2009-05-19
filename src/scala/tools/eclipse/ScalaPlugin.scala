@@ -10,14 +10,18 @@ import scala.collection.JavaConversions._
 import scala.collection.mutable.{ LinkedHashMap, LinkedHashSet, HashMap, HashSet }
 
 import java.io.{ ByteArrayInputStream, ByteArrayOutputStream, DataInputStream, DataOutputStream, ObjectInputStream, ObjectOutputStream }
+import java.io.File.pathSeparator
 
 import org.eclipse.core.resources.{ IContainer, IFile, IFolder, IMarker, IProject, IResource, IResourceChangeEvent, IResourceChangeListener, IWorkspaceRunnable, ResourcesPlugin}
 import org.eclipse.core.runtime.{ CoreException, FileLocator, IPath, IProgressMonitor, IStatus, Path, Platform, Status }
 import org.eclipse.core.runtime.content.IContentTypeSettings
-import org.eclipse.jdt.core.{ IClassFile, IClasspathEntry, IJavaProject, IPackageFragment, IPackageFragmentRoot, JavaCore }
+import org.eclipse.jdt.core.{ IClassFile, IClasspathEntry, IJavaElement, IJavaProject, IPackageFragment, IPackageFragmentRoot, IType, JavaCore }
 import org.eclipse.jdt.internal.core.{ BinaryType, JavaProject, PackageFragment }
 import org.eclipse.jdt.internal.core.util.Util
+import org.eclipse.jdt.internal.ui.IResourceLocator
+import org.eclipse.jdt.internal.ui.javaeditor.{ ClassFileMarkerAnnotationModel, InternalClassFileEditorInput }
 import org.eclipse.jdt.internal.ui.text.java.JavaCompletionProposal
+import org.eclipse.jdt.ui.JavaUI
 import org.eclipse.jface.dialogs.ErrorDialog
 import org.eclipse.jface.text.{ IDocument, ITextViewer, Position, Region, TextPresentation }
 import org.eclipse.jface.text.hyperlink.IHyperlink
@@ -38,8 +42,8 @@ import scala.tools.nsc.{ Global, Settings }
 import scala.tools.nsc.ast.parser.Scanners
 import scala.tools.nsc.io.{ AbstractFile, PlainFile, ZipArchive }
    
-import scala.tools.eclipse.util.IDESettings
-import scala.tools.eclipse.util.Style
+import scala.tools.eclipse.properties.PropertyStore
+import scala.tools.eclipse.util.{ IDESettings, Style } 
 
 object ScalaPlugin { 
   var plugin : ScalaPlugin = _
@@ -235,10 +239,9 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener {
     
   def resolve(path : IPath) : IPath = {
     assert(path != null)
-    import path.lastSegment
-    if (lastSegment == null) return path
+    if (path.lastSegment == null) return path
     val res =
-      if (lastSegment.endsWith(".jar") || lastSegment.endsWith(".zip"))
+      if (path.lastSegment.endsWith(".jar") || path.lastSegment.endsWith(".zip"))
         workspace.getFile(path)
       else
         workspace.findMember(path)
@@ -359,9 +362,6 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener {
               
     private def sys(code : Int) = Display.getDefault().getSystemColor(code)
     
-    import org.eclipse.core.runtime.jobs._  
-    import org.eclipse.core.runtime._  
-
     def highlight(sv : ScalaSourceViewer, offset0 : Int, length0 : Int, style0 : Style, txt : TextPresentation) : Unit = {
       if (sv == null || sv.getTextWidget == null || sv.getTextWidget.isDisposed) return
       //val offset = sv.modelOffset2WidgetOffset(offset0)
@@ -516,8 +516,6 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener {
         ScalaPlugin.this.logError(msg, t)
     }
     
-    import java.io.File.pathSeparator 
-    
     private implicit def r2o[T <: AnyRef](x : T) = if (x == null) None else Some(x)
     override def charSet(file : PlainFile) : String = nscToEclipse(file).getCharset
 
@@ -525,11 +523,10 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener {
     //  ScalaPlugin.this.logError(msg,e)
     override def buildError(file : PlainFile, severity0 : Int, msg : String, offset : Int, identifier : Int) : Unit =
       nscToLampion(file).buildError({
-        import IMarker._
         severity0 match { //hard coded constants from reporters
-          case 2 => SEVERITY_ERROR
-          case 1 => SEVERITY_WARNING
-          case 0 => SEVERITY_INFO
+          case 2 => IMarker.SEVERITY_ERROR
+          case 1 => IMarker.SEVERITY_WARNING
+          case 0 => IMarker.SEVERITY_INFO
         }
       }, msg, offset, identifier, null)
     
@@ -594,17 +591,15 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener {
       settings.deprecation.value = true
       settings.unchecked.value = true
       //First check whether to use preferences or properties
-      import SettingConverterUtil._
-      import scala.tools.eclipse.properties.PropertyStore
       //TODO - should we rely on ScalaPlugin?  Well.. we need these preferences...
       val workspaceStore = ScalaPlugin.plugin.getPreferenceStore
       val projectStore = new PropertyStore(underlying, workspaceStore, pluginId)
-      val useProjectSettings = projectStore.getBoolean(USE_PROJECT_SETTINGS_PREFERENCE)
+      val useProjectSettings = projectStore.getBoolean(SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE)
       
       val store = if (useProjectSettings) projectStore else workspaceStore  
       IDESettings.shownSettings(settings).foreach {
 	      setting =>
-          val value = store.getString(convertNameToProperty(setting.name))
+          val value = store.getString(SettingConverterUtil.convertNameToProperty(setting.name))
           try {          
             if (value != null)
               setting.tryToSetFromPropertyValue(value)
@@ -655,7 +650,6 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener {
     class File(val underlying : FileSpec) {
       def self : File = this
       private[eclipse] var signature : Long = 0
-      import java.io._
 
       def viewer : Option[ScalaSourceViewer] = viewers.get(self)
       def editor : Option[Editor] = viewer.map(_.editor)
@@ -716,8 +710,7 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener {
         val file = underlying match {
         case NormalFile(file) => file
         }
-        import IMarker.{ SEVERITY, SEVERITY_ERROR }
-        file.findMarkers(problemMarkerId.get, true, IResource.DEPTH_INFINITE).exists(_.getAttribute(SEVERITY) == SEVERITY_ERROR)
+        file.findMarkers(problemMarkerId.get, true, IResource.DEPTH_INFINITE).exists(_.getAttribute(IMarker.SEVERITY) == IMarker.SEVERITY_ERROR)
       }
       
       def buildError(severity : Int, msg : String, offset : Int, length : Int, monitor : IProgressMonitor) = if (problemMarkerId.isDefined) {
@@ -727,21 +720,20 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener {
         file.getWorkspace.run(new IWorkspaceRunnable {
           def run(monitor : IProgressMonitor) = {
             val mrk = file.createMarker(problemMarkerId.get)
-            import IMarker._
-            mrk.setAttribute(SEVERITY, severity)
+            mrk.setAttribute(IMarker.SEVERITY, severity)
             val string = msg.map{
               case '\n' => ' '
               case '\r' => ' '
               case c => c
             }.mkString("","","")
             
-            mrk.setAttribute(MESSAGE , msg)
+            mrk.setAttribute(IMarker.MESSAGE , msg)
             if (offset != -1) {
-              mrk.setAttribute(CHAR_START, offset)
-              mrk.setAttribute(CHAR_END  , offset + length)
+              mrk.setAttribute(IMarker.CHAR_START, offset)
+              mrk.setAttribute(IMarker.CHAR_END  , offset + length)
               val line = toLine(offset)
               if (!line.isEmpty) 
-                mrk.setAttribute(LINE_NUMBER, line.get)
+                mrk.setAttribute(IMarker.LINE_NUMBER, line.get)
             }
           }
         }, monitor)
@@ -1028,8 +1020,6 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener {
       }
     }
 
-    import org.eclipse.jdt.core.{IType,IJavaElement}
-    import org.eclipse.core.runtime.IProgressMonitor
     protected def findJava(sym : compiler.Symbol) : Option[IJavaElement] = {
       if (sym == compiler.NoSymbol) None
       else if (sym.owner.isPackageClass) {
@@ -1061,9 +1051,9 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener {
     }
     
     def signatureFor(tpe : compiler.Type) : String = {
+      import compiler.definitions._
       import org.eclipse.jdt.core.Signature._
-      import compiler._
-      import definitions._
+      
       def signatureFor0(sym : compiler.Symbol) : String = {
         if (sym == ByteClass) return SIG_BYTE
         if (sym == CharClass) return SIG_CHAR
@@ -1078,13 +1068,15 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener {
         if (sym == AnyRefClass) return "Ljava.lang.Object;"
         return 'L' + sym.fullNameString.replace('/', '.') + ';'
       }
+      
       tpe match {
-      case tpe : PolyType if tpe.typeParams.length == 1 && tpe.resultType == ArrayClass.tpe => 
-        "[" + signatureFor0(tpe.typeParams(0))
-      case tpe : PolyType => signatureFor(tpe.resultType) 
-      case tpe => signatureFor0(tpe.typeSymbol)  
+        case tpe : compiler.PolyType if tpe.typeParams.length == 1 && tpe.resultType == ArrayClass.tpe => 
+          "[" + signatureFor0(tpe.typeParams(0))
+        case tpe : compiler.PolyType => signatureFor(tpe.resultType) 
+        case tpe => signatureFor0(tpe.typeSymbol)  
       }
     }
+    
     protected def classFileFor(sym : compiler.Symbol) : Option[IClassFile] = {
       findJava(sym).map{e => 
         var p = e
@@ -1095,7 +1087,9 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener {
         case ret => ret
       }
     }
-    private val classFiles = new LinkedHashMap[IClassFile,File] 
+    
+    private val classFiles = new LinkedHashMap[IClassFile,File]
+                                               
     def classFile(source : AbstractFile, classFile : IClassFile) = classFiles.get(classFile) match {
       case Some(file) => file
       case None => 
@@ -1114,7 +1108,6 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener {
     }
     
     private def findFileFor(file : PlainFile) : Option[Project#File] = {
-      import org.eclipse.core.runtime._
       val path = Path.fromOSString(file.path)
       val files = workspace.findFilesForLocation(path)
       if (files.isEmpty)
@@ -1147,8 +1140,6 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener {
     }    
     
     private case class JavaRef(elem : IJavaElement, symbol0 : compiler.Symbol) extends IdeRef {
-      import org.eclipse.jdt.ui._
-
       override def hover = try {
         val str = elem.getAttachedJavadoc(null)
         if (str eq null) None else Some(str)
@@ -1185,10 +1176,8 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener {
       val pkgFrag = classFile.getType.getPackageFragment.asInstanceOf[PackageFragment]
       val rootSource = pkgFrag.getPackageFragmentRoot.getSourceAttachmentPath.toOSString
       val fullSource = pkgFrag.names.mkString("", "" + java.io.File.separatorChar, "") + java.io.File.separatorChar + source
-      import scala.tools.nsc.io._
-      import java.io
       val file = if (rootSource.endsWith(jarFileExtn)) {
-        val jf = new io.File(rootSource)
+        val jf = new java.io.File(rootSource)
         if (jf.exists && !jf.isDirectory) {
         val archive = ZipArchive.fromFile(jf)
         archive.lookupPath(fullSource,false)
@@ -1197,7 +1186,7 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener {
           return None
         } // xxxx.
       } else {
-        val jf = new io.File(rootSource)
+        val jf = new java.io.File(rootSource)
         assert(jf.exists && jf.isDirectory)
         val dir = PlainFile.fromFile(jf)
         dir.lookupPath(fullSource, false)
@@ -1238,9 +1227,6 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener {
     case that : IClassFile  => scalaSourceFile(that).map { case (project,source) => new ClassFileInput(project,source,that) }
     case _ => None
   }
-  
-  import org.eclipse.jdt.internal.ui.javaeditor._
-  import org.eclipse.jdt.internal.ui._
   
   class ClassFileInput(val project : Project, val source : AbstractFile, val classFile : IClassFile)
     extends InternalClassFileEditorInput(classFile) with FixedInput {
