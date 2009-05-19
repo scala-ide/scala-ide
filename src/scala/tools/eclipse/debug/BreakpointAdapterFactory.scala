@@ -24,6 +24,7 @@ import org.eclipse.ui.editors.text.ILocationProvider
 import scala.collection.JavaConversions._
 import scala.collection.mutable.LinkedHashMap
 
+// TODO Replace with JDT equivalent
 class BreakpointAdapterFactory extends IAdapterFactory {
   def getAdapter(adaptableObject : AnyRef, adapterType : java.lang.Class[_]) = adaptableObject match {
   case editor : scala.tools.eclipse.Editor => 
@@ -98,11 +99,6 @@ class BreakpointAdapterFactory extends IAdapterFactory {
               report(null, part)
               val attributes = new LinkedHashMap[Object,Object]
               val plugin = ScalaPlugin.plugin
-              editorInput match {
-              case input : plugin.ClassFileInput => 
-                BreakpointUtils.addJavaBreakpointAttributesWithMemberDetails(attributes, input.classFile, -1, -1)
-              case _ => 
-              }
               val resource = (editor) : IResource
               val name = getTopLevelTypeName(editor, offset)
               if (resource != null && name != null) {

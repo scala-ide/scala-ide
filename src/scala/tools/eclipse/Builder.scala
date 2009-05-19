@@ -107,8 +107,9 @@ class Builder extends IncrementalProjectBuilder {
       assert(!built.isEmpty)
       toBuild.clear
       
-      def f(changed : project.File) : Unit = changed.underlying.path match {
-        case Some(changed) => plugin.reverseDependencies.get(changed) match {
+      def f(changed : project.File) : Unit = {
+        val changedLoc = changed.underlying.getLocation
+        plugin.reverseDependencies.get(changedLoc) match {
           case Some(paths) => paths.foreach(path => {
             val file = plugin.workspace.getFileForLocation(path)
             if (file.exists) {
@@ -118,7 +119,7 @@ class Builder extends IncrementalProjectBuilder {
                     if (toBuild put file) {
                       //f(file) // transitive colsure of dependencies...sigh.
                     }
-                  case Some(file) => plugin.reverseDependencies(changed) += path
+                  case Some(file) => plugin.reverseDependencies(changedLoc) += path
                   case _ => file.touch(monitor)
                 }
               } else {
@@ -129,10 +130,11 @@ class Builder extends IncrementalProjectBuilder {
           })
           case None => 
         }
-        case None =>
       }
+    
       changed.foreach(f)
     }
+    
     if (buildAgain) needRebuild
     else project.buildDone(built, monitor)
     

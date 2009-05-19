@@ -12,7 +12,7 @@
 	</extension>
 	<extension point="org.eclipse.debug.core.watchExpressionDelegates">
 		<watchExpressionDelegate debugModel="org.eclipse.jdt.debug"
-			delegateClass="scala.tools.eclipse.debug.WatchExpressionDelegate" />
+			delegateClass="org.eclipse.jdt.internal.debug.ui.JavaWatchExpressionDelegate" />
 	</extension>
    <extension
          point="org.eclipse.ui.propertyPages">
@@ -341,7 +341,7 @@
    <extension point="org.eclipse.debug.ui.debugModelPresentations">
       <debugModelPresentation
             detailsViewerConfiguration="org.eclipse.jdt.internal.debug.ui.display.DetailsViewerConfiguration"
-            class="scala.tools.eclipse.debug.ScalaModelPresentation"
+            class="org.eclipse.jdt.internal.debug.ui.JDIModelPresentation"
             id="org.eclipse.jdt.debug">
       </debugModelPresentation>
    </extension>

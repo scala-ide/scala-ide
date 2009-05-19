@@ -115,17 +115,13 @@ class ScalaSourceViewer(val plugin : ScalaPlugin, val editor : Editor, parent : 
       return
     }
 
-    file.get.underlying match {
-      case plugin.NormalFile(file0) => {
-        val workspace = file0.getWorkspace 
-        if (!workspace.isTreeLocked)
-          workspace.run(new IWorkspaceRunnable {
-            def run(monitor : IProgressMonitor) = 
-              file0.deleteMarkers(IMarker.PROBLEM, false, IResource.DEPTH_ZERO)
-          }, null)
-      }  
-      case _ =>
-    }
+    val file0 = file.get.underlying 
+    val workspace = file0.getWorkspace 
+    if (!workspace.isTreeLocked)
+      workspace.run(new IWorkspaceRunnable {
+        def run(monitor : IProgressMonitor) = 
+          file0.deleteMarkers(IMarker.PROBLEM, false, IResource.DEPTH_ZERO)
+      }, null)
     
     if (file.get.isLoaded)
       file.get.doUnload
@@ -133,8 +129,7 @@ class ScalaSourceViewer(val plugin : ScalaPlugin, val editor : Editor, parent : 
     val project = file.get.project
     project.initialize(this)
     
-    val file0 = file.get.asInstanceOf[project.File]
-    plugin.viewers(file0) = this
+    plugin.viewers(file.get) = this
   }
   
   def unload : Unit = {

@@ -23,21 +23,15 @@ class BuildCompiler(val project : CompilerProject) extends Global(new Settings) 
   project.initialize(this)
 
   this.reporter = new Reporter {
-    override def info0(pos : Position, msg : String, severity : Severity, force : Boolean) = (pos.offset,pos.source.map(_.file)) match {
-    case (Some(offset),Some(file:PlainFile)) => 
-      val source = pos.source.get
-      //import IMarker._
-      val project = BuildCompiler.this.project
+    override def info0(pos : Position, msg : String, severity : Severity, force : Boolean) = {
       severity.count += 1
-      file
-      project.buildError(file, severity.id, msg, offset, source.identifier(pos, BuildCompiler.this).getOrElse(" ").length)
-    case _ => 
-      severity.count += 1
-      pos match {
-        case _ =>
+      (pos.offset, pos.source.map(_.file)) match {
+        case (Some(offset), Some(file : PlainFile)) => 
+          val source = pos.source.get
+          project.buildError(file, severity.id, msg, offset, source.identifier(pos, BuildCompiler.this).getOrElse(" ").length)
+        case _ => 
           project.buildError(severity.id, msg)
       }
-      //assert(false)
     }
   }
   
@@ -61,10 +55,9 @@ class BuildCompiler(val project : CompilerProject) extends Global(new Settings) 
       }
       override def compileLate(pfile : AbstractFile) = {
         super.compileLate(pfile)
-        //val file = project.nscToLampion(pfile.asInstanceOf[PlainFile]).asInstanceOf[File]
         if (toBuild put pfile) {
           Console.println("late " + pfile)
-          project.clearBuildErrors(pfile) // .clearBuildErrors
+          project.clearBuildErrors(pfile)
         }
       }
     }

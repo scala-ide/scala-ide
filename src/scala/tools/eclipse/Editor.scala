@@ -121,6 +121,7 @@ class Editor extends ScalaEditor {
       })
   }
   
+  /*
   override def doSetInput(input : IEditorInput) = {
     input match {
       case null =>
@@ -131,6 +132,7 @@ class Editor extends ScalaEditor {
     }
     super.doSetInput(input)
   }
+  */
 
   override def getCorrespondingElement(element : IJavaElement ) : IJavaElement = element
 

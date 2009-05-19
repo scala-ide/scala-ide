@@ -95,14 +95,6 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener {
   case _ => None;
   }
   
-  trait FileSpec {
-    def path : Option[IPath]
-  }
-  
-  case class NormalFile(underlying : IFile) extends FileSpec {
-    override def toString = underlying.getName  
-    override def path = Some(underlying.getLocation)
-  }
   def bundlePath = check{
     val bundle = getBundle 
     val bpath = bundle.getEntry("/")
@@ -153,18 +145,17 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener {
   //protected def log(status : Status) = getLog.log(status)
   
   def getFile(path : IPath) : Option[Project#File] = workspace.getFile(path) match {
-  case file if file.exists =>
-    projectSafe(file.getProject) match {
-    case Some(project) => project.fileSafe(file)
-    case None => None
-    }
-  case _ => None
+    case file if file.exists =>
+      projectSafe(file.getProject) match {
+        case Some(project) => project.fileSafe(file)
+        case None => None
+      }
+    case _ => None
   }
+  
   def fileFor(file0 : IFile) : Option[Project#File] = projectSafe(file0.getProject) match {
-  case None => None
-  case Some(project) =>
-    val file = project.fileSafe(file0)
-    file
+    case Some(project) => project.fileSafe(file0)
+    case None => None
   }
   
   class PresentationContext {
@@ -207,9 +198,9 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener {
   }
   
   def fileFor(input : IEditorInput) : Option[Project#File] = input match {
-  case input : FixedInput => Some(input.neutralFile)
-  case input : IFileEditorInput => fileFor(input.getFile)
-  case _ => None
+    case input : FixedInput => Some(input.neutralFile)
+    case input : IFileEditorInput => fileFor(input.getFile)
+    case _ => None
   }
 
   override def initializeDefaultPreferences(store0 : org.eclipse.jface.preference.IPreferenceStore) = {
@@ -248,17 +239,12 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener {
 
     if ((res ne null) && res.exists) res.getLocation else path
   }
-  protected case class ClassFileSpec(source : AbstractFile, classFile : IClassFile) extends FileSpec {
-    override def toString = source.name
-    override def path = None // because they can't change or be recompiled.
-  }
 
   def Project(underlying : IProject) = new Project(underlying)
   
   class Project(val underlying : IProject) extends CompilerProject {
 
     val ERROR_TYPE = "lampion.error"
-    val MATCH_ERROR_TYPE = "lampion.error.match"
 
     override def toString = underlying.getName
     
@@ -325,7 +311,7 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener {
     private val files = new LinkedHashMap[IFile,File] {
       override def default(key : IFile) = {
         assert(key != null)
-        val ret = File(NormalFile(key)); this(key) = ret; 
+        val ret = File(key); this(key) = ret; 
         val manager = Project.this.underlying.getFolder(".manager")
         ret.checkBuildInfo(manager)
         ret
@@ -645,9 +631,9 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener {
       }})
     }
     
-    def File(underlying : FileSpec) = new File(underlying)
+    def File(underlying : IFile) = new File(underlying)
     
-    class File(val underlying : FileSpec) {
+    class File(val underlying : IFile) {
       def self : File = this
       private[eclipse] var signature : Long = 0
 
@@ -673,7 +659,7 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener {
       }
       
       def buildInfo(manager : IFolder) : IFile = {
-        var str = underlying.path.get.toString
+        var str = underlying.getLocation.toString
         var idx = str.indexOf('/')
         while (idx != -1) {
           str = str.substring(0, idx) + "_$_" + str.substring(idx + 1, str.length)
@@ -683,43 +669,29 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener {
       }
       
       def resetDependencies = {
-        val filePath = underlying.path.get
+        val filePath = underlying.getLocation
         dependencies.foreach(reverseDependencies(_) -= filePath)
         dependencies.clear
       }
       
-      def dependsOn(path : IPath) = (underlying) match {
-        case (NormalFile(self)) => 
+      def dependsOn(path : IPath) = {
           dependencies += path
-          reverseDependencies(path) += self.getLocation
-        case _ => 
+          reverseDependencies(path) += underlying.getLocation
       }
       
-      def clearBuildErrors(monitor : IProgressMonitor) = if (problemMarkerId.isDefined) {
-        val file = underlying match {
-        case NormalFile(file) => file
-        }
-        file.getWorkspace.run(new IWorkspaceRunnable {
-          def run(monitor : IProgressMonitor) = {
-            file.deleteMarkers(problemMarkerId.get, true, IResource.DEPTH_INFINITE)
-          }
-        }, monitor)
-      }
+      def clearBuildErrors(monitor : IProgressMonitor) =
+        if (problemMarkerId.isDefined)
+          underlying.getWorkspace.run(new IWorkspaceRunnable {
+            def run(monitor : IProgressMonitor) = underlying.deleteMarkers(problemMarkerId.get, true, IResource.DEPTH_INFINITE)
+          }, monitor)
       
-      def hasBuildErrors : Boolean = if (problemMarkerId.isEmpty) false else {
-        val file = underlying match {
-        case NormalFile(file) => file
-        }
-        file.findMarkers(problemMarkerId.get, true, IResource.DEPTH_INFINITE).exists(_.getAttribute(IMarker.SEVERITY) == IMarker.SEVERITY_ERROR)
-      }
+      def hasBuildErrors : Boolean =
+        !problemMarkerId.isEmpty && underlying.findMarkers(problemMarkerId.get, true, IResource.DEPTH_INFINITE).exists(_.getAttribute(IMarker.SEVERITY) == IMarker.SEVERITY_ERROR)
       
       def buildError(severity : Int, msg : String, offset : Int, length : Int, monitor : IProgressMonitor) = if (problemMarkerId.isDefined) {
-        val file = underlying match {
-          case NormalFile(file) => file
-        }
-        file.getWorkspace.run(new IWorkspaceRunnable {
+        underlying.getWorkspace.run(new IWorkspaceRunnable {
           def run(monitor : IProgressMonitor) = {
-            val mrk = file.createMarker(problemMarkerId.get)
+            val mrk = underlying.createMarker(problemMarkerId.get)
             mrk.setAttribute(IMarker.SEVERITY, severity)
             val string = msg.map{
               case '\n' => ' '
@@ -877,10 +849,7 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener {
         }
       }
       
-      def nscFile : AbstractFile = underlying match {
-        case NormalFile(file) => new PlainFile(file.getLocation.toFile)
-        case ClassFileSpec(source,clazz) => source
-      }
+      def nscFile : AbstractFile = new PlainFile(underlying.getLocation.toFile)
       
       def saveBuildInfo(output : DataOutputStream) : Unit = {
         val output0 = new ObjectOutputStream(output)
@@ -894,44 +863,21 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener {
         signature = input.readLong
       }
       
-      def sourcePackage : Option[String] = underlying match {
-        case NormalFile(file) => 
-          sourceFolders.find(_.getLocation.isPrefixOf(file.getLocation)) match {
-            case Some(fldr) =>
-              var path = file.getLocation.removeFirstSegments(fldr.getLocation.segmentCount)
-              path = path.removeLastSegments(1).removeTrailingSeparator
-              Some(path.segments.mkString("", ".", ""))
-            case None => None
-          }
-        case ClassFileSpec(source,classFile) => 
-          classFile.getParent match {
-            case pkg : IPackageFragment => Some(pkg.getElementName)
-            case _ => None
-          }
-      }
+      def sourcePackage : Option[String] =
+        sourceFolders.find(_.getLocation.isPrefixOf(underlying.getLocation)) match {
+          case Some(fldr) =>
+            var path = underlying.getLocation.removeFirstSegments(fldr.getLocation.segmentCount)
+            path = path.removeLastSegments(1).removeTrailingSeparator
+            Some(path.segments.mkString("", ".", ""))
+          case None => None
+        }
         
-      def defaultClassDir = underlying match {
-        case NormalFile(file) => 
+      def defaultClassDir = {
           val file = new PlainFile(new java.io.File(outputPath))    
           if (file.isDirectory) Some(file) else None
-        case ClassFileSpec(source,classFile) => 
-          var p = classFile.getParent
-          while (p != null && !p.isInstanceOf[IPackageFragmentRoot]) p = p.getParent
-          p match {
-            case null => None
-            case p : IPackageFragmentRoot =>
-              val path = p.getPath.toOSString
-              if (path.endsWith(".jar") || path.endsWith(".zip"))
-                Some(ZipArchive.fromFile(new java.io.File(path)))  
-              else
-                Some(new PlainFile(new java.io.File(path)))
-          }
       }
       
-      def doLoad0(page : IWorkbenchPage) = underlying match {
-        case ClassFileSpec(source,clazz) => page.openEditor(new ClassFileInput(project,source,clazz), editorId) 
-        case NormalFile(underlying) => IDE.openEditor(page, underlying, true)
-      }
+      def doLoad0(page : IWorkbenchPage) = IDE.openEditor(page, underlying, true)
     }
     
     def nscToLampion(file : PlainFile) : File = {
@@ -943,17 +889,11 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener {
       file1
     }
     
-    def nscToEclipse(file : AbstractFile) = nscToLampion(file.asInstanceOf[PlainFile]).underlying match {
-      case NormalFile(file) => file
-    }
+    def nscToEclipse(file : AbstractFile) = nscToLampion(file.asInstanceOf[PlainFile]).underlying
     
     def lampionToNSC(file : File) : PlainFile = {
-      file.underlying match {
-        case NormalFile(file) => 
-          val ioFile = new java.io.File(file.getLocation.toOSString)
-          assert(ioFile.exists)
-          new PlainFile(ioFile) 
-      }
+      val file = new java.io.File(underlying.getLocation.toOSString)
+      new PlainFile(file) 
     }
     
     private var buildCompiler : BuildCompiler = _
@@ -967,9 +907,9 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener {
       toBuild.foreach{file =>
         toBuild0 += lampionToNSC(file)
       }
-      val changed = buildCompiler.build(toBuild0, monitor)
-      toBuild0.foreach{file => toBuild += nscToLampion(file.asInstanceOf[PlainFile])}
-      changed.map(file => nscToLampion(file.asInstanceOf[PlainFile]))
+      
+      buildCompiler.build(toBuild0, monitor)
+      Nil
     }
 
     def clean(monitor : IProgressMonitor) = {
@@ -1074,36 +1014,6 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener {
           "[" + signatureFor0(tpe.typeParams(0))
         case tpe : compiler.PolyType => signatureFor(tpe.resultType) 
         case tpe => signatureFor0(tpe.typeSymbol)  
-      }
-    }
-    
-    protected def classFileFor(sym : compiler.Symbol) : Option[IClassFile] = {
-      findJava(sym).map{e => 
-        var p = e
-        while (p != null && !p.isInstanceOf[IClassFile]) p = p.getParent
-        p.asInstanceOf[IClassFile]
-      } match {
-        case Some(null) => None
-        case ret => ret
-      }
-    }
-    
-    private val classFiles = new LinkedHashMap[IClassFile,File]
-                                               
-    def classFile(source : AbstractFile, classFile : IClassFile) = classFiles.get(classFile) match {
-      case Some(file) => file
-      case None => 
-        val file = File(ClassFileSpec(source, classFile))
-        classFiles(classFile) = file
-        file
-    }
-    
-    def fileFor(sym : compiler.Symbol) : Option[Project#File] = sym.sourceFile match {
-      case null => None
-      case file : PlainFile => findFileFor(file)
-      case source => classFileFor(sym.toplevelClass) match {
-        case None => None 
-        case Some(clazz) => Some(classFile(source,clazz))
       }
     }
     
@@ -1220,39 +1130,6 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener {
       case (iproject : IProject, IResourceChangeEvent.PRE_CLOSE) => 
         val project = projects.removeKey(iproject)
       case _ =>
-    }
-  }
-  
-  def inputFor(that : AnyRef) : Option[IEditorInput] = that match {
-    case that : IClassFile  => scalaSourceFile(that).map { case (project,source) => new ClassFileInput(project,source,that) }
-    case _ => None
-  }
-  
-  class ClassFileInput(val project : Project, val source : AbstractFile, val classFile : IClassFile)
-    extends InternalClassFileEditorInput(classFile) with FixedInput {
-    
-    assert(source != null)
-    
-    override def getAdapter(clazz : java.lang.Class[_]) = clazz match {
-      case clazz if clazz == classOf[AbstractFile] => source
-      case _ => super.getAdapter(clazz)  
-    }
-    
-    override def initialize(doc : IDocument) : Unit = doc.set(new String(source.toCharArray))
-    
-    override def neutralFile = (project.classFile(source,classFile))
-    
-    override def createAnnotationModel = {
-      (classFile.getAdapter(classOf[IResourceLocator]) match {
-      case null => null
-      case locator : IResourceLocator =>  locator.getContainingResource(classFile)
-      }) match {
-      case null => super.createAnnotationModel
-      case resource =>
-        val model = new ClassFileMarkerAnnotationModel(resource)
-        model.setClassFile(classFile)
-        model
-      }
     }
   }
 }
