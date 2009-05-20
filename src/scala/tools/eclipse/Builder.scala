@@ -34,34 +34,31 @@ class Builder extends IncrementalProjectBuilder {
   }
   
   override def build(kind : Int, ignored : ju.Map[_, _], monitor : IProgressMonitor) : Array[IProject] = {
-    
     import IncrementalProjectBuilder._
-    val plugin = this.plugin 
+
     val project = plugin.projectSafe(getProject).get
-    val toBuild = new HashSet[ScalaFile]
+    val buildSet = new HashSet[ScalaFile]
     kind match {
-      case CLEAN_BUILD => return project.externalDepends.toList.toArray
-      case INCREMENTAL_BUILD|AUTO_BUILD if (!project.doFullBuild) =>
+      case INCREMENTAL_BUILD | AUTO_BUILD =>
         getDelta(project.underlying).accept(new IResourceDeltaVisitor {
-          def visit(delta : IResourceDelta) = delta.getResource match {
-            case file : IFile =>
-              if (delta.getKind != IResourceDelta.REMOVED) {
-                if (project.sourceFolders.exists(_.getLocation.isPrefixOf(file.getLocation))) {
-                  toBuild += new ScalaFile(file)
-                }
-              }
-              true
-            case _ => true
+          def visit(delta : IResourceDelta) = {
+            delta.getResource match {
+              case file : IFile
+                if (delta.getKind != IResourceDelta.REMOVED) &&
+                   (project.sourceFolders.exists(_.getLocation.isPrefixOf(file.getLocation))) &&
+                   plugin.isBuildable(file) =>
+                buildSet += new ScalaFile(file)
+              case _ =>
+            }
+            true
           }
         })
-        true
-      case _ => 
-        project.doFullBuild = false
+      case CLEAN_BUILD | FULL_BUILD => 
         val sourceFolders = project.sourceFolders
         sourceFolders.foreach(_.accept(new IResourceVisitor {
           def visit(resource : IResource) = {
             resource match {
-              case file : IFile if file.getName.endsWith(plugin.scalaFileExtn) || file.getName.endsWith(plugin.javaFileExtn) => toBuild += new ScalaFile(file)
+              case file : IFile if plugin.isBuildable(file) => buildSet += new ScalaFile(file)
               case _ =>
             }
             true
@@ -69,28 +66,16 @@ class Builder extends IncrementalProjectBuilder {
         }))
     }
     
-    // everything that needs to be recompiled is in toBuild now. 
-    val built = new HashSet[ScalaFile] // don't recompile twice.
-    var buildAgain = false
-    if (monitor != null) monitor.beginTask("build all", 100)
-    while (!toBuild.isEmpty) {
-      toBuild.foreach(_.clearBuildErrors(null))
-      toBuild.foreach(f => Console.println("build " + f))
-      val changed = project.build(toBuild, monitor)
-      if (!changed.isEmpty) {
-        changed.foreach(f => Console.println("changed " + f))
-      }
-      assert(!toBuild.isEmpty)
-      built ++= toBuild
-      assert(!built.isEmpty)
-      toBuild.clear
-    }
+    // everything that needs to be recompiled is in toBuild now
+    val toBuild = buildSet.toList
     
-    if (buildAgain) needRebuild
-    else project.buildDone(built, monitor)
+    if (monitor != null)
+      monitor.beginTask("build all", 100)
+      
+    project.build(toBuild, monitor)
     
     val depends = project.externalDepends.toList.toArray
-    if (plugin.projectSafe(getProject).get.lastBuildHadBuildErrors)
+    if (toBuild.exists(_.hasBuildErrors))
       depends
     else {
       ensureProject

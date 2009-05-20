@@ -42,18 +42,17 @@ class ScalaFile(val underlying : IFile) {
   def doComplete(offset : Int) : List[ICompletionProposal] = Nil // TODO reinstate
   
   def clearBuildErrors(monitor : IProgressMonitor) =
-    if (plugin.problemMarkerId.isDefined)
-      underlying.getWorkspace.run(new IWorkspaceRunnable {
-        def run(monitor : IProgressMonitor) = underlying.deleteMarkers(plugin.problemMarkerId.get, true, IResource.DEPTH_INFINITE)
-      }, monitor)
+    underlying.getWorkspace.run(new IWorkspaceRunnable {
+      def run(monitor : IProgressMonitor) = underlying.deleteMarkers(plugin.problemMarkerId, true, IResource.DEPTH_INFINITE)
+    }, monitor)
   
   def hasBuildErrors : Boolean =
-    !plugin.problemMarkerId.isEmpty && underlying.findMarkers(plugin.problemMarkerId.get, true, IResource.DEPTH_INFINITE).exists(_.getAttribute(IMarker.SEVERITY) == IMarker.SEVERITY_ERROR)
+    underlying.findMarkers(plugin.problemMarkerId, true, IResource.DEPTH_INFINITE).exists(_.getAttribute(IMarker.SEVERITY) == IMarker.SEVERITY_ERROR)
   
-  def buildError(severity : Int, msg : String, offset : Int, length : Int, monitor : IProgressMonitor) = if (plugin.problemMarkerId.isDefined) {
+  def buildError(severity : Int, msg : String, offset : Int, length : Int, monitor : IProgressMonitor) =
     underlying.getWorkspace.run(new IWorkspaceRunnable {
       def run(monitor : IProgressMonitor) = {
-        val mrk = underlying.createMarker(plugin.problemMarkerId.get)
+        val mrk = underlying.createMarker(plugin.problemMarkerId)
         mrk.setAttribute(IMarker.SEVERITY, severity)
         val string = msg.map{
           case '\n' => ' '
@@ -71,7 +70,6 @@ class ScalaFile(val underlying : IFile) {
         }
       }
     }, monitor)
-  }
   
   def toLine(offset : Int) : Option[Int] = None
   

@@ -51,6 +51,7 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener {
   def projectWizId = wizardId("Project")
   def netProjectWizId = wizardId("NetProject")
     
+  def editorId : String = "scala.tools.eclipse.Editor"
   def builderId = pluginId + ".scalabuilder"
   def natureId = pluginId + ".scalanature"  
   def launchId = "ch.epfl.lamp.sdt.launching"
@@ -59,7 +60,7 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener {
   def scalaLibId  = launchId + "." + scalaLib
   def scalaHomeId = launchId + "." + scalaHome
   def launchTypeId = "scala.application"
-  def problemMarkerId = Some(pluginId + ".marker")
+  def problemMarkerId = pluginId + ".marker"
   val scalaFileExtn = ".scala"
   val javaFileExtn = ".java"
   val jarFileExtn = ".jar"
@@ -195,10 +196,7 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener {
   
   def inUIThread = Display.getCurrent != null
   
-  def canBeConverted(file : IFile) : Boolean = 
-    (file.getName.endsWith(scalaFileExtn) || file.getName.endsWith(javaFileExtn))
-
-  def editorId : String = "scala.tools.eclipse.Editor"
+  def isBuildable(file : IFile) = (file.getName.endsWith(scalaFileExtn) || file.getName.endsWith(javaFileExtn))
 
   override def start(context : BundleContext) = {
     super.start(context)

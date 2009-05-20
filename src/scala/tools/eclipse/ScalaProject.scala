@@ -34,16 +34,10 @@ class ScalaProject(val underlying : IProject) {
 
   override def toString = underlying.getName
   
-  def isOpen = underlying.isOpen
-  
-  def buildDone(built : HashSet[ScalaFile], monitor : IProgressMonitor) : Unit =
-    if (!built.isEmpty)
-      lastBuildHadBuildErrors = built.exists(_.hasBuildErrors)
-
-  def buildError0(severity : Int, msg : String, monitor : IProgressMonitor) = if (plugin.problemMarkerId.isDefined) {
+  def buildError0(severity : Int, msg : String, monitor : IProgressMonitor) =
     underlying.getWorkspace.run(new IWorkspaceRunnable {
       def run(monitor : IProgressMonitor) = {
-        val mrk = underlying.createMarker(plugin.problemMarkerId.get)
+        val mrk = underlying.createMarker(plugin.problemMarkerId)
         mrk.setAttribute(IMarker.SEVERITY, severity)
         val string = msg.map{
           case '\n' => ' '
@@ -53,20 +47,16 @@ class ScalaProject(val underlying : IProject) {
         mrk.setAttribute(IMarker.MESSAGE , msg)
       }
     }, monitor)
-  }
-  def clearBuildErrors(monitor : IProgressMonitor) = if (plugin.problemMarkerId.isDefined) {
+  
+  def clearBuildErrors(monitor : IProgressMonitor) =
     underlying.getWorkspace.run(new IWorkspaceRunnable {
       def run(monitor : IProgressMonitor) = {
-        underlying.deleteMarkers(plugin.problemMarkerId.get, true, IResource.DEPTH_ZERO)
+        underlying.deleteMarkers(plugin.problemMarkerId, true, IResource.DEPTH_ZERO)
       }
     }, monitor)
-  }
   
-  var lastBuildHadBuildErrors = false
   
   protected def findFile(path : String) = new ScalaFile(underlying.getFile(path))
-
-  var doFullBuild = false
 
   def highlight(sv : ScalaSourceViewer, offset0 : Int, length0 : Int, style0 : Style, txt : TextPresentation) : Unit = {
     if (sv == null || sv.getTextWidget == null || sv.getTextWidget.isDisposed) return
@@ -168,18 +158,19 @@ class ScalaProject(val underlying : IProject) {
   
   def checkClasspath : Unit = plugin.check {
     val cp = underlying.getFile(".classpath")
-    if (cp.exists) classpathUpdate match {
-    case IResource.NULL_STAMP => classpathUpdate = cp.getModificationStamp()
-    case stamp if stamp == cp.getModificationStamp() => 
-    case _ =>
-      classpathUpdate = cp.getModificationStamp()
-      resetCompiler
-    }
+    if (cp.exists)
+      classpathUpdate match {
+        case IResource.NULL_STAMP => classpathUpdate = cp.getModificationStamp()
+        case stamp if stamp == cp.getModificationStamp() => 
+        case _ =>
+          classpathUpdate = cp.getModificationStamp()
+          resetCompiler
+      }
   }
   
   def resetCompiler = {
     buildCompiler = null
-    // XXX: nothing we can do for presentation compiler.
+    // TODO Also reset the presentation compiler
   } 
 
   object compiler extends Global(new Settings(null)) with Scanners {
@@ -262,6 +253,7 @@ class ScalaProject(val underlying : IProject) {
     // setup the classpaths!
     intializePaths(global)
   }
+    
   def intializePaths(global : nsc.Global) = {
     val sfs = sourceFolders
     val sourcePath = sfs.map(_.getLocation.toOSString).mkString("", pathSeparator, "")
@@ -312,28 +304,18 @@ class ScalaProject(val underlying : IProject) {
   
   private var buildCompiler : BuildCompiler = _
   
-  def build(toBuild : HashSet[ScalaFile], monitor : IProgressMonitor) : Seq[ScalaFile] = {
+  def build(toBuild : List[ScalaFile], monitor : IProgressMonitor) = {
     checkClasspath
     if (buildCompiler == null) {
       buildCompiler = new BuildCompiler(this) // causes it to initialize.
     }
-    val toBuild0 = new LinkedHashSet[AbstractFile]
-    toBuild.foreach{file =>
-      toBuild0 += lampionToNSC(file)
-    }
     
-    buildCompiler.build(toBuild0, monitor)
-    Nil
+    buildCompiler.build(toBuild.map(lampionToNSC), monitor)
   }
 
   def clean(monitor : IProgressMonitor) = {
-    if (!plugin.problemMarkerId.isEmpty)                
-      underlying.deleteMarkers(plugin.problemMarkerId.get, true, IResource.DEPTH_INFINITE)
-    doFullBuild = true
-    val fldr =underlying.findMember(".manager")
-    if (fldr != null && fldr.exists) {
-      fldr.delete(true, monitor)
-    }
+    underlying.deleteMarkers(plugin.problemMarkerId, true, IResource.DEPTH_INFINITE)
+
     buildCompiler = null // throw out the compiler.
     // delete the class files in bin
     def delete(container : IContainer, deleteDirs : Boolean)(f : String => Boolean) : Unit =

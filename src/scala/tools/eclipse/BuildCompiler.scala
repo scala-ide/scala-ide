@@ -35,46 +35,43 @@ class BuildCompiler(val project : ScalaProject) extends Global(new Settings) {
     }
   }
   
-  def build(toBuild : LinkedHashSet[AbstractFile], monitor : IProgressMonitor) : List[AbstractFile] = {
-    // build all files, return what files have changed.
-    val project = this.project
+  def build(files : List[AbstractFile], monitor : IProgressMonitor) = {
     val run = new Run {
-      var worked : Int = 0
+      var worked = 0
+      
       override def progress(current : Int, total : Int) : Unit = {
         if (monitor != null && monitor.isCanceled) {
-          cancel; return
+          cancel
+          return
         }
-        assert(current <= total)
-        val expected = (current:Double) / (total:Double)
-        val worked0 = (expected * 100f).toInt
-        assert(worked0 <= 100)
-        if (worked0 > worked) {
-          if (monitor != null) monitor.worked(worked0 - worked)
-          worked = worked0
+        
+        val newWorked = if (current >= total) 100 else ((current.toDouble/total)*100).toInt
+        if (worked < newWorked) {
+          if (monitor != null)
+            monitor.worked(newWorked-worked)
+          worked = newWorked
         }
       }
-      override def compileLate(pfile : AbstractFile) = {
-        super.compileLate(pfile)
-        if (toBuild put pfile) {
-          Console.println("late " + pfile)
-          project.clearBuildErrors(pfile)
-        }
+    
+      override def compileLate(file : AbstractFile) = {
+        super.compileLate(file)
+        project.clearBuildErrors(file)
       }
     }
-    //val plugin = this.plugin
-    val files = toBuild.toList
-    project.clearBuildErrors()
+
+    files.foreach(project.clearBuildErrors(_))
+
     reporter.reset
     try {
       run.compileFiles(files)
-    } catch  {
-      case e =>
-        plugin.logError("Build compiler (scalac) crashed", e)
-        return Nil
-    } finally {
-      ()
+    } catch {
+      case ex =>
+        plugin.logError("Build compiler crashed", ex)
     }
+    
+    if (reporter.hasErrors)
+      println("Has errors")
+
     project.refreshOutput
-    Nil
   }
 }
