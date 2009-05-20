@@ -37,7 +37,7 @@ class Nature extends IProjectNature {
       project.setDescription(desc, IResource.FORCE, null)
     }
     plugin.check {
-      val jp = plugin.javaProject(getProject).get
+      val jp = JavaCore.create(getProject)
       val buf = new ArrayBuffer[IClasspathEntry]
       // Scala classpath container before JRE container
       buf ++= jp.getRawClasspath.filter(!_.getPath().equals(Path.fromPortableString(JavaRuntime.JRE_CONTAINER)))
@@ -63,20 +63,14 @@ class Nature extends IProjectNature {
       project.setDescription(desc, IResource.FORCE, null)
     }
     
-    plugin.javaProject(getProject) match {
-      case Some(project) => {
-        val scalaLibPath = Path.fromPortableString(plugin.scalaLibId)
-        //TODO - Reset JavaCore Properties to default, or as defined *before* scala nature was added.
+    val jp = JavaCore.create(getProject)
+    val scalaLibPath = Path.fromPortableString(plugin.scalaLibId)
+    //TODO - Reset JavaCore Properties to default, or as defined *before* scala nature was added.
         
-        //Pull scala lib off the path
-        val buf = project.getRawClasspath filter {
-          entry => !entry.getPath.equals(scalaLibPath)
-        }
-        project.setRawClasspath(buf, null)
-        project.save(null, true)
-      }
-      case None => ScalaPlugin.plugin.logError("Cannot deconfigure an empty proejct!", new RuntimeException("Project was None"))
-    }
-    ()
+    //Pull scala lib off the path
+    val buf = jp.getRawClasspath filter { entry => !entry.getPath.equals(scalaLibPath) }
+
+    jp.setRawClasspath(buf, null)
+    jp.save(null, true)
   }
 }

@@ -12,7 +12,7 @@ import java.io.File.pathSeparator
 
 import org.eclipse.core.resources.{ IContainer, IFile, IFolder, IMarker, IProject, IResource, IWorkspaceRunnable, ResourcesPlugin}
 import org.eclipse.core.runtime.{ IProgressMonitor, Path }
-import org.eclipse.jdt.core.{ IClasspathEntry, IJavaElement, IType, JavaCore }
+import org.eclipse.jdt.core.{ IClasspathEntry, IJavaElement, IJavaProject, IPackageFragmentRoot, IType, JavaCore }
 import org.eclipse.jdt.internal.core.JavaProject
 import org.eclipse.jdt.ui.JavaUI
 import org.eclipse.jface.text.TextPresentation
@@ -124,11 +124,17 @@ class ScalaProject(val underlying : IProject) {
   
   def externalDepends = underlying.getReferencedProjects 
 
-  assert(underlying != null) // already initialized, I hope!
-  assert(underlying.hasNature(plugin.natureId))
-  assert(JavaProject.hasJavaNature(underlying))
   def javaProject = JavaCore.create(underlying)
-  def sourceFolders = plugin.sourceFolders(javaProject)
+
+  def sourceFolders : Iterable[IContainer] = sourceFolders(javaProject)
+  
+  def sourceFolders(javaProject : IJavaProject) : Iterable[IContainer] = {
+    val isOpen = javaProject.isOpen
+    if (!isOpen) javaProject.open(null)
+    javaProject.getAllPackageFragmentRoots.filter(p =>
+      plugin.check(p.getKind == IPackageFragmentRoot.K_SOURCE && p.getResource.isInstanceOf[IContainer] && (p == javaProject || p.getParent == javaProject)) getOrElse false
+    ).map(_.getResource.asInstanceOf[IContainer])
+  }
   
   def outputPath = plugin.check {
     val outputLocation = javaProject.getOutputLocation
@@ -223,14 +229,14 @@ class ScalaProject(val underlying : IProject) {
     
   def initialize(global : Global) = {
     val settings = new Settings(null)
-    val sourceFolders = this.sourceFolders
-    val sourcePath = sourceFolders.map(_.getLocation.toOSString).mkString("", pathSeparator, "")
+    val sfs = sourceFolders
+    val sourcePath = sfs.map(_.getLocation.toOSString).mkString("", pathSeparator, "")
     settings.sourcepath.tryToSetFromPropertyValue(sourcePath)
     settings.outdir.tryToSetFromPropertyValue(outputPath.toOSString)
     settings.classpath.tryToSetFromPropertyValue("")     // Is this really needed?
     settings.bootclasspath.tryToSetFromPropertyValue("") // Is this really needed?
-    if (!sourceFolders.isEmpty) {
-      settings.encoding.value = sourceFolders.elements.next.getDefaultCharset
+    if (!sfs.isEmpty) {
+      settings.encoding.value = sfs.elements.next.getDefaultCharset
     }
     settings.deprecation.value = true
     settings.unchecked.value = true
@@ -257,35 +263,41 @@ class ScalaProject(val underlying : IProject) {
     intializePaths(global)
   }
   def intializePaths(global : nsc.Global) = {
-    val sourceFolders = this.sourceFolders
-    val sourcePath = sourceFolders.map(_.getLocation.toOSString).mkString("", pathSeparator, "")
+    val sfs = sourceFolders
+    val sourcePath = sfs.map(_.getLocation.toOSString).mkString("", pathSeparator, "")
     global.classPath.output(outputPath.toOSString, sourcePath)
+    
     val cps = javaProject.getResolvedClasspath(true)
-    cps.foreach(cp => plugin.check{cp.getEntryKind match { 
-    case IClasspathEntry.CPE_PROJECT => 
-      val path = cp.getPath
-      val p = plugin.javaProject(plugin.workspace.getProject(path.lastSegment))
-      if (!p.isEmpty) {
-        if (p.get.getOutputLocation != null) {
-          val classes = plugin.resolve(p.get.getOutputLocation).toOSString
-          val sources = plugin.sourceFolders(p.get).map(_.getLocation.toOSString).mkString("", pathSeparator, "")
-          global.classPath.library(classes, sources)
-        }
-        p.get.getAllPackageFragmentRoots.elements.filter(!_.isExternal).foreach{root =>
-          val cp = JavaCore.getResolvedClasspathEntry(root.getRawClasspathEntry)
-          if (cp.isExported) {
+    cps.foreach(cp =>
+      plugin.check {
+        cp.getEntryKind match { 
+          case IClasspathEntry.CPE_PROJECT => 
+            val path = cp.getPath
+            val project = plugin.workspace.getProject(path.lastSegment)
+            if (JavaProject.hasJavaNature(project)) {
+              val p = JavaCore.create(project)
+              if (p.getOutputLocation != null) {
+                val classes = plugin.resolve(p.getOutputLocation).toOSString
+                val sources = sourceFolders(p).map(_.getLocation.toOSString).mkString("", pathSeparator, "")
+                global.classPath.library(classes, sources)
+              }
+              p.getAllPackageFragmentRoots.elements.filter(!_.isExternal).foreach { root =>
+                val cp = JavaCore.getResolvedClasspathEntry(root.getRawClasspathEntry)
+                if (cp.isExported) {
+                  val classes = plugin.resolve(cp.getPath).toOSString
+                  val sources = nullToOption(cp.getSourceAttachmentPath).map(p => plugin.resolve(p).toOSString).getOrElse(null)
+                  global.classPath.library(classes, sources)
+                }
+              }
+            }
+            
+          case IClasspathEntry.CPE_LIBRARY =>   
             val classes = plugin.resolve(cp.getPath).toOSString
             val sources = nullToOption(cp.getSourceAttachmentPath).map(p => plugin.resolve(p).toOSString).getOrElse(null)
             global.classPath.library(classes, sources)
-          }
-        }
-      }
-    case IClasspathEntry.CPE_LIBRARY =>   
-      val classes = plugin.resolve(cp.getPath).toOSString
-      val sources = nullToOption(cp.getSourceAttachmentPath).map(p => plugin.resolve(p).toOSString).getOrElse(null)
-      global.classPath.library(classes, sources)
-    case IClasspathEntry.CPE_SOURCE =>  
-    case _ => 
+            
+          case IClasspathEntry.CPE_SOURCE =>  
+          case _ => 
     }})
   }
   

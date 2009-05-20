@@ -6,13 +6,12 @@
 
 package scala.tools.eclipse.wizards
 
-import org.eclipse.core.resources._
-import org.eclipse.jdt.core._
-import org.eclipse.jdt.launching._
-import org.eclipse.debug.core._
-import org.eclipse.debug.ui._
-
 import scala.collection.JavaConversions._
+
+import org.eclipse.core.resources.IFile
+import org.eclipse.debug.core.DebugPlugin
+import org.eclipse.debug.ui.IDebugUIConstants
+import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants
 
 class NewApplicationWizard extends NewObjectWizard {
   override def adjective = "Application"

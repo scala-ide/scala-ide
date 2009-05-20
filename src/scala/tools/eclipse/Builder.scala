@@ -40,31 +40,33 @@ class Builder extends IncrementalProjectBuilder {
     val project = plugin.projectSafe(getProject).get
     val toBuild = new HashSet[ScalaFile]
     kind match {
-    case CLEAN_BUILD => return project.externalDepends.toList.toArray
-    case INCREMENTAL_BUILD|AUTO_BUILD if (!project.doFullBuild) =>
-      getDelta(project.underlying).accept(new IResourceDeltaVisitor {
-        def visit(delta : IResourceDelta) = delta.getResource match {
-          case file : IFile =>
-            if (delta.getKind != IResourceDelta.REMOVED) {
-              if (project.sourceFolders.exists(_.getLocation.isPrefixOf(file.getLocation))) {
-                toBuild += new ScalaFile(file)
+      case CLEAN_BUILD => return project.externalDepends.toList.toArray
+      case INCREMENTAL_BUILD|AUTO_BUILD if (!project.doFullBuild) =>
+        getDelta(project.underlying).accept(new IResourceDeltaVisitor {
+          def visit(delta : IResourceDelta) = delta.getResource match {
+            case file : IFile =>
+              if (delta.getKind != IResourceDelta.REMOVED) {
+                if (project.sourceFolders.exists(_.getLocation.isPrefixOf(file.getLocation))) {
+                  toBuild += new ScalaFile(file)
+                }
               }
-            }
-            true
-          case _ => true
-        }
-      })
-      true
-    case _ => 
-      project.doFullBuild = false
-      val sourceFolders = project.sourceFolders
-      sourceFolders.foreach(_.accept(new IResourceVisitor {
-        def visit(resource : IResource) =
-          resource match {
-            case file : IFile => toBuild += new ScalaFile(file)
               true
             case _ => true
-          }}))
+          }
+        })
+        true
+      case _ => 
+        project.doFullBuild = false
+        val sourceFolders = project.sourceFolders
+        sourceFolders.foreach(_.accept(new IResourceVisitor {
+          def visit(resource : IResource) = {
+            resource match {
+              case file : IFile if file.getName.endsWith(plugin.scalaFileExtn) || file.getName.endsWith(plugin.javaFileExtn) => toBuild += new ScalaFile(file)
+              case _ =>
+            }
+            true
+          }
+        }))
     }
     
     // everything that needs to be recompiled is in toBuild now. 

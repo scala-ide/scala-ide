@@ -11,7 +11,7 @@ import scala.collection.mutable.{ LinkedHashMap }
 import org.eclipse.core.resources.{ IContainer, IFile, IProject, IResourceChangeEvent, IResourceChangeListener, ResourcesPlugin }
 import org.eclipse.core.runtime.{ CoreException, FileLocator, IPath, IStatus, Platform, Status }
 import org.eclipse.core.runtime.content.IContentTypeSettings
-import org.eclipse.jdt.core.{ IJavaProject, IPackageFragmentRoot, JavaCore }
+import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jdt.internal.core.JavaProject
 import org.eclipse.jdt.internal.core.util.Util
 import org.eclipse.jface.dialogs.ErrorDialog
@@ -153,18 +153,6 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener {
     Style.initializeEditorPreferences
   }
   
-  def sourceFolders(javaProject : IJavaProject) : Iterable[IContainer] = {
-    val isOpen = javaProject.isOpen
-    if (!isOpen) javaProject.open(null)
-    javaProject.getAllPackageFragmentRoots.filter(p =>
-      check(p.getKind == IPackageFragmentRoot.K_SOURCE && p.getResource.isInstanceOf[IContainer] && (p == javaProject || p.getParent == javaProject)) getOrElse false
-    ).map(_.getResource.asInstanceOf[IContainer])
-  }
-  
-  def javaProject(p : IProject) = 
-    if (JavaProject.hasJavaNature(p)) Some(JavaCore.create(p))
-    else None
-    
   def resolve(path : IPath) : IPath = {
     assert(path != null)
     if (path.lastSegment == null) return path

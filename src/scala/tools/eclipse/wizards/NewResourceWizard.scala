@@ -6,19 +6,19 @@
 
 package scala.tools.eclipse.wizards
 
-import org.eclipse.ui.wizards.newresource._
-import org.eclipse.ui._
-import org.eclipse.ui.ide._
-import org.eclipse.jface.wizard._
-import org.eclipse.jface.viewers._
-import org.eclipse.jdt.core._
-import org.eclipse.swt.widgets._
-import org.eclipse.swt.layout._
-import org.eclipse.swt.SWT
-import org.eclipse.core.resources._
-import org.eclipse.core.runtime._
-
 import scala.collection.mutable.ArrayBuffer
+
+import org.eclipse.core.resources.{ IFile, IFolder, IncrementalProjectBuilder, IProject, IResource }
+import org.eclipse.core.runtime.IAdaptable
+import org.eclipse.jdt.core.{ IPackageFragment, IPackageFragmentRoot }
+import org.eclipse.jface.viewers.IStructuredSelection
+import org.eclipse.jface.wizard.WizardPage
+import org.eclipse.swt.SWT
+import org.eclipse.swt.layout.{ GridData, GridLayout }
+import org.eclipse.swt.widgets.{ Combo, Composite, Control, Group, Text }
+import org.eclipse.ui.IWorkbench
+import org.eclipse.ui.ide.IDE
+import org.eclipse.ui.wizards.newresource.BasicNewResourceWizard
 
 trait NewResourceWizard extends BasicNewResourceWizard {
   def kind : String
