@@ -35,7 +35,7 @@ class Editor extends ScalaEditor {
   showChangeInformation(true) 
   setPartName("Scala Editor");
 
-  var file : Option[plugin.Project#File] = None
+  var file : Option[ScalaFile] = None
   
   override protected def createActions : Unit = {
     super.createActions
@@ -108,7 +108,7 @@ class Editor extends ScalaEditor {
               ck(Style.strikeoutId)) {
       if (file != null && file.isDefined) {
         val viewer = getSourceViewer0
-        viewer.invalidateTextPresentation(0, file.get.content.length)
+        viewer.invalidateTextPresentation(0, file.get.length)
       }
     }
   }
@@ -121,19 +121,6 @@ class Editor extends ScalaEditor {
       })
   }
   
-  /*
-  override def doSetInput(input : IEditorInput) = {
-    input match {
-      case null =>
-      case input : plugin.ClassFileInput =>
-        setDocumentProvider(new ClassFileDocumentProvider)
-      case _ =>
-        setDocumentProvider(new ScalaCompilationUnitDocumentProvider)
-    }
-    super.doSetInput(input)
-  }
-  */
-
   override def getCorrespondingElement(element : IJavaElement ) : IJavaElement = element
 
   override def getElementAt(offset : Int) : IJavaElement = getElementAt(offset, true)

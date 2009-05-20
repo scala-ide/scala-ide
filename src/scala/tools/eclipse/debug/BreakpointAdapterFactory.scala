@@ -141,8 +141,7 @@ class BreakpointAdapterFactory extends IAdapterFactory {
     case editor : eclipse.Editor => 
       val viewer = editor.getSourceViewer0
       val file = viewer.file.get
-      val project = file.project.asInstanceOf[ScalaPlugin#Project]
-      val file0 = file.asInstanceOf[project.File].self
+      val project = file.project.asInstanceOf[ScalaProject]
       import org.eclipse.swt.widgets.Display
       var answer : String = null
       

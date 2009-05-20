@@ -17,7 +17,7 @@ import scala.tools.nsc.reporters.Reporter
 
 import org.eclipse.core.runtime.IProgressMonitor
 
-class BuildCompiler(val project : ScalaPlugin#Project) extends Global(new Settings) {
+class BuildCompiler(val project : ScalaProject) extends Global(new Settings) {
   val plugin = ScalaPlugin.plugin
   
   project.initialize(this)

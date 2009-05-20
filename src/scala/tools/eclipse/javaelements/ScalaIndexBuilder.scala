@@ -13,7 +13,7 @@ trait ScalaIndexBuilder extends ScalaJavaMapper { self : ScalaCompilationUnit =>
   
   class IndexBuilderTraverser(indexer : ScalaSourceIndexer) extends Traverser {
     private var currentBuilder : Owner = new CompilationUnitBuilder
-    private val file = proj.fileSafe(self.getResource.asInstanceOf[IFile]).get
+    private val file = new ScalaFile(self.getResource.asInstanceOf[IFile])
     
     trait Owner {
       def parent : Owner

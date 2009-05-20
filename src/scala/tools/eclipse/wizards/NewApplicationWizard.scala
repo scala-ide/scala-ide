@@ -17,7 +17,7 @@ import scala.collection.JavaConversions._
 class NewApplicationWizard extends NewObjectWizard {
   override def adjective = "Application"
   override def body = """  def main(args : Array[String]) : Unit = {}"""
-  override protected def postFinish(project : ScalaPlugin#Project, file : IFile) = {
+  override protected def postFinish(project : ScalaProject, file : IFile) = {
     super.postFinish(project, file)
     val toRun = this.pkg.getElementName + "." +this.name
     val launchName = DebugPlugin.getDefault.getLaunchManager().generateUniqueLaunchConfigurationNameFrom(toRun)

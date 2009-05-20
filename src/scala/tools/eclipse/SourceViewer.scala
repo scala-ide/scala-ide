@@ -32,8 +32,6 @@ class ScalaSourceViewer(val plugin : ScalaPlugin, val editor : Editor, parent : 
   getTextWidget.addFocusListener(this)
   this.addTextInputListener(this)
 
-  type File = plugin.Project#File
-
   class ScalaDamagerRepairer(scanner : ITokenScanner) extends DefaultDamagerRepairer(scanner) {
     override def createPresentation(presentation : TextPresentation, damage : ITypedRegion) : Unit =
       super.createPresentation(presentation, damage);
@@ -52,7 +50,7 @@ class ScalaSourceViewer(val plugin : ScalaPlugin, val editor : Editor, parent : 
         val s =
           try {
             val project = ScalaSourceViewer.this.file.get.project
-            val file = ScalaSourceViewer.this.file.get.asInstanceOf[project.File]
+            val file = ScalaSourceViewer.this.file.get.asInstanceOf[ScalaFile]
             project.hover(file, hoverRegion.getOffset) match {
               case Some(seq) => seq.mkString
               case None => ""
@@ -79,7 +77,7 @@ class ScalaSourceViewer(val plugin : ScalaPlugin, val editor : Editor, parent : 
     override def detectHyperlinks(tv : ITextViewer, region : IRegion, canShowMultiple : Boolean) : Array[IHyperlink] = {
       //Console.println("HYPER: " + region.getOffset + " " + region.getLength)
       val project = ScalaSourceViewer.this.file.get.project
-      val file = ScalaSourceViewer.this.file.get.asInstanceOf[project.File]
+      val file = ScalaSourceViewer.this.file.get.asInstanceOf[ScalaFile]
       val result = project.hyperlink(file, region.getOffset)
       if (result == None) null
       else (result.get :: Nil).toArray
@@ -126,9 +124,6 @@ class ScalaSourceViewer(val plugin : ScalaPlugin, val editor : Editor, parent : 
     if (file.get.isLoaded)
       file.get.doUnload
     
-    val project = file.get.project
-    project.initialize(this)
-    
     plugin.viewers(file.get) = this
   }
   
@@ -136,13 +131,13 @@ class ScalaSourceViewer(val plugin : ScalaPlugin, val editor : Editor, parent : 
     getDocument.removeDocumentListener(editor.documentListener)
     if (file.isDefined && file.get.isLoaded) { 
       val project = file.get.project
-      val file0 = file.get.asInstanceOf[project.File]
+      val file0 = file.get.asInstanceOf[ScalaFile]
       file0.doUnload
     }
     editor.file = None
   }
 
-  def file = editor.file.asInstanceOf[Option[File]]
+  def file = editor.file.asInstanceOf[Option[ScalaFile]]
 }
 
 class ScalaSourceViewerConfiguration(store : IPreferenceStore, editor : ITextEditor, contentAssistProcessor : IContentAssistProcessor)

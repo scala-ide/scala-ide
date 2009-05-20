@@ -38,7 +38,7 @@ class Builder extends IncrementalProjectBuilder {
     import IncrementalProjectBuilder._
     val plugin = this.plugin 
     val project = plugin.projectSafe(getProject).get
-    val toBuild = new HashSet[project.File]
+    val toBuild = new HashSet[ScalaFile]
     kind match {
     case CLEAN_BUILD => return project.externalDepends.toList.toArray
     case INCREMENTAL_BUILD|AUTO_BUILD if (!project.doFullBuild) =>
@@ -46,34 +46,14 @@ class Builder extends IncrementalProjectBuilder {
         def visit(delta : IResourceDelta) = delta.getResource match {
           case file : IFile =>
             if (delta.getKind != IResourceDelta.REMOVED) {
-              val file0 = project.fileSafe(file)
-              if (!file0.isEmpty && project.sourceFolders.exists(_.getLocation.isPrefixOf(file.getLocation))) {
-                toBuild += file0.get
+              if (project.sourceFolders.exists(_.getLocation.isPrefixOf(file.getLocation))) {
+                toBuild += new ScalaFile(file)
               }
             }
             true
           case _ => true
         }
       })
-      project.externalDepends.map(getDelta).foreach(f => if (f != null) f.accept(new IResourceDeltaVisitor {
-        override def visit(delta : IResourceDelta) : Boolean = {
-          if (delta.getKind == IResourceDelta.REMOVED) return true
-          if (!delta.getResource.isInstanceOf[IFile]) return true
-          val file = delta.getResource.asInstanceOf[IFile]
-          val paths = plugin.reverseDependencies.get(file.getLocation)
-          if (paths.isEmpty) return true
-          val i = paths.get.elements 
-          while (i.hasNext) {
-            val path = i.next.asInstanceOf[IPath]
-            if (project.sourceFolders.exists(_.getLocation.isPrefixOf(path))) {
-              val p = project.underlying
-              val f = p.getFile(path.removeFirstSegments(path.matchingFirstSegments(p.getLocation)))
-              toBuild += project.fileSafe(f).get
-            }
-          }        
-          true
-        }
-      }))
       true
     case _ => 
       project.doFullBuild = false
@@ -81,18 +61,14 @@ class Builder extends IncrementalProjectBuilder {
       sourceFolders.foreach(_.accept(new IResourceVisitor {
         def visit(resource : IResource) =
           resource match {
-            case file : IFile =>           
-              project.fileSafe(file) match {
-                case Some(file0) => toBuild += file0
-                case _ =>
-              }
+            case file : IFile => toBuild += new ScalaFile(file)
               true
             case _ => true
           }}))
     }
     
     // everything that needs to be recompiled is in toBuild now. 
-    val built = new HashSet[project.File] // don't recompile twice.
+    val built = new HashSet[ScalaFile] // don't recompile twice.
     var buildAgain = false
     if (monitor != null) monitor.beginTask("build all", 100)
     while (!toBuild.isEmpty) {
@@ -106,40 +82,12 @@ class Builder extends IncrementalProjectBuilder {
       built ++= toBuild
       assert(!built.isEmpty)
       toBuild.clear
-      
-      def f(changed : project.File) : Unit = {
-        val changedLoc = changed.underlying.getLocation
-        plugin.reverseDependencies.get(changedLoc) match {
-          case Some(paths) => paths.foreach(path => {
-            val file = plugin.workspace.getFileForLocation(path)
-            if (file.exists) {
-              if (file.getProject == project.underlying) {
-                project.fileSafe(file) match {
-                  case Some(file) if !built.contains(file) => 
-                    if (toBuild put file) {
-                      //f(file) // transitive colsure of dependencies...sigh.
-                    }
-                  case Some(file) => plugin.reverseDependencies(changedLoc) += path
-                  case _ => file.touch(monitor)
-                }
-              } else {
-                if (hasBeenBuilt(file.getProject)) buildAgain = true
-                file.touch(monitor)
-              }
-            }
-          })
-          case None => 
-        }
-      }
-    
-      changed.foreach(f)
     }
     
     if (buildAgain) needRebuild
     else project.buildDone(built, monitor)
     
     val depends = project.externalDepends.toList.toArray
-    
     if (plugin.projectSafe(getProject).get.lastBuildHadBuildErrors)
       depends
     else {

@@ -24,7 +24,7 @@ trait ScalaStructureBuilder extends ScalaJavaMapper { self : ScalaCompilationUni
   class StructureBuilderTraverser(unitInfo : ScalaCompilationUnitInfo, newElements0 : JMap[AnyRef, AnyRef], sourceLength : Int) extends Traverser {
     private var currentBuilder : Owner = new CompilationUnitBuilder
     private val manager = JavaModelManager.getJavaModelManager
-    private val file = proj.fileSafe(self.getResource.asInstanceOf[IFile]).get
+    private val file = new ScalaFile(self.getResource.asInstanceOf[IFile])
     
     trait Owner {
       def parent : Owner

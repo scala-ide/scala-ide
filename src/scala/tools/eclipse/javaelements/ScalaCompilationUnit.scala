@@ -7,7 +7,6 @@ package scala.tools.eclipse.javaelements
 
 import java.util.{ HashMap => JHashMap, Map => JMap }
 
-import org.eclipse.core.filebuffers.FileBuffers
 import org.eclipse.core.resources.{ IFile, IResource }
 import org.eclipse.core.runtime.{ IProgressMonitor, IStatus }
 import org.eclipse.jdt.core.{ IJavaElement, IJavaProject, JavaModelException }
@@ -20,6 +19,8 @@ import org.eclipse.swt.graphics.Image
 import org.eclipse.swt.widgets.Display
 
 import scala.tools.nsc.util.{ NoPosition, Position }
+
+import scala.tools.eclipse.ScalaFile
 
 class ScalaCompilationUnitInfo extends CompilationUnitElementInfo
 
@@ -40,22 +41,20 @@ class ScalaCompilationUnit(fragment : PackageFragment, elementName: String, work
   
   override def buildStructure(info : OpenableElementInfo, pm : IProgressMonitor, newElements : JMap[_, _], underlyingResource : IResource) : Boolean = {
     val unitInfo = info.asInstanceOf[ScalaCompilationUnitInfo]
-    val (root, fileOpt) = try { 
+    val (root, file) = try { 
       val resource = getCorrespondingResource.asInstanceOf[IFile]
-      val fileOpt0 = proj.fileSafe(resource)
+      val file0 = new ScalaFile(resource)
       // TODO reinstate
       //(fileOpt0.map(_.outlineTrees).getOrElse(Nil), fileOpt0)
-      (Nil, fileOpt0)
+      (Nil, file0)
     } catch {
-      case ex : JavaModelException => (Nil, None)
+      case ex : JavaModelException => (Nil, null)
     }
     
     if (root.isEmpty) {
       unitInfo.setIsStructureKnown(false)
       return unitInfo.isStructureKnown
     }
-    
-    val file = fileOpt.get
     
     if (!isWorkingCopy) {
       val status = validateCompilationUnit(underlyingResource)
@@ -67,14 +66,7 @@ class ScalaCompilationUnit(fragment : PackageFragment, elementName: String, work
     if (!isPrimary && getPerWorkingCopyInfo == null)
       throw newNotPresentException
 
-    val sourceLength = {
-      val fs = FileBuffers.getFileStoreAtLocation(file.underlying.getLocation)
-      if (fs != null)
-        fs.fetchInfo.getLength.toInt
-        else
-        -1
-    }
-    
+    val sourceLength = file.length
     new StructureBuilderTraverser(unitInfo, newElements.asInstanceOf[JMap[AnyRef, AnyRef]], sourceLength).traverseTrees(root)
     
     unitInfo.setSourceLength(sourceLength)
@@ -83,7 +75,7 @@ class ScalaCompilationUnit(fragment : PackageFragment, elementName: String, work
   }
   
   def addToIndexer(indexer : ScalaSourceIndexer) {
-    val fileOpt = proj.fileSafe(getCorrespondingResource.asInstanceOf[IFile])
+    val file = new ScalaFile(getCorrespondingResource.asInstanceOf[IFile])
     // TODO reinstate
     // val root = fileOpt.map(_.outlineTrees).getOrElse(Nil)
     val root = Nil
