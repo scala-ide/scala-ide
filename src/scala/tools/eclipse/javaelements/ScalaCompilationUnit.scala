@@ -29,7 +29,8 @@ class ScalaCompilationUnit(fragment : PackageFragment, elementName: String, work
 
   val plugin = ScalaPlugin.plugin
   val proj = plugin.projectSafe(getResource.getProject).get
-  import proj.compiler._
+  val compiler = proj.compiler
+  import compiler._
   
   override def getMainTypeName : Array[Char] =
     elementName.substring(0, elementName.length - ".scala".length).toCharArray()

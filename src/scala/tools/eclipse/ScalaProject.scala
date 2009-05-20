@@ -164,20 +164,8 @@ class ScalaProject(val underlying : IProject) {
         case stamp if stamp == cp.getModificationStamp() => 
         case _ =>
           classpathUpdate = cp.getModificationStamp()
-          resetCompiler
+          resetCompilers
       }
-  }
-  
-  def resetCompiler = {
-    buildCompiler = null
-    // TODO Also reset the presentation compiler
-  } 
-
-  object compiler extends Global(new Settings(null)) {
-    initialize(this)
-
-    override def logError(msg : String, t : Throwable) =
-      plugin.logError(msg, t)
   }
   
   private def nullToOption[T <: AnyRef](x : T) = if (x == null) None else Some(x)
@@ -301,21 +289,43 @@ class ScalaProject(val underlying : IProject) {
   
   def lampionToNSC(file : ScalaFile) : AbstractFile = EclipseResource(file.underlying)
   
-  private var buildCompiler : BuildCompiler = _
-  
-  def build(toBuild : List[ScalaFile], monitor : IProgressMonitor) = {
+  private var buildCompiler0 : BuildCompiler = _
+  private var presentationCompiler0 : Global = _ 
+
+  def resetCompilers = {
+    buildCompiler0 = null
+    presentationCompiler0 = null
+  } 
+
+  def buildCompiler = {
     checkClasspath
-    if (buildCompiler == null) {
-      buildCompiler = new BuildCompiler(this) // causes it to initialize.
+    if (buildCompiler0 == null) {
+      buildCompiler0 = new BuildCompiler(this) // causes it to initialize.
     }
+    buildCompiler0
+  }
+  
+  def compiler = {
+    checkClasspath
+    if (presentationCompiler0 eq null) {
+      presentationCompiler0 = new Global(new Settings(null)) {
+        initialize(this)
+
+        override def logError(msg : String, t : Throwable) =
+          plugin.logError(msg, t)
+      }
+    }
+    presentationCompiler0
+  }
     
+  def build(toBuild : List[ScalaFile], monitor : IProgressMonitor) = {
     buildCompiler.build(toBuild.map(lampionToNSC), monitor)
   }
 
   def clean(monitor : IProgressMonitor) = {
     underlying.deleteMarkers(plugin.problemMarkerId, true, IResource.DEPTH_INFINITE)
+    resetCompilers
 
-    buildCompiler = null // throw out the compiler.
     // delete the class files in bin
     def delete(container : IContainer, deleteDirs : Boolean)(f : String => Boolean) : Unit =
       if (container.exists()) {
@@ -355,13 +365,13 @@ class ScalaProject(val underlying : IProject) {
     }
   }
 
-  protected def findJava(sym : compiler.Symbol) : Option[IJavaElement] = {
+  protected def findJava(sym : Global#Symbol) : Option[IJavaElement] = {
     if (sym == compiler.NoSymbol) None
     else if (sym.owner.isPackageClass) {
       val found = javaProject.findType(sym.owner.fullNameString('.'), sym.simpleName.toString, null : IProgressMonitor)
       if (found eq null) None
       else if (sym.isConstructor) {
-        val params = sym.info.paramTypes.map(signatureFor).toArray
+        val params = sym.info.paramTypes.map(signatureFor(compiler, _)).toArray
         nullToOption(found.getMethod(sym.nameString, params))
       }
       else Some(found)
@@ -370,7 +380,7 @@ class ScalaProject(val underlying : IProject) {
         case Some(owner : IType) =>
           var ret : IJavaElement = null
           if (sym.isMethod) {
-            val params = sym.info.paramTypes.map(signatureFor).toArray
+            val params = sym.info.paramTypes.map(signatureFor(compiler, _)).toArray
             val name = if (sym.isConstructor) sym.owner.nameString else sym.nameString 
             val methods = owner.findMethods(owner.getMethod(name, params))
             if ((methods ne null) && methods.length > 0)
@@ -387,11 +397,11 @@ class ScalaProject(val underlying : IProject) {
     }
   }
   
-  def signatureFor(tpe : compiler.Type) : String = {
+  def signatureFor(compiler : Global, tpe : Global#Type) : String = {
     import compiler.definitions._
     import org.eclipse.jdt.core.Signature._
     
-    def signatureFor0(sym : compiler.Symbol) : String = {
+    def signatureFor0(sym : Global#Symbol) : String = {
       if (sym == ByteClass) return SIG_BYTE
       if (sym == CharClass) return SIG_CHAR
       if (sym == DoubleClass) return SIG_DOUBLE
@@ -407,9 +417,9 @@ class ScalaProject(val underlying : IProject) {
     }
     
     tpe match {
-      case tpe : compiler.PolyType if tpe.typeParams.length == 1 && tpe.resultType == ArrayClass.tpe => 
+      case tpe : Global#PolyType if tpe.typeParams.length == 1 && tpe.resultType == ArrayClass.tpe => 
         "[" + signatureFor0(tpe.typeParams(0))
-      case tpe : compiler.PolyType => signatureFor(tpe.resultType) 
+      case tpe : Global#PolyType => signatureFor(compiler, tpe.resultType) 
       case tpe => signatureFor0(tpe.typeSymbol)  
     }
   }
@@ -426,7 +436,7 @@ class ScalaProject(val underlying : IProject) {
     override def symbol = None
   }    
   
-  private case class JavaRef(elem : IJavaElement, symbol0 : compiler.Symbol) extends IdeRef {
+  private case class JavaRef(elem : IJavaElement, symbol0 : Global#Symbol) extends IdeRef {
     override def hover = try {
       val str = elem.getAttachedJavadoc(null)
       if (str eq null) None else Some(str)
@@ -441,7 +451,7 @@ class ScalaProject(val underlying : IProject) {
     override def symbol = Some(symbol0)
   }
   
-  protected def javaRef(symbol : compiler.Symbol) : IdeRef = {
+  protected def javaRef(symbol : Global#Symbol) : IdeRef = {
     val elem = findJava(symbol) match {
       case Some(elem) => elem
       case None => return NoRef

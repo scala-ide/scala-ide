@@ -9,7 +9,7 @@ import org.eclipse.core.resources.IFile
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants
 
 trait ScalaIndexBuilder extends ScalaJavaMapper { self : ScalaCompilationUnit =>
-  import proj.compiler._
+  import compiler._
   
   class IndexBuilderTraverser(indexer : ScalaSourceIndexer) extends Traverser {
     private var currentBuilder : Owner = new CompilationUnitBuilder
