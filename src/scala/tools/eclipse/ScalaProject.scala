@@ -173,8 +173,7 @@ class ScalaProject(val underlying : IProject) {
     // TODO Also reset the presentation compiler
   } 
 
-  object compiler extends Global(new Settings(null)) with Scanners {
-    override val global = this    // For Scanners
+  object compiler extends Global(new Settings(null)) {
     initialize(this)
 
     override def logError(msg : String, t : Throwable) =
