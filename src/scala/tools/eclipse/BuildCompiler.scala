@@ -17,10 +17,8 @@ import scala.tools.nsc.reporters.Reporter
 
 import org.eclipse.core.runtime.IProgressMonitor
 
-class BuildCompiler(val project : ScalaProject) extends Global(new Settings) {
+class BuildCompiler(val project : ScalaProject, settings : Settings) extends Global(settings) {
   val plugin = ScalaPlugin.plugin
-  
-  project.initialize(this)
 
   this.reporter = new Reporter {
     override def info0(pos : Position, msg : String, severity : Severity, force : Boolean) = {
@@ -60,6 +58,7 @@ class BuildCompiler(val project : ScalaProject) extends Global(new Settings) {
     }
 
     files.foreach(project.clearBuildErrors(_))
+    project.createOutputFolders
 
     reporter.reset
     try {
@@ -69,9 +68,6 @@ class BuildCompiler(val project : ScalaProject) extends Global(new Settings) {
         plugin.logError("Build compiler crashed", ex)
     }
     
-    if (reporter.hasErrors)
-      println("Has errors")
-
     project.refreshOutput
   }
 }

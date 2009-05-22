@@ -27,7 +27,7 @@ import scala.tools.eclipse.util.IDESettings
 trait ProjectSettings {
 
   def preferenceStore : IPreferenceStore 
-  val settings = new Settings(null)
+  val settings = new Settings
 
   /** The settings we may have changed */
   lazy val userSettings = IDESettings.shownSettings(settings).flatMap(userSetting)

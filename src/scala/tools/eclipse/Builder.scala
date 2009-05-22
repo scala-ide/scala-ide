@@ -6,17 +6,18 @@
 
 package scala.tools.eclipse
 
+import scala.collection.mutable.HashSet
+
 import java.{ lang => jl, util => ju }
 
 import org.eclipse.core.resources.{ IFile, IncrementalProjectBuilder, IProject, IResource, IResourceDelta, IResourceDeltaVisitor, IResourceVisitor }
 import org.eclipse.core.runtime.{ IProgressMonitor, IPath }
 import org.eclipse.jdt.internal.core.JavaModelManager
-import org.eclipse.jdt.internal.core.builder.{ JavaBuilder, State }
+import org.eclipse.jdt.internal.core.builder.{ JavaBuilder, NameEnvironment, State }
 
 import scala.tools.eclipse.contribution.weaving.jdt.builderoptions.ScalaJavaBuilder
 import scala.tools.eclipse.javaelements.JDTUtils
-import scala.tools.eclipse.util.ReflectionUtils
-import scala.collection.mutable.HashSet
+import scala.tools.eclipse.util.{ ReflectionUtils }
 
 class Builder extends IncrementalProjectBuilder {
   def plugin = ScalaPlugin.plugin
@@ -38,6 +39,8 @@ class Builder extends IncrementalProjectBuilder {
 
     val project = plugin.projectSafe(getProject).get
     val buildSet = new HashSet[ScalaFile]
+    val allSourceFiles = project.allSourceFiles(new NameEnvironment(project.javaProject))
+    
     kind match {
       case INCREMENTAL_BUILD | AUTO_BUILD =>
         getDelta(project.underlying).accept(new IResourceDeltaVisitor {
@@ -46,24 +49,15 @@ class Builder extends IncrementalProjectBuilder {
               case file : IFile
                 if (delta.getKind != IResourceDelta.REMOVED) &&
                    (project.sourceFolders.exists(_.getLocation.isPrefixOf(file.getLocation))) &&
-                   plugin.isBuildable(file) =>
+                   allSourceFiles(file) =>
                 buildSet += new ScalaFile(file)
               case _ =>
             }
             true
           }
         })
-      case CLEAN_BUILD | FULL_BUILD => 
-        val sourceFolders = project.sourceFolders
-        sourceFolders.foreach(_.accept(new IResourceVisitor {
-          def visit(resource : IResource) = {
-            resource match {
-              case file : IFile if plugin.isBuildable(file) => buildSet += new ScalaFile(file)
-              case _ =>
-            }
-            true
-          }
-        }))
+      case CLEAN_BUILD | FULL_BUILD =>
+        buildSet ++= allSourceFiles.map(ScalaFile.apply)
     }
     
     // everything that needs to be recompiled is in toBuild now

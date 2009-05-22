@@ -23,7 +23,7 @@ class ScalaCompilerPreferenceInitializer extends AbstractPreferenceInitializer {
   def initializeDefaultPreferences() : Unit = {
 	  
     ScalaPlugin.plugin.check {
-      val settings = new Settings(null)
+      val settings = new Settings
       val node = new DefaultScope().getNode(ScalaPlugin.plugin.pluginId)
       val store = ScalaPlugin.plugin.getPluginPreferences
 

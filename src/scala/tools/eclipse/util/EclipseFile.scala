@@ -8,7 +8,8 @@ package scala.tools.eclipse.util
 import java.io.{ ByteArrayInputStream, ByteArrayOutputStream, File, InputStream, OutputStream }
 
 import org.eclipse.core.filebuffers.FileBuffers
-import org.eclipse.core.resources.{ IContainer, IFile, IResource }
+import org.eclipse.core.resources.{ IContainer, IFile, IFolder, IResource }
+import org.eclipse.core.runtime.Path
 
 import scala.tools.nsc.io.AbstractFile
 
@@ -40,7 +41,20 @@ class EclipseFile(override val underlying : IFile) extends EclipseResource[IFile
   
   def output: OutputStream = new ByteArrayOutputStream {
     override def close = {
-      underlying.setContents(new ByteArrayInputStream(buf, 0, count), true, false, null)
+      val contents = new ByteArrayInputStream(buf, 0, count)
+      if (!underlying.exists) {
+        def createParentFolder(parent : IContainer) {
+          if (!parent.exists()) {
+            createParentFolder(parent.getParent)
+            parent.asInstanceOf[IFolder].create(true, true, null)
+          }
+        }
+        
+        createParentFolder(underlying.getParent)
+        underlying.create(contents, true, null)
+      }
+      else
+        underlying.setContents(contents, true, false, null)
     }
   }
 
@@ -57,7 +71,6 @@ class EclipseFile(override val underlying : IFile) extends EclipseResource[IFile
     else
       Some(fs.fetchInfo)
   }
-
 }
 
 class EclipseContainer(override val underlying : IContainer) extends EclipseResource[IContainer] {
@@ -75,5 +88,21 @@ class EclipseContainer(override val underlying : IContainer) extends EclipseReso
       EclipseResource(r)
     else
       null
+  }
+
+  override def fileNamed(name : String) : AbstractFile = {
+    val existing = lookupName(name, false)
+    if (existing == null)
+      new EclipseFile(underlying.getFile(new Path(name)))
+    else
+      existing
+  }
+  
+  override def subdirectoryNamed(name: String): AbstractFile = {
+    val existing = lookupName(name, true)
+    if (existing == null)
+      new EclipseContainer(underlying.getFolder(new Path(name)))
+    else
+      existing
   }
 }

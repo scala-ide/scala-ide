@@ -22,6 +22,10 @@ import org.eclipse.ui.ide.IDE
 
 import scala.tools.eclipse.util.{ EclipseResource, Style } 
 
+object ScalaFile {
+  def apply(file : IFile) = new ScalaFile(file)
+}
+
 class ScalaFile(val underlying : IFile) {
   import ScalaPlugin.plugin
   
@@ -209,7 +213,5 @@ class ScalaFile(val underlying : IFile) {
       case None => None
     }
     
-  def defaultClassDir = EclipseResource(plugin.workspace.findMember(project.outputPath))
-  
   def doLoad0(page : IWorkbenchPage) = IDE.openEditor(page, underlying, true)
 }
