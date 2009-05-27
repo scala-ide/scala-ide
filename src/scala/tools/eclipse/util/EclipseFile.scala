@@ -60,7 +60,7 @@ class EclipseFile(override val underlying : IFile) extends EclipseResource[IFile
 
   override def sizeOption: Option[Int] = getFileInfo.map(_.getLength.toInt)
     
-  def elements : Iterator[AbstractFile] = Iterator.empty
+  def iterator : Iterator[AbstractFile] = Iterator.empty
 
   def lookupName(name : String, directory : Boolean) = null
   
@@ -80,7 +80,7 @@ class EclipseContainer(override val underlying : IContainer) extends EclipseReso
   
   def output = throw new UnsupportedOperationException
   
-  def elements : Iterator[AbstractFile] = underlying.members.map(EclipseResource.apply).elements
+  def iterator : Iterator[AbstractFile] = underlying.members.map(EclipseResource.apply).iterator
 
   def lookupName(name : String, directory : Boolean) = {
     val r = underlying.findMember(name)
