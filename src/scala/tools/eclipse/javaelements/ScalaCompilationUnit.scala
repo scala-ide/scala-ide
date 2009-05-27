@@ -7,6 +7,8 @@ package scala.tools.eclipse.javaelements
 
 import java.util.{ HashMap => JHashMap, Map => JMap }
 
+import scala.concurrent.SyncVar
+
 import org.eclipse.core.resources.{ IFile, IResource }
 import org.eclipse.core.runtime.{ IProgressMonitor, IStatus }
 import org.eclipse.jdt.core.{ IJavaElement, IJavaProject, JavaModelException }
@@ -18,20 +20,22 @@ import org.eclipse.jdt.internal.core.{
 import org.eclipse.swt.graphics.Image
 import org.eclipse.swt.widgets.Display
 
+import scala.tools.nsc.interactive.Global
 import scala.tools.nsc.util.{ NoPosition, Position }
 
 import scala.tools.eclipse.ScalaFile
+import scala.tools.eclipse.util.EclipseFile
 
 class ScalaCompilationUnitInfo extends CompilationUnitElementInfo
 
 class ScalaCompilationUnit(fragment : PackageFragment, elementName: String, workingCopyOwner : WorkingCopyOwner)
-  extends JDTCompilationUnit(fragment, elementName, workingCopyOwner) with ScalaElement with ImageSubstituter with ScalaStructureBuilder with ScalaIndexBuilder {
+  extends JDTCompilationUnit(fragment, elementName, workingCopyOwner) with ScalaElement with ImageSubstituter {
 
   val plugin = ScalaPlugin.plugin
   val proj = plugin.projectSafe(getResource.getProject).get
-  val compiler = proj.compiler
-  import compiler._
   
+  lazy val aFile = new EclipseFile(getCorrespondingResource.asInstanceOf[IFile])
+
   override def getMainTypeName : Array[Char] =
     elementName.substring(0, elementName.length - ".scala".length).toCharArray()
 
@@ -42,17 +46,25 @@ class ScalaCompilationUnit(fragment : PackageFragment, elementName: String, work
   
   override def buildStructure(info : OpenableElementInfo, pm : IProgressMonitor, newElements : JMap[_, _], underlyingResource : IResource) : Boolean = {
     val unitInfo = info.asInstanceOf[ScalaCompilationUnitInfo]
-    val (root, file) = try { 
-      val resource = getCorrespondingResource.asInstanceOf[IFile]
-      val file0 = new ScalaFile(resource)
-      // TODO reinstate
-      //(fileOpt0.map(_.outlineTrees).getOrElse(Nil), fileOpt0)
-      (Nil, file0)
-    } catch {
-      case ex : JavaModelException => (Nil, null)
+
+    val compiler = proj.compiler
+    val sFile = compiler.getSourceFile(aFile)
+    var nscCu = compiler.unitOf(sFile)
+    if (nscCu.status == compiler.NotLoaded) {
+      println("Reloading")
+      val reloaded = new SyncVar[Either[Unit, Throwable]]
+      compiler.askReload(List(sFile), reloaded)
+      reloaded.get.right.toOption match {
+        case Some(thr) => throw thr
+        case _ =>
+      }
+      nscCu = compiler.unitOf(sFile)
     }
-    
-    if (root.isEmpty) {
+    val body = nscCu.body
+
+    compiler.treePrinters.create.print(nscCu)
+
+    if (body == null || body.isEmpty) {
       unitInfo.setIsStructureKnown(false)
       return unitInfo.isStructureKnown
     }
@@ -67,8 +79,9 @@ class ScalaCompilationUnit(fragment : PackageFragment, elementName: String, work
     if (!isPrimary && getPerWorkingCopyInfo == null)
       throw newNotPresentException
 
-    val sourceLength = file.length
-    new StructureBuilderTraverser(unitInfo, newElements.asInstanceOf[JMap[AnyRef, AnyRef]], sourceLength).traverseTrees(root)
+    val sourceLength = aFile.sizeOption.get
+    val ssb = new ScalaStructureBuilder(compiler, this)
+    new ssb.StructureBuilderTraverser(unitInfo, newElements.asInstanceOf[JMap[AnyRef, AnyRef]], sourceLength).traverse(body.asInstanceOf[ssb.compiler.Tree])
     
     unitInfo.setSourceLength(sourceLength)
     unitInfo.setIsStructureKnown(true)
@@ -76,12 +89,25 @@ class ScalaCompilationUnit(fragment : PackageFragment, elementName: String, work
   }
   
   def addToIndexer(indexer : ScalaSourceIndexer) {
-    val file = new ScalaFile(getCorrespondingResource.asInstanceOf[IFile])
-    // TODO reinstate
-    // val root = fileOpt.map(_.outlineTrees).getOrElse(Nil)
-    val root = Nil
-    if (!root.isEmpty)
-      new IndexBuilderTraverser(indexer).traverseTrees(root)
+    val compiler = proj.compiler
+    val sFile = compiler.getSourceFile(aFile)
+    var nscCu = compiler.unitOf(sFile)
+    if (nscCu.status == compiler.NotLoaded) {
+      println("Reloading in addToIndexer")
+      val reloaded = new SyncVar[Either[Unit, Throwable]]
+      compiler.askReload(List(sFile), reloaded)
+      reloaded.get.right.toOption match {
+        case Some(thr) => throw thr
+        case _ =>
+      }
+      nscCu = compiler.unitOf(sFile)
+    }
+    val body = nscCu.body
+
+    if (body ne null) {
+      val sib = new ScalaIndexBuilder(compiler)
+      new sib.IndexBuilderTraverser(indexer).traverse(body.asInstanceOf[sib.compiler.Tree])
+    }
   }
   
   override def createElementInfo : Object = new ScalaCompilationUnitInfo

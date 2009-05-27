@@ -23,9 +23,11 @@ import org.eclipse.swt.SWT
 import org.eclipse.swt.custom.StyleRange
 import org.eclipse.ui.PlatformUI
 import org.eclipse.ui.texteditor.ITextEditor
-import scala.tools.nsc.{ Global, Settings }
+
+import scala.tools.nsc.{ Global, Settings, interactive }
 import scala.tools.nsc.ast.parser.Scanners
 import scala.tools.nsc.io.AbstractFile
+import scala.tools.nsc.reporters.ConsoleReporter
 
 import scala.tools.eclipse.properties.PropertyStore
 import scala.tools.eclipse.util.{ EclipseFile, EclipseResource, IDESettings, ReflectionUtils, Style } 
@@ -409,11 +411,15 @@ class ScalaProject(val underlying : IProject) {
   }
 
   private var buildCompiler0 : BuildCompiler = _
-  private var presentationCompiler0 : Global = _ 
+  private var presentationCompiler0 : interactive.Global = _ 
 
   def resetCompilers = {
     buildCompiler0 = null
-    presentationCompiler0 = null
+    
+    if (presentationCompiler0 != null) {
+      presentationCompiler0.askShutdown()
+      presentationCompiler0 = null
+    }
   } 
 
   def buildCompiler = {
@@ -431,7 +437,7 @@ class ScalaProject(val underlying : IProject) {
     if (presentationCompiler0 eq null) {
       val settings = new Settings
       initialize(settings)
-      presentationCompiler0 = new Global(settings) {
+      presentationCompiler0 = new interactive.Global(settings, new ConsoleReporter(settings)) {
         override def logError(msg : String, t : Throwable) =
           plugin.logError(msg, t)
       }

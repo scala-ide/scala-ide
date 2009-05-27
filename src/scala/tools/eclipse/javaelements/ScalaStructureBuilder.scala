@@ -16,15 +16,15 @@ import org.eclipse.jdt.core.Signature
 import scala.collection.immutable.Map
 import scala.tools.nsc.Global
 import scala.tools.nsc.symtab.Flags
-import scala.tools.nsc.util.{ NoPosition, Position }
+import scala.tools.nsc.util.{ NameTransformer, NoPosition, Position }
 
-trait ScalaStructureBuilder extends ScalaJavaMapper { self : ScalaCompilationUnit =>
+class ScalaStructureBuilder(val compiler : Global, self : ScalaCompilationUnit) extends  {
   import compiler._
+  import ScalaJavaMapper._
 
   class StructureBuilderTraverser(unitInfo : ScalaCompilationUnitInfo, newElements0 : JMap[AnyRef, AnyRef], sourceLength : Int) extends Traverser {
     private var currentBuilder : Owner = new CompilationUnitBuilder
     private val manager = JavaModelManager.getJavaModelManager
-    private val file = new ScalaFile(self.getResource.asInstanceOf[IFile])
     
     trait Owner {
       def parent : Owner
@@ -136,15 +136,16 @@ trait ScalaStructureBuilder extends ScalaJavaMapper { self : ScalaCompilationUni
         classElemInfo.setSuperInterfaceNames(interfaceNames.toArray)
         
         val (start, end) = if (!isAnon) {
-          val start0 = c.symbol.pos.offset.getOrElse(0) 
+          val start0 = c.pos.point 
           (start0, start0 + name.length - 1)
         } else if (primaryType != null) {
-          val start0 = parentTree.pos.offset.getOrElse(0)
+          val start0 = parentTree.pos.point
           (start0, start0 + primaryType.name.length - 1)
         } else {
-          val start0 = parentTree.pos.offset.getOrElse(0)
+          val start0 = parentTree.pos.point
           (start0, start0 - 1)
         }
+        
         classElemInfo.setNameSourceStart0(start)
         classElemInfo.setNameSourceEnd0(end)
         setSourceRange(classElemInfo, c)
@@ -173,8 +174,10 @@ trait ScalaStructureBuilder extends ScalaJavaMapper { self : ScalaCompilationUni
         val moduleElemInfo = new ScalaElementInfo
         moduleElemInfo.setHandle(moduleElem)
         moduleElemInfo.setFlags0(mapModifiers(m.mods))
-        val start = m.symbol.pos.offset.getOrElse(0)
-        val end = start + m.name.length -1
+        
+        val start = m.pos.point
+        val end = start+m.name.length-1
+        
         moduleElemInfo.setNameSourceStart0(start)
         moduleElemInfo.setNameSourceEnd0(end)
         setSourceRange(moduleElemInfo, m)
@@ -228,14 +231,16 @@ trait ScalaStructureBuilder extends ScalaJavaMapper { self : ScalaCompilationUni
         
         val valElemInfo = new ScalaSourceFieldElementInfo
         valElemInfo.setFlags0(mapModifiers(v.mods))
-        val start = v.symbol.pos.offset.getOrElse(0)
-        val end = start + elemName.length - 1
+        
+        val start = v.pos.point
+        val end = start+elemName.length-1
+        
         valElemInfo.setNameSourceStart0(start)
         valElemInfo.setNameSourceEnd0(end)
         setSourceRange(valElemInfo, v)
         newElements0.put(valElem, valElemInfo)
 
-        val tn = manager.intern(mapType(v.tpt).toArray)
+        val tn = manager.intern(mapType(compiler, v.tpt).toArray)
         valElemInfo.setTypeName(tn)
         
         new Builder {
@@ -260,8 +265,10 @@ trait ScalaStructureBuilder extends ScalaJavaMapper { self : ScalaCompilationUni
 
         val typeElemInfo = new ScalaSourceFieldElementInfo
         typeElemInfo.setFlags0(mapModifiers(t.mods))
-        val start = t.symbol.pos.offset.getOrElse(0)
-        val end = start + t.name.length - 1
+        
+        val start = t.pos.point
+        val end = start+t.name.length-1
+
         typeElemInfo.setNameSourceStart0(start)
         typeElemInfo.setNameSourceEnd0(end)
         setSourceRange(typeElemInfo, t)
@@ -273,7 +280,7 @@ trait ScalaStructureBuilder extends ScalaJavaMapper { self : ScalaCompilationUni
           typeElemInfo.setTypeName(tn)
         } else {
           //println("Type has type: "+t.rhs.symbol.fullNameString)
-          val tn = manager.intern(mapType(t.rhs).toArray)
+          val tn = manager.intern(mapType(compiler, t.rhs).toArray)
           typeElemInfo.setTypeName(tn)
         }
         
@@ -297,7 +304,7 @@ trait ScalaStructureBuilder extends ScalaJavaMapper { self : ScalaCompilationUni
         
         val fps = for(vps <- d.vparamss; vp <- vps) yield vp
         
-        val paramTypes = Array(fps.map(v => Signature.createTypeSignature(mapType(v.tpt), false)) : _*)
+        val paramTypes = Array(fps.map(v => Signature.createTypeSignature(mapType(compiler, v.tpt), false)) : _*)
         val paramNames = Array(fps.map(n => nme.getterName(n.name).toString.toArray) : _*)
         
         val sw = new StringWriter
@@ -338,7 +345,7 @@ trait ScalaStructureBuilder extends ScalaJavaMapper { self : ScalaCompilationUni
         
         defElemInfo.setArgumentNames(paramNames)
         defElemInfo.setExceptionTypeNames(new Array[Array[Char]](0))
-        val tn = manager.intern(mapType(d.tpt).toArray)
+        val tn = manager.intern(mapType(compiler, d.tpt).toArray)
         defElemInfo.asInstanceOf[FnInfo].setReturnType(tn)
         
         val mods =
@@ -348,8 +355,10 @@ trait ScalaStructureBuilder extends ScalaJavaMapper { self : ScalaCompilationUni
             ClassFileConstants.AccPrivate
 
         defElemInfo.setFlags0(mods)
-        val start = d.symbol.pos.offset.getOrElse(0)
-        val end = start + defElem.labelName.length - 1
+        
+        val start = d.pos.point
+        val end = start+defElem.labelName.length-1
+        
         defElemInfo.setNameSourceStart0(start)
         defElemInfo.setNameSourceEnd0(end)
         setSourceRange(defElemInfo, d)
@@ -379,14 +388,11 @@ trait ScalaStructureBuilder extends ScalaJavaMapper { self : ScalaCompilationUni
     def setSourceRange(info : ScalaMemberElementInfo, tree : Tree) {
       import Math.{ max, min }
       
-      val startPos = tree.pos 
-      val endPos = tree.pos // TODO Use new position info from trees
-      val start0 = if (startPos != NoPosition) startPos.offset.getOrElse(-1) else -1
-      val end0 = if (endPos != NoPosition) endPos.offset.getOrElse(-1) else -1
-      val start = max(0, min(start0, end0-1))
-      val end = min(sourceLength, max(start+1, end0))
+      val start = tree.pos.startOrElse(-1)
+      val end = tree.pos.endOrElse(start)
+      
       info.setSourceRangeStart0(start)
-      info.setSourceRangeEnd0(end-1)
+      info.setSourceRangeEnd0(end)
     }
     
     override def traverse(tree: Tree): Unit = tree match {

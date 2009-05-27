@@ -8,12 +8,17 @@ package scala.tools.eclipse.javaelements
 import org.eclipse.core.resources.IFile
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants
 
-trait ScalaIndexBuilder extends ScalaJavaMapper { self : ScalaCompilationUnit =>
+import scala.tools.nsc.Global
+
+class ScalaIndexBuilder(val compiler : Global) {
+  
   import compiler._
+  import ScalaJavaMapper._
   
   class IndexBuilderTraverser(indexer : ScalaSourceIndexer) extends Traverser {
     private var currentBuilder : Owner = new CompilationUnitBuilder
-    private val file = new ScalaFile(self.getResource.asInstanceOf[IFile])
+  
+    import compiler._
     
     trait Owner {
       def parent : Owner
