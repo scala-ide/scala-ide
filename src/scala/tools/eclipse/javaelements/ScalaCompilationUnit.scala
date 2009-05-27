@@ -32,7 +32,7 @@ class ScalaCompilationUnit(fragment : PackageFragment, elementName: String, work
   extends JDTCompilationUnit(fragment, elementName, workingCopyOwner) with ScalaElement with ImageSubstituter {
 
   val plugin = ScalaPlugin.plugin
-  val proj = plugin.projectSafe(getResource.getProject).get
+  val proj = plugin.getScalaProject(getResource.getProject)
   
   lazy val aFile = new EclipseFile(getCorrespondingResource.asInstanceOf[IFile])
 

@@ -6,15 +6,12 @@
 
 package scala.tools.eclipse
 
-import java.nio.charset._ 
-
-import scala.collection.mutable.LinkedHashSet
-
 import scala.tools.nsc.{ Global, Settings }
 import scala.tools.nsc.io.AbstractFile
 import scala.tools.nsc.util.Position
 import scala.tools.nsc.reporters.Reporter
 
+import org.eclipse.core.resources.IMarker
 import org.eclipse.core.runtime.IProgressMonitor
 
 class BuildCompiler(val project : ScalaProject, settings : Settings) extends Global(settings) {
@@ -23,12 +20,22 @@ class BuildCompiler(val project : ScalaProject, settings : Settings) extends Glo
   this.reporter = new Reporter {
     override def info0(pos : Position, msg : String, severity : Severity, force : Boolean) = {
       severity.count += 1
+
+      val eclipseSeverity = severity.id match {
+        case 2 => IMarker.SEVERITY_ERROR
+        case 1 => IMarker.SEVERITY_WARNING
+        case 0 => IMarker.SEVERITY_INFO
+      }
+      
       (pos.offset, pos.source.map(_.file)) match {
         case (Some(offset), Some(file)) => 
           val source = pos.source.get
-          project.buildError(file, severity.id, msg, offset, source.identifier(pos, BuildCompiler.this).getOrElse(" ").length)
+          val line = pos.line.get
+          val length = source.identifier(pos, BuildCompiler.this).map(_.length).getOrElse(0)
+          val scalaFile = project.nscToLampion(file)
+          scalaFile.buildError(eclipseSeverity, msg, offset, length, line, null)
         case _ => 
-          project.buildError(severity.id, msg)
+          project.buildError(eclipseSeverity, msg, null)
       }
     }
   }
@@ -53,11 +60,13 @@ class BuildCompiler(val project : ScalaProject, settings : Settings) extends Glo
     
       override def compileLate(file : AbstractFile) = {
         super.compileLate(file)
-        project.clearBuildErrors(file)
+        
+        val scalaFile = project.nscToLampion(file)
+        scalaFile.clearBuildErrors(monitor)
       }
     }
 
-    files.foreach(project.clearBuildErrors(_))
+    files.foreach(project.nscToLampion(_).clearBuildErrors(monitor))
     project.createOutputFolders
 
     reporter.reset

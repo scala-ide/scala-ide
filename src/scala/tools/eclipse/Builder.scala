@@ -26,7 +26,7 @@ class Builder extends IncrementalProjectBuilder {
   
   override def clean(monitor : IProgressMonitor) {
     super.clean(monitor)
-    val project = plugin.projectSafe(getProject).get
+    val project = plugin.getScalaProject(getProject)
     project.clean(monitor)
     
     ensureProject
@@ -37,7 +37,7 @@ class Builder extends IncrementalProjectBuilder {
   override def build(kind : Int, ignored : ju.Map[_, _], monitor : IProgressMonitor) : Array[IProject] = {
     import IncrementalProjectBuilder._
 
-    val project = plugin.projectSafe(getProject).get
+    val project = plugin.getScalaProject(getProject)
     val buildSet = new HashSet[ScalaFile]
     val allSourceFiles = project.allSourceFiles(new NameEnvironment(project.javaProject))
     

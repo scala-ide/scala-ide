@@ -35,16 +35,11 @@ trait NewResourceWizard extends BasicNewResourceWizard {
   var choose : Combo = _
   class Page extends WizardPage("New Scala " + kind) {
     private def populate(iproject : IProject) : Unit = {
-      val plugin = ScalaPlugin.plugin
-      plugin.projectSafe(iproject) match {
-      case None => return
-      case Some(project) => 
-        project.javaProject.getAllPackageFragmentRoots.foreach(pkg => if (pkg.getKind == IPackageFragmentRoot.K_SOURCE) {
-          pkg.getChildren.foreach {
-            case e : IPackageFragment => packages += e
-          }
-        })
-      }
+      for (pfr <- ScalaPlugin.plugin.getJavaProject(iproject).getAllPackageFragmentRoots if pfr.getKind == IPackageFragmentRoot.K_SOURCE ; child <- pfr.getChildren)
+        child match {
+          case pf : IPackageFragment => packages += pf
+          case _ =>
+        }
     }
     def createControl(parent : Composite) : Unit = try {
       val topLevel = new Composite(parent, SWT.NONE)
@@ -145,7 +140,7 @@ trait NewResourceWizard extends BasicNewResourceWizard {
       return false
     }        
     val plugin = ScalaPlugin.plugin
-    val project = plugin.projectSafe(pkg.getResource.getProject).get
+    val project = plugin.getScalaProject(pkg.getResource.getProject)
     val nameOk = !name.isEmpty && project.compiler.syntaxAnalyzer.isIdentifierStart(name(0)) &&
       (1 until name.length).forall(i => project.compiler.syntaxAnalyzer.isIdentifierPart(name(i)))
     if (!nameOk) {

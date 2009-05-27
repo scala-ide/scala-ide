@@ -51,7 +51,7 @@ object JDTUtils {
 
   def flattenProject(project : IProject) : Iterator[IFile] = {
     try {
-      if (!ScalaPlugin.isScalaProject(project))
+      if (!ScalaPlugin.plugin.isScalaProject(project))
         return Iterator.empty
       
       val jp = JavaCore.create(project)

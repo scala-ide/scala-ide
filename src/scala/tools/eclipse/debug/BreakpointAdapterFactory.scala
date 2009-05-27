@@ -137,17 +137,17 @@ class BreakpointAdapterFactory extends IAdapterFactory {
       case resource : IResource => resource
     }
   }
-  private def getTopLevelTypeName(editor : ITextEditor, offset : Int) : String = editor match {
+  
+  private def getTopLevelTypeName(editor : ITextEditor, offset : Int) : String = "None" 
+    /*
+    editor match {
     case editor : eclipse.Editor => 
-      val viewer = editor.getSourceViewer0
+      val viewer = editor.getSourceViewer
       val file = viewer.file.get
       val project = file.project.asInstanceOf[ScalaProject]
       import org.eclipse.swt.widgets.Display
       var answer : String = null
       
-      // TODO reinstate
-      
-      /*
       Display.getDefault.syncExec(new Runnable {
         def run = {
           
@@ -162,11 +162,11 @@ class BreakpointAdapterFactory extends IAdapterFactory {
           }
         }
       })
-      */
       
       answer
   }
-  
+  */
+    
   private def createLineBreakpoint(resource : IResource, typeName : String, lineNumber : Int, charStart : Int, charEnd : Int, hitCount : Int,
        register : Boolean, attributes : LinkedHashMap[Object,Object], document : IDocument, editorPart : IEditorPart) = {
     val breakpoint = JDIDebugModel.createLineBreakpoint(
