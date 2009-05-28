@@ -14,15 +14,14 @@ import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants
 import org.eclipse.jdt.core.Signature
 
 import scala.collection.immutable.Map
-import scala.tools.nsc.Global
 import scala.tools.nsc.symtab.Flags
 import scala.tools.nsc.util.{ NameTransformer, NoPosition, Position }
 
-class ScalaStructureBuilder(val compiler : Global, self : ScalaCompilationUnit) extends  {
-  import compiler._
-  import ScalaJavaMapper._
+import scala.tools.eclipse.ScalaPresentationCompiler
 
-  class StructureBuilderTraverser(unitInfo : ScalaCompilationUnitInfo, newElements0 : JMap[AnyRef, AnyRef], sourceLength : Int) extends Traverser {
+trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
+
+  class StructureBuilderTraverser(scu : ScalaCompilationUnit, unitInfo : ScalaCompilationUnitInfo, newElements0 : JMap[AnyRef, AnyRef], sourceLength : Int) extends Traverser {
     private var currentBuilder : Owner = new CompilationUnitBuilder
     private val manager = JavaModelManager.getJavaModelManager
     
@@ -91,7 +90,7 @@ class ScalaStructureBuilder(val compiler : Global, self : ScalaCompilationUnit) 
         val isAnon = name0 == "$anon"
         val name = if (isAnon) "" else name0
         
-        val parentTree = c.impl.parents.first
+        val parentTree = c.impl.parents.head
         val superclassType = parentTree.tpe
         val (superclassName, primaryType, interfaceTrees) =
           if (superclassType == null)
@@ -105,7 +104,7 @@ class ScalaStructureBuilder(val compiler : Global, self : ScalaCompilationUnit) 
               if (interfaceTrees0.isEmpty)
                 ("java.lang.Object".toCharArray, null, interfaceTrees0)
               else
-                (null, interfaceTrees0.first.tpe.typeSymbol, interfaceTrees0)
+                (null, interfaceTrees0.head.tpe.typeSymbol, interfaceTrees0)
             }
             else
               (superclassName0.toCharArray, superclassType.typeSymbol, interfaceTrees0)   
@@ -183,7 +182,7 @@ class ScalaStructureBuilder(val compiler : Global, self : ScalaCompilationUnit) 
         setSourceRange(moduleElemInfo, m)
         newElements0.put(moduleElem, moduleElemInfo)
         
-        val parentTree = m.impl.parents.first
+        val parentTree = m.impl.parents.head
         val superclassType = parentTree.tpe
         val superclassName = (if (superclassType ne null) superclassType.typeSymbol.fullNameString else "null-"+parentTree).toCharArray
         moduleElemInfo.setSuperclassName(superclassName)
@@ -240,7 +239,7 @@ class ScalaStructureBuilder(val compiler : Global, self : ScalaCompilationUnit) 
         setSourceRange(valElemInfo, v)
         newElements0.put(valElem, valElemInfo)
 
-        val tn = manager.intern(mapType(compiler, v.tpt).toArray)
+        val tn = manager.intern(mapType(v.tpt).toArray)
         valElemInfo.setTypeName(tn)
         
         new Builder {
@@ -280,7 +279,7 @@ class ScalaStructureBuilder(val compiler : Global, self : ScalaCompilationUnit) 
           typeElemInfo.setTypeName(tn)
         } else {
           //println("Type has type: "+t.rhs.symbol.fullNameString)
-          val tn = manager.intern(mapType(compiler, t.rhs).toArray)
+          val tn = manager.intern(mapType(t.rhs).toArray)
           typeElemInfo.setTypeName(tn)
         }
         
@@ -304,7 +303,7 @@ class ScalaStructureBuilder(val compiler : Global, self : ScalaCompilationUnit) 
         
         val fps = for(vps <- d.vparamss; vp <- vps) yield vp
         
-        val paramTypes = Array(fps.map(v => Signature.createTypeSignature(mapType(compiler, v.tpt), false)) : _*)
+        val paramTypes = Array(fps.map(v => Signature.createTypeSignature(mapType(v.tpt), false)) : _*)
         val paramNames = Array(fps.map(n => nme.getterName(n.name).toString.toArray) : _*)
         
         val sw = new StringWriter
@@ -334,7 +333,7 @@ class ScalaStructureBuilder(val compiler : Global, self : ScalaCompilationUnit) 
         if(d.symbol.isGetter || d.symbol.isSetter) {
           elementInfo.getChildren.
             dropWhile(x => !x.isInstanceOf[ScalaFieldElement] || x.getElementName != d.name.toString).
-            firstOption match {
+            headOption match {
             case Some(f : ScalaFieldElement) => {
               val fInfo = f.getElementInfo.asInstanceOf[ScalaSourceFieldElementInfo]
               fInfo.setFlags0(mapModifiers(d.mods))
@@ -345,7 +344,7 @@ class ScalaStructureBuilder(val compiler : Global, self : ScalaCompilationUnit) 
         
         defElemInfo.setArgumentNames(paramNames)
         defElemInfo.setExceptionTypeNames(new Array[Array[Char]](0))
-        val tn = manager.intern(mapType(compiler, d.tpt).toArray)
+        val tn = manager.intern(mapType(d.tpt).toArray)
         defElemInfo.asInstanceOf[FnInfo].setReturnType(tn)
         
         val mods =
@@ -378,7 +377,7 @@ class ScalaStructureBuilder(val compiler : Global, self : ScalaCompilationUnit) 
     
     class CompilationUnitBuilder extends PackageOwner with ClassOwner with ModuleOwner {
       val parent = null
-      val element = self
+      val element = scu
       val elementInfo = unitInfo
       override def compilationUnitBuilder = this 
     }

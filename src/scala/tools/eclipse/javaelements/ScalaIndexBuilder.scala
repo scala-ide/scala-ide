@@ -8,18 +8,13 @@ package scala.tools.eclipse.javaelements
 import org.eclipse.core.resources.IFile
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants
 
-import scala.tools.nsc.Global
+import scala.tools.eclipse.ScalaPresentationCompiler
 
-class ScalaIndexBuilder(val compiler : Global) {
-  
-  import compiler._
-  import ScalaJavaMapper._
+trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
   
   class IndexBuilderTraverser(indexer : ScalaSourceIndexer) extends Traverser {
     private var currentBuilder : Owner = new CompilationUnitBuilder
   
-    import compiler._
-    
     trait Owner {
       def parent : Owner
 
@@ -59,7 +54,7 @@ class ScalaIndexBuilder(val compiler : Global) {
         val isAnon = name0 == "$anon"
         val name = if (isAnon) "" else name0
         
-        val parentTree = c.impl.parents.first
+        val parentTree = c.impl.parents.head
         val superclassType = parentTree.tpe
         val (superclassName, primaryType, interfaceTrees) =
           if (superclassType == null)
@@ -73,7 +68,7 @@ class ScalaIndexBuilder(val compiler : Global) {
               if (interfaceTrees0.isEmpty)
                 ("java.lang.Object".toCharArray, null, interfaceTrees0)
               else
-                (null, interfaceTrees0.first.tpe.typeSymbol, interfaceTrees0)
+                (null, interfaceTrees0.head.tpe.typeSymbol, interfaceTrees0)
             }
             else
               (superclassName0.toCharArray, superclassType.typeSymbol, interfaceTrees0)   
@@ -109,7 +104,7 @@ class ScalaIndexBuilder(val compiler : Global) {
       override def addModule(m : ModuleDef) : Owner = {
         println("Module defn: "+m.name+" ["+this+"]")
         
-        val parentTree = m.impl.parents.first
+        val parentTree = m.impl.parents.head
         val superclassType = parentTree.tpe
         val superclassName = (if (superclassType ne null) superclassType.typeSymbol.fullNameString else "null-"+parentTree).toCharArray
         

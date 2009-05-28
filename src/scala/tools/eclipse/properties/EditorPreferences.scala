@@ -60,7 +60,7 @@ class EditorPreferences extends PreferencePage with IWorkbenchPreferencePage {
   private def setText = {
     val plugin = this.plugin
     val store = EditorsUI.getPreferenceStore
-    val sc = sampleCode.elements.next
+    val sc = sampleCode.iterator.next
     
     def getAttribute(key : Key, appendix : String) : Boolean = attributes.get((key,appendix)) match {
       case Some(value) => value
@@ -87,7 +87,7 @@ class EditorPreferences extends PreferencePage with IWorkbenchPreferencePage {
       def f(nodes : Seq[Node]) : Unit = nodes.foreach{
       case node : Elem =>
         assert(node.child.length == 1)
-        val text : String = node.child.elements.next match {
+        val text : String = node.child.iterator.next match {
         case scala.xml.Text(text) => text
         }
         val offset = buffer.length

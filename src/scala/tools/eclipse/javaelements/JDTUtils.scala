@@ -56,7 +56,7 @@ object JDTUtils {
       
       val jp = JavaCore.create(project)
       jp.getRawClasspath.filter(_.getEntryKind == IClasspathEntry.CPE_SOURCE).
-        elements.flatMap(entry => flatten(ResourcesPlugin.getWorkspace.getRoot.findMember(entry.getPath)))
+        iterator.flatMap(entry => flatten(ResourcesPlugin.getWorkspace.getRoot.findMember(entry.getPath)))
     } catch {
       case _ : JavaModelException => Iterator.empty
     }
@@ -66,7 +66,7 @@ object JDTUtils {
     try {
       r match {
         case r if r == null || !r.exists => Iterator.empty
-        case folder : IFolder if folder.getType == IResource.FOLDER => folder.members.elements.flatMap{flatten _}
+        case folder : IFolder if folder.getType == IResource.FOLDER => folder.members.iterator.flatMap{flatten _}
         case file : IFile if file.getType == IResource.FILE && file.getFileExtension == "scala" => Iterator.single(file)
         case _ => Iterator.empty
       }

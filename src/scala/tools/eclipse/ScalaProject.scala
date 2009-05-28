@@ -36,7 +36,7 @@ class ScalaProject(val underlying : IProject) {
 
   private var classpathUpdate : Long = IResource.NULL_STAMP
   private var buildCompiler0 : BuildCompiler = null
-  private var presentationCompiler0 : interactive.Global = null 
+  private var presentationCompiler0 : ScalaPresentationCompiler = null 
   
   override def toString = underlying.getName
   
@@ -280,7 +280,7 @@ class ScalaProject(val underlying : IProject) {
     // TODO Per-file encodings
     val sfs = sourceFolders
     if (!sfs.isEmpty) {
-      settings.encoding.value = sfs.elements.next.getDefaultCharset
+      settings.encoding.value = sfs.iterator.next.getDefaultCharset
     }
 
     settings.classpath.value = classpath.toList.map(_.toOSString).mkString("", ":", "")
@@ -338,10 +338,7 @@ class ScalaProject(val underlying : IProject) {
     if (presentationCompiler0 eq null) {
       val settings = new Settings
       initialize(settings)
-      presentationCompiler0 = new interactive.Global(settings, new ConsoleReporter(settings)) {
-        override def logError(msg : String, t : Throwable) =
-          plugin.logError(msg, t)
-      }
+      presentationCompiler0 = new ScalaPresentationCompiler(settings)
     }
     presentationCompiler0
   }

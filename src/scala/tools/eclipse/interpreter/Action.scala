@@ -37,7 +37,7 @@ class Action extends IObjectActionDelegate {
     //Pull out the first interpreter configuration we can find for the project.
     val configuration = manager.getLaunchConfigurations(launchType).filter({ config =>       
       projectName.equals(config.getAttribute(ATTR_PROJECT_NAME, ""))
-    }).firstOption
+    }).headOption
     
     val workingCopy = configuration match {
       case Some(config) =>

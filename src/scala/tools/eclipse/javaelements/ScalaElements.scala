@@ -5,6 +5,8 @@
 
 package scala.tools.eclipse.javaelements
 
+import scala.collection.immutable.Sequence
+
 import scala.tools.nsc.util.NameTransformer
 
 import org.eclipse.jdt.core.{ IJavaElement, IType }
@@ -160,7 +162,7 @@ trait ScalaMemberElementInfo extends JavaElementInfo {
     else if (auxChildren.length == 0)
       auxChildren = Array(child)
     else if (!auxChildren.contains(child))
-      auxChildren = auxChildren ++ Seq.singleton(child)
+      auxChildren = auxChildren ++ Sequence(child)
 
   def setFlags0(flags : Int) = setFlagsMethod.invoke(this, new Integer(flags))
   def setNameSourceStart0(start : Int) = setNameSourceStartMethod.invoke(this, new Integer(start)) 

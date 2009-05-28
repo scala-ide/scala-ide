@@ -80,8 +80,7 @@ class ScalaCompilationUnit(fragment : PackageFragment, elementName: String, work
       throw newNotPresentException
 
     val sourceLength = aFile.sizeOption.get
-    val ssb = new ScalaStructureBuilder(compiler, this)
-    new ssb.StructureBuilderTraverser(unitInfo, newElements.asInstanceOf[JMap[AnyRef, AnyRef]], sourceLength).traverse(body.asInstanceOf[ssb.compiler.Tree])
+    new compiler.StructureBuilderTraverser(this, unitInfo, newElements.asInstanceOf[JMap[AnyRef, AnyRef]], sourceLength).traverse(body)
     
     unitInfo.setSourceLength(sourceLength)
     unitInfo.setIsStructureKnown(true)
@@ -105,8 +104,7 @@ class ScalaCompilationUnit(fragment : PackageFragment, elementName: String, work
     val body = nscCu.body
 
     if (body ne null) {
-      val sib = new ScalaIndexBuilder(compiler)
-      new sib.IndexBuilderTraverser(indexer).traverse(body.asInstanceOf[sib.compiler.Tree])
+      new compiler.IndexBuilderTraverser(indexer).traverse(body)
     }
   }
   
