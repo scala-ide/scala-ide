@@ -7,8 +7,6 @@ package scala.tools.eclipse.javaelements
 
 import java.util.{ HashMap => JHashMap, Map => JMap }
 
-import scala.concurrent.SyncVar
-
 import org.eclipse.core.resources.{ IFile, IResource }
 import org.eclipse.core.runtime.{ IProgressMonitor, IStatus }
 import org.eclipse.jdt.core.{ IJavaElement, IJavaProject, JavaModelException }
@@ -47,22 +45,9 @@ class ScalaCompilationUnit(fragment : PackageFragment, elementName: String, work
   override def buildStructure(info : OpenableElementInfo, pm : IProgressMonitor, newElements : JMap[_, _], underlyingResource : IResource) : Boolean = {
     val unitInfo = info.asInstanceOf[ScalaCompilationUnitInfo]
 
+    proj.resetCompilers // TODO temporary workaround for presentation compiler issues
     val compiler = proj.compiler
-    val sFile = compiler.getSourceFile(aFile)
-    var nscCu = compiler.unitOf(sFile)
-    if (nscCu.status == compiler.NotLoaded) {
-      println("Reloading")
-      val reloaded = new SyncVar[Either[Unit, Throwable]]
-      compiler.askReload(List(sFile), reloaded)
-      reloaded.get.right.toOption match {
-        case Some(thr) => throw thr
-        case _ =>
-      }
-      nscCu = compiler.unitOf(sFile)
-    }
-    val body = nscCu.body
-
-    compiler.treePrinters.create.print(nscCu)
+    val body = compiler.loadTree(aFile)
 
     if (body == null || body.isEmpty) {
       unitInfo.setIsStructureKnown(false)
@@ -88,20 +73,9 @@ class ScalaCompilationUnit(fragment : PackageFragment, elementName: String, work
   }
   
   def addToIndexer(indexer : ScalaSourceIndexer) {
+    proj.resetCompilers // TODO temporary workaround for presentation compiler issues
     val compiler = proj.compiler
-    val sFile = compiler.getSourceFile(aFile)
-    var nscCu = compiler.unitOf(sFile)
-    if (nscCu.status == compiler.NotLoaded) {
-      println("Reloading in addToIndexer")
-      val reloaded = new SyncVar[Either[Unit, Throwable]]
-      compiler.askReload(List(sFile), reloaded)
-      reloaded.get.right.toOption match {
-        case Some(thr) => throw thr
-        case _ =>
-      }
-      nscCu = compiler.unitOf(sFile)
-    }
-    val body = nscCu.body
+    val body = compiler.loadTree(aFile)
 
     if (body ne null) {
       new compiler.IndexBuilderTraverser(indexer).traverse(body)
@@ -110,37 +84,6 @@ class ScalaCompilationUnit(fragment : PackageFragment, elementName: String, work
   
   override def createElementInfo : Object = new ScalaCompilationUnitInfo
   
-  override def getElementAt(position : Int) : IJavaElement = {
-    try {
-      val e = super.getElementAt(position)
-      if (e eq this) null else e
-    } catch {
-      case ex : ClassCastException => null
-    }
-  }
-  
-  /**
-   * @see ICompilationUnit#getWorkingCopy(WorkingCopyOwner, IProblemRequestor, IProgressMonitor)
-  */
-  override def getWorkingCopy(workingCopyOwner : WorkingCopyOwner, problemRequestor : IProblemRequestor, monitor : IProgressMonitor) : ICompilationUnit = {
-    if (!isPrimary)
-      return this
-    
-    val manager = JavaModelManager.getJavaModelManager
-    val workingCopy = new ScalaCompilationUnit(getParent.asInstanceOf[PackageFragment], getElementName, workingCopyOwner)
-    
-    val perWorkingCopyInfo = 
-      manager.getPerWorkingCopyInfo(workingCopy, false/*don't create*/, true/*record usage*/, null/*not used since don't create*/)
-    if (perWorkingCopyInfo != null) {
-      return perWorkingCopyInfo.getWorkingCopy(); // return existing handle instead of the one created above
-    }
-    val op = new BecomeWorkingCopyOperation(workingCopy, problemRequestor)
-    op.runOperation(monitor)
-    workingCopy
-  }
-
-  override def validateCompilationUnit(resource : IResource) : IStatus = super.validateCompilationUnit(resource)
-
   override def reconcile(
       astLevel : Int,
       reconcileFlags : Int,
@@ -164,6 +107,7 @@ class ScalaCompilationUnit(fragment : PackageFragment, elementName: String, work
   }
   
   override def mapLabelImage(original : Image) = super.mapLabelImage(original)
+  
   override def replacementImage = {
     val file = getCorrespondingResource.asInstanceOf[IFile]
     if(file == null)

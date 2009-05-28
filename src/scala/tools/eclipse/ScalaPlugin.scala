@@ -5,7 +5,9 @@
 
 package scala.tools.eclipse
 
-import org.eclipse.core.resources.{ IFile, IProject, ResourcesPlugin }
+import scala.collection.mutable.HashMap
+
+import org.eclipse.core.resources.{ IFile, IProject, IResourceChangeEvent, IResourceChangeListener, ResourcesPlugin }
 import org.eclipse.core.runtime.{ CoreException, FileLocator, IStatus, Platform, Status }
 import org.eclipse.core.runtime.content.IContentTypeSettings
 import org.eclipse.jdt.core.JavaCore
@@ -24,7 +26,7 @@ object ScalaPlugin {
   var plugin : ScalaPlugin = _
 }
 
-class ScalaPlugin extends AbstractUIPlugin {
+class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener {
   ScalaPlugin.plugin = this
   
   val OverrideIndicator = "scala.overrideIndicator"  
@@ -54,9 +56,12 @@ class ScalaPlugin extends AbstractUIPlugin {
   val noColor : Color = null
   val scalaCompilationUnitDocumentProvider = new ScalaCompilationUnitDocumentProvider
   
+  private val projects = new HashMap[IProject, ScalaProject]
+  
   override def start(context : BundleContext) = {
     super.start(context)
     
+    ResourcesPlugin.getWorkspace.addResourceChangeListener(this, IResourceChangeEvent.PRE_CLOSE | IResourceChangeEvent.POST_CHANGE)
     ScalaIndexManager.initIndex(ResourcesPlugin.getWorkspace)
     Platform.getContentTypeManager.
       getContentType(JavaCore.JAVA_SOURCE_CONTENT_TYPE).
@@ -65,19 +70,34 @@ class ScalaPlugin extends AbstractUIPlugin {
     PlatformUI.getWorkbench.getEditorRegistry.setDefaultEditor("*.scala", editorId)
   }
 
-  def bundlePath = check {
-    val bundle = getBundle 
-    val bpath = bundle.getEntry("/")
-    val rpath = FileLocator.resolve(bpath)
-    rpath.getPath
-  }.getOrElse("unresolved")
+  override def stop(context : BundleContext) = {
+    ResourcesPlugin.getWorkspace.removeResourceChangeListener(this)
 
+    super.stop(context)
+  }
+  
   def workspaceRoot = ResourcesPlugin.getWorkspace.getRoot
     
   def getJavaProject(project : IProject) = JavaCore.create(project) 
 
-  def getScalaProject(project : IProject) = new ScalaProject(project) 
+  def getScalaProject(project : IProject) = projects.synchronized {
+    projects.get(project) match {
+      case Some(scalaProject) => scalaProject
+      case None =>
+        val scalaProject = new ScalaProject(project)
+        projects(project) = scalaProject
+        scalaProject
+    }
+  }
   
+  override def resourceChanged(event : IResourceChangeEvent) {
+    (event.getResource, event.getType) match {
+      case (project : IProject, IResourceChangeEvent.PRE_CLOSE) => 
+        projects.synchronized{ projects.remove(project) }
+      case _ =>
+    }
+  }
+
   def logError(t : Throwable) : Unit = logError("", t)
   
   def logError(msg : String, t : Throwable) : Unit = {
@@ -86,6 +106,13 @@ class ScalaPlugin extends AbstractUIPlugin {
     getLog.log(status)
   }
   
+  def bundlePath = check {
+    val bundle = getBundle 
+    val bpath = bundle.getEntry("/")
+    val rpath = FileLocator.resolve(bpath)
+    rpath.getPath
+  }.getOrElse("unresolved")
+
   final def check[T](f : => T) =
     try {
       Some(f)
