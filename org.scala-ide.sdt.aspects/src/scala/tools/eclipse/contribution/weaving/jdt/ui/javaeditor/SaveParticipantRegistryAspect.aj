@@ -5,24 +5,27 @@
 
 package scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor;
 
-import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.internal.ui.javaeditor.CompilationUnitDocumentProvider;
 import org.eclipse.jdt.internal.ui.javaeditor.saveparticipant.IPostSaveListener;
-import org.eclipse.jdt.internal.ui.javaeditor.saveparticipant.SaveParticipantRegistry;
+import org.eclipse.jface.text.IRegion;
+import org.eclipse.ui.IFileEditorInput;
 
 @SuppressWarnings("restriction")
 public privileged aspect SaveParticipantRegistryAspect {
-  pointcut getEnabledPostSaveListeners(IProject project) :
-    args(project) &&
-    execution(IPostSaveListener[] SaveParticipantRegistry.getEnabledPostSaveListeners(IProject));
+  pointcut notifyPostSaveListeners(CompilationUnitDocumentProvider.CompilationUnitInfo info, IRegion[] changedRegions, IPostSaveListener[] listeners, IProgressMonitor monitor) :
+    args(info, changedRegions, listeners, monitor) &&
+    execution(void notifyPostSaveListeners(CompilationUnitDocumentProvider.CompilationUnitInfo, IRegion[], IPostSaveListener[], IProgressMonitor));
   
-  pointcut commitWorkingCopy(ScalaCompilationUnitDocumentProvider provider) :
-    target(provider) &&
-    execution(void CompilationUnitDocumentProvider.commitWorkingCopy(IProgressMonitor, Object, CompilationUnitDocumentProvider.CompilationUnitInfo, boolean));
-  
-  IPostSaveListener[] around(ScalaCompilationUnitDocumentProvider provider, IProject project) :
-    getEnabledPostSaveListeners(project) && cflow(commitWorkingCopy(provider)) {
-    return new IPostSaveListener[0];
+  void around(CompilationUnitDocumentProvider.CompilationUnitInfo info, IRegion[] changedRegions, IPostSaveListener[] listeners, IProgressMonitor monitor) :
+    notifyPostSaveListeners(info, changedRegions, listeners, monitor) {
+    if (info.fElement instanceof IFileEditorInput) {
+      IFile file = ((IFileEditorInput)info.fElement).getFile();
+      if (!file.getFileExtension().equals("scala"))
+        proceed(info, changedRegions, listeners, monitor);
+      else
+        return;
+    }
   }
 }
