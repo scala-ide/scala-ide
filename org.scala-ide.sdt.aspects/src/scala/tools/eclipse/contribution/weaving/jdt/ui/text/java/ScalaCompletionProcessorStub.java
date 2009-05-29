@@ -15,9 +15,9 @@ import org.eclipse.jface.text.contentassist.ContentAssistant;
 import org.eclipse.ui.IEditorPart;
 
 @SuppressWarnings("restriction")
-public abstract class ScalaCompletionProcessor extends JavaCompletionProcessor {
+public abstract class ScalaCompletionProcessorStub extends JavaCompletionProcessor {
 
-  public ScalaCompletionProcessor(IEditorPart editor, ContentAssistant assistant, String partition) {
+  public ScalaCompletionProcessorStub(IEditorPart editor, ContentAssistant assistant, String partition) {
     super(editor, assistant, partition);
   }
 

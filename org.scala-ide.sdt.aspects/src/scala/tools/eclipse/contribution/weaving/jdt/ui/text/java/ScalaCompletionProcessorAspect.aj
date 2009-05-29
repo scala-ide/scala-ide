@@ -18,7 +18,7 @@ public aspect ScalaCompletionProcessorAspect {
     args(viewer, offset, monitor, context) &&
     execution(List ContentAssistProcessor.collectProposals(ITextViewer, int, IProgressMonitor, ContentAssistInvocationContext));
 
-  List around(ScalaCompletionProcessor processor, ITextViewer viewer, int offset, IProgressMonitor monitor, ContentAssistInvocationContext context) :
+  List around(ScalaCompletionProcessorStub processor, ITextViewer viewer, int offset, IProgressMonitor monitor, ContentAssistInvocationContext context) :
     collectProposals(viewer, offset, monitor, context) && target(processor) {
     return processor.collectProposals0(viewer, offset, monitor, context);
   }

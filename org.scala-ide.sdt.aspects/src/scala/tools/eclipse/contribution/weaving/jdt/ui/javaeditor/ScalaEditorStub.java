@@ -8,5 +8,5 @@ package scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor;
 import org.eclipse.jdt.internal.ui.javaeditor.CompilationUnitEditor;
 
 @SuppressWarnings("restriction")
-public abstract class ScalaEditor extends CompilationUnitEditor {
+public abstract class ScalaEditorStub extends CompilationUnitEditor {
 }

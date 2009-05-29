@@ -8,5 +8,5 @@ package scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor;
 import org.eclipse.jdt.internal.ui.javaeditor.CompilationUnitDocumentProvider;
 
 @SuppressWarnings("restriction")
-public class ScalaCompilationUnitDocumentProvider extends CompilationUnitDocumentProvider {
+public class ScalaCompilationUnitDocumentProviderStub extends CompilationUnitDocumentProvider {
 }
