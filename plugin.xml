@@ -1,19 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?eclipse version="3.2"?>
 <plugin>
-	<extension point="org.eclipse.core.runtime.adapters">
-		<factory
-			class="scala.tools.eclipse.debug.BreakpointAdapterFactory"
-			adaptableType="scala.tools.eclipse.Editor">
-			<adapter
-				type="org.eclipse.debug.ui.actions.IToggleBreakpointsTarget">
-			</adapter>
-		</factory>
-	</extension>
-	<extension point="org.eclipse.debug.core.watchExpressionDelegates">
-		<watchExpressionDelegate debugModel="org.eclipse.jdt.debug"
-			delegateClass="org.eclipse.jdt.internal.debug.ui.JavaWatchExpressionDelegate" />
-	</extension>
    <extension
          point="org.eclipse.ui.propertyPages">
       <page
@@ -60,11 +47,25 @@
             icon="icons/full/obj16/scu_obj.gif"
             extensions="scala"
             contributorClass="scala.tools.eclipse.ActionContributor"
-            class="scala.tools.eclipse.Editor"
+            class="scala.tools.eclipse.ScalaEditor"
             symbolicFontName="org.eclipse.jdt.ui.editors.textfont"
-            id="scala.tools.eclipse.Editor">
+            id="scala.tools.eclipse.ScalaEditor">
             <contentTypeBinding contentTypeId="scala.tools.eclipse.scalaSource"/> 
       </editor>
+   </extension>
+   
+   <extension
+         point="org.eclipse.ui.editorActions">
+      <editorContribution
+            targetID="scala.tools.eclipse.ScalaEditor"
+            id="org.eclipse.jdt.debug.CompilationUnitEditor.BreakpointRulerActions">
+         <action
+               label="Toggle Breakpoint"
+               class="org.eclipse.debug.ui.actions.RulerToggleBreakpointActionDelegate"
+               actionID="RulerDoubleClick"
+               id="org.eclipse.jdt.debug.ui.actions.ManageBreakpointRulerAction">
+         </action>
+      </editorContribution>
    </extension>
    
    <extension point="org.eclipse.core.filebuffers.annotationModelCreation">
@@ -83,17 +84,6 @@
       </participant>
    </extension>
    
-	<extension point="org.eclipse.ui.editorActions">
-	  <editorContribution
-		targetID="scala.tools.eclipse.Editor"
-		id="ch.epfl.lamp.sdt.ui.scalaeditor.rulerActions">
-		<action label="Not Used"
-			class="org.eclipse.debug.ui.actions.RulerToggleBreakpointActionDelegate"
-			style="push" 
-			actionID="RulerDoubleClick"
-		    id="scala.doubleClickBreakpointAction" />
-	  </editorContribution>
-	</extension>
    <extension point="org.eclipse.ui.perspectives">
       <perspective
             class="scala.tools.eclipse.PerspectiveFactory"
@@ -293,50 +283,6 @@
          <run class="scala.tools.eclipse.Builder"/>
       </builder>
    </extension>
-   <extension
-         point="org.eclipse.ui.editors.markerAnnotationSpecification">
-      <specification
-            annotationType="lampion.error"
-            label="Transient edit errors"
-            textPreferenceKey="lampionIndication"
-            textPreferenceValue="true"
-            textStylePreferenceKey="lampionStyle"
-            textStylePreferenceValue="SQUIGGLES"
-            highlightPreferenceValue="false"
-            contributesToHeader="false"
-            overviewRulerPreferenceKey="lampionIndicationInOverviewRuler"
-            overviewRulerPreferenceValue="true"
-            verticalRulerPreferenceKey="lampionIndicationInVerticalRuler"
-            verticalRulerPreferenceValue="false"
-            colorPreferenceKey="lampionIndicationColor"
-            colorPreferenceValue="255,86,255"
-            presentationLayer="4"
-            includeOnPreferencePage="true">
-      </specification>
-      <specification
-            annotationType="scala.overrideIndicator"
-            label="Override indicator"
-            icon="icons/full/ovr16/over_co.gif"
-            textPreferenceKey="overrideIndicator"
-            textPreferenceValue="false"
-            highlightPreferenceKey="overrideIndicatorHighlighting"
-            highlightPreferenceValue="false"
-            contributesToHeader="false"
-            overviewRulerPreferenceKey="overrideIndicatorInOverviewRuler"
-            overviewRulerPreferenceValue="false"
-            verticalRulerPreferenceKey="overrideIndicatorInVerticalRuler"
-            verticalRulerPreferenceValue="true"
-            colorPreferenceKey="overrideIndicatorColor"
-            colorPreferenceValue="180,207,205"
-            presentationLayer="3"
-            showInNextPrevDropdownToolbarActionKey="showoverrideIndicatorInNextPrevDropdownToolbarAction"
-            showInNextPrevDropdownToolbarAction="false"
-            isGoToNextNavigationTargetKey="isOverrideIndicatorGoToNextNavigationTarget"
-		    isGoToNextNavigationTarget="false"
-            isGoToPreviousNavigationTargetKey="isOverrideIndicatorGoToPreviousNavigationTarget"
-	        isGoToPreviousNavigationTarget="false">
-	  </specification>
-   </extension>
    <!-- debugging -->
    <extension point="org.eclipse.debug.ui.debugModelPresentations">
       <debugModelPresentation
@@ -362,7 +308,7 @@
    </extension>
    <extension point="org.eclipse.ui.actionSetPartAssociations">
       <actionSetPartAssociation targetID="org.eclipse.jdt.ui.A_OpenActionSet">
-	    <part id="scala.tools.eclipse.Editor"></part>
+	    <part id="scala.tools.eclipse.ScalaEditor"></part>
       </actionSetPartAssociation>
    </extension>
    <extension point="org.eclipse.help.toc">

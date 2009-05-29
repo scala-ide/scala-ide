@@ -13,12 +13,11 @@ import org.eclipse.jface.text.ITextOperationTarget
 import org.eclipse.jface.text.source.SourceViewerConfiguration
 import org.eclipse.ui.texteditor.{ IAbstractTextEditorHelpContextIds, ITextEditorActionConstants, IWorkbenchActionDefinitionIds, TextOperationAction }
 
-import scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.ScalaEditor 
+import scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.ScalaEditorStub 
 
-class Editor extends ScalaEditor {
+class ScalaEditor extends ScalaEditorStub {
 
   setPartName("Scala Editor")
-  setDocumentProvider(ScalaPlugin.plugin.scalaCompilationUnitDocumentProvider)
 
   override protected def createActions : Unit = {
     super.createActions
@@ -40,13 +39,13 @@ class Editor extends ScalaEditor {
   }
   
   override def createJavaSourceViewerConfiguration : JavaSourceViewerConfiguration =
-    new ScalaSourceViewerConfiguration(Editor.this.getPreferenceStore, Editor.this)
+    new ScalaSourceViewerConfiguration(getPreferenceStore, this)
   
   override def setSourceViewerConfiguration(configuration : SourceViewerConfiguration) {
     super.setSourceViewerConfiguration(
       configuration match {
         case svc : ScalaSourceViewerConfiguration => svc
-        case _ => new ScalaSourceViewerConfiguration(Editor.this.getPreferenceStore, Editor.this)
+        case _ => new ScalaSourceViewerConfiguration(getPreferenceStore, this)
       })
   }
 }

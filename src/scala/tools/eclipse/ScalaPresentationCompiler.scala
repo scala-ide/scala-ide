@@ -16,7 +16,7 @@ import scala.tools.eclipse.javaelements.{ ScalaIndexBuilder, ScalaJavaMapper, Sc
 
 class ScalaPresentationCompiler(settings : Settings)
   extends Global(settings, new ConsoleReporter(settings))
-  with ScalaStructureBuilder with ScalaIndexBuilder with ScalaJavaMapper {
+  with ScalaStructureBuilder with ScalaIndexBuilder with ScalaJavaMapper with ScalaWordFinder {
   
   override def logError(msg : String, t : Throwable) =
     ScalaPlugin.plugin.logError(msg, t)

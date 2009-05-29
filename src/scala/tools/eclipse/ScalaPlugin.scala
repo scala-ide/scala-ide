@@ -12,13 +12,12 @@ import org.eclipse.core.runtime.{ CoreException, FileLocator, IStatus, Platform,
 import org.eclipse.core.runtime.content.IContentTypeSettings
 import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jdt.internal.core.util.Util
+import org.eclipse.jdt.internal.ui.javaeditor.IClassFileEditorInput
 import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.swt.graphics.Color
-import org.eclipse.ui.PlatformUI
+import org.eclipse.ui.{ IEditorInput, IFileEditorInput, PlatformUI }
 import org.eclipse.ui.plugin.AbstractUIPlugin
 import org.osgi.framework.BundleContext
-
-import scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.ScalaCompilationUnitDocumentProvider 
 
 import scala.tools.eclipse.util.Style 
 
@@ -39,7 +38,7 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener {
   def applicationWizId = wizardId("Application")
   def projectWizId = wizardId("Project")
   def netProjectWizId = wizardId("NetProject")
-  def editorId : String = "scala.tools.eclipse.Editor"
+  def editorId : String = "scala.tools.eclipse.ScalaEditor"
   def builderId = pluginId + ".scalabuilder"
   def natureId = pluginId + ".scalanature"  
   def launchId = "ch.epfl.lamp.sdt.launching"
@@ -54,7 +53,6 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener {
   val jarFileExtn = ".jar"
   val ERROR_TYPE = "lampion.error"
   val noColor : Color = null
-  val scalaCompilationUnitDocumentProvider = new ScalaCompilationUnitDocumentProvider
   
   private val projects = new HashMap[IProject, ScalaProject]
   
@@ -80,7 +78,7 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener {
     
   def getJavaProject(project : IProject) = JavaCore.create(project) 
 
-  def getScalaProject(project : IProject) = projects.synchronized {
+  def getScalaProject(project : IProject) : ScalaProject = projects.synchronized {
     projects.get(project) match {
       case Some(scalaProject) => scalaProject
       case None =>
@@ -90,6 +88,19 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener {
     }
   }
   
+  def getScalaProject(input : IEditorInput) : ScalaProject = input match {
+    case fei : IFileEditorInput => getScalaProject(fei.getFile.getProject)
+    case cfei : IClassFileEditorInput => getScalaProject(cfei.getClassFile.getJavaProject.getProject)
+    case _ => null
+  }
+
+  def isScalaProject(project : IProject) =
+    try {
+      project != null && project.isOpen && project.hasNature(natureId)
+    } catch {
+      case _ : CoreException => false
+    }
+
   override def resourceChanged(event : IResourceChangeEvent) {
     (event.getResource, event.getType) match {
       case (project : IProject, IResourceChangeEvent.PRE_CLOSE) => 
@@ -128,11 +139,4 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener {
   }
   
   def isBuildable(file : IFile) = (file.getName.endsWith(scalaFileExtn) || file.getName.endsWith(javaFileExtn))
-
-  def isScalaProject(project : IProject) =
-    try {
-      project != null && project.isOpen && project.hasNature(natureId)
-    } catch {
-      case _ : CoreException => false
-    }
 }

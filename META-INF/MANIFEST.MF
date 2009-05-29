@@ -47,7 +47,6 @@ Import-Package:
  scala.tools.eclipse.contribution.weaving.jdt.ui.text.java
 Export-Package: 
  scala.tools.eclipse,
- scala.tools.eclipse.debug,
  scala.tools.eclipse.interpreter,
  scala.tools.eclipse.javaelements,
  scala.tools.eclipse.launching,

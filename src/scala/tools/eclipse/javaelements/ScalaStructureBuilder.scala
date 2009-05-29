@@ -21,7 +21,7 @@ import scala.tools.eclipse.ScalaPresentationCompiler
 
 trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
 
-  class StructureBuilderTraverser(scu : ScalaCompilationUnit, unitInfo : ScalaCompilationUnitInfo, newElements0 : JMap[AnyRef, AnyRef], sourceLength : Int) extends Traverser {
+  class StructureBuilderTraverser(scu : ScalaCompilationUnit, unitInfo : ScalaCompilationUnitElementInfo, newElements0 : JMap[AnyRef, AnyRef], sourceLength : Int) extends Traverser {
     private var currentBuilder : Owner = new CompilationUnitBuilder
     private val manager = JavaModelManager.getJavaModelManager
     

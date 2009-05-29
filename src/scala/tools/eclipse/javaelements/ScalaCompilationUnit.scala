@@ -24,7 +24,7 @@ import scala.tools.nsc.util.{ NoPosition, Position }
 import scala.tools.eclipse.ScalaFile
 import scala.tools.eclipse.util.EclipseFile
 
-class ScalaCompilationUnitInfo extends CompilationUnitElementInfo
+class ScalaCompilationUnitElementInfo extends CompilationUnitElementInfo
 
 class ScalaCompilationUnit(fragment : PackageFragment, elementName: String, workingCopyOwner : WorkingCopyOwner)
   extends JDTCompilationUnit(fragment, elementName, workingCopyOwner) with ScalaElement with ImageSubstituter {
@@ -38,12 +38,12 @@ class ScalaCompilationUnit(fragment : PackageFragment, elementName: String, work
     elementName.substring(0, elementName.length - ".scala".length).toCharArray()
 
   override def generateInfos(info : Object, newElements : JHashMap[_, _],  monitor : IProgressMonitor) = {
-    val sinfo = if (info.isInstanceOf[ScalaCompilationUnitInfo]) info else new ScalaCompilationUnitInfo 
+    val sinfo = if (info.isInstanceOf[ScalaCompilationUnitElementInfo]) info else new ScalaCompilationUnitElementInfo 
     super.generateInfos(sinfo, newElements, monitor);
   }
   
   override def buildStructure(info : OpenableElementInfo, pm : IProgressMonitor, newElements : JMap[_, _], underlyingResource : IResource) : Boolean = {
-    val unitInfo = info.asInstanceOf[ScalaCompilationUnitInfo]
+    val unitInfo = info.asInstanceOf[ScalaCompilationUnitElementInfo]
 
     proj.resetCompilers // TODO temporary workaround for presentation compiler issues
     val compiler = proj.compiler
@@ -82,7 +82,7 @@ class ScalaCompilationUnit(fragment : PackageFragment, elementName: String, work
     }
   }
   
-  override def createElementInfo : Object = new ScalaCompilationUnitInfo
+  override def createElementInfo : Object = new ScalaCompilationUnitElementInfo
   
   override def reconcile(
       astLevel : Int,
