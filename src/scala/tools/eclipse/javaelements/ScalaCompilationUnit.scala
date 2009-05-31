@@ -19,21 +19,62 @@ import org.eclipse.swt.graphics.Image
 import org.eclipse.swt.widgets.Display
 
 import scala.tools.nsc.interactive.Global
-import scala.tools.nsc.util.{ NoPosition, Position }
+import scala.tools.nsc.util.{ BatchSourceFile, SourceFile }
 
 import scala.tools.eclipse.ScalaFile
 import scala.tools.eclipse.util.EclipseFile
 
 class ScalaCompilationUnitElementInfo extends CompilationUnitElementInfo
 
+abstract class TreeHolder {
+  val compiler : ScalaPresentationCompiler
+  val body : compiler.Tree
+}
+
 class ScalaCompilationUnit(fragment : PackageFragment, elementName: String, workingCopyOwner : WorkingCopyOwner)
   extends JDTCompilationUnit(fragment, elementName, workingCopyOwner) with ScalaElement with ImageSubstituter {
 
-  val plugin = ScalaPlugin.plugin
-  val proj = plugin.getScalaProject(getResource.getProject)
-  
+  val project = ScalaPlugin.plugin.getScalaProject(getResource.getProject)
   lazy val aFile = new EclipseFile(getCorrespondingResource.asInstanceOf[IFile])
+  var sFile : BatchSourceFile = null
+  var treeHolder : TreeHolder = null
+  var reload = false
+  
+  def getTreeHolder(info : OpenableElementInfo) : TreeHolder = {
+    if (treeHolder == null) {
+      treeHolder = new TreeHolder {
+        val compiler = project.compiler
+        val body = compiler.loadTree(getSourceFile(info), reload)
+        reload = false
+      }
+    }
+    
+    treeHolder
+  }
+  
+  def getTreeHolder : TreeHolder = getTreeHolder(createElementInfo.asInstanceOf[ScalaCompilationUnitElementInfo])
 
+  def discard {
+    if (treeHolder != null) {
+      val th = treeHolder
+      import th._
+
+      compiler.removeUnitOf(sFile)
+      treeHolder = null
+      sFile = null
+    }
+  }
+  
+  override def close {
+    discard
+    super.close
+  }
+  
+  override def discardWorkingCopy {
+    discard
+    super.discardWorkingCopy
+  }
+  
   override def getMainTypeName : Array[Char] =
     elementName.substring(0, elementName.length - ".scala".length).toCharArray()
 
@@ -41,13 +82,30 @@ class ScalaCompilationUnit(fragment : PackageFragment, elementName: String, work
     val sinfo = if (info.isInstanceOf[ScalaCompilationUnitElementInfo]) info else new ScalaCompilationUnitElementInfo 
     super.generateInfos(sinfo, newElements, monitor);
   }
+    
+  def getBuffer(info : OpenableElementInfo) = {
+    val buffer = getBufferManager.getBuffer(this)
+    if (buffer != null)
+      buffer
+    else
+      openBuffer(null, info)
+  }
+    
+  def getSourceFile : SourceFile = getSourceFile(createElementInfo.asInstanceOf[ScalaCompilationUnitElementInfo])
   
-  override def buildStructure(info : OpenableElementInfo, pm : IProgressMonitor, newElements : JMap[_, _], underlyingResource : IResource) : Boolean = {
-    val unitInfo = info.asInstanceOf[ScalaCompilationUnitElementInfo]
+  def getSourceFile(info : OpenableElementInfo) : SourceFile = {
+    if (sFile == null)
+      sFile = new BatchSourceFile(aFile, getBuffer(info).getCharacters) 
+    else
+      sFile.setContent(getBuffer(info).getCharacters)
+    sFile
+  }
 
-    proj.resetCompilers // TODO temporary workaround for presentation compiler issues
-    val compiler = proj.compiler
-    val body = compiler.loadTree(aFile)
+  override def buildStructure(info : OpenableElementInfo, pm : IProgressMonitor, newElements : JMap[_, _], underlyingResource : IResource) : Boolean = {
+    val th = getTreeHolder(info)
+    import th._
+
+    val unitInfo = info.asInstanceOf[ScalaCompilationUnitElementInfo]
 
     if (body == null || body.isEmpty) {
       unitInfo.setIsStructureKnown(false)
@@ -73,13 +131,11 @@ class ScalaCompilationUnit(fragment : PackageFragment, elementName: String, work
   }
   
   def addToIndexer(indexer : ScalaSourceIndexer) {
-    proj.resetCompilers // TODO temporary workaround for presentation compiler issues
-    val compiler = proj.compiler
-    val body = compiler.loadTree(aFile)
+    val th = getTreeHolder 
+    import th._
 
-    if (body ne null) {
+    if (body != null)
       new compiler.IndexBuilderTraverser(indexer).traverse(body)
-    }
   }
   
   override def createElementInfo : Object = new ScalaCompilationUnitElementInfo
@@ -89,11 +145,7 @@ class ScalaCompilationUnit(fragment : PackageFragment, elementName: String, work
       reconcileFlags : Int,
       workingCopyOwner : WorkingCopyOwner,
       monitor : IProgressMonitor) : org.eclipse.jdt.core.dom.CompilationUnit = {
-    if (!isWorkingCopy()) return null // Reconciling is not supported on non working copies
-    
-    val op = new ScalaReconcileWorkingCopyOperation(this, astLevel == AST.JLS3, astLevel, true, workingCopyOwner)
-    op.runOperation(monitor)
-    return op.ast
+    super.reconcile(ICompilationUnit.NO_AST, reconcileFlags & ~ICompilationUnit.FORCE_PROBLEM_DETECTION, workingCopyOwner, monitor)
   }
 
   override def makeConsistent(
@@ -102,6 +154,8 @@ class ScalaCompilationUnit(fragment : PackageFragment, elementName: String, work
     reconcileFlags : Int,
     problems : JHashMap[_,_],
     monitor : IProgressMonitor) : org.eclipse.jdt.core.dom.CompilationUnit = {
+    treeHolder = null
+    reload = true
     openWhenClosed(createElementInfo(), monitor)
     null
   }
@@ -114,8 +168,8 @@ class ScalaCompilationUnit(fragment : PackageFragment, elementName: String, work
       null
     else {
       import ScalaImages.{ SCALA_FILE, EXCLUDED_SCALA_FILE }
-      val project = JavaCore.create(file.getProject)
-      if(project.isOnClasspath(file)) SCALA_FILE else EXCLUDED_SCALA_FILE
+      val javaProject = JavaCore.create(project.underlying)
+      if(javaProject.isOnClasspath(file)) SCALA_FILE else EXCLUDED_SCALA_FILE
     }
   }
 }

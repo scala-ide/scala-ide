@@ -7,9 +7,13 @@ package scala.tools.eclipse.util
 
 import java.io.{ ByteArrayInputStream, ByteArrayOutputStream, File, InputStream, OutputStream }
 
+import scala.collection.generic.VectorTemplate
+import scala.collection.Vector
+
 import org.eclipse.core.filebuffers.FileBuffers
 import org.eclipse.core.resources.{ IContainer, IFile, IFolder, IResource }
 import org.eclipse.core.runtime.Path
+import org.eclipse.jdt.core.IBuffer
 
 import scala.tools.nsc.io.AbstractFile
 
@@ -32,6 +36,12 @@ abstract class EclipseResource[R <: IResource] extends AbstractFile {
   def file: File = underlying.getLocation.toFile
 
   def lastModified: Long = underlying.getLocalTimeStamp
+  
+  def delete = underlying.delete(true, null)
+  
+  def create {}
+  
+  def absolute = this
 }
 
 class EclipseFile(override val underlying : IFile) extends EclipseResource[IFile] {
@@ -64,6 +74,9 @@ class EclipseFile(override val underlying : IFile) extends EclipseResource[IFile
 
   def lookupName(name : String, directory : Boolean) = null
   
+  def lookupNameUnchecked(name : String, directory : Boolean) =
+    throw new UnsupportedOperationException("Files cannot have children")
+  
   private def getFileInfo = {
     val fs = FileBuffers.getFileStoreAtLocation(underlying.getLocation)
     if (fs == null)
@@ -90,6 +103,13 @@ class EclipseContainer(override val underlying : IContainer) extends EclipseReso
       null
   }
 
+  override def lookupNameUnchecked(name : String, directory : Boolean) = {
+    if (directory)
+      new EclipseContainer(underlying.getFolder(new Path(name)))
+    else
+      new EclipseFile(underlying.getFile(new Path(name)))
+  }
+  
   override def fileNamed(name : String) : AbstractFile = {
     val existing = lookupName(name, false)
     if (existing == null)
