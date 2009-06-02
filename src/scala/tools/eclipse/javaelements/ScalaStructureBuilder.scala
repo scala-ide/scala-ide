@@ -14,8 +14,9 @@ import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants
 import org.eclipse.jdt.core.Signature
 
 import scala.collection.immutable.Map
+
 import scala.tools.nsc.symtab.Flags
-import scala.tools.nsc.util.{ NameTransformer, NoPosition, Position }
+import scala.tools.nsc.util.{ NoPosition, Position }
 
 import scala.tools.eclipse.ScalaPresentationCompiler
 

@@ -7,8 +7,6 @@ package scala.tools.eclipse.javaelements
 
 import scala.util.DynamicVariable
 
-import scala.tools.nsc.util.NameTransformer
-
 import org.eclipse.core.resources.IFile
 import org.eclipse.jdt.core.{ ICompilationUnit, JavaCore, JavaModelException }
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants
