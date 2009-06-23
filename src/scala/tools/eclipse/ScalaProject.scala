@@ -283,7 +283,7 @@ class ScalaProject(val underlying : IProject) {
       settings.encoding.value = sfs.iterator.next.getDefaultCharset
     }
 
-    settings.classpath.value = classpath.toList.map(_.toOSString).mkString("", ":", "")
+    settings.classpath.value = classpath.toList.map(_.toOSString).mkString("", pathSeparator, "")
     
     settings.deprecation.value = true
     settings.unchecked.value = true
