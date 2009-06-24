@@ -338,6 +338,7 @@ class ScalaProject(val underlying : IProject) {
     if (presentationCompiler0 eq null) {
       val settings = new Settings
       initialize(settings)
+      settings.printtypes.tryToSet(Nil)
       presentationCompiler0 = new ScalaPresentationCompiler(settings)
     }
     presentationCompiler0
