@@ -65,7 +65,7 @@ trait JVMUtils { self : Global =>
     jf
   }
 
-  def javaType(t: Type): JType = { new Breakpoint ; t match {
+  def javaType(t: Type): JType = t match {
     case ThisType(sym) => 
       if (sym == definitions.ArrayClass)
         new JObjectType(javaName(definitions.ObjectClass))
@@ -109,7 +109,6 @@ trait JVMUtils { self : Global =>
     case _ =>
       abort("Unknown type: " + t + ", " + t.normalize + "[" + t.getClass + ", " + t.normalize.getClass + "]" + 
       " TypeRef? " + t.isInstanceOf[TypeRef] + ", " + t.normalize.isInstanceOf[TypeRef]) 
-  }
   }
   
   private def arrayOrClassType(sym: Symbol, targs: List[Type]): JType = {
