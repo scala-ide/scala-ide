@@ -15,9 +15,8 @@ import org.eclipse.core.resources.IMarker
 import org.eclipse.core.runtime.IProgressMonitor
 
 class BuildCompiler(val project : ScalaProject, settings : Settings) extends Global(settings) {
-  val plugin = ScalaPlugin.plugin
 
-  this.reporter = new Reporter {
+  reporter = new Reporter {
     override def info0(pos : Position, msg : String, severity : Severity, force : Boolean) = {
       severity.count += 1
 
@@ -74,7 +73,7 @@ class BuildCompiler(val project : ScalaProject, settings : Settings) extends Glo
       run.compileFiles(files)
     } catch {
       case ex =>
-        plugin.logError("Build compiler crashed", ex)
+        ScalaPlugin.plugin.logError("Build compiler crashed", ex)
     }
     
     project.refreshOutput

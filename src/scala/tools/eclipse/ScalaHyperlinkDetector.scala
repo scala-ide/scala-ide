@@ -29,10 +29,12 @@ class ScalaHyperlinkDetector extends JavaElementHyperlinkDetector {
       return null
 
     try {
-      val input = textEditor.getEditorInput
-      val project = ScalaPlugin.plugin.getScalaProject(input)
-      val document = textEditor.getDocumentProvider.getDocument(input)
+      val editorInput = textEditor.getEditorInput
+      val project = ScalaPlugin.plugin.getScalaProject(editorInput)
+      val document = textEditor.getDocumentProvider.getDocument(editorInput)
       val wordRegion = project.compiler.findWord(document, offset)
+      println("detectHyperlinks: wordRegion = "+wordRegion)
+      
       if (wordRegion == null || wordRegion.getLength == 0)
         return null
 

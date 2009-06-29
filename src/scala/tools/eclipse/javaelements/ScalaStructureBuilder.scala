@@ -389,7 +389,8 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
       import Math.{ max, min }
       
       val start = tree.pos.startOrElse(-1)
-      val end = tree.pos.endOrElse(start)
+      val end0 = tree.pos.endOrElse(start)
+      val end = if (end0 > start) end0-1 else end0
       
       info.setSourceRangeStart0(start)
       info.setSourceRangeEnd0(end)

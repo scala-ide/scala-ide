@@ -19,14 +19,14 @@ trait ScalaWordFinder { self : Global =>
     try {
       var pos = offset
       
-      while (pos >= 0 && !syntaxAnalyzer.isIdentifierPart(document.getChar(pos)))
+      while (pos >= 0 && syntaxAnalyzer.isIdentifierPart(document.getChar(pos)))
         pos -= 1
       
       start = pos
 
       pos = offset
       val len = document.getLength
-      while (pos < len && !syntaxAnalyzer.isIdentifierPart(document.getChar(pos)))
+      while (pos < len && syntaxAnalyzer.isIdentifierPart(document.getChar(pos)))
         pos += 1
       
       end = pos

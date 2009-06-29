@@ -253,6 +253,7 @@ object ScalaCodeScanner {
     "else", "extends",
     "final", "finally", "for", "forSome",
     "if", "implicit", "import",
+    "lazy",
     "match",
     "new",
     "object", "override",
@@ -269,7 +270,7 @@ object ScalaCodeScanner {
   
   private val RETURN = "return"
 
-  private val fgTypes = Array("Unit", "Boolean", "Char", "Byte", "Short", "Int", "Long", "Float", "Double")
+  private val fgTypes = Array("Unit", "Boolean", "Char", "Byte", "Short", "Int", "Long", "Float", "Double", "Array")
 
   private val fgConstants = Array("false", "null", "true")
 

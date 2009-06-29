@@ -7,14 +7,17 @@ package scala.tools.eclipse.javaelements
 
 import java.util.{ HashMap => JHashMap, Map => JMap }
 
+import scala.concurrent.SyncVar
+
 import org.eclipse.core.resources.{ IFile, IResource }
 import org.eclipse.core.runtime.{ IProgressMonitor, IStatus }
-import org.eclipse.jdt.core.{ IJavaElement, IJavaProject, JavaModelException }
+import org.eclipse.jdt.core.{ IJavaElement, IJavaModelStatusConstants, IJavaProject, JavaModelException }
 import org.eclipse.jdt.core.dom.AST
-import org.eclipse.jdt.core.{ ICompilationUnit, IProblemRequestor, JavaCore, WorkingCopyOwner }
+import org.eclipse.jdt.core.{ CompletionContext, CompletionProposal, CompletionRequestor, Flags, ICompilationUnit, IProblemRequestor, ITypeRoot, JavaCore, WorkingCopyOwner }
+import org.eclipse.jdt.internal.compiler.env
 import org.eclipse.jdt.internal.core.{
   BecomeWorkingCopyOperation, CompilationUnit => JDTCompilationUnit, CompilationUnitElementInfo, DefaultWorkingCopyOwner,
-  JavaModelManager, JavaModelStatus, OpenableElementInfo, PackageFragment }
+  JavaModelManager, JavaModelStatus, JavaProject, OpenableElementInfo, PackageFragment, SelectionRequestor }
 import org.eclipse.swt.graphics.Image
 import org.eclipse.swt.widgets.Display
 
@@ -158,6 +161,67 @@ class ScalaCompilationUnit(fragment : PackageFragment, elementName: String, work
     reload = true
     openWhenClosed(createElementInfo(), monitor)
     null
+  }
+    
+  override def codeSelect(offset : Int, length : Int, workingCopyOwner : WorkingCopyOwner) : Array[IJavaElement] = {
+    val javaProject = getJavaProject().asInstanceOf[JavaProject]
+    val environment = javaProject.newSearchableNameEnvironment(workingCopyOwner)
+    
+    val requestor = new SelectionRequestor(environment.nameLookup, this)
+    val buffer = getBuffer()
+    if (buffer != null) {
+      val end = buffer.getLength()
+      if (offset < 0 || length < 0 || offset + length > end )
+        throw new JavaModelException(new JavaModelStatus(IJavaModelStatusConstants.INDEX_OUT_OF_BOUNDS))
+  
+      val engine = new ScalaSelectionEngine(environment, requestor, javaProject.getOptions(true))
+      engine.select(this, offset, offset + length - 1)
+    }
+    
+    val elements = requestor.getElements()
+    if(elements.isEmpty)
+      println("No selection")
+    else
+      for(e <- elements)
+        println(e)
+    elements
+  }
+
+  override def codeComplete
+    (cu : env.ICompilationUnit, unitToSkip : env.ICompilationUnit,
+     position : Int,  requestor : CompletionRequestor, owner : WorkingCopyOwner, typeRoot : ITypeRoot) {
+
+    val th = getTreeHolder
+    import th._
+
+    val pos = compiler.rangePos(getSourceFile, position, position, position)
+    
+    val completed = new SyncVar[Either[List[compiler.Member], Throwable]]
+    compiler.askCompletion(pos, completed)
+    completed.get.left.toOption match {
+      case Some(completions) =>
+        for(completion <- completions)
+          println(completion)
+      case None =>
+        println("No completions")
+    }
+
+    /*
+    val context = new CompletionContext
+    requestor.acceptContext(context)
+
+    val proposal = CompletionProposal.create(CompletionProposal.FIELD_REF, position)
+    proposal.setDeclarationSignature("I".toArray)
+    proposal.setSignature("I".toArray)
+    //proposal.setTypeName("type".toArray)
+    proposal.setName("name".toArray)
+    proposal.setCompletion("completion".toArray)
+    proposal.setFlags(Flags.AccPublic)
+    proposal.setReplaceRange(position, position)
+    proposal.setTokenRange(0, 0)
+    proposal.setRelevance(1)
+    requestor.accept(proposal)
+    */
   }
   
   override def mapLabelImage(original : Image) = super.mapLabelImage(original)
