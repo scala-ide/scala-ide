@@ -37,6 +37,14 @@
 			base-type="org.eclipse.core.runtime.text"
 			priority="high"				
 			file-extensions="scala"/>
+        <!--
+		<content-type id="scala.tools.eclipse.scalaClass" name="Scala Class File" 
+			base-type="org.eclipse.jdt.core.javaClass"
+			priority="high"
+			file-extensions="class">        
+			<describer class="scala.tools.eclipse.ScalaClassfileDescriber"/>
+		</content-type>        
+		-->
 	</extension>
    
    <extension
@@ -52,28 +60,42 @@
             id="scala.tools.eclipse.ScalaEditor">
             <contentTypeBinding contentTypeId="scala.tools.eclipse.scalaSource"/> 
       </editor>
+      <!--
+      <editor
+            name="Scala Class File Viewer"
+            default="true"
+            icon="icons/full/obj16/sclassf_obj.gif"
+            contributorClass="org.eclipse.jdt.internal.ui.javaeditor.ClassFileEditorActionContributor"
+            class="org.eclipse.jdt.internal.ui.javaeditor.ClassFileEditor"
+            symbolicFontName="org.eclipse.jdt.ui.editors.textfont"
+            id="org.eclipse.jdt.ui.ClassFileEditor">
+            <contentTypeBinding contentTypeId="scala.tools.eclipse.scalaClass"/> 
+      </editor>
+      -->
    </extension>
-   
-   <extension
-         point="org.eclipse.ui.editorActions">
+
+   <extension point="org.eclipse.ui.editorActions">
       <editorContribution
-            targetID="scala.tools.eclipse.ScalaEditor"
-            id="org.eclipse.jdt.debug.CompilationUnitEditor.BreakpointRulerActions">
+         targetID="scala.tools.eclipse.ScalaEditor"
+         id="org.eclipse.jdt.debug.CompilationUnitEditor.BreakpointRulerActions">
          <action
-               label="Toggle Breakpoint"
-               class="org.eclipse.debug.ui.actions.RulerToggleBreakpointActionDelegate"
-               actionID="RulerDoubleClick"
-               id="org.eclipse.jdt.debug.ui.actions.ManageBreakpointRulerAction">
+            label="Toggle &amp;Breakpoint"
+            class="org.eclipse.debug.ui.actions.RulerToggleBreakpointActionDelegate"
+            actionID="RulerDoubleClick"
+            id="org.eclipse.jdt.debug.ui.actions.ManageBreakpointRulerAction">
          </action>
       </editorContribution>
    </extension>
-   
-   <extension point="org.eclipse.core.filebuffers.annotationModelCreation">
-      <factory
-         contentTypeId="scala.tools.eclipse.scalaSource"
-         class="scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.ScalaCompilationUnitDocumentProvider"/>
+
+   <extension point="org.eclipse.core.runtime.adapters">
+     <factory 
+       class="scala.tools.eclipse.ScalaRetargettableActionAdapterFactory" 
+       adaptableType="scala.tools.eclipse.ScalaEditor">
+       <adapter type="org.eclipse.debug.ui.actions.IRunToLineTarget"/>
+       <adapter type="org.eclipse.debug.ui.actions.IToggleBreakpointsTarget"/>
+     </factory>
    </extension>
-   
+
    <extension
       id="ScalaDocumentSetupParticipant"
       name="ScalaDocumentSetupParticipant"
@@ -83,7 +105,6 @@
          class="org.eclipse.jdt.internal.ui.javaeditor.JavaDocumentSetupParticipant">
       </participant>
    </extension>
-   
    <extension point="org.eclipse.ui.perspectives">
       <perspective
             class="scala.tools.eclipse.PerspectiveFactory"
@@ -282,14 +303,6 @@
       <builder hasNature="true">
          <run class="scala.tools.eclipse.Builder"/>
       </builder>
-   </extension>
-   <!-- debugging -->
-   <extension point="org.eclipse.debug.ui.debugModelPresentations">
-      <debugModelPresentation
-            detailsViewerConfiguration="org.eclipse.jdt.internal.debug.ui.display.DetailsViewerConfiguration"
-            class="org.eclipse.jdt.internal.debug.ui.JDIModelPresentation"
-            id="org.eclipse.jdt.debug">
-      </debugModelPresentation>
    </extension>
    <extension
          point="org.eclipse.ui.perspectiveExtensions">
@@ -525,14 +538,5 @@
       class="scala.tools.eclipse.javaelements.ScalaImageDescriptorSelector">
     </selector>
   </extension>  
-
-  <!--
-  <extension point="org.eclipse.contribution.weaving.jdt.sourcetransformer">
-    <transformer
-      class="org.eclipse.ajdt.core.AJSourceTransformer"
-      file_extension="aj">
-    </transformer>
-  </extension>
-  -->
   
 </plugin>
