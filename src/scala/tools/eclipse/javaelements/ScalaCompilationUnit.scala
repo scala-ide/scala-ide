@@ -99,8 +99,6 @@ class ScalaCompilationUnit(fragment : PackageFragment, elementName: String, work
   def getSourceFile(info : OpenableElementInfo) : SourceFile = {
     if (sFile == null)
       sFile = new BatchSourceFile(aFile, getBuffer(info).getCharacters) 
-    else
-      sFile.setContent(getBuffer(info).getCharacters)
     sFile
   }
 
@@ -158,8 +156,11 @@ class ScalaCompilationUnit(fragment : PackageFragment, elementName: String, work
     problems : JHashMap[_,_],
     monitor : IProgressMonitor) : org.eclipse.jdt.core.dom.CompilationUnit = {
     treeHolder = null
+
+    val info = createElementInfo.asInstanceOf[ScalaCompilationUnitElementInfo]
+    sFile = new BatchSourceFile(aFile, getBuffer(info).getCharacters) 
     reload = true
-    openWhenClosed(createElementInfo(), monitor)
+    openWhenClosed(info, monitor)
     null
   }
     

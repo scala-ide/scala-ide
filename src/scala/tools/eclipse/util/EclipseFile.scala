@@ -42,6 +42,11 @@ abstract class EclipseResource[R <: IResource] extends AbstractFile {
   def create {}
   
   def absolute = this
+  
+  override def equals(other : Any) : Boolean =
+    other.isInstanceOf[EclipseResource[_]] && path == other.asInstanceOf[EclipseResource[_]].path
+
+  override def hashCode() : Int = path.hashCode
 }
 
 class EclipseFile(override val underlying : IFile) extends EclipseResource[IFile] {
@@ -84,6 +89,9 @@ class EclipseFile(override val underlying : IFile) extends EclipseResource[IFile
     else
       Some(fs.fetchInfo)
   }
+  
+  override def equals(other : Any) : Boolean =
+    other.isInstanceOf[EclipseFile] && super.equals(other)
 }
 
 class EclipseContainer(override val underlying : IContainer) extends EclipseResource[IContainer] {
@@ -125,4 +133,7 @@ class EclipseContainer(override val underlying : IContainer) extends EclipseReso
     else
       existing
   }
+  
+  override def equals(other : Any) : Boolean =
+    other.isInstanceOf[EclipseContainer] && super.equals(other)
 }

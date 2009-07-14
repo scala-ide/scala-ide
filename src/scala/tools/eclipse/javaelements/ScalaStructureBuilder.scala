@@ -28,6 +28,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
     
     trait Owner {
       def parent : Owner
+      def jdtOwner = this
 
       def element : JavaElement
       def elementInfo : JavaElementInfo
@@ -64,19 +65,27 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
       override def addPackage(p : PackageDef) : Owner = {
         //println("Package defn: "+p.name+" ["+this+"]")
         
-        val pkgElem = JavaElementFactory.createPackageDeclaration(compilationUnitBuilder.element.asInstanceOf[JDTCompilationUnit], p.symbol.fullNameString)
-        resolveDuplicates(pkgElem)
-        compilationUnitBuilder.addChild(pkgElem)
-        
-        val pkgElemInfo = JavaElementFactory.createSourceRefElementInfo
-        newElements0.put(pkgElem, pkgElemInfo)
-        
         new Builder {
           val parent = self
-          val element = pkgElem
-          val elementInfo = pkgElemInfo
+          val element = compilationUnitBuilder.element
+          val elementInfo = compilationUnitBuilder.elementInfo
           
           override def isPackage = true
+          var completed = false
+          override def addChild(child : JavaElement) = {
+            if (!completed) {
+              completed = true
+              
+              val pkgElem = JavaElementFactory.createPackageDeclaration(compilationUnitBuilder.element.asInstanceOf[JDTCompilationUnit], p.symbol.fullNameString)
+              resolveDuplicates(pkgElem)
+              compilationUnitBuilder.addChild(pkgElem)
+
+              val pkgElemInfo = JavaElementFactory.createSourceRefElementInfo
+              newElements0.put(pkgElem, pkgElemInfo)
+            }
+            
+            compilationUnitBuilder.addChild(child)
+          }
         }
       }
     }
@@ -86,7 +95,6 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         //println("Class defn: "+c.name+" ["+this+"]")
         //println("Parents: "+c.impl.parents)
         
-        val owner = if (isPackage) compilationUnitBuilder else this
         val name0 = c.name.toString
         val isAnon = name0 == "$anon"
         val name = if (isAnon) "" else name0
@@ -113,16 +121,16 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
 
         val classElem =
           if(c.mods.isTrait)
-            new ScalaTraitElement(owner.element, name)
+            new ScalaTraitElement(element, name)
           else if (isAnon) {
             val primaryTypeString = if (primaryType != null) primaryType.name.toString else null
-            new ScalaAnonymousClassElement(owner.element, primaryTypeString)
+            new ScalaAnonymousClassElement(element, primaryTypeString)
           }
           else
-            new ScalaClassElement(owner.element, name)
+            new ScalaClassElement(element, name)
         
         resolveDuplicates(classElem)
-        owner.addChild(classElem)
+        addChild(classElem)
         
         val classElemInfo = new ScalaElementInfo
         classElemInfo.setHandle(classElem)
@@ -166,10 +174,9 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
       override def addModule(m : ModuleDef) : Owner = {
         //println("Module defn: "+m.name+" ["+this+"]")
         
-        val owner = if (isPackage) compilationUnitBuilder else this
-        val moduleElem = new ScalaModuleElement(owner.element, m.name.toString, m.symbol.hasFlag(Flags.SYNTHETIC))
+        val moduleElem = new ScalaModuleElement(element, m.name.toString, m.symbol.hasFlag(Flags.SYNTHETIC))
         resolveDuplicates(moduleElem)
-        owner.addChild(moduleElem)
+        addChild(moduleElem)
         
         val moduleElemInfo = new ScalaElementInfo
         moduleElemInfo.setHandle(moduleElem)

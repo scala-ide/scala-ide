@@ -54,7 +54,7 @@
             default="true"
             icon="icons/full/obj16/scu_obj.gif"
             extensions="scala"
-            contributorClass="scala.tools.eclipse.ActionContributor"
+            contributorClass="org.eclipse.jdt.internal.ui.javaeditor.CompilationUnitEditorActionContributor"
             class="scala.tools.eclipse.ScalaEditor"
             symbolicFontName="org.eclipse.jdt.ui.editors.textfont"
             id="scala.tools.eclipse.ScalaEditor">
