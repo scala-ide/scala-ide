@@ -6,6 +6,7 @@
 package scala.tools.eclipse
 
 import scala.collection.mutable.HashMap
+import scala.util.control.ControlException
 
 import org.eclipse.core.resources.{ IFile, IProject, IResourceChangeEvent, IResourceChangeListener, ResourcesPlugin }
 import org.eclipse.core.runtime.{ CoreException, FileLocator, IStatus, Platform, Status }
@@ -112,8 +113,14 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener {
   def logError(t : Throwable) : Unit = logError("", t)
   
   def logError(msg : String, t : Throwable) : Unit = {
-    val t1 = if (t != null) t else { val ex = new Exception ; ex.fillInStackTrace ; ex } 
-    val status = new Status(IStatus.ERROR, pluginId, IStatus.ERROR, msg, t1)
+    val status = t match {
+      case ce : ControlException =>
+        val t1 = { val ex = new Exception ; ex.fillInStackTrace ; ex }
+        new Status(IStatus.ERROR, pluginId, IStatus.ERROR, "Incorrectly logged ControlException", t1)
+      case _ =>
+        val t1 = if (t != null) t else { val ex = new Exception ; ex.fillInStackTrace ; ex }
+        new Status(IStatus.ERROR, pluginId, IStatus.ERROR, msg, t1)
+    }
     getLog.log(status)
   }
   

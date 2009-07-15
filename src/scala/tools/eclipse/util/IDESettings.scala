@@ -11,8 +11,8 @@ object IDESettings {
   def shownSettings(s : Settings) : List[Settings.Setting]= {
     import s._
     List(
-      argfiles, dependenciesFile, debuginfo, make, XO, target,
+      deprecation, debuginfo, XO, target, unchecked,
       Xchecknull, checkInit, noassertions, Xexperimental, future, XlogImplicits, nouescape, XnoVarargsConversion, pluginsDir, Xwarninit,
-      Xcloselim, Xdce, Xdetach, inline, Xlinearizer, Ynogenericsig, noimports, nopredefs, selfInAnnots, Xwarndeadcode)
+      Xcloselim, Xdce, Xdetach, inline, Xlinearizer, Ynogenericsig, noimports, nopredefs, selfInAnnots, Xwarndeadcode, specialize)
   }
 }
