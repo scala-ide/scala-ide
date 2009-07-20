@@ -121,6 +121,22 @@ class ScalaSelectionEngine(nameEnvironment : SearchableEnvironment, requestor : 
     }
   }
 
+  override def acceptConstructor(
+    modifiers : Int,
+    simpleTypeName : Array[Char],
+    parameterCount : Int,
+    signature : Array[Char],
+    parameterTypes : Array[Array[Char]],
+    parameterNames : Array[Array[Char]],
+    typeModifiers : Int,
+    packageName : Array[Char],
+    extraFlags : Int,
+    path : String,
+    accessRestriction : AccessRestriction) {
+
+    // TODO Implement
+  }
+
   override def acceptType(packageName : Array[Char], simpleTypeName : Array[Char], enclosingTypeNames : Array[Array[Char]], modifiers : Int, accessRestriction : AccessRestriction) {
     val typeName =
       if (enclosingTypeNames == null)

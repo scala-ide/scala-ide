@@ -37,13 +37,13 @@ Require-Bundle:
  scala.library,
  scala.tools.nsc
 Import-Package: 
- org.eclipse.contribution.jdt.cuprovider,
- org.eclipse.contribution.jdt.imagedescriptor,
- org.eclipse.contribution.jdt.sourceprovider,
- scala.tools.eclipse.contribution.weaving.jdt,
- scala.tools.eclipse.contribution.weaving.jdt.builderoptions,
- scala.tools.eclipse.contribution.weaving.jdt.ui,
- scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor
+ org.eclipse.contribution.jdt.cuprovider;apply-aspects:=true,
+ org.eclipse.contribution.jdt.imagedescriptor;apply-aspects:=false,
+ org.eclipse.contribution.jdt.sourceprovider;apply-aspects:=false,
+ scala.tools.eclipse.contribution.weaving.jdt;apply-aspects:=false,
+ scala.tools.eclipse.contribution.weaving.jdt.builderoptions;apply-aspects:=false,
+ scala.tools.eclipse.contribution.weaving.jdt.ui;apply-aspects:=false,
+ scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor;apply-aspects:=false
 Export-Package: 
  scala.tools.eclipse,
  scala.tools.eclipse.interpreter,

@@ -234,7 +234,7 @@ PACKAGE FEATURE AND CREATE UPDATE SITE
       file="${scala.dist.dir}/lib/scala-compiler.jar"
       tofile="${dist.dir}/scala.update/plugins/scala.tools.nsc_${compiler.version.number}.jar"/>
     
-    <java
+  	<java
       classname="org.eclipse.equinox.launcher.Main"
       fork="true"
       dir="${basedir}"
@@ -244,26 +244,20 @@ PACKAGE FEATURE AND CREATE UPDATE SITE
       <classpath>
         <fileset dir="${eclipse.dir}/plugins">
           <include name="org.eclipse.equinox.launcher_*.jar"/>
-          <include name="org.eclipse.equinox.p2.metadata.generator_*.jar"/>
         </fileset>
       </classpath>
       <arg value="-application"/>
-      <arg value="org.eclipse.equinox.p2.metadata.generator.EclipseGenerator"/>
-      <arg value="-updateSite"/>
-      <arg value="${dist.dir}/scala.update"/>
-      <arg value="-site"/>
-      <arg value="file:${dist.dir}/scala.update/site.xml"/>
+      <arg value="org.eclipse.equinox.p2.publisher.UpdateSitePublisher"/>
       <arg value="-metadataRepository"/>
       <arg value="file:${dist.dir}/scala.update"/>
-      <arg value="-metadataRepositoryName"/>
-      <arg value="Scala Update Site"/>
       <arg value="-artifactRepository"/>
       <arg value="file:${dist.dir}/scala.update"/>
-      <arg value="-artifactRepositoryName"/>
-      <arg value="Scala Artifacts"/>
+      <arg value="-source"/>
+      <arg value="${dist.dir}/scala.update"/>
+      <arg value="-configs"/>
+      <arg value="gtk.linux.x86"/>
       <arg value="-compress"/>
-      <arg value="-reusePack200Files"/>
-      <arg value="-noDefaultIUs"/>
+      <arg value="-publishArtifacts"/>
     </java>
     
     <zip
@@ -291,6 +285,8 @@ CLEAN ALL BUILT FILES
     <delete dir="${eclipse.dir}/configuration/org.eclipse.core.runtime" includeemptydirs="yes" quiet="yes" failonerror="no"/>
     <delete dir="${eclipse.dir}/configuration/org.eclipse.equinox.app" includeemptydirs="yes" quiet="yes" failonerror="no"/>
     <delete dir="${eclipse.dir}/configuration/org.eclipse.osgi" includeemptydirs="yes" quiet="yes" failonerror="no"/>
+    <delete dir="${eclipse.dir}/configuration/org.eclipse.update" includeemptydirs="yes" quiet="yes" failonerror="no"/>
+    <delete file="${eclipse.dir}/configuration/dev.properties" includeemptydirs="yes" quiet="yes" failonerror="no"/>
   </target>
   
 </project>

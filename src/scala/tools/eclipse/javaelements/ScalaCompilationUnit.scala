@@ -188,9 +188,16 @@ class ScalaCompilationUnit(fragment : PackageFragment, elementName: String, work
     elements
   }
 
-  override def codeComplete
+  def codeComplete
     (cu : env.ICompilationUnit, unitToSkip : env.ICompilationUnit,
      position : Int,  requestor : CompletionRequestor, owner : WorkingCopyOwner, typeRoot : ITypeRoot) {
+     codeComplete(cu, unitToSkip, position, requestor, owner, typeRoot, null) 
+  }
+    
+  override def codeComplete
+    (cu : env.ICompilationUnit, unitToSkip : env.ICompilationUnit,
+     position : Int,  requestor : CompletionRequestor, owner : WorkingCopyOwner, typeRoot : ITypeRoot,
+     monitor : IProgressMonitor) {
 
     val th = getTreeHolder
     import th._
