@@ -283,13 +283,9 @@ CLEAN ALL BUILT FILES
       <fileset dir="${eclipse.dir}/configuration" includes="*.log"/>
     </delete>
     <delete dir="${eclipse.dir}/p2" includeemptydirs="yes" quiet="yes" failonerror="no"/>
-    <delete dir="${eclipse.dir}/configuration/.settings" includeemptydirs="yes" quiet="yes" failonerror="no"/>
     <delete dir="${eclipse.dir}/configuration/org.eclipse.core.runtime" includeemptydirs="yes" quiet="yes" failonerror="no"/>
     <delete dir="${eclipse.dir}/configuration/org.eclipse.equinox.app" includeemptydirs="yes" quiet="yes" failonerror="no"/>
-    <delete dir="${eclipse.dir}/configuration/org.eclipse.equinox.simpleconfigurator" includeemptydirs="yes" quiet="yes" failonerror="no"/>
     <delete dir="${eclipse.dir}/configuration/org.eclipse.osgi" includeemptydirs="yes" quiet="yes" failonerror="no"/>
-    <delete dir="${eclipse.dir}/configuration/org.eclipse.update" includeemptydirs="yes" quiet="yes" failonerror="no"/>
-    <delete file="${eclipse.dir}/configuration/dev.properties" includeemptydirs="yes" quiet="yes" failonerror="no"/>
   </target>
   
 </project>
