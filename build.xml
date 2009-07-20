@@ -246,6 +246,8 @@ PACKAGE FEATURE AND CREATE UPDATE SITE
           <include name="org.eclipse.equinox.launcher_*.jar"/>
         </fileset>
       </classpath>
+      <arg value="-configuration"/>
+      <arg value="${basedir}/eclipse-lib/configuration"/>
       <arg value="-application"/>
       <arg value="org.eclipse.equinox.p2.publisher.UpdateSitePublisher"/>
       <arg value="-metadataRepository"/>
@@ -284,6 +286,7 @@ CLEAN ALL BUILT FILES
     <delete dir="${eclipse.dir}/configuration/.settings" includeemptydirs="yes" quiet="yes" failonerror="no"/>
     <delete dir="${eclipse.dir}/configuration/org.eclipse.core.runtime" includeemptydirs="yes" quiet="yes" failonerror="no"/>
     <delete dir="${eclipse.dir}/configuration/org.eclipse.equinox.app" includeemptydirs="yes" quiet="yes" failonerror="no"/>
+    <delete dir="${eclipse.dir}/configuration/org.eclipse.equinox.simpleconfigurator" includeemptydirs="yes" quiet="yes" failonerror="no"/>
     <delete dir="${eclipse.dir}/configuration/org.eclipse.osgi" includeemptydirs="yes" quiet="yes" failonerror="no"/>
     <delete dir="${eclipse.dir}/configuration/org.eclipse.update" includeemptydirs="yes" quiet="yes" failonerror="no"/>
     <delete file="${eclipse.dir}/configuration/dev.properties" includeemptydirs="yes" quiet="yes" failonerror="no"/>
