@@ -4,22 +4,27 @@ Bundle-Name: Scala JDT Weaving
 Bundle-SymbolicName: ch.epfl.lamp.sdt.aspects;singleton:=true
 Bundle-Version: 1.0.0
 Bundle-Activator: scala.tools.eclipse.contribution.weaving.jdt.ScalaJDTWeavingPlugin
-Require-Bundle: org.aspectj.runtime,
- org.eclipse.equinox.weaving.aspectj;bundle-version="1.0.0";resolution:=optional,
- org.eclipse.osgi;bundle-version="3.4.0",
- org.eclipse.core.runtime;bundle-version="3.4.0",
- org.eclipse.jdt.core;bundle-version="3.4.0",
- org.eclipse.jdt.ui;bundle-version="3.4.0",
- org.eclipse.jface;bundle-version="3.4.0",
- org.eclipse.jface.text;bundle-version="3.4.0",
- org.eclipse.ui;bundle-version="3.4.0",
- org.eclipse.ui.editors;bundle-version="3.4.0",
- org.eclipse.ui.ide;bundle-version="3.4.0",
- org.eclipse.debug.ui;bundle-version="3.4.0";resolution:=optional
-Eclipse-SupplementBundle: org.eclipse.jdt.core,org.eclipse.jdt.ui,org.eclipse.jdt.debug.ui
+Require-Bundle: 
+ org.aspectj.runtime,
+ org.eclipse.equinox.weaving.aspectj,
+ org.eclipse.osgi,
+ org.eclipse.core.runtime,
+ org.eclipse.jdt.core,
+ org.eclipse.jdt.ui,
+ org.eclipse.jface,
+ org.eclipse.jface.text,
+ org.eclipse.ui,
+ org.eclipse.ui.editors,
+ org.eclipse.ui.ide,
+ org.eclipse.debug.ui
+Eclipse-SupplementBundle: 
+ org.eclipse.jdt.core,
+ org.eclipse.jdt.debug.ui,
+ org.eclipse.jdt.ui
 Bundle-ActivationPolicy: lazy
 Export-Package: 
  scala.tools.eclipse.contribution.weaving.jdt,
  scala.tools.eclipse.contribution.weaving.jdt.builderoptions,
+ scala.tools.eclipse.contribution.weaving.jdt.cfprovider,
  scala.tools.eclipse.contribution.weaving.jdt.ui,
  scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor
