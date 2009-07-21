@@ -37,14 +37,12 @@
 			base-type="org.eclipse.core.runtime.text"
 			priority="high"				
 			file-extensions="scala"/>
-        <!--
 		<content-type id="scala.tools.eclipse.scalaClass" name="Scala Class File" 
 			base-type="org.eclipse.jdt.core.javaClass"
 			priority="high"
 			file-extensions="class">        
-			<describer class="scala.tools.eclipse.ScalaClassfileDescriber"/>
+			<describer class="scala.tools.eclipse.ScalaClassFileDescriber"/>
 		</content-type>        
-		-->
 	</extension>
    
    <extension
@@ -60,7 +58,6 @@
             id="scala.tools.eclipse.ScalaEditor">
             <contentTypeBinding contentTypeId="scala.tools.eclipse.scalaSource"/> 
       </editor>
-      <!--
       <editor
             name="Scala Class File Viewer"
             default="true"
@@ -71,7 +68,6 @@
             id="org.eclipse.jdt.ui.ClassFileEditor">
             <contentTypeBinding contentTypeId="scala.tools.eclipse.scalaClass"/> 
       </editor>
-      -->
    </extension>
 
    <extension point="org.eclipse.ui.editorActions">
@@ -531,7 +527,10 @@
       file_extension="scala">
     </provider>
   </extension>
-  
+
+  <extension point="ch.epfl.lamp.sdt.aspects.cfprovider">
+    <provider class="scala.tools.eclipse.javaelements.ScalaClassFileProvider" />
+  </extension>
   
   <extension point="org.eclipse.contribution.weaving.jdt.imagedescriptorselector">
     <selector

@@ -15,6 +15,7 @@ object ScalaImages  {
   val MISSING_ICON = ImageDescriptor.getMissingImageDescriptor
 
   val SCALA_FILE = create("icons/full/obj16/scu_obj.gif")
+  val SCALA_CLASS_FILE = create("icons/full/obj16/sclassf_obj.gif")
   val EXCLUDED_SCALA_FILE = create("icons/full/obj16/scu_resource_obj.gif")
 
   val SCALA_CLASS = create("icons/full/obj16/class_obj.gif")

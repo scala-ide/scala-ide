@@ -32,8 +32,8 @@ trait ScalaElement {
   def isVisible = true
 }
 
-trait ImageSubstituter { this : ScalaElement =>
-  def mapLabelImage(original : Image) : Image = {
+trait ImageSubstituter extends ScalaElement {
+  override def mapLabelImage(original : Image) : Image = {
     val rect = original.getBounds
     
     import JavaElementImageProvider.{ BIG_SIZE, SMALL_ICONS, SMALL_SIZE }
