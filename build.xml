@@ -55,6 +55,12 @@ INITIALISE BUILD
       classname="scala.tools.ant.Scalac"
       classpathref="scala.classpath"
     />
+
+  	<taskdef
+      name="scalacfork"
+      classname="scala.tools.ant.sabbus.ScalacFork"
+      classpathref="scala.classpath"
+    />
     
     <path id="eclipse.classpath">
       <fileset dir="${eclipse.dir}/plugins/">
@@ -271,6 +277,27 @@ PACKAGE FEATURE AND CREATE UPDATE SITE
     
   </target>
   
+<!-- ===========================================================================
+POSITIONS
+============================================================================ -->
+
+	<target name="test.positions" depends="init">
+    <path id="dist.classpath">
+      <pathelement location="${scala.dist.dir}/lib/scala-library.jar"/>
+      <pathelement location="${scala.dist.dir}/lib/scala-compiler.jar"/>
+      <pathelement location="${scala.dist.dir}/lib/scala-partest.jar"/>
+      <pathelement location="${scala.dist.dir}/lib/scalap.jar"/>
+      <pathelement location="${ant.jar}"/>
+    </path>
+		<scalacfork
+	  	destdir=""
+      srcdir="${basedir}/src"
+	    compilerpathref="dist.classpath"
+	    params="-Xprint-pos -Yide-debug">
+	    <include name="**/*.scala"/>
+	  </scalacfork>
+	</target>
+	
 <!-- ===========================================================================
 CLEAN ALL BUILT FILES
 ============================================================================ -->
