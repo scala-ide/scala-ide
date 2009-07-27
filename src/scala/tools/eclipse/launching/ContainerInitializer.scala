@@ -10,6 +10,8 @@ import org.eclipse.jdt.launching._
 import org.eclipse.core.runtime._
 import org.osgi.framework.Bundle
 
+import scala.tools.eclipse.ScalaPlugin
+
 object ContainerInitializer {
   def plugin = ScalaPlugin.plugin
   def libPath : String = plugin.bundlePath + "lib/"

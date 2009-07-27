@@ -24,7 +24,7 @@ import org.eclipse.swt.widgets.Display
 import scala.tools.nsc.interactive.Global
 import scala.tools.nsc.util.{ BatchSourceFile, SourceFile }
 
-import scala.tools.eclipse.ScalaFile
+import scala.tools.eclipse.{ ScalaPlugin, ScalaPresentationCompiler, ScalaSourceIndexer }
 import scala.tools.eclipse.util.EclipseFile
 
 class ScalaCompilationUnitElementInfo extends CompilationUnitElementInfo

@@ -10,6 +10,7 @@ import org.eclipse.core.runtime.preferences.{ AbstractPreferenceInitializer, Def
 
 import scala.tools.nsc.Settings
 
+import scala.tools.eclipse.ScalaPlugin
 import scala.tools.eclipse.SettingConverterUtil._
 import scala.tools.eclipse.util.IDESettings
 

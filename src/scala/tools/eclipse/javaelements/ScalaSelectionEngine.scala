@@ -79,7 +79,7 @@ class ScalaSelectionEngine(nameEnvironment : SearchableEnvironment, requestor : 
                 println("Unhandled: "+i.symbol.getClass.getName)
             }
           case s : compiler.Select =>
-            println("Selector("+s.qualifier+", "+s.selector+")")
+            println("Selector("+s.qualifier+", "+s.name+")")
             println(s.symbol+": "+s.symbol.getClass.getName+" "+s.symbol.pos)
             println(s.symbol.enclosingPackage.fullNameString)
             println(s.symbol.toplevelClass.nameString)
@@ -88,7 +88,7 @@ class ScalaSelectionEngine(nameEnvironment : SearchableEnvironment, requestor : 
               s.symbol.enclosingPackage.fullNameString.toArray,
               s.symbol.toplevelClass.nameString.toArray,
               null,
-              s.selector.toString.toArray,
+              s.name.toString.toArray,
               new Array[Array[Char]](0),
               new Array[Array[Char]](0),
               s.symbol.tpe.paramTypes.map(compiler.javaType(_).getSignature).toArray,

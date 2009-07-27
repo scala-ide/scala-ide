@@ -20,6 +20,8 @@ import org.eclipse.ui.IWorkbench
 import org.eclipse.ui.ide.IDE
 import org.eclipse.ui.wizards.newresource.BasicNewResourceWizard
 
+import scala.tools.eclipse.{ ScalaIndexManager, ScalaPlugin, ScalaProject }
+
 trait NewResourceWizard extends BasicNewResourceWizard {
   def kind : String
   def adjective : String = ""

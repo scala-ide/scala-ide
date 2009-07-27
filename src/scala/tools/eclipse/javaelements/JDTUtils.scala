@@ -12,6 +12,7 @@ import org.eclipse.jdt.internal.core.{ JavaModelManager, OpenableElementInfo }
 import org.eclipse.jdt.internal.ui.packageview.PackageExplorerPart
 import org.eclipse.ui.progress.UIJob
 
+import scala.tools.eclipse.ScalaPlugin
 import scala.tools.eclipse.util.ReflectionUtils
 
 object JDTUtils {

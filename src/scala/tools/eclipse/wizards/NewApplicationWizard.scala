@@ -13,6 +13,8 @@ import org.eclipse.debug.core.DebugPlugin
 import org.eclipse.debug.ui.IDebugUIConstants
 import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants
 
+import scala.tools.eclipse.{ ScalaPlugin, ScalaProject }
+
 class NewApplicationWizard extends NewObjectWizard {
   override def adjective = "Application"
   override def body = """  def main(args : Array[String]) : Unit = {}"""

@@ -20,8 +20,8 @@ import org.eclipse.swt.widgets.{ Button, Composite, Control }
 import org.eclipse.ui.{ IWorkbench, IWorkbenchPreferencePage }
 import org.eclipse.ui.editors.text.EditorsUI
 
-import scala.tools.eclipse.util.Colors
-import scala.tools.eclipse.util.Style
+import scala.tools.eclipse.ScalaPlugin
+import scala.tools.eclipse.util.{ Colors, Style }
 
 object EditorPreferences {
   trait Key {

@@ -1,3 +1,8 @@
+/*
+ * Copyright 2005-2009 LAMP/EPFL
+ */
+// $Id$
+
 package scala.tools.eclipse.interpreter
 
 import org.eclipse.debug.ui._
@@ -16,6 +21,8 @@ import org.eclipse.jface.window._
 import org.eclipse.ui.dialogs._
 import org.eclipse.core.runtime._
 import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants
+
+import scala.tools.eclipse.ScalaPlugin
 
 /**
  * This defines the configuration UI for a scala interpeter launch configuration.

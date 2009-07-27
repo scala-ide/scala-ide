@@ -11,6 +11,8 @@ import scala.collection.mutable.ArrayBuffer
 import org.eclipse.jdt.core.{ IClasspathEntry, JavaCore }
 import org.eclipse.ui.wizards.newresource.BasicNewProjectResourceWizard
 
+import scala.tools.eclipse.ScalaPlugin
+
 /** Simple "New Project" Wizard dialog.  Will create accept a project name, and set up the new scala project. */
 class NewProjectWizard extends BasicNewProjectResourceWizard {
   override def addPages = {

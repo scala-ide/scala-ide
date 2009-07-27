@@ -18,7 +18,7 @@ import org.eclipse.core.runtime.preferences.{ IEclipsePreferences }
 import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.jdt.core.IJavaProject
 
-import scala.tools.eclipse.SettingConverterUtil._
+import scala.tools.eclipse.{ ScalaPlugin, SettingConverterUtil }
 import scala.tools.eclipse.util.IDESettings
 
 /**
@@ -286,6 +286,8 @@ class CompilerSettings extends PropertyPage with ProjectSettings with WorkbenchP
   
   /** This widget should only be used on property pages. */
   class UseProjectSettingsWidget {
+    import SettingConverterUtil._
+    
     // TODO - Does this belong here?  For now it's the only place we can really check...
     if(!preferenceStore.contains(USE_PROJECT_SETTINGS_PREFERENCE)) {
       preferenceStore.setDefault(USE_PROJECT_SETTINGS_PREFERENCE, false)

@@ -8,7 +8,7 @@ package scala.tools.eclipse.javaelements
 import org.eclipse.core.resources.IFile
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants
 
-import scala.tools.eclipse.ScalaPresentationCompiler
+import scala.tools.eclipse.{ ScalaPresentationCompiler, ScalaSourceIndexer }
 
 trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
   
