@@ -11,8 +11,10 @@ import scala.tools.nsc.io.AbstractFile
 import scala.tools.nsc.util.Position
 import scala.tools.nsc.reporters.Reporter
 
-import org.eclipse.core.resources.IMarker
+import org.eclipse.core.resources.{ IFile, IMarker }
 import org.eclipse.core.runtime.IProgressMonitor
+
+import scala.tools.eclipse.util.{ EclipseResource, FileUtils }
 
 class BuildCompiler(val project : ScalaProject, settings : Settings) extends Global(settings) {
 
@@ -31,15 +33,17 @@ class BuildCompiler(val project : ScalaProject, settings : Settings) extends Glo
           val source = pos.source.get
           val line = pos.line.get
           val length = source.identifier(pos, BuildCompiler.this).map(_.length).getOrElse(0)
-          val scalaFile = project.nscToLampion(file)
-          scalaFile.buildError(eclipseSeverity, msg, offset, length, line, null)
+          file match {
+            case EclipseResource(i : IFile) => FileUtils.buildError(i, eclipseSeverity, msg, offset, length, line, null)
+            case _ =>
+          }
         case _ => 
           project.buildError(eclipseSeverity, msg, null)
       }
     }
   }
   
-  def build(files : List[AbstractFile], monitor : IProgressMonitor) = {
+  def build(files : List[IFile], monitor : IProgressMonitor) = {
     val run = new Run {
       var worked = 0
       
@@ -60,17 +64,19 @@ class BuildCompiler(val project : ScalaProject, settings : Settings) extends Glo
       override def compileLate(file : AbstractFile) = {
         super.compileLate(file)
         
-        val scalaFile = project.nscToLampion(file)
-        scalaFile.clearBuildErrors(monitor)
+        file match {
+          case EclipseResource(i : IFile) => FileUtils.clearBuildErrors(i, monitor)
+          case _ => 
+        }
       }
     }
 
-    files.foreach(project.nscToLampion(_).clearBuildErrors(monitor))
+    files.foreach(FileUtils.clearBuildErrors(_, monitor))
     project.createOutputFolders
 
     reporter.reset
     try {
-      run.compileFiles(files)
+      run.compileFiles(files.map(EclipseResource(_)))
     } catch {
       case ex =>
         ScalaPlugin.plugin.logError("Build compiler crashed", ex)

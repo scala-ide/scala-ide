@@ -52,7 +52,6 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener {
   val scalaFileExtn = ".scala"
   val javaFileExtn = ".java"
   val jarFileExtn = ".jar"
-  val ERROR_TYPE = "lampion.error"
   val noColor : Color = null
   
   private val projects = new HashMap[IProject, ScalaProject]

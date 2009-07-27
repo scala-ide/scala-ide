@@ -3,7 +3,7 @@
  */
 // $Id$
 
-package scala.tools.eclipse
+package scala.tools.eclipse.util
 
 import scala.collection.JavaConversions._
 
@@ -16,37 +16,31 @@ import org.eclipse.swt.widgets.Display
 import org.eclipse.ui.{ IWorkbenchPage, PlatformUI }
 import org.eclipse.ui.ide.IDE
 
-import scala.tools.eclipse.util.{ EclipseResource, Style } 
+import scala.tools.eclipse.ScalaPlugin
 
-object ScalaFile {
-  def apply(file : IFile) = new ScalaFile(file)
-}
-
-class ScalaFile(val underlying : IFile) {
+object FileUtils {
   import ScalaPlugin.plugin
   
-  override def toString = underlying.toString
-
-  def length = {
-    val fs = FileBuffers.getFileStoreAtLocation(underlying.getLocation)
+  def length(file : IFile) = {
+    val fs = FileBuffers.getFileStoreAtLocation(file.getLocation)
     if (fs != null)
       fs.fetchInfo.getLength.toInt
     else
       -1
   }
   
-  def clearBuildErrors(monitor : IProgressMonitor) =
-    underlying.getWorkspace.run(new IWorkspaceRunnable {
-      def run(monitor : IProgressMonitor) = underlying.deleteMarkers(plugin.problemMarkerId, true, IResource.DEPTH_INFINITE)
+  def clearBuildErrors(file : IFile, monitor : IProgressMonitor) =
+    file.getWorkspace.run(new IWorkspaceRunnable {
+      def run(monitor : IProgressMonitor) = file.deleteMarkers(plugin.problemMarkerId, true, IResource.DEPTH_INFINITE)
     }, monitor)
   
-  def hasBuildErrors : Boolean =
-    underlying.findMarkers(plugin.problemMarkerId, true, IResource.DEPTH_INFINITE).exists(_.getAttribute(IMarker.SEVERITY) == IMarker.SEVERITY_ERROR)
+  def hasBuildErrors(file : IFile) : Boolean =
+    file.findMarkers(plugin.problemMarkerId, true, IResource.DEPTH_INFINITE).exists(_.getAttribute(IMarker.SEVERITY) == IMarker.SEVERITY_ERROR)
   
-  def buildError(severity : Int, msg : String, offset : Int, length : Int, line : Int, monitor : IProgressMonitor) =
-    underlying.getWorkspace.run(new IWorkspaceRunnable {
+  def buildError(file : IFile, severity : Int, msg : String, offset : Int, length : Int, line : Int, monitor : IProgressMonitor) =
+    file.getWorkspace.run(new IWorkspaceRunnable {
       def run(monitor : IProgressMonitor) = {
-        val mrk = underlying.createMarker(plugin.problemMarkerId)
+        val mrk = file.createMarker(plugin.problemMarkerId)
         mrk.setAttribute(IMarker.SEVERITY, severity)
         val string = msg.map{
           case '\n' => ' '

@@ -22,6 +22,12 @@ object EclipseResource {
     case file : IFile => new EclipseFile(file);
     case container : IContainer => new EclipseContainer(container)
   }
+
+  def unapply(file : AbstractFile) : Option[IResource] = file match {
+    case ef : EclipseFile => Some(ef.underlying)
+    case ec : EclipseContainer => Some(ec.underlying)
+    case _ => None
+  }
 }
 
 abstract class EclipseResource[R <: IResource] extends AbstractFile {

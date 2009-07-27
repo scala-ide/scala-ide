@@ -305,15 +305,6 @@ class ScalaProject(val underlying : IProject) {
     }
   }
   
-  def nscToLampion(nscFile : AbstractFile) = new ScalaFile(nscToEclipse(nscFile))
-  
-  def lampionToNSC(file : ScalaFile) : AbstractFile = EclipseResource(file.underlying)
-    
-  def nscToEclipse(nscFile : AbstractFile) = nscFile match {
-    case ef : EclipseFile => ef.underlying
-    case f => println(f.getClass.getName) ; throw new MatchError
-  }
-
   def resetCompilers = {
     buildCompiler0 = null
     
@@ -344,9 +335,9 @@ class ScalaProject(val underlying : IProject) {
     presentationCompiler0
   }
 
-  def build(toBuild : List[ScalaFile], monitor : IProgressMonitor) = {
+  def build(toBuild : List[IFile], monitor : IProgressMonitor) = {
     if (!toBuild.isEmpty)
-      buildCompiler.build(toBuild.map(lampionToNSC), monitor)
+      buildCompiler.build(toBuild, monitor)
   }
 
   def clean(monitor : IProgressMonitor) = {

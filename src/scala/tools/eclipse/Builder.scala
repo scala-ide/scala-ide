@@ -17,7 +17,7 @@ import org.eclipse.jdt.internal.core.builder.{ JavaBuilder, NameEnvironment, Sta
 
 import scala.tools.eclipse.contribution.weaving.jdt.builderoptions.ScalaJavaBuilder
 import scala.tools.eclipse.javaelements.JDTUtils
-import scala.tools.eclipse.util.{ ReflectionUtils }
+import scala.tools.eclipse.util.{ FileUtils, ReflectionUtils }
 
 class Builder extends IncrementalProjectBuilder {
   def plugin = ScalaPlugin.plugin
@@ -38,7 +38,7 @@ class Builder extends IncrementalProjectBuilder {
     import IncrementalProjectBuilder._
 
     val project = plugin.getScalaProject(getProject)
-    val buildSet = new HashSet[ScalaFile]
+    val buildSet = new HashSet[IFile]
     val allSourceFiles = project.allSourceFiles(new NameEnvironment(project.javaProject))
     
     kind match {
@@ -50,14 +50,14 @@ class Builder extends IncrementalProjectBuilder {
                 if (delta.getKind != IResourceDelta.REMOVED) &&
                    (project.sourceFolders.exists(_.getLocation.isPrefixOf(file.getLocation))) &&
                    allSourceFiles(file) =>
-                buildSet += new ScalaFile(file)
+                buildSet += file
               case _ =>
             }
             true
           }
         })
       case CLEAN_BUILD | FULL_BUILD =>
-        buildSet ++= allSourceFiles.map(ScalaFile.apply)
+        buildSet ++= allSourceFiles
     }
     
     // everything that needs to be recompiled is in toBuild now
@@ -69,7 +69,7 @@ class Builder extends IncrementalProjectBuilder {
     project.build(toBuild, monitor)
     
     val depends = project.externalDepends.toList.toArray
-    if (toBuild.exists(_.hasBuildErrors))
+    if (toBuild.exists(FileUtils.hasBuildErrors(_)))
       depends
     else {
       ensureProject
