@@ -37,36 +37,42 @@ class ScalaBuilder extends IncrementalProjectBuilder {
     import IncrementalProjectBuilder._
 
     val project = plugin.getScalaProject(getProject)
-    val addedOrUpdated = new HashSet[IFile]
-    val removed = new HashSet[IFile]
-    val allSourceFiles = project.allSourceFiles(new NameEnvironment(project.javaProject))
-    
-    kind match {
-      case INCREMENTAL_BUILD | AUTO_BUILD =>
-        getDelta(project.underlying).accept(new IResourceDeltaVisitor {
-          def visit(delta : IResourceDelta) = {
-            delta.getResource match {
-              case file : IFile if project.sourceFolders.exists(_.getLocation.isPrefixOf(file.getLocation)) =>
-                delta.getKind match {
-                  case IResourceDelta.ADDED | IResourceDelta.CHANGED if allSourceFiles(file) =>
-                    addedOrUpdated += file
-                  case IResourceDelta.ADDED | IResourceDelta.CHANGED if !allSourceFiles(file) =>
-                    removed += file
-                  case _ =>
-                }
-              case _ =>
+    val allSourceFiles = project.allSourceFiles()
+
+    val (addedOrUpdated, removed) = if (!project.hasBeenBuilt)
+      (allSourceFiles, Set.empty[IFile])
+    else {
+      kind match {
+        case INCREMENTAL_BUILD | AUTO_BUILD =>
+          val addedOrUpdated0 = new HashSet[IFile]
+          val removed0 = new HashSet[IFile]
+                                          
+          getDelta(project.underlying).accept(new IResourceDeltaVisitor {
+            def visit(delta : IResourceDelta) = {
+              delta.getResource match {
+                case file : IFile if project.sourceFolders.exists(_.getLocation.isPrefixOf(file.getLocation)) =>
+                  delta.getKind match {
+                    case IResourceDelta.ADDED | IResourceDelta.CHANGED if allSourceFiles(file) =>
+                      addedOrUpdated0 += file
+                    case IResourceDelta.ADDED | IResourceDelta.CHANGED if !allSourceFiles(file) =>
+                      removed0 += file
+                    case _ =>
+                  }
+                case _ =>
+              }
+              true
             }
-            true
-          }
-        })
-      case CLEAN_BUILD | FULL_BUILD =>
-        addedOrUpdated ++= allSourceFiles
+          })
+          (Set.empty ++ addedOrUpdated0, Set.empty ++ removed0)
+        case CLEAN_BUILD | FULL_BUILD =>
+          (allSourceFiles, Set.empty[IFile])
+      }
     }
     
     if (monitor != null)
       monitor.beginTask("build all", 100)
       
-    project.build(Set.empty ++ addedOrUpdated, Set.empty ++ removed, monitor)
+    project.build(addedOrUpdated, removed, monitor)
     
     val depends = project.externalDepends.toList.toArray
     if (allSourceFiles.exists(FileUtils.hasBuildErrors(_)))

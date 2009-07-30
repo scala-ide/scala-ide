@@ -395,9 +395,12 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
     def setSourceRange(info : ScalaMemberElementInfo, tree : Tree) {
       import Math.{ max, min }
       
-      val start = tree.pos.startOrElse(-1)
-      val end0 = tree.pos.endOrElse(start)
-      val end = if (end0 > start) end0-1 else end0
+      val pos = tree.pos
+      val (start, end) =
+        if (pos.isDefined)
+          (pos.startOrPoint, pos.endOrPoint)
+        else
+          (-1, -1)
       
       info.setSourceRangeStart0(start)
       info.setSourceRangeEnd0(end)

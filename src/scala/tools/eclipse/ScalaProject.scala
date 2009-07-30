@@ -40,6 +40,7 @@ class ScalaProject(val underlying : IProject) {
   private var classpathUpdate : Long = IResource.NULL_STAMP
   private var buildManager0 : EclipseBuildManager = null
   private var presentationCompiler0 : ScalaPresentationCompiler = null 
+  private var hasBeenBuilt0 = false
   
   override def toString = underlying.getName
   
@@ -141,6 +142,8 @@ class ScalaProject(val underlying : IProject) {
     // skip default output folder which may not be used by any source folder
     return childPath == javaProject.getOutputLocation
   }
+  
+  def allSourceFiles() : Set[IFile] = allSourceFiles(new NameEnvironment(javaProject))
   
   def allSourceFiles(env : NameEnvironment) : Set[IFile] = {
     val sourceFiles = new HashSet[IFile]
@@ -310,13 +313,14 @@ class ScalaProject(val underlying : IProject) {
   
   def resetCompilers = {
     buildManager0 = null
+    hasBeenBuilt0 = false
     
     if (presentationCompiler0 != null) {
       presentationCompiler0.askShutdown()
       presentationCompiler0 = null
     }
-  } 
-
+  }
+  
   class EclipseBuildManager(settings: Settings) extends RefinedBuildManager(settings) {
     var monitor : IProgressMonitor = _
     
@@ -332,16 +336,18 @@ class ScalaProject(val underlying : IProject) {
             case 0 => IMarker.SEVERITY_INFO
           }
           
-          (pos.offset, pos.source.map(_.file)) match {
-            case (Some(offset), Some(file)) => 
-              val source = pos.source.get
-              val line = pos.line.get
+          try {
+            if(pos.isDefined) {
+              val source = pos.source
+              val line = pos.line
               val length = source.identifier(pos, EclipseBuilderGlobal.this).map(_.length).getOrElse(0)
-              file match {
-                case EclipseResource(i : IFile) => FileUtils.buildError(i, eclipseSeverity, msg, offset, length, line, null)
+              source.file match {
+                case EclipseResource(i : IFile) => FileUtils.buildError(i, eclipseSeverity, msg, pos.point, length, line, null)
                 case _ =>
               }
-            case _ => 
+            }
+          } catch {
+            case ex : UnsupportedOperationException => 
               buildError(eclipseSeverity, msg, null)
           }
         }
@@ -399,9 +405,13 @@ class ScalaProject(val underlying : IProject) {
     presentationCompiler0
   }
 
+  def hasBeenBuilt = hasBeenBuilt0
+  
   def build(addedOrUpdated : Set[IFile], removed : Set[IFile], monitor : IProgressMonitor) {
     if (addedOrUpdated.isEmpty && removed.isEmpty)
       return
+      
+    hasBeenBuilt0 = true
 
     buildManager.monitor = monitor
     buildManager.update(addedOrUpdated.map(EclipseResource(_)), removed.map(EclipseResource(_)))
