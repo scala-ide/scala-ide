@@ -46,7 +46,7 @@ class ScalaCompilationUnit(fragment : PackageFragment, elementName: String, work
   def getTreeHolder(info : OpenableElementInfo) : TreeHolder = {
     if (treeHolder == null) {
       treeHolder = new TreeHolder {
-        val compiler = project.compiler
+        val compiler = project.presentationCompiler
         val body = compiler.loadTree(getSourceFile(info), reload)
         reload = false
       }

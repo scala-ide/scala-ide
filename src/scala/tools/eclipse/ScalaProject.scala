@@ -5,6 +5,7 @@
 
 package scala.tools.eclipse
 
+import scala.collection.immutable.Set
 import scala.collection.mutable.{ LinkedHashSet, ListBuffer, HashSet }
 
 import java.io.File.pathSeparator
@@ -24,18 +25,20 @@ import org.eclipse.ui.PlatformUI
 import org.eclipse.ui.texteditor.ITextEditor
 
 import scala.tools.nsc.{ Global, Settings, interactive }
+import scala.tools.nsc.interactive.{ BuildManager, RefinedBuildManager }
 import scala.tools.nsc.ast.parser.Scanners
 import scala.tools.nsc.io.AbstractFile
-import scala.tools.nsc.reporters.ConsoleReporter
+import scala.tools.nsc.reporters.{ Reporter }
+import scala.tools.nsc.util.Position
 
 import scala.tools.eclipse.properties.PropertyStore
-import scala.tools.eclipse.util.{ EclipseFile, EclipseResource, IDESettings, ReflectionUtils, Style } 
+import scala.tools.eclipse.util.{ EclipseFile, EclipseResource, FileUtils, IDESettings, ReflectionUtils, Style } 
 
 class ScalaProject(val underlying : IProject) {
   import ScalaPlugin.plugin
 
   private var classpathUpdate : Long = IResource.NULL_STAMP
-  private var buildCompiler0 : BuildCompiler = null
+  private var buildManager0 : EclipseBuildManager = null
   private var presentationCompiler0 : ScalaPresentationCompiler = null 
   
   override def toString = underlying.getName
@@ -306,7 +309,7 @@ class ScalaProject(val underlying : IProject) {
   }
   
   def resetCompilers = {
-    buildCompiler0 = null
+    buildManager0 = null
     
     if (presentationCompiler0 != null) {
       presentationCompiler0.askShutdown()
@@ -314,17 +317,78 @@ class ScalaProject(val underlying : IProject) {
     }
   } 
 
-  def buildCompiler = {
+  class EclipseBuildManager(settings: Settings) extends RefinedBuildManager(settings) {
+    var monitor : IProgressMonitor = _
+    
+    class EclipseBuilderGlobal(settings: Settings) extends BuilderGlobal(settings) {
+
+      reporter = new Reporter {
+        override def info0(pos : Position, msg : String, severity : Severity, force : Boolean) = {
+          severity.count += 1
+  
+          val eclipseSeverity = severity.id match {
+            case 2 => IMarker.SEVERITY_ERROR
+            case 1 => IMarker.SEVERITY_WARNING
+            case 0 => IMarker.SEVERITY_INFO
+          }
+          
+          (pos.offset, pos.source.map(_.file)) match {
+            case (Some(offset), Some(file)) => 
+              val source = pos.source.get
+              val line = pos.line.get
+              val length = source.identifier(pos, EclipseBuilderGlobal.this).map(_.length).getOrElse(0)
+              file match {
+                case EclipseResource(i : IFile) => FileUtils.buildError(i, eclipseSeverity, msg, offset, length, line, null)
+                case _ =>
+              }
+            case _ => 
+              buildError(eclipseSeverity, msg, null)
+          }
+        }
+      }
+    
+      override def newRun() =
+        new Run {
+          var worked = 0
+          
+          override def progress(current : Int, total : Int) : Unit = {
+            if (monitor != null && monitor.isCanceled) {
+              cancel
+              return
+            }
+            
+            val newWorked = if (current >= total) 100 else ((current.toDouble/total)*100).toInt
+            if (worked < newWorked) {
+              if (monitor != null)
+                monitor.worked(newWorked-worked)
+              worked = newWorked
+            }
+          }
+        
+          override def compileLate(file : AbstractFile) = {
+            file match {
+              case EclipseResource(i : IFile) => FileUtils.clearBuildErrors(i, monitor)
+              case _ => 
+            }
+            super.compileLate(file)
+          }
+        }
+    }
+    
+    override def newCompiler(settings: Settings) = new EclipseBuilderGlobal(settings)
+  }
+  
+  def buildManager = {
     checkClasspath
-    if (buildCompiler0 == null) {
+    if (buildManager0 == null) {
       val settings = new Settings
       initialize(settings)
-      buildCompiler0 = new BuildCompiler(this, settings)
+      buildManager0 = new EclipseBuildManager(settings)        
     }
-    buildCompiler0
+    buildManager0
   }
 
-  def compiler = {
+  def presentationCompiler = {
     checkClasspath
     if (presentationCompiler0 eq null) {
       val settings = new Settings
@@ -335,9 +399,14 @@ class ScalaProject(val underlying : IProject) {
     presentationCompiler0
   }
 
-  def build(toBuild : List[IFile], monitor : IProgressMonitor) = {
-    if (!toBuild.isEmpty)
-      buildCompiler.build(toBuild, monitor)
+  def build(addedOrUpdated : Set[IFile], removed : Set[IFile], monitor : IProgressMonitor) {
+    if (addedOrUpdated.isEmpty && removed.isEmpty)
+      return
+
+    buildManager.monitor = monitor
+    buildManager.update(addedOrUpdated.map(EclipseResource(_)), removed.map(EclipseResource(_)))
+    
+    refreshOutput
   }
 
   def clean(monitor : IProgressMonitor) = {

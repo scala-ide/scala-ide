@@ -1,6 +1,5 @@
 /*
  * Copyright 2005-2009 LAMP/EPFL
- * @author Sean McDirmid
  */
 // $Id$
 
@@ -19,7 +18,7 @@ import scala.tools.eclipse.contribution.weaving.jdt.builderoptions.ScalaJavaBuil
 import scala.tools.eclipse.javaelements.JDTUtils
 import scala.tools.eclipse.util.{ FileUtils, ReflectionUtils }
 
-class Builder extends IncrementalProjectBuilder {
+class ScalaBuilder extends IncrementalProjectBuilder {
   def plugin = ScalaPlugin.plugin
 
   private val scalaJavaBuilder = new ScalaJavaBuilder
@@ -38,7 +37,8 @@ class Builder extends IncrementalProjectBuilder {
     import IncrementalProjectBuilder._
 
     val project = plugin.getScalaProject(getProject)
-    val buildSet = new HashSet[IFile]
+    val addedOrUpdated = new HashSet[IFile]
+    val removed = new HashSet[IFile]
     val allSourceFiles = project.allSourceFiles(new NameEnvironment(project.javaProject))
     
     kind match {
@@ -46,30 +46,30 @@ class Builder extends IncrementalProjectBuilder {
         getDelta(project.underlying).accept(new IResourceDeltaVisitor {
           def visit(delta : IResourceDelta) = {
             delta.getResource match {
-              case file : IFile
-                if (delta.getKind != IResourceDelta.REMOVED) &&
-                   (project.sourceFolders.exists(_.getLocation.isPrefixOf(file.getLocation))) &&
-                   allSourceFiles(file) =>
-                buildSet += file
+              case file : IFile if project.sourceFolders.exists(_.getLocation.isPrefixOf(file.getLocation)) =>
+                delta.getKind match {
+                  case IResourceDelta.ADDED | IResourceDelta.CHANGED if allSourceFiles(file) =>
+                    addedOrUpdated += file
+                  case IResourceDelta.ADDED | IResourceDelta.CHANGED if !allSourceFiles(file) =>
+                    removed += file
+                  case _ =>
+                }
               case _ =>
             }
             true
           }
         })
       case CLEAN_BUILD | FULL_BUILD =>
-        buildSet ++= allSourceFiles
+        addedOrUpdated ++= allSourceFiles
     }
-    
-    // everything that needs to be recompiled is in toBuild now
-    val toBuild = buildSet.toList
     
     if (monitor != null)
       monitor.beginTask("build all", 100)
       
-    project.build(toBuild, monitor)
+    project.build(Set.empty ++ addedOrUpdated, Set.empty ++ removed, monitor)
     
     val depends = project.externalDepends.toList.toArray
-    if (toBuild.exists(FileUtils.hasBuildErrors(_)))
+    if (allSourceFiles.exists(FileUtils.hasBuildErrors(_)))
       depends
     else {
       ensureProject
