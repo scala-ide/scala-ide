@@ -21,16 +21,17 @@ public aspect ClassFileProviderAspect {
     classFileCreations(parent, name) {
 
     ClassFile javaClassFile = proceed(parent, name); 
-    
-    for (IClassFileProvider provider : ClassFileProviderRegistry.getInstance().getProviders()) {
-      try {
-        ClassFile cf = provider.create(javaClassFile.getBytes(), parent, name);
-        if (cf != null)
-          return cf;
-      } catch (Throwable t) {
-        ScalaJDTWeavingPlugin.logException(t);
+    if (javaClassFile.exists())
+      for (IClassFileProvider provider : ClassFileProviderRegistry.getInstance().getProviders()) {
+        try {
+          ClassFile cf = provider.create(javaClassFile.getBytes(), parent, name);
+          if (cf != null)
+            return cf;
+        } catch (Throwable t) {
+          ScalaJDTWeavingPlugin.logException(t);
+        }
       }
-    }
+    
     return javaClassFile;
   }
 }
