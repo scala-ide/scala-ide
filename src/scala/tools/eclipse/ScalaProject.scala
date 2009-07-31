@@ -382,6 +382,15 @@ class ScalaProject(val underlying : IProject) {
     }
     
     override def newCompiler(settings: Settings) = new EclipseBuilderGlobal(settings)
+    
+    override def buildingFiles(included: scala.collection.Set[AbstractFile]) {
+      for(file <- included) {
+        file match {
+          case EclipseResource(f : IFile) => FileUtils.clearBuildErrors(f, null)
+          case _ =>
+        }
+      }
+    }
   }
   
   def buildManager = {

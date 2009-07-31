@@ -127,6 +127,16 @@ TARGETS SUPPORTING DEVELOPMENT WITHIN ECLIPSE
     <ant dir="${scala.plugin.aspects.dir}" antfile="build.xml" target="dist" inheritall="false"/>
     <antcall target="dist"/>
   </target>
+
+	<target name="devel.fastdist">
+    <ant dir="${scala.lib.dir}" antfile="build.xml" target="clean" inheritall="false"/>
+    <ant dir="${scala.plugin.aspects.dir}" antfile="build.xml" target="clean" inheritall="false"/>
+    <antcall target="clean"/>
+    <ant dir="${scala.dir}" antfile="build.xml" target="fastdist" inheritall="false"/>
+    <ant dir="${scala.lib.dir}" antfile="build.xml" target="dist" inheritall="false"/>
+    <ant dir="${scala.plugin.aspects.dir}" antfile="build.xml" target="dist" inheritall="false"/>
+    <antcall target="dist"/>
+  </target>
   
 <!-- ===========================================================================
 BUILD THE PLUGIN

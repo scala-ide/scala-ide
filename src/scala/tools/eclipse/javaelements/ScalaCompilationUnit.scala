@@ -45,11 +45,22 @@ class ScalaCompilationUnit(fragment : PackageFragment, elementName: String, work
   
   def getTreeHolder(info : OpenableElementInfo) : TreeHolder = {
     if (treeHolder == null) {
+
       treeHolder = new TreeHolder {
         val compiler = project.presentationCompiler
-        val body = compiler.loadTree(getSourceFile(info), reload)
-        reload = false
+        val body = {
+          val typed = new SyncVar[Either[compiler.Tree, Throwable]]
+          compiler.askType(getSourceFile(info), reload, typed)
+          typed.get match {
+            case Left(tree) => tree
+            case Right(thr) =>
+              ScalaPlugin.plugin.logError("Failure in presentation compiler", thr)
+              compiler.EmptyTree
+          }
+        }
       }
+      
+      reload = false
     }
     
     treeHolder
@@ -205,7 +216,7 @@ class ScalaCompilationUnit(fragment : PackageFragment, elementName: String, work
     val pos = compiler.rangePos(getSourceFile, position, position, position)
     
     val completed = new SyncVar[Either[List[compiler.Member], Throwable]]
-    compiler.askCompletion(pos, completed)
+    compiler.askTypeCompletion(pos, completed)
     completed.get.left.toOption match {
       case Some(completions) =>
         for(completion <- completions)
