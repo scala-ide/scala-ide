@@ -11,7 +11,8 @@ import scala.collection.generic.VectorTemplate
 import scala.collection.Vector
 
 import org.eclipse.core.filebuffers.FileBuffers
-import org.eclipse.core.resources.{ IContainer, IFile, IFolder, IResource }
+import org.eclipse.core.filesystem.URIUtil
+import org.eclipse.core.resources.{ IContainer, IFile, IFolder, IResource, ResourcesPlugin }
 import org.eclipse.core.runtime.Path
 import org.eclipse.jdt.core.IBuffer
 
@@ -27,6 +28,12 @@ object EclipseResource {
     case ef : EclipseFile => Some(ef.underlying)
     case ec : EclipseContainer => Some(ec.underlying)
     case _ => None
+  }
+  
+  def fromString(path : String) = {
+    val files = ResourcesPlugin.getWorkspace.getRoot.findFilesForLocationURI(URIUtil.toURI(new Path(path)))
+    assert(files != null && files.length > 0)
+    EclipseResource(files(0))
   }
 }
 

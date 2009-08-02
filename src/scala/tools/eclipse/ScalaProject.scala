@@ -40,7 +40,8 @@ class ScalaProject(val underlying : IProject) {
   private var classpathUpdate : Long = IResource.NULL_STAMP
   private var buildManager0 : EclipseBuildManager = null
   private var presentationCompiler0 : ScalaPresentationCompiler = null 
-  private var hasBeenBuilt0 = false
+  private var hasBeenBuilt = false
+  private val depFile = underlying.getFile(".scala_dependencies")
   
   override def toString = underlying.getName
   
@@ -313,7 +314,7 @@ class ScalaProject(val underlying : IProject) {
   
   def resetCompilers = {
     buildManager0 = null
-    hasBeenBuilt0 = false
+    hasBeenBuilt = false
     
     if (presentationCompiler0 != null) {
       presentationCompiler0.askShutdown()
@@ -398,7 +399,7 @@ class ScalaProject(val underlying : IProject) {
     if (buildManager0 == null) {
       val settings = new Settings
       initialize(settings)
-      buildManager0 = new EclipseBuildManager(settings)        
+      buildManager0 = new EclipseBuildManager(settings)
     }
     buildManager0
   }
@@ -414,23 +415,37 @@ class ScalaProject(val underlying : IProject) {
     presentationCompiler0
   }
 
-  def hasBeenBuilt = hasBeenBuilt0
+  def prepareBuild() : Boolean = {
+    if (!hasBeenBuilt) {
+      if (!depFile.exists())
+        true
+      else {
+        !buildManager.loadFrom(EclipseResource(depFile), EclipseResource.fromString)
+      }
+    }
+    else
+      false
+  }
   
   def build(addedOrUpdated : Set[IFile], removed : Set[IFile], monitor : IProgressMonitor) {
     if (addedOrUpdated.isEmpty && removed.isEmpty)
       return
       
-    hasBeenBuilt0 = true
+    hasBeenBuilt = true
 
     buildManager.monitor = monitor
     buildManager.update(addedOrUpdated.map(EclipseResource(_)), removed.map(EclipseResource(_)))
-    
     refreshOutput
+
+    buildManager.saveTo(EclipseResource(depFile), _.toString)
+    depFile.setDerived(true)
+    depFile.refreshLocal(IResource.DEPTH_INFINITE, null)
   }
 
   def clean(monitor : IProgressMonitor) = {
     underlying.deleteMarkers(plugin.problemMarkerId, true, IResource.DEPTH_INFINITE)
     resetCompilers
+    depFile.delete(true, false, monitor)
     cleanOutputFolders(monitor)
   }
 }

@@ -38,8 +38,11 @@ class ScalaBuilder extends IncrementalProjectBuilder {
 
     val project = plugin.getScalaProject(getProject)
     val allSourceFiles = project.allSourceFiles()
-
-    val (addedOrUpdated, removed) = if (!project.hasBeenBuilt)
+    val dependeeProjectChanged =
+      project.externalDepends.exists(
+        x => { val delta = getDelta(x); delta == null || delta.getKind != IResourceDelta.NO_CHANGE})
+    
+    val (addedOrUpdated, removed) = if (project.prepareBuild() || dependeeProjectChanged)
       (allSourceFiles, Set.empty[IFile])
     else {
       kind match {
@@ -52,9 +55,9 @@ class ScalaBuilder extends IncrementalProjectBuilder {
               delta.getResource match {
                 case file : IFile if project.sourceFolders.exists(_.getLocation.isPrefixOf(file.getLocation)) =>
                   delta.getKind match {
-                    case IResourceDelta.ADDED | IResourceDelta.CHANGED if allSourceFiles(file) =>
+                    case IResourceDelta.ADDED | IResourceDelta.CHANGED =>
                       addedOrUpdated0 += file
-                    case IResourceDelta.ADDED | IResourceDelta.CHANGED if !allSourceFiles(file) =>
+                    case IResourceDelta.REMOVED =>
                       removed0 += file
                     case _ =>
                   }
