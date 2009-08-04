@@ -42,13 +42,14 @@ object FileUtils {
       def run(monitor : IProgressMonitor) = {
         val mrk = file.createMarker(plugin.problemMarkerId)
         mrk.setAttribute(IMarker.SEVERITY, severity)
+        
         val string = msg.map{
           case '\n' => ' '
           case '\r' => ' '
           case c => c
         }.mkString("","","")
-        
-        mrk.setAttribute(IMarker.MESSAGE , msg)
+        mrk.setAttribute(IMarker.MESSAGE , string)
+
         if (offset != -1) {
           mrk.setAttribute(IMarker.CHAR_START, offset)
           mrk.setAttribute(IMarker.CHAR_END  , offset + length)

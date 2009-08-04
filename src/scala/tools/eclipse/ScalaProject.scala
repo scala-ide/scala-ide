@@ -340,13 +340,14 @@ class ScalaProject(val underlying : IProject) {
           try {
             if(pos.isDefined) {
               val source = pos.source
-              val line = pos.line
               val length = source.identifier(pos, EclipseBuilderGlobal.this).map(_.length).getOrElse(0)
               source.file match {
-                case EclipseResource(i : IFile) => FileUtils.buildError(i, eclipseSeverity, msg, pos.point, length, line, null)
-                case _ =>
+                case EclipseResource(i : IFile) => FileUtils.buildError(i, eclipseSeverity, msg, pos.point, length, pos.line, null)
+                case _ => buildError(eclipseSeverity, msg, null)
               }
             }
+            else
+              buildError(eclipseSeverity, msg, null)
           } catch {
             case ex : UnsupportedOperationException => 
               buildError(eclipseSeverity, msg, null)

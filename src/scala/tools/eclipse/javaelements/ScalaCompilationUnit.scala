@@ -52,7 +52,21 @@ class ScalaCompilationUnit(fragment : PackageFragment, elementName: String, work
           val typed = new SyncVar[Either[compiler.Tree, Throwable]]
           compiler.askType(getSourceFile(info), reload, typed)
           typed.get match {
-            case Left(tree) => tree
+            case Left(tree) =>
+              if (reload) {
+                val file = getCorrespondingResource().asInstanceOf[IFile]
+                val problems = compiler.problemsOf(file)
+                val problemRequestor = getPerWorkingCopyInfo
+                if (problemRequestor != null) {
+                  try {
+                    problemRequestor.beginReporting
+                    problems.map(problemRequestor.acceptProblem(_))
+                  } finally {
+                    problemRequestor.endReporting
+                  }
+                }
+              }
+              tree
             case Right(thr) =>
               ScalaPlugin.plugin.logError("Failure in presentation compiler", thr)
               compiler.EmptyTree
