@@ -2,4 +2,5 @@
 <?eclipse version="3.2"?>
 <plugin>
    <extension-point id="cfprovider" name="ClassFile Provider" schema="cfprovider.exsd"/>
+   <extension-point id="indexerprovider" name="ClassFile Provider" schema="indexerprovider.exsd"/>
 </plugin>
