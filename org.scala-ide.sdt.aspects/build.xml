@@ -108,6 +108,8 @@ BUILD THE PLUGIN
       destfile="${basedir}/${plugin.name}.jar"
       basedir="${build.dir}"
       manifest="${build.dir}/META-INF/MANIFEST.MF">
+    	<include name="plugin.xml"/>
+    	<include name="*.exsd"/>
       <include name="META-INF/aop.xml"/>
       <include name="**/*.class"/>
       <include name="**/*.properties"/>
