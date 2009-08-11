@@ -8,6 +8,8 @@ package scala.tools.eclipse.javaelements
 import org.eclipse.core.resources.IFile
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants
 
+import scala.tools.nsc.symtab.Flags
+
 import scala.tools.eclipse.{ ScalaPresentationCompiler, ScalaSourceIndexer }
 
 trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
@@ -82,7 +84,7 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
         
         indexer.addClassDeclaration(
           mapModifiers(c.mods) & mask,
-          "plugin.test".toCharArray,
+          c.symbol.enclosingPackage.fullNameString.toCharArray,
           name.toCharArray,
           new Array[Array[Char]](0),
           superclassName,
@@ -114,7 +116,7 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
         
         indexer.addClassDeclaration(
           mapModifiers(m.mods),
-          "plugin.test".toCharArray,
+          m.symbol.enclosingPackage.fullNameString.toCharArray,
           (m.name+"$").toCharArray,
           new Array[Array[Char]](0),
           superclassName,
@@ -122,10 +124,15 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
           new Array[Array[Char]](0),
           true
         )
+        
+        indexer.addFieldDeclaration(
+          (m.symbol.enclosingPackage.fullNameString+m.name+"$").toCharArray,
+          "MODULE$".toCharArray
+        )
 
         indexer.addClassDeclaration(
           mapModifiers(m.mods),
-          "plugin.test".toCharArray,
+          m.symbol.enclosingPackage.fullNameString.toCharArray,
           m.name.toString.toCharArray,
           new Array[Array[Char]](0),
           superclassName,
@@ -143,12 +150,71 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
       }
     }
     
+    trait ValOwner extends Owner { self =>
+      override def addVal(v : ValDef) : Owner = {
+        println("Val defn: >"+nme.getterName(v.name)+"< ["+this+"]")
+        
+        indexer.addMethodDeclaration(
+          nme.getterName(v.name).toString.toCharArray,
+          new Array[Array[Char]](0),
+          mapType(v.tpt).toArray,
+          new Array[Array[Char]](0)
+        )
+        
+        if(v.mods.hasFlag(Flags.MUTABLE))
+          indexer.addMethodDeclaration(
+            nme.getterToSetter(nme.getterName(v.name)).toString.toCharArray,
+            new Array[Array[Char]](0),
+            mapType(v.tpt).toArray,
+            new Array[Array[Char]](0)
+          )
+        
+        new Builder {
+          val parent = self
+          
+          override def addDef(d : DefDef) = this
+          override def addVal(v: ValDef) = this
+          override def addType(t : TypeDef) = this
+        }
+      }
+    }
+    
+    trait DefOwner extends Owner { self =>
+      override def addDef(d : DefDef) : Owner = {
+        println("Def defn: "+d.name+" ["+this+"]")
+        val isCtor0 = d.name.toString == "<init>"
+        val nm =
+          if(isCtor0)
+            currentOwner.simpleName
+          else
+            d.name
+        
+        val fps = for(vps <- d.vparamss; vp <- vps) yield vp
+        
+        val paramTypes = fps.map(v => mapType(v.tpt))
+        indexer.addMethodDeclaration(
+          nm.toString.toCharArray,
+          paramTypes.map(_.toCharArray).toArray,
+          mapType(d.tpt).toArray,
+          new Array[Array[Char]](0)
+        )
+        
+        new Builder {
+          val parent = self
+  
+          override def isCtor = isCtor0
+          override def addVal(v : ValDef) = this
+          override def addType(t : TypeDef) = this
+        }
+      }
+    }
+    
     class CompilationUnitBuilder extends PackageOwner with ClassOwner with ModuleOwner {
       val parent = null
       override def compilationUnitBuilder = this 
     }
     
-    abstract class Builder extends PackageOwner with ClassOwner with ModuleOwner
+    abstract class Builder extends PackageOwner with ClassOwner with ModuleOwner with ValOwner with DefOwner
     
     override def traverse(tree: Tree): Unit = tree match {
       case pd : PackageDef => atBuilder(currentBuilder.addPackage(pd)) { super.traverse(tree) }

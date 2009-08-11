@@ -73,8 +73,7 @@ class ScalaModuleElement(parent : JavaElement, name : String, synthetic : Boolea
   override def isVisible = !synthetic
 }
 
-
-class ScalaDefElement(parent : JavaElement, name: String, paramTypes : Array[String], synthetic : Boolean, val isOverride : Boolean, display : String)
+class ScalaDefElement(parent : JavaElement, name: String, paramTypes : Array[String], synthetic : Boolean, display : String)
   extends SourceMethod(parent, name, paramTypes) with ScalaElement with IMethodOverrideInfo {
   override def labelName = NameTransformer.decode(getElementName)
   override def mapLabelText(original : String) = display // original.replace(getElementName, labelName)
@@ -126,6 +125,16 @@ object ScalaMemberElementInfo extends ReflectionUtils {
   val aiClazz = Class.forName("org.eclipse.jdt.internal.core.AnnotatableInfo")
   val sreiClazz = Class.forName("org.eclipse.jdt.internal.core.SourceRefElementInfo")
   val setFlagsMethod = getDeclaredMethod(meiClazz, "setFlags", classOf[Int])
+  val getNameSourceStartMethod = try {
+    getDeclaredMethod(meiClazz, "getNameSourceStart")
+  } catch {
+    case _ : NoSuchMethodException => getDeclaredMethod(aiClazz, "getNameSourceStart")
+  }
+  val getNameSourceEndMethod = try {
+    getDeclaredMethod(meiClazz, "getNameSourceEnd")
+  } catch {
+    case _ : NoSuchMethodException => getDeclaredMethod(aiClazz, "getNameSourceEnd")
+  }
   val setNameSourceStartMethod = try {
     getDeclaredMethod(meiClazz, "setNameSourceStart", classOf[Int])
   } catch {
@@ -138,6 +147,8 @@ object ScalaMemberElementInfo extends ReflectionUtils {
   }
   val setSourceRangeStartMethod = getDeclaredMethod(sreiClazz, "setSourceRangeStart", classOf[Int])
   val setSourceRangeEndMethod = getDeclaredMethod(sreiClazz, "setSourceRangeEnd", classOf[Int])
+  val getDeclarationSourceStartMethod = getDeclaredMethod(sreiClazz, "getDeclarationSourceStart")
+  val getDeclarationSourceEndMethod = getDeclaredMethod(sreiClazz, "getDeclarationSourceEnd")
   val hasChildrenField = try {
     getDeclaredField(jeiClazz, "children")
     true
@@ -150,9 +161,25 @@ object ScalaMemberElementInfo extends ReflectionUtils {
 trait ScalaMemberElementInfo extends JavaElementInfo {
   import ScalaMemberElementInfo._
   import java.lang.Integer
+  
+  def addChild0(child : IJavaElement) : Unit
+
+  def setFlags0(flags : Int) = setFlagsMethod.invoke(this, new Integer(flags))
+  def getNameSourceStart0 : Int = getNameSourceStartMethod.invoke(this).asInstanceOf[Integer].intValue
+  def getNameSourceEnd0 : Int = getNameSourceEndMethod.invoke(this).asInstanceOf[Integer].intValue
+  def setNameSourceStart0(start : Int) = setNameSourceStartMethod.invoke(this, new Integer(start)) 
+  def setNameSourceEnd0(end : Int) = setNameSourceEndMethod.invoke(this, new Integer(end)) 
+  def getDeclarationSourceStart0 : Int = getDeclarationSourceStartMethod.invoke(this).asInstanceOf[Integer].intValue
+  def getDeclarationSourceEnd0 : Int = getDeclarationSourceEndMethod.invoke(this).asInstanceOf[Integer].intValue
+  def setSourceRangeStart0(start : Int) : Unit = setSourceRangeStartMethod.invoke(this, new Integer(start))
+  def setSourceRangeEnd0(end : Int) : Unit = setSourceRangeEndMethod.invoke(this, new Integer(end))
+}
+
+trait AuxChildrenElementInfo extends JavaElementInfo {
+  import ScalaMemberElementInfo._
 
   var auxChildren : Array[IJavaElement] = if (hasChildrenField) null else new Array(0)
-  
+
   override def getChildren = if (hasChildrenField) super.getChildren else auxChildren
   
   def addChild0(child : IJavaElement) : Unit =
@@ -162,15 +189,20 @@ trait ScalaMemberElementInfo extends JavaElementInfo {
       auxChildren = Array(child)
     else if (!auxChildren.contains(child))
       auxChildren = auxChildren ++ Sequence(child)
-
-  def setFlags0(flags : Int) = setFlagsMethod.invoke(this, new Integer(flags))
-  def setNameSourceStart0(start : Int) = setNameSourceStartMethod.invoke(this, new Integer(start)) 
-  def setNameSourceEnd0(end : Int) = setNameSourceEndMethod.invoke(this, new Integer(end)) 
-  def setSourceRangeStart0(start : Int) : Unit = setSourceRangeStartMethod.invoke(this, new Integer(start))
-  def setSourceRangeEnd0(end : Int) : Unit = setSourceRangeEndMethod.invoke(this, new Integer(end))
 }
 
 class ScalaElementInfo extends SourceTypeElementInfo with ScalaMemberElementInfo {
+  import ScalaMemberElementInfo._
+  
+  override def addChild0(child : IJavaElement) : Unit = {
+    if (hasChildrenField)
+      addChildMethod.invoke(this, child)
+    else if (children.length == 0)
+      children = Array(child)
+    else if (!children.contains(child))
+      children = children ++ Sequence(child)
+  }
+  
   override def setHandle(handle : IType) = super.setHandle(handle)
   override def setSuperclassName(superclassName : Array[Char]) = super.setSuperclassName(superclassName)
   override def setSuperInterfaceNames(superInterfaceNames : Array[Array[Char]]) = super.setSuperInterfaceNames(superInterfaceNames)
@@ -182,14 +214,14 @@ trait FnInfo extends SourceMethodElementInfo with ScalaMemberElementInfo {
   override def setExceptionTypeNames(exceptionTypeNames : Array[Array[Char]]) = super.setExceptionTypeNames(exceptionTypeNames)
 }
 
-class ScalaSourceConstructorInfo extends SourceConstructorInfo with FnInfo {
+class ScalaSourceConstructorInfo extends SourceConstructorInfo with FnInfo with AuxChildrenElementInfo {
   override def setReturnType(returnType : Array[Char]) = super.setReturnType(returnType)
 }
 
-class ScalaSourceMethodInfo extends SourceMethodInfo with FnInfo {
+class ScalaSourceMethodInfo extends SourceMethodInfo with FnInfo with AuxChildrenElementInfo {
   override def setReturnType(returnType : Array[Char]) = super.setReturnType(returnType)
 }
 
-class ScalaSourceFieldElementInfo extends SourceFieldElementInfo with ScalaMemberElementInfo {
+class ScalaSourceFieldElementInfo extends SourceFieldElementInfo with ScalaMemberElementInfo with AuxChildrenElementInfo {
   override def setTypeName(name : Array[Char]) = super.setTypeName(name)
 }

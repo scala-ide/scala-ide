@@ -9,7 +9,9 @@ import java.io.{ PrintWriter, StringWriter }
 import java.util.{ Map => JMap }
 
 import org.eclipse.core.resources.IFile
-import org.eclipse.jdt.internal.core.{ CompilationUnit => JDTCompilationUnit, JavaElement, JavaElementInfo, JavaModelManager, OpenableElementInfo, SourceRefElement }
+import org.eclipse.jdt.internal.core.{
+  AnnotatableInfo, CompilationUnit => JDTCompilationUnit, JavaElement, JavaElementInfo,
+  JavaModelManager, OpenableElementInfo, SourceRefElement }
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants
 import org.eclipse.jdt.core.Signature
 
@@ -216,6 +218,10 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         val instanceElemInfo = new ScalaSourceFieldElementInfo
         instanceElemInfo.setFlags0(ClassFileConstants.AccPublic | ClassFileConstants.AccStatic | ClassFileConstants.AccFinal)
         instanceElemInfo.setTypeName(moduleElem.getFullyQualifiedName('.').toCharArray)
+        setSourceRange(instanceElemInfo, m)
+        instanceElemInfo.setNameSourceStart0(start)
+        instanceElemInfo.setNameSourceEnd0(end)
+        
         newElements0.put(instanceElem, instanceElemInfo)
         
         mb
@@ -326,7 +332,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
           if(d.mods.isAccessor)
             new ScalaAccessorElement(element, nm.toString, paramTypes)
           else if(isTemplate)
-            new ScalaDefElement(element, nm.toString, paramTypes, d.symbol.hasFlag(Flags.SYNTHETIC), d.mods.isOverride, display)
+            new ScalaDefElement(element, nm.toString, paramTypes, d.symbol.hasFlag(Flags.SYNTHETIC), display)
           else
             new ScalaFunctionElement(template.element, element, nm.toString, paramTypes, display)
         resolveDuplicates(defElem)
@@ -363,12 +369,24 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
 
         defElemInfo.setFlags0(mods)
         
-        val start = d.pos.point
-        val end = start+defElem.labelName.length-1
+        if (isCtor0) {
+          elementInfo match {
+            case smei : ScalaMemberElementInfo =>
+              defElemInfo.setSourceRangeStart0(smei.getDeclarationSourceStart0)
+              defElemInfo.setSourceRangeEnd0(smei.getDeclarationSourceEnd0)
+              defElemInfo.setNameSourceStart0(smei.getNameSourceStart0)
+              defElemInfo.setNameSourceEnd0(smei.getNameSourceEnd0)
+            case _ =>
+          }
+        } else {
+          val start = d.pos.point
+          val end = start+defElem.labelName.length-1-(if (d.symbol.isSetter) 4 else 0)
+          
+          defElemInfo.setNameSourceStart0(start)
+          defElemInfo.setNameSourceEnd0(end)
+          setSourceRange(defElemInfo, d)
+        }
         
-        defElemInfo.setNameSourceStart0(start)
-        defElemInfo.setNameSourceEnd0(end)
-        setSourceRange(defElemInfo, d)
         newElements0.put(defElem, defElemInfo)
         
         new Builder {

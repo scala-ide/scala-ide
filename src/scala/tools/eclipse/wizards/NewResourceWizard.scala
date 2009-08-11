@@ -20,7 +20,7 @@ import org.eclipse.ui.IWorkbench
 import org.eclipse.ui.ide.IDE
 import org.eclipse.ui.wizards.newresource.BasicNewResourceWizard
 
-import scala.tools.eclipse.{ ScalaIndexManager, ScalaPlugin, ScalaProject }
+import scala.tools.eclipse.{ ScalaPlugin, ScalaProject }
 
 trait NewResourceWizard extends BasicNewResourceWizard {
   def kind : String
@@ -164,7 +164,6 @@ trait NewResourceWizard extends BasicNewResourceWizard {
       pkgDecl +
       kind.toLowerCase + " " + name + " {\n" + body + "\n}\n"
     ), true, null)
-    ScalaIndexManager.addToIndex(file)
     // force build!
     file.getProject.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, null)
     getWorkbench.getActiveWorkbenchWindow match {

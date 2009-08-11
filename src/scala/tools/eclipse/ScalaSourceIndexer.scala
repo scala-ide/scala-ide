@@ -5,7 +5,21 @@
 
 package scala.tools.eclipse
 
+import org.eclipse.core.resources.ResourcesPlugin
+import org.eclipse.core.runtime.Path
 import org.eclipse.jdt.core.search.SearchDocument
 import org.eclipse.jdt.internal.core.search.indexing.AbstractIndexer
 
-abstract class ScalaSourceIndexer(document : SearchDocument) extends AbstractIndexer(document)
+import scala.tools.eclipse.javaelements.ScalaCompilationUnit
+import scala.tools.eclipse.contribution.weaving.jdt.indexerprovider.IIndexerFactory
+
+class ScalaSourceIndexerFactory extends IIndexerFactory {
+  override def createIndexer(document : SearchDocument) = new ScalaSourceIndexer(document);
+}
+
+class ScalaSourceIndexer(document : SearchDocument) extends AbstractIndexer(document) {
+  override def indexDocument() {
+    println("Indexing document: "+document.getPath)
+    ScalaCompilationUnit.createFromPath(document.getPath).map(_.addToIndexer(this))
+  }
+}

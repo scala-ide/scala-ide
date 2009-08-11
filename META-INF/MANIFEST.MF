@@ -43,6 +43,7 @@ Import-Package:
  scala.tools.eclipse.contribution.weaving.jdt;apply-aspects:=false,
  scala.tools.eclipse.contribution.weaving.jdt.builderoptions;apply-aspects:=false,
  scala.tools.eclipse.contribution.weaving.jdt.cfprovider;apply-aspects:=false,
+ scala.tools.eclipse.contribution.weaving.jdt.indexerprovider;apply-aspects:=false,
  scala.tools.eclipse.contribution.weaving.jdt.ui;apply-aspects:=false,
  scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor;apply-aspects:=false
 Export-Package: 

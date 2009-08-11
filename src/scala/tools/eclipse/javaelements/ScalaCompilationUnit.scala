@@ -10,14 +10,15 @@ import java.util.{ HashMap => JHashMap, Map => JMap }
 import scala.concurrent.SyncVar
 
 import org.eclipse.core.resources.{ IFile, IResource }
-import org.eclipse.core.runtime.{ IProgressMonitor, IStatus }
+import org.eclipse.core.runtime.{ IPath, IProgressMonitor, IStatus }
 import org.eclipse.jdt.core.{ IJavaElement, IJavaModelStatusConstants, IJavaProject, JavaModelException }
 import org.eclipse.jdt.core.dom.AST
 import org.eclipse.jdt.core.{ CompletionContext, CompletionProposal, CompletionRequestor, Flags, ICompilationUnit, IProblemRequestor, ITypeRoot, JavaCore, WorkingCopyOwner }
 import org.eclipse.jdt.internal.compiler.env
 import org.eclipse.jdt.internal.core.{
   BecomeWorkingCopyOperation, CompilationUnit => JDTCompilationUnit, CompilationUnitElementInfo, DefaultWorkingCopyOwner,
-  JavaModelManager, JavaModelStatus, JavaProject, OpenableElementInfo, PackageFragment, SelectionRequestor }
+  JavaModelManager, JavaModelStatus, JavaProject, OpenableElementInfo, PackageFragment }
+import org.eclipse.jdt.internal.core.util.HandleFactory
 import org.eclipse.swt.graphics.Image
 import org.eclipse.swt.widgets.Display
 
@@ -28,6 +29,20 @@ import scala.tools.eclipse.{ ScalaPlugin, ScalaPresentationCompiler, ScalaSource
 import scala.tools.eclipse.util.EclipseFile
 
 class ScalaCompilationUnitElementInfo extends CompilationUnitElementInfo
+
+object ScalaCompilationUnit {
+  val handleFactory = new HandleFactory
+  
+  def createFromPath(path : String) : Option[ScalaCompilationUnit] = {
+    if (!path.endsWith(".scala"))
+      None
+    else
+      handleFactory.createOpenable(path, null) match {
+        case scu : ScalaCompilationUnit => Some(scu)
+        case _ => None
+      }
+  }
+}
 
 abstract class TreeHolder {
   val compiler : ScalaPresentationCompiler
@@ -193,7 +208,7 @@ class ScalaCompilationUnit(fragment : PackageFragment, elementName: String, work
     val javaProject = getJavaProject().asInstanceOf[JavaProject]
     val environment = javaProject.newSearchableNameEnvironment(workingCopyOwner)
     
-    val requestor = new SelectionRequestor(environment.nameLookup, this)
+    val requestor = new ScalaSelectionRequestor(environment.nameLookup, this)
     val buffer = getBuffer()
     if (buffer != null) {
       val end = buffer.getLength()

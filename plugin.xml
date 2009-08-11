@@ -521,6 +521,10 @@
   <extension point="ch.epfl.lamp.sdt.aspects.cfprovider">
     <provider class="scala.tools.eclipse.javaelements.ScalaClassFileProvider" />
   </extension>
+
+  <extension point="ch.epfl.lamp.sdt.aspects.indexerprovider">
+    <provider class="scala.tools.eclipse.ScalaSourceIndexerFactory" />
+  </extension>
   
   <extension point="org.eclipse.contribution.weaving.jdt.imagedescriptorselector">
     <selector
