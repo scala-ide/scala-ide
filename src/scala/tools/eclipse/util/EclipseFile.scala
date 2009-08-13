@@ -19,7 +19,7 @@ import org.eclipse.jdt.core.IBuffer
 import scala.tools.nsc.io.AbstractFile
 
 object EclipseResource {
-  def apply(r : IResource) : EclipseResource[_] = r match {
+  def apply(r : IResource) : EclipseResource[_ <: IResource] = r match {
     case file : IFile => new EclipseFile(file);
     case container : IContainer => new EclipseContainer(container)
   }
@@ -57,7 +57,7 @@ abstract class EclipseResource[R <: IResource] extends AbstractFile {
   def absolute = this
   
   override def equals(other : Any) : Boolean =
-    other.isInstanceOf[EclipseResource[_]] && path == other.asInstanceOf[EclipseResource[_]].path
+    other.isInstanceOf[EclipseResource[_ <: IResource]] && path == other.asInstanceOf[EclipseResource[_ <: IResource]].path
 
   override def hashCode() : Int = path.hashCode
 }
@@ -114,7 +114,7 @@ class EclipseContainer(override val underlying : IContainer) extends EclipseReso
   
   def output = throw new UnsupportedOperationException
   
-  def iterator : Iterator[AbstractFile] = underlying.members.map(EclipseResource.apply).iterator
+  def iterator : Iterator[AbstractFile] = underlying.members.map(EclipseResource(_)).iterator
 
   def lookupName(name : String, directory : Boolean) = {
     val r = underlying.findMember(name)
