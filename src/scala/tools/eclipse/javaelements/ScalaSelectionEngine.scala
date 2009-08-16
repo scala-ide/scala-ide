@@ -130,17 +130,19 @@ class ScalaSelectionEngine(nameEnvironment : SearchableEnvironment, requestor : 
                           compiler.javaType(t.tpe).getSignature,
                           null)
                         ssr.addElement(localVar)
+                        noProposal = false
+                        acceptedAnswer = true
                       }
                     }
                   case _ =>
                     println("Unhandled: "+t.getClass.getName)
                 }
-              case t : compiler.TermSymbol if t.isMethod =>
+              case t : compiler.TermSymbol if t.isMethod && t.pos.isDefined =>
                 val ssr = requestor.asInstanceOf[ScalaSelectionRequestor]
                 ssr.addElement(ssr.findLocalElement(t.pos.startOrPoint))
                 noProposal = false
                 acceptedAnswer = true
-              case t : compiler.TermSymbol =>
+              case t : compiler.TermSymbol if t.pos.isDefined =>
                 val ssr = requestor.asInstanceOf[ScalaSelectionRequestor]
                 val parent = ssr.findLocalElement(t.pos.startOrPoint)
                 if (parent != null) {
@@ -154,6 +156,8 @@ class ScalaSelectionEngine(nameEnvironment : SearchableEnvironment, requestor : 
                     compiler.javaType(t.tpe).getSignature,
                     null)
                   ssr.addElement(localVar)
+                  noProposal = false
+                  acceptedAnswer = true
                 }
               case _ =>
                 println("Unhandled: "+i.symbol.getClass.getName)
@@ -161,7 +165,12 @@ class ScalaSelectionEngine(nameEnvironment : SearchableEnvironment, requestor : 
           case s : compiler.Select =>
             println("Selector("+s.qualifier+", "+s.name+")")
 
-            if (s.symbol.hasFlag(Flags.ACCESSOR)) {
+            if (s.symbol.owner.isAnonymousClass && s.symbol.pos.isDefined) {
+              val ssr = requestor.asInstanceOf[ScalaSelectionRequestor]
+              ssr.addElement(ssr.findLocalElement(s.symbol.pos.startOrPoint))
+              noProposal = false
+              acceptedAnswer = true
+            } else if (s.symbol.hasFlag(Flags.ACCESSOR)) {
               requestor.acceptField(
                 s.symbol.enclosingPackage.fullNameString.toArray,
                 typeName(s.symbol.owner).toArray,
@@ -171,6 +180,8 @@ class ScalaSelectionEngine(nameEnvironment : SearchableEnvironment, requestor : 
                 s.symbol.pos.startOrPoint,
                 s.symbol.pos.endOrPoint
               )
+              noProposal = false
+              acceptedAnswer = true
             } else {
               requestor.acceptMethod(
                 s.symbol.enclosingPackage.fullNameString.toArray,
@@ -188,9 +199,9 @@ class ScalaSelectionEngine(nameEnvironment : SearchableEnvironment, requestor : 
                 actualSelectionStart,
                 actualSelectionEnd
               )
+              noProposal = false
+              acceptedAnswer = true
             }
-            noProposal = false
-            acceptedAnswer = true
           case t0 : compiler.TypeTree if t0.symbol != null =>
             val t = selectFromTypeTree(t0, pos)
             println("TypeTree("+t.tpe+")")
@@ -205,6 +216,8 @@ class ScalaSelectionEngine(nameEnvironment : SearchableEnvironment, requestor : 
                 actualSelectionStart,
                 actualSelectionEnd
               )
+              noProposal = false
+              acceptedAnswer = true
             } else {
               val owner = symbol.owner
               if (owner.isClass) {
@@ -218,6 +231,8 @@ class ScalaSelectionEngine(nameEnvironment : SearchableEnvironment, requestor : 
                     actualSelectionStart,
                     actualSelectionEnd
                   )
+                  noProposal = false
+                  acceptedAnswer = true
                 } else {
                   requestor.acceptField(
                     symbol.enclosingPackage.fullNameString.toArray,
@@ -228,8 +243,10 @@ class ScalaSelectionEngine(nameEnvironment : SearchableEnvironment, requestor : 
                     symbol.pos.startOrPoint,
                     symbol.pos.endOrPoint
                   )
+                  noProposal = false
+                  acceptedAnswer = true
                 }
-              } else {
+              } else if (symbol.pos.isDefined){
                 val ssr = requestor.asInstanceOf[ScalaSelectionRequestor]
                 val parent = ssr.findLocalElement(symbol.pos.startOrPoint)
                 if (parent != null) {
@@ -244,10 +261,10 @@ class ScalaSelectionEngine(nameEnvironment : SearchableEnvironment, requestor : 
                     null)
                   ssr.addElement(localVar)
                 }
+                noProposal = false
+                acceptedAnswer = true
               }
             }
-            noProposal = false
-            acceptedAnswer = true
           case _ =>
             println("Unhandled: "+tree.getClass.getName)
         }
