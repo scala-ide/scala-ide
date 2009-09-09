@@ -39,7 +39,7 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener {
   def applicationWizId = wizardId("Application")
   def projectWizId = wizardId("Project")
   def netProjectWizId = wizardId("NetProject")
-  def editorId : String = "scala.tools.eclipse.ScalaEditor"
+  def editorId : String = "scala.tools.eclipse.ScalaSourceFileEditor"
   def builderId = pluginId + ".scalabuilder"
   def natureId = pluginId + ".scalanature"  
   def launchId = "ch.epfl.lamp.sdt.launching"
@@ -111,15 +111,19 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener {
   def logError(t : Throwable) : Unit = logError("", t)
   
   def logError(msg : String, t : Throwable) : Unit = {
+    val t1 = if (t != null) t else { val ex = new Exception ; ex.fillInStackTrace ; ex }
+    val status1 = new Status(IStatus.ERROR, pluginId, IStatus.ERROR, msg, t1)
+    getLog.log(status1)
+
     val status = t match {
       case ce : ControlException =>
-        val t1 = { val ex = new Exception ; ex.fillInStackTrace ; ex }
-        new Status(IStatus.ERROR, pluginId, IStatus.ERROR, "Incorrectly logged ControlException", t1)
+        val t2 = { val ex = new Exception ; ex.fillInStackTrace ; ex }
+        val status2 = new Status(
+          IStatus.ERROR, pluginId, IStatus.ERROR,
+          "Incorrectly logged ControlException: "+ce.getClass.getSimpleName+"("+ce.getMessage+")", t2)
+        getLog.log(status2)
       case _ =>
-        val t1 = if (t != null) t else { val ex = new Exception ; ex.fillInStackTrace ; ex }
-        new Status(IStatus.ERROR, pluginId, IStatus.ERROR, msg, t1)
     }
-    getLog.log(status)
   }
   
   def bundlePath = check {

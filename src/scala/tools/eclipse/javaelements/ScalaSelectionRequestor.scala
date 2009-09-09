@@ -9,4 +9,6 @@ class ScalaSelectionRequestor(nameLookup : NameLookup, openable : Openable) exte
 
   override def findLocalElement(pos : Int) =
     super.findLocalElement(pos)
+
+  def hasSelection() = elementIndex >= 0
 }

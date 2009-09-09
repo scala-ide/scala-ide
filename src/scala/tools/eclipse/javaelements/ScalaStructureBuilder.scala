@@ -24,7 +24,7 @@ import scala.tools.eclipse.ScalaPresentationCompiler
 
 trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
 
-  class StructureBuilderTraverser(scu : ScalaCompilationUnit, unitInfo : ScalaCompilationUnitElementInfo, newElements0 : JMap[AnyRef, AnyRef], sourceLength : Int) extends Traverser {
+  class StructureBuilderTraverser(scu : ScalaCompilationUnit, unitInfo : OpenableElementInfo, newElements0 : JMap[AnyRef, AnyRef], sourceLength : Int) extends Traverser {
     private var currentBuilder : Owner = new CompilationUnitBuilder
     private val manager = JavaModelManager.getJavaModelManager
     
@@ -73,7 +73,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
           val elementInfo = compilationUnitBuilder.elementInfo
           
           override def isPackage = true
-          var completed = false
+          var completed = !compilationUnitBuilder.element.isInstanceOf[JDTCompilationUnit]
           override def addChild(child : JavaElement) = {
             if (!completed) {
               completed = true
@@ -182,7 +182,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         
         val moduleElemInfo = new ScalaElementInfo
         moduleElemInfo.setHandle(moduleElem)
-        moduleElemInfo.setFlags0(mapModifiers(m.mods))
+        moduleElemInfo.setFlags0(mapModifiers(m.mods)|ClassFileConstants.AccFinal)
         
         val start = m.pos.point
         val end = start+m.name.length-1
@@ -243,7 +243,8 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         addChild(valElem)
         
         val valElemInfo = new ScalaSourceFieldElementInfo
-        valElemInfo.setFlags0(mapModifiers(v.mods))
+        val jdtFinal = if(v.mods.hasFlag(Flags.MUTABLE)) 0 else ClassFileConstants.AccFinal
+        valElemInfo.setFlags0(mapModifiers(v.mods)|jdtFinal)
         
         val start = v.pos.point
         val end = start+elemName.length-1
@@ -261,7 +262,6 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
           val element = valElem
           val elementInfo = valElemInfo
           
-          override def addDef(d : DefDef) = this
           override def addVal(v: ValDef) = this
           override def addType(t : TypeDef) = this
         }

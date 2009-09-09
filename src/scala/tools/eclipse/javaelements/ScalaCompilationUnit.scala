@@ -10,68 +10,47 @@ import java.util.{ HashMap => JHashMap, Map => JMap }
 import scala.concurrent.SyncVar
 
 import org.eclipse.core.resources.{ IFile, IResource }
-import org.eclipse.core.runtime.{ IPath, IProgressMonitor, IStatus }
-import org.eclipse.jdt.core.{ IJavaElement, IJavaModelStatusConstants, IJavaProject, JavaModelException }
-import org.eclipse.jdt.core.dom.AST
-import org.eclipse.jdt.core.{ CompletionContext, CompletionProposal, CompletionRequestor, Flags, ICompilationUnit, IProblemRequestor, ITypeRoot, JavaCore, WorkingCopyOwner }
+import org.eclipse.core.runtime.IProgressMonitor
+import org.eclipse.jdt.core.{
+  CompletionContext, CompletionProposal, CompletionRequestor, Flags, ICompilationUnit, IJavaElement, IJavaModelStatusConstants,
+  IProblemRequestor, ITypeRoot, JavaCore, JavaModelException, WorkingCopyOwner }
 import org.eclipse.jdt.internal.compiler.env
-import org.eclipse.jdt.internal.core.{
-  BecomeWorkingCopyOperation, CompilationUnit => JDTCompilationUnit, CompilationUnitElementInfo, DefaultWorkingCopyOwner,
-  JavaModelManager, JavaModelStatus, JavaProject, OpenableElementInfo, PackageFragment }
-import org.eclipse.jdt.internal.core.util.HandleFactory
+import org.eclipse.jdt.internal.core.{ CompilationUnitElementInfo, JavaModelStatus, JavaProject, Openable, OpenableElementInfo }
 import org.eclipse.swt.graphics.Image
-import org.eclipse.swt.widgets.Display
 
-import scala.tools.nsc.interactive.Global
+import scala.tools.nsc.io.AbstractFile
 import scala.tools.nsc.util.{ BatchSourceFile, SourceFile }
 
 import scala.tools.eclipse.{ ScalaPlugin, ScalaPresentationCompiler, ScalaSourceIndexer }
-import scala.tools.eclipse.util.EclipseFile
-
-class ScalaCompilationUnitElementInfo extends CompilationUnitElementInfo
-
-object ScalaCompilationUnit {
-  val handleFactory = new HandleFactory
-  
-  def createFromPath(path : String) : Option[ScalaCompilationUnit] = {
-    if (!path.endsWith(".scala"))
-      None
-    else
-      handleFactory.createOpenable(path, null) match {
-        case scu : ScalaCompilationUnit => Some(scu)
-        case _ => None
-      }
-  }
-}
 
 abstract class TreeHolder {
   val compiler : ScalaPresentationCompiler
   val body : compiler.Tree
 }
 
-class ScalaCompilationUnit(fragment : PackageFragment, elementName: String, workingCopyOwner : WorkingCopyOwner)
-  extends JDTCompilationUnit(fragment, elementName, workingCopyOwner) with ScalaElement with ImageSubstituter {
-
-  val project = ScalaPlugin.plugin.getScalaProject(getResource.getProject)
-  lazy val aFile = new EclipseFile(getCorrespondingResource.asInstanceOf[IFile])
+trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with ScalaElement with ImageSubstituter {
+  val project = ScalaPlugin.plugin.getScalaProject(getJavaProject.getProject)
+  lazy val aFile = getFile
   var sFile : BatchSourceFile = null
   var treeHolder : TreeHolder = null
   var reload = false
   
-  def getTreeHolder(info : OpenableElementInfo) : TreeHolder = {
+  def getFile : AbstractFile
+  
+  def getTreeHolder : TreeHolder = {
     if (treeHolder == null) {
 
       treeHolder = new TreeHolder {
         val compiler = project.presentationCompiler
         val body = {
           val typed = new SyncVar[Either[compiler.Tree, Throwable]]
-          compiler.askType(getSourceFile(info), reload, typed)
+          compiler.askType(getSourceFile, reload, typed)
           typed.get match {
             case Left(tree) =>
               if (reload) {
-                val file = getCorrespondingResource().asInstanceOf[IFile]
+                val file = getCorrespondingResource.asInstanceOf[IFile]
                 val problems = compiler.problemsOf(file)
-                val problemRequestor = getPerWorkingCopyInfo
+                val problemRequestor = getProblemRequestor
                 if (problemRequestor != null) {
                   try {
                     problemRequestor.beginReporting
@@ -95,8 +74,6 @@ class ScalaCompilationUnit(fragment : PackageFragment, elementName: String, work
     treeHolder
   }
   
-  def getTreeHolder : TreeHolder = getTreeHolder(createElementInfo.asInstanceOf[ScalaCompilationUnitElementInfo])
-
   def discard {
     if (treeHolder != null) {
       val th = treeHolder
@@ -113,62 +90,34 @@ class ScalaCompilationUnit(fragment : PackageFragment, elementName: String, work
     super.close
   }
   
-  override def discardWorkingCopy {
-    discard
-    super.discardWorkingCopy
-  }
-  
-  override def getMainTypeName : Array[Char] =
-    elementName.substring(0, elementName.length - ".scala".length).toCharArray()
-
-  override def generateInfos(info : Object, newElements : JHashMap[_, _],  monitor : IProgressMonitor) = {
-    val sinfo = if (info.isInstanceOf[ScalaCompilationUnitElementInfo]) info else new ScalaCompilationUnitElementInfo 
-    super.generateInfos(sinfo, newElements, monitor);
-  }
-    
-  def getBuffer(info : OpenableElementInfo) = {
-    val buffer = getBufferManager.getBuffer(this)
-    if (buffer != null)
-      buffer
-    else
-      openBuffer(null, info)
-  }
-    
-  def getSourceFile : SourceFile = getSourceFile(createElementInfo.asInstanceOf[ScalaCompilationUnitElementInfo])
-  
-  def getSourceFile(info : OpenableElementInfo) : SourceFile = {
+  def getSourceFile : SourceFile = {
     if (sFile == null)
-      sFile = new BatchSourceFile(aFile, getBuffer(info).getCharacters) 
+      sFile = new BatchSourceFile(aFile, getBuffer.getCharacters) 
     sFile
   }
 
+  def getProblemRequestor : IProblemRequestor = null
+
   override def buildStructure(info : OpenableElementInfo, pm : IProgressMonitor, newElements : JMap[_, _], underlyingResource : IResource) : Boolean = {
-    val th = getTreeHolder(info)
+    val th = getTreeHolder
     import th._
 
-    val unitInfo = info.asInstanceOf[ScalaCompilationUnitElementInfo]
-
     if (body == null || body.isEmpty) {
-      unitInfo.setIsStructureKnown(false)
-      return unitInfo.isStructureKnown
+      info.setIsStructureKnown(false)
+      return info.isStructureKnown
     }
     
-    if (!isWorkingCopy) {
-      val status = validateCompilationUnit(underlyingResource)
-      if (!status.isOK) throw newJavaModelException(status)
+    val sourceLength = getBuffer.getLength
+    new compiler.StructureBuilderTraverser(this, info, newElements.asInstanceOf[JMap[AnyRef, AnyRef]], sourceLength).traverse(body)
+    
+    info match {
+      case cuei : CompilationUnitElementInfo =>
+        cuei.setSourceLength(sourceLength)
+      case _ =>
     }
 
-    // prevents reopening of non-primary working copies (they are closed when
-    // they are discarded and should not be reopened)
-    if (!isPrimary && getPerWorkingCopyInfo == null)
-      throw newNotPresentException
-
-    val sourceLength = aFile.sizeOption.get
-    new compiler.StructureBuilderTraverser(this, unitInfo, newElements.asInstanceOf[JMap[AnyRef, AnyRef]], sourceLength).traverse(body)
-    
-    unitInfo.setSourceLength(sourceLength)
-    unitInfo.setIsStructureKnown(true)
-    unitInfo.isStructureKnown
+    info.setIsStructureKnown(true)
+    info.isStructureKnown
   }
   
   def addToIndexer(indexer : ScalaSourceIndexer) {
@@ -179,47 +128,22 @@ class ScalaCompilationUnit(fragment : PackageFragment, elementName: String, work
       new compiler.IndexBuilderTraverser(indexer).traverse(body)
   }
   
-  override def createElementInfo : Object = new ScalaCompilationUnitElementInfo
-  
-  override def reconcile(
-      astLevel : Int,
-      reconcileFlags : Int,
-      workingCopyOwner : WorkingCopyOwner,
-      monitor : IProgressMonitor) : org.eclipse.jdt.core.dom.CompilationUnit = {
-    super.reconcile(ICompilationUnit.NO_AST, reconcileFlags & ~ICompilationUnit.FORCE_PROBLEM_DETECTION, workingCopyOwner, monitor)
-  }
-
-  override def makeConsistent(
-    astLevel : Int,
-    resolveBindings : Boolean,
-    reconcileFlags : Int,
-    problems : JHashMap[_,_],
-    monitor : IProgressMonitor) : org.eclipse.jdt.core.dom.CompilationUnit = {
-    treeHolder = null
-
-    val info = createElementInfo.asInstanceOf[ScalaCompilationUnitElementInfo]
-    sFile = new BatchSourceFile(aFile, getBuffer(info).getCharacters) 
-    reload = true
-    openWhenClosed(info, monitor)
-    null
-  }
-    
-  override def codeSelect(offset : Int, length : Int, workingCopyOwner : WorkingCopyOwner) : Array[IJavaElement] = {
-    val javaProject = getJavaProject().asInstanceOf[JavaProject]
+  override def codeSelect(cu : env.ICompilationUnit, offset : Int, length : Int, workingCopyOwner : WorkingCopyOwner) : Array[IJavaElement] = {
+    val javaProject = getJavaProject.asInstanceOf[JavaProject]
     val environment = javaProject.newSearchableNameEnvironment(workingCopyOwner)
     
     val requestor = new ScalaSelectionRequestor(environment.nameLookup, this)
-    val buffer = getBuffer()
+    val buffer = getBuffer
     if (buffer != null) {
-      val end = buffer.getLength()
+      val end = buffer.getLength
       if (offset < 0 || length < 0 || offset + length > end )
         throw new JavaModelException(new JavaModelStatus(IJavaModelStatusConstants.INDEX_OUT_OF_BOUNDS))
   
       val engine = new ScalaSelectionEngine(environment, requestor, javaProject.getOptions(true))
-      engine.select(this, offset, offset + length - 1)
+      engine.select(cu, offset, offset + length - 1)
     }
     
-    val elements = requestor.getElements()
+    val elements = requestor.getElements
     if(elements.isEmpty)
       println("No selection")
     else

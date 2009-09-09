@@ -18,7 +18,7 @@ import org.eclipse.jdt.internal.debug.ui.launcher.LauncherMessages
 import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants
 import org.eclipse.jface.operation.IRunnableContext
 
-import scala.tools.eclipse.javaelements.ScalaCompilationUnit
+import scala.tools.eclipse.javaelements.ScalaSourceFile
 
 /**
  * This class extends the Java Launch functionality and overrides the sections that
@@ -57,10 +57,10 @@ class ScalaLaunchShortcut extends JavaLaunchShortcut {
    //Get a hold of scala compilation unit for the file and then get all available types
    val adapt: IAdaptable = o.asInstanceOf[IAdaptable]
    var je = adapt.getAdapter(classOf[IJavaElement]).asInstanceOf[IJavaElement]
-   while ((je ne null) && !je.isInstanceOf[ScalaCompilationUnit])
+   while ((je ne null) && !je.isInstanceOf[ScalaSourceFile])
      je = je.getParent
-   if (je.isInstanceOf[ScalaCompilationUnit]) {
-     val scu = je.asInstanceOf[ScalaCompilationUnit]
+   if (je.isInstanceOf[ScalaSourceFile]) {
+     val scu = je.asInstanceOf[ScalaSourceFile]
      val allTypesFromCU: Array[IType] = scu.getAllTypes   
   
      //Loop over multiple class/modules in a file

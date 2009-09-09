@@ -7,6 +7,7 @@ package scala.tools.eclipse.javaelements
 
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants
 
+import scala.tools.nsc.symtab.Flags
 import scala.tools.eclipse.ScalaPresentationCompiler
 
 trait ScalaJavaMapper { self : ScalaPresentationCompiler => 
@@ -20,7 +21,7 @@ trait ScalaJavaMapper { self : ScalaPresentationCompiler =>
     else
       jdtMods = jdtMods | ClassFileConstants.AccPublic
     
-    if(mods.isFinal)
+    if(mods.isFinal || mods.hasFlag(Flags.MODULE))
       jdtMods = jdtMods | ClassFileConstants.AccFinal
     
     if(mods.isTrait)

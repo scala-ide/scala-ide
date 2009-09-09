@@ -8,10 +8,10 @@ package scala.tools.eclipse.javaelements
 import scala.collection.immutable.Sequence
 import scala.util.NameTransformer
 
-import org.eclipse.jdt.core.{ IJavaElement, IType }
+import org.eclipse.jdt.core.{ IJavaElement, IMember, IType }
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants
 import org.eclipse.jdt.internal.core.{
-  JavaElement, JavaElementInfo, SourceConstructorInfo, SourceField, SourceFieldElementInfo,
+  BinaryType, JavaElement, JavaElementInfo, SourceConstructorInfo, SourceField, SourceFieldElementInfo,
   SourceMethod, SourceMethodElementInfo, SourceMethodInfo, SourceType, SourceTypeElementInfo } 
 import org.eclipse.jdt.internal.ui.JavaPlugin
 import org.eclipse.jdt.internal.ui.viewsupport.{ JavaElementImageProvider }
@@ -19,10 +19,11 @@ import org.eclipse.jdt.ui.JavaElementImageDescriptor
 import org.eclipse.jface.resource.ImageDescriptor
 import org.eclipse.swt.graphics.Image
 
+import scala.tools.eclipse.contribution.weaving.jdt.IScalaElement
 import scala.tools.eclipse.contribution.weaving.jdt.ui.IMethodOverrideInfo
 import scala.tools.eclipse.util.ReflectionUtils
 
-trait ScalaElement {
+trait ScalaElement extends JavaElement with IScalaElement {
   def getElementInfo : AnyRef
   def getElementName : String
   def scalaName : String = getElementName
@@ -43,6 +44,21 @@ trait ImageSubstituter extends ScalaElement {
   }
   
   def replacementImage : ImageDescriptor
+  
+  override def getCompilationUnit() = {
+    val cu = super.getCompilationUnit()
+    if (cu != null) cu else new CompilationUnitAdapter(getClassFile().asInstanceOf[ScalaClassFile])
+  }
+    
+  override def getAncestor(ancestorType : Int) : IJavaElement = {
+    val ancestor = super.getAncestor(ancestorType)
+    if (ancestor != null)
+      ancestor
+    else if(ancestorType == IJavaElement.COMPILATION_UNIT)
+      new CompilationUnitAdapter(getClassFile().asInstanceOf[ScalaClassFile])
+    else
+      null
+  }
 }
 
 trait ScalaFieldElement extends ScalaElement

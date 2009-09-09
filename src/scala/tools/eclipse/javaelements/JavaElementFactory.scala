@@ -7,12 +7,13 @@ package scala.tools.eclipse.javaelements
 
 import java.lang.reflect.Constructor
 
-import org.eclipse.jdt.internal.core.{ CompilationUnit, JavaElementInfo, SourceRefElement }
+import org.eclipse.jdt.internal.core.{ CompilationUnit, JavaElement, JavaElementInfo, SourceType, SourceRefElement }
 
 import scala.tools.eclipse.util.ReflectionUtils
 
 object JavaElementFactory extends ReflectionUtils {
-  
+  private val sourceTypeClazz = classOf[SourceType]
+  private val stCtor = classOf[SourceType].getDeclaredConstructor(classOf[JavaElement], classOf[String])
   private val (sreiCtor, pdCtor) =
     privileged {
       val sreiCtor0 = 
@@ -30,6 +31,9 @@ object JavaElementFactory extends ReflectionUtils {
   
   def createSourceRefElementInfo : JavaElementInfo = sreiCtor.newInstance().asInstanceOf[JavaElementInfo]
   
+  def createSourceType(parent : JavaElement, name : String) =
+    stCtor.newInstance(parent, name).asInstanceOf[SourceType]
+                                                                                         
   def createPackageDeclaration(cu : CompilationUnit, name : String) =
     pdCtor.newInstance(cu, name).asInstanceOf[SourceRefElement]
 }

@@ -53,9 +53,9 @@
             icon="icons/full/obj16/scu_obj.gif"
             extensions="scala"
             contributorClass="org.eclipse.jdt.internal.ui.javaeditor.CompilationUnitEditorActionContributor"
-            class="scala.tools.eclipse.ScalaEditor"
+            class="scala.tools.eclipse.ScalaSourceFileEditor"
             symbolicFontName="org.eclipse.jdt.ui.editors.textfont"
-            id="scala.tools.eclipse.ScalaEditor">
+            id="scala.tools.eclipse.ScalaSourceFileEditor">
             <contentTypeBinding contentTypeId="scala.tools.eclipse.scalaSource"/> 
       </editor>
       <editor
@@ -63,16 +63,16 @@
             default="true"
             icon="icons/full/obj16/sclassf_obj.gif"
             contributorClass="org.eclipse.jdt.internal.ui.javaeditor.ClassFileEditorActionContributor"
-            class="org.eclipse.jdt.internal.ui.javaeditor.ClassFileEditor"
+            class="scala.tools.eclipse.ScalaClassFileEditor"
             symbolicFontName="org.eclipse.jdt.ui.editors.textfont"
-            id="org.eclipse.jdt.ui.ClassFileEditor">
+            id="scala.tools.eclipse.ScalaClassFileEditor">
             <contentTypeBinding contentTypeId="scala.tools.eclipse.scalaClass"/> 
       </editor>
    </extension>
 
    <extension point="org.eclipse.ui.editorActions">
       <editorContribution
-         targetID="scala.tools.eclipse.ScalaEditor"
+         targetID="scala.tools.eclipse.ScalaSourceFileEditor"
          id="org.eclipse.jdt.debug.CompilationUnitEditor.BreakpointRulerActions">
          <action
             label="Toggle &amp;Breakpoint"
@@ -86,7 +86,7 @@
    <extension point="org.eclipse.core.runtime.adapters">
      <factory 
        class="scala.tools.eclipse.ScalaRetargettableActionAdapterFactory" 
-       adaptableType="scala.tools.eclipse.ScalaEditor">
+       adaptableType="scala.tools.eclipse.ScalaSourceFileEditor">
        <adapter type="org.eclipse.debug.ui.actions.IRunToLineTarget"/>
        <adapter type="org.eclipse.debug.ui.actions.IToggleBreakpointsTarget"/>
      </factory>
@@ -307,7 +307,7 @@
    </extension>
    <extension point="org.eclipse.ui.actionSetPartAssociations">
       <actionSetPartAssociation targetID="org.eclipse.jdt.ui.A_OpenActionSet">
-	    <part id="scala.tools.eclipse.ScalaEditor"></part>
+	    <part id="scala.tools.eclipse.ScalaSourceFileEditor"></part>
       </actionSetPartAssociation>
    </extension>
    <extension point="org.eclipse.help.toc">

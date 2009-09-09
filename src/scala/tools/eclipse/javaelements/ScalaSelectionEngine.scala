@@ -19,13 +19,13 @@ import org.eclipse.jdt.core.search.IJavaSearchConstants
 import org.eclipse.jdt.internal.codeassist.{ ISearchRequestor, ISelectionRequestor }
 import org.eclipse.jdt.internal.codeassist.impl.{ AssistParser, Engine }
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants
+import org.eclipse.jdt.internal.compiler.env
 import org.eclipse.jdt.internal.compiler.env.{ AccessRestriction, ICompilationUnit }
 import org.eclipse.jdt.internal.compiler.parser.{ Scanner, ScannerHelper, TerminalTokens }
 import org.eclipse.jdt.internal.core.{ JavaElement, LocalVariable, SearchableEnvironment }
 
 class ScalaSelectionEngine(nameEnvironment : SearchableEnvironment, requestor : ISelectionRequestor, settings : ju.Map[_, _]) extends Engine(settings) with ISearchRequestor {
 
-  var acceptedAnswer : Boolean = _
   var actualSelectionStart : Int = _
   var actualSelectionEnd : Int = _
   var selectedIdentifier : Array[Char] = _
@@ -35,10 +35,9 @@ class ScalaSelectionEngine(nameEnvironment : SearchableEnvironment, requestor : 
   val acceptedEnums = new ArrayBuffer[(Array[Char], Array[Char], Int)]
   val acceptedAnnotations = new ArrayBuffer[(Array[Char], Array[Char], Int)]
 
-  var noProposal = true
-
-  def select(scu : ScalaCompilationUnit, selectionStart : Int, selectionEnd : Int) {
-
+  def select(cu : env.ICompilationUnit, selectionStart : Int, selectionEnd : Int) {
+    val scu = cu.asInstanceOf[ScalaCompilationUnit]
+  
     val source = scu.getContents()
     
     actualSelectionStart = selectionStart
@@ -46,10 +45,9 @@ class ScalaSelectionEngine(nameEnvironment : SearchableEnvironment, requestor : 
     val length = 1+selectionEnd-selectionStart
     selectedIdentifier = new Array(length)
     Array.copy(source, selectionStart, selectedIdentifier, 0, length)
-
     println("selectedIdentifier: "+selectedIdentifier.mkString("", "", ""))
-      
-    acceptedAnswer = false
+
+    val ssr = requestor.asInstanceOf[ScalaSelectionRequestor]
 
     val th = scu.getTreeHolder
     import th._
@@ -58,6 +56,10 @@ class ScalaSelectionEngine(nameEnvironment : SearchableEnvironment, requestor : 
       (t.tpe, t.original) match {
         case (tr : compiler.TypeRef, att : compiler.AppliedTypeTree) =>
           selectFromTypeTree0(tr, att, pos)
+        case (_, compiler.TypeBoundsTree(lo : compiler.TypeTree, _)) if lo.pos overlaps pos =>
+          selectFromTypeTree(lo, pos)
+        case (_, compiler.TypeBoundsTree(_, hi : compiler.TypeTree)) if hi.pos overlaps pos =>
+          selectFromTypeTree(hi, pos)
         case _ => t.tpe.typeSymbolDirect
       }
 
@@ -84,13 +86,107 @@ class ScalaSelectionEngine(nameEnvironment : SearchableEnvironment, requestor : 
       else {
         val owner = s.owner
         val prefix = if (owner != compiler.NoSymbol && !owner.hasFlag(Flags.PACKAGE)) typeName(s.owner)+"." else ""
-        val suffix = if (s.isModuleClass) "$" else ""
+        val suffix = if (s.hasFlag(Flags.MODULE) && !s.hasFlag(Flags.JAVA)) "$" else ""
         prefix+s.nameString+suffix
       }
+
+    def acceptType(t : compiler.Symbol) {
+      requestor.acceptType(
+        t.enclosingPackage.fullNameString.toArray,
+        typeName(t).toArray,
+        if (t.isTrait) ClassFileConstants.AccInterface else 0,
+        false,
+        null,
+        actualSelectionStart,
+        actualSelectionEnd)
+    }
+    
+    def acceptField(f : compiler.Symbol) {
+      requestor.acceptField(
+        f.enclosingPackage.fullNameString.toArray,
+        typeName(f.owner).toArray,
+        (if (f.isSetter) compiler.nme.setterToGetter(f.name) else f.name).toString.toArray,
+        false,
+        null,
+        actualSelectionStart,
+        actualSelectionEnd)
+    }
+    
+    def acceptMethod(m : compiler.Symbol) {
+      
+      def paramTypePackageName(t : compiler.Type) = {
+        if (t.typeSymbolDirect.isTypeParameter)
+          ""
+        else {
+          val jt = compiler.javaType(t)
+          if (jt.isValueType)
+            ""
+          else
+            t.typeSymbol.enclosingPackage.fullNameString
+        }
+      }
+      
+      def paramTypeName(t : compiler.Type) = {
+        if (t.typeSymbolDirect.isTypeParameter)
+          t.typeSymbolDirect.name.toString
+        else {
+          val jt = compiler.javaType(t)
+          if (jt.isValueType)
+            jt.toString
+          else
+            typeName(t.typeSymbol)
+        }
+      }
+      
+      def paramTypeSignature(t : compiler.Type) = {
+        if (t.typeSymbolDirect.isTypeParameter)
+          "T"+t.typeSymbolDirect.name.toString+";"
+        else
+          compiler.javaType(t).getSignature.replace('/', '.')
+      }
+      
+      val m0 = if (m.isClass || m.isModule) m.primaryConstructor else m
+      val owner = m0.owner
+      val name = if (m0.isConstructor) owner.name else m0.name
+      val paramTypes = m0.tpe.paramss.flatMap(_.map(_.tpe))
+      
+      requestor.acceptMethod(
+        m0.enclosingPackage.fullNameString.toArray,
+        typeName(owner).toArray,
+        null,
+        name.toString.toArray,
+        paramTypes.map(paramTypePackageName(_).toArray).toArray,
+        paramTypes.map(paramTypeName(_).toArray).toArray,
+        paramTypes.map(paramTypeSignature(_)).toArray,
+        new Array[Array[Char]](0),
+        new Array[Array[Array[Char]]](0),
+        m0.isConstructor,
+        false,
+        null,
+        actualSelectionStart,
+        actualSelectionEnd
+      )
+    }
+    
+    def acceptLocalDefinition(defn : compiler.Symbol) {
+      val parent = ssr.findLocalElement(defn.pos.startOrPoint)
+      if (parent != null) {
+        val localVar = new LocalVariable(
+          parent.asInstanceOf[JavaElement],
+          defn.name.toString,
+          defn.pos.startOrPoint,
+          defn.pos.endOrPoint-1,
+          defn.pos.point,
+          defn.pos.point+defn.name.toString.length-1,
+          compiler.javaType(defn.tpe).getSignature,
+          null)
+        ssr.addElement(localVar)
+      }
+    }
     
     val bsf = scu.getSourceFile
     val pos = compiler.rangePos(bsf, actualSelectionStart, actualSelectionStart, actualSelectionEnd+1)
-    
+
     val typed = new SyncVar[Either[compiler.Tree, Throwable]]
     compiler.askTypeAt(pos, typed)
     typed.get.left.toOption match {
@@ -101,170 +197,69 @@ class ScalaSelectionEngine(nameEnvironment : SearchableEnvironment, requestor : 
             println(i.symbol+": "+i.symbol.getClass.getName+" "+i.symbol.pos)
             i.symbol match {
               case c : compiler.ClassSymbol =>
-                requestor.acceptType(
-                  c.enclosingPackage.fullNameString.toArray,
-                  typeName(c).toArray,
-                  if (c.isTrait) ClassFileConstants.AccInterface else 0,
-                  false,
-                  null,
-                  actualSelectionStart,
-                  actualSelectionEnd)
-                noProposal = false
-                acceptedAnswer = true
+                acceptType(c)
+              case m : compiler.ModuleSymbol =>
+                acceptType(m)
               case t : compiler.TermSymbol if t.isValueParameter =>
                 val typed = new SyncVar[Either[compiler.Tree, Throwable]]
-                val ownerTree = compiler.askTypeAt(t.owner.pos, typed)
-                typed.get.left.toOption match {
+                compiler.askTypeAt(t.owner.pos, typed)
+                val ownerTree = typed.get.left.toOption 
+                ownerTree match {
                   case Some(compiler.DefDef(_, _, _, paramss, _, _)) =>
-                    for(params <- paramss ; param <- params if param.name.toString == t.nameString) {
-                      val ssr = requestor.asInstanceOf[ScalaSelectionRequestor]
-                      val parent = ssr.findLocalElement(param.pos.startOrPoint)
-                      if (parent != null) {
-                        val localVar = new LocalVariable(
-                          parent.asInstanceOf[JavaElement],
-                          param.name.toString,
-                          param.pos.startOrPoint,
-                          param.pos.endOrPoint-1,
-                          param.pos.startOrPoint,
-                          param.pos.startOrPoint+param.name.toString.length-1,
-                          compiler.javaType(t.tpe).getSignature,
-                          null)
-                        ssr.addElement(localVar)
-                        noProposal = false
-                        acceptedAnswer = true
-                      }
-                    }
+                    for(params <- paramss ; param <- params if param.name.toString == t.nameString)
+                      acceptLocalDefinition(param.symbol)
+                  case Some(compiler.Function(vparams, _)) =>
+                    for(param <- vparams if param.name.toString == t.nameString)
+                      acceptLocalDefinition(param.symbol)
+                  case Some(compiler.Apply(_, _)) =>
+                    acceptLocalDefinition(t)
                   case _ =>
                     println("Unhandled: "+t.getClass.getName)
                 }
               case t : compiler.TermSymbol if t.isMethod && t.pos.isDefined =>
-                val ssr = requestor.asInstanceOf[ScalaSelectionRequestor]
                 ssr.addElement(ssr.findLocalElement(t.pos.startOrPoint))
-                noProposal = false
-                acceptedAnswer = true
               case t : compiler.TermSymbol if t.pos.isDefined =>
-                val ssr = requestor.asInstanceOf[ScalaSelectionRequestor]
-                val parent = ssr.findLocalElement(t.pos.startOrPoint)
-                if (parent != null) {
-                  val localVar = new LocalVariable(
-                    parent.asInstanceOf[JavaElement],
-                    t.name.toString,
-                    t.pos.startOrPoint,
-                    t.pos.endOrPoint-1,
-                    t.pos.startOrPoint,
-                    t.pos.startOrPoint+t.name.toString.length-1,
-                    compiler.javaType(t.tpe).getSignature,
-                    null)
-                  ssr.addElement(localVar)
-                  noProposal = false
-                  acceptedAnswer = true
-                }
+                acceptLocalDefinition(t)
               case _ =>
                 println("Unhandled: "+i.symbol.getClass.getName)
             }
+            
           case s : compiler.Select =>
             println("Selector("+s.qualifier+", "+s.name+")")
-
             if (s.symbol.owner.isAnonymousClass && s.symbol.pos.isDefined) {
-              val ssr = requestor.asInstanceOf[ScalaSelectionRequestor]
               ssr.addElement(ssr.findLocalElement(s.symbol.pos.startOrPoint))
-              noProposal = false
-              acceptedAnswer = true
-            } else if (s.symbol.hasFlag(Flags.ACCESSOR)) {
-              requestor.acceptField(
-                s.symbol.enclosingPackage.fullNameString.toArray,
-                typeName(s.symbol.owner).toArray,
-                (if (s.symbol.isGetter) s.symbol.name else compiler.nme.setterToGetter(s.symbol.name)).toString.toArray,
-                false,
-                null,
-                s.symbol.pos.startOrPoint,
-                s.symbol.pos.endOrPoint
-              )
-              noProposal = false
-              acceptedAnswer = true
+            } else if ((s.symbol.hasFlag(Flags.ACCESSOR) || s.symbol.hasFlag(Flags.PARAMACCESSOR))) {
+              acceptField(s.symbol)
+            } else if (s.symbol.hasFlag(Flags.JAVA) && s.symbol.isModule) {
+              acceptType(s.symbol)
             } else {
-              requestor.acceptMethod(
-                s.symbol.enclosingPackage.fullNameString.toArray,
-                typeName(s.symbol.toplevelClass).toArray,
-                null,
-                s.name.toString.toArray,
-                new Array[Array[Char]](0),
-                s.symbol.tpe.paramTypes.map(compiler.javaType(_).toString.toArray).toArray,
-                s.symbol.tpe.paramTypes.map(compiler.javaType(_).getSignature).toArray,
-                new Array[Array[Char]](0),
-                new Array[Array[Array[Char]]](0),
-                false /* method.isConstructor() */,
-                false,
-                null,
-                actualSelectionStart,
-                actualSelectionEnd
-              )
-              noProposal = false
-              acceptedAnswer = true
+              acceptMethod(s.symbol)
             }
+            
           case t0 : compiler.TypeTree if t0.symbol != null =>
             val t = selectFromTypeTree(t0, pos)
             println("TypeTree("+t.tpe+")")
             val symbol = t.tpe.typeSymbolDirect
+            val symbol0 = t.tpe.typeSymbol
             if (!symbol.pos.isDefined) {
-              requestor.acceptType(
-                symbol.enclosingPackage.fullNameString.toArray,
-                typeName(symbol).toArray,
-                if (symbol.isTrait) ClassFileConstants.AccInterface else 0,
-                false,
-                null,
-                actualSelectionStart,
-                actualSelectionEnd
-              )
-              noProposal = false
-              acceptedAnswer = true
+              acceptType(symbol0)
             } else {
               val owner = symbol.owner
               if (owner.isClass) {
                 if (symbol.isClass) {
-                  requestor.acceptType(
-                    symbol.enclosingPackage.fullNameString.toArray,
-                    typeName(symbol).toArray,
-                    if (symbol.isTrait) ClassFileConstants.AccInterface else 0,
-                    false,
-                    null,
-                    actualSelectionStart,
-                    actualSelectionEnd
-                  )
-                  noProposal = false
-                  acceptedAnswer = true
+                  acceptType(symbol)
+                } else if (symbol.isTypeParameter){
+                  if (symbol.pos.isDefined) {
+                    acceptLocalDefinition(symbol)
+                  }
                 } else {
-                  requestor.acceptField(
-                    symbol.enclosingPackage.fullNameString.toArray,
-                    typeName(symbol.toplevelClass).toArray,
-                    symbol.name.toString.toArray,
-                    false,
-                    null,
-                    symbol.pos.startOrPoint,
-                    symbol.pos.endOrPoint
-                  )
-                  noProposal = false
-                  acceptedAnswer = true
+                  acceptField(symbol)
                 }
               } else if (symbol.pos.isDefined){
-                val ssr = requestor.asInstanceOf[ScalaSelectionRequestor]
-                val parent = ssr.findLocalElement(symbol.pos.startOrPoint)
-                if (parent != null) {
-                  val localVar = new LocalVariable(
-                    parent.asInstanceOf[JavaElement],
-                    symbol.name.toString,
-                    symbol.pos.startOrPoint,
-                    symbol.pos.endOrPoint-1,
-                    symbol.pos.point,
-                    symbol.pos.point+symbol.name.toString.length-1,
-                    compiler.javaType(t.tpe).getSignature,
-                    null)
-                  ssr.addElement(localVar)
-                }
-                noProposal = false
-                acceptedAnswer = true
+                acceptLocalDefinition(symbol)
               }
             }
+            
           case _ =>
             println("Unhandled: "+tree.getClass.getName)
         }
@@ -275,30 +270,25 @@ class ScalaSelectionEngine(nameEnvironment : SearchableEnvironment, requestor : 
     
     // only reaches here if no selection could be derived from the parsed tree
     // thus use the selected source and perform a textual type search
-    if (!acceptedAnswer) {
+    if (!ssr.hasSelection) {
       nameEnvironment.findTypes(selectedIdentifier, false, false, IJavaSearchConstants.TYPE, this)
       
       // accept qualified types only if no unqualified type was accepted
-      if(!acceptedAnswer) {
-        acceptQualifiedTypes()
+      if(!ssr.hasSelection) {
+        def acceptTypes(accepted : ArrayBuffer[(Array[Char], Array[Char], Int)]) {
+          if(!accepted.isEmpty){
+            for (t <- accepted)
+              requestor.acceptType(t._1, t._2, t._3, false, null, actualSelectionStart, actualSelectionEnd)
+            accepted.clear
+          }
+        }
+        
+        acceptTypes(acceptedClasses)
+        acceptTypes(acceptedInterfaces)
+        acceptTypes(acceptedAnnotations)
+        acceptTypes(acceptedEnums)
       }
     }
-  }
-
-  override def acceptConstructor(
-    modifiers : Int,
-    simpleTypeName : Array[Char],
-    parameterCount : Int,
-    signature : Array[Char],
-    parameterTypes : Array[Array[Char]],
-    parameterNames : Array[Array[Char]],
-    typeModifiers : Int,
-    packageName : Array[Char],
-    extraFlags : Int,
-    path : String,
-    accessRestriction : AccessRestriction) {
-
-    // TODO Implement
   }
 
   override def acceptType(packageName : Array[Char], simpleTypeName : Array[Char], enclosingTypeNames : Array[Array[Char]], modifiers : Int, accessRestriction : AccessRestriction) {
@@ -331,7 +321,6 @@ class ScalaSelectionEngine(nameEnvironment : SearchableEnvironment, requestor : 
             acceptedClasses += accepted
         }
       } else {
-        noProposal = false
         requestor.acceptType(
           packageName,
           typeName,
@@ -340,30 +329,30 @@ class ScalaSelectionEngine(nameEnvironment : SearchableEnvironment, requestor : 
           null,
           actualSelectionStart,
           actualSelectionEnd)
-        acceptedAnswer = true
       }
     }
   }
-
-  override def acceptPackage(packageName : Array[Char]) {}
   
-  override def getParser() : AssistParser = null
-  
-  def acceptQualifiedTypes() {
-
-    def acceptTypes(accepted : ArrayBuffer[(Array[Char], Array[Char], Int)]) {
-      if(!accepted.isEmpty){
-        acceptedAnswer = true
-        noProposal = false
-        for (t <- accepted)
-          requestor.acceptType(t._1, t._2, t._3, false, null, actualSelectionStart, actualSelectionEnd)
-        accepted.clear
-      }
-    }
+  override def getParser() : AssistParser = {
+    throw new UnsupportedOperationException();
+  }
     
-    acceptTypes(acceptedClasses)
-    acceptTypes(acceptedInterfaces)
-    acceptTypes(acceptedAnnotations)
-    acceptTypes(acceptedEnums)
+  override def acceptPackage(packageName : Array[Char]) {
+    // NOP
+  }
+  
+  override def acceptConstructor(
+    modifiers : Int,
+    simpleTypeName : Array[Char],
+    parameterCount : Int,
+    signature : Array[Char],
+    parameterTypes : Array[Array[Char]],
+    parameterNames : Array[Array[Char]],
+    typeModifiers : Int,
+    packageName : Array[Char],
+    extraFlags : Int,
+    path : String,
+    accessRestriction : AccessRestriction) {
+    // NOP
   }
 }

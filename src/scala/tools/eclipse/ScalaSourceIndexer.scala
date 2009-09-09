@@ -10,7 +10,7 @@ import org.eclipse.core.runtime.Path
 import org.eclipse.jdt.core.search.SearchDocument
 import org.eclipse.jdt.internal.core.search.indexing.AbstractIndexer
 
-import scala.tools.eclipse.javaelements.ScalaCompilationUnit
+import scala.tools.eclipse.javaelements.ScalaSourceFile
 import scala.tools.eclipse.contribution.weaving.jdt.indexerprovider.IIndexerFactory
 
 class ScalaSourceIndexerFactory extends IIndexerFactory {
@@ -20,6 +20,6 @@ class ScalaSourceIndexerFactory extends IIndexerFactory {
 class ScalaSourceIndexer(document : SearchDocument) extends AbstractIndexer(document) {
   override def indexDocument() {
     println("Indexing document: "+document.getPath)
-    ScalaCompilationUnit.createFromPath(document.getPath).map(_.addToIndexer(this))
+    ScalaSourceFile.createFromPath(document.getPath).map(_.addToIndexer(this))
   }
 }
