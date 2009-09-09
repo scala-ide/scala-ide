@@ -16,11 +16,21 @@ import org.eclipse.jdt.internal.core.util.Util;
 
 @SuppressWarnings("restriction")
 public privileged aspect ScalaJavaBuilderAspect {
-  pointcut build() : execution(IProject[] ScalaJavaBuilder.build(int, Map, IProgressMonitor) throws CoreException);
-  pointcut cleanOutputFolders(boolean copyBack) : args(copyBack) && execution(void BatchImageBuilder.cleanOutputFolders(boolean) throws CoreException);
-  pointcut isJavaLikeFileName(String fileName) : args(fileName) && execution(boolean Util.isJavaLikeFileName(String));  
+  pointcut build() :
+    execution(IProject[] ScalaJavaBuilder.build(int, Map, IProgressMonitor) throws CoreException);
   
-  void around(BatchImageBuilder builder, boolean copyBack) throws CoreException : target(builder) && cleanOutputFolders(copyBack) && cflow(build()) {
+  pointcut cleanOutputFolders(boolean copyBack) :
+    args(copyBack) &&
+    execution(void BatchImageBuilder.cleanOutputFolders(boolean) throws CoreException);
+  
+  pointcut isJavaLikeFileName(String fileName) :
+    args(fileName) &&
+    execution(boolean Util.isJavaLikeFileName(String));  
+  
+  void around(BatchImageBuilder builder, boolean copyBack) throws CoreException :
+    target(builder) &&
+    cleanOutputFolders(copyBack) &&
+    cflow(build()) {
     // Suppress the cleaning behaviour but do the extra resource copying if requested
     if (copyBack)
       for (int i = 0, l = builder.sourceLocations.length; i < l; i++) {
@@ -30,7 +40,10 @@ public privileged aspect ScalaJavaBuilderAspect {
       }
   }
   
-  boolean around(String fileName) : isJavaLikeFileName(fileName) && cflow(build()) && !cflow(cleanOutputFolders(*)) {
+  boolean around(String fileName) :
+    isJavaLikeFileName(fileName) &&
+    cflow(build()) &&
+    !cflow(cleanOutputFolders(*)) {
     if (fileName != null && fileName.endsWith("scala"))
       return false;
     else

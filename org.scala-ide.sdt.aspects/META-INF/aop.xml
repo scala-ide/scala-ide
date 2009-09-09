@@ -3,6 +3,7 @@
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.builderoptions.ScalaJavaBuilderAspect"/>
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.cfprovider.ClassFileProviderAspect"/>
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.indexerprovider.IndexerProviderAspect"/>
+<aspect name="scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.ClassFileEditorIdAspect"/>
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.ScalaCloseStringsAspect"/>
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.ScalaEditorPreferencesAspect"/>
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.SaveParticipantRegistryAspect"/>
