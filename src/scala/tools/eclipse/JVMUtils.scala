@@ -103,6 +103,12 @@ trait JVMUtils { self : Global =>
     case ExistentialType(tparams, t) =>
       javaType(t)
       
+    case m : MethodType =>
+      new JMethodType(javaType(t.resultType), t.paramss.flatMap(_.map(javaType)).toArray)
+      
+    case p : PolyType =>
+      javaType(p.resultType)
+      
     //case WildcardType => // bq: useful hack when wildcard types come here
     //  REFERENCE(definitions.ObjectClass)
 
@@ -135,12 +141,7 @@ trait JVMUtils { self : Global =>
   )
   
   def javaType(s: Symbol): JType =
-    if (s.isMethod)
-      new JMethodType(
-        if (s.isClassConstructor) JType.VOID else javaType(s.tpe.resultType),
-        s.tpe.params.map(javaType).toArray)
-    else
-      javaType(s.tpe)
+    javaType(s.tpe)
 
   def isTopLevelModule(sym: Symbol): Boolean =
     atPhase (currentRun.picklerPhase.next) {

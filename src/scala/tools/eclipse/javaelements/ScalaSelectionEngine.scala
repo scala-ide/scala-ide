@@ -51,6 +51,7 @@ class ScalaSelectionEngine(nameEnvironment : SearchableEnvironment, requestor : 
 
     val th = scu.getTreeHolder
     import th._
+    import compiler._
     
     def selectFromTypeTree(t : compiler.TypeTree, pos : Position) : compiler.Symbol =
       (t.tpe, t.original) match {
@@ -81,19 +82,10 @@ class ScalaSelectionEngine(nameEnvironment : SearchableEnvironment, requestor : 
         case _ => tr.typeSymbolDirect
       }
 
-    def typeName(s : compiler.Symbol) : String =
-      if (s == compiler.NoSymbol || s.hasFlag(Flags.PACKAGE)) ""
-      else {
-        val owner = s.owner
-        val prefix = if (owner != compiler.NoSymbol && !owner.hasFlag(Flags.PACKAGE)) typeName(s.owner)+"." else ""
-        val suffix = if (s.hasFlag(Flags.MODULE) && !s.hasFlag(Flags.JAVA)) "$" else ""
-        prefix+s.nameString+suffix
-      }
-
     def acceptType(t : compiler.Symbol) {
       requestor.acceptType(
         t.enclosingPackage.fullNameString.toArray,
-        typeName(t).toArray,
+        mapTypeName(t).toArray,
         if (t.isTrait) ClassFileConstants.AccInterface else 0,
         false,
         null,
@@ -104,7 +96,7 @@ class ScalaSelectionEngine(nameEnvironment : SearchableEnvironment, requestor : 
     def acceptField(f : compiler.Symbol) {
       requestor.acceptField(
         f.enclosingPackage.fullNameString.toArray,
-        typeName(f.owner).toArray,
+        mapTypeName(f.owner).toArray,
         (if (f.isSetter) compiler.nme.setterToGetter(f.name) else f.name).toString.toArray,
         false,
         null,
@@ -113,38 +105,6 @@ class ScalaSelectionEngine(nameEnvironment : SearchableEnvironment, requestor : 
     }
     
     def acceptMethod(m : compiler.Symbol) {
-      
-      def paramTypePackageName(t : compiler.Type) = {
-        if (t.typeSymbolDirect.isTypeParameter)
-          ""
-        else {
-          val jt = compiler.javaType(t)
-          if (jt.isValueType)
-            ""
-          else
-            t.typeSymbol.enclosingPackage.fullNameString
-        }
-      }
-      
-      def paramTypeName(t : compiler.Type) = {
-        if (t.typeSymbolDirect.isTypeParameter)
-          t.typeSymbolDirect.name.toString
-        else {
-          val jt = compiler.javaType(t)
-          if (jt.isValueType)
-            jt.toString
-          else
-            typeName(t.typeSymbol)
-        }
-      }
-      
-      def paramTypeSignature(t : compiler.Type) = {
-        if (t.typeSymbolDirect.isTypeParameter)
-          "T"+t.typeSymbolDirect.name.toString+";"
-        else
-          compiler.javaType(t).getSignature.replace('/', '.')
-      }
-      
       val m0 = if (m.isClass || m.isModule) m.primaryConstructor else m
       val owner = m0.owner
       val name = if (m0.isConstructor) owner.name else m0.name
@@ -152,20 +112,19 @@ class ScalaSelectionEngine(nameEnvironment : SearchableEnvironment, requestor : 
       
       requestor.acceptMethod(
         m0.enclosingPackage.fullNameString.toArray,
-        typeName(owner).toArray,
+        mapTypeName(owner).toArray,
         null,
         name.toString.toArray,
-        paramTypes.map(paramTypePackageName(_).toArray).toArray,
-        paramTypes.map(paramTypeName(_).toArray).toArray,
-        paramTypes.map(paramTypeSignature(_)).toArray,
+        paramTypes.map(mapParamTypePackageName(_).toArray).toArray,
+        paramTypes.map(mapParamTypeName(_).toArray).toArray,
+        paramTypes.map(mapParamTypeSignature(_)).toArray,
         new Array[Array[Char]](0),
         new Array[Array[Array[Char]]](0),
         m0.isConstructor,
         false,
         null,
         actualSelectionStart,
-        actualSelectionEnd
-      )
+        actualSelectionEnd)
     }
     
     def acceptLocalDefinition(defn : compiler.Symbol) {
@@ -228,7 +187,7 @@ class ScalaSelectionEngine(nameEnvironment : SearchableEnvironment, requestor : 
             println("Selector("+s.qualifier+", "+s.name+")")
             if (s.symbol.owner.isAnonymousClass && s.symbol.pos.isDefined) {
               ssr.addElement(ssr.findLocalElement(s.symbol.pos.startOrPoint))
-            } else if ((s.symbol.hasFlag(Flags.ACCESSOR) || s.symbol.hasFlag(Flags.PARAMACCESSOR))) {
+            } else if (s.symbol.hasFlag(Flags.ACCESSOR) || s.symbol.hasFlag(Flags.PARAMACCESSOR)) {
               acceptField(s.symbol)
             } else if (s.symbol.hasFlag(Flags.JAVA) && s.symbol.isModule) {
               acceptType(s.symbol)
