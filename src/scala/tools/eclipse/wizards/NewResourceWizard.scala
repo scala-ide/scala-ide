@@ -77,7 +77,7 @@ trait NewResourceWizard extends BasicNewResourceWizard {
             return
           case 1 =>
             val pkgName0 = packages(0).getElementName
-            val pkgName = if (pkgName0.isEmpty) "default package" else "package \""+pkgName0+"\""
+            val pkgName = if (pkgName0.length == 0) "default package" else "package \""+pkgName0+"\""
             setDescription("Create new top-level Scala " + noun(true) + " in "+pkgName+" of project \"" + packages(0).getResource.getProject.getName + "\"")
           case _ => 
             val group = label(topLevel, "Package:")
@@ -144,7 +144,7 @@ trait NewResourceWizard extends BasicNewResourceWizard {
     val plugin = ScalaPlugin.plugin
     val project = plugin.getScalaProject(pkg.getResource.getProject)
     val analyzer = project.presentationCompiler.syntaxAnalyzer
-    val nameOk = !name.isEmpty && analyzer.isIdentifierStart(name(0)) &&
+    val nameOk = name.length != 0 && analyzer.isIdentifierStart(name(0)) &&
       (1 until name.length).forall(i => analyzer.isIdentifierPart(name(i)))
     if (!nameOk) {
       mainPage.setErrorMessage("Not a valid name.")
@@ -158,7 +158,7 @@ trait NewResourceWizard extends BasicNewResourceWizard {
     }
 
     val pkgName = pkg.getElementName
-    val pkgDecl = if (pkgName.isEmpty) "" else "package "+pkgName+"\n\n"
+    val pkgDecl = if (pkgName.length == 0) "" else "package "+pkgName+"\n\n"
     
     file.create(new java.io.StringBufferInputStream(
       pkgDecl +
