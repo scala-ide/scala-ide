@@ -7,9 +7,6 @@ package scala.tools.eclipse.util
 
 import java.io.{ ByteArrayInputStream, ByteArrayOutputStream, File, InputStream, OutputStream }
 
-import scala.collection.generic.VectorTemplate
-import scala.collection.Vector
-
 import org.eclipse.core.filebuffers.FileBuffers
 import org.eclipse.core.filesystem.URIUtil
 import org.eclipse.core.resources.{ IContainer, IFile, IFolder, IResource, ResourcesPlugin }
