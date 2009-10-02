@@ -3,7 +3,7 @@
  */
 // $Id$
 
-package scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor;
+package scala.tools.eclipse.contribution.weaving.jdt;
 
 public interface IScalaClassFile {
   public String getSourceFileName();

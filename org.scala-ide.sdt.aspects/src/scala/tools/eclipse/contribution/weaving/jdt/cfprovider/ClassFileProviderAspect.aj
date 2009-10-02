@@ -57,7 +57,7 @@ import org.eclipse.jdt.ui.SharedASTProvider;
 import org.eclipse.jface.viewers.Viewer;
 
 import scala.tools.eclipse.contribution.weaving.jdt.IScalaElement;
-import scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.IScalaClassFile;
+import scala.tools.eclipse.contribution.weaving.jdt.IScalaClassFile;
 
 @SuppressWarnings("restriction")
 public privileged aspect ClassFileProviderAspect {
