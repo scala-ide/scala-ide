@@ -16,6 +16,8 @@ import org.eclipse.jdt.internal.core.{ BufferManager, CompilationUnit => JDTComp
 import scala.tools.nsc.io.AbstractFile
 import scala.tools.nsc.util.BatchSourceFile
 
+import scala.tools.eclipse.contribution.weaving.jdt.IScalaSourceFile
+
 import scala.tools.eclipse.util.EclipseFile
 
 object ScalaSourceFile {
@@ -33,7 +35,7 @@ object ScalaSourceFile {
 }
 
 class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCopyOwner : WorkingCopyOwner) 
-  extends JDTCompilationUnit(fragment, elementName, workingCopyOwner) with ScalaCompilationUnit {
+  extends JDTCompilationUnit(fragment, elementName, workingCopyOwner) with ScalaCompilationUnit with IScalaSourceFile {
 
   override def getMainTypeName : Array[Char] =
     getElementName.substring(0, getElementName.length - ".scala".length).toCharArray()
@@ -43,7 +45,7 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
       reconcileFlags : Int,
       workingCopyOwner : WorkingCopyOwner,
       monitor : IProgressMonitor) : org.eclipse.jdt.core.dom.CompilationUnit = {
-    super.reconcile(ICompilationUnit.NO_AST, reconcileFlags & ~ICompilationUnit.FORCE_PROBLEM_DETECTION, workingCopyOwner, monitor)
+    super.reconcile(ICompilationUnit.NO_AST, reconcileFlags, workingCopyOwner, monitor)
   }
 
   override def makeConsistent(
@@ -55,7 +57,7 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
     treeHolder = null
 
     val info = createElementInfo.asInstanceOf[OpenableElementInfo]
-    sFile = new BatchSourceFile(aFile, getBuffer(/* info */).getCharacters) 
+    sFile = new BatchSourceFile(aFile, getBuffer.getCharacters) 
     reload = true
     openWhenClosed(info, monitor)
     null

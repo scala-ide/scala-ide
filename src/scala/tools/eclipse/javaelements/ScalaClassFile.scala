@@ -24,7 +24,7 @@ import org.eclipse.jdt.core.dom.CompilationUnit
 
 import scala.tools.nsc.io.{ AbstractFile, VirtualFile }
 
-import scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.IScalaClassFile
+import scala.tools.eclipse.contribution.weaving.jdt.IScalaClassFile
 
 class ScalaClassFile(parent : PackageFragment, name : String, sourceFile : String)
   extends ClassFile(parent, name) with ScalaCompilationUnit with IScalaClassFile {

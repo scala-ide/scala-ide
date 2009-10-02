@@ -73,7 +73,6 @@ trait JVMUtils { self : Global =>
         new JObjectType(javaName(sym))
 
     case SingleType(pre, sym) => 
-      println(sym.name+" "+nme.Int+" "+(sym.name == nme.Int))
       primitiveTypeMap get sym.name.toString match {
         case Some(k) => k
         case None    => new JObjectType(javaName(sym))
@@ -83,14 +82,12 @@ trait JVMUtils { self : Global =>
       javaType(t.underlying)
 
     case TypeRef(_, sym, args) =>
-      println(sym.name+" "+nme.Int+" "+(sym.name == nme.Int))
       primitiveTypeMap get sym.name.toString match {
         case Some(k) => k
         case None    => arrayOrClassType(sym, args)
       }
 
     case ClassInfoType(_, _, sym) =>
-      println(sym.name+" "+nme.Int+" "+(sym.name == nme.Int))
       primitiveTypeMap get sym.name.toString match {
         case Some(k) => k
         case None    =>
@@ -104,17 +101,21 @@ trait JVMUtils { self : Global =>
       javaType(t)
       
     case m : MethodType =>
-      new JMethodType(javaType(t.resultType), t.paramss.flatMap(_.map(javaType)).toArray)
+      val t = m.finalResultType
+      new JMethodType(javaType(t), m.paramss.flatMap(_.map(javaType)).toArray)
       
     case p : PolyType =>
-      javaType(p.resultType)
-      
-    //case WildcardType => // bq: useful hack when wildcard types come here
-    //  REFERENCE(definitions.ObjectClass)
-
+      val t = p.finalResultType
+      javaType(t)
+    
+    case r : RefinedType =>
+      new JObjectType(javaName(definitions.ObjectClass))
+      //javaType(r.typeSymbol.tpe)
+    
     case _ =>
-      abort("Unknown type: " + t + ", " + t.normalize + "[" + t.getClass + ", " + t.normalize.getClass + "]" + 
-      " TypeRef? " + t.isInstanceOf[TypeRef] + ", " + t.normalize.isInstanceOf[TypeRef]) 
+      abort(
+        "Unknown type: "+t+", "+t.normalize+"["+t.getClass+", "+t.normalize.getClass+"]"+ 
+        " TypeRef? "+t.isInstanceOf[TypeRef]+", "+t.normalize.isInstanceOf[TypeRef]) 
   }
   
   private def arrayOrClassType(sym: Symbol, targs: List[Type]): JType = {

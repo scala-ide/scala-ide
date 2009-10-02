@@ -48,7 +48,7 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener {
   def scalaLibId  = launchId + "." + scalaLib
   def scalaHomeId = launchId + "." + scalaHome
   def launchTypeId = "scala.application"
-  def problemMarkerId = pluginId + ".marker"
+  def problemMarkerId = pluginId + ".problem"
   val scalaFileExtn = ".scala"
   val javaFileExtn = ".java"
   val jarFileExtn = ".jar"

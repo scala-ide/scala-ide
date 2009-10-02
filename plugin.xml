@@ -178,13 +178,37 @@
    </extension>
    
    <extension
-         id="marker"
+         id="problem"
          name="Scala Problem"
          point="org.eclipse.core.resources.markers">
       <super type="org.eclipse.core.resources.problemmarker"/>
+      <super type="org.eclipse.core.resources.textmarker"/>
+			<super type="org.eclipse.jdt.core.problem"/>
       <persistent value="true"/>
    </extension>
    
+   <extension
+         point="org.eclipse.ui.editors.annotationTypes">
+      <type
+         name="org.eclipse.jdt.ui.error"
+         super="org.eclipse.ui.workbench.texteditor.error"
+         markerType="ch.epfl.lamp.sdt.core.problem"
+         markerSeverity="2">
+      </type>
+      <type
+         name="org.eclipse.jdt.ui.warning"
+         super="org.eclipse.ui.workbench.texteditor.warning"
+         markerType="ch.epfl.lamp.sdt.core.problem"
+         markerSeverity="1">
+      </type>
+      <type
+         name="org.eclipse.jdt.ui.info"
+         super="org.eclipse.ui.workbench.texteditor.info"
+         markerType="ch.epfl.lamp.sdt.core.problem"
+         markerSeverity="0">
+      </type>
+   </extension>
+
     <extension
          point="org.eclipse.jdt.core.classpathContainerInitializer">
       <classpathContainerInitializer

@@ -5,8 +5,6 @@
 
 package scala.tools.eclipse;
 
-import scala.collection.Sequence
-
 import org.eclipse.jdt.internal.ui.JavaPlugin
 import org.eclipse.jdt.internal.ui.javaeditor.JavaElementHyperlinkDetector
 import org.eclipse.jdt.internal.ui.text.ContentAssistPreference

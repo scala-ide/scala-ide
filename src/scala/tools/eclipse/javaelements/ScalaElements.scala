@@ -5,7 +5,7 @@
 
 package scala.tools.eclipse.javaelements
 
-import scala.collection.immutable.Sequence
+import scala.collection.immutable.Seq
 import scala.util.NameTransformer
 
 import org.eclipse.jdt.core.{ IJavaElement, IMember, IType }
@@ -204,7 +204,7 @@ trait AuxChildrenElementInfo extends JavaElementInfo {
     else if (auxChildren.length == 0)
       auxChildren = Array(child)
     else if (!auxChildren.contains(child))
-      auxChildren = auxChildren ++ Sequence(child)
+      auxChildren = auxChildren ++ Seq(child)
 }
 
 class ScalaElementInfo extends SourceTypeElementInfo with ScalaMemberElementInfo {
@@ -216,7 +216,7 @@ class ScalaElementInfo extends SourceTypeElementInfo with ScalaMemberElementInfo
     else if (children.length == 0)
       children = Array(child)
     else if (!children.contains(child))
-      children = children ++ Sequence(child)
+      children = children ++ Seq(child)
   }
   
   override def setHandle(handle : IType) = super.setHandle(handle)

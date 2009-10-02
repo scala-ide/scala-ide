@@ -7,6 +7,7 @@ package scala.tools.eclipse.javaelements
 
 import java.util.{ HashMap => JHashMap, Map => JMap }
 
+import scala.collection.JavaConversions
 import scala.concurrent.SyncVar
 import scala.util.NameTransformer
 
@@ -15,6 +16,7 @@ import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.jdt.core.{
   CompletionContext, CompletionProposal, CompletionRequestor, Flags => JDTFlags, ICompilationUnit, IJavaElement, IJavaModelStatusConstants,
   IProblemRequestor, ITypeRoot, JavaCore, JavaModelException, WorkingCopyOwner }
+import org.eclipse.jdt.core.compiler.IProblem
 import org.eclipse.jdt.internal.codeassist.InternalCompletionProposal
 import org.eclipse.jdt.internal.compiler.env
 import org.eclipse.jdt.internal.core.{ CompilationUnitElementInfo, JavaModelStatus, JavaProject, Openable, OpenableElementInfo }
@@ -38,8 +40,11 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
   var sFile : BatchSourceFile = null
   var treeHolder : TreeHolder = null
   var reload = false
+  var problems : List[IProblem] = null
   
   def getFile : AbstractFile
+  
+  def getProblems : Array[IProblem] = if (problems == null) null else problems.toArray
   
   def getTreeHolder : TreeHolder = {
     if (treeHolder == null) {
@@ -51,9 +56,9 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
           compiler.askType(getSourceFile, reload, typed)
           typed.get match {
             case Left(tree) =>
+              val file = getCorrespondingResource.asInstanceOf[IFile]
+              problems = compiler.problemsOf(file)
               if (reload) {
-                val file = getCorrespondingResource.asInstanceOf[IFile]
-                val problems = compiler.problemsOf(file)
                 val problemRequestor = getProblemRequestor
                 if (problemRequestor != null) {
                   try {
@@ -236,8 +241,11 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
                     (n, n+"()")
                 }
                 
+                val sig0 = javaType(sym.tpe).getSignature.replace('/', '.')
+                val sig = if (sig0.startsWith("(")) sig0 else "()"+sig0
+                
                 proposal.setDeclarationSignature(javaType(sym.owner.tpe).getSignature.replace('/', '.').toArray)
-                proposal.setSignature(javaType(sym.tpe).getSignature.replace('/', '.').toArray)
+                proposal.setSignature(sig.toArray)
                 setDeclarationPackageName(proposal, sym.enclosingPackage.fullNameString.toArray)
                 setDeclarationTypeName(proposal, mapTypeName(sym.owner).toArray)
                 setParameterPackageNames(proposal, paramTypes.map(mapParamTypePackageName(_).toArray).toArray)
