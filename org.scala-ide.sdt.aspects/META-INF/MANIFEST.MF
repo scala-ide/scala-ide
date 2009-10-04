@@ -27,6 +27,7 @@ Export-Package:
  scala.tools.eclipse.contribution.weaving.jdt.builderoptions,
  scala.tools.eclipse.contribution.weaving.jdt.cfprovider,
  scala.tools.eclipse.contribution.weaving.jdt.core,
+ scala.tools.eclipse.contribution.weaving.jdt.hierarchy,
  scala.tools.eclipse.contribution.weaving.jdt.indexerprovider,
  scala.tools.eclipse.contribution.weaving.jdt.ui,
  scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor
