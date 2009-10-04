@@ -68,7 +68,11 @@ class ScalaProject(val underlying : IProject) {
   
   def externalDepends = underlying.getReferencedProjects 
 
-  def javaProject = JavaCore.create(underlying)
+  def javaProject = {
+    if (!underlying.exists())
+      underlying.create(null)
+    JavaCore.create(underlying)
+  }
 
   def sourceFolders : Iterable[IContainer] = sourceFolders(javaProject)
   

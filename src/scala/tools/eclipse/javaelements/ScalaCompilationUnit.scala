@@ -57,7 +57,8 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
           typed.get match {
             case Left(tree) =>
               val file = getCorrespondingResource.asInstanceOf[IFile]
-              problems = compiler.problemsOf(file)
+              if (file != null)
+                problems = compiler.problemsOf(file)
               if (reload) {
                 val problemRequestor = getProblemRequestor
                 if (problemRequestor != null) {
