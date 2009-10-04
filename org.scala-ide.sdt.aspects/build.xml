@@ -94,6 +94,9 @@ BUILD THE PLUGIN
     <mkdir dir="${build.dir}/META-INF"/>
     <copy file="${basedir}/META-INF/MANIFEST.MF" toDir="${build.dir}/META-INF" overwrite="yes"/>
     <copy file="${basedir}/META-INF/aop.xml" toDir="${build.dir}/META-INF" overwrite="yes"/>
+    <copy file="${basedir}/plugin.xml" toDir="${build.dir}" overwrite="yes"/>
+    <copy file="${basedir}/cfprovider.exsd" toDir="${build.dir}" overwrite="yes"/>
+    <copy file="${basedir}/indexerprovider.exsd" toDir="${build.dir}" overwrite="yes"/>
 
     <propertyfile file="${build.dir}/plugin.aspects.properties">
       <entry key="version.number" value="${plugin.aspects.version.number}"/>
