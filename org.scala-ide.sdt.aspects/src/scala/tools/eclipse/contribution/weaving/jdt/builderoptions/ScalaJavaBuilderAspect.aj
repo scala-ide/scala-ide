@@ -5,12 +5,16 @@
 
 package scala.tools.eclipse.contribution.weaving.jdt.builderoptions;
 
+import org.eclipse.core.resources.IResource;
+
 import java.util.Map;
 
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.internal.core.builder.BatchImageBuilder;
+import org.eclipse.jdt.internal.core.builder.JavaBuilder;
 //import org.eclipse.jdt.internal.core.builder.ClasspathMultiDirectory;
 import org.eclipse.jdt.internal.core.util.Util;
 
@@ -26,6 +30,10 @@ public privileged aspect ScalaJavaBuilderAspect {
   pointcut isJavaLikeFileName(String fileName) :
     args(fileName) &&
     execution(boolean Util.isJavaLikeFileName(String));  
+  
+  pointcut filterExtraResource(IResource resource) :
+    args(resource) &&
+    execution(boolean JavaBuilder.filterExtraResource(IResource));
   
   void around(BatchImageBuilder builder, boolean copyBack) throws CoreException :
     target(builder) &&
@@ -48,5 +56,11 @@ public privileged aspect ScalaJavaBuilderAspect {
       return false;
     else
       return proceed(fileName);
+  }
+  
+  boolean around(IResource resource) :
+    filterExtraResource(resource) &&
+    cflow(build()) {
+    return resource.getName().endsWith(".scala") || proceed(resource);
   }
 }
