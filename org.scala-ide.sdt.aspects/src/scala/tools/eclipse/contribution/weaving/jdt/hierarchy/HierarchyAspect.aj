@@ -12,7 +12,6 @@ import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IMember;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.internal.core.JavaElement;
 import org.eclipse.jdt.internal.core.hierarchy.ChangeCollector;
 
 import scala.tools.eclipse.contribution.weaving.jdt.IScalaElement;
@@ -20,20 +19,24 @@ import scala.tools.eclipse.contribution.weaving.jdt.IScalaElement;
 @SuppressWarnings("restriction")
 public privileged aspect HierarchyAspect {
   
-  pointcut getAllTypesFromElement(ChangeCollector cc, JavaElement element, ArrayList allTypes) :
-    execution(void ChangeCollector.getAllTypesFromElement(JavaElement, ArrayList)) &&
+  pointcut getAllTypesFromElement(ChangeCollector cc, IJavaElement element, ArrayList allTypes) :
+    execution(void ChangeCollector.getAllTypesFromElement(IJavaElement, ArrayList)) &&
     args(element, allTypes) &&
     target(cc);
   
-  void around(ChangeCollector cc, JavaElement element, ArrayList allTypes) throws JavaModelException :
+  void around(ChangeCollector cc, IJavaElement element, ArrayList allTypes) throws JavaModelException :
     getAllTypesFromElement(cc, element, allTypes) {
+    getAllTypesFromElement0(cc, element, allTypes);
+  }
+
+  public void getAllTypesFromElement0(ChangeCollector cc, IJavaElement element, ArrayList allTypes) throws JavaModelException {
     switch (element.getElementType()) {
       case IJavaElement.COMPILATION_UNIT:
         IType[] types = ((ICompilationUnit)element).getTypes();
         for (int i = 0, length = types.length; i < length; i++) {
           IType type = types[i];
           allTypes.add(type);
-          cc.getAllTypesFromElement(type, allTypes);
+          getAllTypesFromElement0(cc, type, allTypes);
         }
         break;
       case IJavaElement.TYPE:
@@ -41,7 +44,7 @@ public privileged aspect HierarchyAspect {
         for (int i = 0, length = types.length; i < length; i++) {
           IType type = types[i];
           allTypes.add(type);
-          cc.getAllTypesFromElement(type, allTypes);
+          getAllTypesFromElement0(cc, type, allTypes);
         }
         break;
       case IJavaElement.INITIALIZER:
@@ -53,9 +56,9 @@ public privileged aspect HierarchyAspect {
           if (child instanceof IType) {
             IType type = (IType)child;
             allTypes.add(type);
-            cc.getAllTypesFromElement(type, allTypes);
+            getAllTypesFromElement0(cc, type, allTypes);
           } else if(child instanceof IScalaElement) {
-            cc.getAllTypesFromElement(child, allTypes);
+            getAllTypesFromElement0(cc, child, allTypes);
           }
         }
         break;
