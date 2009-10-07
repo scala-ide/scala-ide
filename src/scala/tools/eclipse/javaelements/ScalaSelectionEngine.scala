@@ -152,7 +152,6 @@ class ScalaSelectionEngine(nameEnvironment : SearchableEnvironment, requestor : 
       case Some(tree) => {
         tree match {
           case i : compiler.Ident =>
-            println("Ident("+i.name+")")
             println(i.symbol+": "+i.symbol.getClass.getName+" "+i.symbol.pos)
             i.symbol match {
               case c : compiler.ClassSymbol =>
@@ -184,7 +183,6 @@ class ScalaSelectionEngine(nameEnvironment : SearchableEnvironment, requestor : 
             }
             
           case s : compiler.Select =>
-            println("Selector("+s.qualifier+", "+s.name+")")
             if (s.symbol.owner.isAnonymousClass && s.symbol.pos.isDefined) {
               ssr.addElement(ssr.findLocalElement(s.symbol.pos.startOrPoint))
             } else if (s.symbol.hasFlag(Flags.ACCESSOR) || s.symbol.hasFlag(Flags.PARAMACCESSOR)) {
@@ -197,7 +195,6 @@ class ScalaSelectionEngine(nameEnvironment : SearchableEnvironment, requestor : 
             
           case t0 : compiler.TypeTree if t0.symbol != null =>
             val t = selectFromTypeTree(t0, pos)
-            println("TypeTree("+t.tpe+")")
             val symbol = t.tpe.typeSymbolDirect
             val symbol0 = t.tpe.typeSymbol
             if (!symbol.pos.isDefined) {
@@ -217,6 +214,34 @@ class ScalaSelectionEngine(nameEnvironment : SearchableEnvironment, requestor : 
               } else if (symbol.pos.isDefined){
                 acceptLocalDefinition(symbol)
               }
+            }
+            
+          case compiler.Import(expr, selectors) =>
+            selectors.find({ case compiler.ImportSelector(name, pos, _, _) => pos >= selectionStart && pos+name.length-1 <= selectionEnd }) match {
+              case Some(compiler.ImportSelector(name, pos, _, _)) =>
+                val expr1 = compiler.typer.typedQualifier(expr)
+                val base = expr1.tpe
+                val sym = base.member(name) match {
+                  case NoSymbol => base.member(name.toTypeName)
+                  case s => s
+                }
+                sym match {
+                  case c : compiler.ClassSymbol =>
+                    acceptType(c)
+                    acceptType(c.linkedModuleOfClass)
+                  case m : compiler.ModuleSymbol =>
+                    acceptType(m.linkedClassOfModule)
+                    acceptType(m)
+                  case m : compiler.TermSymbol if m.isMethod =>
+                    acceptMethod(m)
+                  case f : compiler.TermSymbol =>
+                    acceptField(f)
+                  case t : compiler.TypeSymbol =>
+                    acceptField(t)
+                  case _ =>
+                    println("Unhandled: "+tree.getClass.getName)
+                }
+              case _ =>
             }
             
           case _ =>
