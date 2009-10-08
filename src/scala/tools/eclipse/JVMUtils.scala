@@ -68,7 +68,7 @@ trait JVMUtils { self : Global =>
   def javaType(t: Type): JType = t match {
     case ThisType(sym) => 
       if (sym == definitions.ArrayClass)
-        new JObjectType(javaName(definitions.ObjectClass))
+        JObjectType.JAVA_LANG_OBJECT
       else
         new JObjectType(javaName(sym))
 
@@ -109,7 +109,7 @@ trait JVMUtils { self : Global =>
       javaType(t)
     
     case r : RefinedType =>
-      new JObjectType(javaName(definitions.ObjectClass))
+      JObjectType.JAVA_LANG_OBJECT
       //javaType(r.typeSymbol.tpe)
     
     case _ =>
@@ -125,7 +125,7 @@ trait JVMUtils { self : Global =>
       new JObjectType(javaName(sym))
     else {
       assert(sym.isType, sym) // it must be compiling Array[a]
-      new JObjectType(javaName(definitions.ObjectClass))
+      JObjectType.JAVA_LANG_OBJECT
     }
   }
   
@@ -138,7 +138,10 @@ trait JVMUtils { self : Global =>
     (nme.Int.toString -> JType.INT),
     (nme.Long.toString -> JType.LONG),
     (nme.Float.toString -> JType.FLOAT),
-    (nme.Double.toString -> JType.DOUBLE)
+    (nme.Double.toString -> JType.DOUBLE),
+    (nme.Any.toString -> JObjectType.JAVA_LANG_OBJECT),
+    (nme.AnyRef.toString -> JObjectType.JAVA_LANG_OBJECT),
+    (nme.AnyVal.toString -> JObjectType.JAVA_LANG_OBJECT)
   )
   
   def javaType(s: Symbol): JType =
