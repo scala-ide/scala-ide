@@ -48,6 +48,7 @@ class ScalaSelectionEngine(nameEnvironment : SearchableEnvironment, requestor : 
     println("selectedIdentifier: "+selectedIdentifier.mkString("", "", ""))
 
     val ssr = requestor.asInstanceOf[ScalaSelectionRequestor]
+    var fallbackToDefaultLookup = true
 
     val th = scu.getTreeHolder
     import th._
@@ -59,12 +60,30 @@ class ScalaSelectionEngine(nameEnvironment : SearchableEnvironment, requestor : 
       (t.tpe, t.original) match {
         case (tr : compiler.TypeRef, att : compiler.AppliedTypeTree) =>
           selectFromTypeTree0(tr, att, pos)
+        case (_, compiler.SelectFromTypeTree(qual : compiler.TypeTree, name)) if qual.pos overlaps pos =>
+          selectFromTypeTree(qual, pos)
         case (_, compiler.TypeBoundsTree(lo : compiler.TypeTree, _)) if lo.pos overlaps pos =>
           selectFromTypeTree(lo, pos)
         case (_, compiler.TypeBoundsTree(_, hi : compiler.TypeTree)) if hi.pos overlaps pos =>
           selectFromTypeTree(hi, pos)
         case (_, sel : compiler.Select) => sel.symbol
         case (_, ident : compiler.Ident) => ident.symbol
+        case (_, compound : compiler.CompoundTypeTree) => {
+          if (compound.tpe != null && compound.tpe.typeSymbol != null && compound.tpe.typeSymbol.isRefinementClass)
+            compound.tpe.typeSymbol.info match {
+              case tpe : RefinedType =>
+                tpe.parents.zip(compound.templ.parents).find {
+                  case (tpe, tree) => tree.pos overlaps pos
+                } match {
+                  case Some((tpe, tree)) => tpe.typeSymbolDirect
+                  case _ => t.tpe.typeSymbolDirect
+                }
+              
+              case _ => t.tpe.typeSymbolDirect
+            }
+          else
+            t.tpe.typeSymbolDirect
+        }
         case _ => t.tpe.typeSymbolDirect
       }
     }
@@ -154,6 +173,22 @@ class ScalaSelectionEngine(nameEnvironment : SearchableEnvironment, requestor : 
       }
     }
     
+    def isPrimitiveType(sym : compiler.Symbol) = {
+      import compiler.definitions._
+      sym match {
+        case ByteClass | CharClass | ShortClass | IntClass | LongClass | FloatClass | DoubleClass | UnitClass => true
+        case _ => false
+      }
+    }
+    
+    def isSpecialType(sym : compiler.Symbol) = {
+      import compiler.definitions._
+      sym match {
+        case AnyClass | AnyRefClass | AnyValClass | NothingClass | NullClass => true
+        case _ => false
+      }
+    }
+    
     val bsf = scu.getSourceFile
     val pos = compiler.rangePos(bsf, actualSelectionStart, actualSelectionStart, actualSelectionEnd+1)
 
@@ -214,7 +249,10 @@ class ScalaSelectionEngine(nameEnvironment : SearchableEnvironment, requestor : 
             val symbol = t.tpe.typeSymbolDirect
             val symbol0 = t.tpe.typeSymbol
             if (!symbol.pos.isDefined) {
-              acceptType(symbol0)
+              if (isPrimitiveType(symbol0) || isSpecialType(symbol0) || isSpecialType(symbol))
+                fallbackToDefaultLookup = false
+              else
+                acceptType(symbol0)
             } else {
               val owner = symbol.owner
               if (owner.isClass) {
@@ -285,7 +323,7 @@ class ScalaSelectionEngine(nameEnvironment : SearchableEnvironment, requestor : 
                 case _ =>
               }
             
-          case l@(_ : ValDef | _ : Bind) =>
+          case l@(_ : ValDef | _ : Bind | _ : ClassDef | _ : ModuleDef | _ : TypeDef) =>
             acceptLocalDefinition(l.symbol)
             //ssr.addElement(ssr.findLocalElement(pos.startOrPoint))
             
@@ -297,9 +335,10 @@ class ScalaSelectionEngine(nameEnvironment : SearchableEnvironment, requestor : 
         println("No tree")
     }
     
-    // only reaches here if no selection could be derived from the parsed tree
-    // thus use the selected source and perform a textual type search
-    if (!ssr.hasSelection) {
+    if (!ssr.hasSelection && fallbackToDefaultLookup) {
+      // only reaches here if no selection could be derived from the parsed tree
+      // thus use the selected source and perform a textual type search
+      
       nameEnvironment.findTypes(selectedIdentifier, false, false, IJavaSearchConstants.TYPE, this)
       
       // accept qualified types only if no unqualified type was accepted

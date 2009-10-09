@@ -13,7 +13,7 @@ import org.eclipse.jdt.core.{ IBuffer, ICompilationUnit, IJavaElement, WorkingCo
 import org.eclipse.jdt.internal.core.util.HandleFactory
 import org.eclipse.jdt.internal.core.{ BufferManager, CompilationUnit => JDTCompilationUnit, OpenableElementInfo, PackageFragment }
 
-import scala.tools.nsc.io.AbstractFile
+import scala.tools.nsc.io.{ AbstractFile, VirtualFile }
 import scala.tools.nsc.util.BatchSourceFile
 
 import scala.tools.eclipse.contribution.weaving.jdt.IScalaSourceFile
@@ -73,5 +73,11 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
 
   override def getProblemRequestor = getPerWorkingCopyInfo
 
-  def getFile : AbstractFile = new EclipseFile(getCorrespondingResource.asInstanceOf[IFile])
+  def getFile : AbstractFile = { 
+    val res = getCorrespondingResource
+    if (res != null)
+      new EclipseFile(res.asInstanceOf[IFile])
+    else
+      new VirtualFile(getElementName)
+  }
 }

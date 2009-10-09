@@ -16,9 +16,18 @@ import org.eclipse.jdt.core.IBuffer
 import scala.tools.nsc.io.AbstractFile
 
 object EclipseResource {
-  def apply(r : IResource) : EclipseResource[_ <: IResource] = r match {
-    case file : IFile => new EclipseFile(file);
-    case container : IContainer => new EclipseContainer(container)
+  def apply(r : IResource) : EclipseResource[_ <: IResource] = {
+    try {
+      if (r == null)
+        throw new NullPointerException();
+      else if (r.getLocation == null)
+        throw new NullPointerException(r.toString)
+    }
+      
+    r match {
+      case file : IFile => new EclipseFile(file);
+      case container : IContainer => new EclipseContainer(container)
+    }
   }
 
   def unapply(file : AbstractFile) : Option[IResource] = file match {
@@ -39,7 +48,14 @@ abstract class EclipseResource[R <: IResource] extends AbstractFile {
   
   def name: String = underlying.getName
 
-  def path: String = underlying.getLocation.toOSString
+  def path: String = {
+    if (underlying == null)
+      throw new NullPointerException("underlying == null")
+    else if (underlying.getLocation == null)
+      throw new NullPointerException("underlying.getLocation == null for: "+underlying)
+      
+    underlying.getLocation.toOSString
+  }
 
   def container : AbstractFile = new EclipseContainer(underlying.getParent)
   
@@ -60,6 +76,9 @@ abstract class EclipseResource[R <: IResource] extends AbstractFile {
 }
 
 class EclipseFile(override val underlying : IFile) extends EclipseResource[IFile] {
+  if (underlying == null)
+    throw new NullPointerException("underlying == null");
+  
   def isDirectory : Boolean = false
 
   def input : InputStream = underlying.getContents
@@ -105,6 +124,9 @@ class EclipseFile(override val underlying : IFile) extends EclipseResource[IFile
 }
 
 class EclipseContainer(override val underlying : IContainer) extends EclipseResource[IContainer] {
+  if (underlying == null)
+    throw new NullPointerException("underlying == null");
+
   def isDirectory = true
   
   def input = throw new UnsupportedOperationException

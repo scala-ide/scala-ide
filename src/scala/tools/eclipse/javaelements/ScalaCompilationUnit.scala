@@ -40,11 +40,11 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
   var sFile : BatchSourceFile = null
   var treeHolder : TreeHolder = null
   var reload = false
-  var problems : List[IProblem] = null
+  var problems : List[IProblem] = Nil
   
   def getFile : AbstractFile
   
-  def getProblems : Array[IProblem] = if (problems == null) null else problems.toArray
+  def getProblems : Array[IProblem] = if (problems.isEmpty) null else problems.toArray
   
   def getTreeHolder : TreeHolder = {
     if (treeHolder == null) {
@@ -101,6 +101,9 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
   }
   
   def getSourceFile : SourceFile = {
+    if (getBuffer == null)
+      throw new NullPointerException("getBuffer == null for: "+getElementName)
+        
     if (sFile == null)
       sFile = new BatchSourceFile(aFile, getBuffer.getCharacters) 
     sFile
@@ -153,13 +156,7 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
       engine.select(cu, offset, offset + length - 1)
     }
     
-    val elements = requestor.getElements
-    if(elements.isEmpty)
-      println("No selection")
-    else
-      for(e <- elements)
-        println(e)
-    elements
+    requestor.getElements
   }
 
   def codeComplete
