@@ -5,14 +5,13 @@
 
 package scala.tools.eclipse.contribution.weaving.jdt.cfprovider;
 
-import org.eclipse.jdt.core.IJavaElement;
-
 import java.util.HashSet;
 
-import org.eclipse.jdt.internal.compiler.CompilationResult;
-import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
-import org.eclipse.jdt.internal.compiler.env.ISourceType;
-
+import org.eclipse.core.filebuffers.FileBuffers;
+import org.eclipse.core.filebuffers.ITextFileBuffer;
+import org.eclipse.core.filebuffers.ITextFileBufferManager;
+import org.eclipse.core.filebuffers.LocationKind;
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.IBuffer;
 import org.eclipse.jdt.core.IClassFile;
@@ -23,7 +22,10 @@ import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.ITypeRoot;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.search.TypeNameMatch;
+import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.ast.ASTNode;
+import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.ImportReference;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.TypeReference;
@@ -32,6 +34,7 @@ import org.eclipse.jdt.internal.compiler.env.IBinaryType;
 import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
 import org.eclipse.jdt.internal.compiler.env.IGenericType;
 import org.eclipse.jdt.internal.compiler.env.ISourceImport;
+import org.eclipse.jdt.internal.compiler.env.ISourceType;
 import org.eclipse.jdt.internal.compiler.env.NameEnvironmentAnswer;
 import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
 import org.eclipse.jdt.internal.compiler.lookup.SourceTypeBinding;
@@ -42,8 +45,8 @@ import org.eclipse.jdt.internal.core.ClassFile;
 import org.eclipse.jdt.internal.core.CompilationUnitElementInfo;
 import org.eclipse.jdt.internal.core.ImportDeclaration;
 import org.eclipse.jdt.internal.core.JavaElement;
-import org.eclipse.jdt.internal.core.Openable;
 import org.eclipse.jdt.internal.core.NameLookup;
+import org.eclipse.jdt.internal.core.Openable;
 import org.eclipse.jdt.internal.core.PackageFragment;
 import org.eclipse.jdt.internal.core.SearchableEnvironment;
 import org.eclipse.jdt.internal.core.SourceMapper;
@@ -52,12 +55,13 @@ import org.eclipse.jdt.internal.core.SourceTypeElementInfo;
 import org.eclipse.jdt.internal.core.hierarchy.HierarchyResolver;
 import org.eclipse.jdt.internal.core.hierarchy.HierarchyType;
 import org.eclipse.jdt.internal.core.util.Util;
+import org.eclipse.jdt.internal.corext.util.OpenTypeHistory;
 import org.eclipse.jdt.internal.ui.filters.InnerClassFilesFilter;
 import org.eclipse.jdt.ui.SharedASTProvider;
 import org.eclipse.jface.viewers.Viewer;
 
-import scala.tools.eclipse.contribution.weaving.jdt.IScalaElement;
 import scala.tools.eclipse.contribution.weaving.jdt.IScalaClassFile;
+import scala.tools.eclipse.contribution.weaving.jdt.IScalaElement;
 
 @SuppressWarnings("restriction")
 public privileged aspect ClassFileProviderAspect {
@@ -118,6 +122,10 @@ public privileged aspect ClassFileProviderAspect {
     execution(IJavaElement JavaElement.getAncestor(int)) &&
     target(je) &&
     args(ancestorType);
+  
+  pointcut isContainerDirty(TypeNameMatch match) :
+    execution(boolean OpenTypeHistory.isContainerDirty(TypeNameMatch)) &&
+    args(match);
   
   ClassFile around(PackageFragment parent, String name) : 
     classFileCreations(parent, name) {
@@ -336,5 +344,23 @@ public privileged aspect ClassFileProviderAspect {
       element= element.getParent();
     }
     return null;
+  }
+
+  boolean around(TypeNameMatch match) :
+    isContainerDirty(match) {
+    org.eclipse.jdt.core.ICompilationUnit cu = match.getType().getCompilationUnit();
+    if (cu == null) {
+      return false;
+    }
+    IResource resource= cu.getResource();
+    if (resource == null)
+      return false;
+    
+    ITextFileBufferManager manager= FileBuffers.getTextFileBufferManager();
+    ITextFileBuffer textFileBuffer= manager.getTextFileBuffer(resource.getFullPath(), LocationKind.IFILE);
+    if (textFileBuffer != null) {
+      return textFileBuffer.isDirty();
+    }
+    return false;
   }
 }
