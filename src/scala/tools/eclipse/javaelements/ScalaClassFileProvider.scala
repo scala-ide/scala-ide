@@ -18,9 +18,13 @@ class ScalaClassFileProvider extends IClassFileProvider {
     ScalaClassFileDescriber.isScala(new ByteArrayInputStream(contents)) match {
       case Some(sourceFile) =>
         val scf = new ScalaClassFile(parent, name, sourceFile)
-        val sourceMapper = parent.getSourceMapper      
-        val source = sourceMapper.findSource(scf.getType0, sourceFile)
-        if (source != null) scf else null
+        val sourceMapper = parent.getSourceMapper
+        if (sourceMapper == null)
+          null
+        else {
+          val source = sourceMapper.findSource(scf.getType0, sourceFile)
+          if (source != null) scf else null
+        }
       case _ => null
     }
 }
