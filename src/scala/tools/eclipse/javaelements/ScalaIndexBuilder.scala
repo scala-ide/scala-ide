@@ -17,6 +17,16 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
   class IndexBuilderTraverser(indexer : ScalaSourceIndexer) extends Traverser {
     private var currentBuilder : Owner = new CompilationUnitBuilder
   
+    def fullNonPackageNameString(sym : Symbol): String = {
+      val str =
+        if (sym.owner.hasFlag(Flags.PACKAGE))
+          sym.simpleName.toString
+        else
+          fullNonPackageNameString(sym.owner)+"."+sym.simpleName
+        
+      str.trim
+    }
+    
     trait Owner {
       def parent : Owner
 
@@ -52,9 +62,7 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
         println("Class defn: "+c.name+" ["+this+"]")
         println("Parents: "+c.impl.parents)
         
-        val name0 = c.name.toString
-        val isAnon = name0 == "$anon"
-        val name = if (isAnon) "" else name0
+        val name = fullNonPackageNameString(c.symbol)
         
         val parentTree = c.impl.parents.head
         val superclassType = parentTree.tpe
@@ -77,7 +85,7 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
           }
 
         
-        val mask = ~(if (isAnon) ClassFileConstants.AccPublic else 0)
+        val mask = ~(if (c.symbol.isAnonymousClass) ClassFileConstants.AccPublic else 0)
         
         val interfaceTypes = interfaceTrees.map(t => (t, t.tpe))
         val interfaceNames = interfaceTypes.map({ case (tree, tpe) => (if (tpe ne null) tpe.typeSymbol.fullNameString else "null-"+tree).toCharArray })
@@ -106,6 +114,8 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
       override def addModule(m : ModuleDef) : Owner = {
         println("Module defn: "+m.name+" ["+this+"]")
         
+        val name = fullNonPackageNameString(m.symbol)
+
         val parentTree = m.impl.parents.head
         val superclassType = parentTree.tpe
         val superclassName = (if (superclassType ne null) superclassType.typeSymbol.fullNameString else "null-"+parentTree).toCharArray
@@ -117,7 +127,7 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
         indexer.addClassDeclaration(
           mapModifiers(m.mods),
           m.symbol.enclosingPackage.fullNameString.toCharArray,
-          (m.name+"$").toCharArray,
+          (name+"$").toCharArray,
           new Array[Array[Char]](0),
           superclassName,
           interfaceNames.toArray,
@@ -126,14 +136,14 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
         )
         
         indexer.addFieldDeclaration(
-          (m.symbol.enclosingPackage.fullNameString+m.name+"$").toCharArray,
+          (m.symbol.fullNameString+"$").toCharArray,
           "MODULE$".toCharArray
         )
 
         indexer.addClassDeclaration(
           mapModifiers(m.mods),
           m.symbol.enclosingPackage.fullNameString.toCharArray,
-          m.name.toString.toCharArray,
+          name.toString.toCharArray,
           new Array[Array[Char]](0),
           superclassName,
           interfaceNames.toArray,
