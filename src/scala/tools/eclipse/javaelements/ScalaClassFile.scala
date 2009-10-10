@@ -67,6 +67,8 @@ class ScalaClassFile(parent : PackageFragment, name : String, sourceFile : Strin
     val tpe = super.getType()
     getCorrespondingElement(tpe).getOrElse(tpe).asInstanceOf[IType]
   }
+
+  def getType0() : IType = super.getType()
   
   def getMainTypeName() : Array[Char] =
     Util.getNameWithoutJavaLikeExtension(getElementName).toCharArray
