@@ -5,13 +5,16 @@
 
 package scala.tools.eclipse;
 
+import org.eclipse.jdt.core.{ IJavaProject, IJavaElement }
 import org.eclipse.jdt.internal.ui.JavaPlugin
-import org.eclipse.jdt.internal.ui.javaeditor.JavaElementHyperlinkDetector
+import org.eclipse.jdt.internal.ui.javaeditor.{ IClassFileEditorInput, ICompilationUnitDocumentProvider, JavaElementHyperlinkDetector }
 import org.eclipse.jdt.internal.ui.text.ContentAssistPreference
+import org.eclipse.jdt.internal.ui.text.java.{ JavaAutoIndentStrategy, JavaStringAutoIndentStrategy, SmartSemicolonAutoEditStrategy } 
 import org.eclipse.jdt.internal.ui.text.java.hover.{ AbstractJavaEditorTextHover, BestMatchHover }
+import org.eclipse.jdt.internal.ui.text.javadoc.JavaDocAutoIndentStrategy
 import org.eclipse.jdt.ui.text.{ JavaSourceViewerConfiguration, IJavaPartitions }
 import org.eclipse.jface.preference.IPreferenceStore
-import org.eclipse.jface.text.{ IDocument, ITextHover }
+import org.eclipse.jface.text.{ IAutoEditStrategy, IDocument, ITextHover }
 import org.eclipse.jface.text.contentassist.ContentAssistant
 import org.eclipse.jface.text.hyperlink.IHyperlinkDetector
 import org.eclipse.jface.text.presentation.PresentationReconciler
@@ -19,6 +22,7 @@ import org.eclipse.jface.text.source.ISourceViewer
 import org.eclipse.ui.texteditor.{ HyperlinkDetectorDescriptor, ITextEditor }
 import org.eclipse.swt.SWT
 
+import scala.tools.eclipse.ui.{ JdtPreferenceProvider, ScalaAutoIndentStrategy, ScalaIndenter }
 import scala.tools.eclipse.util.ReflectionUtils
 
 class ScalaSourceViewerConfiguration(store : IPreferenceStore, editor : ITextEditor) 
@@ -51,8 +55,7 @@ class ScalaSourceViewerConfiguration(store : IPreferenceStore, editor : ITextEdi
     }
     
     stateMask match {
-      case SWT.MOD3 => addHover(new ScalaInferredTypeHover)
-      case x if x == (SWT.MOD1|SWT.MOD3) => addHover(new ScalaDebugHover)
+      case SWT.MOD3 => addHover(new ScalaDebugHover)
       case _ => javaHover
     }
   }
@@ -65,6 +68,54 @@ class ScalaSourceViewerConfiguration(store : IPreferenceStore, editor : ITextEdi
         shd
       else
         d)
+  }
+  
+  
+  /**
+   * Direct copy+paste of getProject from SourceViewerConfiguration.
+   * <grumble>No need for this to be _private_ in the parent class</grumble>
+   */
+  def getProject : IJavaProject = {
+    if (editor == null)
+      return null;
+
+    val input = editor.getEditorInput();
+    val provider = editor.getDocumentProvider();
+    
+    val element = if (provider.isInstanceOf[ICompilationUnitDocumentProvider]) {
+      provider.asInstanceOf[ICompilationUnitDocumentProvider].getWorkingCopy(input)
+    } else if (input.isInstanceOf[IClassFileEditorInput]) {
+      input.asInstanceOf[IClassFileEditorInput].getClassFile()
+    } else {
+      null
+    }
+  
+    if (element == null) {
+      return null;
+    }
+    
+    return element.getJavaProject();
+  }
+    
+    
+  /**
+   * Replica of JavaSourceViewerConfiguration#getAutoEditStrategies that returns
+   * a ScalaAutoIndentStrategy instead of a JavaAutoIndentStrategy.
+   * 
+   * @see org.eclipse.jface.text.source.SourceViewerConfiguration#getAutoEditStrategies(org.eclipse.jface.text.source.ISourceViewer, java.lang.String)
+   */
+  override def getAutoEditStrategies(sourceViewer : ISourceViewer, contentType : String) : Array[IAutoEditStrategy] = {
+    val partitioning = getConfiguredDocumentPartitioning(sourceViewer)
+    
+    if (IJavaPartitions.JAVA_DOC.equals(contentType) || IJavaPartitions.JAVA_MULTI_LINE_COMMENT.equals(contentType)) {
+      return Array(new JavaDocAutoIndentStrategy(partitioning))
+    } else if (IJavaPartitions.JAVA_STRING.equals(contentType)) {
+      return Array(new SmartSemicolonAutoEditStrategy(partitioning), new JavaStringAutoIndentStrategy(partitioning))
+    } else if (IJavaPartitions.JAVA_CHARACTER.equals(contentType) || IDocument.DEFAULT_CONTENT_TYPE.equals(contentType)) {
+      return Array(new SmartSemicolonAutoEditStrategy(partitioning), new ScalaAutoIndentStrategy(partitioning, getProject, sourceViewer, new JdtPreferenceProvider(getProject)))
+    } else {
+      return Array(new ScalaAutoIndentStrategy(partitioning, getProject, sourceViewer, new JdtPreferenceProvider(getProject)))
+    }
   }
 }
 

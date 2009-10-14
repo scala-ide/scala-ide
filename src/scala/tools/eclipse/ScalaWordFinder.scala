@@ -9,7 +9,9 @@ import scala.tools.nsc.Global
 
 import org.eclipse.jface.text.{ BadLocationException, IDocument, IRegion, Region }
 
-trait ScalaWordFinder { self : Global =>
+import scala.tools.eclipse.contribution.weaving.jdt.IScalaWordFinder
+
+trait ScalaWordFinder extends IScalaWordFinder { self : Global =>
 
   def findWord(document : IDocument, offset : Int) : IRegion = {
 

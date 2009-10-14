@@ -8,12 +8,15 @@ class ScalaImageDescriptorSelector extends IImageDescriptorSelector {
 
   def getTypeImageDescriptor(isInner : Boolean, isInInterfaceOrAnnotation : Boolean, flags : Int, useLightIcons : Boolean, element : AnyRef) : ImageDescriptor = {
     element match {
-      case _ : ScalaCompilationUnit => ScalaImages.SCALA_FILE 
+      case se : ScalaElement => se.getImageDescriptor
       case _ => null
     }
   }
     
   def createCompletionProposalImageDescriptor(proposal : LazyJavaCompletionProposal) : ImageDescriptor = {
-    null
+    proposal.getJavaElement match {
+      case se : ScalaElement => se.getImageDescriptor
+      case _ => null
+    }
   } 
 }

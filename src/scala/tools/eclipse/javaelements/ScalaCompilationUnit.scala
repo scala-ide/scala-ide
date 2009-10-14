@@ -26,6 +26,8 @@ import scala.tools.nsc.io.AbstractFile
 import scala.tools.nsc.symtab.Flags
 import scala.tools.nsc.util.{ BatchSourceFile, SourceFile }
 
+import scala.tools.eclipse.contribution.weaving.jdt.{ IScalaCompilationUnit, IScalaWordFinder }
+
 import scala.tools.eclipse.{ ScalaPlugin, ScalaPresentationCompiler, ScalaSourceIndexer }
 import scala.tools.eclipse.util.ReflectionUtils
 
@@ -34,7 +36,7 @@ abstract class TreeHolder {
   val body : compiler.Tree
 }
 
-trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with ScalaElement with ImageSubstituter {
+trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with ScalaElement with IScalaCompilationUnit {
   val project = ScalaPlugin.plugin.getScalaProject(getJavaProject.getProject)
   lazy val aFile = getFile
   var sFile : BatchSourceFile = null
@@ -271,9 +273,7 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
     }
   }
   
-  override def mapLabelImage(original : Image) = super.mapLabelImage(original)
-  
-  override def replacementImage = {
+  override def getImageDescriptor = {
     val file = getCorrespondingResource.asInstanceOf[IFile]
     if(file == null)
       null
@@ -283,6 +283,8 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
       if(javaProject.isOnClasspath(file)) SCALA_FILE else EXCLUDED_SCALA_FILE
     }
   }
+  
+  override def getScalaWordFinder() : IScalaWordFinder = project.presentationCompiler
 }
 
 object InternalCompletionProposalUtils extends ReflectionUtils {

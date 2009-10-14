@@ -17,14 +17,18 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
   class IndexBuilderTraverser(indexer : ScalaSourceIndexer) extends Traverser {
     private var currentBuilder : Owner = new CompilationUnitBuilder
   
-    def fullNonPackageNameString(sym : Symbol): String = {
-      val str =
+    def enclosingTypeNames(sym : Symbol): List[String] = {
+      def enclosing(sym : Symbol) : List[String] =
         if (sym.owner.hasFlag(Flags.PACKAGE))
-          sym.simpleName.toString
-        else
-          fullNonPackageNameString(sym.owner)+"."+sym.simpleName
-        
-      str.trim
+          Nil
+        else {
+          val owner = sym.owner 
+          val name0 = owner.simpleName.toString
+          val name = if (owner.isModuleClass) name0+"$" else name0
+          name :: enclosing(owner)
+        }
+          
+      enclosing(sym).reverse
     }
     
     trait Owner {
@@ -62,7 +66,7 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
         println("Class defn: "+c.name+" ["+this+"]")
         println("Parents: "+c.impl.parents)
         
-        val name = fullNonPackageNameString(c.symbol)
+        val name = c.symbol.simpleName.toString
         
         val parentTree = c.impl.parents.head
         val superclassType = parentTree.tpe
@@ -94,7 +98,7 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
           mapModifiers(c.mods) & mask,
           c.symbol.enclosingPackage.fullNameString.toCharArray,
           name.toCharArray,
-          new Array[Array[Char]](0),
+          enclosingTypeNames(c.symbol).map(_.toArray).toArray,
           superclassName,
           interfaceNames.toArray,
           new Array[Array[Char]](0),
@@ -114,7 +118,7 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
       override def addModule(m : ModuleDef) : Owner = {
         println("Module defn: "+m.name+" ["+this+"]")
         
-        val name = fullNonPackageNameString(m.symbol)
+        val name = m.symbol.simpleName.toString
 
         val parentTree = m.impl.parents.head
         val superclassType = parentTree.tpe
@@ -128,7 +132,7 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
           mapModifiers(m.mods),
           m.symbol.enclosingPackage.fullNameString.toCharArray,
           (name+"$").toCharArray,
-          new Array[Array[Char]](0),
+          enclosingTypeNames(m.symbol).map(_.toArray).toArray,
           superclassName,
           interfaceNames.toArray,
           new Array[Array[Char]](0),

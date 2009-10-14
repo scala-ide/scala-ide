@@ -233,12 +233,13 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         //println("Val defn: >"+nme.getterName(v.name)+"< ["+this+"]")
         
         val elemName = nme.getterName(v.name)
+        val display = elemName.toString+" : "+v.symbol.tpe.toString
         
         val valElem =
           if(v.mods.hasFlag(Flags.MUTABLE))
-            new ScalaVarElement(element, elemName.toString)
+            new ScalaVarElement(element, elemName.toString, display)
           else
-            new ScalaValElement(element, elemName.toString)
+            new ScalaValElement(element, elemName.toString, display)
         resolveDuplicates(valElem)
         addChild(valElem)
         
@@ -272,7 +273,9 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
       override def addType(t : TypeDef) : Owner = {
         //println("Type defn: >"+t.name.toString+"< ["+this+"]")
         
-        val typeElem = new ScalaTypeElement(element, t.name.toString)
+        val display = t.name.toString+" : "+t.symbol.tpe.toString
+
+        val typeElem = new ScalaTypeElement(element, t.name.toString, display)
         resolveDuplicates(typeElem)
         addChild(typeElem)
 
@@ -325,6 +328,8 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         tp.print(tp.symName(d, d.name))
         tp.printTypeParams(d.tparams)
         d.vparamss foreach tp.printValueParams
+        sw.write(" : ")
+        tp.print(d.tpt)
         tp.flush
         val display = sw.toString
         
@@ -415,8 +420,9 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
       
       val pos = tree.pos
       val (start, end) =
-        if (pos.isDefined)
-          (pos.startOrPoint, pos.endOrPoint)
+        if (pos.isDefined) {
+          (commentOffsets.getOrElse(tree.symbol, pos.startOrPoint), pos.endOrPoint)
+        }
         else
           (-1, -1)
       

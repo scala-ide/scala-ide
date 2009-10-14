@@ -350,20 +350,6 @@
       enabled="true"/>      
   </extension>
 
-  <extension point="org.eclipse.ui.decorators">
-    <decorator
-      lightweight="false"
-      label="Scala elements"
-      class="scala.tools.eclipse.javaelements.ScalaLabelDecorator"
-      state="true"
-      id="scala.tools.eclipse.javaelements.ScalaLabelDecorator">
-      <description>Shows the structure of Scala files</description>
-      <enablement>
-        <objectClass name="java.lang.Object"/>
-      </enablement>
-    </decorator>
-  </extension>
-   
   <extension point="org.eclipse.ui.popupMenus">
     <objectContribution
             adaptable="true"

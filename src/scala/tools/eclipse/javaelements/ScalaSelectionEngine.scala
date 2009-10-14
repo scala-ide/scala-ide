@@ -22,7 +22,7 @@ import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants
 import org.eclipse.jdt.internal.compiler.env
 import org.eclipse.jdt.internal.compiler.env.{ AccessRestriction, ICompilationUnit }
 import org.eclipse.jdt.internal.compiler.parser.{ Scanner, ScannerHelper, TerminalTokens }
-import org.eclipse.jdt.internal.core.{ JavaElement, LocalVariable, SearchableEnvironment }
+import org.eclipse.jdt.internal.core.{ JavaElement, SearchableEnvironment }
 
 class ScalaSelectionEngine(nameEnvironment : SearchableEnvironment, requestor : ISelectionRequestor, settings : ju.Map[_, _]) extends Engine(settings) with ISearchRequestor {
 
@@ -159,8 +159,8 @@ class ScalaSelectionEngine(nameEnvironment : SearchableEnvironment, requestor : 
     def acceptLocalDefinition(defn : compiler.Symbol) {
       val parent = ssr.findLocalElement(defn.pos.startOrPoint)
       if (parent != null) {
-        val name = defn.name.toString.trim
-        val localVar = new LocalVariable(
+        val name = if (defn.hasFlag(Flags.PARAM) && defn.hasFlag(Flags.SYNTHETIC)) "_" else defn.name.toString.trim
+        val localVar = new ScalaLocalVariableElement(
           parent.asInstanceOf[JavaElement],
           name,
           defn.pos.startOrPoint,
@@ -168,7 +168,7 @@ class ScalaSelectionEngine(nameEnvironment : SearchableEnvironment, requestor : 
           defn.pos.point,
           defn.pos.point+name.length-1,
           compiler.javaType(defn.tpe).getSignature,
-          null)
+          name+" : "+defn.tpe.toString)
         ssr.addElement(localVar)
       }
     }
@@ -323,9 +323,12 @@ class ScalaSelectionEngine(nameEnvironment : SearchableEnvironment, requestor : 
                 case _ =>
               }
             
-          case l@(_ : ValDef | _ : Bind | _ : ClassDef | _ : ModuleDef | _ : TypeDef) =>
-            acceptLocalDefinition(l.symbol)
-            //ssr.addElement(ssr.findLocalElement(pos.startOrPoint))
+          case l@(_ : ValDef | _ : Bind | _ : ClassDef | _ : ModuleDef | _ : TypeDef | _ : DefDef) =>
+            val sym = l.symbol 
+            if (sym.isLocal)  
+              acceptLocalDefinition(l.symbol)
+            else
+              ssr.addElement(ssr.findLocalElement(pos.startOrPoint))
             
           case _ =>
             println("Unhandled: "+tree.getClass.getName)

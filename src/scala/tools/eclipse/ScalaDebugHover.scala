@@ -20,7 +20,6 @@ class ScalaDebugHover extends JavaSourceHover {
 
   override def getHoverInfo(textViewer : ITextViewer, hoverRegion :  IRegion) = {
     val scu = getCodeAssist.asInstanceOf[ScalaCompilationUnit]
-    val doc = textViewer.getDocument
     
     val start = hoverRegion.getOffset
     val length = hoverRegion.getLength

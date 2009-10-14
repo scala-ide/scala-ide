@@ -8,10 +8,10 @@ package scala.tools.eclipse.javaelements
 import scala.collection.immutable.Seq
 import scala.util.NameTransformer
 
-import org.eclipse.jdt.core.{ IJavaElement, IMember, IType }
+import org.eclipse.jdt.core.{ IField, IJavaElement, IMember, IMethod, IType }
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants
 import org.eclipse.jdt.internal.core.{
-  BinaryType, JavaElement, JavaElementInfo, SourceConstructorInfo, SourceField, SourceFieldElementInfo,
+  BinaryType, JavaElement, JavaElementInfo, LocalVariable, SourceConstructorInfo, SourceField, SourceFieldElementInfo,
   SourceMethod, SourceMethodElementInfo, SourceMethodInfo, SourceType, SourceTypeElementInfo } 
 import org.eclipse.jdt.internal.ui.JavaPlugin
 import org.eclipse.jdt.internal.ui.viewsupport.{ JavaElementImageProvider }
@@ -28,22 +28,9 @@ trait ScalaElement extends JavaElement with IScalaElement {
   def getElementName : String
   def scalaName : String = getElementName
   def labelName : String = scalaName
-  def mapLabelImage(original : Image) : Image = original
-  def mapLabelText(original : String) : String = original
+  def getLabelText(flags : Long) : String = labelName
+  def getImageDescriptor : ImageDescriptor = null
   def isVisible = true
-}
-
-trait ImageSubstituter extends ScalaElement {
-  override def mapLabelImage(original : Image) : Image = {
-    val rect = original.getBounds
-    
-    import JavaElementImageProvider.{ BIG_SIZE, SMALL_ICONS, SMALL_SIZE }
-    val flags = if (rect.width == 16) SMALL_ICONS else 0
-    val size = if ((flags & SMALL_ICONS) != 0) SMALL_SIZE else BIG_SIZE
-    JavaPlugin.getImageDescriptorRegistry.get(new JavaElementImageDescriptor(replacementImage, 0, size))
-  }
-  
-  def replacementImage : ImageDescriptor
   
   override def getCompilationUnit() = {
     val cu = super.getCompilationUnit()
@@ -63,43 +50,63 @@ trait ImageSubstituter extends ScalaElement {
 
 trait ScalaFieldElement extends ScalaElement
 
+class ScalaSourceTypeElement(parent : JavaElement, name : String)
+  extends SourceType(parent, name) with ScalaElement {
+
+  def getCorrespondingElement(element : IJavaElement) : Option[IJavaElement] = {
+    val name = element.getElementName
+    getChildren.find(_.getElementName == name)
+  }
+  
+  override def getType(typeName : String) : IType = {
+    val tpe = super.getType(typeName)
+    getCorrespondingElement(tpe).getOrElse(tpe).asInstanceOf[IType]
+  }
+  
+  override def getField(fieldName : String) : IField = {
+    val field = super.getField(fieldName)
+    getCorrespondingElement(field).getOrElse(field).asInstanceOf[IField]
+  }
+  
+  override def getMethod(selector : String, parameterTypeSignatures : Array[String]) : IMethod = {
+    val method = super.getMethod(selector, parameterTypeSignatures)
+    getCorrespondingElement(method).getOrElse(method).asInstanceOf[IMethod]
+  }
+}
+
 class ScalaClassElement(parent : JavaElement, name : String)
-  extends SourceType(parent, name) with ScalaElement with ImageSubstituter {
-  override def mapLabelImage(original : Image) = super.mapLabelImage(original)
-  override def replacementImage = ScalaImages.SCALA_CLASS
+  extends ScalaSourceTypeElement(parent, name) {
+  override def getImageDescriptor = ScalaImages.SCALA_CLASS
 }
 
 class ScalaAnonymousClassElement(parent : JavaElement, name : String)
   extends ScalaClassElement(parent, "") {
-    override def mapLabelText(original : String) = if (name != null ) "new "+name+" {...}" else "new {...}"
+    override def getLabelText(flags : Long) = if (name != null ) "new "+name+" {...}" else "new {...}"
 }
 
 class ScalaTraitElement(parent : JavaElement, name : String)
-  extends SourceType(parent, name) with ScalaElement with ImageSubstituter {
-  override def mapLabelImage(original : Image) = super.mapLabelImage(original)
-  override def replacementImage = ScalaImages.SCALA_TRAIT
+  extends ScalaSourceTypeElement(parent, name) {
+  override def getImageDescriptor = ScalaImages.SCALA_TRAIT
 }
 
 class ScalaModuleElement(parent : JavaElement, name : String, synthetic : Boolean)
-  extends SourceType(parent, name+"$") with ScalaElement with ImageSubstituter {
+  extends ScalaSourceTypeElement(parent, name+"$") {
   override def scalaName = name
-  override def mapLabelImage(original : Image) = super.mapLabelImage(original)
-  override def replacementImage = ScalaImages.SCALA_OBJECT
-  override def mapLabelText(original : String) = original.replace(getElementName, labelName)
+  override def getLabelText(flags : Long) = name
+  override def getImageDescriptor = ScalaImages.SCALA_OBJECT
   override def isVisible = !synthetic
 }
 
 class ScalaDefElement(parent : JavaElement, name: String, paramTypes : Array[String], synthetic : Boolean, display : String)
   extends SourceMethod(parent, name, paramTypes) with ScalaElement with IMethodOverrideInfo {
-  override def labelName = NameTransformer.decode(getElementName)
-  override def mapLabelText(original : String) = display // original.replace(getElementName, labelName)
+  override def getLabelText(flags : Long) = display
   override def isVisible = !synthetic && !getElementInfo.isInstanceOf[ScalaSourceConstructorInfo]
 }
 
 class ScalaFunctionElement(declaringType : JavaElement, parent : JavaElement, name: String, paramTypes : Array[String], display : String)
   extends SourceMethod(parent, name, paramTypes) with ScalaElement {
   override def getDeclaringType() : IType = declaringType.asInstanceOf[IType]
-  override def mapLabelText(original : String) = display
+  override def getLabelText(flags : Long) = display
 }
 
 class ScalaAccessorElement(parent : JavaElement, name: String, paramTypes : Array[String])
@@ -107,10 +114,10 @@ class ScalaAccessorElement(parent : JavaElement, name: String, paramTypes : Arra
   override def isVisible = false
 }
 
-class ScalaValElement(parent : JavaElement, name: String)
-  extends SourceField(parent, name) with ScalaFieldElement with ImageSubstituter {
-  override def mapLabelImage(original : Image) = super.mapLabelImage(original)
-  override def replacementImage = {
+class ScalaValElement(parent : JavaElement, name: String, display : String)
+  extends SourceField(parent, name) with ScalaFieldElement {
+  override def getLabelText(flags : Long) = display
+  override def getImageDescriptor = {
     val flags = getFlags
     if ((flags & ClassFileConstants.AccPublic) != 0)
       ScalaImages.PUBLIC_VAL
@@ -121,17 +128,30 @@ class ScalaValElement(parent : JavaElement, name: String)
   }  
 } 
 
-class ScalaVarElement(parent : JavaElement, name: String)
-  extends SourceField(parent, name) with ScalaFieldElement {} 
+class ScalaVarElement(parent : JavaElement, name: String, display : String)
+  extends SourceField(parent, name) with ScalaFieldElement {
+  override def getLabelText(flags : Long) = display
+}
 
-class ScalaTypeElement(parent : JavaElement, name : String)
-  extends SourceField(parent, name) with ScalaFieldElement with ImageSubstituter {
-  override def mapLabelImage(original : Image) = super.mapLabelImage(original)
-  override def replacementImage = ScalaImages.SCALA_TYPE
+class ScalaTypeElement(parent : JavaElement, name : String, display : String)
+  extends SourceField(parent, name) with ScalaFieldElement {
+  override def getLabelText(flags : Long) = display
+  override def getImageDescriptor = ScalaImages.SCALA_TYPE
 } 
+
+class ScalaLocalVariableElement(
+  parent : JavaElement, name : String,
+  declarationSourceStart : Int, declarationSourceEnd : Int, nameStart : Int, nameEnd : Int,
+  typeSignature : String,
+  display : String) extends LocalVariable(
+  parent, name, declarationSourceStart, declarationSourceEnd, nameStart, nameEnd, typeSignature, null) with
+  ScalaElement {
+  override def getLabelText(flags : Long) = display
+}
 
 class ScalaModuleInstanceElement(parent : JavaElement)
   extends SourceField(parent, "MODULE$") with ScalaFieldElement {
+  override def getLabelText(flags : Long) = getElementName
   override def isVisible = false
 }
 

@@ -9,7 +9,7 @@ import java.util.{ HashMap => JHashMap, Map => JMap }
 
 import org.eclipse.core.resources.{ IFile, IResource }
 import org.eclipse.core.runtime.IProgressMonitor
-import org.eclipse.jdt.core.{ IBuffer, ICompilationUnit, IJavaElement, WorkingCopyOwner }
+import org.eclipse.jdt.core.{ IBuffer, ICompilationUnit, IJavaElement, IType, WorkingCopyOwner }
 import org.eclipse.jdt.internal.core.util.HandleFactory
 import org.eclipse.jdt.internal.core.{ BufferManager, CompilationUnit => JDTCompilationUnit, OpenableElementInfo, PackageFragment }
 
@@ -79,5 +79,15 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
       new EclipseFile(res.asInstanceOf[IFile])
     else
       new VirtualFile(getElementName)
+  }
+
+  def getCorrespondingElement(element : IJavaElement) : Option[IJavaElement] = {
+    val name = element.getElementName
+    getChildren.find(_.getElementName == name)
+  }
+
+  override def getType(name : String) : IType = {
+    val tpe = super.getType(name)
+    getCorrespondingElement(tpe).getOrElse(tpe).asInstanceOf[IType]
   }
 }

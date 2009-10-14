@@ -28,7 +28,7 @@ import scala.tools.eclipse.contribution.weaving.jdt.IScalaClassFile
 
 class ScalaClassFile(parent : PackageFragment, name : String, sourceFile : String)
   extends ClassFile(parent, name) with ScalaCompilationUnit with IScalaClassFile {
-  override def replacementImage = ScalaImages.SCALA_CLASS_FILE
+  override def getImageDescriptor = ScalaImages.SCALA_CLASS_FILE
 
   override def getElementAt(position : Int) : IJavaElement = {
     val e = getSourceElementAt(position)

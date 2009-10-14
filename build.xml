@@ -21,6 +21,9 @@
   <property name="dist.dir" value="${basedir}/dist"/>
   
   <property name="update-site.url" value="http://www.scala-lang.org/downloads/distrib/files/nightly/scala.update/"/>
+	
+  <property name="env.ANT_OPTS" value="-Xms512M -Xmx1024M -Xss1M -XX:MaxPermSize=128M" />
+  <property name="scalacfork.jvmargs" value="${env.ANT_OPTS}"/>
   
 <!-- ===========================================================================
 INITIALISE BUILD
@@ -50,12 +53,6 @@ INITIALISE BUILD
       </fileset>
     </path>
     
-    <taskdef
-      name="scalac"
-      classname="scala.tools.ant.Scalac"
-      classpathref="scala.classpath"
-    />
-
   	<taskdef
       name="scalacfork"
       classname="scala.tools.ant.sabbus.ScalacFork"
@@ -146,17 +143,18 @@ BUILD THE PLUGIN
     
     <mkdir dir="${build.dir}"/>
     
-    <scalac
+    <scalacfork
+      compilerpathref="scala.classpath"
       srcdir="${basedir}/src"
       destdir="${build.dir}"
-      target="jvm-1.5">
-      <classpath>
+    	jvmargs="${scalacfork.jvmargs}">
+      <compilationpath>
         <path refid="scala.classpath"/>
         <path refid="eclipse.classpath"/>
         <path refid="scala.plugin.aspects.classpath"/>
-      </classpath>
+      </compilationpath>
       <include name="**/*.scala"/>
-    </scalac>
+    </scalacfork>
     
     <mkdir dir="${build.dir}/META-INF"/>
     <copy file="${basedir}/META-INF/MANIFEST.MF" toDir="${build.dir}/META-INF" overwrite="yes"/>
