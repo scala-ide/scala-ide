@@ -7,6 +7,6 @@ package scala.tools.eclipse.contribution.weaving.jdt;
 
 import org.eclipse.jdt.core.compiler.IProblem;
 
-public interface IScalaSourceFile {
+public interface IScalaSourceFile extends IScalaCompilationUnit {
   public IProblem[] getProblems();
 }
