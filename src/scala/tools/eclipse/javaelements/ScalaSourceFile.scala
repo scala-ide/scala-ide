@@ -54,11 +54,7 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
     reconcileFlags : Int,
     problems : JHashMap[_,_],
     monitor : IProgressMonitor) : org.eclipse.jdt.core.dom.CompilationUnit = {
-    treeHolder = null
-
     val info = createElementInfo.asInstanceOf[OpenableElementInfo]
-    sFile = new BatchSourceFile(aFile, getBuffer.getCharacters) 
-    reload = true
     openWhenClosed(info, monitor)
     null
   }

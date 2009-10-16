@@ -55,7 +55,8 @@ class ScalaSourceTypeElement(parent : JavaElement, name : String)
 
   def getCorrespondingElement(element : IJavaElement) : Option[IJavaElement] = {
     val name = element.getElementName
-    getChildren.find(_.getElementName == name)
+    val tpe = element.getElementType
+    getChildren.find(e => e.getElementName == name && e.getElementType == tpe)
   }
   
   override def getType(typeName : String) : IType = {
