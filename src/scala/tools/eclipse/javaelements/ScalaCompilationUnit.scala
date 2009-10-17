@@ -40,9 +40,15 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
   
   def getFile : AbstractFile
   
-  def getProblems : Array[IProblem] = if (problems.isEmpty) null else problems.toArray
+  def getProblems : Array[IProblem] =
+    synchronized {
+      if (problems.isEmpty) null else problems.toArray
+    }
   
   def getTreeHolder : TreeHolder = {
+    var result : TreeHolder = null
+    var reportedProblems : List[IProblem] = Nil
+    
     synchronized {
       if (treeHolder == null) {
         treeHolder = new TreeHolder {
@@ -55,15 +61,9 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
                 val file = getCorrespondingResource.asInstanceOf[IFile]
                 if (file != null)
                   problems = compiler.problemsOf(file)
-                val problemRequestor = getProblemRequestor
-                if (problemRequestor != null) {
-                  try {
-                    problemRequestor.beginReporting
-                    problems.map(problemRequestor.acceptProblem(_))
-                  } finally {
-                    problemRequestor.endReporting
-                  }
-                }
+                else
+                  problems = Nil
+                reportedProblems = problems
                 tree
               case Right(thr) =>
                 ScalaPlugin.plugin.logError("Failure in presentation compiler", thr)
@@ -73,8 +73,22 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
         }
       }
       
-      treeHolder
+      result = treeHolder
     }
+    
+    // Problem reporting must be done outside of sync to avoid
+    // a potential deadlock wrt buffer modification
+    val problemRequestor = getProblemRequestor
+    if (problemRequestor != null) {
+      try {
+        problemRequestor.beginReporting
+        reportedProblems.map(problemRequestor.acceptProblem(_))
+      } finally {
+        problemRequestor.endReporting
+      }
+    }
+    
+    result
   }
   
   override def bufferChanged(e : BufferChangedEvent) {
