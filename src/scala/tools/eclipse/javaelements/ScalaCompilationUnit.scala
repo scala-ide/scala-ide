@@ -49,6 +49,10 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
     var result : TreeHolder = null
     var reportedProblems : List[IProblem] = Nil
     
+    // Obtaining a reference to the resource must be done outside
+    // of sync to avoid a potential deadlock wrt discard
+    val file = getCorrespondingResource.asInstanceOf[IFile]
+    
     synchronized {
       if (treeHolder == null) {
         treeHolder = new TreeHolder {
@@ -58,7 +62,6 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
             compiler.askType(getSourceFile, true, typed)
             typed.get match {
               case Left(tree) =>
-                val file = getCorrespondingResource.asInstanceOf[IFile]
                 if (file != null)
                   problems = compiler.problemsOf(file)
                 else
