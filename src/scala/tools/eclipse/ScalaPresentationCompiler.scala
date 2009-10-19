@@ -20,13 +20,18 @@ import scala.tools.eclipse.javaelements.{ ScalaCompilationUnit, ScalaIndexBuilde
 import scala.tools.eclipse.util.EclipseResource
 
 class ScalaPresentationCompiler(settings : Settings)
-  extends Global(settings, new ConsoleReporter(settings))
+  extends Global(settings, new ScalaPresentationCompiler.PresentationReporter)
   with ScalaStructureBuilder with ScalaIndexBuilder with ScalaJavaMapper with ScalaWordFinder with JVMUtils {
+  import ScalaPresentationCompiler._
+  
+  def presentationReporter = reporter.asInstanceOf[PresentationReporter]
+  
+  presentationReporter.compiler = this
   
   val problems = new mutable.HashMap[IFile, ArrayBuffer[IProblem]] with SynchronizedMap[IFile, ArrayBuffer[IProblem]] {
     override def default(k : IFile) = { val v = new ArrayBuffer[IProblem] ; put(k, v); v }
   }
-  
+    
   def problemsOf(file : IFile) : List[IProblem] = {
     val ps = problems.remove(file)
     ps match {
@@ -35,7 +40,13 @@ class ScalaPresentationCompiler(settings : Settings)
     }
   }
 
-  reporter = new Reporter {
+  override def logError(msg : String, t : Throwable) =
+    ScalaPlugin.plugin.logError(msg, t)
+}
+
+object ScalaPresentationCompiler {
+  class PresentationReporter extends Reporter {
+    var compiler : ScalaPresentationCompiler = null
     
     override def info0(pos: Position, msg: String, severity: Severity, force: Boolean): Unit = {
       severity.count += 1
@@ -45,8 +56,8 @@ class ScalaPresentationCompiler(settings : Settings)
           val source = pos.source
           source.file match {
             case EclipseResource(file : IFile) =>
-              val length = source.identifier(pos, ScalaPresentationCompiler.this).map(_.length).getOrElse(0)
-              problems(file) +=
+              val length = source.identifier(pos, compiler).map(_.length).getOrElse(0)
+              compiler.problems(file) +=
                 new DefaultProblem(
                   file.getFullPath.toString.toCharArray,
                   formatMessage(msg),
@@ -68,9 +79,9 @@ class ScalaPresentationCompiler(settings : Settings)
     
     override def reset {
       super.reset
-      problems.clear
+      compiler.problems.clear
     }
-
+  
     def nscSeverityToEclipse(severity : Severity) = 
       severity.id match {
         case 2 => ProblemSeverities.Error
@@ -85,7 +96,4 @@ class ScalaPresentationCompiler(settings : Settings)
         case c => c
       }.mkString("","","")
   }
-
-  override def logError(msg : String, t : Throwable) =
-    ScalaPlugin.plugin.logError(msg, t)
 }
