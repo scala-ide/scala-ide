@@ -5,7 +5,7 @@
 
 package scala.tools.eclipse
 
-import scala.collection.immutable.Vector
+import scala.collection.immutable.IndexedSeq
 
 import scala.tools.nsc.Global
 import scala.tools.nsc.util.SourceFile.{LF, FF, CR, SU}
@@ -17,12 +17,12 @@ import scala.tools.eclipse.contribution.weaving.jdt.IScalaWordFinder
 
 trait ScalaWordFinder extends IScalaWordFinder { self : Global =>
 
-  def docToSeq(doc : IDocument) = new Vector[Char] {
+  def docToSeq(doc : IDocument) = new IndexedSeq[Char] {
     override def apply(i : Int) = doc.getChar(i)
     override def length = doc.getLength
   }
   
-  def bufferToSeq(buf : IBuffer) = new Vector[Char] {
+  def bufferToSeq(buf : IBuffer) = new IndexedSeq[Char] {
     override def apply(i : Int) = buf.getChar(i)
     override def length = buf.getLength
   }
