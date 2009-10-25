@@ -124,8 +124,6 @@ trait ScalaJavaMapper { self : ScalaPresentationCompiler =>
       javaType(t).getSignature.replace('/', '.')
   }
   
-
-  
   def mapTypeName(s : Symbol) : String =
     if (s == NoSymbol || s.hasFlag(Flags.PACKAGE)) ""
     else {
@@ -134,4 +132,18 @@ trait ScalaJavaMapper { self : ScalaPresentationCompiler =>
       val suffix = if (s.hasFlag(Flags.MODULE) && !s.hasFlag(Flags.JAVA)) "$" else ""
       prefix+s.nameString+suffix
     }
+
+  def enclosingTypeNames(sym : Symbol): List[String] = {
+    def enclosing(sym : Symbol) : List[String] =
+      if (sym.owner.hasFlag(Flags.PACKAGE))
+        Nil
+      else {
+        val owner = sym.owner 
+        val name0 = owner.simpleName.toString
+        val name = if (owner.isModuleClass) name0+"$" else name0
+        name :: enclosing(owner)
+      }
+        
+    enclosing(sym).reverse
+  }
 }

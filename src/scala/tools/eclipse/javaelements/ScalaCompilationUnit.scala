@@ -16,7 +16,10 @@ import org.eclipse.jdt.core.{
   IProblemRequestor, ITypeRoot, JavaCore, JavaModelException, WorkingCopyOwner }
 import org.eclipse.jdt.core.compiler.IProblem
 import org.eclipse.jdt.internal.compiler.env
-import org.eclipse.jdt.internal.core.{ CompilationUnitElementInfo, JavaModelStatus, JavaProject, Openable, OpenableElementInfo }
+import org.eclipse.jdt.internal.core.{
+  CompilationUnitElementInfo, DefaultWorkingCopyOwner, JavaModelStatus, JavaProject, Openable,
+  OpenableElementInfo, SearchableEnvironment }
+import org.eclipse.jdt.internal.core.search.matching.{ MatchLocator, PossibleMatch }
 
 import scala.tools.nsc.io.AbstractFile
 import scala.tools.nsc.util.{ BatchSourceFile, SourceFile }
@@ -52,6 +55,7 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
     // Obtaining a reference to the resource must be done outside
     // of sync to avoid a potential deadlock wrt discard
     val file = getCorrespondingResource.asInstanceOf[IFile]
+    val sourceFile = getSourceFile
     
     synchronized {
       if (treeHolder == null) {
@@ -59,7 +63,7 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
           val compiler = project.presentationCompiler
           val body = {
             val typed = new SyncVar[Either[compiler.Tree, Throwable]]
-            compiler.askType(getSourceFile, true, typed)
+            compiler.askType(sourceFile, true, typed)
             typed.get match {
               case Left(tree) =>
                 if (file != null)
@@ -126,19 +130,19 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
   }
   
   def getSourceFile : SourceFile = {
-    synchronized {
-      if (getBuffer == null)
-        throw new NullPointerException("getBuffer == null for: "+getElementName)
-      
-      val buffer = {
-        val buffer0 = getBuffer.getCharacters
-        if (buffer0 != null)
-          buffer0
-        else {
-          new Array[Char](0)
-        }
+    if (getBuffer == null)
+      throw new NullPointerException("getBuffer == null for: "+getElementName)
+    
+    val buffer = {
+      val buffer0 = getBuffer.getCharacters
+      if (buffer0 != null)
+        buffer0
+      else {
+        new Array[Char](0)
       }
+    }
       
+    synchronized {
       if (sFile == null)
         sFile = new BatchSourceFile(aFile, buffer) 
       sFile
@@ -178,10 +182,16 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
       new compiler.IndexBuilderTraverser(indexer).traverse(body)
   }
   
-  override def codeSelect(cu : env.ICompilationUnit, offset : Int, length : Int, workingCopyOwner : WorkingCopyOwner) : Array[IJavaElement] = {
+  def newSearchableEnvironment(workingCopyOwner : WorkingCopyOwner) : SearchableEnvironment = {
     val javaProject = getJavaProject.asInstanceOf[JavaProject]
-    val environment = javaProject.newSearchableNameEnvironment(workingCopyOwner)
-    
+    javaProject.newSearchableNameEnvironment(workingCopyOwner)
+  }
+
+  def newSearchableEnvironment() : SearchableEnvironment =
+    newSearchableEnvironment(DefaultWorkingCopyOwner.PRIMARY)
+  
+  override def codeSelect(cu : env.ICompilationUnit, offset : Int, length : Int, workingCopyOwner : WorkingCopyOwner) : Array[IJavaElement] = {
+    val environment = newSearchableEnvironment(workingCopyOwner)
     val requestor = new ScalaSelectionRequestor(environment.nameLookup, this)
     val buffer = getBuffer
     if (buffer != null) {
@@ -189,7 +199,7 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
       if (offset < 0 || length < 0 || offset + length > end )
         throw new JavaModelException(new JavaModelStatus(IJavaModelStatusConstants.INDEX_OUT_OF_BOUNDS))
   
-      val engine = new ScalaSelectionEngine(environment, requestor, javaProject.getOptions(true))
+      val engine = new ScalaSelectionEngine(environment, requestor, getJavaProject.getOptions(true))
       engine.select(cu, offset, offset + length - 1)
     }
     
@@ -211,6 +221,22 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
     engine.complete(cu, unitToSkip, position, requestor, owner, typeRoot, monitor)
   }
   
+  override def reportMatches(matchLocator : MatchLocator, possibleMatch : PossibleMatch) {
+    val th = getTreeHolder 
+    import th._
+
+    if (body != null)
+      new compiler.MatchLocatorTraverser(this, matchLocator, possibleMatch).traverse(body)
+  }
+  
+  override def createOverrideIndicators(annotationMap : JMap[_, _]) {
+    val th = getTreeHolder 
+    import th._
+
+    if (body != null)
+      new compiler.OverrideIndicatorBuilderTraverser(this, annotationMap.asInstanceOf[JMap[AnyRef, AnyRef]]).traverse(body)
+  }
+  
   override def getImageDescriptor = {
     val file = getCorrespondingResource.asInstanceOf[IFile]
     if(file == null)
@@ -224,3 +250,4 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
   
   override def getScalaWordFinder() : IScalaWordFinder = project.presentationCompiler
 }
+

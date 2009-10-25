@@ -5,10 +5,12 @@
 
 package scala.tools.eclipse.javaelements
 
+import scala.util.control.Breaks._
+
 import org.eclipse.core.resources.{ IFile, IFolder, IProject, IResource, ResourcesPlugin }
 import org.eclipse.core.runtime.{ CoreException, IProgressMonitor, IStatus, Status }
-import org.eclipse.jdt.core.{ IClasspathEntry, IJavaElement, IPackageFragment, JavaCore, JavaModelException }
-import org.eclipse.jdt.internal.core.{ JavaModelManager, OpenableElementInfo }
+import org.eclipse.jdt.core.{ IClasspathEntry, IJavaElement, IPackageFragment, IType, JavaCore, JavaModelException }
+import org.eclipse.jdt.internal.core.{ JavaModelManager, NameLookup, OpenableElementInfo }
 import org.eclipse.jdt.internal.ui.packageview.PackageExplorerPart
 import org.eclipse.ui.progress.UIJob
 
@@ -38,6 +40,17 @@ object JDTUtils {
     }
   }
 
+  def resolveType(nameLookup : NameLookup, packageName : String, typeName : String, acceptFlags : Int) : Option[IType] = {
+    val pkgs = nameLookup.findPackageFragments(packageName, false)
+    for(p <- pkgs) { 
+      val tpe = nameLookup.findType(typeName, p, false, acceptFlags, true)
+      if (tpe != null)
+        return Some(tpe)
+    }
+    
+    return None
+  }
+  
   def getParentPackage(scalaFile : IFile) : IPackageFragment = {
     val jp = JavaCore.create(scalaFile.getProject)
     val pkg = JavaModelManager.determineIfOnClasspath(scalaFile, jp)

@@ -9,11 +9,12 @@ import java.io.{ PrintWriter, StringWriter }
 import java.util.{ Map => JMap }
 
 import org.eclipse.core.resources.IFile
+import org.eclipse.jdt.core.{ IAnnotation, IMemberValuePair, Signature }
+import org.eclipse.jdt.core.compiler.CharOperation
 import org.eclipse.jdt.internal.core.{
-  AnnotatableInfo, CompilationUnit => JDTCompilationUnit, JavaElement, JavaElementInfo,
-  JavaModelManager, OpenableElementInfo, SourceRefElement }
+  Annotation, AnnotationInfo => JDTAnnotationInfo, AnnotatableInfo, CompilationUnit => JDTCompilationUnit, JavaElement, JavaElementInfo,
+  JavaModelManager, MemberValuePair, OpenableElementInfo, SourceRefElement }
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants
-import org.eclipse.jdt.core.Signature
 
 import scala.collection.immutable.Map
 
@@ -21,6 +22,7 @@ import scala.tools.nsc.symtab.Flags
 import scala.tools.nsc.util.{ NoPosition, Position }
 
 import scala.tools.eclipse.ScalaPresentationCompiler
+import scala.tools.eclipse.util.ReflectionUtils
 
 trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
 
@@ -55,12 +57,6 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
           case openable : OpenableElementInfo => OpenableElementInfoUtils.addChild(openable, child)
           case _ =>
         }
-      
-      def resolveDuplicates(handle : SourceRefElement) {
-        while (newElements0.containsKey(handle)) {
-          handle.occurrenceCount += 1
-        }
-      }
     }
     
     trait PackageOwner extends Owner { self =>
@@ -139,6 +135,8 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         val mask = ~(if (isAnon) ClassFileConstants.AccPublic else 0)
         classElemInfo.setFlags0(mapModifiers(c.mods) & mask)
         
+        val annotsPos = addAnnotations(c.symbol.annotations, classElemInfo, classElem)
+
         classElemInfo.setSuperclassName(superclassName)
         
         val interfaceTypes = interfaceTrees.map(t => (t, t.tpe))
@@ -158,7 +156,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         
         classElemInfo.setNameSourceStart0(start)
         classElemInfo.setNameSourceEnd0(end)
-        setSourceRange(classElemInfo, c)
+        setSourceRange(classElemInfo, c, annotsPos)
         newElements0.put(classElem, classElemInfo)
         
         new Builder {
@@ -184,12 +182,14 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         moduleElemInfo.setHandle(moduleElem)
         moduleElemInfo.setFlags0(mapModifiers(m.mods)|ClassFileConstants.AccFinal)
         
+        val annotsPos = addAnnotations(m.symbol.annotations, moduleElemInfo, moduleElem)
+
         val start = m.pos.point
         val end = start+m.name.length-1
         
         moduleElemInfo.setNameSourceStart0(start)
         moduleElemInfo.setNameSourceEnd0(end)
-        setSourceRange(moduleElemInfo, m)
+        setSourceRange(moduleElemInfo, m, annotsPos)
         newElements0.put(moduleElem, moduleElemInfo)
         
         val parentTree = m.impl.parents.head
@@ -212,13 +212,13 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         }
 
         val instanceElem = new ScalaModuleInstanceElement(moduleElem)
-        mb.resolveDuplicates(instanceElem)
+        resolveDuplicates(instanceElem)
         mb.addChild(instanceElem)
         
         val instanceElemInfo = new ScalaSourceFieldElementInfo
         instanceElemInfo.setFlags0(ClassFileConstants.AccPublic | ClassFileConstants.AccStatic | ClassFileConstants.AccFinal)
         instanceElemInfo.setTypeName(moduleElem.getFullyQualifiedName('.').toCharArray)
-        setSourceRange(instanceElemInfo, m)
+        setSourceRange(instanceElemInfo, m, annotsPos)
         instanceElemInfo.setNameSourceStart0(start)
         instanceElemInfo.setNameSourceEnd0(end)
         
@@ -247,12 +247,14 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         val jdtFinal = if(v.mods.hasFlag(Flags.MUTABLE)) 0 else ClassFileConstants.AccFinal
         valElemInfo.setFlags0(mapModifiers(v.mods)|jdtFinal)
         
+        val annotsPos = addAnnotations(v.symbol.annotations, valElemInfo, valElem)
+        
         val start = v.pos.point
         val end = start+elemName.length-1
         
         valElemInfo.setNameSourceStart0(start)
         valElemInfo.setNameSourceEnd0(end)
-        setSourceRange(valElemInfo, v)
+        setSourceRange(valElemInfo, v, annotsPos)
         newElements0.put(valElem, valElemInfo)
 
         val tn = manager.intern(mapType(v.tpt).toArray)
@@ -281,13 +283,15 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
 
         val typeElemInfo = new ScalaSourceFieldElementInfo
         typeElemInfo.setFlags0(mapModifiers(t.mods))
+
+        val annotsPos = addAnnotations(t.symbol.annotations, typeElemInfo, typeElem)
         
         val start = t.pos.point
         val end = start+t.name.length-1
 
         typeElemInfo.setNameSourceStart0(start)
         typeElemInfo.setNameSourceEnd0(end)
-        setSourceRange(typeElemInfo, t)
+        setSourceRange(typeElemInfo, t, annotsPos)
         newElements0.put(typeElem, typeElemInfo)
         
         if(t.rhs.symbol == NoSymbol) {
@@ -366,6 +370,8 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         val tn = manager.intern(mapType(d.tpt).toArray)
         defElemInfo.asInstanceOf[FnInfo].setReturnType(tn)
         
+        val annotsPos = addAnnotations(d.symbol.annotations, defElemInfo, defElem)
+        
         val mods =
           if(isTemplate)
             mapModifiers(d.mods)
@@ -389,7 +395,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
           
           defElemInfo.setNameSourceStart0(start)
           defElemInfo.setNameSourceEnd0(end)
-          setSourceRange(defElemInfo, d)
+          setSourceRange(defElemInfo, d, annotsPos)
         }
         
         newElements0.put(defElem, defElemInfo)
@@ -405,6 +411,86 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         }
       }
     }
+      
+    def resolveDuplicates(handle : SourceRefElement) {
+      while (newElements0.containsKey(handle)) {
+        handle.occurrenceCount += 1
+      }
+    }
+    
+    def addAnnotations(annots : List[AnnotationInfo], parentInfo : AnnotatableInfo, parentHandle : JavaElement) : Position = {
+      import JDTAnnotationUtils._
+      
+      def getMemberValuePairs(owner : JavaElement, memberValuePairs : List[(Name, ClassfileAnnotArg)]) : Array[IMemberValuePair] = {
+        def getMemberValue(value : ClassfileAnnotArg) : (Int, Any) = {
+          value match {
+            case LiteralAnnotArg(const) => 
+              const.tag match {
+                case BooleanTag => (IMemberValuePair.K_BOOLEAN, const.booleanValue)
+                case ByteTag    => (IMemberValuePair.K_BYTE, const.byteValue)
+                case ShortTag   => (IMemberValuePair.K_SHORT, const.shortValue)
+                case CharTag    => (IMemberValuePair.K_CHAR, const.charValue)
+                case IntTag     => (IMemberValuePair.K_INT, const.intValue)
+                case LongTag    => (IMemberValuePair.K_LONG, const.longValue)
+                case FloatTag   => (IMemberValuePair.K_FLOAT, const.floatValue)
+                case DoubleTag  => (IMemberValuePair.K_DOUBLE, const.doubleValue)
+                case StringTag  => (IMemberValuePair.K_STRING, const.stringValue)
+                case ClassTag   => (IMemberValuePair.K_CLASS, const.typeValue.typeSymbol.fullNameString)
+                case EnumTag    => (IMemberValuePair.K_QUALIFIED_NAME, const.tpe.typeSymbol.fullNameString+"."+const.symbolValue.name.toString)
+              }
+            case ArrayAnnotArg(args) =>
+              val taggedValues = args.map(getMemberValue)
+              val firstTag = taggedValues.first._1
+              val tag = if (taggedValues.exists(_._1 != firstTag)) IMemberValuePair.K_UNKNOWN else firstTag
+              val values = taggedValues.map(_._2)
+              (tag, values)
+            case NestedAnnotArg(annInfo) =>
+              (IMemberValuePair.K_ANNOTATION, addAnnotations(List(annInfo), null, owner))
+          }
+        }
+        
+        for ((name, value) <- memberValuePairs.toArray) yield { 
+          val (kind, jdtValue) = getMemberValue(value)
+          new MemberValuePair(name.toString, jdtValue, kind)
+        }
+      }
+
+      annots.foldLeft(NoPosition : Position) { (pos, annot) => {
+        if (!annot.pos.isOpaqueRange)
+          pos
+        else {
+          val nameString = annot.atp.typeSymbol.fullNameString
+          val handle = new Annotation(parentHandle, nameString)
+          resolveDuplicates(handle)
+  
+          val info = new JDTAnnotationInfo
+          newElements0.put(handle, info)
+  
+          info.nameStart = annot.pos.startOrPoint
+          info.nameEnd = annot.pos.endOrPoint-1
+          setSourceRangeStart(info, info.nameStart-1)
+          setSourceRangeEnd(info, info.nameEnd)
+  
+          val memberValuePairs = annot.assocs
+          val membersLength = memberValuePairs.length
+          if (membersLength == 0)
+            info.members = Annotation.NO_MEMBER_VALUE_PAIRS
+          else
+            info.members = getMemberValuePairs(handle, memberValuePairs)
+        
+          if (parentInfo != null) {
+            val annotations0 = getAnnotations(parentInfo)
+            val length = annotations0.length
+            val annotations = new Array[IAnnotation](length+1)
+            Array.copy(annotations0, 0, annotations, 0, length)
+            annotations(length) = handle
+            setAnnotations(parentInfo, annotations)
+          }
+          
+          annot.pos union pos
+        }
+      }}
+    }
     
     class CompilationUnitBuilder extends PackageOwner with ClassOwner with ModuleOwner {
       val parent = null
@@ -415,13 +501,14 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
     
     abstract class Builder extends PackageOwner with ClassOwner with ModuleOwner with ValOwner with TypeOwner with DefOwner
     
-    def setSourceRange(info : ScalaMemberElementInfo, tree : Tree) {
+    def setSourceRange(info : ScalaMemberElementInfo, tree : Tree, annotsPos : Position) {
       import Math.{ max, min }
       
       val pos = tree.pos
       val (start, end) =
         if (pos.isDefined) {
-          (commentOffsets.getOrElse(tree.symbol, pos.startOrPoint), pos.endOrPoint)
+          val pos0 = if (annotsPos.isOpaqueRange) pos union annotsPos else pos
+          (commentOffsets.getOrElse(tree.symbol, pos0.startOrPoint), pos0.endOrPoint)
         }
         else
           (-1, -1)
@@ -506,4 +593,19 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
       currentBuilder = prevBuilder
     }
   }
+}
+
+object JDTAnnotationUtils extends ReflectionUtils {
+  val sreiClazz = Class.forName("org.eclipse.jdt.internal.core.SourceRefElementInfo")
+  val setSourceRangeStartMethod = getDeclaredMethod(sreiClazz, "setSourceRangeStart", classOf[Int])
+  val setSourceRangeEndMethod = getDeclaredMethod(sreiClazz, "setSourceRangeEnd", classOf[Int])
+  
+  def setSourceRangeStart(srei : AnyRef, pos : Int) = setSourceRangeStartMethod.invoke(srei, new Integer(pos))
+  def setSourceRangeEnd(srei : AnyRef, pos : Int) = setSourceRangeEndMethod.invoke(srei, new Integer(pos))
+  
+  val aiClazz = classOf[AnnotatableInfo]
+  val annotationsField = getDeclaredField(aiClazz, "annotations")
+
+  def getAnnotations(ai : AnnotatableInfo) = annotationsField.get(ai).asInstanceOf[Array[IAnnotation]]
+  def setAnnotations(ai : AnnotatableInfo, annotations : Array[IAnnotation]) = annotationsField.set(ai, annotations)
 }

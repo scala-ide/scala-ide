@@ -16,12 +16,15 @@ import scala.tools.nsc.interactive.Global
 import scala.tools.nsc.reporters.{ ConsoleReporter, Reporter }
 import scala.tools.nsc.util.Position
 
-import scala.tools.eclipse.javaelements.{ ScalaCompilationUnit, ScalaIndexBuilder, ScalaJavaMapper, ScalaStructureBuilder }
+import scala.tools.eclipse.javaelements.{
+  ScalaCompilationUnit, ScalaIndexBuilder, ScalaJavaMapper, ScalaMatchLocator, ScalaStructureBuilder,
+  ScalaOverrideIndicatorBuilder }
 import scala.tools.eclipse.util.EclipseResource
 
 class ScalaPresentationCompiler(settings : Settings)
   extends Global(settings, new ScalaPresentationCompiler.PresentationReporter)
-  with ScalaStructureBuilder with ScalaIndexBuilder with ScalaJavaMapper with ScalaWordFinder with JVMUtils {
+  with ScalaStructureBuilder with ScalaIndexBuilder with ScalaMatchLocator
+  with ScalaOverrideIndicatorBuilder with ScalaJavaMapper with ScalaWordFinder with JVMUtils {
   import ScalaPresentationCompiler._
   
   def presentationReporter = reporter.asInstanceOf[PresentationReporter]

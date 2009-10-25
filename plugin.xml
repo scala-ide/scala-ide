@@ -80,6 +80,45 @@
             actionID="RulerDoubleClick"
             id="org.eclipse.jdt.debug.ui.actions.ManageBreakpointRulerAction">
          </action>
+         <action
+            label="Scala Editor Bookmark Ruler Action"
+            helpContextId="org.eclipse.ui.bookmark_action_context"
+            class="org.eclipse.ui.texteditor.BookmarkRulerAction"
+            actionID="RulerDoubleClick"
+            id="org.eclipse.jdt.internal.ui.javaeditor.BookmarkRulerAction">
+         </action>
+         <action
+            label="Scala Editor Ruler Single-Click"
+            class="org.eclipse.jdt.internal.ui.javaeditor.JavaSelectRulerAction"
+            actionID="RulerClick"
+            id="org.eclipse.jdt.internal.ui.javaeditor.JavaSelectRulerAction">
+         </action>
+      </editorContribution>
+   </extension>
+
+   <extension point="org.eclipse.ui.editorActions">
+      <editorContribution
+         targetID="scala.tools.eclipse.ScalaClassFileEditor"
+         id="org.eclipse.jdt.debug.CompilationUnitEditor.BreakpointRulerActions">
+         <action
+            label="Toggle &amp;Breakpoint"
+            class="org.eclipse.debug.ui.actions.RulerToggleBreakpointActionDelegate"
+            actionID="RulerDoubleClick"
+            id="org.eclipse.jdt.debug.ui.actions.ManageBreakpointRulerAction">
+         </action>
+         <action
+            label="Scala Editor Bookmark Ruler Action"
+            helpContextId="org.eclipse.ui.bookmark_action_context"
+            class="org.eclipse.ui.texteditor.BookmarkRulerAction"
+            actionID="RulerDoubleClick"
+            id="org.eclipse.jdt.internal.ui.javaeditor.BookmarkRulerAction">
+         </action>
+         <action
+            label="Scala Editor Ruler Single-Click"
+            class="org.eclipse.jdt.internal.ui.javaeditor.JavaSelectRulerAction"
+            actionID="RulerClick"
+            id="org.eclipse.jdt.internal.ui.javaeditor.JavaSelectRulerAction">
+         </action>
       </editorContribution>
    </extension>
 

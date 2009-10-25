@@ -35,10 +35,22 @@ class ScalaSelectionEngine(nameEnvironment : SearchableEnvironment, requestor : 
   val acceptedEnums = new ArrayBuffer[(Array[Char], Array[Char], Int)]
   val acceptedAnnotations = new ArrayBuffer[(Array[Char], Array[Char], Int)]
 
-  def select(cu : env.ICompilationUnit, selectionStart : Int, selectionEnd : Int) {
+  def select(cu : env.ICompilationUnit, selectionStart0 : Int, selectionEnd0 : Int) {
     val scu = cu.asInstanceOf[ScalaCompilationUnit]
   
+    val th = scu.getTreeHolder
+    import th._
+    import compiler._
+    
     val source = scu.getContents()
+    
+    val (selectionStart, selectionEnd) =
+      if (selectionStart0 <= selectionEnd0)
+        (selectionStart0, selectionEnd0)
+      else {
+        val region = compiler.findWord(source, selectionEnd0)
+        (region.getOffset, region.getOffset+region.getLength-1)
+      }
     
     actualSelectionStart = selectionStart
     actualSelectionEnd = selectionEnd
@@ -50,10 +62,6 @@ class ScalaSelectionEngine(nameEnvironment : SearchableEnvironment, requestor : 
     val ssr = requestor.asInstanceOf[ScalaSelectionRequestor]
     var fallbackToDefaultLookup = true
 
-    val th = scu.getTreeHolder
-    import th._
-    import compiler._
-    
     def selectFromTypeTree(t : compiler.TypeTree, pos : Position) : compiler.Symbol = {
       val tpe = t.tpe
       val orig = t.original
@@ -112,16 +120,20 @@ class ScalaSelectionEngine(nameEnvironment : SearchableEnvironment, requestor : 
     }
     
     def acceptType(t : compiler.Symbol) {
+      acceptTypeWithFlags(t, if (t.isTrait) ClassFileConstants.AccInterface else 0)
+    }
+    
+    def acceptTypeWithFlags(t : compiler.Symbol, jdtFlags : Int) {
       requestor.acceptType(
         t.enclosingPackage.fullNameString.toArray,
         mapTypeName(t).toArray,
-        if (t.isTrait) ClassFileConstants.AccInterface else 0,
+        jdtFlags,
         false,
         null,
         actualSelectionStart,
         actualSelectionEnd)
     }
-    
+
     def acceptField(f : compiler.Symbol) {
       requestor.acceptField(
         f.enclosingPackage.fullNameString.toArray,
@@ -278,6 +290,9 @@ class ScalaSelectionEngine(nameEnvironment : SearchableEnvironment, requestor : 
                 acceptLocalDefinition(symbol)
               }
             }
+            
+          case a@compiler.Annotated(atp, _) =>
+            acceptTypeWithFlags(atp.symbol, ClassFileConstants.AccAnnotation)
             
           case i@compiler.Import(expr, selectors) =>
             def acceptSymbol(sym : compiler.Symbol) {

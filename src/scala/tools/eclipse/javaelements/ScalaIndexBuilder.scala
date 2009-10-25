@@ -17,20 +17,6 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
   class IndexBuilderTraverser(indexer : ScalaSourceIndexer) extends Traverser {
     private var currentBuilder : Owner = new CompilationUnitBuilder
   
-    def enclosingTypeNames(sym : Symbol): List[String] = {
-      def enclosing(sym : Symbol) : List[String] =
-        if (sym.owner.hasFlag(Flags.PACKAGE))
-          Nil
-        else {
-          val owner = sym.owner 
-          val name0 = owner.simpleName.toString
-          val name = if (owner.isModuleClass) name0+"$" else name0
-          name :: enclosing(owner)
-        }
-          
-      enclosing(sym).reverse
-    }
-    
     trait Owner {
       def parent : Owner
 
@@ -104,6 +90,8 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
           new Array[Array[Char]](0),
           true
         )
+
+        addAnnotations(c.symbol.annotations)
         
         new Builder {
           val parent = self
@@ -155,6 +143,8 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
           true
         )
 
+        addAnnotations(m.symbol.annotations)
+
         new Builder {
           val parent = self
           
@@ -183,6 +173,8 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
             new Array[Array[Char]](0)
           )
         
+        addAnnotations(v.symbol.annotations)
+
         new Builder {
           val parent = self
           
@@ -213,6 +205,8 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
           new Array[Array[Char]](0)
         )
         
+        addAnnotations(d.symbol.annotations)
+
         new Builder {
           val parent = self
   
@@ -229,6 +223,10 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
     }
     
     abstract class Builder extends PackageOwner with ClassOwner with ModuleOwner with ValOwner with DefOwner
+    
+    def addAnnotations(annots : List[AnnotationInfo]) {
+      annots.map(annot => indexer.addAnnotationTypeReference(annot.atp.typeSymbol.nameString.toArray))
+    }
     
     override def traverse(tree: Tree): Unit = tree match {
       case pd : PackageDef => atBuilder(currentBuilder.addPackage(pd)) { super.traverse(tree) }
