@@ -12,7 +12,8 @@ object IDESettings {
     import s._
     List(
       deprecation, debuginfo, XO, target, unchecked,
-      Xchecknull, checkInit, noassertions, Xexperimental, future, XlogImplicits, nouescape, XnoVarargsConversion, pluginsDir, Xwarninit,
-      Xcloselim, Xdce, Xdetach, inline, Xlinearizer, Ynogenericsig, noimports, nopredefs, selfInAnnots, Xwarndeadcode, specialize)
+      checkInit, noassertions, elideLevel, Xexperimental, future, XlogImplicits, nouescape, XnoVarargsConversion, pluginsDir, 
+      Xcloselim, Xdce, Xdetach, inline, Xlinearizer, Ynogenericsig, noimports, nopredefs, selfInAnnots, Xsqueeze, specialize, Ytailrec,
+      Xwarninit, Xchecknull, Xwarndeadcode, YwarnShadow, YwarnCatches, Xwarnings)
   }
 }
