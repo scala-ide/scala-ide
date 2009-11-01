@@ -3,6 +3,7 @@
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.builderoptions.ScalaJavaBuilderAspect"/>
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.cfprovider.ClassFileProviderAspect"/>
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.core.CompilationUnitProblemFinderAspect"/>
+<aspect name="scala.tools.eclipse.contribution.weaving.jdt.core.DOMAspect"/>
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.hierarchy.HierarchyAspect"/>
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.indexerprovider.IndexerProviderAspect"/>
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.search.SearchAspect"/>
