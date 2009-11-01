@@ -13,7 +13,7 @@ import org.eclipse.jdt.core.compiler.IProblem
 import org.eclipse.jdt.internal.compiler.problem.{ DefaultProblem, ProblemSeverities }
 import scala.tools.nsc.Settings
 import scala.tools.nsc.interactive.Global
-import scala.tools.nsc.reporters.{ ConsoleReporter, Reporter }
+import scala.tools.nsc.reporters.Reporter
 import scala.tools.nsc.util.Position
 
 import scala.tools.eclipse.javaelements.{

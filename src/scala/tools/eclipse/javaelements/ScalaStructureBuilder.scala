@@ -9,11 +9,12 @@ import java.io.{ PrintWriter, StringWriter }
 import java.util.{ Map => JMap }
 
 import org.eclipse.core.resources.IFile
-import org.eclipse.jdt.core.{ IAnnotation, IMemberValuePair, Signature }
+import org.eclipse.jdt.core.{ IAnnotation, ICompilationUnit, IJavaElement, IMemberValuePair, Signature }
 import org.eclipse.jdt.core.compiler.CharOperation
 import org.eclipse.jdt.internal.core.{
-  Annotation, AnnotationInfo => JDTAnnotationInfo, AnnotatableInfo, CompilationUnit => JDTCompilationUnit, JavaElement, JavaElementInfo,
-  JavaModelManager, MemberValuePair, OpenableElementInfo, SourceRefElement }
+  Annotation, AnnotationInfo => JDTAnnotationInfo, AnnotatableInfo, CompilationUnit => JDTCompilationUnit, ImportContainer,
+  ImportContainerInfo, ImportDeclaration, ImportDeclarationElementInfo, JavaElement, JavaElementInfo, JavaModelManager,
+  MemberValuePair, OpenableElementInfo, SourceRefElement }
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants
 
 import scala.collection.immutable.Map
@@ -36,7 +37,9 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
 
       def element : JavaElement
       def elementInfo : JavaElementInfo
-      def compilationUnitBuilder : Owner = parent.compilationUnitBuilder
+      def compilationUnitBuilder : CompilationUnitBuilder = parent.compilationUnitBuilder
+      def importOwner : ImportOwner = parent.importOwner
+      def importContainer : ImportContainer = importOwner.importContainer;
       
       def isPackage = false
       def isCtor = false
@@ -44,6 +47,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
       def template : Owner = if (parent != null) parent.template else null
 
       def addPackage(p : PackageDef) : Owner = this
+      def addImport(i : Import) : Owner = importOwner.addImport(i)
       def addClass(c : ClassDef) : Owner = this
       def addModule(m : ModuleDef) : Owner = this
       def addVal(v : ValDef) : Owner = this
@@ -55,6 +59,14 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         elementInfo match {
           case scalaMember : ScalaMemberElementInfo => scalaMember.addChild0(child)
           case openable : OpenableElementInfo => OpenableElementInfoUtils.addChild(openable, child)
+          case importContainer : ImportContainerInfo =>
+            import ImportContainerInfoUtils._
+            val children = getChildren(importContainer)
+            if (children.isEmpty)
+              setChildren(importContainer, Array[IJavaElement](child))
+            else
+              setChildren(importContainer, children ++ Seq(child))
+            
           case _ =>
         }
     }
@@ -85,6 +97,56 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
             compilationUnitBuilder.addChild(child)
           }
         }
+      }
+    }
+    
+    trait ImportContainerOwner extends Owner { self =>
+      override lazy val importOwner : ImportOwner = {
+        val importContainerElem = element match {
+          case scf : ScalaClassFile => JavaElementFactory.createImportContainer(null)
+          case cu : ICompilationUnit => cu.getImportContainer.asInstanceOf[ImportContainer]
+          case _ => throw new IllegalArgumentException("Unexpected parent type")
+        }
+
+        val importContainerElemInfo = new ImportContainerInfo
+          
+        addChild(importContainerElem)
+        newElements0.put(importContainerElem, importContainerElemInfo)
+            
+        new ImportOwner {
+          val parent = self
+          val element = importContainerElem
+          val elementInfo = importContainerElemInfo
+          override def importContainer = importContainerElem 
+        }
+      }
+    }
+    
+    trait ImportOwner extends Owner { self =>
+      import SourceRefElementInfoUtils._
+    
+      override def addImport(i : Import) : Owner = {
+        val prefix = i.expr.symbol.fullNameString
+        val pos = i.pos
+
+        def isWildcard(s: ImportSelector) : Boolean = s.name == nme.WILDCARD
+
+        def addImport(name : String, isWildcard : Boolean) {
+          val path = prefix+"."+(if(isWildcard) "*" else name)
+          val importElem = JavaElementFactory.createImportDeclaration(importContainer, path, isWildcard)
+          resolveDuplicates(importElem)
+        
+          val importElemInfo = new ImportDeclarationElementInfo
+          setSourceRangeStart(importElemInfo, pos.startOrPoint)
+          setSourceRangeEnd(importElemInfo, pos.endOrPoint)
+        
+          addChild(importElem)
+          newElements0.put(importElem, importElemInfo)
+        }
+
+        i.selectors.foreach(s => addImport(s.name.toString, isWildcard(s)))
+        
+        self
       }
     }
     
@@ -383,10 +445,15 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         if (isCtor0) {
           elementInfo match {
             case smei : ScalaMemberElementInfo =>
-              defElemInfo.setSourceRangeStart0(smei.getDeclarationSourceStart0)
-              defElemInfo.setSourceRangeEnd0(smei.getDeclarationSourceEnd0)
               defElemInfo.setNameSourceStart0(smei.getNameSourceStart0)
               defElemInfo.setNameSourceEnd0(smei.getNameSourceEnd0)
+              if (d.symbol.isPrimaryConstructor) {
+                defElemInfo.setSourceRangeStart0(smei.getNameSourceEnd0)
+                defElemInfo.setSourceRangeEnd0(smei.getDeclarationSourceEnd0)
+              } else {
+                defElemInfo.setSourceRangeStart0(smei.getDeclarationSourceStart0)
+                defElemInfo.setSourceRangeEnd0(smei.getDeclarationSourceEnd0)
+              }
             case _ =>
           }
         } else {
@@ -419,6 +486,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
     }
     
     def addAnnotations(annots : List[AnnotationInfo], parentInfo : AnnotatableInfo, parentHandle : JavaElement) : Position = {
+      import SourceRefElementInfoUtils._
       import JDTAnnotationUtils._
       
       def getMemberValuePairs(owner : JavaElement, memberValuePairs : List[(Name, ClassfileAnnotArg)]) : Array[IMemberValuePair] = {
@@ -459,7 +527,8 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         if (!annot.pos.isOpaqueRange)
           pos
         else {
-          val nameString = annot.atp.typeSymbol.fullNameString
+          //val nameString = annot.atp.typeSymbol.fullNameString
+          val nameString = annot.atp.typeSymbol.nameString
           val handle = new Annotation(parentHandle, nameString)
           resolveDuplicates(handle)
   
@@ -492,7 +561,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
       }}
     }
     
-    class CompilationUnitBuilder extends PackageOwner with ClassOwner with ModuleOwner {
+    class CompilationUnitBuilder extends PackageOwner with ImportContainerOwner with ClassOwner with ModuleOwner {
       val parent = null
       val element = scu
       val elementInfo = unitInfo
@@ -519,6 +588,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
     
     override def traverse(tree: Tree): Unit = tree match {
       case pd : PackageDef => atBuilder(currentBuilder.addPackage(pd)) { super.traverse(tree) }
+      case i : Import => currentBuilder.addImport(i)
       case cd : ClassDef => {
         val cb = currentBuilder.addClass(cd)
         atOwner(tree.symbol) {
@@ -596,13 +666,6 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
 }
 
 object JDTAnnotationUtils extends ReflectionUtils {
-  val sreiClazz = Class.forName("org.eclipse.jdt.internal.core.SourceRefElementInfo")
-  val setSourceRangeStartMethod = getDeclaredMethod(sreiClazz, "setSourceRangeStart", classOf[Int])
-  val setSourceRangeEndMethod = getDeclaredMethod(sreiClazz, "setSourceRangeEnd", classOf[Int])
-  
-  def setSourceRangeStart(srei : AnyRef, pos : Int) = setSourceRangeStartMethod.invoke(srei, new Integer(pos))
-  def setSourceRangeEnd(srei : AnyRef, pos : Int) = setSourceRangeEndMethod.invoke(srei, new Integer(pos))
-  
   val aiClazz = classOf[AnnotatableInfo]
   val annotationsField = getDeclaredField(aiClazz, "annotations")
 

@@ -10,7 +10,7 @@ import scala.util.control.Breaks._
 import org.eclipse.core.resources.{ IFile, IFolder, IProject, IResource, ResourcesPlugin }
 import org.eclipse.core.runtime.{ CoreException, IProgressMonitor, IStatus, Status }
 import org.eclipse.jdt.core.{ IClasspathEntry, IJavaElement, IPackageFragment, IType, JavaCore, JavaModelException }
-import org.eclipse.jdt.internal.core.{ JavaModelManager, NameLookup, OpenableElementInfo }
+import org.eclipse.jdt.internal.core.{ ImportContainerInfo, JavaModelManager, NameLookup, OpenableElementInfo }
 import org.eclipse.jdt.internal.ui.packageview.PackageExplorerPart
 import org.eclipse.ui.progress.UIJob
 
@@ -102,12 +102,18 @@ object OpenableElementInfoUtils extends ReflectionUtils {
 }
 
 object SourceRefElementInfoUtils extends ReflectionUtils {
-  import java.lang.Integer
-
   private val sreiClazz = Class.forName("org.eclipse.jdt.internal.core.SourceRefElementInfo")
   private val setSourceRangeStartMethod = getDeclaredMethod(sreiClazz, "setSourceRangeStart", classOf[Int])
   private val setSourceRangeEndMethod = getDeclaredMethod(sreiClazz, "setSourceRangeEnd", classOf[Int])
   
-  def setSourceRangeStart(start : Int) : Unit = setSourceRangeStartMethod.invoke(this, new Integer(start))
-  def setSourceRangeEnd(end : Int) : Unit = setSourceRangeEndMethod.invoke(this, new Integer(end))
+  def setSourceRangeStart(srei : AnyRef, pos : Int) = setSourceRangeStartMethod.invoke(srei, new Integer(pos))
+  def setSourceRangeEnd(srei : AnyRef, pos : Int) = setSourceRangeEndMethod.invoke(srei, new Integer(pos))
+}
+
+object ImportContainerInfoUtils extends ReflectionUtils {
+  private val iciClazz = classOf[ImportContainerInfo]
+  private val childrenField = getDeclaredField(iciClazz, "children")
+  
+  def setChildren(ic : ImportContainerInfo, children : Array[IJavaElement]) { childrenField.set(ic, children) }
+  def getChildren(ic : ImportContainerInfo) = childrenField.get(ic).asInstanceOf[Array[IJavaElement]]
 }

@@ -6,33 +6,21 @@
 package scala.tools.eclipse
 
 import scala.collection.immutable.Set
-import scala.collection.mutable.{ LinkedHashSet, ListBuffer, HashSet }
+import scala.collection.mutable.{ LinkedHashSet, HashSet }
 
 import java.io.File.pathSeparator
 
-import org.eclipse.core.resources.{ IContainer, IFile, IFolder, IMarker, IProject, IResource, IResourceProxy, IResourceProxyVisitor, IWorkspaceRunnable, ResourcesPlugin}
-import org.eclipse.core.runtime.{ IPath, IProgressMonitor, Path }
-import org.eclipse.jdt.core.{ IClasspathEntry, IJavaElement, IJavaProject, IPackageFragmentRoot, IType, JavaCore }
+import org.eclipse.core.resources.{ IContainer, IFile, IFolder, IMarker, IProject, IResource, IResourceProxy, IResourceProxyVisitor, IWorkspaceRunnable }
+import org.eclipse.core.runtime.{ IPath, IProgressMonitor }
+import org.eclipse.jdt.core.{ IClasspathEntry, IJavaProject, JavaCore }
 import org.eclipse.jdt.internal.core.JavaProject
 import org.eclipse.jdt.internal.core.builder.{ ClasspathDirectory, ClasspathLocation, NameEnvironment }
 import org.eclipse.jdt.internal.core.util.Util
-import org.eclipse.jdt.ui.JavaUI
-import org.eclipse.jface.text.TextPresentation
-import org.eclipse.jface.text.hyperlink.IHyperlink
-import org.eclipse.swt.SWT
-import org.eclipse.swt.custom.StyleRange
-import org.eclipse.ui.PlatformUI
-import org.eclipse.ui.texteditor.ITextEditor
 
-import scala.tools.nsc.{ Global, Settings, interactive }
-import scala.tools.nsc.interactive.{ BuildManager, RefinedBuildManager }
-import scala.tools.nsc.ast.parser.Scanners
-import scala.tools.nsc.io.AbstractFile
-import scala.tools.nsc.reporters.{ Reporter }
-import scala.tools.nsc.util.Position
+import scala.tools.nsc.Settings
 
 import scala.tools.eclipse.properties.PropertyStore
-import scala.tools.eclipse.util.{ EclipseFile, EclipseResource, FileUtils, IDESettings, ReflectionUtils, Style } 
+import scala.tools.eclipse.util.{ EclipseResource, IDESettings, ReflectionUtils } 
 
 class ScalaProject(val underlying : IProject) {
   import ScalaPlugin.plugin
@@ -326,85 +314,12 @@ class ScalaProject(val underlying : IProject) {
     }
   }
   
-  class EclipseBuildManager(settings: Settings) extends RefinedBuildManager(settings) {
-    var monitor : IProgressMonitor = _
-    
-    class EclipseBuilderGlobal(settings: Settings) extends BuilderGlobal(settings) {
-
-      reporter = new Reporter {
-        override def info0(pos : Position, msg : String, severity : Severity, force : Boolean) = {
-          severity.count += 1
-  
-          val eclipseSeverity = severity.id match {
-            case 2 => IMarker.SEVERITY_ERROR
-            case 1 => IMarker.SEVERITY_WARNING
-            case 0 => IMarker.SEVERITY_INFO
-          }
-          
-          try {
-            if(pos.isDefined) {
-              val source = pos.source
-              val length = source.identifier(pos, EclipseBuilderGlobal.this).map(_.length).getOrElse(0)
-              source.file match {
-                case EclipseResource(i : IFile) => FileUtils.buildError(i, eclipseSeverity, msg, pos.point, length, pos.line, null)
-                case _ => buildError(eclipseSeverity, msg, null)
-              }
-            }
-            else
-              buildError(eclipseSeverity, msg, null)
-          } catch {
-            case ex : UnsupportedOperationException => 
-              buildError(eclipseSeverity, msg, null)
-          }
-        }
-      }
-    
-      override def newRun() =
-        new Run {
-          var worked = 0
-          
-          override def progress(current : Int, total : Int) : Unit = {
-            if (monitor != null && monitor.isCanceled) {
-              cancel
-              return
-            }
-            
-            val newWorked = if (current >= total) 100 else ((current.toDouble/total)*100).toInt
-            if (worked < newWorked) {
-              if (monitor != null)
-                monitor.worked(newWorked-worked)
-              worked = newWorked
-            }
-          }
-        
-          override def compileLate(file : AbstractFile) = {
-            file match {
-              case EclipseResource(i : IFile) => FileUtils.clearBuildErrors(i, monitor)
-              case _ => 
-            }
-            super.compileLate(file)
-          }
-        }
-    }
-    
-    override def newCompiler(settings: Settings) = new EclipseBuilderGlobal(settings)
-    
-    override def buildingFiles(included: scala.collection.Set[AbstractFile]) {
-      for(file <- included) {
-        file match {
-          case EclipseResource(f : IFile) => FileUtils.clearBuildErrors(f, null)
-          case _ =>
-        }
-      }
-    }
-  }
-  
   def buildManager = {
     checkClasspath
     if (buildManager0 == null) {
       val settings = new Settings
       initialize(settings)
-      buildManager0 = new EclipseBuildManager(settings)
+      buildManager0 = new EclipseBuildManager(this, settings)
     }
     buildManager0
   }
