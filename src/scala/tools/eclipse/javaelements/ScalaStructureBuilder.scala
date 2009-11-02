@@ -103,7 +103,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
     trait ImportContainerOwner extends Owner { self =>
       override lazy val importOwner : ImportOwner = {
         val importContainerElem = element match {
-          case scf : ScalaClassFile => JavaElementFactory.createImportContainer(null)
+          case scf : ScalaClassFile => JavaElementFactory.createImportContainer(scf)
           case cu : ICompilationUnit => cu.getImportContainer.asInstanceOf[ImportContainer]
           case _ => throw new IllegalArgumentException("Unexpected parent type")
         }
