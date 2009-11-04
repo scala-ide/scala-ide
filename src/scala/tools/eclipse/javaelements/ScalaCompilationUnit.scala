@@ -31,6 +31,7 @@ import scala.tools.eclipse.{ ScalaPlugin, ScalaPresentationCompiler, ScalaSource
 abstract class TreeHolder {
   val compiler : ScalaPresentationCompiler
   val body : compiler.Tree
+  val problems : List[IProblem]
 }
 
 trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with ScalaElement with IScalaCompilationUnit with IBufferChangedListener {
@@ -39,59 +40,56 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
   private lazy val aFile = getFile
   private var sFile : BatchSourceFile = null
   private var treeHolder : TreeHolder = null
-  private var problems : List[IProblem] = Nil
   
   def getFile : AbstractFile
   
   def getProblems : Array[IProblem] =
     synchronized {
-      if (problems.isEmpty) null else problems.toArray
+      if (treeHolder != null && !treeHolder.problems.isEmpty) treeHolder.problems.toArray else null
     }
   
   def getTreeHolder : TreeHolder = {
-    var result : TreeHolder = null
-    var reportedProblems : List[IProblem] = Nil
-    
     // Obtaining a reference to the resource must be done outside
     // of sync to avoid a potential deadlock wrt discard
     val file = getCorrespondingResource.asInstanceOf[IFile]
     val sourceFile = getSourceFile
     
-    synchronized {
-      if (treeHolder == null) {
-        treeHolder = new TreeHolder {
-          val compiler = project.presentationCompiler
-          val body = {
-            val typed = new SyncVar[Either[compiler.Tree, Throwable]]
-            compiler.askType(sourceFile, true, typed)
-            typed.get match {
-              case Left(tree) =>
-                if (file != null)
-                  problems = compiler.problemsOf(file)
-                else
-                  problems = Nil
-                reportedProblems = problems
-                tree
-              case Right(thr) =>
-                ScalaPlugin.plugin.logError("Failure in presentation compiler", thr)
-                compiler.EmptyTree
+    val (result, changed) =
+      synchronized {
+        if (treeHolder != null) 
+          (treeHolder, false)
+        else {
+          treeHolder = new TreeHolder {
+            val compiler = project.presentationCompiler
+            val (body, problems) = {
+              val typed = new SyncVar[Either[compiler.Tree, Throwable]]
+              compiler.askType(sourceFile, true, typed)
+              typed.get match {
+                case Left(body0) =>
+                  val problems0 = if (file != null) compiler.problemsOf(file) else Nil
+                  (body0, problems0)
+                case Right(thr) =>
+                  ScalaPlugin.plugin.logError("Failure in presentation compiler", thr)
+                  (compiler.EmptyTree, Nil)
+              }
             }
           }
+          
+          (treeHolder, true)
         }
       }
-      
-      result = treeHolder
-    }
     
     // Problem reporting must be done outside of sync to avoid
     // a potential deadlock wrt buffer modification
-    val problemRequestor = getProblemRequestor
-    if (problemRequestor != null) {
-      try {
-        problemRequestor.beginReporting
-        reportedProblems.map(problemRequestor.acceptProblem(_))
-      } finally {
-        problemRequestor.endReporting
+    if (changed) {
+      val problemRequestor = getProblemRequestor
+      if (problemRequestor != null) {
+        try {
+          problemRequestor.beginReporting
+          result.problems.map(problemRequestor.acceptProblem(_))
+        } finally {
+          problemRequestor.endReporting
+        }
       }
     }
     
@@ -104,7 +102,6 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
     else synchronized {
       sFile = null
       treeHolder = null
-      problems = Nil
     }
 
     super.bufferChanged(e)
@@ -119,7 +116,6 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
         compiler.removeUnitOf(sFile)
         sFile = null
         treeHolder = null
-        problems = Nil
       }
     }
   }
