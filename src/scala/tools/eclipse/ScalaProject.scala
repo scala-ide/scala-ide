@@ -6,30 +6,45 @@
 package scala.tools.eclipse
 
 import scala.collection.immutable.Set
-import scala.collection.mutable.{ LinkedHashSet, HashSet }
+import scala.collection.mutable.{ LinkedHashSet, HashMap, HashSet }
 
 import java.io.File.pathSeparator
 
 import org.eclipse.core.resources.{ IContainer, IFile, IFolder, IMarker, IProject, IResource, IResourceProxy, IResourceProxyVisitor, IWorkspaceRunnable }
 import org.eclipse.core.runtime.{ IPath, IProgressMonitor }
 import org.eclipse.jdt.core.{ IClasspathEntry, IJavaProject, JavaCore }
+import org.eclipse.jdt.core.compiler.IProblem
 import org.eclipse.jdt.internal.core.JavaProject
 import org.eclipse.jdt.internal.core.builder.{ ClasspathDirectory, ClasspathLocation, NameEnvironment }
 import org.eclipse.jdt.internal.core.util.Util
 
 import scala.tools.nsc.Settings
 
+import scala.tools.eclipse.javaelements.ScalaCompilationUnit
 import scala.tools.eclipse.properties.PropertyStore
-import scala.tools.eclipse.util.{ EclipseResource, IDESettings, ReflectionUtils } 
+import scala.tools.eclipse.util.{ Cached, EclipseResource, IDESettings, ReflectionUtils } 
 
 class ScalaProject(val underlying : IProject) {
   import ScalaPlugin.plugin
 
   private var classpathUpdate : Long = IResource.NULL_STAMP
   private var buildManager0 : EclipseBuildManager = null
-  private var presentationCompiler0 : ScalaPresentationCompiler = null 
   private var hasBeenBuilt = false
   private val depFile = underlying.getFile(".scala_dependencies")
+
+  private val presentationCompiler = new Cached[ScalaPresentationCompiler] {
+    override def create() = {
+      checkClasspath
+      val settings = new Settings
+      initialize(settings)
+      settings.printtypes.tryToSet(Nil)
+      new ScalaPresentationCompiler(settings)
+    }
+    
+    override def destroy(compiler : ScalaPresentationCompiler) {
+      compiler.destroy()
+    }
+  }
   
   override def toString = underlying.getName
   
@@ -307,11 +322,7 @@ class ScalaProject(val underlying : IProject) {
   def resetCompilers = {
     buildManager0 = null
     hasBeenBuilt = false
-    
-    if (presentationCompiler0 != null) {
-      presentationCompiler0.askShutdown()
-      presentationCompiler0 = null
-    }
+    presentationCompiler.invalidate()
   }
   
   def buildManager = {
@@ -324,17 +335,15 @@ class ScalaProject(val underlying : IProject) {
     buildManager0
   }
 
-  def presentationCompiler = {
-    checkClasspath
-    if (presentationCompiler0 eq null) {
-      val settings = new Settings
-      initialize(settings)
-      settings.printtypes.tryToSet(Nil)
-      presentationCompiler0 = new ScalaPresentationCompiler(settings)
-    }
-    presentationCompiler0
+  def withPresentationCompiler[T](op : ScalaPresentationCompiler => T) : T = {
+    presentationCompiler(op)
   }
 
+  def withCompilerResult[T](scu : ScalaCompilationUnit)(op : ScalaPresentationCompiler.CompilerResultHolder => T) : T =
+    withPresentationCompiler { compiler =>
+      compiler.withCompilerResult(scu)(op)
+    }
+  
   def prepareBuild() : Boolean = {
     if (!hasBeenBuilt) {
       if (!depFile.exists())

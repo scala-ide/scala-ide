@@ -143,9 +143,12 @@ trait NewResourceWizard extends BasicNewResourceWizard {
     }        
     val plugin = ScalaPlugin.plugin
     val project = plugin.getScalaProject(pkg.getResource.getProject)
-    val analyzer = project.presentationCompiler.syntaxAnalyzer
-    val nameOk = name.length != 0 && analyzer.isIdentifierStart(name(0)) &&
-      (1 until name.length).forall(i => analyzer.isIdentifierPart(name(i)))
+    val nameOk = name.length != 0 && project.withPresentationCompiler {
+      compiler =>
+        val analyzer = compiler.syntaxAnalyzer
+        analyzer.isIdentifierStart(name(0)) && (1 until name.length).forall(i => analyzer.isIdentifierPart(name(i)))
+    }
+      
     if (!nameOk) {
       mainPage.setErrorMessage("Not a valid name.")
       return false

@@ -5,16 +5,10 @@
 
 package scala.tools.eclipse
 
-import java.io.{ PrintWriter, StringWriter }
-
-import scala.concurrent.SyncVar
-
 import org.eclipse.jdt.internal.ui.text.java.hover.JavaSourceHover
-import org.eclipse.jface.internal.text.html.HTMLPrinter
 import org.eclipse.jface.text.{ ITextViewer, IRegion }
 
 import scala.tools.eclipse.javaelements.ScalaCompilationUnit
-import scala.tools.eclipse.util.ReflectionUtils
 
 class ScalaDebugHover extends JavaSourceHover {
 
@@ -25,10 +19,9 @@ class ScalaDebugHover extends JavaSourceHover {
     val length = hoverRegion.getLength
     val end = start+length
     
-    val th = scu.getTreeHolder
-    import th._
-    
-    val source = scu.getSourceFile
-    compiler.debugInfo(source, start, length)
+    scu.withCompilerResult({ crh =>
+      import crh._
+      compiler.debugInfo(sourceFile, start, length)
+    })
   }
 }

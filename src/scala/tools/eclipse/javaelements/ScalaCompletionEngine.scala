@@ -35,125 +35,127 @@ class ScalaCompletionEngine {
     def createProposal(kind : Int, completionOffset : Int) : InternalCompletionProposal = 
       CompletionProposal.create(kind, completionOffset).asInstanceOf[InternalCompletionProposal] 
     
-    val th = scu.getTreeHolder
-    import th._
-    import compiler.{ javaType, mapModifiers, mapTypeName, mapParamTypeName, mapParamTypePackageName, nme }
+    scu.withCompilerResult({ crh =>
     
-    val pos = compiler.rangePos(scu.getSourceFile, position, position, position)
-    
-    val typed = new SyncVar[Either[compiler.Tree, Throwable]]
-    compiler.askTypeAt(pos, typed)
-    val t0 = typed.get.left.toOption
-    
-    val completed = new SyncVar[Either[List[compiler.Member], Throwable]]
-    val (start, end) = t0 match {
-      case Some(s@compiler.Select(qualifier, name)) =>
-        val cpos0 = qualifier.pos.endOrPoint 
-        val cpos = compiler.rangePos(scu.getSourceFile, cpos0, cpos0, cpos0)
-        compiler.askTypeCompletion(cpos, completed)
-        (s.pos.point min s.pos.endOrPoint, s.pos.endOrPoint)
-      case _ =>
-        compiler.askScopeCompletion(pos, completed)
-        val region = compiler.findCompletionPoint(scu.getBuffer, position)
-        if (region == null)
-          (position, position)
-        else {
-          val start0 = region.getOffset
-          val end0 = start0+region.getLength
-          (start0, end0)
-        }
-    }
-
-    def createContext = {
-      new CompletionContext {
-        import CompletionContext._
-        
-        override def getOffset() = position
-        override def getToken() : Array[Char] = {
-          scu.getBuffer.getText(start, end-start).toArray
-        }
-        override def getTokenKind() = TOKEN_KIND_NAME
-        override def getTokenLocation() = 0
-        override def getTokenStart() = start
-        override def getTokenEnd() = end-1
-      }
-    }
-    
-    def acceptSymbol(sym : compiler.Symbol, tpe : compiler.Type, accessible : Boolean, inherited : Boolean, viaView : compiler.Symbol) {
-      if (sym.hasFlag(Flags.ACCESSOR) || sym.hasFlag(Flags.PARAMACCESSOR)) {
-        val proposal =  createProposal(CompletionProposal.FIELD_REF, position)
-        val fieldTypeSymbol = sym.tpe.resultType.typeSymbol
-        val transformedName = NameTransformer.decode(sym.name.toString) 
-        val relevance = if (inherited) 20 else if(viaView != compiler.NoSymbol) 10 else 30
-        
-        proposal.setDeclarationSignature(javaType(sym.owner.tpe).getSignature.replace('/', '.').toArray)
-        proposal.setSignature(javaType(sym.tpe).getSignature.replace('/', '.').toArray)
-        setDeclarationPackageName(proposal, sym.enclosingPackage.fullNameString.toArray)
-        setDeclarationTypeName(proposal, mapTypeName(sym.owner).toArray)
-        setPackageName(proposal, fieldTypeSymbol.enclosingPackage.fullNameString.toArray)
-        setTypeName(proposal, mapTypeName(fieldTypeSymbol).toArray)
-        proposal.setName(transformedName.toArray)
-        proposal.setCompletion(transformedName.toArray)
-        proposal.setFlags(mapModifiers(sym))
-        proposal.setReplaceRange(start, end)
-        proposal.setTokenRange(start, end)
-        proposal.setRelevance(relevance)
-        requestor.accept(proposal)
-      } else if (sym.isMethod && !sym.isConstructor && sym.name != nme.asInstanceOf_ && sym.name != nme.isInstanceOf_) {
-        val proposal =  createProposal(CompletionProposal.METHOD_REF, position)
-        val paramNames = sym.tpe.paramss.flatMap(_.map(_.name))
-        val paramTypes = sym.tpe.paramss.flatMap(_.map(_.tpe))
-        val resultTypeSymbol = sym.tpe.finalResultType.typeSymbol
-        val relevance = if (inherited) 20 else if(viaView != compiler.NoSymbol) 10 else 30
-        
-        val (transformedName, completion) = NameTransformer.decode(sym.name.toString) match {
-          case n@("$asInstanceOf" | "$isInstanceOf") =>
-            val n0 = n.substring(1) 
-            (n0, n0+"[]")
-          case n =>
-            (n, n+"()")
-        }
-        
-        val sig0 = javaType(sym.tpe).getSignature.replace('/', '.')
-        val sig = if (sig0.startsWith("(")) sig0 else "()"+sig0
-        
-        proposal.setDeclarationSignature(javaType(sym.owner.tpe).getSignature.replace('/', '.').toArray)
-        proposal.setSignature(sig.toArray)
-        setDeclarationPackageName(proposal, sym.enclosingPackage.fullNameString.toArray)
-        setDeclarationTypeName(proposal, mapTypeName(sym.owner).toArray)
-        setParameterPackageNames(proposal, paramTypes.map(mapParamTypePackageName(_).toArray).toArray)
-        setParameterTypeNames(proposal, paramTypes.map(mapParamTypeName(_).toArray).toArray)
-        setPackageName(proposal, resultTypeSymbol.enclosingPackage.fullNameString.toArray)
-        setTypeName(proposal, mapTypeName(resultTypeSymbol).toArray)
-        proposal.setName(transformedName.toArray)
-        proposal.setCompletion(completion.toArray)
-        proposal.setFlags(mapModifiers(sym))
-        proposal.setReplaceRange(start, end)
-        proposal.setTokenRange(start, end)
-        proposal.setRelevance(relevance)
-        proposal.setParameterNames(paramNames.map(_.toString.toArray).toArray)
-        requestor.accept(proposal)
-      }
-    }
-    
-    completed.get.left.toOption match {
-      case Some(completions) =>
-        requestor.acceptContext(createContext)
+      import crh._
+      import compiler.{ javaType, mapModifiers, mapTypeName, mapParamTypeName, mapParamTypePackageName, nme }
       
-        for(completion <- completions) {
-          assert(true)
-          completion match {
-            case compiler.TypeMember(sym, tpe, accessible, inherited, viaView) =>
-              acceptSymbol(sym, tpe, accessible, inherited, viaView)
-            case compiler.ScopeMember(sym, tpe, accessible, _) =>
-              acceptSymbol(sym, tpe, accessible, false, compiler.NoSymbol)
-            case _ =>
-              println("Not handled")
+      val pos = compiler.rangePos(sourceFile, position, position, position)
+      
+      val typed = new SyncVar[Either[compiler.Tree, Throwable]]
+      compiler.askTypeAt(pos, typed)
+      val t0 = typed.get.left.toOption
+      
+      val completed = new SyncVar[Either[List[compiler.Member], Throwable]]
+      val (start, end) = t0 match {
+        case Some(s@compiler.Select(qualifier, name)) =>
+          val cpos0 = qualifier.pos.endOrPoint 
+          val cpos = compiler.rangePos(sourceFile, cpos0, cpos0, cpos0)
+          compiler.askTypeCompletion(cpos, completed)
+          (s.pos.point min s.pos.endOrPoint, s.pos.endOrPoint)
+        case _ =>
+          compiler.askScopeCompletion(pos, completed)
+          val region = compiler.findCompletionPoint(scu.getBuffer, position)
+          if (region == null)
+            (position, position)
+          else {
+            val start0 = region.getOffset
+            val end0 = start0+region.getLength
+            (start0, end0)
           }
+      }
+  
+      def createContext = {
+        new CompletionContext {
+          import CompletionContext._
+          
+          override def getOffset() = position
+          override def getToken() : Array[Char] = {
+            scu.getBuffer.getText(start, end-start).toArray
+          }
+          override def getTokenKind() = TOKEN_KIND_NAME
+          override def getTokenLocation() = 0
+          override def getTokenStart() = start
+          override def getTokenEnd() = end-1
         }
-      case None =>
-        println("No completions")
-    }
+      }
+      
+      def acceptSymbol(sym : compiler.Symbol, tpe : compiler.Type, accessible : Boolean, inherited : Boolean, viaView : compiler.Symbol) {
+        if (sym.hasFlag(Flags.ACCESSOR) || sym.hasFlag(Flags.PARAMACCESSOR)) {
+          val proposal =  createProposal(CompletionProposal.FIELD_REF, position)
+          val fieldTypeSymbol = sym.tpe.resultType.typeSymbol
+          val transformedName = NameTransformer.decode(sym.name.toString) 
+          val relevance = if (inherited) 20 else if(viaView != compiler.NoSymbol) 10 else 30
+          
+          proposal.setDeclarationSignature(javaType(sym.owner.tpe).getSignature.replace('/', '.').toArray)
+          proposal.setSignature(javaType(sym.tpe).getSignature.replace('/', '.').toArray)
+          setDeclarationPackageName(proposal, sym.enclosingPackage.fullNameString.toArray)
+          setDeclarationTypeName(proposal, mapTypeName(sym.owner).toArray)
+          setPackageName(proposal, fieldTypeSymbol.enclosingPackage.fullNameString.toArray)
+          setTypeName(proposal, mapTypeName(fieldTypeSymbol).toArray)
+          proposal.setName(transformedName.toArray)
+          proposal.setCompletion(transformedName.toArray)
+          proposal.setFlags(mapModifiers(sym))
+          proposal.setReplaceRange(start, end)
+          proposal.setTokenRange(start, end)
+          proposal.setRelevance(relevance)
+          requestor.accept(proposal)
+        } else if (sym.isMethod && !sym.isConstructor && sym.name != nme.asInstanceOf_ && sym.name != nme.isInstanceOf_) {
+          val proposal =  createProposal(CompletionProposal.METHOD_REF, position)
+          val paramNames = sym.tpe.paramss.flatMap(_.map(_.name))
+          val paramTypes = sym.tpe.paramss.flatMap(_.map(_.tpe))
+          val resultTypeSymbol = sym.tpe.finalResultType.typeSymbol
+          val relevance = if (inherited) 20 else if(viaView != compiler.NoSymbol) 10 else 30
+          
+          val (transformedName, completion) = NameTransformer.decode(sym.name.toString) match {
+            case n@("$asInstanceOf" | "$isInstanceOf") =>
+              val n0 = n.substring(1) 
+              (n0, n0+"[]")
+            case n =>
+              (n, n+"()")
+          }
+          
+          val sig0 = javaType(sym.tpe).getSignature.replace('/', '.')
+          val sig = if (sig0.startsWith("(")) sig0 else "()"+sig0
+          
+          proposal.setDeclarationSignature(javaType(sym.owner.tpe).getSignature.replace('/', '.').toArray)
+          proposal.setSignature(sig.toArray)
+          setDeclarationPackageName(proposal, sym.enclosingPackage.fullNameString.toArray)
+          setDeclarationTypeName(proposal, mapTypeName(sym.owner).toArray)
+          setParameterPackageNames(proposal, paramTypes.map(mapParamTypePackageName(_).toArray).toArray)
+          setParameterTypeNames(proposal, paramTypes.map(mapParamTypeName(_).toArray).toArray)
+          setPackageName(proposal, resultTypeSymbol.enclosingPackage.fullNameString.toArray)
+          setTypeName(proposal, mapTypeName(resultTypeSymbol).toArray)
+          proposal.setName(transformedName.toArray)
+          proposal.setCompletion(completion.toArray)
+          proposal.setFlags(mapModifiers(sym))
+          proposal.setReplaceRange(start, end)
+          proposal.setTokenRange(start, end)
+          proposal.setRelevance(relevance)
+          proposal.setParameterNames(paramNames.map(_.toString.toArray).toArray)
+          requestor.accept(proposal)
+        }
+      }
+      
+      completed.get.left.toOption match {
+        case Some(completions) =>
+          requestor.acceptContext(createContext)
+        
+          for(completion <- completions) {
+            assert(true)
+            completion match {
+              case compiler.TypeMember(sym, tpe, accessible, inherited, viaView) =>
+                acceptSymbol(sym, tpe, accessible, inherited, viaView)
+              case compiler.ScopeMember(sym, tpe, accessible, _) =>
+                acceptSymbol(sym, tpe, accessible, false, compiler.NoSymbol)
+              case _ =>
+                println("Not handled")
+            }
+          }
+        case None =>
+          println("No completions")
+      }
+    })
   }
 }
 

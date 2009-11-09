@@ -12,9 +12,8 @@ import scala.concurrent.SyncVar
 import org.eclipse.core.resources.{ IFile, IResource }
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.jdt.core.{
-  BufferChangedEvent, CompletionRequestor, IBufferChangedListener, IJavaElement, IJavaModelStatusConstants,
+  BufferChangedEvent, CompletionRequestor, IBuffer, IBufferChangedListener, IJavaElement, IJavaModelStatusConstants,
   IProblemRequestor, ITypeRoot, JavaCore, JavaModelException, WorkingCopyOwner }
-import org.eclipse.jdt.core.compiler.IProblem
 import org.eclipse.jdt.internal.compiler.env
 import org.eclipse.jdt.internal.core.{
   CompilationUnitElementInfo, DefaultWorkingCopyOwner, JavaModelStatus, JavaProject, Openable,
@@ -27,97 +26,29 @@ import scala.tools.nsc.util.{ BatchSourceFile, SourceFile }
 import scala.tools.eclipse.contribution.weaving.jdt.{ IScalaCompilationUnit, IScalaWordFinder }
 
 import scala.tools.eclipse.{ ScalaPlugin, ScalaPresentationCompiler, ScalaSourceIndexer }
-
-abstract class TreeHolder {
-  val compiler : ScalaPresentationCompiler
-  val body : compiler.Tree
-  val problems : List[IProblem]
-}
+import scala.tools.eclipse.util.ReflectionUtils
 
 trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with ScalaElement with IScalaCompilationUnit with IBufferChangedListener {
   val project = ScalaPlugin.plugin.getScalaProject(getJavaProject.getProject)
 
   private lazy val aFile = getFile
-  private var sFile : BatchSourceFile = null
-  private var treeHolder : TreeHolder = null
   
   def getFile : AbstractFile
   
-  def getProblems : Array[IProblem] =
-    synchronized {
-      if (treeHolder != null && !treeHolder.problems.isEmpty) treeHolder.problems.toArray else null
-    }
-  
-  def getTreeHolder : TreeHolder = {
-    // Obtaining a reference to the resource must be done outside
-    // of sync to avoid a potential deadlock wrt discard
-    val file = getCorrespondingResource.asInstanceOf[IFile]
-    val sourceFile = getSourceFile
-    
-    val (result, changed) =
-      synchronized {
-        if (treeHolder != null) 
-          (treeHolder, false)
-        else {
-          treeHolder = new TreeHolder {
-            val compiler = project.presentationCompiler
-            val (body, problems) = {
-              val typed = new SyncVar[Either[compiler.Tree, Throwable]]
-              compiler.askType(sourceFile, true, typed)
-              typed.get match {
-                case Left(body0) =>
-                  val problems0 = if (file != null) compiler.problemsOf(file) else Nil
-                  (body0, problems0)
-                case Right(thr) =>
-                  ScalaPlugin.plugin.logError("Failure in presentation compiler", thr)
-                  (compiler.EmptyTree, Nil)
-              }
-            }
-          }
-          
-          (treeHolder, true)
-        }
-      }
-    
-    // Problem reporting must be done outside of sync to avoid
-    // a potential deadlock wrt buffer modification
-    if (changed) {
-      val problemRequestor = getProblemRequestor
-      if (problemRequestor != null) {
-        try {
-          problemRequestor.beginReporting
-          result.problems.map(problemRequestor.acceptProblem(_))
-        } finally {
-          problemRequestor.endReporting
-        }
-      }
-    }
-    
-    result
-  }
-  
+	def withCompilerResult[T](op : ScalaPresentationCompiler.CompilerResultHolder => T) : T =
+	  project.withCompilerResult(this)(op)
+	  
   override def bufferChanged(e : BufferChangedEvent) {
     if (e.getBuffer.isClosed)
       discard
-    else synchronized {
-      sFile = null
-      treeHolder = null
-    }
+    else
+      project.withPresentationCompiler(_.invalidateCompilerResult(this))
 
     super.bufferChanged(e)
   }
   
   def discard {
-    synchronized {
-      if (treeHolder != null) {
-        val th = treeHolder
-        import th._
-  
-        compiler.removeUnitOf(sFile)
-        sFile = null
-        treeHolder = null
-      }
-    }
+    project.withPresentationCompiler(_.discardCompilerResult(this))
   }
   
   override def close {
@@ -125,57 +56,55 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
     super.close
   }
   
-  def getSourceFile : SourceFile = {
-    if (getBuffer == null)
+  def createSourceFile : SourceFile = {
+    val buffer = openBuffer0(null, null)
+    if (buffer == null)
       throw new NullPointerException("getBuffer == null for: "+getElementName)
     
-    val buffer = {
-      val buffer0 = getBuffer.getCharacters
-      if (buffer0 != null)
-        buffer0
-      else {
+    val contents = {
+      val contents0 = buffer.getCharacters
+      if (contents0 != null)
+        contents0
+      else
         new Array[Char](0)
-      }
     }
-      
-    synchronized {
-      if (sFile == null)
-        sFile = new BatchSourceFile(aFile, buffer) 
-      sFile
-    }
+
+    new BatchSourceFile(aFile, contents)
   }
+
+  private def openBuffer0(pm : IProgressMonitor, info : AnyRef) = OpenableUtils.openBuffer(this, pm, info)
 
   def getProblemRequestor : IProblemRequestor = null
 
-  override def buildStructure(info : OpenableElementInfo, pm : IProgressMonitor, newElements : JMap[_, _], underlyingResource : IResource) : Boolean = {
-    val th = getTreeHolder
-    import th._
-
-    val buffer = getBuffer
-    if (body == null || body.isEmpty || buffer == null) {
-      info.setIsStructureKnown(false)
-      return info.isStructureKnown
-    }
-    
-    val sourceLength = buffer.getLength
-    new compiler.StructureBuilderTraverser(this, info, newElements.asInstanceOf[JMap[AnyRef, AnyRef]], sourceLength).traverse(body)
-    
-    info match {
-      case cuei : CompilationUnitElementInfo =>
-        cuei.setSourceLength(sourceLength)
-      case _ =>
-    }
-
-    info.setIsStructureKnown(true)
-    info.isStructureKnown
-  }
+  override def buildStructure(info : OpenableElementInfo, pm : IProgressMonitor, newElements : JMap[_, _], underlyingResource : IResource) : Boolean =
+  	withCompilerResult({ crh =>
+			import crh._
+	
+	    if (body == null || body.isEmpty) {
+	      info.setIsStructureKnown(false)
+	      return info.isStructureKnown
+	    }
+	    
+	    val sourceLength = sourceFile.length
+	    new compiler.StructureBuilderTraverser(this, info, newElements.asInstanceOf[JMap[AnyRef, AnyRef]], sourceLength).traverse(body)
+	    
+	    info match {
+	      case cuei : CompilationUnitElementInfo =>
+	        cuei.setSourceLength(sourceLength)
+	      case _ =>
+	    }
+	
+	    info.setIsStructureKnown(true)
+	    info.isStructureKnown
+  })
   
   def addToIndexer(indexer : ScalaSourceIndexer) {
-    val th = getTreeHolder 
-    import th._
-
-    if (body != null)
-      new compiler.IndexBuilderTraverser(indexer).traverse(body)
+    withCompilerResult({ crh =>
+	    import crh._
+	
+	    if (body != null)
+	      new compiler.IndexBuilderTraverser(indexer).traverse(body)
+	  })
   }
   
   def newSearchableEnvironment(workingCopyOwner : WorkingCopyOwner) : SearchableEnvironment = {
@@ -218,19 +147,21 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
   }
   
   override def reportMatches(matchLocator : MatchLocator, possibleMatch : PossibleMatch) {
-    val th = getTreeHolder 
-    import th._
-
-    if (body != null)
-      new compiler.MatchLocatorTraverser(this, matchLocator, possibleMatch).traverse(body)
+    withCompilerResult({ crh =>
+	    import crh._
+	
+	    if (body != null)
+	      new compiler.MatchLocatorTraverser(this, matchLocator, possibleMatch).traverse(body)
+	  })
   }
   
   override def createOverrideIndicators(annotationMap : JMap[_, _]) {
-    val th = getTreeHolder 
-    import th._
-
-    if (body != null)
-      new compiler.OverrideIndicatorBuilderTraverser(this, annotationMap.asInstanceOf[JMap[AnyRef, AnyRef]]).traverse(body)
+    withCompilerResult({ crh =>
+	    import crh._
+	
+	    if (body != null)
+	      new compiler.OverrideIndicatorBuilderTraverser(this, annotationMap.asInstanceOf[JMap[AnyRef, AnyRef]]).traverse(body)
+	  })
   }
   
   override def getImageDescriptor = {
@@ -244,6 +175,12 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
     }
   }
   
-  override def getScalaWordFinder() : IScalaWordFinder = project.presentationCompiler
+  override def getScalaWordFinder() : IScalaWordFinder = project.withPresentationCompiler(compiler => compiler) 
 }
 
+object OpenableUtils extends ReflectionUtils {
+  private val oClazz = classOf[Openable]
+  private val openBufferMethod = getDeclaredMethod(oClazz, "openBuffer", classOf[IProgressMonitor], classOf[AnyRef])
+
+  def openBuffer(o : Openable, pm : IProgressMonitor, info : AnyRef) : IBuffer = openBufferMethod.invoke(o, pm, info).asInstanceOf[IBuffer]
+}

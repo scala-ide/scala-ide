@@ -12,7 +12,7 @@ import org.eclipse.core.runtime.IStatus
 import org.eclipse.jdt.core.{
   ICompilationUnit, IJavaElement, IPackageDeclaration, IProblemRequestor, IJavaModelStatusConstants, IType, JavaModelException,
   WorkingCopyOwner }
-import org.eclipse.jdt.core.compiler.CharOperation
+import org.eclipse.jdt.core.compiler.{ CharOperation, IProblem }
 import org.eclipse.jdt.internal.compiler.env
 import org.eclipse.jdt.internal.compiler.env.IBinaryType
 import org.eclipse.jdt.internal.core.{
@@ -85,6 +85,8 @@ class ScalaClassFile(parent : PackageFragment, name : String, sourceFile : Strin
 
   def getFileName() : Array[Char] =
     getPath.toString.toCharArray
+
+  def getProblems : Array[IProblem] = null
     
   def closeBuffer0() = super.closeBuffer()
   def closing0(info : AnyRef) = super.closing(info)

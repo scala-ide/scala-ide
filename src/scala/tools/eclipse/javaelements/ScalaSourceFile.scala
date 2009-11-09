@@ -10,6 +10,7 @@ import java.util.{ HashMap => JHashMap, Map => JMap }
 import org.eclipse.core.resources.{ IFile, IResource }
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.jdt.core.{ IBuffer, ICompilationUnit, IJavaElement, IType, WorkingCopyOwner }
+import org.eclipse.jdt.core.compiler.IProblem
 import org.eclipse.jdt.internal.core.util.HandleFactory
 import org.eclipse.jdt.internal.core.{ BufferManager, CompilationUnit => JDTCompilationUnit, OpenableElementInfo, PackageFragment }
 
@@ -77,6 +78,9 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
       new VirtualFile(getElementName)
   }
 
+  def getProblems : Array[IProblem] =
+    withCompilerResult { crh => if (crh.problems.isEmpty) null else crh.problems.toArray }
+  
   def getCorrespondingElement(element : IJavaElement) : Option[IJavaElement] = {
     val name = element.getElementName
     getChildren.find(_.getElementName == name)
