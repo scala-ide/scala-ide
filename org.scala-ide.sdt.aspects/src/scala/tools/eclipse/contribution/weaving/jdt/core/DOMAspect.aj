@@ -18,6 +18,7 @@ import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.DefaultErrorHandlingPolicies;
 import org.eclipse.jdt.internal.compiler.ast.AbstractMethodDeclaration;
+import org.eclipse.jdt.internal.compiler.ast.AbstractVariableDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.env.AccessRestriction;
@@ -127,17 +128,31 @@ public privileged aspect DOMAspect {
       tpe.binding.getAnnotationTagBits();
       tpe.scope.buildFields();
       tpe.scope.buildMethods();
-      fixMethods(tpe, tpe.methods);
+      fixFields(tpe.fields);
+      fixMethods(tpe.methods);
       fixTypes(tpe.memberTypes);
     }
   }
   
-  private void fixMethods(TypeDeclaration tpe, AbstractMethodDeclaration[] methods) {
+  private void fixMethods(AbstractMethodDeclaration[] methods) {
+    if (methods == null)
+      return;
+    
     for(int i = 0, iLimit = methods.length; i < iLimit; ++i) {
       AbstractMethodDeclaration m = methods[i];
       m.bodyStart = m.declarationSourceStart;
       m.bodyEnd = m.declarationSourceEnd;
       m.binding.getAnnotationTagBits();
+    }
+  }
+  
+  private void fixFields(AbstractVariableDeclaration[] fields) {
+    if (fields == null)
+      return;
+    
+    for(int i = 0, iLimit = fields.length; i < iLimit; ++i) {
+      AbstractVariableDeclaration f = fields[i];
+      f.declarationEnd = f.declarationSourceEnd;
     }
   }
 }
