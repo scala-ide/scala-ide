@@ -10,6 +10,7 @@ Bundle-ClassPath:
 Bundle-Activator: 
  scala.tools.eclipse.ScalaPlugin
 Require-Bundle: 
+ org.eclipse.core.expressions,
  org.eclipse.core.filesystem,
  org.eclipse.core.resources,
  org.eclipse.core.runtime,
@@ -19,7 +20,7 @@ Require-Bundle:
  org.eclipse.jdt.core.manipulation,
  org.eclipse.jdt.debug,
  org.eclipse.jdt.debug.ui,
- org.eclipse.core.expressions,
+ org.eclipse.jdt.junit,
  org.eclipse.jdt.launching,
  org.eclipse.jdt.ui,
  org.eclipse.jface.text,
