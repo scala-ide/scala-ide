@@ -47,7 +47,7 @@ class ScalaBuilder extends IncrementalProjectBuilder {
     else {
       kind match {
         case INCREMENTAL_BUILD | AUTO_BUILD =>
-          val addedOrUpdated0 = new HashSet[IFile]
+          val addedOrUpdated0 = new HashSet[IFile] ++ allSourceFiles.filter(FileUtils.hasBuildErrors(_))
           val removed0 = new HashSet[IFile]
                                           
           getDelta(project.underlying).accept(new IResourceDeltaVisitor {

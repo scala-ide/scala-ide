@@ -8,6 +8,8 @@ package scala.tools.eclipse
 import org.eclipse.core.resources.{ IFile, IMarker }
 import org.eclipse.core.runtime.IProgressMonitor
 
+import scala.collection.mutable.HashSet
+
 import scala.tools.nsc.{ Global, Settings }
 import scala.tools.nsc.interactive.RefinedBuildManager
 import scala.tools.nsc.io.AbstractFile
@@ -19,7 +21,9 @@ import scala.tools.eclipse.util.{ EclipseResource, FileUtils }
 
 class EclipseBuildManager(project : ScalaProject, settings0: Settings) extends RefinedBuildManager(settings0) {
   var monitor : IProgressMonitor = _
-    
+  val pendingSources = new HashSet[IFile]
+  var hasErrors = false
+  
   class EclipseBuildCompiler(settings : Settings, reporter : Reporter) extends BuilderGlobal(settings, reporter) {
 
     def buildReporter = reporter.asInstanceOf[BuildReporter]
@@ -47,6 +51,7 @@ class EclipseBuildManager(project : ScalaProject, settings0: Settings) extends R
         override def compileLate(file : AbstractFile) = {
           file match {
             case EclipseResource(i : IFile) =>
+              pendingSources += i
               FileUtils.clearBuildErrors(i, monitor)
               FileUtils.clearTasks(i, monitor)
             case _ => 
@@ -64,6 +69,9 @@ class EclipseBuildManager(project : ScalaProject, settings0: Settings) extends R
     override def info0(pos : Position, msg : String, severity : Severity, force : Boolean) = {
       severity.count += 1
 
+      if (severity.id > 1)
+        EclipseBuildManager.this.hasErrors = true
+      
       val eclipseSeverity = severity.id match {
         case 2 => IMarker.SEVERITY_ERROR
         case 1 => IMarker.SEVERITY_WARNING
@@ -102,6 +110,16 @@ class EclipseBuildManager(project : ScalaProject, settings0: Settings) extends R
     }
   }
 
+  def build(addedOrUpdated : Set[IFile], removed : Set[IFile], pm : IProgressMonitor) {
+    monitor = pm
+    
+    pendingSources ++= addedOrUpdated
+    hasErrors = false
+    super.update(pendingSources.map(EclipseResource(_)), removed.map(EclipseResource(_)))
+    if (!hasErrors)
+      pendingSources.clear
+  }
+  
   override def newCompiler(settings: Settings) = new EclipseBuildCompiler(settings, new BuildReporter(project))
   
   override def buildingFiles(included: scala.collection.Set[AbstractFile]) {

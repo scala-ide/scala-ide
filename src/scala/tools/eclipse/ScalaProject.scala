@@ -362,8 +362,7 @@ class ScalaProject(val underlying : IProject) {
       
     hasBeenBuilt = true
 
-    buildManager.monitor = monitor
-    buildManager.update(addedOrUpdated.map(EclipseResource(_)), removed.map(EclipseResource(_)))
+    buildManager.build(addedOrUpdated, removed, monitor)
     refreshOutput
 
     buildManager.saveTo(EclipseResource(depFile), _.toString)
