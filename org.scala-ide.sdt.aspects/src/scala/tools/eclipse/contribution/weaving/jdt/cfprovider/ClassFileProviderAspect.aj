@@ -71,6 +71,10 @@ public privileged aspect ClassFileProviderAspect {
     within(org.eclipse.jdt..*) &&
     args(parent, name);
   
+  pointcut getTypeName(ClassFile cf) :
+    execution(public String ClassFile.getTypeName()) &&
+    target(cf);
+  
   pointcut mapSource() :
     execution(IBuffer ClassFile.mapSource(SourceMapper, IBinaryType)) &&
     target(IScalaClassFile);
@@ -152,6 +156,15 @@ public privileged aspect ClassFileProviderAspect {
     mapSource2() &&
     cflow(mapSource()) {
     return;
+  }
+  
+  String around(ClassFile cf) :
+    getTypeName(cf) {
+    if(cf instanceof IScalaClassFile) {
+      int lastDollar = cf.name.lastIndexOf('$');
+      return (lastDollar == -1 || lastDollar == cf.name.length()-1) ? cf.name : Util.localTypeName(cf.name, lastDollar, cf.name.length());
+    } else
+      return proceed(cf);
   }
   
   boolean around(Viewer viewer, Object parentElement, Object element) :
