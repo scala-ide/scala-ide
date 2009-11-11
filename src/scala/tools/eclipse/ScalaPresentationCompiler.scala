@@ -94,7 +94,7 @@ class ScalaPresentationCompiler(settings : Settings)
   
   def discardCompilerResult(scu : ScalaCompilationUnit) {
     results.remove(scu)
-    removeUnitOf(new BatchSourceFile(scu.getFile, Array[Char](0)))
+    removeUnitOf(new BatchSourceFile(scu.file, Array[Char](0)))
   }
 
   override def logError(msg : String, t : Throwable) =

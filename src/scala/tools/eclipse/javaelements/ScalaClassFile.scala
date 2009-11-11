@@ -48,7 +48,7 @@ class ScalaClassFile(parent : PackageFragment, name : String, sourceFile : Strin
   
   def getContents() = getBuffer.getCharacters
     
-  def getFile : AbstractFile = new VirtualFile(getSourceFileName)
+  override val file : AbstractFile = new VirtualFile(getSourceFileName)
   
   def getSourceFileName() = sourceFile
   

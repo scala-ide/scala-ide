@@ -31,9 +31,7 @@ import scala.tools.eclipse.util.ReflectionUtils
 trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with ScalaElement with IScalaCompilationUnit with IBufferChangedListener {
   val project = ScalaPlugin.plugin.getScalaProject(getJavaProject.getProject)
 
-  private lazy val aFile = getFile
-  
-  def getFile : AbstractFile
+  def file : AbstractFile
   
 	def withCompilerResult[T](op : ScalaPresentationCompiler.CompilerResultHolder => T) : T =
 	  project.withCompilerResult(this)(op)
@@ -69,7 +67,7 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
         new Array[Char](0)
     }
 
-    new BatchSourceFile(aFile, contents)
+    new BatchSourceFile(file, contents)
   }
 
   private def openBuffer0(pm : IProgressMonitor, info : AnyRef) = OpenableUtils.openBuffer(this, pm, info)
