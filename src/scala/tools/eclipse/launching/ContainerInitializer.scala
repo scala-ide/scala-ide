@@ -57,7 +57,7 @@ object ContainerInitializer {
         val url = FileLocator.find(bundle, Path.fromPortableString(portablePath), null)
         if(url == null) None else Some(Path.fromOSString(FileLocator.toFileURL(url).getPath))
       }
-      val scalaLibBundle = Platform.getBundle("scala.library")
+      val scalaLibBundle = Platform.getBundle(plugin.libraryPluginId)
       val libClasses = pathInBundle(scalaLibBundle, "/lib/scala-library.jar").get 
       val libSources = pathInBundle(scalaLibBundle, "/lib/scala-library-src.jar").get 
       val dbcClasses = pathInBundle(scalaLibBundle, "/lib/scala-dbc.jar").get 

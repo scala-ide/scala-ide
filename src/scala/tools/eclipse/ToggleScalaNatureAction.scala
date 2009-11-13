@@ -86,6 +86,13 @@ class ToggleScalaNatureAction extends IObjectActionDelegate {
     def hasNature : Boolean =  project.hasNature(plugin.natureId)
     /** Adds a nature to the project */
     def addNature : Unit = {
+      if (project.hasNature(ToggleScalaNatureAction.PLUGIN_NATURE_ID)) {
+        try {
+          ScalaLibraryPluginDependencyUtils.addScalaLibraryRequirement(project);
+        } catch { 
+          case e: NoClassDefFoundError => () // PDE is an optional dependency
+        }
+      }
       val desc = project.getDescription
       val natures = desc.getNatureIds
       val newNatures : Array[String] = new Array[String](natures.length + 1)
@@ -97,6 +104,13 @@ class ToggleScalaNatureAction extends IObjectActionDelegate {
     }
     /** Removes a nature from the project */
     def removeNature : Unit = {
+      if (project.hasNature(ToggleScalaNatureAction.PLUGIN_NATURE_ID)) {
+        try {
+          ScalaLibraryPluginDependencyUtils.removeScalaLibraryRequirement(project);
+        } catch { 
+          case e: NoClassDefFoundError => () // PDE is an optional dependency
+        }
+      }
       val desc = project.getDescription
       //Remove this nature from the list
       val natures = desc.getNatureIds filter {
@@ -115,4 +129,10 @@ class ToggleScalaNatureAction extends IObjectActionDelegate {
       }
     }
   }
+}
+
+object ToggleScalaNatureAction {
+
+  val PLUGIN_NATURE_ID = "org.eclipse.pde.PluginNature" /* == org.eclipse.pde.internal.core.natures.PDE.PLUGIN_NATURE */
+
 }

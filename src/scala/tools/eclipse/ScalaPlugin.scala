@@ -31,6 +31,7 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener {
   
   val OverrideIndicator = "scala.overrideIndicator"  
   def pluginId = "ch.epfl.lamp.sdt.core"
+  def libraryPluginId = "scala.library"
   def wizardPath = pluginId + ".wizards"
   def wizardId(name : String) = wizardPath + ".new" + name
   def classWizId = wizardId("Class")
