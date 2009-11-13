@@ -20,6 +20,10 @@ import org.eclipse.jface.operation.IRunnableContext
 
 import scala.tools.eclipse.javaelements.ScalaSourceFile
 
+/* This class can be eliminiated in favour of JavaApplicationLaunch shortcut as soon as 
+ * the JDTs method search works correctly for Scala.
+ */
+
 /**
  * This class extends the Java Launch functionality and overrides the sections that
  * require finding the main method as well as finding and creating new launch 
