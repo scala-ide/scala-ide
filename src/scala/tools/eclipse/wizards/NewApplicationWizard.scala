@@ -20,7 +20,9 @@ class NewApplicationWizard extends NewObjectWizard {
   override def body = """  def main(args : Array[String]) : Unit = {}"""
   override protected def postFinish(project : ScalaProject, file : IFile) = {
     super.postFinish(project, file)
-    val toRun = this.pkg.getElementName + "." +this.name
+    val pkgName = this.pkg.getElementName
+    val pkgPrefix = if (pkgName == "") "" else pkgName + "." 
+    val toRun =  pkgPrefix + this.name
     val launchName = DebugPlugin.getDefault.getLaunchManager().generateUniqueLaunchConfigurationNameFrom(toRun)
     val launchType = DebugPlugin.getDefault().getLaunchManager().getLaunchConfigurationType(ScalaPlugin.plugin.launchTypeId)
     val wc = launchType.newInstance(null, name)
