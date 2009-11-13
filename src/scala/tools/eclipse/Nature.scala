@@ -16,9 +16,6 @@ import org.eclipse.core.runtime.Path
 class Nature extends IProjectNature {
   protected def plugin : ScalaPlugin = ScalaPlugin.plugin
   
-  private val requiredBuilders = plugin.builderId :: Nil
-  private val unrequiredBuilders = JavaCore.BUILDER_ID :: Nil
-
   private var project : IProject = _
 
   override def getProject = project
@@ -28,21 +25,23 @@ class Nature extends IProjectNature {
     if (project == null || !project.isOpen) {
       plugin.logError("", null); return
     }
-    plugin.check {
-      val desc = project.getDescription
-      val spec =
-        requiredBuilders.map(b => { val cmd = desc.newCommand ; cmd.setBuilderName(b) ; cmd }) ++
-        desc.getBuildSpec.filter(b => !(requiredBuilders contains b.getBuilderName) && !(unrequiredBuilders contains b.getBuilderName))
-      desc.setBuildSpec(spec.toArray)
-      project.setDescription(desc, IResource.FORCE, null)
-    }
+    
+    replaceBuilder(project, JavaCore.BUILDER_ID, plugin.builderId)
+    
     plugin.check {
       val jp = JavaCore.create(getProject)
       val buf = new ArrayBuffer[IClasspathEntry]
-      // Scala classpath container before JRE container
-      buf ++= jp.getRawClasspath.filter(!_.getPath().equals(Path.fromPortableString(JavaRuntime.JRE_CONTAINER)))
-      buf += JavaCore.newContainerEntry(Path.fromPortableString(plugin.scalaLibId))
-      buf += JavaCore.newContainerEntry(Path.fromPortableString(JavaRuntime.JRE_CONTAINER))
+      buf ++= jp.getRawClasspath
+      
+      // Put the Scala classpath container before JRE container
+      val scalaLibEntry = JavaCore.newContainerEntry(Path.fromPortableString(plugin.scalaLibId))
+      val jreIndex = buf.indexWhere(_.getPath.toPortableString.startsWith(JavaRuntime.JRE_CONTAINER))
+      if (jreIndex != -1) {
+        buf.insert(jreIndex, scalaLibEntry)
+      } else {
+        buf += scalaLibEntry
+        buf += JavaCore.newContainerEntry(Path.fromPortableString(JavaRuntime.JRE_CONTAINER))
+      }
       jp.setRawClasspath(buf.toArray, null)
       jp.save(null, true)
       ()
@@ -55,13 +54,8 @@ class Nature extends IProjectNature {
     if (project == null || !project.isOpen) {
       plugin.logError("", null); return
     }
-
-    plugin.check {
-      val desc = project.getDescription
-      val spec = desc.getBuildSpec.filter(b => !(requiredBuilders contains b.getBuilderName) )
-      desc.setBuildSpec(spec)
-      project.setDescription(desc, IResource.FORCE, null)
-    }
+    
+    replaceBuilder(project, plugin.builderId, JavaCore.BUILDER_ID)
     
     val jp = JavaCore.create(getProject)
     val scalaLibPath = Path.fromPortableString(plugin.scalaLibId)
@@ -73,4 +67,23 @@ class Nature extends IProjectNature {
     jp.setRawClasspath(buf, null)
     jp.save(null, true)
   }
+  
+  private def replaceBuilder(project: IProject, builderToRemove: String, builderToAdd: String) {
+    plugin.check {
+      val description = project.getDescription
+      val previousCommands = description.getBuildSpec
+      val newBuilderCommandIfNecessary = 
+        if (previousCommands.exists( _.getBuilderName == builderToAdd )) 
+          Array() 
+        else {
+          val newBuilderCommand = description.newCommand;
+          newBuilderCommand.setBuilderName(builderToAdd);
+          Array(newBuilderCommand)
+        }
+      val newCommands = previousCommands.filter( _.getBuilderName != builderToRemove ) ++ newBuilderCommandIfNecessary
+      description.setBuildSpec(newCommands)
+      project.setDescription(description, IResource.FORCE, null)
+    }
+  }
+  
 }
