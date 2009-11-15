@@ -114,10 +114,21 @@ class EclipseBuildManager(project : ScalaProject, settings0: Settings) extends R
     monitor = pm
     
     pendingSources ++= addedOrUpdated
+    val toBuild = pendingSources.map(EclipseResource(_)) ++ unbuilt 
     hasErrors = false
-    super.update(pendingSources.map(EclipseResource(_)), removed.map(EclipseResource(_)))
+    super.update(toBuild, removed.map(EclipseResource(_)))
     if (!hasErrors)
       pendingSources.clear
+  }
+  
+  def unbuilt : Set[AbstractFile] = {
+    val targets = compiler.dependencyAnalysis.dependencies.targets
+    val missing = new HashSet[AbstractFile]
+    for (src <- targets.keysIterator)
+      if (targets(src).exists(!_.exists))
+        missing += src
+    
+    Set.empty ++ missing
   }
   
   override def newCompiler(settings: Settings) = new EclipseBuildCompiler(settings, new BuildReporter(project))

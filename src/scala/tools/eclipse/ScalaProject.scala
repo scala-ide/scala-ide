@@ -361,7 +361,8 @@ class ScalaProject(val underlying : IProject) {
       return
       
     hasBeenBuilt = true
-
+    
+    clearBuildErrors(monitor)
     buildManager.build(addedOrUpdated, removed, monitor)
     refreshOutput
 
