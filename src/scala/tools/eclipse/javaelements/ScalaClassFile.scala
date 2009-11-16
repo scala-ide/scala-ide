@@ -37,7 +37,7 @@ class ScalaClassFile(parent : PackageFragment, name : String, sourceFile : Strin
 
   def getCorrespondingElement(element : IJavaElement) : Option[IJavaElement] = {
     val name = element.getElementName
-    if (name.isEmpty)
+    if (name.length() == 0)
       None
     else
       getChildren.find(_.getElementName == name)
