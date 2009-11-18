@@ -9,6 +9,7 @@ import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants
 
 import scala.tools.nsc.symtab.Flags
 import scala.tools.eclipse.ScalaPresentationCompiler
+import ch.epfl.lamp.fjbg.{ JObjectType, JType }
 
 trait ScalaJavaMapper { self : ScalaPresentationCompiler => 
 
@@ -120,8 +121,14 @@ trait ScalaJavaMapper { self : ScalaPresentationCompiler =>
   def mapParamTypeSignature(t : Type) : String = {
     if (t.typeSymbolDirect.isTypeParameter)
       "T"+t.typeSymbolDirect.name.toString+";"
-    else
-      javaType(t).getSignature.replace('/', '.')
+    else {
+      val jt = javaType(t)
+      val fjt = if (jt == JType.UNKNOWN)
+        JObjectType.JAVA_LANG_OBJECT
+      else
+        jt
+      fjt.getSignature.replace('/', '.')
+    }
   }
   
   def mapTypeName(s : Symbol) : String =
