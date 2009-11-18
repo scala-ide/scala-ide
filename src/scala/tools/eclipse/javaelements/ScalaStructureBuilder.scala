@@ -508,7 +508,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
               }
             case ArrayAnnotArg(args) =>
               val taggedValues = args.map(getMemberValue)
-              val firstTag = taggedValues.first._1
+              val firstTag = taggedValues.head._1
               val tag = if (taggedValues.exists(_._1 != firstTag)) IMemberValuePair.K_UNKNOWN else firstTag
               val values = taggedValues.map(_._2)
               (tag, values)
