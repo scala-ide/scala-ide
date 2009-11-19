@@ -73,7 +73,7 @@ object ScalaOverrideIndicatorBuilder {
     isDeferred : Boolean
   ) extends Annotation(ANNOTATION_TYPE, false, text) with IScalaOverrideIndicator {
   
-    override def isOverwriteIndicator : boolean = isDeferred
+    override def isOverwriteIndicator : Boolean = isDeferred
   
     override def open() {
       val tpe0 = JDTUtils.resolveType(scu.newSearchableEnvironment().nameLookup, packageName, typeNames, 0)

@@ -99,7 +99,7 @@ class CompilationUnitAdapter(classFile : ScalaClassFile) extends Openable(classF
   override def isOpen() : Boolean = classFile.isOpen()
   override def makeConsistent(progress : IProgressMonitor) { classFile.makeConsistent(progress) }
   override def open(progress : IProgressMonitor) { classFile.open(progress) }
-  override def save(progress : IProgressMonitor, force : boolean) { classFile.save(progress, force) }
+  override def save(progress : IProgressMonitor, force : Boolean) { classFile.save(progress, force) }
   
   def getSource() : String = classFile.getSource()
   def getSourceRange() : ISourceRange = classFile.getSourceRange()
@@ -140,7 +140,7 @@ class CompilationUnitAdapter(classFile : ScalaClassFile) extends Openable(classF
   def restore() { throw new UnsupportedOperationException }
   
   def copy(container : IJavaElement, sibling : IJavaElement, rename : String, replace : Boolean, monitor : IProgressMonitor) { throw new UnsupportedOperationException }
-  def delete(force : boolean, monitor : IProgressMonitor) { throw new UnsupportedOperationException }
+  def delete(force : Boolean, monitor : IProgressMonitor) { throw new UnsupportedOperationException }
   def move(container : IJavaElement, sibling : IJavaElement, rename : String, replace : Boolean, monitor : IProgressMonitor) { throw new UnsupportedOperationException }
   def rename(name : String, replace : Boolean, monitor : IProgressMonitor) { throw new UnsupportedOperationException }
   
