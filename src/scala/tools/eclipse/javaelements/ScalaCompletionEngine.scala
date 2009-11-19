@@ -12,6 +12,7 @@ import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.jdt.internal.compiler.env
 import org.eclipse.jdt.core.{
   CompletionContext, CompletionProposal, CompletionRequestor, ITypeRoot, JavaCore, WorkingCopyOwner }
+import org.eclipse.jdt.core.compiler.CharOperation
 import org.eclipse.jdt.internal.codeassist.{ InternalCompletionContext, InternalCompletionProposal }
 import org.eclipse.jdt.internal.core.JavaProject
 import org.eclipse.jdt.ui.text.java.CompletionProposalCollector
@@ -64,6 +65,8 @@ class ScalaCompletionEngine {
             (start0, end0)
           }
       }
+      
+      val prefix = scu.getBuffer.getText(start, end-start).toArray
   
       def createContext = {
         new CompletionContext {
@@ -80,15 +83,16 @@ class ScalaCompletionEngine {
         }
       }
       
-      def acceptSymbol(sym : compiler.Symbol, tpe : compiler.Type, accessible : Boolean, inherited : Boolean, viaView : compiler.Symbol) {
+      def acceptSymbol(sym : compiler.Symbol, tpe0 : compiler.Type, accessible : Boolean, inherited : Boolean, viaView : compiler.Symbol) {
+        val tpe = compiler.uncurry.transformInfo(sym, tpe0)
         if (sym.hasFlag(Flags.ACCESSOR) || sym.hasFlag(Flags.PARAMACCESSOR)) {
-          val proposal =  createProposal(CompletionProposal.FIELD_REF, position)
-          val fieldTypeSymbol = sym.tpe.resultType.typeSymbol
+          val proposal =  createProposal(CompletionProposal.FIELD_REF, position-1)
+          val fieldTypeSymbol = tpe.resultType.typeSymbol
           val transformedName = NameTransformer.decode(sym.name.toString) 
           val relevance = if (inherited) 20 else if(viaView != compiler.NoSymbol) 10 else 30
           
           proposal.setDeclarationSignature(javaType(sym.owner.tpe).getSignature.replace('/', '.').toArray)
-          proposal.setSignature(javaType(sym.tpe).getSignature.replace('/', '.').toArray)
+          proposal.setSignature(javaType(tpe).getSignature.replace('/', '.').toArray)
           setDeclarationPackageName(proposal, sym.enclosingPackage.fullNameString.toArray)
           setDeclarationTypeName(proposal, mapTypeName(sym.owner).toArray)
           setPackageName(proposal, fieldTypeSymbol.enclosingPackage.fullNameString.toArray)
@@ -101,10 +105,10 @@ class ScalaCompletionEngine {
           proposal.setRelevance(relevance)
           requestor.accept(proposal)
         } else if (sym.isMethod && !sym.isConstructor && sym.name != nme.asInstanceOf_ && sym.name != nme.isInstanceOf_) {
-          val proposal =  createProposal(CompletionProposal.METHOD_REF, position)
-          val paramNames = sym.tpe.paramss.flatMap(_.map(_.name))
-          val paramTypes = sym.tpe.paramss.flatMap(_.map(_.tpe))
-          val resultTypeSymbol = sym.tpe.finalResultType.typeSymbol
+          val proposal =  createProposal(CompletionProposal.METHOD_REF, position-1)
+          val paramNames = tpe.paramss.flatMap(_.map(_.name))
+          val paramTypes = tpe.paramss.flatMap(_.map(_.tpe))
+          val resultTypeSymbol = tpe.finalResultType.typeSymbol
           val relevance = if (inherited) 20 else if(viaView != compiler.NoSymbol) 10 else 30
           
           val (transformedName, completion) = NameTransformer.decode(sym.name.toString) match {
@@ -115,7 +119,7 @@ class ScalaCompletionEngine {
               (n, n+"()")
           }
           
-          val sig0 = javaType(sym.tpe).getSignature.replace('/', '.')
+          val sig0 = javaType(tpe).getSignature.replace('/', '.')
           val sig = if (sig0.startsWith("(")) sig0 else "()"+sig0
           
           proposal.setDeclarationSignature(javaType(sym.owner.tpe).getSignature.replace('/', '.').toArray)
@@ -137,16 +141,20 @@ class ScalaCompletionEngine {
         }
       }
       
+      def nameMatches(sym : compiler.Symbol) = {
+        val name = sym.name.toString.toArray 
+        CharOperation.prefixEquals(prefix, name, false) ||
+        CharOperation.camelCaseMatch(prefix, name)
+      }
+      
       completed.get.left.toOption match {
         case Some(completions) =>
           requestor.acceptContext(createContext)
-        
           for(completion <- completions) {
-            assert(true)
             completion match {
-              case compiler.TypeMember(sym, tpe, accessible, inherited, viaView) =>
+              case compiler.TypeMember(sym, tpe, accessible, inherited, viaView) if nameMatches(sym) =>
                 acceptSymbol(sym, tpe, accessible, inherited, viaView)
-              case compiler.ScopeMember(sym, tpe, accessible, _) =>
+              case compiler.ScopeMember(sym, tpe, accessible, _) if nameMatches(sym) =>
                 acceptSymbol(sym, tpe, accessible, false, compiler.NoSymbol)
               case _ =>
                 println("Not handled")
