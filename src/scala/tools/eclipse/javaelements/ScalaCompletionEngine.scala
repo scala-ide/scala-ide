@@ -55,8 +55,12 @@ class ScalaCompletionEngine {
           compiler.askTypeCompletion(cpos, completed)
           (s.pos.point min s.pos.endOrPoint, s.pos.endOrPoint)
         case _ =>
-          compiler.askScopeCompletion(pos, completed)
           val region = compiler.findCompletionPoint(scu.getBuffer, position)
+          val cpos = if (region == null) pos else {
+            val start = region.getOffset
+            compiler.rangePos(sourceFile, start, start, start)
+          }
+          compiler.askScopeCompletion(cpos, completed)
           if (region == null)
             (position, position)
           else {
@@ -138,6 +142,20 @@ class ScalaCompletionEngine {
           proposal.setRelevance(relevance)
           proposal.setParameterNames(paramNames.map(_.toString.toArray).toArray)
           requestor.accept(proposal)
+        } else if (sym.isTerm) {
+          val proposal =  createProposal(CompletionProposal.LOCAL_VARIABLE_REF, position-1)
+          val transformedName = NameTransformer.decode(sym.name.toString) 
+          val relevance = 30
+          proposal.setSignature(javaType(tpe).getSignature.replace('/', '.').toArray)
+          setPackageName(proposal, tpe.typeSymbol.enclosingPackage.fullNameString.toArray)
+          setTypeName(proposal, mapTypeName(tpe.typeSymbol).toArray)
+          proposal.setName(transformedName.toArray)
+          proposal.setCompletion(transformedName.toArray)
+          proposal.setFlags(mapModifiers(sym))
+          proposal.setReplaceRange(start, end)
+          proposal.setTokenRange(start, end)
+          proposal.setRelevance(relevance)
+          requestor.accept(proposal)
         }
       }
       
@@ -157,7 +175,7 @@ class ScalaCompletionEngine {
               case compiler.ScopeMember(sym, tpe, accessible, _) if nameMatches(sym) =>
                 acceptSymbol(sym, tpe, accessible, false, compiler.NoSymbol)
               case _ =>
-                println("Not handled")
+                //println("Not handled")
             }
           }
         case None =>
