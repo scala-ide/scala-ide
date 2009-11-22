@@ -11,13 +11,10 @@ import org.eclipse.jdt.ui.text.JavaSourceViewerConfiguration
 import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.jface.text.ITextOperationTarget
 import org.eclipse.jface.text.source.SourceViewerConfiguration
+import org.eclipse.ui.editors.text.{ ForwardingDocumentProvider, TextFileDocumentProvider }
 import org.eclipse.ui.texteditor.{ IAbstractTextEditorHelpContextIds, ITextEditorActionConstants, IWorkbenchActionDefinitionIds, TextOperationAction }
 
-import org.eclipse.jdt.internal.ui.JavaPlugin
-import org.eclipse.ui.editors.text.ForwardingDocumentProvider
-import org.eclipse.jdt.ui.text.IJavaPartitions
-import scala.tools.eclipse.ui._
-import org.eclipse.jdt.internal.ui.javaeditor.CompilationUnitDocumentProvider
+import scala.tools.eclipse.ui.ScalaDocumentSetupParticipant
 
 import scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.ScalaEditorStub 
 
@@ -25,10 +22,14 @@ class ScalaSourceFileEditor extends ScalaEditorStub with ScalaEditor {
   
   setPartName("Scala Editor")
   
-  // Override the default document provider with a document provider that uses 
+  // Reconfigure the default document provider with a parent provider that uses 
   // the scala partition scanner
-  val currentProvider = getDocumentProvider
-  this.setDocumentProvider(new ScalaDocumentProvider(currentProvider))
+  {
+    val cudp = getDocumentProvider.asInstanceOf[TextFileDocumentProvider]
+    val parentProvider = new TextFileDocumentProvider
+    val provider = new ForwardingDocumentProvider(ScalaPartitionScanner.SCALA_PARTITIONING, new ScalaDocumentSetupParticipant, parentProvider)
+    cudp.setParentDocumentProvider(provider)
+  }
 
   override protected def createActions : Unit = {
     super.createActions
