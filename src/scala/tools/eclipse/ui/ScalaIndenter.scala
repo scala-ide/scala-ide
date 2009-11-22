@@ -29,6 +29,7 @@ import java.lang.Math.min
 
 import scala.collection.mutable.Map
 
+import scala.annotation.tailrec
 
 // TODO Move this out into a new file
 trait PreferenceProvider {
@@ -161,27 +162,6 @@ class ScalaIndenter(
     }
 
     return true
-  }
-
-  private def prefTernaryDeepAlign : Boolean = {
-    val option = getCoreFormatterOption(DefaultCodeFormatterConstants.FORMATTER_ALIGNMENT_FOR_CONDITIONAL_EXPRESSION)
-    try {
-      return DefaultCodeFormatterConstants.getIndentStyle(option) == DefaultCodeFormatterConstants.INDENT_ON_COLUMN
-    } catch {
-      case _ : IllegalArgumentException => return false // ignore and return default
-    }
-  }
-
-  private def prefTernaryIndent : Int = {
-    val option = getCoreFormatterOption(DefaultCodeFormatterConstants.FORMATTER_ALIGNMENT_FOR_CONDITIONAL_EXPRESSION)
-    try {
-      if (DefaultCodeFormatterConstants.getIndentStyle(option) == DefaultCodeFormatterConstants.INDENT_BY_ONE)
-        return 1
-    } catch {
-      case _ : IllegalArgumentException => // ignore and return default
-    }
-
-    return prefContinuationIndent
   }
 
   private def prefCaseIndent : Int = {
@@ -858,21 +838,6 @@ class ScalaIndenter(
         fIndent = prefAssignmentIndent
         return fPosition
 
-      case Symbols.TokenCOLON =>
-        // TODO handle ternary deep indentation
-        fIndent = prefCaseBlockIndent
-        return fPosition
-
-      // TODO We might want to remove this as Scala doesn't have the ternary operator
-      case Symbols.TokenQUESTIONMARK =>
-        if (prefTernaryDeepAlign) {
-          setFirstElementAlignment(fPosition, offset + 1)
-          return fPosition
-        } else {
-          fIndent = prefTernaryIndent
-          return fPosition
-        }
-
       // indentation for blockless introducers:
       case Symbols.TokenDO |
            Symbols.TokenWHILE |
@@ -1051,6 +1016,7 @@ class ScalaIndenter(
     }
     
     // We never reach here
+    assert(true)
     return 0
   }
   
@@ -1074,33 +1040,6 @@ class ScalaIndenter(
     
 
   /**
-   * Returns true if the colon at the current position is part of a conditional
-   * (ternary) expression, false otherwise.
-   *
-   * @return true if the colon at the current position is part of a conditional
-   */
-  private def isConditional : Boolean = {
-    while (true) {
-      nextToken
-      fToken match {
-        // search for case labels, which consist of (possibly qualified) identifiers or numbers
-        case Symbols.TokenIDENT |
-             Symbols.TokenOTHER =>
-          // dots for qualified constants
-          // Do nothing
-        case Symbols.TokenCASE |
-             Symbols.TokenDEFAULT =>
-          return false
-        
-        case _ =>
-          return true
-      }
-    }
-    
-    return false // never reach here
-  }
-
-  /**
    * Returns as a reference any previous <code>switch</code> labels (<code>case</code>
    * or <code>default</code>) or the offset of the brace that scopes the switch
    * statement. Sets <code>fIndent</code> to <code>prefCaseIndent</code> upon
@@ -1108,41 +1047,40 @@ class ScalaIndenter(
    *
    * @return the reference offset for a <code>switch</code> label
    */
+  @tailrec
   private def matchCaseAlignment : Int = {
-    while (true) {
-      nextToken
-      fToken match {
-        // invalid cases: another case label or an LBRACE must come before a case
-        // -> bail out with the current position
-        case Symbols.TokenLPAREN |
-             Symbols.TokenLBRACKET |
-             Symbols.TokenEOF =>
-          return fPosition
-          
-        case Symbols.TokenLBRACE =>
-          // opening brace of switch statement
-          fIndent = prefCaseIndent
-          return fPosition
-          
-        case Symbols.TokenCASE |
-             Symbols.TokenDEFAULT =>
-          // align with previous label
-          fIndent = 0
-          return fPosition
+    nextToken
+    fToken match {
+      // invalid cases: another case label or an LBRACE must come before a case
+      // -> bail out with the current position
+      case Symbols.TokenLPAREN |
+           Symbols.TokenLBRACKET |
+           Symbols.TokenEOF =>
+        return fPosition
+        
+      case Symbols.TokenLBRACE =>
+        // opening brace of switch statement
+        fIndent = prefCaseIndent
+        return fPosition
+        
+      case Symbols.TokenCASE |
+           Symbols.TokenDEFAULT =>
+        // align with previous label
+        fIndent = 0
+        return fPosition
 
-        // scopes: skip them
-        case Symbols.TokenRPAREN |
-             Symbols.TokenRBRACKET |
-             Symbols.TokenRBRACE |
-             Symbols.TokenGREATERTHAN =>
-          skipScope
+      // scopes: skip them
+      case Symbols.TokenRPAREN |
+           Symbols.TokenRBRACKET |
+           Symbols.TokenRBRACE |
+           Symbols.TokenGREATERTHAN =>
+        skipScope
+        return matchCaseAlignment
 
-        case _ =>
-          // keep searching
-      }
+      case _ =>
+        // keep searching
+        return matchCaseAlignment
     }
-    
-    return 0 // Never get here
   }
 
   /**
@@ -1192,14 +1130,6 @@ class ScalaIndenter(
         case Symbols.TokenSEMICOLON =>
           return fPosition
           
-        case Symbols.TokenQUESTIONMARK =>
-          if (prefTernaryDeepAlign) {
-            setFirstElementAlignment(fPosition - 1, fPosition + 1)
-            return fPosition
-          } else {
-            fIndent = prefTernaryIndent
-            return fPosition
-          }
         case Symbols.TokenEOF =>
           return 0
           

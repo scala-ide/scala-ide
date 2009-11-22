@@ -32,18 +32,18 @@
             name="Scala Compiler Preferences">
       </page>
    </extension>
-	<extension point="org.eclipse.core.runtime.contentTypes">
-		<content-type id="scala.tools.eclipse.scalaSource" name="Scala Source File" 
-			base-type="org.eclipse.core.runtime.text"
-			priority="high"				
-			file-extensions="scala"/>
-		<content-type id="scala.tools.eclipse.scalaClass" name="Scala Class File" 
-			base-type="org.eclipse.jdt.core.javaClass"
-			priority="high"
-			file-extensions="class">        
-			<describer class="scala.tools.eclipse.ScalaClassFileDescriber"/>
-		</content-type>        
-	</extension>
+  <extension point="org.eclipse.core.runtime.contentTypes">
+    <content-type id="scala.tools.eclipse.scalaSource" name="Scala Source File" 
+      base-type="org.eclipse.core.runtime.text"
+      priority="high"       
+      file-extensions="scala"/>
+    <content-type id="scala.tools.eclipse.scalaClass" name="Scala Class File" 
+      base-type="org.eclipse.jdt.core.javaClass"
+      priority="high"
+      file-extensions="class">        
+      <describer class="scala.tools.eclipse.ScalaClassFileDescriber"/>
+    </content-type>        
+  </extension>
    
    <extension
          point="org.eclipse.ui.editors">
@@ -136,8 +136,8 @@
       name="ScalaDocumentSetupParticipant"
       point="org.eclipse.core.filebuffers.documentSetup">
       <participant
-         contentTypeId="scala.tools.eclipse.scalaSource"
-         class="org.eclipse.jdt.internal.ui.javaeditor.JavaDocumentSetupParticipant">
+            class="scala.tools.eclipse.ui.ScalaDocumentSetupParticipant"
+            extensions="scala">
       </participant>
    </extension>
    <extension point="org.eclipse.ui.perspectives">
@@ -222,7 +222,7 @@
          point="org.eclipse.core.resources.markers">
       <super type="org.eclipse.core.resources.problemmarker"/>
       <super type="org.eclipse.core.resources.textmarker"/>
-			<super type="org.eclipse.jdt.core.problem"/>
+      <super type="org.eclipse.jdt.core.problem"/>
       <persistent value="true"/>
    </extension>
    
@@ -298,11 +298,11 @@
      </launchConfigurationType>
    </extension>
    <extension point="org.eclipse.debug.core.sourceLocators">
-   		<sourceLocator
-   			id="scala.tools.eclipse.launching.ScalaSourceLookupDirector"
-   			class="scala.tools.eclipse.launching.ScalaSourceLookupDirector"
-   			name="Scala Source Locator">
-   		</sourceLocator>
+      <sourceLocator
+        id="scala.tools.eclipse.launching.ScalaSourceLookupDirector"
+        class="scala.tools.eclipse.launching.ScalaSourceLookupDirector"
+        name="Scala Source Locator">
+      </sourceLocator>
    </extension>
    <extension point="org.eclipse.debug.ui.launchConfigurationTypeImages">
      <launchConfigurationTypeImage
@@ -370,7 +370,7 @@
    </extension>
    <extension point="org.eclipse.ui.actionSetPartAssociations">
       <actionSetPartAssociation targetID="org.eclipse.jdt.ui.A_OpenActionSet">
-	    <part id="scala.tools.eclipse.ScalaSourceFileEditor"></part>
+      <part id="scala.tools.eclipse.ScalaSourceFileEditor"></part>
       </actionSetPartAssociation>
    </extension>
    <extension point="org.eclipse.help.toc">
@@ -455,7 +455,7 @@
          </action>
          <visibility>
            <and>
-         	<objectState name="projectNature" value="ch.epfl.lamp.sdt.core.scalanature"/>
+          <objectState name="projectNature" value="ch.epfl.lamp.sdt.core.scalanature"/>
              <objectClass name="org.eclipse.jdt.core.IJavaProject"/>
            </and>
          </visibility>
@@ -485,11 +485,11 @@
          </action>
          <visibility>
             <and>
-         		<not>
-         			<objectState name="projectNature" value="ch.epfl.lamp.sdt.core.scalanature"/>
-         		</not>
-         		<objectClass name="org.eclipse.jdt.core.IJavaProject"/>
-         	</and>
+            <not>
+              <objectState name="projectNature" value="ch.epfl.lamp.sdt.core.scalanature"/>
+            </not>
+            <objectClass name="org.eclipse.jdt.core.IJavaProject"/>
+          </and>
          </visibility>
       </objectContribution>
 
@@ -551,13 +551,13 @@
   
   <extension point="org.eclipse.ui.bindings">
     <key
-  	  commandId="org.eclipse.shortcut.scala.run"
-  	  schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-  	  sequence="M2+M3+X S" />
+      commandId="org.eclipse.shortcut.scala.run"
+      schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+      sequence="M2+M3+X S" />
     <key
-  	  commandId="org.eclipse.shortcut.scala.debug"
-  	  schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-  	  sequence="M2+M3+D S" />
+      commandId="org.eclipse.shortcut.scala.debug"
+      schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+      sequence="M2+M3+D S" />
   </extension>
   
   <extension point="org.eclipse.contribution.weaving.jdt.cuprovider">

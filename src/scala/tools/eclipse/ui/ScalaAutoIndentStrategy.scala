@@ -21,6 +21,7 @@ import org.eclipse.jface.text.ITypedRegion;
 import org.eclipse.jface.text.Region;
 import org.eclipse.jface.text.TextUtilities;
 import org.eclipse.jface.text.rules.FastPartitioner;
+import org.eclipse.jface.text.rules.RuleBasedPartitioner
 import org.eclipse.jface.text.source.ISourceViewer;
 
 import org.eclipse.ui.IEditorPart;
@@ -54,10 +55,11 @@ import org.eclipse.jdt.ui.PreferenceConstants;
 import org.eclipse.jdt.ui.text.IJavaPartitions;
 
 import org.eclipse.jdt.internal.ui.JavaPlugin;
-import org.eclipse.jdt.internal.ui.text.FastJavaPartitionScanner;
 import org.eclipse.jdt.internal.ui.text.JavaHeuristicScanner;
 import org.eclipse.jdt.internal.ui.text.JavaIndenter;
 import org.eclipse.jdt.internal.ui.text.Symbols;
+
+import scala.tools.eclipse.ScalaPartitionScanner
 
 import scala.util.matching.Regex
 
@@ -615,9 +617,9 @@ class ScalaAutoIndentStrategy(
       IJavaPartitions.JAVA_CHARACTER,
       IDocument.DEFAULT_CONTENT_TYPE
     )
-    val partitioner = new FastPartitioner(new FastJavaPartitionScanner(), types)
+    val partitioner = new FastPartitioner(new ScalaPartitionScanner(), types)
     partitioner.connect(document)
-    document.setDocumentPartitioner(IJavaPartitions.JAVA_PARTITIONING, partitioner)
+    document.setDocumentPartitioner(ScalaPartitionScanner.SCALA_PARTITIONING, partitioner)
   }
 
   /**
@@ -626,7 +628,7 @@ class ScalaAutoIndentStrategy(
    * @param document the document
    */
   private def removeJavaStuff(document : Document) : Unit = {
-    document.setDocumentPartitioner(IJavaPartitions.JAVA_PARTITIONING, null)
+    document.setDocumentPartitioner(ScalaPartitionScanner.SCALA_PARTITIONING, null)
   }
 
   private def smartPaste(document : IDocument, command : DocumentCommand) : Unit = {
@@ -772,7 +774,7 @@ class ScalaAutoIndentStrategy(
 
     // don't count the space before javadoc like, asterisk-style comment lines
     if (to > from && to < endOffset - 1 && document.get(to - 1, 2).equals(" *")) {
-      val textType = TextUtilities.getContentType(document, IJavaPartitions.JAVA_PARTITIONING, to, true)
+      val textType = TextUtilities.getContentType(document, ScalaPartitionScanner.SCALA_PARTITIONING, to, true)
       if (textType.equals(IJavaPartitions.JAVA_DOC) || textType.equals(IJavaPartitions.JAVA_MULTI_LINE_COMMENT))
         to -= 1
     }
@@ -1203,6 +1205,7 @@ class ScalaAutoIndentStrategy(
    * @see org.eclipse.jface.text.IAutoIndentStrategy#customizeDocumentCommand(org.eclipse.jface.text.IDocument, org.eclipse.jface.text.DocumentCommand)
    */
   override def customizeDocumentCommand(d : IDocument, c : DocumentCommand) : Unit = {
+    
     if (c.doit == false)
       return
 
