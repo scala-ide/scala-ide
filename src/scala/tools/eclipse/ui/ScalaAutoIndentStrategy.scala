@@ -619,7 +619,7 @@ class ScalaAutoIndentStrategy(
     )
     val partitioner = new FastPartitioner(new ScalaPartitionScanner(), types)
     partitioner.connect(document)
-    document.setDocumentPartitioner(ScalaPartitionScanner.SCALA_PARTITIONING, partitioner)
+    document.setDocumentPartitioner(IJavaPartitions.JAVA_PARTITIONING, partitioner)
   }
 
   /**
@@ -628,7 +628,7 @@ class ScalaAutoIndentStrategy(
    * @param document the document
    */
   private def removeJavaStuff(document : Document) : Unit = {
-    document.setDocumentPartitioner(ScalaPartitionScanner.SCALA_PARTITIONING, null)
+    document.setDocumentPartitioner(IJavaPartitions.JAVA_PARTITIONING, null)
   }
 
   private def smartPaste(document : IDocument, command : DocumentCommand) : Unit = {
@@ -774,7 +774,7 @@ class ScalaAutoIndentStrategy(
 
     // don't count the space before javadoc like, asterisk-style comment lines
     if (to > from && to < endOffset - 1 && document.get(to - 1, 2).equals(" *")) {
-      val textType = TextUtilities.getContentType(document, ScalaPartitionScanner.SCALA_PARTITIONING, to, true)
+      val textType = TextUtilities.getContentType(document, IJavaPartitions.JAVA_PARTITIONING, to, true)
       if (textType.equals(IJavaPartitions.JAVA_DOC) || textType.equals(IJavaPartitions.JAVA_MULTI_LINE_COMMENT))
         to -= 1
     }

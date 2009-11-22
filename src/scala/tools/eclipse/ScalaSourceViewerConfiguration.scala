@@ -26,7 +26,7 @@ import scala.tools.eclipse.ui.{ JdtPreferenceProvider, ScalaAutoIndentStrategy, 
 import scala.tools.eclipse.util.ReflectionUtils
 
 class ScalaSourceViewerConfiguration(store : IPreferenceStore, editor : ITextEditor) 
-  extends JavaSourceViewerConfiguration(JavaPlugin.getDefault.getJavaTextTools.getColorManager, store, editor, ScalaPartitionScanner.SCALA_PARTITIONING) {
+  extends JavaSourceViewerConfiguration(JavaPlugin.getDefault.getJavaTextTools.getColorManager, store, editor, IJavaPartitions.JAVA_PARTITIONING) {
   
   import ScalaSourceViewerConfigurationUtils._
   

@@ -7,6 +7,7 @@ package scala.tools.eclipse
 
 import java.{ util => ju }
 
+import org.eclipse.jdt.internal.ui.javaeditor.CompilationUnitEditor
 import org.eclipse.jdt.ui.text.JavaSourceViewerConfiguration
 import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.jface.text.ITextOperationTarget
@@ -14,23 +15,10 @@ import org.eclipse.jface.text.source.SourceViewerConfiguration
 import org.eclipse.ui.editors.text.{ ForwardingDocumentProvider, TextFileDocumentProvider }
 import org.eclipse.ui.texteditor.{ IAbstractTextEditorHelpContextIds, ITextEditorActionConstants, IWorkbenchActionDefinitionIds, TextOperationAction }
 
-import scala.tools.eclipse.ui.ScalaDocumentSetupParticipant
-
-import scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.ScalaEditorStub 
-
-class ScalaSourceFileEditor extends ScalaEditorStub with ScalaEditor {
+class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
   
   setPartName("Scala Editor")
   
-  // Reconfigure the default document provider with a parent provider that uses 
-  // the scala partition scanner
-  {
-    val cudp = getDocumentProvider.asInstanceOf[TextFileDocumentProvider]
-    val parentProvider = new TextFileDocumentProvider
-    val provider = new ForwardingDocumentProvider(ScalaPartitionScanner.SCALA_PARTITIONING, new ScalaDocumentSetupParticipant, parentProvider)
-    cudp.setParentDocumentProvider(provider)
-  }
-
   override protected def createActions : Unit = {
     super.createActions
     

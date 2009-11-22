@@ -20,12 +20,6 @@ import org.eclipse.jface.text.rules.WordRule
 import org.eclipse.jdt.ui.text.IJavaPartitions
 import org.eclipse.jdt.ui.text.IJavaPartitions._
 
-
-object ScalaPartitionScanner {
-  val SCALA_PARTITIONING = "scala-partitioning"
-}
-
-
 /**
  * This scanner is inspired by the JavaPartitionScanner from the JDT.
  */

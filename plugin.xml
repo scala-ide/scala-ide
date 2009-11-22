@@ -136,8 +136,8 @@
       name="ScalaDocumentSetupParticipant"
       point="org.eclipse.core.filebuffers.documentSetup">
       <participant
-            class="scala.tools.eclipse.ui.ScalaDocumentSetupParticipant"
-            extensions="scala">
+         contentTypeId="scala.tools.eclipse.scalaSource"
+         class="org.eclipse.jdt.internal.ui.javaeditor.JavaDocumentSetupParticipant">
       </participant>
    </extension>
    <extension point="org.eclipse.ui.perspectives">
