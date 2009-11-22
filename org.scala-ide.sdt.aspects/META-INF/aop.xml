@@ -13,6 +13,7 @@
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.ScalaCloseStringsAspect"/>
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.ScalaEditorPreferencesAspect"/>
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.SaveParticipantRegistryAspect"/>
+<aspect name="scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.ScalaPartitionerAspect"/>
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.ui.ScalaOverrideLabelAspect"/>
 </aspects>
 </aspectj>
