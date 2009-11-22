@@ -13,7 +13,7 @@ public privileged aspect ScalaEditorPreferencesAspect {
   pointcut isSemanticHighlightingEnabled() :
     execution(boolean JavaEditor.isSemanticHighlightingEnabled());
   
-  boolean around(ScalaEditorStub editor) :
+  boolean around(IScalaEditor editor) :
     isSemanticHighlightingEnabled() && target(editor) {
     // Disable Java semantic highlighting for Scala source
     return false;
