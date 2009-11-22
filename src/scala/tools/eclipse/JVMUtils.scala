@@ -20,7 +20,7 @@ trait JVMUtils { self : Global =>
   def javaFlags(sym : Symbol) : Int = codeGenerator.javaFlags(sym)
   
   def javaType(t: Type): JType = t match {
-    case ErrorType => JType.UNKNOWN
+    case ErrorType | NoType => JType.UNKNOWN
 
     case m : MethodType =>
       val t = m.finalResultType

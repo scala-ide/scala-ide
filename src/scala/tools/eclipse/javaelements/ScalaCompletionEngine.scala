@@ -170,9 +170,9 @@ class ScalaCompletionEngine {
           requestor.acceptContext(createContext)
           for(completion <- completions) {
             completion match {
-              case compiler.TypeMember(sym, tpe, accessible, inherited, viaView) if nameMatches(sym) =>
+              case compiler.TypeMember(sym, tpe, accessible, inherited, viaView) if nameMatches(sym) && tpe != compiler.NoType =>
                 acceptSymbol(sym, tpe, accessible, inherited, viaView)
-              case compiler.ScopeMember(sym, tpe, accessible, _) if nameMatches(sym) =>
+              case compiler.ScopeMember(sym, tpe, accessible, _) if nameMatches(sym) && tpe != compiler.NoType =>
                 acceptSymbol(sym, tpe, accessible, false, compiler.NoSymbol)
               case _ =>
                 //println("Not handled")
