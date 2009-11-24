@@ -240,7 +240,7 @@ class ScalaSelectionEngine(nameEnvironment : SearchableEnvironment, requestor : 
                   println("Unhandled: "+sym.getClass.getName)
               }
               
-            case s : compiler.Select =>
+            case s : compiler.Select if s.symbol != null && s.symbol != NoSymbol =>
               val sym = s.symbol
               if (sym.hasFlag(Flags.JAVA)) {
                 if (sym.isModule || sym.isClass)

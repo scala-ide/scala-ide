@@ -386,7 +386,17 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         
         val fps = for(vps <- d.vparamss; vp <- vps) yield vp
         
-        val paramTypes = Array(fps.map(v => Signature.createTypeSignature(mapType(uncurry.transformInfo(v.symbol, v.tpe).typeSymbol), false)) : _*)
+        def paramType(v : ValDef) = {
+          val sym = v.symbol
+          val tpe = v.tpe
+          if (sym.isType || tpe != null)
+            uncurry.transformInfo(v.symbol, v.tpe).typeSymbol
+          else {
+            NoSymbol
+          }
+        }
+        
+        val paramTypes = Array(fps.map(v => Signature.createTypeSignature(mapType(paramType(v)), false)) : _*)
         val paramNames = Array(fps.map(n => nme.getterName(n.name).toString.toArray) : _*)
         
         val sw = new StringWriter

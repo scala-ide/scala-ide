@@ -45,7 +45,11 @@ class ScalaCompletionEngine {
       
       val typed = new SyncVar[Either[compiler.Tree, Throwable]]
       compiler.askTypeAt(pos, typed)
-      val t0 = typed.get.left.toOption
+      val t1 = typed.get.left.toOption
+      val t0 = t1 match {
+        case Some(tt : compiler.TypeTree) => Some(tt.original)
+        case t => t 
+      }
       
       val completed = new SyncVar[Either[List[compiler.Member], Throwable]]
       val (start, end) = t0 match {
@@ -54,6 +58,15 @@ class ScalaCompletionEngine {
           val cpos = compiler.rangePos(sourceFile, cpos0, cpos0, cpos0)
           compiler.askTypeCompletion(cpos, completed)
           (s.pos.point min s.pos.endOrPoint, s.pos.endOrPoint)
+        case Some(i@compiler.Import(expr, selectors)) =>
+          def qual(tree : compiler.Tree): compiler.Tree = tree.symbol.info match {
+            case compiler.analyzer.ImportType(expr) => expr
+            case _ => tree
+          }
+          val cpos0 = qual(i).pos.endOrPoint
+          val cpos = compiler.rangePos(sourceFile, cpos0, cpos0, cpos0)
+          compiler.askTypeCompletion(cpos, completed)
+          ((cpos0 + 1) min position, position)
         case _ =>
           val region = compiler.findCompletionPoint(scu.getBuffer, position)
           val cpos = if (region == null) pos else {
@@ -70,7 +83,7 @@ class ScalaCompletionEngine {
           }
       }
       
-      val prefix = scu.getBuffer.getText(start, end-start).toArray
+      val prefix = scu.getBuffer.getText(start, end-start).trim.toArray
   
       def createContext = {
         new CompletionContext {
@@ -165,14 +178,29 @@ class ScalaCompletionEngine {
         CharOperation.camelCaseMatch(prefix, name)
       }
       
+      def validType(sym : compiler.Symbol, tpe : compiler.Type) = {
+        try {
+          if (sym.isEmptyPackage || tpe == compiler.NoType || tpe == compiler.ErrorType)
+            false
+          else { 
+            val tpe0 = compiler.uncurry.transformInfo(sym, tpe)
+            javaType(sym.owner.tpe).getSignature
+            javaType(tpe0).getSignature
+            true
+          }
+        } catch {
+          case _ => false
+        }
+      }
+      
       completed.get.left.toOption match {
         case Some(completions) =>
           requestor.acceptContext(createContext)
           for(completion <- completions) {
             completion match {
-              case compiler.TypeMember(sym, tpe, accessible, inherited, viaView) if nameMatches(sym) && tpe != compiler.NoType =>
+              case compiler.TypeMember(sym, tpe, accessible, inherited, viaView) if nameMatches(sym) && validType(sym, tpe) =>
                 acceptSymbol(sym, tpe, accessible, inherited, viaView)
-              case compiler.ScopeMember(sym, tpe, accessible, _) if nameMatches(sym) && tpe != compiler.NoType =>
+              case compiler.ScopeMember(sym, tpe, accessible, _) if nameMatches(sym) && validType(sym, tpe) =>
                 acceptSymbol(sym, tpe, accessible, false, compiler.NoSymbol)
               case _ =>
                 //println("Not handled")
