@@ -388,9 +388,9 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         
         def paramType(v : ValDef) = {
           val sym = v.symbol
-          val tpe = v.tpe
-          if (sym.isType || tpe != null)
-            uncurry.transformInfo(v.symbol, v.tpe).typeSymbol
+          val tpt = v.tpt
+          if (sym.isType || tpt != null)
+            uncurry.transformInfo(sym, tpt.tpe).typeSymbol
           else {
             NoSymbol
           }
