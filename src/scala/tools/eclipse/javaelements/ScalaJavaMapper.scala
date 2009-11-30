@@ -142,7 +142,7 @@ trait ScalaJavaMapper { self : ScalaPresentationCompiler =>
 
   def enclosingTypeNames(sym : Symbol): List[String] = {
     def enclosing(sym : Symbol) : List[String] =
-      if (sym.owner.hasFlag(Flags.PACKAGE))
+      if (sym == NoSymbol || sym.owner.hasFlag(Flags.PACKAGE))
         Nil
       else {
         val owner = sym.owner 

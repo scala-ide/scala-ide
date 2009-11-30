@@ -197,7 +197,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         val mask = ~(if (isAnon) ClassFileConstants.AccPublic else 0)
         classElemInfo.setFlags0(mapModifiers(c.mods) & mask)
         
-        val annotsPos = addAnnotations(c.symbol.annotations, classElemInfo, classElem)
+        val annotsPos = addAnnotations(c.symbol, classElemInfo, classElem)
 
         classElemInfo.setSuperclassName(superclassName)
         
@@ -244,7 +244,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         moduleElemInfo.setHandle(moduleElem)
         moduleElemInfo.setFlags0(mapModifiers(m.mods)|ClassFileConstants.AccFinal)
         
-        val annotsPos = addAnnotations(m.symbol.annotations, moduleElemInfo, moduleElem)
+        val annotsPos = addAnnotations(m.symbol, moduleElemInfo, moduleElem)
 
         val start = m.pos.point
         val end = start+m.name.length-1
@@ -309,7 +309,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         val jdtFinal = if(v.mods.hasFlag(Flags.MUTABLE)) 0 else ClassFileConstants.AccFinal
         valElemInfo.setFlags0(mapModifiers(v.mods)|jdtFinal)
         
-        val annotsPos = addAnnotations(v.symbol.annotations, valElemInfo, valElem)
+        val annotsPos = addAnnotations(v.symbol, valElemInfo, valElem)
         
         val start = v.pos.point
         val end = start+elemName.length-1
@@ -346,7 +346,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         val typeElemInfo = new ScalaSourceFieldElementInfo
         typeElemInfo.setFlags0(mapModifiers(t.mods))
 
-        val annotsPos = addAnnotations(t.symbol.annotations, typeElemInfo, typeElem)
+        val annotsPos = addAnnotations(t.symbol, typeElemInfo, typeElem)
         
         val start = t.pos.point
         val end = start+t.name.length-1
@@ -389,8 +389,9 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         def paramType(v : ValDef) = {
           val sym = v.symbol
           val tpt = v.tpt
-          if (sym.isType || tpt != null)
-            uncurry.transformInfo(sym, tpt.tpe).typeSymbol
+          val tpe = tpt.tpe
+          if (sym.isType || tpe != null)
+            uncurry.transformInfo(sym, tpe).typeSymbol
           else {
             NoSymbol
           }
@@ -441,9 +442,9 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         defElemInfo.setExceptionTypeNames(new Array[Array[Char]](0))
         val tn = manager.intern(mapType(d.tpt).toArray)
         defElemInfo.asInstanceOf[FnInfo].setReturnType(tn)
-        
-        val annotsPos = addAnnotations(d.symbol.annotations, defElemInfo, defElem)
-        
+
+        val annotsPos = addAnnotations(d.symbol, defElemInfo, defElem)
+
         val mods =
           if(isTemplate)
             mapModifiers(d.mods)
@@ -494,6 +495,9 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         handle.occurrenceCount += 1
       }
     }
+    
+    def addAnnotations(sym : Symbol, parentInfo : AnnotatableInfo, parentHandle : JavaElement) : Position =
+      addAnnotations(try { sym.annotations } catch { case _ => Nil }, parentInfo, parentHandle)
     
     def addAnnotations(annots : List[AnnotationInfo], parentInfo : AnnotatableInfo, parentHandle : JavaElement) : Position = {
       import SourceRefElementInfoUtils._
