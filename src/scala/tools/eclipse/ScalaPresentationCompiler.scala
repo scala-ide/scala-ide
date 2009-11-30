@@ -55,7 +55,7 @@ class ScalaPresentationCompiler(settings : Settings)
         val compiler = self
         val sourceFile = scu.createSourceFile
         val (body, problems) = {
-          val file = scu.getCorrespondingResource.asInstanceOf[IFile]
+          val file = try { scu.getCorrespondingResource.asInstanceOf[IFile] } catch { case _ => null } 
           val typed = new SyncVar[Either[compiler.Tree, Throwable]]
           compiler.askType(sourceFile, true, typed)
           typed.get match {

@@ -71,7 +71,7 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
   override def getProblemRequestor = getPerWorkingCopyInfo
 
   override lazy val file : AbstractFile = { 
-    val res = getCorrespondingResource
+    val res = try { getCorrespondingResource } catch { case _ => null }
     if (res != null)
       new EclipseFile(res.asInstanceOf[IFile])
     else
