@@ -38,8 +38,6 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
       def element : JavaElement
       def elementInfo : JavaElementInfo
       def compilationUnitBuilder : CompilationUnitBuilder = parent.compilationUnitBuilder
-      def importOwner : ImportOwner = parent.importOwner
-      def importContainer : ImportContainer = importOwner.importContainer;
       
       def isPackage = false
       def isCtor = false
@@ -47,26 +45,20 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
       def template : Owner = if (parent != null) parent.template else null
 
       def addPackage(p : PackageDef) : Owner = this
-      def addImport(i : Import) : Owner = importOwner.addImport(i)
+      def addImport(i : Import) : Owner = this
       def addClass(c : ClassDef) : Owner = this
       def addModule(m : ModuleDef) : Owner = this
       def addVal(v : ValDef) : Owner = this
       def addType(t : TypeDef) : Owner = this
       def addDef(d : DefDef) : Owner = this
       def addFunction(f : Function) : Owner = this
-
+      
+      def resetImportContainer {}
+      
       def addChild(child : JavaElement) =
         elementInfo match {
           case scalaMember : ScalaMemberElementInfo => scalaMember.addChild0(child)
           case openable : OpenableElementInfo => OpenableElementInfoUtils.addChild(openable, child)
-          case importContainer : ImportContainerInfo =>
-            import ImportContainerInfoUtils._
-            val children = getChildren(importContainer)
-            if (children.isEmpty)
-              setChildren(importContainer, Array[IJavaElement](child))
-            else
-              setChildren(importContainer, children ++ Seq(child))
-            
           case _ =>
         }
     }
@@ -101,31 +93,15 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
     }
     
     trait ImportContainerOwner extends Owner { self =>
-      override lazy val importOwner : ImportOwner = {
-        val importContainerElem = element match {
-          case scf : ScalaClassFile => JavaElementFactory.createImportContainer(scf)
-          case cu : ICompilationUnit => cu.getImportContainer.asInstanceOf[ImportContainer]
-          case _ => throw new IllegalArgumentException("Unexpected parent type")
-        }
-
-        val importContainerElemInfo = new ImportContainerInfo
-          
-        addChild(importContainerElem)
-        newElements0.put(importContainerElem, importContainerElemInfo)
-            
-        new ImportOwner {
-          val parent = self
-          val element = importContainerElem
-          val elementInfo = importContainerElemInfo
-          override def importContainer = importContainerElem 
-        }
-      }
-    }
-    
-    trait ImportOwner extends Owner { self =>
       import SourceRefElementInfoUtils._
+      import ImportContainerInfoUtils._
     
+      var currentImportContainer : Option[(ImportContainer, ImportContainerInfo)] = None
+      
+      override def resetImportContainer : Unit = currentImportContainer = None
+      
       override def addImport(i : Import) : Owner = {
+        //println("Import "+i)
         val prefix = i.expr.symbol.fullNameString
         val pos = i.pos
 
@@ -133,6 +109,22 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
 
         def addImport(name : String, isWildcard : Boolean) {
           val path = prefix+"."+(if(isWildcard) "*" else name)
+          
+          val (importContainer, importContainerInfo) = currentImportContainer match {
+            case Some(ci) => ci
+            case None =>
+              val importContainerElem = JavaElementFactory.createImportContainer(element)
+              val importContainerElemInfo = new ImportContainerInfo
+                
+              resolveDuplicates(importContainerElem)
+              addChild(importContainerElem)
+              newElements0.put(importContainerElem, importContainerElemInfo)
+              
+              val ci = (importContainerElem, importContainerElemInfo)
+              currentImportContainer = Some(ci)
+              ci
+          }
+          
           val importElem = JavaElementFactory.createImportDeclaration(importContainer, path, isWildcard)
           resolveDuplicates(importElem)
         
@@ -140,7 +132,12 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
           setSourceRangeStart(importElemInfo, pos.startOrPoint)
           setSourceRangeEnd(importElemInfo, pos.endOrPoint)
         
-          addChild(importElem)
+          val children = getChildren(importContainerInfo)
+          if (children.isEmpty)
+            setChildren(importContainerInfo, Array[IJavaElement](importElem))
+          else
+            setChildren(importContainerInfo, children ++ Seq(importElem))
+            
           newElements0.put(importElem, importElemInfo)
         }
 
@@ -582,7 +579,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
       override def compilationUnitBuilder = this 
     }
     
-    abstract class Builder extends PackageOwner with ClassOwner with ModuleOwner with ValOwner with TypeOwner with DefOwner
+    abstract class Builder extends PackageOwner with ImportContainerOwner with ClassOwner with ModuleOwner with ValOwner with TypeOwner with DefOwner
     
     def setSourceRange(info : ScalaMemberElementInfo, tree : Tree, annotsPos : Position) {
       import Math.{ max, min }
@@ -600,74 +597,81 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
       info.setSourceRangeEnd0(end)
     }
     
-    override def traverse(tree: Tree): Unit = tree match {
-      case pd : PackageDef => atBuilder(currentBuilder.addPackage(pd)) { super.traverse(tree) }
-      case i : Import => currentBuilder.addImport(i)
-      case cd : ClassDef => {
-        val cb = currentBuilder.addClass(cd)
-        atOwner(tree.symbol) {
-          atBuilder(cb) {
-            //traverseTrees(cd.mods.annotations)
-            //traverseTrees(cd.tparams)
-            traverse(cd.impl)
-          }
-        }
+    override def traverse(tree: Tree): Unit = {
+      tree match {
+        case _ : Import =>
+        case _ => currentBuilder.resetImportContainer
       }
-      case md : ModuleDef => atBuilder(currentBuilder.addModule(md)) { super.traverse(tree) }
-      case vd : ValDef => {
-        val vb = currentBuilder.addVal(vd)
-        atOwner(tree.symbol) {
-          atBuilder(vb) {
-            //traverseTrees(vd.mods.annotations)
-            //traverse(vd.tpt)
-            traverse(vd.rhs)
-          }
-        }
-      }
-      case td : TypeDef => {
-        val tb = currentBuilder.addType(td)
-        atOwner(tree.symbol) {
-          atBuilder(tb) {
-            //traverseTrees(td.mods.annotations);
-            //traverseTrees(td.tparams);
-            traverse(td.rhs)
-          }
-        }
-      }
-      case dd : DefDef => {
-        if(dd.name != nme.MIXIN_CONSTRUCTOR) {
-          val db = currentBuilder.addDef(dd)
+      
+      tree match {
+        case pd : PackageDef => atBuilder(currentBuilder.addPackage(pd)) { super.traverse(tree) }
+        case i : Import => currentBuilder.addImport(i)
+        case cd : ClassDef => {
+          val cb = currentBuilder.addClass(cd)
           atOwner(tree.symbol) {
-            // traverseTrees(dd.mods.annotations)
-            // traverseTrees(dd.tparams)
-            //if(db.isCtor)
-            //  atBuilder(currentBuilder) { traverseTreess(dd.vparamss) }
-            //else
-            //  atBuilder(db) { traverseTreess(dd.vparamss) }
-            atBuilder(db) {
-              traverse(dd.tpt)
-              traverse(dd.rhs)
+            atBuilder(cb) {
+              //traverseTrees(cd.mods.annotations)
+              //traverseTrees(cd.tparams)
+              traverse(cd.impl)
             }
           }
         }
+        case md : ModuleDef => atBuilder(currentBuilder.addModule(md)) { super.traverse(tree) }
+        case vd : ValDef => {
+          val vb = currentBuilder.addVal(vd)
+          atOwner(tree.symbol) {
+            atBuilder(vb) {
+              //traverseTrees(vd.mods.annotations)
+              //traverse(vd.tpt)
+              traverse(vd.rhs)
+            }
+          }
+        }
+        case td : TypeDef => {
+          val tb = currentBuilder.addType(td)
+          atOwner(tree.symbol) {
+            atBuilder(tb) {
+              //traverseTrees(td.mods.annotations);
+              //traverseTrees(td.tparams);
+              traverse(td.rhs)
+            }
+          }
+        }
+        case dd : DefDef => {
+          if(dd.name != nme.MIXIN_CONSTRUCTOR) {
+            val db = currentBuilder.addDef(dd)
+            atOwner(tree.symbol) {
+              // traverseTrees(dd.mods.annotations)
+              // traverseTrees(dd.tparams)
+              //if(db.isCtor)
+              //  atBuilder(currentBuilder) { traverseTreess(dd.vparamss) }
+              //else
+              //  atBuilder(db) { traverseTreess(dd.vparamss) }
+              atBuilder(db) {
+                traverse(dd.tpt)
+                traverse(dd.rhs)
+              }
+            }
+          }
+        }
+        case Template(parents, self, body) => {
+          //println("Template: "+parents)
+          //traverseTrees(parents)
+          //if (!self.isEmpty) traverse(self)
+          traverseStats(body, tree.symbol)
+        }
+        case Function(vparams, body) => {
+          //println("Anonymous function: "+tree.symbol.simpleName)
+        }
+        case tt : TypeTree => {
+          //println("Type tree: "+tt)
+          //atBuilder(currentBuilder.addTypeTree(tt)) { super.traverse(tree) }            
+          super.traverse(tree)            
+        }
+        case u =>
+          //println("Unknown type: "+u.getClass.getSimpleName+" "+u)
+          super.traverse(tree)
       }
-      case Template(parents, self, body) => {
-        //println("Template: "+parents)
-        //traverseTrees(parents)
-        //if (!self.isEmpty) traverse(self)
-        traverseStats(body, tree.symbol)
-      }
-      case Function(vparams, body) => {
-        //println("Anonymous function: "+tree.symbol.simpleName)
-      }
-      case tt : TypeTree => {
-        //println("Type tree: "+tt)
-        //atBuilder(currentBuilder.addTypeTree(tt)) { super.traverse(tree) }            
-        super.traverse(tree)            
-      }
-      case u =>
-        //println("Unknown type: "+u.getClass.getSimpleName+" "+u)
-        super.traverse(tree)
     }
 
     def atBuilder(builder: Owner)(traverse: => Unit) {
