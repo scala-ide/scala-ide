@@ -16,7 +16,7 @@
   <property name="aspectjtools.dir" value="${basedir}/lib"/>
   <property name="build.dir" value="${basedir}/build"/>
 
-  <property name="copyright.string" value="Copyright 2002-2009, LAMP/EPFL"/>
+  <property name="copyright.string" value="Copyright 2002-2010, LAMP/EPFL"/>
   
 <!-- ===========================================================================
 INITIALISE BUILD
