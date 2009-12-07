@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2008 LAMP/EPFL
+ * Copyright 2005-2010 LAMP/EPFL
  */
 // $Id$
 
