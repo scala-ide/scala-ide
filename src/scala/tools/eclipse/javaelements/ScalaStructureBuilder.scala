@@ -588,7 +588,14 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
       val (start, end) =
         if (pos.isDefined) {
           val pos0 = if (annotsPos.isOpaqueRange) pos union annotsPos else pos
-          (docCommentPos(tree.symbol) match { case NoPosition => pos0.startOrPoint; case cpos => cpos.startOrPoint }, pos0.endOrPoint-1)
+          val start0 = if (tree.symbol == NoSymbol)
+            pos0.startOrPoint
+          else
+            docCommentPos(tree.symbol) match {
+              case NoPosition => pos0.startOrPoint
+              case cpos => cpos.startOrPoint
+            }
+          (start0, pos0.endOrPoint-1)
         }
         else
           (-1, -1)
