@@ -272,9 +272,7 @@ class ScalaSelectionEngine(nameEnvironment : SearchableEnvironment, requestor : 
                     symbol match {
                       case c : compiler.ClassSymbol =>
                         acceptType(c)
-                        acceptType(c.linkedModuleOfClass)
                       case m : compiler.ModuleSymbol =>
-                        acceptType(m.linkedClassOfModule)
                         acceptType(m)
                       case _ =>
                         println("Unhandled: "+tree.getClass.getName)
@@ -299,9 +297,7 @@ class ScalaSelectionEngine(nameEnvironment : SearchableEnvironment, requestor : 
                 sym match {
                   case c : compiler.ClassSymbol =>
                     acceptType(c)
-                    acceptType(c.linkedModuleOfClass)
                   case m : compiler.ModuleSymbol =>
-                    acceptType(m.linkedClassOfModule)
                     acceptType(m)
                   case f : compiler.TermSymbol if f.hasFlag(Flags.ACCESSOR|Flags.PARAMACCESSOR) =>
                     acceptField(f)

@@ -113,6 +113,13 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
   def newSearchableEnvironment() : SearchableEnvironment =
     newSearchableEnvironment(DefaultWorkingCopyOwner.PRIMARY)
   
+  override def getSourceElementAt(pos : Int) : IJavaElement = {
+    super.getSourceElementAt(pos) match {
+      case smie : ScalaModuleInstanceElement => smie.getParent;
+      case elem => elem 
+    }
+  }
+    
   override def codeSelect(cu : env.ICompilationUnit, offset : Int, length : Int, workingCopyOwner : WorkingCopyOwner) : Array[IJavaElement] = {
     val environment = newSearchableEnvironment(workingCopyOwner)
     val requestor = new ScalaSelectionRequestor(environment.nameLookup, this)
