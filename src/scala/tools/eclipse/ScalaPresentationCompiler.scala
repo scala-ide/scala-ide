@@ -25,7 +25,7 @@ import scala.tools.eclipse.util.{ Cached, EclipseResource }
 class ScalaPresentationCompiler(settings : Settings)
   extends Global(settings, new ScalaPresentationCompiler.PresentationReporter)
   with ScalaStructureBuilder with ScalaIndexBuilder with ScalaMatchLocator
-  with ScalaOverrideIndicatorBuilder with ScalaJavaMapper with ScalaWordFinder with JVMUtils { self =>
+  with ScalaOverrideIndicatorBuilder with ScalaJavaMapper with JVMUtils { self =>
   import ScalaPresentationCompiler._
   
   def presentationReporter = reporter.asInstanceOf[PresentationReporter]

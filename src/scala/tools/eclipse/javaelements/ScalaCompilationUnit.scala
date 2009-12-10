@@ -25,7 +25,7 @@ import scala.tools.nsc.util.{ BatchSourceFile, SourceFile }
 
 import scala.tools.eclipse.contribution.weaving.jdt.{ IScalaCompilationUnit, IScalaWordFinder }
 
-import scala.tools.eclipse.{ ScalaPlugin, ScalaPresentationCompiler, ScalaSourceIndexer }
+import scala.tools.eclipse.{ ScalaPlugin, ScalaPresentationCompiler, ScalaSourceIndexer, ScalaWordFinder }
 import scala.tools.eclipse.util.ReflectionUtils
 
 trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with ScalaElement with IScalaCompilationUnit with IBufferChangedListener {
@@ -180,7 +180,7 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
     }
   }
   
-  override def getScalaWordFinder() : IScalaWordFinder = project.withPresentationCompiler(compiler => compiler) 
+  override def getScalaWordFinder() : IScalaWordFinder = ScalaWordFinder
 }
 
 object OpenableUtils extends ReflectionUtils {

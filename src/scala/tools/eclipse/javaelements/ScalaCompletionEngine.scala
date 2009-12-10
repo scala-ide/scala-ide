@@ -19,6 +19,7 @@ import org.eclipse.jdt.ui.text.java.CompletionProposalCollector
 
 import scala.tools.nsc.symtab.Flags
 
+import scala.tools.eclipse.ScalaWordFinder
 import scala.tools.eclipse.util.ReflectionUtils
 
 class ScalaCompletionEngine {
@@ -68,7 +69,7 @@ class ScalaCompletionEngine {
           compiler.askTypeCompletion(cpos, completed)
           ((cpos0 + 1) min position, position)
         case _ =>
-          val region = compiler.findCompletionPoint(scu.getBuffer, position)
+          val region = ScalaWordFinder.findCompletionPoint(scu.getBuffer, position)
           val cpos = if (region == null) pos else {
             val start = region.getOffset
             compiler.rangePos(sourceFile, start, start, start)

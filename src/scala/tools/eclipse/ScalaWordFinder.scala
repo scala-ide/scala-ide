@@ -8,14 +8,14 @@ package scala.tools.eclipse
 import scala.collection.immutable.IndexedSeq
 
 import scala.tools.nsc.Global
-import scala.tools.nsc.util.SourceFile.{LF, FF, CR, SU}
+import scala.tools.nsc.util.Chars.{ isIdentifierPart, isOperatorPart, CR, LF, FF }
 
 import org.eclipse.jdt.core.IBuffer
 import org.eclipse.jface.text.{ BadLocationException, IDocument, IRegion, Region }
 
 import scala.tools.eclipse.contribution.weaving.jdt.IScalaWordFinder
 
-trait ScalaWordFinder extends IScalaWordFinder { self : Global =>
+object ScalaWordFinder extends IScalaWordFinder {
 
   def docToSeq(doc : IDocument) = new IndexedSeq[Char] {
     override def apply(i : Int) = doc.getChar(i)
@@ -69,9 +69,9 @@ trait ScalaWordFinder extends IScalaWordFinder { self : Global =>
         null
     }
     
-    val idRegion = find(syntaxAnalyzer.isIdentifierPart)
+    val idRegion = find(isIdentifierPart)
     if (idRegion == null || idRegion.getLength == 0)
-      find(syntaxAnalyzer.isOperatorPart)
+      find(isOperatorPart)
     else
       idRegion
   }
@@ -83,8 +83,7 @@ trait ScalaWordFinder extends IScalaWordFinder { self : Global =>
     findCompletionPoint(bufferToSeq(buffer), offset)
 
   def findCompletionPoint(document : Seq[Char], offset : Int) : IRegion = {
-    def isWordPart(ch : Char) = 
-      syntaxAnalyzer.isIdentifierPart(ch) || syntaxAnalyzer.isOperatorPart(ch)
+    def isWordPart(ch : Char) = isIdentifierPart(ch) || isOperatorPart(ch)
     def isWhitespace(ch : Char) =
       ch match {
         case ' ' | '\t' | CR | LF | FF => true

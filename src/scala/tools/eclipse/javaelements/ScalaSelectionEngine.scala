@@ -24,6 +24,8 @@ import org.eclipse.jdt.internal.compiler.env.{ AccessRestriction, ICompilationUn
 import org.eclipse.jdt.internal.compiler.parser.{ Scanner, ScannerHelper, TerminalTokens }
 import org.eclipse.jdt.internal.core.{ JavaElement, SearchableEnvironment }
 
+import scala.tools.eclipse.ScalaWordFinder
+
 class ScalaSelectionEngine(nameEnvironment : SearchableEnvironment, requestor : ISelectionRequestor, settings : ju.Map[_, _]) extends Engine(settings) with ISearchRequestor {
 
   var actualSelectionStart : Int = _
@@ -49,7 +51,7 @@ class ScalaSelectionEngine(nameEnvironment : SearchableEnvironment, requestor : 
         if (selectionStart0 <= selectionEnd0)
           (selectionStart0, selectionEnd0)
         else {
-          val region = compiler.findWord(source, selectionEnd0)
+          val region = ScalaWordFinder.findWord(source, selectionEnd0)
           (region.getOffset, region.getOffset+region.getLength-1)
         }
       
