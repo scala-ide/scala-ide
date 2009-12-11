@@ -34,9 +34,6 @@ class ScalaCompletionEngine {
     val javaProject = scu.getJavaProject.asInstanceOf[JavaProject]
     val environment = javaProject.newSearchableNameEnvironment(owner)
     
-    def createProposal(kind : Int, completionOffset : Int) : InternalCompletionProposal = 
-      CompletionProposal.create(kind, completionOffset).asInstanceOf[InternalCompletionProposal] 
-    
     scu.withCompilerResult({ crh =>
     
       import crh._
@@ -104,7 +101,7 @@ class ScalaCompletionEngine {
       def acceptSymbol(sym : compiler.Symbol, tpe0 : compiler.Type, accessible : Boolean, inherited : Boolean, viaView : compiler.Symbol) {
         val tpe = compiler.uncurry.transformInfo(sym, tpe0)
         if (sym.hasFlag(Flags.ACCESSOR) || sym.hasFlag(Flags.PARAMACCESSOR)) {
-          val proposal =  createProposal(CompletionProposal.FIELD_REF, position-1)
+          val proposal =  new ScalaCompletionProposal(CompletionProposal.FIELD_REF, position-1)
           val fieldTypeSymbol = tpe.resultType.typeSymbol
           val transformedName = NameTransformer.decode(sym.name.toString) 
           val relevance = if (inherited) 20 else if(viaView != compiler.NoSymbol) 10 else 30
@@ -123,18 +120,23 @@ class ScalaCompletionEngine {
           proposal.setRelevance(relevance)
           requestor.accept(proposal)
         } else if (sym.isMethod && !sym.isConstructor && sym.name != nme.asInstanceOf_ && sym.name != nme.isInstanceOf_) {
-          val proposal =  createProposal(CompletionProposal.METHOD_REF, position-1)
+          val proposal =  new ScalaCompletionProposal(CompletionProposal.METHOD_REF, position-1)
           val paramNames = tpe.paramss.flatMap(_.map(_.name))
           val paramTypes = tpe.paramss.flatMap(_.map(_.tpe))
           val resultTypeSymbol = tpe.finalResultType.typeSymbol
           val relevance = if (inherited) 20 else if(viaView != compiler.NoSymbol) 10 else 30
           
-          val (transformedName, completion) = NameTransformer.decode(sym.name.toString) match {
+          val (transformedName, completion, suppressArgList) = NameTransformer.decode(sym.name.toString) match {
             case n@("$asInstanceOf" | "$isInstanceOf") =>
               val n0 = n.substring(1) 
-              (n0, n0+"[]")
+              (n0, n0+"[]", true)
             case n =>
-              (n, n+"()")
+              val (c0, s0) = tpe.paramss match {
+                case Nil => (n, true)
+                case List(Nil) if resultTypeSymbol != compiler.definitions.UnitClass => (n, true)
+                case _ => (n+"()", false) 
+              }
+              (n, c0, s0)
           }
           
           val sig0 = javaType(tpe).getSignature.replace('/', '.')
@@ -150,6 +152,7 @@ class ScalaCompletionEngine {
           setTypeName(proposal, mapTypeName(resultTypeSymbol).toArray)
           proposal.setName(transformedName.toArray)
           proposal.setCompletion(completion.toArray)
+          proposal.suppressArgList = suppressArgList
           proposal.setFlags(mapModifiers(sym))
           proposal.setReplaceRange(start, end)
           proposal.setTokenRange(start, end)
@@ -157,7 +160,7 @@ class ScalaCompletionEngine {
           proposal.setParameterNames(paramNames.map(_.toString.toArray).toArray)
           requestor.accept(proposal)
         } else if (sym.isTerm) {
-          val proposal =  createProposal(CompletionProposal.LOCAL_VARIABLE_REF, position-1)
+          val proposal =  new ScalaCompletionProposal(CompletionProposal.LOCAL_VARIABLE_REF, position-1)
           val transformedName = NameTransformer.decode(sym.name.toString) 
           val relevance = 30
           proposal.setSignature(javaType(tpe).getSignature.replace('/', '.').toArray)
