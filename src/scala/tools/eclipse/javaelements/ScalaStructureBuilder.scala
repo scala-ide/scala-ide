@@ -593,9 +593,13 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
           val start0 = if (tree.symbol == NoSymbol)
             pos0.startOrPoint
           else
-            docCommentPos(tree.symbol) match {
-              case NoPosition => pos0.startOrPoint
-              case cpos => cpos.startOrPoint
+            try {
+              docCommentPos(tree.symbol) match {
+                case NoPosition => pos0.startOrPoint
+                case cpos => cpos.startOrPoint
+              }
+            } catch {
+              case _ => pos0.startOrPoint
             }
           (start0, pos0.endOrPoint-1)
         }
