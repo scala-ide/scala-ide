@@ -233,7 +233,8 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
       override def addModule(m : ModuleDef) : Owner = {
         //println("Module defn: "+m.name+" ["+this+"]")
         
-        val moduleElem = new ScalaModuleElement(element, m.name.toString, m.symbol.hasFlag(Flags.SYNTHETIC))
+        val isSynthetic = m.symbol.hasFlag(Flags.SYNTHETIC)
+        val moduleElem = new ScalaModuleElement(element, m.name.toString, isSynthetic)
         resolveDuplicates(moduleElem)
         addChild(moduleElem)
         
@@ -248,7 +249,8 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         
         moduleElemInfo.setNameSourceStart0(start)
         moduleElemInfo.setNameSourceEnd0(end)
-        setSourceRange(moduleElemInfo, m, annotsPos)
+        if (!isSynthetic)
+          setSourceRange(moduleElemInfo, m, annotsPos)
         newElements0.put(moduleElem, moduleElemInfo)
         
         val parentTree = m.impl.parents.head
