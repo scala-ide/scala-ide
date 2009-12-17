@@ -39,27 +39,31 @@ class ScalaQuickFixProcessor extends IQuickFixProcessor {
    *      can be offered
    * @throws CoreException CoreException can be thrown if the operation fails
    */
-  def getCorrections(context : IInvocationContext, locations : Array[IProblemLocation]) : Array[IJavaCompletionProposal] = {
-    val problems = context.getCompilationUnit().asInstanceOf[ScalaSourceFile].getProblems()
-    val corrections = scala.collection.mutable.ListBuffer[IJavaCompletionProposal]()
-
-    // Go over each location and suggest fixes for each matching problem
-    locations.foreach { location =>
-      problems.foreach { problem =>
-        if (location.getOffset() == problem.getSourceStart()
-            && location.getLength() == (1 + problem.getSourceEnd() - problem.getSourceStart())) {
-         
-          // Suggest a fix!
-          val fix = suggestFix(context.getCompilationUnit(), problem)
-          if (fix != null) {
-            corrections ++ fix
+  def getCorrections(context : IInvocationContext, locations : Array[IProblemLocation]) : Array[IJavaCompletionProposal] =
+    context.getCompilationUnit match {
+      case ssf : ScalaSourceFile =>
+        val problems = ssf.getProblems()
+        val corrections = scala.collection.mutable.ListBuffer[IJavaCompletionProposal]()
+    
+        // Go over each location and suggest fixes for each matching problem
+        locations.foreach { location =>
+          problems.foreach { problem =>
+            if (location.getOffset() == problem.getSourceStart()
+                && location.getLength() == (1 + problem.getSourceEnd() - problem.getSourceStart())) {
+             
+              // Suggest a fix!
+              val fix = suggestFix(context.getCompilationUnit(), problem)
+              if (fix != null) {
+                corrections ++ fix
+              }
+            }
           }
         }
-      }
+        
+        corrections.toArray
+        
+      case _ => null
     }
-    
-    corrections.toArray
-  }
   
   private class Requestor(val typeToFind : String) extends ISearchRequestor {
     val typesFound = scala.collection.mutable.ListBuffer[String]()
