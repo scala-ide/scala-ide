@@ -43,7 +43,7 @@ class ScalaQuickFixProcessor extends IQuickFixProcessor {
     context.getCompilationUnit match {
       case ssf : ScalaSourceFile =>
         val problems = ssf.getProblems()
-        val corrections = scala.collection.mutable.ListBuffer[IJavaCompletionProposal]()
+        val corrections = scala.collection.mutable.HashSet[IJavaCompletionProposal]()
     
         // Go over each location and suggest fixes for each matching problem
         locations.foreach { location =>
@@ -51,11 +51,9 @@ class ScalaQuickFixProcessor extends IQuickFixProcessor {
             if (location.getOffset() == problem.getSourceStart()
                 && location.getLength() == (1 + problem.getSourceEnd() - problem.getSourceStart())) {
              
-              // Suggest a fix!
+              // Suggest a fix
               val fix = suggestFix(context.getCompilationUnit(), problem)
-              if (fix != null) {
-                corrections ++ fix
-              }
+              corrections ++ fix
             }
           }
         }
@@ -121,7 +119,7 @@ class ScalaQuickFixProcessor extends IQuickFixProcessor {
         // Return the types found
         requestor.typesFound.map({ typeFound => new ImportCompletionProposal(typeFound) }).toList
 
-      case _ => null
+      case _ => Nil
     }
   }
 }

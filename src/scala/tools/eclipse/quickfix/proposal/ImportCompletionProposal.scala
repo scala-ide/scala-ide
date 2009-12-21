@@ -7,7 +7,7 @@ import org.eclipse.swt.graphics.Image
 import org.eclipse.swt.graphics.Point
 import org.eclipse.jface.text.TextUtilities
 
-class ImportCompletionProposal(val importName : String) extends IJavaCompletionProposal {
+case class ImportCompletionProposal(val importName : String) extends IJavaCompletionProposal {
   
   /**
    * Fixed relevance at 100 for now.
