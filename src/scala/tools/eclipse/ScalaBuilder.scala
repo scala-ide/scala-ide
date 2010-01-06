@@ -33,10 +33,19 @@ class ScalaBuilder extends IncrementalProjectBuilder {
     JDTUtils.refreshPackageExplorer
   }
   
-  override def build(kind : Int, ignored : ju.Map[_, _], monitor : IProgressMonitor) : Array[IProject] = {
+  override def build(kind0 : Int, ignored : ju.Map[_, _], monitor : IProgressMonitor) : Array[IProject] = {
     import IncrementalProjectBuilder._
 
     val project = plugin.getScalaProject(getProject)
+    val kind = if (!project.forceClean)
+      kind0
+    else {
+      project.forceClean = false
+      if (kind0 != CLEAN_BUILD)
+        clean(monitor)
+      CLEAN_BUILD
+    }
+    
     val allSourceFiles = project.allSourceFiles()
     val dependeeProjectChanged =
       project.externalDepends.exists(

@@ -95,6 +95,8 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
 	    info.setIsStructureKnown(true)
 	    info.isStructureKnown
   })
+
+  def scheduleReconcile : Unit = ()
   
   def addToIndexer(indexer : ScalaSourceIndexer) {
     withCompilerResult({ crh =>

@@ -14,6 +14,7 @@ import org.eclipse.jdt.core.compiler.IProblem
 import org.eclipse.jdt.internal.compiler.problem.{ DefaultProblem, ProblemSeverities }
 import scala.tools.nsc.Settings
 import scala.tools.nsc.interactive.Global
+import scala.tools.nsc.io.AbstractFile
 import scala.tools.nsc.reporters.Reporter
 import scala.tools.nsc.util.{ BatchSourceFile, Position, SourceFile }
 
@@ -40,6 +41,9 @@ class ScalaPresentationCompiler(settings : Settings)
     override def default(k : IFile) = { val v = new ArrayBuffer[IProblem] ; put(k, v); v }
   }
   
+  private def fileOf(scu : ScalaCompilationUnit) =
+    try { Some(scu.getCorrespondingResource.asInstanceOf[IFile]) } catch { case _ => None } 
+  
   private def problemsOf(file : IFile) : List[IProblem] = {
     val ps = problems.remove(file)
     ps match {
@@ -48,41 +52,40 @@ class ScalaPresentationCompiler(settings : Settings)
     }
   }
   
+  private def problemsOf(scu : ScalaCompilationUnit) : List[IProblem] = fileOf(scu) match {
+    case Some(file) => problemsOf(file)
+    case None => Nil
+  }
+  
+  private def clearProblemsOf(file : IFile) : Unit = problems.remove(file)
+  
+  private def clearProblemsOf(scu : ScalaCompilationUnit) : Unit = fileOf(scu) match {
+    case Some(file) => clearProblemsOf(file)
+    case None =>
+  }
+  
   class CachedCompilerResult(scu : ScalaCompilationUnit)
     extends Cached[CompilerResultHolder] {
-    override def create() : CompilerResultHolder = {
-      val result = new CompilerResultHolder {
+    override def create() =
+      new CompilerResultHolder {
         val compiler = self
         val sourceFile = scu.createSourceFile
         val (body, problems) = {
-          val file = try { scu.getCorrespondingResource.asInstanceOf[IFile] } catch { case _ => null } 
           val typed = new SyncVar[Either[compiler.Tree, Throwable]]
           compiler.askType(sourceFile, true, typed)
           typed.get match {
             case Left(body0) =>
-              val problems0 = if (file != null) problemsOf(file) else Nil
-              (body0, problems0)
+              (body0, problemsOf(scu))
             case Right(thr) =>
               ScalaPlugin.plugin.logError("Failure in presentation compiler", thr)
               (compiler.EmptyTree, Nil)
           }
         }
       }
-
-      val problemRequestor = scu.getProblemRequestor
-      if (problemRequestor != null) {
-        try {
-          problemRequestor.beginReporting
-          result.problems.map(problemRequestor.acceptProblem(_))
-        } finally {
-          problemRequestor.endReporting
-        }
-      }
     
-      result    
+    override def destroy(crh : CompilerResultHolder) {
+      scu.scheduleReconcile
     }
-    
-    override def destroy(crh : CompilerResultHolder) {}
   }
   
   def withCompilerResult[T](scu : ScalaCompilationUnit)(op : CompilerResultHolder => T) : T =
@@ -90,11 +93,13 @@ class ScalaPresentationCompiler(settings : Settings)
     
   def invalidateCompilerResult(scu : ScalaCompilationUnit) {
     results.get(scu).map(_.invalidate())
+    clearProblemsOf(scu)
   }
   
   def discardCompilerResult(scu : ScalaCompilationUnit) {
     results.remove(scu)
     removeUnitOf(new BatchSourceFile(scu.file, Array[Char](0)))
+    clearProblemsOf(scu)
   }
 
   override def logError(msg : String, t : Throwable) =

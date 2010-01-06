@@ -17,6 +17,7 @@ import org.eclipse.jdt.core.compiler.IProblem
 import org.eclipse.jdt.internal.core.JavaProject
 import org.eclipse.jdt.internal.core.builder.{ ClasspathDirectory, ClasspathLocation, NameEnvironment }
 import org.eclipse.jdt.internal.core.util.Util
+import org.eclipse.swt.widgets.Display
 
 import scala.tools.nsc.Settings
 
@@ -31,7 +32,9 @@ class ScalaProject(val underlying : IProject) {
   private var buildManager0 : EclipseBuildManager = null
   private var hasBeenBuilt = false
   private val depFile = underlying.getFile(".scala_dependencies")
-
+  private val resetPendingLock = new Object
+  private var resetPending = false
+  
   private val presentationCompiler = new Cached[ScalaPresentationCompiler] {
     override def create() = {
       checkClasspath
@@ -298,6 +301,7 @@ class ScalaProject(val underlying : IProject) {
     }
 
     settings.classpath.value = classpath.toList.map(_.toOSString).mkString("", pathSeparator, "")
+    settings.sourcepath.value = sourceFolders(env).map(_.getLocation.toOSString).mkString("", pathSeparator, "")
     
     settings.deprecation.value = true
     settings.unchecked.value = true
@@ -319,10 +323,38 @@ class ScalaProject(val underlying : IProject) {
     }
   }
   
-  def resetCompilers = {
+  def resetBuildCompiler {
     buildManager0 = null
     hasBeenBuilt = false
-    presentationCompiler.invalidate()
+  }
+  
+  var forceClean = false
+  
+  def resetPresentationCompiler {
+    println("Reinstantiating presentation compiler for "+underlying.getName)
+    presentationCompiler.invalidate
+    println("Reinstantiated presentation compiler for "+underlying.getName)
+  }
+  
+  def scheduleResetPresentationCompiler {
+    resetPendingLock.synchronized {
+      if (!resetPending) {
+        resetPending = true
+        Display.getDefault.asyncExec( new Runnable {
+          def run {
+            resetPendingLock.synchronized {
+              resetPresentationCompiler
+              resetPending = false
+            }
+          }
+        })
+      }
+    }
+  }
+  
+  def resetCompilers = {
+    resetBuildCompiler
+    resetPresentationCompiler
   }
   
   def buildManager = {

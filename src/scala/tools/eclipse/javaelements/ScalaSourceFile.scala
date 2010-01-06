@@ -13,6 +13,8 @@ import org.eclipse.jdt.core.{ IBuffer, ICompilationUnit, IJavaElement, IType, Wo
 import org.eclipse.jdt.core.compiler.IProblem
 import org.eclipse.jdt.internal.core.util.HandleFactory
 import org.eclipse.jdt.internal.core.{ BufferManager, CompilationUnit => JDTCompilationUnit, OpenableElementInfo, PackageFragment }
+import org.eclipse.jdt.internal.corext.util.JavaModelUtil
+import org.eclipse.swt.widgets.Display
 
 import scala.tools.nsc.io.{ AbstractFile, VirtualFile }
 import scala.tools.nsc.util.BatchSourceFile
@@ -41,6 +43,10 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
   override def getMainTypeName : Array[Char] =
     getElementName.substring(0, getElementName.length - ".scala".length).toCharArray()
   
+  override def scheduleReconcile = {
+    Display.getDefault.asyncExec(new Runnable { def run = JavaModelUtil.reconcile(ScalaSourceFile.this) })
+  }
+
   override def reconcile(
       astLevel : Int,
       reconcileFlags : Int,

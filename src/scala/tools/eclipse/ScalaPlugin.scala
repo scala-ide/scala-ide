@@ -11,7 +11,7 @@ import scala.util.control.ControlException
 import org.eclipse.core.resources.{ IFile, IProject, IResourceChangeEvent, IResourceChangeListener, ResourcesPlugin }
 import org.eclipse.core.runtime.{ CoreException, FileLocator, IStatus, Platform, Status }
 import org.eclipse.core.runtime.content.IContentTypeSettings
-import org.eclipse.jdt.core.JavaCore
+import org.eclipse.jdt.core.{ ElementChangedEvent, IElementChangedListener, JavaCore, IJavaElementDelta }
 import org.eclipse.jdt.internal.core.util.Util
 import org.eclipse.jdt.internal.ui.javaeditor.IClassFileEditorInput
 import org.eclipse.jface.preference.IPreferenceStore
@@ -20,13 +20,14 @@ import org.eclipse.ui.{ IEditorInput, IFileEditorInput, PlatformUI }
 import org.eclipse.ui.plugin.AbstractUIPlugin
 import org.osgi.framework.BundleContext
 
+import scala.tools.eclipse.javaelements.{ ScalaElement, ScalaSourceFile }
 import scala.tools.eclipse.util.Style 
 
 object ScalaPlugin { 
   var plugin : ScalaPlugin = _
 }
 
-class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener {
+class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IElementChangedListener {
   ScalaPlugin.plugin = this
   
   val OverrideIndicator = "scala.overrideIndicator"  
@@ -61,6 +62,7 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener {
     super.start(context)
     
     ResourcesPlugin.getWorkspace.addResourceChangeListener(this, IResourceChangeEvent.PRE_CLOSE | IResourceChangeEvent.POST_CHANGE)
+    JavaCore.addElementChangedListener(this)
     Platform.getContentTypeManager.
       getContentType(JavaCore.JAVA_SOURCE_CONTENT_TYPE).
         addFileSpec("scala", IContentTypeSettings.FILE_EXTENSION_SPEC)
@@ -105,6 +107,19 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener {
     (event.getResource, event.getType) match {
       case (project : IProject, IResourceChangeEvent.PRE_CLOSE) => 
         projects.synchronized{ projects.remove(project) }
+      case _ =>
+    }
+  }
+
+  override def elementChanged(event : ElementChangedEvent) {
+    val delta = event.getDelta
+    delta.getElement match {
+      case ssf : ScalaSourceFile if (delta.getKind == IJavaElementDelta.CHANGED) =>
+        if (delta.getAffectedChildren.exists(_.getKind == IJavaElementDelta.REMOVED)) {
+          val project = getScalaProject(ssf.getJavaProject.getProject) 
+          project.scheduleResetPresentationCompiler
+          project.forceClean = true
+        }
       case _ =>
     }
   }
