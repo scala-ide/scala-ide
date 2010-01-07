@@ -331,9 +331,7 @@ class ScalaProject(val underlying : IProject) {
   var forceClean = false
   
   def resetPresentationCompiler {
-    println("Reinstantiating presentation compiler for "+underlying.getName)
     presentationCompiler.invalidate
-    println("Reinstantiated presentation compiler for "+underlying.getName)
   }
   
   def scheduleResetPresentationCompiler {
