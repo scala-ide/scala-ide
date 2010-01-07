@@ -8,6 +8,7 @@ package scala.tools.eclipse.util
 import scala.collection.JavaConversions._
 
 import org.eclipse.core.filebuffers.FileBuffers
+import org.eclipse.core.internal.resources.ResourceException
 import org.eclipse.core.resources.{ IFile, IMarker, IResource, IWorkspaceRunnable }
 import org.eclipse.core.runtime.{ IProgressMonitor }
 import org.eclipse.jdt.core.{ IJavaModelMarker, JavaCore }
@@ -33,14 +34,22 @@ object FileUtils {
   }
   
   def clearBuildErrors(file : IFile, monitor : IProgressMonitor) =
-    file.getWorkspace.run(new IWorkspaceRunnable {
-      def run(monitor : IProgressMonitor) = file.deleteMarkers(plugin.problemMarkerId, true, IResource.DEPTH_INFINITE)
-    }, monitor)
+    try {
+      file.getWorkspace.run(new IWorkspaceRunnable {
+        def run(monitor : IProgressMonitor) = file.deleteMarkers(plugin.problemMarkerId, true, IResource.DEPTH_INFINITE)
+      }, monitor)
+    } catch {
+      case _ : ResourceException =>
+    }
   
   def clearTasks(file : IFile, monitor : IProgressMonitor) =
-    file.getWorkspace.run(new IWorkspaceRunnable {
-      def run(monitor : IProgressMonitor) = file.deleteMarkers(IJavaModelMarker.TASK_MARKER, true, IResource.DEPTH_INFINITE)
-    }, monitor)
+    try {
+      file.getWorkspace.run(new IWorkspaceRunnable {
+        def run(monitor : IProgressMonitor) = file.deleteMarkers(IJavaModelMarker.TASK_MARKER, true, IResource.DEPTH_INFINITE)
+      }, monitor)
+    } catch {
+      case _ : ResourceException =>
+    }
   
   def hasBuildErrors(file : IFile) : Boolean =
     file.findMarkers(plugin.problemMarkerId, true, IResource.DEPTH_INFINITE).exists(_.getAttribute(IMarker.SEVERITY) == IMarker.SEVERITY_ERROR)

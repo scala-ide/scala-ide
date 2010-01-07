@@ -114,9 +114,10 @@ class EclipseBuildManager(project : ScalaProject, settings0: Settings) extends R
     monitor = pm
     
     pendingSources ++= addedOrUpdated
-    val toBuild = pendingSources.map(EclipseResource(_)) ++ unbuilt 
+    val removedFiles = removed.map(EclipseResource(_) : AbstractFile)
+    val toBuild = pendingSources.map(EclipseResource(_)) ++ unbuilt -- removedFiles
     hasErrors = false
-    super.update(toBuild, removed.map(EclipseResource(_)))
+    super.update(toBuild, removedFiles)
     if (!hasErrors)
       pendingSources.clear
   }
