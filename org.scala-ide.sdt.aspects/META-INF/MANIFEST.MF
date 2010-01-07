@@ -6,10 +6,12 @@ Bundle-Version: 1.0.0
 Bundle-Activator: scala.tools.eclipse.contribution.weaving.jdt.ScalaJDTWeavingPlugin
 Require-Bundle: 
  org.aspectj.runtime,
+ org.eclipse.core.expressions,
  org.eclipse.core.runtime,
  org.eclipse.debug.ui,
  org.eclipse.equinox.weaving.aspectj,
  org.eclipse.jdt.core,
+ org.eclipse.jdt.launching,
  org.eclipse.jdt.ui,
  org.eclipse.jface,
  org.eclipse.jface.text,
@@ -21,6 +23,7 @@ Require-Bundle:
 Eclipse-SupplementBundle: 
  org.eclipse.jdt.core,
  org.eclipse.jdt.debug.ui,
+ org.eclipse.jdt.launching,
  org.eclipse.jdt.ui
 Bundle-ActivationPolicy: lazy
 Export-Package: 
@@ -30,6 +33,7 @@ Export-Package:
  scala.tools.eclipse.contribution.weaving.jdt.core,
  scala.tools.eclipse.contribution.weaving.jdt.hierarchy,
  scala.tools.eclipse.contribution.weaving.jdt.indexerprovider,
+ scala.tools.eclipse.contribution.weaving.jdt.launching,
  scala.tools.eclipse.contribution.weaving.jdt.search,
  scala.tools.eclipse.contribution.weaving.jdt.ui,
  scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor
