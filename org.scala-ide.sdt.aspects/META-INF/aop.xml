@@ -8,6 +8,7 @@
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.core.RefactoringAvailabilityAspect"/>
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.hierarchy.HierarchyAspect"/>
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.indexerprovider.IndexerProviderAspect"/>
+<aspect name="scala.tools.eclipse.contribution.weaving.jdt.launching.JavaLaunchableTesterAspect"/>
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.search.SearchAspect"/>
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.ClassFileEditorIdAspect"/>
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.CompletionAspect"/>
