@@ -7,6 +7,7 @@ package scala.tools.eclipse
 
 import java.{ util => ju }
 
+import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.jdt.internal.ui.javaeditor.CompilationUnitEditor
 import org.eclipse.jdt.ui.text.JavaSourceViewerConfiguration
 import org.eclipse.jface.preference.IPreferenceStore
@@ -47,6 +48,12 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
         case svc : ScalaSourceViewerConfiguration => svc
         case _ => new ScalaSourceViewerConfiguration(getPreferenceStore, this)
       })
+  }
+  
+  override def doSave(pm : IProgressMonitor) : Unit = {
+    val project = ScalaPlugin.plugin.getScalaProject(getEditorInput)
+    project.scheduleResetPresentationCompiler
+    super.doSave(pm)
   }
 }
 
