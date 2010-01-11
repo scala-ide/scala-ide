@@ -14,6 +14,7 @@ import org.eclipse.jdt.internal.core.IJavaElementRequestor;
 import org.eclipse.jdt.internal.core.NameLookup;
 
 import scala.tools.eclipse.contribution.weaving.jdt.IScalaCompilationUnit;
+import scala.tools.eclipse.contribution.weaving.jdt.IScalaElement;
 
 @SuppressWarnings("restriction")
 public privileged aspect NameLookupAspect {
@@ -76,11 +77,12 @@ public privileged aspect NameLookupAspect {
             IJavaElement cu = compilationUnits[i];
             String cuName = cu.getElementName();
             int lastDot = cuName.lastIndexOf('.');
-            if (!(cu instanceof IScalaCompilationUnit) && (lastDot != topLevelTypeName.length() || !topLevelTypeName.regionMatches(0, cuName, 0, lastDot)))
+            boolean isScala = cu instanceof IScalaCompilationUnit;
+            if (!isScala && (lastDot != topLevelTypeName.length() || !topLevelTypeName.regionMatches(0, cuName, 0, lastDot)))
               continue;
             IType type = ((ICompilationUnit) cu).getType(topLevelTypeName);
             type = nl.getMemberType(type, name, firstDot);
-            if (nl.acceptType(type, acceptFlags, true/*a source type*/)) { // accept type checks for existence
+            if ((isScala && (type instanceof IScalaElement)) || (!isScala && nl.acceptType(type, acceptFlags, true/*a source type*/))) { // accept type checks for existence unless cu is Scala
               requestor.acceptType(type);
               break;  // since an exact match was requested, no other matching type can exist
             }
