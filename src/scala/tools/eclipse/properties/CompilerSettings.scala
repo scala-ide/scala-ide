@@ -133,7 +133,7 @@ trait WorkbenchPreferencePage extends IWorkbenchPreferencePage {
  */   
 class CompilerSettings extends PropertyPage with ProjectSettings with WorkbenchPreferencePage {
   //TODO - Use setValid to enable/disable apply button so we can only click the button when a property/preference
-  // has chaned from the saved value
+  // has changed from the saved value
   
   
   lazy val preferenceStore : IPreferenceStore = {
