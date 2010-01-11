@@ -26,8 +26,16 @@ trait Cached[T] {
     
     wl.lock
     while (!elem.isDefined) {
-      while (inProgress)
-        ready.await
+      try {
+        while (inProgress)
+          ready.await
+      } catch {
+        case ex : InterruptedException =>
+          if (!elem.isDefined) {
+            wl.unlock
+            throw ex
+          }
+      }
         
       if (!elem.isDefined) {
         inProgress = true
