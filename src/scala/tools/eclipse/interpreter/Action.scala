@@ -29,38 +29,11 @@ class Action extends IObjectActionDelegate {
       val shell = new Shell
       MessageDialog.openInformation(shell, "Scala Development Tools", "Intepreter could not be created")
     }
-    import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants._
-    import org.eclipse.debug.core.DebugPlugin
-    val manager = DebugPlugin.getDefault().getLaunchManager();
-    val launchType = manager.getLaunchConfigurationType(SCALA_INTERPRETER_LAUNCH_ID);
-    val projectName = target.get.getJavaProject.getProject.getName
-    //Pull out the first interpreter configuration we can find for the project.
-    val configuration = manager.getLaunchConfigurations(launchType).filter({ config =>       
-      projectName.equals(config.getAttribute(ATTR_PROJECT_NAME, ""))
-    }).headOption
     
-    val workingCopy = configuration match {
-      case Some(config) =>
-        config.getWorkingCopy
-      case None =>
-        val newConfig = launchType.newInstance(null, projectName);
-        newConfig.setAttribute(ATTR_PROJECT_NAME, projectName);
-        //TODO - What else do we need to set on the properties for this to work...
-        newConfig
-    }
+    val project = target.get.getJavaProject.getProject
     
-    target match {
-      case Some(x : IPackageFragment) =>
-        workingCopy.setAttribute(InterpreterLaunchConstants.PACKAGE_IMPORT, x.getElementName)
-      case Some(x : ITypeRoot) =>
-        
-      case _ => //Ignore
-    }
-    
-    import org.eclipse.debug.ui.DebugUITools
-    import org.eclipse.debug.core.ILaunchManager
-    DebugUITools.launch(workingCopy, ILaunchManager.RUN_MODE)
-    
+    import scala.tools.eclipse.interpreter.Factory
+    Factory.openConsoleInProjectFromTarget(project, target)
   }
   
   override def selectionChanged(action: IAction, select: ISelection) = {
