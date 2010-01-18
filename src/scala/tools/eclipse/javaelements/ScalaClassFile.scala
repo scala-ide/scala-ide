@@ -39,8 +39,11 @@ class ScalaClassFile(parent : PackageFragment, name : String, sourceFile : Strin
     val name = element.getElementName
     if (name.length() == 0)
       None
-    else
-      getChildren.find(_.getElementName == name)
+    else {
+      val name = element.getElementName
+      val tpe = element.getElementType
+      getChildren.find(e => e.getElementName == name && e.getElementType == tpe)
+    }
   }
   
   override def codeSelect(offset : Int, length : Int, owner : WorkingCopyOwner) : Array[IJavaElement] =
