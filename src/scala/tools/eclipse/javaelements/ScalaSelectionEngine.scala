@@ -7,6 +7,8 @@ package scala.tools.eclipse.javaelements
 
 import java.{ util => ju }
 
+import ch.epfl.lamp.fjbg.JObjectType
+import ch.epfl.lamp.fjbg.JType
 import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.SyncVar
 import scala.util.control.Breaks._
@@ -175,6 +177,10 @@ class ScalaSelectionEngine(nameEnvironment : SearchableEnvironment, requestor : 
         val parent = ssr.findLocalElement(defn.pos.startOrPoint)
         if (parent != null) {
           val name = if (defn.hasFlag(Flags.PARAM) && defn.hasFlag(Flags.SYNTHETIC)) "_" else defn.name.toString.trim
+          val jtype = compiler.javaType(defn.tpe) match {
+            case jt if jt == JType.UNKNOWN | jt == JType.ADDRESS | jt == JType.REFERENCE => JObjectType.JAVA_LANG_OBJECT
+            case jt => jt
+          }
           val localVar = new ScalaLocalVariableElement(
             parent.asInstanceOf[JavaElement],
             name,
@@ -182,7 +188,7 @@ class ScalaSelectionEngine(nameEnvironment : SearchableEnvironment, requestor : 
             defn.pos.endOrPoint-1,
             defn.pos.point,
             defn.pos.point+name.length-1,
-            compiler.javaType(defn.tpe).getSignature,
+            jtype.getSignature,
             name+" : "+defn.tpe.toString)
           ssr.addElement(localVar)
         }

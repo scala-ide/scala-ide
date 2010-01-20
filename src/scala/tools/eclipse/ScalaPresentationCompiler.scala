@@ -83,9 +83,7 @@ class ScalaPresentationCompiler(settings : Settings)
         }
       }
     
-    override def destroy(crh : CompilerResultHolder) {
-      scu.scheduleReconcile
-    }
+    override def destroy(crh : CompilerResultHolder) {}
   }
   
   def withCompilerResult[T](scu : ScalaCompilationUnit)(op : CompilerResultHolder => T) : T =
@@ -106,6 +104,7 @@ class ScalaPresentationCompiler(settings : Settings)
     ScalaPlugin.plugin.logError(msg, t)
     
   def destroy() {
+    results.keysIterator.foreach(_.scheduleReconcile)
     results.valuesIterator.foreach(_.invalidate)
     askShutdown
   }

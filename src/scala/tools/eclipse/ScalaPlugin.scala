@@ -62,7 +62,7 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
     super.start(context)
     
     ResourcesPlugin.getWorkspace.addResourceChangeListener(this, IResourceChangeEvent.PRE_CLOSE | IResourceChangeEvent.POST_CHANGE)
-    JavaCore.addElementChangedListener(this)
+    JavaCore.addElementChangedListener(this, ElementChangedEvent.POST_RECONCILE)
     Platform.getContentTypeManager.
       getContentType(JavaCore.JAVA_SOURCE_CONTENT_TYPE).
         addFileSpec("scala", IContentTypeSettings.FILE_EXTENSION_SPEC)
