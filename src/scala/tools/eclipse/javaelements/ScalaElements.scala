@@ -75,13 +75,14 @@ class ScalaSourceTypeElement(parent : JavaElement, name : String)
   }
 }
 
-class ScalaClassElement(parent : JavaElement, name : String)
+class ScalaClassElement(parent : JavaElement, name : String, synthetic : Boolean)
   extends ScalaSourceTypeElement(parent, name) {
   override def getImageDescriptor = ScalaImages.SCALA_CLASS
+  override def isVisible = !synthetic
 }
 
 class ScalaAnonymousClassElement(parent : JavaElement, name : String)
-  extends ScalaClassElement(parent, "") {
+  extends ScalaClassElement(parent, "", false) {
     override def getLabelText(flags : Long) = if (name != null ) "new "+name+" {...}" else "new {...}"
 }
 

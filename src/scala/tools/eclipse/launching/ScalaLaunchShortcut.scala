@@ -140,21 +140,21 @@ class ScalaLaunchShortcut extends JavaLaunchShortcut {
    * largely re-implemented here with the appropriate element name made available.
    */
   override def createConfiguration(t: IType) : ILaunchConfiguration = {
-    var config: ILaunchConfiguration = null 
-    // Adjusted the name of class to be run to not include the $ sign.  When the JDT Indexing is fixed this will just
-    // need to use the regular fullyQualifiedName
-    val adjustedFullyQualifiedName: String = t.getFullyQualifiedName.slice(0,t.getFullyQualifiedName.length-1).toString
-    // This is the name that appears on the launch configuration subwindow - since this is for
-    // display purposes only this should not be changed
-    val launchInstanceName: String = t.getElementName.slice(0,t.getElementName.length -1).toString
+    val fullyQualifiedName = {
+      val nm = t.getFullyQualifiedName
+      if (nm.endsWith("$"))
+        nm.substring(0, nm.length-1)
+      else
+        nm
+    }
+    val launchInstanceName = t.getElementName
 
     val configType: ILaunchConfigurationType = getConfigurationType
-    var wc  = configType.newInstance(null,getLaunchManager.generateUniqueLaunchConfigurationNameFrom(launchInstanceName))
-    wc.setAttribute(IJavaLaunchConfigurationConstants.ATTR_MAIN_TYPE_NAME, adjustedFullyQualifiedName)
+    val wc = configType.newInstance(null,getLaunchManager.generateUniqueLaunchConfigurationNameFrom(launchInstanceName))
+    wc.setAttribute(IJavaLaunchConfigurationConstants.ATTR_MAIN_TYPE_NAME, fullyQualifiedName)
     wc.setAttribute(IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME, t.getJavaProject.getElementName)   
     wc.setMappedResources(Array[IResource](t.getUnderlyingResource))
-    config = wc.doSave
-    config    
+    wc.doSave
   }
   
   /**
@@ -172,8 +172,13 @@ class ScalaLaunchShortcut extends JavaLaunchShortcut {
     if (t == null || configType == null)
       return null 
     
-   //Update the launch configuration names to remove the $ sign
-    val fullyQualifiedName: String = t.getFullyQualifiedName.slice(0,t.getFullyQualifiedName.length-1).toString
+    val fullyQualifiedName = {
+      val nm = t.getFullyQualifiedName
+      if (nm.endsWith("$"))
+        nm.substring(0, nm.length-1)
+      else
+        nm
+    }
     val projectName: String = t.getJavaProject.getElementName
     
     //Match existing configurations to the existing list

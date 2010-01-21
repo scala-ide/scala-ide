@@ -17,7 +17,8 @@ import org.eclipse.jdt.internal.core.{
   MemberValuePair, OpenableElementInfo, SourceRefElement }
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants
 
-import scala.collection.immutable.Map
+import scala.collection.Map
+import scala.collection.mutable.HashMap
 
 import scala.tools.nsc.symtab.Flags
 import scala.tools.nsc.util.{ NoPosition, Position }
@@ -61,6 +62,135 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
           case openable : OpenableElementInfo => OpenableElementInfoUtils.addChild(openable, child)
           case _ =>
         }
+      
+      def modules : Map[Symbol, ScalaElementInfo] = Map.empty 
+      def classes : Map[Symbol, (ScalaElement, ScalaElementInfo)] = Map.empty
+      
+      def complete {
+        def addForwarders(classElem : ScalaElement, classElemInfo : ScalaElementInfo, module: Symbol) {
+          def conflictsIn(cls: Symbol, name: Name) =
+            cls.info.nonPrivateMembers.exists(_.name == name)
+          
+          /** List of parents shared by both class and module, so we don't add forwarders
+           *  for methods defined there - bug #1804 */
+          lazy val commonParents = {
+            val cps = module.info.baseClasses
+            val mps = module.linkedClassOfModule.info.baseClasses
+            cps.filter(mps contains)
+          }
+          /* the setter doesn't show up in members so we inspect the name */
+          def conflictsInCommonParent(name: Name) =
+            commonParents exists { cp => name startsWith (cp.name + "$") }
+                 
+          /** Should method `m' get a forwarder in the mirror class? */
+          def shouldForward(m: Symbol): Boolean =
+            atPhase(currentRun.picklerPhase) (
+              m.owner != definitions.ObjectClass 
+              && m.isMethod
+              && !m.hasFlag(Flags.CASE | Flags.PROTECTED | Flags.DEFERRED)
+              && !m.isConstructor
+              && !m.isStaticMember
+              && !(m.owner == definitions.AnyClass) 
+              && !module.isSubClass(module.linkedClassOfModule)
+              && !conflictsIn(definitions.ObjectClass, m.name)
+              && !conflictsInCommonParent(m.name)
+              && !conflictsIn(module.linkedClassOfModule, m.name)
+            )
+          
+          assert(module.isModuleClass)
+          
+          for (m <- module.info.nonPrivateMembers; if shouldForward(m))
+            addForwarder(classElem, classElemInfo, module, m)
+        }
+
+        def addForwarder(classElem: ScalaElement, classElemInfo : ScalaElementInfo, module: Symbol, d: Symbol) {
+          //val moduleName = javaName(module) // + "$"
+          //val className = moduleName.substring(0, moduleName.length() - 1)
+
+          val nm = d.name
+          
+          val fps = for(vps <- d.tpe.paramss; vp <- vps) yield vp
+          
+          def paramType(sym : Symbol) = {
+            val tpe = sym.tpe
+            if (sym.isType || tpe != null)
+              uncurry.transformInfo(sym, tpe).typeSymbol
+            else {
+              NoSymbol
+            }
+          }
+          
+          val paramTypes = Array(fps.map(v => Signature.createTypeSignature(mapType(paramType(v)), false)) : _*)
+          val paramNames = Array(fps.map(n => nme.getterName(n.name).toString.toArray) : _*)
+          
+          val defElem = 
+            if(d.hasFlag(Flags.ACCESSOR))
+              new ScalaAccessorElement(classElem, nm.toString, paramTypes)
+            else
+              new ScalaDefElement(classElem, nm.toString, paramTypes, true, nm.toString)
+          resolveDuplicates(defElem)
+          classElemInfo.addChild0(defElem)
+          
+          val defElemInfo = new ScalaSourceMethodInfo
+          
+          defElemInfo.setArgumentNames(paramNames)
+          defElemInfo.setExceptionTypeNames(new Array[Array[Char]](0))
+          val tn = manager.intern(mapType(d.tpe.finalResultType.typeSymbol).toArray)
+          defElemInfo.asInstanceOf[FnInfo].setReturnType(tn)
+  
+          val annotsPos = addAnnotations(d, defElemInfo, defElem)
+  
+          defElemInfo.setFlags0(ClassFileConstants.AccPublic|ClassFileConstants.AccFinal|ClassFileConstants.AccStatic)
+          
+          val (start, point, end) =
+            d.pos match {
+              case NoPosition =>
+                (module.pos.point, module.pos.point, module.pos.point)
+              case pos =>
+                (d.pos.startOrPoint, d.pos.point, d.pos.endOrPoint)
+            }
+            
+          val nameEnd = point+defElem.labelName.length-1
+            
+          defElemInfo.setNameSourceStart0(point)
+          defElemInfo.setNameSourceEnd0(nameEnd)
+          defElemInfo.setSourceRangeStart0(start)
+          defElemInfo.setSourceRangeEnd0(end)
+          
+          newElements0.put(defElem, defElemInfo)
+        } 
+        
+        for ((m, mInfo) <- modules) {
+          val c = m.linkedClassOfModule
+          if (c != NoSymbol) {
+            classes.get(c) match {
+              case Some((classElem, classElemInfo)) =>
+                addForwarders(classElem, classElemInfo, m.moduleClass)
+              case _ =>
+            }
+          } else {
+            val className = m.nameString
+            
+            val classElem = new ScalaClassElement(element, className, true)
+            resolveDuplicates(classElem)
+            addChild(classElem)
+            
+            val classElemInfo = new ScalaElementInfo
+            classElemInfo.setHandle(classElem)
+            classElemInfo.setFlags0(ClassFileConstants.AccSuper|ClassFileConstants.AccFinal|ClassFileConstants.AccPublic)
+            classElemInfo.setSuperclassName("java.lang.Object".toArray)
+            classElemInfo.setSuperInterfaceNames(null)
+            classElemInfo.setNameSourceStart0(mInfo.getNameSourceStart)
+            classElemInfo.setNameSourceEnd0(mInfo.getNameSourceEnd)
+            classElemInfo.setSourceRangeStart0(mInfo.getDeclarationSourceStart)
+            classElemInfo.setSourceRangeEnd0(mInfo.getDeclarationSourceEnd)
+            
+            newElements0.put(classElem, classElemInfo)
+            
+            addForwarders(classElem, classElemInfo, m.moduleClass)
+          }
+        }
+      }
     }
     
     trait PackageOwner extends Owner { self =>
@@ -148,6 +278,8 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
     }
     
     trait ClassOwner extends Owner { self =>
+      override val classes = new HashMap[Symbol, (ScalaElement, ScalaElementInfo)]
+    
       override def addClass(c : ClassDef) : Owner = {
         //println("Class defn: "+c.name+" ["+this+"]")
         //println("Parents: "+c.impl.parents)
@@ -184,12 +316,14 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
             new ScalaAnonymousClassElement(element, primaryTypeString)
           }
           else
-            new ScalaClassElement(element, name)
+            new ScalaClassElement(element, name, false)
         
         resolveDuplicates(classElem)
         addChild(classElem)
         
         val classElemInfo = new ScalaElementInfo
+        classes(c.symbol) = (classElem, classElemInfo)
+        
         classElemInfo.setHandle(classElem)
         val mask = ~(if (isAnon) ClassFileConstants.AccPublic else 0)
         classElemInfo.setFlags0(mapModifiers(c.mods) & mask)
@@ -230,6 +364,8 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
     }
     
     trait ModuleOwner extends Owner { self =>
+      override val modules = new HashMap[Symbol, ScalaElementInfo]
+
       override def addModule(m : ModuleDef) : Owner = {
         //println("Module defn: "+m.name+" ["+this+"]")
         
@@ -239,6 +375,9 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         addChild(moduleElem)
         
         val moduleElemInfo = new ScalaElementInfo
+        if (m.symbol.owner.isPackageClass)
+          modules(m.symbol) = moduleElemInfo
+        
         moduleElemInfo.setHandle(moduleElem)
         moduleElemInfo.setFlags0(mapModifiers(m.mods)|ClassFileConstants.AccFinal)
         
@@ -691,6 +830,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
       val prevBuilder = currentBuilder
       currentBuilder = builder
       traverse
+      currentBuilder.complete
       currentBuilder = prevBuilder
     }
   }
