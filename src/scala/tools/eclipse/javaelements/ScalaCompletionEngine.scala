@@ -51,7 +51,7 @@ class ScalaCompletionEngine {
       
       val completed = new SyncVar[Either[List[compiler.Member], Throwable]]
       val (start, end) = t0 match {
-        case Some(s@compiler.Select(qualifier, name)) =>
+        case Some(s@compiler.Select(qualifier, name)) if qualifier.pos.isDefined =>
           val cpos0 = qualifier.pos.endOrPoint 
           val cpos = compiler.rangePos(sourceFile, cpos0, cpos0, cpos0)
           compiler.askTypeCompletion(cpos, completed)
