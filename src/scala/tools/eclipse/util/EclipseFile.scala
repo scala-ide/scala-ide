@@ -69,8 +69,10 @@ abstract class EclipseResource[R <: IResource] extends AbstractFile {
   
   def absolute = this
   
-  override def equals(other : Any) : Boolean =
-    other.isInstanceOf[EclipseResource[_ <: IResource]] && path == other.asInstanceOf[EclipseResource[_ <: IResource]].path
+  override def equals(other : Any) : Boolean = other match {
+    case otherRes : EclipseResource[r] => path == otherRes.path
+    case _ => false
+  }
 
   override def hashCode() : Int = path.hashCode
 }

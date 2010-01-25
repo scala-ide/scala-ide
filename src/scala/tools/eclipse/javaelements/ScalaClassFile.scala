@@ -36,13 +36,16 @@ class ScalaClassFile(parent : PackageFragment, name : String, sourceFile : Strin
   }
 
   def getCorrespondingElement(element : IJavaElement) : Option[IJavaElement] = {
-    val name = element.getElementName
-    if (name.length() == 0)
+    if (!validateExistence(resource).isOK)
       None
     else {
       val name = element.getElementName
-      val tpe = element.getElementType
-      getChildren.find(e => e.getElementName == name && e.getElementType == tpe)
+      if (name.length() == 0)
+        None
+      else {
+        val tpe = element.getElementType
+        getChildren.find(e => e.getElementName == name && e.getElementType == tpe)
+      }
     }
   }
   

@@ -88,9 +88,13 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
     withCompilerResult { crh => if (crh.problems.isEmpty) null else crh.problems.toArray }
   
   def getCorrespondingElement(element : IJavaElement) : Option[IJavaElement] = {
-    val name = element.getElementName
-    val tpe = element.getElementType
-    getChildren.find(e => e.getElementName == name && e.getElementType == tpe)
+    if (!validateExistence(resource).isOK)
+      None
+    else {
+      val name = element.getElementName
+      val tpe = element.getElementType
+      getChildren.find(e => e.getElementName == name && e.getElementType == tpe)
+    }
   }
 
   override def getType(name : String) : IType = {
