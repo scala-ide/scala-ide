@@ -24,6 +24,7 @@
 	
   <property name="env.ANT_OPTS" value="-Xms512M -Xmx1024M -Xss1M -XX:MaxPermSize=128M" />
   <property name="scalacfork.jvmargs" value="${env.ANT_OPTS}"/>
+  <property name="scalac.args.optimise" value="-optimise"/>
   
 <!-- ===========================================================================
 INITIALISE BUILD
@@ -119,7 +120,9 @@ TARGETS SUPPORTING DEVELOPMENT WITHIN ECLIPSE
   </target>
   
   <target name="devel.dist" depends="devel.clean">
-    <ant dir="${scala.dir}" antfile="build.xml" target="dist.done" inheritall="false"/>
+    <ant dir="${scala.dir}" antfile="build.xml" target="dist.done" inheritall="false">
+      <property name="scalac.args.optimise" value="${scalac.args.optimise}"/>
+    </ant>
     <ant dir="${scala.lib.dir}" antfile="build.xml" target="dist" inheritall="false"/>
     <ant dir="${scala.plugin.aspects.dir}" antfile="build.xml" target="dist" inheritall="false"/>
     <antcall target="dist"/>
@@ -147,6 +150,7 @@ BUILD THE PLUGIN
       compilerpathref="scala.classpath"
       srcdir="${basedir}/src"
       destdir="${build.dir}"
+    	params="${scalac.args.optimise}"
     	jvmargs="${scalacfork.jvmargs}">
       <compilationpath>
         <path refid="scala.classpath"/>

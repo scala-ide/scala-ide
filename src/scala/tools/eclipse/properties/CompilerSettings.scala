@@ -26,7 +26,7 @@ import scala.tools.eclipse.util.IDESettings
  */   
 trait ProjectSettings {
 
-  def preferenceStore : IPreferenceStore 
+  def preferenceStore0 : IPreferenceStore 
   val settings = new Settings
 
   /** The settings we may have changed */
@@ -37,7 +37,7 @@ trait ProjectSettings {
     for (setting <- userSettings) setting.save()
     
     import org.eclipse.jface.preference.IPersistentPreferenceStore
-    preferenceStore match {
+    preferenceStore0 match {
       case savable : IPersistentPreferenceStore => savable.save()
      }
   }
@@ -71,19 +71,19 @@ trait ProjectSettings {
     val name = SettingConverterUtil.convertNameToProperty(underlying.name)
 
     /** Default value */
-    def default : A = adapt(preferenceStore.getDefaultString(name))
+    def default : A = adapt(preferenceStore0.getDefaultString(name))
     
     /** Saves the setting, unless it matches the default */
     def save() {
       if (value == default)
-        preferenceStore.setToDefault(name)
+        preferenceStore0.setToDefault(name)
       else {
-        preferenceStore.setValue(name, value.toString)
+        preferenceStore0.setValue(name, value.toString)
       }
 	}
 
     /** Previously stored value.  null indicates default value */
-    val savedValue = preferenceStore.getString(name)
+    val savedValue = preferenceStore0.getString(name)
 
     // initialise value to saved value if available, otherwise just keep default}
     if (savedValue ne null) value = savedValue   
@@ -136,7 +136,7 @@ class CompilerSettings extends PropertyPage with ProjectSettings with WorkbenchP
   // has changed from the saved value
   
   
-  lazy val preferenceStore : IPreferenceStore = {
+  lazy val preferenceStore0 : IPreferenceStore = {
     /** The project for which we are setting properties */
     val project = getElement() match {
       case project : IProject => Some(project)
@@ -289,8 +289,8 @@ class CompilerSettings extends PropertyPage with ProjectSettings with WorkbenchP
     import SettingConverterUtil._
     
     // TODO - Does this belong here?  For now it's the only place we can really check...
-    if(!preferenceStore.contains(USE_PROJECT_SETTINGS_PREFERENCE)) {
-      preferenceStore.setDefault(USE_PROJECT_SETTINGS_PREFERENCE, false)
+    if(!preferenceStore0.contains(USE_PROJECT_SETTINGS_PREFERENCE)) {
+      preferenceStore0.setDefault(USE_PROJECT_SETTINGS_PREFERENCE, false)
     }
     
     var control : Button = _
@@ -300,7 +300,7 @@ class CompilerSettings extends PropertyPage with ProjectSettings with WorkbenchP
       gd
     }
     /** Pulls our current value from the preference store */
-    private def getValue = preferenceStore.getBoolean(USE_PROJECT_SETTINGS_PREFERENCE)
+    private def getValue = preferenceStore0.getBoolean(USE_PROJECT_SETTINGS_PREFERENCE)
     /** Adds our widget to the Proeprty Page */
     def addTo(page : Composite) = {
       val container = new Composite(page, SWT.NONE)
@@ -334,12 +334,12 @@ class CompilerSettings extends PropertyPage with ProjectSettings with WorkbenchP
     }
     
     def isUseEnabled : Boolean = {
-      return preferenceStore.getBoolean(USE_PROJECT_SETTINGS_PREFERENCE)
+      return preferenceStore0.getBoolean(USE_PROJECT_SETTINGS_PREFERENCE)
     }
     
     /** Saves our value into the preference store*/
     def save() = {
-      preferenceStore.setValue(USE_PROJECT_SETTINGS_PREFERENCE, control.getSelection)
+      preferenceStore0.setValue(USE_PROJECT_SETTINGS_PREFERENCE, control.getSelection)
     }
   }
   
