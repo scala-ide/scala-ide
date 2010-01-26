@@ -12,6 +12,7 @@ import org.eclipse.core.resources.{ IFile, IProject, IResourceChangeEvent, IReso
 import org.eclipse.core.runtime.{ CoreException, FileLocator, IStatus, Platform, Status }
 import org.eclipse.core.runtime.content.IContentTypeSettings
 import org.eclipse.jdt.core.{ ElementChangedEvent, IElementChangedListener, JavaCore, IJavaElementDelta }
+import org.eclipse.jdt.internal.core.{ JavaModel, JavaProject, PackageFragment, PackageFragmentRoot }
 import org.eclipse.jdt.internal.core.util.Util
 import org.eclipse.jdt.internal.ui.javaeditor.IClassFileEditorInput
 import org.eclipse.jface.preference.IPreferenceStore
@@ -62,7 +63,7 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
     super.start(context)
     
     ResourcesPlugin.getWorkspace.addResourceChangeListener(this, IResourceChangeEvent.PRE_CLOSE | IResourceChangeEvent.POST_CHANGE)
-    JavaCore.addElementChangedListener(this, ElementChangedEvent.POST_RECONCILE)
+    JavaCore.addElementChangedListener(this)
     Platform.getContentTypeManager.
       getContentType(JavaCore.JAVA_SOURCE_CONTENT_TYPE).
         addFileSpec("scala", IContentTypeSettings.FILE_EXTENSION_SPEC)
@@ -112,15 +113,30 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
   }
 
   override def elementChanged(event : ElementChangedEvent) {
+    def topLevelRemoved(ssf : ScalaSourceFile) {
+      val project = getScalaProject(ssf.getJavaProject.getProject) 
+      project.scheduleResetPresentationCompiler
+      project.forceClean = true
+    }
+    
     val delta = event.getDelta
     delta.getElement match {
       case ssf : ScalaSourceFile if (delta.getKind == IJavaElementDelta.CHANGED) =>
-        if (delta.getAffectedChildren.exists(_.getKind == IJavaElementDelta.REMOVED)) {
-          val project = getScalaProject(ssf.getJavaProject.getProject) 
-          project.scheduleResetPresentationCompiler
-          project.forceClean = true
-        }
-      case _ =>
+        if (delta.getAffectedChildren.exists(_.getKind == IJavaElementDelta.REMOVED))
+          topLevelRemoved(ssf)
+      case _ : JavaModel =>
+        def findRemovedSource(deltas : Array[IJavaElementDelta]) : Boolean =
+          deltas.exists { delta =>
+            delta.getElement match {
+              case ssf : ScalaSourceFile if (delta.getKind == IJavaElementDelta.REMOVED) =>
+                topLevelRemoved(ssf)
+                true
+              case _ : PackageFragment | _ : PackageFragmentRoot | _ : JavaProject =>
+                findRemovedSource(delta.getAffectedChildren)
+              case _ => false
+            }
+          }
+        findRemovedSource(delta.getAffectedChildren)
     }
   }
 
