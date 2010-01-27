@@ -137,6 +137,7 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
             }
           }
         findRemovedSource(delta.getAffectedChildren)
+      case _ =>
     }
   }
 
