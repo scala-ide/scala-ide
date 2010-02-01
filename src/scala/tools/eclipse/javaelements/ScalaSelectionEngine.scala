@@ -13,7 +13,6 @@ import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.SyncVar
 import scala.util.control.Breaks._
 import scala.tools.nsc.symtab.Flags
-import scala.tools.nsc.util.Position
 
 import org.eclipse.jdt.core.Signature
 import org.eclipse.jdt.core.compiler.{ CharOperation, InvalidInputException }
@@ -130,7 +129,7 @@ class ScalaSelectionEngine(nameEnvironment : SearchableEnvironment, requestor : 
       
       def acceptTypeWithFlags(t : compiler.Symbol, jdtFlags : Int) {
         requestor.acceptType(
-          t.enclosingPackage.fullNameString.toArray,
+          t.enclosingPackage.fullName.toArray,
           mapTypeName(t).toArray,
           jdtFlags,
           false,
@@ -141,7 +140,7 @@ class ScalaSelectionEngine(nameEnvironment : SearchableEnvironment, requestor : 
   
       def acceptField(f : compiler.Symbol) {
         requestor.acceptField(
-          f.enclosingPackage.fullNameString.toArray,
+          f.enclosingPackage.fullName.toArray,
           mapTypeName(f.owner).toArray,
           (if (f.isSetter) compiler.nme.setterToGetter(f.name) else f.name).toString.toArray,
           false,
@@ -157,7 +156,7 @@ class ScalaSelectionEngine(nameEnvironment : SearchableEnvironment, requestor : 
         val paramTypes = m0.tpe.paramss.flatMap(_.map(_.tpe))
         
         requestor.acceptMethod(
-          m0.enclosingPackage.fullNameString.toArray,
+          m0.enclosingPackage.fullName.toArray,
           mapTypeName(owner).toArray,
           null,
           name.toString.toArray,

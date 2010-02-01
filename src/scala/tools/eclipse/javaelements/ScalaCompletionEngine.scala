@@ -6,7 +6,7 @@
 package scala.tools.eclipse.javaelements
 
 import scala.concurrent.SyncVar
-import scala.util.NameTransformer
+import scala.reflect.NameTransformer
 
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.jdt.internal.compiler.env
@@ -108,9 +108,9 @@ class ScalaCompletionEngine {
           
           proposal.setDeclarationSignature(javaType(sym.owner.tpe).getSignature.replace('/', '.').toArray)
           proposal.setSignature(javaType(tpe).getSignature.replace('/', '.').toArray)
-          setDeclarationPackageName(proposal, sym.enclosingPackage.fullNameString.toArray)
+          setDeclarationPackageName(proposal, sym.enclosingPackage.fullName.toArray)
           setDeclarationTypeName(proposal, mapTypeName(sym.owner).toArray)
-          setPackageName(proposal, fieldTypeSymbol.enclosingPackage.fullNameString.toArray)
+          setPackageName(proposal, fieldTypeSymbol.enclosingPackage.fullName.toArray)
           setTypeName(proposal, mapTypeName(fieldTypeSymbol).toArray)
           proposal.setName(transformedName.toArray)
           proposal.setCompletion(transformedName.toArray)
@@ -144,11 +144,11 @@ class ScalaCompletionEngine {
           
           proposal.setDeclarationSignature(javaType(sym.owner.tpe).getSignature.replace('/', '.').toArray)
           proposal.setSignature(sig.toArray)
-          setDeclarationPackageName(proposal, sym.enclosingPackage.fullNameString.toArray)
+          setDeclarationPackageName(proposal, sym.enclosingPackage.fullName.toArray)
           setDeclarationTypeName(proposal, mapTypeName(sym.owner).toArray)
           setParameterPackageNames(proposal, paramTypes.map(mapParamTypePackageName(_).toArray).toArray)
           setParameterTypeNames(proposal, paramTypes.map(mapParamTypeName(_).toArray).toArray)
-          setPackageName(proposal, resultTypeSymbol.enclosingPackage.fullNameString.toArray)
+          setPackageName(proposal, resultTypeSymbol.enclosingPackage.fullName.toArray)
           setTypeName(proposal, mapTypeName(resultTypeSymbol).toArray)
           proposal.setName(transformedName.toArray)
           proposal.setCompletion(completion.toArray)
@@ -164,7 +164,7 @@ class ScalaCompletionEngine {
           val transformedName = NameTransformer.decode(sym.name.toString) 
           val relevance = 30
           proposal.setSignature(javaType(tpe).getSignature.replace('/', '.').toArray)
-          setPackageName(proposal, tpe.typeSymbol.enclosingPackage.fullNameString.toArray)
+          setPackageName(proposal, tpe.typeSymbol.enclosingPackage.fullName.toArray)
           setTypeName(proposal, mapTypeName(tpe.typeSymbol).toArray)
           proposal.setName(transformedName.toArray)
           proposal.setCompletion(transformedName.toArray)

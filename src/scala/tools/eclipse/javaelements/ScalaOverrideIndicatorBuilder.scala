@@ -25,12 +25,12 @@ trait ScalaOverrideIndicatorBuilder { self : ScalaPresentationCompiler =>
           val opc = new overridingPairs.Cursor(defn.symbol)
           while (opc.hasNext) {
             if (!opc.overridden.isClass && opc.overriding.pos.isOpaqueRange) {
-              val text = (if (opc.overridden.isDeferred) "implements" else "overrides")+" "+opc.overridden.fullNameString
+              val text = (if (opc.overridden.isDeferred) "implements" else "overrides")+" "+opc.overridden.fullName
 
               val start = opc.overriding.pos.startOrPoint
               val end = opc.overriding.pos.endOrPoint
               
-              val packageName = opc.overridden.enclosingPackage.fullNameString
+              val packageName = opc.overridden.enclosingPackage.fullName
               val typeNames = enclosingTypeNames(opc.overridden).mkString(".")
               val methodName = opc.overridden.name.toString
               val paramTypes = opc.overridden.tpe.paramss.flatMap(_.map(_.tpe))

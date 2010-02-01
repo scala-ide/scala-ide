@@ -63,7 +63,7 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
             (null, superclassType.typeSymbol, c.impl.parents)
           else {
             val interfaceTrees0 = c.impl.parents.drop(1) 
-            val superclassName0 = superclassType.typeSymbol.fullNameString
+            val superclassName0 = superclassType.typeSymbol.fullName
             if (superclassName0 == "java.lang.Object") {
               if (interfaceTrees0.isEmpty)
                 ("java.lang.Object".toCharArray, null, interfaceTrees0)
@@ -78,11 +78,11 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
         val mask = ~(if (c.symbol.isAnonymousClass) ClassFileConstants.AccPublic else 0)
         
         val interfaceTypes = interfaceTrees.map(t => (t, t.tpe))
-        val interfaceNames = interfaceTypes.map({ case (tree, tpe) => (if (tpe ne null) tpe.typeSymbol.fullNameString else "null-"+tree).toCharArray })
+        val interfaceNames = interfaceTypes.map({ case (tree, tpe) => (if (tpe ne null) tpe.typeSymbol.fullName else "null-"+tree).toCharArray })
         
         indexer.addClassDeclaration(
           mapModifiers(c.mods) & mask,
-          c.symbol.enclosingPackage.fullNameString.toCharArray,
+          c.symbol.enclosingPackage.fullName.toCharArray,
           name.toCharArray,
           enclosingTypeNames(c.symbol).map(_.toArray).toArray,
           superclassName,
@@ -110,15 +110,15 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
 
         val parentTree = m.impl.parents.head
         val superclassType = parentTree.tpe
-        val superclassName = (if (superclassType ne null) superclassType.typeSymbol.fullNameString else "null-"+parentTree).toCharArray
+        val superclassName = (if (superclassType ne null) superclassType.typeSymbol.fullName else "null-"+parentTree).toCharArray
         
         val interfaceTrees = m.impl.parents.drop(1)
         val interfaceTypes = interfaceTrees.map(t => (t, t.tpe))
-        val interfaceNames = interfaceTypes.map({ case (tree, tpe) => (if (tpe ne null) tpe.typeSymbol.fullNameString else "null-"+tree).toCharArray })
+        val interfaceNames = interfaceTypes.map({ case (tree, tpe) => (if (tpe ne null) tpe.typeSymbol.fullName else "null-"+tree).toCharArray })
         
         indexer.addClassDeclaration(
           mapModifiers(m.mods),
-          m.symbol.enclosingPackage.fullNameString.toCharArray,
+          m.symbol.enclosingPackage.fullName.toCharArray,
           (name+"$").toCharArray,
           enclosingTypeNames(m.symbol).map(_.toArray).toArray,
           superclassName,
@@ -128,13 +128,13 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
         )
         
         indexer.addFieldDeclaration(
-          (m.symbol.fullNameString+"$").toCharArray,
+          (m.symbol.fullName+"$").toCharArray,
           "MODULE$".toCharArray
         )
 
         indexer.addClassDeclaration(
           mapModifiers(m.mods),
-          m.symbol.enclosingPackage.fullNameString.toCharArray,
+          m.symbol.enclosingPackage.fullName.toCharArray,
           name.toString.toCharArray,
           new Array[Array[Char]](0),
           superclassName,

@@ -41,7 +41,7 @@ trait ScalaMatchLocator { self : ScalaPresentationCompiler =>
     }
     
     def reportTypeReference(tpe : Type, refPos : Position) {
-      println(refPos+": "+tpe.typeSymbol.fullNameString)
+      println(refPos+": "+tpe.typeSymbol.fullName)
       
       val ref = new SingleTypeReference(tpe.typeSymbol.nameString.toArray, posToLong(refPos));
       if (matchLocator.patternLocator.`match`(ref, possibleMatch.nodeSet) > 0) {

@@ -40,7 +40,7 @@ trait ScalaJavaMapper { self : ScalaPresentationCompiler =>
         if(tt.symbol == null || tt.symbol == NoSymbol || tt.symbol.isRefinementClass || tt.symbol.owner.isRefinementClass)
           "scala.AnyRef"
         else
-          tt.symbol.fullNameString
+          tt.symbol.fullName
       }
       case Ident(name) => name.toString
       case _ => "scala.AnyRef"
@@ -84,7 +84,7 @@ trait ScalaJavaMapper { self : ScalaPresentationCompiler =>
     (if(s == null || s == NoSymbol || s.isRefinementClass || s.owner.isRefinementClass)
         "scala.AnyRef"
       else
-        s.fullNameString
+        s.fullName
     ) match {
       case "scala.AnyRef" => "java.lang.Object"
       case "scala.Unit" => "void"
@@ -108,7 +108,7 @@ trait ScalaJavaMapper { self : ScalaPresentationCompiler =>
       if (jt.isValueType)
         ""
       else
-        t.typeSymbol.enclosingPackage.fullNameString
+        t.typeSymbol.enclosingPackage.fullName
     }
   }
   

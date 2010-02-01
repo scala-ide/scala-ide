@@ -208,7 +208,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
             if (!completed) {
               completed = true
               
-              val pkgElem = JavaElementFactory.createPackageDeclaration(compilationUnitBuilder.element.asInstanceOf[JDTCompilationUnit], p.symbol.fullNameString)
+              val pkgElem = JavaElementFactory.createPackageDeclaration(compilationUnitBuilder.element.asInstanceOf[JDTCompilationUnit], p.symbol.fullName)
               resolveDuplicates(pkgElem)
               compilationUnitBuilder.addChild(pkgElem)
 
@@ -232,7 +232,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
       
       override def addImport(i : Import) : Owner = {
         //println("Import "+i)
-        val prefix = i.expr.symbol.fullNameString
+        val prefix = i.expr.symbol.fullName
         val pos = i.pos
 
         def isWildcard(s: ImportSelector) : Boolean = s.name == nme.WILDCARD
@@ -297,7 +297,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
             (null, superclassType.typeSymbol, c.impl.parents)
           else {
             val interfaceTrees0 = c.impl.parents.drop(1) 
-            val superclassName0 = superclassType.typeSymbol.fullNameString
+            val superclassName0 = superclassType.typeSymbol.fullName
             if (superclassName0 == "java.lang.Object") {
               if (interfaceTrees0.isEmpty)
                 ("java.lang.Object".toCharArray, null, interfaceTrees0)
@@ -333,7 +333,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         classElemInfo.setSuperclassName(superclassName)
         
         val interfaceTypes = interfaceTrees.map(t => (t, t.tpe))
-        val interfaceNames = interfaceTypes.map({ case (tree, tpe) => (if (tpe ne null) tpe.typeSymbol.fullNameString else "null-"+tree).toCharArray })
+        val interfaceNames = interfaceTypes.map({ case (tree, tpe) => (if (tpe ne null) tpe.typeSymbol.fullName else "null-"+tree).toCharArray })
         classElemInfo.setSuperInterfaceNames(interfaceNames.toArray)
         
         val (start, end) = if (!isAnon) {
@@ -394,12 +394,12 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         
         val parentTree = m.impl.parents.head
         val superclassType = parentTree.tpe
-        val superclassName = (if (superclassType ne null) superclassType.typeSymbol.fullNameString else "null-"+parentTree).toCharArray
+        val superclassName = (if (superclassType ne null) superclassType.typeSymbol.fullName else "null-"+parentTree).toCharArray
         moduleElemInfo.setSuperclassName(superclassName)
         
         val interfaceTrees = m.impl.parents.drop(1)
         val interfaceTypes = interfaceTrees.map(t => (t, t.tpe))
-        val interfaceNames = interfaceTypes.map({ case (tree, tpe) => (if (tpe ne null) tpe.typeSymbol.fullNameString else "null-"+tree).toCharArray })
+        val interfaceNames = interfaceTypes.map({ case (tree, tpe) => (if (tpe ne null) tpe.typeSymbol.fullName else "null-"+tree).toCharArray })
         moduleElemInfo.setSuperInterfaceNames(interfaceNames.toArray)
         
         val mb = new Builder {
@@ -499,7 +499,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
           val tn = manager.intern("java.lang.Object".toArray)
           typeElemInfo.setTypeName(tn)
         } else {
-          //println("Type has type: "+t.rhs.symbol.fullNameString)
+          //println("Type has type: "+t.rhs.symbol.fullName)
           val tn = manager.intern(mapType(t.rhs).toArray)
           typeElemInfo.setTypeName(tn)
         }
@@ -539,7 +539,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         val paramNames = Array(fps.map(n => nme.getterName(n.name).toString.toArray) : _*)
         
         val sw = new StringWriter
-        val tp = treePrinters.create(new PrintWriter(sw))
+        val tp = newTreePrinter(new PrintWriter(sw))
         tp.print(tp.symName(d, d.name))
         tp.printTypeParams(d.tparams)
         d.vparamss foreach tp.printValueParams
@@ -655,8 +655,8 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
                 case FloatTag   => (IMemberValuePair.K_FLOAT, const.floatValue)
                 case DoubleTag  => (IMemberValuePair.K_DOUBLE, const.doubleValue)
                 case StringTag  => (IMemberValuePair.K_STRING, const.stringValue)
-                case ClassTag   => (IMemberValuePair.K_CLASS, const.typeValue.typeSymbol.fullNameString)
-                case EnumTag    => (IMemberValuePair.K_QUALIFIED_NAME, const.tpe.typeSymbol.fullNameString+"."+const.symbolValue.name.toString)
+                case ClassTag   => (IMemberValuePair.K_CLASS, const.typeValue.typeSymbol.fullName)
+                case EnumTag    => (IMemberValuePair.K_QUALIFIED_NAME, const.tpe.typeSymbol.fullName+"."+const.symbolValue.name.toString)
               }
             case ArrayAnnotArg(args) =>
               val taggedValues = args.map(getMemberValue)
@@ -679,7 +679,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         if (!annot.pos.isOpaqueRange)
           pos
         else {
-          //val nameString = annot.atp.typeSymbol.fullNameString
+          //val nameString = annot.atp.typeSymbol.fullName
           val nameString = annot.atp.typeSymbol.nameString
           val handle = new Annotation(parentHandle, nameString)
           resolveDuplicates(handle)

@@ -6,7 +6,7 @@
 package scala.tools.eclipse.javaelements
 
 import scala.collection.immutable.Seq
-import scala.util.NameTransformer
+import scala.reflect.NameTransformer
 
 import org.eclipse.jdt.core.{ IField, IJavaElement, IMember, IMethod, IType }
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants
