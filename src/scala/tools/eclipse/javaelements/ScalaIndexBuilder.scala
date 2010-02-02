@@ -188,10 +188,10 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
     trait DefOwner extends Owner { self =>
       override def addDef(d : DefDef) : Owner = {
         println("Def defn: "+d.name+" ["+this+"]")
-        val isCtor0 = d.name.toString == "<init>"
+        val isCtor0 = d.symbol.isConstructor
         val nm =
           if(isCtor0)
-            currentOwner.simpleName
+            d.symbol.owner.simpleName
           else
             d.name
         
