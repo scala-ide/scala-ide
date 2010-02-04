@@ -61,15 +61,19 @@ class ScalaSourceViewerConfiguration(store : IPreferenceStore, editor : ITextEdi
   }
   
   override def getHyperlinkDetectors(sv : ISourceViewer) = {
-    val shd = new ScalaHyperlinkDetector
-    shd.setContext(editor)
-    super.getHyperlinkDetectors(sv).map(d =>
-      if (getHyperlinkDescriptor(d).getId == "org.eclipse.jdt.internal.ui.javaeditor.JavaElementHyperlinkDetector")
-        shd
-      else
-        d)
+    val javaDetectors = super.getHyperlinkDetectors(sv)
+    if (javaDetectors == null)
+      null
+    else {
+      val shd = new ScalaHyperlinkDetector
+      shd.setContext(editor)
+      javaDetectors.map(d =>
+        if (getHyperlinkDescriptor(d).getId == "org.eclipse.jdt.internal.ui.javaeditor.JavaElementHyperlinkDetector")
+          shd
+        else
+          d)
+    }
   }
-  
   
   /**
    * Direct copy+paste of getProject from SourceViewerConfiguration.
