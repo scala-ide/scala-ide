@@ -22,7 +22,7 @@ trait ScalaJavaMapper { self : ScalaPresentationCompiler =>
     else
       jdtMods = jdtMods | ClassFileConstants.AccPublic
     
-    if(mods.isAbstract)
+    if(mods.isAbstract || mods.isDeferred)
       jdtMods = jdtMods | ClassFileConstants.AccAbstract
 
     if(mods.isFinal || mods.hasFlag(Flags.MODULE))
@@ -68,7 +68,7 @@ trait ScalaJavaMapper { self : ScalaPresentationCompiler =>
     else
       jdtMods = jdtMods | ClassFileConstants.AccPublic
     
-    if(sym.hasFlag(Flags.ABSTRACT))
+    if(sym.hasFlag(Flags.ABSTRACT) || sym.hasFlag(Flags.DEFERRED))
       jdtMods = jdtMods | ClassFileConstants.AccAbstract
 
     if(sym.isFinal || sym.hasFlag(Flags.MODULE))
