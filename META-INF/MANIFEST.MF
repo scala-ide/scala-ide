@@ -48,8 +48,11 @@ Import-Package:
  scala.tools.eclipse.contribution.weaving.jdt;apply-aspects:=false,
  scala.tools.eclipse.contribution.weaving.jdt.builderoptions;apply-aspects:=false,
  scala.tools.eclipse.contribution.weaving.jdt.cfprovider;apply-aspects:=false,
+ scala.tools.eclipse.contribution.weaving.jdt.core;apply-aspects:=false,
  scala.tools.eclipse.contribution.weaving.jdt.hierarchy;apply-aspects:=false,
  scala.tools.eclipse.contribution.weaving.jdt.indexerprovider;apply-aspects:=false,
+ scala.tools.eclipse.contribution.weaving.jdt.launching;apply-aspects:=false,
+ scala.tools.eclipse.contribution.weaving.jdt.search;apply-aspects:=false,
  scala.tools.eclipse.contribution.weaving.jdt.ui;apply-aspects:=false,
  scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor;apply-aspects:=false
 Export-Package: 
@@ -58,5 +61,7 @@ Export-Package:
  scala.tools.eclipse.javaelements,
  scala.tools.eclipse.launching,
  scala.tools.eclipse.properties,
+ scala.tools.eclipse.quickfix.proposal,
+ scala.tools.eclipse.ui,
  scala.tools.eclipse.util,
  scala.tools.eclipse.wizards
