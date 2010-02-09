@@ -251,29 +251,10 @@
     <extension
          point="org.eclipse.jdt.core.classpathContainerInitializer">
       <classpathContainerInitializer
-            class="scala.tools.eclipse.launching.ContainerInitializer"
+            class="scala.tools.eclipse.ScalaClasspathContainerInitializer"
             id="ch.epfl.lamp.sdt.launching.SCALA_CONTAINER">
       </classpathContainerInitializer>
-      <classpathContainerInitializer
-            class="scala.tools.eclipse.launching.ContainerInitializer"
-            id="ch.epfl.lamp.sdt.launching.SCALA_HOME">
-      </classpathContainerInitializer>
    </extension>
-   <extension
-         point="org.eclipse.jdt.launching.runtimeClasspathEntryResolvers">
-      <runtimeClasspathEntryResolver
-            container="ch.epfl.lamp.sdt.launching.SCALA_CONTAINER"
-            variable="SCALA_LIB"
-            class="scala.tools.eclipse.launching.RuntimeClasspathEntryResolver"
-            id="ch.epfl.lamp.sdt.launching.SCALA_RESOLVER">
-      </runtimeClasspathEntryResolver>      
-      <runtimeClasspathEntryResolver
-            container="ch.epfl.lamp.sdt.launching.SCALA_HOME"
-            variable="SCALA_HOME"
-            class="scala.tools.eclipse.launching.RuntimeClasspathEntryResolver"
-            id="ch.epfl.lamp.sdt.launching.SCALA_HOME_RESOLVER">
-      </runtimeClasspathEntryResolver>      
-  </extension>   
    <extension point = "org.eclipse.debug.core.launchConfigurationTypes">
      <launchConfigurationType
            delegate="org.eclipse.jdt.launching.JavaLaunchDelegate"

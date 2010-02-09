@@ -23,6 +23,7 @@ import org.osgi.framework.BundleContext
 
 import scala.tools.eclipse.javaelements.{ ScalaElement, ScalaSourceFile }
 import scala.tools.eclipse.util.Style 
+import scala.tools.eclipse.util.OSGiUtils.pathInBundle 
 
 object ScalaPlugin { 
   var plugin : ScalaPlugin = _
@@ -31,9 +32,9 @@ object ScalaPlugin {
 class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IElementChangedListener {
   ScalaPlugin.plugin = this
   
-  val OverrideIndicator = "scala.overrideIndicator"  
   def pluginId = "ch.epfl.lamp.sdt.core"
   def libraryPluginId = "scala.library"
+    
   def wizardPath = pluginId + ".wizards"
   def wizardId(name : String) = wizardPath + ".new" + name
   def classWizId = wizardId("Class")
@@ -42,20 +43,28 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
   def applicationWizId = wizardId("Application")
   def projectWizId = wizardId("Project")
   def netProjectWizId = wizardId("NetProject")
-  def editorId : String = "scala.tools.eclipse.ScalaSourceFileEditor"
+  
+  def editorId = "scala.tools.eclipse.ScalaSourceFileEditor"
   def builderId = pluginId + ".scalabuilder"
   def natureId = pluginId + ".scalanature"  
   def launchId = "ch.epfl.lamp.sdt.launching"
   val scalaLib = "SCALA_CONTAINER"
-  val scalaHome = "SCALA_HOME"
   def scalaLibId  = launchId + "." + scalaLib
-  def scalaHomeId = launchId + "." + scalaHome
   def launchTypeId = "scala.application"
   def problemMarkerId = pluginId + ".problem"
+  
   val scalaFileExtn = ".scala"
   val javaFileExtn = ".java"
   val jarFileExtn = ".jar"
-  val noColor : Color = null
+  
+  val scalaLibBundle = Platform.getBundle(ScalaPlugin.plugin.libraryPluginId)
+
+  val libClasses = pathInBundle(scalaLibBundle, "/lib/scala-library.jar") 
+  val libSources = pathInBundle(scalaLibBundle, "/lib/scala-library-src.jar") 
+  val dbcClasses = pathInBundle(scalaLibBundle, "/lib/scala-dbc.jar")
+  val dbcSources = pathInBundle(scalaLibBundle, "/lib/scala-dbc-src.jar") 
+  val swingClasses = pathInBundle(scalaLibBundle, "/lib/scala-swing.jar") 
+  val swingSources = pathInBundle(scalaLibBundle, "/lib/scala-swing-src.jar") 
   
   private val projects = new HashMap[IProject, ScalaProject]
   
