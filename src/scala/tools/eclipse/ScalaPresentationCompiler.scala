@@ -21,9 +21,9 @@ import scala.tools.nsc.util.{ BatchSourceFile, Position, SourceFile }
 import scala.tools.eclipse.javaelements.{
   ScalaCompilationUnit, ScalaIndexBuilder, ScalaJavaMapper, ScalaMatchLocator, ScalaStructureBuilder,
   ScalaOverrideIndicatorBuilder }
-import scala.tools.eclipse.util.{ Cached, EclipseResource }
+import scala.tools.eclipse.util.{ Cached, EclipseFile, EclipseResource }
 
-class ScalaPresentationCompiler(settings : Settings)
+class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
   extends Global(settings, new ScalaPresentationCompiler.PresentationReporter)
   with ScalaStructureBuilder with ScalaIndexBuilder with ScalaMatchLocator
   with ScalaOverrideIndicatorBuilder with ScalaJavaMapper with JVMUtils { self =>
@@ -108,6 +108,46 @@ class ScalaPresentationCompiler(settings : Settings)
     results.valuesIterator.foreach(_.invalidate)
     askShutdown
   }
+ 
+  class EclipseTyperRun extends TyperRun {
+    override def compileSourceFor(context : Context, name : Name) = {
+      def addImport(imp : analyzer.ImportInfo) = {
+        val qual = imp.qual
+        val sym = qual.symbol
+        sym.isPackage && {
+          var selectors = imp.tree.selectors
+          if (selectors.head.name == name.toTermName)
+            compileSourceFor(sym.fullName+"."+name)
+          else if (selectors.head.name == nme.WILDCARD)
+            compileSourceFor(sym.fullName+"."+name)
+          else
+            false
+        }
+      }
+      
+      context.imports.exists(addImport) || {
+        val pkg = context.owner.enclosingPackage
+        compileSourceFor(pkg.fullName+"."+name)
+      }
+    }
+
+    override def compileSourceFor(qual : Tree, name : Name) = {
+      val sym = qual.symbol
+      sym.isPackage && compileSourceFor(sym.fullName+"."+name)
+    }
+    
+    def compileSourceFor(qualifiedName : String) : Boolean = {
+      project.findSource(qualifiedName) match {
+        case Some(file) =>
+          println("Adding: "+file+" to resolve: "+qualifiedName)
+          compileLate(new EclipseFile(file))
+          true
+        case _ => false
+      }
+    }
+  }
+  
+  override def newTyperRun = new EclipseTyperRun
 }
 
 object ScalaPresentationCompiler {

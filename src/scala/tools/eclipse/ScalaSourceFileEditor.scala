@@ -13,6 +13,7 @@ import org.eclipse.jdt.ui.text.JavaSourceViewerConfiguration
 import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.jface.text.ITextOperationTarget
 import org.eclipse.jface.text.source.SourceViewerConfiguration
+import org.eclipse.ui.IFileEditorInput
 import org.eclipse.ui.editors.text.{ ForwardingDocumentProvider, TextFileDocumentProvider }
 import org.eclipse.ui.texteditor.{ IAbstractTextEditorHelpContextIds, ITextEditorActionConstants, IWorkbenchActionDefinitionIds, TextOperationAction }
 
@@ -52,6 +53,10 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
   
   override def doSave(pm : IProgressMonitor) : Unit = {
     val project = ScalaPlugin.plugin.getScalaProject(getEditorInput)
+    getEditorInput match {
+      case fei : IFileEditorInput => project.updateTopLevelMap(fei.getFile)
+      case _ =>
+    }
     project.scheduleResetPresentationCompiler
     super.doSave(pm)
   }

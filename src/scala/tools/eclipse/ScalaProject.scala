@@ -29,6 +29,7 @@ class ScalaProject(val underlying : IProject) {
   import ScalaPlugin.plugin
 
   private var classpathUpdate : Long = IResource.NULL_STAMP
+  private var topLevelMap0 : TopLevelMap = null
   private var buildManager0 : EclipseBuildManager = null
   private var hasBeenBuilt = false
   private val depFile = underlying.getFile(".scala_dependencies")
@@ -41,7 +42,7 @@ class ScalaProject(val underlying : IProject) {
       val settings = new Settings
       initialize(settings)
       settings.printtypes.tryToSet(Nil)
-      new ScalaPresentationCompiler(settings)
+      new ScalaPresentationCompiler(ScalaProject.this, settings)
     }
     
     override def destroy(compiler : ScalaPresentationCompiler) {
@@ -323,12 +324,36 @@ class ScalaProject(val underlying : IProject) {
     }
   }
   
-  def resetBuildCompiler {
-    buildManager0 = null
-    hasBeenBuilt = false
+  def topLevelMap = {
+    if (topLevelMap0 == null) {
+      topLevelMap0 = new TopLevelMap
+      println("Building top-level map for: "+underlying.getName)
+      val start = System.currentTimeMillis
+      allSourceFiles.map(topLevelMap0.update)
+      val end = System.currentTimeMillis
+      println("Time: "+(end-start))
+    }
+    topLevelMap0
   }
   
-  var forceClean = false
+  def findSource(qualifiedName : String) = topLevelMap.get(qualifiedName)
+  
+  def updateTopLevelMap(file : IFile) {
+    topLevelMap.update(file)
+  }
+  
+  def resetTopLevelMap {
+    topLevelMap0 = null
+  }
+  
+  def withPresentationCompiler[T](op : ScalaPresentationCompiler => T) : T = {
+    presentationCompiler(op)
+  }
+
+  def withCompilerResult[T](scu : ScalaCompilationUnit)(op : ScalaPresentationCompiler.CompilerResultHolder => T) : T =
+    withPresentationCompiler { compiler =>
+      compiler.withCompilerResult(scu)(op)
+    }
   
   def resetPresentationCompiler {
     presentationCompiler.invalidate
@@ -350,11 +375,6 @@ class ScalaProject(val underlying : IProject) {
     }
   }
   
-  def resetCompilers = {
-    resetBuildCompiler
-    resetPresentationCompiler
-  }
-  
   def buildManager = {
     checkClasspath
     if (buildManager0 == null) {
@@ -365,15 +385,6 @@ class ScalaProject(val underlying : IProject) {
     buildManager0
   }
 
-  def withPresentationCompiler[T](op : ScalaPresentationCompiler => T) : T = {
-    presentationCompiler(op)
-  }
-
-  def withCompilerResult[T](scu : ScalaCompilationUnit)(op : ScalaPresentationCompiler.CompilerResultHolder => T) : T =
-    withPresentationCompiler { compiler =>
-      compiler.withCompilerResult(scu)(op)
-    }
-  
   def prepareBuild() : Boolean = {
     if (!hasBeenBuilt) {
       if (!depFile.exists())
@@ -401,11 +412,24 @@ class ScalaProject(val underlying : IProject) {
     depFile.refreshLocal(IResource.DEPTH_INFINITE, null)
   }
 
+  var forceClean = false
+  
   def clean(monitor : IProgressMonitor) = {
     underlying.deleteMarkers(plugin.problemMarkerId, true, IResource.DEPTH_INFINITE)
     resetCompilers
     depFile.delete(true, false, monitor)
     cleanOutputFolders(monitor)
+  }
+
+  def resetBuildCompiler {
+    buildManager0 = null
+    hasBeenBuilt = false
+  }
+  
+  def resetCompilers = {
+    resetTopLevelMap
+    resetBuildCompiler
+    resetPresentationCompiler
   }
 }
 
