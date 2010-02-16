@@ -8,6 +8,7 @@ package scala.tools.eclipse.contribution.weaving.jdt.core;
 import org.eclipse.jface.viewers.IStructuredSelection;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
@@ -67,34 +68,41 @@ public aspect RefactoringAvailabilityAspect {
     isAvailable2(resources, elements) {
     if (elements == null || elements.length == 0)
       return proceed(resources, elements);
-    else if (resources == null || resources.length == 0) {
-      if (elements == null || elements.length == 0)
-        return false;
-      
-      int limit = elements.length;
-      IResource[] newResources = new IResource[limit];
-      for (int i = 0; i < limit; ++i) {
-        IJavaElement elem = elements[i]; 
-        if (elem instanceof IResource)
-          newResources[i] = (IResource)elem;
-        else
-          return false;
+    
+    int numElements = elements.length;
+    boolean hasScalaElement = false;
+    for (int i = 0; i < numElements; ++i)
+      if (elements[i] instanceof IScalaElement) {
+        hasScalaElement = true;
+        break;
       }
-      return proceed(newResources, null);
+    
+    if (!hasScalaElement)
+      return proceed(resources, elements);
+    
+    List newElements = new ArrayList();
+    
+    List newResources = new ArrayList();
+    if (resources != null)
+      newResources.addAll(Arrays.asList(resources));
+    
+    for (int i = 0; i < numElements; ++i) {
+      IJavaElement elem = elements[i];
+      if (elem instanceof IScalaElement) {
+        try {
+          IResource resource = elem.getCorrespondingResource();
+          if (resource != null)
+            newResources.add(resource);
+        } catch (JavaModelException ex) {
+          // Deliberately ignored
+        }
+      } else
+        newElements.add(elem);
     }
-    else {
-      int limit = elements.length;
-      IResource[] newResources = new IResource[resources.length+limit];
-      System.arraycopy(resources, 0, newResources, 0, resources.length);
-      for (int i = 0, j = resources.length; i < limit; ++i, ++j) {
-        IJavaElement elem = elements[i]; 
-        if (elem instanceof IResource)
-          newResources[j] = (IResource)elem;
-        else
-          return false;
-      }
-      return proceed(newResources, null);
-    }
+
+    return proceed(
+      (IResource[])newResources.toArray(new IResource[newResources.size()]),
+      (IJavaElement[])newElements.toArray(new IJavaElement[newElements.size()]));
   }
   
   IResource[] around(Object[] elements) :
