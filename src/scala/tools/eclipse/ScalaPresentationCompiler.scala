@@ -138,10 +138,15 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
     
     def compileSourceFor(qualifiedName : String) : Boolean = {
       project.findSource(qualifiedName) match {
-        case Some(file) =>
-          println("Adding: "+file+" to resolve: "+qualifiedName)
-          compileLate(new EclipseFile(file))
-          true
+        case Some(iFile) =>
+          val file = new EclipseFile(iFile)
+          if (compiledFiles contains file.path)
+            false
+          else {
+            println("Adding: "+file+" to resolve: "+qualifiedName)
+            compileLate(file)
+            true
+          }
         case _ => false
       }
     }
