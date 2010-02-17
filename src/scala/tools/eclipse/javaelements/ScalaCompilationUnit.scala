@@ -9,6 +9,7 @@ import java.util.{ Map => JMap }
 
 import scala.concurrent.SyncVar
 
+import org.eclipse.core.internal.filebuffers.SynchronizableDocument
 import org.eclipse.core.resources.{ IFile, IResource }
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.jdt.core.{
@@ -16,9 +17,10 @@ import org.eclipse.jdt.core.{
   IProblemRequestor, ITypeRoot, JavaCore, JavaModelException, WorkingCopyOwner }
 import org.eclipse.jdt.internal.compiler.env
 import org.eclipse.jdt.internal.core.{
-  CompilationUnitElementInfo, DefaultWorkingCopyOwner, JavaModelStatus, JavaProject, Openable,
+  BufferManager, CompilationUnitElementInfo, DefaultWorkingCopyOwner, JavaModelStatus, JavaProject, Openable,
   OpenableElementInfo, SearchableEnvironment }
 import org.eclipse.jdt.internal.core.search.matching.{ MatchLocator, PossibleMatch }
+import org.eclipse.jdt.internal.ui.javaeditor.DocumentAdapter
 
 import scala.tools.nsc.io.AbstractFile
 import scala.tools.nsc.util.{ BatchSourceFile, SourceFile }
@@ -33,9 +35,20 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
 
   def file : AbstractFile
   
-	def withCompilerResult[T](op : ScalaPresentationCompiler.CompilerResultHolder => T) : T =
-	  project.withCompilerResult(this)(op)
-	  
+  def withDocument[T](op : =>T) : T = {
+    OpenableUtils.getBufferManager(this).getBuffer(this) match {
+      case da : DocumentAdapter => da.getDocument match {
+        case sd : SynchronizableDocument => sd.getLockObject.synchronized(op) 
+        case _ => op
+      }
+      case _ => op
+    }
+  }
+  
+	def withCompilerResult[T](op : ScalaPresentationCompiler.CompilerResultHolder => T) : T = {
+    withDocument(project.withCompilerResult(this)(op))
+  }
+  
   override def bufferChanged(e : BufferChangedEvent) {
     if (e.getBuffer.isClosed)
       discard
@@ -188,6 +201,8 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
 object OpenableUtils extends ReflectionUtils {
   private val oClazz = classOf[Openable]
   private val openBufferMethod = getDeclaredMethod(oClazz, "openBuffer", classOf[IProgressMonitor], classOf[AnyRef])
+  private val getBufferManagerMethod = getDeclaredMethod(oClazz, "getBufferManager")
 
   def openBuffer(o : Openable, pm : IProgressMonitor, info : AnyRef) : IBuffer = openBufferMethod.invoke(o, pm, info).asInstanceOf[IBuffer]
+  def getBufferManager(o : Openable) : BufferManager = getBufferManagerMethod.invoke(o).asInstanceOf[BufferManager]
 }

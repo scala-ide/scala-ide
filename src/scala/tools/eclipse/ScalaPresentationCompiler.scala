@@ -133,7 +133,7 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
 
     override def compileSourceFor(qual : Tree, name : Name) = {
       val sym = qual.symbol
-      sym.isPackage && compileSourceFor(sym.fullName+"."+name)
+      sym != null && sym.isPackage && compileSourceFor(sym.fullName+"."+name)
     }
     
     def compileSourceFor(qualifiedName : String) : Boolean = {
