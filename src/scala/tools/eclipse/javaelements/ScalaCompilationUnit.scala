@@ -38,7 +38,7 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
   def withDocument[T](op : =>T) : T = {
     OpenableUtils.getBufferManager(this).getBuffer(this) match {
       case da : DocumentAdapter => da.getDocument match {
-        case sd : SynchronizableDocument => sd.getLockObject.synchronized(op) 
+        case sd : SynchronizableDocument if sd.getLockObject != null => sd.getLockObject.synchronized(op) 
         case _ => op
       }
       case _ => op
