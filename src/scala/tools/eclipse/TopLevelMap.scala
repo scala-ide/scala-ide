@@ -78,8 +78,9 @@ class TopLevelMap {
   }
   
   def update(file : IFile) {
-    println("Updating top-level map for: "+file.getName)
-    remove(file)
-    parse(List(file))
+    if (file.getFileExtension == "scala") {
+      remove(file)
+      parse(List(file))
+    }
   }
 }
