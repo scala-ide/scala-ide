@@ -29,7 +29,7 @@ class TopLevelMap {
   def sourceFileFor(qualifiedName : String) = typeToFile.get(qualifiedName)
   
   def parse(files : List[IFile]) {
-    import compiler.{ ClassDef, CompilationUnit, GlobalPhase, ModuleDef, PackageDef, Traverser, Tree }
+    import compiler.{ ClassDef, CompilationUnit, GlobalPhase, ModuleDef, nme, PackageDef, Traverser, Tree }
     import compiler.syntaxAnalyzer.UnitParser
     
     val run = new compiler.Run
@@ -57,6 +57,8 @@ class TopLevelMap {
             packagePrefix = prevPrefix
           case ClassDef(mods, name, tparams, impl) =>
             addMapping(packagePrefix+name)
+          case ModuleDef(_, name, _) if name == nme.PACKAGEkw =>
+            super.traverse(tree)
           case ModuleDef(mods, name, impl) =>
             addMapping(packagePrefix+name)
           case _ => super.traverse(tree)
