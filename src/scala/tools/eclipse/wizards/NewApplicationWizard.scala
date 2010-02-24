@@ -15,7 +15,8 @@ import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants
 
 import scala.tools.eclipse.{ ScalaPlugin, ScalaProject }
 
-class NewApplicationWizard extends NewObjectWizard {
+class NewApplicationWizard extends NewResourceWizard {
+  def kind = "Object"
   override def adjective = "Application"
   override def body = """  def main(args : Array[String]) : Unit = {}"""
   override protected def postFinish(project : ScalaProject, file : IFile) = {
