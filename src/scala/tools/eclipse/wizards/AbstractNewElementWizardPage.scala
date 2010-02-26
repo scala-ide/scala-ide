@@ -273,21 +273,20 @@ abstract class AbstractNewElementWizardPage extends NewTypeWizardPage(1,"") {
                   
     monitor.beginTask(NewWizardMessages.NewTypeWizardPage_operationdesc, 8)
 
-    implicit val pack = getPackageFragment match {
-                 case pf: IPackageFragment => pf
-                 case _ => {
-                   val rt = getPackageFragmentRoot
-                   val pf = rt.getPackageFragment("")
-                   pf.exists match {
-                	 case true => 
-                	   monitor.worked(1)
-                	   pf
-                     case _ =>
-                	   rt.createPackageFragment(pf.getElementName, true, 
+    implicit val pack = {
+      val rt = getPackageFragmentRoot
+      val pf = getPackageFragment
+      var  p = pf match {
+        case ipf: IPackageFragment => ipf
+        case  _                    => rt.getPackageFragment("")
+      }
+      p.exists match {
+        case true => monitor.worked(1)
+        case _    => p = rt.createPackageFragment(pf.getElementName, true, 
         		         new SubProgressMonitor(monitor, 1)) 
-                   }
-                 }
-               }
+      }
+      p
+    }
     
     implicit val ld = StubUtility.getLineDelimiterUsed(pack.getJavaProject)
     val typeName = getTypeNameWithoutParameters
@@ -459,12 +458,6 @@ abstract class AbstractNewElementWizardPage extends NewTypeWizardPage(1,"") {
     
     import CodeBuilder._
     
-    val typeBuffer = BufferSupport(declarationType.toLowerCase)
-    val nameBuffer = new NameBuffer(" " +getTypeName)
-    lhm.put("name", nameBuffer)
-    val extendsBuffer = new ExtendsBuffer(superTypes)
-	lhm.put("extends", extendsBuffer)
-    
     val bldr = new StringBuilder()
       .append(commentTemplate(fileComment))
 	  .append(packageTemplate(packageName))
@@ -472,22 +465,12 @@ abstract class AbstractNewElementWizardPage extends NewTypeWizardPage(1,"") {
     imports.writeTo(bldr)
     
 	bldr.append(commentTemplate(typeComment)).append(modifiers)
+	    .append(declarationType.toLowerCase)
 	
-    typeBuffer.writeTo(bldr)
-    nameBuffer.writeTo(bldr)
-    extendsBuffer.writeTo(bldr)
+	createClassDeclaration(getTypeName, superTypes, bldr)
     
-	bldr.append(bodyStub)
-    
-	val contents = bldr.toString
-	//println("NewWizardPage.cuContent = \n" + contents)
-	
-	contents
+	bldr.append(bodyStub).toString
   }
-  
-  private def typeAndName = declarationType.toLowerCase + " " + getTypeName
-  
-  private def simpleStub(implicit ld: String) = typeAndName + bodyStub
   
   private def bodyStub(implicit ld: String) = " {"+ld+ld+"}"
 	  

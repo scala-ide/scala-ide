@@ -6,6 +6,13 @@
 package scala.tools.eclipse.wizards
 
 object BufferSupport {
+	
+  type Buffer = { 
+    def append(s: String): Unit
+    def getLength(): Int
+	def replace(offset: Int, length: Int, text: String): Unit      
+  }
+  
   implicit protected[wizards] def stringBuilderToBuffer(bldr: StringBuilder) =
 	  new BuilderAdapter(bldr)
   
@@ -29,15 +36,11 @@ object BufferSupport {
 }
 
 trait BufferSupport {
-	
+
+  import BufferSupport._
+  
   var offset = -1
   var length = 0
-	
-  type Buffer = { 
-    def append(s: String): Unit
-    def getLength(): Int
-	def replace(offset: Int, length: Int, text: String): Unit      
-  }
   
   protected def contents(implicit ld: String): String
   
