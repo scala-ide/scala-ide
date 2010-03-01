@@ -38,7 +38,7 @@ object EclipseResource {
   
   def fromString(path : String) = {
     val files = ResourcesPlugin.getWorkspace.getRoot.findFilesForLocationURI(URIUtil.toURI(new Path(path)))
-    assert(files != null && files.length > 0)
+    assert(files != null && files.length > 0, "No resource at \""+path+"\"")
     EclipseResource(files(0))
   }
 }
