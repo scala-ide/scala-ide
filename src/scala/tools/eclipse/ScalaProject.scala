@@ -11,7 +11,7 @@ import scala.collection.mutable.{ LinkedHashSet, HashMap, HashSet }
 import java.io.File.pathSeparator
 
 import org.eclipse.core.resources.{ IContainer, IFile, IFolder, IMarker, IProject, IResource, IResourceProxy, IResourceProxyVisitor, IWorkspaceRunnable }
-import org.eclipse.core.runtime.{ IPath, IProgressMonitor }
+import org.eclipse.core.runtime.{ IPath, IProgressMonitor, Path }
 import org.eclipse.jdt.core.{ IClasspathEntry, IJavaProject, JavaCore }
 import org.eclipse.jdt.core.compiler.IProblem
 import org.eclipse.jdt.internal.core.JavaProject
@@ -337,6 +337,16 @@ class ScalaProject(val underlying : IProject) {
   }
   
   def findSource(qualifiedName : String) = topLevelMap.get(qualifiedName)
+  
+  def isStandardSource(file : IFile, qualifiedName : String) : Boolean = {
+    val pathString = file.getLocation.toString
+    val suffix = qualifiedName.replace(".", "/")+".scala"
+    pathString.endsWith(suffix) && {
+      val suffixPath = new Path(suffix)
+      val sourceFolderPath = file.getLocation.removeLastSegments(suffixPath.segmentCount)
+      sourceFolders.exists(_.getLocation == sourceFolderPath)
+    }
+  }
   
   def updateTopLevelMap(file : IFile) {
     topLevelMap.update(file)

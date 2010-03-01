@@ -138,7 +138,7 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
     
     def compileSourceFor(qualifiedName : String) : Boolean = {
       project.findSource(qualifiedName) match {
-        case Some(iFile) =>
+        case Some(iFile) if (!project.isStandardSource(iFile, qualifiedName)) =>
           val file = new EclipseFile(iFile)
           if (compiledFiles contains file.path)
             false
