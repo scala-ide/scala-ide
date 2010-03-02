@@ -74,6 +74,10 @@ public privileged aspect ClassFileProviderAspect {
   pointcut getTypeName(ClassFile cf) :
     execution(public String ClassFile.getTypeName()) &&
     target(cf);
+
+  pointcut getType(ClassFile cf) :
+    call(public IType ClassFile.getType()) &&
+    target(cf);
   
   pointcut mapSource() :
     execution(IBuffer ClassFile.mapSource(SourceMapper, IBinaryType)) &&
@@ -156,6 +160,14 @@ public privileged aspect ClassFileProviderAspect {
     mapSource2() &&
     cflow(mapSource()) {
     return;
+  }
+  
+  IType around(ClassFile cf) :
+    getType(cf) &&
+    cflow(mapSource()) {
+    if (cf.binaryType == null)
+      cf.binaryType = new BinaryType(cf, cf.getTypeName());
+    return cf.binaryType;
   }
   
   String around(ClassFile cf) :
