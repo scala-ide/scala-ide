@@ -73,11 +73,11 @@ class ScalaClassFile(parent : PackageFragment, name : String, sourceFile : Strin
   }
 
   override def getType() : IType = {
-    val tpe = super.getType()
+    val tpe = getBinaryType
     getCorrespondingElement(tpe).getOrElse(tpe).asInstanceOf[IType]
   }
 
-  def getType0() : IType = super.getType()
+  def getBinaryType() : IType = super.getType
   
   def getMainTypeName() : Array[Char] =
     Util.getNameWithoutJavaLikeExtension(getElementName).toCharArray
