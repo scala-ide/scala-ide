@@ -6,7 +6,7 @@
 package scala.tools.eclipse
 
 import scala.collection.mutable.HashMap
-import scala.util.control.ControlException
+import scala.util.control.ControlThrowable
 
 import org.eclipse.core.resources.{ IFile, IProject, IResourceChangeEvent, IResourceChangeListener, ResourcesPlugin }
 import org.eclipse.core.runtime.{ CoreException, FileLocator, IStatus, Platform, Status }
@@ -158,11 +158,11 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
     getLog.log(status1)
 
     val status = t match {
-      case ce : ControlException =>
+      case ce : ControlThrowable =>
         val t2 = { val ex = new Exception ; ex.fillInStackTrace ; ex }
         val status2 = new Status(
           IStatus.ERROR, pluginId, IStatus.ERROR,
-          "Incorrectly logged ControlException: "+ce.getClass.getSimpleName+"("+ce.getMessage+")", t2)
+          "Incorrectly logged ControlThrowable: "+ce.getClass.getSimpleName+"("+ce.getMessage+")", t2)
         getLog.log(status2)
       case _ =>
     }
