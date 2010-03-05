@@ -75,7 +75,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
            *  for methods defined there - bug #1804 */
           lazy val commonParents = {
             val cps = module.info.baseClasses
-            val mps = module.linkedClassOfModule.info.baseClasses
+            val mps = module.companionClass.info.baseClasses
             cps.filter(mps contains)
           }
           /* the setter doesn't show up in members so we inspect the name */
@@ -91,10 +91,10 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
               && !m.isConstructor
               && !m.isStaticMember
               && !(m.owner == definitions.AnyClass) 
-              && !module.isSubClass(module.linkedClassOfModule)
+              && !module.isSubClass(module.companionClass)
               && !conflictsIn(definitions.ObjectClass, m.name)
               && !conflictsInCommonParent(m.name)
-              && !conflictsIn(module.linkedClassOfModule, m.name)
+              && !conflictsIn(module.companionClass, m.name)
             )
           
           assert(module.isModuleClass)
@@ -161,7 +161,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         } 
         
         for ((m, mInfo) <- modules) {
-          val c = m.linkedClassOfModule
+          val c = m.companionClass
           if (c != NoSymbol) {
             classes.get(c) match {
               case Some((classElem, classElemInfo)) =>
