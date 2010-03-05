@@ -390,6 +390,10 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         moduleElemInfo.setNameSourceEnd0(end)
         if (!isSynthetic)
           setSourceRange(moduleElemInfo, m, annotsPos)
+        else {
+          moduleElemInfo.setSourceRangeStart0(end)
+          moduleElemInfo.setSourceRangeEnd0(end)
+        }
         newElements0.put(moduleElem, moduleElemInfo)
         
         val parentTree = m.impl.parents.head
@@ -516,11 +520,11 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
       override def addDef(d : DefDef) : Owner = {
         //println("Def defn: "+d.name+" ["+this+"]")
         val isCtor0 = d.symbol.isConstructor
-        val nm =
+        val nameString =
           if(isCtor0)
-            d.symbol.owner.simpleName
+            d.symbol.owner.simpleName + (if (d.symbol.owner.isModuleClass) "$" else "")
           else
-            d.name
+            d.name.toString
         
         val fps = for(vps <- d.vparamss; vp <- vps) yield vp
         
@@ -550,11 +554,11 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         
         val defElem = 
           if(d.mods.isAccessor)
-            new ScalaAccessorElement(element, nm.toString, paramTypes)
+            new ScalaAccessorElement(element, nameString, paramTypes)
           else if(isTemplate)
-            new ScalaDefElement(element, nm.toString, paramTypes, d.symbol.hasFlag(Flags.SYNTHETIC), display)
+            new ScalaDefElement(element, nameString, paramTypes, d.symbol.hasFlag(Flags.SYNTHETIC), display)
           else
-            new ScalaFunctionElement(template.element, element, nm.toString, paramTypes, display)
+            new ScalaFunctionElement(template.element, element, nameString, paramTypes, display)
         resolveDuplicates(defElem)
         addChild(defElem)
         
