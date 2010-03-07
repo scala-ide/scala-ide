@@ -155,7 +155,7 @@
             name="Scala Wizards"/>
       <wizard
             icon="icons/full/etool16/newsprj_wiz.gif"
-            class="scala.tools.eclipse.wizards.NewProjectWizard"
+            class="scala.tools.eclipse.wizards.ScalaProjectWizard"
             finalPerspective="ch.epfl.lamp.sdt.core.perspective"
             category="ch.epfl.lamp.sdt.core.wizards"
             project="true"
