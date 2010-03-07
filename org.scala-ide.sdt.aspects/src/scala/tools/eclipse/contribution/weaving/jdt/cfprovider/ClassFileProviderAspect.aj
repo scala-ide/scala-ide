@@ -76,7 +76,7 @@ public privileged aspect ClassFileProviderAspect {
     target(cf);
 
   pointcut getType(ClassFile cf) :
-    call(public IType ClassFile.getType()) &&
+    call(public IType IClassFile.getType()) &&
     target(cf);
   
   pointcut mapSource() :
