@@ -8,7 +8,7 @@ package scala.tools.eclipse.util
 import scala.tools.nsc.Settings
 
 object IDESettings {
-  def shownSettings(s : Settings) : List[Settings.Setting]= {
+  def shownSettings(s : Settings) : List[Settings#Setting]= {
     import s._
     List(
       deprecation, debuginfo, XO, target, unchecked,

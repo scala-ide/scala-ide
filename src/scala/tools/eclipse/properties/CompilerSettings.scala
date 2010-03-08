@@ -8,8 +8,6 @@ package scala.tools.eclipse.properties
 
 import org.eclipse.ui.dialogs.PropertyPage
 import scala.tools.nsc.Settings
-import scala.tools.nsc.Settings.Setting
-import scala.tools.nsc.Settings.SettingValue
 import org.eclipse.swt.widgets._
 import org.eclipse.swt.layout._
 import org.eclipse.swt.SWT
@@ -25,6 +23,9 @@ import scala.tools.eclipse.util.IDESettings
  * Provides a property page to allow Scala compiler settings to be changed.
  */   
 trait ProjectSettings {
+  
+  type Setting = Settings#Setting
+  type SettingValue = Settings#SettingValue
 
   def preferenceStore0 : IPreferenceStore 
   val settings = new Settings
