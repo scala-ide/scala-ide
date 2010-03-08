@@ -24,6 +24,7 @@ import org.eclipse.jdt.core.dom.CompilationUnit
 
 import scala.tools.nsc.io.{ AbstractFile, VirtualFile }
 
+import scala.tools.eclipse.ScalaImages
 import scala.tools.eclipse.contribution.weaving.jdt.IScalaClassFile
 
 class ScalaClassFile(parent : PackageFragment, name : String, sourceFile : String)

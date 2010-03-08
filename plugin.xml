@@ -21,10 +21,6 @@
       <page class="scala.tools.eclipse.properties.ScalaPreferences"
             name="Scala"
             id="ch.epfl.lamp.sdt.core.preferences"/>
-      <page class="scala.tools.eclipse.properties.EditorPreferences"
-            category="ch.epfl.lamp.sdt.core.preferences"
-            name="Scala Editor Preferences"
-            id="ch.epfl.lamp.sdt.core.preferences.EditorPreferences"/>
       <page
             category="ch.epfl.lamp.sdt.core.preferences"
             class="scala.tools.eclipse.properties.CompilerSettings"

@@ -11,9 +11,9 @@ object IDESettings {
   def shownSettings(s : Settings) : List[Settings#Setting]= {
     import s._
     List(
-      deprecation, debuginfo, XO, target, unchecked,
-      checkInit, noassertions, Xexperimental, future, XlogImplicits, nouescape, pluginsDir, 
-      Xcloselim, Xdce, Xdetach, inline, Xlinearizer, Ynogenericsig, noimports, nopredefs, selfInAnnots, Xsqueeze, specialize, Ytailrec,
-      Xwarninit, Xchecknull, Xwarndeadcode, YwarnShadow, YwarnCatches, Xwarnings)
+      deprecation, g, optimise, target, unchecked,
+      checkInit, noassertions, elideLevel, Xexperimental, future, XlogImplicits, Xmigration28, nouescape, pluginsDir, 
+      Xcloselim, Xdce, Xdetach, inline, Xlinearizer, Ynogenericsig, noimports, nopredefs, selfInAnnots, Xsqueeze, refinementMethodDispatch, specialize, Ytailrec, Yjenkins,
+      Ywarnfatal, Xwarninit, Xchecknull, Xwarndeadcode, YwarnShadow, YwarnCatches, Xwarnings)
   }
 }

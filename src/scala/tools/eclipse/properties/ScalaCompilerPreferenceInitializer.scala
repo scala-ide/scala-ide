@@ -34,6 +34,7 @@ class ScalaCompilerPreferenceInitializer extends AbstractPreferenceInitializer {
           setting.value match {
             case bool : Boolean  => node.put(preferenceName, bool.toString)
             case string : String => node.put(preferenceName, string)
+            case _ =>
           }
       }
     }

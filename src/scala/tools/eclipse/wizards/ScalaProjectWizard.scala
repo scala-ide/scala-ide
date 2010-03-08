@@ -14,6 +14,7 @@ import org.eclipse.jdt.internal.ui.wizards.buildpaths.BuildPathsBlock
 import org.eclipse.jdt.ui.PreferenceConstants
 import org.eclipse.jdt.ui.wizards.{ JavaCapabilityConfigurationPage, NewJavaProjectWizardPageOne, NewJavaProjectWizardPageTwo }
 
+import scala.tools.eclipse.ScalaImages
 import scala.tools.eclipse.ScalaPlugin
 import scala.tools.eclipse.util.ReflectionUtils
 
@@ -23,8 +24,11 @@ class ScalaProjectWizard extends {
   }
   with JavaProjectWizard(pageOne, pageTwo) {
   setWindowTitle("New Scala Project")
-  pageOne.setDescription("Create a new Scala project")
-  pageOne.setTitle("New Scala Project")
+  setDefaultPageImageDescriptor(ScalaImages.SCALA_PROJECT_WIZARD);
+
+  pageOne.setTitle("Create a Scala project")
+  pageTwo.setTitle("Scala Settings")
+  pageTwo.setDescription("Define the Scala build settings.")
 }
   
 class NewScalaProjectWizardPageOne extends NewJavaProjectWizardPageOne {

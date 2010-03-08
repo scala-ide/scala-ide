@@ -22,7 +22,6 @@ import org.eclipse.ui.plugin.AbstractUIPlugin
 import org.osgi.framework.BundleContext
 
 import scala.tools.eclipse.javaelements.{ ScalaElement, ScalaSourceFile }
-import scala.tools.eclipse.util.Style 
 import scala.tools.eclipse.util.OSGiUtils.pathInBundle 
 
 object ScalaPlugin { 
@@ -184,10 +183,5 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
         None
     }
 
-  override def initializeDefaultPreferences(store : IPreferenceStore) = {
-    super.initializeDefaultPreferences(store)
-    Style.initializeEditorPreferences
-  }
-  
   def isBuildable(file : IFile) = (file.getName.endsWith(scalaFileExtn) || file.getName.endsWith(javaFileExtn))
 }
