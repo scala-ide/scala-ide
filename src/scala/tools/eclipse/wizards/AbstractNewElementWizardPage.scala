@@ -245,13 +245,7 @@ abstract class AbstractNewElementWizardPage extends NewTypeWizardPage(1,"") {
     Dialog.applyDialogFont(composite)
   }
   
-  def creatingClass: Boolean
-  
-  def creatingObject: Boolean
-  
-  def creatingTrait: Boolean
-  
-  import BufferSupport._
+  protected def makeCreatedType(implicit parentCU: ICompilationUnit)
 
   /* (non-Javadoc)
    * @see org.eclipse.jdt.ui.wizards.NewTypeWizardPage#createType(org.eclipse.core.runtime.IProgressMonitor)
@@ -268,12 +262,19 @@ abstract class AbstractNewElementWizardPage extends NewTypeWizardPage(1,"") {
 	 		  enableStatementsRecovery, workingCopyOwner, monitor)
 	}
 	
+	def superTypes: List[String] = {
+      import scala.collection.JavaConversions._
+      val javaArrayList = getSuperInterfaces
+      val jual = javaArrayList.toArray(new Array[String](javaArrayList.size))
+      (getSuperClass +: jual).toList
+    }
+	
     val monitor = if (progressMonitor == null) new NullProgressMonitor() 
                   else progressMonitor
                   
     monitor.beginTask(NewWizardMessages.NewTypeWizardPage_operationdesc, 8)
 
-    implicit val pack = {
+    implicit val packageFragment = {
       val rt = getPackageFragmentRoot
       val pf = getPackageFragment
       var  p = pf match {
@@ -288,77 +289,85 @@ abstract class AbstractNewElementWizardPage extends NewTypeWizardPage(1,"") {
       p
     }
     
-    implicit val ld = StubUtility.getLineDelimiterUsed(pack.getJavaProject)
+    val packageName = {
+      !packageFragment.isDefaultPackage match {
+        case true => Some(packageFragment.getElementName)
+        case _ => None
+      }
+    }
+    
+    implicit val ld = StubUtility.getLineDelimiterUsed(
+                                    packageFragment.getJavaProject)
     val typeName = getTypeNameWithoutParameters
     val cuName = getCompilationUnitName(typeName)
-    
+
     try {
-      implicit val parentCU = pack.createCompilationUnit(cuName, "", false, 
-    		new SubProgressMonitor(monitor, 2))
+      
+      val parentCU = packageFragment.createCompilationUnit(
+          cuName, "", false, new SubProgressMonitor(monitor, 2))
+          
       parentCU.becomeWorkingCopy(new SubProgressMonitor(monitor, 1))
-    		
-      //var needsSaved = true
+
+      import CodeBuilder._
+      
+      type CommentGetter = (ICompilationUnit, String) => String
+
+      def comment(cg: CommentGetter): Option[String] = {
+        val s = cg(parentCU, ld)
+        toOption(in = s)(guard = s != null && s.nonEmpty)
+      }
+    
+      def elementModifiers = {
+        val mods = getModifiers
+        mods match {
+          case 0 => ""
+          case _ => Flags.toString(mods) + " "
+        }
+      }
+    
+      import templates._
+
+      // generate basic element skeleton
+    
       val buffer = parentCU.getBuffer
-      implicit val imports = ImportSupport(packageName.get)
-    
-      val cuContent = buildContentFor(parentCU)
-      buffer.setContents(cuContent)
+      //start control of buffer
+      val cb = CodeBuilder(packageName.getOrElse(""), superTypes, buffer)
+      cb.append(commentTemplate(comment(getFileComment _)))
+      cb.append(packageTemplate(packageName))
+      cb.writeImports// to buffer
+      cb.append(commentTemplate(comment(getTypeComment _)))
+      cb.append(elementModifiers)
+      cb.append(declarationType.toLowerCase)
+      cb.createElementDeclaration(getTypeName, superTypes, buffer)
+      cb.append(bodyStub)
+      
       reconcile(cu = parentCU)
-      createdType = parentCU.getType(typeName)
-    
-      var createdObjType = parentCU.getType(typeName+"$")
-    
-      if(creatingObject && createdObjType.exists) createdType = createdObjType
+      
+      makeCreatedType(parentCU)
 
-      val cu = createdType.getCompilationUnit
-
+      // refine the created type
       val typeHierarchy = createdType.newSupertypeHierarchy(Array(parentCU),
       		                          new SubProgressMonitor(monitor, 1))
-    
-      val sb = new StringBuilder
-      val us = UnimplemetedSupport(imports, superTypes)
       
-      if(createConstructorsSelected) {
-        us.unimplemetedConstructors(typeHierarchy, createdType)
-        us.writeTo(sb)
-      }
-    
-      if(createInheritedSelected) {
-        us.unimplemetedMethods(typeHierarchy, createdType)
-        us.writeTo(sb)
-      }
-    
-      if(createMainSelected)
-        sb.append(ld + "  def main(args: Array[String]): Unit = {  }" + ld)
-     
-      val idx = cuContent.indexOf(bodyStub)
-      buffer.replace(idx, bodyStub.length, " {" + ld + sb + ld + "}")
+      cb.finishReWrites(typeHierarchy, createdType)(
+          createConstructorsSelected)(createInheritedSelected)(
+              createMainSelected)
+              
+      //end control of buffer
       
-	  import CodeBuilder._
-	  lhm.get("name") match {
-        case Some(x) => x.writeTo(buffer)
-        case _ =>
-      }
-	  lhm.get("extends") match {
-        case Some(x) => x.writeTo(buffer)
-        case _ =>
-      }
+      val cu = createdType.getCompilationUnit
+      reconcile(cu = cu)
     
       if (monitor.isCanceled) throw new InterruptedException()
-
-      imports.writeTo(buffer)
-      reconcile(cu = cu)
 
       cu.commitWorkingCopy(true, new SubProgressMonitor(monitor, 1))
       parentCU.discardWorkingCopy
     }
     catch {
-    	case ex: JavaModelException => {
-    		println("<<<<<<< Error >>>>>>>\n" + ex)
-    	}
+      case ex: JavaModelException => println("<<<<<<< Error >>>>>>>\n" + ex)
     }
     finally {
-    	monitor done
+      monitor done
     }
   }
 
@@ -424,69 +433,5 @@ abstract class AbstractNewElementWizardPage extends NewTypeWizardPage(1,"") {
       }
     }
     status
-  }
-  
-  protected def buildContentFor(cu: ICompilationUnit)
-    (implicit imports: ImportSupport): String = {
-	  
-	type CommentGetter = (ICompilationUnit, String) => String
-	  
-	implicit val pack = cu.getParent.asInstanceOf[IPackageFragment]
-    implicit val ld = StubUtility.getLineDelimiterUsed(pack.getJavaProject)
-	
-	import templates._
-
-	def comment(cg: CommentGetter): Option[String] = {
-      cg(cu, ld) match {
-        case s: String if(s.nonEmpty) => Some(s)
-        case _ => None
-      }
-	}
-	
-	def modifiers = {
-	  val mods = getModifiers
-	  mods match {
-	    case 0 => ""
-	    case _ => Flags.toString(mods) + " "
-	  }
-	}
-	
-    superTypes.foreach(imports.addImport)
-
-    val fileComment = comment(getFileComment _)
-    val typeComment = comment(getTypeComment _)
-    
-    import CodeBuilder._
-    
-    val bldr = new StringBuilder()
-      .append(commentTemplate(fileComment))
-	  .append(packageTemplate(packageName))
-	  
-    imports.writeTo(bldr)
-    
-	bldr.append(commentTemplate(typeComment)).append(modifiers)
-	    .append(declarationType.toLowerCase)
-	
-	createClassDeclaration(getTypeName, superTypes, bldr)
-    
-	bldr.append(bodyStub).toString
-  }
-  
-  private def bodyStub(implicit ld: String) = " {"+ld+ld+"}"
-	  
-  private def packageName(implicit pack: IPackageFragment): Option[String] = {
-    !pack.isDefaultPackage match {
-    	case true => Some(pack.getElementName)
-    	case _ => None
-    }
-  }
-  
-  private def superTypes: List[String] = {
-	  
-	import scala.collection.JavaConversions._
-	
-	val javaArrayList = getSuperInterfaces
-	val jual = javaArrayList.toArray(new Array[String](javaArrayList.size))
-    (getSuperClass +: jual).toList
   }
 }

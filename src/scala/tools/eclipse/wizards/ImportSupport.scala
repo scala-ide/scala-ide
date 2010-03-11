@@ -13,6 +13,7 @@ import collection.mutable.{ Map => MutMap, Set => MutSet }
 
 trait ImportSupport extends QualifiedNameSupport with BufferSupport {
   def addImport(qualifiedTypeName: String): String
+  def addImports(qualifiedTypeNames: Seq[String]): Unit
   def getImports: List[String]
 }
 
@@ -32,12 +33,16 @@ object ImportSupport {
 	  importMap.getOrElseUpdate(key, MutSet(value)) + value
 	  value
 	}
+  
+	def addImports(qualifiedTypeNames: Seq[String]) {
+	  qualifiedTypeNames foreach addImport
+	}
 	
 	def getImports = {
 
 	  def toBuilder(v: MutSet[String]): String = v.toList match {
 	    case List(x) => x
-	    case List(values @ _*) => values.toSet.mkString("{", ", ", "}")
+	    case List(values @ _*) => values.toSet.mkString("{ ", ", ", " }")
 	  }
 	   
 	  def thatAreImplicit(key: String) = !ignoredKeys.contains(key)

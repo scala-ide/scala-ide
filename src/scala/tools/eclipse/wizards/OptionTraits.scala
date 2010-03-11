@@ -6,6 +6,7 @@
  */
 package scala.tools.eclipse.wizards
 
+import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.internal.ui.wizards.dialogfields.{ DialogField, 
 	SelectionButtonDialogFieldGroup }
 
@@ -47,11 +48,9 @@ trait ClassOptions { self: AbstractNewElementWizardPage =>
     DialogField.createEmptySpace(composite)
   }
   
-  def creatingClass = true
-  
-  def creatingObject = false
-  
-  def creatingTrait = false
+  protected def makeCreatedType(implicit parentCU: ICompilationUnit) {
+    createdType = parentCU.getType(getTypeNameWithoutParameters)
+  }
 	
 }
 
@@ -82,13 +81,10 @@ trait ObjectOptions { self: AbstractNewElementWizardPage =>
   }
 
   def specifyModifierControls(composite: Composite, columns: Int) {}
-  
-  def creatingClass = false
-  
-  def creatingObject = true
-  
-  def creatingTrait = false
 
+  protected def makeCreatedType(implicit parentCU: ICompilationUnit) {
+    createdType = parentCU.getType(getTypeNameWithoutParameters+"$")
+  }
 }
 
 trait TraitOptions { self: AbstractNewElementWizardPage =>
@@ -113,12 +109,9 @@ trait TraitOptions { self: AbstractNewElementWizardPage =>
   }
 	  
   def specifyModifierControls(composite: Composite, columns: Int) {}
-  
-  def creatingClass = false
-  
-  def creatingObject = false
-  
-  def creatingTrait = true
 
+  protected def makeCreatedType(implicit parentCU: ICompilationUnit) {
+    createdType = parentCU.getType(getTypeNameWithoutParameters)
+  }
 }
 

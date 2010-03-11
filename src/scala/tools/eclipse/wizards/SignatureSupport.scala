@@ -7,6 +7,9 @@ package scala.tools.eclipse.wizards
 
 import scala.util.parsing.combinator.JavaTokenParsers
 
+/**
+ * Not currently used
+ */
 object SignatureSupport extends JavaTokenParsers {
 
   def primitive: Parser[String] = 

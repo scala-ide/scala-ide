@@ -10,29 +10,12 @@ object BufferSupport {
   type Buffer = { 
     def append(s: String): Unit
     def getLength(): Int
-	def replace(offset: Int, length: Int, text: String): Unit      
+	def replace(offset: Int, length: Int, text: String): Unit
+	def getContents(): String
   }
   
   implicit protected[wizards] def stringBuilderToBuffer(bldr: StringBuilder) =
 	  new BuilderAdapter(bldr)
-  
-  def apply(s: String)(implicit ld: String) = {
-    new BufferSupport {
-      protected def contents(implicit ld: String): String = s
-    }
-  }
-  
-  def apply(f: String => String)(implicit ld: String) = {
-    new BufferSupport {
-      protected def contents(implicit ld: String): String = f(ld)
-    }
-  }
-  
-  def apply(f: => String)(implicit ld: String) = {
-    new BufferSupport {
-      protected def contents(implicit ld: String): String = f
-    }
-  }
 }
 
 trait BufferSupport {
@@ -64,6 +47,7 @@ private[wizards] class BuilderAdapter(sb: StringBuilder) {
   def getLength(): Int = sb.length
   def replace(offset: Int, length: Int, text: String): Unit = 
     sb.replace(offset, length, text)
+  def getContents() = sb.toString
 }
 
 trait SuperTypeSupport {
@@ -72,15 +56,11 @@ trait SuperTypeSupport {
   type Parameters
   
   type SuperType = Triple[PackageName, TypeName, Parameters]
-
-  object SuperType {
-	  
-    def apply(pn: PackageName, tn: TypeName, p: Parameters) = Triple(pn, tn, p)
-	  
-    def unapply(packageName: SuperType): Option[SuperType] = Some(packageName)
-  }
 }
-
+ 
+/**
+ * Functions for working with qualified types
+ */
 trait QualifiedNameSupport extends SuperTypeSupport {
   type PackageName = List[String]
   type TypeName = String
@@ -155,6 +135,6 @@ trait QualifiedNameSupport extends SuperTypeSupport {
   val createSuperType = (typeDeclaration: String) => {
     val (packageAndType, params) = splitOffParameters(typeDeclaration)
     val splitName = packageAndType.split('.').toList
-    SuperType(splitName.init, splitName.last, listOf(params))
+    new SuperType(splitName.init, splitName.last, listOf(params))
   }
 }
