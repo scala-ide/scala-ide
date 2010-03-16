@@ -260,7 +260,7 @@
            modes="run, debug"
            name="Scala Application"
            public="true"
-           sourceLocatorId="scala.tools.eclipse.launching.ScalaSourceLookupDirector"
+           sourceLocatorId="org.eclipse.jdt.launching.sourceLocator.JavaSourceLookupDirector"
            sourcePathComputerId="org.eclipse.jdt.launching.sourceLookup.javaSourcePathComputer">
      </launchConfigurationType>
      <launchConfigurationType
@@ -269,17 +269,10 @@
            delegateName="Scala Interpreter Launcher"
            delegateDescription="The Scala Interpreter launcher supports running and debugging code through a Read-Eval-Print loop"
            modes="run,debug"
-           sourceLocatorId="scala.tools.eclipse.launching.ScalaSourceLookupDirector"
+           sourceLocatorId="org.eclipse.jdt.launching.sourceLocator.JavaSourceLookupDirector"
            sourcePathComputerId="org.eclipse.jdt.launching.sourceLookup.javaSourcePathComputer"
            name="Scala Interpreter">
      </launchConfigurationType>
-   </extension>
-   <extension point="org.eclipse.debug.core.sourceLocators">
-      <sourceLocator
-        id="scala.tools.eclipse.launching.ScalaSourceLookupDirector"
-        class="scala.tools.eclipse.launching.ScalaSourceLookupDirector"
-        name="Scala Source Locator">
-      </sourceLocator>
    </extension>
    <extension point="org.eclipse.debug.ui.launchConfigurationTypeImages">
      <launchConfigurationTypeImage

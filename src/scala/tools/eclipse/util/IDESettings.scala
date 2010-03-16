@@ -12,7 +12,7 @@ object IDESettings {
     import s._
     List(
       deprecation, g, optimise, target, unchecked,
-      checkInit, noassertions, elideLevel, Xexperimental, future, XlogImplicits, Xmigration28, nouescape, pluginsDir, 
+      checkInit, noassertions, Xexperimental, future, XlogImplicits, Xmigration28, nouescape, pluginsDir, 
       Xcloselim, Xdce, Xdetach, inline, Xlinearizer, Ynogenericsig, noimports, nopredefs, selfInAnnots, Xsqueeze, refinementMethodDispatch, specialize, Ytailrec, Yjenkins,
       Ywarnfatal, Xwarninit, Xchecknull, Xwarndeadcode, YwarnShadow, YwarnCatches, Xwarnings)
   }
