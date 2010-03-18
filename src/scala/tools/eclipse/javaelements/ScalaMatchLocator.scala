@@ -5,8 +5,8 @@
 
 package scala.tools.eclipse.javaelements
 
-import org.eclipse.jdt.core.search.{ SearchMatch, SearchParticipant, TypeReferenceMatch }
-import org.eclipse.jdt.internal.compiler.ast.{ QualifiedTypeReference, SingleTypeReference }
+import org.eclipse.jdt.core.search.{ SearchMatch, SearchParticipant, TypeDeclarationMatch, TypeReferenceMatch }
+import org.eclipse.jdt.internal.compiler.ast.{ SingleTypeReference, TypeDeclaration }
 import org.eclipse.jdt.internal.core.search.matching.{ MatchLocator, PossibleMatch }
 
 import scala.tools.nsc.util.Position
@@ -23,6 +23,8 @@ trait ScalaMatchLocator { self : ScalaPresentationCompiler =>
         tree match {
           case t : TypeTree if t.pos.isDefined =>
             reportTypeReference(t.tpe, t.pos)
+          case c : ClassDef if c.pos.isDefined =>
+            reportTypeDefinition(c.symbol.tpe, c.pos)
           case _ =>
         }
         
@@ -40,9 +42,26 @@ trait ScalaMatchLocator { self : ScalaPresentationCompiler =>
       }
     }
     
+    def reportTypeDefinition(tpe : Type, declPos : Position) {
+      val decl = new TypeDeclaration(null)
+      decl.name = tpe.typeSymbol.nameString.toArray
+      if (matchLocator.patternLocator.`match`(decl, possibleMatch.nodeSet) > 0) {
+        val element = scu match {
+          case ssf : ScalaSourceFile => ssf.getElementAt(declPos.start)
+          case _ => null
+        }
+        val accuracy = SearchMatch.A_ACCURATE
+        val offset = declPos.start
+        val length = declPos.end-offset
+        val participant = possibleMatch.document.getParticipant
+        val resource = possibleMatch.resource
+        val sm = new TypeDeclarationMatch(element, accuracy, offset, length, participant, resource)
+    
+        report(matchLocator, sm)
+      }
+    }
+    
     def reportTypeReference(tpe : Type, refPos : Position) {
-      println(refPos+": "+tpe.typeSymbol.fullName)
-      
       val ref = new SingleTypeReference(tpe.typeSymbol.nameString.toArray, posToLong(refPos));
       if (matchLocator.patternLocator.`match`(ref, possibleMatch.nodeSet) > 0) {
         val enclosingElement = scu match {
