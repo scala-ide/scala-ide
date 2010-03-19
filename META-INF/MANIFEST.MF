@@ -6,7 +6,8 @@ Bundle-Version: 2.8.0
 Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: 
  .,
- bin
+ bin,
+ compiler-plugins/continuations.jar
 Bundle-Activator: 
  scala.tools.eclipse.ScalaPlugin
 Require-Bundle: 

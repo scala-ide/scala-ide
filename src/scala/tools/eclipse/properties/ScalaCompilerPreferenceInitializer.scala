@@ -31,10 +31,12 @@ class ScalaCompilerPreferenceInitializer extends AbstractPreferenceInitializer {
       IDESettings.shownSettings(settings).foreach {
         setting =>
           val preferenceName = convertNameToProperty(setting.name)
-          setting.value match {
-            case bool : Boolean  => node.put(preferenceName, bool.toString)
-            case string : String => node.put(preferenceName, string)
-            case _ =>
+          setting match {
+            case bs : Settings#BooleanSetting => node.put(preferenceName, "false")
+            case is : Settings#IntSetting => node.put(preferenceName, is.default.toString)
+            case ss : Settings#StringSetting => node.put(preferenceName, ss.default)
+            case ms : Settings#MultiStringSetting => node.put(preferenceName, "")
+            case cs : Settings#ChoiceSetting => node.put(preferenceName, cs.default)
           }
       }
     }

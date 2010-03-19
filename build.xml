@@ -18,6 +18,7 @@
 
   <property name="eclipse.dir" value="${basedir}/eclipse-lib"/>
   <property name="build.dir" value="${basedir}/build"/>
+  <property name="compiler.plugins.dir" value="${basedir}/compiler-plugins"/>
   <property name="dist.dir" value="${basedir}/dist"/>
   
   <property name="update-site.url" value="http://www.scala-lang.org/downloads/distrib/files/nightly/scala.update/"/>
@@ -110,6 +111,12 @@ TARGETS SUPPORTING DEVELOPMENT WITHIN ECLIPSE
   <target name="devel.prep">
     <ant dir="${scala.dir}" antfile="build.xml" target="dist.done" inheritall="false"/>
     <ant dir="${scala.lib.dir}" antfile="build.xml" target="build" inheritall="false"/>
+  	<mkdir dir="${compiler.plugins.dir}"/>
+    <copy todir="${compiler.plugins.dir}">
+	    <fileset dir="${scala.dist.dir}/plugins">
+	      <include name="*.jar"/>
+	    </fileset>
+    </copy>
   </target>
   
   <target name="devel.clean">
@@ -146,7 +153,14 @@ BUILD THE PLUGIN
     
     <mkdir dir="${build.dir}"/>
     
-    <scalacfork
+  	<mkdir dir="${compiler.plugins.dir}"/>
+    <copy todir="${compiler.plugins.dir}">
+	    <fileset dir="${scala.dist.dir}/plugins">
+	      <include name="*.jar"/>
+	    </fileset>
+    </copy>
+
+  	<scalacfork
       compilerpathref="scala.classpath"
       srcdir="${basedir}/src"
       destdir="${build.dir}"
@@ -171,8 +185,9 @@ BUILD THE PLUGIN
 
     <copy todir="${build.dir}">
       <fileset dir="${basedir}">
-        <include name="icons/**"/>
+        <include name="compiler-plugins/**"/>
         <include name="docs/**"/>
+        <include name="icons/**"/>
         <include name="plugin.xml"/>
         <include name="toc.xml"/>
       </fileset>
@@ -184,9 +199,9 @@ BUILD THE PLUGIN
       manifest="${build.dir}/META-INF/MANIFEST.MF">
       <include name="META-INF/p2.inf"/>
       <include name="**/*.class"/>
-      <include name="lib/**"/>
-      <include name="icons/**"/>
+      <include name="compiler-plugins/**"/>
       <include name="docs/**"/>
+      <include name="icons/**"/>
       <include name="plugin.xml"/>
       <include name="toc.xml"/>
     </jar>
@@ -316,6 +331,7 @@ CLEAN ALL BUILT FILES
   
   <target name="clean">
     <delete dir="${build.dir}" includeemptydirs="yes" quiet="yes" failonerror="no"/>
+    <delete dir="${compiler.plugins.dir}" includeemptydirs="yes" quiet="yes" failonerror="no"/>
     <delete dir="${dist.dir}" includeemptydirs="yes" quiet="yes" failonerror="no"/>
     <delete>
       <fileset dir="${basedir}" includes="ch.epfl.lamp.sdt.core_*.jar"/>

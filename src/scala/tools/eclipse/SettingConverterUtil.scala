@@ -11,7 +11,7 @@ object SettingConverterUtil {
   
   /** Creates preference name from "name" of a compiler setting. */
   def convertNameToProperty(name : String) = {
-    //Returns the enderlying name without the -    
+    //Returns the underlying name without the -    
     name.substring(1)
   }
 }

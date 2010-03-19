@@ -11,7 +11,7 @@ import scala.collection.mutable.{ LinkedHashSet, HashMap, HashSet }
 import java.io.File.pathSeparator
 
 import org.eclipse.core.resources.{ IContainer, IFile, IFolder, IMarker, IProject, IResource, IResourceProxy, IResourceProxyVisitor, IWorkspaceRunnable }
-import org.eclipse.core.runtime.{ IPath, IProgressMonitor, Path }
+import org.eclipse.core.runtime.{ FileLocator, IPath, IProgressMonitor, Path }
 import org.eclipse.jdt.core.{ IClasspathEntry, IJavaProject, JavaCore }
 import org.eclipse.jdt.core.compiler.IProblem
 import org.eclipse.jdt.internal.core.JavaProject
@@ -23,7 +23,7 @@ import scala.tools.nsc.Settings
 
 import scala.tools.eclipse.javaelements.ScalaCompilationUnit
 import scala.tools.eclipse.properties.PropertyStore
-import scala.tools.eclipse.util.{ Cached, EclipseResource, IDESettings, ReflectionUtils } 
+import scala.tools.eclipse.util.{ Cached, EclipseResource, IDESettings, OSGiUtils, ReflectionUtils } 
 
 class ScalaProject(val underlying : IProject) {
   import ScalaPlugin.plugin
@@ -304,9 +304,6 @@ class ScalaProject(val underlying : IProject) {
     settings.classpath.value = classpath.toList.map(_.toOSString).mkString("", pathSeparator, "")
     settings.sourcepath.value = sourceFolders(env).map(_.getLocation.toOSString).mkString("", pathSeparator, "")
     
-    settings.deprecation.value = true
-    settings.unchecked.value = true
-
     val workspaceStore = ScalaPlugin.plugin.getPreferenceStore
     val projectStore = new PropertyStore(underlying, workspaceStore, plugin.pluginId)
     val useProjectSettings = projectStore.getBoolean(SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE)
@@ -314,12 +311,19 @@ class ScalaProject(val underlying : IProject) {
     val store = if (useProjectSettings) projectStore else workspaceStore  
     IDESettings.shownSettings(settings).foreach {
       setting =>
-        val value = store.getString(SettingConverterUtil.convertNameToProperty(setting.name))
-        try {          
-          if (value != null)
+        val value0 = store.getString(SettingConverterUtil.convertNameToProperty(setting.name))
+        try {
+          val value = if (setting ne settings.pluginsDir) value0 else {
+            val url = FileLocator.find(ScalaPlugin.plugin.getBundle, Path.fromPortableString("compiler-plugins"), null)
+            Option(url) map { x =>
+              FileLocator.toFileURL(x).getPath+(if (value0 == null || value0.length == 0) "" else ":"+value0)
+            } getOrElse value0
+          }
+          if (value != null && value.length != 0) {
             setting.tryToSetFromPropertyValue(value)
+          }
         } catch {
-          case t : Throwable => plugin.logError("Unable to set setting '"+setting.name+"'", t)
+          case t : Throwable => plugin.logError("Unable to set setting '"+setting.name+"' to '"+value0+"'", t)
         }
     }
   }
