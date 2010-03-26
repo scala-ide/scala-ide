@@ -20,7 +20,7 @@ class TopLevelMap {
   val settings = new Settings(error)
   settings.classpath.value = ScalaPlugin.plugin.libClasses.get.toOSString
   val reporter = new ConsoleReporter(settings)
-  val command = new CompilerCommand(Nil, settings, error, false)
+  val command = new CompilerCommand(Nil, settings)
   val compiler = new Global(command.settings, reporter)
   
   val fileToTypes = new HashMap[IFile, List[String]]

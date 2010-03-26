@@ -16,7 +16,6 @@ import scala.tools.nsc.io.AbstractFile
 import scala.tools.nsc.reporters.Reporter
 import scala.tools.nsc.util.Position
 
-import scala.tools.eclipse.properties.PropertyStore
 import scala.tools.eclipse.util.{ EclipseResource, FileUtils } 
 
 class EclipseBuildManager(project : ScalaProject, settings0: Settings) extends RefinedBuildManager(settings0) {
