@@ -368,7 +368,7 @@
          <menu
             label="Scala"
             path="additions"
-            id="ch.epfl.lamp.sdt.core.natures.naturePopupMenu">
+            id="ch.epfl.lamp.sdt.core.popupMenu">
             <groupMarker name="content"/>
             <separator name="additions"/>
         </menu>
@@ -390,7 +390,7 @@
       <action
         class="scala.tools.eclipse.interpreter.Action"
         enablesFor="1"
-        menubarPath="ch.epfl.lamp.sdt.core.natures.naturePopupMenu/content"
+        menubarPath="ch.epfl.lamp.sdt.core.popupMenu/content"
         icon="icons/full/etool16/scala_app.gif"
         id="ch.epfl.lamp.sdt.ui.createInt"
         label="Create Scala Interperter"
@@ -420,7 +420,7 @@
                enablesFor="+"
                id="ch.epfl.lamp.sdt.core.natures.ToggleNatureAction"
                label="Remove Scala Nature"
-               menubarPath="ch.epfl.lamp.sdt.core.natures.naturePopupMenu/content"
+               menubarPath="ch.epfl.lamp.sdt.core.popupMenu/content"
                tooltip="Removes an Scala Builder/Classpath from a Java project">
          </action>
          <visibility>
@@ -438,19 +438,13 @@
             objectClass="org.eclipse.jdt.core.IJavaProject"
             nameFilter="*"
             id="ch.epfl.lamp.sdt.core.natures.contribution2">
-         <menu
-            label="Scala"
-            path="additions"
-            id="ch.epfl.lamp.sdt.core.natures.naturePopupMenu">
-            <groupMarker name="content"/>
-            <separator name="additions"/>
-        </menu>
          <action
                class="scala.tools.eclipse.ToggleScalaNatureAction"
                enablesFor="+"
                id="ch.epfl.lamp.sdt.core.natures.ToggleNatureAction"
+               icon="icons/full/etool16/newsprj_wiz.gif"
                label="Add Scala Nature"
-               menubarPath="ch.epfl.lamp.sdt.core.natures.naturePopupMenu/content"
+               menubarPath="org.eclipse.ui.projectConfigure/additions"
                tooltip="Adds Scala builder / classpath to a project">
          </action>
          <visibility>
