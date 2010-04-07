@@ -8,7 +8,7 @@ package scala.tools.eclipse.javaelements
 import java.util.{ HashMap => JHashMap, Map => JMap }
 
 import org.eclipse.core.resources.{ IMarker, IResource }
-import org.eclipse.core.runtime.{ IPath, IProgressMonitor, IStatus }
+import org.eclipse.core.runtime.{ IAdaptable, IPath, IProgressMonitor, IStatus }
 import org.eclipse.core.runtime.jobs.ISchedulingRule
 import org.eclipse.jdt.core.{
   BufferChangedEvent, CompletionRequestor, IBuffer, IBufferFactory, ICodeCompletionRequestor, ICompletionRequestor, ICompilationUnit,
@@ -21,7 +21,7 @@ import org.eclipse.jdt.internal.core.util.MementoTokenizer
 import org.eclipse.text.edits.{ TextEdit, UndoEdit }
 
 class CompilationUnitAdapter(classFile : ScalaClassFile) extends Openable(classFile.getParent.asInstanceOf[JavaElement]) with ICompilationUnit with env.ICompilationUnit {
-  override def getAdapter(adapter : Class[_]) : AnyRef = classFile.getAdapter(adapter)
+  override def getAdapter(adapter : Class[_]) : AnyRef = (classFile : IAdaptable).getAdapter(adapter)
   
   override def equals(o : Any) = classFile.equals(o)
   override def hashCode() = classFile.hashCode()
