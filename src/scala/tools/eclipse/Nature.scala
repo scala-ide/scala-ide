@@ -72,7 +72,7 @@ class Nature extends IProjectNature {
     plugin.check {
       val description = project.getDescription
       val previousCommands = description.getBuildSpec
-      val newBuilderCommandIfNecessary : Array[ICommand] = 
+      val newBuilderCommandIfNecessary/* : Array[ICommand]*/ = 
         if (previousCommands.exists( _.getBuilderName == builderToAdd )) 
           Array() 
         else {
