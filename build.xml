@@ -113,7 +113,7 @@ TARGETS SUPPORTING DEVELOPMENT WITHIN ECLIPSE
     <ant dir="${scala.lib.dir}" antfile="build.xml" target="build" inheritall="false"/>
   	<mkdir dir="${compiler.plugins.dir}"/>
     <copy todir="${compiler.plugins.dir}">
-	    <fileset dir="${scala.dist.dir}/plugins">
+	    <fileset dir="${scala.dist.dir}/misc/scala-devel/plugins">
 	      <include name="*.jar"/>
 	    </fileset>
     </copy>
@@ -155,7 +155,7 @@ BUILD THE PLUGIN
     
   	<mkdir dir="${compiler.plugins.dir}"/>
     <copy todir="${compiler.plugins.dir}">
-	    <fileset dir="${scala.dist.dir}/plugins">
+	    <fileset dir="${scala.dist.dir}/misc/scala-devel/plugins">
 	      <include name="*.jar"/>
 	    </fileset>
     </copy>
