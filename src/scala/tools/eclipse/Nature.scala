@@ -8,7 +8,7 @@ package scala.tools.eclipse
 
 import scala.collection.mutable.ArrayBuffer
 
-import org.eclipse.core.resources.{ IProject, IProjectNature, IResource }
+import org.eclipse.core.resources.{ ICommand, IProject, IProjectNature, IResource }
 import org.eclipse.jdt.core.{ IClasspathEntry, JavaCore }
 import org.eclipse.jdt.launching.JavaRuntime
 import org.eclipse.core.runtime.Path
@@ -72,7 +72,7 @@ class Nature extends IProjectNature {
     plugin.check {
       val description = project.getDescription
       val previousCommands = description.getBuildSpec
-      val newBuilderCommandIfNecessary = 
+      val newBuilderCommandIfNecessary : Array[ICommand] = 
         if (previousCommands.exists( _.getBuilderName == builderToAdd )) 
           Array() 
         else {
