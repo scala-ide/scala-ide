@@ -1,9 +1,13 @@
 package scala.tools.eclipse.contribution.weaving.jdt.search;
 
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.jdt.internal.compiler.classfmt.ClassFileReader;
+import org.eclipse.jdt.internal.core.BinaryType;
+import org.eclipse.jdt.internal.core.ClassFile;
 import org.eclipse.jdt.internal.core.search.matching.MatchLocator;
 import org.eclipse.jdt.internal.core.search.matching.PossibleMatch;
 
+import scala.tools.eclipse.contribution.weaving.jdt.IScalaClassFile;
 import scala.tools.eclipse.contribution.weaving.jdt.IScalaCompilationUnit;
 
 @SuppressWarnings("restriction")
@@ -17,6 +21,10 @@ public privileged aspect SearchAspect {
     execution(void MatchLocator.process(PossibleMatch, boolean)) &&
     target(ml) &&
     args(possibleMatch, bindingsWereCreated);
+  
+  pointcut getSourceFileName(PossibleMatch pm) :
+    execution(String getSourceFileName()) &&
+    target(pm);
     
   boolean around(MatchLocator ml, PossibleMatch possibleMatch, boolean mustResolve) throws CoreException :
     parseAndBuildBindings(ml, possibleMatch, mustResolve) {
@@ -37,5 +45,17 @@ public privileged aspect SearchAspect {
       ((IScalaCompilationUnit)possibleMatch.openable).reportMatches(ml, possibleMatch);
     else
       proceed(ml, possibleMatch, bindingsWereCreated);
+  }
+
+  String around(PossibleMatch pm) :
+    getSourceFileName(pm) {
+    if (pm.sourceFileName != null || !(pm.openable instanceof IScalaClassFile))
+      return proceed(pm);
+
+    pm.sourceFileName = PossibleMatch.NO_SOURCE_FILE_NAME;
+    String fileName = ((IScalaClassFile)pm.openable).getSourceFileName();
+    if (fileName != null)
+      pm.sourceFileName = fileName;
+    return pm.sourceFileName;
   }
 }
