@@ -59,7 +59,7 @@ import org.eclipse.jdt.internal.ui.text.JavaHeuristicScanner;
 import org.eclipse.jdt.internal.ui.text.JavaIndenter;
 import org.eclipse.jdt.internal.ui.text.Symbols;
 
-import scala.tools.eclipse.ScalaPartitionScanner
+import scala.tools.eclipse.lexical.ScalaPartitionScanner
 
 import scala.util.matching.Regex
 

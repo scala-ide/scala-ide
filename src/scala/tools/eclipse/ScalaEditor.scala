@@ -6,7 +6,7 @@
 package scala.tools.eclipse
 
 import scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.IScalaEditor
-
+import scala.tools.eclipse.lexical.ScalaPartitionScanner
 import org.eclipse.jface.text.rules.IPartitionTokenScanner
 
 trait ScalaEditor extends IScalaEditor {

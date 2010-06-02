@@ -24,6 +24,7 @@ import org.eclipse.swt.SWT
 
 import scala.tools.eclipse.ui.{ JdtPreferenceProvider, ScalaAutoIndentStrategy, ScalaIndenter }
 import scala.tools.eclipse.util.ReflectionUtils
+import scala.tools.eclipse.lexical.ScalaCodeScanner
 
 class ScalaSourceViewerConfiguration(store : IPreferenceStore, editor : ITextEditor) 
   extends JavaSourceViewerConfiguration(JavaPlugin.getDefault.getJavaTextTools.getColorManager, store, editor, IJavaPartitions.JAVA_PARTITIONING) {

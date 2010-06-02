@@ -3,7 +3,7 @@
  */
 // $Id$
 
-package scala.tools.eclipse
+package scala.tools.eclipse.lexical
 
 import java.{ util => ju }
 
@@ -305,18 +305,14 @@ class ScalaCodeScanner(manager : IColorManager, store : IPreferenceStore) extend
   protected def createRules : ju.List[IRule] = {
 
     val rules = new ju.ArrayList[IRule]
-
-    // Add rule for character constants.
-    var token = getToken(IJavaColorConstants.JAVA_STRING)
-    rules.add(new SingleLineRule("'", "'", token, '\\'))
-
+    
     // Add generic whitespace rule.
     rules.add(new WhitespaceRule(new JavaWhitespaceDetector))
 
     val version = getPreferenceStore.getString(SOURCE_VERSION)
 
     // Add JLS3 rule for /@\s*interface/ and /@\s*\w+/
-    token = getToken(ANNOTATION_COLOR_KEY)
+    var token = getToken(ANNOTATION_COLOR_KEY)
     val atInterfaceRule = new AnnotationRule(getToken(IJavaColorConstants.JAVA_KEYWORD), token, JavaCore.VERSION_1_5, version)
     rules.add(atInterfaceRule)
     fVersionDependentRules.add(atInterfaceRule)
@@ -334,6 +330,9 @@ class ScalaCodeScanner(manager : IColorManager, store : IPreferenceStore) extend
     token = getToken(IJavaColorConstants.JAVA_BRACKET)
     rules.add(new BracketRule(token))
 
+    // Must come before keyword rules 
+    rules.add(new BackQuotedIdentRule(getToken(IJavaColorConstants.JAVA_DEFAULT)))
+    
     // Add word rule for keyword 'return'.
     val returnWordRule = new CombinedWordRule.WordMatcher
     token = getToken(IJavaColorConstants.JAVA_KEYWORD_RETURN)

@@ -3,7 +3,7 @@
  */
 // $Id$
 
-package scala.tools.eclipse
+package scala.tools.eclipse.lexical
 
 import org.eclipse.jface.text.rules.EndOfLineRule
 import org.eclipse.jface.text.rules.ICharacterScanner
@@ -69,27 +69,24 @@ class ScalaPartitionScanner extends RuleBasedPartitionScanner with IJavaPartitio
   val multiLineComment = new Token(JAVA_MULTI_LINE_COMMENT)
   val singleLineComment = new Token(JAVA_SINGLE_LINE_COMMENT)
 
-  val tripleQuotes = "\"" * 3
-    
   val result = Array[IPredicateRule](
     // Single line comments.
-    new EndOfLineRule("//", singleLineComment),
+    new EndOfLineRule("//", singleLineComment) with NoResumeRule,
 
-    // Triple quoted strings
-    new MultiLineRule(tripleQuotes, tripleQuotes, string, '\\'),
+    // Must come before the single line string rule
+    new MultilineStringLiteralRule(string),
     
     // Strings.
-    new SingleLineRule("\"", "\"", string, '\\'),
+    new SingleLineRule("\"", "\"", string, '\\') with NoResumeRule,
+
+    // Must occur before the character literal rule
+    new SymbolRule(string),
 
     // Character constants.
-    new SingleLineRule("'", "'", character, '\\'),
+    new SingleLineRule("'", "'", character, '\\') with NoResumeRule,
 
-    // Special case word rule.
-    new EmptyCommentRule(multiLineComment),
-
-    // Add rules for multi-line comments and javadoc.
-    new MultiLineRule("/**", "*/", javaDoc),
-    new MultiLineRule("/*", "*/", multiLineComment)
+    new MultilineCommentRule(javaDoc, scalaDoc = true),
+    new MultilineCommentRule(multiLineComment, scalaDoc = false)
   )
 
   setPredicateRules(result)
