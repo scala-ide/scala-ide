@@ -1,3 +1,5 @@
+bin
+.scala_dependencies
 build
 ch.epfl.lamp.sdt.core_*.jar
 compiler-plugins
