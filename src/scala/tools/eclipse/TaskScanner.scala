@@ -41,13 +41,13 @@ class TaskScanner(project : ScalaProject) {
         }
       }
       
-      tags.sortWith(_._1 < _._1)
+      val orderedTags = tags.sortBy(_._1)
       
-      val starts = tags.map(t => t._1+t._2.length)
-      val ends = tags.drop(1).map(_._1) += line.length
+      val starts = orderedTags.map(t => t._1+t._2.length)
+      val ends = orderedTags.drop(1).map(_._1) += line.length
       val msgs = (starts zip ends).map({ case (start, end) => (start, line.substring(start, end).trim)}).filter(_._2.length != 0)
       
-      (for((start, tag) <- tags) yield {
+      (for((start, tag) <- orderedTags) yield {
         val (point, msg) = msgs.find(_._1 > start).getOrElse((start+tag.length, ""))
         Task(tag, msg, tagPriority(tag), new RangePosition(pos.source, offset+start, offset+point, offset+point+msg.length))
       }).toList
