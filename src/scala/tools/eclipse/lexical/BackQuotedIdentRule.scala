@@ -14,12 +14,12 @@ class BackQuotedIdentRule(val successToken: IToken) extends AbstractRule(success
   @tailrec
   private def consumeUntilBackQuote(scanner: RewindableScanner): IToken =
     (scanner.read(): @switch) match {
-      case '`' | '\n' ⇒ successToken
-      case '\r' if scanner.peek != '\n' ⇒ successToken
-      case ICharacterScanner.EOF ⇒ {
+      case '`' | '\n' => successToken
+      case '\r' if scanner.peek != '\n' => successToken
+      case ICharacterScanner.EOF => {
         scanner.unread()
         successToken
       }
-      case _ ⇒ consumeUntilBackQuote(scanner)
+      case _ => consumeUntilBackQuote(scanner)
     }
 }

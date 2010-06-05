@@ -21,14 +21,14 @@ class MultilineCommentRule(val successToken: IToken, val scalaDoc: Boolean) exte
   @tailrec
   private def consumeUntilSplatSlash(scanner: RewindableScanner, nesting: Int): IToken =
     (scanner.read(): @switch) match {
-      case '/' ⇒
+      case '/' =>
         if (scanner.read() == '*')
           consumeUntilSplatSlash(scanner, nesting + 1)
         else {
           scanner.unread()
           consumeUntilSplatSlash(scanner, nesting)
         }
-      case '*' ⇒
+      case '*' =>
         if (scanner.read() == '/')
           if (nesting == 1)
             successToken
@@ -38,11 +38,11 @@ class MultilineCommentRule(val successToken: IToken, val scalaDoc: Boolean) exte
           scanner.unread()
           consumeUntilSplatSlash(scanner, nesting)
         }
-      case ICharacterScanner.EOF ⇒ {
+      case ICharacterScanner.EOF => {
         scanner.unread()
         successToken
       }
-      case _ ⇒ consumeUntilSplatSlash(scanner, nesting)
+      case _ => consumeUntilSplatSlash(scanner, nesting)
     }
 
 }

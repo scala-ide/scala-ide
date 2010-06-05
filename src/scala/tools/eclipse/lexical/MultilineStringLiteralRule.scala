@@ -18,7 +18,7 @@ class MultilineStringLiteralRule(val successToken: IToken) extends AbstractRule(
   @tailrec
   private def consumeUntilTripleQuotes(scanner: RewindableScanner): IToken =
     (scanner.read(): @switch) match {
-      case '"' ⇒
+      case '"' =>
         if (scanner.read() == '"')
           if (scanner.read() == '"') {
             while (scanner.read() == '"') {}
@@ -32,11 +32,11 @@ class MultilineStringLiteralRule(val successToken: IToken) extends AbstractRule(
           scanner.unread()
           consumeUntilTripleQuotes(scanner)
         }
-      case ICharacterScanner.EOF ⇒ {
+      case ICharacterScanner.EOF => {
         scanner.unread()
         successToken
       }
-      case _ ⇒
+      case _ =>
         consumeUntilTripleQuotes(scanner)
     }
 
