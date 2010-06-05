@@ -16,14 +16,16 @@ import org.eclipse.jface.text.source.SourceViewerConfiguration
 import org.eclipse.ui.IFileEditorInput
 import org.eclipse.ui.editors.text.{ ForwardingDocumentProvider, TextFileDocumentProvider }
 import org.eclipse.ui.texteditor.{ IAbstractTextEditorHelpContextIds, ITextEditorActionConstants, IWorkbenchActionDefinitionIds, TextOperationAction }
+import org.eclipse.jdt.internal.ui.javaeditor.selectionactions._
+import org.eclipse.jdt.ui.actions.IJavaEditorActionDefinitionIds
 
 class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
-  
+
   setPartName("Scala Editor")
-  
-  override protected def createActions : Unit = {
+
+  override protected def createActions: Unit = {
     super.createActions
-    
+
     val cutAction = new TextOperationAction(EditorMessages.bundleForConstructedKeys, "Editor.Cut.", this, ITextOperationTarget.CUT); //$NON-NLS-1$
     cutAction.setHelpContextId(IAbstractTextEditorHelpContextIds.CUT_ACTION);
     cutAction.setActionDefinitionId(IWorkbenchActionDefinitionIds.CUT);
@@ -38,23 +40,35 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
     pasteAction.setHelpContextId(IAbstractTextEditorHelpContextIds.PASTE_ACTION);
     pasteAction.setActionDefinitionId(IWorkbenchActionDefinitionIds.PASTE);
     setAction(ITextEditorActionConstants.PASTE, pasteAction);
+
+    val selectionHistory = new SelectionHistory(this)
+
+    val historyAction = new StructureSelectHistoryAction(this, selectionHistory)
+    historyAction.setActionDefinitionId(IJavaEditorActionDefinitionIds.SELECT_LAST)
+    setAction(StructureSelectionAction.HISTORY, historyAction)
+    selectionHistory.setHistoryAction(historyAction)
+
+    val selectEnclosingAction = new ScalaStructureSelectEnclosingAction(this, selectionHistory)
+    selectEnclosingAction.setActionDefinitionId(IJavaEditorActionDefinitionIds.SELECT_ENCLOSING)
+    setAction(StructureSelectionAction.ENCLOSING, selectEnclosingAction)
+
   }
-  
-  override def createJavaSourceViewerConfiguration : JavaSourceViewerConfiguration =
+
+  override def createJavaSourceViewerConfiguration: JavaSourceViewerConfiguration =
     new ScalaSourceViewerConfiguration(getPreferenceStore, this)
-  
-  override def setSourceViewerConfiguration(configuration : SourceViewerConfiguration) {
+
+  override def setSourceViewerConfiguration(configuration: SourceViewerConfiguration) {
     super.setSourceViewerConfiguration(
       configuration match {
-        case svc : ScalaSourceViewerConfiguration => svc
+        case svc: ScalaSourceViewerConfiguration => svc
         case _ => new ScalaSourceViewerConfiguration(getPreferenceStore, this)
       })
   }
-  
-  override def doSave(pm : IProgressMonitor) : Unit = {
+
+  override def doSave(pm: IProgressMonitor): Unit = {
     val project = ScalaPlugin.plugin.getScalaProject(getEditorInput)
     getEditorInput match {
-      case fei : IFileEditorInput => project.updateTopLevelMap(fei.getFile)
+      case fei: IFileEditorInput => project.updateTopLevelMap(fei.getFile)
       case _ =>
     }
     project.scheduleResetPresentationCompiler
