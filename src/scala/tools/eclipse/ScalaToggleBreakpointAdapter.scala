@@ -46,7 +46,12 @@ class ScalaToggleBreakpointAdapter extends ToggleBreakpointAdapter { self =>
                     member.asInstanceOf[IType]
                   else
                     member.getDeclaringType
-                val tname = createQualifiedTypeName(self, tpe)
+
+                val tname = {
+                  val qtname = createQualifiedTypeName(self, tpe)
+                  val emptyPackagePrefix = "<empty>." 
+                  if (qtname startsWith emptyPackagePrefix) qtname.substring(emptyPackagePrefix.length) else qtname
+                }
                 val resource = BreakpointUtils.getBreakpointResource(tpe)
                 val lnumber = selection.asInstanceOf[ITextSelection].getStartLine+1
                 val existingBreakpoint = JDIDebugModel.lineBreakpointExists(resource, tname, lnumber)
