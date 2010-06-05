@@ -9,16 +9,16 @@ package scala.tools.eclipse.launching
 import scala.collection.mutable.ArrayBuffer
 
 import org.eclipse.core.resources.IResource
-import org.eclipse.core.runtime.{ CoreException, IAdaptable }
+import org.eclipse.core.runtime.IAdaptable
 import org.eclipse.debug.core.{ DebugPlugin, ILaunchConfiguration, ILaunchConfigurationType }
 import org.eclipse.debug.ui.DebugUITools
-import org.eclipse.jdt.core.{ IJavaElement, IMethod, IType }
+import org.eclipse.jdt.core.{ Flags, IJavaElement, IMethod, IType, Signature }
 import org.eclipse.jdt.debug.ui.launchConfigurations.JavaLaunchShortcut
 import org.eclipse.jdt.internal.debug.ui.launcher.LauncherMessages
 import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants
 import org.eclipse.jface.operation.IRunnableContext
 
-import scala.tools.eclipse.javaelements.ScalaSourceFile
+import scala.tools.eclipse.javaelements.{ ScalaModuleElement, ScalaSourceFile }
 
 /* This class can be eliminiated in favour of JavaApplicationLaunch shortcut as soon as 
  * the JDTs method search works correctly for Scala.
@@ -34,105 +34,39 @@ class ScalaLaunchShortcut extends JavaLaunchShortcut {
   /**
    * findTypes is the entry method that is used to find main types within a given class.
    */
-  @throws(classOf[InterruptedException])
-  @throws(classOf[CoreException])
-  override def findTypes(elements: Array[Object], context: IRunnableContext) : Array[IType] = {
-    //Handle Exception case
-    if (elements == null || elements.isEmpty){
-      return null
-    }     
-    //Initialize return value
-    var a = new ArrayBuffer[IType]    
-    //Execute search for mains and return
-    elements.foreach(elem => a ++= getMainMethods(elem))    
-    a.toArray
-  }
-
-  
- /**
-  * Given a single resource (file) captures all classes/modules that contain a main method and return
-  * an array of all the declaring types that contain a main method.
-  */  
- def getMainMethods(o: Object) : Array[IType] = {
-   import org.eclipse.jdt.internal.core.SourceType
-   //Initialize an empty return value
-   var a = new ArrayBuffer[IType] 
-   
-   //Get a hold of scala compilation unit for the file and then get all available types
-   val adapt: IAdaptable = o.asInstanceOf[IAdaptable]
-   var je = adapt.getAdapter(classOf[IJavaElement]).asInstanceOf[IJavaElement]
-   while ((je ne null) && !je.isInstanceOf[ScalaSourceFile])
-     je = je.getParent
-   if (je.isInstanceOf[ScalaSourceFile]) {
-     val scu = je.asInstanceOf[ScalaSourceFile]
-     val allTypesFromCU: Array[IType] = scu.getAllTypes   
-  
-     //Loop over multiple class/modules in a file
-     for (cuType <- allTypesFromCU) {
-       
-       //if a class or module get all types to include superclass
-       if (cuType.getDeclaringType == null) {       
-         val allTypes = cuType.newSupertypeHierarchy(null).getAllTypes      
-         
-         //loop through main class and all super classes for the class/module in question to find main class
-          for (t <- allTypes){
-            //debugging purposes only
-            //methodDebugInf(meth)                    
-            if (t.getDeclaringType ==null){
-              for (meth <- t.getMethods){                  
-                if (isMainMethod(meth))           
-                  a += cuType
-              }
-            }      
-          }
-       }
-     }
-   }
-   a.toArray    
-  }
- 
- 
-  /**
-   * This is where the main method is searched for.  Note that searching the super class is not yet supported.  Unable to get a handle
-   * on the super class with the current type / jdt implementation.  This will need to be updated as the Eclipse Scala typing matures.
-   */
-  private def isMainMethod(method: IMethod) : Boolean = {
-    import org.eclipse.jdt.core.Flags
-    import org.eclipse.jdt.core.Signature
-    
-    //Begin Check for main type in the existing class
-    val flags = method.getFlags
-    val parameterArray = method.getParameterTypes    
-    val isMain: Boolean = method.getElementName.equals("main") && method.getReturnType.equals("V") 
-    val isPublicStatic: Boolean = Flags.isPublic(flags)
+  override def findTypes(elements: Array[AnyRef], context: IRunnableContext) : Array[IType] = {
+    if (elements == null || elements.isEmpty)
+      null
+    else {
+      def getMainMethods(element: AnyRef) = {
         
-    //Check the parameterType
-    if (isMain && isPublicStatic && (parameterArray != null) && (!parameterArray.isEmpty)){
-      val typeSignature: String = Signature.toString(parameterArray(0))
-      val simpleSignature = Signature.getSimpleName(typeSignature.toArray)
-      val paramTypeMatches: Boolean = (parameterArray.length == 1) &&  
-                          ("scala.Array".equals(typeSignature) ||
-                           "java.lang.String[]".equals(typeSignature) ||
-                           "String[]".equals(typeSignature))
-                          
-      return paramTypeMatches
+        def isMainMethod(method: IMethod) = {
+          val flags = method.getFlags
+          val params = method.getParameterTypes    
+          method.getElementName == "main" && 
+          Flags.isPublic(flags) &&
+          method.getReturnType == "V" &&
+          params != null &&
+          params.length == 1 &&
+          (Signature.toString(params(0)) match {
+              case "scala.Array" | "java.lang.String[]" | "String[]" => true
+              case _ => false
+          })
+        }
+        
+        val je = element.asInstanceOf[IAdaptable].getAdapter(classOf[IJavaElement]).asInstanceOf[IJavaElement]
+        je.getOpenable match {
+          case scu : ScalaSourceFile =>
+            def isTopLevel(tpe : IType) = tpe.getDeclaringType == null
+            def hasAncestralMainMethod(tpe : IType) = 
+              tpe.newSupertypeHierarchy(null).getAllTypes.exists(t => isTopLevel(t) && t.getMethods.exists(isMainMethod)) 
+            scu.getAllTypes.filter(tpe => tpe.isInstanceOf[ScalaModuleElement] && isTopLevel(tpe) && hasAncestralMainMethod(tpe)).toList
+          case _ => Nil
+        }
+      }
+      
+      elements.flatMap(getMainMethods).toArray
     }
- 
-    //At this point there is no main in the super class or current class return false
-    false  
-  }
- 
-  /**
-   * Private method - should be replaced by a logging solution
-   */
-  private def methodDebugInf(meth: IMethod) {
-    println("Method Name -> " + meth.getElementName)
-    println("Method Param Raw Names -> " + meth.getRawParameterNames.toString)
-    println("Method Param Types -> " + meth.getParameterTypes)
-    println("Method Param Names -> " + meth.getParameterNames)
-    println("Method Return Type -> " + meth.getReturnType) 
-    println("Parent Name -> " + meth.getParent.getElementName)
-    println("DeclaringType Name -> " + meth.getDeclaringType)                    
   }
   
   /**
@@ -166,7 +100,7 @@ class ScalaLaunchShortcut extends JavaLaunchShortcut {
   override def findLaunchConfiguration(t : IType, configType: ILaunchConfigurationType) : ILaunchConfiguration = {
     //Get working values / collections
     val configs: Array[ILaunchConfiguration] = DebugPlugin.getDefault.getLaunchManager.getLaunchConfigurations(configType)        
-    var candidateConfigs = new ArrayBuffer[ILaunchConfiguration]
+    val candidateConfigs = new ArrayBuffer[ILaunchConfiguration]
        
     //Handle Exceptional cases
     if (t == null || configType == null)
@@ -185,17 +119,9 @@ class ScalaLaunchShortcut extends JavaLaunchShortcut {
     for (launchConfig <- configs) {      
       val lcTypeName: String = launchConfig.getAttribute(IJavaLaunchConfigurationConstants.ATTR_MAIN_TYPE_NAME, "")
       val lcProjectName: String = launchConfig.getAttribute(IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME, "")
-      
-      //  println("Incoming Config  -> " + fullyQualifiedName)
-      //  println("Looping Config   -> " + lcTypeName)
-      //  println("Incoming Project -> " + projectName)
-      //  println("Looping Project  -> " + lcProjectName)
-                
-      if (lcTypeName.equals(fullyQualifiedName) && lcProjectName.equals(projectName)){
-        // println("Matched Configuration")  
+      if (lcTypeName.equals(fullyQualifiedName) && lcProjectName.equals(projectName))
         candidateConfigs += launchConfig
-      }          
-    }      
+    }
     
     //Return matched configurations or null if none exist                         
     val candidateCount = candidateConfigs.toArray.length
@@ -222,7 +148,7 @@ class ScalaLaunchShortcut extends JavaLaunchShortcut {
     import org.eclipse.jdt.internal.debug.ui.launcher.LauncherMessages
     
     val labelProvider = DebugUITools.newDebugModelPresentation
-    var dialog = new ElementListSelectionDialog(getShell, labelProvider)
+    val dialog = new ElementListSelectionDialog(getShell, labelProvider)
   
     dialog.setElements(configList.toArray[Object])
     dialog.setTitle(getTypeSelectionTitle)
