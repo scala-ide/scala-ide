@@ -60,12 +60,19 @@ object FileUtils {
         val mrk = file.createMarker(plugin.problemMarkerId)
         mrk.setAttribute(IMarker.SEVERITY, severity)
         
-        val string = msg.map{
-          case '\n' => ' '
-          case '\r' => ' '
+        // Marker attribute values are limited to <= 65535 bytes and setAttribute will assert if they
+        // exceed this. To guard against this we trim to <= 21000 characters ... see
+        // org.eclipse.core.internal.resources.MarkerInfo.checkValidAttribute for justification
+        // of this arbitrary looking number
+        val maxMarkerLen = 21000
+        val trimmedMsg = msg.take(maxMarkerLen)
+        
+        val attrValue = trimmedMsg.map {
+          case '\n' | '\r' => ' '
           case c => c
-        }.mkString("","","")
-        mrk.setAttribute(IMarker.MESSAGE , string)
+        }
+        
+        mrk.setAttribute(IMarker.MESSAGE , attrValue)
 
         if (offset != -1) {
           mrk.setAttribute(IMarker.CHAR_START, offset)
