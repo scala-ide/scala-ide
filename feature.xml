@@ -1,17 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <feature
       id="ch.epfl.lamp.sdt"
-      label="Scala Eclipse Plugin"
+      label="Scala IDE for Eclipse"
       version="@PLUGIN_VERSION@"
-      provider-name="EPFL Lamp">
+      provider-name="The Scala IDE for Eclipse Project">
 
-   <description url="http://scala-lang.org/">
-      The Scala Development Tools (SDT) provides all necessary tools
-to build Scala programs inside the Eclipse Platform.
+   <description url="http://www.scala-ide.org/">
+      The Scala IDE for Eclipse povides all necessary tools to build Scala applications on the Eclipse Platform.
    </description>
 
-   <copyright url="http://scala-lang.org/downloads/">
-      Copyright (c) 2002-2010 EPFL, Lausanne.
+   <copyright url="http://download.scala-ide.org/">
+      Copyright (c) 2002-2010 The Scala IDE for Eclipse Project
 All rights reserved.
    </copyright>
 
@@ -54,7 +53,7 @@ SUCH DAMAGE.
    </license>
 
    <url>
-      <update url="http://www.scala-lang.org/scala-eclipse-plugin-nightly" label="Scala update site"/>
+      <update url="http://download.scala-ide.org/update-current" label="Scala IDE for Eclipse update site"/>
    </url>
 
    <requires>
