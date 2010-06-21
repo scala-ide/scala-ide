@@ -54,5 +54,5 @@ class PerspectiveFactory extends IPerspectiveFactory {
 }
 
 object PerspectiveFactory {
-  val id = "ch.epfl.lamp.sdt.core.perspective"
+  val id = "org.scala-ide.sdt.core.perspective"
 }

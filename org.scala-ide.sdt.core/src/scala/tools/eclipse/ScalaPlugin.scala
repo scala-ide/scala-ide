@@ -31,8 +31,8 @@ object ScalaPlugin {
 class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IElementChangedListener {
   ScalaPlugin.plugin = this
   
-  def pluginId = "ch.epfl.lamp.sdt.core"
-  def libraryPluginId = "scala.library"
+  def pluginId = "org.scala-ide.sdt.core"
+  def libraryPluginId = "org.scala-ide.scala.library"
     
   def wizardPath = pluginId + ".wizards"
   def wizardId(name : String) = wizardPath + ".new" + name
@@ -46,7 +46,7 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
   def editorId = "scala.tools.eclipse.ScalaSourceFileEditor"
   def builderId = pluginId + ".scalabuilder"
   def natureId = pluginId + ".scalanature"  
-  def launchId = "ch.epfl.lamp.sdt.launching"
+  def launchId = "org.scala-ide.sdt.launching"
   val scalaLib = "SCALA_CONTAINER"
   def scalaLibId  = launchId + "." + scalaLib
   def launchTypeId = "scala.application"

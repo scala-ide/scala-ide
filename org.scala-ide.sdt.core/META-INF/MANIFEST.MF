@@ -1,8 +1,8 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Scala Plugin
-Bundle-SymbolicName: ch.epfl.lamp.sdt.core;singleton:=true
-Bundle-Version: 2.8.0
+Bundle-SymbolicName: org.scala-ide.sdt.core;singleton:=true
+Bundle-Version: 1.0.0.qualifier
 Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: 
  .,
@@ -41,8 +41,8 @@ Require-Bundle:
  org.eclipse.ui.workbench.texteditor,
  org.eclipse.pde.core;resolution:=optional,
  org.eclipse.pde.ui;resolution:=optional,
- scala.library,
- scala.tools.nsc
+ org.scala-ide.scala.library,
+ org.scala-ide.scala.compiler
 Import-Package: 
  org.eclipse.contribution.jdt.cuprovider;apply-aspects:=false,
  org.eclipse.contribution.jdt.imagedescriptor;apply-aspects:=false,

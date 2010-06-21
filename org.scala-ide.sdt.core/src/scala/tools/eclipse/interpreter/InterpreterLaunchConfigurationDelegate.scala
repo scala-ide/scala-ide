@@ -135,11 +135,11 @@ class InterpreterLaunchConfigurationDelegate extends AbstractJavaLaunchConfigura
     // scala-library.jar for use on the out-of-process interpreters
     // classpath
     val libraryJarFile =
-      Platform.getBundle("scala.library").asInstanceOf[AbstractBundle].
+      Platform.getBundle("org.scala-ide.scala.library").asInstanceOf[AbstractBundle].
       getBundleData.asInstanceOf[BaseData].
       getBundleFile.getFile("/lib/scala-library.jar", false)
     
-    val compilerBundle = Platform.getBundle("scala.tools.nsc")
+    val compilerBundle = Platform.getBundle("org.scala-ide.scala.compiler")
     val compilerBundleFile = FileLocator.getBundleFile(compilerBundle)
 
     // Compiler classpath corresponds to either the installed .jar

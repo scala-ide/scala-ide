@@ -18,7 +18,7 @@ import org.eclipse.core.runtime.Platform;
 import scala.tools.eclipse.contribution.weaving.jdt.ScalaJDTWeavingPlugin;
 
 public class IndexerProviderRegistry {
-  public static String INDEXING_PROVIDERS_EXTENSION_POINT = "ch.epfl.lamp.sdt.aspects.indexerprovider"; //$NON-NLS-1$
+  public static String INDEXING_PROVIDERS_EXTENSION_POINT = "org.scala-ide.sdt.aspects.indexerprovider"; //$NON-NLS-1$
 
   private static final IndexerProviderRegistry INSTANCE = new IndexerProviderRegistry();
 
