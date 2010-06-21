@@ -6,6 +6,7 @@
     <groupId>org.scala-ide</groupId>
     <artifactId>scala-ide-for-eclipse</artifactId>
     <version>1.0.0-SNAPSHOT</version>
+    <relativePath>../org.scala-ide.build/pom.xml</relativePath>
   </parent>
   <artifactId>org.scala-ide.sdt.update-site</artifactId>
   <packaging>eclipse-update-site</packaging>
