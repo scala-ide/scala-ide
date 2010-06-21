@@ -1,15 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <site>
-   <feature url="features/ch.epfl.lamp.sdt_@PLUGIN_VERSION@.jar" id="ch.epfl.lamp.sdt" version="@PLUGIN_VERSION@">
-   	<category name="ch.epfl.lamp.sdt"/>
+   <feature url="features/org.scala-ide.sdt.feature_0.0.0.jar" id="org.scala-ide.sdt.feature" version="0.0.0">
+   	<category name="sdt"/>
    </feature>
-   <feature url="features/org.eclipse.equinox.weaving_1.0.0.200905031323.jar" id="org.eclipse.equinox.weaving" version="1.0.0.200905031323">
-   	<category name="ch.epfl.lamp.aspects"/>
+   <feature url="features/org.scala-ide.sdt.weaving.feature_0.0.0.jar" id="org.scala-ide.sdt.weaving.feature" version="0.0.0">
+   	<category name="sdt-weaving"/>
    </feature>
-   <feature url="features/org.eclipse.contribution.weaving_1.6.4.20090313172428.jar" id="org.eclipse.contribution.weaving" version="1.6.4.20090313172428">
-   	<category name="ch.epfl.lamp.jdtweaving"/>
-   </feature>
-   <category-def name="ch.epfl.lamp.sdt" label="Scala IDE for Eclipse"/>
-   <category-def name="ch.epfl.lamp.aspects" label="Equinox Aspects"/>
-   <category-def name="ch.epfl.lamp.jdtweaving" label="JDT Weaving"/>
+   <category-def name="sdt" label="Scala IDE for Eclipse"/>
+   <category-def name="sdt-weaving" label="JDT Weaving for Scala"/>
 </site>
