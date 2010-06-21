@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>scala-plugin-aspects</name>
+	<name>org.scala-ide.sdt.aspects</name>
 	<comment></comment>
 	<projects>
 	</projects>
