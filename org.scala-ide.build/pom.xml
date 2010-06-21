@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <modelVersion>4.0.0</modelVersion>
+  <properties>
+    <scala.ide.version>1.0.0-SNAPSHOT</scala.ide.version>
+    <scala.toolchain.version>2.8.0-RC6</scala.toolchain.version>
+    <scala.version>2.8.0.RC6</scala.version>
+  </properties>
+  <groupId>org.scala-ide</groupId>
+  <artifactId>scala-ide-for-eclipse</artifactId>
+  <version>1.0.0-SNAPSHOT</version>
+  <name>The Scala IDE for Eclispe</name>
+  <packaging>pom</packaging>
+  <modules>
+    <module>../org.scala-ide.sdt.weaving.feature</module>
+    <module>../org.scala-ide.sdt.aspects</module>
+    <module>../org.scala-ide.sdt.core</module>
+    <module>../org.scala-ide.sdt.feature</module>
+    <module>../org.scala-ide.sdt.update-site</module>
+  </modules>
+  <dependencies>
+    <dependency>
+      <groupId>org.scala-ide</groupId>
+      <artifactId>org.scala-ide.scala.library</artifactId>
+      <version>${scala.toolchain.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.scala-ide</groupId>
+      <artifactId>org.scala-ide.scala.compiler</artifactId>
+      <version>${scala.toolchain.version}</version>
+    </dependency>
+  </dependencies>
+  <build>
+    <sourceDirectory>${basedir}/src</sourceDirectory>
+    <plugins>
+      <plugin>
+        <groupId>org.sonatype.tycho</groupId>
+        <artifactId>tycho-maven-plugin</artifactId>
+        <version>0.9.0-SNAPSHOT</version>
+        <extensions>true</extensions>
+      </plugin>
+      <plugin>
+        <groupId>org.sonatype.tycho</groupId>
+        <artifactId>target-platform-configuration</artifactId>
+        <version>0.9.0-SNAPSHOT</version>
+        <configuration>
+          <resolver>p2</resolver>
+          <pomDependencies>consider</pomDependencies>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.scala-tools</groupId>
+        <artifactId>maven-scala-plugin</artifactId>
+        <version>2.14-SNAPSHOT</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>compile</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <scalaVersion>${scala.version}</scalaVersion>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+  <repositories>
+    <repository>
+      <id>galileo</id>
+      <name>Eclipse Galileo p2 repository</name>
+      <layout>p2</layout>
+      <url>http://download.eclipse.org/releases/galileo</url>
+    </repository>
+    <repository>
+      <id>jdt-weaving</id>
+      <name>JDT Weaving p2 repository</name>
+      <layout>p2</layout>
+      <url>http://download.scala-ide.org/jdt-weaving</url>
+    </repository>
+    <repository>
+      <id>scala-tools.release</id>
+      <name>Scala Tools maven release repository</name>
+      <url>http://scala-tools.org/repo-releases</url>
+    </repository>
+    <repository>
+      <id>scala-tools.snapshot</id>
+      <name>Scala Tools maven snapshot repository</name>
+      <url>http://scala-tools.org/repo-snapshots</url>
+    </repository>
+  </repositories>
+  <pluginRepositories>
+    <pluginRepository>
+      <id>org.sonartype.tycho</id>
+      <name>Tycho snapshot repository</name>
+      <url>https://repository.sonatype.org/content/repositories/snapshots</url>
+    </pluginRepository>
+    <pluginRepository>
+      <id>scala-tools.release</id>
+      <name>Scala Tools maven release repository</name>
+      <url>http://scala-tools.org/repo-releases</url>
+    </pluginRepository>
+    <pluginRepository>
+      <id>scala-tools.snapshot</id>
+      <name>Scala Tools maven snapshot repository</name>
+      <url>http://scala-tools.org/repo-snapshots</url>
+    </pluginRepository>
+  </pluginRepositories>
+</project>
