@@ -3,7 +3,6 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <modelVersion>4.0.0</modelVersion>
   <properties>
-    <scala.ide.version>1.0.0-SNAPSHOT</scala.ide.version>
     <scala.toolchain.version>2.8.0-RC6</scala.toolchain.version>
     <scala.version>2.8.0.RC6</scala.version>
   </properties>

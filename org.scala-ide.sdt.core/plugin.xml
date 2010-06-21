@@ -5,11 +5,11 @@
          point="org.eclipse.ui.propertyPages">
       <page
             class="scala.tools.eclipse.properties.CompilerSettings"
-            id="ch.epfl.lamp.sdt.core.properties.compilerPropertyPage"
+            id="org.scala-ide.sdt.core.properties.compilerPropertyPage"
             name="Scala Compiler Properties">
          <filter
                name="nature"
-               value="ch.epfl.lamp.sdt.core.scalanature"/>
+               value="org.scala-ide.sdt.core.scalanature"/>
          <enabledWhen>
          <or> <instanceof value="org.eclipse.jdt.core.IJavaProject"/>
               <instanceof value="org.eclipse.core.resources.IProject"/>
@@ -20,11 +20,11 @@
    <extension point="org.eclipse.ui.preferencePages">
       <page class="scala.tools.eclipse.properties.ScalaPreferences"
             name="Scala"
-            id="ch.epfl.lamp.sdt.core.preferences"/>
+            id="org.scala-ide.sdt.core.preferences"/>
       <page
-            category="ch.epfl.lamp.sdt.core.preferences"
+            category="org.scala-ide.sdt.core.preferences"
             class="scala.tools.eclipse.properties.CompilerSettings"
-            id="ch.epfl.lamp.sdt.core.preferences.CompilerPreferences"
+            id="org.scala-ide.sdt.core.preferences.CompilerPreferences"
             name="Scala Compiler Preferences">
       </page>
    </extension>
@@ -141,65 +141,65 @@
             class="scala.tools.eclipse.PerspectiveFactory"
             name="Scala"
             icon="icons/full/eview16/sperspective.gif"
-            id="ch.epfl.lamp.sdt.core.perspective">
+            id="org.scala-ide.sdt.core.perspective">
       </perspective>
    </extension>
      <extension
          point="org.eclipse.ui.newWizards">
       <category
-            id="ch.epfl.lamp.sdt.core.wizards"
+            id="org.scala-ide.sdt.core.wizards"
             name="Scala Wizards"/>
       <wizard
             icon="icons/full/etool16/newsprj_wiz.gif"
             class="scala.tools.eclipse.wizards.ScalaProjectWizard"
-            finalPerspective="ch.epfl.lamp.sdt.core.perspective"
-            category="ch.epfl.lamp.sdt.core.wizards"
+            finalPerspective="org.scala-ide.sdt.core.perspective"
+            category="org.scala-ide.sdt.core.wizards"
             project="true"
             name="Scala Project"
-            id="ch.epfl.lamp.sdt.core.wizards.newProject">
+            id="org.scala-ide.sdt.core.wizards.newProject">
             <description>Create a Scala project</description>
       </wizard>
       <wizard
             class="scala.tools.eclipse.wizards.NewClassWizard"
             icon="icons/full/etool16/newclass_wiz.gif"
-            finalPerspective="ch.epfl.lamp.sdt.core.perspective"
-            category="ch.epfl.lamp.sdt.core.wizards"
+            finalPerspective="org.scala-ide.sdt.core.perspective"
+            category="org.scala-ide.sdt.core.wizards"
             project="false"
             name="Scala Class"
-            id="ch.epfl.lamp.sdt.core.wizards.newClass">
+            id="org.scala-ide.sdt.core.wizards.newClass">
             <description>Create a Scala class</description>
             <selection class="java.lang.Object"/>       
       </wizard>
       <wizard
             class="scala.tools.eclipse.wizards.NewObjectWizard"
             icon="icons/full/etool16/newobject_wiz.gif"
-            finalPerspective="ch.epfl.lamp.sdt.core.perspective"
-            category="ch.epfl.lamp.sdt.core.wizards"
+            finalPerspective="org.scala-ide.sdt.core.perspective"
+            category="org.scala-ide.sdt.core.wizards"
             project="false"
             name="Scala Object"
-            id="ch.epfl.lamp.sdt.core.wizards.newObject">
+            id="org.scala-ide.sdt.core.wizards.newObject">
             <description>Create a Scala object</description>
             <selection class="java.lang.Object"/>       
       </wizard>
       <wizard
             class="scala.tools.eclipse.wizards.NewTraitWizard"
             icon="icons/full/etool16/newtrait_wiz.gif"
-            finalPerspective="ch.epfl.lamp.sdt.core.perspective"
-            category="ch.epfl.lamp.sdt.core.wizards"
+            finalPerspective="org.scala-ide.sdt.core.perspective"
+            category="org.scala-ide.sdt.core.wizards"
             project="false"
             name="Scala Trait"
-            id="ch.epfl.lamp.sdt.core.wizards.newTrait">
+            id="org.scala-ide.sdt.core.wizards.newTrait">
             <description>Create a Scala trait</description>
             <selection class="java.lang.Object"/>       
       </wizard>
       <wizard
             class="scala.tools.eclipse.wizards.NewApplicationWizard"
             icon="icons/full/etool16/scala_app.gif"
-            finalPerspective="ch.epfl.lamp.sdt.core.perspective"
-            category="ch.epfl.lamp.sdt.core.wizards"
+            finalPerspective="org.scala-ide.sdt.core.perspective"
+            category="org.scala-ide.sdt.core.wizards"
             project="false"
             name="Scala Application"
-            id="ch.epfl.lamp.sdt.core.wizards.newApplication">
+            id="org.scala-ide.sdt.core.wizards.newApplication">
             <description>Create a Scala application</description>
             <selection class="java.lang.Object"/>       
       </wizard>
@@ -207,9 +207,9 @@
    <extension
          point="org.eclipse.ui.ide.projectNatureImages">
       <image
-            natureId="ch.epfl.lamp.sdt.core.scalanature"
+            natureId="org.scala-ide.sdt.core.scalanature"
             icon="icons/full/ovr16/scala_co.gif"
-            id="ch.epfl.lamp.sdt.core.scalaNatureImage"/>
+            id="org.scala-ide.sdt.core.scalaNatureImage"/>
    </extension>
    
    <extension
@@ -227,19 +227,19 @@
       <type
          name="org.eclipse.jdt.ui.error"
          super="org.eclipse.ui.workbench.texteditor.error"
-         markerType="ch.epfl.lamp.sdt.core.problem"
+         markerType="org.scala-ide.sdt.core.problem"
          markerSeverity="2">
       </type>
       <type
          name="org.eclipse.jdt.ui.warning"
          super="org.eclipse.ui.workbench.texteditor.warning"
-         markerType="ch.epfl.lamp.sdt.core.problem"
+         markerType="org.scala-ide.sdt.core.problem"
          markerSeverity="1">
       </type>
       <type
          name="org.eclipse.jdt.ui.info"
          super="org.eclipse.ui.workbench.texteditor.info"
-         markerType="ch.epfl.lamp.sdt.core.problem"
+         markerType="org.scala-ide.sdt.core.problem"
          markerSeverity="0">
       </type>
    </extension>
@@ -248,7 +248,7 @@
          point="org.eclipse.jdt.core.classpathContainerInitializer">
       <classpathContainerInitializer
             class="scala.tools.eclipse.ScalaClasspathContainerInitializer"
-            id="ch.epfl.lamp.sdt.launching.SCALA_CONTAINER">
+            id="org.scala-ide.sdt.launching.SCALA_CONTAINER">
       </classpathContainerInitializer>
    </extension>
    <extension point = "org.eclipse.debug.core.launchConfigurationTypes">
@@ -313,7 +313,7 @@
       <runtime>
          <run class="scala.tools.eclipse.Nature"/>
       </runtime>
-      <builder id="ch.epfl.lamp.sdt.core.scalabuilder"/>
+      <builder id="org.scala-ide.sdt.core.scalabuilder"/>
       <requires-nature id="org.eclipse.jdt.core.javanature"/>
    </extension>
    <extension id="scalabuilder"
@@ -326,15 +326,15 @@
    <extension
          point="org.eclipse.ui.perspectiveExtensions">
       <perspectiveExtension targetID="org.eclipse.jdt.ui.JavaPerspective">
-         <perspectiveShortcut id="ch.epfl.lamp.sdt.core.perspective"/>
+         <perspectiveShortcut id="org.scala-ide.sdt.core.perspective"/>
       </perspectiveExtension>
       <perspectiveExtension targetID="org.eclipse.ui.resourcePerspective">
-         <perspectiveShortcut id="ch.epfl.lamp.sdt.core.perspective"/>
+         <perspectiveShortcut id="org.scala-ide.sdt.core.perspective"/>
       </perspectiveExtension>
       <perspectiveExtension targetID="org.eclipse.debug.ui.DebugPerspective">
-         <perspectiveShortcut id="ch.epfl.lamp.sdt.core.perspective"/>
+         <perspectiveShortcut id="org.scala-ide.sdt.core.perspective"/>
       </perspectiveExtension>
-      <perspectiveExtension targetID="ch.epfl.lamp.sdt.core.perspective">
+      <perspectiveExtension targetID="org.scala-ide.sdt.core.perspective">
          <perspectiveShortcut id="org.eclipse.debug.ui.DebugPerspective"/>
       </perspectiveExtension>
    </extension>
@@ -364,11 +364,11 @@
             adaptable="true"
             objectClass="org.eclipse.jdt.core.IJavaElement"
             nameFilter="*"
-            id="ch.epfl.lamp.sdt.core.natures.contribution1">
+            id="org.scala-ide.sdt.core.natures.contribution1">
          <menu
             label="Scala"
             path="additions"
-            id="ch.epfl.lamp.sdt.core.popupMenu">
+            id="org.scala-ide.sdt.core.popupMenu">
             <groupMarker name="content"/>
             <separator name="additions"/>
         </menu>
@@ -376,7 +376,7 @@
         <and>
           <objectState
             name="projectNature"
-            value="ch.epfl.lamp.sdt.core.scalanature"/>
+            value="org.scala-ide.sdt.core.scalanature"/>
           <or>
             <objectClass name="org.eclipse.jdt.core.IJavaProject"/>
             <objectClass name="org.eclipse.jdt.core.IPackageFragment"/>
@@ -385,14 +385,14 @@
       </visibility>
       </objectContribution>
     <objectContribution
-      id="ch.epfl.lamp.sdt.ui.interperter.start"
+      id="org.scala-ide.sdt.ui.interperter.start"
       objectClass="org.eclipse.jdt.core.IJavaElement">
       <action
         class="scala.tools.eclipse.interpreter.Action"
         enablesFor="1"
-        menubarPath="ch.epfl.lamp.sdt.core.popupMenu/content"
+        menubarPath="org.scala-ide.sdt.core.popupMenu/content"
         icon="icons/full/etool16/scala_app.gif"
-        id="ch.epfl.lamp.sdt.ui.createInt"
+        id="org.scala-ide.sdt.ui.createInt"
         label="Create Scala Interperter"
         tooltip="Create a Scala interpreter"/>
 
@@ -400,7 +400,7 @@
         <and>
           <objectState
             name="projectNature"
-            value="ch.epfl.lamp.sdt.core.scalanature"/>
+            value="org.scala-ide.sdt.core.scalanature"/>
           <or>
             <objectClass name="org.eclipse.jdt.core.IJavaProject"/>
             <objectClass name="org.eclipse.jdt.core.IPackageFragment"/>
@@ -414,18 +414,18 @@
             adaptable="true"
             objectClass="org.eclipse.jdt.core.IJavaProject"
             nameFilter="*"
-            id="ch.epfl.lamp.sdt.core.natures.contribution1">
+            id="org.scala-ide.sdt.core.natures.contribution1">
          <action
                class="scala.tools.eclipse.ToggleScalaNatureAction"
                enablesFor="+"
-               id="ch.epfl.lamp.sdt.core.natures.ToggleNatureAction"
+               id="org.scala-ide.sdt.core.natures.ToggleNatureAction"
                label="Remove Scala Nature"
-               menubarPath="ch.epfl.lamp.sdt.core.popupMenu/content"
+               menubarPath="org.scala-ide.sdt.core.popupMenu/content"
                tooltip="Removes an Scala Builder/Classpath from a Java project">
          </action>
          <visibility>
            <and>
-          <objectState name="projectNature" value="ch.epfl.lamp.sdt.core.scalanature"/>
+          <objectState name="projectNature" value="org.scala-ide.sdt.core.scalanature"/>
              <objectClass name="org.eclipse.jdt.core.IJavaProject"/>
            </and>
          </visibility>
@@ -437,11 +437,11 @@
             adaptable="true"
             objectClass="org.eclipse.jdt.core.IJavaProject"
             nameFilter="*"
-            id="ch.epfl.lamp.sdt.core.natures.contribution2">
+            id="org.scala-ide.sdt.core.natures.contribution2">
          <action
                class="scala.tools.eclipse.ToggleScalaNatureAction"
                enablesFor="+"
-               id="ch.epfl.lamp.sdt.core.natures.ToggleNatureAction"
+               id="org.scala-ide.sdt.core.natures.ToggleNatureAction"
                icon="icons/full/etool16/newsprj_wiz.gif"
                label="Add Scala Nature"
                menubarPath="org.eclipse.ui.projectConfigure/additions"
@@ -450,7 +450,7 @@
          <visibility>
             <and>
             <not>
-              <objectState name="projectNature" value="ch.epfl.lamp.sdt.core.scalanature"/>
+              <objectState name="projectNature" value="org.scala-ide.sdt.core.scalanature"/>
             </not>
             <objectClass name="org.eclipse.jdt.core.IJavaProject"/>
           </and>
@@ -470,14 +470,14 @@
   <extension point="org.eclipse.ui.console.consolePageParticipants">
     <consolePageParticipant
       class="scala.tools.eclipse.interpreter.PageParticipant"
-      id="ch.epfl.lamp.sdt.ui.interpreter.PP">
+      id="org.scala-ide.sdt.ui.interpreter.PP">
       <enablement>
         <instanceof value="scala.tools.eclipse.interpreter.Console"/>
       </enablement>
     </consolePageParticipant>
   </extension>
   <extension
-        id="ch.epfl.lamp.sdt.core.preferences"
+        id="org.scala-ide.sdt.core.preferences"
         point="org.eclipse.core.runtime.preferences">
      <initializer
            class="scala.tools.eclipse.properties.ScalaCompilerPreferenceInitializer">
@@ -539,11 +539,11 @@
     </provider>
   </extension>
 
-  <extension point="ch.epfl.lamp.sdt.aspects.cfprovider">
+  <extension point="org.scala-ide.sdt.aspects.cfprovider">
     <provider class="scala.tools.eclipse.javaelements.ScalaClassFileProvider" />
   </extension>
 
-  <extension point="ch.epfl.lamp.sdt.aspects.indexerprovider">
+  <extension point="org.scala-ide.sdt.aspects.indexerprovider">
     <provider class="scala.tools.eclipse.ScalaSourceIndexerFactory" />
   </extension>
   
@@ -560,7 +560,7 @@
         <enablement>
           <with variable="projectNatures">
              <iterate operator="or">
-                <equals value="ch.epfl.lamp.sdt.core.scalanature"/>
+                <equals value="org.scala-ide.sdt.core.scalanature"/>
              </iterate>
           </with>
         </enablement>

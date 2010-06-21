@@ -1,4 +1,0 @@
-instructions.configure = \
-  setProgramProperty(propName:osgi.framework.extensions, propValue:org.eclipse.equinox.weaving.hook);
-instructions.unconfigure = \
-  setProgramProperty(propName:osgi.framework.extensions, propValue:);

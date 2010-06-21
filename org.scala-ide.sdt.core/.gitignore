@@ -1,11 +1,4 @@
 bin
-.scala_dependencies
-build
-ch.epfl.lamp.sdt.core_*.jar
+target
 compiler-plugins
-dist
-eclipse-lib/configuration/*.log
-eclipse-lib/configuration/org.eclipse.core.runtime
-eclipse-lib/configuration/org.eclipse.equinox.app
-eclipse-lib/configuration/org.eclipse.osgi
-eclipse-lib/p2
+.scala_dependencies

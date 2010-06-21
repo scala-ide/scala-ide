@@ -18,7 +18,7 @@ import org.eclipse.pde.internal.core.WorkspacePluginModelManager
 import org.eclipse.pde.internal.ui.editor.plugin.DependenciesPage
 
 /**
- * Adds or removes 'scala.library' as a required plug-in for an Eclipse plug-in project.
+ * Adds or removes 'org.scala-ide.scala.library' as a required plug-in for an Eclipse plug-in project.
  */
 object ScalaLibraryPluginDependencyUtils {
 

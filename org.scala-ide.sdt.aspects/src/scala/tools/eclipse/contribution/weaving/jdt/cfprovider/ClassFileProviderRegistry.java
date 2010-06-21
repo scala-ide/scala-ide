@@ -18,7 +18,7 @@ import org.eclipse.core.runtime.Platform;
 import scala.tools.eclipse.contribution.weaving.jdt.ScalaJDTWeavingPlugin;
 
 public class ClassFileProviderRegistry {
-  public static String CFPROVIDERS_EXTENSION_POINT = "ch.epfl.lamp.sdt.aspects.cfprovider"; //$NON-NLS-1$
+  public static String CFPROVIDERS_EXTENSION_POINT = "org.scala-ide.sdt.aspects.cfprovider"; //$NON-NLS-1$
 
   private static final ClassFileProviderRegistry INSTANCE = new ClassFileProviderRegistry();
 
