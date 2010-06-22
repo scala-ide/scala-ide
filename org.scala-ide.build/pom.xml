@@ -9,7 +9,7 @@
   <groupId>org.scala-ide</groupId>
   <artifactId>scala-ide-for-eclipse</artifactId>
   <version>1.0.0-SNAPSHOT</version>
-  <name>The Scala IDE for Eclispe</name>
+  <name>The Scala IDE for Eclipse</name>
   <packaging>pom</packaging>
   <modules>
     <module>../org.scala-ide.sdt.weaving.feature</module>
@@ -91,7 +91,7 @@
   </repositories>
   <pluginRepositories>
     <pluginRepository>
-      <id>org.sonartype.tycho</id>
+      <id>org.sonatype.tycho</id>
       <name>Tycho snapshot repository</name>
       <url>https://repository.sonatype.org/content/repositories/snapshots</url>
     </pluginRepository>
