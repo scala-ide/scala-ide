@@ -2,15 +2,21 @@
 <project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <modelVersion>4.0.0</modelVersion>
-  <properties>
-    <scala.toolchain.version>2.8.0-RC6</scala.toolchain.version>
-    <scala.version>2.8.0.RC6</scala.version>
-  </properties>
   <groupId>org.scala-ide</groupId>
   <artifactId>scala-ide-for-eclipse</artifactId>
   <version>1.0.0-SNAPSHOT</version>
   <name>The Scala IDE for Eclipse</name>
   <packaging>pom</packaging>
+
+  <properties>
+    <scala.toolchain.version>2.8.0-RC6</scala.toolchain.version>
+    <scala.version>2.8.0.RC6</scala.version>
+    <tycho.version>0.9.0-SNAPSHOT</tycho.version>
+    <maven.compiler.source>1.6</maven.compiler.source>
+    <maven.compiler.target>1.6</maven.compiler.target>
+    <encoding>UTF-8</encoding>
+  </properties>
+
   <modules>
     <module>../org.scala-ide.sdt.weaving.feature</module>
     <module>../org.scala-ide.sdt.aspects</module>
@@ -18,6 +24,7 @@
     <module>../org.scala-ide.sdt.feature</module>
     <module>../org.scala-ide.sdt.update-site</module>
   </modules>
+
   <dependencies>
     <dependency>
       <groupId>org.scala-ide</groupId>
@@ -32,6 +39,16 @@
   </dependencies>
   <build>
     <sourceDirectory>${basedir}/src</sourceDirectory>
+    <testSourceDirectory>${basedir}/test</testSourceDirectory>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-resources-plugin</artifactId>
+          <version>2.4.3</version>
+        </plugin>
+      </plugins>
+    </pluginManagement>
     <plugins>
       <plugin>
         <groupId>org.sonatype.tycho</groupId>
