@@ -1,6 +1,6 @@
 #!/bin/sh
 
-source $(dirname $0)/env.sh
+. $(dirname $0)/env.sh
 
 SCALA_TOOLCHAIN_VERSION=2.8.0-trunk
 SCALA_VERSION=2.8.0.trunk
