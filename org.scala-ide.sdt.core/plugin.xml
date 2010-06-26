@@ -567,4 +567,137 @@
      </quickFixProcessor>
   </extension>  
   
+  
+  <!-- refactoring -->
+  
+  <extension
+         point="org.eclipse.ui.actionSets">
+      <actionSet
+            label="CodingActionSet.label"
+            description="CodingActionSet.description"
+            visible="false"
+            id="scala.tools.eclipse.refactoring.CodingActionSet">
+         <menu
+               id="scala.tools.eclipse.refactoring.refactoringMenu"
+               label="Refactor"
+               path="edit">
+            <separator name="scala.tools.eclipse.refactoring.refactoringGroup"/>
+         </menu>
+           <action
+               class="scala.tools.eclipse.refactoring.ExtractMethodAction"
+               definitionId="scala.tools.eclipse.refactoring.command.ExtractMethod"
+               id="scala.tools.eclipse.refactoring.extractMethodAction"
+               label="Extract Method"
+               menubarPath="scala.tools.eclipse.refactoring.refactoringMenu/scala.tools.eclipse.refactoring.sourceGeneratorGroup"
+               tooltip="Extract Method">
+            <enablement>
+               <objectClass
+                     name="org.eclipse.jface.text.TextSelection">
+               </objectClass>
+            </enablement>
+         </action> 
+           <action
+               class="scala.tools.eclipse.refactoring.ExtractLocalAction"
+               definitionId="scala.tools.eclipse.refactoring.command.ExtractLocal"
+               id="scala.tools.eclipse.refactoring.extractLocalAction"
+               label="Extract Local"
+               menubarPath="scala.tools.eclipse.refactoring.refactoringMenu/scala.tools.eclipse.refactoring.sourceGeneratorGroup"
+               tooltip="Extract Local">
+            <enablement>
+               <objectClass
+                     name="org.eclipse.jface.text.TextSelection">
+               </objectClass>
+            </enablement>
+         </action> 
+           <action
+               class="scala.tools.eclipse.refactoring.OrganizeImportsAction"
+               definitionId="scala.tools.eclipse.refactoring.command.OrganizeImports"
+               id="scala.tools.eclipse.refactoring.organizeImportsAction"
+               label="Organize Imports"
+               menubarPath="scala.tools.eclipse.refactoring.refactoringMenu/scala.tools.eclipse.refactoring.sourceGeneratorGroup"
+               tooltip="Organize Imports">
+         </action> 
+         <action
+               class="scala.tools.eclipse.refactoring.RenameAction"
+               definitionId="scala.tools.eclipse.refactoring.command.Rename"
+               id="scala.tools.eclipse.refactoring.renameAction"
+               label="Rename"
+               menubarPath="scala.tools.eclipse.refactoring.refactoringMenu/scala.tools.eclipse.refactoring.sourceGeneratorGroup"
+               tooltip="Rename">
+            <enablement>
+               <objectClass
+                     name="org.eclipse.jface.text.TextSelection">
+               </objectClass>
+            </enablement>
+         </action> 
+         <action
+               class="scala.tools.eclipse.refactoring.ShowReferencesAction"
+               definitionId="scala.tools.eclipse.refactoring.command.ShowReferences"
+               id="scala.tools.eclipse.refactoring.showReferencesAction"
+               label="Show References"
+               menubarPath="scala.tools.eclipse.refactoring.refactoringMenu/scala.tools.eclipse.refactoring.sourceGeneratorGroup"
+               tooltip="Show References">
+            <enablement>
+               <objectClass
+                     name="org.eclipse.jface.text.TextSelection">
+               </objectClass>
+            </enablement>
+         </action>
+              </actionSet>
+   </extension>
+   
+   <extension
+      point="org.eclipse.ui.commands">
+   <category
+         description="Refactorings"
+         id="scala.tools.eclipse.refactoring.commands.refactoring"
+         name="Refactor - Scala"/>
+      <command
+         categoryId="scala.tools.eclipse.refactoring.commands.refactoring"
+         id="scala.tools.eclipse.refactoring.command.ExtractMethod"
+         name="Extract Method"/>
+      <command
+         categoryId="scala.tools.eclipse.refactoring.commands.refactoring"
+         id="scala.tools.eclipse.refactoring.command.ExtractLocal"
+         name="Extract Local"/>
+      <command
+         categoryId="scala.tools.eclipse.refactoring.commands.refactoring"
+         id="scala.tools.eclipse.refactoring.command.OrganizeImports"
+         name="Organize Imports"/>
+      <command
+         categoryId="scala.tools.eclipse.refactoring.commands.refactoring"
+         id="scala.tools.eclipse.refactoring.command.Rename"
+         name="Rename"/>
+      <command
+         categoryId="scala.tools.eclipse.refactoring.commands.refactoring"
+         id="scala.tools.eclipse.refactoring.command.ShowReferences"
+         name="Show References"/>
+</extension>
+
+<extension
+      point="org.eclipse.ui.bindings"> <!-- M1 == Ctrl, M2 == Shift M3 == Alt -->
+   <key
+   		 commandId="scala.tools.eclipse.refactoring.command.ExtractMethod"
+   		 schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+   		 sequence="M2+M3+E"/>
+   <key
+   		 commandId="scala.tools.eclipse.refactoring.command.ExtractLocal"
+   		 schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+   		 sequence="M2+M3+L"/>
+   <key
+   		 commandId="scala.tools.eclipse.refactoring.command.Rename"
+   		 schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+   		 sequence="M2+M3+R"/>
+
+   </extension>
+   <extension
+         point="org.eclipse.ui.actionSetPartAssociations">
+      <actionSetPartAssociation
+            targetID="scala.tools.eclipse.refactoring.CodingActionSet">
+         <part
+               id="scala.tools.eclipse.ScalaSourceFileEditor">
+         </part>
+      </actionSetPartAssociation>
+   </extension>
+  
 </plugin>
