@@ -52,6 +52,12 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
   def launchTypeId = "scala.application"
   def problemMarkerId = pluginId + ".problem"
   
+  // Retained for backwards compatibility
+  val oldPluginId = "ch.epfl.lamp.sdt.core"
+  val oldBuilderId = oldPluginId + ".scalabuilder"
+  val oldLaunchId = "ch.epfl.lamp.sdt.launching"
+  val oldScalaLibId  = oldLaunchId + "." + scalaLib
+  
   val scalaFileExtn = ".scala"
   val javaFileExtn = ".java"
   val jarFileExtn = ".jar"
