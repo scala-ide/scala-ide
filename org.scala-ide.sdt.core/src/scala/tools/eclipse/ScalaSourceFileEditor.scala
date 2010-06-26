@@ -74,6 +74,8 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
     project.scheduleResetPresentationCompiler
     super.doSave(pm)
   }
+  
+  private[eclipse] def sourceViewer = getSourceViewer
 }
 
 object EditorMessages {
