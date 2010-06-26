@@ -42,7 +42,8 @@ Require-Bundle:
  org.eclipse.pde.core;resolution:=optional,
  org.eclipse.pde.ui;resolution:=optional,
  org.scala-ide.scala.library,
- org.scala-ide.scala.compiler
+ org.scala-ide.scala.compiler,
+ scala.tools.refactoring
 Import-Package: 
  org.eclipse.contribution.jdt.cuprovider;apply-aspects:=false,
  org.eclipse.contribution.jdt.imagedescriptor;apply-aspects:=false,
