@@ -37,3 +37,4 @@ Export-Package:
  scala.tools.eclipse.contribution.weaving.jdt.search,
  scala.tools.eclipse.contribution.weaving.jdt.ui,
  scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor
+Bundle-RequiredExecutionEnvironment: J2SE-1.5
