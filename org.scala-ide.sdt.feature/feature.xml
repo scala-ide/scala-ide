@@ -112,7 +112,7 @@ SUCH DAMAGE.
          unpack="false"/>
 
    <plugin
-         id="ch.epfl.lamp.sdt.core"
+         id="scala.tools.refactoring"
          download-size="0"
          install-size="0"
          version="0.0.0"
