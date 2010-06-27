@@ -210,6 +210,11 @@
             natureId="org.scala-ide.sdt.core.scalanature"
             icon="icons/full/ovr16/scala_co.gif"
             id="org.scala-ide.sdt.core.scalaNatureImage"/>
+      <!-- Retained for backwards compatibility -->
+	    <image
+			      natureId="ch.epfl.lamp.sdt.core.scalanature"
+			      icon="icons/full/ovr16/scala_co.gif"
+			      id="org.scala-ide.sdt.core.scalaNatureImage"/>
    </extension>
    
    <extension
@@ -249,6 +254,11 @@
       <classpathContainerInitializer
             class="scala.tools.eclipse.ScalaClasspathContainerInitializer"
             id="org.scala-ide.sdt.launching.SCALA_CONTAINER">
+      </classpathContainerInitializer>
+      <!-- Retained for backwards compatibility -->
+      <classpathContainerInitializer
+           class="scala.tools.eclipse.ScalaClasspathContainerInitializer"
+           id="ch.epfl.lamp.sdt.launching.SCALA_CONTAINER">
       </classpathContainerInitializer>
    </extension>
    <extension point = "org.eclipse.debug.core.launchConfigurationTypes">
@@ -319,6 +329,20 @@
    <extension id="scalabuilder"
          name="Scala Builder"
          point="org.eclipse.core.resources.builders">
+      <builder hasNature="true">
+         <run class="scala.tools.eclipse.ScalaBuilder"/>
+      </builder>
+   </extension>
+   <!-- Retained for backwards compatibility -->
+   <extension id="ch.epfl.lamp.sdt.core.scalanature" name="Scala Nature" point="org.eclipse.core.resources.natures">
+      <runtime>
+         <run class="scala.tools.eclipse.Nature"/>
+      </runtime>
+      <builder id="ch.epfl.lamp.sdt.core.scalabuilder"/>
+      <requires-nature id="org.eclipse.jdt.core.javanature"/>
+   </extension>
+   <!-- Retained for backwards compatibility -->
+   <extension id="ch.epfl.lamp.sdt.core.scalabuilder" name="Scala Builder" point="org.eclipse.core.resources.builders">
       <builder hasNature="true">
          <run class="scala.tools.eclipse.ScalaBuilder"/>
       </builder>

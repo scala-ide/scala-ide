@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <site>
-   <feature url="features/org.scala-ide.sdt.feature_0.0.0.jar" id="org.scala-ide.sdt.feature" version="0.0.0">
+  <feature url="features/org.scala-ide.sdt.feature_0.0.0.jar" id="org.scala-ide.sdt.feature" version="0.0.0">
    	<category name="sdt"/>
-   </feature>
-   <feature url="features/org.scala-ide.sdt.weaving.feature_0.0.0.jar" id="org.scala-ide.sdt.weaving.feature" version="0.0.0">
+  </feature>
+  <feature url="features/org.scala-ide.sdt.weaving.feature_0.0.0.jar" id="org.scala-ide.sdt.weaving.feature" version="0.0.0">
    	<category name="sdt-weaving"/>
-   </feature>
-   <category-def name="sdt" label="Scala IDE for Eclipse"/>
-   <category-def name="sdt-weaving" label="JDT Weaving for Scala"/>
+  </feature>
+  <category-def name="sdt" label="Scala IDE for Eclipse"/>
+  <category-def name="sdt-weaving" label="JDT Weaving for Scala"/>
 </site>

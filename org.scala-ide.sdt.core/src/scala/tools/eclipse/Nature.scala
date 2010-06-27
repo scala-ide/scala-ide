@@ -9,7 +9,7 @@ package scala.tools.eclipse
 import scala.collection.mutable.ArrayBuffer
 
 import org.eclipse.core.resources.{ ICommand, IProject, IProjectNature, IResource }
-import org.eclipse.jdt.core.{ IClasspathEntry, JavaCore }
+import org.eclipse.jdt.core.{ IClasspathEntry, IJavaProject, JavaCore }
 import org.eclipse.jdt.launching.JavaRuntime
 import org.eclipse.core.runtime.Path
 
@@ -21,17 +21,16 @@ class Nature extends IProjectNature {
   override def getProject = project
   override def setProject(project : IProject) = this.project = project
   
-  override def configure : Unit = {
-    if (project == null || !project.isOpen) {
-      plugin.logError("", null); return
-    }
+  override def configure() {
+    if (project == null || !project.isOpen)
+      return
     
-    replaceBuilder(project, JavaCore.BUILDER_ID, plugin.builderId)
+    updateBuilders(project, List(JavaCore.BUILDER_ID, plugin.oldBuilderId), plugin.builderId)
     
     plugin.check {
       val jp = JavaCore.create(getProject)
-      val buf = new ArrayBuffer[IClasspathEntry]
-      buf ++= jp.getRawClasspath
+      removeClasspathContainer(jp)
+      val buf = ArrayBuffer(jp.getRawClasspath : _*)
       
       // Put the Scala classpath container before JRE container
       val scalaLibEntry = JavaCore.newContainerEntry(Path.fromPortableString(plugin.scalaLibId))
@@ -44,46 +43,42 @@ class Nature extends IProjectNature {
       }
       jp.setRawClasspath(buf.toArray, null)
       jp.save(null, true)
-      ()
     }
   }
   
-  //TODO - Do we need to override deconfigure to undo the above operations?
-  override def deconfigure : Unit = {
+  override def deconfigure() {
+    if (project == null || !project.isOpen)
+      return
 
-    if (project == null || !project.isOpen) {
-      plugin.logError("", null); return
-    }
-    
-    replaceBuilder(project, plugin.builderId, JavaCore.BUILDER_ID)
-    
+    updateBuilders(project, List(plugin.builderId, plugin.oldBuilderId), JavaCore.BUILDER_ID)
+
     val jp = JavaCore.create(getProject)
-    val scalaLibPath = Path.fromPortableString(plugin.scalaLibId)
-    //TODO - Reset JavaCore Properties to default, or as defined *before* scala nature was added.
-        
-    //Pull scala lib off the path
-    val buf = jp.getRawClasspath filter { entry => !entry.getPath.equals(scalaLibPath) }
-
-    jp.setRawClasspath(buf, null)
+    removeClasspathContainer(jp)
     jp.save(null, true)
   }
   
-  private def replaceBuilder(project: IProject, builderToRemove: String, builderToAdd: String) {
+  private def removeClasspathContainer(jp : IJavaProject) {
+    val scalaLibPath = Path.fromPortableString(plugin.scalaLibId)
+    val oldScalaLibPath = Path.fromPortableString(plugin.oldScalaLibId)
+    val buf = jp.getRawClasspath filter { entry => { val path = entry.getPath ; path != scalaLibPath && path != oldScalaLibPath  } }
+    jp.setRawClasspath(buf, null)
+  }
+  
+  private def updateBuilders(project: IProject, buildersToRemove: List[String], builderToAdd: String) {
     plugin.check {
       val description = project.getDescription
       val previousCommands = description.getBuildSpec
-      val newBuilderCommandIfNecessary/* : Array[ICommand]*/ = 
-        if (previousCommands.exists( _.getBuilderName == builderToAdd )) 
-          Array() 
-        else {
+      val filteredCommands = previousCommands.filterNot(buildersToRemove contains _.getBuilderName)
+      val newCommands = if (filteredCommands.exists(_.getBuilderName == builderToAdd))
+        filteredCommands
+      else
+        filteredCommands :+ { 
           val newBuilderCommand = description.newCommand;
           newBuilderCommand.setBuilderName(builderToAdd);
-          Array(newBuilderCommand)
+          newBuilderCommand
         }
-      val newCommands = previousCommands.filter( _.getBuilderName != builderToRemove ) ++ newBuilderCommandIfNecessary
       description.setBuildSpec(newCommands)
       project.setDescription(description, IResource.FORCE, null)
     }
   }
-  
 }
