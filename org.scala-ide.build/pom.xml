@@ -12,16 +12,16 @@
     <scala.toolchain.version>2.8.0-RC6</scala.toolchain.version>
     <scala.version>2.8.0.RC6</scala.version>
     <tycho.version>0.9.0-SNAPSHOT</tycho.version>
-    <maven.compiler.source>1.6</maven.compiler.source>
-    <maven.compiler.target>1.6</maven.compiler.target>
+    <maven.compiler.source>1.5</maven.compiler.source>
+    <maven.compiler.target>1.5</maven.compiler.target>
     <encoding>UTF-8</encoding>
   </properties>
 
   <modules>
-    <module>../ch.epfl.lamp.sdt.core</module>
     <module>../org.scala-ide.sdt.weaving.feature</module>
     <module>../org.scala-ide.sdt.aspects</module>
     <module>../org.scala-ide.sdt.core</module>
+    <module>../ch.epfl.lamp.sdt.core</module>
     <module>../org.scala-ide.sdt.feature</module>
     <module>../org.scala-ide.sdt.update-site</module>
   </modules>
@@ -48,19 +48,24 @@
           <artifactId>maven-resources-plugin</artifactId>
           <version>2.4.3</version>
         </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-dependency-plugin</artifactId>
+          <version>2.1</version>
+        </plugin>
       </plugins>
     </pluginManagement>
     <plugins>
       <plugin>
         <groupId>org.sonatype.tycho</groupId>
         <artifactId>tycho-maven-plugin</artifactId>
-        <version>0.9.0-SNAPSHOT</version>
+        <version>${tycho.version}</version>
         <extensions>true</extensions>
       </plugin>
       <plugin>
         <groupId>org.sonatype.tycho</groupId>
         <artifactId>target-platform-configuration</artifactId>
-        <version>0.9.0-SNAPSHOT</version>
+        <version>${tycho.version}</version>
         <configuration>
           <resolver>p2</resolver>
           <pomDependencies>consider</pomDependencies>
@@ -95,6 +100,12 @@
       <name>JDT Weaving p2 repository</name>
       <layout>p2</layout>
       <url>http://download.scala-ide.org/jdt-weaving</url>
+    </repository>
+    <repository>
+      <id>scala-refactoring</id>
+      <name>Scala Refactoring p2 repository</name>
+      <layout>p2</layout>
+      <url>http://download.scala-ide.org/scala-refactoring</url>
     </repository>
     <repository>
       <id>scala-tools.release</id>
