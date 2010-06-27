@@ -21,7 +21,6 @@
     <module>../org.scala-ide.sdt.weaving.feature</module>
     <module>../org.scala-ide.sdt.aspects</module>
     <module>../org.scala-ide.sdt.core</module>
-    <module>../ch.epfl.lamp.sdt.core</module>
     <module>../org.scala-ide.sdt.feature</module>
     <module>../org.scala-ide.sdt.update-site</module>
   </modules>

@@ -1,6 +1,0 @@
-Manifest-Version: 1.0
-Bundle-ManifestVersion: 2
-Bundle-Name: Backwards compatability with the LAMP namespace
-Bundle-SymbolicName: ch.epfl.lamp.sdt.core;singleton:=true
-Bundle-Version: 2.9.0
-Fragment-Host: org.scala-ide.sdt.core;bundle-version="1.0.0"
