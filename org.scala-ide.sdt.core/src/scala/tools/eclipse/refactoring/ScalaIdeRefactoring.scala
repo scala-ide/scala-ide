@@ -40,7 +40,7 @@ abstract class ScalaIdeRefactoring(val getName: String) extends LTKRefactoring {
   
   def createRefactoringChanges() = refactoring.perform(selection, preparationResult, refactoringParameters) match {
     case Right(result) => 
-      Some(refactoring.refactor(result))
+      Some(result)
     case Left(error) => 
       refactoringError = Some(error)
       None
