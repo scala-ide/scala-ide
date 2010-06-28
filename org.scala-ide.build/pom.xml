@@ -16,7 +16,11 @@
     <maven.compiler.target>1.5</maven.compiler.target>
     <encoding>UTF-8</encoding>
   </properties>
-
+  
+  <prerequisites>
+    <maven>3.0</maven>
+  </prerequisites>
+  
   <modules>
     <module>../org.scala-ide.sdt.weaving.feature</module>
     <module>../org.scala-ide.sdt.aspects</module>
@@ -127,11 +131,6 @@
       <id>scala-tools.release</id>
       <name>Scala Tools maven release repository</name>
       <url>http://scala-tools.org/repo-releases</url>
-    </pluginRepository>
-    <pluginRepository>
-      <id>scala-tools.snapshot</id>
-      <name>Scala Tools maven snapshot repository</name>
-      <url>http://scala-tools.org/repo-snapshots</url>
     </pluginRepository>
   </pluginRepositories>
 </project>

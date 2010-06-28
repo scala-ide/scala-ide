@@ -51,7 +51,7 @@
       <plugin>
         <groupId>org.scala-tools</groupId>
         <artifactId>maven-scala-plugin</artifactId>
-        <version>2.14-SNAPSHOT</version>
+        <version>2.14</version>
         <executions>
           <execution>
             <goals>
