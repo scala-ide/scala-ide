@@ -74,21 +74,6 @@
           <pomDependencies>consider</pomDependencies>
         </configuration>
       </plugin>
-      <plugin>
-        <groupId>org.scala-tools</groupId>
-        <artifactId>maven-scala-plugin</artifactId>
-        <version>2.14-SNAPSHOT</version>
-        <executions>
-          <execution>
-            <goals>
-              <goal>compile</goal>
-            </goals>
-          </execution>
-        </executions>
-        <configuration>
-          <scalaVersion>${scala.version}</scalaVersion>
-        </configuration>
-      </plugin>
     </plugins>
   </build>
   <repositories>
@@ -97,28 +82,35 @@
       <name>Eclipse Galileo p2 repository</name>
       <layout>p2</layout>
       <url>http://download.eclipse.org/releases/galileo</url>
+      <snapshots><enabled>false</enabled></snapshots>
     </repository>
     <repository>
       <id>jdt-weaving</id>
       <name>JDT Weaving p2 repository</name>
       <layout>p2</layout>
       <url>http://download.scala-ide.org/jdt-weaving</url>
+      <snapshots><enabled>false</enabled></snapshots>
     </repository>
     <repository>
       <id>scala-refactoring</id>
       <name>Scala Refactoring p2 repository</name>
       <layout>p2</layout>
       <url>http://download.scala-ide.org/scala-refactoring</url>
+      <snapshots><enabled>false</enabled></snapshots>
     </repository>
     <repository>
       <id>scala-tools.release</id>
       <name>Scala Tools maven release repository</name>
       <url>http://scala-tools.org/repo-releases</url>
+      <snapshots><enabled>false</enabled></snapshots>
     </repository>
     <repository>
       <id>scala-tools.snapshot</id>
       <name>Scala Tools maven snapshot repository</name>
       <url>http://scala-tools.org/repo-snapshots</url>
+      <snapshots>
+        <updatePolicy>daily</updatePolicy>
+      </snapshots>
     </repository>
   </repositories>
   <pluginRepositories>
@@ -126,11 +118,15 @@
       <id>org.sonatype.tycho</id>
       <name>Tycho snapshot repository</name>
       <url>https://repository.sonatype.org/content/repositories/snapshots</url>
+      <snapshots>
+        <updatePolicy>daily</updatePolicy>
+      </snapshots>
     </pluginRepository>
     <pluginRepository>
       <id>scala-tools.release</id>
       <name>Scala Tools maven release repository</name>
       <url>http://scala-tools.org/repo-releases</url>
+      <snapshots><enabled>false</enabled></snapshots>
     </pluginRepository>
   </pluginRepositories>
 </project>
