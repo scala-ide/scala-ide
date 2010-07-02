@@ -4,6 +4,7 @@
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.cfprovider.ClassFileProviderAspect"/>
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.core.BindingKeyAspect"/>
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.core.CompilationUnitProblemFinderAspect"/>
+<aspect name="scala.tools.eclipse.contribution.weaving.jdt.core.CompilationUnitNameAspect"/>
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.core.DOMAspect"/>
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.core.NameLookupAspect"/>
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.core.RefactoringAvailabilityAspect"/>
@@ -19,6 +20,7 @@
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.ScalaCloseStringsAspect"/>
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.ScalaEditorPreferencesAspect"/>
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.formatter.FormatterCleanUpRegistryAspect"/>
+<aspect name="scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.SaveParticipantRegistryAspect"/>
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.ScalaPartitionerAspect"/>
 </aspects>
 </aspectj>
