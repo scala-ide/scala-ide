@@ -27,7 +27,15 @@
             id="org.scala-ide.sdt.core.preferences.CompilerPreferences"
             name="Scala Compiler Preferences">
       </page>
+      <page
+            category="org.scala-ide.sdt.core.preferences"
+            class="scala.tools.eclipse.formatter.FormatterPreferencePage"
+            id="scala.tools.eclipse.formatter.FormatterPreferencePage"
+            name="Scala Formatter Preferences">
+      </page>
    </extension>
+  
+   
   <extension point="org.eclipse.core.runtime.contentTypes">
     <content-type id="scala.tools.eclipse.scalaSource" name="Scala Source File" 
       base-type="org.eclipse.core.runtime.text"
@@ -512,6 +520,9 @@
      <initializer
            class="scala.tools.eclipse.properties.ScalaCompilerPreferenceInitializer">
      </initializer>
+     <initializer
+           class="scala.tools.eclipse.formatter.ScalaFormatterPreferenceInitializer">
+     </initializer>
   </extension>
 
   <extension point="org.eclipse.debug.ui.launchShortcuts">
@@ -575,6 +586,10 @@
 
   <extension point="org.scala-ide.sdt.aspects.indexerprovider">
     <provider class="scala.tools.eclipse.ScalaSourceIndexerFactory" />
+  </extension>
+
+  <extension point="org.scala-ide.sdt.aspects.formatterCleanUp">
+    <provider class="scala.tools.eclipse.formatter.ScalaFormatterCleanUpProvider" />
   </extension>
   
   <extension point="org.eclipse.contribution.weaving.jdt.imagedescriptorselector">
