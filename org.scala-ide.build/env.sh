@@ -12,3 +12,23 @@ if [ "X$MAVEN" = "X" ] ; then
   echo "export MAVEN=/opt/apache-maven-3.0-beta-1/bin/mvn"
   exit
 fi
+
+set_toolchain_version()
+{
+    ${MAVEN} -f toolchain-pom.xml -N versions:set -DnewVersion=$1
+    ${MAVEN} -f toolchain-pom.xml -N versions:update-child-modules
+}
+
+build_both()
+{
+    ${MAVEN} \
+        -Dscala.toolchain.version=${SCALA_TOOLCHAIN_VERSION} \
+        -Dscala.version=${SCALA_VERSION} \
+        -f toolchain-pom.xml \
+        clean install $* && \
+    ${MAVEN} \
+        -Dscala.toolchain.version=${SCALA_TOOLCHAIN_VERSION} \
+        -Dscala.version=${SCALA_VERSION} \
+        clean install $*
+}
+
