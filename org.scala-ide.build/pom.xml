@@ -106,6 +106,12 @@
       <snapshots><enabled>false</enabled></snapshots>
     </repository>
     <repository>
+      <id>scalariform</id>
+      <name>Scalariform's p2 repo</name>
+      <layout>p2</layout>
+      <url>http://scalariform.googlecode.com/svn/trunk/update-site/</url>
+    </repository>
+    <repository>
       <id>scala-tools.release</id>
       <name>Scala Tools maven release repository</name>
       <url>http://scala-tools.org/repo-releases</url>

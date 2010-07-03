@@ -15,6 +15,7 @@ import org.eclipse.jdt.internal.ui.text.javadoc.JavaDocAutoIndentStrategy
 import org.eclipse.jdt.ui.text.{ JavaSourceViewerConfiguration, IJavaPartitions }
 import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.jface.text.{ IAutoEditStrategy, IDocument, ITextHover }
+import org.eclipse.jface.text.formatter.ContentFormatter
 import org.eclipse.jface.text.contentassist.ContentAssistant
 import org.eclipse.jface.text.hyperlink.IHyperlinkDetector
 import org.eclipse.jface.text.presentation.PresentationReconciler
@@ -24,6 +25,7 @@ import org.eclipse.swt.SWT
 
 import scala.tools.eclipse.ui.{ JdtPreferenceProvider, ScalaAutoIndentStrategy, ScalaIndenter }
 import scala.tools.eclipse.util.ReflectionUtils
+import scala.tools.eclipse.formatter.ScalaFormattingStrategy
 import scala.tools.eclipse.lexical.ScalaCodeScanner
 
 class ScalaSourceViewerConfiguration(store : IPreferenceStore, editor : ITextEditor) 
@@ -122,6 +124,14 @@ class ScalaSourceViewerConfiguration(store : IPreferenceStore, editor : ITextEdi
       return Array(new ScalaAutoIndentStrategy(partitioning, getProject, sourceViewer, new JdtPreferenceProvider(getProject)))
     }
   }
+  
+  override def getContentFormatter(sourceViewer: ISourceViewer) = {
+	val contentFormatter = new ContentFormatter
+    contentFormatter.enablePartitionAwareFormatting( false );
+    contentFormatter.setFormattingStrategy(new ScalaFormattingStrategy(sourceViewer), IDocument.DEFAULT_CONTENT_TYPE)
+	contentFormatter
+  }
+  
 }
 
 object ScalaSourceViewerConfigurationUtils extends ReflectionUtils {

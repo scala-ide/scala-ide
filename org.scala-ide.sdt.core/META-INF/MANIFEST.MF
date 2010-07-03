@@ -43,7 +43,8 @@ Require-Bundle:
  org.eclipse.pde.ui;resolution:=optional,
  org.scala-ide.scala.library,
  org.scala-ide.scala.compiler,
- scala.tools.refactoring
+ scala.tools.refactoring,
+ scalariform.core;bundle-version="0.0.4"
 Import-Package: 
  org.eclipse.contribution.jdt.cuprovider;apply-aspects:=false,
  org.eclipse.contribution.jdt.imagedescriptor;apply-aspects:=false,
@@ -57,7 +58,8 @@ Import-Package:
  scala.tools.eclipse.contribution.weaving.jdt.launching;apply-aspects:=false,
  scala.tools.eclipse.contribution.weaving.jdt.search;apply-aspects:=false,
  scala.tools.eclipse.contribution.weaving.jdt.ui;apply-aspects:=false,
- scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor;apply-aspects:=false
+ scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor;apply-aspects:=false,
+ scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.formatter
 Export-Package: 
  scala.tools.eclipse,
  scala.tools.eclipse.interpreter,

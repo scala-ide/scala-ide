@@ -54,6 +54,8 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
   
   // Retained for backwards compatibility
   val oldPluginId = "ch.epfl.lamp.sdt.core"
+  val oldLibraryPluginId = "scala.library"
+  val oldNatureId = oldPluginId + ".scalanature"
   val oldBuilderId = oldPluginId + ".scalabuilder"
   val oldLaunchId = "ch.epfl.lamp.sdt.launching"
   val oldScalaLibId  = oldLaunchId + "." + scalaLib
