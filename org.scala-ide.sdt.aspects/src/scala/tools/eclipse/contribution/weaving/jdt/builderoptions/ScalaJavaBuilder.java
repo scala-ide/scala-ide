@@ -30,10 +30,12 @@ public class ScalaJavaBuilder extends JavaBuilder {
     }
   }
   
+  @Override
   public void clean(IProgressMonitor monitor) throws CoreException {
     super.clean(monitor);
   }
   
+  @Override
   @SuppressWarnings("unchecked")
   public IProject[] build(int kind, Map ignored, IProgressMonitor monitor) throws CoreException {
     return super.build(kind, ignored, monitor);

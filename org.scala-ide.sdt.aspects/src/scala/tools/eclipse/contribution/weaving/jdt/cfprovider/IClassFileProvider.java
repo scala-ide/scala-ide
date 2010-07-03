@@ -8,6 +8,7 @@ package scala.tools.eclipse.contribution.weaving.jdt.cfprovider;
 import org.eclipse.jdt.internal.core.ClassFile;
 import org.eclipse.jdt.internal.core.PackageFragment;
 
+@SuppressWarnings("restriction")
 public interface IClassFileProvider {
   public ClassFile create(byte[] contents, PackageFragment parent, String name);
 }
