@@ -10,23 +10,15 @@
   </parent>
   <artifactId>org.scala-ide.sdt.core</artifactId>
   <packaging>eclipse-plugin</packaging>
+
   <dependencies>
     <dependency>
       <groupId>org.scala-ide</groupId>
       <artifactId>org.scala-ide.sdt.aspects</artifactId>
       <version>${project.version}</version>
     </dependency>
-    <dependency>
-      <groupId>org.scala-ide</groupId>
-      <artifactId>org.scala-ide.scala.library</artifactId>
-      <version>${scala.toolchain.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.scala-ide</groupId>
-      <artifactId>org.scala-ide.scala.compiler</artifactId>
-      <version>${scala.toolchain.version}</version>
-    </dependency>
   </dependencies>
+  
   <build>
     <plugins>
       <plugin>
