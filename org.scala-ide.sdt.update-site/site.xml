@@ -3,6 +3,9 @@
   <feature url="features/org.scala-ide.sdt.feature_0.0.0.jar" id="org.scala-ide.sdt.feature" version="0.0.0">
    	<category name="sdt"/>
   </feature>
+  <feature url="http://scalariform.googlecode.com/svn/trunk/update-site/features/scalariform.feature_0.0.0.jar" id="scalariform.feature" version="0.0.0">
+      <category name="sdt"/>
+  </feature>
   <feature url="features/org.scala-ide.sdt.weaving.feature_0.0.0.jar" id="org.scala-ide.sdt.weaving.feature" version="0.0.0">
    	<category name="sdt-weaving"/>
   </feature>
