@@ -9,7 +9,7 @@ import org.eclipse.jdt.core.{ IJavaProject, IJavaElement }
 import org.eclipse.jdt.internal.ui.JavaPlugin
 import org.eclipse.jdt.internal.ui.javaeditor.{ IClassFileEditorInput, ICompilationUnitDocumentProvider, JavaElementHyperlinkDetector }
 import org.eclipse.jdt.internal.ui.text.ContentAssistPreference
-import org.eclipse.jdt.internal.ui.text.java.{ JavaAutoIndentStrategy, JavaStringAutoIndentStrategy, SmartSemicolonAutoEditStrategy } 
+import org.eclipse.jdt.internal.ui.text.java.{ JavaAutoIndentStrategy, JavaStringAutoIndentStrategy, SmartSemicolonAutoEditStrategy }
 import org.eclipse.jdt.internal.ui.text.java.hover.{ AbstractJavaEditorTextHover, BestMatchHover }
 import org.eclipse.jdt.internal.ui.text.javadoc.JavaDocAutoIndentStrategy
 import org.eclipse.jdt.ui.text.{ JavaSourceViewerConfiguration, IJavaPartitions }
@@ -17,6 +17,7 @@ import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.jface.text.{ IAutoEditStrategy, IDocument, ITextHover }
 import org.eclipse.jface.text.formatter.ContentFormatter
 import org.eclipse.jface.text.contentassist.ContentAssistant
+import org.eclipse.jface.text.contentassist.IContentAssistant
 import org.eclipse.jface.text.hyperlink.IHyperlinkDetector
 import org.eclipse.jface.text.presentation.PresentationReconciler
 import org.eclipse.jface.text.source.ISourceViewer
@@ -28,13 +29,13 @@ import scala.tools.eclipse.util.ReflectionUtils
 import scala.tools.eclipse.formatter.ScalaFormattingStrategy
 import scala.tools.eclipse.lexical.ScalaCodeScanner
 
-class ScalaSourceViewerConfiguration(store : IPreferenceStore, editor : ITextEditor) 
+class ScalaSourceViewerConfiguration(store : IPreferenceStore, editor : ITextEditor)
   extends JavaSourceViewerConfiguration(JavaPlugin.getDefault.getJavaTextTools.getColorManager, store, editor, IJavaPartitions.JAVA_PARTITIONING) {
-  
+
   import ScalaSourceViewerConfigurationUtils._
-  
+
   private val codeScanner = new ScalaCodeScanner(getColorManager, store);
-  
+
   override def getPresentationReconciler(sv : ISourceViewer) = {
     val reconciler = super.getPresentationReconciler(sv).asInstanceOf[PresentationReconciler]
     val dr = new ScalaDamagerRepairer(codeScanner)
@@ -45,10 +46,10 @@ class ScalaSourceViewerConfiguration(store : IPreferenceStore, editor : ITextEdi
 
   override def getConfiguredTextHoverStateMasks(sourceViewer : ISourceViewer, contentType : String) : Array[Int] =
     (Set.empty ++ super.getConfiguredTextHoverStateMasks(sourceViewer, contentType) ++ Seq(SWT.MOD3, SWT.MOD1|SWT.MOD3)).toArray
-  
+
   override def getTextHover(sv : ISourceViewer, contentType : String, stateMask : Int) = {
     val javaHover = super.getTextHover(sv, contentType, stateMask)
-    
+
     def addHover(hover : AbstractJavaEditorTextHover) = {
       hover.setEditor(editor)
       javaHover match {
@@ -56,13 +57,13 @@ class ScalaSourceViewerConfiguration(store : IPreferenceStore, editor : ITextEdi
         case _ => hover
       }
     }
-    
+
     stateMask match {
       case SWT.MOD3 => addHover(new ScalaDebugHover)
       case _ => javaHover
     }
   }
-  
+
   override def getHyperlinkDetectors(sv : ISourceViewer) = {
     val javaDetectors = super.getHyperlinkDetectors(sv)
     if (javaDetectors == null)
@@ -77,7 +78,7 @@ class ScalaSourceViewerConfiguration(store : IPreferenceStore, editor : ITextEdi
           d)
     }
   }
-  
+
   /**
    * Direct copy+paste of getProject from SourceViewerConfiguration.
    * <grumble>No need for this to be _private_ in the parent class</grumble>
@@ -88,7 +89,7 @@ class ScalaSourceViewerConfiguration(store : IPreferenceStore, editor : ITextEdi
 
     val input = editor.getEditorInput();
     val provider = editor.getDocumentProvider();
-    
+
     val element = if (provider.isInstanceOf[ICompilationUnitDocumentProvider]) {
       provider.asInstanceOf[ICompilationUnitDocumentProvider].getWorkingCopy(input)
     } else if (input.isInstanceOf[IClassFileEditorInput]) {
@@ -96,24 +97,24 @@ class ScalaSourceViewerConfiguration(store : IPreferenceStore, editor : ITextEdi
     } else {
       null
     }
-  
+
     if (element == null) {
       return null;
     }
-    
+
     return element.getJavaProject();
   }
-    
-    
+
+
   /**
    * Replica of JavaSourceViewerConfiguration#getAutoEditStrategies that returns
    * a ScalaAutoIndentStrategy instead of a JavaAutoIndentStrategy.
-   * 
+   *
    * @see org.eclipse.jface.text.source.SourceViewerConfiguration#getAutoEditStrategies(org.eclipse.jface.text.source.ISourceViewer, java.lang.String)
    */
   override def getAutoEditStrategies(sourceViewer : ISourceViewer, contentType : String) : Array[IAutoEditStrategy] = {
     val partitioning = getConfiguredDocumentPartitioning(sourceViewer)
-    
+
     if (IJavaPartitions.JAVA_DOC.equals(contentType) || IJavaPartitions.JAVA_MULTI_LINE_COMMENT.equals(contentType)) {
       return Array(new JavaDocAutoIndentStrategy(partitioning))
     } else if (IJavaPartitions.JAVA_STRING.equals(contentType)) {
@@ -124,14 +125,26 @@ class ScalaSourceViewerConfiguration(store : IPreferenceStore, editor : ITextEdi
       return Array(new ScalaAutoIndentStrategy(partitioning, getProject, sourceViewer, new JdtPreferenceProvider(getProject)))
     }
   }
-  
+
   override def getContentFormatter(sourceViewer: ISourceViewer) = {
 	val contentFormatter = new ContentFormatter
     contentFormatter.enablePartitionAwareFormatting( false );
     contentFormatter.setFormattingStrategy(new ScalaFormattingStrategy(sourceViewer), IDocument.DEFAULT_CONTENT_TYPE)
 	contentFormatter
   }
-  
+
+  override def getContentAssistant(sourceViewer : ISourceViewer) : IContentAssistant = {
+    super.getContentAssistant(sourceViewer) match {
+      case back : ContentAssistant => {
+        back.setContentAssistProcessor(ScalaPlugin.plugin.templateManager.makeTemplateCompletionProcessor(), IDocument.DEFAULT_CONTENT_TYPE)
+        back
+      }
+      case back => {
+        ScalaPlugin.plugin.logWarning("Scala Template Completion Processor not attachable to " + back.getClass )
+        back
+      }
+    }
+  }
 }
 
 object ScalaSourceViewerConfigurationUtils extends ReflectionUtils {
@@ -139,7 +152,7 @@ object ScalaSourceViewerConfigurationUtils extends ReflectionUtils {
   val addTextHoverMethod = getDeclaredMethod(bestMatchHoverClazz, "addTextHover", classOf[ITextHover])
   val hyperlinkDetectorDelegateClazz = Class.forName("org.eclipse.ui.texteditor.HyperlinkDetectorRegistry$HyperlinkDetectorDelegate")
   val hyperlinkDescriptorField = getDeclaredField(hyperlinkDetectorDelegateClazz, "fHyperlinkDescriptor")
-  
+
   def addTextHover(bmh : BestMatchHover, hover : ITextHover) = addTextHoverMethod.invoke(bmh, hover)
   def getHyperlinkDescriptor(hdd : IHyperlinkDetector) = hyperlinkDescriptorField.get(hdd).asInstanceOf[HyperlinkDetectorDescriptor]
 }
