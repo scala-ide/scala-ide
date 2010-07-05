@@ -11,14 +11,15 @@
   <artifactId>org.scala-ide.sdt.update-site</artifactId>
   <packaging>eclipse-update-site</packaging>
   
-  <build>
-    <plugins>
-      <plugin>
         <!--
           xml-maven-plugin is an alternative, but as we need to transform file inplace(or from content.jar)
           it's ease to use ant tasks
           http://mojo.codehaus.org/xml-maven-plugin/
         -->
+<!--
+  <build>
+    <plugins>
+      <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-antrun-plugin</artifactId>
         <version>1.4</version>
@@ -45,5 +46,6 @@
       </plugin>
     </plugins>
   </build>
+-->
   
 </project>

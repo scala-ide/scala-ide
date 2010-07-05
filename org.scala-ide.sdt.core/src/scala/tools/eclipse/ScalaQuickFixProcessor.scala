@@ -53,7 +53,7 @@ class ScalaQuickFixProcessor extends IQuickFixProcessor {
                  
                 // Suggest a fix
                 val fix = suggestFix(context.getCompilationUnit(), problem)
-                corrections ++ fix
+                corrections ++= fix
               }
             }
           }

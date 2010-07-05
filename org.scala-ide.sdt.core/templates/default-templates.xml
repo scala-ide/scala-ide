@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates>
+<template name="actor"
+  description="actor statement"
+  id="scala.templates.actor"
+  context="org.scala-ide.sdt.core.templates" enabled="true"
+>val a = actor {
+  loop {
+    react {
+      ${line_selection}${cursor}
+    }
+  }
+}</template>
+<template name="app"
+  description="application object"
+  id="scala.templates.app"
+  context="org.scala-ide.sdt.core.templates" enabled="true"
+>object ${name} extends Application {
+  ${line_selection}${cursor}
+}</template>
+<template name="arr"
+  description="Array[T](..)"
+  id="scala.templates.arr"
+  context="org.scala-ide.sdt.core.templates" enabled="true"
+>Array[${value}](${args})${cursor}</template>
+<template name="asof"
+  description="asInstanceOf[T]"
+  id="scala.templates.asof"
+  context="org.scala-ide.sdt.core.templates" enabled="true"
+>asInstanceOf[${type}]${cursor}</template>
+<template name="while"
+  description="while loop"
+  id="scala.templates.while"
+  context="org.scala-ide.sdt.core.templates" enabled="true"
+>while (${condition}) {
+  ${line_selection}${cursor}
+}</template>
+<template name="match"
+  description="match/case statement"
+  id="scala.templates.match"
+  context="org.scala-ide.sdt.core.templates" enabled="true"
+>match {
+  case ${value} => ${cursor}
+}</template>
+<template name="case"
+  description="case statement"
+  id="scala.templates.case"
+  context="org.scala-ide.sdt.core.templates" enabled="true"
+>case ${value} => ${cursor}</template>
+<template name="if"
+  description="if statement"
+  id="scala.templates.if"
+  context="org.scala-ide.sdt.core.templates" enabled="true"
+>if (${condition}) {
+  ${line_selection}${cursor}
+}</template>
+<template name="elseif"
+  description="else if block"
+  id="scala.templates.elseif"
+  context="org.scala-ide.sdt.core.templates" enabled="true"
+>else if (${condition}) {
+  ${cursor}
+}</template>
+<template name="else"
+  description="else block"
+  id="scala.templates.else"
+  context="org.scala-ide.sdt.core.templates" enabled="true"
+>else {
+  ${cursor}
+}</template>
+<template name="trycatch"
+  description="try catch block"
+  id="scala.templates.trycatch"
+  context="org.scala-ide.sdt.core.templates" enabled="true"
+>try {
+  ${line_selection}${cursor}
+} catch {
+  case t =>  t.printStackTrace()// ${todo}: handle error
+}</template>
+<template name="try"
+  description="try"
+  id="scala.templates.try"
+  context="org.scala-ide.sdt.core.templates" enabled="true"
+>try {
+  ${line_selection}${cursor}
+}</template>
+<template name="catch"
+  description="catch block"
+  id="scala.templates.catch"
+  context="org.scala-ide.sdt.core.templates" enabled="true"
+>catch {
+  case t => ${cursor}// ${todo}: handle error
+}</template>
+<template name="finally"
+  description="finally block"
+  id="scala.templates.finally"
+  context="org.scala-ide.sdt.core.templates" enabled="true"
+>finally {
+  ${cursor}
+}</template>
+<template name="def"
+  description="method"
+  id="scala.templates.function"
+  context="org.scala-ide.sdt.core.templates" enabled="true"
+>def ${name}(${}) : ${Unit} = {
+  ${cursor}
+}</template>
+<template name="lazy"
+  description="lazy val"
+  id="scala.templates.lazy"
+  context="org.scala-ide.sdt.core.templates" enabled="true"
+>lazy val ${name} = new ${type}(${cursor})</template>
+<template name="class"
+  description="new class"
+  id="scala.templates.newClass"
+  context="org.scala-ide.sdt.core.templates" enabled="true"
+>/**
+ * @author ${user}
+ */
+class ${type_name}() {
+  ${cursor}
+}</template>
+<template name="trait"
+  description="new trait"
+  id="scala.templates.newTrait"
+  context="org.scala-ide.sdt.core.templates" enabled="true"
+>/**
+ * @author ${user}
+ */
+trait ${type_name} {
+  ${cursor}
+}</template>
+<template name="obj"
+  description="new object"
+  id="scala.templates.newObject"
+  context="org.scala-ide.sdt.core.templates" enabled="true"
+>/**
+ * @author ${user}
+ */
+object ${new_name} {
+  ${cursor}
+}</template>
+<template name="var"
+  description="new variable"
+  id="scala.templates.var"
+  context="org.scala-ide.sdt.core.templates" enabled="true"
+>var ${new_name} : ${type} = ${cursor}</template>
+<template name="val"
+  description="new constant"
+  id="scala.templates.val"
+  context="net.alchim31.yascaladt.template" enabled="true"
+>val ${new_name} : ${type} = ${cursor}</template>
+<template name="main"
+  description="main"
+  id="scala.templates.main"
+  context="org.scala-ide.sdt.core.templates" enabled="true"
+>def main(args: Array[String]) {
+  ${cursor}
+}</template>
+<template name="syserr"
+  description="print to standard error"
+  id="scala.templates.syserr"
+  context="org.scala-ide.sdt.core.templates" enabled="true"
+>System.err.println(${word_selection}${});${cursor}</template>
+<template name="sysout"
+  description="print to standard out"
+  id="scala.templates.sysout"
+  context="org.scala-ide.sdt.core.templates" enabled="true"
+>println(${word_selection}${});${cursor}</template>
+<template name="systrace"
+  description="print current method to standard out"
+  id="scala.templates.systrace"
+  context="org.scala-ide.sdt.core.templates" enabled="true"
+>System.out.println("${enclosing_type}.${enclosing_method}()");</template>
+
+</templates>

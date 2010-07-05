@@ -23,6 +23,7 @@ import org.osgi.framework.BundleContext
 
 import scala.tools.eclipse.javaelements.{ ScalaElement, ScalaSourceFile }
 import scala.tools.eclipse.util.OSGiUtils.pathInBundle 
+import scala.tools.eclipse.templates.ScalaTemplateManager
 
 object ScalaPlugin { 
   var plugin : ScalaPlugin = _
@@ -72,6 +73,8 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
   val dbcSources = pathInBundle(scalaLibBundle, "/lib/scala-dbc-src.jar") 
   val swingClasses = pathInBundle(scalaLibBundle, "/lib/scala-swing.jar") 
   val swingSources = pathInBundle(scalaLibBundle, "/lib/scala-swing-src.jar") 
+
+  lazy val templateManager = new ScalaTemplateManager()
   
   private val projects = new HashMap[IProject, ScalaProject]
   
@@ -156,6 +159,8 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
       case _ =>
     }
   }
+
+  def logWarning(msg : String) : Unit = getLog.log(new Status(IStatus.WARNING, pluginId, msg))
 
   def logError(t : Throwable) : Unit = logError("", t)
   

@@ -31,6 +31,7 @@ public class ScalaJDTWeavingPlugin extends Plugin
       return INSTANCE;
   }
   
+  @Override
   public void start(BundleContext context) throws Exception {
       super.start(context);
   }
