@@ -8,6 +8,7 @@ import org.eclipse.ltk.core.refactoring.CompositeChange
 import org.eclipse.ltk.ui.refactoring.RefactoringWizardPage
 import scala.tools.refactoring.MultiStageRefactoring
 import scala.tools.refactoring.common.Selections
+import scala.tools.refactoring.common.TreeNotFound
 import scala.tools.eclipse.util.EclipseResource
 import org.eclipse.ltk.core.refactoring.RefactoringStatus
 import org.eclipse.jface.text.IDocument
@@ -36,14 +37,25 @@ abstract class ScalaIdeRefactoring(val getName: String) extends LTKRefactoring {
     
   var preparationResult: refactoring.PreparationResult = _
   
-  private var refactoringError = None: Option[refactoring.RefactoringError] 
+  private var refactoringError = None: Option[String] 
   
-  def createRefactoringChanges() = refactoring.perform(selection, preparationResult, refactoringParameters) match {
-    case Right(result) => 
-      Some(result)
-    case Left(error) => 
-      refactoringError = Some(error)
-      None
+  def createRefactoringChanges() = {
+    try {
+      refactoring.perform(selection, preparationResult, refactoringParameters) match {
+        case Right(result) => 
+          Some(result)
+        case Left(refactoring.RefactoringError(cause)) => 
+          refactoringError = Some(cause)
+          None
+      }
+    } catch {
+      case e: TreeNotFound =>
+        refactoringError = Some(e.getMessage)
+        None
+      case e: Exception =>
+        refactoringError = Some(e.getMessage)
+        None
+    }
   }
   
   def createChange(pm: IProgressMonitor): CompositeChange = new CompositeChange(getName) {
@@ -76,7 +88,7 @@ abstract class ScalaIdeRefactoring(val getName: String) extends LTKRefactoring {
   
   def checkFinalConditions(pm: IProgressMonitor): RefactoringStatus = {
     refactoringError map { error =>
-      RefactoringStatus.createErrorStatus(error.cause)
+      RefactoringStatus.createErrorStatus(error)
     } getOrElse new RefactoringStatus
   }
 }

@@ -9,8 +9,8 @@ import org.eclipse.ltk.core.refactoring.Refactoring
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.ltk.core.refactoring.RefactoringStatus
 
-class ErrorRefactoringWizard(msg: String = "Error, not a text editor.") extends RefactoringWizard(new Refactoring {
-    
+private class FailingRefactoring(msg: String) extends Refactoring {
+      
   def fail = throw new Exception(msg)
     
   def createChange(pm: IProgressMonitor) = fail
@@ -20,5 +20,9 @@ class ErrorRefactoringWizard(msg: String = "Error, not a text editor.") extends 
   def checkFinalConditions(pm: IProgressMonitor) = fail
     
   val getName = msg
-    
-}, RefactoringWizard.WIZARD_BASED_USER_INTERFACE) { def addUserInputPages() = () }
+}
+
+class ErrorRefactoringWizard(msg: String = "Error, not a text editor.") extends 
+    RefactoringWizard(new FailingRefactoring(msg), RefactoringWizard.WIZARD_BASED_USER_INTERFACE) { 
+  def addUserInputPages() = ()
+}

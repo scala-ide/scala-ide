@@ -35,9 +35,12 @@ import scala.tools.eclipse.ScalaPresentationCompiler
 import scala.tools.refactoring.Refactoring
 
 class ExtractMethodAction extends RefactoringAction {
-  
-  def createRefactoring(selectionStart: Int, selectionEnd: Int, file: ScalaSourceFile) = Some(new ScalaIdeRefactoring("Extract Method") {
-            
+
+  def createRefactoring(selectionStart: Int, selectionEnd: Int, file: ScalaSourceFile) = 
+    Some(new ExtractMethodScalaIdeRefactoring(selectionStart, selectionEnd, file))
+
+  class ExtractMethodScalaIdeRefactoring(start: Int, end: Int, file: ScalaSourceFile) extends ScalaIdeRefactoring("Extract Method") {
+   
     var name = ""
     
     val refactoring = file.withCompilerResult(crh => new ExtractMethod with GlobalIndexes with NameValidation {
@@ -45,7 +48,7 @@ class ExtractMethodAction extends RefactoringAction {
       val index = GlobalIndex(global.unitOfFile(crh.sourceFile.file).body)
     })
 
-    lazy val selection = createSelection(file, selectionStart, selectionEnd)
+    lazy val selection = createSelection(file, start, end)
             
     def initialCheck = file.withCompilerResult { crh =>
       refactoring.prepare(selection)
@@ -55,6 +58,7 @@ class ExtractMethodAction extends RefactoringAction {
       val methodName = name
     }
     
-    override def getPages = new NewNameWizardPage((s => name = s), refactoring.isValidIdentifier, "extractedMethod") :: Nil
-  })
+    override def getPages = new NewNameWizardPage(s => name = s, refactoring.isValidIdentifier, "extractedMethod") :: Nil
+    
+  }
 }

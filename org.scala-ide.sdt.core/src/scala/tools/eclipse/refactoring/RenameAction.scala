@@ -19,7 +19,7 @@ import scala.tools.refactoring.implementations.Rename
 
 class RenameAction extends RefactoringAction {
   
-  class IdeRenameRefactoring(selectedFrom: Int, selectedTo: Int, file: ScalaSourceFile) extends ScalaIdeRefactoring("Rename") {
+  class RenameScalaIdeRefactoring(selectedFrom: Int, selectedTo: Int, file: ScalaSourceFile) extends ScalaIdeRefactoring("Rename") {
       
       var name = ""
             
@@ -102,12 +102,12 @@ class RenameAction extends RefactoringAction {
       case x => x
     }
     
-    Some(new IdeRenameRefactoring(from, to, file))
+    Some(new RenameScalaIdeRefactoring(from, to, file))
   }
   
   override def run(action: IAction) {
 
-    def runInlineRename(r: IdeRenameRefactoring) {
+    def runInlineRename(r: RenameScalaIdeRefactoring) {
       import r.refactoring._
       
         val positions = index.occurences(r.selection.selectedSymbolTree.get.symbol) map {
@@ -119,7 +119,7 @@ class RenameAction extends RefactoringAction {
     }
     
     createScalaRefactoring() match {
-      case Some(r: IdeRenameRefactoring) => 
+      case Some(r: RenameScalaIdeRefactoring) => 
         r.initialCheck match {
           case Right(r.refactoring.PreparationResult(_, true)) => runInlineRename(r)
           case _ => runRefactoring(createWizard(Some(r)))

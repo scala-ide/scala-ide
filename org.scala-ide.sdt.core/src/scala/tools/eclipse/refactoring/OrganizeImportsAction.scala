@@ -24,7 +24,7 @@ import scala.tools.eclipse.ScalaPresentationCompiler
 
 class OrganizeImportsAction extends RefactoringAction {
   
-  def createRefactoring(selectionStart: Int, selectionEnd: Int, file: ScalaSourceFile) = Some(new ScalaIdeRefactoring("Organize Imports") {
+  class OrganizeImportsScalaIdeRefactoring(file: ScalaSourceFile) extends ScalaIdeRefactoring("Organize Imports") {
                   
     val refactoring = file.withCompilerResult(crh => new OrganizeImports {
       val global = crh.compiler
@@ -36,6 +36,8 @@ class OrganizeImportsAction extends RefactoringAction {
       refactoring.prepare(selection)
     }
     
-    def refactoringParameters = new refactoring.RefactoringParameters
-  })
+    def refactoringParameters = new refactoring.RefactoringParameters    
+  }
+  
+  def createRefactoring(selectionStart: Int, selectionEnd: Int, file: ScalaSourceFile) = Some(new OrganizeImportsScalaIdeRefactoring(file))
 }

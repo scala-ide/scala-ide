@@ -33,7 +33,7 @@ import scala.tools.eclipse.util.EclipseResource
 
 class ExtractLocalAction extends RefactoringAction {
   
-  class ExtractLocalIDERefactoring(selectionStart: Int, selectionEnd: Int, file: ScalaSourceFile) extends ScalaIdeRefactoring("Extract Local") {
+  class ExtractLocalScalaIdeRefactoring(selectionStart: Int, selectionEnd: Int, file: ScalaSourceFile) extends ScalaIdeRefactoring("Extract Local") {
     outer =>
           
     val name = "$_unused_name"
@@ -53,12 +53,12 @@ class ExtractLocalAction extends RefactoringAction {
     }
   }
   
-  def createRefactoring(selectionStart: Int, selectionEnd: Int, file: ScalaSourceFile) = Some(new ExtractLocalIDERefactoring(selectionStart, selectionEnd, file))
+  def createRefactoring(selectionStart: Int, selectionEnd: Int, file: ScalaSourceFile) = Some(new ExtractLocalScalaIdeRefactoring(selectionStart, selectionEnd, file))
       
   override def run(action: IAction) {
     
     createScalaRefactoring() match {
-      case Some(r: ExtractLocalIDERefactoring) => 
+      case Some(r: ExtractLocalScalaIdeRefactoring) => 
       
         r.checkInitialConditions(new NullProgressMonitor)
         
