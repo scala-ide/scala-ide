@@ -664,6 +664,19 @@
             </enablement>
          </action>
            <action
+               class="scala.tools.eclipse.refactoring.InlineLocalAction"
+               definitionId="scala.tools.eclipse.refactoring.command.InlineLocal"
+               id="scala.tools.eclipse.refactoring.inlineLocalAction"
+               label="Inline Local"
+               menubarPath="scala.tools.eclipse.refactoring.refactoringMenu/scala.tools.eclipse.refactoring.sourceGeneratorGroup"
+               tooltip="Inline Local">
+            <enablement>
+               <objectClass
+                     name="org.eclipse.jface.text.TextSelection">
+               </objectClass>
+            </enablement>
+         </action>
+           <action
                class="scala.tools.eclipse.refactoring.OrganizeImportsAction"
                definitionId="scala.tools.eclipse.refactoring.command.OrganizeImports"
                id="scala.tools.eclipse.refactoring.organizeImportsAction"
@@ -716,6 +729,10 @@
          name="Extract Local"/>
       <command
          categoryId="scala.tools.eclipse.refactoring.commands.refactoring"
+         id="scala.tools.eclipse.refactoring.command.InlineLocal"
+         name="Inline Local"/>
+      <command
+         categoryId="scala.tools.eclipse.refactoring.commands.refactoring"
          id="scala.tools.eclipse.refactoring.command.OrganizeImports"
          name="Organize Imports"/>
       <command
@@ -738,6 +755,10 @@
    		 commandId="scala.tools.eclipse.refactoring.command.ExtractLocal"
    		 schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
    		 sequence="M2+M3+L"/>
+   <key
+   		 commandId="scala.tools.eclipse.refactoring.command.InlineLocal"
+   		 schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+   		 sequence="M2+M3+I"/>
    <key
    		 commandId="scala.tools.eclipse.refactoring.command.Rename"
    		 schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"

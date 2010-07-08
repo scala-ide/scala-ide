@@ -77,7 +77,7 @@ class RenameAction extends RefactoringAction {
       override def checkFinalConditions(pm: IProgressMonitor): RefactoringStatus = {
         val status = super.checkFinalConditions(pm)
         
-        refactoring.doesNameCollide(name, selection.selectedSymbolTree map (_.symbol) getOrElse refactoring.global.NoSymbol, refactoring.index) match {
+        refactoring.doesNameCollide(name, selection.selectedSymbolTree map (_.symbol) getOrElse refactoring.global.NoSymbol) match {
           case Nil => ()
           case collisions => 
             val names = collisions map (s => s.fullName) mkString ", "
@@ -88,9 +88,7 @@ class RenameAction extends RefactoringAction {
         status
       }
       
-      def refactoringParameters = new refactoring.RefactoringParameters {
-        val newName = name
-      }
+      def refactoringParameters = name
       
       override def getPages = new NewNameWizardPage((s => name = s), refactoring.isValidIdentifier, name) :: Nil
     }

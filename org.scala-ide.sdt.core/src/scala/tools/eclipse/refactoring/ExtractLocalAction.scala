@@ -3,33 +3,23 @@
  */
 
 package scala.tools.eclipse.refactoring
-
-import scala.tools.refactoring.common.Selections
-import scala.tools.refactoring.common.Change
-import scala.tools.refactoring.analysis.GlobalIndexes
 import org.eclipse.core.resources.IFile
-import scala.tools.eclipse.refactoring.ui._
-import org.eclipse.ltk.core.refactoring.RefactoringStatus
-import org.eclipse.core.runtime.IProgressMonitor
-import org.eclipse.swt.events.ModifyEvent
-import org.eclipse.swt.events.ModifyListener
-import org.eclipse.ltk.ui.refactoring.RefactoringWizardOpenOperation
-import scala.tools.refactoring.implementations.ExtractLocal
-import org.eclipse.ui.IFileEditorInput
-import org.eclipse.ui.texteditor.ITextEditor
-import org.eclipse.jface.viewers.ISelection
-import org.eclipse.ui.IWorkbenchWindow
-import org.eclipse.ui.IEditorPart
+import org.eclipse.core.runtime.{NullProgressMonitor, IProgressMonitor}
 import org.eclipse.jface.action.IAction
-import org.eclipse.ui.IWorkbenchWindowActionDelegate
-import org.eclipse.ui.IEditorActionDelegate
-import scala.tools.eclipse.javaelements.ScalaSourceFile
+import org.eclipse.jface.viewers.ISelection
+import org.eclipse.ltk.core.refactoring.{TextFileChange, RefactoringStatus}
+import org.eclipse.ltk.ui.refactoring.RefactoringWizardOpenOperation
+import org.eclipse.swt.events.{ModifyListener, ModifyEvent}
+import org.eclipse.text.edits.{ReplaceEdit, MultiTextEdit}
+import org.eclipse.ui.{IEditorActionDelegate, IWorkbenchWindowActionDelegate, IEditorPart, IWorkbenchWindow, IFileEditorInput}
+import org.eclipse.ui.texteditor.ITextEditor
 import scala.tools.eclipse.ScalaPresentationCompiler
-import org.eclipse.core.runtime.NullProgressMonitor
-import org.eclipse.ltk.core.refactoring.TextFileChange
-import org.eclipse.text.edits.MultiTextEdit
-import org.eclipse.text.edits.ReplaceEdit
+import scala.tools.eclipse.javaelements.ScalaSourceFile
+import scala.tools.eclipse.refactoring.ui._
 import scala.tools.eclipse.util.EclipseResource
+import scala.tools.refactoring.analysis.GlobalIndexes
+import scala.tools.refactoring.common.{Change, Selections}
+import scala.tools.refactoring.implementations.ExtractLocal
 
 class ExtractLocalAction extends RefactoringAction {
   
@@ -48,9 +38,7 @@ class ExtractLocalAction extends RefactoringAction {
       refactoring.prepare(selection)
     }
     
-    def refactoringParameters = new refactoring.RefactoringParameters {
-      val name = outer.name
-    }
+    def refactoringParameters = outer.name
   }
   
   def createRefactoring(selectionStart: Int, selectionEnd: Int, file: ScalaSourceFile) = Some(new ExtractLocalScalaIdeRefactoring(selectionStart, selectionEnd, file))
