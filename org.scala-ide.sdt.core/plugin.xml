@@ -745,15 +745,25 @@
          name="Show References"/>
 </extension>
 
+   <extension point="org.eclipse.ui.contexts">
+          <context name="scala.tools.eclipse.scalaEditorScope"
+           description="Scala source file editor"
+           parentId="org.eclipse.ui.textEditorScope"
+           id="scala.tools.eclipse.scalaEditorScope" />
+   </extension>
+
+
 <extension
       point="org.eclipse.ui.bindings"> <!-- M1 == Ctrl, M2 == Shift M3 == Alt -->
    <key
    		 commandId="scala.tools.eclipse.refactoring.command.ExtractMethod"
    		 schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+   		 contextId="scala.tools.eclipse.scalaEditorScope"
    		 sequence="M2+M3+E"/>
    <key
    		 commandId="scala.tools.eclipse.refactoring.command.ExtractLocal"
    		 schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+   		 contextId="scala.tools.eclipse.scalaEditorScope"
    		 sequence="M2+M3+L"/>
    <key
    		 commandId="scala.tools.eclipse.refactoring.command.InlineLocal"
@@ -762,6 +772,7 @@
    <key
    		 commandId="scala.tools.eclipse.refactoring.command.Rename"
    		 schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+   		 contextId="scala.tools.eclipse.scalaEditorScope"
    		 sequence="M2+M3+R"/>
 
    </extension>
@@ -787,4 +798,14 @@
         file="templates/default-templates.xml">
     </include>
   </extension>
+  
+ <extension point="org.eclipse.jdt.ui.javaCompletionProposalComputer"
+   id="scala.tools.eclipse.TemplateCompletionProposalComputer"
+   name="Template Completion Proposal Computer">
+   <javaCompletionProposalComputer
+      class="scala.tools.eclipse.templates.TemplateCompletionProposalComputer"
+      categoryId="org.eclipse.jdt.ui.templateProposalCategory">
+      <partition type="__dftl_partition_content_type"/>
+   </javaCompletionProposalComputer>
+ </extension>
 </plugin>

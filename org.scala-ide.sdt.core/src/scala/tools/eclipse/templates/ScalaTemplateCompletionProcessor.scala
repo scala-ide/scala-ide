@@ -3,6 +3,8 @@
  */
 package scala.tools.eclipse.templates
 
+import org.eclipse.jdt.internal.ui.JavaPluginImages
+
 
 import scala.tools.eclipse.ScalaPlugin
 
@@ -55,7 +57,7 @@ class ScalaTemplateCompletionProcessor(val tm : ScalaTemplateManager) extends Te
   }
     
   //TODO provide a icon for template
-  protected override def getImage(template : Template) : Image  = null
+  protected override def getImage(template : Template) : Image  = JavaPluginImages.get(JavaPluginImages.IMG_OBJS_TEMPLATE)
     
   /**
    * @return All the templates 
@@ -66,6 +68,12 @@ class ScalaTemplateCompletionProcessor(val tm : ScalaTemplateManager) extends Te
     tm.templateStore.getTemplates()
   }
 
+  protected override def getRelevance(template : Template, prefix : String) : Int = {
+    (prefix == null | prefix.trim().length == 0) match {
+      case true => 0
+      case false => super.getRelevance(template, prefix)
+    }
+  }
 }
 
 import org.eclipse.jface.text.templates.GlobalTemplateVariables

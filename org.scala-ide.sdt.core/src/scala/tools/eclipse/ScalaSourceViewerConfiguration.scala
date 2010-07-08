@@ -133,18 +133,6 @@ class ScalaSourceViewerConfiguration(store : IPreferenceStore, editor : ITextEdi
 	contentFormatter
   }
 
-  override def getContentAssistant(sourceViewer : ISourceViewer) : IContentAssistant = {
-    super.getContentAssistant(sourceViewer) match {
-      case back : ContentAssistant => {
-        back.setContentAssistProcessor(ScalaPlugin.plugin.templateManager.makeTemplateCompletionProcessor(), IDocument.DEFAULT_CONTENT_TYPE)
-        back
-      }
-      case back => {
-        ScalaPlugin.plugin.logWarning("Scala Template Completion Processor not attachable to " + back.getClass )
-        back
-      }
-    }
-  }
 }
 
 object ScalaSourceViewerConfigurationUtils extends ReflectionUtils {

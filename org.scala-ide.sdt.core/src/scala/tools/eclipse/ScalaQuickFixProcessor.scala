@@ -19,6 +19,8 @@ import org.eclipse.jdt.internal.compiler.env.AccessRestriction
 
 class ScalaQuickFixProcessor extends IQuickFixProcessor {
   val typeNotFoundError = new Regex("not found: type (.*)")
+  val valueNotFoundError = new Regex("not found: value (.*)")
+  val xxxxxNotFoundError = new Regex("not found: (.*)")
   
   /**
    * Checks if the processor has any corrections.
@@ -108,19 +110,27 @@ class ScalaQuickFixProcessor extends IQuickFixProcessor {
   }
 
   def suggestFix(compilationUnit : ICompilationUnit, problem : IProblem) : List[IJavaCompletionProposal] = {
+    /**
+     * Import a type could solve several error message :
+     * 
+     * * "not found : type  Xxxx"
+     * * "not found : value Xxxx" in case of java static constant/method like Xxxx.ZZZZ or Xxxx.zzz()
+     * * "not found : Xxxx" in case of new Xxxx.eee (IMO (davidB) a better suggestion is to insert (), to have new Xxxx().eeee )
+     */
+    def suggestImportType(missingType : String) : List[IJavaCompletionProposal] = {
+      // Get similar types
+      val project = compilationUnit.asInstanceOf[ScalaSourceFile].getJavaProject()
+      val ne = project.asInstanceOf[JavaProject].newSearchableNameEnvironment(DefaultWorkingCopyOwner.PRIMARY)
+      val requestor = new Requestor(missingType)
+      ne.findTypes(missingType.toCharArray(), true, false, IJavaSearchConstants.TYPE, requestor)
+      // Return the types found
+      requestor.typesFound.map({ typeFound => new ImportCompletionProposal(typeFound) }).toList
+    }
     
     return problem.getMessage() match {
-      case typeNotFoundError(missingType) =>
-        
-        // Get similar types
-        val project = compilationUnit.asInstanceOf[ScalaSourceFile].getJavaProject()
-        val ne = project.asInstanceOf[JavaProject].newSearchableNameEnvironment(DefaultWorkingCopyOwner.PRIMARY)
-        val requestor = new Requestor(missingType)
-        ne.findTypes(missingType.toCharArray(), true, false, IJavaSearchConstants.TYPE, requestor)
-        
-        // Return the types found
-        requestor.typesFound.map({ typeFound => new ImportCompletionProposal(typeFound) }).toList
-
+      case typeNotFoundError(missingType) => suggestImportType(missingType)
+      case valueNotFoundError(missingValue) => suggestImportType(missingValue)
+      case xxxxxNotFoundError(missing) => suggestImportType(missing)
       case _ => Nil
     }
   }
