@@ -5,8 +5,7 @@
 
 package scala.tools.eclipse
 
-import java.{ util => ju }
-
+import java.util.ResourceBundle
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.jdt.internal.ui.javaeditor.CompilationUnitEditor
 import org.eclipse.jdt.ui.text.JavaSourceViewerConfiguration
@@ -21,25 +20,27 @@ import org.eclipse.jdt.ui.actions.IJavaEditorActionDefinitionIds
 
 class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
 
+  import ScalaSourceFileEditor._
+
   setPartName("Scala Editor")
 
-  override protected def createActions: Unit = {
-    super.createActions
+  override protected def createActions() {
+    super.createActions()
 
-    val cutAction = new TextOperationAction(EditorMessages.bundleForConstructedKeys, "Editor.Cut.", this, ITextOperationTarget.CUT); //$NON-NLS-1$
-    cutAction.setHelpContextId(IAbstractTextEditorHelpContextIds.CUT_ACTION);
-    cutAction.setActionDefinitionId(IWorkbenchActionDefinitionIds.CUT);
-    setAction(ITextEditorActionConstants.CUT, cutAction);
+    val cutAction = new TextOperationAction(bundleForConstructedKeys, "Editor.Cut.", this, ITextOperationTarget.CUT) //$NON-NLS-1$
+    cutAction.setHelpContextId(IAbstractTextEditorHelpContextIds.CUT_ACTION)
+    cutAction.setActionDefinitionId(IWorkbenchActionDefinitionIds.CUT)
+    setAction(ITextEditorActionConstants.CUT, cutAction)
 
-    val copyAction = new TextOperationAction(EditorMessages.bundleForConstructedKeys, "Editor.Copy.", this, ITextOperationTarget.COPY, true); //$NON-NLS-1$
-    copyAction.setHelpContextId(IAbstractTextEditorHelpContextIds.COPY_ACTION);
-    copyAction.setActionDefinitionId(IWorkbenchActionDefinitionIds.COPY);
-    setAction(ITextEditorActionConstants.COPY, copyAction);
+    val copyAction = new TextOperationAction(bundleForConstructedKeys, "Editor.Copy.", this, ITextOperationTarget.COPY, true) //$NON-NLS-1$
+    copyAction.setHelpContextId(IAbstractTextEditorHelpContextIds.COPY_ACTION)
+    copyAction.setActionDefinitionId(IWorkbenchActionDefinitionIds.COPY)
+    setAction(ITextEditorActionConstants.COPY, copyAction)
 
-    val pasteAction = new TextOperationAction(EditorMessages.bundleForConstructedKeys, "Editor.Paste.", this, ITextOperationTarget.PASTE); //$NON-NLS-1$
-    pasteAction.setHelpContextId(IAbstractTextEditorHelpContextIds.PASTE_ACTION);
-    pasteAction.setActionDefinitionId(IWorkbenchActionDefinitionIds.PASTE);
-    setAction(ITextEditorActionConstants.PASTE, pasteAction);
+    val pasteAction = new TextOperationAction(bundleForConstructedKeys, "Editor.Paste.", this, ITextOperationTarget.PASTE) //$NON-NLS-1$
+    pasteAction.setHelpContextId(IAbstractTextEditorHelpContextIds.PASTE_ACTION)
+    pasteAction.setActionDefinitionId(IWorkbenchActionDefinitionIds.PASTE)
+    setAction(ITextEditorActionConstants.PASTE, pasteAction)
 
     val selectionHistory = new SelectionHistory(this)
 
@@ -52,6 +53,10 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
     selectEnclosingAction.setActionDefinitionId(IJavaEditorActionDefinitionIds.SELECT_ENCLOSING)
     setAction(StructureSelectionAction.ENCLOSING, selectEnclosingAction)
 
+  }
+
+  override protected def initializeKeyBindingScopes() {
+    setKeyBindingScopes(Array(SCALA_EDITOR_SCOPE, JAVA_EDITOR_SCOPE))
   }
 
   override def createJavaSourceViewerConfiguration: JavaSourceViewerConfiguration =
@@ -74,11 +79,16 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
     project.scheduleResetPresentationCompiler
     super.doSave(pm)
   }
-  
+
   private[eclipse] def sourceViewer = getSourceViewer
 }
 
-object EditorMessages {
+object ScalaSourceFileEditor {
+
   private val EDITOR_BUNDLE_FOR_CONSTRUCTED_KEYS = "org.eclipse.ui.texteditor.ConstructedEditorMessages"
-  val bundleForConstructedKeys = ju.ResourceBundle.getBundle(EDITOR_BUNDLE_FOR_CONSTRUCTED_KEYS)
+  private val bundleForConstructedKeys = ResourceBundle.getBundle(EDITOR_BUNDLE_FOR_CONSTRUCTED_KEYS)
+
+  private val SCALA_EDITOR_SCOPE = "scala.tools.eclipse.scalaEditorScope"
+  private val JAVA_EDITOR_SCOPE = "org.eclipse.jdt.ui.javaEditorScope"
+
 }
