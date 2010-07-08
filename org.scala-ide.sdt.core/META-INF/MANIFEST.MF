@@ -43,7 +43,7 @@ Require-Bundle:
  org.eclipse.pde.ui;resolution:=optional,
  org.scala-ide.scala.library,
  org.scala-ide.scala.compiler,
- scala.tools.refactoring,
+ org.scala-refactoring.library,
  scalariform.core;bundle-version="0.0.4"
 Import-Package: 
  org.eclipse.contribution.jdt.cuprovider;apply-aspects:=false,

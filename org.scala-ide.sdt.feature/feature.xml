@@ -112,7 +112,7 @@ SUCH DAMAGE.
          unpack="false"/>
 
    <plugin
-         id="scala.tools.refactoring"
+         id="org.scala-refactoring.library"
          download-size="0"
          install-size="0"
          version="0.0.0"
