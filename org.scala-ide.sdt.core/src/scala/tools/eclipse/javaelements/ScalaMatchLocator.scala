@@ -22,14 +22,24 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
     override def traverse(tree: Tree): Unit = {
       if (tree.pos.isOpaqueRange) {
         tree match {
-          case t: TypeTree if t.pos.isDefined =>
-            reportTypeReference(t.tpe, t.pos)
+          case t : TypeTree => {
+            if (t.pos.isDefined)
+              reportTypeReference(t.tpe, t.pos)
+            if (t.tpe.isInstanceOf[TypeRef]) 
+              t.tpe.asInstanceOf[TypeRef].args.foreach(a => reportTypeReference(a, t.pos))
+            if (t.tpe.isInstanceOf[TypeBounds]) { 
+              reportTypeReference(t.tpe.asInstanceOf[TypeBounds].hi, t.pos)
+              reportTypeReference(t.tpe.asInstanceOf[TypeBounds].lo, t.pos)
+            }  
+          }    
           case v: ValOrDefDef if !v.tpt.pos.isRange =>
             reportTypeReference(v.tpt.asInstanceOf[TypeTree].tpe,
               new RangePosition(v.tpt.pos.source,
                 v.tpt.pos.point,
                 v.tpt.pos.point,
                 v.tpt.pos.point + v.name.length))
+          case n: New =>
+            reportTypeReference(n.tpe, n.tpt.pos)
           case c: ClassDef if c.pos.isDefined =>
             reportTypeDefinition(c.symbol.tpe, c.pos)
           case _ =>
