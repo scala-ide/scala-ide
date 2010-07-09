@@ -742,7 +742,7 @@
    		 commandId="scala.tools.eclipse.refactoring.command.ExtractMethod"
    		 schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
    		 contextId="scala.tools.eclipse.scalaEditorScope"
-   		 sequence="M2+M3+E"/>
+   		 sequence="M2+M3+M"/>
    <key
    		 commandId="scala.tools.eclipse.refactoring.command.ExtractLocal"
    		 schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
