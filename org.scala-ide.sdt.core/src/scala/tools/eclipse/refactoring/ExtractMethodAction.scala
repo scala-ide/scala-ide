@@ -32,7 +32,7 @@ class ExtractMethodAction extends RefactoringAction {
     Some(new ExtractMethodScalaIdeRefactoring(selectionStart, selectionEnd, file))
 
   class ExtractMethodScalaIdeRefactoring(start: Int, end: Int, file: ScalaSourceFile) extends ScalaIdeRefactoring("Extract Method") {
-   
+       
     var name = ""
     
     val refactoring = file.withCompilerResult(crh => new ExtractMethod with GlobalIndexes with NameValidation {
@@ -48,7 +48,7 @@ class ExtractMethodAction extends RefactoringAction {
     
     def refactoringParameters = name
     
-    override def getPages = new NewNameWizardPage(s => name = s, refactoring.isValidIdentifier, "extractedMethod") :: Nil
+    override def getPages = new NewNameWizardPage(s => name = s, refactoring.isValidIdentifier, "extractedMethod", "refactoring_extract_method") :: Nil
     
   }
 }

@@ -90,7 +90,7 @@ class RenameAction extends RefactoringAction {
       
       def refactoringParameters = name
       
-      override def getPages = new NewNameWizardPage((s => name = s), refactoring.isValidIdentifier, name) :: Nil
+      override def getPages = new NewNameWizardPage((s => name = s), refactoring.isValidIdentifier, name, "refactoring_rename") :: Nil
     }
   
   def createRefactoring(selectionStart: Int, selectionEnd: Int, file: ScalaSourceFile) = {

@@ -1,0 +1,12 @@
+<contexts>
+	<context id="refactoring_extract_method" title="Refactoring">
+		<description>This is the Extract Method refactoring, for a description, see below</description>
+		<topic href="docs/refactorings/extract_method.html" label="Extract Method" />
+		<topic href="docs/refactorings.html" label="Refactoring" />
+	</context>
+	<context id="refactoring_rename" title="Refactoring">
+		<description>This is the Rename refactoring, for a description, see below.</description>
+		<topic href="docs/refactorings/rename.html" label="Rename" />
+		<topic href="docs/refactorings.html" label="Refactoring" />
+	</context>
+</contexts>

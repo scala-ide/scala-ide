@@ -1,6 +1,11 @@
 <toc label="Scala Development Tool">
-
-<topic label="Getting Started" href="docs/quickstart.html"/>
-<topic label="Release Notes" href="docs/issues.html"/>
-
+  <topic label="Getting Started" href="docs/quickstart.html"/>
+  <topic label="Release Notes" href="docs/issues.html"/>
+    <topic label="Refactoring" href="docs/refactorings.html">
+      <topic label="Extract Local" href="docs/refactorings/extract_local.html" />
+      <topic label="Extract Method" href="docs/refactorings/extract_method.html" />
+      <topic label="Inline Local" href="docs/refactorings/inline_local.html" />
+      <topic label="Organize Imports" href="docs/refactorings/organize_imports.html" />
+      <topic label="Rename" href="docs/refactorings/rename.html" />
+    </topic>
 </toc>

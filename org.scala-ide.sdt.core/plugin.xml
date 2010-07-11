@@ -385,6 +385,12 @@
       <toc file="toc.xml"
            primary="true"/>
    </extension>
+   <extension
+         point="org.eclipse.help.contexts">
+         <contexts
+         	file="docs/contexts.xml">
+         </contexts>
+   </extension>   
 
   <extension
     id="javaelementfilters"
