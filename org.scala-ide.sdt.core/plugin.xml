@@ -600,6 +600,10 @@
     <provider class="scala.tools.eclipse.ScalaSourceIndexerFactory" />
   </extension>
 
+  <extension point="org.scala-ide.sdt.aspects.spellingengineprovider">
+    <provider class="scala.tools.eclipse.ScalaSpellingEngineProvider" />
+  </extension> 
+
   <extension point="org.scala-ide.sdt.aspects.formatterCleanUp">
     <provider class="scala.tools.eclipse.formatter.ScalaFormatterCleanUpProvider" />
   </extension>
