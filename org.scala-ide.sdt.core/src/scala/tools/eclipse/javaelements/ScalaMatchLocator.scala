@@ -5,7 +5,7 @@
 
 package scala.tools.eclipse.javaelements
 
-import org.eclipse.jdt.core.search.{ SearchMatch, SearchParticipant, TypeDeclarationMatch, TypeReferenceMatch }
+import org.eclipse.jdt.core.search.{ SearchMatch, SearchParticipant, TypeDeclarationMatch, TypeReferenceMatch, MethodReferenceMatch, FieldReferenceMatch }
 
 import org.eclipse.jdt.internal.compiler.ast.{ SingleTypeReference, TypeDeclaration }
 import org.eclipse.jdt.internal.core.search.matching.{ MatchLocator, PossibleMatch }
@@ -14,7 +14,8 @@ import scala.tools.nsc.util.{ RangePosition, Position }
 
 import scala.tools.eclipse.ScalaPresentationCompiler
 import scala.tools.eclipse.util.ReflectionUtils
-
+import org.eclipse.jdt.internal.core.search.matching.{ FieldPattern, MethodPattern };
+    	
 trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
   class MatchLocatorTraverser(scu: ScalaCompilationUnit, matchLocator: MatchLocator, possibleMatch: PossibleMatch) extends Traverser {
     import MatchLocatorUtils._
@@ -32,12 +33,18 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
               reportTypeReference(t.tpe.asInstanceOf[TypeBounds].lo, t.pos)
             }  
           }    
-          case v: ValOrDefDef if !v.tpt.pos.isRange =>
-            reportTypeReference(v.tpt.asInstanceOf[TypeTree].tpe,
-              new RangePosition(v.tpt.pos.source,
-                v.tpt.pos.point,
-                v.tpt.pos.point,
-                v.tpt.pos.point + v.name.length))
+          case v : ValOrDefDef if v.tpt.pos.isDefined && !v.tpt.pos.isRange =>
+              reportTypeReference(v.tpt.asInstanceOf[TypeTree].tpe,
+                new RangePosition(v.tpt.pos.source,
+                  v.tpt.pos.point,
+                  v.tpt.pos.point,
+                  v.tpt.pos.point + v.name.length))
+          case s : Select =>
+              if (s.symbol.isInstanceOf[MethodSymbol])
+            	if (matchLocator.pattern.isInstanceOf[MethodPattern])  
+                  reportValueOrMethodReference(s, matchLocator.pattern.asInstanceOf[MethodPattern]);
+            	else if (matchLocator.pattern.isInstanceOf[FieldPattern])  
+                  reportVariableReference(s, matchLocator.pattern.asInstanceOf[FieldPattern]); 
           case n: New =>
             reportTypeReference(n.tpe, n.tpt.pos)
           case c: ClassDef if c.pos.isDefined =>
@@ -67,7 +74,9 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
           case ssf: ScalaSourceFile => ssf.getElementAt(declPos.start)
           case _ => null
         }
-        val accuracy = SearchMatch.A_ACCURATE
+        //since we consider only the class name (and not its fully qualified name), 
+        //the search is inaccurate
+        val accuracy = SearchMatch.A_INACCURATE 
         val offset = declPos.start
         val length = declPos.end - offset
         val participant = possibleMatch.document.getParticipant
@@ -79,13 +88,16 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
     }
 
     def reportTypeReference(tpe: Type, refPos: Position) {
+      if (tpe == null) return;	
       val ref = new SingleTypeReference(tpe.typeSymbol.nameString.toArray, posToLong(refPos));
       if (matchLocator.patternLocator.`match`(ref, possibleMatch.nodeSet) > 0) {
         val enclosingElement = scu match {
           case ssf: ScalaSourceFile => ssf.getElementAt(refPos.start)
           case _ => null
         }
-        val accuracy = SearchMatch.A_ACCURATE
+        //since we consider only the class name (and not its fully qualified name), 
+        //the search is inaccurate
+        val accuracy = SearchMatch.A_INACCURATE
         val offset = refPos.start
         val length = refPos.end - offset
         val insideDocComment = false
@@ -97,6 +109,72 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
       }
     }
 
+    def reportValueOrMethodReference(s : Select, methodPattern : MethodPattern) {
+    	if (!s.name.toString.equals(new String(methodPattern.selector))) return; 
+    	
+    	def checkSignature(methodType : MethodType) : Boolean = {
+    	  if (methodPattern.parameterCount != methodType.paramTypes.size)
+    	    return false;
+    	  val searchedParamTypes = methodPattern.parameterSimpleNames.map(sp => new String(sp));
+    	  val currentParamTypes = methodType.paramTypes;
+    	   
+    	  for (i <- 0 to currentParamTypes.size - 1) 
+    		if (!currentParamTypes(i).baseClasses.exists(bc => bc.name.toString.equals(searchedParamTypes(i))))
+    		  return false;    	  
+    	  true; 
+    	}
+    	
+    	if (checkCallingObjectType(s, new String(methodPattern.declaringSimpleName)))
+    	  if ((!s.tpe.isInstanceOf[MethodType] && methodPattern.parameterCount == 0) || 
+    	      (s.tpe.isInstanceOf[MethodType] && checkSignature(s.tpe.asInstanceOf[MethodType]))) {    		
+    		  val enclosingElement = scu match {
+    			case ssf: ScalaSourceFile => ssf.getElementAt(s.pos.start)
+    			case _ => null
+    		  }
+    		  val accuracy = SearchMatch.A_INACCURATE
+    		  val offset = s.pos.start
+    		  val length = s.pos.end - offset
+    		  val insideDocComment = false
+    		  val participant = possibleMatch.document.getParticipant
+    		  val resource = possibleMatch.resource
+
+    		  val sm = new MethodReferenceMatch(enclosingElement, accuracy, offset, length, insideDocComment, participant, resource)
+
+    		  report(matchLocator, sm)
+    	}
+    }
+    
+    def reportVariableReference(s : Select, fieldPattern : FieldPattern) {
+        val nameOfTheSearchedVar = new String(fieldPattern.getIndexKey)
+        
+        if ((!s.name.toString.equals(nameOfTheSearchedVar) &&
+        	 !s.name.toString.equals(nameOfTheSearchedVar + "_$eq")) ||
+        	!checkCallingObjectType(s, new String(declaringSimpleName(fieldPattern)))) 
+        	return;
+	
+        val enclosingElement = scu match {
+    	  case ssf: ScalaSourceFile => ssf.getElementAt(s.pos.start)
+    	  case _ => null
+        }
+    	val accuracy = SearchMatch.A_INACCURATE
+    	val offset = s.pos.start
+    	val length = s.pos.end - offset
+    	val insideDocComment = false
+    	val participant = possibleMatch.document.getParticipant
+    	val resource = possibleMatch.resource
+
+    	val sm = new FieldReferenceMatch(enclosingElement, accuracy, offset, length, true, false, insideDocComment, participant, resource)
+
+    	report(matchLocator, sm)
+    }
+    
+	def checkCallingObjectType(s : Select, classNameContainingTheSearchedVal : String) = {
+      val containerClass = s.qualifier.tpe.asInstanceOf[Type];
+      val classNames = containerClass.baseClasses.map(bc => bc.name.toString);	
+      classNames.exists(n => n.equals(classNameContainingTheSearchedVal));
+    }
+
+    
     def posToLong(pos: Position): Long = pos.startOrPoint << 32 | pos.endOrPoint
   }
 }
@@ -104,6 +182,9 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
 object MatchLocatorUtils extends ReflectionUtils {
   val mlClazz = classOf[MatchLocator]
   val reportMethod = getDeclaredMethod(mlClazz, "report", classOf[SearchMatch])
-
   def report(ml: MatchLocator, sm: SearchMatch) = reportMethod.invoke(ml, sm)
+  
+  val fpClazz = classOf[FieldPattern]
+  val declaringSimpleNameField = getDeclaredField(fpClazz, "declaringSimpleName")
+  def declaringSimpleName(fp : FieldPattern) = declaringSimpleNameField.get(fp).asInstanceOf[Array[Char]];
 }
