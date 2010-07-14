@@ -720,6 +720,13 @@
                </objectClass>
             </enablement>
          </action>
+         <action
+               class="scala.tools.eclipse.quickfix.proposal.AddImportAction"
+               definitionId="scala.tools.eclipse.refactoring.command.AddImport"
+               id="scala.tools.eclipse.refactoring.addImportAction"
+               label="Add Import"
+               tooltip="Add Import">
+         </action>
               </actionSet>
    </extension>
 
@@ -753,15 +760,18 @@
          categoryId="scala.tools.eclipse.refactoring.commands.refactoring"
          id="scala.tools.eclipse.refactoring.command.ShowReferences"
          name="Show References"/>
+      <command
+         categoryId="scala.tools.eclipse.refactoring.commands.refactoring"
+         id="scala.tools.eclipse.refactoring.command.AddImport"
+         name="Add Import"/>
 </extension>
 
    <extension point="org.eclipse.ui.contexts">
-          <context name="scala.tools.eclipse.scalaEditorScope"
-           description="Scala source file editor"
-           parentId="org.eclipse.ui.textEditorScope"
-           id="scala.tools.eclipse.scalaEditorScope" />
+     <context name="scala.tools.eclipse.scalaEditorScope"
+              description="Scala source file editor"
+              parentId="org.eclipse.jdt.ui.javaEditorScope"
+              id="scala.tools.eclipse.scalaEditorScope" />
    </extension>
-
 
 <extension
       point="org.eclipse.ui.bindings"> <!-- M1 == Ctrl, M2 == Shift M3 == Alt -->
@@ -785,6 +795,16 @@
    		 schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
    		 contextId="scala.tools.eclipse.scalaEditorScope"
    		 sequence="M2+M3+R"/>
+   <key
+   		 commandId="scala.tools.eclipse.refactoring.command.OrganizeImports"
+   		 schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+   		 contextId="scala.tools.eclipse.scalaEditorScope"
+   		 sequence="M1+M2+O"/>
+   <key
+   		 commandId="scala.tools.eclipse.refactoring.command.AddImport"
+   		 schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+   		 contextId="scala.tools.eclipse.scalaEditorScope"
+   		 sequence="M1+M2+M"/>
 
    </extension>
    <extension

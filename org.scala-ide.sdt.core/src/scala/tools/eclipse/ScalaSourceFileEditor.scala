@@ -56,7 +56,7 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
   }
 
   override protected def initializeKeyBindingScopes() {
-    setKeyBindingScopes(Array(SCALA_EDITOR_SCOPE, JAVA_EDITOR_SCOPE))
+    setKeyBindingScopes(Array(SCALA_EDITOR_SCOPE))
   }
 
   override def createJavaSourceViewerConfiguration: JavaSourceViewerConfiguration =
@@ -89,6 +89,5 @@ object ScalaSourceFileEditor {
   private val bundleForConstructedKeys = ResourceBundle.getBundle(EDITOR_BUNDLE_FOR_CONSTRUCTED_KEYS)
 
   private val SCALA_EDITOR_SCOPE = "scala.tools.eclipse.scalaEditorScope"
-  private val JAVA_EDITOR_SCOPE = "org.eclipse.jdt.ui.javaEditorScope"
 
 }
