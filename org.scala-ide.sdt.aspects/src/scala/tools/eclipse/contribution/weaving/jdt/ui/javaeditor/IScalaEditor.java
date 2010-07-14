@@ -5,8 +5,10 @@
 
 package scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor;
 
-import org.eclipse.jface.text.rules.IPartitionTokenScanner;
+import org.eclipse.jface.text.IDocumentPartitioner;
 
 public interface IScalaEditor {
-  public IPartitionTokenScanner getPartitionScanner();
+
+    public IDocumentPartitioner createDocumentPartitioner();
+
 }

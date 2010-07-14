@@ -32,7 +32,7 @@ public abstract class AbstractProviderRegistry<T> {
 	@SuppressWarnings("unchecked")
 	public List<T> registerProviders() {
 		List<T> registry = new ArrayList<T>();
-		IExtensionPoint exP = Platform.getExtensionRegistry().getExtensionPoint(getExtensionPointId());
+		IExtensionPoint exP = Platform.getExtensionRegistry().getExtensionPoint( getExtensionPointId());
 		if (exP != null) {
 			IExtension[] exs = exP.getExtensions();
 			for (int i = 0; i < exs.length; i++) {

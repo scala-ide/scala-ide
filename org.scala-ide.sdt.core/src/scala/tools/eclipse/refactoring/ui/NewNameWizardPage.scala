@@ -1,6 +1,7 @@
 package scala.tools.eclipse.refactoring.ui
 
 import org.eclipse.ltk.ui.refactoring.UserInputWizardPage
+import org.eclipse.ui.PlatformUI
 import org.eclipse.jface.dialogs.IMessageProvider
 import org.eclipse.swt.widgets.Composite
 import org.eclipse.swt.layout.GridData
@@ -10,7 +11,8 @@ import org.eclipse.swt.SWT
 class NewNameWizardPage(
     nameChanged: String => Unit,
     isValidName: String => Boolean,
-    defaultName: String) extends UserInputWizardPage("??") {
+    defaultName: String,
+    helpId: String) extends UserInputWizardPage("??") {
               
   setMessage("Note that this is a preview release, make sure to check the generated changes.", IMessageProvider.WARNING)
   
@@ -25,6 +27,13 @@ class NewNameWizardPage(
     textField.setLayoutData(new GridData(GridData.FILL_HORIZONTAL))
     
     setControl(main)
+  }
+  
+  override def setVisible(visible: Boolean) = {
+    super.setVisible(visible)
+    if(visible) {
+      PlatformUI.getWorkbench.getHelpSystem.setHelp(getControl, "org.scala-ide.sdt.core." + helpId)            
+    }
   }
   
   def newNameEntered(name: String) {

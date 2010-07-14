@@ -385,6 +385,12 @@
       <toc file="toc.xml"
            primary="true"/>
    </extension>
+   <extension
+         point="org.eclipse.help.contexts">
+         <contexts
+         	file="docs/contexts.xml">
+         </contexts>
+   </extension>   
 
   <extension
     id="javaelementfilters"
@@ -594,6 +600,10 @@
     <provider class="scala.tools.eclipse.ScalaSourceIndexerFactory" />
   </extension>
 
+  <extension point="org.scala-ide.sdt.aspects.spellingengineprovider">
+    <provider class="scala.tools.eclipse.ScalaSpellingEngineProvider" />
+  </extension> 
+
   <extension point="org.scala-ide.sdt.aspects.formatterCleanUp">
     <provider class="scala.tools.eclipse.formatter.ScalaFormatterCleanUpProvider" />
   </extension>
@@ -768,6 +778,7 @@
    <key
    		 commandId="scala.tools.eclipse.refactoring.command.InlineLocal"
    		 schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+   		 contextId="scala.tools.eclipse.scalaEditorScope"
    		 sequence="M2+M3+I"/>
    <key
    		 commandId="scala.tools.eclipse.refactoring.command.Rename"

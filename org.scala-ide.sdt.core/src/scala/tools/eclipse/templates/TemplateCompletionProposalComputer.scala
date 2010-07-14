@@ -72,6 +72,14 @@ class TemplateCompletionProposalComputer extends IJavaCompletionProposalComputer
      */
     def sessionEnded() {}
 }
+
+//Take inspiration from :
+// * http://help.eclipse.org/galileo/index.jsp?topic=/org.eclipse.jdt.doc.isv/guide/jdt_api_codeassist.htm
+// * http://eclipseone.wordpress.com/2009/11/29/how-to-tweak-eclipse-templates-to-suit-you/
+// * org.eclipse.jdt.internal.ui.text.java http://www.java2s.com/Open-Source/Java-Document/IDE-Eclipse/jdt/org.eclipse.jdt.internal.ui.text.java.htm
+// * org.eclipse.jdt.internal.ui.text.template.contentassist http://www.java2s.com/Open-Source/Java-Document/IDE-Eclipse/jdt/org.eclipse.jdt.internal.ui.text.template.contentassist.htm
+// * http://blog.jcake.com/2009/11/29/easy-sharing-of-eclipse-templates/ but need that scala templates be listed into Template View before !
+
 //TODO try to do find if it's possible to extends AbstractTemplateCompletionProposalComputer (without fully rewrite TemplateEngine (use JavaPlugin.getTemplateStore)
 ///**
 // * Computer computing template proposals for Scala (and Javadoc) context type.

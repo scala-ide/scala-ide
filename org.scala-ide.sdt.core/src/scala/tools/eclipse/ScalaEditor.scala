@@ -4,13 +4,28 @@
 // $Id$
 
 package scala.tools.eclipse
-
+import org.eclipse.jface.text.rules.FastPartitioner
+import org.eclipse.jface.text.IDocumentPartitioner
+import org.eclipse.jdt.ui.text.JavaTextTools
 import scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.IScalaEditor
-import scala.tools.eclipse.lexical.ScalaPartitionScanner
+import scala.tools.eclipse.lexical.{ ScalaPartitionScanner, ScalaPartitions }
+import org.eclipse.jdt.ui.text.IJavaPartitions
 import org.eclipse.jface.text.rules.IPartitionTokenScanner
 
 trait ScalaEditor extends IScalaEditor {
-  override def getPartitionScanner() : IPartitionTokenScanner = {
-    new ScalaPartitionScanner
-  }
+
+  def createDocumentPartitioner(): IDocumentPartitioner = new FastPartitioner(new ScalaPartitionScanner, ScalaEditor.LEGAL_CONTENT_TYPES)
+
+}
+
+object ScalaEditor {
+
+  val LEGAL_CONTENT_TYPES = Array[String](
+    IJavaPartitions.JAVA_DOC,
+    IJavaPartitions.JAVA_MULTI_LINE_COMMENT,
+    IJavaPartitions.JAVA_SINGLE_LINE_COMMENT,
+    IJavaPartitions.JAVA_STRING,
+    IJavaPartitions.JAVA_CHARACTER,
+    ScalaPartitions.SCALA_MULTI_LINE_STRING)
+
 }

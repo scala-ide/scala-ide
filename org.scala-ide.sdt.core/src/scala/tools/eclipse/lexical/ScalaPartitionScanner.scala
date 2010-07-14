@@ -16,7 +16,7 @@ import org.eclipse.jface.text.rules.RuleBasedPartitionScanner
 import org.eclipse.jface.text.rules.SingleLineRule
 import org.eclipse.jface.text.rules.Token
 import org.eclipse.jface.text.rules.WordRule
-
+import org.eclipse.jface.text.IDocument
 import org.eclipse.jdt.ui.text.IJavaPartitions
 import org.eclipse.jdt.ui.text.IJavaPartitions._
 
@@ -68,13 +68,14 @@ class ScalaPartitionScanner extends RuleBasedPartitionScanner with IJavaPartitio
   val javaDoc = new Token(JAVA_DOC)
   val multiLineComment = new Token(JAVA_MULTI_LINE_COMMENT)
   val singleLineComment = new Token(JAVA_SINGLE_LINE_COMMENT)
+  val multiLineString = new Token(ScalaPartitions.SCALA_MULTI_LINE_STRING)
 
   val result = Array[IPredicateRule](
     // Single line comments.
     new EndOfLineRule("//", singleLineComment) with NoResumeRule,
 
     // Must come before the single line string rule
-    new MultilineStringLiteralRule(string),
+    new MultilineStringLiteralRule(multiLineString),
     
     // Strings.
     new SingleLineRule("\"", "\"", string, '\\') with NoResumeRule,

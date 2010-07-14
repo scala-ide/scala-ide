@@ -22,5 +22,6 @@
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.formatter.FormatterCleanUpRegistryAspect"/>
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.SaveParticipantRegistryAspect"/>
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.ScalaPartitionerAspect"/>
+<aspect name="scala.tools.eclipse.contribution.weaving.jdt.spellingengineprovider.SpellingEngineProviderAspect"/>
 </aspects>
 </aspectj>

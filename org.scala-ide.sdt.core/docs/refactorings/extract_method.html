@@ -1,0 +1,19 @@
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>Extract Method</title>
+  <META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+  <LINK REL="STYLESHEET" HREF="book.css" CHARSET="ISO-8859-1" TYPE="text/css">
+  <body bgcolor=FFFFFF>
+</head>
+<body>
+  <h1>Extract Method</h1>
+    <p>The Extract Method refactoring lets you extract one or many expressions into a new private method. The refactoring takes care of passing all necessary parameters to the method and returns all values that are needed.</p>
+    <p>To invoke the refactoring, a selection inside of a method has to be made. The refactoring wizard will then ask for a new name and show a preview of the changes:
+      <br/><br/>
+      <img src="images/extract_method_screenshot_1.png"/>
+    <h2>Limitations</h2>
+	  <p>Compared to Eclipse's Extract Method for Java, the Scala version currently lacks many features &ndash; for example, one cannot reorder the parameters, nor rename them. Allowing the user to choose where the extracted method should be placed also has not been implemented yet, and the visibility of the extracted method is always set to private.</p>
+	
+</body>
+</html>

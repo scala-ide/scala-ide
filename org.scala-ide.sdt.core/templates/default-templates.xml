@@ -3,7 +3,7 @@
 <template name="actor"
   description="actor statement"
   id="scala.templates.actor"
-  context="org.scala-ide.sdt.core.templates" enabled="true"
+  context="org.scala-ide.sdt.core.templates" enabled="false"
 >val a = actor {
   loop {
     react {
@@ -14,7 +14,7 @@
 <template name="app"
   description="application object"
   id="scala.templates.app"
-  context="org.scala-ide.sdt.core.templates" enabled="true"
+  context="org.scala-ide.sdt.core.templates" enabled="false"
 >object ${name} extends Application {
   ${line_selection}${cursor}
 }</template>
@@ -71,7 +71,7 @@
 <template name="trycatch"
   description="try catch block"
   id="scala.templates.trycatch"
-  context="org.scala-ide.sdt.core.templates" enabled="true"
+  context="org.scala-ide.sdt.core.templates" enabled="false"
 >try {
   ${line_selection}${cursor}
 } catch {
@@ -108,12 +108,12 @@
 <template name="lazy"
   description="lazy val"
   id="scala.templates.lazy"
-  context="org.scala-ide.sdt.core.templates" enabled="true"
+  context="org.scala-ide.sdt.core.templates" enabled="false"
 >lazy val ${name} = new ${type}(${cursor})</template>
 <template name="class"
   description="new class"
   id="scala.templates.newClass"
-  context="org.scala-ide.sdt.core.templates" enabled="true"
+  context="org.scala-ide.sdt.core.templates" enabled="false"
 >/**
  * @author ${user}
  */
@@ -123,7 +123,7 @@ class ${type_name}() {
 <template name="trait"
   description="new trait"
   id="scala.templates.newTrait"
-  context="org.scala-ide.sdt.core.templates" enabled="true"
+  context="org.scala-ide.sdt.core.templates" enabled="false"
 >/**
  * @author ${user}
  */
@@ -133,7 +133,7 @@ trait ${type_name} {
 <template name="obj"
   description="new object"
   id="scala.templates.newObject"
-  context="org.scala-ide.sdt.core.templates" enabled="true"
+  context="org.scala-ide.sdt.core.templates" enabled="false"
 >/**
  * @author ${user}
  */
@@ -143,12 +143,12 @@ object ${new_name} {
 <template name="var"
   description="new variable"
   id="scala.templates.var"
-  context="org.scala-ide.sdt.core.templates" enabled="true"
+  context="org.scala-ide.sdt.core.templates" enabled="false"
 >var ${new_name} : ${type} = ${cursor}</template>
 <template name="val"
   description="new constant"
   id="scala.templates.val"
-  context="net.alchim31.yascaladt.template" enabled="true"
+  context="net.alchim31.yascaladt.template" enabled="false"
 >val ${new_name} : ${type} = ${cursor}</template>
 <template name="main"
   description="main"

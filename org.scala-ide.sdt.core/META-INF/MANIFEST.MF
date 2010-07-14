@@ -57,9 +57,11 @@ Import-Package:
  scala.tools.eclipse.contribution.weaving.jdt.indexerprovider;apply-aspects:=false,
  scala.tools.eclipse.contribution.weaving.jdt.launching;apply-aspects:=false,
  scala.tools.eclipse.contribution.weaving.jdt.search;apply-aspects:=false,
+ scala.tools.eclipse.contribution.weaving.jdt.spellingengineprovider;apply-aspects:=false,
  scala.tools.eclipse.contribution.weaving.jdt.ui;apply-aspects:=false,
  scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor;apply-aspects:=false,
- scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.formatter
+ scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.formatter;apply-aspects:=false,
+ com.ibm.icu.text;apply-aspects:=false
 Export-Package: 
  scala.tools.eclipse,
  scala.tools.eclipse.interpreter,
