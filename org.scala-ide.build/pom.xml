@@ -62,6 +62,14 @@
           <artifactId>maven-dependency-plugin</artifactId>
           <version>2.1</version>
         </plugin>
+        <plugin>
+          <groupId>org.sonatype.tycho</groupId>
+          <artifactId>maven-osgi-packaging-plugin</artifactId>
+          <version>${tycho.version}</version>
+          <configuration>
+            <target>${project.build.directory}/${update-site.name}</target>
+          </configuration>
+        </plugin>
       </plugins>
     </pluginManagement>
     <plugins>
@@ -83,13 +91,6 @@
     </plugins>
   </build>
   <repositories>
-    <repository>
-      <id>galileo</id>
-      <name>Eclipse Galileo p2 repository</name>
-      <layout>p2</layout>
-      <url>http://download.eclipse.org/releases/galileo</url>
-      <snapshots><enabled>false</enabled></snapshots>
-    </repository>
     <repository>
       <id>jdt-weaving</id>
       <name>JDT Weaving p2 repository</name>
@@ -142,4 +143,40 @@
       <snapshots><enabled>false</enabled></snapshots>
     </pluginRepository>
   </pluginRepositories>
+  
+  <profiles>
+    <profile>
+      <id>galileo</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <properties>
+        <!--update-site.name>site-galileo</update-site.name-->
+        <update-site.name>site</update-site.name>
+      </properties>
+      <repositories>
+        <repository>
+          <id>galileo</id>
+          <url>http://download.eclipse.org/releases/galileo/</url>
+          <layout>p2</layout>
+          <snapshots><enabled>false</enabled></snapshots>
+        </repository>
+      </repositories>
+    </profile>
+    <profile>
+      <id>helios</id>
+      <properties>
+        <update-site.name>site-helios</update-site.name>
+      </properties>
+      <repositories>
+        <repository>
+          <id>helios</id>
+          <url>http://download.eclipse.org/releases/helios/</url>
+          <layout>p2</layout>
+          <snapshots><enabled>false</enabled></snapshots>
+        </repository>
+      </repositories>
+    </profile>
+  </profiles>
+
 </project>
