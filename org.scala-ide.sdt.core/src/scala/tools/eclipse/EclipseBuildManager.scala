@@ -116,7 +116,14 @@ class EclipseBuildManager(project : ScalaProject, settings0: Settings) extends R
     val removedFiles = removed.map(EclipseResource(_) : AbstractFile)
     val toBuild = pendingSources.map(EclipseResource(_)) ++ unbuilt -- removedFiles
     hasErrors = false
-    super.update(toBuild, removedFiles)
+    try {
+      super.update(toBuild, removedFiles)
+    } catch {
+      case e =>
+        hasErrors = true
+        project.buildError(IMarker.SEVERITY_ERROR, e.getMessage, null)
+        ScalaPlugin.plugin.logError(e)
+    }
     if (!hasErrors)
       pendingSources.clear
   }
