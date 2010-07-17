@@ -158,9 +158,8 @@ class InterpreterMainTab extends JavaLaunchTab {
     dialog.setTitle("Select a Scala Project"); 
     dialog.setMessage(""); 
     try {
-      dialog.setElements(JavaCore.create(getWorkspaceRoot()).getJavaProjects().filter({ project =>
-        project.getProject.hasNature(ScalaPlugin.plugin.natureId)
-      }).toArray);
+      val scalaProjects = JavaCore.create(getWorkspaceRoot).getJavaProjects.filter(ScalaPlugin.plugin.isScalaProject).toArray[Object]
+      dialog.setElements(scalaProjects)
     }
     catch {
       case jme : JavaModelException =>

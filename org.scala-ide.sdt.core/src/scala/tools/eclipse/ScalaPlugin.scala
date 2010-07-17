@@ -5,6 +5,7 @@
 
 package scala.tools.eclipse
 
+import org.eclipse.jdt.core.IJavaProject
 import scala.collection.mutable.HashMap
 import scala.util.control.ControlThrowable
 
@@ -116,11 +117,15 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
     case _ => null
   }
 
-  def isScalaProject(project : IProject) =
+  def isScalaProject(project: IJavaProject): Boolean = isScalaProject(project.getProject)
+  
+  def isScalaProject(project : IProject): Boolean =
     try {
-      project != null && project.isOpen && project.hasNature(natureId)
+      project != null && project.isOpen && (project.hasNature(natureId) || project.hasNature(oldNatureId))
     } catch {
-      case _ : CoreException => false
+      case e : CoreException => 
+        e.printStackTrace()
+      false
     }
 
   override def resourceChanged(event : IResourceChangeEvent) {
