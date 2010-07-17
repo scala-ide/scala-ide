@@ -1,15 +1,12 @@
 package scala.tools.eclipse.lexical
 
 import org.junit.Assert._
-import org.junit.internal.runners.JUnit4ClassRunner
-import org.junit.runner.RunWith
 import org.junit.{ Test, Before }
 import org.eclipse.jface.text.rules._
 
 class MultilineStringLiteralRuleTest extends RuleTest {
 
   import TestLanguage._
-
   @Test
   def positiveCases() { // format: OFF
     <t>"""wibble"""</t>                ==> <t>"""wibble"""</t>;

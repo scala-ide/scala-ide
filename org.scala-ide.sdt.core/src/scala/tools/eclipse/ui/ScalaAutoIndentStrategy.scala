@@ -59,6 +59,12 @@ import org.eclipse.jdt.internal.ui.text.JavaHeuristicScanner;
 import org.eclipse.jdt.internal.ui.text.JavaIndenter;
 import org.eclipse.jdt.internal.ui.text.Symbols;
 
+import scala.tools.eclipse.lexical.ScalaDocumentPartitioner
+
+import scala.util.matching.Regex
+
+import org.eclipse.jdt.internal.ui.text.Symbols;
+
 import scala.tools.eclipse.lexical.ScalaPartitionScanner
 
 import scala.util.matching.Regex
@@ -609,15 +615,7 @@ class ScalaAutoIndentStrategy(
    * @param document the document
    */
   private def installJavaStuff(document : Document) : Unit = {
-    val types = Array[String](
-      IJavaPartitions.JAVA_DOC,
-      IJavaPartitions.JAVA_MULTI_LINE_COMMENT,
-      IJavaPartitions.JAVA_SINGLE_LINE_COMMENT,
-      IJavaPartitions.JAVA_STRING,
-      IJavaPartitions.JAVA_CHARACTER,
-      IDocument.DEFAULT_CONTENT_TYPE
-    )
-    val partitioner = new FastPartitioner(new ScalaPartitionScanner(), types)
+    val partitioner = new ScalaDocumentPartitioner
     partitioner.connect(document)
     document.setDocumentPartitioner(IJavaPartitions.JAVA_PARTITIONING, partitioner)
   }

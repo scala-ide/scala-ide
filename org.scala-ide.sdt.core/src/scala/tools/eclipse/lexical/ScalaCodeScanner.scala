@@ -311,8 +311,11 @@ class ScalaCodeScanner(manager : IColorManager, store : IPreferenceStore) extend
 
     val version = getPreferenceStore.getString(SOURCE_VERSION)
 
+    var token = getToken(IJavaColorConstants.JAVA_STRING)
+    rules.add(new SymbolRule(token))
+    
     // Add JLS3 rule for /@\s*interface/ and /@\s*\w+/
-    var token = getToken(ANNOTATION_COLOR_KEY)
+    token = getToken(ANNOTATION_COLOR_KEY)
     val atInterfaceRule = new AnnotationRule(getToken(IJavaColorConstants.JAVA_KEYWORD), token, JavaCore.VERSION_1_5, version)
     rules.add(atInterfaceRule)
     fVersionDependentRules.add(atInterfaceRule)

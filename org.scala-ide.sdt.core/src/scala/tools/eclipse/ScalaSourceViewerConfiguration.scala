@@ -20,14 +20,14 @@ import org.eclipse.jface.text.contentassist.ContentAssistant
 import org.eclipse.jface.text.contentassist.IContentAssistant
 import org.eclipse.jface.text.hyperlink.IHyperlinkDetector
 import org.eclipse.jface.text.presentation.PresentationReconciler
-import org.eclipse.jface.text.rules.DefaultDamagerRepairer
+import org.eclipse.jface.text.rules.{ DefaultDamagerRepairer, RuleBasedScanner, ITokenScanner }
 import org.eclipse.jface.text.source.ISourceViewer
 import org.eclipse.ui.texteditor.{ HyperlinkDetectorDescriptor, ITextEditor }
 import org.eclipse.swt.SWT
 import scala.tools.eclipse.ui.{ JdtPreferenceProvider, ScalaAutoIndentStrategy, ScalaIndenter }
 import scala.tools.eclipse.util.ReflectionUtils
+import scala.tools.eclipse.lexical._
 import scala.tools.eclipse.formatter.ScalaFormattingStrategy
-import scala.tools.eclipse.lexical.{ ScalaCodeScanner, ScalaPartitions }
 
 class ScalaSourceViewerConfiguration(store : IPreferenceStore, editor : ITextEditor)
   extends JavaSourceViewerConfiguration(JavaPlugin.getDefault.getJavaTextTools.getColorManager, store, editor, IJavaPartitions.JAVA_PARTITIONING) {
@@ -39,12 +39,21 @@ class ScalaSourceViewerConfiguration(store : IPreferenceStore, editor : ITextEdi
   override def getPresentationReconciler(sv : ISourceViewer) = {
     val reconciler = super.getPresentationReconciler(sv).asInstanceOf[PresentationReconciler]
     val dr = new ScalaDamagerRepairer(codeScanner)
+
     reconciler.setDamager(dr, IDocument.DEFAULT_CONTENT_TYPE)
     reconciler.setRepairer(dr, IDocument.DEFAULT_CONTENT_TYPE)
     
-    val dr2 = new DefaultDamagerRepairer(getStringScanner())
-    reconciler.setDamager(dr2, ScalaPartitions.SCALA_MULTI_LINE_STRING)
-	reconciler.setRepairer(dr2, ScalaPartitions.SCALA_MULTI_LINE_STRING)
+    def handlePartition(partitionType: String, tokenScanner: ITokenScanner) {
+      val dr = new DefaultDamagerRepairer(tokenScanner)
+      reconciler.setDamager(dr, partitionType)
+      reconciler.setRepairer(dr, partitionType)
+    }
+    
+    handlePartition(ScalaPartitions.SCALA_MULTI_LINE_STRING, getStringScanner())
+    handlePartition(ScalaPartitions.XML_TAG, new XmlTagScanner(getColorManager))
+    handlePartition(ScalaPartitions.XML_COMMENT, new XmlCommentScanner(getColorManager))
+    handlePartition(ScalaPartitions.XML_CDATA, new XmlCDATAScanner(getColorManager))
+    handlePartition(ScalaPartitions.XML_PI, new XmlPIScanner(getColorManager))
     
     reconciler
   }
