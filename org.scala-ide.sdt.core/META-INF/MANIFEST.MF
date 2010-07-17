@@ -68,7 +68,7 @@ Export-Package:
  scala.tools.eclipse.javaelements,
  scala.tools.eclipse.launching,
  scala.tools.eclipse.properties,
- scala.tools.eclipse.quickfix.proposal,
+ scala.tools.eclipse.quickfix,
  scala.tools.eclipse.ui,
  scala.tools.eclipse.util,
  scala.tools.eclipse.wizards

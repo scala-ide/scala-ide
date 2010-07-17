@@ -1,4 +1,4 @@
-package scala.tools.eclipse.quickfix.proposal
+package scala.tools.eclipse.quickfix
 
 import org.eclipse.core.commands.{ AbstractHandler, ExecutionEvent }
 import org.eclipse.jface.action.{ Action, AbstractAction, IAction }

@@ -616,7 +616,7 @@
   <extension
         point="org.eclipse.jdt.ui.quickFixProcessors">
      <quickFixProcessor
-           class="scala.tools.eclipse.ScalaQuickFixProcessor"
+           class="scala.tools.eclipse.quickfix.ScalaQuickFixProcessor"
            id="scala-plugin.quickFixProcessor1">
         <enablement>
           <with variable="projectNatures">
@@ -721,7 +721,7 @@
             </enablement>
          </action>
          <action
-               class="scala.tools.eclipse.quickfix.proposal.AddImportAction"
+               class="scala.tools.eclipse.quickfix.AddImportAction"
                definitionId="scala.tools.eclipse.refactoring.command.AddImport"
                id="scala.tools.eclipse.refactoring.addImportAction"
                label="Add Import"

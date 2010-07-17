@@ -1,21 +1,17 @@
-package scala.tools.eclipse
+package scala.tools.eclipse.quickfix
 
-import org.eclipse.jdt.ui.text.java._
-
-import org.eclipse.jdt.internal.compiler.env.INameEnvironment
 import org.eclipse.core.runtime.CoreException
 import org.eclipse.jdt.core.ICompilationUnit
-import scala.tools.eclipse.javaelements.ScalaSourceFile
 import org.eclipse.jdt.core.compiler.IProblem
-import scala.util.matching.Regex
-import scala.tools.eclipse.quickfix.proposal._
-import org.eclipse.jdt.internal.ui.text.correction.SimilarElementsRequestor
-import org.eclipse.jdt.internal.ui.text.correction.SimilarElement
-import org.eclipse.jdt.internal.core.JavaProject
-import org.eclipse.jdt.internal.core.DefaultWorkingCopyOwner
 import org.eclipse.jdt.core.search.IJavaSearchConstants
 import org.eclipse.jdt.internal.codeassist.ISearchRequestor
-import org.eclipse.jdt.internal.compiler.env.AccessRestriction
+import org.eclipse.jdt.internal.compiler.env.{ AccessRestriction, INameEnvironment }
+import org.eclipse.jdt.internal.core.{ DefaultWorkingCopyOwner, JavaProject }
+import org.eclipse.jdt.internal.ui.text.correction.{ SimilarElement, SimilarElementsRequestor }
+
+import org.eclipse.jdt.ui.text.java._
+import scala.tools.eclipse.javaelements.ScalaSourceFile
+import scala.util.matching.Regex
 
 class ScalaQuickFixProcessor extends IQuickFixProcessor {
   val typeNotFoundError = new Regex("not found: type (.*)")

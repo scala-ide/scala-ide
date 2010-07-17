@@ -1,4 +1,4 @@
-package scala.tools.eclipse.quickfix.proposal
+package scala.tools.eclipse.quickfix
 
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal
 import org.eclipse.jface.text.IDocument
