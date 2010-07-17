@@ -123,9 +123,7 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
     try {
       project != null && project.isOpen && (project.hasNature(natureId) || project.hasNature(oldNatureId))
     } catch {
-      case e : CoreException => 
-        e.printStackTrace()
-      false
+      case _ : CoreException => false
     }
 
   override def resourceChanged(event : IResourceChangeEvent) {
