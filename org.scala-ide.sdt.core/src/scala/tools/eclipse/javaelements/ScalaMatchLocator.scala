@@ -96,8 +96,9 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
           case _ => null
         }
         //since we consider only the class name (and not its fully qualified name), 
-        //the search is inaccurate
-        val accuracy = SearchMatch.A_INACCURATE
+        //the search is inaccurate 
+        // Matt: JUnit search results require ACCURATE matches to locate its annotations 
+        val accuracy = SearchMatch.A_ACCURATE
         val offset = refPos.start
         val length = refPos.end - offset
         val insideDocComment = false
