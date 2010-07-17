@@ -121,8 +121,8 @@ class EclipseBuildManager(project : ScalaProject, settings0: Settings) extends R
     } catch {
       case e =>
         hasErrors = true
-        project.buildError(IMarker.SEVERITY_ERROR, e.getMessage, null)
-        ScalaPlugin.plugin.logError(e)
+        project.buildError(IMarker.SEVERITY_ERROR, "Error in Scala compiler: " + e.getMessage, null)
+        ScalaPlugin.plugin.logError("Error in Scala compiler", e)
     }
     if (!hasErrors)
       pendingSources.clear
