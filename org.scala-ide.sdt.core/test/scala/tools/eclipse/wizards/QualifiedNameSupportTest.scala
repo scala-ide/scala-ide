@@ -27,7 +27,6 @@ class QualifiedNameSupportTest extends QualifiedNameSupport {
   @Test
   def createSuperTypeInstance2 = {
     val st = createSuperType(Test_Data4)
-    println(st)
     assertTrue(st._1 == List("scala", "math"))
     assertTrue(st._2 == "Equiv")
     assertTrue(st._3 == List("Eee"))
