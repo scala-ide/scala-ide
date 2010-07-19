@@ -5,14 +5,15 @@ import org.eclipse.jface.text.IDocument.DEFAULT_CONTENT_TYPE
 import scala.collection.mutable.ListBuffer
 
 class ScalaDocumentPartitioner extends IDocumentPartitioner {
-
+  import ScalaDocumentPartitioner._
+  
   private var documentOpt: Option[IDocument] = None
 
-  private var tokensOpt: Option[List[ScalaPartitionRegion]] = None
+  private var partitionRegionsOpt: Option[List[ScalaPartitionRegion]] = None
 
   def connect(document: IDocument): Unit = {
     this.documentOpt = Some(document)
-    this.tokensOpt = Some(ScalaPartitionTokeniser.tokenise(document))
+    this.partitionRegionsOpt = Some(ScalaPartitionTokeniser.tokenise(document))
   }
 
   def disconnect(): Unit = { this.documentOpt = None }
@@ -20,36 +21,44 @@ class ScalaDocumentPartitioner extends IDocumentPartitioner {
   def documentAboutToBeChanged(event: DocumentEvent) {}
 
   def documentChanged(event: DocumentEvent): Boolean = {
-    this.tokensOpt = Some(ScalaPartitionTokeniser.tokenise(documentOpt.get))
+    this.partitionRegionsOpt = Some(ScalaPartitionTokeniser.tokenise(documentOpt.get))
     true
   }
 
-  def getLegalContentTypes(): Array[String] = ScalaDocumentPartitioner.LEGAL_CONTENT_TYPES
+  def getLegalContentTypes(): Array[String] = LEGAL_CONTENT_TYPES
 
   def getContentType(offset: Int): String = getToken(offset) map { _.contentType } getOrElse DEFAULT_CONTENT_TYPE
 
-  def getToken(offset: Int): Option[ScalaPartitionRegion] = tokensOpt.get find { _ containsPosition offset }
+  def getToken(offset: Int): Option[ScalaPartitionRegion] = partitionRegionsOpt.get find { _ containsPosition offset }
 
   def computePartitioning(offset: Int, length: Int): Array[ITypedRegion] = {
     val regions = new ListBuffer[ITypedRegion]
     var searchingForStart = true
-    for (token <- tokensOpt.get)
+    for (partitionRegion <- partitionRegionsOpt.get)
       if (searchingForStart) {
-        if (token containsPosition offset) {
+        if (partitionRegion containsPosition offset) {
           searchingForStart = false
-          regions += token
+          regions += cropRegion(partitionRegion, offset, length)
         }
       } else {
-        if (token.start > offset + length - 1)
+        if (partitionRegion.start > offset + length - 1)
           return regions.toArray
         else
-          regions += token
+          regions += cropRegion(partitionRegion, offset, length)
       }
     regions.toArray
   }
 
-  def getPartition(offset: Int): ITypedRegion = getToken(offset) getOrElse new TypedRegion(offset, 0, "__no_partition_at_all")
+  private def cropRegion(region: ScalaPartitionRegion, offset: Int, length: Int): ScalaPartitionRegion = {
+    import math.{ max, min }
+    val ScalaPartitionRegion(_, start, end) = region
+    if (start > offset + length - 1 || end < offset)
+      region
+    else
+      region.copy(start = max(start, offset), end = min(end, offset + length))
+  }
 
+  def getPartition(offset: Int): ITypedRegion = getToken(offset) getOrElse new TypedRegion(offset, 0, NO_PARTITION_AT_ALL)
 
 }
 
@@ -66,5 +75,7 @@ object ScalaDocumentPartitioner {
 
   final val EOF = '\u001A'
 
+  val NO_PARTITION_AT_ALL = "__no_partition_at_all"
+    
 }
 
