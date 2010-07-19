@@ -4,20 +4,26 @@
 // $Id$
 
 package scala.tools.eclipse
-
 import java.util.ResourceBundle
-import org.eclipse.core.runtime.IProgressMonitor
+import org.eclipse.core.runtime.{ IAdaptable, IProgressMonitor }
+import org.eclipse.jdt.core.IJavaElement
+import org.eclipse.jdt.core.dom.CompilationUnit
 import org.eclipse.jdt.internal.ui.javaeditor.CompilationUnitEditor
+import org.eclipse.jdt.internal.ui.javaeditor.selectionactions._
+import org.eclipse.jdt.internal.ui.search.IOccurrencesFinder._
+import org.eclipse.jdt.ui.actions.IJavaEditorActionDefinitionIds
 import org.eclipse.jdt.ui.text.JavaSourceViewerConfiguration
 import org.eclipse.jface.preference.IPreferenceStore
-import org.eclipse.jface.text.ITextOperationTarget
-import org.eclipse.jface.text.source.SourceViewerConfiguration
-import org.eclipse.ui.IFileEditorInput
+import org.eclipse.jface.text._
+import org.eclipse.jface.text.source.{ Annotation, IAnnotationModelExtension, SourceViewerConfiguration }
+import org.eclipse.jface.viewers.ISelection
+import org.eclipse.ui.{ IWorkbenchPart, ISelectionListener, IFileEditorInput }
 import org.eclipse.ui.editors.text.{ ForwardingDocumentProvider, TextFileDocumentProvider }
 import org.eclipse.ui.texteditor.{ IAbstractTextEditorHelpContextIds, ITextEditorActionConstants, IWorkbenchActionDefinitionIds, TextOperationAction }
-import org.eclipse.jdt.internal.ui.javaeditor.selectionactions._
-import org.eclipse.jdt.ui.actions.IJavaEditorActionDefinitionIds
-
+import scala.collection.JavaConversions._
+import scala.collection.mutable
+import scala.tools.eclipse.javaelements.ScalaSourceFile
+import scala.tools.eclipse.markoccurrences.{ ScalaOccurrencesFinder, Occurrences }
 class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
 
   import ScalaSourceFileEditor._
@@ -81,6 +87,55 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
   }
 
   private[eclipse] def sourceViewer = getSourceViewer
+
+  private var occurrenceAnnotations: Array[Annotation] = _
+
+  override def updateOccurrenceAnnotations(selection: ITextSelection, astRoot: CompilationUnit) {
+    val documentProvider = getDocumentProvider
+    if (documentProvider == null)
+      return
+
+    val scalaSourceFile = getEditorInput.asInstanceOf[IAdaptable].getAdapter(classOf[IJavaElement]).asInstanceOf[ScalaSourceFile]
+    val annotations = getAnnotations(selection, scalaSourceFile)
+    val annotationModel = documentProvider.getAnnotationModel(getEditorInput)
+    annotationModel.asInstanceOf[ISynchronizable].getLockObject() synchronized {
+      val annotationModelExtension = annotationModel.asInstanceOf[IAnnotationModelExtension]
+      annotationModelExtension.replaceAnnotations(occurrenceAnnotations, annotations)
+      occurrenceAnnotations = annotations.keySet.toArray
+    }
+    super.updateOccurrenceAnnotations(selection, astRoot)
+  }
+
+  private def getAnnotations(selection: ITextSelection, scalaSourceFile: ScalaSourceFile): mutable.Map[Annotation, Position] = {
+    val annotations = for {
+      Occurrences(name, locations) <- new ScalaOccurrencesFinder(scalaSourceFile, selection.getOffset, selection.getLength).findOccurrences.toList
+      location <- locations
+      val offset = location.getOffset
+      val length = location.getLength
+      val position = new Position(location.getOffset, location.getLength)
+    } yield new Annotation(OCCURRENCE_ANNOTATION, false, "Occurrence of '" + name + "'") -> position
+    mutable.Map(annotations: _*)
+  }
+
+  override def doSelectionChanged(selection: ISelection) {
+    super.doSelectionChanged(selection)
+    val selectionProvider = getSelectionProvider
+    if (selectionProvider != null)
+      selectionProvider.getSelection match {
+        case textSelection: ITextSelection => updateOccurrenceAnnotations(textSelection, null)
+        case _ =>
+      }
+  }
+
+  override def installOccurrencesFinder(forceUpdate: Boolean) {
+    getEditorSite.getPage.addPostSelectionListener(new ISelectionListener() {
+      def selectionChanged(part: IWorkbenchPart, selection: ISelection) {
+        if (selection.isInstanceOf[ITextSelection])
+          updateOccurrenceAnnotations(selection.asInstanceOf[ITextSelection], null)
+      }
+    })
+  }
+
 }
 
 object ScalaSourceFileEditor {
@@ -89,5 +144,7 @@ object ScalaSourceFileEditor {
   private val bundleForConstructedKeys = ResourceBundle.getBundle(EDITOR_BUNDLE_FOR_CONSTRUCTED_KEYS)
 
   private val SCALA_EDITOR_SCOPE = "scala.tools.eclipse.scalaEditorScope"
+
+  private val OCCURRENCE_ANNOTATION = "org.eclipse.jdt.ui.occurrences"
 
 }
