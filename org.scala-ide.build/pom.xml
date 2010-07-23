@@ -110,7 +110,7 @@
       <id>scalariform</id>
       <name>Scalariform's p2 repo</name>
       <layout>p2</layout>
-      <url>http://scalariform.googlecode.com/svn/trunk/update-site/</url>
+      <url>http://download.scala-ide.org/scalariform</url>
     </repository>
     <repository>
       <id>scala-tools.release</id>
