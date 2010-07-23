@@ -51,7 +51,10 @@ object FileUtils {
       case _ : ResourceException =>
     }
   
-  def hasBuildErrors(file : IFile) : Boolean =
+  def findBuildErrors(file : IResource) : Seq[IMarker] =
+    file.findMarkers(plugin.problemMarkerId, true, IResource.DEPTH_INFINITE)
+
+  def hasBuildErrors(file : IResource) : Boolean =
     file.findMarkers(plugin.problemMarkerId, true, IResource.DEPTH_INFINITE).exists(_.getAttribute(IMarker.SEVERITY) == IMarker.SEVERITY_ERROR)
   
   def buildError(file : IFile, severity : Int, msg : String, offset : Int, length : Int, line : Int, monitor : IProgressMonitor) =

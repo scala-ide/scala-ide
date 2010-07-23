@@ -165,7 +165,7 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
 
   def logWarning(msg : String) : Unit = getLog.log(new Status(IStatus.WARNING, pluginId, msg))
 
-  def logError(t : Throwable) : Unit = logError("", t)
+  def logError(t : Throwable) : Unit = logError(t.getClass + ":" + t.getMessage, t)
   
   def logError(msg : String, t : Throwable) : Unit = {
     val t1 = if (t != null) t else { val ex = new Exception ; ex.fillInStackTrace ; ex }

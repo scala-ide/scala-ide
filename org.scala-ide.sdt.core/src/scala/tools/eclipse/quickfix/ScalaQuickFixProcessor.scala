@@ -2,21 +2,20 @@ package scala.tools.eclipse.quickfix
 
 import org.eclipse.core.runtime.CoreException
 import org.eclipse.jdt.core.ICompilationUnit
-import org.eclipse.jdt.core.compiler.IProblem
 import org.eclipse.jdt.core.search.IJavaSearchConstants
 import org.eclipse.jdt.internal.codeassist.ISearchRequestor
 import org.eclipse.jdt.internal.compiler.env.{ AccessRestriction, INameEnvironment }
 import org.eclipse.jdt.internal.core.{ DefaultWorkingCopyOwner, JavaProject }
 import org.eclipse.jdt.internal.ui.text.correction.{ SimilarElement, SimilarElementsRequestor }
-
 import org.eclipse.jdt.ui.text.java._
 import scala.tools.eclipse.javaelements.ScalaSourceFile
+import scala.tools.eclipse.util.FileUtils
 import scala.util.matching.Regex
 
 class ScalaQuickFixProcessor extends IQuickFixProcessor {
-  val typeNotFoundError = new Regex("not found: type (.*)")
-  val valueNotFoundError = new Regex("not found: value (.*)")
-  val xxxxxNotFoundError = new Regex("not found: (.*)")
+  private val typeNotFoundError = new Regex("not found: type (.*)")
+  private val valueNotFoundError = new Regex("not found: value (.*)")
+  private val xxxxxNotFoundError = new Regex("not found: (.*)")
   
   /**
    * Checks if the processor has any corrections.
@@ -39,27 +38,25 @@ class ScalaQuickFixProcessor extends IQuickFixProcessor {
    */
   def getCorrections(context : IInvocationContext, locations : Array[IProblemLocation]) : Array[IJavaCompletionProposal] =
     context.getCompilationUnit match {
-      case ssf : ScalaSourceFile =>
-        val problems = ssf.getProblems() // return null if isEmpty
-        if (problems != null && !problems.isEmpty) {
-          val corrections = scala.collection.mutable.HashSet[IJavaCompletionProposal]()
-          // Go over each location and suggest fixes for each matching problem
-          locations.foreach { location =>
-            problems.foreach { problem =>
-              if (location.getOffset() == problem.getSourceStart()
-                  && location.getLength() == (1 + problem.getSourceEnd() - problem.getSourceStart())) {
-                 
-                // Suggest a fix
-                val fix = suggestFix(context.getCompilationUnit(), problem)
-                corrections ++= fix
-              }
-            }
-          }
-          corrections.toArray
-        } else {
-          null
+      case ssf : ScalaSourceFile => {
+        import org.eclipse.core.resources.IMarker
+        import org.eclipse.core.resources.IResource
+        var corrections : List[IJavaCompletionProposal] = Nil
+        val markers = FileUtils.findBuildErrors(ssf.getResource)
+        for {
+          location <- locations
+          marker <- markers
+          if (marker.getAttribute(IMarker.CHAR_START, -1) == location.getOffset)
+        } {
+          val msg = marker.getAttribute(IMarker.MESSAGE, "")
+          val fix = suggestFix(context.getCompilationUnit(), msg)
+          corrections = corrections ++ fix
         }
-        
+        corrections match {
+          case Nil => null
+          case l => l.distinct.toArray
+        }
+      }
       case _ => null
     }
   
@@ -105,7 +102,8 @@ class ScalaQuickFixProcessor extends IQuickFixProcessor {
     }
   }
 
-  def suggestFix(compilationUnit : ICompilationUnit, problem : IProblem) : List[IJavaCompletionProposal] = {
+  private
+  def suggestFix(compilationUnit : ICompilationUnit, problemMessage : String) : List[IJavaCompletionProposal] = {
     /**
      * Import a type could solve several error message :
      * 
@@ -123,7 +121,7 @@ class ScalaQuickFixProcessor extends IQuickFixProcessor {
       requestor.typesFound.map({ typeFound => new ImportCompletionProposal(typeFound) }).toList
     }
     
-    return problem.getMessage() match {
+    return problemMessage match {
       case typeNotFoundError(missingType) => suggestImportType(missingType)
       case valueNotFoundError(missingValue) => suggestImportType(missingValue)
       case xxxxxNotFoundError(missing) => suggestImportType(missing)
