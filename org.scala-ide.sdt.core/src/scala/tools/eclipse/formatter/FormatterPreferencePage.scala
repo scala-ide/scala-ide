@@ -16,7 +16,7 @@ class FormatterPreferencePage extends FieldEditorPreferencePage with IWorkbenchP
 
   override def createFieldEditors() {
 
-    for (preference ← AllPreferences.preferences) {
+    for (preference <- AllPreferences.preferences) {
       val preferenceType = preference.preferenceType
       preferenceType match {
         case BooleanPreference =>
