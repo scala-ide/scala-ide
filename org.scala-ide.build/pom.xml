@@ -22,6 +22,8 @@
   </prerequisites>
   
   <modules>
+    <module>../ch.epfl.lamp.sdt</module>
+    <module>../org.eclipse.contribution.weaving</module>
     <module>../org.scala-ide.sdt.weaving.feature</module>
     <module>../org.scala-ide.sdt.aspects</module>
     <module>../org.scala-ide.sdt.core</module>

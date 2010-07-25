@@ -3,7 +3,13 @@
   <feature url="features/org.scala-ide.sdt.feature_0.0.0.jar" id="org.scala-ide.sdt.feature" version="0.0.0">
    	<category name="sdt"/>
   </feature>
+  <feature url="features/ch.epfl.lamp.sdt_0.0.0.jar" id="ch.epfl.lamp.sdt" version="0.0.0">
+   	<category name="sdt"/>
+  </feature>
   <feature url="features/org.scala-ide.sdt.weaving.feature_0.0.0.jar" id="org.scala-ide.sdt.weaving.feature" version="0.0.0">
+   	<category name="sdt-weaving"/>
+  </feature>
+  <feature url="features/org.eclipse.contribution.weaving_0.0.0.jar" id="org.eclipse.contribution.weaving" version="0.0.0">
    	<category name="sdt-weaving"/>
   </feature>
   <category-def name="sdt" label="Scala IDE for Eclipse"/>
