@@ -22,11 +22,13 @@ set_toolchain_version()
 build_both()
 {
     ${MAVEN} \
+	-U \
         -Dscala.toolchain.version=${SCALA_TOOLCHAIN_VERSION} \
         -Dscala.version=${SCALA_VERSION} \
         -f toolchain-pom.xml \
         clean install $* && \
     ${MAVEN} \
+	-U \
         -Dscala.toolchain.version=${SCALA_TOOLCHAIN_VERSION} \
         -Dscala.version=${SCALA_VERSION} \
         clean install $*
