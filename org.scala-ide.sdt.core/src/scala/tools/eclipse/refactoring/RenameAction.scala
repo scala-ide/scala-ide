@@ -108,10 +108,7 @@ class RenameAction extends RefactoringAction {
     def runInlineRename(r: RenameScalaIdeRefactoring) {
       import r.refactoring._
       
-        val positions = index.occurences(r.selection.selectedSymbolTree.get.symbol) map {
-          case t: global.DefTree => (t.pos.point, t.name.length)
-          case t: global.RefTree => (t.pos.start, t.pos.end - t.pos.start)
-        }
+      val positions = index.occurences(r.selection.selectedSymbolTree.get.symbol) map (_.namePosition) map (pos => (pos.start, pos.end - pos.start))
       
       runInLinkedModeUi(positions)
     }

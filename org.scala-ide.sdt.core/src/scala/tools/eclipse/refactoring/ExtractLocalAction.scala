@@ -34,9 +34,7 @@ class ExtractLocalAction extends RefactoringAction {
     
     lazy val selection = createSelection(file, selectionStart, selectionEnd)
             
-    def initialCheck = file.withCompilerResult { crh =>
-      refactoring.prepare(selection)
-    }
+    def initialCheck = refactoring.prepare(selection)
     
     def refactoringParameters = outer.name
   }

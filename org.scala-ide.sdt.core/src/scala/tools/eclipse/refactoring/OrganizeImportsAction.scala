@@ -32,9 +32,7 @@ class OrganizeImportsAction extends RefactoringAction {
             
     lazy val selection = createSelection(file, 0, 0)
     
-    def initialCheck = file.withCompilerResult { crh =>
-      refactoring.prepare(selection)
-    }
+    def initialCheck = refactoring.prepare(selection)
     
     def refactoringParameters = new refactoring.RefactoringParameters    
   }

@@ -42,9 +42,7 @@ class ExtractMethodAction extends RefactoringAction {
 
     lazy val selection = createSelection(file, start, end)
             
-    def initialCheck = file.withCompilerResult { crh =>
-      refactoring.prepare(selection)
-    }
+    def initialCheck = refactoring.prepare(selection)
     
     def refactoringParameters = name
     
