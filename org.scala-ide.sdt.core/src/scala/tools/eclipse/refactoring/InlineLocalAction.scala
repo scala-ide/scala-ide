@@ -20,6 +20,7 @@ import scala.tools.eclipse.util.EclipseResource
 import scala.tools.refactoring.analysis.GlobalIndexes
 import scala.tools.refactoring.common.{Change, Selections}
 import scala.tools.refactoring.implementations.InlineLocal
+import org.eclipse.ltk.ui.refactoring.RefactoringWizard
 
 class InlineLocalAction extends RefactoringAction {
   
@@ -39,4 +40,22 @@ class InlineLocalAction extends RefactoringAction {
   
   def createRefactoring(selectionStart: Int, selectionEnd: Int, file: ScalaSourceFile) = 
     Some(new InlineLocalScalaIdeRefactoring(selectionStart, selectionEnd, file))
+  
+  override def run(action: IAction) {
+    // if there are no errors, we want to apply the refactoring without showing the change preview
+    createScalaRefactoring() match {
+      case Some(refactoring: InlineLocalScalaIdeRefactoring) =>
+        val npm = new NullProgressMonitor
+        val status = refactoring.checkInitialConditions(npm)
+        
+        if(status.hasError) {
+          runRefactoring(createWizard(Some(refactoring)))
+          return
+        }
+        
+        val change = refactoring.createChange(npm)
+        change.perform(npm)
+      case _ => //?
+    }
+  }
 }
