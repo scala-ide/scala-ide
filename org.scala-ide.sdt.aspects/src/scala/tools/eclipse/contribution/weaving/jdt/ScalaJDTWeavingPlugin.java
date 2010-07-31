@@ -14,7 +14,7 @@ public class ScalaJDTWeavingPlugin extends Plugin
 {
   private static ScalaJDTWeavingPlugin INSTANCE;
   
-  public static String ID = "org.eclipse.contribution.jdt"; //$NON-NLS-1$
+  public static String ID = "org.scala-ide.sdt.aspects"; //$NON-NLS-1$
   
   public ScalaJDTWeavingPlugin() {
       super();
