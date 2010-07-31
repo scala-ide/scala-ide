@@ -15,7 +15,7 @@
     <dependency>
       <groupId>org.aspectj</groupId>
       <artifactId>aspectjrt</artifactId>
-      <version>1.6.8</version>
+      <version>1.6.9</version>
     </dependency>
   </dependencies>
   <build>
@@ -51,6 +51,8 @@
               <target>1.5</target>
               <aspectDirectory>src</aspectDirectory>
               <Xlint>ignore</Xlint>
+              <Xreweavable>true</Xreweavable>
+              <deprecation>true</deprecation>
             </configuration>
             <goals>
               <goal>compile</goal>
