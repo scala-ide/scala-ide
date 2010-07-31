@@ -54,7 +54,7 @@ SUCH DAMAGE.
    </license>
 
    <url>
-      <update url="http://download.scala-ide.org/update-current" label="Scala IDE for Eclipse update site"/>
+      <update url="http://download.scala-ide.org/update-current-35" label="Scala IDE for Eclipse update site"/>
    </url>
    
    <includes id="ch.epfl.lamp.sdt" version="0.0.0" optional="true"/>
