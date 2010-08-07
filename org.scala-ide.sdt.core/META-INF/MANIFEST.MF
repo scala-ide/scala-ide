@@ -44,7 +44,8 @@ Require-Bundle:
  org.scala-ide.scala.library,
  org.scala-ide.scala.compiler,
  org.scala-refactoring.library,
- scalariform
+ scalariform,
+ org.junit4;bundle-version="4.5.0"
 Import-Package: 
  org.eclipse.contribution.jdt.cuprovider;apply-aspects:=false,
  org.eclipse.contribution.jdt.imagedescriptor;apply-aspects:=false,
