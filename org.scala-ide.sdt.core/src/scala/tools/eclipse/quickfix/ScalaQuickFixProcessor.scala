@@ -1,5 +1,9 @@
 package scala.tools.eclipse.quickfix
 
+import org.eclipse.ui.IEditorPart
+import org.eclipse.jface.text.source.Annotation
+import org.eclipse.jdt.internal.ui.javaeditor.CompilationUnitDocumentProvider.ProblemAnnotation
+import org.eclipse.jdt.ui.JavaUI
 import org.eclipse.core.runtime.CoreException
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.core.search.IJavaSearchConstants
@@ -8,6 +12,7 @@ import org.eclipse.jdt.internal.compiler.env.{ AccessRestriction, INameEnvironme
 import org.eclipse.jdt.internal.core.{ DefaultWorkingCopyOwner, JavaProject }
 import org.eclipse.jdt.internal.ui.text.correction.{ SimilarElement, SimilarElementsRequestor }
 import org.eclipse.jdt.ui.text.java._
+import org.eclipse.core.resources.IMarker
 import scala.tools.eclipse.javaelements.ScalaSourceFile
 import scala.tools.eclipse.util.FileUtils
 import scala.util.matching.Regex
@@ -39,26 +44,35 @@ class ScalaQuickFixProcessor extends IQuickFixProcessor {
   def getCorrections(context : IInvocationContext, locations : Array[IProblemLocation]) : Array[IJavaCompletionProposal] =
     context.getCompilationUnit match {
       case ssf : ScalaSourceFile => {
-        import org.eclipse.core.resources.IMarker
-        import org.eclipse.core.resources.IResource
+    	val editor = JavaUI.openInEditor(context.getCompilationUnit)
         var corrections : List[IJavaCompletionProposal] = Nil
-        val markers = FileUtils.findBuildErrors(ssf.getResource)
-        for {
-          location <- locations
-          marker <- markers
-          if (marker.getAttribute(IMarker.CHAR_START, -1) == location.getOffset)
-        } {
-          val msg = marker.getAttribute(IMarker.MESSAGE, "")
-          val fix = suggestFix(context.getCompilationUnit(), msg)
-          corrections = corrections ++ fix
-        }
+        for (location <- locations)
+        	for (ann <- getAnnotationsAtOffset(editor, location.getOffset)) {
+         	  val fix = suggestFix(context.getCompilationUnit(), ann.getText)
+              corrections = corrections ++ fix
+        	}
         corrections match {
           case Nil => null
           case l => l.distinct.toArray
         }
       }
       case _ => null
-    }
+  }
+  
+  private def getAnnotationsAtOffset(part: IEditorPart, offset: Int): List[Annotation] = {
+	  import ScalaQuickFixProcessor._ 
+	  
+	  var ret = List[Annotation]() 
+	  val model = JavaUI.getDocumentProvider().getAnnotationModel(part.getEditorInput())
+	  val iter = model.getAnnotationIterator
+	  while (iter.hasNext()) {
+	 	val ann: Annotation = iter.next().asInstanceOf[Annotation]
+	 	val pos = model.getPosition(ann)
+	 	if (isInside(offset, pos.offset, pos.offset + pos.length))
+	 	    ret = ann :: ret
+	  }
+	  return ret
+  }
   
   private class Requestor(val typeToFind : String) extends ISearchRequestor {
     val typesFound = scala.collection.mutable.ListBuffer[String]()
@@ -130,5 +144,9 @@ class ScalaQuickFixProcessor extends IQuickFixProcessor {
   }
 }
 
-
+object ScalaQuickFixProcessor {
+	private def isInside(offset: Int, start: Int,end: Int): Boolean = {
+		return offset == start || offset == end || (offset > start && offset < end); // make sure to handle 0-length ranges
+    }
+}
 
