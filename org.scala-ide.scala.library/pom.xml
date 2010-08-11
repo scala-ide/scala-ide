@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>org.scala-ide</groupId>
     <artifactId>scala-toolchain-for-eclipse</artifactId>
-    <version>2.8.0</version>
-    <relativePath>../org.scala-ide.build/toolchain-pom.xml</relativePath>
+    <version>2.8.0-SNAPSHOT</version>
+    <relativePath>../org.scala-ide.build-toolchain/pom.xml</relativePath>
   </parent>
   <artifactId>org.scala-ide.scala.library</artifactId>
   <packaging>bundle</packaging>
@@ -27,65 +27,101 @@
   <build>
     <plugins>
       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>unpack</id>
+            <phase>initialize</phase>
+            <goals>
+              <goal>unpack</goal>
+            </goals>
+            <configuration>
+              <artifactItems>
+                <artifactItem>
+                  <groupId>org.scala-lang</groupId>
+                  <artifactId>scala-library</artifactId>
+                  <outputDirectory>${project.build.directory}</outputDirectory>
+                  <includes>library.properties</includes>
+                </artifactItem>
+              </artifactItems>
+            </configuration>
+          </execution>
+          <execution>
+            <id>copy</id>
+            <phase>compile</phase>
+            <goals>
+              <goal>copy</goal>
+            </goals>
+            <configuration>
+              <artifactItems>
+                <artifactItem>
+                  <groupId>org.scala-lang</groupId>
+                  <artifactId>scala-library</artifactId>
+                  <version>${scala.version}</version>
+                  <classifier>sources</classifier>
+                  <type>jar</type>
+                  <destFileName>scala-library-src.jar</destFileName>
+                </artifactItem>
+                <artifactItem>
+                  <groupId>org.scala-lang</groupId>
+                  <artifactId>scala-swing</artifactId>
+                  <version>${scala.version}</version>
+                  <classifier>sources</classifier>
+                  <type>jar</type>
+                  <destFileName>scala-swing-src.jar</destFileName>
+                </artifactItem>
+                <artifactItem>
+                  <groupId>org.scala-lang</groupId>
+                  <artifactId>scala-dbc</artifactId>
+                  <version>${scala.version}</version>
+                  <classifier>sources</classifier>
+                  <type>jar</type>
+                  <destFileName>scala-dbc-src.jar</destFileName>
+                </artifactItem>
+              </artifactItems>
+              <outputDirectory>${project.build.directory}/lib</outputDirectory>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>properties-maven-plugin</artifactId>
+        <version>1.0-alpha-2</version>
+        <executions>
+          <execution>
+            <phase>initialize</phase>
+            <goals>
+              <goal>read-project-properties</goal>
+            </goals>
+            <configuration>
+              <files>
+                <file>${project.build.directory}/library.properties</file>
+              </files>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
         <groupId>org.apache.felix</groupId>
-     	<artifactId>maven-bundle-plugin</artifactId>
+        <artifactId>maven-bundle-plugin</artifactId>
         <version>2.1.0</version>
         <extensions>true</extensions>
         <configuration>
           <instructions>
             <Bundle-SymbolicName>org.scala-ide.scala.library</Bundle-SymbolicName>
             <Bundle-Name>Scala Library for Eclipse</Bundle-Name>
+            <Bundle-Version>${version.number}</Bundle-Version>
             <Embed-Dependency>*;scope=compile|runtime;inline=false</Embed-Dependency>
-            <_exportcontents>scala.*;version=${scala.toolchain.version}</_exportcontents>
-            <Embed-Directory>lib</Embed-Directory>
-            <Embed-StripVersion>true</Embed-StripVersion>
-            <Include-Resource>lib=${project.build.directory}/lib</Include-Resource>
-            <Import-Package>!sun.misc,*</Import-Package>
-          </instructions>
-        </configuration>
-       </plugin>
-       <plugin>
-         <groupId>org.apache.maven.plugins</groupId>
-         <artifactId>maven-dependency-plugin</artifactId>
-         <executions>
-           <execution>
-             <id>copy</id>
-             <phase>compile</phase>
-             <goals>
-               <goal>copy</goal>
-             </goals>
-             <configuration>
-               <artifactItems>
-                 <artifactItem>
-                   <groupId>org.scala-lang</groupId>
-                   <artifactId>scala-library</artifactId>
-                   <version>${scala.version}</version>
-                   <classifier>sources</classifier>
-                   <type>jar</type>
-                   <destFileName>scala-library-src.jar</destFileName>
-                 </artifactItem>
-                 <artifactItem>
-                   <groupId>org.scala-lang</groupId>
-                   <artifactId>scala-swing</artifactId>
-                   <version>${scala.version}</version>
-                   <classifier>sources</classifier>
-                   <type>jar</type>
-                   <destFileName>scala-swing-src.jar</destFileName>
-                 </artifactItem>
-                 <artifactItem>
-                   <groupId>org.scala-lang</groupId>
-                   <artifactId>scala-dbc</artifactId>
-                   <version>${scala.version}</version>
-                   <classifier>sources</classifier>
-                   <type>jar</type>
-                   <destFileName>scala-dbc-src.jar</destFileName>
-                 </artifactItem>
-               </artifactItems>
-               <outputDirectory>${project.build.directory}/lib</outputDirectory>
-             </configuration>
-           </execution>
-         </executions>
-       </plugin>
-    </plugins>
-  </build>
+            <_exportcontents>scala.*;version=${version.number}</_exportcontents>
+          <Embed-Directory>lib</Embed-Directory>
+          <Embed-StripVersion>true</Embed-StripVersion>
+          <Include-Resource>lib=${project.build.directory}/lib</Include-Resource>
+          <Import-Package>!sun.misc,*</Import-Package>
+        </instructions>
+      </configuration>
+    </plugin>
+  </plugins>
+</build>
 </project>

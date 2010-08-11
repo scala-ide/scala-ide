@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>org.scala-ide</groupId>
     <artifactId>scala-toolchain-for-eclipse</artifactId>
-    <version>2.8.0</version>
-    <relativePath>../org.scala-ide.build/toolchain-pom.xml</relativePath>
+    <version>2.8.0-SNAPSHOT</version>
+    <relativePath>../org.scala-ide.build-toolchain/pom.xml</relativePath>
   </parent>
   <artifactId>org.scala-ide.scala.compiler</artifactId>
   <packaging>bundle</packaging>
@@ -19,20 +19,63 @@
   <build>
     <plugins>
       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <version>2.1</version>
+        <executions>
+          <execution>
+            <id>unpack</id>
+            <phase>initialize</phase>
+            <goals>
+              <goal>unpack</goal>
+            </goals>
+            <configuration>
+              <artifactItems>
+                <artifactItem>
+                  <groupId>org.scala-lang</groupId>
+                  <artifactId>scala-compiler</artifactId>
+                  <outputDirectory>${project.build.directory}</outputDirectory>
+                  <includes>compiler.properties</includes>
+                </artifactItem>
+              </artifactItems>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>properties-maven-plugin</artifactId>
+        <version>1.0-alpha-2</version>
+        <executions>
+          <execution>
+            <phase>initialize</phase>
+            <goals>
+              <goal>read-project-properties</goal>
+            </goals>
+            <configuration>
+              <files>
+                <file>${project.build.directory}/compiler.properties</file>
+              </files>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
         <groupId>org.apache.felix</groupId>
-     	<artifactId>maven-bundle-plugin</artifactId>
+        <artifactId>maven-bundle-plugin</artifactId>
         <version>2.1.0</version>
         <extensions>true</extensions>
         <configuration>
           <instructions>
             <Bundle-SymbolicName>org.scala-ide.scala.compiler</Bundle-SymbolicName>
             <Bundle-Name>Scala Compiler for Eclipse</Bundle-Name>
+            <Bundle-Version>${version.number}</Bundle-Version>
             <Embed-Dependency>*;scope=compile|runtime;inline=true</Embed-Dependency>
-            <Export-Package>scala.tools.*;version=${scala.toolchain.version},ch.epfl.lamp.*;version=${scala.toolchain.version}</Export-Package>
+            <Export-Package>scala.tools.*;version=${version.number},ch.epfl.lamp.*;version=${version.number}</Export-Package>
             <Import-Package>!jline,*</Import-Package>
           </instructions>
         </configuration>
-       </plugin>
+      </plugin>
     </plugins>
   </build>
 </project>

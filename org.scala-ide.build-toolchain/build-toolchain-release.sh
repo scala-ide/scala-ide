@@ -4,4 +4,6 @@
 
 SCALA_VERSION=2.8.0
 
+set_version ${SCALA_VERSION}
+
 build $*

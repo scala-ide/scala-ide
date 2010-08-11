@@ -13,10 +13,17 @@ if [ "X$MAVEN" = "X" ] ; then
   exit
 fi
 
+set_version()
+{
+    ${MAVEN} -f pom.xml -N versions:set -DnewVersion=$1
+    ${MAVEN} -f pom.xml -N versions:update-child-modules
+}
+
 build()
 {
-  ${MAVEN} \
-    -U \
-    -Dscala.version=${SCALA_VERSION} \
-    clean install $*
+    ${MAVEN} \
+        -U \
+        -Dscala.version=${SCALA_VERSION} \
+        clean install $* 
 }
+
