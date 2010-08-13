@@ -25,7 +25,26 @@
     </dependency>
   </dependencies>
   <build>
+    <outputDirectory>${basedir}</outputDirectory>
     <plugins>
+      <plugin>
+        <artifactId>maven-clean-plugin</artifactId>
+        <version>2.4.1</version>
+        <configuration>
+          <excludeDefaultDirectories>true</excludeDefaultDirectories>
+          <filesets>
+            <fileset>
+              <directory>${basedir}</directory>
+              <includes>
+                <include>META-INF</include>
+                <include>lib</include>
+                <include>target</include>
+              </includes>
+              <followSymlinks>false</followSymlinks>
+            </fileset>
+          </filesets>
+        </configuration>
+      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-dependency-plugin</artifactId>
@@ -109,19 +128,20 @@
         <version>2.1.0</version>
         <extensions>true</extensions>
         <configuration>
+          <unpackBundle>true</unpackBundle>
           <instructions>
             <Bundle-SymbolicName>org.scala-ide.scala.library</Bundle-SymbolicName>
             <Bundle-Name>Scala Library for Eclipse</Bundle-Name>
             <Bundle-Version>${version.number}</Bundle-Version>
             <Embed-Dependency>*;scope=compile|runtime;inline=false</Embed-Dependency>
             <_exportcontents>scala.*;version=${version.number}</_exportcontents>
-          <Embed-Directory>lib</Embed-Directory>
-          <Embed-StripVersion>true</Embed-StripVersion>
-          <Include-Resource>lib=${project.build.directory}/lib</Include-Resource>
-          <Import-Package>!sun.misc,*</Import-Package>
-        </instructions>
-      </configuration>
-    </plugin>
-  </plugins>
-</build>
+            <Embed-Directory>lib</Embed-Directory>
+            <Embed-StripVersion>true</Embed-StripVersion>
+            <Include-Resource>lib=${project.build.directory}/lib</Include-Resource>
+            <Import-Package>!sun.misc,*</Import-Package>
+          </instructions>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 </project>

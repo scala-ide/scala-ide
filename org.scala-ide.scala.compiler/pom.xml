@@ -17,7 +17,26 @@
     </dependency>
   </dependencies>
   <build>
+    <outputDirectory>${basedir}</outputDirectory>
     <plugins>
+      <plugin>
+        <artifactId>maven-clean-plugin</artifactId>
+        <version>2.4.1</version>
+        <configuration>
+          <excludeDefaultDirectories>true</excludeDefaultDirectories>
+          <filesets>
+            <fileset>
+              <directory>${basedir}</directory>
+              <includes>
+                <include>META-INF</include>
+                <include>lib</include>
+                <include>target</include>
+              </includes>
+              <followSymlinks>false</followSymlinks>
+            </fileset>
+          </filesets>
+        </configuration>
+      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-dependency-plugin</artifactId>
@@ -38,6 +57,33 @@
                   <includes>compiler.properties</includes>
                 </artifactItem>
               </artifactItems>
+            </configuration>
+          </execution>
+          <execution>
+            <id>copy</id>
+            <phase>compile</phase>
+            <goals>
+              <goal>copy</goal>
+            </goals>
+            <configuration>
+              <artifactItems>
+                <artifactItem>
+                  <groupId>org.scala-lang</groupId>
+                  <artifactId>scala-compiler</artifactId>
+                  <version>${scala.version}</version>
+                  <classifier>sources</classifier>
+                  <type>jar</type>
+                  <destFileName>scala-compiler-src.jar</destFileName>
+                </artifactItem>
+                <artifactItem>
+                  <groupId>org.scala-lang.plugins</groupId>
+                  <artifactId>continuations</artifactId>
+                  <version>${scala.version}</version>
+                  <type>jar</type>
+                </artifactItem>
+              </artifactItems>
+              <stripVersion>true</stripVersion>
+              <outputDirectory>${project.build.directory}/lib</outputDirectory>
             </configuration>
           </execution>
         </executions>
@@ -66,12 +112,16 @@
         <version>2.1.0</version>
         <extensions>true</extensions>
         <configuration>
+          <unpackBundle>true</unpackBundle>
           <instructions>
             <Bundle-SymbolicName>org.scala-ide.scala.compiler</Bundle-SymbolicName>
             <Bundle-Name>Scala Compiler for Eclipse</Bundle-Name>
             <Bundle-Version>${version.number}</Bundle-Version>
-            <Embed-Dependency>*;scope=compile|runtime;inline=true</Embed-Dependency>
-            <Export-Package>scala.tools.*;version=${version.number},ch.epfl.lamp.*;version=${version.number}</Export-Package>
+            <Embed-Dependency>*;scope=compile|runtime;inline=false</Embed-Dependency>
+            <_exportcontents>scala.tools.*;version=${version.number},ch.epfl.lamp.*;version=${version.number}</_exportcontents>
+            <Embed-Directory>lib</Embed-Directory>
+            <Embed-StripVersion>true</Embed-StripVersion>
+            <Include-Resource>lib=${project.build.directory}/lib</Include-Resource>
             <Import-Package>!jline,*</Import-Package>
           </instructions>
         </configuration>

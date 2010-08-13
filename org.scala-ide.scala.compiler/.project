@@ -2,6 +2,8 @@
 <projectDescription>
 	<name>org.scala-ide.scala.compiler</name>
 	<comment></comment>
+	<projects>
+	</projects>
 	<buildSpec>
 		<buildCommand>
 			<name>org.eclipse.pde.ManifestBuilder</name>
