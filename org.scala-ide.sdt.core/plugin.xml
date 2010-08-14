@@ -707,7 +707,7 @@
                </objectClass>
             </enablement>
          </action>
-         <action
+	 <!--<action
                class="scala.tools.eclipse.refactoring.ShowReferencesAction"
                definitionId="scala.tools.eclipse.refactoring.command.ShowReferences"
                id="scala.tools.eclipse.refactoring.showReferencesAction"
@@ -719,7 +719,7 @@
                      name="org.eclipse.jface.text.TextSelection">
                </objectClass>
             </enablement>
-         </action>
+	</action>-->
          <action
                class="scala.tools.eclipse.quickfix.AddImportAction"
                definitionId="scala.tools.eclipse.refactoring.command.AddImport"
@@ -756,10 +756,10 @@
          categoryId="scala.tools.eclipse.refactoring.commands.refactoring"
          id="scala.tools.eclipse.refactoring.command.Rename"
          name="Rename"/>
-      <command
+      <!--<command
          categoryId="scala.tools.eclipse.refactoring.commands.refactoring"
          id="scala.tools.eclipse.refactoring.command.ShowReferences"
-         name="Show References"/>
+	 name="Show References"/>-->
       <command
          categoryId="scala.tools.eclipse.refactoring.commands.refactoring"
          id="scala.tools.eclipse.refactoring.command.AddImport"
