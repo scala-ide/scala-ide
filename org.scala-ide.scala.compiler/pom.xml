@@ -116,7 +116,7 @@
           <instructions>
             <Bundle-SymbolicName>org.scala-ide.scala.compiler</Bundle-SymbolicName>
             <Bundle-Name>Scala Compiler for Eclipse</Bundle-Name>
-            <Bundle-Version>${version.number}</Bundle-Version>
+            <Bundle-Version>${version.number}-${patch.level}</Bundle-Version>
             <Embed-Dependency>*;scope=compile|runtime;inline=false</Embed-Dependency>
             <_exportcontents>scala.tools.*;version=${version.number},ch.epfl.lamp.*;version=${version.number}</_exportcontents>
             <Embed-Directory>lib</Embed-Directory>
