@@ -182,5 +182,41 @@
         </repository>
       </repositories>
     </profile>
+    <profile>
+      <id>local-scala-2.8.0.final</id>
+      <activation>
+        <property>
+          <name>scala.version</name>
+          <value>2.8.0</value>
+        </property>
+      </activation>
+      <dependencies>
+        <dependency>
+          <groupId>org.scala-ide</groupId>
+          <artifactId>org.scala-ide.scala.library</artifactId>
+          <version>${scala.version}</version>
+        </dependency>
+        <dependency>
+          <groupId>org.scala-ide</groupId>
+          <artifactId>org.scala-ide.scala.compiler</artifactId>
+          <version>${scala.version}</version>
+        </dependency>
+      </dependencies>
+      <repositories>
+        <repository>
+          <id>scala-refactoring-2.8.0.final</id>
+          <name>Scala Refactoring Scala 2.8.0.final p2 repository</name>
+          <layout>p2</layout>
+          <url>http://download.scala-ide.org/scala-refactoring-2.8.0.final</url>
+          <snapshots><enabled>false</enabled></snapshots>
+        </repository>
+        <repository>
+          <id>scalariform-2.8.0.final</id>
+          <name>Scalariform Scala 2.8.0.final p2 repo</name>
+          <layout>p2</layout>
+          <url>http://download.scala-ide.org/scalariform-2.8.0.final</url>
+        </repository>
+      </repositories>
+    </profile>
   </profiles>
 </project>
