@@ -6,8 +6,7 @@ Bundle-Version: 1.0.0.qualifier
 Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: 
  .,
- bin,
- compiler-plugins/continuations.jar
+ bin
 Bundle-Activator: 
  scala.tools.eclipse.ScalaPlugin
 Require-Bundle: 

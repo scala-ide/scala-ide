@@ -34,6 +34,7 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
   ScalaPlugin.plugin = this
   
   def pluginId = "org.scala-ide.sdt.core"
+  def compilerPluginId = "org.scala-ide.scala.compiler"
   def libraryPluginId = "org.scala-ide.scala.library"
     
   def wizardPath = pluginId + ".wizards"
@@ -49,7 +50,9 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
   def builderId = pluginId + ".scalabuilder"
   def natureId = pluginId + ".scalanature"  
   def launchId = "org.scala-ide.sdt.launching"
+  val scalaCompiler = "SCALA_COMPILER_CONTAINER"
   val scalaLib = "SCALA_CONTAINER"
+  def scalaCompilerId  = launchId + "." + scalaCompiler
   def scalaLibId  = launchId + "." + scalaLib
   def launchTypeId = "scala.application"
   def problemMarkerId = pluginId + ".problem"
@@ -66,8 +69,12 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
   val javaFileExtn = ".java"
   val jarFileExtn = ".jar"
   
+  val scalaCompilerBundle = Platform.getBundle(ScalaPlugin.plugin.compilerPluginId)
+  val compilerClasses = pathInBundle(scalaCompilerBundle, "/lib/scala-compiler.jar")
+  val continuationsClasses = pathInBundle(scalaCompilerBundle, "/lib/continuations.jar")
+  val compilerSources = pathInBundle(scalaCompilerBundle, "/lib/scala-compiler-src.jar")
+  
   val scalaLibBundle = Platform.getBundle(ScalaPlugin.plugin.libraryPluginId)
-
   val libClasses = pathInBundle(scalaLibBundle, "/lib/scala-library.jar") 
   val libSources = pathInBundle(scalaLibBundle, "/lib/scala-library-src.jar") 
   val dbcClasses = pathInBundle(scalaLibBundle, "/lib/scala-dbc.jar")

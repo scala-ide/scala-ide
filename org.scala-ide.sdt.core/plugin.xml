@@ -266,7 +266,11 @@
     <extension
          point="org.eclipse.jdt.core.classpathContainerInitializer">
       <classpathContainerInitializer
-            class="scala.tools.eclipse.ScalaClasspathContainerInitializer"
+            class="scala.tools.eclipse.ScalaCompilerClasspathContainerInitializer"
+            id="org.scala-ide.sdt.launching.SCALA_COMPILER_CONTAINER">
+      </classpathContainerInitializer>
+      <classpathContainerInitializer
+            class="scala.tools.eclipse.ScalaLibraryClasspathContainerInitializer"
             id="org.scala-ide.sdt.launching.SCALA_CONTAINER">
       </classpathContainerInitializer>
       <!-- Retained for backwards compatibility -->
@@ -274,6 +278,18 @@
            class="scala.tools.eclipse.ScalaClasspathContainerInitializer"
            id="ch.epfl.lamp.sdt.launching.SCALA_CONTAINER">
       </classpathContainerInitializer>
+   </extension>
+   <extension point="org.eclipse.jdt.ui.classpathContainerPage">
+      <classpathContainerPage
+         id="org.scala-ide.sdt.launching.SCALA_COMPILER_CONTAINER"
+         name="Scala Compiler"
+         class="scala.tools.eclipse.ScalaCompilerClasspathContainerPage">
+      </classpathContainerPage>
+      <classpathContainerPage
+         id="org.scala-ide.sdt.launching.SCALA_CONTAINER"
+         name="Scala Library"
+         class="scala.tools.eclipse.ScalaLibraryClasspathContainerPage">
+      </classpathContainerPage>
    </extension>
    <extension point = "org.eclipse.debug.core.launchConfigurationTypes">
      <launchConfigurationType

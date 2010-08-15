@@ -314,9 +314,8 @@ class ScalaProject(val underlying : IProject) {
         val value0 = store.getString(SettingConverterUtil.convertNameToProperty(setting.name))
         try {
           val value = if (setting ne settings.pluginsDir) value0 else {
-            val url = FileLocator.find(ScalaPlugin.plugin.getBundle, Path.fromPortableString("compiler-plugins"), null)
-            Option(url) map { x =>
-              FileLocator.toFileURL(x).getPath+(if (value0 == null || value0.length == 0) "" else ":"+value0)
+            ScalaPlugin.plugin.continuationsClasses map {
+              _.removeLastSegments(1).toOSString+(if (value0 == null || value0.length == 0) "" else ":"+value0)
             } getOrElse value0
           }
           if (value != null && value.length != 0) {
