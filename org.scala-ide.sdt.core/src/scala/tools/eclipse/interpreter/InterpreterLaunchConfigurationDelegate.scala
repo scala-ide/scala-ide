@@ -7,13 +7,11 @@ package scala.tools.eclipse.interpreter
 
 import java.io.File
 
-import org.eclipse.jdt.launching._
-import org.eclipse.debug.core._
-import org.eclipse.core.runtime._
+import org.eclipse.core.runtime.{ IProgressMonitor, NullProgressMonitor }
+import org.eclipse.debug.core.{ ILaunch, ILaunchConfiguration }
+import org.eclipse.jdt.launching.{ AbstractJavaLaunchConfigurationDelegate, ExecutionArguments, VMRunnerConfiguration }
 
-import org.eclipse.osgi.baseadaptor.BaseData
-import org.eclipse.osgi.framework.internal.core.AbstractBundle
-import org.osgi.framework.Bundle
+import scala.tools.eclipse.ScalaPlugin
 
 /**
  * This launch delegate extends the normal JavaLaunchDelegate with functionality to work for the interpreter.
@@ -130,31 +128,9 @@ class InterpreterLaunchConfigurationDelegate extends AbstractJavaLaunchConfigura
   }
   
   /** Retreives the extra classpath needed for the interpreter*/
-  def toolClassPath : Seq[String] = {
-    // Equinox-specific hack which allows us to refer to the unpacked
-    // scala-library.jar for use on the out-of-process interpreters
-    // classpath
-    val libraryJarFile =
-      Platform.getBundle("org.scala-ide.scala.library").asInstanceOf[AbstractBundle].
-      getBundleData.asInstanceOf[BaseData].
-      getBundleFile.getFile("/lib/scala-library.jar", false)
-    
-    val compilerBundle = Platform.getBundle("org.scala-ide.scala.compiler")
-    val compilerBundleFile = FileLocator.getBundleFile(compilerBundle)
-
-    // Compiler classpath corresponds to either the installed .jar
-    // or a compiler projectc in a development time workspace
-    if (compilerBundleFile.getName.endsWith(".jar"))
-      libraryJarFile.getPath ::
-      compilerBundleFile.getPath ::
-      Nil
-    else {
-      def mkEntry(entry : String) = new File(compilerBundleFile, entry).getPath
-      libraryJarFile.getPath ::
-      mkEntry("/bin") ::
-      mkEntry("/lib/fjbg.jar") ::
-      mkEntry("/lib/msil.jar") ::
-      Nil
-    }
+  def toolClassPath = {
+    val plugin = ScalaPlugin.plugin
+    import plugin._
+    (libClasses :: dbcClasses :: swingClasses :: compilerClasses :: Nil).flatMap(_.toList).map(_.toOSString)
   }
 }
