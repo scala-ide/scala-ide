@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry kind="lib" path="lib/scala-library.jar"/>
-	<classpathentry kind="lib" path="lib/scala-dbc.jar"/>
-	<classpathentry kind="lib" path="lib/scala-swing.jar"/>
+	<classpathentry kind="lib" path="lib/scala-library.jar" sourcepath="lib/scala-library-src.jar"/>
+	<classpathentry kind="lib" path="lib/scala-dbc.jar" sourcepath="lib/scala-dbc-src.jar"/>
+	<classpathentry kind="lib" path="lib/scala-swing.jar" sourcepath="lib/scala-swing-src.jar"/>
 	<classpathentry kind="output" path="classes"/>
 </classpath>
