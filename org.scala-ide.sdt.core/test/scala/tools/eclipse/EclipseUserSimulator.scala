@@ -6,6 +6,8 @@ import org.eclipse.core.runtime.Path;
 import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.ui.PlatformUI;
+import org.eclipse.jdt.core.search.SearchRequestor
+import org.eclipse.jdt.core.search.SearchMatch
 
 class EclipseUserSimulator {
 	  import org.eclipse.jdt.core._;
@@ -87,7 +89,28 @@ class EclipseUserSimulator {
       def saveCurrentEditor() = 
     	currentEditor.doSave(new NullProgressMonitor())  
       
-      
       def setContentOfCurrentEditor(code : String) = 
     	 currentEditor.getDocumentProvider().getDocument(fileEditorInput).set(code)
+    	 
+      def searchType(typeName : String) = {
+    	  import org.eclipse.jdt.core.search._
+    	  val searchPattern = SearchPattern.createPattern(typeName, 
+    	 		  										  IJavaSearchConstants.CLASS, 
+    	 		  										  IJavaSearchConstants.ALL_OCCURRENCES, 
+    	 		  										  SearchPattern.R_EXACT_MATCH);
+    	   val engine = new SearchEngine;
+    	   val requestor = new ClassSearchRequestor  
+    	   engine.search(searchPattern, Array(SearchEngine.getDefaultSearchParticipant()), SearchEngine.createWorkspaceScope, requestor, null)
+    	   
+    	   requestor.matches
+      }
+      
+      class ClassSearchRequestor extends SearchRequestor {
+    	  
+    	  var matches = List.empty[SearchMatch]
+    	   
+    	  def acceptSearchMatch(sm : SearchMatch) {
+    	 	matches = sm :: matches;
+    	  }  
+      }
   }
