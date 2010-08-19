@@ -13,8 +13,8 @@ class ReferenceSearchTest {
   var compilationUnit1, compilationUnit2 : ICompilationUnit = null;
   var workspace : IWorkspace = null;
   val eclipseInstance = new EclipseUserSimulator;
-  
-  @Before
+
+      @Before
   def initialise() {
 	import eclipseInstance._
 	
@@ -40,6 +40,11 @@ class ReferenceSearchTest {
        package test.top_level; 
        object ReferringObject { 
          var b : ReferencedClass = null;
+         var o = ReferencedObject;
+         var p = ReferencedObject.a;
+       }
+       object ReferencedObject { 
+         var a = 2;
        }
     """);
     compilationUnit2 = createCompilationUnit(pack, "ReferringObject.scala", sourceCode2.toString)
@@ -47,29 +52,50 @@ class ReferenceSearchTest {
     
     buildWorkspace;
     Thread.sleep(200)    
-  }
-     
+  }	
+  
   @Test
-  def testReferences() {
+  def testReference {
+	testClassReferences
+	testObjectReferences
+  }
+  
+  def testObjectReferences {
+	import eclipseInstance._  
+    val references = searchType("ReferencedObject");
+	
+	assertEquals(2, references.size)
+	assertEquals(0, getReferencesOffsetsFromFile(references, "ReferencedClass.scala").size)
+	
+	assertEquals(2, getReferencesOffsetsFromFile(references, "ReferringObject.scala").size)
+	assertEquals(155, getReferencesOffsetsFromFile(references, "ReferringObject.scala").head)
+  }
+  
+  def testClassReferences {
 	import eclipseInstance._
 	import scala.tools.eclipse.javaelements._
 	
 	val references = searchType("ReferencedClass");
 	
-	assertEquals(3, references.size)
-   
-	def getReferencesOffsetsFromFile(name : String) = {
-	  val filtered = references.filter(r => {
-	   	val fileName = r.getResource.getName
-	   	fileName.equals(name)
-	  })
-	  filtered.map(_.getOffset) 		
-	}
-	 
-	assertEquals(getReferencesOffsetsFromFile("ReferringObject.scala").size, 1)
-	assertEquals(getReferencesOffsetsFromFile("ReferringObject.scala").head, 83)
+	assertEquals(3, references.size)	 
+	assertEquals(1, getReferencesOffsetsFromFile(references, "ReferringObject.scala").size)
+	assertEquals(83, getReferencesOffsetsFromFile(references, "ReferringObject.scala").head)
 	
-	assertEquals(getReferencesOffsetsFromFile("ReferencedClass.scala").size, 2)
-	
+	assertEquals(2, getReferencesOffsetsFromFile(references, "ReferencedClass.scala").size)
   }
+  
+  import org.eclipse.jdt.core.search._
+  def getReferencesOffsetsFromFile(references : List[SearchMatch], name : String) = {
+    val filtered = references.filter(r => {
+	  val fileName = r.getResource.getName
+   	  fileName.equals(name)
+	})
+	filtered.map(_.getOffset) 		
+  }
+
+}
+
+object ReferenceSearchTest {
+	
+
 }
