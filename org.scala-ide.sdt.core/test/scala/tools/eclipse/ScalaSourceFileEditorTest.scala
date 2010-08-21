@@ -10,7 +10,6 @@ import org.junit.Assert._
 import org.eclipse.core.resources.IWorkspace;
 
 class ScalaSourceFileEditorTest {
-
   var scalaProject : ScalaProject = null;
   var compilationUnit : ICompilationUnit = null;
   var workspace : IWorkspace = null;
@@ -31,8 +30,9 @@ class ScalaSourceFileEditorTest {
     	 var a = 1; 
        }
     """);
-   
+    Thread.sleep(200)
     compilationUnit = createCompilationUnit(pack, "AClass.scala", sourceCode.toString)
+    Thread.sleep(200)
   }
      
   @Test

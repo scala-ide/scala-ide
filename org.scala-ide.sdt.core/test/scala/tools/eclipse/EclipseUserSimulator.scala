@@ -96,8 +96,8 @@ class EclipseUserSimulator {
     	  import org.eclipse.jdt.core.search._
     	  val searchPattern = SearchPattern.createPattern(typeName, 
     	 		  										  IJavaSearchConstants.CLASS, 
-    	 		  										  IJavaSearchConstants.ALL_OCCURRENCES, 
-    	 		  										  SearchPattern.R_EXACT_MATCH);
+    	 		  										  IJavaSearchConstants.REFERENCES, 
+    	 		  										  SearchPattern.R_EXACT_MATCH | SearchPattern.R_CASE_SENSITIVE);
     	   val engine = new SearchEngine;
     	   val requestor = new ClassSearchRequestor  
     	   engine.search(searchPattern, Array(SearchEngine.getDefaultSearchParticipant()), SearchEngine.createWorkspaceScope, requestor, null)

@@ -8,17 +8,20 @@ import org.junit.Assert._
 import org.eclipse.core.resources.IWorkspace;
 
 class ReferenceSearchTest { 
-
   var scalaProject : ScalaProject = null;
   var compilationUnit1, compilationUnit2 : ICompilationUnit = null;
   var workspace : IWorkspace = null;
   val eclipseInstance = new EclipseUserSimulator;
-
-      @Before
+  
+  @Before
   def initialise() {
 	import eclipseInstance._
+
+	if (ReferenceSearchTest.initialized) //this is a hack to simulate @BeforeClass
+	  return;
+	ReferenceSearchTest.initialized = true;
 	
-    scalaProject = createProjectInWorkspace("test_project");	
+    scalaProject = createProjectInWorkspace("test_reference_search");	
 	val pack = createPackage("test.top_level");
     Thread.sleep(200)
     
@@ -55,33 +58,29 @@ class ReferenceSearchTest {
   }	
   
   @Test
-  def testReference {
-	testClassReferences
-	testObjectReferences
-  }
-  
   def testObjectReferences {
 	import eclipseInstance._  
     val references = searchType("ReferencedObject");
-	
-	assertEquals(2, references.size)
+	 
+	assertEquals(3, references.size)
 	assertEquals(0, getReferencesOffsetsFromFile(references, "ReferencedClass.scala").size)
 	
-	assertEquals(2, getReferencesOffsetsFromFile(references, "ReferringObject.scala").size)
-	assertEquals(155, getReferencesOffsetsFromFile(references, "ReferringObject.scala").head)
+	assertEquals(3, getReferencesOffsetsFromFile(references, "ReferringObject.scala").size)
+	assertEquals(159, getReferencesOffsetsFromFile(references, "ReferringObject.scala").head)
   }
   
+  @Test
   def testClassReferences {
 	import eclipseInstance._
 	import scala.tools.eclipse.javaelements._
 	
 	val references = searchType("ReferencedClass");
 	
-	assertEquals(3, references.size)	 
+	assertEquals(2, references.size)	 
 	assertEquals(1, getReferencesOffsetsFromFile(references, "ReferringObject.scala").size)
 	assertEquals(83, getReferencesOffsetsFromFile(references, "ReferringObject.scala").head)
 	
-	assertEquals(2, getReferencesOffsetsFromFile(references, "ReferencedClass.scala").size)
+	assertEquals(1, getReferencesOffsetsFromFile(references, "ReferencedClass.scala").size)
   }
   
   import org.eclipse.jdt.core.search._
@@ -95,7 +94,6 @@ class ReferenceSearchTest {
 
 }
 
-object ReferenceSearchTest {
-	
-
+object ReferenceSearchTest { 
+  var initialized = false;
 }

@@ -14,7 +14,7 @@ import scala.tools.nsc.util.{ RangePosition, Position }
 
 import scala.tools.eclipse.ScalaPresentationCompiler
 import scala.tools.eclipse.util.ReflectionUtils
-import org.eclipse.jdt.internal.core.search.matching.{ FieldPattern, MethodPattern };
+import org.eclipse.jdt.internal.core.search.matching.{ FieldPattern, MethodPattern, TypeReferencePattern };
     	
 trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
   class MatchLocatorTraverser(scu: ScalaCompilationUnit, matchLocator: MatchLocator, possibleMatch: PossibleMatch) extends Traverser {
@@ -39,6 +39,9 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
                   v.tpt.pos.point,
                   v.tpt.pos.point,
                   v.tpt.pos.point + v.name.length))
+          case id : Ident =>
+              if (matchLocator.pattern.isInstanceOf[TypeReferencePattern] && !id.symbol.toString.startsWith("package")) 
+            	reportObjectReference(matchLocator.pattern.asInstanceOf[TypeReferencePattern], id);
           case s : Select =>
               if (s.symbol.isInstanceOf[MethodSymbol])
             	if (matchLocator.pattern.isInstanceOf[MethodPattern])  
@@ -86,7 +89,7 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
         report(matchLocator, sm)
       }
     }
-
+ 
     def reportTypeReference(tpe: Type, refPos: Position) {
       if (tpe == null) return;	
       val ref = new SingleTypeReference(tpe.typeSymbol.nameString.toArray, posToLong(refPos));
@@ -110,6 +113,28 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
       }
     }
 
+    def reportObjectReference(pattern : TypeReferencePattern, id : Ident) {
+        val searchedObjectName = new String(simpleName(pattern))
+        val currentObjectName = id.symbol.name.toString
+        if (searchedObjectName.equals(currentObjectName)) {
+        	val enclosingElement = scu match {
+              case ssf: ScalaSourceFile => ssf.getElementAt(id.pos.start)
+              case _ => null
+            }
+	        //since we consider only the object name (and not its fully qualified name), 
+	        //the search is inaccurate 
+	        val accuracy = SearchMatch.A_INACCURATE
+	        val offset = id.pos.start
+	        val length = id.pos.end - offset
+	        val insideDocComment = false
+	        val participant = possibleMatch.document.getParticipant
+	        val resource = possibleMatch.resource
+	        val sm = new TypeReferenceMatch(enclosingElement, accuracy, offset, length, insideDocComment, participant, resource)
+	
+	        report(matchLocator, sm)
+        }
+    }
+        
     def reportValueOrMethodReference(s : Select, methodPattern : MethodPattern) {
     	if (!s.name.toString.equals(new String(methodPattern.selector))) return; 
     	
@@ -188,4 +213,8 @@ object MatchLocatorUtils extends ReflectionUtils {
   val fpClazz = classOf[FieldPattern]
   val declaringSimpleNameField = getDeclaredField(fpClazz, "declaringSimpleName")
   def declaringSimpleName(fp : FieldPattern) = declaringSimpleNameField.get(fp).asInstanceOf[Array[Char]];
+  
+  val ftrClazz = classOf[TypeReferencePattern]
+  val simpleNameField = getDeclaredField(ftrClazz, "simpleName")
+  def simpleName(trp : TypeReferencePattern) = simpleNameField.get(trp).asInstanceOf[Array[Char]];
 }
