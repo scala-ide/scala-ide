@@ -4,9 +4,6 @@ Bundle-Name: Scala Plugin
 Bundle-SymbolicName: org.scala-ide.sdt.core;singleton:=true
 Bundle-Version: 1.0.0.qualifier
 Bundle-ActivationPolicy: lazy
-Bundle-ClassPath: 
- .,
- bin
 Bundle-Activator: 
  scala.tools.eclipse.ScalaPlugin
 Require-Bundle: 
