@@ -12,6 +12,11 @@
   <feature url="features/org.eclipse.contribution.weaving_0.0.0.jar" id="org.eclipse.contribution.weaving" version="0.0.0">
    	<category name="sdt-weaving"/>
   </feature>
+  <feature url="features/org.scala-ide.sdt.source.feature_0.0.0.jar" id="org.scala-ide.sdt.source.feature" version="0.0.0">
+    <category name="sdt-source"/>
+  </feature>
+
   <category-def name="sdt" label="Scala IDE for Eclipse"/>
   <category-def name="sdt-weaving" label="JDT Weaving for Scala"/>
+  <category-def name="sdt-source" label="Scala IDE for Eclipse Source Feature"/>
 </site>

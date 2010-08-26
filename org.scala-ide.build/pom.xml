@@ -27,6 +27,7 @@
     <module>../org.scala-ide.sdt.aspects</module>
     <module>../org.scala-ide.sdt.core</module>
     <module>../org.scala-ide.sdt.feature</module>
+    <module>../org.scala-ide.sdt.source.feature</module>
     <module>../org.scala-ide.sdt.update-site</module>
   </modules>
 
@@ -67,6 +68,23 @@
           <resolver>p2</resolver>
           <pomDependencies>consider</pomDependencies>
         </configuration>
+      </plugin>
+      <plugin>
+        <!-- TODO remove workaround when
+             https://issues.sonatype.org/browse/TYCHO-473
+             is fixed -->
+        <groupId>org.sonatype.tycho</groupId>
+        <artifactId>maven-osgi-source-plugin</artifactId>
+        <version>${tycho.version}</version>
+        <executions>
+          <execution>
+            <id>attach-source</id>
+            <phase>process-classes</phase>
+            <goals>
+              <goal>plugin-source</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>

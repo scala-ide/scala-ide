@@ -24,5 +24,6 @@
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.ScalaPartitionerAspect"/>
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.spellingengineprovider.SpellingEngineProviderAspect"/>
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.debug.SuppressBreakpointMarkerUpdaterAspect"/>
+<aspect name="scala.tools.eclipse.contribution.weaving.pde.ui.PluginImportAspect"/>
 </aspects>
 </aspectj>
