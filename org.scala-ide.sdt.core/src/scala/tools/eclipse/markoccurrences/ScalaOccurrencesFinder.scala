@@ -1,6 +1,5 @@
 package scala.tools.eclipse.markoccurrences
 
-import scala.tools.refactoring.analysis.TreeAnalysis
 import scala.tools.refactoring.common.Selections
 import org.eclipse.jface.text.Region
 import org.eclipse.jface.text.ITextSelection
@@ -34,7 +33,7 @@ class ScalaOccurrencesFinder(file: ScalaSourceFile, offset: Int, length: Int) {
             None
           else {
             val index = GlobalIndex(global.unitOf(position.source).body)
-            val positions = index occurences symbol map (_.namePosition) map (p => (p.start, p.end - p.start))
+            val positions = index occurences symbol map (_.namePosition) filter (_ != global.NoPosition) map (p => (p.start, p.end - p.start))
             val symbolName = symbol.nameString
             val locations = positions collect { case (offset, length) if length == symbolName.length => new Region(offset, length) }
             Some(Occurrences(symbolName, locations.toList))

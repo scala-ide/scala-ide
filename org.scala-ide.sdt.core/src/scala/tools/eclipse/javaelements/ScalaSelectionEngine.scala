@@ -53,7 +53,7 @@ class ScalaSelectionEngine(nameEnvironment : SearchableEnvironment, requestor : 
           (selectionStart0, selectionEnd0)
         else {
           val region = ScalaWordFinder.findWord(source, selectionEnd0)
-          (region.getOffset, region.getOffset+region.getLength-1)
+          (region.getOffset, if (region.getLength > 0) region.getOffset+region.getLength-1 else region.getOffset)
         }
       
       actualSelectionStart = selectionStart
