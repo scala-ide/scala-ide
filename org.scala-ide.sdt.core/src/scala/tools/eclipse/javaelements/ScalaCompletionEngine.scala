@@ -5,7 +5,6 @@
 
 package scala.tools.eclipse.javaelements
 
-import scala.concurrent.SyncVar
 import scala.reflect.NameTransformer
 
 import org.eclipse.core.runtime.IProgressMonitor
@@ -41,7 +40,7 @@ class ScalaCompletionEngine {
       
       val pos = compiler.rangePos(sourceFile, position, position, position)
       
-      val typed = new SyncVar[Either[compiler.Tree, Throwable]]
+      val typed = new compiler.Response[compiler.Tree]
       compiler.askTypeAt(pos, typed)
       val t1 = typed.get.left.toOption
       val t0 = t1 match {
@@ -49,7 +48,7 @@ class ScalaCompletionEngine {
         case t => t 
       }
       
-      val completed = new SyncVar[Either[List[compiler.Member], Throwable]]
+      val completed = new compiler.Response[List[compiler.Member]]
       val (start, end) = t0 match {
         case Some(s@compiler.Select(qualifier, name)) if qualifier.pos.isDefined =>
           val cpos0 = qualifier.pos.endOrPoint 
