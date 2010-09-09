@@ -46,7 +46,7 @@ class ScalaHyperlinkDetector extends JavaElementHyperlinkDetector {
         }
       }
 
-      val elements = input.asInstanceOf[ICodeAssist].codeSelect(wordRegion.getOffset, wordRegion.getLength).filter(isLinkable)
+      val elements = input.asInstanceOf[ICodeAssist].codeSelect(wordRegion.getOffset, wordRegion.getLength).filter(e => e != null && isLinkable(e))
       if (elements.length == 0)
         return null
 
