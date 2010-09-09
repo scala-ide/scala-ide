@@ -171,11 +171,11 @@
       </repositories>
     </profile>
     <profile>
-      <id>scala-2.8.0.trunk</id>
+      <id>scala-2.8.1.trunk</id>
       <activation>
         <property>
           <name>scala.version</name>
-          <value>2.8.0-SNAPSHOT</value>
+          <value>2.8.1-SNAPSHOT</value>
         </property>
       </activation>
       <repositories>
@@ -231,7 +231,7 @@
       </repositories>
     </profile>
     <profile>
-      <id>local-scala-2.8.0.trunk</id>
+      <id>local-scala-2.8.1.trunk</id>
       <dependencies>
         <dependency>
           <groupId>org.scala-ide</groupId>
