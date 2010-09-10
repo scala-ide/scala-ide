@@ -5,8 +5,9 @@
 
 package scala.tools.eclipse
 
+import scala.reflect.NameTransformer
 import scala.tools.nsc.Global 
-import ch.epfl.lamp.fjbg.{ JMethodType, JObjectType, JType }
+import ch.epfl.lamp.fjbg.{ JArrayType, JMethodType, JObjectType, JType }
 
 trait JVMUtils { self : Global =>
 
@@ -35,6 +36,19 @@ trait JVMUtils { self : Global =>
       //javaType(r.typeSymbol.tpe)
       
     case _ => codeGenerator.javaType(t)
+  }
+  
+  // Provides JType where all special symbols are substituted.
+  def encodedJavaType(t : Type) = {
+	def encode(jt : JType) : JType = jt match {
+	  case clazz : JObjectType => {
+	    val name = clazz.getName.split("/").map{NameTransformer encode _}.mkString("/")
+	    new JObjectType(name)
+	  }
+	  case arr : JArrayType => new JArrayType(encode(arr.getElementType))
+	  case _ => jt
+    }
+	encode(javaType(t))
   }
     
   def javaType(s: Symbol): JType =
