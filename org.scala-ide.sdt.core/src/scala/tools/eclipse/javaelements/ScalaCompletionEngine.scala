@@ -53,7 +53,7 @@ class ScalaCompletionEngine {
       
       val completed = new compiler.Response[List[compiler.Member]]
       val (start, end) = t0 match {
-        case Some(s@compiler.Select(qualifier, name)) if qualifier.pos.isDefined =>
+        case Some(s@compiler.Select(qualifier, name)) if qualifier.pos.isDefined && qualifier.pos.isRange =>
           val cpos0 = qualifier.pos.endOrPoint 
           val cpos = compiler.rangePos(sourceFile, cpos0, cpos0, cpos0)
           compiler.askTypeCompletion(cpos, completed)
