@@ -46,6 +46,7 @@ trait JVMUtils { self : Global =>
 	    new JObjectType(name)
 	  }
 	  case arr : JArrayType => new JArrayType(encode(arr.getElementType))
+	  case m : JMethodType => new JMethodType(encode(m.getReturnType), m.getArgumentTypes.map( encode(_) ))
 	  case _ => jt
     }
 	encode(javaType(t))
