@@ -7,7 +7,6 @@ package scala.tools.eclipse
 
 import scala.collection.mutable
 import scala.collection.mutable.{ ArrayBuffer, SynchronizedMap }
-import scala.concurrent.SyncVar
 
 import org.eclipse.core.resources.IFile
 import org.eclipse.jdt.core.compiler.IProblem
@@ -71,7 +70,7 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
         val compiler = self
         val sourceFile = scu.createSourceFile
         val (body, problems) = {
-          val typed = new SyncVar[Either[compiler.Tree, Throwable]]
+          val typed = new compiler.Response[compiler.Tree]
           compiler.askType(sourceFile, true, typed)
           typed.get match {
             case Left(body0) =>
