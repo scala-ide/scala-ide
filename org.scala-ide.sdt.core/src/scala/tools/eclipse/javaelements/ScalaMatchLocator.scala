@@ -41,9 +41,14 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
                   v.tpt.pos.point + v.name.length))
           case id : Ident =>
               if (matchLocator.pattern.isInstanceOf[TypeReferencePattern] && !id.symbol.toString.startsWith("package")) 
-            	reportObjectReference(matchLocator.pattern.asInstanceOf[TypeReferencePattern], id);
+            	reportObjectReference(matchLocator.pattern.asInstanceOf[TypeReferencePattern], id.symbol, id.pos);
+          case im : Import =>
+              if (matchLocator.pattern.isInstanceOf[TypeReferencePattern] && !im.expr.symbol.toString.startsWith("package")) 
+            	reportObjectReference(matchLocator.pattern.asInstanceOf[TypeReferencePattern], im.expr.symbol, im.pos);
           case s : Select =>
-              if (s.symbol.isInstanceOf[MethodSymbol])
+              if (s.symbol.isInstanceOf[ModuleSymbol])
+            	reportObjectReference(matchLocator.pattern.asInstanceOf[TypeReferencePattern], s.symbol, s.pos);
+              else if (s.symbol.isInstanceOf[MethodSymbol])
             	if (matchLocator.pattern.isInstanceOf[MethodPattern])  
                   reportValueOrMethodReference(s, matchLocator.pattern.asInstanceOf[MethodPattern]);
             	else if (matchLocator.pattern.isInstanceOf[FieldPattern])  
@@ -113,19 +118,19 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
       }
     }
 
-    def reportObjectReference(pattern : TypeReferencePattern, id : Ident) {
+    def reportObjectReference(pattern : TypeReferencePattern, symbol : Symbol, pos : Position) {
         val searchedObjectName = new String(simpleName(pattern))
-        val currentObjectName = id.symbol.name.toString
-        if (searchedObjectName.equals(currentObjectName)) {
+        val currentObjectName = symbol.name.toString
+        if (searchedObjectName.equals(currentObjectName) || searchedObjectName.equals(currentObjectName + "$")) {
         	val enclosingElement = scu match {
-              case ssf: ScalaSourceFile => ssf.getElementAt(id.pos.start)
+              case ssf: ScalaSourceFile => ssf.getElementAt(pos.start)
               case _ => null
             }
 	        //since we consider only the object name (and not its fully qualified name), 
 	        //the search is inaccurate 
 	        val accuracy = SearchMatch.A_INACCURATE
-	        val offset = id.pos.start
-	        val length = id.pos.end - offset
+	        val offset = pos.start
+	        val length = pos.end - offset
 	        val insideDocComment = false
 	        val participant = possibleMatch.document.getParticipant
 	        val resource = possibleMatch.resource

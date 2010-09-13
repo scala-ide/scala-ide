@@ -9,7 +9,7 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.jdt.core.search.SearchRequestor
 import org.eclipse.jdt.core.search.SearchMatch
 
-class EclipseUserSimulator {
+class EclipseUserSimulator {  
 	  import org.eclipse.jdt.core._;
 	   
 	  var root : IPackageFragmentRoot = null;
@@ -56,8 +56,11 @@ class EclipseUserSimulator {
 	  def createPackage(packageName : String) = 
 	 	  root.createPackageFragment(packageName, false, null);
 	   
-      def createCompilationUnit(pack : IPackageFragment, name : String, sourceCode : String) = 
-    	  pack.createCompilationUnit(name, sourceCode, false, null);
+      def createCompilationUnit(pack : IPackageFragment, name : String, sourceCode : String) = {
+    	  val cu = pack.createCompilationUnit(name, sourceCode, false, null);
+    	  Thread.sleep(200)
+    	  cu;
+      }
    
       def buildWorkspace {
     	import org.eclipse.core.internal.resources.Workspace;
