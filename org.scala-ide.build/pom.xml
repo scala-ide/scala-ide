@@ -189,7 +189,7 @@
           <id>scalariform-2.8.1.alpha</id>
           <name>Scalariform Scala 2.8.1.alpha p2 repo</name>
           <layout>p2</layout>
-          <url>http://download.scala-ide.org/scalariform-2.8.1.final</url>
+          <url>http://download.scala-ide.org/scalariform-2.8.1.alpha</url>
         </repository>
         <repository>
           <id>scala-toolchain-2.8.1.alpha</id>
