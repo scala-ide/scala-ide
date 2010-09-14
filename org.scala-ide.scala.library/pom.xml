@@ -34,10 +34,13 @@
           <excludeDefaultDirectories>true</excludeDefaultDirectories>
           <filesets>
             <fileset>
-              <directory>${basedir}</directory>
+              <directory>./</directory>
               <includes>
+                <include>META-INF/**/*</include>
                 <include>META-INF</include>
+                <include>lib/**/*</include>
                 <include>lib</include>
+                <include>target/**/*</include>
                 <include>target</include>
               </includes>
               <followSymlinks>false</followSymlinks>
