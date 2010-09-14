@@ -10,7 +10,7 @@
 
   <properties>
     <scala.version>2.8.0</scala.version>
-    <patch.level>p0001</patch.level>
+    <patch.level>p0002</patch.level>
     <encoding>UTF-8</encoding>
   </properties>
 
@@ -73,4 +73,32 @@
       </plugins>
     </pluginManagement>
   </build>
+  <profiles>
+    <profile>
+      <id>default</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <properties>
+        <scala.compiler.groupid>org.scala-lang</scala.compiler.groupid>
+        <scala.compiler.version>2.8.0</scala.compiler.version>
+        <maintenance.suffix></maintenance.suffix>
+      </properties>
+    </profile>
+    <profile>
+      <id>maintenance</id>
+      <properties>
+        <scala.compiler.groupid>org.scala-ide</scala.compiler.groupid>
+        <scala.compiler.version>2.8.0.final-maintenance</scala.compiler.version>
+        <maintenance.suffix>-sdt</maintenance.suffix>
+      </properties>
+      <repositories>
+        <repository>
+          <id>scala-ide.org</id>
+          <name>Scala IDE Toolchain maintenance repository</name>
+          <url>http://download.scala-ide.org/scala-eclipse-toolchain-2.8.0.final-maintenance</url>
+        </repository>
+      </repositories>
+    </profile>
+  </profiles>
 </project>

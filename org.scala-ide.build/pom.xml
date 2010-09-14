@@ -171,6 +171,30 @@
       </repositories>
     </profile>
     <profile>
+      <id>scala-2.8.0-maintenance</id>
+      <repositories>
+        <repository>
+          <id>scala-refactoring-2.8.0.final</id>
+          <name>Scala Refactoring Scala 2.8.0.final p2 repository</name>
+          <layout>p2</layout>
+          <url>http://download.scala-ide.org/scala-refactoring-2.8.0.final</url>
+          <snapshots><enabled>false</enabled></snapshots>
+        </repository>
+        <repository>
+          <id>scalariform-2.8.0.final</id>
+          <name>Scalariform Scala 2.8.0.final p2 repo</name>
+          <layout>p2</layout>
+          <url>http://download.scala-ide.org/scalariform-2.8.0.final</url>
+        </repository>
+        <repository>
+          <id>scala-toolchain-2.8.0.final-maintenance</id>
+          <name>Scala Toolchain 2.8.0.final-maintenance p2 repository</name>
+          <layout>p2</layout>
+          <url>http://download.scala-ide.org/scala-eclipse-toolchain-osgi-2.8.0.final-maintenance</url>
+        </repository>
+      </repositories>
+    </profile>
+    <profile>
       <id>scala-2.8.1</id>
       <activation>
         <property>
