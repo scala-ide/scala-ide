@@ -28,37 +28,49 @@ import scala.tools.nsc.util.{ BatchSourceFile, SourceFile }
 import scala.tools.eclipse.contribution.weaving.jdt.{ IScalaCompilationUnit, IScalaWordFinder }
 
 import scala.tools.eclipse.{ ScalaImages, ScalaPlugin, ScalaPresentationCompiler, ScalaSourceIndexer, ScalaWordFinder }
-import scala.tools.eclipse.util.ReflectionUtils
+import scala.tools.eclipse.util.{ Cached, ReflectionUtils }
 
 trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with ScalaElement with IScalaCompilationUnit with IBufferChangedListener {
   val project = ScalaPlugin.plugin.getScalaProject(getJavaProject.getProject)
+  val cachedSourceFile = new Cached[SourceFile] {
+    def create = {
+      val buffer = openBuffer0(null, null)
+      if (buffer == null)
+        throw new NullPointerException("getBuffer == null for: "+getElementName)
+      
+      val contents = {
+        val contents0 = buffer.getCharacters
+        if (contents0 != null)
+          contents0
+        else
+          new Array[Char](0)
+      }
+  
+      new BatchSourceFile(file, contents)
+    }
+    
+    def destroy(sf : SourceFile) {}
+  }
 
   def file : AbstractFile
   
-  def withDocument[T](op : =>T) : T = {
-    OpenableUtils.getBufferManager(this).getBuffer(this) match {
-      case da : DocumentAdapter => da.getDocument match {
-        case sd : SynchronizableDocument if sd.getLockObject != null => sd.getLockObject.synchronized(op) 
-        case _ => op
-      }
-      case _ => op
-    }
-  }
-  
 	def withCompilerResult[T](op : ScalaPresentationCompiler.CompilerResultHolder => T) : T = {
-    withDocument(project.withCompilerResult(this)(op))
+    project.withCompilerResult(this, cachedSourceFile(identity))(op)
   }
   
   override def bufferChanged(e : BufferChangedEvent) {
     if (e.getBuffer.isClosed)
       discard
-    else
+    else {
+      cachedSourceFile.invalidate
       project.withPresentationCompiler(_.invalidateCompilerResult(this))
-
+    }
+    
     super.bufferChanged(e)
   }
   
   def discard {
+    cachedSourceFile.invalidate
     project.withPresentationCompiler(_.discardCompilerResult(this))
   }
   
