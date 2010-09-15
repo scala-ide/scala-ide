@@ -403,7 +403,7 @@ class ScalaProject(val underlying : IProject) {
       if (!depFile.exists())
         true
       else {
-        !buildManager.loadFrom(EclipseResource(depFile), EclipseResource.fromString)
+        !buildManager.loadFrom(EclipseResource(depFile), EclipseResource.fromString(_).getOrElse(null))
       }
     }
     else

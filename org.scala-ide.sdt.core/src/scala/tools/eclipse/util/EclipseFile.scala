@@ -10,7 +10,7 @@ import java.io.{ ByteArrayInputStream, ByteArrayOutputStream, File, InputStream,
 import org.eclipse.core.filebuffers.FileBuffers
 import org.eclipse.core.filesystem.URIUtil
 import org.eclipse.core.resources.{ IContainer, IFile, IFolder, IResource, ResourcesPlugin }
-import org.eclipse.core.runtime.Path
+import org.eclipse.core.runtime.{ IPath, Path }
 import org.eclipse.jdt.core.IBuffer
 
 import scala.tools.nsc.io.AbstractFile
@@ -36,10 +36,24 @@ object EclipseResource {
     case _ => None
   }
   
-  def fromString(path : String) = {
-    val files = ResourcesPlugin.getWorkspace.getRoot.findFilesForLocationURI(URIUtil.toURI(new Path(path)))
-    assert(files != null && files.length > 0, "No resource at \""+path+"\"")
-    EclipseResource(files(0))
+  def fromString(path : String) : Option[EclipseResource[_ <: IResource]] = {
+    def resourceForPath(p : IPath) = {
+      val resources = ResourcesPlugin.getWorkspace.getRoot.findFilesForLocationURI(URIUtil.toURI(p))
+      if (resources != null && resources.length > 0) Some(resources(0)) else None
+    }
+    
+    val path0 = new Path(path)
+    resourceForPath(path0) match {
+      case Some(res) => Some(EclipseResource(res))
+      case None =>
+        // Attempt to refresh the parent folder and try again
+        resourceForPath(path0.removeLastSegments(1)) match {
+          case Some(res) =>
+            res.refreshLocal(IResource.DEPTH_ONE, null)
+            resourceForPath(path0).map(EclipseResource(_))
+          case _ => None
+        }
+    }
   }
 }
 
