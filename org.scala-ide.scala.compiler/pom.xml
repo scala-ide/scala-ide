@@ -12,8 +12,9 @@
   <packaging>bundle</packaging>
   <dependencies>
     <dependency>
-      <groupId>org.scala-lang</groupId>
+      <groupId>${scala.compiler.groupid}</groupId>
       <artifactId>scala-compiler</artifactId>
+      <version>${scala.compiler.version}</version>
     </dependency>
   </dependencies>
   <build>
@@ -26,10 +27,13 @@
           <excludeDefaultDirectories>true</excludeDefaultDirectories>
           <filesets>
             <fileset>
-              <directory>${basedir}</directory>
+              <directory>./</directory>
               <includes>
+                <include>META-INF/**/*</include>
                 <include>META-INF</include>
+                <include>lib/**/*</include>
                 <include>lib</include>
+                <include>target/**/*</include>
                 <include>target</include>
               </includes>
               <followSymlinks>false</followSymlinks>
@@ -51,8 +55,9 @@
             <configuration>
               <artifactItems>
                 <artifactItem>
-                  <groupId>org.scala-lang</groupId>
+                  <groupId>${scala.compiler.groupid}</groupId>
                   <artifactId>scala-compiler</artifactId>
+                  <version>${scala.compiler.version}</version>
                   <outputDirectory>${project.build.directory}</outputDirectory>
                   <includes>compiler.properties</includes>
                 </artifactItem>
@@ -68,9 +73,9 @@
             <configuration>
               <artifactItems>
                 <artifactItem>
-                  <groupId>org.scala-lang</groupId>
+                  <groupId>${scala.compiler.groupid}</groupId>
                   <artifactId>scala-compiler</artifactId>
-                  <version>${scala.version}</version>
+                  <version>${scala.compiler.version}</version>
                   <classifier>sources</classifier>
                   <type>jar</type>
                   <destFileName>scala-compiler-src.jar</destFileName>
@@ -116,7 +121,7 @@
           <instructions>
             <Bundle-SymbolicName>org.scala-ide.scala.compiler</Bundle-SymbolicName>
             <Bundle-Name>Scala Compiler for Eclipse</Bundle-Name>
-            <Bundle-Version>${version.number}-${patch.level}</Bundle-Version>
+            <Bundle-Version>${version.number}${maintenance.suffix}-${patch.level}</Bundle-Version>
             <Embed-Dependency>*;scope=compile|runtime;inline=false</Embed-Dependency>
             <_exportcontents>scala.tools.*;version=${version.number},ch.epfl.lamp.*;version=${version.number}</_exportcontents>
             <Embed-Directory>lib</Embed-Directory>

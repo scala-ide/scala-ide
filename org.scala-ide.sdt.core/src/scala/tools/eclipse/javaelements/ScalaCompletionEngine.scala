@@ -5,7 +5,6 @@
 
 package scala.tools.eclipse.javaelements
 
-import scala.concurrent.SyncVar
 import scala.reflect.NameTransformer
 
 import org.eclipse.core.runtime.IProgressMonitor
@@ -18,6 +17,7 @@ import org.eclipse.jdt.internal.core.JavaProject
 import org.eclipse.jdt.ui.text.java.CompletionProposalCollector
 import ch.epfl.lamp.fjbg.JType
 
+import scala.tools.nsc.interactive.Response
 import scala.tools.nsc.symtab.Flags
 
 import scala.tools.eclipse.ScalaWordFinder
@@ -41,10 +41,11 @@ class ScalaCompletionEngine {
     
       import crh._
       import compiler.{ encodedJavaType, mapModifiers, mapTypeName, mapParamTypeName, mapParamTypePackageName, nme }
-
-      val pos = compiler.rangePos(sourceFile, position, position, position)      
-      val typed = new SyncVar[Either[compiler.Tree, Throwable]]
-      compiler.getTypedTreeAt(pos, typed)
+      
+      val pos = compiler.rangePos(sourceFile, position, position, position)
+      
+      val typed = new compiler.Response[compiler.Tree]
+      compiler.askTypeAt(pos, typed)
       val t1 = typed.get.left.toOption
 
       val chars = scu.getContents
@@ -54,7 +55,7 @@ class ScalaCompletionEngine {
           case t => t 
         }
       
-        val completed = new SyncVar[Either[List[compiler.Member], Throwable]]
+        val completed = new compiler.Response[List[compiler.Member]]
         val (start, end) = t0 match {
           case Some(s@compiler.Select(qualifier, name)) if qualifier.pos.isDefined && qualifier.pos.isRange =>
             val cpos0 = qualifier.pos.endOrPoint 

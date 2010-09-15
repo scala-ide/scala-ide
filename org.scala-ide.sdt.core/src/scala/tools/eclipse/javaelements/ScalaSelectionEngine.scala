@@ -10,7 +10,6 @@ import java.{ util => ju }
 import ch.epfl.lamp.fjbg.JObjectType
 import ch.epfl.lamp.fjbg.JType
 import scala.collection.mutable.ArrayBuffer
-import scala.concurrent.SyncVar
 import scala.util.control.Breaks._
 import scala.tools.nsc.symtab.Flags
 
@@ -211,7 +210,7 @@ class ScalaSelectionEngine(nameEnvironment : SearchableEnvironment, requestor : 
       
       val pos = compiler.rangePos(sourceFile, actualSelectionStart, actualSelectionStart, actualSelectionEnd+1)
   
-      val typed = new SyncVar[Either[compiler.Tree, Throwable]]
+      val typed = new compiler.Response[compiler.Tree]
       compiler.askTypeAt(pos, typed)
       typed.get.left.toOption match {
         case Some(tree) => {
@@ -224,7 +223,7 @@ class ScalaSelectionEngine(nameEnvironment : SearchableEnvironment, requestor : 
                 case m : compiler.ModuleSymbol =>
                   acceptType(m)
                 case t : compiler.TermSymbol if t.isValueParameter =>
-                  val typed = new SyncVar[Either[compiler.Tree, Throwable]]
+                  val typed = new Response[compiler.Tree]
                   compiler.askTypeAt(t.owner.pos, typed)
                   val ownerTree = typed.get.left.toOption 
                   ownerTree match {

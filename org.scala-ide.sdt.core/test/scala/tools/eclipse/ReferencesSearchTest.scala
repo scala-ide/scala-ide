@@ -7,15 +7,15 @@ import org.junit.{ Test, Assert, Ignore, Before, BeforeClass }
 import org.junit.Assert._
 import org.eclipse.core.resources.IWorkspace;
 
-class ReferenceSearchTest { 
+class ReferencesSearchTest { 
   var scalaProject : ScalaProject = null;
-  var compilationUnit1, compilationUnit2 : ICompilationUnit = null;
+  var compilationUnit1, compilationUnit2, compilationUnit3, compilationUnit4 : ICompilationUnit = null;
   var workspace : IWorkspace = null;
   val eclipseInstance = new EclipseUserSimulator;
   
   @Before
-  def initialise() {
-	import eclipseInstance._
+  def initialise() { 
+	import eclipseInstance._ 
 
 	if (ReferenceSearchTest.initialized) //this is a hack to simulate @BeforeClass
 	  return;
@@ -35,7 +35,6 @@ class ReferenceSearchTest {
        }
     """);
     compilationUnit1 = createCompilationUnit(pack, "ReferencedClass.scala", sourceCode1.toString)
-    Thread.sleep(200)
     
     val sourceCode2 = new StringBuffer(); 
     sourceCode2.append(
@@ -51,10 +50,32 @@ class ReferenceSearchTest {
        }
     """);
     compilationUnit2 = createCompilationUnit(pack, "ReferringObject.scala", sourceCode2.toString)
-    Thread.sleep(200)    
     
-    buildWorkspace;
-    Thread.sleep(200)    
+    val sourceCode3 = new StringBuffer(); 
+    sourceCode3.append(
+    """
+       package test.top_level;
+       class ATrait {
+         object AnObject {
+	       def aMeth = 2;
+         }
+	     AnObject.aMeth
+       }
+    """);
+    compilationUnit3 = createCompilationUnit(pack, "AnotherTestCase.scala", sourceCode3.toString)
+    
+    val sourceCode4 = new StringBuffer(); 
+    sourceCode4.append(
+    """
+       object moduleObject {
+         val member = "a string"
+       }
+       import moduleObject.{_}
+    """);
+    compilationUnit4 = createCompilationUnit(pack, "FourthTestCase.scala", sourceCode4.toString)
+    
+    buildWorkspace; 
+    Thread.sleep(1500)     
   }	
   
   @Test
@@ -69,6 +90,24 @@ class ReferenceSearchTest {
 	assertEquals(159, getReferencesOffsetsFromFile(references, "ReferringObject.scala").head)
   }
   
+  @Test
+  def testAnotherObjectReferences {
+	import eclipseInstance._  
+    val references = searchType("AnObject");
+	 
+	assertEquals(1, references.size)
+	assertEquals(121, getReferencesOffsetsFromFile(references, "AnotherTestCase.scala").head)
+  }
+  
+  @Test
+  def testModuleReferences {
+	import eclipseInstance._  
+    val references = searchType("moduleObject");
+	 
+	assertEquals(1, references.size)
+	assertEquals(79, getReferencesOffsetsFromFile(references, "FourthTestCase.scala").head)
+  }
+    
   @Test
   def testClassReferences {
 	import eclipseInstance._
