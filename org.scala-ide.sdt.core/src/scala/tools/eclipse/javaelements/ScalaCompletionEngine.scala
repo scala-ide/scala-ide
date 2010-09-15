@@ -41,47 +41,51 @@ class ScalaCompletionEngine {
     
       import crh._
       import compiler.{ encodedJavaType, mapModifiers, mapTypeName, mapParamTypeName, mapParamTypePackageName, nme }
-      
-      val pos = compiler.rangePos(sourceFile, position, position, position)
-      
+
+      val pos = compiler.rangePos(sourceFile, position, position, position)      
       val typed = new SyncVar[Either[compiler.Tree, Throwable]]
-      compiler.askTypeAt(pos, typed)
+      compiler.getTypedTreeAt(pos, typed)
       val t1 = typed.get.left.toOption
-      val t0 = t1 match {
-        case Some(tt : compiler.TypeTree) => Some(tt.original)
-        case t => t 
-      }
+
+      val chars = scu.getContents
+      val (start, end, completed) = compiler.ask { () =>
+        val t0 = t1 match {
+          case Some(tt : compiler.TypeTree) => Some(tt.original)
+          case t => t 
+        }
       
-      val completed = new SyncVar[Either[List[compiler.Member], Throwable]]
-      val (start, end) = t0 match {
-        case Some(s@compiler.Select(qualifier, name)) if qualifier.pos.isDefined && qualifier.pos.isRange =>
-          val cpos0 = qualifier.pos.endOrPoint 
-          val cpos = compiler.rangePos(sourceFile, cpos0, cpos0, cpos0)
-          compiler.askTypeCompletion(cpos, completed)
-          (s.pos.point min s.pos.endOrPoint, s.pos.endOrPoint)
-        case Some(i@compiler.Import(expr, selectors)) =>
-          def qual(tree : compiler.Tree): compiler.Tree = tree.symbol.info match {
-            case compiler.analyzer.ImportType(expr) => expr
-            case _ => tree
-          }
-          val cpos0 = qual(i).pos.endOrPoint
-          val cpos = compiler.rangePos(sourceFile, cpos0, cpos0, cpos0)
-          compiler.askTypeCompletion(cpos, completed)
-          ((cpos0 + 1) min position, position)
-        case _ =>
-          val region = ScalaWordFinder.findCompletionPoint(scu.getBuffer, position)
-          val cpos = if (region == null) pos else {
-            val start = region.getOffset
-            compiler.rangePos(sourceFile, start, start, start)
-          }
-          compiler.askScopeCompletion(cpos, completed)
-          if (region == null)
-            (position, position)
-          else {
-            val start0 = region.getOffset
-            val end0 = start0+region.getLength
-            (start0, end0)
-          }
+        val completed = new SyncVar[Either[List[compiler.Member], Throwable]]
+        val (start, end) = t0 match {
+          case Some(s@compiler.Select(qualifier, name)) if qualifier.pos.isDefined && qualifier.pos.isRange =>
+            val cpos0 = qualifier.pos.endOrPoint 
+            val cpos = compiler.rangePos(sourceFile, cpos0, cpos0, cpos0)
+            compiler.askTypeCompletion(cpos, completed)
+            (s.pos.point min s.pos.endOrPoint, s.pos.endOrPoint)
+          case Some(i@compiler.Import(expr, selectors)) =>
+            def qual(tree : compiler.Tree): compiler.Tree = tree.symbol.info match {
+              case compiler.analyzer.ImportType(expr) => expr
+              case _ => tree
+            }
+            val cpos0 = qual(i).pos.endOrPoint
+            val cpos = compiler.rangePos(sourceFile, cpos0, cpos0, cpos0)
+            compiler.askTypeCompletion(cpos, completed)
+            ((cpos0 + 1) min position, position)
+          case _ =>
+            val region = ScalaWordFinder.findCompletionPoint(chars, position)
+            val cpos = if (region == null) pos else {
+              val start = region.getOffset
+              compiler.rangePos(sourceFile, start, start, start)
+            }
+            compiler.askScopeCompletion(cpos, completed)
+            if (region == null)
+              (position, position)
+            else {
+              val start0 = region.getOffset
+              val end0 = start0+region.getLength
+              (start0, end0)
+            }
+        }
+        (start, end, completed)
       }
       
       val prefix = (if (position <= start) "" else scu.getBuffer.getText(start, position-start).trim).toArray
@@ -211,7 +215,7 @@ class ScalaCompletionEngine {
         case Some(completions) =>
           requestor.acceptContext(createContext)
           if (debug) {
-        	  println("Completions: " + completions.mkString("\n"))
+	    println("Completions: " + completions.mkString("\n"))
           }
           for(completion <- completions) {
             completion match {
