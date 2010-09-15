@@ -81,7 +81,7 @@
       </activation>
       <properties>
         <scala.compiler.groupid>org.scala-lang</scala.compiler.groupid>
-        <scala.compiler.version>2.8.0</scala.compiler.version>
+        <scala.compiler.version>${scala.version}</scala.compiler.version>
         <maintenance.suffix></maintenance.suffix>
       </properties>
     </profile>
