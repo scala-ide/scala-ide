@@ -275,7 +275,7 @@
       </classpathContainerInitializer>
       <!-- Retained for backwards compatibility -->
       <classpathContainerInitializer
-           class="scala.tools.eclipse.ScalaClasspathContainerInitializer"
+           class="scala.tools.eclipse.ScalaLibraryClasspathContainerInitializer"
            id="ch.epfl.lamp.sdt.launching.SCALA_CONTAINER">
       </classpathContainerInitializer>
    </extension>
