@@ -45,8 +45,15 @@ trait JVMUtils { self : Global =>
 	    val name = clazz.getName.split("/").map{NameTransformer encode _}.mkString("/")
 	    new JObjectType(name)
 	  }
-	  case arr : JArrayType => new JArrayType(encode(arr.getElementType))
-	  case m : JMethodType => new JMethodType(encode(m.getReturnType), m.getArgumentTypes.map( encode(_) ))
+	  case arr : JArrayType => {
+		  val etype = encode(arr.getElementType)
+	 	  if (JType.UNKNOWN == etype) JType.UNKNOWN else new JArrayType(etype)
+	  }
+	  case m : JMethodType => {
+	 	  val ret = encode(m.getReturnType)
+	 	  val argTypes = m.getArgumentTypes.map( encode(_) )
+	 	  if (ret == JType.UNKNOWN || argTypes.exists(_ == JType.UNKNOWN)) JType.UNKNOWN else new JMethodType(ret, argTypes)
+	  }
 	  case _ => jt
     }
 	encode(javaType(t))
