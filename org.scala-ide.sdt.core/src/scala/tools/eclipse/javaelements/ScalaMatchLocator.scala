@@ -15,15 +15,18 @@ import scala.tools.nsc.util.{ RangePosition, Position }
 import scala.tools.eclipse.ScalaPresentationCompiler
 import scala.tools.eclipse.util.ReflectionUtils
 import org.eclipse.jdt.internal.core.search.matching.{ FieldPattern, MethodPattern, TypeReferencePattern };
-    	
+
+//TODO manage OrPattern
+//FIXME should report all and let matcher to the selection OR only report matcher interest (pre select by type) OR ...
+
 trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
   class MatchLocatorTraverser(scu: ScalaCompilationUnit, matchLocator: MatchLocator, possibleMatch: PossibleMatch) extends Traverser {
     import MatchLocatorUtils._
 
     override def traverse(tree: Tree): Unit = {
       if (tree.pos.isOpaqueRange) {
-        tree match {
-          case t : TypeTree => {
+        (tree, matchLocator.pattern) match {
+          case (t : TypeTree, _) => {
             if (t.pos.isDefined)
               reportTypeReference(t.tpe, t.pos)
             if (t.tpe.isInstanceOf[TypeRef]) 
@@ -33,31 +36,27 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
               reportTypeReference(t.tpe.asInstanceOf[TypeBounds].lo, t.pos)
             }  
           }    
-          case v : ValOrDefDef if v.tpt.pos.isDefined && !v.tpt.pos.isRange =>
+          case (v : ValOrDefDef, _) if v.tpt.pos.isDefined && !v.tpt.pos.isRange =>
               reportTypeReference(v.tpt.asInstanceOf[TypeTree].tpe,
                 new RangePosition(v.tpt.pos.source,
                   v.tpt.pos.point,
                   v.tpt.pos.point,
                   v.tpt.pos.point + v.name.length))
-          case id : Ident =>
-              if (matchLocator.pattern.isInstanceOf[TypeReferencePattern] && !id.symbol.toString.startsWith("package")) 
-            	reportObjectReference(matchLocator.pattern.asInstanceOf[TypeReferencePattern], id.symbol, id.pos);
-          case im : Import =>
-              if (matchLocator.pattern.isInstanceOf[TypeReferencePattern] && !im.expr.symbol.toString.startsWith("package")) 
-            	reportObjectReference(matchLocator.pattern.asInstanceOf[TypeReferencePattern], im.expr.symbol, im.pos);
-          case s : Select =>
-              if (s.symbol.isInstanceOf[ModuleSymbol])
-            	reportObjectReference(matchLocator.pattern.asInstanceOf[TypeReferencePattern], s.symbol, s.pos);
-              else if (s.symbol.isInstanceOf[MethodSymbol])
-            	if (matchLocator.pattern.isInstanceOf[MethodPattern])  
-                  reportValueOrMethodReference(s, matchLocator.pattern.asInstanceOf[MethodPattern]);
-            	else if (matchLocator.pattern.isInstanceOf[FieldPattern])  
-                  reportVariableReference(s, matchLocator.pattern.asInstanceOf[FieldPattern]); 
-          case n: New =>
+          case (id : Ident, pattern : TypeReferencePattern) if (!id.symbol.toString.startsWith("package")) =>
+            	reportObjectReference(pattern, id.symbol, id.pos)
+          case (im : Import, pattern : TypeReferencePattern) if (!im.expr.symbol.toString.startsWith("package")) =>
+            	reportObjectReference(pattern, im.expr.symbol, im.pos)
+          case (s : Select, pattern) => (s.symbol, pattern) match {
+              case (symbol : ModuleSymbol, pattern : TypeReferencePattern) => reportObjectReference(pattern, symbol, s.pos)
+              case (symbol : MethodSymbol, pattern : MethodPattern)        => reportValueOrMethodReference(s, pattern)
+              case (symbol : MethodSymbol, pattern : FieldPattern)         => reportVariableReference(s, pattern)
+              case _ => ()
+          }
+          case (n: New, _) =>
             reportTypeReference(n.tpe, n.tpt.pos)
-          case c: ClassDef if c.pos.isDefined =>
+          case (c: ClassDef, _) if c.pos.isDefined =>
             reportTypeDefinition(c.symbol.tpe, c.pos)
-          case _ =>
+          case _ => ()
         }
 
         if (tree.symbol != null)
