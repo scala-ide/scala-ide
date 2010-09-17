@@ -20,6 +20,7 @@ import org.eclipse.jdt.internal.core.util.Util
 import org.eclipse.swt.widgets.Display
 
 import scala.tools.nsc.Settings
+import scala.tools.nsc.util.SourceFile
 
 import scala.tools.eclipse.javaelements.ScalaCompilationUnit
 import scala.tools.eclipse.properties.PropertyStore
@@ -363,9 +364,9 @@ class ScalaProject(val underlying : IProject) {
     presentationCompiler(op)
   }
 
-  def withCompilerResult[T](scu : ScalaCompilationUnit)(op : ScalaPresentationCompiler.CompilerResultHolder => T) : T =
+  def withCompilerResult[T](scu : ScalaCompilationUnit, sf : SourceFile)(op : ScalaPresentationCompiler.CompilerResultHolder => T) : T =
     withPresentationCompiler { compiler =>
-      compiler.withCompilerResult(scu)(op)
+      compiler.withCompilerResult(scu, sf)(op)
     }
   
   def resetPresentationCompiler {

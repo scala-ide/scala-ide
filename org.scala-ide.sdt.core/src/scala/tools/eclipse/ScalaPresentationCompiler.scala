@@ -32,9 +32,7 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
   
   presentationReporter.compiler = this
   
-  private val results = new mutable.HashMap[ScalaCompilationUnit, CachedCompilerResult] with SynchronizedMap[ScalaCompilationUnit, CachedCompilerResult] {
-    override def default(k : ScalaCompilationUnit) = { val v = new CachedCompilerResult(k) ; put(k, v); v } 
-  }
+  private val results = new mutable.HashMap[ScalaCompilationUnit, CachedCompilerResult] with SynchronizedMap[ScalaCompilationUnit, CachedCompilerResult]
   
   private val problems = new mutable.HashMap[IFile, ArrayBuffer[IProblem]] with SynchronizedMap[IFile, ArrayBuffer[IProblem]] {
     override def default(k : IFile) = { val v = new ArrayBuffer[IProblem] ; put(k, v); v }
@@ -63,12 +61,12 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
     case None =>
   }
   
-  class CachedCompilerResult(scu : ScalaCompilationUnit)
+  class CachedCompilerResult(scu : ScalaCompilationUnit, sf : SourceFile)
     extends Cached[CompilerResultHolder] {
     override def create() =
       new CompilerResultHolder {
         val compiler = self
-        val sourceFile = scu.createSourceFile
+        val sourceFile = sf
         val (body, problems) = {
           val typed = new compiler.Response[compiler.Tree]
           compiler.askType(sourceFile, true, typed)
@@ -85,9 +83,20 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
     override def destroy(crh : CompilerResultHolder) {}
   }
   
-  def withCompilerResult[T](scu : ScalaCompilationUnit)(op : CompilerResultHolder => T) : T =
-    results(scu).apply(op)
+  def withCompilerResult[T](scu : ScalaCompilationUnit, sf : SourceFile)(op : CompilerResultHolder => T) : T = {
+    val ccr = results.synchronized {
+      results.get(scu) match {
+        case Some(res) => res
+        case None =>
+          val res = new CachedCompilerResult(scu, sf)
+          results.put(scu, res)
+          res
+      }
+    }
     
+    ccr.apply(op)
+  }
+  
   def invalidateCompilerResult(scu : ScalaCompilationUnit) {
     results.get(scu).map(_.invalidate())
     clearProblemsOf(scu)
