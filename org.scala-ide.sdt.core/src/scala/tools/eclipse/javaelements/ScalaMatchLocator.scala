@@ -5,6 +5,8 @@
 
 package scala.tools.eclipse.javaelements
 
+import org.eclipse.jdt.core.search.SearchPattern
+import org.eclipse.jdt.internal.core.search.matching.OrPattern
 import org.eclipse.jdt.core.search.{ SearchMatch, SearchParticipant, TypeDeclarationMatch, TypeReferenceMatch, MethodReferenceMatch, FieldReferenceMatch }
 
 import org.eclipse.jdt.internal.compiler.ast.{ SingleTypeReference, TypeDeclaration }
@@ -16,17 +18,23 @@ import scala.tools.eclipse.ScalaPresentationCompiler
 import scala.tools.eclipse.util.ReflectionUtils
 import org.eclipse.jdt.internal.core.search.matching.{ FieldPattern, MethodPattern, TypeReferencePattern };
 
-//TODO manage OrPattern
 //FIXME should report all and let matcher to the selection OR only report matcher interest (pre select by type) OR ...
 
 trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
   class MatchLocatorTraverser(scu: ScalaCompilationUnit, matchLocator: MatchLocator, possibleMatch: PossibleMatch) extends Traverser {
     import MatchLocatorUtils._
 
+    private val patterns = {
+      matchLocator.pattern match {
+          case orp : OrPattern => MatchLocatorUtils.patterns(orp)
+          case singlePattern => Array(singlePattern)
+      }
+    }
+    
     override def traverse(tree: Tree): Unit = {
       if (tree.pos.isOpaqueRange) {
-        (tree, matchLocator.pattern) match {
-          case (t : TypeTree, _) => {
+        tree match {
+          case t : TypeTree => {
             if (t.pos.isDefined)
               reportTypeReference(t.tpe, t.pos)
             if (t.tpe.isInstanceOf[TypeRef]) 
@@ -36,25 +44,31 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
               reportTypeReference(t.tpe.asInstanceOf[TypeBounds].lo, t.pos)
             }  
           }    
-          case (v : ValOrDefDef, _) if v.tpt.pos.isDefined && !v.tpt.pos.isRange =>
-              reportTypeReference(v.tpt.asInstanceOf[TypeTree].tpe,
-                new RangePosition(v.tpt.pos.source,
-                  v.tpt.pos.point,
-                  v.tpt.pos.point,
-                  v.tpt.pos.point + v.name.length))
-          case (id : Ident, pattern : TypeReferencePattern) if (!id.symbol.toString.startsWith("package")) =>
-            	reportObjectReference(pattern, id.symbol, id.pos)
-          case (im : Import, pattern : TypeReferencePattern) if (!im.expr.symbol.toString.startsWith("package")) =>
-            	reportObjectReference(pattern, im.expr.symbol, im.pos)
-          case (s : Select, pattern) => (s.symbol, pattern) match {
+          case v : ValOrDefDef if (v.tpt.pos.isDefined && !v.tpt.pos.isRange) =>
+            reportTypeReference(v.tpt.asInstanceOf[TypeTree].tpe,
+              new RangePosition(v.tpt.pos.source,
+                v.tpt.pos.point,
+                v.tpt.pos.point,
+                v.tpt.pos.point + v.name.length))
+          case id : Ident if (!id.symbol.toString.startsWith("package")) =>	patterns.foreach {
+            case pattern : TypeReferencePattern => reportObjectReference(pattern, id.symbol, id.pos)
+            case _ => ()
+          }
+          case im : Import if (!im.expr.symbol.toString.startsWith("package")) => patterns.foreach {
+            case pattern : TypeReferencePattern => reportObjectReference(pattern, im.expr.symbol, im.pos)
+            case _ => ()
+          }
+          case s : Select => patterns.foreach { pattern =>
+            (s.symbol, pattern) match {
               case (symbol : ModuleSymbol, pattern : TypeReferencePattern) => reportObjectReference(pattern, symbol, s.pos)
               case (symbol : MethodSymbol, pattern : MethodPattern)        => reportValueOrMethodReference(s, pattern)
               case (symbol : MethodSymbol, pattern : FieldPattern)         => reportVariableReference(s, pattern)
               case _ => ()
+            }
           }
-          case (n: New, _) =>
+          case n: New =>
             reportTypeReference(n.tpe, n.tpt.pos)
-          case (c: ClassDef, _) if c.pos.isDefined =>
+          case c: ClassDef if c.pos.isDefined =>
             reportTypeDefinition(c.symbol.tpe, c.pos)
           case _ => ()
         }
@@ -216,9 +230,14 @@ object MatchLocatorUtils extends ReflectionUtils {
   
   val fpClazz = classOf[FieldPattern]
   val declaringSimpleNameField = getDeclaredField(fpClazz, "declaringSimpleName")
-  def declaringSimpleName(fp : FieldPattern) = declaringSimpleNameField.get(fp).asInstanceOf[Array[Char]];
+  def declaringSimpleName(fp : FieldPattern) = declaringSimpleNameField.get(fp).asInstanceOf[Array[Char]]
   
   val ftrClazz = classOf[TypeReferencePattern]
   val simpleNameField = getDeclaredField(ftrClazz, "simpleName")
-  def simpleName(trp : TypeReferencePattern) = simpleNameField.get(trp).asInstanceOf[Array[Char]];
+  def simpleName(trp : TypeReferencePattern) = simpleNameField.get(trp).asInstanceOf[Array[Char]]
+  
+  val orpClazz = classOf[OrPattern]
+  val patternsField = getDeclaredField(orpClazz, "patterns")
+  def patterns(orp : OrPattern) = patternsField.get(orp).asInstanceOf[Array[SearchPattern]]
+  
 }
