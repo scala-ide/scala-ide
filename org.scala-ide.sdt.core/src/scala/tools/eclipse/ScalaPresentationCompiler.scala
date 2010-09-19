@@ -98,7 +98,8 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
   }
   
   def invalidateCompilerResult(scu : ScalaCompilationUnit) {
-    results.get(scu).map(_.invalidate())
+    val ccr = results.remove(scu)
+    ccr.map(_.invalidate())
     clearProblemsOf(scu)
   }
   

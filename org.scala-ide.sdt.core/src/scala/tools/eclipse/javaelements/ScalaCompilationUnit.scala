@@ -45,7 +45,7 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
         else
           new Array[Char](0)
       }
-  
+      
       new BatchSourceFile(file, contents)
     }
     
@@ -77,22 +77,6 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
   override def close {
     discard
     super.close
-  }
-  
-  def createSourceFile : SourceFile = {
-    val buffer = openBuffer0(null, null)
-    if (buffer == null)
-      throw new NullPointerException("getBuffer == null for: "+getElementName)
-    
-    val contents = {
-      val contents0 = buffer.getCharacters
-      if (contents0 != null)
-        contents0
-      else
-        new Array[Char](0)
-    }
-
-    new BatchSourceFile(file, contents)
   }
 
   private def openBuffer0(pm : IProgressMonitor, info : AnyRef) = OpenableUtils.openBuffer(this, pm, info)
