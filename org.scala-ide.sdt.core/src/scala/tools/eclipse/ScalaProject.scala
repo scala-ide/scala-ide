@@ -333,7 +333,7 @@ class ScalaProject(val underlying : IProject) {
       topLevelMap0 = new TopLevelMap
       println("Building top-level map for: "+underlying.getName)
       val start = System.currentTimeMillis
-      allSourceFiles.map(topLevelMap0.update)
+      topLevelMap0.resetWith(allSourceFiles)
       val end = System.currentTimeMillis
       println("Time: "+(end-start))
     }

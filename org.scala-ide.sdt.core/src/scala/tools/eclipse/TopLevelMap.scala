@@ -85,4 +85,15 @@ class TopLevelMap {
       parse(List(file))
     }
   }
+  
+  /**
+   * optimized version of new + files.foreach { f => update }
+   * Avoid call of remove, creation of some temporary List
+   * @param files
+   */
+  def resetWith(files : Set[IFile]) {
+      fileToTypes.clear
+      typeToFile.clear
+      parse(files.toList)
+  }
 }
