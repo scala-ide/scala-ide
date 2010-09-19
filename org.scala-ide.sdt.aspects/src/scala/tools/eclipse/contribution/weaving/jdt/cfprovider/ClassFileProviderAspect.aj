@@ -224,7 +224,8 @@ public privileged aspect ClassFileProviderAspect {
   
   void around(HierarchyResolver hr, IType type, ReferenceBinding typeBinding) :
     remember(hr, type, typeBinding) {
-    if (((IOpenable)type.getCompilationUnit()).isOpen()) {
+    IOpenable openable = (IOpenable) type.getCompilationUnit();
+    if (openable != null && openable.isOpen()) {
       try {
         IGenericType genericType = (IGenericType)((JavaElement)type).getElementInfo();
         hr.remember(genericType, typeBinding);
@@ -318,25 +319,28 @@ public privileged aspect ClassFileProviderAspect {
     int start = topLevelTypeInfo.getNameSourceStart();
     int end = topLevelTypeInfo.getNameSourceEnd();
 
-    /* convert package and imports */
-    String[] packageName = ((PackageFragment) cuHandle.getParent()).names;
-    if (packageName.length > 0)
-      // if its null then it is defined in the default package
-      stc.unit.currentPackage =
-        stc.createImportReference(packageName, start, end, false, ClassFileConstants.AccDefault);
-    IImportDeclaration[] importDeclarations = topLevelTypeInfo.getHandle().getCompilationUnit().getImports();
-    int importCount = importDeclarations.length;
-    stc.unit.imports = new ImportReference[importCount];
-    for (int i = 0; i < importCount; i++) {
-      ImportDeclaration importDeclaration = (ImportDeclaration) importDeclarations[i];
-      ISourceImport sourceImport = (ISourceImport) importDeclaration.getElementInfo();
-      String nameWithoutStar = importDeclaration.getNameWithoutStar();
-      stc.unit.imports[i] = stc.createImportReference(
-        Util.splitOn('.', nameWithoutStar, 0, nameWithoutStar.length()),
-        sourceImport.getDeclarationSourceStart(),
-        sourceImport.getDeclarationSourceEnd(),
-        importDeclaration.isOnDemand(),
-        sourceImport.getModifiers());
+    //cuHanlde could be null if this member is not declared in a compilation unit (for example, a binary type) (see javadoc of getCompilationUnit)
+    if (cuHandle != null) {
+      /* convert package and imports */
+      String[] packageName = ((PackageFragment) cuHandle.getParent()).names;
+      if (packageName.length > 0)
+        // if its null then it is defined in the default package
+        stc.unit.currentPackage =
+          stc.createImportReference(packageName, start, end, false, ClassFileConstants.AccDefault);
+      IImportDeclaration[] importDeclarations = cuHandle.getImports();
+      int importCount = importDeclarations.length;
+      stc.unit.imports = new ImportReference[importCount];
+      for (int i = 0; i < importCount; i++) {
+        ImportDeclaration importDeclaration = (ImportDeclaration) importDeclarations[i];
+        ISourceImport sourceImport = (ISourceImport) importDeclaration.getElementInfo();
+        String nameWithoutStar = importDeclaration.getNameWithoutStar();
+        stc.unit.imports[i] = stc.createImportReference(
+          Util.splitOn('.', nameWithoutStar, 0, nameWithoutStar.length()),
+          sourceImport.getDeclarationSourceStart(),
+          sourceImport.getDeclarationSourceEnd(),
+          importDeclaration.isOnDemand(),
+          sourceImport.getModifiers());
+      }
     }
     /* convert type(s) */
     try {
