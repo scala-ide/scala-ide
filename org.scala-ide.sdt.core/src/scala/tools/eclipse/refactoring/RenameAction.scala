@@ -4,6 +4,7 @@
 
 package scala.tools.eclipse.refactoring
 
+import scala.tools.eclipse.Tracer
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.jface.action.IAction
 import org.eclipse.ltk.core.refactoring.RefactoringStatus
@@ -59,10 +60,10 @@ class RenameAction extends RefactoringAction {
             
               ScalaSourceFile.createFromPath(f.getFullPath.toString) map (_.withCompilerResult { crh => 
                 if(crh.body.pos.isRange) {
-                  println("indexing "+ crh.body.pos.source.file.name)
+                  Tracer.println("indexing "+ crh.body.pos.source.file.name)
                   List(CompilationUnitIndex(global.unitOf(crh.body.pos.source).body))
                 } else {
-                  println("skipped indexing "+ f.getFullPath.toString)
+                  Tracer.println("skipped indexing "+ f.getFullPath.toString)
                   Nil
                 }
               })

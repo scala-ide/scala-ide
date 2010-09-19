@@ -19,7 +19,7 @@ class ScalaSourceIndexerFactory extends IIndexerFactory {
 
 class ScalaSourceIndexer(document : SearchDocument) extends AbstractIndexer(document) {
   override def indexDocument() {
-    println("Indexing document: "+document.getPath)
+    Tracer.println("Indexing document: "+document.getPath)
     ScalaSourceFile.createFromPath(document.getPath).map(_.addToIndexer(this))
   }
 }

@@ -4,6 +4,7 @@
 
 package scala.tools.eclipse.refactoring
 
+import scala.tools.eclipse.Tracer
 import scala.tools.refactoring.analysis.GlobalIndexes
 import scala.tools.refactoring.analysis.Indexes
 import scala.tools.refactoring.common._
@@ -57,7 +58,7 @@ class ShowReferencesAction extends RefactoringAction {
             if(crh.body.pos.isRange) {
               Some(refactoring.CompilationUnitIndex(refactoring.global.unitOf(crh.body.pos.source).body))
             } else {
-              println("skipped indexing "+ f.getFullPath.toString)
+              Tracer.println("skipped indexing "+ f.getFullPath.toString)
               None
             }
           })
@@ -66,9 +67,9 @@ class ShowReferencesAction extends RefactoringAction {
         val index = refactoring.GlobalIndex(compilationUnitIndices)
         
         selection.selectedSymbolTree map { symTree =>
-            println(symTree.symbol.nameString +" is referenced in: ")
+            Tracer.println(symTree.symbol.nameString +" is referenced in: ")
             index.references(symTree.symbol) foreach { t =>
-            println("%s:%s\t%s".format(t.pos.source.file.name, t.pos.line, t.pos.lineContent))
+            Tracer.println("%s:%s\t%s".format(t.pos.source.file.name, t.pos.line, t.pos.lineContent))
           }
         }
 

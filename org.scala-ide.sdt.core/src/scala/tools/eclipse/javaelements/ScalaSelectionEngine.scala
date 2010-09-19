@@ -5,6 +5,7 @@
 
 package scala.tools.eclipse.javaelements
 
+import scala.tools.eclipse.Tracer
 import java.{ util => ju }
 
 import ch.epfl.lamp.fjbg.JObjectType
@@ -60,7 +61,7 @@ class ScalaSelectionEngine(nameEnvironment : SearchableEnvironment, requestor : 
       val length = 1+selectionEnd-selectionStart
       selectedIdentifier = new Array(length)
       Array.copy(source, selectionStart, selectedIdentifier, 0, length)
-      println("selectedIdentifier: "+selectedIdentifier.mkString("", "", ""))
+      Tracer.println("selectedIdentifier: "+selectedIdentifier.mkString("", "", ""))
   
       val ssr = requestor.asInstanceOf[ScalaSelectionRequestor]
       var fallbackToDefaultLookup = true
@@ -236,14 +237,14 @@ class ScalaSelectionEngine(nameEnvironment : SearchableEnvironment, requestor : 
                     case Some(compiler.Apply(_, _)) =>
                       acceptLocalDefinition(t)
                     case _ =>
-                      println("Unhandled: "+t.getClass.getName)
+                      Tracer.println("Unhandled: "+t.getClass.getName)
                   }
                 case t : compiler.TermSymbol if t.isMethod && t.pos.isDefined =>
                   ssr.addElement(ssr.findLocalElement(t.pos.startOrPoint))
                 case t : compiler.TermSymbol if t.pos.isDefined =>
                   acceptLocalDefinition(t)
                 case _ =>
-                  println("Unhandled: "+sym.getClass.getName)
+                  Tracer.println("Unhandled: "+sym.getClass.getName)
               }
               
             case s : compiler.Select if s.symbol != null && s.symbol != NoSymbol =>
@@ -281,7 +282,7 @@ class ScalaSelectionEngine(nameEnvironment : SearchableEnvironment, requestor : 
                       case m : compiler.ModuleSymbol =>
                         acceptType(m)
                       case _ =>
-                        println("Unhandled: "+tree.getClass.getName)
+                        Tracer.println("Unhandled: "+tree.getClass.getName)
                     }
                   } else if (symbol.isTypeParameter){
                     if (symbol.pos.isDefined) {
@@ -314,7 +315,7 @@ class ScalaSelectionEngine(nameEnvironment : SearchableEnvironment, requestor : 
                   case t : compiler.TypeSymbol =>
                     acceptField(t)
                   case _ =>
-                    println("Unhandled: "+tree.getClass.getName)
+                    Tracer.println("Unhandled: "+tree.getClass.getName)
                 }
               }
             
@@ -348,11 +349,11 @@ class ScalaSelectionEngine(nameEnvironment : SearchableEnvironment, requestor : 
                 ssr.addElement(ssr.findLocalElement(pos.startOrPoint))
               
             case _ =>
-              println("Unhandled: "+tree.getClass.getName)
+              Tracer.println("Unhandled: "+tree.getClass.getName)
           }
         }
         case None =>
-          println("No tree")
+          Tracer.println("No tree")
       }
       
       if (!ssr.hasSelection && fallbackToDefaultLookup) {

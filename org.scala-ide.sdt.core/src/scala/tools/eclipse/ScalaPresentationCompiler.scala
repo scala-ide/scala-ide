@@ -69,6 +69,8 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
         val sourceFile = sf
         val (body, problems) = {
           val typed = new compiler.Response[compiler.Tree]
+          Tracer.println("call askType : " + sourceFile)  
+
           compiler.askType(sourceFile, true, typed)
           typed.get match {
             case Left(body0) =>
@@ -146,13 +148,14 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
     }
     
     def compileSourceFor(qualifiedName : String) : Boolean = {
+      //Tracer.println("call compileSourceFor : " + qualifiedName)  
       project.findSource(qualifiedName) match {
         case Some(iFile) if (!project.isStandardSource(iFile, qualifiedName)) =>
           val file = new EclipseFile(iFile)
           if (compiledFiles contains file.path)
             false
           else {
-            println("Adding: "+file+" to resolve: "+qualifiedName)
+            Tracer.println("Adding: "+file+" to resolve: "+qualifiedName)
             compileLate(file)
             true
           }

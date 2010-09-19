@@ -88,7 +88,7 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
   
   override def start(context : BundleContext) = {
     super.start(context)
-    
+    Tracer.println("start plugin")
     ResourcesPlugin.getWorkspace.addResourceChangeListener(this, IResourceChangeEvent.PRE_CLOSE | IResourceChangeEvent.POST_CHANGE)
     JavaCore.addElementChangedListener(this)
     Platform.getContentTypeManager.

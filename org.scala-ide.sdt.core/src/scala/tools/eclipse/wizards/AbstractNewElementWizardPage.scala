@@ -6,6 +6,7 @@
  */
 package scala.tools.eclipse.wizards
 
+import scala.tools.eclipse.Tracer
 import org.eclipse.core.resources.IResource
 
 import org.eclipse.core.runtime.{ CoreException, FileLocator, IPath, 
@@ -364,7 +365,7 @@ abstract class AbstractNewElementWizardPage extends NewTypeWizardPage(1,"") {
       parentCU.discardWorkingCopy
     }
     catch {
-      case ex: JavaModelException => println("<<<<<<< Error >>>>>>>\n" + ex)
+      case ex: JavaModelException => Tracer.println("<<<<<<< Error >>>>>>>\n" + ex)
     }
     finally {
       monitor done
@@ -399,7 +400,7 @@ abstract class AbstractNewElementWizardPage extends NewTypeWizardPage(1,"") {
   override protected def typeNameChanged(): IStatus = {
 	  
     var status = super.typeNameChanged.asInstanceOf[StatusInfo]
-    println(">>>> Status = " + status)
+    Tracer.println(">>>> Status = " + status)
     val pack = getPackageFragment
     
     if (pack != null) {
@@ -409,7 +410,7 @@ abstract class AbstractNewElementWizardPage extends NewTypeWizardPage(1,"") {
       try {
         if(!plugin.isScalaProject(project.getProject)) {
           val msg = project.getElementName + " is not a Scala project"
-          println(msg)
+          Tracer.println(msg)
           status.setError(msg)
         }
       } 
