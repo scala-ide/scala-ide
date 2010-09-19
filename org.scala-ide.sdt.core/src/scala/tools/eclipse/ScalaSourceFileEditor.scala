@@ -128,10 +128,13 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
   }
 
   override def installOccurrencesFinder(forceUpdate: Boolean) {
-    getEditorSite.getPage.addPostSelectionListener(new ISelectionListener() {
+    getEditorSite.getPage.addPostSelectionListener(new ISelectionListener {
       def selectionChanged(part: IWorkbenchPart, selection: ISelection) {
-        if (selection.isInstanceOf[ITextSelection])
-          updateOccurrenceAnnotations(selection.asInstanceOf[ITextSelection], null)
+        selection match {
+          case textSelection: ITextSelection if textSelection.getLength >= 0 && textSelection.getOffset >= 0 => 
+            updateOccurrenceAnnotations(textSelection, null)
+          case _ =>
+        }
       }
     })
   }
