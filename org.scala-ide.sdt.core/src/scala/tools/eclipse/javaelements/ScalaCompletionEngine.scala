@@ -4,6 +4,7 @@
 // $Id$
 
 package scala.tools.eclipse.javaelements
+import scala.tools.eclipse.Tracer
 
 import scala.reflect.NameTransformer
 
@@ -210,7 +211,7 @@ class ScalaCompletionEngine {
         case Some(completions) =>
           requestor.acceptContext(createContext)
           if (debug) {
-        	  println("Completions: " + completions.mkString("\n"))
+        	  Tracer.println("Completions: " + completions.mkString("\n"))
           }
           for(completion <- completions) {
             completion match {
@@ -223,7 +224,7 @@ class ScalaCompletionEngine {
             }
           }
         case None =>
-          println("No completions")
+          Tracer.println("No completions")
       }
     })
   }

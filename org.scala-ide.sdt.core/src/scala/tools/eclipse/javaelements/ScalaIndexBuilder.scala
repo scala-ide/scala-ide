@@ -4,6 +4,7 @@
 // $Id$
 
 package scala.tools.eclipse.javaelements
+import scala.tools.eclipse.Tracer
 
 import org.eclipse.core.resources.IFile
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants
@@ -38,7 +39,7 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
     
     trait PackageOwner extends Owner { self =>
       override def addPackage(p : PackageDef) : Owner = {
-        println("Package defn: "+p.name+" ["+this+"]")
+        Tracer.println("Package defn: "+p.name+" ["+this+"]")
         
         new Builder {
           val parent = self
@@ -49,8 +50,8 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
     
     trait ClassOwner extends Owner { self =>
       override def addClass(c : ClassDef) : Owner = {
-        println("Class defn: "+c.name+" ["+this+"]")
-        println("Parents: "+c.impl.parents)
+        Tracer.println("Class defn: "+c.name+" ["+this+"]")
+        Tracer.println("Parents: "+c.impl.parents)
         
         val name = c.symbol.simpleName.toString
         
@@ -104,7 +105,7 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
     
     trait ModuleOwner extends Owner { self =>
       override def addModule(m : ModuleDef) : Owner = {
-        println("Module defn: "+m.name+" ["+this+"]")
+        Tracer.println("Module defn: "+m.name+" ["+this+"]")
         
         val name = m.symbol.simpleName.toString
 
@@ -156,7 +157,7 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
     
     trait ValOwner extends Owner { self =>
       override def addVal(v : ValDef) : Owner = {
-        println("Val defn: >"+nme.getterName(v.name)+"< ["+this+"]")
+        Tracer.println("Val defn: >"+nme.getterName(v.name)+"< ["+this+"]")
         
         indexer.addMethodDeclaration(
           nme.getterName(v.name).toString.toCharArray,
@@ -187,7 +188,7 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
     
     trait DefOwner extends Owner { self =>
       override def addDef(d : DefDef) : Owner = {
-        println("Def defn: "+d.name+" ["+this+"]")
+        Tracer.println("Def defn: "+d.name+" ["+this+"]")
         val isCtor0 = d.symbol.isConstructor
         val nm =
           if(isCtor0)
@@ -279,21 +280,21 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
         }
       }
       case Template(parents, self, body) => {
-        println("Template: "+parents)
+        Tracer.println("Template: "+parents)
         //traverseTrees(parents)
         //if (!self.isEmpty) traverse(self)
         traverseStats(body, tree.symbol)
       }
       case Function(vparams, body) => {
-        println("Anonymous function: "+tree.symbol.simpleName)
+        Tracer.println("Anonymous function: "+tree.symbol.simpleName)
       }
       case tt : TypeTree => {
-        //println("Type tree: "+tt)
+        //Tracer.println("Type tree: "+tt)
         //atBuilder(currentBuilder.addTypeTree(tt)) { super.traverse(tree) }            
         super.traverse(tree)            
       }
       case u =>
-        //println("Unknown type: "+u.getClass.getSimpleName+" "+u)
+        //Tracer.println("Unknown type: "+u.getClass.getSimpleName+" "+u)
         super.traverse(tree)
     }
 
