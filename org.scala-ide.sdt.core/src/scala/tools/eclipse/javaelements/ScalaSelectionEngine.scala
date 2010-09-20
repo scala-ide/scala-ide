@@ -330,7 +330,7 @@ class ScalaSelectionEngine(nameEnvironment : SearchableEnvironment, requestor : 
                 }
                 val tree = findInSelect(q)
                 val sym = tree.symbol
-                acceptSymbol(sym) 
+                Continuation (acceptSymbol(sym)) 
               } else
                 selectors.find({ case compiler.ImportSelector(name, pos, _, _) => pos >= selectionStart && pos+name.length-1 <= selectionEnd }) match {
                   case Some(compiler.ImportSelector(name, _, _, _)) =>
