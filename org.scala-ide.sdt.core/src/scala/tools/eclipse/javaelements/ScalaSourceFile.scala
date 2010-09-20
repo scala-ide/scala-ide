@@ -84,8 +84,12 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
       new VirtualFile(getElementName)
   }
 
-  def getProblems : Array[IProblem] =
-    withCompilerResult { crh => if (crh.problems.isEmpty) null else crh.problems.toArray }
+  def getProblems : Array[IProblem] = withSourceFile { (sourceFile, compiler) =>
+    val response = new compiler.Response[compiler.Tree]
+    compiler.body(sourceFile)
+    val problems = compiler.problemsOf(this)
+    if (problems.isEmpty) null else problems.toArray
+  }
   
   def getCorrespondingElement(element : IJavaElement) : Option[IJavaElement] = {
     if (!validateExistence(resource).isOK)

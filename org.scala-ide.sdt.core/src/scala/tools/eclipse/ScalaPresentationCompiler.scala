@@ -32,8 +32,8 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
   
   presentationReporter.compiler = this
   
-  private val results = new mutable.HashMap[ScalaCompilationUnit, CachedCompilerResult] with SynchronizedMap[ScalaCompilationUnit, CachedCompilerResult] {
-    override def default(k : ScalaCompilationUnit) = { val v = new CachedCompilerResult(k) ; put(k, v); v } 
+  private val sourceFiles = new mutable.HashMap[ScalaCompilationUnit, SourceFile] with SynchronizedMap[ScalaCompilationUnit, SourceFile] {
+    override def default(k : ScalaCompilationUnit) = { val v = k.createSourceFile; put(k, v); v } 
   }
   
   private val problems = new mutable.HashMap[IFile, ArrayBuffer[IProblem]] with SynchronizedMap[IFile, ArrayBuffer[IProblem]] {
@@ -51,7 +51,7 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
     }
   }
   
-  private def problemsOf(scu : ScalaCompilationUnit) : List[IProblem] = fileOf(scu) match {
+  def problemsOf(scu : ScalaCompilationUnit) : List[IProblem] = fileOf(scu) match {
     case Some(file) => problemsOf(file)
     case None => Nil
   }
@@ -63,38 +63,25 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
     case None =>
   }
   
-  class CachedCompilerResult(scu : ScalaCompilationUnit)
-    extends Cached[CompilerResultHolder] {
-    override def create() =
-      new CompilerResultHolder {
-        val compiler = self
-        val sourceFile = scu.createSourceFile
-        val (body, problems) = {
-          val typed = new compiler.Response[compiler.Tree]
-          compiler.askType(sourceFile, true, typed)
-          typed.get match {
-            case Left(body0) =>
-              (body0, problemsOf(scu))
-            case Right(thr) =>
-              ScalaPlugin.plugin.logError("Failure in presentation compiler", thr)
-              (compiler.EmptyTree, Nil)
-          }
-        }
-      }
+  def withSourceFile[T](scu : ScalaCompilationUnit)(op : (SourceFile, ScalaPresentationCompiler) => T) : T =
+    op(sourceFiles(scu), this)
     
-    override def destroy(crh : CompilerResultHolder) {}
+  def body(sourceFile : SourceFile) = {
+	val tree = new Response[Tree]
+	askType(sourceFile, false, tree)
+	tree.get match {
+		case Left(l) => l
+		case Right(r) => throw r
+	}
   }
-  
-  def withCompilerResult[T](scu : ScalaCompilationUnit)(op : CompilerResultHolder => T) : T =
-    results(scu).apply(op)
     
-  def invalidateCompilerResult(scu : ScalaCompilationUnit) {
-    results.get(scu).map(_.invalidate())
+  def askReload(scu : ScalaCompilationUnit) {
+    askReload(List(sourceFiles(scu)), new Response[Unit])
     clearProblemsOf(scu)
   }
   
-  def discardCompilerResult(scu : ScalaCompilationUnit) {
-    results.remove(scu)
+  def discardSourceFile(scu : ScalaCompilationUnit) {
+    sourceFiles.remove(scu)
     removeUnitOf(new BatchSourceFile(scu.file, Array[Char](0)))
     clearProblemsOf(scu)
   }
@@ -103,8 +90,7 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
     ScalaPlugin.plugin.logError(msg, t)
     
   def destroy() {
-    results.keysIterator.foreach(_.scheduleReconcile)
-    results.valuesIterator.foreach(_.invalidate)
+    sourceFiles.keysIterator.foreach(_.scheduleReconcile)
     askShutdown
   }
  
@@ -155,14 +141,6 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
 }
 
 object ScalaPresentationCompiler {
-  
-  trait CompilerResultHolder {
-    val compiler : ScalaPresentationCompiler
-    val sourceFile : SourceFile
-    val body : compiler.Tree
-    val problems : List[IProblem]
-  }
-
   class PresentationReporter extends Reporter {
     var compiler : ScalaPresentationCompiler = null
     

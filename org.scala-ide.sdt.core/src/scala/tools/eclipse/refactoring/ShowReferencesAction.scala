@@ -35,10 +35,10 @@ class ShowReferencesAction extends RefactoringAction {
   
   def createRefactoring(selectionStart: Int, selectionEnd: Int, file: ScalaSourceFile) = {
 
-    file.withCompilerResult{ crh => 
+    file.withSourceFile{ (sourceFile, compiler) => 
     
       val refactoring = new GlobalIndexes with Selections with PimpedTrees { 
-        val global = crh.compiler
+        val global = compiler
         val index: IndexLookup = null
       }
               
@@ -47,15 +47,16 @@ class ShowReferencesAction extends RefactoringAction {
         case x => x
       }
       
-      val selection = new refactoring.FileSelection(crh.sourceFile.file, from, to)
+      val selection = new refactoring.FileSelection(sourceFile.file, from, to)
                           
       EditorHelpers.withCurrentEditor { editor =>
       
         val compilationUnitIndices = ScalaPlugin.plugin.getScalaProject(editor.getEditorInput).allSourceFiles.toList flatMap { f =>
           
-          ScalaSourceFile.createFromPath(f.getFullPath.toString) map (_.withCompilerResult { crh => 
-            if(crh.body.pos.isRange) {
-              Some(refactoring.CompilationUnitIndex(refactoring.global.unitOf(crh.body.pos.source).body))
+          ScalaSourceFile.createFromPath(f.getFullPath.toString) map (_.withSourceFile { (source1, _) => 
+            val body = compiler.body(source1)
+            if(body.pos.isRange) {
+              Some(refactoring.CompilationUnitIndex(refactoring.global.unitOf(body.pos.source).body))
             } else {
               println("skipped indexing "+ f.getFullPath.toString)
               None

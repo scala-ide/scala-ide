@@ -33,7 +33,8 @@ abstract class ScalaIdeRefactoring(val getName: String) extends LTKRefactoring {
   
   def getPages: List[RefactoringWizardPage] = Nil
   
-  def createSelection(file: ScalaSourceFile, start: Int, end: Int) = file.withCompilerResult(crh => new refactoring.FileSelection(crh.sourceFile.file, start, end))
+  def createSelection(file: ScalaSourceFile, start: Int, end: Int) = 
+	  file.withSourceFile((sourceFile, _) => new refactoring.FileSelection(sourceFile.file, start, end))
     
   var preparationResult: refactoring.PreparationResult = _
   

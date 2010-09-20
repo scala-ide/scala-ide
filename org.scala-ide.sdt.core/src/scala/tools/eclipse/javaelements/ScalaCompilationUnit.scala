@@ -45,21 +45,21 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
     }
   }
   
-	def withCompilerResult[T](op : ScalaPresentationCompiler.CompilerResultHolder => T) : T = {
-    withDocument(project.withCompilerResult(this)(op))
+  def withSourceFile[T](op : (SourceFile, ScalaPresentationCompiler) => T) : T = {
+    withDocument(project.withSourceFile(this)(op))
   }
   
   override def bufferChanged(e : BufferChangedEvent) {
     if (e.getBuffer.isClosed)
       discard
     else
-      project.withPresentationCompiler(_.invalidateCompilerResult(this))
+      project.withPresentationCompiler(_.askReload(this))
 
     super.bufferChanged(e)
   }
   
   def discard {
-    project.withPresentationCompiler(_.discardCompilerResult(this))
+    project.withPresentationCompiler(_.discardSourceFile(this))
   }
   
   override def close {
@@ -88,8 +88,8 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
   def getProblemRequestor : IProblemRequestor = null
 
   override def buildStructure(info : OpenableElementInfo, pm : IProgressMonitor, newElements : JMap[_, _], underlyingResource : IResource) : Boolean =
-  	withCompilerResult({ crh =>
-			import crh._
+  	withSourceFile({ (sourceFile, compiler) =>
+		val body = compiler.body(sourceFile)
 	
 	    if (body == null || body.isEmpty) {
 	      info.setIsStructureKnown(false)
@@ -112,10 +112,9 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
   def scheduleReconcile : Unit = ()
   
   def addToIndexer(indexer : ScalaSourceIndexer) {
-    withCompilerResult({ crh =>
-	    import crh._
-	
-	    if (body != null)
+    withSourceFile({ (source, compiler) =>
+      val body = compiler.body(source)
+      if (body != null)
 	      new compiler.IndexBuilderTraverser(indexer).traverse(body)
 	  })
   }
@@ -167,8 +166,8 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
   }
   
   override def reportMatches(matchLocator : MatchLocator, possibleMatch : PossibleMatch) {
-    withCompilerResult({ crh =>
-	    import crh._
+    withSourceFile({ (sourceFile, compiler) =>
+	    val body = compiler.body(sourceFile)
 	
 	    if (body != null)
 	      new compiler.MatchLocatorTraverser(this, matchLocator, possibleMatch).traverse(body)
@@ -176,8 +175,8 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
   }
   
   override def createOverrideIndicators(annotationMap : JMap[_, _]) {
-    withCompilerResult({ crh =>
-	    import crh._
+    withSourceFile({ (sourceFile, compiler) =>
+	    val body = compiler.body(sourceFile)
 	
 	    if (body != null)
 	      new compiler.OverrideIndicatorBuilderTraverser(this, annotationMap.asInstanceOf[JMap[AnyRef, AnyRef]]).traverse(body)

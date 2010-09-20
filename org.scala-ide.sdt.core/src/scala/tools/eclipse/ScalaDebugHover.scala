@@ -19,8 +19,7 @@ class ScalaDebugHover extends JavaSourceHover {
     val length = hoverRegion.getLength
     val end = start+length
     
-    scu.withCompilerResult({ crh =>
-      import crh._
+    scu.withSourceFile({ (sourceFile, compiler) =>
       compiler.debugInfo(sourceFile, start, length)
     })
   }

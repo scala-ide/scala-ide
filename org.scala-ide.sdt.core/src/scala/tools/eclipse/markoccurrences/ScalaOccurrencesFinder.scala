@@ -16,15 +16,16 @@ class ScalaOccurrencesFinder(file: ScalaSourceFile, offset: Int, length: Int) {
       case (f, t) if f == t => (f - 1, t + 1) // pretend that we have a selection
       case x => x
     }
-    file.withCompilerResult { crh =>
+    file.withSourceFile { (sourceFile, compiler) =>
       val analysis = new Selections with GlobalIndexes {
-        val global = crh.compiler
+        val global = compiler
         val index = GlobalIndex(Nil)
       }
       import analysis._
-      val selection = new FileSelection(crh.sourceFile.file, from, to)
+      val body = compiler.body(sourceFile)
+      val selection = new FileSelection(sourceFile.file, from, to)
       selection.selectedSymbolTree flatMap { selectedLocal =>
-        val position = crh.body.pos
+        val position = body.pos
         if (position == global.NoPosition)
           None
         else {

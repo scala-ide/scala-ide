@@ -26,8 +26,8 @@ class OrganizeImportsAction extends RefactoringAction {
   
   class OrganizeImportsScalaIdeRefactoring(file: ScalaSourceFile) extends ScalaIdeRefactoring("Organize Imports") {
                   
-    val refactoring = file.withCompilerResult(crh => new OrganizeImports {
-      val global = crh.compiler
+    val refactoring = file.withSourceFile((_, compiler) => new OrganizeImports {
+      val global = compiler
     })
             
     lazy val selection = createSelection(file, 0, 0)

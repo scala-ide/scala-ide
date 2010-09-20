@@ -28,8 +28,8 @@ class ExtractLocalAction extends RefactoringAction {
           
     val name = "$_unused_name"
     
-    val refactoring = file.withCompilerResult(crh => new ExtractLocal {
-      val global = crh.compiler
+    val refactoring = file.withSourceFile((_, compiler) => new ExtractLocal {
+      val global = compiler
     })
     
     lazy val selection = createSelection(file, selectionStart, selectionEnd)

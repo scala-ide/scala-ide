@@ -23,8 +23,8 @@ class RenameAction extends RefactoringAction {
       
       var name = ""
             
-      val refactoring = file.withCompilerResult(crh => new Rename with ConsoleTracing with GlobalIndexes with NameValidation { 
-        val global = crh.compiler
+      val refactoring = file.withSourceFile((_,compiler) => new Rename with ConsoleTracing with GlobalIndexes with NameValidation { 
+        val global = compiler
         var index = GlobalIndex(Nil)
       })
       
@@ -32,17 +32,18 @@ class RenameAction extends RefactoringAction {
               
       lazy val selection = createSelection(file, selectedFrom, selectedTo)
       
-      lazy val initialCheck = file.withCompilerResult { crh =>
+      lazy val initialCheck = file.withSourceFile { (sourceFile, compiler) =>
+        val body = compiler.body(sourceFile)
         prepare(selection) match {
           
           case r @ Right(PreparationResult(selectedLocal, true)) =>
           
             name = selectedLocal.symbol.nameString
             
-            if(crh.body.pos == global.NoPosition)
+            if(body.pos == global.NoPosition)
               Left(PreparationError("Could not get AST for current compilation unit."))
             else {
-              index = GlobalIndex(global.unitOf(crh.body.pos.source).body)
+              index = GlobalIndex(global.unitOf(body.pos.source).body)
               r
             }
             
@@ -57,10 +58,11 @@ class RenameAction extends RefactoringAction {
             // TODO index in the background while the user inputs the name
             val cus = allProjectSourceFiles flatMap { f =>
             
-              ScalaSourceFile.createFromPath(f.getFullPath.toString) map (_.withCompilerResult { crh => 
-                if(crh.body.pos.isRange) {
-                  println("indexing "+ crh.body.pos.source.file.name)
-                  List(CompilationUnitIndex(global.unitOf(crh.body.pos.source).body))
+              ScalaSourceFile.createFromPath(f.getFullPath.toString) map (_.withSourceFile { (sourceFile, compiler) => 
+                val body = compiler.body(sourceFile)
+                if(body.pos.isRange) {
+                  println("indexing "+ body.pos.source.file.name)
+                  List(CompilationUnitIndex(global.unitOf(body.pos.source).body))
                 } else {
                   println("skipped indexing "+ f.getFullPath.toString)
                   Nil

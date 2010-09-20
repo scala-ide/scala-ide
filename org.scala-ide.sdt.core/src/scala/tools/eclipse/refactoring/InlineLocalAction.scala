@@ -26,9 +26,9 @@ class InlineLocalAction extends RefactoringAction {
   
   class InlineLocalScalaIdeRefactoring(selectionStart: Int, selectionEnd: Int, file: ScalaSourceFile) extends ScalaIdeRefactoring("Inline Local") {
           
-    val refactoring = file.withCompilerResult(crh => new InlineLocal with GlobalIndexes {
-      val global = crh.compiler
-      val index = GlobalIndex(global.unitOfFile(crh.sourceFile.file).body)
+    val refactoring = file.withSourceFile((sourceFile, compiler) => new InlineLocal with GlobalIndexes {
+      val global = compiler
+      val index = GlobalIndex(global.unitOfFile(sourceFile.file).body)
     })
     
     lazy val selection = createSelection(file, selectionStart, selectionEnd)

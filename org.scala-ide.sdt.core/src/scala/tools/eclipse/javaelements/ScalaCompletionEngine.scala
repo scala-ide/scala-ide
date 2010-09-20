@@ -37,9 +37,8 @@ class ScalaCompletionEngine {
     val javaProject = scu.getJavaProject.asInstanceOf[JavaProject]
     val environment = javaProject.newSearchableNameEnvironment(owner)
     
-    scu.withCompilerResult({ crh =>
+    scu.withSourceFile({ (sourceFile, compiler) =>
     
-      import crh._
       import compiler.{ encodedJavaType, mapModifiers, mapTypeName, mapParamTypeName, mapParamTypePackageName, nme }
       
       val pos = compiler.rangePos(sourceFile, position, position, position)
