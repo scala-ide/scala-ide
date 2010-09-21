@@ -67,7 +67,6 @@ class EclipseBuildManager(project : ScalaProject, settings0: Settings) extends R
     
     override def info0(pos : Position, msg : String, severity : Severity, force : Boolean) = {
       severity.count += 1
-
       if (severity.id > 1)
         EclipseBuildManager.this.hasErrors = true
       
@@ -87,7 +86,13 @@ class EclipseBuildManager(project : ScalaProject, settings0: Settings) extends R
           }
         }
         else
-          project.buildError(eclipseSeverity, msg, null)
+          eclipseSeverity match {
+            case IMarker.SEVERITY_INFO if (settings0.Ybuildmanagerdebug.value) =>
+        	  // print only to console, better debugging
+        	  println("[Buildmanager info] " + msg)
+            case _ =>
+        	  project.buildError(eclipseSeverity, msg, null)   
+          }
       } catch {
         case ex : UnsupportedOperationException => 
           project.buildError(eclipseSeverity, msg, null)
