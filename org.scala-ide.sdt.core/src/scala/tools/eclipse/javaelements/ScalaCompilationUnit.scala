@@ -23,7 +23,7 @@ import org.eclipse.jdt.internal.core.search.matching.{ MatchLocator, PossibleMat
 import org.eclipse.jdt.internal.ui.javaeditor.DocumentAdapter
 
 import scala.tools.nsc.io.AbstractFile
-import scala.tools.nsc.util.{ BatchSourceFile, SourceFile }
+import scala.tools.nsc.util.{ MutableSourceFile, SourceFile }
 
 import scala.tools.eclipse.contribution.weaving.jdt.{ IScalaCompilationUnit, IScalaWordFinder }
 
@@ -53,7 +53,7 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
     if (e.getBuffer.isClosed)
       discard
     else
-      project.withPresentationCompiler(_.askReload(this))
+      project.withPresentationCompiler(_.askReload(this, content))
 
     super.bufferChanged(e)
   }
@@ -67,20 +67,20 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
     super.close
   }
   
-  def createSourceFile : SourceFile = {
+  def content = {
     val buffer = openBuffer0(null, null)
     if (buffer == null)
       throw new NullPointerException("getBuffer == null for: "+getElementName)
     
-    val contents = {
-      val contents0 = buffer.getCharacters
-      if (contents0 != null)
-        contents0
-      else
-        new Array[Char](0)
-    }
-
-    new BatchSourceFile(file, contents)
+    val contents0 = buffer.getCharacters
+    if (contents0 != null)
+      contents0
+    else
+      new Array[Char](0)
+  }
+  
+  def createSourceFile : MutableSourceFile = {
+    new MutableSourceFile(file, content)
   }
 
   private def openBuffer0(pm : IProgressMonitor, info : AnyRef) = OpenableUtils.openBuffer(this, pm, info)

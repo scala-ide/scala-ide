@@ -17,7 +17,6 @@ import org.eclipse.jdt.internal.corext.util.JavaModelUtil
 import org.eclipse.swt.widgets.Display
 
 import scala.tools.nsc.io.{ AbstractFile, VirtualFile }
-import scala.tools.nsc.util.BatchSourceFile
 
 import scala.tools.eclipse.contribution.weaving.jdt.IScalaSourceFile
 

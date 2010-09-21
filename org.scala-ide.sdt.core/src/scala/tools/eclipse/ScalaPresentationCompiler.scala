@@ -15,7 +15,7 @@ import scala.tools.nsc.Settings
 import scala.tools.nsc.interactive.Global
 import scala.tools.nsc.io.AbstractFile
 import scala.tools.nsc.reporters.Reporter
-import scala.tools.nsc.util.{ BatchSourceFile, Position, SourceFile }
+import scala.tools.nsc.util.{ MutableSourceFile, Position, SourceFile }
 
 import scala.tools.eclipse.javaelements.{
   ScalaCompilationUnit, ScalaIndexBuilder, ScalaJavaMapper, ScalaMatchLocator, ScalaStructureBuilder,
@@ -32,7 +32,7 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
   
   presentationReporter.compiler = this
   
-  private val sourceFiles = new mutable.HashMap[ScalaCompilationUnit, SourceFile] with SynchronizedMap[ScalaCompilationUnit, SourceFile] {
+  private val sourceFiles = new mutable.HashMap[ScalaCompilationUnit, MutableSourceFile] with SynchronizedMap[ScalaCompilationUnit, MutableSourceFile] {
     override def default(k : ScalaCompilationUnit) = { val v = k.createSourceFile; put(k, v); v } 
   }
   
@@ -75,14 +75,16 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
 	}
   }
     
-  def askReload(scu : ScalaCompilationUnit) {
-    askReload(List(sourceFiles(scu)), new Response[Unit])
+  def askReload(scu : ScalaCompilationUnit, content : Array[Char]) {
+    val f = sourceFiles(scu)
+    f.content = content
+	askReload(List(f), new Response[Unit])
     clearProblemsOf(scu)
   }
   
   def discardSourceFile(scu : ScalaCompilationUnit) {
-    sourceFiles.remove(scu)
-    removeUnitOf(new BatchSourceFile(scu.file, Array[Char](0)))
+    removeUnitOf(sourceFiles(scu))
+	sourceFiles.remove(scu)
     clearProblemsOf(scu)
   }
 
