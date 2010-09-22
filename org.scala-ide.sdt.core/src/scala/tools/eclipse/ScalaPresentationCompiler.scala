@@ -15,7 +15,7 @@ import scala.tools.nsc.Settings
 import scala.tools.nsc.interactive.Global
 import scala.tools.nsc.io.AbstractFile
 import scala.tools.nsc.reporters.Reporter
-import scala.tools.nsc.util.{ MutableSourceFile, Position, SourceFile }
+import scala.tools.nsc.util.{ BatchSourceFile, Position, SourceFile }
 
 import scala.tools.eclipse.javaelements.{
   ScalaCompilationUnit, ScalaIndexBuilder, ScalaJavaMapper, ScalaMatchLocator, ScalaStructureBuilder,
@@ -32,7 +32,7 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
   
   presentationReporter.compiler = this
   
-  private val sourceFiles = new mutable.HashMap[ScalaCompilationUnit, MutableSourceFile] with SynchronizedMap[ScalaCompilationUnit, MutableSourceFile] {
+  private val sourceFiles = new mutable.HashMap[ScalaCompilationUnit, BatchSourceFile] with SynchronizedMap[ScalaCompilationUnit, BatchSourceFile] {
     override def default(k : ScalaCompilationUnit) = { val v = k.createSourceFile; put(k, v); v } 
   }
   
@@ -77,8 +77,9 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
     
   def askReload(scu : ScalaCompilationUnit, content : Array[Char]) {
     val f = sourceFiles(scu)
-    f.content = content
-	askReload(List(f), new Response[Unit])
+    val newF = new BatchSourceFile(f.file, content)
+    sourceFiles(scu) = newF 
+	askReload(List(newF), new Response[Unit])
     clearProblemsOf(scu)
   }
   

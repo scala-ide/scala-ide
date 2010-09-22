@@ -23,7 +23,7 @@ import org.eclipse.jdt.internal.core.search.matching.{ MatchLocator, PossibleMat
 import org.eclipse.jdt.internal.ui.javaeditor.DocumentAdapter
 
 import scala.tools.nsc.io.AbstractFile
-import scala.tools.nsc.util.{ MutableSourceFile, SourceFile }
+import scala.tools.nsc.util.{ BatchSourceFile, SourceFile }
 
 import scala.tools.eclipse.contribution.weaving.jdt.{ IScalaCompilationUnit, IScalaWordFinder }
 
@@ -79,8 +79,8 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
       new Array[Char](0)
   }
   
-  def createSourceFile : MutableSourceFile = {
-    new MutableSourceFile(file, content)
+  def createSourceFile : BatchSourceFile = {
+    new BatchSourceFile(file, content)
   }
 
   private def openBuffer0(pm : IProgressMonitor, info : AnyRef) = OpenableUtils.openBuffer(this, pm, info)
