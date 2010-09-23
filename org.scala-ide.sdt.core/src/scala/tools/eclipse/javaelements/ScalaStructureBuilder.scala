@@ -26,7 +26,7 @@ import scala.tools.nsc.util.{ NoPosition, Position }
 import scala.tools.eclipse.ScalaPresentationCompiler
 import scala.tools.eclipse.util.ReflectionUtils
 
-trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
+trait  { self : ScalaPresentationCompiler =>
 
   class StructureBuilderTraverser(scu : ScalaCompilationUnit, unitInfo : OpenableElementInfo, newElements0 : JMap[AnyRef, AnyRef], sourceLength : Int) extends Traverser {
     private var currentBuilder : Owner = new CompilationUnitBuilder
@@ -84,18 +84,16 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
                  
           /** Should method `m' get a forwarder in the mirror class? */
           def shouldForward(m: Symbol): Boolean =
-            atPhase(currentRun.picklerPhase) (
-              m.owner != definitions.ObjectClass 
-              && m.isMethod
-              && !m.hasFlag(Flags.CASE | Flags.PROTECTED | Flags.DEFERRED)
-              && !m.isConstructor
-              && !m.isStaticMember
-              && !(m.owner == definitions.AnyClass) 
-              && !module.isSubClass(module.companionClass)
-              && !conflictsIn(definitions.ObjectClass, m.name)
-              && !conflictsInCommonParent(m.name)
-              && !conflictsIn(module.companionClass, m.name)
-            )
+            m.isMethod &&
+	    !m.isConstructor &&
+	    !m.isStaticMember &&
+	    !(m.owner == definitions.ObjectClass) && 
+	    !(m.owner == definitions.AnyClass) &&
+	    !m.hasFlag(Flags.CASE | Flags.PROTECTED | Flags.DEFERRED) &&
+	    !module.isSubClass(module.companionClass) &&
+	    !conflictsIn(definitions.ObjectClass, m.name) &&
+	    !conflictsInCommonParent(m.name) && 
+	    !conflictsIn(module.companionClass, m.name)
           
           assert(module.isModuleClass)
           
@@ -834,7 +832,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
       val prevBuilder = currentBuilder
       currentBuilder = builder
       traverse
-      currentBuilder.complete
+      ask { () => currentBuilder.complete }
       currentBuilder = prevBuilder
     }
   }
