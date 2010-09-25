@@ -4,9 +4,10 @@ import org.eclipse.jface.text._
 import org.eclipse.jface.text.IDocument.DEFAULT_CONTENT_TYPE
 import scala.collection.mutable.ListBuffer
 
-class ScalaDocumentPartitioner extends IDocumentPartitioner {
+class ScalaDocumentPartitioner extends IDocumentPartitioner with IDocumentPartitionerExtension2 {
+
   import ScalaDocumentPartitioner._
-  
+
   private var documentOpt: Option[IDocument] = None
 
   private var partitionRegionsOpt: Option[List[ScalaPartitionRegion]] = None
@@ -16,7 +17,7 @@ class ScalaDocumentPartitioner extends IDocumentPartitioner {
     this.partitionRegionsOpt = Some(ScalaPartitionTokeniser.tokenise(document))
   }
 
-  def disconnect(): Unit = { this.documentOpt = None }
+  def disconnect() { this.documentOpt = None }
 
   def documentAboutToBeChanged(event: DocumentEvent) {}
 
@@ -60,6 +61,26 @@ class ScalaDocumentPartitioner extends IDocumentPartitioner {
 
   def getPartition(offset: Int): ITypedRegion = getToken(offset) getOrElse new TypedRegion(offset, 0, NO_PARTITION_AT_ALL)
 
+  def getManagingPositionCategories(): Array[String] = null
+
+  def getContentType(offset: Int, preferOpenPartitions: Boolean): String =
+    getPartition(offset, preferOpenPartitions).getType
+
+  def getPartition(offset: Int, preferOpenPartitions: Boolean): ITypedRegion = {
+    val region = getPartition(offset)
+    if (preferOpenPartitions)
+      if (region.getOffset == offset && region.getType != IDocument.DEFAULT_CONTENT_TYPE)
+        if (offset > 0) {
+          val previousRegion = getPartition(offset - 1)
+          if (previousRegion.getType == IDocument.DEFAULT_CONTENT_TYPE)
+            return previousRegion
+        }
+    return region
+  }
+
+  def computePartitioning(offset: Int, length: Int, includeZeroLengthPartitions: Boolean): Array[ITypedRegion] =
+    computePartitioning(offset, length)
+
 }
 
 object ScalaDocumentPartitioner {
@@ -76,6 +97,6 @@ object ScalaDocumentPartitioner {
   final val EOF = '\u001A'
 
   val NO_PARTITION_AT_ALL = "__no_partition_at_all"
-    
+
 }
 
