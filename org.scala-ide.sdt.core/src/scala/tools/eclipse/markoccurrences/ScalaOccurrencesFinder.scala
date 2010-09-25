@@ -23,21 +23,23 @@ class ScalaOccurrencesFinder(file: ScalaSourceFile, offset: Int, length: Int) {
       }
       import analysis._
       val body = compiler.body(sourceFile)
-      val selection = new FileSelection(sourceFile.file, from, to)
-      selection.selectedSymbolTree flatMap { selectedLocal =>
-        val position = body.pos
-        if (position == global.NoPosition)
-          None
-        else {
-          val symbol = selectedLocal.symbol
-          if (symbol.name.isOperatorName)
+      compiler.ask { () => 
+        val selection = new FileSelection(sourceFile.file, from, to)
+        selection.selectedSymbolTree flatMap { selectedLocal =>
+          val position = body.pos
+          if (position == global.NoPosition)
             None
           else {
-            val index = GlobalIndex(global.unitOf(position.source).body)
-            val positions = index occurences symbol map (_.namePosition) filter (_ != global.NoPosition) map (p => (p.start, p.end - p.start))
-            val symbolName = symbol.nameString
-            val locations = positions collect { case (offset, length) if length == symbolName.length => new Region(offset, length) }
-            Some(Occurrences(symbolName, locations.toList))
+            val symbol = selectedLocal.symbol
+            if (symbol.name.isOperatorName)
+              None
+            else {
+              val index = GlobalIndex(global.unitOf(position.source).body)
+              val positions = index occurences symbol map (_.namePosition) filter (_ != global.NoPosition) map (p => (p.start, p.end - p.start))
+              val symbolName = symbol.nameString
+              val locations = positions collect { case (offset, length) if length == symbolName.length => new Region(offset, length) }
+              Some(Occurrences(symbolName, locations.toList))
+            }
           }
         }
       }

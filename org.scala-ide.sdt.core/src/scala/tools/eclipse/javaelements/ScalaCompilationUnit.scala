@@ -89,7 +89,7 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
 
   override def buildStructure(info : OpenableElementInfo, pm : IProgressMonitor, newElements : JMap[_, _], underlyingResource : IResource) : Boolean =
   	withSourceFile({ (sourceFile, compiler) =>
-		val body = compiler.body(sourceFile)
+            val body = compiler.body(sourceFile)
 	
 	    if (body == null || body.isEmpty) {
 	      info.setIsStructureKnown(false)
@@ -97,8 +97,9 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
 	    }
 	    
 	    val sourceLength = sourceFile.length
-	    new compiler.StructureBuilderTraverser(this, info, newElements.asInstanceOf[JMap[AnyRef, AnyRef]], sourceLength).traverse(body)
-	    
+	    compiler.ask { () =>
+  	      new compiler.StructureBuilderTraverser(this, info, newElements.asInstanceOf[JMap[AnyRef, AnyRef]], sourceLength).traverse(body)
+	    }
 	    info match {
 	      case cuei : CompilationUnitElementInfo =>
 	        cuei.setSourceLength(sourceLength)
@@ -115,7 +116,9 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
     withSourceFile({ (source, compiler) =>
       val body = compiler.body(source)
       if (body != null)
-	      new compiler.IndexBuilderTraverser(indexer).traverse(body)
+	    compiler.ask { () =>
+    	  new compiler.IndexBuilderTraverser(indexer).traverse(body)
+        }
 	  })
   }
   
@@ -170,7 +173,9 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
 	    val body = compiler.body(sourceFile)
 	
 	    if (body != null)
-	      new compiler.MatchLocatorTraverser(this, matchLocator, possibleMatch).traverse(body)
+	      compiler.ask { () =>
+	    	new compiler.MatchLocatorTraverser(this, matchLocator, possibleMatch).traverse(body)
+	      }
 	  })
   }
   
@@ -179,7 +184,9 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
 	    val body = compiler.body(sourceFile)
 	
 	    if (body != null)
-	      new compiler.OverrideIndicatorBuilderTraverser(this, annotationMap.asInstanceOf[JMap[AnyRef, AnyRef]]).traverse(body)
+	      compiler.ask { () =>
+	    	new compiler.OverrideIndicatorBuilderTraverser(this, annotationMap.asInstanceOf[JMap[AnyRef, AnyRef]]).traverse(body)
+	      }
 	  })
   }
   

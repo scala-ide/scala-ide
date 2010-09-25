@@ -28,8 +28,7 @@ import scala.tools.eclipse.util.ReflectionUtils
 
 trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
 
-  class StructureBuilderTraverser(scu : ScalaCompilationUnit, unitInfo : OpenableElementInfo, newElements0 : JMap[AnyRef, AnyRef], sourceLength : Int) extends Traverser {
-    private var currentBuilder : Owner = new CompilationUnitBuilder
+  class StructureBuilderTraverser(scu : ScalaCompilationUnit, unitInfo : OpenableElementInfo, newElements0 : JMap[AnyRef, AnyRef], sourceLength : Int) {
     private val manager = JavaModelManager.getJavaModelManager
     
     trait Owner {
@@ -566,7 +565,8 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
           else
             new ScalaSourceMethodInfo
         
-        if(d.symbol.isGetter || d.symbol.isSetter) {
+        // This causes a deadlock in the ask-based version, but also looks suspicious by itself. 
+        /*if(d.symbol.isGetter || d.symbol.isSetter) {
           elementInfo.getChildren.
             dropWhile(x => !x.isInstanceOf[ScalaFieldElement] || x.getElementName != d.name.toString).
             headOption match {
@@ -576,7 +576,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
             }
             case _ =>
           }
-        }
+        }*/
         
         defElemInfo.setArgumentNames(paramNames)
         defElemInfo.setExceptionTypeNames(new Array[Array[Char]](0))
@@ -751,89 +751,36 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
       info.setSourceRangeEnd0(end)
     }
     
-    override def traverse(tree: Tree): Unit = {
-      tree match {
-        case _ : Import =>
-        case _ => currentBuilder.resetImportContainer
-      }
-      
-      tree match {
-        case pd : PackageDef => atBuilder(currentBuilder.addPackage(pd)) { super.traverse(tree) }
-        case i : Import => currentBuilder.addImport(i)
-        case cd : ClassDef => {
-          val cb = currentBuilder.addClass(cd)
-          atOwner(tree.symbol) {
-            atBuilder(cb) {
-              //traverseTrees(cd.mods.annotations)
-              //traverseTrees(cd.tparams)
-              traverse(cd.impl)
-            }
-          }
-        }
-        case md : ModuleDef => atBuilder(currentBuilder.addModule(md)) { super.traverse(tree) }
-        case vd : ValDef => {
-          val vb = currentBuilder.addVal(vd)
-          atOwner(tree.symbol) {
-            atBuilder(vb) {
-              //traverseTrees(vd.mods.annotations)
-              //traverse(vd.tpt)
-              traverse(vd.rhs)
-            }
-          }
-        }
-        case td : TypeDef => {
-          val tb = currentBuilder.addType(td)
-          atOwner(tree.symbol) {
-            atBuilder(tb) {
-              //traverseTrees(td.mods.annotations);
-              //traverseTrees(td.tparams);
-              traverse(td.rhs)
-            }
-          }
-        }
-        case dd : DefDef => {
-          if(dd.name != nme.MIXIN_CONSTRUCTOR) {
-            val db = currentBuilder.addDef(dd)
-            atOwner(tree.symbol) {
-              // traverseTrees(dd.mods.annotations)
-              // traverseTrees(dd.tparams)
-              //if(db.isCtor)
-              //  atBuilder(currentBuilder) { traverseTreess(dd.vparamss) }
-              //else
-              //  atBuilder(db) { traverseTreess(dd.vparamss) }
-              atBuilder(db) {
-                traverse(dd.tpt)
-                traverse(dd.rhs)
-              }
-            }
-          }
-        }
-        case Template(parents, self, body) => {
-          //println("Template: "+parents)
-          //traverseTrees(parents)
-          //if (!self.isEmpty) traverse(self)
-          traverseStats(body, tree.symbol)
-        }
-        case Function(vparams, body) => {
-          //println("Anonymous function: "+tree.symbol.simpleName)
-        }
-        case tt : TypeTree => {
-          //println("Type tree: "+tt)
-          //atBuilder(currentBuilder.addTypeTree(tt)) { super.traverse(tree) }            
-          super.traverse(tree)            
-        }
-        case u =>
-          //println("Unknown type: "+u.getClass.getSimpleName+" "+u)
-          super.traverse(tree)
-      }
+    def traverse(tree: Tree) {
+      traverse(tree, new CompilationUnitBuilder)
     }
 
-    def atBuilder(builder: Owner)(traverse: => Unit) {
-      val prevBuilder = currentBuilder
-      currentBuilder = builder
-      traverse
-      ask { () => currentBuilder.complete }
-      currentBuilder = prevBuilder
+    def traverse(tree: Tree, builder : Owner) {
+      val (newBuilder, children) = {
+        tree match {
+          case _ : Import =>
+          case _ => builder.resetImportContainer
+        }
+      
+        tree match {
+          case pd : PackageDef => (builder.addPackage(pd), pd.stats)
+          case i : Import => (builder.addImport(i), Nil)
+          case cd : ClassDef => (builder.addClass(cd), List(cd.impl))
+          case md : ModuleDef => (builder.addModule(md), List(md.impl))
+          case vd : ValDef =>  (builder.addVal(vd), List(vd.rhs))
+          case td : TypeDef => (builder.addType(td), List(td.rhs))
+          case dd : DefDef => {
+            if(dd.name != nme.MIXIN_CONSTRUCTOR) {
+              (builder.addDef(dd), List(dd.tpt, dd.rhs))
+            } else (builder, Nil)
+          }
+          case Template(parents, self,  body) => (builder, body)
+          case Function(vparams, body) => (builder, Nil)
+          case _ => (builder, tree.children)
+        }
+      }
+      children.foreach {traverse(_, newBuilder)}
+      if (newBuilder != builder) newBuilder.complete
     }
   }
 }
