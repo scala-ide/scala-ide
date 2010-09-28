@@ -164,8 +164,8 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
      position : Int,  requestor : CompletionRequestor, owner : WorkingCopyOwner, typeRoot : ITypeRoot,
      monitor : IProgressMonitor) {
     
-    val engine = new ScalaCompletionEngine
-    engine.complete(cu, unitToSkip, position, requestor, owner, typeRoot, monitor)
+    //val engine = new ScalaCompletionEngine
+    //engine.complete(cu, unitToSkip, position, requestor, owner, typeRoot, monitor)
   }
   
   override def reportMatches(matchLocator : MatchLocator, possibleMatch : PossibleMatch) {

@@ -30,6 +30,14 @@ class ScalaCompletionProposalComputer extends IJavaCompletionProposalComputer {
   def computeContextInformation(context : ContentAssistInvocationContext,
 				monitor : IProgressMonitor) : java.util.List[_] = null
 
+  import ScalaImages._
+  val defImage = PUBLIC_DEF.createImage()
+  val classImage = SCALA_CLASS.createImage()
+  val traitImage = SCALA_TRAIT.createImage()
+  val objectImage = SCALA_OBJECT.createImage()
+  val typeImage = SCALA_TYPE.createImage()
+  val valImage = PUBLIC_VAL.createImage()
+
   def computeCompletionProposals(context : ContentAssistInvocationContext,
 				 monitor : IProgressMonitor) : java.util.List[_] = {
     val scu = context match {
@@ -49,7 +57,7 @@ class ScalaCompletionProposalComputer extends IJavaCompletionProposalComputer {
       compiler.askTypeAt(pos, typed)
       val t1 = typed.get.left.toOption
 
-      val chars = scu.getContents
+      val chars = context.getDocument.get.toCharArray
       val (start, end, completed) = compiler.ask { () =>
         val t0 = t1 match {
           case Some(tt : compiler.TypeTree) => Some(tt.original)
@@ -118,19 +126,20 @@ class ScalaCompletionProposalComputer extends IJavaCompletionProposalComputer {
       def accept(sym : compiler.Symbol, tpe : compiler.Type, inherited : Boolean, viaView : compiler.Symbol) {
         if (sym.isPackage || sym.isConstructor ||
             sym.hasFlag(Flags.ACCESSOR) || sym.hasFlag(Flags.PARAMACCESSOR)) return
-        import ScalaImages._
-        val image = (if (sym.isMethod) PUBLIC_DEF
-                    else if (sym.isClass) SCALA_CLASS
-                    else if (sym.isTrait) SCALA_TRAIT
-                    else if (sym.isModule) SCALA_OBJECT
-                    else if (sym.isType) SCALA_TYPE
-                    else PUBLIC_VAL).createImage
-        val name = sym.rawname.toString
-        val display = if (sym.isMethod) name + tpe.paramss.
-                      map(_.map(_.tpe.toString).mkString("(", ",", ")")).mkString
-		      else name
-        val container = sym.enclClass.fullName
-        buff += new ScalaCompletionProposal(name, display, container, image)
+        val image = if (sym.isMethod) defImage
+                    else if (sym.isClass) classImage
+                    else if (sym.isTrait) traitImage
+                    else if (sym.isModule) objectImage
+                    else if (sym.isType) typeImage
+                    else valImage
+        val name = sym.decodedName.toString
+        val own = if (sym.isMethod) name + tpe.paramss.
+                  map(_.map(_.tpe.toString).mkString("(", ",", ")")).mkString
+		  else name
+        val container = sym.owner.enclClass.fullName
+        val display = own + " - " + container
+        // todo: display documentation in additional info.
+        buff += new ScalaCompletionProposal(name, display, null, image)
       }
 
       completed.get.left.toOption match {
