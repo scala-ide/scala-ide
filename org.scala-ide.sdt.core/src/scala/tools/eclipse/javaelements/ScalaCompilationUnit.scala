@@ -46,7 +46,7 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
   }
   
   def withSourceFile[T](op : (SourceFile, ScalaPresentationCompiler) => T) : T = {
-    withDocument(project.withSourceFile(this)(op))
+    project.withSourceFile(this)(op)
   }
   
   override def bufferChanged(e : BufferChangedEvent) {
