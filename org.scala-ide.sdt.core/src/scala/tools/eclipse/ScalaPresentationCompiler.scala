@@ -65,14 +65,17 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
   
   def withSourceFile[T](scu : ScalaCompilationUnit)(op : (SourceFile, ScalaPresentationCompiler) => T) : T =
     op(sourceFiles(scu), this)
+
+  override def ask[A](op: () => A): A = if (Thread.currentThread == compileRunner) op() else super.ask(op)
     
   def body(sourceFile : SourceFile) = {
-	val tree = new Response[Tree]
-	askType(sourceFile, false, tree)
-	tree.get match {
-		case Left(l) => l
-		case Right(r) => throw r
-	}
+    val tree = new Response[Tree]
+    if (Thread.currentThread == compileRunner) 
+      getTypedTree(sourceFile, false, tree) else askType(sourceFile, false, tree)
+    tree.get match {
+      case Left(l) => l
+      case Right(r) => throw r
+    }
   }
     
   def askReload(scu : ScalaCompilationUnit, content : Array[Char]) {
