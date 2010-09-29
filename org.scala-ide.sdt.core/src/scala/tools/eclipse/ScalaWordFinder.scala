@@ -93,9 +93,9 @@ object ScalaWordFinder extends IScalaWordFinder {
     val ch = document(offset)
     if (isWordPart(ch))
       findWord(document, offset)
-    else if(offset > 0 && isWhitespace(ch) && isWordPart(document(offset-1)))
+    else if(offset > 0 && isWordPart(document(offset-1)))
       findWord(document, offset-1)
     else
-      null
+      new Region(offset, 0)
   }
 }
