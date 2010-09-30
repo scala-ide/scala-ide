@@ -100,10 +100,11 @@ class ScalaModuleElement(parent : JavaElement, name : String, synthetic : Boolea
   override def isVisible = !synthetic
 }
 
-class ScalaDefElement(parent : JavaElement, name: String, paramTypes : Array[String], synthetic : Boolean, display : String)
+class ScalaDefElement(parent : JavaElement, name: String, paramTypes : Array[String], synthetic : Boolean, display : String, overrideInfo : Int)
   extends SourceMethod(parent, name, paramTypes) with ScalaElement with IMethodOverrideInfo {
   override def getLabelText(flags : Long) = display
   override def isVisible = !synthetic && !getElementInfo.isInstanceOf[ScalaSourceConstructorInfo]
+  def getOverrideInfo = overrideInfo
 }
 
 class ScalaFunctionElement(declaringType : JavaElement, parent : JavaElement, name: String, paramTypes : Array[String], display : String)

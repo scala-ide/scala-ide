@@ -16,6 +16,7 @@ import org.eclipse.jdt.internal.core.{
   ImportContainerInfo, ImportDeclaration, ImportDeclarationElementInfo, JavaElement, JavaElementInfo, JavaModelManager,
   MemberValuePair, OpenableElementInfo, SourceRefElement }
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants
+import org.eclipse.jdt.ui.JavaElementImageDescriptor
 
 import scala.collection.Map
 import scala.collection.mutable.HashMap
@@ -30,6 +31,21 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
 
   class StructureBuilderTraverser(scu : ScalaCompilationUnit, unitInfo : OpenableElementInfo, newElements0 : JMap[AnyRef, AnyRef], sourceLength : Int) {
     private val manager = JavaModelManager.getJavaModelManager
+
+    type OverrideInfo = Int
+    var overrideInfos : collection.mutable.Map[Symbol, OverrideInfo] = _
+    def fillOverrideInfos(c : Symbol) {
+      overrideInfos = new collection.mutable.HashMap[Symbol, OverrideInfo]
+      val opc = new overridingPairs.Cursor(c)
+      while (opc.hasNext) {
+        if (!opc.overridden.isClass && opc.overriding.pos.isOpaqueRange) {
+          overrideInfos += opc.overriding -> (if (opc.overridden.isDeferred) JavaElementImageDescriptor.IMPLEMENTS else JavaElementImageDescriptor.OVERRIDES)
+        }
+        opc.next
+      }
+    }
+
+    def methodOverrideInfo(m : Symbol) = overrideInfos.getOrElse(m, 0)
     
     trait Owner {
       def parent : Owner
@@ -54,7 +70,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
       def addFunction(f : Function) : Owner = this
       
       def resetImportContainer {}
-      
+
       def addChild(child : JavaElement) =
         elementInfo match {
           case scalaMember : ScalaMemberElementInfo => scalaMember.addChild0(child)
@@ -124,7 +140,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
             if(d.hasFlag(Flags.ACCESSOR))
               new ScalaAccessorElement(classElem, nm.toString, paramTypes)
             else
-              new ScalaDefElement(classElem, nm.toString, paramTypes, true, nm.toString)
+              new ScalaDefElement(classElem, nm.toString, paramTypes, true, nm.toString, methodOverrideInfo(d))
           resolveDuplicates(defElem)
           classElemInfo.addChild0(defElem)
           
@@ -348,6 +364,8 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         classElemInfo.setNameSourceEnd0(end)
         setSourceRange(classElemInfo, c, annotsPos)
         newElements0.put(classElem, classElemInfo)
+
+        fillOverrideInfos(c.symbol)
         
         new Builder {
           val parent = self
@@ -402,6 +420,8 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         val interfaceTypes = interfaceTrees.map(t => (t, t.tpe))
         val interfaceNames = interfaceTypes.map({ case (tree, tpe) => (if (tpe ne null) tpe.typeSymbol.fullName else "null-"+tree).toCharArray })
         moduleElemInfo.setSuperInterfaceNames(interfaceNames.toArray)
+
+        fillOverrideInfos(m.symbol)
         
         val mb = new Builder {
           val parent = self
@@ -553,7 +573,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
           if(d.mods.isAccessor)
             new ScalaAccessorElement(element, nameString, paramTypes)
           else if(isTemplate)
-            new ScalaDefElement(element, nameString, paramTypes, d.symbol.hasFlag(Flags.SYNTHETIC), display)
+            new ScalaDefElement(element, nameString, paramTypes, d.symbol.hasFlag(Flags.SYNTHETIC), display, methodOverrideInfo(d.symbol))
           else
             new ScalaFunctionElement(template.element, element, nameString, paramTypes, display)
         resolveDuplicates(defElem)
