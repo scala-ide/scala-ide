@@ -6,6 +6,6 @@ SCALA_VERSION=2.8.1-SNAPSHOT
 
 ${MAVEN} \
   -U \
-  -P local-scala-2.8.1,!scala-2.8.1 \
+  -P local-scala-2.8.1,!scala-2.8.x \
   -Dscala.version=${SCALA_VERSION} \
   clean install $*
