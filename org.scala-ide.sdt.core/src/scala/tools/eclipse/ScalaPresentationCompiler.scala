@@ -70,11 +70,19 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
     
   def body(sourceFile : SourceFile) = {
     val tree = new Response[Tree]
-    if (Thread.currentThread == compileRunner) 
+    if (Thread.currentThread == compileRunner)
       getTypedTree(sourceFile, false, tree) else askType(sourceFile, false, tree)
     tree.get match {
       case Left(l) => l
       case Right(r) => throw r
+    }
+  }
+
+  def root(sourceFile : SourceFile) = {
+    ask { () => 
+      val u = unitOf(sourceFile)
+      if (u.status < JustParsed) parse(u)
+      u.body
     }
   }
     

@@ -564,8 +564,10 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         tp.print(tp.symName(d, d.name))
         tp.printTypeParams(d.tparams)
         d.vparamss foreach tp.printValueParams
-        sw.write(" : ")
-        tp.print(d.tpt)
+	if (d.tpt.tpe != null) {
+          sw.write(" : ")
+          tp.print(d.tpt)
+        }
         tp.flush
         val display = sw.toString
         

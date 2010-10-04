@@ -89,16 +89,10 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
 
   override def buildStructure(info : OpenableElementInfo, pm : IProgressMonitor, newElements : JMap[_, _], underlyingResource : IResource) : Boolean =
   	withSourceFile({ (sourceFile, compiler) =>
-            val body = compiler.body(sourceFile)
-	
-	    if (body == null || body.isEmpty) {
-	      info.setIsStructureKnown(false)
-	      return info.isStructureKnown
-	    }
-	    
 	    val sourceLength = sourceFile.length
 	    compiler.ask { () =>
-  	      new compiler.StructureBuilderTraverser(this, info, newElements.asInstanceOf[JMap[AnyRef, AnyRef]], sourceLength).traverse(body)
+	      val root = compiler.root(sourceFile)
+  	      new compiler.StructureBuilderTraverser(this, info, newElements.asInstanceOf[JMap[AnyRef, AnyRef]], sourceLength).traverse(root)
 	    }
 	    info match {
 	      case cuei : CompilationUnitElementInfo =>
@@ -119,7 +113,7 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
 	    compiler.ask { () =>
     	  new compiler.IndexBuilderTraverser(indexer).traverse(body)
         }
-	  })
+      })
   }
   
   def newSearchableEnvironment(workingCopyOwner : WorkingCopyOwner) : SearchableEnvironment = {
