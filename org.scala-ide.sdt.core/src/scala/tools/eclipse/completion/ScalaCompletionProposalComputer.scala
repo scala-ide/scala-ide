@@ -59,13 +59,8 @@ class ScalaCompletionProposalComputer extends IJavaCompletionProposalComputer {
 
       val chars = context.getDocument.get.toCharArray
       val (start, end, completed) = compiler.ask { () =>
-        val t0 = t1 match {
-          case Some(tt : compiler.TypeTree) => Some(tt.original)
-          case t => t 
-        }
-      
         val completed = new compiler.Response[List[compiler.Member]]
-        val (start, end) = t0 match {
+        val (start, end) = t1 match {
           case Some(s@compiler.Select(qualifier, name)) if qualifier.pos.isDefined && qualifier.pos.isRange =>
             val cpos0 = qualifier.pos.endOrPoint 
             val cpos = compiler.rangePos(sourceFile, cpos0, cpos0, cpos0)
@@ -101,8 +96,8 @@ class ScalaCompletionProposalComputer extends IJavaCompletionProposalComputer {
       val prefix = (if (position <= start) "" else scu.getBuffer.getText(start, position-start).trim).toArray
 
       def nameMatches(sym : compiler.Symbol) = {
-        val name = sym.rawname.toString.toArray
-        CharOperation.prefixEquals(prefix, name, false) ||
+        val name = sym.decodedName.toString.toArray
+        CharOperation.prefixEquals(prefix, name, true) ||
         CharOperation.camelCaseMatch(prefix, name)	
       }
 
