@@ -32,8 +32,14 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
   
   presentationReporter.compiler = this
   
-  private val sourceFiles = new mutable.HashMap[ScalaCompilationUnit, BatchSourceFile] with SynchronizedMap[ScalaCompilationUnit, BatchSourceFile] {
-    override def default(k : ScalaCompilationUnit) = { val v = k.createSourceFile; put(k, v); v } 
+  private val sourceFiles = new mutable.HashMap[ScalaCompilationUnit, BatchSourceFile] {
+    override def default(k : ScalaCompilationUnit) = { val v = k.createSourceFile
+                                                       ScalaPresentationCompiler.this.synchronized {
+                                                    	   get(k) match {
+                                                    	  	   case Some(v) => v
+                                                    	       case None => put(k, v); v
+                                                    	   }
+                                                       }} 
   }
   
   private val problems = new mutable.HashMap[IFile, ArrayBuffer[IProblem]] with SynchronizedMap[IFile, ArrayBuffer[IProblem]] {
@@ -89,14 +95,14 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
   def askReload(scu : ScalaCompilationUnit, content : Array[Char]) {
     val f = sourceFiles(scu)
     val newF = new BatchSourceFile(f.file, content)
-    sourceFiles(scu) = newF 
+    synchronized { sourceFiles(scu) = newF } 
 	askReload(List(newF), new Response[Unit])
     clearProblemsOf(scu)
   }
   
   def discardSourceFile(scu : ScalaCompilationUnit) {
     removeUnitOf(sourceFiles(scu))
-	sourceFiles.remove(scu)
+	synchronized { sourceFiles.remove(scu) }
     clearProblemsOf(scu)
   }
 
