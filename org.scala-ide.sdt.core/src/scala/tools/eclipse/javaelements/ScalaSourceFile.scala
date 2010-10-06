@@ -68,11 +68,6 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
   override def codeSelect(offset : Int, length : Int, workingCopyOwner : WorkingCopyOwner) : Array[IJavaElement] =
     codeSelect(this, offset, length, workingCopyOwner)
 
-  override def discardWorkingCopy {
-    discard
-    super.discardWorkingCopy
-  }
-
   override def getProblemRequestor = getPerWorkingCopyInfo
 
   override lazy val file : AbstractFile = { 
