@@ -35,16 +35,6 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
 
   def file : AbstractFile
   
-  def withDocument[T](op : =>T) : T = {
-    OpenableUtils.getBufferManager(this).getBuffer(this) match {
-      case da : DocumentAdapter => da.getDocument match {
-        case sd : SynchronizableDocument if sd.getLockObject != null => sd.getLockObject.synchronized(op) 
-        case _ => op
-      }
-      case _ => op
-    }
-  }
-  
   def withSourceFile[T](op : (SourceFile, ScalaPresentationCompiler) => T) : T = {
     project.withSourceFile(this)(op)
   }
@@ -67,23 +57,11 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
     super.close
   }
   
-  def content = {
-    val buffer = openBuffer0(null, null)
-    if (buffer == null)
-      throw new NullPointerException("getBuffer == null for: "+getElementName)
-    
-    val contents0 = buffer.getCharacters
-    if (contents0 != null)
-      contents0
-    else
-      new Array[Char](0)
-  }
+  def content = getContents
   
   def createSourceFile : BatchSourceFile = {
     new BatchSourceFile(file, content)
   }
-
-  private def openBuffer0(pm : IProgressMonitor, info : AnyRef) = OpenableUtils.openBuffer(this, pm, info)
 
   def getProblemRequestor : IProblemRequestor = null
 
@@ -157,9 +135,6 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
     (cu : env.ICompilationUnit, unitToSkip : env.ICompilationUnit,
      position : Int,  requestor : CompletionRequestor, owner : WorkingCopyOwner, typeRoot : ITypeRoot,
      monitor : IProgressMonitor) {
-    
-    //val engine = new ScalaCompletionEngine
-    //engine.complete(cu, unitToSkip, position, requestor, owner, typeRoot, monitor)
   }
   
   override def reportMatches(matchLocator : MatchLocator, possibleMatch : PossibleMatch) {
