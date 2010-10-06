@@ -390,8 +390,10 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         addChild(moduleElem)
         
         val moduleElemInfo = new ScalaElementInfo
-        if (m.symbol.owner.isPackageClass)
-          modules(m.symbol) = moduleElemInfo
+        m.symbol match {
+          case NoSymbol => ()
+          case s => if (s.owner.isPackageClass) modules(s) = moduleElemInfo
+        }
         
         moduleElemInfo.setHandle(moduleElem)
         moduleElemInfo.setFlags0(mapModifiers(m.mods)|ClassFileConstants.AccFinal)
