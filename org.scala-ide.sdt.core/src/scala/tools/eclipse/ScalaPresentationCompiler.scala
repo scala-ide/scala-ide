@@ -93,16 +93,25 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
   }
     
   def askReload(scu : ScalaCompilationUnit, content : Array[Char]) {
-    val f = sourceFiles(scu)
-    val newF = new BatchSourceFile(f.file, content)
-    synchronized { sourceFiles(scu) = newF } 
-	askReload(List(newF), new Response[Unit])
+    sourceFiles.get(scu) match {
+      case None =>
+      case Some(f) =>
+        val newF = new BatchSourceFile(f.file, content)
+        synchronized { sourceFiles(scu) = newF } 
+        askReload(List(newF), new Response[Unit])
+    }
     clearProblemsOf(scu)
   }
   
   def discardSourceFile(scu : ScalaCompilationUnit) {
-    removeUnitOf(sourceFiles(scu))
-	synchronized { sourceFiles.remove(scu) }
+    synchronized {
+      sourceFiles.get(scu) match {
+        case None =>
+        case Some(source) =>
+          removeUnitOf(source)
+          sourceFiles.remove(scu)
+      }
+    }
     clearProblemsOf(scu)
   }
 
