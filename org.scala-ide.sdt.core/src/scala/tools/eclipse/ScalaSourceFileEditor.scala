@@ -127,15 +127,20 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
       }
   }
 
-  override def installOccurrencesFinder(forceUpdate: Boolean) {
-    getEditorSite.getPage.addPostSelectionListener(new ISelectionListener() {
-      def selectionChanged(part: IWorkbenchPart, selection: ISelection) {
-        if (selection.isInstanceOf[ITextSelection])
-          updateOccurrenceAnnotations(selection.asInstanceOf[ITextSelection], null)
-      }
-    })
+  lazy val selectionListener = new ISelectionListener() {
+    def selectionChanged(part: IWorkbenchPart, selection: ISelection) {
+      if (selection.isInstanceOf[ITextSelection])
+        updateOccurrenceAnnotations(selection.asInstanceOf[ITextSelection], null)
+    }
   }
-
+  
+  override def installOccurrencesFinder(forceUpdate: Boolean) {
+    getEditorSite.getPage.addPostSelectionListener(selectionListener)
+  }
+  
+  override def uninstallOccurrencesFinder() {
+    getEditorSite.getPage.removePostSelectionListener(selectionListener)
+  }
 }
 
 object ScalaSourceFileEditor {
