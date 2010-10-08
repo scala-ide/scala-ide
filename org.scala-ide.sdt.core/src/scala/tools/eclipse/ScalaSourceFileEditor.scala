@@ -135,11 +135,13 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
   }
   
   override def installOccurrencesFinder(forceUpdate: Boolean) {
+    super.installOccurrencesFinder(forceUpdate)
     getEditorSite.getPage.addPostSelectionListener(selectionListener)
   }
   
   override def uninstallOccurrencesFinder() {
-    getEditorSite.getPage.removePostSelectionListener(selectionListener) 
+    getEditorSite.getPage.removePostSelectionListener(selectionListener)
+    super.uninstallOccurrencesFinder
   }
 }
 
