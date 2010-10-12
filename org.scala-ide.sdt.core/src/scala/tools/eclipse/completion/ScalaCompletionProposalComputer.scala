@@ -6,7 +6,7 @@
 package scala.tools.eclipse
 package completion
 
-import org.eclipse.jface.text.contentassist.ICompletionProposal
+import org.eclipse.jface.text.contentassist.{ICompletionProposal, ICompletionProposalExtension}
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.jdt.core.compiler.CharOperation
 
@@ -96,25 +96,34 @@ class ScalaCompletionProposalComputer extends IJavaCompletionProposalComputer {
       val prefix = (if (position <= start) "" else scu.getBuffer.getText(start, position-start).trim).toArray
 
       def nameMatches(sym : compiler.Symbol) = {
-        val name = sym.decodedName.toString.toArray
-        CharOperation.prefixEquals(prefix, name, true) ||
-        CharOperation.camelCaseMatch(prefix, name)	
+        prefixMatches(sym.decodedName.toString.toArray, prefix)	
       }
+      
+      def prefixMatches(name : Array[Char], prefix : Array[Char]) = CharOperation.prefixEquals(prefix, name, true) ||
+                                                                    CharOperation.camelCaseMatch(prefix, name) 
 
       val buff = new collection.mutable.ListBuffer[ICompletionProposal]
 
       class ScalaCompletionProposal(completion : String,
                                     display : String,
                                     container : String,
-                                    image : Image) extends IJavaCompletionProposal {
+                                    image : Image) extends IJavaCompletionProposal with ICompletionProposalExtension {
         def getRelevance() = 100
         def getImage() = image
         def getContextInformation() = null
         def getDisplayString() = display
         def getAdditionalProposalInfo() = container
         def getSelection(d : IDocument) = null
-        def apply(d : IDocument) {
-          d.replace(start, position - start, completion)
+        def apply(d : IDocument) { throw new IllegalStateException("Shoudln't be called") }
+        
+        def apply(d : IDocument, trigger : Char, offset : Int) {
+          d.replace(start, offset - start, completion)
+        }
+        def getTriggerCharacters= null
+        def getContextInformationPosition = -1
+        def isValidFor(d : IDocument, pos : Int) =  {
+          val prefix = d.get.substring(start, pos).toArray
+          prefixMatches(completion.toArray, prefix)  
         }
       }
 
