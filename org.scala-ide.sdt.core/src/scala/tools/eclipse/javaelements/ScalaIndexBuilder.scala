@@ -81,7 +81,7 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
         val interfaceNames = interfaceTypes.map({ case (tree, tpe) => (if (tpe ne null) tpe.typeSymbol.fullName else "null-"+tree).toCharArray })
         
         indexer.addClassDeclaration(
-          mapModifiers(c.mods) & mask,
+          mapModifiers(c.symbol) & mask,
           c.symbol.enclosingPackage.fullName.toCharArray,
           name.toCharArray,
           enclosingTypeNames(c.symbol).map(_.toArray).toArray,
@@ -117,7 +117,7 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
         val interfaceNames = interfaceTypes.map({ case (tree, tpe) => (if (tpe ne null) tpe.typeSymbol.fullName else "null-"+tree).toCharArray })
         
         indexer.addClassDeclaration(
-          mapModifiers(m.mods),
+          mapModifiers(m.symbol),
           m.symbol.enclosingPackage.fullName.toCharArray,
           (name+"$").toCharArray,
           enclosingTypeNames(m.symbol).map(_.toArray).toArray,
@@ -133,7 +133,7 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
         )
 
         indexer.addClassDeclaration(
-          mapModifiers(m.mods),
+          mapModifiers(m.symbol),
           m.symbol.enclosingPackage.fullName.toCharArray,
           name.toString.toCharArray,
           new Array[Array[Char]](0),
@@ -165,7 +165,7 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
           new Array[Array[Char]](0)
         )
         
-        if(v.mods.hasFlag(Flags.MUTABLE))
+        if(v.symbol.hasFlag(Flags.MUTABLE))
           indexer.addMethodDeclaration(
             nme.getterToSetter(nme.getterName(v.name)).toString.toCharArray,
             new Array[Array[Char]](0),

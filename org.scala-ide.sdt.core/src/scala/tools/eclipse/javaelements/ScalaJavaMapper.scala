@@ -12,28 +12,6 @@ import scala.tools.eclipse.ScalaPresentationCompiler
 import ch.epfl.lamp.fjbg.{ JObjectType, JType }
 
 trait ScalaJavaMapper { self : ScalaPresentationCompiler => 
-
-  def mapModifiers(mods : Modifiers) : Int = {
-    var jdtMods = 0
-    if(mods.isPrivate)
-      jdtMods = jdtMods | ClassFileConstants.AccPrivate
-    else if(mods.isProtected)
-      jdtMods = jdtMods | ClassFileConstants.AccProtected
-    else
-      jdtMods = jdtMods | ClassFileConstants.AccPublic
-    
-    if(mods.isAbstract || mods.isDeferred)
-      jdtMods = jdtMods | ClassFileConstants.AccAbstract
-
-    if(mods.isFinal || mods.hasFlag(Flags.MODULE))
-      jdtMods = jdtMods | ClassFileConstants.AccFinal
-    
-    if(mods.isTrait)
-      jdtMods = jdtMods | ClassFileConstants.AccInterface
-    
-    jdtMods
-  }
-        
   def mapType(t : Tree) : String = {
     (t match {
       case tt : TypeTree => {

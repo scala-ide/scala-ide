@@ -322,7 +322,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
           }
 
         val classElem =
-          if(c.mods.isTrait)
+          if(c.symbol.isTrait)
             new ScalaTraitElement(element, name)
           else if (isAnon) {
             val primaryTypeString = if (primaryType != null) primaryType.name.toString else null
@@ -339,7 +339,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         
         classElemInfo.setHandle(classElem)
         val mask = ~(if (isAnon) ClassFileConstants.AccPublic else 0)
-        classElemInfo.setFlags0(mapModifiers(c.mods) & mask)
+        classElemInfo.setFlags0(mapModifiers(c.symbol) & mask)
         
         val annotsPos = addAnnotations(c.symbol, classElemInfo, classElem)
 
@@ -396,7 +396,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         }
         
         moduleElemInfo.setHandle(moduleElem)
-        moduleElemInfo.setFlags0(mapModifiers(m.mods)|ClassFileConstants.AccFinal)
+        moduleElemInfo.setFlags0(mapModifiers(m.symbol)|ClassFileConstants.AccFinal)
         
         val annotsPos = addAnnotations(m.symbol, moduleElemInfo, moduleElem)
 
@@ -459,7 +459,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         val display = elemName.toString+" : "+v.symbol.tpe.toString
         
         val valElem =
-          if(v.mods.hasFlag(Flags.MUTABLE))
+          if(v.symbol.hasFlag(Flags.MUTABLE))
             new ScalaVarElement(element, elemName.toString, display)
           else
             new ScalaValElement(element, elemName.toString, display)
@@ -467,8 +467,8 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         addChild(valElem)
         
         val valElemInfo = new ScalaSourceFieldElementInfo
-        val jdtFinal = if(v.mods.hasFlag(Flags.MUTABLE)) 0 else ClassFileConstants.AccFinal
-        valElemInfo.setFlags0(mapModifiers(v.mods)|jdtFinal)
+        val jdtFinal = if(v.symbol.hasFlag(Flags.MUTABLE)) 0 else ClassFileConstants.AccFinal
+        valElemInfo.setFlags0(mapModifiers(v.symbol)|jdtFinal)
         
         val annotsPos = addAnnotations(v.symbol, valElemInfo, valElem)
         
@@ -505,7 +505,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         addChild(typeElem)
 
         val typeElemInfo = new ScalaSourceFieldElementInfo
-        typeElemInfo.setFlags0(mapModifiers(t.mods))
+        typeElemInfo.setFlags0(mapModifiers(t.symbol))
 
         val annotsPos = addAnnotations(t.symbol, typeElemInfo, typeElem)
         
@@ -574,7 +574,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         val display = sw.toString
         
         val defElem = 
-          if(d.mods.isAccessor)
+          if(d.symbol.hasFlag(Flags.ACCESSOR))
             new ScalaAccessorElement(element, nameString, paramTypes)
           else if(isTemplate)
             new ScalaDefElement(element, nameString, paramTypes, d.symbol.hasFlag(Flags.SYNTHETIC), display, methodOverrideInfo(d.symbol))
@@ -596,7 +596,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
             headOption match {
             case Some(f : ScalaFieldElement) => {
               val fInfo = f.getElementInfo.asInstanceOf[ScalaSourceFieldElementInfo]
-              fInfo.setFlags0(mapModifiers(d.mods))
+              fInfo.setFlags0(mapModifiers(d.symbol))
             }
             case _ =>
           }
@@ -611,7 +611,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
 
         val mods =
           if(isTemplate)
-            mapModifiers(d.mods)
+            mapModifiers(d.symbol)
           else
             ClassFileConstants.AccPrivate
 
