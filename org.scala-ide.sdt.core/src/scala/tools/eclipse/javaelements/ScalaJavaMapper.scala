@@ -12,6 +12,7 @@ import scala.tools.eclipse.ScalaPresentationCompiler
 import ch.epfl.lamp.fjbg.{ JObjectType, JType }
 
 trait ScalaJavaMapper { self : ScalaPresentationCompiler => 
+
   def mapType(t : Tree) : String = {
     (t match {
       case tt : TypeTree => {

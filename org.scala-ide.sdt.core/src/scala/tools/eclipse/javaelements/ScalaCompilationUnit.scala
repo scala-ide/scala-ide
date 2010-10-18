@@ -143,7 +143,7 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
 	
 	    if (body != null)
 	      compiler.ask { () =>
-	    	new compiler.MatchLocatorTraverser(this, matchLocator, possibleMatch).traverse(body)
+	    	  compiler.MatchLocator(this, matchLocator, possibleMatch).traverse(body)
 	      }
 	  })
   }

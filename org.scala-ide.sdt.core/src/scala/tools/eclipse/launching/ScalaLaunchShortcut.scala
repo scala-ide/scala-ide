@@ -18,7 +18,7 @@ import org.eclipse.jdt.internal.debug.ui.launcher.LauncherMessages
 import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants
 import org.eclipse.jface.operation.IRunnableContext
 
-import scala.tools.eclipse.javaelements.{ ScalaModuleElement, ScalaSourceFile }
+import scala.tools.eclipse.javaelements.{ ScalaModuleElement, ScalaClassElement, ScalaSourceFile }
 
 /* This class can be eliminiated in favour of JavaApplicationLaunch shortcut as soon as 
  * the JDTs method search works correctly for Scala.
@@ -45,6 +45,7 @@ class ScalaLaunchShortcut extends JavaLaunchShortcut {
           val params = method.getParameterTypes    
           method.getElementName == "main" && 
           Flags.isPublic(flags) &&
+          Flags.isStatic(flags) &&
           method.getReturnType == "V" &&
           params != null &&
           params.length == 1 &&
@@ -59,8 +60,12 @@ class ScalaLaunchShortcut extends JavaLaunchShortcut {
           case scu : ScalaSourceFile =>
             def isTopLevel(tpe : IType) = tpe.getDeclaringType == null
             def hasAncestralMainMethod(tpe : IType) = 
-              tpe.newSupertypeHierarchy(null).getAllTypes.exists(t => isTopLevel(t) && t.getMethods.exists(isMainMethod)) 
-            scu.getAllTypes.filter(tpe => tpe.isInstanceOf[ScalaModuleElement] && isTopLevel(tpe) && hasAncestralMainMethod(tpe)).toList
+              tpe.getMethods.exists(isMainMethod)//newSupertypeHierarchy(null).getAllTypes.exists(t => isTopLevel(t) && t.getMethods.exists(isMainMethod)) 
+            val ts = scu.getAllTypes
+            ts.filter(tpe => 
+              tpe.isInstanceOf[ScalaClassElement] 
+              && isTopLevel(tpe) 
+              && hasAncestralMainMethod(tpe)).toList
           case _ => Nil
         }
       }

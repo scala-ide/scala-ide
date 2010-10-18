@@ -47,6 +47,12 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
 
     def methodOverrideInfo(m : Symbol) = overrideInfos.getOrElse(m, 0)
     
+    /**
+     * Returns a type name for an untyped tree which the JDT should be able to consume,
+     * in particular org.eclipse.jdt.internal.compiler.parser.TypeConverter
+     */
+    def unresolvedType(tree: Tree): String = "null-Type"
+    
     trait Owner {
       def parent : Owner
       def jdtOwner = this
@@ -322,7 +328,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
           }
 
         val classElem =
-          if(c.symbol.isTrait)
+          if(c.symbol hasFlag Flags.TRAIT)
             new ScalaTraitElement(element, name)
           else if (isAnon) {
             val primaryTypeString = if (primaryType != null) primaryType.name.toString else null
@@ -345,8 +351,10 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
 
         classElemInfo.setSuperclassName(superclassName)
         
-        val interfaceTypes = interfaceTrees.map(t => (t, t.tpe))
-        val interfaceNames = interfaceTypes.map({ case (tree, tpe) => (if (tpe ne null) tpe.typeSymbol.fullName else "null-"+tree).toCharArray })
+        val interfaceNames = interfaceTrees.map { t => 
+          val tpe = t.tpe
+          (if (tpe ne null) mapParamTypeName(tpe) else unresolvedType(t)).toCharArray
+        }
         classElemInfo.setSuperInterfaceNames(interfaceNames.toArray)
         
         val (start, end) = if (!isAnon) {
@@ -415,12 +423,15 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         
         val parentTree = m.impl.parents.head
         val superclassType = parentTree.tpe
-        val superclassName = (if (superclassType ne null) superclassType.typeSymbol.fullName else "null-"+parentTree).toCharArray
+        val superclassName = (if (superclassType ne null) superclassType.typeSymbol.fullName 
+          else unresolvedType(parentTree)).toCharArray
         moduleElemInfo.setSuperclassName(superclassName)
         
         val interfaceTrees = m.impl.parents.drop(1)
-        val interfaceTypes = interfaceTrees.map(t => (t, t.tpe))
-        val interfaceNames = interfaceTypes.map({ case (tree, tpe) => (if (tpe ne null) tpe.typeSymbol.fullName else "null-"+tree).toCharArray })
+        val interfaceNames = interfaceTrees.map { t =>
+          val tpe = t.tpe
+          (if (tpe ne null) tpe.typeSymbol.fullName else unresolvedType(t)).toCharArray 
+        }
         moduleElemInfo.setSuperInterfaceNames(interfaceNames.toArray)
 
         fillOverrideInfos(m.symbol)
@@ -483,14 +494,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         val tn = manager.intern(mapType(v.tpt).toArray)
         valElemInfo.setTypeName(tn)
         
-        new Builder {
-          val parent = self
-          val element = valElem
-          val elementInfo = valElemInfo
-          
-          override def addVal(v: ValDef) = this
-          override def addType(t : TypeDef) = this
-        }
+        self
       }
     }
     
@@ -574,7 +578,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         val display = sw.toString
         
         val defElem = 
-          if(d.symbol.hasFlag(Flags.ACCESSOR))
+          if(d.symbol hasFlag Flags.ACCESSOR)
             new ScalaAccessorElement(element, nameString, paramTypes)
           else if(isTemplate)
             new ScalaDefElement(element, nameString, paramTypes, d.symbol.hasFlag(Flags.SYNTHETIC), display, methodOverrideInfo(d.symbol))
