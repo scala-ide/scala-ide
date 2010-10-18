@@ -426,8 +426,6 @@ class ScalaProject(val underlying : IProject) {
     depFile.refreshLocal(IResource.DEPTH_INFINITE, null)
   }
 
-  var forceClean = false
-  
   def clean(monitor : IProgressMonitor) = {
     underlying.deleteMarkers(plugin.problemMarkerId, true, IResource.DEPTH_INFINITE)
     resetCompilers

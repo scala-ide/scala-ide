@@ -143,27 +143,17 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
   }
 
   override def elementChanged(event : ElementChangedEvent) {
-    def topLevelRemoved(ssf : ScalaSourceFile) {
-      val project = getScalaProject(ssf.getJavaProject.getProject) 
-      project.scheduleResetPresentationCompiler
-      project.forceClean = true
-    }
-    
     val delta = event.getDelta
     delta.getElement match {
-      case ssf : ScalaSourceFile if (delta.getKind == IJavaElementDelta.CHANGED) =>
-        if (delta.getAffectedChildren.exists(_.getKind == IJavaElementDelta.REMOVED))
-          topLevelRemoved(ssf)
       case _ : JavaModel =>
-        def findRemovedSource(deltas : Array[IJavaElementDelta]) : Boolean =
-          deltas.exists { delta =>
+        def findRemovedSource(deltas : Array[IJavaElementDelta]) : Unit =
+          deltas.foreach { delta =>
             delta.getElement match {
               case ssf : ScalaSourceFile if (delta.getKind == IJavaElementDelta.REMOVED) =>
-                topLevelRemoved(ssf)
-                true
+                getScalaProject(ssf.getJavaProject.getProject).withPresentationCompiler { _.discardSourceFile(ssf) }
               case _ : PackageFragment | _ : PackageFragmentRoot | _ : JavaProject =>
                 findRemovedSource(delta.getAffectedChildren)
-              case _ => false
+              case _ =>
             }
           }
         findRemovedSource(delta.getAffectedChildren)
