@@ -3,7 +3,8 @@
  */
 // $Id$
 
-package scala.tools.eclipse.util
+package scala.tools.eclipse
+package util
 
 import java.io.{ ByteArrayInputStream, ByteArrayOutputStream, File, InputStream, OutputStream }
 
@@ -12,6 +13,7 @@ import org.eclipse.core.filesystem.URIUtil
 import org.eclipse.core.resources.{ IContainer, IFile, IFolder, IResource, ResourcesPlugin }
 import org.eclipse.core.runtime.{ IPath, Path }
 import org.eclipse.jdt.core.IBuffer
+import javaelements.ScalaSourceFile
 
 import scala.tools.nsc.io.AbstractFile
 
@@ -19,13 +21,13 @@ object EclipseResource {
   def apply(r : IResource) : EclipseResource[_ <: IResource] = {
     try {
       if (r == null)
-        throw new NullPointerException();
+        throw new NullPointerException()
       else if (r.getLocation == null)
         throw new NullPointerException(r.toString)
     }
       
     r match {
-      case file : IFile => new EclipseFile(file);
+      case file : IFile => new EclipseFile(file)
       case container : IContainer => new EclipseContainer(container)
     }
   }
@@ -91,34 +93,29 @@ abstract class EclipseResource[R <: IResource] extends AbstractFile {
   override def hashCode() : Int = path.hashCode
 }
 
+object BufferFactory {
+  def create(f : IFile) = ScalaSourceFile.handleFactory.createOpenable(f.getFullPath.toString, null).getBuffer
+}
+
 class EclipseFile(override val underlying : IFile) extends EclipseResource[IFile] {
   if (underlying == null)
-    throw new NullPointerException("underlying == null");
+    throw new NullPointerException("underlying == null")
   
   def isDirectory : Boolean = false
-
-  def input : InputStream = underlying.getContents
+  
+  lazy val buffer = BufferFactory.create(underlying)
+  
+  def input : InputStream = {
+	new ByteArrayInputStream(buffer.getContents.getBytes)
+  }
   
   def output: OutputStream = new ByteArrayOutputStream {
     override def close = {
-      val contents = new ByteArrayInputStream(buf, 0, count)
-      if (!underlying.exists) {
-        def createParentFolder(parent : IContainer) {
-          if (!parent.exists()) {
-            createParentFolder(parent.getParent)
-            parent.asInstanceOf[IFolder].create(true, true, null)
-          }
-        }
-        
-        createParentFolder(underlying.getParent)
-        underlying.create(contents, true, null)
-      }
-      else
-        underlying.setContents(contents, true, false, null)
+      buffer.setContents(new String(buf, 0, count))
     }
   }
 
-  override def sizeOption: Option[Int] = getFileInfo.map(_.getLength.toInt)
+  override def sizeOption: Option[Int] = Some(buffer.getLength)
     
   def iterator : Iterator[AbstractFile] = Iterator.empty
 
@@ -126,14 +123,6 @@ class EclipseFile(override val underlying : IFile) extends EclipseResource[IFile
   
   def lookupNameUnchecked(name : String, directory : Boolean) =
     throw new UnsupportedOperationException("Files cannot have children")
-  
-  private def getFileInfo = {
-    val fs = FileBuffers.getFileStoreAtLocation(underlying.getLocation)
-    if (fs == null)
-      None
-    else
-      Some(fs.fetchInfo)
-  }
   
   override def equals(other : Any) : Boolean =
     other.isInstanceOf[EclipseFile] && super.equals(other)
@@ -152,7 +141,7 @@ class EclipseContainer(override val underlying : IContainer) extends EclipseReso
   def iterator : Iterator[AbstractFile] = underlying.members.map(EclipseResource(_)).iterator
 
   def lookupName(name : String, directory : Boolean) = {
-    val r = underlying.findMember(name)
+    val r = underlying findMember name
     if (r != null && directory == r.isInstanceOf[IContainer])
       EclipseResource(r)
     else

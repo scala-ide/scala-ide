@@ -72,14 +72,13 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
 
   override lazy val file : AbstractFile = { 
     val res = try { getCorrespondingResource } catch { case _ => null }
-    if (res != null)
-      new EclipseFile(res.asInstanceOf[IFile])
-    else
-      new VirtualFile(getElementName)
+    res match {
+      case f : IFile => new EclipseFile(f)
+      case _ => new VirtualFile(getElementName, getPath.toString)
+    }
   }
 
   def getProblems : Array[IProblem] = withSourceFile { (sourceFile, compiler) =>
-    val response = new compiler.Response[compiler.Tree]
     compiler.body(sourceFile)
     val problems = compiler.problemsOf(this)
     if (problems.isEmpty) null else problems.toArray
