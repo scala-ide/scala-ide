@@ -94,7 +94,10 @@ abstract class EclipseResource[R <: IResource] extends AbstractFile {
 }
 
 object BufferFactory {
-  def create(f : IFile) = ScalaSourceFile.handleFactory.createOpenable(f.getFullPath.toString, null).getBuffer
+  def create(f : IFile) = {
+	val openable = ScalaSourceFile.handleFactory.createOpenable(f.getFullPath.toString, null)
+	if (openable eq null) null else openable.getBuffer
+  }
 }
 
 class EclipseFile(override val underlying : IFile) extends EclipseResource[IFile] {
@@ -103,19 +106,44 @@ class EclipseFile(override val underlying : IFile) extends EclipseResource[IFile
   
   def isDirectory : Boolean = false
   
-  lazy val buffer = BufferFactory.create(underlying)
+  lazy val buffer : IBuffer = BufferFactory.create(underlying)
   
   def input : InputStream = {
-	new ByteArrayInputStream(buffer.getContents.getBytes)
+	if (buffer ne null) new ByteArrayInputStream(buffer.getContents.getBytes) else underlying.getContents
   }
   
-  def output: OutputStream = new ByteArrayOutputStream {
-    override def close = {
-      buffer.setContents(new String(buf, 0, count))
+  def output: OutputStream = {
+    val buffer = EclipseFile.this.buffer
+	if (buffer ne null) new ByteArrayOutputStream {
+      override def close = {
+        buffer.setContents(new String(buf, 0, count))
+      }
+    } else new ByteArrayOutputStream {
+      override def close = {
+        val contents = new ByteArrayInputStream(buf, 0, count)
+        if (!underlying.exists) {
+          def createParentFolder(parent : IContainer) {
+            if (!parent.exists()) {
+              createParentFolder(parent.getParent)
+              parent.asInstanceOf[IFolder].create(true, true, null)
+            }
+          }
+          createParentFolder(underlying.getParent)
+          underlying.create(contents, true, null)
+        }
+      }
     }
   }
 
-  override def sizeOption: Option[Int] = Some(buffer.getLength)
+  override def sizeOption: Option[Int] = if (buffer ne null) Some(buffer.getLength) else getFileInfo.map(_.getLength.toInt)
+  
+  private def getFileInfo = {
+    val fs = FileBuffers.getFileStoreAtLocation(underlying.getLocation)
+    if (fs == null)
+      None
+    else
+      Some(fs.fetchInfo)
+  }
     
   def iterator : Iterator[AbstractFile] = Iterator.empty
 
