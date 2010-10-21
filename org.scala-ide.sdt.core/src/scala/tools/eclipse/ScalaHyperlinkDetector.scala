@@ -2,58 +2,139 @@
  * Copyright 2005-2010 LAMP/EPFL
  */
 // $Id$
-
 package scala.tools.eclipse
 
-import org.eclipse.jdt.core.{ ICodeAssist, IJavaElement, JavaModelException }
-import org.eclipse.jdt.internal.ui.javaeditor.{ EditorUtility, JavaElementHyperlink, JavaElementHyperlinkDetector }
+import org.eclipse.core.resources.ResourcesPlugin
+import org.eclipse.core.runtime.Path
+import org.eclipse.jdt.core.{ICodeAssist, IJavaElement}
+import org.eclipse.jface.text.{IRegion, ITextViewer}
+import org.eclipse.jface.text.hyperlink.{AbstractHyperlinkDetector, IHyperlink}
+import org.eclipse.jdt.internal.core.{ClassFile,Openable}
+import org.eclipse.ui.texteditor.ITextEditor
+import org.eclipse.jdt.internal.compiler.env.ICompilationUnit
 import org.eclipse.jdt.ui.actions.SelectionDispatchAction
-import org.eclipse.jface.text.{ ITextViewer, IRegion }
-import org.eclipse.jface.text.hyperlink.{ IHyperlink, IHyperlinkDetector }
-import org.eclipse.ui.texteditor.ITextEditor;
+import org.eclipse.jdt.internal.ui.javaeditor.{EditorUtility, JavaElementHyperlink}
 
-class ScalaHyperlinkDetector extends JavaElementHyperlinkDetector {
-  override def detectHyperlinks(tv : ITextViewer, region : IRegion, canShowMultiple : Boolean) : Array[IHyperlink] = {
-    
-    val textEditor = getAdapter(classOf[ITextEditor]).asInstanceOf[ITextEditor]
-    if (region == null || !textEditor.isInstanceOf[ScalaEditor])
-      return null
+import scala.reflect.generic.Flags._
+import scala.tools.nsc.util.BatchSourceFile
+import scala.tools.nsc.io.AbstractFile
+import scala.tools.eclipse.refactoring.EditorHelpers
 
-    val openAction = textEditor.getAction("OpenEditor")
-    if (!openAction.isInstanceOf[SelectionDispatchAction])
-      return null
+import javaelements.{ScalaSourceFile, ScalaClassFile}
+import util.EclipseFile
 
-    val offset = region.getOffset
-    val input = EditorUtility.getEditorInputJavaElement(textEditor, false)
-    if (input == null)
-      return null
-
-    try {
-      val editorInput = textEditor.getEditorInput
-      val project = ScalaPlugin.plugin.getScalaProject(editorInput)
-      val document = textEditor.getDocumentProvider.getDocument(editorInput)
-      val wordRegion = ScalaWordFinder.findWord(document, offset)
-      println("detectHyperlinks: wordRegion = "+wordRegion)
+class ScalaHyperlinkDetector extends AbstractHyperlinkDetector {
+  def detectHyperlinks(viewer : ITextViewer, region : IRegion, canShowMultipleHyperlinks : Boolean) : Array[IHyperlink] = {
+    EditorHelpers.withCurrentScalaSourceFile { ssf =>
+      ssf.withSourceFile { (sourceFile, compiler) =>
+	    val wordRegion = ScalaWordFinder.findWord(viewer.getDocument, region.getOffset)
+	    if (wordRegion == null || wordRegion.getLength == 0) null else  {
+          val pos = compiler.rangePos(sourceFile, wordRegion.getOffset, wordRegion.getOffset, wordRegion.getOffset + wordRegion.getLength)
+  
+          val response = new compiler.Response[compiler.Tree]
+          compiler.askTypeAt(pos, response)
+          val typed = response.get
+        
+          println("detectHyperlinks: wordRegion = "+wordRegion)
       
-      if (wordRegion == null || wordRegion.getLength == 0)
-        return null
+          compiler.ask { () =>
+            case class Hyperlink(file : Openable, pos : Int) extends IHyperlink {
+              def getHyperlinkRegion = wordRegion
+              def getTypeLabel = null
+              def getHyperlinkText = "Open Declaration"
+              def open = {
+                EditorUtility.openInEditor(file, true) match { 
+                  case editor : ITextEditor => editor.selectAndReveal(pos, 0)
+                  case _ =>
+                }
+              }
+            }
+            import compiler._
+            typed.left.toOption map { tree : Tree => tree match {
+              case i : Ident => i.symbol 
+              case s : Select => s.symbol
+	          case Annotated(atp, _) => atp.symbol
+              // TODO: imports
+              case _ => NoSymbol
+            }
+          } flatMap { sym => 
+            if (sym.isPackage || sym == NoSymbol || sym.isJavaDefined) None else {
+	     	  def find[T, V](arr : Array[T])(f : T => Option[V]) : Option[V] = {
+	            for(e <- arr) {
+		          f(e) match {
+		            case v@Some(_) => return v
+	                case None =>
+		          }
+		        }
+		        None
+	      	  }
+	     	  def findClassFile = {
+	     	 	val packName = sym.enclosingPackage.fullName
+	            val pfs = ssf.newSearchableEnvironment.nameLookup.findPackageFragments(packName, false)
+	     	    find(pfs) {
+	              val top = sym.toplevelClass
+	              val name = top.name + (if (top.isModule && !top.isJavaDefined) "$" else "") + ".class"
+		          _.getClassFile(name) match {
+		            case classFile : ScalaClassFile if classFile.exists => Some(classFile)
+		            case _ => None
+		          }
+	     	    }
+	     	  }
+              (if (sym.sourceFile ne null) {
+                val path = new Path(sym.sourceFile.path)
+                val root = ResourcesPlugin.getWorkspace().getRoot()
+                root.findFilesForLocation(path) match {
+         	      case arr : Array[_] if arr.length == 1 =>
+                    ScalaSourceFile.createFromPath(arr(0).getFullPath.toString)
+         	      case _ => findClassFile
+                }
+              } else findClassFile) flatMap { file =>
+                Some(Hyperlink(file, sym.pos.pointOrElse(-1)))
+         	  }
+            }
+	        }
+	      } match {
+	        case Some(hyper) => Left(Array[IHyperlink](hyper))
+	        case None => Right( () => codeSelect(viewer, wordRegion) )
+	      }
+	    } match {
+	   	  case Left(l) => l
+	      case Right(cont) => cont()
+	    }
+	  }
+    }.getOrElse(null)
+  }
+  
+  //Default path used for selecting.
+  def codeSelect(viewer : ITextViewer, wordRegion : IRegion) : Array[IHyperlink] = {
+	val offset = wordRegion.getOffset
+    val textEditor = getAdapter(classOf[ITextEditor]).asInstanceOf[ITextEditor]
+    textEditor.getAction("OpenEditor") match {
+	  case openAction : SelectionDispatchAction =>
+		val input = EditorUtility.getEditorInputJavaElement(textEditor, false)
+        if (input eq null) null else {
+         try {
+           val editorInput = textEditor.getEditorInput
+           val project = ScalaPlugin.plugin.getScalaProject(editorInput)
+           val document = textEditor.getDocumentProvider.getDocument(editorInput)
+           def isLinkable(element : IJavaElement) = {
+             import IJavaElement._
+             element.getElementType match {
+               case PACKAGE_DECLARATION | PACKAGE_FRAGMENT | PACKAGE_FRAGMENT_ROOT | JAVA_PROJECT | JAVA_MODEL => false
+               case _ => true
+             }
+           }
 
-      def isLinkable(element : IJavaElement) = {
-        import IJavaElement._
-        element.getElementType match {
-          case PACKAGE_DECLARATION | PACKAGE_FRAGMENT | PACKAGE_FRAGMENT_ROOT | JAVA_PROJECT | JAVA_MODEL => false
-          case _ => true
-        }
+           val elements = input.asInstanceOf[ICodeAssist].codeSelect(wordRegion.getOffset, wordRegion.getLength).filter(e => e != null && isLinkable(e))
+           if (elements.length == 0) null else {
+             val qualify = elements.length > 1
+             elements.map(new JavaElementHyperlink(wordRegion, openAction.asInstanceOf[SelectionDispatchAction], _, qualify))
+           }
+         } catch {
+           case _ => null
+         }    	  
       }
-
-      val elements = input.asInstanceOf[ICodeAssist].codeSelect(wordRegion.getOffset, wordRegion.getLength).filter(e => e != null && isLinkable(e))
-      if (elements.length == 0)
-        return null
-
-      val qualify = elements.length > 1
-      elements.map(new JavaElementHyperlink(wordRegion, openAction.asInstanceOf[SelectionDispatchAction], _, qualify))
-    } catch {
-      case ex : JavaModelException => null
-    }
+	  case _ => null
+	}
   }
 }
