@@ -263,8 +263,10 @@ class ScalaSelectionEngine(nameEnvironment : SearchableEnvironment, requestor : 
                 Continuation (ssr.addElement(ssr.findLocalElement(sym.pos.startOrPoint)))
               } else if (sym.hasFlag(Flags.ACCESSOR|Flags.PARAMACCESSOR)) {
                 Continuation (acceptField(sym))
+              } else if (sym.isModule || sym.isClass) {
+                Continuation (acceptType(sym))
               } else
-                Continuation (acceptMethod(sym))
+        	    Continuation (acceptMethod(sym))
               
             case t0 : compiler.TypeTree if t0.symbol != null =>
               val t = selectFromTypeTree(t0, pos)
