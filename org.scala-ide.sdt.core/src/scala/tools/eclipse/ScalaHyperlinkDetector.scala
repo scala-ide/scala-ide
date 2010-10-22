@@ -95,7 +95,7 @@ class ScalaHyperlinkDetector extends AbstractHyperlinkDetector {
 	    	          src match {
 	    	           //fixme: ugly toString compare + =:= doesn't work. 
 	    	           case DefDef(_, name, _, paramss, _, _) if clz.isMethod => 
-	    	              name.toString == clz.decodedName.toString && paramss.corresponds(clz.paramss) {
+	    	              name.toString == clz.decodedName.toString && src.symbol.paramss.corresponds(clz.paramss) {
 	    	                case (sec1, sec2) => sec1.corresponds(sec2) {case (p1, p2) => p1.tpe =:= p2.tpe}
                           }
                         case TypeDef(_,name,_,_) if clz.isType => name.toString == clz.decodedName.toString
