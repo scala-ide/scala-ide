@@ -89,6 +89,57 @@ class ScalaHyperlinkDetector extends AbstractHyperlinkDetector {
          	      case _ => findClassFile
                 }
               } else findClassFile) flatMap { file =>
+                if (sym.pos eq NoPosition) {
+                  val traverser = new Traverser {
+                    def equiv(src : DefTree, clz : Symbol) = {
+	    	          src match {
+	    	           //fixme: ugly toString compare + =:= doesn't work. 
+	    	           case DefDef(_, name, _, paramss, _, _) if clz.isMethod => 
+	    	              name.toString == clz.decodedName.toString && paramss.corresponds(clz.paramss) {
+	    	                case (sec1, sec2) => sec1.corresponds(sec2) {case (p1, p2) => p1.tpe =:= p2.tpe}
+                          }
+                        case TypeDef(_,name,_,_) if clz.isType => name.toString == clz.decodedName.toString
+                        case ClassDef(_,name,_,_) if clz.isClass || clz.isTrait => name.toString == clz.decodedName.toString
+                        case ValDef(_,name,_,_) if clz.isValue => name.toString == clz.decodedName.toString
+                        case ModuleDef(_,name,_) if clz.isModule => name.toString == clz.decodedName.toString
+	  	                case _ => false
+	    	          }
+	    	        }
+		    	  
+	    	        var owners = sym.ownerChain.reverse.tail   // drop root symbol
+	    	        def packageNames(ref : RefTree) = {
+	    	          def inner(ref : RefTree, acc : List[Name]) : List[Name] = ref match {
+	    	     	    case Select(q : RefTree, name) => inner(q, name::acc)
+	    	     	    case _ => ref.name::acc
+	    	          }
+	    	          inner(ref, Nil)
+	    	        }
+	    	    	    	  
+	    	        override def traverse(t : Tree) {
+                      t match {
+                        case _ : Template => super.traverse(t)
+                        case PackageDef(ref, stats) => {
+                          val names = packageNames(ref)
+                          val (pre, rest) = owners.splitAt(names.length)
+                          if (pre.corresponds(names) {case (owner, name) => owner.sourceModule.isPackage && owner.name.toString == name.toString}) {
+                    	    owners = rest
+                    	    super.traverseTrees(stats)  
+                          }
+                        }
+                        case dt : DefTree if equiv(dt, owners.head) => owners.tail match {
+                          case Nil => sym.setPos(dt.pos)
+	    	 	          case tl =>
+                            owners = tl
+	    	                super.traverse(t)
+	    	            }
+	    	            case _ =>
+	    	          }
+	    	        }
+	    	      }
+                  file.withSourceFile{ (f, _) =>
+                    traverser traverse compiler.body(f)
+                  }
+                }
                 Some(Hyperlink(file, sym.pos.pointOrElse(-1)))
          	  }
             }
