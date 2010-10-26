@@ -209,6 +209,7 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage {
     case setting : Settings#BooleanSetting => new CheckBoxSetting(setting)
     case setting : Settings#IntSetting => new IntegerSetting(setting)
     case setting : Settings#StringSetting => new StringSetting(setting)
+//    case setting : Settings#PhasesSetting  => new StringSetting(setting) // !!!
     case setting : Settings#MultiStringSetting => new MultiStringSetting(setting)
     case setting : Settings#ChoiceSetting => new ComboSetting(setting)
   }
@@ -266,9 +267,10 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage {
    */
   abstract class EclipseSetting(val setting : Settings#Setting) {
     def control : Control
-    
-    def layout = new GridData()
+    val data = new GridData()
+    data.horizontalAlignment = GridData.FILL
 
+    
     def setEnabled(value:Boolean) : Unit = {
       control.setEnabled(value)
       if(!value) {
@@ -325,7 +327,7 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage {
 
     def createControl(page : Composite) {
       control = new Text(page, SWT.SINGLE | SWT.BORDER)
-      control.setLayoutData(layout)
+      control.setLayoutData(data)
       control.setText(setting.value.toString)
       control.addListener (SWT.Verify, new Listener {
         def handleEvent(e : Event) { if(e.text.exists(c => c < '0' || c > '9')) e.doit = false }
@@ -356,8 +358,9 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage {
 
     def createControl(page : Composite) {
       control = new Text(page, SWT.SINGLE | SWT.BORDER)
-      control.setLayoutData(layout)
       control.setText(setting.value)
+      control.setLayoutData(data)
+      
       control.addModifyListener(new ModifyListener() {
         def modifyText(e : ModifyEvent) = { updateApplyButton }
       }) 
@@ -378,7 +381,7 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage {
 
     def createControl(page : Composite) {
       control = new Text(page, SWT.SINGLE | SWT.BORDER)
-      control.setLayoutData(layout)
+      control.setLayoutData(data)
       control.setText(setting.value.mkString(" "))
       control.addModifyListener(new ModifyListener() {
         def modifyText(e : ModifyEvent) = { updateApplyButton }
@@ -400,7 +403,7 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage {
 
     def createControl(page : Composite) {
       control = new Combo(page, SWT.DROP_DOWN | SWT.READ_ONLY)
-      control.setLayoutData(layout)
+      control.setLayoutData(data)
       setting.choices.foreach(control.add)
       control.setText(setting.value)
       control.addSelectionListener(new SelectionAdapter() {
