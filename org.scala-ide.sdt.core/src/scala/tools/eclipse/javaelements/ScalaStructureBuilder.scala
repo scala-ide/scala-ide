@@ -75,6 +75,8 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
       def addDef(d : DefDef) : Owner = this
       def addFunction(f : Function) : Owner = this
       
+      def symbol(t : Tree) = t.symbol.initialize
+      
       def resetImportContainer {}
 
       def addChild(child : JavaElement) =
@@ -227,7 +229,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
             if (!completed) {
               completed = true
               
-              val pkgElem = JavaElementFactory.createPackageDeclaration(compilationUnitBuilder.element.asInstanceOf[JDTCompilationUnit], p.symbol.fullName)
+              val pkgElem = JavaElementFactory.createPackageDeclaration(compilationUnitBuilder.element.asInstanceOf[JDTCompilationUnit], symbol(p).fullName)
               resolveDuplicates(pkgElem)
               compilationUnitBuilder.addChild(pkgElem)
 
@@ -251,7 +253,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
       
       override def addImport(i : Import) : Owner = {
         //println("Import "+i)
-        val prefix = i.expr.symbol.fullName
+        val prefix = symbol(i.expr).fullName
         val pos = i.pos
 
         def isWildcard(s: ImportSelector) : Boolean = s.name == nme.WILDCARD
@@ -327,8 +329,9 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
               (superclassName0.toCharArray, superclassType.typeSymbol, interfaceTrees0)   
           }
 
+        val sym = symbol(c)
         val classElem =
-          if(c.symbol hasFlag Flags.TRAIT)
+          if(sym hasFlag Flags.TRAIT)
             new ScalaTraitElement(element, name)
           else if (isAnon) {
             val primaryTypeString = if (primaryType != null) primaryType.name.toString else null
@@ -341,13 +344,13 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         addChild(classElem)
         
         val classElemInfo = new ScalaElementInfo
-        classes(c.symbol) = (classElem, classElemInfo)
+        classes(sym) = (classElem, classElemInfo)
         
         classElemInfo.setHandle(classElem)
         val mask = ~(if (isAnon) ClassFileConstants.AccPublic else 0)
-        classElemInfo.setFlags0(mapModifiers(c.symbol) & mask)
+        classElemInfo.setFlags0(mapModifiers(sym) & mask)
         
-        val annotsPos = addAnnotations(c.symbol, classElemInfo, classElem)
+        val annotsPos = addAnnotations(sym, classElemInfo, classElem)
 
         classElemInfo.setSuperclassName(superclassName)
         
@@ -373,7 +376,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         setSourceRange(classElemInfo, c, annotsPos)
         newElements0.put(classElem, classElemInfo)
 
-        fillOverrideInfos(c.symbol)
+        fillOverrideInfos(sym)
         
         new Builder {
           val parent = self
@@ -392,21 +395,22 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
       override def addModule(m : ModuleDef) : Owner = {
         //println("Module defn: "+m.name+" ["+this+"]")
         
-        val isSynthetic = m.symbol.hasFlag(Flags.SYNTHETIC)
+        val sym = symbol(m)
+    	val isSynthetic = sym.hasFlag(Flags.SYNTHETIC)
         val moduleElem = new ScalaModuleElement(element, m.name.toString, isSynthetic)
         resolveDuplicates(moduleElem)
         addChild(moduleElem)
         
         val moduleElemInfo = new ScalaElementInfo
-        m.symbol match {
+        sym match {
           case NoSymbol => ()
           case s => if (s.owner.isPackageClass) modules(s) = moduleElemInfo
         }
         
         moduleElemInfo.setHandle(moduleElem)
-        moduleElemInfo.setFlags0(mapModifiers(m.symbol)|ClassFileConstants.AccFinal)
+        moduleElemInfo.setFlags0(mapModifiers(sym)|ClassFileConstants.AccFinal)
         
-        val annotsPos = addAnnotations(m.symbol, moduleElemInfo, moduleElem)
+        val annotsPos = addAnnotations(sym, moduleElemInfo, moduleElem)
 
         val start = m.pos.point
         val end = start+m.name.length-1
@@ -434,7 +438,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         }
         moduleElemInfo.setSuperInterfaceNames(interfaceNames.toArray)
 
-        fillOverrideInfos(m.symbol)
+        fillOverrideInfos(sym)
         
         val mb = new Builder {
           val parent = self
@@ -467,10 +471,11 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         //println("Val defn: >"+nme.getterName(v.name)+"< ["+this+"]")
         
         val elemName = nme.getterName(v.name)
-        val display = elemName.toString+" : "+v.symbol.tpe.toString
+        val sym = symbol(v)
+        val display = elemName.toString+" : "+sym.tpe.toString
         
         val valElem =
-          if(v.symbol.hasFlag(Flags.MUTABLE))
+          if(sym.hasFlag(Flags.MUTABLE))
             new ScalaVarElement(element, elemName.toString, display)
           else
             new ScalaValElement(element, elemName.toString, display)
@@ -478,10 +483,10 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         addChild(valElem)
         
         val valElemInfo = new ScalaSourceFieldElementInfo
-        val jdtFinal = if(v.symbol.hasFlag(Flags.MUTABLE)) 0 else ClassFileConstants.AccFinal
-        valElemInfo.setFlags0(mapModifiers(v.symbol)|jdtFinal)
+        val jdtFinal = if(sym.hasFlag(Flags.MUTABLE)) 0 else ClassFileConstants.AccFinal
+        valElemInfo.setFlags0(mapModifiers(sym)|jdtFinal)
         
-        val annotsPos = addAnnotations(v.symbol, valElemInfo, valElem)
+        val annotsPos = addAnnotations(sym, valElemInfo, valElem)
         
         val start = v.pos.point
         val end = start+elemName.length-1
@@ -502,16 +507,17 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
       override def addType(t : TypeDef) : Owner = {
         //println("Type defn: >"+t.name.toString+"< ["+this+"]")
         
-        val display = t.name.toString+" : "+t.symbol.tpe.toString
+        val sym = symbol(t)
+    	val display = t.name.toString+" : "+sym.tpe.toString
 
         val typeElem = new ScalaTypeElement(element, t.name.toString, display)
         resolveDuplicates(typeElem)
         addChild(typeElem)
 
         val typeElemInfo = new ScalaSourceFieldElementInfo
-        typeElemInfo.setFlags0(mapModifiers(t.symbol))
+        typeElemInfo.setFlags0(mapModifiers(sym))
 
-        val annotsPos = addAnnotations(t.symbol, typeElemInfo, typeElem)
+        val annotsPos = addAnnotations(sym, typeElemInfo, typeElem)
         
         val start = t.pos.point
         val end = start+t.name.length-1
@@ -542,17 +548,18 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
     trait DefOwner extends Owner { self =>
       override def addDef(d : DefDef) : Owner = {
         //println("Def defn: "+d.name+" ["+this+"]")
-        val isCtor0 = d.symbol.isConstructor
+        val sym = symbol(d)
+    	val isCtor0 = sym.isConstructor
         val nameString =
           if(isCtor0)
-            d.symbol.owner.simpleName + (if (d.symbol.owner.isModuleClass) "$" else "")
+            sym.owner.simpleName + (if (sym.owner.isModuleClass) "$" else "")
           else
             d.name.toString
         
         val fps = for(vps <- d.vparamss; vp <- vps) yield vp
         
         def paramType(v : ValDef) = {
-          val sym = v.symbol
+          val sym = symbol(v)
           val tpt = v.tpt
           val tpe = tpt.tpe
           if (sym.isType || tpe != null)
@@ -570,7 +577,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         tp.print(tp.symName(d, d.name))
         tp.printTypeParams(d.tparams)
         d.vparamss foreach tp.printValueParams
-	if (d.tpt.tpe != null) {
+	    if (d.tpt.tpe != null) {
           sw.write(" : ")
           tp.print(d.tpt)
         }
@@ -578,10 +585,10 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         val display = sw.toString
         
         val defElem = 
-          if(d.symbol hasFlag Flags.ACCESSOR)
+          if(sym hasFlag Flags.ACCESSOR)
             new ScalaAccessorElement(element, nameString, paramTypes)
           else if(isTemplate)
-            new ScalaDefElement(element, nameString, paramTypes, d.symbol.hasFlag(Flags.SYNTHETIC), display, methodOverrideInfo(d.symbol))
+            new ScalaDefElement(element, nameString, paramTypes, sym hasFlag Flags.SYNTHETIC, display, methodOverrideInfo(sym))
           else
             new ScalaFunctionElement(template.element, element, nameString, paramTypes, display)
         resolveDuplicates(defElem)
@@ -594,13 +601,13 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
             new ScalaSourceMethodInfo
         
         // This causes a deadlock in the ask-based version, but also looks suspicious by itself. 
-        /*if(d.symbol.isGetter || d.symbol.isSetter) {
+        /*if(sym.isGetter || sym.isSetter) {
           elementInfo.getChildren.
             dropWhile(x => !x.isInstanceOf[ScalaFieldElement] || x.getElementName != d.name.toString).
             headOption match {
             case Some(f : ScalaFieldElement) => {
               val fInfo = f.getElementInfo.asInstanceOf[ScalaSourceFieldElementInfo]
-              fInfo.setFlags0(mapModifiers(d.symbol))
+              fInfo.setFlags0(mapModifiers(sym))
             }
             case _ =>
           }
@@ -611,11 +618,11 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         val tn = manager.intern(mapType(d.tpt).toArray)
         defElemInfo.asInstanceOf[FnInfo].setReturnType(tn)
 
-        val annotsPos = addAnnotations(d.symbol, defElemInfo, defElem)
+        val annotsPos = addAnnotations(sym, defElemInfo, defElem)
 
         val mods =
           if(isTemplate)
-            mapModifiers(d.symbol)
+            mapModifiers(sym)
           else
             ClassFileConstants.AccPrivate
 
@@ -626,7 +633,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
             case smei : ScalaMemberElementInfo =>
               defElemInfo.setNameSourceStart0(smei.getNameSourceStart0)
               defElemInfo.setNameSourceEnd0(smei.getNameSourceEnd0)
-              if (d.symbol.isPrimaryConstructor) {
+              if (sym.isPrimaryConstructor) {
                 defElemInfo.setSourceRangeStart0(smei.getNameSourceEnd0)
                 defElemInfo.setSourceRangeEnd0(smei.getDeclarationSourceEnd0)
               } else {
@@ -637,7 +644,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
           }
         } else {
           val start = d.pos.point
-          val end = start+defElem.labelName.length-1-(if (d.symbol.isSetter) 4 else 0)
+          val end = start+defElem.labelName.length-1-(if (sym.isSetter) 4 else 0)
           
           defElemInfo.setNameSourceStart0(start)
           defElemInfo.setNameSourceEnd0(end)
@@ -759,11 +766,12 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
       val (start, end) =
         if (pos.isDefined) {
           val pos0 = if (annotsPos.isOpaqueRange) pos union annotsPos else pos
-          val start0 = if (tree.symbol == NoSymbol)
+          val sym = tree.symbol.initialize
+          val start0 = if (sym == NoSymbol)
             pos0.startOrPoint
           else
             try {
-              docCommentPos(tree.symbol) match {
+              docCommentPos(sym) match {
                 case NoPosition => pos0.startOrPoint
                 case cpos => cpos.startOrPoint
               }
