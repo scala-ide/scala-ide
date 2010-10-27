@@ -95,8 +95,8 @@ abstract class EclipseResource[R <: IResource] extends AbstractFile {
 
 object BufferFactory {
   def create(f : IFile) = {
-	val openable = ScalaSourceFile.handleFactory.createOpenable(f.getFullPath.toString, null)
-	if (openable eq null) null else openable.getBuffer
+    val openable = ScalaSourceFile.handleFactory.createOpenable(f.getFullPath.toString, null)
+    if (openable eq null) null else openable.getBuffer
   }
 }
 
