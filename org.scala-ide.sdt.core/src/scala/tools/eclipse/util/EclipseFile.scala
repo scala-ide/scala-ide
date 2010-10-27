@@ -13,6 +13,7 @@ import org.eclipse.core.filesystem.URIUtil
 import org.eclipse.core.resources.{ IContainer, IFile, IFolder, IResource, ResourcesPlugin }
 import org.eclipse.core.runtime.{ IPath, Path }
 import org.eclipse.jdt.core.IBuffer
+import org.eclipse.jdt.internal.core.BufferManager
 import javaelements.ScalaSourceFile
 
 import scala.tools.nsc.io.AbstractFile
@@ -93,20 +94,16 @@ abstract class EclipseResource[R <: IResource] extends AbstractFile {
   override def hashCode() : Int = path.hashCode
 }
 
-object BufferFactory {
-  def create(f : IFile) = {
-    val openable = ScalaSourceFile.handleFactory.createOpenable(f.getFullPath.toString, null)
-    if (openable eq null) null else openable.getBuffer
-  }
-}
-
 class EclipseFile(override val underlying : IFile) extends EclipseResource[IFile] {
   if (underlying == null)
     throw new NullPointerException("underlying == null")
   
   def isDirectory : Boolean = false
   
-  lazy val buffer : IBuffer = BufferFactory.create(underlying)
+  lazy val buffer : IBuffer = {
+    val openable = ScalaSourceFile.handleFactory.createOpenable(underlying.getFullPath.toString, null)
+    if (openable eq null) null else BufferManager.getDefaultBufferManager().getBuffer(openable)
+  }
   
   def input : InputStream = {
 	if (buffer ne null) new ByteArrayInputStream(buffer.getContents.getBytes) else underlying.getContents
