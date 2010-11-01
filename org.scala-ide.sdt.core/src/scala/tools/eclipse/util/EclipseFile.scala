@@ -101,8 +101,10 @@ class EclipseFile(override val underlying : IFile) extends EclipseResource[IFile
   def isDirectory : Boolean = false
   
   lazy val buffer : IBuffer = {
-    val openable = ScalaSourceFile.handleFactory.createOpenable(underlying.getFullPath.toString, null)
-    if (openable eq null) null else BufferManager.getDefaultBufferManager().getBuffer(openable)
+    Option(ScalaSourceFile.handleFactory.createOpenable(underlying.getFullPath.toString, null)).map { openable =>
+      val resource = openable.getResource
+      if (resource.getModificationStamp == resource.getLocalTimeStamp)	null else openable.getBuffer
+    }.getOrElse(null)
   }
   
   def input : InputStream = {
