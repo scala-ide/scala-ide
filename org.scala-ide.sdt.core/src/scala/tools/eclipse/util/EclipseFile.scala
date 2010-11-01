@@ -13,7 +13,8 @@ import org.eclipse.core.filesystem.URIUtil
 import org.eclipse.core.resources.{ IContainer, IFile, IFolder, IResource, ResourcesPlugin }
 import org.eclipse.core.runtime.{ IPath, Path }
 import org.eclipse.jdt.core.IBuffer
-import org.eclipse.jdt.internal.core.BufferManager
+import org.eclipse.core.filesystem.EFS
+import org.eclipse.core.internal.resources.Resource
 import javaelements.ScalaSourceFile
 
 import scala.tools.nsc.io.AbstractFile
@@ -103,7 +104,9 @@ class EclipseFile(override val underlying : IFile) extends EclipseResource[IFile
   lazy val buffer : IBuffer = {
     Option(ScalaSourceFile.handleFactory.createOpenable(underlying.getFullPath.toString, null)).map { openable =>
       val resource = openable.getResource
-      if (resource.getModificationStamp == resource.getLocalTimeStamp)	null else openable.getBuffer
+      val fileInfo = EFS.getStore(resource.getLocationURI).fetchInfo
+      val info = resource.asInstanceOf[Resource].getResourceInfo(true, false);
+      if (fileInfo.getLastModified == info.getLocalSyncInfo) null else openable.getBuffer
     }.getOrElse(null)
   }
   
@@ -112,7 +115,6 @@ class EclipseFile(override val underlying : IFile) extends EclipseResource[IFile
   }
   
   def output: OutputStream = {
-    val buffer = EclipseFile.this.buffer
 	if (buffer ne null) new ByteArrayOutputStream {
       override def close = {
         buffer.setContents(new String(buf, 0, count))
