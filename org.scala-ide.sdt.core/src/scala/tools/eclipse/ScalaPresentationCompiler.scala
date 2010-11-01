@@ -123,7 +123,7 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
     askShutdown
   }
  
-  class EclipseTyperRun extends TyperRun {
+  /*class EclipseTyperRun extends TyperRun {
     override def compileSourceFor(context : Context, name : Name) = {
       def addImport(imp : analyzer.ImportInfo) = {
         val qual = imp.qual
@@ -166,7 +166,7 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
     }
   }
   
-  override def newTyperRun = new EclipseTyperRun
+  override def newTyperRun = new EclipseTyperRun*/
 }
 
 object ScalaPresentationCompiler {
