@@ -71,7 +71,7 @@ class ScalaHyperlinkDetector extends AbstractHyperlinkDetector {
 	     	  def findClassFile = {
 	     	 	val packName = sym.enclosingPackage.fullName
 	            val pfs = ssf.newSearchableEnvironment.nameLookup.findPackageFragments(packName, false)
-	     	    find(pfs) {
+	     	    if (pfs eq null) None else find(pfs) {
 	              val top = sym.toplevelClass
 	              val name = top.name + (if (top.isModule && !top.isJavaDefined) "$" else "") + ".class"
 		          _.getClassFile(name) match {
