@@ -96,7 +96,7 @@ class ScalaHyperlinkDetector extends AbstractHyperlinkDetector {
 
                     def equiv(src : Symbol, clz : Symbol) = {
 	    	          //fixme: ugly toString compare.
-                      src.name.toString == clz.decodedName.toString && ((src,clz) match {
+                      src.name.toString == clz.decodedName && ((src,clz) match {
 	    	            case (_,_) if src.isMethod && clz.isMethod => 
 	    	             src.tpe.substSym(tparamMapping._1, tparamMapping._2) matches clz.tpe
                         case (_,_) if src.isType && clz.isType => true

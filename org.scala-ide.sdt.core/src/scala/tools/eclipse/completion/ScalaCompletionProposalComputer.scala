@@ -136,7 +136,7 @@ class ScalaCompletionProposalComputer extends IJavaCompletionProposalComputer {
                     else if (sym.isModule) objectImage
                     else if (sym.isType) typeImage
                     else valImage
-        val name = sym.decodedName.toString
+        val name = sym.decodedName
         val own = if (sym.isMethod) name + tpe.paramss.
                   map(_.map(_.tpe.toString).mkString("(", ",", ")")).mkString
 		  else name
