@@ -90,54 +90,47 @@ class ScalaHyperlinkDetector extends AbstractHyperlinkDetector {
                 }
               } else findClassFile) flatMap { file =>
                 if (sym.pos eq NoPosition) {
-                  val traverser = new Traverser {
-                    def equiv(src : DefTree, clz : Symbol) = {
-	    	          src match {
-	    	           //fixme: ugly toString compare + =:= doesn't work. 
-	    	           case DefDef(_, name, _, paramss, _, _) if clz.isMethod => 
-	    	              name.toString == clz.decodedName.toString && src.symbol.paramss.corresponds(clz.paramss) {
-	    	                case (sec1, sec2) => sec1.corresponds(sec2) {case (p1, p2) => p1.tpe =:= p2.tpe}
-                          }
-                        case TypeDef(_,name,_,_) if clz.isType => name.toString == clz.decodedName.toString
-                        case ClassDef(_,name,_,_) if clz.isClass || clz.isTrait => name.toString == clz.decodedName.toString
-                        case ValDef(_,name,_,_) if clz.isValue => name.toString == clz.decodedName.toString
-                        case ModuleDef(_,name,_) if clz.isModule => name.toString == clz.decodedName.toString
+	    	      object traverser {
+	    	     	var owners = sym.ownerChain.reverse.tail  // drop root package
+                    var tparamMapping = (Nil : List[Symbol], Nil : List[Symbol])
+
+                    def equiv(src : Symbol, clz : Symbol) = {
+	    	          //fixme: ugly toString compare.
+                      src.name.toString == clz.decodedName.toString && ((src,clz) match {
+	    	            case (_,_) if src.isMethod && clz.isMethod => 
+	    	             src.tpe.substSym(tparamMapping._1, tparamMapping._2) matches clz.tpe
+                        case (_,_) if src.isType && clz.isType => true
+                        case (_,_) if src.isClass && clz.isClass => true
+                        case (_,_) if src.isTrait && clz.isTrait => true
+                        case (_,_) if src.isValue && clz.isValue => true
+                        case (_,_) if src.isModule && clz.isModule => true
+                        case (_,_) if (src.isPackage) && clz.sourceModule.isPackage => true
 	  	                case _ => false
 	    	          }
-	    	        }
+	    	        )}
 		    	  
-	    	        var owners = sym.ownerChain.reverse.tail   // drop root symbol
-	    	        def packageNames(ref : RefTree) = {
-	    	          def inner(ref : RefTree, acc : List[Name]) : List[Name] = ref match {
-	    	     	    case Select(q : RefTree, name) => inner(q, name::acc)
-	    	     	    case _ => ref.name::acc
-	    	          }
-	    	          inner(ref, Nil)
-	    	        }
-	    	    	    	  
-	    	        override def traverse(t : Tree) {
-                      t match {
-                        case _ : Template => super.traverse(t)
-                        case PackageDef(ref, stats) => {
-                          val names = packageNames(ref)
-                          val (pre, rest) = owners.splitAt(names.length)
-                          if (pre.corresponds(names) {case (owner, name) => owner.sourceModule.isPackage && owner.name.toString == name.toString}) {
-                    	    owners = rest
-                    	    super.traverseTrees(stats)  
+	    	        def traverse(srcsym : Symbol) {
+	    	          if (equiv(srcsym, owners.head)) owners.tail match {
+                        case Nil => sym.setPos(srcsym.pos)
+	    	 	        case tl => {
+                          val oldMapping = tparamMapping
+                          tparamMapping = (srcsym.typeParams, owners.head.typeParams) match {
+                            case (tps1, tps2) if tps1.length == tps2.length =>
+                              (srcsym::tps1:::tparamMapping._1, owners.head::tps2:::tparamMapping._2) 
+                            case _ => tparamMapping
                           }
-                        }
-                        case dt : DefTree if equiv(dt, owners.head) => owners.tail match {
-                          case Nil => sym.setPos(dt.pos)
-	    	 	          case tl =>
-                            owners = tl
-	    	                super.traverse(t)
-	    	            }
-	    	            case _ =>
+                          owners = tl
+	    	              for (sym <- srcsym.info.decls) {
+	    	         	    traverse(sym)
+	    	         	  }
+	    	              tparamMapping = oldMapping
+	    	 	        }
 	    	          }
 	    	        }
-	    	      }
+                  }
+	    	        
                   file.withSourceFile{ (f, _) =>
-                    traverser traverse compiler.body(f)
+                    traverser traverse compiler.root(f).symbol.ownerChain.reverse.tail.head
                   }
                 }
                 Some(Hyperlink(file, sym.pos.pointOrElse(-1)))
