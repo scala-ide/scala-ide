@@ -73,9 +73,9 @@ class ScalaHyperlinkDetector extends AbstractHyperlinkDetector {
 	            val pfs = ssf.newSearchableEnvironment.nameLookup.findPackageFragments(packName, false)
 	     	    if (pfs eq null) None else find(pfs) {
 	              val top = sym.toplevelClass
-	              val name = top.name + (if (top.isModule && !top.isJavaDefined) "$" else "") + ".class"
+	              val name = top.name + (if (top.isModule) "$" else "") + ".class"
 		          _.getClassFile(name) match {
-		            case classFile : ScalaClassFile if classFile.exists => Some(classFile)
+		            case classFile : ScalaClassFile => Some(classFile)
 		            case _ => None
 		          }
 	     	    }
@@ -91,13 +91,13 @@ class ScalaHyperlinkDetector extends AbstractHyperlinkDetector {
               } else findClassFile) flatMap { file =>
                 if (sym.pos eq NoPosition) {
 	    	      object traverser {
-	    	     	var owners = sym.ownerChain.reverse.tail  // drop root package
-                    var tparamMapping = (Nil : List[Symbol], Nil : List[Symbol])
+	    	     	var owners = sym.ownerChain.reverse
+                    var symMapping = (Nil : List[Symbol], Nil : List[Symbol])
 
                     def equiv(src : Symbol, clz : Symbol) = {
                       src.decodedName == clz.decodedName && ((src,clz) match {
 	    	            case (_,_) if src.isMethod && clz.isMethod => 
-	    	             src.info.substSym(tparamMapping._1, tparamMapping._2) matches clz.info
+	    	             src.info.substSym(symMapping._1, symMapping._2) matches clz.info
                         case (_,_) if src.isType == clz.isType && src.isClass == clz.isClass => true
                         case (_,_) if src.isValue && clz.isValue => true
                         case (_,_) if src.isModule && clz.isModule => true
@@ -110,24 +110,24 @@ class ScalaHyperlinkDetector extends AbstractHyperlinkDetector {
 	    	          if (equiv(srcsym, owners.head)) owners.tail match {
                         case Nil => sym.setPos(srcsym.pos)
 	    	 	        case tl => {
-                          val oldMapping = tparamMapping
-                          tparamMapping = (srcsym.typeParams, owners.head.typeParams) match {
+                          val oldMapping = symMapping
+                          symMapping = (srcsym.typeParams, owners.head.typeParams) match {
                             case (tps1, tps2) if tps1.length == tps2.length =>
-                              (srcsym::tps1:::tparamMapping._1, owners.head::tps2:::tparamMapping._2) 
-                            case _ => tparamMapping
+                              (srcsym::tps1:::symMapping._1, owners.head::tps2:::symMapping._2) 
+                            case _ => symMapping
                           }
                           owners = tl
 	    	              for (sym <- srcsym.info.decls) {
 	    	         	    traverse(sym)
 	    	         	  }
-	    	              tparamMapping = oldMapping
+	    	              symMapping = oldMapping
 	    	 	        }
 	    	          }
 	    	        }
                   }
 	    	        
                   file.withSourceFile{ (f, _) =>
-                    traverser traverse compiler.root(f).symbol.ownerChain.reverse.tail.head
+                    traverser traverse compiler.root(f).symbol.ownerChain.reverse.head
                   }
                 }
                 Some(Hyperlink(file, sym.pos.pointOrElse(-1)))
