@@ -82,7 +82,6 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
       case fei: IFileEditorInput => project.updateTopLevelMap(fei.getFile)
       case _ =>
     }
-    project.scheduleResetPresentationCompiler
     super.doSave(pm)
   }
 

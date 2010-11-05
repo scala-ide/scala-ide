@@ -40,9 +40,11 @@ class ScalaProject(val underlying : IProject) {
   private val presentationCompiler = new Cached[ScalaPresentationCompiler] {
     override def create() = {
       checkClasspath
+      
       val settings = new Settings
-      initialize(settings)
       settings.printtypes.tryToSet(Nil)
+      //settings.debug.tryToSetFromPropertyValue("true")
+      initialize(settings)
       new ScalaPresentationCompiler(ScalaProject.this, settings)
     }
     
@@ -371,22 +373,6 @@ class ScalaProject(val underlying : IProject) {
   
   def resetPresentationCompiler {
     presentationCompiler.invalidate
-  }
-  
-  def scheduleResetPresentationCompiler {
-    resetPendingLock.synchronized {
-      if (!resetPending) {
-        resetPending = true
-        Display.getDefault.asyncExec( new Runnable {
-          def run {
-            resetPendingLock.synchronized {
-              resetPresentationCompiler
-              resetPending = false
-            }
-          }
-        })
-      }
-    }
   }
   
   def buildManager = {
