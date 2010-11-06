@@ -20,13 +20,18 @@ import scala.tools.nsc.util.BatchSourceFile
 import scala.tools.nsc.io.AbstractFile
 import scala.tools.eclipse.refactoring.EditorHelpers
 
-import javaelements.{ScalaSourceFile, ScalaClassFile}
+import javaelements.{ScalaSourceFile, ScalaClassFile, ScalaCompilationUnit}
 import util.EclipseFile
 
 class ScalaHyperlinkDetector extends AbstractHyperlinkDetector {
   def detectHyperlinks(viewer : ITextViewer, region : IRegion, canShowMultipleHyperlinks : Boolean) : Array[IHyperlink] = {
-    EditorHelpers.withCurrentScalaSourceFile { ssf =>
-      ssf.withSourceFile { (sourceFile, compiler) =>
+    val textEditor = getAdapter(classOf[ITextEditor]).asInstanceOf[ITextEditor]
+	Option(EditorUtility.getEditorInputJavaElement(textEditor, false)).flatMap { _ match {
+    	case scu : ScalaCompilationUnit => Some(scu)
+    	case _ => None
+      }
+    }.map { scu =>
+      scu.withSourceFile { (sourceFile, compiler) =>
 	    val wordRegion = ScalaWordFinder.findWord(viewer.getDocument, region.getOffset)
 	    if (wordRegion == null || wordRegion.getLength == 0) null else  {
           val pos = compiler.rangePos(sourceFile, wordRegion.getOffset, wordRegion.getOffset, wordRegion.getOffset + wordRegion.getLength)
@@ -70,7 +75,7 @@ class ScalaHyperlinkDetector extends AbstractHyperlinkDetector {
 	      	  }
 	     	  def findClassFile = {
 	     	 	val packName = sym.enclosingPackage.fullName
-	            val pfs = ssf.newSearchableEnvironment.nameLookup.findPackageFragments(packName, false)
+	            val pfs = scu.newSearchableEnvironment.nameLookup.findPackageFragments(packName, false)
 	     	    if (pfs eq null) None else find(pfs) {
 	              val top = sym.toplevelClass
 	              val name = top.name + (if (top.isModule) "$" else "") + ".class"
@@ -95,16 +100,14 @@ class ScalaHyperlinkDetector extends AbstractHyperlinkDetector {
                     var symMapping = (Nil : List[Symbol], Nil : List[Symbol])
 
                     def equiv(src : Symbol, clz : Symbol) = {
-                      src.decodedName == clz.decodedName && ((src,clz) match {
-	    	            case (_,_) if src.isMethod && clz.isMethod => 
-	    	             src.info.substSym(symMapping._1, symMapping._2) matches clz.info
-                        case (_,_) if src.isType == clz.isType && src.isClass == clz.isClass => true
-                        case (_,_) if src.isValue && clz.isValue => true
-                        case (_,_) if src.isModule && clz.isModule => true
-                        case (_,_) if (src.isPackage) && clz.sourceModule.isPackage => true
-	  	                case _ => false
-	    	          }
-	    	        )}
+                      src.decodedName == clz.decodedName && ( 
+	    	            if (src.isMethod && clz.isMethod) 
+	    	              src.info.substSym(symMapping._1, symMapping._2) matches clz.info
+	    	            else src.isPackage && clz.sourceModule.isPackage ||
+	    	                 src.isType && clz.isType ||
+                             src.isTerm && clz.isTerm 
+	    	          )
+	    	        }
 		    	  
 	    	        def traverse(srcsym : Symbol) {
 	    	          if (equiv(srcsym, owners.head)) owners.tail match {
@@ -136,7 +139,7 @@ class ScalaHyperlinkDetector extends AbstractHyperlinkDetector {
 	        }
 	      } match {
 	        case Some(hyper) => Left(Array[IHyperlink](hyper))
-	        case None => Right( () => codeSelect(viewer, wordRegion) )
+	        case None => Right( () => codeSelect(textEditor, wordRegion, scu) )
 	      }
 	    } match {
 	   	  case Left(l) => l
@@ -147,34 +150,29 @@ class ScalaHyperlinkDetector extends AbstractHyperlinkDetector {
   }
   
   //Default path used for selecting.
-  def codeSelect(viewer : ITextViewer, wordRegion : IRegion) : Array[IHyperlink] = {
-	val offset = wordRegion.getOffset
-    val textEditor = getAdapter(classOf[ITextEditor]).asInstanceOf[ITextEditor]
+  def codeSelect(textEditor : ITextEditor, wordRegion : IRegion, scu : ScalaCompilationUnit) : Array[IHyperlink] = {
     textEditor.getAction("OpenEditor") match {
 	  case openAction : SelectionDispatchAction =>
-		val input = EditorUtility.getEditorInputJavaElement(textEditor, false)
-        if (input eq null) null else {
-         try {
-           val editorInput = textEditor.getEditorInput
-           val project = ScalaPlugin.plugin.getScalaProject(editorInput)
-           val document = textEditor.getDocumentProvider.getDocument(editorInput)
-           def isLinkable(element : IJavaElement) = {
-             import IJavaElement._
-             element.getElementType match {
-               case PACKAGE_DECLARATION | PACKAGE_FRAGMENT | PACKAGE_FRAGMENT_ROOT | JAVA_PROJECT | JAVA_MODEL => false
-               case _ => true
-             }
-           }
+        try {
+          val editorInput = textEditor.getEditorInput
+          val project = ScalaPlugin.plugin.getScalaProject(editorInput)
+          val document = textEditor.getDocumentProvider.getDocument(editorInput)
+          def isLinkable(element : IJavaElement) = {
+            import IJavaElement._
+            element.getElementType match {
+              case PACKAGE_DECLARATION | PACKAGE_FRAGMENT | PACKAGE_FRAGMENT_ROOT | JAVA_PROJECT | JAVA_MODEL => false
+              case _ => true
+            }
+          }
 
-           val elements = input.asInstanceOf[ICodeAssist].codeSelect(wordRegion.getOffset, wordRegion.getLength).filter(e => e != null && isLinkable(e))
-           if (elements.length == 0) null else {
-             val qualify = elements.length > 1
-             elements.map(new JavaElementHyperlink(wordRegion, openAction.asInstanceOf[SelectionDispatchAction], _, qualify))
-           }
-         } catch {
-           case _ => null
-         }    	  
-      }
+          val elements = scu.asInstanceOf[ICodeAssist].codeSelect(wordRegion.getOffset, wordRegion.getLength).filter(e => e != null && isLinkable(e))
+          if (elements.length == 0) null else {
+            val qualify = elements.length > 1
+            elements.map(new JavaElementHyperlink(wordRegion, openAction.asInstanceOf[SelectionDispatchAction], _, qualify))
+          }
+        } catch {
+          case _ => null
+        }    	  
 	  case _ => null
 	}
   }
