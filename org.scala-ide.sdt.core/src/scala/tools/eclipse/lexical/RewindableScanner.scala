@@ -16,8 +16,11 @@ class RewindableScanner(scanner: ICharacterScanner) extends ICharacterScanner {
   }
 
   def rewind() = {
-    for (i <- 1 to readCount)
-      scanner.unread()
+    var i = 0
+	while(i < readCount) {
+		scanner.unread()
+		i += 1
+	}
     readCount = 0
   }
 
