@@ -11,8 +11,6 @@ import ch.epfl.lamp.fjbg.JObjectType
 import ch.epfl.lamp.fjbg.JType
 import scala.collection.mutable.ArrayBuffer
 import scala.util.control.Breaks._
-import scala.tools.eclipse.util.Continuation
-import Continuation._
 import scala.tools.nsc.symtab.Flags
 
 import org.eclipse.jdt.core.Signature
@@ -66,58 +64,6 @@ class ScalaSelectionEngine(nameEnvironment : SearchableEnvironment, requestor : 
       val ssr = requestor.asInstanceOf[ScalaSelectionRequestor]
       var fallbackToDefaultLookup = true
   
-      def selectFromTypeTree(t : compiler.TypeTree, pos : Position) : compiler.Symbol = {
-        val tpe = t.tpe
-        val orig = t.original
-        (t.tpe, t.original) match {
-          case (tr : compiler.TypeRef, att : compiler.AppliedTypeTree) =>
-            selectFromTypeTree0(tr, att, pos)
-          case (_, compiler.SelectFromTypeTree(qual : compiler.TypeTree, name)) if qual.pos overlaps pos =>
-            selectFromTypeTree(qual, pos)
-          case (_, compiler.TypeBoundsTree(lo : compiler.TypeTree, _)) if lo.pos overlaps pos =>
-            selectFromTypeTree(lo, pos)
-          case (_, compiler.TypeBoundsTree(_, hi : compiler.TypeTree)) if hi.pos overlaps pos =>
-            selectFromTypeTree(hi, pos)
-          case (_, sel : compiler.Select) => sel.symbol
-          case (_, ident : compiler.Ident) => ident.symbol
-          case (_, compound : compiler.CompoundTypeTree) => {
-            if (compound.tpe != null && compound.tpe.typeSymbol != null && compound.tpe.typeSymbol.isRefinementClass)
-              compound.tpe.typeSymbol.info match {
-                case tpe : RefinedType =>
-                  tpe.parents.zip(compound.templ.parents).find {
-                    case (tpe, tree) => tree.pos overlaps pos
-                  } match {
-                    case Some((tpe, tree)) => tpe.typeSymbolDirect
-                    case _ => t.tpe.typeSymbolDirect
-                  }
-                
-                case _ => t.tpe.typeSymbolDirect
-              }
-            else
-              t.tpe.typeSymbolDirect
-          }
-          case _ => t.tpe.typeSymbolDirect
-        }
-      }
-  
-      def selectFromTypeTree0(tr : compiler.TypeRef, att : compiler.AppliedTypeTree, pos : Position) : compiler.Symbol =
-        (tr, att) match {
-          case (compiler.TypeRef(pre, sym, args0), compiler.AppliedTypeTree(tpt, args1)) =>
-            if (pos overlaps tpt.pos)
-              tr.typeSymbolDirect
-            else {
-              val pargs = args0 zip args1
-              val arg = pargs.find(pos overlaps _._2.pos)
-              arg match {
-                case Some((tr2 : compiler.TypeRef, att2 : compiler.AppliedTypeTree)) =>
-                  selectFromTypeTree0(tr2, att2, pos)
-                case Some((tpe, _)) => tpe.typeSymbolDirect
-                case _ => tr.typeSymbolDirect
-              }
-            }
-          case _ => tr.typeSymbolDirect
-        }
-      
       def qual(tree : compiler.Tree): Tree = tree.symbol.info match {
         case compiler.analyzer.ImportType(expr) => expr
         case _ => tree
@@ -214,38 +160,36 @@ class ScalaSelectionEngine(nameEnvironment : SearchableEnvironment, requestor : 
       val typed = new compiler.Response[compiler.Tree]
       compiler.askTypeAt(pos, typed)
       val typedRes = typed.get
-      val cont : Continuation[Unit] = compiler.ask { () => typedRes.left.toOption match {
+      compiler.ask { () => typedRes.left.toOption match {
         case Some(tree) => {
           tree match {
             case i : compiler.Ident =>
               val sym = i.symbol
               sym match {
                 case c : compiler.ClassSymbol =>
-                  Continuation (acceptType(c))
+                  acceptType(c)
                 case m : compiler.ModuleSymbol =>
-                  Continuation (acceptType(m))
+                  acceptType(m)
                 case t : compiler.TermSymbol if t.isValueParameter => 
-                  Continuation {
-                    val typed = new Response[compiler.Tree]
-                    compiler.askTypeAt(t.owner.pos, typed)
-                    val ownerTree = typed.get.left.toOption 
-                    ownerTree match {
-                      case Some(compiler.DefDef(_, _, _, paramss, _, _)) =>
-                        for(params <- paramss ; param <- params if param.name.toString == t.nameString)
-                          acceptLocalDefinition(param.symbol)
-                      case Some(compiler.Function(vparams, _)) =>
-                        for(param <- vparams if param.name.toString == t.nameString)
-                          acceptLocalDefinition(param.symbol)
-                      case Some(compiler.Apply(_, _)) =>
-                        acceptLocalDefinition(t)
-                      case _ =>
-                        println("Unhandled: "+t.getClass.getName)
-                    }
+                  val typed = new Response[compiler.Tree]
+                  compiler.askTypeAt(t.owner.pos, typed)
+                  val ownerTree = typed.get.left.toOption 
+                  ownerTree match {
+                    case Some(compiler.DefDef(_, _, _, paramss, _, _)) =>
+                      for(params <- paramss ; param <- params if param.name.toString == t.nameString)
+                        acceptLocalDefinition(param.symbol)
+                    case Some(compiler.Function(vparams, _)) =>
+                      for(param <- vparams if param.name.toString == t.nameString)
+                        acceptLocalDefinition(param.symbol)
+                    case Some(compiler.Apply(_, _)) =>
+                      acceptLocalDefinition(t)
+                    case _ =>
+                      println("Unhandled: "+t.getClass.getName)
                   }
                 case t : compiler.TermSymbol if t.isMethod && t.pos.isDefined =>
-                  Continuation (ssr.addElement(ssr.findLocalElement(t.pos.startOrPoint)))
+                  ssr.addElement(ssr.findLocalElement(t.pos.startOrPoint))
                 case t : compiler.TermSymbol if t.pos.isDefined =>
-                  Continuation (acceptLocalDefinition(t))
+                  acceptLocalDefinition(t)
                 case _ =>
                   println("Unhandled: "+sym.getClass.getName)
               }
@@ -254,71 +198,38 @@ class ScalaSelectionEngine(nameEnvironment : SearchableEnvironment, requestor : 
               val sym = s.symbol
               if (sym.hasFlag(Flags.JAVA)) {
                 if (sym.isModule || sym.isClass)
-                  Continuation (acceptType(sym))
+                  acceptType(sym)
                 else if (sym.isMethod)
-                  Continuation (acceptMethod(sym))
+                  acceptMethod(sym)
                 else
-                  Continuation (acceptField(sym))
+                  acceptField(sym)
               } else if (sym.owner.isAnonymousClass && sym.pos.isDefined) {
-                Continuation (ssr.addElement(ssr.findLocalElement(sym.pos.startOrPoint)))
+                ssr.addElement(ssr.findLocalElement(sym.pos.startOrPoint))
               } else if (sym.hasFlag(Flags.ACCESSOR|Flags.PARAMACCESSOR)) {
-                Continuation (acceptField(sym))
+                acceptField(sym)
               } else if (sym.isModule || sym.isClass) {
-                Continuation (acceptType(sym))
+                acceptType(sym)
               } else
-        	    Continuation (acceptMethod(sym))
-              
-            case t0 : compiler.TypeTree if t0.symbol != null =>
-              val t = selectFromTypeTree(t0, pos)
-              val symbol = t.tpe.typeSymbolDirect
-              val symbol0 = t.tpe.typeSymbol
-              if (!symbol.pos.isDefined) {
-                if (isPrimitiveType(symbol0) || isSpecialType(symbol0) || isSpecialType(symbol))
-                  fallbackToDefaultLookup = false
-                else
-                  Continuation (acceptType(symbol0))
-              } else {
-                val owner = symbol.owner
-                if (owner.isClass) {
-                  if (symbol.isClass) {
-                    symbol match {
-                      case c : compiler.ClassSymbol =>
-                        Continuation (acceptType(c))
-                      case m : compiler.ModuleSymbol =>
-                        Continuation (acceptType(m))
-                      case _ =>
-                        println("Unhandled: "+tree.getClass.getName)
-                    }
-                  } else if (symbol.isTypeParameter){
-                    if (symbol.pos.isDefined) {
-                      Continuation (acceptLocalDefinition(symbol))
-                    }
-                  } else {
-                    Continuation (acceptField(symbol))
-                  }
-                } else if (symbol.pos.isDefined){
-                  Continuation (acceptLocalDefinition(symbol))
-                }
-              }
+        	    acceptMethod(sym)
               
             case a@compiler.Annotated(atp, _) =>
-              Continuation (acceptTypeWithFlags(atp.symbol, ClassFileConstants.AccAnnotation))
+              acceptTypeWithFlags(atp.symbol, ClassFileConstants.AccAnnotation)
               
             case i@compiler.Import(expr, selectors) =>
               def acceptSymbol(sym : compiler.Symbol) {
                 sym match {
                   case c : compiler.ClassSymbol =>
-                    Continuation (acceptType(c))
+                    acceptType(c)
                   case m : compiler.ModuleSymbol =>
-                    Continuation (acceptType(m))
+                    acceptType(m)
                   case f : compiler.TermSymbol if f.hasFlag(Flags.ACCESSOR|Flags.PARAMACCESSOR) =>
-                    Continuation (acceptField(f))
+                    acceptField(f)
                   case m : compiler.TermSymbol if m.isMethod =>
-                    Continuation (acceptMethod(m))
+                    acceptMethod(m)
                   case f : compiler.TermSymbol =>
-                    Continuation (acceptField(f))
+                    acceptField(f)
                   case t : compiler.TypeSymbol =>
-                    Continuation (acceptField(t))
+                    acceptField(t)
                   case _ =>
                     println("Unhandled: "+tree.getClass.getName)
                 }
@@ -332,7 +243,7 @@ class ScalaSelectionEngine(nameEnvironment : SearchableEnvironment, requestor : 
                 }
                 val tree = findInSelect(q)
                 val sym = tree.symbol
-                Continuation (acceptSymbol(sym)) 
+                acceptSymbol(sym) 
               } else
                 selectors.find({ case compiler.ImportSelector(name, pos, _, _) => pos >= selectionStart && pos+name.length-1 <= selectionEnd }) match {
                   case Some(compiler.ImportSelector(name, _, _, _)) =>
@@ -342,16 +253,16 @@ class ScalaSelectionEngine(nameEnvironment : SearchableEnvironment, requestor : 
                       case s => s
                     }
                     val syms = if (sym0.hasFlag(Flags.OVERLOADED)) sym0.alternatives  else List(sym0)
-                    Continuation (syms.map(acceptSymbol))
+                    syms.map(acceptSymbol)
                   case _ =>
                 }
               
             case l@(_ : ValDef | _ : Bind | _ : ClassDef | _ : ModuleDef | _ : TypeDef | _ : DefDef) =>
               val sym = l.symbol 
               if (sym.isLocal)  
-                Continuation (acceptLocalDefinition(l.symbol))
+                acceptLocalDefinition(l.symbol)
               else
-                Continuation (ssr.addElement(ssr.findLocalElement(pos.startOrPoint)))
+                ssr.addElement(ssr.findLocalElement(pos.startOrPoint))
               
             case _ =>
               println("Unhandled: "+tree.getClass.getName)
@@ -361,7 +272,6 @@ class ScalaSelectionEngine(nameEnvironment : SearchableEnvironment, requestor : 
           println("No tree")
         }
       }
-      cont()
 
       if (!ssr.hasSelection && fallbackToDefaultLookup) {
         // only reaches here if no selection could be derived from the parsed tree
