@@ -1,5 +1,6 @@
 <aspectj>
 <aspects>
+<aspect name="org.eclipse.jdt.core.dom.ASTConverterAspect"/>
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.builderoptions.ScalaJavaBuilderAspect"/>
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.cfprovider.ClassFileProviderAspect"/>
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.core.BindingKeyAspect"/>
