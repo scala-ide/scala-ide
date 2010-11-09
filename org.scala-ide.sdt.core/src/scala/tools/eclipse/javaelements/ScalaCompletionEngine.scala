@@ -142,7 +142,8 @@ class ScalaCompletionEngine {
               (n, c0, s0)
           }
           
-          val sig0 = encodedJavaType(tpe).getSignature.replace('/', '.')
+          val type0 = encodedJavaType(tpe)
+          val sig0 = if (type0 == JType.UNKNOWN) "void" else type0.getSignature.replace('/', '.')
           val sig = if (sig0.startsWith("(")) sig0 else "()"+sig0
           
           val jtOwner = encodedJavaType(sym.owner.tpe)
