@@ -95,6 +95,10 @@ class ScalaClassFile(parent : PackageFragment, name : String, sourceFile : Strin
 
   def getFileName() : Array[Char] =
     getPath.toString.toCharArray
+    
+  override def validateExistence(underlyingResource : IResource) : IStatus = {
+	if ((underlyingResource ne null) && !underlyingResource.isAccessible) newDoesNotExistStatus() else JavaModelStatus.VERIFIED_OK
+  }
 
   def getProblems : Array[IProblem] = null
     
@@ -104,10 +108,10 @@ class ScalaClassFile(parent : PackageFragment, name : String, sourceFile : Strin
   def generateInfos0(info : AnyRef, newElements : JHashMap[_, _], monitor : IProgressMonitor) =
     super.generateInfos(info, newElements, monitor)
   def getBufferManager0() = super.getBufferManager()
+  def validateExistence0(underlying : IResource) : IStatus = validateExistence(underlying)
   def hasBuffer0() : Boolean = super.hasBuffer()
   def openBuffer0(pm : IProgressMonitor, info : Object) = super.openBuffer(pm, info)
   def resourceExists0(underlyingResource : IResource) = super.resourceExists(underlyingResource) 
-  def validateExistence0(underlyingResource : IResource) : IStatus = super.validateExistence(underlyingResource)
   def openAncestors0(newElements : JHashMap[_, _], monitor : IProgressMonitor) { super.openAncestors(newElements, monitor) }
   def getHandleMementoDelimiter0() = super.getHandleMementoDelimiter()
   def isSourceElement0() : Boolean = super.isSourceElement()
