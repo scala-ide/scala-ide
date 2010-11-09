@@ -20,7 +20,8 @@ Require-Bundle:
  org.eclipse.ui.editors,
  org.eclipse.ui.ide,
  org.eclipse.ui.workbench.texteditor,
- org.eclipse.jdt.debug.ui
+ org.eclipse.jdt.debug.ui,
+ org.aspectj.runtime
 Eclipse-SupplementBundle: 
  org.eclipse.debug.core,
  org.eclipse.jdt.core,
