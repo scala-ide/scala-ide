@@ -28,7 +28,7 @@ object ScalaCodeScanner {
   class OperatorRule(fToken : IToken) extends IRule {
 
     /** Scala operators */
-    val JAVA_OPERATORS = Array(';', '.', '=', '/', '\\', '+', '-', '*', '<', '>', ':', '?', '!', ',', '|', '&', '^', '%', '~')
+    val OPERATORS = Set(';', '.', '=', '/', '\\', '+', '-', '*', '<', '>', ':', '?', '!', ',', '|', '&', '^', '%', '~')
 
     /**
      * Is this character an operator character?
@@ -36,7 +36,7 @@ object ScalaCodeScanner {
      * @param character Character to determine whether it is an operator character
      * @return <code>true</code> iff the character is an operator, <code>false</code> otherwise.
      */
-    def isOperator(character : Char) = JAVA_OPERATORS.contains(character)
+    def isOperator(character : Char) = OPERATORS.contains(character)
 
     /*
      * @see org.eclipse.jface.text.rules.IRule#evaluate(org.eclipse.jface.text.rules.ICharacterScanner)
@@ -58,14 +58,13 @@ object ScalaCodeScanner {
   }
 
   /**
-   * Rule to detect java brackets.
+   * Rule to detect brackets.
    *
    * @since 3.3
    */
   class BracketRule(fToken : IToken) extends IRule {
 
-    /** Java brackets */
-    val JAVA_BRACKETS = Array('(', ')', '{', '}', '[', ']')
+    val BRACKETS = Set('(', ')', '{', '}', '[', ']')
 
     /**
      * Is this character a bracket character?
@@ -73,7 +72,7 @@ object ScalaCodeScanner {
      * @param character Character to determine whether it is a bracket character
      * @return <code>true</code> iff the character is a bracket, <code>false</code> otherwise.
      */
-    def isBracket(character : Char) = JAVA_BRACKETS.contains(character)
+    def isBracket(character : Char) = BRACKETS.contains(character)
 
     /*
      * @see org.eclipse.jface.text.rules.IRule#evaluate(org.eclipse.jface.text.rules.ICharacterScanner)
