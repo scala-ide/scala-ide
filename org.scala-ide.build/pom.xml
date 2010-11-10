@@ -9,7 +9,7 @@
   <packaging>pom</packaging>
 
   <properties>
-    <scala.version>2.8.0</scala.version>
+    <scala.version>2.8.1</scala.version>
     <tycho.version>0.9.0</tycho.version>
     <maven.compiler.source>1.5</maven.compiler.source>
     <maven.compiler.target>1.5</maven.compiler.target>
@@ -201,36 +201,6 @@
       </repositories>
     </profile>
     <profile>
-      <id>scala-2.8.1.RC2</id>
-      <activation>
-        <property>
-          <name>scala.version</name>
-          <value>2.8.1.RC2</value>
-        </property>
-      </activation>
-      <repositories>
-        <repository>
-          <id>scala-refactoring-2.8.1.RC2</id>
-          <name>Scala Refactoring Scala 2.8.1.RC2 p2 repository</name>
-          <layout>p2</layout>
-          <url>http://download.scala-ide.org/scala-refactoring-2.8.1.RC2</url>
-          <snapshots><enabled>false</enabled></snapshots>
-        </repository>
-        <repository>
-          <id>scalariform-2.8.1.RC2</id>
-          <name>Scalariform Scala 2.8.1.RC2 p2 repo</name>
-          <layout>p2</layout>
-          <url>http://download.scala-ide.org/scalariform-2.8.1.RC2</url>
-        </repository>
-        <repository>
-          <id>scala-toolchain-2.8.1.RC2</id>
-          <name>Scala Toolchain 2.8.1.RC2 p2 repository</name>
-          <layout>p2</layout>
-          <url>http://download.scala-ide.org/scala-eclipse-toolchain-osgi-2.8.1.RC2</url>
-        </repository>
-      </repositories>
-    </profile>
-    <profile>
       <id>scala-2.8.0-maintenance</id>
       <repositories>
         <repository>
@@ -259,27 +229,27 @@
       <activation>
         <property>
           <name>scala.version</name>
-          <value>2.8.1-SNAPSHOT</value>
+          <value>2.8.2-SNAPSHOT</value>
         </property>
       </activation>
       <repositories>
         <repository>
-          <id>scala-refactoring-2.8.1.alpha</id>
-          <name>Scala Refactoring Scala 2.8.1.alpha p2 repository</name>
+          <id>scala-refactoring-2.8.x</id>
+          <name>Scala Refactoring Scala 2.8.x p2 repository</name>
           <layout>p2</layout>
-          <url>http://download.scala-ide.org/scala-refactoring-2.8.1.alpha</url>
+          <url>http://download.scala-ide.org/scala-refactoring-2.8.x</url>
         </repository>
         <repository>
-          <id>scalariform-2.8.1.alpha</id>
-          <name>Scalariform Scala 2.8.1.alpha p2 repo</name>
+          <id>scalariform-2.8.x</id>
+          <name>Scalariform Scala 2.8.x p2 repo</name>
           <layout>p2</layout>
-          <url>http://download.scala-ide.org/scalariform-2.8.1.alpha</url>
+          <url>http://download.scala-ide.org/scalariform-2.8.x</url>
         </repository>
         <repository>
-          <id>scala-toolchain-2.8.1.alpha</id>
-          <name>Scala Toolchain 2.8.1.alpha p2 repository</name>
+          <id>scala-toolchain-2.8.x</id>
+          <name>Scala Toolchain 2.8.x p2 repository</name>
           <layout>p2</layout>
-          <url>http://download.scala-ide.org/scala-eclipse-toolchain-osgi-2.8.1.alpha</url>
+          <url>http://download.scala-ide.org/scala-eclipse-toolchain-osgi-2.8.x</url>
         </repository>
       </repositories>
     </profile>
@@ -358,17 +328,17 @@
       </dependencies>
       <repositories>
         <repository>
-          <id>scala-refactoring-2.8.1.alpha</id>
-          <name>Scala Refactoring Scala 2.8.1.alpha p2 repository</name>
+          <id>scala-refactoring-2.8.1.final</id>
+          <name>Scala Refactoring Scala 2.8.1.final p2 repository</name>
           <layout>p2</layout>
-          <url>http://download.scala-ide.org/scala-refactoring-2.8.1.alpha</url>
+          <url>http://download.scala-ide.org/scala-refactoring-2.8.1.final</url>
           <snapshots><enabled>false</enabled></snapshots>
         </repository>
         <repository>
-          <id>scalariform-2.8.1.alpha</id>
-          <name>Scalariform Scala 2.8.1.alpha p2 repo</name>
+          <id>scalariform-2.8.1.final</id>
+          <name>Scalariform Scala 2.8.1.final p2 repo</name>
           <layout>p2</layout>
-          <url>http://download.scala-ide.org/scalariform-2.8.1.alpha</url>
+          <url>http://download.scala-ide.org/scalariform-2.8.1.final</url>
         </repository>
       </repositories>
     </profile>
