@@ -32,8 +32,6 @@ import scala.tools.eclipse.formatter.ScalaFormattingStrategy
 class ScalaSourceViewerConfiguration(store : IPreferenceStore, editor : ITextEditor)
   extends JavaSourceViewerConfiguration(JavaPlugin.getDefault.getJavaTextTools.getColorManager, store, editor, IJavaPartitions.JAVA_PARTITIONING) {
 
-  import ScalaSourceViewerConfigurationUtils._
-
   private val codeScanner = new ScalaCodeScanner(getColorManager, store);
 
   override def getPresentationReconciler(sv : ISourceViewer) = {
@@ -64,33 +62,16 @@ class ScalaSourceViewerConfiguration(store : IPreferenceStore, editor : ITextEdi
   override def getTextHover(sv : ISourceViewer, contentType : String, stateMask : Int) = {
     val javaHover = super.getTextHover(sv, contentType, stateMask)
 
-    def addHover(hover : AbstractJavaEditorTextHover) = {
-      hover.setEditor(editor)
-      javaHover match {
-        case bmh : BestMatchHover => addTextHover(bmh, hover) ; bmh
-        case _ => hover
-      }
-    }
-
     stateMask match {
-      case SWT.MOD3 => addHover(new ScalaDebugHover)
+      case SWT.MOD3 => new ScalaDebugHover
       case _ => javaHover
     }
   }
 
   override def getHyperlinkDetectors(sv : ISourceViewer) = {
-    val javaDetectors = super.getHyperlinkDetectors(sv)
-    if (javaDetectors == null)
-      null
-    else {
-      val shd = new ScalaHyperlinkDetector
-      shd.setContext(editor)
-      javaDetectors.map(d =>
-        if (getHyperlinkDescriptor(d).getId == "org.eclipse.jdt.internal.ui.javaeditor.JavaElementHyperlinkDetector")
-          shd
-        else
-          d)
-    }
+    val shd = new ScalaHyperlinkDetector
+    shd.setContext(editor)
+    Array(shd)
   }
 
   /**
@@ -146,15 +127,4 @@ class ScalaSourceViewerConfiguration(store : IPreferenceStore, editor : ITextEdi
     contentFormatter.setFormattingStrategy(new ScalaFormattingStrategy(sourceViewer), IDocument.DEFAULT_CONTENT_TYPE)
 	contentFormatter
   }
-
-}
-
-object ScalaSourceViewerConfigurationUtils extends ReflectionUtils {
-  val bestMatchHoverClazz = classOf[BestMatchHover]
-  val addTextHoverMethod = getDeclaredMethod(bestMatchHoverClazz, "addTextHover", classOf[ITextHover])
-  val hyperlinkDetectorDelegateClazz = Class.forName("org.eclipse.ui.texteditor.HyperlinkDetectorRegistry$HyperlinkDetectorDelegate")
-  val hyperlinkDescriptorField = getDeclaredField(hyperlinkDetectorDelegateClazz, "fHyperlinkDescriptor")
-
-  def addTextHover(bmh : BestMatchHover, hover : ITextHover) = addTextHoverMethod.invoke(bmh, hover)
-  def getHyperlinkDescriptor(hdd : IHyperlinkDetector) = hyperlinkDescriptorField.get(hdd).asInstanceOf[HyperlinkDetectorDescriptor]
 }
