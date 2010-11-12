@@ -43,7 +43,7 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
     if (e.getBuffer.isClosed)
       discard
     else
-      project.withPresentationCompiler(_.askReload(this, content))
+      project.withPresentationCompiler(_.askReload(this, getContents))
 
     super.bufferChanged(e)
   }
@@ -57,10 +57,8 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
     super.close
   }
   
-  def content = getContents
-  
   def createSourceFile : BatchSourceFile = {
-    new BatchSourceFile(file, content)
+    new BatchSourceFile(file, getContents)
   }
 
   def getProblemRequestor : IProblemRequestor = null

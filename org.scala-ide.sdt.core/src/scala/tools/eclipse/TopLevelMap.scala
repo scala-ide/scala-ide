@@ -15,7 +15,7 @@ import scala.tools.nsc.io.AbstractFile
 import scala.tools.nsc.reporters.{ ConsoleReporter, Reporter }
 
 import scala.tools.eclipse.util.EclipseFile
-
+/*
 class TopLevelMap {
   val settings = new Settings(error)
   settings.classpath.value = ScalaPlugin.plugin.libClasses.get.toOSString
@@ -86,3 +86,4 @@ class TopLevelMap {
     }
   }
 }
+*/

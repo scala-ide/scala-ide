@@ -126,51 +126,6 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
     sourceFiles.keysIterator.foreach(_.scheduleReconcile)
     askShutdown
   }
- 
-  /*class EclipseTyperRun extends TyperRun {
-    override def compileSourceFor(context : Context, name : Name) = {
-      def addImport(imp : analyzer.ImportInfo) = {
-        val qual = imp.qual
-        val sym = qual.symbol
-        sym.isPackage && {
-          var selectors = imp.tree.selectors
-          if (selectors.head.name == name.toTermName)
-            compileSourceFor(sym.fullName+"."+name)
-          else if (selectors.head.name == nme.WILDCARD)
-            compileSourceFor(sym.fullName+"."+name)
-          else
-            false
-        }
-      }
-      
-      context.imports.exists(addImport) || {
-        val pkg = context.owner.enclosingPackage
-        compileSourceFor(pkg.fullName+"."+name)
-      }
-    }
-
-    override def compileSourceFor(qual : Tree, name : Name) = {
-      val sym = qual.symbol
-      sym != null && sym.isPackage && compileSourceFor(sym.fullName+"."+name)
-    }
-    
-    def compileSourceFor(qualifiedName : String) : Boolean = {
-      project.findSource(qualifiedName) match {
-        case Some(iFile) if (!project.isStandardSource(iFile, qualifiedName)) =>
-          val file = new EclipseFile(iFile)
-          if (compiledFiles contains file.path)
-            false
-          else {
-            println("Adding: "+file+" to resolve: "+qualifiedName)
-            compileLate(file)
-            true
-          }
-        case _ => false
-      }
-    }
-  }
-  
-  override def newTyperRun = new EclipseTyperRun*/
 }
 
 object ScalaPresentationCompiler {

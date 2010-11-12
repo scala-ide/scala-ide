@@ -76,15 +76,6 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
       })
   }
 
-  override def doSave(pm: IProgressMonitor): Unit = {
-    val project = ScalaPlugin.plugin.getScalaProject(getEditorInput)
-    getEditorInput match {
-      case fei: IFileEditorInput => project.updateTopLevelMap(fei.getFile)
-      case _ =>
-    }
-    super.doSave(pm)
-  }
-
   private[eclipse] def sourceViewer = getSourceViewer
 
   private var occurrenceAnnotations: Array[Annotation] = _

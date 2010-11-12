@@ -34,25 +34,4 @@ class ScalaSourceFileEditorTest {
     compilationUnit = createCompilationUnit(pack, "AClass.scala", sourceCode.toString)
     Thread.sleep(200)
   }
-     
-  @Test
-  def testTopLevelMapRefresh() {
-	import eclipseInstance._
-	
-	openInEditor(compilationUnit)
-    sourceCode.append("class AnotherClass {}")
-    setContentOfCurrentEditor(sourceCode.toString)
-    saveCurrentEditor();
-    
-    //the TopLevel is computed for the old source 
-    var file = scalaProject.topLevelMap.typeToFile.get("test.top_level.AClass")  
-    assertEquals("/test_project/src/test/top_level/AClass.scala", file.get.getFullPath.toString)
-    
-    //BUG
-    file = scalaProject.topLevelMap.typeToFile.get("test.top_level.AnotherClass")
-    file match {
-	  case None => fail("Top level map entry not found")
-	  case Some(f) => assertEquals("/test_project/src/test/top_level/AClass.scala", f.getFullPath.toString) 
-	}
-  }
 }

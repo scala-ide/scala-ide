@@ -30,7 +30,6 @@ class ScalaProject(val underlying : IProject) {
   import ScalaPlugin.plugin
 
   private var classpathUpdate : Long = IResource.NULL_STAMP
-  private var topLevelMap0 : TopLevelMap = null
   private var buildManager0 : EclipseBuildManager = null
   private var hasBeenBuilt = false
   private val depFile = underlying.getFile(".scala_dependencies")
@@ -330,20 +329,6 @@ class ScalaProject(val underlying : IProject) {
     }
   }
   
-  def topLevelMap = {
-    if (topLevelMap0 == null) {
-      topLevelMap0 = new TopLevelMap
-      println("Building top-level map for: "+underlying.getName)
-      val start = System.currentTimeMillis
-      allSourceFiles.map(topLevelMap0.update)
-      val end = System.currentTimeMillis
-      println("Time: "+(end-start))
-    }
-    topLevelMap0
-  }
-  
-  def findSource(qualifiedName : String) = topLevelMap.get(qualifiedName)
-  
   def isStandardSource(file : IFile, qualifiedName : String) : Boolean = {
     val pathString = file.getLocation.toString
     val suffix = qualifiedName.replace(".", "/")+".scala"
@@ -352,14 +337,6 @@ class ScalaProject(val underlying : IProject) {
       val sourceFolderPath = file.getLocation.removeLastSegments(suffixPath.segmentCount)
       sourceFolders.exists(_.getLocation == sourceFolderPath)
     }
-  }
-  
-  def updateTopLevelMap(file : IFile) {
-    topLevelMap.update(file)
-  }
-  
-  def resetTopLevelMap {
-    topLevelMap0 = null
   }
   
   def withPresentationCompiler[T](op : ScalaPresentationCompiler => T) : T = {
@@ -427,7 +404,6 @@ class ScalaProject(val underlying : IProject) {
   }
   
   def resetCompilers = {
-    resetTopLevelMap
     resetBuildCompiler
     resetPresentationCompiler
   }
