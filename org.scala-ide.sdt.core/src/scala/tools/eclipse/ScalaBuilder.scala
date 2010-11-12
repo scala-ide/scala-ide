@@ -54,7 +54,7 @@ class ScalaBuilder extends IncrementalProjectBuilder {
           getDelta(project.underlying).accept(new IResourceDeltaVisitor {
             def visit(delta : IResourceDelta) = {
               delta.getResource match {
-                case file : IFile if plugin.isBuildable(file) && project.sourceFolders.exists(_.getLocation.isPrefixOf(file.getLocation)) =>
+                case file : IFile if plugin.isBuildable(file) && project.sourceFolderPaths.exists(_.isPrefixOf(file.getLocation)) =>
                   delta.getKind match {
                     case IResourceDelta.ADDED | IResourceDelta.CHANGED =>
                       addedOrUpdated0 += file
