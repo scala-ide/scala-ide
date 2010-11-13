@@ -60,24 +60,26 @@ object EclipseResource {
     }
   }
 }
-
+// for equals/hashCode using path is better but need to many computation see ticket #1000193
 abstract class EclipseResource[R <: IResource] extends AbstractFile {
   val underlying : R
   
   def name: String = underlying.getName
-
-  def path: String = {
+  
+  private def location = {
     if (underlying == null)
       throw new NullPointerException("underlying == null")
     else if (underlying.getLocation == null)
       throw new NullPointerException("underlying.getLocation == null for: "+underlying)
       
-    underlying.getLocation.toOSString
+    underlying.getLocation
   }
+
+  def path: String = location.toOSString
 
   def container : AbstractFile = new EclipseContainer(underlying.getParent)
   
-  def file: File = underlying.getLocation.toFile
+  def file: File = location.toFile
 
   def lastModified: Long = underlying.getLocalTimeStamp
   
@@ -88,11 +90,11 @@ abstract class EclipseResource[R <: IResource] extends AbstractFile {
   def absolute = this
   
   override def equals(other : Any) : Boolean = other match {
-    case otherRes : EclipseResource[r] => path == otherRes.path
+    case otherRes : EclipseResource[r] => underlying == otherRes.underlying
     case _ => false
   }
 
-  override def hashCode() : Int = path.hashCode
+  override def hashCode() : Int = underlying.hashCode
 }
 
 class EclipseFile(override val underlying : IFile) extends EclipseResource[IFile] {
