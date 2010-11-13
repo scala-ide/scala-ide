@@ -9,7 +9,6 @@ import scala.collection.immutable.Set
 import scala.collection.mutable.{ LinkedHashSet, HashMap, HashSet }
 
 import java.io.File.pathSeparator
-import java.net.URI
 
 import org.eclipse.core.resources.{ IContainer, IFile, IFolder, IMarker, IProject, IResource, IResourceProxy, IResourceProxyVisitor, IWorkspaceRunnable }
 import org.eclipse.core.runtime.{ FileLocator, IPath, IProgressMonitor, Path }
@@ -19,7 +18,6 @@ import org.eclipse.jdt.internal.core.JavaProject
 import org.eclipse.jdt.internal.core.builder.{ ClasspathDirectory, ClasspathLocation, NameEnvironment }
 import org.eclipse.jdt.internal.core.util.Util
 import org.eclipse.swt.widgets.Display
-import org.eclipse.core.resources.ResourcesPlugin
 
 import scala.tools.nsc.Settings
 import scala.tools.nsc.util.SourceFile
@@ -85,15 +83,13 @@ class ScalaProject(val underlying : IProject) {
     JavaCore.create(underlying)
   }
 
-  def sourceFolderAbsolutePaths : Seq[IPath] = {
+  def sourceFolders : Seq[IPath] = {
 	val all = for (cpe <- javaProject.getResolvedClasspath(true) if cpe.getEntryKind == IClasspathEntry.CPE_SOURCE)
-	  yield ResourcesPlugin.getWorkspace().getRoot().getFile(cpe.getPath).getLocation
+	  yield {
+		val resource = plugin.workspaceRoot.findMember(cpe.getPath)
+		if (resource == null) null else resource.getLocation
+	}
 	all.filter{_ ne null}
-  }
-  
-  def sourceFolderPaths : Seq[IPath] = {
-	for (cpe <- javaProject.getResolvedClasspath(true) if cpe.getEntryKind == IClasspathEntry.CPE_SOURCE)
-	  yield cpe.getPath
   }
   
   def outputFolders : Seq[IPath] = {
@@ -112,11 +108,21 @@ class ScalaProject(val underlying : IProject) {
       val cpes = javaProject.getResolvedClasspath(true)
 
       // A slightly confusing code to avoid adding our own output to classpath.
-      for (cpe <- cpes if (!exportedOnly || cpe.isExported) || (cpe.getEntryKind == IClasspathEntry.CPE_SOURCE && exportedOnly)) cpe.getEntryKind match {
+      for (cpe <- cpes if (!exportedOnly || cpe.isExported)) cpe.getEntryKind match {
         case IClasspathEntry.CPE_PROJECT => 
           val depProject = plugin.workspaceRoot.getProject(cpe.getPath.lastSegment)
-          if (JavaProject.hasJavaNature(depProject))
-            classpath(JavaCore.create(depProject), true)
+          if (JavaProject.hasJavaNature(depProject)) {
+            val depJava = JavaCore.create(depProject)
+        	for (cpe <- depJava.getResolvedClasspath(true) if cpe.getEntryKind == IClasspathEntry.CPE_SOURCE) {
+              val specificOutputLocation = cpe.getOutputLocation
+              val outputLocation = if (specificOutputLocation != null) specificOutputLocation else javaProject.getOutputLocation
+              if (outputLocation != null) {
+                val absPath = plugin.workspaceRoot.findMember(outputLocation)
+                if (absPath != null) path += absPath.getLocation
+              }
+        	}
+            classpath(depJava, true)
+          }
         case IClasspathEntry.CPE_LIBRARY =>   
           if (cpe.getPath != null) {
             val absPath = plugin.workspaceRoot.findMember(cpe.getPath)
@@ -125,18 +131,7 @@ class ScalaProject(val underlying : IProject) {
             else
               path += cpe.getPath
           }
-        case IClasspathEntry.CPE_SOURCE =>
-          val specificOutputLocation = cpe.getOutputLocation
-          val outputLocation =
-            if (specificOutputLocation != null)
-              specificOutputLocation
-            else
-              javaProject.getOutputLocation
-          if (outputLocation != null) {
-            val absPath = plugin.workspaceRoot.findMember(outputLocation)
-            if (absPath != null)
-              path += absPath.getLocation
-          }
+        case _ =>
       }
     }
     classpath(javaProject, false)
@@ -222,8 +217,8 @@ class ScalaProject(val underlying : IProject) {
   }
     
   def createOutputFolders = {
-    for(outputPath <- outputFolders) ResourcesPlugin.getWorkspace().getRoot().findContainersForLocation(outputPath) match {
-      case Array(fldr : IFolder) =>
+    for(outputPath <- outputFolders) plugin.workspaceRoot.findMember(outputPath) match {
+      case fldr : IFolder =>
         def createParentFolder(parent : IContainer) {
           if(!parent.exists()) {
             createParentFolder(parent.getParent)
@@ -305,17 +300,17 @@ class ScalaProject(val underlying : IProject) {
       settings.outputDirs.add(EclipseResource(src), EclipseResource(dst))
       
     // TODO Per-file encodings
-    val sfPaths = sourceFolderPaths
-    if (!sfPaths.isEmpty) {
-      val path = sfPaths.iterator.next
-      ResourcesPlugin.getWorkspace().getRoot().findContainersForLocation(path) match {
+    val sfs = sourceFolders
+    if (!sfs.isEmpty) {
+      val path = sfs.iterator.next
+      plugin.workspaceRoot.findContainersForLocation(path) match {
     	case Array(container) => settings.encoding.value = container.getDefaultCharset   
         case _ =>
       }
     }
 
     settings.classpath.value = classpath.map(_.toOSString).mkString(pathSeparator)
-    settings.sourcepath.value = sourceFolderAbsolutePaths.map(_.toOSString).mkString(pathSeparator)
+    settings.sourcepath.value = sfs.map(_.toOSString).mkString(pathSeparator)
     
     val workspaceStore = ScalaPlugin.plugin.getPreferenceStore
     val projectStore = new PropertyStore(underlying, workspaceStore, plugin.pluginId)
@@ -346,7 +341,7 @@ class ScalaProject(val underlying : IProject) {
     pathString.endsWith(suffix) && {
       val suffixPath = new Path(suffix)
       val sourceFolderPath = file.getLocation.removeLastSegments(suffixPath.segmentCount)
-      sourceFolderPaths.exists(_ == sourceFolderPath)
+      sourceFolders.exists(_ == sourceFolderPath)
     }
   }
   
