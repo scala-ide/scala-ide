@@ -16,9 +16,7 @@ import org.eclipse.jdt.ui.actions.SelectionDispatchAction
 import org.eclipse.jdt.internal.ui.javaeditor.{EditorUtility, JavaElementHyperlink}
 
 import scala.reflect.generic.Flags._
-import scala.tools.nsc.util.BatchSourceFile
 import scala.tools.nsc.io.AbstractFile
-import scala.tools.eclipse.refactoring.EditorHelpers
 
 import javaelements.{ScalaSourceFile, ScalaClassFile, ScalaCompilationUnit}
 import util.EclipseFile
@@ -97,12 +95,11 @@ class ScalaHyperlinkDetector extends AbstractHyperlinkDetector {
                 if (sym.pos eq NoPosition) {
 	    	      object traverser {
 	    	     	var owners = sym.ownerChain.reverse
-                    var symMapping = (Nil : List[Symbol], Nil : List[Symbol])
 
                     def equiv(src : Symbol, clz : Symbol) = {
                       src.decodedName == clz.decodedName && ( 
 	    	            if (src.isMethod && clz.isMethod) 
-	    	              src.info.substSym(symMapping._1, symMapping._2) matches clz.info
+	    	              src.info.toString == clz.info.toString
 	    	            else src.isPackage && clz.sourceModule.isPackage ||
 	    	                 src.isType && clz.isType ||
                              src.isTerm && clz.isTerm 
@@ -113,17 +110,10 @@ class ScalaHyperlinkDetector extends AbstractHyperlinkDetector {
 	    	          if (equiv(srcsym, owners.head)) owners.tail match {
                         case Nil => sym.setPos(srcsym.pos)
 	    	 	        case tl => {
-                          val oldMapping = symMapping
-                          symMapping = (srcsym.typeParams, owners.head.typeParams) match {
-                            case (tps1, tps2) if tps1.length == tps2.length =>
-                              (srcsym::tps1:::symMapping._1, owners.head::tps2:::symMapping._2) 
-                            case _ => symMapping
-                          }
                           owners = tl
 	    	              for (sym <- srcsym.info.decls) {
 	    	         	    traverse(sym)
 	    	         	  }
-	    	              symMapping = oldMapping
 	    	 	        }
 	    	          }
 	    	        }
@@ -155,8 +145,6 @@ class ScalaHyperlinkDetector extends AbstractHyperlinkDetector {
 	  case openAction : SelectionDispatchAction =>
         try {
           val editorInput = textEditor.getEditorInput
-          val project = ScalaPlugin.plugin.getScalaProject(editorInput)
-          val document = textEditor.getDocumentProvider.getDocument(editorInput)
           def isLinkable(element : IJavaElement) = {
             import IJavaElement._
             element.getElementType match {
