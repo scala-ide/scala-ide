@@ -106,16 +106,14 @@ class ScalaHyperlinkDetector extends AbstractHyperlinkDetector {
 	    	          )
 	    	        }
 		    	  
-	    	        def traverse(srcsym : Symbol) {
+	    	        def traverse(srcsym : Symbol) : Boolean = {
 	    	          if (equiv(srcsym, owners.head)) owners.tail match {
-                        case Nil => sym.setPos(srcsym.pos)
+                        case Nil if srcsym.pos ne NoPosition => sym.setPos(srcsym.pos); true
 	    	 	        case tl => {
                           owners = tl
-	    	              for (sym <- srcsym.info.decls) {
-	    	         	    traverse(sym)
-	    	         	  }
+	    	              srcsym.info.decls exists { traverse _ }
 	    	 	        }
-	    	          }
+	    	          } else false
 	    	        }
                   }
 	    	        
