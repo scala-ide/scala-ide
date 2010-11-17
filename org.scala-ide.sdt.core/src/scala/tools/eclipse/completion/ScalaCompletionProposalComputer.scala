@@ -157,9 +157,10 @@ class ScalaCompletionProposalComputer extends IJavaCompletionProposalComputer {
             	tpe.paramss.map(_.map(_.tpe.toString).mkString("(", ", ", ")")).mkString +
                 ": " + tpe.finalResultType.toString}
 		      else name
-            val container = sym.owner.enclClass.fullName
-            val display = signature + " - " + container
-            // todo: display documentation in additional info.
+            val display = if (!sym.isLocal) {
+              val container = sym.owner.enclClass.fullName
+              signature + " - " + container
+            } else signature
             buff += new ScalaCompletionProposal(name, display, signature, null, image)
           }
 
