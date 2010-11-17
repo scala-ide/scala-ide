@@ -15,7 +15,6 @@
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.search.SearchAspect"/>
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.ui.ScalaOverrideLabelAspect"/>
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.ClassFileEditorIdAspect"/>
-<aspect name="scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.CompletionAspect"/>
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.HoversAspect"/>
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.ScalaCloseStringsAspect"/>
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.ScalaEditorPreferencesAspect"/>
