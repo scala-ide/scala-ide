@@ -152,8 +152,9 @@ class ScalaCompletionProposalComputer extends IJavaCompletionProposalComputer {
                         else if (sym.isType) typeImage
                         else valImage
             val name = sym.decodedName
-            val signature = if (sym.isMethod) { name + tpe.paramss.
-                map(_.map(p => p.name.toString + ": " + p.tpe.toString).mkString("(", ",", ")")).mkString +
+            val signature = if (sym.isMethod) { name +
+            	(if(!sym.typeParams.isEmpty) sym.typeParams.map{_.name}.mkString("[", ",", "]") else "") +
+            	tpe.paramss.map(_.map(_.tpe.toString).mkString("(", ", ", ")")).mkString +
                 ": " + tpe.finalResultType.toString}
 		      else name
             val container = sym.owner.enclClass.fullName
