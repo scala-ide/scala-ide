@@ -100,9 +100,9 @@ class ScalaHyperlinkDetector extends AbstractHyperlinkDetector {
                       src.decodedName == clz.decodedName && ( 
 	    	            if (src.isMethod && clz.isMethod) 
 	    	              src.info.toString == clz.info.toString
-	    	            else src.isPackage && clz.sourceModule.isPackage ||
-	    	                 src.isType && clz.isType ||
-                             src.isTerm && clz.isTerm 
+	    	            else src.hasFlag(PACKAGE) && clz.hasFlag(PACKAGE) ||
+    	                     src.isType && clz.isType && !clz.isModuleClass ||
+                             src.isTerm && (clz.isTerm || clz.isModuleClass) 
 	    	          )
 	    	        }
 		    	  
