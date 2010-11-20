@@ -41,6 +41,14 @@
       </page>
    </extension>
 
+   <extension point="org.eclipse.core.expressions.propertyTesters">
+      <propertyTester
+            class="scala.tools.eclipse.launching.ScalaLaunchableTester"
+            id="scala.tools.eclipse.launching.ScalaLaunchableTester"
+            namespace="scala.tools.eclipse.launching"
+            properties="hasMain"
+            type="org.eclipse.core.runtime.IAdaptable"/>            
+   </extension>
 
   <extension point="org.eclipse.core.runtime.contentTypes">
     <content-type id="scala.tools.eclipse.scalaSource" name="Scala Source File"
@@ -565,7 +573,10 @@
           <with variable="selection">
             <count value="1" />
             <iterate>
-              <test property="org.eclipse.debug.ui.matchesPattern" value="*.scala"/>
+              <and>
+                <test property="org.eclipse.debug.ui.matchesPattern" value="*.scala"/>
+                <test property="scala.tools.eclipse.launching.hasMain"/>
+              </and>
             </iterate>
           </with>
         </enablement>

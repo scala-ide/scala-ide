@@ -20,7 +20,7 @@ import org.eclipse.jface.operation.IRunnableContext
 
 import scala.tools.eclipse.javaelements.{ ScalaModuleElement, ScalaSourceFile }
 
-/* This class can be eliminiated in favour of JavaApplicationLaunch shortcut as soon as 
+/* This class can be eliminated in favour of JavaApplicationLaunch shortcut as soon as 
  * the JDTs method search works correctly for Scala.
  */
 
@@ -38,34 +38,8 @@ class ScalaLaunchShortcut extends JavaLaunchShortcut {
     if (elements == null || elements.isEmpty)
       null
     else {
-      def getMainMethods(element: AnyRef) = {
-        
-        def isMainMethod(method: IMethod) = {
-          val flags = method.getFlags
-          val params = method.getParameterTypes    
-          method.getElementName == "main" && 
-          Flags.isPublic(flags) &&
-          method.getReturnType == "V" &&
-          params != null &&
-          params.length == 1 &&
-          (Signature.toString(params(0)) match {
-              case "scala.Array" | "java.lang.String[]" | "String[]" => true
-              case _ => false
-          })
-        }
-        
-        val je = element.asInstanceOf[IAdaptable].getAdapter(classOf[IJavaElement]).asInstanceOf[IJavaElement]
-        je.getOpenable match {
-          case scu : ScalaSourceFile =>
-            def isTopLevel(tpe : IType) = tpe.getDeclaringType == null
-            def hasAncestralMainMethod(tpe : IType) = 
-              tpe.newSupertypeHierarchy(null).getAllTypes.exists(t => isTopLevel(t) && t.getMethods.exists(isMainMethod)) 
-            scu.getAllTypes.filter(tpe => tpe.isInstanceOf[ScalaModuleElement] && isTopLevel(tpe) && hasAncestralMainMethod(tpe)).toList
-          case _ => Nil
-        }
-      }
       
-      elements.flatMap(getMainMethods).toArray
+      elements.flatMap(ScalaLaunchShortcut.getMainMethods).toArray
     }
   }
   
@@ -184,4 +158,32 @@ class ScalaLaunchShortcut extends JavaLaunchShortcut {
   
   override def getTypeSelectionTitle =
     LauncherMessages.JavaApplicationLaunchShortcut_0
+}
+
+object ScalaLaunchShortcut {
+  def getMainMethods(element: AnyRef) = {
+    def isMainMethod(method: IMethod) = {
+      val flags = method.getFlags
+      val params = method.getParameterTypes    
+      method.getElementName == "main" && 
+      Flags.isPublic(flags) &&
+      method.getReturnType == "V" &&
+      params != null &&
+      params.length == 1 &&
+      (Signature.toString(params(0)) match {
+          case "scala.Array" | "java.lang.String[]" | "String[]" => true
+          case _ => false
+      })
+    }
+    
+    val je = element.asInstanceOf[IAdaptable].getAdapter(classOf[IJavaElement]).asInstanceOf[IJavaElement]
+    je.getOpenable match {
+      case scu : ScalaSourceFile =>
+        def isTopLevel(tpe : IType) = tpe.getDeclaringType == null
+        def hasAncestralMainMethod(tpe : IType) = 
+          tpe.newSupertypeHierarchy(null).getAllTypes.exists(t => isTopLevel(t) && t.getMethods.exists(isMainMethod)) 
+        scu.getAllTypes.filter(tpe => tpe.isInstanceOf[ScalaModuleElement] && isTopLevel(tpe) && hasAncestralMainMethod(tpe)).toList
+      case _ => Nil
+    }
+  }
 }
