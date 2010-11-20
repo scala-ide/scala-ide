@@ -145,12 +145,14 @@ public privileged aspect DOMAspect {
   private void fixTypes(TypeDeclaration[] types) {
     for(int i = 0, iLimit = types.length; i < iLimit ; ++i) {
       TypeDeclaration tpe = types[i];
-      tpe.binding.getAnnotationTagBits();
-      tpe.scope.buildFields();
-      tpe.scope.buildMethods();
-      fixFields(tpe.fields);
-      fixMethods(tpe.methods);
-      fixTypes(tpe.memberTypes);
+      if (tpe != null) {
+        tpe.binding.getAnnotationTagBits();
+        tpe.scope.buildFields();
+        tpe.scope.buildMethods();
+        fixFields(tpe.fields);
+        fixMethods(tpe.methods);
+        fixTypes(tpe.memberTypes);
+      }
     }
   }
   
