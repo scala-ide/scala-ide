@@ -13,7 +13,7 @@ object IDESettings {
     List(
       deprecation, g, optimise, target, unchecked,
       checkInit, noassertions, elidebelow, Xexperimental, future, XlogImplicits, Xmigration28, nouescape, plugin, disable, require, pluginsDir, pluginOptions,
-      Xcloselim, Xdce, Xdetach, inline, Xlinearizer, Ynogenericsig, noimports, nopredefs, Yrecursion, selfInAnnots, Xsqueeze, refinementMethodDispatch, nospecialization,
+      Xcloselim, Xdce, inline, Xlinearizer, Ynogenericsig, noimports, nopredefs, Yrecursion, selfInAnnots, Xsqueeze, refinementMethodDispatch, nospecialization,
       Xwarnfatal, Xwarninit, Xchecknull, Ywarndeadcode, Ybuildmanagerdebug)
   }
 }
