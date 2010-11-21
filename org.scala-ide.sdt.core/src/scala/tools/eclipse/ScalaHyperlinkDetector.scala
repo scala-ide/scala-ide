@@ -54,11 +54,9 @@ class ScalaHyperlinkDetector extends AbstractHyperlinkDetector {
             }
             import compiler._
             typed.left.toOption map { tree : Tree => tree match {
-              case i : Ident => i.symbol 
-              case s : Select => s.symbol
+              case st : SymTree => st.symbol 
 	          case Annotated(atp, _) => atp.symbol
-              // TODO: imports
-              case _ => NoSymbol
+	          case _ => NoSymbol
             }
           } flatMap { sym => 
             if (sym.isPackage || sym == NoSymbol || sym.isJavaDefined) None else {
