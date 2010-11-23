@@ -31,6 +31,13 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
 
   class StructureBuilderTraverser(scu : ScalaCompilationUnit, unitInfo : OpenableElementInfo, newElements0 : JMap[AnyRef, AnyRef], sourceLength : Int) {
     private val manager = JavaModelManager.getJavaModelManager
+    
+    private def companionClassOf(s: Symbol): Symbol =
+      try {
+        s.companionClass
+      } catch {
+        case e: InvalidCompanions => NoSymbol
+      }
 
     type OverrideInfo = Int
     var overrideInfos : collection.mutable.Map[Symbol, OverrideInfo] = _
@@ -92,13 +99,19 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
       def complete {
         def addForwarders(classElem : ScalaElement, classElemInfo : ScalaElementInfo, module: Symbol) {
           def conflictsIn(cls: Symbol, name: Name) =
-            cls.info.nonPrivateMembers.exists(_.name == name)
+            if (cls != NoSymbol)
+              cls.info.nonPrivateMembers.exists(_.name == name)
+            else
+              false
           
           /** List of parents shared by both class and module, so we don't add forwarders
            *  for methods defined there - bug #1804 */
           lazy val commonParents = {
             val cps = module.info.baseClasses
-            val mps = module.companionClass.info.baseClasses
+            val mps = {
+            	val comp = companionClassOf(module)
+            	if (comp == NoSymbol) List() else comp.info.baseClasses
+            }
             cps.filter(mps contains)
           }
           /* the setter doesn't show up in members so we inspect the name */
@@ -113,10 +126,10 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
 	    !(m.owner == definitions.ObjectClass) && 
 	    !(m.owner == definitions.AnyClass) &&
 	    !m.hasFlag(Flags.CASE | Flags.PROTECTED | Flags.DEFERRED) &&
-	    !module.isSubClass(module.companionClass) &&
+	    !module.isSubClass(companionClassOf(module)) &&
 	    !conflictsIn(definitions.ObjectClass, m.name) &&
 	    !conflictsInCommonParent(m.name) && 
-	    !conflictsIn(module.companionClass, m.name)
+	    !conflictsIn(companionClassOf(module), m.name)
           
           assert(module.isModuleClass)
           
@@ -182,7 +195,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         } 
         
         for ((m, mInfo) <- modules) {
-          val c = m.companionClass
+          val c = companionClassOf(m)
           if (c != NoSymbol) {
             classes.get(c) match {
               case Some((classElem, classElemInfo)) =>
