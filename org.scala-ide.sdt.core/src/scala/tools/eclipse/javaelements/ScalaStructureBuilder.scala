@@ -5,6 +5,8 @@
 
 package scala.tools.eclipse.javaelements
 
+import scala.tools.eclipse.ScalaPlugin
+
 import java.io.{ PrintWriter, StringWriter }
 import java.util.{ Map => JMap }
 
@@ -36,7 +38,12 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
       try {
         s.companionClass
       } catch {
-        case e: InvalidCompanions => NoSymbol
+        //BACK-2.8.0 InvalidCompanions doesn't exists, replace by return NoSymbol for every Exception (and log)
+        //case e: InvalidCompanions => NoSymbol
+        case e => {
+          ScalaPlugin.plugin.logError(e)
+          NoSymbol
+        }
       }
 
     type OverrideInfo = Int

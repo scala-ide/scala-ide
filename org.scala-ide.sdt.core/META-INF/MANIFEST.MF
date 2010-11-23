@@ -4,7 +4,7 @@ Bundle-Name: Scala Plugin
 Bundle-SymbolicName: org.scala-ide.sdt.core;singleton:=true
 Bundle-Version: 1.0.0.qualifier
 Bundle-ActivationPolicy: lazy
-Bundle-Activator: 
+Bundle-Activator:  
  scala.tools.eclipse.ScalaPlugin
 Require-Bundle: 
  org.eclipse.core.expressions,
@@ -68,5 +68,6 @@ Export-Package:
  scala.tools.eclipse.quickfix,
  scala.tools.eclipse.ui,
  scala.tools.eclipse.util,
- scala.tools.eclipse.wizards
+ scala.tools.eclipse.wizards,
+ scala.tools.nsc.interactive
 Bundle-RequiredExecutionEnvironment: J2SE-1.5

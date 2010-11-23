@@ -128,6 +128,7 @@
             <Embed-StripVersion>true</Embed-StripVersion>
             <Include-Resource>lib=${project.build.directory}/lib</Include-Resource>
             <Import-Package>!jline,!sun.misc,!scala.tools.nsc.interactive,*</Import-Package>
+            <Eclipse-ExtensibleAPI>true</Eclipse-ExtensibleAPI>
           </instructions>
         </configuration>
       </plugin>
