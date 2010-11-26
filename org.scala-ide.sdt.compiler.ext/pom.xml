@@ -8,22 +8,10 @@
     <version>1.0.0-SNAPSHOT</version>
     <relativePath>../org.scala-ide.build/pom.xml</relativePath>
   </parent>
-  <artifactId>org.scala-ide.sdt.core</artifactId>
+  <artifactId>org.scala-ide.sdt.compiler.ext</artifactId>
   <packaging>eclipse-plugin</packaging>
+  <!--version>2.8.0.final</version-->
 
-  <dependencies>
-    <dependency>
-      <groupId>org.scala-ide</groupId>
-      <artifactId>org.scala-ide.sdt.aspects</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <!--dependency>
-      <groupId>org.scala-ide</groupId>
-      <artifactId>org.scala-ide.sdt.compiler.ext</artifactId>
-      <version>${project.version}</version>
-    </dependency-->
-  </dependencies>
-  
   <build>
     <plugins>
       <plugin>

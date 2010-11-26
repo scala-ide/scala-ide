@@ -56,7 +56,14 @@ SUCH DAMAGE.
   <url>
     <update url="http://download.scala-ide.org/update-current-35" label="Scala IDE for Eclipse update site"/>
   </url>
-
+  
+  <plugin
+    id="org.scala-ide.sdt.compiler.ext.source"
+    download-size="0"
+    install-size="0"
+    version="0.0.0"
+    unpack="false"/>
+    
   <plugin
     id="org.scala-ide.sdt.core.source"
     download-size="0"

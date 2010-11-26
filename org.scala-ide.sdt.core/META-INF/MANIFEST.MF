@@ -4,7 +4,7 @@ Bundle-Name: Scala Plugin
 Bundle-SymbolicName: org.scala-ide.sdt.core;singleton:=true
 Bundle-Version: 1.0.0.qualifier
 Bundle-ActivationPolicy: lazy
-Bundle-Activator:  
+Bundle-Activator: 
  scala.tools.eclipse.ScalaPlugin
 Require-Bundle: 
  org.eclipse.core.expressions,
@@ -38,11 +38,23 @@ Require-Bundle:
  org.eclipse.pde.core;resolution:=optional,
  org.eclipse.pde.ui;resolution:=optional,
  org.scala-ide.scala.library,
- org.scala-ide.scala.compiler,
  org.scala-refactoring.library,
  scalariform,
  org.junit4;bundle-version="4.5.0"
 Import-Package: 
+ scala.tools.nsc;apply-aspects:=false,
+ scala.tools.nsc.io;apply-aspects:=false,
+ scala.tools.nsc.reporters;apply-aspects:=false,
+ scala.tools.nsc.transform;apply-aspects:=false,
+ scala.tools.nsc.backend.jvm;apply-aspects:=false,
+ scala.tools.nsc.dependencies;apply-aspects:=false,
+ scala.tools.nsc.ast;apply-aspects:=false,
+ scala.tools.nsc.ast.parser;apply-aspects:=false,
+ scala.tools.nsc.settings;apply-aspects:=false,
+ scala.tools.nsc.symtab;apply-aspects:=false,
+ scala.tools.nsc.util;apply-aspects:=false,
+ scala.tools.nsc.interactive;apply-aspects:=false,
+ ch.epfl.lamp.fjbg;apply-aspects:=false,
  org.eclipse.contribution.jdt.cuprovider;apply-aspects:=false,
  org.eclipse.contribution.jdt.imagedescriptor;apply-aspects:=false,
  org.eclipse.contribution.jdt.sourceprovider;apply-aspects:=false,
@@ -68,6 +80,5 @@ Export-Package:
  scala.tools.eclipse.quickfix,
  scala.tools.eclipse.ui,
  scala.tools.eclipse.util,
- scala.tools.eclipse.wizards,
- scala.tools.nsc.interactive
+ scala.tools.eclipse.wizards
 Bundle-RequiredExecutionEnvironment: J2SE-1.5

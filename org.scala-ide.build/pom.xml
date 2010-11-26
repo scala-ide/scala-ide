@@ -25,6 +25,7 @@
     <module>../org.eclipse.contribution.weaving</module>
     <module>../org.scala-ide.sdt.weaving.feature</module>
     <module>../org.scala-ide.sdt.aspects</module>
+    <module>../org.scala-ide.sdt.compiler.ext</module>
     <module>../org.scala-ide.sdt.core</module>
     <module>../org.scala-ide.sdt.feature</module>
     <module>../org.scala-ide.sdt.source.feature</module>
@@ -332,6 +333,8 @@
           <name>Scala Refactoring Scala 2.8.0.final p2 repository</name>
           <layout>p2</layout>
           <url>http://download.scala-ide.org/scala-refactoring-2.8.0.final</url>
+          <!--url>http://scala.ifs.hsr.ch/hudson/job/Scala-Refactoring/ws/org.scala-refactoring.update-site/target/site/</url-->
+          <!--url>file:////${user.home}/work/oss/scala-eclipse/scala-refactoring/org.scala-refactoring.update-site/target/site</url-->
           <snapshots><enabled>false</enabled></snapshots>
         </repository>
         <repository>
