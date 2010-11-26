@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>org.scala-ide</groupId>
@@ -15,6 +14,7 @@
       <groupId>${scala.compiler.groupid}</groupId>
       <artifactId>scala-compiler</artifactId>
       <version>${scala.compiler.version}</version>
+      <optional>true</optional>
     </dependency>
   </dependencies>
   <build>
@@ -76,6 +76,12 @@
                   <groupId>${scala.compiler.groupid}</groupId>
                   <artifactId>scala-compiler</artifactId>
                   <version>${scala.compiler.version}</version>
+                  <type>jar</type>
+                </artifactItem>
+                <artifactItem>
+                  <groupId>${scala.compiler.groupid}</groupId>
+                  <artifactId>scala-compiler</artifactId>
+                  <version>${scala.compiler.version}</version>
                   <classifier>sources</classifier>
                   <type>jar</type>
                   <destFileName>scala-compiler-src.jar</destFileName>
@@ -90,6 +96,27 @@
               <stripVersion>true</stripVersion>
               <outputDirectory>${project.build.directory}/lib</outputDirectory>
             </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <version>1.6</version>
+        <executions>
+          <execution>
+            <phase>process-classes</phase>
+            <configuration>
+              <target>
+                <property name="jarfile" location="${project.build.directory}/lib/scala-compiler.jar"/>
+                <jar destfile="${jarfile}.part">
+                  <zipfileset src="${jarfile}" excludes="scala/tools/nsc/interactive, scala/tools/nsc/interactive/**"/>
+                </jar>
+                <move file="${jarfile}.part" tofile="${jarfile}" overwrite="true"/>
+              </target>
+            </configuration>
+            <goals>
+              <goal>run</goal>
+            </goals>
           </execution>
         </executions>
       </plugin>
@@ -126,9 +153,10 @@
             <_exportcontents>!scala.tools.nsc.interactive.*,scala.tools.*;version=${version.number},ch.epfl.lamp.*;version=${version.number}</_exportcontents>
             <Embed-Directory>lib</Embed-Directory>
             <Embed-StripVersion>true</Embed-StripVersion>
+            <!--included resource target/lib/scala-compiler.jar (stripped) override the regular one -->
             <Include-Resource>lib=${project.build.directory}/lib</Include-Resource>
-            <Import-Package>!jline,!sun.misc,!scala.tools.nsc.interactive,*</Import-Package>
-            <Eclipse-ExtensibleAPI>true</Eclipse-ExtensibleAPI>
+            <Import-Package>!jline,!sun.misc,*</Import-Package>
+            <!--Eclipse-ExtensibleAPI>true</Eclipse-ExtensibleAPI-->
           </instructions>
         </configuration>
       </plugin>
