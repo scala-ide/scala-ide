@@ -146,9 +146,14 @@ public privileged aspect DOMAspect {
     for(int i = 0, iLimit = types.length; i < iLimit ; ++i) {
       TypeDeclaration tpe = types[i];
       if (tpe != null) {
-        tpe.binding.getAnnotationTagBits();
-        tpe.scope.buildFields();
-        tpe.scope.buildMethods();
+        //BACK-2.8.0 possible NPE with tpe.binding, tpe.scope
+        if (tpe.binding != null) {
+          tpe.binding.getAnnotationTagBits();
+        }
+        if (tpe.scope != null) {
+          tpe.scope.buildFields();
+          tpe.scope.buildMethods();
+        }
         fixFields(tpe.fields);
         fixMethods(tpe.methods);
         fixTypes(tpe.memberTypes);
@@ -164,7 +169,9 @@ public privileged aspect DOMAspect {
       AbstractMethodDeclaration m = methods[i];
       m.bodyStart = m.declarationSourceStart;
       m.bodyEnd = m.declarationSourceEnd;
-      m.binding.getAnnotationTagBits();
+      if (m.binding != null) {
+        m.binding.getAnnotationTagBits();
+      }
     }
   }
   
