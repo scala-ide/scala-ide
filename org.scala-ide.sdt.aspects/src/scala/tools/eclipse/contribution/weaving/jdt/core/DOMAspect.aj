@@ -146,9 +146,11 @@ public privileged aspect DOMAspect {
     for(int i = 0, iLimit = types.length; i < iLimit ; ++i) {
       TypeDeclaration tpe = types[i];
       if (tpe != null) {
-        tpe.binding.getAnnotationTagBits();
-        tpe.scope.buildFields();
-        tpe.scope.buildMethods();
+        if (tpe.binding != null) tpe.binding.getAnnotationTagBits();
+        if (tpe.scope != null) {
+          tpe.scope.buildFields();
+          tpe.scope.buildMethods();
+        }
         fixFields(tpe.fields);
         fixMethods(tpe.methods);
         fixTypes(tpe.memberTypes);
