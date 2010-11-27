@@ -166,7 +166,9 @@ public privileged aspect DOMAspect {
       AbstractMethodDeclaration m = methods[i];
       m.bodyStart = m.declarationSourceStart;
       m.bodyEnd = m.declarationSourceEnd;
-      m.binding.getAnnotationTagBits();
+      if (m.binding != null) {
+        m.binding.getAnnotationTagBits();
+      }
     }
   }
   
