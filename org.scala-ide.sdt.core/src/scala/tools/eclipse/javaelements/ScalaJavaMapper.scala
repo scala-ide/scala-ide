@@ -90,10 +90,20 @@ trait ScalaJavaMapper { self : ScalaPresentationCompiler =>
         t.typeSymbol.enclosingPackage.fullName
     }
   }
+
+  def isScalaSpecialType(t : Type) = {
+    import definitions._
+    t.typeSymbol match {
+      case AnyClass | AnyRefClass | AnyValClass | NothingClass | NullClass => true
+      case _ => false
+    }
+  }
   
   def mapParamTypeName(t : Type) : String = {
     if (t.typeSymbolDirect.isTypeParameter)
       t.typeSymbolDirect.name.toString
+    else if (isScalaSpecialType(t))
+      "java.lang.Object"
     else {
       val jt = javaType(t)
       if (jt.isValueType)
@@ -106,6 +116,8 @@ trait ScalaJavaMapper { self : ScalaPresentationCompiler =>
   def mapParamTypeSignature(t : Type) : String = {
     if (t.typeSymbolDirect.isTypeParameter)
       "T"+t.typeSymbolDirect.name.toString+";"
+    else if (isScalaSpecialType(t))
+      "Ljava.lang.Object;"
     else {
       val jt = javaType(t)
       val fjt = if (jt == JType.UNKNOWN)

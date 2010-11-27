@@ -146,10 +146,7 @@ public privileged aspect DOMAspect {
     for(int i = 0, iLimit = types.length; i < iLimit ; ++i) {
       TypeDeclaration tpe = types[i];
       if (tpe != null) {
-        //BACK-2.8.0 possible NPE with tpe.binding, tpe.scope
-        if (tpe.binding != null) {
-          tpe.binding.getAnnotationTagBits();
-        }
+        if (tpe.binding != null) tpe.binding.getAnnotationTagBits();
         if (tpe.scope != null) {
           tpe.scope.buildFields();
           tpe.scope.buildMethods();
