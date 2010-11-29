@@ -172,5 +172,34 @@ object ${new_name} {
   id="scala.templates.systrace"
   context="org.scala-ide.sdt.core.templates" enabled="true"
 >System.out.println("${enclosing_type}.${enclosing_method}()");</template>
+<template name="specs"
+  description="Specs specification template"
+  id="scala.templates.specs"
+  context="org.scala-ide.sdt.core.templates" enabled="true"
+>import org.junit.runner.RunWith
+import org.specs._
+import org.specs.matcher._
+import org.specs.runner.{ JUnitSuiteRunner, JUnit }
+//import org.scalacheck.Gen
 
+@RunWith(classOf[JUnitSuiteRunner])
+class ${name}SpecTest extends Specification with JUnit /*with ScalaCheck*/ {
+
+  "${name}" should {
+    "allow " in {
+      ${cursor}
+      //0
+    }
+    "deny " in {
+      //0
+    }
+  }
+}
+
+object ${name}SpecMain {
+  def main(args: Array[String]) {
+    new ${name}SpecTest().main(args)
+  }
+}
+</template>
 </templates>
