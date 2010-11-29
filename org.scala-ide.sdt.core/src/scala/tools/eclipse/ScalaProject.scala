@@ -43,6 +43,7 @@ class ScalaProject(val underlying : IProject) {
       val settings = new Settings
       settings.printtypes.tryToSet(Nil)
       settings.verbose.tryToSetFromPropertyValue("true")
+      settings.XlogImplicits.tryToSetFromPropertyValue("true")
       initialize(settings)
       new ScalaPresentationCompiler(ScalaProject.this, settings)
     }
@@ -107,20 +108,19 @@ class ScalaProject(val underlying : IProject) {
     def classpath(javaProject : IJavaProject, exportedOnly : Boolean) : Unit = {
       val cpes = javaProject.getResolvedClasspath(true)
 
-      // A slightly confusing code to avoid adding our own output to classpath.
       for (cpe <- cpes if (!exportedOnly || cpe.isExported)) cpe.getEntryKind match {
         case IClasspathEntry.CPE_PROJECT => 
           val depProject = plugin.workspaceRoot.getProject(cpe.getPath.lastSegment)
           if (JavaProject.hasJavaNature(depProject)) {
             val depJava = JavaCore.create(depProject)
-        	for (cpe <- depJava.getResolvedClasspath(true) if cpe.getEntryKind == IClasspathEntry.CPE_SOURCE) {
+            for (cpe <- depJava.getResolvedClasspath(true) if cpe.getEntryKind == IClasspathEntry.CPE_SOURCE) {
               val specificOutputLocation = cpe.getOutputLocation
-              val outputLocation = if (specificOutputLocation != null) specificOutputLocation else javaProject.getOutputLocation
+              val outputLocation = if (specificOutputLocation != null) specificOutputLocation else depJava.getOutputLocation
               if (outputLocation != null) {
                 val absPath = plugin.workspaceRoot.findMember(outputLocation)
                 if (absPath != null) path += absPath.getLocation
               }
-        	}
+        	  }
             classpath(depJava, true)
           }
         case IClasspathEntry.CPE_LIBRARY =>   
