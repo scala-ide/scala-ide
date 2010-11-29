@@ -3,7 +3,7 @@
   id="org.scala-ide.sdt.source.feature"
   label="Scala IDE for Eclipse Source"
   version="1.0.0.qualifier"
-  provider-name="The Scala IDE for Eclipse Project">
+  provider-name="scala-ide.org">
 
   <description url="http://scala-ide.org/">
 The Scala IDE for Eclipse provides the tools needed to

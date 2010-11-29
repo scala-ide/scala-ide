@@ -3,6 +3,7 @@ Bundle-ManifestVersion: 2
 Bundle-Name: Scala Compiler for Eclipse (Extension)
 Bundle-SymbolicName: org.scala-ide.sdt.compiler.ext
 Bundle-Version: 1.0.0.qualifier
+Bundle-Vendor: scala-ide.org
 Bundle-RequiredExecutionEnvironment: J2SE-1.5
 Require-Bundle: org.scala-ide.scala.library
 Export-Package: scala.tools.nsc.interactive
@@ -15,5 +16,6 @@ Import-Package: scala.tools.nsc,
  scala.tools.nsc.symtab,
  scala.tools.nsc.typechecker,
  scala.tools.nsc.util
+
 
 
