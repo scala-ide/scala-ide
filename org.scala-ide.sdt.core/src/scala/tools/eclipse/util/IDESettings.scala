@@ -7,13 +7,34 @@ package scala.tools.eclipse.util
 
 import scala.tools.nsc.Settings
 
+
 object IDESettings {
-  def shownSettings(s : Settings) : List[Settings#Setting]= {
+	case class Box(name: String, userSettings: List[Settings#Setting])
+  def shownSettings(s : Settings) : List[Box] = {
     import s._
+
     List(
-      deprecation, g, optimise, target, unchecked,
-      checkInit, noassertions, elidebelow, Xexperimental, future, XlogImplicits, Xmigration28, nouescape, plugin, disable, require, pluginsDir, pluginOptions,
-      Xcloselim, Xdce, inline, Xlinearizer, Ynogenericsig, noimports, nopredefs, Yrecursion, selfInAnnots, Xsqueeze, refinementMethodDispatch, nospecialization,
-      Xwarnfatal, Xwarninit, Xchecknull, Ywarndeadcode, Ybuildmanagerdebug)
+    		Box("Standard options",
+    				List(deprecation, g, optimise, target, unchecked,
+                 pluginOptions, nospecialization)),
+    		Box("Advanced options",
+    				List(checkInit, Xchecknull, Xdce,
+    						 Xexperimental, future, XlogImplicits,
+    						 Xmigration28, noassertions, nouescape, plugin, disable,
+    						 require, pluginsDir, Xwarnfatal, Xwarninit)),
+    		Box("Private options",
+    				List(Xcloselim, inline, Xlinearizer, Ynogenericsig, noimports,
+    						 nopredefs, selfInAnnots, refinementMethodDispatch,
+    						 Ywarndeadcode, Ybuildmanagerdebug, Xsqueeze)))
   }
+  
+  def pluginSettings: List[Box] = {
+	  import ScalaPluginSettings._
+    val Yplugininfo = BooleanSetting("-plugininfo", "Print Scala plugin debugging info")
+	  List(Box("Scala Plugin Debugging", List(Yplugininfo)))    
+  }
+}
+
+object ScalaPluginSettings extends Settings {
+	val YPlugininfo = BooleanSetting("-plugininfo", "Enable logging of the Scala Plugin info")
 }

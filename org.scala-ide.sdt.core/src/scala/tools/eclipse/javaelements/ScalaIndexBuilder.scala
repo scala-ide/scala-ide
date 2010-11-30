@@ -10,9 +10,20 @@ import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants
 
 import scala.tools.nsc.symtab.Flags
 
-import scala.tools.eclipse.{ ScalaPresentationCompiler, ScalaSourceIndexer }
+import scala.tools.eclipse.{ ScalaPlugin, ScalaPresentationCompiler,
+	                           ScalaSourceIndexer, SettingConverterUtil }
+import scala.tools.eclipse.util.ScalaPluginSettings
 
 trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
+
+  object IndexBuilderTraverser {
+  	lazy val store = ScalaPlugin.plugin.getPreferenceStore
+  	lazy val infoName = 
+  		SettingConverterUtil.convertNameToProperty(ScalaPluginSettings.YPlugininfo.name)
+  	def isInfo = store.getBoolean(infoName)
+  }
+  
+  import IndexBuilderTraverser.isInfo
   
   class IndexBuilderTraverser(indexer : ScalaSourceIndexer) extends Traverser {
     private var currentBuilder : Owner = new CompilationUnitBuilder
@@ -38,7 +49,8 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
     
     trait PackageOwner extends Owner { self =>
       override def addPackage(p : PackageDef) : Owner = {
-        println("Package defn: "+p.name+" ["+this+"]")
+        if (isInfo)
+          println("Package defn: "+p.name+" ["+this+"]")
         
         new Builder {
           val parent = self
@@ -49,8 +61,10 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
     
     trait ClassOwner extends Owner { self =>
       override def addClass(c : ClassDef) : Owner = {
-        println("Class defn: "+c.name+" ["+this+"]")
-        println("Parents: "+c.impl.parents)
+      	if (isInfo) {      		
+          println("Class defn: "+c.name+" ["+this+"]")
+          println("Parents: "+c.impl.parents)
+      	}
         
         val name = c.symbol.simpleName.toString
         
@@ -104,7 +118,8 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
     
     trait ModuleOwner extends Owner { self =>
       override def addModule(m : ModuleDef) : Owner = {
-        println("Module defn: "+m.name+" ["+this+"]")
+      	if (isInfo)
+          println("Module defn: "+m.name+" ["+this+"]")
         
         val name = m.symbol.simpleName.toString
 
@@ -156,7 +171,8 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
     
     trait ValOwner extends Owner { self =>
       override def addVal(v : ValDef) : Owner = {
-        println("Val defn: >"+nme.getterName(v.name)+"< ["+this+"]")
+      	if (isInfo)
+          println("Val defn: >"+nme.getterName(v.name)+"< ["+this+"]")
         
         indexer.addMethodDeclaration(
           nme.getterName(v.name).toString.toCharArray,
@@ -187,7 +203,8 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
     
     trait DefOwner extends Owner { self =>
       override def addDef(d : DefDef) : Owner = {
-        println("Def defn: "+d.name+" ["+this+"]")
+      	if (isInfo)
+          println("Def defn: "+d.name+" ["+this+"]")
         val isCtor0 = d.symbol.isConstructor
         val nm =
           if(isCtor0)
@@ -279,13 +296,15 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
         }
       }
       case Template(parents, self, body) => {
-        println("Template: "+parents)
+      	if (isInfo)
+          println("Template: "+parents)
         //traverseTrees(parents)
         //if (!self.isEmpty) traverse(self)
         traverseStats(body, tree.symbol)
       }
       case Function(vparams, body) => {
-        println("Anonymous function: "+tree.symbol.simpleName)
+      	if (isInfo)
+          println("Anonymous function: "+tree.symbol.simpleName)
       }
       case tt : TypeTree => {
         //println("Type tree: "+tt)
