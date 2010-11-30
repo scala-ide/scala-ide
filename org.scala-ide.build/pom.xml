@@ -101,7 +101,7 @@
       <id>ajdt-galileo</id>
       <name>AJDT for Eclipse Galileo p2 repository</name>
       <layout>p2</layout>
-      <url>http://download.eclipse.org/tools/ajdt/35/dev/update</url>
+      <url>http://download.eclipse.org/tools/ajdt/35/update</url>
       <snapshots><enabled>false</enabled></snapshots>
     </repository>
     <repository>
