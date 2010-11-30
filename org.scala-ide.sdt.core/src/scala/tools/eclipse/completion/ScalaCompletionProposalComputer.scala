@@ -69,14 +69,14 @@ class ScalaCompletionProposalComputer extends IJavaCompletionProposalComputer {
         val t1 = typed.get.left.toOption
 
         val chars = context.getDocument.get.toCharArray
-        val (start, end, completed) = compiler.ask { () =>
+        val (start, completed) = compiler.ask { () =>
           val completed = new compiler.Response[List[compiler.Member]]
-          val (start, end) = t1 match {
+          val start = t1 match {
             case Some(s@compiler.Select(qualifier, name)) if qualifier.pos.isDefined && qualifier.pos.isRange =>
-              val cpos0 = qualifier.pos.endOrPoint 
+              val cpos0 = qualifier.pos.end 
               val cpos = compiler.rangePos(sourceFile, cpos0, cpos0, cpos0)
               compiler.askTypeCompletion(cpos, completed)
-              (s.pos.point min s.pos.endOrPoint, s.pos.endOrPoint)
+              s.pos.point min position
             case Some(i@compiler.Import(expr, selectors)) =>
               def qual(tree : compiler.Tree): compiler.Tree = tree.symbol.info match {
                 case compiler.analyzer.ImportType(expr) => expr
@@ -85,7 +85,7 @@ class ScalaCompletionProposalComputer extends IJavaCompletionProposalComputer {
               val cpos0 = qual(i).pos.endOrPoint
               val cpos = compiler.rangePos(sourceFile, cpos0, cpos0, cpos0)
               compiler.askTypeCompletion(cpos, completed)
-              ((cpos0 + 1) min position, position)
+              (cpos0 + 1) min position
             case _ =>
               val region = ScalaWordFinder.findCompletionPoint(chars, position)
               val cpos = if (region == null) pos else {
@@ -93,15 +93,9 @@ class ScalaCompletionProposalComputer extends IJavaCompletionProposalComputer {
                 compiler.rangePos(sourceFile, start, start, start)
               }
               compiler.askScopeCompletion(cpos, completed)
-              if (region == null)
-                (position, position)
-              else {
-                val start0 = region.getOffset
-                val end0 = start0+region.getLength
-                (start0, end0)
-              }
+              if (region == null) position else region.getOffset
           }
-          (start, end, completed)
+          (start, completed)
         }
 
         val prefix = (if (position <= start) "" else scu.getBuffer.getText(start, position-start).trim).toArray
