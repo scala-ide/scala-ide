@@ -20,7 +20,7 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
   	lazy val store = ScalaPlugin.plugin.getPreferenceStore
   	lazy val infoName = 
   		SettingConverterUtil.convertNameToProperty(ScalaPluginSettings.YPlugininfo.name)
-  	def isInfo = store.getBoolean(infoName)
+  	@inline def isInfo = store.getBoolean(infoName)
   }
   
   import IndexBuilderTraverser.isInfo

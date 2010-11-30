@@ -18,13 +18,13 @@ object IDESettings {
     				List(deprecation, g, optimise, target, unchecked,
                  pluginOptions, nospecialization)),
     		Box("Advanced options",
-    				List(checkInit, Xchecknull, Xdce,
+    				List(checkInit, Xchecknull, elidebelow,
     						 Xexperimental, future, XlogImplicits,
     						 Xmigration28, noassertions, nouescape, plugin, disable,
     						 require, pluginsDir, Xwarnfatal, Xwarninit)),
     		Box("Private options",
-    				List(Xcloselim, inline, Xlinearizer, Ynogenericsig, noimports,
-    						 nopredefs, selfInAnnots, refinementMethodDispatch,
+    				List(Xcloselim, Xdce, inline, Xlinearizer, Ynogenericsig, noimports,
+    						 nopredefs, selfInAnnots, Yrecursion, refinementMethodDispatch,
     						 Ywarndeadcode, Ybuildmanagerdebug, Xsqueeze)))
   }
   
