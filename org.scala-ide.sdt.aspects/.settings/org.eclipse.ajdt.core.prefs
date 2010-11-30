@@ -1,4 +1,4 @@
-#Fri May 08 23:57:33 BST 2009
+#Tue Nov 30 18:35:41 CET 2010
 eclipse.preferences.version=1
 org.aspectj.ajdt.core.compiler.BuildOptions.showweavemessages=false
 org.aspectj.ajdt.core.compiler.lint.BrokeSerialVersionCompatibility=ignore
@@ -36,5 +36,5 @@ org.aspectj.ajdt.core.compiler.weaver.XNotReweavable=false
 org.aspectj.ajdt.core.compiler.weaver.XSerializableAspects=false
 org.aspectj.ajdt.core.complier.lint.aspectExcludedByConfiguration=ignore
 org.eclipse.ajdt.core.builder.incrementalCompilationOptimizations=true
-org.eclipse.ajdt.core.compiler.nonStandardOptions=
+org.eclipse.ajdt.core.compiler.nonStandardOptions=-Xset\:minimalModel\=true,typeDemotion\=true
 org.eclipse.ajdt.core.compiler.useProjectSettings=true
