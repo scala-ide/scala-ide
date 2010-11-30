@@ -1,4 +1,5 @@
 package scala.tools.eclipse
+package internal.logging
 
 /**
  * @author david.bernard
