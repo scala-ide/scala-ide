@@ -53,6 +53,7 @@ import org.eclipse.jdt.internal.core.SourceType;
 import org.eclipse.jdt.internal.core.SourceTypeElementInfo;
 
 import scala.tools.eclipse.contribution.weaving.jdt.IScalaCompilationUnit;
+import scala.tools.eclipse.internal.logging.Defensive;
 
 @SuppressWarnings("restriction")
 public privileged aspect DOMAspect {
@@ -123,8 +124,14 @@ public privileged aspect DOMAspect {
       ast.setFlag(AST.RESOLVED_BINDINGS);
       ast.setDefaultNodeFlag(ASTNode.ORIGINAL);
 
-      org.eclipse.jdt.core.dom.ASTConverter converter =
-        new org.eclipse.jdt.core.dom.ASTConverter(compilerOptions0, true, monitor);
+      org.eclipse.jdt.core.dom.ASTConverter converter = new org.eclipse.jdt.core.dom.ASTConverter(compilerOptions0, true, monitor) {
+        protected boolean isPrimitiveType(char[] name) {
+          if (Defensive.notEmpty(name, "isPrimitive")) {
+            return false;
+          }        
+          return super.isPrimitiveType(name);
+        }
+      };
       
       org.eclipse.jdt.core.dom.BindingResolver resolver =
         new org.eclipse.jdt.core.dom.DefaultBindingResolver(
@@ -145,9 +152,10 @@ public privileged aspect DOMAspect {
   private void fixTypes(TypeDeclaration[] types) {
     for(int i = 0, iLimit = types.length; i < iLimit ; ++i) {
       TypeDeclaration tpe = types[i];
-      if (tpe != null) {
-        if (tpe.binding != null) tpe.binding.getAnnotationTagBits();
-        if (tpe.scope != null) {
+      if (Defensive.notNull(tpe, "typeDeclaration[%d]", i)) {
+//        fixTypeReference(tpe.superclass);
+        if (Defensive.notNull(tpe.binding, "tpe.binding")) tpe.binding.getAnnotationTagBits();
+        if (Defensive.notNull(tpe.scope, "tpe.scope")) {
           tpe.scope.buildFields();
           tpe.scope.buildMethods();
         }
@@ -157,6 +165,36 @@ public privileged aspect DOMAspect {
       }
     }
   }
+  
+//  /**
+//   * Replace null/empty token for TypeReference.typeName[0] by "Any" (!! modify in place)
+//   * Try to avoid an exception when parsing token :
+//   *  <pre>
+//   *   java.lang.ArrayIndexOutOfBoundsException: 0
+//   *     at org.eclipse.jdt.core.dom.ASTConverter.isPrimitiveType(ASTConverter.java:3540)
+//   *     at org.eclipse.jdt.core.dom.ASTConverter.convertType(ASTConverter.java:3117)
+//   *     at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:2663)
+//   *     at org.eclipse.jdt.core.dom.ASTConverter.buildBodyDeclarations(ASTConverter.java:184)
+//   *     at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:2694)
+//   *     at org.eclipse.jdt.core.dom.ASTConverter.convert(ASTConverter.java:1264)
+//   *     at scala.tools.eclipse.contribution.weaving.jdt.core.DOMAspect.ajc$around$scala_tools_eclipse_contribution_weaving_jdt_core_DOMAspect$1$3b9eae81(DOMAspect.aj:138)
+//   *     at org.eclipse.jdt.core.dom.ASTParser.internalCreateAST(ASTParser.java:823)
+//   *   ...
+//   *  </pre>
+//   * use it because ASTConverterAspect.aj doesn't seems to be enabled (??)
+//   * @fixme avoid direct modification of TypeReference ??
+//   * @see http://grepcode.com/file/repository.grepcode.com/java/eclipse.org/3.5/org.eclipse.jdt/core/3.5.0/org/eclipse/jdt/core/dom/ASTConverter.java#ASTConverter.isPrimitiveType%28char%5B%5D%29
+//   */ 	 
+//  private void fixTypeReference(TypeReference tpeRef) {
+//    if (typeReference instanceof org.eclipse.jdt.internal.compiler.ast.SingleTypeReference) {
+//      // this is either an ArrayTypeReference or a SingleTypeReference
+//      char[][] typeName = ((org.eclipse.jdt.internal.compiler.ast.SingleTypeReference) tpeRef).getTypeName();
+//      char[] name = typeName[0];
+//      if (name == null || name.length == 0) {
+//        typeName[0] = new char[]{'A', 'n' ,'y'}; 
+//      }
+//    }
+//  }
   
   private void fixMethods(AbstractMethodDeclaration[] methods) {
     if (methods == null)
@@ -189,7 +227,8 @@ public privileged aspect DOMAspect {
     /* only source positions available */
     int start = methodInfo.getNameSourceStart();
     int end = methodInfo.getNameSourceEnd();
-
+    Defensive.check(start <= end, "start %d =< end %d for methodInfo %s", start, end, methodInfo);
+    
     // convert 1.5 specific constructs only if compliance is 1.5 or above
     TypeParameter[] typeParams = null;
     if (stc.has1_5Compliance) {
