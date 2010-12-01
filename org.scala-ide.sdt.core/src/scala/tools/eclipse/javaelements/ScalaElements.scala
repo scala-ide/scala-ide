@@ -201,18 +201,38 @@ object ScalaMemberElementInfo extends ReflectionUtils {
 trait ScalaMemberElementInfo extends JavaElementInfo {
   import ScalaMemberElementInfo._
   import java.lang.Integer
+  import scala.tools.eclipse.internal.logging.Defensive
   
   def addChild0(child : IJavaElement) : Unit
 
   def setFlags0(flags : Int) = setFlagsMethod.invoke(this, new Integer(flags))
+
   def getNameSourceStart0 : Int = getNameSourceStartMethod.invoke(this).asInstanceOf[Integer].intValue
   def getNameSourceEnd0 : Int = getNameSourceEndMethod.invoke(this).asInstanceOf[Integer].intValue
-  def setNameSourceStart0(start : Int) = setNameSourceStartMethod.invoke(this, new Integer(start)) 
-  def setNameSourceEnd0(end : Int) = setNameSourceEndMethod.invoke(this, new Integer(end)) 
+  def setNameSource0(start : Int, end : Int) = {
+	  val oStart = new Integer(start)
+	  var oEnd = new Integer(end)
+	  if (!Defensive.check(start <= end, "setNameSource0 start %s <= end %s false then force end = start (FIXME)", oStart, oEnd)) {
+	    oEnd = oStart
+	  }
+	  Defensive.check(start > -1, "setNameSource0 start %s > -1", oStart)
+	  setNameSourceStartMethod.invoke(this, oStart)
+	  setNameSourceEndMethod.invoke(this, oEnd)
+  }
+
   def getDeclarationSourceStart0 : Int = getDeclarationSourceStartMethod.invoke(this).asInstanceOf[Integer].intValue
   def getDeclarationSourceEnd0 : Int = getDeclarationSourceEndMethod.invoke(this).asInstanceOf[Integer].intValue
-  def setSourceRangeStart0(start : Int) : Unit = setSourceRangeStartMethod.invoke(this, new Integer(start))
-  def setSourceRangeEnd0(end : Int) : Unit = setSourceRangeEndMethod.invoke(this, new Integer(end))
+  
+  def setSourceRange0(start : Int, end : Int) : Unit = {
+	  val oStart = new Integer(start)
+	  var oEnd = new Integer(end)
+	  if (!Defensive.check(start <= end, "setSourceRange0 start %s <= end %s false then force end = start (FIXME)", oStart, oEnd)) {
+      oEnd = oStart
+	  }
+	  Defensive.check(start > -1, "setSourceRange0 start %s > -1", oStart)
+	  setSourceRangeEndMethod.invoke(this, oEnd)
+	  setSourceRangeStartMethod.invoke(this, oStart)
+  }
 }
 
 trait AuxChildrenElementInfo extends JavaElementInfo {

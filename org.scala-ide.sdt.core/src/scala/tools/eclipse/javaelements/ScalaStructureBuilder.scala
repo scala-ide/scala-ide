@@ -5,7 +5,9 @@
 
 package scala.tools.eclipse.javaelements
 
+import scala.tools.eclipse.internal.logging.Defensive
 import scala.tools.eclipse.ScalaPlugin
+import scala.tools.eclipse.internal.logging.Tracer
 
 import java.io.{ PrintWriter, StringWriter }
 import java.util.{ Map => JMap }
@@ -193,10 +195,8 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
             
           val nameEnd = point+defElem.labelName.length-1
             
-          defElemInfo.setNameSourceStart0(point)
-          defElemInfo.setNameSourceEnd0(nameEnd)
-          defElemInfo.setSourceRangeStart0(start)
-          defElemInfo.setSourceRangeEnd0(end)
+          defElemInfo.setNameSource0(point, nameEnd)
+          defElemInfo.setSourceRange0(start, end)
           
           newElements0.put(defElem, defElemInfo)
         } 
@@ -221,10 +221,8 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
             classElemInfo.setFlags0(ClassFileConstants.AccSuper|ClassFileConstants.AccFinal|ClassFileConstants.AccPublic)
             classElemInfo.setSuperclassName("java.lang.Object".toArray)
             classElemInfo.setSuperInterfaceNames(null)
-            classElemInfo.setNameSourceStart0(mInfo.getNameSourceStart)
-            classElemInfo.setNameSourceEnd0(mInfo.getNameSourceEnd)
-            classElemInfo.setSourceRangeStart0(mInfo.getDeclarationSourceStart)
-            classElemInfo.setSourceRangeEnd0(mInfo.getDeclarationSourceEnd)
+            classElemInfo.setNameSource0(mInfo.getNameSourceStart, mInfo.getNameSourceEnd)
+            classElemInfo.setSourceRange0(mInfo.getDeclarationSourceStart, mInfo.getDeclarationSourceEnd)
             
             newElements0.put(classElem, classElemInfo)
             
@@ -300,8 +298,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
           resolveDuplicates(importElem)
         
           val importElemInfo = new ImportDeclarationElementInfo
-          setSourceRangeStart(importElemInfo, pos.startOrPoint)
-          setSourceRangeEnd(importElemInfo, pos.endOrPoint-1)
+          setSourceRange0(importElemInfo, pos.startOrPoint, pos.endOrPoint)
         
           val children = getChildren(importContainerInfo)
           if (children.isEmpty)
@@ -381,18 +378,19 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         classElemInfo.setSuperInterfaceNames(interfaceNames.toArray)
         
         val (start, end) = if (!isAnon) {
+          Defensive.notEmpty(name, "name of Class")
           val start0 = c.pos.point 
           (start0, start0 + name.length - 1)
         } else if (primaryType != null) {
+          Defensive.check(primaryType.name.length > 0, "primaryType.name.length > 0")
           val start0 = parentTree.pos.point
           (start0, start0 + primaryType.name.length - 1)
         } else {
           val start0 = parentTree.pos.point
-          (start0, start0 - 1)
+          (start0, start0)
         }
         
-        classElemInfo.setNameSourceStart0(start)
-        classElemInfo.setNameSourceEnd0(end)
+        classElemInfo.setNameSource0(start, end)
         setSourceRange(classElemInfo, c, annotsPos)
         newElements0.put(classElem, classElemInfo)
 
@@ -435,13 +433,11 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         val start = m.pos.point
         val end = start+m.name.length-1
         
-        moduleElemInfo.setNameSourceStart0(start)
-        moduleElemInfo.setNameSourceEnd0(end)
+        moduleElemInfo.setNameSource0(start, end)
         if (!isSynthetic)
           setSourceRange(moduleElemInfo, m, annotsPos)
         else {
-          moduleElemInfo.setSourceRangeStart0(end)
-          moduleElemInfo.setSourceRangeEnd0(end)
+          moduleElemInfo.setSourceRange0(end, end)
         }
         newElements0.put(moduleElem, moduleElemInfo)
         
@@ -477,8 +473,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         instanceElemInfo.setFlags0(ClassFileConstants.AccPublic | ClassFileConstants.AccStatic | ClassFileConstants.AccFinal)
         instanceElemInfo.setTypeName(moduleElem.getFullyQualifiedName('.').toCharArray)
         setSourceRange(instanceElemInfo, m, annotsPos)
-        instanceElemInfo.setNameSourceStart0(start)
-        instanceElemInfo.setNameSourceEnd0(end)
+        instanceElemInfo.setNameSource0(start, end)
         
         newElements0.put(instanceElem, instanceElemInfo)
         
@@ -511,8 +506,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         val start = v.pos.point
         val end = start+elemName.length-1
         
-        valElemInfo.setNameSourceStart0(start)
-        valElemInfo.setNameSourceEnd0(end)
+        valElemInfo.setNameSource0(start, end)
         setSourceRange(valElemInfo, v, annotsPos)
         newElements0.put(valElem, valElemInfo)
 
@@ -540,10 +534,9 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         val annotsPos = addAnnotations(sym, typeElemInfo, typeElem)
         
         val start = t.pos.point
-        val end = start+t.name.length-1
+        val end = start + t.name.length -1
 
-        typeElemInfo.setNameSourceStart0(start)
-        typeElemInfo.setNameSourceEnd0(end)
+        typeElemInfo.setNameSource0(start, end)
         setSourceRange(typeElemInfo, t, annotsPos)
         newElements0.put(typeElem, typeElemInfo)
         
@@ -651,23 +644,24 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         if (isCtor0) {
           elementInfo match {
             case smei : ScalaMemberElementInfo =>
-              defElemInfo.setNameSourceStart0(smei.getNameSourceStart0)
-              defElemInfo.setNameSourceEnd0(smei.getNameSourceEnd0)
+              defElemInfo.setNameSource0(smei.getNameSourceStart0, smei.getNameSourceEnd0)
               if (sym.isPrimaryConstructor) {
-                defElemInfo.setSourceRangeStart0(smei.getNameSourceEnd0)
-                defElemInfo.setSourceRangeEnd0(smei.getDeclarationSourceEnd0)
+            	//FIXME ? in original code start is set to smei.getNameSourceEnd0 (why ?)  
+                defElemInfo.setSourceRange0(smei.getNameSourceStart0, smei.getDeclarationSourceEnd0)
               } else {
-                defElemInfo.setSourceRangeStart0(smei.getDeclarationSourceStart0)
-                defElemInfo.setSourceRangeEnd0(smei.getDeclarationSourceEnd0)
+                defElemInfo.setSourceRange0(smei.getDeclarationSourceStart0, smei.getDeclarationSourceEnd0)
               }
-            case _ =>
+            case _ => Tracer.println("WARN constructor of " + defElem.labelName + " can't handle elementInfo (define start/end) : " + elementInfo)
           }
         } else {
           val start = d.pos.point
-          val end = start+defElem.labelName.length-1-(if (sym.isSetter) 4 else 0)
-          
-          defElemInfo.setNameSourceStart0(start)
-          defElemInfo.setNameSourceEnd0(end)
+          val end = if (Defensive.notEmpty(defElem.labelName, "defElem.labelName notEmpty : %s", defElem)) {
+        	  // disable subtraction if iSetter, can introduce end < start, why 4 ??
+        	  start+defElem.labelName.length-1//-(if (sym.isSetter) 4 else 0)
+          } else {
+        	  start + 1
+          }
+          defElemInfo.setNameSource0(start, end)
           setSourceRange(defElemInfo, d, annotsPos)
         }
         
@@ -744,10 +738,10 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
           val info = new JDTAnnotationInfo
           newElements0.put(handle, info)
   
+          // pos.startOrPoint can == pos.endOrPoint == pos.point
           info.nameStart = annot.pos.startOrPoint
-          info.nameEnd = annot.pos.endOrPoint-1
-          setSourceRangeStart(info, info.nameStart-1)
-          setSourceRangeEnd(info, info.nameEnd)
+          info.nameEnd = annot.pos.endOrPoint
+          setSourceRange0(info, info.nameStart, info.nameEnd)
   
           val memberValuePairs = annot.assocs
           val membersLength = memberValuePairs.length
@@ -787,24 +781,24 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         if (pos.isDefined) {
           val pos0 = if (annotsPos.isOpaqueRange) pos union annotsPos else pos
           val sym = tree.symbol.initialize
-          val start0 = if (sym == NoSymbol)
-            pos0.startOrPoint
-          else
+          val pos1 = if (sym == NoSymbol) {
+            pos0
+          } else {
             try {
               docCommentPos(sym) match {
-                case NoPosition => pos0.startOrPoint
-                case cpos => cpos.startOrPoint
+                case NoPosition => pos0
+                case cpos => cpos
               }
             } catch {
-              case _ => pos0.startOrPoint
+              case _ => pos0
             }
-          (start0, pos0.endOrPoint-1)
-        }
-        else
+          }
+          (pos1.startOrPoint, pos1.endOrPoint) //start0 can == pos0.endOrPoint == pos0.point 
+        } else {
+          Tracer.println("WARN set sourceRange(-1, -1) for : " + info) 	
           (-1, -1)
-      
-      info.setSourceRangeStart0(start)
-      info.setSourceRangeEnd0(end)
+        }
+      info.setSourceRange0(start, end)
     }
     
     def traverse(tree: Tree) {

@@ -102,12 +102,20 @@ object OpenableElementInfoUtils extends ReflectionUtils {
 }
 
 object SourceRefElementInfoUtils extends ReflectionUtils {
+  import scala.tools.eclipse.internal.logging.Defensive
+  
   private val sreiClazz = Class.forName("org.eclipse.jdt.internal.core.SourceRefElementInfo")
   private val setSourceRangeStartMethod = getDeclaredMethod(sreiClazz, "setSourceRangeStart", classOf[Int])
   private val setSourceRangeEndMethod = getDeclaredMethod(sreiClazz, "setSourceRangeEnd", classOf[Int])
   
-  def setSourceRangeStart(srei : AnyRef, pos : Int) = setSourceRangeStartMethod.invoke(srei, new Integer(pos))
-  def setSourceRangeEnd(srei : AnyRef, pos : Int) = setSourceRangeEndMethod.invoke(srei, new Integer(pos))
+  def setSourceRange0(srei : AnyRef, start : Int, end : Int) = {
+    val oStart = new Integer(start)
+    val oEnd = new Integer(end)
+    Defensive.check(start <= end, "SourceRefElementInfoUtils.setSourceRange start %s <= end %s", oStart, oEnd)
+    Defensive.check(start > -1, "SourceRefElementInfoUtils.setNameSource start %s > -1", oStart)    
+    setSourceRangeStartMethod.invoke(srei, oStart)
+    setSourceRangeEndMethod.invoke(srei, oEnd)
+  }
 }
 
 object ImportContainerInfoUtils extends ReflectionUtils {
