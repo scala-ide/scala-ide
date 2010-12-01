@@ -9,23 +9,65 @@ package scala.tools.eclipse.properties
 import org.eclipse.core.resources.{ IncrementalProjectBuilder, IProject }
 import org.eclipse.core.runtime.preferences.IEclipsePreferences
 import org.eclipse.jdt.core.IJavaProject
-import org.eclipse.jface.preference.{ IPersistentPreferenceStore, IPreferenceStore }
+import org.eclipse.jface.preference.{ PreferencePage, IPersistentPreferenceStore, IPreferenceStore }
 import org.eclipse.ui.{ IWorkbench, IWorkbenchPreferencePage }
 import org.eclipse.ui.dialogs.PropertyPage
 import org.eclipse.swt.SWT
 import org.eclipse.swt.events.{ ModifyEvent, ModifyListener, SelectionAdapter, SelectionEvent, SelectionListener }
-import org.eclipse.swt.layout.{ GridData, GridLayout }
-import org.eclipse.swt.widgets.{ Button, Combo, Composite, Control, Event, Group, Label, Listener, Text }
-
+import org.eclipse.swt.layout.{ GridData, GridLayout, RowLayout }
+import org.eclipse.swt.widgets.{ Button, Combo, Composite, Group, Label, Control}
 import scala.tools.nsc.Settings
 
 import scala.tools.eclipse.{ ScalaPlugin, SettingConverterUtil }
 import scala.tools.eclipse.util.IDESettings
 
+trait ScalaPluginPreferencePage {
+	self: PreferencePage with EclipseSettings => 
+	
+	val eclipseBoxes: List[EclipseSetting.EclipseBox]
+	
+	def isChanged: Boolean = eclipseBoxes.exists(_.eSettings.exists(_.isChanged))
+	
+  override def performDefaults = eclipseBoxes.foreach(_.eSettings.foreach(_.reset()))
+  
+  def save(userBoxes: List[IDESettings.Box], store: IPreferenceStore): Unit = {
+	  for (b <- userBoxes) {
+      for (setting <- b.userSettings) {
+        val name = SettingConverterUtil.convertNameToProperty(setting.name)
+        val isDefault = setting match {
+          case bs : Settings#BooleanSetting => bs.value == false
+          case is : Settings#IntSetting => is.value == is.default
+          case ss : Settings#StringSetting => ss.value == ss.default
+          case ms : Settings#MultiStringSetting => ms.value == Nil
+          case cs : Settings#ChoiceSetting => cs.value == cs.default
+        }
+        if (isDefault)
+          store.setToDefault(name)
+        else {
+          val value = setting match {
+            case ms : Settings#MultiStringSetting => ms.value.mkString(" ")
+            case setting => setting.value.toString 
+          }
+          store.setValue(name, value)
+        }
+      }
+    }
+    
+    store match {
+      case savable : IPersistentPreferenceStore => savable.save()
+    }
+	}
+	
+	// There seems to be a bug in the compiler that appears in runtime (#2296)
+	// So updateApply is goint to forward to real updateApplyButton
+	def updateApply: Unit 
+}
+
 /**
  * Provides a property page to allow Scala compiler settings to be changed.
  */   
-class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage {
+class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with EclipseSettings
+  with ScalaPluginPreferencePage {
   //TODO - Use setValid to enable/disable apply button so we can only click the button when a property/preference
   // has changed from the saved value
   
@@ -38,26 +80,23 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage {
   lazy val preferenceStore0 : IPreferenceStore = {
     /** The project for which we are setting properties */
     val project = getElement() match {
-      case project : IProject => Some(project)
+      case project : IProject         => Some(project)
       case javaProject : IJavaProject => Some(javaProject.getProject())
-      case other => None // We're a Preference page!
+      case other                      => None // We're a Preference page!
     }
-    if(project.isEmpty) {
+    if(project.isEmpty)
       super.getPreferenceStore()
-    } else {
+    else
       new PropertyStore(project.get, super.getPreferenceStore(), getPageId)
-    }
   }
+
   /** Returns the id of what preference page we use */
   def getPageId = ScalaPlugin.plugin.pluginId
-  
+
+  import EclipseSetting.toEclipseBox
   /** The settings we can change */
-  lazy val userSettings = IDESettings.shownSettings(new Settings)
-  lazy val eclipseSettings = userSettings.map { setting =>
-    val name = SettingConverterUtil.convertNameToProperty(setting.name)
-    setting.tryToSetFromPropertyValue(preferenceStore0.getString(name))
-    eclipseSetting(setting)
-  }
+  lazy val userBoxes    = IDESettings.shownSettings(new Settings)
+  lazy val eclipseBoxes =	userBoxes.map { s => toEclipseBox(s, preferenceStore0) }
 
   /** Pulls the preference store associated with this plugin */
   override def doGetPreferenceStore() : IPreferenceStore = {
@@ -66,42 +105,22 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage {
  
   var useProjectSettingsWidget : Option[UseProjectSettingsWidget] = None
   
-  def save() = {
+  def save(): Unit = {
     if(useProjectSettingsWidget.isDefined) {
       useProjectSettingsWidget.get.save
     }
     //This has to come later, as we need to make sure the useProjectSettingsWidget's values make it into
     //the final save.
-    for (setting <- userSettings) {
-      val name = SettingConverterUtil.convertNameToProperty(setting.name)
-      val isDefault = setting match {
-        case bs : Settings#BooleanSetting => bs.value == false
-        case is : Settings#IntSetting => is.value == is.default
-        case ss : Settings#StringSetting => ss.value == ss.default
-        case ms : Settings#MultiStringSetting => ms.value == Nil
-        case cs : Settings#ChoiceSetting => cs.value == cs.default
-      }
-      if (isDefault)
-        preferenceStore0.setToDefault(name)
-      else {
-        val value = setting match {
-          case ms : Settings#MultiStringSetting => ms.value.mkString(" ")
-          case setting => setting.value.toString 
-        }
-        
-        preferenceStore0.setValue(name, value)
-      }
-    }
-    
-    preferenceStore0 match {
-      case savable : IPersistentPreferenceStore => savable.save()
-    }
+    save(userBoxes, preferenceStore0)
 
-    //Don't let use click "apply" again until a change
+    //Don't let user click "apply" again until a change
     updateApplyButton
   }
+  
+  def updateApply = updateApplyButton
+  
   /** Updates the apply button with the appropriate enablement. */
-  override def updateApplyButton() : Unit = {
+  protected override def updateApplyButton() : Unit = {
     if(getApplyButton != null) {
       if(isValid) {
           getApplyButton.setEnabled(isChanged)
@@ -117,10 +136,11 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage {
       if(isWorkbenchPage) {
         //No Outer Composite
         val tmp = new Composite(parent, SWT.NONE)
-	      val layout = new GridLayout(3, false)
+	      val layout = new GridLayout(1, false)
         tmp.setLayout(layout)
         val data = new GridData(GridData.FILL)
         data.grabExcessHorizontalSpace = true
+        data.horizontalAlignment = GridData.FILL
         tmp.setLayoutData(data)
         tmp
       } else {
@@ -131,16 +151,27 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage {
         useProjectSettingsWidget.get.addTo(outer)
         val tmp = new Group(outer, SWT.SHADOW_ETCHED_IN)
         tmp.setText("Project Compiler Settings")
-        val layout = new GridLayout(3, false)
+        val layout = new GridLayout(1, false)
         tmp.setLayout(layout)
         val data = new GridData(GridData.FILL)
         data.grabExcessHorizontalSpace = true
+        data.horizontalAlignment = GridData.FILL
         tmp.setLayoutData(data)
         tmp
       }
     }
     
-    for (setting <- eclipseSettings) setting.addTo(composite)
+    eclipseBoxes.foreach(eBox => {
+      val group = new Group(composite, SWT.SHADOW_ETCHED_IN)
+      group.setText(eBox.name)
+      val layout = new GridLayout(3, false)
+      group.setLayout(layout)
+      val data = new GridData(GridData.FILL)
+      data.grabExcessHorizontalSpace = true
+      data.horizontalAlignment = GridData.FILL
+      group.setLayoutData(data)
+      eBox.eSettings.foreach(_.addTo(group))
+    })
     
     //Make sure we check enablement of compiler settings here...
     useProjectSettingsWidget match {
@@ -156,9 +187,6 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage {
     super.createControl(parent)
     updateApplyButton
   }
-
-  // Eclipse PropertyPage API
-  override protected def performDefaults = for (setting <- eclipseSettings) setting.reset()
 
   /** Check who needs to rebuild with new compiler flags */
   private def buildIfNecessary() = {
@@ -176,7 +204,7 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage {
   
   // Eclipse PropertyPage API
   override def performOk = try {
-    for (setting <- eclipseSettings) setting.apply()
+  	eclipseBoxes.foreach(_.eSettings.foreach(_.apply()))
     save()
     buildIfNecessary()    
     true
@@ -185,7 +213,7 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage {
   }
   
   //Make sure apply button isn't available until it should be
-  def isChanged : Boolean = {
+  override def isChanged : Boolean = {
 	  useProjectSettingsWidget match {
 	    case Some(widget) => 
 		    if(widget.isChanged) {
@@ -200,18 +228,7 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage {
 	  }
     
 	  //check all our other settings
-    eclipseSettings.exists(_.isChanged)
-  }
-
-
-  /** Function to map a Scala compiler setting to an Eclipse plugin setting */
-  private def eclipseSetting(setting : Settings#Setting) : EclipseSetting = setting match {
-    case setting : Settings#BooleanSetting => new CheckBoxSetting(setting)
-    case setting : Settings#IntSetting => new IntegerSetting(setting)
-    case setting : Settings#StringSetting => new StringSetting(setting)
-//    case setting : Settings#PhasesSetting  => new StringSetting(setting) // !!!
-    case setting : Settings#MultiStringSetting => new MultiStringSetting(setting)
-    case setting : Settings#ChoiceSetting => new ComboSetting(setting)
+	  super.isChanged
   }
   
   /** This widget should only be used on property pages. */
@@ -248,7 +265,7 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage {
     /** Toggles the use of a property page */
     def handleToggle = {
       val selected = control.getSelection
-      eclipseSettings foreach { _.setEnabled(selected) }
+      eclipseBoxes.foreach(_.eSettings.foreach(_.setEnabled(selected)))
       updateApplyButton
     }
     
@@ -261,160 +278,4 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage {
       preferenceStore0.setValue(USE_PROJECT_SETTINGS_PREFERENCE, control.getSelection)
     }
   }
-  
-  /** 
-   * Represents a setting that may by changed within Eclipse.
-   */
-  abstract class EclipseSetting(val setting : Settings#Setting) {
-    def control : Control
-    val data = new GridData()
-    data.horizontalAlignment = GridData.FILL
-
-    
-    def setEnabled(value:Boolean) : Unit = {
-      control.setEnabled(value)
-      if(!value) {
-        reset
-      }
-    }
-    
-    def addTo(page : Composite) {
-      val label = new Label(page, SWT.NONE)
-      label.setText(SettingConverterUtil.convertNameToProperty(setting.name))
-      createControl(page)
-      val help = new Label(page, SWT.NONE)
-      help.setText(setting.helpDescription)
-    }
-
-    /** Create the control on the page */
-    def createControl(page : Composite)
-
-    def isChanged : Boolean
-    
-    /** Reset the control to a default value */
-    def reset()
-
-    /** Apply the value of the control */
-    def apply()
-  }
-
-  /** 
-   * Boolean setting controlled by a checkbox.
-   */
-  class CheckBoxSetting(setting : Settings#BooleanSetting) extends EclipseSetting(setting) {
-    var control : Button = _
-
-    def createControl(page : Composite) {
-      control = new Button(page, SWT.CHECK)
-      control.setSelection(setting.value)
-      control.addSelectionListener(new SelectionAdapter() {
-        override def widgetSelected(e : SelectionEvent) { updateApplyButton }	
-      })
-    }
-
-    def isChanged = !setting.value.equals(control.getSelection)
-    
-    def reset() { control.setSelection(false) }
-
-    def apply() { setting.value = control.getSelection }
-  }
-
-  /** 
-     * Integer setting editable using a text field.
-     */
-  class IntegerSetting(setting : Settings#IntSetting) extends EclipseSetting(setting) {
-    var control : Text = _
-
-    def createControl(page : Composite) {
-      control = new Text(page, SWT.SINGLE | SWT.BORDER)
-      control.setLayoutData(data)
-      control.setText(setting.value.toString)
-      control.addListener (SWT.Verify, new Listener {
-        def handleEvent(e : Event) { if(e.text.exists(c => c < '0' || c > '9')) e.doit = false }
-      })
-      control.addModifyListener(new ModifyListener() {
-        def modifyText(e : ModifyEvent ) { updateApplyButton }
-      }) 
-    }
-
-    def isChanged = setting.value.toString != control.getText
-    
-    def reset() { control.setText(setting.default.toString) }
-
-    def apply() {
-      setting.value = try {
-        control.getText.toInt
-      } catch {
-        case _ : NumberFormatException => setting.default
-      }
-    }
-  }
-
-  /** 
-     * String setting editable using a text field.
-     */
-  class StringSetting(setting : Settings#StringSetting) extends EclipseSetting(setting) {
-    var control : Text = _
-
-    def createControl(page : Composite) {
-      control = new Text(page, SWT.SINGLE | SWT.BORDER)
-      control.setText(setting.value)
-      control.setLayoutData(data)
-      
-      control.addModifyListener(new ModifyListener() {
-        def modifyText(e : ModifyEvent) = { updateApplyButton }
-      }) 
-    }
-
-    def isChanged = setting.value != control.getText
-    
-    def reset() { control.setText(setting.default) }
-
-    def apply() { setting.value = control.getText }
-  }
-
-  /** 
-     * Multi string setting editable using a text field.
-     */
-  class MultiStringSetting(setting : Settings#MultiStringSetting) extends EclipseSetting(setting) {
-    var control : Text = _
-
-    def createControl(page : Composite) {
-      control = new Text(page, SWT.SINGLE | SWT.BORDER)
-      control.setLayoutData(data)
-      control.setText(setting.value.mkString(" "))
-      control.addModifyListener(new ModifyListener() {
-        def modifyText(e : ModifyEvent) = { updateApplyButton }
-      }) 
-    }
-
-    def isChanged = setting.value != control.getText
-    
-    def reset() { control.setText("") }
-
-    def apply() { setting.value = control.getText.trim.split(" +").toList }
-  }
-
-  /** 
-     * Text setting selectable using a drop down combo box.
-     */
-  class ComboSetting(setting : Settings#ChoiceSetting) extends EclipseSetting(setting) {
-    var control : Combo = _
-
-    def createControl(page : Composite) {
-      control = new Combo(page, SWT.DROP_DOWN | SWT.READ_ONLY)
-      control.setLayoutData(data)
-      setting.choices.foreach(control.add)
-      control.setText(setting.value)
-      control.addSelectionListener(new SelectionAdapter() {
-        override def widgetSelected(e : SelectionEvent) { updateApplyButton }	
-      })
-    }
-
-    def isChanged = setting.value != control.getText
-    
-    def reset() { control.setText(setting.default) }
-
-    def apply() { setting.value = control.getText }
-  }
-}
+}  

@@ -326,7 +326,7 @@ class ScalaProject(val underlying : IProject) {
     val useProjectSettings = projectStore.getBoolean(SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE)
     
     val store = if (useProjectSettings) projectStore else workspaceStore  
-    IDESettings.shownSettings(settings).foreach {
+    IDESettings.shownSettings(settings).foreach{ _.userSettings.foreach {
       setting =>
         val value0 = store.getString(SettingConverterUtil.convertNameToProperty(setting.name))
         try {
@@ -341,7 +341,7 @@ class ScalaProject(val underlying : IProject) {
         } catch {
           case t : Throwable => plugin.logError("Unable to set setting '"+setting.name+"' to '"+value0+"'", t)
         }
-    }
+    } }
   }
   
   def isStandardSource(file : IFile, qualifiedName : String) : Boolean = {
