@@ -22,7 +22,7 @@ import scala.tools.eclipse.javaelements.{
   ScalaOverrideIndicatorBuilder }
 import scala.tools.eclipse.util.{ Cached, EclipseFile, EclipseResource }
 
-class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
+class ScalaPresentationCompiler(settings : Settings)
   extends Global(settings, new ScalaPresentationCompiler.PresentationReporter)
   with ScalaStructureBuilder with ScalaIndexBuilder with ScalaMatchLocator
   with ScalaOverrideIndicatorBuilder with ScalaJavaMapper with JVMUtils { self =>

@@ -36,6 +36,8 @@ class ScalaProject(val underlying : IProject) {
   private val resetPendingLock = new Object
   private var resetPending = false
   
+  private var scalaVersion = "2.8.x"
+    
   private val presentationCompiler = new Cached[ScalaPresentationCompiler] {
     override def create() = {
       checkClasspath
@@ -45,7 +47,14 @@ class ScalaProject(val underlying : IProject) {
       settings.verbose.tryToSetFromPropertyValue("true")
       settings.XlogImplicits.tryToSetFromPropertyValue("true")
       initialize(settings)
-      new ScalaPresentationCompiler(ScalaProject.this, settings)
+      //TODO replace the if by a conditional Extension Point (or better)
+      if (scalaVersion.startsWith("2.9")) {
+        new ScalaPresentationCompiler(settings)
+      } else {
+        new ScalaPresentationCompiler(settings) with scalac_28.TopLevelMapTyper {
+          val project = ScalaProject.this
+        }
+      }
     }
     
     override def destroy(compiler : ScalaPresentationCompiler) {

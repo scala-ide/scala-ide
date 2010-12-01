@@ -4,6 +4,7 @@
 // $Id$
 
 package scala.tools.eclipse
+package scalac_28
 
 import scala.collection.mutable.HashMap
 
@@ -15,7 +16,7 @@ import scala.tools.nsc.io.AbstractFile
 import scala.tools.nsc.reporters.{ ConsoleReporter, Reporter }
 
 import scala.tools.eclipse.util.EclipseFile
-/*
+
 class TopLevelMap {
   val settings = new Settings(error)
   settings.classpath.value = ScalaPlugin.plugin.libClasses.get.toOSString
@@ -85,5 +86,16 @@ class TopLevelMap {
       parse(List(file))
     }
   }
+  
+  /**
+   * optimized version of new + files.foreach { f => update }
+   * Avoid call of remove, creation of some temporary List
+   * @param files
+   */
+  def resetWith(files : Set[IFile]) : this.type = {
+      fileToTypes.clear
+      typeToFile.clear
+      parse(files.toList)
+      this
+  }
 }
-*/
