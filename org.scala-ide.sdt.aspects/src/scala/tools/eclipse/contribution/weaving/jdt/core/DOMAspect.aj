@@ -127,9 +127,9 @@ public privileged aspect DOMAspect {
       org.eclipse.jdt.core.dom.ASTConverter converter = new org.eclipse.jdt.core.dom.ASTConverter(compilerOptions0, true, monitor) {
         protected boolean isPrimitiveType(char[] name) {
           if (Defensive.notEmpty(name, "isPrimitive")) {
-            return false;
-          }        
-          return super.isPrimitiveType(name);
+            return super.isPrimitiveType(name);
+          }
+          return false;
         }
       };
       
