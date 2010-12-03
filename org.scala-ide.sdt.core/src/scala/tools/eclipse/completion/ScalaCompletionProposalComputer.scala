@@ -102,7 +102,7 @@ class ScalaCompletionProposalComputer extends IJavaCompletionProposalComputer {
 
         def nameMatches(sym : compiler.Symbol) = prefixMatches(sym.decodedName.toString.toArray, prefix)	
         def prefixMatches(name : Array[Char], prefix : Array[Char]) =
-      	  CharOperation.prefixEquals(prefix, name, true) || CharOperation.camelCaseMatch(prefix, name) 
+      	  CharOperation.prefixEquals(prefix, name, false) || CharOperation.camelCaseMatch(prefix, name) 
        val buff = new collection.mutable.ListBuffer[ICompletionProposal]
 
        class ScalaCompletionProposal(completion : String,
