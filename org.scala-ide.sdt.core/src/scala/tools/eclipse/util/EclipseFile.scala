@@ -102,24 +102,44 @@ class EclipseFile(override val underlying : IFile) extends EclipseResource[IFile
     throw new NullPointerException("underlying == null")
   
   def isDirectory : Boolean = false
+
+  // try to use a IDocument instead of IBuffer that can require 'openable.getBuffer' => compilation (via request to ScalaStructureBuilder)
+  // scan every editors to find if someone currently edit the underling IFile
+  // we doen't realy need the Document but a way to read/update content of potential existing editor open on 'underling
+  ///TODO find a better way to retreive Editors/IDocument than scanning
+  import org.eclipse.jface.text.IDocument
   
-  lazy val buffer : IBuffer = {
-    Option(ScalaSourceFile.handleFactory.createOpenable(underlying.getFullPath.toString, null)).map { openable =>
-      val resource = openable.getResource
-      val fileInfo = EFS.getStore(resource.getLocationURI).fetchInfo
-      val info = resource.asInstanceOf[Resource].getResourceInfo(true, false);
-      if (fileInfo.getLastModified == info.getLocalSyncInfo) null else openable.getBuffer
-    }.getOrElse(null)
+  private def document : IDocument = {
+    import org.eclipse.ui.PlatformUI
+    import org.eclipse.jdt.ui.JavaUI
+    import org.eclipse.ui.part.FileEditorInput
+    
+    var back : IDocument = null
+    val dp = JavaUI.getDocumentProvider()
+    for (
+      window <- PlatformUI.getWorkbench().getWorkbenchWindows();
+      page <- window.getPages;
+      edr <- page.getEditorReferences
+    ) {
+      edr.getEditorInput() match {
+        case ed : FileEditorInput if (ed.getFile == underlying) =>
+          back = dp.getDocument(ed)
+        case _ => () //ignore
+      }
+    }
+    back
   }
   
   def input : InputStream = {
-	if (buffer ne null) new ByteArrayInputStream(buffer.getContents.getBytes) else underlying.getContents
+    val doc = document  
+    if (doc ne null) new ByteArrayInputStream(doc.get.getBytes) else underlying.getContents(true)
   }
   
   def output: OutputStream = {
-	if (buffer ne null) new ByteArrayOutputStream {
+    val doc = document  
+    if (doc ne null) new ByteArrayOutputStream {
       override def close = {
-        buffer.setContents(new String(buf, 0, count))
+        doc.set(new String(buf, 0, count))
       }
     } else new ByteArrayOutputStream {
       override def close = {
@@ -138,7 +158,11 @@ class EclipseFile(override val underlying : IFile) extends EclipseResource[IFile
     }
   }
 
-  override def sizeOption: Option[Int] = if (buffer ne null) Some(buffer.getLength) else getFileInfo.map(_.getLength.toInt)
+  // Size in bytes of char ??
+  override def sizeOption: Option[Int] = {
+    val doc = document
+    if (doc ne null) Some(doc.get.getBytes.length) else getFileInfo.map(_.getLength.toInt)
+  }
   
   private def getFileInfo = {
     val fs = FileBuffers.getFileStoreAtLocation(underlying.getLocation)
