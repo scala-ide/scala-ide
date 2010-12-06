@@ -52,7 +52,7 @@ class ScalaProject(val underlying : IProject) {
         new ScalaPresentationCompiler(settings)
       } else {
         new ScalaPresentationCompiler(settings) with scalac_28.TopLevelMapTyper {
-          val project = ScalaProject.this
+          def project = ScalaProject.this
         }
       }
     }
@@ -94,22 +94,22 @@ class ScalaProject(val underlying : IProject) {
   }
 
   def sourceFolders : Seq[IPath] = {
-	val all = for (cpe <- javaProject.getResolvedClasspath(true) if cpe.getEntryKind == IClasspathEntry.CPE_SOURCE)
-	  yield {
-		val resource = plugin.workspaceRoot.findMember(cpe.getPath)
-		if (resource == null) null else resource.getLocation
-	}
-	all.filter{_ ne null}
+    val all = for (cpe <- javaProject.getResolvedClasspath(true) if cpe.getEntryKind == IClasspathEntry.CPE_SOURCE)
+      yield {
+        val resource = plugin.workspaceRoot.findMember(cpe.getPath)
+        if (resource == null) null else resource.getLocation
+    }
+    all.filter{_ ne null}
   }
   
   def outputFolders : Seq[IPath] = {
-	val outputs = new LinkedHashSet[IPath]
-	for (cpe <- javaProject.getResolvedClasspath(true) if cpe.getEntryKind == IClasspathEntry.CPE_SOURCE) {
-	  val cpeOutput = cpe.getOutputLocation
-	  val output = if (cpeOutput == null) javaProject.getOutputLocation else cpeOutput
-	  outputs += output
-	}
-	outputs.toSeq
+    val outputs = new LinkedHashSet[IPath]
+    for (cpe <- javaProject.getResolvedClasspath(true) if cpe.getEntryKind == IClasspathEntry.CPE_SOURCE) {
+      val cpeOutput = cpe.getOutputLocation
+      val output = if (cpeOutput == null) javaProject.getOutputLocation else cpeOutput
+      outputs += output
+    }
+    outputs.toSeq
   }
 
   def classpath : Seq[IPath] = {
@@ -129,7 +129,7 @@ class ScalaProject(val underlying : IProject) {
                 val absPath = plugin.workspaceRoot.findMember(outputLocation)
                 if (absPath != null) path += absPath.getLocation
               }
-        	  }
+              }
             classpath(depJava, true)
           }
         case IClasspathEntry.CPE_LIBRARY =>   
@@ -313,7 +313,7 @@ class ScalaProject(val underlying : IProject) {
     if (!sfs.isEmpty) {
       val path = sfs.iterator.next
       plugin.workspaceRoot.findContainersForLocation(path) match {
-    	case Array(container) => settings.encoding.value = container.getDefaultCharset   
+        case Array(container) => settings.encoding.value = container.getDefaultCharset   
         case _ =>
       }
     }
@@ -383,7 +383,7 @@ class ScalaProject(val underlying : IProject) {
         true
       else {
         try {
-        	!buildManager.loadFrom(EclipseResource(depFile), EclipseResource.fromString(_).getOrElse(null))
+            !buildManager.loadFrom(EclipseResource(depFile), EclipseResource.fromString(_).getOrElse(null))
         } catch { case _ => true }
       }
     }

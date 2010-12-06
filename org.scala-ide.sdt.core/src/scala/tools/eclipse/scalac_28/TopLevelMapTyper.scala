@@ -26,10 +26,10 @@ trait TopLevelMapTyper extends ScalaPresentationCompiler {
   def project : ScalaProject
   
   class EclipseTyperRun extends TyperRun {
-    lazy val topLevelMap : TopLevelMap = {
+    val topLevelMap : TopLevelMap = {
       Tracer.timeOf("Building top-level map for: "+ project.underlying.getName) {
         new TopLevelMap().resetWith(project.allSourceFiles)
-      }      
+      }
     }
     
     def findSource(qualifiedName : String) = topLevelMap.get(qualifiedName)
