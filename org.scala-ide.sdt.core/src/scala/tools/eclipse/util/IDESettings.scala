@@ -24,8 +24,8 @@ object IDESettings {
     						 require, pluginsDir, Xwarnfatal, Xwarninit)),
     		Box("Private options",
     				List(Xcloselim, Xdce, inline, Xlinearizer, Ynogenericsig, noimports,
-    						 nopredefs, selfInAnnots, Yrecursion, refinementMethodDispatch,
-    						 Ywarndeadcode, Ybuildmanagerdebug, Xsqueeze)))
+    						 selfInAnnots, Yrecursion, refinementMethodDispatch,
+    						 Ywarndeadcode, Ybuildmanagerdebug)))
   }
   
   def pluginSettings: List[Box] = {
