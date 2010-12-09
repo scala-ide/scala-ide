@@ -5,6 +5,7 @@
 
 package scala.tools.eclipse
 
+import scala.tools.eclipse.internal.logging.Tracer
 import scala.collection.immutable.Set
 import scala.collection.mutable.{ LinkedHashSet, HashMap, HashSet }
 
@@ -35,7 +36,7 @@ class ScalaProject(val underlying : IProject) {
   private val depFile = underlying.getFile(".scala_dependencies")
   private val resetPendingLock = new Object
   private var resetPending = false
-  
+    
   private var scalaVersion = "2.8.x"
     
   private val presentationCompiler = new Cached[ScalaPresentationCompiler] {
@@ -93,26 +94,74 @@ class ScalaProject(val underlying : IProject) {
     JavaCore.create(underlying)
   }
 
-  def sourceFolders : Seq[IPath] = {
-    val all = for (cpe <- javaProject.getResolvedClasspath(true) if cpe.getEntryKind == IClasspathEntry.CPE_SOURCE)
-      yield {
-        val resource = plugin.workspaceRoot.findMember(cpe.getPath)
-        if (resource == null) null else resource.getLocation
-    }
-    all.filter{_ ne null}
+  private def toIResource(v : IPath) : IResource = {
+    // findMember return null if IPath to a non existing resource
+    //val b = plugin.workspaceRoot.findMember(v)
+    //if (b == null) Tracer.println("IResource is null from plugin.workspaceRoot.findMember(" + v + ")")
+
+    // getFolder don't test if resource exist
+    val b = plugin.workspaceRoot.getFolder(v)
+    b
+  }
+  private def toIResource(cpe : IClasspathEntry) : IResource = toIResource(cpe.getPath)
+  private def toOutputIPath(cpe : IClasspathEntry) = {
+    val cpeOutput = cpe.getOutputLocation
+    if (cpeOutput == null) javaProject.getOutputLocation else cpeOutput
   }
   
-  def outputFolders : Seq[IPath] = {
-    val outputs = new LinkedHashSet[IPath]
-    for (cpe <- javaProject.getResolvedClasspath(true) if cpe.getEntryKind == IClasspathEntry.CPE_SOURCE) {
-      val cpeOutput = cpe.getOutputLocation
-      val output = if (cpeOutput == null) javaProject.getOutputLocation else cpeOutput
-      outputs += output
-    }
-    outputs.toSeq
-  }
+  private def findSelectedIFile(cpe : IClasspathEntry) : Seq[IFile] = {
+    def toCharArray(v : IPath) = v.toPortableString.toCharArray
+    
+    val selected = new HashSet[IFile]()
+    val inclusionPatterns = cpe.getInclusionPatterns.map{ toCharArray }
+    val exclusionPatterns = cpe.getExclusionPatterns.map{ toCharArray }
+    
+    toIResource(cpe).accept(
+      new IResourceProxyVisitor {
+        def visit(proxy : IResourceProxy) : Boolean = proxy.getType match {
+          case IResource.FILE => {
+            val resource = proxy.requestResource
+            if(plugin.isBuildable(resource.asInstanceOf[IFile]) && Util.isExcluded(resource.getFullPath, inclusionPatterns, exclusionPatterns, false)) {
+              selected += resource.asInstanceOf[IFile]
+            }
+            false
+          }
+          case IResource.FOLDER => {
+            //TODO case of source folder is project root
+//                var folderPath : IPath = null
+//                if (isAlsoProject) {
+//                  folderPath = proxy.requestFullPath
+//                  if (isExcludedFromProject(env, folderPath))
+//                    return false
+//                }
+            if ((exclusionPatterns != null) && Util.isExcluded(proxy.requestFullPath, inclusionPatterns, exclusionPatterns, true)) {
+              // must walk children if inclusionPatterns != null, can skip them if == null
+              // but folder is excluded so do not create it in the output folder
+              inclusionPatterns != null
+            } else {
+              true
+            }
+          }
+          case _ => true
+        }
+      }
+      , IResource.NONE
+    )
 
-  def classpath : Seq[IPath] = {
+    selected.toSeq
+  }
+  
+  private def sourcesFoldersInfo = (javaProject.getResolvedClasspath(true)
+      .filter(_.getEntryKind == IClasspathEntry.CPE_SOURCE)
+      .filter(cpe => toIResource(cpe) != null)
+  )
+  
+  def sourceFolders : Seq[IPath] = sourcesFoldersInfo.map{ _.getPath }.toSeq
+  
+  private def outputFolders : Seq[IResource] = sourcesFoldersInfo.map{ cpe => toIResource(toOutputIPath(cpe)) }.toSeq.distinct
+
+  //TODO adding or not the output folder of sourcefolders ??
+  private def classpath : Seq[IPath] = {
     val path = new LinkedHashSet[IPath]
     def classpath(javaProject : IJavaProject, exportedOnly : Boolean) : Unit = {
       val cpes = javaProject.getResolvedClasspath(true)
@@ -126,20 +175,16 @@ class ScalaProject(val underlying : IProject) {
               val specificOutputLocation = cpe.getOutputLocation
               val outputLocation = if (specificOutputLocation != null) specificOutputLocation else depJava.getOutputLocation
               if (outputLocation != null) {
-                val absPath = plugin.workspaceRoot.findMember(outputLocation)
-                if (absPath != null) path += absPath.getLocation
+                if (plugin.workspaceRoot.exists(outputLocation)) {
+                  path += outputLocation.makeAbsolute()
+                }
               }
-              }
+            }
             classpath(depJava, true)
           }
-        case IClasspathEntry.CPE_LIBRARY =>   
-          if (cpe.getPath != null) {
-            val absPath = plugin.workspaceRoot.findMember(cpe.getPath)
-            if (absPath != null)
-              path += absPath.getLocation
-            else
-              path += cpe.getPath
-          }
+        case IClasspathEntry.CPE_LIBRARY if (cpe.getPath != null) =>{
+          path += cpe.getPath.makeAbsolute()
+        }
         case _ =>
       }
     }
@@ -147,105 +192,105 @@ class ScalaProject(val underlying : IProject) {
     path.toList
   }
   
-  def sourceOutputFolders(env : NameEnvironment) : Seq[(IContainer, IContainer)] = {
-    val sourceLocations = NameEnvironmentUtils.sourceLocations(env)
-    sourceLocations.map(cl => (ClasspathLocationUtils.sourceFolder(cl), ClasspathLocationUtils.binaryFolder(cl))) 
-  }
+//  def sourceOutputFolders(env : NameEnvironment) : Seq[(IContainer, IContainer)] = {
+//    val sourceLocations = NameEnvironmentUtils.sourceLocations(env)
+//    sourceLocations.map(cl => (ClasspathLocationUtils.sourceFolder(cl), ClasspathLocationUtils.binaryFolder(cl))) 
+//  }
 
-  def isExcludedFromProject(env : NameEnvironment, childPath : IPath) : Boolean = {
-    // answer whether the folder should be ignored when walking the project as a source folder
-    if (childPath.segmentCount() > 2) return false // is a subfolder of a package
-
-    val sourceLocations = NameEnvironmentUtils.sourceLocations(env)
-    for (sl <- sourceLocations) {
-      val binaryFolder = ClasspathLocationUtils.binaryFolder(sl)
-      if (childPath == binaryFolder.getFullPath) return true
-      val sourceFolder = ClasspathLocationUtils.sourceFolder(sl)
-      if (childPath == sourceFolder.getFullPath) return true
-    }
-    
-    // skip default output folder which may not be used by any source folder
-    return childPath == javaProject.getOutputLocation
-  }
+//  def isExcludedFromProject(env : NameEnvironment, childPath : IPath) : Boolean = {
+//    // answer whether the folder should be ignored when walking the project as a source folder
+//    if (childPath.segmentCount() > 2) return false // is a subfolder of a package
+//
+//    val sourceLocations = NameEnvironmentUtils.sourceLocations(env)
+//    for (sl <- sourceLocations) {
+//      val binaryFolder = ClasspathLocationUtils.binaryFolder(sl)
+//      if (childPath == binaryFolder.getFullPath) return true
+//      val sourceFolder = ClasspathLocationUtils.sourceFolder(sl)
+//      if (childPath == sourceFolder.getFullPath) return true
+//    }
+//    
+//    // skip default output folder which may not be used by any source folder
+//    return childPath == javaProject.getOutputLocation
+//  }
   
-  def allSourceFiles() : Set[IFile] = allSourceFiles(new NameEnvironment(javaProject))
+  def allSourceFiles() : Set[IFile] = sourcesFoldersInfo.flatMap{ findSelectedIFile }.toSet
+//  def allSourceFiles() : Set[IFile] = allSourceFiles(new NameEnvironment(javaProject)) 
   
-  def allSourceFiles(env : NameEnvironment) : Set[IFile] = {
-    val sourceFiles = new HashSet[IFile]
-    val sourceLocations = NameEnvironmentUtils.sourceLocations(env)
-
-    for (sourceLocation <- sourceLocations) {
-      val sourceFolder = ClasspathLocationUtils.sourceFolder(sourceLocation)
-      val exclusionPatterns = ClasspathLocationUtils.exclusionPatterns(sourceLocation)
-      val inclusionPatterns = ClasspathLocationUtils.inclusionPatterns(sourceLocation)
-      val isAlsoProject = sourceFolder == javaProject
-      val segmentCount = sourceFolder.getFullPath.segmentCount
-      val outputFolder = ClasspathLocationUtils.binaryFolder(sourceLocation)
-      val isOutputFolder = sourceFolder == outputFolder
-      sourceFolder.accept(
-        new IResourceProxyVisitor {
-          def visit(proxy : IResourceProxy) : Boolean = {
-            proxy.getType match {
-              case IResource.FILE =>
-                val resource = proxy.requestResource
-                if (plugin.isBuildable(resource.asInstanceOf[IFile])) {
-                  if (exclusionPatterns != null || inclusionPatterns != null)
-                    if (Util.isExcluded(resource.getFullPath, inclusionPatterns, exclusionPatterns, false))
-                      return false
-                  sourceFiles += resource.asInstanceOf[IFile]
-                }
-                return false
-                
-              case IResource.FOLDER => 
-                var folderPath : IPath = null
-                if (isAlsoProject) {
-                  folderPath = proxy.requestFullPath
-                  if (isExcludedFromProject(env, folderPath))
-                    return false
-                }
-                if (exclusionPatterns != null) {
-                  if (folderPath == null)
-                    folderPath = proxy.requestFullPath
-                  if (Util.isExcluded(folderPath, inclusionPatterns, exclusionPatterns, true)) {
-                    // must walk children if inclusionPatterns != null, can skip them if == null
-                    // but folder is excluded so do not create it in the output folder
-                    return inclusionPatterns != null
-                  }
-                }
-                
-              case _ =>
-            }
-            return true
-          }
-        },
-        IResource.NONE
-      )
-    }
+//  def allSourceFiles(env : NameEnvironment) : Set[IFile] = {
+//    val sourceFiles = new HashSet[IFile]
+//    val sourceLocations = NameEnvironmentUtils.sourceLocations(env)
+//
+//    for (sourceLocation <- sourceLocations) {
+//      val sourceFolder = ClasspathLocationUtils.sourceFolder(sourceLocation)
+//      val exclusionPatterns = ClasspathLocationUtils.exclusionPatterns(sourceLocation)
+//      val inclusionPatterns = ClasspathLocationUtils.inclusionPatterns(sourceLocation)
+//      val isAlsoProject = sourceFolder == javaProject
+//      val segmentCount = sourceFolder.getFullPath.segmentCount
+//      val outputFolder = ClasspathLocationUtils.binaryFolder(sourceLocation)
+//      val isOutputFolder = sourceFolder == outputFolder
+//      sourceFolder.accept(
+//        new IResourceProxyVisitor {
+//          def visit(proxy : IResourceProxy) : Boolean = {
+//            proxy.getType match {
+//              case IResource.FILE =>
+//                val resource = proxy.requestResource
+//                if (plugin.isBuildable(resource.asInstanceOf[IFile])) {
+//                  if (exclusionPatterns != null || inclusionPatterns != null)
+//                    if (Util.isExcluded(resource.getFullPath, inclusionPatterns, exclusionPatterns, false))
+//                      return false
+//                  sourceFiles += resource.asInstanceOf[IFile]
+//                }
+//                return false
+//                
+//              case IResource.FOLDER => 
+//                var folderPath : IPath = null
+//                if (isAlsoProject) {
+//                  folderPath = proxy.requestFullPath
+//                  if (isExcludedFromProject(env, folderPath))
+//                    return false
+//                }
+//                if (exclusionPatterns != null) {
+//                  if (folderPath == null)
+//                    folderPath = proxy.requestFullPath
+//                  if (Util.isExcluded(folderPath, inclusionPatterns, exclusionPatterns, true)) {
+//                    // must walk children if inclusionPatterns != null, can skip them if == null
+//                    // but folder is excluded so do not create it in the output folder
+//                    return inclusionPatterns != null
+//                  }
+//                }
+//                
+//              case _ =>
+//            }
+//            return true
+//          }
+//        },
+//        IResource.NONE
+//      )
+//    }
+//    sourceFiles.toSet
+//  }
     
-    Set.empty ++ sourceFiles
-  }
-    
-  def createOutputFolders = {
-    for(outputPath <- outputFolders) plugin.workspaceRoot.findMember(outputPath) match {
-      case fldr : IFolder =>
-        def createParentFolder(parent : IContainer) {
-          if(!parent.exists()) {
-            createParentFolder(parent.getParent)
-            parent.asInstanceOf[IFolder].create(true, true, null)
-            parent.setDerived(true)
-          }
-        }
-      
-        fldr.refreshLocal(IResource.DEPTH_ZERO, null)
-        if(!fldr.exists()) {
-          createParentFolder(fldr.getParent)
-          fldr.create(IResource.FORCE | IResource.DERIVED, true, null)
-        }
-      case _ => 
-    }
-  }
+//  private def createOutputFolders() = {
+//    for(outputFolder <- outputFolders) outputFolder match {
+//      case fldr : IFolder =>
+//        def createParentFolder(parent : IContainer) {
+//          if(!parent.exists()) {
+//            createParentFolder(parent.getParent)
+//            parent.asInstanceOf[IFolder].create(true, true, null)
+//            parent.setDerived(true)
+//          }
+//        }
+//      
+//        fldr.refreshLocal(IResource.DEPTH_ZERO, null)
+//        if(!fldr.exists()) {
+//          createParentFolder(fldr.getParent)
+//          fldr.create(IResource.FORCE | IResource.DERIVED, true, null)
+//        }
+//      case _ => 
+//    }
+//  }
   
-  def cleanOutputFolders(monitor : IProgressMonitor) = {
+  private def cleanOutputFolders(monitor : IProgressMonitor) = {
     def delete(container : IContainer, deleteDirs : Boolean)(f : String => Boolean) : Unit =
       if (container.exists()) {
         container.members.foreach {
@@ -275,13 +320,10 @@ class ScalaProject(val underlying : IProject) {
           case _ => 
         }
       }
-    
-    val outputLocation = javaProject.getOutputLocation
-    val resource = plugin.workspaceRoot.findMember(outputLocation)
-    resource match {
-      case container : IContainer => delete(container, container != javaProject.getProject)(_.endsWith(".class"))
-      case _ =>
-    }
+    for(outputFolder <- outputFolders) outputFolder match {
+      case container : IContainer => delete(container, container != underlying)(_.endsWith(".class"))
+      case _ => 
+    }    
   }
     
   def checkClasspath : Unit = plugin.check {
@@ -303,23 +345,27 @@ class ScalaProject(val underlying : IProject) {
   }
     
   def initialize(settings : Settings) = {
-    val env = new NameEnvironment(javaProject)
-    
-    for((src, dst) <- sourceOutputFolders(env))
-      settings.outputDirs.add(EclipseResource(src), EclipseResource(dst))
-      
-    // TODO Per-file encodings
-    val sfs = sourceFolders
-    if (!sfs.isEmpty) {
-      val path = sfs.iterator.next
-      plugin.workspaceRoot.findContainersForLocation(path) match {
-        case Array(container) => settings.encoding.value = container.getDefaultCharset   
-        case _ =>
-      }
+//    val env = new NameEnvironment(javaProject)
+//    
+//    for((src, dst) <- sourceOutputFolders(env))
+//      settings.outputDirs.add(EclipseResource(src), EclipseResource(dst))
+    val sfs = sourcesFoldersInfo
+    sfs.foreach { cpe =>
+      settings.outputDirs.add(EclipseResource(toIResource(cpe)), EclipseResource(toIResource(toOutputIPath(cpe))))
     }
+    
+    // TODO Per-file encodings, but as eclipse user it's easier to handler Charset at project level
+    settings.encoding.value = underlying.getDefaultCharset
+//    if (!sfs.isEmpty) {
+//      val path = sfs.iterator.next
+//      plugin.workspaceRoot.findContainersForLocation(path) match {
+//        case Array(container) => settings.encoding.value = container.getDefaultCharset   
+//        case _ =>
+//      }
+//    }
 
     settings.classpath.value = classpath.map(_.toOSString).mkString(pathSeparator)
-    settings.sourcepath.value = sfs.map(_.toOSString).mkString(pathSeparator)
+    settings.sourcepath.value = sfs.map{ _.getPath.toOSString }.mkString(pathSeparator)
     
     val workspaceStore = ScalaPlugin.plugin.getPreferenceStore
     val projectStore = new PropertyStore(underlying, workspaceStore, plugin.pluginId)
@@ -344,16 +390,6 @@ class ScalaProject(val underlying : IProject) {
     } }
   }
   
-  def isStandardSource(file : IFile, qualifiedName : String) : Boolean = {
-    val pathString = file.getLocation.toString
-    val suffix = qualifiedName.replace(".", "/")+".scala"
-    pathString.endsWith(suffix) && {
-      val suffixPath = new Path(suffix)
-      val sourceFolderPath = file.getLocation.removeLastSegments(suffixPath.segmentCount)
-      sourceFolders.exists(_ == sourceFolderPath)
-    }
-  }
-  
   def withPresentationCompiler[T](op : ScalaPresentationCompiler => T) : T = {
     presentationCompiler(op)
   }
@@ -363,7 +399,8 @@ class ScalaProject(val underlying : IProject) {
       compiler.withSourceFile(scu)(op)
     }
   
-  def resetPresentationCompiler {
+  def resetPresentationCompiler() {
+    Tracer.println("resetPresentationCompiler")
     presentationCompiler.invalidate
   }
   
@@ -408,19 +445,19 @@ class ScalaProject(val underlying : IProject) {
 
   def clean(monitor : IProgressMonitor) = {
     underlying.deleteMarkers(plugin.problemMarkerId, true, IResource.DEPTH_INFINITE)
-    resetCompilers
+    resetCompilers()
     depFile.delete(true, false, monitor)
     cleanOutputFolders(monitor)
   }
 
-  def resetBuildCompiler {
+  def resetBuildCompiler() {
     buildManager0 = null
     hasBeenBuilt = false
   }
   
-  def resetCompilers = {
-    resetBuildCompiler
-    resetPresentationCompiler
+  def resetCompilers() = {
+    resetBuildCompiler()
+    resetPresentationCompiler()
   }
 }
 
