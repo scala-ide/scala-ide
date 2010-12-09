@@ -2,11 +2,12 @@
  * 
  */
 package scala.tools.eclipse
-
 package scalac_28
 
 import scala.tools.eclipse.internal.logging.Tracer
 import scala.tools.eclipse.util.EclipseFile
+import org.eclipse.core.runtime.Path
+import org.eclipse.core.resources.IFile
 
 /**
  * @TODO update content on file change, several possibilities eg :
@@ -24,15 +25,27 @@ trait TopLevelMapTyper extends ScalaPresentationCompiler {
   self => ScalaPresentationCompiler //TODO search and replace by the most low level type eg interactive.Global
   
   def project : ScalaProject
+
+  private val topLevelMap : TopLevelMap  = {
+    Tracer.timeOf("Building top-level map for: "+ project.underlying.getName) {
+      new TopLevelMap().resetWith(project.allSourceFiles)
+    }
+  }
+  private val sourceFolders = project.sourceFolders
   
   class EclipseTyperRun extends TyperRun {
-    val topLevelMap : TopLevelMap = {
-      Tracer.timeOf("Building top-level map for: "+ project.underlying.getName) {
-        new TopLevelMap().resetWith(project.allSourceFiles)
-      }
-    }
     
     def findSource(qualifiedName : String) = topLevelMap.get(qualifiedName)
+    
+    def isStandardSource(file : IFile, qualifiedName : String) : Boolean = {
+      val pathString = file.getLocation.toString
+      val suffix = qualifiedName.replace(".", "/")+".scala"
+      pathString.endsWith(suffix) && {
+        val suffixPath = new Path(suffix)
+        val sourceFolderPath = file.getLocation.removeLastSegments(suffixPath.segmentCount)
+        sourceFolders.exists(_ == sourceFolderPath)
+      }
+    }
     
     override def compileSourceFor(context : Context, name : Name) = {
       def addImport(imp : analyzer.ImportInfo) = {
@@ -61,21 +74,36 @@ trait TopLevelMapTyper extends ScalaPresentationCompiler {
     }
     
     def compileSourceFor(qualifiedName : String) : Boolean = {
+      //for a name X, compileSourceFor can be called for
+      // scala.X, java.lang.X, current.package.X 
+
       //Tracer.println("call compileSourceFor : " + qualifiedName)  
       findSource(qualifiedName) match {
-        case Some(iFile) if (!project.isStandardSource(iFile, qualifiedName)) =>
+        case Some(iFile) if (!isStandardSource(iFile, qualifiedName)) => {
           val file = new EclipseFile(iFile)
           if (compiledFiles contains file.path)
             false
           else {
-            Tracer.println("Adding: "+file+" to resolve: "+qualifiedName)
+            Tracer.println("Adding (" + compiledFiles.size + ") : "+file+" to resolve: "+qualifiedName)
             compileLate(file)
             true
           }
-        case _ => false
+        }
+        case Some(iFile) => {
+          Tracer.println("Ignoring: "+ iFile+" to resolve: "+qualifiedName)
+          false
+        }
+        case None => {
+          //Tracer.println("Not found file to resolve: "+qualifiedName)
+          false
+        }
       }
     }
   }
   
-  override def newTyperRun = new EclipseTyperRun
+  override def newTyperRun = {
+    Tracer.println("newTyperRun")
+    Thread.dumpStack()
+    new EclipseTyperRun()
+  }
 }
