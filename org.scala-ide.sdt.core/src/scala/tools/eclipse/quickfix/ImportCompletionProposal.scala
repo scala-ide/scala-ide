@@ -16,26 +16,34 @@ case class ImportCompletionProposal(val importName : String) extends IJavaComple
   
   
   /**
-   * Inserts the proposed completion into the given document.
+   * Inserts the proposed completion into the given document. (text based transformation)
    *
    * @param document the document into which to insert the proposed completion
+   * @TODO AST based transformation (to allow insert rules like near scope (method, inner class, outer class, top file (after package declaration))
    */
   def apply(document : IDocument) : Unit = {
     val lineDelimiter = TextUtilities.getDefaultLineDelimiter(document)
 
     // Find the package declaration
     val text = document.get
-    val packageIndex = text.indexOf("package")
     var insertIndex = 0
+    val packageIndex = text.indexOf("package", insertIndex)
     var preInsert = "" 
     
     if (packageIndex != -1) {
-      // Insert on the line after the package declaration, with a line of whitespace first if needed
+      // Insert on the line after the last package declaration, with a line of whitespace first if needed
+      var nextLineIndex = text.indexOf(lineDelimiter, packageIndex) + 1
+      var nextLineEndIndex = text.indexOf(lineDelimiter, nextLineIndex)
+      var nextLine = text.substring(nextLineIndex, nextLineEndIndex).trim()
       
+      // scan to see if package declaration is not multi-line
+      while (nextLine.startsWith("package")) {
+        nextLineIndex = text.indexOf(lineDelimiter, nextLineIndex) + 1
+        nextLineEndIndex = text.indexOf(lineDelimiter, nextLineIndex)
+        nextLine = text.substring(nextLineIndex, nextLineEndIndex).trim()
+      }
+
       // Get the next line to see if it is already whitespace
-      val nextLineIndex = text.indexOf(lineDelimiter, packageIndex) + 1
-      val nextLineEndIndex = text.indexOf(lineDelimiter, nextLineIndex)
-      val nextLine = text.substring(nextLineIndex, nextLineEndIndex)
       if (nextLine.trim() == "") {
         // This is a whitespace line, add the import here
         insertIndex = nextLineEndIndex + 1
