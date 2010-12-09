@@ -18,9 +18,9 @@ case class ScalaPartitionRegion(contentType: String, start: Int, end: Int) exten
 
 object ScalaPartitionTokeniser {
 
-  def tokenise(document: IDocument): List[ScalaPartitionRegion] = {
+  def tokenise(text: String): List[ScalaPartitionRegion] = {
     val tokens = new ListBuffer[ScalaPartitionRegion]
-    val tokeniser = new ScalaPartitionTokeniser(document)
+    val tokeniser = new ScalaPartitionTokeniser(text)
     while (tokeniser.tokensRemain) {
       val nextToken = tokeniser.nextToken()
       tokens += nextToken
@@ -30,10 +30,10 @@ object ScalaPartitionTokeniser {
 
 }
 
-class ScalaPartitionTokeniser(document: IDocument) extends TokenTests {
+class ScalaPartitionTokeniser(text: String) extends TokenTests {
   import ScalaDocumentPartitioner.EOF
 
-  private val length = document.getLength
+  private val length = text.length
 
   private var pos = 0
 
@@ -41,14 +41,14 @@ class ScalaPartitionTokeniser(document: IDocument) extends TokenTests {
 
   private var contentTypeOpt: Option[String] = None
 
-  private def ch = if (pos >= length) EOF else document.getChar(pos)
+  private def ch = if (pos >= length) EOF else text.charAt(pos)
 
   private def ch(lookahead: Int) = {
     val offset = pos + lookahead
     if (offset >= length || offset < 0)
       EOF
     else
-      document.getChar(offset)
+      text.charAt(offset)
   }
 
   private def accept() { pos += 1 }
