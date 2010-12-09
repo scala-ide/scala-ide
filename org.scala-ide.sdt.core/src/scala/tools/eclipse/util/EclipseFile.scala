@@ -75,7 +75,7 @@ abstract class EclipseResource[R <: IResource] extends AbstractFile {
     underlying.getLocation
   }
 
-  def path: String = location.toOSString
+  val path: String = location.toOSString
 
   def container : AbstractFile = new EclipseContainer(underlying.getParent)
   
