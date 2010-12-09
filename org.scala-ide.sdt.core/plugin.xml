@@ -225,10 +225,10 @@
             icon="icons/full/ovr16/scala_co.gif"
             id="org.scala-ide.sdt.core.scalaNatureImage"/>
       <!-- Retained for backwards compatibility -->
-	    <image
-			      natureId="ch.epfl.lamp.sdt.core.scalanature"
-			      icon="icons/full/ovr16/scala_co.gif"
-			      id="org.scala-ide.sdt.core.scalaNatureImage"/>
+      <image
+            natureId="ch.epfl.lamp.sdt.core.scalanature"
+            icon="icons/full/ovr16/scala_co.gif"
+            id="org.scala-ide.sdt.core.scalaNatureImage"/>
    </extension>
 
    <extension
@@ -390,6 +390,18 @@
       </perspectiveExtension>
       <perspectiveExtension targetID="org.scala-ide.sdt.core.perspective">
          <perspectiveShortcut id="org.eclipse.debug.ui.DebugPerspective"/>
+         <actionSet
+               id="org.eclipse.jdt.ui.JavaActionSet">
+         </actionSet>
+         <actionSet
+               id="org.eclipse.ui.edit.text.actionSet.convertLineDelimitersTo">
+         </actionSet>
+         <actionSet
+               id="org.eclipse.ui.edit.text.actionSet.navigation">
+         </actionSet>
+         <actionSet
+               id="org.eclipse.ui.NavigateActionSet">
+         </actionSet>
       </perspectiveExtension>
    </extension>
    <extension point="org.eclipse.ui.actionSetPartAssociations">
@@ -404,7 +416,7 @@
    <extension
          point="org.eclipse.help.contexts">
          <contexts
-         	file="docs/contexts.xml">
+          file="docs/contexts.xml">
          </contexts>
    </extension>   
 
@@ -735,7 +747,7 @@
                </objectClass>
             </enablement>
          </action>
-	 <!--<action
+   <!--<action
                class="scala.tools.eclipse.refactoring.ShowReferencesAction"
                definitionId="scala.tools.eclipse.refactoring.command.ShowReferences"
                id="scala.tools.eclipse.refactoring.showReferencesAction"
@@ -747,7 +759,7 @@
                      name="org.eclipse.jface.text.TextSelection">
                </objectClass>
             </enablement>
-	</action>-->
+  </action>-->
          <action
                class="scala.tools.eclipse.quickfix.AddImportAction"
                definitionId="scala.tools.eclipse.refactoring.command.AddImport"
@@ -787,7 +799,7 @@
       <!--<command
          categoryId="scala.tools.eclipse.refactoring.commands.refactoring"
          id="scala.tools.eclipse.refactoring.command.ShowReferences"
-	 name="Show References"/>-->
+   name="Show References"/>-->
       <command
          categoryId="scala.tools.eclipse.refactoring.commands.refactoring"
          id="scala.tools.eclipse.refactoring.command.AddImport"
@@ -804,35 +816,35 @@
 <extension
       point="org.eclipse.ui.bindings"> <!-- M1 == Ctrl, M2 == Shift M3 == Alt -->
    <key
-   		 commandId="scala.tools.eclipse.refactoring.command.ExtractMethod"
-   		 schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-   		 contextId="scala.tools.eclipse.scalaEditorScope"
-   		 sequence="M2+M3+M"/>
+       commandId="scala.tools.eclipse.refactoring.command.ExtractMethod"
+       schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+       contextId="scala.tools.eclipse.scalaEditorScope"
+       sequence="M2+M3+M"/>
    <key
-   		 commandId="scala.tools.eclipse.refactoring.command.ExtractLocal"
-   		 schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-   		 contextId="scala.tools.eclipse.scalaEditorScope"
-   		 sequence="M2+M3+L"/>
+       commandId="scala.tools.eclipse.refactoring.command.ExtractLocal"
+       schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+       contextId="scala.tools.eclipse.scalaEditorScope"
+       sequence="M2+M3+L"/>
    <key
-   		 commandId="scala.tools.eclipse.refactoring.command.InlineLocal"
-   		 schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-   		 contextId="scala.tools.eclipse.scalaEditorScope"
-   		 sequence="M2+M3+I"/>
+       commandId="scala.tools.eclipse.refactoring.command.InlineLocal"
+       schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+       contextId="scala.tools.eclipse.scalaEditorScope"
+       sequence="M2+M3+I"/>
    <key
-   		 commandId="scala.tools.eclipse.refactoring.command.Rename"
-   		 schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-   		 contextId="scala.tools.eclipse.scalaEditorScope"
-   		 sequence="M2+M3+R"/>
+       commandId="scala.tools.eclipse.refactoring.command.Rename"
+       schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+       contextId="scala.tools.eclipse.scalaEditorScope"
+       sequence="M2+M3+R"/>
    <key
-   		 commandId="scala.tools.eclipse.refactoring.command.OrganizeImports"
-   		 schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-   		 contextId="scala.tools.eclipse.scalaEditorScope"
-   		 sequence="M1+M2+O"/>
+       commandId="scala.tools.eclipse.refactoring.command.OrganizeImports"
+       schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+       contextId="scala.tools.eclipse.scalaEditorScope"
+       sequence="M1+M2+O"/>
    <key
-   		 commandId="scala.tools.eclipse.refactoring.command.AddImport"
-   		 schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-   		 contextId="scala.tools.eclipse.scalaEditorScope"
-   		 sequence="M1+M2+M"/>
+       commandId="scala.tools.eclipse.refactoring.command.AddImport"
+       schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+       contextId="scala.tools.eclipse.scalaEditorScope"
+       sequence="M1+M2+M"/>
 
    </extension>
    <extension
