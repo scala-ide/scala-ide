@@ -17,6 +17,7 @@ import org.eclipse.jdt.internal.core.builder.{ JavaBuilder, NameEnvironment, Sta
 import scala.tools.eclipse.contribution.weaving.jdt.builderoptions.ScalaJavaBuilder
 import scala.tools.eclipse.javaelements.JDTUtils
 import scala.tools.eclipse.util.{ FileUtils, ReflectionUtils }
+import scala.tools.eclipse.internal.logging.Tracer
 
 class ScalaBuilder extends IncrementalProjectBuilder {
   def plugin = ScalaPlugin.plugin
@@ -25,6 +26,7 @@ class ScalaBuilder extends IncrementalProjectBuilder {
   
   override def clean(monitor : IProgressMonitor) {
     super.clean(monitor)
+    Tracer.println("ScalaBuilder clean")
     val project = plugin.getScalaProject(getProject)
     project.clean(monitor)
     
@@ -33,7 +35,7 @@ class ScalaBuilder extends IncrementalProjectBuilder {
     JDTUtils.refreshPackageExplorer
   }
   
-  override def build(kind : Int, ignored : ju.Map[_, _], monitor : IProgressMonitor) : Array[IProject] = {
+  override def build(kind : Int, ignored : ju.Map[_, _], monitor : IProgressMonitor) : Array[IProject] = Tracer.timeOf("ScalaBuilder build :" + kindToString(kind)){
     import IncrementalProjectBuilder._
 
     val project = plugin.getScalaProject(getProject)
@@ -50,11 +52,11 @@ class ScalaBuilder extends IncrementalProjectBuilder {
         case INCREMENTAL_BUILD | AUTO_BUILD =>
           val addedOrUpdated0 = new HashSet[IFile] ++ allSourceFiles.filter(FileUtils.hasBuildErrors(_))
           val removed0 = new HashSet[IFile]
-                                          
+          val sourceFolders = project.sourceFolders                                
           getDelta(project.underlying).accept(new IResourceDeltaVisitor {
             def visit(delta : IResourceDelta) = {
               delta.getResource match {
-                case file : IFile if plugin.isBuildable(file) && project.sourceFolders.exists(_.isPrefixOf(file.getLocation)) =>
+                case file : IFile if plugin.isBuildable(file) && sourceFolders.exists(_.isPrefixOf(file.getLocation)) =>
                   delta.getKind match {
                     case IResourceDelta.ADDED | IResourceDelta.CHANGED =>
                       addedOrUpdated0 += file
@@ -67,7 +69,7 @@ class ScalaBuilder extends IncrementalProjectBuilder {
               true
             }
           })
-          (Set.empty ++ addedOrUpdated0, Set.empty ++ removed0)
+          (addedOrUpdated0.toSet, removed0.toSet)
         case CLEAN_BUILD | FULL_BUILD =>
           (allSourceFiles, Set.empty[IFile])
       }
@@ -102,6 +104,14 @@ class ScalaBuilder extends IncrementalProjectBuilder {
   def ensureProject = {
     if (scalaJavaBuilder.getProject == null)
       scalaJavaBuilder.setProject0(getProject)
+  }
+  
+  private def kindToString(k : Int) = k match {
+    case IncrementalProjectBuilder.AUTO_BUILD  => "AUTO_BUILD"
+    case IncrementalProjectBuilder.INCREMENTAL_BUILD => "INCREMENTAL_BUILD"
+    case IncrementalProjectBuilder.CLEAN_BUILD => "CLEAN_BUILD"
+    case IncrementalProjectBuilder.FULL_BUILD => "FULL_BUILD"
+    case x => x.toString
   }
 }
 
