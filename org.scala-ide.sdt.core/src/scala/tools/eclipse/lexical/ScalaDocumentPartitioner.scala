@@ -8,21 +8,18 @@ class ScalaDocumentPartitioner extends IDocumentPartitioner with IDocumentPartit
 
   import ScalaDocumentPartitioner._
 
-  private var documentOpt: Option[IDocument] = None
-
   private var partitionRegionsOpt: Option[List[ScalaPartitionRegion]] = None
 
   def connect(document: IDocument): Unit = {
-    this.documentOpt = Some(document)
-    this.partitionRegionsOpt = Some(ScalaPartitionTokeniser.tokenise(document))
+    this.partitionRegionsOpt = Some(ScalaPartitionTokeniser.tokenise(document.get()))
   }
 
-  def disconnect() { this.documentOpt = None }
+  def disconnect() {}
 
   def documentAboutToBeChanged(event: DocumentEvent) {}
 
   def documentChanged(event: DocumentEvent): Boolean = {
-    this.partitionRegionsOpt = Some(ScalaPartitionTokeniser.tokenise(documentOpt.get))
+    this.partitionRegionsOpt = Some(ScalaPartitionTokeniser.tokenise(event.fDocument.get()))
     true
   }
 
