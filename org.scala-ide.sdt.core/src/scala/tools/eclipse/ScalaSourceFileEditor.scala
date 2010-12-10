@@ -24,6 +24,7 @@ import scala.collection.JavaConversions._
 import scala.collection.mutable
 import scala.tools.eclipse.javaelements.ScalaSourceFile
 import scala.tools.eclipse.markoccurrences.{ ScalaOccurrencesFinder, Occurrences }
+
 class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
 
   import ScalaSourceFileEditor._
@@ -112,15 +113,17 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
     val selectionProvider = getSelectionProvider
     if (selectionProvider != null)
       selectionProvider.getSelection match {
-        case textSelection: ITextSelection => updateOccurrenceAnnotations(textSelection, null)
+        case textSel: ITextSelection => SelectionVar.set({ _ => updateOccurrenceAnnotations(textSel, null) })
         case _ =>
       }
   }
 
   lazy val selectionListener = new ISelectionListener() {
     def selectionChanged(part: IWorkbenchPart, selection: ISelection) {
-      if (selection.isInstanceOf[ITextSelection])
-        updateOccurrenceAnnotations(selection.asInstanceOf[ITextSelection], null)
+      selection match {
+    	  case textSel : ITextSelection => SelectionVar.set({ _ => updateOccurrenceAnnotations(textSel, null) })
+    	  case _ =>
+      }
     }
   }
   
@@ -144,4 +147,27 @@ object ScalaSourceFileEditor {
 
   private val OCCURRENCE_ANNOTATION = "org.eclipse.jdt.ui.occurrences"
 
+  object SelectionVar {
+    type Req = Unit => Unit
+	var value : Option[Req] = None
+    def set(v : Req) {
+	  synchronized { value = Some(v); notifyAll() }
+    }
+  
+    def get : Req = {
+	  def retrieve : Req = value match {
+	    case Some(v) => value = None; v
+	    case None => wait(); retrieve  
+	  }
+	  synchronized { retrieve }
+    }
+  }
+  
+  val occurrenceUpdater = new Thread(new Runnable {
+	def run {
+	  while(true) SelectionVar.get.apply()
+	}
+  })
+  
+  occurrenceUpdater.start()
 }
