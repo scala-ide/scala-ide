@@ -84,7 +84,7 @@ object ScalaPartitionTokeniserTest {
 
   class PimpedString(source: String) {
     def ==>(expectedPartitions: List[(String, Int, Int)]) {
-      val actualPartitions = ScalaPartitionTokeniser.tokenise(new MockDocument(source))
+      val actualPartitions = ScalaPartitionTokeniser.tokenise(source)
       assertEquals(expectedPartitions map ScalaPartitionRegion.tupled toList, actualPartitions)
     }
     def ==>(expectedPartitions: (String, Int, Int)*) { this ==> expectedPartitions.toList }
