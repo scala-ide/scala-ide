@@ -42,8 +42,9 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
   override def bufferChanged(e : BufferChangedEvent) {
     if (e.getBuffer.isClosed)
       discard
-    else
-      project.withPresentationCompiler(_.askReload(this, getContents))
+    else {
+      ScalaPlugin.plugin.onTypingReloader.schedule(project, this)
+    }
 
     super.bufferChanged(e)
   }
@@ -179,3 +180,4 @@ object OpenableUtils extends ReflectionUtils {
   def openBuffer(o : Openable, pm : IProgressMonitor, info : AnyRef) : IBuffer = openBufferMethod.invoke(o, pm, info).asInstanceOf[IBuffer]
   def getBufferManager(o : Openable) : BufferManager = getBufferManagerMethod.invoke(o).asInstanceOf[BufferManager]
 }
+

@@ -83,6 +83,7 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
   val swingSources = pathInBundle(scalaLibBundle, "/lib/scala-swing-src.jar") 
 
   lazy val templateManager = new ScalaTemplateManager()
+  lazy val onTypingReloader = new OnTypingReloader()
   
   private val projects = new HashMap[IProject, ScalaProject]
   
