@@ -10,10 +10,11 @@
 
   <properties>
     <scala.version>2.8.0</scala.version>
-    <tycho.version>0.9.0</tycho.version>
+    <tycho.version>0.10.0</tycho.version>
     <maven.compiler.source>1.5</maven.compiler.source>
     <maven.compiler.target>1.5</maven.compiler.target>
     <encoding>UTF-8</encoding>
+    <maven.test.skip>true</maven.test.skip>
   </properties>
 
   <prerequisites>
@@ -27,6 +28,7 @@
     <module>../org.scala-ide.sdt.aspects</module>
     <module>../org.scala-ide.sdt.compiler.ext</module>
     <module>../org.scala-ide.sdt.core</module>
+    <module>../org.scala-ide.sdt.core.tests</module>
     <module>../org.scala-ide.sdt.feature</module>
     <module>../org.scala-ide.sdt.source.feature</module>
     <module>../org.scala-ide.sdt.update-site</module>
