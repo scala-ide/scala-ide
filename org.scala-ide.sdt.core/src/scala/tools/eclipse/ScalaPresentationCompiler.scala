@@ -84,7 +84,7 @@ class ScalaPresentationCompiler(settings : Settings)
       getTypedTree(sourceFile, false, tree) else askType(sourceFile, false, tree)
     tree.get match {
       case Left(l) => l
-      case Right(r) => throw r
+      case Right(r) => throw new AsyncGetException(r, "body of " + sourceFile.path)
     }
   }
 
@@ -181,3 +181,10 @@ object ScalaPresentationCompiler {
       }.mkString("","","")
   }
 }
+
+/**
+ * Wrapping exception for Exception raise in an other thread (from async call).
+ * Help to find where is the cause on caller/context (ask+get).
+ * Message of the exception include the hashCode of the cause, because a cause Exception can be wrapped several time.
+ */
+class AsyncGetException(cause : Throwable, contextInfo : String = "") extends Exception("origin (" + cause.hashCode + ") : " + cause.getMessage + " [" + contextInfo + "]", cause)
