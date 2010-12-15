@@ -86,6 +86,13 @@ abstract class EclipseResource[R <: IResource] extends AbstractFile {
   def create {}
   
   def absolute = this
+  
+  override def equals(other : Any) : Boolean = other match {
+    case otherRes : EclipseResource[r] => path == otherRes.path
+    case _ => false
+  }
+
+  override def hashCode() : Int = path.hashCode
 }
 
 class EclipseFile(override val underlying : IFile) extends EclipseResource[IFile] {
@@ -99,7 +106,7 @@ class EclipseFile(override val underlying : IFile) extends EclipseResource[IFile
       val resource = openable.getResource
       val fileInfo = EFS.getStore(resource.getLocationURI).fetchInfo
       val info = resource.asInstanceOf[Resource].getResourceInfo(true, false);
-      if (fileInfo != null && (info == null || fileInfo.getLastModified == info.getLocalSyncInfo)) null else openable.getBuffer
+      if (fileInfo.getLastModified == info.getLocalSyncInfo) null else openable.getBuffer
     }.getOrElse(null)
   }
   
@@ -145,6 +152,9 @@ class EclipseFile(override val underlying : IFile) extends EclipseResource[IFile
   
   def lookupNameUnchecked(name : String, directory : Boolean) =
     throw new UnsupportedOperationException("Files cannot have children")
+  
+  override def equals(other : Any) : Boolean =
+    other.isInstanceOf[EclipseFile] && super.equals(other)
 }
 
 class EclipseContainer(override val underlying : IContainer) extends EclipseResource[IContainer] {
@@ -189,4 +199,7 @@ class EclipseContainer(override val underlying : IContainer) extends EclipseReso
     else
       existing
   }
+  
+  override def equals(other : Any) : Boolean =
+    other.isInstanceOf[EclipseContainer] && super.equals(other)
 }
