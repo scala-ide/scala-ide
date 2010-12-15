@@ -106,7 +106,7 @@ class EclipseFile(override val underlying : IFile) extends EclipseResource[IFile
       val resource = openable.getResource
       val fileInfo = EFS.getStore(resource.getLocationURI).fetchInfo
       val info = resource.asInstanceOf[Resource].getResourceInfo(true, false);
-      if (fileInfo.getLastModified == info.getLocalSyncInfo) null else openable.getBuffer
+      if (fileInfo != null && (info == null || fileInfo.getLastModified == info.getLocalSyncInfo)) null else openable.getBuffer
     }.getOrElse(null)
   }
   
