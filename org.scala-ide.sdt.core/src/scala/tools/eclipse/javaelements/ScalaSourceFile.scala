@@ -15,12 +15,10 @@ import org.eclipse.jdt.internal.core.util.HandleFactory
 import org.eclipse.jdt.internal.core.{ BufferManager, CompilationUnit => JDTCompilationUnit, OpenableElementInfo, PackageFragment }
 import org.eclipse.jdt.internal.corext.util.JavaModelUtil
 import org.eclipse.swt.widgets.Display
-
 import scala.tools.nsc.io.{ AbstractFile, VirtualFile }
-
 import scala.tools.eclipse.contribution.weaving.jdt.IScalaSourceFile
-
 import scala.tools.eclipse.util.EclipseFile
+import scala.tools.eclipse.internal.logging.Tracer
 
 object ScalaSourceFile {
   val handleFactory = new HandleFactory
@@ -50,7 +48,8 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
       astLevel : Int,
       reconcileFlags : Int,
       workingCopyOwner : WorkingCopyOwner,
-      monitor : IProgressMonitor) : org.eclipse.jdt.core.dom.CompilationUnit = {
+      monitor : IProgressMonitor) : org.eclipse.jdt.core.dom.CompilationUnit = Tracer.timeOf("reconcile of " + file.path){
+          
     super.reconcile(ICompilationUnit.NO_AST, reconcileFlags, workingCopyOwner, monitor)
   }
 
