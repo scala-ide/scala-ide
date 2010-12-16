@@ -647,7 +647,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
               defElemInfo.setNameSource0(smei.getNameSourceStart0, smei.getNameSourceEnd0)
               if (sym.isPrimaryConstructor) {
             	//FIXME ? in original code start is set to smei.getNameSourceEnd0 (why ?)  
-                defElemInfo.setSourceRange0(smei.getNameSourceStart0, smei.getDeclarationSourceEnd0)
+                defElemInfo.setSourceRange0(smei.getNameSourceStart0, smei.getNameSourceEnd0)
               } else {
                 defElemInfo.setSourceRange0(smei.getDeclarationSourceStart0, smei.getDeclarationSourceEnd0)
               }
