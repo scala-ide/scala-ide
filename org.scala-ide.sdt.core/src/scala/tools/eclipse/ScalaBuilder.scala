@@ -52,7 +52,7 @@ class ScalaBuilder extends IncrementalProjectBuilder {
         case INCREMENTAL_BUILD | AUTO_BUILD =>
           val addedOrUpdated0 = new HashSet[IFile] ++ allSourceFiles.filter(FileUtils.hasBuildErrors(_))
           val removed0 = new HashSet[IFile]
-          val sourceFolders = project.sourceFolders                                
+          val sourceFolders = project.sourceFolders.map{ _.getLocation }
           getDelta(project.underlying).accept(new IResourceDeltaVisitor {
             def visit(delta : IResourceDelta) = {
               delta.getResource match {
