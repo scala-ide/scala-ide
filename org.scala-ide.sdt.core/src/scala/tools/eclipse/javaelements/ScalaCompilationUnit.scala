@@ -5,6 +5,8 @@
 
 package scala.tools.eclipse.javaelements
 
+import scala.tools.eclipse.internal.logging.Tracer
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.{ Map => JMap }
 
 import scala.concurrent.SyncVar
@@ -32,7 +34,9 @@ import scala.tools.eclipse.util.ReflectionUtils
 
 trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with ScalaElement with IScalaCompilationUnit with IBufferChangedListener {
   val project = ScalaPlugin.plugin.getScalaProject(getJavaProject.getProject)
-
+  
+  private var _changed = new AtomicBoolean(false)
+  
   def file : AbstractFile
   
   def withSourceFile[T](op : (SourceFile, ScalaPresentationCompiler) => T) : T = {
@@ -43,7 +47,7 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
     if (e.getBuffer.isClosed)
       discard
     else {
-      ScalaPlugin.plugin.onTypingReloader.schedule(project, this)
+      _changed.set(true)
     }
 
     super.bufferChanged(e)
@@ -64,12 +68,19 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
 
   def getProblemRequestor : IProblemRequestor = null
 
-  override def buildStructure(info : OpenableElementInfo, pm : IProgressMonitor, newElements : JMap[_, _], underlyingResource : IResource) : Boolean =
-  	withSourceFile({ (sourceFile, compiler) =>
-	    val sourceLength = sourceFile.length
+  override def buildStructure(info : OpenableElementInfo, pm : IProgressMonitor, newElements : JMap[_, _], underlyingResource : IResource) : Boolean = {
+    Tracer.println("buildStructure : " + underlyingResource)
+  	withSourceFile { (sourceFile, compiler) =>
+  	  import scala.tools.eclipse.util.IDESettings
+  	  
+      val contents = this.getContents
+	    if (IDESettings.compileOnTyping.value && _changed.getAndSet(false)) {
+	      compiler.askReload(this, contents)
+	    }
+      val sourceLength = contents.length // sourceFile.length
 	    compiler.ask { () =>
 	      val root = compiler.root(sourceFile)
-  	      new compiler.StructureBuilderTraverser(this, info, newElements.asInstanceOf[JMap[AnyRef, AnyRef]], sourceLength).traverse(root)
+  	    new compiler.StructureBuilderTraverser(this, info, newElements.asInstanceOf[JMap[AnyRef, AnyRef]]).traverse(root)
 	    }
 	    info match {
 	      case cuei : CompilationUnitElementInfo =>
@@ -79,9 +90,10 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
 	
 	    info.setIsStructureKnown(true)
 	    info.isStructureKnown
-  })
+    }
+  }
 
-  def scheduleReconcile : Unit = ()
+  def scheduleReconcile : Unit = (Tracer.println("scheduleReconcile ignored"))
   
   def addToIndexer(indexer : ScalaSourceIndexer) {
     withSourceFile({ (source, compiler) =>

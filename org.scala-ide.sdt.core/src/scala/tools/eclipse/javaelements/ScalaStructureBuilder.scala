@@ -33,7 +33,7 @@ import scala.tools.eclipse.util.ReflectionUtils
 
 trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
 
-  class StructureBuilderTraverser(scu : ScalaCompilationUnit, unitInfo : OpenableElementInfo, newElements0 : JMap[AnyRef, AnyRef], sourceLength : Int) {
+  class StructureBuilderTraverser(scu : ScalaCompilationUnit, unitInfo : OpenableElementInfo, newElements0 : JMap[AnyRef, AnyRef]) {
     private val manager = JavaModelManager.getJavaModelManager
     
     private def companionClassOf(s: Symbol): Symbol =
