@@ -107,13 +107,30 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
     } yield new Annotation(OCCURRENCE_ANNOTATION, false, "Occurrence of '" + name + "'") -> position
     mutable.Map(annotations: _*)
   }
+  
+  def askUpdateOccurrenceAnnotations(selection: ITextSelection, astRoot: CompilationUnit) {
+    import org.eclipse.core.runtime.jobs.Job
+    import org.eclipse.core.runtime.IProgressMonitor
+    import org.eclipse.core.runtime.{IStatus, Status}
+    
+    val job = new Job("updateOccurrenceAnnotations"){
+      def run(monitor : IProgressMonitor) : IStatus = {
+        updateOccurrenceAnnotations(selection, astRoot)
+        Status.OK_STATUS
+      }
+    }
+  
+    job.setPriority(Job.INTERACTIVE)
+    job.schedule()
+  }
+
 
   override def doSelectionChanged(selection: ISelection) {
     super.doSelectionChanged(selection)
     val selectionProvider = getSelectionProvider
     if (selectionProvider != null)
       selectionProvider.getSelection match {
-        case textSel: ITextSelection => SelectionVar.set({ _ => updateOccurrenceAnnotations(textSel, null) })
+        case textSel: ITextSelection => askUpdateOccurrenceAnnotations(textSel, null)
         case _ =>
       }
   }
@@ -121,7 +138,7 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
   lazy val selectionListener = new ISelectionListener() {
     def selectionChanged(part: IWorkbenchPart, selection: ISelection) {
       selection match {
-    	  case textSel : ITextSelection => SelectionVar.set({ _ => updateOccurrenceAnnotations(textSel, null) })
+    	  case textSel : ITextSelection => askUpdateOccurrenceAnnotations(textSel, null)
     	  case _ =>
       }
     }
@@ -146,28 +163,4 @@ object ScalaSourceFileEditor {
   private val SCALA_EDITOR_SCOPE = "scala.tools.eclipse.scalaEditorScope"
 
   private val OCCURRENCE_ANNOTATION = "org.eclipse.jdt.ui.occurrences"
-
-  object SelectionVar {
-    type Req = Unit => Unit
-	var value : Option[Req] = None
-    def set(v : Req) {
-	  synchronized { value = Some(v); notifyAll() }
-    }
-  
-    def get : Req = {
-	  def retrieve : Req = value match {
-	    case Some(v) => value = None; v
-	    case None => wait(); retrieve  
-	  }
-	  synchronized { retrieve }
-    }
-  }
-  
-  val occurrenceUpdater = new Thread(new Runnable {
-	def run {
-	  while(true) SelectionVar.get.apply()
-	}
-  })
-  
-  occurrenceUpdater.start()
 }
