@@ -17,7 +17,7 @@ package scala.tools.eclipse.internal.logging;
 public class Defensive {
   private static void log(String format, Object... args) {
     //TODO log in Eclipse Error Log
-    System.err.println("Defensive : " + String.format(format, args));
+    System.err.println("ScalaPlugin--Defensive--" + Thread.currentThread().getName() + "--:" + String.format(format, args));
     Thread.dumpStack();
   }
   public static boolean notNull(Object o, String format, Object... args) {
