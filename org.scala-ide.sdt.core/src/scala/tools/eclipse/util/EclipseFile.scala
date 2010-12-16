@@ -61,6 +61,10 @@ object EclipseResource {
   }
 }
 
+//FIXME doesn't handle underlying move (change path), using def instead of val was the previous solution
+// * equals, hashCode need to be immutable and quick
+// * underlying.path/location can need many computation (CPU/time consume), can require some lock
+// see ticket #1000193
 abstract class EclipseResource[R <: IResource] extends AbstractFile {
   val underlying : R
   
@@ -88,6 +92,13 @@ abstract class EclipseResource[R <: IResource] extends AbstractFile {
   def create {}
   
   def absolute = this
+  
+  override def equals(other : Any) : Boolean = other match {
+    case otherRes : EclipseResource[r] => path == otherRes.path
+    case _ => false
+  }
+
+  override def hashCode() : Int = path.hashCode
 }
 
 class EclipseFile(override val underlying : IFile) extends EclipseResource[IFile] {
@@ -171,6 +182,9 @@ class EclipseFile(override val underlying : IFile) extends EclipseResource[IFile
   
   def lookupNameUnchecked(name : String, directory : Boolean) =
     throw new UnsupportedOperationException("Files cannot have children")
+  
+  override def equals(other : Any) : Boolean =
+    other.isInstanceOf[EclipseFile] && super.equals(other)
 }
 
 class EclipseContainer(override val underlying : IContainer) extends EclipseResource[IContainer] {
@@ -215,4 +229,7 @@ class EclipseContainer(override val underlying : IContainer) extends EclipseReso
     else
       existing
   }
+  
+  override def equals(other : Any) : Boolean =
+    other.isInstanceOf[EclipseContainer] && super.equals(other)
 }
