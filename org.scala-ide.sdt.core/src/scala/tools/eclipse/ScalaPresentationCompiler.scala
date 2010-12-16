@@ -5,6 +5,7 @@
 
 package scala.tools.eclipse
 
+import scala.tools.eclipse.internal.logging.Tracer
 import scala.collection.mutable
 import scala.collection.mutable.{ ArrayBuffer, SynchronizedMap }
 
@@ -72,9 +73,14 @@ class ScalaPresentationCompiler(settings : Settings)
   def withSourceFile[T](scu : ScalaCompilationUnit)(op : (SourceFile, ScalaPresentationCompiler) => T) : T =
     op(sourceFiles(scu), this)
 
-  override def ask[A](op: () => A): A = if (Thread.currentThread == compileRunner) op() else super.ask(op)
+  override def ask[A](op: () => A): A = {
+    Tracer.println("ask " + op)
+    Thread.dumpStack
+    if (Thread.currentThread == compileRunner) op() else super.ask(op)
+  }
   
-  override def askTypeAt(pos: Position, response: Response[Tree]) = {
+  override def askTypeAt(pos: Position, response: Response[Tree]) {
+    Tracer.println("askTypeAt")
 	  if (Thread.currentThread == compileRunner) getTypedTreeAt(pos, response) else super.askTypeAt(pos, response)
   }
     
@@ -97,6 +103,7 @@ class ScalaPresentationCompiler(settings : Settings)
   }
     
   def askReload(scu : ScalaCompilationUnit, content : Array[Char]) {
+    Tracer.println("askReload")
     sourceFiles.get(scu) match {
       case None =>
       case Some(f) =>
