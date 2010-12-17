@@ -168,6 +168,16 @@ class ScalaProject(val underlying : IProject) {
    */
   private def classpath : Seq[IPath] = {
     val path = new LinkedHashSet[IPath]
+    
+    // location is the path on local filesystem
+    // should work for File (jar) and Folder
+    def pathToLocation(p : IPath) : IPath = {
+      plugin.workspaceRoot.findMember(p) match {
+        case null => p 
+        case iresource => iresource.getLocation
+      }
+    }
+    
     def classpath(jProject : IJavaProject, exportedOnly : Boolean, includeSourceOutput : Boolean) : Unit = {
       val cpes = jProject.getResolvedClasspath(true)
 
@@ -185,7 +195,7 @@ class ScalaProject(val underlying : IProject) {
           }
         }
         case IClasspathEntry.CPE_LIBRARY if (cpe.getPath != null && (!exportedOnly || cpe.isExported)) =>{
-          path += cpe.getPath
+          path += pathToLocation(cpe.getPath.makeAbsolute)
         }
         case _ =>
       }
