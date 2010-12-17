@@ -5,6 +5,7 @@
 
 package scala.tools.eclipse
 
+import scala.tools.eclipse.internal.logging.Tracer
 import org.eclipse.core.resources.ResourcesPlugin
 import org.eclipse.core.runtime.Path
 import org.eclipse.jdt.core.search.SearchDocument
@@ -19,7 +20,14 @@ class ScalaSourceIndexerFactory extends IIndexerFactory {
 
 class ScalaSourceIndexer(document : SearchDocument) extends AbstractIndexer(document) {
   override def indexDocument() {
-    println("Indexing document: "+document.getPath)
-    ScalaSourceFile.createFromPath(document.getPath).map(_.addToIndexer(this))
+    Tracer.println("Indexing document: "+ document.getPath)
+    try {
+      ScalaSourceFile.createFromPath(document.getPath).map(_.addToIndexer(this))
+    } catch {
+      case exc => {
+        //log, ignore and continue
+        ScalaPlugin.plugin.logError("failed to index :" + document.getPath, exc)
+      }
+    }
   }
 }
