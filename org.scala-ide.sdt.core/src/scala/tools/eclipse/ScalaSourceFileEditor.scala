@@ -100,12 +100,14 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
   
   override def updateOccurrenceAnnotations(selection: ITextSelection, astRoot: CompilationUnit) {
     val documentProvider = getDocumentProvider
-    if (documentProvider == null)
+    if (documentProvider eq null)
       return
 
     val scalaSourceFile = getEditorInput.asInstanceOf[IAdaptable].getAdapter(classOf[IJavaElement]).asInstanceOf[ScalaSourceFile]
     val annotations = getAnnotations(selection, scalaSourceFile)
     val annotationModel = documentProvider.getAnnotationModel(getEditorInput)
+    if (annotationModel eq null)
+      return
     annotationModel.asInstanceOf[ISynchronizable].getLockObject() synchronized {
       val annotationModelExtension = annotationModel.asInstanceOf[IAnnotationModelExtension]
       annotationModelExtension.replaceAnnotations(occurrenceAnnotations, annotations)
@@ -124,6 +126,23 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
     } yield new Annotation(OCCURRENCE_ANNOTATION, false, "Occurrence of '" + name + "'") -> position
     mutable.Map(annotations: _*)
   }
+  
+  def askUpdateOccurrenceAnnotations(selection: ITextSelection, astRoot: CompilationUnit) {
+    import org.eclipse.core.runtime.jobs.Job
+    import org.eclipse.core.runtime.IProgressMonitor
+    import org.eclipse.core.runtime.{IStatus, Status}
+    
+    val job = new Job("updateOccurrenceAnnotations"){
+      def run(monitor : IProgressMonitor) : IStatus = {
+        updateOccurrenceAnnotations(selection, astRoot)
+        Status.OK_STATUS
+      }
+    }
+  
+    job.setPriority(Job.INTERACTIVE)
+    job.schedule()
+  }
+
 
   override def doSelectionChanged(selection: ISelection) {
     super.doSelectionChanged(selection)

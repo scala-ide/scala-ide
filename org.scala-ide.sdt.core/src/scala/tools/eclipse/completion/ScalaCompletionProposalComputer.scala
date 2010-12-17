@@ -47,10 +47,10 @@ class ScalaCompletionProposalComputer extends IJavaCompletionProposalComputer {
   
   def computeContextInformation(context : ContentAssistInvocationContext,
 				monitor : IProgressMonitor) : java.util.List[_] = {
-	// Currently not supported
-	java.util.Collections.emptyList()
+    // Currently not supported
+    java.util.Collections.emptyList()
   }
-
+  
   def computeCompletionProposals(context : ContentAssistInvocationContext,
 				 monitor : IProgressMonitor) : java.util.List[_] = {
     val position = context.getInvocationOffset()
@@ -144,11 +144,8 @@ class ScalaCompletionProposalComputer extends IJavaCompletionProposalComputer {
           	   tpe.paramss.map(_.map(_.tpe.toString).mkString("(", ", ", ")")).mkString +
                ": " + tpe.finalResultType.toString}
 		     else name
-         val display = if (!sym.isLocal) {
-           val container = sym.owner.enclClass.fullName
-           signature + " - " + container
-         } else signature
-         buff += new ScalaCompletionProposal(name, display, signature, null, image)
+         val container = sym.owner.enclClass.fullName
+         buff += new ScalaCompletionProposal(name, signature, signature, container, image)
        }
 
        completed.get.left.toOption match {
