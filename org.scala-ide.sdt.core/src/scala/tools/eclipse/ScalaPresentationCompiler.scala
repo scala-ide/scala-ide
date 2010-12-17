@@ -75,7 +75,7 @@ class ScalaPresentationCompiler(settings : Settings)
 
   override def ask[A](op: () => A): A = {
     Tracer.println("ask " + op)
-    Thread.dumpStack
+    //Thread.dumpStack
     if (Thread.currentThread == compileRunner) op() else super.ask(op)
   }
   
