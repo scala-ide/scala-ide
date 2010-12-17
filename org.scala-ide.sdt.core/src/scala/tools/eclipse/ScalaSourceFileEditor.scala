@@ -126,23 +126,6 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
     } yield new Annotation(OCCURRENCE_ANNOTATION, false, "Occurrence of '" + name + "'") -> position
     mutable.Map(annotations: _*)
   }
-  
-  def askUpdateOccurrenceAnnotations(selection: ITextSelection, astRoot: CompilationUnit) {
-    import org.eclipse.core.runtime.jobs.Job
-    import org.eclipse.core.runtime.IProgressMonitor
-    import org.eclipse.core.runtime.{IStatus, Status}
-    
-    val job = new Job("updateOccurrenceAnnotations"){
-      def run(monitor : IProgressMonitor) : IStatus = {
-        updateOccurrenceAnnotations(selection, astRoot)
-        Status.OK_STATUS
-      }
-    }
-  
-    job.setPriority(Job.INTERACTIVE)
-    job.schedule()
-  }
-
 
   override def doSelectionChanged(selection: ISelection) {
     super.doSelectionChanged(selection)
@@ -157,8 +140,8 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
   lazy val selectionListener = new ISelectionListener() {
     def selectionChanged(part: IWorkbenchPart, selection: ISelection) {
       selection match {
-    	  case textSel : ITextSelection => askUpdateOccurrenceAnnotations(textSel, null)
-    	  case _ =>
+        case textSel : ITextSelection => askUpdateOccurrenceAnnotations(textSel, null)
+        case _ =>
       }
     }
   }

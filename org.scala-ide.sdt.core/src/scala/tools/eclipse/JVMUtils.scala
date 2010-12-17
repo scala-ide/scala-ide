@@ -12,13 +12,16 @@ import ch.epfl.lamp.fjbg.{ JArrayType, JMethodType, JObjectType, JType }
 trait JVMUtils { self : Global =>
 
   private lazy val jvmUtil =
-    new genJVM.BytecodeUtil {}
+    //BACK-2.8
+    // new genJVM.BytecodeUtil {}
+    currentRun.phaseNamed(genJVM.phaseName).asInstanceOf[genJVM.JvmPhase].codeGenerator
 
   def javaName(sym : Symbol) : String = jvmUtil.javaName(sym)
   
   def javaNames(syms : List[Symbol]) : Array[String] = jvmUtil.javaNames(syms)
   
-  def javaFlags(sym : Symbol) : Int = genJVM.javaFlags(sym)
+  def javaFlags(sym : Symbol) : Int = //BACK-2.8 genJVM.javaFlags(sym)
+    jvmUtil.javaFlags(sym)
   
   def javaType(t: Type): JType = t.normalize match {
     case ErrorType | NoType => JType.UNKNOWN
@@ -40,23 +43,23 @@ trait JVMUtils { self : Global =>
   
   // Provides JType where all special symbols are substituted.
   def encodedJavaType(t : Type) = {
-	def encode(jt : JType) : JType = jt match {
-	  case clazz : JObjectType => {
-	    val name = clazz.getName.split("/").map{NameTransformer encode _}.mkString("/")
-	    new JObjectType(name)
-	  }
-	  case arr : JArrayType => {
-		  val etype = encode(arr.getElementType)
-	 	  if (JType.UNKNOWN == etype) JType.UNKNOWN else new JArrayType(etype)
-	  }
-	  case m : JMethodType => {
-	 	  val ret = encode(m.getReturnType)
-	 	  val argTypes = m.getArgumentTypes.map( encode(_) )
-	 	  if (ret == JType.UNKNOWN || argTypes.exists(_ == JType.UNKNOWN)) JType.UNKNOWN else new JMethodType(ret, argTypes)
-	  }
-	  case _ => jt
+    def encode(jt : JType) : JType = jt match {
+      case clazz : JObjectType => {
+        val name = clazz.getName.split("/").map{NameTransformer encode _}.mkString("/")
+        new JObjectType(name)
+      }
+      case arr : JArrayType => {
+          val etype = encode(arr.getElementType)
+          if (JType.UNKNOWN == etype) JType.UNKNOWN else new JArrayType(etype)
+      }
+      case m : JMethodType => {
+          val ret = encode(m.getReturnType)
+          val argTypes = m.getArgumentTypes.map( encode(_) )
+          if (ret == JType.UNKNOWN || argTypes.exists(_ == JType.UNKNOWN)) JType.UNKNOWN else new JMethodType(ret, argTypes)
+      }
+      case _ => jt
     }
-	encode(javaType(t))
+    encode(javaType(t))
   }
     
   def javaType(s: Symbol): JType =
