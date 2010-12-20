@@ -5,6 +5,7 @@
 
 package scala.tools.eclipse
 
+import org.eclipse.ui.part.FileEditorInput
 import scala.tools.eclipse.javaelements.ScalaCompilationUnit
 import org.eclipse.jdt.internal.ui.JavaPlugin
 import java.util.ResourceBundle
@@ -171,7 +172,7 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
       _semanticPresenter = _semanticPresenter match {
         case Some(x) => _semanticPresenter
         case None => {
-          val b = new SemanticHighlightingPresenter(viewer)
+          val b = new SemanticHighlightingPresenter(getEditorInput.asInstanceOf[FileEditorInput], viewer)
           ScalaPlugin.plugin.getPreferenceStore().addPropertyChangeListener(b)
           ScalaPlugin.plugin.reconcileListeners.after_+(b.update)
           Some(b)

@@ -4,6 +4,7 @@
 package scala.tools.eclipse
 package ui.semantic.highlighting
 
+import org.eclipse.ui.part.FileEditorInput
 import org.eclipse.jdt.core.WorkingCopyOwner
 import scala.tools.eclipse.internal.logging.Tracer
 import org.eclipse.jdt.core.dom.CompilationUnit;
@@ -37,7 +38,7 @@ import scala.collection._
  * @author David Bernard 
  *
  */
-class SemanticHighlightingPresenter(sourceViewer: ISourceViewer) extends IPropertyChangeListener {
+class SemanticHighlightingPresenter(editor : FileEditorInput, sourceViewer: ISourceViewer) extends IPropertyChangeListener {
   import scala.tools.eclipse.ui.preferences.ScalaEditorColoringPreferencePage._
 
   val annotationAccess = new IAnnotationAccess() {
@@ -105,50 +106,53 @@ class SemanticHighlightingPresenter(sourceViewer: ISourceViewer) extends IProper
   val update = (scu: ScalaCompilationUnit, monitor: IProgressMonitor, workingCopyOwner: WorkingCopyOwner) => {
     //val cu = JavaPlugin.getDefault().getWorkingCopyManager().getWorkingCopy(fEditor.getEditorInput());
     //val scu = cu.asInstanceOf[ScalaCompilationUnit]
-    scu.withSourceFile { (sourceFile, compiler) =>
-      val toAdds = new java.util.HashMap[Annotation, org.eclipse.jface.text.Position]
-      object viewsCollector extends compiler.Traverser {
-        override def traverse(t: compiler.Tree): Unit = t match {
-          case v: compiler.ApplyImplicitView =>
-            val txt = new String(sourceFile.content, v.pos.start, math.max(0, v.pos.end - v.pos.start)).trim()
-            val ia = new ImplicitConversionsOrArgsAnnotation(
-              scu.getCompilationUnit,
-              ImplicitConversionsOrArgsAnnotation.KIND,
-              false,
-              "Implicit conversions found: " + txt + " => " + v.fun.symbol.name + "(" + txt + ")")
-            val pos = new org.eclipse.jface.text.Position(v.pos.start, txt.length)
-            toAdds.put(ia, pos)
-            super.traverse(t)
-          case v: compiler.ApplyToImplicitArgs =>
-            val txt = new String(sourceFile.content, v.pos.start, math.max(0, v.pos.end - v.pos.start)).trim()
-            val argsStr = v.args.map(_.symbol.name).mkString("( ", ", ", " )")
-            val ia = new ImplicitConversionsOrArgsAnnotation(
-              scu.getCompilationUnit,
-              ImplicitConversionsOrArgsAnnotation.KIND,
-              false,
-              "Implicit arguments found: " + txt + " => " + txt + argsStr)
-            val pos = new org.eclipse.jface.text.Position(v.pos.start, txt.length)
-            toAdds.put(ia, pos)
-            super.traverse(t)
-          case _ =>
-            super.traverse(t)
-        }
-      }
-      viewsCollector.traverse(compiler.body(sourceFile))
-
-      val model = sourceViewer.getAnnotationModel()
-      Tracer.println("update implicit annotations : " + toAdds.size)
-      if (model ne null) {
-        var toRemove: List[Annotation] = Nil
-        val it = model.getAnnotationIterator()
-        while (it.hasNext) {
-          val annot = it.next.asInstanceOf[Annotation]
-          if (ImplicitConversionsOrArgsAnnotation.KIND == annot.getType) {
-            toRemove = annot :: toRemove
+    //FIXME : avoid having several SemanticHighlighter notified on single file update (=> move listeners at document level, or move SemanticHighliter at plugin level ?)
+    if (scu.getResource.getLocation == editor.getPath.makeAbsolute) {
+      scu.withSourceFile { (sourceFile, compiler) =>
+        val toAdds = new java.util.HashMap[Annotation, org.eclipse.jface.text.Position]
+        object viewsCollector extends compiler.Traverser {
+          override def traverse(t: compiler.Tree): Unit = t match {
+            case v: compiler.ApplyImplicitView =>
+              val txt = new String(sourceFile.content, v.pos.start, math.max(0, v.pos.end - v.pos.start)).trim()
+              val ia = new ImplicitConversionsOrArgsAnnotation(
+                scu.getCompilationUnit,
+                ImplicitConversionsOrArgsAnnotation.KIND,
+                false,
+                "Implicit conversions found: " + txt + " => " + v.fun.symbol.name + "(" + txt + ")")
+              val pos = new org.eclipse.jface.text.Position(v.pos.start, txt.length)
+              toAdds.put(ia, pos)
+              super.traverse(t)
+            case v: compiler.ApplyToImplicitArgs =>
+              val txt = new String(sourceFile.content, v.pos.start, math.max(0, v.pos.end - v.pos.start)).trim()
+              val argsStr = v.args.map(_.symbol.name).mkString("( ", ", ", " )")
+              val ia = new ImplicitConversionsOrArgsAnnotation(
+                scu.getCompilationUnit,
+                ImplicitConversionsOrArgsAnnotation.KIND,
+                false,
+                "Implicit arguments found: " + txt + " => " + txt + argsStr)
+              val pos = new org.eclipse.jface.text.Position(v.pos.start, txt.length)
+              toAdds.put(ia, pos)
+              super.traverse(t)
+            case _ =>
+              super.traverse(t)
           }
         }
-        val am = model.asInstanceOf[IAnnotationModelExtension]
-        am.replaceAnnotations(toRemove.toArray, toAdds)
+        viewsCollector.traverse(compiler.body(sourceFile))
+  
+        val model = sourceViewer.getAnnotationModel()
+        Tracer.println("update implicit annotations : " + toAdds.size)
+        if (model ne null) {
+          var toRemove: List[Annotation] = Nil
+          val it = model.getAnnotationIterator()
+          while (it.hasNext) {
+            val annot = it.next.asInstanceOf[Annotation]
+            if (ImplicitConversionsOrArgsAnnotation.KIND == annot.getType) {
+              toRemove = annot :: toRemove
+            }
+          }
+          val am = model.asInstanceOf[IAnnotationModelExtension]
+          am.replaceAnnotations(toRemove.toArray, toAdds)
+        }
       }
     }
   }
