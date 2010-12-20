@@ -37,17 +37,14 @@ class ScalaSourceViewerConfiguration(store : IPreferenceStore, editor : ITextEdi
 
   override def getPresentationReconciler(sv : ISourceViewer) = {
     val reconciler = super.getPresentationReconciler(sv).asInstanceOf[PresentationReconciler]
-    val dr = new ScalaDamagerRepairer(codeScanner)
-
-    reconciler.setDamager(dr, IDocument.DEFAULT_CONTENT_TYPE)
-    reconciler.setRepairer(dr, IDocument.DEFAULT_CONTENT_TYPE)
     
     def handlePartition(partitionType: String, tokenScanner: ITokenScanner) {
       val dr = new DefaultDamagerRepairer(tokenScanner)
       reconciler.setDamager(dr, partitionType)
       reconciler.setRepairer(dr, partitionType)
     }
-    
+
+    handlePartition(IDocument.DEFAULT_CONTENT_TYPE, codeScanner)
     handlePartition(ScalaPartitions.SCALA_MULTI_LINE_STRING, getStringScanner())
     handlePartition(ScalaPartitions.XML_TAG, new XmlTagScanner(getColorManager))
     handlePartition(ScalaPartitions.XML_COMMENT, new XmlCommentScanner(getColorManager))
