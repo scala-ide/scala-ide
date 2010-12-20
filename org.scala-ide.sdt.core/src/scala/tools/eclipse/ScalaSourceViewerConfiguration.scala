@@ -5,6 +5,7 @@
 
 package scala.tools.eclipse;
 
+import scala.tools.eclipse.text.scala.ScalaCompletionProcessor
 import org.eclipse.jdt.core.{ IJavaProject, IJavaElement }
 import org.eclipse.jdt.internal.ui.JavaPlugin
 import org.eclipse.jdt.internal.ui.javaeditor.{ IClassFileEditorInput, ICompilationUnitDocumentProvider, JavaElementHyperlinkDetector }
@@ -126,5 +127,16 @@ class ScalaSourceViewerConfiguration(store : IPreferenceStore, editor : ITextEdi
     contentFormatter.enablePartitionAwareFormatting( false );
     contentFormatter.setFormattingStrategy(new ScalaFormattingStrategy(sourceViewer), IDocument.DEFAULT_CONTENT_TYPE)
 	contentFormatter
+  }
+
+  //
+  override def getContentAssistant(sourceViewer: ISourceViewer): IContentAssistant = {
+	  val assistant = super.getContentAssistant(sourceViewer).asInstanceOf[ContentAssistant]
+	  
+      val scalaProcessor = new ScalaCompletionProcessor(getEditor(), assistant, IDocument.DEFAULT_CONTENT_TYPE);
+      assistant.setContentAssistProcessor(null, IDocument.DEFAULT_CONTENT_TYPE);
+	  assistant.setContentAssistProcessor(scalaProcessor, IDocument.DEFAULT_CONTENT_TYPE);
+	  
+	  return assistant
   }
 }

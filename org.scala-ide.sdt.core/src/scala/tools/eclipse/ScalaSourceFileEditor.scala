@@ -4,6 +4,9 @@
 // $Id$
 
 package scala.tools.eclipse
+
+import scala.tools.eclipse.javaelements.ScalaCompilationUnit
+import org.eclipse.jdt.internal.ui.JavaPlugin
 import java.util.ResourceBundle
 import org.eclipse.core.runtime.{ IAdaptable, IProgressMonitor }
 import org.eclipse.jdt.core.IJavaElement
@@ -20,10 +23,13 @@ import org.eclipse.jface.viewers.ISelection
 import org.eclipse.ui.{ IWorkbenchPart, ISelectionListener, IFileEditorInput }
 import org.eclipse.ui.editors.text.{ ForwardingDocumentProvider, TextFileDocumentProvider }
 import org.eclipse.ui.texteditor.{ IAbstractTextEditorHelpContextIds, ITextEditorActionConstants, IWorkbenchActionDefinitionIds, TextOperationAction }
+import org.eclipse.swt.widgets.Composite
 import scala.collection.JavaConversions._
 import scala.collection.mutable
 import scala.tools.eclipse.javaelements.ScalaSourceFile
 import scala.tools.eclipse.markoccurrences.{ ScalaOccurrencesFinder, Occurrences }
+import scala.tools.eclipse.ui.semantic.highlighting.SemanticHighlightingPresenter
+import scala.tools.eclipse.text.scala.ScalaTypeAutoCompletionProposalManager
 
 class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
 
@@ -154,6 +160,19 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
   override def uninstallOccurrencesFinder() {
     getEditorSite.getPage.removePostSelectionListener(selectionListener)
     super.uninstallOccurrencesFinder
+  }
+
+  //XXX: By Jin Mingjian
+  override  def createPartControl(parent: Composite){
+	  super.createPartControl(parent)
+ 	//
+	val presenter = new SemanticHighlightingPresenter(this,getSourceViewer())
+	getSourceViewer().getDocument().addDocumentListener(presenter)
+	ScalaPlugin.plugin.getPreferenceStore().addPropertyChangeListener(presenter)
+	presenter.update()
+	//workaround for my limited knowledge about current presentation compiler
+	val scu = JavaPlugin.getDefault().getWorkingCopyManager().getWorkingCopy(getEditorInput()).asInstanceOf[ScalaCompilationUnit];
+	getSourceViewer().getDocument().addPrenotifiedDocumentListener(ScalaTypeAutoCompletionProposalManager.getProposalFor(scu))
   }
 }
 

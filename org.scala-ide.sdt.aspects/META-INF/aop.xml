@@ -22,6 +22,7 @@
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.SaveParticipantRegistryAspect"/>
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.ScalaPartitionerAspect"/>
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.spellingengineprovider.SpellingEngineProviderAspect"/>
+<aspect name="scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.ScalaCompletionProcessorAspect"/>
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.debug.SuppressBreakpointMarkerUpdaterAspect"/>
 <aspect name="scala.tools.eclipse.contribution.weaving.pde.ui.PluginImportAspect"/>
 </aspects>

@@ -39,6 +39,18 @@
             id="org.scala-ide.sdt.core.preferences.Templates"
             name="Templates">
       </page>
+      <page
+            category="org.scala-ide.sdt.core.preferences"
+            class="scala.tools.eclipse.ui.preferences.ScalaEditorPreferencePage"
+            id="scala.tools.eclipse.ui.preferences.scalaEditorPreferencePage"
+            name="Editor">
+      </page>
+      <page
+            category="scala.tools.eclipse.ui.preferences.scalaEditorPreferencePage"
+            class="scala.tools.eclipse.ui.preferences.ScalaEditorColoringPreferencePage"
+            id="scala-plugin.page1"
+            name="Syntax Coloring">
+      </page>
    </extension>
 
 
@@ -563,6 +575,9 @@
      <initializer
            class="scala.tools.eclipse.formatter.ScalaFormatterPreferenceInitializer">
      </initializer>
+     <initializer
+           class="scala.tools.eclipse.ui.preferences.ScalaEditorColoringPagePreferenceInitializer">
+     </initializer>
   </extension>
 
   <extension point="org.eclipse.core.expressions.propertyTesters">
@@ -889,6 +904,29 @@
        <partition
              type="__dftl_partition_content_type">
        </partition>
+    </javaCompletionProposalComputer>
+ </extension>
+ <extension
+       id="scalaProposalCategory"
+       name="Scala Proposals"
+       point="org.eclipse.jdt.ui.javaCompletionProposalComputer">
+    <proposalCategory
+          icon="icons/full/elcl16/scalaassist_co.gif"></proposalCategory>
+ </extension>
+ <extension
+       point="org.eclipse.jdt.ui.quickAssistProcessors">
+    <quickAssistProcessor
+          class="scala.tools.eclipse.quickfix.ScalaQuickAssistProcessor"
+          id="org.scala-ide.sdt.core.quickAssistProcessor"
+          name="Scala Quick Assist Processor">
+    </quickAssistProcessor>
+ </extension>
+ <extension
+       id="ScalaCompletionProposalComputer_no"
+       point="org.eclipse.jdt.ui.javaCompletionProposalComputer">
+    <javaCompletionProposalComputer
+          categoryId="org.scala-ide.sdt.core.scalaProposalCategory"
+          class="scala.tools.eclipse.text.scala.ScalaCompletionProposalComputer">
     </javaCompletionProposalComputer>
  </extension>
 </plugin>
