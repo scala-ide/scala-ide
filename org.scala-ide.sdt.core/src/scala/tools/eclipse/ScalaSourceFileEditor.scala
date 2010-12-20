@@ -35,6 +35,8 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
 
   import ScalaSourceFileEditor._
 
+  private var _semanticPresenter: Option[SemanticHighlightingPresenter] = None
+
   setPartName("Scala Editor")
 
   override protected def createActions() {
@@ -90,20 +92,20 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
   def askUpdateOccurrenceAnnotations(selection: ITextSelection, astRoot: CompilationUnit) {
     import org.eclipse.core.runtime.jobs.Job
     import org.eclipse.core.runtime.IProgressMonitor
-    import org.eclipse.core.runtime.{IStatus, Status}
-    
-    val job = new Job("updateOccurrenceAnnotations"){
-      def run(monitor : IProgressMonitor) : IStatus = {
+    import org.eclipse.core.runtime.{ IStatus, Status }
+
+    val job = new Job("updateOccurrenceAnnotations") {
+      def run(monitor: IProgressMonitor): IStatus = {
         updateOccurrenceAnnotations(selection, astRoot)
         Status.OK_STATUS
       }
     }
-  
+
     //job.setSystem(true)
     job.setPriority(Job.INTERACTIVE)
     job.schedule()
   }
-  
+
   override def updateOccurrenceAnnotations(selection: ITextSelection, astRoot: CompilationUnit) {
     val documentProvider = getDocumentProvider
     if (documentProvider eq null)
@@ -146,33 +148,40 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
   lazy val selectionListener = new ISelectionListener() {
     def selectionChanged(part: IWorkbenchPart, selection: ISelection) {
       selection match {
-        case textSel : ITextSelection => askUpdateOccurrenceAnnotations(textSel, null)
+        case textSel: ITextSelection => askUpdateOccurrenceAnnotations(textSel, null)
         case _ =>
       }
     }
   }
-  
+
   override def installOccurrencesFinder(forceUpdate: Boolean) {
     super.installOccurrencesFinder(forceUpdate)
     getEditorSite.getPage.addPostSelectionListener(selectionListener)
   }
-  
+
   override def uninstallOccurrencesFinder() {
     getEditorSite.getPage.removePostSelectionListener(selectionListener)
     super.uninstallOccurrencesFinder
   }
 
-  //XXX: By Jin Mingjian
-  override  def createPartControl(parent: Composite){
-	  super.createPartControl(parent)
- 	//
-	val presenter = new SemanticHighlightingPresenter(this,getSourceViewer())
-	getSourceViewer().getDocument().addDocumentListener(presenter)
-	ScalaPlugin.plugin.getPreferenceStore().addPropertyChangeListener(presenter)
-	presenter.update()
-	//workaround for my limited knowledge about current presentation compiler
-	val scu = JavaPlugin.getDefault().getWorkingCopyManager().getWorkingCopy(getEditorInput()).asInstanceOf[ScalaCompilationUnit];
-	getSourceViewer().getDocument().addPrenotifiedDocumentListener(ScalaTypeAutoCompletionProposalManager.getProposalFor(scu))
+  override def createPartControl(parent: Composite) {
+    super.createPartControl(parent)
+    val viewer = getSourceViewer()
+    if (viewer ne null) {
+      _semanticPresenter = _semanticPresenter match {
+        case Some(x) => _semanticPresenter
+        case None => {
+          val b = new SemanticHighlightingPresenter(viewer)
+          ScalaPlugin.plugin.getPreferenceStore().addPropertyChangeListener(b)
+          ScalaPlugin.plugin.reconcileListeners.after_+(b.update)
+          Some(b)
+        }
+      }
+
+      //FIXME : workaround for my limited knowledge about current presentation compiler
+      val scu = JavaPlugin.getDefault().getWorkingCopyManager().getWorkingCopy(getEditorInput()).asInstanceOf[ScalaCompilationUnit]
+      viewer.getDocument().addPrenotifiedDocumentListener(ScalaTypeAutoCompletionProposalManager.getProposalFor(scu))
+    }
   }
 }
 

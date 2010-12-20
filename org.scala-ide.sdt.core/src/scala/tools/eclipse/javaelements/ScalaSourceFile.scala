@@ -3,7 +3,8 @@
  */
 // $Id$
 
-package scala.tools.eclipse.javaelements
+package scala.tools.eclipse
+package javaelements
 
 import java.util.{ HashMap => JHashMap, Map => JMap }
 
@@ -49,8 +50,10 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
       reconcileFlags : Int,
       workingCopyOwner : WorkingCopyOwner,
       monitor : IProgressMonitor) : org.eclipse.jdt.core.dom.CompilationUnit = Tracer.timeOf("reconcile of " + file.path){
-          
-    super.reconcile(ICompilationUnit.NO_AST, reconcileFlags, workingCopyOwner, monitor)
+    ScalaPlugin.plugin.reconcileListeners.triggerBeforeReconcile(this, monitor, workingCopyOwner)
+    val b = super.reconcile(ICompilationUnit.NO_AST, reconcileFlags, workingCopyOwner, monitor)
+    ScalaPlugin.plugin.reconcileListeners.triggerAfterReconcile(this, monitor, workingCopyOwner)
+    b
   }
 
   override def makeConsistent(

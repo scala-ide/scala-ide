@@ -5,6 +5,7 @@
 
 package scala.tools.eclipse
 
+import scala.tools.eclipse.ui.semantic.highlighting.SemanticHighlightingPresenter
 import org.eclipse.jdt.core.IJavaProject
 import scala.collection.mutable.HashMap
 import scala.util.control.ControlThrowable
@@ -75,16 +76,17 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
   val compilerSources = pathInBundle(scalaCompilerBundle, "/lib/scala-compiler-src.jar")
   
   val scalaLibBundle = Platform.getBundle(ScalaPlugin.plugin.libraryPluginId)
-  val libClasses = pathInBundle(scalaLibBundle, "/lib/scala-library.jar") 
-  val libSources = pathInBundle(scalaLibBundle, "/lib/scala-library-src.jar") 
+  val libClasses = pathInBundle(scalaLibBundle, "/lib/scala-library.jar")
+  val libSources = pathInBundle(scalaLibBundle, "/lib/scala-library-src.jar")
   val dbcClasses = pathInBundle(scalaLibBundle, "/lib/scala-dbc.jar")
-  val dbcSources = pathInBundle(scalaLibBundle, "/lib/scala-dbc-src.jar") 
-  val swingClasses = pathInBundle(scalaLibBundle, "/lib/scala-swing.jar") 
-  val swingSources = pathInBundle(scalaLibBundle, "/lib/scala-swing-src.jar") 
+  val dbcSources = pathInBundle(scalaLibBundle, "/lib/scala-dbc-src.jar")
+  val swingClasses = pathInBundle(scalaLibBundle, "/lib/scala-swing.jar")
+  val swingSources = pathInBundle(scalaLibBundle, "/lib/scala-swing-src.jar")
 
   lazy val templateManager = new ScalaTemplateManager()
+  lazy val reconcileListeners = new ReconcileListeners()
   lazy val onTypingReloader = new OnTypingReloader()
-  
+
   private val projects = new HashMap[IProject, ScalaProject]
   
   override def start(context : BundleContext) = {

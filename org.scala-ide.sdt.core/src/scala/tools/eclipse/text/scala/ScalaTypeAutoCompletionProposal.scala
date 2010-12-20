@@ -39,7 +39,7 @@ class ScalaTypeAutoCompletionProposal(scu: ScalaCompilationUnit, doc: IDocument)
           case None => "<None>"
         }
       }
-      Tracer.println(currentTyp)
+      Tracer.println("ScalaTypeAutoCompletionProposal : " + currentTyp)
     }
   }
 
