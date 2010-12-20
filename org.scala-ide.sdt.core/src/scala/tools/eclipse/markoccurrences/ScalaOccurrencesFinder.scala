@@ -22,14 +22,20 @@ class ScalaOccurrencesFinder(file: ScalaSourceFile, offset: Int, length: Int) {
         val index = GlobalIndex(Nil)
       }
       import analysis._
-      val selection = new FileSelection(crh.sourceFile.file, from, to)
-      selection.selectedSymbolTree flatMap { selectedLocal =>
+      
+      val selectedTree = {
+        val selection = new FileSelection(crh.sourceFile.file, from, to)
+        selection.findSelectedOfType[global.TypeTree] orElse 
+        selection.findSelectedOfType[global.SymTree]
+      }
+      
+      selectedTree flatMap { selectedLocal =>
         val position = crh.body.pos
         if (position == global.NoPosition)
           None
         else {
           val symbol = selectedLocal.symbol
-          if (symbol.name.isOperatorName)
+          if (symbol == null || symbol.name.isOperatorName)
             None
           else {
             val index = GlobalIndex(global.unitOf(position.source).body)
