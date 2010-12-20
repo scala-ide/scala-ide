@@ -21,10 +21,14 @@ class ScalaOccurrencesFinder(file: ScalaSourceFile, offset: Int, length: Int) {
       import analysis._
       compiler.ask { () =>
         if (!compiler.unitOfFile.contains(sourceFile.file)) None else {
-          val selection = new FileSelection(sourceFile.file, from, to)
-          selection.selectedSymbolTree flatMap { selectedLocal =>
+          val selectedTree = {
+            val selection = new FileSelection(sourceFile.file, from, to)
+            selection.findSelectedOfType[global.TypeTree] orElse 
+            selection.findSelectedOfType[global.SymTree]
+          }
+          selectedTree flatMap { selectedLocal =>
             val symbol = selectedLocal.symbol
-            if (symbol.name.isOperatorName)
+            if (symbol == null || symbol.name.isOperatorName)
               None
             else {
               val index = GlobalIndex(global.unitOf(sourceFile).body)
