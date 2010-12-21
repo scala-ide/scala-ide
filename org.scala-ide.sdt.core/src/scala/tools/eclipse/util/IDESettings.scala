@@ -25,7 +25,9 @@ object IDESettings {
     		Box("Private options",
     				List(Xcloselim, Xdce, inline, Xlinearizer, Ynogenericsig, noimports,
     						 selfInAnnots, Yrecursion, refinementMethodDispatch,
-    						 Ywarndeadcode, Ybuildmanagerdebug)))
+    						 Ywarndeadcode, Ybuildmanagerdebug)),
+        Box("Presentation Compiler",
+            List(YpresentationDebug, YpresentationVerbose)))
   }
   
   def pluginSettings: List[Box] = {

@@ -44,7 +44,7 @@ class ScalaProject(val underlying : IProject) {
       settings.printtypes.tryToSet(Nil)
       settings.verbose.tryToSetFromPropertyValue("true")
       settings.XlogImplicits.tryToSetFromPropertyValue("true")
-      initialize(settings)
+      initialize(settings, _.name.startsWith("-Ypresentation"))
       new ScalaPresentationCompiler(ScalaProject.this, settings)
     }
     
@@ -293,7 +293,7 @@ class ScalaProject(val underlying : IProject) {
       res.refreshLocal(IResource.DEPTH_INFINITE, null)
   }
     
-  def initialize(settings : Settings) = {
+  def initialize(settings : Settings, filter: Settings#Setting => Boolean) = {
     val env = new NameEnvironment(javaProject)
     
     for((src, dst) <- sourceOutputFolders(env))
@@ -317,22 +317,23 @@ class ScalaProject(val underlying : IProject) {
     val useProjectSettings = projectStore.getBoolean(SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE)
     
     val store = if (useProjectSettings) projectStore else workspaceStore  
-    IDESettings.shownSettings(settings).foreach{ _.userSettings.foreach {
-      setting =>
-        val value0 = store.getString(SettingConverterUtil.convertNameToProperty(setting.name))
-        try {
-          val value = if (setting ne settings.pluginsDir) value0 else {
-            ScalaPlugin.plugin.continuationsClasses map {
-              _.removeLastSegments(1).toOSString+(if (value0 == null || value0.length == 0) "" else ":"+value0)
-            } getOrElse value0
-          }
-          if (value != null && value.length != 0) {
-            setting.tryToSetFromPropertyValue(value)
-          }
-        } catch {
-          case t : Throwable => plugin.logError("Unable to set setting '"+setting.name+"' to '"+value0+"'", t)
+    for (box <- IDESettings.shownSettings(settings);
+       setting <- box.userSettings; if filter(setting)) {
+      println("initializing " + setting)
+      val value0 = store.getString(SettingConverterUtil.convertNameToProperty(setting.name))
+      try {
+        val value = if (setting ne settings.pluginsDir) value0 else {
+          ScalaPlugin.plugin.continuationsClasses map {
+            _.removeLastSegments(1).toOSString+(if (value0 == null || value0.length == 0) "" else ":"+value0)
+          } getOrElse value0
         }
-    } }
+        if (value != null && value.length != 0) {
+          setting.tryToSetFromPropertyValue(value)
+        }
+      } catch {
+        case t : Throwable => plugin.logError("Unable to set setting '"+setting.name+"' to '"+value0+"'", t)
+      }
+    }
   }
   
   def isStandardSource(file : IFile, qualifiedName : String) : Boolean = {
@@ -362,7 +363,7 @@ class ScalaProject(val underlying : IProject) {
     checkClasspath
     if (buildManager0 == null) {
       val settings = new Settings
-      initialize(settings)
+      initialize(settings, _ => true)
       buildManager0 = new EclipseBuildManager(this, settings)
     }
     buildManager0
