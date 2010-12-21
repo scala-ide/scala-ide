@@ -173,7 +173,6 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
         case Some(x) => _semanticPresenter
         case None => {
           val b = new SemanticHighlightingPresenter(getEditorInput.asInstanceOf[FileEditorInput], viewer)
-          ScalaPlugin.plugin.getPreferenceStore().addPropertyChangeListener(b)
           ScalaPlugin.plugin.reconcileListeners.after_+(b.update)
           Some(b)
         }

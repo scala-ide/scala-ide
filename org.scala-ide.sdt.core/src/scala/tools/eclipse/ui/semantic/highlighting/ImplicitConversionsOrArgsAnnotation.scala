@@ -15,12 +15,10 @@ import org.eclipse.jface.text.source.AnnotationPainter;
 import org.eclipse.jdt.internal.ui.javaeditor.IJavaAnnotation
 import org.eclipse.jdt.core.ICompilationUnit
 
-class ImplicitConversionsOrArgsAnnotation(cu: ICompilationUnit, kind: String, isPersistent: Boolean, text: String)
-  extends Annotation(kind, isPersistent, text) with IJavaAnnotation {
+class ImplicitConversionsOrArgsAnnotation(cu: ICompilationUnit, text: String, isPersistent: Boolean = false)
+  extends Annotation(ImplicitConversionsOrArgsAnnotation.KIND, isPersistent, text) with IJavaAnnotation {
 
-  //
-  override def getType(): String = ImplicitConversionsOrArgsAnnotation.KIND
-  override def isPersistent() = true
+  //override def isPersistent() = true
   override def isMarkedDeleted() = false
   override def getText = super.getText()
   override def hasOverlay() = false
@@ -40,25 +38,12 @@ object ImplicitConversionsOrArgsAnnotation {
   final val KIND = "scala.tools.eclipse.ui.semantic.highlighting.implicitConversionsOrArgsAnnotation"
 }
 
-class ImplicitConversionsOrArgsTextStyleStrategy(var fUnderlineStyle: Int, var fFontStyle: Int) extends AnnotationPainter.ITextStyleStrategy {
+class ImplicitConversionsOrArgsTextStyleStrategy(var fFontStyle: Int) extends AnnotationPainter.ITextStyleStrategy {
 
   def applyTextStyle(styleRange: StyleRange, annotationColor: Color) {
     styleRange.fontStyle = fFontStyle
-    if (fUnderlineStyle == 8) {
-      styleRange.underline = false
-    } else {
-      styleRange.underline = true
-      styleRange.underlineStyle = fUnderlineStyle
-      styleRange.underlineColor = annotationColor
-    }
-  }
-
-  def setUnderlineStyle(fus: Int) {
-    fUnderlineStyle = fus
-  }
-
-  def setFontStyle(ffs: Int) {
-    fFontStyle = ffs
+    styleRange.underline = false
+    styleRange.underlineColor = annotationColor
   }
 
 }

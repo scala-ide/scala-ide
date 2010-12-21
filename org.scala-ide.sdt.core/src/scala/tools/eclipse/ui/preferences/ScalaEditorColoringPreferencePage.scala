@@ -17,7 +17,10 @@ class ScalaEditorColoringPreferencePage extends FieldEditorPreferencePage
 	import ScalaEditorColoringPreferencePage._
 
 	setPreferenceStore(ScalaPlugin.plugin.getPreferenceStore());
-	setDescription("Set the highlighting for implicit conversions and implicit parameters.");
+	setDescription("""
+	    Set the highlighting for implicit conversions and implicit parameters.
+	    Underline configuration, Set at General > Editors > Text Editors > Annotations (Scala Implicit)
+  """)
 	
 	
 	/**
@@ -28,9 +31,6 @@ class ScalaEditorColoringPreferencePage extends FieldEditorPreferencePage
 	 */
 	override def createFieldEditors() {
 		addField(
-				new ColorFieldEditor(P_COLOR, 
-				"Color:", getFieldEditorParent()));
-		addField(
 				new BooleanFieldEditor(P_BLOD,
 				"Blod",
 				getFieldEditorParent()));
@@ -38,20 +38,6 @@ class ScalaEditorColoringPreferencePage extends FieldEditorPreferencePage
 				new BooleanFieldEditor(P_ITALIC,
 				"Italic",
 				getFieldEditorParent()));
-		val entryNamesAndValues = new Array[Array[String]](4, 2)
-		entryNamesAndValues(0)(0)="Squiggle"
-		entryNamesAndValues(0)(1)="1"
-		entryNamesAndValues(1)(0)="Double"
-		entryNamesAndValues(1)(1)="2"	
-		entryNamesAndValues(2)(0)="Single"
-		entryNamesAndValues(2)(1)="3"
-		entryNamesAndValues(3)(0)="None"
-		entryNamesAndValues(3)(1)="4"
-		addField(
-				new ComboFieldEditor(P_UNDERLINE,
-				"UnderLine Style",
-				entryNamesAndValues,
-				getFieldEditorParent())); 
 	}
 
 	/* (non-Javadoc)
@@ -63,10 +49,9 @@ class ScalaEditorColoringPreferencePage extends FieldEditorPreferencePage
 
 
 object ScalaEditorColoringPreferencePage {
-	val P_COLOR = "colorPreference";
-	val P_BLOD = "blodPreference"; 
-	val P_ITALIC= "italicPreference";
-	val P_UNDERLINE = "underLinePreference";
+  val BASE = "scala.tools.eclipse.ui.preferences.implicit."
+	val P_BLOD = BASE + "text.blod"
+	val P_ITALIC= BASE + "text.italic"
 }
 
 
@@ -85,11 +70,8 @@ class ScalaEditorColoringPagePreferenceInitializer extends AbstractPreferenceIni
 	 */
 	override def initializeDefaultPreferences() {
 		val store = ScalaPlugin.plugin.getPreferenceStore();
-		val green = new RGB(0, 255, 0);
-		PreferenceConverter.setDefault(store,P_COLOR, green); 
 		store.setDefault(P_BLOD, true);
 		store.setDefault(P_ITALIC, true);
-		store.setDefault(P_UNDERLINE, 1);
 	}
 
 }

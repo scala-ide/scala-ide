@@ -24,12 +24,14 @@ import org.eclipse.jface.text.source.Annotation;
 import org.eclipse.jface.text.source.{ IAnnotationAccess, AnnotationPainter, IAnnotationModelExtension };
 import org.eclipse.jface.util.IPropertyChangeListener
 import org.eclipse.jface.util.PropertyChangeEvent
+import org.eclipse.jface.text.IPainter
 
 import org.eclipse.swt.SWT
 
 import scala.tools.eclipse.javaelements.ScalaCompilationUnit;
 import scala.tools.nsc.util.RangePosition
 import scala.tools.eclipse.util.ColorManager
+import scala.tools.eclipse.ui.preferences.PropertyChangeListenerProxy
 
 import scala.collection._
 
@@ -38,7 +40,7 @@ import scala.collection._
  * @author David Bernard 
  *
  */
-class SemanticHighlightingPresenter(editor : FileEditorInput, sourceViewer: ISourceViewer) extends IPropertyChangeListener {
+class SemanticHighlightingPresenter(editor : FileEditorInput, sourceViewer: ISourceViewer) {
   import scala.tools.eclipse.ui.preferences.ScalaEditorColoringPreferencePage._
 
   val annotationAccess = new IAnnotationAccess() {
@@ -47,60 +49,58 @@ class SemanticHighlightingPresenter(editor : FileEditorInput, sourceViewer: ISou
     def isTemporary(annotation: Annotation) = true
   }
 
-  var fUnderlineStyle = getPreferenceStore().getInt(P_UNDERLINE) match {
-    case 1 => SWT.UNDERLINE_SQUIGGLE
-    case 2 => SWT.UNDERLINE_DOUBLE
-    case 3 => SWT.UNDERLINE_SINGLE
-    case 4 => 8 // for no underline case
-  }
-
-  var fFontStyle_BLOD = getPreferenceStore().getBoolean(P_BLOD) match {
+  
+  private def fFontStyle_BLOD = pluginStore.getBoolean(P_BLOD) match {
     case true => SWT.BOLD
     case _ => SWT.NORMAL
   }
 
-  var fFontStyle_ITALIC = getPreferenceStore().getBoolean(P_ITALIC) match {
+  private def fFontStyle_ITALIC = pluginStore.getBoolean(P_ITALIC) match {
     case true => SWT.ITALIC
     case _ => SWT.NORMAL
   }
 
-  var fColorValue = PreferenceConverter.getColor(getPreferenceStore(), P_COLOR)
+  private val P_COLOR = {
+    val lookup = new org.eclipse.ui.texteditor.AnnotationPreferenceLookup()
+    val pref = lookup.getAnnotationPreference(ImplicitConversionsOrArgsAnnotation.KIND)
+    pref.getColorPreferenceKey()
+  }
+  
+  def fColorValue = ColorManager.getDefault.getColor(PreferenceConverter.getColor(editorsStore, P_COLOR))
 
-  val impTextStyleStrategy = new ImplicitConversionsOrArgsTextStyleStrategy(fUnderlineStyle, fFontStyle_BLOD | fFontStyle_ITALIC)
+  val impTextStyleStrategy = new ImplicitConversionsOrArgsTextStyleStrategy(fFontStyle_BLOD | fFontStyle_ITALIC)
 
   val painter: AnnotationPainter = {
     val b = new AnnotationPainter(sourceViewer, annotationAccess)
-    b.addTextStyleStrategy(ImplicitConversionsOrArgsAnnotation.KIND, impTextStyleStrategy)
     b.addAnnotationType(ImplicitConversionsOrArgsAnnotation.KIND, ImplicitConversionsOrArgsAnnotation.KIND)
-    b.setAnnotationTypeColor(ImplicitConversionsOrArgsAnnotation.KIND, ColorManager.getDefault.getColor(fColorValue))
+    b.addTextStyleStrategy(ImplicitConversionsOrArgsAnnotation.KIND, impTextStyleStrategy)
+    //FIXME settings color of the underline is required to active TextStyle (bug ??, better way ??)
+    b.setAnnotationTypeColor(ImplicitConversionsOrArgsAnnotation.KIND, fColorValue)
     sourceViewer.asInstanceOf[org.eclipse.jface.text.TextViewer].addPainter(b)
     sourceViewer.asInstanceOf[org.eclipse.jface.text.TextViewer].addTextPresentationListener(b)
     b
   }
 
-  override def propertyChange(event: PropertyChangeEvent) {
-    event.getProperty() match {
-      case P_BLOD =>
-        fFontStyle_BLOD = event.getNewValue().asInstanceOf[Boolean]
-          match { case true => SWT.BOLD; case _ => SWT.NORMAL }
-      case P_ITALIC =>
-        fFontStyle_ITALIC = event.getNewValue().asInstanceOf[Boolean]
-          match { case true => SWT.ITALIC; case _ => SWT.NORMAL }
-      case P_COLOR => fColorValue = event.getNewValue().asInstanceOf[org.eclipse.swt.graphics.RGB]
-      case P_UNDERLINE =>
-        fUnderlineStyle = event.getNewValue().asInstanceOf[String]
-          match {
-            case "1" => SWT.UNDERLINE_SQUIGGLE
-            case "2" => SWT.UNDERLINE_DOUBLE
-            case "3" => SWT.UNDERLINE_SINGLE
-            case "4" => 8
-          }
+  private val _listener = new IPropertyChangeListener {
+    def propertyChange(event: PropertyChangeEvent) {
+      val changed = event.getProperty() match {
+        case P_BLOD => true
+        case P_ITALIC => true
+        case P_COLOR => true
+        case _ => false
+      }
+      if (changed) {
+        impTextStyleStrategy.fFontStyle = fFontStyle_BLOD | fFontStyle_ITALIC
+        painter.setAnnotationTypeColor(ImplicitConversionsOrArgsAnnotation.KIND, fColorValue)
+        painter.paint(IPainter.CONFIGURATION)
+      }
     }
-    impTextStyleStrategy.setUnderlineStyle(fUnderlineStyle)
-    impTextStyleStrategy.setFontStyle(fFontStyle_BLOD | fFontStyle_ITALIC)
-    painter.setAnnotationTypeColor(ImplicitConversionsOrArgsAnnotation.KIND, ColorManager.getDefault.getColor(fColorValue))
-    //    update()
   }
+  
+  protected def pluginStore : IPreferenceStore = ScalaPlugin.plugin.getPreferenceStore
+  protected def editorsStore :IPreferenceStore = org.eclipse.ui.editors.text.EditorsUI.getPreferenceStore
+
+  new PropertyChangeListenerProxy(_listener, pluginStore, editorsStore).autoRegister()
 
   //TODO call it only on reconcile, build,... when tree is rebuild
   val update = (scu: ScalaCompilationUnit, monitor: IProgressMonitor, workingCopyOwner: WorkingCopyOwner) => {
@@ -116,8 +116,6 @@ class SemanticHighlightingPresenter(editor : FileEditorInput, sourceViewer: ISou
               val txt = new String(sourceFile.content, v.pos.start, math.max(0, v.pos.end - v.pos.start)).trim()
               val ia = new ImplicitConversionsOrArgsAnnotation(
                 scu.getCompilationUnit,
-                ImplicitConversionsOrArgsAnnotation.KIND,
-                false,
                 "Implicit conversions found: " + txt + " => " + v.fun.symbol.name + "(" + txt + ")")
               val pos = new org.eclipse.jface.text.Position(v.pos.start, txt.length)
               toAdds.put(ia, pos)
@@ -127,8 +125,6 @@ class SemanticHighlightingPresenter(editor : FileEditorInput, sourceViewer: ISou
               val argsStr = v.args.map(_.symbol.name).mkString("( ", ", ", " )")
               val ia = new ImplicitConversionsOrArgsAnnotation(
                 scu.getCompilationUnit,
-                ImplicitConversionsOrArgsAnnotation.KIND,
-                false,
                 "Implicit arguments found: " + txt + " => " + txt + argsStr)
               val pos = new org.eclipse.jface.text.Position(v.pos.start, txt.length)
               toAdds.put(ia, pos)
@@ -156,7 +152,5 @@ class SemanticHighlightingPresenter(editor : FileEditorInput, sourceViewer: ISou
       }
     }
   }
-
-  def getPreferenceStore(): IPreferenceStore = ScalaPlugin.plugin.getPreferenceStore()
-
+  
 }
