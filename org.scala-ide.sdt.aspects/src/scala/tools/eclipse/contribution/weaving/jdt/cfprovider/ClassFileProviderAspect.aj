@@ -45,6 +45,7 @@ import org.eclipse.jdt.internal.core.ClassFile;
 import org.eclipse.jdt.internal.core.CompilationUnitElementInfo;
 import org.eclipse.jdt.internal.core.ImportDeclaration;
 import org.eclipse.jdt.internal.core.JavaElement;
+import org.eclipse.jdt.internal.core.BufferManager;
 import org.eclipse.jdt.internal.core.NameLookup;
 import org.eclipse.jdt.internal.core.Openable;
 import org.eclipse.jdt.internal.core.PackageFragment;
@@ -75,17 +76,20 @@ public privileged aspect ClassFileProviderAspect {
     execution(public String ClassFile.getTypeName()) &&
     target(cf);
 
-  pointcut getType(ClassFile cf) :
-    call(public IType IClassFile.getType()) &&
-    target(cf);
-  
-  pointcut mapSource() :
+  // For 3.6
+  pointcut mapSource(ClassFile cf, SourceMapper mapper, IBinaryType info, IClassFile owner) :
+    execution(IBuffer ClassFile.mapSource(SourceMapper, IBinaryType, IClassFile)) &&
+    target(cf) &&
+    target(IScalaClassFile) &&
+    args(mapper, info, owner);
+
+  // For 3.5
+  pointcut mapSource2(ClassFile cf, SourceMapper mapper, IBinaryType info) :
     execution(IBuffer ClassFile.mapSource(SourceMapper, IBinaryType)) &&
-    target(IScalaClassFile);
-  
-  pointcut mapSource2() :
-    execution(void SourceMapper.mapSource(IType, char[], IBinaryType));
-  
+    target(cf) &&
+    target(IScalaClassFile) &&
+    args(mapper, info);
+
   pointcut getSourceFileName(BinaryType bt) :
     execution(String BinaryType.getSourceFileName(IBinaryType)) &&
     target(bt);
@@ -156,20 +160,27 @@ public privileged aspect ClassFileProviderAspect {
     return javaClassFile;
   }
   
-  void around() :
-    mapSource2() &&
-    cflow(mapSource()) {
-    return;
+  IBuffer around(ClassFile cf, SourceMapper mapper, IBinaryType info, IClassFile owner) :
+    mapSource(cf, mapper, info, owner) {
+    return mapSourceSubst(cf, mapper, info);
   }
-  
-  IType around(ClassFile cf) :
-    getType(cf) &&
-    cflow(mapSource()) {
-    if (cf.binaryType == null)
-      cf.binaryType = new BinaryType(cf, cf.getTypeName());
-    return cf.binaryType;
+
+  IBuffer around(ClassFile cf, SourceMapper mapper, IBinaryType info) :
+    mapSource2(cf, mapper, info) {
+    return mapSourceSubst(cf, mapper, info);
   }
-  
+
+  IBuffer mapSourceSubst(ClassFile cf, SourceMapper mapper, IBinaryType info) {
+    char[] contents = mapper.findSource(cf.getType(), info);
+    assert(contents != null);
+    IBuffer buffer = BufferManager.createBuffer(cf);
+    BufferManager bufManager = cf.getBufferManager();
+    bufManager.addBuffer(buffer);
+    buffer.setContents(contents);
+    buffer.addBufferChangedListener(cf);
+    return buffer;
+  }
+
   String around(ClassFile cf) :
     getTypeName(cf) {
     if(cf instanceof IScalaClassFile) {
@@ -275,9 +286,10 @@ public privileged aspect ClassFileProviderAspect {
   
   String around(BinaryType bt) :
     getSourceFileName(bt) {
-    IJavaElement parent = bt.getParent(); 
-    if (parent instanceof IScalaClassFile)
+    IJavaElement parent = bt.getTypeRoot(); 
+    if (parent instanceof IScalaClassFile) {
       return ((IScalaClassFile)parent).getSourceFileName();
+    }
     else
       return proceed(bt);
   }
