@@ -47,12 +47,13 @@ class ScalaProject(val underlying : IProject) {
       settings.printtypes.tryToSet(Nil)
       settings.verbose.tryToSetFromPropertyValue("true")
       settings.XlogImplicits.tryToSetFromPropertyValue("true")
-      initialize(settings, _.name.startsWith("-Ypresentation"))
       //TODO replace the if by a conditional Extension Point (or better)
       if (scalaVersion.startsWith("2.9")) {
-        new ScalaPresentationCompiler(ScalaProject.this, settings)
+        initialize(settings, _.name.startsWith("-Ypresentation"))
+        new ScalaPresentationCompiler(settings)
       } else {
-        new ScalaPresentationCompiler(ScalaProject.this, settings) with scalac_28.TopLevelMapTyper {
+        initialize(settings, _ => true)
+        new ScalaPresentationCompiler(settings) with scalac_28.TopLevelMapTyper {
           def project = ScalaProject.this
         }
       }
