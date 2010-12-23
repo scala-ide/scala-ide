@@ -16,7 +16,7 @@ trait JVMUtils { self : Global =>
 
   def javaName(sym : Symbol) : String = jvmUtil.javaName(sym)
   
-  def javaNames(syms : List[Symbol]) : Array[String] = jvmUtil.javaNames(syms)
+  def javaNames(syms : List[Symbol]) : Array[String] = syms.toArray map (s => jvmUtil.javaName(s))
   
   def javaFlags(sym : Symbol) : Int = genJVM.javaFlags(sym)
   
