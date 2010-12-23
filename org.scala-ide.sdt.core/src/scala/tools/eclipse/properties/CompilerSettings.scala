@@ -15,7 +15,7 @@ import org.eclipse.ui.dialogs.PropertyPage
 import org.eclipse.swt.SWT
 import org.eclipse.swt.events.{ ModifyEvent, ModifyListener, SelectionAdapter, SelectionEvent, SelectionListener }
 import org.eclipse.swt.layout.{ GridData, GridLayout, RowLayout }
-import org.eclipse.swt.widgets.{ Button, Combo, Composite, Group, Label, Control}
+import org.eclipse.swt.widgets.{ Button, Combo, Composite, Group, Label, Control, TabFolder, TabItem}
 import scala.tools.nsc.Settings
 
 import scala.tools.eclipse.{ ScalaPlugin, SettingConverterUtil }
@@ -161,8 +161,10 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
       }
     }
     
+    val tabFolder = new TabFolder(composite, SWT.TOP)
+
     eclipseBoxes.foreach(eBox => {
-      val group = new Group(composite, SWT.SHADOW_ETCHED_IN)
+      val group = new Group(tabFolder, SWT.SHADOW_ETCHED_IN)
       group.setText(eBox.name)
       val layout = new GridLayout(3, false)
       group.setLayout(layout)
@@ -171,6 +173,11 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
       data.horizontalAlignment = GridData.FILL
       group.setLayoutData(data)
       eBox.eSettings.foreach(_.addTo(group))
+      
+            
+      val tabItem = new TabItem(tabFolder, SWT.NONE)
+      tabItem.setText(eBox.name)
+      tabItem.setControl(group)
     })
     
     //Make sure we check enablement of compiler settings here...
@@ -179,6 +186,7 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
       case None =>
     }
     
+    tabFolder.pack()
     composite
   }
   
@@ -197,7 +205,8 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
       case javaProject : IJavaProject => 
             //Make sure project is rebuilt
 		    javaProject.getProject().build(IncrementalProjectBuilder.CLEAN_BUILD, null)
-      case other => None // We're a Preference page!
+      case other => 
+		    None // We're a Preference page!
       //TODO - FIgure out who needs to rebuild
     }
   }
