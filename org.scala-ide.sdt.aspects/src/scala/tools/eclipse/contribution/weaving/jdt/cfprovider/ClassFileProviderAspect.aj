@@ -172,11 +172,15 @@ public privileged aspect ClassFileProviderAspect {
 
   IBuffer mapSourceSubst(ClassFile cf, SourceMapper mapper, IBinaryType info) {
     char[] contents = mapper.findSource(cf.getType(), info);
-    assert(contents != null);
-    IBuffer buffer = BufferManager.createBuffer(cf);
+    IBuffer buffer;
+    if (contents != null) {
+      buffer = BufferManager.createBuffer(cf);
+      buffer.setContents(contents);
+    } else {
+      buffer = BufferManager.createNullBuffer(cf);
+    }
     BufferManager bufManager = cf.getBufferManager();
     bufManager.addBuffer(buffer);
-    buffer.setContents(contents);
     buffer.addBufferChangedListener(cf);
     return buffer;
   }
