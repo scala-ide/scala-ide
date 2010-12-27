@@ -855,8 +855,14 @@
               id="scala.tools.eclipse.scalaEditorScope" />
    </extension>
 
-<extension
-      point="org.eclipse.ui.bindings"> <!-- M1 == Ctrl, M2 == Shift M3 == Alt -->
+  <extension
+      point="org.eclipse.ui.bindings"> <!-- M1 == Ctrl/Cmd, M2 == Shift M3 == Alt -->
+   <!--
+   Bindings to be replaced with Mac bindings like in the JDT (see 
+   http://dev.eclipse.org/viewcvs/viewvc.cgi/org.eclipse.jdt.ui/plugin.xml)
+   -->
+   <sequenceModifier find="M2+M3" replace="M1+M3" platforms="cocoa,carbon" />
+      
    <key
        commandId="scala.tools.eclipse.refactoring.command.ExtractMethod"
        schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
@@ -877,6 +883,8 @@
        schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
        contextId="scala.tools.eclipse.scalaEditorScope"
        sequence="M2+M3+R"/>
+   </extension>
+   <extension point="org.eclipse.ui.bindings"> <!-- Cross-platform bindings -->
    <key
        commandId="scala.tools.eclipse.refactoring.command.OrganizeImports"
        schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
