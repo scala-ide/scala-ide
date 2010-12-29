@@ -273,25 +273,21 @@
          markerType="org.scala-ide.sdt.core.problem"
          markerSeverity="0">
       </type>
-      <type
-         name="scala.tools.eclipse.ui.semantic.highlighting.implicitConversionsOrArgsAnnotation"
-         super="org.eclipse.ui.workbench.texteditor.info"
-         >
-      </type>
+      <type name="scala.tools.eclipse.ui.semantic.highlighting.implicitConversionsOrArgsAnnotation"/>
    </extension>
    <extension
          point="org.eclipse.ui.editors.markerAnnotationSpecification">
      <specification
           annotationType="scala.tools.eclipse.ui.semantic.highlighting.implicitConversionsOrArgsAnnotation"
           colorPreferenceKey="scala.tools.eclipse.ui.preferences.implicit.color"
-          colorPreferenceValue="0,255,0"
-          contributesToHeader="true"
+          colorPreferenceValue="183,239,176"
+          contributesToHeader="false"
           includeOnPreferencePage="true"
           icon="icons/full/elcl16/implicit_co.gif"
           label="Scala Implicit"
           overviewRulerPreferenceKey="scala.tools.eclipse.ui.preferences.implicit.rulers.overview"
-          overviewRulerPreferenceValue="true"
-          presentationLayer="0"
+          overviewRulerPreferenceValue="false"
+          presentationLayer="5"
           symbolicIcon="info"
           textPreferenceKey="scala.tools.eclipse.ui.preferences.implicit.text"
           textPreferenceValue="true"
