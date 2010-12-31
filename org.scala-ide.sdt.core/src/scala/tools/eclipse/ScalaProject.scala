@@ -465,6 +465,7 @@ class ScalaProject(val underlying : IProject) {
   }
 
   def clean(monitor : IProgressMonitor) = {
+    Tracer.println("clean scala project " + underlying.getName)
     underlying.deleteMarkers(plugin.problemMarkerId, true, IResource.DEPTH_INFINITE)
     resetCompilers()
     depFile.delete(true, false, monitor)
