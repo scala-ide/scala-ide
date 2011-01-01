@@ -17,6 +17,9 @@ class ScalaOccurrencesFinder(file: ScalaSourceFile, offset: Int, length: Int) {
     val (from, to) = (offset, offset + length)
     file.withCompilerResult { crh =>
     
+      if (crh.body.pos == crh.compiler.NoPosition)
+        return None
+    
       val mo = new MarkOccurrences with GlobalIndexes {
         val global = crh.compiler
         lazy val index = GlobalIndex(global.unitOf(crh.body.pos.source).body)
