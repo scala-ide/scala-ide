@@ -65,7 +65,7 @@ public privileged aspect DOMAspect {
     execution(AbstractMethodDeclaration SourceTypeConverter.convert(SourceMethod, SourceMethodElementInfo, CompilationResult)) &&
     args(methodHandle, methodInfo, compilationResult) &&
     target(stc);
-  
+/*  
   ASTNode around(ASTParser parser, IProgressMonitor monitor) :
     internalCreateAST(parser, monitor) {
     try {
@@ -156,7 +156,7 @@ public privileged aspect DOMAspect {
         fixTypes(tpe.memberTypes);
       }
     }
-  }
+  }*/
   
   private void fixMethods(AbstractMethodDeclaration[] methods) {
     if (methods == null)
