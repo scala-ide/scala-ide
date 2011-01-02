@@ -24,13 +24,13 @@ import scala.tools.eclipse.util.ReflectionUtils
 class ScalaToggleBreakpointAdapter extends ToggleBreakpointAdapter { self =>
   import ScalaToggleBreakpointAdapterUtils._
   
-  override def toggleLineBreakpoints(part : IWorkbenchPart, selection : ISelection, bestMatch : Boolean) {
+  private def toggleLineBreakpointsImpl(part : IWorkbenchPart, selection : ISelection) {
     val job = new Job("Toggle Line Breakpoint") {
       override def run(monitor : IProgressMonitor) : IStatus = {
         val editor = self.getTextEditor(part)
         if (editor != null && selection.isInstanceOf[ITextSelection]) {
           if (monitor.isCanceled)
-            return Status.CANCEL_STATUS;
+            return Status.CANCEL_STATUS
           try {
             report(null, part)
             val sel = 
@@ -97,19 +97,19 @@ class ScalaToggleBreakpointAdapter extends ToggleBreakpointAdapter { self =>
       if(mtype == IJavaElement.FIELD || mtype == IJavaElement.METHOD) {
         if (selection.isInstanceOf[ITextSelection]) {
           val ts = selection.asInstanceOf[ITextSelection]
-          toggleLineBreakpoints(part, ts)
+          toggleLineBreakpointsImpl(part, ts)
         } 
       }
       else if(member.getElementType == IJavaElement.TYPE)
         toggleClassBreakpoints(part, sel)
       else
-        toggleLineBreakpoints(part, selection, true)
+        toggleLineBreakpointsImpl(part, selection)
     }
   }
-
-  override def report(message : String, part : IWorkbenchPart) = super.report(message, part)
-  override def getTextEditor(part : IWorkbenchPart) = super.getTextEditor(part)
-  override def translateToMembers(part : IWorkbenchPart, selection : ISelection) = super.translateToMembers(part, selection)
+  
+  override def toggleLineBreakpoints(part : IWorkbenchPart, selection : ISelection) {
+    toggleLineBreakpointsImpl(part, selection)
+  }
 }
 
 object ScalaToggleBreakpointAdapterUtils extends ReflectionUtils {
