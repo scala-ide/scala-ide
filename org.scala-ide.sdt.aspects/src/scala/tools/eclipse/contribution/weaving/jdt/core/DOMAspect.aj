@@ -160,7 +160,7 @@ public privileged aspect DOMAspect {
     boolean fromJavaProject = true;
 
     Class clazz = org.eclipse.jdt.core.dom.BindingResolver.class;
-    Defensive.check(clazz.getDeclaredConstructors().length > 0, "access BindingResolver constructors")
+    //Defensive.check(clazz.getDeclaredConstructors().length > 0, "access BindingResolver constructors");
     try {
       try {
         // first try signature of eclipse 3.6
