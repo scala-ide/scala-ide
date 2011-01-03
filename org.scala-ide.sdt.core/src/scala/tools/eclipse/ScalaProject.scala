@@ -30,7 +30,6 @@ import scala.tools.eclipse.util.{ Cached, EclipseResource, IDESettings, OSGiUtil
 class ScalaProject(val underlying : IProject) {
   import ScalaPlugin.plugin
 
-  private var classpathUpdate : Long = IResource.NULL_STAMP
   private var buildManager0 : EclipseBuildManager = null
   private var hasBeenBuilt = false
   private val depFile = underlying.getFile(".scala_dependencies")
@@ -41,8 +40,6 @@ class ScalaProject(val underlying : IProject) {
     
   private val presentationCompiler = new Cached[ScalaPresentationCompiler] {
     override def create() = {
-      checkClasspath
-      
       val settings = new Settings
       settings.printtypes.tryToSet(Nil)
       settings.verbose.tryToSetFromPropertyValue("true")
@@ -338,18 +335,6 @@ class ScalaProject(val underlying : IProject) {
       case _ => 
     }    
   }
-    
-  def checkClasspath : Unit = plugin.check {
-    val cp = underlying.getFile(".classpath")
-    if (cp.exists)
-      classpathUpdate match {
-        case IResource.NULL_STAMP => classpathUpdate = cp.getModificationStamp()
-        case stamp if stamp == cp.getModificationStamp() => 
-        case _ =>
-          classpathUpdate = cp.getModificationStamp()
-          resetCompilers
-      }
-  }
   
   def refreshOutput : Unit = {
     val res = plugin.workspaceRoot.findMember(javaProject.getOutputLocation)
@@ -426,8 +411,9 @@ class ScalaProject(val underlying : IProject) {
   }
   
   def buildManager = {
-    checkClasspath
     if (buildManager0 == null) {
+      Tracer.println("creating a new EclipseBuildManager")
+      depFile.delete(true, false, null/*monitor*/)
       val settings = new Settings
       initialize(settings, _ => true)
       buildManager0 = new EclipseBuildManager(this, settings)
@@ -466,19 +452,18 @@ class ScalaProject(val underlying : IProject) {
 
   def clean(monitor : IProgressMonitor) = {
     Tracer.println("clean scala project " + underlying.getName)
-    underlying.deleteMarkers(plugin.problemMarkerId, true, IResource.DEPTH_INFINITE)
-    resetCompilers()
-    depFile.delete(true, false, monitor)
-    cleanOutputFolders(monitor)
+    resetCompilers(monitor)
   }
 
-  def resetBuildCompiler() {
+  def resetBuildCompiler(monitor : IProgressMonitor) {
+    underlying.deleteMarkers(plugin.problemMarkerId, true, IResource.DEPTH_INFINITE)
+    cleanOutputFolders(monitor)
     buildManager0 = null
     hasBeenBuilt = false
   }
   
-  def resetCompilers() = {
-    resetBuildCompiler()
+  def resetCompilers(monitor : IProgressMonitor) = {
+    resetBuildCompiler(monitor)
     resetPresentationCompiler()
   }
 }

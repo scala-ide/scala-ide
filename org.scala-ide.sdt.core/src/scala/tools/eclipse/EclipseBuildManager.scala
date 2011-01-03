@@ -128,7 +128,7 @@ class EclipseBuildManager(project : ScalaProject, settings0: Settings) extends R
         hasErrors = true
         project.buildError(IMarker.SEVERITY_ERROR, "Error in Scala compiler: " + e.getMessage, null)
         ScalaPlugin.plugin.logError("Error in Scala compiler (=> resetting...)", e)
-        //project.resetBuildCompiler()
+        //project.resetBuildCompiler(pm)
     }
     if (!hasErrors)
       pendingSources.clear
@@ -144,7 +144,8 @@ class EclipseBuildManager(project : ScalaProject, settings0: Settings) extends R
     Set.empty ++ missing
   }
   
-  override def newCompiler(settings: Settings) = new EclipseBuildCompiler(settings, new BuildReporter(project))
+  /** ignore settings parameter and used settings from constructor */
+  override def newCompiler(settings: Settings) = new EclipseBuildCompiler(settings0, new BuildReporter(project))
   
   override def buildingFiles(included: scala.collection.Set[AbstractFile]) {
     for(file <- included) {
