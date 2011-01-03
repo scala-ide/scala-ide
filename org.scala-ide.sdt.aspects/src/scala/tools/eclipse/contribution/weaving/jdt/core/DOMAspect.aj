@@ -66,7 +66,7 @@ public privileged aspect DOMAspect {
     execution(AbstractMethodDeclaration SourceTypeConverter.convert(SourceMethod, SourceMethodElementInfo, CompilationResult)) &&
     args(methodHandle, methodInfo, compilationResult) &&
     target(stc);
-  
+/*  
   ASTNode around(ASTParser parser, IProgressMonitor monitor) :
     internalCreateAST(parser, monitor) {
     try {
@@ -164,7 +164,7 @@ public privileged aspect DOMAspect {
         fixTypes(tpe.memberTypes);
       }
     }
-  }
+  }*/
   
 //  /**
 //   * Replace null/empty token for TypeReference.typeName[0] by "Any" (!! modify in place)
