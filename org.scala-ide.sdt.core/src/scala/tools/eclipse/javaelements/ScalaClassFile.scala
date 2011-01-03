@@ -5,6 +5,7 @@
 
 package scala.tools.eclipse.javaelements
 
+import scala.tools.eclipse.internal.logging.Defensive
 import java.util.{ HashMap => JHashMap }
 
 import org.eclipse.core.resources.IResource
@@ -53,7 +54,14 @@ class ScalaClassFile(parent : PackageFragment, name : String, sourceFile : Strin
   override def codeSelect(offset : Int, length : Int, owner : WorkingCopyOwner) : Array[IJavaElement] =
     codeSelect(this, offset, length, owner)
   
-  def getContents() = getBuffer.getCharacters
+  def getContents() = {
+    val buffer = getBuffer
+    if(Defensive.notNull(buffer, "getBuffer")) {
+      buffer.getCharacters
+    } else {
+      Array[Char]()
+    }
+  }
     
   override lazy val file : AbstractFile = new VirtualFile(getSourceFileName, getSourceFilePath)
   
