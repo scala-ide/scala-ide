@@ -5,6 +5,7 @@
 
 package scala.tools.eclipse.contribution.weaving.jdt.core;
 
+import java.lang.reflect.Constructor;
 import java.util.Locale;
 import java.util.Map;
 
@@ -13,6 +14,7 @@ import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.core.WorkingCopyOwner;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
@@ -39,6 +41,7 @@ import org.eclipse.jdt.internal.compiler.env.INameEnvironment;
 import org.eclipse.jdt.internal.compiler.env.ISourceType;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.impl.ITypeRequestor;
+import org.eclipse.jdt.internal.compiler.lookup.CompilationUnitScope;
 import org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment;
 import org.eclipse.jdt.internal.compiler.lookup.PackageBinding;
 import org.eclipse.jdt.internal.compiler.parser.SourceTypeConverter;
@@ -51,7 +54,6 @@ import org.eclipse.jdt.internal.core.SourceMethod;
 import org.eclipse.jdt.internal.core.SourceMethodElementInfo;
 import org.eclipse.jdt.internal.core.SourceType;
 import org.eclipse.jdt.internal.core.SourceTypeElementInfo;
-
 import scala.tools.eclipse.contribution.weaving.jdt.IScalaCompilationUnit;
 import scala.tools.eclipse.internal.logging.Defensive;
 
@@ -66,7 +68,7 @@ public privileged aspect DOMAspect {
     execution(AbstractMethodDeclaration SourceTypeConverter.convert(SourceMethod, SourceMethodElementInfo, CompilationResult)) &&
     args(methodHandle, methodInfo, compilationResult) &&
     target(stc);
-/*  
+  
   ASTNode around(ASTParser parser, IProgressMonitor monitor) :
     internalCreateAST(parser, monitor) {
     try {
@@ -132,13 +134,8 @@ public privileged aspect DOMAspect {
           return false;
         }
       };
-      
-      org.eclipse.jdt.core.dom.BindingResolver resolver =
-        new org.eclipse.jdt.core.dom.DefaultBindingResolver(
-          unit.scope,
-          DefaultWorkingCopyOwner.PRIMARY,
-          new org.eclipse.jdt.core.dom.DefaultBindingResolver.BindingTables(),
-          true);
+        
+      org.eclipse.jdt.core.dom.BindingResolver resolver = newResolver(unit);
       ast.setBindingResolver(resolver);
       converter.setAST(ast);
       
@@ -146,6 +143,41 @@ public privileged aspect DOMAspect {
       return node;
     } catch (JavaModelException ex) {
       throw new IllegalArgumentException(ex);
+    }
+  }
+
+  /**
+   * Provide a "cross" eclipse 3.5/3.6 constructor for Binding Resolver.
+   * Using reflection because signature of the constructor change between eclipse 3.5 and 3.6.
+   */
+  private org.eclipse.jdt.core.dom.BindingResolver newResolver(CompilationUnitDeclaration unit) {
+    org.eclipse.jdt.core.dom.BindingResolver resolver = null;
+    
+    CompilationUnitScope scope = unit.scope;
+    WorkingCopyOwner workingCopyOwner = DefaultWorkingCopyOwner.PRIMARY;
+    org.eclipse.jdt.core.dom.DefaultBindingResolver.BindingTables bindingTables = new org.eclipse.jdt.core.dom.DefaultBindingResolver.BindingTables();
+    boolean isRecoveringBindings = true;
+    boolean fromJavaProject = true;
+
+    Class clazz = org.eclipse.jdt.core.dom.BindingResolver.class;
+    Defensive.check(clazz.getDeclaredConstructors().length > 0, "access BindingResolver constructors")
+    try {
+      try {
+        // first try signature of eclipse 3.6
+        //  BindingResolver resolver = new DefaultBindingResolver(scope, workingCopyOwner, BindingTables, isRecoveringBindings, fromJavaProject);
+        Constructor<org.eclipse.jdt.core.dom.BindingResolver> ctor = clazz.getDeclaredConstructor(CompilationUnitScope.class, WorkingCopyOwner.class, org.eclipse.jdt.core.dom.DefaultBindingResolver.BindingTables.class, Boolean.class, Boolean.class);
+        ctor.setAccessible(true);
+        resolver = ctor.newInstance(scope, workingCopyOwner, bindingTables, isRecoveringBindings, fromJavaProject);
+      } catch (NoSuchMethodException ex) {
+        // eclipse 3.5
+        //  BindingResolver resolver = new DefaultBindingResolver(scope, workingCopyOwner, BindingTables, isRecoveringBindings);
+        Constructor<org.eclipse.jdt.core.dom.BindingResolver> ctor = clazz.getDeclaredConstructor(CompilationUnitScope.class, WorkingCopyOwner.class, org.eclipse.jdt.core.dom.DefaultBindingResolver.BindingTables.class, Boolean.class);
+        ctor.setAccessible(true);
+        resolver = ctor.newInstance(scope, workingCopyOwner, bindingTables, isRecoveringBindings);
+      }
+      return resolver;
+    } catch (Exception exc) {
+      throw new RuntimeException("failed to create a BindingResolver by refection", exc);
     }
   }
   
@@ -164,7 +196,7 @@ public privileged aspect DOMAspect {
         fixTypes(tpe.memberTypes);
       }
     }
-  }*/
+  }
   
 //  /**
 //   * Replace null/empty token for TypeReference.typeName[0] by "Any" (!! modify in place)
