@@ -110,6 +110,13 @@ class ScalaToggleBreakpointAdapter extends ToggleBreakpointAdapter { self =>
   override def toggleLineBreakpoints(part : IWorkbenchPart, selection : ISelection) {
     toggleLineBreakpointsImpl(part, selection)
   }
+  
+  /** override from protected to public method to be accessible from Job created in toggleLineBreakpointsImpl*/
+  override def report(message : String, part : IWorkbenchPart) = super.report(message, part)
+  /** override from protected to public method to be accessible from Job created in toggleLineBreakpointsImpl*/
+  override def getTextEditor(part : IWorkbenchPart) = super.getTextEditor(part)
+  /** override from protected to public method to be accessible from Job created in toggleLineBreakpointsImpl*/
+  override def translateToMembers(part : IWorkbenchPart, selection : ISelection) = super.translateToMembers(part, selection)
 }
 
 object ScalaToggleBreakpointAdapterUtils extends ReflectionUtils {
