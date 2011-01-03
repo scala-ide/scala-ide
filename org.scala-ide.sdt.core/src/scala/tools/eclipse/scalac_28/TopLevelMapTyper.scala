@@ -104,6 +104,6 @@ trait TopLevelMapTyper extends ScalaPresentationCompiler {
   override def newTyperRun = {
     Tracer.println("newTyperRun")
     Thread.dumpStack()
-    new EclipseTyperRun()
+    currentTyperRun = new EclipseTyperRun()
   }
 }

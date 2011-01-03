@@ -53,7 +53,7 @@ object BuildManagerTest extends EvalLoop {
 
   def prompt = "builder > "
 
-  def error(msg: String) {
+  private def buildError(msg: String) {
     println(msg + "\n  scalac -help  gives more information")
   }
 
@@ -69,7 +69,7 @@ object BuildManagerTest extends EvalLoop {
       Set.empty ++ result._1
     }
 
-    val settings = new Settings(error)
+    val settings = new Settings(buildError)
     settings.Ybuildmanagerdebug.value = true
     val command = new CompilerCommand(args.toList, settings)
 //    settings.make.value = "off"
