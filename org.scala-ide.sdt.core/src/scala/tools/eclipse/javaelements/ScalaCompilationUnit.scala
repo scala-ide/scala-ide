@@ -70,26 +70,26 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
 
   override def buildStructure(info : OpenableElementInfo, pm : IProgressMonitor, newElements : JMap[_, _], underlyingResource : IResource) : Boolean = {
     Tracer.println("buildStructure : " + underlyingResource)
-  	withSourceFile { (sourceFile, compiler) =>
-  	  import scala.tools.eclipse.util.IDESettings
-  	  
+    withSourceFile { (sourceFile, compiler) =>
+      import scala.tools.eclipse.util.IDESettings
+      
       val contents = this.getContents
-	    if (IDESettings.compileOnTyping.value && _changed.getAndSet(false)) {
-	      compiler.askReload(this, contents)
-	    }
+      if (IDESettings.compileOnTyping.value && _changed.getAndSet(false)) {
+        compiler.askReload(this, contents)
+      }
       val sourceLength = contents.length // sourceFile.length
-	    compiler.ask { () =>
-	      val root = compiler.root(sourceFile)
-  	    new compiler.StructureBuilderTraverser(this, info, newElements.asInstanceOf[JMap[AnyRef, AnyRef]]).traverse(root)
-	    }
-	    info match {
-	      case cuei : CompilationUnitElementInfo =>
-	        cuei.setSourceLength(sourceLength)
-	      case _ =>
-	    }
-	
-	    info.setIsStructureKnown(true)
-	    info.isStructureKnown
+      compiler.ask { () =>
+        val body = compiler.body(sourceFile)
+        new compiler.StructureBuilderTraverser(this, info, newElements.asInstanceOf[JMap[AnyRef, AnyRef]]).traverse(body)
+      }
+      info match {
+        case cuei : CompilationUnitElementInfo =>
+          cuei.setSourceLength(sourceLength)
+        case _ =>
+      }
+    
+      info.setIsStructureKnown(true)
+      info.isStructureKnown
     }
   }
 
@@ -99,8 +99,8 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
     withSourceFile({ (source, compiler) =>
       val body = compiler.body(source)
       if (body != null)
-	    compiler.ask { () =>
-    	  new compiler.IndexBuilderTraverser(indexer).traverse(body)
+        compiler.ask { () =>
+          new compiler.IndexBuilderTraverser(indexer).traverse(body)
         }
       })
   }
@@ -150,24 +150,24 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
   
   override def reportMatches(matchLocator : MatchLocator, possibleMatch : PossibleMatch) = Defensive.tryOrLog {
     withSourceFile({ (sourceFile, compiler) =>
-	    val body = compiler.body(sourceFile)
-	
-	    if (body != null)
-	      compiler.ask { () =>
-	    	  compiler.MatchLocator(this, matchLocator, possibleMatch).traverse(body)
-	      }
-	  })
+        val body = compiler.body(sourceFile)
+    
+        if (body != null)
+          compiler.ask { () =>
+              compiler.MatchLocator(this, matchLocator, possibleMatch).traverse(body)
+          }
+      })
   }
   
   override def createOverrideIndicators(annotationMap : JMap[_, _]) = Defensive.tryOrLog {
     withSourceFile({ (sourceFile, compiler) =>
-	    val body = compiler.body(sourceFile)
-	
-	    if (body != null)
-	      compiler.ask { () =>
-	    	new compiler.OverrideIndicatorBuilderTraverser(this, annotationMap.asInstanceOf[JMap[AnyRef, AnyRef]]).traverse(body)
-	      }
-	  })
+        val body = compiler.body(sourceFile)
+    
+        if (body != null)
+          compiler.ask { () =>
+            new compiler.OverrideIndicatorBuilderTraverser(this, annotationMap.asInstanceOf[JMap[AnyRef, AnyRef]]).traverse(body)
+          }
+      })
   }
   
   override def getImageDescriptor = {

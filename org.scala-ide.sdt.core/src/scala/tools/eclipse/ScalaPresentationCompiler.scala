@@ -81,20 +81,10 @@ class ScalaPresentationCompiler(settings : Settings)
   
   override def askTypeAt(pos: Position, response: Response[Tree]) {
     Tracer.println("askTypeAt")
-	  if (Thread.currentThread == compileRunner) getTypedTreeAt(pos, response) else super.askTypeAt(pos, response)
+	if (Thread.currentThread == compileRunner) getTypedTreeAt(pos, response) else super.askTypeAt(pos, response)
   }
     
   def body(sourceFile : SourceFile) = {
-    val tree = new Response[Tree]
-    if (Thread.currentThread == compileRunner)
-      getTypedTree(sourceFile, false, tree) else askType(sourceFile, false, tree)
-    tree.get match {
-      case Left(l) => l
-      case Right(r) => throw new AsyncGetException(r, "body of " + sourceFile.path)
-    }
-  }
-
-  def root(sourceFile : SourceFile) = {
     ask { () => 
       val u = unitOf(sourceFile)
       if (u.status < JustParsed) parse(u)
@@ -189,9 +179,10 @@ object ScalaPresentationCompiler {
   }
 }
 
+//TODO remove (no longer used)
 /**
  * Wrapping exception for Exception raise in an other thread (from async call).
  * Help to find where is the cause on caller/context (ask+get).
  * Message of the exception include the hashCode of the cause, because a cause Exception can be wrapped several time.
  */
-class AsyncGetException(cause : Throwable, contextInfo : String = "") extends Exception("origin (" + cause.hashCode + ") : " + cause.getMessage + " [" + contextInfo + "]", cause)
+//class AsyncGetException(cause : Throwable, contextInfo : String = "") extends Exception("origin (" + cause.hashCode + ") : " + cause.getMessage + " [" + contextInfo + "]", cause)
