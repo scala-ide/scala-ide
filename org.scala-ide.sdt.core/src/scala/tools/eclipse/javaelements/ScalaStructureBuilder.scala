@@ -118,8 +118,8 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
           lazy val commonParents = {
             val cps = module.info.baseClasses
             val mps = {
-            	val comp = companionClassOf(module)
-            	if (comp == NoSymbol) List() else comp.info.baseClasses
+                val comp = companionClassOf(module)
+                if (comp == NoSymbol) List() else comp.info.baseClasses
             }
             cps.filter(mps contains)
           }
@@ -130,20 +130,21 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
           /** Should method `m' get a forwarder in the mirror class? */
           def shouldForward(m: Symbol): Boolean =
             m.isMethod &&
-	    !m.isConstructor &&
-	    !m.isStaticMember &&
-	    !(m.owner == definitions.ObjectClass) && 
-	    !(m.owner == definitions.AnyClass) &&
-	    !m.hasFlag(Flags.CASE | Flags.PROTECTED | Flags.DEFERRED) &&
-	    !module.isSubClass(companionClassOf(module)) &&
-	    !conflictsIn(definitions.ObjectClass, m.name) &&
-	    !conflictsInCommonParent(m.name) && 
-	    !conflictsIn(companionClassOf(module), m.name)
+            !m.isConstructor &&
+            !m.isStaticMember &&
+            !(m.owner == definitions.ObjectClass) && 
+            !(m.owner == definitions.AnyClass) &&
+            !m.hasFlag(Flags.CASE | Flags.PROTECTED | Flags.DEFERRED) &&
+            !module.isSubClass(companionClassOf(module)) &&
+            !conflictsIn(definitions.ObjectClass, m.name) &&
+            !conflictsInCommonParent(m.name) && 
+            !conflictsIn(companionClassOf(module), m.name)
           
-          assert(module.isModuleClass)
-          
-          for (m <- module.info.nonPrivateMembers; if shouldForward(m))
-            addForwarder(classElem, classElemInfo, module, m)
+          if(Defensive.check(module.isModuleClass, "module %s isModuleClass", module)) {
+            for (m <- module.info.nonPrivateMembers; if shouldForward(m)) {
+              addForwarder(classElem, classElemInfo, module, m)
+            }
+          }
         }
 
         def addForwarder(classElem: ScalaElement, classElemInfo : ScalaElementInfo, module: Symbol, d: Symbol) {
@@ -414,7 +415,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         //println("Module defn: "+m.name+" ["+this+"]")
         
         val sym = symbol(m)
-    	val isSynthetic = sym.hasFlag(Flags.SYNTHETIC)
+        val isSynthetic = sym.hasFlag(Flags.SYNTHETIC)
         val moduleElem = new ScalaModuleElement(element, m.name.toString, isSynthetic)
         resolveDuplicates(moduleElem)
         addChild(moduleElem)
@@ -522,7 +523,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         //println("Type defn: >"+t.name.toString+"< ["+this+"]")
         
         val sym = symbol(t)
-    	val display = t.name.toString+" : "+sym.tpe.toString
+        val display = t.name.toString+" : "+sym.tpe.toString
 
         val typeElem = new ScalaTypeElement(element, t.name.toString, display)
         resolveDuplicates(typeElem)
@@ -562,7 +563,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
       override def addDef(d : DefDef) : Owner = {
         //println("Def defn: "+d.name+" ["+this+"]")
         val sym = symbol(d)
-    	val isCtor0 = sym.isConstructor
+        val isCtor0 = sym.isConstructor
         val nameString =
           if(isCtor0)
             sym.owner.simpleName + (if (sym.owner.isModuleClass) "$" else "")
@@ -590,7 +591,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         tp.print(tp.symName(d, d.name))
         tp.printTypeParams(d.tparams)
         d.vparamss foreach tp.printValueParams
-	    if (d.tpt.tpe != null) {
+        if (d.tpt.tpe != null) {
           sw.write(" : ")
           tp.print(d.tpt)
         }
@@ -646,7 +647,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
             case smei : ScalaMemberElementInfo =>
               defElemInfo.setNameSource0(smei.getNameSourceStart0, smei.getNameSourceEnd0)
               if (sym.isPrimaryConstructor) {
-            	//FIXME ? in original code start is set to smei.getNameSourceEnd0 (why ?)  
+                //FIXME ? in original code start is set to smei.getNameSourceEnd0 (why ?)  
                 defElemInfo.setSourceRange0(smei.getNameSourceStart0, smei.getNameSourceEnd0)
               } else {
                 defElemInfo.setSourceRange0(smei.getDeclarationSourceStart0, smei.getDeclarationSourceEnd0)
@@ -656,10 +657,10 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         } else {
           val start = d.pos.point
           val end = if (Defensive.notEmpty(defElem.labelName, "defElem.labelName notEmpty : %s", defElem)) {
-        	  // disable subtraction if iSetter, can introduce end < start, why 4 ??
-        	  start+defElem.labelName.length-1//-(if (sym.isSetter) 4 else 0)
+              // disable subtraction if iSetter, can introduce end < start, why 4 ??
+              start+defElem.labelName.length-1//-(if (sym.isSetter) 4 else 0)
           } else {
-        	  start + 1
+              start + 1
           }
           defElemInfo.setNameSource0(start, end)
           setSourceRange(defElemInfo, d, annotsPos)
