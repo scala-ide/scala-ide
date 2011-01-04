@@ -31,8 +31,6 @@ class ScalaProject(val underlying : IProject) {
   import ScalaPlugin.plugin
 
   private var buildManager0 : EclipseBuildManager = null
-  private var hasBeenBuilt = false
-  private val depFile = underlying.getFile(".scala_dependencies")
   private val resetPendingLock = new Object
   private var resetPending = false
     
@@ -62,27 +60,6 @@ class ScalaProject(val underlying : IProject) {
   }
   
   override def toString = underlying.getName
-  
-  def buildError(severity : Int, msg : String, monitor : IProgressMonitor) =
-    underlying.getWorkspace.run(new IWorkspaceRunnable {
-      def run(monitor : IProgressMonitor) = {
-        val mrk = underlying.createMarker(plugin.problemMarkerId)
-        mrk.setAttribute(IMarker.SEVERITY, severity)
-        val string = msg.map{
-          case '\n' => ' '
-          case '\r' => ' '
-          case c => c
-        }.mkString("","","")
-        mrk.setAttribute(IMarker.MESSAGE , msg)
-      }
-    }, monitor)
-  
-  def clearBuildErrors(monitor : IProgressMonitor) =
-    underlying.getWorkspace.run(new IWorkspaceRunnable {
-      def run(monitor : IProgressMonitor) = {
-        underlying.deleteMarkers(plugin.problemMarkerId, true, IResource.DEPTH_ZERO)
-      }
-    }, monitor)
   
   def externalDepends = underlying.getReferencedProjects 
 
@@ -198,7 +175,7 @@ class ScalaProject(val underlying : IProject) {
         case _ =>
       }
     }
-    classpath(javaProject, false, false)
+    classpath(javaProject, false, true)
     path.toList
   }
   
@@ -366,8 +343,6 @@ class ScalaProject(val underlying : IProject) {
     settings.classpath.value = classpath.map{ _.toOSString }.mkString(pathSeparator)
     settings.sourcepath.value = sfs.map{ x => toIFolder(x).getLocation.toOSString }.mkString(pathSeparator)
     
-    Tracer.println("sourcepath : " + settings.sourcepath.value)
-    Tracer.println("classpath  : " + settings.classpath.value)
     
     val workspaceStore = ScalaPlugin.plugin.getPreferenceStore
     val projectStore = new PropertyStore(underlying, workspaceStore, plugin.pluginId)
@@ -394,6 +369,10 @@ class ScalaProject(val underlying : IProject) {
         case t : Throwable => plugin.logError("Unable to set setting '"+setting.name+"' to '"+value0+"'", t)
       }
     }
+
+    Tracer.println("sourcepath : " + settings.sourcepath.value)
+    Tracer.println("classpath  : " + settings.classpath.value)
+    Tracer.println("outputdirs : " + settings.outputDirs.outputs)
   }
   
   def withPresentationCompiler[T](op : ScalaPresentationCompiler => T) : T = {
@@ -413,7 +392,6 @@ class ScalaProject(val underlying : IProject) {
   def buildManager = {
     if (buildManager0 == null) {
       Tracer.println("creating a new EclipseBuildManager")
-      depFile.delete(true, false, null/*monitor*/)
       val settings = new Settings
       initialize(settings, _ => true)
       buildManager0 = new EclipseBuildManager(this, settings)
@@ -421,33 +399,9 @@ class ScalaProject(val underlying : IProject) {
     buildManager0
   }
 
-  def prepareBuild() : Boolean = {
-    if (!hasBeenBuilt) {
-      if (!depFile.exists())
-        true
-      else {
-        try {
-            !buildManager.loadFrom(EclipseResource(depFile), EclipseResource.fromString(_).getOrElse(null))
-        } catch { case _ => true }
-      }
-    }
-    else
-      false
-  }
-  
   def build(addedOrUpdated : Set[IFile], removed : Set[IFile], monitor : IProgressMonitor) {
-    if (addedOrUpdated.isEmpty && removed.isEmpty)
-      return
-      
-    hasBeenBuilt = true
-    
-    clearBuildErrors(monitor)
     buildManager.build(addedOrUpdated, removed, monitor)
     refreshOutput
-
-    buildManager.saveTo(EclipseResource(depFile), _.toString)
-    depFile.setDerived(true)
-    depFile.refreshLocal(IResource.DEPTH_INFINITE, null)
   }
 
   def clean(monitor : IProgressMonitor) = {
@@ -459,33 +413,10 @@ class ScalaProject(val underlying : IProject) {
     underlying.deleteMarkers(plugin.problemMarkerId, true, IResource.DEPTH_INFINITE)
     cleanOutputFolders(monitor)
     buildManager0 = null
-    hasBeenBuilt = false
   }
   
   def resetCompilers(monitor : IProgressMonitor) = {
     resetBuildCompiler(monitor)
     resetPresentationCompiler()
   }
-}
-
-object NameEnvironmentUtils extends ReflectionUtils {
-  val neClazz = classOf[NameEnvironment]
-  val sourceLocationsField = getDeclaredField(neClazz, "sourceLocations")
-  
-  def sourceLocations(env : NameEnvironment) = sourceLocationsField.get(env).asInstanceOf[Array[ClasspathLocation]]
-}
-
-object ClasspathLocationUtils extends ReflectionUtils {
-  val cdClazz =  classOf[ClasspathDirectory]
-  val binaryFolderField = getDeclaredField(cdClazz, "binaryFolder")
-  
-  val cpmlClazz = Class.forName("org.eclipse.jdt.internal.core.builder.ClasspathMultiDirectory")
-  val sourceFolderField = getDeclaredField(cpmlClazz, "sourceFolder")
-  val inclusionPatternsField = getDeclaredField(cpmlClazz, "inclusionPatterns")
-  val exclusionPatternsField = getDeclaredField(cpmlClazz, "exclusionPatterns")
-                         
-  def binaryFolder(cl : ClasspathLocation) = binaryFolderField.get(cl).asInstanceOf[IContainer]
-  def sourceFolder(cl : ClasspathLocation) = sourceFolderField.get(cl).asInstanceOf[IContainer]
-  def inclusionPatterns(cl : ClasspathLocation) = inclusionPatternsField.get(cl).asInstanceOf[Array[Array[Char]]]
-  def exclusionPatterns(cl : ClasspathLocation) = exclusionPatternsField.get(cl).asInstanceOf[Array[Array[Char]]]
 }

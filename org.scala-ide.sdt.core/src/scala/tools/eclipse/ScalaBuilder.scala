@@ -45,11 +45,10 @@ class ScalaBuilder extends IncrementalProjectBuilder {
       project.externalDepends.exists(
         x => { val delta = getDelta(x); delta == null || delta.getKind != IResourceDelta.NO_CHANGE})
     
-    val (addedOrUpdated, removed) = if (project.prepareBuild() || dependeeProjectChanged)
-      (allSourceFiles, Set.empty[IFile])
-    else {
-      kind match {
-        case INCREMENTAL_BUILD | AUTO_BUILD =>
+    val (addedOrUpdated, removed) = dependeeProjectChanged match {
+      case true => (allSourceFiles, Set.empty[IFile])
+      case _ => kind match {
+        case INCREMENTAL_BUILD | AUTO_BUILD => {
           val addedOrUpdated0 = new HashSet[IFile] ++ allSourceFiles.filter(FileUtils.hasBuildErrors(_))
           val removed0 = new HashSet[IFile]
           val sourceFolders = project.sourceFolders.map{ _.getLocation }
@@ -70,35 +69,36 @@ class ScalaBuilder extends IncrementalProjectBuilder {
             }
           })
           (addedOrUpdated0.toSet, removed0.toSet)
-        case CLEAN_BUILD | FULL_BUILD =>
+        }
+        case CLEAN_BUILD | FULL_BUILD => {
           (allSourceFiles, Set.empty[IFile])
+        }
       }
     }
     
-    if (monitor != null)
-      monitor.beginTask("build all", 100)
-      
     project.build(addedOrUpdated, removed, monitor)
     
-    val depends = project.externalDepends.toList.toArray
-    if (allSourceFiles.exists(FileUtils.hasBuildErrors(_)))
-      depends
-    else {
-      ensureProject
-      val javaDepends = scalaJavaBuilder.build(kind, ignored, monitor)
-      val modelManager = JavaModelManager.getJavaModelManager
-      val state = modelManager.getLastBuiltState(getProject, null).asInstanceOf[State]
-      val newState = if (state ne null) state
-        else {
-          ScalaJavaBuilderUtils.initializeBuilder(scalaJavaBuilder, 0, false)
-          StateUtils.newState(scalaJavaBuilder)
-        }
-      StateUtils.tagAsStructurallyChanged(newState)
-      StateUtils.resetStructurallyChangedTypes(newState)
-      modelManager.setLastBuiltState(getProject, newState)
-      JDTUtils.refreshPackageExplorer
-      (Set.empty ++ depends ++ javaDepends).toArray
+    val depends = project.externalDepends
+    val back = (allSourceFiles.exists(_.getFileExtension == "java")) match {
+      case false => {
+        ensureProject
+        val javaDepends = scalaJavaBuilder.build(kind, ignored, monitor)
+        val modelManager = JavaModelManager.getJavaModelManager
+        val state = modelManager.getLastBuiltState(getProject, null).asInstanceOf[State]
+        val newState = if (state ne null) state
+          else {
+            ScalaJavaBuilderUtils.initializeBuilder(scalaJavaBuilder, 0, false)
+            StateUtils.newState(scalaJavaBuilder)
+          }
+        StateUtils.tagAsStructurallyChanged(newState)
+        StateUtils.resetStructurallyChangedTypes(newState)
+        modelManager.setLastBuiltState(getProject, newState)
+        JDTUtils.refreshPackageExplorer
+        (depends ++ javaDepends).toArray
+      }
+      case true => depends
     }
+    back.distinct
   }
   
   def ensureProject = {

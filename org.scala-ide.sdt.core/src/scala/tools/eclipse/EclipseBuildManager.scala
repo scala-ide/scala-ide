@@ -5,7 +5,8 @@
 
 package scala.tools.eclipse
 
-import org.eclipse.core.resources.{ IFile, IMarker }
+import scala.tools.eclipse.internal.logging.Tracer
+import org.eclipse.core.resources.{ IResource, IFile, IMarker, IWorkspaceRunnable }
 import org.eclipse.core.runtime.IProgressMonitor
 
 import scala.collection.mutable.HashSet
@@ -19,9 +20,15 @@ import scala.tools.nsc.util.Position
 import scala.tools.eclipse.util.{ EclipseResource, FileUtils } 
 
 class EclipseBuildManager(project : ScalaProject, settings0: Settings) extends RefinedBuildManager(settings0) {
-  var monitor : IProgressMonitor = _
-  val pendingSources = new HashSet[IFile]
-  var hasErrors = false
+  private var monitor : IProgressMonitor = _
+  private lazy val pendingSources = new HashSet[IFile] ++ project.allSourceFiles() // first run should build every sources
+  
+//  private val depFile = {
+//    val b = project.underlying.getFile(".scala_dependencies")
+//    b.delete(true, false, null/*monitor*/)
+//    b
+//  }
+      
   
   class EclipseBuildCompiler(settings : Settings, reporter : Reporter) extends BuilderGlobal(settings, reporter) {
 
@@ -67,8 +74,6 @@ class EclipseBuildManager(project : ScalaProject, settings0: Settings) extends R
     
     override def info0(pos : Position, msg : String, severity : Severity, force : Boolean) = {
       severity.count += 1
-      if (severity.id > 1)
-        EclipseBuildManager.this.hasErrors = true
       
       val eclipseSeverity = severity.id match {
         case 2 => IMarker.SEVERITY_ERROR
@@ -82,7 +87,7 @@ class EclipseBuildManager(project : ScalaProject, settings0: Settings) extends R
           val length = source.identifier(pos, compiler).map(_.length).getOrElse(0)
           source.file match {
             case EclipseResource(i : IFile) => FileUtils.buildError(i, eclipseSeverity, msg, pos.point, length, pos.line, null)
-            case _ => project.buildError(eclipseSeverity, msg, null)
+            case _ => buildError(eclipseSeverity, msg, null)
           }
         }
         else
@@ -91,11 +96,11 @@ class EclipseBuildManager(project : ScalaProject, settings0: Settings) extends R
         	  // print only to console, better debugging
         	  println("[Buildmanager info] " + msg)
             case _ =>
-        	  project.buildError(eclipseSeverity, msg, null)   
+        	  buildError(eclipseSeverity, msg, null)   
           }
       } catch {
         case ex : UnsupportedOperationException => 
-          project.buildError(eclipseSeverity, msg, null)
+          buildError(eclipseSeverity, msg, null)
       }
     }
     
@@ -116,22 +121,31 @@ class EclipseBuildManager(project : ScalaProject, settings0: Settings) extends R
 
   def build(addedOrUpdated : Set[IFile], removed : Set[IFile], pm : IProgressMonitor) {
     monitor = pm
-    
-    pendingSources ++= addedOrUpdated
+    if (monitor != null) monitor.beginTask("build scala files", 100)       
+
+    val pendingSources0 = pendingSources ++ addedOrUpdated
+    pendingSources.clear
     val removedFiles = removed.map(EclipseResource(_) : AbstractFile)
-    val toBuild = pendingSources.map(EclipseResource(_)) ++ unbuilt -- removedFiles
-    hasErrors = false
+    val toBuild = pendingSources0.map(EclipseResource(_)) ++ unbuilt -- removedFiles
+    var hasErrors = false
+    clearBuildErrors(monitor)
     try {
       super.update(toBuild, removedFiles)
+      hasErrors = compiler.reporter.ERROR.count > 0
     } catch {
       case e =>
         hasErrors = true
-        project.buildError(IMarker.SEVERITY_ERROR, "Error in Scala compiler: " + e.getMessage, null)
-        ScalaPlugin.plugin.logError("Error in Scala compiler (=> resetting...)", e)
+        buildError(IMarker.SEVERITY_ERROR, "Error in Scala compiler: " + e.getMessage, null)
+        ScalaPlugin.plugin.logError("Error in Scala compiler", e)
         //project.resetBuildCompiler(pm)
     }
-    if (!hasErrors)
-      pendingSources.clear
+    Tracer.println("build ends with %d error(s), %d warnings".format(compiler.reporter.ERROR.count, compiler.reporter.WARNING.count))
+    if (hasErrors)
+      pendingSources ++= pendingSources0
+      
+//    saveTo(EclipseResource(depFile), _.toString)
+//    depFile.setDerived(true)
+//    depFile.refreshLocal(IResource.DEPTH_INFINITE, null)      
   }
   
   def unbuilt : Set[AbstractFile] = {
@@ -141,7 +155,7 @@ class EclipseBuildManager(project : ScalaProject, settings0: Settings) extends R
       if (targets(src).exists(!_.exists))
         missing += src
     
-    Set.empty ++ missing
+    missing.toSet
   }
   
   /** ignore settings parameter and used settings from constructor */
@@ -149,6 +163,7 @@ class EclipseBuildManager(project : ScalaProject, settings0: Settings) extends R
   
   override def buildingFiles(included: scala.collection.Set[AbstractFile]) {
     for(file <- included) {
+      Tracer.println("buildingFile : " + file)
       file match {
         case EclipseResource(f : IFile) =>
           FileUtils.clearBuildErrors(f, null)
@@ -156,5 +171,31 @@ class EclipseBuildManager(project : ScalaProject, settings0: Settings) extends R
         case _ =>
       }
     }
+  }
+  
+    private def runOnWorker(monitor : IProgressMonitor)(f : => Unit) {
+    Thread.currentThread.getName.startsWith("Worker-") match {
+      case true => f
+      case false => {
+        project.underlying.getWorkspace.run(new IWorkspaceRunnable {
+          def run(monitor : IProgressMonitor) = { f }
+        }, monitor)
+      }
+    }
+  }
+  
+  def buildError(severity : Int, msg : String, monitor : IProgressMonitor) = runOnWorker(monitor){
+        val mrk = project.underlying.createMarker(ScalaPlugin.plugin.problemMarkerId)
+        mrk.setAttribute(IMarker.SEVERITY, severity)
+        val string = msg.map{
+          case '\n' => ' '
+          case '\r' => ' '
+          case c => c
+        }.mkString("","","")
+        mrk.setAttribute(IMarker.MESSAGE , msg)
+  }
+  
+  def clearBuildErrors(monitor : IProgressMonitor) = runOnWorker(monitor){
+    project.underlying.deleteMarkers(ScalaPlugin.plugin.problemMarkerId, true, IResource.DEPTH_ZERO)
   }
 }
