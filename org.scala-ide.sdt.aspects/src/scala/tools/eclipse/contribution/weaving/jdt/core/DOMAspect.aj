@@ -159,19 +159,19 @@ public privileged aspect DOMAspect {
     boolean isRecoveringBindings = true;
     boolean fromJavaProject = true;
 
-    Class clazz = org.eclipse.jdt.core.dom.BindingResolver.class;
+    Class clazz = org.eclipse.jdt.core.dom.DefaultBindingResolver.class;
     //Defensive.check(clazz.getDeclaredConstructors().length > 0, "access BindingResolver constructors");
     try {
       try {
         // first try signature of eclipse 3.6
         //  BindingResolver resolver = new DefaultBindingResolver(scope, workingCopyOwner, BindingTables, isRecoveringBindings, fromJavaProject);
-        Constructor<org.eclipse.jdt.core.dom.BindingResolver> ctor = clazz.getDeclaredConstructor(CompilationUnitScope.class, WorkingCopyOwner.class, org.eclipse.jdt.core.dom.DefaultBindingResolver.BindingTables.class, Boolean.class, Boolean.class);
+        Constructor<org.eclipse.jdt.core.dom.DefaultBindingResolver> ctor = clazz.getDeclaredConstructor(CompilationUnitScope.class, WorkingCopyOwner.class, org.eclipse.jdt.core.dom.DefaultBindingResolver.BindingTables.class, boolean.class, boolean.class);
         ctor.setAccessible(true);
         resolver = ctor.newInstance(scope, workingCopyOwner, bindingTables, isRecoveringBindings, fromJavaProject);
       } catch (NoSuchMethodException ex) {
         // eclipse 3.5
         //  BindingResolver resolver = new DefaultBindingResolver(scope, workingCopyOwner, BindingTables, isRecoveringBindings);
-        Constructor<org.eclipse.jdt.core.dom.BindingResolver> ctor = clazz.getDeclaredConstructor(CompilationUnitScope.class, WorkingCopyOwner.class, org.eclipse.jdt.core.dom.DefaultBindingResolver.BindingTables.class, Boolean.class);
+        Constructor<org.eclipse.jdt.core.dom.DefaultBindingResolver> ctor = clazz.getDeclaredConstructor(CompilationUnitScope.class, WorkingCopyOwner.class, org.eclipse.jdt.core.dom.DefaultBindingResolver.BindingTables.class, boolean.class);
         ctor.setAccessible(true);
         resolver = ctor.newInstance(scope, workingCopyOwner, bindingTables, isRecoveringBindings);
       }
