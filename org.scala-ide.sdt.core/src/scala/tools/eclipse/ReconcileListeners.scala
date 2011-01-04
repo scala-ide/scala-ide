@@ -1,5 +1,6 @@
 package scala.tools.eclipse
 
+import scala.tools.eclipse.internal.logging.Defensive
 import java.lang.ref.WeakReference
 import scala.tools.eclipse.javaelements.ScalaSourceFile
 import org.eclipse.core.runtime.IProgressMonitor
@@ -22,7 +23,7 @@ class ReconcileListeners {
     ls.foreach {l =>
       l.get match {
         case null => () // ignore
-        case op => op(sourceFile, monitor, workingCopyOwner)
+        case op => Defensive.tryOrLog(op(sourceFile, monitor, workingCopyOwner))
       }
     }
   }
@@ -32,7 +33,7 @@ class ReconcileListeners {
     ls.foreach{l =>
       l.get match {
         case null => () //ignore
-        case op => op(sourceFile, monitor, workingCopyOwner)
+        case op => Defensive.tryOrLog(op(sourceFile, monitor, workingCopyOwner))
       }
     }
   }

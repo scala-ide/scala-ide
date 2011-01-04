@@ -5,7 +5,7 @@
 
 package scala.tools.eclipse.javaelements
 
-import scala.tools.eclipse.internal.logging.Tracer
+import scala.tools.eclipse.internal.logging.{Tracer, Defensive}
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.{ Map => JMap }
 
@@ -148,7 +148,7 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
      monitor : IProgressMonitor) {
   }
   
-  override def reportMatches(matchLocator : MatchLocator, possibleMatch : PossibleMatch) {
+  override def reportMatches(matchLocator : MatchLocator, possibleMatch : PossibleMatch) = Defensive.tryOrLog {
     withSourceFile({ (sourceFile, compiler) =>
 	    val body = compiler.body(sourceFile)
 	
@@ -159,7 +159,7 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
 	  })
   }
   
-  override def createOverrideIndicators(annotationMap : JMap[_, _]) {
+  override def createOverrideIndicators(annotationMap : JMap[_, _]) = Defensive.tryOrLog {
     withSourceFile({ (sourceFile, compiler) =>
 	    val body = compiler.body(sourceFile)
 	
