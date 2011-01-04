@@ -116,7 +116,7 @@ class ScalaHyperlinkDetector extends AbstractHyperlinkDetector {
                   }
 	    	        
                   file.withSourceFile{ (f, _) =>
-                    traverser traverse compiler.body(f).symbol.ownerChain.reverse.head
+                    traverser traverse compiler.root(f).symbol.ownerChain.reverse.head
                     reload(List(f), new Response[Unit])
                     removeUnitOf(f)
                   }

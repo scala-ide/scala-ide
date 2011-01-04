@@ -68,6 +68,7 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
 
   def getProblemRequestor : IProblemRequestor = null
 
+
   override def buildStructure(info : OpenableElementInfo, pm : IProgressMonitor, newElements : JMap[_, _], underlyingResource : IResource) : Boolean = {
     Tracer.println("buildStructure : " + underlyingResource)
     withSourceFile { (sourceFile, compiler) =>
@@ -79,7 +80,7 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
       }
       val sourceLength = contents.length // sourceFile.length
       compiler.ask { () =>
-        val body = compiler.body(sourceFile)
+        val body = compiler.root(sourceFile)
         new compiler.StructureBuilderTraverser(this, info, newElements.asInstanceOf[JMap[AnyRef, AnyRef]]).traverse(body)
       }
       info match {
@@ -94,6 +95,7 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
   }
 
   def scheduleReconcile : Unit = (Tracer.println("scheduleReconcile ignored"))
+
   
   def addToIndexer(indexer : ScalaSourceIndexer) {
     withSourceFile({ (source, compiler) =>
