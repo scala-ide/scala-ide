@@ -1,6 +1,7 @@
 package scala.tools.eclipse
 package internal.logging
 
+import scala.tools.eclipse.util.IDESettings
 /**
  * @author david.bernard
  *
@@ -13,7 +14,9 @@ object Tracer {
   /**  
    * A very primitive logger to replace call of classic println. 
    */
-  def println(s : String) = Console.println("ScalaPlugin--TRACE--" + (System.currentTimeMillis - t0) + "--" + Thread.currentThread.getName + "--:" + s)
+  def println(s : String) = if (IDESettings.tracerEnabled.value) {
+    Console.println("ScalaPlugin--TRACE--" + (System.currentTimeMillis - t0) + "--" + Thread.currentThread.getName + "--:" + s)
+  }
   
   /**
    * A very primitive StopWatch (no stats,....)

@@ -40,8 +40,11 @@ object IDESettings {
 	  List(Box("Scala Plugin Debugging", List(Yplugininfo)))    
   }
   
-  def editorTuningSettings: List[Box] = {
-    List(Box("Editor Tuning", List(compileOnTyping, compileOnTypingDelay)))    
+  def tuningSettings: List[Box] = {
+    List(
+        Box("Editor Tuning", List(compileOnTyping))
+        , Box("Logging Tuning", List(tracerEnabled))
+    )    
   }
   
   val compileOnTyping = {
@@ -50,8 +53,15 @@ object IDESettings {
     b
   }
   
+  // TODO remove compileOnTypingDelay (useless)
   val compileOnTypingDelay = IntSetting("_auto compile delay", "compile file on typing, delay (ms), 0 : immediate", 600, Some((0,3000)), parseInt)
   
+  val tracerEnabled = {
+    val b = BooleanSetting("_tracer printing", "print tracer info on stdout/stderr")
+    b.value = false
+    b
+  }
+
   def parseInt(s : String) : Option[Int] = {
     try {
       Some( s.toInt )

@@ -33,7 +33,7 @@ class ScalaPreferences extends PropertyPage with IWorkbenchPreferencePage with E
   
   /** Returns the id of what preference page we use */
   import EclipseSetting.toEclipseBox
-  lazy val scalaBoxes   = IDESettings.pluginSettings ++ IDESettings.editorTuningSettings 
+  lazy val scalaBoxes   = IDESettings.pluginSettings ++ IDESettings.tuningSettings
   lazy val eclipseBoxes = scalaBoxes.map { s => toEclipseBox(s, getPreferenceStore) }
   
   def createContents(parent : Composite) : Control = {
