@@ -67,8 +67,8 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
   	withSourceFile({ (sourceFile, compiler) =>
 	    val sourceLength = sourceFile.length
 	    compiler.ask { () =>
-	      val body = compiler.body(sourceFile)
-  	      new compiler.StructureBuilderTraverser(this, info, newElements.asInstanceOf[JMap[AnyRef, AnyRef]], sourceLength).traverse(body)
+	      val root = compiler.root(sourceFile)
+  	      new compiler.StructureBuilderTraverser(this, info, newElements.asInstanceOf[JMap[AnyRef, AnyRef]], sourceLength).traverse(root)
 	    }
 	    info match {
 	      case cuei : CompilationUnitElementInfo =>
