@@ -58,7 +58,7 @@ object Defensive {
   }
   
     
-  def tryOrLog[T](f : => Unit) = {
+  def tryOrLog(f : => Unit) = {
     try {
       f
     } catch {
