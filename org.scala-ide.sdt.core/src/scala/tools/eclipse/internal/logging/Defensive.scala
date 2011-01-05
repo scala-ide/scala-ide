@@ -21,12 +21,12 @@ package internal.logging
  * <br/> by : <code>if (Defensive.notNul(x , "x")) { ... }</code>
  */
 object Defensive {
-  private def log(format : String, args : Object*) {
+  private def log(format : String, args : Any*) {
     //TODO log in Eclipse Error Log
     System.err.println("ScalaPlugin--Defensive--" + Thread.currentThread().getName() + "--:" + format.format(args))
     Thread.dumpStack()
   }
-  def notNull(o : AnyRef, format : String, args : Object*) : Boolean = {
+  def notNull(o : AnyRef, format : String, args : Any*) : Boolean = {
     val back = o != null
     if (!back) {
       log("isNull " + format, args)
@@ -34,7 +34,7 @@ object Defensive {
     back
   }
   
-  def notEmpty(s : String, format : String, args : Object*) : Boolean = {
+  def notEmpty(s : String, format : String, args : Any*) : Boolean = {
     val back = (s != null && s.trim().length() > 0)
     if (!back) {
       log("isEmpty " + format, args)
@@ -42,7 +42,7 @@ object Defensive {
     back
   }
   
-  def notEmpty(a : Array[Char], format : String, args : Object*) : Boolean = {
+  def notEmpty(a : Array[Char], format : String, args : Any*) : Boolean = {
     val back = (a != null && a.length > 0);
     if (!back) {
       log("isEmpty " + format, args)
@@ -50,14 +50,13 @@ object Defensive {
     back
   }
   
-  def check(assertion : Boolean , format : String, args : Object*) : Boolean = {
+  def check(assertion : Boolean , format : String, args : Any*) : Boolean = {
     if (!assertion) {
       log("assertion failed " + format, args)
     }
     assertion
   }
   
-    
   def tryOrLog(f : => Unit) = {
     try {
       f
@@ -65,4 +64,18 @@ object Defensive {
       case t => ScalaPlugin.plugin.logError(t)
     }
   }
+  
+  def tryOrLog[T](default : => T)(f : => T) = {
+    try {
+      f
+    } catch {
+      case t => {
+        ScalaPlugin.plugin.logError(t)
+        default
+      }
+    }
+  }
+  
+     
+
 }
