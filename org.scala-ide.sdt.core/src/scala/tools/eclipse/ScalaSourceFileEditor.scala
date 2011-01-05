@@ -182,6 +182,13 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
       val scu = JavaPlugin.getDefault().getWorkingCopyManager().getWorkingCopy(getEditorInput()).asInstanceOf[ScalaCompilationUnit]
       viewer.getDocument().addPrenotifiedDocumentListener(ScalaTypeAutoCompletionProposalManager.getProposalFor(scu))
     }
+    
+    refactoring.RefactoringMenu.fillQuickMenu(this)
+  }
+  
+  override def editorContextMenuAboutToShow(menu: org.eclipse.jface.action.IMenuManager): Unit = {
+    super.editorContextMenuAboutToShow(menu)
+    refactoring.RefactoringMenu.fillContextMenu(menu, this)
   }
 }
 

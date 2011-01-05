@@ -815,6 +815,11 @@
          id="scala.tools.eclipse.refactoring.commands.refactoring"
          name="Refactor - Scala"/>
       <command
+         name="Refactor Quick Menu"
+         description="Shows the refactor quick menu"
+         categoryId="scala.tools.eclipse.refactoring.commands.refactoring"
+         id="scala.tools.eclipse.refactoring.commands.quickMenu"/>
+      <command
          categoryId="scala.tools.eclipse.refactoring.commands.refactoring"
          id="scala.tools.eclipse.refactoring.command.ExtractMethod"
          name="Extract Method"/>
@@ -858,7 +863,12 @@
    http://dev.eclipse.org/viewcvs/viewvc.cgi/org.eclipse.jdt.ui/plugin.xml)
    -->
    <sequenceModifier find="M2+M3" replace="M1+M3" platforms="cocoa,carbon" />
-      
+    
+   <key
+       commandId="scala.tools.eclipse.refactoring.commands.quickMenu"
+       schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+       contextId="scala.tools.eclipse.scalaEditorScope"
+       sequence="M2+M3+T"/>  
    <key
        commandId="scala.tools.eclipse.refactoring.command.ExtractMethod"
        schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
