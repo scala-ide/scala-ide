@@ -81,7 +81,7 @@ public privileged aspect DOMAspect {
       IType[] topLevelTypes = cu.getTypes();
       int length = topLevelTypes.length;
       if (length == 0)
-        throw new IllegalStateException();
+        throw new IllegalStateException("((ICompilationUnit)parser.typeRoot).getTypes().length == 0");
       
       SourceTypeElementInfo[] topLevelInfos = new SourceTypeElementInfo[length];
       for (int i = 0; i < length; i++) {
