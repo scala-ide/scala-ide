@@ -354,7 +354,6 @@ class ScalaProject(val underlying : IProject) {
       setting <- box.userSettings;
       if filter(setting)
     ) {
-      Tracer.println("initializing " + setting)
       val value0 = store.getString(SettingConverterUtil.convertNameToProperty(setting.name))
       try {
         val value = if (setting ne settings.pluginsDir) value0 else {
@@ -365,11 +364,12 @@ class ScalaProject(val underlying : IProject) {
         if (value != null && value.length != 0) {
           setting.tryToSetFromPropertyValue(value)
         }
+        Tracer.println("initializing " + setting)
       } catch {
         case t : Throwable => plugin.logError("Unable to set setting '"+setting.name+"' to '"+value0+"'", t)
       }
     }
-
+    Tracer.println("initializing " + settings.encoding)
     Tracer.println("sourcepath : " + settings.sourcepath.value)
     Tracer.println("classpath  : " + settings.classpath.value)
     Tracer.println("outputdirs : " + settings.outputDirs.outputs)
