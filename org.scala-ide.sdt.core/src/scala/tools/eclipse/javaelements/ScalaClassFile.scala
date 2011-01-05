@@ -53,7 +53,7 @@ class ScalaClassFile(parent : PackageFragment, name : String, sourceFile : Strin
   override def codeSelect(offset : Int, length : Int, owner : WorkingCopyOwner) : Array[IJavaElement] =
     codeSelect(this, offset, length, owner)
   
-  def getContents() = getBuffer.getCharacters
+  def getContents() = Option(getBuffer).map(_.getCharacters).getOrElse(Array())
     
   override lazy val file : AbstractFile = new VirtualFile(getSourceFileName, getSourceFilePath)
   
