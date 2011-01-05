@@ -80,17 +80,19 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
       }
       val sourceLength = contents.length // sourceFile.length
       compiler.ask { () =>
-        val body = compiler.root(sourceFile)
-        new compiler.StructureBuilderTraverser(this, info, newElements.asInstanceOf[JMap[AnyRef, AnyRef]]).traverse(body)
+        Defensive.tryOrLog[Boolean](false) {
+          val body = compiler.root(sourceFile)
+          new compiler.StructureBuilderTraverser(this, info, newElements.asInstanceOf[JMap[AnyRef, AnyRef]]).traverse(body)
+          info match {
+            case cuei : CompilationUnitElementInfo =>
+              cuei.setSourceLength(sourceLength)
+            case _ =>
+          }
+        
+          info.setIsStructureKnown(true)
+          info.isStructureKnown
+        }
       }
-      info match {
-        case cuei : CompilationUnitElementInfo =>
-          cuei.setSourceLength(sourceLength)
-        case _ =>
-      }
-    
-      info.setIsStructureKnown(true)
-      info.isStructureKnown
     }
   }
 
