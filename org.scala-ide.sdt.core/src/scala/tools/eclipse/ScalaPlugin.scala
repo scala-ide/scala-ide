@@ -139,30 +139,44 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
       case _ : CoreException => false
     }
 
+  //TODO merge behavior with/into elementChanged ?
   override def resourceChanged(event : IResourceChangeEvent) {
-    (event.getResource, event.getType) match {
-      case (project : IProject, IResourceChangeEvent.PRE_CLOSE) => 
-        projects.synchronized{ projects.remove(project) }
-      case _ =>
+    if ((event.getType & IResourceChangeEvent.PRE_CLOSE) != 0) {
+      event.getResource  match {
+//        case project : IProject =>  projects.synchronized{ projects.remove(project) }
+        case _ => ()
+      }
     }
   }
 
+  //TODO invalidate (set dirty) cache about classpath, compilers,... when sourcefolders, classpath change
   override def elementChanged(event : ElementChangedEvent) {
+    if ((event.getType & ElementChangedEvent.POST_CHANGE) == 0) {
+      return
+    }
     val delta = event.getDelta
-    delta.getElement match {
-      case _ : JavaModel =>
-        def findRemovedSource(deltas : Array[IJavaElementDelta]) : Unit =
-          deltas.foreach { delta =>
-            delta.getElement match {
-              case ssf : ScalaSourceFile if (delta.getKind == IJavaElementDelta.REMOVED) =>
-                getScalaProject(ssf.getJavaProject.getProject).withPresentationCompiler { _.discardSourceFile(ssf) }
-              case _ : PackageFragment | _ : PackageFragmentRoot | _ : JavaProject =>
-                findRemovedSource(delta.getAffectedChildren)
-              case _ =>
+    (delta.getKind, delta.getFlags) match {
+      //let it do (close the project) else findRemovedSource raise exception
+      case (IJavaElementDelta.CHANGED, IJavaElementDelta.F_CLOSED) => ()
+      // TODO check if the code below is always usefull
+      case (IJavaElementDelta.REMOVED, _) => delta.getElement match {
+        case _ : JavaModel => {
+          def findRemovedSource(deltas : Array[IJavaElementDelta]) : Unit = {
+            deltas.foreach { delta =>
+              delta.getElement match {
+                case ssf : ScalaSourceFile if (delta.getKind == IJavaElementDelta.REMOVED) =>
+                  getScalaProject(ssf.getJavaProject.getProject).withPresentationCompiler { _.discardSourceFile(ssf) }
+                case _ : PackageFragment | _ : PackageFragmentRoot | _ : JavaProject =>
+                  findRemovedSource(delta.getAffectedChildren)
+                case _ => ()
+              }
             }
           }
-        findRemovedSource(delta.getAffectedChildren)
-      case _ =>
+          findRemovedSource(delta.getAffectedChildren)
+        }
+        case _ => () //ignore
+      }
+      case (_, _) => () //ignore
     }
   }
 
