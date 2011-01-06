@@ -626,7 +626,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         
         defElemInfo.setArgumentNames(paramNames)
         defElemInfo.setExceptionTypeNames(new Array[Array[Char]](0))
-        val tn = mapType(d.tpt).toArray)
+        val tn = mapType(d.tpt).toArray
         defElemInfo.asInstanceOf[FnInfo].setReturnType(tn)
 
         val annotsPos = addAnnotations(sym, defElemInfo, defElem)

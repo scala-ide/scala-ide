@@ -40,7 +40,7 @@ class ScalaSelectionEngine(nameEnvironment : SearchableEnvironment, requestor : 
   def select(cu : env.ICompilationUnit, selectionStart0 : Int, selectionEnd0 : Int) {
     val scu = cu.asInstanceOf[ScalaCompilationUnit]
   
-    scu.withSourceFile({ (sourceFile, compiler) =>
+    scu.withSourceFile({ (src, compiler) =>
     
       import compiler._
       
@@ -155,7 +155,7 @@ class ScalaSelectionEngine(nameEnvironment : SearchableEnvironment, requestor : 
         }
       }
       
-      val pos = compiler.rangePos(sourceFile, actualSelectionStart, actualSelectionStart, actualSelectionEnd+1)
+      val pos = compiler.rangePos(src, actualSelectionStart, actualSelectionStart, actualSelectionEnd+1)
   
       val typed = new compiler.Response[compiler.Tree]
       compiler.askTypeAt(pos, typed)
