@@ -6,6 +6,8 @@
 package scala.tools.eclipse
 package util
 
+import scala.tools.eclipse.internal.logging.Tracer
+//import scala.tools.eclipse.contribution.weaving.nsc.io.OverrideToByteArray
 import java.io.{ ByteArrayInputStream, ByteArrayOutputStream, File, InputStream, OutputStream }
 
 import org.eclipse.core.filebuffers.FileBuffers
@@ -101,7 +103,7 @@ abstract class EclipseResource[R <: IResource] extends AbstractFile {
   override def hashCode() : Int = path.hashCode
 }
 
-class EclipseFile(override val underlying : IFile) extends EclipseResource[IFile] {
+class EclipseFile(override val underlying : IFile) extends EclipseResource[IFile] /*with OverrideToByteArray*/ {
   if (underlying == null)
     throw new NullPointerException("underlying == null")
   
@@ -109,8 +111,8 @@ class EclipseFile(override val underlying : IFile) extends EclipseResource[IFile
 
   // try to use a IDocument instead of IBuffer that can require 'openable.getBuffer' => compilation (via request to ScalaStructureBuilder)
   // scan every editors to find if someone currently edit the underling IFile
-  // we doen't realy need the Document but a way to read/update content of potential existing editor open on 'underling
-  ///TODO find a better way to retreive Editors/IDocument than scanning
+  // we doen't really need the Document but a way to read/update content of potential existing editor open on 'underling
+  ///TODO find a better way to retrieve Editors/IDocument than scanning
   import org.eclipse.jface.text.IDocument
   
   private def document : IDocument = {
@@ -133,41 +135,48 @@ class EclipseFile(override val underlying : IFile) extends EclipseResource[IFile
     }
     back
   }
-  
-  def input : InputStream = {
-    val doc = document  
-    if (doc ne null) new ByteArrayInputStream(doc.get.getBytes) else underlying.getContents(true)
+
+  // use the charset of the resource and not the FileSystem default (should fix some encoding issue)
+  private def toByteArray0(doc : IDocument) = doc.get.getBytes(underlying.getCharset(true))
+   
+  // Size in bytes
+  //FIXME sizeOption is called near input in AbstractFile.toByteArray (final), but content can change between the two call and then introduce some failure
+  //TODO Optimization avoid double conversion into ByteArray from doc (in method `sizeOption` and `input`, has there used together by AbstractFile.toByteArray
+  override def sizeOption: Option[Int] = {
+    val doc = document
+    if (doc ne null) Some(toByteArray0(doc).length) else getFileInfo.map(_.getLength.toInt)
   }
   
-  def output: OutputStream = {
+  def input : InputStream = {
+    Tracer.println("call input : " + underlying)
     val doc = document  
-    if (doc ne null) new ByteArrayOutputStream {
+    if (doc ne null) new ByteArrayInputStream(toByteArray0(doc)) else underlying.getContents(true)
+  }
+  
+  //TODO may be it's better to modify underling without change in the document, and ask user if he want to reload (and potentialy loose his changes)
+  def output: OutputStream = {
+    new ByteArrayOutputStream {
       override def close = {
-        doc.set(new String(buf, 0, count))
-      }
-    } else new ByteArrayOutputStream {
-      override def close = {
-        val contents = new ByteArrayInputStream(buf, 0, count)
-        if (!underlying.exists) {
-          def createParentFolder(parent : IContainer) {
-            if (!parent.exists()) {
-              createParentFolder(parent.getParent)
-              parent.asInstanceOf[IFolder].create(true, true, null)
+        document match {  
+          case null => {
+            val contents = new ByteArrayInputStream(buf, 0, count)
+            if (!underlying.exists) {
+              def createParentFolder(parent : IContainer) {
+                if (!parent.exists()) {
+                  createParentFolder(parent.getParent)
+                  parent.asInstanceOf[IFolder].create(true, true, null)
+                }
+              }
+              createParentFolder(underlying.getParent)
+              underlying.create(contents, true, null)
             }
           }
-          createParentFolder(underlying.getParent)
-          underlying.create(contents, true, null)
+          case doc => doc.set(new String(buf, 0, count))
         }
       }
     }
   }
 
-  // Size in bytes of char ??
-  override def sizeOption: Option[Int] = {
-    val doc = document
-    if (doc ne null) Some(doc.get.getBytes.length) else getFileInfo.map(_.getLength.toInt)
-  }
-  
   private def getFileInfo = {
     val fs = FileBuffers.getFileStoreAtLocation(underlying.getLocation)
     if (fs == null)
