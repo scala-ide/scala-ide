@@ -111,13 +111,13 @@ class EclipseFile(override val underlying : IFile) extends EclipseResource[IFile
   }
   
   def input : InputStream = {
-	if (buffer ne null) new ByteArrayInputStream(buffer.getContents.getBytes) else underlying.getContents
+	if (buffer ne null) new ByteArrayInputStream(buffer.getContents.getBytes(underlying.getCharset)) else underlying.getContents
   }
   
   def output: OutputStream = {
 	if (buffer ne null) new ByteArrayOutputStream {
       override def close = {
-        buffer.setContents(new String(buf, 0, count))
+        buffer.setContents(new String(buf, 0, count, underlying.getCharset))
       }
     } else new ByteArrayOutputStream {
       override def close = {
