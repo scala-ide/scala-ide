@@ -38,15 +38,16 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
       }
 
     type OverrideInfo = Int
-    var overrideInfos : collection.mutable.Map[Symbol, OverrideInfo] = _
+    val overrideInfos = new collection.mutable.HashMap[Symbol, OverrideInfo]
     def fillOverrideInfos(c : Symbol) {
-      overrideInfos = new collection.mutable.HashMap[Symbol, OverrideInfo]
-      val opc = new overridingPairs.Cursor(c)
-      while (opc.hasNext) {
-        if (!opc.overridden.isClass && opc.overriding.pos.isOpaqueRange) {
-          overrideInfos += opc.overriding -> (if (opc.overridden.isDeferred) JavaElementImageDescriptor.IMPLEMENTS else JavaElementImageDescriptor.OVERRIDES)
+      if (c ne NoSymbol) {
+        val base = c.allOverriddenSymbols
+        if (!base.isEmpty) {
+          if (c.isDeferred)
+            overrideInfos += c -> JavaElementImageDescriptor.OVERRIDES
+          else
+            overrideInfos += c -> (if(base.exists(!_.isDeferred)) JavaElementImageDescriptor.OVERRIDES else JavaElementImageDescriptor.IMPLEMENTS)
         }
-        opc.next
       }
     }
 
