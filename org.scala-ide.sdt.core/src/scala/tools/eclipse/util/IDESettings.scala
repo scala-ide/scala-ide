@@ -14,20 +14,20 @@ object IDESettings {
     import s._
 
     List(
-    		Box("Standard options",
+    		Box("Standard",
     				List(deprecation, g, optimise, target, unchecked,
                  pluginOptions, nospecialization)),
-    		Box("Advanced options",
+    		Box("Advanced",
     				List(checkInit, Xchecknull, elidebelow,
     						 Xexperimental, future, XlogImplicits,
     						 Xmigration28, noassertions, nouescape, plugin, disable,
     						 require, pluginsDir, Xwarnfatal, Xwarninit)),
-    		Box("Private options",
+    		Box("Private",
     				List(Xcloselim, Xdce, inline, Xlinearizer, Ynogenericsig, noimports,
     						 selfInAnnots, Yrecursion, refinementMethodDispatch,
     						 Ywarndeadcode, Ybuildmanagerdebug)),
         Box("Presentation Compiler",
-            List(YpresentationDebug, YpresentationVerbose)))
+            List(YpresentationDebug, YpresentationVerbose, YpresentationLog, YpresentationReplay)))
   }
   
   def pluginSettings: List[Box] = {
