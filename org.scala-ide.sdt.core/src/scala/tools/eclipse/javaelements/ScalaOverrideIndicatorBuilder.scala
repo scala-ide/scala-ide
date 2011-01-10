@@ -54,7 +54,7 @@ trait ScalaOverrideIndicatorBuilder { self : ScalaPresentationCompiler =>
     
     override def traverse(tree: Tree): Unit = {
       tree match {
-        case defn: DefTree =>
+        case defn: DefTree if defn.symbol ne NoSymbol =>
           for(base <- defn.symbol.allOverriddenSymbols) {
             val text = (if (base.isDeferred && !defn.symbol.isDeferred) "implements " else "overrides ") + base.fullName
             val position = {
