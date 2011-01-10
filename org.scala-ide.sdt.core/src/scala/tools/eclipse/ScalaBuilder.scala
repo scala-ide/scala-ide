@@ -18,6 +18,7 @@ import scala.tools.eclipse.contribution.weaving.jdt.builderoptions.ScalaJavaBuil
 import scala.tools.eclipse.javaelements.JDTUtils
 import scala.tools.eclipse.util.{ FileUtils, ReflectionUtils }
 import scala.tools.eclipse.internal.logging.Tracer
+import scala.tools.eclipse.util.IDESettings
 
 class ScalaBuilder extends IncrementalProjectBuilder {
   def plugin = ScalaPlugin.plugin
@@ -44,10 +45,14 @@ class ScalaBuilder extends IncrementalProjectBuilder {
     val dependeeProjectChanged =
       project.externalDepends.exists(
         x => { val delta = getDelta(x); delta == null || delta.getKind != IResourceDelta.NO_CHANGE})
-    
-    val (addedOrUpdated, removed) = dependeeProjectChanged match {
-      case true => (allSourceFiles, Set.empty[IFile])
-      case _ => kind match {
+    val cleanBuildForced = IDESettings.alwaysCleanBuild.value || dependeeProjectChanged
+    val (addedOrUpdated, removed) = cleanBuildForced match {
+      case true => {
+        Tracer.println("clean+build forced")
+        clean(monitor)
+        (allSourceFiles, Set.empty[IFile])
+      }
+      case false => kind match {
         case INCREMENTAL_BUILD | AUTO_BUILD => {
           val addedOrUpdated0 = new HashSet[IFile] ++ allSourceFiles.filter(FileUtils.hasBuildErrors(_))
           val removed0 = new HashSet[IFile]
@@ -77,9 +82,9 @@ class ScalaBuilder extends IncrementalProjectBuilder {
     }
     
     project.build(addedOrUpdated, removed, monitor)
-    
+    //TODO trigger rebuild of depends only if no error in current build
     val depends = project.externalDepends
-    val back = (allSourceFiles.exists(_.getFileExtension == "java")) match {
+    val back = ((allSourceFiles.exists(_.getFileExtension == "java")) match {
       case false => {
         ensureProject
         val javaDepends = scalaJavaBuilder.build(kind, ignored, monitor)
@@ -97,8 +102,13 @@ class ScalaBuilder extends IncrementalProjectBuilder {
         (depends ++ javaDepends).toArray
       }
       case true => depends
+    }).distinct
+    
+    // reset classpath of depend project to force reload of newly generated class in the current thread (using events can raised event too late)
+    for( p <- back if plugin.isScalaProject(p)) {
+      plugin.getScalaProject(p).resetCompilers(monitor)
     }
-    back.distinct
+    back
   }
   
   def ensureProject = {
