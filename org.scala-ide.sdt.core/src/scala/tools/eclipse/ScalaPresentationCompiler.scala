@@ -33,13 +33,14 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
   presentationReporter.compiler = this
   
   private val sourceFiles = new mutable.HashMap[ScalaCompilationUnit, BatchSourceFile] {
-    override def default(k : ScalaCompilationUnit) = { val v = k.createSourceFile
-                                                       ScalaPresentationCompiler.this.synchronized {
-                                                    	   get(k) match {
-                                                    	  	   case Some(v) => v
-                                                    	       case None => put(k, v); v
-                                                    	   }
-                                                       }} 
+    override def default(k : ScalaCompilationUnit) = { 
+      val v = k.createSourceFile
+      ScalaPresentationCompiler.this.synchronized {
+        get(k) match {
+          case Some(v) => v
+          case None => put(k, v); v
+  	   }
+      }} 
   }
   
   private val problems = new mutable.HashMap[IFile, ArrayBuffer[IProblem]] with SynchronizedMap[IFile, ArrayBuffer[IProblem]] {

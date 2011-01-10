@@ -139,7 +139,15 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
   override def resourceChanged(event : IResourceChangeEvent) {
     (event.getResource, event.getType) match {
       case (project : IProject, IResourceChangeEvent.PRE_CLOSE) => 
-        projects.synchronized{ projects.remove(project) }
+        projects.synchronized { 
+          projects.get(project) match {
+            case Some(scalaProject) =>
+              projects.remove(project)
+              println("resetting compilers for " + project.getName)
+              scalaProject.resetCompilers
+            case None => 
+          }
+        }
       case _ =>
     }
   }
@@ -152,7 +160,10 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
           deltas.foreach { delta =>
             delta.getElement match {
               case ssf : ScalaSourceFile if (delta.getKind == IJavaElementDelta.REMOVED) =>
-                getScalaProject(ssf.getJavaProject.getProject).withPresentationCompiler { _.discardSourceFile(ssf) }
+                val project = ssf.getJavaProject.getProject
+                if (project.isOpen)
+                  getScalaProject(ssf.getJavaProject.getProject).withPresentationCompiler { _.discardSourceFile(ssf) }
+                
               case _ : PackageFragment | _ : PackageFragmentRoot | _ : JavaProject =>
                 findRemovedSource(delta.getAffectedChildren)
               case _ =>
