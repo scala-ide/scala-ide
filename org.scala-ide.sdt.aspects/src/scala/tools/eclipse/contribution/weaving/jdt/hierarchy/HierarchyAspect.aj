@@ -137,7 +137,7 @@ public privileged aspect HierarchyAspect {
   boolean around(Annotation a) :
     isOverwriting(a) {
     if (a instanceof IScalaOverrideIndicator)
-      return ((IScalaOverrideIndicator)a).isOverwriteIndicator();
+      return false;
     else
       return proceed(a);
   }
