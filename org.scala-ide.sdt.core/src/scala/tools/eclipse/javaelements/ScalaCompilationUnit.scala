@@ -49,7 +49,8 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
   }
   
   def discard {
-    project.withPresentationCompiler(_.discardSourceFile(this))
+    if (getJavaProject.getProject.isOpen)
+      project.withPresentationCompiler(_.discardSourceFile(this))
   }
   
   override def close {
