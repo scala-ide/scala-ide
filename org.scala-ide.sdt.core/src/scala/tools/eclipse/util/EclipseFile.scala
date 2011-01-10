@@ -121,16 +121,18 @@ class EclipseFile(override val underlying : IFile) extends EclipseResource[IFile
     import org.eclipse.ui.part.FileEditorInput
     
     var back : IDocument = null
-    val dp = JavaUI.getDocumentProvider()
-    for (
-      window <- PlatformUI.getWorkbench().getWorkbenchWindows();
-      page <- window.getPages;
-      edr <- page.getEditorReferences
-    ) {
-      edr.getEditorInput() match {
-        case ed : FileEditorInput if (ed.getFile == underlying) =>
-          back = dp.getDocument(ed)
-        case _ => () //ignore
+    if (IDESettings.useContentOfEditor.value) {
+      val dp = JavaUI.getDocumentProvider()
+      for (
+        window <- PlatformUI.getWorkbench().getWorkbenchWindows();
+        page <- window.getPages;
+        edr <- page.getEditorReferences
+      ) {
+        edr.getEditorInput() match {
+          case ed : FileEditorInput if (ed.getFile == underlying) =>
+            back = dp.getDocument(ed)
+          case _ => () //ignore
+        }
       }
     }
     back
