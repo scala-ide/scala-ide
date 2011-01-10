@@ -60,71 +60,9 @@ class ScalaHyperlinkDetector extends AbstractHyperlinkDetector {
             }
           } flatMap { sym => 
             if (sym.isPackage || sym == NoSymbol || sym.isJavaDefined) None else {
-	     	  def find[T, V](arr : Array[T])(f : T => Option[V]) : Option[V] = {
-	            for(e <- arr) {
-		          f(e) match {
-		            case v@Some(_) => return v
-	                case None =>
-		          }
-		        }
-		        None
-	      	  }
-	     	  def findClassFile = {
-	     	 	val packName = sym.enclosingPackage.fullName
-	            val pfs = scu.newSearchableEnvironment.nameLookup.findPackageFragments(packName, false)
-	     	    if (pfs eq null) None else find(pfs) {
-	              val top = sym.toplevelClass
-	              val name = top.name + (if (top.isModule) "$" else "") + ".class"
-		          _.getClassFile(name) match {
-		            case classFile : ScalaClassFile => Some(classFile)
-		            case _ => None
-		          }
-	     	    }
-	     	  }
-              (if (sym.sourceFile ne null) {
-                val path = new Path(sym.sourceFile.path)
-                val root = ResourcesPlugin.getWorkspace().getRoot()
-                root.findFilesForLocation(path) match {
-         	      case arr : Array[_] if arr.length == 1 =>
-                    ScalaSourceFile.createFromPath(arr(0).getFullPath.toString)
-         	      case _ => findClassFile
-                }
-              } else findClassFile) flatMap { file =>
-                if (sym.pos eq NoPosition) {
-	    	      object traverser {
-	    	     	var owners = sym.ownerChain.reverse
-
-                    def equiv(src : Symbol, clz : Symbol) = {
-                      src.decodedName == clz.decodedName && ( 
-	    	            if (src.isMethod && clz.isMethod) 
-	    	              src.info.toString == clz.info.toString
-	    	            else src.hasFlag(PACKAGE) && clz.hasFlag(PACKAGE) ||
-    	                     src.isType && clz.isType && !clz.isModuleClass ||
-                             src.isTerm && (clz.isTerm || clz.isModuleClass) 
-	    	          )
-	    	        }
-		    	  
-	    	        def traverse(srcsym : Symbol) : Boolean = {
-	    	          if (equiv(srcsym, owners.head)) owners.tail match {
-                        case Nil if srcsym.pos ne NoPosition => sym.setPos(srcsym.pos); true
-	    	 	        case tl => {
-                          owners = tl
-	    	              srcsym.info.decls exists { traverse _ }
-	    	 	        }
-	    	          } else false
-	    	        }
-                  }
-	    	        
-                  file.withSourceFile{ (f, _) =>
-                    traverser traverse compiler.root(f).symbol.ownerChain.reverse.head
-                    reload(List(f), new Response[Unit])
-                    removeUnitOf(f)
-                  }
-                }
-                Some(Hyperlink(file, sym.pos.pointOrElse(-1)))
-         	  }
-            }
+	     	  compiler.locate(sym, scu) map { case (f, pos) => Hyperlink(f, pos) }
 	        }
+          }
 	      } match {
 	        case Some(hyper) => Left(Array[IHyperlink](hyper))
 	        case None => Right( () => codeSelect(textEditor, wordRegion, scu) )
