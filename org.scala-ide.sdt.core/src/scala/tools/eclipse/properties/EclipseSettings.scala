@@ -16,6 +16,7 @@ trait EclipseSettings {
   object EclipseSetting {
 	/** Function to map a Scala compiler setting to an Eclipse plugin setting */
     def apply(setting : Settings#Setting) : EclipseSetting = setting match {
+      case setting : SettingsAddOn#BooleanSettingD => new CheckBoxSettingD(setting)
       case setting : Settings#BooleanSetting => new CheckBoxSetting(setting)
       case setting : Settings#IntSetting => new IntegerSetting(setting)
       case setting : Settings#StringSetting => new StringSetting(setting)
@@ -78,29 +79,51 @@ trait EclipseSettings {
 	  def apply()
 	}
 
-	/** 
-	 * Boolean setting controlled by a checkbox.
-	 */
-	class CheckBoxSetting(setting : Settings#BooleanSetting)
-	  extends EclipseSetting(setting) {
-	  var control : Button = _
-	
-	  def createControl(page : Composite) {
-	    control = new Button(page, SWT.CHECK)
-	    control.setSelection(setting.value)
-	    control.addSelectionListener(
-	      SelectionListenerSing
-	    )
-	  }
-	
-	  def isChanged = !setting.value.equals(control.getSelection)
-	    
-	  def reset() { control.setSelection(false) }
-	
-	  def apply() { setting.value = control.getSelection }
-	}
+  /** 
+   * Boolean setting controlled by a checkbox.
+   */
+  class CheckBoxSetting(setting : Settings#BooleanSetting)
+    extends EclipseSetting(setting) {
+    var control : Button = _
+  
+    def createControl(page : Composite) {
+      control = new Button(page, SWT.CHECK)
+      control.setSelection(setting.value)
+      control.addSelectionListener(
+        SelectionListenerSing
+      )
+    }
+  
+    def isChanged = !setting.value.equals(control.getSelection)
+      
+    def reset() { control.setSelection(false) }
+  
+    def apply() { setting.value = control.getSelection }
+  }
+  
+  /** 
+   * Boolean setting controlled by a checkbox.
+   */
+  class CheckBoxSettingD(setting : SettingsAddOn#BooleanSettingD)
+    extends EclipseSetting(setting) {
+    var control : Button = _
+  
+    def createControl(page : Composite) {
+      control = new Button(page, SWT.CHECK)
+      control.setSelection(setting.value)
+      control.addSelectionListener(
+        SelectionListenerSing
+      )
+    }
+  
+    def isChanged = !setting.value.equals(control.getSelection)
+      
+    def reset() { control.setSelection(setting.default) }
+  
+    def apply() { setting.value = control.getSelection }
+  }
 
-	/** 
+  /** 
 	  * Integer setting editable using a text field.
 	  */
 	class IntegerSetting(setting : Settings#IntSetting)

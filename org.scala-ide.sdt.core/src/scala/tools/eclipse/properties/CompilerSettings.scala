@@ -35,6 +35,7 @@ trait ScalaPluginPreferencePage {
       for (setting <- b.userSettings) {
         val name = SettingConverterUtil.convertNameToProperty(setting.name)
         val isDefault = setting match {
+          case bs : SettingsAddOn#BooleanSettingD => bs.value == bs.default
           case bs : Settings#BooleanSetting => bs.value == false
           case is : Settings#IntSetting => is.value == is.default
           case ss : Settings#StringSetting => ss.value == ss.default
