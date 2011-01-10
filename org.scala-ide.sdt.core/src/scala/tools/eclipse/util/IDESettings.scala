@@ -5,6 +5,7 @@
 
 package scala.tools.eclipse.util
 
+import scala.tools.eclipse.properties.SettingsAddOn
 import scala.tools.nsc.Settings
 
 
@@ -47,20 +48,12 @@ object IDESettings {
     )    
   }
   
-  val compileOnTyping = {
-    val b = BooleanSetting("_auto compile", "compile file on typing (else compile on save)")
-    b.value = true
-    b
-  }
+  val compileOnTyping = BooleanSetting("_auto compile", "compile file on typing (else compile on save)", true)
   
   // TODO remove compileOnTypingDelay (useless)
   val compileOnTypingDelay = IntSetting("_auto compile delay", "compile file on typing, delay (ms), 0 : immediate", 600, Some((0,3000)), parseInt)
   
-  val tracerEnabled = {
-    val b = BooleanSetting("_tracer printing", "print tracer info on stdout/stderr")
-    b.value = false
-    b
-  }
+  val tracerEnabled = BooleanSetting("_tracer printing", "print tracer info on stdout/stderr", false)
 
   def parseInt(s : String) : Option[Int] = {
     try {
@@ -71,6 +64,7 @@ object IDESettings {
   }
 }
 
-object ScalaPluginSettings extends Settings {
+object ScalaPluginSettings extends SettingsAddOn {
 	val YPlugininfo = BooleanSetting("-plugininfo", "Enable logging of the Scala Plugin info")
 }
+
