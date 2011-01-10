@@ -81,11 +81,3 @@ trait ScalaOverrideIndicatorBuilder { self : ScalaPresentationCompiler =>
     }
   }
 }
-
-trait A  {
-  type t
-}
-
-class B extends A {
-  type t = Int
-}
