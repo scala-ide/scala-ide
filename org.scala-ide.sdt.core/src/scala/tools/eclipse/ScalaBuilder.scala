@@ -73,7 +73,15 @@ class ScalaBuilder extends IncrementalProjectBuilder {
               true
             }
           })
-          (addedOrUpdated0.toSet, removed0.toSet)
+          //TODO made a less brutal update of PresentationCompiler (+TopLevelMap) / RefinedBuilder when some files are removed/renamed
+          removed0.isEmpty match {
+            case false => {
+              Tracer.println("clean+build forced due to files removed/renamed")
+              clean(monitor)
+              (allSourceFiles, Set.empty[IFile])
+            }
+            case true => (addedOrUpdated0.toSet, removed0.toSet) 
+          }
         }
         case CLEAN_BUILD | FULL_BUILD => {
           (allSourceFiles, Set.empty[IFile])
