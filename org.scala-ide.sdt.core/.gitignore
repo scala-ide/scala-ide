@@ -3,3 +3,4 @@ target
 compiler-plugins
 .scala_dependencies
 *.orig
+about.ini

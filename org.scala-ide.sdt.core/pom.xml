@@ -63,6 +63,40 @@
           </jvmArgs>
         </configuration>
       </plugin>
+      <plugin>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <version>1.6</version>
+        <executions>
+          <execution>
+            <phase>generate-resources</phase>
+            <id>aboutIni</id>
+            <goals><goal>run</goal></goals>
+            <configuration>
+              <target>
+                <exec dir="${basedir}" executable="git" logError="true" outputproperty="gitLastCommitInfo" failonerror="false">
+                  <arg line="log -1 --format='%d%n%nLast Commit by %cN at %ci%n  subject : %s%n  hash    : %H%n  parent  : %P'"/>
+                </exec>
+                <property name="gitLastCommitInfo" value="( can't retrive git's Last Commit Info )"/>
+                <property name="aboutText">
+The Scala IDE for Eclipse
+
+The Scala IDE for Eclipse provides the tools needed to
+to build Scala programs on the Eclipse Platform.
+Visit http://scala-ide.org/
+
+Version details :
+                </property>
+	              <propertyfile
+	                file="${basedir}/about.ini"
+	                comment="Property 'featureImage' contains path to feature image (32x32)">
+	                <entry  key="featureImage" default="" operation="=" value="about.png"/>
+	                <entry  key="aboutText" default="" operation="=" value="${aboutText} ${gitLastCommitInfo}"/>
+	              </propertyfile>
+              </target>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
   </build>
 </project>
