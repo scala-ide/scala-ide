@@ -23,7 +23,7 @@ trait ScalaOverrideIndicatorBuilder { self : ScalaPresentationCompiler =>
   class OverrideIndicatorBuilderTraverser(scu : ScalaCompilationUnit, annotationMap : JMap[AnyRef, AnyRef]) extends Traverser {
     val ANNOTATION_TYPE= "org.eclipse.jdt.ui.overrideIndicator"
 
-    case class ScalaIndicator(text : String, file : Openable, pos : Int) extends Annotation(ANNOTATION_TYPE, false, text) 
+    case class ScalaIndicator(text : String, file : Openable, pos : Int, val isOverwrite : Boolean) extends Annotation(ANNOTATION_TYPE, false, text) 
     with IScalaOverrideIndicator {
       def open = {
         EditorUtility.openInEditor(file, true) match { 
@@ -38,7 +38,8 @@ trait ScalaOverrideIndicatorBuilder { self : ScalaPresentationCompiler =>
       typeNames : String,
       methodName : String,
       methodTypeSignatures : List[String],
-      text : String
+      text : String,
+      val isOverwrite : Boolean
     ) extends Annotation(ANNOTATION_TYPE, false, text) with IScalaOverrideIndicator {
       def open() {
         val tpe0 = JDTUtils.resolveType(scu.newSearchableEnvironment().nameLookup, packageName, typeNames, 0)
@@ -56,7 +57,8 @@ trait ScalaOverrideIndicatorBuilder { self : ScalaPresentationCompiler =>
       tree match {
         case defn: DefTree if (defn.symbol ne NoSymbol) && defn.symbol.pos.isOpaqueRange =>
           for(base <- defn.symbol.allOverriddenSymbols) {
-            val text = (if (base.isDeferred && !defn.symbol.isDeferred) "implements " else "overrides ") + base.fullName
+            val isOverwrite = base.isDeferred && !defn.symbol.isDeferred
+        	val text = (if (isOverwrite) "implements " else "overrides ") + base.fullName
             val position = {
               val start = defn.symbol.pos.startOrPoint
               val end = defn.symbol.pos.endOrPoint
@@ -69,9 +71,9 @@ trait ScalaOverrideIndicatorBuilder { self : ScalaPresentationCompiler =>
               val methodName = base.name.toString
               val paramTypes = base.tpe.paramss.flatMap(_.map(_.tpe))
               val methodTypeSignatures = paramTypes.map(mapParamTypeSignature(_))
-              annotationMap.put(JavaIndicator(packageName, typeNames, methodName, methodTypeSignatures, text), position)
+              annotationMap.put(JavaIndicator(packageName, typeNames, methodName, methodTypeSignatures, text, isOverwrite), position)
             } else locate(base, scu) map {
-              case (f, pos) =>  annotationMap.put(ScalaIndicator(text, f, pos), position)
+              case (f, pos) =>  annotationMap.put(ScalaIndicator(text, f, pos, isOverwrite), position)
             }
           }
         case _ =>
