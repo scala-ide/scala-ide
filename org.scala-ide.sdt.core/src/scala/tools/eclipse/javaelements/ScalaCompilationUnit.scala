@@ -148,14 +148,12 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
   }
   
   override def createOverrideIndicators(annotationMap : JMap[_, _]) {
-    withSourceFile({ (sourceFile, compiler) =>
-	    val body = compiler.body(sourceFile)
-	
-	    if (body != null)
-	      compiler.ask { () =>
-	    	new compiler.OverrideIndicatorBuilderTraverser(this, annotationMap.asInstanceOf[JMap[AnyRef, AnyRef]]).traverse(body)
-	      }
-	  })
+    withSourceFile { (sourceFile, compiler) =>
+      val root = compiler.root(sourceFile)
+      compiler.ask { () =>
+        new compiler.OverrideIndicatorBuilderTraverser(this, annotationMap.asInstanceOf[JMap[AnyRef, AnyRef]]).traverse(root)
+	  }
+	}
   }
   
   override def getImageDescriptor = {
