@@ -4,6 +4,9 @@
 
 package scala.tools.eclipse.refactoring
 
+import org.eclipse.text.edits.ReplaceEdit
+import org.eclipse.text.edits.MultiTextEdit
+import org.eclipse.ltk.core.refactoring.TextFileChange
 import org.eclipse.ui.PlatformUI
 import org.eclipse.ui.IWorkbenchWindow
 import org.eclipse.ui.IWorkbenchPage
@@ -39,6 +42,31 @@ object EditorHelpers {
       file(textEditor)      flatMap { file =>
         ScalaSourceFile.createFromPath(file.getFullPath.toString) map block
       }
+    }
+  }
+  
+  def withScalaFileAndSelection[T](block: (ScalaSourceFile, ITextSelection) => Option[T]): Option[T] = {
+    withCurrentEditor { textEditor =>
+      file(textEditor) flatMap { file =>
+        ScalaSourceFile.createFromPath(file.getFullPath.toString) flatMap { scalaFile =>
+          selection(textEditor) flatMap { selection =>
+            block(scalaFile, selection)
+          }
+        }
+      }
+    }
+  }
+  
+  def createTextFileChange(file: IFile, fileChanges: List[scala.tools.refactoring.common.Change]): TextFileChange = {
+    new TextFileChange(file.getName(), file) {
+            
+      val fileChangeRootEdit = new MultiTextEdit
+  
+      fileChanges map { change =>      
+        new ReplaceEdit(change.from, change.to - change.from, change.text)
+      } foreach fileChangeRootEdit.addChild
+            
+      setEdit(fileChangeRootEdit)
     }
   }
 }

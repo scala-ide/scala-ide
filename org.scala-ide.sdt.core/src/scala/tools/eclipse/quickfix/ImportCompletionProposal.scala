@@ -1,11 +1,21 @@
 package scala.tools.eclipse.quickfix
 
+import org.eclipse.jdt.ui.JavaUI
+import org.eclipse.jdt.ui.ISharedImages
+import org.eclipse.core.runtime.NullProgressMonitor
+import org.eclipse.text.edits.ReplaceEdit
+import org.eclipse.text.edits.MultiTextEdit
+import org.eclipse.ltk.core.refactoring.TextFileChange
+import org.eclipse.core.resources.IFile
+import scala.tools.eclipse.util.EclipseResource
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal
 import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.contentassist.IContextInformation
 import org.eclipse.swt.graphics.Image
 import org.eclipse.swt.graphics.Point
 import org.eclipse.jface.text.TextUtilities
+import scala.tools.eclipse.refactoring.EditorHelpers._
+import scala.tools.refactoring.implementations.AddImportStatement
 
 case class ImportCompletionProposal(val importName : String) extends IJavaCompletionProposal {
   
@@ -21,39 +31,36 @@ case class ImportCompletionProposal(val importName : String) extends IJavaComple
    * @param document the document into which to insert the proposed completion
    */
   def apply(document : IDocument) : Unit = {
-    val lineDelimiter = TextUtilities.getDefaultLineDelimiter(document)
-
-    // Find the package declaration
-    val text = document.get
-    val packageIndex = text.indexOf("package")
-    var insertIndex = 0
-    var preInsert = "" 
     
-    if (packageIndex != -1) {
-      // Insert on the line after the package declaration, with a line of whitespace first if needed
-      
-      // Get the next line to see if it is already whitespace
-      val nextLineIndex = text.indexOf(lineDelimiter, packageIndex) + 1
-      val nextLineEndIndex = text.indexOf(lineDelimiter, nextLineIndex)
-      val nextLine = text.substring(nextLineIndex, nextLineEndIndex)
-      if (nextLine.trim() == "") {
-        // This is a whitespace line, add the import here
-        insertIndex = nextLineEndIndex + 1
-      } else {
-        // Need to insert whitespace after the package declaration and insert
-        preInsert = lineDelimiter
-        insertIndex = nextLineIndex
+    withScalaFileAndSelection { (scalaSourceFile, iTextSelection) =>
+    
+      val changes = scalaSourceFile.withCompilerResult { crh =>
+            
+        val refactoring = new AddImportStatement {
+          val global = crh.compiler
+          
+          val selection = {
+            val start = iTextSelection.getOffset
+            val end = start + iTextSelection.getLength
+            val file = crh.sourceFile.file
+            // start and end are not yet used
+            new FileSelection(file, start, end)
+          }
+        }
+       
+        refactoring.addImport(refactoring.selection, importName)
       }
-    } else {
-      // Insert at the top of the file
-      insertIndex = 0
+      
+      scalaSourceFile.file match {
+        case EclipseResource(file: IFile) => 
+          val textFileChange = createTextFileChange(file, changes)
+          textFileChange.getEdit.apply(document)
+      }
+      
+      None
     }
-    
-    // Insert the import as the third line in the file... RISKY AS HELL :D
-    document.replace(insertIndex, 0, preInsert + "import " + importName + lineDelimiter);
   }
   
-
   /**
    * Returns the new selection after the proposal has been applied to
    * the given document in absolute document coordinates. If it returns
@@ -99,7 +106,7 @@ case class ImportCompletionProposal(val importName : String) extends IJavaComple
    *
    * @return the image to be shown or <code>null</code> if no image is desired
    */
-  def getImage() : Image = null
+  def getImage() : Image = JavaUI.getSharedImages().getImage(ISharedImages.IMG_OBJS_IMPDECL)
 
   
   /**
