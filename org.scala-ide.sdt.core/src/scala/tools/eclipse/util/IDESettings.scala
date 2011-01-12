@@ -43,7 +43,7 @@ object IDESettings {
   
   def tuningSettings: List[Box] = {
     List(
-        Box("Editor Tuning", List(compileOnTyping, useContentOfEditor, alwaysCleanBuild))
+        Box("Editor Tuning", List(compileOnTyping, useContentOfEditor, alwaysCleanBuild, classBreakpoint))
         , Box("Logging Tuning", List(tracerEnabled))
     )    
   }
@@ -51,7 +51,7 @@ object IDESettings {
   val compileOnTyping = BooleanSetting("_auto compile", "compile file on typing (else compile on save)", true)
   val useContentOfEditor = BooleanSetting("_editor content", "use content from Editor for compilation instead of saved file (may lock/freeze)", false)
   val alwaysCleanBuild = BooleanSetting("_clean+build", "always do a clean+full build", false)
-  
+  val classBreakpoint = BooleanSetting("_class breakpoint", "support toggling breakpoint on class from editor", false)
   // TODO remove compileOnTypingDelay (useless)
   val compileOnTypingDelay = IntSetting("_auto compile delay", "compile file on typing, delay (ms), 0 : immediate", 600, Some((0,3000)), parseInt)
   

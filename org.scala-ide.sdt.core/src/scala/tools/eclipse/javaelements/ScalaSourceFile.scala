@@ -100,4 +100,9 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
     val tpe = super.getType(name)
     getCorrespondingElement(tpe).getOrElse(tpe).asInstanceOf[IType]
   }
+  
+  // override because super implementation return null if getSourceElementAt(pos) == this.
+  // But returning null prevent finding the typename required to set a workable breakpoint
+  // TODO check that this override has no bad side-effects (I suppose returning null of parent implementation was done to secure some stuff 
+  override def getElementAt(pos : Int) : IJavaElement = getSourceElementAt(pos)
 }

@@ -119,7 +119,7 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
   
   override def getSourceElementAt(pos : Int) : IJavaElement = {
     super.getSourceElementAt(pos) match {
-      case smie : ScalaModuleInstanceElement => smie.getParent;
+      case smie : ScalaModuleInstanceElement => smie.getParent
       case elem => elem 
     }
   }
