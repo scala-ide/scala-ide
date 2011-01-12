@@ -51,14 +51,20 @@ class ScalaToggleBreakpointAdapter extends ToggleBreakpointAdapter { self =>
         oresource match {
           case None => report(ActionMessages.ToggleBreakpointAdapter_3, part)
           case Some(resource : IResource) => {
-            val tname = otpe.map(fqn).getOrElse("<type_undef>")
             val lnumber = selection.getStartLine + 1
-            val existingBreakpoint = JDIDebugModel.lineBreakpointExists(resource, tname, lnumber)
-            if (existingBreakpoint != null) {
-              DebugPlugin.getDefault().getBreakpointManager.removeBreakpoint(existingBreakpoint, true)
-            } else {
-              val oattributes = otpe.map(x => findAttributes(x, selection.getOffset, selection.getLength))
-              JDIDebugModel.createLineBreakpoint(resource, tname, lnumber, -1, -1, 0, true, oattributes.getOrElse(null))        
+            otpe match {
+              case None => ScalaPlugin.plugin.logWarning("can't toggle breakpoint because can't define type in " + resource + " at " + lnumber)
+              case Some(tpe) => {
+                // a valid tname is required, else Breakpoint will not work
+                val tname = fqn(tpe)
+                val existingBreakpoint = JDIDebugModel.lineBreakpointExists(resource, tname, lnumber)
+                if (existingBreakpoint != null) {
+                  DebugPlugin.getDefault().getBreakpointManager.removeBreakpoint(existingBreakpoint, true)
+                } else {
+                  val oattributes = otpe.map(x => findAttributes(x, selection.getOffset, selection.getLength))
+                  JDIDebugModel.createLineBreakpoint(resource, tname, lnumber, -1, -1, 0, true, oattributes.getOrElse(null))        
+                }
+              }
             }
           }
         }
