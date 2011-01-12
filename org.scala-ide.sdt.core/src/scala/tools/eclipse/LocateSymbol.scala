@@ -5,6 +5,7 @@
 
 package scala.tools.eclipse
 
+import scala.tools.eclipse.internal.logging.Defensive
 import org.eclipse.core.resources.ResourcesPlugin
 import org.eclipse.core.runtime.Path
 import org.eclipse.jdt.core.{ICodeAssist, IJavaElement}
@@ -18,6 +19,7 @@ import org.eclipse.jdt.internal.ui.javaeditor.{EditorUtility, JavaElementHyperli
 
 import scala.reflect.generic.Flags._
 import scala.tools.nsc.io.AbstractFile
+import scala.tools.nsc.util.NoPosition
 
 import javaelements.{ScalaSourceFile, ScalaClassFile, ScalaCompilationUnit}
 
@@ -77,14 +79,30 @@ trait LocateSymbol { self : ScalaPresentationCompiler =>
             } else false
           }
         }
-                    
         file.withSourceFile{ (f, _) =>
-          traverser traverse root(f).symbol.ownerChain.reverse.head
-          reload(List(f), new Response[Unit])
-          removeUnitOf(f)
+          Defensive.tryOrLog(None : Option[RichCompilationUnit]) {
+            def f0(symbol : Symbol) : Option[RichCompilationUnit] = {
+              traverser traverse (
+                symbol.
+                ownerChain.
+                reverse.
+                head
+              )
+              reload(List(f), new Response[Unit])
+              removeUnitOf(f)
+            }
+            for (
+              root <- Option(root(f)); // root(f) can be null
+              symbol <- Option(root.symbol) ;
+              r <- f0(symbol)
+            ) yield r
+          }
         }
       }
-      Some (file, sym.pos.point)
+      sym.pos match {
+        case NoPosition => None
+        case pos => Some(file, pos.point) 
+      }
     }
   }
 }
