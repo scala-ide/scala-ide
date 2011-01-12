@@ -25,9 +25,9 @@ class ScalaStructureSelectEnclosingAction(editor: ScalaSourceFileEditor, selecti
     val selection = editor.getSelectionProvider.getSelection.asInstanceOf[ITextSelection]
 
     val scalaSourceFile = editor.getEditorInput.asInstanceOf[IAdaptable].getAdapter(classOf[IJavaElement]).asInstanceOf[ScalaSourceFile]
-    scalaSourceFile.withSourceFile { (sourceFile, compiler) =>
+    scalaSourceFile.withSourceFile { (src, compiler) =>
       import compiler._
-      val currentPos = rangePos(sourceFile, selection.getOffset, selection.getOffset, selection.getOffset + selection.getLength)
+      val currentPos = rangePos(src, selection.getOffset, selection.getOffset, selection.getOffset + selection.getLength)
 
       object StrictlyContainingTreeTraverser extends Traverser {
         var containingPosOpt: Option[Position] = None
@@ -38,7 +38,7 @@ class ScalaStructureSelectEnclosingAction(editor: ScalaSourceFileEditor, selecti
         }
       }
 
-      val body = compiler.body(sourceFile)
+      val body = compiler.body(src)
       StrictlyContainingTreeTraverser.traverse(body)
 
       for (containingPos <- StrictlyContainingTreeTraverser.containingPosOpt) {

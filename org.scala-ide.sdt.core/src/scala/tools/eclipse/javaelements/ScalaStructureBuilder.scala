@@ -17,7 +17,7 @@ import org.eclipse.jdt.core.{ IAnnotation, ICompilationUnit, IJavaElement, IMemb
 import org.eclipse.jdt.core.compiler.CharOperation
 import org.eclipse.jdt.internal.core.{
   Annotation, AnnotationInfo => JDTAnnotationInfo, AnnotatableInfo, CompilationUnit => JDTCompilationUnit, ImportContainer,
-  ImportContainerInfo, ImportDeclaration, ImportDeclarationElementInfo, JavaElement, JavaElementInfo, JavaModelManager,
+  ImportContainerInfo, ImportDeclaration, ImportDeclarationElementInfo, JavaElement, JavaElementInfo,
   MemberValuePair, OpenableElementInfo, SourceRefElement }
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants
 import org.eclipse.jdt.ui.JavaElementImageDescriptor
@@ -33,9 +33,7 @@ import scala.tools.eclipse.util.ReflectionUtils
 
 trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
 
-  class StructureBuilderTraverser(scu : ScalaCompilationUnit, unitInfo : OpenableElementInfo, newElements0 : JMap[AnyRef, AnyRef]) {
-    private val manager = JavaModelManager.getJavaModelManager
-    
+  class StructureBuilderTraverser(scu : ScalaCompilationUnit, unitInfo : OpenableElementInfo, newElements0 : JMap[AnyRef, AnyRef], sourceLength : Int) {
     private def companionClassOf(s: Symbol): Symbol =
       try {
         s.companionClass
@@ -49,15 +47,16 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
       }
 
     type OverrideInfo = Int
-    var overrideInfos : collection.mutable.Map[Symbol, OverrideInfo] = _
+    val overrideInfos = new collection.mutable.HashMap[Symbol, OverrideInfo]
     def fillOverrideInfos(c : Symbol) {
-      overrideInfos = new collection.mutable.HashMap[Symbol, OverrideInfo]
-      val opc = new overridingPairs.Cursor(c)
-      while (opc.hasNext) {
-        if (!opc.overridden.isClass && opc.overriding.pos.isOpaqueRange) {
-          overrideInfos += opc.overriding -> (if (opc.overridden.isDeferred) JavaElementImageDescriptor.IMPLEMENTS else JavaElementImageDescriptor.OVERRIDES)
+      if (c ne NoSymbol) {
+        val base = c.allOverriddenSymbols
+        if (!base.isEmpty) {
+          if (c.isDeferred)
+            overrideInfos += c -> JavaElementImageDescriptor.OVERRIDES
+          else
+            overrideInfos += c -> (if(base.exists(!_.isDeferred)) JavaElementImageDescriptor.OVERRIDES else JavaElementImageDescriptor.IMPLEMENTS)
         }
-        opc.next
       }
     }
 
@@ -179,7 +178,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
           
           defElemInfo.setArgumentNames(paramNames)
           defElemInfo.setExceptionTypeNames(new Array[Array[Char]](0))
-          val tn = manager.intern(mapType(d.tpe.finalResultType.typeSymbol).toArray)
+          val tn = mapType(d.tpe.finalResultType.typeSymbol).toArray
           defElemInfo.asInstanceOf[FnInfo].setReturnType(tn)
   
           val annotsPos = addAnnotations(d, defElemInfo, defElem)
@@ -511,7 +510,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         setSourceRange(valElemInfo, v, annotsPos)
         newElements0.put(valElem, valElemInfo)
 
-        val tn = manager.intern(mapType(v.tpt).toArray)
+        val tn = mapType(v.tpt).toArray
         valElemInfo.setTypeName(tn)
         
         self
@@ -543,11 +542,11 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         
         if(t.rhs.symbol == NoSymbol) {
           //println("Type is abstract")
-          val tn = manager.intern("java.lang.Object".toArray)
+          val tn = "java.lang.Object".toArray
           typeElemInfo.setTypeName(tn)
         } else {
           //println("Type has type: "+t.rhs.symbol.fullName)
-          val tn = manager.intern(mapType(t.rhs).toArray)
+          val tn = mapType(t.rhs).toArray
           typeElemInfo.setTypeName(tn)
         }
         
@@ -629,7 +628,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         
         defElemInfo.setArgumentNames(paramNames)
         defElemInfo.setExceptionTypeNames(new Array[Array[Char]](0))
-        val tn = manager.intern(mapType(d.tpt).toArray)
+        val tn = mapType(d.tpt).toArray
         defElemInfo.asInstanceOf[FnInfo].setReturnType(tn)
 
         val annotsPos = addAnnotations(sym, defElemInfo, defElem)

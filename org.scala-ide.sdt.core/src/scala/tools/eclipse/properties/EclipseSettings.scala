@@ -19,7 +19,16 @@ trait EclipseSettings {
       case setting : SettingsAddOn#BooleanSettingD => new CheckBoxSettingD(setting)
       case setting : Settings#BooleanSetting => new CheckBoxSetting(setting)
       case setting : Settings#IntSetting => new IntegerSetting(setting)
-      case setting : Settings#StringSetting => new StringSetting(setting)
+      case setting : Settings#StringSetting => 
+        setting.name match {
+          case "-Ypresentation-log" | "-Ypresentation-replay" =>
+            println("setting a file setting")
+            new FileSetting(setting)
+          case _ =>         
+            println("plain old string setting " + setting.name)
+            new StringSetting(setting)
+        }
+
 //    case setting : Settings#PhasesSetting  => new StringSetting(setting) // !!!
       case setting : Settings#MultiStringSetting => new MultiStringSetting(setting)
       case setting : Settings#ChoiceSetting => new ComboSetting(setting)
@@ -161,7 +170,12 @@ trait EclipseSettings {
 	  def createControl(page : Composite) {
 	    control = new Text(page, SWT.SINGLE | SWT.BORDER)
 	    control.setText(setting.value)
-	    control.setLayoutData(data)
+	    var layout = data
+	    if (setting.value.isEmpty) {
+	      layout = new GridData()
+	      layout.widthHint = 100
+	    }
+	    control.setLayoutData(layout)
 	    control.addModifyListener(ModifyListenerSing) 
 	  }
 	
@@ -206,4 +220,42 @@ trait EclipseSettings {
 	  def reset() { control.setText(setting.default) }
 	  def apply() { setting.value = control.getText }
 	}
+	
+  /** 
+    * String setting editable using a File dialog.
+    * 
+    * @note Temporary implementation. This one does not have a File dialog, instead
+    *       it prefixes the workspace path when the filename is not an absolute path.
+    */
+  class FileSetting(setting : Settings#StringSetting)
+    extends EclipseSetting(setting) {
+    var control : Text = _
+    def createControl(page : Composite) {
+      control = new Text(page, SWT.SINGLE | SWT.BORDER)
+      control.setText(setting.value)
+      var layout = data
+      if (setting.value.isEmpty) {
+        layout = new GridData()
+        layout.widthHint = 200
+      }
+      control.setLayoutData(layout)
+      control.addModifyListener(ModifyListenerSing) 
+    }
+    
+    def fileName() = {
+      import scala.tools.eclipse.ScalaPlugin
+      import java.io.File
+      
+      val text = control.getText
+      if (text.nonEmpty && !text.startsWith(File.separator)) {
+        val workspacePath = ScalaPlugin.plugin.workspaceRoot.getLocation
+        workspacePath + java.io.File.separator + text
+      } else text
+    }
+  
+    def isChanged = setting.value != fileName()
+    def reset() { control.setText(setting.default) }
+    def apply() { setting.value = fileName() }
+  }
+
 }

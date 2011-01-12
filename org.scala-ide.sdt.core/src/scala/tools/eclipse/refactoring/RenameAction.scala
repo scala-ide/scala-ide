@@ -33,19 +33,13 @@ class RenameAction extends RefactoringAction {
       lazy val selection = createSelection(file, selectedFrom, selectedTo)
       
       lazy val initialCheck = file.withSourceFile { (sourceFile, compiler) =>
-        val body = compiler.body(sourceFile)
         prepare(selection) match {
           
           case r @ Right(PreparationResult(selectedLocal, true)) =>
           
             name = selectedLocal.symbol.nameString
-            
-            if(body.pos == global.NoPosition)
-              Left(PreparationError("Could not get AST for current compilation unit."))
-            else {
-              index = GlobalIndex(global.unitOf(body.pos.source).body)
-              r
-            }
+            index = GlobalIndex(global.unitOf(sourceFile).body)
+            r
             
           case r @ Right(PreparationResult(selectedLocal, false)) =>
           
@@ -59,14 +53,8 @@ class RenameAction extends RefactoringAction {
             val cus = allProjectSourceFiles flatMap { f =>
             
               ScalaSourceFile.createFromPath(f.getFullPath.toString) map (_.withSourceFile { (sourceFile, compiler) => 
-                val body = compiler.body(sourceFile)
-                if(body.pos.isRange) {
-                  println("indexing "+ body.pos.source.file.name)
-                  List(CompilationUnitIndex(global.unitOf(body.pos.source).body))
-                } else {
-                  println("skipped indexing "+ f.getFullPath.toString)
-                  Nil
-                }
+                println("indexing "+ sourceFile.file.name)
+                List(CompilationUnitIndex(global.unitOf(sourceFile).body))
               })
             } flatten
             

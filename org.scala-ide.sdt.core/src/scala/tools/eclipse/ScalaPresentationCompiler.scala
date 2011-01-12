@@ -26,7 +26,7 @@ import scala.tools.eclipse.util.{ Cached, EclipseFile, EclipseResource }
 class ScalaPresentationCompiler(settings : Settings)
   extends Global(settings, new ScalaPresentationCompiler.PresentationReporter)
   with ScalaStructureBuilder with ScalaIndexBuilder with ScalaMatchLocator
-  with ScalaOverrideIndicatorBuilder with ScalaJavaMapper with JVMUtils { self =>
+  with ScalaOverrideIndicatorBuilder with ScalaJavaMapper with JVMUtils with LocateSymbol { self =>
   import ScalaPresentationCompiler._
   
   def presentationReporter = reporter.asInstanceOf[PresentationReporter]
@@ -34,13 +34,14 @@ class ScalaPresentationCompiler(settings : Settings)
   presentationReporter.compiler = this
   
   private val sourceFiles = new mutable.HashMap[ScalaCompilationUnit, BatchSourceFile] {
-    override def default(k : ScalaCompilationUnit) = { val v = k.createSourceFile
-                                                       ScalaPresentationCompiler.this.synchronized {
-                                                           get(k) match {
-                                                               case Some(v) => v
-                                                               case None => put(k, v); v
-                                                           }
-                                                       }} 
+    override def default(k : ScalaCompilationUnit) = { 
+      val v = k.createSourceFile
+      ScalaPresentationCompiler.this.synchronized {
+        get(k) match {
+          case Some(v) => v
+          case None => put(k, v); v
+  	   }
+      }} 
   }
   
   private val problems = new mutable.HashMap[IFile, ArrayBuffer[IProblem]] with SynchronizedMap[IFile, ArrayBuffer[IProblem]] {

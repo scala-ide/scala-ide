@@ -12,27 +12,27 @@ import scala.tools.nsc.Settings
 object IDESettings {
   import ScalaPluginSettings._
   
-	case class Box(name: String, userSettings: List[Settings#Setting])
+  case class Box(name: String, userSettings: List[Settings#Setting])
 	
   def shownSettings(s : Settings) : List[Box] = {
     import s._
 
     List(
-    		Box("Standard options",
+    		Box("Standard",
     				List(deprecation, g, optimise, target, unchecked,
                  pluginOptions, nospecialization)),
-    		Box("Advanced options",
+    		Box("Advanced",
     				List(checkInit, Xchecknull, elidebelow,
     						 Xexperimental, future, XlogImplicits,
     						 Xmigration28, noassertions, nouescape, plugin, disable,
     						 require, pluginsDir, Xwarnfatal, Xwarninit)),
-    		Box("Private options",
+    		Box("Private",
     				List(Xcloselim, Xdce, inline, Xlinearizer, Ynogenericsig, noimports,
     						 selfInAnnots, Yrecursion, refinementMethodDispatch,
     						 Ywarndeadcode, Ybuildmanagerdebug))
         // BACK-2.8    						 
         //Box("Presentation Compiler",
-        //    List(YpresentationDebug, YpresentationVerbose))
+        //    List(YpresentationDebug, YpresentationVerbose, YpresentationLog, YpresentationReplay))
     )
   }
   

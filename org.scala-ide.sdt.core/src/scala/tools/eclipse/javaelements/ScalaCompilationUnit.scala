@@ -54,7 +54,8 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
   }
   
   def discard {
-    project.withPresentationCompiler(_.discardSourceFile(this))
+    if (getJavaProject.getProject.isOpen)
+      project.withPresentationCompiler(_.discardSourceFile(this))
   }
   
   override def close {
@@ -79,19 +80,19 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
         compiler.askReload(this, contents)
       }
       val sourceLength = contents.length // sourceFile.length
-      compiler.ask { () =>
-        Defensive.tryOrLog[Boolean](false) {
+      Defensive.tryOrLog[Boolean](false) {
+        compiler.ask { () =>
           val body = compiler.root(sourceFile)
-          new compiler.StructureBuilderTraverser(this, info, newElements.asInstanceOf[JMap[AnyRef, AnyRef]]).traverse(body)
-          info match {
-            case cuei : CompilationUnitElementInfo =>
-              cuei.setSourceLength(sourceLength)
-            case _ =>
-          }
-        
-          info.setIsStructureKnown(true)
-          info.isStructureKnown
+          new compiler.StructureBuilderTraverser(this, info, newElements.asInstanceOf[JMap[AnyRef, AnyRef]], sourceLength).traverse(body)
         }
+        info match {
+          case cuei : CompilationUnitElementInfo =>
+            cuei.setSourceLength(sourceLength)
+          case _ =>
+        }
+        
+        info.setIsStructureKnown(true)
+        info.isStructureKnown
       }
     }
   }
@@ -164,14 +165,12 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
   }
   
   override def createOverrideIndicators(annotationMap : JMap[_, _]) = Defensive.tryOrLog {
-    withSourceFile({ (sourceFile, compiler) =>
-        val body = compiler.body(sourceFile)
-    
-        if (body != null)
-          compiler.ask { () =>
-            new compiler.OverrideIndicatorBuilderTraverser(this, annotationMap.asInstanceOf[JMap[AnyRef, AnyRef]]).traverse(body)
-          }
-      })
+    withSourceFile { (sourceFile, compiler) =>
+      val root = compiler.root(sourceFile)
+      compiler.ask { () =>
+        new compiler.OverrideIndicatorBuilderTraverser(this, annotationMap.asInstanceOf[JMap[AnyRef, AnyRef]]).traverse(root)
+    }
+  }
   }
   
   override def getImageDescriptor = {

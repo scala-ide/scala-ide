@@ -24,8 +24,9 @@ import org.eclipse.ui.plugin.AbstractUIPlugin
 import org.osgi.framework.BundleContext
 
 import scala.tools.eclipse.javaelements.{ ScalaElement, ScalaSourceFile }
-import scala.tools.eclipse.util.OSGiUtils.pathInBundle 
+import scala.tools.eclipse.util.OSGiUtils.pathInBundle
 import scala.tools.eclipse.templates.ScalaTemplateManager
+import scala.tools.eclipse.internal.logging.Tracer
 
 object ScalaPlugin { 
   var plugin : ScalaPlugin = _
@@ -142,10 +143,19 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
   //TODO merge behavior with/into elementChanged ?
   override def resourceChanged(event : IResourceChangeEvent) {
     if ((event.getType & IResourceChangeEvent.PRE_CLOSE) != 0) {
-      event.getResource  match {
-//        case project : IProject =>  projects.synchronized{ projects.remove(project) }
+      event.getResource match {
+        case project : IProject =>  projects.synchronized{
+          projects.get(project) match {
+            case Some(scalaProject) =>
+              projects.remove(project)
+              Tracer.println("resetting compilers for " + project.getName)
+              scalaProject.resetCompilers(null)
+            case None => 
+          }
+        }
         case _ => ()
       }
+
     }
   }
 
@@ -165,10 +175,12 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
             deltas.foreach { delta =>
               delta.getElement match {
                 case ssf : ScalaSourceFile if (delta.getKind == IJavaElementDelta.REMOVED) =>
-                  getScalaProject(ssf.getJavaProject.getProject).withPresentationCompiler { _.discardSourceFile(ssf) }
+                  val project = ssf.getJavaProject.getProject
+                  if (project.isOpen)
+                    getScalaProject(project).withPresentationCompiler { _.discardSourceFile(ssf) }
                 case _ : PackageFragment | _ : PackageFragmentRoot | _ : JavaProject =>
                   findRemovedSource(delta.getAffectedChildren)
-                case _ => ()
+                case _ =>
               }
             }
           }

@@ -364,7 +364,7 @@ class ScalaProject(val underlying : IProject) {
         if (value != null && value.length != 0) {
           setting.tryToSetFromPropertyValue(value)
         }
-        Tracer.println("initializing " + setting)
+        Tracer.println("initializing %s to %s".format(setting.name, value0.toString))
       } catch {
         case t : Throwable => plugin.logError("Unable to set setting '"+setting.name+"' to '"+value0+"'", t)
       }

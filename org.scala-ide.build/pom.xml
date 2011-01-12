@@ -366,8 +366,8 @@
           <id>scala-refactoring-trunk</id>
           <name>Scala Refactoring Scala trunk p2 repository</name>
           <layout>p2</layout>
-<!--          <url>http://download.scala-ide.org/scala-refactoring-trunk</url> -->
-          <url>http://scala.ifs.hsr.ch/hudson/job/Scala-Refactoring-2.9.0-SNAPSHOT/ws/org.scala-refactoring.update-site/target/site/repo/</url>
+          <url>http://download.scala-ide.org/scala-refactoring-trunk</url>
+          <!-- <url>http://scala.ifs.hsr.ch/hudson/job/Scala-Refactoring-2.9.0-SNAPSHOT/ws/org.scala-refactoring.update-site/target/site/repo/</url> -->
           <snapshots><enabled>false</enabled></snapshots>
         </repository>
         <repository>
