@@ -5,6 +5,14 @@
 
 package scala.tools.eclipse.util
 
+/** A ref cell to a managed resource. Overwrite 'create' and 'destroy'.
+ * 
+ *  @note Important: 'create' is not allowed to throw any exceptions. Throwing
+ *        an exception may lead to either NoSuchElementException, or an infinite
+ *        loop if other threads wait while 'create' is in progress. Use a Cached[Option[T]] 
+ *        in such a case.
+ *      
+ */
 trait Cached[T] {
   private var inProgress = false
   private var elem : Option[T] = None
@@ -37,7 +45,7 @@ trait Cached[T] {
             }
           }
           elem.get
-	}
+        }
       }
     }
     
@@ -57,6 +65,7 @@ trait Cached[T] {
     }
   }
 
+  /** Should not throw. */
   protected def create() : T
 
   protected def destroy(t : T)
