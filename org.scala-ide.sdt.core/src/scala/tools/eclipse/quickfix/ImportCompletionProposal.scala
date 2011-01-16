@@ -1,11 +1,21 @@
 package scala.tools.eclipse.quickfix
 
+import org.eclipse.jdt.ui.JavaUI
+import org.eclipse.jdt.ui.ISharedImages
+import org.eclipse.core.runtime.NullProgressMonitor
+import org.eclipse.text.edits.ReplaceEdit
+import org.eclipse.text.edits.MultiTextEdit
+import org.eclipse.ltk.core.refactoring.TextFileChange
+import org.eclipse.core.resources.IFile
+import scala.tools.eclipse.util.EclipseResource
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal
 import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.contentassist.IContextInformation
 import org.eclipse.swt.graphics.Image
 import org.eclipse.swt.graphics.Point
 import org.eclipse.jface.text.TextUtilities
+import scala.tools.eclipse.refactoring.EditorHelpers._
+import scala.tools.refactoring.implementations.AddImportStatement
 
 case class ImportCompletionProposal(val importName : String) extends IJavaCompletionProposal {
   
@@ -16,52 +26,41 @@ case class ImportCompletionProposal(val importName : String) extends IJavaComple
   
   
   /**
-   * Inserts the proposed completion into the given document. (text based transformation)
+   * Inserts the proposed completion into the given document.
    *
    * @param document the document into which to insert the proposed completion
-   * @TODO AST based transformation (to allow insert rules like near scope (method, inner class, outer class, top file (after package declaration))
    */
   def apply(document : IDocument) : Unit = {
-    val lineDelimiter = TextUtilities.getDefaultLineDelimiter(document)
-
-    // Find the package declaration
-    val text = document.get
-    var insertIndex = 0
-    val packageIndex = text.indexOf("package", insertIndex)
-    var preInsert = "" 
     
-    if (packageIndex != -1) {
-      // Insert on the line after the last package declaration, with a line of whitespace first if needed
-      var nextLineIndex = text.indexOf(lineDelimiter, packageIndex) + 1
-      var nextLineEndIndex = text.indexOf(lineDelimiter, nextLineIndex)
-      var nextLine = text.substring(nextLineIndex, nextLineEndIndex).trim()
+    withScalaFileAndSelection { (scalaSourceFile, iTextSelection) =>
+    
+      val changes = scalaSourceFile.withSourceFile { (sourceFile, compiler) =>
+            
+        val refactoring = new AddImportStatement {
+          val global = compiler
+          
+          val selection = {
+            val start = iTextSelection.getOffset
+            val end = start + iTextSelection.getLength
+            val file = scalaSourceFile.file
+            // start and end are not yet used
+            new FileSelection(file, start, end)
+          }
+        }
+       
+        refactoring.addImport(refactoring.selection, importName)
+      }
       
-      // scan to see if package declaration is not multi-line
-      while (nextLine.startsWith("package")) {
-        nextLineIndex = text.indexOf(lineDelimiter, nextLineIndex) + 1
-        nextLineEndIndex = text.indexOf(lineDelimiter, nextLineIndex)
-        nextLine = text.substring(nextLineIndex, nextLineEndIndex).trim()
+      scalaSourceFile.file match {
+        case EclipseResource(file: IFile) => 
+          val textFileChange = createTextFileChange(file, changes)
+          textFileChange.getEdit.apply(document)
       }
-
-      // Get the next line to see if it is already whitespace
-      if (nextLine.trim() == "") {
-        // This is a whitespace line, add the import here
-        insertIndex = nextLineEndIndex + 1
-      } else {
-        // Need to insert whitespace after the package declaration and insert
-        preInsert = lineDelimiter
-        insertIndex = nextLineIndex
-      }
-    } else {
-      // Insert at the top of the file
-      insertIndex = 0
+      
+      None
     }
-    
-    // Insert the import as the third line in the file... RISKY AS HELL :D
-    document.replace(insertIndex, 0, preInsert + "import " + importName + lineDelimiter);
   }
   
-
   /**
    * Returns the new selection after the proposal has been applied to
    * the given document in absolute document coordinates. If it returns
@@ -107,7 +106,7 @@ case class ImportCompletionProposal(val importName : String) extends IJavaComple
    *
    * @return the image to be shown or <code>null</code> if no image is desired
    */
-  def getImage() : Image = null
+  def getImage() : Image = JavaUI.getSharedImages().getImage(ISharedImages.IMG_OBJS_IMPDECL)
 
   
   /**

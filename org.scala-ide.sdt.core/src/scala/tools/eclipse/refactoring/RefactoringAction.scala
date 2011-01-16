@@ -30,14 +30,8 @@ trait RefactoringAction extends ActionAdapter {
   def createScalaRefactoring(): Option[ScalaIdeRefactoring] = {
     import EditorHelpers._
     
-    withCurrentEditor { textEditor =>
-      file(textEditor)      flatMap { file =>
-        ScalaSourceFile.createFromPath(file.getFullPath.toString) flatMap { scalaFile =>
-          selection(textEditor) flatMap { selection =>
-            createRefactoring(selection.getOffset, selection.getOffset + selection.getLength, scalaFile)
-          }
-        }
-      }
+    withScalaFileAndSelection { (scalaFile, selection) =>
+      createRefactoring(selection.getOffset, selection.getOffset + selection.getLength, scalaFile)
     }
   }
   
