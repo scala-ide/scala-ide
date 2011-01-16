@@ -9,7 +9,6 @@ import scala.tools.eclipse.ui.semantic.highlighting.SemanticHighlightingPresente
 import org.eclipse.jdt.core.IJavaProject
 import scala.collection.mutable.HashMap
 import scala.util.control.ControlThrowable
-
 import org.eclipse.core.resources.{ IFile, IProject, IResourceChangeEvent, IResourceChangeListener, ResourcesPlugin }
 import org.eclipse.core.runtime.{ CoreException, FileLocator, IStatus, Platform, Status }
 import org.eclipse.core.runtime.content.IContentTypeSettings
@@ -22,11 +21,11 @@ import org.eclipse.swt.graphics.Color
 import org.eclipse.ui.{ IEditorInput, IFileEditorInput, PlatformUI }
 import org.eclipse.ui.plugin.AbstractUIPlugin
 import org.osgi.framework.BundleContext
-
 import scala.tools.eclipse.javaelements.{ ScalaElement, ScalaSourceFile }
 import scala.tools.eclipse.util.OSGiUtils.pathInBundle
 import scala.tools.eclipse.templates.ScalaTemplateManager
 import scala.tools.eclipse.internal.logging.Tracer
+import scala.tools.eclipse.internal.logging.Defensive
 
 object ScalaPlugin { 
   var plugin : ScalaPlugin = _
@@ -147,9 +146,10 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
         case project : IProject =>  projects.synchronized{
           projects.get(project) match {
             case Some(scalaProject) =>
-              projects.remove(project)
-              Tracer.println("resetting compilers for " + project.getName)
-              scalaProject.resetCompilers(null)
+              Defensive.tryOrLog {
+                projects.remove(project)
+                scalaProject.resetCompilers(null)
+              }
             case None => 
           }
         }
@@ -230,3 +230,4 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
 
   def isBuildable(file : IFile) = (file.getName.endsWith(scalaFileExtn) || file.getName.endsWith(javaFileExtn))
 }
+

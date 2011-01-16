@@ -409,10 +409,18 @@ class ScalaProject(val underlying : IProject) {
     resetCompilers(monitor)
   }
 
+  /**
+   * remove markers + clean output dear + remove builder from memory  
+   * can raise exception when deleteMarkers (ResourceException: The resource tree is locked for modifications.)
+   */
   def resetBuildCompiler(monitor : IProgressMonitor) {
-    underlying.deleteMarkers(plugin.problemMarkerId, true, IResource.DEPTH_INFINITE)
-    cleanOutputFolders(monitor)
-    buildManager0 = null
+    Tracer.println("resetting compilers for " + underlying.getName)
+    try {
+      underlying.deleteMarkers(plugin.problemMarkerId, true, IResource.DEPTH_INFINITE)
+      cleanOutputFolders(monitor)
+    } finally {
+      buildManager0 = null
+    }
   }
   
   def resetCompilers(monitor : IProgressMonitor) = {
