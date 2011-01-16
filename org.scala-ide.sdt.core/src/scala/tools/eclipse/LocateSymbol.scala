@@ -64,17 +64,17 @@ trait LocateSymbol { self : ScalaPresentationCompiler =>
               if (src.isMethod && clz.isMethod) 
                 src.info.toString == clz.info.toString
               else src.hasFlag(PACKAGE) && clz.hasFlag(PACKAGE) ||
-              src.isType && clz.isType && !clz.isModuleClass ||
-              src.isTerm && (clz.isTerm || clz.isModuleClass) 
+                   src.isType && clz.isType && !clz.isModuleClass ||
+                   src.isTerm && (clz.isTerm || clz.isModuleClass) 
             )
           }
                   
           def traverse(srcsym : Symbol) : Boolean = {
             if (equiv(srcsym, owners.head)) owners.tail match {
-              case Nil if srcsym.pos ne NoPosition => sym.setPos(srcsym.pos); true
+              case Nil  => if (srcsym.pos ne NoPosition) { sym.setPos(srcsym.pos); true } else false
               case tl => {
                 owners = tl
-               srcsym.info.decls exists { traverse _ }
+                srcsym.info.decls exists { traverse _ }
               }
             } else false
           }
