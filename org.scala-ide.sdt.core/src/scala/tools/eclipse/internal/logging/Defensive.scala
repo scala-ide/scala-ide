@@ -5,6 +5,7 @@
 
 package scala.tools.eclipse
 package internal.logging
+import scala.util.control.ControlThrowable
 
 /**
  * Defensive is an helper 
@@ -61,6 +62,10 @@ object Defensive {
     try {
       f
     } catch {
+      case ce : ControlThrowable => {
+        ScalaPlugin.plugin.logError("log only for tracking", ce)
+        throw ce
+      }
       case t => ScalaPlugin.plugin.logError(t)
     }
   }
@@ -69,6 +74,10 @@ object Defensive {
     try {
       f
     } catch {
+      case ce : ControlThrowable => {
+        ScalaPlugin.plugin.logError("log only for tracking", ce)
+        throw ce
+      }
       case t => {
         ScalaPlugin.plugin.logError(t)
         default
