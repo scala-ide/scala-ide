@@ -90,31 +90,38 @@ class ScalaBuilder extends IncrementalProjectBuilder {
     }
     
     project.build(addedOrUpdated, removed, monitor)
-    //TODO trigger rebuild of depends only if no error in current build
-    val depends = project.externalDepends
-    val back = ((allSourceFiles.exists(_.getFileExtension == "java")) match {
-      case false => {
-        ensureProject
-        val javaDepends = scalaJavaBuilder.build(kind, ignored, monitor)
-        val modelManager = JavaModelManager.getJavaModelManager
-        val state = modelManager.getLastBuiltState(getProject, null).asInstanceOf[State]
-        val newState = if (state ne null) state
-          else {
-            ScalaJavaBuilderUtils.initializeBuilder(scalaJavaBuilder, 0, false)
-            StateUtils.newState(scalaJavaBuilder)
+
+    //trigger rebuild of depends only if no error in current build
+    val back = allSourceFiles.filter(FileUtils.hasBuildErrors(_)).isEmpty match {
+      case false => Array[IProject]()
+      case true =>{
+        val depends = project.externalDepends
+        val projects = ((allSourceFiles.exists(_.getFileExtension == "java")) match {
+          case false => {
+            ensureProject
+            val javaDepends = scalaJavaBuilder.build(kind, ignored, monitor)
+            val modelManager = JavaModelManager.getJavaModelManager
+            val state = modelManager.getLastBuiltState(getProject, null).asInstanceOf[State]
+            val newState = if (state ne null) state
+              else {
+                ScalaJavaBuilderUtils.initializeBuilder(scalaJavaBuilder, 0, false)
+                StateUtils.newState(scalaJavaBuilder)
+              }
+            StateUtils.tagAsStructurallyChanged(newState)
+            StateUtils.resetStructurallyChangedTypes(newState)
+            modelManager.setLastBuiltState(getProject, newState)
+            JDTUtils.refreshPackageExplorer
+            (depends ++ javaDepends).toArray
           }
-        StateUtils.tagAsStructurallyChanged(newState)
-        StateUtils.resetStructurallyChangedTypes(newState)
-        modelManager.setLastBuiltState(getProject, newState)
-        JDTUtils.refreshPackageExplorer
-        (depends ++ javaDepends).toArray
+          case true => depends
+        }).distinct
+        
+        // reset classpath of depend project to force reload of newly generated class in the current thread (using events can raised event too late)
+        for( p <- projects if plugin.isScalaProject(p)) {
+          plugin.getScalaProject(p).resetCompilers(monitor)
+        }
+        projects
       }
-      case true => depends
-    }).distinct
-    
-    // reset classpath of depend project to force reload of newly generated class in the current thread (using events can raised event too late)
-    for( p <- back if plugin.isScalaProject(p)) {
-      plugin.getScalaProject(p).resetCompilers(monitor)
     }
     back
   }
