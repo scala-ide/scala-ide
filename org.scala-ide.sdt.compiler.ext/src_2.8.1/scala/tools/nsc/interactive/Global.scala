@@ -88,8 +88,11 @@ self =>
    */
   override def signalDone(context: Context, old: Tree, result: Tree) {
     def integrateNew() {
-      // Don't think this is needed anymore, let's see if we can remove
-      context.unit.body = new TreeReplacer(old, result) transform context.unit.body
+      //Defensive
+      if ((context ne null) && (context.unit ne null)) {
+        // Don't think this is needed anymore, let's see if we can remove
+        context.unit.body = new TreeReplacer(old, result) transform context.unit.body
+      }
     }
     if (activeLocks == 0) { // can we try to avoid that condition (?)
       if (context.unit != null && 
