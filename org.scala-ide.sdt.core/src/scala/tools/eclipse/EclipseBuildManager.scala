@@ -122,11 +122,15 @@ class EclipseBuildManager(project : ScalaProject, settings0: Settings) extends R
   def build(addedOrUpdated : Set[IFile], removed : Set[IFile], pm : IProgressMonitor) {
     monitor = pm
     if (monitor != null) monitor.beginTask("build scala files", 100)       
-
     val pendingSources0 = pendingSources ++ addedOrUpdated
     pendingSources.clear
     val removedFiles = removed.map(EclipseResource(_) : AbstractFile)
-    val toBuild = pendingSources0.map(EclipseResource(_)) ++ unbuilt -- removedFiles
+    val unbuilt0 = unbuilt
+    val toBuild = pendingSources0.map(EclipseResource(_)) ++ unbuilt0 -- removedFiles
+    Tracer.printlnItems("ask to build (addedOrUpdated)  ", addedOrUpdated)
+    Tracer.printlnItems("ask to build (pendingSources)  ", pendingSources)
+    Tracer.printlnItems("ask to build (unbuilt)         ", unbuilt0)
+    Tracer.printlnItems("ask to build (removed)         ", removedFiles)
     var hasErrors = false
     clearBuildErrors(monitor)
     try {

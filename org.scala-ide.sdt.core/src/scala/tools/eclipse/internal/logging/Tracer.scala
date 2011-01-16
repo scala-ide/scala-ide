@@ -18,6 +18,12 @@ object Tracer {
     Console.println("ScalaPlugin--TRACE--" + (System.currentTimeMillis - t0) + "--" + Thread.currentThread.getName + "--:" + s)
   }
   
+  def printlnItems(s : String, items : Iterable[Any]) = if (IDESettings.tracerEnabled.value) {
+    for(item <- items) {
+      Console.println("ScalaPlugin--TRACE--" + (System.currentTimeMillis - t0) + "--" + Thread.currentThread.getName + "--:" + s + " : " + item)
+    }
+  }
+
   /**
    * A very primitive StopWatch (no stats,....)
    */
