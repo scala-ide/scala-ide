@@ -55,7 +55,7 @@ trait LocateSymbol { self : ScalaPresentationCompiler =>
        }
     } else findClassFile) flatMap { file =>
       if (sym.pos eq NoPosition) {
-        object traverser {
+        object possetter {
           var owners = sym.ownerChain.reverse
           def equiv(src : Symbol, clz : Symbol) = {
             src.decodedName == clz.decodedName && ( 
@@ -77,9 +77,20 @@ trait LocateSymbol { self : ScalaPresentationCompiler =>
             } else false
           }
         }
+        
+        object remover extends Traverser {
+          override def traverse(tree: Tree) {
+        	tree match {
+              case _ : PackageDef => super.traverse(tree)
+              case _ : ClassDef | _ : ModuleDef => tree.symbol.owner.info.decls unlink tree.symbol
+              case _ =>
+        	}
+          }
+        }
                     
         file.withSourceFile{ (f, _) =>
-          traverser traverse root(f).symbol.ownerChain.reverse.head
+          possetter traverse root(f).symbol.ownerChain.reverse.head
+          remover traverse root(f)
           reload(List(f), new Response[Unit])
           removeUnitOf(f)
         }

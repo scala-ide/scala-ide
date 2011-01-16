@@ -13,7 +13,7 @@ import org.eclipse.core.internal.filebuffers.SynchronizableDocument
 import org.eclipse.core.resources.{ IFile, IResource }
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.jdt.core.{
-  BufferChangedEvent, CompletionRequestor, IBuffer, IBufferChangedListener, IJavaElement, IJavaModelStatusConstants,
+  CompletionRequestor, IBuffer, IJavaElement, IJavaModelStatusConstants,
   IProblemRequestor, ITypeRoot, JavaCore, JavaModelException, WorkingCopyOwner }
 import org.eclipse.jdt.internal.compiler.env
 import org.eclipse.jdt.internal.core.{
@@ -30,7 +30,7 @@ import scala.tools.eclipse.contribution.weaving.jdt.{ IScalaCompilationUnit, ISc
 import scala.tools.eclipse.{ ScalaImages, ScalaPlugin, ScalaPresentationCompiler, ScalaSourceIndexer, ScalaWordFinder }
 import scala.tools.eclipse.util.ReflectionUtils
 
-trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with ScalaElement with IScalaCompilationUnit with IBufferChangedListener {
+trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with ScalaElement with IScalaCompilationUnit {
   val project = ScalaPlugin.plugin.getScalaProject(getJavaProject.getProject)
 
   def file : AbstractFile
@@ -38,16 +38,7 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
   def withSourceFile[T](op : (SourceFile, ScalaPresentationCompiler) => T) : T = {
     project.withSourceFile(this)(op)
   }
-  
-  override def bufferChanged(e : BufferChangedEvent) {
-    if (e.getBuffer.isClosed)
-      discard
-    else
-      project.withPresentationCompiler(_.askReload(this, getContents))
 
-    super.bufferChanged(e)
-  }
-  
   def discard {
     if (getJavaProject.getProject.isOpen)
       project.withPresentationCompiler(_.discardSourceFile(this))

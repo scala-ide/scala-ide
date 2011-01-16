@@ -15,6 +15,7 @@ import org.eclipse.jdt.internal.core.util.HandleFactory
 import org.eclipse.jdt.internal.core.{ BufferManager, CompilationUnit => JDTCompilationUnit, OpenableElementInfo, PackageFragment }
 import org.eclipse.jdt.internal.corext.util.JavaModelUtil
 import org.eclipse.swt.widgets.Display
+import org.eclipse.jdt.core.{BufferChangedEvent,IBufferChangedListener}
 
 import scala.tools.nsc.io.{ AbstractFile, VirtualFile }
 
@@ -37,10 +38,19 @@ object ScalaSourceFile {
 }
 
 class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCopyOwner : WorkingCopyOwner) 
-  extends JDTCompilationUnit(fragment, elementName, workingCopyOwner) with ScalaCompilationUnit with IScalaSourceFile {
+  extends JDTCompilationUnit(fragment, elementName, workingCopyOwner) with ScalaCompilationUnit with IBufferChangedListener with IScalaSourceFile {
 
   override def getMainTypeName : Array[Char] =
     getElementName.substring(0, getElementName.length - ".scala".length).toCharArray()
+  
+  override def bufferChanged(e : BufferChangedEvent) {
+    if (e.getBuffer.isClosed)
+      discard
+    else
+      project.withPresentationCompiler(_.askReload(this, getContents))
+
+    super.bufferChanged(e)
+  }
   
   override def scheduleReconcile = {
     Display.getDefault.asyncExec(new Runnable { def run = JavaModelUtil.reconcile(ScalaSourceFile.this) })
