@@ -41,15 +41,9 @@
       </page>
       <page
             category="org.scala-ide.sdt.core.preferences"
-            class="scala.tools.eclipse.ui.preferences.ScalaEditorPreferencePage"
-            id="scala.tools.eclipse.ui.preferences.scalaEditorPreferencePage"
-            name="Editor">
-      </page>
-      <page
-            category="scala.tools.eclipse.ui.preferences.scalaEditorPreferencePage"
-            class="scala.tools.eclipse.ui.preferences.ScalaEditorColoringPreferencePage"
-            id="scala-plugin.page1"
-            name="Syntax Coloring">
+            class="scala.tools.eclipse.ui.preferences.ImplicitsPreferencePage"
+            id="org.scala-ide.sdt.core.preferences.Implicits"
+            name="Implicits">
       </page>
    </extension>
 
@@ -599,7 +593,7 @@
            class="scala.tools.eclipse.formatter.ScalaFormatterPreferenceInitializer">
      </initializer>
      <initializer
-           class="scala.tools.eclipse.ui.preferences.ScalaEditorColoringPagePreferenceInitializer">
+           class="scala.tools.eclipse.ui.preferences.ImplicitsPagePreferenceInitializer">
      </initializer>
   </extension>
 
@@ -847,6 +841,11 @@
          categoryId="scala.tools.eclipse.refactoring.commands.refactoring"
          id="scala.tools.eclipse.refactoring.command.AddImport"
          name="Add Import"/>
+      <command
+            categoryId="scala.tools.eclipse.category"
+            id="org.scala-ide.sdt.core.commands.ToggleImplicitsDisplay"
+            name="Toggle Implicits Display">
+      </command>
 </extension>
 
    <extension point="org.eclipse.ui.contexts">
@@ -897,10 +896,16 @@
        contextId="scala.tools.eclipse.scalaEditorScope"
        sequence="M1+M2+O"/>
    <key
-       commandId="scala.tools.eclipse.refactoring.command.AddImport"
+       commandId="org.scala-ide.sdt.core.commands.ToggleImplicitsDisplay"
        schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
        contextId="scala.tools.eclipse.scalaEditorScope"
-       sequence="M1+M2+M"/>
+       sequence="M1+M2+I"/>
+   <key
+         commandId="scala.tools.eclipse.refactoring.command.AddImport"
+         contextId="scala.tools.eclipse.scalaEditorScope"
+         schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+         sequence="M1+M2+M">
+   </key>
 
    </extension>
    <extension
@@ -969,5 +974,27 @@
           categoryId="org.scala-ide.sdt.core.scalaProposalCategory"
           class="scala.tools.eclipse.text.scala.ScalaCompletionProposalComputer">
     </javaCompletionProposalComputer>
+ </extension>
+ <extension
+       point="org.eclipse.ui.handlers">
+    <handler
+          class="scala.tools.eclipse.handlers.ToggleImplicitsDisplayHandler"
+          commandId="org.scala-ide.sdt.core.commands.ToggleImplicitsDisplay">
+    </handler>
+ </extension>
+ <extension
+       point="org.eclipse.ui.menus">
+    <menuContribution
+          locationURI="toolbar:org.eclipse.ui.main.toolbar?after=additions">
+       <toolbar
+             id="org.scala-ide.sdt.core.toolbar">
+          <command
+                commandId="org.scala-ide.sdt.core.commands.ToggleImplicitsDisplay"
+                icon="icons/full/elcl16/implicit_co.gif"
+                id="org.scala-ide.sdt.core.toolbar.ToggleImplicitsDisplay"
+                style="toggle">
+          </command>
+       </toolbar>
+    </menuContribution>
  </extension>
 </plugin>

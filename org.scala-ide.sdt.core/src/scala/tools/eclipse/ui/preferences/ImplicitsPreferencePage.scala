@@ -7,14 +7,20 @@ import org.eclipse.ui.IWorkbench;
 import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer;
 import org.eclipse.jface.preference.IPreferenceStore;
 
+import org.eclipse.swt.graphics.RGB;
+
 import scala.tools.eclipse.ScalaPlugin;
 
-class ScalaEditorPreferencePage
-	extends FieldEditorPreferencePage
+
+class ImplicitsPreferencePage extends FieldEditorPreferencePage
 	with IWorkbenchPreferencePage {
+	import ImplicitsPreferencePage._
 
 	setPreferenceStore(ScalaPlugin.plugin.getPreferenceStore());
-	setDescription("Editor preference page");
+	setDescription("""
+	    Set the highlighting for implicit conversions and implicit parameters.
+	    Underline configuration, Set at General > Editors > Text Editors > Annotations (Scala Implicit)
+  """)
 	
 	
 	/**
@@ -24,6 +30,18 @@ class ScalaEditorPreferencePage
 	 * restore itself.
 	 */
 	override def createFieldEditors() {
+    addField(
+        new BooleanFieldEditor(P_ACTIVE,
+        "Active",
+        getFieldEditorParent()))
+    addField(
+				new BooleanFieldEditor(P_BLOD,
+				"Blod",
+				getFieldEditorParent()))
+		addField(
+				new BooleanFieldEditor(P_ITALIC,
+				"Italic",
+				getFieldEditorParent()))
 	}
 
 	/* (non-Javadoc)
@@ -31,13 +49,24 @@ class ScalaEditorPreferencePage
 	 */
 	override def init(workbench: IWorkbench) {
 	}
-	
 }
+
+
+object ImplicitsPreferencePage {
+  val BASE = "scala.tools.eclipse.ui.preferences.implicit."
+  val P_ACTIVE = BASE + "enabled"
+	val P_BLOD = BASE + "text.blod"
+	val P_ITALIC= BASE + "text.italic"
+}
+
+
 
 /**
  * Class used to initialize default preference values.
  */
-class ScalaEditorPagePreferenceInitializer extends AbstractPreferenceInitializer {
+class ImplicitsPagePreferenceInitializer extends AbstractPreferenceInitializer {
+	
+	import ImplicitsPreferencePage._
 
 	/*
 	 * (non-Javadoc)
@@ -46,9 +75,10 @@ class ScalaEditorPagePreferenceInitializer extends AbstractPreferenceInitializer
 	 */
 	override def initializeDefaultPreferences() {
 		val store = ScalaPlugin.plugin.getPreferenceStore();
+    store.setDefault(P_ACTIVE, true);
+		store.setDefault(P_BLOD, true);
+		store.setDefault(P_ITALIC, true);
 	}
 
 }
 
-object ScalaEditorPagePreferenceConstants {
-}

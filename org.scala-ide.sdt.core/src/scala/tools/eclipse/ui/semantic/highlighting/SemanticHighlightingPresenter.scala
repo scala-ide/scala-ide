@@ -3,37 +3,21 @@
  */
 package scala.tools.eclipse
 package ui.semantic.highlighting
-
-import org.eclipse.ui.part.FileEditorInput
+import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.jdt.core.WorkingCopyOwner
-import scala.tools.eclipse.internal.logging.Tracer
-import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.eclipse.jdt.internal.ui.javaeditor.CompilationUnitEditor;
-import org.eclipse.jdt.internal.ui.JavaPlugin;
-
-import org.eclipse.core.runtime.IProgressMonitor;
-
-import org.eclipse.jface.preference.IPreferenceStore
-import org.eclipse.jface.preference.PreferenceConverter
-import org.eclipse.jface.text.source.ISourceViewer;
-import org.eclipse.jface.text.DocumentEvent;
-import org.eclipse.jface.text.IDocument;
-import org.eclipse.jface.text.IDocumentListener;
-import org.eclipse.jface.text.TextPresentation;
-import org.eclipse.jface.text.source.Annotation;
-import org.eclipse.jface.text.source.{ IAnnotationAccess, AnnotationPainter, IAnnotationModelExtension };
-import org.eclipse.jface.util.IPropertyChangeListener
-import org.eclipse.jface.util.PropertyChangeEvent
+import org.eclipse.jdt.internal.ui.JavaPlugin
+import org.eclipse.jface.preference.{PreferenceConverter, IPreferenceStore}
 import org.eclipse.jface.text.IPainter
-
+import org.eclipse.jface.text.source.{IAnnotationAccess, AnnotationPainter, IAnnotationModelExtension, Annotation, ISourceViewer}
+import org.eclipse.jface.util.{PropertyChangeEvent, IPropertyChangeListener}
 import org.eclipse.swt.SWT
-
-import scala.tools.eclipse.javaelements.ScalaCompilationUnit;
-import scala.tools.nsc.util.RangePosition
-import scala.tools.eclipse.util.ColorManager
-import scala.tools.eclipse.ui.preferences.PropertyChangeListenerProxy
-
+import org.eclipse.ui.PlatformUI
+import org.eclipse.ui.part.FileEditorInput
 import scala.collection._
+import scala.tools.eclipse.internal.logging.Tracer
+import scala.tools.eclipse.javaelements.ScalaCompilationUnit
+import scala.tools.eclipse.ui.preferences.PropertyChangeListenerProxy
+import scala.tools.eclipse.util.ColorManager
 
 /**
  * @author Jin Mingjian
@@ -41,7 +25,7 @@ import scala.collection._
  *
  */
 class SemanticHighlightingPresenter(editor : FileEditorInput, sourceViewer: ISourceViewer) {
-  import scala.tools.eclipse.ui.preferences.ScalaEditorColoringPreferencePage._
+  import scala.tools.eclipse.ui.preferences.ImplicitsPreferencePage._
 
   val annotationAccess = new IAnnotationAccess() {
     def getType(annotation: Annotation) = annotation.getType();
@@ -87,6 +71,10 @@ class SemanticHighlightingPresenter(editor : FileEditorInput, sourceViewer: ISou
         case P_BLOD => true
         case P_ITALIC => true
         case P_COLOR => true
+        case P_ACTIVE => {
+          refresh()
+          false
+        }
         case _ => false
       }
       if (changed) {
@@ -97,12 +85,32 @@ class SemanticHighlightingPresenter(editor : FileEditorInput, sourceViewer: ISou
     }
   }
   
+  private def refresh() {
+    import org.eclipse.ui.IFileEditorInput
+    import org.eclipse.core.resources.IResource
+    
+    val wb = PlatformUI.getWorkbench()
+    for (
+      win <- wb.getWorkbenchWindows;
+      page <- win.getPages ;
+      editorRef <- page.getEditorReferences ;
+      editorIn <- Option(editorRef.getEditorInput)
+    ) {
+     JavaPlugin.getDefault().getWorkingCopyManager().getWorkingCopy(editorIn) match {
+       case scu : ScalaCompilationUnit => update(scu, null, null)
+       case _ => //ignore
+      }
+    }
+  }
+
+  
   protected def pluginStore : IPreferenceStore = ScalaPlugin.plugin.getPreferenceStore
   protected def editorsStore :IPreferenceStore = org.eclipse.ui.editors.text.EditorsUI.getPreferenceStore
 
   new PropertyChangeListenerProxy(_listener, pluginStore, editorsStore).autoRegister()
 
-  //TODO call it only on reconcile, build,... when tree is rebuild
+  //TODO monitor P_ACTIVATE to register/unregister update
+  //TODO monitor P_ACTIVATE to remove existings annotation (true => false) or update openning file (false => true)
   val update = (scu: ScalaCompilationUnit, monitor: IProgressMonitor, workingCopyOwner: WorkingCopyOwner) => {
     //val cu = JavaPlugin.getDefault().getWorkingCopyManager().getWorkingCopy(fEditor.getEditorInput());
     //val scu = cu.asInstanceOf[ScalaCompilationUnit]
@@ -110,30 +118,33 @@ class SemanticHighlightingPresenter(editor : FileEditorInput, sourceViewer: ISou
     if (scu.getResource.getLocation == editor.getPath.makeAbsolute) {
       scu.withSourceFile { (sourceFile, compiler) =>
         val toAdds = new java.util.HashMap[Annotation, org.eclipse.jface.text.Position]
-        object viewsCollector extends compiler.Traverser {
-          override def traverse(t: compiler.Tree): Unit = t match {
-            case v: compiler.ApplyImplicitView =>
-              val txt = new String(sourceFile.content, v.pos.startOrPoint, math.max(0, v.pos.endOrPoint - v.pos.startOrPoint)).trim()
-              val ia = new ImplicitConversionsOrArgsAnnotation(
-                scu.getCompilationUnit,
-                "Implicit conversions found: " + txt + " => " + v.fun.symbol.name + "(" + txt + ")")
-              val pos = new org.eclipse.jface.text.Position(v.pos.startOrPoint, txt.length)
-              toAdds.put(ia, pos)
-              super.traverse(t)
-            case v: compiler.ApplyToImplicitArgs =>
-              val txt = new String(sourceFile.content, v.pos.startOrPoint, math.max(0, v.pos.endOrPoint - v.pos.startOrPoint)).trim()
-              val argsStr = v.args.map(_.symbol.name).mkString("( ", ", ", " )")
-              val ia = new ImplicitConversionsOrArgsAnnotation(
-                scu.getCompilationUnit,
-                "Implicit arguments found: " + txt + " => " + txt + argsStr)
-              val pos = new org.eclipse.jface.text.Position(v.pos.startOrPoint, txt.length)
-              toAdds.put(ia, pos)
-              super.traverse(t)
-            case _ =>
-              super.traverse(t)
+
+        if (pluginStore.getBoolean(P_ACTIVE)) {
+          object viewsCollector extends compiler.Traverser {
+            override def traverse(t: compiler.Tree): Unit = t match {
+              case v: compiler.ApplyImplicitView =>
+                val txt = new String(sourceFile.content, v.pos.startOrPoint, math.max(0, v.pos.endOrPoint - v.pos.startOrPoint)).trim()
+                val ia = new ImplicitConversionsOrArgsAnnotation(
+                  scu.getCompilationUnit,
+                  "Implicit conversions found: " + txt + " => " + v.fun.symbol.name + "(" + txt + ")")
+                val pos = new org.eclipse.jface.text.Position(v.pos.startOrPoint, txt.length)
+                toAdds.put(ia, pos)
+                super.traverse(t)
+              case v: compiler.ApplyToImplicitArgs =>
+                val txt = new String(sourceFile.content, v.pos.startOrPoint, math.max(0, v.pos.endOrPoint - v.pos.startOrPoint)).trim()
+                val argsStr = v.args.map(_.symbol.name).mkString("( ", ", ", " )")
+                val ia = new ImplicitConversionsOrArgsAnnotation(
+                  scu.getCompilationUnit,
+                  "Implicit arguments found: " + txt + " => " + txt + argsStr)
+                val pos = new org.eclipse.jface.text.Position(v.pos.startOrPoint, txt.length)
+                toAdds.put(ia, pos)
+                super.traverse(t)
+              case _ =>
+                super.traverse(t)
+            }
           }
+          viewsCollector.traverse(compiler.body(sourceFile))
         }
-        viewsCollector.traverse(compiler.body(sourceFile))
   
         val model = sourceViewer.getAnnotationModel()
         Tracer.println("update implicit annotations : " + toAdds.size)
