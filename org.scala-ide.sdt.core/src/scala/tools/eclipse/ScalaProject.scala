@@ -91,38 +91,40 @@ class ScalaProject(val underlying : IProject) {
     val selected = new HashSet[IFile]()
     val inclusionPatterns = cpe.getInclusionPatterns.map{ toCharArray }
     val exclusionPatterns = cpe.getExclusionPatterns.map{ toCharArray }
-    
-    toIFolder(cpe).accept(
-      new IResourceProxyVisitor {
-        def visit(proxy : IResourceProxy) : Boolean = proxy.getType match {
-          case IResource.FILE => {
-            val resource = proxy.requestResource
-            if(plugin.isBuildable(resource.asInstanceOf[IFile]) && Util.isExcluded(resource.getFullPath, inclusionPatterns, exclusionPatterns, false)) {
-              selected += resource.asInstanceOf[IFile]
+    val folder = toIFolder(cpe)
+    if (folder.exists) { 
+      folder.accept(
+        new IResourceProxyVisitor {
+          def visit(proxy : IResourceProxy) : Boolean = proxy.getType match {
+            case IResource.FILE => {
+              val resource = proxy.requestResource
+              if(plugin.isBuildable(resource.asInstanceOf[IFile]) && Util.isExcluded(resource.getFullPath, inclusionPatterns, exclusionPatterns, false)) {
+                selected += resource.asInstanceOf[IFile]
+              }
+              false
             }
-            false
-          }
-          case IResource.FOLDER => {
-            //TODO case of source folder is project root
-//                var folderPath : IPath = null
-//                if (isAlsoProject) {
-//                  folderPath = proxy.requestFullPath
-//                  if (isExcludedFromProject(env, folderPath))
-//                    return false
-//                }
-            if ((exclusionPatterns != null) && Util.isExcluded(proxy.requestFullPath, inclusionPatterns, exclusionPatterns, true)) {
-              // must walk children if inclusionPatterns != null, can skip them if == null
-              // but folder is excluded so do not create it in the output folder
-              inclusionPatterns != null
-            } else {
-              true
+            case IResource.FOLDER => {
+              //TODO case of source folder is project root
+  //                var folderPath : IPath = null
+  //                if (isAlsoProject) {
+  //                  folderPath = proxy.requestFullPath
+  //                  if (isExcludedFromProject(env, folderPath))
+  //                    return false
+  //                }
+              if ((exclusionPatterns != null) && Util.isExcluded(proxy.requestFullPath, inclusionPatterns, exclusionPatterns, true)) {
+                // must walk children if inclusionPatterns != null, can skip them if == null
+                // but folder is excluded so do not create it in the output folder
+                inclusionPatterns != null
+              } else {
+                true
+              }
             }
+            case _ => true
           }
-          case _ => true
         }
-      }
-      , IResource.NONE
-    )
+        , IResource.NONE
+      )
+    }
 
     selected.toSeq
   }
