@@ -31,6 +31,7 @@ import scala.tools.eclipse.javaelements.ScalaSourceFile
 import scala.tools.eclipse.markoccurrences.{ ScalaOccurrencesFinder, Occurrences }
 import scala.tools.eclipse.ui.semantic.highlighting.SemanticHighlightingPresenter
 import scala.tools.eclipse.text.scala.ScalaTypeAutoCompletionProposalManager
+import scala.tools.eclipse.util.IDESettings
 
 class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
 
@@ -111,7 +112,10 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
     val documentProvider = getDocumentProvider
     if (documentProvider eq null)
       return
-
+      
+    if (IDESettings.markOccurencesForSelectionOnly.value && selection.getLength < 1) {
+      return
+    }
     val scalaSourceFile = getEditorInput.asInstanceOf[IAdaptable].getAdapter(classOf[IJavaElement]).asInstanceOf[ScalaSourceFile]
     val annotations = getAnnotations(selection, scalaSourceFile)
     val annotationModel = documentProvider.getAnnotationModel(getEditorInput)

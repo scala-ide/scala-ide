@@ -12,8 +12,8 @@ case class Occurrences(name: String, locations: List[Region])
 class ScalaOccurrencesFinder(file: ScalaSourceFile, offset: Int, length: Int) {
 
   def findOccurrences(): Option[Occurrences] = {
-    if (!Defensive.check(offset > -1, "offset > -1")) return None
-    if (!Defensive.check(length > 0, "length > 0")) return None
+    if (!Defensive.check(offset > -1, "offset(%d) > -1", offset)) return None
+    if (!Defensive.check(length > -1, "length(%d) > -1", length)) return None
     val (from, to) = (offset, offset + length)
     file.withSourceFile { (sourceFile, compiler) =>
       compiler.ask { () =>
