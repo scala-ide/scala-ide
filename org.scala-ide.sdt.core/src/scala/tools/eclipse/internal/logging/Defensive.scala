@@ -63,7 +63,7 @@ object Defensive {
       f
     } catch {
       case ce : ControlThrowable => {
-        ScalaPlugin.plugin.logError("log only for tracking", ce)
+        ScalaPlugin.plugin.logInfo("log only for tracking", Some(ce))
         throw ce
       }
       case t => ScalaPlugin.plugin.logError(t)
@@ -75,7 +75,7 @@ object Defensive {
       f
     } catch {
       case ce : ControlThrowable => {
-        ScalaPlugin.plugin.logError("log only for tracking", ce)
+        ScalaPlugin.plugin.logInfo("log only for tracking", Some(ce))
         throw ce
       }
       case t => {

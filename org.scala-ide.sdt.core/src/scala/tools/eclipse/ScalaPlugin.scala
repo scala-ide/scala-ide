@@ -192,20 +192,26 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
     }
   }
 
-  def logWarning(msg : String) : Unit = getLog.log(new Status(IStatus.WARNING, pluginId, msg))
+  def logInfo(msg : String, t : Option[Throwable] = None) : Unit = log(IStatus.INFO, msg, t)
+
+  def logWarning(msg : String, t : Option[Throwable] = None) : Unit = log(IStatus.WARNING, msg, t)
 
   def logError(t : Throwable) : Unit = logError(t.getClass + ":" + t.getMessage, t)
   
   def logError(msg : String, t : Throwable) : Unit = {
-    val t1 = if (t != null) t else { val ex = new Exception ; ex.fillInStackTrace ; ex }
-    val status1 = new Status(IStatus.ERROR, pluginId, IStatus.ERROR, msg, t1)
+    val t1 = if (t != null) t else { val ex = new Exception ; ex.fillInStackTrace ; ex }    
+    log(IStatus.ERROR, msg, Some(t1))
+  }
+  
+  private def log(level : Int, msg : String, t : Option[Throwable]) : Unit = {
+    val status1 = new Status(level, pluginId, level, msg, t.getOrElse(null))
     getLog.log(status1)
 
     val status = t match {
-      case ce : ControlThrowable =>
+      case Some(ce : ControlThrowable) =>
         val t2 = { val ex = new Exception ; ex.fillInStackTrace ; ex }
         val status2 = new Status(
-          IStatus.ERROR, pluginId, IStatus.ERROR,
+           level, pluginId, level,
           "Incorrectly logged ControlThrowable: "+ce.getClass.getSimpleName+"("+ce.getMessage+")", t2)
         getLog.log(status2)
       case _ =>
