@@ -90,7 +90,7 @@ trait LocateSymbol { self : ScalaPresentationCompiler =>
                     
         file.withSourceFile{ (f, _) =>
           possetter traverse root(f).symbol.ownerChain.reverse.head
-          //remover traverse root(f)
+          remover traverse root(f)
           reload(List(f), new Response[Unit])
           removeUnitOf(f)
         }
