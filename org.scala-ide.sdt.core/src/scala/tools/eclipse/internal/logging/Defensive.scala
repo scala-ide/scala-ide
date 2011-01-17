@@ -20,6 +20,9 @@ import scala.util.control.ControlThrowable
  * Usage :
  * <br/> replace : <code>if (x != null) { ... }</code>
  * <br/> by : <code>if (Defensive.notNul(x , "x")) { ... }</code>
+ *
+ * A good practice can be to link (as comment) to a ticket's number (from issue tracker, or to a file in the project,
+ * may be under the directory <project>/issues).
  */
 object Defensive {
   private def log(format : String, args : Any*) {
