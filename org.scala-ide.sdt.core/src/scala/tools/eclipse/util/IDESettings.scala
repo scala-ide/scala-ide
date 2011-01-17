@@ -13,23 +13,23 @@ object IDESettings {
   import ScalaPluginSettings._
   
   case class Box(name: String, userSettings: List[Settings#Setting])
-	
+  
   def shownSettings(s : Settings) : List[Box] = {
     import s._
 
     List(
-    		Box("Standard",
-    				List(deprecation, g, optimise, target, unchecked,
+        Box("Standard",
+            List(deprecation, g, optimise, target, unchecked,
                  pluginOptions, nospecialization)),
-    		Box("Advanced",
-    				List(checkInit, Xchecknull, elidebelow,
-    						 Xexperimental, future, XlogImplicits,
-    						 Xmigration28, noassertions, nouescape, plugin, disable,
-    						 require, pluginsDir, Xwarnfatal, Xwarninit)),
-    		Box("Private",
-    				List(Xcloselim, Xdce, inline, Xlinearizer, Ynogenericsig, noimports,
-    						 selfInAnnots, Yrecursion, refinementMethodDispatch,
-    						 Ywarndeadcode, Ybuildmanagerdebug))
+        Box("Advanced",
+            List(checkInit, Xchecknull, elidebelow,
+                 Xexperimental, future, XlogImplicits,
+                 Xmigration28, noassertions, nouescape, plugin, disable,
+                 require, pluginsDir, Xwarnfatal, Xwarninit)),
+        Box("Private",
+            List(Xcloselim, Xdce, inline, Xlinearizer, Ynogenericsig, noimports,
+                 selfInAnnots, Yrecursion, refinementMethodDispatch,
+                 Ywarndeadcode, Ybuildmanagerdebug))
         // BACK-2.8    						 
         //Box("Presentation Compiler",
         //    List(YpresentationDebug, YpresentationVerbose, YpresentationLog, YpresentationReplay))
@@ -38,12 +38,12 @@ object IDESettings {
   
   def pluginSettings: List[Box] = {
     val Yplugininfo = BooleanSetting("-plugininfo", "Print Scala plugin debugging info")
-	  List(Box("Scala Plugin Debugging", List(Yplugininfo)))    
+    List(Box("Scala Plugin Debugging", List(Yplugininfo)))    
   }
   
   def tuningSettings: List[Box] = {
     List(
-      Box("Editor Tuning", List(outputInClasspath, compileOnTyping, useContentOfEditor, alwaysCleanBuild, classBreakpoint, markOccurencesForSelectionOnly))
+      Box("Editor Tuning", List(outputInClasspath, compileOnTyping, useContentOfEditor, alwaysCleanBuild, classBreakpoint, markOccurencesForSelectionOnly, timeOutBodyReq))
       , Box("QuickFix Tuning", List(quickfixImportByText))
       , Box("Logging Tuning", List(tracerEnabled))
     )
@@ -55,6 +55,7 @@ object IDESettings {
   val alwaysCleanBuild = BooleanSetting("_clean+build", "always do a clean+full build", false)
   val classBreakpoint = BooleanSetting("_class breakpoint", "support toggling breakpoint on class from editor", false)
   val markOccurencesForSelectionOnly = BooleanSetting("_mark occurences on selection", "doesn't try to mark occurences if there is no selection", false)
+  val timeOutBodyReq = IntSetting("_timeout body req", "timeout (ms) to access body/AST of a source file", 3000, Some((0,60000)), parseInt)
 
   // TODO remove compileOnTypingDelay (useless)
   val compileOnTypingDelay = IntSetting("_auto compile delay", "compile file on typing, delay (ms), 0 : immediate", 600, Some((0,3000)), parseInt)
@@ -73,6 +74,6 @@ object IDESettings {
 }
 
 object ScalaPluginSettings extends SettingsAddOn {
-	val YPlugininfo = BooleanSetting("-plugininfo", "Enable logging of the Scala Plugin info")
+  val YPlugininfo = BooleanSetting("-plugininfo", "Enable logging of the Scala Plugin info")
 }
 

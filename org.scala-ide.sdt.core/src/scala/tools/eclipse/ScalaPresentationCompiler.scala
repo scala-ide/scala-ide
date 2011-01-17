@@ -21,7 +21,7 @@ import scala.tools.nsc.util.{ BatchSourceFile, Position, SourceFile }
 import scala.tools.eclipse.javaelements.{
   ScalaCompilationUnit, ScalaIndexBuilder, ScalaJavaMapper, ScalaMatchLocator, ScalaStructureBuilder,
   ScalaOverrideIndicatorBuilder }
-import scala.tools.eclipse.util.{ Cached, EclipseFile, EclipseResource }
+import scala.tools.eclipse.util.{ Cached, EclipseFile, EclipseResource, IDESettings }
 
 class ScalaPresentationCompiler(settings : Settings)
   extends Global(settings, new ScalaPresentationCompiler.PresentationReporter)
@@ -40,7 +40,7 @@ class ScalaPresentationCompiler(settings : Settings)
         get(k) match {
           case Some(v) => v
           case None => put(k, v); v
-  	   }
+       }
       }} 
   }
   
@@ -89,9 +89,13 @@ class ScalaPresentationCompiler(settings : Settings)
     val tree = new Response[Tree]
     if (Thread.currentThread == compileRunner)
       getTypedTree(sourceFile, false, tree) else askType(sourceFile, false, tree)
-    tree.get match {
-      case Left(l) => l
-      case Right(r) => throw new AsyncGetException(r, "body(" + sourceFile + ")")
+    val timeout = IDESettings.timeOutBodyReq.value //Defensive use a timeout see issue_0003 issue_0004
+    tree.get(timeout) match {
+      case None => throw new AsyncGetTimeoutException(timeout, "body(" + sourceFile + ")")
+      case Some(x) => x match {
+        case Left(l) => l
+        case Right(r) => throw new AsyncGetException(r, "body(" + sourceFile + ")")
+      }
     }
   }
 
@@ -196,3 +200,4 @@ object ScalaPresentationCompiler {
  * Message of the exception include the hashCode of the cause, because a cause Exception can be wrapped several time.
  */
 class AsyncGetException(cause : Throwable, contextInfo : String = "") extends Exception("origin (" + cause.hashCode + ") : " + cause.getMessage + " [" + contextInfo + "]", cause)
+class AsyncGetTimeoutException(timeout : Int, contextInfo : String = "") extends Exception("timeout (" + timeout + " ms) expired [" + contextInfo + "]")
