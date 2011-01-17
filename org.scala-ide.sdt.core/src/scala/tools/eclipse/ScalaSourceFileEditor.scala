@@ -32,6 +32,7 @@ import scala.tools.eclipse.markoccurrences.{ ScalaOccurrencesFinder, Occurrences
 import scala.tools.eclipse.ui.semantic.highlighting.SemanticHighlightingPresenter
 import scala.tools.eclipse.text.scala.ScalaTypeAutoCompletionProposalManager
 import scala.tools.eclipse.util.IDESettings
+import scala.tools.eclipse.internal.logging.Defensive
 
 class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
 
@@ -117,6 +118,8 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
       return
     }
     val scalaSourceFile = getEditorInput.asInstanceOf[IAdaptable].getAdapter(classOf[IJavaElement]).asInstanceOf[ScalaSourceFile]
+    if (!Defensive.notNull(scalaSourceFile, "scalaSourceFile")) //issue_0001
+      return
     val annotations = getAnnotations(selection, scalaSourceFile)
     val annotationModel = documentProvider.getAnnotationModel(getEditorInput)
     if (annotationModel eq null)
