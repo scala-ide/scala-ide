@@ -1,0 +1,293 @@
+[INFO] --- maven-scala-plugin:2.15.0:compile (default) @ org.scala-ide.sdt.compiler.ext ---
+[INFO] Checking for multiple versions of scala
+[INFO] includes = [**/*.scala,**/*.java,]
+[INFO] excludes = []
+[INFO] /home/dwayne/work/oss/scala-eclipse/scala-ide-wip_exp_backport/org.scala-ide.sdt.compiler.ext/src:-1: info: compiling
+[INFO] /home/dwayne/work/oss/scala-eclipse/scala-ide-wip_exp_backport/org.scala-ide.sdt.compiler.ext/src_2.8.1:-1: info: compiling
+[INFO] Compiling 14 source files to /home/dwayne/work/oss/scala-eclipse/scala-ide-wip_exp_backport/org.scala-ide.sdt.compiler.ext/target/classes at 1295285495051
+[ERROR] /home/dwayne/work/oss/scala-eclipse/scala-ide-wip_exp_backport/org.scala-ide.sdt.compiler.ext/src_2.8.1/scala/tools/nsc/interactive/Global.scala:16: error: value Pickler is not a member of package scala.tools.nsc.io
+[INFO] import _root_.scala.tools.nsc.io.Pickler._
+[INFO]                                  ^
+[ERROR] /home/dwayne/work/oss/scala-eclipse/scala-ide-wip_exp_backport/org.scala-ide.sdt.compiler.ext/src_2.8.1/scala/tools/nsc/interactive/Global.scala:11: error: LogReplay is not a member of _root_.scala.tools.nsc.io
+[INFO] import _root_.scala.tools.nsc.io.{AbstractFile, LogReplay, Logger, NullLogger, Replayer}
+[INFO]        ^
+[ERROR] /home/dwayne/work/oss/scala-eclipse/scala-ide-wip_exp_backport/org.scala-ide.sdt.compiler.ext/src/scala/tools/nsc/interactive/Picklers.scala:9: error: value Pickler is not a member of package scala.tools.nsc.io
+[INFO] import io.Pickler._
+[INFO]           ^
+[ERROR] /home/dwayne/work/oss/scala-eclipse/scala-ide-wip_exp_backport/org.scala-ide.sdt.compiler.ext/src/scala/tools/nsc/interactive/Picklers.scala:8: error: Pickler is not a member of io
+[INFO] import io.{Pickler, CondPickler}
+[INFO]        ^
+[ERROR] /home/dwayne/work/oss/scala-eclipse/scala-ide-wip_exp_backport/org.scala-ide.sdt.compiler.ext/src/scala/tools/nsc/interactive/Picklers.scala:7: error: EmptyAction is not a member of util
+[INFO] import util.{Position, RangePosition, NoPosition, OffsetPosition, TransparentPosition, EmptyAction}
+[INFO]        ^
+[ERROR] /home/dwayne/work/oss/scala-eclipse/scala-ide-wip_exp_backport/org.scala-ide.sdt.compiler.ext/src/scala/tools/nsc/interactive/Picklers.scala:34: error: Picklers.this.sourceFilesSeen of type AnyRef{def default(key: scala.tools.nsc.io.AbstractFile): <error>} does not take parameters
+[INFO]     val bs = sourceFilesSeen(f)
+[INFO]                             ^
+[ERROR] /home/dwayne/work/oss/scala-eclipse/scala-ide-wip_exp_backport/org.scala-ide.sdt.compiler.ext/src/scala/tools/nsc/interactive/Picklers.scala:46: error: Picklers.this.sourceFilesSeen of type AnyRef{def default(key: scala.tools.nsc.io.AbstractFile): <error>} does not take parameters
+[INFO]     val patched = sourceFilesSeen(f).patch(start, replacement, end - start)
+[INFO]                                  ^
+[ERROR] /home/dwayne/work/oss/scala-eclipse/scala-ide-wip_exp_backport/org.scala-ide.sdt.compiler.ext/src_2.8.1/scala/tools/nsc/interactive/Global.scala:43: error: logreplay is not a member of log
+[INFO]   import log.logreplay
+[INFO]          ^
+[INFO] java.lang.reflect.InvocationTargetException
+[INFO] 	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+[INFO] 	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:39)
+[INFO] 	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:25)
+[INFO] 	at java.lang.reflect.Method.invoke(Method.java:597)
+[INFO] 	at org_scala_tools_maven_executions.MainHelper.runMain(MainHelper.java:161)
+[INFO] 	at org_scala_tools_maven_executions.MainWithArgsInFile.main(MainWithArgsInFile.java:26)
+[ERROR] Caused by: java.lang.AssertionError: assertion failed
+[INFO] 	at scala.Predef$.assert(Predef.scala:77)
+[INFO] 	at scala.tools.nsc.ast.TreeGen.gd3$1(TreeGen.scala:130)
+[INFO] 	at scala.tools.nsc.ast.TreeGen.stableTypeFor(TreeGen.scala:127)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer$$anonfun$27.apply(Typers.scala:2429)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer$$anonfun$27.apply(Typers.scala:2429)
+[INFO] 	at scala.collection.TraversableLike$$anonfun$map$1.apply(TraversableLike.scala:206)
+[INFO] 	at scala.collection.TraversableLike$$anonfun$map$1.apply(TraversableLike.scala:206)
+[INFO] 	at scala.collection.LinearSeqOptimized$class.foreach(LinearSeqOptimized.scala:61)
+[INFO] 	at scala.collection.immutable.List.foreach(List.scala:45)
+[INFO] 	at scala.collection.TraversableLike$class.map(TraversableLike.scala:206)
+[INFO] 	at scala.collection.immutable.List.map(List.scala:45)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.doTypedApply(Typers.scala:2429)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer$$anonfun$tryTypedApply$1$1.apply(Typers.scala:3318)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer$$anonfun$tryTypedApply$1$1.apply(Typers.scala:3318)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.silent(Typers.scala:728)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.tryTypedApply$1(Typers.scala:3318)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.typedApply$1(Typers.scala:3378)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.typed1(Typers.scala:4049)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.typed(Typers.scala:4203)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.typedQualifier(Typers.scala:4271)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.typedQualifier(Typers.scala:4277)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.typed1(Typers.scala:4089)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.typed(Typers.scala:4203)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer$$anonfun$typedApply$1$1.apply(Typers.scala:3362)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer$$anonfun$typedApply$1$1.apply(Typers.scala:3362)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.silent(Typers.scala:722)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.typedApply$1(Typers.scala:3362)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.typed1(Typers.scala:4049)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.typed(Typers.scala:4203)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.typedQualifier(Typers.scala:4271)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.typedQualifier(Typers.scala:4277)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.typed1(Typers.scala:4089)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.typed(Typers.scala:4203)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer$$anonfun$typedApply$1$1.apply(Typers.scala:3362)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer$$anonfun$typedApply$1$1.apply(Typers.scala:3362)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.silent(Typers.scala:722)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.typedApply$1(Typers.scala:3362)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.typed1(Typers.scala:4049)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.typed(Typers.scala:4203)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.typedArg(Typers.scala:2202)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer$$anonfun$typedArgs$3.apply(Typers.scala:2212)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer$$anonfun$typedArgs$3.apply(Typers.scala:2211)
+[INFO] 	at scala.collection.TraversableLike$$anonfun$map$1.apply(TraversableLike.scala:206)
+[INFO] 	at scala.collection.TraversableLike$$anonfun$map$1.apply(TraversableLike.scala:206)
+[INFO] 	at scala.collection.LinearSeqOptimized$class.foreach(LinearSeqOptimized.scala:61)
+[INFO] 	at scala.collection.immutable.List.foreach(List.scala:45)
+[INFO] 	at scala.collection.TraversableLike$class.map(TraversableLike.scala:206)
+[INFO] 	at scala.collection.immutable.List.map(List.scala:45)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.typedArgs(Typers.scala:2211)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.doTypedApply(Typers.scala:2425)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer$$anonfun$tryTypedApply$1$1.apply(Typers.scala:3318)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer$$anonfun$tryTypedApply$1$1.apply(Typers.scala:3318)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.silent(Typers.scala:722)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.tryTypedApply$1(Typers.scala:3318)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.typedApply$1(Typers.scala:3378)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.typed1(Typers.scala:4049)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.typed(Typers.scala:4203)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.typedStat$1(Typers.scala:2128)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer$$anonfun$20.apply(Typers.scala:2196)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer$$anonfun$20.apply(Typers.scala:2196)
+[INFO] 	at scala.collection.immutable.List.loop$1(List.scala:115)
+[INFO] 	at scala.collection.immutable.List.mapConserve(List.scala:132)
+[INFO] 	at scala.collection.immutable.List.loop$1(List.scala:119)
+[INFO] 	at scala.collection.immutable.List.mapConserve(List.scala:132)
+[INFO] 	at scala.collection.immutable.List.loop$1(List.scala:119)
+[INFO] 	at scala.collection.immutable.List.mapConserve(List.scala:132)
+[INFO] 	at scala.collection.immutable.List.loop$1(List.scala:119)
+[INFO] 	at scala.collection.immutable.List.mapConserve(List.scala:132)
+[INFO] 	at scala.collection.immutable.List.loop$1(List.scala:119)
+[INFO] 	at scala.collection.immutable.List.mapConserve(List.scala:132)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.typedStats(Typers.scala:2196)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.typedTemplate(Typers.scala:1549)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.typedClassDef(Typers.scala:1311)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.typed1(Typers.scala:3853)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.typed(Typers.scala:4203)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.typedStat$1(Typers.scala:2128)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer$$anonfun$20.apply(Typers.scala:2196)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer$$anonfun$20.apply(Typers.scala:2196)
+[INFO] 	at scala.collection.immutable.List.loop$1(List.scala:115)
+[INFO] 	at scala.collection.immutable.List.mapConserve(List.scala:132)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.typedStats(Typers.scala:2196)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.typed1(Typers.scala:3849)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.typed(Typers.scala:4203)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.typedStat$1(Typers.scala:2128)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer$$anonfun$20.apply(Typers.scala:2196)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer$$anonfun$20.apply(Typers.scala:2196)
+[INFO] 	at scala.collection.immutable.List.loop$1(List.scala:115)
+[INFO] 	at scala.collection.immutable.List.mapConserve(List.scala:132)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.typedStats(Typers.scala:2196)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.typed1(Typers.scala:3849)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.typed(Typers.scala:4203)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.typed(Typers.scala:4252)
+[INFO] 	at scala.tools.nsc.typechecker.Analyzer$typerFactory$$anon$3.apply(Analyzer.scala:85)
+[INFO] 	at scala.tools.nsc.Global$GlobalPhase$$anonfun$applyPhase$1.apply(Global.scala:282)
+[INFO] 	at scala.tools.nsc.Global$GlobalPhase$$anonfun$applyPhase$1.apply(Global.scala:282)
+[INFO] 	at scala.tools.nsc.reporters.Reporter.withSource(Reporter.scala:48)
+[INFO] 	at scala.tools.nsc.Global$GlobalPhase.applyPhase(Global.scala:282)
+[INFO] 	at scala.tools.nsc.typechecker.Analyzer$typerFactory$$anon$3$$anonfun$run$1.apply(Analyzer.scala:80)
+[INFO] 	at scala.tools.nsc.typechecker.Analyzer$typerFactory$$anon$3$$anonfun$run$1.apply(Analyzer.scala:80)
+[INFO] 	at scala.collection.Iterator$class.foreach(Iterator.scala:631)
+[INFO] 	at scala.collection.mutable.ListBuffer$$anon$1.foreach(ListBuffer.scala:304)
+[INFO] 	at scala.tools.nsc.typechecker.Analyzer$typerFactory$$anon$3.run(Analyzer.scala:80)
+[INFO] 	at scala.tools.nsc.Global$Run.compileSources(Global.scala:741)
+[INFO] 	at scala.tools.nsc.Global$Run.compile(Global.scala:822)
+[INFO] 	at scala.tools.nsc.Main$.process(Main.scala:106)
+[INFO] 	at scala.tools.nsc.Main$.main(Main.scala:120)
+[INFO] 	at scala.tools.nsc.Main.main(Main.scala)
+[INFO] --- maven-scala-plugin:2.15.0:compile (default) @ org.scala-ide.sdt.compiler.ext ---
+[INFO] Checking for multiple versions of scala
+[INFO] includes = [**/*.scala,**/*.java,]
+[INFO] excludes = []
+[INFO] /home/dwayne/work/oss/scala-eclipse/scala-ide-wip_exp_backport/org.scala-ide.sdt.compiler.ext/src:-1: info: compiling
+[INFO] /home/dwayne/work/oss/scala-eclipse/scala-ide-wip_exp_backport/org.scala-ide.sdt.compiler.ext/src_2.8.1:-1: info: compiling
+[INFO] Compiling 14 source files to /home/dwayne/work/oss/scala-eclipse/scala-ide-wip_exp_backport/org.scala-ide.sdt.compiler.ext/target/classes at 1295285495051
+[ERROR] /home/dwayne/work/oss/scala-eclipse/scala-ide-wip_exp_backport/org.scala-ide.sdt.compiler.ext/src_2.8.1/scala/tools/nsc/interactive/Global.scala:16: error: value Pickler is not a member of package scala.tools.nsc.io
+[INFO] import _root_.scala.tools.nsc.io.Pickler._
+[INFO]                                  ^
+[ERROR] /home/dwayne/work/oss/scala-eclipse/scala-ide-wip_exp_backport/org.scala-ide.sdt.compiler.ext/src_2.8.1/scala/tools/nsc/interactive/Global.scala:11: error: LogReplay is not a member of _root_.scala.tools.nsc.io
+[INFO] import _root_.scala.tools.nsc.io.{AbstractFile, LogReplay, Logger, NullLogger, Replayer}
+[INFO]        ^
+[ERROR] /home/dwayne/work/oss/scala-eclipse/scala-ide-wip_exp_backport/org.scala-ide.sdt.compiler.ext/src/scala/tools/nsc/interactive/Picklers.scala:9: error: value Pickler is not a member of package scala.tools.nsc.io
+[INFO] import io.Pickler._
+[INFO]           ^
+[ERROR] /home/dwayne/work/oss/scala-eclipse/scala-ide-wip_exp_backport/org.scala-ide.sdt.compiler.ext/src/scala/tools/nsc/interactive/Picklers.scala:8: error: Pickler is not a member of io
+[INFO] import io.{Pickler, CondPickler}
+[INFO]        ^
+[ERROR] /home/dwayne/work/oss/scala-eclipse/scala-ide-wip_exp_backport/org.scala-ide.sdt.compiler.ext/src/scala/tools/nsc/interactive/Picklers.scala:7: error: EmptyAction is not a member of util
+[INFO] import util.{Position, RangePosition, NoPosition, OffsetPosition, TransparentPosition, EmptyAction}
+[INFO]        ^
+[ERROR] /home/dwayne/work/oss/scala-eclipse/scala-ide-wip_exp_backport/org.scala-ide.sdt.compiler.ext/src/scala/tools/nsc/interactive/Picklers.scala:34: error: Picklers.this.sourceFilesSeen of type AnyRef{def default(key: scala.tools.nsc.io.AbstractFile): <error>} does not take parameters
+[INFO]     val bs = sourceFilesSeen(f)
+[INFO]                             ^
+[ERROR] /home/dwayne/work/oss/scala-eclipse/scala-ide-wip_exp_backport/org.scala-ide.sdt.compiler.ext/src/scala/tools/nsc/interactive/Picklers.scala:46: error: Picklers.this.sourceFilesSeen of type AnyRef{def default(key: scala.tools.nsc.io.AbstractFile): <error>} does not take parameters
+[INFO]     val patched = sourceFilesSeen(f).patch(start, replacement, end - start)
+[INFO]                                  ^
+[ERROR] /home/dwayne/work/oss/scala-eclipse/scala-ide-wip_exp_backport/org.scala-ide.sdt.compiler.ext/src_2.8.1/scala/tools/nsc/interactive/Global.scala:43: error: logreplay is not a member of log
+[INFO]   import log.logreplay
+[INFO]          ^
+[INFO] java.lang.reflect.InvocationTargetException
+[INFO] 	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+[INFO] 	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:39)
+[INFO] 	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:25)
+[INFO] 	at java.lang.reflect.Method.invoke(Method.java:597)
+[INFO] 	at org_scala_tools_maven_executions.MainHelper.runMain(MainHelper.java:161)
+[INFO] 	at org_scala_tools_maven_executions.MainWithArgsInFile.main(MainWithArgsInFile.java:26)
+[ERROR] Caused by: java.lang.AssertionError: assertion failed
+[INFO] 	at scala.Predef$.assert(Predef.scala:77)
+[INFO] 	at scala.tools.nsc.ast.TreeGen.gd3$1(TreeGen.scala:130)
+[INFO] 	at scala.tools.nsc.ast.TreeGen.stableTypeFor(TreeGen.scala:127)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer$$anonfun$27.apply(Typers.scala:2429)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer$$anonfun$27.apply(Typers.scala:2429)
+[INFO] 	at scala.collection.TraversableLike$$anonfun$map$1.apply(TraversableLike.scala:206)
+[INFO] 	at scala.collection.TraversableLike$$anonfun$map$1.apply(TraversableLike.scala:206)
+[INFO] 	at scala.collection.LinearSeqOptimized$class.foreach(LinearSeqOptimized.scala:61)
+[INFO] 	at scala.collection.immutable.List.foreach(List.scala:45)
+[INFO] 	at scala.collection.TraversableLike$class.map(TraversableLike.scala:206)
+[INFO] 	at scala.collection.immutable.List.map(List.scala:45)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.doTypedApply(Typers.scala:2429)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer$$anonfun$tryTypedApply$1$1.apply(Typers.scala:3318)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer$$anonfun$tryTypedApply$1$1.apply(Typers.scala:3318)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.silent(Typers.scala:728)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.tryTypedApply$1(Typers.scala:3318)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.typedApply$1(Typers.scala:3378)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.typed1(Typers.scala:4049)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.typed(Typers.scala:4203)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.typedQualifier(Typers.scala:4271)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.typedQualifier(Typers.scala:4277)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.typed1(Typers.scala:4089)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.typed(Typers.scala:4203)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer$$anonfun$typedApply$1$1.apply(Typers.scala:3362)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer$$anonfun$typedApply$1$1.apply(Typers.scala:3362)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.silent(Typers.scala:722)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.typedApply$1(Typers.scala:3362)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.typed1(Typers.scala:4049)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.typed(Typers.scala:4203)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.typedQualifier(Typers.scala:4271)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.typedQualifier(Typers.scala:4277)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.typed1(Typers.scala:4089)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.typed(Typers.scala:4203)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer$$anonfun$typedApply$1$1.apply(Typers.scala:3362)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer$$anonfun$typedApply$1$1.apply(Typers.scala:3362)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.silent(Typers.scala:722)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.typedApply$1(Typers.scala:3362)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.typed1(Typers.scala:4049)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.typed(Typers.scala:4203)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.typedArg(Typers.scala:2202)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer$$anonfun$typedArgs$3.apply(Typers.scala:2212)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer$$anonfun$typedArgs$3.apply(Typers.scala:2211)
+[INFO] 	at scala.collection.TraversableLike$$anonfun$map$1.apply(TraversableLike.scala:206)
+[INFO] 	at scala.collection.TraversableLike$$anonfun$map$1.apply(TraversableLike.scala:206)
+[INFO] 	at scala.collection.LinearSeqOptimized$class.foreach(LinearSeqOptimized.scala:61)
+[INFO] 	at scala.collection.immutable.List.foreach(List.scala:45)
+[INFO] 	at scala.collection.TraversableLike$class.map(TraversableLike.scala:206)
+[INFO] 	at scala.collection.immutable.List.map(List.scala:45)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.typedArgs(Typers.scala:2211)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.doTypedApply(Typers.scala:2425)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer$$anonfun$tryTypedApply$1$1.apply(Typers.scala:3318)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer$$anonfun$tryTypedApply$1$1.apply(Typers.scala:3318)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.silent(Typers.scala:722)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.tryTypedApply$1(Typers.scala:3318)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.typedApply$1(Typers.scala:3378)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.typed1(Typers.scala:4049)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.typed(Typers.scala:4203)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.typedStat$1(Typers.scala:2128)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer$$anonfun$20.apply(Typers.scala:2196)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer$$anonfun$20.apply(Typers.scala:2196)
+[INFO] 	at scala.collection.immutable.List.loop$1(List.scala:115)
+[INFO] 	at scala.collection.immutable.List.mapConserve(List.scala:132)
+[INFO] 	at scala.collection.immutable.List.loop$1(List.scala:119)
+[INFO] 	at scala.collection.immutable.List.mapConserve(List.scala:132)
+[INFO] 	at scala.collection.immutable.List.loop$1(List.scala:119)
+[INFO] 	at scala.collection.immutable.List.mapConserve(List.scala:132)
+[INFO] 	at scala.collection.immutable.List.loop$1(List.scala:119)
+[INFO] 	at scala.collection.immutable.List.mapConserve(List.scala:132)
+[INFO] 	at scala.collection.immutable.List.loop$1(List.scala:119)
+[INFO] 	at scala.collection.immutable.List.mapConserve(List.scala:132)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.typedStats(Typers.scala:2196)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.typedTemplate(Typers.scala:1549)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.typedClassDef(Typers.scala:1311)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.typed1(Typers.scala:3853)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.typed(Typers.scala:4203)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.typedStat$1(Typers.scala:2128)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer$$anonfun$20.apply(Typers.scala:2196)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer$$anonfun$20.apply(Typers.scala:2196)
+[INFO] 	at scala.collection.immutable.List.loop$1(List.scala:115)
+[INFO] 	at scala.collection.immutable.List.mapConserve(List.scala:132)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.typedStats(Typers.scala:2196)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.typed1(Typers.scala:3849)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.typed(Typers.scala:4203)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.typedStat$1(Typers.scala:2128)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer$$anonfun$20.apply(Typers.scala:2196)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer$$anonfun$20.apply(Typers.scala:2196)
+[INFO] 	at scala.collection.immutable.List.loop$1(List.scala:115)
+[INFO] 	at scala.collection.immutable.List.mapConserve(List.scala:132)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.typedStats(Typers.scala:2196)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.typed1(Typers.scala:3849)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.typed(Typers.scala:4203)
+[INFO] 	at scala.tools.nsc.typechecker.Typers$Typer.typed(Typers.scala:4252)
+[INFO] 	at scala.tools.nsc.typechecker.Analyzer$typerFactory$$anon$3.apply(Analyzer.scala:85)
+[INFO] 	at scala.tools.nsc.Global$GlobalPhase$$anonfun$applyPhase$1.apply(Global.scala:282)
+[INFO] 	at scala.tools.nsc.Global$GlobalPhase$$anonfun$applyPhase$1.apply(Global.scala:282)
+[INFO] 	at scala.tools.nsc.reporters.Reporter.withSource(Reporter.scala:48)
+[INFO] 	at scala.tools.nsc.Global$GlobalPhase.applyPhase(Global.scala:282)
+[INFO] 	at scala.tools.nsc.typechecker.Analyzer$typerFactory$$anon$3$$anonfun$run$1.apply(Analyzer.scala:80)
+[INFO] 	at scala.tools.nsc.typechecker.Analyzer$typerFactory$$anon$3$$anonfun$run$1.apply(Analyzer.scala:80)
+[INFO] 	at scala.collection.Iterator$class.foreach(Iterator.scala:631)
+[INFO] 	at scala.collection.mutable.ListBuffer$$anon$1.foreach(ListBuffer.scala:304)
+[INFO] 	at scala.tools.nsc.typechecker.Analyzer$typerFactory$$anon$3.run(Analyzer.scala:80)
+[INFO] 	at scala.tools.nsc.Global$Run.compileSources(Global.scala:741)
+[INFO] 	at scala.tools.nsc.Global$Run.compile(Global.scala:822)
+[INFO] 	at scala.tools.nsc.Main$.process(Main.scala:106)
+[INFO] 	at scala.tools.nsc.Main$.main(Main.scala:120)
+[INFO] 	at scala.tools.nsc.Main.main(Main.scala)
+
