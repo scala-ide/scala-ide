@@ -175,7 +175,8 @@ class ScalaProject(val underlying : IProject) {
         case _ =>
       }
     }
-    classpath(javaProject, false, true)
+    //TODO sort the classpath's entries ?
+    classpath(javaProject, false, IDESettings.outputInClasspath.value)
     path.toList
   }
   
