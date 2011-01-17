@@ -16,6 +16,7 @@ import org.eclipse.swt.graphics.Point
 import org.eclipse.jface.text.TextUtilities
 import scala.tools.eclipse.refactoring.EditorHelpers._
 import scala.tools.refactoring.implementations.AddImportStatement
+import scala.tools.eclipse.util.IDESettings
 
 case class ImportCompletionProposal(val importName : String) extends IJavaCompletionProposal {
   
@@ -24,13 +25,24 @@ case class ImportCompletionProposal(val importName : String) extends IJavaComple
    */
   def getRelevance = 100
   
-  
   /**
    * Inserts the proposed completion into the given document.
    *
    * @param document the document into which to insert the proposed completion
    */
   def apply(document : IDocument) : Unit = {
+    IDESettings.quickfixImportByText.value match {
+      case true => applyByTextTransfo(document)
+      case false => applyByASTTransfo(document)
+    }
+  }
+  
+  /**
+   * Inserts the proposed completion into the given document.
+   *
+   * @param document the document into which to insert the proposed completion
+   */
+  private def applyByASTTransfo(document : IDocument) : Unit = {
     
     withScalaFileAndSelection { (scalaSourceFile, iTextSelection) =>
     
@@ -59,6 +71,51 @@ case class ImportCompletionProposal(val importName : String) extends IJavaComple
       
       None
     }
+  }
+  
+  /**
+   * Inserts the proposed completion into the given document. (text based transformation)
+   *
+   * @param document the document into which to insert the proposed completion
+   */
+  private def applyByTextTransfo(document : IDocument) : Unit = {
+    val lineDelimiter = TextUtilities.getDefaultLineDelimiter(document)
+
+    // Find the package declaration
+    val text = document.get
+    var insertIndex = 0
+    val packageIndex = text.indexOf("package", insertIndex)
+    var preInsert = "" 
+    
+    if (packageIndex != -1) {
+      // Insert on the line after the last package declaration, with a line of whitespace first if needed
+      var nextLineIndex = text.indexOf(lineDelimiter, packageIndex) + 1
+      var nextLineEndIndex = text.indexOf(lineDelimiter, nextLineIndex)
+      var nextLine = text.substring(nextLineIndex, nextLineEndIndex).trim()
+      
+      // scan to see if package declaration is not multi-line
+      while (nextLine.startsWith("package")) {
+        nextLineIndex = text.indexOf(lineDelimiter, nextLineIndex) + 1
+        nextLineEndIndex = text.indexOf(lineDelimiter, nextLineIndex)
+        nextLine = text.substring(nextLineIndex, nextLineEndIndex).trim()
+      }
+
+      // Get the next line to see if it is already whitespace
+      if (nextLine.trim() == "") {
+        // This is a whitespace line, add the import here
+        insertIndex = nextLineEndIndex + 1
+      } else {
+        // Need to insert whitespace after the package declaration and insert
+        preInsert = lineDelimiter
+        insertIndex = nextLineIndex
+      }
+    } else {
+      // Insert at the top of the file
+      insertIndex = 0
+    }
+    
+    // Insert the import as the third line in the file... RISKY AS HELL :D
+    document.replace(insertIndex, 0, preInsert + "import " + importName + lineDelimiter);
   }
   
   /**

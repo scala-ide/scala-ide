@@ -43,8 +43,9 @@ object IDESettings {
   
   def tuningSettings: List[Box] = {
     List(
-        Box("Editor Tuning", List(outputInClasspath, compileOnTyping, useContentOfEditor, alwaysCleanBuild, classBreakpoint))
-        , Box("Logging Tuning", List(tracerEnabled))
+      Box("Editor Tuning", List(outputInClasspath, compileOnTyping, useContentOfEditor, alwaysCleanBuild, classBreakpoint))
+      , Box("QuickFix Tuning", List(quickfixImportByText))
+      , Box("Logging Tuning", List(tracerEnabled))
     )
   }
 
@@ -57,6 +58,8 @@ object IDESettings {
   val compileOnTypingDelay = IntSetting("_auto compile delay", "compile file on typing, delay (ms), 0 : immediate", 600, Some((0,3000)), parseInt)
   
   val tracerEnabled = BooleanSetting("_tracer printing", "print tracer info on stdout/stderr", false)
+
+  val quickfixImportByText = BooleanSetting("_import via text", "quick fix for import done by text manipulation (else by AST/refactoring)", false)
 
   def parseInt(s : String) : Option[Int] = {
     try {
