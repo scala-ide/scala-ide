@@ -12,10 +12,6 @@ import org.eclipse.core.filebuffers.FileBuffers
 import org.eclipse.core.filesystem.URIUtil
 import org.eclipse.core.resources.{ IContainer, IFile, IFolder, IResource, ResourcesPlugin }
 import org.eclipse.core.runtime.{ IPath, Path }
-import org.eclipse.jdt.core.IBuffer
-import org.eclipse.core.filesystem.EFS
-import org.eclipse.core.internal.resources.Resource
-import javaelements.ScalaSourceFile
 
 import scala.tools.nsc.io.AbstractFile
 
@@ -100,26 +96,11 @@ class EclipseFile(override val underlying : IFile) extends EclipseResource[IFile
     throw new NullPointerException("underlying == null")
   
   def isDirectory : Boolean = false
-  
-  lazy val buffer : IBuffer = {
-    Option(ScalaSourceFile.handleFactory.createOpenable(underlying.getFullPath.toString, null)).map { openable =>
-      val resource = openable.getResource
-      val fileInfo = EFS.getStore(resource.getLocationURI).fetchInfo
-      val info = resource.asInstanceOf[Resource].getResourceInfo(true, false);
-      if (fileInfo != null && (info == null || fileInfo.getLastModified == info.getLocalSyncInfo)) null else openable.getBuffer
-    }.getOrElse(null)
-  }
-  
-  def input : InputStream = {
-	if (buffer ne null) new ByteArrayInputStream(buffer.getContents.getBytes(underlying.getCharset)) else underlying.getContents
-  }
+
+  def input : InputStream =	underlying.getContents(true)
   
   def output: OutputStream = {
-	if (buffer ne null) new ByteArrayOutputStream {
-      override def close = {
-        buffer.setContents(new String(buf, 0, count, underlying.getCharset))
-      }
-    } else new ByteArrayOutputStream {
+    new ByteArrayOutputStream {
       override def close = {
         val contents = new ByteArrayInputStream(buf, 0, count)
         if (!underlying.exists) {
@@ -136,7 +117,7 @@ class EclipseFile(override val underlying : IFile) extends EclipseResource[IFile
     }
   }
 
-  override def sizeOption: Option[Int] = if (buffer ne null) Some(buffer.getLength) else getFileInfo.map(_.getLength.toInt)
+  override def sizeOption: Option[Int] = getFileInfo.map(_.getLength.toInt)
   
   private def getFileInfo = {
     val fs = FileBuffers.getFileStoreAtLocation(underlying.getLocation)
