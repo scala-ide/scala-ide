@@ -108,19 +108,7 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
   }
     
   override def codeSelect(cu : env.ICompilationUnit, offset : Int, length : Int, workingCopyOwner : WorkingCopyOwner) : Array[IJavaElement] = {
-    val environment = newSearchableEnvironment(workingCopyOwner)
-    val requestor = new ScalaSelectionRequestor(environment.nameLookup, this)
-    val buffer = getBuffer
-    if (buffer != null) {
-      val end = buffer.getLength
-      if (offset < 0 || length < 0 || offset + length > end )
-        throw new JavaModelException(new JavaModelStatus(IJavaModelStatusConstants.INDEX_OUT_OF_BOUNDS))
-  
-      val engine = new ScalaSelectionEngine(environment, requestor, getJavaProject.getOptions(true))
-      engine.select(cu, offset, offset + length - 1)
-    }
-    
-    requestor.getElements
+    Array.empty
   }
 
   def codeComplete

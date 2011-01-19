@@ -18,7 +18,7 @@ import org.eclipse.jdt.internal.ui.javaeditor.{EditorUtility, JavaElementHyperli
 import scala.reflect.generic.Flags._
 import scala.tools.nsc.io.AbstractFile
 
-import javaelements.{ScalaSourceFile, ScalaClassFile, ScalaCompilationUnit}
+import javaelements.{ScalaSourceFile, ScalaClassFile, ScalaCompilationUnit, ScalaSelectionEngine, ScalaSelectionRequestor}
 import util.EclipseFile
 
 class ScalaHyperlinkDetector extends AbstractHyperlinkDetector {
@@ -88,8 +88,13 @@ class ScalaHyperlinkDetector extends AbstractHyperlinkDetector {
               case _ => true
             }
           }
-
-          val elements = scu.asInstanceOf[ICodeAssist].codeSelect(wordRegion.getOffset, wordRegion.getLength).filter(e => e != null && isLinkable(e))
+          
+          val environment = scu.newSearchableEnvironment()
+          val requestor = new ScalaSelectionRequestor(environment.nameLookup, scu)
+          val engine = new ScalaSelectionEngine(environment, requestor, scu.getJavaProject.getOptions(true))
+          val offset = wordRegion.getOffset
+          engine.select(scu, offset, offset + wordRegion.getLength - 1)
+          val elements = requestor.getElements
           if (elements.length == 0) null else {
             val qualify = elements.length > 1
             elements.map(new JavaElementHyperlink(wordRegion, openAction.asInstanceOf[SelectionDispatchAction], _, qualify))
