@@ -70,7 +70,7 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
         enclosingTypeNames(c.symbol).map(_.toArray).toArray,
         superclassName,
         interfaceNames.toArray,
-        new Array[Array[Char]](0),
+        Array.empty,
         true
       )
 
@@ -98,7 +98,7 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
         enclosingTypeNames(m.symbol).map(_.toArray).toArray,
         superclassName,
         interfaceNames.toArray,
-        new Array[Array[Char]](0),
+        Array.empty,
         true
       )
         
@@ -111,10 +111,10 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
         mapModifiers(m.symbol),
         m.symbol.enclosingPackage.fullName.toCharArray,
         name.toString.toCharArray,
-        new Array[Array[Char]](0),
+        Array.empty,
         superclassName,
         interfaceNames.toArray,
-        new Array[Array[Char]](0),
+        Array.empty,
         true
       )
 
@@ -127,17 +127,17 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
         
       indexer.addMethodDeclaration(
         nme.getterName(v.name).toString.toCharArray,
-        new Array[Array[Char]](0),
+        Array.empty,
         mapType(v.tpt).toArray,
-        new Array[Array[Char]](0)
+        Array.empty
       )
         
       if(v.symbol.hasFlag(Flags.MUTABLE))
         indexer.addMethodDeclaration(
           nme.getterToSetter(nme.getterName(v.name)).toString.toCharArray,
-          new Array[Array[Char]](0),
+          Array.empty,
           mapType(v.tpt).toArray,
-          new Array[Array[Char]](0)
+          Array.empty
         )
         
       addAnnotations(v.symbol.annotations)
@@ -160,7 +160,7 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
         nm.toString.toCharArray,
         paramTypes.map(_.toCharArray).toArray,
         mapType(d.tpt).toArray,
-        new Array[Array[Char]](0)
+        Array.empty
       )
         
       addAnnotations(d.symbol.annotations)
@@ -174,23 +174,22 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
       annots.map(annot => indexer.addAnnotationTypeReference(annot.atp.typeSymbol.nameString.toArray))
     }
     
-    override def traverse(tree: Tree): Unit = tree match {
-      case pd : PackageDef => addPackage(pd); super.traverse(tree)
-      case cd : ClassDef => addClass(cd); traverse(cd.impl)
-      case md : ModuleDef => addModule(md); super.traverse(tree)
-      case vd : ValDef => addVal(vd); traverse(vd.rhs)
-      case td : TypeDef => addType(td); traverse(td.rhs)
-      case dd : DefDef =>
-        if(dd.name != nme.MIXIN_CONSTRUCTOR) {
-          addDef(dd)
-          traverse(dd.tpt)
-          traverse(dd.rhs)
-        }
-      case tt : TypeTree if tt.original ne null => {
-        super.traverse(tt.original)            
+    override def traverse(tree: Tree): Unit = {
+      tree match {
+        case pd : PackageDef => addPackage(pd)
+        case cd : ClassDef => addClass(cd)
+        case md : ModuleDef => addModule(md)
+        case vd : ValDef => addVal(vd)
+        case td : TypeDef => addType(td)
+        case dd : DefDef if dd.name != nme.MIXIN_CONSTRUCTOR => addDef(dd)
+        case _ =>
       }
-      case u =>
-        super.traverse(tree)
+      tree match {
+        case tt : TypeTree if tt.original ne null => {
+          traverse(tt.original)            
+        }
+        case _ => super.traverse(tree)
+      }
     }
   }
 }
