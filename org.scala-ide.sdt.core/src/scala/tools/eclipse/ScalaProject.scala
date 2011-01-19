@@ -281,7 +281,7 @@ class ScalaProject(val underlying : IProject) {
 //  }
   
   private def cleanOutputFolders(monitor : IProgressMonitor) = {
-    def delete(container : IContainer, deleteDirs : Boolean)(f : String => Boolean) : Unit =
+    def delete(container : IContainer, deleteDirs : Boolean)(f : String => Boolean) : Unit = {
       if (container.exists()) {
         container.members.foreach {
           case cntnr : IContainer =>
@@ -310,6 +310,7 @@ class ScalaProject(val underlying : IProject) {
           case _ => 
         }
       }
+    }
     for(outputFolder <- outputFolders) outputFolder match {
       case container : IContainer => delete(container, container != underlying)(_.endsWith(".class"))
       case _ => 
@@ -409,6 +410,7 @@ class ScalaProject(val underlying : IProject) {
 
   def clean(monitor : IProgressMonitor) = {
     Tracer.println("clean scala project " + underlying.getName)
+    cleanOutputFolders(monitor)
     resetCompilers(monitor)
   }
 
@@ -416,11 +418,10 @@ class ScalaProject(val underlying : IProject) {
    * remove markers + clean output dear + remove builder from memory  
    * can raise exception when deleteMarkers (ResourceException: The resource tree is locked for modifications.)
    */
-  def resetBuildCompiler(monitor : IProgressMonitor) {
+  private def resetBuildCompiler(monitor : IProgressMonitor) {
     Tracer.println("resetting compilers for " + underlying.getName)
     try {
       underlying.deleteMarkers(plugin.problemMarkerId, true, IResource.DEPTH_INFINITE)
-      cleanOutputFolders(monitor)
     } finally {
       buildManager0 = null
     }
