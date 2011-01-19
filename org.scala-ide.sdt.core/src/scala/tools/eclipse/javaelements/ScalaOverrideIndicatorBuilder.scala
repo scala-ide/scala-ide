@@ -58,7 +58,7 @@ trait ScalaOverrideIndicatorBuilder { self : ScalaPresentationCompiler =>
         case defn: DefTree if (defn.symbol ne NoSymbol) && defn.symbol.pos.isOpaqueRange =>
           for(base <- defn.symbol.allOverriddenSymbols) {
             val isOverwrite = base.isDeferred && !defn.symbol.isDeferred
-        	val text = (if (isOverwrite) "implements " else "overrides ") + base.fullName
+            val text = (if (isOverwrite) "implements " else "overrides ") + base.fullName
             val position = {
               val start = defn.symbol.pos.startOrPoint
               val end = defn.symbol.pos.endOrPoint

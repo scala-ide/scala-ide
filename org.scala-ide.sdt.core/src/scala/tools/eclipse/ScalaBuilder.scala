@@ -39,9 +39,9 @@ class ScalaBuilder extends IncrementalProjectBuilder {
     val project = plugin.getScalaProject(getProject)
     
     val allSourceFiles = project.allSourceFiles()
-    val dependeeProjectChanged =
-      project.externalDepends.exists(
-        x => { val delta = getDelta(x); delta == null || delta.getKind != IResourceDelta.NO_CHANGE})
+    val dependeeProjectChanged = false
+//      project.externalDepends.exists(
+//        x => { val delta = getDelta(x); delta == null || delta.getKind != IResourceDelta.NO_CHANGE})
     
     val (addedOrUpdated, removed) = if (project.prepareBuild() || dependeeProjectChanged)
       (allSourceFiles, Set.empty[IFile])
