@@ -85,12 +85,11 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
   
   def addToIndexer(indexer : ScalaSourceIndexer) {
     withSourceFile({ (source, compiler) =>
-      val body = compiler.body(source)
-      if (body != null)
-	    compiler.ask { () =>
-    	  new compiler.IndexBuilderTraverser(indexer).traverse(body)
-        }
-      })
+      val root = compiler.root(source)
+      compiler.ask { () =>
+        new compiler.IndexBuilderTraverser(indexer).traverse(root)
+      }
+    })
   }
   
   def newSearchableEnvironment(workingCopyOwner : WorkingCopyOwner) : SearchableEnvironment = {
