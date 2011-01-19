@@ -99,6 +99,15 @@ class ScalaPresentationCompiler(settings : Settings)
     }
   }
 
+  def askWithRoot(sourceFile : SourceFile)(f : (Tree) => Unit) = {
+    ask { () => 
+      val u = unitOf(sourceFile)
+      if (u.status < JustParsed) parse(u)
+      val root = u.body
+      if(root != null) { f(root) }
+    }
+  }
+    
   def root(sourceFile : SourceFile) = {
     ask { () => 
       val u = unitOf(sourceFile)
@@ -106,7 +115,7 @@ class ScalaPresentationCompiler(settings : Settings)
       u.body
     }
   }
-    
+  
   def askReload(scu : ScalaCompilationUnit, content : Array[Char]) {
     Tracer.println("askReload")
     sourceFiles.get(scu) match {

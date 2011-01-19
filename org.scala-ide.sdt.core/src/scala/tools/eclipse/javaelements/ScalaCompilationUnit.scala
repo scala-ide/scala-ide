@@ -81,9 +81,8 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
       }
       val sourceLength = contents.length // sourceFile.length
       Defensive.tryOrLog[Boolean](false) {
-        compiler.ask { () =>
-          val body = compiler.root(sourceFile)
-          new compiler.StructureBuilderTraverser(this, info, newElements.asInstanceOf[JMap[AnyRef, AnyRef]], sourceLength).traverse(body)
+        compiler.askWithRoot(sourceFile) { root =>
+          new compiler.StructureBuilderTraverser(this, info, newElements.asInstanceOf[JMap[AnyRef, AnyRef]], sourceLength).traverse(root)
         }
         info match {
           case cuei : CompilationUnitElementInfo =>
@@ -101,13 +100,11 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
 
   
   def addToIndexer(indexer : ScalaSourceIndexer) {
-    withSourceFile({ (source, compiler) =>
-      val body = compiler.body(source)
-      if (body != null)
-        compiler.ask { () =>
-          new compiler.IndexBuilderTraverser(indexer).traverse(body)
-        }
-      })
+    withSourceFile { (source, compiler) =>
+      compiler.askWithRoot(source) { root =>
+          new compiler.IndexBuilderTraverser(indexer).traverse(root)
+      }
+    }
   }
   
   def newSearchableEnvironment(workingCopyOwner : WorkingCopyOwner) : SearchableEnvironment = {
