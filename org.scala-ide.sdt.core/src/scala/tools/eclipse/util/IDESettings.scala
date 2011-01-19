@@ -29,8 +29,8 @@ object IDESettings {
         Box("Private",
             List(Xcloselim, Xdce, inline, Xlinearizer, Ynogenericsig, noimports,
                  selfInAnnots, Yrecursion, refinementMethodDispatch,
-                 Ywarndeadcode, Ybuildmanagerdebug))
-        // BACK-2.8    						 
+                 YmethodInfer, YdepMethTpes, Ywarndeadcode, Ybuildmanagerdebug))
+        // BACK-2.8
         //Box("Presentation Compiler",
         //    List(YpresentationDebug, YpresentationVerbose, YpresentationLog, YpresentationReplay))
     )
