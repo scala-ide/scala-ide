@@ -90,7 +90,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
       def addDef(d : DefDef) : Owner = this
       def addFunction(f : Function) : Owner = this
       
-      def symbol(t : Tree) = Defensive.tryOrLog(t.symbol) { t.symbol.initialize }
+      def symbol(t : Tree) = t.symbol.initialize
       
       def resetImportContainer {}
 
