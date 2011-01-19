@@ -163,36 +163,20 @@ class ScalaSelectionEngine(nameEnvironment : SearchableEnvironment, requestor : 
       compiler.ask { () => typedRes.left.toOption match {
         case Some(tree) => {
           tree match {
-            case i : compiler.Ident =>
-              val sym = i.symbol
-              sym match {
-                case c : compiler.ClassSymbol =>
-                  acceptType(c)
-                case m : compiler.ModuleSymbol =>
-                  acceptType(m)
-                case t : compiler.TermSymbol if t.isValueParameter => 
-                  val typed = new Response[compiler.Tree]
-                  compiler.askTypeAt(t.owner.pos, typed)
-                  val ownerTree = typed.get.left.toOption 
-                  ownerTree match {
-                    case Some(compiler.DefDef(_, _, _, paramss, _, _)) =>
-                      for(params <- paramss ; param <- params if param.name.toString == t.nameString)
-                        acceptLocalDefinition(param.symbol)
-                    case Some(compiler.Function(vparams, _)) =>
-                      for(param <- vparams if param.name.toString == t.nameString)
-                        acceptLocalDefinition(param.symbol)
-                    case Some(compiler.Apply(_, _)) =>
-                      acceptLocalDefinition(t)
-                    case _ =>
-                      println("Unhandled: "+t.getClass.getName)
-                  }
-                case t : compiler.TermSymbol if t.isMethod && t.pos.isDefined =>
-                  ssr.addElement(ssr.findLocalElement(t.pos.startOrPoint))
-                case t : compiler.TermSymbol if t.pos.isDefined =>
-                  acceptLocalDefinition(t)
-                case _ =>
-                  println("Unhandled: "+sym.getClass.getName)
-              }
+            case i : compiler.Ident => i.symbol match {
+              case c : compiler.ClassSymbol => acceptType(c)
+              case m : compiler.ModuleSymbol => acceptType(m)
+              case t : compiler.TermSymbol if t.pos.isDefined => 
+                if(t.isMethod) acceptMethod(t) else if (t.isLocal) acceptLocalDefinition(t) else acceptField(t)
+              case sym => println("Unhandled: " + sym.getClass.getName)
+            }
+              
+            case r : compiler.Literal => r.symbol match {
+              case m : compiler.ModuleSymbol => acceptType(m)
+              case t : compiler.TermSymbol if !t.isMethod && t.pos.isDefined => 
+                if (t.isLocal) acceptLocalDefinition(t) else acceptField(t)
+              case _ => 
+            }
               
             case s : compiler.Select if s.symbol != null && s.symbol != NoSymbol =>
               val sym = s.symbol
@@ -231,7 +215,7 @@ class ScalaSelectionEngine(nameEnvironment : SearchableEnvironment, requestor : 
                   case t : compiler.TypeSymbol =>
                     acceptField(t)
                   case _ =>
-                    println("Unhandled: "+tree.getClass.getName)
+                    println("Unhandled: " + tree.getClass.getName)
                 }
               }
             
@@ -265,7 +249,7 @@ class ScalaSelectionEngine(nameEnvironment : SearchableEnvironment, requestor : 
                 ssr.addElement(ssr.findLocalElement(pos.startOrPoint))
               
             case _ =>
-              println("Unhandled: "+tree.getClass.getName)
+              println("Unhandled: " + tree.getClass.getName)
           }
         }
         case None =>
