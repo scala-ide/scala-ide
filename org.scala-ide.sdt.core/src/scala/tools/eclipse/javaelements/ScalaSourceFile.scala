@@ -41,10 +41,11 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
   override def getMainTypeName : Array[Char] =
     getElementName.substring(0, getElementName.length - ".scala".length).toCharArray()
   
-  override def scheduleReconcile = {
-    Display.getDefault.asyncExec(new Runnable { def run = JavaModelUtil.reconcile(ScalaSourceFile.this) })
-  }
-
+  /**
+   * !! reconcile can take time (creation of presentation compiler, previous task,...)
+   *    => Don't run it in the Display Thread to avoid UI freeze
+   *      (unlike what was done with removed method 'scheduleReconcile')
+   */
   override def reconcile(
       astLevel : Int,
       reconcileFlags : Int,

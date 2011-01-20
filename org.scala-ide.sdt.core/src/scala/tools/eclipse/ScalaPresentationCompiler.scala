@@ -144,7 +144,6 @@ class ScalaPresentationCompiler(settings : Settings)
     ScalaPlugin.plugin.logError(msg, t)
     
   def destroy() {
-    sourceFiles.keysIterator.foreach(_.scheduleReconcile)
     askShutdown
   }
 }

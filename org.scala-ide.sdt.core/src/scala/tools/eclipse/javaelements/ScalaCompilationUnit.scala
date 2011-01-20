@@ -96,9 +96,6 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
     }
   }
 
-  def scheduleReconcile : Unit = (Tracer.println("scheduleReconcile ignored"))
-
-  
   def addToIndexer(indexer : ScalaSourceIndexer) {
     withSourceFile { (source, compiler) =>
       compiler.askWithRoot(source) { root =>
