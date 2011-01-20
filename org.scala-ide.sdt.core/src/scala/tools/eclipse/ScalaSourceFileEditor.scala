@@ -33,6 +33,7 @@ import scala.tools.eclipse.ui.semantic.highlighting.SemanticHighlightingPresente
 import scala.tools.eclipse.text.scala.ScalaTypeAutoCompletionProposalManager
 import scala.tools.eclipse.util.IDESettings
 import scala.tools.eclipse.internal.logging.Defensive
+import org.eclipse.ui.texteditor.IDocumentProvider
 
 class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
 
@@ -97,9 +98,17 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
     import org.eclipse.core.runtime.IProgressMonitor
     import org.eclipse.core.runtime.{ IStatus, Status }
 
+    val documentProvider = getDocumentProvider
+    if (documentProvider eq null)
+      return
+      
+    if (IDESettings.markOccurencesForSelectionOnly.value && selection.getLength < 1) {
+      return
+    }
+
     val job = new Job("updateOccurrenceAnnotations") {
       def run(monitor: IProgressMonitor): IStatus = {
-        updateOccurrenceAnnotations(selection, astRoot)
+        updateOccurrenceAnnotations0(documentProvider, selection, astRoot)
         Status.OK_STATUS
       }
     }
@@ -109,14 +118,9 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
     job.schedule()
   }
 
-  override def updateOccurrenceAnnotations(selection: ITextSelection, astRoot: CompilationUnit) {
-    val documentProvider = getDocumentProvider
-    if (documentProvider eq null)
-      return
-      
-    if (IDESettings.markOccurencesForSelectionOnly.value && selection.getLength < 1) {
-      return
-    }
+  override def updateOccurrenceAnnotations(selection: ITextSelection, astRoot: CompilationUnit) = askUpdateOccurrenceAnnotations(selection, astRoot)
+  
+  private def updateOccurrenceAnnotations0(documentProvider : IDocumentProvider, selection: ITextSelection, astRoot: CompilationUnit) {
     val scalaSourceFile = getEditorInput.asInstanceOf[IAdaptable].getAdapter(classOf[IJavaElement]).asInstanceOf[ScalaSourceFile]
     if (!Defensive.notNull(scalaSourceFile, "scalaSourceFile")) //issue_0001
       return
