@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package scala.tools.eclipse
 package scalac_28
@@ -16,14 +16,14 @@ import org.eclipse.core.resources.IFile
  *   * via a resourceListener (see http://www.eclipse.org/articles/Article-Resource-deltas/resource-deltas.html)
  *   * via a hook on hosted Compiler when it compile successfully
  *   In every case of hook, listener don't forgot to unregister (avoid memory leak)
- *     
+ *
  * @author david.bernard
  * @see https://www.assembla.com/code/scala-ide/git/changesets/623ff3bc19cfb0e661ec11d01a28f2133f00eae4
  */
 
 trait TopLevelMapTyper extends ScalaPresentationCompiler {
   self => ScalaPresentationCompiler //TODO search and replace by the most low level type eg interactive.Global
-  
+
   def project : ScalaProject
 
   private val topLevelMap : TopLevelMap  = {
@@ -32,11 +32,11 @@ trait TopLevelMapTyper extends ScalaPresentationCompiler {
     }
   }
   private val sourceFolders = project.sourceFolders
-  
+
   class EclipseTyperRun extends TyperRun {
-    
+
     def findSource(qualifiedName : String) = topLevelMap.get(qualifiedName)
-    
+
     def isStandardSource(file : IFile, qualifiedName : String) : Boolean = {
       val pathString = file.getLocation.toString
       val suffix = qualifiedName.replace(".", "/")+".scala"
@@ -46,7 +46,7 @@ trait TopLevelMapTyper extends ScalaPresentationCompiler {
         sourceFolders.exists(_ == sourceFolderPath)
       }
     }
-    
+
     override def compileSourceFor(context : Context, name : Name) = {
       def addImport(imp : analyzer.ImportInfo) = {
         val qual = imp.qual
@@ -61,7 +61,7 @@ trait TopLevelMapTyper extends ScalaPresentationCompiler {
             false
         }
       }
-      
+
       context.imports.exists(addImport) || {
         val pkg = context.owner.enclosingPackage
         compileSourceFor(pkg.fullName+"."+name)
@@ -72,12 +72,12 @@ trait TopLevelMapTyper extends ScalaPresentationCompiler {
       val sym = qual.symbol
       sym != null && sym.isPackage && compileSourceFor(sym.fullName+"."+name)
     }
-    
+
     def compileSourceFor(qualifiedName : String) : Boolean = {
       //for a name X, compileSourceFor can be called for
-      // scala.X, java.lang.X, current.package.X 
+      // scala.X, java.lang.X, current.package.X
 
-      //Tracer.println("call compileSourceFor : " + qualifiedName)  
+      //Tracer.println("call compileSourceFor : " + qualifiedName)
       findSource(qualifiedName) match {
         case Some(iFile) if (!isStandardSource(iFile, qualifiedName)) => {
           val file = new EclipseFile(iFile)
@@ -100,10 +100,9 @@ trait TopLevelMapTyper extends ScalaPresentationCompiler {
       }
     }
   }
-  
+
   override def newTyperRun = {
     Tracer.println("newTyperRun")
-    Thread.dumpStack()
     currentTyperRun = new EclipseTyperRun()
   }
 }
