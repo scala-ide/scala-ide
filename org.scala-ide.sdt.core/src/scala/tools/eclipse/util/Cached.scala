@@ -103,7 +103,7 @@ trait Cached[T] {
   }
   
   //TODO find a better abstraction for Cached, apply, doIfExist,...
-  def doIfExist(op : T => _) : Unit = {
+  def doIfExist(op : T => Unit) : Unit = {
     //TODO should we used the readLock, as it's ok to use the old value if new value is writing...
     elem match {
       case Some(t) => op(t)

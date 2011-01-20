@@ -383,7 +383,7 @@ class ScalaProject(val underlying : IProject) {
     presentationCompiler(op)
   }
 
-  def withPresentationCompilerIfExists(op : ScalaPresentationCompiler => _) : Unit = {
+  def withPresentationCompilerIfExists(op : ScalaPresentationCompiler => Unit) : Unit = {
     presentationCompiler.doIfExist(op)
   }
   
