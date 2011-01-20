@@ -24,6 +24,13 @@ object Tracer {
     }
   }
 
+  def printlnWithStack(s : String, predicate : => Boolean = {true}) = if (IDESettings.tracerEnabled.value) {
+    if (predicate) {
+      Console.println("ScalaPlugin--TRACE--" + (System.currentTimeMillis - t0) + "--" + Thread.currentThread.getName + "--:" + s)
+      Thread.dumpStack
+    }
+  }
+
   /**
    * A very primitive StopWatch (no stats,....)
    */
