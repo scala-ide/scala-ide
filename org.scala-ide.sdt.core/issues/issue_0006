@@ -1,0 +1,38 @@
+date     : 2011-01-20
+reporter : David Bernard
+branch   : wip_exp_backport
+
+when call "references search in project"
+
+java.lang.ClassCastException: org.eclipse.jdt.internal.compiler.lookup.BaseTypeBinding cannot be cast to org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding
+  at org.eclipse.jdt.internal.compiler.lookup.BinaryTypeBinding.initializeTypeVariable(BinaryTypeBinding.java:927)
+  at org.eclipse.jdt.internal.compiler.lookup.BinaryTypeBinding.createTypeVariables(BinaryTypeBinding.java:645)
+  at org.eclipse.jdt.internal.compiler.lookup.BinaryTypeBinding.createMethod(BinaryTypeBinding.java:482)
+  at org.eclipse.jdt.internal.compiler.lookup.BinaryTypeBinding.createMethods(BinaryTypeBinding.java:596)
+  at org.eclipse.jdt.internal.compiler.lookup.BinaryTypeBinding.cachePartsFrom(BinaryTypeBinding.java:327)
+  at org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment.createBinaryTypeFrom(LookupEnvironment.java:640)
+  at org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment.createBinaryTypeFrom(LookupEnvironment.java:619)
+  at org.eclipse.jdt.internal.core.search.matching.MatchLocator.accept(MatchLocator.java:302)
+  at org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment.askForType(LookupEnvironment.java:107)
+  at org.eclipse.jdt.internal.compiler.lookup.UnresolvedReferenceBinding.resolve(UnresolvedReferenceBinding.java:49)
+  at org.eclipse.jdt.internal.compiler.lookup.BinaryTypeBinding.resolveType(BinaryTypeBinding.java:122)
+  at org.eclipse.jdt.internal.compiler.lookup.ParameterizedTypeBinding.resolve(ParameterizedTypeBinding.java:851)
+  at org.eclipse.jdt.internal.compiler.lookup.BinaryTypeBinding.resolveType(BinaryTypeBinding.java:100)
+  at org.eclipse.jdt.internal.compiler.lookup.BinaryTypeBinding.resolveTypesFor(BinaryTypeBinding.java:1030)
+  at org.eclipse.jdt.internal.compiler.lookup.BinaryTypeBinding.availableMethods(BinaryTypeBinding.java:231)
+  at org.eclipse.jdt.internal.core.search.matching.ClassFileMatchLocator.locateMatches(ClassFileMatchLocator.java:185)
+  at org.eclipse.jdt.internal.core.search.matching.MatchLocator.process_aroundBody2(MatchLocator.java:1593)
+  at org.eclipse.jdt.internal.core.search.matching.MatchLocator$AjcClosure3.run(MatchLocator.java:1)
+  at scala.tools.eclipse.contribution.weaving.jdt.search.SearchAspect.ajc$around$scala_tools_eclipse_contribution_weaving_jdt_search_SearchAspect$2$5ae075ecproceed(SearchAspect.aj:1)
+  at scala.tools.eclipse.contribution.weaving.jdt.search.SearchAspect.ajc$around$scala_tools_eclipse_contribution_weaving_jdt_search_SearchAspect$2$5ae075ec(SearchAspect.aj:47)
+  at org.eclipse.jdt.internal.core.search.matching.MatchLocator.process(MatchLocator.java:1576)
+  at org.eclipse.jdt.internal.core.search.matching.MatchLocator.locateMatches(MatchLocator.java:1037)
+  at org.eclipse.jdt.internal.core.search.matching.MatchLocator.locateMatches(MatchLocator.java:1078)
+  at org.eclipse.jdt.internal.core.search.matching.MatchLocator.locateMatches(MatchLocator.java:1210)
+  at org.eclipse.jdt.internal.core.search.JavaSearchParticipant.locateMatches(JavaSearchParticipant.java:94)
+  at org.eclipse.jdt.internal.core.search.BasicSearchEngine.findMatches(BasicSearchEngine.java:223)
+  at org.eclipse.jdt.internal.core.search.BasicSearchEngine.search(BasicSearchEngine.java:507)
+  at org.eclipse.jdt.core.search.SearchEngine.search(SearchEngine.java:551)
+  at org.eclipse.jdt.internal.ui.search.JavaSearchQuery.run(JavaSearchQuery.java:144)
+  at org.eclipse.search2.internal.ui.InternalSearchUI$InternalSearchJob.run(InternalSearchUI.java:91)
+  at org.eclipse.core.internal.jobs.Worker.run(Worker.java:55)
