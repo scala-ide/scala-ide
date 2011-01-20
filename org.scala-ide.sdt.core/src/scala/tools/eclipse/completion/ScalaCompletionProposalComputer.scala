@@ -41,13 +41,13 @@ class ScalaCompletionProposalComputer extends IJavaCompletionProposalComputer {
                                 info : String,
                                 image : Image) extends IContextInformation with IContextInformationExtension {
     def getContextDisplayString() = display
-	def getImage() = image
-	def getInformationDisplayString() = info
-	def getContextInformationPosition(): Int = 0
+    def getImage() = image
+    def getInformationDisplayString() = info
+    def getContextInformationPosition(): Int = 0
   }
   
   def computeContextInformation(context : ContentAssistInvocationContext,
-				monitor : IProgressMonitor) : java.util.List[_] = {
+      monitor : IProgressMonitor) : java.util.List[_] = {
     // Currently not supported
     java.util.Collections.emptyList()
   }
@@ -55,7 +55,7 @@ class ScalaCompletionProposalComputer extends IJavaCompletionProposalComputer {
   def computeCompletionProposals(context : ContentAssistInvocationContext,
 				 monitor : IProgressMonitor) : java.util.List[_] = {
     val position = context.getInvocationOffset()
-	(context match {
+    (context match {
       case jc : JavaContentAssistInvocationContext => jc.getCompilationUnit match {
         case scu : ScalaCompilationUnit => Some(scu)
         case _ => None
@@ -110,8 +110,9 @@ class ScalaCompletionProposalComputer extends IJavaCompletionProposalComputer {
                                      display : String,
                                      contextName: String,
                                      container : String,
+                                     relevance: Int,
                                      image : Image) extends IJavaCompletionProposal with ICompletionProposalExtension {
-         def getRelevance() = 100
+         def getRelevance() = relevance
          def getImage() = image
          def getContextInformation(): IContextInformation =
            new ScalaContextInformation(display,contextName, image)
@@ -129,9 +130,23 @@ class ScalaCompletionProposalComputer extends IJavaCompletionProposalComputer {
            prefixMatches(completion.toArray, d.get.substring(start, pos).toArray)  
        } 
 
+       /** Add a new completion proposal to the buffer. Skip constructors and accessors.
+        * 
+        *  Computes a very basic relevance metric based on where the symbol comes from 
+        *  (in decreasing order of relevance):
+        *    - members defined by the owner
+        *    - inherited members
+        *    - members added by views
+        *    - packages
+        *    
+        *  TODO We should have a more refined strategy based on the context (inside an import, case
+        *       pattern, 'new' call, etc.)
+        */
        def accept(sym : compiler.Symbol, tpe : compiler.Type, inherited : Boolean, viaView : compiler.Symbol) {
-         if (sym.isPackage || sym.isConstructor ||
-           sym.hasFlag(Flags.ACCESSOR) || sym.hasFlag(Flags.PARAMACCESSOR)) return
+         if (sym.isConstructor 
+             || sym.hasFlag(Flags.ACCESSOR) 
+             || sym.hasFlag(Flags.PARAMACCESSOR)) return
+             
          import JavaPluginImages._
          val image = if (sym.isMethod) defImage
                      else if (sym.isClass) classImage
@@ -143,13 +158,20 @@ class ScalaCompletionProposalComputer extends IJavaCompletionProposalComputer {
                      else valImage
          val name = sym.decodedName
          val signature = 
-        	 if (sym.isMethod) { name +
+           if (sym.isMethod) { name +
                (if(!sym.typeParams.isEmpty) sym.typeParams.map{_.name}.mkString("[", ",", "]") else "") +
-          	   tpe.paramss.map(_.map(_.tpe.toString).mkString("(", ", ", ")")).mkString +
+               tpe.paramss.map(_.map(_.tpe.toString).mkString("(", ", ", ")")).mkString +
                ": " + tpe.finalResultType.toString}
-		     else name
+           else name
          val container = sym.owner.enclClass.fullName
-         buff += new ScalaCompletionProposal(name, signature, signature, container, image)
+         
+         // rudimentary relevance, place own members before ineherited ones, and before view-provided ones
+         var relevance = 100
+         if (inherited) relevance -= 10
+         if (viaView != compiler.NoSymbol) relevance -= 20
+         if (sym.isPackage) relevance -= 30
+         
+         buff += new ScalaCompletionProposal(name, signature, signature, container, relevance, image)
        }
 
        completed.get.left.toOption match {
