@@ -43,6 +43,13 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
     project.withSourceFile(this)(op)
   }
   
+  def withSourceFileButNotInMainThread[T](default : => T)(op : (SourceFile, ScalaPresentationCompiler) => T) : T = {
+    (Thread.currentThread.getName == "main") match {
+      case true => default
+      case false => project.withSourceFile(this)(op)
+    }
+  }
+
   override def bufferChanged(e : BufferChangedEvent) {
     if (e.getBuffer.isClosed)
       discard
@@ -72,7 +79,7 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
 
   override def buildStructure(info : OpenableElementInfo, pm : IProgressMonitor, newElements : JMap[_, _], underlyingResource : IResource) : Boolean = {
     Tracer.println("buildStructure : " + underlyingResource)
-    withSourceFile { (sourceFile, compiler) =>
+    withSourceFileButNotInMainThread[Boolean](false) { (sourceFile, compiler) =>
       import scala.tools.eclipse.util.IDESettings
       
       val contents = this.getContents
@@ -97,7 +104,7 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
   }
 
   def addToIndexer(indexer : ScalaSourceIndexer) {
-    withSourceFile { (source, compiler) =>
+    withSourceFileButNotInMainThread() { (source, compiler) =>
       compiler.askWithRoot(source) { root =>
           new compiler.IndexBuilderTraverser(indexer).traverse(root)
       }
@@ -148,23 +155,24 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
   }
   
   override def reportMatches(matchLocator : MatchLocator, possibleMatch : PossibleMatch) = Defensive.tryOrLog {
-    withSourceFile({ (sourceFile, compiler) =>
-        val body = compiler.body(sourceFile)
-    
-        if (body != null)
-          compiler.ask { () =>
-              compiler.MatchLocator(this, matchLocator, possibleMatch).traverse(body)
-          }
-      })
+    withSourceFileButNotInMainThread[Unit](){ (sourceFile, compiler) =>
+      val body = compiler.body(sourceFile)
+  
+      if (body != null) {
+        compiler.ask { () =>
+          compiler.MatchLocator(this, matchLocator, possibleMatch).traverse(body)
+        }
+      }
+    }
   }
   
   override def createOverrideIndicators(annotationMap : JMap[_, _]) = Defensive.tryOrLog {
-    withSourceFile { (sourceFile, compiler) =>
+    withSourceFileButNotInMainThread[Unit]() { (sourceFile, compiler) =>
       val root = compiler.root(sourceFile)
       compiler.ask { () =>
         new compiler.OverrideIndicatorBuilderTraverser(this, annotationMap.asInstanceOf[JMap[AnyRef, AnyRef]]).traverse(root)
+      }
     }
-  }
   }
   
   override def getImageDescriptor = {
