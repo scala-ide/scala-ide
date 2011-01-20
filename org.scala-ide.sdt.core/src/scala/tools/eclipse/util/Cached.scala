@@ -7,6 +7,7 @@ package scala.tools.eclipse.util
 
 trait Cached[T] {
   import java.util.concurrent.locks.ReentrantReadWriteLock
+  import scala.tools.eclipse.internal.logging.Tracer
   
 //  private var inProgress = false
   @volatile
@@ -95,6 +96,7 @@ trait Cached[T] {
   }
   
   def apply[U](op : T => U) : U = {
+    Tracer.printlnWithStack("FIXME : access Cached in 'main' Thread, UI freeze possible", {Thread.currentThread.getName == "main"})
     val e = provide()
     //TODO should the execution of op be part of the readLock ??
     op(e)
