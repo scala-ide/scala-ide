@@ -35,7 +35,7 @@ import scala.tools.eclipse.util.ReflectionUtils
 trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with ScalaElement with IScalaCompilationUnit with IBufferChangedListener {
   val project = ScalaPlugin.plugin.getScalaProject(getJavaProject.getProject)
   
-  private var _changed = new AtomicBoolean(false)
+  private var _changed = new AtomicBoolean(true)
   
   def file : AbstractFile
   
