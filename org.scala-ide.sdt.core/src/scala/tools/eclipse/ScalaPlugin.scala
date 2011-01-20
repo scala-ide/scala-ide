@@ -177,7 +177,7 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
                 case ssf : ScalaSourceFile if (delta.getKind == IJavaElementDelta.REMOVED) =>
                   val project = ssf.getJavaProject.getProject
                   if (project.isOpen)
-                    getScalaProject(project).withPresentationCompiler { _.discardSourceFile(ssf) }
+                    getScalaProject(project).withPresentationCompilerIfExists { _.discardSourceFile(ssf) }
                 case _ : PackageFragment | _ : PackageFragmentRoot | _ : JavaProject =>
                   findRemovedSource(delta.getAffectedChildren)
                 case _ =>

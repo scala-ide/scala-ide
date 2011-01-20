@@ -102,6 +102,15 @@ trait Cached[T] {
     op(e)
   }
   
+  //TODO find a better abstraction for Cached, apply, doIfExist,...
+  def doIfExist(op : T => _) : Unit = {
+    //TODO should we used the readLock, as it's ok to use the old value if new value is writing...
+    elem match {
+      case Some(t) => op(t)
+      case None => // do nothing
+    }
+  }
+  
   def invalidate() {
     var oldElem : Option[T] = None  
     _rwl.writeLock().lock()

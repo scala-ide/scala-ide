@@ -383,6 +383,10 @@ class ScalaProject(val underlying : IProject) {
     presentationCompiler(op)
   }
 
+  def withPresentationCompilerIfExists(op : ScalaPresentationCompiler => _) : Unit = {
+    presentationCompiler.doIfExist(op)
+  }
+  
   def withSourceFile[T](scu : ScalaCompilationUnit)(op : (SourceFile, ScalaPresentationCompiler) => T) : T =
     withPresentationCompiler { compiler =>
       compiler.withSourceFile(scu)(op)

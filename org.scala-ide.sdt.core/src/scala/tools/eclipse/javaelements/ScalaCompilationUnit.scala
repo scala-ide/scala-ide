@@ -45,7 +45,7 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
   
   def withSourceFileButNotInMainThread[T](default : => T)(op : (SourceFile, ScalaPresentationCompiler) => T) : T = {
     (Thread.currentThread.getName == "main") match {
-      case true => default
+      case true => Tracer.printlnWithStack("cancel call to withSourceFile"); default
       case false => project.withSourceFile(this)(op)
     }
   }
@@ -62,7 +62,7 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
   
   def discard {
     if (getJavaProject.getProject.isOpen)
-      project.withPresentationCompiler(_.discardSourceFile(this))
+      project.withPresentationCompilerIfExists(_.discardSourceFile(this))
   }
   
   override def close {
