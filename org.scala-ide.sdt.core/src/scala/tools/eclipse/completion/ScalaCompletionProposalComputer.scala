@@ -17,6 +17,7 @@ import org.eclipse.jdt.ui.text.java.{IJavaCompletionProposalComputer,
 				     IJavaCompletionProposal}
 
 import org.eclipse.swt.graphics.Image
+import org.eclipse.jdt.internal.ui.JavaPluginImages 
 import org.eclipse.jface.text.IDocument
 
 import scala.tools.nsc.symtab.Flags
@@ -131,10 +132,13 @@ class ScalaCompletionProposalComputer extends IJavaCompletionProposalComputer {
        def accept(sym : compiler.Symbol, tpe : compiler.Type, inherited : Boolean, viaView : compiler.Symbol) {
          if (sym.isPackage || sym.isConstructor ||
            sym.hasFlag(Flags.ACCESSOR) || sym.hasFlag(Flags.PARAMACCESSOR)) return
+         import JavaPluginImages._
          val image = if (sym.isMethod) defImage
                      else if (sym.isClass) classImage
                      else if (sym.isTrait) traitImage
-                     else if (sym.isModule) objectImage
+                     else if (sym.isModule) if (sym.isJavaDefined) 
+                    	                      if(sym.companionClass.isJavaInterface) JavaPluginImages.get(IMG_OBJS_INTERFACE) else JavaPluginImages.get(IMG_OBJS_CLASS) 
+                                            else objectImage
                      else if (sym.isType) typeImage
                      else valImage
          val name = sym.decodedName
