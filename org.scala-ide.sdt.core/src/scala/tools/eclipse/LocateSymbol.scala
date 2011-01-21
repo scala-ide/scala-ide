@@ -54,37 +54,15 @@ trait LocateSymbol { self : ScalaPresentationCompiler =>
          case _ => findClassFile
        }
     } else findClassFile) flatMap { file =>
-      if (sym.pos eq NoPosition) {
-        object traverser {
-          var owners = sym.ownerChain.reverse
-          def equiv(src : Symbol, clz : Symbol) = {
-            src.decodedName == clz.decodedName && ( 
-              if (src.isMethod && clz.isMethod) 
-                src.info.toString == clz.info.toString
-              else src.hasFlag(PACKAGE) && clz.hasFlag(PACKAGE) ||
-                   src.isType && clz.isType && !clz.isModuleClass ||
-                   src.isTerm && (clz.isTerm || clz.isModuleClass) 
-            )
-          }
-                  
-          def traverse(srcsym : Symbol) : Boolean = {
-            if (equiv(srcsym, owners.head)) owners.tail match {
-              case Nil  => if (srcsym.pos ne NoPosition) { sym.setPos(srcsym.pos); true } else false
-              case tl => {
-                owners = tl
-                srcsym.info.decls exists { traverse _ }
-              }
-            } else false
-          }
-        }
-                    
+      (if (sym.pos eq NoPosition) {
         file.withSourceFile{ (f, _) =>
-          traverser traverse root(f).symbol.ownerChain.reverse.head
-          reload(List(f), new Response[Unit])
-          removeUnitOf(f)
+          val pos = new Response[Position]
+          getLinkPos(sym, f, pos)
+          pos.get.left.toOption
         }
+      } else Some(sym.pos)) flatMap { p =>
+        if (p eq NoPosition) None else Some(file, p.point)
       }
-      Some (file, sym.pos.point)
     }
   }
 }

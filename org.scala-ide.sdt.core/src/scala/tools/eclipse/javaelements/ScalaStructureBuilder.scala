@@ -811,6 +811,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         }
       
         tree match {
+          case dt : DefTree if dt.symbol.isSynthetic => (builder, Nil)
           case pd : PackageDef => (builder.addPackage(pd), pd.stats)
           case i : Import => (builder.addImport(i), Nil)
           case cd : ClassDef => (builder.addClass(cd), List(cd.impl))
@@ -828,7 +829,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         }
       }
       children.foreach {traverse(_, newBuilder)}
-      if (newBuilder != builder) newBuilder.complete
+      if (newBuilder ne builder) newBuilder.complete
     }
   }
 }
