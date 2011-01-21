@@ -32,41 +32,43 @@ class ScalaHyperlinkDetector extends AbstractHyperlinkDetector {
       scu.withSourceFile { (sourceFile, compiler) =>
 	    val wordRegion = ScalaWordFinder.findWord(viewer.getDocument, region.getOffset)
 	    if (wordRegion == null || wordRegion.getLength == 0) null else  {
-          val pos = compiler.rangePos(sourceFile, wordRegion.getOffset, wordRegion.getOffset, wordRegion.getOffset + wordRegion.getLength)
+          compiler.withUntypedTree(sourceFile) { _ =>
+	        val pos = compiler.rangePos(sourceFile, wordRegion.getOffset, wordRegion.getOffset, wordRegion.getOffset + wordRegion.getLength)
   
-          val response = new compiler.Response[compiler.Tree]
-          compiler.askTypeAt(pos, response)
-          val typed = response.get
+            val response = new compiler.Response[compiler.Tree]
+            compiler.askTypeAt(pos, response)
+            val typed = response.get
         
-          println("detectHyperlinks: wordRegion = "+wordRegion)
+            println("detectHyperlinks: wordRegion = "+wordRegion)
       
-          compiler.ask { () =>
-            case class Hyperlink(file : Openable, pos : Int) extends IHyperlink {
-              def getHyperlinkRegion = wordRegion
-              def getTypeLabel = null
-              def getHyperlinkText = "Open Declaration"
-              def open = {
-                EditorUtility.openInEditor(file, true) match { 
-                  case editor : ITextEditor => editor.selectAndReveal(pos, 0)
-                  case _ =>
+            compiler.ask { () =>
+              case class Hyperlink(file : Openable, pos : Int) extends IHyperlink {
+                def getHyperlinkRegion = wordRegion
+                def getTypeLabel = null
+                def getHyperlinkText = "Open Declaration"
+                def open = {
+                  EditorUtility.openInEditor(file, true) match { 
+                    case editor : ITextEditor => editor.selectAndReveal(pos, 0)
+                    case _ =>
+                  }
                 }
               }
+              import compiler._
+              typed.left.toOption map { tree : Tree => tree match {
+                case st : SymTree => st.symbol 
+	            case Annotated(atp, _) => atp.symbol
+	            case _ => NoSymbol
+              }
+            } flatMap { sym => 
+              if (sym.isPackage || sym == NoSymbol || sym.isJavaDefined) None else {
+                compiler.locate(sym, scu) map { case (f, pos) => Hyperlink(f, pos) }
+	          }
             }
-            import compiler._
-            typed.left.toOption map { tree : Tree => tree match {
-              case st : SymTree => st.symbol 
-	          case Annotated(atp, _) => atp.symbol
-	          case _ => NoSymbol
-            }
-          } flatMap { sym => 
-            if (sym.isPackage || sym == NoSymbol || sym.isJavaDefined) None else {
-	     	  compiler.locate(sym, scu) map { case (f, pos) => Hyperlink(f, pos) }
+	        } match {
+	          case Some(hyper) => Left(Array[IHyperlink](hyper))
+	          case None => Right( () => codeSelect(textEditor, wordRegion, scu) )
 	        }
           }
-	      } match {
-	        case Some(hyper) => Left(Array[IHyperlink](hyper))
-	        case None => Right( () => codeSelect(textEditor, wordRegion, scu) )
-	      }
 	    } match {
 	   	  case Left(l) => l
 	      case Right(cont) => cont()

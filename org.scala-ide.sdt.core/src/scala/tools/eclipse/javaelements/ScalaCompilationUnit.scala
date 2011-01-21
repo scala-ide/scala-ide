@@ -68,8 +68,9 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
   	withSourceFile({ (sourceFile, compiler) =>
 	    val sourceLength = sourceFile.length
 	    compiler.ask { () =>
-	      val root = compiler.root(sourceFile)
-  	      new compiler.StructureBuilderTraverser(this, info, newElements.asInstanceOf[JMap[AnyRef, AnyRef]], sourceLength).traverse(root)
+	      compiler.withUntypedTree(sourceFile) { tree =>
+  	        new compiler.StructureBuilderTraverser(this, info, newElements.asInstanceOf[JMap[AnyRef, AnyRef]], sourceLength).traverse(tree)
+	      }
 	    }
 	    info match {
 	      case cuei : CompilationUnitElementInfo =>
@@ -85,9 +86,10 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
   
   def addToIndexer(indexer : ScalaSourceIndexer) {
     withSourceFile({ (source, compiler) =>
-      val root = compiler.root(source)
       compiler.ask { () =>
-        new compiler.IndexBuilderTraverser(indexer).traverse(root)
+        compiler.withUntypedTree(source) { tree =>
+          new compiler.IndexBuilderTraverser(indexer).traverse(tree)
+        }
       }
     })
   }
@@ -136,9 +138,10 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
   
   override def createOverrideIndicators(annotationMap : JMap[_, _]) {
     withSourceFile { (sourceFile, compiler) =>
-      val root = compiler.root(sourceFile)
       compiler.ask { () =>
-        new compiler.OverrideIndicatorBuilderTraverser(this, annotationMap.asInstanceOf[JMap[AnyRef, AnyRef]]).traverse(root)
+        compiler.withUntypedTree(sourceFile) { tree =>
+          new compiler.OverrideIndicatorBuilderTraverser(this, annotationMap.asInstanceOf[JMap[AnyRef, AnyRef]]).traverse(tree)
+        }
 	  }
 	}
   }

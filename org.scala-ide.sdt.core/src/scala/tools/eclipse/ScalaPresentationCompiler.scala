@@ -89,12 +89,13 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
     }
   }
 
-  def root(sourceFile : SourceFile) = {
-    ask { () => 
+  def withUntypedTree[T](sourceFile : SourceFile)(op : Tree => T) = {
+    val tree = ask { () => 
       val u = unitOf(sourceFile)
       if (u.status < JustParsed) parse(u)
       u.body
     }
+    op(tree)
   }
     
   def askReload(scu : ScalaCompilationUnit, content : Array[Char]) {
