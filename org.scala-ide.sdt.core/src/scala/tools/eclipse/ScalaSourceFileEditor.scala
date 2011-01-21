@@ -82,15 +82,18 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
   private var occurrenceAnnotations: Array[Annotation] = _
 
   override def updateOccurrenceAnnotations(selection: ITextSelection, astRoot: CompilationUnit) {
+    if (selection eq null) return
+
     val documentProvider = getDocumentProvider
-    if (documentProvider eq null)
-      return
+    if (documentProvider eq null) return
 
     val scalaSourceFile = getEditorInput.asInstanceOf[IAdaptable].getAdapter(classOf[IJavaElement]).asInstanceOf[ScalaSourceFile]
+    if (scalaSourceFile eq null) return
+
     val annotations = getAnnotations(selection, scalaSourceFile)
     val annotationModel = documentProvider.getAnnotationModel(getEditorInput)
-    if (annotationModel eq null)
-      return
+    if (annotationModel eq null) return
+
     annotationModel.asInstanceOf[ISynchronizable].getLockObject() synchronized {
       val annotationModelExtension = annotationModel.asInstanceOf[IAnnotationModelExtension]
       annotationModelExtension.replaceAnnotations(occurrenceAnnotations, annotations)
