@@ -795,7 +795,7 @@
 </extension>
 
    <extension point="org.eclipse.ui.contexts">
-     <context name="scala.tools.eclipse.scalaEditorScope"
+     <context name="Scala Editor Scope"
               description="Scala source file editor"
               parentId="org.eclipse.jdt.ui.javaEditorScope"
               id="scala.tools.eclipse.scalaEditorScope" />
@@ -878,5 +878,12 @@
              type="__dftl_partition_content_type">
        </partition>
     </javaCompletionProposalComputer>
+ </extension>
+ <extension
+       point="org.eclipse.ui.editors.documentProviders">
+    <provider
+          class="provider.Provider1"
+          id="org.scala-ide.sdt.core.provider1">
+    </provider>
  </extension>
 </plugin>

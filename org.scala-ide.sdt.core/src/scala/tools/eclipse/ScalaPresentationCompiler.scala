@@ -143,6 +143,7 @@ object ScalaPresentationCompiler {
           source.file match {
             case EclipseResource(file : IFile) =>
               val length = source.identifier(pos, compiler).map(_.length).getOrElse(0)
+              compiler.debugLog(source.file.name + ":" + pos.line + ": " + msg)
               compiler.problems(file) +=
                 new DefaultProblem(
                   file.getFullPath.toString.toCharArray,
@@ -156,6 +157,7 @@ object ScalaPresentationCompiler {
                   pos.column
                 )
             case _ =>  
+              println("WARNING: error coming from a file outside Eclipse: %s[%s]: %s".format(source.file.name, source.file.getClass, msg))
           }
         }
       } catch {
