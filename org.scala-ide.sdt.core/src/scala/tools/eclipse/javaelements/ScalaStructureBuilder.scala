@@ -81,8 +81,6 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
       def addDef(d : DefDef) : Owner = this
       def addFunction(f : Function) : Owner = this
       
-      def symbol(t : Tree) = t.symbol.initialize
-      
       def resetImportContainer {}
 
       def addChild(child : JavaElement) =
@@ -241,7 +239,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
             if (!completed) {
               completed = true
               
-              val pkgElem = JavaElementFactory.createPackageDeclaration(compilationUnitBuilder.element.asInstanceOf[JDTCompilationUnit], symbol(p).fullName)
+              val pkgElem = JavaElementFactory.createPackageDeclaration(compilationUnitBuilder.element.asInstanceOf[JDTCompilationUnit], p.symbol.fullName)
               resolveDuplicates(pkgElem)
               compilationUnitBuilder.addChild(pkgElem)
 
@@ -265,7 +263,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
       
       override def addImport(i : Import) : Owner = {
         //println("Import "+i)
-        val prefix = symbol(i.expr).fullName
+        val prefix = i.expr.symbol.fullName
         val pos = i.pos
 
         def isWildcard(s: ImportSelector) : Boolean = s.name == nme.WILDCARD
@@ -341,7 +339,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
               (superclassName0.toCharArray, superclassType.typeSymbol, interfaceTrees0)   
           }
 
-        val sym = symbol(c)
+        val sym = c.symbol
         val classElem =
           if(sym hasFlag Flags.TRAIT)
             new ScalaTraitElement(element, name)
@@ -407,7 +405,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
       override def addModule(m : ModuleDef) : Owner = {
         //println("Module defn: "+m.name+" ["+this+"]")
         
-        val sym = symbol(m)
+        val sym = m.symbol
     	val isSynthetic = sym.hasFlag(Flags.SYNTHETIC)
         val moduleElem = new ScalaModuleElement(element, m.name.toString, isSynthetic)
         resolveDuplicates(moduleElem)
@@ -483,7 +481,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         //println("Val defn: >"+nme.getterName(v.name)+"< ["+this+"]")
         
         val elemName = nme.getterName(v.name)
-        val sym = symbol(v)
+        val sym = v.symbol
         val display = elemName.toString+" : "+sym.tpe.toString
         
         val valElem =
@@ -519,10 +517,10 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
       override def addType(t : TypeDef) : Owner = {
         //println("Type defn: >"+t.name.toString+"< ["+this+"]")
         
-        val sym = symbol(t)
-    	val display = t.name.toString+" : "+sym.tpe.toString
+        val sym = t.symbol
+    	val name = t.name.toString
 
-        val typeElem = new ScalaTypeElement(element, t.name.toString, display)
+        val typeElem = new ScalaTypeElement(element, name, name)
         resolveDuplicates(typeElem)
         addChild(typeElem)
 
@@ -560,7 +558,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
     trait DefOwner extends Owner { self =>
       override def addDef(d : DefDef) : Owner = {
         //println("Def defn: "+d.name+" ["+this+"]")
-        val sym = symbol(d)
+        val sym = d.symbol
     	val isCtor0 = sym.isConstructor
         val nameString =
           if(isCtor0)
@@ -571,7 +569,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         val fps = for(vps <- d.vparamss; vp <- vps) yield vp
         
         def paramType(v : ValDef) = {
-          val sym = symbol(v)
+          val sym = v.symbol
           val tpt = v.tpt
           val tpe = tpt.tpe
           if (sym.isType || tpe != null)
@@ -611,19 +609,6 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
             new ScalaSourceConstructorInfo
           else
             new ScalaSourceMethodInfo
-        
-        // This causes a deadlock in the ask-based version, but also looks suspicious by itself. 
-        /*if(sym.isGetter || sym.isSetter) {
-          elementInfo.getChildren.
-            dropWhile(x => !x.isInstanceOf[ScalaFieldElement] || x.getElementName != d.name.toString).
-            headOption match {
-            case Some(f : ScalaFieldElement) => {
-              val fInfo = f.getElementInfo.asInstanceOf[ScalaSourceFieldElementInfo]
-              fInfo.setFlags0(mapModifiers(sym))
-            }
-            case _ =>
-          }
-        }*/
         
         defElemInfo.setArgumentNames(paramNames)
         defElemInfo.setExceptionTypeNames(new Array[Array[Char]](0))
@@ -778,7 +763,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
       val (start, end) =
         if (pos.isDefined) {
           val pos0 = if (annotsPos.isOpaqueRange) pos union annotsPos else pos
-          val sym = tree.symbol.initialize
+          val sym = tree.symbol
           val start0 = if (sym == NoSymbol)
             pos0.startOrPoint
           else
