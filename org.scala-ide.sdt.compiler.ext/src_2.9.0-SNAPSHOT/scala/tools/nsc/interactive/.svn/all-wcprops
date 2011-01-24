@@ -1,0 +1,77 @@
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/svn-repos/scala/!svn/ver/24073/scala/trunk/src/compiler/scala/tools/nsc/interactive
+END
+PresentationCompilerThread.scala
+K 25
+svn:wc:ra_dav:version-url
+V 117
+/svn-repos/scala/!svn/ver/24064/scala/trunk/src/compiler/scala/tools/nsc/interactive/PresentationCompilerThread.scala
+END
+Response.scala
+K 25
+svn:wc:ra_dav:version-url
+V 99
+/svn-repos/scala/!svn/ver/23407/scala/trunk/src/compiler/scala/tools/nsc/interactive/Response.scala
+END
+Global.scala
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/svn-repos/scala/!svn/ver/24073/scala/trunk/src/compiler/scala/tools/nsc/interactive/Global.scala
+END
+REPL.scala
+K 25
+svn:wc:ra_dav:version-url
+V 95
+/svn-repos/scala/!svn/ver/23967/scala/trunk/src/compiler/scala/tools/nsc/interactive/REPL.scala
+END
+RangePositions.scala
+K 25
+svn:wc:ra_dav:version-url
+V 105
+/svn-repos/scala/!svn/ver/23686/scala/trunk/src/compiler/scala/tools/nsc/interactive/RangePositions.scala
+END
+SimpleBuildManager.scala
+K 25
+svn:wc:ra_dav:version-url
+V 109
+/svn-repos/scala/!svn/ver/21919/scala/trunk/src/compiler/scala/tools/nsc/interactive/SimpleBuildManager.scala
+END
+ContextTrees.scala
+K 25
+svn:wc:ra_dav:version-url
+V 103
+/svn-repos/scala/!svn/ver/22948/scala/trunk/src/compiler/scala/tools/nsc/interactive/ContextTrees.scala
+END
+RefinedBuildManager.scala
+K 25
+svn:wc:ra_dav:version-url
+V 110
+/svn-repos/scala/!svn/ver/24032/scala/trunk/src/compiler/scala/tools/nsc/interactive/RefinedBuildManager.scala
+END
+RichCompilationUnits.scala
+K 25
+svn:wc:ra_dav:version-url
+V 111
+/svn-repos/scala/!svn/ver/23789/scala/trunk/src/compiler/scala/tools/nsc/interactive/RichCompilationUnits.scala
+END
+BuildManager.scala
+K 25
+svn:wc:ra_dav:version-url
+V 103
+/svn-repos/scala/!svn/ver/23686/scala/trunk/src/compiler/scala/tools/nsc/interactive/BuildManager.scala
+END
+CompilerControl.scala
+K 25
+svn:wc:ra_dav:version-url
+V 106
+/svn-repos/scala/!svn/ver/24073/scala/trunk/src/compiler/scala/tools/nsc/interactive/CompilerControl.scala
+END
+Picklers.scala
+K 25
+svn:wc:ra_dav:version-url
+V 99
+/svn-repos/scala/!svn/ver/24050/scala/trunk/src/compiler/scala/tools/nsc/interactive/Picklers.scala
+END
