@@ -125,6 +125,7 @@ object REPL {
         case List("complete", file, off1) =>
           doComplete(makePos(file, off1, off1))
         case List("quit") =>
+          comp.askShutdown()
           //BACK-2.8 system => System
           System.exit(1)
         case _ =>

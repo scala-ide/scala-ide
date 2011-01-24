@@ -87,7 +87,18 @@ class EclipseBuildManager(project : ScalaProject, settings0: Settings) extends R
           val length = source.identifier(pos, compiler).map(_.length).getOrElse(0)
           source.file match {
             case EclipseResource(i : IFile) => FileUtils.buildError(i, eclipseSeverity, msg, pos.point, length, pos.line, null)
-            case _ => buildError(eclipseSeverity, msg, null)
+            case f =>
+              Tracer.println("no EclipseResource associated to %s [%s]".format(f.path, f.getClass))
+              EclipseResource.fromString(source.file.path) match {
+                case Some(i: IFile) => 
+                  // this may happen if a file was compileLate by the build compiler
+                  // for instance, when a source file (on the sourcepath) is newer than the classfile
+                  // the compiler will create PlainFile instances in that case
+                  FileUtils.buildError(i, eclipseSeverity, msg, pos.point, length, pos.line, null)
+                case None =>
+                  Tracer.println("no EclipseResource associated to %s [%s]".format(f.path, f.getClass))
+                  buildError(eclipseSeverity, msg, null)
+              }
           }
         }
         else

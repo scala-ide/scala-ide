@@ -1,9 +1,9 @@
 package scala.tools.nsc
 //BACK-2.8.0 move from util to interactive package to use by interactive class  (doesn't exist in 2.8.0)
 //package util
-package interactive
+package interactive.util
 
-import _root_.scala.collection.mutable.Queue
+import scala.collection.mutable.Queue
 
 class WorkScheduler {
 
@@ -19,7 +19,7 @@ class WorkScheduler {
   }
 
   /** called from Server: test whether one of todo list, throwables, or InterruptReqs is nonempty */
-  def moreWork(): Boolean = synchronized {
+  def moreWork: Boolean = synchronized {
     todo.nonEmpty || throwables.nonEmpty || interruptReqs.nonEmpty
   }
   
@@ -79,7 +79,11 @@ class WorkScheduler {
    */
   def raise(exc: Throwable) = synchronized {
     throwables enqueue exc
-    postWorkItem { () => }
+    postWorkItem { new EmptyAction }
   }
+}
+
+class EmptyAction extends (() => Unit) {
+  def apply() {}
 }
 

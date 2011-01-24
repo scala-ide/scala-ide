@@ -156,7 +156,7 @@
             <Embed-StripVersion>true</Embed-StripVersion>
             <!--included resource target/lib/scala-compiler.jar (stripped) override the regular one -->
             <Include-Resource>lib=${project.build.directory}/lib</Include-Resource>
-            <Import-Package>!jline.*,!sun.misc,*</Import-Package>
+            <Import-Package>!scala.tools.jline.*,!jline.*,!sun.misc,*</Import-Package>
             <!--Eclipse-ExtensibleAPI>true</Eclipse-ExtensibleAPI-->
           </instructions>
         </configuration>

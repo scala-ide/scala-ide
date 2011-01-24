@@ -84,3 +84,4 @@ Export-Package:
  scala.tools.eclipse.util,
  scala.tools.eclipse.wizards
 Bundle-RequiredExecutionEnvironment: J2SE-1.5
+Bundle-Vendor: Scala Team (experimental branch)

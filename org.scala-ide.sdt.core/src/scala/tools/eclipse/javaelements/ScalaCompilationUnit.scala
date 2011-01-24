@@ -76,7 +76,6 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
 
   def getProblemRequestor : IProblemRequestor = null
 
-
   override def buildStructure(info : OpenableElementInfo, pm : IProgressMonitor, newElements : JMap[_, _], underlyingResource : IResource) : Boolean = {
     Tracer.println("buildStructure : " + underlyingResource)
     withSourceFileButNotInMainThread[Boolean](false) { (sourceFile, compiler) =>
@@ -88,9 +87,11 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
       }
       val sourceLength = contents.length // sourceFile.length
       Defensive.tryOrLog[Boolean](false) {
-        compiler.askWithRoot(sourceFile) { root =>
-          new compiler.StructureBuilderTraverser(this, info, newElements.asInstanceOf[JMap[AnyRef, AnyRef]], sourceLength).traverse(root)
-        }
+	    compiler.ask { () =>
+	      compiler.withUntypedTree(sourceFile) { tree =>
+  	        new compiler.StructureBuilderTraverser(this, info, newElements.asInstanceOf[JMap[AnyRef, AnyRef]], sourceLength).traverse(tree)
+	      }
+	    }
         info match {
           case cuei : CompilationUnitElementInfo =>
             cuei.setSourceLength(sourceLength)
@@ -105,8 +106,10 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
 
   def addToIndexer(indexer : ScalaSourceIndexer) {
     withSourceFileButNotInMainThread() { (source, compiler) =>
-      compiler.askWithRoot(source) { root =>
-          new compiler.IndexBuilderTraverser(indexer).traverse(root)
+      compiler.ask { () =>
+        compiler.withUntypedTree(source) { tree =>
+          new compiler.IndexBuilderTraverser(indexer).traverse(tree)
+        }
       }
     }
   }
@@ -127,19 +130,7 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
   }
     
   override def codeSelect(cu : env.ICompilationUnit, offset : Int, length : Int, workingCopyOwner : WorkingCopyOwner) : Array[IJavaElement] = {
-    val environment = newSearchableEnvironment(workingCopyOwner)
-    val requestor = new ScalaSelectionRequestor(environment.nameLookup, this)
-    val buffer = getBuffer
-    if (buffer != null) {
-      val end = buffer.getLength
-      if (offset < 0 || length < 0 || offset + length > end )
-        throw new JavaModelException(new JavaModelStatus(IJavaModelStatusConstants.INDEX_OUT_OF_BOUNDS))
-  
-      val engine = new ScalaSelectionEngine(environment, requestor, getJavaProject.getOptions(true))
-      engine.select(cu, offset, offset + length - 1)
-    }
-    
-    requestor.getElements
+    Array.empty
   }
 
   def codeComplete
@@ -155,24 +146,23 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
   }
   
   override def reportMatches(matchLocator : MatchLocator, possibleMatch : PossibleMatch) = Defensive.tryOrLog {
-    withSourceFileButNotInMainThread[Unit](){ (sourceFile, compiler) =>
-      val body = compiler.body(sourceFile)
-  
-      if (body != null) {
-        compiler.ask { () =>
-          compiler.MatchLocator(this, matchLocator, possibleMatch).traverse(body)
-        }
-      }
+    withSourceFileButNotInMainThread[Unit]() { (sourceFile, compiler) =>
+      compiler.ask { () =>
+	    compiler.withUntypedTree(sourceFile) { tree =>
+          compiler.MatchLocator(this, matchLocator, possibleMatch).traverse(tree)
+	    }
+	  }
     }
   }
   
   override def createOverrideIndicators(annotationMap : JMap[_, _]) = Defensive.tryOrLog {
     withSourceFileButNotInMainThread[Unit]() { (sourceFile, compiler) =>
-      val root = compiler.root(sourceFile)
       compiler.ask { () =>
-        new compiler.OverrideIndicatorBuilderTraverser(this, annotationMap.asInstanceOf[JMap[AnyRef, AnyRef]]).traverse(root)
-      }
-    }
+        compiler.withUntypedTree(sourceFile) { tree =>
+          new compiler.OverrideIndicatorBuilderTraverser(this, annotationMap.asInstanceOf[JMap[AnyRef, AnyRef]]).traverse(tree)
+        }
+	  }
+	}
   }
   
   override def getImageDescriptor = {

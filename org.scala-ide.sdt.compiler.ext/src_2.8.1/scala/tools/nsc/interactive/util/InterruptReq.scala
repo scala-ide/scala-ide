@@ -1,7 +1,7 @@
 package scala.tools.nsc
 //BACK-2.8.0 move from util to interactive package to use by interactive class  (doesn't exist in 2.8.0)
 //package util
-package interactive
+package interactive.util
 
 /** A class of work items to be used in interrupt requests.
  */

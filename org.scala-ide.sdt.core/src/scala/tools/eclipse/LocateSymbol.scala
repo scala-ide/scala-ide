@@ -5,7 +5,6 @@
 
 package scala.tools.eclipse
 
-import scala.tools.eclipse.internal.logging.Defensive
 import org.eclipse.core.resources.ResourcesPlugin
 import org.eclipse.core.runtime.Path
 import org.eclipse.jdt.core.{ICodeAssist, IJavaElement}
@@ -56,52 +55,15 @@ trait LocateSymbol { self : ScalaPresentationCompiler =>
          case _ => findClassFile
        }
     } else findClassFile) flatMap { file =>
-      if (sym.pos eq NoPosition) {
-        object traverser {
-          var owners = sym.ownerChain.reverse
-          def equiv(src : Symbol, clz : Symbol) = {
-            src.decodedName == clz.decodedName && ( 
-              if (src.isMethod && clz.isMethod) 
-                src.info.toString == clz.info.toString
-              else src.hasFlag(PACKAGE) && clz.hasFlag(PACKAGE) ||
-                   src.isType && clz.isType && !clz.isModuleClass ||
-                   src.isTerm && (clz.isTerm || clz.isModuleClass) 
-            )
-          }
-                  
-          def traverse(srcsym : Symbol) : Boolean = {
-            if (equiv(srcsym, owners.head)) owners.tail match {
-              case Nil  => if (srcsym.pos ne NoPosition) { sym.setPos(srcsym.pos); true } else false
-              case tl => {
-                owners = tl
-                srcsym.info.decls exists { traverse _ }
-              }
-            } else false
-          }
-        }
+      (if (sym.pos eq NoPosition) {
         file.withSourceFile{ (f, _) =>
-          Defensive.tryOrLog(None : Option[RichCompilationUnit]) {
-            def f0(symbol : Symbol) : Option[RichCompilationUnit] = {
-              traverser traverse (
-                symbol.
-                ownerChain.
-                reverse.
-                head
-              )
-              reload(List(f), new Response[Unit])
-              removeUnitOf(f)
-            }
-            for (
-              root <- Option(root(f)); // root(f) can be null
-              symbol <- Option(root.symbol) ;
-              r <- f0(symbol)
-            ) yield r
-          }
+          val pos = new Response[Position]
+          getLinkPos(sym, f, pos)
+          askReload(scu, scu.getContents)
+          pos.get.left.toOption
         }
-      }
-      sym.pos match {
-        case NoPosition => None
-        case pos => Some(file, pos.point) 
+      } else Some(sym.pos)) flatMap { p =>
+        if (p eq NoPosition) None else Some(file, p.point)
       }
     }
   }

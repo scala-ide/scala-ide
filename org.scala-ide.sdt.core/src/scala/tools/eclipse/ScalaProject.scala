@@ -18,16 +18,16 @@ import org.eclipse.jdt.core.compiler.IProblem
 import org.eclipse.jdt.internal.core.JavaProject
 import org.eclipse.jdt.internal.core.builder.{ ClasspathDirectory, ClasspathLocation, NameEnvironment }
 import org.eclipse.jdt.internal.core.util.Util
-import org.eclipse.swt.widgets.Display
+import org.eclipse.swt.widgets.{ Display, Shell }
 
-import scala.tools.nsc.Settings
+import scala.tools.nsc.{ Settings, MissingRequirementError }
 import scala.tools.nsc.util.SourceFile
 
 import scala.tools.eclipse.javaelements.ScalaCompilationUnit
 import scala.tools.eclipse.properties.PropertyStore
-import scala.tools.eclipse.util.{ Cached, EclipseResource, IDESettings, OSGiUtils, ReflectionUtils } 
+import scala.tools.eclipse.util.{ Cached, EclipseResource, IDESettings, OSGiUtils, ReflectionUtils }
 
-class ScalaProject(val underlying : IProject) {
+class ScalaProject(val underlying: IProject) {
   import ScalaPlugin.plugin
 
   private var buildManager0 : EclipseBuildManager = null
@@ -36,29 +36,60 @@ class ScalaProject(val underlying : IProject) {
     
   private var scalaVersion = "2.8.x"
     
-  private val presentationCompiler = new Cached[ScalaPresentationCompiler] {
+  private val presentationCompiler = new Cached[Option[ScalaPresentationCompiler]] {
     override def create() = {
-      val settings = new Settings
-      settings.printtypes.tryToSet(Nil)
-      settings.verbose.tryToSetFromPropertyValue("true")
-      settings.XlogImplicits.tryToSetFromPropertyValue("true")
-      //TODO replace the if by a conditional Extension Point (or better)
-      if (scalaVersion.startsWith("2.9")) {
-        initialize(settings, _.name.startsWith("-Ypresentation"))
-        new ScalaPresentationCompiler(settings)
-      } else {
-        initialize(settings, _ => true)
-        new ScalaPresentationCompiler(settings) with scalac_28.TopLevelMapTyper {
-          def project = ScalaProject.this
+      try {
+        val settings = new Settings
+        settings.printtypes.tryToSet(Nil)
+        settings.verbose.tryToSetFromPropertyValue("true")
+        settings.XlogImplicits.tryToSetFromPropertyValue("true")
+        //TODO replace the if by a conditional Extension Point (or better)
+        val compiler = if (scalaVersion.startsWith("2.9")) {
+          initialize(settings, _.name.startsWith("-Ypresentation"))
+          new ScalaPresentationCompiler(settings)
+        } else {
+          initialize(settings, _ => true)
+          new ScalaPresentationCompiler(settings) with scalac_28.TopLevelMapTyper {
+            def project = ScalaProject.this
+          }
         }
+        Some(compiler)
+      } catch {
+        case ex@MissingRequirementError(required) =>
+          failedCompilerInitialization("Could not initialize Scala compiler because it could not find a required class: " + required)
+          plugin.logError(ex)
+          None
+        case ex =>
+          plugin.logError(ex)
+          None
       }
     }
     
-    override def destroy(compiler : ScalaPresentationCompiler) {
-      compiler.destroy()
+    override def destroy(compiler : Option[ScalaPresentationCompiler]) {
+      compiler.map(_.destroy())
     }
   }
+
+  private var messageShowed = false
   
+  private def failedCompilerInitialization(msg: String) {
+    import org.eclipse.jface.dialogs.MessageDialog
+    synchronized {
+      if (!messageShowed) {
+        messageShowed = true
+        Display.getDefault asyncExec new Runnable { 
+          def run() {
+//            ToggleScalaNatureAction.toggleScalaNature(underlying)
+            MessageDialog.openWarning(null, "Error initializing the Scala compiler in project %s".format(underlying.getName),
+            msg +
+            ". The editor will not try to re-initialize the compiler until you change the classpath and " +
+            " reopen project %s .".format(underlying.getName))
+          }
+        }
+      }
+    }
+  }
+
   override def toString = underlying.getName
   
   def externalDepends = underlying.getReferencedProjects 
@@ -284,7 +315,7 @@ class ScalaProject(val underlying : IProject) {
     def delete(container : IContainer, deleteDirs : Boolean)(f : String => Boolean) : Unit = {
       if (container.exists()) {
         container.members.foreach {
-          case cntnr : IContainer =>
+          case cntnr: IContainer =>
             if (deleteDirs) {
               try {
                 cntnr.delete(true, monitor) // might not work.
@@ -298,16 +329,15 @@ class ScalaProject(val underlying : IProject) {
                       case t => plugin.logError(t)
                     }
               }
-            }
-            else
+            } else
               delete(cntnr, deleteDirs)(f)
-          case file : IFile if f(file.getName) =>
+          case file: IFile if f(file.getName) =>
             try {
               file.delete(true, monitor)
             } catch {
               case t => plugin.logError(t)
             }
-          case _ => 
+          case _ =>
         }
       }
     }
@@ -316,8 +346,8 @@ class ScalaProject(val underlying : IProject) {
       case _ => 
     }    
   }
-  
-  def refreshOutput : Unit = {
+
+  def refreshOutput: Unit = {
     val res = plugin.workspaceRoot.findMember(javaProject.getOutputLocation)
     if (res ne null)
       res.refreshLocal(IResource.DEPTH_INFINITE, null)
@@ -345,7 +375,15 @@ class ScalaProject(val underlying : IProject) {
 //    }
 
     settings.classpath.value = classpath.map{ _.toOSString }.mkString(pathSeparator)
-    settings.sourcepath.value = sfs.map{ x => toIFolder(x).getLocation.toOSString }.mkString(pathSeparator)
+
+    settings.classpath.value = classpath.map(_.toOSString).mkString(pathSeparator)
+    // source path should be emtpy. the build manager decides what files get recompiled when.
+    // if scalac finds a source file newer than its corresponding classfile, it will 'compileLate'
+    // that file, using an AbstractFile/PlainFile instead of the EclipseResource instance. This later
+    // causes problems if errors are reported against that file. Anyway, it's wrong to have a sourcepath
+    // when using the build manager.
+    settings.sourcepath.value = "" 
+    //settings.sourcepath.value = sfs.map{ x => toIFolder(x).getLocation.toOSString }.mkString(pathSeparator)
     
     
     val workspaceStore = ScalaPlugin.plugin.getPreferenceStore
@@ -362,7 +400,7 @@ class ScalaProject(val underlying : IProject) {
       try {
         val value = if (setting ne settings.pluginsDir) value0 else {
           ScalaPlugin.plugin.continuationsClasses map {
-            _.removeLastSegments(1).toOSString+(if (value0 == null || value0.length == 0) "" else ":"+value0)
+            _.removeLastSegments(1).toOSString + (if (value0 == null || value0.length == 0) "" else ":" + value0)
           } getOrElse value0
         }
         if (value != null && value.length != 0) {
@@ -370,7 +408,7 @@ class ScalaProject(val underlying : IProject) {
         }
         Tracer.println("initializing %s to %s".format(setting.name, value0.toString))
       } catch {
-        case t : Throwable => plugin.logError("Unable to set setting '"+setting.name+"' to '"+value0+"'", t)
+        case t: Throwable => plugin.logError("Unable to set setting '" + setting.name + "' to '" + value0 + "'", t)
       }
     }
     Tracer.println("initializing " + settings.encoding)
@@ -378,13 +416,20 @@ class ScalaProject(val underlying : IProject) {
     Tracer.println("classpath  : " + settings.classpath.value)
     Tracer.println("outputdirs : " + settings.outputDirs.outputs)
   }
-  
-  def withPresentationCompiler[T](op : ScalaPresentationCompiler => T) : T = {
-    presentationCompiler(op)
+
+  def withPresentationCompiler[T](op: ScalaPresentationCompiler => T): T = {
+    presentationCompiler {
+      case Some(c) => op(c)
+      case None => 
+        if (underlying.isOpen)
+          failedCompilerInitialization("Compiler failed to initialize properly.");
+        //throw InvalidCompilerSettings()
+        null.asInstanceOf[T] // we're already in deep trouble here, so one more NPE won't kill us
+    }
   }
 
   def withPresentationCompilerIfExists(op : ScalaPresentationCompiler => Unit) : Unit = {
-    presentationCompiler.doIfExist(op)
+    presentationCompiler.doIfExist(_.foreach(x => op(x)))
   }
   
   def withSourceFile[T](scu : ScalaCompilationUnit)(op : (SourceFile, ScalaPresentationCompiler) => T) : T =
@@ -396,7 +441,7 @@ class ScalaProject(val underlying : IProject) {
     Tracer.println("resetPresentationCompiler")
     presentationCompiler.invalidate
   }
-  
+
   def buildManager = {
     if (buildManager0 == null) {
       Tracer.println("creating a new EclipseBuildManager")

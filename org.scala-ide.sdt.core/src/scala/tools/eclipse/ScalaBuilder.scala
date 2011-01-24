@@ -65,6 +65,7 @@ class ScalaBuilder extends IncrementalProjectBuilder {
       }
       case false => kind
     }
+
     
     val allSourceFiles = project.allSourceFiles()
     val (addedOrUpdated, removed) = newKind match {

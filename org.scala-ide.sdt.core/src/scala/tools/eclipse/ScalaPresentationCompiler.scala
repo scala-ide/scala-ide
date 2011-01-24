@@ -99,21 +99,13 @@ class ScalaPresentationCompiler(settings : Settings)
     }
   }
 
-  def askWithRoot(sourceFile : SourceFile)(f : (Tree) => Unit) = {
-    ask { () => 
-      val u = unitOf(sourceFile)
-      if (u.status < JustParsed) parse(u)
-      val root = u.body
-      if(root != null) { f(root) }
-    }
-  }
-    
-  def root(sourceFile : SourceFile) = {
-    ask { () => 
+  def withUntypedTree[T](sourceFile : SourceFile)(op : Tree => T) : T = {
+    val tree = ask { () => 
       val u = unitOf(sourceFile)
       if (u.status < JustParsed) parse(u)
       u.body
     }
+    op(tree)
   }
   
   def askReload(scu : ScalaCompilationUnit, content : Array[Char]) {
@@ -161,6 +153,7 @@ object ScalaPresentationCompiler {
           source.file match {
             case EclipseResource(file : IFile) =>
               val length = source.identifier(pos, compiler).map(_.length).getOrElse(0)
+              compiler.debugLog(source.file.name + ":" + pos.line + ": " + msg)
               compiler.problems(file) +=
                 new DefaultProblem(
                   file.getFullPath.toString.toCharArray,
@@ -174,6 +167,7 @@ object ScalaPresentationCompiler {
                   pos.column
                 )
             case _ =>  
+              Tracer.println("WARNING: error coming from a file outside Eclipse: %s[%s]: %s".format(source.file.name, source.file.getClass, msg))
           }
         }
       } catch {
