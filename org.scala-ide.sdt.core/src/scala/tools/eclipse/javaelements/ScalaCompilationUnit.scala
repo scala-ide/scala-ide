@@ -126,14 +126,13 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
   }
   
   override def reportMatches(matchLocator : MatchLocator, possibleMatch : PossibleMatch) {
-    withSourceFile({ (sourceFile, compiler) =>
-	    val body = compiler.body(sourceFile)
-	
-	    if (body != null)
-	      compiler.ask { () =>
-	    	  compiler.MatchLocator(this, matchLocator, possibleMatch).traverse(body)
-	      }
-	  })
+    withSourceFile { (sourceFile, compiler) =>
+      compiler.ask { () =>
+	    compiler.withUntypedTree(sourceFile) { tree =>
+          compiler.MatchLocator(this, matchLocator, possibleMatch).traverse(tree)
+	    }
+	  }
+    }
   }
   
   override def createOverrideIndicators(annotationMap : JMap[_, _]) {
