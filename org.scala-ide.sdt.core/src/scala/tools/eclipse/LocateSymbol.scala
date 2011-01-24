@@ -58,6 +58,7 @@ trait LocateSymbol { self : ScalaPresentationCompiler =>
         file.withSourceFile{ (f, _) =>
           val pos = new Response[Position]
           getLinkPos(sym, f, pos)
+          askReload(scu, scu.getContents)
           pos.get.left.toOption
         }
       } else Some(sym.pos)) flatMap { p =>
