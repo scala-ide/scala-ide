@@ -393,11 +393,8 @@ class ScalaProject(val underlying: IProject) {
       case None => 
         if (underlying.isOpen)
           failedCompilerInitialization("Compiler failed to initialize properly.");
-        // FIXME: this now shows 2 dialog boxes, the one above and the one caused by the throw below
-        // will investigate further -DM
-        throw InvalidCompilerSettings() // DM: see if this error is easier to catch
-//        DM: commented out the null below.  
-//        null.asInstanceOf[T] // we're already in deep trouble here, so one more NPE won't kill us
+        //throw InvalidCompilerSettings()
+        null.asInstanceOf[T] // we're already in deep trouble here, so one more NPE won't kill us
     }
   }
 

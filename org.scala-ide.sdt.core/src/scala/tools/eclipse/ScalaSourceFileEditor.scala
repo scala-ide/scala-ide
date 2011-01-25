@@ -80,62 +80,37 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
   private[eclipse] def sourceViewer = getSourceViewer
 
   private var occurrenceAnnotations: Array[Annotation] = _
-  
-  override def updateOccurrenceAnnotations(selection: ITextSelection, astRoot: CompilationUnit) {
-    import ScalaPlugin.{plugin => thePlugin }
-    
-    val documentProvider = getDocumentProvider
-    if (documentProvider eq null)
-      return
 
-    //  TODO: find out if there was any good reason the previous code did a cast to IAdaptable before calling getAdapter 
-    val adaptable = getEditorInput.asInstanceOf[IAdaptable].getAdapter(classOf[IJavaElement])
-    println("adaptable: " + adaptable.getClass + " : " + adaptable.toString)
-    println("crazy other method call: " + getEditorInput.getAdapter(classOf[IJavaElement]))
-      
-    adaptable match {
-      case scalaSourceFile: ScalaSourceFile =>
-        val annotations = getAnnotations(selection, scalaSourceFile)
-        val annotationModel = documentProvider.getAnnotationModel(getEditorInput)
-        if (annotationModel eq null)
-          return
-        annotationModel.asInstanceOf[ISynchronizable].getLockObject() synchronized {
-          val annotationModelExtension = annotationModel.asInstanceOf[IAnnotationModelExtension]
-          annotationModelExtension.replaceAnnotations(occurrenceAnnotations, annotations)
-          occurrenceAnnotations = annotations.keySet.toArray
-        }
-        super.updateOccurrenceAnnotations(selection, astRoot)
-        
-      case _ =>
-        // TODO: pop up a dialog explaining what needs to be fixed or fix it ourselves
-        thePlugin checkOrElse (adaptable.asInstanceOf[ScalaSourceFile], // trigger the exception, so as to get a diagnostic stack trace 
-          "Could not recompute ocurrence annotations: configuration problem")
+  override def updateOccurrenceAnnotations(selection: ITextSelection, astRoot: CompilationUnit) {
+    if (selection eq null) return
+
+    val documentProvider = getDocumentProvider
+    if (documentProvider eq null) return
+
+    val scalaSourceFile = getEditorInput.asInstanceOf[IAdaptable].getAdapter(classOf[IJavaElement]).asInstanceOf[ScalaSourceFile]
+    if (scalaSourceFile eq null) return
+
+    val annotations = getAnnotations(selection, scalaSourceFile)
+    val annotationModel = documentProvider.getAnnotationModel(getEditorInput)
+    if (annotationModel eq null) return
+
+    annotationModel.asInstanceOf[ISynchronizable].getLockObject() synchronized {
+      val annotationModelExtension = annotationModel.asInstanceOf[IAnnotationModelExtension]
+      annotationModelExtension.replaceAnnotations(occurrenceAnnotations, annotations)
+      occurrenceAnnotations = annotations.keySet.toArray
     }
+    super.updateOccurrenceAnnotations(selection, astRoot)
   }
-  
+
   private def getAnnotations(selection: ITextSelection, scalaSourceFile: ScalaSourceFile): mutable.Map[Annotation, Position] = {
     val annotations = for {
-      // FIXME: moved to multiple lines to diagnose NPE
-      Occurrences(name, locations) <- debugScalaOccurrencesFinder(selection, scalaSourceFile)
-//        new ScalaOccurrencesFinder(
-//            scalaSourceFile, 
-//            selection.getOffset, 
-//            selection.getLength).
-//            findOccurrences.
-//            toList
+      Occurrences(name, locations) <- new ScalaOccurrencesFinder(scalaSourceFile, selection.getOffset, selection.getLength).findOccurrences.toList
       location <- locations
       val offset = location.getOffset
       val length = location.getLength
       val position = new Position(location.getOffset, location.getLength)
     } yield new Annotation(OCCURRENCE_ANNOTATION, false, "Occurrence of '" + name + "'") -> position
     mutable.Map(annotations: _*)
-  }
-
-  // FIXME: created method to debug NPE
-  def debugScalaOccurrencesFinder(selection: ITextSelection, scalaSourceFile: ScalaSourceFile) = {
-    val finder = new ScalaOccurrencesFinder(scalaSourceFile, selection.getOffset, selection.getLength)
-    val occ = finder.findOccurrences
-    occ.toList
   }
   
   def askUpdateOccurrenceAnnotations(selection: ITextSelection, astRoot: CompilationUnit) {
