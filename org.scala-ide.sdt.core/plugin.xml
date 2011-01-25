@@ -795,7 +795,7 @@
 </extension>
 
    <extension point="org.eclipse.ui.contexts">
-     <context name="scala.tools.eclipse.scalaEditorScope"
+     <context name="Editing Scala Source"
               description="Scala source file editor"
               parentId="org.eclipse.jdt.ui.javaEditorScope"
               id="scala.tools.eclipse.scalaEditorScope" />
