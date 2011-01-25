@@ -157,9 +157,10 @@ object ScalaPresentationCompiler {
                   pos.column
                 )
             case _ =>  
-              println("WARNING: error coming from a file outside Eclipse: %s[%s]: %s".format(source.file.name, source.file.getClass, msg))
+              compiler.debugLog("WARNING: error coming from a file outside Eclipse: %s[%s]: %s".format(source.file.name, source.file.getClass, msg))
           }
-        }
+        } else 
+          compiler.debugLog("[reporter] INFO: " + msg)
       } catch {
         case ex : UnsupportedOperationException => 
       }
