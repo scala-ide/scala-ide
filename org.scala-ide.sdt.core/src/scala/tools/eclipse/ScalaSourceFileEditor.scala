@@ -4,6 +4,7 @@
 // $Id$
 
 package scala.tools.eclipse
+
 import java.util.ResourceBundle
 import org.eclipse.core.runtime.{ IAdaptable, IProgressMonitor }
 import org.eclipse.jdt.core.IJavaElement
@@ -80,28 +81,38 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
   private[eclipse] def sourceViewer = getSourceViewer
 
   private var occurrenceAnnotations: Array[Annotation] = _
-
+  
   override def updateOccurrenceAnnotations(selection: ITextSelection, astRoot: CompilationUnit) {
-    if (selection eq null) return
-
+    import ScalaPlugin.{plugin => thePlugin }
+    
     val documentProvider = getDocumentProvider
-    if (documentProvider eq null) return
+    if (documentProvider eq null)
+      return
 
-    val scalaSourceFile = getEditorInput.asInstanceOf[IAdaptable].getAdapter(classOf[IJavaElement]).asInstanceOf[ScalaSourceFile]
-    if (scalaSourceFile eq null) return
-
-    val annotations = getAnnotations(selection, scalaSourceFile)
-    val annotationModel = documentProvider.getAnnotationModel(getEditorInput)
-    if (annotationModel eq null) return
-
-    annotationModel.asInstanceOf[ISynchronizable].getLockObject() synchronized {
-      val annotationModelExtension = annotationModel.asInstanceOf[IAnnotationModelExtension]
-      annotationModelExtension.replaceAnnotations(occurrenceAnnotations, annotations)
-      occurrenceAnnotations = annotations.keySet.toArray
+    //  TODO: find out why this code does a cast to IAdaptable before calling getAdapter 
+    val adaptable = getEditorInput.asInstanceOf[IAdaptable].getAdapter(classOf[IJavaElement])
+    println("adaptable: " + adaptable.getClass + " : " + adaptable.toString)
+      
+    adaptable match {
+      case scalaSourceFile: ScalaSourceFile =>
+        val annotations = getAnnotations(selection, scalaSourceFile)
+        val annotationModel = documentProvider.getAnnotationModel(getEditorInput)
+        if (annotationModel eq null)
+          return
+        annotationModel.asInstanceOf[ISynchronizable].getLockObject() synchronized {
+          val annotationModelExtension = annotationModel.asInstanceOf[IAnnotationModelExtension]
+          annotationModelExtension.replaceAnnotations(occurrenceAnnotations, annotations)
+          occurrenceAnnotations = annotations.keySet.toArray
+        }
+        super.updateOccurrenceAnnotations(selection, astRoot)
+        
+      case _ =>
+        // TODO: pop up a dialog explaining what needs to be fixed or fix it ourselves
+        thePlugin checkOrElse (adaptable.asInstanceOf[ScalaSourceFile], // trigger the exception, so as to get a diagnostic stack trace 
+          "Could not recompute occurrence annotations: configuration problem")
     }
-    super.updateOccurrenceAnnotations(selection, astRoot)
   }
-
+  
   private def getAnnotations(selection: ITextSelection, scalaSourceFile: ScalaSourceFile): mutable.Map[Annotation, Position] = {
     val annotations = for {
       Occurrences(name, locations) <- new ScalaOccurrencesFinder(scalaSourceFile, selection.getOffset, selection.getLength).findOccurrences.toList
