@@ -84,7 +84,7 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
     if (problems.isEmpty) null else problems.toArray
   }
   
-  def getCorrespondingElement(element : IJavaElement) : Option[IJavaElement] = {
+  /*def getCorrespondingElement(element : IJavaElement) : Option[IJavaElement] = {
     if (!validateExistence(resource).isOK)
       None
     else {
@@ -97,5 +97,5 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
   override def getType(name : String) : IType = {
     val tpe = super.getType(name)
     getCorrespondingElement(tpe).getOrElse(tpe).asInstanceOf[IType]
-  }
+  }*/
 }
