@@ -85,7 +85,6 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
 
   lazy val templateManager = new ScalaTemplateManager()
   lazy val reconcileListeners = new ReconcileListeners()
-  lazy val onTypingReloader = new OnTypingReloader()
 
   private val projects = new HashMap[IProject, ScalaProject]
   

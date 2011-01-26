@@ -60,9 +60,6 @@ object IDESettings {
 
   val exceptionOnCreatePresentationCompiler = BooleanSetting("_exceptionOnCreatePresentationCompiler", "(for ScalaIDE debugging only) throw an exception when trying to create ScalaPresentationCompiler", false)
 
-  // TODO remove compileOnTypingDelay (useless)
-  val compileOnTypingDelay = IntSetting("_auto compile delay", "compile file on typing, delay (ms), 0 : immediate", 600, Some((0,3000)), parseInt)
-  
   val tracerEnabled = BooleanSetting("_tracer printing", "print tracer info on stdout/stderr", false)
 
   val quickfixImportByText = BooleanSetting("_import via text", "quick fix for import done by text manipulation (else by AST/refactoring)", false)
