@@ -78,8 +78,11 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
     }
   }
 
-  def getProblems : Array[IProblem] = withSourceFile { (sourceFile, compiler) =>
-    compiler.body(sourceFile)
+  def getProblems : Array[IProblem] = withSourceFile { (src, compiler) =>
+    import compiler._
+    val resp = new Response[Tree]
+    askLoadedTyped(src, resp)
+    resp.get
     val problems = compiler.problemsOf(this)
     if (problems.isEmpty) null else problems.toArray
   }
