@@ -124,9 +124,7 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
 
   def askUpdateOccurrenceAnnotations(selection: ITextSelection, astRoot: CompilationUnit) {
     import org.eclipse.core.runtime.jobs.Job
-    import org.eclipse.core.runtime.IProgressMonitor
-    import org.eclipse.core.runtime.{ IStatus, Status }
-
+    
 	  if (selection eq null) return
     val documentProvider = getDocumentProvider
     if (documentProvider eq null)
@@ -135,18 +133,9 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
     if (IDESettings.markOccurencesForSelectionOnly.value && selection.getLength < 1) {
       return
     }
-
-    val job = new Job("updateOccurrenceAnnotations") {
-      def run(monitor: IProgressMonitor): IStatus = {
-        updateOccurrenceAnnotations0(documentProvider, selection, astRoot)
-        Status.OK_STATUS
-      }
-    }
-
-    job.setSystem(true)
-    job.setPriority(Job.INTERACTIVE)
-    job.schedule()
+	  Defensive.askRunOutOfMain("updateOccurrenceAnnotations", Job.DECORATE) { updateOccurrenceAnnotations0(documentProvider, selection, astRoot) }
   }
+
   override def doSelectionChanged(selection: ISelection) {
     super.doSelectionChanged(selection)
     val selectionProvider = getSelectionProvider
