@@ -343,13 +343,7 @@ class ScalaProject(val underlying: IProject) {
     }
 
     settings.classpath.value = classpath.map(_.toOSString).mkString(pathSeparator)
-    // source path should be emtpy. the build manager decides what files get recompiled when.
-    // if scalac finds a source file newer than its corresponding classfile, it will 'compileLate'
-    // that file, using an AbstractFile/PlainFile instead of the EclipseResource instance. This later
-    // causes problems if errors are reported against that file. Anyway, it's wrong to have a sourcepath
-    // when using the build manager.
-    settings.sourcepath.value = "" 
-//    settings.sourcepath.value = sfs.map(_.toOSString).mkString(pathSeparator)
+    settings.sourcepath.value = sfs.map(_.toOSString).mkString(pathSeparator)
 
     val workspaceStore = ScalaPlugin.plugin.getPreferenceStore
     val projectStore = new PropertyStore(underlying, workspaceStore, plugin.pluginId)
@@ -415,6 +409,13 @@ class ScalaProject(val underlying: IProject) {
     if (buildManager0 == null) {
       val settings = new Settings
       initialize(settings, _ => true)
+      // source path should be emtpy. the build manager decides what files get recompiled when.
+      // if scalac finds a source file newer than its corresponding classfile, it will 'compileLate'
+      // that file, using an AbstractFile/PlainFile instead of the EclipseResource instance. This later
+      // causes problems if errors are reported against that file. Anyway, it's wrong to have a sourcepath
+      // when using the build manager.
+      settings.sourcepath.value = "" 
+
       buildManager0 = new EclipseBuildManager(this, settings)
     }
     buildManager0
