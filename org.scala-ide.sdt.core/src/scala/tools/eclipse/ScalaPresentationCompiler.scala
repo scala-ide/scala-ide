@@ -160,7 +160,10 @@ object ScalaPresentationCompiler {
               compiler.debugLog("WARNING: error coming from a file outside Eclipse: %s[%s]: %s".format(source.file.name, source.file.getClass, msg))
           }
         } else 
-          compiler.debugLog("[reporter] INFO: " + msg)
+          if (compiler ne null) // compiler is null during the constructor, but info may be called already
+            compiler.debugLog("[reporter] INFO: " + msg)
+          else 
+            println("[reporter] INFO: " + msg)
       } catch {
         case ex : UnsupportedOperationException => 
       }
