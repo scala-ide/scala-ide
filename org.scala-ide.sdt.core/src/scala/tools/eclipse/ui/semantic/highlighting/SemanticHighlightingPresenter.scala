@@ -17,7 +17,7 @@ import scala.collection._
 import scala.tools.eclipse.internal.logging.Tracer
 import scala.tools.eclipse.javaelements.ScalaCompilationUnit
 import scala.tools.eclipse.ui.preferences.PropertyChangeListenerProxy
-import scala.tools.eclipse.util.ColorManager
+import scala.tools.eclipse.util.{ColorManager, Annotations, AnnotationsTypes}
 
 /**
  * @author Jin Mingjian
@@ -46,7 +46,7 @@ class SemanticHighlightingPresenter(editor : FileEditorInput, sourceViewer: ISou
 
   private val P_COLOR = {
     val lookup = new org.eclipse.ui.texteditor.AnnotationPreferenceLookup()
-    val pref = lookup.getAnnotationPreference(ImplicitConversionsOrArgsAnnotation.KIND)
+    val pref = lookup.getAnnotationPreference(AnnotationsTypes.Implicits)
     pref.getColorPreferenceKey()
   }
   
@@ -56,10 +56,10 @@ class SemanticHighlightingPresenter(editor : FileEditorInput, sourceViewer: ISou
 
   val painter: AnnotationPainter = {
     val b = new AnnotationPainter(sourceViewer, annotationAccess)
-    b.addAnnotationType(ImplicitConversionsOrArgsAnnotation.KIND, ImplicitConversionsOrArgsAnnotation.KIND)
-    b.addTextStyleStrategy(ImplicitConversionsOrArgsAnnotation.KIND, impTextStyleStrategy)
+    b.addAnnotationType(AnnotationsTypes.Implicits, AnnotationsTypes.Implicits)
+    b.addTextStyleStrategy(AnnotationsTypes.Implicits, impTextStyleStrategy)
     //FIXME settings color of the underline is required to active TextStyle (bug ??, better way ??)
-    b.setAnnotationTypeColor(ImplicitConversionsOrArgsAnnotation.KIND, fColorValue)
+    b.setAnnotationTypeColor(AnnotationsTypes.Implicits, fColorValue)
     sourceViewer.asInstanceOf[org.eclipse.jface.text.TextViewer].addPainter(b)
     sourceViewer.asInstanceOf[org.eclipse.jface.text.TextViewer].addTextPresentationListener(b)
     b
@@ -79,7 +79,7 @@ class SemanticHighlightingPresenter(editor : FileEditorInput, sourceViewer: ISou
       }
       if (changed) {
         impTextStyleStrategy.fFontStyle = fFontStyle_BLOD | fFontStyle_ITALIC
-        painter.setAnnotationTypeColor(ImplicitConversionsOrArgsAnnotation.KIND, fColorValue)
+        painter.setAnnotationTypeColor(AnnotationsTypes.Implicits, fColorValue)
         painter.paint(IPainter.CONFIGURATION)
       }
     }
@@ -145,21 +145,7 @@ class SemanticHighlightingPresenter(editor : FileEditorInput, sourceViewer: ISou
           }
           viewsCollector.traverse(compiler.body(sourceFile))
         }
-  
-        val model = sourceViewer.getAnnotationModel()
-        Tracer.println("update implicit annotations : " + toAdds.size)
-        if (model ne null) {
-          var toRemove: List[Annotation] = Nil
-          val it = model.getAnnotationIterator()
-          while (it.hasNext) {
-            val annot = it.next.asInstanceOf[Annotation]
-            if (ImplicitConversionsOrArgsAnnotation.KIND == annot.getType) {
-              toRemove = annot :: toRemove
-            }
-          }
-          val am = model.asInstanceOf[IAnnotationModelExtension]
-          am.replaceAnnotations(toRemove.toArray, toAdds)
-        }
+        Annotations.update(sourceViewer, AnnotationsTypes.Implicits, toAdds)
       }
     }
   }
