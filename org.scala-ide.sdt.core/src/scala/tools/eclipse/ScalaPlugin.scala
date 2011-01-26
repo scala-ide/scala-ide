@@ -26,6 +26,7 @@ import scala.tools.eclipse.util.OSGiUtils.pathInBundle
 import scala.tools.eclipse.templates.ScalaTemplateManager
 import scala.tools.eclipse.internal.logging.Tracer
 import scala.tools.eclipse.internal.logging.Defensive
+import scala.tools.eclipse.markoccurrences.UpdateOccurrenceAnnotationsService
 
 object ScalaPlugin { 
   var plugin : ScalaPlugin = _
@@ -84,6 +85,7 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
   val swingSources = pathInBundle(scalaLibBundle, "/lib/scala-swing-src.jar")
 
   lazy val templateManager = new ScalaTemplateManager()
+  lazy val updateOccurrenceAnnotationsService = new UpdateOccurrenceAnnotationsService()
   lazy val reconcileListeners = new ReconcileListeners()
 
   private val projects = new HashMap[IProject, ScalaProject]

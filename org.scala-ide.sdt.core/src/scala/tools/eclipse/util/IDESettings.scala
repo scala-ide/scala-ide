@@ -3,7 +3,8 @@
  */
 // $Id$
 
-package scala.tools.eclipse.util
+package scala.tools.eclipse
+package util
 
 import scala.tools.eclipse.properties.SettingsAddOn
 import scala.tools.nsc.Settings
@@ -43,7 +44,7 @@ object IDESettings {
   
   def tuningSettings: List[Box] = {
     List(
-      Box("Editor Tuning", List(outputInClasspath, compileOnTyping, useContentOfEditor, alwaysCleanBuild, classBreakpoint, markOccurencesForSelectionOnly, timeOutBodyReq))
+      Box("Editor Tuning", List(outputInClasspath, compileOnTyping, useContentOfEditor, alwaysCleanBuild, classBreakpoint, markOccurencesForSelectionOnly, markOccurencesTStrategy, timeOutBodyReq))
       , Box("QuickFix Tuning", List(quickfixImportByText))
       , Box("Logging Tuning", List(tracerEnabled))
       , Box("Editor Debug", List(exceptionOnCreatePresentationCompiler))
@@ -55,9 +56,12 @@ object IDESettings {
   val useContentOfEditor = BooleanSetting("_editor content", "use content from Editor for compilation instead of saved file (may lock/freeze)", false)
   val alwaysCleanBuild = BooleanSetting("_clean+build", "always do a clean+full build", false)
   val classBreakpoint = BooleanSetting("_class breakpoint", "support toggling breakpoint on class from editor", false)
-  val markOccurencesForSelectionOnly = BooleanSetting("_mark occurences on selection", "doesn't try to mark occurences if there is no selection", false)
+  val markOccurencesForSelectionOnly = BooleanSetting("_mark occurrences on selection", "doesn't try to mark occurrences if there is no selection", true)
+  val markOccurencesTStrategy = {
+    val choices = ScalaPlugin.plugin.updateOccurrenceAnnotationsService.strategies
+    ChoiceSetting("_mark occurrences threading", "is which thread mark occurrences should run", choices , choices.head)
+  }
   val timeOutBodyReq = IntSetting("_timeout body req", "timeout (ms) to access body/AST of a source file", 3000, Some((0,60000)), parseInt)
-
   val exceptionOnCreatePresentationCompiler = BooleanSetting("_exceptionOnCreatePresentationCompiler", "(for ScalaIDE debugging only) throw an exception when trying to create ScalaPresentationCompiler", false)
 
   val tracerEnabled = BooleanSetting("_tracer printing", "print tracer info on stdout/stderr", false)

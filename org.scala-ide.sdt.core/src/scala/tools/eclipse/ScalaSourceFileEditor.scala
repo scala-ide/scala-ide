@@ -32,7 +32,7 @@ import scala.tools.eclipse.markoccurrences.{ ScalaOccurrencesFinder, Occurrences
 import scala.tools.eclipse.ui.semantic.highlighting.SemanticHighlightingPresenter
 import scala.tools.eclipse.text.scala.ScalaTypeAutoCompletionProposalManager
 import scala.tools.eclipse.util.IDESettings
-import scala.tools.eclipse.internal.logging.Defensive
+import scala.tools.eclipse.internal.logging.{Defensive, Tracer}
 import org.eclipse.ui.texteditor.IDocumentProvider
 import org.eclipse.ui.IEditorInput
 
@@ -101,65 +101,25 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
   
   private[eclipse] def sourceViewer = getSourceViewer
 
-  private var occurrenceAnnotations: Array[Annotation] = _
-
-  override def updateOccurrenceAnnotations(selection: ITextSelection, astRoot: CompilationUnit) = askUpdateOccurrenceAnnotations(selection, astRoot)
-  
-  private def updateOccurrenceAnnotations0(documentProvider : IDocumentProvider, selection: ITextSelection, astRoot: CompilationUnit) : Unit = Defensive.tryOrLog {
-    val scalaSourceFile = getEditorInput.asInstanceOf[IAdaptable].getAdapter(classOf[IJavaElement]).asInstanceOf[ScalaSourceFile]
-    if (!Defensive.notNull(scalaSourceFile, "scalaSourceFile")) //issue_0001
-      return
-    val annotations = getAnnotations(selection, scalaSourceFile)
-    val annotationModel = documentProvider.getAnnotationModel(getEditorInput)
-    if (annotationModel eq null) return
-
-    annotationModel.asInstanceOf[ISynchronizable].getLockObject() synchronized {
-      val annotationModelExtension = annotationModel.asInstanceOf[IAnnotationModelExtension]
-      annotationModelExtension.replaceAnnotations(occurrenceAnnotations, annotations)
-      occurrenceAnnotations = annotations.keySet.toArray
-    }
-    super.updateOccurrenceAnnotations(selection, astRoot)
-  }
-
-  private def getAnnotations(selection: ITextSelection, scalaSourceFile: ScalaSourceFile): mutable.Map[Annotation, Position] = {
-    val annotations = for {
-      Occurrences(name, locations) <- new ScalaOccurrencesFinder(scalaSourceFile, selection.getOffset, selection.getLength).findOccurrences.toList
-      location <- locations
-      val offset = location.getOffset
-      val length = location.getLength
-      val position = new Position(location.getOffset, location.getLength)
-    } yield new Annotation(OCCURRENCE_ANNOTATION, false, "Occurrence of '" + name + "'") -> position
-    mutable.Map(annotations: _*)
-  }
-
-  def askUpdateOccurrenceAnnotations(selection: ITextSelection, astRoot: CompilationUnit) {
-    import org.eclipse.core.runtime.jobs.Job
-    
-	  if (selection eq null) return
-    val documentProvider = getDocumentProvider
-    if (documentProvider eq null)
-      return
-      
-    if (IDESettings.markOccurencesForSelectionOnly.value && selection.getLength < 1) {
-      return
-    }
-	  Defensive.askRunOutOfMain("updateOccurrenceAnnotations", Job.DECORATE) { updateOccurrenceAnnotations0(documentProvider, selection, astRoot) }
-  }
+  override def updateOccurrenceAnnotations(selection: ITextSelection, astRoot: CompilationUnit) = ScalaPlugin.plugin.updateOccurrenceAnnotationsService.askUpdateOccurrenceAnnotations(this, selection, astRoot)
+  def superUpdateOccurrenceAnnotations(selection: ITextSelection, astRoot: CompilationUnit) = super.updateOccurrenceAnnotations(selection, astRoot)
 
   override def doSelectionChanged(selection: ISelection) {
+    Tracer.println("ScalaSourceFileEditor.doSelectionChanged")
     super.doSelectionChanged(selection)
     val selectionProvider = getSelectionProvider
     if (selectionProvider != null)
       selectionProvider.getSelection match {
-        case textSel: ITextSelection => askUpdateOccurrenceAnnotations(textSel, null)
+        case textSel: ITextSelection => updateOccurrenceAnnotations(textSel, null)
         case _ =>
       }
   }
 
   lazy val selectionListener = new ISelectionListener() {
     def selectionChanged(part: IWorkbenchPart, selection: ISelection) {
+      Tracer.println("ScalaSourceFileEditor.selectionListener.selectionChanged")
       selection match {
-        case textSel: ITextSelection => askUpdateOccurrenceAnnotations(textSel, null)
+        case textSel: ITextSelection => updateOccurrenceAnnotations(textSel, null)
         case _ =>
       }
     }
@@ -208,6 +168,4 @@ object ScalaSourceFileEditor {
   private val bundleForConstructedKeys = ResourceBundle.getBundle(EDITOR_BUNDLE_FOR_CONSTRUCTED_KEYS)
 
   private val SCALA_EDITOR_SCOPE = "scala.tools.eclipse.scalaEditorScope"
-
-  private val OCCURRENCE_ANNOTATION = "org.eclipse.jdt.ui.occurrences"
 }
