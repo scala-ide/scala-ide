@@ -95,7 +95,7 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
 
   override def updateOccurrenceAnnotations(selection: ITextSelection, astRoot: CompilationUnit) = askUpdateOccurrenceAnnotations(selection, astRoot)
   
-  private def updateOccurrenceAnnotations0(documentProvider : IDocumentProvider, selection: ITextSelection, astRoot: CompilationUnit) {
+  private def updateOccurrenceAnnotations0(documentProvider : IDocumentProvider, selection: ITextSelection, astRoot: CompilationUnit) : Unit = Defensive.tryOrLog {
     val scalaSourceFile = getEditorInput.asInstanceOf[IAdaptable].getAdapter(classOf[IJavaElement]).asInstanceOf[ScalaSourceFile]
     if (!Defensive.notNull(scalaSourceFile, "scalaSourceFile")) //issue_0001
       return
@@ -127,7 +127,7 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
     import org.eclipse.core.runtime.IProgressMonitor
     import org.eclipse.core.runtime.{ IStatus, Status }
 
-	if (selection eq null) return
+	  if (selection eq null) return
     val documentProvider = getDocumentProvider
     if (documentProvider eq null)
       return
