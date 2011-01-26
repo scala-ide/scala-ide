@@ -34,6 +34,7 @@ import scala.tools.eclipse.text.scala.ScalaTypeAutoCompletionProposalManager
 import scala.tools.eclipse.util.IDESettings
 import scala.tools.eclipse.internal.logging.Defensive
 import org.eclipse.ui.texteditor.IDocumentProvider
+import org.eclipse.ui.IEditorInput
 
 class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
 
@@ -89,6 +90,15 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
       })
   }
 
+// doSetInput is called in Thread "main" but can take time because some part require ScalaPresentationCompiler
+// but run it in other thread than current raise NPE later
+// keep the code block commented for memory (and may be later try to improve)
+//  /*
+//   * @see AbstractTextEditor#doSetInput
+//   * @throws CoreException
+//   */
+//  protected override def doSetInput(input: IEditorInput) = Defensive.askRunOutOfMain("ScalaSourceFileEditor.doSetInput") { super.doSetInput(input) }
+  
   private[eclipse] def sourceViewer = getSourceViewer
 
   private var occurrenceAnnotations: Array[Annotation] = _
