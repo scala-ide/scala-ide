@@ -46,6 +46,7 @@ object IDESettings {
       Box("Editor Tuning", List(outputInClasspath, compileOnTyping, useContentOfEditor, alwaysCleanBuild, classBreakpoint, markOccurencesForSelectionOnly, timeOutBodyReq))
       , Box("QuickFix Tuning", List(quickfixImportByText))
       , Box("Logging Tuning", List(tracerEnabled))
+      , Box("Editor Debug", List(exceptionOnCreatePresentationCompiler))
     )
   }
 
@@ -56,6 +57,8 @@ object IDESettings {
   val classBreakpoint = BooleanSetting("_class breakpoint", "support toggling breakpoint on class from editor", false)
   val markOccurencesForSelectionOnly = BooleanSetting("_mark occurences on selection", "doesn't try to mark occurences if there is no selection", false)
   val timeOutBodyReq = IntSetting("_timeout body req", "timeout (ms) to access body/AST of a source file", 3000, Some((0,60000)), parseInt)
+
+  val exceptionOnCreatePresentationCompiler = BooleanSetting("_exceptionOnCreatePresentationCompiler", "(for ScalaIDE debugging only) throw an exception when trying to create ScalaPresentationCompiler", false)
 
   // TODO remove compileOnTypingDelay (useless)
   val compileOnTypingDelay = IntSetting("_auto compile delay", "compile file on typing, delay (ms), 0 : immediate", 600, Some((0,3000)), parseInt)

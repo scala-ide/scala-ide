@@ -5,21 +5,17 @@
 
 package scala.tools.eclipse.util
 
-/** A ref cell to a managed resource. Overwrite 'create' and 'destroy'.
- * 
- *  @note Important: 'create' is not allowed to throw any exceptions. Throwing
- *        an exception may lead to either NoSuchElementException, or an infinite
- *        loop if other threads wait while 'create' is in progress. Use a Cached[Option[T]] 
- *        in such a case.
- *      
+/**
+ *  A ref cell to a managed resource. Overwrite 'create' and 'destroy'.
  */
+//TODO find a better abstraction for Cached, apply, doIfExist,...
 trait Cached[T] {
   import java.util.concurrent.locks.ReentrantReadWriteLock
   import scala.tools.eclipse.internal.logging.Tracer
   
 //  private var inProgress = false
   @volatile
-  private var elem : Option[T] = None
+  private var elem : Option[Either[Throwable,T]] = None
   private val _rwl = new ReentrantReadWriteLock()
   
   /**
@@ -71,7 +67,7 @@ trait Cached[T] {
 //  }
 
   // implementation based on http://download.oracle.com/javase/6/docs/api/java/util/concurrent/locks/ReentrantReadWriteLock.html
-  private def provide() : T = {
+  private def provide() : Either[Throwable,T] = {
     _rwl.readLock().lock()
     try {
       elem match {
@@ -86,7 +82,11 @@ trait Cached[T] {
             elem match {
               case Some(t) => t
               case None => {
-                val t = create
+                val t = try {
+                  Right(create)
+                } catch {
+                  case error => Left(error)
+                }
                 elem = Some(t)
                 t
               }
@@ -103,24 +103,31 @@ trait Cached[T] {
     }
   }
   
-  def apply[U](op : T => U) : U = {
+  /**
+   * Run the operation on the cached value if successfully created,
+   * if the value not already created (or invalidated) then try to create the value,
+   * and return the value as Right part.
+   * If an exception was throw during the creation then the exception is return as Left part.
+   */
+  def apply[U](op : T => U) : Either[Throwable, U] = {
     Tracer.printlnWithStack("FIXME : access Cached in 'main' Thread, UI freeze possible", {Thread.currentThread.getName == "main"})
-    val e = provide()
-    //TODO should the execution of op be part of the readLock ??
-    op(e)
+    provide().right.map(op)
   }
   
-  //TODO find a better abstraction for Cached, apply, doIfExist,...
+  /**
+   * Run the operation if cached value is already available and successfully created, else do nothing
+   * (doesn't try to create the value vs apply)
+   */
   def doIfExist(op : T => Unit) : Unit = {
     //TODO should we used the readLock, as it's ok to use the old value if new value is writing...
     elem match {
-      case Some(t) => op(t)
-      case None => // do nothing
+      case Some(t) if t.isRight => t.right.map(op)
+      case _ => // do nothing
     }
   }
   
   def invalidate() {
-    var oldElem : Option[T] = None  
+    var oldElem : Option[Either[Throwable,T]] = None
     _rwl.writeLock().lock()
     try {
       oldElem = elem
@@ -129,8 +136,8 @@ trait Cached[T] {
       _rwl.writeLock().unlock()
     }
     oldElem match {
-      case Some(t) => destroy(t)
-      case _ =>
+      case Some(t) if t.isRight => t.right.map(destroy)
+      case _ => // do nothing
     }
   }
 

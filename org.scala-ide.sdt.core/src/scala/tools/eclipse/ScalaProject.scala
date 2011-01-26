@@ -36,7 +36,7 @@ class ScalaProject(val underlying: IProject) {
     
   private var scalaVersion = "2.8.x"
     
-  private val presentationCompiler = new Cached[Option[ScalaPresentationCompiler]] {
+  private val presentationCompiler = new Cached[ScalaPresentationCompiler] {
     override def create() = {
       try {
         val settings = new Settings
@@ -47,49 +47,51 @@ class ScalaProject(val underlying: IProject) {
         val compiler = if (scalaVersion.startsWith("2.9")) {
           initialize(settings, _.name.startsWith("-Ypresentation"))
           new ScalaPresentationCompiler(settings)
+        } else if (IDESettings.exceptionOnCreatePresentationCompiler.value) {
+          throw new Exception("exceptionOnCreatePresentationCompiler == true")
         } else {
           initialize(settings, _ => true)
           new ScalaPresentationCompiler(settings) with scalac_28.TopLevelMapTyper {
             def project = ScalaProject.this
           }
         }
-        Some(compiler)
+        compiler
       } catch {
         case ex@MissingRequirementError(required) =>
           failedCompilerInitialization("Could not initialize Scala compiler because it could not find a required class: " + required)
           plugin.logError(ex)
-          None
+          throw ex
         case ex =>
+          failedCompilerInitialization("failed to initialize Scala compiler properly : "+ ex.getMessage)
           plugin.logError(ex)
-          None
+          throw ex
       }
     }
     
-    override def destroy(compiler : Option[ScalaPresentationCompiler]) {
-      compiler.map(_.destroy())
+    override def destroy(compiler : ScalaPresentationCompiler) {
+      compiler.destroy()
     }
-  }
-
-  private var messageShowed = false
-  
-  private def failedCompilerInitialization(msg: String) {
-    import org.eclipse.jface.dialogs.MessageDialog
-    synchronized {
-      if (!messageShowed) {
-        messageShowed = true
-        Display.getDefault asyncExec new Runnable { 
-          def run() {
+    
+    private def failedCompilerInitialization(msg: String) {
+      import org.eclipse.jface.dialogs.MessageDialog
+      Display.getDefault asyncExec new Runnable { 
+        def run() {
 //            ToggleScalaNatureAction.toggleScalaNature(underlying)
-            MessageDialog.openWarning(null, "Error initializing the Scala compiler in project %s".format(underlying.getName),
-            msg +
-            ". The editor will not try to re-initialize the compiler until you change the classpath and " +
-            " reopen project %s .".format(underlying.getName))
-          }
+          MessageDialog.openWarning(null, "Error initializing the Scala compiler in project %s".format(underlying.getName),
+          msg +
+          ". The editor will not try to re-initialize the compiler until you change the classpath and " +
+          " reopen project %s .".format(underlying.getName))
         }
       }
     }
+
   }
 
+  private def getOrFailed[U](v : Either[Throwable, U]) : U = v match {
+    case Right(t) => t
+    case Left(ex) => throw new IllegalStateException("failed to access value", ex) //to have the stack trace of the caller and the of the compiler creation (async)
+  }
+  
   override def toString = underlying.getName
   
   def externalDepends = underlying.getReferencedProjects 
@@ -418,18 +420,11 @@ class ScalaProject(val underlying: IProject) {
   }
 
   def withPresentationCompiler[T](op: ScalaPresentationCompiler => T): T = {
-    presentationCompiler {
-      case Some(c) => op(c)
-      case None => 
-        if (underlying.isOpen)
-          failedCompilerInitialization("Compiler failed to initialize properly.");
-        //throw InvalidCompilerSettings()
-        null.asInstanceOf[T] // we're already in deep trouble here, so one more NPE won't kill us
-    }
+    getOrFailed(presentationCompiler.apply(op))
   }
 
   def withPresentationCompilerIfExists(op : ScalaPresentationCompiler => Unit) : Unit = {
-    presentationCompiler.doIfExist(_.foreach(x => op(x)))
+    presentationCompiler.doIfExist(op)
   }
   
   def withSourceFile[T](scu : ScalaCompilationUnit)(op : (SourceFile, ScalaPresentationCompiler) => T) : T =
