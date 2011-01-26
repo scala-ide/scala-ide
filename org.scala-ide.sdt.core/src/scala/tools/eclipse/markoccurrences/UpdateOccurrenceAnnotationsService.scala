@@ -14,6 +14,10 @@ import scala.tools.eclipse.internal.logging.Defensive
 import scala.tools.eclipse.javaelements.ScalaSourceFile
 import scala.tools.eclipse.util.{Annotations, AnnotationsTypes, IDESettings}
 import scala.actors.Reactor
+import org.eclipse.ui.{ISelectionListener, IEditorSite, IWorkbenchPart}
+import org.eclipse.jface.viewers.ISelection
+import scala.tools.eclipse.internal.logging.{Defensive, Tracer}
+import java.util.concurrent.atomic.AtomicInteger
 
 class UpdateOccurrenceAnnotationsService {
   private val Strategies_NotInMain = "not in main thread"
@@ -22,7 +26,7 @@ class UpdateOccurrenceAnnotationsService {
   private val Strategies_InActor = "in shared actor"
     
   val strategies = List(Strategies_InActor, Strategies_NotInMain, Strategies_InWorker, Strategies_InCaller)
-    
+  
   def askUpdateOccurrenceAnnotations(editor : ScalaSourceFileEditor, selection: ITextSelection, astRoot: CompilationUnit) {
     import org.eclipse.core.runtime.jobs.Job
     
@@ -74,4 +78,56 @@ class UpdateOccurrenceAnnotationsService {
       }
     }
   }.start
+  
+  
+  /**
+   * A shared (by editor) selection listener
+   * SelectionChanged is called for every move of the caret
+   */
+  private val _selectionListenerInstallationCnt = new AtomicInteger(0)
+  
+  private lazy val _selectionListener = new ISelectionListener() {
+    def selectionChanged(part: IWorkbenchPart, selection: ISelection) {
+      //Tracer.println("ScalaSourceFileEditor.selectionListener.selectionChanged")
+      selection match {
+        case textSel: ITextSelection => {
+          if (IDESettings.markOccurencesForSelectionOnly.value && textSel.getLength < 1)
+            return
+          findScalaSourceFileEditor(part).foreach{ v => askUpdateOccurrenceAnnotations(v, textSel, null) }
+        }
+        case _ =>
+      }
+    }
+  }
+
+  def installSelectionListener(editorSite : IEditorSite) {
+    if ((editorSite ne null) && _selectionListenerInstallationCnt.incrementAndGet() == 1) {
+      // has no effect if an identical listener is already registered
+      // but we count call to install/uninstall to not unsintall when an editor is closed and call uninstall
+      // so if the method is called from several ScalaSourceFileEditor
+      //   with editorSite = ScalaSourceFileEditor.getEditorSite then event will be triggered once  
+      editorSite.getPage.addPostSelectionListener(_selectionListener)
+    }
+  }
+
+  def uninstallSelectionListener(editorSite : IEditorSite) {
+    if ((editorSite ne null) && _selectionListenerInstallationCnt.decrementAndGet() == 0) {
+      editorSite.getPage.removePostSelectionListener(_selectionListener)
+    }
+  }
+    
+  
+  // TODO move to an helper/object 
+  private def findScalaSourceFileEditor(part : IWorkbenchPart) : Option[ScalaSourceFileEditor] = part match {
+    case e : ScalaSourceFileEditor => Some(e)
+    case x => Option(part.getAdapter(classOf[ScalaSourceFileEditor]).asInstanceOf[ScalaSourceFileEditor]) orElse {
+      import org.eclipse.ui.texteditor.ITextEditor          
+      part.getAdapter(classOf[ITextEditor]) match {
+        case null => None
+        case e : ScalaSourceFileEditor => Some(e)
+        case _ => None
+      }
+    }
+  }
+
 }

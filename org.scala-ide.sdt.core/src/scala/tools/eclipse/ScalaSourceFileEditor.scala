@@ -102,7 +102,7 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
   private[eclipse] def sourceViewer = getSourceViewer
 
   override def updateOccurrenceAnnotations(selection: ITextSelection, astRoot: CompilationUnit) = ScalaPlugin.plugin.updateOccurrenceAnnotationsService.askUpdateOccurrenceAnnotations(this, selection, astRoot)
-  def superUpdateOccurrenceAnnotations(selection: ITextSelection, astRoot: CompilationUnit) = super.updateOccurrenceAnnotations(selection, astRoot)
+  def superUpdateOccurrenceAnnotations(selection: ITextSelection, astRoot: CompilationUnit) = {}//super.updateOccurrenceAnnotations(selection, astRoot)
 
   override def doSelectionChanged(selection: ISelection) {
     Tracer.println("ScalaSourceFileEditor.doSelectionChanged")
@@ -115,24 +115,14 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
       }
   }
 
-  lazy val selectionListener = new ISelectionListener() {
-    def selectionChanged(part: IWorkbenchPart, selection: ISelection) {
-      Tracer.println("ScalaSourceFileEditor.selectionListener.selectionChanged")
-      selection match {
-        case textSel: ITextSelection => updateOccurrenceAnnotations(textSel, null)
-        case _ =>
-      }
-    }
-  }
-
   override def installOccurrencesFinder(forceUpdate: Boolean) {
-    super.installOccurrencesFinder(forceUpdate)
-    getEditorSite.getPage.addPostSelectionListener(selectionListener)
+    //super.installOccurrencesFinder(forceUpdate)
+    ScalaPlugin.plugin.updateOccurrenceAnnotationsService.installSelectionListener(getEditorSite)
   }
 
   override def uninstallOccurrencesFinder() {
-    getEditorSite.getPage.removePostSelectionListener(selectionListener)
-    super.uninstallOccurrencesFinder
+    ScalaPlugin.plugin.updateOccurrenceAnnotationsService.uninstallSelectionListener(getEditorSite)
+    //super.uninstallOccurrencesFinder
   }
 
   override def createPartControl(parent: Composite) {
