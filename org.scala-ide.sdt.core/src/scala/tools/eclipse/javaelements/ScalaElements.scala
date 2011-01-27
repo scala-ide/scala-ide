@@ -265,3 +265,14 @@ class ScalaSourceMethodInfo extends SourceMethodInfo with FnInfo with AuxChildre
 class ScalaSourceFieldElementInfo extends SourceFieldElementInfo with ScalaMemberElementInfo with AuxChildrenElementInfo {
   override def setTypeName(name : Array[Char]) = super.setTypeName(name)
 }
+
+class LazyToplevelClass(unit : ScalaCompilationUnit, name : String) extends SourceType(unit, name) with IType {
+  lazy val mirror = unit.getChildren.find(e => e.getElementName == name).map(_.asInstanceOf[ScalaSourceTypeElement])
+  
+  override def getField(nm : String) = mirror map (_.getField(nm)) getOrElse super.getField(nm) 
+  override def getType(nm : String) = mirror map (_.getType(nm)) getOrElse super.getType(nm)
+  override def getMethod(nm : String, params : Array[String]) = mirror map (_.getMethod(nm, params)) getOrElse super.getMethod(nm, params)
+  override def getElementInfo = mirror map (_.getElementInfo) getOrElse super.getElementInfo
+  
+  override def isResolved = mirror.isDefined
+}

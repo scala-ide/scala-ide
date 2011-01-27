@@ -87,18 +87,5 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
     if (problems.isEmpty) null else problems.toArray
   }
   
-  /*def getCorrespondingElement(element : IJavaElement) : Option[IJavaElement] = {
-    if (!validateExistence(resource).isOK)
-      None
-    else {
-      val name = element.getElementName
-      val tpe = element.getElementType
-      getChildren.find(e => e.getElementName == name && e.getElementType == tpe)
-    }
-  }
-
-  override def getType(name : String) : IType = {
-    val tpe = super.getType(name)
-    getCorrespondingElement(tpe).getOrElse(tpe).asInstanceOf[IType]
-  }*/
+  override def getType(name : String) : IType = new LazyToplevelClass(this, name)
 }
