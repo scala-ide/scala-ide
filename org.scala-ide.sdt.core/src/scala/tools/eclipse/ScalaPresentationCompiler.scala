@@ -8,7 +8,6 @@ package scala.tools.eclipse
 import scala.collection.mutable
 import scala.collection.mutable.{ ArrayBuffer, SynchronizedMap }
 
-import org.eclipse.core.resources.IFile
 import org.eclipse.jdt.core.compiler.IProblem
 import org.eclipse.jdt.internal.compiler.problem.{ DefaultProblem, ProblemSeverities }
 import scala.tools.nsc.Settings
@@ -43,14 +42,11 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
       }} 
   }
   
-  private val problems = new mutable.HashMap[IFile, ArrayBuffer[IProblem]] with SynchronizedMap[IFile, ArrayBuffer[IProblem]] {
-    override def default(k : IFile) = { val v = new ArrayBuffer[IProblem] ; put(k, v); v }
+  private val problems = new mutable.HashMap[AbstractFile, ArrayBuffer[IProblem]] with SynchronizedMap[AbstractFile, ArrayBuffer[IProblem]] {
+    override def default(k : AbstractFile) = { val v = new ArrayBuffer[IProblem] ; put(k, v); v }
   }
   
-  private def fileOf(scu : ScalaCompilationUnit) =
-    try { Some(scu.getCorrespondingResource.asInstanceOf[IFile]) } catch { case _ => None } 
-  
-  private def problemsOf(file : IFile) : List[IProblem] = {
+  private def problemsOf(file : AbstractFile) : List[IProblem] = {
     val ps = problems.remove(file)
     ps match {
       case Some(ab) => ab.toList
@@ -58,16 +54,10 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
     }
   }
   
-  def problemsOf(scu : ScalaCompilationUnit) : List[IProblem] = fileOf(scu) match {
-    case Some(file) => problemsOf(file)
-    case None => Nil
-  }
+  def problemsOf(scu : ScalaCompilationUnit) : List[IProblem] = problemsOf(scu.file)
   
-  private def clearProblemsOf(file : IFile) : Unit = problems.remove(file)
-  
-  private def clearProblemsOf(scu : ScalaCompilationUnit) : Unit = fileOf(scu) match {
-    case Some(file) => clearProblemsOf(file)
-    case None =>
+  private def clearProblemsOf(scu : ScalaCompilationUnit) {
+    problems.remove(scu.file)
   }
   
   def withSourceFile[T](scu : ScalaCompilationUnit)(op : (SourceFile, ScalaPresentationCompiler) => T) : T =
@@ -152,10 +142,10 @@ object ScalaPresentationCompiler {
         if(pos.isDefined) {
           val source = pos.source
           source.file match {
-            case EclipseResource(file : IFile) =>
+            case ef@EclipseFile(file) =>
               val length = source.identifier(pos, compiler).map(_.length).getOrElse(0)
               compiler.debugLog(source.file.name + ":" + pos.line + ": " + msg)
-              compiler.problems(file) +=
+              compiler.problems(ef) +=
                 new DefaultProblem(
                   file.getFullPath.toString.toCharArray,
                   formatMessage(msg),

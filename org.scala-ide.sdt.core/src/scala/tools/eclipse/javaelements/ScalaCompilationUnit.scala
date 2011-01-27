@@ -33,7 +33,7 @@ import scala.tools.eclipse.util.ReflectionUtils
 trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with ScalaElement with IScalaCompilationUnit with IBufferChangedListener {
   val project = ScalaPlugin.plugin.getScalaProject(getJavaProject.getProject)
 
-  def file : AbstractFile
+  val file : AbstractFile
   
   def withSourceFile[T](op : (SourceFile, ScalaPresentationCompiler) => T) : T = {
     project.withSourceFile(this)(op)
