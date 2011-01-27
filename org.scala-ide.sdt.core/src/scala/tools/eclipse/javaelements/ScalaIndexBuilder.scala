@@ -156,24 +156,25 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
         case _ =>
       }
       
-      def addMethodReference(t : Tree, argCount : Int) : Unit = tree match {
-        case Typed(ttree, Function(vparams, body)) => addMethodReference(ttree, argCount + vparams.length)
-        case Apply(rt : RefTree, args) =>
-          indexer.addMethodReference(rt.name.toChars, args.length + argCount)
-        case _ =>
-      }
-      
       tree match {
-        case cd : ClassDef => inClass(cd.name.toChars) {super.traverse(tree)}
-        case md : ModuleDef => inClass(md.name.append("$").toChars) {super.traverse(tree)}
+        case cd : ClassDef => inClass(cd.name.toChars) { super.traverse(tree) }
+        case md : ModuleDef => inClass(md.name.append("$").toChars) { super.traverse(tree) }
         
         case Apply(rt : RefTree, args) =>
-          addMethodReference(rt, 0)
+          indexer.addMethodReference(rt.name.toChars, args.length)
           for (t <- args) traverse(t)
           
         // Partial apply.
-        case Typed(ttree, Function(vparams, _)) =>
-          addMethodReference(ttree, vparams.length)
+        case Typed(ttree, Function(_, _)) => 
+          ttree match {
+            case rt : RefTree => 
+              val name = rt.name.toChars
+              for (i <- 0 to maxArgs) indexer.addMethodReference(name, i)
+            case Apply(rt : RefTree, args) => 
+              val name = rt.name.toChars
+              for (i <- args.length to maxArgs) indexer.addMethodReference(name, i)
+            case _ =>
+          }
           super.traverse(tree)
           
         case rt : RefTree =>
@@ -185,5 +186,7 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
         case _ => super.traverse(tree)
       }
     }
+    
+    val maxArgs = 22  // just arbitrary choice.
   }
 }

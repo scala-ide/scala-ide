@@ -87,7 +87,7 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
   def addToIndexer(indexer : ScalaSourceIndexer) {
     withSourceFile({ (source, compiler) =>
       compiler.ask { () =>
-        compiler.withUntypedTree(source) { tree =>
+        compiler.withParseTree(source) { tree =>
           new compiler.IndexBuilderTraverser(indexer).traverse(tree)
         }
       }
