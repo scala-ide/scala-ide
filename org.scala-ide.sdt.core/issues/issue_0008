@@ -1,0 +1,756 @@
+FIXED
+
+branch : wip_exp_backport / wip_experiment
+symptom : NPE (first stackTrace) or full GUI freeze (see full stack trace below)
+
+step to reproduce : try to complete "Thread." from any compiled scala source file
+
+
+java.lang.NullPointerException
+at org.eclipse.jface.resource.JFaceResources.getResources(JFaceResources.java:207)
+at org.eclipse.jface.resource.ImageRegistry.<init>(ImageRegistry.java:152)
+at org.eclipse.jface.resource.ImageRegistry.<init>(ImageRegistry.java:124)
+at org.eclipse.jdt.internal.ui.JavaPluginImages.getImageRegistry(JavaPluginImages.java:534)
+at org.eclipse.jdt.internal.ui.JavaPluginImages.get(JavaPluginImages.java:491)
+at scala.tools.eclipse.completion.ScalaCompletionProposalComputer$$anonfun$computeCompletionProposals$1$$anonfun$apply$2.accept$1(ScalaCompletionProposalComputer.scala:156)
+at scala.tools.eclipse.completion.ScalaCompletionProposalComputer$$anonfun$computeCompletionProposals$1$$anonfun$apply$2$$anonfun$apply$1$$anonfun$apply$mcV$sp$1.apply(ScalaCompletionProposalComputer.scala:184)
+at scala.tools.eclipse.completion.ScalaCompletionProposalComputer$$anonfun$computeCompletionProposals$1$$anonfun$apply$2$$anonfun$apply$1$$anonfun$apply$mcV$sp$1.apply(ScalaCompletionProposalComputer.scala:181)
+at scala.collection.LinearSeqOptimized$class.foreach(LinearSeqOptimized.scala:61)
+at scala.collection.immutable.List.foreach(List.scala:45)
+at scala.tools.eclipse.completion.ScalaCompletionProposalComputer$$anonfun$computeCompletionProposals$1$$anonfun$apply$2$$anonfun$apply$1.apply$mcV$sp(ScalaCompletionProposalComputer.scala:181)
+at scala.tools.eclipse.completion.ScalaCompletionProposalComputer$$anonfun$computeCompletionProposals$1$$anonfun$apply$2$$anonfun$apply$1.apply(ScalaCompletionProposalComputer.scala:180)
+at scala.tools.eclipse.completion.ScalaCompletionProposalComputer$$anonfun$computeCompletionProposals$1$$anonfun$apply$2$$anonfun$apply$1.apply(ScalaCompletionProposalComputer.scala:180)
+at scala.tools.nsc.interactive.util.InterruptReq.liftedTree1$1(InterruptReq.scala:22)
+at scala.tools.nsc.interactive.util.InterruptReq.execute(InterruptReq.scala:21)
+at scala.tools.nsc.interactive.Global.pollForWork(Global.scala:252)
+at scala.tools.nsc.interactive.Global.signalDone(Global.scala:161)
+at scala.tools.nsc.typechecker.Typers$Typer.typed(Typers.scala:4212)
+at scala.tools.nsc.typechecker.Typers$Typer.typedQualifier(Typers.scala:4271)
+at scala.tools.nsc.typechecker.Typers$Typer.typedQualifier(Typers.scala:4277)
+at scala.tools.nsc.typechecker.Typers$Typer.typed1(Typers.scala:4089)
+at scala.tools.nsc.typechecker.Typers$Typer.typed(Typers.scala:4203)
+at scala.tools.nsc.typechecker.Typers$Typer.typedQualifier(Typers.scala:4271)
+at scala.tools.nsc.typechecker.Typers$Typer.typedQualifier(Typers.scala:4277)
+at scala.tools.nsc.typechecker.Typers$Typer.typed1(Typers.scala:4089)
+at scala.tools.nsc.typechecker.Typers$Typer.typed(Typers.scala:4203)
+at scala.tools.nsc.typechecker.Typers$Typer.typedQualifier(Typers.scala:4271)
+at scala.tools.nsc.typechecker.Typers$Typer.typedQualifier(Typers.scala:4279)
+at scala.tools.nsc.typechecker.Typers$Typer.typed1(Typers.scala:3844)
+at scala.tools.nsc.typechecker.Typers$Typer.typed(Typers.scala:4203)
+at scala.tools.nsc.typechecker.Typers$Typer.typed(Typers.scala:4252)
+at scala.tools.nsc.typechecker.Analyzer$typerFactory$$anon$3.apply(Analyzer.scala:85)
+at scala.tools.nsc.Global$GlobalPhase$$anonfun$applyPhase$1.apply(Global.scala:282)
+at scala.tools.nsc.Global$GlobalPhase$$anonfun$applyPhase$1.apply(Global.scala:282)
+at scala.tools.nsc.reporters.Reporter.withSource(Reporter.scala:48)
+at scala.tools.nsc.Global$GlobalPhase.applyPhase(Global.scala:282)
+at scala.tools.nsc.interactive.Global$TyperRun$$anonfun$applyPhase$1$$anonfun$apply$mcV$sp$1.apply$mcV$sp(Global.scala:761)
+at scala.tools.nsc.interactive.Global$TyperRun$$anonfun$applyPhase$1$$anonfun$apply$mcV$sp$1.apply(Global.scala:761)
+at scala.tools.nsc.interactive.Global$TyperRun$$anonfun$applyPhase$1$$anonfun$apply$mcV$sp$1.apply(Global.scala:761)
+at scala.tools.nsc.symtab.SymbolTable.atPhase(SymbolTable.scala:103)
+at scala.tools.nsc.interactive.Global$TyperRun$$anonfun$applyPhase$1.apply$mcV$sp(Global.scala:761)
+at scala.tools.nsc.interactive.Global$TyperRun$$anonfun$applyPhase$1.apply(Global.scala:761)
+at scala.tools.nsc.interactive.Global$TyperRun$$anonfun$applyPhase$1.apply(Global.scala:761)
+at scala.tools.nsc.reporters.Reporter.withSource(Reporter.scala:48)
+at scala.tools.nsc.interactive.Global$TyperRun.applyPhase(Global.scala:760)
+at scala.tools.nsc.interactive.Global$TyperRun.typeCheck(Global.scala:752)
+at scala.tools.nsc.interactive.Global.typeCheck(Global.scala:387)
+at scala.tools.nsc.interactive.Global$$anonfun$backgroundCompile$4$$anonfun$apply$3.apply(Global.scala:354)
+at scala.tools.nsc.interactive.Global$$anonfun$backgroundCompile$4$$anonfun$apply$3.apply(Global.scala:353)
+at scala.Option.foreach(Option.scala:185)
+at scala.tools.nsc.interactive.Global$$anonfun$backgroundCompile$4.apply(Global.scala:353)
+at scala.tools.nsc.interactive.Global$$anonfun$backgroundCompile$4.apply(Global.scala:353)
+at scala.collection.LinearSeqOptimized$class.foreach(LinearSeqOptimized.scala:61)
+at scala.collection.immutable.List.foreach(List.scala:45)
+at scala.tools.nsc.interactive.Global.backgroundCompile(Global.scala:353)
+at scala.tools.nsc.interactive.PresentationCompilerThread.run(PresentationCompilerThread.scala:22)
+
+
+
+2011-01-27 17:33:00
+Full thread dump Java HotSpot(TM) 64-Bit Server VM (19.0-b09 mixed mode):
+
+"Attach Listener" daemon prio=10 tid=0x00007f860c7c8800 nid=0x1df2 waiting on condition [0x0000000000000000]
+   java.lang.Thread.State: RUNNABLE
+
+   Locked ownable synchronizers:
+  - None
+
+"Scala Presentation Compiler V22" prio=10 tid=0x00007f85f8e86000 nid=0x1d9a in Object.wait() [0x00007f85f6efd000]
+   java.lang.Thread.State: WAITING (on object monitor)
+  at java.lang.Object.wait(Native Method)
+  at java.lang.Object.wait(Object.java:485)
+  at org.eclipse.swt.internal.Lock.lock(Lock.java:34)
+  - locked <0x000000076b1e6878> (a org.eclipse.swt.internal.Lock)
+  at org.eclipse.swt.internal.gtk.OS.g_utf16_to_utf8(OS.java:2863)
+  at org.eclipse.swt.internal.Converter.wcsToMbcs(Converter.java:63)
+  at org.eclipse.swt.graphics.Image.initNative(Image.java:541)
+  at org.eclipse.swt.graphics.Image.<init>(Image.java:531)
+  at org.eclipse.jface.resource.URLImageDescriptor.createImage(URLImageDescriptor.java:162)
+  at org.eclipse.jface.resource.ImageDescriptor.createResource(ImageDescriptor.java:165)
+  at org.eclipse.jface.resource.DeviceResourceManager.allocate(DeviceResourceManager.java:56)
+  at org.eclipse.jface.resource.AbstractResourceManager.create(AbstractResourceManager.java:88)
+  at org.eclipse.jface.resource.ResourceManager.createImageWithDefault(ResourceManager.java:192)
+  at org.eclipse.jface.resource.ImageRegistry.get(ImageRegistry.java:212)
+  at org.eclipse.jdt.internal.ui.JavaPluginImages.get(JavaPluginImages.java:491)
+  at scala.tools.eclipse.completion.ScalaCompletionProposalComputer$$anonfun$computeCompletionProposals$1$$anonfun$apply$2.accept$1(ScalaCompletionProposalComputer.scala:156)
+  at scala.tools.eclipse.completion.ScalaCompletionProposalComputer$$anonfun$computeCompletionProposals$1$$anonfun$apply$2$$anonfun$apply$1$$anonfun$apply$mcV$sp$1.apply(ScalaCompletionProposalComputer.scala:184)
+  at scala.tools.eclipse.completion.ScalaCompletionProposalComputer$$anonfun$computeCompletionProposals$1$$anonfun$apply$2$$anonfun$apply$1$$anonfun$apply$mcV$sp$1.apply(ScalaCompletionProposalComputer.scala:181)
+  at scala.collection.LinearSeqOptimized$class.foreach(LinearSeqOptimized.scala:61)
+  at scala.collection.immutable.List.foreach(List.scala:45)
+  at scala.tools.eclipse.completion.ScalaCompletionProposalComputer$$anonfun$computeCompletionProposals$1$$anonfun$apply$2$$anonfun$apply$1.apply$mcV$sp(ScalaCompletionProposalComputer.scala:181)
+  at scala.tools.eclipse.completion.ScalaCompletionProposalComputer$$anonfun$computeCompletionProposals$1$$anonfun$apply$2$$anonfun$apply$1.apply(ScalaCompletionProposalComputer.scala:180)
+  at scala.tools.eclipse.completion.ScalaCompletionProposalComputer$$anonfun$computeCompletionProposals$1$$anonfun$apply$2$$anonfun$apply$1.apply(ScalaCompletionProposalComputer.scala:180)
+  at scala.tools.nsc.interactive.util.InterruptReq.liftedTree1$1(InterruptReq.scala:22)
+  at scala.tools.nsc.interactive.util.InterruptReq.execute(InterruptReq.scala:21)
+  - locked <0x0000000769dd7dc8> (a scala.tools.nsc.interactive.util.WorkScheduler$$anon$1)
+  at scala.tools.nsc.interactive.Global.pollForWork(Global.scala:252)
+  at scala.tools.nsc.interactive.PresentationCompilerThread.run(PresentationCompilerThread.scala:19)
+
+   Locked ownable synchronizers:
+  - None
+
+"Timer-16" daemon prio=10 tid=0x0000000043564800 nid=0x1d06 in Object.wait() [0x00007f85e96e3000]
+   java.lang.Thread.State: WAITING (on object monitor)
+  at java.lang.Object.wait(Native Method)
+  at java.lang.Object.wait(Object.java:485)
+  at java.util.TimerThread.mainLoop(Timer.java:483)
+  - locked <0x0000000789a11ea8> (a java.util.TaskQueue)
+  at java.util.TimerThread.run(Timer.java:462)
+
+   Locked ownable synchronizers:
+  - None
+
+"Worker-21" prio=10 tid=0x00007f860c6f6800 nid=0x1c6c in Object.wait() [0x00007f85e8edf000]
+   java.lang.Thread.State: TIMED_WAITING (on object monitor)
+  at java.lang.Object.wait(Native Method)
+  at org.eclipse.core.internal.jobs.WorkerPool.sleep(WorkerPool.java:185)
+  - locked <0x000000076acbe6e0> (a org.eclipse.core.internal.jobs.WorkerPool)
+  at org.eclipse.core.internal.jobs.WorkerPool.startJob(WorkerPool.java:217)
+  at org.eclipse.core.internal.jobs.Worker.run(Worker.java:51)
+
+   Locked ownable synchronizers:
+  - None
+
+"Worker-20" prio=10 tid=0x00007f85f88de800 nid=0x1c65 in Object.wait() [0x00007f85e90e0000]
+   java.lang.Thread.State: TIMED_WAITING (on object monitor)
+  at java.lang.Object.wait(Native Method)
+  at org.eclipse.core.internal.jobs.WorkerPool.sleep(WorkerPool.java:185)
+  - locked <0x000000076acbe6e0> (a org.eclipse.core.internal.jobs.WorkerPool)
+  at org.eclipse.core.internal.jobs.WorkerPool.startJob(WorkerPool.java:217)
+  at org.eclipse.core.internal.jobs.Worker.run(Worker.java:51)
+
+   Locked ownable synchronizers:
+  - None
+
+"Worker-18" prio=10 tid=0x00007f85f8e8f800 nid=0x1c60 in Object.wait() [0x00007f85e94e2000]
+   java.lang.Thread.State: TIMED_WAITING (on object monitor)
+  at java.lang.Object.wait(Native Method)
+  at org.eclipse.core.internal.jobs.WorkerPool.sleep(WorkerPool.java:185)
+  - locked <0x000000076acbe6e0> (a org.eclipse.core.internal.jobs.WorkerPool)
+  at org.eclipse.core.internal.jobs.WorkerPool.startJob(WorkerPool.java:217)
+  at org.eclipse.core.internal.jobs.Worker.run(Worker.java:51)
+
+   Locked ownable synchronizers:
+  - None
+
+"Timer-3" daemon prio=10 tid=0x00000000427d8800 nid=0x1c5e in Object.wait() [0x00007f85e98e4000]
+   java.lang.Thread.State: WAITING (on object monitor)
+  at java.lang.Object.wait(Native Method)
+  at java.lang.Object.wait(Object.java:485)
+  at java.util.TimerThread.mainLoop(Timer.java:483)
+  - locked <0x0000000787dbb500> (a java.util.TaskQueue)
+  at java.util.TimerThread.run(Timer.java:462)
+
+   Locked ownable synchronizers:
+  - None
+
+"Timer-2" daemon prio=10 tid=0x00000000427d8000 nid=0x1c5d in Object.wait() [0x00007f85e9ae5000]
+   java.lang.Thread.State: WAITING (on object monitor)
+  at java.lang.Object.wait(Native Method)
+  at java.lang.Object.wait(Object.java:485)
+  at java.util.TimerThread.mainLoop(Timer.java:483)
+  - locked <0x0000000787dbb518> (a java.util.TaskQueue)
+  at java.util.TimerThread.run(Timer.java:462)
+
+   Locked ownable synchronizers:
+  - None
+
+"org.eclipse.jdt.debug: JDI Event Dispatcher" daemon prio=10 tid=0x0000000043cca000 nid=0x1c37 in Object.wait() [0x00007f85ea0e8000]
+   java.lang.Thread.State: TIMED_WAITING (on object monitor)
+  at java.lang.Object.wait(Native Method)
+  at org.eclipse.jdi.internal.connect.PacketReceiveManager.waitForPacketAvailable(PacketReceiveManager.java:192)
+  at org.eclipse.jdi.internal.connect.PacketReceiveManager.getCommand(PacketReceiveManager.java:103)
+  - locked <0x000000078777df38> (a java.util.LinkedList)
+  at org.eclipse.jdi.internal.MirrorImpl.getCommandVM(MirrorImpl.java:277)
+  at org.eclipse.jdi.internal.event.EventQueueImpl.remove(EventQueueImpl.java:63)
+  at org.eclipse.jdt.internal.debug.core.EventDispatcher.run(EventDispatcher.java:241)
+  at java.lang.Thread.run(Thread.java:662)
+
+   Locked ownable synchronizers:
+  - None
+
+"Packet Send Manager" daemon prio=10 tid=0x0000000041e00800 nid=0x1c36 in Object.wait() [0x00007f85e9ce6000]
+   java.lang.Thread.State: WAITING (on object monitor)
+  at java.lang.Object.wait(Native Method)
+  at java.lang.Object.wait(Object.java:485)
+  at org.eclipse.jdi.internal.connect.PacketSendManager.sendAvailablePackets(PacketSendManager.java:98)
+  - locked <0x0000000787462cf8> (a java.util.LinkedList)
+  at org.eclipse.jdi.internal.connect.PacketSendManager.run(PacketSendManager.java:53)
+  at java.lang.Thread.run(Thread.java:662)
+
+   Locked ownable synchronizers:
+  - None
+
+"Packet Receive Manager" daemon prio=10 tid=0x0000000043258000 nid=0x1c35 runnable [0x00007f85e9ee7000]
+   java.lang.Thread.State: RUNNABLE
+  at java.net.SocketInputStream.socketRead0(Native Method)
+  at java.net.SocketInputStream.read(SocketInputStream.java:129)
+  at java.net.SocketInputStream.read(SocketInputStream.java:182)
+  at java.io.DataInputStream.readInt(DataInputStream.java:370)
+  at org.eclipse.jdi.internal.connect.SocketConnection.readPacket(SocketConnection.java:60)
+  - locked <0x0000000769e3d6a0> (a java.io.DataInputStream)
+  at org.eclipse.jdi.internal.connect.PacketReceiveManager.readAvailablePacket(PacketReceiveManager.java:274)
+  at org.eclipse.jdi.internal.connect.PacketReceiveManager.run(PacketReceiveManager.java:82)
+  at java.lang.Thread.run(Thread.java:662)
+
+   Locked ownable synchronizers:
+  - None
+
+"Process monitor" daemon prio=10 tid=0x0000000042719800 nid=0x1c25 in Object.wait() [0x00007f85f52f0000]
+   java.lang.Thread.State: WAITING (on object monitor)
+  at java.lang.Object.wait(Native Method)
+  at java.lang.Object.wait(Object.java:485)
+  at java.lang.UNIXProcess.waitFor(UNIXProcess.java:165)
+  - locked <0x0000000787799230> (a java.lang.UNIXProcess)
+  at org.eclipse.debug.core.model.RuntimeProcess$ProcessMonitorThread.run(RuntimeProcess.java:405)
+
+   Locked ownable synchronizers:
+  - None
+
+"Input Stream Monitor" daemon prio=10 tid=0x00000000427c2000 nid=0x1c24 in Object.wait() [0x00007f85f54f1000]
+   java.lang.Thread.State: WAITING (on object monitor)
+  at java.lang.Object.wait(Native Method)
+  at java.lang.Object.wait(Object.java:485)
+  at org.eclipse.debug.internal.core.InputStreamMonitor.writeNext(InputStreamMonitor.java:136)
+  - locked <0x0000000787462cc8> (a java.lang.Object)
+  at org.eclipse.debug.internal.core.InputStreamMonitor.write(InputStreamMonitor.java:109)
+  at org.eclipse.debug.internal.core.InputStreamMonitor$1.run(InputStreamMonitor.java:84)
+  at java.lang.Thread.run(Thread.java:662)
+
+   Locked ownable synchronizers:
+  - None
+
+"Output Stream Monitor" daemon prio=10 tid=0x00000000436b6800 nid=0x1c23 runnable [0x00007f85f5cf5000]
+   java.lang.Thread.State: RUNNABLE
+  at java.io.FileInputStream.readBytes(Native Method)
+  at java.io.FileInputStream.read(FileInputStream.java:199)
+  at java.io.BufferedInputStream.read1(BufferedInputStream.java:256)
+  at java.io.BufferedInputStream.read(BufferedInputStream.java:317)
+  - locked <0x00000007877957d0> (a java.io.BufferedInputStream)
+  at java.io.FilterInputStream.read(FilterInputStream.java:90)
+  at org.eclipse.debug.internal.core.OutputStreamMonitor.read(OutputStreamMonitor.java:144)
+  at org.eclipse.debug.internal.core.OutputStreamMonitor.access$1(OutputStreamMonitor.java:134)
+  at org.eclipse.debug.internal.core.OutputStreamMonitor$1.run(OutputStreamMonitor.java:207)
+  at java.lang.Thread.run(Thread.java:662)
+
+   Locked ownable synchronizers:
+  - None
+
+"Output Stream Monitor" daemon prio=10 tid=0x0000000042da7000 nid=0x1c22 runnable [0x00007f8606787000]
+   java.lang.Thread.State: RUNNABLE
+  at java.io.FileInputStream.readBytes(Native Method)
+  at java.io.FileInputStream.read(FileInputStream.java:199)
+  at java.io.BufferedInputStream.read1(BufferedInputStream.java:256)
+  at java.io.BufferedInputStream.read(BufferedInputStream.java:317)
+  - locked <0x00000007879313c0> (a java.io.BufferedInputStream)
+  at java.io.BufferedInputStream.read1(BufferedInputStream.java:256)
+  at java.io.BufferedInputStream.read(BufferedInputStream.java:317)
+  - locked <0x0000000787791b58> (a java.io.BufferedInputStream)
+  at java.io.FilterInputStream.read(FilterInputStream.java:90)
+  at org.eclipse.debug.internal.core.OutputStreamMonitor.read(OutputStreamMonitor.java:144)
+  at org.eclipse.debug.internal.core.OutputStreamMonitor.access$1(OutputStreamMonitor.java:134)
+  at org.eclipse.debug.internal.core.OutputStreamMonitor$1.run(OutputStreamMonitor.java:207)
+  at java.lang.Thread.run(Thread.java:662)
+
+   Locked ownable synchronizers:
+  - None
+
+"process reaper" daemon prio=10 tid=0x0000000042b85000 nid=0x1c20 runnable [0x00007f85f5af4000]
+   java.lang.Thread.State: RUNNABLE
+  at java.lang.UNIXProcess.waitForProcessExit(Native Method)
+  at java.lang.UNIXProcess.access$900(UNIXProcess.java:20)
+  at java.lang.UNIXProcess$1$1.run(UNIXProcess.java:132)
+
+   Locked ownable synchronizers:
+  - None
+
+"Worker-16" prio=10 tid=0x00007f860c6d7000 nid=0x1c1f in Object.wait() [0x00007f8607885000]
+   java.lang.Thread.State: TIMED_WAITING (on object monitor)
+  at java.lang.Object.wait(Native Method)
+  at org.eclipse.core.internal.jobs.WorkerPool.sleep(WorkerPool.java:185)
+  - locked <0x000000076acbe6e0> (a org.eclipse.core.internal.jobs.WorkerPool)
+  at org.eclipse.core.internal.jobs.WorkerPool.startJob(WorkerPool.java:217)
+  at org.eclipse.core.internal.jobs.Worker.run(Worker.java:51)
+
+   Locked ownable synchronizers:
+  - None
+
+"Timer-1" daemon prio=10 tid=0x0000000043e53800 nid=0x1bfb in Object.wait() [0x00007f85f56f2000]
+   java.lang.Thread.State: TIMED_WAITING (on object monitor)
+  at java.lang.Object.wait(Native Method)
+  at java.util.TimerThread.mainLoop(Timer.java:509)
+  - locked <0x0000000786fb9938> (a java.util.TaskQueue)
+  at java.util.TimerThread.run(Timer.java:462)
+
+   Locked ownable synchronizers:
+  - None
+
+"1795163697@qtp-1447396496-1 - Acceptor0 SelectChannelConnector@0.0.0.0:35955" prio=10 tid=0x0000000042715800 nid=0x1bfa runnable [0x00007f8607c87000]
+   java.lang.Thread.State: RUNNABLE
+  at sun.nio.ch.EPollArrayWrapper.epollWait(Native Method)
+  at sun.nio.ch.EPollArrayWrapper.poll(EPollArrayWrapper.java:210)
+  at sun.nio.ch.EPollSelectorImpl.doSelect(EPollSelectorImpl.java:65)
+  at sun.nio.ch.SelectorImpl.lockAndDoSelect(SelectorImpl.java:69)
+  - locked <0x0000000786fbab08> (a sun.nio.ch.Util$2)
+  - locked <0x0000000786fbaaf0> (a java.util.Collections$UnmodifiableSet)
+  - locked <0x0000000786fba8c8> (a sun.nio.ch.EPollSelectorImpl)
+  at sun.nio.ch.SelectorImpl.select(SelectorImpl.java:80)
+  at org.mortbay.io.nio.SelectorManager$SelectSet.doSelect(SelectorManager.java:432)
+  at org.mortbay.io.nio.SelectorManager.doSelect(SelectorManager.java:185)
+  at org.mortbay.jetty.nio.SelectChannelConnector.accept(SelectChannelConnector.java:124)
+  at org.mortbay.jetty.AbstractConnector$Acceptor.run(AbstractConnector.java:707)
+  at org.mortbay.thread.QueuedThreadPool$PoolThread.run(QueuedThreadPool.java:520)
+
+   Locked ownable synchronizers:
+  - None
+
+"1395884053@qtp-1447396496-0" prio=10 tid=0x0000000042a37800 nid=0x1bf9 in Object.wait() [0x00007f8605751000]
+   java.lang.Thread.State: TIMED_WAITING (on object monitor)
+  at java.lang.Object.wait(Native Method)
+  at org.mortbay.thread.QueuedThreadPool$PoolThread.run(QueuedThreadPool.java:563)
+  - locked <0x0000000786f9d978> (a org.mortbay.thread.QueuedThreadPool$PoolThread)
+
+   Locked ownable synchronizers:
+  - None
+
+"Worker-15" prio=10 tid=0x00007f85fa2e6000 nid=0x1bc2 in Object.wait() [0x00007f85f5099000]
+   java.lang.Thread.State: WAITING (on object monitor)
+  at java.lang.Object.wait(Native Method)
+  at java.lang.Object.wait(Object.java:485)
+  at org.eclipse.ui.console.IOConsoleInputStream.waitForData(IOConsoleInputStream.java:147)
+  at org.eclipse.ui.console.IOConsoleInputStream.read(IOConsoleInputStream.java:92)
+  - locked <0x0000000787799110> (a org.eclipse.ui.console.IOConsoleInputStream)
+  at org.eclipse.ui.console.IOConsoleInputStream.read(IOConsoleInputStream.java:117)
+  at org.eclipse.debug.internal.ui.views.console.ProcessConsole$InputReadJob.run(ProcessConsole.java:675)
+  at org.eclipse.core.internal.jobs.Worker.run(Worker.java:55)
+
+   Locked ownable synchronizers:
+  - None
+
+"Worker-13" prio=10 tid=0x00007f85fab40000 nid=0x1ba9 in Object.wait() [0x00007f85f5ef6000]
+   java.lang.Thread.State: TIMED_WAITING (on object monitor)
+  at java.lang.Object.wait(Native Method)
+  at org.eclipse.core.internal.jobs.WorkerPool.sleep(WorkerPool.java:185)
+  - locked <0x000000076acbe6e0> (a org.eclipse.core.internal.jobs.WorkerPool)
+  at org.eclipse.core.internal.jobs.WorkerPool.startJob(WorkerPool.java:217)
+  at org.eclipse.core.internal.jobs.Worker.run(Worker.java:51)
+
+   Locked ownable synchronizers:
+  - None
+
+"org.eclipse.jdt.internal.ui.text.JavaReconciler" daemon prio=10 tid=0x0000000044ece800 nid=0x1aa4 in Object.wait() [0x00007f85f58f2000]
+   java.lang.Thread.State: WAITING (on object monitor)
+  at java.lang.Object.wait(Native Method)
+  at java.lang.Object.wait(Object.java:485)
+  at scala.tools.nsc.interactive.util.InterruptReq.liftedTree2$1(InterruptReq.scala:33)
+  at scala.tools.nsc.interactive.util.InterruptReq.getResult(InterruptReq.scala:32)
+  - locked <0x0000000769e2acf0> (a scala.tools.nsc.interactive.util.WorkScheduler$$anon$1)
+  at scala.tools.nsc.interactive.util.WorkScheduler.doQuickly(WorkScheduler.scala:63)
+  at scala.tools.nsc.interactive.CompilerControl$class.ask(CompilerControl.scala:172)
+  at scala.tools.eclipse.ScalaPresentationCompiler.ask(ScalaPresentationCompiler.scala:80)
+  at scala.tools.eclipse.javaelements.ScalaCompilationUnit$$anonfun$buildStructure$2$$anonfun$apply$2.apply$mcZ$sp(ScalaCompilationUnit.scala:90)
+  at scala.tools.eclipse.javaelements.ScalaCompilationUnit$$anonfun$buildStructure$2$$anonfun$apply$2.apply(ScalaCompilationUnit.scala:89)
+  at scala.tools.eclipse.javaelements.ScalaCompilationUnit$$anonfun$buildStructure$2$$anonfun$apply$2.apply(ScalaCompilationUnit.scala:89)
+  at scala.tools.eclipse.internal.logging.Defensive$.tryOrLog(Defensive.scala:80)
+  at scala.tools.eclipse.javaelements.ScalaCompilationUnit$$anonfun$buildStructure$2.apply(ScalaCompilationUnit.scala:89)
+  at scala.tools.eclipse.javaelements.ScalaCompilationUnit$$anonfun$buildStructure$2.apply(ScalaCompilationUnit.scala:81)
+  at scala.tools.eclipse.ScalaPresentationCompiler.withSourceFile(ScalaPresentationCompiler.scala:75)
+  at scala.tools.eclipse.ScalaProject$$anonfun$withSourceFile$1.apply(ScalaProject.scala:432)
+  at scala.tools.eclipse.ScalaProject$$anonfun$withSourceFile$1.apply(ScalaProject.scala:431)
+  at scala.Either$RightProjection.map(Either.scala:283)
+  at scala.tools.eclipse.util.Cached$class.apply(Cached.scala:114)
+  at scala.tools.eclipse.ScalaProject$$anon$2.apply(ScalaProject.scala:39)
+  at scala.tools.eclipse.ScalaProject.withPresentationCompiler(ScalaProject.scala:423)
+  at scala.tools.eclipse.ScalaProject.withSourceFile(ScalaProject.scala:431)
+  at scala.tools.eclipse.javaelements.ScalaCompilationUnit$class.withSourceFileButNotInMainThread(ScalaCompilationUnit.scala:49)
+  at scala.tools.eclipse.javaelements.ScalaSourceFile.withSourceFileButNotInMainThread(ScalaSourceFile.scala:38)
+  at scala.tools.eclipse.javaelements.ScalaCompilationUnit$class.buildStructure(ScalaCompilationUnit.scala:81)
+  at scala.tools.eclipse.javaelements.ScalaSourceFile.buildStructure(ScalaSourceFile.scala:38)
+  at org.eclipse.jdt.internal.core.Openable.generateInfos(Openable.java:258)
+  at org.eclipse.jdt.internal.core.JavaElement.openWhenClosed(JavaElement.java:515)
+  at scala.tools.eclipse.javaelements.ScalaSourceFile.makeConsistent(ScalaSourceFile.scala:67)
+  at org.eclipse.jdt.internal.core.ReconcileWorkingCopyOperation.makeConsistent(ReconcileWorkingCopyOperation.java:170)
+  at org.eclipse.jdt.internal.core.ReconcileWorkingCopyOperation.executeOperation(ReconcileWorkingCopyOperation.java:89)
+  at org.eclipse.jdt.internal.core.JavaModelOperation.run(JavaModelOperation.java:728)
+  at org.eclipse.jdt.internal.core.JavaModelOperation.runOperation(JavaModelOperation.java:788)
+  at org.eclipse.jdt.internal.core.CompilationUnit.reconcile(CompilationUnit.java:1244)
+  at scala.tools.eclipse.javaelements.ScalaSourceFile.scala$tools$eclipse$javaelements$ScalaSourceFile$$super$reconcile(ScalaSourceFile.scala:55)
+  at scala.tools.eclipse.javaelements.ScalaSourceFile$$anonfun$reconcile$1.apply(ScalaSourceFile.scala:55)
+  at scala.tools.eclipse.javaelements.ScalaSourceFile$$anonfun$reconcile$1.apply(ScalaSourceFile.scala:53)
+  at scala.tools.eclipse.internal.logging.Tracer$.timeOf(Tracer.scala:41)
+  at scala.tools.eclipse.javaelements.ScalaSourceFile.reconcile(ScalaSourceFile.scala:53)
+  at org.eclipse.jdt.internal.ui.text.java.JavaReconcilingStrategy.reconcile(JavaReconcilingStrategy.java:126)
+  at org.eclipse.jdt.internal.ui.text.java.JavaReconcilingStrategy.access$0(JavaReconcilingStrategy.java:108)
+  at org.eclipse.jdt.internal.ui.text.java.JavaReconcilingStrategy$1.run(JavaReconcilingStrategy.java:89)
+  at org.eclipse.core.runtime.SafeRunner.run(SafeRunner.java:42)
+  at org.eclipse.jdt.internal.ui.text.java.JavaReconcilingStrategy.reconcile(JavaReconcilingStrategy.java:87)
+  at org.eclipse.jdt.internal.ui.text.java.JavaReconcilingStrategy.reconcile(JavaReconcilingStrategy.java:151)
+  at org.eclipse.jdt.internal.ui.text.CompositeReconcilingStrategy.reconcile(CompositeReconcilingStrategy.java:86)
+  at org.eclipse.jdt.internal.ui.text.JavaCompositeReconcilingStrategy.reconcile(JavaCompositeReconcilingStrategy.java:102)
+  at org.eclipse.jface.text.reconciler.MonoReconciler.process(MonoReconciler.java:77)
+  at org.eclipse.jface.text.reconciler.AbstractReconciler$BackgroundThread.run(AbstractReconciler.java:206)
+
+   Locked ownable synchronizers:
+  - None
+
+"Timer-0" daemon prio=10 tid=0x00007f85f8d13000 nid=0x183e in Object.wait() [0x00007f85f60f7000]
+   java.lang.Thread.State: WAITING (on object monitor)
+  at java.lang.Object.wait(Native Method)
+  - waiting on <0x000000077227df58> (a java.util.TaskQueue)
+  at java.lang.Object.wait(Object.java:485)
+  at java.util.TimerThread.mainLoop(Timer.java:483)
+  - locked <0x000000077227df58> (a java.util.TaskQueue)
+  at java.util.TimerThread.run(Timer.java:462)
+
+   Locked ownable synchronizers:
+  - None
+
+"ForkJoinScheduler" prio=10 tid=0x00007f85f8318800 nid=0x183d in Object.wait() [0x00007f85f62f8000]
+   java.lang.Thread.State: TIMED_WAITING (on object monitor)
+  at java.lang.Object.wait(Native Method)
+  at scala.actors.scheduler.ForkJoinScheduler.liftedTree1$1(ForkJoinScheduler.scala:70)
+  at scala.actors.scheduler.ForkJoinScheduler.run(ForkJoinScheduler.scala:69)
+  - locked <0x00000007722241b0> (a scala.actors.scheduler.ForkJoinScheduler)
+  at java.lang.Thread.run(Thread.java:662)
+
+   Locked ownable synchronizers:
+  - None
+
+"ForkJoinPool-1-worker-3" daemon prio=10 tid=0x00007f85f8f1a800 nid=0x183c waiting on condition [0x00007f85f64f9000]
+   java.lang.Thread.State: WAITING (parking)
+  at sun.misc.Unsafe.park(Native Method)
+  - parking to wait for  <0x000000078ac53e80> (a scala.concurrent.forkjoin.ForkJoinPool$WaitQueueNode)
+  at java.util.concurrent.locks.LockSupport.park(LockSupport.java:158)
+  at scala.concurrent.forkjoin.ForkJoinPool$WaitQueueNode.awaitSyncRelease(ForkJoinPool.java:1340)
+  at scala.concurrent.forkjoin.ForkJoinPool.sync(ForkJoinPool.java:1417)
+  at scala.concurrent.forkjoin.ForkJoinWorkerThread.mainLoop(ForkJoinWorkerThread.java:342)
+  at scala.concurrent.forkjoin.ForkJoinWorkerThread.run(ForkJoinWorkerThread.java:325)
+
+   Locked ownable synchronizers:
+  - None
+
+"ForkJoinPool-1-worker-2" daemon prio=10 tid=0x00007f85f9f61000 nid=0x183b waiting on condition [0x00007f860553c000]
+   java.lang.Thread.State: WAITING (parking)
+  at sun.misc.Unsafe.park(Native Method)
+  - parking to wait for  <0x000000078ac53ea0> (a scala.concurrent.forkjoin.ForkJoinPool$WaitQueueNode)
+  at java.util.concurrent.locks.LockSupport.park(LockSupport.java:158)
+  at scala.concurrent.forkjoin.ForkJoinPool$WaitQueueNode.awaitSyncRelease(ForkJoinPool.java:1340)
+  at scala.concurrent.forkjoin.ForkJoinPool.sync(ForkJoinPool.java:1417)
+  at scala.concurrent.forkjoin.ForkJoinWorkerThread.mainLoop(ForkJoinWorkerThread.java:342)
+  at scala.concurrent.forkjoin.ForkJoinWorkerThread.run(ForkJoinWorkerThread.java:325)
+
+   Locked ownable synchronizers:
+  - None
+
+"ForkJoinPool-1-worker-1" daemon prio=10 tid=0x00007f85fa408800 nid=0x183a waiting on condition [0x00007f85f6afc000]
+   java.lang.Thread.State: WAITING (parking)
+  at sun.misc.Unsafe.park(Native Method)
+  - parking to wait for  <0x000000078ac53ec0> (a scala.concurrent.forkjoin.ForkJoinPool$WaitQueueNode)
+  at java.util.concurrent.locks.LockSupport.park(LockSupport.java:158)
+  at scala.concurrent.forkjoin.ForkJoinPool$WaitQueueNode.awaitSyncRelease(ForkJoinPool.java:1340)
+  at scala.concurrent.forkjoin.ForkJoinPool.sync(ForkJoinPool.java:1417)
+  at scala.concurrent.forkjoin.ForkJoinWorkerThread.mainLoop(ForkJoinWorkerThread.java:342)
+  at scala.concurrent.forkjoin.ForkJoinWorkerThread.run(ForkJoinWorkerThread.java:325)
+
+   Locked ownable synchronizers:
+  - None
+
+"ForkJoinPool-1-worker-0" daemon prio=10 tid=0x00007f85fa267800 nid=0x1839 waiting on condition [0x00007f85f66fa000]
+   java.lang.Thread.State: WAITING (parking)
+  at sun.misc.Unsafe.park(Native Method)
+  - parking to wait for  <0x000000078ac53ee0> (a scala.concurrent.forkjoin.ForkJoinPool$WaitQueueNode)
+  at java.util.concurrent.locks.LockSupport.park(LockSupport.java:158)
+  at scala.concurrent.forkjoin.ForkJoinPool$WaitQueueNode.awaitSyncRelease(ForkJoinPool.java:1340)
+  at scala.concurrent.forkjoin.ForkJoinPool.sync(ForkJoinPool.java:1417)
+  at scala.concurrent.forkjoin.ForkJoinWorkerThread.mainLoop(ForkJoinWorkerThread.java:342)
+  at scala.concurrent.forkjoin.ForkJoinWorkerThread.run(ForkJoinWorkerThread.java:325)
+
+   Locked ownable synchronizers:
+  - None
+
+"org.eclipse.jdt.internal.ui.text.JavaReconciler" daemon prio=10 tid=0x0000000042b99800 nid=0x1836 in Object.wait() [0x00007f85f68fb000]
+   java.lang.Thread.State: TIMED_WAITING (on object monitor)
+  at java.lang.Object.wait(Native Method)
+  at org.eclipse.jface.text.reconciler.AbstractReconciler$BackgroundThread.run(AbstractReconciler.java:179)
+  - locked <0x000000076e8b5e60> (a org.eclipse.jface.text.reconciler.DirtyRegionQueue)
+
+   Locked ownable synchronizers:
+  - None
+
+"[ThreadPool Manager] - Idle Thread" daemon prio=10 tid=0x0000000042382000 nid=0x1834 in Object.wait() [0x00007f85f6cfd000]
+   java.lang.Thread.State: WAITING (on object monitor)
+  at java.lang.Object.wait(Native Method)
+  at java.lang.Object.wait(Object.java:485)
+  at org.eclipse.equinox.internal.util.impl.tpt.threadpool.Executor.run(Executor.java:106)
+  - locked <0x000000076e0e0bc8> (a org.eclipse.equinox.internal.util.impl.tpt.threadpool.Executor)
+
+   Locked ownable synchronizers:
+  - None
+
+"Java indexing" daemon prio=10 tid=0x0000000042d3f800 nid=0x1825 in Object.wait() [0x00007f8605c4a000]
+   java.lang.Thread.State: WAITING (on object monitor)
+  at java.lang.Object.wait(Native Method)
+  at java.lang.Object.wait(Object.java:485)
+  at org.eclipse.jdt.internal.core.search.processing.JobManager.run(JobManager.java:381)
+  - locked <0x000000076b881b40> (a org.eclipse.jdt.internal.core.search.indexing.IndexManager)
+  at java.lang.Thread.run(Thread.java:662)
+
+   Locked ownable synchronizers:
+  - None
+
+"Thread-1" daemon prio=10 tid=0x00007f860d04a800 nid=0x1821 waiting on condition [0x00007f8607270000]
+   java.lang.Thread.State: WAITING (parking)
+  at sun.misc.Unsafe.park(Native Method)
+  - parking to wait for  <0x000000076b104600> (a java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject)
+  at java.util.concurrent.locks.LockSupport.park(LockSupport.java:158)
+  at java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(AbstractQueuedSynchronizer.java:1987)
+  at java.util.concurrent.ArrayBlockingQueue.take(ArrayBlockingQueue.java:317)
+  at org.eclipse.equinox.weaving.internal.caching.CacheWriter$1.run(CacheWriter.java:47)
+  at java.lang.Thread.run(Thread.java:662)
+
+   Locked ownable synchronizers:
+  - None
+
+"[Timer] - Main Queue Handler" daemon prio=10 tid=0x00007f860caca800 nid=0x1820 in Object.wait() [0x00007f8607684000]
+   java.lang.Thread.State: TIMED_WAITING (on object monitor)
+  at java.lang.Object.wait(Native Method)
+  at org.eclipse.equinox.internal.util.impl.tpt.timer.TimerImpl.run(TimerImpl.java:141)
+  - locked <0x000000076b1953e8> (a java.lang.Object)
+  at java.lang.Thread.run(Thread.java:662)
+
+   Locked ownable synchronizers:
+  - None
+
+"Provisioning Event Dispatcher" daemon prio=10 tid=0x00007f860c73d800 nid=0x181e in Object.wait() [0x00007f8607a86000]
+   java.lang.Thread.State: WAITING (on object monitor)
+  at java.lang.Object.wait(Native Method)
+  - waiting on <0x000000076af3ba68> (a org.eclipse.osgi.framework.eventmgr.EventManager$EventThread)
+  at java.lang.Object.wait(Object.java:485)
+  at org.eclipse.osgi.framework.eventmgr.EventManager$EventThread.getNextEvent(EventManager.java:397)
+  - locked <0x000000076af3ba68> (a org.eclipse.osgi.framework.eventmgr.EventManager$EventThread)
+  at org.eclipse.osgi.framework.eventmgr.EventManager$EventThread.run(EventManager.java:333)
+
+   Locked ownable synchronizers:
+  - None
+
+"Framework Event Dispatcher" daemon prio=10 tid=0x00000000423ef000 nid=0x181c in Object.wait() [0x00007f8607e88000]
+   java.lang.Thread.State: WAITING (on object monitor)
+  at java.lang.Object.wait(Native Method)
+  at java.lang.Object.wait(Object.java:485)
+  at org.eclipse.osgi.framework.eventmgr.EventManager$EventThread.getNextEvent(EventManager.java:397)
+  - locked <0x000000076ac90b08> (a org.eclipse.osgi.framework.eventmgr.EventManager$EventThread)
+  at org.eclipse.osgi.framework.eventmgr.EventManager$EventThread.run(EventManager.java:333)
+
+   Locked ownable synchronizers:
+  - None
+
+"Start Level Event Dispatcher" daemon prio=10 tid=0x00007f860c5c8800 nid=0x181b in Object.wait() [0x00007f86081da000]
+   java.lang.Thread.State: WAITING (on object monitor)
+  at java.lang.Object.wait(Native Method)
+  - waiting on <0x000000076ac90b88> (a org.eclipse.osgi.framework.eventmgr.EventManager$EventThread)
+  at java.lang.Object.wait(Object.java:485)
+  at org.eclipse.osgi.framework.eventmgr.EventManager$EventThread.getNextEvent(EventManager.java:397)
+  - locked <0x000000076ac90b88> (a org.eclipse.osgi.framework.eventmgr.EventManager$EventThread)
+  at org.eclipse.osgi.framework.eventmgr.EventManager$EventThread.run(EventManager.java:333)
+
+   Locked ownable synchronizers:
+  - None
+
+"Bundle File Closer" daemon prio=10 tid=0x00007f860c8c3000 nid=0x181a in Object.wait() [0x00007f8608425000]
+   java.lang.Thread.State: WAITING (on object monitor)
+  at java.lang.Object.wait(Native Method)
+  at java.lang.Object.wait(Object.java:485)
+  at org.eclipse.osgi.framework.eventmgr.EventManager$EventThread.getNextEvent(EventManager.java:397)
+  - locked <0x000000076ab30f78> (a org.eclipse.osgi.framework.eventmgr.EventManager$EventThread)
+  at org.eclipse.osgi.framework.eventmgr.EventManager$EventThread.run(EventManager.java:333)
+
+   Locked ownable synchronizers:
+  - None
+
+"State Data Manager" daemon prio=10 tid=0x00007f860c6e7000 nid=0x1819 waiting on condition [0x00007f8608767000]
+   java.lang.Thread.State: TIMED_WAITING (sleeping)
+  at java.lang.Thread.sleep(Native Method)
+  at org.eclipse.osgi.internal.baseadaptor.StateManager.run(StateManager.java:306)
+  at java.lang.Thread.run(Thread.java:662)
+
+   Locked ownable synchronizers:
+  - None
+
+"Low Memory Detector" daemon prio=10 tid=0x0000000041c25000 nid=0x1817 runnable [0x0000000000000000]
+   java.lang.Thread.State: RUNNABLE
+
+   Locked ownable synchronizers:
+  - None
+
+"CompilerThread1" daemon prio=10 tid=0x0000000041c21800 nid=0x1816 waiting on condition [0x0000000000000000]
+   java.lang.Thread.State: RUNNABLE
+
+   Locked ownable synchronizers:
+  - None
+
+"CompilerThread0" daemon prio=10 tid=0x0000000041c1f000 nid=0x1815 waiting on condition [0x0000000000000000]
+   java.lang.Thread.State: RUNNABLE
+
+   Locked ownable synchronizers:
+  - None
+
+"Signal Dispatcher" daemon prio=10 tid=0x0000000041c1c800 nid=0x1814 runnable [0x0000000000000000]
+   java.lang.Thread.State: RUNNABLE
+
+   Locked ownable synchronizers:
+  - None
+
+"Surrogate Locker Thread (CMS)" daemon prio=10 tid=0x0000000041c1a800 nid=0x1813 waiting on condition [0x0000000000000000]
+   java.lang.Thread.State: RUNNABLE
+
+   Locked ownable synchronizers:
+  - None
+
+"Finalizer" daemon prio=10 tid=0x0000000041bfb800 nid=0x1812 in Object.wait() [0x00007f8612f41000]
+   java.lang.Thread.State: WAITING (on object monitor)
+  at java.lang.Object.wait(Native Method)
+  at java.lang.ref.ReferenceQueue.remove(ReferenceQueue.java:118)
+  - locked <0x000000076a990ee0> (a java.lang.ref.ReferenceQueue$Lock)
+  at java.lang.ref.ReferenceQueue.remove(ReferenceQueue.java:134)
+  at java.lang.ref.Finalizer$FinalizerThread.run(Finalizer.java:159)
+
+   Locked ownable synchronizers:
+  - None
+
+"Reference Handler" daemon prio=10 tid=0x0000000041bf4000 nid=0x1811 in Object.wait() [0x00007f8613142000]
+   java.lang.Thread.State: WAITING (on object monitor)
+  at java.lang.Object.wait(Native Method)
+  at java.lang.Object.wait(Object.java:485)
+  at java.lang.ref.Reference$ReferenceHandler.run(Reference.java:116)
+  - locked <0x000000076a990ef8> (a java.lang.ref.Reference$Lock)
+
+   Locked ownable synchronizers:
+  - None
+
+"main" prio=10 tid=0x0000000041aff000 nid=0x180c in Object.wait() [0x00007f861cef9000]
+   java.lang.Thread.State: WAITING (on object monitor)
+  at java.lang.Object.wait(Native Method)
+  at java.lang.Object.wait(Object.java:485)
+  at scala.tools.nsc.interactive.util.InterruptReq.liftedTree2$1(InterruptReq.scala:33)
+  at scala.tools.nsc.interactive.util.InterruptReq.getResult(InterruptReq.scala:32)
+  - locked <0x0000000769dd7dc8> (a scala.tools.nsc.interactive.util.WorkScheduler$$anon$1)
+  at scala.tools.nsc.interactive.util.WorkScheduler.doQuickly(WorkScheduler.scala:63)
+  at scala.tools.nsc.interactive.CompilerControl$class.ask(CompilerControl.scala:172)
+  at scala.tools.eclipse.ScalaPresentationCompiler.ask(ScalaPresentationCompiler.scala:80)
+  at scala.tools.eclipse.completion.ScalaCompletionProposalComputer$$anonfun$computeCompletionProposals$1$$anonfun$apply$2.apply(ScalaCompletionProposalComputer.scala:180)
+  at scala.tools.eclipse.completion.ScalaCompletionProposalComputer$$anonfun$computeCompletionProposals$1$$anonfun$apply$2.apply(ScalaCompletionProposalComputer.scala:65)
+  at scala.tools.eclipse.ScalaPresentationCompiler.withSourceFile(ScalaPresentationCompiler.scala:75)
+  at scala.tools.eclipse.ScalaProject$$anonfun$withSourceFile$1.apply(ScalaProject.scala:432)
+  at scala.tools.eclipse.ScalaProject$$anonfun$withSourceFile$1.apply(ScalaProject.scala:431)
+  at scala.Either$RightProjection.map(Either.scala:283)
+  at scala.tools.eclipse.util.Cached$class.apply(Cached.scala:114)
+  at scala.tools.eclipse.ScalaProject$$anon$2.apply(ScalaProject.scala:39)
+  at scala.tools.eclipse.ScalaProject.withPresentationCompiler(ScalaProject.scala:423)
+  at scala.tools.eclipse.ScalaProject.withSourceFile(ScalaProject.scala:431)
+  at scala.tools.eclipse.javaelements.ScalaCompilationUnit$class.withSourceFile(ScalaCompilationUnit.scala:43)
+  at scala.tools.eclipse.javaelements.ScalaSourceFile.withSourceFile(ScalaSourceFile.scala:38)
+  at scala.tools.eclipse.completion.ScalaCompletionProposalComputer$$anonfun$computeCompletionProposals$1.apply(ScalaCompletionProposalComputer.scala:65)
+  at scala.tools.eclipse.completion.ScalaCompletionProposalComputer$$anonfun$computeCompletionProposals$1.apply(ScalaCompletionProposalComputer.scala:64)
+  at scala.Option.map(Option.scala:129)
+  at scala.tools.eclipse.completion.ScalaCompletionProposalComputer.computeCompletionProposals(ScalaCompletionProposalComputer.scala:64)
+  at org.eclipse.jdt.internal.ui.text.java.CompletionProposalComputerDescriptor.computeCompletionProposals(CompletionProposalComputerDescriptor.java:316)
+  at org.eclipse.jdt.internal.ui.text.java.CompletionProposalCategory.computeCompletionProposals(CompletionProposalCategory.java:264)
+  at org.eclipse.jdt.internal.ui.text.java.ContentAssistProcessor.collectProposals(ContentAssistProcessor.java:286)
+  at org.eclipse.jdt.internal.ui.text.java.ContentAssistProcessor.computeCompletionProposals(ContentAssistProcessor.java:246)
+  at org.eclipse.jface.text.contentassist.ContentAssistant.computeCompletionProposals(ContentAssistant.java:1832)
+  at org.eclipse.jface.text.contentassist.CompletionProposalPopup.computeProposals(CompletionProposalPopup.java:556)
+  at org.eclipse.jface.text.contentassist.CompletionProposalPopup.access$16(CompletionProposalPopup.java:553)
+  at org.eclipse.jface.text.contentassist.CompletionProposalPopup$2.run(CompletionProposalPopup.java:488)
+  at org.eclipse.swt.custom.BusyIndicator.showWhile(BusyIndicator.java:70)
+  at org.eclipse.jface.text.contentassist.CompletionProposalPopup.showProposals(CompletionProposalPopup.java:482)
+  at org.eclipse.jface.text.contentassist.ContentAssistant.showPossibleCompletions(ContentAssistant.java:1660)
+  at org.eclipse.jdt.internal.ui.javaeditor.CompilationUnitEditor$AdaptedSourceViewer.doOperation(CompilationUnitEditor.java:182)
+  at org.eclipse.ui.texteditor.ContentAssistAction$1.run(ContentAssistAction.java:82)
+  at org.eclipse.swt.custom.BusyIndicator.showWhile(BusyIndicator.java:70)
+  at org.eclipse.ui.texteditor.ContentAssistAction.run(ContentAssistAction.java:80)
+  at org.eclipse.jface.action.Action.runWithEvent(Action.java:498)
+  at org.eclipse.ui.commands.ActionHandler.execute(ActionHandler.java:185)
+  at org.eclipse.ui.internal.handlers.LegacyHandlerWrapper.execute(LegacyHandlerWrapper.java:109)
+  at org.eclipse.core.commands.Command.executeWithChecks(Command.java:476)
+  at org.eclipse.core.commands.ParameterizedCommand.executeWithChecks(ParameterizedCommand.java:508)
+  at org.eclipse.ui.internal.handlers.HandlerService.executeCommand(HandlerService.java:169)
+  at org.eclipse.ui.internal.keys.WorkbenchKeyboard.executeCommand(WorkbenchKeyboard.java:470)
+  at org.eclipse.ui.internal.keys.WorkbenchKeyboard.press(WorkbenchKeyboard.java:824)
+  at org.eclipse.ui.internal.keys.WorkbenchKeyboard.processKeyEvent(WorkbenchKeyboard.java:880)
+  at org.eclipse.ui.internal.keys.WorkbenchKeyboard.filterKeySequenceBindings(WorkbenchKeyboard.java:569)
+  at org.eclipse.ui.internal.keys.WorkbenchKeyboard.access$3(WorkbenchKeyboard.java:510)
+  at org.eclipse.ui.internal.keys.WorkbenchKeyboard$KeyDownFilter.handleEvent(WorkbenchKeyboard.java:125)
+  at org.eclipse.swt.widgets.EventTable.sendEvent(EventTable.java:84)
+  at org.eclipse.swt.widgets.Display.filterEvent(Display.java:1467)
+  at org.eclipse.swt.widgets.Widget.sendEvent(Widget.java:1175)
+  at org.eclipse.swt.widgets.Widget.sendEvent(Widget.java:1200)
+  at org.eclipse.swt.widgets.Widget.sendEvent(Widget.java:1185)
+  at org.eclipse.swt.widgets.Widget.sendKeyEvent(Widget.java:1212)
+  at org.eclipse.swt.widgets.Widget.gtk_key_press_event(Widget.java:706)
+  at org.eclipse.swt.widgets.Control.gtk_key_press_event(Control.java:2837)
+  at org.eclipse.swt.widgets.Composite.gtk_key_press_event(Composite.java:703)
+  at org.eclipse.swt.widgets.Widget.windowProc(Widget.java:1570)
+  at org.eclipse.swt.widgets.Control.windowProc(Control.java:4594)
+  at org.eclipse.swt.widgets.Display.windowProc(Display.java:4191)
+  at org.eclipse.swt.internal.gtk.OS._gtk_main_do_event(Native Method)
+  at org.eclipse.swt.internal.gtk.OS.gtk_main_do_event(OS.java:7603)
+  at org.eclipse.swt.widgets.Display.eventProc(Display.java:1185)
+  at org.eclipse.swt.internal.gtk.OS._g_main_context_iteration(Native Method)
+  at org.eclipse.swt.internal.gtk.OS.g_main_context_iteration(OS.java:1860)
+  at org.eclipse.swt.widgets.Display.readAndDispatch(Display.java:3110)
+  at org.eclipse.ui.internal.Workbench.runEventLoop(Workbench.java:2405)
+  at org.eclipse.ui.internal.Workbench.runUI(Workbench.java:2369)
+  at org.eclipse.ui.internal.Workbench.access$4(Workbench.java:2221)
+  at org.eclipse.ui.internal.Workbench$5.run(Workbench.java:500)
+  at org.eclipse.core.databinding.observable.Realm.runWithDefault(Realm.java:332)
+  at org.eclipse.ui.internal.Workbench.createAndRunWorkbench(Workbench.java:493)
+  at org.eclipse.ui.PlatformUI.createAndRunWorkbench(PlatformUI.java:149)
+  at org.eclipse.ui.internal.ide.application.IDEApplication.start(IDEApplication.java:113)
+  at org.eclipse.equinox.internal.app.EclipseAppHandle.run(EclipseAppHandle.java:194)
+  at org.eclipse.core.runtime.internal.adaptor.EclipseAppLauncher.runApplication(EclipseAppLauncher.java:110)
+  at org.eclipse.core.runtime.internal.adaptor.EclipseAppLauncher.start(EclipseAppLauncher.java:79)
+  at org.eclipse.core.runtime.adaptor.EclipseStarter.run(EclipseStarter.java:368)
+  at org.eclipse.core.runtime.adaptor.EclipseStarter.run(EclipseStarter.java:179)
+  at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+  at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:39)
+  at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:25)
+  at java.lang.reflect.Method.invoke(Method.java:597)
+  at org.eclipse.equinox.launcher.Main.invokeFramework(Main.java:559)
+  at org.eclipse.equinox.launcher.Main.basicRun(Main.java:514)
+  at org.eclipse.equinox.launcher.Main.run(Main.java:1311)
+  at org.eclipse.equinox.launcher.Main.main(Main.java:1287)
+
+   Locked ownable synchronizers:
+  - None
+
+"VM Thread" prio=10 tid=0x0000000041bef800 nid=0x1810 runnable 
+
+"Gang worker#0 (Parallel GC Threads)" prio=10 tid=0x0000000041b0e000 nid=0x180d runnable 
+
+"Gang worker#1 (Parallel GC Threads)" prio=10 tid=0x0000000041b0f800 nid=0x180e runnable 
+
+"Concurrent Mark-Sweep GC Thread" prio=10 tid=0x0000000041b6e000 nid=0x180f runnable 
+"VM Periodic Task Thread" prio=10 tid=0x0000000041c30000 nid=0x1818 waiting on condition 
+
+JNI global references: 2229
+

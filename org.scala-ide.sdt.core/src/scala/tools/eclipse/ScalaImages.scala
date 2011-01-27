@@ -8,6 +8,7 @@ package scala.tools.eclipse
 import java.net.{ MalformedURLException, URL }
 
 import org.eclipse.jface.resource.ImageDescriptor
+import org.eclipse.jdt.internal.ui.JavaPluginImages 
 
 object ScalaImages  {
   val MISSING_ICON = ImageDescriptor.getMissingImageDescriptor
@@ -31,6 +32,9 @@ object ScalaImages  {
   val SCALA_TYPE = create("icons/full/obj16/typevariable_obj.gif")
   
   val SCALA_PROJECT_WIZARD = create("icons/full/wizban/newsprj_wiz.png")
+  
+  val JAVA_CLASS = JavaPluginImages.get(JavaPluginImages.IMG_OBJS_CLASS)
+  val JAVA_INTERFACE = JavaPluginImages.get(JavaPluginImages.IMG_OBJS_INTERFACE)
   
   private def create(localPath : String) = {
     try {

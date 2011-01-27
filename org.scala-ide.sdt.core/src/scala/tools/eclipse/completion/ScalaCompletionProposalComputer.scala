@@ -7,17 +7,16 @@ package scala.tools.eclipse
 package completion
 
 import org.eclipse.jface.text.contentassist.{ICompletionProposal, ICompletionProposalExtension,
-	IContextInformation, IContextInformationExtension}
+  IContextInformation, IContextInformationExtension}
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.jdt.core.compiler.CharOperation
 
 import org.eclipse.jdt.ui.text.java.{IJavaCompletionProposalComputer,
-				     ContentAssistInvocationContext,
-				     JavaContentAssistInvocationContext,
-				     IJavaCompletionProposal}
+             ContentAssistInvocationContext,
+             JavaContentAssistInvocationContext,
+             IJavaCompletionProposal}
 
 import org.eclipse.swt.graphics.Image
-import org.eclipse.jdt.internal.ui.JavaPluginImages 
 import org.eclipse.jface.text.IDocument
 
 import scala.tools.nsc.symtab.Flags
@@ -53,7 +52,7 @@ class ScalaCompletionProposalComputer extends IJavaCompletionProposalComputer {
   }
   
   def computeCompletionProposals(context : ContentAssistInvocationContext,
-				 monitor : IProgressMonitor) : java.util.List[_] = {
+         monitor : IProgressMonitor) : java.util.List[_] = {
     val position = context.getInvocationOffset()
     (context match {
       case jc : JavaContentAssistInvocationContext => jc.getCompilationUnit match {
@@ -103,7 +102,7 @@ class ScalaCompletionProposalComputer extends IJavaCompletionProposalComputer {
 
         def nameMatches(sym : compiler.Symbol) = prefixMatches(sym.decodedName.toString.toArray, prefix)	
         def prefixMatches(name : Array[Char], prefix : Array[Char]) =
-      	  CharOperation.prefixEquals(prefix, name, false) || CharOperation.camelCaseMatch(prefix, name) 
+          CharOperation.prefixEquals(prefix, name, false) || CharOperation.camelCaseMatch(prefix, name) 
        val buff = new collection.mutable.ListBuffer[ICompletionProposal]
 
        class ScalaCompletionProposal(completion : String,
@@ -147,13 +146,12 @@ class ScalaCompletionProposalComputer extends IJavaCompletionProposalComputer {
              || sym.hasFlag(Flags.ACCESSOR) 
              || sym.hasFlag(Flags.PARAMACCESSOR)) return
              
-         import JavaPluginImages._
          val image = if (sym.isMethod) defImage
                      else if (sym.isClass) classImage
                      else if (sym.isTrait) traitImage
                      else if (sym.isModule) if (sym.isJavaDefined)
                                               //BACK-2.8
-                    	                        /*if(sym.companionClass.isJavaInterface) JavaPluginImages.get(IMG_OBJS_INTERFACE) else*/ JavaPluginImages.get(IMG_OBJS_CLASS) 
+                                              /*if(sym.companionClass.isJavaInterface) JAVA_INTERFACE else*/ JAVA_CLASS 
                                             else objectImage
                      else if (sym.isType) typeImage
                      else valImage
