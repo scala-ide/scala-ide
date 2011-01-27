@@ -73,7 +73,7 @@ class ScalaClassFile(parent : PackageFragment, name : String, sourceFile : Strin
       Util.toCharArrays(packageFragment.names)
   }
 
-  override def getType() : IType = new LazyToplevelClass(this, super.getType.getElementName)
+  //override def getType() : IType = new LazyToplevelClass(this, super.getType.getElementName)
   
   def getMainTypeName() : Array[Char] =
     Util.getNameWithoutJavaLikeExtension(getElementName).toCharArray
