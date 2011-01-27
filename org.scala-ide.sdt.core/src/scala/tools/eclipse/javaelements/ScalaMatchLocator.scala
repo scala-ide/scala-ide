@@ -16,6 +16,7 @@ import scala.tools.nsc.util.{ RangePosition, Position }
 import scala.tools.eclipse.ScalaPresentationCompiler
 import scala.tools.eclipse.util.ReflectionUtils
 import org.eclipse.jdt.internal.core.search.matching.{ PatternLocator, FieldPattern, MethodPattern, TypeReferencePattern, TypeDeclarationPattern, OrPattern };
+import scala.tools.eclipse.internal.logging.Tracer
 
 //FIXME should report all and let matcher to the selection OR only report matcher interest (pre select by type) OR ...
 
@@ -30,7 +31,7 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
   
   def MatchLocator(scu: ScalaCompilationUnit, matchLocator: MatchLocator, 
       pattern: SearchPattern, possibleMatch: PossibleMatch): MatchLocatorTraverser = {
-    println("Search pattern " + pattern)
+    Tracer.printlnWithStack("Search pattern " + pattern)
     pattern match {
       case p: OrPattern => 
         val locators = MatchLocatorUtils.orPatterns(p) map { p => MatchLocator(scu, matchLocator, p, possibleMatch) }
@@ -61,13 +62,13 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
     
     import MatchLocatorUtils._
     def report(sm: SearchMatch) = {
-      println("found a match: " + sm)
+      Tracer.println("found a match: " + sm)
       reportMethod.invoke(matchLocator, sm)
     }
 
     def checkQualifier(s: Select, className: Array[Char], pat: SearchPattern) = 
       s.qualifier.tpe.baseClasses exists { bc => 
-        println("Base class " + bc)
+        Tracer.println("Base class " + bc)
         pat.matchesName(bc.name.toChars, className)
       }
     
@@ -155,7 +156,7 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
       else false
     
     def reportMethodReference(tree: Tree, sym: Symbol, pat: MethodPattern) {
-      println("Trying " + tree)
+      Tracer.println("Trying " + tree)
         
       if (!pat.matchesName(pat.selector, sym.name.toChars) || !sym.pos.isDefined) return
       val proceed = tree match {
