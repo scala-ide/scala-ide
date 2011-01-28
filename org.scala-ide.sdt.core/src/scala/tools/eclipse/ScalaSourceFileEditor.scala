@@ -91,7 +91,7 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
 
     //  TODO: find out why this code does a cast to IAdaptable before calling getAdapter 
     val adaptable = getEditorInput.asInstanceOf[IAdaptable].getAdapter(classOf[IJavaElement])
-    println("adaptable: " + adaptable.getClass + " : " + adaptable.toString)
+    // println("adaptable: " + adaptable.getClass + " : " + adaptable.toString)
       
     adaptable match {
       case scalaSourceFile: ScalaSourceFile =>
