@@ -86,7 +86,7 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
   def withUntypedTree[T](sourceFile : SourceFile)(op : Tree => T) : T = {
     val tree = ask { () => 
       onUnitOf(sourceFile) { u =>
-        if (u.status < JustParsed) parse(u)
+        if (u.status < JustParsed) parseAndEnter(u)
         u.body
       }
     }
