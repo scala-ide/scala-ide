@@ -150,6 +150,9 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
     super.editorContextMenuAboutToShow(menu)
     refactoring.RefactoringMenu.fillContextMenu(menu, this)
   }
+  
+  // override to public scope (from protected)
+  override def getElementAt(offset : Int, reconcile : Boolean) = super.getElementAt(offset, reconcile)
 }
 
 object ScalaSourceFileEditor {

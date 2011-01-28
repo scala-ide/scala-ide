@@ -46,7 +46,7 @@ class ScalaToggleBreakpointAdapter extends ToggleBreakpointAdapter { self =>
         }
       }
       def toggleBreakPoint(part : IWorkbenchPart, selection : ITextSelection) {
-        val otpe = findType(selection)
+        val otpe = findType(part, selection)
         val oresource = findResource(part) orElse otpe.flatMap(x => findResource(x))
         oresource match {
           case None => report(ActionMessages.ToggleBreakpointAdapter_3, part)
@@ -81,10 +81,11 @@ class ScalaToggleBreakpointAdapter extends ToggleBreakpointAdapter { self =>
       def findResource(tpe : IType) : Option[IResource] = {
         Option(BreakpointUtils.getBreakpointResource(tpe))
       }
-      def findType(selection : ISelection) : Option[IType] = {
-        translateToMembers(part, selection) match {
-          case sel: IStructuredSelection => {
-            val member =  sel.getFirstElement.asInstanceOf[IMember]        
+      def toIType(e : Object) : Option[IType] = {
+        e match {
+          case null => None
+          case x : IType => Some(x)
+          case member : IMember => {
             val tpe = if(member.getElementType == IJavaElement.TYPE)
               member.asInstanceOf[IType]
             else
@@ -93,6 +94,18 @@ class ScalaToggleBreakpointAdapter extends ToggleBreakpointAdapter { self =>
           }
           case _ => None
         }
+      }
+      def findType(part : IWorkbenchPart, selection : ITextSelection) : Option[IType] = {
+        def findTypeOldWay() = translateToMembers(part, selection) match {
+          case sel: IStructuredSelection => toIType(sel.getFirstElement)        
+          case _ => None
+        }
+ 
+        val r = part match {
+          case ssfe : ScalaSourceFileEditor => toIType(ssfe.getElementAt(selection.getOffset, true)) 
+          case _ => None
+        }
+        r orElse { findTypeOldWay() }
       }
       def fqn(tpe : IType) : String = {
         val qtname = createQualifiedTypeName(self, tpe)
