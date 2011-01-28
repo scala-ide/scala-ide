@@ -33,12 +33,13 @@ class ScalaProject(val underlying: IProject) {
   private var buildManager0 : EclipseBuildManager = null
   private val resetPendingLock = new Object
   private var resetPending = false
-    
+
   private var scalaVersion = "2.8.x"
-    
+
   private val presentationCompiler = new Cached[ScalaPresentationCompiler] {
     override def create() = {
       try {
+        Tracer.println("create a new ScalaPresentationCompiler for " + underlying.getName )
         val settings = new Settings
         settings.printtypes.tryToSet(Nil)
         settings.verbose.tryToSetFromPropertyValue("true")
@@ -67,14 +68,14 @@ class ScalaProject(val underlying: IProject) {
           throw ex
       }
     }
-    
+
     override def destroy(compiler : ScalaPresentationCompiler) {
       compiler.destroy()
     }
-    
+
     private def failedCompilerInitialization(msg: String) {
       import org.eclipse.jface.dialogs.MessageDialog
-      Display.getDefault asyncExec new Runnable { 
+      Display.getDefault asyncExec new Runnable {
         def run() {
 //            ToggleScalaNatureAction.toggleScalaNature(underlying)
           MessageDialog.openWarning(null, "Error initializing the Scala compiler in project %s".format(underlying.getName),
@@ -91,10 +92,10 @@ class ScalaProject(val underlying: IProject) {
     case Right(t) => t
     case Left(ex) => throw new IllegalStateException("failed to access value", ex) //to have the stack trace of the caller and the of the compiler creation (async)
   }
-  
+
   override def toString = underlying.getName
-  
-  def externalDepends = underlying.getReferencedProjects 
+
+  def externalDepends = underlying.getReferencedProjects
 
   lazy val javaProject = {
     if (!underlying.exists())
@@ -117,15 +118,15 @@ class ScalaProject(val underlying: IProject) {
     val p = if (cpeOutput == null) jproject.getOutputLocation else cpeOutput
     toIFolder(p)
   }
-  
+
   private def findSelectedIFile(cpe : IClasspathEntry) : Seq[IFile] = {
     def toCharArray(v : IPath) = v.toPortableString.toCharArray
-    
+
     val selected = new HashSet[IFile]()
     val inclusionPatterns = cpe.getInclusionPatterns.map{ toCharArray }
     val exclusionPatterns = cpe.getExclusionPatterns.map{ toCharArray }
     val folder = toIFolder(cpe)
-    if (folder.exists) { 
+    if (folder.exists) {
       folder.accept(
         new IResourceProxyVisitor {
           def visit(proxy : IResourceProxy) : Boolean = proxy.getType match {
@@ -161,33 +162,33 @@ class ScalaProject(val underlying: IProject) {
 
     selected.toSeq
   }
-  
+
   private def sourcesFoldersInfo = (javaProject.getResolvedClasspath(true)
       .filter(_.getEntryKind == IClasspathEntry.CPE_SOURCE)
       .filter(cpe => toIFolder(cpe) != null)
   )
-  
+
   def sourceFolders : Seq[IResource] = sourcesFoldersInfo.map{ cpe => toIFolder(cpe.getPath) }.toSeq
-  
+
   private def outputFolders : Seq[IResource] = sourcesFoldersInfo.map{ cpe => toOutput(cpe) }.toSeq.distinct
 
   /**
    * @return a classpath with absolute IPath (location)
-   * 
+   *
    * @TODO adding or not the output folder of current sourcefolders ??
    */
   private def classpath : Seq[IPath] = {
     val path = new LinkedHashSet[IPath]
-    
+
     // location is the path on local filesystem
     // should work for File (jar) and Folder
     def pathToLocation(p : IPath) : IPath = {
       plugin.workspaceRoot.findMember(p) match {
-        case null => p 
+        case null => p
         case iresource => iresource.getLocation
       }
     }
-    
+
     def classpath(jProject : IJavaProject, exportedOnly : Boolean, includeSourceOutput : Boolean) : Unit = {
       val cpes = jProject.getResolvedClasspath(true)
 
@@ -198,7 +199,7 @@ class ScalaProject(val underlying: IProject) {
             path += output.getLocation
           }
         }
-        case IClasspathEntry.CPE_PROJECT if (!exportedOnly || cpe.isExported) => { 
+        case IClasspathEntry.CPE_PROJECT if (!exportedOnly || cpe.isExported) => {
           val depProject = plugin.workspaceRoot.getProject(cpe.getPath.lastSegment)
           if (JavaProject.hasJavaNature(depProject)) {
             classpath(JavaCore.create(depProject), true, true)
@@ -214,10 +215,10 @@ class ScalaProject(val underlying: IProject) {
     classpath(javaProject, false, IDESettings.outputInClasspath.value)
     path.toList
   }
-  
+
 //  def sourceOutputFolders(env : NameEnvironment) : Seq[(IContainer, IContainer)] = {
 //    val sourceLocations = NameEnvironmentUtils.sourceLocations(env)
-//    sourceLocations.map(cl => (ClasspathLocationUtils.sourceFolder(cl), ClasspathLocationUtils.binaryFolder(cl))) 
+//    sourceLocations.map(cl => (ClasspathLocationUtils.sourceFolder(cl), ClasspathLocationUtils.binaryFolder(cl)))
 //  }
 
 //  def isExcludedFromProject(env : NameEnvironment, childPath : IPath) : Boolean = {
@@ -231,14 +232,14 @@ class ScalaProject(val underlying: IProject) {
 //      val sourceFolder = ClasspathLocationUtils.sourceFolder(sl)
 //      if (childPath == sourceFolder.getFullPath) return true
 //    }
-//    
+//
 //    // skip default output folder which may not be used by any source folder
 //    return childPath == javaProject.getOutputLocation
 //  }
-  
+
   def allSourceFiles() : Set[IFile] = sourcesFoldersInfo.flatMap{ findSelectedIFile }.toSet
-//  def allSourceFiles() : Set[IFile] = allSourceFiles(new NameEnvironment(javaProject)) 
-  
+//  def allSourceFiles() : Set[IFile] = allSourceFiles(new NameEnvironment(javaProject))
+
 //  def allSourceFiles(env : NameEnvironment) : Set[IFile] = {
 //    val sourceFiles = new HashSet[IFile]
 //    val sourceLocations = NameEnvironmentUtils.sourceLocations(env)
@@ -264,8 +265,8 @@ class ScalaProject(val underlying: IProject) {
 //                  sourceFiles += resource.asInstanceOf[IFile]
 //                }
 //                return false
-//                
-//              case IResource.FOLDER => 
+//
+//              case IResource.FOLDER =>
 //                var folderPath : IPath = null
 //                if (isAlsoProject) {
 //                  folderPath = proxy.requestFullPath
@@ -281,7 +282,7 @@ class ScalaProject(val underlying: IProject) {
 //                    return inclusionPatterns != null
 //                  }
 //                }
-//                
+//
 //              case _ =>
 //            }
 //            return true
@@ -292,7 +293,7 @@ class ScalaProject(val underlying: IProject) {
 //    }
 //    sourceFiles.toSet
 //  }
-    
+
 //  private def createOutputFolders() = {
 //    for(outputFolder <- outputFolders) outputFolder match {
 //      case fldr : IFolder =>
@@ -303,16 +304,16 @@ class ScalaProject(val underlying: IProject) {
 //            parent.setDerived(true)
 //          }
 //        }
-//      
+//
 //        fldr.refreshLocal(IResource.DEPTH_ZERO, null)
 //        if(!fldr.exists()) {
 //          createParentFolder(fldr.getParent)
 //          fldr.create(IResource.FORCE | IResource.DERIVED, true, null)
 //        }
-//      case _ => 
+//      case _ =>
 //    }
 //  }
-  
+
   private def cleanOutputFolders(monitor : IProgressMonitor) = {
     def delete(container : IContainer, deleteDirs : Boolean)(f : String => Boolean) : Unit = {
       if (container.exists()) {
@@ -345,8 +346,8 @@ class ScalaProject(val underlying: IProject) {
     }
     for(outputFolder <- outputFolders) outputFolder match {
       case container : IContainer => delete(container, container != underlying)(_.endsWith(".class"))
-      case _ => 
-    }    
+      case _ =>
+    }
   }
 
   def refreshOutput: Unit = {
@@ -354,24 +355,24 @@ class ScalaProject(val underlying: IProject) {
     if (res ne null)
       res.refreshLocal(IResource.DEPTH_INFINITE, null)
   }
-    
+
 
   def initialize(settings : Settings, filter: Settings#Setting => Boolean) = {
 //    val env = new NameEnvironment(javaProject)
-//    
+//
 //    for((src, dst) <- sourceOutputFolders(env))
 //      settings.outputDirs.add(EclipseResource(src), EclipseResource(dst))
     val sfs = sourcesFoldersInfo
     sfs.foreach { cpe =>
       settings.outputDirs.add(EclipseResource(toIFolder(cpe)), EclipseResource(toOutput(cpe)))
     }
-    
+
     // TODO Per-file encodings, but as eclipse user it's easier to handler Charset at project level
     settings.encoding.value = underlying.getDefaultCharset
 //    if (!sfs.isEmpty) {
 //      val path = sfs.iterator.next
 //      plugin.workspaceRoot.findContainersForLocation(path) match {
-//        case Array(container) => settings.encoding.value = container.getDefaultCharset   
+//        case Array(container) => settings.encoding.value = container.getDefaultCharset
 //        case _ =>
 //      }
 //    }
@@ -384,15 +385,15 @@ class ScalaProject(val underlying: IProject) {
     // that file, using an AbstractFile/PlainFile instead of the EclipseResource instance. This later
     // causes problems if errors are reported against that file. Anyway, it's wrong to have a sourcepath
     // when using the build manager.
-    settings.sourcepath.value = "" 
+    settings.sourcepath.value = ""
     //settings.sourcepath.value = sfs.map{ x => toIFolder(x).getLocation.toOSString }.mkString(pathSeparator)
-    
-    
+
+
     val workspaceStore = ScalaPlugin.plugin.getPreferenceStore
     val projectStore = new PropertyStore(underlying, workspaceStore, plugin.pluginId)
     val useProjectSettings = projectStore.getBoolean(SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE)
-    
-    val store = if (useProjectSettings) projectStore else workspaceStore  
+
+    val store = if (useProjectSettings) projectStore else workspaceStore
     for (
       box <- IDESettings.shownSettings(settings);
       setting <- box.userSettings;
@@ -426,12 +427,12 @@ class ScalaProject(val underlying: IProject) {
   def withPresentationCompilerIfExists(op : ScalaPresentationCompiler => Unit) : Unit = {
     presentationCompiler.doIfExist(op)
   }
-  
+
   def withSourceFile[T](scu : ScalaCompilationUnit)(op : (SourceFile, ScalaPresentationCompiler) => T) : T =
     withPresentationCompiler { compiler =>
       compiler.withSourceFile(scu)(op)
     }
-  
+
   def resetPresentationCompiler() {
     Tracer.println("resetPresentationCompiler")
     presentationCompiler.invalidate
@@ -459,7 +460,7 @@ class ScalaProject(val underlying: IProject) {
   }
 
   /**
-   * remove markers + clean output dear + remove builder from memory  
+   * remove markers + clean output dear + remove builder from memory
    * can raise exception when deleteMarkers (ResourceException: The resource tree is locked for modifications.)
    */
   private def resetBuildCompiler(monitor : IProgressMonitor) {
@@ -470,9 +471,9 @@ class ScalaProject(val underlying: IProject) {
       buildManager0 = null
     }
   }
-  
+
   def resetCompilers(monitor : IProgressMonitor) = {
-    resetBuildCompiler(monitor)
     resetPresentationCompiler()
+    resetBuildCompiler(monitor)
   }
 }
