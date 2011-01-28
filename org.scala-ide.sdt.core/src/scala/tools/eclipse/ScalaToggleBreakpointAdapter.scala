@@ -121,7 +121,7 @@ class ScalaToggleBreakpointAdapter extends ToggleBreakpointAdapter { self =>
         }
  
         val r = part match {
-          case ssfe : ScalaSourceFileEditor => toIType(ssfe.getElementAt(selection.getOffset, true)) 
+          case ssfe : ScalaSourceFileEditor => toIType(ssfe.getElementAt(selection.getOffset, false)) 
           case _ => None
         }
         r orElse { findTypeOldWay() }
