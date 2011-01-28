@@ -80,13 +80,7 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
   }
   
   def withParseTree[T](sourceFile : SourceFile)(op : Tree => T) : T = {
-    val resp = new Response[Tree]
-    askParse(sourceFile, resp)
-    val tree = resp.get match {
-      case Left(l) => l
-      case Right(r) => throw r
-    }
-    op(tree)
+    op(parseTree(sourceFile))
   }
 
   def withUntypedTree[T](sourceFile : SourceFile)(op : Tree => T) : T = {
