@@ -45,7 +45,10 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
   
   def withSourceFileButNotInMainThread[T](default : => T)(op : (SourceFile, ScalaPresentationCompiler) => T) : T = {
     (Thread.currentThread.getName == "main") match {
-      case true => Tracer.printlnWithStack("cancel call to withSourceFile"); default
+      case true => {
+        Tracer.printlnWithStack("cancel/default call to withSourceFile in main Thread")
+        default
+      }
       case false => project.withSourceFile(this)(op)
     }
   }
@@ -78,7 +81,8 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
 
   override def buildStructure(info : OpenableElementInfo, pm : IProgressMonitor, newElements : JMap[_, _], underlyingResource : IResource) : Boolean = {
     Tracer.println("buildStructure : " + underlyingResource)
-    withSourceFileButNotInMainThread[Boolean](false) { (sourceFile, compiler) =>
+    //Can freeze UI if in main Thread
+    withSourceFile { (sourceFile, compiler) =>
       import scala.tools.eclipse.util.IDESettings
       
       val contents = this.getContents

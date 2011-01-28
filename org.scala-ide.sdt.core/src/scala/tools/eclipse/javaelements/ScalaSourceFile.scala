@@ -7,7 +7,6 @@ package scala.tools.eclipse
 package javaelements
 
 import java.util.{ HashMap => JHashMap, Map => JMap }
-
 import org.eclipse.core.resources.{ IFile, IResource }
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.jdt.core.{ IBuffer, ICompilationUnit, IJavaElement, IType, WorkingCopyOwner }
@@ -20,6 +19,8 @@ import scala.tools.nsc.io.{ AbstractFile, VirtualFile }
 import scala.tools.eclipse.contribution.weaving.jdt.IScalaSourceFile
 import scala.tools.eclipse.util.EclipseFile
 import scala.tools.eclipse.internal.logging.Tracer
+import scala.tools.eclipse.internal.logging.Defensive
+import org.eclipse.core.runtime.jobs.Job
 
 object ScalaSourceFile {
   val handleFactory = new HandleFactory
@@ -63,8 +64,10 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
     reconcileFlags : Int,
     problems : JHashMap[_,_],
     monitor : IProgressMonitor) : org.eclipse.jdt.core.dom.CompilationUnit = {
-    val info = createElementInfo.asInstanceOf[OpenableElementInfo]
-    openWhenClosed(info, monitor)
+    Defensive.askRunOutOfMain("makeConsistent", Job.INTERACTIVE) {
+      val info = createElementInfo.asInstanceOf[OpenableElementInfo]
+      openWhenClosed(info, monitor)
+    }
     null
   }
 
