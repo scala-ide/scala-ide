@@ -19,6 +19,7 @@ import org.eclipse.jface.viewers.IStructuredSelection
 import org.eclipse.jface.text.{ BadLocationException, ITextSelection }
 import org.eclipse.jface.viewers.ISelection
 import org.eclipse.ui.{IWorkbenchPart, IFileEditorInput, IPathEditorInput}
+import org.eclipse.debug.core.model.ILineBreakpoint
 
 import scala.tools.eclipse.util.{ReflectionUtils, IDESettings}
 
@@ -52,20 +53,38 @@ class ScalaToggleBreakpointAdapter extends ToggleBreakpointAdapter { self =>
           case None => report(ActionMessages.ToggleBreakpointAdapter_3, part)
           case Some(resource : IResource) => {
             val lnumber = selection.getStartLine + 1
-            otpe match {
-              case None => ScalaPlugin.plugin.logWarning("can't toggle breakpoint because can't define type in " + resource + " at " + lnumber)
-              case Some(tpe) => {
-                // a valid tname is required, else Breakpoint will not work
-                val tname = fqn(tpe)
-                val existingBreakpoint = JDIDebugModel.lineBreakpointExists(resource, tname, lnumber)
-                if (existingBreakpoint != null) {
-                  DebugPlugin.getDefault().getBreakpointManager.removeBreakpoint(existingBreakpoint, true)
-                } else {
-                  val oattributes = otpe.map(x => findAttributes(x, selection.getOffset, selection.getLength))
-                  JDIDebugModel.createLineBreakpoint(resource, tname, lnumber, -1, -1, 0, true, oattributes.getOrElse(null))        
-                }
-              }
+            if (!removeExistingLineBreakPoint(resource, lnumber)) {
+              addLineBreakPoint(resource, lnumber, otpe, selection)
             }
+          }
+        }
+      }
+      def removeExistingLineBreakPoint(resource : IResource, lnumber : Int) : Boolean = {
+        //val existingBreakpoint = JDIDebugModel.lineBreakpointExists(resource, tname, lnumber) check the type name
+        //if (existingBreakpoint != null) {
+        //  DebugPlugin.getDefault().getBreakpointManager.removeBreakpoint(existingBreakpoint, true)
+        //}
+        //(existingBreakpoint != null)
+        val breakpoints = DebugPlugin.getDefault.getBreakpointManager.getBreakpoints.filter{ breakpoint =>
+          (
+              breakpoint.getMarker.getResource == resource
+              && breakpoint.asInstanceOf[ILineBreakpoint].getLineNumber == lnumber
+          )
+        }
+        breakpoints.foreach { _.delete }
+        !breakpoints.isEmpty
+      }
+      def addLineBreakPoint(resource : IResource, lnumber : Int, otpe : Option[IType], selection : ITextSelection) {
+        otpe match {
+          case None => {
+            ScalaPlugin.plugin.logWarning("toggle breakpoint in Stratum mode because can't define type in " + resource + " at " + lnumber)
+            JDIDebugModel.createStratumBreakpoint(resource, "Scala", resource.getName(), null, null, lnumber, -1, -1, 0, true, null)
+          }
+          case Some(tpe) => {
+            // a valid tname is required, else Breakpoint will not work
+            val tname = fqn(tpe)
+            val oattributes = otpe.map(x => findAttributes(x, selection.getOffset, selection.getLength))
+            JDIDebugModel.createLineBreakpoint(resource, tname, lnumber, -1, -1, 0, true, oattributes.getOrElse(null))
           }
         }
       }
