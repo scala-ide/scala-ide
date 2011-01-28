@@ -30,10 +30,12 @@ class ReconcileListeners {
   
   def triggerAfterReconcile(sourceFile : ScalaSourceFile, monitor : IProgressMonitor, workingCopyOwner : WorkingCopyOwner) {
     val ls = _afterListeners
-    ls.foreach{l =>
-      l.get match {
-        case null => () //ignore
-        case op => Defensive.tryOrLog(op(sourceFile, monitor, workingCopyOwner))
+    if (!ls.isEmpty) Defensive.askRunOutOfMain("after reconcile :" + sourceFile.file){
+      ls.foreach{l =>
+        l.get match {
+          case null => () //ignore
+          case op => Defensive.tryOrLog(op(sourceFile, monitor, workingCopyOwner))
+        }
       }
     }
   }
