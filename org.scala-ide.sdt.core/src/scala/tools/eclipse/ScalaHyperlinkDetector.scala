@@ -19,9 +19,9 @@ import scala.reflect.generic.Flags._
 import scala.tools.nsc.io.AbstractFile
 
 import javaelements.{ScalaSourceFile, ScalaClassFile, ScalaCompilationUnit, ScalaSelectionEngine, ScalaSelectionRequestor}
-import util.EclipseFile
+import util.Logger
 
-class ScalaHyperlinkDetector extends AbstractHyperlinkDetector {
+class ScalaHyperlinkDetector extends AbstractHyperlinkDetector with Logger {
   def detectHyperlinks(viewer : ITextViewer, region : IRegion, canShowMultipleHyperlinks : Boolean) : Array[IHyperlink] = {
     val textEditor = getAdapter(classOf[ITextEditor]).asInstanceOf[ITextEditor]
 	Option(EditorUtility.getEditorInputJavaElement(textEditor, false)).flatMap { _ match {
@@ -38,7 +38,7 @@ class ScalaHyperlinkDetector extends AbstractHyperlinkDetector {
           compiler.askTypeAt(pos, response)
           val typed = response.get
         
-          println("detectHyperlinks: wordRegion = "+wordRegion)
+          log("detectHyperlinks: wordRegion = "+wordRegion)
       
           compiler.ask { () =>
             case class Hyperlink(file : Openable, pos : Int) extends IHyperlink {
@@ -52,21 +52,20 @@ class ScalaHyperlinkDetector extends AbstractHyperlinkDetector {
                 }
               }
             }
-            import compiler._
-            typed.left.toOption map { tree : Tree => tree match {
+            import compiler.{log =>_, _}
+            typed.left.toOption map ( _ match {
               case st : SymTree => st.symbol 
 	          case Annotated(atp, _) => atp.symbol
-	          case _ => NoSymbol
-            }
-          } flatMap { sym => 
-            if (sym.isPackage || sym == NoSymbol || sym.isJavaDefined) None else {
-              compiler.locate(sym, scu) map { case (f, pos) => Hyperlink(f, pos) }
+	          case t => log("unhandled tree " + t); NoSymbol
+            }) flatMap { sym => 
+              if (sym.isPackage || sym == NoSymbol || sym.isJavaDefined) None else {
+                compiler.locate(sym, scu) map { case (f, pos) => Hyperlink(f, pos) }
+	          }
+	        } match {
+	          case Some(hyper) => Left(Array[IHyperlink](hyper))
+	          case None => Right( () => codeSelect(textEditor, wordRegion, scu) )
 	        }
-	      } match {
-	        case Some(hyper) => Left(Array[IHyperlink](hyper))
-	        case None => Right( () => codeSelect(textEditor, wordRegion, scu) )
-	      }
-         }
+          }
 	    } match {
 	   	  case Left(l) => l
 	      case Right(cont) => cont()
