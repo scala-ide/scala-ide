@@ -157,8 +157,8 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
 
 object ScalaSourceFileEditor {
 
-  private val EDITOR_BUNDLE_FOR_CONSTRUCTED_KEYS = "org.eclipse.ui.texteditor.ConstructedEditorMessages"
-  private val bundleForConstructedKeys = ResourceBundle.getBundle(EDITOR_BUNDLE_FOR_CONSTRUCTED_KEYS)
+  val EDITOR_BUNDLE_FOR_CONSTRUCTED_KEYS = "org.eclipse.ui.texteditor.ConstructedEditorMessages"
+  val bundleForConstructedKeys = ResourceBundle.getBundle(EDITOR_BUNDLE_FOR_CONSTRUCTED_KEYS)
 
-  private val SCALA_EDITOR_SCOPE = "scala.tools.eclipse.scalaEditorScope"
+  val SCALA_EDITOR_SCOPE = "scala.tools.eclipse.scalaEditorScope"
 }

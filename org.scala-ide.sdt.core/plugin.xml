@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<?eclipse version="3.2"?>
+<?eclipse version="3.5"?>
 <plugin>
    <extension
          point="org.eclipse.ui.propertyPages">
@@ -110,9 +110,7 @@
             id="org.eclipse.jdt.internal.ui.javaeditor.JavaSelectRulerAction">
          </action>
       </editorContribution>
-   </extension>
 
-   <extension point="org.eclipse.ui.editorActions">
       <editorContribution
          targetID="scala.tools.eclipse.ScalaClassFileEditor"
          id="org.eclipse.jdt.debug.CompilationUnitEditor.BreakpointRulerActions">
