@@ -14,7 +14,7 @@ import org.eclipse.jdt.internal.core.builder.{ JavaBuilder, NameEnvironment, Sta
 import scala.tools.eclipse.contribution.weaving.jdt.builderoptions.ScalaJavaBuilder
 import scala.tools.eclipse.javaelements.JDTUtils
 import scala.tools.eclipse.util.{ FileUtils, ReflectionUtils }
-import scala.tools.eclipse.internal.logging.Tracer
+import scala.tools.eclipse.util.Tracer
 import scala.tools.eclipse.util.IDESettings
 import org.eclipse.core.resources.IMarker
 

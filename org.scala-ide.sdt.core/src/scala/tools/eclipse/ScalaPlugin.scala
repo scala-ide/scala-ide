@@ -24,8 +24,8 @@ import org.osgi.framework.BundleContext
 import scala.tools.eclipse.javaelements.{ ScalaElement, ScalaSourceFile }
 import scala.tools.eclipse.util.OSGiUtils.pathInBundle
 import scala.tools.eclipse.templates.ScalaTemplateManager
-import scala.tools.eclipse.internal.logging.Tracer
-import scala.tools.eclipse.internal.logging.Defensive
+import scala.tools.eclipse.util.Tracer
+import scala.tools.eclipse.util.Defensive
 import scala.tools.eclipse.markoccurrences.UpdateOccurrenceAnnotationsService
 
 object ScalaPlugin { 

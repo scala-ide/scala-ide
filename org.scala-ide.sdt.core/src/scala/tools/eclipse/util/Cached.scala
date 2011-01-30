@@ -11,7 +11,7 @@ package scala.tools.eclipse.util
 //TODO find a better abstraction for Cached, apply, doIfExist,...
 trait Cached[T] {
   import java.util.concurrent.locks.ReentrantReadWriteLock
-  import scala.tools.eclipse.internal.logging.Tracer
+  import scala.tools.eclipse.util.Tracer
   
 //  private var inProgress = false
   @volatile

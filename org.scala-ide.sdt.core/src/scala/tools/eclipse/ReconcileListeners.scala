@@ -1,6 +1,6 @@
 package scala.tools.eclipse
 
-import scala.tools.eclipse.internal.logging.Defensive
+import scala.tools.eclipse.util.Defensive
 import java.lang.ref.WeakReference
 import scala.tools.eclipse.javaelements.ScalaSourceFile
 import org.eclipse.core.runtime.IProgressMonitor

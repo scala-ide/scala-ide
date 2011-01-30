@@ -5,7 +5,7 @@ import scala.tools.refactoring.implementations.MarkOccurrences
 import org.eclipse.jface.text.Region
 import scala.tools.eclipse.javaelements.ScalaSourceFile
 import scala.tools.refactoring.analysis.GlobalIndexes
-import scala.tools.eclipse.internal.logging.Defensive
+import scala.tools.eclipse.util.Defensive
 
 case class Occurrences(name: String, locations: List[Region])
 

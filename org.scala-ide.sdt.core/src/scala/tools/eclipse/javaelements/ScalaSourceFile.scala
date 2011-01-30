@@ -18,8 +18,8 @@ import org.eclipse.swt.widgets.Display
 import scala.tools.nsc.io.{ AbstractFile, VirtualFile }
 import scala.tools.eclipse.contribution.weaving.jdt.IScalaSourceFile
 import scala.tools.eclipse.util.EclipseFile
-import scala.tools.eclipse.internal.logging.Tracer
-import scala.tools.eclipse.internal.logging.Defensive
+import scala.tools.eclipse.util.Tracer
+import scala.tools.eclipse.util.Defensive
 import org.eclipse.core.runtime.jobs.Job
 
 object ScalaSourceFile {

@@ -14,7 +14,7 @@ import org.eclipse.swt.SWT
 import org.eclipse.ui.PlatformUI
 import org.eclipse.ui.part.FileEditorInput
 import scala.collection._
-import scala.tools.eclipse.internal.logging.Tracer
+import scala.tools.eclipse.util.Tracer
 import scala.tools.eclipse.javaelements.ScalaCompilationUnit
 import scala.tools.eclipse.ui.preferences.PropertyChangeListenerProxy
 import scala.tools.eclipse.util.{ColorManager, Annotations, AnnotationsTypes}

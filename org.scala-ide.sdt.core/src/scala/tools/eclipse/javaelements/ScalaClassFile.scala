@@ -5,7 +5,7 @@
 
 package scala.tools.eclipse.javaelements
 
-import scala.tools.eclipse.internal.logging.Defensive
+import scala.tools.eclipse.util.Defensive
 import java.util.{ HashMap => JHashMap }
 
 import org.eclipse.core.resources.IResource

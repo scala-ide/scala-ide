@@ -32,7 +32,7 @@ import scala.tools.eclipse.markoccurrences.{ ScalaOccurrencesFinder, Occurrences
 import scala.tools.eclipse.ui.semantic.highlighting.SemanticHighlightingPresenter
 import scala.tools.eclipse.text.scala.ScalaTypeAutoCompletionProposalManager
 import scala.tools.eclipse.util.IDESettings
-import scala.tools.eclipse.internal.logging.{Defensive, Tracer}
+import scala.tools.eclipse.util.{Defensive, Tracer}
 import org.eclipse.ui.texteditor.IDocumentProvider
 import org.eclipse.ui.IEditorInput
 

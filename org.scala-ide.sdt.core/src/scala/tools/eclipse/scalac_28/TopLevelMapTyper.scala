@@ -4,7 +4,7 @@
 package scala.tools.eclipse
 package scalac_28
 
-import scala.tools.eclipse.internal.logging.Tracer
+import scala.tools.eclipse.util.Tracer
 import scala.tools.eclipse.util.EclipseFile
 import org.eclipse.core.runtime.Path
 import org.eclipse.core.resources.IFile

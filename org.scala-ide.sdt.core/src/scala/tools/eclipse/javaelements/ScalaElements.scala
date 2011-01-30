@@ -201,7 +201,7 @@ object ScalaMemberElementInfo extends ReflectionUtils {
 trait ScalaMemberElementInfo extends JavaElementInfo {
   import ScalaMemberElementInfo._
   import java.lang.Integer
-  import scala.tools.eclipse.internal.logging.Defensive
+  import scala.tools.eclipse.util.Defensive
   
   def addChild0(child : IJavaElement) : Unit
 

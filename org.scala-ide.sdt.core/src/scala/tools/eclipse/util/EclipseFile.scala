@@ -6,7 +6,6 @@
 package scala.tools.eclipse
 package util
 
-import scala.tools.eclipse.internal.logging.Tracer
 //import scala.tools.eclipse.contribution.weaving.nsc.io.OverrideToByteArray
 import java.io.{ ByteArrayInputStream, ByteArrayOutputStream, File, InputStream, OutputStream }
 

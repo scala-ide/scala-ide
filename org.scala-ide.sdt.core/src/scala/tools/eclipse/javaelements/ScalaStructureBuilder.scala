@@ -5,9 +5,9 @@
 
 package scala.tools.eclipse.javaelements
 
-import scala.tools.eclipse.internal.logging.Defensive
+import scala.tools.eclipse.util.Defensive
 import scala.tools.eclipse.ScalaPlugin
-import scala.tools.eclipse.internal.logging.Tracer
+import scala.tools.eclipse.util.Tracer
 
 import java.io.{ PrintWriter, StringWriter }
 import java.util.{ Map => JMap }

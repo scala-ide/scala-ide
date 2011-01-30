@@ -2,7 +2,6 @@ package scala.tools.eclipse
 package util
 
 import org.eclipse.jface.text.source.{ IAnnotationModelExtension, Annotation, IAnnotationModel, ISourceViewer }
-import scala.tools.eclipse.internal.logging.Tracer
 import org.eclipse.jface.text.ISynchronizable
 
 object AnnotationsTypes {

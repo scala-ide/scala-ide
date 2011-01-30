@@ -20,7 +20,7 @@ import scala.tools.nsc.io.AbstractFile
 
 import javaelements.{ScalaSourceFile, ScalaClassFile, ScalaCompilationUnit, ScalaSelectionEngine, ScalaSelectionRequestor}
 import util.EclipseFile
-import scala.tools.eclipse.internal.logging.Tracer
+import scala.tools.eclipse.util.Tracer
 
 class ScalaHyperlinkDetector extends AbstractHyperlinkDetector {
   def detectHyperlinks(viewer : ITextViewer, region : IRegion, canShowMultipleHyperlinks : Boolean) : Array[IHyperlink] = {

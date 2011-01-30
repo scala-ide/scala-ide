@@ -5,7 +5,7 @@
 
 package scala.tools.eclipse
 
-import scala.tools.eclipse.internal.logging.Tracer
+import scala.tools.eclipse.util.Tracer
 import org.eclipse.core.resources.ResourcesPlugin
 import org.eclipse.core.runtime.Path
 import org.eclipse.jdt.core.search.SearchDocument

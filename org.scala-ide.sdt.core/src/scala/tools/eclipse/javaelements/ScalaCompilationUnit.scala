@@ -5,7 +5,7 @@
 
 package scala.tools.eclipse.javaelements
 
-import scala.tools.eclipse.internal.logging.{Tracer, Defensive}
+import scala.tools.eclipse.util.{Tracer, Defensive}
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.{ Map => JMap }
 

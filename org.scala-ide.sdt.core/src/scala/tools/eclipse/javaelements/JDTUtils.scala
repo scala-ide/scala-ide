@@ -102,7 +102,7 @@ object OpenableElementInfoUtils extends ReflectionUtils {
 }
 
 object SourceRefElementInfoUtils extends ReflectionUtils {
-  import scala.tools.eclipse.internal.logging.Defensive
+  import scala.tools.eclipse.util.Defensive
   
   private val sreiClazz = Class.forName("org.eclipse.jdt.internal.core.SourceRefElementInfo")
   private val setSourceRangeStartMethod = getDeclaredMethod(sreiClazz, "setSourceRangeStart", classOf[Int])

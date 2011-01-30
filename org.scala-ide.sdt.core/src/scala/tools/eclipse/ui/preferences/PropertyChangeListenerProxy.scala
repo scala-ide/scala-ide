@@ -1,7 +1,7 @@
 package scala.tools.eclipse
 package ui.preferences
 
-import scala.tools.eclipse.internal.logging.Tracer
+import scala.tools.eclipse.util.Tracer
 import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.jface.util.IPropertyChangeListener
 import org.eclipse.jface.util.PropertyChangeEvent

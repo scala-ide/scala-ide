@@ -16,7 +16,7 @@ import scala.tools.nsc.util.{ RangePosition, Position }
 import scala.tools.eclipse.ScalaPresentationCompiler
 import scala.tools.eclipse.util.ReflectionUtils
 import org.eclipse.jdt.internal.core.search.matching.{ PatternLocator, FieldPattern, MethodPattern, TypeReferencePattern, TypeDeclarationPattern, OrPattern };
-import scala.tools.eclipse.internal.logging.Tracer
+import scala.tools.eclipse.util.Tracer
 
 //FIXME should report all and let matcher to the selection OR only report matcher interest (pre select by type) OR ...
 

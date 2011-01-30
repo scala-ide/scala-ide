@@ -1,7 +1,6 @@
 package scala.tools.eclipse
-package internal.logging
+package util
 
-import scala.tools.eclipse.util.IDESettings
 /**
  * @author david.bernard
  *

@@ -14,7 +14,7 @@ import org.eclipse.jface.text.DocumentEvent;
 import scala.tools.eclipse.javaelements.ScalaCompilationUnit
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal
 import scala.tools.eclipse.ScalaWordFinder
-import scala.tools.eclipse.internal.logging.Tracer
+import scala.tools.eclipse.util.Tracer
 
 class ScalaTypeAutoCompletionProposal(scu: ScalaCompilationUnit, doc: IDocument) extends IJavaCompletionProposal with IDocumentListener {
 

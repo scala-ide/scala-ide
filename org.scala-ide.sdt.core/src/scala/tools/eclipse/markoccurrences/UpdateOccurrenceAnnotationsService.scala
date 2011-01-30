@@ -10,13 +10,13 @@ import org.eclipse.ui.IEditorInput
 import org.eclipse.ui.texteditor.IDocumentProvider
 import scala.collection.mutable
 import scala.collection.JavaConversions._
-import scala.tools.eclipse.internal.logging.Defensive
+import scala.tools.eclipse.util.Defensive
 import scala.tools.eclipse.javaelements.ScalaSourceFile
 import scala.tools.eclipse.util.{Annotations, AnnotationsTypes, IDESettings}
 import scala.actors.Reactor
 import org.eclipse.ui.{ISelectionListener, IEditorSite, IWorkbenchPart}
 import org.eclipse.jface.viewers.ISelection
-import scala.tools.eclipse.internal.logging.{Defensive, Tracer}
+import scala.tools.eclipse.util.{Defensive, Tracer}
 import java.util.concurrent.atomic.AtomicInteger
 
 class UpdateOccurrenceAnnotationsService {

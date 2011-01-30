@@ -5,7 +5,7 @@
 
 package scala.tools.eclipse
 
-import scala.tools.eclipse.internal.logging.Tracer
+import scala.tools.eclipse.util.Tracer
 import org.eclipse.core.resources.{ IResource, IFile, IMarker, IWorkspaceRunnable }
 import org.eclipse.core.runtime.IProgressMonitor
 

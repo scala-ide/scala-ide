@@ -5,7 +5,7 @@
 
 package scala.tools.eclipse
 
-import scala.tools.eclipse.internal.logging.Tracer
+import scala.tools.eclipse.util.Tracer
 import scala.collection.mutable
 import scala.collection.mutable.{ ArrayBuffer, SynchronizedMap }
 
