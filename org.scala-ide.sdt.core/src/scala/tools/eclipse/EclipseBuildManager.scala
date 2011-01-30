@@ -90,7 +90,7 @@ class EclipseBuildManager(project : ScalaProject, settings0: Settings) extends R
                   // for instance, when a source file (on the sourcepath) is newer than the classfile
                   // the compiler will create PlainFile instances in that case
                   FileUtils.buildError(i, eclipseSeverity, msg, pos.point, length, pos.line, null)
-                case None =>
+                case _ =>
                   println("no EclipseResource associated to %s [%s]".format(f.path, f.getClass))
                   project.buildError(eclipseSeverity, msg, null)
               }
