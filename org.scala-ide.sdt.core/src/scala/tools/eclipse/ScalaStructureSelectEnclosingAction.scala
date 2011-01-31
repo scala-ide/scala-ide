@@ -25,7 +25,7 @@ class ScalaStructureSelectEnclosingAction(editor: ScalaSourceFileEditor, selecti
     val selection = editor.getSelectionProvider.getSelection.asInstanceOf[ITextSelection]
 
     val scalaSourceFile = editor.getEditorInput.asInstanceOf[IAdaptable].getAdapter(classOf[IJavaElement]).asInstanceOf[ScalaSourceFile]
-    scalaSourceFile.withSourceFile { (src, compiler) =>
+    scalaSourceFile.doWithSourceFile { (src, compiler) =>
       import compiler._
       val currentPos = rangePos(src, selection.getOffset, selection.getOffset, selection.getOffset + selection.getLength)
 
@@ -52,8 +52,6 @@ class ScalaStructureSelectEnclosingAction(editor: ScalaSourceFileEditor, selecti
           selectionHistory.listenToSelectionChanges()
         }
       }
-    }
-
+    } 
   }
-
 }

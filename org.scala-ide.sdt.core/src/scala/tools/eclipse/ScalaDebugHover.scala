@@ -22,9 +22,9 @@ class ScalaDebugHover extends JavaSourceHover {
         val start = hoverRegion.getOffset
         val length = hoverRegion.getLength
         val end = start+length
-        scu.withSourceFile({ (sourceFile, compiler) =>
+        scu.withSourceFile ({ (sourceFile, compiler) =>
           compiler.debugInfo(sourceFile, start, length)
-        })
+        }) (_noHoverInfo)
       }
       case _ => super.getHoverInfo(textViewer, hoverRegion)
     }

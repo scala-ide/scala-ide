@@ -31,7 +31,7 @@ class ScalaOccurrencesFinder(file: ScalaSourceFile, offset: Int, length: Int) {
           }
         }
       }
-    }
+    } (None)
   }
 }
 

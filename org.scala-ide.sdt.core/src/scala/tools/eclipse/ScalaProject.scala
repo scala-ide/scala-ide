@@ -380,25 +380,46 @@ class ScalaProject(val underlying: IProject) {
       sourceFolders.exists(_ == sourceFolderPath)
     }
   }
-
-  def withPresentationCompiler[T](op: ScalaPresentationCompiler => T): T = {
+  
+  /**
+   * Performs `op` on the presentation compiler, if the compiler has been initialized. 
+   * Otherwise, do nothing (no exception thrown).
+   */
+  def doWithPresentationCompiler(op: ScalaPresentationCompiler => Unit): Unit = {
     presentationCompiler {
       case Some(c) => op(c)
-      case None => 
-        if (underlying.isOpen)
-          failedCompilerInitialization("Compiler failed to initialize properly.");
-        // FIXME: this now shows 2 dialog boxes, the one above and the one caused by the throw below
-        // will investigate further -DM
-        throw InvalidCompilerSettings() // DM: see if this error is easier to catch
-//        DM: commented out the null below.
-//        null.asInstanceOf[T] // we're already in deep trouble here, so one more NPE won't kill us
+      case None =>
+    }
+  }
+  
+  def defaultOrElse[T]: T = {  
+    if (underlying.isOpen)
+      failedCompilerInitialization("Compiler failed to initialize properly.");
+
+    // FIXME: this now shows 2 dialog boxes, the one above and the one caused by the throw below
+    // will investigate further -DM
+    throw InvalidCompilerSettings() // DM: see if this error is easier to catch
+//    DM: commented out the null below.
+//    null.asInstanceOf[T] // we're already in deep trouble here, so one more NPE won't kill us    
+  }
+
+  /** 
+   * If the presentation compiler has failed to initialize and no `orElse` is specified, 
+   * the default handler throws an `InvalidCompilerSettings` exception
+   * If T = Unit, then doWithPresentationCompiler can be used, which does not throw.
+   */
+  def withPresentationCompiler[T](op: ScalaPresentationCompiler => T)(orElse: => T = defaultOrElse): T = {
+    presentationCompiler {
+      case Some(c) => op(c)
+      case None => orElse
     }
   }
 
-  def withSourceFile[T](scu: ScalaCompilationUnit)(op: (SourceFile, ScalaPresentationCompiler) => T): T =
+  def withSourceFile[T](scu: ScalaCompilationUnit)(op: (SourceFile, ScalaPresentationCompiler) => T)(orElse: => T = defaultOrElse): T = {
     withPresentationCompiler { compiler =>
       compiler.withSourceFile(scu)(op)
-    }
+    } {orElse}
+  }
 
   def resetPresentationCompiler {
     presentationCompiler.invalidate

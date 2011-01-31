@@ -40,7 +40,7 @@ class ScalaSelectionEngine(nameEnvironment : SearchableEnvironment, requestor : 
   def select(cu : env.ICompilationUnit, selectionStart0 : Int, selectionEnd0 : Int) {
     val scu = cu.asInstanceOf[ScalaCompilationUnit]
   
-    scu.withSourceFile({ (src, compiler) =>
+    scu.doWithSourceFile { (src, compiler) =>
     
       import compiler.{log => _, _}
       
@@ -279,7 +279,7 @@ class ScalaSelectionEngine(nameEnvironment : SearchableEnvironment, requestor : 
           acceptTypes(acceptedEnums)
         }
       }
-    })
+    } 
   }
 
   override def acceptType(packageName : Array[Char], simpleTypeName : Array[Char], enclosingTypeNames : Array[Array[Char]], modifiers : Int, accessRestriction : AccessRestriction) {

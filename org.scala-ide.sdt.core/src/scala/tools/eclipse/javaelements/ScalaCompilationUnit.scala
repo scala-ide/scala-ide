@@ -34,23 +34,27 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
   val project = ScalaPlugin.plugin.getScalaProject(getJavaProject.getProject)
 
   val file : AbstractFile
+
+  def doWithSourceFile(op : (SourceFile, ScalaPresentationCompiler) => Unit) {
+    project.withSourceFile(this)(op)(())
+  }
   
-  def withSourceFile[T](op : (SourceFile, ScalaPresentationCompiler) => T) : T = {
-    project.withSourceFile(this)(op)
+  def withSourceFile[T](op : (SourceFile, ScalaPresentationCompiler) => T)(orElse: => T = project.defaultOrElse) : T = {
+    project.withSourceFile(this)(op)(orElse)
   }
   
   override def bufferChanged(e : BufferChangedEvent) {
     if (e.getBuffer.isClosed)
       discard
     else
-      project.withPresentationCompiler(_.askReload(this, getContents))
+      project.doWithPresentationCompiler(_.askReload(this, getContents))
 
     super.bufferChanged(e)
   }
   
   def discard {
     if (getJavaProject.getProject.isOpen)
-      project.withPresentationCompiler(_.discardSourceFile(this))
+      project.doWithPresentationCompiler(_.discardSourceFile(this))
   }
   
   override def close {
@@ -65,33 +69,33 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
   def getProblemRequestor : IProblemRequestor = null
 
   override def buildStructure(info : OpenableElementInfo, pm : IProgressMonitor, newElements : JMap[_, _], underlyingResource : IResource) : Boolean =
-  	withSourceFile({ (sourceFile, compiler) =>
-	    val sourceLength = sourceFile.length
-	    compiler.ask { () =>
-	      compiler.withUntypedTree(sourceFile) { tree =>
-  	        new compiler.StructureBuilderTraverser(this, info, newElements.asInstanceOf[JMap[AnyRef, AnyRef]], sourceLength).traverse(tree)
-	      }
-	    }
-	    info match {
-	      case cuei : CompilationUnitElementInfo =>
-	        cuei.setSourceLength(sourceLength)
-	      case _ =>
-	    }
-	
-	    info.setIsStructureKnown(true)
-	    info.isStructureKnown
-  })
+    withSourceFile({ (sourceFile, compiler) =>
+      val sourceLength = sourceFile.length
+      compiler.ask { () =>
+        compiler.withUntypedTree(sourceFile) { tree =>
+            new compiler.StructureBuilderTraverser(this, info, newElements.asInstanceOf[JMap[AnyRef, AnyRef]], sourceLength).traverse(tree)
+        }
+      }
+      info match {
+        case cuei : CompilationUnitElementInfo =>
+          cuei.setSourceLength(sourceLength)
+        case _ =>
+      }
+  
+      info.setIsStructureKnown(true)
+      info.isStructureKnown
+  }) (false)
 
   def scheduleReconcile : Unit = ()
   
   def addToIndexer(indexer : ScalaSourceIndexer) {
-    withSourceFile({ (source, compiler) =>
+    doWithSourceFile { (source, compiler) =>
       compiler.ask { () =>
         compiler.withParseTree(source) { tree =>
           new compiler.IndexBuilderTraverser(indexer).traverse(tree)
         }
       }
-    })
+    }
   }
   
   def newSearchableEnvironment(workingCopyOwner : WorkingCopyOwner) : SearchableEnvironment = {
@@ -126,23 +130,23 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
   }
   
   override def reportMatches(matchLocator : MatchLocator, possibleMatch : PossibleMatch) {
-    withSourceFile { (sourceFile, compiler) =>
+    doWithSourceFile { (sourceFile, compiler) =>
       compiler.ask { () =>
-	    compiler.withUntypedTree(sourceFile) { tree =>
-          compiler.MatchLocator(this, matchLocator, possibleMatch).traverse(tree)
-	    }
-	  }
+        compiler.withUntypedTree(sourceFile) { tree =>
+            compiler.MatchLocator(this, matchLocator, possibleMatch).traverse(tree)
+        }
+      }
     }
   }
   
   override def createOverrideIndicators(annotationMap : JMap[_, _]) {
-    withSourceFile { (sourceFile, compiler) =>
+    doWithSourceFile { (sourceFile, compiler) =>
       compiler.ask { () =>
         compiler.withUntypedTree(sourceFile) { tree =>
           new compiler.OverrideIndicatorBuilderTraverser(this, annotationMap.asInstanceOf[JMap[AnyRef, AnyRef]]).traverse(tree)
         }
-	  }
-	}
+      }
+    }
   }
   
   override def getImageDescriptor = {

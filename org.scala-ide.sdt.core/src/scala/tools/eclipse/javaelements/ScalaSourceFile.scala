@@ -85,7 +85,7 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
     resp.get
     val problems = compiler.problemsOf(this)
     if (problems.isEmpty) null else problems.toArray
-  }
+  } (null)
   
   override def getType(name : String) : IType = new LazyToplevelClass(this, name)
 }
