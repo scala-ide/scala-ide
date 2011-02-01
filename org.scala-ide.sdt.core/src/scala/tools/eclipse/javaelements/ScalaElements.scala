@@ -273,6 +273,7 @@ class LazyToplevelClass(unit : ScalaCompilationUnit, name : String) extends Sour
   override def getType(nm : String) = mirror map (_.getType(nm)) getOrElse super.getType(nm)
   override def getMethod(nm : String, params : Array[String]) = mirror map (_.getMethod(nm, params)) getOrElse super.getMethod(nm, params)
   override def getElementInfo = mirror map (_.getElementInfo) getOrElse super.getElementInfo
+  override def getChildren = mirror map (_.getChildren) getOrElse super.getChildren
   
   override def isResolved = mirror.isDefined
   override def exists = {
