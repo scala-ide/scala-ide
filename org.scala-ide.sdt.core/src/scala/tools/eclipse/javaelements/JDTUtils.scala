@@ -90,17 +90,6 @@ object JDTUtils {
   }
 }
 
-object OpenableElementInfoUtils extends ReflectionUtils {
-  private val clazz = Class.forName("org.eclipse.jdt.internal.core.OpenableElementInfo")
-  private val addChildMethod = getMethod(clazz, "addChild", classOf[IJavaElement])
-  private val removeChildMethod = getMethod(clazz, "removeChild", classOf[IJavaElement])
-  private val setChildrenMethod = getMethod(clazz, "setChildren", classOf[Array[IJavaElement]])
-  
-  def addChild(info : OpenableElementInfo, child : IJavaElement) = addChildMethod.invoke(info, child)
-  def removeChild(info : OpenableElementInfo, child : IJavaElement) = removeChildMethod.invoke(info, child)
-  def setChildren(info : OpenableElementInfo, children : Array[IJavaElement]) = setChildrenMethod.invoke(info, children : AnyRef)
-}
-
 object SourceRefElementInfoUtils extends ReflectionUtils {
   private val sreiClazz = Class.forName("org.eclipse.jdt.internal.core.SourceRefElementInfo")
   private val setSourceRangeStartMethod = getDeclaredMethod(sreiClazz, "setSourceRangeStart", classOf[Int])
