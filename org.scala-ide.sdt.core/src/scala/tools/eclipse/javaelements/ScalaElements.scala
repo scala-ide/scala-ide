@@ -12,7 +12,7 @@ import org.eclipse.jdt.core.{ IField, IJavaElement, IMember, IMethod, IType }
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants
 import org.eclipse.jdt.internal.core.{
   BinaryType, JavaElement, JavaElementInfo, LocalVariable, SourceConstructorInfo, SourceField, SourceFieldElementInfo,
-  SourceMethod, SourceMethodElementInfo, SourceMethodInfo, SourceType, SourceTypeElementInfo } 
+  SourceMethod, SourceMethodElementInfo, SourceMethodInfo, SourceType, SourceTypeElementInfo, OpenableElementInfo }
 import org.eclipse.jdt.internal.ui.JavaPlugin
 import org.eclipse.jdt.internal.ui.viewsupport.{ JavaElementImageProvider }
 import org.eclipse.jdt.ui.JavaElementImageDescriptor
@@ -267,7 +267,7 @@ class ScalaSourceFieldElementInfo extends SourceFieldElementInfo with ScalaMembe
 }
 
 class LazyToplevelClass(unit : ScalaCompilationUnit, name : String) extends SourceType(unit, name) with IType {
-  lazy val mirror = unit.getChildren.find(e => e.getElementName == name).map(_.asInstanceOf[ScalaSourceTypeElement])
+  lazy val mirror = unit.getElementInfo.asInstanceOf[OpenableElementInfo].getChildren.find(e => e.getElementName == name).map(_.asInstanceOf[ScalaSourceTypeElement])
   
   override def getField(nm : String) = mirror map (_.getField(nm)) getOrElse super.getField(nm) 
   override def getType(nm : String) = mirror map (_.getType(nm)) getOrElse super.getType(nm)
@@ -275,4 +275,10 @@ class LazyToplevelClass(unit : ScalaCompilationUnit, name : String) extends Sour
   override def getElementInfo = mirror map (_.getElementInfo) getOrElse super.getElementInfo
   
   override def isResolved = mirror.isDefined
+  override def exists = {
+	  val r = isResolved
+	  println("toplevel element, name =" + name + ", resolved =" + r)
+	  if (!r) println(unit.getElementInfo.asInstanceOf[OpenableElementInfo].getChildren.mkString("\n"))
+	  r
+  }
 }

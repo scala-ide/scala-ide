@@ -86,8 +86,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
       def addChild(child : JavaElement) =
         elementInfo match {
           case scalaMember : ScalaMemberElementInfo => scalaMember.addChild0(child)
-          case openable : OpenableElementInfo => OpenableElementInfoUtils.addChild(openable, child)
-          case _ =>
+          case openable : OpenableElementInfo => openable.addChild(child)
         }
       
       def modules : Map[Symbol, ScalaElementInfo] = Map.empty 
@@ -165,7 +164,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
           val defElemInfo = new ScalaSourceMethodInfo
           
           defElemInfo.setArgumentNames(paramNames)
-          defElemInfo.setExceptionTypeNames(new Array[Array[Char]](0))
+          defElemInfo.setExceptionTypeNames(Array.empty)
           val tn = mapType(d.tpe.finalResultType.typeSymbol).toArray
           defElemInfo.asInstanceOf[FnInfo].setReturnType(tn)
   
@@ -611,7 +610,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
             new ScalaSourceMethodInfo
         
         defElemInfo.setArgumentNames(paramNames)
-        defElemInfo.setExceptionTypeNames(new Array[Array[Char]](0))
+        defElemInfo.setExceptionTypeNames(Array.empty)
         val tn = mapType(d.tpt).toArray
         defElemInfo.asInstanceOf[FnInfo].setReturnType(tn)
 
