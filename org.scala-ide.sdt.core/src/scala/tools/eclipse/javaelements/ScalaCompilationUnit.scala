@@ -67,7 +67,7 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
   }
 
   def getProblemRequestor : IProblemRequestor = null
-
+`
   override def buildStructure(info : OpenableElementInfo, pm : IProgressMonitor, newElements : JMap[_, _], underlyingResource : IResource) : Boolean =
     withSourceFile({ (sourceFile, compiler) =>
       val sourceLength = sourceFile.length
@@ -90,10 +90,8 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
   
   def addToIndexer(indexer : ScalaSourceIndexer) {
     doWithSourceFile { (source, compiler) =>
-      compiler.ask { () =>
-        compiler.withParseTree(source) { tree =>
-          new compiler.IndexBuilderTraverser(indexer).traverse(tree)
-        }
+      compiler.withParseTree(source) { tree =>
+        new compiler.IndexBuilderTraverser(indexer).traverse(tree)
       }
     }
   }
