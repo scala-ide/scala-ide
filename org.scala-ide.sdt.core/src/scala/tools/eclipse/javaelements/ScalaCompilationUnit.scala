@@ -67,7 +67,7 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
   }
 
   def getProblemRequestor : IProblemRequestor = null
-`
+
   override def buildStructure(info : OpenableElementInfo, pm : IProgressMonitor, newElements : JMap[_, _], underlyingResource : IResource) : Boolean =
     withSourceFile({ (sourceFile, compiler) =>
       val sourceLength = sourceFile.length
