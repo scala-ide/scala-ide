@@ -58,18 +58,12 @@ class ScalaHyperlinkDetector extends AbstractHyperlinkDetector with Logger {
                 case Annotated(atp, _) => atp.symbol
                 case t => log("unhandled tree " + t); NoSymbol
               }) flatMap { sym => 
-                  if (sym.isPackage || sym == NoSymbol || sym.isJavaDefined) 
-                    None 
-                  else 
-                    compiler.locate(sym, scu) map { case (f, pos) => Hyperlink(f, pos) }
-                 } match {
-                   case Some(hyper) => Left(Array[IHyperlink](hyper))
-                   case None => Right( () => codeSelect(textEditor, wordRegion, scu) )
-                 }
-            }
-          } match {
-            case Left(l) => l
-            case Right(cont) => cont()
+                if (sym.isPackage || sym == NoSymbol || sym.isJavaDefined) 
+                  None 
+                else 
+                  compiler.locate(sym, scu) map { case (f, pos) => Hyperlink(f, pos) }
+              }
+            } map (Array(_ : IHyperlink)) getOrElse codeSelect(textEditor, wordRegion, scu)
           }
         }) (null)
     
