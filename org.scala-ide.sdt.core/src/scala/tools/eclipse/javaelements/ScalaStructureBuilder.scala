@@ -151,7 +151,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
           }
           
           val paramTypes = Array(fps.map(v => Signature.createTypeSignature(mapType(paramType(v)), false)) : _*)
-          val paramNames = Array(fps.map(n => nme.getterName(n.name).toString.toArray) : _*)
+          val paramNames = Array(fps.map(n => nme.getterName(n.name).toChars) : _*)
           
           val defElem = 
             if(d.hasFlag(Flags.ACCESSOR))
@@ -579,7 +579,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         }
         
         val paramTypes = Array(fps.map(v => Signature.createTypeSignature(mapType(paramType(v)), false)) : _*)
-        val paramNames = Array(fps.map(n => nme.getterName(n.name).toString.toArray) : _*)
+        val paramNames = Array(fps.map(n => nme.getterName(n.name).toChars) : _*)
         
         val sw = new StringWriter
         val tp = newTreePrinter(new PrintWriter(sw))
