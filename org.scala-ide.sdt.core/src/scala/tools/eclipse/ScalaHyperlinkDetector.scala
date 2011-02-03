@@ -51,6 +51,7 @@ class ScalaHyperlinkDetector extends AbstractHyperlinkDetector with Logger {
                   }
                 }
               }
+              
               import compiler.{log =>_, _}
               typed.left.toOption map ( _ match {
                 case st : SymTree => st.symbol 
@@ -62,14 +63,14 @@ class ScalaHyperlinkDetector extends AbstractHyperlinkDetector with Logger {
                   else 
                     compiler.locate(sym, scu) map { case (f, pos) => Hyperlink(f, pos) }
                  } match {
-                    case Some(hyper) => Left(Array[IHyperlink](hyper))
-                    case None => Right( () => codeSelect(textEditor, wordRegion, scu) )
-                   }
+                   case Some(hyper) => Left(Array[IHyperlink](hyper))
+                   case None => Right( () => codeSelect(textEditor, wordRegion, scu) )
+                 }
             }
           } match {
-              case Left(l) => l
-              case Right(cont) => cont()
-            }
+            case Left(l) => l
+            case Right(cont) => cont()
+          }
         }) (null)
     
       case _ => null
@@ -96,7 +97,10 @@ class ScalaHyperlinkDetector extends AbstractHyperlinkDetector with Logger {
           val offset = wordRegion.getOffset
           engine.select(scu, offset, offset + wordRegion.getLength - 1)
           val elements = requestor.getElements
-          if (elements.length == 0) null else {
+
+          if (elements.length == 0) 
+            null 
+          else {
             val qualify = elements.length > 1
             elements.map(new JavaElementHyperlink(wordRegion, openAction.asInstanceOf[SelectionDispatchAction], _, qualify))
           }

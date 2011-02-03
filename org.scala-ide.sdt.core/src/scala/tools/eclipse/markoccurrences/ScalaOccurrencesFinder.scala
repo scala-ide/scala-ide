@@ -19,15 +19,18 @@ class ScalaOccurrencesFinder(file: ScalaSourceFile, offset: Int, length: Int) {
           lazy val index = GlobalIndex(global.body(sourceFile))
         }
 
-        if (!compiler.unitOfFile.contains(sourceFile.file)) None else {
-          val (selectedTree, os) = mo.occurrencesOf(sourceFile.file, from, to)
-          
+        if (!compiler.unitOfFile.contains(sourceFile.file)) 
+          None 
+        else {
+          val (selectedTree, os) = mo.occurrencesOf(sourceFile.file, from, to)          
           val symbol = selectedTree.symbol
-          if (symbol == null || symbol.name.isOperatorName) None else {
-        	val symbolName = selectedTree.symbol.nameString
-        	val positions = os map (p => (p.start, p.end - p.start))
-        	val locations = positions collect { case (offset, length) if length == symbolName.length => new Region(offset, length) }
-        	Some(Occurrences(symbolName, locations.toList))
+          if (symbol == null || symbol.name.isOperatorName) 
+            None 
+          else {
+          	val symbolName = selectedTree.symbol.nameString
+          	val positions = os map (p => (p.start, p.end - p.start))
+          	val locations = positions collect { case (offset, length) if length == symbolName.length => new Region(offset, length) }
+          	Some(Occurrences(symbolName, locations.toList))
           }
         }
       }
