@@ -74,7 +74,12 @@ class ScalaClassFile(parent : PackageFragment, name : String, sourceFile : Strin
       Util.toCharArrays(packageFragment.names)
   }
 
-  //override def getType() : IType = new LazyToplevelClass(this, super.getType.getElementName)
+  class ScalaBinaryType(name : String) extends BinaryType(this, name) {
+    lazy val mirror = getChildren.find(_.getElementName == name)
+	override def exists = mirror.isDefined
+  }
+
+  override def getType() : IType = new ScalaBinaryType(getTypeName)
   
   def getMainTypeName() : Array[Char] =
     Util.getNameWithoutJavaLikeExtension(getElementName).toCharArray
@@ -89,8 +94,7 @@ class ScalaClassFile(parent : PackageFragment, name : String, sourceFile : Strin
     }
   }
 
-  def getFileName() : Array[Char] =
-    getPath.toString.toCharArray
+  def getFileName() : Array[Char] = getPath.toString.toCharArray
     
   override def validateExistence(underlyingResource : IResource) : IStatus = {
 	if ((underlyingResource ne null) && !underlyingResource.isAccessible) newDoesNotExistStatus() else JavaModelStatus.VERIFIED_OK
