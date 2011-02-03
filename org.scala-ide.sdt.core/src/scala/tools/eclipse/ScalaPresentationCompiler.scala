@@ -66,7 +66,14 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
   override def ask[A](op: () => A): A = if (Thread.currentThread == compileRunner) op() else super.ask(op)
   
   override def askTypeAt(pos: Position, response: Response[Tree]) = {
-	  if (Thread.currentThread == compileRunner) getTypedTreeAt(pos, response) else super.askTypeAt(pos, response)
+    if (Thread.currentThread == compileRunner) getTypedTreeAt(pos, response) else super.askTypeAt(pos, response)
+  }
+
+  override def askParsedEntered(source: SourceFile, keepLoaded: Boolean, response: Response[Tree]) {
+    if (Thread.currentThread == compileRunner)
+      getParsedEntered(source, keepLoaded, response)
+    else
+      super.askParsedEntered(source, keepLoaded, response)
   }
     
   def body(sourceFile : SourceFile) = {
@@ -84,10 +91,12 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
   }
 
   def withUntypedTree[T](sourceFile : SourceFile)(op : Tree => T) : T = {
-    val tree = ask { () => 
-      onUnitOf(sourceFile) { u =>
-        if (u.status < JustParsed) parseAndEnter(u)
-        u.body
+    val tree = {
+      val response = new Response[Tree]
+      askParsedEntered(sourceFile, true, response)
+      response.get match {
+        case Left(tree) => tree 
+        case Right(thr) => throw thr
       }
     }
     op(tree)

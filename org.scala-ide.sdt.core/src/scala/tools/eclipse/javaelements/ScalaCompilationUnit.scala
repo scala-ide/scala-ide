@@ -71,8 +71,8 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
   override def buildStructure(info : OpenableElementInfo, pm : IProgressMonitor, newElements : JMap[_, _], underlyingResource : IResource) : Boolean =
     withSourceFile({ (sourceFile, compiler) =>
       val sourceLength = sourceFile.length
-      compiler.ask { () =>
-        compiler.withUntypedTree(sourceFile) { tree =>
+      compiler.withUntypedTree(sourceFile) { tree =>
+        compiler.ask { () =>
             new compiler.StructureBuilderTraverser(this, info, newElements.asInstanceOf[JMap[AnyRef, AnyRef]], sourceLength).traverse(tree)
         }
       }
@@ -129,8 +129,8 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
   
   override def reportMatches(matchLocator : MatchLocator, possibleMatch : PossibleMatch) {
     doWithSourceFile { (sourceFile, compiler) =>
-      compiler.ask { () =>
-        compiler.withUntypedTree(sourceFile) { tree =>
+      compiler.withUntypedTree(sourceFile) { tree =>
+        compiler.ask { () =>
             compiler.MatchLocator(this, matchLocator, possibleMatch).traverse(tree)
         }
       }
@@ -139,8 +139,8 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
   
   override def createOverrideIndicators(annotationMap : JMap[_, _]) {
     doWithSourceFile { (sourceFile, compiler) =>
-      compiler.ask { () =>
-        compiler.withUntypedTree(sourceFile) { tree =>
+      compiler.withUntypedTree(sourceFile) { tree =>
+        compiler.ask { () =>
           new compiler.OverrideIndicatorBuilderTraverser(this, annotationMap.asInstanceOf[JMap[AnyRef, AnyRef]]).traverse(tree)
         }
       }
