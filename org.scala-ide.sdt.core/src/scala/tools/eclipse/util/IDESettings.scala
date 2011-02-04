@@ -16,7 +16,7 @@ object IDESettings {
     List(
     		Box("Standard",
     				List(deprecation, g, optimise, target, unchecked,
-                 pluginOptions, nospecialization)),
+                 pluginOptions, nospecialization, verbose)),
     		Box("Advanced",
     				List(checkInit, Xchecknull, elidebelow,
     						 Xexperimental, future, XlogImplicits,
