@@ -75,7 +75,7 @@ class ScalaClassFile(parent : PackageFragment, name : String, sourceFile : Strin
   }
 
   class ScalaBinaryType(name : String) extends BinaryType(this, name) {
-    lazy val mirror = getChildren.find(_.getElementName == name)
+    lazy val mirror = ScalaClassFile.this.getChildren.find(_.getElementName == name)
 	override def exists = mirror.isDefined
   }
 
