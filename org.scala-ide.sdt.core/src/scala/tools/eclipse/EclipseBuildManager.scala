@@ -162,6 +162,7 @@ class EclipseBuildManager(project : ScalaProject, settings0: Settings) extends R
         case EclipseResource(f : IFile) =>
           FileUtils.clearBuildErrors(f, null)
           FileUtils.clearTasks(f, null)
+          scala.tools.eclipse.warnings.UnusedImportsWarning.markUnusedImports(f)
         case _ =>
       }
     }
