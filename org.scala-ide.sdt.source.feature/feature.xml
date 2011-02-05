@@ -2,7 +2,7 @@
 <feature
   id="org.scala-ide.sdt.source.feature"
   label="Scala IDE for Eclipse Source"
-  version="0.7.0"
+  version="0.8.0.qualifier"
   provider-name="scala-ide.org">
 
   <description url="http://scala-ide.org/">

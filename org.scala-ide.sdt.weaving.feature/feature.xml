@@ -2,7 +2,7 @@
 <feature
       id="org.scala-ide.sdt.weaving.feature"
       label="JDT Weaving for Scala"
-      version="0.7.0"
+      version="0.8.0.qualifier"
       provider-name="scala-ide.org">
 
    <license url="http://scala-lang.org/downloads/license.html">
