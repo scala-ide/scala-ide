@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Scala Compiler for Eclipse (Extension)
 Bundle-SymbolicName: org.scala-ide.sdt.compiler.ext
-Bundle-Version: 1.0.0.qualifier
+Bundle-Version: 0.7.0
 Bundle-Vendor: scala-ide.org
 Bundle-RequiredExecutionEnvironment: J2SE-1.5
 Require-Bundle: org.scala-ide.scala.library

@@ -18,5 +18,5 @@
 
   <category-def name="sdt" label="Scala IDE for Eclipse"/>
   <category-def name="sdt-weaving" label="JDT Weaving for Scala"/>
-  <category-def name="sdt-source" label="Scala IDE for Eclipse Source Feature"/>
+  <category-def name="sdt-source" label="Scala IDE for Eclipse Source Feature (Optional)"/>
 </site>
