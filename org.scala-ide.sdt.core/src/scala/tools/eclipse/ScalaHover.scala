@@ -25,7 +25,10 @@ class ScalaHover(codeAssist : Option[ICodeAssist]) extends ITextHover {
           val range = compiler.rangePos(src, start, start, end)
           askTypeAt(range, resp)
           resp.get.left.toOption map {	t =>
-            ask { () => t.symbol.defString }
+            ask { () => 
+              val sym = t.symbol
+              if (sym.isClass || sym.isModule) sym.fullName else sym.defString
+            }
           } getOrElse _noHoverInfo
         }) (_noHoverInfo)
       }
