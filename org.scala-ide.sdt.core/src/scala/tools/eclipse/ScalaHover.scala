@@ -24,10 +24,11 @@ class ScalaHover(codeAssist : Option[ICodeAssist]) extends ITextHover {
           val resp = new Response[Tree]
           val range = compiler.rangePos(src, start, start, end)
           askTypeAt(range, resp)
-          resp.get.left.toOption map {	t =>
+          resp.get.left.toOption flatMap {	t =>
             ask { () => 
-              val sym = t.symbol
-              if (sym.isClass || sym.isModule) sym.fullName else sym.defString
+              Option(t.symbol) map { sym =>
+                if (sym.isClass || sym.isModule) sym.fullName else sym.defString
+              }
             }
           } getOrElse _noHoverInfo
         }) (_noHoverInfo)
