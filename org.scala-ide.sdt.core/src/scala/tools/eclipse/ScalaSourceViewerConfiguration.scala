@@ -5,7 +5,7 @@
 
 package scala.tools.eclipse;
 
-import org.eclipse.jdt.core.{ IJavaProject, IJavaElement }
+import org.eclipse.jdt.core.{ IJavaProject, IJavaElement, ICodeAssist }
 import org.eclipse.jdt.internal.ui.JavaPlugin
 import org.eclipse.jdt.internal.ui.javaeditor.{ IClassFileEditorInput, ICompilationUnitDocumentProvider, JavaElementHyperlinkDetector }
 import org.eclipse.jdt.internal.ui.text.ContentAssistPreference
@@ -56,48 +56,27 @@ class ScalaSourceViewerConfiguration(store : IPreferenceStore, editor : ITextEdi
     reconciler
   }
 
-  override def getConfiguredTextHoverStateMasks(sourceViewer : ISourceViewer, contentType : String) : Array[Int] =
-    (Set.empty ++ super.getConfiguredTextHoverStateMasks(sourceViewer, contentType) ++ Seq(SWT.MOD3, SWT.MOD1|SWT.MOD3)).toArray
-
-  override def getTextHover(sv : ISourceViewer, contentType : String, stateMask : Int) = {
-    val javaHover = super.getTextHover(sv, contentType, stateMask)
-
-    stateMask match {
-      case SWT.MOD3 => new ScalaDebugHover
-      case _ => javaHover
-    }
-  }
+  override def getTextHover(sv : ISourceViewer, contentType : String, stateMask : Int) = new ScalaHover(getCodeAssist)
 
   override def getHyperlinkDetectors(sv : ISourceViewer) = {
     val shd = new ScalaHyperlinkDetector
     shd.setContext(editor)
     Array(shd)
   }
+  
+  def getCodeAssist : Option[ICodeAssist] = Option(editor) map { editor =>
+    val input = editor.getEditorInput
+    val provider = editor.getDocumentProvider
 
-  /**
-   * Direct copy+paste of getProject from SourceViewerConfiguration.
-   * <grumble>No need for this to be _private_ in the parent class</grumble>
-   */
+    (provider, input) match {
+      case (icudp : ICompilationUnitDocumentProvider, _) => icudp getWorkingCopy input
+   	  case (_, icfei : IClassFileEditorInput) => icfei.getClassFile
+   	  case _ => null
+    }
+  }
+
   def getProject : IJavaProject = {
-    if (editor == null)
-      return null;
-
-    val input = editor.getEditorInput();
-    val provider = editor.getDocumentProvider();
-
-    val element = if (provider.isInstanceOf[ICompilationUnitDocumentProvider]) {
-      provider.asInstanceOf[ICompilationUnitDocumentProvider].getWorkingCopy(input)
-    } else if (input.isInstanceOf[IClassFileEditorInput]) {
-      input.asInstanceOf[IClassFileEditorInput].getClassFile()
-    } else {
-      null
-    }
-
-    if (element == null) {
-      return null;
-    }
-
-    return element.getJavaProject();
+	getCodeAssist map (_.asInstanceOf[IJavaElement].getJavaProject) orNull
   }
 
 
