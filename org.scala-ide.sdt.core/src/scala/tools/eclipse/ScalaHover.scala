@@ -9,6 +9,7 @@ import org.eclipse.jdt.core.ICodeAssist
 import org.eclipse.jface.text.{ ITextViewer, IRegion, ITextHover }
 
 import scala.tools.eclipse.javaelements.ScalaCompilationUnit
+import scala.tools.nsc.symtab.Flags
 
 class ScalaHover(codeAssist : Option[ICodeAssist]) extends ITextHover {
   
@@ -21,14 +22,22 @@ class ScalaHover(codeAssist : Option[ICodeAssist]) extends ITextHover {
         val end = start + region.getLength
         scu.withSourceFile ({ (src, compiler) =>
           import compiler._
+          
           val resp = new Response[Tree]
           val range = compiler.rangePos(src, start, start, end)
           askTypeAt(range, resp)
           resp.get.left.toOption flatMap {	t =>
             ask { () => 
-              Option(t.symbol) map { sym =>
-                if (sym.isClass || sym.isModule) sym.fullName else sym.defString
-              }
+              Option(t.symbol) flatMap { sym => Option(t.tpe) map { tpe =>
+                def defString: String = {
+                  compose(List(sym.hasFlagsToString(Flags.ExplicitFlags), sym.keyString, sym.varianceString + sym.nameString + 
+                  sym.infoString(tpe)))
+                }
+  
+                def compose(ss: List[String]): String = ss.filter("" !=).mkString("", " ", "")
+
+                if (sym.isClass || sym.isModule) sym.fullName else defString
+              }}
             }
           } getOrElse _noHoverInfo
         }) (_noHoverInfo)
