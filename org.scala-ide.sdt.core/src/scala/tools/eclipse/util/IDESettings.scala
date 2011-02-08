@@ -45,6 +45,7 @@ object IDESettings {
   def tuningSettings: List[Box] = {
     List(
       Box("Editor Tuning", List(outputInClasspath, compileOnTyping, useContentOfEditor, alwaysCleanBuild, classBreakpoint, markOccurencesForSelectionOnly, markOccurencesTStrategy, timeOutBodyReq))
+      , Box("Builder Tuning", List(markUnusedImports))
       , Box("QuickFix Tuning", List(quickfixImportByText))
       , Box("Logging Tuning", List(tracerEnabled))
       , Box("Editor Debug", List(exceptionOnCreatePresentationCompiler))
@@ -66,6 +67,8 @@ object IDESettings {
 
   val tracerEnabled = BooleanSetting("_tracer printing", "print tracer info on stdout/stderr", false)
 
+  val markUnusedImports = BooleanSetting("_mark unused imports", "", true)
+  
   val quickfixImportByText = BooleanSetting("_import via text", "quick fix for import done by text manipulation (else by AST/refactoring)", false)
 
   def parseInt(s : String) : Option[Int] = {

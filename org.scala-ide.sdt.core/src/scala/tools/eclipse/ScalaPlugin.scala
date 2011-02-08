@@ -101,7 +101,7 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
     Util.resetJavaLikeExtensions // TODO Is this still needed?
     PlatformUI.getWorkbench.getEditorRegistry.setDefaultEditor("*.scala", editorId)
     
-    println("Scala compiler bundle: " + scalaCompilerBundle.getLocation)
+    Tracer.println("Scala compiler bundle: " + scalaCompilerBundle.getLocation)
     PerspectiveFactory.updatePerspective
   }
 

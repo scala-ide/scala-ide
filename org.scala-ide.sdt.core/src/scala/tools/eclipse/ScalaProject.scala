@@ -8,9 +8,7 @@ package scala.tools.eclipse
 import scala.tools.eclipse.util.Tracer
 import scala.collection.immutable.Set
 import scala.collection.mutable.{ LinkedHashSet, HashMap, HashSet }
-
 import java.io.File.pathSeparator
-
 import org.eclipse.core.resources.{ IContainer, IFile, IFolder, IMarker, IProject, IResource, IResourceProxy, IResourceProxyVisitor, IWorkspaceRunnable }
 import org.eclipse.core.runtime.{ FileLocator, IPath, IProgressMonitor, Path }
 import org.eclipse.jdt.core.{ IClasspathEntry, IJavaProject, JavaCore }
@@ -19,13 +17,12 @@ import org.eclipse.jdt.internal.core.JavaProject
 import org.eclipse.jdt.internal.core.builder.{ ClasspathDirectory, ClasspathLocation, NameEnvironment }
 import org.eclipse.jdt.internal.core.util.Util
 import org.eclipse.swt.widgets.{ Display, Shell }
-
 import scala.tools.nsc.{ Settings, MissingRequirementError }
 import scala.tools.nsc.util.SourceFile
-
 import scala.tools.eclipse.javaelements.ScalaCompilationUnit
 import scala.tools.eclipse.properties.PropertyStore
 import scala.tools.eclipse.util.{ Cached, EclipseResource, IDESettings, OSGiUtils, ReflectionUtils }
+import scala.tools.eclipse.ui.semantic.highlighting.UnusedImportsAnalyzer
 
 class ScalaProject(val underlying: IProject) {
   import ScalaPlugin.plugin
@@ -450,6 +447,11 @@ class ScalaProject(val underlying: IProject) {
 
   def build(addedOrUpdated : Set[IFile], removed : Set[IFile], monitor : IProgressMonitor) {
     buildManager.build(addedOrUpdated, removed, monitor)
+    if (IDESettings.markUnusedImports.value) {
+      for ( file <- addedOrUpdated) {
+        UnusedImportsAnalyzer.markUnusedImports(file)
+      }
+    }
     refreshOutput
   }
 
