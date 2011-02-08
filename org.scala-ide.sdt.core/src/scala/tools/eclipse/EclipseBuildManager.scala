@@ -79,7 +79,7 @@ class EclipseBuildManager(project : ScalaProject, settings0: Settings) extends R
       try {
         if(pos.isDefined) {
           val source = pos.source
-          val length = source.identifier(pos, compiler).map(_.length).getOrElse(0)
+          val length = source.identifier(pos).map(_.length).getOrElse(0)
           source.file match {
             case EclipseResource(i : IFile) => FileUtils.buildError(i, eclipseSeverity, msg, pos.point, length, pos.line, null)
             case f =>
