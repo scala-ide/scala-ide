@@ -314,9 +314,8 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         //println("Class defn: "+c.name+" ["+this+"]")
         //println("Parents: "+c.impl.parents)
         
-        val name0 = c.name.toString
-        val isAnon = name0 == "$anon"
-        val name = if (isAnon) "" else name0
+        val name = c.name.toString
+        val isAnon = name == "$anon"
         
         val parentTree = c.impl.parents.head
         val superclassType = parentTree.tpe
