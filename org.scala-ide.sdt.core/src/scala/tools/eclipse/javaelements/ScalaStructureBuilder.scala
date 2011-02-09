@@ -516,7 +516,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         //println("Type defn: >"+t.name.toString+"< ["+this+"]")
         
         val sym = t.symbol
-    	val name = t.name.toString
+        val name = t.name.toString
 
         val typeElem = new ScalaTypeElement(element, name, name)
         resolveDuplicates(typeElem)
@@ -557,7 +557,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
       override def addDef(d : DefDef) : Owner = {
         //println("Def defn: "+d.name+" ["+this+"]")
         val sym = d.symbol
-    	val isCtor0 = sym.isConstructor
+        val isCtor0 = sym.isConstructor
         val nameString =
           if(isCtor0)
             sym.owner.simpleName + (if (sym.owner.isModuleClass) "$" else "")
@@ -585,7 +585,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         tp.print(tp.symName(d, d.name))
         tp.printTypeParams(d.tparams)
         d.vparamss foreach tp.printValueParams
-	    if (d.tpt.tpe != null) {
+        if (d.tpt.tpe != null) {
           sw.write(" : ")
           tp.print(d.tpt)
         }

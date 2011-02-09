@@ -27,7 +27,7 @@ object IDESettings {
              selfInAnnots, Yrecursion, refinementMethodDispatch,
              Ywarndeadcode, Ybuildmanagerdebug)),
       Box("Presentation Compiler",
-        List(YpresentationDebug, YpresentationVerbose, YpresentationLog, YpresentationReplay)))
+        List(YpresentationDebug, YpresentationVerbose, YpresentationLog, YpresentationReplay, YpresentationDelay)))
   }
   
   def pluginSettings: List[Box] = {
