@@ -8,8 +8,8 @@ package scala.tools.eclipse.util
 import scala.tools.nsc.Settings
 
 object IDESettings {
+  import ScalaPluginSettings._
   case class Box(name: String, userSettings: List[Settings#Setting])
-  
   def shownSettings(s : Settings) : List[Box] = {
     import s._
 
@@ -31,12 +31,15 @@ object IDESettings {
   }
   
   def pluginSettings: List[Box] = {
-   import ScalaPluginSettings._
-    val Yplugininfo = BooleanSetting("-plugininfo", "Print Scala plugin debugging info")
-    List(Box("Scala Plugin Debugging", List(Yplugininfo)))    
+    List(Box("Scala Plugin Debugging", List(YPlugininfo)))    
+  }
+  
+  def buildManagerSettings: List[Box] = {
+    List(Box("Build manager", List(buildManager)))    
   }
 }
 
 object ScalaPluginSettings extends Settings {
   val YPlugininfo = BooleanSetting("-plugininfo", "Enable logging of the Scala Plugin info")
+  val buildManager = ChoiceSetting("-buildmanager", "which", "Build manager to use", List("refined", "sbt0.9"), "refined")
 }

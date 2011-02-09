@@ -32,7 +32,6 @@ class ScalaProject(val underlying: IProject) {
   private var classpathUpdate: Long = IResource.NULL_STAMP
   private var buildManager0: EclipseBuildManager = null
   private var hasBeenBuilt = false
-  private val depFile = underlying.getFile(underlying.getName() + ".scala_dependencies")
   private val resetPendingLock = new Object
   private var resetPending = false
 
@@ -320,7 +319,7 @@ class ScalaProject(val underlying: IProject) {
       }
   }
 
-  def refreshOutput: Unit = {
+  private def refreshOutput: Unit = {
     val res = plugin.workspaceRoot.findMember(javaProject.getOutputLocation)
     if (res ne null)
       res.refreshLocal(IResource.DEPTH_INFINITE, null)
@@ -345,11 +344,7 @@ class ScalaProject(val underlying: IProject) {
     settings.classpath.value = classpath.map(_.toOSString).mkString(pathSeparator)
     settings.sourcepath.value = sfs.map(_.toOSString).mkString(pathSeparator)
 
-    val workspaceStore = ScalaPlugin.plugin.getPreferenceStore
-    val projectStore = new PropertyStore(underlying, workspaceStore, plugin.pluginId)
-    val useProjectSettings = projectStore.getBoolean(SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE)
-
-    val store = if (useProjectSettings) projectStore else workspaceStore
+    val store = storage
     for (
       box <- IDESettings.shownSettings(settings);
       setting <- box.userSettings; if filter(setting)
@@ -369,6 +364,17 @@ class ScalaProject(val underlying: IProject) {
         case t: Throwable => plugin.logError("Unable to set setting '" + setting.name + "' to '" + value0 + "'", t)
       }
     }
+  }
+  
+  private def buildManagerInitialize: String =
+    storage.getString(SettingConverterUtil.convertNameToProperty(util.ScalaPluginSettings.buildManager.name))
+  
+  private def storage = {
+    val workspaceStore = ScalaPlugin.plugin.getPreferenceStore
+    val projectStore = new PropertyStore(underlying, workspaceStore, plugin.pluginId)
+    val useProjectSettings = projectStore.getBoolean(SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE)
+
+    if (useProjectSettings) projectStore else workspaceStore
   }
 
   def isStandardSource(file: IFile, qualifiedName: String): Boolean = {
@@ -430,30 +436,35 @@ class ScalaProject(val underlying: IProject) {
     if (buildManager0 == null) {
       val settings = new Settings
       initialize(settings, _ => true)
-      // source path should be emtpy. the build manager decides what files get recompiled when.
+      // source path should be emtpy. The build manager decides what files get recompiled when.
       // if scalac finds a source file newer than its corresponding classfile, it will 'compileLate'
       // that file, using an AbstractFile/PlainFile instead of the EclipseResource instance. This later
       // causes problems if errors are reported against that file. Anyway, it's wrong to have a sourcepath
       // when using the build manager.
-      settings.sourcepath.value = "" 
+      settings.sourcepath.value = ""
+      	
+      // Which build manager?
+      // We assume that build manager setting has only single box
+      val choice = buildManagerInitialize
+      choice match {
+      	case "refined" =>
+      	  println("BM: Refined Build Manager")
+      	  buildManager0 = new buildmanager.refined.EclipseRefinedBuildManager(this, settings)
+      	case "sbt0.9"  =>
+      	  println("BM: SBT 0.9 enhanced Build Manager")
+      	  buildManager0 = new buildmanager.sbtintegration.EclipseSbtBuildManager(this, settings)
+      	case _         =>
+      	  println("Invalid build manager choice '" + choice  + "'. Setting to (default) refined build manager")
+      	  buildManager0 = new buildmanager.refined.EclipseRefinedBuildManager(this, settings)
+      }
 
-      buildManager0 = new EclipseBuildManager(this, settings)
+      //buildManager0 = new EclipseBuildManager(this, settings)
     }
     buildManager0
   }
 
-  def prepareBuild(): Boolean = {
-    if (!hasBeenBuilt) {
-      if (!depFile.exists())
-        true
-      else {
-        try {
-          !buildManager.loadFrom(EclipseResource(depFile), EclipseResource.fromString(_).getOrElse(null))
-        } catch { case _ => true }
-      }
-    } else
-      false
-  }
+  /* If true, then it means that all source files have to be reloaded */
+  def prepareBuild(): Boolean = if (!hasBeenBuilt) buildManager.invalidateAfterLoad else false
 
   def build(addedOrUpdated: Set[IFile], removed: Set[IFile], monitor: IProgressMonitor) {
     if (addedOrUpdated.isEmpty && removed.isEmpty)
@@ -465,15 +476,12 @@ class ScalaProject(val underlying: IProject) {
     buildManager.build(addedOrUpdated, removed, monitor)
     refreshOutput
 
-    buildManager.saveTo(EclipseResource(depFile), _.toString)
-    depFile.setDerived(true)
-    depFile.refreshLocal(IResource.DEPTH_INFINITE, null)
+    // Already performs saving the dependencies
   }
 
   def clean(monitor: IProgressMonitor) = {
     underlying.deleteMarkers(plugin.problemMarkerId, true, IResource.DEPTH_INFINITE)
     resetCompilers
-    depFile.delete(true, false, monitor)
     cleanOutputFolders(monitor)
   }
 
