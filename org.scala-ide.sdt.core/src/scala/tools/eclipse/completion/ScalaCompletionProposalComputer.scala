@@ -128,12 +128,13 @@ class ScalaCompletionProposalComputer extends IJavaCompletionProposalComputer {
      *       pattern, 'new' call, etc.)
      */
     def addCompletionProposal(sym: compiler.Symbol, tpe: compiler.Type, inherited: Boolean, viaView: compiler.Symbol) {
-       if (sym.isConstructor 
-           || sym.hasFlag(Flags.ACCESSOR) 
-           || sym.hasFlag(Flags.PARAMACCESSOR)) return
+      // skip constructors and fields (they should all have a getter)
+      // TODO: This misses private[this] fields (they don't have a getter). When the presentation compiler
+      //       is fixed not to return both getters and fields, revisit this line
+      if (sym.isConstructor || (sym.isTerm && !sym.isMethod)) return
            
        import JavaPluginImages._
-       val image = if (sym.isMethod) defImage
+       val image = if (sym.isSourceMethod && !sym.hasFlag(Flags.ACCESSOR | Flags.PARAMACCESSOR)) defImage
                    else if (sym.isClass) classImage
                    else if (sym.isTrait) traitImage
                    else if (sym.isModule) if (sym.isJavaDefined) 
@@ -156,13 +157,14 @@ class ScalaCompletionProposalComputer extends IJavaCompletionProposalComputer {
        if (viaView != compiler.NoSymbol) relevance -= 20
        if (sym.isPackage) relevance -= 30
        
-       buff += new ScalaCompletionProposal(start, name, signature, signature, container, relevance, image)
+       val contextString = sym.paramss.map(_.map(p => "%s: %s".format(p.decodedName, p.tpe)).mkString("(", ", ", ")")).mkString("")
+       buff += new ScalaCompletionProposal(start, name, signature, contextString, container, relevance, image)
     }     
     
     completed.get.left.toOption match {
       case Some(completions) =>
         compiler.ask { () =>
-          for(completion <- completions) { 
+          for(completion <- completions) {
             completion match {
               case compiler.TypeMember(sym, tpe, accessible, inherited, viaView) if nameMatches(sym) =>
                 addCompletionProposal(sym, tpe, inherited, viaView)
@@ -184,7 +186,11 @@ class ScalaCompletionProposalComputer extends IJavaCompletionProposalComputer {
                                         extends IJavaCompletionProposal with ICompletionProposalExtension {
     def getRelevance() = relevance
     def getImage() = image
-    def getContextInformation(): IContextInformation = new ScalaContextInformation(display, contextName, image)
+    def getContextInformation(): IContextInformation = 
+      if (contextName.size > 0)
+        new ScalaContextInformation(display, contextName, image)
+      else null
+        
     def getDisplayString() = display
     def getAdditionalProposalInfo() = container
     def getSelection(d : IDocument) = null
