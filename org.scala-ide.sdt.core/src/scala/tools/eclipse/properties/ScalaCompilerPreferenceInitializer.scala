@@ -24,7 +24,6 @@ class ScalaCompilerPreferenceInitializer extends AbstractPreferenceInitializer {
   def initializeDefaultPreferences() : Unit = {
 	  
     ScalaPlugin.plugin.check {
-      val settings = new Settings
       val node = new DefaultScope().getNode(ScalaPlugin.plugin.pluginId)
       val store = ScalaPlugin.plugin.getPluginPreferences
       
@@ -39,8 +38,9 @@ class ScalaCompilerPreferenceInitializer extends AbstractPreferenceInitializer {
           }
       }
 
-      IDESettings.shownSettings(settings).foreach {_.userSettings.foreach (defaultPreference)}
+      IDESettings.shownSettings(new Settings).foreach {_.userSettings.foreach (defaultPreference)}
       IDESettings.pluginSettings.foreach {_.userSettings.foreach (defaultPreference)}
+      IDESettings.buildManagerSettings.foreach {_.userSettings.foreach(defaultPreference)}
     }
   }
 }

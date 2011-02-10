@@ -3,11 +3,12 @@
       id="org.scala-ide.sdt.feature"
       label="Scala IDE for Eclipse"
       version="1.0.0.qualifier"
-      provider-name="The Scala IDE for Eclipse Project">
+      provider-name="scala-ide.org"
+      plugin="org.scala-ide.sdt.core">
 
-   <description url="http://scala-lang.org/">
-      The Scala Development Tools (SDT) provides all necessary tools
-to build Scala programs inside the Eclipse Platform.
+   <description url="http://scala-ide.org/">
+      The Scala IDE for Eclipse provides the tools needed to
+to build Scala programs on the Eclipse Platform.
    </description>
 
    <copyright url="http://scala-lang.org/downloads/">
@@ -54,11 +55,14 @@ SUCH DAMAGE.
    </license>
 
    <url>
-      <update url="http://download.scala-ide.org/update-current-35" label="Scala IDE for Eclipse update site"/>
+      <update label="Scala IDE for Eclipse update site" url="http://download.scala-ide.org/update-current-35"/>
    </url>
-   
-   <includes id="ch.epfl.lamp.sdt" version="0.0.0" optional="true"/>
-   
+
+   <includes
+         id="ch.epfl.lamp.sdt"
+         version="0.0.0"
+         optional="true"/>
+
    <requires>
       <import plugin="org.eclipse.core.runtime"/>
       <import plugin="org.eclipse.core.resources"/>

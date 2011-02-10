@@ -123,16 +123,14 @@ class ScalaCompletionProposalComputer extends IJavaCompletionProposalComputer {
      *    - inherited members
      *    - members added by views
      *    - packages
+     *    - members coming from Any/AnyRef/Object
      *    
      *  TODO We should have a more refined strategy based on the context (inside an import, case
      *       pattern, 'new' call, etc.)
      */
     def addCompletionProposal(sym: compiler.Symbol, tpe: compiler.Type, inherited: Boolean, viaView: compiler.Symbol) {
-      // skip constructors and fields (they should all have a getter)
-      // TODO: This misses private[this] fields (they don't have a getter). When the presentation compiler
-      //       is fixed not to return both getters and fields, revisit this line
-      if (sym.isConstructor || (sym.isTerm && !sym.isMethod)) return
-           
+      if (sym.isConstructor) return
+
        import JavaPluginImages._
        val image = if (sym.isSourceMethod && !sym.hasFlag(Flags.ACCESSOR | Flags.PARAMACCESSOR)) defImage
                    else if (sym.isClass) classImage
@@ -156,6 +154,15 @@ class ScalaCompletionProposalComputer extends IJavaCompletionProposalComputer {
        if (inherited) relevance -= 10
        if (viaView != compiler.NoSymbol) relevance -= 20
        if (sym.isPackage) relevance -= 30
+       // theoretically we'd need an 'ask' around this code, but given that
+       // Any and AnyRef are definitely loaded, we call directly to definitions.
+       if (sym.owner == compiler.definitions.AnyClass
+           || sym.owner == compiler.definitions.AnyRefClass
+           || sym.owner == compiler.definitions.ObjectClass) { 
+         println("decreased relevance for Any/AnyRef owner:" + sym )
+         relevance -= 40
+       }
+       println("\t" + relevance)
        
        val contextString = sym.paramss.map(_.map(p => "%s: %s".format(p.decodedName, p.tpe)).mkString("(", ", ", ")")).mkString("")
        buff += new ScalaCompletionProposal(start, name, signature, contextString, container, relevance, image)

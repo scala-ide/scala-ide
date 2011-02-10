@@ -276,10 +276,5 @@ class LazyToplevelClass(unit : ScalaCompilationUnit, name : String) extends Sour
   override def getChildren = mirror map (_.getChildren) getOrElse super.getChildren
   
   override def isResolved = mirror.isDefined
-  override def exists = {
-	  val r = isResolved
-	  println("toplevel element, name =" + name + ", resolved =" + r)
-	  if (!r) println(unit.getElementInfo.asInstanceOf[OpenableElementInfo].getChildren.mkString("\n"))
-	  r
-  }
+  override def exists = isResolved
 }

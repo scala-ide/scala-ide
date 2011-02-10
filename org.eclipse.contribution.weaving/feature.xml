@@ -2,7 +2,8 @@
 <feature
       id="org.eclipse.contribution.weaving"
       label="Dummy weaving feature for upgrade"
-      version="1.6.4.scala-ide-upgrade">
+      version="1.6.4.scala-ide-upgrade"
+      provider-name="scala-ide.org">
 
    <description url="http://www.example.com/description">
 This is a dummy feature allowing the renamed Scala IDE bundles to upgrade their
