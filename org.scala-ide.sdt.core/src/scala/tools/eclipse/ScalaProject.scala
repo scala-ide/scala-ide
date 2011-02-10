@@ -100,7 +100,7 @@ class ScalaProject(val underlying: IProject) {
       }
     }, monitor)
 
-  def clearBuildErrors(monitor: IProgressMonitor) =
+  def clearBuildErrors(implicit monitor: IProgressMonitor) =
     underlying.getWorkspace.run(new IWorkspaceRunnable {
       def run(monitor: IProgressMonitor) = {
         underlying.deleteMarkers(plugin.problemMarkerId, true, IResource.DEPTH_ZERO)
@@ -135,6 +135,17 @@ class ScalaProject(val underlying: IProject) {
 
   def classpath: Seq[IPath] = {
     val path = new LinkedHashSet[IPath]
+    
+    def ouputInClasspath(outputLocation0: IPath, jProject: IJavaProject) {
+      val outputLocation = if (outputLocation0 != null) outputLocation0 else javaProject.getOutputLocation
+              
+      if (outputLocation != null) {
+        val absPath = plugin.workspaceRoot.findMember(outputLocation)
+        if (absPath != null) path += absPath.getLocation
+      }
+    	
+    }
+    
     def classpath(javaProject: IJavaProject, exportedOnly: Boolean): Unit = {
       val cpes = javaProject.getResolvedClasspath(true)
 
@@ -144,12 +155,7 @@ class ScalaProject(val underlying: IProject) {
           if (JavaProject.hasJavaNature(depProject)) {
             val depJava = JavaCore.create(depProject)
             for (cpe <- depJava.getResolvedClasspath(true) if cpe.getEntryKind == IClasspathEntry.CPE_SOURCE) {
-              val specificOutputLocation = cpe.getOutputLocation
-              val outputLocation = if (specificOutputLocation != null) specificOutputLocation else depJava.getOutputLocation
-              if (outputLocation != null) {
-                val absPath = plugin.workspaceRoot.findMember(outputLocation)
-                if (absPath != null) path += absPath.getLocation
-              }
+            	ouputInClasspath(cpe.getOutputLocation, depJava)
             }
             classpath(depJava, true)
           }
@@ -161,6 +167,8 @@ class ScalaProject(val underlying: IProject) {
             else
               path += cpe.getPath
           }
+        case IClasspathEntry.CPE_SOURCE =>
+          ouputInClasspath(cpe.getOutputLocation, javaProject)
         case _ =>
       }
     }
@@ -265,7 +273,7 @@ class ScalaProject(val underlying: IProject) {
     }
   }
 
-  def cleanOutputFolders(monitor: IProgressMonitor) = {
+  def cleanOutputFolders(implicit monitor: IProgressMonitor) = {
     def delete(container: IContainer, deleteDirs: Boolean)(f: String => Boolean): Unit =
       if (container.exists()) {
         container.members.foreach {
@@ -466,31 +474,33 @@ class ScalaProject(val underlying: IProject) {
   /* If true, then it means that all source files have to be reloaded */
   def prepareBuild(): Boolean = if (!hasBeenBuilt) buildManager.invalidateAfterLoad else false
 
-  def build(addedOrUpdated: Set[IFile], removed: Set[IFile], monitor: IProgressMonitor) {
+  def build(addedOrUpdated: Set[IFile], removed: Set[IFile])(implicit monitor: IProgressMonitor) {
     if (addedOrUpdated.isEmpty && removed.isEmpty)
       return
 
     hasBeenBuilt = true
 
-    clearBuildErrors(monitor)
-    buildManager.build(addedOrUpdated, removed, monitor)
+    clearBuildErrors
+    buildManager.build(addedOrUpdated, removed)
     refreshOutput
 
     // Already performs saving the dependencies
   }
 
-  def clean(monitor: IProgressMonitor) = {
+  def clean(implicit monitor: IProgressMonitor) = {
     underlying.deleteMarkers(plugin.problemMarkerId, true, IResource.DEPTH_INFINITE)
     resetCompilers
-    cleanOutputFolders(monitor)
+    cleanOutputFolders
   }
 
-  def resetBuildCompiler {
+  def resetBuildCompiler(implicit monitor: IProgressMonitor) {
+  	if (buildManager0 != null)
+  		buildManager0.clean(monitor)
     buildManager0 = null
     hasBeenBuilt = false
   }
 
-  def resetCompilers = {
+  def resetCompilers(implicit monitor: IProgressMonitor = null) = {
     resetBuildCompiler
     resetPresentationCompiler
   }

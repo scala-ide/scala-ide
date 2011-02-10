@@ -20,7 +20,7 @@ class EclipseSbtBuildManager(project: ScalaProject, settings0: Settings)
   def removeFiles(files: scala.collection.Set[AbstractFile]) {}
   def addSourceFiles(files: scala.collection.Set[AbstractFile]) {}
   def update(added: scala.collection.Set[AbstractFile], removed: scala.collection.Set[AbstractFile]) {}
-  def build(addedOrUpdated: Set[IFile], removed: Set[IFile], monitor: IProgressMonitor): Unit = {}
-  def clean(monitor: IProgressMonitor) {}
+  def build(addedOrUpdated: Set[IFile], removed: Set[IFile])(implicit monitor: IProgressMonitor): Unit = {}
+  def clean(implicit monitor: IProgressMonitor) {}
   def invalidateAfterLoad: Boolean = false
 }

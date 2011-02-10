@@ -76,7 +76,7 @@ class ScalaBuilder extends IncrementalProjectBuilder {
     if (monitor != null)
       monitor.beginTask("build all", 100)
       
-    project.build(addedOrUpdated, removed, monitor)
+    project.build(addedOrUpdated, removed)(monitor)
     
     val depends = project.externalDepends.toList.toArray
     if (allSourceFiles.exists(FileUtils.hasBuildErrors(_)))

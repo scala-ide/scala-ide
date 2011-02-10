@@ -19,9 +19,9 @@ import scala.tools.eclipse.util.{ EclipseResource, FileUtils }
 import scala.tools.eclipse.buildmanager.{BuildReporter}
 
 trait EclipseBuildManager extends BuildManager {
-  def build(addedOrUpdated: Set[IFile], removed: Set[IFile], monitor: IProgressMonitor): Unit
+  def build(addedOrUpdated: Set[IFile], removed: Set[IFile])(implicit monitor: IProgressMonitor = null): Unit
   var depFile: IFile
   var hasErrors = false
   def invalidateAfterLoad: Boolean
-  def clean(monitor: IProgressMonitor): Unit
+  def clean(implicit monitor: IProgressMonitor): Unit
 }

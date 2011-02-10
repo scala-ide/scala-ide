@@ -16,7 +16,7 @@ import scala.tools.eclipse.util.{ EclipseResource, FileUtils }
 
 class EclipseRefinedBuildManager(project : ScalaProject, settings0: Settings)
   extends RefinedBuildManager(settings0) with EclipseBuildManager {
-	var depFile:IFile = project.underlying.getFile(project.underlying.getName() + ".scala_dependencies")
+  var depFile:IFile = project.underlying.getFile(".scala_dependencies")
   var monitor : IProgressMonitor = _
   val pendingSources = new HashSet[IFile]
   
@@ -54,7 +54,7 @@ class EclipseRefinedBuildManager(project : ScalaProject, settings0: Settings)
 
   }
 
-  def build(addedOrUpdated : Set[IFile], removed : Set[IFile], pm : IProgressMonitor) {
+  def build(addedOrUpdated : Set[IFile], removed : Set[IFile])(implicit pm : IProgressMonitor) {
     monitor = pm
     
     pendingSources ++= addedOrUpdated
@@ -103,7 +103,7 @@ class EclipseRefinedBuildManager(project : ScalaProject, settings0: Settings)
     }
   }
   
-  def clean(monitor: IProgressMonitor) {
+  def clean(implicit monitor: IProgressMonitor) {
   	depFile.delete(true, false, monitor)
   }
 
