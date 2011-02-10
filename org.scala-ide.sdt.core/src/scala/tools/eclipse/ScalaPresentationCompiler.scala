@@ -145,6 +145,7 @@ object ScalaPresentationCompiler {
       import prob._
       if (pos.isDefined) {
           val source = pos.source
+          val pos1 = pos.toSingleLine
           source.file match {
             case ef@EclipseFile(file) =>
               Some(
@@ -154,10 +155,10 @@ object ScalaPresentationCompiler {
                   0,
                   new Array[String](0),
                   nscSeverityToEclipse(severityLevel),
-                  pos.startOrPoint,
-                  pos.endOrPoint,
-                  pos.line,
-                  pos.column
+                  pos1.startOrPoint,
+                  pos1.endOrPoint,
+                  pos1.line,
+                  pos1.column
                 ))
             case _ => None
           }
