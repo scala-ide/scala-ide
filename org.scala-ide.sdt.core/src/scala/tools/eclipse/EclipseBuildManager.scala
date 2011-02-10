@@ -8,19 +8,18 @@ package scala.tools.eclipse
 import scala.tools.eclipse.util.Tracer
 import org.eclipse.core.resources.{ IResource, IFile, IMarker, IWorkspaceRunnable }
 import org.eclipse.core.runtime.IProgressMonitor
-
 import scala.collection.mutable.HashSet
-
 import scala.tools.nsc.{ Global, Settings }
 import scala.tools.nsc.interactive.RefinedBuildManager
 import scala.tools.nsc.io.AbstractFile
 import scala.tools.nsc.reporters.Reporter
 import scala.tools.nsc.util.Position
-
-import scala.tools.eclipse.util.{ EclipseResource, FileUtils } 
+import scala.tools.eclipse.util.{ EclipseResource, FileUtils }
+import org.eclipse.core.runtime.NullProgressMonitor
+import scala.tools.eclipse.util.IDESettings
 
 class EclipseBuildManager(project : ScalaProject, settings0: Settings) extends RefinedBuildManager(settings0) {
-  private var monitor : IProgressMonitor = _
+  private var monitor : IProgressMonitor = new NullProgressMonitor()
   private lazy val pendingSources = new HashSet[IFile] ++ project.allSourceFiles() // first run should build every sources
   
 //  private val depFile = {
@@ -41,15 +40,14 @@ class EclipseBuildManager(project : ScalaProject, settings0: Settings) extends R
         var worked = 0
         
         override def progress(current : Int, total : Int) : Unit = {
-          if (monitor != null && monitor.isCanceled) {
+          if (monitor.isCanceled) {
             cancel
             return
           }
           
           val newWorked = if (current >= total) 100 else ((current.toDouble/total)*100).toInt
           if (worked < newWorked) {
-            if (monitor != null)
-              monitor.worked(newWorked-worked)
+            monitor.worked(newWorked-worked)
             worked = newWorked
           }
         }
@@ -81,12 +79,15 @@ class EclipseBuildManager(project : ScalaProject, settings0: Settings) extends R
         case 0 => IMarker.SEVERITY_INFO
       }
       
+      def notifyBuildError(file : IFile, severity : Int, msg : String, offset : Int, length : Int, line : Int, monitor : IProgressMonitor) {
+        FileUtils.buildError(file, severity, msg, offset, length, line, monitor)
+      }
       try {
         if(pos.isDefined) {
           val source = pos.source
           val length = source.identifier(pos, compiler).map(_.length).getOrElse(0)
           source.file match {
-            case EclipseResource(i : IFile) => FileUtils.buildError(i, eclipseSeverity, msg, pos.point, length, pos.line, null)
+            case EclipseResource(i : IFile) => buildError(i, eclipseSeverity, msg, pos.point, length, pos.line)
             case f =>
               Tracer.println("no EclipseResource associated to %s [%s]".format(f.path, f.getClass))
               EclipseResource.fromString(source.file.path) match {
@@ -94,10 +95,10 @@ class EclipseBuildManager(project : ScalaProject, settings0: Settings) extends R
                   // this may happen if a file was compileLate by the build compiler
                   // for instance, when a source file (on the sourcepath) is newer than the classfile
                   // the compiler will create PlainFile instances in that case
-                  FileUtils.buildError(i, eclipseSeverity, msg, pos.point, length, pos.line, null)
+                  buildError(i, eclipseSeverity, msg, pos.point, length, pos.line)
                 case None =>
                   Tracer.println("no EclipseResource associated to %s [%s]".format(f.path, f.getClass))
-                  buildError(eclipseSeverity, msg, null)
+                  buildError(eclipseSeverity, msg)
               }
           }
         }
@@ -107,11 +108,11 @@ class EclipseBuildManager(project : ScalaProject, settings0: Settings) extends R
         	  // print only to console, better debugging
         	  println("[Buildmanager info] " + msg)
             case _ =>
-        	  buildError(eclipseSeverity, msg, null)   
+        	  buildError(eclipseSeverity, msg)   
           }
       } catch {
         case ex : UnsupportedOperationException => 
-          buildError(eclipseSeverity, msg, null)
+          buildError(eclipseSeverity, msg)
       }
     }
     
@@ -131,8 +132,8 @@ class EclipseBuildManager(project : ScalaProject, settings0: Settings) extends R
   }
 
   def build(addedOrUpdated : Set[IFile], removed : Set[IFile], pm : IProgressMonitor) {
-    monitor = pm
-    if (monitor != null) monitor.beginTask("build scala files", 100)       
+    monitor = if (pm == null) new NullProgressMonitor() else pm
+    monitor.beginTask("build scala files", 100)       
     val pendingSources0 = pendingSources ++ addedOrUpdated
     pendingSources.clear
     val removedFiles = removed.map(EclipseResource(_) : AbstractFile)
@@ -150,7 +151,7 @@ class EclipseBuildManager(project : ScalaProject, settings0: Settings) extends R
     } catch {
       case e =>
         hasErrors = true
-        buildError(IMarker.SEVERITY_ERROR, "Error in Scala compiler: " + e.getMessage, null)
+        buildError(IMarker.SEVERITY_ERROR, "Error in Scala compiler: " + e.getMessage)
         ScalaPlugin.plugin.logError("Error in Scala compiler", e)
         //project.resetBuildCompiler(pm)
     }
@@ -199,7 +200,7 @@ class EclipseBuildManager(project : ScalaProject, settings0: Settings) extends R
     }
   }
   
-  def buildError(severity : Int, msg : String, monitor : IProgressMonitor) = runOnWorker(monitor){
+  protected def buildError(severity : Int, msg : String) = runOnWorker(monitor){
         val mrk = project.underlying.createMarker(ScalaPlugin.plugin.problemMarkerId)
         mrk.setAttribute(IMarker.SEVERITY, severity)
         val string = msg.map{
@@ -209,7 +210,14 @@ class EclipseBuildManager(project : ScalaProject, settings0: Settings) extends R
         }.mkString("","","")
         mrk.setAttribute(IMarker.MESSAGE , msg)
   }
-  
+
+  protected def buildError(file : IFile, severity : Int, msg : String, offset : Int, length : Int, line : Int) {
+    if (IDESettings.ignoreErrorOnJavaFile.value && file.getFileExtension == "java") {
+      return
+    }
+    FileUtils.buildError(file, severity, msg, offset, length, line, monitor)
+  }  
+
   def clearBuildErrors(monitor : IProgressMonitor) = runOnWorker(monitor){
     project.underlying.deleteMarkers(ScalaPlugin.plugin.problemMarkerId, true, IResource.DEPTH_ZERO)
   }
