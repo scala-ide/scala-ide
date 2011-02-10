@@ -78,7 +78,6 @@ class ScalaClassFile(parent : PackageFragment, name : String, sourceFile : Strin
     lazy val mirror = ScalaClassFile.this.getChildren.find(_.getElementName == name)
 	override def exists = mirror.isDefined
 	override def getChildren = mirror map (_.asInstanceOf[IType].getChildren) getOrElse Array.empty
-	override def getParent = mirror map (_.getParent) orNull
   }
 
   override def getType() : IType = new ScalaBinaryType(getTypeName)
