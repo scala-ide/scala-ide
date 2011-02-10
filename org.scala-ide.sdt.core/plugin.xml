@@ -48,7 +48,7 @@
    </extension>
 
 
-  <extension point="org.eclipse.core.runtime.contentTypes">
+  <extension point="org.eclipse.core.contenttype.contentTypes">
     <content-type id="scala.tools.eclipse.scalaSource" name="Scala Source File"
       base-type="org.eclipse.core.runtime.text"
       priority="high"
@@ -370,7 +370,7 @@
         <launchMode
               mode="debug"
               description="Runs an interpreter in Debug mode"
-              perspective="Debug">
+              perspective="org.eclipse.debug.ui.DebugPerspective">
         </launchMode>
     </launchConfigurationTabGroup>
    </extension>
@@ -572,15 +572,6 @@
             label="Scala Console"/>
    </extension>
 
-  <extension point="org.eclipse.ui.console.consolePageParticipants">
-    <consolePageParticipant
-      class="scala.tools.eclipse.interpreter.PageParticipant"
-      id="org.scala-ide.sdt.ui.interpreter.PP">
-      <enablement>
-        <instanceof value="scala.tools.eclipse.interpreter.Console"/>
-      </enablement>
-    </consolePageParticipant>
-  </extension>
   <extension
         id="org.scala-ide.sdt.core.preferences"
         point="org.eclipse.core.runtime.preferences">
