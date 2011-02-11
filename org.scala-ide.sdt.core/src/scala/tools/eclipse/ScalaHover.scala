@@ -31,7 +31,7 @@ class ScalaHover(codeAssist : Option[ICodeAssist]) extends ITextHover {
               Option(t.symbol) flatMap { sym => Option(t.tpe) map { tpe =>
                 def defString: String = {
                   compose(List(sym.hasFlagsToString(Flags.ExplicitFlags), sym.keyString, sym.varianceString + sym.nameString + 
-                  sym.infoString(tpe)))
+                  sym.infoString(tpe.widen)))
                 }
   
                 def compose(ss: List[String]): String = ss.filter("" !=).mkString("", " ", "")
