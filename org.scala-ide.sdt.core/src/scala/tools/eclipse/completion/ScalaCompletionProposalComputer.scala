@@ -6,6 +6,8 @@
 package scala.tools.eclipse
 package completion
 
+import org.eclipse.jface.viewers.ISelectionProvider
+import org.eclipse.jface.text.TextSelection
 import org.eclipse.jface.text.contentassist.
              {ICompletionProposal, ICompletionProposalExtension, 
               IContextInformation, IContextInformationExtension}
@@ -165,7 +167,7 @@ class ScalaCompletionProposalComputer extends IJavaCompletionProposalComputer {
        println("\t" + relevance)
        
        val contextString = sym.paramss.map(_.map(p => "%s: %s".format(p.decodedName, p.tpe)).mkString("(", ", ", ")")).mkString("")
-       buff += new ScalaCompletionProposal(start, name, signature, contextString, container, relevance, image)
+       buff += new ScalaCompletionProposal(start, name, signature, contextString, container, relevance, image, context.getViewer.getSelectionProvider)
     }     
     
     completed.get.left.toOption match {
@@ -189,7 +191,7 @@ class ScalaCompletionProposalComputer extends IJavaCompletionProposalComputer {
   }    
   
   private class ScalaCompletionProposal(startPos: Int, completion: String, display: String, contextName: String, 
-                                        container: String, relevance: Int, image: Image) 
+                                        container: String, relevance: Int, image: Image, selectionProvider: ISelectionProvider) 
                                         extends IJavaCompletionProposal with ICompletionProposalExtension {
     def getRelevance() = relevance
     def getImage() = image
@@ -205,6 +207,7 @@ class ScalaCompletionProposalComputer extends IJavaCompletionProposalComputer {
     
     def apply(d : IDocument, trigger : Char, offset : Int) {
       d.replace(startPos, offset - startPos, completion)
+      selectionProvider.setSelection(new TextSelection(startPos + completion.length, 0))
     }
     def getTriggerCharacters= null
     def getContextInformationPosition = 0
