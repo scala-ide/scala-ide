@@ -74,7 +74,7 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
   override def buildStructure(info : OpenableElementInfo, pm : IProgressMonitor, newElements : JMap[_, _], underlyingResource : IResource) : Boolean =
     withSourceFile({ (sourceFile, compiler) =>
       val unsafeElements = newElements.asInstanceOf[JMap[AnyRef, AnyRef]]
-	  val sourceLength = sourceFile.length
+      val sourceLength = sourceFile.length
       compiler.withUntypedTree(sourceFile) { tree =>
         compiler.ask { () =>
             new compiler.StructureBuilderTraverser(this, info, unsafeElements, sourceLength).traverse(tree)
@@ -169,9 +169,9 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
       def getOffset = selection.getOffset
       def getLength = selection.getLength
     }
-	new ScalaHyperlinkDetector().detectHyperlinks(editor, region, false) match {
-	  case Array(hyp) => hyp.open
-	  case _ =>  
+    new ScalaHyperlinkDetector().detectHyperlinks(editor, region, false) match {
+      case Array(hyp) => hyp.open
+      case _ =>  
     }
   }
 }
