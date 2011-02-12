@@ -24,10 +24,14 @@ import util.Logger
 class ScalaHyperlinkDetector extends AbstractHyperlinkDetector with Logger {
   def detectHyperlinks(viewer : ITextViewer, region : IRegion, canShowMultipleHyperlinks : Boolean) : Array[IHyperlink] = {
     val textEditor = getAdapter(classOf[ITextEditor]).asInstanceOf[ITextEditor]
+    detectHyperlinks(textEditor, region, canShowMultipleHyperlinks)
+  }
+	  
+  def detectHyperlinks(textEditor : ITextEditor, region : IRegion, canShowMultipleHyperlinks : Boolean) : Array[IHyperlink] = {
     EditorUtility.getEditorInputJavaElement(textEditor, false) match {
       case scu : ScalaCompilationUnit => 
         scu.withSourceFile({ (sourceFile, compiler) =>
-          val wordRegion = ScalaWordFinder.findWord(viewer.getDocument, region.getOffset)
+          val wordRegion = ScalaWordFinder.findWord(scu.getContents, region.getOffset)
           if (wordRegion == null || wordRegion.getLength == 0) 
             null 
           else {
@@ -76,15 +80,6 @@ class ScalaHyperlinkDetector extends AbstractHyperlinkDetector with Logger {
     textEditor.getAction("OpenEditor") match {
       case openAction : SelectionDispatchAction =>
         try {
-          val editorInput = textEditor.getEditorInput
-          def isLinkable(element : IJavaElement) = {
-            import IJavaElement._
-            element.getElementType match {
-              case PACKAGE_DECLARATION | PACKAGE_FRAGMENT | PACKAGE_FRAGMENT_ROOT | JAVA_PROJECT | JAVA_MODEL => false
-              case _ => true
-            }
-          }
-          
           val environment = scu.newSearchableEnvironment()
           val requestor = new ScalaSelectionRequestor(environment.nameLookup, scu)
           val engine = new ScalaSelectionEngine(environment, requestor, scu.getJavaProject.getOptions(true))
