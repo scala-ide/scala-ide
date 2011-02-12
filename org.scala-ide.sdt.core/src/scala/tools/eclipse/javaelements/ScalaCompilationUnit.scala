@@ -3,7 +3,8 @@
  */
 // $Id$
 
-package scala.tools.eclipse.javaelements
+package scala.tools.eclipse
+package javaelements
 
 import java.util.{ Map => JMap }
 
@@ -21,6 +22,8 @@ import org.eclipse.jdt.internal.core.{
   OpenableElementInfo, SearchableEnvironment }
 import org.eclipse.jdt.internal.core.search.matching.{ MatchLocator, PossibleMatch }
 import org.eclipse.jdt.internal.ui.javaeditor.DocumentAdapter
+import org.eclipse.jface.text.{IRegion, ITextSelection}
+import org.eclipse.ui.texteditor.ITextEditor 
 
 import scala.tools.nsc.io.AbstractFile
 import scala.tools.nsc.util.{ BatchSourceFile, SourceFile }
@@ -70,15 +73,17 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
 
   override def buildStructure(info : OpenableElementInfo, pm : IProgressMonitor, newElements : JMap[_, _], underlyingResource : IResource) : Boolean =
     withSourceFile({ (sourceFile, compiler) =>
-      val sourceLength = sourceFile.length
+      val unsafeElements = newElements.asInstanceOf[JMap[AnyRef, AnyRef]]
+	  val sourceLength = sourceFile.length
       compiler.withUntypedTree(sourceFile) { tree =>
         compiler.ask { () =>
-            new compiler.StructureBuilderTraverser(this, info, newElements.asInstanceOf[JMap[AnyRef, AnyRef]], sourceLength).traverse(tree)
+            new compiler.StructureBuilderTraverser(this, info, unsafeElements, sourceLength).traverse(tree)
         }
       }
       info match {
-        case cuei : CompilationUnitElementInfo =>
+        case cuei : CompilationUnitElementInfo => 
           cuei.setSourceLength(sourceLength)
+          unsafeElements.put(this, info)
         case _ =>
       }
   
@@ -87,6 +92,8 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
   }) (false)
 
   def scheduleReconcile : Unit = ()
+  
+  override def createElementInfo = new CompilationUnitElementInfo
   
   def addToIndexer(indexer : ScalaSourceIndexer) {
     doWithSourceFile { (source, compiler) =>
@@ -148,17 +155,25 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
   }
   
   override def getImageDescriptor = {
-    val file = getCorrespondingResource.asInstanceOf[IFile]
-    if(file == null)
-      null
-    else {
+    Option(getCorrespondingResource) map { file =>
       import ScalaImages.{ SCALA_FILE, EXCLUDED_SCALA_FILE }
       val javaProject = JavaCore.create(project.underlying)
-      if(javaProject.isOnClasspath(file)) SCALA_FILE else EXCLUDED_SCALA_FILE
-    }
+      if (javaProject.isOnClasspath(file)) SCALA_FILE else EXCLUDED_SCALA_FILE
+    } orNull
   }
   
   override def getScalaWordFinder() : IScalaWordFinder = ScalaWordFinder
+  
+  def followReference(editor : ITextEditor, selection : ITextSelection) = {
+    val region = new IRegion {
+      def getOffset = selection.getOffset
+      def getLength = selection.getLength
+    }
+	new ScalaHyperlinkDetector().detectHyperlinks(editor, region, false) match {
+	  case Array(hyp) => hyp.open
+	  case _ =>  
+    }
+  }
 }
 
 object OpenableUtils extends ReflectionUtils {
