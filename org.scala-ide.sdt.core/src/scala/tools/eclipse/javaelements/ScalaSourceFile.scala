@@ -13,14 +13,13 @@ import org.eclipse.jdt.core.{ IBuffer, ICompilationUnit, IJavaElement, IType, Wo
 import org.eclipse.jdt.core.compiler.IProblem
 import org.eclipse.jdt.internal.core.util.HandleFactory
 import org.eclipse.jdt.internal.core.{ BufferManager, CompilationUnit => JDTCompilationUnit, OpenableElementInfo, PackageFragment }
-import org.eclipse.jdt.internal.corext.util.JavaModelUtil
-import org.eclipse.swt.widgets.Display
 import scala.tools.nsc.io.{ AbstractFile, VirtualFile }
 import scala.tools.eclipse.contribution.weaving.jdt.IScalaSourceFile
 import scala.tools.eclipse.util.EclipseFile
 import scala.tools.eclipse.util.Tracer
 import scala.tools.eclipse.util.Defensive
 import org.eclipse.core.runtime.jobs.Job
+import org.eclipse.core.runtime.NullProgressMonitor
 
 object ScalaSourceFile {
   val handleFactory = new HandleFactory
@@ -58,6 +57,7 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
     b
   }
 
+  // ProgressMonitorWrapper.isCancelled in non SWT Thread throws exception see #1000237 => use NullProgressMonitor
   override def makeConsistent(
     astLevel : Int,
     resolveBindings : Boolean,
@@ -66,7 +66,7 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
     monitor : IProgressMonitor) : org.eclipse.jdt.core.dom.CompilationUnit = {
     Defensive.askRunOutOfMain("makeConsistent", Job.INTERACTIVE) {
       val info = createElementInfo.asInstanceOf[OpenableElementInfo]
-      openWhenClosed(info, monitor)
+      openWhenClosed(info, new NullProgressMonitor())
     }
     null
   }
