@@ -189,7 +189,7 @@ class ScalaCompletionProposalComputer extends IJavaCompletionProposalComputer {
          case None =>
            println("No completions")
        }
-       collection.JavaConversions.asList(buff.toList)
+       collection.JavaConversions.asJavaList(buff.toList)
      })
     }.getOrElse(java.util.Collections.emptyList())
   }
