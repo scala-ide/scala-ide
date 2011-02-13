@@ -1,0 +1,49 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Scala JDT Weaving
+Bundle-SymbolicName: org.scala-ide.sdt.aspects;singleton:=true
+Bundle-Version: 1.0.0.qualifier
+Bundle-Vendor: scala-ide.org
+Bundle-Activator: scala.tools.eclipse.contribution.weaving.jdt.ScalaJDTWeavingPlugin
+Require-Bundle: 
+ org.aspectj.runtime,
+ org.eclipse.core.expressions,
+ org.eclipse.core.runtime,
+ org.eclipse.debug.ui,
+ org.eclipse.jdt.core,
+ org.eclipse.jdt.launching,
+ org.eclipse.jdt.ui,
+ org.eclipse.jface,
+ org.eclipse.jface.text,
+ org.eclipse.osgi,
+ org.eclipse.pde.ui,
+ org.eclipse.ui,
+ org.eclipse.ui.editors,
+ org.eclipse.ui.ide,
+ org.eclipse.ui.workbench.texteditor,
+ org.eclipse.jdt.debug.ui,
+ org.aspectj.runtime
+Eclipse-SupplementBundle: 
+ org.eclipse.debug.core,
+ org.eclipse.jdt.core,
+ org.eclipse.jdt.debug.ui,
+ org.eclipse.jdt.launching,
+ org.eclipse.jdt.ui,
+ org.eclipse.pde.ui
+Bundle-ActivationPolicy: lazy
+Export-Package: 
+ scala.tools.eclipse.contribution.weaving.jdt,
+ scala.tools.eclipse.contribution.weaving.jdt.builderoptions,
+ scala.tools.eclipse.contribution.weaving.jdt.cfprovider,
+ scala.tools.eclipse.contribution.weaving.jdt.core,
+ scala.tools.eclipse.contribution.weaving.jdt.debug,
+ scala.tools.eclipse.contribution.weaving.jdt.hierarchy,
+ scala.tools.eclipse.contribution.weaving.jdt.indexerprovider,
+ scala.tools.eclipse.contribution.weaving.jdt.launching,
+ scala.tools.eclipse.contribution.weaving.jdt.search,
+ scala.tools.eclipse.contribution.weaving.jdt.spellingengineprovider,
+ scala.tools.eclipse.contribution.weaving.jdt.ui,
+ scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor,
+ scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.formatter,
+ scala.tools.eclipse.contribution.weaving.pde.ui
+Bundle-RequiredExecutionEnvironment: J2SE-1.5

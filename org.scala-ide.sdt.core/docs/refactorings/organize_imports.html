@@ -1,0 +1,25 @@
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>Organize Imports</title>
+  <META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+  <LINK REL="STYLESHEET" HREF="book.css" CHARSET="ISO-8859-1" TYPE="text/css">
+  <body bgcolor=FFFFFF>
+</head>
+<body>
+  <h1>Organize Imports</h1>
+    <p>Organize Imports cleans up the import statements in the current file. It does however not remove any unused imports nor imports that are needed for the program to compile. The refactoring does the following to the imports:
+      <ul>
+        <li>Sorts the statements alphabetically by their full name.</li>
+        <li>Collapses multiple distinct imports from the same package into a single statement.</li>
+        <li>Simplifies the imports: when a wildcard imports the whole package content, individual import from that package are removed, unless they contain renames.</li>
+	  </ul>
+      The following screenshot shows the changes Organize Imports proposes:
+      <br/><br/>
+      <img src="images/organize_screenshot_1.png" />		  
+    </p>
+    <h2>Limitations</h2>
+	  <p>The current implementation has some limitations compared to its Java counterpart. The refactoring does not do any dependency analysis, imports that are missing are not added, and unneeded imports are not being removed by Organize Imports.</p>	
+
+</body>
+</html>

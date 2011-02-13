@@ -1,0 +1,9 @@
+branch : wip_exp_backport
+date : 2011-01-17
+
+java.lang.NullPointerException
+at scala.tools.eclipse.markoccurrences.ScalaOccurrencesFinder.findOccurrences(ScalaOccurrencesFinder.scala:18)
+at scala.tools.eclipse.ScalaSourceFileEditor.getAnnotations(ScalaSourceFileEditor.scala:134)
+at scala.tools.eclipse.ScalaSourceFileEditor.updateOccurrenceAnnotations(ScalaSourceFileEditor.scala:120)
+at scala.tools.eclipse.ScalaSourceFileEditor$$anon$1.run(ScalaSourceFileEditor.scala:101)
+at org.eclipse.core.internal.jobs.Worker.run(Worker.java:55)

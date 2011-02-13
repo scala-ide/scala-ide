@@ -1,0 +1,97 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<script language="JavaScript" src="../../org.eclipse.help/livehelp.js"> </script>
+<title>Release Notes</title>
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+<LINK REL="STYLESHEET" HREF="book.css" CHARSET="ISO-8859-1" TYPE="text/css">
+<body bgcolor=FFFFFF>
+
+</head>
+<body>
+
+<h1>New features</h1>
+
+<ul>
+<li> Truly incremental syntax/type checking and semantic highlighting (no more ctrl-shift-z!), works fast even in very large files.
+
+<li> Code completion (content assist) that works reliably and responsively
+
+<li> Almost 100% semantic highlighting coverage (better for search and refactoring later...)
+
+<li> Better integration with Java. Java-doc comments from Java source now show in hover help (if the Java-doc attachment is set) and can hyperlink to Java definitions (if the Java source attachment is set).
+
+<li> The incremental builder now knows about changes to classfiles in other Scala and Java projects, and will rebuild accordingly (hopefully, still needs more testing). The Scala editor also knows about classfile changes. 
+
+<li> You can now set breakpoints in Scala-derived classfiles. When the debugger triggers a break point in a Scala-derived classfile, the debugger opens the breakpoint in a Scala editor and not a Java editor as before. Also, when Scala-derived classfiles are opened up through the Project Explorer (but unfortunately, not the Package Explorer), they will open up in a Scala editor rather than a Java editor as before. 
+
+<li> Position/highlighting information is saved so Scala-derived classfiles can be opened very quickly (assuming the Scala source attachment is set).
+
+<li> Goto declaration has been implemented (using the JDT configured key binding, usually F3).
+
+<li> Folding and Scala-centric auto indenting!
+
+<li> Better editor preferences dialogue. 
+
+</ul>
+
+<h2>Release Notes </h2>
+<ul>
+<li> The plugin is currently based on (and comes with) the unfinished 2.6.1 Scala release. No feature for 2.6.1 has yet been set in stone and 2.6.1 probably contains some new bugs not in 2.6.0.
+
+<li> The plugin currently relies heavily on "IDE" files. Please clean-rebuild your existing projects in the new plugin before opening up files in the editor.
+
+<li> Existing .project files must be updated in the following way: ch.epfl.lamp.sdt.core.scalabuilder becomes scala.plugin.scalabuilder and ch.epfl.lamp.sdt.core.scalanature becomes scala.plugin.scalanature. Thankfully, .classpath files don't need to be migrated. 
+
+<li> Existing application and Scala breakpoint profiles cannot be migrated. Please remove them from your workspace before installing the new plugin.
+
+<li> Its probably not a good idea to have both the old and new plugin installed on the same Eclipse installation. Please uninstall or disable the old plugin before installing the new one, or use a different configuration profile.
+
+<li> The IDE file is used to ensure that the file is opened quickly, but parsing and type checking will not occur until the first edit ("breaking the ice"). This means that there will be a lag on the first edit of a large file (due to parsing, which occurs in the UI thread) and then later when type checking completes (as the type checking results are integrated into the UI). While type checking is occurring, no type-dependent services will work (e.g., hover help, code completion). Type checking for most edits is incremental and so completes fast enough that this is not an issue. The biggest type checking times occur when (a) modifying a top-level import in a large file or (b) when you start editing a large file. As an example, Typers.scala, which is around 3300 lines, takes around 8 seconds to type check initially in the editor. This will balloon to 20 or so seconds if you edit a top-level import. Import statements are currently a big problem given the way they are represented in the compiler, we still don't have a fix in mind for this.
+
+<li> You are free to change the parse tree while type checking occurs in the background, it shouldn't crash the compiler :) All changed parse nodes are scheduled for type checking in the background. 
+
+<li> Parsing and type checking will not occur if braces (including comments and double quotes) in the file are unbalanced. For this reason, brace completion (as implemented in the IDE) is essential to keep things lively and is definitely not a save-on-typing convenience. If a brace is completed, you are free to type over it (as in the old plugin, where brace completion is copied from the JDT), a new closing brace won't be inserted. Braces can be unbalanced (e.g., if you block paste in some code with unbalanced braces), but many IDE features will not work during this time.  There are a few more features that aid in keeping braces balanced: deleting an opening brace will delete its matched closing brace; typing a closing brace will move out or in an existing closing brace in certain contexts; and you can select a block of text and type ",`,(,{,[,/ to enclose the block in double quotes, back quotes, parentheses, curly braces, brackets, or a multi-line comment, respectively. 
+
+<li> XML support is currently very minimal! Currently, only de-limited XML is supported, meaning XML blocks must be enclosed in parens.  
+
+<li> The content outliner, interpreter, and test pad views are not yet implemented in the new plugin.
+
+<li> There is still no support for refactoring or search. 
+
+<li> The Project Explorer replaces the Package Explorer as the preferred navigation view of Scala projects (the Package Explorer will still work). However, I've noticed some conflicts with the JDT "Java Element" content view, you'll probably have to disable it (click the down white triangle in the project explorer view, select the "Customize View" menu, select the "Content" tab, uncheck "Java Elements"). 
+
+<li> For some strange reason, no default highlighting colors are configured when the plugin is first installed. Go to Preferences/Scala/Scala Editor Preferences, hit "Restore Defaults", "Ok" then colors will be enabled. I know the default color scheme is atrocious, but you can also customize Scala highlighting colors.
+
+<li> Scala classpath entries do not make use of Java-doc attachments (all scala-doc entries are extracted from source attachments) while Java requires these attachments even if source is available. Make sure your Java-doc/source code attachments are configured correctly for your JRE_CONTAINER. Source attachments are included for the embedded Scala library.
+
+</ul>
+
+Because the technology used in the plugin is very new and untested, I initially expect that there will be ALOT of bugs. I'm continuously afraid whenever I'm editing in the new plugin that any keystroke will cause a crash :) I really need the community's help if the plugin is going to become stable. Please keep your error log view open while using the plugin, as this could fill up pretty quickly and you'll only be notified of the first crash. We'll use trac to manage bug reports, but check the open bug reports to avoid wasting time on duplicate reports.
+
+
+<h2>Existing issues</h2>
+
+<ul>
+<li>The plugin does not currently support having projects outside of the current workspace. Opening 
+a Scala project outside of the workspace will cause the plug-in to crash.
+
+<li>It does not work well with external tools, such as ant builders. 
+If ant builders are used, ensure that they refresh the workspace after they execute.
+
+<li>Compilation information is incomplete. Not all identifiers are associated with compilation information, 
+in which case they are not highlighted and no services can be performed on them.
+
+<li>Multiple source and output directories are not currently supported.
+
+<li>Cancelling the build often corrupts the resident compiler, requiring a clean build or reset of the builder (by closing and reopening the project).
+
+<li>Java code cannot be mixed inside a Scala project. Instead, it must be compiled 
+in a separate projected and added to the Scala project's build path.
+
+<li>Hot Code Replace does not support changing field initialization values.
+
+</ul>  
+</body>
+</html>
