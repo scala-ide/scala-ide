@@ -6,18 +6,13 @@
 package scala.tools.eclipse.javaelements
 
 import scala.collection.immutable.Seq
-import scala.reflect.NameTransformer
 
 import org.eclipse.jdt.core.{ IField, IJavaElement, IMember, IMethod, IType }
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants
 import org.eclipse.jdt.internal.core.{
   BinaryType, JavaElement, JavaElementInfo, LocalVariable, SourceConstructorInfo, SourceField, SourceFieldElementInfo,
   SourceMethod, SourceMethodElementInfo, SourceMethodInfo, SourceType, SourceTypeElementInfo } 
-import org.eclipse.jdt.internal.ui.JavaPlugin
-import org.eclipse.jdt.internal.ui.viewsupport.{ JavaElementImageProvider }
-import org.eclipse.jdt.ui.JavaElementImageDescriptor
 import org.eclipse.jface.resource.ImageDescriptor
-import org.eclipse.swt.graphics.Image
 
 import scala.tools.eclipse.ScalaImages
 import scala.tools.eclipse.contribution.weaving.jdt.IScalaElement
@@ -210,12 +205,12 @@ trait ScalaMemberElementInfo extends JavaElementInfo {
   def getNameSourceStart0 : Int = getNameSourceStartMethod.invoke(this).asInstanceOf[Integer].intValue
   def getNameSourceEnd0 : Int = getNameSourceEndMethod.invoke(this).asInstanceOf[Integer].intValue
   def setNameSource0(start : Int, end : Int) = {
-	  val oStart = new Integer(start)
-	  var oEnd = new Integer(end)
-	  if (!Defensive.check(start <= end, "setNameSource0 start %s <= end %s false then force end = start (FIXME)", oStart, oEnd)) {
+	  val oStart = new java.lang.Integer(start)
+	  var oEnd = new java.lang.Integer(end)
+	  if (!Defensive.check(start <= end, "setNameSource0 start %d <= end %d false then force end = start (FIXME)", start, end)) {
 	    oEnd = oStart
 	  }
-	  Defensive.check(start > -1, "setNameSource0 start %s > -1", oStart)
+	  Defensive.check(start > -1, "setNameSource0 start %d > -1", start)
 	  setNameSourceStartMethod.invoke(this, oStart)
 	  setNameSourceEndMethod.invoke(this, oEnd)
   }
@@ -224,12 +219,12 @@ trait ScalaMemberElementInfo extends JavaElementInfo {
   def getDeclarationSourceEnd0 : Int = getDeclarationSourceEndMethod.invoke(this).asInstanceOf[Integer].intValue
   
   def setSourceRange0(start : Int, end : Int) : Unit = {
-	  val oStart = new Integer(start)
-	  var oEnd = new Integer(end)
-	  if (!Defensive.check(start <= end, "setSourceRange0 start %s <= end %s false then force end = start (FIXME)", oStart, oEnd)) {
+	  val oStart = new java.lang.Integer(start)
+	  var oEnd = new java.lang.Integer(end)
+	  if (!Defensive.check(start <= end, "setSourceRange0 start %d <= end %d false then force end = start (FIXME)", start, end)) {
       oEnd = oStart
 	  }
-	  Defensive.check(start > -1, "setSourceRange0 start %s > -1", oStart)
+	  Defensive.check(start > -1, "setSourceRange0 start %d > -1", start)
 	  setSourceRangeEndMethod.invoke(this, oEnd)
 	  setSourceRangeStartMethod.invoke(this, oStart)
   }

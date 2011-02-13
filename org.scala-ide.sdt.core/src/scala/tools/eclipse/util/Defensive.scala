@@ -27,9 +27,9 @@ import org.eclipse.core.runtime.jobs.Job
  * may be under the directory <project>/issues).
  */
 object Defensive {
-  private def log(format : String, args : Any*) {
+  private def log(format : String, args : Seq[Any]) {
     //TODO log in Eclipse Error Log
-    System.err.println("ScalaPlugin--Defensive--" + Thread.currentThread().getName() + "--:" + format.format(args))
+    System.err.println("ScalaPlugin--Defensive--" + Thread.currentThread().getName() + "--:" + format.format(args : _*))
     Thread.dumpStack()
   }
   def notNull(o : AnyRef, format : String, args : Any*) : Boolean = {

@@ -5,8 +5,6 @@
 
 package scala.tools.eclipse.javaelements
 
-import scala.util.control.Breaks._
-
 import org.eclipse.core.resources.{ IFile, IFolder, IProject, IResource, ResourcesPlugin }
 import org.eclipse.core.runtime.{ CoreException, IProgressMonitor, IStatus, Status }
 import org.eclipse.jdt.core.{ IClasspathEntry, IJavaElement, IPackageFragment, IType, JavaCore, JavaModelException }
@@ -109,10 +107,10 @@ object SourceRefElementInfoUtils extends ReflectionUtils {
   private val setSourceRangeEndMethod = getDeclaredMethod(sreiClazz, "setSourceRangeEnd", classOf[Int])
   
   def setSourceRange0(srei : AnyRef, start : Int, end : Int) = {
-    val oStart = new Integer(start)
-    val oEnd = new Integer(end)
-    Defensive.check(start <= end, "SourceRefElementInfoUtils.setSourceRange start %s <= end %s", oStart, oEnd)
-    Defensive.check(start > -1, "SourceRefElementInfoUtils.setNameSource start %s > -1", oStart)    
+    val oStart = new java.lang.Integer(start)
+    val oEnd = new java.lang.Integer(end)
+    Defensive.check(start <= end, "SourceRefElementInfoUtils.setSourceRange start %d <= end %d", start, end)
+    Defensive.check(start > -1, "SourceRefElementInfoUtils.setNameSource start %d > -1", start)    
     setSourceRangeStartMethod.invoke(srei, oStart)
     setSourceRangeEndMethod.invoke(srei, oEnd)
   }
