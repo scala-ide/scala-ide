@@ -30,3 +30,4 @@ build()
     -DforceContextQualifier=${QUALIFIER} \
     clean install $*
 }
+MILESTONE=-M1
