@@ -19,7 +19,21 @@ import org.eclipse.jface.util.PropertyChangeEvent
 import org.eclipse.jface.text.rules.{ ICharacterScanner, IRule, IToken, IWhitespaceDetector, IWordDetector, SingleLineRule, Token, WhitespaceRule }
 
 object ScalaCodeScanner {
-
+  // Only ASCII characters are allowed in the set.
+  class Chars {
+    val nAscii = 256
+    val bitmap = Array.fill(nAscii)(false)
+    def contains(c: Char): Boolean = c < nAscii && bitmap(c)
+  }
+  
+  object Chars {
+    def apply(cs: Char*) = {
+      val res = new Chars
+      cs foreach (res.bitmap(_) = true)
+      res
+    }
+  }
+	
   /**
    * Rule to detect Scala operators.
    *
@@ -28,7 +42,7 @@ object ScalaCodeScanner {
   class OperatorRule(fToken : IToken) extends IRule {
 
     /** Scala operators */
-    val OPERATORS = Set(';', '.', '=', '/', '\\', '+', '-', '*', '<', '>', ':', '?', '!', ',', '|', '&', '^', '%', '~')
+    val OPERATORS = Chars(';', '.', '=', '/', '\\', '+', '-', '*', '<', '>', ':', '?', '!', ',', '|', '&', '^', '%', '~')
 
     /**
      * Is this character an operator character?
@@ -64,7 +78,7 @@ object ScalaCodeScanner {
    */
   class BracketRule(fToken : IToken) extends IRule {
 
-    val BRACKETS = Set('(', ')', '{', '}', '[', ']')
+    val BRACKETS = Chars('(', ')', '{', '}', '[', ']')
 
     /**
      * Is this character a bracket character?
