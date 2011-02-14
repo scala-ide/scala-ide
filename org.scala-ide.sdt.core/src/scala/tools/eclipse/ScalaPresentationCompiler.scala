@@ -125,6 +125,7 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
     ScalaPlugin.plugin.logError(msg, t)
     
   def destroy() {
+    println("shutting down presentation compiler on project: " + project)
     sourceFiles.keysIterator.foreach(_.scheduleReconcile)
     askShutdown
   }

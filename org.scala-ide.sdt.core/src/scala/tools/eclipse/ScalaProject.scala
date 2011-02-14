@@ -35,7 +35,7 @@ class ScalaProject(val underlying: IProject) {
   private val resetPendingLock = new Object
   private var resetPending = false
 
-  case class InvalidCompilerSettings() extends RuntimeException("Scala compiler cannot initialize. Please check that your classpath contains the standard Scala library")
+  case class InvalidCompilerSettings() extends RuntimeException("Scala compiler cannot initialize. Please check that your classpath contains the standard Scala library.")
 
   private val presentationCompiler = new Cached[Option[ScalaPresentationCompiler]] {
     override def create() = {
@@ -74,10 +74,10 @@ class ScalaProject(val underlying: IProject) {
         Display.getDefault asyncExec new Runnable { 
           def run() {
 //            ToggleScalaNatureAction.toggleScalaNature(underlying)
-            MessageDialog.openWarning(null, "Error initializing the Scala compiler in project %s".format(underlying.getName),
-            msg +
-            ". The editor will not try to re-initialize the compiler until you change the classpath and " +
-            " reopen project %s .".format(underlying.getName))
+            MessageDialog.openWarning(ScalaPlugin.getShell, "Error initializing Scala compiler", 
+                ("Error initializing the Scala compiler for project %s:\n%s.\n\n" +
+                "The editor will not try to re-initialize the compiler until you change the classpath or perform Project->Clean.") 
+                  .format(underlying.getName, msg))
           }
         }
       }
@@ -146,7 +146,7 @@ class ScalaProject(val underlying: IProject) {
     	
     }
     
-    def classpath(javaProject: IJavaProject, exportedOnly: Boolean): Unit = {
+    def computeClasspath(javaProject: IJavaProject, exportedOnly: Boolean): Unit = {
       val cpes = javaProject.getResolvedClasspath(true)
 
       for (cpe <- cpes if (!exportedOnly || cpe.isExported)) cpe.getEntryKind match {
@@ -157,7 +157,7 @@ class ScalaProject(val underlying: IProject) {
             for (cpe <- depJava.getResolvedClasspath(true) if cpe.getEntryKind == IClasspathEntry.CPE_SOURCE) {
             	ouputInClasspath(cpe.getOutputLocation, depJava)
             }
-            classpath(depJava, true)
+            computeClasspath(depJava, true)
           }
         case IClasspathEntry.CPE_LIBRARY =>
           if (cpe.getPath != null) {
@@ -172,7 +172,7 @@ class ScalaProject(val underlying: IProject) {
         case _ =>
       }
     }
-    classpath(javaProject, false)
+    computeClasspath(javaProject, false)
     path.toList
   }
 
@@ -501,6 +501,7 @@ class ScalaProject(val underlying: IProject) {
   }
 
   def resetCompilers(implicit monitor: IProgressMonitor = null) = {
+    println("resetting compilers!  project: " + this.toString)
     resetBuildCompiler
     resetPresentationCompiler
   }
