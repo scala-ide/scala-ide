@@ -315,35 +315,36 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         //println("Parents: "+c.impl.parents)
         
         val name = c.name.toString
-        val isAnon = name == "$anon"
         
         val parentTree = c.impl.parents.head
         val superclassType = parentTree.tpe
-        val (superclassName, primaryType, interfaceTrees) =
+        val (primaryType, interfaceTrees) =
           if (superclassType == null)
-            (null, null, c.impl.parents)
+            (null, c.impl.parents)
           else if (superclassType.typeSymbol.isTrait)
-            (null, superclassType.typeSymbol, c.impl.parents)
+            (superclassType.typeSymbol, c.impl.parents)
           else {
             val interfaceTrees0 = c.impl.parents.drop(1) 
             val superclassName0 = superclassType.typeSymbol.fullName
             if (superclassName0 == "java.lang.Object") {
               if (interfaceTrees0.isEmpty)
-                ("java.lang.Object".toCharArray, null, interfaceTrees0)
+                (null, interfaceTrees0)
               else
-                (null, interfaceTrees0.head.tpe.typeSymbol, interfaceTrees0)
+                (interfaceTrees0.head.tpe.typeSymbol, interfaceTrees0)
             }
             else
-              (superclassName0.toCharArray, superclassType.typeSymbol, interfaceTrees0)   
+              (superclassType.typeSymbol, interfaceTrees0)   
           }
 
         val sym = c.symbol
+        val isAnon = sym.isAnonymousClass
+        val superClass = sym.superClass
+        val superclassName = if (superClass ne NoSymbol) superClass.name.toString else "Object"
         val classElem =
           if(sym hasFlag Flags.TRAIT)
             new ScalaTraitElement(element, name)
           else if (isAnon) {
-            val primaryTypeString = if (primaryType != null) primaryType.name.toString else null
-            new ScalaAnonymousClassElement(element, primaryTypeString)
+            new ScalaAnonymousClassElement(element, superclassName)
           }
           else
             new ScalaClassElement(element, name, false)
@@ -360,7 +361,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         
         val annotsPos = addAnnotations(sym, classElemInfo, classElem)
 
-        classElemInfo.setSuperclassName(superclassName)
+        classElemInfo.setSuperclassName(superclassName.toCharArray)
         
         val interfaceNames = interfaceTrees.map { t => 
           val tpe = t.tpe

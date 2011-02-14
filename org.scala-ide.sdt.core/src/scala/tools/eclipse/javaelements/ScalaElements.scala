@@ -83,7 +83,7 @@ class ScalaClassElement(parent : JavaElement, name : String, synthetic : Boolean
 }
 
 class ScalaAnonymousClassElement(parent : JavaElement, name : String)
-  extends ScalaClassElement(parent, "", false) {
+  extends ScalaClassElement(parent, name, false) {
     override def getLabelText(flags : Long) = if (name != null ) "new "+name+" {...}" else "new {...}"
 }
 
