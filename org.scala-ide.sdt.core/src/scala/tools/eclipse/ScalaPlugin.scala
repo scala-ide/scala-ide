@@ -28,7 +28,7 @@ import scala.tools.eclipse.util.OSGiUtils.pathInBundle
 import scala.tools.eclipse.templates.ScalaTemplateManager
 
 object ScalaPlugin { 
-  var plugin : ScalaPlugin = _
+  var plugin: ScalaPlugin = _
   
   /** Returns the active workbench shell, or null if one does not exist */
   def getShell: Shell = {
@@ -47,7 +47,7 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
   def libraryPluginId = "org.scala-ide.scala.library"
     
   def wizardPath = pluginId + ".wizards"
-  def wizardId(name : String) = wizardPath + ".new" + name
+  def wizardId(name: String) = wizardPath + ".new" + name
   def classWizId = wizardId("Class")
   def traitWizId = wizardId("Trait")
   def objectWizId = wizardId("Object")
@@ -95,7 +95,7 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
   
   private val projects = new HashMap[IProject, ScalaProject]
   
-  override def start(context : BundleContext) = {
+  override def start(context: BundleContext) = {
     super.start(context)
     
     ResourcesPlugin.getWorkspace.addResourceChangeListener(this, IResourceChangeEvent.PRE_CLOSE | IResourceChangeEvent.POST_CHANGE)
@@ -110,7 +110,7 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
     PerspectiveFactory.updatePerspective
   }
 
-  override def stop(context : BundleContext) = {
+  override def stop(context: BundleContext) = {
     ResourcesPlugin.getWorkspace.removeResourceChangeListener(this)
 
     super.stop(context)
@@ -118,9 +118,9 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
   
   def workspaceRoot = ResourcesPlugin.getWorkspace.getRoot
     
-  def getJavaProject(project : IProject) = JavaCore.create(project) 
+  def getJavaProject(project: IProject) = JavaCore.create(project) 
 
-  def getScalaProject(project : IProject) : ScalaProject = projects.synchronized {
+  def getScalaProject(project: IProject): ScalaProject = projects.synchronized {
     projects.get(project) match {
       case Some(scalaProject) => scalaProject
       case None =>
@@ -130,24 +130,24 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
     }
   }
   
-  def getScalaProject(input : IEditorInput) : ScalaProject = input match {
-    case fei : IFileEditorInput => getScalaProject(fei.getFile.getProject)
-    case cfei : IClassFileEditorInput => getScalaProject(cfei.getClassFile.getJavaProject.getProject)
+  def getScalaProject(input: IEditorInput): ScalaProject = input match {
+    case fei: IFileEditorInput => getScalaProject(fei.getFile.getProject)
+    case cfei: IClassFileEditorInput => getScalaProject(cfei.getClassFile.getJavaProject.getProject)
     case _ => null
   }
 
   def isScalaProject(project: IJavaProject): Boolean = isScalaProject(project.getProject)
   
-  def isScalaProject(project : IProject): Boolean =
+  def isScalaProject(project: IProject): Boolean =
     try {
       project != null && project.isOpen && (project.hasNature(natureId) || project.hasNature(oldNatureId))
     } catch {
-      case _ : CoreException => false
+      case _: CoreException => false
     }
 
-  override def resourceChanged(event : IResourceChangeEvent) {
+  override def resourceChanged(event: IResourceChangeEvent) {
     (event.getResource, event.getType) match {
-      case (project : IProject, IResourceChangeEvent.PRE_CLOSE) => 
+      case (project: IProject, IResourceChangeEvent.PRE_CLOSE) => 
         projects.synchronized { 
           projects.get(project) match {
             case Some(scalaProject) =>
@@ -203,21 +203,21 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
       delta.getAffectedChildren foreach { findRemovedSources(_) }
   }
 
-  def logWarning(msg : String) : Unit = getLog.log(new Status(IStatus.WARNING, pluginId, msg))
+  def logWarning(msg: String): Unit = getLog.log(new Status(IStatus.WARNING, pluginId, msg))
 
-  def logError(t : Throwable) : Unit = logError(t.getClass + ":" + t.getMessage, t)
+  def logError(t: Throwable): Unit = logError(t.getClass + ":" + t.getMessage, t)
   
-  def logError(msg : String, t : Throwable) : Unit = {
+  def logError(msg: String, t: Throwable): Unit = {
     val t1 = if (t != null) t else { val ex = new Exception ; ex.fillInStackTrace ; ex }
     val status1 = new Status(IStatus.ERROR, pluginId, IStatus.ERROR, msg, t1)
     getLog.log(status1)
 
     val status = t match {
-      case ce : ControlThrowable =>
-        val t2 = { val ex = new Exception ; ex.fillInStackTrace ; ex }
+      case ce: ControlThrowable =>
+        val t2 = { val ex = new Exception; ex.fillInStackTrace; ex }
         val status2 = new Status(
           IStatus.ERROR, pluginId, IStatus.ERROR,
-          "Incorrectly logged ControlThrowable: "+ce.getClass.getSimpleName+"("+ce.getMessage+")", t2)
+          "Incorrectly logged ControlThrowable: " + ce.getClass.getSimpleName + "(" + ce.getMessage + ")", t2)
         getLog.log(status2)
       case _ =>
     }
@@ -230,24 +230,24 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
     rpath.getPath
   }.getOrElse("unresolved")
 
-  final def check[T](f : => T) =
+  final def check[T](f: => T) =
     try {
       Some(f)
     } catch {
-      case e : Throwable =>
+      case e: Throwable =>
         logError(e)
         None
     }
 
-  final def checkOrElse[T](f : => T, msgIfError: String): Option[T] = {
+  final def checkOrElse[T](f: => T, msgIfError: String): Option[T] = {
     try {
       Some(f)
     } catch {
-      case e : Throwable =>
+      case e: Throwable =>
         logError(msgIfError, e)
         None
     }     
   }
   
-  def isBuildable(file : IFile) = (file.getName.endsWith(scalaFileExtn) || file.getName.endsWith(javaFileExtn))
+  def isBuildable(file: IFile) = (file.getName.endsWith(scalaFileExtn) || file.getName.endsWith(javaFileExtn))
 }
