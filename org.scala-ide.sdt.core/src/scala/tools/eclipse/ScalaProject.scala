@@ -136,8 +136,8 @@ class ScalaProject(val underlying: IProject) {
   def classpath: Seq[IPath] = {
     val path = new LinkedHashSet[IPath]
     
-    def ouputInClasspath(outputLocation0: IPath, jProject: IJavaProject) {
-      val outputLocation = if (outputLocation0 != null) outputLocation0 else javaProject.getOutputLocation
+    def ouputInClasspath(outputLocation0: IPath, project: IJavaProject) {
+      val outputLocation = if (outputLocation0 != null) outputLocation0 else project.getOutputLocation
               
       if (outputLocation != null) {
         val absPath = plugin.workspaceRoot.findMember(outputLocation)
