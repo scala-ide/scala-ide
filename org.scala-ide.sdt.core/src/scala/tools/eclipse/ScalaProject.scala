@@ -135,29 +135,16 @@ class ScalaProject(val underlying: IProject) {
 
   def classpath: Seq[IPath] = {
     val path = new LinkedHashSet[IPath]
-    
-    def ouputInClasspath(outputLocation0: IPath, project: IJavaProject) {
-      val outputLocation = if (outputLocation0 != null) outputLocation0 else project.getOutputLocation
-              
-      if (outputLocation != null) {
-        val absPath = plugin.workspaceRoot.findMember(outputLocation)
-        if (absPath != null) path += absPath.getLocation
-      }
-    	
-    }
-    
-    def computeClasspath(javaProject: IJavaProject, exportedOnly: Boolean): Unit = {
-      val cpes = javaProject.getResolvedClasspath(true)
 
-      for (cpe <- cpes if (!exportedOnly || cpe.isExported)) cpe.getEntryKind match {
+    def computeClasspath(project: IJavaProject, exportedOnly: Boolean): Unit = {
+      val cpes = project.getResolvedClasspath(true)
+
+      for (cpe <- cpes if !exportedOnly || cpe.isExported ||
+    		            cpe.getEntryKind == IClasspathEntry.CPE_SOURCE) cpe.getEntryKind match {
         case IClasspathEntry.CPE_PROJECT =>
           val depProject = plugin.workspaceRoot.getProject(cpe.getPath.lastSegment)
           if (JavaProject.hasJavaNature(depProject)) {
-            val depJava = JavaCore.create(depProject)
-            for (cpe <- depJava.getResolvedClasspath(true) if cpe.getEntryKind == IClasspathEntry.CPE_SOURCE) {
-            	ouputInClasspath(cpe.getOutputLocation, depJava)
-            }
-            computeClasspath(depJava, true)
+            computeClasspath(JavaCore.create(depProject), true)
           }
         case IClasspathEntry.CPE_LIBRARY =>
           if (cpe.getPath != null) {
@@ -168,7 +155,17 @@ class ScalaProject(val underlying: IProject) {
               path += cpe.getPath
           }
         case IClasspathEntry.CPE_SOURCE =>
-          ouputInClasspath(cpe.getOutputLocation, javaProject)
+          val cpeOutput = cpe.getOutputLocation
+          val outputLocation = if (cpeOutput != null) cpeOutput else project.getOutputLocation
+              
+          if (outputLocation != null) {
+            val absPath = plugin.workspaceRoot.findMember(outputLocation)
+            if (absPath != null) 
+              path += absPath.getLocation
+            else
+              path += cpe.getPath
+          }  
+
         case _ =>
       }
     }
