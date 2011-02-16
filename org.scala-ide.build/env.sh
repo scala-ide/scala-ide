@@ -1,3 +1,5 @@
+#!/bin/sh
+
 # MAVEN needs to point to a MAVEN3 installation:
 if which mvn >/dev/null; then
   mvn -version | grep "Maven 3" > /dev/null
@@ -21,9 +23,25 @@ set_version()
   # ${MAVEN} -f pom.xml -N versions:update-child-modules
 }
 
+timestamp()
+{
+  UNCOMMITTED_CHANGES=$(git status -s | wc -l)
+  if [ $UNCOMMITTED_CHANGES -eq 0 ] ; then
+    # timestamp of the last commit
+    # in UTC (or in LOCAL time zone ?)
+    T=$(git log -1 --format='%ci' | tr -d ': -')
+    BACK=$(expr substr $T 1 12)
+  else
+    BACK=$(date +%Y%m%d%H%M)
+  fi
+  echo $BACK
+#  return BACK
+}
+
 build()
 {
-  QUALIFIER=$(date +%Y%m%d%H%M)${MILESTONE}
+  QUALIFIER=$(timestamp)${MILESTONE}
+  echo QUALIFIER=$QUALIFIER
   ${MAVEN} \
     -U \
     -Dscala.version=${SCALA_VERSION} \
