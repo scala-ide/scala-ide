@@ -8,7 +8,7 @@ package scala.tools.eclipse.javaelements
 import scala.collection.immutable.Seq
 import scala.reflect.NameTransformer
 
-import org.eclipse.jdt.core.{ IField, IJavaElement, IMember, IMethod, IType }
+import org.eclipse.jdt.core.{ IField, IJavaElement, IMember, IMethod, IType, ITypeParameter }
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants
 import org.eclipse.jdt.internal.core.{
   BinaryType, JavaElement, JavaElementInfo, LocalVariable, SourceConstructorInfo, SourceField, SourceFieldElementInfo,
@@ -246,6 +246,9 @@ class ScalaElementInfo extends SourceTypeElementInfo with ScalaMemberElementInfo
   override def setHandle(handle : IType) = super.setHandle(handle)
   override def setSuperclassName(superclassName : Array[Char]) = super.setSuperclassName(superclassName)
   override def setSuperInterfaceNames(superInterfaceNames : Array[Array[Char]]) = super.setSuperInterfaceNames(superInterfaceNames)
+  def setTypeParameters(tps : Array[ITypeParameter]) {
+    typeParameters = tps
+  }
 }
 
 trait FnInfo extends SourceMethodElementInfo with ScalaMemberElementInfo {
