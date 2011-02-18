@@ -162,8 +162,6 @@ class ScalaProject(val underlying: IProject) {
             val absPath = plugin.workspaceRoot.findMember(outputLocation)
             if (absPath != null) 
               path += absPath.getLocation
-            else
-              path += cpe.getPath
           }  
 
         case _ =>
