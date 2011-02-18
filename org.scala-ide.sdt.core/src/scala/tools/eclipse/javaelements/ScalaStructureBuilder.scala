@@ -14,7 +14,7 @@ import org.eclipse.jdt.core.compiler.CharOperation
 import org.eclipse.jdt.internal.core.{
   Annotation, AnnotationInfo => JDTAnnotationInfo, AnnotatableInfo, CompilationUnit => JDTCompilationUnit, ImportContainer,
   ImportContainerInfo, ImportDeclaration, ImportDeclarationElementInfo, JavaElement, JavaElementInfo,
-  MemberValuePair, OpenableElementInfo, SourceRefElement }
+  MemberValuePair, OpenableElementInfo, SourceRefElement, TypeParameter, TypeParameterElementInfo }
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants
 import org.eclipse.jdt.ui.JavaElementImageDescriptor
 
@@ -318,22 +318,22 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         
         val parentTree = c.impl.parents.head
         val superclassType = parentTree.tpe
-        val (primaryType, interfaceTrees) =
+        val primaryType =
           if (superclassType == null)
-            (null, c.impl.parents)
+            null
           else if (superclassType.typeSymbol.isTrait)
-            (superclassType.typeSymbol, c.impl.parents)
+            superclassType.typeSymbol
           else {
             val interfaceTrees0 = c.impl.parents.drop(1) 
             val superclassName0 = superclassType.typeSymbol.fullName
             if (superclassName0 == "java.lang.Object") {
               if (interfaceTrees0.isEmpty)
-                (null, interfaceTrees0)
+                null
               else
-                (interfaceTrees0.head.tpe.typeSymbol, interfaceTrees0)
+                interfaceTrees0.head.tpe.typeSymbol
             }
             else
-              (superclassType.typeSymbol, interfaceTrees0)   
+              superclassType.typeSymbol   
           }
 
         val sym = c.symbol
@@ -354,6 +354,20 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         
         val classElemInfo = new ScalaElementInfo
         classes(sym) = (classElem, classElemInfo)
+        if (!sym.typeParams.isEmpty) {
+          val typeParams = sym.typeParams.map { tp =>
+            val typeParameter = new TypeParameter(classElem, tp.name.toString)
+            val tpElementInfo = new TypeParameterElementInfo
+            val parents = /*if (tp.info.parents.isEmpty) List(typeRef(NoType, definitions.ObjectClass, Nil)) else */tp.info.parents
+            if (!parents.isEmpty) {
+              tpElementInfo.boundsSignatures = parents.map(_.typeSymbol.fullName.toCharArray).toArray 
+              tpElementInfo.bounds = parents.map(_.typeSymbol.name.toChars).toArray
+            }
+            newElements0.put(typeParameter, tpElementInfo)
+            typeParameter
+          }
+          classElemInfo setTypeParameters typeParams.toArray
+        }
         
         classElemInfo.setHandle(classElem)
         val mask = ~(if (isAnon) ClassFileConstants.AccPublic else 0)
@@ -363,9 +377,8 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
 
         classElemInfo.setSuperclassName(superclassName.toCharArray)
         
-        val interfaceNames = interfaceTrees.map { t => 
-          val tpe = t.tpe
-          (if (tpe ne null) mapParamTypeName(tpe) else unresolvedType(t)).toCharArray
+        val interfaceNames = sym.mixinClasses.map { m => 
+          mapType(m).toCharArray
         }
         classElemInfo.setSuperInterfaceNames(interfaceNames.toArray)
         
