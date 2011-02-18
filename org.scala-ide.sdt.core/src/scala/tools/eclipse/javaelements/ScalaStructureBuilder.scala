@@ -315,26 +315,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         //println("Parents: "+c.impl.parents)
         
         val name = c.name.toString
-        
         val parentTree = c.impl.parents.head
-        val superclassType = parentTree.tpe
-        val primaryType =
-          if (superclassType == null)
-            null
-          else if (superclassType.typeSymbol.isTrait)
-            superclassType.typeSymbol
-          else {
-            val interfaceTrees0 = c.impl.parents.drop(1) 
-            val superclassName0 = superclassType.typeSymbol.fullName
-            if (superclassName0 == "java.lang.Object") {
-              if (interfaceTrees0.isEmpty)
-                null
-              else
-                interfaceTrees0.head.tpe.typeSymbol
-            }
-            else
-              superclassType.typeSymbol   
-          }
 
         val sym = c.symbol
         val isAnon = sym.isAnonymousClass
@@ -385,12 +366,9 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         val (start, end) = if (!isAnon) {
           val start0 = c.pos.point 
           (start0, start0 + name.length - 1)
-        } else if (primaryType != null) {
-          val start0 = parentTree.pos.point
-          (start0, start0 + primaryType.name.length - 1)
         } else {
           val start0 = parentTree.pos.point
-          (start0, start0 - 1)
+          (start0, start0-1)
         }
         
         classElemInfo.setNameSourceStart0(start)
