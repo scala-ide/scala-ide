@@ -104,6 +104,26 @@
             id="org.eclipse.jdt.internal.ui.javaeditor.JavaSelectRulerAction">
          </action>
       </editorContribution>
+      
+   </extension>
+
+   <extension point = "org.eclipse.ui.actionSets">         
+     <actionSet id="org.scala-ide.sdt.ui.runDiag.actionSet"
+       label="Run Diagnostics"
+       visible="true">
+       <menu id="org_scala-ide_sdt_ui_menu"
+         label="ActionSet.menu"
+         path="project/projEnd"> 
+         <separator name="slot1"/>
+       </menu>
+       <action id="org.scala-ide.sdt.ui.runDiag.action"
+         label="Run Scala Setup Diagnostics..."
+         menubarPath="project/projEnd"
+         tooltip="Verify that Scala configuration is correct"
+         class="scala.tools.eclipse.diagnostic.RunDiagnosticAction"
+         enablesFor="*">
+       </action>
+     </actionSet>
    </extension>
 
    <extension point="org.eclipse.ui.editorActions">
@@ -454,7 +474,7 @@
         menubarPath="org.scala-ide.sdt.core.popupMenu/content"
         icon="icons/full/etool16/scala_app.gif"
         id="org.scala-ide.sdt.ui.createInt"
-        label="Create Scala Interperter"
+        label="Create Scala Interpreter"
         tooltip="Create a Scala interpreter"/>
 
       <visibility>
@@ -547,8 +567,8 @@
           </and>
         </visibility>
   	</objectContribution>
-
   </extension>
+    
 
   <extension
          point="org.eclipse.ui.console.consoleFactories">
