@@ -49,7 +49,7 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
     unitOfFile get file match {
       case Some(unit) => 
         val result = unit.problems.toList flatMap presentationReporter.eclipseProblem
-        unit.problems.clear()
+        //unit.problems.clear()
         result
       case None => 
         Nil
