@@ -9,8 +9,8 @@ import org.eclipse.jface.text.Position
 import org.eclipse.jface.text.IDocumentListener
 import org.eclipse.jface.text.IDocument
 
-class MockDocument(s: String) extends IDocument {
-
+class MockDocument(private var s: String) extends IDocument {
+ 
   def getChar(offset: Int): Char = s.charAt(offset)
 
   def getLength(): Int = s.length
@@ -19,9 +19,9 @@ class MockDocument(s: String) extends IDocument {
 
   def get(offset: Int, length: Int): String = s.substring(offset, length)
 
-  def set(text: String) = throw new UnsupportedOperationException
+  def set(text: String) { s = text }
 
-  def replace(offset: Int, length: Int, text: String) = throw new UnsupportedOperationException
+  def replace(offset: Int, length: Int, text: String) = set(s.patch(offset, text, length))
 
   def addDocumentListener(listener: IDocumentListener): Unit = {}
 
@@ -47,7 +47,7 @@ class MockDocument(s: String) extends IDocument {
 
   def removePosition(category: String, position: Position): Unit = {}
 
-  def getPositions(category: String) = throw new UnsupportedOperationException
+  def getPositions(category: String) = Array()
 
   def containsPosition(category: String, offset: Int, length: Int): Boolean = { false }
 
@@ -93,9 +93,9 @@ class MockDocument(s: String) extends IDocument {
 
   def computeNumberOfLines(text: String): Int = { 0 }
 
-  def getLegalLineDelimiters() = throw new UnsupportedOperationException
+  def getLegalLineDelimiters() = Array("\n")
 
-  def getLineDelimiter(line: Int): String = { null }
+  def getLineDelimiter(line: Int): String = "\n"
 
   def search(startOffset: Int, findString: String, forwardSearch: Boolean, caseSensitive: Boolean, wholeWord: Boolean): Int = { 0 }
 

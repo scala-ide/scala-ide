@@ -11,11 +11,11 @@ import org.eclipse.jface.text.IDocumentPartitioner
 import org.eclipse.jdt.ui.text.IJavaPartitions
 
 import scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.IScalaEditor
-import scala.tools.eclipse.lexical.{ ScalaPartitionScanner, ScalaPartitions }
+import scala.tools.eclipse.lexical._
 
 trait ScalaEditor extends IScalaEditor {
 
-  def createDocumentPartitioner(): IDocumentPartitioner = new FastPartitioner(new ScalaPartitionScanner, ScalaEditor.LEGAL_CONTENT_TYPES)
+  def createDocumentPartitioner = new ScalaDocumentPartitioner
 
 }
 
