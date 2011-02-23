@@ -22,7 +22,8 @@ class RunDiagnosticAction extends IObjectActionDelegate with IWorkbenchWindowAct
   
   def run(action: IAction) { 
     plugin check {      
-      new DiagnosticDialog(parentWindow.getShell).open
+      val shell = if (parentWindow == null) ScalaPlugin.getShell else parentWindow.getShell        
+      new DiagnosticDialog(shell).open
     }
   }
     
