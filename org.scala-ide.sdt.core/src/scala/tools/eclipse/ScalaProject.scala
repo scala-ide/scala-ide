@@ -44,8 +44,6 @@ class ScalaProject(val underlying: IProject) {
       try {
         val settings = new Settings
         settings.printtypes.tryToSet(Nil)
-        settings.verbose.tryToSetFromPropertyValue("true")
-        settings.XlogImplicits.tryToSetFromPropertyValue("true")
         initialize(settings, _.name.startsWith("-Ypresentation"))
         Some(new ScalaPresentationCompiler(ScalaProject.this, settings))
       } catch {
