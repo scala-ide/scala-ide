@@ -60,12 +60,13 @@ object EclipseResource {
 abstract class EclipseResource[R <: IResource] extends AbstractFile {
   val underlying : R
   
+  if (underlying == null)
+    throw new NullPointerException("underlying == null")
+  
   def name: String = underlying.getName
 
-  def path: String = {
-    if (underlying == null)
-      throw new NullPointerException("underlying == null")
-    else if (underlying.getLocation == null)
+  lazy val path: String = {
+    if (underlying.getLocation == null)
       throw new NullPointerException("underlying.getLocation == null for: "+underlying)
       
     underlying.getLocation.toOSString
