@@ -9,11 +9,10 @@ import scala.tools.eclipse.util.Tracer
 import scala.collection.mutable
 import scala.collection.mutable.{ ArrayBuffer, SynchronizedMap }
 
-import org.eclipse.core.resources.IFile
 import org.eclipse.jdt.core.compiler.IProblem
 import org.eclipse.jdt.internal.compiler.problem.{ DefaultProblem, ProblemSeverities }
 import scala.tools.nsc.Settings
-import scala.tools.nsc.interactive.Global
+import scala.tools.nsc.interactive.{Global, InteractiveReporter, Problem}
 import scala.tools.nsc.io.AbstractFile
 import scala.tools.nsc.reporters.Reporter
 import scala.tools.nsc.util.{ BatchSourceFile, Position, SourceFile }
@@ -22,15 +21,19 @@ import scala.tools.eclipse.javaelements.{
   ScalaCompilationUnit, ScalaIndexBuilder, ScalaJavaMapper, ScalaMatchLocator, ScalaStructureBuilder,
   ScalaOverrideIndicatorBuilder }
 import scala.tools.eclipse.util.{ Cached, EclipseFile, EclipseResource, IDESettings }
+import scala.tools.eclipse.scalac_28.conversions._
 
 class ScalaPresentationCompiler(settings : Settings)
   extends Global(settings, new ScalaPresentationCompiler.PresentationReporter)
-  with ScalaStructureBuilder with ScalaIndexBuilder with ScalaMatchLocator
-  with ScalaOverrideIndicatorBuilder with ScalaJavaMapper with JVMUtils with LocateSymbol { self =>
-  import ScalaPresentationCompiler._
+  with ScalaStructureBuilder 
+  with ScalaIndexBuilder 
+  with ScalaMatchLocator
+  with ScalaOverrideIndicatorBuilder 
+  with ScalaJavaMapper 
+  with JVMUtils 
+  with LocateSymbol { self =>
   
-  def presentationReporter = reporter.asInstanceOf[PresentationReporter]
-  
+  def presentationReporter = reporter.asInstanceOf[ScalaPresentationCompiler.PresentationReporter]
   presentationReporter.compiler = this
   
   private val sourceFiles = new mutable.HashMap[ScalaCompilationUnit, BatchSourceFile] {
@@ -44,45 +47,37 @@ class ScalaPresentationCompiler(settings : Settings)
       }} 
   }
   
-  private val problems = new mutable.HashMap[IFile, ArrayBuffer[IProblem]] with SynchronizedMap[IFile, ArrayBuffer[IProblem]] {
-    override def default(k : IFile) = { val v = new ArrayBuffer[IProblem] ; put(k, v); v }
-  }
-  
-  private def fileOf(scu : ScalaCompilationUnit) =
-    try { Some(scu.getCorrespondingResource.asInstanceOf[IFile]) } catch { case _ => None } 
-  
-  private def problemsOf(file : IFile) : List[IProblem] = {
-    val ps = problems.remove(file)
-    ps match {
-      case Some(ab) => ab.toList
-      case _ => Nil
+  private def problemsOf(file : AbstractFile) : List[IProblem] = {
+    unitOfFile get file match {
+      case Some(unit) => 
+        val result = unit.problems.toList flatMap presentationReporter.eclipseProblem
+        unit.problems.clear()
+        result
+      case None => 
+        Nil
     }
   }
   
-  def problemsOf(scu : ScalaCompilationUnit) : List[IProblem] = fileOf(scu) match {
-    case Some(file) => problemsOf(file)
-    case None => Nil
-  }
-  
-  private def clearProblemsOf(file : IFile) : Unit = problems.remove(file)
-  
-  private def clearProblemsOf(scu : ScalaCompilationUnit) : Unit = fileOf(scu) match {
-    case Some(file) => clearProblemsOf(file)
-    case None =>
-  }
+  def problemsOf(scu : ScalaCompilationUnit) : List[IProblem] = problemsOf(scu.file)
   
   def withSourceFile[T](scu : ScalaCompilationUnit)(op : (SourceFile, ScalaPresentationCompiler) => T) : T =
     op(sourceFiles(scu), this)
 
   override def ask[A](op: () => A): A = {
     Tracer.println("ask " + op)
-    //Thread.dumpStack
     if (Thread.currentThread == compileRunner) op() else super.ask(op)
   }
   
-  override def askTypeAt(pos: Position, response: Response[Tree]) {
+  override def askTypeAt(pos: Position, response: Response[Tree]) = {
     Tracer.println("askTypeAt")
     if (Thread.currentThread == compileRunner) getTypedTreeAt(pos, response) else super.askTypeAt(pos, response)
+  }
+
+  override def askParsedEntered(source: SourceFile, keepLoaded: Boolean, response: Response[Tree]) {
+    if (Thread.currentThread == compileRunner)
+      getParsedEntered(source, keepLoaded, response)
+    else
+      super.askParsedEntered(source, keepLoaded, response)
   }
     
   def body(sourceFile : SourceFile) = {
@@ -98,12 +93,19 @@ class ScalaPresentationCompiler(settings : Settings)
       }
     }
   }
+  
+  def withParseTree[T](sourceFile : SourceFile)(op : Tree => T) : T = {
+    op(parseTree(sourceFile))
+  }
 
   def withUntypedTree[T](sourceFile : SourceFile)(op : Tree => T) : T = {
-    val tree = ask { () => 
-      val u = unitOf(sourceFile)
-      if (u.status < JustParsed) parse(u)
-      u.body
+    val tree = {
+      val response = new Response[Tree]
+      askParsedEntered(sourceFile, true, response)
+      response.get match {
+        case Left(tree) => tree 
+        case Right(thr) => throw new AsyncGetException(thr, "withUntypedTree(" + sourceFile + ")")
+      }
     }
     op(tree)
   }
@@ -117,7 +119,6 @@ class ScalaPresentationCompiler(settings : Settings)
         synchronized { sourceFiles(scu) = newF } 
         askReload(List(newF), new Response[Unit])
     }
-    clearProblemsOf(scu)
   }
   
   def discardSourceFile(scu : ScalaCompilationUnit) {
@@ -129,7 +130,6 @@ class ScalaPresentationCompiler(settings : Settings)
           sourceFiles.remove(scu)
       }
     }
-    clearProblemsOf(scu)
   }
 
   override def logError(msg : String, t : Throwable) =
@@ -141,58 +141,45 @@ class ScalaPresentationCompiler(settings : Settings)
 }
 
 object ScalaPresentationCompiler {
-  class PresentationReporter extends Reporter {
+  class PresentationReporter extends InteractiveReporter {
     var compiler : ScalaPresentationCompiler = null
-    
-    override def info0(pos: Position, msg: String, severity: Severity, force: Boolean): Unit = {
-      severity.count += 1
       
-      try {
-        if(pos.isDefined) {
+    def nscSeverityToEclipse(severityLevel: Int) = 
+      severityLevel match {
+        case v if v == ERROR.id => ProblemSeverities.Error
+        case v if v == WARNING.id => ProblemSeverities.Warning
+        case v if v == INFO.id => ProblemSeverities.Ignore
+      }
+    
+    def eclipseProblem(prob: Problem): Option[IProblem] = {
+      import prob._
+      if (pos.isDefined) {
           val source = pos.source
+          val pos1 = pos.toSingleLine
           source.file match {
-            case EclipseResource(file : IFile) =>
-              val length = source.identifier(pos, compiler).map(_.length).getOrElse(0)
-              compiler.debugLog(source.file.name + ":" + pos.line + ": " + msg)
-              compiler.problems(file) +=
+            case ef@EclipseFile(file) =>
+              Some(
                 new DefaultProblem(
                   file.getFullPath.toString.toCharArray,
                   formatMessage(msg),
                   0,
                   new Array[String](0),
-                  nscSeverityToEclipse(severity),
-                  pos.startOrPoint,
-                  pos.endOrPoint,
-                  pos.line,
-                  pos.column
-                )
-            case _ =>  
-              Tracer.println("WARNING: error coming from a file outside Eclipse: %s[%s]: %s".format(source.file.name, source.file.getClass, msg))
+                  nscSeverityToEclipse(severityLevel),
+                  pos1.startOrPoint,
+                  pos1.endOrPoint,
+                  pos1.line,
+                  pos1.column
+                ))
+            case _ => None
           }
-        }
-      } catch {
-        case ex : UnsupportedOperationException => 
-      }
-    }
-    
-    override def reset {
-      super.reset
-      compiler.problems.clear
-    }
-  
-    def nscSeverityToEclipse(severity : Severity) = 
-      severity.id match {
-        case 2 => ProblemSeverities.Error
-        case 1 => ProblemSeverities.Warning
-        case 0 => ProblemSeverities.Ignore
-      }
-    
-    def formatMessage(msg : String) =
-      msg.map{
+        } else None
+      }   
+
+      def formatMessage(msg : String) = msg.map{
         case '\n' => ' '
         case '\r' => ' '
         case c => c
-      }.mkString("","","")
+      }
   }
 }
 

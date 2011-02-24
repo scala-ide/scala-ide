@@ -59,6 +59,7 @@ Import-Package:
  ch.epfl.lamp.fjbg;apply-aspects:=false,
  org.eclipse.contribution.jdt.cuprovider;apply-aspects:=false,
  org.eclipse.contribution.jdt.imagedescriptor;apply-aspects:=false,
+ org.eclipse.contribution.jdt.preferences;apply-aspects:=false,
  org.eclipse.contribution.jdt.sourceprovider;apply-aspects:=false,
  scala.tools.eclipse.contribution.weaving.jdt;apply-aspects:=false,
  scala.tools.eclipse.contribution.weaving.jdt.builderoptions;apply-aspects:=false,

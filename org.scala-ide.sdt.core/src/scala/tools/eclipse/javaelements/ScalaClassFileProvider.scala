@@ -22,7 +22,7 @@ class ScalaClassFileProvider extends IClassFileProvider {
         if (sourceMapper == null)
           null
         else {
-          val source = sourceMapper.findSource(scf.getBinaryType, sourceFile)
+          val source = sourceMapper.findSource(scf.getType, sourceFile)
           if (source != null) scf else null
         }
       case _ => null

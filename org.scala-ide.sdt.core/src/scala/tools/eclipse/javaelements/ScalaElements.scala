@@ -6,12 +6,16 @@
 package scala.tools.eclipse.javaelements
 
 import scala.collection.immutable.Seq
+import scala.reflect.NameTransformer
 
 import org.eclipse.jdt.core.{ IField, IJavaElement, IMember, IMethod, IType }
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants
 import org.eclipse.jdt.internal.core.{
   BinaryType, JavaElement, JavaElementInfo, LocalVariable, SourceConstructorInfo, SourceField, SourceFieldElementInfo,
-  SourceMethod, SourceMethodElementInfo, SourceMethodInfo, SourceType, SourceTypeElementInfo } 
+  SourceMethod, SourceMethodElementInfo, SourceMethodInfo, SourceType, SourceTypeElementInfo, OpenableElementInfo }
+import org.eclipse.jdt.internal.ui.JavaPlugin
+import org.eclipse.jdt.internal.ui.viewsupport.{ JavaElementImageProvider }
+import org.eclipse.jdt.ui.JavaElementImageDescriptor
 import org.eclipse.jface.resource.ImageDescriptor
 
 import scala.tools.eclipse.ScalaImages
@@ -279,4 +283,17 @@ class ScalaSourceMethodInfo extends SourceMethodInfo with FnInfo with AuxChildre
 
 class ScalaSourceFieldElementInfo extends SourceFieldElementInfo with ScalaMemberElementInfo with AuxChildrenElementInfo {
   override def setTypeName(name : Array[Char]) = super.setTypeName(name)
+}
+
+class LazyToplevelClass(unit : ScalaCompilationUnit, name : String) extends SourceType(unit, name) with IType {
+  lazy val mirror = unit.getElementInfo.asInstanceOf[OpenableElementInfo].getChildren.find(e => e.getElementName == name).map(_.asInstanceOf[ScalaSourceTypeElement])
+  
+  override def getField(nm : String) = mirror map (_.getField(nm)) getOrElse super.getField(nm) 
+  override def getType(nm : String) = mirror map (_.getType(nm)) getOrElse super.getType(nm)
+  override def getMethod(nm : String, params : Array[String]) = mirror map (_.getMethod(nm, params)) getOrElse super.getMethod(nm, params)
+  override def getElementInfo = mirror map (_.getElementInfo) getOrElse super.getElementInfo
+  override def getChildren = mirror map (_.getChildren) getOrElse super.getChildren
+  
+  override def isResolved = mirror.isDefined
+  override def exists = isResolved
 }

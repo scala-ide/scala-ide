@@ -136,11 +136,6 @@ trait Picklers { self: Global =>
       .wrapped { case source ~ forceReload => new AskTypeItem(source, forceReload, new Response) } { w => w.source ~ w.forceReload }
       .asClass (classOf[AskTypeItem])
 
-  implicit def askLastTypeItem: CondPickler[AskLastTypeItem] = 
-    pkl[SourceFile]
-      .wrapped { new AskLastTypeItem(_, new Response) } { _.source }
-      .asClass (classOf[AskLastTypeItem])
-
   implicit def askTypeCompletionItem: CondPickler[AskTypeCompletionItem] = 
     pkl[Position]
       .wrapped { new AskTypeCompletionItem(_, new Response) } { _.pos }
@@ -161,11 +156,22 @@ trait Picklers { self: Global =>
       .wrapped { case sym ~ source => new AskLinkPosItem(sym, source, new Response) } { item => item.sym ~ item.source }
       .asClass (classOf[AskLinkPosItem])
 
+  implicit def askLoadedTypedItem: CondPickler[AskLoadedTypedItem] = 
+    pkl[SourceFile]
+      .wrapped { new AskLoadedTypedItem(_, new Response) } { _.source }
+      .asClass (classOf[AskLoadedTypedItem])
+    
+  implicit def askParsedEnteredItem: CondPickler[AskParsedEnteredItem] = 
+    (pkl[SourceFile] ~ pkl[Boolean])
+      .wrapped { case source ~ keepLoaded => new AskParsedEnteredItem(source, keepLoaded, new Response) } { w => w.source ~ w.keepLoaded }
+      .asClass (classOf[AskParsedEnteredItem])
+      
   implicit def emptyAction: CondPickler[EmptyAction] = 
     pkl[Unit]
       .wrapped { _ => new EmptyAction } { _ => () }
       .asClass (classOf[EmptyAction])
       
   implicit def action: Pickler[() => Unit] = 
-    reloadItem | askTypeAtItem | askTypeItem | askLastTypeItem | askTypeCompletionItem | askScopeCompletionItem | askToDoFirstItem | emptyAction
+    reloadItem | askTypeAtItem | askTypeItem | askTypeCompletionItem | askScopeCompletionItem | 
+    askToDoFirstItem | askLinkPosItem | askLoadedTypedItem | askParsedEnteredItem | emptyAction
 }

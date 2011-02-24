@@ -18,17 +18,16 @@ trait EclipseSettings {
     def apply(setting : Settings#Setting) : EclipseSetting = setting match {
       case setting : SettingsAddOn#BooleanSettingD => new CheckBoxSettingD(setting)
       case setting : Settings#BooleanSetting => new CheckBoxSetting(setting)
-      case setting : Settings#IntSetting => new IntegerSetting(setting)
-      case setting : Settings#StringSetting => 
+      case setting : Settings#IntSetting     => new IntegerSetting(setting)
+      case setting : Settings#StringSetting  => 
         setting.name match {
           case "-Ypresentation-log" | "-Ypresentation-replay" =>
             println("setting a file setting")
             new FileSetting(setting)
-          case _ =>         
+          case _                                              =>         
             println("plain old string setting " + setting.name)
             new StringSetting(setting)
         }
-
 //    case setting : Settings#PhasesSetting  => new StringSetting(setting) // !!!
       case setting : Settings#MultiStringSetting => new MultiStringSetting(setting)
       case setting : Settings#ChoiceSetting => new ComboSetting(setting)

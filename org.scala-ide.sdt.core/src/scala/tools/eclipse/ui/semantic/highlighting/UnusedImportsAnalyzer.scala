@@ -21,7 +21,7 @@ object UnusedImportsAnalyzer {
     for (
       scalaSourceFile <- ScalaSourceFile.createFromPath(file.getFullPath.toString) 
     ) {
-      scalaSourceFile.withSourceFile { (sourceFile, compiler) =>
+      scalaSourceFile.doWithSourceFile { (sourceFile, compiler) =>
         compiler.ask { () =>
           new UnusedImportsFinder {
             val global = compiler

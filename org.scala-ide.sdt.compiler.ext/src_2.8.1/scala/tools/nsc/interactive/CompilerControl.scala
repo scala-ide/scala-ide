@@ -40,6 +40,8 @@ import scala.tools.nsc.interactive.util.WorkScheduler
  */
 trait CompilerControl { self: Global =>
  
+  import syntaxAnalyzer.UnitParser
+
   type Response[T] = scala.tools.nsc.interactive.Response[T]
 
   /** The scheduler by which client and compiler communicate
@@ -51,6 +53,13 @@ trait CompilerControl { self: Global =>
    *  if source is not loaded.
    */
   def getUnitOf(s: SourceFile): Option[RichCompilationUnit] = getUnit(s)
+  
+  /** Run operation `op` on a compilation unit assocuated with given `source`.
+   *  If source has a loaded compilation unit, this one is passed to `op`.
+   *  Otherwise a new compilation unit is created, but not added to the set of loaded units.
+   */
+  def onUnitOf[T](source: SourceFile)(op: RichCompilationUnit => T): T =
+    op(unitOfFile.getOrElse(source.file, new RichCompilationUnit(source)))
   
  /** The compilation unit corresponding to a source file
    *  if it does not yet exist create a new one atomically
@@ -108,7 +117,7 @@ trait CompilerControl { self: Global =>
   }
 
   /** Sets sync var `response` to the smallest fully attributed tree that encloses position `pos`.
-   *  @pre The source file belonging to `pos` needs to be loaded.
+   *  Note: Unlike for most other ask... operations, the source file belonging to `pos` needs not be be loaded.
    */
   def askTypeAt(pos: Position, response: Response[Tree]) = 
     scheduler postWorkItem new AskTypeAtItem(pos, response)
@@ -138,20 +147,16 @@ trait CompilerControl { self: Global =>
   def askLinkPos(sym: Symbol, source: SourceFile, response: Response[Position]) = 
     scheduler postWorkItem new AskLinkPosItem(sym, source, response)
   
-  /** Sets sync var `response` to the last fully attributed & typechecked tree produced from `source`.
-   *  If no such tree exists yet, do a normal askType(source, false, response)
-   */
-  def askLastType(source: SourceFile, response: Response[Tree]) =
-    scheduler postWorkItem new AskLastTypeItem(source, response)
-  
   /** Sets sync var `response' to list of members that are visible
    *  as members of the tree enclosing `pos`, possibly reachable by an implicit.
+   *  @pre  source is loaded
    */
   def askTypeCompletion(pos: Position, response: Response[List[Member]]) = 
     scheduler postWorkItem new AskTypeCompletionItem(pos, response)
 
   /** Sets sync var `response' to list of members that are visible
    *  as members of the scope enclosing `pos`.
+   *  @pre  source is loaded
    */
   def askScopeCompletion(pos: Position, response: Response[List[Member]]) = 
     scheduler postWorkItem new AskScopeCompletionItem(pos, response)
@@ -160,6 +165,26 @@ trait CompilerControl { self: Global =>
   def askToDoFirst(source: SourceFile) =
     scheduler postWorkItem new AskToDoFirstItem(source)
 
+  /** If source is not yet loaded, loads it, and starts a new run, otherwise
+   *  continues with current pass.
+   *  Waits until source is fully type checked and returns body in response.
+   *  @param source    The source file that needs to be fully typed.
+   *  @param response  The response, which is set to the fully attributed tree of `source`.
+   *                   If the unit corresponding to `source` has been removed in the meantime
+   *                   the a NoSuchUnitError is raised in the response.
+   */
+  def askLoadedTyped(source: SourceFile, response: Response[Tree]) =
+    scheduler postWorkItem new AskLoadedTypedItem(source, response)
+  
+  /** Set sync var `response` to the parse tree of `source` with all top-level symbols entered.
+   *  @param source       The source file to be analyzed
+   *  @param keepLoaded   If set to `true`, source file will be kept as a loaded unit afterwards.
+   *                      If keepLoaded is `false` the operation is run at low priority, only after
+   *                      everything is brought up to date in a regular type checker run.
+   *  @param response     The response.
+   */
+  def askParsedEntered(source: SourceFile, keepLoaded: Boolean, response: Response[Tree]) =
+    scheduler postWorkItem new AskParsedEnteredItem(source, keepLoaded, response)
   /** Cancels current compiler run and start a fresh one where everything will be re-typechecked
    *  (but not re-loaded).
    */
@@ -167,6 +192,23 @@ trait CompilerControl { self: Global =>
 
   /** Tells the compile server to shutdown, and not to restart again */
   def askShutdown() = scheduler raise ShutdownReq
+  
+  @deprecated("use parseTree(source) instead") 
+  def askParse(source: SourceFile, response: Response[Tree]) = respond(response) {
+    parseTree(source)
+  }
+  
+  /** Returns parse tree for source `source`. No symbols are entered. Syntax errors are reported.
+   *  Can be called asynchronously from presentation compiler.
+   */
+  def parseTree(source: SourceFile): Tree = ask { () =>
+    getUnit(source) match { 
+      case Some(unit) if unit.status >= JustParsed =>
+        unit.body
+      case _ =>
+        new UnitParser(new CompilationUnit(source)).parse()
+    }
+  }
 
   /** Asks for a computation to be done quickly on the presentation compiler thread */
   def ask[A](op: () => A): A = scheduler doQuickly op
@@ -177,6 +219,7 @@ trait CompilerControl { self: Global =>
     val sym: Symbol 
     val tpe: Type
     val accessible: Boolean
+    def implicitlyAdded = false
   }
 
   case class TypeMember(
@@ -184,7 +227,9 @@ trait CompilerControl { self: Global =>
     tpe: Type, 
     accessible: Boolean, 
     inherited: Boolean, 
-    viaView: Symbol) extends Member
+    viaView: Symbol) extends Member {
+    override def implicitlyAdded = viaView != NoSymbol
+  }
 
   case class ScopeMember(
     sym: Symbol, 
@@ -211,11 +256,6 @@ trait CompilerControl { self: Global =>
     override def toString = "typecheck"
   }
 
-  class AskLastTypeItem(val source: SourceFile, response: Response[Tree]) extends WorkItem {
-    def apply() = self.getLastTypedTree(source, response)
-    override def toString = "reconcile"
-  }
-
   class AskTypeCompletionItem(val pos: Position, response: Response[List[Member]]) extends WorkItem {
     def apply() = self.getTypeCompletion(pos, response)
     override def toString = "type completion "+pos.source+" "+pos.show
@@ -235,6 +275,15 @@ trait CompilerControl { self: Global =>
     def apply() = self.getLinkPos(sym, source, response)
     override def toString = "linkpos "+sym+" in "+source
   }
+  class AskLoadedTypedItem(val source: SourceFile, response: Response[Tree]) extends WorkItem {
+    def apply() = self.waitLoadedTyped(source, response)
+    override def toString = "wait loaded & typed "+source
+  }
+  
+  class AskParsedEnteredItem(val source: SourceFile, val keepLoaded: Boolean, response: Response[Tree]) extends WorkItem {
+    def apply() = self.getParsedEntered(source, keepLoaded, response)
+    override def toString = "getParsedEntered "+source+", keepLoaded = "+keepLoaded
+  }
 }
 
   // ---------------- Interpreted exceptions -------------------
@@ -249,4 +298,5 @@ object FreshRunReq extends ControlThrowable
  */
 object ShutdownReq extends ControlThrowable
 
+class NoSuchUnitError(file: AbstractFile) extends Exception("no unit found for file "+file)
 

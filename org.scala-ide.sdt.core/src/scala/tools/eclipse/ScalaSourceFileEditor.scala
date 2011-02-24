@@ -101,6 +101,8 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
   
   private[eclipse] def sourceViewer = getSourceViewer
 
+
+
   override def updateOccurrenceAnnotations(selection: ITextSelection, astRoot: CompilationUnit) = ScalaPlugin.plugin.updateOccurrenceAnnotationsService.askUpdateOccurrenceAnnotations(this, selection, astRoot)
   def superUpdateOccurrenceAnnotations(selection: ITextSelection, astRoot: CompilationUnit) = {}//super.updateOccurrenceAnnotations(selection, astRoot)
 
@@ -118,8 +120,7 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
   override def installOccurrencesFinder(forceUpdate: Boolean) {
     //super.installOccurrencesFinder(forceUpdate)
     ScalaPlugin.plugin.updateOccurrenceAnnotationsService.installSelectionListener(getEditorSite)
-  }
-
+      }
   override def uninstallOccurrencesFinder() {
     ScalaPlugin.plugin.updateOccurrenceAnnotationsService.uninstallSelectionListener(getEditorSite)
     //super.uninstallOccurrencesFinder
@@ -135,7 +136,7 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
           val b = new SemanticHighlightingPresenter(getEditorInput.asInstanceOf[FileEditorInput], viewer)
           ScalaPlugin.plugin.reconcileListeners.after_+(b.update)
           Some(b)
-        }
+    }
       }
 
       //FIXME : workaround for my limited knowledge about current presentation compiler

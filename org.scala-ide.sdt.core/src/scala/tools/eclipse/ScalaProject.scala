@@ -213,105 +213,11 @@ class ScalaProject(val underlying: IProject) {
     path.toList
   }
 
-//  def sourceOutputFolders(env : NameEnvironment) : Seq[(IContainer, IContainer)] = {
-//    val sourceLocations = NameEnvironmentUtils.sourceLocations(env)
-//    sourceLocations.map(cl => (ClasspathLocationUtils.sourceFolder(cl), ClasspathLocationUtils.binaryFolder(cl)))
-//  }
 
-//  def isExcludedFromProject(env : NameEnvironment, childPath : IPath) : Boolean = {
-//    // answer whether the folder should be ignored when walking the project as a source folder
-//    if (childPath.segmentCount() > 2) return false // is a subfolder of a package
-//
-//    val sourceLocations = NameEnvironmentUtils.sourceLocations(env)
-//    for (sl <- sourceLocations) {
-//      val binaryFolder = ClasspathLocationUtils.binaryFolder(sl)
-//      if (childPath == binaryFolder.getFullPath) return true
-//      val sourceFolder = ClasspathLocationUtils.sourceFolder(sl)
-//      if (childPath == sourceFolder.getFullPath) return true
-//    }
-//
-//    // skip default output folder which may not be used by any source folder
-//    return childPath == javaProject.getOutputLocation
-//  }
 
   def allSourceFiles() : Set[IFile] = sourcesFoldersInfo.flatMap{ findSelectedIFile }.toSet
-//  def allSourceFiles() : Set[IFile] = allSourceFiles(new NameEnvironment(javaProject))
 
-//  def allSourceFiles(env : NameEnvironment) : Set[IFile] = {
-//    val sourceFiles = new HashSet[IFile]
-//    val sourceLocations = NameEnvironmentUtils.sourceLocations(env)
-//
-//    for (sourceLocation <- sourceLocations) {
-//      val sourceFolder = ClasspathLocationUtils.sourceFolder(sourceLocation)
-//      val exclusionPatterns = ClasspathLocationUtils.exclusionPatterns(sourceLocation)
-//      val inclusionPatterns = ClasspathLocationUtils.inclusionPatterns(sourceLocation)
-//      val isAlsoProject = sourceFolder == javaProject
-//      val segmentCount = sourceFolder.getFullPath.segmentCount
-//      val outputFolder = ClasspathLocationUtils.binaryFolder(sourceLocation)
-//      val isOutputFolder = sourceFolder == outputFolder
-//      sourceFolder.accept(
-//        new IResourceProxyVisitor {
-//          def visit(proxy : IResourceProxy) : Boolean = {
-//            proxy.getType match {
-//              case IResource.FILE =>
-//                val resource = proxy.requestResource
-//                if (plugin.isBuildable(resource.asInstanceOf[IFile])) {
-//                  if (exclusionPatterns != null || inclusionPatterns != null)
-//                    if (Util.isExcluded(resource.getFullPath, inclusionPatterns, exclusionPatterns, false))
-//                      return false
-//                  sourceFiles += resource.asInstanceOf[IFile]
-//                }
-//                return false
-//
-//              case IResource.FOLDER =>
-//                var folderPath : IPath = null
-//                if (isAlsoProject) {
-//                  folderPath = proxy.requestFullPath
-//                  if (isExcludedFromProject(env, folderPath))
-//                    return false
-//                }
-//                if (exclusionPatterns != null) {
-//                  if (folderPath == null)
-//                    folderPath = proxy.requestFullPath
-//                  if (Util.isExcluded(folderPath, inclusionPatterns, exclusionPatterns, true)) {
-//                    // must walk children if inclusionPatterns != null, can skip them if == null
-//                    // but folder is excluded so do not create it in the output folder
-//                    return inclusionPatterns != null
-//                  }
-//                }
-//
-//              case _ =>
-//            }
-//            return true
-//          }
-//        },
-//        IResource.NONE
-//      )
-//    }
-//    sourceFiles.toSet
-//  }
-
-//  private def createOutputFolders() = {
-//    for(outputFolder <- outputFolders) outputFolder match {
-//      case fldr : IFolder =>
-//        def createParentFolder(parent : IContainer) {
-//          if(!parent.exists()) {
-//            createParentFolder(parent.getParent)
-//            parent.asInstanceOf[IFolder].create(true, true, null)
-//            parent.setDerived(true)
-//          }
-//        }
-//
-//        fldr.refreshLocal(IResource.DEPTH_ZERO, null)
-//        if(!fldr.exists()) {
-//          createParentFolder(fldr.getParent)
-//          fldr.create(IResource.FORCE | IResource.DERIVED, true, null)
-//        }
-//      case _ =>
-//    }
-//  }
-
-  private def cleanOutputFolders(monitor : IProgressMonitor) = {
+  private def cleanOutputFolders(implicit monitor : IProgressMonitor) = {
     def delete(container : IContainer, deleteDirs : Boolean)(f : String => Boolean) : Unit = {
       if (container.exists()) {
         container.members.foreach {
@@ -355,10 +261,6 @@ class ScalaProject(val underlying: IProject) {
 
 
   def initialize(settings : Settings, filter: Settings#Setting => Boolean) = {
-//    val env = new NameEnvironment(javaProject)
-//
-//    for((src, dst) <- sourceOutputFolders(env))
-//      settings.outputDirs.add(EclipseResource(src), EclipseResource(dst))
     val sfs = sourcesFoldersInfo
     sfs.foreach { cpe =>
       settings.outputDirs.add(EclipseResource(toIFolder(cpe)), EclipseResource(toOutput(cpe)))
@@ -366,14 +268,6 @@ class ScalaProject(val underlying: IProject) {
 
     // TODO Per-file encodings, but as eclipse user it's easier to handler Charset at project level
     settings.encoding.value = underlying.getDefaultCharset
-//    if (!sfs.isEmpty) {
-//      val path = sfs.iterator.next
-//      plugin.workspaceRoot.findContainersForLocation(path) match {
-//        case Array(container) => settings.encoding.value = container.getDefaultCharset
-//        case _ =>
-//      }
-//    }
-
     settings.classpath.value = classpath.map{ _.toOSString }.mkString(pathSeparator)
 
     settings.classpath.value = classpath.map(_.toOSString).mkString(pathSeparator)
@@ -382,15 +276,9 @@ class ScalaProject(val underlying: IProject) {
     // that file, using an AbstractFile/PlainFile instead of the EclipseResource instance. This later
     // causes problems if errors are reported against that file. Anyway, it's wrong to have a sourcepath
     // when using the build manager.
-    settings.sourcepath.value = ""
-    //settings.sourcepath.value = sfs.map{ x => toIFolder(x).getLocation.toOSString }.mkString(pathSeparator)
-
-
-    val workspaceStore = ScalaPlugin.plugin.getPreferenceStore
-    val projectStore = new PropertyStore(underlying, workspaceStore, plugin.pluginId)
-    val useProjectSettings = projectStore.getBoolean(SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE)
-
-    val store = if (useProjectSettings) projectStore else workspaceStore
+    settings.sourcepath.value = sfs.map{ x => toIFolder(x).getLocation.toOSString }.mkString(pathSeparator)
+  
+    val store = storage
     for (
       box <- IDESettings.shownSettings(settings);
       setting <- box.userSettings;
@@ -416,19 +304,55 @@ class ScalaProject(val underlying: IProject) {
     Tracer.println("classpath  : " + settings.classpath.value)
     Tracer.println("outputdirs : " + settings.outputDirs.outputs)
   }
+  
+  private def buildManagerInitialize: String =
+    storage.getString(SettingConverterUtil.convertNameToProperty(util.ScalaPluginSettings.buildManager.name))
+  
+  private def storage = {
+    val workspaceStore = ScalaPlugin.plugin.getPreferenceStore
+    val projectStore = new PropertyStore(underlying, workspaceStore, plugin.pluginId)
+    val useProjectSettings = projectStore.getBoolean(SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE)
 
-  def withPresentationCompiler[T](op: ScalaPresentationCompiler => T): T = {
-    getOrFailed(presentationCompiler.apply(op))
+    if (useProjectSettings) projectStore else workspaceStore
+  }
+
+
+  def defaultOrElse[T]: T = {  
+//    if (underlying.isOpen)
+//      failedCompilerInitialization("Compiler failed to initialize properly.")
+
+    // FIXME: this now shows 2 dialog boxes, the one above and the one caused by the throw below
+    // will investigate further -DM
+    throw new IllegalStateException("InvalidCompilerSettings") // DM: see if this error is easier to catch
+//    DM: commented out the null below.
+//    null.asInstanceOf[T] // we're already in deep trouble here, so one more NPE won't kill us    
+  }
+
+  /** 
+   * If the presentation compiler has failed to initialize and no `orElse` is specified, 
+   * the default handler throws an `InvalidCompilerSettings` exception
+   * If T = Unit, then doWithPresentationCompiler can be used, which does not throw.
+   */
+  def withPresentationCompiler[T](op: ScalaPresentationCompiler => T)(orElse: => T = defaultOrElse): T = {
+//    getOrFailed(presentationCompiler.apply(op))
+    presentationCompiler.apply(op) match {
+      case Right(t) => t
+      case Left(ex) => {
+        Tracer.println("failed to access value : " + ex) //to have the stack trace of the caller and the of the compiler creation (async)
+        orElse
+      }
+    }
   }
 
   def withPresentationCompilerIfExists(op : ScalaPresentationCompiler => Unit) : Unit = {
     presentationCompiler.doIfExist(op)
   }
 
-  def withSourceFile[T](scu : ScalaCompilationUnit)(op : (SourceFile, ScalaPresentationCompiler) => T) : T =
+  def withSourceFile[T](scu: ScalaCompilationUnit)(op: (SourceFile, ScalaPresentationCompiler) => T)(orElse: => T = defaultOrElse): T = {
     withPresentationCompiler { compiler =>
       compiler.withSourceFile(scu)(op)
-    }
+    } {orElse}
+  }
 
   def resetPresentationCompiler() {
     Tracer.println("resetPresentationCompiler")
@@ -437,25 +361,49 @@ class ScalaProject(val underlying: IProject) {
 
   def buildManager = {
     if (buildManager0 == null) {
-      Tracer.println("creating a new EclipseBuildManager")
       val settings = new Settings
       initialize(settings, _ => true)
-      buildManager0 = new EclipseBuildManager(this, settings)
+      // source path should be emtpy. The build manager decides what files get recompiled when.
+      // if scalac finds a source file newer than its corresponding classfile, it will 'compileLate'
+      // that file, using an AbstractFile/PlainFile instead of the EclipseResource instance. This later
+      // causes problems if errors are reported against that file. Anyway, it's wrong to have a sourcepath
+      // when using the build manager.
+      settings.sourcepath.value = ""
+      	
+      // Which build manager?
+      // We assume that build manager setting has only single box
+      val choice = buildManagerInitialize
+      Tracer.println("creating a new EclipseBuildManager : " + choice)
+      choice match {
+      	case "refined" =>
+      	  println("BM: Refined Build Manager")
+      	  buildManager0 = new buildmanager.refined.EclipseRefinedBuildManager(this, settings)
+      	case "sbt0.9"  =>
+      	  println("BM: SBT 0.9 enhanced Build Manager")
+      	  buildManager0 = new buildmanager.sbtintegration.EclipseSbtBuildManager(this, settings)
+      	case _         =>
+      	  println("Invalid build manager choice '" + choice  + "'. Setting to (default) refined build manager")
+      	  buildManager0 = new buildmanager.refined.EclipseRefinedBuildManager(this, settings)
+      }
+
+      //buildManager0 = new EclipseBuildManager(this, settings)
     }
     buildManager0
   }
 
-  def build(addedOrUpdated : Set[IFile], removed : Set[IFile], monitor : IProgressMonitor) {
-    buildManager.build(addedOrUpdated, removed, monitor)
+  def build(addedOrUpdated : Set[IFile], removed : Set[IFile])(implicit monitor : IProgressMonitor) {
+    buildManager.build(addedOrUpdated, removed)
     if (IDESettings.markUnusedImports.value) {
       for ( file <- addedOrUpdated) {
         UnusedImportsAnalyzer.markUnusedImports(file)
       }
     }
     refreshOutput
+
+    // Already performs saving the dependencies
   }
 
-  def clean(monitor : IProgressMonitor) = {
+  def clean(implicit monitor : IProgressMonitor) = {
     Tracer.println("clean scala project " + underlying.getName)
     cleanOutputFolders(monitor)
     resetCompilers(monitor)
@@ -468,13 +416,14 @@ class ScalaProject(val underlying: IProject) {
   private def resetBuildCompiler(monitor : IProgressMonitor) {
     Tracer.println("resetting compilers for " + underlying.getName)
     try {
-      underlying.deleteMarkers(plugin.problemMarkerId, true, IResource.DEPTH_INFINITE)
+      //underlying.deleteMarkers(plugin.problemMarkerId, true, IResource.DEPTH_INFINITE)
+      if (buildManager0 != null) buildManager0.clean(monitor)
     } finally {
       buildManager0 = null
     }
   }
 
-  def resetCompilers(monitor : IProgressMonitor) = {
+  def resetCompilers(implicit monitor : IProgressMonitor) = {
     resetPresentationCompiler()
     resetBuildCompiler(monitor)
   }

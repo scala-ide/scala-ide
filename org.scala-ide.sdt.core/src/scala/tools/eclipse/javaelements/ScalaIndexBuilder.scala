@@ -15,7 +15,22 @@ import scala.tools.eclipse.{ ScalaPlugin, ScalaPresentationCompiler,
 import scala.tools.eclipse.util.ScalaPluginSettings
 
 trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
-
+  //BACK-2.8
+  import scala.tools.nsc.symtab.Names
+  private  def isConstructorName(name: Names#Name)  = name == nme.CONSTRUCTOR || name == nme.MIXIN_CONSTRUCTOR
+  private implicit def append(v : Name) = new Object(){
+    def append(suffix : String) : Names#Name = {
+      import nme._
+      //in scala 2.8 TermName and TypeName are private
+      v.getClass.getSimpleName match {
+        case x if x.indexOf("TypeName") > -1 => newTypeName(v + suffix)
+        //case x if x.indexOf("TermName") > -1 => newTermName(v + suffix)
+        case _ => newTermName(v + suffix)
+      }
+    }
+  }
+  //---end BACK-2.8
+  
   object IndexBuilderTraverser {
   	lazy val store = ScalaPlugin.plugin.getPreferenceStore
   	lazy val infoName = 
@@ -26,9 +41,19 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
   import IndexBuilderTraverser.isInfo
   
   class IndexBuilderTraverser(indexer : ScalaSourceIndexer) extends Traverser {
+    var packageName = new StringBuilder
+      
     def addPackage(p : PackageDef) = {
       if (isInfo) println("Package defn: "+p.name+" ["+this+"]")
+      if (!packageName.isEmpty) packageName.append('.')
+      packageName.append(p.name)  
     }
+    
+    def getSuperNames(supers : List[Tree]) = supers map ( _ match { 
+        case Ident(id) => id.toChars
+        case Select(_, name) => name.toChars
+        case _ => "$$NoRef".toCharArray
+      }) toArray
     
     def addClass(c : ClassDef) {
    	  if (isInfo) {      		
@@ -36,89 +61,43 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
         println("Parents: "+c.impl.parents)
       }
         
-      val name = c.symbol.simpleName.toString
-        
-      val parentTree = c.impl.parents.head
-      val superclassType = parentTree.tpe
-      val (superclassName, primaryType, interfaceTrees) =
-        if (superclassType == null)
-          (null, null, c.impl.parents)
-        else if (superclassType.typeSymbol.isTrait)
-          (null, superclassType.typeSymbol, c.impl.parents)
-        else {
-          val interfaceTrees0 = c.impl.parents.drop(1) 
-          val superclassName0 = superclassType.typeSymbol.fullName
-          if (superclassName0 == "java.lang.Object") {
-            if (interfaceTrees0.isEmpty)
-              ("java.lang.Object".toCharArray, null, interfaceTrees0)
-            else
-              (null, interfaceTrees0.head.tpe.typeSymbol, interfaceTrees0)
-          }
-          else
-            (superclassName0.toCharArray, superclassType.typeSymbol, interfaceTrees0)   
-        }
-
-      val mask = ~(if (c.symbol.isAnonymousClass) ClassFileConstants.AccPublic else 0)
-        
-      val interfaceTypes = interfaceTrees.map(t => (t, t.tpe))
-      val interfaceNames = interfaceTypes.map({ case (tree, tpe) => (if (tpe ne null) tpe.typeSymbol.fullName else "null-"+tree).toCharArray })
-        
       indexer.addClassDeclaration(
-        mapModifiers(c.symbol) & mask,
-        c.symbol.enclosingPackage.fullName.toCharArray,
-        name.toCharArray,
-        enclosingTypeNames(c.symbol).map(_.toArray).toArray,
-        superclassName,
-        interfaceNames.toArray,
+        mapModifiers(c.mods),
+        packageName.toString.toCharArray,
+        c.name.toChars,
+        enclClassNames.reverse.toArray,
+        Array.empty,
+        getSuperNames(c.impl.parents),
         Array.empty,
         true
       )
-
-      addAnnotations(c.symbol.annotations)
     }
     
     def addModule(m : ModuleDef) {
       if (isInfo)
         println("Module defn: "+m.name+" ["+this+"]")
-        
-      val name = m.symbol.simpleName.toString
-
-      val parentTree = m.impl.parents.head
-      val superclassType = parentTree.tpe
-      val superclassName = (if (superclassType ne null) superclassType.typeSymbol.fullName else "null-"+parentTree).toCharArray
-        
-      val interfaceTrees = m.impl.parents.drop(1)
-      val interfaceTypes = interfaceTrees.map(t => (t, t.tpe))
-      val interfaceNames = interfaceTypes.map({ case (tree, tpe) => (if (tpe ne null) tpe.typeSymbol.fullName else "null-"+tree).toCharArray })
-        
+      
       indexer.addClassDeclaration(
-        mapModifiers(m.symbol),
-        m.symbol.enclosingPackage.fullName.toCharArray,
-        (name+"$").toCharArray,
-        enclosingTypeNames(m.symbol).map(_.toArray).toArray,
-        superclassName,
-        interfaceNames.toArray,
+        mapModifiers(m.mods),
+        packageName.toString.toCharArray,
+        m.name.append("$").toChars,
+        enclClassNames.reverse.toArray,
+        Array.empty,
+        getSuperNames(m.impl.parents),
         Array.empty,
         true
       )
         
-      indexer.addFieldDeclaration(
-        (m.symbol.fullName+"$").toCharArray,
-        "MODULE$".toCharArray
-      )
-
       indexer.addClassDeclaration(
-        mapModifiers(m.symbol),
-        m.symbol.enclosingPackage.fullName.toCharArray,
-        name.toString.toCharArray,
+        mapModifiers(m.mods),
+        packageName.toString.toCharArray,
+        m.name.toChars,
         Array.empty,
-        superclassName,
-        interfaceNames.toArray,
+        Array.empty,
+        Array.empty,
         Array.empty,
         true
       )
-
-      addAnnotations(m.symbol.annotations)
     }
     
     def addVal(v : ValDef) {
@@ -126,55 +105,61 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
         println("Val defn: >"+nme.getterName(v.name)+"< ["+this+"]")
         
       indexer.addMethodDeclaration(
-        nme.getterName(v.name).toString.toCharArray,
+        nme.getterName(v.name).toChars,
         Array.empty,
         mapType(v.tpt).toArray,
         Array.empty
       )
         
-      if(v.symbol.hasFlag(Flags.MUTABLE))
+      if(v.mods.hasFlag(Flags.MUTABLE))
         indexer.addMethodDeclaration(
-          nme.getterToSetter(nme.getterName(v.name)).toString.toCharArray,
+          nme.getterToSetter(nme.getterName(v.name)).toChars,
           Array.empty,
           mapType(v.tpt).toArray,
           Array.empty
         )
-        
-      addAnnotations(v.symbol.annotations)
     }
     
     def addDef(d : DefDef) {
       if (isInfo)
         println("Def defn: "+d.name+" ["+this+"]")
-      val isCtor0 = d.symbol.isConstructor
-      val nm =
-        if(isCtor0)
-          d.symbol.owner.simpleName
-        else
-          d.name
+      val name = if(isConstructorName(d.name)) enclClassNames.head else d.name.toChars
         
       val fps = for(vps <- d.vparamss; vp <- vps) yield vp
         
       val paramTypes = fps.map(v => mapType(v.tpt))
       indexer.addMethodDeclaration(
-        nm.toString.toCharArray,
+        name,
         paramTypes.map(_.toCharArray).toArray,
         mapType(d.tpt).toArray,
         Array.empty
       )
-        
-      addAnnotations(d.symbol.annotations)
     }
     
     def addType(td : TypeDef) {
-      // TODO
+      // We don't care what to add, java doesn't see types anyway.
+      indexer.addClassDeclaration(
+        mapModifiers(td.mods),
+        packageName.toString.toCharArray,
+        td.name.toChars,
+        Array.empty,
+        Array.empty,
+        Array.empty,
+        Array.empty,
+        true
+      )
     }
+     
+    var enclClassNames = List[Array[Char]]()
 
-    def addAnnotations(annots : List[AnnotationInfo]) {
-      annots.map(annot => indexer.addAnnotationTypeReference(annot.atp.typeSymbol.nameString.toArray))
-    }
-    
     override def traverse(tree: Tree): Unit = {
+      def inClass(c : Array[Char])(block : => Unit) {
+        val old = enclClassNames
+        enclClassNames = c::enclClassNames
+        block
+        enclClassNames = old
+      }
+      
       tree match {
         case pd : PackageDef => addPackage(pd)
         case cd : ClassDef => addClass(cd)
@@ -182,14 +167,42 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
         case vd : ValDef => addVal(vd)
         case td : TypeDef => addType(td)
         case dd : DefDef if dd.name != nme.MIXIN_CONSTRUCTOR => addDef(dd)
+        
         case _ =>
       }
+      
       tree match {
-        case tt : TypeTree if tt.original ne null => {
-          traverse(tt.original)            
-        }
+        case cd : ClassDef => inClass(cd.name.toChars) { super.traverse(tree) }
+        case md : ModuleDef => inClass(md.name.append("$").toChars) { super.traverse(tree) }
+        
+        case Apply(rt : RefTree, args) =>
+          indexer.addMethodReference(rt.name.toChars, args.length)
+          for (t <- args) traverse(t)
+          
+        // Partial apply.
+        case Typed(ttree, Function(_, _)) => 
+          ttree match {
+            case rt : RefTree => 
+              val name = rt.name.toChars
+              for (i <- 0 to maxArgs) indexer.addMethodReference(name, i)
+            case Apply(rt : RefTree, args) => 
+              val name = rt.name.toChars
+              for (i <- args.length to maxArgs) indexer.addMethodReference(name, i)
+            case _ =>
+          }
+          super.traverse(tree)
+          
+        case rt : RefTree =>
+          val name = rt.name.toChars
+          indexer.addTypeReference(name)
+          indexer.addFieldReference(name)
+          super.traverse(tree)
+          
         case _ => super.traverse(tree)
       }
     }
+    
+    val maxArgs = 22  // just arbitrary choice.
   }
+  
 }

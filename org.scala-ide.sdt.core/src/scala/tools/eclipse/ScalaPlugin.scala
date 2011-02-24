@@ -235,6 +235,16 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
         None
     }
 
+  final def checkOrElse[T](f : => T, msgIfError: String): Option[T] = {
+    try {
+      Some(f)
+    } catch {
+      case e : Throwable =>
+        logError(msgIfError, e)
+        None
+    }     
+  }
+  
   def isBuildable(file : IFile) = (file.getName.endsWith(scalaFileExtn) || file.getName.endsWith(javaFileExtn))
 }
 

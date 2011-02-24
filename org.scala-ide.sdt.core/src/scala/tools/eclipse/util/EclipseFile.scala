@@ -197,6 +197,13 @@ class EclipseFile(override val underlying : IFile) extends EclipseResource[IFile
     other.isInstanceOf[EclipseFile] && super.equals(other)
 }
 
+object EclipseFile {
+  def unapply(file : AbstractFile) : Option[IFile] = file match {
+    case ef : EclipseFile => Some(ef.underlying)
+    case _ => None
+  }
+}
+
 class EclipseContainer(override val underlying : IContainer) extends EclipseResource[IContainer] {
   if (underlying == null)
     throw new NullPointerException("underlying == null");

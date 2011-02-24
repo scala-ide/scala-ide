@@ -61,8 +61,8 @@ class ShowReferencesAction extends RefactoringAction {
               println("skipped indexing "+ f.getFullPath.toString)
               None
             }
-          })
-        } flatten
+          } ())
+        } flatten 
         
         val index = refactoring.GlobalIndex(compilationUnitIndices)
         
@@ -75,6 +75,6 @@ class ShowReferencesAction extends RefactoringAction {
 
         None
       }
-    }
+    } ()
   }
 }

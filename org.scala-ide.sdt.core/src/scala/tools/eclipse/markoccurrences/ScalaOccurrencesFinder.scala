@@ -17,26 +17,27 @@ class ScalaOccurrencesFinder(file: ScalaSourceFile, offset: Int, length: Int) {
     val (from, to) = (offset, offset + length)
     file.withSourceFile { (sourceFile, compiler) =>
       compiler.ask { () =>
-        Defensive.tryOrLog[Option[Occurrences]](None){
-          val mo = new MarkOccurrences with GlobalIndexes {
-            val global = compiler
-            lazy val index = GlobalIndex(global.body(sourceFile))
-          }
-  
-          if (!compiler.unitOfFile.contains(sourceFile.file)) None else {
-            val (selectedTree, os) = mo.occurrencesOf(sourceFile.file, from, to)
-            
-            val symbol = selectedTree.symbol
-            if (symbol == null || symbol.name.isOperatorName) None else {
-            	val symbolName = selectedTree.symbol.nameString
-            	val positions = os map (p => (p.start, p.end - p.start))
-            	val locations = positions collect { case (offset, length) if length == symbolName.length => new Region(offset, length) }
-            	Some(Occurrences(symbolName, locations.toList))
-            }
+        val mo = new MarkOccurrences with GlobalIndexes {
+          val global = compiler
+          lazy val index = GlobalIndex(global.body(sourceFile))
+        }
+
+        if (!compiler.unitOfFile.contains(sourceFile.file)) 
+          None 
+        else {
+          val (selectedTree, os) = mo.occurrencesOf(sourceFile.file, from, to)          
+          val symbol = selectedTree.symbol
+          if (symbol == null || symbol.name.isOperatorName) 
+            None 
+          else {
+          	val symbolName = selectedTree.symbol.nameString
+          	val positions = os map (p => (p.start, p.end - p.start))
+          	val locations = positions collect { case (offset, length) if length == symbolName.length => new Region(offset, length) }
+          	Some(Occurrences(symbolName, locations.toList))
           }
         }
       }
-    }
+    } (None)
   }
 }
 

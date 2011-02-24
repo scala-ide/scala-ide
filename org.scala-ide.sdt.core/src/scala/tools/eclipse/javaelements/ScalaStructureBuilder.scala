@@ -90,8 +90,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
       def addChild(child : JavaElement) =
         elementInfo match {
           case scalaMember : ScalaMemberElementInfo => scalaMember.addChild0(child)
-          case openable : OpenableElementInfo => OpenableElementInfoUtils.addChild(openable, child)
-          case _ =>
+          case openable : OpenableElementInfo => openable.addChild(child)
         }
       
       def modules : Map[Symbol, ScalaElementInfo] = Map.empty 
@@ -157,7 +156,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
           }
           
           val paramTypes = Array(fps.map(v => Signature.createTypeSignature(mapType(paramType(v)), false)) : _*)
-          val paramNames = Array(fps.map(n => nme.getterName(n.name).toString.toArray) : _*)
+          val paramNames = Array(fps.map(n => nme.getterName(n.name).toChars) : _*)
           
           val defElem = 
             if(d.hasFlag(Flags.ACCESSOR))
@@ -170,7 +169,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
           val defElemInfo = new ScalaSourceMethodInfo
           
           defElemInfo.setArgumentNames(paramNames)
-          defElemInfo.setExceptionTypeNames(new Array[Array[Char]](0))
+          defElemInfo.setExceptionTypeNames(Array.empty)
           val tn = mapType(d.tpe.finalResultType.typeSymbol).toArray
           defElemInfo.asInstanceOf[FnInfo].setReturnType(tn)
   
@@ -315,9 +314,8 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         //println("Class defn: "+c.name+" ["+this+"]")
         //println("Parents: "+c.impl.parents)
         
-        val name0 = c.name.toString
-        val isAnon = name0 == "$anon"
-        val name = if (isAnon) "" else name0
+        val name = c.name.toString
+        val isAnon = name == "$anon"
         
         val parentTree = c.impl.parents.head
         val superclassType = parentTree.tpe
@@ -515,7 +513,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         //println("Type defn: >"+t.name.toString+"< ["+this+"]")
         
         val sym = t.symbol
-    	val name = t.name.toString
+        val name = t.name.toString
 
         val typeElem = new ScalaTypeElement(element, name, name)
         resolveDuplicates(typeElem)
@@ -555,7 +553,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
       override def addDef(d : DefDef) : Owner = {
         //println("Def defn: "+d.name+" ["+this+"]")
         val sym = d.symbol
-    	val isCtor0 = sym.isConstructor
+        val isCtor0 = sym.isConstructor
         val nameString =
           if(isCtor0)
             sym.owner.simpleName + (if (sym.owner.isModuleClass) "$" else "")
@@ -576,7 +574,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         }
         
         val paramTypes = Array(fps.map(v => Signature.createTypeSignature(mapType(paramType(v)), false)) : _*)
-        val paramNames = Array(fps.map(n => nme.getterName(n.name).toString.toArray) : _*)
+        val paramNames = Array(fps.map(n => nme.getterName(n.name).toChars) : _*)
         
         val sw = new StringWriter
         val tp = newTreePrinter(new PrintWriter(sw))
@@ -607,7 +605,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
             new ScalaSourceMethodInfo
         
         defElemInfo.setArgumentNames(paramNames)
-        defElemInfo.setExceptionTypeNames(new Array[Array[Char]](0))
+        defElemInfo.setExceptionTypeNames(Array.empty)
         val tn = mapType(d.tpt).toArray
         defElemInfo.asInstanceOf[FnInfo].setReturnType(tn)
 

@@ -116,7 +116,7 @@ class SemanticHighlightingPresenter(editor : FileEditorInput, sourceViewer: ISou
     //val scu = cu.asInstanceOf[ScalaCompilationUnit]
     //FIXME : avoid having several SemanticHighlighter notified on single file update (=> move listeners at document level, or move SemanticHighliter at plugin level ?)
     if (scu.getResource.getLocation == editor.getPath.makeAbsolute) {
-      scu.withSourceFile { (sourceFile, compiler) =>
+      scu.doWithSourceFile { (sourceFile, compiler) =>
         val toAdds = new java.util.HashMap[Annotation, org.eclipse.jface.text.Position]
 
         if (pluginStore.getBoolean(P_ACTIVE)) {
