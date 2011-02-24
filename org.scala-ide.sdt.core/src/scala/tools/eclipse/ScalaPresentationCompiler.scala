@@ -50,8 +50,11 @@ class ScalaPresentationCompiler(settings : Settings)
   private def problemsOf(file : AbstractFile) : List[IProblem] = {
     unitOfFile get file match {
       case Some(unit) => 
+        val response = new Response[Tree]
+        askLoadedTyped(unit.source, response)
+        response.get
         val result = unit.problems.toList flatMap presentationReporter.eclipseProblem
-        unit.problems.clear()
+        //unit.problems.clear()
         result
       case None => 
         Nil

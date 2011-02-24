@@ -59,8 +59,9 @@ class ScalaHyperlinkDetector extends AbstractHyperlinkDetector {
               
               import compiler.{log =>_, _}
               typed.left.toOption map ( _ match {
-                case st : SymTree => st.symbol 
+            	case Import(expr, sels) => sels find (_.namePos >= pos.start) map (sel => expr.tpe.member(sel.name)) getOrElse NoSymbol
                 case Annotated(atp, _) => atp.symbol
+                case st : SymTree => st.symbol 
                 case t => Tracer.println("unhandled tree " + t); NoSymbol
               }) flatMap { sym => 
                 if (sym.isPackage || sym == NoSymbol || sym.isJavaDefined) 

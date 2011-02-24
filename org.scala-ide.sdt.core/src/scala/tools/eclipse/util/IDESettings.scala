@@ -86,6 +86,6 @@ object IDESettings {
 
 object ScalaPluginSettings extends SettingsAddOn {
   val YPlugininfo = BooleanSetting("-plugininfo", "Enable logging of the Scala Plugin info")
-  val buildManager = ChoiceSetting("-buildmanager", "which Build manager to use", List("refined", "sbt0.9"), "refined")
+  val buildManager = ChoiceSetting("-buildmanager", "which Build manager to use", List("refined"), "refined")
 }
 

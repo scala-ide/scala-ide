@@ -159,10 +159,10 @@ class ScalaCompletionProposalComputer extends IJavaCompletionProposalComputer {
        if (sym.owner == compiler.definitions.AnyClass
            || sym.owner == compiler.definitions.AnyRefClass
            || sym.owner == compiler.definitions.ObjectClass) { 
-         println("decreased relevance for Any/AnyRef owner:" + sym )
+//         println("decreased relevance for Any/AnyRef owner:" + sym )
          relevance -= 40
        }
-       println("\t" + relevance)
+//       println("\t" + relevance)
        
        val contextString = sym.paramss.map(_.map(p => "%s: %s".format(p.decodedName, p.tpe)).mkString("(", ", ", ")")).mkString("")
        buff += new ScalaCompletionProposal(start, name, signature, contextString, container, relevance, image, context.getViewer.getSelectionProvider)
