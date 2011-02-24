@@ -60,16 +60,17 @@ object EclipseResource {
 abstract class EclipseResource[R <: IResource] extends AbstractFile {
   val underlying: R
   
-  if (underlying == null)
+  if (underlying eq null)
     throw new NullPointerException("underlying == null")
   
   def name: String = underlying.getName
 
   def path: String = {
-    if (underlying.getLocation == null)
+    var loc = underlying.getLocation
+	if (loc eq null)
       throw new NullPointerException("underlying.getLocation == null for: "+underlying)
       
-    underlying.getLocation.toOSString
+    loc.toOSString
   }
   
   def workspacePath: String = underlying.getFullPath.toString
