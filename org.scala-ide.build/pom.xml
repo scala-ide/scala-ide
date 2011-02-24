@@ -94,17 +94,17 @@
   </build>
   <repositories>
     <repository>
-      <id>Helios</id>
-      <name>Eclipse Helios p2 repository</name>
+      <id>galileo</id>
+      <name>Eclipse Galileo p2 repository</name>
       <layout>p2</layout>
-      <url>http://download.eclipse.org/releases/helios/</url>
+      <url>http://download.eclipse.org/releases/galileo/</url>
       <snapshots><enabled>false</enabled></snapshots>
     </repository>
     <repository>
-      <id>ajdt-helios</id>
-      <name>AJDT for Eclipse Helios p2 repository</name>
+      <id>ajdt-galileo</id>
+      <name>AJDT for Eclipse Galileo p2 repository</name>
       <layout>p2</layout>
-      <url>http://download.eclipse.org/tools/ajdt/36/dev/update</url>
+      <url>http://download.eclipse.org/tools/ajdt/35/update</url>
       <snapshots><enabled>false</enabled></snapshots>
     </repository>
     <repository>
@@ -381,3 +381,4 @@
     </profile>
   </profiles>
 </project>
+
