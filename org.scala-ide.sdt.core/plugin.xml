@@ -553,7 +553,7 @@
          </visibility>
       </objectContribution>
 
-      <objectContribution
+<!---      <objectContribution
         id="org.scala-ide.sdt.ui.diagnostics"
         objectClass="org.eclipse.jdt.core.IJavaElement">
         <action
@@ -576,7 +576,7 @@
             </or>
           </and>
         </visibility>
-  	</objectContribution>
+  	</objectContribution> -->
   </extension>
     
 
