@@ -1,15 +1,15 @@
 /**
- * 
+ *
  */
 package scala.tools.eclipse
 package ui.semantic.highlighting
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.jdt.core.WorkingCopyOwner
 import org.eclipse.jdt.internal.ui.JavaPlugin
-import org.eclipse.jface.preference.{PreferenceConverter, IPreferenceStore}
+import org.eclipse.jface.preference.{ PreferenceConverter, IPreferenceStore }
 import org.eclipse.jface.text.IPainter
-import org.eclipse.jface.text.source.{IAnnotationAccess, AnnotationPainter, IAnnotationModelExtension, Annotation, ISourceViewer}
-import org.eclipse.jface.util.{PropertyChangeEvent, IPropertyChangeListener}
+import org.eclipse.jface.text.source.{ IAnnotationAccess, AnnotationPainter, IAnnotationModelExtension, Annotation, ISourceViewer }
+import org.eclipse.jface.util.{ PropertyChangeEvent, IPropertyChangeListener }
 import org.eclipse.swt.SWT
 import org.eclipse.ui.PlatformUI
 import org.eclipse.ui.part.FileEditorInput
@@ -17,14 +17,14 @@ import scala.collection._
 import scala.tools.eclipse.util.Tracer
 import scala.tools.eclipse.javaelements.ScalaCompilationUnit
 import scala.tools.eclipse.ui.preferences.PropertyChangeListenerProxy
-import scala.tools.eclipse.util.{ColorManager, Annotations, AnnotationsTypes}
+import scala.tools.eclipse.util.{ ColorManager, Annotations, AnnotationsTypes }
 
 /**
  * @author Jin Mingjian
- * @author David Bernard 
+ * @author David Bernard
  *
  */
-class SemanticHighlightingPresenter(editor : FileEditorInput, sourceViewer: ISourceViewer) {
+class SemanticHighlightingPresenter(editor: FileEditorInput, sourceViewer: ISourceViewer) {
   import scala.tools.eclipse.ui.preferences.ImplicitsPreferencePage._
 
   val annotationAccess = new IAnnotationAccess() {
@@ -33,8 +33,7 @@ class SemanticHighlightingPresenter(editor : FileEditorInput, sourceViewer: ISou
     def isTemporary(annotation: Annotation) = true
   }
 
-  
-  private def fFontStyle_BLOD = pluginStore.getBoolean(P_BLOD) match {
+  private def fFontStyle_BOLD = pluginStore.getBoolean(P_BOLD) match {
     case true => SWT.BOLD
     case _ => SWT.NORMAL
   }
@@ -49,10 +48,10 @@ class SemanticHighlightingPresenter(editor : FileEditorInput, sourceViewer: ISou
     val pref = lookup.getAnnotationPreference(AnnotationsTypes.Implicits)
     pref.getColorPreferenceKey()
   }
-  
+
   def fColorValue = ColorManager.getDefault.getColor(PreferenceConverter.getColor(editorsStore, P_COLOR))
 
-  val impTextStyleStrategy = new ImplicitConversionsOrArgsTextStyleStrategy(fFontStyle_BLOD | fFontStyle_ITALIC)
+  val impTextStyleStrategy = new ImplicitConversionsOrArgsTextStyleStrategy(fFontStyle_BOLD | fFontStyle_ITALIC)
 
   val painter: AnnotationPainter = {
     val b = new AnnotationPainter(sourceViewer, annotationAccess)
@@ -68,7 +67,7 @@ class SemanticHighlightingPresenter(editor : FileEditorInput, sourceViewer: ISou
   private val _listener = new IPropertyChangeListener {
     def propertyChange(event: PropertyChangeEvent) {
       val changed = event.getProperty() match {
-        case P_BLOD => true
+        case P_BOLD => true
         case P_ITALIC => true
         case P_COLOR => true
         case P_ACTIVE => {
@@ -78,34 +77,30 @@ class SemanticHighlightingPresenter(editor : FileEditorInput, sourceViewer: ISou
         case _ => false
       }
       if (changed) {
-        impTextStyleStrategy.fFontStyle = fFontStyle_BLOD | fFontStyle_ITALIC
+        impTextStyleStrategy.fFontStyle = fFontStyle_BOLD | fFontStyle_ITALIC
         painter.setAnnotationTypeColor(AnnotationsTypes.Implicits, fColorValue)
         painter.paint(IPainter.CONFIGURATION)
       }
     }
   }
-  
+
   private def refresh() {
-    import org.eclipse.ui.IFileEditorInput
-    import org.eclipse.core.resources.IResource
-    
     val wb = PlatformUI.getWorkbench()
     for (
       win <- wb.getWorkbenchWindows;
-      page <- win.getPages ;
-      editorRef <- page.getEditorReferences ;
+      page <- win.getPages;
+      editorRef <- page.getEditorReferences;
       editorIn <- Option(editorRef.getEditorInput)
     ) {
-     JavaPlugin.getDefault().getWorkingCopyManager().getWorkingCopy(editorIn) match {
-       case scu : ScalaCompilationUnit => update(scu, null, null)
-       case _ => //ignore
+      JavaPlugin.getDefault().getWorkingCopyManager().getWorkingCopy(editorIn) match {
+        case scu: ScalaCompilationUnit => update(scu, null, null)
+        case _ => //ignore
       }
     }
   }
 
-  
-  protected def pluginStore : IPreferenceStore = ScalaPlugin.plugin.getPreferenceStore
-  protected def editorsStore :IPreferenceStore = org.eclipse.ui.editors.text.EditorsUI.getPreferenceStore
+  protected def pluginStore: IPreferenceStore = ScalaPlugin.plugin.getPreferenceStore
+  protected def editorsStore: IPreferenceStore = org.eclipse.ui.editors.text.EditorsUI.getPreferenceStore
 
   new PropertyChangeListenerProxy(_listener, pluginStore, editorsStore).autoRegister()
 
@@ -149,5 +144,5 @@ class SemanticHighlightingPresenter(editor : FileEditorInput, sourceViewer: ISou
       }
     }
   }
-  
+
 }
