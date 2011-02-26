@@ -21,7 +21,7 @@ class ScalaFormatterCleanUpProvider extends IFormatterCleanUpProvider {
     for (TextEdit(start, length, replacement) <- edits)
       resultEdit.addChild(new ReplaceEdit(start, length, replacement))
     val change = new CompilationUnitChange("", cu)
-    change.setEdit(resultEdit);
+    change.setEdit(resultEdit)
     new CodeFormatFix(change)
   }
 
