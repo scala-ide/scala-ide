@@ -16,7 +16,7 @@ import org.eclipse.swt.SWT
 import org.eclipse.swt.events.{ ModifyEvent, ModifyListener, SelectionAdapter, SelectionEvent, SelectionListener }
 import org.eclipse.swt.layout.{ GridData, GridLayout, RowLayout }
 import org.eclipse.swt.widgets.{ Button, Combo, Composite, Group, Label, Control, TabFolder, TabItem}
-import scala.tools.nsc.Settings
+import scala.tools.nsc.interactive.compat.Settings
 
 import scala.tools.eclipse.{ ScalaPlugin, SettingConverterUtil }
 import scala.tools.eclipse.util.IDESettings
@@ -96,7 +96,7 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
 
   import EclipseSetting.toEclipseBox
   /** The settings we can change */
-  lazy val userBoxes    = IDESettings.shownSettings(new Settings) ++ IDESettings.buildManagerSettings
+  lazy val userBoxes    = IDESettings.compilerSettings ++ IDESettings.buildManagerSettings
   lazy val eclipseBoxes =	userBoxes.map { s => toEclipseBox(s, preferenceStore0) }
 
   /** Pulls the preference store associated with this plugin */

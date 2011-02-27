@@ -2,7 +2,6 @@ package scala.tools.nsc
 package interactive
 
 //BACK-2.8.0 use absolute import to avoid wrong search with relative
-import _root_.scala.concurrent.SyncVar
 import _root_.scala.tools.nsc.util._
 import _root_.scala.tools.nsc.symtab._
 import _root_.scala.tools.nsc.ast._
@@ -27,14 +26,14 @@ object REPL {
   }
 
   def process(args: Array[String]) {
-    val settings = new Settings(replError)
+    val settings = new compat.Settings(replError)
     reporter = new ConsoleReporter(settings)
     val command = new CompilerCommand(args.toList, settings)
     if (command.settings.version.value)
       reporter.info(null, versionMsg, true)
     else {
       try {
-        object compiler extends Global(command.settings, reporter) {
+        object compiler extends Global(command.settings.asInstanceOf[compat.Settings], reporter) {
 //          printTypings = true
         } 
         if (reporter.hasErrors) {

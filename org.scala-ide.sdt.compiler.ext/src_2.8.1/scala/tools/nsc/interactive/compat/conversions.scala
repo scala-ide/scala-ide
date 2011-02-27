@@ -1,12 +1,11 @@
-package scala.tools.eclipse
-package scalac_28
+package scala.tools.nsc
+package interactive.compat
 
-import scala.tools.nsc.util.Position
-import scala.tools.nsc.symtab.{Symbols, Flags}
-import scala.tools.nsc.util.{SourceFile, BatchSourceFile}
-import scala.tools.nsc.util.RangePosition
-import scala.tools.nsc.util.Chars
-
+import _root_.scala.tools.nsc.util.Position
+import _root_.scala.tools.nsc.symtab.{Symbols, Flags}
+import _root_.scala.tools.nsc.util.{SourceFile, BatchSourceFile}
+import _root_.scala.tools.nsc.util.RangePosition
+import _root_.scala.tools.nsc.util.Chars
 
 object conversions {
   implicit def toSingleLine(v : Position) = new Object(){
@@ -49,6 +48,5 @@ object conversions {
       case _ => None
     }
   }
-  
 
 }

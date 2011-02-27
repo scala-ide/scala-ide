@@ -49,6 +49,7 @@ Import-Package:
  scala.tools.nsc.backend.jvm;apply-aspects:=false,
  scala.tools.nsc.dependencies;apply-aspects:=false,
  scala.tools.nsc.interactive;apply-aspects:=false,
+ scala.tools.nsc.interactive.compat;apply-aspects:=false,
  scala.tools.nsc.io;apply-aspects:=false,
  scala.tools.nsc.reporters;apply-aspects:=false,
  scala.tools.nsc.settings;apply-aspects:=false,

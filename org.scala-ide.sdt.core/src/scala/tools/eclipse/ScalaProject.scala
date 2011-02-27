@@ -17,7 +17,8 @@ import org.eclipse.jdt.internal.core.JavaProject
 import org.eclipse.jdt.internal.core.builder.{ ClasspathDirectory, ClasspathLocation, NameEnvironment }
 import org.eclipse.jdt.internal.core.util.Util
 import org.eclipse.swt.widgets.{ Display, Shell }
-import scala.tools.nsc.{ Settings, MissingRequirementError }
+import scala.tools.nsc.{ MissingRequirementError }
+import scala.tools.nsc.interactive.compat.Settings
 import scala.tools.nsc.util.SourceFile
 import scala.tools.eclipse.javaelements.ScalaCompilationUnit
 import scala.tools.eclipse.properties.PropertyStore
@@ -37,7 +38,7 @@ class ScalaProject(val underlying: IProject) {
     override def create() = {
       try {
         Tracer.println("create a new ScalaPresentationCompiler for " + underlying.getName )
-        val settings = new Settings
+        val settings = new Settings({x => ScalaPlugin.plugin.logWarning(x, None)})
         settings.printtypes.tryToSet(Nil)
         settings.verbose.tryToSetFromPropertyValue("true")
         settings.XlogImplicits.tryToSetFromPropertyValue("true")
@@ -280,7 +281,7 @@ class ScalaProject(val underlying: IProject) {
   
     val store = storage
     for (
-      box <- IDESettings.shownSettings(settings);
+      box <- IDESettings.compilerSettings;
       setting <- box.userSettings;
       if filter(setting)
     ) {
@@ -361,7 +362,7 @@ class ScalaProject(val underlying: IProject) {
 
   def buildManager = {
     if (buildManager0 == null) {
-      val settings = new Settings
+      val settings = new Settings({x => ScalaPlugin.plugin.logWarning(x, None)})
       initialize(settings, _ => true)
       // source path should be emtpy. The build manager decides what files get recompiled when.
       // if scalac finds a source file newer than its corresponding classfile, it will 'compileLate'

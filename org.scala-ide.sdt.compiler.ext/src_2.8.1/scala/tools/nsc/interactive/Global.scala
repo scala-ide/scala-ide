@@ -8,7 +8,6 @@ import _root_.scala.collection.mutable.{ArrayBuffer, ListBuffer, SynchronizedBuf
 //BACK-2.8.0 use absolute import to avoid wrong search with relative
 import _root_.scala.collection.mutable
 import mutable.{LinkedHashMap, SynchronizedMap,LinkedHashSet, SynchronizedSet}
-import _root_.scala.concurrent.SyncVar
 import _root_.scala.util.control.ControlThrowable
 import _root_.scala.tools.nsc.io.AbstractFile
 import _root_.scala.tools.nsc.util.{SourceFile, BatchSourceFile, Position, RangePosition, NoPosition}
@@ -20,7 +19,7 @@ import scala.tools.nsc.interactive.util.{MultiHashMap }
 
 /** The main class of the presentation compiler in an interactive environment such as an IDE
  */
-class Global(settings: Settings, reporter: Reporter) 
+class Global(settings: compat.Settings, reporter: Reporter) 
   extends _root_.scala.tools.nsc.Global(settings, reporter) 
      with CompilerControl 
      with RangePositions
@@ -35,9 +34,9 @@ self =>
   //BACK-2.8 verboseIDE
   var verboseIDE = true
 
-  private def replayName = "" //BACK-2.8 settings.YpresentationReplay.value
-  private def logName = "" //BACK-2.8 settings.YpresentationLog.value
-  private def afterTypeDelay = 300 //BACK-2.8 settings.YpresentationDelay.value
+  private def replayName = settings.YpresentationReplay.value
+  private def logName = settings.YpresentationLog.value
+  private def afterTypeDelay = settings.YpresentationDelay.value
   private final val SleepTime = 10
 
   val log =

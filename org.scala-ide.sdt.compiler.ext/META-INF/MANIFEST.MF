@@ -6,7 +6,8 @@ Bundle-Version: 1.0.0.qualifier
 Bundle-Vendor: scala-ide.org
 Bundle-RequiredExecutionEnvironment: J2SE-1.5
 Require-Bundle: org.scala-ide.scala.library
-Export-Package: scala.tools.nsc.interactive
+Export-Package: scala.tools.nsc.interactive,
+ scala.tools.nsc.interactive.compat
 Import-Package: scala.tools.nsc,
  scala.tools.nsc.ast,
  scala.tools.nsc.dependencies,

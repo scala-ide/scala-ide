@@ -11,7 +11,6 @@ import scala.collection.mutable.{ ArrayBuffer, SynchronizedMap }
 
 import org.eclipse.jdt.core.compiler.IProblem
 import org.eclipse.jdt.internal.compiler.problem.{ DefaultProblem, ProblemSeverities }
-import scala.tools.nsc.Settings
 import scala.tools.nsc.interactive.{Global, InteractiveReporter, Problem}
 import scala.tools.nsc.io.AbstractFile
 import scala.tools.nsc.reporters.Reporter
@@ -21,7 +20,8 @@ import scala.tools.eclipse.javaelements.{
   ScalaCompilationUnit, ScalaIndexBuilder, ScalaJavaMapper, ScalaMatchLocator, ScalaStructureBuilder,
   ScalaOverrideIndicatorBuilder }
 import scala.tools.eclipse.util.{ Cached, EclipseFile, EclipseResource, IDESettings }
-import scala.tools.eclipse.scalac_28.conversions._
+import scala.tools.nsc.interactive.compat.Settings
+import scala.tools.nsc.interactive.compat.conversions._
 
 class ScalaPresentationCompiler(settings : Settings)
   extends Global(settings, new ScalaPresentationCompiler.PresentationReporter)

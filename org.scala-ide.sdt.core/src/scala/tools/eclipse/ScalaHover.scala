@@ -10,7 +10,7 @@ import org.eclipse.jface.text.{ ITextViewer, IRegion, ITextHover }
 
 import scala.tools.eclipse.javaelements.ScalaCompilationUnit
 import scala.tools.nsc.symtab.Flags
-import scala.tools.eclipse.scalac_28.conversions._
+import scala.tools.nsc.interactive.compat.conversions._
 
 class ScalaHover(codeAssist : Option[ICodeAssist]) extends ITextHover {
   

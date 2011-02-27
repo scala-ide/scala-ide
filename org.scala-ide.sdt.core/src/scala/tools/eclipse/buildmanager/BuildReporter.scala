@@ -6,7 +6,7 @@ import scala.tools.nsc.Settings
 import scala.tools.nsc.reporters.Reporter
 import scala.tools.nsc.util.Position
 import scala.tools.eclipse.util.{ EclipseResource, FileUtils }
-import scala.tools.eclipse.scalac_28.conversions._
+import scala.tools.nsc.interactive.compat.conversions._
 
 import org.eclipse.core.resources.{ IFile, IMarker }
 import org.eclipse.core.runtime.IProgressMonitor
