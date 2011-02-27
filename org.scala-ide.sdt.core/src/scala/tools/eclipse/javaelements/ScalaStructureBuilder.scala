@@ -344,7 +344,8 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
             val tpElementInfo = new TypeParameterElementInfo
             val parents = /*if (tp.info.parents.isEmpty) List(typeRef(NoType, definitions.ObjectClass, Nil)) else */tp.info.parents
             if (!parents.isEmpty) {
-              tpElementInfo.boundsSignatures = parents.map(_.typeSymbol.fullName.toCharArray).toArray 
+              //BACK-Galileo : value boundsSignatures is not a member of org.eclipse.jdt.internal.core.TypeParameterElementInfo
+              // tpElementInfo.boundsSignatures = parents.map(_.typeSymbol.fullName.toCharArray).toArray 
               tpElementInfo.bounds = parents.map(_.typeSymbol.name.toChars).toArray
             }
             newElements0.put(typeParameter, tpElementInfo)

@@ -243,10 +243,21 @@ class DiagnosticDialog(shell: Shell) extends Dialog(shell) {
     // IMPORTANT: add the listeners AFTER updating the widgets. Otherwise, the listeners will be triggered when setting the 
     // widget's initial values
     val selectionListener = new SelectionAdapter {
-      override def widgetSelected(e: SelectionEvent) { 
-        e.getSource.asInstanceOf[Control].getData.asInstanceOf[WidgetData].updateValue
-        refreshRadioButtons()
-        doEnableDisable() 
+      override def widgetSelected(e: SelectionEvent) {
+        //BACK-Galileo
+        // ambiguous reference to overloaded definition, both method getData in class Control of type (x$1: java.lang.String)java.lang.Object and  method getData in class Widget of type ()java.lang.Object match expected type ?
+        // may be because Galileo doesn't have getData with no parameter on Control => use explicit () when call getData()
+        e.getSource match {
+          case c : Control => {
+            c.getData() match {
+              case wd : WidgetData => {
+                wd.updateValue
+                refreshRadioButtons()
+                doEnableDisable() 
+              }
+            }
+          }
+        }
       }    
     }
     
@@ -289,7 +300,7 @@ class DiagnosticDialog(shell: Shell) extends Dialog(shell) {
   
   def doEnableDisable() {
     val selected = autoActivationButton.getSelection        
-    if (!selected && errorMessageField.getData.asInstanceOf[Boolean]) {
+    if (!selected && errorMessageField.getData().asInstanceOf[Boolean]) {
       delayText.setText("")
       setErrorMessage(None) // clear the error if there was one
     } else if (selected) { 
