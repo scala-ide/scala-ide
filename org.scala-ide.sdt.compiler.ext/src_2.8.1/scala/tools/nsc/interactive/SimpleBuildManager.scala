@@ -5,9 +5,7 @@ package interactive
 import _root_.scala.collection._
 
 import _root_.scala.tools.nsc.reporters.{Reporter, ConsoleReporter}
-import dependencies._
 
-import _root_.scala.tools.nsc.util.FakePos
 import _root_.scala.tools.nsc.io.AbstractFile
 
 /** A simple build manager, using the default scalac dependency tracker.
