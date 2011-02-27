@@ -18,8 +18,16 @@ import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.jface.util.PropertyChangeEvent
 import org.eclipse.jface.text.rules.{ ICharacterScanner, IRule, IToken, IWhitespaceDetector, IWordDetector, SingleLineRule, Token, WhitespaceRule }
 
-object ScalaCodeScanner {
+import scala.collection.immutable
 
+object ScalaCodeScanner {
+  // Only ASCII characters are allowed in the set.
+  object Chars {
+    def apply(cs: Int*): immutable.Set[Int] = {
+      immutable.BitSet(cs: _*)
+    }
+  }
+	
   /**
    * Rule to detect Scala operators.
    *
@@ -28,7 +36,7 @@ object ScalaCodeScanner {
   class OperatorRule(fToken : IToken) extends IRule {
 
     /** Scala operators */
-    val OPERATORS = Set(';', '.', '=', '/', '\\', '+', '-', '*', '<', '>', ':', '?', '!', ',', '|', '&', '^', '%', '~')
+    final val OPERATORS = Chars(';', '.', '=', '/', '\\', '+', '-', '*', '<', '>', ':', '?', '!', ',', '|', '&', '^', '%', '~')
 
     /**
      * Is this character an operator character?
@@ -36,7 +44,7 @@ object ScalaCodeScanner {
      * @param character Character to determine whether it is an operator character
      * @return <code>true</code> iff the character is an operator, <code>false</code> otherwise.
      */
-    def isOperator(character : Char) = OPERATORS.contains(character)
+    @inline final def isOperator(character : Char) = OPERATORS.contains(character)
 
     /*
      * @see org.eclipse.jface.text.rules.IRule#evaluate(org.eclipse.jface.text.rules.ICharacterScanner)
@@ -64,7 +72,7 @@ object ScalaCodeScanner {
    */
   class BracketRule(fToken : IToken) extends IRule {
 
-    val BRACKETS = Set('(', ')', '{', '}', '[', ']')
+    val BRACKETS = Chars('(', ')', '{', '}', '[', ']')
 
     /**
      * Is this character a bracket character?
@@ -312,17 +320,17 @@ class ScalaCodeScanner(manager : IColorManager, store : IPreferenceStore) extend
 
     var token = getToken(IJavaColorConstants.JAVA_STRING)
     rules.add(new SymbolRule(token))
-    
-    // Add JLS3 rule for /@\s*interface/ and /@\s*\w+/
-    token = getToken(ANNOTATION_COLOR_KEY)
-    val atInterfaceRule = new AnnotationRule(getToken(IJavaColorConstants.JAVA_KEYWORD), token, JavaCore.VERSION_1_5, version)
-    rules.add(atInterfaceRule)
-    fVersionDependentRules.add(atInterfaceRule)
 
     // Add word rule for new keywords, 4077
     val wordDetector = new JavaWordDetector
     token = getToken(IJavaColorConstants.JAVA_DEFAULT)
     val combinedWordRule = new CombinedWordRule(wordDetector, token)
+
+    // Add JLS3 rule for /@\s*interface/ and /@\s*\w+/
+    token = getToken(ANNOTATION_COLOR_KEY)
+    val atInterfaceRule = new AnnotationRule(getToken(IJavaColorConstants.JAVA_KEYWORD), token, JavaCore.VERSION_1_5, version)
+    rules.add(atInterfaceRule)
+    fVersionDependentRules.add(atInterfaceRule)
 
     // Add rule for operators
     token = getToken(IJavaColorConstants.JAVA_OPERATOR)

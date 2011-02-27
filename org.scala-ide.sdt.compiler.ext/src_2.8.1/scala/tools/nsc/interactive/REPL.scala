@@ -86,6 +86,7 @@ object REPL {
     val typeatResult = new Response[comp.Tree]
     val completeResult = new Response[List[comp.Member]]
     val typedResult = new Response[comp.Tree]
+    val structureResult = new Response[comp.Tree]
     def makePos(file: String, off1: String, off2: String) = {
       val source = toSourceFile(file)
       comp.rangePos(source, off1.toInt, off1.toInt, off2.toInt)
@@ -101,6 +102,10 @@ object REPL {
     def doTypedTree(file: String) {
       comp.askType(toSourceFile(file), true, typedResult)
       show(typedResult)
+    }
+    def doStructure(file: String) {
+      comp.askParsedEntered(toSourceFile(file), false, structureResult)
+      show(structureResult)
     }
     
     loop { line =>
@@ -128,6 +133,8 @@ object REPL {
           comp.askShutdown()
           //BACK-2.8 system => System
           System.exit(1)
+        case List("structure", file) =>
+          doStructure(file)
         case _ =>
           println("unrecongized command")
       }

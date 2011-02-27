@@ -3,7 +3,8 @@
  */
 // $Id$
 
-package scala.tools.eclipse.javaelements
+package scala.tools.eclipse
+package javaelements
 
 import scala.tools.eclipse.util.{Tracer, Defensive}
 import java.util.concurrent.atomic.AtomicBoolean
@@ -23,6 +24,8 @@ import org.eclipse.jdt.internal.core.{
   OpenableElementInfo, SearchableEnvironment }
 import org.eclipse.jdt.internal.core.search.matching.{ MatchLocator, PossibleMatch }
 import org.eclipse.jdt.internal.ui.javaeditor.DocumentAdapter
+import org.eclipse.jface.text.{IRegion, ITextSelection}
+import org.eclipse.ui.texteditor.ITextEditor 
 
 import scala.tools.nsc.io.AbstractFile
 import scala.tools.nsc.util.{ BatchSourceFile, SourceFile }
@@ -36,11 +39,15 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
   val project = ScalaPlugin.plugin.getScalaProject(getJavaProject.getProject)
   
   private var _changed = new AtomicBoolean(true)
+
+  val file : AbstractFile
   
-  def file : AbstractFile
+  def doWithSourceFile(op : (SourceFile, ScalaPresentationCompiler) => Unit) {
+    project.withSourceFile(this)(op)(())
+  }
   
-  def withSourceFile[T](op : (SourceFile, ScalaPresentationCompiler) => T) : T = {
-    project.withSourceFile(this)(op)
+  def withSourceFile[T](op : (SourceFile, ScalaPresentationCompiler) => T)(orElse: => T = project.defaultOrElse) : T = {
+    project.withSourceFile(this)(op)(orElse)
   }
   
   def withSourceFileButNotInMainThread[T](default : => T)(op : (SourceFile, ScalaPresentationCompiler) => T) : T = {
@@ -49,7 +56,7 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
         Tracer.printlnWithStack("cancel/default call to withSourceFile in main Thread")
         default
       }
-      case false => project.withSourceFile(this)(op)
+      case false => project.withSourceFile(this)(op)(default)
     }
   }
 
@@ -82,38 +89,39 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
   override def buildStructure(info : OpenableElementInfo, pm : IProgressMonitor, newElements : JMap[_, _], underlyingResource : IResource) : Boolean = {
     Tracer.println("buildStructure : " + underlyingResource)
     //Can freeze UI if in main Thread
-    withSourceFile { (sourceFile, compiler) =>
+    withSourceFile({ (sourceFile, compiler) =>
       import scala.tools.eclipse.util.IDESettings
       
       val contents = this.getContents
       if (IDESettings.compileOnTyping.value && _changed.getAndSet(false)) {
         compiler.askReload(this, contents)
       }
-      val sourceLength = contents.length // sourceFile.length
-      Defensive.tryOrLog[Boolean](false) {
-	    compiler.ask { () =>
-	      compiler.withUntypedTree(sourceFile) { tree =>
-  	        new compiler.StructureBuilderTraverser(this, info, newElements.asInstanceOf[JMap[AnyRef, AnyRef]], sourceLength).traverse(tree)
-	      }
-	    }
-        info match {
-          case cuei : CompilationUnitElementInfo =>
-            cuei.setSourceLength(sourceLength)
-          case _ =>
-        }
-        
-        info.setIsStructureKnown(true)
-        info.isStructureKnown
-      }
-    }
-  }
 
-  def addToIndexer(indexer : ScalaSourceIndexer) {
-    withSourceFileButNotInMainThread() { (source, compiler) =>
-      compiler.ask { () =>
-        compiler.withUntypedTree(source) { tree =>
-          new compiler.IndexBuilderTraverser(indexer).traverse(tree)
+      val unsafeElements = newElements.asInstanceOf[JMap[AnyRef, AnyRef]]
+      val sourceLength = sourceFile.length
+      //Defensive.tryOrLog[Boolean](false) {
+      compiler.withUntypedTree(sourceFile) { tree =>
+        compiler.ask { () =>
+            new compiler.StructureBuilderTraverser(this, info, unsafeElements, sourceLength).traverse(tree)
         }
+      }
+      info match {
+        case cuei : CompilationUnitElementInfo => 
+          cuei.setSourceLength(sourceLength)
+          unsafeElements.put(this, info)
+        case _ =>
+      }
+  
+      info.setIsStructureKnown(true)
+      info.isStructureKnown
+    }) (false)
+  }
+  override def createElementInfo = new CompilationUnitElementInfo
+  
+  def addToIndexer(indexer : ScalaSourceIndexer) {
+    doWithSourceFile { (source, compiler) =>
+      compiler.withParseTree(source) { tree =>
+        new compiler.IndexBuilderTraverser(indexer).traverse(tree)
       }
     }
   }
@@ -149,38 +157,46 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
      monitor : IProgressMonitor) {
   }
   
-  override def reportMatches(matchLocator : MatchLocator, possibleMatch : PossibleMatch) = Defensive.tryOrLog {
-    withSourceFileButNotInMainThread[Unit]() { (sourceFile, compiler) =>
-      compiler.ask { () =>
-	    compiler.withUntypedTree(sourceFile) { tree =>
-          compiler.MatchLocator(this, matchLocator, possibleMatch).traverse(tree)
-	    }
-	  }
+  override def reportMatches(matchLocator : MatchLocator, possibleMatch : PossibleMatch) {
+    doWithSourceFile { (sourceFile, compiler) =>
+      compiler.withUntypedTree(sourceFile) { tree =>
+        compiler.ask { () =>
+            compiler.MatchLocator(this, matchLocator, possibleMatch).traverse(tree)
+        }
+      }
     }
   }
   
-  override def createOverrideIndicators(annotationMap : JMap[_, _]) = Defensive.askRunOutOfMain("createOverrideIndicators") {
-    withSourceFileButNotInMainThread[Unit]() { (sourceFile, compiler) =>
-      compiler.ask { () =>
-        compiler.withUntypedTree(sourceFile) { tree =>
+  override def createOverrideIndicators(annotationMap : JMap[_, _]) {
+    doWithSourceFile { (sourceFile, compiler) =>
+      compiler.withUntypedTree(sourceFile) { tree =>
+        compiler.ask { () =>
           new compiler.OverrideIndicatorBuilderTraverser(this, annotationMap.asInstanceOf[JMap[AnyRef, AnyRef]]).traverse(tree)
         }
-	    }
-	  }
+      }
+    }
   }
   
   override def getImageDescriptor = {
-    val file = getCorrespondingResource.asInstanceOf[IFile]
-    if(file == null)
-      null
-    else {
+    Option(getCorrespondingResource) map { file =>
       import ScalaImages.{ SCALA_FILE, EXCLUDED_SCALA_FILE }
       val javaProject = JavaCore.create(project.underlying)
-      if(javaProject.isOnClasspath(file)) SCALA_FILE else EXCLUDED_SCALA_FILE
-    }
+      if (javaProject.isOnClasspath(file)) SCALA_FILE else EXCLUDED_SCALA_FILE
+    } orNull
   }
   
   override def getScalaWordFinder() : IScalaWordFinder = ScalaWordFinder
+  
+  def followReference(editor : ITextEditor, selection : ITextSelection) = {
+    val region = new IRegion {
+      def getOffset = selection.getOffset
+      def getLength = selection.getLength
+    }
+    new ScalaHyperlinkDetector().detectHyperlinks(editor, region, false) match {
+      case Array(hyp) => hyp.open
+      case _ =>  
+    }
+  }
 }
 
 object OpenableUtils extends ReflectionUtils {

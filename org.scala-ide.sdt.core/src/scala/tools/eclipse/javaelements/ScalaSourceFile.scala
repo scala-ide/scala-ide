@@ -84,29 +84,19 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
     }
   }
 
-  def getProblems : Array[IProblem] = withSourceFile { (sourceFile, compiler) =>
-    compiler.body(sourceFile)
+  def getProblems : Array[IProblem] = withSourceFile { (src, compiler) =>
+    import compiler._
+    val resp = new Response[Tree]
+    askLoadedTyped(src, resp)
+    resp.get
     val problems = compiler.problemsOf(this)
     if (problems.isEmpty) null else problems.toArray
-  }
+  } (null)
   
-  def getCorrespondingElement(element : IJavaElement) : Option[IJavaElement] = {
-    if (!validateExistence(resource).isOK)
-      None
-    else {
-      val name = element.getElementName
-      val tpe = element.getElementType
-      getChildren.find(e => e.getElementName == name && e.getElementType == tpe)
-    }
-  }
-
-  override def getType(name : String) : IType = {
-    val tpe = super.getType(name)
-    getCorrespondingElement(tpe).getOrElse(tpe).asInstanceOf[IType]
-  }
+  override def getType(name : String) : IType = new LazyToplevelClass(this, name)
   
   // override because super implementation return null if getSourceElementAt(pos) == this.
   // But returning null prevent finding the typename required to set a workable breakpoint
   // TODO check that this override has no bad side-effects (I suppose returning null of parent implementation was done to secure some stuff 
-  override def getElementAt(pos : Int) : IJavaElement = getSourceElementAt(pos)
+  //override def getElementAt(pos : Int) : IJavaElement = getSourceElementAt(pos)
 }

@@ -56,12 +56,12 @@ trait LocateSymbol { self : ScalaPresentationCompiler =>
        }
     } else findClassFile) flatMap { file =>
       (if (sym.pos eq NoPosition) {
-        file.withSourceFile{ (f, _) =>
+        file.withSourceFile { (f, _) =>
           val pos = new Response[Position]
           getLinkPos(sym, f, pos)
           askReload(scu, scu.getContents)
           pos.get.left.toOption
-        }
+        } (None)
       } else Some(sym.pos)) flatMap { p =>
         if (p eq NoPosition) None else Some(file, p.point)
       }

@@ -5,15 +5,17 @@
 
 package scala.tools.eclipse
 
-import scala.tools.eclipse.lexical.ScalaPartitions
-import org.eclipse.jdt.ui.text.IJavaPartitions
-import scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.IScalaEditor
+import org.eclipse.jface.text.rules.FastPartitioner
 import org.eclipse.jface.text.IDocumentPartitioner
-import scala.tools.eclipse.lexical.ScalaDocumentPartitioner
+
+import org.eclipse.jdt.ui.text.IJavaPartitions
+
+import scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.IScalaEditor
+import scala.tools.eclipse.lexical.{ ScalaPartitionScanner, ScalaPartitions }
 
 trait ScalaEditor extends IScalaEditor {
 
-  def createDocumentPartitioner(): IDocumentPartitioner = new ScalaDocumentPartitioner
+  def createDocumentPartitioner(): IDocumentPartitioner = new FastPartitioner(new ScalaPartitionScanner, ScalaEditor.LEGAL_CONTENT_TYPES)
 
 }
 

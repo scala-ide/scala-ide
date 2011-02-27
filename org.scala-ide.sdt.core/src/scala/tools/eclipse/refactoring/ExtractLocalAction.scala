@@ -30,7 +30,7 @@ class ExtractLocalAction extends RefactoringAction {
     
     val refactoring = file.withSourceFile((_, compiler) => new ExtractLocal {
       val global = compiler
-    })
+    })()
     
     lazy val selection = createSelection(file, selectionStart, selectionEnd)
             

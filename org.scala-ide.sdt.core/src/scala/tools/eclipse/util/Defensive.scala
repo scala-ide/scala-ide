@@ -113,5 +113,4 @@ object Defensive {
     job.setPriority(priority)
     job.schedule()
   }
-
 }

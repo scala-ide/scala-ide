@@ -45,7 +45,7 @@ class RegenerateAction extends RefactoringAction {
                   
     val refactoring = file.withSourceFile((_,compiler) => new RegenerateRefactoring {
       val global = compiler
-    })
+    }) ()
             
     lazy val selection = createSelection(file, 0, 0)
     

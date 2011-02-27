@@ -98,10 +98,6 @@ public privileged aspect ClassFileProviderAspect {
     execution(boolean InnerClassFilesFilter.select(Viewer, Object, Object)) &&
     args(viewer, parentElement, element);
   
-  pointcut getChildren(BinaryType bt) :
-    execution(IJavaElement[] BinaryType.getChildren()) &&
-    target(bt);
-  
   pointcut getAST(ITypeRoot element, SharedASTProvider.WAIT_FLAG waitFlag, IProgressMonitor progressMonitor) : 
     execution(CompilationUnit SharedASTProvider.getAST(ITypeRoot, SharedASTProvider.WAIT_FLAG, IProgressMonitor)) &&
     args(element, waitFlag, progressMonitor);
@@ -203,16 +199,6 @@ public privileged aspect ClassFileProviderAspect {
       return dollarIndex == -1 || dollarIndex == name.length()-7; // Trailing '$' implies object rather than inner class 
     }
     return proceed(viewer, parentElement, element);
-  }
-  
-  IJavaElement[] around(BinaryType bt) throws JavaModelException :
-    getChildren(bt) && 
-    target(BinaryType) {
-    ClassFile cf = (ClassFile)bt.parent;
-    if (cf instanceof IScalaClassFile)
-      return cf.getChildren();
-    else
-      return proceed(bt);
   }
   
   CompilationUnit around(ITypeRoot element, SharedASTProvider.WAIT_FLAG waitFlag, IProgressMonitor progressMonitor) :

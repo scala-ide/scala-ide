@@ -24,7 +24,7 @@ class ScalaTypeAutoCompletionProposal(scu: ScalaCompilationUnit, doc: IDocument)
   override def documentAboutToBeChanged(event: DocumentEvent) {
     if (event.getText.equals(":")) {
       offset = event.getOffset
-      scu.withSourceFile { (sourceFile, compiler) =>
+      scu.doWithSourceFile { (sourceFile, compiler) =>
         val pos = compiler.rangePos(sourceFile, offset - 1, offset - 1, offset)
         val typed = new compiler.Response[compiler.Tree]
         compiler.askTypeAt(pos, typed)

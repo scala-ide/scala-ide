@@ -107,7 +107,7 @@ class ScalaBuilder extends IncrementalProjectBuilder {
     (addedOrUpdated.isEmpty && removed.isEmpty) match {
       case true => Tracer.println("no scala/java changes")
       case false => {
-        project.build(addedOrUpdated, removed, monitor)
+        project.build(addedOrUpdated, removed)(monitor)
         callJavaBuilder(newKind, ignored, monitor) // ignore returned value, else next time, this should take care in depends definition 
         JDTUtils.refreshPackageExplorer
       }

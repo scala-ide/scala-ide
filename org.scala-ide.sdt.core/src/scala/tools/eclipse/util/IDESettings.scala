@@ -9,19 +9,18 @@ package util
 import scala.tools.eclipse.properties.SettingsAddOn
 import scala.tools.nsc.Settings
 
-
 object IDESettings {
   import ScalaPluginSettings._
-  
+
   case class Box(name: String, userSettings: List[Settings#Setting])
-  
+
   def shownSettings(s : Settings) : List[Box] = {
     import s._
 
     List(
         Box("Standard",
             List(deprecation, g, optimise, target, unchecked,
-                 pluginOptions, nospecialization)),
+             pluginOptions, nospecialization, verbose)),
         Box("Advanced",
             List(checkInit, Xchecknull, elidebelow,
                  Xexperimental, future, XlogImplicits,
@@ -30,18 +29,22 @@ object IDESettings {
         Box("Private",
             List(Xcloselim, Xdce, inline, Xlinearizer, Ynogenericsig, noimports,
                  selfInAnnots, Yrecursion, refinementMethodDispatch,
-                 YmethodInfer, YdepMethTpes, Ywarndeadcode, Ybuildmanagerdebug))
+                 YmethodInfer, YdepMethTpes,
+                 Ywarndeadcode, Ybuildmanagerdebug))
         // BACK-2.8
         //Box("Presentation Compiler",
-        //    List(YpresentationDebug, YpresentationVerbose, YpresentationLog, YpresentationReplay))
+        //    List(YpresentationDebug, YpresentationVerbose, YpresentationLog, YpresentationReplay, YpresentationDelay))
     )
   }
   
   def pluginSettings: List[Box] = {
-    val Yplugininfo = BooleanSetting("-plugininfo", "Print Scala plugin debugging info")
-    List(Box("Scala Plugin Debugging", List(Yplugininfo)))    
+    List(Box("Scala Plugin Debugging", List(YPlugininfo)))    
   }
-  
+
+  def buildManagerSettings: List[Box] = {
+    List(Box("Build manager", List(buildManager)))    
+  }
+
   def tuningSettings: List[Box] = {
     List(
       Box("Editor Tuning", List(outputInClasspath, compileOnTyping, useContentOfEditor, alwaysCleanBuild, classBreakpoint, markOccurencesForSelectionOnly, markOccurencesTStrategy, timeOutBodyReq))
@@ -83,5 +86,6 @@ object IDESettings {
 
 object ScalaPluginSettings extends SettingsAddOn {
   val YPlugininfo = BooleanSetting("-plugininfo", "Enable logging of the Scala Plugin info")
+  val buildManager = ChoiceSetting("-buildmanager", "which Build manager to use", List("refined"), "refined")
 }
 

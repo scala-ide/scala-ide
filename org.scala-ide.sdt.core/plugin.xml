@@ -110,6 +110,38 @@
             id="org.eclipse.jdt.internal.ui.javaeditor.JavaSelectRulerAction">
          </action>
       </editorContribution>
+   </extension>
+
+   <extension point = "org.eclipse.ui.actionSets">         
+     <actionSet id="org.scala-ide.sdt.ui.scalaMenu.actionSet"
+       label="Scala Diagnostics" 
+       visible="true">
+       <menu id="org_scala-ide_sdt_ui_menu"
+         label="Scala"
+         path="additions"> 
+         <groupMarker name="diagnostics"/>
+         <groupMarker name="additions"/>
+       </menu>
+       <action id="org.scala-ide.sdt.ui.runDiag.action"
+         definitionId="org.scala-ide.sdt.ui.runDiag.action"
+         label="Run Setup Diagnostics..."
+         menubarPath="org_scala-ide_sdt_ui_menu/diagnostics"
+         tooltip="Verify that Scala configuration is correct"
+         class="scala.tools.eclipse.diagnostic.RunDiagnosticAction"
+         enablesFor="*">
+       </action>
+       <action id="org.scala-ide.sdt.ui.reportBug.action"
+         definitionId="org.scala-ide.sdt.ui.reportBug.action"
+         label="Report a Bug..."
+         menubarPath="org_scala-ide_sdt_ui_menu/additions"
+         tooltip="Report a bug in the Scala Development Tools"
+         class="scala.tools.eclipse.diagnostic.RunDiagnosticAction"
+         enablesFor="*">
+       </action>       
+     </actionSet>
+   </extension>
+
+   <extension point="org.eclipse.ui.editorActions">
 
       <editorContribution
          targetID="scala.tools.eclipse.ScalaClassFileEditor"
@@ -493,7 +525,7 @@
         menubarPath="org.scala-ide.sdt.core.popupMenu/content"
         icon="icons/full/etool16/scala_app.gif"
         id="org.scala-ide.sdt.ui.createInt"
-        label="Create Scala Interperter"
+        label="Create Scala Interpreter"
         tooltip="Create a Scala interpreter"/>
 
       <visibility>
@@ -562,7 +594,32 @@
          </visibility>
       </objectContribution>
 
+<!---      <objectContribution
+        id="org.scala-ide.sdt.ui.diagnostics"
+        objectClass="org.eclipse.jdt.core.IJavaElement">
+        <action
+          class="scala.tools.eclipse.diagnostic.RunDiagnosticAction"
+          enablesFor="1"
+          menubarPath="org.scala-ide.sdt.core.popupMenu/content"
+          id="org.scala-ide.sdt.ui.runDiag"
+          label="Run setup diagnostics..."
+          tooltip="Verify that Scala configuration is correct"/>
+
+        <visibility>
+          <and>
+            <or>
+              <objectState name="projectNature" value="org.scala-ide.sdt.core.scalanature"/>
+              <objectState name="projectNature" value="ch.epfl.lamp.sdt.core.scalanature"/>
+            </or>
+            <or>
+              <objectClass name="org.eclipse.jdt.core.IJavaProject"/>
+              <objectClass name="org.eclipse.jdt.core.IPackageFragment"/>
+            </or>
+          </and>
+        </visibility>
+  	</objectContribution> -->
   </extension>
+    
 
   <extension
          point="org.eclipse.ui.console.consoleFactories">
@@ -572,6 +629,15 @@
             label="Scala Console"/>
    </extension>
 
+  <extension point="org.eclipse.ui.console.consolePageParticipants">
+    <consolePageParticipant
+      class="scala.tools.eclipse.interpreter.PageParticipant"
+      id="org.scala-ide.sdt.ui.interpreter.PP">
+      <enablement>
+        <instanceof value="scala.tools.eclipse.interpreter.Console"/>
+      </enablement>
+    </consolePageParticipant>
+  </extension>
   <extension
         id="org.scala-ide.sdt.core.preferences"
         point="org.eclipse.core.runtime.preferences">
@@ -838,7 +904,7 @@
 </extension>
 
    <extension point="org.eclipse.ui.contexts">
-     <context name="scala.tools.eclipse.scalaEditorScope"
+     <context name="Editing Scala Source"
               description="Scala source file editor"
               parentId="org.eclipse.jdt.ui.javaEditorScope"
               id="scala.tools.eclipse.scalaEditorScope" />

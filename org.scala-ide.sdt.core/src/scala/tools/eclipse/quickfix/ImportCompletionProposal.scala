@@ -61,7 +61,7 @@ case class ImportCompletionProposal(val importName : String) extends IJavaComple
         }
        
         refactoring.addImport(refactoring.selection, importName)
-      }
+      }(Nil)
       
       scalaSourceFile.file match {
         case EclipseResource(file: IFile) => 
