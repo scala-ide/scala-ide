@@ -8,20 +8,13 @@ package scala.tools.eclipse
 import scala.reflect.NameTransformer
 import scala.tools.nsc.Global 
 import ch.epfl.lamp.fjbg.{ JArrayType, JMethodType, JObjectType, JType }
+import scala.tools.nsc.interactive.compat.JVMUtilsSupport
 
-trait JVMUtils { self : Global =>
-
-  private lazy val jvmUtil =
-    //BACK-2.8
-    // new genJVM.BytecodeUtil {}
-    currentRun.phaseNamed(genJVM.phaseName).asInstanceOf[genJVM.JvmPhase].codeGenerator
+trait JVMUtils extends JVMUtilsSupport { self : Global =>
 
   def javaName(sym : Symbol) : String = jvmUtil.javaName(sym)
   
   def javaNames(syms : List[Symbol]) : Array[String] = syms.toArray map (s => jvmUtil.javaName(s))
-  
-  def javaFlags(sym : Symbol) : Int = //BACK-2.8 genJVM.javaFlags(sym)
-    jvmUtil.javaFlags(sym)
   
   def javaType(t: Type): JType = t.normalize match {
     case ErrorType | NoType => JType.UNKNOWN

@@ -6,6 +6,11 @@ import _root_.scala.tools.nsc.{Settings => MainSettings}
 
 class Settings(errorFn: String => Unit) extends MainSettings(errorFn) {
   // BACK from 2.9.0-SNAPSHOT
+  /**
+   * helpArg is ignored (only available since 2.9)
+   */
+  def ChoiceSetting(name: String,  helpArg: String,descr: String, choices: List[String], default: String) : ChoiceSetting =
+    ChoiceSetting(name, descr, choices, default)
 
   /**
    * IDE-specific settings

@@ -18,7 +18,7 @@ import org.eclipse.jdt.internal.core.builder.{ ClasspathDirectory, ClasspathLoca
 import org.eclipse.jdt.internal.core.util.Util
 import org.eclipse.swt.widgets.{ Display, Shell }
 import scala.tools.nsc.{ MissingRequirementError }
-import scala.tools.nsc.interactive.compat.Settings
+import scala.tools.nsc.interactive.compat.{Settings, Info}
 import scala.tools.nsc.util.SourceFile
 import scala.tools.eclipse.javaelements.ScalaCompilationUnit
 import scala.tools.eclipse.properties.PropertyStore
@@ -32,8 +32,6 @@ class ScalaProject(val underlying: IProject) {
   private val resetPendingLock = new Object
   private var resetPending = false
 
-  private var scalaVersion = "2.8.x"
-
   private val presentationCompiler = new Cached[ScalaPresentationCompiler] {
     override def create() = {
       try {
@@ -43,7 +41,7 @@ class ScalaProject(val underlying: IProject) {
         settings.verbose.tryToSetFromPropertyValue("true")
         settings.XlogImplicits.tryToSetFromPropertyValue("true")
         //TODO replace the if by a conditional Extension Point (or better)
-        val compiler = if (scalaVersion.startsWith("2.9")) {
+        val compiler = if (Info.scalaVersion.startsWith("2.9")) {
           initialize(settings, _.name.startsWith("-Ypresentation"))
           new ScalaPresentationCompiler(settings)
         } else if (IDESettings.exceptionOnCreatePresentationCompiler.value) {

@@ -103,6 +103,10 @@ trait TopLevelMapTyper extends ScalaPresentationCompiler {
 
   override def newTyperRun = {
     Tracer.println("newTyperRun")
-    currentTyperRun = new EclipseTyperRun()
+    //COMPAT-2.9 currentTyperRun is private
+    //currentTyperRun = new EclipseTyperRun()
+    // throw an exception if method not found
+    val setter = this.getClass.getDeclaredMethod("currentTyperRun_$eq", classOf[TyperRun])
+    setter.invoke(this, new EclipseTyperRun())
   }
 }
