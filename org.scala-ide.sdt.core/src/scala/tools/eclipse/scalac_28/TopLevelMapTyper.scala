@@ -106,7 +106,12 @@ trait TopLevelMapTyper extends ScalaPresentationCompiler {
     //COMPAT-2.9 currentTyperRun is private
     //currentTyperRun = new EclipseTyperRun()
     // throw an exception if method not found
-    val setter = this.getClass.getDeclaredMethod("currentTyperRun_$eq", classOf[TyperRun])
-    setter.invoke(this, new EclipseTyperRun())
+    //I don't use getDeclaredMethod("currentTyperRun_$eq") to only match on the name regardless the Type (path dependends Type)
+    val methods = classOf[scala.tools.nsc.interactive.Global].getDeclaredMethods()
+    val setter = methods.find(_.getName == "currentTyperRun_$eq")
+    setter match {
+      case Some(m) => m.invoke(this, new EclipseTyperRun())
+      case None => throw new NoSuchMethodException("TopLevelMapTyper.currentTyperRun_=(TyperRun)")
+    }
   }
 }
