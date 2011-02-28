@@ -22,5 +22,5 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings)
   def update(added: scala.collection.Set[AbstractFile], removed: scala.collection.Set[AbstractFile]) {}
   def build(addedOrUpdated: Set[IFile], removed: Set[IFile])(implicit monitor: IProgressMonitor): Unit = {}
   def clean(implicit monitor: IProgressMonitor) {}
-  def invalidateAfterLoad: Boolean = false
+  //def invalidateAfterLoad: Boolean = false
 }

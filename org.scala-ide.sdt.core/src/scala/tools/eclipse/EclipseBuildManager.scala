@@ -16,7 +16,7 @@ trait EclipseBuildManager extends BuildManager {
   def build(addedOrUpdated: Set[IFile], removed: Set[IFile])(implicit monitor: IProgressMonitor = null): Unit
   var depFile: IFile
   var hasErrors = false
-  def invalidateAfterLoad: Boolean
+  //def invalidateAfterLoad: Boolean
   def clean(implicit monitor: IProgressMonitor): Unit
   def project : ScalaProject
   
@@ -39,6 +39,6 @@ trait EclipseBuildManager extends BuildManager {
   }  
 
   def clearBuildErrors(implicit monitor : IProgressMonitor) = Defensive.askRunInJob("build error"){
-    project.underlying.deleteMarkers(ScalaPlugin.plugin.problemMarkerId, true, IResource.DEPTH_ZERO)
+    project.underlying.deleteMarkers(ScalaPlugin.plugin.problemMarkerId, true, IResource.DEPTH_INFINITE)
   }
 }

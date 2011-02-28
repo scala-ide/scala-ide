@@ -116,15 +116,4 @@ class EclipseRefinedBuildManager(val project : ScalaProject, settings0: Settings
   def clean(implicit monitor: IProgressMonitor) {
   	depFile.delete(true, false, monitor)
   }
-
-  // pre: project hasn't been built
-  def invalidateAfterLoad: Boolean = {
-  	if (!depFile.exists())
-        true
-      else {
-        try {
-          !loadFrom(EclipseResource(depFile), EclipseResource.fromString(_).getOrElse(null))
-        } catch { case _ => true }
-      }
-  }
 }
