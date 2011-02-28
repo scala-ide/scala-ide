@@ -9,12 +9,12 @@ import scala.tools.nsc.{ Global, Settings }
 import scala.tools.nsc.interactive.{BuildManager, RefinedBuildManager}
 import scala.tools.nsc.io.AbstractFile
 import scala.tools.nsc.reporters.Reporter
+import org.eclipse.core.runtime.NullProgressMonitor
 import scala.tools.eclipse.util.{ EclipseResource, FileUtils, Defensive}
 
-class EclipseRefinedBuildManager(val project : ScalaProject, settings0: Settings)
-  extends RefinedBuildManager(settings0) with EclipseBuildManager {
+class EclipseRefinedBuildManager(val project : ScalaProject, settings0: Settings) extends RefinedBuildManager(settings0) with EclipseBuildManager {
   var depFile:IFile = project.underlying.getFile(".scala_dependencies")
-  var monitor : IProgressMonitor = _
+  private var monitor : IProgressMonitor = new NullProgressMonitor()
   val pendingSources = new HashSet[IFile]
   
   class EclipseBuildCompiler(settings : Settings, reporter : Reporter) extends BuilderGlobal(settings, reporter) {
@@ -24,15 +24,14 @@ class EclipseRefinedBuildManager(val project : ScalaProject, settings0: Settings
         var worked = 0
         
         override def progress(current : Int, total : Int) : Unit = {
-          if (monitor != null && monitor.isCanceled) {
+          if (monitor.isCanceled) {
             cancel
             return
           }
           
           val newWorked = if (current >= total) 100 else ((current.toDouble/total)*100).toInt
           if (worked < newWorked) {
-            if (monitor != null)
-              monitor.worked(newWorked-worked)
+            monitor.worked(newWorked-worked)
             worked = newWorked
           }
         }
@@ -54,7 +53,7 @@ class EclipseRefinedBuildManager(val project : ScalaProject, settings0: Settings
   }
 
   def build(addedOrUpdated : Set[IFile], removed : Set[IFile])(implicit pm : IProgressMonitor) {
-    monitor = pm
+    monitor = if (pm == null) new NullProgressMonitor() else pm
     
     pendingSources ++= addedOrUpdated
     val removedFiles = removed.map(EclipseResource(_) : AbstractFile)
