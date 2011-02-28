@@ -10,6 +10,8 @@ Export-Package: scala.tools.nsc.interactive,
  scala.tools.nsc.interactive.compat
 Import-Package: scala.tools.nsc,
  scala.tools.nsc.ast,
+ scala.tools.nsc.ast.parser,
+ scala.tools.nsc.backend.jvm,
  scala.tools.nsc.dependencies,
  scala.tools.nsc.io,
  scala.tools.nsc.reporters,
@@ -17,6 +19,7 @@ Import-Package: scala.tools.nsc,
  scala.tools.nsc.symtab,
  scala.tools.nsc.typechecker,
  scala.tools.nsc.util
+
 
 
 
