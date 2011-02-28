@@ -103,15 +103,28 @@ trait TopLevelMapTyper extends ScalaPresentationCompiler {
 
   override def newTyperRun = {
     Tracer.println("newTyperRun")
-    //COMPAT-2.9 currentTyperRun is private
-    //currentTyperRun = new EclipseTyperRun()
-    // throw an exception if method not found
-    //I don't use getDeclaredMethod("currentTyperRun_$eq") to only match on the name regardless the Type (path dependends Type)
-    val methods = classOf[scala.tools.nsc.interactive.Global].getDeclaredMethods()
-    val setter = methods.find(_.getName == "currentTyperRun_$eq")
-    setter match {
-      case Some(m) => m.invoke(this, new EclipseTyperRun())
-      case None => throw new NoSuchMethodException("TopLevelMapTyper.currentTyperRun_=(TyperRun)")
-    }
+    TopeLevelMapTyper.setCurrentTyperRun(this)(new EclipseTyperRun())
+  }
+}
+
+object TopeLevelMapTyper extends util.ReflectionUtils {
+  import scala.tools.nsc.interactive.Global
+  
+  private val globalClazz = classOf[Global]
+  
+  //COMPAT-2.9 currentTyperRun is private
+  //currentTyperRun = new EclipseTyperRun()
+  // throw an exception if method not found
+  //I don't use getDeclaredMethod("currentTyperRun_$eq") to only match on the name regardless the Type (path dependends Type)
+  private val currentTyperRunSetter = privileged {
+    val methods = globalClazz.getDeclaredMethods()
+    val m = methods.find(_.getName == "currentTyperRun_$eq")
+    m.foreach(_.setAccessible(true))
+    m
+  }
+
+  def setCurrentTyperRun[T <: Global](target : T)(value : T#TyperRun) = currentTyperRunSetter match {
+    case Some(m) => m.invoke(target, value)
+    case None => throw new NoSuchMethodException("TopLevelMapTyper.currentTyperRun_=(TyperRun)")
   }
 }
