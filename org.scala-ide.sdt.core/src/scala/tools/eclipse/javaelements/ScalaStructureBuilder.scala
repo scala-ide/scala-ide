@@ -499,6 +499,19 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         val tn = mapType(v.tpt).toArray
         valElemInfo.setTypeName(tn)
         
+        if (sym.isValueParameter && sym.owner.isPrimaryConstructor) {
+          val getter = new ScalaAccessorElement(element, elemName.toString, Array.empty)
+          resolveDuplicates(getter)
+          addChild(getter)
+          val methodInfo = new ScalaSourceMethodInfo
+          methodInfo.setNameSourceStart0(start)
+          methodInfo.setNameSourceEnd0(end)
+          methodInfo.setArgumentNames(Array.empty)
+          methodInfo.setExceptionTypeNames(Array.empty)
+          methodInfo.setReturnType(tn)
+          newElements0.put(getter, methodInfo)
+        }
+        
         self
       }
     }
@@ -776,9 +789,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         }
       
         tree match {
-          case dt : DefTree if dt.symbol.isSynthetic &&
-                               // The following represent user-visible synthetic symbols
-                               !dt.symbol.isCaseAccessor => (builder, Nil)
+          case dt : DefTree if dt.symbol.isSynthetic => (builder, Nil)
           case pd : PackageDef => (builder.addPackage(pd), pd.stats)
           case i : Import => (builder.addImport(i), Nil)
           case cd : ClassDef => (builder.addClass(cd), List(cd.impl))
