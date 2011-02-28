@@ -776,7 +776,9 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         }
       
         tree match {
-          case dt : DefTree if dt.symbol.isSynthetic => (builder, Nil)
+          case dt : DefTree if dt.symbol.isSynthetic &&
+                               // The following represent user-visible synthetic symbols
+                               !dt.symbol.isCaseAccessor => (builder, Nil)
           case pd : PackageDef => (builder.addPackage(pd), pd.stats)
           case i : Import => (builder.addImport(i), Nil)
           case cd : ClassDef => (builder.addClass(cd), List(cd.impl))
