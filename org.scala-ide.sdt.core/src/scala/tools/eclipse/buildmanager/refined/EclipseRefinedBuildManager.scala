@@ -4,15 +4,12 @@ package refined
 
 import org.eclipse.core.resources.{ IFile, IMarker, IResource }
 import org.eclipse.core.runtime.IProgressMonitor
-
 import scala.collection.mutable.HashSet
-
 import scala.tools.nsc.{ Global, Settings }
 import scala.tools.nsc.interactive.{BuildManager, RefinedBuildManager}
 import scala.tools.nsc.io.AbstractFile
 import scala.tools.nsc.reporters.Reporter
-
-import scala.tools.eclipse.util.{ EclipseResource, FileUtils }
+import scala.tools.eclipse.util.{ EclipseResource, FileUtils, Defensive}
 
 class EclipseRefinedBuildManager(val project : ScalaProject, settings0: Settings)
   extends RefinedBuildManager(settings0) with EclipseBuildManager {
@@ -48,7 +45,9 @@ class EclipseRefinedBuildManager(val project : ScalaProject, settings0: Settings
               FileUtils.clearTasks(i, monitor)
             case _ => 
           }
-          super.compileLate(file)
+          if (Defensive.notNull(file, "try to compile file == null"))
+            super.compileLate(file)
+          }
         }
       }
 
@@ -88,9 +87,10 @@ class EclipseRefinedBuildManager(val project : ScalaProject, settings0: Settings
   }
   
   override def newCompiler(settings: Settings) = new EclipseBuildCompiler(settings,
-  		new BuildReporter(project, settings) {
-  	    val buildManager = EclipseRefinedBuildManager.this
-      })
+		new BuildReporter(project, settings) {
+	    val buildManager = EclipseRefinedBuildManager.this
+    }
+  )
   
   override def buildingFiles(included: scala.collection.Set[AbstractFile]) {
     for(file <- included) {
