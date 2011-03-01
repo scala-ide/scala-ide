@@ -23,8 +23,9 @@ import org.eclipse.ui.editors.text.{ ForwardingDocumentProvider, TextFileDocumen
 import org.eclipse.ui.texteditor.{ IAbstractTextEditorHelpContextIds, ITextEditorActionConstants, IWorkbenchActionDefinitionIds, TextOperationAction }
 import scala.collection.JavaConversions._
 import scala.collection.mutable
-import scala.tools.eclipse.javaelements.ScalaSourceFile
+import scala.tools.eclipse.javaelements.{ScalaSourceFile, ScalaCompilationUnit}
 import scala.tools.eclipse.markoccurrences.{ ScalaOccurrencesFinder, Occurrences }
+import org.eclipse.jface.action.Action
 
 class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
 
@@ -61,6 +62,16 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
     selectEnclosingAction.setActionDefinitionId(IJavaEditorActionDefinitionIds.SELECT_ENCLOSING)
     setAction(StructureSelectionAction.ENCLOSING, selectEnclosingAction)
 
+    // TODO: same action must be added to ScalaClassFileEditor.
+    val openAction = new Action {
+	  override def run {
+	    Option(getInputJavaElement) map (_.asInstanceOf[ScalaCompilationUnit]) foreach { scu =>
+	      scu.followReference(ScalaSourceFileEditor.this, getSelectionProvider.getSelection.asInstanceOf[ITextSelection])
+	    }
+      }
+	}
+    openAction.setActionDefinitionId(IJavaEditorActionDefinitionIds.OPEN_EDITOR)
+    setAction("OpenEditor", openAction)
   }
 
   override protected def initializeKeyBindingScopes() {
