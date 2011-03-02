@@ -62,7 +62,6 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
     selectEnclosingAction.setActionDefinitionId(IJavaEditorActionDefinitionIds.SELECT_ENCLOSING)
     setAction(StructureSelectionAction.ENCLOSING, selectEnclosingAction)
 
-    // TODO: same action must be added to ScalaClassFileEditor.
     val openAction = new Action {
 	  override def run {
 	    Option(getInputJavaElement) map (_.asInstanceOf[ScalaCompilationUnit]) foreach { scu =>
