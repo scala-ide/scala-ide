@@ -38,9 +38,17 @@ timestamp()
 #  return BACK
 }
 
+current_branch()
+{
+  git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/\1/'
+}
+qualifier()
+{
+  echo $(timestamp)-$(current_branch)${MILESTONE}
+}
 build()
 {
-  QUALIFIER=$(timestamp)${MILESTONE}
+  QUALIFIER=$(qualifier)
   echo QUALIFIER=$QUALIFIER
   ${MAVEN} \
     -U \
