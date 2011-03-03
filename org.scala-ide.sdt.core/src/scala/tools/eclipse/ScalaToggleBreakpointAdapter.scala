@@ -20,6 +20,7 @@ import org.eclipse.jface.viewers.ISelection
 import org.eclipse.ui.IWorkbenchPart
 
 import scala.tools.eclipse.util.ReflectionUtils
+import scala.tools.eclipse.javaelements.ScalaClassElement
 
 class ScalaToggleBreakpointAdapter extends ToggleBreakpointAdapter { self =>
   import ScalaToggleBreakpointAdapterUtils._
@@ -116,5 +117,10 @@ object ScalaToggleBreakpointAdapterUtils extends ReflectionUtils {
   val toggleBreakpointAdapterClazz = classOf[ToggleBreakpointAdapter]
   val createQualifiedTypeNameMethod = getDeclaredMethod(toggleBreakpointAdapterClazz, "createQualifiedTypeName", classOf[IType])
   
-  def createQualifiedTypeName(tba : ToggleBreakpointAdapter, tpe : IType) = createQualifiedTypeNameMethod.invoke(tba, tpe).asInstanceOf[String]
+  def createQualifiedTypeName(tba : ToggleBreakpointAdapter, tpe : IType) = {
+  	if (tpe.isInstanceOf[ScalaClassElement])
+      tpe.getFullyQualifiedName
+    else
+      createQualifiedTypeNameMethod.invoke(tba, tpe).asInstanceOf[String]
+  }
 }
