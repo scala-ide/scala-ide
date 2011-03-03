@@ -75,9 +75,10 @@ class ScalaClassFile(parent : PackageFragment, name : String, sourceFile : Strin
   }
 
   class ScalaBinaryType(name : String) extends BinaryType(this, name) {
-    lazy val mirror = ScalaClassFile.this.getChildren.find(_.getElementName == name)
+    lazy val mirror = ScalaClassFile.this.getChildren.find(_.getElementName == name) map (_.asInstanceOf[IType])
 	override def exists = mirror.isDefined
-	override def getChildren = mirror map (_.asInstanceOf[IType].getChildren) getOrElse Array.empty
+	override def getChildren = mirror map (_.getChildren) getOrElse Array.empty
+	override def getDeclaringType = mirror map(_.getDeclaringType) orNull
   }
 
   override def getType() : IType = new ScalaBinaryType(getTypeName)
