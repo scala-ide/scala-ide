@@ -77,7 +77,8 @@ class ScalaClassFile(parent : PackageFragment, name : String, sourceFile : Strin
   class ScalaBinaryType(name : String) extends BinaryType(this, name) {
     lazy val mirror = ScalaClassFile.this.getChildren.find(_.getElementName == name) map (_.asInstanceOf[IType])
 	override def exists = mirror.isDefined
-	override def getChildren = mirror map (_.getChildren) getOrElse Array.empty
+    override def getElementInfo(m : IProgressMonitor) = mirror map(_.asInstanceOf[JavaElement].getElementInfo(m)) getOrElse (
+      throw new Exception("Invalid element info requested"))
 	override def getDeclaringType = mirror map(_.getDeclaringType) orNull
   }
 
