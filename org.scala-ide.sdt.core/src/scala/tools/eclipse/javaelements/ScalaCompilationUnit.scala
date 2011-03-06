@@ -83,7 +83,6 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
       info match {
         case cuei : CompilationUnitElementInfo => 
           cuei.setSourceLength(sourceLength)
-          unsafeElements.put(this, info)
         case _ =>
       }
   
@@ -92,8 +91,6 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
   }) (false)
 
   def scheduleReconcile : Unit = ()
-  
-  override def createElementInfo = new CompilationUnitElementInfo
   
   def addToIndexer(indexer : ScalaSourceIndexer) {
     doWithSourceFile { (source, compiler) =>
