@@ -585,7 +585,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         val paramTypes = Array(fps.map(v => Signature.createTypeSignature(mapType(paramType(v)), false)) : _*)
         val paramNames = Array(fps.map(n => nme.getterName(n.name).toChars) : _*)
         
-        val display = sym.nameString + sym.infoString(sym.rawInfo)
+        val display = sym.nameString + sym.infoString(sym.info)
         
         val defElem = 
           if(sym hasFlag Flags.ACCESSOR)
