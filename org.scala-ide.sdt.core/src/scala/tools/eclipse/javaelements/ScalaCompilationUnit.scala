@@ -15,7 +15,7 @@ import org.eclipse.core.resources.{ IFile, IResource }
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.jdt.core.{
   BufferChangedEvent, CompletionRequestor, IBuffer, IBufferChangedListener, IJavaElement, IJavaModelStatusConstants,
-  IProblemRequestor, ITypeRoot, JavaCore, JavaModelException, WorkingCopyOwner }
+  IProblemRequestor, ITypeRoot, JavaCore, JavaModelException, WorkingCopyOwner, IClassFile }
 import org.eclipse.jdt.internal.compiler.env
 import org.eclipse.jdt.internal.core.{
   BufferManager, CompilationUnitElementInfo, DefaultWorkingCopyOwner, JavaModelStatus, JavaProject, Openable,
@@ -75,7 +75,7 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
     withSourceFile({ (sourceFile, compiler) =>
       val unsafeElements = newElements.asInstanceOf[JMap[AnyRef, AnyRef]]
       val sourceLength = sourceFile.length
-      compiler.withUntypedTree(sourceFile) { tree =>
+      compiler.withUntypedTree(sourceFile, false) { tree =>
         compiler.ask { () =>
             new compiler.StructureBuilderTraverser(this, info, unsafeElements, sourceLength).traverse(tree)
         }
@@ -133,7 +133,7 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
   
   override def reportMatches(matchLocator : MatchLocator, possibleMatch : PossibleMatch) {
     doWithSourceFile { (sourceFile, compiler) =>
-      compiler.withUntypedTree(sourceFile) { tree =>
+      compiler.withUntypedTree(sourceFile, false) { tree =>
         compiler.ask { () =>
             compiler.MatchLocator(this, matchLocator, possibleMatch).traverse(tree)
         }
@@ -143,7 +143,7 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
   
   override def createOverrideIndicators(annotationMap : JMap[_, _]) {
     doWithSourceFile { (sourceFile, compiler) =>
-      compiler.withUntypedTree(sourceFile) { tree =>
+      compiler.withUntypedTree(sourceFile, !this.isInstanceOf[IClassFile]) { tree =>
         compiler.ask { () =>
           new compiler.OverrideIndicatorBuilderTraverser(this, annotationMap.asInstanceOf[JMap[AnyRef, AnyRef]]).traverse(tree)
         }

@@ -91,10 +91,10 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
     op(parseTree(sourceFile))
   }
 
-  def withUntypedTree[T](sourceFile : SourceFile)(op : Tree => T) : T = {
+  def withUntypedTree[T](sourceFile : SourceFile, keepLoaded: Boolean)(op : Tree => T) : T = {
     val tree = {
       val response = new Response[Tree]
-      askParsedEntered(sourceFile, true, response)
+      askParsedEntered(sourceFile, keepLoaded, response)
       response.get match {
         case Left(tree) => tree 
         case Right(thr) => throw thr
