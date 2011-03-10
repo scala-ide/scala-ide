@@ -69,53 +69,73 @@ class ScalaSelectionEngine(nameEnvironment : SearchableEnvironment, requestor : 
         case _ => tree
       }
       
-      def acceptType(t : compiler.Symbol) {
+      class Cont(f: () => Unit) {
+    	def apply() = f()
+      }
+      object Cont {
+        def apply(next: => Unit) = new Cont({() => next})
+        val Noop = new Cont(() => ())
+        implicit def noop(v: Any) = Noop
+      }
+      
+      def acceptType(t : compiler.Symbol) = {
         acceptTypeWithFlags(t, if (t.isTrait) ClassFileConstants.AccInterface else 0)
       }
       
-      def acceptTypeWithFlags(t : compiler.Symbol, jdtFlags : Int) {
-        requestor.acceptType(
-          t.enclosingPackage.fullName.toArray,
-          mapTypeName(t).toArray,
+      def acceptTypeWithFlags(t : compiler.Symbol, jdtFlags : Int) = {
+        val packageName = t.enclosingPackage.fullName.toArray
+        val typeName = mapTypeName(t).toArray
+    	Cont(requestor.acceptType(
+          packageName,
+          typeName,
           jdtFlags,
           false,
           null,
           actualSelectionStart,
-          actualSelectionEnd)
+          actualSelectionEnd))
       }
   
-      def acceptField(f : compiler.Symbol) {
-        requestor.acceptField(
-          f.enclosingPackage.fullName.toArray,
-          mapTypeName(f.owner).toArray,
-          (if (f.isSetter) compiler.nme.setterToGetter(f.name) else f.name).toString.toArray,
+      def acceptField(f : compiler.Symbol) = {
+        val packageName = f.enclosingPackage.fullName.toArray
+        val typeName = mapTypeName(f.owner).toArray
+        val name = (if (f.isSetter) compiler.nme.setterToGetter(f.name) else f.name).toString.toArray
+    	Cont(requestor.acceptField(
+          packageName,
+          typeName,
+          name,
           false,
           null,
           actualSelectionStart,
-          actualSelectionEnd)
+          actualSelectionEnd))
       }
       
-      def acceptMethod(m : compiler.Symbol) {
+      def acceptMethod(m : compiler.Symbol) = {
         val m0 = if (m.isClass || m.isModule) m.primaryConstructor else m
         val owner = m0.owner
-        val name = if (m0.isConstructor) owner.name else m0.name
+        val isConstructor = m0.isConstructor
+        val name = if (isConstructor) owner.name else m0.name
         val paramTypes = m0.tpe.paramss.flatMap(_.map(_.tpe))
         
-        requestor.acceptMethod(
-          m0.enclosingPackage.fullName.toArray,
-          mapTypeName(owner).toArray,
+        val packageName = m0.enclosingPackage.fullName.toArray
+        val typeName = mapTypeName(owner).toArray
+        val parameterPackageNames = paramTypes.map(mapParamTypePackageName(_).toArray).toArray
+        val parameterTypeNames = paramTypes.map(mapParamTypeName(_).toArray).toArray
+        val parameterSignatures = paramTypes.map(mapParamTypeSignature(_)).toArray
+        Cont(requestor.acceptMethod(
+          packageName,
+          typeName,
           null,
-          name.toString.toArray,
-          paramTypes.map(mapParamTypePackageName(_).toArray).toArray,
-          paramTypes.map(mapParamTypeName(_).toArray).toArray,
-          paramTypes.map(mapParamTypeSignature(_)).toArray,
-          new Array[Array[Char]](0),
-          new Array[Array[Array[Char]]](0),
-          m0.isConstructor,
+          name.toChars,
+          parameterPackageNames,
+          parameterTypeNames,
+          parameterSignatures,
+          Array.empty,
+          Array.empty,
+          isConstructor,
           false,
           null,
           actualSelectionStart,
-          actualSelectionEnd)
+          actualSelectionEnd))
       }
       
       def acceptLocalDefinition(defn : compiler.Symbol) {
@@ -160,7 +180,8 @@ class ScalaSelectionEngine(nameEnvironment : SearchableEnvironment, requestor : 
       val typed = new compiler.Response[compiler.Tree]
       compiler.askTypeAt(pos, typed)
       val typedRes = typed.get
-      compiler.ask { () => typedRes.left.toOption match {
+      import Cont.noop
+      val cont: Cont = compiler.ask { () => typedRes.left.toOption match {
         case Some(tree) => {
           tree match {
             case i : compiler.Ident => i.symbol match {
@@ -256,6 +277,7 @@ class ScalaSelectionEngine(nameEnvironment : SearchableEnvironment, requestor : 
           log("No tree")
         }
       }
+      cont()
 
       if (!ssr.hasSelection && fallbackToDefaultLookup) {
         // only reaches here if no selection could be derived from the parsed tree
