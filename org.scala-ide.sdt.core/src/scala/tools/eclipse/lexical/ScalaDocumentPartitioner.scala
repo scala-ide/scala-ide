@@ -33,6 +33,8 @@ class ScalaDocumentPartitioner extends IDocumentPartitioner with IDocumentPartit
   private def calculateDirtyRegion(oldPartitions: List[ScalaPartitionRegion], newPartitions: List[ScalaPartitionRegion], offset: Int, length: Int, text: String): IRegion =
     if (newPartitions.isEmpty)
       new Region(0, 0)
+    else if (oldPartitions == newPartitions)
+      null
     else {
       // Scan outside-in from both the beginning and the end of the document to match up undisturbed partitions:
       val unchangedLeadingRegionCount = commonPrefixLength(oldPartitions, newPartitions)

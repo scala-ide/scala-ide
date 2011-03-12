@@ -8,6 +8,13 @@ import org.eclipse.jface.text._
 class ScalaDocumentPartitionerTest {
 
   @Test
+  def no_partition_change {	
+    //       000000000011111111112222222222333333333344444444445
+    //       012345678901234567890123456789012345678901234567890 
+    check("""/* comment */ "foo" /* comment */""", Replace(start = 5, finish = 7, text = "foo"), expectedNoRegion)
+  }
+	
+  @Test
   def modify_single_partition {
     //       000000000011111111112222222222333333333344444444445
     //       012345678901234567890123456789012345678901234567890 
