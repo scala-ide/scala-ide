@@ -6,7 +6,7 @@
 package scala.tools.eclipse
 
 import org.eclipse.core.resources.{ IFile, IMarker }
-import org.eclipse.core.runtime.IProgressMonitor
+import org.eclipse.core.runtime.{ IProgressMonitor, SubMonitor }
 
 import scala.collection.mutable.HashSet
 
@@ -19,7 +19,7 @@ import scala.tools.eclipse.util.{ EclipseResource, FileUtils }
 import scala.tools.eclipse.buildmanager.{BuildReporter}
 
 trait EclipseBuildManager extends BuildManager {
-  def build(addedOrUpdated: Set[IFile], removed: Set[IFile])(implicit monitor: IProgressMonitor = null): Unit
+  def build(addedOrUpdated: Set[IFile], removed: Set[IFile], monitor: SubMonitor): Unit
   var depFile: IFile
   var hasErrors = false
   def invalidateAfterLoad: Boolean

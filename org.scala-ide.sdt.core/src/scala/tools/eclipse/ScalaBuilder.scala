@@ -10,7 +10,7 @@ import scala.collection.mutable.HashSet
 import java.{ lang => jl, util => ju }
 
 import org.eclipse.core.resources.{ IFile, IncrementalProjectBuilder, IProject, IResource, IResourceDelta, IResourceDeltaVisitor, IResourceVisitor }
-import org.eclipse.core.runtime.{ IProgressMonitor, IPath }
+import org.eclipse.core.runtime.{ IProgressMonitor, IPath, SubMonitor }
 import org.eclipse.jdt.internal.core.JavaModelManager
 import org.eclipse.jdt.internal.core.builder.{ JavaBuilder, NameEnvironment, State }
 
@@ -72,18 +72,18 @@ class ScalaBuilder extends IncrementalProjectBuilder {
           (allSourceFiles, Set.empty[IFile])
       }
     }
-    
-    if (monitor != null)
-      monitor.beginTask("build all", 100)
+
+    val subMonitor = SubMonitor.convert(monitor, 100).newChild(100, SubMonitor.SUPPRESS_NONE)
+    subMonitor.beginTask("Running Scala Builder", 100)
       
-    project.build(addedOrUpdated, removed)(monitor)
+    project.build(addedOrUpdated, removed, subMonitor)
     
     val depends = project.externalDepends.toList.toArray
     if (allSourceFiles.exists(FileUtils.hasBuildErrors(_)))
       depends
     else {
       ensureProject
-      val javaDepends = scalaJavaBuilder.build(kind, ignored, monitor)
+      val javaDepends = scalaJavaBuilder.build(kind, ignored, subMonitor) 
       val modelManager = JavaModelManager.getJavaModelManager
       val state = modelManager.getLastBuiltState(getProject, null).asInstanceOf[State]
       val newState = if (state ne null) state

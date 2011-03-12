@@ -11,7 +11,7 @@ import scala.collection.mutable.{ LinkedHashSet, HashMap, HashSet }
 import java.io.File.pathSeparator
 
 import org.eclipse.core.resources.{ IContainer, IFile, IFolder, IMarker, IProject, IResource, IResourceProxy, IResourceProxyVisitor, IWorkspaceRunnable }
-import org.eclipse.core.runtime.{ FileLocator, IPath, IProgressMonitor, Path }
+import org.eclipse.core.runtime.{ FileLocator, IPath, IProgressMonitor, Path, SubMonitor }
 import org.eclipse.jdt.core.{ IClasspathEntry, IJavaProject, JavaCore }
 import org.eclipse.jdt.core.compiler.IProblem
 import org.eclipse.jdt.internal.core.JavaProject
@@ -98,12 +98,12 @@ class ScalaProject(val underlying: IProject) {
       }
     }, monitor)
 
-  def clearBuildErrors(implicit monitor: IProgressMonitor) =
+  def clearBuildErrors =
     underlying.getWorkspace.run(new IWorkspaceRunnable {
       def run(monitor: IProgressMonitor) = {
         underlying.deleteMarkers(plugin.problemMarkerId, true, IResource.DEPTH_ZERO)
       }
-    }, monitor)
+    }, null)
 
   def externalDepends = underlying.getReferencedProjects
 
@@ -467,14 +467,14 @@ class ScalaProject(val underlying: IProject) {
   /* If true, then it means that all source files have to be reloaded */
   def prepareBuild(): Boolean = if (!hasBeenBuilt) buildManager.invalidateAfterLoad else false
 
-  def build(addedOrUpdated: Set[IFile], removed: Set[IFile])(implicit monitor: IProgressMonitor) {
+  def build(addedOrUpdated: Set[IFile], removed: Set[IFile], monitor: SubMonitor) {
     if (addedOrUpdated.isEmpty && removed.isEmpty)
       return
 
     hasBeenBuilt = true
 
     clearBuildErrors
-    buildManager.build(addedOrUpdated, removed)
+    buildManager.build(addedOrUpdated, removed, monitor)
     refreshOutput
 
     // Already performs saving the dependencies
