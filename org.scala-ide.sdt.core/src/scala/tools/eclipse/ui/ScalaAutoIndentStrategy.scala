@@ -65,7 +65,6 @@ import scala.util.matching.Regex
 
 import org.eclipse.jdt.internal.ui.text.Symbols;
 
-import scala.tools.eclipse.lexical.ScalaPartitionScanner
 
 import scala.util.matching.Regex
 
