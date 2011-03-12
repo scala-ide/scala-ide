@@ -269,15 +269,20 @@ class ScalaSourceFieldElementInfo extends SourceFieldElementInfo with ScalaMembe
   override def setTypeName(name : Array[Char]) = super.setTypeName(name)
 }
 
-class LazyToplevelClass(unit : ScalaCompilationUnit, name : String) extends SourceType(unit, name) with IType {
+class LazyToplevelClass(unit : ScalaCompilationUnit, name : String) extends SourceType(unit, name) with IType with ScalaElement {
   lazy val mirror = unit.getElementInfo.asInstanceOf[OpenableElementInfo].getChildren.find(e => e.getElementName == name).map(_.asInstanceOf[ScalaSourceTypeElement])
   
-  override def getField(nm : String) = mirror map (_.getField(nm)) getOrElse super.getField(nm) 
-  override def getType(nm : String) = mirror map (_.getType(nm)) getOrElse super.getType(nm)
-  override def getMethod(nm : String, params : Array[String]) = mirror map (_.getMethod(nm, params)) getOrElse super.getMethod(nm, params)
-  override def getElementInfo = mirror map (_.getElementInfo) getOrElse super.getElementInfo
-  override def getChildren = mirror map (_.getChildren) getOrElse super.getChildren
+  override def getField(nm : String) = mirror map (_.getField(nm)) orNull 
+  override def getType(nm : String) = mirror map (_.getType(nm)) orNull
+  override def getMethod(nm : String, params : Array[String]) = mirror map (_.getMethod(nm, params)) orNull
+  override def getMethods() = mirror map (_.getMethods) getOrElse Array.empty
+  override def getFields() = mirror map (_.getFields) getOrElse Array.empty
+  override def getTypes() = mirror map (_.getTypes) getOrElse Array.empty
   
-  override def isResolved = mirror.isDefined
-  override def exists = isResolved
+  override def isAnonymous = false
+  override def isLocal = false
+  override def isEnum = false
+  override def isInterface = mirror map (_.isInterface) getOrElse false
+  override def getDeclaringType = null
+  override def exists = mirror.isDefined
 }
