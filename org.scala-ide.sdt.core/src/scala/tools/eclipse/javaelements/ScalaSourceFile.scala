@@ -50,7 +50,7 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
       astLevel : Int,
       reconcileFlags : Int,
       workingCopyOwner : WorkingCopyOwner,
-      monitor : IProgressMonitor) : org.eclipse.jdt.core.dom.CompilationUnit = Tracer.timeOf("reconcile of " + file.path){
+      monitor : IProgressMonitor) : org.eclipse.jdt.core.dom.CompilationUnit = Tracer.timeOf("reconcile of " + file){
     ScalaPlugin.plugin.reconcileListeners.triggerBeforeReconcile(this, monitor, workingCopyOwner)
     val b = super.reconcile(ICompilationUnit.NO_AST, reconcileFlags, workingCopyOwner, monitor)
     ScalaPlugin.plugin.reconcileListeners.triggerAfterReconcile(this, monitor, workingCopyOwner)
@@ -76,23 +76,19 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
 
   override def getProblemRequestor = getPerWorkingCopyInfo
 
-  override lazy val file : AbstractFile = { 
-    val res = try { getCorrespondingResource } catch { case _ => null }
-    res match {
-      case f : IFile => new EclipseFile(f)
-      case _ => new VirtualFile(getElementName, getPath.toString)
-    }
-  }
+//  override lazy val file : AbstractFile = { 
+//    val res = try { getCorrespondingResource } catch { case _ => null }
+//    res match {
+//      case f : IFile => new EclipseFile(f)
+//      case _ => new VirtualFile(getElementName, getPath.toString)
+//    }
+//  }
 
   def getProblems : Array[IProblem] = withSourceFile { (src, compiler) =>
-    import compiler._
-    val resp = new Response[Tree]
-    askLoadedTyped(src, resp)
-    resp.get
-    val problems = compiler.problemsOf(this)
+    val problems = compiler.problemsOf(file)
     if (problems.isEmpty) null else problems.toArray
   } (null)
-  
+
   override def getType(name : String) : IType = new LazyToplevelClass(this, name)
   
   // override because super implementation return null if getSourceElementAt(pos) == this.

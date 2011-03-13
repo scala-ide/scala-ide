@@ -9,10 +9,6 @@ package javaelements
 import scala.tools.eclipse.util.{Tracer, Defensive}
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.{ Map => JMap }
-
-import scala.concurrent.SyncVar
-
-import org.eclipse.core.internal.filebuffers.SynchronizableDocument
 import org.eclipse.core.resources.{ IFile, IResource }
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.jdt.core.{
@@ -23,31 +19,33 @@ import org.eclipse.jdt.internal.core.{
   BufferManager, CompilationUnitElementInfo, DefaultWorkingCopyOwner, JavaModelStatus, JavaProject, Openable,
   OpenableElementInfo, SearchableEnvironment }
 import org.eclipse.jdt.internal.core.search.matching.{ MatchLocator, PossibleMatch }
-import org.eclipse.jdt.internal.ui.javaeditor.DocumentAdapter
 import org.eclipse.jface.text.{IRegion, ITextSelection}
-import org.eclipse.ui.texteditor.ITextEditor 
-
-import scala.tools.nsc.io.AbstractFile
-import scala.tools.nsc.util.{ BatchSourceFile, SourceFile }
-
+import org.eclipse.ui.texteditor.ITextEditor
+import scala.tools.nsc.util.{ SourceFile }
 import scala.tools.eclipse.contribution.weaving.jdt.{ IScalaCompilationUnit, IScalaWordFinder }
-
 import scala.tools.eclipse.{ ScalaImages, ScalaPlugin, ScalaPresentationCompiler, ScalaSourceIndexer, ScalaWordFinder }
 import scala.tools.eclipse.util.ReflectionUtils
+import scala.tools.eclipse.util.FileUtils
+import scala.tools.nsc.io.AbstractFile
 
 trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with ScalaElement with IScalaCompilationUnit with IBufferChangedListener {
   val project = ScalaPlugin.plugin.getScalaProject(getJavaProject.getProject)
   
   private var _changed = new AtomicBoolean(true)
 
-  val file : AbstractFile
+  def file : AbstractFile = _file
+  private val _file = (
+    FileUtils.toAbstractFile(Option(this.getCorrespondingResource.asInstanceOf[IFile]))
+    .orElse(FileUtils.toAbstractFile(getElementName, getPath.toString))
+    .orNull
+  )
   
   def doWithSourceFile(op : (SourceFile, ScalaPresentationCompiler) => Unit) {
-    project.withSourceFile(this)(op)(())
+    project.withSourceFile(this.file)(op)(())
   }
   
   def withSourceFile[T](op : (SourceFile, ScalaPresentationCompiler) => T)(orElse: => T = project.defaultOrElse) : T = {
-    project.withSourceFile(this)(op)(orElse)
+    project.withSourceFile(this.file)(op)(orElse)
   }
   
   def withSourceFileButNotInMainThread[T](default : => T)(op : (SourceFile, ScalaPresentationCompiler) => T) : T = {
@@ -56,7 +54,7 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
         Tracer.printlnWithStack("cancel/default call to withSourceFile in main Thread")
         default
       }
-      case false => project.withSourceFile(this)(op)(default)
+      case false => project.withSourceFile(this.file)(op)(default)
     }
   }
 
@@ -72,16 +70,12 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
   
   def discard {
     if (getJavaProject.getProject.isOpen)
-      project.withPresentationCompilerIfExists(_.discardSourceFile(this))
+      project.withPresentationCompilerIfExists(_.discardSourceFile(file))
   }
   
   override def close {
     discard
     super.close
-  }
-  
-  def createSourceFile : BatchSourceFile = {
-    new BatchSourceFile(file, getContents)
   }
 
   def getProblemRequestor : IProblemRequestor = null
@@ -89,16 +83,18 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
   override def buildStructure(info : OpenableElementInfo, pm : IProgressMonitor, newElements : JMap[_, _], underlyingResource : IResource) : Boolean = {
     Tracer.println("buildStructure : " + underlyingResource)
     //Can freeze UI if in main Thread
-    withSourceFile({ (sourceFile, compiler) =>
+    project.withPresentationCompiler ({ compiler =>
       import scala.tools.eclipse.util.IDESettings
-      
-      val contents = this.getContents
       if (IDESettings.compileOnTyping.value && _changed.getAndSet(false)) {
-        compiler.askReload(this, contents)
+        val contents = this.getContents
+        compiler.askReload(file, contents)
       }
-
+    })()
+    
+    
+    withSourceFile({ (sourceFile, compiler) =>
       val unsafeElements = newElements.asInstanceOf[JMap[AnyRef, AnyRef]]
-      val sourceLength = sourceFile.length
+      val sourceLength = sourceFile.length //contents.length
       //Defensive.tryOrLog[Boolean](false) {
       compiler.withUntypedTree(sourceFile) { tree =>
         compiler.ask { () =>
@@ -116,6 +112,7 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
       info.isStructureKnown
     }) (false)
   }
+  
   override def createElementInfo = new CompilationUnitElementInfo
   
   def addToIndexer(indexer : ScalaSourceIndexer) {

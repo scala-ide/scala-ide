@@ -24,6 +24,7 @@ import scala.tools.eclipse.javaelements.ScalaCompilationUnit
 import scala.tools.eclipse.properties.PropertyStore
 import scala.tools.eclipse.util.{ Cached, EclipseResource, IDESettings, OSGiUtils, ReflectionUtils }
 import scala.tools.eclipse.ui.semantic.highlighting.UnusedImportsAnalyzer
+import scala.tools.nsc.io.AbstractFile
 
 class ScalaProject(val underlying: IProject) {
   import ScalaPlugin.plugin
@@ -347,9 +348,12 @@ class ScalaProject(val underlying: IProject) {
     presentationCompiler.doIfExist(op)
   }
 
-  def withSourceFile[T](scu: ScalaCompilationUnit)(op: (SourceFile, ScalaPresentationCompiler) => T)(orElse: => T = defaultOrElse): T = {
+  //@deprecated
+  //def withSourceFile[T](scu: ScalaCompilationUnit)(op: (SourceFile, ScalaPresentationCompiler) => T)(orElse: => T = defaultOrElse): T = withSourceFile(scu.file)(op)(orElse) 
+
+  def withSourceFile[T](f : AbstractFile)(op: (SourceFile, ScalaPresentationCompiler) => T)(orElse: => T = defaultOrElse): T = {
     withPresentationCompiler { compiler =>
-      compiler.withSourceFile(scu)(op)
+      compiler.withSourceFile(f)(op)
     } {orElse}
   }
 

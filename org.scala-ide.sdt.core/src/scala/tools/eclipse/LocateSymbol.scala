@@ -7,14 +7,7 @@ package scala.tools.eclipse
 
 import org.eclipse.core.resources.ResourcesPlugin
 import org.eclipse.core.runtime.Path
-import org.eclipse.jdt.core.{ICodeAssist, IJavaElement}
-import org.eclipse.jface.text.{IRegion, ITextViewer}
-import org.eclipse.jface.text.hyperlink.{AbstractHyperlinkDetector, IHyperlink}
-import org.eclipse.jdt.internal.core.{ClassFile,Openable}
-import org.eclipse.ui.texteditor.ITextEditor
 import org.eclipse.jdt.internal.compiler.env.ICompilationUnit
-import org.eclipse.jdt.ui.actions.SelectionDispatchAction
-import org.eclipse.jdt.internal.ui.javaeditor.{EditorUtility, JavaElementHyperlink}
 
 import scala.reflect.generic.Flags._
 import scala.tools.nsc.io.AbstractFile
@@ -59,7 +52,7 @@ trait LocateSymbol { self : ScalaPresentationCompiler =>
         file.withSourceFile { (f, _) =>
           val pos = new Response[Position]
           getLinkPos(sym, f, pos)
-          askReload(scu, scu.getContents)
+          askReload(scu.file, scu.getContents)
           pos.get.left.toOption
         } (None)
       } else Some(sym.pos)) flatMap { p =>

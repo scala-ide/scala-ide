@@ -205,7 +205,7 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
         val project = elem.getJavaProject.getProject
         if (project.isOpen) {
           getScalaProject(project).
-            withPresentationCompilerIfExists { _.discardSourceFile(elem.asInstanceOf[ScalaSourceFile]) } 
+            withPresentationCompilerIfExists { _.discardSourceFile(elem.asInstanceOf[ScalaSourceFile].file) } 
         }
         false
       

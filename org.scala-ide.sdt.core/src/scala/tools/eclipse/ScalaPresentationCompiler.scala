@@ -7,17 +7,14 @@ package scala.tools.eclipse
 
 import scala.tools.eclipse.util.Tracer
 import scala.collection.mutable
-import scala.collection.mutable.{ ArrayBuffer, SynchronizedMap }
-
 import org.eclipse.jdt.core.compiler.IProblem
 import org.eclipse.jdt.internal.compiler.problem.{ DefaultProblem, ProblemSeverities }
 import scala.tools.nsc.interactive.{Global, InteractiveReporter, Problem}
 import scala.tools.nsc.io.AbstractFile
 import scala.tools.nsc.reporters.Reporter
 import scala.tools.nsc.util.{ BatchSourceFile, Position, SourceFile }
-
 import scala.tools.eclipse.javaelements.{
-  ScalaCompilationUnit, ScalaIndexBuilder, ScalaJavaMapper, ScalaMatchLocator, ScalaStructureBuilder,
+  ScalaIndexBuilder, ScalaJavaMapper, ScalaMatchLocator, ScalaStructureBuilder,
   ScalaOverrideIndicatorBuilder }
 import scala.tools.eclipse.util.{ Cached, EclipseFile, EclipseResource, IDESettings }
 import scala.tools.nsc.interactive.compat.Settings
@@ -36,34 +33,39 @@ class ScalaPresentationCompiler(settings : Settings)
   def presentationReporter = reporter.asInstanceOf[ScalaPresentationCompiler.PresentationReporter]
   presentationReporter.compiler = this
   
-  private val sourceFiles = new mutable.HashMap[ScalaCompilationUnit, BatchSourceFile] {
-    override def default(k : ScalaCompilationUnit) = { 
-      val v = k.createSourceFile
+  private val sourceFiles = new mutable.HashMap[AbstractFile, BatchSourceFile]{
+    override def default(k : AbstractFile) = { 
+      val v = new BatchSourceFile(k)
       ScalaPresentationCompiler.this.synchronized {
         get(k) match {
           case Some(v) => v
           case None => put(k, v); v
-       }
-      }} 
+        }
+      }
+    }
   }
   
-  private def problemsOf(file : AbstractFile) : List[IProblem] = {
-    unitOfFile get file match {
+  def problemsOf(file : AbstractFile) : List[IProblem] = {
+    val b = unitOfFile get file match {
       case Some(unit) => 
         val response = new Response[Tree]
         askLoadedTyped(unit.source, response)
-        response.get
+        val timeout = IDESettings.timeOutBodyReq.value //Defensive use a timeout see issue_0003 issue_0004
+        response.get(timeout)
         val result = unit.problems.toList flatMap presentationReporter.eclipseProblem
         //unit.problems.clear()
         result
       case None => 
+        Tracer.println("no unit for " + file)
         Nil
     }
+    Tracer.println("problems of " + file + " : " + b.size)
+    b
   }
   
-  def problemsOf(scu : ScalaCompilationUnit) : List[IProblem] = problemsOf(scu.file)
+  //def problemsOf(scu : IFile) : List[IProblem] = problemsOf(FileUtils.toAbstractFile(scu))
   
-  def withSourceFile[T](scu : ScalaCompilationUnit)(op : (SourceFile, ScalaPresentationCompiler) => T) : T =
+  def withSourceFile[T](scu : AbstractFile)(op : (SourceFile, ScalaPresentationCompiler) => T) : T =
     op(sourceFiles(scu), this)
 
   override def ask[A](op: () => A): A = {
@@ -113,18 +115,20 @@ class ScalaPresentationCompiler(settings : Settings)
     op(tree)
   }
   
-  def askReload(scu : ScalaCompilationUnit, content : Array[Char]) {
-    Tracer.println("askReload")
+  def askReload(scu : AbstractFile, content : Array[Char]) {
+    Tracer.println("askReload 3: " + scu)
     sourceFiles.get(scu) match {
       case None =>
-      case Some(f) =>
-        val newF = new BatchSourceFile(f.file, content)
+      case Some(f) => {
+        val newF = new BatchSourceFile(scu, content) 
+        Tracer.println("content length :" + content.length)
         synchronized { sourceFiles(scu) = newF } 
         askReload(List(newF), new Response[Unit])
+      }
     }
   }
   
-  def discardSourceFile(scu : ScalaCompilationUnit) {
+  def discardSourceFile(scu : AbstractFile) {
     synchronized {
       sourceFiles.get(scu) match {
         case None =>
