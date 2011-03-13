@@ -6,16 +6,10 @@ import scala.tools.refactoring.implementations._
 import org.eclipse.core.resources.IFile
 import scala.tools.eclipse.javaelements.ScalaSourceFile
 import scala.tools.refactoring.common.TreeTraverser
-import scala.tools.refactoring.transformation.TreeTransformations
-import scala.tools.refactoring.common.CompilerAccess
-import scala.tools.refactoring.common.PimpedTrees
-import scala.tools.eclipse.ScalaPlugin._
-import scala.tools.refactoring.sourcegen.SourceGenerator
-import org.eclipse.core.runtime.IProgressMonitor
-import org.eclipse.jdt.core.WorkingCopyOwner
+import scala.tools.eclipse.ScalaPlugin
 
 object UnusedImportsAnalyzer {
-  val warningMarkerId = plugin.problemMarkerId
+  val warningMarkerId = ScalaPlugin.plugin.problemMarkerId
 
   def markUnusedImports(file: IFile) {
     for (

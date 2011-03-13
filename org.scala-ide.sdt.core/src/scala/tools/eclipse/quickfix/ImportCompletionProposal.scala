@@ -2,9 +2,6 @@ package scala.tools.eclipse.quickfix
 
 import org.eclipse.jdt.ui.JavaUI
 import org.eclipse.jdt.ui.ISharedImages
-import org.eclipse.core.runtime.NullProgressMonitor
-import org.eclipse.text.edits.ReplaceEdit
-import org.eclipse.text.edits.MultiTextEdit
 import org.eclipse.ltk.core.refactoring.TextFileChange
 import org.eclipse.core.resources.IFile
 import scala.tools.eclipse.util.EclipseResource
