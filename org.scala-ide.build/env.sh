@@ -40,11 +40,15 @@ timestamp()
 
 current_branch()
 {
-  git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/\1/'
+  git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/-\1/'
+}
+milestone()
+{
+  git log --decorate -1 | grep 'tag:' | sed -e 's/^.*tag: \(M[^,]*\).*$/-\1/'
 }
 qualifier()
 {
-  echo $(timestamp)-$(current_branch)${MILESTONE}
+  echo $(timestamp)$(current_branch)$(milestone)
 }
 build()
 {
