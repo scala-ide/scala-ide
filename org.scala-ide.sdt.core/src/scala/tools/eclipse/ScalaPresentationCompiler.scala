@@ -177,6 +177,19 @@ object ScalaPresentationCompiler {
                   pos1.line,
                   pos1.column
                 ))
+            case af : AbstractFile =>
+              Some(
+                new DefaultProblem(
+                  af.path.toCharArray,
+                  formatMessage(msg),
+                  0,
+                  new Array[String](0),
+                  nscSeverityToEclipse(severityLevel),
+                  pos1.startOrPoint,
+                  pos1.endOrPoint,
+                  pos1.line,
+                  pos1.column
+                ))
             case _ => None
           }
         } else None
