@@ -14,9 +14,6 @@ import org.eclipse.jdt.core.{ IJavaModelMarker, JavaCore }
 import org.eclipse.jdt.core.compiler.IProblem
 import org.eclipse.jdt.internal.core.builder.JavaBuilder
 import scala.tools.eclipse.ScalaPlugin
-//import scala.tools.nsc.io.PlainFile
-//import scala.tools.nsc.io.Path
-import scala.tools.nsc.io.VirtualFile
 import scala.tools.nsc.io.AbstractFile
 
 object FileUtils {
@@ -25,10 +22,15 @@ object FileUtils {
   //TODO : OPTIMIZE may be used other thing than .getLocation is CPU consumming - to monitor
   // or new EclipseFile(f) but path of EclipseFile is not absolute => take care
   def toAbstractFile(f : Option[IFile]) : Option[AbstractFile] = f.map{ x =>
-    // new PlainFile(Path(x.getLocation.toFile))
-    new EclipseFile(x)
+    import scala.tools.nsc.io.PlainFile
+    import scala.tools.nsc.io.Path
+    new PlainFile(Path(x.getLocation.toFile))
+    //new EclipseFile(x)
   } 
-  def toAbstractFile(name : String, virtualPath : String) : Option[AbstractFile] = Option(new VirtualFile(name, virtualPath)) 
+  def toAbstractFile(name : String, virtualPath : String) : Option[AbstractFile] = {
+    import scala.tools.nsc.io.VirtualFile
+    Option(new VirtualFile(name, virtualPath)) 
+  }
 //    val res = try { getCorrespondingResource } catch { case _ => null }
 //    res match {
 //      case f : IFile => new EclipseFile(f)
