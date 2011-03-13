@@ -496,7 +496,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         setSourceRange(valElemInfo, v, annotsPos)
         newElements0.put(valElem, valElemInfo)
 
-        val tn = mapType(v.tpt).toArray
+        val tn = mapType(v.tpt.symbol).toArray
         valElemInfo.setTypeName(tn)
         
         if (sym.isValueParameter && sym.owner.isPrimaryConstructor) {
@@ -546,7 +546,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
           typeElemInfo.setTypeName(tn)
         } else {
           //println("Type has type: "+t.rhs.symbol.fullName)
-          val tn = mapType(t.rhs).toArray
+          val tn = mapType(t.rhs.symbol).toArray
           typeElemInfo.setTypeName(tn)
         }
         
@@ -605,7 +605,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         
         defElemInfo.setArgumentNames(paramNames)
         defElemInfo.setExceptionTypeNames(Array.empty)
-        val tn = mapType(d.tpt).toArray
+        val tn = mapType(d.tpt.symbol).toArray
         defElemInfo.asInstanceOf[FnInfo].setReturnType(tn)
 
         val annotsPos = addAnnotations(sym, defElemInfo, defElem)
