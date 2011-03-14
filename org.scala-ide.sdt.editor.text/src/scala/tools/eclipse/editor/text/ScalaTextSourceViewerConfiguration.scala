@@ -63,10 +63,11 @@ protected class ScalaTextSourceViewerConfiguration(val editor : IEditorPart, val
 
     //TODO handlePartition(ScalaPartitions.SCALA_MULTI_LINE_STRING, getStringScanner())
 
-    handlePartition(ScalaPartitions.XML_TAG, new XmlTagScanner(colorManager))
-    handlePartition(ScalaPartitions.XML_COMMENT, new XmlCommentScanner(colorManager))
-    handlePartition(ScalaPartitions.XML_CDATA, new XmlCDATAScanner(colorManager))
-    handlePartition(ScalaPartitions.XML_PI, new XmlPIScanner(colorManager))
+    val scalaPreferenceStore = ScalaPlugin.plugin.getPreferenceStore
+    handlePartition(ScalaPartitions.XML_TAG, new XmlTagScanner(colorManager, scalaPreferenceStore))
+    handlePartition(ScalaPartitions.XML_COMMENT, new XmlCommentScanner(colorManager, scalaPreferenceStore))
+    handlePartition(ScalaPartitions.XML_CDATA, new XmlCDATAScanner(colorManager, scalaPreferenceStore))
+    handlePartition(ScalaPartitions.XML_PI, new XmlPIScanner(colorManager, scalaPreferenceStore))
 
     reconciler
   }
