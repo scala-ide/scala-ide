@@ -272,13 +272,6 @@ class ScalaSourceFieldElementInfo extends SourceFieldElementInfo with ScalaMembe
 class LazyToplevelClass(unit : ScalaCompilationUnit, name : String) extends SourceType(unit, name) with IType with ScalaElement {
   lazy val mirror = unit.getElementInfo.asInstanceOf[OpenableElementInfo].getChildren.find(e => e.getElementName == name).map(_.asInstanceOf[ScalaSourceTypeElement])
   
-  override def getField(nm : String) = mirror map (_.getField(nm)) orNull 
-  override def getType(nm : String) = mirror map (_.getType(nm)) orNull
-  override def getMethod(nm : String, params : Array[String]) = mirror map (_.getMethod(nm, params)) orNull
-  override def getMethods() = mirror map (_.getMethods) getOrElse Array.empty
-  override def getFields() = mirror map (_.getFields) getOrElse Array.empty
-  override def getTypes() = mirror map (_.getTypes) getOrElse Array.empty
-  
   override def isAnonymous = false
   override def isLocal = false
   override def isEnum = false
