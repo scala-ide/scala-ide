@@ -100,10 +100,6 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
     
     ResourcesPlugin.getWorkspace.addResourceChangeListener(this, IResourceChangeEvent.PRE_CLOSE | IResourceChangeEvent.POST_CHANGE)
     JavaCore.addElementChangedListener(this)
-    Platform.getContentTypeManager.
-      getContentType(JavaCore.JAVA_SOURCE_CONTENT_TYPE).
-        addFileSpec("scala", IContentTypeSettings.FILE_EXTENSION_SPEC)
-    Util.resetJavaLikeExtensions // TODO Is this still needed?
     PlatformUI.getWorkbench.getEditorRegistry.setDefaultEditor("*.scala", editorId)
     
     println("Scala compiler bundle: " + scalaCompilerBundle.getLocation)

@@ -44,7 +44,7 @@
 
   <extension point="org.eclipse.core.contenttype.contentTypes">
     <content-type id="scala.tools.eclipse.scalaSource" name="Scala Source File"
-      base-type="org.eclipse.core.runtime.text"
+      base-type="org.eclipse.jdt.core.javaSource"
       priority="high"
       file-extensions="scala"/>
     <content-type id="scala.tools.eclipse.scalaClass" name="Scala Class File"
