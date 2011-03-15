@@ -63,6 +63,7 @@ Import-Package:
  com.ibm.icu.text;apply-aspects:=false
 Export-Package: 
  scala.tools.eclipse,
+ scala.tools.eclipse.actions,
  scala.tools.eclipse.interpreter,
  scala.tools.eclipse.javaelements,
  scala.tools.eclipse.launching,

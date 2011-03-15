@@ -1,5 +1,5 @@
 package scala.tools.eclipse
-package diagnostic
+package actions
 
 import org.eclipse.jface.action.IAction
 import org.eclipse.jface.viewers.{ ISelection, IStructuredSelection }
@@ -7,7 +7,6 @@ import org.eclipse.ui.{ IObjectActionDelegate, IWorkbenchPart, IWorkbenchWindowA
 
 import scala.tools.eclipse.ScalaPlugin.plugin
 import scala.tools.eclipse.javaelements.JDTUtils
-
 
 class RunDiagnosticAction extends IObjectActionDelegate with IWorkbenchWindowActionDelegate {
   private var parentWindow: IWorkbenchWindow = null
@@ -26,10 +25,10 @@ class RunDiagnosticAction extends IObjectActionDelegate with IWorkbenchWindowAct
   
   def run(action: IAction) { 
     plugin check {
-      action.getActionDefinitionId match {
+      action.getId match {
         case RUN_DIAGNOSTICS =>
           val shell = if (parentWindow == null) ScalaPlugin.getShell else parentWindow.getShell        
-          new DiagnosticDialog(shell).open
+          new diagnostic.DiagnosticDialog(shell).open
         case REPORT_BUG =>
           val browserSupport = PlatformUI.getWorkbench.getBrowserSupport
           browserSupport.getExternalBrowser.openURL(new java.net.URL(SDT_TRACKER_URL))

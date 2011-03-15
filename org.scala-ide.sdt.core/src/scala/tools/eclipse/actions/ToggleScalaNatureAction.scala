@@ -4,6 +4,7 @@
 // $Id$
 
 package scala.tools.eclipse
+package actions
 
 import org.eclipse.core.resources.{ IProject }
 import org.eclipse.core.runtime.IAdaptable
@@ -13,8 +14,12 @@ import org.eclipse.core.runtime.Platform
 import org.eclipse.ui.{ IObjectActionDelegate, IWorkbenchPart }
 import ScalaPlugin.plugin
 
-class ToggleScalaNatureAction extends IObjectActionDelegate {
-  
+object ToggleScalaNatureAction {
+  val PDE_PLUGIN_NATURE = "org.eclipse.pde.PluginNature" /* == org.eclipse.pde.internal.core.natures.PDE.PLUGIN_NATURE */
+  val PDE_BUNDLE_NAME = "org.eclipse.pde.ui"
+}
+
+class ToggleScalaNatureAction extends IObjectActionDelegate {  
   import ToggleScalaNatureAction._
   
   private var selectionOption: Option[ISelection] = None
@@ -60,13 +65,5 @@ class ToggleScalaNatureAction extends IObjectActionDelegate {
   }
 
   def setActivePart(action: IAction, targetPart: IWorkbenchPart) {}
-
-}
-
-object ToggleScalaNatureAction {
-
-  val PDE_PLUGIN_NATURE = "org.eclipse.pde.PluginNature" /* == org.eclipse.pde.internal.core.natures.PDE.PLUGIN_NATURE */
-
-  val PDE_BUNDLE_NAME = "org.eclipse.pde.ui"
 
 }

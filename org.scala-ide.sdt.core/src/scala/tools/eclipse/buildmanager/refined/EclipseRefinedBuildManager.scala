@@ -43,7 +43,6 @@ class EclipseRefinedBuildManager(project: ScalaProject, settings0: Settings)
           if (savedTotal != total) {
             monitor.setWorkRemaining(total - savedTotal)
             savedTotal = total
-            println("Total work: " + total)
           }
           
           if (lastWorked < current) {

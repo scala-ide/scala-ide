@@ -5,7 +5,8 @@
  */
 // $Id$
 
-package scala.tools.eclipse.interpreter
+package scala.tools.eclipse
+package actions
 
 import org.eclipse.jface.action.IAction
 import org.eclipse.ui.IObjectActionDelegate
@@ -19,7 +20,7 @@ import org.eclipse.jdt.core._
 /**
  * This is the action defintion that will run a scala interpreter 
  */
-class Action extends IObjectActionDelegate {
+class InterpreterAction extends IObjectActionDelegate {
   var target : Option[IJavaElement] = None
   val SCALA_INTERPRETER_LAUNCH_ID = "scala.interpreter"
   override def setActivePart(action : IAction, targetpart : IWorkbenchPart) = {}
