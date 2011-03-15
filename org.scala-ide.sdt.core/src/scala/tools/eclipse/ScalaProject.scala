@@ -40,7 +40,6 @@ class ScalaProject(val underlying: IProject) {
   private val presentationCompiler = new Cached[Option[ScalaPresentationCompiler]] {
     override def create() = {
       checkClasspathTimeStamp()
-      println("trying to instantiate compiler for " + underlying.getName)
       try {
         val settings = new Settings
         settings.printtypes.tryToSet(Nil)
@@ -48,7 +47,7 @@ class ScalaProject(val underlying: IProject) {
         Some(new ScalaPresentationCompiler(ScalaProject.this, settings))
       } catch {
         case ex@MissingRequirementError(required) =>
-          failedCompilerInitialization("Could not initialize Scala compiler because it could not find a required class: " + required)
+          failedCompilerInitialization("could not find a required class: " + required)
           plugin.logError(ex)
           None
         case ex =>
@@ -71,11 +70,16 @@ class ScalaProject(val underlying: IProject) {
         messageShowed = true
         Display.getDefault asyncExec new Runnable { 
           def run() {
-//            ToggleScalaNatureAction.toggleScalaNature(underlying)
-            MessageDialog.openWarning(ScalaPlugin.getShell, "Error initializing Scala compiler", 
-                ("Error initializing the Scala compiler for project %s:\n%s.\n\n" +
-                "The editor will not try to re-initialize the compiler until you change the classpath or perform Project->Clean.") 
-                  .format(underlying.getName, msg))
+            val doAdd = MessageDialog.openQuestion(ScalaPlugin.getShell, "Add Scala library to project classpath?", 
+                ("There was an error initializing the Scala compiler: %s. \n\n"+
+                 "The editor compiler will be restarted when the project is cleaned or the classpath is changed.\n\n" + 
+                 "Add the Scala library to the classpath of project %s?") 
+                .format(msg, underlying.getName))
+            if (doAdd) {
+              plugin check {
+                Nature.addScalaLibAndSave(underlying)
+              }
+            }
           }
         }
       }
@@ -401,13 +405,9 @@ class ScalaProject(val underlying: IProject) {
   
   def defaultOrElse[T]: T = {  
     if (underlying.isOpen)
-      failedCompilerInitialization("Compiler failed to initialize properly.");
-
-    // FIXME: this now shows 2 dialog boxes, the one above and the one caused by the throw below
-    // will investigate further -DM
-    throw InvalidCompilerSettings() // DM: see if this error is easier to catch
-//    DM: commented out the null below.
-//    null.asInstanceOf[T] // we're already in deep trouble here, so one more NPE won't kill us    
+      failedCompilerInitialization("")
+    
+    throw InvalidCompilerSettings() 
   }
 
   /** 
