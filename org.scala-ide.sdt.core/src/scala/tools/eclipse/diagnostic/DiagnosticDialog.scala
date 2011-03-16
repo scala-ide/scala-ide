@@ -52,7 +52,7 @@ class DiagnosticDialog(shell: Shell) extends Dialog(shell) {
   
   protected var boldFont: Font = null
   
-  protected val markOccurrencesData = new BoolWidgetData(PreferenceConstants.EDITOR_MARK_OCCURRENCES, false)
+//  protected val markOccurrencesData = new BoolWidgetData(PreferenceConstants.EDITOR_MARK_OCCURRENCES, false)
   protected val completionData = new BoolWidgetData("", true) {      
     val mylynCompletion = "org.eclipse.mylyn.java.ui.javaAllProposalCategory"
     val javaCompletion = "org.eclipse.jdt.ui.javaAllProposalCategory"
@@ -92,7 +92,7 @@ class DiagnosticDialog(shell: Shell) extends Dialog(shell) {
   protected val autoActivationData = new BoolWidgetData(PreferenceConstants.CODEASSIST_AUTOACTIVATION, true)
   protected val activationDelayData = new IntWidgetData(PreferenceConstants.CODEASSIST_AUTOACTIVATION_DELAY, 500)
   
-  protected var widgetDataList: List[WidgetData] = List(markOccurrencesData, completionData, autoActivationData, activationDelayData)
+  protected var widgetDataList: List[WidgetData] = List(completionData, autoActivationData, activationDelayData) // , markOccurrencesData
      
   // helper classes for loading and storing widget values
   abstract class WidgetData {
@@ -196,9 +196,10 @@ class DiagnosticDialog(shell: Shell) extends Dialog(shell) {
     // the inner controls
     val innerGroup = newGroup("", radioGroup)
     innerGroup.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, true, 2, 1))
-        
-    val markOccurrencesButton = 
-      newCheckboxButton(innerGroup, "Enable JDT \"Mark Occurrences\" (not recommended)", markOccurrencesData)
+
+    // Note: Mark Occurences is now working properly, so it doesn't need to be recommended to be turned off...
+//    val markOccurrencesButton = 
+//      newCheckboxButton(innerGroup, "Enable JDT \"Mark Occurrences\" (not recommended)", markOccurrencesData)
         
     val completionButton = 
       newCheckboxButton(innerGroup, "Use Scala-compatible JDT content assist proposals (recommended)", completionData)
@@ -265,7 +266,7 @@ class DiagnosticDialog(shell: Shell) extends Dialog(shell) {
       }    
     }
     
-    markOccurrencesButton.addSelectionListener(selectionListener)
+//    markOccurrencesButton.addSelectionListener(selectionListener)
     autoActivationButton.addSelectionListener(selectionListener)
     completionButton.addSelectionListener(selectionListener)
 
