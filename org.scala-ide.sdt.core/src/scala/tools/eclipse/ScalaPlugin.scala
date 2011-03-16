@@ -268,12 +268,12 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
   def partDeactivated(part: IWorkbenchPart) {}
   def partBroughtToTop(part: IWorkbenchPart) {}
   def partOpened(part: IWorkbenchPart) {
-	withCompilerAndFile(part) { (compiler, ssf) =>
+    withCompilerAndFile(part) { (compiler, ssf) =>
       compiler.askReload(ssf, ssf.getContents)
     }
   }
   def partClosed(part: IWorkbenchPart) {
-	withCompilerAndFile(part) { (compiler, ssf) =>
+    withCompilerAndFile(part) { (compiler, ssf) =>
       compiler.discardSourceFile(ssf)
     }
   }
