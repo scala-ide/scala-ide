@@ -104,6 +104,7 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
     
     println("Scala compiler bundle: " + scalaCompilerBundle.getLocation)
     PerspectiveFactory.updatePerspective
+    diagnostic.StartupDiagnostics.run
   }
 
   override def stop(context: BundleContext) = {

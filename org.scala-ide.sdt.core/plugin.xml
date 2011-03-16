@@ -332,10 +332,10 @@
    </extension>
    <extension point = "org.eclipse.debug.core.launchConfigurationTypes">
      <launchConfigurationType
-           delegate="org.eclipse.jdt.launching.JavaLaunchDelegate"
+           id="scala.application"
+           delegate="scala.tools.eclipse.launching.ScalaLaunchDelegate"
            delegateDescription="The Scala JVM Launcher supports running and debugging of local Scala applications compiled to the JVM"
            delegateName="Scala JVM Launcher"
-           id="scala.application"
            modes="run, debug"
            name="Scala Application"
            public="true"
@@ -510,6 +510,20 @@
       </visibility>
 
 
+    </objectContribution>
+    <objectContribution
+          adaptable="true"
+          id="org.scala-ide.sdt.core.addScalaLibrary"
+          nameFilter="*"
+          objectClass="org.eclipse.jdt.core.IJavaProject">
+       <action
+             class="scala.tools.eclipse.actions.AddScalaLibraryAction"
+             enablesFor="+"
+             id="org.scala-ide.sdt.core.action.addScalaLibrary"
+             label="Add Scala Library to Build Path"
+             menubarPath="org.scala-ide.sdt.core.popupMenu/content"
+             tooltip="Add the Scala standard library to the project build path">
+       </action>
     </objectContribution>
       <objectContribution
             adaptable="true"
