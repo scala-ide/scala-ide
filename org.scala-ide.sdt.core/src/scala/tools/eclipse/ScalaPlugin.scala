@@ -19,7 +19,8 @@ import org.eclipse.jdt.internal.ui.javaeditor.IClassFileEditorInput
 import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.swt.widgets.Shell
 import org.eclipse.swt.graphics.Color
-import org.eclipse.ui.{ IEditorInput, IFileEditorInput, PlatformUI }
+import org.eclipse.ui.{ IEditorInput, IFileEditorInput, PlatformUI, IPartListener, IWorkbenchPart, IWorkbenchPage, IPageListener, IEditorPart }
+import org.eclipse.ui.part.FileEditorInput
 import org.eclipse.ui.plugin.AbstractUIPlugin
 import org.osgi.framework.BundleContext
 
@@ -39,7 +40,7 @@ object ScalaPlugin {
   }
 }
 
-class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IElementChangedListener {
+class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IElementChangedListener with IPartListener {
   ScalaPlugin.plugin = this
   
   def pluginId = "org.scala-ide.sdt.core"
@@ -93,6 +94,18 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
 
   lazy val templateManager = new ScalaTemplateManager()
   
+  val pageListener = new IPageListener {
+	def pageOpened(page: IWorkbenchPage) {
+      page.addPartListener(ScalaPlugin.this)
+	}
+	
+	def pageClosed(page: IWorkbenchPage) {
+	  page.removePartListener(ScalaPlugin.this)
+	}
+	
+	def pageActivated(page: IWorkbenchPage) {}
+  }
+  
   private val projects = new HashMap[IProject, ScalaProject]
   
   override def start(context: BundleContext) = {
@@ -101,6 +114,7 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
     ResourcesPlugin.getWorkspace.addResourceChangeListener(this, IResourceChangeEvent.PRE_CLOSE | IResourceChangeEvent.POST_CHANGE)
     JavaCore.addElementChangedListener(this)
     PlatformUI.getWorkbench.getEditorRegistry.setDefaultEditor("*.scala", editorId)
+    PlatformUI.getWorkbench.getActiveWorkbenchWindow.addPageListener(pageListener)
     
     println("Scala compiler bundle: " + scalaCompilerBundle.getLocation)
     PerspectiveFactory.updatePerspective
@@ -109,6 +123,7 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
 
   override def stop(context: BundleContext) = {
     ResourcesPlugin.getWorkspace.removeResourceChangeListener(this)
+    PlatformUI.getWorkbench.getActiveWorkbenchWindow.removePageListener(pageListener)
 
     super.stop(context)
   }
@@ -247,4 +262,39 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
   }
   
   def isBuildable(file: IFile) = (file.getName.endsWith(scalaFileExtn) || file.getName.endsWith(javaFileExtn))
+  
+  // IPartListener
+  def partActivated(part: IWorkbenchPart) {}
+  def partDeactivated(part: IWorkbenchPart) {}
+  def partBroughtToTop(part: IWorkbenchPart) {}
+  def partOpened(part: IWorkbenchPart) {
+	withCompilerAndFile(part) { (compiler, ssf) =>
+      compiler.askReload(ssf, ssf.getContents)
+    }
+  }
+  def partClosed(part: IWorkbenchPart) {
+	withCompilerAndFile(part) { (compiler, ssf) =>
+      compiler.discardSourceFile(ssf)
+    }
+  }
+  
+  private def withCompilerAndFile(part : IWorkbenchPart)(op: (ScalaPresentationCompiler, ScalaSourceFile) => Unit) {
+	part match {
+      case editor: IEditorPart =>
+        editor.getEditorInput match {
+          case fei: FileEditorInput =>
+            val f = fei.getFile
+            if (f.getName.endsWith(scalaFileExtn)) {
+              for (ssf <- ScalaSourceFile.createFromPath(f.getFullPath.toString)) {
+            	val proj = getScalaProject(f.getProject)
+            	proj.withSourceFile(ssf) { (_, compiler) =>
+            	  op(compiler, ssf)  
+                } ()
+              }
+            }
+          case _ =>
+        }
+      case _ =>
+    }  
+  }
 }

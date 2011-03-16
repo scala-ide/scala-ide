@@ -91,10 +91,10 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
     op(parseTree(sourceFile))
   }
 
-  def withUntypedTree[T](sourceFile : SourceFile, keepLoaded: Boolean)(op : Tree => T) : T = {
+  def withStructure[T](sourceFile : SourceFile)(op : Tree => T) : T = {
     val tree = {
       val response = new Response[Tree]
-      askParsedEntered(sourceFile, keepLoaded, response)
+      askStructure(sourceFile, response)
       response.get match {
         case Left(tree) => tree 
         case Right(thr) => throw thr
@@ -114,7 +114,8 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
   }
   
   def discardSourceFile(scu : ScalaCompilationUnit) {
-    synchronized {
+    println("discarding " + scu.getPath)
+	synchronized {
       sourceFiles.get(scu) match {
         case None =>
         case Some(source) =>
