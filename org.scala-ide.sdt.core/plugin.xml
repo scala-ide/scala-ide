@@ -511,6 +511,20 @@
 
 
     </objectContribution>
+    <objectContribution
+          adaptable="true"
+          id="org.scala-ide.sdt.core.addScalaLibrary"
+          nameFilter="*"
+          objectClass="org.eclipse.jdt.core.IJavaProject">
+       <action
+             class="scala.tools.eclipse.actions.AddScalaLibraryAction"
+             enablesFor="+"
+             id="org.scala-ide.sdt.core.action.addScalaLibrary"
+             label="Add Scala Library to Build Path"
+             menubarPath="org.scala-ide.sdt.core.popupMenu/content"
+             tooltip="Add the Scala standard library to the project build path">
+       </action>
+    </objectContribution>
       <objectContribution
             adaptable="true"
             objectClass="org.eclipse.jdt.core.IJavaProject"
