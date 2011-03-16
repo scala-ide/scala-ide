@@ -312,10 +312,11 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
       override val classes = new HashMap[Symbol, (ScalaElement, ScalaElementInfo)]
     
       override def addClass(c : ClassDef) : Owner = {
+        val sym = c.symbol
+        if (sym eq NoSymbol) return self  // Local class hasn't been attributed yet, can't show anything meaningful.
+        
         val name = c.name.toString
         val parentTree = c.impl.parents.head
-
-        val sym = c.symbol
         val isAnon = sym.isAnonymousClass
         val superClass = sym.superClass
         val superName = if (superClass ne NoSymbol) superClass.name.toString else "Object"
