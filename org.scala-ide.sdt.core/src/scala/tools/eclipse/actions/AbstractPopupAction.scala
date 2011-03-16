@@ -28,5 +28,7 @@ trait AbstractPopupAction extends IObjectActionDelegate {
     case project: IProject => Some(project)
     case adaptable: IAdaptable => Option(adaptable.getAdapter(classOf[IProject]).asInstanceOf[IProject])
     case _ => None
-  }  
+  }
+  
+  def setActivePart(action: IAction, targetPart: IWorkbenchPart) {  }  
 }

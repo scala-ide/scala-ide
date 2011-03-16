@@ -49,6 +49,4 @@ class ToggleScalaNatureAction extends AbstractPopupAction {
     project.setDescription(projectDescription, null)
     project.touch(null)
   }
-
-  def setActivePart(action: IAction, targetPart: IWorkbenchPart) {}
 }
