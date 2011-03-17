@@ -87,6 +87,17 @@
           </execution>
         </executions>
       </plugin>
+      <!-- for setting a better qualifier -->
+      <plugin>
+        <groupId>org.sonatype.tycho</groupId>
+        <artifactId>maven-osgi-packaging-plugin</artifactId>
+        <version>${tycho.version}</version>
+        <configuration>
+          <format>yyyyMMddHHmm'-${git.hash}'</format> 
+          <archiveSite>true</archiveSite>
+        </configuration>
+      </plugin>    
+  
     </plugins>
   </build>
   <repositories>
