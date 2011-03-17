@@ -18,5 +18,6 @@ build()
   ${MAVEN} \
     -U \
     -Dscala.version=${SCALA_VERSION} \
+    -Dgit.hash=`git log -1 --pretty=format:"%h"` \
     clean install $*
 }
