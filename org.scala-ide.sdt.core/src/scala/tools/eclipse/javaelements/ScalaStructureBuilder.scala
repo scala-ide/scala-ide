@@ -320,7 +320,6 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         val isAnon = sym.isAnonymousClass
         val superClass = sym.superClass
         val superName = if (superClass ne NoSymbol) superClass.toString else "Object"
-        val superFullName = if (superClass ne NoSymbol) superClass.fullName.toChars else "java.lang.Object".toCharArray
         val classElem =
           if(sym hasFlag Flags.TRAIT)
             new ScalaTraitElement(element, name)
@@ -356,7 +355,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         
         val annotsPos = addAnnotations(sym, classElemInfo, classElem)
 
-        classElemInfo.setSuperclassName(superFullName)
+        classElemInfo.setSuperclassName(mapType(superClass).toCharArray)
         
         val interfaceNames = sym.mixinClasses.map { m => 
           mapType(m).toCharArray
