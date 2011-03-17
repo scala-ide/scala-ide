@@ -319,7 +319,8 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         val parentTree = c.impl.parents.head
         val isAnon = sym.isAnonymousClass
         val superClass = sym.superClass
-        val superName = if (superClass ne NoSymbol) superClass.name.toString else "Object"
+        val superName = if (superClass ne NoSymbol) superClass.toString else "Object"
+        val superFullName = if (superClass ne NoSymbol) superClass.fullName.toChars else "java.lang.Object".toCharArray
         val classElem =
           if(sym hasFlag Flags.TRAIT)
             new ScalaTraitElement(element, name)
@@ -338,7 +339,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
           val typeParams = sym.typeParams.map { tp =>
             val typeParameter = new TypeParameter(classElem, tp.name.toString)
             val tpElementInfo = new TypeParameterElementInfo
-            val parents = /*if (tp.info.parents.isEmpty) List(typeRef(NoType, definitions.ObjectClass, Nil)) else */tp.info.parents
+            val parents = tp.info.parents
             if (!parents.isEmpty) {
               tpElementInfo.boundsSignatures = parents.map(_.typeSymbol.fullName.toCharArray).toArray 
               tpElementInfo.bounds = parents.map(_.typeSymbol.name.toChars).toArray
@@ -355,7 +356,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         
         val annotsPos = addAnnotations(sym, classElemInfo, classElem)
 
-        classElemInfo.setSuperclassName(superName.toCharArray)
+        classElemInfo.setSuperclassName(superFullName)
         
         val interfaceNames = sym.mixinClasses.map { m => 
           mapType(m).toCharArray
