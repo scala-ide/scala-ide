@@ -287,9 +287,7 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
             if (f.getName.endsWith(scalaFileExtn)) {
               for (ssf <- ScalaSourceFile.createFromPath(f.getFullPath.toString)) {
             	val proj = getScalaProject(f.getProject)
-            	proj.withSourceFile(ssf) { (_, compiler) =>
-            	  op(compiler, ssf)  
-                } ()
+            	proj.withPresentationCompiler(op(_, ssf)) ()
               }
             }
           case _ =>
