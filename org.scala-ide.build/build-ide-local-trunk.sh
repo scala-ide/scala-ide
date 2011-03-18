@@ -8,4 +8,5 @@ ${MAVEN} \
   -U \
   -P local-scala-trunk,!scala-trunk \
   -Dscala.version=${SCALA_VERSION} \
+  -Dgit.hash=${GIT_HASH} \
   clean install $*
