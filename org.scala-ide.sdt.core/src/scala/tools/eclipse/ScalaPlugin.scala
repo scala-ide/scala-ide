@@ -124,6 +124,7 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
   override def stop(context: BundleContext) = {
     ResourcesPlugin.getWorkspace.removeResourceChangeListener(this)
     PlatformUI.getWorkbench.getActiveWorkbenchWindow.removePageListener(pageListener)
+    savePluginPreferences() // TODO: this method is deprecated, but the solution given in the docs is unclear and is not used by Eclipse itself. -DM
 
     super.stop(context)
   }
