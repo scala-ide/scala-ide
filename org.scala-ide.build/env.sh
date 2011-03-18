@@ -1,3 +1,5 @@
+#!/bin/sh
+
 # MAVEN needs to point to a MAVEN3 installation:
 if which mvn >/dev/null; then
   mvn -version | grep "Maven 3" > /dev/null
@@ -15,9 +17,12 @@ fi
 
 build()
 {
+  GIT_HASH="`git log -1 --pretty=format:"%h"`"
+  echo "Last commit git hash:" $GIT_HASH
+  
   ${MAVEN} \
     -U \
     -Dscala.version=${SCALA_VERSION} \
-    -Dgit.hash=`git log -1 --pretty=format:"%h"` \
+    -Dgit.hash=${GIT_HASH} \
     clean install $*
 }
