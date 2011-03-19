@@ -6,7 +6,6 @@
 package scala.tools.eclipse.util
 
 import scala.collection.JavaConversions._
-import org.eclipse.core.filebuffers.FileBuffers
 import org.eclipse.core.internal.resources.ResourceException
 import org.eclipse.core.resources.{ IFile, IMarker, IResource, IWorkspaceRunnable }
 import org.eclipse.core.runtime.{ IProgressMonitor }
@@ -40,6 +39,8 @@ object FileUtils {
   
 
   def length(file : IFile) = {
+    import org.eclipse.core.filebuffers.FileBuffers
+    
     val fs = FileBuffers.getFileStoreAtLocation(file.getLocation)
     if (fs != null)
       fs.fetchInfo.getLength.toInt
