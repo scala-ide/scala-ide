@@ -1,4 +1,5 @@
-package scala.tools.eclipse.quickfix
+package scala.tools.eclipse
+package quickfix
 
 import org.eclipse.jdt.ui.JavaUI
 import org.eclipse.jdt.ui.ISharedImages
@@ -30,7 +31,14 @@ case class ImportCompletionProposal(val importName : String) extends IJavaComple
   def apply(document : IDocument) : Unit = {
     IDESettings.quickfixImportByText.value match {
       case true => applyByTextTransfo(document)
-      case false => applyByASTTransfo(document)
+      case false => try {
+        applyByASTTransfo(document)
+      } catch {
+        case t => {
+          ScalaPlugin.plugin.logWarning("failed to update import by AST transformation, fallback to text implementation", Some(t))
+          applyByTextTransfo(document)
+        }
+      }
     }
   }
   
