@@ -6,4 +6,5 @@ Bundle-Version: 1.0.0.qualifier
 Bundle-Vendor: scala-ide.org
 Fragment-Host: org.scala-ide.sdt.core
 Bundle-RequiredExecutionEnvironment: J2SE-1.5
-Require-Bundle: org.scala-ide.scala.library
+Require-Bundle: org.scala-ide.scala.library,
+ org.junit4
