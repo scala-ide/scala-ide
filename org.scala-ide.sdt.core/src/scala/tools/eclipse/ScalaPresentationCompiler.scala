@@ -45,13 +45,18 @@ class ScalaPresentationCompiler(settings : Settings)
     }
   }
   
-  def problemsOf(file : AbstractFile) : List[IProblem] = {
+  def askRunLoadedTyped(file : AbstractFile) = {
+    for (source <- (sourceFiles get file)) {
+      val response = new Response[Tree]
+      askLoadedTyped(source, response)
+      val timeout = IDESettings.timeOutBodyReq.value //Defensive use a timeout
+      response.get(timeout) orElse { throw new AsyncGetTimeoutException(timeout, "askRunLoadedTyped(" + file + ")") }
+    }
+  }
+        
+  def askProblemsOf(file : AbstractFile) : List[IProblem] = ask{() =>
     val b = unitOfFile get file match {
       case Some(unit) => 
-        val response = new Response[Tree]
-        askLoadedTyped(unit.source, response)
-        val timeout = IDESettings.timeOutBodyReq.value //Defensive use a timeout see issue_0003 issue_0004
-        response.get(timeout)
         val result = unit.problems.toList flatMap presentationReporter.eclipseProblem
         //unit.problems.clear()
         result
@@ -117,15 +122,15 @@ class ScalaPresentationCompiler(settings : Settings)
   
   def askReload(scu : AbstractFile, content : Array[Char]) {
     Tracer.println("askReload 3: " + scu)
-    sourceFiles.get(scu) match {
-      case None =>
-      case Some(f) => {
+//    sourceFiles.get(scu) match {
+//      case None =>
+//      case Some(f) => {
         val newF = new BatchSourceFile(scu, content) 
         Tracer.println("content length :" + content.length)
         synchronized { sourceFiles(scu) = newF } 
         askReload(List(newF), new Response[Unit])
-      }
-    }
+//      }
+//    }
   }
   
   def discardSourceFile(scu : AbstractFile) {

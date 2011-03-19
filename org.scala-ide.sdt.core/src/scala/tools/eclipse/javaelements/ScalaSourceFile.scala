@@ -84,8 +84,9 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
 //    }
 //  }
 
-  def getProblems : Array[IProblem] = withSourceFile { (src, compiler) =>
-    val problems = compiler.problemsOf(file)
+  def getProblems : Array[IProblem] = project.withPresentationCompiler { compiler =>
+    compiler.askRunLoadedTyped(file)
+    val problems = compiler.askProblemsOf(file)
     if (problems.isEmpty) null else problems.toArray
   } (null)
 
