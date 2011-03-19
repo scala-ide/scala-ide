@@ -1,19 +1,13 @@
 package scala.tools.eclipse
 package editor.text
 
-import java.util.Arrays
-import org.eclipse.jdt.ui.JavaUI
 import org.eclipse.jdt.ui.text.IColorManager
 import org.eclipse.jdt.ui.text.IJavaColorConstants
 import org.eclipse.jface.preference.IPreferenceStore
-import org.eclipse.jface.text.DefaultIndentLineAutoEditStrategy
-import org.eclipse.jface.text.DefaultLineTracker
 import org.eclipse.jface.text.IAutoEditStrategy
 import org.eclipse.jface.text.IDocument
-import org.eclipse.jface.text.TabsToSpacesConverter
 import org.eclipse.jface.text.TextAttribute
 import org.eclipse.jface.text.contentassist.ContentAssistant
-import org.eclipse.jface.text.contentassist.IContentAssistProcessor
 import org.eclipse.jface.text.contentassist.IContentAssistant
 import org.eclipse.jface.text.presentation.IPresentationReconciler
 import org.eclipse.jface.text.presentation.PresentationReconciler
@@ -23,11 +17,9 @@ import org.eclipse.ui.editors.text.TextSourceViewerConfiguration
 import scala.tools.eclipse.lexical.ScalaCodeScanner
 import scala.tools.eclipse.lexical.ScalaPartitions
 import org.eclipse.jface.text.rules.ITokenScanner
-import scala.collection.mutable.ArrayBuffer
 import org.eclipse.jface.text.formatter.ContentFormatter
 import scala.tools.eclipse.formatter.ScalaFormattingStrategy
 import scala.tools.eclipse.text.scala.ScalaCompletionProcessor
-import scala.tools.eclipse.ui.ScalaAutoIndentStrategy
 import org.eclipse.jdt.internal.ui.text.java.SmartSemicolonAutoEditStrategy
 import org.eclipse.jdt.internal.ui.text.java.JavaStringAutoIndentStrategy
 import org.eclipse.jdt.internal.ui.text.javadoc.JavaDocAutoIndentStrategy
@@ -35,15 +27,10 @@ import scala.tools.eclipse.lexical.XmlPIScanner
 import scala.tools.eclipse.lexical.XmlCDATAScanner
 import scala.tools.eclipse.lexical.XmlTagScanner
 import scala.tools.eclipse.lexical.XmlCommentScanner
-import org.eclipse.jface.text.presentation.IPresentationRepairer
 import org.eclipse.ui.IEditorPart
-import scala.tools.eclipse.ui.{ JdtPreferenceProvider, ScalaAutoIndentStrategy, ScalaIndenter }
 import org.eclipse.jface.text.reconciler.IReconciler
 import org.eclipse.jface.text.reconciler.MonoReconciler
-import org.eclipse.jface.text.reconciler.IReconcilingStrategy
-import org.eclipse.jface.text.IRegion
-import org.eclipse.jface.text.reconciler.DirtyRegion
-import scala.tools.eclipse.util.Tracer
+import org.eclipse.jface.text.source.IAnnotationHover
 
 protected class ScalaTextSourceViewerConfiguration(val editor : IEditorPart, val colorManager: IColorManager, val jdtPreferenceStore: IPreferenceStore) extends TextSourceViewerConfiguration(jdtPreferenceStore){
 
@@ -234,7 +221,7 @@ protected class ScalaTextSourceViewerConfiguration(val editor : IEditorPart, val
    * @param sourceViewer the source viewer to be configured by this configuration
    * @return a reconciler or <code>null</code> if reconciling should not be supported
    */
-  override def getReconciler(sourceViewer : ISourceViewer) : IReconciler = new MonoReconciler(new ScalaTextReconcilingStrategy(), false)
+  override def getReconciler(sourceViewer : ISourceViewer) : IReconciler = new MonoReconciler(new ScalaTextReconcilingStrategy(sourceViewer), false)
   
 //  /**
 //   * Direct copy+paste of getProject from SourceViewerConfiguration.
@@ -261,4 +248,5 @@ protected class ScalaTextSourceViewerConfiguration(val editor : IEditorPart, val
 //
 //    return element.getJavaProject();
 //  }
+  override def getAnnotationHover(sourceViewer : ISourceViewer) : IAnnotationHover =  new org.eclipse.jface.text.source.DefaultAnnotationHover(); 
 }

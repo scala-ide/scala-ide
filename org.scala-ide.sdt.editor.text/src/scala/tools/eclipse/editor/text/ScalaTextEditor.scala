@@ -20,7 +20,6 @@ class ScalaTextEditor extends TextEditor {
     super.initializeEditor()
     setSourceViewerConfiguration(new ScalaTextSourceViewerConfiguration(this, JavaUI.getColorManager, PreferenceConstants.getPreferenceStore))
     val dp = DocumentProviderRegistry.getDefault().getDocumentProvider("scala")
-    println(">>>>>>>>>> dp : " + dp.getClass + " .. " + dp)
     setDocumentProvider(dp)
     setPartName("Scala Editor") // like ScalaSourceFileEcitor
   }
@@ -229,14 +228,14 @@ class ScalaDocumentProvider extends FileDocumentProvider {
     document
   }
   
-//  def getFile(d: IDocument) : Option[IFile] = {
-//    import scala.collection.JavaConversions._
-//    import org.eclipse.ui.IFileEditorInput
-//    //val it : Iterator[Object] = asScalaIterator[Object](getConnectedElements().asInstanceOf[java.util.Iterator[Object]])
-//    getConnectedElements().collect{
-//      case x : IFileEditorInput if ( getElementInfo( x ).fDocument  == d) => x.getFile
-//    }.toList.headOption
-//  } 
+  def getFile(d: IDocument) : Option[IFile] = {
+    import scala.collection.JavaConversions._
+    import org.eclipse.ui.IFileEditorInput
+    //val it : Iterator[Object] = asScalaIterator[Object](getConnectedElements().asInstanceOf[java.util.Iterator[Object]])
+    getConnectedElements().collect{
+      case x : IFileEditorInput if ( getElementInfo( x ).fDocument  == d) => x.getFile
+    }.toList.headOption
+  } 
 }
 
 protected class Scanner4Partition extends RuleBasedPartitionScanner {

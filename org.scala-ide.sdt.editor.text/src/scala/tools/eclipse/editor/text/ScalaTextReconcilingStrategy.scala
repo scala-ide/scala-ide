@@ -5,14 +5,15 @@ import org.eclipse.jface.text.{IRegion, IDocument}
 import org.eclipse.jface.text.reconciler.{IReconcilingStrategyExtension, DirtyRegion, IReconcilingStrategy}
 import scala.tools.eclipse.util.Tracer
 import org.eclipse.core.runtime.IProgressMonitor
-import org.eclipse.ui.texteditor.MarkerUtilities
 import java.util.HashMap
-import org.eclipse.core.resources.IMarker
+import org.eclipse.core.resources.{IMarker, IFile}
 import org.eclipse.ui.texteditor.DocumentProviderRegistry
+import org.eclipse.jdt.core.compiler.IProblem
+import org.eclipse.jface.text.source.ISourceViewer
 
-class ScalaTextReconcilingStrategy extends IReconcilingStrategy with IReconcilingStrategyExtension{
+class ScalaTextReconcilingStrategy(sourceViewer : ISourceViewer) extends IReconcilingStrategy with IReconcilingStrategyExtension{
   
-  private var _lastDocument : Option[IDocument] = None
+  private var _lastDocument : (Option[IDocument],Option[IFile]) = (None, None)
 
   /**
    * Tells this reconciling strategy on which document it will
@@ -24,7 +25,8 @@ class ScalaTextReconcilingStrategy extends IReconcilingStrategy with IReconcilin
    * @param document the document on which this strategy will work
    */
   def setDocument(document : IDocument) {
-    _lastDocument = Option(document)
+    val o = Option(document)
+    _lastDocument = (o, o.flatMap(toFile)) 
     Tracer.println("reconcile (setDocument) " + this + " : " + _lastDocument)
   }
 
@@ -71,6 +73,7 @@ class ScalaTextReconcilingStrategy extends IReconcilingStrategy with IReconcilin
    */
   def reconcile(partition : IRegion) {
     Tracer.println("reconcile " + this + " : " + _lastDocument + " -- " + partition)
+//    import org.eclipse.ui.texteditor.MarkerUtilities
 //    val map = new HashMap[String, java.lang.Integer]()
 //    MarkerUtilities.setLineNumber(map, 1) //1-based line numbering
 //    MarkerUtilities.setMessage(map, "This is some sample warning.")
@@ -79,7 +82,70 @@ class ScalaTextReconcilingStrategy extends IReconcilingStrategy with IReconcilin
 //    //DocumentProviderRegistry.getDefault().getDocumentProvider("scala")
 //    MarkerUtilities.createMarker(file, map, "problem")
     //IDocumentProvider.getAnnotationModel()
-    Thread.sleep(3000) //FIXME to remove (used to simulate a freeze)
+    for (d <- _lastDocument._1; f <- _lastDocument._2) {
+      val problems = compile(d, f)
+      displayProblems(f, problems)
+    }
+  }
+
+  private def toFile(v : IDocument) : Option[IFile] = {
+    DocumentProviderRegistry.getDefault().getDocumentProvider("scala").asInstanceOf[ScalaDocumentProvider].getFile(v)
+  }
+  
+  private def compile(d: IDocument, f : IFile) : List[IProblem]= {
+    import scala.tools.eclipse.util.FileUtils
+//    Thread.sleep(3000) //FIXME to remove (used to simulate a freeze)
+    val project = ScalaPlugin.plugin.getScalaProject(f.getProject)
+    project.withPresentationCompiler{ compiler =>
+//      val af = new PlainFile(Path(f.getLocation.toFile))
+      FileUtils.toAbstractFile(Some(f)) match {
+        case None => Nil
+        case Some(af) => {
+          compiler.askReload(af, d.get.toCharArray)
+          compiler.askRunLoadedTyped(af)
+          compiler.askProblemsOf(af)
+        }
+      }
+    }(project.defaultOrElse)
+  }
+  
+  private def displayProblems(f: IFile, problems : List[IProblem]) : Unit = {
+    import org.eclipse.jface.text.Position
+    import org.eclipse.jface.text.source.{Annotation, IAnnotationModel}
+    import scala.tools.eclipse.util.{Annotations, AnnotationsTypes}
+    
+    // model is null because no annotation model was created from DocumentProvider
+    //val model : IAnnotationModel = DocumentProviderRegistry.getDefault().getDocumentProvider("scala").asInstanceOf[ScalaDocumentProvider].getAnnotationModel(d)
+    //Tracer.println("model :" + model)
+    
+    val toAdds= new java.util.HashMap[Annotation, Position]()
+    for (p <- problems) {
+      Tracer.println("add problem : " + p)
+      toAdds.put(new ProblemAnnotation(p), new Position(p.getSourceStart, math.max(p.getSourceEnd - p.getSourceStart, 1)))
+    }
+    Annotations.update(sourceViewer, AnnotationsTypes.Problems, toAdds)
+  //TODO use utils.Annotations
+    
+//    val warningMarkerId = ScalaPlugin.plugin.problemMarkerId
+//    for (p <- problems) {
+//      Tracer.println("add problem : " + p)
+//      try {
+//        val mrk = f.createMarker(warningMarkerId)
+//        mrk.setAttribute(IMarker.SEVERITY, if (p.isError) IMarker.SEVERITY_ERROR else IMarker.SEVERITY_WARNING)
+//        mrk.setAttribute(IMarker.MESSAGE, p.getMessage)
+//        mrk.setAttribute(IMarker.PRIORITY, IMarker.PRIORITY_LOW)
+//        if (p.getSourceStart > -1 && p.getSourceEnd > -1) {
+//          mrk.setAttribute(IMarker.CHAR_START, p.getSourceStart)
+//          mrk.setAttribute(IMarker.CHAR_END, p.getSourceEnd)
+//        } else if (p.getSourceLineNumber > -1) {
+//          mrk.setAttribute(IMarker.LINE_NUMBER, p.getSourceLineNumber)
+//        } else {
+//          mrk.setAttribute(IMarker.LOCATION, p.getOriginatingFileName)
+//        }
+//      } catch {
+//        case e: Exception => e.printStackTrace();
+//      }
+//    }    
   }
 
 }
