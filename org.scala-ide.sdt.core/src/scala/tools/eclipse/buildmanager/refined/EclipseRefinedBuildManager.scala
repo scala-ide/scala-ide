@@ -83,10 +83,18 @@ class EclipseRefinedBuildManager(project: ScalaProject, settings0: Settings)
     }
     if (!hasErrors)
       pendingSources.clear
-      
+    
+    ensureDepFileFresh()
     saveTo(EclipseResource(depFile), _.toString)
     depFile.setDerived(true)
     depFile.refreshLocal(IResource.DEPTH_INFINITE, null)
+  }
+  
+  // TODO: this is a temporary fix for a bug where writing to dependencies file isn't performed
+  // looks to me like underlying stream isn't created/closed properly
+  private def ensureDepFileFresh() {
+  	depFile.delete(true, null)
+  	depFile = project.underlying.getFile(".scala_dependencies")
   }
   
   private def unbuilt : Set[AbstractFile] = {
