@@ -3,7 +3,7 @@ Bundle-ManifestVersion: 2
 Bundle-Name: Scala Plugin
 Bundle-SymbolicName: org.scala-ide.sdt.core;singleton:=true
 Bundle-Version: 1.0.0.qualifier
-Bundle-Vendor: Scala Team (experimental branch)
+Bundle-Vendor: scala-ide.org
 Bundle-ActivationPolicy: lazy
 Bundle-Activator: 
  scala.tools.eclipse.ScalaPlugin
