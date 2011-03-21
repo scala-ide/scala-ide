@@ -28,6 +28,6 @@ build()
     -U \
     -Dscala.version=${SCALA_VERSION} \
     -Dgit.hash=${GIT_HASH} \
-    -Dgit.branch=${GIT_BRANCH} \
+#    -Dgit.branch=${GIT_BRANCH} \
     clean install $*
 }
