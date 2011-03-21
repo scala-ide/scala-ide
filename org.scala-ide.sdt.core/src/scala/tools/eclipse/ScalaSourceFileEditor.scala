@@ -5,6 +5,8 @@
 
 package scala.tools.eclipse
 
+import org.eclipse.jface.util.PropertyChangeEvent
+import org.eclipse.jface.util.IPropertyChangeListener
 import java.util.ResourceBundle
 import org.eclipse.core.runtime.{ IAdaptable, IProgressMonitor }
 import org.eclipse.jdt.core.IJavaElement
@@ -78,13 +80,13 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
   }
 
   override def createJavaSourceViewerConfiguration: JavaSourceViewerConfiguration =
-    new ScalaSourceViewerConfiguration(getPreferenceStore, this)
+    new ScalaSourceViewerConfiguration(getPreferenceStore, ScalaPlugin.plugin.getPreferenceStore, this)
 
   override def setSourceViewerConfiguration(configuration: SourceViewerConfiguration) {
     super.setSourceViewerConfiguration(
       configuration match {
         case svc: ScalaSourceViewerConfiguration => svc
-        case _ => new ScalaSourceViewerConfiguration(getPreferenceStore, this)
+        case _ => new ScalaSourceViewerConfiguration(getPreferenceStore, ScalaPlugin.plugin.getPreferenceStore, this)
       })
   }
 
@@ -183,6 +185,20 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
     getEditorSite.getPage.removePostSelectionListener(selectionListener)
     super.uninstallOccurrencesFinder
   }
+  
+  private val preferenceListener = new IPropertyChangeListener() {
+    def propertyChange(event: PropertyChangeEvent) {
+      handlePreferenceStoreChanged(event)
+    }
+  }
+  ScalaPlugin.plugin.getPreferenceStore.addPropertyChangeListener(preferenceListener)
+
+  override def dispose() {
+    super.dispose()
+    ScalaPlugin.plugin.getPreferenceStore.removePropertyChangeListener(preferenceListener)
+  }
+
+
 }
 
 object ScalaSourceFileEditor {

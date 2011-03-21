@@ -2,12 +2,12 @@ package scala.tools.eclipse.lexical
 import org.eclipse.jface.text._
 import org.eclipse.jface.text.rules._
 import org.eclipse.jdt.ui.text.IColorManager
-import scala.tools.eclipse.lexical.XmlColours._
+import scala.tools.eclipse.properties.ScalaSyntaxClasses._
+import org.eclipse.jface.util.PropertyChangeEvent
+import org.eclipse.jface.preference.IPreferenceStore
 
-class XmlCommentScanner(colorManager: IColorManager) extends RuleBasedScanner {
+class XmlCommentScanner(val colorManager: IColorManager, val preferenceStore: IPreferenceStore) extends RuleBasedScanner with AbstractScalaScanner {
 
-  val commentToken = new Token(new TextAttribute(colorManager.getColor(XML_COMMENT)))
-
-  setRules(Array(new MultiLineRule("<!--", "-->", commentToken)))
+  setRules(Array(new MultiLineRule("<!--", "-->", getToken(XML_COMMENT))))
 
 }
