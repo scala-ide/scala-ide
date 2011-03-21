@@ -1,7 +1,10 @@
 #!/bin/sh
 
 GIT_HASH="`git log -1 --pretty=format:"%h"`"
-echo "Last commit git hash:" $GIT_HASH
+GIT_BRANCH="`git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/\1/'`"
+
+echo "git branch and hash:" $GIT_BRANCH $GIT_HASH
+
 
 # MAVEN needs to point to a MAVEN3 installation:
 if which mvn >/dev/null; then
@@ -21,8 +24,10 @@ fi
 build()
 {
   ${MAVEN} \
+    $PROFILE_NAME \
     -U \
     -Dscala.version=${SCALA_VERSION} \
     -Dgit.hash=${GIT_HASH} \
+    -Dgit.branch=${GIT_BRANCH} \
     clean install $*
 }
