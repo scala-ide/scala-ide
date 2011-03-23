@@ -270,7 +270,20 @@ class ScalaSourceFieldElementInfo extends SourceFieldElementInfo with ScalaMembe
 }
 
 class LazyToplevelClass(unit : ScalaCompilationUnit, name : String) extends SourceType(unit, name) with IType with ScalaElement {
-  lazy val mirror = unit.getElementInfo.asInstanceOf[OpenableElementInfo].getChildren.find(e => e.getElementName == name).map(_.asInstanceOf[ScalaSourceTypeElement])
+  
+  /** I rewrote this method from the previous implementation, to what I believe was the initial intention. 
+   *  The commented line is the original, in case this causes any problems.
+   *  
+   *  TODO: Revisit this once there is a better structure builder.
+   */
+  lazy val mirror: Option[ScalaSourceTypeElement] = {
+//    unit.getElementInfo.asInstanceOf[OpenableElementInfo].getChildren.find(e => e.getElementName == name).map(_.asInstanceOf[ScalaSourceTypeElement])
+    unit.getElementInfo match {
+      case openable: OpenableElementInfo => 
+        openable.getChildren.find(e => e.getElementType == IJavaElement.TYPE && e.getElementName == name) map (_.asInstanceOf[ScalaSourceTypeElement])
+      case _ => None
+    }
+  }
   
   override def isAnonymous = false
   override def isLocal = false
