@@ -41,6 +41,9 @@ class ScalaCompletionProposalComputer extends IJavaCompletionProposalComputer {
   val typeImage = SCALA_TYPE.createImage()
   val valImage = PUBLIC_VAL.createImage()
   
+  val javaInterfaceImage = JavaPluginImages.get(JavaPluginImages.IMG_OBJS_INTERFACE)
+  val javaClassImage = JavaPluginImages.get(JavaPluginImages.IMG_OBJS_CLASS)
+  
   class ScalaContextInformation(display : String,
                                 info : String,
                                 image : Image) extends IContextInformation with IContextInformationExtension {
@@ -133,12 +136,11 @@ class ScalaCompletionProposalComputer extends IJavaCompletionProposalComputer {
     def addCompletionProposal(sym: compiler.Symbol, tpe: compiler.Type, inherited: Boolean, viaView: compiler.Symbol) {
       if (sym.isConstructor) return
 
-       import JavaPluginImages._
        val image = if (sym.isSourceMethod && !sym.hasFlag(Flags.ACCESSOR | Flags.PARAMACCESSOR)) defImage
                    else if (sym.isClass) classImage
                    else if (sym.isTrait) traitImage
                    else if (sym.isModule) if (sym.isJavaDefined) 
-                                          if(sym.companionClass.isJavaInterface) JavaPluginImages.get(IMG_OBJS_INTERFACE) else JavaPluginImages.get(IMG_OBJS_CLASS) 
+                                          if(sym.companionClass.isJavaInterface) javaInterfaceImage else javaClassImage 
                                           else objectImage
                    else if (sym.isType) typeImage
                    else valImage
@@ -187,7 +189,7 @@ class ScalaCompletionProposalComputer extends IJavaCompletionProposalComputer {
         println("No completions")
     }
     
-    collection.JavaConversions.asList(buff.toList)
+    collection.JavaConversions.seqAsJavaList(buff.toList)
   }    
   
   private class ScalaCompletionProposal(startPos: Int, completion: String, display: String, contextName: String, 
