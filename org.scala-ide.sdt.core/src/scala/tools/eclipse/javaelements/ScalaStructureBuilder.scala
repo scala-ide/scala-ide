@@ -38,7 +38,8 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
       }
 
     type OverrideInfo = Int
-    val overrideInfos = new collection.mutable.HashMap[Symbol, OverrideInfo]
+    val overrideInfos = (new collection.mutable.HashMap[Symbol, OverrideInfo]).withDefaultValue(0)
+    
     def fillOverrideInfos(c : Symbol) {
       if (c ne NoSymbol) {
         val base = c.allOverriddenSymbols
@@ -51,8 +52,6 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
       }
     }
 
-    def methodOverrideInfo(m : Symbol) = overrideInfos.getOrElse(m, 0)
-    
     /**
      * Returns a type name for an untyped tree which the JDT should be able to consume,
      * in particular org.eclipse.jdt.internal.compiler.parser.TypeConverter
@@ -161,7 +160,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
             if(d.hasFlag(Flags.ACCESSOR))
               new ScalaAccessorElement(classElem, nm.toString, paramTypes)
             else
-              new ScalaDefElement(classElem, nm.toString, paramTypes, true, nm.toString, methodOverrideInfo(d))
+              new ScalaDefElement(classElem, nm.toString, paramTypes, true, nm.toString, overrideInfos(d))
           resolveDuplicates(defElem)
           classElemInfo.addChild0(defElem)
           
@@ -491,7 +490,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         setSourceRange(valElemInfo, sym, annotsPos)
         newElements0.put(valElem, valElemInfo)
 
-        val tn = mapType(v.tpt.symbol).toArray
+        val tn = mapType(sym.info.typeSymbol).toArray
         valElemInfo.setTypeName(tn)
         
         // TODO: this is a hack needed until building is rewritten to traverse scopes rather than trees.
@@ -561,26 +560,21 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
           else
             sym.name.toString
         
-        val fps = for(vps <- sym.paramss; vp <- vps) yield vp
+        // make sure the method type has been uncurried
+        uncurry.transformInfo(sym, sym.info)
         
-        def paramType(v: Symbol) = {
-          if (sym.isType)
-            uncurry.transformInfo(sym, sym.info).typeSymbol
-          else {
-            NoSymbol
-          }
-        }
+        val fps = sym.paramss.flatten
         
-        val paramTypes = Array(fps.map(v => Signature.createTypeSignature(mapType(paramType(v)), false)) : _*)
+        val paramTypes = Array(fps.map(v => Signature.createTypeSignature(mapType(v.info.typeSymbol), false)) : _*)
         val paramNames = Array(fps.map(n => nme.getterName(n.name).toChars) : _*)
         
         val display = if (sym ne NoSymbol) sym.nameString + sym.infoString(sym.info) else sym.name.toString + " (no info)"
-        
+
         val defElem = 
           if(sym hasFlag Flags.ACCESSOR)
             new ScalaAccessorElement(element, nameString, paramTypes)
-          else if(isTemplate)
-            new ScalaDefElement(element, nameString, paramTypes, sym hasFlag Flags.SYNTHETIC, display, methodOverrideInfo(sym))
+          else if (isTemplate)
+            new ScalaDefElement(element, nameString, paramTypes, sym hasFlag Flags.SYNTHETIC, display, overrideInfos(sym))
           else
             new ScalaFunctionElement(template.element, element, nameString, paramTypes, display)
         resolveDuplicates(defElem)
