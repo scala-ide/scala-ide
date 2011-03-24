@@ -1,6 +1,7 @@
 package scala.tools.eclipse
 package editor.text
 
+import org.eclipse.jdt.core.ICodeAssist
 import org.eclipse.jdt.ui.text.IColorManager
 import org.eclipse.jdt.ui.text.IJavaColorConstants
 import org.eclipse.jface.preference.IPreferenceStore
@@ -159,14 +160,25 @@ protected class ScalaTextSourceViewerConfiguration(val editor : IEditorPart, val
     val scalaProcessor = new ScalaCompletionProcessor(editor, assistant, IDocument.DEFAULT_CONTENT_TYPE)
     assistant.setContentAssistProcessor(null, IDocument.DEFAULT_CONTENT_TYPE) // set null to remove previously set
     assistant.setContentAssistProcessor(scalaProcessor, IDocument.DEFAULT_CONTENT_TYPE)
-
+    assistant.setProposalPopupOrientation(IContentAssistant.PROPOSAL_OVERLAY)
+    assistant.setContextInformationPopupOrientation(IContentAssistant.CONTEXT_INFO_ABOVE)
+    assistant.setInformationControlCreator(getInformationControlCreator(sourceViewer))
+    
     //        IContentAssistProcessor processor= new MyTemplateCompletionProcessor();
     //        assistant.setContentAssistProcessor(processor, IDocument.DEFAULT_CONTENT_TYPE);
     //        assistant.setContextInformationPopupOrientation(IContentAssistant.CONTEXT_INFO_ABOVE);
     //        assistant.setInformationControlCreator(getInformationControlCreator(sourceViewer));
+//    if (assistant == null) {
+//        assistant = new ContentAssistant();
+//        assistant.setDocumentPartitioning(getConfiguredDocumentPartitioning(sourceViewer));
+//        assistant.setContentAssistProcessor(getMyAssistProcessor(), MyPartitionScanner.DESIRED_PARTITION_FOR_MY_ASSISTANCE);
+//        assistant.enableAutoActivation(true);
+//        assistant.setAutoActivationDelay(500);
+//       assistant.setProposalPopupOrientation(IContentAssistant.PROPOSAL_OVERLAY);
+//       assistant.setContextInformationPopupOrientation(IContentAssistant.CONTEXT_INFO_ABOVE);
+//    }
 
     assistant
-
   }
 
   override def getTabWidth(sourceViewer: ISourceViewer) = 2 //TODO read from prefs
@@ -249,5 +261,25 @@ protected class ScalaTextSourceViewerConfiguration(val editor : IEditorPart, val
 //
 //    return element.getJavaProject();
 //  }
-  override def getAnnotationHover(sourceViewer : ISourceViewer) : IAnnotationHover =  new org.eclipse.jface.text.source.DefaultAnnotationHover(); 
+  override def getAnnotationHover(sourceViewer : ISourceViewer) : IAnnotationHover =  new org.eclipse.jface.text.source.DefaultAnnotationHover()
+  
+  override def getTextHover(sv : ISourceViewer, contentType : String, stateMask : Int) = new ScalaHover(getCodeAssist)
+
+  override def getHyperlinkDetectors(sv : ISourceViewer) = {
+    val shd = new ScalaHyperlinkDetector()
+    shd.setContext(editor)
+    Array(shd)
+  }
+  
+  private def getCodeAssist : Option[ICodeAssist] = None
+//  Option(editor) flatMap { editor =>
+//    val input = editor.getEditorInput
+//    val provider = editor.getDocumentProvider
+//
+//    (provider, input) match {
+//      case (icudp : ICompilationUnitDocumentProvider, _) => icudp getWorkingCopy input
+//      case (_, icfei : IClassFileEditorInput) => icfei.getClassFile
+//      case _ => null
+//    }
+//  }
 }
