@@ -3,9 +3,8 @@
  */
 package scala.tools.eclipse.templates
 
-import org.eclipse.jdt.internal.ui.JavaPluginImages
-
-
+import org.eclipse.core.filebuffers.FileBuffers
+import scala.tools.eclipse.ScalaImages
 import scala.tools.eclipse.ScalaPlugin
 
 import org.eclipse.ui.editors.text.templates.ContributionContextTypeRegistry
@@ -38,12 +37,14 @@ class ScalaTemplateManager {
   def makeTemplateCompletionProcessor() = new ScalaTemplateCompletionProcessor(this)
 }
 
+import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.IRegion
 import org.eclipse.jface.text.ITextViewer
 import org.eclipse.jface.text.templates.Template
 import org.eclipse.jface.text.templates.TemplateCompletionProcessor
 import org.eclipse.jface.text.templates.TemplateContextType
 import org.eclipse.swt.graphics.Image
+import scala.tools.eclipse.lexical.ScalaPartitions
 
 /**
  * Completion processor used for templates.
@@ -53,11 +54,18 @@ import org.eclipse.swt.graphics.Image
 class ScalaTemplateCompletionProcessor(val tm : ScalaTemplateManager) extends TemplateCompletionProcessor {
 
   protected override def getContextType(viewer : ITextViewer , region : IRegion) : TemplateContextType = {
-    tm.contextTypeRegistry.getContextType(tm.CONTEXT_TYPE);
+    //TODO find a better way to detect if we are in Java or Scala Editor (as both use IDocument.DEFAULT_CONTENT_TYPE for code section and return same values for viewer.getClass, doc.getLegalContentTypes
+    //TODO better scala editor should no longer use IDocument.DEFAULT_CONTENT_TYPE (may be side effect completion hover for the scala editor inherited from JDT/JavaSourceViewerConfiguration)
+    val doc = viewer.getDocument
+    val bufferManager = FileBuffers.getTextFileBufferManager()
+    val fb = bufferManager.getTextFileBuffer(doc)
+    ("scala" == fb.getLocation.getFileExtension)  match {
+      case true => tm.contextTypeRegistry.getContextType(tm.CONTEXT_TYPE)
+      case _ => null
+    }
   }
     
-  //TODO provide a icon for template
-  protected override def getImage(template : Template) : Image  = JavaPluginImages.get(JavaPluginImages.IMG_OBJS_TEMPLATE)
+  protected override def getImage(template : Template) : Image  = ScalaImages.TEMPLATE
     
   /**
    * @return All the templates 
@@ -65,13 +73,17 @@ class ScalaTemplateCompletionProcessor(val tm : ScalaTemplateManager) extends Te
    * @TODO provide a ScalaTemplate class with a match() method in template and get more sensible template matching.
    */
   protected override def getTemplates(contextTypeId : String) : Array[Template] = {
-    tm.templateStore.getTemplates()
+    (contextTypeId == tm.CONTEXT_TYPE) match {
+      case true => tm.templateStore.getTemplates()
+      case false => Array.empty[Template]
+    }
   }
 
   protected override def getRelevance(template : Template, prefix : String) : Int = {
     (prefix == null || prefix.trim().length == 0) match {
       case true => 0
-      case false => super.getRelevance(template, prefix)
+      case false if (template.getName().startsWith(prefix)) => 50
+      case _ => -1
     }
   }
 }

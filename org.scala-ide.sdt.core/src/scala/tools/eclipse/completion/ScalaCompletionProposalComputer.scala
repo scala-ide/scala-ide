@@ -6,6 +6,7 @@
 package scala.tools.eclipse
 package completion
 
+import scala.tools.eclipse.util.Tracer
 import org.eclipse.jface.viewers.ISelectionProvider
 import org.eclipse.jface.text.TextSelection
 import org.eclipse.jface.text.contentassist.
@@ -62,7 +63,7 @@ class ScalaCompletionProposalComputer extends IJavaCompletionProposalComputer {
     context match {
       case jc : JavaContentAssistInvocationContext => jc.getCompilationUnit match {
         case scu : ScalaCompilationUnit => 
-          scu.withSourceFile { findCompletions(position, context, scu) } (javaEmptyList())
+          scu.withSourceFile { findCompletions(position, context.getDocument.get.toCharArray, context.getViewer.getSelectionProvider) } (javaEmptyList())
         case _ => javaEmptyList()
       }
       case _ => javaEmptyList()
@@ -72,15 +73,14 @@ class ScalaCompletionProposalComputer extends IJavaCompletionProposalComputer {
   private def prefixMatches(name : Array[Char], prefix : Array[Char]) = 
     CharOperation.prefixEquals(prefix, name, false) || CharOperation.camelCaseMatch(prefix, name) 
    
-  private def findCompletions(position: Int, context: ContentAssistInvocationContext, scu: ScalaCompilationUnit)
-                             (sourceFile: SourceFile, compiler: ScalaPresentationCompiler): java.util.List[_] = {
+  private def findCompletions(position: Int, fulltext : Array[Char], selectionProvider : ISelectionProvider)(sourceFile: SourceFile, compiler: ScalaPresentationCompiler): java.util.List[_] = {
     val pos = compiler.rangePos(sourceFile, position, position, position)
     
     val typed = new compiler.Response[compiler.Tree]
     compiler.askTypeAt(pos, typed)
     val t1 = typed.get.left.toOption
 
-    val chars = context.getDocument.get.toCharArray
+    val chars = fulltext
     val (start, completed) = compiler.ask { () =>
       val completed = new compiler.Response[List[compiler.Member]]
       val start = t1 match {
@@ -110,7 +110,7 @@ class ScalaCompletionProposalComputer extends IJavaCompletionProposalComputer {
       (start, completed)
     }
 
-    val prefix = (if (position <= start) "" else scu.getBuffer.getText(start, position-start).trim).toArray
+    val prefix = (if (position <= start) Array.empty[Char] else fulltext.slice(start, position-start))
     
     def nameMatches(sym : compiler.Symbol) = prefixMatches(sym.decodedName.toString.toArray, prefix)  
     val buff = new collection.mutable.ListBuffer[ICompletionProposal]
@@ -165,7 +165,7 @@ class ScalaCompletionProposalComputer extends IJavaCompletionProposalComputer {
 //       println("\t" + relevance)
        
        val contextString = sym.paramss.map(_.map(p => "%s: %s".format(p.decodedName, p.tpe)).mkString("(", ", ", ")")).mkString("")
-       buff += new ScalaCompletionProposal(start, name, signature, contextString, container, relevance, image, context.getViewer.getSelectionProvider)
+       buff += new ScalaCompletionProposal(start, name, signature, contextString, container, relevance, image, selectionProvider)
     }     
     
     completed.get.left.toOption match {
@@ -182,7 +182,7 @@ class ScalaCompletionProposalComputer extends IJavaCompletionProposalComputer {
           }
         }
       case None =>
-        println("No completions")
+        Tracer.println("No completions")
     }
     
     collection.JavaConversions.asList(buff.toList)
