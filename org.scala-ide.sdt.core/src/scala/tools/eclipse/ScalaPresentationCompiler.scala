@@ -91,10 +91,16 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
     op(parseTree(sourceFile))
   }
 
+  /** Get the structure of the given source file and perform op. If the
+   *  call is on the presentation compiler thread, it will perform a synchronous
+   *  call, otherwise it performs an async askStructure call and waits for the response.
+   */
   def withStructure[T](sourceFile : SourceFile)(op : Tree => T) : T = {
     val tree = {
       val response = new Response[Tree]
-      askStructure(sourceFile, response)
+      if (Thread.currentThread == compileRunner)
+        getStructure(sourceFile, response) else askStructure(sourceFile, response)
+
       response.get match {
         case Left(tree) => tree 
         case Right(thr) => throw thr
