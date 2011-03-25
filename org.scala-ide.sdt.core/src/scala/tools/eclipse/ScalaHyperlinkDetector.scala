@@ -60,17 +60,21 @@ class ScalaHyperlinkDetector extends AbstractHyperlinkDetector with Logger {
               
               import compiler.{log =>_, _}
               typed.left.toOption map ( _ match {
-            	case Import(expr, sels) => sels find (_.namePos >= pos.start) map (sel => expr.tpe.member(sel.name)) getOrElse NoSymbol
+                case Import(expr, sels) => sels find (_.namePos >= pos.start) map (sel => expr.tpe.member(sel.name)) getOrElse NoSymbol
                 case Annotated(atp, _) => atp.symbol
                 case st : SymTree => st.symbol 
-                case t => log("unhandled tree " + t); NoSymbol
+                case t => 
+                  log("unhandled tree " + t); NoSymbol
               }) flatMap { sym => 
                 if (sym.isPackage || sym == NoSymbol || sym.isJavaDefined) 
                   None 
                 else 
                   compiler.locate(sym, scu) map { case (f, pos) => Hyperlink(f, pos) }
               }
-            } map (Array(_ : IHyperlink)) getOrElse codeSelect(textEditor, wordRegion, scu)
+            } map (Array(_ : IHyperlink)) getOrElse {
+              log("!!! Falling back to selection engine for %s!".format(typed.left), Category.ERROR)
+              codeSelect(textEditor, wordRegion, scu)
+            }
           }
         }) (null)
     
