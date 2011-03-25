@@ -141,6 +141,9 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
   }
   
   def askForOccurrencesUpdate(selection: ITextSelection, astRoot: CompilationUnit) {
+    
+    if(selection.getLength < 0 || selection.getOffset < 0) return
+    
     import org.eclipse.core.runtime.jobs.Job
     import org.eclipse.core.runtime.IProgressMonitor
     import org.eclipse.core.runtime.{IStatus, Status}
