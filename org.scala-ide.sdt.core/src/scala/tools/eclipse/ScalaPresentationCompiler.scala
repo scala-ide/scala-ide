@@ -64,23 +64,9 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
   def withSourceFile[T](scu : ScalaCompilationUnit)(op : (SourceFile, ScalaPresentationCompiler) => T) : T =
     op(sourceFiles(scu), this)
 
-  override def ask[A](op: () => A): A = if (Thread.currentThread == compileRunner) op() else super.ask(op)
-  
-  override def askTypeAt(pos: Position, response: Response[Tree]) = {
-    if (Thread.currentThread == compileRunner) getTypedTreeAt(pos, response) else super.askTypeAt(pos, response)
-  }
-
-  override def askParsedEntered(source: SourceFile, keepLoaded: Boolean, response: Response[Tree]) {
-    if (Thread.currentThread == compileRunner)
-      getParsedEntered(source, keepLoaded, response)
-    else
-      super.askParsedEntered(source, keepLoaded, response)
-  }
-    
   def body(sourceFile : SourceFile) = {
     val tree = new Response[Tree]
-    if (Thread.currentThread == compileRunner)
-      getTypedTree(sourceFile, false, tree) else askType(sourceFile, false, tree)
+    askType(sourceFile, false, tree)
     tree.get match {
       case Left(l) => l
       case Right(r) => throw r
