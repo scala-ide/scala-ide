@@ -7,6 +7,7 @@ import org.junit.{ Test, Assert, Ignore, Before, BeforeClass }
 import org.junit.Assert._
 import org.eclipse.core.resources.IWorkspace;
 
+@Test
 class ReferencesSearchTest { 
   var scalaProject : ScalaProject = null;
   var compilationUnit1, compilationUnit2, compilationUnit3, compilationUnit4 : ICompilationUnit = null;
