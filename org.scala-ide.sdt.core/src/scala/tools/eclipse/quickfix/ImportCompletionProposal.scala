@@ -16,6 +16,14 @@ import scala.tools.eclipse.refactoring.EditorHelpers._
 import scala.tools.refactoring.implementations.AddImportStatement
 import scala.tools.eclipse.util.IDESettings
 
+object ImportCompletionProposal {
+  private val Strategies_Ast = "by ast transformation"
+  private val Strategies_Text = "by text transformation"
+  private val Strategies_AstThenText = "by ast and fallback to text if failed"
+    
+  val strategies = List(Strategies_AstThenText, Strategies_Ast, Strategies_Text)
+}
+
 case class ImportCompletionProposal(val importName : String) extends IJavaCompletionProposal {
   
   /**
@@ -30,8 +38,9 @@ case class ImportCompletionProposal(val importName : String) extends IJavaComple
    */
   def apply(document : IDocument) : Unit = {
     IDESettings.quickfixImportByText.value match {
-      case true => applyByTextTransfo(document)
-      case false => try {
+      case ImportCompletionProposal.Strategies_Text => applyByTextTransfo(document)
+      case ImportCompletionProposal.Strategies_Ast => applyByASTTransfo(document)
+      case ImportCompletionProposal.Strategies_AstThenText => try {
         applyByASTTransfo(document)
       } catch {
         case t => {

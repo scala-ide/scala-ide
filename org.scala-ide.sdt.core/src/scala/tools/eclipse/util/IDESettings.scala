@@ -6,6 +6,7 @@
 package scala.tools.eclipse
 package util
 
+import scala.tools.eclipse.quickfix.ImportCompletionProposal
 import scala.tools.eclipse.properties.SettingsAddOn 
 import scala.tools.nsc.interactive.compat.Settings
 
@@ -76,7 +77,10 @@ object IDESettings {
   val markUnusedImports = BooleanSetting("_mark unused imports", "", true)
   val ignoreErrorOnJavaFile = BooleanSetting("_ignore error on java", "the scala builder should not report error about *.java", true)
   
-  val quickfixImportByText = BooleanSetting("_import via text", "quick fix for import done by text manipulation (else by AST/refactoring)", false)
+  val quickfixImportByText = {
+    val choices = ImportCompletionProposal.strategies
+    ChoiceSetting("_import strategy", "quick fix for import done with which implementation", choices , choices.head)
+  }
 
   def parseInt(s : String) : Option[Int] = {
     try {
