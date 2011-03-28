@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.scala-ide</groupId>
   <artifactId>scala-ide-for-eclipse</artifactId>
-  <version>1.0.0-SNAPSHOT</version>
+  <version>2.0.0-SNAPSHOT</version>
   <name>The Scala IDE for Eclipse</name>
   <packaging>pom</packaging>
 
@@ -93,7 +93,7 @@
         <artifactId>maven-osgi-packaging-plugin</artifactId>
         <version>${tycho.version}</version>
         <configuration>
-          <format>yyyyMMddHHmm'-${git.hash}'</format> 
+          <format>yyyyMMddHHmm'-beta1-${git.hash}'</format> 
           <archiveSite>true</archiveSite>
         </configuration>
       </plugin>    
@@ -270,7 +270,7 @@
       <activation>
         <property>
           <name>scala.version</name>
-          <value>2.9.0-SNAPSHOT</value>
+          <value>2.10.0-SNAPSHOT</value>
         </property>
       </activation>
       <repositories>
@@ -354,6 +354,38 @@
         </repository>
       </repositories>
     </profile>
+    <!-- local 2.9.0-SNAPSHOT -->
+    <profile>
+      <id>local-scala-2.9.x</id>
+      <dependencies>
+        <dependency>
+          <groupId>org.scala-ide</groupId>
+          <artifactId>org.scala-ide.scala.library</artifactId>
+          <version>${scala.version}</version>
+        </dependency>
+        <dependency>
+          <groupId>org.scala-ide</groupId>
+          <artifactId>org.scala-ide.scala.compiler</artifactId>
+          <version>${scala.version}</version>
+        </dependency>
+      </dependencies>
+      <repositories>
+        <repository>
+          <id>scala-refactoring-2.9.x</id>
+          <name>Scala Refactoring Scala 2.9.0.final p2 repository</name>
+          <layout>p2</layout>
+          <url>http://download.scala-ide.org/scala-refactoring-trunk</url>
+          <snapshots><enabled>false</enabled></snapshots>
+        </repository>
+        <repository>
+          <id>scalariform-2.9.x</id>
+          <name>Scalariform Scala 2.9.0.final p2 repo</name>
+          <layout>p2</layout>
+          <url>http://download.scala-ide.org/scalariform-trunk</url>
+        </repository>
+      </repositories>
+    </profile>
+
     <profile>
       <id>local-scala-trunk</id>
       <dependencies>
