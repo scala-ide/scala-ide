@@ -42,6 +42,10 @@ current_branch()
 {
   git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/-\1/'
 }
+hash()
+{
+  git log -1 --pretty=format:"-%h"
+}
 milestone()
 {
   git log --decorate -1 | grep 'tag:' | sed -e 's/^.*tag: \(M[^,]*\).*$/-\1/'

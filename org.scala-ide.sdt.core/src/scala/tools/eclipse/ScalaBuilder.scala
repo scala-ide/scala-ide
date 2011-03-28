@@ -8,7 +8,7 @@ package scala.tools.eclipse
 import scala.collection.mutable.HashSet
 import java.{ lang => jl, util => ju }
 import org.eclipse.core.resources.{ IFile, IncrementalProjectBuilder, IProject, IResource, IResourceDelta, IResourceDeltaVisitor, IResourceVisitor }
-import org.eclipse.core.runtime.{ IProgressMonitor, IPath }
+import org.eclipse.core.runtime.{ IProgressMonitor, IPath, SubMonitor }
 import org.eclipse.jdt.internal.core.JavaModelManager
 import org.eclipse.jdt.internal.core.builder.{ JavaBuilder, NameEnvironment, State }
 import scala.tools.eclipse.contribution.weaving.jdt.builderoptions.ScalaJavaBuilder
@@ -107,8 +107,11 @@ class ScalaBuilder extends IncrementalProjectBuilder {
     (addedOrUpdated.isEmpty && removed.isEmpty) match {
       case true => Tracer.println("no scala/java changes")
       case false => {
-        project.build(addedOrUpdated, removed)(monitor)
-        callJavaBuilder(newKind, ignored, monitor) // ignore returned value, else next time, this should take care in depends definition 
+        val subMonitor = SubMonitor.convert(monitor, 100).newChild(100, SubMonitor.SUPPRESS_NONE)
+        subMonitor.beginTask("Running Scala Builder", 100)
+
+        project.build(addedOrUpdated, removed, subMonitor)
+        callJavaBuilder(newKind, ignored, subMonitor) // ignore returned value, else next time, this should take care in depends definition 
         JDTUtils.refreshPackageExplorer
       }
     }

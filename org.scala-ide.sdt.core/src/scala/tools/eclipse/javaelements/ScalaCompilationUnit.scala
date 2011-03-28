@@ -13,7 +13,7 @@ import org.eclipse.core.resources.{ IFile, IResource }
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.jdt.core.{
   BufferChangedEvent, CompletionRequestor, IBuffer, IBufferChangedListener, IJavaElement, IJavaModelStatusConstants,
-  IProblemRequestor, ITypeRoot, JavaCore, JavaModelException, WorkingCopyOwner }
+  IProblemRequestor, ITypeRoot, JavaCore, JavaModelException, WorkingCopyOwner, IClassFile }
 import org.eclipse.jdt.internal.compiler.env
 import org.eclipse.jdt.internal.core.{
   BufferManager, CompilationUnitElementInfo, DefaultWorkingCopyOwner, JavaModelStatus, JavaProject, Openable,
@@ -59,25 +59,10 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
   }
 
   override def bufferChanged(e : BufferChangedEvent) {
-    if (e.getBuffer.isClosed)
-      discard
-    else {
-      _changed.set(true)
-    }
-
+    _changed.set(true)
     super.bufferChanged(e)
   }
   
-  def discard {
-    if (getJavaProject.getProject.isOpen)
-      project.withPresentationCompilerIfExists(_.discardSourceFile(file))
-  }
-  
-  override def close {
-    discard
-    super.close
-  }
-
   def getProblemRequestor : IProblemRequestor = null
 
   override def buildStructure(info : OpenableElementInfo, pm : IProgressMonitor, newElements : JMap[_, _], underlyingResource : IResource) : Boolean = {
@@ -94,9 +79,8 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
     
     withSourceFile({ (sourceFile, compiler) =>
       val unsafeElements = newElements.asInstanceOf[JMap[AnyRef, AnyRef]]
-      val sourceLength = sourceFile.length //contents.length
-      //Defensive.tryOrLog[Boolean](false) {
-      compiler.withUntypedTree(sourceFile) { tree =>
+      val sourceLength = sourceFile.length
+      compiler.withStructure(sourceFile) { tree =>
         compiler.ask { () =>
             new compiler.StructureBuilderTraverser(this, info, unsafeElements, sourceLength).traverse(tree)
         }
@@ -104,7 +88,6 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
       info match {
         case cuei : CompilationUnitElementInfo => 
           cuei.setSourceLength(sourceLength)
-          unsafeElements.put(this, info)
         case _ =>
       }
   
@@ -112,8 +95,6 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
       info.isStructureKnown
     }) (false)
   }
-  
-  override def createElementInfo = new CompilationUnitElementInfo
   
   def addToIndexer(indexer : ScalaSourceIndexer) {
     doWithSourceFile { (source, compiler) =>
@@ -156,9 +137,9 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
   
   override def reportMatches(matchLocator : MatchLocator, possibleMatch : PossibleMatch) {
     doWithSourceFile { (sourceFile, compiler) =>
-      compiler.withUntypedTree(sourceFile) { tree =>
+      compiler.withStructure(sourceFile) { tree =>
         compiler.ask { () =>
-            compiler.MatchLocator(this, matchLocator, possibleMatch).traverse(tree)
+          compiler.MatchLocator(this, matchLocator, possibleMatch).traverse(tree)
         }
       }
     }
@@ -166,7 +147,7 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
   
   override def createOverrideIndicators(annotationMap : JMap[_, _]) {
     doWithSourceFile { (sourceFile, compiler) =>
-      compiler.withUntypedTree(sourceFile) { tree =>
+      compiler.withStructure(sourceFile) { tree =>
         compiler.ask { () =>
           new compiler.OverrideIndicatorBuilderTraverser(this, annotationMap.asInstanceOf[JMap[AnyRef, AnyRef]]).traverse(tree)
         }

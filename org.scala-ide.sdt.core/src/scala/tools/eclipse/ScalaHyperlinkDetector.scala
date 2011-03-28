@@ -13,7 +13,9 @@ import org.eclipse.jdt.internal.core.{ ClassFile, Openable }
 import org.eclipse.ui.texteditor.ITextEditor
 import org.eclipse.jdt.internal.compiler.env.ICompilationUnit
 import org.eclipse.jdt.ui.actions.SelectionDispatchAction
-import org.eclipse.jdt.internal.ui.javaeditor.{ EditorUtility, JavaElementHyperlink }
+import org.eclipse.jdt.internal.ui.javaeditor.{EditorUtility, JavaElementHyperlink}
+import org.eclipse.jdt.ui.actions.OpenAction
+import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor
 
 import scala.reflect.generic.Flags._
 import scala.tools.nsc.io.AbstractFile
@@ -56,22 +58,23 @@ class ScalaHyperlinkDetector extends AbstractHyperlinkDetector {
                   }
                 }
               }
-
-              import compiler.{ log => _, _ }
-              typed.left.toOption map (_ match {
-                case Import(expr, sels) => sels find (_.namePos >= pos.start) map (sel =>
-                  expr.tpe.member(sel.name)
-                ) getOrElse NoSymbol
+              
+              import compiler.{log =>_, _}
+              typed.left.toOption map ( _ match {
+                case Import(expr, sels) => sels find (_.namePos >= pos.start) map (sel => expr.tpe.member(sel.name)) getOrElse NoSymbol
                 case Annotated(atp, _) => atp.symbol
-                case st: SymTree => st.symbol
+                case st : SymTree => st.symbol 
                 case t => Tracer.println("unhandled tree " + t); NoSymbol
-              }) flatMap { sym =>
-                if (sym.isPackage || sym == NoSymbol || sym.isJavaDefined)
-                  None
-                else
+              }) flatMap { sym => 
+                if (sym.isPackage || sym == NoSymbol || sym.isJavaDefined) 
+                  None 
+                else 
                   compiler.locate(sym, scu) map { case (f, pos) => Hyperlink(f, pos) }
               }
-            } map (Array(_: IHyperlink)) getOrElse codeSelect(textEditor, wordRegion, scu)
+            } map (Array(_ : IHyperlink)) getOrElse {
+              ScalaPlugin.plugin.logWarning("!!! Falling back to selection engine for %s!".format(typed.left))
+              codeSelect(textEditor, wordRegion, scu)
+            }
           }
         })(null)
 
@@ -80,27 +83,24 @@ class ScalaHyperlinkDetector extends AbstractHyperlinkDetector {
   }
 
   //Default path used for selecting.
-  def codeSelect(textEditor: ITextEditor, wordRegion: IRegion, scu: ScalaCompilationUnit): Array[IHyperlink] = {
-    textEditor.getAction("OpenEditor") match {
-      case openAction: SelectionDispatchAction =>
-        try {
-          val environment = scu.newSearchableEnvironment()
-          val requestor = new ScalaSelectionRequestor(environment.nameLookup, scu)
-          val engine = new ScalaSelectionEngine(environment, requestor, scu.getJavaProject.getOptions(true))
-          val offset = wordRegion.getOffset
-          engine.select(scu, offset, offset + wordRegion.getLength - 1)
-          val elements = requestor.getElements
+  def codeSelect(textEditor : ITextEditor, wordRegion : IRegion, scu : ScalaCompilationUnit) : Array[IHyperlink] = {
+    try {
+      val environment = scu.newSearchableEnvironment()
+      val requestor = new ScalaSelectionRequestor(environment.nameLookup, scu)
+      val engine = new ScalaSelectionEngine(environment, requestor, scu.getJavaProject.getOptions(true))
+      val offset = wordRegion.getOffset
+      engine.select(scu, offset, offset + wordRegion.getLength - 1)
+      val elements = requestor.getElements
 
-          if (elements.length == 0)
-            null
-          else {
-            val qualify = elements.length > 1
-            elements.map(new JavaElementHyperlink(wordRegion, openAction.asInstanceOf[SelectionDispatchAction], _, qualify))
-          }
-        } catch {
-          case _ => null
-        }
+      if (elements.length == 0) 
+        null 
+      else {
+        val qualify = elements.length > 1
+        val openAction = new OpenAction(textEditor.asInstanceOf[JavaEditor])
+        elements.map(new JavaElementHyperlink(wordRegion, openAction, _, qualify))
+      }
+    } catch {
       case _ => null
-    }
+    }    	  
   }
 }

@@ -10,9 +10,8 @@ import scala.collection.immutable.Set
 import scala.collection.mutable.{ LinkedHashSet, HashMap, HashSet }
 import java.io.File.pathSeparator
 import org.eclipse.core.resources.{ IContainer, IFile, IFolder, IMarker, IProject, IResource, IResourceProxy, IResourceProxyVisitor, IWorkspaceRunnable }
-import org.eclipse.core.runtime.{ FileLocator, IPath, IProgressMonitor, Path }
+import org.eclipse.core.runtime.{ FileLocator, IPath, IProgressMonitor, Path, SubMonitor}
 import org.eclipse.jdt.core.{ IClasspathEntry, IJavaProject, JavaCore }
-import org.eclipse.jdt.core.compiler.IProblem
 import org.eclipse.jdt.internal.core.JavaProject
 import org.eclipse.jdt.internal.core.builder.{ ClasspathDirectory, ClasspathLocation, NameEnvironment }
 import org.eclipse.jdt.internal.core.util.Util
@@ -317,14 +316,7 @@ class ScalaProject(val underlying: IProject) {
 
 
   def defaultOrElse[T]: T = {  
-//    if (underlying.isOpen)
-//      failedCompilerInitialization("Compiler failed to initialize properly.")
-
-    // FIXME: this now shows 2 dialog boxes, the one above and the one caused by the throw below
-    // will investigate further -DM
-    throw new IllegalStateException("InvalidCompilerSettings") // DM: see if this error is easier to catch
-//    DM: commented out the null below.
-//    null.asInstanceOf[T] // we're already in deep trouble here, so one more NPE won't kill us    
+    throw new IllegalStateException("InvalidCompilerSettings")
   }
 
   /** 
@@ -393,8 +385,8 @@ class ScalaProject(val underlying: IProject) {
     buildManager0
   }
 
-  def build(addedOrUpdated : Set[IFile], removed : Set[IFile])(implicit monitor : IProgressMonitor) {
-    buildManager.build(addedOrUpdated, removed)
+  def build(addedOrUpdated : Set[IFile], removed : Set[IFile], monitor : SubMonitor) {
+    buildManager.build(addedOrUpdated, removed, monitor)
     if (IDESettings.markUnusedImports.value) {
       for ( file <- addedOrUpdated) {
         UnusedImportsAnalyzer.markUnusedImports(file)

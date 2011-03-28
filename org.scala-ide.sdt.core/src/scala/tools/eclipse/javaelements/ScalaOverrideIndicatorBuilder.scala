@@ -23,12 +23,14 @@ trait ScalaOverrideIndicatorBuilder { self : ScalaPresentationCompiler =>
   class OverrideIndicatorBuilderTraverser(scu : ScalaCompilationUnit, annotationMap : JMap[AnyRef, AnyRef]) extends Traverser {
     val ANNOTATION_TYPE= "org.eclipse.jdt.ui.overrideIndicator"
 
-    case class ScalaIndicator(text : String, file : Openable, pos : Int, val isOverwrite : Boolean) extends Annotation(ANNOTATION_TYPE, false, text) 
+    case class ScalaIndicator(text : String, base: Symbol, val isOverwrite : Boolean) extends Annotation(ANNOTATION_TYPE, false, text) 
     with IScalaOverrideIndicator {
       def open = {
-        EditorUtility.openInEditor(file, true) match { 
-          case editor : ITextEditor => editor.selectAndReveal(pos, 0)
-          case _ =>
+        ask{ () => locate(base, scu) } map { case (file, pos) =>
+    	  EditorUtility.openInEditor(file, true) match { 
+            case editor : ITextEditor => editor.selectAndReveal(pos, 0)
+            case _ =>
+          }
         }
       }
     }
@@ -68,9 +70,7 @@ trait ScalaOverrideIndicatorBuilder { self : ScalaPresentationCompiler =>
               val paramTypes = base.tpe.paramss.flatMap(_.map(_.tpe))
               val methodTypeSignatures = paramTypes.map(mapParamTypeSignature(_))
               annotationMap.put(JavaIndicator(packageName, typeNames, methodName, methodTypeSignatures, text, isOverwrite), position)
-            } else locate(base, scu) map {
-              case (f, pos) =>  annotationMap.put(ScalaIndicator(text, f, pos, isOverwrite), position)
-            }
+            } else annotationMap.put(ScalaIndicator(text, base, isOverwrite), position)
           }
         case _ =>
       }

@@ -288,15 +288,26 @@ class ScalaSourceFieldElementInfo extends SourceFieldElementInfo with ScalaMembe
   override def setTypeName(name : Array[Char]) = super.setTypeName(name)
 }
 
-class LazyToplevelClass(unit : ScalaCompilationUnit, name : String) extends SourceType(unit, name) with IType {
-  lazy val mirror = unit.getElementInfo.asInstanceOf[OpenableElementInfo].getChildren.find(e => e.getElementName == name).map(_.asInstanceOf[ScalaSourceTypeElement])
+class LazyToplevelClass(unit : ScalaCompilationUnit, name : String) extends SourceType(unit, name) with IType with ScalaElement {
   
-  override def getField(nm : String) = mirror map (_.getField(nm)) getOrElse super.getField(nm) 
-  override def getType(nm : String) = mirror map (_.getType(nm)) getOrElse super.getType(nm)
-  override def getMethod(nm : String, params : Array[String]) = mirror map (_.getMethod(nm, params)) getOrElse super.getMethod(nm, params)
-  override def getElementInfo = mirror map (_.getElementInfo) getOrElse super.getElementInfo
-  override def getChildren = mirror map (_.getChildren) getOrElse super.getChildren
+  /** I rewrote this method from the previous implementation, to what I believe was the initial intention. 
+   *  The commented line is the original, in case this causes any problems.
+   *  
+   *  TODO: Revisit this once there is a better structure builder.
+   */
+  lazy val mirror: Option[ScalaSourceTypeElement] = {
+//    unit.getElementInfo.asInstanceOf[OpenableElementInfo].getChildren.find(e => e.getElementName == name).map(_.asInstanceOf[ScalaSourceTypeElement])
+    unit.getElementInfo match {
+      case openable: OpenableElementInfo => 
+        openable.getChildren.find(e => e.getElementType == IJavaElement.TYPE && e.getElementName == name) map (_.asInstanceOf[ScalaSourceTypeElement])
+      case _ => None
+    }
+  }
   
-  override def isResolved = mirror.isDefined
-  override def exists = isResolved
+  override def isAnonymous = false
+  override def isLocal = false
+  override def isEnum = false
+  override def isInterface = mirror map (_.isInterface) getOrElse false
+  override def getDeclaringType = null
+  override def exists = mirror.isDefined
 }

@@ -7,6 +7,7 @@ package scala.tools.eclipse
 
 import scala.tools.eclipse.util.Tracer
 import scala.collection.mutable
+import scala.collection.mutable.{ ArrayBuffer, SynchronizedMap }
 import org.eclipse.jdt.core.compiler.IProblem
 import org.eclipse.jdt.internal.compiler.problem.{ DefaultProblem, ProblemSeverities }
 import scala.tools.nsc.interactive.{Global, InteractiveReporter, Problem}
@@ -108,10 +109,10 @@ class ScalaPresentationCompiler(settings : Settings)
     op(parseTree(sourceFile))
   }
 
-  def withUntypedTree[T](sourceFile : SourceFile)(op : Tree => T) : T = {
+  def withStructure[T](sourceFile : SourceFile)(op : Tree => T) : T = {
     val tree = {
       val response = new Response[Tree]
-      askParsedEntered(sourceFile, true, response)
+      askStructure(sourceFile, response)
       response.get match {
         case Left(tree) => tree 
         case Right(thr) => throw new AsyncGetException(thr, "withUntypedTree(" + sourceFile + ")")
@@ -134,7 +135,8 @@ class ScalaPresentationCompiler(settings : Settings)
   }
   
   def discardSourceFile(scu : AbstractFile) {
-    synchronized {
+    Tracer.println("discarding " + scu)
+	synchronized {
       sourceFiles.get(scu) match {
         case None =>
         case Some(source) =>

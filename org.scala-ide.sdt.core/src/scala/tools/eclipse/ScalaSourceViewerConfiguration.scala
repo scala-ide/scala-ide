@@ -24,6 +24,7 @@ import org.eclipse.jface.text.hyperlink.IHyperlinkDetector
 import org.eclipse.jface.text.presentation.PresentationReconciler
 import org.eclipse.jface.text.rules.{ DefaultDamagerRepairer, RuleBasedScanner, ITokenScanner }
 import org.eclipse.jface.text.source.ISourceViewer
+import org.eclipse.jface.util.PropertyChangeEvent
 import org.eclipse.ui.texteditor.{ HyperlinkDetectorDescriptor, ITextEditor }
 import org.eclipse.swt.SWT
 import scala.tools.eclipse.ui.{ JdtPreferenceProvider, ScalaAutoIndentStrategy, ScalaIndenter }
@@ -31,7 +32,6 @@ import scala.tools.eclipse.util.ReflectionUtils
 import scala.tools.eclipse.lexical._
 import scala.tools.eclipse.formatter.ScalaFormattingStrategy
 import scala.tools.eclipse.properties.ScalaSyntaxClasses
-
 class ScalaSourceViewerConfiguration(store: IPreferenceStore, scalaPreferenceStore: IPreferenceStore, editor: ITextEditor)
   extends JavaSourceViewerConfiguration(JavaPlugin.getDefault.getJavaTextTools.getColorManager, store, editor, IJavaPartitions.JAVA_PARTITIONING) {
 
@@ -45,6 +45,10 @@ class ScalaSourceViewerConfiguration(store: IPreferenceStore, scalaPreferenceSto
     }
 
     handlePartition(IDocument.DEFAULT_CONTENT_TYPE, scalaCodeScanner)
+    //val dr = new ScalaDamagerRepairer(scalaCodeScanner)
+    //reconciler.setDamager(dr, IDocument.DEFAULT_CONTENT_TYPE)
+    //reconciler.setRepairer(dr, IDocument.DEFAULT_CONTENT_TYPE)
+
     handlePartition(IJavaPartitions.JAVA_DOC, scaladocScanner)   
     handlePartition(IJavaPartitions.JAVA_SINGLE_LINE_COMMENT, singleLineCommentScanner)
     handlePartition(IJavaPartitions.JAVA_MULTI_LINE_COMMENT, multiLineCommentScanner)
@@ -132,21 +136,21 @@ class ScalaSourceViewerConfiguration(store: IPreferenceStore, scalaPreferenceSto
   //	  return assistant
   //  }
 
-  override def handlePropertyChangeEvent(event: PropertyChangeEvent) {
-    super.handlePropertyChangeEvent(event)
-    scalaCodeScanner.adaptToPreferenceChange(event)
-    scaladocScanner.adaptToPreferenceChange(event)
-    stringScanner.adaptToPreferenceChange(event)
-    multiLineStringScanner.adaptToPreferenceChange(event)
-    singleLineCommentScanner.adaptToPreferenceChange(event)
-    multiLineCommentScanner.adaptToPreferenceChange(event)
-    xmlTagScanner.adaptToPreferenceChange(event)
-    xmlCommentScanner.adaptToPreferenceChange(event)
-    xmlCDATAScanner.adaptToPreferenceChange(event)
-    xmlPCDATAScanner.adaptToPreferenceChange(event)
-    xmlPIScanner.adaptToPreferenceChange(event)
-  }
+   override def handlePropertyChangeEvent(event: PropertyChangeEvent) {
+      super.handlePropertyChangeEvent(event)
+      scalaCodeScanner.adaptToPreferenceChange(event)
+      scaladocScanner.adaptToPreferenceChange(event)
+      stringScanner.adaptToPreferenceChange(event)
+      multiLineStringScanner.adaptToPreferenceChange(event)
+      singleLineCommentScanner.adaptToPreferenceChange(event)
+      multiLineCommentScanner.adaptToPreferenceChange(event)
+      xmlTagScanner.adaptToPreferenceChange(event)
+      xmlCommentScanner.adaptToPreferenceChange(event)
+      xmlCDATAScanner.adaptToPreferenceChange(event)
+      xmlPCDATAScanner.adaptToPreferenceChange(event)
+      xmlPIScanner.adaptToPreferenceChange(event)
+   }
 
-  override def affectsTextPresentation(event: PropertyChangeEvent) = true
+   override def affectsTextPresentation(event: PropertyChangeEvent) = true
 
 }

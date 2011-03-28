@@ -10,6 +10,7 @@ import org.eclipse.swt.widgets.{ List => SWTList, _ }
 import org.eclipse.swt.layout.{ GridLayout, GridData }
 import org.eclipse.swt.SWT
 import org.eclipse.swt.events.{ ModifyListener, ModifyEvent, SelectionAdapter, SelectionListener, SelectionEvent }
+import org.eclipse.swt.graphics.{ Font, FontData }
 
 import org.eclipse.jdt.ui.PreferenceConstants
 import org.eclipse.jdt.internal.ui.preferences.PreferencesMessages
@@ -49,7 +50,9 @@ class DiagnosticDialog(shell: Shell) extends Dialog(shell) {
   protected var autoActivationButton: Button = null
   protected var delayText: Text = null
   
-  protected val markOccurrencesData = new BoolWidgetData(PreferenceConstants.EDITOR_MARK_OCCURRENCES, false)
+  protected var boldFont: Font = null
+  
+//  protected val markOccurrencesData = new BoolWidgetData(PreferenceConstants.EDITOR_MARK_OCCURRENCES, false)
   protected val completionData = new BoolWidgetData("", true) {      
     val mylynCompletion = "org.eclipse.mylyn.java.ui.javaAllProposalCategory"
     val javaCompletion = "org.eclipse.jdt.ui.javaAllProposalCategory"
@@ -89,7 +92,7 @@ class DiagnosticDialog(shell: Shell) extends Dialog(shell) {
   protected val autoActivationData = new BoolWidgetData(PreferenceConstants.CODEASSIST_AUTOACTIVATION, true)
   protected val activationDelayData = new IntWidgetData(PreferenceConstants.CODEASSIST_AUTOACTIVATION_DELAY, 500)
   
-  protected var widgetDataList: List[WidgetData] = List(markOccurrencesData, completionData, autoActivationData, activationDelayData)
+  protected var widgetDataList: List[WidgetData] = List(completionData, autoActivationData, activationDelayData) // , markOccurrencesData
      
   // helper classes for loading and storing widget values
   abstract class WidgetData {
@@ -193,9 +196,10 @@ class DiagnosticDialog(shell: Shell) extends Dialog(shell) {
     // the inner controls
     val innerGroup = newGroup("", radioGroup)
     innerGroup.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, true, 2, 1))
-        
-    val markOccurrencesButton = 
-      newCheckboxButton(innerGroup, "Enable JDT \"Mark Occurrences\" (not recommended)", markOccurrencesData)
+
+    // Note: Mark Occurences is now working properly, so it doesn't need to be recommended to be turned off...
+//    val markOccurrencesButton = 
+//      newCheckboxButton(innerGroup, "Enable JDT \"Mark Occurrences\" (not recommended)", markOccurrencesData)
         
     val completionButton = 
       newCheckboxButton(innerGroup, "Use Scala-compatible JDT content assist proposals (recommended)", completionData)
@@ -216,12 +220,24 @@ class DiagnosticDialog(shell: Shell) extends Dialog(shell) {
     heapGroup.setLayout(new GridLayout(1, true))
     
     new Label(heapGroup, SWT.LEFT).setText("Current maximum heap size: " + heapSize + "M")
+    
     if (heapSize < recommendedHeap) {
-      val link = new Link(heapGroup, SWT.LEFT)
+      // create the warning label 
+      val warningLabel = new Label(heapGroup, SWT.LEFT)
+      warningLabel.setText("Warning: recommended value is at least " + recommendedHeap + "M")
+
+      // set the font to bold
+      val currentFont = warningLabel.getFont
+      val fontData = currentFont.getFontData // returns an array of fonts due to different platforms having different font behavior
+      fontData foreach { _.setStyle(SWT.BOLD) }
+      this.boldFont = new Font(currentFont.getDevice, fontData)
+      warningLabel.setFont(boldFont)
+      
+      val link = new Link(heapGroup, SWT.NONE)
       link.setText(
-          "Recommended value is " + recommendedHeap + "M or more. " +
           "See <a href=\"http://wiki.eclipse.org/FAQ_How_do_I_increase_the_heap_size_available_to_Eclipse%3F\">" +
           "instructions for changing heap size</a>.")
+          
       link.addListener (SWT.Selection, new Listener {
         def handleEvent(e: Event) {
           try {
@@ -261,7 +277,7 @@ class DiagnosticDialog(shell: Shell) extends Dialog(shell) {
       }    
     }
     
-    markOccurrencesButton.addSelectionListener(selectionListener)
+//    markOccurrencesButton.addSelectionListener(selectionListener)
     autoActivationButton.addSelectionListener(selectionListener)
     completionButton.addSelectionListener(selectionListener)
 
@@ -347,6 +363,12 @@ class DiagnosticDialog(shell: Shell) extends Dialog(shell) {
     super.okPressed
     if (doEnableWeaving)
       turnWeavingOn()
+  }
+  
+  override def close: Boolean = {
+    if (boldFont != null) 
+      boldFont.dispose
+    super.close
   }
   
   def turnWeavingOn() {

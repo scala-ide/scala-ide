@@ -79,19 +79,24 @@
                 <property name="gitLastCommitInfo" value="( can't retrive git's Last Commit Info )"/>
                 <property name="aboutText">
 The Scala IDE for Eclipse
+(c) LAMP/EPFL and Scala Solutions
 
-The Scala IDE for Eclipse provides the tools needed to
-to build Scala programs on the Eclipse Platform.
+The Scala IDE for Eclipse provides an integrated environment for creating Scala programs.
 Visit http://scala-ide.org/
+
+
+Scala Solutions Team: Iulian Dragos, Donna Malayeri, Martin Odersky, Hubert Plocinicak, Eugene Vigdorchik
+ScalaIDE.org organizer: Miles Sabin
+Many thanks to David Bernard, Matt Russell, Mirko Stocker, Joshua Suereth, and all other contributors.
 
 Version details :
                 </property>
-	              <propertyfile
-	                file="${basedir}/about.ini"
-	                comment="Property 'featureImage' contains path to feature image (32x32)">
-	                <entry  key="featureImage" default="" operation="=" value="about.png"/>
-	                <entry  key="aboutText" default="" operation="=" value="${aboutText} ${gitLastCommitInfo}"/>
-	              </propertyfile>
+                <propertyfile
+                  file="${basedir}/about.ini"
+                  comment="Property 'featureImage' contains path to feature image (32x32)">
+                  <entry  key="featureImage" default="" operation="=" value="about.png"/>
+                  <entry  key="aboutText" default="" operation="=" value="${aboutText} ${gitLastCommitInfo}"/>
+                </propertyfile>
               </target>
             </configuration>
           </execution>

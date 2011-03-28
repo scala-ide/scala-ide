@@ -134,7 +134,7 @@ class ScalaCompletionProposalComputer extends IJavaCompletionProposalComputer {
        val image = if (sym.isSourceMethod && !sym.hasFlag(Flags.ACCESSOR | Flags.PARAMACCESSOR)) defImage
                    else if (sym.isClass) classImage
                    else if (sym.isTrait) traitImage
-                   else if (sym.isModule) if (sym.isJavaDefined) 
+                   else if (sym.isModule) if (sym.isJavaDefined)
                                               //BACK-2.8
                                               /*if(sym.companionClass.isJavaInterface) JAVA_INTERFACE else*/ JAVA_CLASS 
                                           else objectImage
@@ -184,8 +184,9 @@ class ScalaCompletionProposalComputer extends IJavaCompletionProposalComputer {
       case None =>
         Tracer.println("No completions")
     }
-    
-    collection.JavaConversions.asList(buff.toList)
+    //BACK-2.8
+    //collection.JavaConversions.seqAsJavaList(buff.toList)
+    collection.JavaConversions.asJavaList(buff.toList)
   }    
   
   private class ScalaCompletionProposal(startPos: Int, completion: String, display: String, contextName: String, 

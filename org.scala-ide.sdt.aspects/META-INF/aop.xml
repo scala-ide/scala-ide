@@ -19,10 +19,9 @@
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.ScalaCloseStringsAspect"/>
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.ScalaEditorPreferencesAspect"/>
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.formatter.FormatterCleanUpRegistryAspect"/>
-<!--  <aspect name="scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.SaveParticipantRegistryAspect"/> Matt: Disabling to allow format save action -->
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.ScalaPartitionerAspect"/>
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.spellingengineprovider.SpellingEngineProviderAspect"/>
-<aspect name="scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.ScalaCompletionProcessorAspect"/>
+<!--aspect name="scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.ScalaCompletionProcessorAspect"/-->
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.debug.SuppressBreakpointMarkerUpdaterAspect"/>
 <aspect name="scala.tools.eclipse.contribution.weaving.pde.ui.PluginImportAspect"/>
 </aspects>

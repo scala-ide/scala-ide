@@ -45,7 +45,10 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
       }
 
     type OverrideInfo = Int
-    val overrideInfos = new collection.mutable.HashMap[Symbol, OverrideInfo]
+    val overrideInfos = (new collection.mutable.HashMap[Symbol, OverrideInfo]{
+      override def default ( key : Symbol ) = 0
+    })//.withDefaultValue(0)
+    
     def fillOverrideInfos(c : Symbol) {
       if (c ne NoSymbol) {
         val base = c.allOverriddenSymbols
@@ -58,8 +61,6 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
       }
     }
 
-    def methodOverrideInfo(m : Symbol) = overrideInfos.getOrElse(m, 0)
-    
     /**
      * Returns a type name for an untyped tree which the JDT should be able to consume,
      * in particular org.eclipse.jdt.internal.compiler.parser.TypeConverter
@@ -85,7 +86,11 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
       def addModule(m : ModuleDef) : Owner = this
       def addVal(v : ValDef) : Owner = this
       def addType(t : TypeDef) : Owner = this
-      def addDef(d : DefDef) : Owner = this
+      
+      // TODO: need to rewrite everything to use symbols rather than trees, only DefDef for now.
+      def addDef(sym: Symbol) : Owner = this
+      def addDef(d: DefDef) : Owner = this
+      
       def addFunction(f : Function) : Owner = this
       
       def resetImportContainer {}
@@ -165,7 +170,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
             if(d.hasFlag(Flags.ACCESSOR))
               new ScalaAccessorElement(classElem, nm.toString, paramTypes)
             else
-              new ScalaDefElement(classElem, nm.toString, paramTypes, true, nm.toString, methodOverrideInfo(d))
+              new ScalaDefElement(classElem, nm.toString, paramTypes, true, nm.toString, overrideInfos(d))
           resolveDuplicates(defElem)
           classElemInfo.addChild0(defElem)
           
@@ -229,8 +234,6 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
     
     trait PackageOwner extends Owner { self =>
       override def addPackage(p : PackageDef) : Owner = {
-        //println("Package defn: "+p.name+" ["+this+"]")
-        
         new Builder {
           val parent = self
           val element = compilationUnitBuilder.element
@@ -265,7 +268,6 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
       override def resetImportContainer : Unit = currentImportContainer = None
       
       override def addImport(i : Import) : Owner = {
-        //println("Import "+i)
         val prefix = i.expr.symbol.fullName
         val pos = i.pos
 
@@ -314,21 +316,19 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
       override val classes = new HashMap[Symbol, (ScalaElement, ScalaElementInfo)]
     
       override def addClass(c : ClassDef) : Owner = {
-        //println("Class defn: "+c.name+" ["+this+"]")
-        //println("Parents: "+c.impl.parents)
+        val sym = c.symbol
+        if (sym eq NoSymbol) return self  // Local class hasn't been attributed yet, can't show anything meaningful.
         
         val name = c.name.toString
         val parentTree = c.impl.parents.head
-
-        val sym = c.symbol
         val isAnon = sym.isAnonymousClass
         val superClass = sym.superClass
-        val superclassName = if (superClass ne NoSymbol) superClass.name.toString else "Object"
+        val superName = if (superClass ne NoSymbol) superClass.toString else "Object"
         val classElem =
           if(sym hasFlag Flags.TRAIT)
             new ScalaTraitElement(element, name)
           else if (isAnon) {
-            new ScalaAnonymousClassElement(element, superclassName)
+        	new ScalaAnonymousClassElement(element, superName)
           }
           else
             new ScalaClassElement(element, name, false)
@@ -342,7 +342,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
           val typeParams = sym.typeParams.map { tp =>
             val typeParameter = new TypeParameter(classElem, tp.name.toString)
             val tpElementInfo = new TypeParameterElementInfo
-            val parents = /*if (tp.info.parents.isEmpty) List(typeRef(NoType, definitions.ObjectClass, Nil)) else */tp.info.parents
+            val parents = tp.info.parents
             if (!parents.isEmpty) {
               //BACK-Galileo : value boundsSignatures is not a member of org.eclipse.jdt.internal.core.TypeParameterElementInfo
               // tpElementInfo.boundsSignatures = parents.map(_.typeSymbol.fullName.toCharArray).toArray 
@@ -360,7 +360,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         
         val annotsPos = addAnnotations(sym, classElemInfo, classElem)
 
-        classElemInfo.setSuperclassName(superclassName.toCharArray)
+        classElemInfo.setSuperclassName(mapType(superClass).toCharArray)
         
         val interfaceNames = sym.mixinClasses.map { m => 
           mapType(m).toCharArray
@@ -377,7 +377,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         }
         
         classElemInfo.setNameSource0(start, end)
-        setSourceRange(classElemInfo, c, annotsPos)
+        setSourceRange(classElemInfo, sym, annotsPos)
         newElements0.put(classElem, classElemInfo)
 
         fillOverrideInfos(sym)
@@ -397,8 +397,6 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
       override val modules = new HashMap[Symbol, ScalaElementInfo]
 
       override def addModule(m : ModuleDef) : Owner = {
-        //println("Module defn: "+m.name+" ["+this+"]")
-        
         val sym = m.symbol
       val isSynthetic = sym.hasFlag(Flags.SYNTHETIC)
         val moduleElem = new ScalaModuleElement(element, m.name.toString, isSynthetic)
@@ -421,7 +419,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         
         moduleElemInfo.setNameSource0(start, end)
         if (!isSynthetic)
-          setSourceRange(moduleElemInfo, m, annotsPos)
+          setSourceRange(moduleElemInfo, sym, annotsPos)
         else {
           moduleElemInfo.setSourceRange0(end, end)
         }
@@ -458,7 +456,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         val instanceElemInfo = new ScalaSourceFieldElementInfo
         instanceElemInfo.setFlags0(ClassFileConstants.AccPublic | ClassFileConstants.AccStatic | ClassFileConstants.AccFinal)
         instanceElemInfo.setTypeName(moduleElem.getFullyQualifiedName('.').toCharArray)
-        setSourceRange(instanceElemInfo, m, annotsPos)
+        setSourceRange(instanceElemInfo, sym, annotsPos)
         instanceElemInfo.setNameSource0(start, end)
         
         newElements0.put(instanceElem, instanceElemInfo)
@@ -469,8 +467,6 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
     
     trait ValOwner extends Owner { self =>
       override def addVal(v : ValDef) : Owner = {
-        //println("Val defn: >"+nme.getterName(v.name)+"< ["+this+"]")
-        
         val elemName = nme.getterName(v.name)
         val sym = v.symbol
         val display = elemName.toString+" : "+sym.tpe.toString
@@ -493,12 +489,22 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         val end = start+elemName.length-1
         
         valElemInfo.setNameSource0(start, end)
-        setSourceRange(valElemInfo, v, annotsPos)
+        setSourceRange(valElemInfo, sym, annotsPos)
         newElements0.put(valElem, valElemInfo)
 
-        val tn = mapType(v.tpt).toArray
+        val tn = mapType(sym.info.typeSymbol).toArray
         valElemInfo.setTypeName(tn)
         
+        // TODO: this is a hack needed until building is rewritten to traverse scopes rather than trees.
+        // When done, remove.
+        if (sym ne NoSymbol) {
+          sym.initialize
+          val getter = sym.getter(sym.owner)
+          if (getter hasFlag Flags.ACCESSOR) addDef(getter)
+          val setter = sym.setter(sym.owner)
+          if (setter hasFlag Flags.ACCESSOR) addDef(setter)
+        }
+
         self
       }
     }
@@ -523,7 +529,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         val end = start + t.name.length -1
 
         typeElemInfo.setNameSource0(start, end)
-        setSourceRange(typeElemInfo, t, annotsPos)
+        setSourceRange(typeElemInfo, sym, annotsPos)
         newElements0.put(typeElem, typeElemInfo)
         
         if(t.rhs.symbol == NoSymbol) {
@@ -532,7 +538,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
           typeElemInfo.setTypeName(tn)
         } else {
           //println("Type has type: "+t.rhs.symbol.fullName)
-          val tn = mapType(t.rhs).toArray
+          val tn = mapType(t.rhs.symbol).toArray
           typeElemInfo.setTypeName(tn)
         }
         
@@ -545,45 +551,37 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
     }
 
     trait DefOwner extends Owner { self =>
-      override def addDef(d : DefDef) : Owner = {
-        //println("Def defn: "+d.name+" ["+this+"]")
-        val sym = d.symbol
+      override def addDef(d: DefDef): Owner = addDef(d.symbol)
+
+      override def addDef(sym: Symbol): Owner = {
         val isCtor0 = sym.isConstructor
         val nameString =
           if(isCtor0)
             sym.owner.simpleName + (if (sym.owner.isModuleClass) "$" else "")
           else
-            d.name.toString
+            sym.name.toString
         
-        val fps = for(vps <- d.vparamss; vp <- vps) yield vp
+        // make sure the method type has been uncurried
+        uncurry.transformInfo(sym, sym.info)
         
-        def paramType(v : ValDef) = {
-          val sym = v.symbol
-          val tpt = v.tpt
-          val tpe = tpt.tpe
-          if (sym.isType || tpe != null)
-            uncurry.transformInfo(sym, tpe).typeSymbol
-          else {
-            NoSymbol
-          }
-        }
+        val fps = sym.paramss.flatten
         
-        val paramTypes = Array(fps.map(v => Signature.createTypeSignature(mapType(paramType(v)), false)) : _*)
+        val paramTypes = Array(fps.map(v => Signature.createTypeSignature(mapType(v.info.typeSymbol), false)) : _*)
         val paramNames = Array(fps.map(n => nme.getterName(n.name).toChars) : _*)
         
-        val display = sym.nameString + sym.infoString(sym.rawInfo)
-        
+        val display = if (sym ne NoSymbol) sym.nameString + sym.infoString(sym.info) else sym.name.toString + " (no info)"
+
         val defElem = 
           if(sym hasFlag Flags.ACCESSOR)
             new ScalaAccessorElement(element, nameString, paramTypes)
-          else if(isTemplate)
-            new ScalaDefElement(element, nameString, paramTypes, sym hasFlag Flags.SYNTHETIC, display, methodOverrideInfo(sym))
+          else if (isTemplate)
+            new ScalaDefElement(element, nameString, paramTypes, sym hasFlag Flags.SYNTHETIC, display, overrideInfos(sym))
           else
             new ScalaFunctionElement(template.element, element, nameString, paramTypes, display)
         resolveDuplicates(defElem)
         addChild(defElem)
         
-        val defElemInfo : FnInfo =
+        val defElemInfo: FnInfo =
           if(isCtor0)
             new ScalaSourceConstructorInfo
           else
@@ -591,7 +589,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         
         defElemInfo.setArgumentNames(paramNames)
         defElemInfo.setExceptionTypeNames(Array.empty)
-        val tn = mapType(d.tpt).toArray
+        val tn = mapType(sym.info.resultType.typeSymbol).toArray
         defElemInfo.asInstanceOf[FnInfo].setReturnType(tn)
 
         val annotsPos = addAnnotations(sym, defElemInfo, defElem)
@@ -617,15 +615,15 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
             case _ => Tracer.println("WARN constructor of " + defElem.labelName + " can't handle elementInfo (define start/end) : " + elementInfo)
           }
         } else {
-          val start = d.pos.point
-          val end = if (Defensive.notEmpty(defElem.labelName, "defElem.labelName notEmpty : %s", defElem)) {
+          val start = sym.pos.pointOrElse(-1)
+          val end = if (Defensive.check(start >= 0 , "defElem.labelName notEmpty : %s", defElem)) {
               // disable subtraction if iSetter, can introduce end < start, why 4 ??
               start+defElem.labelName.length-1//-(if (sym.isSetter) 4 else 0)
           } else {
               start
           }
           defElemInfo.setNameSource0(start, end)
-          setSourceRange(defElemInfo, d, annotsPos)
+          setSourceRange(defElemInfo, sym, annotsPos)
         }
         
         newElements0.put(defElem, defElemInfo)
@@ -736,14 +734,13 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
     
     abstract class Builder extends PackageOwner with ImportContainerOwner with ClassOwner with ModuleOwner with ValOwner with TypeOwner with DefOwner
     
-    def setSourceRange(info : ScalaMemberElementInfo, tree : Tree, annotsPos : Position) {
+    def setSourceRange(info: ScalaMemberElementInfo, sym: Symbol, annotsPos: Position) {
       import Math.{ max, min }
       
-      val pos = tree.pos
+      val pos = sym.pos
       val (start, end) =
         if (pos.isDefined) {
           val pos0 = if (annotsPos.isOpaqueRange) pos union annotsPos else pos
-          val sym = tree.symbol
           val start0 = if (sym == NoSymbol) {
             pos0.startOrPoint
           } else {
@@ -776,7 +773,9 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         }
       
         tree match {
-          case dt : DefTree if dt.symbol.isSynthetic => (builder, Nil)
+          case dt : DefTree if dt.symbol.isSynthetic ||
+            // Accessors are added in ValOwner, when they are not, remove. 
+            dt.symbol.hasFlag(Flags.ACCESSOR) => (builder, Nil)
           case pd : PackageDef => (builder.addPackage(pd), pd.stats)
           case i : Import => (builder.addImport(i), Nil)
           case cd : ClassDef => (builder.addClass(cd), List(cd.impl))

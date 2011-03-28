@@ -6,17 +6,18 @@
 package scala.tools.eclipse
 
 import org.eclipse.core.resources.{ IResource, IFile, IMarker, IWorkspaceRunnable }
-import org.eclipse.core.runtime.IProgressMonitor
+import org.eclipse.core.runtime.{ IProgressMonitor, SubMonitor }
+
 import scala.tools.nsc.interactive.{BuildManager, RefinedBuildManager}
 import scala.tools.eclipse.util.{ EclipseResource, FileUtils }
 import scala.tools.eclipse.util.IDESettings
 import scala.tools.eclipse.util.Defensive
 
 trait EclipseBuildManager extends BuildManager {
-  def build(addedOrUpdated: Set[IFile], removed: Set[IFile])(implicit monitor: IProgressMonitor = null): Unit
+  def build(addedOrUpdated: Set[IFile], removed: Set[IFile], monitor: SubMonitor): Unit
   var depFile: IFile
   var hasErrors = false
-  //def invalidateAfterLoad: Boolean
+  def invalidateAfterLoad: Boolean
   def clean(implicit monitor: IProgressMonitor): Unit
   def project : ScalaProject
   

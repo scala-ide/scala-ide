@@ -5,9 +5,11 @@
 
 package scala.tools.eclipse
 
-import org.eclipse.ui.part.FileEditorInput
-import scala.tools.eclipse.javaelements.ScalaCompilationUnit
 import org.eclipse.jdt.internal.ui.JavaPlugin
+import org.eclipse.ui.part.FileEditorInput
+import org.eclipse.swt.widgets.Composite
+import org.eclipse.jface.util.PropertyChangeEvent
+import org.eclipse.jface.util.IPropertyChangeListener
 import java.util.ResourceBundle
 import org.eclipse.core.runtime.{ IAdaptable, IProgressMonitor }
 import org.eclipse.jdt.core.IJavaElement
@@ -24,10 +26,9 @@ import org.eclipse.jface.viewers.ISelection
 import org.eclipse.ui.{ IWorkbenchPart, ISelectionListener, IFileEditorInput }
 import org.eclipse.ui.editors.text.{ ForwardingDocumentProvider, TextFileDocumentProvider }
 import org.eclipse.ui.texteditor.{ IAbstractTextEditorHelpContextIds, ITextEditorActionConstants, IWorkbenchActionDefinitionIds, TextOperationAction }
-import org.eclipse.swt.widgets.Composite
 import scala.collection.JavaConversions._
 import scala.collection.mutable
-import scala.tools.eclipse.javaelements.ScalaSourceFile
+import scala.tools.eclipse.javaelements.{ScalaSourceFile, ScalaCompilationUnit}
 import scala.tools.eclipse.markoccurrences.{ ScalaOccurrencesFinder, Occurrences }
 import scala.tools.eclipse.ui.semantic.highlighting.SemanticHighlightingPresenter
 import scala.tools.eclipse.text.scala.ScalaTypeAutoCompletionProposalManager
@@ -37,6 +38,7 @@ import org.eclipse.ui.texteditor.IDocumentProvider
 import org.eclipse.ui.IEditorInput
 import org.eclipse.jface.util.IPropertyChangeListener
 import org.eclipse.jface.util.PropertyChangeEvent
+import org.eclipse.jface.action.Action
 
 class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
 
@@ -75,6 +77,15 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
     selectEnclosingAction.setActionDefinitionId(IJavaEditorActionDefinitionIds.SELECT_ENCLOSING)
     setAction(StructureSelectionAction.ENCLOSING, selectEnclosingAction)
 
+    val openAction = new Action {
+	  override def run {
+	    Option(getInputJavaElement) map (_.asInstanceOf[ScalaCompilationUnit]) foreach { scu =>
+	      scu.followReference(ScalaSourceFileEditor.this, getSelectionProvider.getSelection.asInstanceOf[ITextSelection])
+	    }
+      }
+	}
+    openAction.setActionDefinitionId(IJavaEditorActionDefinitionIds.OPEN_EDITOR)
+    setAction("OpenEditor", openAction)
   }
 
   override protected def initializeKeyBindingScopes() {

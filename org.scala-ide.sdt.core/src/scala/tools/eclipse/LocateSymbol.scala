@@ -7,11 +7,10 @@ package scala.tools.eclipse
 
 import org.eclipse.core.resources.ResourcesPlugin
 import org.eclipse.core.runtime.Path
-import org.eclipse.jdt.internal.compiler.env.ICompilationUnit
+import org.eclipse.jdt.core.{ICodeAssist, IJavaElement, WorkingCopyOwner}
+import org.eclipse.jdt.internal.core.{ClassFile,Openable, SearchableEnvironment, JavaProject}
 
-import scala.reflect.generic.Flags._
 import scala.tools.nsc.io.AbstractFile
-import scala.tools.nsc.util.NoPosition
 
 import javaelements.{ScalaSourceFile, ScalaClassFile, ScalaCompilationUnit}
 
@@ -29,7 +28,8 @@ trait LocateSymbol { self : ScalaPresentationCompiler =>
     }
     def findClassFile = {
       val packName = sym.enclosingPackage.fullName
-      val pfs = scu.newSearchableEnvironment.nameLookup.findPackageFragments(packName, false)
+      val project = scu.getJavaProject.asInstanceOf[JavaProject]
+      val pfs = new SearchableEnvironment(project, null: WorkingCopyOwner).nameLookup.findPackageFragments(packName, false)
       if (pfs eq null) None else find(pfs) {
         val top = sym.toplevelClass
         val name = top.name + (if (top.isModule) "$" else "") + ".class"

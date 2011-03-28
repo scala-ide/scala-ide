@@ -4,6 +4,7 @@
 // $Id$
 
 package scala.tools.eclipse
+package actions
 
 import org.eclipse.core.resources.{ IProject }
 import org.eclipse.core.runtime.IAdaptable
@@ -13,28 +14,18 @@ import org.eclipse.core.runtime.Platform
 import org.eclipse.ui.{ IObjectActionDelegate, IWorkbenchPart }
 import ScalaPlugin.plugin
 
-class ToggleScalaNatureAction extends IObjectActionDelegate {
-  
+object ToggleScalaNatureAction {
+  val PDE_PLUGIN_NATURE = "org.eclipse.pde.PluginNature" /* == org.eclipse.pde.internal.core.natures.PDE.PLUGIN_NATURE */
+  val PDE_BUNDLE_NAME = "org.eclipse.pde.ui"
+}
+
+class ToggleScalaNatureAction extends AbstractPopupAction {  
   import ToggleScalaNatureAction._
   
-  private var selectionOption: Option[ISelection] = None
-
-  def selectionChanged(action: IAction, selection: ISelection) { this.selectionOption = Option(selection) }
-
-  def run(action: IAction) =
-    for {
-      selection <- selectionOption
-      if selection.isInstanceOf[IStructuredSelection]
-      selectionElement <- selection.asInstanceOf[IStructuredSelection].toArray
-      project <- convertSelectionToProject(selectionElement)
-    } toggleScalaNature(project)
-
-  private def convertSelectionToProject(selectionElement: Object): Option[IProject] = selectionElement match {
-    case project: IProject => Some(project)
-    case adaptable: IAdaptable => Option(adaptable.getAdapter(classOf[IProject]).asInstanceOf[IProject])
-    case _ => None
+  override def performAction(project: IProject) {
+    toggleScalaNature(project)
   }
-
+  
   private def toggleScalaNature(project: IProject) =
     plugin check {
       if (project.hasNature(plugin.natureId) || project.hasNature(plugin.oldNatureId)) {
@@ -58,15 +49,4 @@ class ToggleScalaNatureAction extends IObjectActionDelegate {
     project.setDescription(projectDescription, null)
     project.touch(null)
   }
-
-  def setActivePart(action: IAction, targetPart: IWorkbenchPart) {}
-
-}
-
-object ToggleScalaNatureAction {
-
-  val PDE_PLUGIN_NATURE = "org.eclipse.pde.PluginNature" /* == org.eclipse.pde.internal.core.natures.PDE.PLUGIN_NATURE */
-
-  val PDE_BUNDLE_NAME = "org.eclipse.pde.ui"
-
 }

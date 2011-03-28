@@ -27,18 +27,17 @@ class ScalaHover(codeAssist : Option[ICodeAssist]) extends ITextHover {
           val resp = new Response[Tree]
           val range = compiler.rangePos(src, start, start, end)
           askTypeAt(range, resp)
-          resp.get.left.toOption flatMap {	t =>
-            ask { () => 
-              Option(t.symbol) flatMap { sym => Option(t.tpe) map { tpe =>
-                def defString: String = {
-                  compose(List(sym.hasFlagsToString(Flags.ExplicitFlags), sym.keyString, sym.varianceString + sym.nameString + 
-                  sym.infoString(tpe.widen)))
-                }
-  
-                def compose(ss: List[String]): String = ss.filter("" !=).mkString("", " ", "")
-
-                if (sym.isClass || sym.isModule) sym.fullName else defString
-              }}
+          resp.get.left.toOption flatMap { t =>
+            ask { () =>
+              def compose(ss: List[String]): String = ss.filter("" !=).mkString("", " ", "")
+              def defString(sym: Symbol, tpe: Type): String = {
+                // NoType is returned for defining occurrences, in this case we want to display symbol info itself.
+                val tpeinfo = if (tpe ne NoType) tpe.widen else sym.info
+                compose(List(sym.hasFlagsToString(Flags.ExplicitFlags), sym.keyString, sym.varianceString + sym.nameString + 
+                sym.infoString(tpeinfo)))
+              }
+              for (sym <- Option(t.symbol); tpe <- Option(t.tpe))               
+                yield if (sym.isClass || sym.isModule) sym.fullName else defString(sym, tpe)
             }
           } getOrElse _noHoverInfo
         }) (_noHoverInfo)
