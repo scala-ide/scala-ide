@@ -35,7 +35,9 @@ class ScalaProject(val underlying: IProject) {
   private val resetPendingLock = new Object
   private var resetPending = false
 
-  case class InvalidCompilerSettings() extends RuntimeException("Scala compiler cannot initialize. Please check that your classpath contains the standard Scala library.")
+  case class InvalidCompilerSettings() 
+    extends RuntimeException("Scala compiler cannot initialize on project %s. ".format(underlying.getName) +
+    		"Please check that your classpath contains the standard Scala library.")
 
   private val presentationCompiler = new Cached[Option[ScalaPresentationCompiler]] {
     override def create() = {
