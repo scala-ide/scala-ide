@@ -576,8 +576,12 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
             new ScalaAccessorElement(element, nameString, paramTypes)
           else if (isTemplate)
             new ScalaDefElement(element, nameString, paramTypes, sym hasFlag Flags.SYNTHETIC, display, overrideInfos(sym))
-          else
+          else if (template ne null)
             new ScalaFunctionElement(template.element, element, nameString, paramTypes, display)
+          else
+            //FIXME by default template == null (if parent == null) and isTemplate is false, maybe in this case return this is a better solution ?
+            throw new IllegalStateException("no rules to defElem for symbol " + sym  + " and owner " + this) 
+            
         resolveDuplicates(defElem)
         addChild(defElem)
         
