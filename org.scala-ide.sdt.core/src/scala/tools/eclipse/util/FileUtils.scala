@@ -36,7 +36,24 @@ object FileUtils {
 //      case _ => new VirtualFile(getElementName, getPath.toString)
 //    }
 //  }
-  
+  // TODO return Validation/Box/Either instead of raise an exception 
+  def toIFile(af : AbstractFile) : Option[IFile] = af match {
+    case null => None
+    case EclipseResource(file: IFile) => Some(file)
+    case abstractFile => { 
+      import org.eclipse.core.resources.ResourcesPlugin
+      import org.eclipse.core.runtime.Path
+      val file = ResourcesPlugin.getWorkspace.getRoot.getFileForLocation(Path.fromOSString(abstractFile.path))
+      (file == null || !file.exists) match {
+        case true => {
+          //val msg = "Could not find the corresponding IFile for "+ abstractFile.path
+          //throw new CoreException(new Status(IStatus.ERROR, ScalaPlugin.plugin.pluginId, 0, msg, null))
+          None
+        }
+        case false => Some(file)
+      }
+    }
+  }
 
   def length(file : IFile) = {
     import org.eclipse.core.filebuffers.FileBuffers

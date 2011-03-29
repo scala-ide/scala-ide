@@ -2,15 +2,15 @@
  * Copyright 2005-2010 LAMP/EPFL
  */
 
-package scala.tools.eclipse.refactoring
+package scala.tools.eclipse
+package refactoring
 
+import util.FileUtils
 import org.eclipse.core.resources.{IFile, ResourcesPlugin}
 import org.eclipse.core.runtime.{IProgressMonitor, CoreException, Status, IStatus, Path}
 import org.eclipse.ltk.core.refactoring.{Refactoring => LTKRefactoring, Change, RefactoringStatus, CompositeChange}
 import org.eclipse.ltk.ui.refactoring.RefactoringWizardPage
-import scala.tools.eclipse.ScalaPlugin
 import scala.tools.eclipse.javaelements.ScalaSourceFile
-import scala.tools.eclipse.util.EclipseResource
 import scala.tools.refactoring.MultiStageRefactoring
 import scala.tools.refactoring.common.{TreeNotFound, Selections}
 
@@ -53,21 +53,12 @@ abstract class ScalaIdeRefactoring(val getName: String) extends LTKRefactoring {
   }
   
   def createChange(pm: IProgressMonitor): CompositeChange = new CompositeChange(getName) {
-       
-    createRefactoringChanges() map {
-      _ groupBy (_.file) map {
-        case (EclipseResource(file: IFile), fileChanges) => 
-          EditorHelpers.createTextFileChange(file, fileChanges)
-        case (abstractFile, fileChanges) =>
-          // if we cannot get the IFile from the AbstractFile, we search for it ourselves:
-          val file = ResourcesPlugin.getWorkspace.getRoot.getFileForLocation(Path.fromOSString(abstractFile.path))
-          if(file == null || !file.exists) {
-            val msg = "Could not find the corresponding IFile for "+ abstractFile.path
-            throw new CoreException(new Status(IStatus.ERROR, ScalaPlugin.plugin.pluginId, 0, msg, null))
-          } else {
-            EditorHelpers.createTextFileChange(file, fileChanges)
-          }
-      } foreach add
+    for (
+      changes <- createRefactoringChanges();  
+      (abstractFile, fileChanges) <- changes.groupBy(_.file);
+      ifile <- FileUtils.toIFile(abstractFile) 
+    ) {
+     add(EditorHelpers.createTextFileChange(ifile, fileChanges))
     }
   }
       

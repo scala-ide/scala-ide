@@ -1,6 +1,7 @@
 package scala.tools.eclipse
 package quickfix
 
+import util.FileUtils
 import org.eclipse.jdt.ui.JavaUI
 import org.eclipse.jdt.ui.ISharedImages
 import org.eclipse.ltk.core.refactoring.TextFileChange
@@ -77,10 +78,9 @@ case class ImportCompletionProposal(val importName : String) extends IJavaComple
         refactoring.addImport(refactoring.selection, importName)
       }(Nil)
       
-      scalaSourceFile.file match {
-        case EclipseResource(file: IFile) => 
-          val textFileChange = createTextFileChange(file, changes)
-          textFileChange.getEdit.apply(document)
+      FileUtils.toIFile(scalaSourceFile.file).foreach{ f =>
+        val textFileChange = createTextFileChange(f, changes)
+        textFileChange.getEdit.apply(document)
       }
       
       None
