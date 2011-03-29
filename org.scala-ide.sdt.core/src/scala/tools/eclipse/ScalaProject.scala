@@ -35,9 +35,9 @@ class ScalaProject(val underlying: IProject) {
   private val resetPendingLock = new Object
   private var resetPending = false
 
-  case class InvalidCompilerSettings() 
-    extends RuntimeException("Scala compiler cannot initialize on project %s. ".format(underlying.getName) +
-    		"Please check that your classpath contains the standard Scala library.")
+  case class InvalidCompilerSettings() extends RuntimeException(
+        "Scala compiler cannot initialize for project: " + underlying.getName +
+    		". Please check that your classpath contains the standard Scala library.")
 
   private val presentationCompiler = new Cached[Option[ScalaPresentationCompiler]] {
     override def create() = {
@@ -48,12 +48,15 @@ class ScalaProject(val underlying: IProject) {
         initialize(settings, _.name.startsWith("-Ypresentation"))
         Some(new ScalaPresentationCompiler(ScalaProject.this, settings))
       } catch {
-        case ex@MissingRequirementError(required) =>
+        case ex @ MissingRequirementError(required) =>
           failedCompilerInitialization("could not find a required class: " + required)
           plugin.logError(ex)
           None
         case ex =>
-          plugin.logError(ex)
+          println("Throwable when intializing presentation compiler!!! " + ex.getMessage)
+          if (underlying.isOpen)
+            failedCompilerInitialization("error initializing Scala compiler")
+          plugin.logError(ex)          
           None
       }
     }
