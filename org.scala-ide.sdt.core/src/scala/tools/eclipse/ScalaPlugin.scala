@@ -269,17 +269,17 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
   def partDeactivated(part: IWorkbenchPart) {}
   def partBroughtToTop(part: IWorkbenchPart) {}
   def partOpened(part: IWorkbenchPart) {
-    withCompilerAndFile(part) { (compiler, ssf) =>
+    doWithCompilerAndFile(part) { (compiler, ssf) =>
       compiler.askReload(ssf, ssf.getContents)
     }
   }
   def partClosed(part: IWorkbenchPart) {
-    withCompilerAndFile(part) { (compiler, ssf) =>
+    doWithCompilerAndFile(part) { (compiler, ssf) =>
       compiler.discardSourceFile(ssf)
     }
   }
   
-  private def withCompilerAndFile(part : IWorkbenchPart)(op: (ScalaPresentationCompiler, ScalaSourceFile) => Unit) {
+  private def doWithCompilerAndFile(part : IWorkbenchPart)(op: (ScalaPresentationCompiler, ScalaSourceFile) => Unit) {
 	part match {
       case editor: IEditorPart =>
         editor.getEditorInput match {
@@ -288,7 +288,7 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
             if (f.getName.endsWith(scalaFileExtn)) {
               for (ssf <- ScalaSourceFile.createFromPath(f.getFullPath.toString)) {
             	val proj = getScalaProject(f.getProject)
-            	proj.withPresentationCompiler(op(_, ssf)) ()
+            	proj.doWithPresentationCompiler(op(_, ssf)) // so that an exception is not thrown
               }
             }
           case _ =>
