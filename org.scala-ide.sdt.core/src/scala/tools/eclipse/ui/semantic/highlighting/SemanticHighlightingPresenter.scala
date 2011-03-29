@@ -119,18 +119,14 @@ class SemanticHighlightingPresenter(editor: FileEditorInput, sourceViewer: ISour
             override def traverse(t: compiler.Tree): Unit = t match {
               case v: compiler.ApplyImplicitView =>
                 val txt = new String(sourceFile.content, v.pos.startOrPoint, math.max(0, v.pos.endOrPoint - v.pos.startOrPoint)).trim()
-                val ia = new ImplicitConversionsOrArgsAnnotation(
-                  scu.getCompilationUnit,
-                  "Implicit conversions found: " + txt + " => " + v.fun.symbol.name + "(" + txt + ")")
+                val ia = new ImplicitConversionsOrArgsAnnotation("Implicit conversions found: " + txt + " => " + v.fun.symbol.name + "(" + txt + ")")
                 val pos = new org.eclipse.jface.text.Position(v.pos.startOrPoint, txt.length)
                 toAdds.put(ia, pos)
                 super.traverse(t)
               case v: compiler.ApplyToImplicitArgs =>
                 val txt = new String(sourceFile.content, v.pos.startOrPoint, math.max(0, v.pos.endOrPoint - v.pos.startOrPoint)).trim()
                 val argsStr = v.args.map(_.symbol.name).mkString("( ", ", ", " )")
-                val ia = new ImplicitConversionsOrArgsAnnotation(
-                  scu.getCompilationUnit,
-                  "Implicit arguments found: " + txt + " => " + txt + argsStr)
+                val ia = new ImplicitConversionsOrArgsAnnotation("Implicit arguments found: " + txt + " => " + txt + argsStr)
                 val pos = new org.eclipse.jface.text.Position(v.pos.startOrPoint, txt.length)
                 toAdds.put(ia, pos)
                 super.traverse(t)
