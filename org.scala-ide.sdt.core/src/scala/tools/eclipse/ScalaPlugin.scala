@@ -119,6 +119,7 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
     JavaCore.addElementChangedListener(this)
     val workbench = PlatformUI.getWorkbench 
     workbench.getEditorRegistry.setDefaultEditor("*.scala", editorId)
+    //FIXME Maybe the code is never raise as .getActiveWorkbenchWindow is null in start/stop context
     Option(workbench.getActiveWorkbenchWindow).foreach{ _.addPageListener(pageListener) }
     
     Tracer.println("Scala compiler bundle: " + scalaCompilerBundle.getLocation)
@@ -128,7 +129,8 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
 
   override def stop(context: BundleContext) = {
     ResourcesPlugin.getWorkspace.removeResourceChangeListener(this)
-    PlatformUI.getWorkbench.getActiveWorkbenchWindow.removePageListener(pageListener)
+    //FIXME Maybe the code is never raise as .getActiveWorkbenchWindow is null in start/stop context
+    Option(PlatformUI.getWorkbench.getActiveWorkbenchWindow).foreach{ _.removePageListener(pageListener) } 
     savePluginPreferences() // TODO: this method is deprecated, but the solution given in the docs is unclear and is not used by Eclipse itself. -DM
 
     super.stop(context)
