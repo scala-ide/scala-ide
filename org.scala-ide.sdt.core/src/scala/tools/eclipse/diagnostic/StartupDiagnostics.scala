@@ -39,6 +39,8 @@ object StartupDiagnostics {
                 plugin.getPreferenceStore.setValue(ASK_DIAGNOSTICS, false)
               case _ => // user pressed close button (-1) or No (1)
             }
+            
+            ScalaPlugin.plugin.savePluginPreferences // TODO: this method is deprecated, but the solution given in the docs is unclear and is not used by Eclipse itself. -DM
           }
         }
       }
