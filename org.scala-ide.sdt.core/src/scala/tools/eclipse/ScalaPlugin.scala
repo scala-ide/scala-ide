@@ -117,8 +117,9 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
     
     ResourcesPlugin.getWorkspace.addResourceChangeListener(this, IResourceChangeEvent.PRE_CLOSE | IResourceChangeEvent.POST_CHANGE)
     JavaCore.addElementChangedListener(this)
-    PlatformUI.getWorkbench.getEditorRegistry.setDefaultEditor("*.scala", editorId)
-    PlatformUI.getWorkbench.getActiveWorkbenchWindow.addPageListener(pageListener)
+    val workbench = PlatformUI.getWorkbench 
+    workbench.getEditorRegistry.setDefaultEditor("*.scala", editorId)
+    Option(workbench.getActiveWorkbenchWindow).foreach{ _.addPageListener(pageListener) }
     
     Tracer.println("Scala compiler bundle: " + scalaCompilerBundle.getLocation)
     PerspectiveFactory.updatePerspective
