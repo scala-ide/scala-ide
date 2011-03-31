@@ -35,7 +35,7 @@ class DiagnosticDialog(shell: Shell) extends Dialog(shell) {
   protected val configurer = new WeavingStateConfigurer
   
   val heapSize = Runtime.getRuntime.maxMemory / (1024 * 1024)
-  val recommendedHeap = 1500
+  val recommendedHeap = 1024
   
   protected val prefStore: IPreferenceStore = PreferenceConstants.getPreferenceStore
   
