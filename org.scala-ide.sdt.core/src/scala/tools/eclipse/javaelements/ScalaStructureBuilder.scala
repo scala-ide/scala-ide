@@ -501,9 +501,17 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
           if (getter hasFlag Flags.ACCESSOR) addDef(getter)
           val setter = sym.setter(sym.owner)
           if (setter hasFlag Flags.ACCESSOR) addDef(setter)
+          addBeanAccessors(sym)
         }
 
         self
+      }
+      
+      def addBeanAccessors(sym: Symbol) {
+        var beanName = nme.localToGetter(sym.name).toString.capitalize
+        val ownerInfo = sym.owner.info
+        val accessors = List(ownerInfo.decl("get" + beanName), ownerInfo.decl("is" + beanName), ownerInfo.decl("set" + beanName)).filter(_ ne NoSymbol)
+        accessors.foreach(addDef)
       }
     }
     
