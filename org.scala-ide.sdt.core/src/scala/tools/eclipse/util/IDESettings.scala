@@ -21,7 +21,7 @@ object IDESettings {
     	List(checkInit, Xchecknull, elidebelow,
              Xexperimental, future, XlogImplicits,
              Xmigration28, noassertions, nouescape, plugin, disable,
-             require, pluginsDir, Xwarnfatal, Xwarninit)),
+             require, pluginsDir, Xwarnfatal)),
       Box("Private",
         List(Xcloselim, Xdce, inline, Xlinearizer, Ynogenericsig, noimports,
              selfInAnnots, Yrecursion, refinementMethodDispatch,
