@@ -62,21 +62,30 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
   override def buildStructure(info : OpenableElementInfo, pm : IProgressMonitor, newElements : JMap[_, _], underlyingResource : IResource) : Boolean =
     withSourceFile({ (sourceFile, compiler) =>
       val unsafeElements = newElements.asInstanceOf[JMap[AnyRef, AnyRef]]
+      val tmpMap = new java.util.HashMap[AnyRef, AnyRef]
       val sourceLength = sourceFile.length
-      compiler.withStructure(sourceFile) { tree =>
-        compiler.ask { () =>
-            new compiler.StructureBuilderTraverser(this, info, unsafeElements, sourceLength).traverse(tree)
+      
+      try {
+        compiler.withStructure(sourceFile) { tree =>
+          compiler.ask { () =>
+              new compiler.StructureBuilderTraverser(this, info, tmpMap, sourceLength).traverse(tree)
+          }
         }
+        info match {
+          case cuei : CompilationUnitElementInfo => 
+            cuei.setSourceLength(sourceLength)
+          case _ =>
+        }
+    
+        unsafeElements.putAll(tmpMap)
+        info.setIsStructureKnown(true)
+      } catch {
+        case ex => 
+          ScalaPlugin.plugin.logError("Error building structure for %s".format(sourceFile), ex)
+          info.setIsStructureKnown(false)
       }
-      info match {
-        case cuei : CompilationUnitElementInfo => 
-          cuei.setSourceLength(sourceLength)
-        case _ =>
-      }
-  
-      info.setIsStructureKnown(true)
       info.isStructureKnown
-  }) (false)
+    }) (false)
 
   def scheduleReconcile : Unit = ()
   

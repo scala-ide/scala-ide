@@ -120,15 +120,15 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
           /** Should method `m' get a forwarder in the mirror class? */
           def shouldForward(m: Symbol): Boolean =
             m.isMethod &&
-	    !m.isConstructor &&
-	    !m.isStaticMember &&
-	    !(m.owner == definitions.ObjectClass) && 
-	    !(m.owner == definitions.AnyClass) &&
-	    !m.hasFlag(Flags.CASE | Flags.PROTECTED | Flags.DEFERRED) &&
-	    !module.isSubClass(companionClassOf(module)) &&
-	    !conflictsIn(definitions.ObjectClass, m.name) &&
-	    !conflictsInCommonParent(m.name) && 
-	    !conflictsIn(companionClassOf(module), m.name)
+           !m.isConstructor &&
+           !m.isStaticMember &&
+           !(m.owner == definitions.ObjectClass) && 
+           !(m.owner == definitions.AnyClass) &&
+           !m.hasFlag(Flags.CASE | Flags.PROTECTED | Flags.DEFERRED) &&
+           !module.isSubClass(companionClassOf(module)) &&
+           !conflictsIn(definitions.ObjectClass, m.name) &&
+           !conflictsInCommonParent(m.name) && 
+           !conflictsIn(companionClassOf(module), m.name)
           
           assert(module.isModuleClass)
           
