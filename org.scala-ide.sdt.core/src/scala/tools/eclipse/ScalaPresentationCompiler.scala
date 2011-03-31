@@ -22,7 +22,7 @@ import scala.tools.eclipse.javaelements.{
 import scala.tools.eclipse.util.{ Cached, EclipseFile, EclipseResource }
 
 class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
-  extends Global(settings, new ScalaPresentationCompiler.PresentationReporter)
+  extends Global(settings, new ScalaPresentationCompiler.PresentationReporter, project.underlying.getName)
   with ScalaStructureBuilder 
   with ScalaIndexBuilder 
   with ScalaMatchLocator
