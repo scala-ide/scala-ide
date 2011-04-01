@@ -30,7 +30,6 @@ import scala.collection.JavaConversions._
 import scala.collection.mutable
 import scala.tools.eclipse.javaelements.{ScalaSourceFile, ScalaCompilationUnit}
 import scala.tools.eclipse.markoccurrences.{ ScalaOccurrencesFinder, Occurrences }
-import scala.tools.eclipse.ui.semantic.highlighting.SemanticHighlightingPresenter
 import scala.tools.eclipse.text.scala.ScalaTypeAutoCompletionProposalManager
 import scala.tools.eclipse.util.IDESettings
 import scala.tools.eclipse.util.{ Defensive, Tracer }
@@ -43,8 +42,6 @@ import org.eclipse.jface.action.Action
 class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
 
   import ScalaSourceFileEditor._
-
-  private var _semanticPresenter: Option[SemanticHighlightingPresenter] = None
 
   setPartName("Scala Editor")
 
@@ -136,20 +133,12 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
     ScalaPlugin.plugin.updateOccurrenceAnnotationsService.uninstallSelectionListener(getEditorSite)
     //super.uninstallOccurrencesFinder
   }
-
+  
   override def createPartControl(parent: Composite) {
     super.createPartControl(parent)
     val viewer = getSourceViewer()
     if (viewer ne null) {
-      _semanticPresenter = _semanticPresenter match {
-        case Some(x) => _semanticPresenter
-        case None => {
-          val b = new SemanticHighlightingPresenter(getEditorInput.asInstanceOf[FileEditorInput], viewer)
-          ScalaPlugin.plugin.reconcileListeners.after_+(b.update)
-          Some(b)
-        }
-      }
-
+      
       //FIXME : workaround for my limited knowledge about current presentation compiler
       val scu = JavaPlugin.getDefault().getWorkingCopyManager().getWorkingCopy(getEditorInput()).asInstanceOf[ScalaCompilationUnit]
       viewer.getDocument().addPrenotifiedDocumentListener(ScalaTypeAutoCompletionProposalManager.getProposalFor(scu))

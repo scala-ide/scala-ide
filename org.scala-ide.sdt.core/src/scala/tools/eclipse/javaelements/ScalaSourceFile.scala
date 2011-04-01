@@ -18,6 +18,7 @@ import scala.tools.eclipse.contribution.weaving.jdt.IScalaSourceFile
 import scala.tools.eclipse.util.EclipseFile
 import scala.tools.eclipse.util.Tracer
 import scala.tools.eclipse.util.Defensive
+import scala.tools.eclipse.ui.ReconciliationParticipantsExtensionPoint
 import org.eclipse.core.runtime.jobs.Job
 import org.eclipse.core.runtime.NullProgressMonitor
 
@@ -51,9 +52,9 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
       reconcileFlags : Int,
       workingCopyOwner : WorkingCopyOwner,
       monitor : IProgressMonitor) : org.eclipse.jdt.core.dom.CompilationUnit = Tracer.timeOf("reconcile of " + file){
-    ScalaPlugin.plugin.reconcileListeners.triggerBeforeReconcile(this, monitor, workingCopyOwner)
+    ReconciliationParticipantsExtensionPoint.runBefore(this, monitor, workingCopyOwner)
     val b = super.reconcile(ICompilationUnit.NO_AST, reconcileFlags, workingCopyOwner, monitor)
-    ScalaPlugin.plugin.reconcileListeners.triggerAfterReconcile(this, monitor, workingCopyOwner)
+    ReconciliationParticipantsExtensionPoint.runAfter(this, monitor, workingCopyOwner)
     b
   }
 

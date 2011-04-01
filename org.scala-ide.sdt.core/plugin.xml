@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?eclipse version="3.5"?>
 <plugin>
+   <extension-point id="reconciliationParticipants" name="Reconcilation Participants" schema="schema/reconciliationParticipants.exsd"/>
    <extension
          point="org.eclipse.ui.propertyPages">
       <page
@@ -1048,5 +1049,13 @@
           </command>
        </toolbar>
     </menuContribution>
+ </extension>
+ <extension
+       point="org.scala-ide.sdt.core.reconciliationParticipants">
+    <participant
+          class="scala.tools.eclipse.ui.semantic.highlighting.SemanticHighlightingReconciliationParticipant"
+          id="org.scala-ide.sdt.core.SemanticHighlightingPresenter"
+          name="Semantic Highlighting">
+    </participant>
  </extension>
 </plugin>

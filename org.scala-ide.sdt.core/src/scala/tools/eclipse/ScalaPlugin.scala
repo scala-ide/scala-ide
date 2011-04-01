@@ -5,7 +5,6 @@
 
 package scala.tools.eclipse
 
-import scala.tools.eclipse.ui.semantic.highlighting.SemanticHighlightingPresenter
 import org.eclipse.jdt.core.IJavaProject
 import scala.collection.mutable.HashMap
 import scala.util.control.ControlThrowable
@@ -96,7 +95,6 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
 
   lazy val templateManager = new ScalaTemplateManager()
   lazy val updateOccurrenceAnnotationsService = new UpdateOccurrenceAnnotationsService()
-  lazy val reconcileListeners = new ReconcileListeners()
 
   val pageListener = new IPageListener {
   	def pageOpened(page: IWorkbenchPage) {
