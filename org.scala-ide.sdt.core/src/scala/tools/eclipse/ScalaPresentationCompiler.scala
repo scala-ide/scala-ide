@@ -113,10 +113,14 @@ class ScalaPresentationCompiler(settings : Settings)
     val tree = {
       val response = new Response[Tree]
       askStructure(sourceFile, response)
-      response.get match {
-        case Left(tree) => tree 
-        case Right(thr) => throw new AsyncGetException(thr, "withUntypedTree(" + sourceFile + ")")
-      }
+      val timeout = IDESettings.timeOutBodyReq.value //Defensive use a timeout see issue_0003 issue_0004
+      response.get(timeout) match {
+        case None => throw new AsyncGetTimeoutException(timeout, "withStructure(" + sourceFile + ")")
+        case Some(x) => x match {
+          case Left(tree) => tree
+          case Right(r) => throw new AsyncGetException(r, "withStructure(" + sourceFile + ")")
+        }
+      }      
     }
     op(tree)
   }
