@@ -105,7 +105,7 @@
             default="true"
             icon="icons/full/obj16/scu_obj.gif"
             extensions="scala"
-            contributorClass="org.eclipse.jdt.internal.ui.javaeditor.CompilationUnitEditorActionContributor"
+            contributorClass="scala.tools.eclipse.actions.ScalaCompilationUnitEditorActionContributor"
             class="scala.tools.eclipse.ScalaSourceFileEditor"
             symbolicFontName="org.eclipse.jdt.ui.editors.textfont"
             id="scala.tools.eclipse.ScalaSourceFileEditor">
@@ -221,6 +221,27 @@
          enablesFor="*">
        </action>       
      </actionSet>
+   </extension>
+
+  <extension
+         point="org.eclipse.ui.actionSets">
+      <actionSet
+            label="Scala text editor"
+            visible="true"
+            id="scala.texteditor.actionset">
+         <action
+               allowLabelUpdate="true"
+               definitionId="showInferredSemicolonsAction"
+               icon="icons/show_inferred_semicolons.png"
+               id="showInferredSemicolonsAction"
+               label="Show inferred semicolons"
+               retarget="true"
+               style="toggle"
+               toolbarPath="Normal/Presentation"
+               tooltip="Show inferred semicolons">
+        </action>
+
+      </actionSet>
    </extension>
 
    <extension
@@ -760,6 +781,13 @@
       description="Debug Scala Application"
       id="org.eclipse.shortcut.scala.debug"
       name="Debug Scala Application" />
+     <command
+	  name="Show inferred semicolons"
+	  description="Shows inferred semicolons in the current editor"
+	  categoryId="org.eclipse.ui.category.textEditor"
+	  id="scala.tools.eclipse.toggleShowInferredSemicolonsAction"/>
+	  
+      
   </extension>
 
   <extension point="org.eclipse.ui.bindings">

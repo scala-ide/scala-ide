@@ -7,6 +7,8 @@ package scala.tools.eclipse;
 
 import org.eclipse.jface.text.formatter.MultiPassContentFormatter
 import org.eclipse.jface.util.PropertyChangeEvent
+import scala.tools.eclipse.semicolon.InferredSemicolonPainter
+import org.eclipse.jface.text.ITextViewerExtension2
 import org.eclipse.jdt.core.{ IJavaProject, IJavaElement, ICodeAssist }
 import org.eclipse.jdt.internal.ui.JavaPlugin
 import org.eclipse.jdt.internal.ui.javaeditor.{ IClassFileEditorInput, ICompilationUnitDocumentProvider, JavaElementHyperlinkDetector }
