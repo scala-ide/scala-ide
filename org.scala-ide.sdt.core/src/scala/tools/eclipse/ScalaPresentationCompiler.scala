@@ -7,7 +7,6 @@ package scala.tools.eclipse
 
 import scala.tools.eclipse.util.Tracer
 import scala.collection.mutable
-import scala.collection.mutable.{ ArrayBuffer, SynchronizedMap }
 import org.eclipse.jdt.core.compiler.IProblem
 import org.eclipse.jdt.internal.compiler.problem.{ DefaultProblem, ProblemSeverities }
 import scala.tools.nsc.interactive.{Global, InteractiveReporter, Problem}
@@ -113,7 +112,7 @@ class ScalaPresentationCompiler(settings : Settings)
     val tree = {
       val response = new Response[Tree]
       askStructure(sourceFile, response)
-      val timeout = IDESettings.timeOutBodyReq.value //Defensive use a timeout see issue_0003 issue_0004
+      val timeout = math.max(15000, IDESettings.timeOutBodyReq.value)
       response.get(timeout) match {
         case None => throw new AsyncGetTimeoutException(timeout, "withStructure(" + sourceFile + ")")
         case Some(x) => x match {
@@ -140,7 +139,7 @@ class ScalaPresentationCompiler(settings : Settings)
   
   def discardSourceFile(scu : AbstractFile) {
     Tracer.println("discarding " + scu)
-	synchronized {
+	  synchronized {
       sourceFiles.get(scu) match {
         case None =>
         case Some(source) =>
