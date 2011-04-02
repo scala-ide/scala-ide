@@ -77,7 +77,7 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
     })()
     
     
-    withSourceFile({ (sourceFile, compiler) =>
+    val v = withSourceFile({ (sourceFile, compiler) =>
       val unsafeElements = newElements.asInstanceOf[JMap[AnyRef, AnyRef]]
       val sourceLength = sourceFile.length
       compiler.withStructure(sourceFile) { tree =>
@@ -90,10 +90,10 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
           cuei.setSourceLength(sourceLength)
         case _ =>
       }
-  
-      info.setIsStructureKnown(true)
-      info.isStructureKnown
+      true
     }) (false)
+    info.setIsStructureKnown(v)
+    info.isStructureKnown
   }
   
   def addToIndexer(indexer : ScalaSourceIndexer) {
