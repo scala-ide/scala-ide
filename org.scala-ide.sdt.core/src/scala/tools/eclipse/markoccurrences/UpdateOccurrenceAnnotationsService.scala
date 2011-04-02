@@ -16,7 +16,7 @@ import scala.tools.eclipse.util.{Annotations, AnnotationsTypes, IDESettings}
 import scala.actors.Reactor
 import org.eclipse.ui.{ISelectionListener, IEditorSite, IWorkbenchPart}
 import org.eclipse.jface.viewers.ISelection
-import scala.tools.eclipse.util.{Defensive, Tracer}
+import scala.tools.eclipse.util.{Defensive, Tracer, JobUtils}
 import java.util.concurrent.atomic.AtomicInteger
 
 class UpdateOccurrenceAnnotationsService {
@@ -42,7 +42,7 @@ class UpdateOccurrenceAnnotationsService {
     IDESettings.markOccurencesTStrategy.value match {
       case Strategies_NotInMain => Defensive.askRunOutOfMain("updateOccurrenceAnnotations", Job.DECORATE) { updateOccurrenceAnnotations0(editor, documentProvider, selection, astRoot) }
       case Strategies_InCaller => updateOccurrenceAnnotations0(editor, documentProvider, selection, astRoot)
-      case Strategies_InWorker => Defensive.askRunInJob("updateOccurrenceAnnotations", Job.DECORATE) { updateOccurrenceAnnotations0(editor, documentProvider, selection, astRoot) }
+      case Strategies_InWorker => JobUtils.askRunInJob("updateOccurrenceAnnotations", Job.DECORATE) { updateOccurrenceAnnotations0(editor, documentProvider, selection, astRoot) }
       case Strategies_InActor => _processorQ ! UpdateOccurrenceAnnotationsReq(editor, documentProvider, selection, astRoot)
     }
   }

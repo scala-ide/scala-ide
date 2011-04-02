@@ -5,6 +5,9 @@
 
 package scala.tools.eclipse
 
+import org.eclipse.ui.IPartService
+import org.eclipse.core.runtime.jobs.Job
+import scala.tools.eclipse.util.JobUtils
 import org.eclipse.jdt.core.IJavaProject
 import scala.collection.mutable.HashMap
 import scala.util.control.ControlThrowable
@@ -115,21 +118,37 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
     
     ResourcesPlugin.getWorkspace.addResourceChangeListener(this, IResourceChangeEvent.PRE_CLOSE | IResourceChangeEvent.POST_CHANGE)
     JavaCore.addElementChangedListener(this)
-    val workbench = PlatformUI.getWorkbench 
+    val workbench = getWorkbench 
     workbench.getEditorRegistry.setDefaultEditor("*.scala", editorId)
     //FIXME Maybe the code is never raise as .getActiveWorkbenchWindow is null in start/stop context
-    Option(workbench.getActiveWorkbenchWindow).foreach{ _.addPageListener(pageListener) }
-    
+    JobUtils.askRunInUI {
+      val window = workbench.getActiveWorkbenchWindow()
+      if (window != null) {
+        window.addPageListener(pageListener)
+        window.getActivePage().addPartListener(ScalaPlugin.this)
+        // already register for open editors
+//          for (
+//            page <- window.getPages();  
+//            editorRef <- page.getEditorReferences()
+//          ) {
+//            partOpened(editorRef.getEditor(true))
+//          }
+      } else {
+        logWarning("can't register IPartListener, because getActiveWorkbenchWindow == null")
+      }
+    }
     Tracer.println("Scala compiler bundle: " + scalaCompilerBundle.getLocation)
     PerspectiveFactory.updatePerspective
     diagnostic.StartupDiagnostics.run
   }
 
   override def stop(context: BundleContext) = {
-    ResourcesPlugin.getWorkspace.removeResourceChangeListener(this)
-    //FIXME Maybe the code is never raise as .getActiveWorkbenchWindow is null in start/stop context
-    Option(PlatformUI.getWorkbench.getActiveWorkbenchWindow).foreach{ _.removePageListener(pageListener) } 
     savePluginPreferences() // TODO: this method is deprecated, but the solution given in the docs is unclear and is not used by Eclipse itself. -DM
+    ResourcesPlugin.getWorkspace.removeResourceChangeListener(this)
+    JobUtils.askRunInJob("build error", Job.INTERACTIVE){
+      //FIXME Maybe the code is never raise as .getActiveWorkbenchWindow is null in start/stop context
+      Option(getWorkbench.getActiveWorkbenchWindow).foreach{ _.removePageListener(pageListener) }
+    }
 
     super.stop(context)
   }
@@ -302,7 +321,7 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
 
 
   private def withCompilerAndFile(part : IWorkbenchPart)(op: (ScalaPresentationCompiler, ScalaSourceFile) => Unit) {
-	part match {
+	  part match {
       case editor: IEditorPart =>
         editor.getEditorInput match {
           case fei: FileEditorInput =>

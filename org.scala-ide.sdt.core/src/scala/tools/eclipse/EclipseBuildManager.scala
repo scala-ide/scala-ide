@@ -11,7 +11,7 @@ import org.eclipse.core.runtime.{ IProgressMonitor, SubMonitor }
 import scala.tools.nsc.interactive.{BuildManager, RefinedBuildManager}
 import scala.tools.eclipse.util.{ EclipseResource, FileUtils }
 import scala.tools.eclipse.util.IDESettings
-import scala.tools.eclipse.util.Defensive
+import scala.tools.eclipse.util.JobUtils
 
 trait EclipseBuildManager extends BuildManager {
   def build(addedOrUpdated: Set[IFile], removed: Set[IFile], monitor: SubMonitor): Unit
@@ -21,7 +21,7 @@ trait EclipseBuildManager extends BuildManager {
   def clean(implicit monitor: IProgressMonitor): Unit
   def project : ScalaProject
   
-  def buildError(severity : Int, msg : String) = Defensive.askRunInJob("build error"){
+  def buildError(severity : Int, msg : String) = JobUtils.askRunInJob("build error"){
         val mrk = project.underlying.createMarker(ScalaPlugin.plugin.problemMarkerId)
         mrk.setAttribute(IMarker.SEVERITY, severity)
         val string = msg.map{
@@ -39,7 +39,7 @@ trait EclipseBuildManager extends BuildManager {
     FileUtils.buildError(file, severity, msg, offset, length, line, monitor)
   }  
 
-  def clearBuildErrors(implicit monitor : IProgressMonitor) = Defensive.askRunInJob("build error"){
+  def clearBuildErrors(implicit monitor : IProgressMonitor) = JobUtils.askRunInJob("build error"){
     project.underlying.deleteMarkers(ScalaPlugin.plugin.problemMarkerId, true, IResource.DEPTH_INFINITE)
   }
 }

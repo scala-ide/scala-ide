@@ -93,24 +93,7 @@ object Defensive {
   def askRunOutOfMain(label : String, priority : Int = Job.INTERACTIVE)(f : => Unit) = {
     (Thread.currentThread.getName != "main") match {
       case true => Defensive.tryOrLog(f)
-      case false => askRunInJob(label, priority)(f)
+      case false => JobUtils.askRunInJob(label, priority)(f)
     }
-  }
-
-  def askRunInJob(label : String, priority : Int = Job.INTERACTIVE)(f : => Unit) = {
-    import org.eclipse.core.runtime.IStatus
-    import org.eclipse.core.runtime.IProgressMonitor
-    import org.eclipse.core.runtime.Status
-    
-    val job = new Job(label) {
-      def run(monitor: IProgressMonitor): IStatus = {
-        Defensive.tryOrLog(f)
-        Status.OK_STATUS
-      }
-    }
-
-    job.setSystem(true)
-    job.setPriority(priority)
-    job.schedule()
   }
 }
