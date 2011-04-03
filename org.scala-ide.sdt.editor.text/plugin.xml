@@ -95,6 +95,7 @@
             commandId="org.scala-ide.sdt.editor.text.commands.toggleComment">
       </handler>
    </extension>
+   <!--
    <extension
          point="org.eclipse.ui.bindings">
       <key
@@ -110,5 +111,5 @@
             sequence="M1+/">
       </key>
    </extension>
-      
+-->      
 </plugin>
