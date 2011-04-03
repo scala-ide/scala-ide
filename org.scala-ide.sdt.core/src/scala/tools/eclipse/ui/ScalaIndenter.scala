@@ -7,29 +7,23 @@ package scala.tools.eclipse.ui
 
 
 import org.eclipse.core.runtime.Assert
-
 import org.eclipse.jface.text.BadLocationException
 import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.IRegion
-
 import org.eclipse.jdt.core.IJavaProject
 import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jdt.core.formatter.DefaultCodeFormatterConstants
-
-import org.eclipse.jdt.internal.ui.JavaPlugin;
+import org.eclipse.jdt.internal.ui.JavaPlugin
 import org.eclipse.jdt.internal.ui.text.DocumentCharacterIterator
 import org.eclipse.jdt.internal.ui.text.JavaHeuristicScanner
 import org.eclipse.jdt.internal.ui.text.Symbols
-
 import org.eclipse.jdt.internal.corext.util.CodeFormatterUtil
-
 import org.eclipse.jdt.ui.PreferenceConstants
-
 import java.lang.Math.min
-
 import scala.collection.mutable.Map
-
 import scala.annotation.tailrec
+import scala.tools.eclipse.ScalaPlugin
+import scala.tools.eclipse.formatter.FormatterPreferencePage
 
 // TODO Move this out into a new file
 trait PreferenceProvider {
@@ -64,9 +58,13 @@ class JdtPreferenceProvider(val project : IJavaProject) extends PreferenceProvid
         preferenceStore.getBoolean(PreferenceConstants.EDITOR_CLOSE_BRACES).toString)
     put(PreferenceConstants.EDITOR_SMART_TAB, 
         preferenceStore.getBoolean(PreferenceConstants.EDITOR_SMART_TAB).toString)
-        
-    put(ScalaIndenter.TAB_SIZE, CodeFormatterUtil.getTabWidth(project).toString)
-    put(ScalaIndenter.INDENT_SIZE, CodeFormatterUtil.getIndentWidth(project).toString)
+
+    // TODO: Matt -- use better pref lookup when merged with formatter-preferences-page branch        
+    val scalaPrefs = ScalaPlugin.plugin.getPreferenceStore
+    val key = FormatterPreferencePage.prefix + scalariform.formatter.preferences.IndentSpaces.key
+    val indent = scalaPrefs.getInt(key)
+    put(ScalaIndenter.TAB_SIZE, indent.toString)
+    put(ScalaIndenter.INDENT_SIZE, indent.toString)
     
     def populateFromProject(key : String) = {
       put(key, project.getOption(key, true))
@@ -285,7 +283,7 @@ class ScalaIndenter(
     return 2 // sensible default
   }
   
-  private def prefTabChar = getCoreFormatterOption(DefaultCodeFormatterConstants.FORMATTER_TAB_CHAR)
+  private def prefTabChar = JavaCore.SPACE
 
     
   private def hasGenerics : Boolean = true
