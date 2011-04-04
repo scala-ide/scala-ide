@@ -83,6 +83,7 @@
         <scala.compiler.groupid>org.scala-lang</scala.compiler.groupid>
         <scala.compiler.version>${scala.version}</scala.compiler.version>
         <maintenance.suffix></maintenance.suffix>
+        <patch.level.suffix></patch.level.suffix>
       </properties>
     </profile>
     <profile>
@@ -91,6 +92,7 @@
         <scala.compiler.groupid>org.scala-ide</scala.compiler.groupid>
         <scala.compiler.version>2.8.0.final-maintenance</scala.compiler.version>
         <maintenance.suffix>-sdt</maintenance.suffix>
+        <patch.level.suffix>-${patch.level}</patch.level.suffix>
       </properties>
       <repositories>
         <repository>
