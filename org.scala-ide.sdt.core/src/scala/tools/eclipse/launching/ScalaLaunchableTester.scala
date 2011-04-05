@@ -6,25 +6,26 @@
 
 package scala.tools.eclipse.launching
 
-import org.eclipse.core.expressions.PropertyTester;
-import org.eclipse.core.resources.IContainer;
-import org.eclipse.core.resources.IResource;
-import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IAdaptable;
-import org.eclipse.jdt.core.Flags;
-import org.eclipse.jdt.core.IClassFile;
-import org.eclipse.jdt.core.ICompilationUnit;
-import org.eclipse.jdt.core.IJavaElement;
-import org.eclipse.jdt.core.IMember;
-import org.eclipse.jdt.core.IMethod;
-import org.eclipse.jdt.core.IType;
-import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.core.expressions.PropertyTester
+import org.eclipse.core.resources.IContainer
+import org.eclipse.core.resources.IResource
+import org.eclipse.core.runtime.CoreException
+import org.eclipse.core.runtime.IAdaptable
+import org.eclipse.jdt.core.Flags
+import org.eclipse.jdt.core.IClassFile
+import org.eclipse.jdt.core.ICompilationUnit
+import org.eclipse.jdt.core.IJavaElement
+import org.eclipse.jdt.core.IMember
+import org.eclipse.jdt.core.IMethod
+import org.eclipse.jdt.core.IType
+import org.eclipse.jdt.core.JavaModelException
+import scala.tools.eclipse.util.EclipseUtils._
 
 class ScalaLaunchableTester extends PropertyTester {
   /**
    * name for the "has main" property
    */
-  private val PROPERTY_HAS_MAIN = "hasMain"; //$NON-NLS-1$
+  private val PROPERTY_HAS_MAIN = "hasMain" //$NON-NLS-1$
 
   /**
    * Determines if the Scala element contains main method(s).
@@ -59,12 +60,12 @@ class ScalaLaunchableTester extends PropertyTester {
    * @return true if the specified tests pass, false otherwise
    */
   def test(receiver: Object, property: String, args: Array[Object], expectedValue: Object): Boolean = {
-    var element: IJavaElement = null;
+    var element: IJavaElement = null
 
     if (receiver.isInstanceOf[IAdaptable]) {
-      element = (receiver.asInstanceOf[IAdaptable]).getAdapter(classOf[IJavaElement]).asInstanceOf[IJavaElement];
+      element = receiver.asInstanceOf[IAdaptable].adaptTo[IJavaElement]
       if (element != null && !element.exists()) {
-        return false;
+        return false
       }
     }
 

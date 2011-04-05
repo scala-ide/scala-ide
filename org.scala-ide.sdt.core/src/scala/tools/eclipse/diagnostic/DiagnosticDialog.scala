@@ -16,7 +16,7 @@ import org.eclipse.jdt.ui.PreferenceConstants
 import org.eclipse.jdt.internal.ui.preferences.PreferencesMessages
 import org.eclipse.jdt.internal.corext.util.Messages
 
-import org.eclipse.core.runtime.{ IAdaptable, IStatus }
+import org.eclipse.core.runtime.IStatus
 import org.eclipse.contribution.jdt.preferences.{ WeavingStateConfigurer, WeavingStateConfigurerUI, JDTWeavingPreferences }
 import org.eclipse.ui.PlatformUI
 import org.eclipse.ui.browser.IWorkbenchBrowserSupport 

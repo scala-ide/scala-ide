@@ -7,7 +7,6 @@ package scala.tools.eclipse
 package actions
 
 import org.eclipse.core.resources.{ IProject }
-import org.eclipse.core.runtime.IAdaptable
 import org.eclipse.jface.action.IAction
 import org.eclipse.jface.viewers.{ ISelection, IStructuredSelection }
 import org.eclipse.core.runtime.Platform
