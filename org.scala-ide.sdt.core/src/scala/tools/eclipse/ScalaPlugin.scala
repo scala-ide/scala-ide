@@ -31,6 +31,7 @@ import scala.tools.eclipse.templates.ScalaTemplateManager
 import scala.tools.eclipse.util.Tracer
 import scala.tools.eclipse.util.Defensive
 import scala.tools.eclipse.markoccurrences.UpdateOccurrenceAnnotationsService
+import org.eclipse.core.runtime.NullProgressMonitor
 
 object ScalaPlugin { 
   var plugin: ScalaPlugin = _
@@ -208,10 +209,10 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
     if ((event.getType & ElementChangedEvent.POST_CHANGE) == 0) {
       return
     }
-    findRemovedSources(event.getDelta)
+    processDelta(event.getDelta)
   }
   
-  private def findRemovedSources(delta: IJavaElementDelta) {    
+  private def processDelta(delta: IJavaElementDelta) {    
     import IJavaElement._    
     import IJavaElementDelta._
     
@@ -225,9 +226,9 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
       case JAVA_PROJECT if !isRemoved && !hasFlag(F_CLOSED) => true
       
       case PACKAGE_FRAGMENT_ROOT =>
-        if (isRemoved || hasFlag(F_REMOVED_FROM_CLASSPATH | F_ADDED_TO_CLASSPATH | F_ARCHIVE_CONTENT_CHANGED)) {
-          println("package fragment root changed (resetting pres compiler): " + elem)
-          getScalaProject(elem.getJavaProject.getProject).resetPresentationCompiler
+        if (isRemoved || (isChanged && (hasFlag(F_REMOVED_FROM_CLASSPATH | F_ADDED_TO_CLASSPATH | F_ARCHIVE_CONTENT_CHANGED)))) {
+          //println("package fragment root changed (resetting pres compiler): " + elem)
+          getScalaProject(elem.getJavaProject.getProject).clean(new NullProgressMonitor()) //.resetPresentationCompiler
           false
         }
         else true
@@ -246,7 +247,7 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
     }
     
     if (processChildren)
-      delta.getAffectedChildren foreach { findRemovedSources(_) }
+      delta.getAffectedChildren foreach { processDelta(_) }
   }
 
   def logInfo(msg : String, t : Option[Throwable] = None) : Unit = log(IStatus.INFO, msg, t)
