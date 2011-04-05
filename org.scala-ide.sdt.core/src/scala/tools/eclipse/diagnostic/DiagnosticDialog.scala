@@ -51,7 +51,18 @@ class DiagnosticDialog(shell: Shell) extends Dialog(shell) {
   protected var delayText: Text = null
   
   protected var boldFont: Font = null
-  
+
+  object linkListener extends Listener {
+    def handleEvent(e: Event) {
+      try {
+        val browserSupport = PlatformUI.getWorkbench.getBrowserSupport
+        browserSupport.getExternalBrowser.openURL(new java.net.URL(e.text))
+      } catch {
+        case e: Exception => e.printStackTrace
+      }
+    }  
+  }
+    
 //  protected val markOccurrencesData = new BoolWidgetData(PreferenceConstants.EDITOR_MARK_OCCURRENCES, false)
   protected val completionData = new BoolWidgetData("", true) {      
     val mylynCompletion = "org.eclipse.mylyn.java.ui.javaAllProposalCategory"
@@ -237,18 +248,16 @@ class DiagnosticDialog(shell: Shell) extends Dialog(shell) {
       link.setText(
           "See <a href=\"http://wiki.eclipse.org/FAQ_How_do_I_increase_the_heap_size_available_to_Eclipse%3F\">" +
           "instructions for changing heap size</a>.")
-          
-      link.addListener (SWT.Selection, new Listener {
-        def handleEvent(e: Event) {
-          try {
-            val browserSupport = PlatformUI.getWorkbench.getBrowserSupport
-            browserSupport.getExternalBrowser.openURL(new java.net.URL(e.text))
-          } catch {
-            case e: Exception => e.printStackTrace
-          }
-        }  
-      })
+                    
+      link.addListener(SWT.Selection, linkListener)
     }
+
+    val otherGroup = newGroup("Additional", control, new GridLayout(1, true))
+    
+    val knownIssuesLink = new Link(otherGroup, SWT.NONE)
+    knownIssuesLink.setText("See list of <a href=\"https://www.assembla.com/wiki/show/scala-ide/Known_Issues\">known issues</a>" +
+         " for known problems and workarounds")      
+    knownIssuesLink.addListener(SWT.Selection, linkListener)
     
     errorMessageField = new Text(control, SWT.READ_ONLY | SWT.WRAP)
     errorMessageField.setLayoutData(new GridData(GridData.GRAB_HORIZONTAL | GridData.HORIZONTAL_ALIGN_FILL))
