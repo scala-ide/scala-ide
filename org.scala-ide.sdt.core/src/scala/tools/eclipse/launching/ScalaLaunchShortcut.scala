@@ -19,6 +19,7 @@ import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants
 import org.eclipse.jface.operation.IRunnableContext
 
 import scala.tools.eclipse.javaelements.{ ScalaModuleElement, ScalaClassElement, ScalaSourceFile }
+import scala.tools.eclipse.util.EclipseUtils._
 
 /* This class can be eliminated in favour of JavaApplicationLaunch shortcut as soon as 
  * the JDTs method search works correctly for Scala.
@@ -170,7 +171,7 @@ object ScalaLaunchShortcut {
         })
     }
 
-    val je = element.asInstanceOf[IAdaptable].getAdapter(classOf[IJavaElement]).asInstanceOf[IJavaElement]
+    val je = element.asInstanceOf[IAdaptable].adaptTo[IJavaElement]
     je.getOpenable match {
       case scu: ScalaSourceFile =>
         def isTopLevel(tpe: IType) = tpe.getDeclaringType == null
