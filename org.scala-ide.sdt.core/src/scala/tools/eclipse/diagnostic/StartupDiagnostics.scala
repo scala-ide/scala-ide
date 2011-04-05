@@ -31,7 +31,9 @@ object StartupDiagnostics {
             val labels = Array(IDialogConstants.YES_LABEL, IDialogConstants.NO_LABEL, "Never")
             val dialog = 
               new MessageDialog(ScalaPlugin.getShell, "Run Scala Setup Diagnostics?", 
-                null, "Upgrade of Scala plugin detected. Run setup diagnostics?", MessageDialog.QUESTION, labels, 0)
+                null, "Upgrade of Scala plugin detected.\n\n" +
+                "Run setup diagnostics to ensure correct plugin settings?",
+                MessageDialog.QUESTION, labels, 0)
             dialog.open match {
               case 0 => // user pressed Yes
                 new DiagnosticDialog(ScalaPlugin.getShell).open
