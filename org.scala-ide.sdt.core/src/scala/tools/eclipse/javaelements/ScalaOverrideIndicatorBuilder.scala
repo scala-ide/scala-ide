@@ -6,18 +6,15 @@
 package scala.tools.eclipse.javaelements
 
 import java.util.{ Map => JMap }
-
 import org.eclipse.jdt.ui.JavaUI
 import org.eclipse.jdt.internal.core.Openable
 import org.eclipse.jface.text.{ Position => JFacePosition }
 import org.eclipse.jface.text.source.Annotation
-
 import scala.tools.eclipse.contribution.weaving.jdt.IScalaOverrideIndicator
-
 import org.eclipse.ui.texteditor.ITextEditor
 import org.eclipse.jdt.internal.ui.javaeditor.EditorUtility
-
 import scala.tools.eclipse.ScalaPresentationCompiler
+import scala.tools.eclipse.util.Defensive
 
 trait ScalaOverrideIndicatorBuilder { self : ScalaPresentationCompiler =>
   class OverrideIndicatorBuilderTraverser(scu : ScalaCompilationUnit, annotationMap : JMap[AnyRef, AnyRef]) extends Traverser {
@@ -57,7 +54,7 @@ trait ScalaOverrideIndicatorBuilder { self : ScalaPresentationCompiler =>
     
     override def traverse(tree: Tree): Unit = {
       tree match {
-        case defn: DefTree if (defn.symbol ne NoSymbol) && defn.symbol.pos.isOpaqueRange =>
+        case defn: DefTree if (defn.symbol ne NoSymbol) && defn.symbol.pos.isOpaqueRange => Defensive.tryOrLog{
           for(base <- defn.symbol.allOverriddenSymbols) {
             val isOverwrite = base.isDeferred && !defn.symbol.isDeferred
             val text = (if (isOverwrite) "implements " else "overrides ") + base.fullName
@@ -72,6 +69,7 @@ trait ScalaOverrideIndicatorBuilder { self : ScalaPresentationCompiler =>
               annotationMap.put(JavaIndicator(packageName, typeNames, methodName, methodTypeSignatures, text, isOverwrite), position)
             } else annotationMap.put(ScalaIndicator(text, base, isOverwrite), position)
           }
+        }
         case _ =>
       }
   
