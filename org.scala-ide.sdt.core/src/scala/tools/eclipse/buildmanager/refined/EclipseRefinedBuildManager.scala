@@ -28,10 +28,15 @@ class EclipseRefinedBuildManager(project: ScalaProject, settings0: Settings)
       new Run {
         var lastWorked = 0
         var savedTotal = 0
+        var throttledMessages = 0
 
         override def informUnitStarting(phase: Phase, unit: CompilationUnit) {
-          val unitPath: IPath = Path.fromOSString(unit.source.path)
-          monitor.subTask("phase " + phase.name + " for " + unitPath.makeRelativeTo(projectPath))
+          throttledMessages += 1
+          if (throttledMessages == 10) {
+            throttledMessages = 0
+            val unitPath: IPath = Path.fromOSString(unit.source.path)
+            monitor.subTask("phase " + phase.name + " for " + unitPath.makeRelativeTo(projectPath))
+          }
         }
 
         override def progress(current: Int, total: Int) {
