@@ -13,7 +13,7 @@ class RunDiagnosticAction extends IObjectActionDelegate with IWorkbenchWindowAct
 	
   val RUN_DIAGNOSTICS = "org.scala-ide.sdt.ui.runDiag.action"
   val REPORT_BUG      = "org.scala-ide.sdt.ui.reportBug.action"
-  val SDT_TRACKER_URL = "http://www.assembla.com/spaces/scala-ide/tickets"
+  val SDT_TRACKER_URL = "https://www.assembla.com/spaces/scala-ide/support/tickets"
   
   override def init(window: IWorkbenchWindow) {  
     parentWindow = window
