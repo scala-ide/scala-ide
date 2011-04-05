@@ -99,7 +99,7 @@ object SemanticHighlightingReconciliation {
        createSemantigHighlighterForEditor(scu) foreach (participants(scu) = _)
     }
     
-    participants(scu).update(scu, monitor, workingCopyOwner)
+    participants(scu).update(scu)
   }
 }
 
@@ -177,7 +177,7 @@ class SemanticHighlightingPresenter(editor: FileEditorInput, sourceViewer: ISour
       editorIn <- Option(editorRef.getEditorInput)
     ) {
       JavaPlugin.getDefault().getWorkingCopyManager().getWorkingCopy(editorIn) match {
-        case scu: ScalaCompilationUnit => update(scu, null, null)
+        case scu: ScalaCompilationUnit => update(scu)
         case _ => //ignore
       }
     }
@@ -190,7 +190,7 @@ class SemanticHighlightingPresenter(editor: FileEditorInput, sourceViewer: ISour
 
   //TODO monitor P_ACTIVATE to register/unregister update
   //TODO monitor P_ACTIVATE to remove existings annotation (true => false) or update openning file (false => true)
-  val update = (scu: ScalaCompilationUnit, monitor: IProgressMonitor, workingCopyOwner: WorkingCopyOwner) => {
+  def update(scu: ScalaCompilationUnit) = {
     //val cu = JavaPlugin.getDefault().getWorkingCopyManager().getWorkingCopy(fEditor.getEditorInput());
     //val scu = cu.asInstanceOf[ScalaCompilationUnit]
     //FIXME : avoid having several SemanticHighlighter notified on single file update (=> move listeners at document level, or move SemanticHighliter at plugin level ?)
