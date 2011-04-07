@@ -93,7 +93,7 @@
         <artifactId>maven-osgi-packaging-plugin</artifactId>
         <version>${tycho.version}</version>
         <configuration>
-          <format>yyyyMMddHHmm'-${git.hash}'</format> 
+          <format>yyyyMMddHHmm'-beta1-${git.hash}'</format> 
           <archiveSite>true</archiveSite>
         </configuration>
       </plugin>    
