@@ -185,13 +185,14 @@ class FormatterPreferencePage extends PropertyPage with IWorkbenchPreferencePage
   object SpacesPrefTab extends PrefTab("Spaces", SPACES_PREVIEW_TEXT) {
 
     def buildContents(composite: Composite) {
-      composite.setLayout(new MigLayout(new LC().fill, new AC, new AC().index(6).grow(1)))
+      composite.setLayout(new MigLayout(new LC().fill, new AC, new AC().index(7).grow(1)))
 
       addCheckBox(composite, "Space before colons", SpaceBeforeColon)
       addCheckBox(composite, "Compact string concatenation", CompactStringConcatenation)
       addCheckBox(composite, "Space inside brackets", SpaceInsideBrackets)
       addCheckBox(composite, "Space inside parentheses", SpaceInsideParentheses)
       addCheckBox(composite, "Preserve space before arguments", PreserveSpaceBeforeArguments)
+      addCheckBox(composite, "Spaces within pattern binders", SpacesWithinPatternBinders)
 
       addPreview(composite)
     }
@@ -200,11 +201,12 @@ class FormatterPreferencePage extends PropertyPage with IWorkbenchPreferencePage
   object MiscPrefTab extends PrefTab("Miscellaneous", MISC_PREVIEW_TEXT) {
 
     def buildContents(composite: Composite) {
-      composite.setLayout(new MigLayout(new LC().fill, new AC, new AC().index(4).grow(1)))
+      composite.setLayout(new MigLayout(new LC().fill, new AC, new AC().index(5).grow(1)))
 
       addCheckBox(composite, "Format XML", FormatXml)
       addCheckBox(composite, "Rewrite arrow tokens", RewriteArrowSymbols)
       addCheckBox(composite, "Preserve dangling close parenthesis", PreserveDanglingCloseParenthesis)
+      addCheckBox(composite, "Multiline Scaladoc comments start on first line", MultilineScaladocCommentsStartOnFirstLine)
 
       addPreview(composite)
     }
@@ -379,6 +381,11 @@ object FormatterPreferencePage {
   println("hello"+name+"world")
   
   stack.pop() should equal (2)
+
+  x match {
+    case elem@Multi(values@_*) =>
+  }
+
 }
 """
 
@@ -406,7 +413,11 @@ n: Int) = {
 for (n <- 1 to 10) 
  n match {
   case _ => 42
-} 
+}
+/**
+ * Multiline Scaladoc 
+ * comment
+ */ 
 val book = Book(
   name = "Name",
   author = "Author",
