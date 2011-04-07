@@ -23,8 +23,8 @@ trait ScalaOverrideIndicatorBuilder { self : ScalaPresentationCompiler =>
   class OverrideIndicatorBuilderTraverser(scu : ScalaCompilationUnit, annotationMap : JMap[AnyRef, AnyRef]) extends Traverser {
     val ANNOTATION_TYPE= "org.eclipse.jdt.ui.overrideIndicator"
 
-    case class ScalaIndicator(text : String, base: Symbol, val isOverwrite : Boolean) extends Annotation(ANNOTATION_TYPE, false, text) 
-    with IScalaOverrideIndicator {
+    case class ScalaIndicator(text : String, base: Symbol, val isOverwrite : Boolean) 
+      extends Annotation(ANNOTATION_TYPE, false, text) with IScalaOverrideIndicator {
       def open = {
         ask{ () => locate(base, scu) } map { case (file, pos) =>
     	  EditorUtility.openInEditor(file, true) match { 

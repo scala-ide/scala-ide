@@ -28,7 +28,19 @@ class ScalaHyperlinkDetector extends AbstractHyperlinkDetector with Logger {
     val textEditor = getAdapter(classOf[ITextEditor]).asInstanceOf[ITextEditor]
     detectHyperlinks(textEditor, region, canShowMultipleHyperlinks)
   }
-	  
+
+  case class Hyperlink(file: Openable, pos: Int)(wordRegion: IRegion)  extends IHyperlink {
+    def getHyperlinkRegion = wordRegion
+    def getTypeLabel = null
+    def getHyperlinkText = "Open Declaration"
+    def open = {
+      EditorUtility.openInEditor(file, true) match {
+        case editor: ITextEditor => editor.selectAndReveal(pos, 0)
+        case _ =>
+      }
+    }
+  }
+  
   def detectHyperlinks(textEditor: ITextEditor, region: IRegion, canShowMultipleHyperlinks: Boolean): Array[IHyperlink] = {
     if (textEditor == null) // can be null if generated through ScalaPreviewerFactory
       null
@@ -47,37 +59,26 @@ class ScalaHyperlinkDetector extends AbstractHyperlinkDetector with Logger {
               val typed = response.get
 
               log("detectHyperlinks: wordRegion = " + wordRegion)
-
-              compiler.ask { () =>
-                case class Hyperlink(file: Openable, pos: Int) extends IHyperlink {
-                  def getHyperlinkRegion = wordRegion
-                  def getTypeLabel = null
-                  def getHyperlinkText = "Open Declaration"
-                  def open = {
-                    EditorUtility.openInEditor(file, true) match {
-                      case editor: ITextEditor => editor.selectAndReveal(pos, 0)
-                      case _ =>
-                    }
-                  }
-                }
-
+              val hyperlinks: Option[Hyperlink] = compiler.ask { () =>
                 import compiler.{ log => _, _ }
-                typed.left.toOption map (_ match {
+                
+                typed.left.toOption map {
                   case Import(expr, sels) => sels find (_.namePos >= pos.start) map (sel => expr.tpe.member(sel.name)) getOrElse NoSymbol
-                  case Annotated(atp, _) => atp.symbol
-                  case st: SymTree => st.symbol
-                  case t =>
-                    log("unhandled tree " + t); NoSymbol
-                }) flatMap { sym =>
+                  case Annotated(atp, _)  => atp.symbol
+                  case st: SymTree        => st.symbol
+                  case t                  => log("unhandled tree " + t); NoSymbol
+                } flatMap { sym =>
                   if (sym.isPackage || sym == NoSymbol || sym.isJavaDefined)
                     None
                   else
-                    compiler.locate(sym, scu) map { case (f, pos) => Hyperlink(f, pos) }
+                    compiler.locate(sym, scu) map { case (f, pos) => Hyperlink(f, pos)(wordRegion) }
                 }
-              } map (Array(_: IHyperlink)) getOrElse {
+              }
+              if (!hyperlinks.isDefined) {
                 log("!!! Falling back to selection engine for %s!".format(typed.left), Category.ERROR)
                 codeSelect(textEditor, wordRegion, scu)
-              }
+              } else
+                Array(hyperlinks.get: IHyperlink)
             }
           })(null)
 
