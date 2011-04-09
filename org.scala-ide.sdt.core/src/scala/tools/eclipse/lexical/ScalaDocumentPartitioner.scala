@@ -5,7 +5,7 @@ import org.eclipse.jface.text.IDocument.DEFAULT_CONTENT_TYPE
 import scala.collection.mutable.ListBuffer
 import scala.math.{ max, min }
 
-class ScalaDocumentPartitioner extends IDocumentPartitioner with IDocumentPartitionerExtension with IDocumentPartitionerExtension2 {
+class ScalaDocumentPartitioner(conservative: Boolean = false) extends IDocumentPartitioner with IDocumentPartitionerExtension with IDocumentPartitionerExtension2 {
 
   import ScalaDocumentPartitioner._
 
@@ -27,7 +27,10 @@ class ScalaDocumentPartitioner extends IDocumentPartitioner with IDocumentPartit
     val oldPartitions = partitionRegions
     val newPartitions = ScalaPartitionTokeniser.tokenise(event.getDocument.get)
     partitionRegions = newPartitions
-    calculateDirtyRegion(oldPartitions, newPartitions, event.getOffset, event.getLength, event.getText)
+    if (conservative)
+      new Region(0, event.getDocument.getLength)
+    else
+      calculateDirtyRegion(oldPartitions, newPartitions, event.getOffset, event.getLength, event.getText)
   }
 
   private def calculateDirtyRegion(oldPartitions: List[ScalaPartitionRegion], newPartitions: List[ScalaPartitionRegion], offset: Int, length: Int, text: String): IRegion =

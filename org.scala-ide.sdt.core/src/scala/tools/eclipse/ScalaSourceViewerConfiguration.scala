@@ -122,7 +122,7 @@ class ScalaSourceViewerConfiguration(store: IPreferenceStore, scalaPreferenceSto
   override def getContentFormatter(sourceViewer: ISourceViewer) = {
     val contentFormatter = new ContentFormatter
     contentFormatter.enablePartitionAwareFormatting(false);
-    contentFormatter.setFormattingStrategy(new ScalaFormattingStrategy(sourceViewer), IDocument.DEFAULT_CONTENT_TYPE)
+    contentFormatter.setFormattingStrategy(new ScalaFormattingStrategy(editor), IDocument.DEFAULT_CONTENT_TYPE)
     contentFormatter
   }
 

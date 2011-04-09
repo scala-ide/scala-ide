@@ -15,10 +15,11 @@ import org.eclipse.jdt.internal.ui.javaeditor.DocumentAdapter
 class ScalaFormatterCleanUpProvider extends IFormatterCleanUpProvider {
 
   def createCleanUp(cu: ICompilationUnit): ICleanUpFix = {
+    val project = cu.getJavaProject.getProject
     val document = cu.getBuffer.asInstanceOf[DocumentAdapter].getDocument
     val lineDelimiter = TextUtilities.getDefaultLineDelimiter(document)
     val edits =
-      try ScalaFormatter.formatAsEdits(cu.getSource, FormatterPreferencePage.getPreferences, Some(lineDelimiter))
+      try ScalaFormatter.formatAsEdits(cu.getSource, FormatterPreferences.getPreferences(project), Some(lineDelimiter))
       catch { case e: ScalaParserException => return null }
     val resultEdit = new MultiTextEdit
     for (TextEdit(start, length, replacement) <- edits)

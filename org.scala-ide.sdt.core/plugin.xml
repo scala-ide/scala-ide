@@ -7,7 +7,23 @@
       <page
             class="scala.tools.eclipse.properties.CompilerSettings"
             id="org.scala-ide.sdt.core.properties.compilerPropertyPage"
-            name="Scala Compiler Properties">
+            name="Scala Compiler">
+         <filter
+               name="nature"
+               value="org.scala-ide.sdt.core.scalanature"/>
+         <enabledWhen>
+         <or> <instanceof value="org.eclipse.jdt.core.IJavaProject"/>
+              <instanceof value="org.eclipse.core.resources.IProject"/>
+         </or>
+         </enabledWhen>
+      </page>
+   </extension>
+   <extension
+         point="org.eclipse.ui.propertyPages">
+      <page
+            class="scala.tools.eclipse.formatter.FormatterPreferencePage"
+            id="scala.tools.eclipse.formatter.FormatterPropertyPage"
+            name="Scala Formatter">
          <filter
                name="nature"
                value="org.scala-ide.sdt.core.scalanature"/>

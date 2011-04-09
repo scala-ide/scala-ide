@@ -31,6 +31,9 @@ class ScalaHyperlinkDetector extends AbstractHyperlinkDetector {
   }
 
   def detectHyperlinks(textEditor: ITextEditor, region: IRegion, canShowMultipleHyperlinks: Boolean): Array[IHyperlink] = {
+	if (textEditor == null) // can be null if generated through ScalaPreviewerFactory
+      null
+    else
     EditorUtility.getEditorInputJavaElement(textEditor, false) match {
       case scu: ScalaCompilationUnit =>
         scu.withSourceFile({ (sourceFile, compiler) =>
