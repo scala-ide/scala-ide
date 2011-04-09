@@ -330,11 +330,8 @@ class SyntaxColouringPreferencePage extends PreferencePage with IWorkbenchPrefer
     outerComposite
   }
 
-  private def createPreviewer(parent: Composite): Control = {
-    val store = new ChainedPreferenceStore(Array(overlayStore, EditorsUI.getPreferenceStore))
-    val (control, document) = ScalaPreviewerFactory.createPreviewer(parent, store, previewText)
-    control
-  }
+  private def createPreviewer(parent: Composite): Control =
+    ScalaPreviewerFactory.createPreviewer(parent, overlayStore, previewText).getControl
 
   private def selectedSyntaxClass: Option[ScalaSyntaxClass] =
     condOpt(treeViewer.getSelection.asInstanceOf[IStructuredSelection].getFirstElement) {

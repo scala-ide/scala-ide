@@ -1,5 +1,8 @@
 package scala.tools.eclipse
 
+import org.eclipse.jface.text.source.SourceViewer
+import org.eclipse.ui.editors.text.EditorsUI
+import org.eclipse.ui.texteditor.ChainedPreferenceStore
 import org.eclipse.jface.util.{ IPropertyChangeListener, PropertyChangeEvent }
 import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.Document
@@ -19,8 +22,8 @@ import org.eclipse.swt.widgets.Composite
 
 object ScalaPreviewerFactory {
 
-  def createPreviewer(parent: Composite, preferenceStore: IPreferenceStore, initialText: String): (Control, IDocument) = {
-
+  def createPreviewer(parent: Composite, scalaPreferenceStore: IPreferenceStore, initialText: String): SourceViewer = {
+    val preferenceStore = new ChainedPreferenceStore(Array(scalaPreferenceStore, EditorsUI.getPreferenceStore))
     val previewViewer = new JavaSourceViewer(parent, null, null, false, SWT.V_SCROLL | SWT.H_SCROLL | SWT.BORDER, preferenceStore)
     val font = JFaceResources.getFont(PreferenceConstants.EDITOR_TEXT_FONT)
     previewViewer.getTextWidget.setFont(font)
@@ -43,7 +46,7 @@ object ScalaPreviewerFactory {
         previewViewer.invalidateTextPresentation()
       }
     })
-    (previewViewer.getControl, document)
+    previewViewer
   }
 
 }
