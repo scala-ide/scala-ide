@@ -158,8 +158,9 @@ class FormatterPreferencePage extends PropertyPage with IWorkbenchPreferencePage
     }
 
     protected def createPreviewer(parent: Composite): Control = {
-      val (control, document) = ScalaPreviewerFactory.createPreviewer(parent, getPreferenceStore, formatPreviewText)
-      previewDocument = document
+      val previewer = ScalaPreviewerFactory.createPreviewer(parent, getPreferenceStore, formatPreviewText)
+      previewDocument = previewer.getDocument
+      val control = previewer.getControl
       allEnableDisableControls += control
       control
     }
