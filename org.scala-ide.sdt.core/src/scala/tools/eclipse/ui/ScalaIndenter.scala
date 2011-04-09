@@ -23,7 +23,8 @@ import java.lang.Math.min
 import scala.collection.mutable.Map
 import scala.annotation.tailrec
 import scala.tools.eclipse.ScalaPlugin
-import scala.tools.eclipse.formatter.FormatterPreferences
+import scala.tools.eclipse.formatter.FormatterPreferences._
+import scalariform.formatter.preferences.IndentSpaces
 
 // TODO Move this out into a new file
 trait PreferenceProvider {
@@ -59,10 +60,8 @@ class JdtPreferenceProvider(val project : IJavaProject) extends PreferenceProvid
     put(PreferenceConstants.EDITOR_SMART_TAB, 
         preferenceStore.getBoolean(PreferenceConstants.EDITOR_SMART_TAB).toString)
 
-    // TODO: Matt -- use better pref lookup when merged with formatter-preferences-page branch        
     val scalaPrefs = ScalaPlugin.plugin.getPreferenceStore
-    val key = FormatterPreferences.PREFIX + scalariform.formatter.preferences.IndentSpaces.key
-    val indent = scalaPrefs.getInt(key)
+    val indent = scalaPrefs(IndentSpaces)
     put(ScalaIndenter.TAB_SIZE, indent.toString)
     put(ScalaIndenter.INDENT_SIZE, indent.toString)
     
