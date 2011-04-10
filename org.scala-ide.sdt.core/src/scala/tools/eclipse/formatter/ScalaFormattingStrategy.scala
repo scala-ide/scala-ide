@@ -1,50 +1,91 @@
 package scala.tools.eclipse.formatter
 
 import org.eclipse.core.resources.IProject
+import org.eclipse.core.runtime.IAdaptable
+import org.eclipse.jdt.core.IJavaElement
+import org.eclipse.jface.text._
+import org.eclipse.jface.text.formatter._
+import org.eclipse.jface.text.source.ISourceViewer
 import org.eclipse.jface.preference.IPreferenceStore
+import org.eclipse.text.undo.DocumentUndoManagerRegistry
+import org.eclipse.text.edits.{ TextEdit => EclipseTextEdit, _ }
+import org.eclipse.ui.texteditor.ITextEditor
+
+import scalariform.formatter.ScalaFormatter
+import scalariform.formatter.preferences._
+import scalariform.parser.ScalaParserException
+import scalariform.utils.TextEdit
+
 import scala.tools.eclipse.properties.PropertyStore
 import scala.tools.eclipse.ScalaPlugin
-import org.eclipse.jdt.core.IJavaElement
-import org.eclipse.core.runtime.IAdaptable
-import org.eclipse.ui.texteditor.ITextEditor
-import org.eclipse.jface.text.formatter.IFormattingStrategy
-import org.eclipse.jface.text.source.ISourceViewer
-import scalariform.parser.ScalaParserException
-import scalariform.formatter.ScalaFormatter
-import scalariform.formatter.preferences.FormattingPreferences
-import scalariform.utils.TextEdit
-import org.eclipse.text.undo.DocumentUndoManagerRegistry
-import org.eclipse.text.edits.{ TextEdit => JFaceTextEdit, _ }
-import org.eclipse.jface.text.{ IDocument, TextUtilities }
+import scala.tools.eclipse.util.EclipseUtils._
 
-class ScalaFormattingStrategy(val editor: ITextEditor) extends IFormattingStrategy {
+class ScalaFormattingStrategy(val editor: ITextEditor) extends IFormattingStrategy with IFormattingStrategyExtension {
 
-  def format(content: String, isLineStart: Boolean, indentation: String, positions: Array[Int]): String = {
-    val project = editor.getEditorInput.asInstanceOf[IAdaptable].getAdapter(classOf[IJavaElement]).asInstanceOf[IJavaElement].getJavaProject.getProject
-    val document = editor.getDocumentProvider.getDocument(editor.getEditorInput)
-    val source = document.get
-    val lineDelimiter = Option(TextUtilities.getDefaultLineDelimiter(document))
-    val preferences = FormatterPreferences.getPreferences(project)
+  private var document: IDocument = _
 
-    val edits =
-      try ScalaFormatter.formatAsEdits(source, preferences, lineDelimiter)
-      catch { case _: ScalaParserException => return null }
-    applyEdits(document, edits)
+  private var regionOpt: Option[IRegion] = None
 
-    null
+  def formatterStarts(context: IFormattingContext) {
+    this.document = context.getProperty(FormattingContextProperties.CONTEXT_MEDIUM).asInstanceOf[IDocument]
+    this.regionOpt = Option(context.getProperty(FormattingContextProperties.CONTEXT_REGION).asInstanceOf[IRegion])
   }
 
-  private def applyEdits(document: IDocument, edits: List[TextEdit]) {
+  def format() {
+    val preferences = FormatterPreferences.getPreferences(getProject)
+    var edits =
+      try ScalaFormatter.formatAsEdits(document.get, preferences, document.defaultLineDelimiter)
+      catch { case _: ScalaParserException => return }
+
+    val (offset, length) = expandToWholeLines(regionOpt match {
+      case Some(region) => (region.getOffset, region.getLength)
+      case None => (0, document.getLength)
+    })
+    val formattingRegion = new Position(offset, length)
+
+    val eclipseEdits = edits.collect {
+      case TextEdit(position, len, replacement) if formattingRegion.overlapsWith(position, len) =>
+        new ReplaceEdit(position, len, replacement)
+    }
+    applyEdits(eclipseEdits)
+  }
+
+  private def expandToWholeLines(offsetAndLength: (Int, Int)): (Int, Int) = {
+    val (offset, length) = offsetAndLength
+    var current = offset
+    while (current >= 0 && document(current) != '\n')
+      current -= 1
+    assert(current == -1 || document(current) == '\n')
+    val newOffset = current + 1
+
+    current = offset + length
+    while (current < document.getLength && document(current) != '\n' && document(current) != '\r')
+      current += 1
+    while (current < document.getLength && (document(current) == '\n' || document(current) == '\r'))
+      current += 1
+    val newLength = current - newOffset
+    (newOffset, newLength)
+  }
+
+  private def applyEdits(edits: List[EclipseTextEdit]) {
+    val multiEdit = new MultiTextEdit
+    multiEdit.addChildren(edits.toArray)
+
     val undoManager = DocumentUndoManagerRegistry.getDocumentUndoManager(document)
     undoManager.beginCompoundChange()
-    val eclipseEdit = new MultiTextEdit
-    for (TextEdit(start, length, replacement) <- edits)
-      eclipseEdit.addChild(new ReplaceEdit(start, length, replacement))
-    new TextEditProcessor(document, eclipseEdit, JFaceTextEdit.NONE).performEdits
+    new TextEditProcessor(document, multiEdit, EclipseTextEdit.NONE).performEdits
     undoManager.endCompoundChange()
   }
 
+  def formatterStops() {
+    this.document = null
+    this.regionOpt = None
+  }
+
+  private def getProject = editor.getEditorInput.asInstanceOf[IAdaptable].adaptTo[IJavaElement].getJavaProject.getProject
+
+  def format(content: String, isLineStart: Boolean, indentation: String, positions: Array[Int]): String = null
+
   def formatterStarts(initialIndentation: String) {}
 
-  def formatterStops() {}
 }

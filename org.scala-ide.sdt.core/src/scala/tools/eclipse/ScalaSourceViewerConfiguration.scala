@@ -5,6 +5,7 @@
 
 package scala.tools.eclipse;
 
+import org.eclipse.jface.text.formatter.MultiPassContentFormatter
 //import scala.tools.eclipse.text.scala.ScalaCompletionProcessor
 import org.eclipse.jface.util.PropertyChangeEvent
 import org.eclipse.jdt.core.{ IJavaProject, IJavaElement, ICodeAssist }
@@ -120,10 +121,9 @@ class ScalaSourceViewerConfiguration(store: IPreferenceStore, scalaPreferenceSto
   }
 
   override def getContentFormatter(sourceViewer: ISourceViewer) = {
-    val contentFormatter = new ContentFormatter
-    contentFormatter.enablePartitionAwareFormatting(false);
-    contentFormatter.setFormattingStrategy(new ScalaFormattingStrategy(editor), IDocument.DEFAULT_CONTENT_TYPE)
-    contentFormatter
+    val formatter = new MultiPassContentFormatter(getConfiguredDocumentPartitioning(sourceViewer), IDocument.DEFAULT_CONTENT_TYPE)
+    formatter.setMasterStrategy(new ScalaFormattingStrategy(editor))
+    formatter
   }
 
   //  override def getContentAssistant(sourceViewer: ISourceViewer): IContentAssistant = {
