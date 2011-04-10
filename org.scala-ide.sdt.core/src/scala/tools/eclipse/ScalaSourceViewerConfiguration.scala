@@ -5,6 +5,8 @@
 
 package scala.tools.eclipse;
 
+import org.eclipse.jface.text.formatter.MultiPassContentFormatter
+import org.eclipse.jface.util.PropertyChangeEvent
 import org.eclipse.jdt.core.{ IJavaProject, IJavaElement, ICodeAssist }
 import org.eclipse.jdt.internal.ui.JavaPlugin
 import org.eclipse.jdt.internal.ui.javaeditor.{ IClassFileEditorInput, ICompilationUnitDocumentProvider, JavaElementHyperlinkDetector }
@@ -120,12 +122,11 @@ class ScalaSourceViewerConfiguration(store: IPreferenceStore, scalaPreferenceSto
       }
    }
 
-   override def getContentFormatter(sourceViewer: ISourceViewer) = {
-      val contentFormatter = new ContentFormatter
-      contentFormatter.enablePartitionAwareFormatting(false);
-      contentFormatter.setFormattingStrategy(new ScalaFormattingStrategy(editor), IDocument.DEFAULT_CONTENT_TYPE)
-      contentFormatter
-   }
+  override def getContentFormatter(sourceViewer: ISourceViewer) = {
+    val formatter = new MultiPassContentFormatter(getConfiguredDocumentPartitioning(sourceViewer), IDocument.DEFAULT_CONTENT_TYPE)
+    formatter.setMasterStrategy(new ScalaFormattingStrategy(editor))
+    formatter
+  }
 
    override def handlePropertyChangeEvent(event: PropertyChangeEvent) {
       super.handlePropertyChangeEvent(event)
