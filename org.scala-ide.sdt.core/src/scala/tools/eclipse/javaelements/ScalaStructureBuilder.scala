@@ -313,6 +313,8 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
       override def addClass(c : ClassDef) : Owner = {
         val sym = c.symbol
         if (sym eq NoSymbol) return self  // Local class hasn't been attributed yet, can't show anything meaningful.
+        // make sure classes are completed
+        sym.initialize
         
         val name = c.name.toString
         val parentTree = c.impl.parents.head
@@ -789,7 +791,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
           case vd : ValDef =>  (builder.addVal(vd), List(vd.rhs))
           case td : TypeDef => (builder.addType(td), List(td.rhs))
           case dd : DefDef => {
-            if(dd.name != nme.MIXIN_CONSTRUCTOR) {
+            if(dd.name != nme.MIXIN_CONSTRUCTOR && (dd.symbol ne NoSymbol)) {
               (builder.addDef(dd), List(dd.tpt, dd.rhs))
             } else (builder, Nil)
           }

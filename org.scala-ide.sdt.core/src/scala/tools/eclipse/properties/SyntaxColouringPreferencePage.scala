@@ -1,5 +1,6 @@
 package scala.tools.eclipse.properties
 
+import scala.tools.eclipse.ScalaPreviewerFactory
 import java.util.HashMap
 import org.eclipse.jdt.internal.ui.preferences.OverlayPreferenceStore
 import PartialFunction.condOpt
@@ -52,6 +53,7 @@ import scala.tools.eclipse.ScalaSourceViewerConfiguration
 import org.eclipse.jdt.ui.text.IJavaPartitions
 import org.eclipse.jface.util.IPropertyChangeListener
 import org.eclipse.jface.util.PropertyChangeEvent
+import scala.tools.eclipse.util.SWTUtils._
 
 /**
  * @see org.eclipse.jdt.internal.ui.preferences.JavaEditorColoringConfigurationBlock
@@ -176,27 +178,18 @@ class SyntaxColouringPreferencePage extends PreferencePage with IWorkbenchPrefer
       widthHint = widthHint,
       heightHint = convertHeightInCharsToPixels(9)))
 
-    treeViewer.addDoubleClickListener(new IDoubleClickListener {
-      def doubleClick(event: DoubleClickEvent) {
-        val element = event.getSelection.asInstanceOf[IStructuredSelection].getFirstElement
-        if (treeViewer.isExpandable(element))
-          treeViewer.setExpandedState(element, !treeViewer.getExpandedState(element))
-      }
-    })
+    treeViewer.addDoubleClickListener { event: DoubleClickEvent =>
+      val element = event.getSelection.asInstanceOf[IStructuredSelection].getFirstElement
+      if (treeViewer.isExpandable(element))
+        treeViewer.setExpandedState(element, !treeViewer.getExpandedState(element))
+    }
 
-    treeViewer.addSelectionChangedListener(new ISelectionChangedListener {
-      def selectionChanged(event: SelectionChangedEvent) {
-        handleSyntaxColorListSelection()
-      }
-    })
+    treeViewer.addSelectionChangedListener {
+      handleSyntaxColorListSelection()
+    }
 
     treeViewer.setInput(new Object)
   }
-
-  private implicit def fnToSelectionAdapter[T](p: SelectionEvent => T): SelectionAdapter =
-    new SelectionAdapter() {
-      override def widgetSelected(e: SelectionEvent) = p(e)
-    }
 
   private def gridLayout(marginHeight: Int = 5, marginWidth: Int = 5, numColumns: Int = 1): GridLayout = {
     val layout = new GridLayout
@@ -310,23 +303,23 @@ class SyntaxColouringPreferencePage extends PreferencePage with IWorkbenchPrefer
       widthHint = convertWidthInCharsToPixels(20),
       heightHint = convertHeightInCharsToPixels(5)))
 
-    foregroundColorButton.addSelectionListener { e: SelectionEvent =>
+    foregroundColorButton.addSelectionListener {
       for (syntaxClass <- selectedSyntaxClass)
         PreferenceConverter.setValue(overlayStore, syntaxClass.colourKey, syntaxForegroundColorEditor.getColorValue)
     }
-    boldCheckBox.addSelectionListener { e: SelectionEvent =>
+    boldCheckBox.addSelectionListener {
       for (syntaxClass <- selectedSyntaxClass)
         overlayStore.setValue(syntaxClass.boldKey, boldCheckBox.getSelection)
     }
-    italicCheckBox.addSelectionListener { e: SelectionEvent =>
+    italicCheckBox.addSelectionListener {
       for (syntaxClass <- selectedSyntaxClass)
         overlayStore.setValue(syntaxClass.italicKey, italicCheckBox.getSelection)
     }
-    underlineCheckBox.addSelectionListener { e: SelectionEvent =>
+    underlineCheckBox.addSelectionListener {
       for (syntaxClass <- selectedSyntaxClass)
         overlayStore.setValue(syntaxClass.underlineKey, underlineCheckBox.getSelection)
     }
-    strikethroughCheckBox.addSelectionListener { e: SelectionEvent =>
+    strikethroughCheckBox.addSelectionListener {
       for (syntaxClass <- selectedSyntaxClass)
         overlayStore.setValue(syntaxClass.strikethroughKey, strikethroughCheckBox.getSelection)
     }
@@ -339,30 +332,8 @@ class SyntaxColouringPreferencePage extends PreferencePage with IWorkbenchPrefer
 
   private def createPreviewer(parent: Composite): Control = {
     val store = new ChainedPreferenceStore(Array(overlayStore, EditorsUI.getPreferenceStore))
-
-    val previewViewer = new JavaSourceViewer(parent, null, null, false, SWT.V_SCROLL | SWT.H_SCROLL | SWT.BORDER, store)
-    val font = JFaceResources.getFont(PreferenceConstants.EDITOR_TEXT_FONT)
-    previewViewer.getTextWidget.setFont(font)
-    previewViewer.setEditable(false)
-
-    val configuration = new ScalaSourceViewerConfiguration(store, store, null)
-    previewViewer.configure(configuration)
-
-    store.addPropertyChangeListener(new IPropertyChangeListener() {
-      def propertyChange(event: PropertyChangeEvent) {
-        if (configuration.affectsTextPresentation(event))
-          configuration.handlePropertyChangeEvent(event)
-        previewViewer.invalidateTextPresentation()
-      }
-    })
-
-    val document = new Document(previewText)
-    val partitioners = new HashMap[String, IDocumentPartitioner]
-    partitioners.put(IJavaPartitions.JAVA_PARTITIONING, new ScalaDocumentPartitioner)
-    TextUtilities.addDocumentPartitioners(document, partitioners)
-    previewViewer.setDocument(document)
-
-    previewViewer.getControl
+    val (control, document) = ScalaPreviewerFactory.createPreviewer(parent, store, previewText)
+    control
   }
 
   private def selectedSyntaxClass: Option[ScalaSyntaxClass] =

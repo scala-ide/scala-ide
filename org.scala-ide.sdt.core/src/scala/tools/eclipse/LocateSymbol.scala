@@ -22,8 +22,8 @@ import scala.tools.nsc.io.AbstractFile
 import javaelements.{ScalaSourceFile, ScalaClassFile, ScalaCompilationUnit}
 
 trait LocateSymbol { self : ScalaPresentationCompiler => 
-  
-  def locate(sym : Symbol, scu : ScalaCompilationUnit) = {
+
+  def locate(sym : Symbol, scu : ScalaCompilationUnit): Option[(ScalaCompilationUnit, Int)] = {
     def find[T, V](arr : Array[T])(f : T => Option[V]) : Option[V] = {
       for(e <- arr) {
         f(e) match {
@@ -58,7 +58,7 @@ trait LocateSymbol { self : ScalaPresentationCompiler =>
       (if (sym.pos eq NoPosition) {
         file.withSourceFile { (f, _) =>
           val pos = new Response[Position]
-          getLinkPos(sym, f, pos)
+          askLinkPos(sym, f, pos)
           askReload(scu, scu.getContents)
           pos.get.left.toOption
         } (None)
