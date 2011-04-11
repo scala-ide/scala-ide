@@ -44,7 +44,9 @@ class ScalaFormattingStrategy(val editor: ITextEditor) extends IFormattingStrate
     val formattingRegion = new Position(offset, length)
 
     val eclipseEdits = edits.collect {
-      case TextEdit(position, len, replacement) if formattingRegion.overlapsWith(position, len) =>
+      // We filter down to the edits that intersect the selected region, except those that
+      // exceed the selection, because they have a habit of messing with the indentation of subsequent statements.
+      case TextEdit(position, len, replacement) if formattingRegion.includes(position + len) =>
         new ReplaceEdit(position, len, replacement)
     }
     applyEdits(eclipseEdits)
