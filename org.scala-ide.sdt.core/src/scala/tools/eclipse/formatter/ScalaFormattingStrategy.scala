@@ -4,6 +4,7 @@ import org.eclipse.core.resources.IProject
 import org.eclipse.core.runtime.IAdaptable
 import org.eclipse.jdt.core.IJavaElement
 import org.eclipse.jface.text._
+import org.eclipse.jface.text.TextUtilities.getDefaultLineDelimiter
 import org.eclipse.jface.text.formatter._
 import org.eclipse.jface.text.source.ISourceViewer
 import org.eclipse.jface.preference.IPreferenceStore
@@ -34,7 +35,7 @@ class ScalaFormattingStrategy(val editor: ITextEditor) extends IFormattingStrate
   def format() {
     val preferences = FormatterPreferences.getPreferences(getProject)
     var edits =
-      try ScalaFormatter.formatAsEdits(document.get, preferences, document.defaultLineDelimiter)
+      try ScalaFormatter.formatAsEdits(document.get, preferences, Some(getDefaultLineDelimiter(document)))
       catch { case _: ScalaParserException => return }
 
     val (offset, length) = expandToWholeLines(regionOpt match {
