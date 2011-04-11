@@ -1,8 +1,11 @@
 package scala.tools.eclipse.util
 
+import org.eclipse.text.edits.{ TextEdit => EclipseTextEdit, _ }
+import scalariform.utils.TextEdit
 import org.eclipse.jface.text.IDocumentExtension4
 import org.eclipse.jface.text.IDocument
 import org.eclipse.core.runtime.IAdaptable
+
 import PartialFunction._
 
 object EclipseUtils {
@@ -21,12 +24,10 @@ object EclipseUtils {
 
   class PimpedDocument(document: IDocument) {
 
-    def defaultLineDelimiter: Option[String] = condOpt(document) {
-      case d4: IDocumentExtension4 => d4.getDefaultLineDelimiter
-    }
-
     def apply(offset: Int): Character = document.getChar(offset)
-    
+
   }
+
+  implicit def asEclipseTextEdit(edit: TextEdit): EclipseTextEdit = new ReplaceEdit(edit.position, edit.length, edit.replacement)
 
 }
