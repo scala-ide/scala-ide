@@ -737,8 +737,10 @@ class ScalaIndenter(
    *         should be indented, or {@link JavaHeuristicScanner#NOT_FOUND}
    */
   def findReferencePosition(offset : Int, danglingElse : Boolean, matchBrace : Boolean, matchParen : Boolean, matchCase : Boolean, matchBracket : Boolean) : Int = {
+    import JavaHeuristicScanner._
+    
     fIndent = 0 // the indentation modification
-    fAlign = JavaHeuristicScanner.NOT_FOUND
+    fAlign = NOT_FOUND
     fPosition = offset
 
     // forward cases
@@ -803,6 +805,10 @@ class ScalaIndenter(
 
     nextToken
     fToken match {
+      // check for an arrow token and increase indentation (handles 'case' and closures)
+      case Symbols.TokenGREATERTHAN if scanner.previousToken(fPosition - 1, UNBOUND) == Symbols.TokenEQUAL  =>
+          handleScopeIntroduction(offset + 1)
+        
       case Symbols.TokenGREATERTHAN |
            Symbols.TokenRBRACKET |
            Symbols.TokenRBRACE =>
@@ -828,7 +834,7 @@ class ScalaIndenter(
 
       case Symbols.TokenEOF =>
         // trap when hitting start of document
-        return JavaHeuristicScanner.NOT_FOUND
+        return NOT_FOUND
 
       case Symbols.TokenEQUAL =>
         // indent assignments
@@ -1170,7 +1176,7 @@ class ScalaIndenter(
               return false
           }
         }
-        
+
         if ((fToken == Symbols.TokenIDENT && !isGenericStarter) || 
             fToken == Symbols.TokenQUESTIONMARK ||
             fToken == Symbols.TokenGREATERTHAN) {
@@ -1285,6 +1291,11 @@ class ScalaIndenter(
         fIndent = prefBracketIndent
         return pos // restore
 
+      // a '=>', could be a case pattern or a closure
+      case Symbols.TokenGREATERTHAN =>
+        fIndent = prefBracketIndent
+        return fPosition
+        
       case _ =>
         Assert.isTrue(false)
         return -1 // dummy
