@@ -488,12 +488,12 @@ class ScalaProject(val underlying: IProject) {
   def clean(implicit monitor: IProgressMonitor) = {
     underlying.deleteMarkers(plugin.problemMarkerId, true, IResource.DEPTH_INFINITE)
     resetCompilers
+    if (buildManager0 != null)
+      buildManager0.clean(monitor)
     cleanOutputFolders
   }
 
   def resetBuildCompiler(implicit monitor: IProgressMonitor) {
-  	if (buildManager0 != null)
-  		buildManager0.clean(monitor)
     buildManager0 = null
     hasBeenBuilt = false
   }
