@@ -24,11 +24,17 @@ import scala.tools.eclipse.properties.PropertyStore
 import scala.tools.eclipse.util.{ Cached, EclipseResource, IDESettings, OSGiUtils, ReflectionUtils }
 import scala.tools.eclipse.ui.semantic.highlighting.UnusedImportsAnalyzer
 import scala.tools.nsc.io.AbstractFile
+import scala.ref.SoftReference
 
 class ScalaProject(val underlying: IProject) {
   import ScalaPlugin.plugin
 
-  private var buildManager0 : EclipseBuildManager = null
+  private var buildManagerRef : SoftReference[EclipseBuildManager] = {
+    val b = new SoftReference[EclipseBuildManager](null)
+    b.clear()
+    b
+  }
+  
   private val resetPendingLock = new Object
   private var resetPending = false
 
@@ -353,8 +359,8 @@ class ScalaProject(val underlying: IProject) {
     presentationCompiler.invalidate
   }
 
-  def buildManager = {
-    if (buildManager0 == null) {
+  def buildManager = buildManagerRef.get match {
+    case None => { 
       val settings = new Settings({x => ScalaPlugin.plugin.logWarning(x, None)})
       initialize(settings, _ => true)
       // source path should be emtpy. The build manager decides what files get recompiled when.
@@ -368,21 +374,21 @@ class ScalaProject(val underlying: IProject) {
       // We assume that build manager setting has only single box
       val choice = buildManagerInitialize
       Tracer.println("creating a new EclipseBuildManager : " + choice)
-      choice match {
+      val b = choice match {
       	case "refined" =>
-      	  println("BM: Refined Build Manager")
-      	  buildManager0 = new buildmanager.refined.EclipseRefinedBuildManager(this, settings)
+      	  Tracer.println("BM: Refined Build Manager")
+      	  new buildmanager.refined.EclipseRefinedBuildManager(this, settings)
       	case "sbt0.9"  =>
-      	  println("BM: SBT 0.9 enhanced Build Manager")
-      	  buildManager0 = new buildmanager.sbtintegration.EclipseSbtBuildManager(this, settings)
+      	  Tracer.println("BM: SBT 0.9 enhanced Build Manager")
+      	  new buildmanager.sbtintegration.EclipseSbtBuildManager(this, settings)
       	case _         =>
-      	  println("Invalid build manager choice '" + choice  + "'. Setting to (default) refined build manager")
-      	  buildManager0 = new buildmanager.refined.EclipseRefinedBuildManager(this, settings)
+      	  Tracer.println("Invalid build manager choice '" + choice  + "'. Setting to (default) refined build manager")
+      	  new buildmanager.refined.EclipseRefinedBuildManager(this, settings)
       }
-
-      //buildManager0 = new EclipseBuildManager(this, settings)
+      buildManagerRef = new SoftReference(b)
+      b
     }
-    buildManager0
+    case Some(b) => b
   }
 
   def build(addedOrUpdated : Set[IFile], removed : Set[IFile], monitor : SubMonitor) {
@@ -411,9 +417,9 @@ class ScalaProject(val underlying: IProject) {
     Tracer.println("resetting compilers for " + underlying.getName)
     try {
       //underlying.deleteMarkers(plugin.problemMarkerId, true, IResource.DEPTH_INFINITE)
-      if (buildManager0 != null) buildManager0.clean(monitor)
+      buildManagerRef.get.foreach{ _.clean(monitor) }
     } finally {
-      buildManager0 = null
+      buildManagerRef.clear()
     }
   }
 
