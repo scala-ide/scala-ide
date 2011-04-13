@@ -45,7 +45,7 @@ class ScalaProject(val underlying: IProject) {
       try {
         val settings = new Settings
         settings.printtypes.tryToSet(Nil)
-        initialize(settings, _.name.startsWith("-Ypresentation"))
+        initialize(settings, isPCSetting(settings))
         Some(new ScalaPresentationCompiler(ScalaProject.this, settings))
       } catch {
         case ex @ MissingRequirementError(required) =>
@@ -66,6 +66,25 @@ class ScalaProject(val underlying: IProject) {
     }
   }
 
+  /** Compiler settings that are honored by the presentation compiler. */
+  private def isPCSetting(settings: Settings): Set[Settings#Setting] = {
+    import settings.{ plugin => pluginSetting, _ }
+    Set(deprecation, 
+        unchecked, 
+        pluginOptions, 
+        verbose,
+        Xexperimental, 
+        future, 
+        Xmigration28, 
+        pluginSetting,
+        pluginsDir,
+        YpresentationDebug, 
+        YpresentationVerbose, 
+        YpresentationLog, 
+        YpresentationReplay, 
+        YpresentationDelay)
+  }
+  
   private var messageShowed = false
   
   private def failedCompilerInitialization(msg: String) {
