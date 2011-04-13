@@ -55,7 +55,10 @@ class ScalaBuilder extends IncrementalProjectBuilder {
 
     val project = plugin.getScalaProject(getProject)
     
-    val depends = project.externalDepends
+    val depends = IDESettings.trackDepProjectChanges.value match {
+      case true => project.externalDepends
+      case false => Array.empty[IProject]
+    }
     val cleanBuildForced = IDESettings.alwaysCleanBuild.value || dependsChangedWithNoError(depends)
     val newKind = cleanBuildForced match {
       case true => {

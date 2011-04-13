@@ -46,12 +46,14 @@ object IDESettings {
   }
 
   def buildManagerSettings: List[Box] = {
-    List(Box("Build manager", List(buildManager)))    
+    List(
+      Box("Build manager", List(buildManager, trackDepProjectChanges, alwaysCleanBuild))
+    )    
   }
 
   def tuningSettings: List[Box] = {
     List(
-      Box("Editor Tuning", List(outputInClasspath, compileOnTyping, useContentOfEditor, alwaysCleanBuild, classBreakpoint, markOccurencesForSelectionOnly, markOccurencesTStrategy, timeOutBodyReq))
+      Box("Editor Tuning", List(outputInClasspath, compileOnTyping, useContentOfEditor, classBreakpoint, markOccurencesForSelectionOnly, markOccurencesTStrategy, timeOutBodyReq))
       , Box("Builder Tuning", List(markUnusedImports, ignoreErrorOnJavaFile))
       , Box("QuickFix Tuning", List(quickfixImportByText))
       , Box("Logging Tuning", List(tracerEnabled))
@@ -81,6 +83,8 @@ object IDESettings {
     val choices = ImportCompletionProposal.strategies
     ChoiceSetting("_import strategy", "quick fix for import done with which implementation", choices , choices.head)
   }
+
+  val trackDepProjectChanges = BooleanSetting("_track dep-project changes", "should project be re-build when a required project change", true)
 
   def parseInt(s : String) : Option[Int] = {
     try {
