@@ -12,7 +12,7 @@ import org.eclipse.core.runtime.Platform
 
 class ReportBugDialog(shell: Shell) extends Dialog(shell) {
   
-  val SDT_TRACKER_URL = "http://www.assembla.com/spaces/scala-ide/tickets"
+  val SDT_TRACKER_URL = "https://www.assembla.com/spaces/scala-ide/support/tickets"
   
   protected override def isResizable = true
   
