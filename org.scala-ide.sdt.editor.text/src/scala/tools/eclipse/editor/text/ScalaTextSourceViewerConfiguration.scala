@@ -32,8 +32,9 @@ import org.eclipse.ui.IEditorPart
 import org.eclipse.jface.text.reconciler.IReconciler
 import org.eclipse.jface.text.reconciler.MonoReconciler
 import org.eclipse.jface.text.source.IAnnotationHover
+import org.eclipse.ui.editors.text.TextEditor
 
-protected class ScalaTextSourceViewerConfiguration(val editor : IEditorPart, val colorManager: IColorManager, val jdtPreferenceStore: IPreferenceStore) extends TextSourceViewerConfiguration(jdtPreferenceStore){
+protected class ScalaTextSourceViewerConfiguration(val editor : TextEditor, val colorManager: IColorManager, val jdtPreferenceStore: IPreferenceStore) extends TextSourceViewerConfiguration(jdtPreferenceStore){
 
   private val _codeScanner = new ScalaCodeScanner(colorManager, jdtPreferenceStore)
 
@@ -145,7 +146,7 @@ protected class ScalaTextSourceViewerConfiguration(val editor : IEditorPart, val
   override def getContentFormatter(sourceViewer: ISourceViewer) = {
     val contentFormatter = new ContentFormatter()
     contentFormatter.enablePartitionAwareFormatting(false)
-    contentFormatter.setFormattingStrategy(new ScalaFormattingStrategy(sourceViewer), IDocument.DEFAULT_CONTENT_TYPE)
+    contentFormatter.setFormattingStrategy(new ScalaFormattingStrategy(editor), IDocument.DEFAULT_CONTENT_TYPE)
     contentFormatter
   }
 
