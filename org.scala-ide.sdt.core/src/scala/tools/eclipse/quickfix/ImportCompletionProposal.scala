@@ -11,6 +11,8 @@ import org.eclipse.swt.graphics.{Point, Image}
 import refactoring.EditorHelpers._
 import scala.tools.refactoring.implementations.AddImportStatement
 import util.FileUtils
+import org.eclipse.text.edits.MultiTextEdit
+import org.eclipse.text.edits.RangeMarker
 
 case class ImportCompletionProposal(val importName: String) extends IJavaCompletionProposal {
   
@@ -43,7 +45,7 @@ case class ImportCompletionProposal(val importName: String) extends IJavaComplet
    */
   private def applyByASTTransformation(document: IDocument) {
     
-    withScalaFileAndSelection { (scalaSourceFile, iTextSelection) =>
+    withScalaFileAndSelection { (scalaSourceFile, textSelection) =>
     
       val changes = scalaSourceFile.withSourceFile { (sourceFile, compiler) =>
             
@@ -51,8 +53,8 @@ case class ImportCompletionProposal(val importName: String) extends IJavaComplet
           val global = compiler
           
           val selection = {
-            val start = iTextSelection.getOffset
-            val end = start + iTextSelection.getLength
+            val start = textSelection.getOffset
+            val end = start + textSelection.getLength
             val file = scalaSourceFile.file
             // start and end are not yet used
             new FileSelection(file, start, end)
@@ -63,8 +65,18 @@ case class ImportCompletionProposal(val importName: String) extends IJavaComplet
       }(Nil)
       
       FileUtils.toIFile(scalaSourceFile.file) foreach { f =>
-        val textFileChange = createTextFileChange(f, changes)
-        textFileChange.getEdit.apply(document)
+        createTextFileChange(f, changes).getEdit match {
+          case edit: MultiTextEdit =>
+            
+            val currentPosition = new RangeMarker(textSelection.getOffset, textSelection.getLength)
+            edit.addChild(currentPosition)
+            edit.apply(document)
+            
+            withCurrentEditor { editor =>
+              editor.selectAndReveal(currentPosition.getOffset, currentPosition.getLength)
+              None
+            }
+        }
       }
       
       None
