@@ -19,11 +19,29 @@ import org.eclipse.jface.text.contentassist.ICompletionProposal
 import org.eclipse.swt.widgets.Display
 import org.eclipse.ui.{ IWorkbenchPage, PlatformUI }
 import org.eclipse.ui.ide.IDE
+import org.eclipse.core.resources.ResourcesPlugin
+import org.eclipse.core.runtime.Path
 
+import scala.tools.nsc.io.AbstractFile
 import scala.tools.eclipse.ScalaPlugin
 
 object FileUtils {
   import ScalaPlugin.plugin
+  
+  def toIFile(file: AbstractFile): Option[IFile] = file match {
+    case null => None
+    case EclipseResource(file: IFile) => Some(file)
+    case abstractFile =>
+      
+      val file = ResourcesPlugin.getWorkspace.getRoot.getFileForLocation(Path.fromOSString(abstractFile.path))
+      
+      if (file == null || !file.exists) {
+        None
+      } else {
+        Some(file)
+      }
+  }
+
   
   def length(file : IFile) = {
     val fs = FileBuffers.getFileStoreAtLocation(file.getLocation)

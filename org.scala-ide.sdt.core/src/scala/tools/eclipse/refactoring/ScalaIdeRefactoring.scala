@@ -4,6 +4,7 @@
 
 package scala.tools.eclipse.refactoring
 
+import scala.tools.eclipse.util.FileUtils
 import org.eclipse.core.resources.{IFile, ResourcesPlugin}
 import org.eclipse.core.runtime.{IProgressMonitor, CoreException, Status, IStatus, Path}
 import org.eclipse.ltk.core.refactoring.{Refactoring => LTKRefactoring, Change, RefactoringStatus, CompositeChange}
@@ -56,16 +57,12 @@ abstract class ScalaIdeRefactoring(val getName: String) extends LTKRefactoring {
        
     createRefactoringChanges() map {
       _ groupBy (_.file) map {
-        case (EclipseResource(file: IFile), fileChanges) => 
-          EditorHelpers.createTextFileChange(file, fileChanges)
         case (abstractFile, fileChanges) =>
-          // if we cannot get the IFile from the AbstractFile, we search for it ourselves:
-          val file = ResourcesPlugin.getWorkspace.getRoot.getFileForLocation(Path.fromOSString(abstractFile.path))
-          if(file == null || !file.exists) {
+          FileUtils.toIFile(abstractFile) map { 
+            EditorHelpers.createTextFileChange(_, fileChanges)
+          } getOrElse {
             val msg = "Could not find the corresponding IFile for "+ abstractFile.path
             throw new CoreException(new Status(IStatus.ERROR, ScalaPlugin.plugin.pluginId, 0, msg, null))
-          } else {
-            EditorHelpers.createTextFileChange(file, fileChanges)
           }
       } foreach add
     }
