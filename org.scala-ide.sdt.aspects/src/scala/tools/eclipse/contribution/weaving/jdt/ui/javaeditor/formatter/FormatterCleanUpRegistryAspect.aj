@@ -40,9 +40,12 @@ public privileged aspect FormatterCleanUpRegistryAspect {
 			boolean correctIndentation) :
 				createFormatterCleanUp(cu, regions, format, removeTrailingWhitespacesAll, removeTrailingWhitespacesIgnorEmpty, correctIndentation) {
 		if ("scala".equals(cu.getResource().getFileExtension()))
-			for (IFormatterCleanUpProvider provider : FormatterCleanUpRegistry
+			if (format)
+				for (IFormatterCleanUpProvider provider : FormatterCleanUpRegistry
 					.getInstance().getProviders())
-				return provider.createCleanUp(cu);
+					return provider.createCleanUp(cu);
+				else 
+					return null;
 		return proceed(cu, regions, format, removeTrailingWhitespacesAll, removeTrailingWhitespacesIgnorEmpty, correctIndentation);
 	}
  
