@@ -19,7 +19,7 @@ import scala.tools.nsc.interactive.util.{MultiHashMap }
 
 /** The main class of the presentation compiler in an interactive environment such as an IDE
  */
-class Global(settings: compat.Settings, reporter: Reporter) 
+class Global(settings: compat.Settings, reporter: Reporter, projectName: String = "") 
   extends _root_.scala.tools.nsc.Global(settings, reporter) 
      with CompilerControl 
      with RangePositions
@@ -55,11 +55,11 @@ class Global(settings: compat.Settings, reporter: Reporter)
   }
   /** Print msg only when debugIDE is true. */
   @inline final def debugLog(msg: => String) = 
-    if (debugIDE) println(msg)
+    if (debugIDE) println("[%s] %s".format(projectName, msg))
 
   /** Inform with msg only when verboseIDE is true. */
   @inline final def informIDE(msg: => String) = 
-    if (verboseIDE) println("["+msg+"]")
+    if (verboseIDE) println("[%s][%s]".format(projectName, msg))
   
   //BACK-2.8 (override notthing)
   //override def forInteractive = true
@@ -115,6 +115,22 @@ class Global(settings: compat.Settings, reporter: Reporter)
       if (rmap(source).isEmpty)
         rmap -= source
     }
+  }
+
+  private def cleanAllResponses() {
+    cleanResponses(waitLoadedTypeResponses)
+    cleanResponses(getParsedEnteredResponses)
+  }
+  
+  private def checkNoOutstanding(rmap: ResponseMap): Unit =
+    for ((_, rs) <- rmap.toList; r <- rs) {
+      debugLog("ERROR: missing response, request will be discarded")
+      r raise new MissingResponse
+    }
+  
+  def checkNoResponsesOutstanding() {
+    checkNoOutstanding(waitLoadedTypeResponses)
+    checkNoOutstanding(getParsedEnteredResponses)
   }
 
   /** The compilation unit corresponding to a source file
@@ -261,7 +277,7 @@ class Global(settings: compat.Settings, reporter: Reporter)
    *  @param pos   The position of the tree if polling while typechecking, NoPosition otherwise
    *  
    */
-  protected[interactive] def pollForWork(pos: Position) {
+  private[interactive] def pollForWork(pos: Position) {
     if (!interruptsEnabled) return
     if (pos == NoPosition || nodesSeen % yieldPeriod == 0)
       Thread.`yield`()
@@ -374,9 +390,9 @@ class Global(settings: compat.Settings, reporter: Reporter)
 
   /** Create a new presentation compiler runner.
    */
-  private[interactive] def newRunnerThread(): Thread = {
+  private def newRunnerThread(): Thread = {
     threadId += 1
-    compileRunner = new PresentationCompilerThread(this, threadId)
+    compileRunner = new PresentationCompilerThread(this, projectName)
     compileRunner.start()
     compileRunner
   }
@@ -417,8 +433,7 @@ class Global(settings: compat.Settings, reporter: Reporter)
     }
 
     // clean out stale waiting responses
-    cleanResponses(waitLoadedTypeResponses)
-    cleanResponses(getParsedEnteredResponses)
+    cleanAllResponses()
     
     // wind down
     if (waitLoadedTypeResponses.nonEmpty || getParsedEnteredResponses.nonEmpty) {
@@ -522,11 +537,12 @@ class Global(settings: compat.Settings, reporter: Reporter)
     } catch {
       case CancelException =>
         debugLog("cancelled")
-/* Commented out. Typing should always cancel requests 
       case ex @ FreshRunReq =>
-        scheduler.postWorkItem(() => respondGradually(response)(op))
+        if (debugIDE) {
+          println("FreshRunReq thrown during response")
+        }
+        response raise ex
         throw ex
-*/
       case ex =>
         if (debugIDE) {
           println("exception thrown during response: "+ex)
@@ -538,14 +554,14 @@ class Global(settings: compat.Settings, reporter: Reporter)
     }
   }
 
-  protected def reloadSource(source: SourceFile) {
+  private def reloadSource(source: SourceFile) {
     val unit = new RichCompilationUnit(source)
     unitOfFile(source.file) = unit
     reset(unit)
     //parseAndEnter(unit)
   }
   /** Make sure a set of compilation units is loaded and parsed */
-  protected def reloadSources(sources: List[SourceFile]) {
+  private def reloadSources(sources: List[SourceFile]) {
     newTyperRun()
     minRunId = currentRunId
     sources foreach reloadSource
@@ -553,7 +569,7 @@ class Global(settings: compat.Settings, reporter: Reporter)
   }
 
   /** Make sure a set of compilation units is loaded and parsed */
-  protected def reload(sources: List[SourceFile], response: Response[Unit]) {
+  private[interactive] def reload(sources: List[SourceFile], response: Response[Unit]) {
     informIDE("reload: " + sources)
     lastWasReload = true
     respond(response)(reloadSources(sources))
@@ -596,31 +612,28 @@ class Global(settings: compat.Settings, reporter: Reporter)
   }
 
   /** A fully attributed tree corresponding to the entire compilation unit  */
-  protected def typedTree(source: SourceFile, forceReload: Boolean): Tree = {
+  private def typedTree(source: SourceFile, forceReload: Boolean): Tree = {
     informIDE("typedTree" + source + " forceReload: " + forceReload)
     val unit = getOrCreateUnitOf(source)
     if (forceReload) reset(unit)
     parseAndEnter(unit)
-    if (unit.status <= PartiallyChecked) {
-      //newTyperRun()   // not deeded for idempotent type checker phase
-      typeCheck(unit)
-    }
+    if (unit.status <= PartiallyChecked) typeCheck(unit)
     unit.body
   }
 
   /** Set sync var `response` to a fully attributed tree located at position `pos`  */
-  protected def getTypedTreeAt(pos: Position, response: Response[Tree]) {
+  private[interactive] def getTypedTreeAt(pos: Position, response: Response[Tree]) {
     respond(response)(typedTreeAt(pos))
   }
 
   /** Set sync var `response` to a fully attributed tree corresponding to the
    *  entire compilation unit  */
-  protected def getTypedTree(source: SourceFile, forceReload: Boolean, response: Response[Tree]) {
+  private[interactive] def getTypedTree(source: SourceFile, forceReload: Boolean, response: Response[Tree]) {
     respond(response)(typedTree(source, forceReload))
   }
 
   /** Implements CompilerControl.askLinkPos */
-  protected def getLinkPos(sym: Symbol, source: SourceFile, response: Response[Position]) {
+  private[interactive] def getLinkPos(sym: Symbol, source: SourceFile, response: Response[Position]) {
     informIDE("getLinkPos "+sym+" "+source)
     respond(response) {
       val preExisting = unitOfFile isDefinedAt source.file
@@ -724,7 +737,7 @@ class Global(settings: compat.Settings, reporter: Reporter)
   }
 
   /** Return all members visible without prefix in context enclosing `pos`. */
-  protected def scopeMembers(pos: Position): List[ScopeMember] = {
+  private def scopeMembers(pos: Position): List[ScopeMember] = {
     typedTreeAt(pos) // to make sure context is entered
     val context = doLocateContext(pos)
     val locals = new Members[ScopeMember]
@@ -758,13 +771,13 @@ class Global(settings: compat.Settings, reporter: Reporter)
     result
   }
 
-  protected def getTypeCompletion(pos: Position, response: Response[List[Member]]) {
+  private[interactive] def getTypeCompletion(pos: Position, response: Response[List[Member]]) {
     informIDE("getTypeCompletion " + pos)
     respondGradually(response) { typeMembers(pos) }
     //if (debugIDE) typeMembers(pos)
   }
 
-  protected def typeMembers(pos: Position): Stream[List[TypeMember]] = {
+  private def typeMembers(pos: Position): Stream[List[TypeMember]] = {
     var tree = typedTreeAt(pos)
 
     // if tree consists of just x. or x.fo where fo is not yet a full member name
@@ -834,37 +847,46 @@ class Global(settings: compat.Settings, reporter: Reporter)
   }
   
   /** Implements CompilerControl.askLoadedTyped */
-  protected def waitLoadedTyped(source: SourceFile, response: Response[Tree]) {
+  private[interactive] def waitLoadedTyped(source: SourceFile, response: Response[Tree], onSameThread: Boolean = true) {
     getUnit(source) match {
       case Some(unit) =>
-        if (unit.isUpToDate) { debugLog("already typed"); response set unit.body }
-        else { debugLog("wait for later"); outOfDate = true; waitLoadedTypeResponses(source) += response }
+        if (unit.isUpToDate) {
+          debugLog("already typed"); 
+          response set unit.body
+        } else if (onSameThread) {
+          getTypedTree(source, forceReload = false, response)
+        } else {
+          debugLog("wait for later")
+          outOfDate = true
+          waitLoadedTypeResponses(source) += response
+        }
       case None =>
         debugLog("load unit and type")
-        reloadSources(List(source))
-        waitLoadedTyped(source, response)
+        try reloadSources(List(source))
+        finally waitLoadedTyped(source, response, onSameThread)
     }
   }
   
   /** Implements CompilerControl.askParsedEntered */
-  protected def getParsedEntered(source: SourceFile, keepLoaded: Boolean, response: Response[Tree]) {
+  private[interactive] def getParsedEntered(source: SourceFile, keepLoaded: Boolean, response: Response[Tree], onSameThread: Boolean = true) {
     getUnit(source) match {
       case Some(unit) =>
         getParsedEnteredNow(source, response)
       case None =>
-        if (keepLoaded) {
+        try {
+          if (keepLoaded || outOfDate && onSameThread)
           reloadSources(List(source))
+        } finally {
+          if (keepLoaded || !outOfDate || onSameThread)
           getParsedEnteredNow(source, response)
-        } else if (outOfDate) {
+          else 
           getParsedEnteredResponses(source) += response
-        } else {
-          getParsedEnteredNow(source, response)
         }
     }
   }
   
-  /** Parses and enteres given source file, stroring parse tree in response */
-  protected def getParsedEnteredNow(source: SourceFile, response: Response[Tree]) {
+  /** Parses and enters given source file, stroring parse tree in response */
+  private def getParsedEnteredNow(source: SourceFile, response: Response[Tree]) {
     respond(response) {
       onUnitOf(source) { unit =>
         parseAndEnter(unit)
