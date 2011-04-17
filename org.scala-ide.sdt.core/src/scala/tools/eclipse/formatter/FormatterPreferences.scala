@@ -1,5 +1,6 @@
 package scala.tools.eclipse.formatter
 
+import org.eclipse.jdt.core.IJavaProject
 import org.eclipse.core.resources.IProject
 import scalariform.formatter.preferences.IntegerPreferenceDescriptor
 import scalariform.formatter.preferences.BooleanPreferenceDescriptor
@@ -57,6 +58,8 @@ object FormatterPreferences {
     }
 
   def getPreferences(project: IProject): IFormattingPreferences = getPreferences(getPreferenceStore(project))
+
+  def getPreferences(project: IJavaProject): IFormattingPreferences = getPreferences(project.getProject)
 
   private def getPreferenceStore(project: IProject): IPreferenceStore = {
     val workspaceStore = ScalaPlugin.plugin.getPreferenceStore
