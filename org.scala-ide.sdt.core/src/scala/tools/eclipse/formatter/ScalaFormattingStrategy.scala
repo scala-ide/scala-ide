@@ -85,7 +85,7 @@ class ScalaFormattingStrategy(val editor: ITextEditor) extends IFormattingStrate
     this.regionOpt = None
   }
 
-  private def getProject = editor.getEditorInput.asInstanceOf[IAdaptable].adaptTo[IJavaElement].getJavaProject.getProject
+  private def getProject = editor.getEditorInput.asInstanceOf[IAdaptable].adaptTo[IJavaElement].getJavaProject
 
   def format(content: String, isLineStart: Boolean, indentation: String, positions: Array[Int]): String = null
 
