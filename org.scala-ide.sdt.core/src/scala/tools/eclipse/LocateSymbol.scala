@@ -8,15 +8,22 @@ package scala.tools.eclipse
 import org.eclipse.core.resources.ResourcesPlugin
 import org.eclipse.core.runtime.Path
 import org.eclipse.jdt.core.{ICodeAssist, IJavaElement, WorkingCopyOwner}
+import org.eclipse.jface.text.{IRegion, ITextViewer}
+import org.eclipse.jface.text.hyperlink.{AbstractHyperlinkDetector, IHyperlink}
 import org.eclipse.jdt.internal.core.{ClassFile,Openable, SearchableEnvironment, JavaProject}
+import org.eclipse.ui.texteditor.ITextEditor
+import org.eclipse.jdt.internal.compiler.env.ICompilationUnit
+import org.eclipse.jdt.ui.actions.SelectionDispatchAction
+import org.eclipse.jdt.internal.ui.javaeditor.{EditorUtility, JavaElementHyperlink}
 
+import scala.reflect.generic.Flags._
 import scala.tools.nsc.io.AbstractFile
 
 import javaelements.{ScalaSourceFile, ScalaClassFile, ScalaCompilationUnit}
 
 trait LocateSymbol { self : ScalaPresentationCompiler => 
-  
-  def locate(sym : Symbol, scu : ScalaCompilationUnit) = {
+
+  def locate(sym : Symbol, scu : ScalaCompilationUnit): Option[(ScalaCompilationUnit, Int)] = {
     def find[T, V](arr : Array[T])(f : T => Option[V]) : Option[V] = {
       for(e <- arr) {
         f(e) match {
@@ -51,7 +58,7 @@ trait LocateSymbol { self : ScalaPresentationCompiler =>
       (if (sym.pos eq NoPosition) {
         file.withSourceFile { (f, _) =>
           val pos = new Response[Position]
-          getLinkPos(sym, f, pos)
+          askLinkPos(sym, f, pos)
           askReload(scu.file, scu.getContents)
           pos.get.left.toOption
         } (None)

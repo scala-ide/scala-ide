@@ -39,3 +39,4 @@ class ScalaStructureSelectEnclosingAction(editor: ScalaSourceFileEditor, selecti
   }
 
 }
+

@@ -1,5 +1,6 @@
 #!/bin/sh
 
+
 # MAVEN needs to point to a MAVEN3 installation:
 if which mvn >/dev/null; then
   mvn -version | grep "Maven 3" > /dev/null

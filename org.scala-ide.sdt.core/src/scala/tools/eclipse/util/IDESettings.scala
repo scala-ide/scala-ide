@@ -46,15 +46,13 @@ object IDESettings {
   }
 
   def buildManagerSettings: List[Box] = {
-    List(
-      Box("Build manager", List(buildManager, trackDepProjectChanges, alwaysCleanBuild))
-    )    
+    List(Box("Build manager", List(buildManager)))    
   }
 
   def tuningSettings: List[Box] = {
     List(
       Box("Editor Tuning", List(outputInClasspath, compileOnTyping, useContentOfEditor, classBreakpoint, markOccurencesForSelectionOnly, markOccurencesTStrategy, timeOutBodyReq))
-      , Box("Builder Tuning", List(markUnusedImports, ignoreErrorOnJavaFile))
+      , Box("Builder Tuning", List(markUnusedImports, ignoreErrorOnJavaFile, trackDepProjectChanges, alwaysCleanBuild))
       , Box("QuickFix Tuning", List(quickfixImportByText))
       , Box("Logging Tuning", List(tracerEnabled))
       , Box("Editor Debug", List(exceptionOnCreatePresentationCompiler))

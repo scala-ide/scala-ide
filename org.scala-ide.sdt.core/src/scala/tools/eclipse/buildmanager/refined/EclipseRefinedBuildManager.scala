@@ -39,7 +39,7 @@ class EclipseRefinedBuildManager(val project: ScalaProject, settings0: Settings)
             cancel
             return
           }
-          
+
           if (savedTotal != total) {
             monitor.setWorkRemaining(total - savedTotal)
             savedTotal = total
@@ -134,6 +134,7 @@ class EclipseRefinedBuildManager(val project: ScalaProject, settings0: Settings)
     new BuildReporter(project, settings) {
       val buildManager = EclipseRefinedBuildManager.this
     })
+
   override def buildingFiles(included: scala.collection.Set[AbstractFile]) {
     for (file <- included) {
       file match {

@@ -30,59 +30,61 @@ class ScalaHyperlinkDetector extends AbstractHyperlinkDetector {
     detectHyperlinks(textEditor, region, canShowMultipleHyperlinks)
   }
 
+  case class Hyperlink(file: Openable, pos: Int)(wordRegion: IRegion)  extends IHyperlink {
+    def getHyperlinkRegion = wordRegion
+    def getTypeLabel = null
+    def getHyperlinkText = "Open Declaration"
+    def open = {
+      EditorUtility.openInEditor(file, true) match {
+        case editor: ITextEditor => editor.selectAndReveal(pos, 0)
+        case _ =>
+      }
+    }
+  }
+  
   def detectHyperlinks(textEditor: ITextEditor, region: IRegion, canShowMultipleHyperlinks: Boolean): Array[IHyperlink] = {
-	if (textEditor == null) // can be null if generated through ScalaPreviewerFactory
+    if (textEditor == null) // can be null if generated through ScalaPreviewerFactory
       null
     else
-    EditorUtility.getEditorInputJavaElement(textEditor, false) match {
-      case scu: ScalaCompilationUnit =>
-        scu.withSourceFile({ (sourceFile, compiler) =>
-          val wordRegion = ScalaWordFinder.findWord(scu.getContents, region.getOffset)
-          if (wordRegion == null || wordRegion.getLength == 0)
-            null
-          else {
-            val pos = compiler.rangePos(sourceFile, wordRegion.getOffset, wordRegion.getOffset, wordRegion.getOffset + wordRegion.getLength)
+      EditorUtility.getEditorInputJavaElement(textEditor, false) match {
+        case scu: ScalaCompilationUnit =>
+          scu.withSourceFile({ (sourceFile, compiler) =>
+            val wordRegion = ScalaWordFinder.findWord(scu.getContents, region.getOffset)
+            if (wordRegion == null || wordRegion.getLength == 0)
+              null
+            else {
+              val pos = compiler.rangePos(sourceFile, wordRegion.getOffset, wordRegion.getOffset, wordRegion.getOffset + wordRegion.getLength)
 
-            val response = new compiler.Response[compiler.Tree]
-            compiler.askTypeAt(pos, response)
-            val typed = response.get
+              val response = new compiler.Response[compiler.Tree]
+              compiler.askTypeAt(pos, response)
+              val typed = response.get
 
-            Tracer.println("detectHyperlinks: wordRegion = " + wordRegion)
-
-            compiler.ask { () =>
-              case class Hyperlink(file: Openable, pos: Int) extends IHyperlink {
-                def getHyperlinkRegion = wordRegion
-                def getTypeLabel = null
-                def getHyperlinkText = "Open Declaration"
-                def open = {
-                  EditorUtility.openInEditor(file, true) match {
-                    case editor: ITextEditor => editor.selectAndReveal(pos, 0)
-                    case _ =>
-                  }
+              Tracer.println("detectHyperlinks: wordRegion = " + wordRegion)
+              val hyperlinks: Option[Hyperlink] = compiler.ask { () =>
+                import compiler.{ log => _, _ }
+                
+                typed.left.toOption map {
+                  case Import(expr, sels) => sels find (_.namePos >= pos.start) map (sel => expr.tpe.member(sel.name)) getOrElse NoSymbol
+                  case Annotated(atp, _)  => atp.symbol
+                  case st: SymTree        => st.symbol
+                  case t                  => Tracer.println("unhandled tree " + t); NoSymbol
+                } flatMap { sym =>
+                  if (sym.isPackage || sym == NoSymbol || sym.isJavaDefined)
+                    None
+                  else
+                    compiler.locate(sym, scu) map { case (f, pos) => Hyperlink(f, pos)(wordRegion) }
                 }
               }
-              
-              import compiler.{log =>_, _}
-              typed.left.toOption map ( _ match {
-                case Import(expr, sels) => sels find (_.namePos >= pos.start) map (sel => expr.tpe.member(sel.name)) getOrElse NoSymbol
-                case Annotated(atp, _) => atp.symbol
-                case st : SymTree => st.symbol 
-                case t => Tracer.println("unhandled tree " + t); NoSymbol
-              }) flatMap { sym => 
-                if (sym.isPackage || sym == NoSymbol || sym.isJavaDefined) 
-                  None 
-                else 
-                  compiler.locate(sym, scu) map { case (f, pos) => Hyperlink(f, pos) }
-              }
-            } map (Array(_ : IHyperlink)) getOrElse {
-              ScalaPlugin.plugin.logWarning("!!! Falling back to selection engine for %s!".format(typed.left))
-              codeSelect(textEditor, wordRegion, scu)
+              if (!hyperlinks.isDefined) {
+                ScalaPlugin.plugin.logWarning("!!! Falling back to selection engine for %s!".format(typed.left))
+                codeSelect(textEditor, wordRegion, scu)
+              } else
+                Array(hyperlinks.get: IHyperlink)
             }
-          }
-        })(null)
+          })(null)
 
-      case _ => null
-    }
+        case _ => null
+      }
   }
 
   //Default path used for selecting.

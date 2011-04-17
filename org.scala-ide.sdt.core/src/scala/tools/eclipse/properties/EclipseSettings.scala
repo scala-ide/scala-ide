@@ -22,14 +22,18 @@ trait EclipseSettings {
       case setting : Settings#StringSetting  => 
         setting.name match {
           case "-Ypresentation-log" | "-Ypresentation-replay" =>
-            println("setting a file setting")
+            println("file setting for " + setting.name)
             new FileSetting(setting)
           case _                                              =>         
             println("plain old string setting " + setting.name)
             new StringSetting(setting)
         }
 //    case setting : Settings#PhasesSetting  => new StringSetting(setting) // !!!
-      case setting : Settings#MultiStringSetting => new MultiStringSetting(setting)
+      case setting : Settings#MultiStringSetting => 
+        setting.name match {
+          case "-Xplugin" => new MultiFileSetting(setting)
+          case _          => new MultiStringSetting(setting)
+        }
       case setting : Settings#ChoiceSetting => new ComboSetting(setting)
     }
     
@@ -238,23 +242,50 @@ trait EclipseSettings {
         layout.widthHint = 200
       }
       control.setLayoutData(layout)
+      control.setMessage("Path is relative to the workspace")
       control.addModifyListener(ModifyListenerSing) 
     }
     
-    def fileName() = {
-      import scala.tools.eclipse.ScalaPlugin
-      import java.io.File
-      
-      val text = control.getText
-      if (text.nonEmpty && !text.startsWith(File.separator)) {
-        val workspacePath = ScalaPlugin.plugin.workspaceRoot.getLocation
-        workspacePath + java.io.File.separator + text
-      } else text
-    }
-  
-    def isChanged = setting.value != fileName()
+    def isChanged = setting.value != fileName(control.getText)
     def reset() { control.setText(setting.default) }
-    def apply() { setting.value = fileName() }
+    def apply() { setting.value = fileName(control.getText) }
   }
+
+  
+  
+  class MultiFileSetting(setting: Settings#MultiStringSetting) extends EclipseSetting(setting) {
+    var control : Text = _
+    def createControl(page : Composite) {
+      control = new Text(page, SWT.SINGLE | SWT.BORDER)
+      control.setText(setting.value.mkString(", "))
+      var layout = data
+      if (setting.value.isEmpty) {
+        layout = new GridData()
+        layout.widthHint = 200
+      }
+      control.setLayoutData(layout)
+      control.setMessage("Path is relative to the workspace")
+      control.addModifyListener(ModifyListenerSing) 
+    }
+    
+    def fileNames() = {
+      control.getText().split(',').map(f => fileName(f.trim)).toList
+    }
+
+    override def isChanged = setting.value != fileNames()
+    override def reset() { control.setText("") }
+    override def apply() { setting.value = fileNames() }
+  }
+
+  def fileName(text: String) = {
+    import scala.tools.eclipse.ScalaPlugin
+    import java.io.File
+
+    if (text.nonEmpty && !text.startsWith(File.separator)) {
+      val workspacePath = ScalaPlugin.plugin.workspaceRoot.getLocation
+      workspacePath + java.io.File.separator + text
+    } else text
+  }
+
 
 }

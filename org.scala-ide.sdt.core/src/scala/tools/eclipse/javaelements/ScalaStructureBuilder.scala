@@ -318,6 +318,8 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
       override def addClass(c : ClassDef) : Owner = {
         val sym = c.symbol
         if (sym eq NoSymbol) return self  // Local class hasn't been attributed yet, can't show anything meaningful.
+        // make sure classes are completed
+        sym.initialize
         
         val name = c.name.toString
         val parentTree = c.impl.parents.head
@@ -503,9 +505,17 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
           if (getter hasFlag Flags.ACCESSOR) addDef(getter)
           val setter = sym.setter(sym.owner)
           if (setter hasFlag Flags.ACCESSOR) addDef(setter)
+          addBeanAccessors(sym)
         }
 
         self
+      }
+      
+      def addBeanAccessors(sym: Symbol) {
+        var beanName = nme.localToGetter(sym.name).toString.capitalize
+        val ownerInfo = sym.owner.info
+        val accessors = List(ownerInfo.decl("get" + beanName), ownerInfo.decl("is" + beanName), ownerInfo.decl("set" + beanName)).filter(_ ne NoSymbol)
+        accessors.foreach(addDef)
       }
     }
     
@@ -560,7 +570,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
             sym.owner.simpleName + (if (sym.owner.isModuleClass) "$" else "")
           else
             sym.name.toString
-        
+       
         // make sure the method type has been uncurried
         uncurry.transformInfo(sym, sym.info)
         
@@ -790,7 +800,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
           case vd : ValDef =>  (builder.addVal(vd), List(vd.rhs))
           case td : TypeDef => (builder.addType(td), List(td.rhs))
           case dd : DefDef => {
-            if(dd.name != nme.MIXIN_CONSTRUCTOR) {
+            if(dd.name != nme.MIXIN_CONSTRUCTOR && (dd.symbol ne NoSymbol)) {
               (builder.addDef(dd), List(dd.tpt, dd.rhs))
             } else (builder, Nil)
           }

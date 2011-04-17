@@ -8,7 +8,7 @@ package javaelements
 
 import scala.tools.eclipse.util.{Tracer, Defensive}
 import java.util.concurrent.atomic.AtomicBoolean
-import java.util.{ Map => JMap }
+import java.util.{ Map => JMap, HashMap => JHashMap }
 import org.eclipse.core.resources.{ IFile, IResource }
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.jdt.core.{
@@ -79,17 +79,19 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
     
     val v = withSourceFile({ (sourceFile, compiler) =>
       val unsafeElements = newElements.asInstanceOf[JMap[AnyRef, AnyRef]]
+      val tmpMap = new JHashMap[AnyRef, AnyRef]
       val sourceLength = sourceFile.length
       compiler.withStructure(sourceFile) { tree =>
         compiler.ask { () =>
-            new compiler.StructureBuilderTraverser(this, info, unsafeElements, sourceLength).traverse(tree)
+            new compiler.StructureBuilderTraverser(this, info, tmpMap, sourceLength).traverse(tree)
+          }
         }
-      }
       info match {
         case cuei : CompilationUnitElementInfo => 
           cuei.setSourceLength(sourceLength)
         case _ =>
       }
+      unsafeElements.putAll(tmpMap)
       true
     }) (false)
     info.setIsStructureKnown(v)

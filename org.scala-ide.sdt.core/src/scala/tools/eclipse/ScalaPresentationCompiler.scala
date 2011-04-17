@@ -73,27 +73,10 @@ class ScalaPresentationCompiler(settings : Settings)
   def withSourceFile[T](scu : AbstractFile)(op : (SourceFile, ScalaPresentationCompiler) => T) : T =
     op(sourceFiles(scu), this)
 
-  override def ask[A](op: () => A): A = {
-    Tracer.println("ask " + op)
-    if (Thread.currentThread == compileRunner) op() else super.ask(op)
-  }
-  
-  override def askTypeAt(pos: Position, response: Response[Tree]) = {
-    Tracer.println("askTypeAt")
-    if (Thread.currentThread == compileRunner) getTypedTreeAt(pos, response) else super.askTypeAt(pos, response)
-  }
-
-  override def askParsedEntered(source: SourceFile, keepLoaded: Boolean, response: Response[Tree]) {
-    if (Thread.currentThread == compileRunner)
-      getParsedEntered(source, keepLoaded, response)
-    else
-      super.askParsedEntered(source, keepLoaded, response)
-  }
     
   def body(sourceFile : SourceFile) = {
     val tree = new Response[Tree]
-    if (Thread.currentThread == compileRunner)
-      getTypedTree(sourceFile, false, tree) else askType(sourceFile, false, tree)
+    askType(sourceFile, false, tree)
     val timeout = IDESettings.timeOutBodyReq.value //Defensive use a timeout see issue_0003 issue_0004
     tree.get(timeout) match {
       case None => throw new AsyncGetTimeoutException(timeout, "body(" + sourceFile + ")")
@@ -139,7 +122,7 @@ class ScalaPresentationCompiler(settings : Settings)
   
   def discardSourceFile(scu : AbstractFile) {
     Tracer.println("discarding " + scu)
-	  synchronized {
+	synchronized {
       sourceFiles.get(scu) match {
         case None =>
         case Some(source) =>
