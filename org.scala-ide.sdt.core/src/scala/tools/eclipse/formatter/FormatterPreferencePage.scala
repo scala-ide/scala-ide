@@ -169,9 +169,10 @@ class FormatterPreferencePage extends PropertyPage with IWorkbenchPreferencePage
   object IndentPrefTab extends PrefTab("Indentation && Alignment", INDENT_PREVIEW_TEXT) {
 
     def buildContents(composite: Composite) {
-      composite.setLayout(new MigLayout(new LC().fill, new AC, new AC().index(8).grow(1)))
+      composite.setLayout(new MigLayout(new LC().fill, new AC, new AC().index(9).grow(1)))
 
       addNumericField(composite, "Spaces to indent:", IndentSpaces)
+      addCheckBox(composite, "Indent using tabs", IndentWithTabs)
       addCheckBox(composite, "Align parameters", AlignParameters)
       addCheckBox(composite, "Double indent class declaration", DoubleIndentClassDeclaration)
       addCheckBox(composite, "Align single-line case statements", AlignSingleLineCaseStatements)

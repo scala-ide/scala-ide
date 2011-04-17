@@ -22,7 +22,7 @@ class ScalaFormatterCleanUpProvider extends IFormatterCleanUpProvider {
     }
     val lineDelimiter = TextUtilities.getDefaultLineDelimiter(document)
 
-    val preferences = FormatterPreferences.getPreferences(cu.getJavaProject.getProject)
+    val preferences = FormatterPreferences.getPreferences(cu.getJavaProject)
     val edits =
       try ScalaFormatter.formatAsEdits(cu.getSource, preferences, Some(lineDelimiter))
       catch { case e: ScalaParserException => return null }
