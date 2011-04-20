@@ -330,7 +330,7 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
           if(sym hasFlag Flags.TRAIT)
             new ScalaTraitElement(element, name)
           else if (isAnon) {
-        	new ScalaAnonymousClassElement(element, superName)
+          new ScalaAnonymousClassElement(element, superName)
           }
           else
             new ScalaClassElement(element, name, false)
@@ -511,7 +511,8 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         self
       }
       
-      def addBeanAccessors(sym: Symbol) {
+      def addBeanAccessors(sym: Symbol) = Defensive.tryOrLog {
+        //BACK-2.8 nme.localToGetter raise AssertionError: assertion failed
         var beanName = nme.localToGetter(sym.name).toString.capitalize
         val ownerInfo = sym.owner.info
         val accessors = List(ownerInfo.decl("get" + beanName), ownerInfo.decl("is" + beanName), ownerInfo.decl("set" + beanName)).filter(_ ne NoSymbol)

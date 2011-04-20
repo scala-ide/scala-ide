@@ -67,33 +67,35 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
 
   override def buildStructure(info : OpenableElementInfo, pm : IProgressMonitor, newElements : JMap[_, _], underlyingResource : IResource) : Boolean = {
     Tracer.println("buildStructure : " + underlyingResource)
-    //Can freeze UI if in main Thread
-    project.withPresentationCompiler ({ compiler =>
-      import scala.tools.eclipse.util.IDESettings
-      if (IDESettings.compileOnTyping.value && _changed.getAndSet(false)) {
-        val contents = this.getContents
-        compiler.askReload(file, contents)
-      }
-    })()
+    // throwing an exception in buildStructure can break Openable.generateInfos => can open any editor on source (nor right click)
+    val v = Defensive.tryOrLog(false) { 
+      //Can freeze UI if in main Thread
+      project.withPresentationCompiler ({ compiler =>
+        import scala.tools.eclipse.util.IDESettings
+        if (IDESettings.compileOnTyping.value && _changed.getAndSet(false)) {
+          val contents = this.getContents
+          compiler.askReload(file, contents)
+        }
+      })()
     
-    
-    val v = withSourceFile({ (sourceFile, compiler) =>
-      val unsafeElements = newElements.asInstanceOf[JMap[AnyRef, AnyRef]]
-      val tmpMap = new JHashMap[AnyRef, AnyRef]
-      val sourceLength = sourceFile.length
-      compiler.withStructure(sourceFile) { tree =>
-        compiler.ask { () =>
+      withSourceFile({ (sourceFile, compiler) =>
+        val unsafeElements = newElements.asInstanceOf[JMap[AnyRef, AnyRef]]
+        val tmpMap = new JHashMap[AnyRef, AnyRef]
+        val sourceLength = sourceFile.length
+        compiler.withStructure(sourceFile) { tree =>
+          compiler.ask { () =>
             new compiler.StructureBuilderTraverser(this, info, tmpMap, sourceLength).traverse(tree)
           }
         }
-      info match {
-        case cuei : CompilationUnitElementInfo => 
-          cuei.setSourceLength(sourceLength)
-        case _ =>
-      }
-      unsafeElements.putAll(tmpMap)
-      true
-    }) (false)
+        info match {
+          case cuei : CompilationUnitElementInfo => 
+            cuei.setSourceLength(sourceLength)
+          case _ =>
+        }
+        unsafeElements.putAll(tmpMap)
+        true
+      }) (false)
+    }
     info.setIsStructureKnown(v)
     info.isStructureKnown
   }
