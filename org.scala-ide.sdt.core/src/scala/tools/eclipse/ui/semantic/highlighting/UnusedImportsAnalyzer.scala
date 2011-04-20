@@ -2,40 +2,38 @@ package scala.tools.eclipse
 package ui.semantic.highlighting
 
 import org.eclipse.core.resources.IMarker
-import scala.tools.refactoring.implementations._
+import scala.tools.refactoring.implementations.UnusedImportsFinder
 import org.eclipse.core.resources.IFile
 import scala.tools.eclipse.javaelements.ScalaSourceFile
 import scala.tools.refactoring.common.TreeTraverser
 import scala.tools.eclipse.ScalaPlugin
+import scala.tools.eclipse.util.FileUtils
+import scala.tools.nsc.io.AbstractFile
 
 object UnusedImportsAnalyzer {
   val warningMarkerId = ScalaPlugin.plugin.problemMarkerId
 
   def markUnusedImports(file: IFile) {
     for (
-      scalaSourceFile <- ScalaSourceFile.createFromPath(file.getFullPath.toString) 
+      afile <- FileUtils.toAbstractFile(Option(file));
+      project <- Option(ScalaPlugin.plugin.getScalaProject(file.getProject))//ScalaSourceFile.createFromPath(file.getFullPath.toString) 
     ) {
-      scalaSourceFile.doWithSourceFile { (sourceFile, compiler) =>
+      val unuseds : List[(String, Int)] = project.withPresentationCompiler{ compiler =>
         compiler.ask { () =>
           new UnusedImportsFinder {
             val global = compiler
-            import global._
-            
-            compilationUnitOfFile(scalaSourceFile.file).map(unit => {
-              val warningsSetter = new Traverser {
-                override def traverse(tree: Tree): Unit = tree match {
-                  case Import(expr, selectors) => {
-                    val needed = selectors.filter(s => neededImportSelector(unit, expr, s))
-                    if (needed.size == 0)
-                      putMarker(file, tree.pos.line)
-                  }
-                  case _ => super.traverse(tree);
-                }
-              }
-              warningsSetter.traverse(unit.body)
-            })
-          }
+            val unit = global.unitOfFile(afile)
+            def compilationUnitOfFile(f: AbstractFile) = global.unitOfFile.get(f)
+            val unuseds : List[(String, Int)] = findUnusedImports(unit)
+          }.unuseds
         }
+      }(Nil)
+      for (
+        (filepath, line) <- unuseds;
+        ifile <- FileUtils.toIFile(filepath)
+      ) {
+        //TODO check ifile == file
+        putMarker(ifile, line)
       }
     }
   }
