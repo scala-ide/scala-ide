@@ -22,6 +22,8 @@ import org.eclipse.swt.graphics.Color
 import org.eclipse.ui.{ IEditorInput, IFileEditorInput, PlatformUI, IPartListener, IWorkbenchPart, IWorkbenchPage, IPageListener, IEditorPart }
 import org.eclipse.ui.part.FileEditorInput
 import org.eclipse.ui.plugin.AbstractUIPlugin
+import util.SWTUtils.asyncExec
+
 import org.osgi.framework.BundleContext
 
 import scala.tools.eclipse.javaelements.{ ScalaElement, ScalaSourceFile }
@@ -114,7 +116,7 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
     ResourcesPlugin.getWorkspace.addResourceChangeListener(this, IResourceChangeEvent.PRE_CLOSE | IResourceChangeEvent.POST_CHANGE)
     JavaCore.addElementChangedListener(this)
     PlatformUI.getWorkbench.getEditorRegistry.setDefaultEditor("*.scala", editorId)
-    PlatformUI.getWorkbench.getActiveWorkbenchWindow.addPageListener(pageListener)
+    asyncExec(PlatformUI.getWorkbench.getActiveWorkbenchWindow.addPageListener(pageListener))
 
     println("Scala compiler bundle: " + scalaCompilerBundle.getLocation)
     PerspectiveFactory.updatePerspective

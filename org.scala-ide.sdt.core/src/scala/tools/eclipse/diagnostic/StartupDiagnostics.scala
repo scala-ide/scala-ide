@@ -2,9 +2,10 @@ package scala.tools.eclipse
 
 package diagnostic
 
+
 import org.eclipse.jface.dialogs.MessageDialog
 import org.eclipse.jface.dialogs.IDialogConstants
-import org.eclipse.swt.widgets.Display
+import util.SWTUtils.asyncExec
 
 object StartupDiagnostics {
   import ScalaPlugin.plugin
@@ -26,8 +27,7 @@ object StartupDiagnostics {
       prefStore.setValue(INSTALLED_VERSION_KEY, currentVersion)
       
       if (askDiagnostics) {
-        Display.getDefault asyncExec new Runnable { 
-          def run() {
+        asyncExec { 
             val labels = Array(IDialogConstants.YES_LABEL, IDialogConstants.NO_LABEL, "Never")
             val dialog = 
               new MessageDialog(ScalaPlugin.getShell, "Run Scala Setup Diagnostics?", 
@@ -43,7 +43,6 @@ object StartupDiagnostics {
             }
             
             ScalaPlugin.plugin.savePluginPreferences // TODO: this method is deprecated, but the solution given in the docs is unclear and is not used by Eclipse itself. -DM
-          }
         }
       }
     }
