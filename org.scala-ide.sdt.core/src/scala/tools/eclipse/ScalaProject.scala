@@ -25,6 +25,7 @@ import scala.tools.nsc.util.SourceFile
 import scala.tools.eclipse.javaelements.ScalaCompilationUnit
 import scala.tools.eclipse.properties.PropertyStore
 import scala.tools.eclipse.util.{ Cached, EclipseResource, IDESettings, OSGiUtils, ReflectionUtils }
+import util.SWTUtils.asyncExec
 
 class ScalaProject(val underlying: IProject) {
   import ScalaPlugin.plugin
@@ -92,17 +93,15 @@ class ScalaProject(val underlying: IProject) {
     synchronized {
       if (!messageShowed) {
         messageShowed = true
-        Display.getDefault asyncExec new Runnable { 
-          def run() {
-            val doAdd = MessageDialog.openQuestion(ScalaPlugin.getShell, "Add Scala library to project classpath?", 
-                ("There was an error initializing the Scala compiler: %s. \n\n"+
-                 "The editor compiler will be restarted when the project is cleaned or the classpath is changed.\n\n" + 
-                 "Add the Scala library to the classpath of project %s?") 
-                .format(msg, underlying.getName))
-            if (doAdd) {
-              plugin check {
-                Nature.addScalaLibAndSave(underlying)
-              }
+        asyncExec {
+          val doAdd = MessageDialog.openQuestion(ScalaPlugin.getShell, "Add Scala library to project classpath?", 
+              ("There was an error initializing the Scala compiler: %s. \n\n"+
+               "The editor compiler will be restarted when the project is cleaned or the classpath is changed.\n\n" + 
+               "Add the Scala library to the classpath of project %s?") 
+              .format(msg, underlying.getName))
+          if (doAdd) {
+            plugin check {
+              Nature.addScalaLibAndSave(underlying)
             }
           }
         }

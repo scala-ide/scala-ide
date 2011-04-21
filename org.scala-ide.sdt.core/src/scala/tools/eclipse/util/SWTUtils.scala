@@ -1,5 +1,6 @@
 package scala.tools.eclipse.util
 
+import org.eclipse.swt.widgets.Display
 import org.eclipse.jface.viewers.{ DoubleClickEvent, IDoubleClickListener, SelectionChangedEvent, ISelectionChangedListener }
 import org.eclipse.swt.widgets.Control
 import org.eclipse.swt.events.{ KeyEvent, KeyAdapter, FocusAdapter, FocusEvent }
@@ -9,6 +10,13 @@ import org.eclipse.swt.events.SelectionAdapter
 import org.eclipse.swt.events.SelectionEvent
 
 object SWTUtils {
+  
+  /** Run `f` on the UI thread.  */
+  def asyncExec(f: => Unit) {
+    Display.getDefault asyncExec new Runnable {
+      override def run() { f }
+    }
+  }
 
   implicit def fnToSelectionAdapter(p: SelectionEvent => Any): SelectionAdapter =
     new SelectionAdapter() {

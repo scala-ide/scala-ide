@@ -13,6 +13,7 @@ import org.eclipse.ui.{ IPageLayout, IPerspectiveFactory, PlatformUI }
 import org.eclipse.ui.console.IConsoleConstants
 import org.eclipse.ui.internal.{ PerspectiveBarContributionItem, WorkbenchWindow }
 import org.eclipse.ui.navigator.resources.ProjectExplorer
+import util.SWTUtils.asyncExec
 
 class PerspectiveFactory extends IPerspectiveFactory {
   def createInitialLayout(layout : IPageLayout) = {
@@ -78,10 +79,10 @@ object PerspectiveFactory {
           val perspectiveDesc = workbench.getPerspectiveRegistry.findPerspectiveWithId(PerspectiveFactory.id)
           if (perspectiveDesc != null) {
             item.update(perspectiveDesc)
-            Display.getDefault.asyncExec(new Runnable { def run {
+            asyncExec {
               val activeWindow = workbench.getActiveWorkbenchWindow
               workbench.showPerspective(PerspectiveFactory.id, activeWindow)
-            }})
+            }
           }
           else
             perspectiveBar.remove(item)
