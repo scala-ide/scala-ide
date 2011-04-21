@@ -154,6 +154,40 @@ class ScalaLaunchShortcut extends JavaLaunchShortcut {
 }
 
 object ScalaLaunchShortcut {
+  def getJunitTestClasses(element: AnyRef) = {
+    
+    def contains(annotations: Array[org.eclipse.jdt.core.IAnnotation], names: String*): Boolean = {
+      annotations.exists(a => names.contains(a.getElementName))
+    }
+    
+	def isAnnotatedTestMethod(method: IMethod) = {
+      val flags = method.getFlags
+      
+      // This should work, but doesn't for some reason, so we just say that the class has junit tests and let the runner decide that there aren't any tests
+      // val hasAnnotations = contains(method.getAnnotations(), "Test", "org.junit.Test")
+      val hasAnnotations = true
+      
+      hasAnnotations && Flags.isPublic(flags) && method.getReturnType == "V";
+    }
+
+    def extendsTraitAssertionsForJUnit(iType: IType) = iType.getSuperInterfaceNames().contains("org.scalatest.junit.AssertionsForJUnit")
+    
+    def isJunitTestClass(iType: IType): Boolean = extendsTraitAssertionsForJUnit(iType) || iType.getMethods.exists(isAnnotatedTestMethod) 
+
+    val je = element.asInstanceOf[IAdaptable].getAdapter(classOf[IJavaElement]).asInstanceOf[IJavaElement]
+    je.getOpenable match {
+      case scu: ScalaSourceFile =>
+        def isTopLevel(tpe: IType) = tpe.getDeclaringType == null
+        
+        val ts = scu.getAllTypes
+        ts.filter(tpe =>
+          tpe.isInstanceOf[ScalaClassElement]
+            && isTopLevel(tpe)
+            && isJunitTestClass(tpe)).toList
+      case _ => Nil
+    }
+  }
+  
   def getMainMethods(element: AnyRef) = {
 
     def isMainMethod(method: IMethod) = {
