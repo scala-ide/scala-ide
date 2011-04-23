@@ -41,8 +41,9 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
         get(k) match {
           case Some(v) => v
           case None => put(k, v); v
-  	   }
-      }} 
+        }
+      }
+    } 
   }
   
   private def problemsOf(file : AbstractFile) : List[IProblem] = {
@@ -88,26 +89,34 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
   }
     
   def askReload(scu : ScalaCompilationUnit, content : Array[Char]) {
-    sourceFiles.get(scu) match {
-      case None =>
-      case Some(f) =>
-        val newF = new BatchSourceFile(f.file, content)
-        synchronized { sourceFiles(scu) = newF } 
-        askReload(List(newF), new Response[Unit])
+    sourceFiles.get(scu) foreach { f =>
+      val newF = new BatchSourceFile(f.file, content)
+      synchronized { sourceFiles(scu) = newF } 
+      askReload(List(newF), new Response[Unit])
     }
   }
   
-  def discardSourceFile(scu : ScalaCompilationUnit) {
-    println("discarding " + scu.getPath)
-	synchronized {
-      sourceFiles.get(scu) match {
-        case None =>
-        case Some(source) =>
-          removeUnitOf(source)
-          sourceFiles.remove(scu)
+  def filesDeleted(files : List[ScalaCompilationUnit]) {
+    println("files deleted:\n" + (files map (_.getPath) mkString "\n"))
+    synchronized {
+      val srcs = files.map(sourceFiles remove _).foldLeft(List[SourceFile]()) {
+        case (acc, None) => acc
+        case (acc, Some(f)) => f::acc
       }
+      if (!srcs.isEmpty)
+        askFilesDeleted(srcs, new Response[Unit])
     }
   }
+
+ def discardSourceFile(scu : ScalaCompilationUnit) {
+   println("discarding " + scu.getPath)
+   synchronized {
+     sourceFiles.get(scu) foreach { source =>
+       removeUnitOf(source)
+       sourceFiles.remove(scu)
+     }
+   }
+ }
 
   override def logError(msg : String, t : Throwable) =
     ScalaPlugin.plugin.logError(msg, t)
