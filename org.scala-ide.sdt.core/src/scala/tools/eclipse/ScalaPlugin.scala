@@ -175,44 +175,49 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
   }
 
   override def elementChanged(event: ElementChangedEvent) {
-    findRemovedSources(event.getDelta)
-  }
+    import scala.collection.mutable.ListBuffer
+    val buff = new ListBuffer[ScalaSourceFile]
 
-  private def findRemovedSources(delta: IJavaElementDelta) {
-    import IJavaElement._
-    import IJavaElementDelta._
+    def findRemovedSources(delta: IJavaElementDelta) {
+      import IJavaElement._
+      import IJavaElementDelta._
 
-    val isChanged = delta.getKind == CHANGED
-    val isRemoved = delta.getKind == REMOVED
-    def hasFlag(flag: Int) = (delta.getFlags & flag) != 0
+      val isChanged = delta.getKind == CHANGED
+      val isRemoved = delta.getKind == REMOVED
+      def hasFlag(flag: Int) = (delta.getFlags & flag) != 0
 
-    val elem = delta.getElement
-    val processChildren: Boolean = elem.getElementType match {
-      case JAVA_MODEL => true
-      case JAVA_PROJECT if !isRemoved && !hasFlag(F_CLOSED) => true
+      val elem = delta.getElement
+      val processChildren: Boolean = elem.getElementType match {
+        case JAVA_MODEL => true
+        case JAVA_PROJECT if !isRemoved && !hasFlag(F_CLOSED) => true
 
-      case PACKAGE_FRAGMENT_ROOT =>
-        if (isRemoved || hasFlag(F_REMOVED_FROM_CLASSPATH | F_ADDED_TO_CLASSPATH | F_ARCHIVE_CONTENT_CHANGED)) {
-          println("package fragment root changed (resetting pres compiler): " + elem)
-          getScalaProject(elem.getJavaProject.getProject).resetPresentationCompiler
+        case PACKAGE_FRAGMENT_ROOT =>
+          if (isRemoved || hasFlag(F_REMOVED_FROM_CLASSPATH | F_ADDED_TO_CLASSPATH | F_ARCHIVE_CONTENT_CHANGED)) {
+            println("package fragment root changed (resetting pres compiler): " + elem)
+            getScalaProject(elem.getJavaProject.getProject).resetPresentationCompiler
+            false
+          } else true
+
+        case PACKAGE_FRAGMENT => true
+
+        case COMPILATION_UNIT if elem.isInstanceOf[ScalaSourceFile] && isRemoved =>
+          buff += elem.asInstanceOf[ScalaSourceFile]
           false
-        } else true
 
-      case PACKAGE_FRAGMENT => true
+        case _ => false
+      }
 
-      case COMPILATION_UNIT if elem.isInstanceOf[ScalaSourceFile] && isRemoved =>
-        val project = elem.getJavaProject.getProject
-        if (project.isOpen) {
-          getScalaProject(project).
-            doWithPresentationCompiler { _.discardSourceFile(elem.asInstanceOf[ScalaSourceFile]) }
-        }
-        false
-
-      case _ => false
+      if (processChildren)
+        delta.getAffectedChildren foreach { findRemovedSources(_) }
     }
-
-    if (processChildren)
-      delta.getAffectedChildren foreach { findRemovedSources(_) }
+    findRemovedSources(event.getDelta)
+    if(!buff.isEmpty) {
+      buff.toList groupBy (_.getJavaProject.getProject) foreach {
+        case (project, srcs) =>
+          if (project.isOpen)
+            getScalaProject(project) doWithPresentationCompiler (_.filesDeleted(srcs))
+      }
+    }
   }
 
   def logWarning(msg: String): Unit = getLog.log(new Status(IStatus.WARNING, pluginId, msg))
