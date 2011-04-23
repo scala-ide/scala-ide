@@ -152,6 +152,7 @@ class DiagnosticDialog(shell: Shell) extends Dialog(shell) {
   }
     
   protected override def createDialogArea(parent: Composite): Control = {
+    parent.getShell.setText("Setup Diagnostics")
     val control = new Composite(parent, SWT.NONE)
     control.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, true))
     control.setLayout(new GridLayout)
