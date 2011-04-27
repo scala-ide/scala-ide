@@ -5,6 +5,7 @@
 
 package scala.tools.eclipse.javaelements
 
+import scala.tools.nsc.interactive.compat.Info
 import scala.tools.eclipse.util.Defensive
 import scala.tools.eclipse.ScalaPlugin
 import scala.tools.eclipse.util.Tracer
@@ -512,8 +513,15 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
       }
       
       def addBeanAccessors(sym: Symbol) = Defensive.tryOrLog {
-        //BACK-2.8 nme.localToGetter raise AssertionError: assertion failed
-        var beanName = nme.localToGetter(sym.name).toString.capitalize
+        
+        var beanName = try {
+          nme.localToGetter(sym.name).toString.capitalize
+        } catch {
+          case t if Info.scalaVersion.startsWith("2.8")=> {
+            //BACK-2.8 nme.localToGetter raise AssertionError: assertion failed
+            sym.name.toString.capitalize
+          }
+        }
         val ownerInfo = sym.owner.info
         val accessors = List(ownerInfo.decl("get" + beanName), ownerInfo.decl("is" + beanName), ownerInfo.decl("set" + beanName)).filter(_ ne NoSymbol)
         accessors.foreach(addDef)
