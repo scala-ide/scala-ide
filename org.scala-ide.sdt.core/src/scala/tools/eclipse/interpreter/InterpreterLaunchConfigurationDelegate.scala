@@ -136,7 +136,7 @@ class InterpreterLaunchConfigurationDelegate extends
     }
     
     try {
-   	reconfigureLaunchListeners()
+    	reconfigureLaunchListeners()
       doTheLaunch()
     } finally {
       mon.done();
@@ -160,7 +160,12 @@ class InterpreterLaunchConfigurationDelegate extends
 			 	val colorProvider = new ConsoleColorProvider() 
 			 	val encoding = launch.getAttribute(DebugPlugin.ATTR_CONSOLE_ENCODING)
 			 	val replConsole = new ReplConsole("New Scala Repl!!", p, colorProvider)
-            replConsole.setAttribute(IDebugUIConstants.ATTR_CONSOLE_PROCESS, p);
+			 	
+			 	val javaProject = getJavaProject(launch.getLaunchConfiguration)
+			 	if (javaProject != null)
+			 	  ReplConsole.addConsole(javaProject.getProject, replConsole)
+			 	  
+        replConsole.setAttribute(IDebugUIConstants.ATTR_CONSOLE_PROCESS, p);
 			 	getConsoleManager.addConsoles(Array(replConsole))
 			 	getConsoleManager.showConsoleView(replConsole)
 		 }
@@ -195,6 +200,7 @@ class InterpreterLaunchConfigurationDelegate extends
 			} else if (e.getKind == DebugEvent.TERMINATE) {
 				DebugPlugin.getDefault.removeDebugEventListener(this) // FIXME: don't want to remove for all launches, just the ones we were supposed to listen to
 				// TODO: remove the console!
+				// FIXME: remove the console from the map in ReplConsole
 			}
 		}
 	}

@@ -841,7 +841,15 @@
                label="Add Import"
                tooltip="Add Import">
          </action>
-              </actionSet>
+         
+         <action
+               class="scala.tools.eclipse.actions.RunSelectionAction"
+               definitionId="scala.tools.eclipse.interpreter.RunSelection"
+               id="scala.tools.eclipse.interpreter.runSelectionAction"
+               label="Run Selection in REPL"
+               tooltip="Run Selection">
+         </action>         
+     </actionSet>
    </extension>
 
    <extension
@@ -881,8 +889,11 @@
       <command
             categoryId="org.eclipse.debug.ui.category.run"
             id="scala.tools.eclipse.repl.historyUp"
-            name="Repl History Up">
-      </command>
+            name="Repl History Up"/>
+      <command
+         categoryId="org.eclipse.debug.ui.category.run"
+         id="scala.tools.eclipse.interpreter.RunSelection"
+         name="Send Selection to REPL"/>
 </extension>
 
    <extension point="org.eclipse.ui.contexts">
@@ -928,8 +939,12 @@
          commandId="scala.tools.eclipse.repl.historyUp"
          contextId="org.eclipse.debug.ui.console"
          schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-         sequence="CTRL+ARROW_UP">
-   </key>
+         sequence="CTRL+ARROW_UP"/>
+   <key
+       commandId="scala.tools.eclipse.interpreter.RunSelection"
+       schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+       contextId="scala.tools.eclipse.scalaEditorScope"
+       sequence="M1+M2+X"/>
 
    </extension>
    <extension
