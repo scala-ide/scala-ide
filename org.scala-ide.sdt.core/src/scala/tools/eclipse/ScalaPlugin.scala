@@ -226,7 +226,10 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
       case PACKAGE_FRAGMENT_ROOT =>
         if (isRemoved || (isChanged && (hasFlag(F_REMOVED_FROM_CLASSPATH | F_ADDED_TO_CLASSPATH | F_ARCHIVE_CONTENT_CHANGED)))) {
           //println("package fragment root changed (resetting pres compiler): " + elem)
-          getScalaProject(elem.getJavaProject.getProject).clean(new NullProgressMonitor()) //.resetPresentationCompiler
+          val p = getScalaProject(elem.getJavaProject.getProject)
+          JobUtils.askRunInJob2("classpath change") { m => 
+            p.clean(m) //.resetPresentationCompiler
+          }
           false
         } else true
 
