@@ -183,7 +183,7 @@ class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: IS
       compiler.askTypeAt(pos, typed)
       val typedRes = typed.get
       import Cont.noop
-      val cont: Cont = compiler.ask { () =>
+      val cont: Cont = compiler.askOption { () =>
         typedRes.left.toOption match {
           case Some(tree) => {
             tree match {
@@ -279,7 +279,7 @@ class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: IS
           case None =>
             log("No tree")
         }
-      }
+      } getOrElse Cont.Noop
       cont()
 
       if (!ssr.hasSelection && fallbackToDefaultLookup) {

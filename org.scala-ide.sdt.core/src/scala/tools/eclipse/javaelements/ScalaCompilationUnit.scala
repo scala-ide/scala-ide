@@ -67,7 +67,7 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
       
       try {
         compiler.withStructure(sourceFile) { tree =>
-          compiler.ask { () =>
+          compiler.askOption { () =>
               new compiler.StructureBuilderTraverser(this, info, tmpMap, sourceLength).traverse(tree)
           }
         }
@@ -131,7 +131,7 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
   override def reportMatches(matchLocator : MatchLocator, possibleMatch : PossibleMatch) {
     doWithSourceFile { (sourceFile, compiler) =>
       compiler.withStructure(sourceFile) { tree =>
-        compiler.ask { () =>
+        compiler.askOption { () =>
           compiler.MatchLocator(this, matchLocator, possibleMatch).traverse(tree)
         }
       }
@@ -141,7 +141,7 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
   override def createOverrideIndicators(annotationMap : JMap[_, _]) {
     doWithSourceFile { (sourceFile, compiler) =>
       compiler.withStructure(sourceFile) { tree =>
-        compiler.ask { () =>
+        compiler.askOption { () =>
           new compiler.OverrideIndicatorBuilderTraverser(this, annotationMap.asInstanceOf[JMap[AnyRef, AnyRef]]).traverse(tree)
         }
       }
