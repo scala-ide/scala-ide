@@ -18,7 +18,15 @@ object UnusedImportsAnalyzer {
       afile <- FileUtils.toAbstractFile(Option(file));
       project <- Option(ScalaPlugin.plugin.getScalaProject(file.getProject))//ScalaSourceFile.createFromPath(file.getFullPath.toString) 
     ) {
+      
       val unuseds : List[(String, Int)] = project.withPresentationCompiler{ compiler =>
+      
+        if(!compiler.unitOfFile.contains(afile)) {
+          // Just abort if there's no compilation unit for that file.
+          // This is not very elegant, but this code will soon be removed anyway.
+          return
+        }
+      
         compiler.ask { () =>
           new UnusedImportsFinder {
             val global = compiler
