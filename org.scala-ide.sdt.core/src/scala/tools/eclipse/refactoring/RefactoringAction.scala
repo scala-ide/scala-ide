@@ -53,7 +53,7 @@ trait RefactoringAction extends ActionAdapter {
     
   def runInLinkedModeUi(ps: List[(Int, Int)]) = {
     
-    EditorHelpers.withCurrentEditor { editor =>
+    for (editor <- EditorHelpers.currentEditor) {
         
       val model = new LinkedModeModel {
         
@@ -68,8 +68,6 @@ trait RefactoringAction extends ActionAdapter {
       }
 
       (new LinkedModeUI(model, editor.sourceViewer)).enter
-      
-      None
     }
   }
 }

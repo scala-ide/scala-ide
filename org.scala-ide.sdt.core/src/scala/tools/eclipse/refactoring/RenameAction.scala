@@ -45,9 +45,9 @@ class RenameAction extends RefactoringAction {
           
             name = selectedLocal.symbol.nameString
 
-            val allProjectSourceFiles = (EditorHelpers.withCurrentEditor { editor =>
-              Some(ScalaPlugin.plugin.getScalaProject(editor.getEditorInput).allSourceFiles.toList)
-            }) getOrElse Nil
+            val allProjectSourceFiles = EditorHelpers.currentEditor.map { editor =>
+              ScalaPlugin.plugin.getScalaProject(editor.getEditorInput).allSourceFiles.toList
+            }.getOrElse(Nil)
             
             // TODO index in the background while the user inputs the name
             val cus = allProjectSourceFiles flatMap { f =>

@@ -26,18 +26,19 @@ import org.eclipse.core.runtime.NullProgressMonitor
 object ScalaSourceFile {
   val handleFactory = new HandleFactory
   
-  def createFromPath(of : Option[IFile]) : Option[ScalaSourceFile] = {
-    of.filter(_.getFileExtension() == "scala").flatMap { f =>
-      handleFactory.createOpenable(f.getFullPath.toString, null) match {
+  def createFromPath(f : IFile) : Option[ScalaSourceFile] = {
+    (f.getFileExtension() == "scala") match {
+      case true => handleFactory.createOpenable(f.getFullPath.toString, null) match {
         case ssf : ScalaSourceFile => Some(ssf)
         case _ => None
       }
+      case false => None
     }
   }
+  
+  def createFromPath(of : Option[IFile]) : Option[ScalaSourceFile] = of.flatMap{ createFromPath(_) }
 
-  def createFromPath(path : String) : Option[ScalaSourceFile] = {
-    createFromPath(FileUtils.toIFile(path))
-  }
+  def createFromPath(path : String) : Option[ScalaSourceFile] = createFromPath(FileUtils.toIFile(path))
 }
 
 class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCopyOwner : WorkingCopyOwner) 

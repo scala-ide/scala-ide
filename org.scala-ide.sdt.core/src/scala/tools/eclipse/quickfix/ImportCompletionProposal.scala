@@ -87,9 +87,8 @@ case class ImportCompletionProposal(val importName: String) extends IJavaComplet
             edit.addChild(currentPosition)
             edit.apply(document)
             
-            withCurrentEditor { editor =>
+            for (editor <- currentEditor) {
               editor.selectAndReveal(currentPosition.getOffset, currentPosition.getLength)
-              None
             }
         }
       }

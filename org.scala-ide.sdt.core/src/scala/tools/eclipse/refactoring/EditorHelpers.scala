@@ -26,35 +26,31 @@ object EditorHelpers {
   def textEditor(e: IEditorPart): Option[ScalaSourceFileEditor] = e match {case t: ScalaSourceFileEditor => Some(t) case _ => None}
   def file(e: ITextEditor): Option[IFile] = e.getEditorInput match {case f: IFileEditorInput => Some(f.getFile) case _ => None}
   def selection(e: ITextEditor): Option[ITextSelection] = e.getSelectionProvider.getSelection match {case s: ITextSelection => Some(s) case _ => None}
-  
-  def withCurrentEditor[T](block: ScalaSourceFileEditor => Option[T]): Option[T] = { 
-    activeWorkbenchWindow flatMap { 
-      activePage(_)         flatMap {
-        activeEditor(_)       flatMap {
-          textEditor(_)         flatMap block
-        }
-      }
-    }
+  def currentEditor : Option[ScalaSourceFileEditor] = {
+    for {
+      aww <- activeWorkbenchWindow
+      ap <- activePage(aww)
+      ae <- activeEditor(ap)
+      te <- textEditor(ae)
+    } yield te
   }
   
   def withCurrentScalaSourceFile[T](block: ScalaSourceFile => T): Option[T] = {
-    withCurrentEditor { textEditor =>
-      file(textEditor)      flatMap { file =>
-        ScalaSourceFile.createFromPath(file.getFullPath.toString) map block
-      }
-    }
+    for {
+      textEditor <- currentEditor
+      f <- file(textEditor)
+      scalaFile <- ScalaSourceFile.createFromPath(f)
+    } yield block(scalaFile)
   }
   
   def withScalaFileAndSelection[T](block: (ScalaSourceFile, ITextSelection) => Option[T]): Option[T] = {
-    withCurrentEditor { textEditor =>
-      file(textEditor) flatMap { file =>
-        ScalaSourceFile.createFromPath(file.getFullPath.toString) flatMap { scalaFile =>
-          selection(textEditor) flatMap { selection =>
-            block(scalaFile, selection)
-          }
-        }
-      }
-    }
+    for {
+      textEditor <- currentEditor
+      f <- file(textEditor)
+      scalaFile <- ScalaSourceFile.createFromPath(f)
+      selection <- selection(textEditor)
+      back <- block(scalaFile, selection) 
+    } yield back
   }
   
   def createTextFileChange(file: IFile, fileChanges: List[scala.tools.refactoring.common.Change]): TextFileChange = {

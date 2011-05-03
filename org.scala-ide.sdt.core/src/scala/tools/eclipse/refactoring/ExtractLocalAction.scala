@@ -64,15 +64,13 @@ class ExtractLocalAction extends RefactoringAction {
                 
                 val edit = new ReplaceEdit(from, to - from, text.replace(r.name, newName))
                 
-                EditorHelpers.withCurrentEditor { editor =>
+                for (editor <- EditorHelpers.currentEditor) {
                 
                   val document = editor.getDocumentProvider.getDocument(editor.getEditorInput)
                   
                   edit.apply(document)
                   
                   runInLinkedModeUi((from + firstOccurence, newName.length) :: (from + secondOccurrence, newName.length) :: Nil)
-                  
-                  None
                 }
                 
               case _ => runRefactoring(createWizard(Some(r)))
