@@ -76,7 +76,7 @@ class ScalaHyperlinkDetector extends AbstractHyperlinkDetector {
                 }
               }
               if (!hyperlinks.isDefined) {
-                ScalaPlugin.plugin.logWarning("!!! Falling back to selection engine for %s!".format(typed.left))
+                Tracer.println("!!! Falling back to selection engine for %s!".format(typed.left))
                 codeSelect(textEditor, wordRegion, scu)
               } else
                 Array(hyperlinks.get: IHyperlink)
