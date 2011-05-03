@@ -6,6 +6,7 @@
 package scala.tools.eclipse
 package javaelements
 
+import util.FileUtils
 import java.util.{ HashMap => JHashMap, Map => JMap }
 import org.eclipse.core.resources.{ IFile, IResource }
 import org.eclipse.core.runtime.IProgressMonitor
@@ -25,14 +26,17 @@ import org.eclipse.core.runtime.NullProgressMonitor
 object ScalaSourceFile {
   val handleFactory = new HandleFactory
   
-  def createFromPath(path : String) : Option[ScalaSourceFile] = {
-    if (!path.endsWith(".scala"))
-      None
-    else
-      handleFactory.createOpenable(path, null) match {
+  def createFromPath(of : Option[IFile]) : Option[ScalaSourceFile] = {
+    of.filter(_.getFileExtension() == "scala").flatMap { f =>
+      handleFactory.createOpenable(f.getFullPath.toString, null) match {
         case ssf : ScalaSourceFile => Some(ssf)
         case _ => None
       }
+    }
+  }
+
+  def createFromPath(path : String) : Option[ScalaSourceFile] = {
+    createFromPath(FileUtils.toIFile(path))
   }
 }
 

@@ -327,11 +327,11 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
         editor.getEditorInput match {
           case fei: FileEditorInput =>
             val f = fei.getFile
-            if (f.getName.endsWith(scalaFileExtn)) {
-              for (ssf <- ScalaSourceFile.createFromPath(f.getFullPath.toString)) {
-            	val proj = getScalaProject(f.getProject)
+            if (f.exists && (f.getFileExtension() == "scala")) {
+              for (ssf <- ScalaSourceFile.createFromPath(Option(f))) {
+            	  val proj = getScalaProject(f.getProject)
                 if (proj.underlying.isOpen) {
-            	  proj.withPresentationCompiler(op(_, ssf)) ()
+            	    proj.withPresentationCompiler(op(_, ssf)) ()
                 }
               }
             }
