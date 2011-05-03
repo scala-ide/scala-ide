@@ -140,8 +140,10 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
     if (viewer ne null) {
       
       //FIXME : workaround for my limited knowledge about current presentation compiler
-      val scu = JavaPlugin.getDefault().getWorkingCopyManager().getWorkingCopy(getEditorInput()).asInstanceOf[ScalaCompilationUnit]
-      viewer.getDocument().addPrenotifiedDocumentListener(ScalaTypeAutoCompletionProposalManager.getProposalFor(scu))
+      JavaPlugin.getDefault().getWorkingCopyManager().getWorkingCopy(getEditorInput()) match {
+        case scu : ScalaCompilationUnit => viewer.getDocument().addPrenotifiedDocumentListener(ScalaTypeAutoCompletionProposalManager.getProposalFor(scu))
+        case _ => ()
+      }
     }
 
     refactoring.RefactoringMenu.fillQuickMenu(this)
