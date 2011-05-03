@@ -634,8 +634,15 @@
            class="scala.tools.eclipse.launching.ScalaLaunchableTester"
            id="scala.tools.eclipse.launching.ScalaLaunchableTester"
            namespace="scala.tools.eclipse.launching"
-           properties="hasMain"
+           properties="hasMain,canLaunchAsJUnit"
            type="org.eclipse.core.runtime.IAdaptable"/>            
+      <propertyTester
+            properties="canLaunchAsJUnit"
+            namespace="scala.tools.eclipse.launching.junit"
+            type="org.eclipse.core.runtime.IAdaptable"
+            class="scala.tools.eclipse.launching.JUnitPropertyTester"
+            id="scala.tools.eclipse.launching.JUnitPropertyTester">
+      </propertyTester>
   </extension>
 
   <extension point="org.eclipse.debug.ui.launchShortcuts">
@@ -659,6 +666,43 @@
         </enablement>
       </contextualLaunch>
     </shortcut>
+      <shortcut
+            label="%JUnitShortcut.label"
+            icon="$nl$/icons/full/obj16/julaunch.gif"
+            helpContextId="org.eclipse.jdt.junit.launch_shortcut"
+            class="org.eclipse.jdt.junit.launcher.JUnitLaunchShortcut"
+            modes="run, debug"
+            id="scala.tools.eclipse.scalatest.junitShortcut">
+         <contextualLaunch>
+            <enablement>
+               <with variable="selection">
+                  <count value="1"/>
+               	  <iterate>
+                     <adapt type="org.eclipse.jdt.core.IJavaElement">
+		                <test property="org.eclipse.debug.ui.matchesPattern" value="*.scala"/>
+		                <test property="org.eclipse.jdt.core.isInJavaProject"/>
+		                <test property="org.eclipse.jdt.core.hasTypeOnClasspath" value="junit.framework.Test"/>
+		                <or>
+                        <test property="scala.tools.eclipse.launching.canLaunchAsJUnit" forcePluginActivation="true"/>
+                        <test property="scala.tools.eclipse.launching.junit.canLaunchAsJUnit" forcePluginActivation="true"/>
+                        </or>
+		             </adapt>
+		          </iterate>
+               </with>
+            </enablement>
+         </contextualLaunch>
+         <configurationType
+               id="org.eclipse.jdt.junit.launchconfig">
+         </configurationType>
+         <description
+               description="%DebugJUnitLaunchShortcut.description"
+               mode="debug">
+         </description>
+         <description
+               description="%RunJUnitLaunchShortcut.description"
+               mode="run">
+         </description>
+      </shortcut>
   </extension>
 
   <extension point="org.eclipse.ui.commands">

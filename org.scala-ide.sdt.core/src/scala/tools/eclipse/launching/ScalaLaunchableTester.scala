@@ -27,6 +27,11 @@ class ScalaLaunchableTester extends PropertyTester {
    */
   private val PROPERTY_HAS_MAIN = "hasMain" //$NON-NLS-1$
 
+    /**
+   * name for the "can launch as junit" property
+   */
+  private val PROPERTY_CAN_LAUNCH_AS_JUNIT = "canLaunchAsJUnit"; //$NON-NLS-1$
+
   /**
    * Determines if the Scala element contains main method(s).
    * 
@@ -36,6 +41,21 @@ class ScalaLaunchableTester extends PropertyTester {
   private def hasMain(element: IJavaElement): Boolean = {
     try {
       ScalaLaunchShortcut.getMainMethods(element).length > 0
+    } catch {
+      case e: JavaModelException => false
+      case e: CoreException => false
+    }
+  }
+
+  /**
+   * Determines if the Scala element contains main method(s).
+   * 
+   * @param element the element to check for the method 
+   * @return true if a method is found in the element, false otherwise
+   */
+  private def canLaunchAsJUnit(element: IJavaElement): Boolean = {
+    try {
+      ScalaLaunchShortcut.getJunitTestClasses(element).length > 0
     } catch {
       case e: JavaModelException => false
       case e: CoreException => false
@@ -71,6 +91,7 @@ class ScalaLaunchableTester extends PropertyTester {
 
     property match {
       case PROPERTY_HAS_MAIN => hasMain(element)
+      case PROPERTY_CAN_LAUNCH_AS_JUNIT => canLaunchAsJUnit(element)
       case _ => false
     }
   }

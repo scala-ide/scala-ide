@@ -86,7 +86,7 @@ class ScalaCompletionProposalComputer extends IJavaCompletionProposalComputer {
     val t1 = typed.get.left.toOption
 
     val chars = context.getDocument.get.toCharArray
-    val (start, completed) = compiler.ask { () =>
+    val (start, completed) = compiler.askOption{ () =>
       val completed = new compiler.Response[List[compiler.Member]]
       val start = t1 match {
         case Some(s@compiler.Select(qualifier, name)) if qualifier.pos.isDefined && qualifier.pos.isRange =>
@@ -112,8 +112,8 @@ class ScalaCompletionProposalComputer extends IJavaCompletionProposalComputer {
           compiler.askScopeCompletion(cpos, completed)
           if (region == null) position else region.getOffset
       }
-      (start, completed)
-    }
+      (start, Some(completed))
+    } getOrElse ((0, None))
 
     val prefix = (if (position <= start) "" else scu.getBuffer.getText(start, position-start).trim).toArray
     
@@ -163,30 +163,28 @@ class ScalaCompletionProposalComputer extends IJavaCompletionProposalComputer {
        if (sym.owner == compiler.definitions.AnyClass
            || sym.owner == compiler.definitions.AnyRefClass
            || sym.owner == compiler.definitions.ObjectClass) { 
-//         println("decreased relevance for Any/AnyRef owner:" + sym )
          relevance -= 40
        }
-//       println("\t" + relevance)
        
        val contextString = sym.paramss.map(_.map(p => "%s: %s".format(p.decodedName, p.tpe)).mkString("(", ", ", ")")).mkString("")
        buff += new ScalaCompletionProposal(start, name, signature, contextString, container, relevance, image, context.getViewer.getSelectionProvider)
-    }     
-    
-    completed.get.left.toOption match {
-      case Some(completions) =>
-        compiler.ask { () =>
-          for(completion <- completions) {
-            completion match {
-              case compiler.TypeMember(sym, tpe, accessible, inherited, viaView) if nameMatches(sym) =>
-                addCompletionProposal(sym, tpe, inherited, viaView)
-              case compiler.ScopeMember(sym, tpe, accessible, _) if nameMatches(sym) =>
-                addCompletionProposal(sym, tpe, false, compiler.NoSymbol)
-              case _ =>
-            }
+    }
+
+    for (
+      response <- completed;
+      completions <- response.get.left.toOption
+    ) {
+      compiler.askOption { () =>
+        for (completion <- completions) {
+          completion match {
+            case compiler.TypeMember(sym, tpe, accessible, inherited, viaView) if nameMatches(sym) =>
+              addCompletionProposal(sym, tpe, inherited, viaView)
+            case compiler.ScopeMember(sym, tpe, accessible, _) if nameMatches(sym) =>
+              addCompletionProposal(sym, tpe, false, compiler.NoSymbol)
+            case _ =>
           }
         }
-      case None =>
-        println("No completions")
+      }
     }
     
     collection.JavaConversions.seqAsJavaList(buff.toList)
