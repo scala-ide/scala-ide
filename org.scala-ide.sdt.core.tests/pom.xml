@@ -9,6 +9,10 @@
   <artifactId>org.scala-ide.sdt.core.tests</artifactId>
   <packaging>eclipse-test-plugin</packaging>
   
+  <properties>
+    <tycho.test.jvmArgs>-Xmx800m -XX:MaxPermSize=256m -Dosgi.ws=cocoa -XstartOnFirstThread</tycho.test.jvmArgs>
+  </properties>
+
   <dependencies>
     <dependency>
       <groupId>junit</groupId>
@@ -45,13 +49,13 @@
         <version>${tycho.version}</version>
         <configuration>
           <useUIHarness>true</useUIHarness>
+          <useUIThread>true</useUIThread> 
           <includes>
             <include>scala/tools/eclipse/*Test.class</include>
           </includes>
-          <!--
-          <testSuite>${project.artifactId}</testSuite> 
-          <testClass>scala.tools.eclipse.TestsSuite</testClass>
-          -->
+          <argLine>${tycho.test.jvmArgs}</argLine>
+          <!-- <testSuite>${project.artifactId}</testSuite> -->
+          <!-- <testClass>scala.tools.eclipse.TestsSuite</testClass> -->
         </configuration>
       </plugin>
     </plugins>
