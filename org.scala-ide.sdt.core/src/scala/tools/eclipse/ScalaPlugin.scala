@@ -96,18 +96,6 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
 
   lazy val templateManager = new ScalaTemplateManager()
 
-  val pageListener = new IPageListener {
-    def pageOpened(page: IWorkbenchPage) {
-      page.addPartListener(ScalaPlugin.this)
-    }
-
-    def pageClosed(page: IWorkbenchPage) {
-      page.removePartListener(ScalaPlugin.this)
-    }
-
-    def pageActivated(page: IWorkbenchPage) {}
-  }
-
   private val projects = new HashMap[IProject, ScalaProject]
 
   override def start(context: BundleContext) = {
@@ -116,7 +104,9 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
     ResourcesPlugin.getWorkspace.addResourceChangeListener(this, IResourceChangeEvent.PRE_CLOSE | IResourceChangeEvent.POST_CHANGE)
     JavaCore.addElementChangedListener(this)
     PlatformUI.getWorkbench.getEditorRegistry.setDefaultEditor("*.scala", editorId)
-    asyncExec(PlatformUI.getWorkbench.getActiveWorkbenchWindow.addPageListener(pageListener))
+    asyncExec {
+      PlatformUI.getWorkbench.getActiveWorkbenchWindow().getPartService().addPartListener(ScalaPlugin.this)
+    }
 
     println("Scala compiler bundle: " + scalaCompilerBundle.getLocation)
     PerspectiveFactory.updatePerspective
@@ -125,7 +115,6 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
 
   override def stop(context: BundleContext) = {
     ResourcesPlugin.getWorkspace.removeResourceChangeListener(this)
-    Option(PlatformUI.getWorkbench.getActiveWorkbenchWindow).map(_.removePageListener(pageListener))
     super.stop(context)
   }
 
@@ -273,11 +262,13 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
   def partDeactivated(part: IWorkbenchPart) {}
   def partBroughtToTop(part: IWorkbenchPart) {}
   def partOpened(part: IWorkbenchPart) {
+    println("open " + part.getTitle)
     doWithCompilerAndFile(part) { (compiler, ssf) =>
       compiler.askReload(ssf, ssf.getContents)
     }
   }
   def partClosed(part: IWorkbenchPart) {
+    println("close " + part.getTitle)
     doWithCompilerAndFile(part) { (compiler, ssf) =>
       compiler.discardSourceFile(ssf)
     }
