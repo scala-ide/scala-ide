@@ -152,4 +152,14 @@ trait ScalaJavaMapper { self : ScalaPresentationCompiler =>
         
     enclosing(sym).reverse
   }
+  
+  /** Return the enclosing package. Correctly handle the empty package, by returning
+   *  the empty string, instead of <empty>. */
+  def enclosingPackage(sym: Symbol): String = {
+    val enclPackage = sym.enclosingPackage
+    if (enclPackage == definitions.EmptyPackage || enclPackage == definitions.RootPackage)
+      ""
+    else
+      enclPackage.fullName
+  }
 }
