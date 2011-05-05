@@ -24,6 +24,10 @@ set_version()
   # ${MAVEN} -f pom.xml -N versions:update-child-modules
 }
 
+#to find last commit timestamp (author) and short hash made under ${DIR}
+#git rev-list --pretty=format:%ad-%h --date=iso -n 1  HEAD -- ${DIR} |tail -n 1
+#TODO to use to have the timestamp on nigthly build for each module/eclipse-plugin and not a global one.
+
 timestamp()
 {
   UNCOMMITTED_CHANGES=$(git status -s | wc -l)
