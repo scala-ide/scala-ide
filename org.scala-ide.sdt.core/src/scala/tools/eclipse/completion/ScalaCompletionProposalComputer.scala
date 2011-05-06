@@ -94,15 +94,12 @@ class ScalaCompletionProposalComputer extends IJavaCompletionProposalComputer {
           val cpos = compiler.rangePos(sourceFile, cpos0, cpos0, cpos0)
           compiler.askTypeCompletion(cpos, completed)
           s.pos.point min position
-        case Some(i@compiler.Import(expr, selectors)) =>
-          def qual(tree : compiler.Tree): compiler.Tree = tree.symbol.info match {
-            case compiler.analyzer.ImportType(expr) => expr
-            case _ => tree
-          }
-          val cpos0 = qual(i).pos.endOrPoint
+        case Some(compiler.Import(expr, _)) =>
+          val cpos0 = expr.pos.endOrPoint
           val cpos = compiler.rangePos(sourceFile, cpos0, cpos0, cpos0)
           compiler.askTypeCompletion(cpos, completed)
-          (cpos0 + 1) min position
+          val region = ScalaWordFinder.findCompletionPoint(chars, position)
+          if (region == null) position else region.getOffset
         case _ =>
           val region = ScalaWordFinder.findCompletionPoint(chars, position)
           val cpos = if (region == null) pos else {
