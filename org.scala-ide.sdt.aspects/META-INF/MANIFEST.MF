@@ -6,7 +6,7 @@ Bundle-Version: 1.0.0.qualifier
 Bundle-Vendor: scala-ide.org
 Bundle-Activator: scala.tools.eclipse.contribution.weaving.jdt.ScalaJDTWeavingPlugin
 Require-Bundle: 
- org.aspectj.runtime,
+ org.aspectj.runtime;visibility:=reexport,
  org.eclipse.core.expressions,
  org.eclipse.core.runtime,
  org.eclipse.debug.ui,
