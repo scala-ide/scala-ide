@@ -50,12 +50,12 @@
         <configuration>
           <useUIHarness>true</useUIHarness>
           <useUIThread>true</useUIThread> 
-          <includes>
-            <include>scala/tools/eclipse/*Test.class</include>
-          </includes>
+          <!-- <includes> -->
+          <!--   <include>scala/tools/eclipse/*Test.class</include> -->
+          <!-- </includes> -->
           <argLine>${tycho.test.jvmArgs}</argLine>
-          <!-- <testSuite>${project.artifactId}</testSuite> -->
-          <!-- <testClass>scala.tools.eclipse.TestsSuite</testClass> -->
+          <testSuite>${project.artifactId}</testSuite>
+          <testClass>scala.tools.eclipse.TestsSuite</testClass>
         </configuration>
       </plugin>
     </plugins>
