@@ -44,6 +44,8 @@ object ScalaPlugin {
 class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IElementChangedListener with IPartListener {
   ScalaPlugin.plugin = this
 
+  final val NO_DIAGNOSTICS = "sdtcore.nodiagnostics"
+  
   def pluginId = "org.scala-ide.sdt.core"
   def compilerPluginId = "org.scala-ide.scala.compiler"
   def libraryPluginId = "org.scala-ide.scala.library"
@@ -107,7 +109,8 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
 
     println("Scala compiler bundle: " + scalaCompilerBundle.getLocation)
     PerspectiveFactory.updatePerspective
-    diagnostic.StartupDiagnostics.run
+    if (System.getProperty(NO_DIAGNOSTICS) eq null)
+        diagnostic.StartupDiagnostics.run
   }
 
   override def stop(context: BundleContext) = {

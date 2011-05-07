@@ -104,6 +104,7 @@ class TestScalaIndenter {
     preferenceProvider.put(Dcfc.FORMATTER_TAB_CHAR, "space")
     preferenceProvider.put(ScalaIndenter.TAB_SIZE, "2")
     preferenceProvider.put(ScalaIndenter.INDENT_SIZE, "2")
+    preferenceProvider.put(ScalaIndenter.INDENT_WITH_TABS, "false")
     
     val project = new JavaProject()
     
