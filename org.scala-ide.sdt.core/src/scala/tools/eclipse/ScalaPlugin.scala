@@ -32,14 +32,13 @@ import scala.tools.eclipse.templates.ScalaTemplateManager
 
 object ScalaPlugin {
   var plugin: ScalaPlugin = _
-
-  /** Returns the active workbench shell, or null if one does not exist */
-  def getShell: Shell = {
+  
+  def getWorkbenchWindow = {
     val workbench = PlatformUI.getWorkbench
-    var window =
-      Option(workbench.getActiveWorkbenchWindow) orElse workbench.getWorkbenchWindows.headOption
-    window.map { _.getShell }.orNull
+    Option(workbench.getActiveWorkbenchWindow) orElse workbench.getWorkbenchWindows.headOption
   }
+  
+  def getShell: Shell = getWorkbenchWindow map (_.getShell) orNull
 }
 
 class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IElementChangedListener with IPartListener {
@@ -104,9 +103,7 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
     ResourcesPlugin.getWorkspace.addResourceChangeListener(this, IResourceChangeEvent.PRE_CLOSE | IResourceChangeEvent.POST_CHANGE)
     JavaCore.addElementChangedListener(this)
     PlatformUI.getWorkbench.getEditorRegistry.setDefaultEditor("*.scala", editorId)
-    asyncExec {
-      PlatformUI.getWorkbench.getActiveWorkbenchWindow().getPartService().addPartListener(ScalaPlugin.this)
-    }
+    ScalaPlugin.getWorkbenchWindow map (_.getPartService().addPartListener(ScalaPlugin.this))
 
     println("Scala compiler bundle: " + scalaCompilerBundle.getLocation)
     PerspectiveFactory.updatePerspective
