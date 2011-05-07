@@ -10,7 +10,7 @@
   <packaging>eclipse-test-plugin</packaging>
   
   <properties>
-    <tycho.test.jvmArgs>-Xmx800m -XX:MaxPermSize=256m -Dosgi.ws=cocoa -XstartOnFirstThread</tycho.test.jvmArgs>
+    <tycho.test.jvmArgs>-Xmx800m -XX:MaxPermSize=256m -Dosgi.ws=cocoa -XstartOnFirstThread -Dsdtcore.nodiagnostics</tycho.test.jvmArgs>
   </properties>
 
   <dependencies>
