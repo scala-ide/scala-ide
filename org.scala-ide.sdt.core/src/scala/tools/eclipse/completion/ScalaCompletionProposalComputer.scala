@@ -81,37 +81,31 @@ class ScalaCompletionProposalComputer extends IJavaCompletionProposalComputer {
                              (sourceFile: SourceFile, compiler: ScalaPresentationCompiler): java.util.List[_] = {
     val pos = compiler.rangePos(sourceFile, position, position, position)
     
+    val chars = context.getDocument.get.toCharArray
+    val region = ScalaWordFinder.findCompletionPoint(chars, position)
+    val start = if (region == null) position else region.getOffset
+    
     val typed = new compiler.Response[compiler.Tree]
     compiler.askTypeAt(pos, typed)
     val t1 = typed.get.left.toOption
 
-    val chars = context.getDocument.get.toCharArray
-    val (start, completed) = compiler.askOption{ () =>
-      val completed = new compiler.Response[List[compiler.Member]]
-      val start = t1 match {
+    val completed = new compiler.Response[List[compiler.Member]]
+    compiler.askOption{ () =>
+      t1 match {
         case Some(s@compiler.Select(qualifier, name)) if qualifier.pos.isDefined && qualifier.pos.isRange =>
           val cpos0 = qualifier.pos.end 
           val cpos = compiler.rangePos(sourceFile, cpos0, cpos0, cpos0)
           compiler.askTypeCompletion(cpos, completed)
-          s.pos.point min position
         case Some(compiler.Import(expr, _)) =>
           val cpos0 = expr.pos.endOrPoint
           val cpos = compiler.rangePos(sourceFile, cpos0, cpos0, cpos0)
           compiler.askTypeCompletion(cpos, completed)
-          val region = ScalaWordFinder.findCompletionPoint(chars, position)
-          if (region == null) position else region.getOffset
         case _ =>
-          val region = ScalaWordFinder.findCompletionPoint(chars, position)
-          val cpos = if (region == null) pos else {
-            val start = region.getOffset
-            compiler.rangePos(sourceFile, start, start, start)
-          }
+          val cpos = compiler.rangePos(sourceFile, start, start, start)
           compiler.askScopeCompletion(cpos, completed)
-          if (region == null) position else region.getOffset
       }
-      (start, Some(completed))
-    } getOrElse ((0, None))
-
+    }
+    
     val prefix = (if (position <= start) "" else scu.getBuffer.getText(start, position-start).trim).toArray
     
     def nameMatches(sym : compiler.Symbol) = prefixMatches(sym.decodedName.toString.toArray, prefix)  
@@ -167,10 +161,7 @@ class ScalaCompletionProposalComputer extends IJavaCompletionProposalComputer {
        buff += new ScalaCompletionProposal(start, name, signature, contextString, container, relevance, image, context.getViewer.getSelectionProvider)
     }
 
-    for (
-      response <- completed;
-      completions <- response.get.left.toOption
-    ) {
+    for (completions <- completed.get.left.toOption) {
       compiler.askOption { () =>
         for (completion <- completions) {
           completion match {
