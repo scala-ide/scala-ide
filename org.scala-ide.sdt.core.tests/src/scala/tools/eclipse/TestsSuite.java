@@ -17,7 +17,6 @@ import org.junit.runners.Suite;
 @Suite.SuiteClasses({
   ScalaDocumentPartitionerTest.class,
   ScalaPartitionTokeniserTest.class,
-  TestScalaIndenter.class,
   ImportSupportTest.class,
   QualifiedNameSupportTest.class
 })
