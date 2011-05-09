@@ -53,7 +53,7 @@ class ScalaHyperlinkDetector extends AbstractHyperlinkDetector with Logger {
               val typed = response.get
 
               log("detectHyperlinks: wordRegion = " + wordRegion)
-              val hyperlinks: Option[List[IHyperlink]] = compiler.ask { () =>
+              val hyperlinks: Option[List[IHyperlink]] = compiler.askOption { () =>
                 typed.left.toOption map {
                   case Import(expr, sels) => sels find (_.namePos >= pos.start) map {sel => 
                     val tpe = stabilizedType(expr)
@@ -76,7 +76,8 @@ class ScalaHyperlinkDetector extends AbstractHyperlinkDetector with Logger {
                       }
                   }
                 }
-              }
+              }.flatten.headOption
+
               if (!hyperlinks.isDefined || hyperlinks.get.isEmpty) {
                 log("!!! Falling back to selection engine for %s!".format(typed.left), Category.ERROR)
                 codeSelect(textEditor, wordRegion, scu)
