@@ -44,7 +44,7 @@ object ScalaPlugin {
 class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IElementChangedListener with IPartListener {
   ScalaPlugin.plugin = this
 
-  final val NO_DIAGNOSTICS = "sdtcore.nodiagnostics"
+  final val HEADLESS_TEST  = "sdtcore.headless"
   
   def pluginId = "org.scala-ide.sdt.core"
   def compilerPluginId = "org.scala-ide.scala.compiler"
@@ -102,15 +102,16 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
   override def start(context: BundleContext) = {
     super.start(context)
 
-    ResourcesPlugin.getWorkspace.addResourceChangeListener(this, IResourceChangeEvent.PRE_CLOSE | IResourceChangeEvent.POST_CHANGE)
-    JavaCore.addElementChangedListener(this)
-    PlatformUI.getWorkbench.getEditorRegistry.setDefaultEditor("*.scala", editorId)
-    ScalaPlugin.getWorkbenchWindow map (_.getPartService().addPartListener(ScalaPlugin.this))
+    if (System.getProperty(HEADLESS_TEST) eq null) {
+      ResourcesPlugin.getWorkspace.addResourceChangeListener(this, IResourceChangeEvent.PRE_CLOSE | IResourceChangeEvent.POST_CHANGE)
+      JavaCore.addElementChangedListener(this)
+      PlatformUI.getWorkbench.getEditorRegistry.setDefaultEditor("*.scala", editorId)
+      ScalaPlugin.getWorkbenchWindow map (_.getPartService().addPartListener(ScalaPlugin.this))
 
+      PerspectiveFactory.updatePerspective
+      diagnostic.StartupDiagnostics.run
+    }
     println("Scala compiler bundle: " + scalaCompilerBundle.getLocation)
-    PerspectiveFactory.updatePerspective
-    if (System.getProperty(NO_DIAGNOSTICS) eq null)
-        diagnostic.StartupDiagnostics.run
   }
 
   override def stop(context: BundleContext) = {

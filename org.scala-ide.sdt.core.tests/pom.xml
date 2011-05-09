@@ -34,7 +34,7 @@
   </profiles>
 
   <properties>
-    <tycho.test.jvmArgs>-Xmx800m -XX:MaxPermSize=256m -Dsdtcore.nodiagnostics ${tycho.test.OSspecific}</tycho.test.jvmArgs>
+    <tycho.test.jvmArgs>-Xmx800m -XX:MaxPermSize=256m -Dsdtcore.headless ${tycho.test.OSspecific}</tycho.test.jvmArgs>
   </properties>
 
   <dependencies>
@@ -72,8 +72,8 @@
         <artifactId>maven-osgi-test-plugin</artifactId>
         <version>${tycho.version}</version>
         <configuration>
-          <useUIHarness>true</useUIHarness>
-          <useUIThread>true</useUIThread> 
+          <useUIHarness>false</useUIHarness>
+          <useUIThread>false</useUIThread> 
 
           <!-- Enable JDT weaving -->
           <!-- <systemProperties combine.children="append"> -->
