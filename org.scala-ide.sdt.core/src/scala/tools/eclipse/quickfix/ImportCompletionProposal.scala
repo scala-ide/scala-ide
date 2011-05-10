@@ -1,18 +1,14 @@
 package scala.tools.eclipse
 package quickfix
 
-import org.eclipse.core.resources.IFile
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal
 import org.eclipse.jdt.ui.{ISharedImages, JavaUI}
 import org.eclipse.jface.text.contentassist.IContextInformation
 import org.eclipse.jface.text.{TextUtilities, IDocument}
-import org.eclipse.ltk.core.refactoring.TextFileChange
 import org.eclipse.swt.graphics.{Point, Image}
 import refactoring.EditorHelpers._
+import scala.tools.eclipse.refactoring.EditorHelpers
 import scala.tools.refactoring.implementations.AddImportStatement
-import util.FileUtils
-import org.eclipse.text.edits.MultiTextEdit
-import org.eclipse.text.edits.RangeMarker
 
 case class ImportCompletionProposal(val importName: String) extends IJavaCompletionProposal {
   
@@ -64,20 +60,7 @@ case class ImportCompletionProposal(val importName: String) extends IJavaComplet
         refactoring.addImport(refactoring.selection, importName)
       }(Nil)
       
-      FileUtils.toIFile(scalaSourceFile.file) foreach { f =>
-        createTextFileChange(f, changes).getEdit match {
-          case edit: MultiTextEdit =>
-            
-            val currentPosition = new RangeMarker(textSelection.getOffset, textSelection.getLength)
-            edit.addChild(currentPosition)
-            edit.apply(document)
-            
-            withCurrentEditor { editor =>
-              editor.selectAndReveal(currentPosition.getOffset, currentPosition.getLength)
-              None
-            }
-        }
-      }
+      EditorHelpers.applyChangesToFileWhileKeepingSelection(document, textSelection, scalaSourceFile.file, changes)
       
       None
     }
