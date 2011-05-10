@@ -80,18 +80,7 @@ case class ImportCompletionProposal(val importName: String) extends IJavaComplet
         refactoring.addImport(refactoring.selection, importName)
       }(Nil)
       
-      FileUtils.toIFile(scalaSourceFile.file) foreach { f =>
-        createTextFileChange(f, changes).getEdit match {
-          case edit: MultiTextEdit =>
-            val currentPosition = new RangeMarker(textSelection.getOffset, textSelection.getLength)
-            edit.addChild(currentPosition)
-            edit.apply(document)
-            
-            for (editor <- currentEditor) {
-              editor.selectAndReveal(currentPosition.getOffset, currentPosition.getLength)
-            }
-        }
-      }
+      applyChangesToFileWhileKeepingSelection(document, textSelection, scalaSourceFile.file, changes)
       
       None
     }
