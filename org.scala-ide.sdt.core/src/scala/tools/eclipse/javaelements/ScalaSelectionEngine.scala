@@ -19,9 +19,7 @@ import org.eclipse.jdt.core.search.IJavaSearchConstants
 import org.eclipse.jdt.internal.codeassist.{ ISearchRequestor, ISelectionRequestor }
 import org.eclipse.jdt.internal.codeassist.impl.{ AssistParser, Engine }
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants
-import org.eclipse.jdt.internal.compiler.env
-import org.eclipse.jdt.internal.compiler.env.{ AccessRestriction, ICompilationUnit }
-import org.eclipse.jdt.internal.compiler.parser.{ Scanner, ScannerHelper, TerminalTokens }
+import org.eclipse.jdt.internal.compiler.env.{ICompilationUnit, AccessRestriction}
 import org.eclipse.jdt.internal.core.{ JavaElement, SearchableEnvironment }
 
 import util.Logger
@@ -37,22 +35,24 @@ class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: IS
   val acceptedEnums = new ArrayBuffer[(Array[Char], Array[Char], Int)]
   val acceptedAnnotations = new ArrayBuffer[(Array[Char], Array[Char], Int)]
 
-  def select(cu: env.ICompilationUnit, selectionStart0: Int, selectionEnd0: Int) {
+  def select(cu: ICompilationUnit, selectionStart0: Int, selectionEnd0: Int) {
     val scu = cu.asInstanceOf[ScalaCompilationUnit]
 
     scu.doWithSourceFile { (src, compiler) =>
 
       import compiler.{ log => _, _ }
 
-      val source = scu.getContents()
+      val source = scu.getContents
+      val region = ScalaWordFinder.findWord(source, selectionStart0)
 
       val (selectionStart, selectionEnd) =
         if (selectionStart0 <= selectionEnd0)
           (selectionStart0, selectionEnd0)
         else {
-          val region = ScalaWordFinder.findWord(source, selectionEnd0)
           (region.getOffset, if (region.getLength > 0) region.getOffset + region.getLength - 1 else region.getOffset)
         }
+      
+      val wordStart = region.getOffset
 
       actualSelectionStart = selectionStart
       actualSelectionEnd = selectionEnd
@@ -62,12 +62,6 @@ class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: IS
       log("selectedIdentifier: " + selectedIdentifier.mkString("", "", ""))
 
       val ssr = requestor.asInstanceOf[ScalaSelectionRequestor]
-      var fallbackToDefaultLookup = true
-
-      def qual(tree: compiler.Tree): Tree = tree.symbol.info match {
-        case compiler.analyzer.ImportType(expr) => expr
-        case _ => tree
-      }
 
       /** Delay the action. Necessary so that the payload is run outside of 'ask'. */
       class Cont(f: () => Unit) {
@@ -246,29 +240,13 @@ class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: IS
                       Cont.Noop
                   }
                 }
-
-                val q = qual(i)
-                if (q.pos overlaps pos) {
-                  def findInSelect(t: compiler.Tree): Tree = t match {
-                    case Select(qual, _) if qual.pos.overlaps(pos) => findInSelect(qual)
-                    case _ => t
-                  }
-                  val tree = findInSelect(q)
-                  val sym = tree.symbol
-                  acceptSymbol(sym)
-                } else
-                  selectors.find({ case compiler.ImportSelector(name, pos, _, _) => pos >= selectionStart && pos + name.length - 1 <= selectionEnd }) match {
-                    case Some(compiler.ImportSelector(name, _, _, _)) =>
-                      val base = compiler.typer.typedQualifier(q).tpe
-                      val sym0 = base.member(name) match {
-                        case NoSymbol => base.member(name.toTypeName)
-                        case s => s
-                      }
-                      val syms = if (sym0.hasFlag(Flags.OVERLOADED)) sym0.alternatives else List(sym0)
-                      Cont(syms.map(acceptSymbol))
-                    case _ => Cont.Noop
-                  }
-
+                
+                val sym = selectors find (_.namePos >= wordStart) map {sel => 
+                  val tpe = stabilizedType(expr)
+                  // Only look for java type, scala symbols are handled in ScalaHyperlinkDetector.
+                  tpe.member(sel.name.toTypeName)
+                } getOrElse NoSymbol
+                if (sym ne NoSymbol) acceptSymbol(sym) else Cont.Noop
               case l@(_: ValDef | _: Bind | _: ClassDef | _: ModuleDef | _: TypeDef | _: DefDef) =>
                 val sym = l.symbol
                 if (sym.isLocal)
@@ -290,7 +268,7 @@ class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: IS
       
       cont()
 
-      if (!ssr.hasSelection && fallbackToDefaultLookup) {
+      if (!ssr.hasSelection) {
         // only reaches here if no selection could be derived from the parsed tree
         // thus use the selected source and perform a textual type search
 
