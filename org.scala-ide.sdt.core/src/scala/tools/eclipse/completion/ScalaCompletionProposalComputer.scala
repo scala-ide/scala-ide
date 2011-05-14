@@ -175,7 +175,9 @@ class ScalaCompletionProposalComputer extends IJavaCompletionProposalComputer {
       }
     }
     
-    collection.JavaConversions.seqAsJavaList(buff.toList)
+    // COMPAT: 2.8 compatiblity. backwards compatible: this compiles both with 2.9 and 2.8
+    import collection.JavaConversions._
+    buff.toList: java.util.List[ICompletionProposal]
   }    
   
   private class ScalaCompletionProposal(startPos: Int, completion: String, display: String, contextName: String, 

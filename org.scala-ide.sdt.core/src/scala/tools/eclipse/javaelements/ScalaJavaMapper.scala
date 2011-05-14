@@ -5,8 +5,8 @@
 
 package scala.tools.eclipse.javaelements
 
+
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants
-import scala.reflect.generic.HasFlags
 
 import scala.tools.nsc.symtab.Flags
 import scala.tools.eclipse.ScalaPresentationCompiler
@@ -40,7 +40,18 @@ trait ScalaJavaMapper { self : ScalaPresentationCompiler =>
     }
   }
 
-  def mapModifiers(owner : HasFlags) : Int = {
+  /** Compatible with both 2.8 and 2.9 (interface HasFlags appears in 2.9).
+   * 
+   *  COMPAT: Once we drop 2.8, rewrite to use the HasFlags trait in scala.reflect.generic
+   */
+  type HasFlags = {
+      /** Whether this entity has ANY of the flags in the given mask. */
+      def hasFlag(flag: Long): Boolean
+      def isFinal: Boolean
+      def isTrait: Boolean
+  }
+  
+  def mapModifiers(owner: HasFlags) : Int = {
     var jdtMods = 0
     if(owner.hasFlag(Flags.PRIVATE))
       jdtMods = jdtMods | ClassFileConstants.AccPrivate
