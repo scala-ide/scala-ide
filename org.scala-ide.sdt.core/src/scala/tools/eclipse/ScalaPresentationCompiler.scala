@@ -103,7 +103,7 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
         println("FreshRunReq in ask:\n" + f)
         None
       case e =>
-        ScalaPlugin.plugin.logError("Error while marking occurrences", e)
+        ScalaPlugin.plugin.logError("Error during askOption", e)
         None
     }
   
