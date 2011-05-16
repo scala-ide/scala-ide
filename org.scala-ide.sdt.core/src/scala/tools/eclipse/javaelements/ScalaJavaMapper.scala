@@ -44,14 +44,18 @@ trait ScalaJavaMapper { self : ScalaPresentationCompiler =>
    * 
    *  COMPAT: Once we drop 2.8, rewrite to use the HasFlags trait in scala.reflect.generic
    */
+  
+  
+/* Re-add when ticket #4560 is fixed.
   type HasFlags = {
       /** Whether this entity has ANY of the flags in the given mask. */
       def hasFlag(flag: Long): Boolean
       def isFinal: Boolean
       def isTrait: Boolean
   }
+*/  
   
-  def mapModifiers(owner: HasFlags) : Int = {
+  def mapModifiers(owner: Symbol) : Int = {
     var jdtMods = 0
     if(owner.hasFlag(Flags.PRIVATE))
       jdtMods = jdtMods | ClassFileConstants.AccPrivate
@@ -72,6 +76,31 @@ trait ScalaJavaMapper { self : ScalaPresentationCompiler =>
     jdtMods
   }
 
+  /** Overload that needs to go away when 'HasFlag' can be used, either as a
+   *  structural type -- see #4560, or by sticking to 2.9.0 that has this trait
+   */
+  def mapModifiers(owner: Modifiers) : Int = {
+    var jdtMods = 0
+    if(owner.hasFlag(Flags.PRIVATE))
+      jdtMods = jdtMods | ClassFileConstants.AccPrivate
+    else if(owner.hasFlag(Flags.PROTECTED))
+      jdtMods = jdtMods | ClassFileConstants.AccProtected
+    else
+      jdtMods = jdtMods | ClassFileConstants.AccPublic
+    
+    if(owner.hasFlag(Flags.ABSTRACT) || owner.hasFlag(Flags.DEFERRED))
+      jdtMods = jdtMods | ClassFileConstants.AccAbstract
+
+    if(owner.isFinal || owner.hasFlag(Flags.MODULE))
+      jdtMods = jdtMods | ClassFileConstants.AccFinal
+    
+    if(owner.isTrait)
+      jdtMods = jdtMods | ClassFileConstants.AccInterface
+    
+    jdtMods
+  }
+
+  
   def mapType(s : Symbol) : String = {
     (if(s == null || s == NoSymbol || s.isRefinementClass || s.owner.isRefinementClass)
         "scala.AnyRef"
