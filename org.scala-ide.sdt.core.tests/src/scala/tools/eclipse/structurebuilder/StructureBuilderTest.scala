@@ -20,10 +20,20 @@ class StructureBuilderTest {
   
   def traversePackage(pkg: IPackageFragment) {
     for (unit <- pkg.getChildren) {
-      unit.getOpenable.open(null)
-      println("-" * 10 + unit)
+      openAll(unit)
+      println("-" * 10 + unit + "-" * 10)
     }
   }
+  
+  def openAll(elem: IJavaElement) {
+    elem match {
+      case parent: IParent =>
+        parent.getOpenable.open(null)
+        parent.getChildren.foreach(openAll)
+      case _ => ()
+    }
+  }
+  
   
   @Before def setupProject {
     
