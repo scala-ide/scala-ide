@@ -23,6 +23,7 @@ build()
 {
     ${MAVEN} \
         -U \
+        $PROFILE \
         -Dscala.version=${SCALA_VERSION} \
         clean install $* 
 }
