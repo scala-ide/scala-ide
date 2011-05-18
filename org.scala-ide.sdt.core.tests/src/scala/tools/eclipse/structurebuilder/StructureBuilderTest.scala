@@ -28,6 +28,7 @@ class StructureBuilderTest {
   def openAll(elem: IJavaElement) {
     elem match {
       case parent: IParent =>
+        println(parent + ": " + parent.getClass)
         parent.getOpenable.open(null)
         parent.getChildren.foreach(openAll)
       case _ => ()
