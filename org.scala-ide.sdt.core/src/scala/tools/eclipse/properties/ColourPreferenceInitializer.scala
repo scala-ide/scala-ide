@@ -6,6 +6,7 @@ import scala.tools.eclipse.properties.ScalaSyntaxClasses._
 import scala.tools.eclipse.ScalaPlugin
 import org.eclipse.jface.preference.PreferenceConverter
 import org.eclipse.swt.graphics.RGB
+import org.eclipse.jface.resource.StringConverter
 
 class ColourPreferenceInitializer extends AbstractPreferenceInitializer {
 
@@ -16,7 +17,10 @@ class ColourPreferenceInitializer extends AbstractPreferenceInitializer {
       strikethrough: Boolean = false, underline: Boolean = false) =
       {
         val baseName = syntaxClass.baseName
-        PreferenceConverter.setDefault(preferenceStore, baseName + COLOUR_SUFFIX, rgb)
+//        PreferenceConverter.setDefault(preferenceStore, baseName + COLOUR_SUFFIX, rgb)
+        // Removed PreferenceConverter, as it has the side-effect of creating a Display 
+        // that breaks headless tests
+        preferenceStore.setDefault(baseName + COLOUR_SUFFIX, StringConverter.asString(rgb))
         preferenceStore.setDefault(baseName + BOLD_SUFFIX, bold)
         preferenceStore.setDefault(baseName + ITALIC_SUFFIX, italic)
         preferenceStore.setDefault(baseName + STRIKETHROUGH_SUFFIX, strikethrough)
