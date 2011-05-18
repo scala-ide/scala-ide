@@ -999,4 +999,20 @@
        </partition>
     </javaCompletionProposalComputer>
  </extension>
+ <extension
+       point="org.eclipse.ltk.core.refactoring.renameParticipants">
+    <renameParticipant
+          class="scala.tools.eclipse.refactoring.RenameParticipant"
+          id="org.scala-ide.sdt.core.renameParticipant"
+          name="Scala Rename Participant">
+       <enablement>
+          <with
+                variable="element">
+             <instanceof
+                   value="org.eclipse.core.resources.IResource">
+             </instanceof>
+          </with>
+       </enablement>
+    </renameParticipant>
+ </extension>
 </plugin>

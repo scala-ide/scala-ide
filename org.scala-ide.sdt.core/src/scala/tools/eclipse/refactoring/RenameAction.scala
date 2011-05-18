@@ -7,15 +7,13 @@ package scala.tools.eclipse.refactoring
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.jface.action.IAction
 import org.eclipse.ltk.core.refactoring.RefactoringStatus
-import org.eclipse.ltk.ui.refactoring.{RefactoringWizardOpenOperation, UserInputWizardPage}
-import scala.tools.eclipse.ScalaPlugin
 import scala.tools.eclipse.javaelements.ScalaSourceFile
 import scala.tools.eclipse.refactoring.ui._
-import scala.tools.refactoring.Refactoring
-import scala.tools.refactoring.analysis.{NameValidation, GlobalIndexes}
+import scala.tools.nsc.util.SourceFile
+import scala.tools.refactoring.analysis.{GlobalIndexes, NameValidation}
 import scala.tools.refactoring.common.ConsoleTracing
-
 import scala.tools.refactoring.implementations.Rename
+import scala.tools.refactoring.Refactoring
 
 class RenameAction extends RefactoringAction {
   
@@ -29,32 +27,35 @@ class RenameAction extends RefactoringAction {
       })()
       
       import refactoring._
+      
+      def getTree(file: SourceFile): Option[global.Tree] = {
+        val r = new global.Response[global.Tree]
+        global.askLoadedTyped(file, r)
+        r.get.left.toOption
+      }
               
       lazy val selection = createSelection(file, selectedFrom, selectedTo)
       
-      lazy val initialCheck = file.withSourceFile { (sourceFile, compiler) =>
+      lazy val initialCheck = file.withSourceFile { (sourceFile, _) =>
         prepare(selection) match {
           
           case r @ Right(PreparationResult(selectedLocal, true)) =>
           
             name = selectedLocal.symbol.nameString
-            index = GlobalIndex(global.unitOf(sourceFile).body)
+            index = GlobalIndex(getTree(sourceFile).get /*FIXME*/)
             r
             
           case r @ Right(PreparationResult(selectedLocal, false)) =>
           
             name = selectedLocal.symbol.nameString
 
-            val allProjectSourceFiles = (EditorHelpers.withCurrentEditor { editor =>
-              Some(ScalaPlugin.plugin.getScalaProject(editor.getEditorInput).allSourceFiles.toList)
-            }) getOrElse Nil
+            val allProjectSourceFiles = file.project.allSourceFiles.toList 
             
             // TODO index in the background while the user inputs the name
             val cus = allProjectSourceFiles flatMap { f =>
-            
-              ScalaSourceFile.createFromPath(f.getFullPath.toString) map (_.withSourceFile { (sourceFile, compiler) => 
-                println("indexing "+ sourceFile.file.name)
-                List(CompilationUnitIndex(global.unitOf(sourceFile).body))
+              ScalaSourceFile.createFromPath(f.getFullPath.toString) map (_.withSourceFile { (sourceFile, _) => 
+                println("indexing for renaming"+ sourceFile.file.name)
+                getTree(sourceFile).toList map CompilationUnitIndex.apply
               } ())
             } flatten
             
@@ -73,7 +74,6 @@ class RenameAction extends RefactoringAction {
             val names = collisions map (s => s.fullName) mkString ", "
             status.addWarning("The name \""+ name +"\" is already in use: "+ names)
         }
-        
         
         status
       }
