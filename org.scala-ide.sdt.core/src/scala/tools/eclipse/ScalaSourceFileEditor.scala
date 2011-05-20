@@ -28,6 +28,9 @@ import scala.collection.mutable
 import scala.tools.eclipse.javaelements.{ScalaSourceFile, ScalaCompilationUnit}
 import scala.tools.eclipse.markoccurrences.{ ScalaOccurrencesFinder, Occurrences }
 import org.eclipse.jface.action.Action
+import org.eclipse.jface.action.MenuManager
+import org.eclipse.jface.action.IContributionItem
+import org.eclipse.jface.action.Separator
 
 class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
 
@@ -201,7 +204,45 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
     ScalaPlugin.plugin.getPreferenceStore.removePropertyChangeListener(preferenceListener)
   }
 
-
+  override def editorContextMenuAboutToShow(menu: org.eclipse.jface.action.IMenuManager): Unit = {
+    super.editorContextMenuAboutToShow(menu)
+    
+    def groupMenuItemsByGroupId(items: Seq[IContributionItem]) = {
+      // the different groups (as indicated by separators) and 
+      // contributions in a menu are originally just a flat list
+      items.foldLeft(Nil: List[(String, List[IContributionItem])]) {
+        
+        // start a new group
+        case (others, group: Separator) => (group.getId, Nil) :: others
+          
+        // append contribution to the current group
+        case ((group, others) :: rest, element) => (group, element :: others) :: rest
+          
+        // the menu does not start with a group, this shouldn't happen, but if
+        // it does we just skip this element, so it will stay in the menu.
+        case (others, _) => others
+      } toMap
+    }
+    
+    def findJdtSourceMenuManager(items: Seq[IContributionItem]) = {
+      items.collect {
+        case mm: MenuManager if mm.getId == "org.eclipse.jdt.ui.source.menu" => mm
+      }
+    }
+    
+    findJdtSourceMenuManager(menu.getItems) foreach { mm =>
+              
+      val groups = groupMenuItemsByGroupId(mm.getItems)
+      
+      // these two contributions won't work on Scala files, so we remove them
+      val blacklist = List("codeGroup", "importGroup")
+      
+      // and provide our own organize imports instead
+      mm.appendToGroup("importGroup", new refactoring.OrganizeImportsAction { setText("Organize Imports") })
+      
+      blacklist.flatMap(groups.get).flatten.foreach(mm.remove)
+    }
+  }
 }
 
 object ScalaSourceFileEditor {

@@ -10,14 +10,18 @@ import org.eclipse.jface.action.IAction
 import org.eclipse.ui.IEditorPart
 import org.eclipse.ui.IEditorActionDelegate
 import org.eclipse.ui.IWorkbenchWindowActionDelegate
+import org.eclipse.jface.action.Action
 
-trait ActionAdapter extends IWorkbenchWindowActionDelegate with IEditorActionDelegate {
+trait ActionAdapter extends Action with IWorkbenchWindowActionDelegate with IEditorActionDelegate {
 
   def setActiveEditor(action: IAction, targetEditor: IEditorPart) = ()
   
   def init(window: IWorkbenchWindow) = ()
   
   def dispose() = ()
+  
+  // adapt from Action to the ActionDelegate
+  override def run() = run(this)
   
   def selectionChanged(action: IAction, selection: ISelection) = ()
 }
