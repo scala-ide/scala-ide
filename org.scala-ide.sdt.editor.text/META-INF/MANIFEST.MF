@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: ScalaText Editor
 Bundle-SymbolicName: org.scala-ide.sdt.editor.text;singleton:=true
-Bundle-Version: 1.0.0.qualifier
+Bundle-Version: 1.1.0.qualifier
 Bundle-ActivationPolicy: lazy
 Bundle-Vendor: scala-ide.org
 Require-Bundle: org.eclipse.ui,
