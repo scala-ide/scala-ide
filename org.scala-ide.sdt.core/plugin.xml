@@ -843,7 +843,7 @@
                tooltip="Organize Imports">
          </action>
          <action
-               class="scala.tools.eclipse.refactoring.RenameAction"
+               class="scala.tools.eclipse.refactoring.rename.RenameAction"
                definitionId="scala.tools.eclipse.refactoring.command.Rename"
                id="scala.tools.eclipse.refactoring.renameAction"
                label="Rename"
@@ -1002,7 +1002,7 @@
  <extension
        point="org.eclipse.ltk.core.refactoring.renameParticipants">
     <renameParticipant
-          class="scala.tools.eclipse.refactoring.RenameParticipant"
+          class="scala.tools.eclipse.refactoring.rename.RenameParticipant"
           id="org.scala-ide.sdt.core.renameParticipant"
           name="Scala Rename Participant">
        <enablement>

@@ -1,5 +1,6 @@
 package scala.tools.eclipse
 package refactoring
+package rename
 
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.ltk.core.refactoring.participants.{ CheckConditionsContext, RenameParticipant => LtkRenameParticipant }
@@ -59,7 +60,7 @@ class RenameParticipant extends LtkRenameParticipant {
           
           /* we can reuse the already existing rename action*/
           val renameRefactoring = {
-            val renameAction = new RenameAction
+            val renameAction = new GlobalRenameAction
             new renameAction.RenameScalaIdeRefactoring(pos.start, pos.start + file.getName.length, scalaSourceFile)
           }
           
@@ -70,7 +71,7 @@ class RenameParticipant extends LtkRenameParticipant {
           val finalConditions = checkFinalConditions(pm)
           
           change = new CompositeChange("Rename Scala Class") {
-            createSingleChanges foreach add
+            scalaChangesToEclipseChanges(performRefactoring) foreach add
           }
           
           new RefactoringStatus {
@@ -118,13 +119,13 @@ class RenameParticipant extends LtkRenameParticipant {
 
         def findTopLevelObjectOrClassDefinition(t: Tree): List[ImplDef] = t match {
           case PackageDef(_, stats) => stats flatMap findTopLevelObjectOrClassDefinition
-          case x: ImplDef => List(x)
+          case x: ImplDef if implDefSameAsFileName(x) => List(x)
           case _ => Nil
         }
 
         def implDefSameAsFileName(t: ImplDef) = t.name.toString + ".scala" == file.getName
 
-        trees flatMap findTopLevelObjectOrClassDefinition filter implDefSameAsFileName map (_.pos) headOption
+        trees flatMap findTopLevelObjectOrClassDefinition map (_.pos) headOption
 
       }(None)
     } getOrElse NoPosition

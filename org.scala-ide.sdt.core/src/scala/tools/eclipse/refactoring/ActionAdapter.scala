@@ -12,6 +12,9 @@ import org.eclipse.ui.IEditorActionDelegate
 import org.eclipse.ui.IWorkbenchWindowActionDelegate
 import org.eclipse.jface.action.Action
 
+/**
+ * A simple adapter to unify Eclipse's different action interfaces.
+ */
 trait ActionAdapter extends Action with IWorkbenchWindowActionDelegate with IEditorActionDelegate {
 
   def setActiveEditor(action: IAction, targetEditor: IEditorPart) = ()
