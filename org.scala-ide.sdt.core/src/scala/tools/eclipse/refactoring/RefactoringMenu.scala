@@ -3,8 +3,10 @@
  * are made available under the terms of the Scala License which accompanies this distribution, and 
  * is available at http://www.scala-lang.org/node/146
  */
-package scala.tools.eclipse.refactoring
+package scala.tools.eclipse
+package refactoring
 
+import util.Defensive
 import org.eclipse.ui.handlers.IHandlerService
 import org.eclipse.ui.commands.{ ICommandService, IHandler }
 import org.eclipse.ui.part.EditorPart
@@ -32,11 +34,14 @@ protected[eclipse] object RefactoringMenu {
   }
 
   def fillContextMenu(menu: IMenuManager, editor: EditorPart): Unit = {
+    //findMenuUsingPath returns the menu contribution item, or null if there is no such contribution item or if the item does not have an associated menu manager
     val refactorSubmenu = menu.findMenuUsingPath(Id.ContextMenu)
-    /* Add actions in a listener to refill every time RefactorActionGroup's listener empties it for us: */
-    refactorSubmenu.addMenuListener(new IMenuListener() {
-      def menuAboutToShow(menu: IMenuManager): Unit = fillFromPluginXml(menu, editor, true)
-    })
+    if (Defensive.notNull(refactorSubmenu, "findMenuUsingPat(%s)", Id.ContextMenu)) {
+      /* Add actions in a listener to refill every time RefactorActionGroup's listener empties it for us: */
+      refactorSubmenu.addMenuListener(new IMenuListener() {
+        def menuAboutToShow(menu: IMenuManager): Unit = fillFromPluginXml(menu, editor, true)
+      })
+    }
   }
 
   def fillQuickMenu(editor: JavaEditor): Unit = {

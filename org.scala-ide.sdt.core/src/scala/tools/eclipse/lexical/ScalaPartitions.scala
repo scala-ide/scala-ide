@@ -1,5 +1,8 @@
 package scala.tools.eclipse.lexical
 
+/**
+ * @see org.eclipse.jdt.ui.text.IJavaPartitions
+ */
 object ScalaPartitions {
 
   val SCALA_MULTI_LINE_STRING = "__scala_multiline_string"

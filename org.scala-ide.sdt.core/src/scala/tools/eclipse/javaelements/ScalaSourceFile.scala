@@ -6,6 +6,7 @@
 package scala.tools.eclipse
 package javaelements
 
+import util.FileUtils
 import java.util.{ HashMap => JHashMap, Map => JMap }
 import org.eclipse.core.resources.{ IFile, IResource }
 import org.eclipse.core.runtime.IProgressMonitor
@@ -18,21 +19,26 @@ import scala.tools.eclipse.contribution.weaving.jdt.IScalaSourceFile
 import scala.tools.eclipse.util.EclipseFile
 import scala.tools.eclipse.util.Tracer
 import scala.tools.eclipse.util.Defensive
+import scala.tools.eclipse.ui.ReconciliationParticipantsExtensionPoint
 import org.eclipse.core.runtime.jobs.Job
 import org.eclipse.core.runtime.NullProgressMonitor
 
 object ScalaSourceFile {
   val handleFactory = new HandleFactory
   
-  def createFromPath(path : String) : Option[ScalaSourceFile] = {
-    if (!path.endsWith(".scala"))
-      None
-    else
-      handleFactory.createOpenable(path, null) match {
+  def createFromPath(f : IFile) : Option[ScalaSourceFile] = {
+    (f.getFileExtension() == "scala") match {
+      case true => handleFactory.createOpenable(f.getFullPath.toString, null) match {
         case ssf : ScalaSourceFile => Some(ssf)
         case _ => None
       }
+      case false => None
+    }
   }
+  
+  def createFromPath(of : Option[IFile]) : Option[ScalaSourceFile] = of.flatMap{ createFromPath(_) }
+
+  def createFromPath(path : String) : Option[ScalaSourceFile] = createFromPath(FileUtils.toIFile(path))
 }
 
 class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCopyOwner : WorkingCopyOwner) 
@@ -50,10 +56,10 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
       astLevel : Int,
       reconcileFlags : Int,
       workingCopyOwner : WorkingCopyOwner,
-      monitor : IProgressMonitor) : org.eclipse.jdt.core.dom.CompilationUnit = Tracer.timeOf("reconcile of " + file.path){
-    ScalaPlugin.plugin.reconcileListeners.triggerBeforeReconcile(this, monitor, workingCopyOwner)
+      monitor : IProgressMonitor) : org.eclipse.jdt.core.dom.CompilationUnit = Tracer.timeOf("reconcile of " + file){
+    ReconciliationParticipantsExtensionPoint.runBefore(this, monitor, workingCopyOwner)
     val b = super.reconcile(ICompilationUnit.NO_AST, reconcileFlags, workingCopyOwner, monitor)
-    ScalaPlugin.plugin.reconcileListeners.triggerAfterReconcile(this, monitor, workingCopyOwner)
+    ReconciliationParticipantsExtensionPoint.runAfter(this, monitor, workingCopyOwner)
     b
   }
 
@@ -76,37 +82,24 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
 
   override def getProblemRequestor = getPerWorkingCopyInfo
 
-  override lazy val file : AbstractFile = { 
-    val res = try { getCorrespondingResource } catch { case _ => null }
-    res match {
-      case f : IFile => new EclipseFile(f)
-      case _ => new VirtualFile(getElementName, getPath.toString)
-    }
-  }
+//  override lazy val file : AbstractFile = { 
+//    val res = try { getCorrespondingResource } catch { case _ => null }
+//    res match {
+//      case f : IFile => new EclipseFile(f)
+//      case _ => new VirtualFile(getElementName, getPath.toString)
+//    }
+//  }
 
-  def getProblems : Array[IProblem] = withSourceFile { (sourceFile, compiler) =>
-    compiler.body(sourceFile)
-    val problems = compiler.problemsOf(this)
+  def getProblems : Array[IProblem] = project.withPresentationCompiler { compiler =>
+    compiler.askRunLoadedTyped(file)
+    val problems = compiler.askProblemsOf(file)
     if (problems.isEmpty) null else problems.toArray
-  }
-  
-  def getCorrespondingElement(element : IJavaElement) : Option[IJavaElement] = {
-    if (!validateExistence(resource).isOK)
-      None
-    else {
-      val name = element.getElementName
-      val tpe = element.getElementType
-      getChildren.find(e => e.getElementName == name && e.getElementType == tpe)
-    }
-  }
+  } (null)
 
-  override def getType(name : String) : IType = {
-    val tpe = super.getType(name)
-    getCorrespondingElement(tpe).getOrElse(tpe).asInstanceOf[IType]
-  }
+  override def getType(name : String) : IType = new LazyToplevelClass(this, name)
   
   // override because super implementation return null if getSourceElementAt(pos) == this.
   // But returning null prevent finding the typename required to set a workable breakpoint
   // TODO check that this override has no bad side-effects (I suppose returning null of parent implementation was done to secure some stuff 
-  override def getElementAt(pos : Int) : IJavaElement = getSourceElementAt(pos)
+  //override def getElementAt(pos : Int) : IJavaElement = getSourceElementAt(pos)
 }

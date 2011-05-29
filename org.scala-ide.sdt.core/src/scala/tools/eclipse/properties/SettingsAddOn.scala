@@ -1,6 +1,6 @@
 package scala.tools.eclipse.properties
 
-import scala.tools.nsc.Settings
+import scala.tools.nsc.interactive.compat.Settings
 
 
 trait SettingsAddOn extends Settings {

@@ -4,13 +4,14 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.scala-ide</groupId>
   <artifactId>scala-ide-for-eclipse</artifactId>
-  <version>1.0.0-SNAPSHOT</version>
+  <version>1.1.0-SNAPSHOT</version>
   <name>The Scala IDE for Eclipse</name>
   <packaging>pom</packaging>
 
   <properties>
     <scala.version>2.8.0</scala.version>
-    <tycho.version>0.10.0</tycho.version>
+    <tycho.version>0.11.0</tycho.version>
+    <sbt.version>0.9.0-SNAPSHOT</sbt.version>
     <maven.compiler.source>1.5</maven.compiler.source>
     <maven.compiler.target>1.5</maven.compiler.target>
     <encoding>UTF-8</encoding>
@@ -29,6 +30,7 @@
     <module>../org.scala-ide.sdt.compiler.ext</module>
     <module>../org.scala-ide.sdt.core</module>
     <module>../org.scala-ide.sdt.core.tests</module>
+    <module>../org.scala-ide.sdt.editor.text</module>
     <module>../org.scala-ide.sdt.feature</module>
     <module>../org.scala-ide.sdt.source.feature</module>
     <module>../org.scala-ide.sdt.update-site</module>
@@ -88,6 +90,15 @@
             </goals>
           </execution>
         </executions>
+      </plugin>
+      <!-- for setting a better qualifier -->
+      <plugin>
+        <groupId>org.sonatype.tycho</groupId>
+        <artifactId>maven-osgi-packaging-plugin</artifactId>
+        <version>${tycho.version}</version>
+        <configuration>
+          <archiveSite>true</archiveSite>
+        </configuration>
       </plugin>
     </plugins>
   </build>
@@ -380,3 +391,4 @@
     </profile>
   </profiles>
 </project>
+

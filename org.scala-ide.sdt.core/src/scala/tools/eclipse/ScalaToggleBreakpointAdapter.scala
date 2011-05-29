@@ -5,6 +5,7 @@
 
 package scala.tools.eclipse
 
+import javaelements.ScalaClassElement
 import java.util.HashMap
 
 import org.eclipse.core.runtime.{ CoreException, IProgressMonitor, IStatus, Status }
@@ -178,5 +179,10 @@ object ScalaToggleBreakpointAdapterUtils extends ReflectionUtils {
   val toggleBreakpointAdapterClazz = classOf[ToggleBreakpointAdapter]
   val createQualifiedTypeNameMethod = getDeclaredMethod(toggleBreakpointAdapterClazz, "createQualifiedTypeName", classOf[IType])
   
-  def createQualifiedTypeName(tba : ToggleBreakpointAdapter, tpe : IType) = createQualifiedTypeNameMethod.invoke(tba, tpe).asInstanceOf[String]
+  def createQualifiedTypeName(tba : ToggleBreakpointAdapter, tpe : IType) = {
+  	if (tpe.isInstanceOf[ScalaClassElement])
+      tpe.getFullyQualifiedName
+    else
+      createQualifiedTypeNameMethod.invoke(tba, tpe).asInstanceOf[String]
+  }
 }

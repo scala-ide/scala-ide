@@ -7,88 +7,76 @@ package scala.tools.eclipse
 
 import scala.tools.eclipse.util.Tracer
 import scala.collection.mutable
-import scala.collection.mutable.{ ArrayBuffer, SynchronizedMap }
-
-import org.eclipse.core.resources.IFile
 import org.eclipse.jdt.core.compiler.IProblem
 import org.eclipse.jdt.internal.compiler.problem.{ DefaultProblem, ProblemSeverities }
-import scala.tools.nsc.Settings
-import scala.tools.nsc.interactive.Global
+import scala.tools.nsc.interactive.{Global, InteractiveReporter, Problem}
 import scala.tools.nsc.io.AbstractFile
 import scala.tools.nsc.reporters.Reporter
 import scala.tools.nsc.util.{ BatchSourceFile, Position, SourceFile }
-
 import scala.tools.eclipse.javaelements.{
-  ScalaCompilationUnit, ScalaIndexBuilder, ScalaJavaMapper, ScalaMatchLocator, ScalaStructureBuilder,
+  ScalaIndexBuilder, ScalaJavaMapper, ScalaMatchLocator, ScalaStructureBuilder,
   ScalaOverrideIndicatorBuilder }
 import scala.tools.eclipse.util.{ Cached, EclipseFile, EclipseResource, IDESettings }
+import scala.tools.nsc.interactive.compat.Settings
+import scala.tools.nsc.interactive.compat.conversions._
 
 class ScalaPresentationCompiler(settings : Settings)
   extends Global(settings, new ScalaPresentationCompiler.PresentationReporter)
-  with ScalaStructureBuilder with ScalaIndexBuilder with ScalaMatchLocator
-  with ScalaOverrideIndicatorBuilder with ScalaJavaMapper with JVMUtils with LocateSymbol { self =>
-  import ScalaPresentationCompiler._
+  with ScalaStructureBuilder 
+  with ScalaIndexBuilder 
+  with ScalaMatchLocator
+  with ScalaOverrideIndicatorBuilder 
+  with ScalaJavaMapper 
+  with JVMUtils 
+  with LocateSymbol { self =>
   
-  def presentationReporter = reporter.asInstanceOf[PresentationReporter]
-  
+  def presentationReporter = reporter.asInstanceOf[ScalaPresentationCompiler.PresentationReporter]
   presentationReporter.compiler = this
   
-  private val sourceFiles = new mutable.HashMap[ScalaCompilationUnit, BatchSourceFile] {
-    override def default(k : ScalaCompilationUnit) = { 
-      val v = k.createSourceFile
+  private val sourceFiles = new mutable.HashMap[AbstractFile, BatchSourceFile]{
+    override def default(k : AbstractFile) = { 
+      val v = new BatchSourceFile(k)
       ScalaPresentationCompiler.this.synchronized {
         get(k) match {
           case Some(v) => v
           case None => put(k, v); v
-       }
-      }} 
-  }
-  
-  private val problems = new mutable.HashMap[IFile, ArrayBuffer[IProblem]] with SynchronizedMap[IFile, ArrayBuffer[IProblem]] {
-    override def default(k : IFile) = { val v = new ArrayBuffer[IProblem] ; put(k, v); v }
-  }
-  
-  private def fileOf(scu : ScalaCompilationUnit) =
-    try { Some(scu.getCorrespondingResource.asInstanceOf[IFile]) } catch { case _ => None } 
-  
-  private def problemsOf(file : IFile) : List[IProblem] = {
-    val ps = problems.remove(file)
-    ps match {
-      case Some(ab) => ab.toList
-      case _ => Nil
+        }
+      }
     }
   }
   
-  def problemsOf(scu : ScalaCompilationUnit) : List[IProblem] = fileOf(scu) match {
-    case Some(file) => problemsOf(file)
-    case None => Nil
+  def askRunLoadedTyped(file : AbstractFile) = {
+    for (source <- (sourceFiles get file)) {
+      val response = new Response[Tree]
+      askLoadedTyped(source, response)
+      val timeout = IDESettings.timeOutBodyReq.value //Defensive use a timeout
+      response.get(timeout) orElse { throw new AsyncGetTimeoutException(timeout, "askRunLoadedTyped(" + file + ")") }
+    }
+  }
+        
+  def askProblemsOf(file : AbstractFile) : List[IProblem] = ask{() =>
+    val b = unitOfFile get file match {
+      case Some(unit) => 
+        val result = unit.problems.toList flatMap presentationReporter.eclipseProblem
+        //unit.problems.clear()
+        result
+      case None => 
+        Tracer.println("no unit for " + file)
+        Nil
+    }
+    Tracer.println("problems of " + file + " : " + b.size)
+    b
   }
   
-  private def clearProblemsOf(file : IFile) : Unit = problems.remove(file)
+  //def problemsOf(scu : IFile) : List[IProblem] = problemsOf(FileUtils.toAbstractFile(scu))
   
-  private def clearProblemsOf(scu : ScalaCompilationUnit) : Unit = fileOf(scu) match {
-    case Some(file) => clearProblemsOf(file)
-    case None =>
-  }
-  
-  def withSourceFile[T](scu : ScalaCompilationUnit)(op : (SourceFile, ScalaPresentationCompiler) => T) : T =
+  def withSourceFile[T](scu : AbstractFile)(op : (SourceFile, ScalaPresentationCompiler) => T) : T =
     op(sourceFiles(scu), this)
 
-  override def ask[A](op: () => A): A = {
-    Tracer.println("ask " + op)
-    //Thread.dumpStack
-    if (Thread.currentThread == compileRunner) op() else super.ask(op)
-  }
-  
-  override def askTypeAt(pos: Position, response: Response[Tree]) {
-    Tracer.println("askTypeAt")
-    if (Thread.currentThread == compileRunner) getTypedTreeAt(pos, response) else super.askTypeAt(pos, response)
-  }
     
   def body(sourceFile : SourceFile) = {
     val tree = new Response[Tree]
-    if (Thread.currentThread == compileRunner)
-      getTypedTree(sourceFile, false, tree) else askType(sourceFile, false, tree)
+    askType(sourceFile, false, tree)
     val timeout = IDESettings.timeOutBodyReq.value //Defensive use a timeout see issue_0003 issue_0004
     tree.get(timeout) match {
       case None => throw new AsyncGetTimeoutException(timeout, "body(" + sourceFile + ")")
@@ -98,30 +86,43 @@ class ScalaPresentationCompiler(settings : Settings)
       }
     }
   }
+  
+  def withParseTree[T](sourceFile : SourceFile)(op : Tree => T) : T = {
+    op(parseTree(sourceFile))
+  }
 
-  def withUntypedTree[T](sourceFile : SourceFile)(op : Tree => T) : T = {
-    val tree = ask { () => 
-      val u = unitOf(sourceFile)
-      if (u.status < JustParsed) parse(u)
-      u.body
+  def withStructure[T](sourceFile : SourceFile)(op : Tree => T) : T = {
+    val tree = {
+      val response = new Response[Tree]
+      askStructure(sourceFile, response)
+      val timeout = math.max(15000, IDESettings.timeOutBodyReq.value)
+      response.get(timeout) match {
+        case None => throw new AsyncGetTimeoutException(timeout, "withStructure(" + sourceFile + ")")
+        case Some(x) => x match {
+          case Left(tree) => tree
+          case Right(r) => throw new AsyncGetException(r, "withStructure(" + sourceFile + ")")
+        }
+      }      
     }
     op(tree)
   }
   
-  def askReload(scu : ScalaCompilationUnit, content : Array[Char]) {
-    Tracer.println("askReload")
-    sourceFiles.get(scu) match {
-      case None =>
-      case Some(f) =>
-        val newF = new BatchSourceFile(f.file, content)
+  def askReload(scu : AbstractFile, content : Array[Char]) {
+    Tracer.println("askReload 3: " + scu)
+//    sourceFiles.get(scu) match {
+//      case None =>
+//      case Some(f) => {
+        val newF = new BatchSourceFile(scu, content) 
+        Tracer.println("content length :" + content.length)
         synchronized { sourceFiles(scu) = newF } 
         askReload(List(newF), new Response[Unit])
-    }
-    clearProblemsOf(scu)
+//      }
+//    }
   }
   
-  def discardSourceFile(scu : ScalaCompilationUnit) {
-    synchronized {
+  def discardSourceFile(scu : AbstractFile) {
+    Tracer.println("discarding " + scu)
+	synchronized {
       sourceFiles.get(scu) match {
         case None =>
         case Some(source) =>
@@ -129,7 +130,6 @@ class ScalaPresentationCompiler(settings : Settings)
           sourceFiles.remove(scu)
       }
     }
-    clearProblemsOf(scu)
   }
 
   override def logError(msg : String, t : Throwable) =
@@ -141,58 +141,58 @@ class ScalaPresentationCompiler(settings : Settings)
 }
 
 object ScalaPresentationCompiler {
-  class PresentationReporter extends Reporter {
+  class PresentationReporter extends InteractiveReporter {
     var compiler : ScalaPresentationCompiler = null
-    
-    override def info0(pos: Position, msg: String, severity: Severity, force: Boolean): Unit = {
-      severity.count += 1
       
-      try {
-        if(pos.isDefined) {
+    def nscSeverityToEclipse(severityLevel: Int) = 
+      severityLevel match {
+        case v if v == ERROR.id => ProblemSeverities.Error
+        case v if v == WARNING.id => ProblemSeverities.Warning
+        case v if v == INFO.id => ProblemSeverities.Ignore
+      }
+    
+    def eclipseProblem(prob: Problem): Option[IProblem] = {
+      import prob._
+      if (pos.isDefined) {
           val source = pos.source
+          val pos1 = pos.toSingleLine
           source.file match {
-            case EclipseResource(file : IFile) =>
-              val length = source.identifier(pos, compiler).map(_.length).getOrElse(0)
-              compiler.debugLog(source.file.name + ":" + pos.line + ": " + msg)
-              compiler.problems(file) +=
+            case ef@EclipseFile(file) =>
+              Some(
                 new DefaultProblem(
                   file.getFullPath.toString.toCharArray,
                   formatMessage(msg),
                   0,
                   new Array[String](0),
-                  nscSeverityToEclipse(severity),
-                  pos.startOrPoint,
-                  pos.endOrPoint,
-                  pos.line,
-                  pos.column
-                )
-            case _ =>  
-              Tracer.println("WARNING: error coming from a file outside Eclipse: %s[%s]: %s".format(source.file.name, source.file.getClass, msg))
+                  nscSeverityToEclipse(severityLevel),
+                  pos1.startOrPoint,
+                  pos1.endOrPoint,
+                  pos1.line,
+                  pos1.column
+                ))
+            case af : AbstractFile =>
+              Some(
+                new DefaultProblem(
+                  af.path.toCharArray,
+                  formatMessage(msg),
+                  0,
+                  new Array[String](0),
+                  nscSeverityToEclipse(severityLevel),
+                  pos1.startOrPoint,
+                  pos1.endOrPoint,
+                  pos1.line,
+                  pos1.column
+                ))
+            case _ => None
           }
-        }
-      } catch {
-        case ex : UnsupportedOperationException => 
-      }
-    }
-    
-    override def reset {
-      super.reset
-      compiler.problems.clear
-    }
-  
-    def nscSeverityToEclipse(severity : Severity) = 
-      severity.id match {
-        case 2 => ProblemSeverities.Error
-        case 1 => ProblemSeverities.Warning
-        case 0 => ProblemSeverities.Ignore
-      }
-    
-    def formatMessage(msg : String) =
-      msg.map{
+        } else None
+      }   
+
+      def formatMessage(msg : String) = msg.map{
         case '\n' => ' '
         case '\r' => ' '
         case c => c
-      }.mkString("","","")
+      }
   }
 }
 

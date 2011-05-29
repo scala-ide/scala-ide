@@ -1,3 +1,6 @@
+#!/bin/sh
+
+
 # MAVEN needs to point to a MAVEN3 installation:
 if which mvn >/dev/null; then
   mvn -version | grep "Maven 3" > /dev/null
@@ -21,9 +24,45 @@ set_version()
   # ${MAVEN} -f pom.xml -N versions:update-child-modules
 }
 
+#to find last commit timestamp (author) and short hash made under ${DIR}
+#git rev-list --pretty=format:%ad-%h --date=iso -n 1  HEAD -- ${DIR} |tail -n 1
+#TODO to use to have the timestamp on nigthly build for each module/eclipse-plugin and not a global one.
+
+timestamp()
+{
+  UNCOMMITTED_CHANGES=$(git status -s | wc -l)
+  if [ $UNCOMMITTED_CHANGES -eq 0 ] ; then
+    # timestamp of the last commit
+    # in UTC (or in LOCAL time zone ?)
+    T=$(git log -1 --format='%ci' | tr -d ': -')
+    BACK=$(expr substr $T 1 12)
+  else
+    BACK=$(date +%Y%m%d%H%M)
+  fi
+  echo $BACK
+#  return BACK
+}
+
+current_branch()
+{
+  git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/-\1/'
+}
+hash()
+{
+  git log -1 --pretty=format:"-%h"
+}
+milestone()
+{
+  git log --decorate -1 | grep 'tag:' | sed -e 's/^.*tag: \(M[^,]*\).*$/-\1/'
+}
+qualifier()
+{
+  echo $(timestamp)$(current_branch)$(milestone)
+}
 build()
 {
-  QUALIFIER=$(date +%Y%m%d%H%M)${MILESTONE}
+  QUALIFIER=$(qualifier)
+  echo QUALIFIER=$QUALIFIER
   ${MAVEN} \
     -U \
     -Dscala.version=${SCALA_VERSION} \

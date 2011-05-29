@@ -6,7 +6,8 @@ import org.eclipse.jface.text.ISynchronizable
 
 object AnnotationsTypes {
   val Implicits = "scala.tools.eclipse.ui.semantic.highlighting.implicitConversionsOrArgsAnnotation"
-  val Occurrences = "org.eclipse.jdt.ui.occurrences"     
+  val Occurrences = "org.eclipse.jdt.ui.occurrences"
+  val Problems = "org.eclipse.jdt.ui.error" //use by text editor  
 }
 
 object Annotations {

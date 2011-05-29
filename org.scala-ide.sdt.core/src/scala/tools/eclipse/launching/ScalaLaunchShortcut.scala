@@ -19,6 +19,7 @@ import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants
 import org.eclipse.jface.operation.IRunnableContext
 
 import scala.tools.eclipse.javaelements.{ ScalaModuleElement, ScalaClassElement, ScalaSourceFile }
+import scala.tools.eclipse.util.EclipseUtils._
 
 /* This class can be eliminated in favour of JavaApplicationLaunch shortcut as soon as 
  * the JDTs method search works correctly for Scala.
@@ -47,18 +48,10 @@ class ScalaLaunchShortcut extends JavaLaunchShortcut {
    * largely re-implemented here with the appropriate element name made available.
    */
   override def createConfiguration(t: IType): ILaunchConfiguration = {
-    val fullyQualifiedName = {
-      val nm = t.getFullyQualifiedName
-      if (nm.endsWith("$"))
-        nm.substring(0, nm.length - 1)
-      else
-        nm
-    }
     val launchInstanceName = t.getElementName
-
     val configType: ILaunchConfigurationType = getConfigurationType
     val wc = configType.newInstance(null, getLaunchManager.generateUniqueLaunchConfigurationNameFrom(launchInstanceName))
-    wc.setAttribute(IJavaLaunchConfigurationConstants.ATTR_MAIN_TYPE_NAME, fullyQualifiedName)
+    wc.setAttribute(IJavaLaunchConfigurationConstants.ATTR_MAIN_TYPE_NAME, fullyQualifiedName(t))
     wc.setAttribute(IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME, t.getJavaProject.getElementName)
     wc.setMappedResources(Array[IResource](t.getUnderlyingResource))
     wc.doSave
@@ -79,20 +72,13 @@ class ScalaLaunchShortcut extends JavaLaunchShortcut {
     if (t == null || configType == null)
       return null
 
-    val fullyQualifiedName = {
-      val nm = t.getFullyQualifiedName
-      if (nm.endsWith("$"))
-        nm.substring(0, nm.length - 1)
-      else
-        nm
-    }
     val projectName: String = t.getJavaProject.getElementName
 
     //Match existing configurations to the existing list
     for (launchConfig <- configs) {
       val lcTypeName: String = launchConfig.getAttribute(IJavaLaunchConfigurationConstants.ATTR_MAIN_TYPE_NAME, "")
       val lcProjectName: String = launchConfig.getAttribute(IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME, "")
-      if (lcTypeName.equals(fullyQualifiedName) && lcProjectName.equals(projectName))
+      if (lcTypeName.equals(fullyQualifiedName(t)) && lcProjectName.equals(projectName))
         candidateConfigs += launchConfig
     }
 
@@ -115,7 +101,7 @@ class ScalaLaunchShortcut extends JavaLaunchShortcut {
    * @param configList list of configurations to choose from
    * @return configuration to launch or <code>null</code> to cancel
    */
-  def chooseConfiguration(configList: List[ILaunchConfiguration]): ILaunchConfiguration = {
+  private def chooseConfiguration(configList: List[ILaunchConfiguration]): ILaunchConfiguration = {
     import org.eclipse.ui.dialogs.ElementListSelectionDialog
     import org.eclipse.jface.window.Window
     import org.eclipse.jdt.internal.debug.ui.launcher.LauncherMessages
@@ -141,6 +127,14 @@ class ScalaLaunchShortcut extends JavaLaunchShortcut {
    */
   private def getLaunchManager =
     DebugPlugin.getDefault.getLaunchManager
+    
+  private def fullyQualifiedName(t: IType) = {
+    val nm = t.getFullyQualifiedName
+    if (nm.endsWith("$"))
+      nm.substring(0, nm.length - 1)
+    else
+      nm
+  }
 
   /**
    * Required to have the new launch configuration be placed as a Scala Launch configuration instead of a Java 
@@ -177,7 +171,7 @@ object ScalaLaunchShortcut {
         })
     }
 
-    val je = element.asInstanceOf[IAdaptable].getAdapter(classOf[IJavaElement]).asInstanceOf[IJavaElement]
+    val je = element.asInstanceOf[IAdaptable].adaptTo[IJavaElement]
     je.getOpenable match {
       case scu: ScalaSourceFile =>
         def isTopLevel(tpe: IType) = tpe.getDeclaringType == null

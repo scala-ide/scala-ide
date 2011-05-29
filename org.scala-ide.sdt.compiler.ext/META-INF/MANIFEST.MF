@@ -1,14 +1,17 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Scala Compiler for Eclipse (Extension)
-Bundle-SymbolicName: org.scala-ide.sdt.compiler.ext
-Bundle-Version: 1.0.0.qualifier
+Bundle-SymbolicName: org.scala-ide.sdt.compiler.ext;singleton:=true
+Bundle-Version: 1.1.0.qualifier
 Bundle-Vendor: scala-ide.org
 Bundle-RequiredExecutionEnvironment: J2SE-1.5
 Require-Bundle: org.scala-ide.scala.library
-Export-Package: scala.tools.nsc.interactive
+Export-Package: scala.tools.nsc.interactive,
+ scala.tools.nsc.interactive.compat
 Import-Package: scala.tools.nsc,
  scala.tools.nsc.ast,
+ scala.tools.nsc.ast.parser,
+ scala.tools.nsc.backend.jvm,
  scala.tools.nsc.dependencies,
  scala.tools.nsc.io,
  scala.tools.nsc.reporters,
@@ -16,6 +19,7 @@ Import-Package: scala.tools.nsc,
  scala.tools.nsc.symtab,
  scala.tools.nsc.typechecker,
  scala.tools.nsc.util
+
 
 
 

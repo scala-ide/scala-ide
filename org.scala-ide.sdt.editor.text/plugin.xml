@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.5"?>
+<plugin>
+   <extension
+         point="org.eclipse.ui.editors">
+      <editor
+            name="Scala TextEditor (experimental)"
+            default="false"
+            icon="icons/full/obj16/scu_obj.gif"
+            extensions="scala"
+            class="scala.tools.eclipse.editor.text.ScalaTextEditor"
+            contributorClass="org.eclipse.ui.texteditor.BasicTextEditorActionContributor"
+            symbolicFontName="org.eclipse.jdt.ui.editors.textfont"
+            id="scala.tools.eclipse.editor.text.ScalaTextEditor">
+            <!--contentTypeBinding contentTypeId="scala.tools.eclipse.scalaSource"/-->      
+      </editor>
+   </extension>
+   <extension
+         point="org.eclipse.ui.editors.documentProviders">
+      <provider
+            class="scala.tools.eclipse.editor.text.ScalaDocumentProvider"
+            extensions="scala"
+            id="org.scala-ide.sdt.editor.text.documentProvider">
+      </provider>
+   </extension>
+
+   <extension point="org.eclipse.ui.editorActions">
+      <editorContribution
+         targetID="scala.tools.eclipse.editor.text.ScalaTextEditor"
+         id="scala.tools.eclipse.editor.text.ecl">
+         <action
+            label="Toggle &amp;Breakpoint"
+            class="org.eclipse.debug.ui.actions.RulerToggleBreakpointActionDelegate"
+            style="push"
+            actionID="RulerDoubleClick"
+            id="scala.tools.eclipse.editor.text.ecl.RulerToggleBreakpointActionDelegate">
+         </action>
+      </editorContribution>
+   </extension>
+   <!--
+   <extension point="org.eclipse.ui.popupMenus">
+     <viewerContribution
+       targetID="example.rulerContextMenuId"
+       id="scala.tools.eclipse.editor.text.vcl">
+         <action
+           label="Toggle Breakpoint"
+           class="org.eclipse.debug.ui.actions.RulerToggleBreakpointActionDelegate"
+           menubarPath="additions"
+           id="example.rulerContextMenu.toggleBreakpointAction">
+         </action>
+     </viewerContribution>
+   </extension>
+   -->   
+   <extension
+         point="org.eclipse.ui.commands">
+      <category
+            description="Scala TextEditor Commands"
+            id="org.scala-ide.sdt.editor.text.commands"
+            name="Edit - Scala">
+      </category>
+      <command
+            categoryId="org.scala-ide.sdt.editor.text.commands"
+            description="Turn comments on/off for a selection"
+            id="org.scala-ide.sdt.editor.text.commands.toggleComment"
+            name="Toggle Comments">
+      </command>
+   </extension>
+   <extension
+         point="org.eclipse.ui.menus">
+      <menuContribution
+            locationURI="popup:org.eclipse.ui.popup.any?after=additions">
+         <menu
+               label="Source">
+            <command
+                  commandId="org.scala-ide.sdt.editor.text.commands.toggleComment"
+                  label="Toggle Comments"
+                  style="push">
+            </command>
+            <visibleWhen
+                  checkEnabled="false">
+               <with
+                     variable="activePartId">
+                  <equals
+                        value="scala.tools.eclipse.editor.text.ScalaTextEditor">
+                  </equals>
+               </with>
+            </visibleWhen>
+         </menu>
+      </menuContribution>
+   </extension>
+   <extension
+         point="org.eclipse.ui.handlers">
+      <handler
+            class="scala.tools.eclipse.editor.text.handlers.ToggleCommentHandler"
+            commandId="org.scala-ide.sdt.editor.text.commands.toggleComment">
+      </handler>
+   </extension>
+   <!--
+   <extension
+         point="org.eclipse.ui.bindings">
+      <key
+            commandId="org.scala-ide.sdt.editor.text.commands.toggleComment"
+            contextId="scala.tools.eclipse.scalaEditorScope"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="M1+M2+C">
+      </key>
+      <key
+            commandId="org.scala-ide.sdt.editor.text.commands.toggleComment"
+            contextId="scala.tools.eclipse.scalaEditorScope"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="M1+/">
+      </key>
+   </extension>
+-->      
+</plugin>

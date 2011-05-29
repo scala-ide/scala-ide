@@ -35,6 +35,7 @@ object ScalaImages  {
   
   val JAVA_CLASS = JavaPluginImages.get(JavaPluginImages.IMG_OBJS_CLASS)
   val JAVA_INTERFACE = JavaPluginImages.get(JavaPluginImages.IMG_OBJS_INTERFACE)
+  val TEMPLATE = JavaPluginImages.get(JavaPluginImages.IMG_OBJS_TEMPLATE)
   
   private def create(localPath : String) = {
     try {

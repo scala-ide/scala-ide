@@ -26,7 +26,7 @@ class RenameAction extends RefactoringAction {
       val refactoring = file.withSourceFile((_,compiler) => new Rename with ConsoleTracing with GlobalIndexes with NameValidation { 
         val global = compiler
         var index = GlobalIndex(Nil)
-      })
+      })()
       
       import refactoring._
               
@@ -45,9 +45,9 @@ class RenameAction extends RefactoringAction {
           
             name = selectedLocal.symbol.nameString
 
-            val allProjectSourceFiles = (EditorHelpers.withCurrentEditor { editor =>
-              Some(ScalaPlugin.plugin.getScalaProject(editor.getEditorInput).allSourceFiles.toList)
-            }) getOrElse Nil
+            val allProjectSourceFiles = EditorHelpers.currentEditor.map { editor =>
+              ScalaPlugin.plugin.getScalaProject(editor.getEditorInput).allSourceFiles.toList
+            }.getOrElse(Nil)
             
             // TODO index in the background while the user inputs the name
             val cus = allProjectSourceFiles flatMap { f =>
@@ -55,14 +55,14 @@ class RenameAction extends RefactoringAction {
               ScalaSourceFile.createFromPath(f.getFullPath.toString) map (_.withSourceFile { (sourceFile, compiler) => 
                 println("indexing "+ sourceFile.file.name)
                 List(CompilationUnitIndex(global.unitOf(sourceFile).body))
-              })
+              } ())
             } flatten
             
             index = GlobalIndex(cus)
             r
           case l @ Left(_) => l
         }
-      }
+      } ()
       
       override def checkFinalConditions(pm: IProgressMonitor): RefactoringStatus = {
         val status = super.checkFinalConditions(pm)

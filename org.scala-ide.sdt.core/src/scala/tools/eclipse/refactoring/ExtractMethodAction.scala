@@ -38,7 +38,7 @@ class ExtractMethodAction extends RefactoringAction {
     val refactoring = file.withSourceFile((sourceFile, compiler) => new ExtractMethod with GlobalIndexes with NameValidation {
       val global = compiler
       val index = GlobalIndex(global.unitOfFile(sourceFile.file).body)
-    })
+    })()
 
     lazy val selection = createSelection(file, start, end)
             

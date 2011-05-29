@@ -6,22 +6,23 @@
 package scala.tools.eclipse
 package util
 
-import scala.tools.eclipse.properties.SettingsAddOn
-import scala.tools.nsc.Settings
+import scala.tools.eclipse.quickfix.ImportCompletionProposal
+import scala.tools.eclipse.properties.SettingsAddOn 
+import scala.tools.nsc.interactive.compat.Settings
 
 
 object IDESettings {
   import ScalaPluginSettings._
-  
+
   case class Box(name: String, userSettings: List[Settings#Setting])
-  
-  def shownSettings(s : Settings) : List[Box] = {
+
+  private def shownSettings(s : Settings) : List[Box] = {
     import s._
 
     List(
         Box("Standard",
             List(deprecation, g, optimise, target, unchecked,
-                 pluginOptions, nospecialization)),
+             pluginOptions, nospecialization, verbose)),
         Box("Advanced",
             List(checkInit, Xchecknull, elidebelow,
                  Xexperimental, future, XlogImplicits,
@@ -30,22 +31,28 @@ object IDESettings {
         Box("Private",
             List(Xcloselim, Xdce, inline, Xlinearizer, Ynogenericsig, noimports,
                  selfInAnnots, Yrecursion, refinementMethodDispatch,
-                 YmethodInfer, YdepMethTpes, Ywarndeadcode, Ybuildmanagerdebug))
+                 YmethodInfer, YdepMethTpes,
+                 Ywarndeadcode, Ybuildmanagerdebug)),
         // BACK-2.8
-        //Box("Presentation Compiler",
-        //    List(YpresentationDebug, YpresentationVerbose, YpresentationLog, YpresentationReplay))
+        Box("Presentation Compiler",
+            List(YpresentationDebug, YpresentationVerbose, YpresentationLog, YpresentationReplay, YpresentationDelay))
     )
   }
   
-  def pluginSettings: List[Box] = {
-    val Yplugininfo = BooleanSetting("-plugininfo", "Print Scala plugin debugging info")
-    List(Box("Scala Plugin Debugging", List(Yplugininfo)))    
-  }
+  def compilerSettings: List[Box] = shownSettings(ScalaPluginSettings)
   
+  def pluginSettings: List[Box] = {
+    List(Box("Scala Plugin Debugging", List(YPlugininfo)))    
+  }
+
+  def buildManagerSettings: List[Box] = {
+    List(Box("Build manager", List(buildManager)))    
+  }
+
   def tuningSettings: List[Box] = {
     List(
-      Box("Editor Tuning", List(outputInClasspath, compileOnTyping, useContentOfEditor, alwaysCleanBuild, classBreakpoint, markOccurencesForSelectionOnly, markOccurencesTStrategy, timeOutBodyReq))
-      , Box("Builder Tuning", List(markUnusedImports, ignoreErrorOnJavaFile))
+      Box("Editor Tuning", List(outputInClasspath, compileOnTyping, useContentOfEditor, classBreakpoint, markOccurencesForSelectionOnly, markOccurencesTStrategy, timeOutBodyReq))
+      , Box("Builder Tuning", List(markUnusedImports, ignoreErrorOnJavaFile, trackDepProjectChanges, alwaysCleanBuild))
       , Box("QuickFix Tuning", List(quickfixImportByText))
       , Box("Logging Tuning", List(tracerEnabled))
       , Box("Editor Debug", List(exceptionOnCreatePresentationCompiler))
@@ -70,7 +77,12 @@ object IDESettings {
   val markUnusedImports = BooleanSetting("_mark unused imports", "", true)
   val ignoreErrorOnJavaFile = BooleanSetting("_ignore error on java", "the scala builder should not report error about *.java", true)
   
-  val quickfixImportByText = BooleanSetting("_import via text", "quick fix for import done by text manipulation (else by AST/refactoring)", false)
+  val quickfixImportByText = {
+    val choices = ImportCompletionProposal.strategies
+    ChoiceSetting("_import strategy", "quick fix for import done with which implementation", choices , choices.head)
+  }
+
+  val trackDepProjectChanges = BooleanSetting("_track dep-project changes", "should project be re-build when a required project change", true)
 
   def parseInt(s : String) : Option[Int] = {
     try {
@@ -81,7 +93,8 @@ object IDESettings {
   }
 }
 
-object ScalaPluginSettings extends SettingsAddOn {
+object ScalaPluginSettings extends Settings({x => ScalaPlugin.plugin.logWarning(x, None)}) with SettingsAddOn {
   val YPlugininfo = BooleanSetting("-plugininfo", "Enable logging of the Scala Plugin info")
+  val buildManager = ChoiceSetting("-buildmanager", "which Build manager to use", List("refined"), "refined")
 }
 

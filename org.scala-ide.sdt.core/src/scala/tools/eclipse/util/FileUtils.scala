@@ -6,26 +6,61 @@
 package scala.tools.eclipse.util
 
 import scala.collection.JavaConversions._
-
-import org.eclipse.core.filebuffers.FileBuffers
 import org.eclipse.core.internal.resources.ResourceException
 import org.eclipse.core.resources.{ IFile, IMarker, IResource, IWorkspaceRunnable }
 import org.eclipse.core.runtime.{ IProgressMonitor }
 import org.eclipse.jdt.core.{ IJavaModelMarker, JavaCore }
 import org.eclipse.jdt.core.compiler.IProblem
 import org.eclipse.jdt.internal.core.builder.JavaBuilder
-import org.eclipse.jface.text.{ ITextViewer, Position, TextPresentation }
-import org.eclipse.jface.text.contentassist.ICompletionProposal
-import org.eclipse.swt.widgets.Display
-import org.eclipse.ui.{ IWorkbenchPage, PlatformUI }
-import org.eclipse.ui.ide.IDE
-
 import scala.tools.eclipse.ScalaPlugin
+import scala.tools.nsc.io.AbstractFile
 
 object FileUtils {
   import ScalaPlugin.plugin
   
+  //TODO : OPTIMIZE may be used other thing than .getLocation is CPU consumming - to monitor
+  // or new EclipseFile(f) but path of EclipseFile is not absolute => take care
+  def toAbstractFile(f : Option[IFile]) : Option[AbstractFile] = f.map{ x =>
+    import scala.tools.nsc.io.PlainFile
+    import scala.tools.nsc.io.Path
+    new PlainFile(Path(x.getLocation.toFile))
+    //new EclipseFile(x)
+  } 
+  def toAbstractFile(name : String, virtualPath : String) : Option[AbstractFile] = {
+    import scala.tools.nsc.io.VirtualFile
+    Option(new VirtualFile(name, virtualPath)) 
+  }
+//    val res = try { getCorrespondingResource } catch { case _ => null }
+//    res match {
+//      case f : IFile => new EclipseFile(f)
+//      case _ => new VirtualFile(getElementName, getPath.toString)
+//    }
+//  }
+  // TODO return Validation/Box/Either instead of raise an exception 
+  def toIFile(af : AbstractFile) : Option[IFile] = af match {
+    case null => None
+    case EclipseResource(file: IFile) => Some(file)
+    case abstractFile => toIFile(abstractFile.path)
+  }
+
+  def toIFile(abspath: String) : Option[IFile] = {
+    import org.eclipse.core.resources.ResourcesPlugin
+    import org.eclipse.core.runtime.Path
+    
+    val file = ResourcesPlugin.getWorkspace.getRoot.getFileForLocation(Path.fromOSString(abspath))
+    (file == null || !file.exists) match {
+      case true => {
+        //val msg = "Could not find the corresponding IFile for "+ abstractFile.path
+        //throw new CoreException(new Status(IStatus.ERROR, ScalaPlugin.plugin.pluginId, 0, msg, null))
+        None
+      }
+      case false => Some(file)
+    }
+  }
+  
   def length(file : IFile) = {
+    import org.eclipse.core.filebuffers.FileBuffers
+    
     val fs = FileBuffers.getFileStoreAtLocation(file.getLocation)
     if (fs != null)
       fs.fetchInfo.getLength.toInt

@@ -5,8 +5,10 @@
 
 package scala.tools.eclipse;
 
-import scala.tools.eclipse.text.scala.ScalaCompletionProcessor
-import org.eclipse.jdt.core.{ IJavaProject, IJavaElement }
+import org.eclipse.jface.text.formatter.MultiPassContentFormatter
+//import scala.tools.eclipse.text.scala.ScalaCompletionProcessor
+import org.eclipse.jface.util.PropertyChangeEvent
+import org.eclipse.jdt.core.{ IJavaProject, IJavaElement, ICodeAssist }
 import org.eclipse.jdt.internal.ui.JavaPlugin
 import org.eclipse.jdt.internal.ui.javaeditor.{ IClassFileEditorInput, ICompilationUnitDocumentProvider, JavaElementHyperlinkDetector }
 import org.eclipse.jdt.internal.ui.text.ContentAssistPreference
@@ -23,81 +25,80 @@ import org.eclipse.jface.text.hyperlink.IHyperlinkDetector
 import org.eclipse.jface.text.presentation.PresentationReconciler
 import org.eclipse.jface.text.rules.{ DefaultDamagerRepairer, RuleBasedScanner, ITokenScanner }
 import org.eclipse.jface.text.source.ISourceViewer
+import org.eclipse.jface.util.PropertyChangeEvent
 import org.eclipse.ui.texteditor.{ HyperlinkDetectorDescriptor, ITextEditor }
 import org.eclipse.swt.SWT
 import scala.tools.eclipse.ui.{ JdtPreferenceProvider, ScalaAutoIndentStrategy, ScalaIndenter }
 import scala.tools.eclipse.util.ReflectionUtils
 import scala.tools.eclipse.lexical._
 import scala.tools.eclipse.formatter.ScalaFormattingStrategy
-
-class ScalaSourceViewerConfiguration(store : IPreferenceStore, editor : ITextEditor)
+import scala.tools.eclipse.properties.ScalaSyntaxClasses
+class ScalaSourceViewerConfiguration(store: IPreferenceStore, scalaPreferenceStore: IPreferenceStore, editor: ITextEditor)
   extends JavaSourceViewerConfiguration(JavaPlugin.getDefault.getJavaTextTools.getColorManager, store, editor, IJavaPartitions.JAVA_PARTITIONING) {
 
-  private val codeScanner = new ScalaCodeScanner(getColorManager, store);
-
-  override def getPresentationReconciler(sv : ISourceViewer) = {
+  override def getPresentationReconciler(sv: ISourceViewer) = {
     val reconciler = super.getPresentationReconciler(sv).asInstanceOf[PresentationReconciler]
-    
+
     def handlePartition(partitionType: String, tokenScanner: ITokenScanner) {
       val dr = new DefaultDamagerRepairer(tokenScanner)
       reconciler.setDamager(dr, partitionType)
       reconciler.setRepairer(dr, partitionType)
     }
 
-    handlePartition(IDocument.DEFAULT_CONTENT_TYPE, codeScanner)
-    handlePartition(ScalaPartitions.SCALA_MULTI_LINE_STRING, getStringScanner())
-    handlePartition(ScalaPartitions.XML_TAG, new XmlTagScanner(getColorManager))
-    handlePartition(ScalaPartitions.XML_COMMENT, new XmlCommentScanner(getColorManager))
-    handlePartition(ScalaPartitions.XML_CDATA, new XmlCDATAScanner(getColorManager))
-    handlePartition(ScalaPartitions.XML_PI, new XmlPIScanner(getColorManager))
-    
+    handlePartition(IDocument.DEFAULT_CONTENT_TYPE, scalaCodeScanner)
+    //val dr = new ScalaDamagerRepairer(scalaCodeScanner)
+    //reconciler.setDamager(dr, IDocument.DEFAULT_CONTENT_TYPE)
+    //reconciler.setRepairer(dr, IDocument.DEFAULT_CONTENT_TYPE)
+
+    handlePartition(IJavaPartitions.JAVA_DOC, scaladocScanner)   
+    handlePartition(IJavaPartitions.JAVA_SINGLE_LINE_COMMENT, singleLineCommentScanner)
+    handlePartition(IJavaPartitions.JAVA_MULTI_LINE_COMMENT, multiLineCommentScanner)
+    handlePartition(IJavaPartitions.JAVA_STRING, stringScanner)
+    handlePartition(ScalaPartitions.SCALA_MULTI_LINE_STRING, multiLineStringScanner)
+    handlePartition(ScalaPartitions.XML_TAG, xmlTagScanner)
+    handlePartition(ScalaPartitions.XML_COMMENT, xmlCommentScanner)
+    handlePartition(ScalaPartitions.XML_CDATA, xmlCDATAScanner)
+    handlePartition(ScalaPartitions.XML_PCDATA, xmlPCDATAScanner)
+    handlePartition(ScalaPartitions.XML_PI, xmlPIScanner)
+
     reconciler
   }
 
-  override def getConfiguredTextHoverStateMasks(sourceViewer : ISourceViewer, contentType : String) : Array[Int] =
-    (Set.empty ++ super.getConfiguredTextHoverStateMasks(sourceViewer, contentType) ++ Seq(SWT.MOD3, SWT.MOD1|SWT.MOD3)).toArray
+  private val scalaCodeScanner = new ScalaCodeScanner(getColorManager, scalaPreferenceStore)
+  private val singleLineCommentScanner = new SingleTokenScanner(ScalaSyntaxClasses.SINGLE_LINE_COMMENT, getColorManager, scalaPreferenceStore)
+  private val multiLineCommentScanner = new SingleTokenScanner(ScalaSyntaxClasses.MULTI_LINE_COMMENT, getColorManager, scalaPreferenceStore)
+  private val scaladocScanner = new SingleTokenScanner(ScalaSyntaxClasses.SCALADOC, getColorManager, scalaPreferenceStore)
+  private val stringScanner = new SingleTokenScanner(ScalaSyntaxClasses.STRING, getColorManager, scalaPreferenceStore)
+  private val multiLineStringScanner = new SingleTokenScanner(ScalaSyntaxClasses.MULTI_LINE_STRING, getColorManager, scalaPreferenceStore)
+  private val xmlTagScanner = new XmlTagScanner(getColorManager, scalaPreferenceStore)
+  private val xmlCommentScanner = new XmlCommentScanner(getColorManager, scalaPreferenceStore)
+  private val xmlCDATAScanner = new XmlCDATAScanner(getColorManager, scalaPreferenceStore)
+  private val xmlPCDATAScanner = new SingleTokenScanner(ScalaSyntaxClasses.DEFAULT, getColorManager, scalaPreferenceStore)
+  private val xmlPIScanner = new XmlPIScanner(getColorManager, scalaPreferenceStore)
 
-  override def getTextHover(sv : ISourceViewer, contentType : String, stateMask : Int) = {
-    val javaHover = super.getTextHover(sv, contentType, stateMask)
+  override def getTextHover(sv: ISourceViewer, contentType: String, stateMask: Int) = new ScalaHover(getCodeAssist)
 
-    stateMask match {
-      case SWT.MOD3 => new ScalaDebugHover
-      case _ => javaHover
-    }
-  }
-
-  override def getHyperlinkDetectors(sv : ISourceViewer) = {
+  override def getHyperlinkDetectors(sv: ISourceViewer) = {
     val shd = new ScalaHyperlinkDetector
-    shd.setContext(editor)
+    if (editor != null)
+      shd.setContext(editor)
     Array(shd)
   }
 
-  /**
-   * Direct copy+paste of getProject from SourceViewerConfiguration.
-   * <grumble>No need for this to be _private_ in the parent class</grumble>
-   */
-  def getProject : IJavaProject = {
-    if (editor == null)
-      return null;
+  def getCodeAssist: Option[ICodeAssist] = Option(editor) map { editor =>
+    val input = editor.getEditorInput
+    val provider = editor.getDocumentProvider
 
-    val input = editor.getEditorInput();
-    val provider = editor.getDocumentProvider();
-
-    val element = if (provider.isInstanceOf[ICompilationUnitDocumentProvider]) {
-      provider.asInstanceOf[ICompilationUnitDocumentProvider].getWorkingCopy(input)
-    } else if (input.isInstanceOf[IClassFileEditorInput]) {
-      input.asInstanceOf[IClassFileEditorInput].getClassFile()
-    } else {
-      null
+    (provider, input) match {
+      case (icudp: ICompilationUnitDocumentProvider, _) => icudp getWorkingCopy input
+      case (_, icfei: IClassFileEditorInput) => icfei.getClassFile
+      case _ => null
     }
-
-    if (element == null) {
-      return null;
-    }
-
-    return element.getJavaProject();
   }
 
+  def getProject: IJavaProject = {
+    getCodeAssist map (_.asInstanceOf[IJavaElement].getJavaProject) orNull
+  }
 
   /**
    * Replica of JavaSourceViewerConfiguration#getAutoEditStrategies that returns
@@ -105,35 +106,51 @@ class ScalaSourceViewerConfiguration(store : IPreferenceStore, editor : ITextEdi
    *
    * @see org.eclipse.jface.text.source.SourceViewerConfiguration#getAutoEditStrategies(org.eclipse.jface.text.source.ISourceViewer, java.lang.String)
    */
-  override def getAutoEditStrategies(sourceViewer : ISourceViewer, contentType : String) : Array[IAutoEditStrategy] = {
+  override def getAutoEditStrategies(sourceViewer: ISourceViewer, contentType: String): Array[IAutoEditStrategy] = {
     val partitioning = getConfiguredDocumentPartitioning(sourceViewer)
-
-    if (IJavaPartitions.JAVA_DOC.equals(contentType) || IJavaPartitions.JAVA_MULTI_LINE_COMMENT.equals(contentType)) {
-      return Array(new JavaDocAutoIndentStrategy(partitioning))
-    } else if (IJavaPartitions.JAVA_STRING.equals(contentType)) {
-      return Array(new SmartSemicolonAutoEditStrategy(partitioning), new JavaStringAutoIndentStrategy(partitioning))
-    } else if (IJavaPartitions.JAVA_CHARACTER.equals(contentType) || IDocument.DEFAULT_CONTENT_TYPE.equals(contentType)) {
-      return Array(new SmartSemicolonAutoEditStrategy(partitioning), new ScalaAutoIndentStrategy(partitioning, getProject, sourceViewer, new JdtPreferenceProvider(getProject)))
-    } else {
-      return Array(new ScalaAutoIndentStrategy(partitioning, getProject, sourceViewer, new JdtPreferenceProvider(getProject)))
+    contentType match {
+      case IJavaPartitions.JAVA_DOC | IJavaPartitions.JAVA_MULTI_LINE_COMMENT =>
+        Array(new JavaDocAutoIndentStrategy(partitioning))
+      case IJavaPartitions.JAVA_STRING =>
+        Array(new SmartSemicolonAutoEditStrategy(partitioning), new JavaStringAutoIndentStrategy(partitioning))
+      case IJavaPartitions.JAVA_CHARACTER | IDocument.DEFAULT_CONTENT_TYPE =>
+        Array(new SmartSemicolonAutoEditStrategy(partitioning), new ScalaAutoIndentStrategy(partitioning, getProject, sourceViewer, new JdtPreferenceProvider(getProject)))
+      case _ =>
+        Array(new ScalaAutoIndentStrategy(partitioning, getProject, sourceViewer, new JdtPreferenceProvider(getProject)))
     }
   }
 
   override def getContentFormatter(sourceViewer: ISourceViewer) = {
-	val contentFormatter = new ContentFormatter
-    contentFormatter.enablePartitionAwareFormatting( false );
-    contentFormatter.setFormattingStrategy(new ScalaFormattingStrategy(sourceViewer), IDocument.DEFAULT_CONTENT_TYPE)
-	contentFormatter
+    val formatter = new MultiPassContentFormatter(getConfiguredDocumentPartitioning(sourceViewer), IDocument.DEFAULT_CONTENT_TYPE)
+    formatter.setMasterStrategy(new ScalaFormattingStrategy(editor))
+    formatter
   }
 
-  //
-  override def getContentAssistant(sourceViewer: ISourceViewer): IContentAssistant = {
-	  val assistant = super.getContentAssistant(sourceViewer).asInstanceOf[ContentAssistant]
-	  
-      val scalaProcessor = new ScalaCompletionProcessor(getEditor(), assistant, IDocument.DEFAULT_CONTENT_TYPE);
-      assistant.setContentAssistProcessor(null, IDocument.DEFAULT_CONTENT_TYPE);
-	  assistant.setContentAssistProcessor(scalaProcessor, IDocument.DEFAULT_CONTENT_TYPE);
-	  
-	  return assistant
-  }
+  //  override def getContentAssistant(sourceViewer: ISourceViewer): IContentAssistant = {
+  //	  val assistant = super.getContentAssistant(sourceViewer).asInstanceOf[ContentAssistant]
+  //	  
+  //    val scalaProcessor = new ScalaCompletionProcessor(getEditor(), assistant, IDocument.DEFAULT_CONTENT_TYPE);
+  //    assistant.setContentAssistProcessor(null, IDocument.DEFAULT_CONTENT_TYPE);
+  //	  assistant.setContentAssistProcessor(scalaProcessor, IDocument.DEFAULT_CONTENT_TYPE);
+  //	  
+  //	  return assistant
+  //  }
+
+   override def handlePropertyChangeEvent(event: PropertyChangeEvent) {
+      super.handlePropertyChangeEvent(event)
+      scalaCodeScanner.adaptToPreferenceChange(event)
+      scaladocScanner.adaptToPreferenceChange(event)
+      stringScanner.adaptToPreferenceChange(event)
+      multiLineStringScanner.adaptToPreferenceChange(event)
+      singleLineCommentScanner.adaptToPreferenceChange(event)
+      multiLineCommentScanner.adaptToPreferenceChange(event)
+      xmlTagScanner.adaptToPreferenceChange(event)
+      xmlCommentScanner.adaptToPreferenceChange(event)
+      xmlCDATAScanner.adaptToPreferenceChange(event)
+      xmlPCDATAScanner.adaptToPreferenceChange(event)
+      xmlPIScanner.adaptToPreferenceChange(event)
+   }
+
+   override def affectsTextPresentation(event: PropertyChangeEvent) = true
+
 }

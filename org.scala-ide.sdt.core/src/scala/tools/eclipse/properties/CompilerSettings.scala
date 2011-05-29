@@ -16,7 +16,7 @@ import org.eclipse.swt.SWT
 import org.eclipse.swt.events.{ ModifyEvent, ModifyListener, SelectionAdapter, SelectionEvent, SelectionListener }
 import org.eclipse.swt.layout.{ GridData, GridLayout, RowLayout }
 import org.eclipse.swt.widgets.{ Button, Combo, Composite, Group, Label, Control, TabFolder, TabItem}
-import scala.tools.nsc.Settings
+import scala.tools.nsc.interactive.compat.Settings
 
 import scala.tools.eclipse.{ ScalaPlugin, SettingConverterUtil }
 import scala.tools.eclipse.util.IDESettings
@@ -60,7 +60,7 @@ trait ScalaPluginPreferencePage {
 	}
 	
 	// There seems to be a bug in the compiler that appears in runtime (#2296)
-	// So updateApply is goint to forward to real updateApplyButton
+	// So updateApply is going to forward to real updateApplyButton
 	def updateApply: Unit 
 }
 
@@ -96,7 +96,7 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
 
   import EclipseSetting.toEclipseBox
   /** The settings we can change */
-  lazy val userBoxes    = IDESettings.shownSettings(new Settings)
+  lazy val userBoxes    = IDESettings.compilerSettings ++ IDESettings.buildManagerSettings
   lazy val eclipseBoxes =	userBoxes.map { s => toEclipseBox(s, preferenceStore0) }
 
   /** Pulls the preference store associated with this plugin */
@@ -208,7 +208,7 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
 		    javaProject.getProject().build(IncrementalProjectBuilder.CLEAN_BUILD, null)
       case other => 
 		    None // We're a Preference page!
-      //TODO - FIgure out who needs to rebuild
+      //TODO - Figure out who needs to rebuild
     }
   }
   

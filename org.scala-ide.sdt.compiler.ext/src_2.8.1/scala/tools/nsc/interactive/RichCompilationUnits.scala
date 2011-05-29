@@ -1,8 +1,13 @@
+/* NSC -- new Scala compiler
+ * Copyright 2009-2011 Scala Solutions and LAMP/EPFL
+ * @author Martin Odersky
+ */
 package scala.tools.nsc
 package interactive
 
 //BACK-2.8.0 use absolute import to avoid wrong search with relative
 import _root_.scala.tools.nsc.util.{SourceFile, Position, NoPosition}
+import collection.mutable.ArrayBuffer
 
 trait RichCompilationUnits { self: Global =>
 
@@ -34,6 +39,9 @@ trait RichCompilationUnits { self: Global =>
     /** the current edit point offset */
     var editPoint: Int = -1
     
+    /** The problems reported for this unit */
+    val problems = new ArrayBuffer[Problem]
+
     /** The position of a targeted type check
      *  If this is different from NoPosition, the type checking
      *  will stop once a tree that contains this position range

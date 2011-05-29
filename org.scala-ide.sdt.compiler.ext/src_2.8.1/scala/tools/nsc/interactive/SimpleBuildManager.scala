@@ -1,3 +1,7 @@
+/* NSC -- new Scala compiler
+ * Copyright 2009-2011 Scala Solutions and LAMP/EPFL
+ * @author Martin Odersky
+ */
 package scala.tools.nsc
 package interactive
 
@@ -5,9 +9,7 @@ package interactive
 import _root_.scala.collection._
 
 import _root_.scala.tools.nsc.reporters.{Reporter, ConsoleReporter}
-import dependencies._
 
-import _root_.scala.tools.nsc.util.FakePos
 import _root_.scala.tools.nsc.io.AbstractFile
 
 /** A simple build manager, using the default scalac dependency tracker.

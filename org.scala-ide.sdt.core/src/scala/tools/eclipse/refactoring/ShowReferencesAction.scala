@@ -30,6 +30,7 @@ import scala.tools.eclipse.javaelements.ScalaSourceFile
 import scala.tools.eclipse.ScalaPresentationCompiler
 import scala.tools.eclipse.ScalaPlugin
 import org.eclipse.jface.text.link._
+import scala.tools.eclipse.util.Tracer
 
 class ShowReferencesAction extends RefactoringAction {
   
@@ -49,7 +50,7 @@ class ShowReferencesAction extends RefactoringAction {
       
       val selection = new refactoring.FileSelection(sourceFile.file, from, to)
                           
-      EditorHelpers.withCurrentEditor { editor =>
+      for (editor <- EditorHelpers.currentEditor) {
       
         val compilationUnitIndices = ScalaPlugin.plugin.getScalaProject(editor.getEditorInput).allSourceFiles.toList flatMap { f =>
           
@@ -61,20 +62,19 @@ class ShowReferencesAction extends RefactoringAction {
               println("skipped indexing "+ f.getFullPath.toString)
               None
             }
-          })
-        } flatten
+          } ())
+        } flatten 
         
         val index = refactoring.GlobalIndex(compilationUnitIndices)
         
         selection.selectedSymbolTree map { symTree =>
-            println(symTree.symbol.nameString +" is referenced in: ")
+            Tracer.println(symTree.symbol.nameString +" is referenced in: ")
             index.references(symTree.symbol) foreach { t =>
-            println("%s:%s\t%s".format(t.pos.source.file.name, t.pos.line, t.pos.lineContent))
+            Tracer.println("%s:%s\t%s".format(t.pos.source.file.name, t.pos.line, t.pos.lineContent))
           }
         }
-
-        None
       }
-    }
+      None
+    } ()
   }
 }

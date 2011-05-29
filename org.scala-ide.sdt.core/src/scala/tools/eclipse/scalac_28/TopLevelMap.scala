@@ -11,8 +11,6 @@ import scala.collection.mutable.HashMap
 import org.eclipse.core.resources.IFile
 
 import scala.tools.nsc.{ CompilerCommand, FatalError, Global, NoPhase, Settings }
-import scala.tools.nsc.ast.parser.Tokens
-import scala.tools.nsc.io.AbstractFile
 import scala.tools.nsc.reporters.{ ConsoleReporter, Reporter }
 
 import scala.tools.eclipse.util.EclipseFile
@@ -78,13 +76,6 @@ class TopLevelMap {
       case _ =>
     }
     fileToTypes.remove(file)
-  }
-  
-  def update(file : IFile) {
-    if (file.getFileExtension == "scala") {
-      remove(file)
-      parse(List(file))
-    }
   }
   
   /**

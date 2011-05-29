@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.scala-ide</groupId>
     <artifactId>scala-ide-for-eclipse</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.1.0-SNAPSHOT</version>
     <relativePath>../org.scala-ide.build/pom.xml</relativePath>
   </parent>
   <artifactId>org.scala-ide.sdt.core</artifactId>
@@ -22,6 +22,13 @@
       <artifactId>org.scala-ide.sdt.compiler.ext</artifactId>
       <version>${project.version}</version>
     </dependency-->
+    <dependency>
+    	<groupId>com.miglayout</groupId>
+    	<artifactId>miglayout</artifactId>
+    	<version>3.7.4</version>
+    	<type>jar</type>
+    	<scope>compile</scope>
+    </dependency>
   </dependencies>
   
   <build>
@@ -48,7 +55,7 @@
       <plugin>
         <groupId>org.scala-tools</groupId>
         <artifactId>maven-scala-plugin</artifactId>
-        <version>2.15.0</version>
+        <version>2.15.1</version>
         <executions>
           <execution>
             <goals>
@@ -79,19 +86,24 @@
                 <property name="gitLastCommitInfo" value="( can't retrive git's Last Commit Info )"/>
                 <property name="aboutText">
 The Scala IDE for Eclipse
+(c) LAMP/EPFL and Scala Solutions
 
-The Scala IDE for Eclipse provides the tools needed to
-to build Scala programs on the Eclipse Platform.
+The Scala IDE for Eclipse provides an integrated environment for creating Scala programs.
 Visit http://scala-ide.org/
+
+
+Scala Solutions Team: Iulian Dragos, Donna Malayeri, Martin Odersky, Hubert Plocinicak, Eugene Vigdorchik
+ScalaIDE.org organizer: Miles Sabin
+Many thanks to David Bernard, Matt Russell, Mirko Stocker, Joshua Suereth, and all other contributors.
 
 Version details :
                 </property>
-	              <propertyfile
-	                file="${basedir}/about.ini"
-	                comment="Property 'featureImage' contains path to feature image (32x32)">
-	                <entry  key="featureImage" default="" operation="=" value="about.png"/>
-	                <entry  key="aboutText" default="" operation="=" value="${aboutText} ${gitLastCommitInfo}"/>
-	              </propertyfile>
+                <propertyfile
+                  file="${basedir}/about.ini"
+                  comment="Property 'featureImage' contains path to feature image (32x32)">
+                  <entry  key="featureImage" default="" operation="=" value="about.png"/>
+                  <entry  key="aboutText" default="" operation="=" value="${aboutText} ${gitLastCommitInfo}"/>
+                </propertyfile>
               </target>
             </configuration>
           </execution>

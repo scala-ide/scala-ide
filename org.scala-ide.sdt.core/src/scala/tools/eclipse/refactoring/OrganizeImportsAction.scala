@@ -28,7 +28,7 @@ class OrganizeImportsAction extends RefactoringAction {
                   
     val refactoring = file.withSourceFile((_, compiler) => new OrganizeImports {
       val global = compiler
-    })
+    }) ()
             
     lazy val selection = createSelection(file, 0, 0)
     

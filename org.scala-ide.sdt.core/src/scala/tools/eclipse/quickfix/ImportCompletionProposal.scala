@@ -1,10 +1,9 @@
-package scala.tools.eclipse.quickfix
+package scala.tools.eclipse
+package quickfix
 
+import util.FileUtils
 import org.eclipse.jdt.ui.JavaUI
 import org.eclipse.jdt.ui.ISharedImages
-import org.eclipse.core.runtime.NullProgressMonitor
-import org.eclipse.text.edits.ReplaceEdit
-import org.eclipse.text.edits.MultiTextEdit
 import org.eclipse.ltk.core.refactoring.TextFileChange
 import org.eclipse.core.resources.IFile
 import scala.tools.eclipse.util.EclipseResource
@@ -17,8 +16,18 @@ import org.eclipse.jface.text.TextUtilities
 import scala.tools.eclipse.refactoring.EditorHelpers._
 import scala.tools.refactoring.implementations.AddImportStatement
 import scala.tools.eclipse.util.IDESettings
+import org.eclipse.text.edits.MultiTextEdit
+import org.eclipse.text.edits.RangeMarker
 
-case class ImportCompletionProposal(val importName : String) extends IJavaCompletionProposal {
+object ImportCompletionProposal {
+  private val Strategies_Ast = "by ast transformation"
+  private val Strategies_Text = "by text transformation"
+  private val Strategies_AstThenText = "by ast and fallback to text if failed"
+    
+  val strategies = List(Strategies_AstThenText, Strategies_Ast, Strategies_Text)
+}
+
+case class ImportCompletionProposal(val importName: String) extends IJavaCompletionProposal {
   
   /**
    * Fixed relevance at 100 for now.
@@ -32,8 +41,16 @@ case class ImportCompletionProposal(val importName : String) extends IJavaComple
    */
   def apply(document : IDocument) : Unit = {
     IDESettings.quickfixImportByText.value match {
-      case true => applyByTextTransfo(document)
-      case false => applyByASTTransfo(document)
+      case ImportCompletionProposal.Strategies_Text => applyByTextTransfo(document)
+      case ImportCompletionProposal.Strategies_Ast => applyByASTTransfo(document)
+      case ImportCompletionProposal.Strategies_AstThenText => try {
+        applyByASTTransfo(document)
+      } catch {
+        case t => {
+          ScalaPlugin.plugin.logWarning("failed to update import by AST transformation, fallback to text implementation", Some(t))
+          applyByTextTransfo(document)
+        }
+      }
     }
   }
   
@@ -44,7 +61,7 @@ case class ImportCompletionProposal(val importName : String) extends IJavaComple
    */
   private def applyByASTTransfo(document : IDocument) : Unit = {
     
-    withScalaFileAndSelection { (scalaSourceFile, iTextSelection) =>
+    withScalaFileAndSelection { (scalaSourceFile, textSelection) =>
     
       val changes = scalaSourceFile.withSourceFile { (sourceFile, compiler) =>
             
@@ -52,8 +69,8 @@ case class ImportCompletionProposal(val importName : String) extends IJavaComple
           val global = compiler
           
           val selection = {
-            val start = iTextSelection.getOffset
-            val end = start + iTextSelection.getLength
+            val start = textSelection.getOffset
+            val end = start + textSelection.getLength
             val file = scalaSourceFile.file
             // start and end are not yet used
             new FileSelection(file, start, end)
@@ -61,13 +78,9 @@ case class ImportCompletionProposal(val importName : String) extends IJavaComple
         }
        
         refactoring.addImport(refactoring.selection, importName)
-      }
+      }(Nil)
       
-      scalaSourceFile.file match {
-        case EclipseResource(file: IFile) => 
-          val textFileChange = createTextFileChange(file, changes)
-          textFileChange.getEdit.apply(document)
-      }
+      applyChangesToFileWhileKeepingSelection(document, textSelection, scalaSourceFile.file, changes)
       
       None
     }
@@ -131,7 +144,7 @@ case class ImportCompletionProposal(val importName : String) extends IJavaComple
    * @param document the document into which the proposed completion has been inserted
    * @return the new selection in absolute document coordinates
    */
-  def getSelection(document : IDocument) : Point = null
+  def getSelection(document: IDocument): Point = null
   
 
   /**
@@ -144,7 +157,7 @@ case class ImportCompletionProposal(val importName : String) extends IJavaComple
    *
    * @return the additional information or <code>null</code>
    */
-  def getAdditionalProposalInfo() : String = null
+  def getAdditionalProposalInfo(): String = null
   
 
   /**
@@ -154,7 +167,7 @@ case class ImportCompletionProposal(val importName : String) extends IJavaComple
    * 
    * @see ICompletionProposalExtension6#getStyledDisplayString()
    */
-  def getDisplayString() : String = "Import " + importName
+  def getDisplayString(): String = "Import " + importName
     
 
   /**
@@ -164,7 +177,6 @@ case class ImportCompletionProposal(val importName : String) extends IJavaComple
    * @return the image to be shown or <code>null</code> if no image is desired
    */
   def getImage() : Image = JavaUI.getSharedImages().getImage(ISharedImages.IMG_OBJS_IMPDECL)
-
   
   /**
    * Returns optional context information associated with this proposal.
@@ -173,5 +185,5 @@ case class ImportCompletionProposal(val importName : String) extends IJavaComple
    *
    * @return the context information for this proposal or <code>null</code>
    */
-  def getContextInformation : IContextInformation = null
+  def getContextInformation: IContextInformation = null
 }

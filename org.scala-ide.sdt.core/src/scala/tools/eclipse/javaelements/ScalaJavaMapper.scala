@@ -6,6 +6,7 @@
 package scala.tools.eclipse.javaelements
 
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants
+//BACK-2.8 import scala.reflect.generic.HasFlags
 
 import scala.tools.nsc.symtab.Flags
 import scala.tools.eclipse.ScalaPresentationCompiler
@@ -21,6 +22,7 @@ trait ScalaJavaMapper { self : ScalaPresentationCompiler =>
         else
           tt.symbol.fullName
       }
+      case Select(_, name) => name.toString
       case Ident(name) => name.toString
       case _ => "scala.AnyRef"
     }) match {
@@ -38,22 +40,44 @@ trait ScalaJavaMapper { self : ScalaPresentationCompiler =>
     }
   }
 
-  def mapModifiers(sym : Symbol) : Int = {
+  //BACK-2.8 def mapModifiers(owner : HasFlags) : Int = {
+  def mapModifiers(owner : Modifiers) : Int = {
     var jdtMods = 0
-    if(sym.hasFlag(Flags.PRIVATE))
+    if(owner.hasFlag(Flags.PRIVATE))
       jdtMods = jdtMods | ClassFileConstants.AccPrivate
-    else if(sym.hasFlag(Flags.PROTECTED))
+    else if(owner.hasFlag(Flags.PROTECTED))
       jdtMods = jdtMods | ClassFileConstants.AccProtected
     else
       jdtMods = jdtMods | ClassFileConstants.AccPublic
     
-    if(sym.hasFlag(Flags.ABSTRACT) || sym.hasFlag(Flags.DEFERRED))
+    if(owner.hasFlag(Flags.ABSTRACT) || owner.hasFlag(Flags.DEFERRED))
       jdtMods = jdtMods | ClassFileConstants.AccAbstract
 
-    if(sym.isFinal || sym.hasFlag(Flags.MODULE))
+    if(owner.isFinal || owner.hasFlag(Flags.MODULE))
       jdtMods = jdtMods | ClassFileConstants.AccFinal
     
-    if(sym.isTrait)
+    if(owner.isTrait)
+      jdtMods = jdtMods | ClassFileConstants.AccInterface
+    
+    jdtMods
+  }
+
+  def mapModifiers(owner : Symbol) : Int = {
+    var jdtMods = 0
+    if(owner.hasFlag(Flags.PRIVATE))
+      jdtMods = jdtMods | ClassFileConstants.AccPrivate
+    else if(owner.hasFlag(Flags.PROTECTED))
+      jdtMods = jdtMods | ClassFileConstants.AccProtected
+    else
+      jdtMods = jdtMods | ClassFileConstants.AccPublic
+    
+    if(owner.hasFlag(Flags.ABSTRACT) || owner.hasFlag(Flags.DEFERRED))
+      jdtMods = jdtMods | ClassFileConstants.AccAbstract
+
+    if(owner.isFinal || owner.hasFlag(Flags.MODULE))
+      jdtMods = jdtMods | ClassFileConstants.AccFinal
+    
+    if(owner.isTrait)
       jdtMods = jdtMods | ClassFileConstants.AccInterface
     
     jdtMods

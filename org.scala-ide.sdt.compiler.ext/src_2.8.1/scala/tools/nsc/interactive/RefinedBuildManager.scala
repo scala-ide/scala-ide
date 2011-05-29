@@ -13,8 +13,9 @@ import _root_.scala.util.control.Breaks._
 import _root_.scala.tools.nsc.symtab.Flags
 
 import _root_.scala.tools.nsc.dependencies._
-import _root_.scala.tools.nsc.util.FakePos
+import _root_.scala.tools.nsc.util.{FakePos, ClassPath}
 import _root_.scala.tools.nsc.io.AbstractFile
+import scala.tools.nsc.interactive.util.PathResolver
 
 /** A more defined build manager, based on change sets. For each
  *  updated source file, it computes the set of changes to its
@@ -33,8 +34,14 @@ class RefinedBuildManager(val settings: Settings) extends Changes with BuildMana
       super.computeInternalPhases
       phasesSet += dependencyAnalysis
     }
+    lazy val _classpath: ClassPath[_] = new NoSourcePathPathResolver(settings).result
+    override def classPath: ClassPath[_] = _classpath
     
     def newRun() = new Run()
+  }
+  
+  class NoSourcePathPathResolver(settings: Settings) extends PathResolver(settings) {
+    override def containers = Calculated.basis.dropRight(1).flatten.distinct
   }
 
   protected def newCompiler(settings: Settings) = new BuilderGlobal(settings) 
@@ -184,6 +191,8 @@ class RefinedBuildManager(val settings: Settings) extends Changes with BuildMana
     }
 
     update0(files)
+    // remove the current run in order to save some memory
+    //BACK-2.8 TODO copy from 2.9 compiler.dropRun()
   }
 
   // Attempt to break the cycling reference deps as soon as possible and reduce

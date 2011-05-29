@@ -29,7 +29,7 @@ class InlineLocalAction extends RefactoringAction {
     val refactoring = file.withSourceFile((sourceFile, compiler) => new InlineLocal with GlobalIndexes {
       val global = compiler
       val index = GlobalIndex(global.unitOfFile(sourceFile.file).body)
-    })
+    })()
     
     lazy val selection = createSelection(file, selectionStart, selectionEnd)
             

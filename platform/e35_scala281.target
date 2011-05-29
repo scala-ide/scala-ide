@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<?pde version="3.6"?>
+
+<target name="e35_scala281">
+<locations>
+<location path="${project_loc}/../org.scala-ide.sdt.update-site/target/site/plugins" type="Directory"/>
+<location includeAllPlatforms="false" includeMode="planner" type="InstallableUnit">
+<unit id="org.eclipse.jdt.feature.group" version="3.5.2.r352_v20100108-7r88FEwFI0WTuoBl0iaG0tyhfZH6"/>
+<unit id="org.eclipse.emf.ecore.feature.group" version="2.5.0.v200906151043"/>
+<unit id="org.eclipse.zest.feature.group" version="1.1.2.v20100111-1352-6618yD6DH8G6N59OM53B2A"/>
+<unit id="org.eclipse.wst.common_core.feature.feature.group" version="3.1.1.v200908102300-7B77FZ6F7RZHKDIwRlOwUN"/>
+<unit id="org.eclipse.wst.common_ui.feature.feature.group" version="3.1.1.v200908102300-7B5FRHDhdMOGnoekn4gtEJxSmPxV"/>
+<unit id="org.eclipse.wst.server_ui.feature.feature.group" version="3.1.1.v20090727b-7B3DPAtJZRZxULQRALIM4256"/>
+<unit id="org.eclipse.wst.web_core.feature.feature.group" version="3.1.1.v200908120400-7H77FDCAT7oGlivgHN1M2RkCBHz0"/>
+<unit id="org.eclipse.wst.ws_ui.feature.feature.group" version="3.1.2.v200911241834-7I6FPpEtEnGx_Csz-6wI8hoH_MRt"/>
+<unit id="org.eclipse.wst.xml_core.feature.feature.group" version="3.1.1.v200907161031-7C7OFPiF7RZHKFHgU1LkY6"/>
+<repository location="http://download.eclipse.org/releases/galileo"/>
+</location>
+<location includeAllPlatforms="false" includeMode="planner" type="InstallableUnit">
+<unit id="org.maven.ide.eclipse.feature.feature.group" version="0.12.1.20110112-1712"/>
+<repository location="http://m2eclipse.sonatype.org/sites/m2e"/>
+</location>
+<location includeAllPlatforms="false" includeMode="planner" type="InstallableUnit">
+<unit id="org.maven.ide.eclipse.scala_feature.feature.group" version="0.2.3"/>
+<repository location="http://alchim31.free.fr/m2e-scala/update-site/"/>
+</location>
+</locations>
+<launcherArgs>
+<vmArgs>-server
+-XX:PermSize=256m
+-XX:MaxPermSize=384m
+-Xss2m
+-Xms512m
+-Xmx2g
+-XX:+DoEscapeAnalysis
+-XX:+UseConcMarkSweepGC
+-XX:+HeapDumpOnOutOfMemoryError
+-XX:+CMSClassUnloadingEnabled
+-Dosgi.requireJavaVersion=1.6
+-Dosgi.framework.extensions=org.eclipse.equinox.weaving.hook
+-Declipse.p2.unsignedPolicy=allow</vmArgs>
+</launcherArgs>
+</target>

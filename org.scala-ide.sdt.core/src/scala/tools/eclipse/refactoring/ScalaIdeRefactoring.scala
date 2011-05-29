@@ -2,13 +2,15 @@
  * Copyright 2005-2010 LAMP/EPFL
  */
 
-package scala.tools.eclipse.refactoring
-import org.eclipse.core.resources.IFile
-import org.eclipse.core.runtime.IProgressMonitor
+package scala.tools.eclipse
+package refactoring
+
+import util.FileUtils
+import org.eclipse.core.resources.{IFile, ResourcesPlugin}
+import org.eclipse.core.runtime.{IProgressMonitor, CoreException, Status, IStatus, Path}
 import org.eclipse.ltk.core.refactoring.{Refactoring => LTKRefactoring, Change, RefactoringStatus, CompositeChange}
 import org.eclipse.ltk.ui.refactoring.RefactoringWizardPage
 import scala.tools.eclipse.javaelements.ScalaSourceFile
-import scala.tools.eclipse.util.EclipseResource
 import scala.tools.refactoring.MultiStageRefactoring
 import scala.tools.refactoring.common.{TreeNotFound, Selections}
 
@@ -25,7 +27,7 @@ abstract class ScalaIdeRefactoring(val getName: String) extends LTKRefactoring {
   def getPages: List[RefactoringWizardPage] = Nil
   
   def createSelection(file: ScalaSourceFile, start: Int, end: Int) = 
-	  file.withSourceFile((sourceFile, _) => new refactoring.FileSelection(sourceFile.file, start, end))
+	  file.withSourceFile((sourceFile, _) => new refactoring.FileSelection(sourceFile.file, start, end)) ()
     
   var preparationResult: refactoring.PreparationResult = _
   
@@ -51,11 +53,12 @@ abstract class ScalaIdeRefactoring(val getName: String) extends LTKRefactoring {
   }
   
   def createChange(pm: IProgressMonitor): CompositeChange = new CompositeChange(getName) {
-       
-    createRefactoringChanges() map {
-      _ groupBy (_.file) map {
-        case (EclipseResource(file: IFile), fileChanges) => EditorHelpers.createTextFileChange(file, fileChanges)
-      } foreach add
+    for (
+      changes <- createRefactoringChanges();  
+      (abstractFile, fileChanges) <- changes.groupBy(_.file);
+      ifile <- FileUtils.toIFile(abstractFile) 
+    ) {
+     add(EditorHelpers.createTextFileChange(ifile, fileChanges))
     }
   }
       
@@ -69,8 +72,6 @@ abstract class ScalaIdeRefactoring(val getName: String) extends LTKRefactoring {
   }
   
   def checkFinalConditions(pm: IProgressMonitor): RefactoringStatus = {
-    refactoringError map { error =>
-      RefactoringStatus.createErrorStatus(error)
-    } getOrElse new RefactoringStatus
+    refactoringError map RefactoringStatus.createErrorStatus getOrElse new RefactoringStatus
   }
 }

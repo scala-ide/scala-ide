@@ -1,0 +1,17 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<?compositeMetadataRepository version='1.0.0'?>
+<repository name='"Eclipse Project Test Site"'
+    type='org.eclipse.equinox.internal.p2.metadata.repository.CompositeArtifactRepository'
+    version='1.0.0'>
+<properties size='2'>
+  <property name='p2.compressed' value='true'/>
+  <!-- get new time w/ `date +%s000` -->
+  <property name='p2.timestamp' value='1294205433000'/>
+  </properties>
+  <children size='4'>
+    <child location='http://download.scala-ide.org/scala-refactoring-2.8.1.final/'/>
+    <child location='http://download.scala-ide.org/scalariform-2.8.1.final/'/>
+    <child location='http://download.scala-ide.org/nightly-update-wip-exp-backport-2.8.1.final/'/>
+    <child location='http://alchim31.free.fr/m2e-scala/update-site/'/>
+  </children>
+</repository>

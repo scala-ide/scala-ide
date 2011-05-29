@@ -95,8 +95,8 @@ class ScalaQuickFixProcessor extends IQuickFixProcessor {
     def acceptType(packageName : Array[Char], typeNameChars : Array[Char], enclosingTypeNames : Array[Array[Char]], modifiers : Int, accessRestriction : AccessRestriction) = {
       // If the type matches what we were looking for then it add it to the list of those found
       val typeName = new String(typeNameChars)
-      if (typeName == typeToFind) {
-        val enclosingTypeNamesAsStrings = new String(packageName) :: enclosingTypeNames.map(new String(_)).toList
+      if (typeName == typeToFind && enclosingTypeNames != null) {
+        val enclosingTypeNamesAsStrings = new String(packageName) :: enclosingTypeNames.filter(x => x != null & x.length  != 0).map(new String(_)).toList
         val enclosingTypeNamesString = 
           enclosingTypeNamesAsStrings.mkString(".").replaceAll("\\$", "")
         typesFound += enclosingTypeNamesString + "." + typeName      
@@ -147,6 +147,6 @@ class ScalaQuickFixProcessor extends IQuickFixProcessor {
 object ScalaQuickFixProcessor {
 	private def isInside(offset: Int, start: Int,end: Int): Boolean = {
 		return offset == start || offset == end || (offset > start && offset < end); // make sure to handle 0-length ranges
-    }
+  }
 }
 
