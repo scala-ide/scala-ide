@@ -37,10 +37,18 @@ class RunSelectionAction extends ActionDelegate with IWorkbenchWindowActionDeleg
         selection <- doCast[ITextSelection](textEditor.getSelectionProvider.getSelection)) 
     {
       val project = input.getFile.getProject
-      interpreter.ReplConsole.getConsole(project) foreach { _.insertText(selection.getText) }
+//      interpreter.ReplConsole.getConsole(project) foreach { console => 
+//        console.insertText(selection.getText)
+//      }
       
       println("Project: " + project.getName)    
       println("Selected text: " + selection.getText)
+      
+      val scalaProject = ScalaPlugin.plugin.getScalaProject(project)
+      
+      println("Result: ")
+      val repl = interpreter.EclipseRepl.replForProject(scalaProject)      
+      repl.interpret(selection.getText)
     }
   }
 }

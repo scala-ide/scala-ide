@@ -1035,4 +1035,21 @@
        </partition>
     </javaCompletionProposalComputer>
  </extension>
+ <extension
+       id="scala.tools.eclipse.consoleView"
+       point="org.eclipse.ui.views">
+    <category
+          id="org.scala-ide.sdt.core.scalaCategory"
+          name="Scala">
+    </category>
+    <view
+          allowMultiple="true"
+          category="org.scala-ide.sdt.core.scalaCategory"
+          class="scala.tools.eclipse.interpreter.ReplConsoleView"
+          icon="icons/full/etool16/scala_app.gif"
+          id="org.scala-ide.sdt.core.consoleView"
+          name="Scala REPL"
+          restorable="false">
+    </view>
+ </extension>
 </plugin>
