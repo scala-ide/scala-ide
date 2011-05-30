@@ -5,6 +5,7 @@
 
 package scala.tools.eclipse
 
+import scala.tools.nsc.interactive.FreshRunReq
 import scala.collection.mutable
 import scala.collection.mutable.{ ArrayBuffer, SynchronizedMap }
 
@@ -87,7 +88,25 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
     }
     op(tree)
   }
-    
+
+  /** Perform `op' on the compiler thread. Catch all exceptions, and return 
+   *  None if an exception occured. TypeError and FreshRunReq are printed to
+   *  stdout, all the others are logged in the platform error log.
+   */
+  def askOption[A](op: () => A): Option[A] =
+    try Some(op())
+    catch {
+      case e: TypeError =>
+        println("TypeError in ask:\n" + e)
+        None
+      case f: FreshRunReq =>
+        println("FreshRunReq in ask:\n" + f)
+        None
+      case e =>
+        ScalaPlugin.plugin.logError("Error during askOption", e)
+        None
+    }
+  
   def askReload(scu : ScalaCompilationUnit, content : Array[Char]) {
     sourceFiles.get(scu) foreach { f =>
       val newF = new BatchSourceFile(f.file, content)

@@ -42,21 +42,6 @@
       </dependency>
     </dependencies>
   </dependencyManagement>
-  <repositories>
-    <repository>
-      <id>scala-tools.org</id>
-      <name>Scala Tools Maven2 Repository</name>
-      <url>http://scala-tools.org/repo-releases</url>
-    </repository>
-    <repository>
-      <id>scala-tools.snapshot</id>
-      <name>Scala Tools maven snapshot repository</name>
-      <url>http://scala-tools.org/repo-snapshots</url>
-      <snapshots>
-        <updatePolicy>daily</updatePolicy>
-      </snapshots>
-    </repository>
-  </repositories>
   <build>
     <pluginManagement>
       <plugins>
@@ -85,7 +70,38 @@
         <maintenance.suffix></maintenance.suffix>
         <patch.level.suffix></patch.level.suffix>
       </properties>
+
+      <repositories>
+        <repository>
+          <id>scala-tools.org</id>
+          <name>Scala Tools Maven2 Repository</name>
+          <url>http://scala-tools.org/repo-releases</url>
+        </repository>
+        <repository>
+          <id>scala-tools.snapshot</id>
+          <name>Scala Tools maven snapshot repository</name>
+          <url>http://scala-tools.org/repo-snapshots</url>
+          <snapshots>
+            <updatePolicy>daily</updatePolicy>
+          </snapshots>
+        </repository>
+      </repositories>
     </profile>
+
+    <profile>
+      <id>local</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <properties>
+        <scala.compiler.groupid>org.scala-lang</scala.compiler.groupid>
+        <scala.compiler.version>${scala.version}</scala.compiler.version>
+        <maintenance.suffix></maintenance.suffix>
+        <patch.level.suffix></patch.level.suffix>
+      </properties>
+    </profile>
+
+
     <profile>
       <id>maintenance</id>
       <properties>

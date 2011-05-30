@@ -853,7 +853,7 @@
                tooltip="Organize Imports">
          </action>
          <action
-               class="scala.tools.eclipse.refactoring.RenameAction"
+               class="scala.tools.eclipse.refactoring.rename.RenameAction"
                definitionId="scala.tools.eclipse.refactoring.command.Rename"
                id="scala.tools.eclipse.refactoring.renameAction"
                label="Rename"
@@ -1036,6 +1036,22 @@
     </javaCompletionProposalComputer>
  </extension>
  <extension
+       point="org.eclipse.ltk.core.refactoring.renameParticipants">
+    <renameParticipant
+          class="scala.tools.eclipse.refactoring.rename.RenameParticipant"
+          id="org.scala-ide.sdt.core.renameParticipant"
+          name="Scala Rename Participant">
+       <enablement>
+          <with
+                variable="element">
+             <instanceof
+                   value="org.eclipse.core.resources.IResource">
+             </instanceof>
+          </with>
+       </enablement>
+    </renameParticipant>
+ </extension>
+ <extension
        id="scala.tools.eclipse.consoleView"
        point="org.eclipse.ui.views">
     <category
@@ -1051,5 +1067,5 @@
           name="Scala REPL"
           restorable="false">
     </view>
- </extension>
+ </extension> 
 </plugin>

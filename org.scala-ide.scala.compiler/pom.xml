@@ -124,11 +124,11 @@
             <Bundle-Version>${version.number}${maintenance.suffix}${patch.level.suffix}</Bundle-Version>
             <Bundle-Vendor>scala-ide.org</Bundle-Vendor>
             <Embed-Dependency>*;scope=compile|runtime;inline=false</Embed-Dependency>
-            <_exportcontents>scala.tools.*;version=${version.number},ch.epfl.lamp.*;version=${version.number}</_exportcontents>
+            <_exportcontents>scala.reflect.internal.*;version=${version.number},scala.tools.*;version=${version.number},ch.epfl.lamp.*;version=${version.number}</_exportcontents>
             <Embed-Directory>lib</Embed-Directory>
             <Embed-StripVersion>true</Embed-StripVersion>
             <Include-Resource>lib=${project.build.directory}/lib</Include-Resource>
-            <Import-Package>!scala.tools.jline.*,!sun.misc,*</Import-Package>
+            <Import-Package>!jline.*,!scala.tools.jline.*,!sun.misc,scala.reflect,*</Import-Package>
           </instructions>
         </configuration>
       </plugin>

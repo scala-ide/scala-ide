@@ -138,7 +138,7 @@
             <Bundle-Version>${version.number}${patch.level.suffix}</Bundle-Version>
             <Bundle-Vendor>scala-ide.org</Bundle-Vendor>
             <Embed-Dependency>*;scope=compile|runtime;inline=false</Embed-Dependency>
-            <_exportcontents>scala.*;version=${version.number}</_exportcontents>
+            <_exportcontents>scala.reflect,scala.*;version=${version.number}</_exportcontents>
             <Embed-Directory>lib</Embed-Directory>
             <Embed-StripVersion>true</Embed-StripVersion>
             <Include-Resource>lib=${project.build.directory}/lib</Include-Resource>

@@ -27,6 +27,7 @@
     <module>../org.scala-ide.sdt.weaving.feature</module>
     <module>../org.scala-ide.sdt.aspects</module>
     <module>../org.scala-ide.sdt.core</module>
+    <module>../org.scala-ide.sdt.core.tests</module>
     <module>../org.scala-ide.sdt.feature</module>
     <module>../org.scala-ide.sdt.source.feature</module>
     <module>../org.scala-ide.sdt.update-site</module>
@@ -213,30 +214,6 @@
       </repositories>
     </profile>
     <profile>
-      <id>scala-2.8.0-maintenance</id>
-      <repositories>
-        <repository>
-          <id>scala-refactoring-2.8.0.final</id>
-          <name>Scala Refactoring Scala 2.8.0.final p2 repository</name>
-          <layout>p2</layout>
-          <url>http://download.scala-ide.org/scala-refactoring-2.8.0.final</url>
-          <snapshots><enabled>false</enabled></snapshots>
-        </repository>
-        <repository>
-          <id>scalariform-2.8.0.final</id>
-          <name>Scalariform Scala 2.8.0.final p2 repo</name>
-          <layout>p2</layout>
-          <url>http://download.scala-ide.org/scalariform-2.8.0.final</url>
-        </repository>
-        <repository>
-          <id>scala-toolchain-2.8.0.final-maintenance</id>
-          <name>Scala Toolchain 2.8.0.final-maintenance p2 repository</name>
-          <layout>p2</layout>
-          <url>http://download.scala-ide.org/scala-eclipse-toolchain-osgi-2.8.0.final-maintenance</url>
-        </repository>
-      </repositories>
-    </profile>
-    <profile>
       <id>scala-2.8.x</id>
       <activation>
         <property>
@@ -262,6 +239,36 @@
           <name>Scala Toolchain 2.8.x p2 repository</name>
           <layout>p2</layout>
           <url>http://download.scala-ide.org/scala-eclipse-toolchain-osgi-2.8.x</url>
+        </repository>
+      </repositories>
+    </profile>
+    <profile>
+      <id>scala-2.9.0</id>
+      <activation>
+        <property>
+          <name>scala.version</name>
+          <value>2.9.0</value>
+        </property>
+      </activation>
+      <repositories>
+        <repository>
+          <id>scala-refactoring-2.9.0.final</id>
+          <name>Scala Refactoring Scala 2.9.0.final p2 repository</name>
+          <layout>p2</layout>
+          <url>http://download.scala-ide.org/scala-refactoring-2.9.0.final</url>
+          <snapshots><enabled>false</enabled></snapshots>
+        </repository>
+        <repository>
+          <id>scalariform-2.9.0.final</id>
+          <name>Scalariform Scala 2.9.0.final p2 repo</name>
+          <layout>p2</layout>
+          <url>http://download.scala-ide.org/scalariform-2.9.0.final</url>
+        </repository>
+        <repository>
+          <id>scala-toolchain-2.9.0.final</id>
+          <name>Scala Toolchain 2.9.0.final p2 repository</name>
+          <layout>p2</layout>
+          <url>http://download.scala-ide.org/scala-eclipse-toolchain-osgi-2.9.0.final</url>
         </repository>
       </repositories>
     </profile>

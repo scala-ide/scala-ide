@@ -157,7 +157,7 @@ class DiagnosticDialog(shell: Shell) extends Dialog(shell) {
     control.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, true))
     control.setLayout(new GridLayout)
 
-    def newGroup(name: String, theParent: Composite = control, layout: GridLayout = new GridLayout(2, false)): Group = {
+    def newGroup(name: String, theParent: Composite, layout: GridLayout = new GridLayout(2, false)): Group = {
       val group = new Group(theParent, SWT.SHADOW_NONE)
       group.setText(name)
       group.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, true))
@@ -165,7 +165,7 @@ class DiagnosticDialog(shell: Shell) extends Dialog(shell) {
       group
     }
     
-    val weavingGroup = newGroup("JDT Weaving")    
+    val weavingGroup = newGroup("JDT Weaving", control)    
     this.weavingButton = newCheckboxButton(weavingGroup, "Enable JDT weaving (required for Scala plugin)")
     weavingButton.setSelection(configurer.isWeaving)
     weavingButton.setEnabled(!configurer.isWeaving) // disable the control if weaving is already enabled

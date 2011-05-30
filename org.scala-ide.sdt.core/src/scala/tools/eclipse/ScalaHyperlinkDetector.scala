@@ -4,23 +4,16 @@
 // $Id$
 package scala.tools.eclipse
 
-import org.eclipse.core.resources.ResourcesPlugin
-import org.eclipse.core.runtime.Path
 import org.eclipse.jdt.core.{ICodeAssist, IJavaElement}
 import org.eclipse.jface.text.{IRegion, ITextViewer}
 import org.eclipse.jface.text.hyperlink.{AbstractHyperlinkDetector, IHyperlink}
-import org.eclipse.jdt.internal.core.{ClassFile,Openable}
+import org.eclipse.jdt.internal.core.Openable
 import org.eclipse.ui.texteditor.ITextEditor
-import org.eclipse.jdt.internal.compiler.env.ICompilationUnit
-import org.eclipse.jdt.ui.actions.SelectionDispatchAction
 import org.eclipse.jdt.internal.ui.javaeditor.{EditorUtility, JavaElementHyperlink}
 import org.eclipse.jdt.ui.actions.OpenAction
 import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor
 
-import scala.reflect.generic.Flags._
-import scala.tools.nsc.io.AbstractFile
-
-import javaelements.{ScalaSourceFile, ScalaClassFile, ScalaCompilationUnit, ScalaSelectionEngine, ScalaSelectionRequestor}
+import javaelements.{ScalaCompilationUnit, ScalaSelectionEngine, ScalaSelectionRequestor}
 import util.Logger
 
 class ScalaHyperlinkDetector extends AbstractHyperlinkDetector with Logger {
@@ -29,10 +22,10 @@ class ScalaHyperlinkDetector extends AbstractHyperlinkDetector with Logger {
     detectHyperlinks(textEditor, region, canShowMultipleHyperlinks)
   }
 
-  case class Hyperlink(file: Openable, pos: Int)(wordRegion: IRegion)  extends IHyperlink {
+  case class Hyperlink(file: Openable, pos: Int, text: String)(wordRegion: IRegion)  extends IHyperlink {
     def getHyperlinkRegion = wordRegion
     def getTypeLabel = null
-    def getHyperlinkText = "Open Declaration"
+    def getHyperlinkText = text
     def open = {
       EditorUtility.openInEditor(file, true) match {
         case editor: ITextEditor => editor.selectAndReveal(pos, 0)
@@ -54,31 +47,42 @@ class ScalaHyperlinkDetector extends AbstractHyperlinkDetector with Logger {
             else {
               val pos = compiler.rangePos(sourceFile, wordRegion.getOffset, wordRegion.getOffset, wordRegion.getOffset + wordRegion.getLength)
 
-              val response = new compiler.Response[compiler.Tree]
-              compiler.askTypeAt(pos, response)
+              import compiler.{ log => _, _ }
+              val response = new Response[compiler.Tree]
+              askTypeAt(pos, response)
               val typed = response.get
 
               log("detectHyperlinks: wordRegion = " + wordRegion)
-              val hyperlinks: Option[Hyperlink] = compiler.ask { () =>
-                import compiler.{ log => _, _ }
-                
+              val hyperlinks: Option[List[IHyperlink]] = compiler.askOption { () =>
                 typed.left.toOption map {
-                  case Import(expr, sels) => sels find (_.namePos >= pos.start) map (sel => expr.tpe.member(sel.name)) getOrElse NoSymbol
-                  case Annotated(atp, _)  => atp.symbol
-                  case st: SymTree        => st.symbol
-                  case t                  => log("unhandled tree " + t); NoSymbol
-                } flatMap { sym =>
-                  if (sym.isPackage || sym == NoSymbol || sym.isJavaDefined)
-                    None
-                  else
-                    compiler.locate(sym, scu) map { case (f, pos) => Hyperlink(f, pos)(wordRegion) }
+                  case Import(expr, sels) => sels find (_.namePos >= pos.start) map {sel => 
+                    val tpe = stabilizedType(expr)
+                    List(tpe.member(sel.name), tpe.member(sel.name.toTypeName))
+                  } getOrElse List()
+                  case Annotated(atp, _)  => List(atp.symbol)
+                  case st: SymTree        => List(st.symbol)
+                  case t                  => log("unhandled tree " + t); List()
+                } map { list =>
+                  list.foldLeft(List[IHyperlink]()) { (l, sym) => 
+                    if (sym.isPackage || sym == NoSymbol || sym.isJavaDefined)
+                      l
+                    else
+                      compiler.locate(sym, scu) match {
+                        case Some((f, pos)) => {
+                          val text = sym.kindString + " " + sym.fullName
+                          (Hyperlink(f, pos, text)(wordRegion): IHyperlink)::l
+                        }
+                        case _ => l
+                      }
+                  }
                 }
-              }
-              if (!hyperlinks.isDefined) {
+              }.flatten.headOption
+
+              if (!hyperlinks.isDefined || hyperlinks.get.isEmpty) {
                 log("!!! Falling back to selection engine for %s!".format(typed.left), Category.ERROR)
                 codeSelect(textEditor, wordRegion, scu)
               } else
-                Array(hyperlinks.get: IHyperlink)
+                hyperlinks.get.toArray
             }
           })(null)
 

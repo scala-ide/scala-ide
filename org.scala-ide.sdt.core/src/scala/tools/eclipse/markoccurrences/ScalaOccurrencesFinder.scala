@@ -1,5 +1,7 @@
-package scala.tools.eclipse.markoccurrences
+package scala.tools.eclipse
+package markoccurrences
 
+import scala.tools.nsc.interactive.FreshRunReq
 import scala.tools.refactoring.common.Selections
 import scala.tools.refactoring.implementations.MarkOccurrences
 import org.eclipse.jface.text.Region
@@ -13,7 +15,7 @@ class ScalaOccurrencesFinder(file: ScalaSourceFile, offset: Int, length: Int) {
   def findOccurrences(): Option[Occurrences] = {
     val (from, to) = (offset, offset + length)
     file.withSourceFile { (sourceFile, compiler) =>
-      compiler.ask { () =>
+      compiler.askOption { () =>
         val mo = new MarkOccurrences with GlobalIndexes {
           val global = compiler
           lazy val index = GlobalIndex(global.body(sourceFile))
@@ -33,8 +35,8 @@ class ScalaOccurrencesFinder(file: ScalaSourceFile, offset: Int, length: Int) {
           	Some(Occurrences(symbolName, locations.toList))
           }
         }
-      }
-    } (None)
+      } getOrElse None
+    }(None)
   }
 }
 

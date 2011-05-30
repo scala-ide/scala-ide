@@ -32,19 +32,20 @@ import scala.tools.eclipse.templates.ScalaTemplateManager
 
 object ScalaPlugin {
   var plugin: ScalaPlugin = _
-
-  /** Returns the active workbench shell, or null if one does not exist */
-  def getShell: Shell = {
+  
+  def getWorkbenchWindow = {
     val workbench = PlatformUI.getWorkbench
-    var window =
-      Option(workbench.getActiveWorkbenchWindow) orElse workbench.getWorkbenchWindows.headOption
-    window.map { _.getShell }.orNull
+    Option(workbench.getActiveWorkbenchWindow) orElse workbench.getWorkbenchWindows.headOption
   }
+  
+  def getShell: Shell = getWorkbenchWindow map (_.getShell) orNull
 }
 
 class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IElementChangedListener with IPartListener {
   ScalaPlugin.plugin = this
 
+  final val HEADLESS_TEST  = "sdtcore.headless"
+  
   def pluginId = "org.scala-ide.sdt.core"
   def compilerPluginId = "org.scala-ide.scala.compiler"
   def libraryPluginId = "org.scala-ide.scala.library"
@@ -96,36 +97,25 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
 
   lazy val templateManager = new ScalaTemplateManager()
 
-  val pageListener = new IPageListener {
-    def pageOpened(page: IWorkbenchPage) {
-      page.addPartListener(ScalaPlugin.this)
-    }
-
-    def pageClosed(page: IWorkbenchPage) {
-      page.removePartListener(ScalaPlugin.this)
-    }
-
-    def pageActivated(page: IWorkbenchPage) {}
-  }
-
   private val projects = new HashMap[IProject, ScalaProject]
 
   override def start(context: BundleContext) = {
     super.start(context)
 
-    ResourcesPlugin.getWorkspace.addResourceChangeListener(this, IResourceChangeEvent.PRE_CLOSE | IResourceChangeEvent.POST_CHANGE)
-    JavaCore.addElementChangedListener(this)
-    PlatformUI.getWorkbench.getEditorRegistry.setDefaultEditor("*.scala", editorId)
-    asyncExec(PlatformUI.getWorkbench.getActiveWorkbenchWindow.addPageListener(pageListener))
+    if (System.getProperty(HEADLESS_TEST) eq null) {
+      ResourcesPlugin.getWorkspace.addResourceChangeListener(this, IResourceChangeEvent.PRE_CLOSE | IResourceChangeEvent.POST_CHANGE)
+      JavaCore.addElementChangedListener(this)
+      PlatformUI.getWorkbench.getEditorRegistry.setDefaultEditor("*.scala", editorId)
+      ScalaPlugin.getWorkbenchWindow map (_.getPartService().addPartListener(ScalaPlugin.this))
 
+      PerspectiveFactory.updatePerspective
+      diagnostic.StartupDiagnostics.run
+    }
     println("Scala compiler bundle: " + scalaCompilerBundle.getLocation)
-    PerspectiveFactory.updatePerspective
-    diagnostic.StartupDiagnostics.run
   }
 
   override def stop(context: BundleContext) = {
     ResourcesPlugin.getWorkspace.removeResourceChangeListener(this)
-    Option(PlatformUI.getWorkbench.getActiveWorkbenchWindow).map(_.removePageListener(pageListener))
     super.stop(context)
   }
 
@@ -273,11 +263,13 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
   def partDeactivated(part: IWorkbenchPart) {}
   def partBroughtToTop(part: IWorkbenchPart) {}
   def partOpened(part: IWorkbenchPart) {
+    println("open " + part.getTitle)
     doWithCompilerAndFile(part) { (compiler, ssf) =>
       compiler.askReload(ssf, ssf.getContents)
     }
   }
   def partClosed(part: IWorkbenchPart) {
+    println("close " + part.getTitle)
     doWithCompilerAndFile(part) { (compiler, ssf) =>
       compiler.discardSourceFile(ssf)
     }

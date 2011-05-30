@@ -22,40 +22,27 @@ import scala.tools.refactoring.common.{Change, Selections}
 import scala.tools.refactoring.implementations.InlineLocal
 import org.eclipse.ltk.ui.refactoring.RefactoringWizard
 
-class InlineLocalAction extends RefactoringAction {
+/**
+ * The Inline Local -- also known as Inline Temp -- refactoring is the dual to Extract Local. 
+ * It can be used to eliminate a local values by replacing all references to the local value
+ * by its right hand side.
+ * 
+ * The implementation does not show a wizard but directly applies the changes (ActionWithNoWizard trait).
+ */
+class InlineLocalAction extends RefactoringAction with ActionWithNoWizard {
+
+  def createRefactoring(selectionStart: Int, selectionEnd: Int, file: ScalaSourceFile) = new InlineLocalScalaIdeRefactoring(selectionStart, selectionEnd, file)
   
-  class InlineLocalScalaIdeRefactoring(selectionStart: Int, selectionEnd: Int, file: ScalaSourceFile) extends ScalaIdeRefactoring("Inline Local") {
+  class InlineLocalScalaIdeRefactoring(start: Int, end: Int, file: ScalaSourceFile) extends ScalaIdeRefactoring("Inline Local", file, start, end) {
           
     val refactoring = file.withSourceFile((sourceFile, compiler) => new InlineLocal with GlobalIndexes {
       val global = compiler
-      val index = GlobalIndex(global.unitOfFile(sourceFile.file).body)
+      val index = GlobalIndex(askLoadedAndTypedTreeForFile(sourceFile).left.get)
     })()
     
-    lazy val selection = createSelection(file, selectionStart, selectionEnd)
-            
-    def initialCheck = refactoring.prepare(selection)
-    
+    /**
+     * The refactoring does not take any parameters.
+     */
     def refactoringParameters = new refactoring.RefactoringParameters
-  }
-  
-  def createRefactoring(selectionStart: Int, selectionEnd: Int, file: ScalaSourceFile) = 
-    Some(new InlineLocalScalaIdeRefactoring(selectionStart, selectionEnd, file))
-  
-  override def run(action: IAction) {
-    // if there are no errors, we want to apply the refactoring without showing the change preview
-    createScalaRefactoring() match {
-      case Some(refactoring: InlineLocalScalaIdeRefactoring) =>
-        val npm = new NullProgressMonitor
-        val status = refactoring.checkInitialConditions(npm)
-        
-        if(status.hasError) {
-          runRefactoring(createWizard(Some(refactoring)))
-          return
-        }
-        
-        val change = refactoring.createChange(npm)
-        change.perform(npm)
-      case _ => //?
-    }
   }
 }

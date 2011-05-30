@@ -19,9 +19,7 @@ import org.eclipse.jdt.core.search.IJavaSearchConstants
 import org.eclipse.jdt.internal.codeassist.{ ISearchRequestor, ISelectionRequestor }
 import org.eclipse.jdt.internal.codeassist.impl.{ AssistParser, Engine }
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants
-import org.eclipse.jdt.internal.compiler.env
-import org.eclipse.jdt.internal.compiler.env.{ AccessRestriction, ICompilationUnit }
-import org.eclipse.jdt.internal.compiler.parser.{ Scanner, ScannerHelper, TerminalTokens }
+import org.eclipse.jdt.internal.compiler.env.{ICompilationUnit, AccessRestriction}
 import org.eclipse.jdt.internal.core.{ JavaElement, SearchableEnvironment }
 
 import util.Logger
@@ -37,22 +35,24 @@ class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: IS
   val acceptedEnums = new ArrayBuffer[(Array[Char], Array[Char], Int)]
   val acceptedAnnotations = new ArrayBuffer[(Array[Char], Array[Char], Int)]
 
-  def select(cu: env.ICompilationUnit, selectionStart0: Int, selectionEnd0: Int) {
+  def select(cu: ICompilationUnit, selectionStart0: Int, selectionEnd0: Int) {
     val scu = cu.asInstanceOf[ScalaCompilationUnit]
 
     scu.doWithSourceFile { (src, compiler) =>
 
       import compiler.{ log => _, _ }
 
-      val source = scu.getContents()
+      val source = scu.getContents
+      val region = ScalaWordFinder.findWord(source, selectionStart0)
 
       val (selectionStart, selectionEnd) =
         if (selectionStart0 <= selectionEnd0)
           (selectionStart0, selectionEnd0)
         else {
-          val region = ScalaWordFinder.findWord(source, selectionEnd0)
           (region.getOffset, if (region.getLength > 0) region.getOffset + region.getLength - 1 else region.getOffset)
         }
+      
+      val wordStart = region.getOffset
 
       actualSelectionStart = selectionStart
       actualSelectionEnd = selectionEnd
@@ -62,12 +62,6 @@ class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: IS
       log("selectedIdentifier: " + selectedIdentifier.mkString("", "", ""))
 
       val ssr = requestor.asInstanceOf[ScalaSelectionRequestor]
-      var fallbackToDefaultLookup = true
-
-      def qual(tree: compiler.Tree): Tree = tree.symbol.info match {
-        case compiler.analyzer.ImportType(expr) => expr
-        case _ => tree
-      }
 
       /** Delay the action. Necessary so that the payload is run outside of 'ask'. */
       class Cont(f: () => Unit) {
@@ -77,7 +71,6 @@ class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: IS
       object Cont {
         def apply(next: => Unit) = new Cont({ () => next })
         val Noop = new Cont(() => ())
-        implicit def noop(v: Any) = Noop
       }
 
       def acceptType(t: compiler.Symbol) = {
@@ -85,7 +78,7 @@ class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: IS
       }
 
       def acceptTypeWithFlags(t: compiler.Symbol, jdtFlags: Int) = {
-        val packageName = t.enclosingPackage.fullName.toArray
+        val packageName = enclosingPackage(t).toArray
         val typeName = mapTypeName(t).toArray
         Cont(requestor.acceptType(
           packageName,
@@ -98,7 +91,7 @@ class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: IS
       }
 
       def acceptField(f: compiler.Symbol) = {
-        val packageName = f.enclosingPackage.fullName.toArray
+        val packageName = enclosingPackage(f).toArray
         val typeName = mapTypeName(f.owner).toArray
         val name = (if (f.isSetter) compiler.nme.setterToGetter(f.name) else f.name).toString.toArray
         Cont(requestor.acceptField(
@@ -118,7 +111,7 @@ class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: IS
         val name = if (isConstructor) owner.name else m0.name
         val paramTypes = m0.tpe.paramss.flatMap(_.map(_.tpe))
 
-        val packageName = m0.enclosingPackage.fullName.toArray
+        val packageName = enclosingPackage(m0).toArray
         val typeName = mapTypeName(owner).toArray
         val parameterPackageNames = paramTypes.map(mapParamTypePackageName(_).toArray).toArray
         val parameterTypeNames = paramTypes.map(mapParamTypeName(_).toArray).toArray
@@ -140,7 +133,7 @@ class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: IS
           actualSelectionEnd))
       }
 
-      def acceptLocalDefinition(defn: compiler.Symbol) {
+      def acceptLocalDefinition(defn: compiler.Symbol): Cont = {
         val parent = ssr.findLocalElement(defn.pos.startOrPoint)
         if (parent != null) {
           val name = if (defn.hasFlag(Flags.PARAM) && defn.hasFlag(Flags.SYNTHETIC)) "_" else defn.name.toString.trim
@@ -157,8 +150,8 @@ class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: IS
             defn.pos.point + name.length - 1,
             jtype.getSignature,
             name + " : " + defn.tpe.toString)
-          ssr.addElement(localVar)
-        }
+          Cont(ssr.addElement(localVar))
+        } else Cont.Noop
       }
 
       def isPrimitiveType(sym: compiler.Symbol) = {
@@ -182,27 +175,30 @@ class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: IS
       val typed = new compiler.Response[compiler.Tree]
       compiler.askTypeAt(pos, typed)
       val typedRes = typed.get
-      import Cont.noop
-      val cont: Cont = compiler.ask { () =>
+      val cont: Cont = compiler.askOption { () =>
         typedRes.left.toOption match {
           case Some(tree) => {
             tree match {
-              case i: compiler.Ident => i.symbol match {
-                case c: compiler.ClassSymbol => acceptType(c)
-                case m: compiler.ModuleSymbol => acceptType(m)
-                case t: compiler.TermSymbol if t.pos.isDefined =>
-                  if (t.isMethod) acceptMethod(t) else if (t.isLocal) acceptLocalDefinition(t) else acceptField(t)
-                case sym => log("Unhandled: " + sym.getClass.getName)
-              }
+              case i: compiler.Ident => 
+                i.symbol match {
+                  case c: compiler.ClassSymbol  => acceptType(c)
+                  case m: compiler.ModuleSymbol => acceptType(m)
+                  case t: compiler.TermSymbol if t.pos.isDefined =>
+                    if (t.isMethod) acceptMethod(t) else if (t.isLocal) acceptLocalDefinition(t) else acceptField(t)
+                  case sym =>
+                    log("Unhandled: " + sym.getClass.getName)
+                    Cont.Noop
+                }
 
-              case r: compiler.Literal => r.symbol match {
-                case m: compiler.ModuleSymbol => acceptType(m)
-                case t: compiler.TermSymbol if !t.isMethod && t.pos.isDefined =>
-                  if (t.isLocal) acceptLocalDefinition(t) else acceptField(t)
-                case _ =>
-              }
+              case r: compiler.Literal =>
+                r.symbol match {
+                  case m: compiler.ModuleSymbol => acceptType(m)
+                  case t: compiler.TermSymbol if !t.isMethod && t.pos.isDefined =>
+                    if (t.isLocal) acceptLocalDefinition(t) else acceptField(t)
+                  case _ => Cont.Noop
+                }
 
-              case s: compiler.Select if s.symbol != null && s.symbol != NoSymbol =>
+              case s: compiler.Select if s.symbol != null && s.symbol != NoSymbol => 
                 val sym = s.symbol
                 if (sym.hasFlag(Flags.JAVA)) {
                   if (sym.isModule || sym.isClass)
@@ -213,18 +209,19 @@ class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: IS
                     acceptField(sym)
                 } else if (sym.owner.isAnonymousClass && sym.pos.isDefined) {
                   ssr.addElement(ssr.findLocalElement(sym.pos.startOrPoint))
+                  Cont.Noop
                 } else if (sym.hasFlag(Flags.ACCESSOR | Flags.PARAMACCESSOR)) {
                   acceptField(sym)
                 } else if (sym.isModule || sym.isClass) {
                   acceptType(sym)
                 } else
                   acceptMethod(sym)
-
+              
               case a@compiler.Annotated(atp, _) =>
                 acceptTypeWithFlags(atp.symbol, ClassFileConstants.AccAnnotation)
 
               case i@compiler.Import(expr, selectors) =>
-                def acceptSymbol(sym: compiler.Symbol) {
+                def acceptSymbol(sym: compiler.Symbol): Cont = {
                   sym match {
                     case c: compiler.ClassSymbol =>
                       acceptType(c)
@@ -240,49 +237,38 @@ class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: IS
                       acceptField(t)
                     case _ =>
                       log("Unhandled: " + tree.getClass.getName)
+                      Cont.Noop
                   }
                 }
-
-                val q = qual(i)
-                if (q.pos overlaps pos) {
-                  def findInSelect(t: compiler.Tree): Tree = t match {
-                    case Select(qual, _) if qual.pos.overlaps(pos) => findInSelect(qual)
-                    case _ => t
-                  }
-                  val tree = findInSelect(q)
-                  val sym = tree.symbol
-                  acceptSymbol(sym)
-                } else
-                  selectors.find({ case compiler.ImportSelector(name, pos, _, _) => pos >= selectionStart && pos + name.length - 1 <= selectionEnd }) match {
-                    case Some(compiler.ImportSelector(name, _, _, _)) =>
-                      val base = compiler.typer.typedQualifier(q).tpe
-                      val sym0 = base.member(name) match {
-                        case NoSymbol => base.member(name.toTypeName)
-                        case s => s
-                      }
-                      val syms = if (sym0.hasFlag(Flags.OVERLOADED)) sym0.alternatives else List(sym0)
-                      syms.map(acceptSymbol)
-                    case _ =>
-                  }
-
+                
+                val sym = selectors find (_.namePos >= wordStart) map {sel => 
+                  val tpe = stabilizedType(expr)
+                  // Only look for java type, scala symbols are handled in ScalaHyperlinkDetector.
+                  tpe.member(sel.name.toTypeName)
+                } getOrElse NoSymbol
+                if (sym ne NoSymbol) acceptSymbol(sym) else Cont.Noop
               case l@(_: ValDef | _: Bind | _: ClassDef | _: ModuleDef | _: TypeDef | _: DefDef) =>
                 val sym = l.symbol
                 if (sym.isLocal)
                   acceptLocalDefinition(l.symbol)
                 else
                   ssr.addElement(ssr.findLocalElement(pos.startOrPoint))
+                  Cont.Noop
 
               case _ =>
                 log("Unhandled: " + tree.getClass.getName)
+                Cont.Noop
             }
           }
           case None =>
             log("No tree")
+            Cont.Noop
         }
-      }
+      } getOrElse Cont.Noop
+      
       cont()
 
-      if (!ssr.hasSelection && fallbackToDefaultLookup) {
+      if (!ssr.hasSelection) {
         // only reaches here if no selection could be derived from the parsed tree
         // thus use the selected source and perform a textual type search
 
