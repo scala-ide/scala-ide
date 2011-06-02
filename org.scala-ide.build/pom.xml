@@ -381,14 +381,14 @@
           <id>scala-refactoring-2.9.x</id>
           <name>Scala Refactoring Scala 2.9.0.final p2 repository</name>
           <layout>p2</layout>
-          <url>http://download.scala-ide.org/scala-refactoring-trunk</url>
+          <url>http://download.scala-ide.org/scala-refactoring-2.9.0.final</url>
           <snapshots><enabled>false</enabled></snapshots>
         </repository>
         <repository>
           <id>scalariform-2.9.x</id>
           <name>Scalariform Scala 2.9.0.final p2 repo</name>
           <layout>p2</layout>
-          <url>http://download.scala-ide.org/scalariform-trunk</url>
+          <url>http://download.scala-ide.org/scalariform-2.9.0.final</url>
         </repository>
       </repositories>
     </profile>
