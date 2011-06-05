@@ -1060,7 +1060,6 @@
     </category>
     <view
           allowMultiple="true"
-          category="org.scala-ide.sdt.core.scalaCategory"
           class="scala.tools.eclipse.interpreter.ReplConsoleView"
           icon="icons/full/etool16/scala_app.gif"
           id="org.scala-ide.sdt.core.consoleView"
