@@ -34,9 +34,7 @@ class EclipseRepl(project: ScalaProject, settings: Settings) extends IMain(setti
     val viewPart = PlatformUI.getWorkbench.getActiveWorkbenchWindow.getActivePage.showView(
         "org.scala-ide.sdt.core.consoleView", project.underlying.getName, 
         IWorkbenchPage.VIEW_VISIBLE)
-    val replView = viewPart.asInstanceOf[ReplConsoleView]
-    replView.projectName = project.underlying.getName
-    replView
+    viewPart.asInstanceOf[ReplConsoleView]
   }
   
   override def interpret(code: String): Results.Result = {
