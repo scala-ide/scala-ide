@@ -28,6 +28,17 @@ class ReplConsoleView extends ViewPart {
   var codeBgColor: Color = null
   var codeFgColor: Color = null
   var projectName: String = ""
+  private var scalaProject: ScalaProject = null
+  var isStopped = true
+  
+  def setScalaProject(project: ScalaProject) {
+    scalaProject = project
+    
+    if (isStopped) {
+      clearConsoleAction.run
+      setStarted
+    }
+  }
     
   object stopReplAction extends Action("Terminate") {
     setToolTipText("Terminate")
@@ -38,10 +49,9 @@ class ReplConsoleView extends ViewPart {
     setHoverImageDescriptor(DebugPluginImages.getImageDescriptor(IMG_LCL_TERMINATE))
     
     override def run() {
-      println("*** stop repl action.run was called")
+      EclipseRepl.stopRepl(scalaProject)
+      setStopped
     }
-    
-    setEnabled(false) // TODO change
   }
     
   object clearConsoleAction extends Action("Clear Output") {
@@ -65,10 +75,27 @@ class ReplConsoleView extends ViewPart {
     setHoverImageDescriptor(DebugPluginImages.getImageDescriptor(IMG_ELCL_TERMINATE_AND_RELAUNCH))
     
     override def run() {
-      println("*** relaunch interpreter action called")
+      clearConsoleAction.run
+      EclipseRepl.relaunchRepl(scalaProject)
     }
+  }
+  
+  private def setStarted {
+    isStopped = false
+
+    stopReplAction.setEnabled(true)
+    relaunchAction.setEnabled(true)
+
+    setContentDescription("Scala REPL (Project: " + projectName + ")")
+  }
+
+  private def setStopped {
+    isStopped = true
+
+    stopReplAction.setEnabled(false)
+    relaunchAction.setEnabled(false)
     
-    setEnabled(false) // TODO change
+    setContentDescription("<terminated> " + getContentDescription)
   }
     
   def createPartControl(parent: Composite) {
@@ -89,7 +116,7 @@ class ReplConsoleView extends ViewPart {
     toolbarManager.add(clearConsoleAction)
     
     setPartName("Scala REPL (" + projectName + ")")
-    setContentDescription("Scala REPL (Project: " + projectName + ")")
+    setStarted
   }
 
   def setFocus() { }
@@ -98,27 +125,30 @@ class ReplConsoleView extends ViewPart {
    * Display the string with code formatting
    */
   def displayCode(text: String) {
-    appendText(text, codeFgColor, codeBgColor, SWT.ITALIC)
+    if (textWidget.getCharCount != 0) // don't insert a newline if this is the first line of code to be displayed
+      displayOutput("\n")
+    appendText(text, codeFgColor, codeBgColor, SWT.ITALIC, insertNewline = true)
+    displayOutput("\n")
   }
 
   def displayOutput(text: String) {
     appendText(text, null, null, SWT.NORMAL)
   }
   
-  private def appendText(text: String, fgColor: Color, bgColor: Color, fontStyle: Int) {
+  private def appendText(text: String, fgColor: Color, bgColor: Color, fontStyle: Int, insertNewline: Boolean = false) {
     val lastOffset = textWidget.getCharCount
     val oldLastLine = textWidget.getLineCount
     
-    textWidget.append("\n")
-    textWidget.append(text)
-    textWidget.append("\n")
-    textWidget.setStyleRange(new StyleRange(lastOffset, text.length + 1, fgColor, null, fontStyle))
+    val outputStr = 
+      if (insertNewline) "\n" + text.stripLineEnd + "\n\n"
+      else text
+
+    textWidget.append(outputStr)        
+    textWidget.setStyleRange(new StyleRange(lastOffset, outputStr.length, fgColor, null, fontStyle))
     
     val lastLine = textWidget.getLineCount
-    
     if (bgColor != null)
       textWidget.setLineBackground(oldLastLine - 1, lastLine - oldLastLine, bgColor)
-     
     textWidget.setTopIndex(textWidget.getLineCount - 1)  
     
     clearConsoleAction.setEnabled(true)

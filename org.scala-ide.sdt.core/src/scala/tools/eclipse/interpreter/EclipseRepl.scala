@@ -21,30 +21,50 @@ object EclipseRepl {
       new EclipseRepl(project, settings)      
     })
   }
+  
+  /** Stop the execution of the repl associated with the project. The repl is expected to be in `projectToReplMap` */
+  def stopRepl(project: ScalaProject) {
+    val repl = projectToReplMap.remove(project).get
+    repl.close
+  }
+  
+  def relaunchRepl(project: ScalaProject) {
+    val repl = projectToReplMap.get(project).get
+    repl.replay
+  }
 }
 
 class EclipseRepl(project: ScalaProject, settings: Settings) extends IMain(settings) {
-  object ReplReporter extends ConsoleReporter(settings, null, new PrintWriter(NullOutputStream)) {
-    override def printMessage(msg: String) = {
-      getReplView.displayOutput(msg)      
-    }
-  }
+  
+  val replayList = new mutable.ListBuffer[String]
   
   private def getReplView: ReplConsoleView = {
     val viewPart = PlatformUI.getWorkbench.getActiveWorkbenchWindow.getActivePage.showView(
         "org.scala-ide.sdt.core.consoleView", project.underlying.getName, 
         IWorkbenchPage.VIEW_VISIBLE)
-    viewPart.asInstanceOf[ReplConsoleView]
+    val replView = viewPart.asInstanceOf[ReplConsoleView]
+    replView setScalaProject project
+    replView
   }
   
   override def interpret(code: String): Results.Result = {
-    getReplView.displayCode(code)
+    replayList += code
+    getReplView displayCode code
     super.interpret(code)
   }
+    
+  def replay {
+    reset
+    getReplView.displayCode(replayList.mkString("\n"))
+    replayList foreach { super.interpret(_) }
+  }
   
-  override lazy val reporter = ReplReporter
-}
+  override lazy val reporter = new ConsoleReporter(settings, null, new PrintWriter(ViewOutputStream)) 
 
-object NullOutputStream extends OutputStream {
-  def write(b: Int) { }
+  object ViewOutputStream extends java.io.ByteArrayOutputStream { self =>
+    override def flush() {      
+      getReplView.displayOutput(self.toString)
+      self.reset
+    }
+  }
 }
