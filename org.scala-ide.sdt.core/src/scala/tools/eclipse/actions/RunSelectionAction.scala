@@ -17,7 +17,6 @@ class RunSelectionAction extends ActionDelegate with IWorkbenchWindowActionDeleg
   var workbenchWindow: IWorkbenchWindow = null
 
   def init(window: IWorkbenchWindow) {
-    println("Init! " + window)
     workbenchWindow = window
   }
      
@@ -29,8 +28,7 @@ class RunSelectionAction extends ActionDelegate with IWorkbenchWindowActionDeleg
   }
   
   override def run(action: IAction) {
-    println("run: RunSelectionAction")
-   
+
     for (editor <- Option(workbenchWindow.getActivePage.getActiveEditor);
         input <- doCast[IFileEditorInput](editor.getEditorInput);
         textEditor <- doCast[ITextEditor](editor);
@@ -38,8 +36,6 @@ class RunSelectionAction extends ActionDelegate with IWorkbenchWindowActionDeleg
     {
       val project = input.getFile.getProject
       var text = selection.getText
-      
-      println("Selected text: " + text)
       
       if (text.isEmpty) {
         val provider = textEditor.getDocumentProvider
@@ -50,7 +46,6 @@ class RunSelectionAction extends ActionDelegate with IWorkbenchWindowActionDeleg
           val lineOffset = document.getLineOffset(selection.getStartLine)
           val lineLength = document.getLineLength(selection.getStartLine)
           text = document.get(lineOffset, lineLength)
-          println("Current line: " + text)
         } 
         finally {
           provider.disconnect(input)
