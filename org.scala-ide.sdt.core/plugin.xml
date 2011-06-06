@@ -615,16 +615,6 @@
             label="Scala Console"/>
    </extension>
 
-  <extension point="org.eclipse.ui.console.consolePageParticipants">
-     <consolePageParticipant
-           class="scala.tools.eclipse.interpreter.ReplConsolePageParticipant"
-           id="org.scala-ide.sdt.core.consolePageParticipant2">
-        <enablement>
-           <instanceof
-                 value="scala.tools.eclipse.interpreter.ReplConsole">
-           </instanceof></enablement>
-     </consolePageParticipant>
-  </extension>
   <extension
         id="org.scala-ide.sdt.core.preferences"
         point="org.eclipse.core.runtime.preferences">
@@ -931,10 +921,6 @@
          id="scala.tools.eclipse.refactoring.command.AddImport"
          name="Add Import"/>
       <command
-            categoryId="org.eclipse.debug.ui.category.run"
-            id="scala.tools.eclipse.repl.historyUp"
-            name="Repl History Up"/>
-      <command
          categoryId="org.eclipse.debug.ui.category.run"
          id="scala.tools.eclipse.interpreter.RunSelection"
          name="Send Selection to REPL"/>
@@ -979,11 +965,6 @@
    		 schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
    		 contextId="scala.tools.eclipse.scalaEditorScope"
    		 sequence="M1+M2+M"/>
-   <key
-         commandId="scala.tools.eclipse.repl.historyUp"
-         contextId="org.eclipse.debug.ui.console"
-         schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-         sequence="CTRL+ARROW_UP"/>
    <key
        commandId="scala.tools.eclipse.interpreter.RunSelection"
        schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
@@ -1060,6 +1041,7 @@
     </category>
     <view
           allowMultiple="true"
+          category="null"
           class="scala.tools.eclipse.interpreter.ReplConsoleView"
           icon="icons/full/etool16/scala_app.gif"
           id="org.scala-ide.sdt.core.consoleView"
