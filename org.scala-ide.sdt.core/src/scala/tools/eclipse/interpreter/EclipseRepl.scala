@@ -14,11 +14,11 @@ import org.eclipse.ui.IWorkbenchPage
 object EclipseRepl {
   private val projectToReplMap = new mutable.HashMap[ScalaProject, EclipseRepl]   
   
-  def replForProject(project: ScalaProject): EclipseRepl = {
+  def replForProject(project: ScalaProject, replView: ReplConsoleView): EclipseRepl = {
     projectToReplMap.getOrElseUpdate(project, {
       val settings = new Settings
       project.initialize(settings, _ => true)
-      new EclipseRepl(project, settings)      
+      new EclipseRepl(project, settings, replView)      
     })
   }
   
@@ -34,36 +34,39 @@ object EclipseRepl {
   }
 }
 
-class EclipseRepl(project: ScalaProject, settings: Settings) extends IMain(settings) {
+class EclipseRepl(project: ScalaProject, settings: Settings, replView: ReplConsoleView) {
   
   val replayList = new mutable.ListBuffer[String]
   
-  private def getReplView: ReplConsoleView = {
-    val viewPart = PlatformUI.getWorkbench.getActiveWorkbenchWindow.getActivePage.showView(
-        "org.scala-ide.sdt.core.consoleView", project.underlying.getName, 
-        IWorkbenchPage.VIEW_VISIBLE)
-    val replView = viewPart.asInstanceOf[ReplConsoleView]
-    replView setScalaProject project
-    replView
-  }
-  
-  override def interpret(code: String): Results.Result = {
-    replayList += code
-    getReplView displayCode code
-    super.interpret(code)
+  val intp = new IMain(settings) {
+    override lazy val reporter = new ConsoleReporter(settings, null, new PrintWriter(ViewOutputStream)) 
   }
     
-  def replay {
-    reset
-    getReplView.displayCode(replayList.mkString("\n"))
-    replayList foreach { super.interpret(_) }
+  def interpret(code: String) {
+    replayList += code
+    replView displayCode code 
+    interpretAndRedirect(code)
   }
   
-  override lazy val reporter = new ConsoleReporter(settings, null, new PrintWriter(ViewOutputStream)) 
-
+  /**
+   * Interpret `code`, while redirecting standard output to the repl view
+   */
+  private def interpretAndRedirect(code: String) {
+    val result = Console.withOut(ViewOutputStream) { intp interpret code }
+    ViewOutputStream.flush
+  }
+  
+  def close = intp.close
+    
+  def replay {
+    intp.reset
+    replView displayCode replayList.mkString("\n") 
+    replayList foreach { interpretAndRedirect(_) }
+  }
+  
   object ViewOutputStream extends java.io.ByteArrayOutputStream { self =>
     override def flush() {      
-      getReplView.displayOutput(self.toString)
+      replView displayOutput self.toString 
       self.reset
     }
   }
