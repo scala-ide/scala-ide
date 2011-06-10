@@ -33,6 +33,23 @@
          </enabledWhen>
       </page>
    </extension>
+      <extension
+         point="org.eclipse.ui.propertyPages">
+      <page
+            class="scala.tools.eclipse.properties.OrganizeImportsPreferencesPage"
+            id="scala.tools.eclipse.properties.OrganizeImportsPreferencesPage"
+            name="Scala Organize Imports">
+         <filter
+               name="nature"
+               value="org.scala-ide.sdt.core.scalanature"/>
+         <enabledWhen>
+         <or> <instanceof value="org.eclipse.jdt.core.IJavaProject"/>
+              <instanceof value="org.eclipse.core.resources.IProject"/>
+         </or>
+         </enabledWhen>
+      </page>
+   </extension>
+   
    <extension point="org.eclipse.ui.preferencePages">
       <page class="scala.tools.eclipse.properties.ScalaPreferences"
             name="Scala"
@@ -58,6 +75,12 @@
             class="scala.tools.eclipse.templates.TemplatePreferences"
             id="org.scala-ide.sdt.core.preferences.Templates"
             name="Templates">
+      </page>
+      <page
+            category="org.scala-ide.sdt.core.preferences"
+            class="scala.tools.eclipse.properties.OrganizeImportsPreferencesPage"
+            id="scala.tools.eclipse.properties.OrganizeImportsPreferencesPage"
+            name="Organize Imports">
       </page>
    </extension>
 
@@ -626,6 +649,9 @@
      </initializer>
      <initializer
            class="scala.tools.eclipse.formatter.ScalaFormatterPreferenceInitializer">
+     </initializer>
+     <initializer
+           class="scala.tools.eclipse.properties.OrganizeImportsPreferencesInitializer">
      </initializer>
   </extension>
 
