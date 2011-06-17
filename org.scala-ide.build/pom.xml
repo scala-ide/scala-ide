@@ -273,6 +273,36 @@
       </repositories>
     </profile>
     <profile>
+      <id>scala-2.9.0-1</id>
+      <activation>
+        <property>
+          <name>scala.version</name>
+          <value>2.9.0-1</value>
+        </property>
+      </activation>
+      <repositories>
+        <repository>
+          <id>scala-refactoring-2.9.0-1</id>
+          <name>Scala Refactoring Scala 2.9.0-1 p2 repository</name>
+          <layout>p2</layout>
+          <url>http://download.scala-ide.org/scala-refactoring-2.9.0-1</url>
+          <snapshots><enabled>false</enabled></snapshots>
+        </repository>
+        <repository>
+          <id>scalariform-2.9.0-1</id>
+          <name>Scalariform Scala 2.9.0-1 p2 repo</name>
+          <layout>p2</layout>
+          <url>http://download.scala-ide.org/scalariform-2.9.0-1</url>
+        </repository>
+        <repository>
+          <id>scala-toolchain-2.9.0-1</id>
+          <name>Scala Toolchain 2.9.0-1 p2 repository</name>
+          <layout>p2</layout>
+          <url>http://download.scala-ide.org/scala-eclipse-toolchain-osgi-2.9.0-1</url>
+        </repository>
+      </repositories>
+    </profile>
+    <profile>
       <id>scala-trunk</id>
       <activation>
         <property>
