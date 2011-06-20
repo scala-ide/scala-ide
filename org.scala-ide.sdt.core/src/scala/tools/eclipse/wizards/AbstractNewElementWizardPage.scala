@@ -80,7 +80,7 @@ abstract class AbstractNewElementWizardPage extends NewTypeWizardPage(1, "") {
 
   protected object dialogFieldListener extends IDialogFieldListener {
     def dialogFieldChanged(field: DialogField) {
-      updateStatus(modifiersChanged)
+      doStatusUpdate()
     }
   }
 
