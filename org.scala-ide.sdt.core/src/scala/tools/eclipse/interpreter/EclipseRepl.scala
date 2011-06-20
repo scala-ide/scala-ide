@@ -6,6 +6,9 @@ import scala.tools.nsc.Settings
 import scala.tools.nsc.reporters.ConsoleReporter
 import scala.tools.nsc.util.Position
 import scala.collection.mutable
+import scala.tools.eclipse.util.SWTUtils
+
+import scala.actors.Actor
 
 import java.io.PrintWriter
 import org.eclipse.ui.PlatformUI
@@ -32,6 +35,7 @@ object EclipseRepl {
     val repl = projectToReplMap.get(project).get
     repl.close
     repl.resetCompiler
+    repl.replay
   }  
   
   def replayRepl(project: ScalaProject) {
@@ -41,6 +45,20 @@ object EclipseRepl {
 }   
 
 class EclipseRepl(project: ScalaProject, settings: Settings, replView: ReplConsoleView) {
+  
+  import Actor._
+  
+  private val eventQueue = Actor.actor {
+    loop { receive {
+      case code: String => 
+        Console.withOut(ViewOutputStream) { intp interpret code }
+        ViewOutputStream.flush
+    }}
+  }
+  
+  private def addToQueue(code: String) {
+    eventQueue ! code
+  }
   
   val replayList = new mutable.ListBuffer[String]
   
@@ -52,29 +70,23 @@ class EclipseRepl(project: ScalaProject, settings: Settings, replView: ReplConso
   def interpret(code: String) {
     replayList += code
     replView displayCode code 
-    interpretAndRedirect(code)
-  }
-  
-  /**
-   * Interpret `code`, while redirecting standard output to the repl view
-   */
-  private def interpretAndRedirect(code: String) {
-    Console.withOut(ViewOutputStream) { intp interpret code }
-    ViewOutputStream.flush
-  }
+    addToQueue(code)
+  } 
   
   def close = intp.close
     
   def replay {
     intp.reset
     replView displayCode replayList.mkString("\n") 
-    replayList foreach { interpretAndRedirect(_) }
+    replayList foreach { addToQueue(_) }
   }
   
   object ViewOutputStream extends java.io.ByteArrayOutputStream { self =>
     override def flush() {      
-      replView displayOutput self.toString 
-      self.reset
+      SWTUtils.asyncExec { 
+        replView displayOutput self.toString 
+        self.reset
+      } 
     }
   }
 }
