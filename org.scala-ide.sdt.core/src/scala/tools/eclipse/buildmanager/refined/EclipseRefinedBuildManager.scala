@@ -97,7 +97,7 @@ class EclipseRefinedBuildManager(project: ScalaProject, settings0: Settings)
     val targets = compiler.dependencyAnalysis.dependencies.targets
     toBuild flatMap targets foreach {
       case EclipseResource(f) =>
-        f.setDerived(true, monitor)
+        f.setDerived(true, null) // don't report progress on setting derived attributes, as the UI is slower than the operation
       case _ =>
     }
   }
