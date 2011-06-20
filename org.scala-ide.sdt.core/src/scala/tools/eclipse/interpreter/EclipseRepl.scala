@@ -38,9 +38,7 @@ class EclipseRepl(project: ScalaProject, settings: Settings, replView: ReplConso
   
   val replayList = new mutable.ListBuffer[String]
   
-  val intp = new IMain(settings) {
-    override lazy val reporter = new ConsoleReporter(settings, null, new PrintWriter(ViewOutputStream)) 
-  }
+  val intp = new IMain(settings, new PrintWriter(ViewOutputStream)) 
     
   def interpret(code: String) {
     replayList += code
