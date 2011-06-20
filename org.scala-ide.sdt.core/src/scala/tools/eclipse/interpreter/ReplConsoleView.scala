@@ -14,9 +14,6 @@ import org.eclipse.ui.IPropertyListener
 import org.eclipse.ui.part.ViewPart
 import org.eclipse.swt.graphics.Image
 import org.eclipse.swt.custom.StyledText
-import org.eclipse.swt.widgets.Text
-import org.eclipse.swt.layout.GridData
-import org.eclipse.swt.layout.GridLayout
 
 // for the toolbar images
 import org.eclipse.debug.internal.ui.IInternalDebugUIConstants
@@ -33,8 +30,7 @@ class ReplConsoleView extends ViewPart {
   var projectName: String = ""
   private var scalaProject: ScalaProject = null
   var isStopped = true
-  var inputField: Text = null
-   
+  
   def setScalaProject(project: ScalaProject) {
     scalaProject = project
     
@@ -84,19 +80,6 @@ class ReplConsoleView extends ViewPart {
     }
   }
   
-  object replayAction extends Action("Replay interpreter history") {
-    setToolTipText("Replay all commands")
-    
-    import IInternalDebugUIConstants._    
-    setImageDescriptor(DebugPluginImages.getImageDescriptor(IMG_ELCL_RESTART))
-    setDisabledImageDescriptor(DebugPluginImages.getImageDescriptor(IMG_DLCL_RESTART))
-    setHoverImageDescriptor(DebugPluginImages.getImageDescriptor(IMG_ELCL_RESTART))
-    
-    override def run() {
-      displayOutput("To do: replay all commands without restarting interpreter")
-    }
-  }  
-  
   private def setStarted {
     isStopped = false
 
@@ -122,62 +105,18 @@ class ReplConsoleView extends ViewPart {
     codeBgColor = new Color(parent.getDisplay, 230, 230, 230) // light gray
     codeFgColor = new Color(parent.getDisplay, 64, 0, 128) // eggplant
     
-    val panel = new Composite(parent, SWT.NONE)
-    panel.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, true))
-    panel.setLayout(new GridLayout)
-      
-    textWidget = new StyledText(panel, SWT.BORDER | SWT.H_SCROLL | SWT.V_SCROLL)
-    textWidget.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true))
+    textWidget = new StyledText(parent, SWT.BORDER | SWT.H_SCROLL | SWT.V_SCROLL)
     textWidget.setEditable(false)
-    val editorFont = JFaceResources.getFont(PreferenceConstants.EDITOR_TEXT_FONT)    
-    textWidget.setFont(editorFont) // java editor font
+    textWidget.setFont(JFaceResources.getFont(PreferenceConstants.EDITOR_TEXT_FONT)) // java editor font
     
-    inputField = new Text(panel, SWT.BORDER | SWT.SINGLE)
-    inputField.setFont(editorFont)
-    inputField.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false))
-     
     val toolbarManager = getViewSite.getActionBars.getToolBarManager
-    toolbarManager.add(replayAction)
-    toolbarManager.add(new Separator)
     toolbarManager.add(stopReplAction)
     toolbarManager.add(relaunchAction)
     toolbarManager.add(new Separator)
     toolbarManager.add(clearConsoleAction)
-
-    createMenuActions
     
     setPartName("Scala REPL (" + projectName + ")")
     setStarted
-  }
-  
-  private def createAction(name: String, payload: => Unit): Action = {
-    new Action(name) {
-      override def run() { payload }
-    }
-  }
-  
-  def createMenuActions {
-    val showImportsAction = createAction("Import history", { 
-          displayOutput("to do: add hook for :imports command. Note: will take a string argument\n")
-        })
-        
-    val showImplicitsAction = createAction("Implicits in scope", { 
-          displayOutput("to do: add hook for :implicits command. Note: has a verbose option\n")
-        })
-        
-    val powerModeAction = createAction("Power user mode", { 
-          displayOutput("to do: add hook for :power command. To do: add commands to dropdown: :dump, :phase, :wrap\n")
-        })
-   
-    val typeAction = createAction("Show type", { 
-          displayOutput("to do: add hook for :type command. Note: takes an argument. TBD: make this a right-click menu item?\n")
-        })
-    
-    val menuManager = getViewSite.getActionBars.getMenuManager
-    menuManager.add(showImportsAction)
-    menuManager.add(showImplicitsAction)
-    menuManager.add(typeAction)
-    menuManager.add(powerModeAction)
   }
 
   def setFocus() { }
@@ -216,7 +155,6 @@ class ReplConsoleView extends ViewPart {
   }
   
   override def dispose() {
-    stopReplAction.run // FIXME: this should NOT WRITE anything to the widget because it will be disposed already
     codeBgColor.dispose
     codeFgColor.dispose
   }
