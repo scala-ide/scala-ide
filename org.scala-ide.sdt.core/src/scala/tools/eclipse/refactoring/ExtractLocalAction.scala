@@ -10,6 +10,7 @@ import javaelements.ScalaSourceFile
 import scala.tools.refactoring.analysis.GlobalIndexes
 import scala.tools.refactoring.common.{Change, Selections}
 import scala.tools.refactoring.implementations.ExtractLocal
+import org.eclipse.ui.PlatformUI
 
 /**
  * From a selected expression, the Extract Local refactoring will create a new 
@@ -53,6 +54,8 @@ class ExtractLocalAction extends RefactoringAction {
       }      
     }
     
+    val shell = PlatformUI.getWorkbench.getActiveWorkbenchWindow.getShell
+    
     createScalaIdeRefactoringForCurrentEditorAndSelection() match {
       case Some(r: ExtractLocalScalaIdeRefactoring) => 
               
@@ -60,10 +63,10 @@ class ExtractLocalAction extends RefactoringAction {
           case Right((change: Change) :: Nil) =>
             doInlineExtraction(change, r.name)
           case _ =>
-            runRefactoring(createWizardForRefactoring(Some(r)))
+            runRefactoring(createWizardForRefactoring(Some(r)), shell)
         }
         
-      case None => runRefactoring(createWizardForRefactoring(None))
+      case None => runRefactoring(createWizardForRefactoring(None), shell)
     }
   }
 }
