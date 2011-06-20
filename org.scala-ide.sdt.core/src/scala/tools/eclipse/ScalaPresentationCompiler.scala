@@ -94,7 +94,7 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
    *  stdout, all the others are logged in the platform error log.
    */
   def askOption[A](op: () => A): Option[A] =
-    try Some(op())
+    try Some(ask(op))
     catch {
       case e: TypeError =>
         println("TypeError in ask:\n" + e)
