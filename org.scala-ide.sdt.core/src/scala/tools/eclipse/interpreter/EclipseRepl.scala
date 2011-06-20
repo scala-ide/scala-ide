@@ -21,24 +21,33 @@ object EclipseRepl {
       new EclipseRepl(project, settings, replView)      
     })
   }
-  
+    
   /** Stop the execution of the repl associated with the project. The repl is expected to be in `projectToReplMap` */
   def stopRepl(project: ScalaProject) {
     val repl = projectToReplMap.remove(project).get
     repl.close
   }
-  
+
   def relaunchRepl(project: ScalaProject) {
+    val repl = projectToReplMap.get(project).get
+    repl.close
+    repl.resetCompiler
+  }  
+  
+  def replayRepl(project: ScalaProject) {
     val repl = projectToReplMap.get(project).get
     repl.replay
   }
-}
+}   
 
 class EclipseRepl(project: ScalaProject, settings: Settings, replView: ReplConsoleView) {
   
   val replayList = new mutable.ListBuffer[String]
   
-  val intp = new IMain(settings, new PrintWriter(ViewOutputStream)) 
+  var intp = createCompiler()
+  
+  private def createCompiler(): IMain = new IMain(settings, new PrintWriter(ViewOutputStream))  
+  private def resetCompiler = { intp = createCompiler() } 
     
   def interpret(code: String) {
     replayList += code
@@ -50,7 +59,7 @@ class EclipseRepl(project: ScalaProject, settings: Settings, replView: ReplConso
    * Interpret `code`, while redirecting standard output to the repl view
    */
   private def interpretAndRedirect(code: String) {
-    val result = Console.withOut(ViewOutputStream) { intp interpret code }
+    Console.withOut(ViewOutputStream) { intp interpret code }
     ViewOutputStream.flush
   }
   
