@@ -18,6 +18,7 @@ import org.eclipse.ui.PlatformUI
 import org.eclipse.ltk.core.refactoring.RefactoringStatus
 import scala.tools.eclipse.javaelements.ScalaSourceFile
 import org.eclipse.jface.text.link._
+import org.eclipse.swt.widgets.Shell
 
 /**
  * This is the abstract driver of a refactoring execution: it is the 
@@ -63,14 +64,12 @@ trait RefactoringAction extends ActionAdapter {
    * Some of the refactoring implementations don't run in a wizard but make use of the
    * linked mode ui. These refactorings call `enterLinkedModeUi` directly.
    */
-  def runRefactoring(wizard: RefactoringWizard) {
-    
-    val shell = PlatformUI.getWorkbench.getActiveWorkbenchWindow.getShell
-          
+  def runRefactoring(wizard: RefactoringWizard, shell: Shell) {              
     (new RefactoringWizardOpenOperation(wizard)).run(shell, "Scala Refactoring")
   }
   
   def run(action: IAction) {
-    runRefactoring(createWizardForRefactoring(createScalaIdeRefactoringForCurrentEditorAndSelection()))
+    val shell = PlatformUI.getWorkbench.getActiveWorkbenchWindow.getShell
+    runRefactoring(createWizardForRefactoring(createScalaIdeRefactoringForCurrentEditorAndSelection()), shell)
   }
 }

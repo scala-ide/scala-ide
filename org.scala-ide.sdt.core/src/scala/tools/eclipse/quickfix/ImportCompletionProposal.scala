@@ -45,19 +45,9 @@ case class ImportCompletionProposal(val importName: String) extends IJavaComplet
     
       val changes = scalaSourceFile.withSourceFile { (sourceFile, compiler) =>
             
-        val refactoring = new AddImportStatement {
-          val global = compiler
-          
-          val selection = {
-            val start = textSelection.getOffset
-            val end = start + textSelection.getLength
-            val file = scalaSourceFile.file
-            // start and end are not yet used
-            new FileSelection(file, start, end)
-          }
-        }
+        val refactoring = new AddImportStatement { val global = compiler }
        
-        refactoring.addImport(refactoring.selection, importName)
+        refactoring.addImport(scalaSourceFile.file, importName)
       }(Nil)
       
       EditorHelpers.applyChangesToFileWhileKeepingSelection(document, textSelection, scalaSourceFile.file, changes)
