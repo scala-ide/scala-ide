@@ -26,14 +26,13 @@ object EclipseRepl {
   }
     
   /** Stop the execution of the repl associated with the project. The repl is expected to be in `projectToReplMap` */
-  def stopRepl(project: ScalaProject) {
+  def stopRepl(project: ScalaProject, flush: Boolean = true) {
     val repl = projectToReplMap.remove(project).get
-    repl.close
+    if (flush) repl.close
   }
 
   def relaunchRepl(project: ScalaProject) {
     val repl = projectToReplMap.get(project).get
-    repl.close
     repl.resetCompiler
     repl.replay
   }  
@@ -48,10 +47,12 @@ class EclipseRepl(project: ScalaProject, settings: Settings, replView: ReplConso
   
   import Actor._
   
-  private val eventQueue = Actor.actor {
+  private val eventQueue = actor {
     loop { receive {
       case code: String => 
-        Console.withOut(ViewOutputStream) { intp interpret code }
+        Console.withOut(ViewOutputStream) { 
+          intp interpret code 
+        }
         ViewOutputStream.flush
     }}
   }
@@ -65,7 +66,10 @@ class EclipseRepl(project: ScalaProject, settings: Settings, replView: ReplConso
   var intp = createCompiler()
   
   private def createCompiler(): IMain = new IMain(settings, new PrintWriter(ViewOutputStream))  
-  private def resetCompiler = { intp = createCompiler() } 
+  private def resetCompiler = {
+    intp.close
+    intp = createCompiler() 
+  } 
     
   def interpret(code: String) {
     replayList += code
