@@ -14,6 +14,9 @@ import org.eclipse.ui.IPropertyListener
 import org.eclipse.ui.part.ViewPart
 import org.eclipse.swt.graphics.Image
 import org.eclipse.swt.custom.StyledText
+import org.eclipse.swt.widgets.Text
+import org.eclipse.swt.layout.GridData
+import org.eclipse.swt.layout.GridLayout
 
 // for the toolbar images
 import org.eclipse.debug.internal.ui.IInternalDebugUIConstants
@@ -80,11 +83,29 @@ class ReplConsoleView extends ViewPart {
     }
   }
   
+  object replayAction extends Action("Replay interpreter history") {
+    setToolTipText("Replay all commands")
+    
+    import IInternalDebugUIConstants._    
+    setImageDescriptor(DebugPluginImages.getImageDescriptor(IMG_ELCL_RESTART))
+    setDisabledImageDescriptor(DebugPluginImages.getImageDescriptor(IMG_DLCL_RESTART))
+    setHoverImageDescriptor(DebugPluginImages.getImageDescriptor(IMG_ELCL_RESTART))
+    
+    setEnabled(false)
+    
+    override def run() {
+      // TODO: relaunch the interpreter if the repl is terminated
+      // problem: when the interpreter is stopped, history will be lost
+      EclipseRepl.replayRepl(scalaProject)
+    }
+  }  
+  
   private def setStarted {
     isStopped = false
 
     stopReplAction.setEnabled(true)
     relaunchAction.setEnabled(true)
+    replayAction.setEnabled(true)
 
     setContentDescription("Scala REPL (Project: " + projectName + ")")
   }
@@ -94,6 +115,7 @@ class ReplConsoleView extends ViewPart {
 
     stopReplAction.setEnabled(false)
     relaunchAction.setEnabled(false)
+    replayAction.setEnabled(false)
     
     setContentDescription("<terminated> " + getContentDescription)
   }
@@ -105,11 +127,19 @@ class ReplConsoleView extends ViewPart {
     codeBgColor = new Color(parent.getDisplay, 230, 230, 230) // light gray
     codeFgColor = new Color(parent.getDisplay, 64, 0, 128) // eggplant
     
-    textWidget = new StyledText(parent, SWT.BORDER | SWT.H_SCROLL | SWT.V_SCROLL)
+    val panel = new Composite(parent, SWT.NONE)
+    panel.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, true))
+    panel.setLayout(new GridLayout)
+      
+    textWidget = new StyledText(panel, SWT.BORDER | SWT.H_SCROLL | SWT.V_SCROLL)
+    textWidget.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true))
     textWidget.setEditable(false)
-    textWidget.setFont(JFaceResources.getFont(PreferenceConstants.EDITOR_TEXT_FONT)) // java editor font
+    val editorFont = JFaceResources.getFont(PreferenceConstants.EDITOR_TEXT_FONT)    
+    textWidget.setFont(editorFont) // java editor font
     
     val toolbarManager = getViewSite.getActionBars.getToolBarManager
+    toolbarManager.add(replayAction)
+    toolbarManager.add(new Separator)
     toolbarManager.add(stopReplAction)
     toolbarManager.add(relaunchAction)
     toolbarManager.add(new Separator)
@@ -157,5 +187,8 @@ class ReplConsoleView extends ViewPart {
   override def dispose() {
     codeBgColor.dispose
     codeFgColor.dispose
+    
+    if (!isStopped)
+      EclipseRepl.stopRepl(scalaProject, flush = false)
   }
 }
