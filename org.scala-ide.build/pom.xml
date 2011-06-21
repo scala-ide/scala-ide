@@ -22,8 +22,6 @@
   </prerequisites>
 
   <modules>
-    <module>../ch.epfl.lamp.sdt</module>
-    <module>../org.eclipse.contribution.weaving</module>
     <module>../org.scala-ide.sdt.weaving.feature</module>
     <module>../org.scala-ide.sdt.aspects</module>
     <module>../org.scala-ide.sdt.core</module>
@@ -94,7 +92,7 @@
         <artifactId>maven-osgi-packaging-plugin</artifactId>
         <version>${tycho.version}</version>
         <configuration>
-          <format>yyyyMMddHHmm'${version.tag}-${git.hash}'</format> 
+          <format>yyyyMMddHHmm'${version.tag}-${git.hash}'</format>
           <archiveSite>true</archiveSite>
         </configuration>
       </plugin>    

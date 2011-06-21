@@ -5,6 +5,13 @@
       version="2.0.0.qualifier"
       provider-name="scala-ide.org">
 
+   <description>
+      This feature adds the JDT weaving service to Eclipse. If you
+already have a feature that installs it (such as the AspectJ
+plugin or the Springsource Tool Suite), please do NOT select
+this feature.
+   </description>
+
    <license url="http://scala-lang.org/downloads/license.html">
       SCALA LICENSE
 
@@ -43,8 +50,6 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 SUCH DAMAGE.
    </license>
 
-   <includes id="org.eclipse.contribution.weaving" version="0.0.0" optional="true"/>
-
    <plugin
          id="org.aspectj.runtime"
          download-size="0"
@@ -79,4 +84,5 @@ SUCH DAMAGE.
          install-size="0"
          version="0.0.0"
          unpack="false"/>
+
 </feature>

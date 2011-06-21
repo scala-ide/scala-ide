@@ -58,11 +58,6 @@ SUCH DAMAGE.
       <update label="Scala IDE for Eclipse update site" url="http://download.scala-ide.org/update-current-35"/>
    </url>
 
-   <includes
-         id="ch.epfl.lamp.sdt"
-         version="0.0.0"
-         optional="true"/>
-
    <requires>
       <import plugin="org.eclipse.core.runtime"/>
       <import plugin="org.eclipse.core.resources"/>
