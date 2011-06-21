@@ -50,10 +50,11 @@ class EclipseRepl(project: ScalaProject, settings: Settings, replView: ReplConso
   private val eventQueue = actor {
     loop { receive {
       case code: String => 
-        Console.withOut(ViewOutputStream) { 
-          intp interpret code 
+        val output = new ViewOutputStream(false)
+        Console.withOut(output) { 
+          intp.interpret(code)
         }
-        ViewOutputStream.flush
+        output.flush
     }}
   }
   
@@ -65,7 +66,7 @@ class EclipseRepl(project: ScalaProject, settings: Settings, replView: ReplConso
   
   var intp = createCompiler()
   
-  private def createCompiler(): IMain = new IMain(settings, new PrintWriter(ViewOutputStream))  
+  private def createCompiler(): IMain = new IMain(settings, new PrintWriter(new ViewOutputStream(false)))  
   private def resetCompiler = {
     intp.close
     intp = createCompiler() 
@@ -85,10 +86,14 @@ class EclipseRepl(project: ScalaProject, settings: Settings, replView: ReplConso
     replayList foreach { addToQueue(_) }
   }
   
-  object ViewOutputStream extends java.io.ByteArrayOutputStream { self =>
+  class ViewOutputStream(isErrorStream: Boolean) extends java.io.ByteArrayOutputStream { self =>
     override def flush() {      
       SWTUtils.asyncExec { 
-        replView displayOutput self.toString 
+        if (isErrorStream)
+          replView displayError self.toString
+        else
+          replView displayOutput self.toString  
+          
         self.reset
       } 
     }

@@ -30,6 +30,8 @@ class ReplConsoleView extends ViewPart {
   var textWidget: StyledText = null
   var codeBgColor: Color = null
   var codeFgColor: Color = null
+  var errorFgColor: Color = null 
+  
   var projectName: String = ""
   private var scalaProject: ScalaProject = null
   var isStopped = true
@@ -124,8 +126,9 @@ class ReplConsoleView extends ViewPart {
     projectName = getViewSite.getSecondaryId
     if (projectName == null) projectName = ""
     
-    codeBgColor = new Color(parent.getDisplay, 230, 230, 230) // light gray
-    codeFgColor = new Color(parent.getDisplay, 64, 0, 128) // eggplant
+    codeBgColor = new Color(parent.getDisplay, 230, 230, 230)   // light gray
+    codeFgColor = new Color(parent.getDisplay, 64, 0, 128)      // eggplant
+    errorFgColor = new Color(parent.getDisplay, 128, 0, 64)     // maroon
     
     val panel = new Composite(parent, SWT.NONE)
     panel.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, true))
@@ -165,6 +168,10 @@ class ReplConsoleView extends ViewPart {
     appendText(text, null, null, SWT.NORMAL)
   }
   
+  def displayError(text: String) {
+    appendText(text, errorFgColor, null, SWT.NORMAL)
+  }
+  
   private def appendText(text: String, fgColor: Color, bgColor: Color, fontStyle: Int, insertNewline: Boolean = false) {
     val lastOffset = textWidget.getCharCount
     val oldLastLine = textWidget.getLineCount
@@ -187,6 +194,7 @@ class ReplConsoleView extends ViewPart {
   override def dispose() {
     codeBgColor.dispose
     codeFgColor.dispose
+    errorFgColor.dispose
     
     if (!isStopped)
       EclipseRepl.stopRepl(scalaProject, flush = false)
