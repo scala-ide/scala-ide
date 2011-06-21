@@ -45,7 +45,7 @@ class ReplConsoleView extends ViewPart {
   }
     
   object stopReplAction extends Action("Terminate") {
-    setToolTipText("Terminate")
+    setToolTipText("Terminate") 
     
     import IInternalDebugUIConstants._
     setImageDescriptor(DebugPluginImages.getImageDescriptor(IMG_LCL_TERMINATE))
@@ -92,8 +92,12 @@ class ReplConsoleView extends ViewPart {
     setDisabledImageDescriptor(DebugPluginImages.getImageDescriptor(IMG_DLCL_RESTART))
     setHoverImageDescriptor(DebugPluginImages.getImageDescriptor(IMG_ELCL_RESTART))
     
+    setEnabled(false)
+    
     override def run() {
-      displayOutput("To do: replay all commands without restarting interpreter")
+      // TODO: relaunch the interpreter if the repl is terminated
+      // problem: when the interpreter is stopped, history will be lost
+      EclipseRepl.replayRepl(scalaProject)
     }
   }  
   
@@ -102,6 +106,7 @@ class ReplConsoleView extends ViewPart {
 
     stopReplAction.setEnabled(true)
     relaunchAction.setEnabled(true)
+    replayAction.setEnabled(true)
 
     setContentDescription("Scala REPL (Project: " + projectName + ")")
   }
@@ -111,6 +116,7 @@ class ReplConsoleView extends ViewPart {
 
     stopReplAction.setEnabled(false)
     relaunchAction.setEnabled(false)
+    replayAction.setEnabled(false)
     
     setContentDescription("<terminated> " + getContentDescription)
   }
@@ -144,7 +150,7 @@ class ReplConsoleView extends ViewPart {
     toolbarManager.add(new Separator)
     toolbarManager.add(clearConsoleAction)
 
-    createMenuActions
+//    createMenuActions
     
     setPartName("Scala REPL (" + projectName + ")")
     setStarted
@@ -157,10 +163,6 @@ class ReplConsoleView extends ViewPart {
   }
   
   def createMenuActions {
-    val showImportsAction = createAction("Import history", { 
-          displayOutput("to do: add hook for :imports command. Note: will take a string argument\n")
-        })
-        
     val showImplicitsAction = createAction("Implicits in scope", { 
           displayOutput("to do: add hook for :implicits command. Note: has a verbose option\n")
         })
@@ -169,14 +171,8 @@ class ReplConsoleView extends ViewPart {
           displayOutput("to do: add hook for :power command. To do: add commands to dropdown: :dump, :phase, :wrap\n")
         })
    
-    val typeAction = createAction("Show type", { 
-          displayOutput("to do: add hook for :type command. Note: takes an argument. TBD: make this a right-click menu item?\n")
-        })
-    
     val menuManager = getViewSite.getActionBars.getMenuManager
-    menuManager.add(showImportsAction)
     menuManager.add(showImplicitsAction)
-    menuManager.add(typeAction)
     menuManager.add(powerModeAction)
   }
 
@@ -216,8 +212,10 @@ class ReplConsoleView extends ViewPart {
   }
   
   override def dispose() {
-    stopReplAction.run // FIXME: this should NOT WRITE anything to the widget because it will be disposed already
     codeBgColor.dispose
     codeFgColor.dispose
+    
+    if (!isStopped)
+      EclipseRepl.stopRepl(scalaProject, flush = false)
   }
 }
