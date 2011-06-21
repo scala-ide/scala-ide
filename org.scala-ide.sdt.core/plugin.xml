@@ -881,27 +881,6 @@
                </objectClass>
             </enablement>
          </action>
-	 <!--<action
-               class="scala.tools.eclipse.refactoring.ShowReferencesAction"
-               definitionId="scala.tools.eclipse.refactoring.command.ShowReferences"
-               id="scala.tools.eclipse.refactoring.showReferencesAction"
-               label="Show References"
-               menubarPath="scala.tools.eclipse.refactoring.refactoringMenu/scala.tools.eclipse.refactoring.sourceGeneratorGroup"
-               tooltip="Show References">
-            <enablement>
-               <objectClass
-                     name="org.eclipse.jface.text.TextSelection">
-               </objectClass>
-            </enablement>
-	</action>-->
-         <action
-               class="scala.tools.eclipse.quickfix.AddImportAction"
-               definitionId="scala.tools.eclipse.refactoring.command.AddImport"
-               id="scala.tools.eclipse.refactoring.addImportAction"
-               label="Add Import"
-               tooltip="Add Import">
-         </action>
-         
          <action
                class="scala.tools.eclipse.actions.RunSelectionAction"
                definitionId="scala.tools.eclipse.interpreter.RunSelection"
@@ -918,6 +897,11 @@
          description="Refactorings"
          id="scala.tools.eclipse.refactoring.commands.refactoring"
          name="Refactor - Scala"/>
+      <command
+         name="Refactor Quick Menu"
+         description="Shows the refactor quick menu"
+         categoryId="scala.tools.eclipse.refactoring.commands.refactoring"
+         id="scala.tools.eclipse.refactoring.commands.quickMenu"/>
       <command
          categoryId="scala.tools.eclipse.refactoring.commands.refactoring"
          id="scala.tools.eclipse.refactoring.command.ExtractMethod"
@@ -938,14 +922,6 @@
          categoryId="scala.tools.eclipse.refactoring.commands.refactoring"
          id="scala.tools.eclipse.refactoring.command.Rename"
          name="Rename"/>
-      <!--<command
-         categoryId="scala.tools.eclipse.refactoring.commands.refactoring"
-         id="scala.tools.eclipse.refactoring.command.ShowReferences"
-	 name="Show References"/>-->
-      <command
-         categoryId="scala.tools.eclipse.refactoring.commands.refactoring"
-         id="scala.tools.eclipse.refactoring.command.AddImport"
-         name="Add Import"/>
       <command
          categoryId="org.eclipse.debug.ui.category.run"
          id="scala.tools.eclipse.interpreter.RunSelection"
@@ -960,7 +936,14 @@
    </extension>
 
 <extension
-      point="org.eclipse.ui.bindings"> <!-- M1 == Ctrl, M2 == Shift M3 == Alt -->
+      point="org.eclipse.ui.bindings"> <!-- M1 == Ctrl/Cmd, M2 == Shift M3 == Alt -->
+   <!-- Bindings to be replaced with Mac bindings like in the JDT (see http://dev.eclipse.org/viewcvs/viewvc.cgi/org.eclipse.jdt.ui/plugin.xml) -->
+   <sequenceModifier find="M2+M3" replace="M1+M3" platforms="cocoa,carbon" />
+   <key
+         commandId="scala.tools.eclipse.refactoring.commands.quickMenu"
+         schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+         contextId="scala.tools.eclipse.scalaEditorScope"
+         sequence="M2+M3+T"/> 
    <key
    		 commandId="scala.tools.eclipse.refactoring.command.ExtractMethod"
    		 schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
@@ -981,16 +964,13 @@
    		 schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
    		 contextId="scala.tools.eclipse.scalaEditorScope"
    		 sequence="M2+M3+R"/>
+   </extension>
+   <extension point="org.eclipse.ui.bindings"> <!-- Cross-platform bindings -->
    <key
    		 commandId="scala.tools.eclipse.refactoring.command.OrganizeImports"
    		 schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
    		 contextId="scala.tools.eclipse.scalaEditorScope"
    		 sequence="M1+M2+O"/>
-   <key
-   		 commandId="scala.tools.eclipse.refactoring.command.AddImport"
-   		 schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-   		 contextId="scala.tools.eclipse.scalaEditorScope"
-   		 sequence="M1+M2+M"/>
    <key
        commandId="scala.tools.eclipse.interpreter.RunSelection"
        schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"

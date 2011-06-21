@@ -37,7 +37,7 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
   import ScalaSourceFileEditor._
 
   setPartName("Scala Editor")
-
+  
   override protected def createActions() {
     super.createActions()
 
@@ -242,6 +242,13 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
       
       blacklist.flatMap(groups.get).flatten.foreach(mm.remove)
     }
+    
+    refactoring.RefactoringMenu.fillContextMenu(menu, this)
+  }
+  
+  override def createPartControl(parent: org.eclipse.swt.widgets.Composite) {
+    super.createPartControl(parent)
+    refactoring.RefactoringMenu.fillQuickMenu(this)
   }
 }
 
