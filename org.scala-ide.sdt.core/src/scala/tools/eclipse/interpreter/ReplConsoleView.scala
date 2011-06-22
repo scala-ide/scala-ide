@@ -17,6 +17,7 @@ import org.eclipse.swt.custom.StyledText
 import org.eclipse.swt.widgets.Text
 import org.eclipse.swt.layout.GridData
 import org.eclipse.swt.layout.GridLayout
+import scala.tools.eclipse.ui.CommandField
 
 // for the toolbar images
 import org.eclipse.debug.internal.ui.IInternalDebugUIConstants
@@ -27,13 +28,21 @@ import org.eclipse.ui.internal.console.ConsolePluginImages
 
 class ReplConsoleView extends ViewPart {
 
+  private class ReplEvaluator extends scala.tools.eclipse.ui.CommandField.Evaluator {
+    override def eval(command: String) {
+      val repl = EclipseRepl.replForProject(scalaProject)
+      assert(repl.isDefined, "A REPL should always exist at this point")
+      repl.get.interpret(code = command, withReplay = false)
+    }
+  }
+  
   var textWidget: StyledText = null
   var codeBgColor: Color = null
   var codeFgColor: Color = null
   var projectName: String = ""
   private var scalaProject: ScalaProject = null
   var isStopped = true
-  var inputField: Text = null
+  var inputField: StyledText = null
    
   def setScalaProject(project: ScalaProject) {
     scalaProject = project
@@ -138,7 +147,9 @@ class ReplConsoleView extends ViewPart {
     val editorFont = JFaceResources.getFont(PreferenceConstants.EDITOR_TEXT_FONT)    
     textWidget.setFont(editorFont) // java editor font
     
-    inputField = new Text(panel, SWT.BORDER | SWT.SINGLE)
+    inputField = new CommandField(panel, SWT.BORDER | SWT.SINGLE) {
+      setEvaluator(new ReplEvaluator)
+    }
     inputField.setFont(editorFont)
     inputField.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false))
      

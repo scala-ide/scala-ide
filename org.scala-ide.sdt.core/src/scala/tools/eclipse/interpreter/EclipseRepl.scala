@@ -17,6 +17,8 @@ import org.eclipse.ui.IWorkbenchPage
 object EclipseRepl {
   private val projectToReplMap = new mutable.HashMap[ScalaProject, EclipseRepl]   
   
+  def replForProject(project: ScalaProject): Option[EclipseRepl] = projectToReplMap.get(project)
+  
   def replForProject(project: ScalaProject, replView: ReplConsoleView): EclipseRepl = {
     projectToReplMap.getOrElseUpdate(project, {
       val settings = new Settings
@@ -50,10 +52,17 @@ class EclipseRepl(project: ScalaProject, settings: Settings, replView: ReplConso
   private val eventQueue = actor {
     loop { receive {
       case code: String => 
-        Console.withOut(ViewOutputStream) { 
+        val result = Console.withOut(ViewOutputStream) {
           intp interpret code 
+        } 
+        
+        //TODO: Should be moved in IMain. A flag is needed to set the REPL working mode
+        if(result == Results.Incomplete) {
+          val msg = "error: cannot evaluate incomplete expression"
+          ViewOutputStream write msg.getBytes
         }
-        ViewOutputStream.flush
+        
+        ViewOutputStream.flush()
     }}
   }
   
@@ -71,8 +80,8 @@ class EclipseRepl(project: ScalaProject, settings: Settings, replView: ReplConso
     intp = createCompiler() 
   } 
     
-  def interpret(code: String) {
-    replayList += code
+  def interpret(code: String, withReplay: Boolean = true) {
+    if(withReplay) replayList += code
     replView displayCode code 
     addToQueue(code)
   } 
