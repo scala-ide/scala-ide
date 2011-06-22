@@ -14,7 +14,7 @@ import org.eclipse.ui.IPropertyListener
 import org.eclipse.ui.part.ViewPart
 import org.eclipse.swt.graphics.Image
 import org.eclipse.swt.custom.StyledText
-import org.eclipse.swt.widgets.Text
+import org.eclipse.swt.widgets.Label
 import org.eclipse.swt.layout.GridData
 import org.eclipse.swt.layout.GridLayout
 import scala.tools.eclipse.ui.CommandField
@@ -36,13 +36,13 @@ class ReplConsoleView extends ViewPart {
     }
   }
   
-  var textWidget: StyledText = null
-  var codeBgColor: Color = null
-  var codeFgColor: Color = null
-  var projectName: String = ""
+  private var textWidget: StyledText = null
+  private var codeBgColor: Color = null
+  private var codeFgColor: Color = null
+  private var projectName: String = ""
   private var scalaProject: ScalaProject = null
-  var isStopped = true
-  var inputField: StyledText = null
+  private var isStopped = true
+  private var inputField: CommandField = null
    
   def setScalaProject(project: ScalaProject) {
     scalaProject = project
@@ -53,7 +53,7 @@ class ReplConsoleView extends ViewPart {
     }
   }
     
-  object stopReplAction extends Action("Terminate") {
+  private object stopReplAction extends Action("Terminate") {
     setToolTipText("Terminate") 
     
     import IInternalDebugUIConstants._
@@ -67,7 +67,7 @@ class ReplConsoleView extends ViewPart {
     }
   }
     
-  object clearConsoleAction extends Action("Clear Output") {
+  private object clearConsoleAction extends Action("Clear Output") {
     setToolTipText("Clear Output")
     setImageDescriptor(ConsolePluginImages.getImageDescriptor(IInternalConsoleConstants.IMG_ELCL_CLEAR));
     setDisabledImageDescriptor(ConsolePluginImages.getImageDescriptor(IInternalConsoleConstants.IMG_DLCL_CLEAR));
@@ -79,7 +79,7 @@ class ReplConsoleView extends ViewPart {
     }
   }
   
-  object relaunchAction extends Action("Relaunch Interpreter") {
+  private object relaunchAction extends Action("Relaunch Interpreter") {
     setToolTipText("Terminate and Relaunch")
     
     import IInternalDebugUIConstants._    
@@ -93,7 +93,7 @@ class ReplConsoleView extends ViewPart {
     }
   }
   
-  object replayAction extends Action("Replay interpreter history") {
+  private object replayAction extends Action("Replay interpreter history") {
     setToolTipText("Replay all commands")
     
     import IInternalDebugUIConstants._    
@@ -116,6 +116,8 @@ class ReplConsoleView extends ViewPart {
     stopReplAction.setEnabled(true)
     relaunchAction.setEnabled(true)
     replayAction.setEnabled(true)
+    
+    inputField.setEnabled(true)
 
     setContentDescription("Scala REPL (Project: " + projectName + ")")
   }
@@ -127,10 +129,13 @@ class ReplConsoleView extends ViewPart {
     relaunchAction.setEnabled(false)
     replayAction.setEnabled(false)
     
+    inputField.setEnabled(false)
+    inputField.clearText()
+    
     setContentDescription("<terminated> " + getContentDescription)
   }
     
-  def createPartControl(parent: Composite) {
+  override def createPartControl(parent: Composite) {
     projectName = getViewSite.getSecondaryId
     if (projectName == null) projectName = ""
     
@@ -138,20 +143,24 @@ class ReplConsoleView extends ViewPart {
     codeFgColor = new Color(parent.getDisplay, 64, 0, 128) // eggplant
     
     val panel = new Composite(parent, SWT.NONE)
-    panel.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, true))
-    panel.setLayout(new GridLayout)
-      
+    panel.setLayout(new GridLayout(2, false)) //two columns grid
+     
+    // 1st row
     textWidget = new StyledText(panel, SWT.BORDER | SWT.H_SCROLL | SWT.V_SCROLL)
-    textWidget.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true))
+    textWidget.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1)) // span two columns
     textWidget.setEditable(false)
     val editorFont = JFaceResources.getFont(PreferenceConstants.EDITOR_TEXT_FONT)    
     textWidget.setFont(editorFont) // java editor font
+    
+    // 2nd row
+    val inputLabel = new Label(panel, SWT.NULL)
+    inputLabel.setText("Evaluate:")
     
     inputField = new CommandField(panel, SWT.BORDER | SWT.SINGLE) {
       setEvaluator(new ReplEvaluator)
     }
     inputField.setFont(editorFont)
-    inputField.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false))
+    inputField.setLayoutData(new GridData(GridData.FILL_HORIZONTAL))
      
     val toolbarManager = getViewSite.getActionBars.getToolBarManager
     toolbarManager.add(replayAction)
@@ -173,7 +182,7 @@ class ReplConsoleView extends ViewPart {
     }
   }
   
-  def createMenuActions {
+  private def createMenuActions {
     val showImplicitsAction = createAction("Implicits in scope", { 
           displayOutput("to do: add hook for :implicits command. Note: has a verbose option\n")
         })
@@ -187,19 +196,19 @@ class ReplConsoleView extends ViewPart {
     menuManager.add(powerModeAction)
   }
 
-  def setFocus() { }
+  override def setFocus() { }
        
   /**
    * Display the string with code formatting
    */
-  def displayCode(text: String) {
+  private[interpreter] def displayCode(text: String) {
     if (textWidget.getCharCount != 0) // don't insert a newline if this is the first line of code to be displayed
       displayOutput("\n")
     appendText(text, codeFgColor, codeBgColor, SWT.ITALIC, insertNewline = true)
     displayOutput("\n")
   }
 
-  def displayOutput(text: String) {
+  private[interpreter] def displayOutput(text: String) {
     appendText(text, null, null, SWT.NORMAL)
   }
   

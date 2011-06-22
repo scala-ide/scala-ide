@@ -35,15 +35,15 @@ class CommandField(parent: Composite, style: Int) extends StyledText(parent, sty
     private var pos: Int = _
 
     private def appendHistory(expr: String) {
-      def resetHistoryPos() {
-        pos = history.length
-      }
-
       history += expr
       // every time a new command is pushed in the history, the 
       // currently tracked history position (used for history navigation
       // via ARROW_UP/DOWN keys) is resetted.
       resetHistoryPos()
+    }
+
+    def resetHistoryPos() {
+      pos = history.length
     }
 
     override def keyReleased(e: org.eclipse.swt.events.KeyEvent) {
@@ -79,16 +79,26 @@ class CommandField(parent: Composite, style: Int) extends StyledText(parent, sty
       setText(text)
       setCaretOffset(text.length)
     }
+    
+    private[CommandField] def reset() {
+      resetHistoryPos()
+      updateTextWithCurrentHistory()
+    }
   }
 
   class NullEvaluator extends Evaluator {
     override def eval(command: String) {}
   }
 
-  addKeyListener(new InputFieldListener)
+  private val inputFieldListener = new InputFieldListener
+  addKeyListener(inputFieldListener)
 
   private var evaluator: Evaluator = new NullEvaluator()
 
   /** Allows to plug a different evaluation strategy for the typed command. */
   def setEvaluator(_evaluator: Evaluator) { evaluator = _evaluator }
+
+  def clearText() {
+    inputFieldListener.reset()
+  }
 }
