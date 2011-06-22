@@ -14,14 +14,13 @@ import org.eclipse.core.runtime.{ IProgressMonitor, IPath, SubMonitor }
 import org.eclipse.jdt.internal.core.JavaModelManager
 import org.eclipse.jdt.internal.core.builder.{ JavaBuilder, NameEnvironment, State }
 
-import scala.tools.eclipse.contribution.weaving.jdt.builderoptions.ScalaJavaBuilder
 import scala.tools.eclipse.javaelements.JDTUtils
 import scala.tools.eclipse.util.{ FileUtils, ReflectionUtils }
 
 class ScalaBuilder extends IncrementalProjectBuilder {
   def plugin = ScalaPlugin.plugin
 
-  private val scalaJavaBuilder = new ScalaJavaBuilder
+  private val scalaJavaBuilder = new GeneralScalaJavaBuilder
   
   override def clean(monitor : IProgressMonitor) {
     super.clean(monitor)
@@ -103,16 +102,6 @@ class ScalaBuilder extends IncrementalProjectBuilder {
     if (scalaJavaBuilder.getProject == null)
       scalaJavaBuilder.setProject0(getProject)
   }
-}
-
-object ScalaJavaBuilderUtils extends ReflectionUtils {
-  private val ibClazz = Class.forName("org.eclipse.core.internal.events.InternalBuilder")
-  private val setProjectMethod = getDeclaredMethod(ibClazz, "setProject", classOf[IProject])
-  private val jbClazz = Class.forName("org.eclipse.jdt.internal.core.builder.JavaBuilder")
-  private val initializeBuilderMethod = getDeclaredMethod(jbClazz, "initializeBuilder", classOf[Int], classOf[Boolean])
-  
-  def setProject(builder : ScalaJavaBuilder, project : IProject) = setProjectMethod.invoke(builder, project)
-  def initializeBuilder(builder : ScalaJavaBuilder, kind : Int, forBuild : Boolean) = initializeBuilderMethod.invoke(builder, int2Integer(kind), boolean2Boolean(forBuild))
 }
 
 object StateUtils extends ReflectionUtils {
