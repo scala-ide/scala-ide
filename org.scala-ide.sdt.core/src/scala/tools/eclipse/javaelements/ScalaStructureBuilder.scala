@@ -45,6 +45,8 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
         case None => Some(0)
         case v => v
       }
+      
+      override def default(sym: Symbol) = 0
     } 
     
     def fillOverrideInfos(c : Symbol) {
