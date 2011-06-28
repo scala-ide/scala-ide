@@ -384,8 +384,9 @@ abstract class AbstractNewElementWizardPage extends NewTypeWizardPage(1, "") {
     }
   }
   
-  /** Return the package name that will be injected in the produced file. The package name
-   * may be different from the file's location (as in the case of a `package object`).*/
+  /** Return the package declaration used in the resources created by the wizard. 
+   * This is needed because the package declaration may be different from the 
+   * file's location (as in the case of a `package object`).*/
   protected def getPackageNameToInject = !getPackageFragment.isDefaultPackage match {
   	case true => Some(getPackageFragment.getElementName)
     case _ => None

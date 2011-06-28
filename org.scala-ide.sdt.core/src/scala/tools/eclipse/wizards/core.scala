@@ -39,10 +39,12 @@ class NewPackageObjectWizardPage extends {
   }
 
   // temp file name that is produced for a package object. The file will be
-  // renamed to `package.scala` on `NewPackageObjectWizard.performFinish()`.
+  // renamed to `package.scala` during `NewPackageObjectWizard.performFinish()`.
   // `package.scala` cannot be used immediately because Eclipse validates 
   // the name against some JavaConventions (class with static methods) and 
-  // we cannot inject a ScalaConventions object.
+  // we cannot replace it with a ScalaConventions class.
+  // TODO: We should really consider implementing our own `NewTypeWizardPage`
+  //       to overcome this and other impediments in the wizard.
   override def getCompilationUnitName(typeName: String) = "_package.scala"
 
   override protected def packageChanged() = {
