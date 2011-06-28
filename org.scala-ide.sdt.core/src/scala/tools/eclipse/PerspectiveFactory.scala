@@ -29,6 +29,7 @@ class PerspectiveFactory extends IPerspectiveFactory {
     layout.addNewWizardShortcut(ScalaPlugin.plugin.classWizId)
     layout.addNewWizardShortcut(ScalaPlugin.plugin.traitWizId)
     layout.addNewWizardShortcut(ScalaPlugin.plugin.objectWizId)
+    layout.addNewWizardShortcut(ScalaPlugin.plugin.packageObjectWizId)
     layout.addNewWizardShortcut(ScalaPlugin.plugin.applicationWizId)
     layout.addNewWizardShortcut("org.eclipse.ui.wizards.new.folder")
     layout.addNewWizardShortcut("org.eclipse.ui.wizards.new.file")

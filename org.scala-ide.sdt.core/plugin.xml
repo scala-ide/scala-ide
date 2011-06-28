@@ -278,6 +278,17 @@
             <selection class="java.lang.Object"/>
       </wizard>
       <wizard
+            class="scala.tools.eclipse.wizards.NewPackageObjectWizard"
+            icon="icons/full/etool16/newobject_wiz.gif"
+            finalPerspective="org.scala-ide.sdt.core.perspective"
+            category="org.scala-ide.sdt.core.wizards"
+            project="false"
+            name="Scala Package Object"
+            id="org.scala-ide.sdt.core.wizards.newPackageObject">
+            <description>Create a Scala Package Object</description>
+            <selection class="java.lang.Object"/>
+      </wizard>
+      <wizard
             class="scala.tools.eclipse.wizards.NewTraitWizard"
             icon="icons/full/etool16/newtrait_wiz.gif"
             finalPerspective="org.scala-ide.sdt.core.perspective"
