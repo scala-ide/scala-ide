@@ -22,13 +22,13 @@ class ScalaHyperlinkDetector extends AbstractHyperlinkDetector with Logger {
     detectHyperlinks(textEditor, region, canShowMultipleHyperlinks)
   }
 
-  case class Hyperlink(file: Openable, pos: Int, text: String)(wordRegion: IRegion)  extends IHyperlink {
+  case class Hyperlink(file: Openable, pos: Int, len: Int, text: String)(wordRegion: IRegion)  extends IHyperlink {
     def getHyperlinkRegion = wordRegion
     def getTypeLabel = null
     def getHyperlinkText = text
     def open = {
       EditorUtility.openInEditor(file, true) match {
-        case editor: ITextEditor => editor.selectAndReveal(pos, 0)
+        case editor: ITextEditor => editor.selectAndReveal(pos, len)
         case _ =>
       }
     }
@@ -70,7 +70,7 @@ class ScalaHyperlinkDetector extends AbstractHyperlinkDetector with Logger {
                       compiler.locate(sym, scu) match {
                         case Some((f, pos)) => {
                           val text = sym.kindString + " " + sym.fullName
-                          (Hyperlink(f, pos, text)(wordRegion): IHyperlink)::l
+                          (Hyperlink(f, pos, wordRegion.getLength, text)(wordRegion): IHyperlink)::l
                         }
                         case _ => l
                       }
