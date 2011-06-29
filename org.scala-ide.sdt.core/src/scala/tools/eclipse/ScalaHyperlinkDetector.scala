@@ -62,27 +62,32 @@ class ScalaHyperlinkDetector extends AbstractHyperlinkDetector with Logger {
                   case Annotated(atp, _)  => List(atp.symbol)
                   case st: SymTree        => List(st.symbol)
                   case t                  => log("unhandled tree " + t); List()
-                } map { list =>
-                  list.foldLeft(List[IHyperlink]()) { (l, sym) => 
-                    if (sym.isPackage || sym == NoSymbol || sym.isJavaDefined)
-                      l
-                    else
-                      compiler.locate(sym, scu) match {
-                        case Some((f, pos)) => {
-                          val text = sym.kindString + " " + sym.fullName
-                          (Hyperlink(f, pos, wordRegion.getLength, text)(wordRegion): IHyperlink)::l
+                } flatMap { list =>
+                  val filtered = list filterNot {sym => sym.isPackage || sym == NoSymbol}
+                  if (filtered.isEmpty) None else Some(
+                    filtered.foldLeft(List[IHyperlink]()) { (l, sym) => 
+                      if (sym.isJavaDefined)
+                        l
+                      else
+                        compiler.locate(sym, scu) match {
+                          case Some((f, pos)) => {
+                            val text = sym.kindString + " " + sym.fullName
+                            (Hyperlink(f, pos, wordRegion.getLength, text)(wordRegion): IHyperlink)::l
+                          }
+                          case _ => l
                         }
-                        case _ => l
-                      }
-                  }
+                    }
+                  )
                 }
               }.flatten.headOption
 
-              if (!hyperlinks.isDefined || hyperlinks.get.isEmpty) {
-                log("!!! Falling back to selection engine for %s!".format(typed.left), Category.ERROR)
-                codeSelect(textEditor, wordRegion, scu)
-              } else
-                hyperlinks.get.toArray
+              hyperlinks match {
+                case None => null // do not try to use codeSelect.
+                case Some(List()) =>
+                  log("!!! Falling back to selection engine for %s!".format(typed.left), Category.ERROR)
+                  codeSelect(textEditor, wordRegion, scu)
+                case Some(hyperlinks) => hyperlinks.toArray
+              }
             }
           })(null)
 
