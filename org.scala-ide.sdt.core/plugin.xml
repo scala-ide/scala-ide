@@ -811,8 +811,8 @@
   <extension
          point="org.eclipse.ui.actionSets">
       <actionSet
-            label="CodingActionSet.label"
-            description="CodingActionSet.description"
+            label="Scala"
+            description="Scala Actions"
             visible="false"
             id="scala.tools.eclipse.refactoring.CodingActionSet">
          <menu
@@ -884,9 +884,13 @@
          <action
                class="scala.tools.eclipse.actions.RunSelectionAction"
                definitionId="scala.tools.eclipse.interpreter.RunSelection"
+               disabledIcon="icons/full/dtool16/run_interpreter.gif"
+               hoverIcon="icons/full/etool16/run_interpreter.gif"
+               icon="icons/full/etool16/run_interpreter.gif"
                id="scala.tools.eclipse.interpreter.runSelectionAction"
-               label="Run Selection in REPL"
-               tooltip="Run Selection">
+               label="Run Selection in Scala Interpreter"
+               toolbarPath="org.eclipse.debug.ui.launchActionSet/debug"
+               tooltip="Run Selection in Scala Interpreter">
          </action>         
      </actionSet>
    </extension>
@@ -925,7 +929,7 @@
       <command
          categoryId="org.eclipse.debug.ui.category.run"
          id="scala.tools.eclipse.interpreter.RunSelection"
-         name="Send Selection to REPL"/>
+         name="Send Selection to Scala Interpreter"/>
 </extension>
 
    <extension point="org.eclipse.ui.contexts">
@@ -1046,7 +1050,7 @@
           class="scala.tools.eclipse.interpreter.ReplConsoleView"
           icon="icons/full/etool16/scala_app.gif"
           id="org.scala-ide.sdt.core.consoleView"
-          name="Scala REPL"
+          name="Scala Interpreter"
           restorable="false">
     </view>
  </extension> 

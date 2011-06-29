@@ -82,7 +82,7 @@ class ReplConsoleView extends ViewPart {
     override def run() {
       clearConsoleAction.run
       EclipseRepl.relaunchRepl(scalaProject)
-    }
+    }  
   }
   
   object replayAction extends Action("Replay interpreter history") {
@@ -109,7 +109,7 @@ class ReplConsoleView extends ViewPart {
     relaunchAction.setEnabled(true)
     replayAction.setEnabled(true)
 
-    setContentDescription("Scala REPL (Project: " + projectName + ")")
+    setContentDescription("Scala Interpreter (Project: " + projectName + ")")
   }
 
   private def setStopped {
@@ -148,7 +148,7 @@ class ReplConsoleView extends ViewPart {
     toolbarManager.add(new Separator)
     toolbarManager.add(clearConsoleAction)
     
-    setPartName("Scala REPL (" + projectName + ")")
+    setPartName("Scala Interpreter (" + projectName + ")")
     setStarted
   }
 
