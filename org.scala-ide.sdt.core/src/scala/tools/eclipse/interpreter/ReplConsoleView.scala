@@ -17,13 +17,12 @@ import org.eclipse.swt.custom.StyledText
 import org.eclipse.swt.widgets.Text
 import org.eclipse.swt.layout.GridData
 import org.eclipse.swt.layout.GridLayout
-
-// for the toolbar images
 import org.eclipse.debug.internal.ui.IInternalDebugUIConstants
 import org.eclipse.debug.internal.ui.DebugPluginImages
 import org.eclipse.ui.internal.console.IInternalConsoleConstants
 import org.eclipse.ui.console.IConsoleConstants
 import org.eclipse.ui.internal.console.ConsolePluginImages
+import org.eclipse.jface.action.IAction
 
 class ReplConsoleView extends ViewPart {
 
@@ -85,8 +84,8 @@ class ReplConsoleView extends ViewPart {
     }  
   }
   
-  object replayAction extends Action("Replay interpreter history") {
-    setToolTipText("Replay all commands")
+  object replayAction extends Action("Replay Interpreter History") {
+    setToolTipText("Replay All Commands")
     
     import IInternalDebugUIConstants._    
     setImageDescriptor(DebugPluginImages.getImageDescriptor(IMG_ELCL_RESTART))
@@ -101,6 +100,27 @@ class ReplConsoleView extends ViewPart {
       EclipseRepl.replayRepl(scalaProject)
     }
   }  
+  
+  object refreshOnRebuildAction extends Action("Replay History on Project Rebuild", IAction.AS_CHECK_BOX) with BuildSuccessListener {
+    setToolTipText("Replay History on Project Rebuild")
+    
+    setImageDescriptor(ScalaImages.REFRESH_REPL_TOOLBAR)
+    setHoverImageDescriptor(ScalaImages.REFRESH_REPL_TOOLBAR)
+    
+    override def run() {
+      if (isChecked) scalaProject addBuildSuccessListener this
+      else scalaProject removeBuildSuccessListener this
+    }
+    
+    def buildSuccessful() {
+      if (!isStopped) {
+        util.SWTUtils asyncExec {
+          displayOutput("\n------ Project Rebuilt, Replaying Interpreter Transcript ------\n")
+          EclipseRepl.relaunchRepl(scalaProject)
+        }
+      }
+    }
+  }
   
   private def setStarted {
     isStopped = false
@@ -141,12 +161,15 @@ class ReplConsoleView extends ViewPart {
     textWidget.setFont(editorFont) // java editor font
     
     val toolbarManager = getViewSite.getActionBars.getToolBarManager
+    
     toolbarManager.add(replayAction)
     toolbarManager.add(new Separator)
     toolbarManager.add(stopReplAction)
     toolbarManager.add(relaunchAction)
     toolbarManager.add(new Separator)
     toolbarManager.add(clearConsoleAction)
+    toolbarManager.add(new Separator)
+    toolbarManager.add(refreshOnRebuildAction)
     
     setPartName("Scala Interpreter (" + projectName + ")")
     setStarted

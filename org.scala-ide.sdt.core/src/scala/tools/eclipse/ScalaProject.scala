@@ -27,6 +27,10 @@ import scala.tools.eclipse.properties.PropertyStore
 import scala.tools.eclipse.util.{ Cached, EclipseResource, IDESettings, OSGiUtils, ReflectionUtils }
 import util.SWTUtils.asyncExec
 
+trait BuildSuccessListener {
+  def buildSuccessful(): Unit
+}
+
 class ScalaProject(val underlying: IProject) {
   import ScalaPlugin.plugin
 
@@ -35,6 +39,8 @@ class ScalaProject(val underlying: IProject) {
   private var hasBeenBuilt = false
   private val resetPendingLock = new Object
   private var resetPending = false
+  
+  private val buildListeners = new HashSet[BuildSuccessListener]
 
   case class InvalidCompilerSettings() extends RuntimeException(
         "Scala compiler cannot initialize for project: " + underlying.getName +
@@ -489,7 +495,7 @@ class ScalaProject(val underlying: IProject) {
 
   /* If true, then it means that all source files have to be reloaded */
   def prepareBuild(): Boolean = if (!hasBeenBuilt) buildManager.invalidateAfterLoad else false
-
+  
   def build(addedOrUpdated: Set[IFile], removed: Set[IFile], monitor: SubMonitor) {
     if (addedOrUpdated.isEmpty && removed.isEmpty)
       return
@@ -501,6 +507,17 @@ class ScalaProject(val underlying: IProject) {
     refreshOutput
 
     // Already performs saving the dependencies
+    
+    if (!buildManager.hasErrors) 
+      buildListeners foreach { _.buildSuccessful }
+  }
+  
+  def addBuildSuccessListener(listener: BuildSuccessListener) {
+    buildListeners add listener
+  }
+  
+  def removeBuildSuccessListener(listener: BuildSuccessListener) {
+    buildListeners remove listener
   }
 
   def clean(implicit monitor: IProgressMonitor) = {
