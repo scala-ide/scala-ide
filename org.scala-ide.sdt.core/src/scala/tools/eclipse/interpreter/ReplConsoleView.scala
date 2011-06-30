@@ -221,5 +221,7 @@ class ReplConsoleView extends ViewPart {
     
     if (!isStopped)
       EclipseRepl.stopRepl(scalaProject, flush = false)
+      
+    scalaProject removeBuildSuccessListener refreshOnRebuildAction
   }
 }
