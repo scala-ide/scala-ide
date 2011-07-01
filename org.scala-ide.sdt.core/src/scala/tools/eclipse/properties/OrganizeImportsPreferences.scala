@@ -127,7 +127,7 @@ class OrganizeImportsPreferencesPage extends PropertyPage with IWorkbenchPrefere
     }
     
     fieldEditors += addNewFieldEditorWrappedInComposite(parent = control) { parent => 
-      new ListEditor(wildcardsKey, "Always use wilcard imports when importing from these packages and types:", parent) {
+      new ListEditor(wildcardsKey, "Always use wilcard imports when importing from these packages and objects:", parent) {
         
         getDownButton.setVisible(false)
         getUpButton.setVisible(false)
