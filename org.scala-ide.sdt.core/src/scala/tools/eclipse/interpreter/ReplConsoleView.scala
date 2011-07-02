@@ -14,7 +14,7 @@ import org.eclipse.ui.IPropertyListener
 import org.eclipse.ui.part.ViewPart
 import org.eclipse.swt.graphics.Image
 import org.eclipse.swt.custom.StyledText
-import org.eclipse.swt.widgets.Label
+import org.eclipse.swt.widgets.{Label, Caret}
 import org.eclipse.swt.layout.GridData
 import org.eclipse.swt.layout.GridLayout
 import scala.tools.eclipse.ui.CommandField
@@ -149,6 +149,9 @@ class ReplConsoleView extends ViewPart {
     textWidget = new StyledText(panel, SWT.BORDER | SWT.H_SCROLL | SWT.V_SCROLL)
     textWidget.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1)) // span two columns
     textWidget.setEditable(false)
+    textWidget.setCaret(new Caret(textWidget, SWT.NONE))
+    
+    
     val editorFont = JFaceResources.getFont(PreferenceConstants.EDITOR_TEXT_FONT)    
     textWidget.setFont(editorFont) // java editor font
     
