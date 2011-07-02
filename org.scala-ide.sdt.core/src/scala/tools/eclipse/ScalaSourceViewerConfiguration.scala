@@ -78,7 +78,9 @@ class ScalaSourceViewerConfiguration(store: IPreferenceStore, scalaPreferenceSto
    private val xmlPCDATAScanner = new SingleTokenScanner(ScalaSyntaxClasses.DEFAULT, getColorManager, scalaPreferenceStore)
    private val xmlPIScanner = new XmlPIScanner(getColorManager, scalaPreferenceStore)
 
-   override def getTextHover(sv: ISourceViewer, contentType: String, stateMask: Int) = new ScalaHover(getCodeAssist)
+   override def getTextHover(sv: ISourceViewer, contentType: String, stateMask: Int) = {
+     new ScalaHover(getCodeAssist _)
+   }
 
    override def getHyperlinkDetectors(sv: ISourceViewer) = {
       val shd = new ScalaHyperlinkDetector
