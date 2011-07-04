@@ -98,8 +98,8 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
   private var occurrenceAnnotations: Array[Annotation] = _
   
   override def updateOccurrenceAnnotations(selection: ITextSelection, astRoot: CompilationUnit) {
-    askForOccurrencesUpdate(selection, astRoot)
-    super.updateOccurrenceAnnotations(selection, astRoot)
+	askForOccurrencesUpdate(selection, astRoot)
+	super.updateOccurrenceAnnotations(selection, astRoot)
   }
   
   private def performOccurrencesUpdate(selection: ITextSelection, astRoot: CompilationUnit) {
