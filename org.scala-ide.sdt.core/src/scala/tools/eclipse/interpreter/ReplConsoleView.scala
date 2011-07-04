@@ -154,7 +154,7 @@ class ReplConsoleView extends ViewPart {
     replayAction.setEnabled(false)
     
     inputField.setEnabled(false)
-    inputField.clearText()
+    inputField.clear()
     
     setContentDescription("<terminated> " + getContentDescription)
   }
@@ -185,6 +185,7 @@ class ReplConsoleView extends ViewPart {
     inputLabel.setText("Evaluate:")
     
     inputField = new CommandField(panel, SWT.BORDER | SWT.SINGLE) {
+      override protected def helpText = "<type an expression>" 
       setEvaluator(new ReplEvaluator)
     }
     inputField.setFont(editorFont)
