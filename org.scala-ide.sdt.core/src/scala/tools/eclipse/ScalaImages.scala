@@ -32,6 +32,8 @@ object ScalaImages  {
   
   val SCALA_PROJECT_WIZARD = create("icons/full/wizban/newsprj_wiz.png")
   
+  val REFRESH_REPL_TOOLBAR = create("icons/full/etool16/refresh_interpreter.gif")
+  
   private def create(localPath : String) = {
     try {
       val pluginInstallURL : URL = ScalaPlugin.plugin.getBundle.getEntry("/")

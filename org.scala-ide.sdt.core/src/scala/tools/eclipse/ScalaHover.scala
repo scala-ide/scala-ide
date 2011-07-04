@@ -11,12 +11,12 @@ import org.eclipse.jface.text.{ ITextViewer, IRegion, ITextHover }
 import scala.tools.eclipse.javaelements.ScalaCompilationUnit
 import scala.tools.nsc.symtab.Flags
 
-class ScalaHover(codeAssist : Option[ICodeAssist]) extends ITextHover {
+class ScalaHover(codeAssist : () => Option[ICodeAssist]) extends ITextHover {
   
   private val NoHoverInfo = "" // could return null, but prefer to return empty (see API of ITextHover).
     
   override def getHoverInfo(viewer : ITextViewer, region :  IRegion) = {
-    codeAssist match {
+    codeAssist() match {
       case Some(scu : ScalaCompilationUnit) => {
         val start = region.getOffset
         val end = start + region.getLength

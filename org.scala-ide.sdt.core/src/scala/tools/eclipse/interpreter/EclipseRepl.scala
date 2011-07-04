@@ -1,7 +1,6 @@
 package scala.tools.eclipse
 package interpreter
 
-import scala.tools.nsc.Interpreter
 import scala.tools.nsc.interpreter._
 import scala.tools.nsc.Settings
 import scala.tools.nsc.reporters.ConsoleReporter
@@ -17,6 +16,8 @@ import org.eclipse.ui.IWorkbenchPage
 
 object EclipseRepl {
   private val projectToReplMap = new mutable.HashMap[ScalaProject, EclipseRepl]   
+  
+  def replForProject(project: ScalaProject): Option[EclipseRepl] = projectToReplMap.get(project)
   
   def replForProject(project: ScalaProject, replView: ReplConsoleView): EclipseRepl = {
     projectToReplMap.getOrElseUpdate(project, {
@@ -46,16 +47,24 @@ object EclipseRepl {
 
 class EclipseRepl(project: ScalaProject, settings: Settings, replView: ReplConsoleView) {
   
+  private val output = new ViewOutputStream(false)
+  
   import Actor._
   
   private val eventQueue = actor {
     loop { receive {
       case code: String => 
-        val output = new ViewOutputStream(false)
-        Console.withOut(output) { 
-          intp.interpret(code)
+        val result = Console.withOut(output) {
+          intp interpret code 
+        } 
+        
+        //TODO: Should be moved in IMain. A flag is needed to set the REPL working mode
+        if(result == Results.Incomplete) {
+          val msg = "error: cannot evaluate incomplete expression"
+          output write msg.getBytes
         }
-        output.flush
+        
+        output.flush()
     }}
   }
   
@@ -67,14 +76,14 @@ class EclipseRepl(project: ScalaProject, settings: Settings, replView: ReplConso
   
   var intp = createCompiler()
   
-  private def createCompiler(): Interpreter = new Interpreter(settings, new PrintWriter(new ViewOutputStream(false)))  
+  private def createCompiler(): IMain = new IMain(settings, new PrintWriter(output))  
   private def resetCompiler = {
     intp.close
     intp = createCompiler() 
   } 
     
-  def interpret(code: String) {
-    replayList += code
+  def interpret(code: String, withReplay: Boolean = true) {
+    if(withReplay) replayList += code
     replView displayCode code 
     addToQueue(code)
   } 
