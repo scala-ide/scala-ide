@@ -47,22 +47,24 @@ object EclipseRepl {
 
 class EclipseRepl(project: ScalaProject, settings: Settings, replView: ReplConsoleView) {
   
+  private val output = new ViewOutputStream(false)
+  
   import Actor._
   
   private val eventQueue = actor {
     loop { receive {
       case code: String => 
-        val result = Console.withOut(new ViewOutputStream(false)) {
+        val result = Console.withOut(output) {
           intp interpret code 
         } 
         
         //TODO: Should be moved in IMain. A flag is needed to set the REPL working mode
         if(result == Results.Incomplete) {
           val msg = "error: cannot evaluate incomplete expression"
-          ViewOutputStream write msg.getBytes
+          output write msg.getBytes
         }
         
-        ViewOutputStream.flush()
+        output.flush()
     }}
   }
   
@@ -74,7 +76,7 @@ class EclipseRepl(project: ScalaProject, settings: Settings, replView: ReplConso
   
   var intp = createCompiler()
   
-  private def createCompiler(): IMain = new IMain(settings, new PrintWriter(ViewOutputStream))  
+  private def createCompiler(): IMain = new IMain(settings, new PrintWriter(output))  
   private def resetCompiler = {
     intp.close
     intp = createCompiler() 
