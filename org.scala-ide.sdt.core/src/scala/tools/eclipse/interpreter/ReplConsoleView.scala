@@ -143,7 +143,7 @@ class ReplConsoleView extends ViewPart {
     
     inputField.setEnabled(true)
 
-    setContentDescription("Scala REPL (Project: " + projectName + ")")
+    setContentDescription("Scala Interpreter (Project: " + projectName + ")")
   }
 
   private def setStopped {
@@ -198,31 +198,11 @@ class ReplConsoleView extends ViewPart {
     toolbarManager.add(relaunchAction)
     toolbarManager.add(new Separator)
     toolbarManager.add(clearConsoleAction)
-
-//    createMenuActions
+    toolbarManager.add(new Separator)
+    toolbarManager.add(refreshOnRebuildAction)
     
-    setPartName("Scala REPL (" + projectName + ")")
+    setPartName("Scala Interpreter (" + projectName + ")")
     setStarted
-  }
-  
-  private def createAction(name: String, payload: => Unit): Action = {
-    new Action(name) {
-      override def run() { payload }
-    }
-  }
-  
-  private def createMenuActions {
-    val showImplicitsAction = createAction("Implicits in scope", { 
-          displayOutput("to do: add hook for :implicits command. Note: has a verbose option\n")
-        })
-        
-    val powerModeAction = createAction("Power user mode", { 
-          displayOutput("to do: add hook for :power command. To do: add commands to dropdown: :dump, :phase, :wrap\n")
-        })
-   
-    val menuManager = getViewSite.getActionBars.getMenuManager
-    menuManager.add(showImplicitsAction)
-    menuManager.add(powerModeAction)
   }
 
   override def setFocus() { }
