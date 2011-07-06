@@ -64,7 +64,16 @@ abstract class ScalaIdeRefactoring(val getName: String, file: ScalaSourceFile, s
    * Holds the result of preparing this refactoring. We can keep this
    * in a lazy var because it will only be evaluated once.
    */
-  private [refactoring] lazy val preparationResult = refactoring.prepare(selection)
+  private [refactoring] lazy val preparationResult = {    
+    // evaluate the selection in this thread
+    val sel = selection
+    
+    withCompiler{ compiler => 
+      compiler.askOption { () =>
+        refactoring.prepare(sel)
+      } getOrElse fail()
+    }
+  }
   
   def createChange(pm: IProgressMonitor): CompositeChange = {
     new CompositeChange(getName) {
@@ -125,8 +134,22 @@ abstract class ScalaIdeRefactoring(val getName: String, file: ScalaSourceFile, s
    * @return The list of changes or an empty list when an error occurred. 
    */
   private [refactoring] def performRefactoring(): List[tools.refactoring.common.Change] = {
-    val refactoringResult = refactoring.perform(selection, preparationResult.right.get, refactoringParameters)
-    refactoringResult.left.map(e => refactoringError = Some(e.cause)).fold(_ => Nil, identity)
+    
+    val params = refactoringParameters
+    
+    val result = withCompiler { compiler =>
+      compiler.askOption {() =>
+        refactoring.perform(selection, preparationResult.right.get, params)
+      }
+    }
+
+    result match {
+      case Some(refactoringResult) =>
+        refactoringResult.left.map(e => refactoringError = Some(e.cause)).fold(_ => Nil, identity)
+      case _ => 
+        refactoringError = Some("An error occurred, please check the log file")
+        Nil
+    }    
   }
   
   private [refactoring] def withCompiler[T](f: ScalaPresentationCompiler => T) = {

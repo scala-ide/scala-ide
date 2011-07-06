@@ -36,7 +36,7 @@ class RenameParticipant extends LtkRenameParticipant {
         case NoPosition => 
           false
         case pos: RangePosition =>
-          classBeingRenamed = Some(file → pos)
+          classBeingRenamed = Some(file -> pos)
           true
       }
     case _ => 
@@ -58,7 +58,7 @@ class RenameParticipant extends LtkRenameParticipant {
       case (file, pos) =>
         ScalaSourceFile.createFromPath(file.getFullPath.toOSString) map { scalaSourceFile =>
           
-          /* we can reuse the already existing rename action*/
+          // we can reuse the already existing rename action
           val renameRefactoring = {
             val renameAction = new GlobalRenameAction
             new renameAction.RenameScalaIdeRefactoring(pos.start, pos.start + file.getName.length, scalaSourceFile)
@@ -70,12 +70,20 @@ class RenameParticipant extends LtkRenameParticipant {
           name = newName
           val finalConditions = checkFinalConditions(pm)
           
-          change = new CompositeChange("Rename Scala Class") {
-            scalaChangesToEclipseChanges(performRefactoring) foreach add
+          if(pm.isCanceled) {
+            // when the user cancelled we still want to do the refactoring,
+            // but we skip renaming the class in the source files.
+            pm.setCanceled(false)
+          } else {
+            change = new CompositeChange("Rename Scala Class") {
+              scalaChangesToEclipseChanges(performRefactoring) foreach add
+            }
           }
           
+          renameRefactoring.cleanup()
+          
           new RefactoringStatus {
-            initialConditions.getEntries ++ initialConditions.getEntries foreach addEntry 
+            initialConditions.getEntries ++ finalConditions.getEntries foreach addEntry 
              
             if(!refactoring.isValidIdentifier(newName)) {
               addError("'"+ newName +"' is not a valid Scala identifier name")
@@ -94,7 +102,6 @@ class RenameParticipant extends LtkRenameParticipant {
   override def createPreChange(pm: IProgressMonitor)= change
   
   def createChange(pm: IProgressMonitor)= null
-  
   
   private var classBeingRenamed: Option[(IFile, RangePosition)] = None
 
