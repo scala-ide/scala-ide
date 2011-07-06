@@ -1,7 +1,8 @@
 package traits
 
-import scala.reflect.BeanProperty
 import scala.annotation._
+import scala.reflect.BeanProperty
+import org.junit.Test
 
 abstract class C[T](_x: Int, _y: T) extends Ordered[String] {
 
@@ -27,6 +28,11 @@ abstract class C[T](_x: Int, _y: T) extends Ordered[String] {
   def method() {
     System.out.println("Hello, world " + x)
     println(x)
+  }
+  
+  @Test
+  def annotatedMethod {
+    
   }
 
   def curriedMethod(x: Int)(y: Int) = x + y
