@@ -83,7 +83,7 @@ class ReplConsoleView extends ViewPart {
   }
   
   private object relaunchAction extends Action("Relaunch Interpreter") {
-    setToolTipText("Terminate and Relaunch")
+    setToolTipText("Terminate and Replay")
     
     import IInternalDebugUIConstants._    
     setImageDescriptor(DebugPluginImages.getImageDescriptor(IMG_ELCL_TERMINATE_AND_RELAUNCH))
