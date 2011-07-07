@@ -2,6 +2,7 @@ package scala.tools.eclipse;
 
 import scala.tools.eclipse.lexical.ScalaDocumentPartitionerTest;
 import scala.tools.eclipse.lexical.ScalaPartitionTokeniserTest;
+import scala.tools.eclipse.occurrences.OccurrencesFinderTest;
 import scala.tools.eclipse.structurebuilder.StructureBuilderTest;
 import scala.tools.eclipse.ui.TestScalaIndenter;
 import scala.tools.eclipse.wizards.*;
@@ -21,5 +22,6 @@ import org.junit.runners.Suite;
   ImportSupportTest.class,
   QualifiedNameSupportTest.class,
   StructureBuilderTest.class,
+  OccurrencesFinderTest.class
 })
 class TestsSuite { }

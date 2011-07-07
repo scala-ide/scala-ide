@@ -9,6 +9,9 @@ import java.io.{ ByteArrayInputStream, File, IOException, InputStream }
 import org.eclipse.core.resources.{ IContainer, IFile, IFolder, IProject, IProjectDescription, ResourcesPlugin }
 import org.eclipse.core.runtime.{ IPath, Path }
 import scala.tools.eclipse.util.OSGiUtils
+import scala.tools.nsc.util.SourceFile
+import scala.collection.mutable
+import scala.util.matching.Regex
 
 /** Utility functions for setting up test projects.
  *  
@@ -38,6 +41,34 @@ object SDTTestUtils {
     JavaCore.create(project)
     ScalaPlugin.plugin.getScalaProject(project)
   }
+  
+  /** Return all positions (offsets) of the given str in the given source file. 
+   */
+  def positionsOf(source: Array[Char], str: String): Seq[Int] = {
+    val buf = new mutable.ListBuffer[Int]
+    var pos = source.indexOfSlice(str)
+    while (pos >= 0) {
+      buf += pos - 1 // we need the position before the first character of this marker
+      pos = source.indexOfSlice(str, pos + 1) 
+    }
+    buf.toList
+  }
+
+  /** Return all positions and the number in the given marker. The marker is
+   *  wrapped by /**/, and the method returns matches for /*[0-9]+*/, as a sequence
+   *  of pairs (offset, parsedNumber)
+   */
+  def markersOf(source: Array[Char], prefix: String): Seq[(Int, Int)] = {
+    val regex = """\/\*%s([0-9]+)\*/""".format(prefix).r
+    val buf = new mutable.ListBuffer[(Int, Int)]
+    val it = regex.findAllIn(source)
+    for (m <- it) {
+      buf += ((it.start, it.group(1).toInt))
+    }
+    
+    buf.toSeq
+  }
+
   
   def deleteRecursive(d : File) {
     if (d.exists) {

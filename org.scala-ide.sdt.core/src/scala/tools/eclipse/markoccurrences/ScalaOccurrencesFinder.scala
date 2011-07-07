@@ -1,16 +1,15 @@
 package scala.tools.eclipse
 package markoccurrences
 
-import scala.tools.nsc.interactive.FreshRunReq
-import scala.tools.refactoring.common.Selections
-import scala.tools.refactoring.implementations.MarkOccurrences
-import org.eclipse.jface.text.Region
-import scala.tools.eclipse.javaelements.ScalaSourceFile
+import scala.tools.eclipse.javaelements.ScalaCompilationUnit
 import scala.tools.refactoring.analysis.GlobalIndexes
+import scala.tools.refactoring.implementations.MarkOccurrences
+
+import org.eclipse.jface.text.Region
 
 case class Occurrences(name: String, locations: List[Region])
 
-class ScalaOccurrencesFinder(file: ScalaSourceFile, offset: Int, length: Int) {
+class ScalaOccurrencesFinder(file: ScalaCompilationUnit, offset: Int, length: Int) {
 
   def findOccurrences(): Option[Occurrences] = {
     val (from, to) = (offset, offset + length)
