@@ -145,6 +145,7 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
     
   def destroy() {
     println("shutting down presentation compiler on project: " + project)
+    // TODO: Why is this needed? (ID)
     sourceFiles.keysIterator.foreach(_.scheduleReconcile)
     askShutdown
   }

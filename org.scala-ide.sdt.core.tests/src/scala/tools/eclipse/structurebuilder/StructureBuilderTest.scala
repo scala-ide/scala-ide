@@ -23,10 +23,11 @@ object StructureBuilderTest {
     
   srcPackageRoot.open(null)
   println("children: " + srcPackageRoot.getChildren.toList)
-  
-  @AfterClass def shutdown {
-    project.resetCompilers
-  }
+
+  // TODO: Find out why shutdown triggers reconcile
+//  @AfterClass def shutdown {
+//    project.resetCompilers
+//  }
 }
 
 class StructureBuilderTest {
