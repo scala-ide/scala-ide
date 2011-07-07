@@ -7,10 +7,26 @@ import Assert._
 import scala.tools.eclipse.testsetup.SDTTestUtils
 import org.eclipse.jdt.core._
 import org.eclipse.core.runtime.Path
+import org.eclipse.jdt.core.search._
+import scala.collection.mutable.ListBuffer
+
+object StructureBuilderTest {
+  lazy val project = SDTTestUtils.setupProject("simple-structure-builder")
+  lazy val srcPackageRoot: IPackageFragmentRoot = {
+    val javaProject = JavaCore.create(project.underlying)
+    
+    javaProject.open(null)
+    javaProject.findPackageFragmentRoot(new Path("/simple-structure-builder/src"))
+  }
+  
+  Assert.assertNotNull(srcPackageRoot)
+    
+  srcPackageRoot.open(null)
+  println("children: " + srcPackageRoot.getChildren.toList)
+}
 
 class StructureBuilderTest {
-
-  var project: ScalaProject = _
+  import StructureBuilderTest._
   
   def setupWorkspace {
     // auto-building is off
@@ -31,26 +47,50 @@ class StructureBuilderTest {
     buf.toString
   }
   
-  /** Copy the project from 'test-workspace' to the temporary, clean unit-test 
-   *  workspace.
-   */
-  @Before def setupProject {
-    project = SDTTestUtils.setupProject("simple-structure-builder")
-    println(project)
+  @Test def testAnnotations() {
+    val annotsPkg = srcPackageRoot.getPackageFragment("annots");
+    assertNotNull(annotsPkg)
+    val cu = annotsPkg.getCompilationUnit("ScalaTestSuite.scala")
+    assertTrue(cu.exists)
+    val tpe = cu.findPrimaryType()
+    val m1 = tpe.getMethod("someTestMethod", Array())
+    val m2 = tpe.getMethod("anotherTestMethod", Array())
+    println(m1.getAnnotations.toList)
+    println(m2.getAnnotations.toList)
+    
+    assertTrue(m1.getAnnotations.length == 1)
+    assertTrue(m1.getAnnotation("Test").exists)
+    assertTrue(m2.getAnnotations.length == 1)
+    assertTrue(m2.getAnnotation("Test").exists)
+  }
+  
+  @Test def testSearchIndexAnnotations() {
+    import IJavaSearchConstants._
+    val pattern = SearchPattern.createPattern("org.junit.Test", TYPE, ANNOTATION_TYPE_REFERENCE, SearchPattern.R_PREFIX_MATCH)
+    val scope = SearchEngine.createJavaSearchScope(Array(srcPackageRoot.getPackageFragment("annots"): IJavaElement))
+    
+    var elems = Set[IMethod]()
+    
+    val requestor = new SearchRequestor {
+      def acceptSearchMatch(m: SearchMatch) {
+        m.getElement match {
+          case method: IMethod => elems += method
+          case elem => 
+            println(elem)
+            fail
+        }
+      }
+    }
+    
+    (new SearchEngine).search(pattern, Array[SearchParticipant](SearchEngine.getDefaultSearchParticipant), scope, requestor, null)
+    println(elems)
+    assertEquals(elems.size, 2)
   }
 
   /** Test the structure as seen by the JDT. Use the JDT API to 
    *  retrieve the package `traits' and compare the toString output.
    */
   @Test def testStructure() {
-    val javaProject = JavaCore.create(project.underlying)
-    
-    javaProject.open(null)
-    val srcPackageRoot = javaProject.findPackageFragmentRoot(new Path("/simple-structure-builder/src"))
-    Assert.assertNotNull(srcPackageRoot)
-    
-    srcPackageRoot.open(null)
-    println("children: " + srcPackageRoot.getChildren.toList)
     val fragment = srcPackageRoot.getPackageFragment("traits")
     assertNotNull(fragment)
     assertEquals(expectedFragment, compilationUnitsStructure(fragment).trim)

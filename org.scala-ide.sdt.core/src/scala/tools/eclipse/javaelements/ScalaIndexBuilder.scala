@@ -14,6 +14,17 @@ import scala.tools.eclipse.{ ScalaPlugin, ScalaPresentationCompiler,
 	                           ScalaSourceIndexer, SettingConverterUtil }
 import scala.tools.eclipse.util.ScalaPluginSettings
 
+/** Add entires to the JDT index. This class traverses an *unattributed* Scala AST. This 
+ *  means a tree without symbols or types.
+ *  
+ *  The indexer builds a map from names to documents that mention that name. Names are
+ *  categorized (for instance, as method definitions, method references, annotation references, etc.).
+ *  
+ *  The indexer is later used by the JDT to narrow the scope of a search. For instance, a search
+ *  for test methods would first check the index for documents that have annotation references to
+ *  'Test' in 'org.junit', and then pass those documents to the structure builder for  
+ *  precise parsing, where names are actually resolved.
+ */
 trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
 
   object IndexBuilderTraverser {
@@ -37,9 +48,24 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
     def getSuperNames(supers : List[Tree]) = supers map ( _ match { 
         case Ident(id) => id.toChars
         case Select(_, name) => name.toChars
-        case _ => "$$NoRef".toCharArray
+        case AppliedTypeTree(fun: RefTree, args) => fun.name.toChars
+        case parent => 
+          println("superclass not understood: %s".format(parent))
+          "$$NoRef".toCharArray
       }) toArray
     
+    
+    def addAnnotationRef(tree: Tree) {
+      for (t <- tree) t match {
+        case New(tpt) =>
+          println("\t!!added annotation refs for %s".format(tpt))
+          indexer.addAnnotationTypeReference(tpt.toString.toChars)
+        case _ => ()
+      }
+    }
+    
+    def addAnnotations(trees: List[Tree]) = trees.foreach(addAnnotationRef)
+      
     def addClass(c : ClassDef) {
    	  if (isInfo) {      		
         println("Class defn: "+c.name+" ["+this+"]")
@@ -56,6 +82,7 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
         Array.empty,
         true
       )
+      addAnnotations(c.mods.annotations)
     }
     
     def addModule(m : ModuleDef) {
@@ -103,6 +130,8 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
           mapType(v.tpt).toArray,
           Array.empty
         )
+      addAnnotations(v.mods.annotations)
+
     }
     
     def addDef(d : DefDef) {
@@ -119,6 +148,7 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
         mapType(d.tpt).toArray,
         Array.empty
       )
+      addAnnotations(d.mods.annotations)
     }
     
     def addType(td : TypeDef) {
