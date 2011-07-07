@@ -23,6 +23,10 @@ object StructureBuilderTest {
     
   srcPackageRoot.open(null)
   println("children: " + srcPackageRoot.getChildren.toList)
+  
+  @AfterClass def shutdown {
+    project.resetCompilers
+  }
 }
 
 class StructureBuilderTest {
@@ -33,8 +37,8 @@ class StructureBuilderTest {
     val desc = SDTTestUtils.workspace.getDescription
     desc.setAutoBuilding(false)
     SDTTestUtils.workspace.setDescription(desc)
-    ScalaPlugin
   }
+  
   /** Return the toString output for all compilation units in the given fragment. */
   def compilationUnitsStructure(frag: IPackageFragment): String = {
     val buf = new StringBuilder
