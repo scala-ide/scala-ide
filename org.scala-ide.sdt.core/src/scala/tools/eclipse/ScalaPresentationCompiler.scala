@@ -101,6 +101,9 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
         None
       case f: FreshRunReq =>
         println("FreshRunReq in ask:\n" + f)
+         None
+      case e @ InvalidCompanions(c1, c2) =>
+        reporter.warning(c1.pos, e.getMessage)
         None
       case e =>
         ScalaPlugin.plugin.logError("Error during askOption", e)
