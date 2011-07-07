@@ -58,7 +58,6 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
     def addAnnotationRef(tree: Tree) {
       for (t <- tree) t match {
         case New(tpt) =>
-          println("\t!!added annotation refs for %s".format(tpt))
           indexer.addAnnotationTypeReference(tpt.toString.toChars)
         case _ => ()
       }
