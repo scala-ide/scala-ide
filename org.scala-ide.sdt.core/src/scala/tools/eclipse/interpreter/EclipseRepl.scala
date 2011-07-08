@@ -1,6 +1,7 @@
 package scala.tools.eclipse
 package interpreter
 
+import scala.tools.nsc.Interpreter
 import scala.tools.nsc.interpreter._
 import scala.tools.nsc.Settings
 import scala.tools.nsc.reporters.ConsoleReporter
@@ -76,7 +77,7 @@ class EclipseRepl(project: ScalaProject, settings: Settings, replView: ReplConso
   
   var intp = createCompiler()
   
-  private def createCompiler(): IMain = new IMain(settings, new PrintWriter(output))  
+  private def createCompiler(): Interpreter = new Interpreter(settings, new PrintWriter(output))  
   private def resetCompiler = {
     intp.close
     intp = createCompiler() 
