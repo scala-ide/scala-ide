@@ -11,27 +11,15 @@ import org.eclipse.jface.text.Region
 import scala.tools.eclipse.markoccurrences.ScalaOccurrencesFinder
 import scala.tools.eclipse.ScalaWordFinder
 import scala.tools.nsc.interactive.Response
+import scala.tools.eclipse.testsetup.TestProjectSetup
 
-object OccurrencesFinderTest {
-  lazy val project = SDTTestUtils.setupProject("occurrences-hyperlinking")
-  lazy val srcPackageRoot: IPackageFragmentRoot = {
-    val javaProject = JavaCore.create(project.underlying)
-    
-    javaProject.open(null)
-    javaProject.findPackageFragmentRoot(new Path("/occurrences-hyperlinking/src"))
-  }
-  
-  assertNotNull(srcPackageRoot)
-    
-  srcPackageRoot.open(null)
-  println("children: " + srcPackageRoot.getChildren.toList)
-}
+object OccurrencesFinderTest extends TestProjectSetup("occurrences-hyperlinking")
 
 class OccurrencesFinderTest {
   import OccurrencesFinderTest._
   
   @Test def typeOccurrences() {
-    val unit = srcPackageRoot.getPackageFragment("occ").getCompilationUnit("DummyOccurrences.scala").asInstanceOf[ScalaCompilationUnit];
+    val unit = compilationUnit("occ/DummyOccurrences.scala").asInstanceOf[ScalaCompilationUnit];
     
     // first, 'open' the file by telling the compiler to load it
     project.withSourceFile(unit) { (src, compiler) =>
