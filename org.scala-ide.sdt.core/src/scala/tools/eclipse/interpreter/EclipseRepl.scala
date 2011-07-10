@@ -60,7 +60,7 @@ class EclipseRepl(project: ScalaProject, settings: Settings, replView: ReplConso
         } 
         
         //TODO: Should be moved in IMain. A flag is needed to set the REPL working mode
-        if(result == Results.Incomplete) {
+        if(result == scala.tools.nsc.InterpreterResults) {
           val msg = "error: cannot evaluate incomplete expression"
           output write msg.getBytes
         }
