@@ -43,9 +43,11 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
     var packageName = new StringBuilder
       
     def addPackage(p : PackageDef) = {
-      if (isInfo) println("Package defn: "+p.name+" ["+this+"]")
       if (!packageName.isEmpty) packageName.append('.')
-      packageName.append(p.name)  
+      if (p.name != nme.EMPTY_PACKAGE_NAME && p.name != nme.ROOTPKG) {
+        if (isInfo) println("Package defn: "+p.name+" ["+this+"]")
+        packageName.append(p.name)  
+      }
     }
 
     def getSuperNames(supers: List[Tree]) = supers map (_ match {

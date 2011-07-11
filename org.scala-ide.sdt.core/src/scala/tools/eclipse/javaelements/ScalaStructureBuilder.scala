@@ -248,7 +248,8 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
             if (!completed) {
               completed = true
               
-              val pkgElem = JavaElementFactory.createPackageDeclaration(compilationUnitBuilder.element.asInstanceOf[JDTCompilationUnit], p.symbol.fullName)
+              val name = if (p.symbol.isEmptyPackage || p.symbol.isRootPackage) "" else p.symbol.fullName
+              val pkgElem = JavaElementFactory.createPackageDeclaration(compilationUnitBuilder.element.asInstanceOf[JDTCompilationUnit], name)
               resolveDuplicates(pkgElem)
               compilationUnitBuilder.addChild(pkgElem)
 
