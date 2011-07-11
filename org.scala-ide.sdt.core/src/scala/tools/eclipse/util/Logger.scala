@@ -8,6 +8,8 @@ trait Logger {
   import Category._
   def log(message: String, cat: Value = INFO) = {
     val printer = if (cat eq INFO) System.out else System.err
-    printer.format("[%s] %s%n", getClass.getSimpleName, message)
+    val name = if (getClass().isAnonymousClass) getClass.getName else getClass.getSimpleName
+    
+    printer.format("[%s] %s%n", name, message)
   }
 }
