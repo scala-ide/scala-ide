@@ -15,7 +15,10 @@ import scala.tools.eclipse.{ ScalaPlugin, ScalaPresentationCompiler,
 import scala.tools.eclipse.util.ScalaPluginSettings
 
 /** Add entires to the JDT index. This class traverses an *unattributed* Scala AST. This 
- *  means a tree without symbols or types.
+ *  means a tree without symbols or types. However, a tree that was typed may still get here
+ *  (usually during reconciliation, after editing and saving a file). That adds some complexity
+ *  because the Scala typechecker modifies the tree. One prime example is annotations, which
+ *  after type-checking are removed from the tree and placed in the corresponding Symbol.
  *  
  *  The indexer builds a map from names to documents that mention that name. Names are
  *  categorized (for instance, as method definitions, method references, annotation references, etc.).
@@ -44,26 +47,43 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
       if (!packageName.isEmpty) packageName.append('.')
       packageName.append(p.name)  
     }
+
+    def getSuperNames(supers: List[Tree]) = supers map (_ match {
+      case Ident(id)                           => id.toChars
+      case Select(_, name)                     => name.toChars
+      case AppliedTypeTree(fun: RefTree, args) => fun.name.toChars
+      case tpt @ TypeTree()                    => tpt.tpe.typeSymbol.name.toChars // maybe the tree was typed
+      case parent =>
+        println("superclass not understood: %s".format(parent))
+        "$$NoRef".toCharArray
+    }) toArray
     
-    def getSuperNames(supers : List[Tree]) = supers map ( _ match { 
-        case Ident(id) => id.toChars
-        case Select(_, name) => name.toChars
-        case AppliedTypeTree(fun: RefTree, args) => fun.name.toChars
-        case parent => 
-          println("superclass not understood: %s".format(parent))
-          "$$NoRef".toCharArray
-      }) toArray
+    /** Add annotations on the given tree. If the tree is not yet typed,
+     *  it uses the (unresolved) annotations in the tree (part of modifiers).
+     *  If the modifiers are empty, it uses the Symbol for finding them (the type-checker
+     *  moves the annotations from the tree to the symbol).
+     */
+    def addAnnotations(tree: MemberDef) {
+      if (tree.mods.annotations.isEmpty)
+        addAnnotations(tree.symbol)
+      else 
+        tree.mods.annotations.foreach(addAnnotationRef)
+    }
     
+    private def addAnnotations(sym: Symbol) =
+      for (ann <- sym.annotations) {
+        println("added annotation %s [using symbols]".format(ann.atp))
+        indexer.addAnnotationTypeReference(ann.atp.toString.toChars)
+      }
     
-    def addAnnotationRef(tree: Tree) {
+    private def addAnnotationRef(tree: Tree) {
       for (t <- tree) t match {
         case New(tpt) =>
+          println("added annotation %s [using trees]".format(tpt))
           indexer.addAnnotationTypeReference(tpt.toString.toChars)
         case _ => ()
       }
     }
-    
-    def addAnnotations(trees: List[Tree]) = trees.foreach(addAnnotationRef)
       
     def addClass(c : ClassDef) {
    	  if (isInfo) {      		
@@ -81,7 +101,8 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
         Array.empty,
         true
       )
-      addAnnotations(c.mods.annotations)
+      
+      addAnnotations(c)
     }
     
     def addModule(m : ModuleDef) {
@@ -129,8 +150,7 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
           mapType(v.tpt).toArray,
           Array.empty
         )
-      addAnnotations(v.mods.annotations)
-
+      addAnnotations(v)
     }
     
     def addDef(d : DefDef) {
@@ -147,7 +167,7 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
         mapType(d.tpt).toArray,
         Array.empty
       )
-      addAnnotations(d.mods.annotations)
+      addAnnotations(d)
     }
     
     def addType(td : TypeDef) {
@@ -190,8 +210,11 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
         case md : ModuleDef => inClass(md.name.append("$").toChars) { super.traverse(tree) }
         
         case Apply(rt : RefTree, args) =>
+          if (isInfo)
+            println("method reference: "+rt.name+" ["+args.length+"]")
+
           indexer.addMethodReference(rt.name.toChars, args.length)
-          for (t <- args) traverse(t)
+          super.traverse(tree)
           
         // Partial apply.
         case Typed(ttree, Function(_, _)) => 

@@ -9,26 +9,10 @@ import org.eclipse.jdt.core._
 import org.eclipse.core.runtime.Path
 import org.eclipse.jdt.core.search._
 import scala.collection.mutable.ListBuffer
+import scala.tools.eclipse.javaelements.ScalaCompilationUnit
+import org.eclipse.jdt.internal.corext.util.JavaModelUtil
 
-object StructureBuilderTest {
-  lazy val project = SDTTestUtils.setupProject("simple-structure-builder")
-  lazy val srcPackageRoot: IPackageFragmentRoot = {
-    val javaProject = JavaCore.create(project.underlying)
-    
-    javaProject.open(null)
-    javaProject.findPackageFragmentRoot(new Path("/simple-structure-builder/src"))
-  }
-  
-  Assert.assertNotNull(srcPackageRoot)
-    
-  srcPackageRoot.open(null)
-  println("children: " + srcPackageRoot.getChildren.toList)
-
-  // TODO: Find out why shutdown triggers reconcile
-//  @AfterClass def shutdown {
-//    project.resetCompilers
-//  }
-}
+object StructureBuilderTest extends testsetup.TestProjectSetup("simple-structure-builder")
 
 class StructureBuilderTest {
   import StructureBuilderTest._
@@ -90,6 +74,22 @@ class StructureBuilderTest {
     (new SearchEngine).search(pattern, Array[SearchParticipant](SearchEngine.getDefaultSearchParticipant), scope, requestor, null)
     println(elems)
     assertEquals(elems.size, 2)
+  }
+  
+  /** This tests that search for annotations still succeeds after a reconcile. The
+   *  reconciler triggers type-checking, which in turn produces typed trees. The indexer
+   *  is run again on the document, this time with attributed trees. Type-checked trees
+   *  move annotations from the tree to the symbol, hence this test.
+   */
+  @Test def testSearchAnnotationsAfterReconcile {
+    val unit = compilationUnit("annots/ScalaTestSuite.scala")
+    unit.becomeWorkingCopy(null)
+    unit.getBuffer().append("  ")
+    unit.commitWorkingCopy(true, null) // trigger indexing
+    unit.discardWorkingCopy()
+
+    // search again for annotations
+    testSearchIndexAnnotations()
   }
 
   /** Test the structure as seen by the JDT. Use the JDT API to 
