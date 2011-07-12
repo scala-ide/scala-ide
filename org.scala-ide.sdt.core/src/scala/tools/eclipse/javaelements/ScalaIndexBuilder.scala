@@ -14,7 +14,7 @@ import scala.tools.eclipse.{ ScalaPlugin, ScalaPresentationCompiler,
 	                           ScalaSourceIndexer, SettingConverterUtil }
 import scala.tools.eclipse.util.ScalaPluginSettings
 
-/** Add entires to the JDT index. This class traverses an *unattributed* Scala AST. This 
+/** Add entries to the JDT index. This class traverses an *unattributed* Scala AST. This 
  *  means a tree without symbols or types. However, a tree that was typed may still get here
  *  (usually during reconciliation, after editing and saving a file). That adds some complexity
  *  because the Scala typechecker modifies the tree. One prime example is annotations, which
