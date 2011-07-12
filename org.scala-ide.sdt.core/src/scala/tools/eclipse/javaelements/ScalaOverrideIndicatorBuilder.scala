@@ -19,42 +19,47 @@ import org.eclipse.jdt.internal.ui.javaeditor.EditorUtility
 
 import scala.tools.eclipse.{ ScalaPresentationCompiler, ScalaPlugin }
 
-trait ScalaOverrideIndicatorBuilder { self : ScalaPresentationCompiler =>
-  class OverrideIndicatorBuilderTraverser(scu : ScalaCompilationUnit, annotationMap : JMap[AnyRef, AnyRef]) extends Traverser {
-    val ANNOTATION_TYPE= "org.eclipse.jdt.ui.overrideIndicator"
+object ScalaOverrideIndicatorBuilder {
+  val OVERRIDE_ANNOTATION_TYPE = "org.eclipse.jdt.ui.overrideIndicator"
+}
 
-    case class ScalaIndicator(text : String, base: Symbol, val isOverwrite : Boolean) 
-      extends Annotation(ANNOTATION_TYPE, false, text) with IScalaOverrideIndicator {
-      def open = {
-        ask{ () => locate(base, scu) } map { case (file, pos) =>
-    	  EditorUtility.openInEditor(file, true) match { 
-            case editor : ITextEditor => editor.selectAndReveal(pos, 0)
-            case _ =>
+case class JavaIndicator(scu: ScalaCompilationUnit,
+  packageName: String,
+  typeNames: String,
+  methodName: String,
+  methodTypeSignatures: List[String],
+  text: String,
+  val isOverwrite: Boolean) extends Annotation(ScalaOverrideIndicatorBuilder.OVERRIDE_ANNOTATION_TYPE, false, text) with IScalaOverrideIndicator {
+
+  def open() {
+    val tpe0 = JDTUtils.resolveType(scu.newSearchableEnvironment().nameLookup, packageName, typeNames, 0)
+    tpe0 match {
+      case Some(tpe) =>
+        val method = tpe.getMethod(methodName, methodTypeSignatures.toArray)
+        if (method.exists)
+          JavaUI.openInEditor(method, true, true);
+      case _ =>
+    }
+  }
+}
+
+trait ScalaOverrideIndicatorBuilder { self : ScalaPresentationCompiler =>
+  import ScalaOverrideIndicatorBuilder.OVERRIDE_ANNOTATION_TYPE
+  
+  case class ScalaIndicator(scu: ScalaCompilationUnit, text: String, base: Symbol, val isOverwrite: Boolean)
+    extends Annotation(OVERRIDE_ANNOTATION_TYPE, false, text) with IScalaOverrideIndicator {
+    def open = {
+      ask { () => locate(base, scu) } map {
+        case (file, pos) =>
+          EditorUtility.openInEditor(file, true) match {
+            case editor: ITextEditor => editor.selectAndReveal(pos, 0)
+            case _                   =>
           }
-        }
       }
     }
-
-    case class JavaIndicator(
-      packageName : String,
-      typeNames : String,
-      methodName : String,
-      methodTypeSignatures : List[String],
-      text : String,
-      val isOverwrite : Boolean
-    ) extends Annotation(ANNOTATION_TYPE, false, text) with IScalaOverrideIndicator {
-      def open() {
-        val tpe0 = JDTUtils.resolveType(scu.newSearchableEnvironment().nameLookup, packageName, typeNames, 0)
-        tpe0 match {
-          case Some(tpe) =>
-            val method = tpe.getMethod(methodName, methodTypeSignatures.toArray)
-            if (method.exists)
-              JavaUI.openInEditor(method, true, true);
-          case _ =>
-        }
-     }
-    }
-    
+  }
+  
+  class OverrideIndicatorBuilderTraverser(scu : ScalaCompilationUnit, annotationMap : JMap[AnyRef, AnyRef]) extends Traverser {
     override def traverse(tree: Tree): Unit = {
       tree match {
         case defn: DefTree if (defn.symbol ne NoSymbol) && defn.symbol.pos.isOpaqueRange =>
@@ -70,8 +75,8 @@ trait ScalaOverrideIndicatorBuilder { self : ScalaPresentationCompiler =>
                 val methodName = base.name.toString
                 val paramTypes = base.tpe.paramss.flatMap(_.map(_.tpe))
                 val methodTypeSignatures = paramTypes.map(mapParamTypeSignature(_))
-                annotationMap.put(JavaIndicator(packageName, typeNames, methodName, methodTypeSignatures, text, isOverwrite), position)
-              } else annotationMap.put(ScalaIndicator(text, base, isOverwrite), position)
+                annotationMap.put(JavaIndicator(scu, packageName, typeNames, methodName, methodTypeSignatures, text, isOverwrite), position)
+              } else annotationMap.put(ScalaIndicator(scu, text, base, isOverwrite), position)
             }
           } catch {
             case ex => ScalaPlugin.plugin.logError("Error creating override indicators for %s".format(scu.file.path), ex) 
