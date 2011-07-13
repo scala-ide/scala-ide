@@ -6,7 +6,6 @@
 package scala.tools.eclipse
 
 import java.util.HashMap
-
 import org.eclipse.core.runtime.{ CoreException, IProgressMonitor, IStatus, Status }
 import org.eclipse.core.runtime.jobs.Job
 import org.eclipse.debug.core.DebugPlugin
@@ -18,9 +17,9 @@ import org.eclipse.jface.viewers.IStructuredSelection
 import org.eclipse.jface.text.{ BadLocationException, ITextSelection }
 import org.eclipse.jface.viewers.ISelection
 import org.eclipse.ui.IWorkbenchPart
-
 import scala.tools.eclipse.util.ReflectionUtils
 import scala.tools.eclipse.javaelements.ScalaClassElement
+import scala.tools.eclipse.javaelements.ScalaSourceTypeElement
 
 class ScalaToggleBreakpointAdapter extends ToggleBreakpointAdapter { self =>
   import ScalaToggleBreakpointAdapterUtils._
@@ -32,6 +31,13 @@ class ScalaToggleBreakpointAdapter extends ToggleBreakpointAdapter { self =>
    */
   def accessorGetTextEditor(part: IWorkbenchPart) = getTextEditor(part)
   
+  /** Implementation of the breakpoint toggler. This method relies on the JDT being able
+   *  to find the corresponding JDT element for the given selection.
+   *  
+   *  TODO: Rewrite using the presentation compiler, without failing for unknown elements 
+   *  (unknown to the JDT, such as inner objects inside objects). Breakpoints could be set 
+   *  by giving only the line number.
+   */
   private def toggleLineBreakpointsImpl(part : IWorkbenchPart, selection : ISelection) {
     val job = new Job("Toggle Line Breakpoint") {
       override def run(monitor : IProgressMonitor) : IStatus = {
@@ -55,6 +61,7 @@ class ScalaToggleBreakpointAdapter extends ToggleBreakpointAdapter { self =>
                   else
                     member.getDeclaringType
 
+                println("setting breakpoint on mbr: %s, tpe: %s [%s]".format(member, tpe.getFullyQualifiedName, tpe.getClass))
                 val tname = {
                   val qtname = createQualifiedTypeName(self, tpe)
                   val emptyPackagePrefix = "<empty>." 
@@ -97,21 +104,30 @@ class ScalaToggleBreakpointAdapter extends ToggleBreakpointAdapter { self =>
     job.schedule
   }
 
+  /** Toggle a breakpoint for the given selection. This method relies on the JDT
+   *  being able to find the Java Element corresponding to this selection.
+   *  
+   *  TODO: Rewrite to use the presentation compiler for finding the position.
+   */
   override def toggleBreakpoints(part : IWorkbenchPart, selection : ISelection) {
     val sel = translateToMembers(part, selection)
-    if(sel.isInstanceOf[IStructuredSelection]) {
-      val member = sel.asInstanceOf[IStructuredSelection].getFirstElement.asInstanceOf[IMember]
-      val mtype = member.getElementType
-      if(mtype == IJavaElement.FIELD || mtype == IJavaElement.METHOD) {
-        if (selection.isInstanceOf[ITextSelection]) {
-          val ts = selection.asInstanceOf[ITextSelection]
-          toggleLineBreakpointsImpl(part, ts)
-        } 
-      }
-      else if(member.getElementType == IJavaElement.TYPE)
-        toggleClassBreakpoints(part, sel)
-      else
-        toggleLineBreakpointsImpl(part, selection)
+
+    sel match {
+      case structuredSelection: IStructuredSelection =>
+        val member = structuredSelection.getFirstElement.asInstanceOf[IMember]
+        member.getElementType match {
+          case IJavaElement.FIELD | IJavaElement.METHOD =>
+            selection match {
+              case textSelection: ITextSelection => toggleLineBreakpointsImpl(part, textSelection)
+              case _                             => ()
+            }
+          case IJavaElement.TYPE =>
+            toggleClassBreakpoints(part, sel)
+          case _ =>
+            toggleLineBreakpointsImpl(part, selection)
+        }
+      case _ =>
+        println("Unknown selection when toggling breakpoint: " + selection)
     }
   }
   
@@ -125,7 +141,7 @@ object ScalaToggleBreakpointAdapterUtils extends ReflectionUtils {
   val createQualifiedTypeNameMethod = getDeclaredMethod(toggleBreakpointAdapterClazz, "createQualifiedTypeName", classOf[IType])
   
   def createQualifiedTypeName(tba : ToggleBreakpointAdapter, tpe : IType) = {
-  	if (tpe.isInstanceOf[ScalaClassElement])
+  	if (tpe.isInstanceOf[ScalaSourceTypeElement])
       tpe.getFullyQualifiedName
     else
       createQualifiedTypeNameMethod.invoke(tba, tpe).asInstanceOf[String]
