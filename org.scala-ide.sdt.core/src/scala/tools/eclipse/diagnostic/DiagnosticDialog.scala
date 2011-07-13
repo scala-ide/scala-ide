@@ -83,6 +83,7 @@ class DiagnosticDialog(shell: Shell) extends Dialog(shell) {
         "org.eclipse.jdt.ui.swtProposalCategory:65541").mkString("\0")
     
     override def saveToStore {
+      updateValue
       if (value && !getStoredValue) {
         PreferenceConstants.setExcludedCompletionProposalCategories(defaultExcluded)
         prefStore.setValue(PreferenceConstants.CODEASSIST_CATEGORY_ORDER, defaultOrdering)
