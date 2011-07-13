@@ -8,7 +8,6 @@ package scala.tools.eclipse
 import org.eclipse.jdt.core.IJavaProject
 import scala.collection.mutable.HashMap
 import scala.util.control.ControlThrowable
-
 import org.eclipse.core.resources.{ IFile, IProject, IResourceChangeEvent, IResourceChangeListener, ResourcesPlugin }
 import org.eclipse.core.runtime.{ CoreException, FileLocator, IStatus, Platform, Status }
 import org.eclipse.core.runtime.content.IContentTypeSettings
@@ -23,12 +22,12 @@ import org.eclipse.ui.{ IEditorInput, IFileEditorInput, PlatformUI, IPartListene
 import org.eclipse.ui.part.FileEditorInput
 import org.eclipse.ui.plugin.AbstractUIPlugin
 import util.SWTUtils.asyncExec
-
 import org.osgi.framework.BundleContext
-
 import scala.tools.eclipse.javaelements.{ ScalaElement, ScalaSourceFile }
 import scala.tools.eclipse.util.OSGiUtils.pathInBundle
 import scala.tools.eclipse.templates.ScalaTemplateManager
+import org.eclipse.jdt.ui.PreferenceConstants
+import org.eclipse.core.resources.IResourceDelta
 
 object ScalaPlugin {
   var plugin: ScalaPlugin = _
@@ -96,14 +95,15 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
   val swingSources = pathInBundle(scalaLibBundle, "/lib/scala-swing-src.jar")
 
   lazy val templateManager = new ScalaTemplateManager()
+  lazy val headlessMode = System.getProperty(HEADLESS_TEST) ne null
 
   private val projects = new HashMap[IProject, ScalaProject]
 
   override def start(context: BundleContext) = {
     super.start(context)
 
-    if (System.getProperty(HEADLESS_TEST) eq null) {
-      ResourcesPlugin.getWorkspace.addResourceChangeListener(this, IResourceChangeEvent.PRE_CLOSE | IResourceChangeEvent.POST_CHANGE)
+    if (!headlessMode) {
+      ResourcesPlugin.getWorkspace.addResourceChangeListener(this, IResourceChangeEvent.PRE_CLOSE)
       JavaCore.addElementChangedListener(this)
       PlatformUI.getWorkbench.getEditorRegistry.setDefaultEditor("*.scala", editorId)
       ScalaPlugin.getWorkbenchWindow map (_.getPartService().addPartListener(ScalaPlugin.this))
@@ -127,6 +127,7 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
     projects.get(project) match {
       case Some(scalaProject) => scalaProject
       case None =>
+        if (!headlessMode) asyncExec(ensureJavaCompletions())
         val scalaProject = new ScalaProject(project)
         projects(project) = scalaProject
         scalaProject
@@ -161,6 +162,20 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
           }
         }
       case _ =>
+    }
+  }
+  
+  /** Make sure that Java Completion Proposals are enabled. This is a hack, sneaking behind the
+   *  user's back and enabling Java completions if they are disabled. However, this saves hours
+   *  of frustration, and probably lots of first-time users that are puzzled by this fact.
+   */
+  def ensureJavaCompletions() {
+    val javaCompletion = "org.eclipse.jdt.ui.javaAllProposalCategory"
+
+    val currentExcluded: Array[String] = PreferenceConstants.getExcludedCompletionProposalCategories
+    if (currentExcluded.contains(javaCompletion)) {
+      ScalaPlugin.plugin.logWarning("Detected Java Completion proposals were disabled. Re-enabled.")
+      PreferenceConstants.setExcludedCompletionProposalCategories(currentExcluded.filterNot(_ == javaCompletion))
     }
   }
 
