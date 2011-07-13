@@ -61,6 +61,7 @@ class ScalaProject(val underlying: IProject) {
           None
         case ex =>
           println("Throwable when intializing presentation compiler!!! " + ex.getMessage)
+          ex.printStackTrace()
           if (underlying.isOpen)
             failedCompilerInitialization("error initializing Scala compiler")
           plugin.logError(ex)          
