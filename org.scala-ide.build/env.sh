@@ -21,8 +21,16 @@ if [ "X$MAVEN" = "X" ] ; then
   exit
 fi
 
+if [ -z $VERSION_TAG ]
+then
+    VERSION_TAG='local'
+fi
+
+echo "Version tag is $VERSION_TAG"
+
 build()
 {
+
   ${MAVEN} \
     $PROFILE_NAME -U \
     -Dscala.version=${SCALA_VERSION} \

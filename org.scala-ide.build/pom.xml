@@ -481,6 +481,9 @@
 
     <profile>
       <id>local-scala-trunk</id>
+      <properties>
+        <version.suffix>210</version.suffix>
+      </properties>
       <dependencies>
         <dependency>
           <groupId>org.scala-ide</groupId>
