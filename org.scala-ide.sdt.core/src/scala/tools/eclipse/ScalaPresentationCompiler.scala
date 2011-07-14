@@ -8,7 +8,6 @@ package scala.tools.eclipse
 import scala.tools.nsc.interactive.FreshRunReq
 import scala.collection.mutable
 import scala.collection.mutable.{ ArrayBuffer, SynchronizedMap }
-
 import org.eclipse.jdt.core.compiler.IProblem
 import org.eclipse.jdt.internal.compiler.problem.{ DefaultProblem, ProblemSeverities }
 import scala.tools.nsc.Settings
@@ -16,11 +15,11 @@ import scala.tools.nsc.interactive.{Global, InteractiveReporter, Problem}
 import scala.tools.nsc.io.AbstractFile
 import scala.tools.nsc.reporters.Reporter
 import scala.tools.nsc.util.{ BatchSourceFile, Position, SourceFile }
-
 import scala.tools.eclipse.javaelements.{
   ScalaCompilationUnit, ScalaIndexBuilder, ScalaJavaMapper, ScalaMatchLocator, ScalaStructureBuilder,
   ScalaOverrideIndicatorBuilder }
 import scala.tools.eclipse.util.{ Cached, EclipseFile, EclipseResource }
+import scala.tools.nsc.util.FailedInterrupt
 
 class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
   extends Global(settings, new ScalaPresentationCompiler.PresentationReporter, project.underlying.getName)
@@ -96,15 +95,21 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
   def askOption[A](op: () => A): Option[A] =
     try Some(ask(op))
     catch {
-      case e: TypeError =>
-        println("TypeError in ask:\n" + e)
-        None
-      case f: FreshRunReq =>
-        println("FreshRunReq in ask:\n" + f)
-         None
-      case e @ InvalidCompanions(c1, c2) =>
-        reporter.warning(c1.pos, e.getMessage)
-        None
+      case fi: FailedInterrupt =>
+        fi.getCause() match {
+          case e: TypeError =>
+            println("TypeError in ask:\n" + e)
+            None
+          case f: FreshRunReq =>
+            println("FreshRunReq in ask:\n" + f)
+             None
+          case e @ InvalidCompanions(c1, c2) =>
+            reporter.warning(c1.pos, e.getMessage)
+            None
+          case e =>
+            ScalaPlugin.plugin.logError("Error during askOption", e)
+            None
+        }
       case e =>
         ScalaPlugin.plugin.logError("Error during askOption", e)
         None
