@@ -66,7 +66,7 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
      *  moves the annotations from the tree to the symbol).
      */
     def addAnnotations(tree: MemberDef) {
-      if (tree.mods.annotations.isEmpty)
+      if (tree.mods.annotations.isEmpty && tree.symbol.isInitialized) // don't force any symbols
         addAnnotations(tree.symbol)
       else 
         tree.mods.annotations.foreach(addAnnotationRef)
