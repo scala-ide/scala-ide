@@ -5,8 +5,10 @@ import scalariform.utils.TextEdit
 import org.eclipse.jface.text.IDocumentExtension4
 import org.eclipse.jface.text.IDocument
 import org.eclipse.core.runtime.IAdaptable
-
 import PartialFunction._
+import org.eclipse.core.resources.IWorkspace
+import org.eclipse.core.runtime.IProgressMonitor
+import org.eclipse.core.resources.IWorkspaceRunnable
 
 object EclipseUtils {
 
@@ -30,4 +32,16 @@ object EclipseUtils {
 
   implicit def asEclipseTextEdit(edit: TextEdit): EclipseTextEdit = new ReplaceEdit(edit.position, edit.length, edit.replacement)
 
+  /** Run the given function as a workspace runnable inside `wspace`.
+   * 
+   * @param wspace the workspace
+   * @param monitor the progress monitor (defaults to null for no progress monitor).
+   */
+  def workspaceRunnableIn(wspace: IWorkspace, monitor: IProgressMonitor = null)(f: IProgressMonitor => Unit) = {
+    wspace.run(new IWorkspaceRunnable {
+      def run(monitor: IProgressMonitor) {
+        f(monitor)
+      }
+    }, monitor)
+  }
 }
