@@ -76,13 +76,22 @@ class ScalaCompletionProposalComputer extends IJavaCompletionProposalComputer {
   
   private def prefixMatches(name : Array[Char], prefix : Array[Char]) = 
     CharOperation.prefixEquals(prefix, name, false) || CharOperation.camelCaseMatch(prefix, name) 
-   
+  
+    
   private def findCompletions(position: Int, context: ContentAssistInvocationContext, scu: ScalaCompilationUnit)
+                             (sourceFile: SourceFile, compiler: ScalaPresentationCompiler): java.util.List[_] = {
+    val chars = context.getDocument.get.toCharArray
+    val region = ScalaWordFinder.findCompletionPoint(chars, position)
+    
+    findCompletions(region)(position, context.getViewer().getSelectionProvider, scu)(sourceFile, compiler)
+  }
+    
+  import org.eclipse.jface.text.IRegion
+  
+  def findCompletions(region: IRegion)(position: Int, selectionProvider: ISelectionProvider, scu: ScalaCompilationUnit)
                              (sourceFile: SourceFile, compiler: ScalaPresentationCompiler): java.util.List[_] = {
     val pos = compiler.rangePos(sourceFile, position, position, position)
     
-    val chars = context.getDocument.get.toCharArray
-    val region = ScalaWordFinder.findCompletionPoint(chars, position)
     val start = if (region == null) position else region.getOffset
     
     val typed = new compiler.Response[compiler.Tree]
@@ -90,20 +99,22 @@ class ScalaCompletionProposalComputer extends IJavaCompletionProposalComputer {
     val t1 = typed.get.left.toOption
 
     val completed = new compiler.Response[List[compiler.Member]]
-    compiler.askOption{ () =>
-      t1 match {
-        case Some(s@compiler.Select(qualifier, name)) if qualifier.pos.isDefined && qualifier.pos.isRange =>
-          val cpos0 = qualifier.pos.end 
-          val cpos = compiler.rangePos(sourceFile, cpos0, cpos0, cpos0)
-          compiler.askTypeCompletion(cpos, completed)
-        case Some(compiler.Import(expr, _)) =>
-          val cpos0 = expr.pos.endOrPoint
-          val cpos = compiler.rangePos(sourceFile, cpos0, cpos0, cpos0)
-          compiler.askTypeCompletion(cpos, completed)
-        case _ =>
-          val cpos = compiler.rangePos(sourceFile, start, start, start)
-          compiler.askScopeCompletion(cpos, completed)
-      }
+    // completion depends on the typed tree
+    t1 match {
+      // completion on select
+      case Some(s@compiler.Select(qualifier, name)) if qualifier.pos.isDefined && qualifier.pos.isRange =>
+        val cpos0 = qualifier.pos.end 
+        val cpos = compiler.rangePos(sourceFile, cpos0, cpos0, cpos0)
+        compiler.askTypeCompletion(cpos, completed)
+      case Some(compiler.Import(expr, _)) =>
+        // completion on `imports`
+        val cpos0 = expr.pos.endOrPoint
+        val cpos = compiler.rangePos(sourceFile, cpos0, cpos0, cpos0)
+        compiler.askTypeCompletion(cpos, completed)
+      case _ =>
+        // this covers completion on `types`
+        val cpos = compiler.rangePos(sourceFile, start, start, start)
+        compiler.askScopeCompletion(cpos, completed)
     }
     
     val prefix = (if (position <= start) "" else scu.getBuffer.getText(start, position-start).trim).toArray
@@ -158,7 +169,7 @@ class ScalaCompletionProposalComputer extends IJavaCompletionProposalComputer {
        }
        
        val contextString = sym.paramss.map(_.map(p => "%s: %s".format(p.decodedName, p.tpe)).mkString("(", ", ", ")")).mkString("")
-       buff += new ScalaCompletionProposal(start, name, signature, contextString, container, relevance, image, context.getViewer.getSelectionProvider)
+       buff += new ScalaCompletionProposal(start, name, signature, contextString, container, relevance, image, selectionProvider)
     }
 
     for (completions <- completed.get.left.toOption) {
