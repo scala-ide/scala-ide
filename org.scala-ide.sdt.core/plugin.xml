@@ -1025,12 +1025,20 @@
       <partition type="__dftl_partition_content_type"/>
    </javaCompletionProposalComputer>
  </extension>
+   <extension
+       id="scala_completions"
+       name="Scala Completions"
+       point="org.eclipse.jdt.ui.javaCompletionProposalComputer">
+    <proposalCategory
+          icon="icons/scala.png">
+    </proposalCategory>
+ </extension>
  <extension
        id="scala.tools.eclipse.completion.ScalaCompletionProposalComputer"
        name="Scala Completion Proposal Computer"
        point="org.eclipse.jdt.ui.javaCompletionProposalComputer">
     <javaCompletionProposalComputer
-          categoryId="org.eclipse.jdt.ui.javaAllProposalCategory"
+          categoryId="org.scala-ide.sdt.core.scala_completions"
           class="scala.tools.eclipse.completion.ScalaCompletionProposalComputer">
        <partition
              type="__dftl_partition_content_type">
