@@ -13,7 +13,7 @@ import org.eclipse.jdt.internal.ui.wizards.NewElementWizard
 
 import org.eclipse.jface.viewers.IStructuredSelection
 
-abstract class AbstractNewElementWizard(wizardPage: AbstractNewElementWizardPage)
+abstract class AbstractNewElementWizard(protected val wizardPage: AbstractNewElementWizardPage)
   extends NewElementWizard {
 	
   setWindowTitle("Create a new Scala " + wizardPage.declarationType)

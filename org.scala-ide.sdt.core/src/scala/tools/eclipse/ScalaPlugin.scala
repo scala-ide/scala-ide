@@ -54,6 +54,7 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
   def classWizId = wizardId("Class")
   def traitWizId = wizardId("Trait")
   def objectWizId = wizardId("Object")
+  def packageObjectWizId = wizardId("PackageObject")
   def applicationWizId = wizardId("Application")
   def projectWizId = wizardId("Project")
   def netProjectWizId = wizardId("NetProject")
