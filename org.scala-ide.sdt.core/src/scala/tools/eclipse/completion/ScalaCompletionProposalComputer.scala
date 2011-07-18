@@ -44,15 +44,6 @@ class ScalaCompletionProposalComputer extends IJavaCompletionProposalComputer {
   val javaInterfaceImage = JavaPluginImages.get(JavaPluginImages.IMG_OBJS_INTERFACE)
   val javaClassImage = JavaPluginImages.get(JavaPluginImages.IMG_OBJS_CLASS)
   
-  class ScalaContextInformation(display : String,
-                                info : String,
-                                image : Image) extends IContextInformation with IContextInformationExtension {
-    def getContextDisplayString() = display
-    def getImage() = image
-    def getInformationDisplayString() = info
-    def getContextInformationPosition(): Int = 0
-  }
-  
   def computeContextInformation(context : ContentAssistInvocationContext,
       monitor : IProgressMonitor) : java.util.List[_] = {
     // Currently not supported
@@ -74,22 +65,22 @@ class ScalaCompletionProposalComputer extends IJavaCompletionProposalComputer {
     }
   }  
   
-  private def prefixMatches(name : Array[Char], prefix : Array[Char]) = 
-    CharOperation.prefixEquals(prefix, name, false) || CharOperation.camelCaseMatch(prefix, name) 
-  
-    
   private def findCompletions(position: Int, context: ContentAssistInvocationContext, scu: ScalaCompilationUnit)
-                             (sourceFile: SourceFile, compiler: ScalaPresentationCompiler): java.util.List[_] = {
+                             (sourceFile: SourceFile, compiler: ScalaPresentationCompiler): java.util.List[ICompletionProposal] = {
     val chars = context.getDocument.get.toCharArray
     val region = ScalaWordFinder.findCompletionPoint(chars, position)
     
-    findCompletions(region)(position, context.getViewer().getSelectionProvider, scu)(sourceFile, compiler)
+    val res = findCompletions(region)(position, context.getViewer().getSelectionProvider, scu)(sourceFile, compiler)
+    
+    // COMPAT: 2.8 compatiblity. backwards compatible: this compiles both with 2.9 and 2.8
+    import collection.JavaConversions._
+    res: java.util.List[ICompletionProposal]
   }
     
   import org.eclipse.jface.text.IRegion
   
   def findCompletions(region: IRegion)(position: Int, selectionProvider: ISelectionProvider, scu: ScalaCompilationUnit)
-                             (sourceFile: SourceFile, compiler: ScalaPresentationCompiler): java.util.List[_] = {
+                             (sourceFile: SourceFile, compiler: ScalaPresentationCompiler):List[ICompletionProposal] = {
     val pos = compiler.rangePos(sourceFile, position, position, position)
     
     val start = if (region == null) position else region.getOffset
@@ -186,32 +177,6 @@ class ScalaCompletionProposalComputer extends IJavaCompletionProposalComputer {
       }
     }
     
-    // COMPAT: 2.8 compatiblity. backwards compatible: this compiles both with 2.9 and 2.8
-    import collection.JavaConversions._
-    buff.toList: java.util.List[ICompletionProposal]
+    buff.toList
   }    
-  
-  private class ScalaCompletionProposal(startPos: Int, completion: String, display: String, contextName: String, 
-                                        container: String, relevance: Int, image: Image, selectionProvider: ISelectionProvider) 
-                                        extends IJavaCompletionProposal with ICompletionProposalExtension {
-    def getRelevance() = relevance
-    def getImage() = image
-    def getContextInformation(): IContextInformation = 
-      if (contextName.size > 0)
-        new ScalaContextInformation(display, contextName, image)
-      else null
-        
-    def getDisplayString() = display
-    def getAdditionalProposalInfo() = container
-    def getSelection(d : IDocument) = null
-    def apply(d : IDocument) { throw new IllegalStateException("Shouldn't be called") }
-    
-    def apply(d : IDocument, trigger : Char, offset : Int) {
-      d.replace(startPos, offset - startPos, completion)
-      selectionProvider.setSelection(new TextSelection(startPos + completion.length, 0))
-    }
-    def getTriggerCharacters= null
-    def getContextInformationPosition = 0
-    def isValidFor(d : IDocument, pos : Int) = prefixMatches(completion.toArray, d.get.substring(startPos, pos).toArray)  
-  } 
 }
