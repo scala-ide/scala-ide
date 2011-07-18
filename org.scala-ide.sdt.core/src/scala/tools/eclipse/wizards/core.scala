@@ -35,7 +35,8 @@ class NewPackageObjectWizardPage extends {
     super.createTypeNameControls(composite, nColumns)
     // then make sure the field is not editable (the type name is automatically derived from the 
     // package's name. Look at `packageChanged()` method.
-    setTypeName(getTypeName, false)
+    setTypeName(buildTypeName, false)
+    packageChanged()
   }
 
   // temp file name that is produced for a package object. The file will be
@@ -49,12 +50,16 @@ class NewPackageObjectWizardPage extends {
 
   override protected def packageChanged() = {
     val status = super.packageChanged()
-    // the type's name is derived from the package's name
-    //e.g., if the package name is `foo.bar`, the type name is `bar 
-    val typeName = getPackageText.split('.').last
-    setTypeName(typeName, false)
+    
+    setTypeName(buildTypeName, false)
 
     status
+  }
+  
+  private def buildTypeName = {
+    // the type's name is derived from the package's name
+    //e.g., if the package name is `foo.bar`, the type name is `bar 
+    getPackageText.split('.').last
   }
 
   override protected def getPackageNameToInject = {
@@ -80,7 +85,7 @@ trait MuteLowerCaseTypeNameWarning extends AbstractNewElementWizardPage {
     // object's name are allowed to be lowercase
     val lowerCaseTypeNameWarningMessage = Messages.format(NewWizardMessages.NewTypeWizardPage_warning_TypeNameDiscouraged, InternalMessages.convention_type_lowercaseName)
 
-    if (status.getMessage.equals(lowerCaseTypeNameWarningMessage))
+    if (status != null && status.getMessage!= null && status.getMessage.equals(lowerCaseTypeNameWarningMessage))
       StatusInfo.OK_STATUS // swallow warning
     else
       status

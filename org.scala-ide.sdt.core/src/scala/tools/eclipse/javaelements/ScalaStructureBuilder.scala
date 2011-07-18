@@ -406,7 +406,8 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
       override def addModule(m : ModuleDef) : Owner = {
         val sym = m.symbol
     	val isSynthetic = sym.hasFlag(Flags.SYNTHETIC)
-        val moduleElem = new ScalaModuleElement(element, m.name.toString, isSynthetic)
+        val moduleElem = if(sym.isPackageObject)  new ScalaPackageModuleElement(element, m.name.toString, isSynthetic) 
+          				 else new ScalaModuleElement(element, m.name.toString, isSynthetic)
         resolveDuplicates(moduleElem)
         addChild(moduleElem)
         

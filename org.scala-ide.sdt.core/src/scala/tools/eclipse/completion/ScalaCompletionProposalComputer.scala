@@ -38,6 +38,7 @@ class ScalaCompletionProposalComputer extends IJavaCompletionProposalComputer {
   val classImage = SCALA_CLASS.createImage()
   val traitImage = SCALA_TRAIT.createImage()
   val objectImage = SCALA_OBJECT.createImage()
+  val packageObjectImage = SCALA_PACKAGE_OBJECT.createImage()
   val typeImage = SCALA_TYPE.createImage()
   val valImage = PUBLIC_VAL.createImage()
   
@@ -132,8 +133,9 @@ class ScalaCompletionProposalComputer extends IJavaCompletionProposalComputer {
        val image = if (sym.isSourceMethod && !sym.hasFlag(Flags.ACCESSOR | Flags.PARAMACCESSOR)) defImage
                    else if (sym.isClass) classImage
                    else if (sym.isTrait) traitImage
+                   else if (sym.isPackageObject) packageObjectImage
                    else if (sym.isModule) if (sym.isJavaDefined) 
-                                          if(sym.companionClass.isJavaInterface) javaInterfaceImage else javaClassImage 
+                                          if(sym.companionClass.isJavaInterface) javaInterfaceImage else javaClassImage  
                                           else objectImage
                    else if (sym.isType) typeImage
                    else valImage
