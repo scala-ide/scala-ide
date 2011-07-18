@@ -1,5 +1,6 @@
 package scala.tools.eclipse;
 
+import scala.tools.eclipse.completion.CompletionTests;
 import scala.tools.eclipse.hyperlinks.HyperlinkDetectorTests;
 import scala.tools.eclipse.lexical.ScalaDocumentPartitionerTest;
 import scala.tools.eclipse.lexical.ScalaPartitionTokeniserTest;
@@ -24,6 +25,7 @@ import org.junit.runners.Suite;
   QualifiedNameSupportTest.class,
   HyperlinkDetectorTests.class,
   OccurrencesFinderTest.class,
-  StructureBuilderTest.class
+  StructureBuilderTest.class,
+  CompletionTests.class
 })
 class TestsSuite { }
