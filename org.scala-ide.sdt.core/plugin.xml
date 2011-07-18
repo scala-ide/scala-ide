@@ -1048,5 +1048,26 @@
           name="Scala Interpreter"
           restorable="false">
     </view>
+ </extension>
+ <extension
+       id="scala_java_completions"
+       name="Scala Completions (Java sources)"
+       point="org.eclipse.jdt.ui.javaCompletionProposalComputer">
+    <proposalCategory
+          icon="icons/scala.png">
+    </proposalCategory>
+ </extension>
+ <extension
+       id="JavaTraitMembersCompletions"
+       name="Scala Trait Member Completions for Java"
+       point="org.eclipse.jdt.ui.javaCompletionProposalComputer">
+    <javaCompletionProposalComputer
+          activate="false"
+          categoryId="org.scala-ide.sdt.core.scala_java_completions"
+          class="scala.tools.eclipse.completion.ScalaJavaCompletionProposalComputer">
+       <partition
+             type="__dftl_partition_content_type">
+       </partition>
+    </javaCompletionProposalComputer>
  </extension> 
 </plugin>
