@@ -84,11 +84,6 @@ object ScalaWordFinder extends IScalaWordFinder {
 
   def findCompletionPoint(document : Seq[Char], offset0 : Int) : IRegion = {
     def isWordPart(ch : Char) = isIdentifierPart(ch) || isOperatorPart(ch)
-    def isWhitespace(ch : Char) =
-      ch match {
-        case ' ' | '\t' | CR | LF | FF => true
-        case _ => false
-      }
   
     val offset = if (offset0 >= document.length) (document.length - 1) else offset0
     val ch = document(offset)
