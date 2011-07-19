@@ -25,6 +25,7 @@ import org.junit.runners.Suite;
   QualifiedNameSupportTest.class,
   HyperlinkDetectorTests.class,
   OccurrencesFinderTest.class,
-  StructureBuilderTest.class
+  StructureBuilderTest.class,
+  CompletionTests.class
 })
 class TestsSuite { }
