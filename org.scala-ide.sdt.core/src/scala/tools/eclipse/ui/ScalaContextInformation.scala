@@ -1,9 +1,9 @@
-package scala.tools.eclipse.completion
+package scala.tools.eclipse.ui
 
 import org.eclipse.jface.text.contentassist.{IContextInformation,IContextInformationExtension}
 import org.eclipse.swt.graphics.Image
 
-private[completion] class ScalaContextInformation(
+class ScalaContextInformation(
     display: String, info: String, image: Image) 
     extends IContextInformation 
     with IContextInformationExtension {

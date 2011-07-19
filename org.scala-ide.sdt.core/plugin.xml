@@ -1034,12 +1034,12 @@
     </proposalCategory>
  </extension>
  <extension
-       id="scala.tools.eclipse.completion.ScalaCompletionProposalComputer"
+       id="scala.tools.eclipse.ui.ScalaCompletionProposalComputer"
        name="Scala Completion Proposal Computer"
        point="org.eclipse.jdt.ui.javaCompletionProposalComputer">
     <javaCompletionProposalComputer
           categoryId="org.scala-ide.sdt.core.scala_completions"
-          class="scala.tools.eclipse.completion.ScalaCompletionProposalComputer">
+          class="scala.tools.eclipse.ui.ScalaCompletionProposalComputer">
        <partition
              type="__dftl_partition_content_type">
        </partition>

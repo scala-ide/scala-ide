@@ -8,11 +8,10 @@ import scala.tools.nsc.util.SourceFile
 import scala.tools.eclipse.ScalaPresentationCompiler
 import org.eclipse.jface.text.contentassist.ICompletionProposal
 import org.mockito.Mockito._
-
 import org.junit.Assert._
 import org.junit.Test
-
 import scala.tools.eclipse.testsetup.TestProjectSetup
+import scala.tools.eclipse.completion.ScalaCompletions
 
 object CompletionTests extends TestProjectSetup("completion")
 
@@ -20,10 +19,8 @@ object CompletionTests extends TestProjectSetup("completion")
 class CompletionTests {
   import CompletionTests._
 
-  import org.eclipse.jface.viewers.{ ISelectionProvider, ISelectionChangedListener, ISelection }
   import org.eclipse.core.runtime.IProgressMonitor
   import org.eclipse.jface.text.IDocument
-  import org.eclipse.jface.text.ITextViewer
   import org.eclipse.jdt.ui.text.java.ContentAssistInvocationContext
 
   private def runTest(path2source: String)(expectedCompletions: List[String]*) {
@@ -45,16 +42,15 @@ class CompletionTests {
       val positions = SDTTestUtils.positionsOf(contents, " /*!*/")
       val content = unit.getContents.mkString /*.replace("/*!*/","")*/
       
-      val completion = new ScalaCompletionProposalComputer
+      val completion = new ScalaCompletions
       for (i <- 0 until positions.size) yield {
         val pos = positions(i) 
         
         val position = new scala.tools.nsc.util.OffsetPosition(src, pos)
         var wordRegion = ScalaWordFinder.findWord(content, position.offset.get)
-        val word = new String(contents.slice(wordRegion.getOffset, wordRegion.getOffset + wordRegion.getLength))
         
         
-        val selection = mock(classOf[ISelectionProvider])
+//        val selection = mock(classOf[ISelectionProvider])
         
         /* FIXME:
          * I would really love to call `completion.computeCompletionProposals`, but for some unclear 
@@ -72,14 +68,14 @@ class CompletionTests {
         val completions: List[ICompletionProposal] = completion.computeCompletionProposals(context, monitor).map(_.asInstanceOf[ICompletionProposal]).toList
         */
         
-        val completions = completion.findCompletions(wordRegion)(pos+1, selection, unit)(src, compiler)
+        val completions = completion.findCompletions(wordRegion)(pos+1, unit)(src, compiler)
         
         assertTrue("Found %d completions @ position %d (%d,%d), Expected %d".format(completions.size, pos, position.line, position.column, expectedCompletions(i).size),
             completions.size == expectedCompletions(i).size)
             
-        completions.sortBy(c => c.getDisplayString).zip(expectedCompletions(i).sorted).foreach {
+        completions.sortBy(c => c.display).zip(expectedCompletions(i).sorted).foreach {
           case (found, expected) => 
-            assertTrue("Found `%s`, expected `%s`".format(found.getDisplayString, expected), found.getDisplayString == expected) 
+            assertTrue("Found `%s`, expected `%s`".format(found.display, expected), found.display == expected) 
         }
       }
     }()

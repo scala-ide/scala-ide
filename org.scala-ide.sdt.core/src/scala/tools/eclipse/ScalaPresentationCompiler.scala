@@ -20,6 +20,8 @@ import scala.tools.eclipse.javaelements.{
   ScalaOverrideIndicatorBuilder }
 import scala.tools.eclipse.util.{ Cached, EclipseFile, EclipseResource }
 import scala.tools.nsc.util.FailedInterrupt
+import scala.tools.nsc.symtab.Flags
+import scala.tools.eclipse.completion.CompletionProposal
 
 class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
   extends Global(settings, new ScalaPresentationCompiler.PresentationReporter, project.underlying.getName)
@@ -153,6 +155,65 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
     // TODO: Why is this needed? (ID)
     sourceFiles.keysIterator.foreach(_.scheduleReconcile)
     askShutdown
+  }
+  
+
+  /** Add a new completion proposal to the buffer. Skip constructors and accessors.
+   * 
+   *  Computes a very basic relevance metric based on where the symbol comes from 
+   *  (in decreasing order of relevance):
+   *    - members defined by the owner
+   *    - inherited members
+   *    - members added by views
+   *    - packages
+   *    - members coming from Any/AnyRef/Object
+   *    
+   *  TODO We should have a more refined strategy based on the context (inside an import, case
+   *       pattern, 'new' call, etc.)
+   */
+  def mkCompletionProposal(start: Int, sym: Symbol, tpe: Type, inherited: Boolean, viaView: Symbol): CompletionProposal = {
+    import scala.tools.eclipse.completion.MemberKind._
+    
+     val kind = if (sym.isSourceMethod && !sym.hasFlag(Flags.ACCESSOR | Flags.PARAMACCESSOR)) Def
+                 else if (sym.isPackage) Package
+                 else if (sym.isClass) Class
+                 else if (sym.isTrait) Trait
+                 else if (sym.isPackageObject) PackageObject
+                 else if (sym.isModule) Object
+                 else if (sym.isType) Type
+                 else Val
+     val name = sym.decodedName
+     val signature = 
+       if (sym.isMethod) { name +
+           (if(!sym.typeParams.isEmpty) sym.typeParams.map{_.name}.mkString("[", ",", "]") else "") +
+           tpe.paramss.map(_.map(_.tpe.toString).mkString("(", ", ", ")")).mkString +
+           ": " + tpe.finalResultType.toString}
+       else name
+     val container = sym.owner.enclClass.fullName
+     
+     // rudimentary relevance, place own members before ineherited ones, and before view-provided ones
+     var relevance = 100
+     if (inherited) relevance -= 10
+     if (viaView != NoSymbol) relevance -= 20
+     if (sym.isPackage) relevance -= 30
+     // theoretically we'd need an 'ask' around this code, but given that
+     // Any and AnyRef are definitely loaded, we call directly to definitions.
+     if (sym.owner == definitions.AnyClass
+         || sym.owner == definitions.AnyRefClass
+         || sym.owner == definitions.ObjectClass) { 
+       relevance -= 40
+     }
+     
+     val contextString = sym.paramss.map(_.map(p => "%s: %s".format(p.decodedName, p.tpe)).mkString("(", ", ", ")")).mkString("")
+     CompletionProposal(kind,
+         start, 
+         name, 
+         signature, 
+         contextString, 
+         container,
+         relevance,
+         sym.paramss.size > 0,
+         sym.isJavaDefined)
   }
 }
 

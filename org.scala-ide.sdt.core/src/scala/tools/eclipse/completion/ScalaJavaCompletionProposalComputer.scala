@@ -1,6 +1,7 @@
 package scala.tools.eclipse.completion
 
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposalComputer
+
 import org.eclipse.jdt.ui.text.java.ContentAssistInvocationContext
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext
@@ -10,6 +11,7 @@ import org.eclipse.jdt.core._
 import scala.tools.eclipse.ScalaPlugin
 import org.eclipse.jface.text.Document
 import scala.tools.eclipse.ScalaImages
+import scala.tools.eclipse.ui.ScalaCompletionProposal
 
 /** A completion proposal for Java sources. This adds mixed-in concrete members to scope
  *  completions in Java.
@@ -57,8 +59,6 @@ class ScalaJavaCompletionProposalComputer extends IJavaCompletionProposalCompute
   import scala.collection.JavaConversions._
   
   /** Return completion proposals for mixed-in methods.
-   * 
-   *  TODO: clean up code, split UI and non-UI code
    */
   def mixedInCompletions(jc: JavaContentAssistInvocationContext): java.util.List[_] = {
     val coreContext = jc.getCoreContext()
@@ -90,17 +90,8 @@ class ScalaJavaCompletionProposalComputer extends IJavaCompletionProposalCompute
               val proposals = currentClass.info.members.filter(mixedInMethod)
 
               for (sym <- proposals if sym.name.startsWith(prefix)) yield {
-                val signature =
-                  if (sym.isMethod) {
-                    sym.name.toString +
-                      (if (!sym.typeParams.isEmpty) sym.typeParams.map { _.name }.mkString("[", ",", "]") else "") +
-                      sym.info.paramss.map(_.map(_.tpe.toString).mkString("(", ", ", ")")).mkString +
-                      ": " + sym.info.finalResultType.toString
-                  } else sym.name.toString
-
-                val tooltip = sym.paramss.map(_.map(p => "%s: %s".format(p.decodedName, p.tpe)).mkString("(", ", ", ")")).mkString("")
-                val replacement = sym.name.toString + "()"
-                new ScalaCompletionProposal(start, replacement, signature, tooltip, sym.owner.fullName, 100, ScalaImages.PUBLIC_DEF.createImage(), jc.getViewer.getSelectionProvider)
+                val prop = compiler.mkCompletionProposal(start, sym = sym, tpe = sym.info, inherited = true, viaView = NoSymbol)
+                new ScalaCompletionProposal(prop, jc.getViewer.getSelectionProvider)
               }
             }.getOrElse(Nil)
           } (Nil)
