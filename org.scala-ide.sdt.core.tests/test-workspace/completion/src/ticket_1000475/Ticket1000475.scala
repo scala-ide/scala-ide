@@ -5,9 +5,9 @@ class Ticket1000475 {
   v.toS /*!*/
   
   val m = Map(1 -> "1")
-  m(1).fo /*!*/
+  m(1).foral /*!*/
   println()
   
-  m(1) fo /*!*/ /** infix notation also works fine */
+  m(1) foral /*!*/ /** infix notation also works fine */
   println()
 }

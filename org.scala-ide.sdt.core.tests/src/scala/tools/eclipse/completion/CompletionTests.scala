@@ -40,7 +40,7 @@ class CompletionTests {
       // mind that the space in the marker is very important (the presentation compiler 
       // seems to get lost when the position where completion is asked 
       val positions = SDTTestUtils.positionsOf(contents, " /*!*/")
-      val content = unit.getContents.mkString /*.replace("/*!*/","")*/
+      val content = unit.getContents.mkString
       
       val completion = new ScalaCompletions
       for (i <- 0 until positions.size) yield {
@@ -70,12 +70,26 @@ class CompletionTests {
         
         val completions = completion.findCompletions(wordRegion)(pos+1, unit)(src, compiler)
         
-        assertTrue("Found %d completions @ position %d (%d,%d), Expected %d".format(completions.size, pos, position.line, position.column, expectedCompletions(i).size),
-            completions.size == expectedCompletions(i).size)
+        // remove parens as the compiler trees' printer has been slightly modified in 2.10 
+        // (and we need the test to pass for 2.9.0/-1 and 2.8.x as well).
+        val completionsNoParens: List[String] = completions.map(_.display.replace("(","").replace(")","")).sorted
+        val expectedNoParens: List[String] = expectedCompletions(i).map(_.replace("(","").replace(")","")).sorted
+        
+        println("Found following completions @ position %d (%d,%d):".format(pos, position.line, position.column))
+        completionsNoParens.foreach(e => println("\t" + e))
+        println()
+        
+        println("Expected completions:")
+        expectedNoParens.foreach(e => println("\t" + e))
+        println()
+        
+        assertTrue("Found %d completions @ position %d (%d,%d), Expected %d"
+            .format(completionsNoParens.size, pos, position.line, position.column, expectedNoParens.size),
+            completionsNoParens.size == expectedNoParens.size) // <-- checked condition
             
-        completions.sortBy(c => c.display).zip(expectedCompletions(i).sorted).foreach {
-          case (found, expected) => 
-            assertTrue("Found `%s`, expected `%s`".format(found.display, expected), found.display == expected) 
+        completionsNoParens.zip(expectedNoParens).foreach {
+          case (found, expected) =>  
+            assertTrue("Found `%s`, expected `%s`".format(found, expected), found == expected)
         }
       }
     }()
@@ -84,28 +98,8 @@ class CompletionTests {
   @Test
   def ticket1000475() {
     val oraclePos73 = List("toString(): java.lang.String")
-    val oraclePos116 = List(
-        "formatLocal(java.util.Locale, Any*): String",
-        "format(Any*): String",
-        "foldRight[B](B)((Char, B) => B): B",
-        "foldLeft[B](B)((B, Char) => B): B",
-        "foldr[B](Int, Int, B, (Char, B) => B): B",
-        "foldl[B](Int, Int, B, (B, Char) => B): B",
-        "forall(Char => Boolean): Boolean",
-        "foreach[U](Char => U): Unit",
-        "fold[A1](A1)((A1, A1) => A1): A1",
-        "formatted(String): String")
-    val oraclePos147 = List(
-        "formatLocal(java.util.Locale, Any*): String",
-        "format(Any*): String",
-        "foldRight[B](B)((Char, B) => B): B",
-        "foldLeft[B](B)((B, Char) => B): B",
-        "foldr[B](Int, Int, B, (Char, B) => B): B",
-        "foldl[B](Int, Int, B, (B, Char) => B): B",
-        "forall(Char => Boolean): Boolean",
-        "foreach[U](Char => U): Unit",
-        "fold[A1](A1)((A1, A1) => A1): A1",
-        "formatted(String): String")
+    val oraclePos116 = List("forallChar => Boolean: Boolean")
+    val oraclePos147 = List("forallChar => Boolean: Boolean")
         
     runTest("ticket_1000475/Ticket1000475.scala")(oraclePos73, oraclePos116, oraclePos147)
   }
