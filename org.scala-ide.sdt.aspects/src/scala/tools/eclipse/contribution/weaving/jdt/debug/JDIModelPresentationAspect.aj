@@ -12,7 +12,7 @@ import org.eclipse.jdt.internal.debug.ui.JDIModelPresentation;
  */
 @SuppressWarnings("restriction")
 public aspect JDIModelPresentationAspect {
-  //FIXME: Can we share code with ClassFileEditorIdAspect ?! How? (duplication!) 
+
   pointcut getEditorId(JDIModelPresentation jdiModelPresentation, IEditorInput input, Object inputObject): 
     args(input, inputObject) 
     && execution(String JDIModelPresentation.getEditorId(IEditorInput, Object))
