@@ -42,6 +42,7 @@ class StructureBuilderTest {
     val cu = annotsPkg.getCompilationUnit("ScalaTestSuite.scala")
     assertTrue(cu.exists)
     val tpe = cu.findPrimaryType()
+    assertNotNull("Primary type should not be null", tpe)
     val m1 = tpe.getMethod("someTestMethod", Array())
     val m2 = tpe.getMethod("anotherTestMethod", Array())
     println(m1.getAnnotations.toList)

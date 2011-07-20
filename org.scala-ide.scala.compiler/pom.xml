@@ -128,6 +128,7 @@
             scala.reflect.api.*;version=${version.number},
             scala.reflect.runtime.*;version=${version.number},
             scala.reflect.std.*;version=${version.number},
+            scala.reflect.internal.transform.*;version=${version.number},
             scala.tools.*;version=${version.number},
             ch.epfl.lamp.*;version=${version.number}</_exportcontents>
             <Embed-Directory>lib</Embed-Directory>
