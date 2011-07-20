@@ -128,7 +128,6 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
     projects.get(project) match {
       case Some(scalaProject) => scalaProject
       case None =>
-        if (!headlessMode) asyncExec(ensureJavaCompletions())
         val scalaProject = new ScalaProject(project)
         projects(project) = scalaProject
         scalaProject
@@ -166,20 +165,6 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
     }
   }
   
-  /** Make sure that Java Completion Proposals are enabled. This is a hack, sneaking behind the
-   *  user's back and enabling Java completions if they are disabled. However, this saves hours
-   *  of frustration, and probably lots of first-time users that are puzzled by this fact.
-   */
-  def ensureJavaCompletions() {
-    val javaCompletion = "org.eclipse.jdt.ui.javaAllProposalCategory"
-
-    val currentExcluded: Array[String] = PreferenceConstants.getExcludedCompletionProposalCategories
-    if (currentExcluded.contains(javaCompletion)) {
-      ScalaPlugin.plugin.logWarning("Detected Java Completion proposals were disabled. Re-enabled.")
-      PreferenceConstants.setExcludedCompletionProposalCategories(currentExcluded.filterNot(_ == javaCompletion))
-    }
-  }
-
   override def elementChanged(event: ElementChangedEvent) {
     import scala.collection.mutable.ListBuffer
     val buff = new ListBuffer[ScalaSourceFile]
