@@ -43,6 +43,7 @@ class SemanticHighlightingReconciliationParticipant extends ReconciliationPartic
  */
 object SemanticHighlightingReconciliation {
 
+  // TODO use an actor to manage "Thread Safely" the map
   private val participants = new collection.mutable.HashMap[ScalaCompilationUnit, SemanticHighlightingPresenter]
 
   /**
@@ -205,7 +206,12 @@ class SemanticHighlightingPresenter(editor: FileEditorInput, sourceViewer: ISour
                 super.traverse(t)
               case v: compiler.ApplyToImplicitArgs =>
                 val txt = new String(sourceFile.content, v.pos.startOrPoint, math.max(0, v.pos.endOrPoint - v.pos.startOrPoint)).trim()
-                val argsStr = v.args.map(_.symbol.name).mkString("( ", ", ", " )")
+                // Defensive, but why x.symbol is null (see bug 1000477) for "Some(x.flatten))"
+                // TODO find the implicit args value
+                val argsStr = v.args match {
+                  case null => ""
+                  case l => l.collect{case x if x.hasSymbol => x.symbol.name }.mkString("( ", ", ", " )")
+                }
                 val ia = new ImplicitConversionsOrArgsAnnotation("Implicit arguments found: " + txt + " => " + txt + argsStr)
                 val pos = new org.eclipse.jface.text.Position(v.pos.startOrPoint, txt.length)
                 toAdds.put(ia, pos)
