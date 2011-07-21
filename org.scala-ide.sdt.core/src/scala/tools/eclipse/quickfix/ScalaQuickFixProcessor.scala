@@ -16,6 +16,12 @@ import org.eclipse.core.resources.IMarker
 import scala.tools.eclipse.javaelements.ScalaSourceFile
 import scala.tools.eclipse.util.FileUtils
 import scala.util.matching.Regex
+import org.eclipse.jdt.core.search.TypeNameMatch
+import org.eclipse.jdt.core.search.SearchEngine
+import org.eclipse.jdt.core.IJavaElement
+import org.eclipse.jdt.internal.corext.util.TypeNameMatchCollector
+import org.eclipse.core.runtime.NullProgressMonitor
+import collection.JavaConversions._
 
 class ScalaQuickFixProcessor extends IQuickFixProcessor {
   private val typeNotFoundError = new Regex("not found: type (.*)")
@@ -73,48 +79,6 @@ class ScalaQuickFixProcessor extends IQuickFixProcessor {
 	  }
 	  return ret
   }
-  
-  private class Requestor(val typeToFind : String) extends ISearchRequestor {
-    val typesFound = scala.collection.mutable.ListBuffer[String]()
-    
-    def acceptConstructor(
-        modifiers : Int, simpleTypeName : Array[Char], parameterCount : Int, signature : Array[Char], parameterTypes : Array[Array[Char]], parameterNames : Array[Array[Char]], 
-        typeModifiers : Int, packageName : Array[Char], extraFlags : Int, path : String, access : AccessRestriction) = {
-
-      // Ignore constructors
-    }
-  
-    /**
-     * One result of the search consists of a new type.
-     *
-     * NOTE - All package and type names are presented in their readable form:
-     *    Package names are in the form "a.b.c".
-     *    Nested type names are in the qualified form "A.I".
-     *    The default package is represented by an empty array.
-     */
-    def acceptType(packageName : Array[Char], typeNameChars : Array[Char], enclosingTypeNames : Array[Array[Char]], modifiers : Int, accessRestriction : AccessRestriction) = {
-      // If the type matches what we were looking for then it add it to the list of those found
-      val typeName = new String(typeNameChars)
-      if (typeName == typeToFind) {
-        val enclosingTypeNamesAsStrings = new String(packageName) :: enclosingTypeNames.map(new String(_)).toList
-        val enclosingTypeNamesString = 
-          enclosingTypeNamesAsStrings.mkString(".").replaceAll("\\$", "")
-        typesFound += enclosingTypeNamesString + "." + typeName      
-      }
-    }
-    
-    
-    /**
-     * One result of the search consists of a new package.
-     *
-     * NOTE - All package names are presented in their readable form:
-     *    Package names are in the form "a.b.c".
-     *    The default package is represented by an empty array.
-     */
-    def acceptPackage(packageName : Array[Char]) = {
-      // Ignore packages
-    }
-  }
 
   private
   def suggestFix(compilationUnit : ICompilationUnit, problemMessage : String) : List[IJavaCompletionProposal] = {
@@ -126,13 +90,13 @@ class ScalaQuickFixProcessor extends IQuickFixProcessor {
      * * "not found : Xxxx" in case of new Xxxx.eee (IMO (davidB) a better suggestion is to insert (), to have new Xxxx().eeee )
      */
     def suggestImportType(missingType : String) : List[IJavaCompletionProposal] = {
-      // Get similar types
-      val project = compilationUnit.asInstanceOf[ScalaSourceFile].getJavaProject()
-      val ne = project.asInstanceOf[JavaProject].newSearchableNameEnvironment(DefaultWorkingCopyOwner.PRIMARY)
-      val requestor = new Requestor(missingType)
-      ne.findTypes(missingType.toCharArray(), true, false, IJavaSearchConstants.TYPE, requestor)
-      // Return the types found
-      requestor.typesFound.map({ typeFound => new ImportCompletionProposal(typeFound) }).toList
+      val resultCollector = new java.util.ArrayList[TypeNameMatch]
+      val scope = SearchEngine.createJavaSearchScope(Array[IJavaElement](compilationUnit.getJavaProject))
+      val typesToSearch = Array(missingType.toArray)
+      new SearchEngine().searchAllTypeNames(null, typesToSearch, scope, new TypeNameMatchCollector(resultCollector), IJavaSearchConstants.WAIT_UNTIL_READY_TO_SEARCH, new NullProgressMonitor)
+      resultCollector map { typeFound =>
+        new ImportCompletionProposal(typeFound.getFullyQualifiedName)
+      } toList
     }
     
     return problemMessage match {
