@@ -209,6 +209,7 @@ class FormatterPreferencePage extends PropertyPage with IWorkbenchPreferencePage
       addCheckBox(composite, "Rewrite arrow tokens", RewriteArrowSymbols)
       addCheckBox(composite, "Preserve dangling close parenthesis", PreserveDanglingCloseParenthesis)
       addCheckBox(composite, "Multiline Scaladoc comments start on first line", MultilineScaladocCommentsStartOnFirstLine)
+      addCheckBox(composite, "Use Compact Control Readability style", CompactControlReadability)
 
       addPreview(composite)
     }
@@ -425,6 +426,15 @@ val book = Book(
   author = "Author",
   rating = 5
 )
+if (condition) {
+  // do something
+}
+else if (condition2) {
+  // do something else
+}
+else {
+  // last ditch
+}
 """
 
 }
