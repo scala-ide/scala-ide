@@ -94,7 +94,7 @@ class ScalaDocumentPartitioner(conservative: Boolean = false) extends IDocumentP
     if (start > offset + length - 1 || end < offset)
       region
     else
-      region.copy(start = max(start, offset), end = min(end, offset + length))
+      region.copy(start = max(start, offset), end = min(end, offset + length - 1))
   }
 
   def getPartition(offset: Int): ITypedRegion = getToken(offset) getOrElse new TypedRegion(offset, 0, NO_PARTITION_AT_ALL)
