@@ -19,6 +19,7 @@ import scala.tools.eclipse.contribution.weaving.jdt.IScalaSourceFile
 import scala.tools.eclipse.util.EclipseFile
 import org.eclipse.jdt.core.compiler.CharOperation
 import scala.tools.nsc.interactive.Response
+import scala.tools.eclipse.reconciliation.ReconciliationParticipantsExtensionPoint
 
 object ScalaSourceFile {
   val handleFactory = new HandleFactory
@@ -62,8 +63,11 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
       astLevel : Int,
       reconcileFlags : Int,
       workingCopyOwner : WorkingCopyOwner,
-      monitor : IProgressMonitor) : org.eclipse.jdt.core.dom.CompilationUnit = {
-    super.reconcile(ICompilationUnit.NO_AST, reconcileFlags, workingCopyOwner, monitor)
+      monitor : IProgressMonitor) : org.eclipse.jdt.core.dom.CompilationUnit = {    
+    ReconciliationParticipantsExtensionPoint.runBefore(this, monitor, workingCopyOwner)
+    val result = super.reconcile(ICompilationUnit.NO_AST, reconcileFlags, workingCopyOwner, monitor)
+    ReconciliationParticipantsExtensionPoint.runAfter(this, monitor, workingCopyOwner)
+    result
   }
 
   override def makeConsistent(

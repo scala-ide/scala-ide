@@ -1,0 +1,105 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!-- Schema file written by PDE -->
+<schema targetNamespace="org.scala-ide.sdt.core" xmlns="http://www.w3.org/2001/XMLSchema">
+<annotation>
+      <appInfo>
+         <meta.schema plugin="org.scala-ide.sdt.core" id="reconciliationParticipants" name="Reconciliation Participants"/>
+      </appInfo>
+      <documentation>
+         Registered Participants are notified before and after each reconciliation of a compilation unit. This makes it possible to perform an action whenever a compilation unit changed.
+      </documentation>
+   </annotation>
+
+   <element name="extension">
+      <annotation>
+         <appInfo>
+            <meta.element />
+         </appInfo>
+      </annotation>
+      <complexType>
+         <choice minOccurs="0" maxOccurs="unbounded">
+            <element ref="participant" minOccurs="0" maxOccurs="unbounded"/>
+         </choice>
+         <attribute name="point" type="string" use="required">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="id" type="string">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="name" type="string">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+               <appInfo>
+                  <meta.attribute translatable="true"/>
+               </appInfo>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
+   <element name="participant">
+      <annotation>
+         <documentation>
+            A participant gets notified before and after the reconciliation of a compilation unit.
+         </documentation>
+      </annotation>
+      <complexType>
+         <attribute name="class" type="string" use="required">
+            <annotation>
+               <documentation>
+                  The class that will be instantiated to participate before or after the reconciliation. Note that the class should not be made stateful because it will be instantiated on every run.
+               </documentation>
+               <appInfo>
+                  <meta.attribute kind="java" basedOn=":scala.tools.eclipse.ui.ReconciliationParticipant"/>
+               </appInfo>
+            </annotation>
+         </attribute>
+         <attribute name="name" type="string" use="required">
+            <annotation>
+               <documentation>
+                  The name of this participation that is shown in the user interface.
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="id" type="string" use="required">
+            <annotation>
+               <documentation>
+                  A unique id that identifies this participant.
+               </documentation>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
+   <annotation>
+      <appInfo>
+         <meta.section type="since"/>
+      </appInfo>
+      <documentation>
+         2.1.0
+      </documentation>
+   </annotation>
+
+   <annotation>
+      <appInfo>
+         <meta.section type="examples"/>
+      </appInfo>
+      <documentation>
+         The Scala IDE&apos;s highlighting of implicit conversions is hooked up using this extension point and runs after each reconciliation.
+      </documentation>
+   </annotation>
+
+
+
+
+</schema>

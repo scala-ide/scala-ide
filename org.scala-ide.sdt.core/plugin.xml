@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?eclipse version="3.2"?>
 <plugin>
+   <extension-point id="reconciliationParticipants" name="Reconcilation Participants" schema="schema/reconciliationParticipants.exsd"/>
    <extension
          point="org.eclipse.ui.propertyPages">
       <page
@@ -82,6 +83,12 @@
             id="scala.tools.eclipse.properties.OrganizeImportsPreferencesPage"
             name="Organize Imports">
       </page>
+      <page
+            category="org.scala-ide.sdt.core.preferences"
+            class="scala.tools.eclipse.properties.ImplicitsPreferencePage"
+            id="org.scala-ide.sdt.core.properties.Implicits"
+            name="Implicits">
+      </page>      
    </extension>
 
 
@@ -375,6 +382,31 @@
          markerType="org.scala-ide.sdt.core.problem"
          markerSeverity="0">
       </type>
+      <type
+            name="scala.tools.eclipse.semantic.highlighting.implicitConversionsOrArgsAnnotation"/>
+   </extension>
+   
+   <extension
+         point="org.eclipse.ui.editors.markerAnnotationSpecification">
+     <specification
+          annotationType="scala.tools.eclipse.semantic.highlighting.implicitConversionsOrArgsAnnotation"
+          colorPreferenceKey="scala.tools.eclipse.ui.preferences.implicit.color"
+          colorPreferenceValue="183,239,176"
+          contributesToHeader="false"
+          includeOnPreferencePage="true"
+          icon="icons/full/elcl16/implicit_co.gif"
+          label="Scala Implicit"
+          overviewRulerPreferenceKey="scala.tools.eclipse.ui.preferences.implicit.rulers.overview"
+          overviewRulerPreferenceValue="false"
+          presentationLayer="5"
+          symbolicIcon="info"
+          textPreferenceKey="scala.tools.eclipse.ui.preferences.implicit.text"
+          textPreferenceValue="true"
+          textStylePreferenceKey="scala.tools.eclipse.ui.preferences.implicit.textStylePreference"
+          textStylePreferenceValue="SQUIGGLES"
+          verticalRulerPreferenceKey="scala.tools.eclipse.ui.preferences.implicit.rulers.vertical"
+          verticalRulerPreferenceValue="true">
+     </specification>
    </extension>
 
     <extension
@@ -689,6 +721,9 @@
      <initializer
            class="scala.tools.eclipse.properties.OrganizeImportsPreferencesInitializer">
      </initializer>
+     <initializer
+           class="scala.tools.eclipse.properties.ImplicitsPagePreferenceInitializer">
+     </initializer>
   </extension>
 
   <extension point="org.eclipse.core.expressions.propertyTesters">
@@ -851,7 +886,24 @@
         </enablement>
      </quickFixProcessor>
   </extension>
-
+ <extension
+       point="org.eclipse.jdt.ui.quickAssistProcessors">
+    <quickAssistProcessor
+          class="scala.tools.eclipse.quickfix.ScalaQuickAssistProcessor"
+          id="org.scala-ide.sdt.core.quickAssistProcessor"
+          name="Scala Quick Assist Processor">
+        <enablement>
+          <with variable="projectNatures">
+             <iterate operator="or">
+                <or>
+                  <equals value="org.scala-ide.sdt.core.scalanature"/>
+                  <equals value="ch.epfl.lamp.sdt.core.scalanature"/>
+                </or>
+             </iterate>
+          </with>
+        </enablement>          
+    </quickAssistProcessor>
+ </extension>
 
   <!-- refactoring -->
 
@@ -974,6 +1026,10 @@
          id="scala.tools.eclipse.refactoring.command.Rename"
          name="Rename"/>
       <command
+         categoryId="scala.tools.eclipse.category"
+         id="org.scala-ide.sdt.core.commands.ToggleImplicitsDisplay"
+         name="Toggle Implicits Display"/>         
+      <command
          categoryId="org.eclipse.debug.ui.category.run"
          id="scala.tools.eclipse.interpreter.RunSelection"
          name="Send Selection to Scala Interpreter"/>
@@ -1023,6 +1079,11 @@
    		 contextId="scala.tools.eclipse.scalaEditorScope"
    		 sequence="M1+M2+O"/>
    <key
+       commandId="org.scala-ide.sdt.core.commands.ToggleImplicitsDisplay"
+       schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+       contextId="scala.tools.eclipse.scalaEditorScope"
+       sequence="M1+M2+I"/>
+   <key
        commandId="scala.tools.eclipse.interpreter.RunSelection"
        schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
        contextId="scala.tools.eclipse.scalaEditorScope"
@@ -1051,6 +1112,29 @@
         file="templates/default-templates.xml">
     </include>
   </extension>
+  
+ <extension
+       point="org.eclipse.ui.handlers">
+    <handler
+          class="scala.tools.eclipse.semantic.highlighting.ToggleImplicitsDisplayHandler"
+          commandId="org.scala-ide.sdt.core.commands.ToggleImplicitsDisplay">
+    </handler>
+ </extension>
+ <extension
+       point="org.eclipse.ui.menus">
+    <menuContribution
+          locationURI="toolbar:org.eclipse.ui.main.toolbar?after=additions">
+       <toolbar
+             id="org.scala-ide.sdt.core.toolbar">
+          <command
+                commandId="org.scala-ide.sdt.core.commands.ToggleImplicitsDisplay"
+                icon="icons/full/elcl16/implicit_co.gif"
+                id="org.scala-ide.sdt.core.toolbar.ToggleImplicitsDisplay"
+                style="toggle">
+          </command>
+       </toolbar>
+    </menuContribution>
+ </extension>  
   
  <extension point="org.eclipse.jdt.ui.javaCompletionProposalComputer"
    id="scala.tools.eclipse.TemplateCompletionProposalComputer"
@@ -1113,5 +1197,13 @@
              type="__dftl_partition_content_type">
        </partition>
     </javaCompletionProposalComputer>
- </extension> 
+ </extension>
+ <extension
+       point="org.scala-ide.sdt.core.reconciliationParticipants">
+    <participant
+          class="scala.tools.eclipse.semantic.highlighting.SemanticHighlightingReconciliationParticipant"
+          id="org.scala-ide.sdt.core.SemanticHighlightingPresenter"
+          name="Semantic Highlighting">
+    </participant>
+ </extension>
 </plugin>
