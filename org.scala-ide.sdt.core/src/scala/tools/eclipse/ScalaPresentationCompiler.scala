@@ -205,6 +205,8 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
      }
      
      val contextString = sym.paramss.map(_.map(p => "%s: %s".format(p.decodedName, p.tpe)).mkString("(", ", ", ")")).mkString("")
+     
+     import scala.tools.eclipse.completion.HasArgs
      CompletionProposal(kind,
          start, 
          name, 
@@ -212,7 +214,7 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
          contextString, 
          container,
          relevance,
-         sym.paramss.size > 0,
+         HasArgs(sym.paramss),
          sym.isJavaDefined)
   }
 }

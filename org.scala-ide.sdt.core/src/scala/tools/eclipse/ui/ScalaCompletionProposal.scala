@@ -45,7 +45,7 @@ class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: I
   
   def getImage = image
   
-  val completionString = if (hasArgs) completion + "()" else completion
+  val completionString = if (hasArgs == HasArgs.HasParens.NoParens) completion else completion + "()"
   
   def getContextInformation(): IContextInformation =
     if (tooltip.size > 0)
@@ -61,7 +61,7 @@ class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: I
     d.replace(startPos, offset - startPos, completionString)
     selectionProvider.setSelection(new TextSelection(startPos + completionString.length, 0))
     selectionProvider match {
-      case viewer: ITextViewer if hasArgs =>
+      case viewer: ITextViewer if hasArgs == HasArgs.HasParens.NonEmptyParens =>
         viewer.getTextWidget().setCaretOffset(startPos + completionString.length - 1)
       case _ => () 
     }
