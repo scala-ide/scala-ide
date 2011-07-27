@@ -1,19 +1,19 @@
 package scala.tools.eclipse.completion
 
-object HasArgs {
-  object HasParens extends Enumeration {
-  	val NoParens, EmptyParens, NonEmptyParens = Value
-  }
-  
-  import HasParens._
+object HasArgs extends Enumeration {
+  val NoArgs, EmptyArgs, NonEmptyArgs = Value
   
   /** Given a list of method's parameters it tells if the method 
    * arguments should be adorned with parenthesis. */
-  def apply(params: List[List[_]]) = params match {
-  	case Nil => NoParens
-    case List(List()) => EmptyParens
-    case _ => NonEmptyParens
+  def from(params: List[List[_]]) = params match {
+  	case Nil => NoArgs
+    case Nil :: Nil => EmptyArgs
+    case _ => NonEmptyArgs
   }
+}
+
+object HasParens extends Enumeration {
+	val NoParens, EmptyParens, NonEmptyParens = Value
 }
 
 /** A completion proposal coming from the Scala compiler. This 
@@ -30,7 +30,7 @@ case class CompletionProposal(kind: MemberKind.Value,
   tooltip: String,           // tooltop info showed after a completion has been selected
   additionalInfo: String,    // info displayed on the right of the current completion selection
   relevance: Int,
-  hasArgs: HasArgs.HasParens.Value,
+  hasArgs: HasArgs.Value,
   isJava: Boolean
 )
 
