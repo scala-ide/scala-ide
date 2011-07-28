@@ -107,7 +107,7 @@ trait ScalaJavaMapper { self : ScalaPresentationCompiler =>
       else
         s.fullName
     ) match {
-      case "scala.AnyRef" => "java.lang.Object"
+      case "scala.AnyRef" | "scala.Any" => "java.lang.Object"
       case "scala.Unit" => "void"
       case "scala.Boolean" => "boolean"
       case "scala.Byte" => "byte"
