@@ -199,7 +199,7 @@
    <extension point = "org.eclipse.ui.actionSets">         
      <actionSet id="org.scala-ide.sdt.ui.scalaMenu.actionSet"
        label="Scala Diagnostics" 
-       visible="true">
+       visible="false">
        <menu id="org_scala-ide_sdt_ui_menu"
          label="Scala"
          path="additions"> 
@@ -472,6 +472,9 @@
    </extension>
    <extension
          point="org.eclipse.ui.perspectiveExtensions">
+      <perspectiveExtension targetID="org.scala-ide.sdt.core.perspective">
+         <actionSet id="org.scala-ide.sdt.ui.scalaMenu.actionSet"/>
+      </perspectiveExtension>
       <perspectiveExtension targetID="org.eclipse.jdt.ui.JavaPerspective">
          <perspectiveShortcut id="org.scala-ide.sdt.core.perspective"/>
       </perspectiveExtension>
