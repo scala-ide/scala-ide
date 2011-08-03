@@ -18,14 +18,11 @@ trait ScalaAnnotationHelper { self: ScalaPresentationCompiler =>
     }
   }
 
-  protected def hasTransientAnn(sym: Symbol) = hasAnnotation(sym, TransientAttr)
-  protected def hasVolatileAnn(sym: Symbol) = hasAnnotation(sym, definitions.VolatileAttr)
-  protected def hasNativeAnn(sym: Symbol) = hasAnnotation(sym, definitions.NativeAttr)
-  protected def hasStrictFPAnn(sym: Symbol) = hasAnnotation(sym, ScalaStrictFPAttr)
-  protected def hasThrowsAnn(sym: Symbol) = hasAnnotation(sym, definitions.ThrowsClass)
-
-  private def hasAnnotation(sym: Symbol, annotation: Symbol) =
-    sym.annotations.exists(_.atp.typeSymbolDirect == annotation)
+  protected def hasTransientAnn(sym: Symbol) = sym == TransientAttr
+  protected def hasVolatileAnn(sym: Symbol) = sym == definitions.VolatileAttr
+  protected def hasNativeAnn(sym: Symbol) = sym == definitions.NativeAttr
+  protected def hasStrictFPAnn(sym: Symbol) = sym == ScalaStrictFPAttr
+  protected def hasThrowsAnn(sym: Symbol) = sym == definitions.ThrowsClass
 
   /**
    * Only valid Java annotations have to be exposed to JDT. Specifically, Scala's annotations
@@ -37,9 +34,9 @@ trait ScalaAnnotationHelper { self: ScalaPresentationCompiler =>
   protected def isInvalidJavaAnnotation(ann: AnnotationInfo) = {
     val annSym = ann.atp.typeSymbolDirect
     hasTransientAnn(annSym) ||
-      hasVolatileAnn(annSym) ||
-      hasNativeAnn(annSym) ||
-      hasThrowsAnn(annSym) ||
-      hasStrictFPAnn(annSym)
+    hasVolatileAnn(annSym)  ||
+    hasNativeAnn(annSym)    ||
+    hasThrowsAnn(annSym)    ||
+    hasStrictFPAnn(annSym)
   }
 }
