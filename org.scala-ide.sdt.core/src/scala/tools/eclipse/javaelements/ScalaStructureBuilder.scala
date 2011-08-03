@@ -682,7 +682,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { self : ScalaPresenta
           val handle = new Annotation(parentHandle, name)
           
           val info = if(annot.assocs.nonEmpty) buildInfoForJavaAnnotationWithMembers(annot, handle)
-          					 else buildInfoForAnnotationWithNoMember(annot, handle)
+          					 else buildInfoAndDropAnnotationMembers(annot, handle)
           
           setSourceRangeStart(info, info.nameStart-1)
           setSourceRangeEnd(info, info.nameEnd)
@@ -757,7 +757,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { self : ScalaPresenta
      * 
      * This method is meant to be called by passing either a scala annotation or a java annotation with no members. 
      * */
-  	 private def buildInfoForAnnotationWithNoMember(ann: AnnotationInfo, handle: Annotation): JDTAnnotationInfo = {
+  	 private def buildInfoAndDropAnnotationMembers(ann: AnnotationInfo, handle: Annotation): JDTAnnotationInfo = {
   	   assert(ann.assocs.isEmpty, "non empty `assocs` => You are passing a Java annotation with members") 
   	   
   	   val info = new JDTAnnotationInfo
