@@ -12,7 +12,7 @@ import scala.tools.nsc.symtab.Flags
 import scala.tools.eclipse.ScalaPresentationCompiler
 import ch.epfl.lamp.fjbg.{ JObjectType, JType }
 
-trait ScalaJavaMapper { self : ScalaPresentationCompiler => 
+trait ScalaJavaMapper extends ScalaAnnotationHelper { self : ScalaPresentationCompiler => 
 
   def mapType(t : Tree) : String = {
     (t match {
@@ -73,7 +73,29 @@ trait ScalaJavaMapper { self : ScalaPresentationCompiler =>
     if(owner.isTrait)
       jdtMods = jdtMods | ClassFileConstants.AccInterface
     
-    jdtMods
+    /** Handle Scala's annotations that have to be mapped into Java modifiers */
+    def mapScalaAnnotationsIntoJavaModifiers(): Int = {
+      var mod = 0
+      if(hasTransientAnn(owner)) {
+        mod = mod | ClassFileConstants.AccTransient
+      }
+      
+      if(hasVolatileAnn(owner)) {
+        mod = mod | ClassFileConstants.AccVolatile
+      }
+      
+      if(hasNativeAnn(owner)) {
+        mod = mod | ClassFileConstants.AccNative
+      }
+      
+      if(hasStrictFPAnn(owner)) {
+        mod = mod | ClassFileConstants.AccStrictfp
+      }
+      
+      mod
+    }
+      
+    jdtMods | mapScalaAnnotationsIntoJavaModifiers()
   }
 
   /** Overload that needs to go away when 'HasFlag' can be used, either as a

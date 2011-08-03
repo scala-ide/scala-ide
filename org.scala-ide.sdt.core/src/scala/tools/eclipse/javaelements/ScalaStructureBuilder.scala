@@ -27,7 +27,7 @@ import scala.tools.nsc.util.{ NoPosition, Position }
 import scala.tools.eclipse.ScalaPresentationCompiler
 import scala.tools.eclipse.util.ReflectionUtils
 
-trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
+trait ScalaStructureBuilder extends ScalaAnnotationHelper { self : ScalaPresentationCompiler =>
 
   class StructureBuilderTraverser(scu : ScalaCompilationUnit, unitInfo : OpenableElementInfo, newElements0 : JMap[AnyRef, AnyRef], sourceLength : Int) {
     private def companionClassOf(s: Symbol): Symbol =
@@ -671,67 +671,27 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
     
     def addAnnotations(annots : List[AnnotationInfo], parentInfo : AnnotatableInfo, parentHandle : JavaElement) : Position = {
       import SourceRefElementInfoUtils._
-      import JDTAnnotationUtils._
+      // we need to remove annotations that are keywords in Java or JDT get lost
+      val validAnnots = annots.remove(isInvalidJavaAnnotation)
       
-      def getMemberValuePairs(owner : JavaElement, memberValuePairs : List[(Name, ClassfileAnnotArg)]) : Array[IMemberValuePair] = {
-        def getMemberValue(value : ClassfileAnnotArg) : (Int, Any) = {
-          value match {
-            case LiteralAnnotArg(const) => 
-              const.tag match {
-                case BooleanTag => (IMemberValuePair.K_BOOLEAN, const.booleanValue)
-                case ByteTag    => (IMemberValuePair.K_BYTE, const.byteValue)
-                case ShortTag   => (IMemberValuePair.K_SHORT, const.shortValue)
-                case CharTag    => (IMemberValuePair.K_CHAR, const.charValue)
-                case IntTag     => (IMemberValuePair.K_INT, const.intValue)
-                case LongTag    => (IMemberValuePair.K_LONG, const.longValue)
-                case FloatTag   => (IMemberValuePair.K_FLOAT, const.floatValue)
-                case DoubleTag  => (IMemberValuePair.K_DOUBLE, const.doubleValue)
-                case StringTag  => (IMemberValuePair.K_STRING, const.stringValue)
-                case ClassTag   => (IMemberValuePair.K_CLASS, const.typeValue.typeSymbol.fullName)
-                case EnumTag    => (IMemberValuePair.K_QUALIFIED_NAME, const.tpe.typeSymbol.fullName+"."+const.symbolValue.name.toString)
-              }
-            case ArrayAnnotArg(args) =>
-              val taggedValues = args.map(getMemberValue)
-              val firstTag = taggedValues.head._1
-              val tag = if (taggedValues.exists(_._1 != firstTag)) IMemberValuePair.K_UNKNOWN else firstTag
-              val values = taggedValues.map(_._2)
-              (tag, values)
-            case NestedAnnotArg(annInfo) =>
-              (IMemberValuePair.K_ANNOTATION, addAnnotations(List(annInfo), null, owner))
-          }
-        }
-        
-        for ((name, value) <- memberValuePairs.toArray) yield { 
-          val (kind, jdtValue) = getMemberValue(value)
-          new MemberValuePair(name.toString, jdtValue, kind)
-        }
-      }
-
-      annots.foldLeft(NoPosition : Position) { (pos, annot) => {
+      validAnnots.foldLeft(NoPosition : Position) { (pos, annot) => {
         if (!annot.pos.isOpaqueRange)
           pos
         else {
-          //val nameString = annot.atp.typeSymbol.fullName
-          val nameString = annot.atp.typeSymbol.nameString
-          val handle = new Annotation(parentHandle, nameString)
-          resolveDuplicates(handle)
-  
-          val info = new JDTAnnotationInfo
-          newElements0.put(handle, info)
-  
-          info.nameStart = annot.pos.startOrPoint
-          info.nameEnd = annot.pos.endOrPoint-1
+          var name = annot.atp.typeSymbol.nameString
+          val handle = new Annotation(parentHandle, name)
+          
+          val info = if(annot.assocs.nonEmpty) buildInfoForJavaAnnotationWithMembers(annot, handle)
+          					 else buildInfoForAnnotationWithNoMember(annot, handle)
+          
           setSourceRangeStart(info, info.nameStart-1)
           setSourceRangeEnd(info, info.nameEnd)
-  
-          val memberValuePairs = annot.assocs
-          val membersLength = memberValuePairs.length
-          if (membersLength == 0)
-            info.members = Annotation.NO_MEMBER_VALUE_PAIRS
-          else
-            info.members = getMemberValuePairs(handle, memberValuePairs)
+          
+          resolveDuplicates(handle)
+          newElements0.put(handle, info)
         
           if (parentInfo != null) {
+            import JDTAnnotationUtils._
             val annotations0 = getAnnotations(parentInfo)
             val length = annotations0.length
             val annotations = new Array[IAnnotation](length+1)
@@ -743,8 +703,75 @@ trait ScalaStructureBuilder { self : ScalaPresentationCompiler =>
           annot.pos union pos
         }
       }}
-    }
+      }
     
+      /** Java annotations occurring in scala sources have to be correctly mapped. */
+      private def buildInfoForJavaAnnotationWithMembers(ann: AnnotationInfo, handle: Annotation): JDTAnnotationInfo = {
+        assert(ann.args.isEmpty, "non empty `args` => you are passing a Scala annotation")
+        assert(ann.assocs.nonEmpty, "this method is meant to be used only for Java annotation with members")
+      
+        def getMemberValuePairs(owner : JavaElement, memberValuePairs : List[(Name, ClassfileAnnotArg)]) : Array[IMemberValuePair] = {
+          def getMemberValue(value : ClassfileAnnotArg) : (Int, Any) = {
+            value match {
+              case LiteralAnnotArg(const) => 
+                const.tag match {
+                  case BooleanTag => (IMemberValuePair.K_BOOLEAN, const.booleanValue)
+                  case ByteTag    => (IMemberValuePair.K_BYTE, const.byteValue)
+                  case ShortTag   => (IMemberValuePair.K_SHORT, const.shortValue)
+                  case CharTag    => (IMemberValuePair.K_CHAR, const.charValue)
+                  case IntTag     => (IMemberValuePair.K_INT, const.intValue)
+                  case LongTag    => (IMemberValuePair.K_LONG, const.longValue)
+                  case FloatTag   => (IMemberValuePair.K_FLOAT, const.floatValue)
+                  case DoubleTag  => (IMemberValuePair.K_DOUBLE, const.doubleValue)
+                  case StringTag  => (IMemberValuePair.K_STRING, const.stringValue)
+                  case ClassTag   => (IMemberValuePair.K_CLASS, const.typeValue.typeSymbol.fullName)
+                  case EnumTag    => (IMemberValuePair.K_QUALIFIED_NAME, const.tpe.typeSymbol.fullName+"."+const.symbolValue.name.toString)
+                }
+              case ArrayAnnotArg(args) =>
+                val taggedValues = args.map(getMemberValue)
+                val firstTag = taggedValues.head._1
+                val tag = if (taggedValues.exists(_._1 != firstTag)) IMemberValuePair.K_UNKNOWN else firstTag
+                val values = taggedValues.map(_._2)
+                (tag, values)
+              case NestedAnnotArg(annInfo) =>
+                (IMemberValuePair.K_ANNOTATION, addAnnotations(List(annInfo), null, owner))
+            }
+          }
+          
+          for ((name, value) <- memberValuePairs.toArray) yield { 
+            val (kind, jdtValue) = getMemberValue(value)
+            new MemberValuePair(name.toString, jdtValue, kind)
+          }
+        }
+        
+        val info = new JDTAnnotationInfo          
+        info.nameStart = ann.pos.startOrPoint
+        info.nameEnd = ann.pos.endOrPoint-1
+        info.members = getMemberValuePairs(handle, ann.assocs)
+        info
+     }
+    
+    /** Scala annotations are quite different from Java ones. Specifically, annotations in Scala take `Tree`s as argument, 
+     * while Java only accept constant values (e.g., method calls are disallowed). Therefore, if a Scala annotation 
+     * takes some argument, they are dropped here so that JDT does not complain. 
+     * 
+     * This method is meant to be called by passing either a scala annotation or a java annotation with no members. 
+     * */
+  	 private def buildInfoForAnnotationWithNoMember(ann: AnnotationInfo, handle: Annotation): JDTAnnotationInfo = {
+  	   assert(ann.assocs.isEmpty, "non empty `assocs` => You are passing a Java annotation with members") 
+  	   
+  	   val info = new JDTAnnotationInfo
+  	   
+  	   info.nameStart = ann.pos.startOrPoint
+  	   // Annotation's argument have to be dropped also when computing the position.
+  	   // (this is why we use the name's length to calculate the annotation's end pos).
+  	   info.nameEnd = info.nameStart + handle.getElementName.length - 1
+  	   info.members = Annotation.NO_MEMBER_VALUE_PAIRS
+  	   info
+  	 }
+  	  
+  	
+  
     class CompilationUnitBuilder extends PackageOwner with ImportContainerOwner with ClassOwner with ModuleOwner {
       val parent = null
       val element = scu
