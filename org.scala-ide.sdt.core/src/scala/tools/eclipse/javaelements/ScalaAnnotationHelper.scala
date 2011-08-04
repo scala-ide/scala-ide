@@ -29,16 +29,4 @@ trait ScalaAnnotationHelper { self: ScalaPresentationCompiler =>
     val isJava = ann.atp.typeSymbol.isJavaDefined
     !isJava
   }
-  
-  protected def scalaToJava(ann: AnnotationInfo): AnnotationInfo = {
-    val annSym = ann.atp.typeSymbol
-    if(hasDeprecatedAnn(annSym)) {
-      val javaDeprecatedSym = definitions.getClass("java.lang.Deprecated")
-	  javaDeprecatedSym.initialize // if not initialized, javaDeprecatedSym.isJavaDefined will return false
-	  val res = AnnotationInfo(javaDeprecatedSym.tpe, Nil, Nil)
-	  res.setPos(self.rangePos(ann.pos.source, ann.pos.start, ann.pos.start, ann.pos.start + javaDeprecatedSym.name.length))
-	  res
-    }
-    else ann
-  }
 }
