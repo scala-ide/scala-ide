@@ -23,20 +23,22 @@ trait ScalaAnnotationHelper { self: ScalaPresentationCompiler =>
   protected def hasNativeAnn(sym: Symbol) = sym == definitions.NativeAttr
   protected def hasStrictFPAnn(sym: Symbol) = sym == ScalaStrictFPAttr
   protected def hasThrowsAnn(sym: Symbol) = sym == definitions.ThrowsClass
+  protected def hasDeprecatedAnn(sym: Symbol) = sym == definitions.DeprecatedAttr
 
-  /**
-   * Only valid Java annotations have to be exposed to JDT. Specifically, Scala's annotations
-   * `@transient`, `@volatile`, `@native`, `throws`, and `@strictfp` are mapped into Java
-   * modifiers (@see ScalaJavaMapper#mapModifiers(Symbol)). Therefore, we remove them from the
-   * set of mapped annotations or JDT will fail (red markers will appear in the editor view,
-   * e.g., ticket #1000469).
-   */
-  protected def isInvalidJavaAnnotation(ann: AnnotationInfo) = {
-    val annSym = ann.atp.typeSymbolDirect
-    hasTransientAnn(annSym) ||
-    hasVolatileAnn(annSym)  ||
-    hasNativeAnn(annSym)    ||
-    hasThrowsAnn(annSym)    ||
-    hasStrictFPAnn(annSym)
+  protected def isScalaAnnotation(ann: AnnotationInfo) = {
+    val isJava = ann.atp.typeSymbol.isJavaDefined
+    !isJava
+  }
+  
+  protected def scalaToJava(ann: AnnotationInfo): AnnotationInfo = {
+    val annSym = ann.atp.typeSymbol
+    if(hasDeprecatedAnn(annSym)) {
+      val javaDeprecatedSym = definitions.getClass("java.lang.Deprecated")
+	  javaDeprecatedSym.initialize // if not initialized, javaDeprecatedSym.isJavaDefined will return false
+	  val res = AnnotationInfo(javaDeprecatedSym.tpe, Nil, Nil)
+	  res.setPos(self.rangePos(ann.pos.source, ann.pos.start, ann.pos.start, ann.pos.start + javaDeprecatedSym.name.length))
+	  res
+    }
+    else ann
   }
 }

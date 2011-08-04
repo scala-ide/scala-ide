@@ -671,18 +671,17 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { self : ScalaPresenta
     
     def addAnnotations(annots : List[AnnotationInfo], parentInfo : AnnotatableInfo, parentHandle : JavaElement) : Position = {
       import SourceRefElementInfoUtils._
-      // we need to remove annotations that are keywords in Java or JDT get lost
-      val validAnnots = annots.remove(isInvalidJavaAnnotation)
+      // ignore Scala annotations as they cannot be correctly represented in Java
+      val javaAnnots = annots.map(scalaToJava).remove(isScalaAnnotation)
       
-      validAnnots.foldLeft(NoPosition : Position) { (pos, annot) => {
+      javaAnnots.foldLeft(NoPosition : Position) { (pos, annot) => {
         if (!annot.pos.isOpaqueRange)
           pos
         else {
           var name = annot.atp.typeSymbol.nameString
           val handle = new Annotation(parentHandle, name)
           
-          val info = if(annot.assocs.nonEmpty) buildInfoForJavaAnnotationWithMembers(annot, handle)
-          					 else buildInfoAndDropAnnotationMembers(annot, handle)
+          val info = buildInfoForJavaAnnotation(annot, handle)
           
           setSourceRangeStart(info, info.nameStart-1)
           setSourceRangeEnd(info, info.nameEnd)
@@ -705,10 +704,8 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { self : ScalaPresenta
       }}
       }
     
-      /** Java annotations occurring in scala sources have to be correctly mapped. */
-      private def buildInfoForJavaAnnotationWithMembers(ann: AnnotationInfo, handle: Annotation): JDTAnnotationInfo = {
-        assert(ann.args.isEmpty, "non empty `args` => you are passing a Scala annotation")
-        assert(ann.assocs.nonEmpty, "this method is meant to be used only for Java annotation with members")
+      private def buildInfoForJavaAnnotation(ann: AnnotationInfo, handle: Annotation): JDTAnnotationInfo = {
+        assert(ann.atp.typeSymbolDirect.isJavaDefined, "You are passing a Scala annotation. Scala annotations cannot be exposed to JDT and they should be filtered out")
       
         def getMemberValuePairs(owner : JavaElement, memberValuePairs : List[(Name, ClassfileAnnotArg)]) : Array[IMemberValuePair] = {
           def getMemberValue(value : ClassfileAnnotArg) : (Int, Any) = {
@@ -747,30 +744,9 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { self : ScalaPresenta
         val info = new JDTAnnotationInfo          
         info.nameStart = ann.pos.startOrPoint
         info.nameEnd = ann.pos.endOrPoint-1
-        info.members = getMemberValuePairs(handle, ann.assocs)
+        info.members = if(ann.assocs.isEmpty) Annotation.NO_MEMBER_VALUE_PAIRS else getMemberValuePairs(handle, ann.assocs)
         info
      }
-    
-    /** Scala annotations are quite different from Java ones. Specifically, annotations in Scala take `Tree`s as argument, 
-     * while Java only accept constant values (e.g., method calls are disallowed). Therefore, if a Scala annotation 
-     * takes some argument, they are dropped here so that JDT does not complain. 
-     * 
-     * This method is meant to be called by passing either a scala annotation or a java annotation with no members. 
-     * */
-  	 private def buildInfoAndDropAnnotationMembers(ann: AnnotationInfo, handle: Annotation): JDTAnnotationInfo = {
-  	   assert(ann.assocs.isEmpty, "non empty `assocs` => You are passing a Java annotation with members") 
-  	   
-  	   val info = new JDTAnnotationInfo
-  	   
-  	   info.nameStart = ann.pos.startOrPoint
-  	   // Annotation's argument have to be dropped also when computing the position.
-  	   // (this is why we use the name's length to calculate the annotation's end pos).
-  	   info.nameEnd = info.nameStart + handle.getElementName.length - 1
-  	   info.members = Annotation.NO_MEMBER_VALUE_PAIRS
-  	   info
-  	 }
-  	  
-  	
   
     class CompilationUnitBuilder extends PackageOwner with ImportContainerOwner with ClassOwner with ModuleOwner {
       val parent = null

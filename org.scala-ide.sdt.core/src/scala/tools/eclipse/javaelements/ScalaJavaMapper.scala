@@ -92,6 +92,10 @@ trait ScalaJavaMapper extends ScalaAnnotationHelper { self : ScalaPresentationCo
         mod = mod | ClassFileConstants.AccStrictfp
       }
       
+      if(hasDeprecatedAnn(owner)) {
+        mod = mod | ClassFileConstants.AccDeprecated
+      }
+      
       mod
     }
       
