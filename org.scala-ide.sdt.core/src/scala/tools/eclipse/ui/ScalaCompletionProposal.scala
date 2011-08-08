@@ -62,7 +62,11 @@ class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: I
     selectionProvider.setSelection(new TextSelection(startPos + completionString.length, 0))
     selectionProvider match {
       case viewer: ITextViewer if hasArgs == HasArgs.NonEmptyArgs =>
-        viewer.getTextWidget().setCaretOffset(startPos + completionString.length - 1)
+        // obtain the relative offset in the screen (this is needed to correctly 
+        // update the caret position when folded comments/imports/classes are
+        // present in the source file.
+        val viewCaretOffset = viewer.getTextWidget().getCaretOffset()
+        viewer.getTextWidget().setCaretOffset(viewCaretOffset -1 )
       case _ => () 
     }
   }
