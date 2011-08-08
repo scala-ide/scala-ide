@@ -12,10 +12,6 @@ object HasArgs extends Enumeration {
   }
 }
 
-object HasParens extends Enumeration {
-	val NoParens, EmptyParens, NonEmptyParens = Value
-}
-
 /** A completion proposal coming from the Scala compiler. This 
  *  class holds together data about completion proposals.
  *  
