@@ -13,7 +13,7 @@
     <version.tag>nightly</version.tag>
     <version.suffix>210</version.suffix>
     <tycho.version>0.11.1</tycho.version>
-    <sbt.version>0.9.0-SNAPSHOT</sbt.version>
+    <sbt.version>0.10.1-SNAPSHOT</sbt.version>
     <maven.compiler.source>1.5</maven.compiler.source>
     <maven.compiler.target>1.5</maven.compiler.target>
     <encoding>UTF-8</encoding>
@@ -194,6 +194,13 @@
           <value>2.8.1</value>
         </property>
       </activation>
+      <dependencies>
+        <dependency>
+          <groupId>org.scala-ide</groupId>
+          <artifactId>org.scala-ide.sbt.full.library</artifactId>
+          <version>${sbt.version}</version>
+        </dependency>
+      </dependencies>
       <properties>
         <version.suffix>28</version.suffix>
       </properties>
@@ -227,6 +234,13 @@
           <value>2.8.2-SNAPSHOT</value>
         </property>
       </activation>
+      <dependencies>
+        <dependency>
+          <groupId>org.scala-ide</groupId>
+          <artifactId>org.scala-ide.sbt.full.library</artifactId>
+          <version>${sbt.version}</version>
+        </dependency>
+      </dependencies>
       <properties>
         <version.suffix>28</version.suffix>
       </properties>
@@ -292,6 +306,13 @@
           <value>2.9.0-1</value>
         </property>
       </activation>
+      <dependencies>
+        <dependency>
+          <groupId>org.scala-ide</groupId>
+          <artifactId>org.scala-ide.sbt.full.library</artifactId>
+          <version>${sbt.version}</version>
+        </dependency>
+      </dependencies>
       <properties>
         <version.suffix>29</version.suffix>
       </properties>
@@ -325,6 +346,13 @@
           <value>2.9.1-SNAPSHOT</value>
         </property>
       </activation>
+      <dependencies>
+        <dependency>
+          <groupId>org.scala-ide</groupId>
+          <artifactId>org.scala-ide.sbt.full.library</artifactId>
+          <version>${sbt.version}</version>
+        </dependency>
+      </dependencies>
       <properties>
         <version.suffix>29</version.suffix>
       </properties>
@@ -357,6 +385,13 @@
           <value>2.10.0-SNAPSHOT</value>
         </property>
       </activation>
+      <dependencies>
+        <dependency>
+          <groupId>org.scala-ide</groupId>
+          <artifactId>org.scala-ide.sbt.full.library</artifactId>
+          <version>${sbt.version}</version>
+        </dependency>
+      </dependencies>
       <repositories>
         <repository>
           <id>scala-refactoring-trunk</id>
@@ -494,6 +529,11 @@
           <groupId>org.scala-ide</groupId>
           <artifactId>org.scala-ide.scala.compiler</artifactId>
           <version>${scala.version}</version>
+        </dependency>
+        <dependency>
+          <groupId>org.scala-ide</groupId>
+          <artifactId>org.scala-ide.sbt.full.library</artifactId>
+          <version>${sbt.version}</version>
         </dependency>
       </dependencies>
       <repositories>

@@ -75,4 +75,4 @@ class ScalaLibraryClasspathContainerPage extends
   ScalaClasspathContainerPage(ScalaPlugin.plugin.scalaLibId,
   	"ScalaLibraryContainerPage",
     "Scala Library Container",
-    "Scala library container") 
+    "Scala library container")

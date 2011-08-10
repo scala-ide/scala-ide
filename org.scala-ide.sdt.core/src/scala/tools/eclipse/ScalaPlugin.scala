@@ -48,6 +48,7 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
   def pluginId = "org.scala-ide.sdt.core"
   def compilerPluginId = "org.scala-ide.scala.compiler"
   def libraryPluginId = "org.scala-ide.scala.library"
+  def sbtPluginId = "org.scala-ide.sbt.full.library"
 
   def wizardPath = pluginId + ".wizards"
   def wizardId(name: String) = wizardPath + ".new" + name
@@ -81,12 +82,32 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
   val scalaFileExtn = ".scala"
   val javaFileExtn = ".java"
   val jarFileExtn = ".jar"
+    
+  val sbtVersion = "0.10.1-SNAPSHOT"
+
+  private def cutVersion(version: String): String = {
+          val pattern = "(\\d)\\.(\\d+)\\..*".r
+          version match {
+            case pattern(major, minor)=>
+              major + "." + minor
+            case _ =>
+              "(unknown)"
+          }
+      }
+
+  lazy val scalaVer = scala.util.Properties.scalaPropOrElse("version.number", "(unknown)")
+  lazy val shortScalaVer = cutVersion(scalaVer)
 
   val scalaCompilerBundle = Platform.getBundle(ScalaPlugin.plugin.compilerPluginId)
   val compilerClasses = pathInBundle(scalaCompilerBundle, "/lib/scala-compiler.jar")
   val continuationsClasses = pathInBundle(scalaCompilerBundle, "/lib/continuations.jar")
   val compilerSources = pathInBundle(scalaCompilerBundle, "/lib/scala-compiler-src.jar")
-
+  
+  lazy val sbtCompilerBundle = Platform.getBundle(ScalaPlugin.plugin.sbtPluginId)
+  lazy val sbtCompilerInterface = pathInBundle(sbtCompilerBundle, "/lib/scala-" + shortScalaVer + "/lib/compiler-interface.jar")
+  lazy val sbtScalaLib = pathInBundle(sbtCompilerBundle, "/lib/scala-" + shortScalaVer + "/lib/scala-library.jar")
+  lazy val sbtScalaCompiler = pathInBundle(sbtCompilerBundle, "/lib/scala-" + shortScalaVer + "/lib/scala-compiler.jar")
+  
   val scalaLibBundle = Platform.getBundle(ScalaPlugin.plugin.libraryPluginId)
   val libClasses = pathInBundle(scalaLibBundle, "/lib/scala-library.jar")
   val libSources = pathInBundle(scalaLibBundle, "/lib/scala-library-src.jar")

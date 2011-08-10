@@ -46,7 +46,7 @@ trait ScalaPluginPreferencePage {
         else {
           val value = setting match {
             case ms : Settings#MultiStringSetting => ms.value.mkString(" ")
-            case setting => setting.value.toString 
+            case setting => setting.value.toString
           }
           store.setValue(name, value)
         }

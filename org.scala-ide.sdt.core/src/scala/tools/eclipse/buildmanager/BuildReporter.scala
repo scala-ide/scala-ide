@@ -4,15 +4,20 @@ import scala.tools.eclipse.{EclipseBuildManager, TaskScanner, ScalaProject}
 
 import scala.tools.nsc.Settings
 import scala.tools.nsc.reporters.Reporter
-import scala.tools.nsc.util.Position
+import scala.tools.nsc.util.{ Position, NoPosition }
 import scala.tools.eclipse.util.{ EclipseResource, FileUtils, Logger }
+
+import scala.collection.mutable.ListBuffer
 
 import org.eclipse.core.resources.{ IFile, IMarker }
 import org.eclipse.core.runtime.IProgressMonitor
 
+case class BuildProblem(severity: Reporter#Severity, msg: String, pos: Position)
+
 abstract class BuildReporter(project0: ScalaProject, settings0: Settings) extends Reporter with Logger {
-	val buildManager: EclipseBuildManager
-  
+  val buildManager: EclipseBuildManager
+  val prob: ListBuffer[BuildProblem] = ListBuffer.empty
+
   val taskScanner = new TaskScanner(project0)
   
   override def info0(pos : Position, msg : String, severity : Severity, force : Boolean) = {
@@ -43,9 +48,11 @@ abstract class BuildReporter(project0: ScalaProject, settings0: Settings) extend
                 // this may happen if a file was compileLate by the build compiler
                 // for instance, when a source file (on the sourcepath) is newer than the classfile
                 // the compiler will create PlainFile instances in that case
+                prob += new BuildProblem(severity, msg, pos)
                 FileUtils.buildError(i, eclipseSeverity, msg, pos.point, length, pos.line, null)
               case _ =>
                 log("no EclipseResource associated to %s [%s]".format(f.path, f.getClass))
+                prob += new BuildProblem(severity, msg, NoPosition)
                 project0.buildError(eclipseSeverity, msg, null)
             }
         }
@@ -56,10 +63,12 @@ abstract class BuildReporter(project0: ScalaProject, settings0: Settings) extend
 	      	  // print only to console, better debugging
 	      	  log("[Buildmanager info] " + msg)
           case _ =>
-	      	  project0.buildError(eclipseSeverity, msg, null)   
+	      	  prob += new BuildProblem(severity, msg, NoPosition)
+	      	  project0.buildError(eclipseSeverity, msg, null)
         }
     } catch {
       case ex : UnsupportedOperationException => 
+        prob += new BuildProblem(severity, msg, NoPosition)
         project0.buildError(eclipseSeverity, msg, null)
     }
   }
@@ -76,5 +85,10 @@ abstract class BuildReporter(project0: ScalaProject, settings0: Settings) extend
         case _ =>
       }
     }
+  }
+  
+  override def reset() {
+  	super.reset()
+  	prob.clear()
   }
 }

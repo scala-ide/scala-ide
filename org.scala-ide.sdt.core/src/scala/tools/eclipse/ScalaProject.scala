@@ -95,7 +95,7 @@ class ScalaProject(val underlying: IProject) {
   }
   
   private var messageShowed = false
-  
+
   private def failedCompilerInitialization(msg: String) {
     import org.eclipse.jface.dialogs.MessageDialog
     synchronized {
@@ -404,7 +404,7 @@ class ScalaProject(val underlying: IProject) {
   private def buildManagerInitialize: String =
     storage.getString(SettingConverterUtil.convertNameToProperty(util.ScalaPluginSettings.buildManager.name))
   
-  private def storage = {
+  def storage = {
     val workspaceStore = ScalaPlugin.plugin.getPreferenceStore
     val projectStore = new PropertyStore(underlying, workspaceStore, plugin.pluginId)
     val useProjectSettings = projectStore.getBoolean(SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE)
@@ -481,8 +481,8 @@ class ScalaProject(val underlying: IProject) {
       	case "refined" =>
       	  println("BM: Refined Build Manager")
       	  buildManager0 = new buildmanager.refined.EclipseRefinedBuildManager(this, settings)
-      	case "sbt0.9"  =>
-      	  println("BM: SBT 0.9 enhanced Build Manager")
+      	case "sbt"  =>
+      	  println("BM: SBT 0.10.1 enhanced Build Manager for " + ScalaPlugin.plugin.scalaVer + " Scala library")
       	  buildManager0 = new buildmanager.sbtintegration.EclipseSbtBuildManager(this, settings)
       	case _         =>
       	  println("Invalid build manager choice '" + choice  + "'. Setting to (default) refined build manager")

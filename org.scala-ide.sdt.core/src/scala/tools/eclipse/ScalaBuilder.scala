@@ -38,11 +38,8 @@ class ScalaBuilder extends IncrementalProjectBuilder {
     val project = plugin.getScalaProject(getProject)
     
     val allSourceFiles = project.allSourceFiles()
-    val dependeeProjectChanged = false
-//      project.externalDepends.exists(
-//        x => { val delta = getDelta(x); delta == null || delta.getKind != IResourceDelta.NO_CHANGE})
     
-    val (addedOrUpdated, removed) = if (project.prepareBuild() || dependeeProjectChanged)
+    val (addedOrUpdated, removed) = if (project.prepareBuild())
       (allSourceFiles, Set.empty[IFile])
     else {
       kind match {
@@ -66,6 +63,19 @@ class ScalaBuilder extends IncrementalProjectBuilder {
               true
             }
           })
+          // Only for sbt which is able to track external dependencies properly
+          project.buildManager match {
+            case _: buildmanager.sbtintegration.EclipseSbtBuildManager =>
+              if (project.externalDepends.exists(
+                x => { val delta = getDelta(x); delta == null || delta.getKind != IResourceDelta.NO_CHANGE})) {
+                // in theory need to be able to identify the exact dependencies
+                // but this is deeply rooted inside the sbt dependency tracking mechanism
+                // so we just tell it to have a look at all the files 
+                // and it will figure out the exact changes during initialization
+                addedOrUpdated0 ++= allSourceFiles
+              }
+            case _ => 
+          }
           (Set.empty ++ addedOrUpdated0, Set.empty ++ removed0)
         case CLEAN_BUILD | FULL_BUILD =>
           (allSourceFiles, Set.empty[IFile])

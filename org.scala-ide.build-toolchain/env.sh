@@ -25,6 +25,10 @@ build()
         -U \
         $PROFILE \
         -Dscala.version=${SCALA_VERSION} \
+        -Dsbt.version=${SBT_VERSION} \
+        -Dsbt.scala.version=${SBT_SCALA_VERSION} \
+        -Dsbinary.version=${SBINARY_VERSION} \
+        -Dscala.precompiled.version=${SCALA_PRECOMPILED} \
         clean install $* 
 }
 
