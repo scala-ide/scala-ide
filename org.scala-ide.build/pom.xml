@@ -198,7 +198,7 @@
         <dependency>
           <groupId>org.scala-ide</groupId>
           <artifactId>org.scala-ide.sbt.full.library</artifactId>
-          <version>${sbt.version}</version>
+          <version>${scala.version}</version>
         </dependency>
       </dependencies>
       <properties>
@@ -238,7 +238,7 @@
         <dependency>
           <groupId>org.scala-ide</groupId>
           <artifactId>org.scala-ide.sbt.full.library</artifactId>
-          <version>${sbt.version}</version>
+          <version>${scala.version}</version>
         </dependency>
       </dependencies>
       <properties>
@@ -310,7 +310,7 @@
         <dependency>
           <groupId>org.scala-ide</groupId>
           <artifactId>org.scala-ide.sbt.full.library</artifactId>
-          <version>${sbt.version}</version>
+          <version>${scala.version}</version>
         </dependency>
       </dependencies>
       <properties>
@@ -350,7 +350,7 @@
         <dependency>
           <groupId>org.scala-ide</groupId>
           <artifactId>org.scala-ide.sbt.full.library</artifactId>
-          <version>${sbt.version}</version>
+          <version>${scala.version}</version>
         </dependency>
       </dependencies>
       <properties>
@@ -389,7 +389,7 @@
         <dependency>
           <groupId>org.scala-ide</groupId>
           <artifactId>org.scala-ide.sbt.full.library</artifactId>
-          <version>${sbt.version}</version>
+          <version>${scala.version}</version>
         </dependency>
       </dependencies>
       <repositories>
@@ -533,7 +533,7 @@
         <dependency>
           <groupId>org.scala-ide</groupId>
           <artifactId>org.scala-ide.sbt.full.library</artifactId>
-          <version>${sbt.version}</version>
+          <version>${scala.version}</version>
         </dependency>
       </dependencies>
       <repositories>
