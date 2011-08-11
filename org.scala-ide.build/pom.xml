@@ -194,13 +194,6 @@
           <value>2.8.1</value>
         </property>
       </activation>
-      <dependencies>
-        <dependency>
-          <groupId>org.scala-ide</groupId>
-          <artifactId>org.scala-ide.sbt.full.library</artifactId>
-          <version>${scala.version}</version>
-        </dependency>
-      </dependencies>
       <properties>
         <version.suffix>28</version.suffix>
       </properties>
@@ -234,13 +227,6 @@
           <value>2.8.2-SNAPSHOT</value>
         </property>
       </activation>
-      <dependencies>
-        <dependency>
-          <groupId>org.scala-ide</groupId>
-          <artifactId>org.scala-ide.sbt.full.library</artifactId>
-          <version>${scala.version}</version>
-        </dependency>
-      </dependencies>
       <properties>
         <version.suffix>28</version.suffix>
       </properties>
@@ -306,13 +292,6 @@
           <value>2.9.0-1</value>
         </property>
       </activation>
-      <dependencies>
-        <dependency>
-          <groupId>org.scala-ide</groupId>
-          <artifactId>org.scala-ide.sbt.full.library</artifactId>
-          <version>${scala.version}</version>
-        </dependency>
-      </dependencies>
       <properties>
         <version.suffix>29</version.suffix>
       </properties>
@@ -346,13 +325,6 @@
           <value>2.9.1-SNAPSHOT</value>
         </property>
       </activation>
-      <dependencies>
-        <dependency>
-          <groupId>org.scala-ide</groupId>
-          <artifactId>org.scala-ide.sbt.full.library</artifactId>
-          <version>${scala.version}</version>
-        </dependency>
-      </dependencies>
       <properties>
         <version.suffix>29</version.suffix>
       </properties>
@@ -385,13 +357,6 @@
           <value>2.10.0-SNAPSHOT</value>
         </property>
       </activation>
-      <dependencies>
-        <dependency>
-          <groupId>org.scala-ide</groupId>
-          <artifactId>org.scala-ide.sbt.full.library</artifactId>
-          <version>${scala.version}</version>
-        </dependency>
-      </dependencies>
       <repositories>
         <repository>
           <id>scala-refactoring-trunk</id>
