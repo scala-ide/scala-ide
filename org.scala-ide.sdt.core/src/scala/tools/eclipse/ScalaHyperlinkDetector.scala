@@ -49,10 +49,24 @@ class ScalaHyperlinkDetector extends AbstractHyperlinkDetector with Logger {
         log("detectHyperlinks: wordRegion = " + wordRegion)
         compiler.askOption { () =>
           typed.left.toOption map {
-            case Import(expr, sels) => sels find (_.namePos >= pos.start) map { sel =>
-              val tpe = stabilizedType(expr)
-              List(tpe.member(sel.name), tpe.member(sel.name.toTypeName))
-            } getOrElse List()
+            case Import(expr, sels) => 
+              if(expr.pos.includes(pos)) {
+                @annotation.tailrec
+                def locate(p: Position, inExpr: Tree): Symbol = inExpr match {
+                  case Select(qualifier, name) =>
+                    if(qualifier.pos.includes(p)) locate(p, qualifier)
+                    else inExpr.symbol
+                  case tree => tree.symbol
+                }
+                
+                List(locate(pos, expr))
+              }
+              else {
+                sels find (selPos => selPos.namePos >= pos.start && selPos.namePos <= pos.end) map { sel =>
+                  val tpe = stabilizedType(expr)
+                  List(tpe.member(sel.name), tpe.member(sel.name.toTypeName))
+                } getOrElse Nil
+              }
             case Annotated(atp, _) => List(atp.symbol)
             case st: SymTree       => List(st.symbol)
             case t                 => log("unhandled tree " + t.getClass); List()

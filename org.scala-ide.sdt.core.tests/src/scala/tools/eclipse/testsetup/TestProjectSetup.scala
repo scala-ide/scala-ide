@@ -41,7 +41,26 @@ class TestProjectSetup(projectName: String) {
    */
   def compilationUnit(path: String): ICompilationUnit = {
     val segments = path.split("/")
-    
     srcPackageRoot.getPackageFragment(segments.init.mkString(".")).getCompilationUnit(segments.last)
+  }
+  
+  def scalaCompilationUnit(path: String): ScalaCompilationUnit =
+    compilationUnit(path).asInstanceOf[ScalaCompilationUnit]
+  
+  def reload(unit: ScalaCompilationUnit) {
+    // first, 'open' the file by telling the compiler to load it
+    project.withSourceFile(unit) { (src, compiler) =>
+      val dummy = new compiler.Response[Unit]
+      compiler.askReload(List(src), dummy)
+      dummy.get
+    }()
+  }
+  
+  def findMarker(marker: String) = new {
+    import org.eclipse.jdt.internal.compiler.env.ICompilationUnit
+    def in(unit: ICompilationUnit): Seq[Int] = {
+    	val contents = unit.getContents()
+    	SDTTestUtils.positionsOf(contents, marker)
+    }
   }
 }

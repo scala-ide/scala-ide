@@ -13,27 +13,65 @@ import org.junit.Assert._
 import org.junit.Test
 import scala.tools.eclipse.ScalaWordFinder
 import scala.tools.eclipse.testsetup.TestProjectSetup
+import org.eclipse.jface.text.IRegion
 
-object HyperlinkDetectorTests extends TestProjectSetup("hyperlinks")
+object HyperlinkDetectorTests extends TestProjectSetup("hyperlinks") {
+  private final val HyperlinkMarker = "/*^*/"
+  
+  case class Link(pos: Pos, length: Int, text: String)
+  case class Pos(line: Int, column: Int)
+  
+  /** Load a single Scala Compilation Unit. The file contains text markers that 
+   * will be used to trigger hyperlinking requests to the presentation compiler. */
+  def loadTestUnit(path2unit: String) = {
+    val unit = scalaCompilationUnit(path2unit)
+    reload(unit)
+    new {
+      /** @param expectations A collection of expected `Link` (test's oracle). */
+      def andCheckAgainst(expectations: List[Link]) = {
+        val positions = findMarker(HyperlinkMarker).in(unit)
+  
+        println("checking %d positions".format(positions.size))
+        assertEquals(positions.size, expectations.size)
+        for ((pos, oracle) <- positions.zip(expectations)) {
+          val wordRegion = ScalaWordFinder.findWord(unit.getContents, pos)
+          val word = new String(unit.getContents.slice(wordRegion.getOffset, wordRegion.getOffset + wordRegion.getLength))
+          println("hyperlinking at position %d (%s)".format(pos, word))
+          
+          // Execute SUT
+          val detector = new ScalaHyperlinkDetector
+          val maybeLinks = detector.scalaHyperlinks(unit, wordRegion)
+          
+          // Verify Expectations
+          assertTrue("no links found for `%s` @ (%d,%d)".format(word, oracle.pos.line, oracle.pos.column), maybeLinks.isDefined)
+          val links = maybeLinks.get
+          assertEquals("expected %d link, found %d".format(1, links.size), 1, links.size)
+          val link = links.head
+          assertEquals("text", oracle.text, link.getHyperlinkText())
+          //assertEquals("offset", oracle.region.getOffset(), link.getHyperlinkRegion().getOffset())
+          unit.withSourceFile({ (sourceFile, compiler) =>
+            val offset = link.getHyperlinkRegion().getOffset()
+            val length = link.getHyperlinkRegion().getLength
+            val linkedPos = compiler.rangePos(sourceFile, offset, offset, offset + length)
+            assertEquals("@line:",oracle.pos.line, linkedPos.line)
+            assertEquals("@line:",oracle.pos.column, linkedPos.column)
+          })(None)
+          assertEquals("length", oracle.length, link.getHyperlinkRegion().getLength())
+        }
+      }
+    }
+  }
+}
 
 class HyperlinkDetectorTests {
   import HyperlinkDetectorTests._
   
   @Test
   def simpleHyperlinks() {
-    val unit = compilationUnit("hyperlinks/SimpleHyperlinking.scala").asInstanceOf[ScalaCompilationUnit];
+    val unit = scalaCompilationUnit("hyperlinks/SimpleHyperlinking.scala")
 
-    // first, 'open' the file by telling the compiler to load it
-    project.withSourceFile(unit) { (src, compiler) =>
-      val dummy = new Response[Unit]
-      compiler.askReload(List(src), dummy)
-      dummy.get
-
-      val tree = new Response[compiler.Tree]
-      compiler.askType(src, false, tree)
-      tree.get
-    }()
-
+    reload(unit)
+    
     val contents = unit.getContents
     val positions = SDTTestUtils.positionsOf(contents, "/*^*/")
 
@@ -48,5 +86,24 @@ class HyperlinkDetectorTests {
       assertTrue(links.isDefined)
       assertEquals(1, links.get.size)
     }
+  }
+  
+  @Test
+  def bug1000560() {
+    val oracle = List(Link(Pos(12,10), 5, "object bug1000560.Outer"),
+    			      Link(Pos(12,22), 3, "value bug1000560.Outer.bbb"),
+    			      Link(Pos(12,37), 1, "value bug1000560.Outer.a"),
+    			      Link(Pos(14,10), 5, "object bug1000560.Outer")
+  )
+    
+    loadTestUnit("bug1000560/Test1.scala").andCheckAgainst(oracle)
+  }
+  
+  @Test
+  def bug1000560_2() {
+    val oracle = List(Link(Pos(10,10), 3, "value bug1000560.Test2.foo"),
+                      Link(Pos(10,20), 3, "method bug1000560.Foo.bar"))
+    
+    loadTestUnit("bug1000560/Test2.scala").andCheckAgainst(oracle)
   }
 }
