@@ -39,7 +39,12 @@ class ScalaHyperlinkDetector extends AbstractHyperlinkDetector with Logger {
       if (wordRegion == null || wordRegion.getLength == 0)
         None
       else {
-        val pos = compiler.rangePos(sourceFile, wordRegion.getOffset, wordRegion.getOffset, wordRegion.getOffset + wordRegion.getLength)
+        val start = wordRegion.getOffset
+        val regionEnd = wordRegion.getOffset + wordRegion.getLength
+        // removing 1 handles correctly hyperlinking requests @ EOF
+        val end = if(sourceFile.length == regionEnd) regionEnd - 1 else regionEnd
+          
+        val pos = compiler.rangePos(sourceFile, start, start, end)
 
         import compiler.{ log => _, _ }
         val response = new Response[compiler.Tree]
