@@ -32,11 +32,13 @@ protected[eclipse] object RefactoringMenu {
   }
 
   def fillContextMenu(menu: IMenuManager, editor: EditorPart): Unit = {
-    val refactorSubmenu = menu.findMenuUsingPath(Id.ContextMenu)
+    val refactorSubmenu = Option(menu.findMenuUsingPath(Id.ContextMenu))
     /* Add actions in a listener to refill every time RefactorActionGroup's listener empties it for us: */
-    refactorSubmenu.addMenuListener(new IMenuListener() {
-      def menuAboutToShow(menu: IMenuManager): Unit = fillFromPluginXml(menu, editor, true)
-    })
+    refactorSubmenu foreach { 
+      _.addMenuListener(new IMenuListener() {
+        def menuAboutToShow(menu: IMenuManager): Unit = fillFromPluginXml(menu, editor, true)
+      })
+    }
   }
 
   def fillQuickMenu(editor: JavaEditor): Unit = {
