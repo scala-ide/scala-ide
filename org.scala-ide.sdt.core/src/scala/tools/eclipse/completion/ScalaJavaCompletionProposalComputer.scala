@@ -36,10 +36,13 @@ class ScalaJavaCompletionProposalComputer extends IJavaCompletionProposalCompute
 
   def computeCompletionProposals(context: ContentAssistInvocationContext, monitor: IProgressMonitor): java.util.List[_] = {
     context match {
-      case jc: JavaContentAssistInvocationContext => jc.getCompilationUnit match {
-        case scu: ScalaCompilationUnit => javaEmptyList()
-        case _                         => mixedInCompletions(jc)
-      }
+      case jc: JavaContentAssistInvocationContext => 
+        if (ScalaPlugin.plugin.isScalaProject(jc.getProject()))
+          jc.getCompilationUnit match {
+          case scu: ScalaCompilationUnit => javaEmptyList()
+          case _                         => mixedInCompletions(jc)
+        } else
+          javaEmptyList()
       case _ => javaEmptyList()
     }
   }
