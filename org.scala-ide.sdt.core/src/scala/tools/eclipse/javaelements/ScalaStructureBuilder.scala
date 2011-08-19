@@ -672,7 +672,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { self : ScalaPresenta
     def addAnnotations(annots : List[AnnotationInfo], parentInfo : AnnotatableInfo, parentHandle : JavaElement) : Position = {
       import SourceRefElementInfoUtils._
       // ignore Scala annotations as they cannot be correctly represented in Java
-      val javaAnnots = annots.remove(isScalaAnnotation)
+      val javaAnnots = annots.filterNot(isScalaAnnotation)
       
       javaAnnots.foldLeft(NoPosition : Position) { (pos, annot) => {
         if (!annot.pos.isOpaqueRange)
