@@ -34,6 +34,7 @@ class ScalaBuilder extends IncrementalProjectBuilder {
   
   override def build(kind : Int, ignored : ju.Map[_, _], monitor : IProgressMonitor) : Array[IProject] = {
     import IncrementalProjectBuilder._
+    import buildmanager.sbtintegration.EclipseSbtBuildManager
 
     val project = plugin.getScalaProject(getProject)
     
@@ -65,7 +66,7 @@ class ScalaBuilder extends IncrementalProjectBuilder {
           })
           // Only for sbt which is able to track external dependencies properly
           project.buildManager match {
-            case _: buildmanager.sbtintegration.EclipseSbtBuildManager =>
+            case _: EclipseSbtBuildManager =>
               if (project.externalDepends.exists(
                 x => { val delta = getDelta(x); delta == null || delta.getKind != IResourceDelta.NO_CHANGE})) {
                 // in theory need to be able to identify the exact dependencies
@@ -88,7 +89,8 @@ class ScalaBuilder extends IncrementalProjectBuilder {
     project.build(addedOrUpdated, removed, subMonitor)
     
     val depends = project.externalDepends.toList.toArray
-    if (allSourceFiles.exists(FileUtils.hasBuildErrors(_)))
+    // SBT build manager already calls java builder internally
+    if (allSourceFiles.exists(FileUtils.hasBuildErrors(_)) || project.buildManager.isInstanceOf[EclipseSbtBuildManager])
       depends
     else {
       ensureProject

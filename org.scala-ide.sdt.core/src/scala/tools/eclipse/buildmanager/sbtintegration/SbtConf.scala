@@ -53,22 +53,26 @@ class BasicConfiguration(
     
     private final val cacheSuffix = ".cache"
     private final val outSuffix   = "target"
-    def cacheDirectory: File = {
-        outputDirectory / cacheSuffix
-    }
     
-    def outputDirectory: File = {
+    def cacheLocation = project.underlying.getFile(cacheSuffix)
+    
+    def outputDirectories: List[File] = {
       val outDirs = project.outputFolders.toList
       outDirs match {
-        case List(out) =>          
+        case Nil =>
+          println("[Warning] No output directory specified")
+          List(project.underlying.getLocation().toFile / "default-bin")
+        case dirs =>
           val root = ResourcesPlugin.getWorkspace().getRoot()
-          val ifolder = root.getFolder(out)
-          ifolder.getLocation().toFile
-        case _ =>
-          project.underlying.getLocation().toFile / "default-bin"
+          dirs.map(dir => root.getFolder(dir).getLocation().toFile())
       }
     }
     
+    def outputDirectory: File =
+      // use projects directory. It doesn't really matter because this configuration
+      // contains only a dummy value for sbt (though it needs to be real directory)
+      project.underlying.getLocation().toFile
+
     def classesDirectory: File = {
         outputDirectory
     }

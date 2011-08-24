@@ -482,7 +482,7 @@ class ScalaProject(val underlying: IProject) {
       	  println("BM: Refined Build Manager")
       	  buildManager0 = new buildmanager.refined.EclipseRefinedBuildManager(this, settings)
       	case "sbt"  =>
-      	  println("BM: SBT 0.10.1 enhanced Build Manager for " + ScalaPlugin.plugin.scalaVer + " Scala library")
+      	  println("BM: SBT enhanced Build Manager for " + ScalaPlugin.plugin.scalaVer + " Scala library")
       	  buildManager0 = new buildmanager.sbtintegration.EclipseSbtBuildManager(this, settings)
       	case _         =>
       	  println("Invalid build manager choice '" + choice  + "'. Setting to (default) refined build manager")

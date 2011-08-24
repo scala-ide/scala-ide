@@ -82,8 +82,6 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
   val scalaFileExtn = ".scala"
   val javaFileExtn = ".java"
   val jarFileExtn = ".jar"
-    
-  val sbtVersion = "0.10.1-SNAPSHOT"
 
   private def cutVersion(version: String): String = {
           val pattern = "(\\d)\\.(\\d+)\\..*".r

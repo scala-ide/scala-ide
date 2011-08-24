@@ -13,7 +13,6 @@
     <version.tag>nightly</version.tag>
     <version.suffix>210</version.suffix>
     <tycho.version>0.11.1</tycho.version>
-    <sbt.version>0.10.1-SNAPSHOT</sbt.version>
     <maven.compiler.source>1.5</maven.compiler.source>
     <maven.compiler.target>1.5</maven.compiler.target>
     <encoding>UTF-8</encoding>

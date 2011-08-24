@@ -208,20 +208,6 @@ class SbtBuildLogger(underlying: BuildReporter) extends EclipseLogger {
 	}
 }
 
-object SettingsUnParser {
-  def apply(s: Settings): Seq[String] = {
-    val disallowed = Set(s.d, s.Ybuildmanagerdebug, s.Ybuilderdebug, s.sourcepath, s.sourcedir,
-                         s.YpresentationDebug, s.YpresentationDelay, s.YpresentationLog,
-                         s.YpresentationReplay, s.YpresentationVerbose,
-                         s.classpath)
-                         
-    val set = s.userSetSettings -- disallowed
-    
-    set.toList flatMap (_.unparse)
-  }
-}
-
-
 class EclipseSbtBuildManager(project: ScalaProject, settings0: Settings)
   extends EclipseBuildManager {
   
@@ -271,9 +257,9 @@ class EclipseSbtBuildManager(project: ScalaProject, settings0: Settings)
 	lazy val reporter: xsbti.Reporter = new SbtBuildReporter(_buildReporter)
 	val pendingSources = new mutable.HashSet[IFile]
 
-	private def filterOutScalaJars(l: Seq[IPath]): Seq[IPath] = {
+	private def filterOutScalaJars(l: Seq[IPath]): (Seq[IPath], Option[IPath]) = {
 		val jars = l.partition(p => p.lastSegment() == ScalaCompilerConf.LIBRARY_SUFFIX || p.lastSegment() == ScalaCompilerConf.COMPILER_SUFFIX)
-		jars._2
+		(jars._2, jars._1.find(p => p.lastSegment() == ScalaCompilerConf.LIBRARY_SUFFIX))
 	}
 	
 	lazy val scalaVersion = {
@@ -281,13 +267,14 @@ class EclipseSbtBuildManager(project: ScalaProject, settings0: Settings)
 	  ScalaPlugin.plugin.scalaVer
 	}
 	
-  def compilers(settings: Settings, libJar: File, compJar:File, compInterfaceJar: File): (ScalaSbtCompiler, JavaCompiler) = {
+  def compilers(settings: Settings, libJar: File, compJar:File, compInterfaceJar: File): (ScalaSbtCompiler, JavaEclipseCompiler) = {
     val scalacInstance = ScalaCompilerConf(scalaVersion, libJar, compJar, compInterfaceJar)
     val scalac = new ScalaSbtCompiler(settings,
             scalacInstance,
             ClasspathOptions.auto, 
             reporter)
-    val javac = JavaCompiler.directOrFork(scalac.cp, scalac.scalaInstance)( (args: Seq[String], log: sbt.Logger) => Process("javac", args) ! log )
+    //val javac = JavaCompiler.directOrFork(scalac.cp, scalac.scalaInstance)( (args: Seq[String], log: sbt.Logger) => Process("javac", args) ! log )
+    val javac = new JavaEclipseCompiler(project.underlying, monitor)
     (scalac, javac)
   }
   
@@ -327,23 +314,30 @@ class EclipseSbtBuildManager(project: ScalaProject, settings0: Settings)
   
   private def runCompiler(sources: Seq[File]) {
       // setup the settings
-  	  val restJars = filterOutScalaJars(project.classpath)
+  	  val allJarsAndLibrary = filterOutScalaJars(project.classpath)
   	  // Fixed 2.9 for now
-  	  val libJar = ScalaPlugin.plugin.sbtScalaLib
+  	  val libJar = allJarsAndLibrary match {
+  	    case (_, Some(lib)) =>
+  	      lib.toFile()
+  	    case (_, None) =>
+  	      println("Cannot find Scala library on the classpath. Verify your build path! Using default library corresponding to the compiler")
+  	      // TODO remove once we no longer pack scala-library with it
+  	      ScalaPlugin.plugin.sbtScalaLib.get.toFile
+  	  }
   	  val compJar = ScalaPlugin.plugin.sbtScalaCompiler
   	  // TODO pull the actual version from properties and select the correct one
   	  val compInterfaceJar = ScalaPlugin.plugin.sbtCompilerInterface
   	  
-      val (scalac, javac) = compilers(settings0, libJar.get.toFile, compJar.get.toFile, compInterfaceJar.get.toFile)
+      val (scalac, javac) = compilers(settings0, libJar, compJar.get.toFile, compInterfaceJar.get.toFile)
       // read settings properly
       //val cp = disintegrateClasspath(settings.classpath.value)
-      val cp = restJars.map(_.toFile)
+      val cp = allJarsAndLibrary._1.map(_.toFile)
       val conf = new BasicConfiguration(
               project, Seq(scalac.scalaInstance.libraryJar, compInterfaceJar.get.toFile) ++ cp)
       
       val analysisComp = new AnalysisCompile(conf, this, new SbtProgress())
       val result = analysisComp.doCompile(
-              scalac, javac, sources, reporter, SettingsUnParser(settings0))
+              scalac, javac, sources, reporter, settings0)
   }
   
   /** Not supported */
@@ -352,7 +346,11 @@ class EclipseSbtBuildManager(project: ScalaProject, settings0: Settings)
   /** Not supported */
   def saveTo(file: AbstractFile, fromFile: AbstractFile => String) {}
 	
-  def clean(implicit monitor: IProgressMonitor) {} // Should remove .cache and output directory
+  def clean(implicit monitor: IProgressMonitor) {
+    val dummy = new BasicConfiguration(project, Seq())
+    dummy.cacheLocation.delete(true, false, monitor)
+    // refresh explorer
+  }
   def invalidateAfterLoad: Boolean = true
 
   

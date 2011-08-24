@@ -1,4 +1,6 @@
-package scala.tools.eclipse.buildmanager.sbtintegration
+package scala.tools.eclipse
+package buildmanager
+package sbtintegration
 
 import sbt.{Logger, IO, CompileSetup, CompileOptions,
             ClasspathOptions, CompileOrder}
@@ -18,38 +20,42 @@ import sbinary.DefaultProtocol.{ immutableMapFormat, immutableSetFormat, StringF
 
 import scala.collection.Seq
 import scala.tools.nsc.io.AbstractFile
+import scala.tools.nsc.Settings
 import scala.tools.eclipse.util.EclipseResource
 
 import java.io.File
 
-class CompilerArgsConstr {
-    def apply(sources: Seq[File], out: File, classpath: Seq[File]): Seq[String] = {
-      param("-d", abs(out).toString) ++ debugSbt ++ param("-classpath", classpath.map(_.toString).mkString(":")) ++ abs(sources)
-    }
-    
-    private def debugSbt: Seq[String] = Seq("-Dxsbt.inc.debug=true")
-    private def param(name: String, value: String): Seq[String] = Seq(name, value)
-        
-    private def abs(files: Seq[File]) = files.map(_.getAbsolutePath).sortWith(_ < _)
-    private def abs(file: File) = file.getAbsolutePath
-}
 
 class AnalysisCompile (conf: BasicConfiguration, bm: EclipseSbtBuildManager, contr: Controller) {
     import AnalysisFormats._
-    private lazy val store = AnalysisStore.sync(AnalysisStore.cached(FileBasedStore(conf.cacheDirectory)))
+    private lazy val store = AnalysisStore.sync(AnalysisStore.cached(FileBasedStore(EclipseResource(conf.cacheLocation).file)))
     
     private def withBootclasspath(args: CompilerArguments, classpath: Seq[File]): Seq[File] =
 		  args.bootClasspath ++ args.finishClasspath(classpath)
 		  
 		implicit def toAbstractFile(files: Seq[File]): Set[AbstractFile] =
 		  files.flatMap(f => EclipseResource.fromString(f.getPath)).toSet
+		  
+    def removeSbtOutputDirs(args: List[String]) = {
+      val outputOpt = "-d"
+      val left = args.takeWhile(_ != outputOpt)
+      val right = args.dropWhile(_ != outputOpt)
+      right match {
+        case d::out::rest =>
+          (left:::rest).toSeq
+        case _ =>
+          // something is wrong 
+          assert(false, "Incorrect configuration for compiler arguments: " + args)
+          args.toSeq
+      }
+    }
     
-    def doCompile(scalac: ScalaSbtCompiler, javac: JavaCompiler,
-              sources: Seq[File],  reporter: Reporter,
+    def doCompile(scalac: ScalaSbtCompiler, javac: JavaEclipseCompiler,
+              sources: Seq[File],  reporter: Reporter, settings: Settings,
               compOptions: Seq[String] = Nil, javaSrcBases: Seq[File] = Nil,
               javacOptions: Seq[String] = Nil, compOrder: CompileOrder.Value = Mixed,
               analysisMap: Map[File, Analysis] = Map.empty, maxErrors: Int = 100)(implicit log: EclipseLogger): Analysis = {
-      
+
         val currentSetup = new CompileSetup(conf.outputDirectory, new CompileOptions(compOptions, javacOptions),
                                          scalac.scalaInstance.actualVersion, Mixed)
         import currentSetup._
@@ -67,7 +73,7 @@ class AnalysisCompile (conf: BasicConfiguration, bm: EclipseSbtBuildManager, con
         val (previousAnalysis, previousSetup) = extract(store.get)
         	
         val compile0 = (include: Set[File], callback: AnalysisCallback) => {
-            IO.createDirectory(conf.outputDirectory)
+            conf.outputDirectories.foreach(IO.createDirectory)
             val incSrc = sources.filter(include)
             println("Compiling:\n\t" + incSrc.mkString("\n\t"))
             bm.buildingFiles(toAbstractFile(incSrc))
@@ -85,9 +91,9 @@ class AnalysisCompile (conf: BasicConfiguration, bm: EclipseSbtBuildManager, con
             def compileScala() =
 				      if(!scalaSrcs.isEmpty) {
 				      	val sources0 = if(order == Mixed) incSrc else scalaSrcs
-				      	val arguments = compArgs(sources0, conf.classpath, conf.outputDirectory, options.options)
+				      	val arguments = removeSbtOutputDirs(compArgs(sources0, conf.classpath, conf.outputDirectory, options.options).toList)
 				      	try {
-				      	  scalac.compile(arguments, callback, maxErrors, log, contr)
+				      	  scalac.compile(arguments, callback, maxErrors, log, contr, settings)
 				      	} catch {
 				      	  case err: xsbti.CompileFailed =>
 				      	    scalaError = Some(err)
@@ -99,15 +105,15 @@ class AnalysisCompile (conf: BasicConfiguration, bm: EclipseSbtBuildManager, con
                 val loader = ClasspathUtilities.toLoader(conf.classpath, scalac.scalaInstance.loader)
                 def readAPI(source: File, classes: Seq[Class[_]]) { callback.api(source, sbt.ClassToAPI(classes)) }
 	            	
-                sbt.classfile.Analyze(conf.outputDirectory, javaSrcs, log)(callback, loader, readAPI) {
-                  javac(javaSrcs, conf.classpath, conf.outputDirectory, options.javacOptions)
+                sbt.classfile.Analyze(conf.outputDirectories, javaSrcs, log)(callback, loader, readAPI) {
+                  javac.build(org.eclipse.core.resources.IncrementalProjectBuilder.INCREMENTAL_BUILD)
                   log.flush()
                 }
             	}
             
             if(order == JavaThenScala) {
               compileJava(); compileScala()
-              throwLater()     
+              throwLater()
             } else {
               compileScala(); compileJava()
               // if we reached here, then it might be that compiling scala files failed but java succeded
@@ -125,6 +131,7 @@ class AnalysisCompile (conf: BasicConfiguration, bm: EclipseSbtBuildManager, con
 			      case _ => Incremental.prune(sources.toSet, previousAnalysis)
 		      }
           
+          // Seems ok to just provide conf.outputDirectory
           val (modified, result) : (Boolean, Analysis) = 
               IncrementalCompile(sources.toSet, entry, compile0, analysis, getAnalysis, conf.outputDirectory, log)
             
