@@ -374,7 +374,7 @@
             </goals>
             <configuration>
               <artifactItems>
-                <artifactItem>
+<!--                <artifactItem>
                   <groupId>org.scala-lang</groupId>
                   <artifactId>scala-library</artifactId>
                   <version>${scala.compiler.version}</version>
@@ -403,7 +403,7 @@
                   <version>${scala.compiler.version}</version>
                   <type>jar</type>
                   <destFileName>scala-${scala.major.minor.version}/lib/scala-compiler.jar</destFileName>
-                </artifactItem>
+                </artifactItem> -->
                 <artifactItem>
                   <groupId>org.scala-tools.sbt</groupId>
                   <artifactId>precompiled-${sbt.compiled.version}-${scala.precompiled.version}</artifactId>

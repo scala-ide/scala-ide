@@ -103,8 +103,9 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
   
   lazy val sbtCompilerBundle = Platform.getBundle(ScalaPlugin.plugin.sbtPluginId)
   lazy val sbtCompilerInterface = pathInBundle(sbtCompilerBundle, "/lib/scala-" + shortScalaVer + "/lib/compiler-interface.jar")
-  lazy val sbtScalaLib = pathInBundle(sbtCompilerBundle, "/lib/scala-" + shortScalaVer + "/lib/scala-library.jar")
-  lazy val sbtScalaCompiler = pathInBundle(sbtCompilerBundle, "/lib/scala-" + shortScalaVer + "/lib/scala-compiler.jar")
+  // Disable for now, until we introduce a way to have multiple scala libraries, compilers available for the builder
+  //lazy val sbtScalaLib = pathInBundle(sbtCompilerBundle, "/lib/scala-" + shortScalaVer + "/lib/scala-library.jar")
+  //lazy val sbtScalaCompiler = pathInBundle(sbtCompilerBundle, "/lib/scala-" + shortScalaVer + "/lib/scala-compiler.jar")
   
   val scalaLibBundle = Platform.getBundle(ScalaPlugin.plugin.libraryPluginId)
   val libClasses = pathInBundle(scalaLibBundle, "/lib/scala-library.jar")

@@ -321,10 +321,14 @@ class EclipseSbtBuildManager(project: ScalaProject, settings0: Settings)
   	      lib.toFile()
   	    case (_, None) =>
   	      println("Cannot find Scala library on the classpath. Verify your build path! Using default library corresponding to the compiler")
-  	      // TODO remove once we no longer pack scala-library with it
-  	      ScalaPlugin.plugin.sbtScalaLib.get.toFile
+  	      //ScalaPlugin.plugin.sbtScalaLib.get.toFile
+  	      val e = new Exception("Cannot find Scala library on the classpath. Verify your build path!")
+  	      project.buildError(IMarker.SEVERITY_ERROR, e.getMessage(), null)
+          ScalaPlugin.plugin.logError("Error in Scala SBT builder", e)
+  	      return
   	  }
-  	  val compJar = ScalaPlugin.plugin.sbtScalaCompiler
+  	  //val compJar = ScalaPlugin.plugin.sbtScalaCompiler
+  	  val compJar = ScalaPlugin.plugin.compilerClasses
   	  // TODO pull the actual version from properties and select the correct one
   	  val compInterfaceJar = ScalaPlugin.plugin.sbtCompilerInterface
   	  

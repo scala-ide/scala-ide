@@ -29,6 +29,7 @@ class ScalaBuilder extends IncrementalProjectBuilder {
     
     ensureProject
     scalaJavaBuilder.clean(monitor)
+    project.buildManager.clean(monitor)
     JDTUtils.refreshPackageExplorer
   }
   
