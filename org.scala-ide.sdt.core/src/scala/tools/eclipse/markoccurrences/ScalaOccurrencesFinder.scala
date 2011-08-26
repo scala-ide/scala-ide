@@ -23,15 +23,13 @@ class ScalaOccurrencesFinder(file: ScalaCompilationUnit, offset: Int, length: In
         if (!compiler.unitOfFile.contains(sourceFile.file)) 
           None 
         else {
-          val (selectedTree, os) = mo.occurrencesOf(sourceFile.file, from, to)          
-          val symbol = selectedTree.symbol
-          if (symbol == null || symbol.name.isOperatorName) 
-            None 
-          else {
-          	val symbolName = selectedTree.symbol.nameString
-          	val positions = os map (p => (p.start, p.end - p.start))
-          	val locations = positions collect { case (offset, length) if length == symbolName.length => new Region(offset, length) }
-          	Some(Occurrences(symbolName, locations.toList))
+          val (selectedTree, occurrences) = mo.occurrencesOf(sourceFile.file, from, to)       
+          
+          Option(selectedTree.symbol) filter (!_.name.isOperatorName) map { sym =>
+            val locations = occurrences map { pos => 
+              new Region(pos.start, pos.end - pos.start)
+            }
+            Occurrences(sym.nameString, locations)
           }
         }
       } getOrElse None
