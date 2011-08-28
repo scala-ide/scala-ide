@@ -24,6 +24,7 @@ class NewObjectWizardPage extends {
 
 class NewPackageObjectWizardPage extends {
   val declarationType = "Package Object"
+  override val imageName = "newpackage_object_wiz.png"
 } with AbstractNewElementWizardPage
   with MuteLowerCaseTypeNameWarning
   with PackageObjectOptions {
@@ -50,12 +51,12 @@ class NewPackageObjectWizardPage extends {
 
   override protected def packageChanged() = {
     val status = super.packageChanged()
-    
+
     setTypeName(buildTypeName, false)
 
     status
   }
-  
+
   private def buildTypeName = {
     // the type's name is derived from the package's name
     //e.g., if the package name is `foo.bar`, the type name is `bar 
@@ -85,7 +86,7 @@ trait MuteLowerCaseTypeNameWarning extends AbstractNewElementWizardPage {
     // object's name are allowed to be lowercase
     val lowerCaseTypeNameWarningMessage = Messages.format(NewWizardMessages.NewTypeWizardPage_warning_TypeNameDiscouraged, InternalMessages.convention_type_lowercaseName)
 
-    if (status != null && status.getMessage!= null && status.getMessage.equals(lowerCaseTypeNameWarningMessage))
+    if (status != null && status.getMessage != null && status.getMessage.equals(lowerCaseTypeNameWarningMessage))
       StatusInfo.OK_STATUS // swallow warning
     else
       status

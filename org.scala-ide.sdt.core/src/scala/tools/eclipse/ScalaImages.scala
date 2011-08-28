@@ -19,7 +19,7 @@ object ScalaImages  {
   val SCALA_CLASS = create("icons/full/obj16/class_obj.gif")
   val SCALA_TRAIT = create("icons/full/obj16/trait_obj.gif")
   val SCALA_OBJECT = create("icons/full/obj16/object_obj.gif")
-  val SCALA_PACKAGE_OBJECT = create("icons/full/obj16/package_object_obj.gif")
+  val SCALA_PACKAGE_OBJECT = create("icons/full/obj16/package_object_obj.png")
 
   val PUBLIC_DEF = create("icons/full/obj16/defpub_obj.gif")
   val PRIVATE_DEF = create("icons/full/obj16/defpri_obj.gif")

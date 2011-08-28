@@ -300,7 +300,7 @@
       </wizard>
       <wizard
             class="scala.tools.eclipse.wizards.NewPackageObjectWizard"
-            icon="icons/full/etool16/newpackage_object_wiz.gif"
+            icon="icons/full/etool16/newpackage_object_wiz.png"
             finalPerspective="org.scala-ide.sdt.core.perspective"
             category="org.scala-ide.sdt.core.wizards"
             project="false"
