@@ -1,6 +1,9 @@
 package scala.tools.eclipse.properties
+
 import org.eclipse.jdt.ui.PreferenceConstants._
 import org.eclipse.jdt.ui.text.IJavaColorConstants._
+import scalariform.lexer._
+import scalariform.lexer.Tokens._
 
 object ScalaSyntaxClasses {
 
@@ -33,5 +36,33 @@ object ScalaSyntaxClasses {
   val ITALIC_SUFFIX = ".italic"
   val STRIKETHROUGH_SUFFIX = ".strikethrough"
   val UNDERLINE_SUFFIX = ".underline"
+
+}
+
+object ScalariformToSyntaxClass {
+
+  // TODO: Distinguish inside from outside of CDATA; distinguish XML tag and attribute name
+  
+  def apply(token: Token): ScalaSyntaxClass = token.tokenType match {
+    case LPAREN | RPAREN | LBRACE | RBRACE | LBRACKET | RBRACKET => ScalaSyntaxClasses.BRACKET
+    case STRING_LITERAL => ScalaSyntaxClasses.STRING
+    case TRUE | FALSE | NULL => ScalaSyntaxClasses.KEYWORD
+    case RETURN => ScalaSyntaxClasses.RETURN
+    case t if t.isKeyword => ScalaSyntaxClasses.KEYWORD
+    case LINE_COMMENT => ScalaSyntaxClasses.SINGLE_LINE_COMMENT
+    case MULTILINE_COMMENT if token.isScalaDocComment => ScalaSyntaxClasses.SCALADOC
+    case MULTILINE_COMMENT => ScalaSyntaxClasses.MULTI_LINE_COMMENT
+    case PLUS | MINUS | STAR | PIPE | TILDE | EXCLAMATION => ScalaSyntaxClasses.OPERATOR
+    case DOT | COMMA | COLON | USCORE | EQUALS | SEMI | LARROW | ARROW | SUBTYPE | SUPERTYPE | VIEWBOUND => ScalaSyntaxClasses.OPERATOR
+    case VARID if ScalaOnlyLexer.isOperatorPart(token.getText(0)) => ScalaSyntaxClasses.OPERATOR
+    case XML_START_OPEN | XML_EMPTY_CLOSE | XML_TAG_CLOSE | XML_END_OPEN => ScalaSyntaxClasses.XML_TAG_DELIMITER
+    case XML_NAME => ScalaSyntaxClasses.XML_TAG_NAME
+    case XML_ATTR_EQ => ScalaSyntaxClasses.XML_ATTRIBUTE_EQUALS
+    case XML_PROCESSING_INSTRUCTION => ScalaSyntaxClasses.XML_PI
+    case XML_COMMENT => ScalaSyntaxClasses.XML_COMMENT
+    case XML_ATTR_VALUE => ScalaSyntaxClasses.XML_ATTRIBUTE_VALUE
+    case XML_CDATA => ScalaSyntaxClasses.XML_CDATA_BORDER
+    case XML_UNPARSED | XML_WHITESPACE | XML_PCDATA | VARID | _ => ScalaSyntaxClasses.DEFAULT
+  }
 
 }

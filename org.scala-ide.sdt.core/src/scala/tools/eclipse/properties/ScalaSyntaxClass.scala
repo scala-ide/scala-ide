@@ -12,6 +12,7 @@ import org.eclipse.jface.preference.IPreferenceStore
 case class ScalaSyntaxClass(displayName: String, baseName: String) {
 
   import ScalaSyntaxClasses._
+  
   def colourKey = baseName + COLOUR_SUFFIX
   def boldKey = baseName + BOLD_SUFFIX
   def italicKey = baseName + ITALIC_SUFFIX
@@ -23,7 +24,7 @@ case class ScalaSyntaxClass(displayName: String, baseName: String) {
     val style: Int = makeStyle(preferenceStore.getBoolean(boldKey), preferenceStore.getBoolean(italicKey),
       preferenceStore.getBoolean(strikethroughKey), preferenceStore.getBoolean(underlineKey))
     val backgroundColour = null
-    new TextAttribute(colour, null, style)
+    new TextAttribute(colour, backgroundColour, style)
   }
 
   private def makeStyle(bold: Boolean, italic: Boolean, strikethrough: Boolean, underline: Boolean): Int = {

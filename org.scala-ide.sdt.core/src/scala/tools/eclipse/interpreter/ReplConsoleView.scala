@@ -27,6 +27,10 @@ import org.eclipse.ui.console.IConsoleConstants
 import org.eclipse.ui.internal.console.ConsolePluginImages
 import org.eclipse.jface.action.IAction
 
+import org.eclipse.jdt.internal.ui.JavaPlugin
+import scala.tools.eclipse.properties.ScalariformToSyntaxClass
+import scalariform.lexer.ScalaLexer
+
 class ReplConsoleView extends ViewPart {
 
   private class ReplEvaluator extends scala.tools.eclipse.ui.CommandField.Evaluator {
@@ -206,15 +210,21 @@ class ReplConsoleView extends ViewPart {
   }
 
   override def setFocus() { }
-       
+
   /**
    * Display the string with code formatting
    */
   private[interpreter] def displayCode(text: String) {
     if (textWidget.getCharCount != 0) // don't insert a newline if this is the first line of code to be displayed
       displayOutput("\n")
-    appendText(text, codeFgColor, codeBgColor, SWT.ITALIC, insertNewline = true)
-    displayOutput("\n")
+    appendText("\n", codeFgColor, codeBgColor, SWT.NORMAL, insertNewline = false)
+    val colorManager = JavaPlugin.getDefault.getJavaTextTools.getColorManager
+    val prefStore = ScalaPlugin.plugin.getPreferenceStore
+    for (token <- ScalaLexer.rawTokenise(text, forgiveErrors = true)) {
+      val textAttribute = ScalariformToSyntaxClass(token).getTextAttribute(colorManager, prefStore)
+      appendText(token.text, textAttribute.getForeground, codeBgColor, textAttribute.getStyle, insertNewline = false)
+    }
+    appendText("\n\n", codeFgColor, codeBgColor, SWT.NORMAL, insertNewline = false)
   }
 
   private[interpreter] def displayOutput(text: String) {

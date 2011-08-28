@@ -9,7 +9,6 @@ import scala.tools.eclipse.properties.ScalaSyntaxClasses._
 import org.eclipse.jface.layout.PixelConverter
 import org.eclipse.jdt.internal.ui.preferences.PreferencesMessages
 import scala.tools.eclipse.ScalaPlugin
-import org.eclipse.jdt.ui.text.IColorManager
 import org.eclipse.jface.preference.ColorSelector
 import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.jface.preference.PreferenceConverter

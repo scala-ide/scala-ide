@@ -9,9 +9,8 @@ import org.eclipse.jdt.internal.ui.javaeditor.SemanticHighlightings
 import org.eclipse.jdt.internal.ui.text.AbstractJavaScanner
 import scalariform.lexer.{ ScalaLexer, UnicodeEscapeReader, ScalaOnlyLexer }
 import scalariform.lexer.Tokens._
-import scala.tools.eclipse.properties.ScalaSyntaxClasses
+import scala.tools.eclipse.properties._
 import scala.tools.eclipse.ScalaPlugin
-import scala.tools.eclipse.properties.ScalaSyntaxClass
 import org.eclipse.jface.util.PropertyChangeEvent
 
 class ScalaCodeScanner(val colorManager: IColorManager, val preferenceStore: IPreferenceStore) extends AbstractScalaScanner {
@@ -22,16 +21,8 @@ class ScalaCodeScanner(val colorManager: IColorManager, val preferenceStore: IPr
     getTokenOffset = scalaToken.startIndex + offset
     scalaToken.tokenType match {
       case WS => Token.WHITESPACE
-      case PLUS | MINUS | STAR | PIPE | TILDE | EXCLAMATION => getToken(ScalaSyntaxClasses.OPERATOR)
-      case DOT | COMMA | COLON | USCORE | EQUALS | SEMI | LARROW | ARROW | SUBTYPE | SUPERTYPE | VIEWBOUND => getToken(ScalaSyntaxClasses.OPERATOR)
-      case STRING_LITERAL => getToken(ScalaSyntaxClasses.STRING)
-      case LPAREN | RPAREN | LBRACE | RBRACE | LBRACKET | RBRACKET => getToken(ScalaSyntaxClasses.BRACKET)
-      case RETURN => getToken(ScalaSyntaxClasses.RETURN)
       case EOF => Token.EOF
-      case TRUE | FALSE | NULL => getToken(ScalaSyntaxClasses.KEYWORD)
-      case VARID if ScalaOnlyLexer.isOperatorPart(scalaToken.getText(0)) => getToken(ScalaSyntaxClasses.OPERATOR)
-      case t if t.isKeyword => getToken(ScalaSyntaxClasses.KEYWORD)
-      case _ => getToken(ScalaSyntaxClasses.DEFAULT)
+      case _ => getToken(ScalariformToSyntaxClass(scalaToken))
     }
   }
 
