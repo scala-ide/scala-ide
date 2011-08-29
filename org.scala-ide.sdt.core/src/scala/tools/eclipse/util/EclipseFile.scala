@@ -100,7 +100,14 @@ class EclipseFile(override val underlying : IFile) extends EclipseResource[IFile
 
   def input: InputStream =	underlying.getContents(true)
   
+  /** Return an output stream for writing to this file.
+   *  If the file already exists, it is first deleted and it's contents replaced
+   *  when the stream is closed. If the file does not exist, it is created on `close`.
+   */
   def output: OutputStream = {
+    
+    if (underlying.exists) delete()
+   
     new ByteArrayOutputStream {
       override def close = {
         val contents = new ByteArrayInputStream(buf, 0, count)
