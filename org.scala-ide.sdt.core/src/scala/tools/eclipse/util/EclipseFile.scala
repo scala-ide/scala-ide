@@ -113,7 +113,8 @@ class EclipseFile(override val underlying : IFile) extends EclipseResource[IFile
           }
           createParentFolder(underlying.getParent)
           underlying.create(contents, true, null)
-        }
+        } else
+          underlying.setContents(contents, true, false, null)
       }
     }
   }
