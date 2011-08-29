@@ -1,54 +1,44 @@
 package scala.tools.eclipse.formatter
 
-import java.net.URL
-import org.eclipse.jface.dialogs.MessageDialog
-import java.io.FileOutputStream
-import scalariform.formatter.preferences.PreferencesImporterExporter
-import java.io.IOException
-import java.util.Properties
 import java.io.FileInputStream
-import org.eclipse.jdt.internal.ui.JavaPlugin
-import org.eclipse.ui.dialogs.PreferencesUtil
-import org.eclipse.jdt.internal.ui.preferences.PreferencesMessages
-import org.eclipse.jdt.core.IJavaProject
-import org.eclipse.core.resources.IProject
-import org.eclipse.ui.dialogs.PropertyPage
-import scala.tools.eclipse.ScalaPreviewerFactory
-import org.eclipse.ui.editors.text.TextEditor
-import org.eclipse.jface.util._
-import org.eclipse.swt.events._
-import org.eclipse.swt.widgets._
-import net.miginfocom.swt.MigLayout
-import net.miginfocom.layout._
-import scalariform.formatter.preferences._
-import org.eclipse.swt.events.{ SelectionAdapter, SelectionEvent }
+import java.io.FileOutputStream
+import java.io.IOException
+import java.net.URL
 import java.util.HashMap
-import org.eclipse.jface.text.TextUtilities
-import org.eclipse.jdt.ui.text.IJavaPartitions
-import org.eclipse.jdt.internal.ui.preferences.OverlayPreferenceStore
-
-import org.eclipse.jface.resource.JFaceResources
+import java.util.Properties
+import net.miginfocom.layout._
+import net.miginfocom.swt.MigLayout
+import org.eclipse.core.resources.IProject
+import org.eclipse.jdt.core.IJavaProject
+import org.eclipse.jdt.internal.ui.JavaPlugin
 import org.eclipse.jdt.internal.ui.javaeditor.JavaSourceViewer
-import scala.tools.eclipse.ScalaSourceViewerConfiguration
-import org.eclipse.swt.layout._
-import org.eclipse.swt.widgets.TabItem
-import org.eclipse.swt.widgets.TabFolder
-import org.eclipse.swt.SWT
-import org.eclipse.swt.widgets.Control
-import org.eclipse.swt.widgets.Composite
-import org.eclipse.ui._
-import org.eclipse.jface.preference._
-import scalariform.formatter._
-import scalariform.formatter.preferences._
-import scala.tools.eclipse.ScalaPlugin
+import org.eclipse.jdt.internal.ui.preferences.OverlayPreferenceStore
+import org.eclipse.jdt.internal.ui.preferences.PreferencesMessages
 import org.eclipse.jdt.ui.PreferenceConstants
-import org.eclipse.jface.text.{ Document, IDocument }
+import org.eclipse.jdt.ui.text.IJavaPartitions
+import org.eclipse.jface.dialogs.MessageDialog
+import org.eclipse.jface.preference._
+import org.eclipse.jface.resource.JFaceResources
+import org.eclipse.jface.text._
+import org.eclipse.jface.util._
+import org.eclipse.swt.SWT
+import org.eclipse.swt.events._
+import org.eclipse.swt.layout._
+import org.eclipse.swt.widgets._
+import org.eclipse.ui._
+import org.eclipse.ui.dialogs.PreferencesUtil
+import org.eclipse.ui.dialogs.PropertyPage
+import org.eclipse.ui.editors.text.TextEditor
+import scala.tools.eclipse.ScalaPlugin
+import scala.tools.eclipse.ScalaPreviewerFactory
+import scala.tools.eclipse.ScalaSourceViewerConfiguration
+import scala.tools.eclipse.formatter.FormatterPreferences._
 import scala.tools.eclipse.lexical.ScalaDocumentPartitioner
 import scala.tools.eclipse.properties.PropertyStore
-import org.eclipse.jface.text.IDocumentPartitioner
-import scala.tools.eclipse.formatter.FormatterPreferences._
-import scala.tools.eclipse.util.SWTUtils._
 import scala.tools.eclipse.util.FileUtils._
+import scala.tools.eclipse.util.SWTUtils._
+import scalariform.formatter._
+import scalariform.formatter.preferences._
 
 class FormatterPreferencePage extends PropertyPage with IWorkbenchPreferencePage {
   import FormatterPreferencePage._
@@ -208,11 +198,24 @@ class FormatterPreferencePage extends PropertyPage with IWorkbenchPreferencePage
       addCheckBox(composite, "Format XML", FormatXml)
       addCheckBox(composite, "Rewrite arrow tokens", RewriteArrowSymbols)
       addCheckBox(composite, "Preserve dangling close parenthesis", PreserveDanglingCloseParenthesis)
-      addCheckBox(composite, "Multiline Scaladoc comments start on first line", MultilineScaladocCommentsStartOnFirstLine)
       addCheckBox(composite, "Use Compact Control Readability style", CompactControlReadability)
 
       addPreview(composite)
     }
+
+  }
+
+  object ScaladocPrefTab extends PrefTab("Scaladoc", SCALADOC_PREVIEW_TEXT) {
+
+    def buildContents(composite: Composite) {
+      composite.setLayout(new MigLayout(new LC().fill, new AC, new AC().index(3).grow(1)))
+
+      addCheckBox(composite, "Multiline Scaladoc comments start on first line", MultilineScaladocCommentsStartOnFirstLine)
+      addCheckBox(composite, "Align asterisks beneath second asterisk", PlaceScaladocAsterisksBeneathSecondAsterisk)
+
+      addPreview(composite)
+    }
+
   }
 
   private def initUnderlyingPreferenceStore() {
@@ -297,6 +300,7 @@ class FormatterPreferencePage extends PropertyPage with IWorkbenchPreferencePage
 
     IndentPrefTab.build(tabFolder)
     SpacesPrefTab.build(tabFolder)
+    ScaladocPrefTab.build(tabFolder)
     MiscPrefTab.build(tabFolder)
 
     allEnableDisableControls += tabFolder
@@ -417,10 +421,6 @@ for (n <- 1 to 10)
  n match {
   case _ => 42
 }
-/**
- * Multiline Scaladoc 
- * comment
- */ 
 val book = Book(
   name = "Name",
   author = "Author",
@@ -435,6 +435,13 @@ else if (condition2) {
 else {
   // last ditch
 }
+"""
+
+  val SCALADOC_PREVIEW_TEXT = """/**
+ * Multiline Scaladoc 
+ * comment
+ */ 
+ class A
 """
 
 }
