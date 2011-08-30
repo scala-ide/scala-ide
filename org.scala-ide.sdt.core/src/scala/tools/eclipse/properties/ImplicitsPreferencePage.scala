@@ -42,7 +42,7 @@ class ImplicitsPagePreferenceInitializer extends AbstractPreferenceInitializer {
 
   override def initializeDefaultPreferences() {
     val store = ScalaPlugin.plugin.getPreferenceStore
-    store.setDefault(P_ACTIVE, true)
+    store.setDefault(P_ACTIVE, false)
     store.setDefault(P_BOLD, false)
     store.setDefault(P_ITALIC, false)
   }
