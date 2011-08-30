@@ -122,7 +122,7 @@ class InferredSemicolonPainter(textViewer: ITextViewer with ITextViewerExtension
   private def getBestPositionToDraw(token: Token, document: IDocument): Int = {
     var pos = token.startIndex
     while (pos < document.getLength)
-      (document(pos): Char) match {
+      document(pos) match {
         // A good place to draw is a space before a single-line comment
         case ' ' if pos + 2 < document.getLength && document(pos + 1) == '/' && document(pos + 2) == '/' =>
           return pos

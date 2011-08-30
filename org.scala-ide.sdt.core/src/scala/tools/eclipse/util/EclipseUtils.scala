@@ -26,7 +26,7 @@ object EclipseUtils {
 
   class PimpedDocument(document: IDocument) {
 
-    def apply(offset: Int): Character = document.getChar(offset)
+    def apply(offset: Int): Char = document.getChar(offset)
 
   }
 
