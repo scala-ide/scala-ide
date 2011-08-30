@@ -221,12 +221,15 @@ class SemanticHighlightingPresenter(editor: FileEditorInput, sourceViewer: ISour
             }
           }
           
-          try {
-            // XXX Maybe we should use a Response.get with a timeout to be more responsive? -- Mirko
-            viewsCollector.traverse(compiler.body(sourceFile))
-          } catch {
-            case t: Throwable =>
-              ScalaPlugin.plugin.logError(t)
+          val response = new compiler.Response[compiler.Tree]
+          compiler.askLoadedTyped(sourceFile, response)
+          response.get(200) match {
+            case Some(Left(tree)) => tree
+              viewsCollector.traverse(tree)
+            case Some(Right(exc)) => 
+              ScalaPlugin.plugin.logError(exc)
+            case None =>
+              ScalaPlugin.plugin.logWarning("Timeout while waiting for `askLoadedTyped` during implicit highlighting.")
           }
         }
         Annotations.update(sourceViewer, AnnotationsTypes.Implicits, toAdds)
