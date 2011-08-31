@@ -108,6 +108,11 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
           case e @ InvalidCompanions(c1, c2) =>
             reporter.warning(c1.pos, e.getMessage)
             None
+          case e: InterruptedException =>
+            Thread.currentThread().interrupt()
+            println("interrupted exception in askOption")
+            None
+            
           case e =>
             ScalaPlugin.plugin.logError("Error during askOption", e)
             None
