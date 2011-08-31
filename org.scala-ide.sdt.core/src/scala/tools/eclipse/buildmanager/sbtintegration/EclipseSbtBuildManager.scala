@@ -304,12 +304,13 @@ class EclipseSbtBuildManager(project: ScalaProject, settings0: Settings)
    *  them and their dependent files.
    */
   def update(added: scala.collection.Set[AbstractFile], removed: scala.collection.Set[AbstractFile]) {
-  	println("update files: " + added)
-  	if (!added.isEmpty || !removed.isEmpty) {
-  		removeFiles(removed)
-  		sources ++= added
-  		runCompiler(sources)
-  	}
+    println("update files: " + added)
+    if (!added.isEmpty || !removed.isEmpty) {
+      buildingFiles(added)
+      removeFiles(removed)
+      sources ++= added
+      runCompiler(sources)
+    }
   }
   
   private def runCompiler(sources: Seq[File]) {

@@ -136,13 +136,15 @@ class AnalysisCompile (conf: BasicConfiguration, bm: EclipseSbtBuildManager, con
               IncrementalCompile(sources.toSet, entry, compile0, analysis, getAnalysis, conf.outputDirectory, log)
             
           // Store if necessary
+          println("Compilation was successful")
           //println("Modified: " + modified + " Analysis: " + result + " apis " + result.apis)
           if (modified) {
             store.set(result, currentSetup)
           }
           result
         } catch {
-        	case e: xsbti.CompileFailed => 
+        	case e: xsbti.CompileFailed =>
+        	  println("Compilation failed")
         	  null
         } finally {
           log.flush()
