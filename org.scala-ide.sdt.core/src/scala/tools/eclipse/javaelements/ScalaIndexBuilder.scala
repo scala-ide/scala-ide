@@ -74,14 +74,14 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
     
     private def addAnnotations(sym: Symbol) =
       for (ann <- sym.annotations) {
-        println("added annotation %s [using symbols]".format(ann.atp))
+        if (isInfo) println("added annotation %s [using symbols]".format(ann.atp))
         indexer.addAnnotationTypeReference(ann.atp.toString.toChars)
       }
     
     private def addAnnotationRef(tree: Tree) {
       for (t <- tree) t match {
         case New(tpt) =>
-          println("added annotation %s [using trees]".format(tpt))
+          if (isInfo) println("added annotation %s [using trees]".format(tpt))
           indexer.addAnnotationTypeReference(tpt.toString.toChars)
         case _ => ()
       }

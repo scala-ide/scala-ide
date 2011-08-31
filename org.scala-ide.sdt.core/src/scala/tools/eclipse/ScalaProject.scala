@@ -385,7 +385,7 @@ class ScalaProject(val underlying: IProject) {
       setting <- box.userSettings; if filter(setting)
     ) {
       val value0 = store.getString(SettingConverterUtil.convertNameToProperty(setting.name))
-      println("initializing %s to %s".format(setting.name, value0.toString))
+      println("[%s] initializing %s to %s".format(underlying.getName(), setting.name, value0.toString))
       try {
         val value = if (setting ne settings.pluginsDir) value0 else {
           ScalaPlugin.plugin.continuationsClasses map {
