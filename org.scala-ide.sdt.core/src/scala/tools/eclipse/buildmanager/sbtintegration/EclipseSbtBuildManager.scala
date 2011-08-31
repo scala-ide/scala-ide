@@ -6,20 +6,16 @@ import scala.tools.nsc.{Global, Settings}
 import scala.tools.nsc.io.AbstractFile
 import scala.tools.nsc.util.{ Position, NoPosition, FakePos }
 import scala.tools.nsc.reporters.Reporter
-
 import scala.collection.mutable
-
 import org.eclipse.core.resources.{ IFile, IMarker }
 import org.eclipse.core.runtime.{ IProgressMonitor, IPath, SubMonitor, Path}
-
 import java.io.File
-
 import xsbti.Maybe
 import xsbti.Controller
 import sbt.compiler.{JavaCompiler}
 import sbt.{Process, ClasspathOptions}
-
 import scala.tools.eclipse.util.{ EclipseResource, FileUtils }
+import org.eclipse.core.resources.IResource
 
 // The following code is based on sbt.AggressiveCompile
 // Copyright 2010 Mark Harrah
@@ -353,6 +349,7 @@ class EclipseSbtBuildManager(project: ScalaProject, settings0: Settings)
 	
   def clean(implicit monitor: IProgressMonitor) {
     val dummy = new BasicConfiguration(project, Seq())
+    dummy.cacheLocation.refreshLocal(IResource.DEPTH_ZERO, null)
     dummy.cacheLocation.delete(true, false, monitor)
     // refresh explorer
   }
