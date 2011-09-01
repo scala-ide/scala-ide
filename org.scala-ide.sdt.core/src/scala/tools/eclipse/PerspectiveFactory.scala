@@ -38,7 +38,6 @@ class PerspectiveFactory extends IPerspectiveFactory {
     layout.addShowViewShortcut(ProjectExplorer.VIEW_ID)
     layout.addShowViewShortcut(IPageLayout.ID_OUTLINE)
     layout.addShowViewShortcut("org.eclipse.pde.runtime.LogView")
-    	            
   }
   private def createFolders(layout : IPageLayout) = {
     val editorArea = layout.getEditorArea()
@@ -50,7 +49,7 @@ class PerspectiveFactory extends IPerspectiveFactory {
     problemsFolder.addView(IPageLayout.ID_PROBLEM_VIEW)
     problemsFolder.addView(IPageLayout.ID_TASK_LIST)
     problemsFolder.addView(IConsoleConstants.ID_CONSOLE_VIEW)
-    problemsFolder.addView("org.eclipse.pde.runtime.LogView")
+//    problemsFolder.addView("org.eclipse.pde.runtime.LogView")
 
     val outlineFolder = layout.createFolder("right", IPageLayout.RIGHT,0.75f,editorArea)
     outlineFolder.addView(IPageLayout.ID_OUTLINE)  
