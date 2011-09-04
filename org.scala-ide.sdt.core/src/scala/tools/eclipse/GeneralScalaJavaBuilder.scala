@@ -6,8 +6,7 @@ import org.eclipse.core.runtime.Platform
 import java.lang.reflect.InvocationTargetException
 import scala.tools.eclipse.util.ReflectionUtils
 
-/** A ScalaJavaBuilder implementation that can work both on Eclipse Helios and
- *  Indigo (3.6 and 3.7). 
+/** A ScalaJavaBuilder implementation that works with JDT 3.6, 3.7 and 3.8
  *  
  *  The JavaBuilder in 3.7 introduces build configurations, so instead of setting
  *  the current project we need to create a BuildConfiguration and pass that around.
@@ -18,8 +17,10 @@ import scala.tools.eclipse.util.ReflectionUtils
  */
 class GeneralScalaJavaBuilder extends ScalaJavaBuilder {
   lazy val JDTVersion = Platform.getBundle("org.eclipse.jdt.core").getVersion
-  lazy val isHelios = JDTVersion.getMinor == 6
-  lazy val isIndigo = JDTVersion.getMinor == 7
+  lazy val isMajorThree = JDTVersion.getMajor == 3
+  lazy val isHelios = isMajorThree && JDTVersion.getMinor == 6
+  lazy val isIndigo = isMajorThree && JDTVersion.getMinor == 7
+  lazy val isJuno = isMajorThree && JDTVersion.getMinor == 8
 
   // (Indigo) this sets a dummy BuildConfiguration and avoids an NPE in InternalBuilder.getProject
   setProject0(null)
@@ -27,10 +28,8 @@ class GeneralScalaJavaBuilder extends ScalaJavaBuilder {
   override def setProject0(project: IProject) {
     if (isHelios)
       setProjectHelios(project)
-    else if (isIndigo)
-      setProjectIndigo(project)
-    else
-      throw new RuntimeException("Unknown JDT version: " + JDTVersion)
+    else 
+      ScalaJavaBuilderUtils.setBuildConfig(this, project)
   }
   
   private def setProjectHelios(project: IProject) {
@@ -43,10 +42,6 @@ class GeneralScalaJavaBuilder extends ScalaJavaBuilder {
       case e: InvocationTargetException =>
         throw new RuntimeException(e);
     }
-  }
-  
-  private def setProjectIndigo(project: IProject) {
-    ScalaJavaBuilderUtils.setBuildConfig(this, project)
   }
 }
 

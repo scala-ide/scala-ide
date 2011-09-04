@@ -8,12 +8,9 @@ package scala.tools.eclipse
 
 import org.eclipse.debug.ui.IDebugUIConstants
 import org.eclipse.jdt.ui.JavaUI
-import org.eclipse.swt.widgets.Display
-import org.eclipse.ui.{ IPageLayout, IPerspectiveFactory, PlatformUI }
+import org.eclipse.ui.{ IPageLayout, IPerspectiveFactory }
 import org.eclipse.ui.console.IConsoleConstants
-import org.eclipse.ui.internal.{ PerspectiveBarContributionItem, WorkbenchWindow }
 import org.eclipse.ui.navigator.resources.ProjectExplorer
-import util.SWTUtils.asyncExec
 
 class PerspectiveFactory extends IPerspectiveFactory {
   def createInitialLayout(layout : IPageLayout) = {
@@ -53,41 +50,5 @@ class PerspectiveFactory extends IPerspectiveFactory {
 
     val outlineFolder = layout.createFolder("right", IPageLayout.RIGHT,0.75f,editorArea)
     outlineFolder.addView(IPageLayout.ID_OUTLINE)  
-  }
-}
-
-object PerspectiveFactory {
-  val id = "org.scala-ide.sdt.core.perspective"
-  val oldId = "ch.epfl.lamp.sdt.core.perspective"
-
-  // If we're upgrading from a pre scala-ide.org release, then there might be a stale
-  // reference to the Scala perspective under the ch.epfl.lamp.sdt.core.perspective id
-  // in the perspective bar. If there is, then we update the perspective bar item to
-  // refer to the Scala perspective under the new id.
-  //
-  // We also show the Scala perspective, because its previous visibility status will 
-  // have been lost. There is a chance that this will result in the Scala perspective 
-  // being selected after the upgrade when previously it wasn't ... it would be nice 
-  // if we could preserve the state exactly, but this seems harmless.
-  def updatePerspective {
-    val workbench = PlatformUI.getWorkbench
-    val activeWindow = workbench.getActiveWorkbenchWindow.asInstanceOf[WorkbenchWindow]
-    if (activeWindow != null) {
-      val perspectiveBar = activeWindow.getPerspectiveBar 
-      perspectiveBar.find(oldId) match {
-        case item : PerspectiveBarContributionItem =>
-          val perspectiveDesc = workbench.getPerspectiveRegistry.findPerspectiveWithId(PerspectiveFactory.id)
-          if (perspectiveDesc != null) {
-            item.update(perspectiveDesc)
-            asyncExec {
-              val activeWindow = workbench.getActiveWorkbenchWindow
-              workbench.showPerspective(PerspectiveFactory.id, activeWindow)
-            }
-          }
-          else
-            perspectiveBar.remove(item)
-        case _ =>
-      }
-    }
   }
 }

@@ -128,8 +128,6 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
       JavaCore.addElementChangedListener(this)
       PlatformUI.getWorkbench.getEditorRegistry.setDefaultEditor("*.scala", editorId)
       ScalaPlugin.getWorkbenchWindow map (_.getPartService().addPartListener(ScalaPlugin.this))
-
-      PerspectiveFactory.updatePerspective
       diagnostic.StartupDiagnostics.run
     }
     println("Scala compiler bundle: " + scalaCompilerBundle.getLocation)
