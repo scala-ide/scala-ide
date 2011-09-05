@@ -11,7 +11,9 @@
   <properties>
     <scala.version>2.8.0</scala.version>
     <version.tag>nightly</version.tag>
-    <version.suffix>210</version.suffix>
+    <version.suffix>2_10</version.suffix>
+    <scala.version.short>2.10</scala.version.short>
+    <sbt.version>0.10.3</sbt.version>
     <tycho.version>0.12.0</tycho.version>
     <maven.compiler.source>1.5</maven.compiler.source>
     <maven.compiler.target>1.5</maven.compiler.target>
@@ -157,7 +159,7 @@
         </property>
       </activation>
       <properties>
-        <version.suffix>28</version.suffix>
+        <version.suffix>2_08</version.suffix>
       </properties>
       <repositories>
         <repository>
@@ -190,7 +192,7 @@
         </property>
       </activation>
       <properties>
-        <version.suffix>28</version.suffix>
+        <version.suffix>2_08</version.suffix>
       </properties>
       <repositories>
         <repository>
@@ -223,7 +225,7 @@
         </property>
       </activation>
       <properties>
-        <version.suffix>28</version.suffix>
+        <version.suffix>2_08</version.suffix>
       </properties>
       <repositories>
         <repository>
@@ -255,7 +257,7 @@
         </property>
       </activation>
       <properties>
-        <version.suffix>29</version.suffix>
+        <version.suffix>2_09</version.suffix>
       </properties>
       <repositories>
         <repository>
@@ -288,7 +290,7 @@
         </property>
       </activation>
       <properties>
-        <version.suffix>29</version.suffix>
+        <version.suffix>2_09</version.suffix>
       </properties>
       <repositories>
         <repository>
@@ -321,7 +323,7 @@
         </property>
       </activation>
       <properties>
-        <version.suffix>29</version.suffix>
+        <version.suffix>2_09</version.suffix>
       </properties>
       <repositories>
         <repository>
@@ -408,7 +410,7 @@
     <profile>
       <id>local-scala-2.8.0</id>
       <properties>
-        <version.suffix>28</version.suffix>
+        <version.suffix>2_08</version.suffix>
       </properties>
       <dependencies>
         <dependency>
@@ -441,7 +443,7 @@
     <profile>
       <id>local-scala-2.8.1</id>
       <properties>
-        <version.suffix>28</version.suffix>
+        <version.suffix>2_08</version.suffix>
       </properties>
       <dependencies>
         <dependency>
@@ -475,7 +477,7 @@
     <profile>
       <id>local-scala-2.9.x</id>
       <properties>
-        <version.suffix>29</version.suffix>
+        <version.suffix>2_09</version.suffix>
       </properties>
       <dependencies>
         <dependency>
@@ -509,7 +511,7 @@
     <profile>
       <id>local-scala-trunk</id>
       <properties>
-        <version.suffix>210</version.suffix>
+        <version.suffix>2_10</version.suffix>
       </properties>
       <dependencies>
         <dependency>

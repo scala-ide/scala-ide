@@ -66,5 +66,13 @@
         </configuration>
       </plugin>
     </plugins>
+<!--
+    <resources>
+      <resource>
+        <directory>src/resources</directory>
+        <filtering>true</filtering>
+        <targetPath>${basedir}/META-INF</targetPath>
+      </resource>
+    </resources> -->
   </build>
 </project>
