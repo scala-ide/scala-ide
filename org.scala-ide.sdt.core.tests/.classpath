@@ -7,5 +7,6 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
 	<classpathentry kind="con" path="org.eclipse.pde.core.requiredPlugins"/>
 	<classpathentry kind="lib" path="lib/mockito-all-1.8.5.jar"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/org.scala-ide.sdt.core"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>

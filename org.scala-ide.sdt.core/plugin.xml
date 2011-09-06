@@ -507,6 +507,7 @@
       </perspectiveExtension>
       <perspectiveExtension targetID="org.scala-ide.sdt.core.perspective">
          <perspectiveShortcut id="org.eclipse.debug.ui.DebugPerspective"/>
+         <actionSet id="org.eclipse.debug.ui.breakpointActionSet" />
       </perspectiveExtension>
    </extension>
    <extension point="org.eclipse.ui.actionSetPartAssociations">
