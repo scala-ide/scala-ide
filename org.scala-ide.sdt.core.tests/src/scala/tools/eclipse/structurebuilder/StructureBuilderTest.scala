@@ -74,7 +74,7 @@ class StructureBuilderTest {
     
     (new SearchEngine).search(pattern, Array[SearchParticipant](SearchEngine.getDefaultSearchParticipant), scope, requestor, null)
     println(elems)
-    assertEquals(elems.size, 2)
+    assertEquals(2, elems.size)
   }
   
   /** This tests that search for annotations still succeeds after a reconcile. The
