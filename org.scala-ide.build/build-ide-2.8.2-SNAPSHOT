@@ -3,6 +3,5 @@
 . $(dirname $0)/env.sh
 
 SCALA_VERSION=2.8.2-SNAPSHOT
-SBT_VERSION=2.8.2-SNAPSHOT
 
 build $*

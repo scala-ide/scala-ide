@@ -9,7 +9,7 @@
     <relativePath>../org.scala-ide.build-toolchain/pom.xml</relativePath>
   </parent>
   <artifactId>org.scala-ide.sbt.full.library</artifactId>
-  <version>${sbt.version}.${sbt.library.qualifier}</version>
+  <version>${sbt.version}.${version.suffix}-${maven.build.timestamp}</version>
   <packaging>bundle</packaging>
   <dependencies>
     <dependency>
@@ -160,6 +160,7 @@
   <build>
     <outputDirectory>${basedir}</outputDirectory>
     <plugins>
+
       <plugin>
         <artifactId>maven-clean-plugin</artifactId>
         <version>2.4.1</version>
@@ -448,7 +449,7 @@
           <instructions>
             <Bundle-SymbolicName>org.scala-ide.sbt.full.library</Bundle-SymbolicName>
             <Bundle-Name>Sbt ${sbt.version} Library for Eclipse</Bundle-Name>
-            <Bundle-Version>${sbt.version}.${sbt.library.qualifier}</Bundle-Version>
+            <Bundle-Version>${sbt.version}.${version.suffix}-${maven.build.timestamp}</Bundle-Version>
             <Embed-Dependency>*;scope=compile|runtime;inline=false</Embed-Dependency>
             <_exportcontents>sbt.*;version=${sbt.version},xsbt.*;version=${sbt.version},xsbti.*;version=${sbt.version},sbinary.*;version=${sbinary.version},jline.*;version=0.9.94,org.apache.ivy.*;version=2.2.0</_exportcontents>
             <Embed-Directory>lib</Embed-Directory>
