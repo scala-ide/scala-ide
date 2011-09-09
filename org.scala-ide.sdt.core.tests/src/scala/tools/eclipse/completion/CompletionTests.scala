@@ -13,6 +13,8 @@ import org.junit.Test
 import scala.tools.eclipse.testsetup.TestProjectSetup
 import scala.tools.eclipse.completion.ScalaCompletions
 
+import org.junit.Ignore
+
 object CompletionTests extends TestProjectSetup("completion")
 
 
@@ -95,7 +97,7 @@ class CompletionTests {
     }()
   }
   
-  @Test
+  @Test @Ignore
   def ticket1000475() {
     val oraclePos73 = List("toString(): java.lang.String")
     val oraclePos116 = List("forallChar => Boolean: Boolean")

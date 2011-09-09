@@ -20,7 +20,8 @@ import sbinary.DefaultProtocol.{ immutableMapFormat, immutableSetFormat, StringF
 
 import scala.collection.Seq
 import scala.tools.nsc.io.AbstractFile
-import scala.tools.nsc.Settings
+import scala.tools.nsc.util.NoPosition
+import scala.tools.nsc.{ Settings, MissingRequirementError }
 import scala.tools.eclipse.util.EclipseResource
 
 import java.io.File
@@ -95,6 +96,7 @@ class AnalysisCompile (conf: BasicConfiguration, bm: EclipseSbtBuildManager, con
 				      	try {
 				      	  scalac.compile(arguments, callback, maxErrors, log, contr, settings)
 				      	} catch {
+				      	 
 				      	  case err: xsbti.CompileFailed =>
 				      	    scalaError = Some(err)
 				      	}
@@ -146,6 +148,9 @@ class AnalysisCompile (conf: BasicConfiguration, bm: EclipseSbtBuildManager, con
         	case e: xsbti.CompileFailed =>
         	  println("Compilation failed")
         	  null
+        	case ex @ MissingRequirementError(required) =>
+        	  reporter.log(SbtConverter.convertToSbt(NoPosition), "could not find a required class (incomplete classpath?): " + required, xsbti.Severity.Error)
+            null
         } finally {
           log.flush()
         }
