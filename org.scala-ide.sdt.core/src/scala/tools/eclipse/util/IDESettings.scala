@@ -25,7 +25,7 @@ object IDESettings {
              Xmigration28, noassertions, nouescape, plugin, disable,
              require, pluginsDir, Xwarnfatal)),
       Box("Private",
-        List(Xcloselim, Xdce, inline, Xlinearizer, Ynogenericsig, noimports,
+        List(Ynogenericsig, noimports,
              selfInAnnots, Yrecursion, refinementMethodDispatch,
              Ywarndeadcode, Ybuildmanagerdebug)),
       Box("Presentation Compiler",
