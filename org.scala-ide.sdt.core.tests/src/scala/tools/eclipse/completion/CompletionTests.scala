@@ -11,7 +11,6 @@ import org.mockito.Mockito._
 import org.junit.Assert._
 import org.junit.Test
 import scala.tools.eclipse.testsetup.TestProjectSetup
-import scala.tools.eclipse.completion.ScalaCompletions
 
 object CompletionTests extends TestProjectSetup("completion")
 

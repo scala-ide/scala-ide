@@ -39,6 +39,7 @@ Export-Package:
  scala.tools.eclipse.contribution.weaving.jdt.debug,
  scala.tools.eclipse.contribution.weaving.jdt.hierarchy,
  scala.tools.eclipse.contribution.weaving.jdt.indexerprovider,
+ scala.tools.eclipse.contribution.weaving.jdt.jcompiler,
  scala.tools.eclipse.contribution.weaving.jdt.launching,
  scala.tools.eclipse.contribution.weaving.jdt.search,
  scala.tools.eclipse.contribution.weaving.jdt.spellingengineprovider,

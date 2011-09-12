@@ -825,6 +825,10 @@
     <provider class="scala.tools.eclipse.formatter.ScalaFormatterCleanUpProvider" />
   </extension>
 
+  <extension point="org.scala-ide.sdt.aspects.method_verifier">
+    <provider class="scala.tools.eclipse.jcompiler.ScalaMethodVerifierProvider" />
+  </extension>
+  
   <extension point="org.eclipse.contribution.weaving.jdt.imagedescriptorselector">
     <selector
       class="scala.tools.eclipse.javaelements.ScalaImageDescriptorSelector">
