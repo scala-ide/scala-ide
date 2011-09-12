@@ -6,8 +6,7 @@ import org.eclipse.swt.widgets.Control
 import org.eclipse.swt.events.{ KeyEvent, KeyAdapter, FocusAdapter, FocusEvent }
 import org.eclipse.jface.util.IPropertyChangeListener
 import org.eclipse.jface.util.PropertyChangeEvent
-import org.eclipse.swt.events.SelectionAdapter
-import org.eclipse.swt.events.SelectionEvent
+import org.eclipse.swt.events._
 
 object SWTUtils {
   
@@ -16,6 +15,14 @@ object SWTUtils {
     Display.getDefault asyncExec new Runnable {
       override def run() { f }
     }
+  }
+  
+  implicit def fnToModifyListener(f: ModifyEvent => Unit): ModifyListener = new ModifyListener {
+    def modifyText(e: ModifyEvent) = f(e)
+  }
+
+  implicit def fnToValListener(f: VerifyEvent => Unit) = new VerifyListener {
+    def verifyText(e: VerifyEvent) = f(e)
   }
 
   implicit def fnToSelectionAdapter(p: SelectionEvent => Any): SelectionAdapter =

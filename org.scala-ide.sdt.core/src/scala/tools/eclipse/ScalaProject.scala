@@ -7,9 +7,7 @@ package scala.tools.eclipse
 
 import scala.collection.immutable.Set
 import scala.collection.mutable.{ LinkedHashSet, HashMap, HashSet }
-
 import java.io.File.pathSeparator
-
 import org.eclipse.core.resources.{ IContainer, IFile, IFolder, IMarker, IProject, IResource, IResourceProxy, IResourceProxyVisitor }
 import org.eclipse.core.runtime.{ FileLocator, IPath, IProgressMonitor, Path, SubMonitor }
 import org.eclipse.jdt.core.{ IClasspathEntry, IJavaProject, JavaCore }
@@ -18,15 +16,14 @@ import org.eclipse.jdt.internal.core.JavaProject
 import org.eclipse.jdt.internal.core.builder.{ ClasspathDirectory, ClasspathLocation, NameEnvironment }
 import org.eclipse.jdt.internal.core.util.Util
 import org.eclipse.swt.widgets.{ Display, Shell }
-
 import scala.tools.nsc.{ Settings, MissingRequirementError }
 import scala.tools.nsc.util.SourceFile
-
 import scala.tools.eclipse.javaelements.ScalaCompilationUnit
 import scala.tools.eclipse.properties.PropertyStore
 import scala.tools.eclipse.util.{ Cached, EclipseResource, IDESettings, OSGiUtils, ReflectionUtils, EclipseUtils }
 import util.SWTUtils.asyncExec
 import EclipseUtils.workspaceRunnableIn
+import scala.tools.eclipse.properties.CompilerSettings
 
 trait BuildSuccessListener {
   def buildSuccessful(): Unit
@@ -399,6 +396,11 @@ class ScalaProject(val underlying: IProject) {
         case t: Throwable => plugin.logError("Unable to set setting '" + setting.name + "' to '" + value0 + "'", t)
       }
     }
+    
+    // handle additional parameters
+    val additional = store.getString(CompilerSettings.ADDITIONAL_PARAMS)
+    println("setting additional paramters: " + additional)
+    settings.processArgumentString(additional)
   }
   
   private def buildManagerInitialize: String =
