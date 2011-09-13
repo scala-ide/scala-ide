@@ -97,7 +97,7 @@ class CompletionTests {
     }()
   }
   
-  @Test @Ignore
+  @Test
   def ticket1000475() {
     val oraclePos73 = List("toString(): java.lang.String")
     val oraclePos116 = List("forallChar => Boolean: Boolean")
