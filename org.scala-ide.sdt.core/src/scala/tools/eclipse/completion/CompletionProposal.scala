@@ -23,11 +23,13 @@ case class CompletionProposal(kind: MemberKind.Value,
   startPos: Int,             // position where the 'completion' string should be inserted
   completion: String,        // the string to be inserted in the document
   display: String,           // the display string in the completion list
-  tooltip: String,           // tooltop info showed after a completion has been selected
-  additionalInfo: String,    // info displayed on the right of the current completion selection
+  tooltip: String,           // tooltip info showed after a completion has been selected
+  displayDetail: String,     // additional details to be display in the completion list (like package for a class)
   relevance: Int,
   hasArgs: HasArgs.Value,
-  isJava: Boolean
+  isJava: Boolean,
+  fullyQualifiedName: String, // for Class, Trait, Type, Objects: the fully qualified name
+  needImport: Boolean        // for Class, Trait, Type, Objects: import statement has to be added
 )
 
 /** The kind of a completion proposal. */

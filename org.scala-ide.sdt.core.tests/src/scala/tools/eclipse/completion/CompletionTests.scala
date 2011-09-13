@@ -11,7 +11,8 @@ import org.mockito.Mockito._
 import org.junit.Assert._
 import org.junit.Test
 import scala.tools.eclipse.testsetup.TestProjectSetup
-import scala.tools.eclipse.completion.ScalaCompletions
+import org.eclipse.jdt.core.search.{SearchEngine, IJavaSearchConstants, IJavaSearchScope, SearchPattern, TypeNameRequestor}
+import org.eclipse.jdt.core.IJavaElement
 
 import org.junit.Ignore
 
@@ -25,7 +26,10 @@ class CompletionTests {
   import org.eclipse.jface.text.IDocument
   import org.eclipse.jdt.ui.text.java.ContentAssistInvocationContext
 
-  private def runTest(path2source: String)(expectedCompletions: List[String]*) {
+  /**
+   * @param withImportProposal take in account proposal for types not imported yet
+   */
+  private def runTest(path2source: String, withImportProposal: Boolean)(expectedCompletions: List[String]*) {
     val unit = compilationUnit(path2source).asInstanceOf[ScalaCompilationUnit]
 
     // first, 'open' the file by telling the compiler to load it
@@ -70,7 +74,10 @@ class CompletionTests {
         val completions: List[ICompletionProposal] = completion.computeCompletionProposals(context, monitor).map(_.asInstanceOf[ICompletionProposal]).toList
         */
         
-        val completions = completion.findCompletions(wordRegion)(pos+1, unit)(src, compiler)
+        var completions = completion.findCompletions(wordRegion)(pos+1, unit)(src, compiler)
+        
+        if (!withImportProposal)
+          completions= completions.filter((c) => !c.needImport)
         
         // remove parens as the compiler trees' printer has been slightly modified in 2.10 
         // (and we need the test to pass for 2.9.0/-1 and 2.8.x as well).
@@ -103,6 +110,19 @@ class CompletionTests {
     val oraclePos116 = List("forallChar => Boolean: Boolean")
     val oraclePos147 = List("forallChar => Boolean: Boolean")
         
-    runTest("ticket_1000475/Ticket1000475.scala")(oraclePos73, oraclePos116, oraclePos147)
+    runTest("ticket_1000475/Ticket1000475.scala", false)(oraclePos73, oraclePos116, oraclePos147)
   }
+  
+  /**
+   * Test completion for 'any' Java type visible in the project
+   */
+  @Test
+  def ticket100476() {
+    val oraclePos4_26 = List("ArrayList", "ArrayLister")
+    val oraclePos6_33 = List("ArrayList")
+    val oraclePos11_16 = List("TreeSet")
+
+    runTest("ticket_1000476/Ticket1000476.scala", true)(oraclePos4_26, oraclePos6_33, oraclePos11_16)
+  }
+  
 }

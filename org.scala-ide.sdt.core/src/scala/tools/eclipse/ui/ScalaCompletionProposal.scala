@@ -2,15 +2,17 @@ package scala.tools.eclipse
 package ui
 
 import completion._
-
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal
-import org.eclipse.jface.text.contentassist.{ ICompletionProposalExtension, IContextInformation }
+import org.eclipse.jface.text.contentassist.{ ICompletionProposalExtension, ICompletionProposalExtension6, IContextInformation }
 import org.eclipse.swt.graphics.Image
 import org.eclipse.jface.text.IDocument
-import org.eclipse.jface.viewers.ISelectionProvider
+import org.eclipse.jface.viewers.{ISelectionProvider, StyledString}
 import org.eclipse.jface.text.TextSelection
 import org.eclipse.jface.text.ITextViewer
 import org.eclipse.jdt.internal.ui.JavaPluginImages
+import refactoring.EditorHelpers
+import refactoring.EditorHelpers._
+import scala.tools.refactoring.implementations.AddImportStatement
 
 
 /** A UI class for displaying completion proposals.
@@ -19,7 +21,7 @@ import org.eclipse.jdt.internal.ui.JavaPluginImages
  *  between them.
  */
 class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: ISelectionProvider) 
-    extends IJavaCompletionProposal with ICompletionProposalExtension {
+    extends IJavaCompletionProposal with ICompletionProposalExtension with ICompletionProposalExtension6 {
   
   import proposal._
   import ScalaCompletionProposal._
@@ -51,9 +53,26 @@ class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: I
     if (tooltip.size > 0)
       new ScalaContextInformation(display, tooltip, image)
     else null
-
+ 
+  /**
+   * A simple display string
+   */
   def getDisplayString() = display
-  def getAdditionalProposalInfo() = additionalInfo
+  
+  /**
+   * A display string with grayed out extra details
+   */
+  def getStyledDisplayString() : StyledString = {
+       val styledString= new StyledString(display)
+       if (displayDetail != null && displayDetail.size > 0)
+         styledString.append(" - ", StyledString.QUALIFIER_STYLER).append(displayDetail, StyledString.QUALIFIER_STYLER)
+      styledString
+    }
+  
+  /**
+   * Some additional info (like javadoc ...)
+   */
+  def getAdditionalProposalInfo() = null
   def getSelection(d: IDocument) = null
   def apply(d: IDocument) { throw new IllegalStateException("Shouldn't be called") }
 
@@ -68,6 +87,17 @@ class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: I
         val viewCaretOffset = viewer.getTextWidget().getCaretOffset()
         viewer.getTextWidget().setCaretOffset(viewCaretOffset -1 )
       case _ => () 
+    }
+    if (needImport) { // add an import statement if required
+      // [luc] code copied from scala.tools.eclipse.quickfix.ImportCompletionProposal
+      withScalaFileAndSelection { (scalaSourceFile, textSelection) =>
+        val changes = scalaSourceFile.withSourceFile { (sourceFile, compiler) =>
+          val refactoring = new AddImportStatement { val global = compiler }
+          refactoring.addImport(scalaSourceFile.file, fullyQualifiedName)
+        }(Nil)
+        EditorHelpers.applyChangesToFileWhileKeepingSelection(d, textSelection, scalaSourceFile.file, changes)
+        None
+      }
     }
   }
   def getTriggerCharacters = null

@@ -332,6 +332,7 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
       if (matchLocator.patternLocator.`match`(decl, possibleMatch.nodeSet) > 0) {
         val element = scu match {
           case ssf: ScalaSourceFile => ssf.getElementAt(declPos.start)
+          case scf: ScalaClassFile => scf
           case _ => null
         }
         //since we consider only the class name (and not its fully qualified name), 

@@ -220,7 +220,9 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
          container,
          relevance,
          HasArgs.from(sym.paramss),
-         sym.isJavaDefined)
+         sym.isJavaDefined,
+         sym.fullName,
+         false)
   }
 }
 

@@ -60,6 +60,8 @@ import collection.mutable.Buffer
 
 import scala.tools.eclipse.ScalaPlugin._
 
+import scala.tools.eclipse.formatter.ScalaFormatterCleanUpProvider
+
 abstract class AbstractNewElementWizardPage extends NewTypeWizardPage(1, "") {
 
   val declarationType: String
@@ -374,7 +376,11 @@ abstract class AbstractNewElementWizardPage extends NewTypeWizardPage(1, "") {
       reconcile(cu = cu)
 
       if (monitor.isCanceled) throw new InterruptedException()
-
+      
+      val formatter= new ScalaFormatterCleanUpProvider()
+      val textChange= formatter.createCleanUp(cu).createChange(monitor)
+      textChange.perform(monitor)
+      
       cu.commitWorkingCopy(true, new SubProgressMonitor(monitor, 1))
       parentCU.discardWorkingCopy
     } catch {

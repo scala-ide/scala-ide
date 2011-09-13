@@ -20,6 +20,25 @@
       <properties>
         <tycho.test.OSspecific>-Dosgi.ws=cocoa -XstartOnFirstThread</tycho.test.OSspecific>
       </properties>
+       <build>
+        <pluginManagement>
+          <plugins>
+            <plugin>
+              <groupId>org.eclipse.tycho</groupId>
+              <artifactId>tycho-surefire-plugin</artifactId>
+              <version>${tycho-version}</version>
+              <configuration>
+                <dependencies>
+                  <dependency>
+                    <artifactId>org.eclipse.jdt.launching.macosx</artifactId>
+                    <type>eclipse-plugin</type>
+                  </dependency>
+                </dependencies>
+              </configuration>
+            </plugin>
+          </plugins>
+        </pluginManagement>
+      </build>
     </profile>
 
     <profile>
