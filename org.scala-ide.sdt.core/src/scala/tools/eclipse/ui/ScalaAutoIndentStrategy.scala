@@ -1068,7 +1068,7 @@ class ScalaAutoIndentStrategy(
     var p = start
 
     while (true) {
-      val tok = Some(scanner.nextToken(p, JavaHeuristicScanner.UNBOUND))
+      val tok = scanner.nextToken(p, JavaHeuristicScanner.UNBOUND)
       p = scanner.getPosition()
 
       if (tok == openToken) {
