@@ -77,9 +77,9 @@ class ScalaCompletions {
         // some tree, not empty
         val length= position - e.pos.start
         // get the text of the tree element, with all white spaces removed
-        var content= sourceFile.content.slice(e.pos.start, position).filterNot((c) => new scala.runtime.RichChar(c).isWhitespace)
+        var content= sourceFile.content.slice(e.pos.start, position).filterNot((c) => c.isWhitespace)
         // check if it may look like a qualified type reference
-        if (length > prefix.length + 1 && content.find((c) => !new scala.runtime.RichChar(c).isUnicodeIdentifierPart && c != '.') == None)
+        if (length > prefix.length + 1 && content.find((c) => !c.isUnicodeIdentifierPart && c != '.') == None)
           // extract the package qualifier
           content.slice(0, content.length - prefix.length - 1)
         else
