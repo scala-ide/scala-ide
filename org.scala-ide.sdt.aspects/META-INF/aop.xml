@@ -12,6 +12,7 @@
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.core.SourceLookupAspect"/>
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.hierarchy.HierarchyAspect"/>
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.indexerprovider.IndexerProviderAspect"/>
+<aspect name="scala.tools.eclipse.contribution.weaving.jdt.jcompiler.MethodVerifierAspect"/>
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.launching.JavaLaunchableTesterAspect"/>
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.search.SearchAspect"/>
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.ui.ScalaOverrideLabelAspect"/>

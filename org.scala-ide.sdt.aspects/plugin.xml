@@ -5,4 +5,5 @@
    <extension-point id="cfprovider" name="ClassFile Provider" schema="cfprovider.exsd"/>
    <extension-point id="indexerprovider" name="Indexer Provider" schema="indexerprovider.exsd"/>
    <extension-point id="formatterCleanUp" name="Formatter Clean Up" schema="formatterCleanUp.exsd"/>
+   <extension-point id="method_verifier" name="Method Verifier" schema="methodVerifier.exsd"/>
 </plugin>
