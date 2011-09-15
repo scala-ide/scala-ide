@@ -81,6 +81,11 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
         unsafeElements.putAll(tmpMap)
         info.setIsStructureKnown(true)
       } catch {
+        case e: InterruptedException =>
+          Thread.currentThread().interrupt()
+          println("ignored InterruptedException in build structure")
+          info.setIsStructureKnown(false)
+          
         case ex => 
           ScalaPlugin.plugin.logError("Error building structure for %s".format(sourceFile), ex)
           info.setIsStructureKnown(false)
