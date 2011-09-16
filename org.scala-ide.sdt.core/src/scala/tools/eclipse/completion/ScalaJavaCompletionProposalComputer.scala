@@ -86,7 +86,11 @@ class ScalaJavaCompletionProposalComputer extends IJavaCompletionProposalCompute
             import compiler._
   
             def mixedInMethod(sym: Symbol): Boolean =
-              (sym.isSourceMethod && !sym.isDeferred && sym.owner.isTrait && !sym.isConstructor && !sym.isPrivate)
+              (sym.isSourceMethod &&
+                  !sym.isDeferred && 
+                  sym.owner.isTrait && 
+                  !sym.isConstructor && 
+                  !sym.isPrivate)
   
             compiler.askOption { () =>
               val currentClass = definitions.getClass(tpe.toTypeName)

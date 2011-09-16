@@ -284,6 +284,7 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
   def partOpened(part: IWorkbenchPart) {
     println("open " + part.getTitle)
     doWithCompilerAndFile(part) { (compiler, ssf) =>
+      compiler.askToDoFirst(ssf)
       compiler.askReload(ssf, ssf.getContents)
     }
   }
