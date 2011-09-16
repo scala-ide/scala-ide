@@ -18,12 +18,12 @@ trait ScalaAnnotationHelper { self: ScalaPresentationCompiler =>
     }
   }
 
-  protected def hasTransientAnn(sym: Symbol) = sym == TransientAttr
-  protected def hasVolatileAnn(sym: Symbol) = sym == definitions.VolatileAttr
-  protected def hasNativeAnn(sym: Symbol) = sym == definitions.NativeAttr
-  protected def hasStrictFPAnn(sym: Symbol) = sym == ScalaStrictFPAttr
-  protected def hasThrowsAnn(sym: Symbol) = sym == definitions.ThrowsClass
-  protected def hasDeprecatedAnn(sym: Symbol) = sym == definitions.DeprecatedAttr
+  protected def hasTransientAnn(sym: Symbol) = sym.hasAnnotation(TransientAttr)
+  protected def hasVolatileAnn(sym: Symbol) = sym.hasAnnotation(definitions.VolatileAttr)
+  protected def hasNativeAnn(sym: Symbol) = sym.hasAnnotation(definitions.NativeAttr)
+  protected def hasStrictFPAnn(sym: Symbol) = sym.hasAnnotation(ScalaStrictFPAttr)
+  protected def hasThrowsAnn(sym: Symbol) = sym.hasAnnotation(definitions.ThrowsClass)
+  protected def hasDeprecatedAnn(sym: Symbol) = sym.hasAnnotation(definitions.DeprecatedAttr)
 
   protected def isScalaAnnotation(ann: AnnotationInfo) = {
     val isJava = ann.atp.typeSymbol.isJavaDefined
