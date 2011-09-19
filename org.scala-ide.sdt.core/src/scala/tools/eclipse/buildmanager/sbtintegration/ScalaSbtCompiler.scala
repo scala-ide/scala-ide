@@ -14,7 +14,7 @@ object SettingsCleanup {
                          s.YpresentationReplay, s.YpresentationVerbose,
                          s.classpath)
     val s1 = new Settings(Log.settingsError(log))
-    val xs = (s.userSetSettings -- toDefault) flatMap (_.unparse)
+    val xs = (s.userSetSettings -- toDefault).toList flatMap (_.unparse)
 
     s1.processArguments(xs.toList, true)
     // Needs to preserve output directories
