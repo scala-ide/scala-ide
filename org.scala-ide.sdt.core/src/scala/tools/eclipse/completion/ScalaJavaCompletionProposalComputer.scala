@@ -54,8 +54,9 @@ class ScalaJavaCompletionProposalComputer extends IJavaCompletionProposalCompute
    *        selections on 'this', but it seemed overkill at this point.
    */
   private def shouldProposeCompletion(line: String) = {
+    val prefixes = Set("this", "super")
     val trimmed = line.trim
-    ((trimmed.startsWith("this") && trimmed.split(".").size <= 2)
+    ((prefixes.exists(trimmed.startsWith) && trimmed.split(".").size <= 2)
         || trimmed.indexOf('.') == -1)
   }
   
