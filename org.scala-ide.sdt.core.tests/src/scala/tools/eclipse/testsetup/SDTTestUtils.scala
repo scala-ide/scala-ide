@@ -8,10 +8,11 @@ import org.eclipse.core.runtime.Platform
 import java.io.{ ByteArrayInputStream, File, IOException, InputStream }
 import org.eclipse.core.resources.{ IContainer, IFile, IFolder, IProject, IProjectDescription, ResourcesPlugin }
 import org.eclipse.core.runtime.{ IPath, Path }
-import scala.tools.eclipse.util.OSGiUtils
+import scala.tools.eclipse.util.{ OSGiUtils, EclipseUtils }
 import scala.tools.nsc.util.SourceFile
 import scala.collection.mutable
 import scala.util.matching.Regex
+import org.eclipse.core.runtime.NullProgressMonitor
 
 /** Utility functions for setting up test projects.
  *  
@@ -30,16 +31,18 @@ object SDTTestUtils {
    *  exist in the source workspace.
    */
   def setupProject(name: String): ScalaProject = {
-    val wspaceLoc = workspace.getRoot.getLocation
-    val src = new File(sourceWorkspaceLoc.toFile().getAbsolutePath + File.separatorChar + name)
-    val dst = new File(wspaceLoc.toFile().getAbsolutePath + File.separatorChar + name)
-    println("copying %s to %s".format(src, dst))
-    FileUtils.copyDirectory(src, dst)
-    val project = workspace.getRoot.getProject(name)
-    project.create(null)
-    project.open(null)
-    JavaCore.create(project)
-    ScalaPlugin.plugin.getScalaProject(project)
+    EclipseUtils.workspaceRunnableIn(workspace) { monitor =>
+      val wspaceLoc = workspace.getRoot.getLocation
+      val src = new File(sourceWorkspaceLoc.toFile().getAbsolutePath + File.separatorChar + name)
+      val dst = new File(wspaceLoc.toFile().getAbsolutePath + File.separatorChar + name)
+      println("copying %s to %s".format(src, dst))
+      FileUtils.copyDirectory(src, dst)
+      val project = workspace.getRoot.getProject(name)
+      project.create(null)
+      project.open(null)
+      JavaCore.create(project)
+    }
+    ScalaPlugin.plugin.getScalaProject(workspace.getRoot.getProject(name))
   }
   
   /** Return all positions (offsets) of the given str in the given source file. 
