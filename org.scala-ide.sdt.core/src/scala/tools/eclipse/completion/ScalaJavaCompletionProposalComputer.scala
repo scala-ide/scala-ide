@@ -54,8 +54,9 @@ class ScalaJavaCompletionProposalComputer extends IJavaCompletionProposalCompute
    *        selections on 'this', but it seemed overkill at this point.
    */
   private def shouldProposeCompletion(line: String) = {
+    val prefixes = Set("this", "super")
     val trimmed = line.trim
-    ((trimmed.startsWith("this") && trimmed.split(".").size <= 2)
+    ((prefixes.exists(trimmed.startsWith) && trimmed.split(".").size <= 2)
         || trimmed.indexOf('.') == -1)
   }
   
@@ -86,7 +87,11 @@ class ScalaJavaCompletionProposalComputer extends IJavaCompletionProposalCompute
             import compiler._
   
             def mixedInMethod(sym: Symbol): Boolean =
-              (sym.isSourceMethod && !sym.isDeferred && sym.owner.isTrait && !sym.isConstructor && !sym.isPrivate)
+              (sym.isSourceMethod &&
+                  !sym.isDeferred && 
+                  sym.owner.isTrait && 
+                  !sym.isConstructor && 
+                  !sym.isPrivate)
   
             compiler.askOption { () =>
               val currentClass = definitions.getClass(tpe.toTypeName)

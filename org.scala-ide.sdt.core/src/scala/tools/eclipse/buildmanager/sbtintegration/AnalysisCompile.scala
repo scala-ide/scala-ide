@@ -71,7 +71,9 @@ class AnalysisCompile (conf: BasicConfiguration, bm: EclipseSbtBuildManager, con
         val searchClasspath = withBootclasspath(compArgs, conf.classpath)
         val entry = Locate.entry(searchClasspath, Locate.definesClass) // use default defineClass for now
         
-        val (previousAnalysis, previousSetup) = extract(store.get)
+        val ((previousAnalysis, previousSetup), tm) = util.Utils.timed(extract(store.get))
+        
+        println("API store loaded in %0,3d ms".format(tm))
         	
         val compile0 = (include: Set[File], callback: AnalysisCallback) => {
             conf.outputDirectories.foreach(IO.createDirectory)

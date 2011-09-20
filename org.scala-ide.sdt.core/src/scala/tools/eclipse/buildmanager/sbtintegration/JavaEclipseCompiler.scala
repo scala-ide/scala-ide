@@ -6,11 +6,15 @@ import org.eclipse.core.runtime.SubMonitor
 import org.eclipse.core.resources.{ IncrementalProjectBuilder, IProject}
 import scala.tools.eclipse.javaelements.JDTUtils
 import scala.tools.eclipse.util.FileUtils
-
 import org.eclipse.jdt.internal.core.JavaModelManager
 import org.eclipse.jdt.internal.core.builder.{ JavaBuilder, NameEnvironment, State }
+import org.eclipse.core.resources.ResourcesPlugin
+import org.eclipse.core.resources.IResource
 
-
+/** Eclipse Java compiler interface, used by the SBT builder.
+ *  This class forwards to the internal Eclipse Java compiler, using
+ *  reflection to circumvent private/protected modifiers.
+ */
 class JavaEclipseCompiler(project: IProject, monitor: SubMonitor) {
   private val scalaJavaBuilder = new GeneralScalaJavaBuilder
   
@@ -28,6 +32,14 @@ class JavaEclipseCompiler(project: IProject, monitor: SubMonitor) {
       depends
     else {
       ensureProject
+      
+      // refresh output directories, since SBT removes classfiles that the Eclipse
+      // Java compiler expects to find
+      for (folder <- project.outputFolders) {
+        val container = ResourcesPlugin.getWorkspace().getRoot().getFolder(folder)
+        container.refreshLocal(IResource.DEPTH_INFINITE, null)
+      }
+      
       val javaDepends = scalaJavaBuilder.build(kind,new java.util.HashMap(), monitor) 
       val modelManager = JavaModelManager.getJavaModelManager
       val state = modelManager.getLastBuiltState(getProject, null).asInstanceOf[State]

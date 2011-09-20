@@ -56,6 +56,8 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
         response.get
         unit.problems.toList flatMap presentationReporter.eclipseProblem
       case None => 
+        println("Missing unit for file %s when retrieving errors. Errors will not be shown in this file".format(file))
+        println(unitOfFile)
         Nil
     }
   }
@@ -121,6 +123,14 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
         ScalaPlugin.plugin.logError("Error during askOption", e)
         None
     }
+  
+  /** Ask to put scu in the beginning of the list of files to be typechecked.
+   * 
+   *  If the file has not been 'reloaded' first, it does nothing.
+   */
+  def askToDoFirst(scu: ScalaCompilationUnit) {
+    sourceFiles.get(scu) foreach askToDoFirst
+  }
   
   def askReload(scu : ScalaCompilationUnit, content : Array[Char]) {
     sourceFiles.get(scu) foreach { f =>

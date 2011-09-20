@@ -7,9 +7,7 @@ package scala.tools.eclipse
 package javaelements
 
 import java.util.{ Map => JMap }
-
 import scala.concurrent.SyncVar
-
 import org.eclipse.core.internal.filebuffers.SynchronizableDocument
 import org.eclipse.core.resources.{ IFile, IResource }
 import org.eclipse.core.runtime.IProgressMonitor
@@ -23,13 +21,10 @@ import org.eclipse.jdt.internal.core.{
 import org.eclipse.jdt.internal.core.search.matching.{ MatchLocator, PossibleMatch }
 import org.eclipse.jdt.internal.ui.javaeditor.DocumentAdapter
 import org.eclipse.jface.text.{IRegion, ITextSelection}
-import org.eclipse.ui.texteditor.ITextEditor 
-
+import org.eclipse.ui.texteditor.ITextEditor
 import scala.tools.nsc.io.AbstractFile
 import scala.tools.nsc.util.{ BatchSourceFile, SourceFile }
-
 import scala.tools.eclipse.contribution.weaving.jdt.{ IScalaCompilationUnit, IScalaWordFinder }
-
 import scala.tools.eclipse.{ ScalaImages, ScalaPlugin, ScalaPresentationCompiler, ScalaSourceIndexer, ScalaWordFinder }
 import scala.tools.eclipse.util.ReflectionUtils
 
@@ -37,6 +32,8 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
   val project = ScalaPlugin.plugin.getScalaProject(getJavaProject.getProject)
 
   val file : AbstractFile
+  
+  private var lastCrash: Throwable = null
 
   def doWithSourceFile(op : (SourceFile, ScalaPresentationCompiler) => Unit) {
     project.withSourceFile(this)(op)(())
@@ -81,8 +78,16 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
         unsafeElements.putAll(tmpMap)
         info.setIsStructureKnown(true)
       } catch {
+        case e: InterruptedException =>
+          Thread.currentThread().interrupt()
+          println("ignored InterruptedException in build structure")
+          info.setIsStructureKnown(false)
+          
         case ex => 
-          ScalaPlugin.plugin.logError("Error building structure for %s".format(sourceFile), ex)
+          if (lastCrash != ex) {
+            lastCrash = ex
+            ScalaPlugin.plugin.logError("Compiler crash while building structure for %s".format(sourceFile), ex)
+          }
           info.setIsStructureKnown(false)
       }
       info.isStructureKnown
@@ -141,10 +146,16 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
   
   override def createOverrideIndicators(annotationMap : JMap[_, _]) {
     doWithSourceFile { (sourceFile, compiler) =>
-      compiler.withStructure(sourceFile) { tree =>
-        compiler.askOption { () =>
-          new compiler.OverrideIndicatorBuilderTraverser(this, annotationMap.asInstanceOf[JMap[AnyRef, AnyRef]]).traverse(tree)
+      try {
+        compiler.withStructure(sourceFile) { tree =>
+          compiler.askOption { () =>
+            new compiler.OverrideIndicatorBuilderTraverser(this, annotationMap.asInstanceOf[JMap[AnyRef, AnyRef]]).traverse(tree)
+          }
         }
+      } catch {
+        case ex =>
+          // any exception thrown here is likely to crash the reconciler. Better not
+          println("Exception thrown while creating override indicators: " + ex)
       }
     }
   }
