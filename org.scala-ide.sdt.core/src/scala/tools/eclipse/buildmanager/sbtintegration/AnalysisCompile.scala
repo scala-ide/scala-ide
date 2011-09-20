@@ -155,6 +155,7 @@ class AnalysisCompile (conf: BasicConfiguration, bm: EclipseSbtBuildManager, con
             null
             
         	case ex =>
+        	  ScalaPlugin.plugin.logError("Crash in the Scala build compiler.", ex)
         	  reporter.log(SbtConverter.convertToSbt(NoPosition), "The Scala compiler crashed while compiling your project. This is a bug in the Scala compiler, not the IDE. Check the Erorr Log for details.", xsbti.Severity.Error)
         	  null
         	  
