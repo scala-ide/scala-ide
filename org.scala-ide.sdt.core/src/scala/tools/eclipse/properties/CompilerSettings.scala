@@ -116,12 +116,12 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
     if (useProjectSettingsWidget.isDefined) {
       useProjectSettingsWidget.get.save
     }
+    additionalParamsWidget.save()
+    
     //This has to come later, as we need to make sure the useProjectSettingsWidget's values make it into
     //the final save.
     save(userBoxes, preferenceStore0)
 
-    additionalParamsWidget.save()
-    
     //Don't let user click "apply" again until a change
     updateApplyButton
   }
