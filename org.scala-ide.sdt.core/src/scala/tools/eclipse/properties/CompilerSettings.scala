@@ -270,20 +270,17 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
     /** Pulls our current value from the preference store */
     private def getValue = preferenceStore0.getBoolean(USE_PROJECT_SETTINGS_PREFERENCE)
 
-    /** Adds our widget to the Proeprty Page */
+    /** Adds our widget to the Property Page */
     def addTo(page: Composite) = {
-      val container = new Composite(page, SWT.NONE)
-      container.setLayout(new GridLayout(2, false))
-      //Create Control      
-      control = new Button(container, SWT.CHECK)
+      //Create Check Box
+      control = new Button(page, SWT.CHECK)
+      control.setText("Use Project Settings")
       control.setSelection(getValue)
       control.redraw
       control.addSelectionListener(new SelectionListener() {
         override def widgetDefaultSelected(e: SelectionEvent) {}
         override def widgetSelected(e: SelectionEvent) { handleToggle }
       })
-      val label = new Label(container, SWT.NONE)
-      label.setText("Use Project Settings")
     }
 
     /** Toggles the use of a property page */
