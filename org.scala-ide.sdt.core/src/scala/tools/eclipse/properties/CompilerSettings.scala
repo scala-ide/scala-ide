@@ -254,6 +254,11 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
     //check all our other settings
     additionalParamsWidget.isChanged || super.isChanged
   }
+  
+  override def performDefaults {
+    super.performDefaults
+    additionalParamsWidget.reset
+  }
 
   /** This widget should only be used on property pages. */
   class UseProjectSettingsWidget {
@@ -301,6 +306,7 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
     }
   }
 
+  // LUC_B: it would be nice to have this widget behave like the other 'EclipseSettings', to avoid unnecessary custom code
   class AdditionalParametersWidget {
     import SWTUtils._
 
@@ -382,6 +388,10 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
 
     def save() {
       preferenceStore0.setValue(CompilerSettings.ADDITIONAL_PARAMS, additionalCompParams)
+    }
+    
+    def reset() {
+      additionalParametersControl.setText(preferenceStore0.getDefaultString(CompilerSettings.ADDITIONAL_PARAMS))
     }
     
     def setEnabled(value: Boolean) {
