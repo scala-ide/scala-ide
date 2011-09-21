@@ -314,7 +314,7 @@ public privileged aspect ClassFileProviderAspect {
     stc.unit = new CompilationUnitDeclaration(stc.problemReporter, compilationResult, 0);
     // not filled at this point
 
-    if (sourceTypes.length == 0) return stc.unit;
+    if (sourceTypes.length == 0 || sourceTypes[0] == null) return stc.unit;
     SourceTypeElementInfo topLevelTypeInfo = (SourceTypeElementInfo) sourceTypes[0];
     org.eclipse.jdt.core.ICompilationUnit cuHandle = topLevelTypeInfo.getHandle().getCompilationUnit();
     stc.cu = (ICompilationUnit) cuHandle;
