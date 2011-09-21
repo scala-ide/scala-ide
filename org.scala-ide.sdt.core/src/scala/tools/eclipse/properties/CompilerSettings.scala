@@ -188,13 +188,13 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
       tabItem.setControl(group)
     })
 
+    additionalParamsWidget = (new AdditionalParametersWidget).addTo(composite)
+
     //Make sure we check enablement of compiler settings here...
     useProjectSettingsWidget match {
       case Some(widget) => widget.handleToggle
       case None         =>
     }
-
-    additionalParamsWidget = (new AdditionalParametersWidget).addTo(composite)
 
     tabFolder.pack()
     composite
@@ -287,6 +287,7 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
     def handleToggle = {
       val selected = control.getSelection
       eclipseBoxes.foreach(_.eSettings.foreach(_.setEnabled(selected)))
+      additionalParamsWidget.setEnabled(selected)
       updateApplyButton
     }
 
@@ -381,6 +382,10 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
 
     def save() {
       preferenceStore0.setValue(CompilerSettings.ADDITIONAL_PARAMS, additionalCompParams)
+    }
+    
+    def setEnabled(value: Boolean) {
+      additionalParametersControl.setEnabled(value)
     }
   }  
 }
