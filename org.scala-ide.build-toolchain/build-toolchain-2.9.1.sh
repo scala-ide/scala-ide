@@ -15,7 +15,7 @@ SCALA_PRECOMPILED=2_9_1-SNAPSHOT
 # The scala version that was used to compile SBT dependencies (it is part of the artifact name)
 # It is usually enough to have a binary compatible version of SCALA_VERSION
 # For instance, here we can use 2.9.0, for a 2.9.1 compiler
-SBT_SCALA_VERSION=2.9.0-1
+SBT_SCALA_VERSION=2.9.1
 
 SBINARY_VERSION=0.4.0
 
