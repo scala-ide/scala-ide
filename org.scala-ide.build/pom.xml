@@ -17,8 +17,10 @@
     <maven.compiler.source>1.5</maven.compiler.source>
     <maven.compiler.target>1.5</maven.compiler.target>
     <encoding>UTF-8</encoding>
-    <!-- <toolchain.base.url>file:/Users/dragos/workspace/git/plugin/mkrepo</toolchain.base.url> -->
-    <toolchain.base.url>http://download.scala-ide.org</toolchain.base.url>
+    <!-- <repo.scala-ide>file:/Users/dragos/workspace/git/plugin/mkrepo</repo.scala-ide> -->
+    <repo.scala-ide>http://download.scala-ide.org</repo.scala-ide>
+    <repo.helios>http://download.eclipse.org/releases/helios/</repo.helios>
+    <!-- <repo.helios>file:/Users/dragos/Sites/helios/helios-mirror</repo.helios> -->
   </properties>
 
   <prerequisites>
@@ -104,7 +106,7 @@
       <id>Helios</id>
       <name>Eclipse Helios p2 repository</name>
       <layout>p2</layout>
-      <url>http://download.eclipse.org/releases/helios/</url>
+      <url>${repo.helios}</url>
       <snapshots><enabled>false</enabled></snapshots>
     </repository>
     <repository>
@@ -167,20 +169,20 @@
           <id>scala-refactoring-2.8.0.final</id>
           <name>Scala Refactoring Scala 2.8.0.final p2 repository</name>
           <layout>p2</layout>
-          <url>http://download.scala-ide.org/scala-refactoring-2.8.0.final</url>
+          <url>${repo.scala-ide}/scala-refactoring-2.8.0.final</url>
           <snapshots><enabled>false</enabled></snapshots>
         </repository>
         <repository>
           <id>scalariform-2.8.0.final</id>
           <name>Scalariform Scala 2.8.0.final p2 repo</name>
           <layout>p2</layout>
-          <url>http://download.scala-ide.org/scalariform-2.8.0.final</url>
+          <url>${repo.scala-ide}/scalariform-2.8.0.final</url>
         </repository>
         <repository>
           <id>scala-toolchain-2.8.0.final</id>
           <name>Scala Toolchain 2.8.0.final p2 repository</name>
           <layout>p2</layout>
-          <url>${toolchain.base.url}/scala-eclipse-toolchain-osgi-2.8.0.final</url>
+          <url>${repo.scala-ide}/scala-eclipse-toolchain-osgi-2.8.0.final</url>
         </repository>
       </repositories>
     </profile>
@@ -200,20 +202,20 @@
           <id>scala-refactoring-2.8.1.final</id>
           <name>Scala Refactoring Scala 2.8.1.final p2 repository</name>
           <layout>p2</layout>
-          <url>http://download.scala-ide.org/scala-refactoring-2.8.1.final</url>
+          <url>${repo.scala-ide}/scala-refactoring-2.8.1.final</url>
           <snapshots><enabled>false</enabled></snapshots>
         </repository>
         <repository>
           <id>scalariform-2.8.1.final</id>
           <name>Scalariform Scala 2.8.1.final p2 repo</name>
           <layout>p2</layout>
-          <url>http://download.scala-ide.org/scalariform-2.8.1.final</url>
+          <url>${repo.scala-ide}/scalariform-2.8.1.final</url>
         </repository>
         <repository>
           <id>scala-toolchain-2.8.1.final</id>
           <name>Scala Toolchain 2.8.1.final p2 repository</name>
           <layout>p2</layout>
-          <url>${toolchain.base.url}/scala-eclipse-toolchain-osgi-2.8.1.final</url>
+          <url>${repo.scala-ide}/scala-eclipse-toolchain-osgi-2.8.1.final</url>
         </repository>
       </repositories>
     </profile>
@@ -233,19 +235,19 @@
           <id>scala-refactoring-trunk</id>
           <name>Scala Refactoring Scala 2.8.2-SNAPSHOT p2 repository</name>
           <layout>p2</layout>
-          <url>http://download.scala-ide.org/scala-refactoring-2.8.2-SNAPSHOT</url>
+          <url>${repo.scala-ide}/scala-refactoring-2.8.2-SNAPSHOT</url>
         </repository>
         <repository>
           <id>scalariform-trunk</id>
           <name>Scalariform Scala 2.8.2-SNAPSHOT p2 repo</name>
           <layout>p2</layout>
-          <url>http://download.scala-ide.org/scalariform-2.8.2-SNAPSHOT</url>
+          <url>${repo.scala-ide}/scalariform-2.8.2-SNAPSHOT</url>
         </repository>
         <repository>
           <id>scala-toolchain-2.8.2-SNAPSHOT</id>
           <name>Scala Toolchain 2.8.2-SNAPSHOT p2 repository</name>
           <layout>p2</layout>
-          <url>${toolchain.base.url}/scala-eclipse-toolchain-osgi-2.8.2-SNAPSHOT</url>
+          <url>${repo.scala-ide}/scala-eclipse-toolchain-osgi-2.8.2-SNAPSHOT</url>
         </repository>
       </repositories>
     </profile>
@@ -265,20 +267,20 @@
           <id>scala-refactoring-2.9.0.final</id>
           <name>Scala Refactoring Scala 2.9.0.final p2 repository</name>
           <layout>p2</layout>
-          <url>http://download.scala-ide.org/scala-refactoring-2.9.0.final</url>
+          <url>${repo.scala-ide}/scala-refactoring-2.9.0.final</url>
           <snapshots><enabled>false</enabled></snapshots>
         </repository>
         <repository>
           <id>scalariform-2.9.0.final</id>
           <name>Scalariform Scala 2.9.0.final p2 repo</name>
           <layout>p2</layout>
-          <url>http://download.scala-ide.org/scalariform-2.9.0.final</url>
+          <url>${repo.scala-ide}/scalariform-2.9.0.final</url>
         </repository>
         <repository>
           <id>scala-toolchain-2.9.0.final</id>
           <name>Scala Toolchain 2.9.0.final p2 repository</name>
           <layout>p2</layout>
-          <url>${toolchain.base.url}/scala-eclipse-toolchain-osgi-2.9.0.final</url>
+          <url>${repo.scala-ide}/scala-eclipse-toolchain-osgi-2.9.0.final</url>
         </repository>
       </repositories>
     </profile>
@@ -298,20 +300,20 @@
           <id>scala-refactoring-2.9.0-1</id>
           <name>Scala Refactoring Scala 2.9.0-1 p2 repository</name>
           <layout>p2</layout>
-          <url>http://download.scala-ide.org/scala-refactoring-2.9.0-1</url>
+          <url>${repo.scala-ide}/scala-refactoring-2.9.0-1</url>
           <snapshots><enabled>false</enabled></snapshots>
         </repository>
         <repository>
           <id>scalariform-2.9.0-1</id>
           <name>Scalariform Scala 2.9.0-1 p2 repo</name>
           <layout>p2</layout>
-          <url>http://download.scala-ide.org/scalariform-2.9.0-1</url>
+          <url>${repo.scala-ide}/scalariform-2.9.0-1</url>
         </repository>
         <repository>
           <id>scala-toolchain-2.9.0-1</id>
           <name>Scala Toolchain 2.9.0-1 p2 repository</name>
           <layout>p2</layout>
-          <url>${toolchain.base.url}/scala-eclipse-toolchain-osgi-2.9.0-1</url>
+          <url>${repo.scala-ide}/scala-eclipse-toolchain-osgi-2.9.0-1</url>
         </repository>
       </repositories>
     </profile>
@@ -331,19 +333,19 @@
           <id>scala-refactoring-trunk</id>
           <name>Scala Refactoring Scala 2.9.1.final p2 repository</name>
           <layout>p2</layout>
-          <url>http://download.scala-ide.org/scala-refactoring-2.9.1.final</url>
+          <url>${repo.scala-ide}/scala-refactoring-2.9.1.final</url>
         </repository>
         <repository>
           <id>scalariform-trunk</id>
           <name>Scalariform Scala 2.9.1.final p2 repo</name>
           <layout>p2</layout>
-          <url>http://download.scala-ide.org/scalariform-2.9.1.final</url>
+          <url>${repo.scala-ide}/scalariform-2.9.1.final</url>
         </repository>
         <repository>
           <id>scala-toolchain-2.9.1.final</id>
           <name>Scala Toolchain 2.9.1.final p2 repository</name>
           <layout>p2</layout>
-          <url>${toolchain.base.url}/scala-eclipse-toolchain-osgi-2.9.1.final</url>
+          <url>${repo.scala-ide}/scala-eclipse-toolchain-osgi-2.9.1.final</url>
         </repository>
       </repositories>
     </profile>
@@ -363,19 +365,19 @@
           <id>scala-refactoring-trunk</id>
           <name>Scala Refactoring Scala 2.9.2-SNAPSHOT p2 repository</name>
           <layout>p2</layout>
-          <url>http://download.scala-ide.org/scala-refactoring-2.9.2-SNAPSHOT</url>
+          <url>${repo.scala-ide}/scala-refactoring-2.9.2-SNAPSHOT</url>
         </repository>
         <repository>
           <id>scalariform-trunk</id>
           <name>Scalariform Scala 2.9.2-SNAPSHOT p2 repo</name>
           <layout>p2</layout>
-          <url>http://download.scala-ide.org/scalariform-2.9.2-SNAPSHOT</url>
+          <url>${repo.scala-ide}/scalariform-2.9.2-SNAPSHOT</url>
         </repository>
         <repository>
           <id>scala-toolchain-2.9.2-SNAPSHOT</id>
           <name>Scala Toolchain 2.9.2-SNAPSHOT p2 repository</name>
           <layout>p2</layout>
-          <url>${toolchain.base.url}/scala-eclipse-toolchain-osgi-2.9.2-SNAPSHOT</url>
+          <url>${repo.scala-ide}/scala-eclipse-toolchain-osgi-2.9.2-SNAPSHOT</url>
         </repository>
       </repositories>
     </profile>
@@ -392,19 +394,19 @@
           <id>scala-refactoring-trunk</id>
           <name>Scala Refactoring Scala trunk p2 repository</name>
           <layout>p2</layout>
-          <url>http://download.scala-ide.org/scala-refactoring-trunk</url>
+          <url>${repo.scala-ide}/scala-refactoring-trunk</url>
         </repository>
         <repository>
           <id>scalariform-trunk</id>
           <name>Scalariform Scala trunk p2 repo</name>
           <layout>p2</layout>
-          <url>http://download.scala-ide.org/scalariform-trunk</url>
+          <url>${repo.scala-ide}/scalariform-trunk</url>
         </repository>
         <repository>
           <id>scala-toolchain-trunk</id>
           <name>Scala Toolchain trunk p2 repository</name>
           <layout>p2</layout>
-          <url>${toolchain.base.url}/scala-eclipse-toolchain-osgi-trunk</url>
+          <url>${repo.scala-ide}/scala-eclipse-toolchain-osgi-trunk</url>
         </repository>
       </repositories>
     </profile>
@@ -430,14 +432,14 @@
           <id>scala-refactoring-2.8.0.final</id>
           <name>Scala Refactoring Scala 2.8.0.final p2 repository</name>
           <layout>p2</layout>
-          <url>http://download.scala-ide.org/scala-refactoring-2.8.0.final</url>
+          <url>${repo.scala-ide}/scala-refactoring-2.8.0.final</url>
           <snapshots><enabled>false</enabled></snapshots>
         </repository>
         <repository>
           <id>scalariform-2.8.0.final</id>
           <name>Scalariform Scala 2.8.0.final p2 repo</name>
           <layout>p2</layout>
-          <url>http://download.scala-ide.org/scalariform-2.8.0.final</url>
+          <url>${repo.scala-ide}/scalariform-2.8.0.final</url>
         </repository>
       </repositories>
     </profile>
@@ -463,14 +465,14 @@
           <id>scala-refactoring-2.8.1.final</id>
           <name>Scala Refactoring Scala 2.8.1.final p2 repository</name>
           <layout>p2</layout>
-          <url>http://download.scala-ide.org/scala-refactoring-2.8.1.final</url>
+          <url>${repo.scala-ide}/scala-refactoring-2.8.1.final</url>
           <snapshots><enabled>false</enabled></snapshots>
         </repository>
         <repository>
           <id>scalariform-2.8.1.final</id>
           <name>Scalariform Scala 2.8.1.final p2 repo</name>
           <layout>p2</layout>
-          <url>http://download.scala-ide.org/scalariform-2.8.1.final</url>
+          <url>${repo.scala-ide}/scalariform-2.8.1.final</url>
         </repository>
       </repositories>
     </profile>
@@ -497,14 +499,14 @@
           <id>scala-refactoring-2.9.x</id>
           <name>Scala Refactoring Scala 2.9.0.final p2 repository</name>
           <layout>p2</layout>
-          <url>http://download.scala-ide.org/scala-refactoring-2.9.0.final</url>
+          <url>${repo.scala-ide}/scala-refactoring-2.9.0.final</url>
           <snapshots><enabled>false</enabled></snapshots>
         </repository>
         <repository>
           <id>scalariform-2.9.x</id>
           <name>Scalariform Scala 2.9.0.final p2 repo</name>
           <layout>p2</layout>
-          <url>http://download.scala-ide.org/scalariform-2.9.0.final</url>
+          <url>${repo.scala-ide}/scalariform-2.9.0.final</url>
         </repository>
       </repositories>
     </profile>
@@ -528,7 +530,7 @@
         <dependency>
           <groupId>org.scala-ide</groupId>
           <artifactId>org.scala-ide.sbt.full.library</artifactId>
-          <version>${scala.version}</version>
+          <version>[${sbt.version}.${version.suffix},)</version>
         </dependency>
       </dependencies>
       <repositories>
@@ -536,7 +538,7 @@
           <id>scala-refactoring-trunk</id>
           <name>Scala Refactoring Scala trunk p2 repository</name>
           <layout>p2</layout>
-          <url>http://download.scala-ide.org/scala-refactoring-trunk</url>
+          <url>${repo.scala-ide}/scala-refactoring-trunk</url>
           <!-- <url>http://scala.ifs.hsr.ch/hudson/job/Scala-Refactoring-2.9.0-SNAPSHOT/ws/org.scala-refactoring.update-site/target/site/repo/</url> -->
           <snapshots><enabled>false</enabled></snapshots>
         </repository>
@@ -544,7 +546,7 @@
           <id>scalariform-trunk</id>
           <name>Scalariform Scala trunk p2 repo</name>
           <layout>p2</layout>
-          <url>http://download.scala-ide.org/scalariform-trunk</url>
+          <url>${repo.scala-ide}/scalariform-trunk</url>
         </repository>
       </repositories>
     </profile>
