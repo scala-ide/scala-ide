@@ -10,7 +10,7 @@ SCALA_VERSION=2.9.1
 # The precompiled compiler-interface.jar that SBT uses to communicate with scalac
 # This is usually the same as Scala version, and it is not enough to be just binary 
 # compatible (compiler interface depends on scalac, not just std library)
-SCALA_PRECOMPILED=2_9_1-SNAPSHOT
+SCALA_PRECOMPILED=2_9_1
 
 # The scala version that was used to compile SBT dependencies (it is part of the artifact name)
 # It is usually enough to have a binary compatible version of SCALA_VERSION
