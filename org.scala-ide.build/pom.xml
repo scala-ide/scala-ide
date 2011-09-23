@@ -358,7 +358,7 @@
         </property>
       </activation>
       <properties>
-        <version.suffix>29</version.suffix>
+        <version.suffix>2_09</version.suffix>
       </properties>
       <repositories>
         <repository>
