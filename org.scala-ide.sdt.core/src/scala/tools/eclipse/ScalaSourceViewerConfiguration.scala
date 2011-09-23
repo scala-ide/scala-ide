@@ -146,6 +146,12 @@ class ScalaSourceViewerConfiguration(store: IPreferenceStore, scalaPreferenceSto
       xmlPCDATAScanner.adaptToPreferenceChange(event)
       xmlPIScanner.adaptToPreferenceChange(event)
    }
+   
+   override def getConfiguredContentTypes(sourceViewer: ISourceViewer): Array[String] = {
+     // Adds the SCALA_MULTI_LINE_STRING partition type to the list of configured content types, so it is
+     // supported for the comment out and shift left/right actions
+	 return super.getConfiguredContentTypes(sourceViewer) :+ ScalaPartitions.SCALA_MULTI_LINE_STRING
+   }
 
    override def affectsTextPresentation(event: PropertyChangeEvent) = true
 
