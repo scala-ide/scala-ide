@@ -18,13 +18,13 @@ object ScalaCompilerConf {
     }
     
     def apply(libraryJar: File, compilerJar: File): ScalaInstance = {
-      val repo:List[Repository] = List(Repository.Predefined.apply(Repository.Predefined.Local))
+      val repo:List[xsbti.Repository] = List(Repository.Predefined.apply(xsbti.Predefined.Local))
     	val launcher = Launcher(_bootdir, repo)
     	ScalaInstance(libraryJar, compilerJar, launcher)
     }
 
     def apply(version: String, libraryJar: File, compilerJar: File, extraJar: File): ScalaInstance = {
-      val repo:List[Repository] = List(Repository.Predefined.apply(Repository.Predefined.Local))
+      val repo:List[xsbti.Repository] = List(Repository.Predefined.apply(xsbti.Predefined.Local))
     	val launcher = Launcher(_bootdir, repo)
     	ScalaInstance(version, libraryJar, compilerJar, launcher, extraJar)      
     }
