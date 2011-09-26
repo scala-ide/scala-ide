@@ -24,14 +24,12 @@ class ScalaCompilerPreferenceInitializer extends AbstractPreferenceInitializer {
   def initializeDefaultPreferences() : Unit = {
 	  
     ScalaPlugin.plugin.check {
-      val settings = new Settings
       val node = new DefaultScope().getNode(ScalaPlugin.plugin.pluginId)
       val store = ScalaPlugin.plugin.getPluginPreferences
-
-      IDESettings.shownSettings(settings).foreach {
-        setting =>
-          val preferenceName = convertNameToProperty(setting.name)
-          setting match {
+      
+      def defaultPreference(s: Settings#Setting) {
+      	val preferenceName = convertNameToProperty(s.name)
+          s match {
             case bs : Settings#BooleanSetting => node.put(preferenceName, "false")
             case is : Settings#IntSetting => node.put(preferenceName, is.default.toString)
             case ss : Settings#StringSetting => node.put(preferenceName, ss.default)
@@ -39,6 +37,10 @@ class ScalaCompilerPreferenceInitializer extends AbstractPreferenceInitializer {
             case cs : Settings#ChoiceSetting => node.put(preferenceName, cs.default)
           }
       }
+
+      IDESettings.shownSettings(new Settings).foreach {_.userSettings.foreach (defaultPreference)}
+      IDESettings.pluginSettings.foreach {_.userSettings.foreach (defaultPreference)}
+      IDESettings.buildManagerSettings.foreach {_.userSettings.foreach(defaultPreference)}
     }
   }
 }

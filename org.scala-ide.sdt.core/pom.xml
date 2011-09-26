@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.scala-ide</groupId>
     <artifactId>scala-ide-for-eclipse</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>2.0.0-SNAPSHOT</version>
     <relativePath>../org.scala-ide.build/pom.xml</relativePath>
   </parent>
   <artifactId>org.scala-ide.sdt.core</artifactId>
@@ -17,12 +17,24 @@
       <artifactId>org.scala-ide.sdt.aspects</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <dependency>
+    	<groupId>com.miglayout</groupId>
+    	<artifactId>miglayout</artifactId>
+    	<version>3.7.4</version>
+    	<type>jar</type>
+    	<scope>compile</scope>
+    </dependency>
+    <!-- <dependency> -->
+    <!--   <groupId>org.scala-ide</groupId> -->
+    <!--   <artifactId>org.scala-ide.sbt.full.library</artifactId> -->
+    <!--   <version>${sbt.version}.${version.suffix}</version> -->
+    <!-- </dependency> -->
   </dependencies>
-  
+
   <build>
     <plugins>
       <plugin>
-        <groupId>org.sonatype.tycho</groupId>
+        <groupId>org.eclipse.tycho</groupId>
         <artifactId>target-platform-configuration</artifactId>
         <version>${tycho.version}</version>
         <configuration>
@@ -31,8 +43,8 @@
         </configuration>
       </plugin>
       <plugin>
-        <groupId>org.sonatype.tycho</groupId>
-        <artifactId>maven-osgi-compiler-plugin</artifactId>
+        <groupId>org.eclipse.tycho</groupId>
+        <artifactId>tycho-compiler-plugin</artifactId>
         <version>${tycho.version}</version>
         <configuration>
           <excludeResources>
@@ -59,5 +71,13 @@
         </configuration>
       </plugin>
     </plugins>
+<!--
+    <resources>
+      <resource>
+        <directory>src/resources</directory>
+        <filtering>true</filtering>
+        <targetPath>${basedir}/META-INF</targetPath>
+      </resource>
+    </resources> -->
   </build>
 </project>

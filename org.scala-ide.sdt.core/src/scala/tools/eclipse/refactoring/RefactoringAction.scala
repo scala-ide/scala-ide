@@ -2,7 +2,8 @@
  * Copyright 2005-2010 LAMP/EPFL
  */
 
-package scala.tools.eclipse.refactoring
+package scala.tools.eclipse
+package refactoring
 
 import org.eclipse.ltk.ui.refactoring.RefactoringWizard
 import org.eclipse.core.resources.IFile
@@ -17,59 +18,58 @@ import org.eclipse.ui.PlatformUI
 import org.eclipse.ltk.core.refactoring.RefactoringStatus
 import scala.tools.eclipse.javaelements.ScalaSourceFile
 import org.eclipse.jface.text.link._
+import org.eclipse.swt.widgets.Shell
 
+/**
+ * This is the abstract driver of a refactoring execution: it is the 
+ * entry point when a refactoring is executed and manages the wizards.
+ * 
+ * Each concrete refactoring action needs to implement the abstract
+ * `createRefactoring` method which instantiates a ScalaIdeRefactoring.
+ */
 trait RefactoringAction extends ActionAdapter {
   
-  def createRefactoring(selectionStart: Int, selectionEnd: Int, file: ScalaSourceFile): Option[ScalaIdeRefactoring]
+  /**
+   * This factory method needs to be implemented by subclasses to
+   * construct an appropriate ScalaIdeRefactoring instance.
+   */
+  def createRefactoring(selectionStart: Int, selectionEnd: Int, file: ScalaSourceFile): ScalaIdeRefactoring
  
-  def createWizard(refactoring: Option[ScalaIdeRefactoring]): RefactoringWizard = refactoring match {
-    case Some(refactoring) => new ScalaRefactoringWizard(refactoring)
-    case None => new ErrorRefactoringWizard
+  /**
+   * Creates a ScalaRefactoringWizard for this ScalaIdeRefactoring instance.
+   * 
+   * @param refactoring An optional ScalaIdeRefactoring instance.
+   * @return When None is passed, an instance of ErrorRefactoringWizard is returned.
+   */
+  def createWizardForRefactoring(refactoring: Option[ScalaIdeRefactoring]): RefactoringWizard = {
+    refactoring map (new ScalaRefactoringWizard(_)) getOrElse (new ErrorRefactoringWizard("Error, not a text editor."))
   }
   
-  def createScalaRefactoring(): Option[ScalaIdeRefactoring] = {
+  /**
+   * Creates a ScalaIdeRefactoring for the current active editor and selection. If no appropriate
+   * editor can be found of if it's not possible to create a ScalaSourceFile for this editor,
+   * None is returned.
+   */
+  def createScalaIdeRefactoringForCurrentEditorAndSelection(): Option[ScalaIdeRefactoring] = {
     import EditorHelpers._
     
     withScalaFileAndSelection { (scalaFile, selection) =>
-      createRefactoring(selection.getOffset, selection.getOffset + selection.getLength, scalaFile)
+      Some(createRefactoring(selection.getOffset, selection.getOffset + selection.getLength, scalaFile))
     }
   }
   
-  def runRefactoring(wizard: RefactoringWizard) {
-    
-    val shell = PlatformUI.getWorkbench.getActiveWorkbenchWindow.getShell
-          
-    new RefactoringWizardOpenOperation(wizard) run (shell, "EM")
+  /**
+   * Runs the given wizard in a RefactoringWizardOpenOperation and the current shell.
+   * 
+   * Some of the refactoring implementations don't run in a wizard but make use of the
+   * linked mode ui. These refactorings call `enterLinkedModeUi` directly.
+   */
+  def runRefactoring(wizard: RefactoringWizard, shell: Shell) {              
+    (new RefactoringWizardOpenOperation(wizard)).run(shell, "Scala Refactoring")
   }
   
   def run(action: IAction) {
-    
-    val refactoring = createScalaRefactoring()
-    
-    val wizard = createWizard(refactoring)
-    
-    runRefactoring(wizard)
-  }
-    
-  def runInLinkedModeUi(ps: List[(Int, Int)]) = {
-    
-    EditorHelpers.withCurrentEditor { editor =>
-        
-      val model = new LinkedModeModel {
-        
-        this addGroup new LinkedPositionGroup {
-        
-          val document = editor.getDocumentProvider.getDocument(editor.getEditorInput)
-          
-          ps foreach (p => addPosition(new LinkedPosition(document, p._1, p._2)))
-        }
-      
-        forceInstall
-      }
-
-      (new LinkedModeUI(model, editor.sourceViewer)).enter
-      
-      None
-    }
+    val shell = PlatformUI.getWorkbench.getActiveWorkbenchWindow.getShell
+    runRefactoring(createWizardForRefactoring(createScalaIdeRefactoringForCurrentEditorAndSelection()), shell)
   }
 }

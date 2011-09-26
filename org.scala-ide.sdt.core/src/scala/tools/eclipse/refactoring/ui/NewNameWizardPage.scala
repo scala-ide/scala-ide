@@ -1,20 +1,30 @@
-package scala.tools.eclipse.refactoring.ui
+package scala.tools.eclipse
+package refactoring
+package ui
 
-import org.eclipse.ltk.ui.refactoring.UserInputWizardPage
-import org.eclipse.ui.PlatformUI
 import org.eclipse.jface.dialogs.IMessageProvider
+import org.eclipse.ltk.ui.refactoring.UserInputWizardPage
+import org.eclipse.swt.layout.{GridData, GridLayout}
 import org.eclipse.swt.widgets.Composite
-import org.eclipse.swt.layout.GridData
-import org.eclipse.swt.layout.GridLayout
 import org.eclipse.swt.SWT
+import org.eclipse.ui.PlatformUI
 
+/**
+ * This wizard page prompts the user to enter a new name. If an invalid name is entered, 
+ * an error message is displayed.
+ * 
+ * @param isValidName A validation function that returns true when the name is valid.
+ * @param nameChanged A callback that is called with the changed name, but only when
+ * the name is valid.
+ * @param defaultName The initial name that is displayed when the page is opened.
+ */
 class NewNameWizardPage(
     nameChanged: String => Unit,
     isValidName: String => Boolean,
     defaultName: String,
-    helpId: String) extends UserInputWizardPage("??") {
-              
-  setMessage("Note that this is a preview release, make sure to check the generated changes.", IMessageProvider.WARNING)
+    helpId: String) extends UserInputWizardPage("New Name") {
+
+  setMessage("Note that this is a preview release, make sure to check the generated changes.", IMessageProvider.INFORMATION)
   
   def createControl(parent: Composite) {
         

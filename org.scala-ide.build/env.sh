@@ -1,3 +1,11 @@
+#!/bin/sh
+
+GIT_HASH="`git log -1 --pretty=format:"%h"`"
+# GIT_BRANCH="`git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/\1/'`"
+
+echo "git hash:" $GIT_HASH
+
+
 # MAVEN needs to point to a MAVEN3 installation:
 if which mvn >/dev/null; then
   mvn -version | grep "Maven 3" > /dev/null
@@ -13,10 +21,20 @@ if [ "X$MAVEN" = "X" ] ; then
   exit
 fi
 
+if [ -z $VERSION_TAG ]
+then
+    VERSION_TAG='local'
+fi
+
+echo "Version tag is $VERSION_TAG"
+
 build()
 {
+
   ${MAVEN} \
-    -U \
+    $PROFILE_NAME -U \
     -Dscala.version=${SCALA_VERSION} \
+    -Dgit.hash=${GIT_HASH} \
+    -Dversion.tag=${VERSION_TAG}\
     clean install $*
 }

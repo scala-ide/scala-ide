@@ -14,13 +14,17 @@ case class ScalaPartitionRegion(contentType: String, start: Int, end: Int) exten
   def getType = contentType
   def getOffset = start
   def getLength = length
+
+  def containsRange(offset: Int, length: Int) = containsPosition(offset) && containsPosition(offset + length)
+
+  def shift(n: Int) = copy(start = start + n, end = end + n)
 }
 
 object ScalaPartitionTokeniser {
 
-  def tokenise(document: IDocument): List[ScalaPartitionRegion] = {
+  def tokenise(text: String): List[ScalaPartitionRegion] = {
     val tokens = new ListBuffer[ScalaPartitionRegion]
-    val tokeniser = new ScalaPartitionTokeniser(document)
+    val tokeniser = new ScalaPartitionTokeniser(text)
     while (tokeniser.tokensRemain) {
       val nextToken = tokeniser.nextToken()
       tokens += nextToken
@@ -30,10 +34,10 @@ object ScalaPartitionTokeniser {
 
 }
 
-class ScalaPartitionTokeniser(document: IDocument) extends TokenTests {
+class ScalaPartitionTokeniser(text: String) extends TokenTests {
   import ScalaDocumentPartitioner.EOF
 
-  private val length = document.getLength
+  private val length = text.length
 
   private var pos = 0
 
@@ -41,14 +45,14 @@ class ScalaPartitionTokeniser(document: IDocument) extends TokenTests {
 
   private var contentTypeOpt: Option[String] = None
 
-  private def ch = if (pos >= length) EOF else document.getChar(pos)
+  private def ch = if (pos >= length) EOF else text.charAt(pos)
 
   private def ch(lookahead: Int) = {
     val offset = pos + lookahead
     if (offset >= length || offset < 0)
       EOF
     else
-      document.getChar(offset)
+      text.charAt(offset)
   }
 
   private def accept() { pos += 1 }
@@ -340,6 +344,10 @@ class ScalaPartitionTokeniser(document: IDocument) extends TokenTests {
         case '{' if ch(1) != '{' =>
           nestIntoScalaMode()
           getScalaToken()
+        case '{' if ch(1) == '{' =>
+          setContentType(XML_PCDATA)
+          accept(2)
+          getXmlCharData()
         case _ =>
           setContentType(XML_PCDATA)
           getXmlCharData()
@@ -349,6 +357,9 @@ class ScalaPartitionTokeniser(document: IDocument) extends TokenTests {
   private def getXmlCharData(): Unit =
     (ch: @switch) match {
       case EOF | '<' =>
+      case '{' if ch(1) == '{' =>
+        accept(2)
+        getXmlCharData()
       case '{' if ch(1) != '{' =>
         nestIntoScalaMode()
       case _ =>
@@ -358,8 +369,8 @@ class ScalaPartitionTokeniser(document: IDocument) extends TokenTests {
 
   /**
    * Read an Xml tag, or part of one up to a Scala escape.
-   * @return nesting alteration (0, 1 or -1) showing the change to the depth of XML tag nesting, 
-   * and whether the tag scanning was interrupted by embedded Scala. 
+   * @return nesting alteration (0, 1 or -1) showing the change to the depth of XML tag nesting,
+   * and whether the tag scanning was interrupted by embedded Scala.
    */
   @tailrec
   private def getXmlTag(isEndTag: Boolean): (Int, Boolean) =
@@ -373,6 +384,9 @@ class ScalaPartitionTokeniser(document: IDocument) extends TokenTests {
         accept()
         getXmlAttributeValue('\'')
         getXmlTag(isEndTag)
+      case '{' if ch(1) == '{' =>
+        accept(2)
+        (0, false)
       case '{' if ch(1) != '{' =>
         (0, true)
       case '/' if ch(1) == '>' && !isEndTag => // an empty tag

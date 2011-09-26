@@ -22,18 +22,7 @@ public privileged aspect ScalaOverrideLabelAspect {
 
   int around(IMethod method) throws JavaModelException : getOverrideIndicators(method) {
     if (method instanceof IMethodOverrideInfo) {
-      IType type= method.getDeclaringType();
-
-      MethodOverrideTester methodOverrideTester= SuperTypeHierarchyCache.getMethodOverrideTester(type);
-      IMethod defining= methodOverrideTester.findOverriddenMethod(method, true);
-      if (defining != null) {
-        if (JdtFlags.isAbstract(defining)) {
-          return JavaElementImageDescriptor.IMPLEMENTS;
-        } else {
-          return JavaElementImageDescriptor.OVERRIDES;
-        }
-      }
-      return 0;
+      return ((IMethodOverrideInfo)method).getOverrideInfo();
     } 
     else
       return proceed(method);

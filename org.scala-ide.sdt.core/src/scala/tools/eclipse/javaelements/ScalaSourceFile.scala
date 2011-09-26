@@ -17,7 +17,6 @@ import org.eclipse.jdt.internal.corext.util.JavaModelUtil
 import org.eclipse.swt.widgets.Display
 
 import scala.tools.nsc.io.{ AbstractFile, VirtualFile }
-import scala.tools.nsc.util.BatchSourceFile
 
 import scala.tools.eclipse.contribution.weaving.jdt.IScalaSourceFile
 
@@ -69,36 +68,20 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
   override def codeSelect(offset : Int, length : Int, workingCopyOwner : WorkingCopyOwner) : Array[IJavaElement] =
     codeSelect(this, offset, length, workingCopyOwner)
 
-  override def discardWorkingCopy {
-    discard
-    super.discardWorkingCopy
-  }
-
   override def getProblemRequestor = getPerWorkingCopyInfo
 
   override lazy val file : AbstractFile = { 
     val res = try { getCorrespondingResource } catch { case _ => null }
-    if (res != null)
-      new EclipseFile(res.asInstanceOf[IFile])
-    else
-      new VirtualFile(getElementName)
-  }
-
-  def getProblems : Array[IProblem] =
-    withCompilerResult { crh => if (crh.problems.isEmpty) null else crh.problems.toArray }
-  
-  def getCorrespondingElement(element : IJavaElement) : Option[IJavaElement] = {
-    if (!validateExistence(resource).isOK)
-      None
-    else {
-      val name = element.getElementName
-      val tpe = element.getElementType
-      getChildren.find(e => e.getElementName == name && e.getElementType == tpe)
+    res match {
+      case f : IFile => new EclipseFile(f)
+      case _ => new VirtualFile(getElementName, getPath.toString)
     }
   }
 
-  override def getType(name : String) : IType = {
-    val tpe = super.getType(name)
-    getCorrespondingElement(tpe).getOrElse(tpe).asInstanceOf[IType]
-  }
+  def getProblems : Array[IProblem] = withSourceFile { (src, compiler) =>
+    val problems = compiler.problemsOf(this)
+    if (problems.isEmpty) null else problems.toArray
+  } (null)
+  
+  override def getType(name : String) : IType = new LazyToplevelClass(this, name)
 }

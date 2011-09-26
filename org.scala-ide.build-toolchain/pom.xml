@@ -4,12 +4,12 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.scala-ide</groupId>
   <artifactId>scala-toolchain-for-eclipse</artifactId>
-  <version>2.8.1</version>
+  <version>2.9.1</version>
   <name>The Scala Toolchain for Eclipse</name>
   <packaging>pom</packaging>
 
   <properties>
-    <scala.version>2.8.1</scala.version>
+    <sbt.version>0.11.0</sbt.version>
     <patch.level>p0002</patch.level>
     <encoding>UTF-8</encoding>
   </properties>
@@ -17,6 +17,7 @@
   <modules>
     <module>../org.scala-ide.scala.compiler</module>
     <module>../org.scala-ide.scala.library</module>
+    <module>../org.scala-ide.sbt</module>
   </modules>
   <dependencyManagement>
     <dependencies>
@@ -42,21 +43,6 @@
       </dependency>
     </dependencies>
   </dependencyManagement>
-  <repositories>
-    <repository>
-      <id>scala-tools.org</id>
-      <name>Scala Tools Maven2 Repository</name>
-      <url>http://scala-tools.org/repo-releases</url>
-    </repository>
-    <repository>
-      <id>scala-tools.snapshot</id>
-      <name>Scala Tools maven snapshot repository</name>
-      <url>http://scala-tools.org/repo-snapshots</url>
-      <snapshots>
-        <updatePolicy>daily</updatePolicy>
-      </snapshots>
-    </repository>
-  </repositories>
   <build>
     <pluginManagement>
       <plugins>
@@ -83,14 +69,120 @@
         <scala.compiler.groupid>org.scala-lang</scala.compiler.groupid>
         <scala.compiler.version>${scala.version}</scala.compiler.version>
         <maintenance.suffix></maintenance.suffix>
+        <patch.level.suffix></patch.level.suffix>
+      </properties>
+
+      <repositories>
+        <repository>
+          <id>scala-tools.org</id>
+          <name>Scala Tools Maven2 Repository</name>
+          <url>http://scala-tools.org/repo-releases</url>
+        </repository>
+        <repository>
+          <id>scala-tools.snapshot</id>
+          <name>Scala Tools maven snapshot repository</name>
+          <url>http://scala-tools.org/repo-snapshots</url>
+          <snapshots>
+            <updatePolicy>daily</updatePolicy>
+          </snapshots>
+        </repository>
+      </repositories>
+    </profile>
+
+    <profile>
+      <id>local</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <properties>
+        <scala.compiler.groupid>org.scala-lang</scala.compiler.groupid>
+        <scala.compiler.version>${scala.version}</scala.compiler.version>
+        <maintenance.suffix></maintenance.suffix>
+        <patch.level.suffix></patch.level.suffix>
       </properties>
     </profile>
+    
+    <profile>
+      <id>sbt-2.10</id>
+      <properties>
+        <scala.compiler.groupid>org.scala-lang</scala.compiler.groupid>
+        <scala.compiler.version>${scala.version}</scala.compiler.version>
+        <version.suffix>2_10</version.suffix>
+
+        <!-- Used as part of the artifact name for SBT cross-compiled modules. -->
+        <scala.major.minor.version>2.10</scala.major.minor.version>
+
+        <!-- Used as part of the artifact name for SBT cross-compiled modules. -->
+        <sbt.compiled.version>${sbt.scala.version}</sbt.compiled.version>
+        <maintenance.suffix></maintenance.suffix>
+        <patch.level.suffix></patch.level.suffix>
+      </properties>
+      <repositories>
+        <repository>
+          <id>typesafe-ide-2.10</id>
+          <name>Typesafe IDE 2.10 repository</name>
+          <url>http://repo.typesafe.com/typesafe/ide-2.10</url>
+        </repository>
+      </repositories>
+    </profile>
+    
+    <profile>
+      <id>sbt-2.9</id>
+      <properties>
+        <scala.compiler.groupid>org.scala-lang</scala.compiler.groupid>
+        <scala.compiler.version>${scala.version}</scala.compiler.version>
+        <version.suffix>2_09</version.suffix>
+
+        <!-- Used as part of the directory name for compiler-interface.jar. -->
+        <scala.major.minor.version>2.9</scala.major.minor.version>
+
+        <!-- Used as part of the artifact name for SBT cross-compiled modules. -->
+        <sbt.compiled.version>${sbt.scala.version}</sbt.compiled.version>
+
+        <maintenance.suffix></maintenance.suffix>
+        <patch.level.suffix></patch.level.suffix>
+      </properties>
+      <repositories>
+        <repository>
+          <id>typesafe-ide-2.9</id>
+          <name>Typesafe IDE 2.9 repository</name>
+          <url>http://repo.typesafe.com/typesafe/ide-2.9</url>
+        </repository>
+      </repositories>
+    </profile>
+    
+    <profile>
+      <id>sbt-2.8</id>
+      <properties>
+        <scala.compiler.groupid>org.scala-lang</scala.compiler.groupid>
+        <scala.compiler.version>${scala.version}</scala.compiler.version>
+        <version.suffix>2_08</version.suffix>
+
+        <!-- Used as part of the directory name for compiler-interface.jar. -->
+        <scala.major.minor.version>2.8</scala.major.minor.version>
+
+        <!-- Used as part of the artifact name for SBT cross-compiled modules. -->
+        <sbt.compiled.version>${sbt.scala.version}</sbt.compiled.version>
+        <maintenance.suffix></maintenance.suffix>
+        <patch.level.suffix></patch.level.suffix>
+      </properties>
+      <repositories>
+        <repository>
+          <id>typesafe-ide-2.8</id>
+          <name>Typesafe IDE 2.8 repository</name>
+          <url>http://repo.typesafe.com/typesafe/ide-2.8</url>
+        </repository>
+      </repositories>
+    </profile>
+
+
     <profile>
       <id>maintenance</id>
       <properties>
         <scala.compiler.groupid>org.scala-ide</scala.compiler.groupid>
         <scala.compiler.version>2.8.0.final-maintenance</scala.compiler.version>
         <maintenance.suffix>-sdt</maintenance.suffix>
+        <patch.level.suffix>-${patch.level}</patch.level.suffix>
       </properties>
       <repositories>
         <repository>

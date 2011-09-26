@@ -23,6 +23,7 @@ import org.eclipse.ui.wizards.newresource.BasicNewResourceWizard
 import scala.tools.nsc.util.Chars
 
 import scala.tools.eclipse.{ ScalaPlugin, ScalaProject }
+import scala.tools.eclipse.util.EclipseUtils._
 
 trait NewResourceWizard extends BasicNewResourceWizard {
   def kind : String
@@ -65,10 +66,7 @@ trait NewResourceWizard extends BasicNewResourceWizard {
           val i = getSelection.iterator
           while (i.hasNext) i.next match {
           case res : IResource => populate(res.getProject)
-          case res : IAdaptable => res.getAdapter(classOf[IResource]) match {
-            case res : IResource => populate(res.getProject)
-            case null =>
-          }
+          case adaptable : IAdaptable => adaptable.adaptToSafe[IResource] foreach { res => populate(res.getProject) }
           case _ => 
           }
         }

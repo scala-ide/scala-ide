@@ -11,14 +11,14 @@ import ch.epfl.lamp.fjbg.{ JArrayType, JMethodType, JObjectType, JType }
 
 trait JVMUtils { self : Global =>
 
-  private lazy val codeGenerator =
-    currentRun.phaseNamed(genJVM.phaseName).asInstanceOf[genJVM.JvmPhase].codeGenerator
+  private lazy val jvmUtil =
+    new genJVM.BytecodeUtil {}
 
-  def javaName(sym : Symbol) : String = codeGenerator.javaName(sym)
+  def javaName(sym : Symbol) : String = jvmUtil.javaName(sym)
   
-  def javaNames(syms : List[Symbol]) : Array[String] = codeGenerator.javaNames(syms)
+  def javaNames(syms : List[Symbol]) : Array[String] = syms.toArray map (s => jvmUtil.javaName(s))
   
-  def javaFlags(sym : Symbol) : Int = codeGenerator.javaFlags(sym)
+  def javaFlags(sym : Symbol) : Int = genJVM.javaFlags(sym)
   
   def javaType(t: Type): JType = t.normalize match {
     case ErrorType | NoType => JType.UNKNOWN
@@ -35,7 +35,7 @@ trait JVMUtils { self : Global =>
       JObjectType.JAVA_LANG_OBJECT
       //javaType(r.typeSymbol.tpe)
       
-    case _ => codeGenerator.javaType(t)
+    case _ => jvmUtil.javaType(t)
   }
   
   // Provides JType where all special symbols are substituted.

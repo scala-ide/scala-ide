@@ -65,7 +65,6 @@ import scala.util.matching.Regex
 
 import org.eclipse.jdt.internal.ui.text.Symbols;
 
-import scala.tools.eclipse.lexical.ScalaPartitionScanner
 
 import scala.util.matching.Regex
 
@@ -1069,7 +1068,7 @@ class ScalaAutoIndentStrategy(
     var p = start
 
     while (true) {
-      val tok = Some(scanner.nextToken(p, JavaHeuristicScanner.UNBOUND))
+      val tok = scanner.nextToken(p, JavaHeuristicScanner.UNBOUND)
       p = scanner.getPosition()
 
       if (tok == openToken) {

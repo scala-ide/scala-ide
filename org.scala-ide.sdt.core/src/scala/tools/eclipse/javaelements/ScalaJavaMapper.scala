@@ -5,35 +5,15 @@
 
 package scala.tools.eclipse.javaelements
 
+
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants
 
 import scala.tools.nsc.symtab.Flags
 import scala.tools.eclipse.ScalaPresentationCompiler
 import ch.epfl.lamp.fjbg.{ JObjectType, JType }
 
-trait ScalaJavaMapper { self : ScalaPresentationCompiler => 
+trait ScalaJavaMapper extends ScalaAnnotationHelper { self : ScalaPresentationCompiler => 
 
-  def mapModifiers(mods : Modifiers) : Int = {
-    var jdtMods = 0
-    if(mods.isPrivate)
-      jdtMods = jdtMods | ClassFileConstants.AccPrivate
-    else if(mods.isProtected)
-      jdtMods = jdtMods | ClassFileConstants.AccProtected
-    else
-      jdtMods = jdtMods | ClassFileConstants.AccPublic
-    
-    if(mods.isAbstract || mods.isDeferred)
-      jdtMods = jdtMods | ClassFileConstants.AccAbstract
-
-    if(mods.isFinal || mods.hasFlag(Flags.MODULE))
-      jdtMods = jdtMods | ClassFileConstants.AccFinal
-    
-    if(mods.isTrait)
-      jdtMods = jdtMods | ClassFileConstants.AccInterface
-    
-    jdtMods
-  }
-        
   def mapType(t : Tree) : String = {
     (t match {
       case tt : TypeTree => {
@@ -42,6 +22,7 @@ trait ScalaJavaMapper { self : ScalaPresentationCompiler =>
         else
           tt.symbol.fullName
       }
+      case Select(_, name) => name.toString
       case Ident(name) => name.toString
       case _ => "scala.AnyRef"
     }) match {
@@ -59,34 +40,100 @@ trait ScalaJavaMapper { self : ScalaPresentationCompiler =>
     }
   }
 
-  def mapModifiers(sym : Symbol) : Int = {
+  /** Compatible with both 2.8 and 2.9 (interface HasFlags appears in 2.9).
+   * 
+   *  COMPAT: Once we drop 2.8, rewrite to use the HasFlags trait in scala.reflect.generic
+   */
+  
+  
+/* Re-add when ticket #4560 is fixed.
+  type HasFlags = {
+      /** Whether this entity has ANY of the flags in the given mask. */
+      def hasFlag(flag: Long): Boolean
+      def isFinal: Boolean
+      def isTrait: Boolean
+  }
+*/  
+  
+  def mapModifiers(owner: Symbol) : Int = {
     var jdtMods = 0
-    if(sym.hasFlag(Flags.PRIVATE))
+    if(owner.hasFlag(Flags.PRIVATE))
       jdtMods = jdtMods | ClassFileConstants.AccPrivate
-    else if(sym.hasFlag(Flags.PROTECTED))
+    else if(owner.hasFlag(Flags.PROTECTED))
       jdtMods = jdtMods | ClassFileConstants.AccProtected
     else
       jdtMods = jdtMods | ClassFileConstants.AccPublic
     
-    if(sym.hasFlag(Flags.ABSTRACT) || sym.hasFlag(Flags.DEFERRED))
+    if(owner.hasFlag(Flags.ABSTRACT) || owner.hasFlag(Flags.DEFERRED))
       jdtMods = jdtMods | ClassFileConstants.AccAbstract
 
-    if(sym.isFinal || sym.hasFlag(Flags.MODULE))
+    if(owner.isFinal || owner.hasFlag(Flags.MODULE))
       jdtMods = jdtMods | ClassFileConstants.AccFinal
     
-    if(sym.isTrait)
+    if(owner.isTrait)
+      jdtMods = jdtMods | ClassFileConstants.AccInterface
+    
+    /** Handle Scala's annotations that have to be mapped into Java modifiers */
+    def mapScalaAnnotationsIntoJavaModifiers(): Int = {
+      var mod = 0
+      if(hasTransientAnn(owner)) {
+        mod = mod | ClassFileConstants.AccTransient
+      }
+      
+      if(hasVolatileAnn(owner)) {
+        mod = mod | ClassFileConstants.AccVolatile
+      }
+      
+      if(hasNativeAnn(owner)) {
+        mod = mod | ClassFileConstants.AccNative
+      }
+      
+      if(hasStrictFPAnn(owner)) {
+        mod = mod | ClassFileConstants.AccStrictfp
+      }
+      
+      if(hasDeprecatedAnn(owner)) {
+        mod = mod | ClassFileConstants.AccDeprecated
+      }
+      
+      mod
+    }
+      
+    jdtMods | mapScalaAnnotationsIntoJavaModifiers()
+  }
+
+  /** Overload that needs to go away when 'HasFlag' can be used, either as a
+   *  structural type -- see #4560, or by sticking to 2.9.0 that has this trait
+   */
+  def mapModifiers(owner: Modifiers) : Int = {
+    var jdtMods = 0
+    if(owner.hasFlag(Flags.PRIVATE))
+      jdtMods = jdtMods | ClassFileConstants.AccPrivate
+    else if(owner.hasFlag(Flags.PROTECTED))
+      jdtMods = jdtMods | ClassFileConstants.AccProtected
+    else
+      jdtMods = jdtMods | ClassFileConstants.AccPublic
+    
+    if(owner.hasFlag(Flags.ABSTRACT) || owner.hasFlag(Flags.DEFERRED))
+      jdtMods = jdtMods | ClassFileConstants.AccAbstract
+
+    if(owner.isFinal || owner.hasFlag(Flags.MODULE))
+      jdtMods = jdtMods | ClassFileConstants.AccFinal
+    
+    if(owner.isTrait)
       jdtMods = jdtMods | ClassFileConstants.AccInterface
     
     jdtMods
   }
 
+  
   def mapType(s : Symbol) : String = {
     (if(s == null || s == NoSymbol || s.isRefinementClass || s.owner.isRefinementClass)
         "scala.AnyRef"
       else
         s.fullName
     ) match {
-      case "scala.AnyRef" => "java.lang.Object"
+      case "scala.AnyRef" | "scala.Any" => "java.lang.Object"
       case "scala.Unit" => "void"
       case "scala.Boolean" => "boolean"
       case "scala.Byte" => "byte"
@@ -111,10 +158,20 @@ trait ScalaJavaMapper { self : ScalaPresentationCompiler =>
         t.typeSymbol.enclosingPackage.fullName
     }
   }
+
+  def isScalaSpecialType(t : Type) = {
+    import definitions._
+    t.typeSymbol match {
+      case AnyClass | AnyRefClass | AnyValClass | NothingClass | NullClass => true
+      case _ => false
+    }
+  }
   
   def mapParamTypeName(t : Type) : String = {
     if (t.typeSymbolDirect.isTypeParameter)
       t.typeSymbolDirect.name.toString
+    else if (isScalaSpecialType(t))
+      "java.lang.Object"
     else {
       val jt = javaType(t)
       if (jt.isValueType)
@@ -127,6 +184,8 @@ trait ScalaJavaMapper { self : ScalaPresentationCompiler =>
   def mapParamTypeSignature(t : Type) : String = {
     if (t.typeSymbolDirect.isTypeParameter)
       "T"+t.typeSymbolDirect.name.toString+";"
+    else if (isScalaSpecialType(t))
+      "Ljava.lang.Object;"
     else {
       val jt = javaType(t)
       val fjt = if (jt == JType.UNKNOWN)
@@ -158,5 +217,15 @@ trait ScalaJavaMapper { self : ScalaPresentationCompiler =>
       }
         
     enclosing(sym).reverse
+  }
+  
+  /** Return the enclosing package. Correctly handle the empty package, by returning
+   *  the empty string, instead of <empty>. */
+  def enclosingPackage(sym: Symbol): String = {
+    val enclPackage = sym.enclosingPackage
+    if (enclPackage == definitions.EmptyPackage || enclPackage == definitions.RootPackage)
+      ""
+    else
+      enclPackage.fullName
   }
 }

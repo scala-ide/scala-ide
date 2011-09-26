@@ -8,11 +8,11 @@ package scala.tools.eclipse.javaelements
 import scala.collection.immutable.Seq
 import scala.reflect.NameTransformer
 
-import org.eclipse.jdt.core.{ IField, IJavaElement, IMember, IMethod, IType }
+import org.eclipse.jdt.core.{ IField, IJavaElement, IMember, IMethod, IType, ITypeParameter }
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants
 import org.eclipse.jdt.internal.core.{
   BinaryType, JavaElement, JavaElementInfo, LocalVariable, SourceConstructorInfo, SourceField, SourceFieldElementInfo,
-  SourceMethod, SourceMethodElementInfo, SourceMethodInfo, SourceType, SourceTypeElementInfo } 
+  SourceMethod, SourceMethodElementInfo, SourceMethodInfo, SourceType, SourceTypeElementInfo, OpenableElementInfo }
 import org.eclipse.jdt.internal.ui.JavaPlugin
 import org.eclipse.jdt.internal.ui.viewsupport.{ JavaElementImageProvider }
 import org.eclipse.jdt.ui.JavaElementImageDescriptor
@@ -83,7 +83,7 @@ class ScalaClassElement(parent : JavaElement, name : String, synthetic : Boolean
 }
 
 class ScalaAnonymousClassElement(parent : JavaElement, name : String)
-  extends ScalaClassElement(parent, "", false) {
+  extends ScalaClassElement(parent, name, false) {
     override def getLabelText(flags : Long) = if (name != null ) "new "+name+" {...}" else "new {...}"
 }
 
@@ -100,10 +100,16 @@ class ScalaModuleElement(parent : JavaElement, name : String, synthetic : Boolea
   override def isVisible = !synthetic
 }
 
-class ScalaDefElement(parent : JavaElement, name: String, paramTypes : Array[String], synthetic : Boolean, display : String)
+class ScalaPackageModuleElement(parent: JavaElement, name: String, synthetic: Boolean)
+  extends ScalaModuleElement(parent, name, synthetic) {
+  override def getImageDescriptor = ScalaImages.SCALA_PACKAGE_OBJECT
+}
+
+class ScalaDefElement(parent : JavaElement, name: String, paramTypes : Array[String], synthetic : Boolean, display : String, overrideInfo : Int)
   extends SourceMethod(parent, name, paramTypes) with ScalaElement with IMethodOverrideInfo {
   override def getLabelText(flags : Long) = display
   override def isVisible = !synthetic && !getElementInfo.isInstanceOf[ScalaSourceConstructorInfo]
+  def getOverrideInfo = overrideInfo
 }
 
 class ScalaFunctionElement(declaringType : JavaElement, parent : JavaElement, name: String, paramTypes : Array[String], display : String)
@@ -245,6 +251,9 @@ class ScalaElementInfo extends SourceTypeElementInfo with ScalaMemberElementInfo
   override def setHandle(handle : IType) = super.setHandle(handle)
   override def setSuperclassName(superclassName : Array[Char]) = super.setSuperclassName(superclassName)
   override def setSuperInterfaceNames(superInterfaceNames : Array[Array[Char]]) = super.setSuperInterfaceNames(superInterfaceNames)
+  def setTypeParameters(tps : Array[ITypeParameter]) {
+    typeParameters = tps
+  }
 }
 
 trait FnInfo extends SourceMethodElementInfo with ScalaMemberElementInfo {
@@ -263,4 +272,28 @@ class ScalaSourceMethodInfo extends SourceMethodInfo with FnInfo with AuxChildre
 
 class ScalaSourceFieldElementInfo extends SourceFieldElementInfo with ScalaMemberElementInfo with AuxChildrenElementInfo {
   override def setTypeName(name : Array[Char]) = super.setTypeName(name)
+}
+
+class LazyToplevelClass(unit : ScalaCompilationUnit, name : String) extends SourceType(unit, name) with IType with ScalaElement {
+  
+  /** I rewrote this method from the previous implementation, to what I believe was the initial intention. 
+   *  The commented line is the original, in case this causes any problems.
+   *  
+   *  TODO: Revisit this once there is a better structure builder.
+   */
+  lazy val mirror: Option[ScalaSourceTypeElement] = {
+//    unit.getElementInfo.asInstanceOf[OpenableElementInfo].getChildren.find(e => e.getElementName == name).map(_.asInstanceOf[ScalaSourceTypeElement])
+    unit.getElementInfo match {
+      case openable: OpenableElementInfo => 
+        openable.getChildren.find(e => e.getElementType == IJavaElement.TYPE && e.getElementName == name) map (_.asInstanceOf[ScalaSourceTypeElement])
+      case _ => None
+    }
+  }
+  
+  override def isAnonymous = false
+  override def isLocal = false
+  override def isEnum = false
+  override def isInterface = mirror map (_.isInterface) getOrElse false
+  override def getDeclaringType = null
+  override def exists = mirror.isDefined
 }

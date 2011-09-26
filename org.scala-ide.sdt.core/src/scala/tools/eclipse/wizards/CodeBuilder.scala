@@ -160,15 +160,15 @@ object CodeBuilder {
   case class Arg(val n: Name, val t: Type) extends Part
   case class Result(val t: Type, val v: Value) extends Part
   case class ParenList(val ps: List[Part]) extends Part
-  case class ParamNames(pn: List[Name]) extends ParenList(pn)
-  case class Args(as: List[Arg]) extends ParenList(as)
+  class ParamNames(val pn: List[Name]) extends ParenList(pn)
+  class Args(val as: List[Arg]) extends ParenList(as)
   case class Func(val mods: Mods, val name: Name, val typeParams: TypeParams,
 		          val args: Args, val result: Result) extends Part
   case class ConsBody(val pn: ParamNames) extends Part
   case class AuxCons(val args: Args, val body: ConsBody) extends Part
   
-  case object AnyBound extends Type(Name("Any"))
-  case object NothingBound extends Type(Name("Nothing"))
+  object AnyBound extends Type(Name("Any"))
+  object NothingBound extends Type(Name("Nothing"))
   
   def eval(p: Part): String = p match {
     case Type(n)                => eval(n)
@@ -291,7 +291,7 @@ object CodeBuilder {
          pn =  stc.getParameterNames map (pn => Name(pn))
          pt =  stc.getParameterTypes map (pt => Type(Name(convertAndAdd(pt))))
          nt =  pn zip pt map (nt => Arg(nt._1, nt._2))
-         ag =  Args(nt.toList)
+         ag =  new Args(nt.toList)
       } addConstructorArgs(ag)
        
       for {
@@ -300,8 +300,8 @@ object CodeBuilder {
          pt =  stc.getParameterTypes map (pt => Type(Name(convertAndAdd(pt))))
          nt =  pn zip pt map (nt => Arg(nt._1, nt._2))
          if(nt.nonEmpty)
-         ag =  Args(nt.init.toList)
-         pl =  ParamNames(pn.dropRight(1) :+ Name("null"))
+         ag =  new Args(nt.init.toList)
+         pl =  new ParamNames(pn.dropRight(1) :+ Name("null"))
       } generatedConstructors + eval(AuxCons(ag, ConsBody(pl)))
       
       generatedConstructors.map (s => ld+"  " +s+ld).toList.mkString
@@ -334,7 +334,7 @@ object CodeBuilder {
          pn =  stm.getParameterNames map (pn => Name(pn))
          pt =  stm.getParameterTypes map (pt => Type(Name(convertAndAdd(pt))))
          nt =  pn zip pt map (nt => Arg(nt._1, nt._2))
-         ag =  Args(nt.toList)
+         ag =  new Args(nt.toList)
           r =  Result(Type(Name(convertAndAdd(returnType(stm).get))), Value(returnValue(stm).get))
       } generatedMethods + eval(Func(md,nm,ts,ag,r))
 

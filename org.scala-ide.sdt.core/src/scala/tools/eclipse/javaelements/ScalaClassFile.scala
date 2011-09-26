@@ -16,7 +16,7 @@ import org.eclipse.jdt.core.compiler.{ CharOperation, IProblem }
 import org.eclipse.jdt.internal.compiler.env
 import org.eclipse.jdt.internal.compiler.env.IBinaryType
 import org.eclipse.jdt.internal.core.{
-  BasicCompilationUnit, BinaryType, ClassFile, DefaultWorkingCopyOwner, JavaModelStatus, JavaProject, PackageFragment }
+  BasicCompilationUnit, BinaryType, ClassFile, DefaultWorkingCopyOwner, JavaModelStatus, JavaProject, JavaElement, PackageFragment }
 import org.eclipse.jdt.internal.core.util.Util
 
 import org.eclipse.core.runtime.IProgressMonitor
@@ -53,9 +53,10 @@ class ScalaClassFile(parent : PackageFragment, name : String, sourceFile : Strin
   override def codeSelect(offset : Int, length : Int, owner : WorkingCopyOwner) : Array[IJavaElement] =
     codeSelect(this, offset, length, owner)
   
-  def getContents() = getBuffer.getCharacters
+  def getContents() = Option(getSourceMapper) flatMap 
+    {mapper => Option(mapper.findSource(getType, getSourceFileName))} getOrElse Array.empty
     
-  override val file : AbstractFile = new VirtualFile(getSourceFileName)
+  override lazy val file : AbstractFile = new VirtualFile(getSourceFileName, getSourceFilePath)
   
   def getSourceFileName() = sourceFile
   
@@ -73,12 +74,12 @@ class ScalaClassFile(parent : PackageFragment, name : String, sourceFile : Strin
       Util.toCharArrays(packageFragment.names)
   }
 
-  override def getType() : IType = {
-    val tpe = getBinaryType
-    getCorrespondingElement(tpe).getOrElse(tpe).asInstanceOf[IType]
+  class ScalaBinaryType(name : String) extends BinaryType(this, name) {
+    lazy val mirror = ScalaClassFile.this.getChildren.find(_.getElementName == name) map (_.asInstanceOf[IType])
+	override def exists = mirror.isDefined
   }
 
-  def getBinaryType() : IType = super.getType
+  override def getType() : IType = new ScalaBinaryType(getTypeName)
   
   def getMainTypeName() : Array[Char] =
     Util.getNameWithoutJavaLikeExtension(getElementName).toCharArray
@@ -93,8 +94,11 @@ class ScalaClassFile(parent : PackageFragment, name : String, sourceFile : Strin
     }
   }
 
-  def getFileName() : Array[Char] =
-    getPath.toString.toCharArray
+  def getFileName() : Array[Char] = getPath.toString.toCharArray
+    
+  override def validateExistence(underlyingResource : IResource) : IStatus = {
+	if ((underlyingResource ne null) && !underlyingResource.isAccessible) newDoesNotExistStatus() else JavaModelStatus.VERIFIED_OK
+  }
 
   def getProblems : Array[IProblem] = null
     
@@ -104,10 +108,10 @@ class ScalaClassFile(parent : PackageFragment, name : String, sourceFile : Strin
   def generateInfos0(info : AnyRef, newElements : JHashMap[_, _], monitor : IProgressMonitor) =
     super.generateInfos(info, newElements, monitor)
   def getBufferManager0() = super.getBufferManager()
+  def validateExistence0(underlying : IResource) : IStatus = validateExistence(underlying)
   def hasBuffer0() : Boolean = super.hasBuffer()
   def openBuffer0(pm : IProgressMonitor, info : Object) = super.openBuffer(pm, info)
   def resourceExists0(underlyingResource : IResource) = super.resourceExists(underlyingResource) 
-  def validateExistence0(underlyingResource : IResource) : IStatus = super.validateExistence(underlyingResource)
   def openAncestors0(newElements : JHashMap[_, _], monitor : IProgressMonitor) { super.openAncestors(newElements, monitor) }
   def getHandleMementoDelimiter0() = super.getHandleMementoDelimiter()
   def isSourceElement0() : Boolean = super.isSourceElement()

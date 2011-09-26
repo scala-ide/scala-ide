@@ -1,64 +1,104 @@
-package scala.tools.eclipse.quickfix
+package scala.tools.eclipse
+package quickfix
 
-import org.eclipse.jdt.ui.JavaUI
-import org.eclipse.jdt.ui.ISharedImages
-import org.eclipse.core.runtime.NullProgressMonitor
-import org.eclipse.text.edits.ReplaceEdit
-import org.eclipse.text.edits.MultiTextEdit
-import org.eclipse.ltk.core.refactoring.TextFileChange
-import org.eclipse.core.resources.IFile
-import scala.tools.eclipse.util.EclipseResource
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal
-import org.eclipse.jface.text.IDocument
+import org.eclipse.jdt.ui.{ISharedImages, JavaUI}
 import org.eclipse.jface.text.contentassist.IContextInformation
-import org.eclipse.swt.graphics.Image
-import org.eclipse.swt.graphics.Point
-import org.eclipse.jface.text.TextUtilities
-import scala.tools.eclipse.refactoring.EditorHelpers._
+import org.eclipse.jface.text.{TextUtilities, IDocument}
+import org.eclipse.swt.graphics.{Point, Image}
+import refactoring.EditorHelpers._
+import scala.tools.eclipse.refactoring.EditorHelpers
 import scala.tools.refactoring.implementations.AddImportStatement
 
-case class ImportCompletionProposal(val importName : String) extends IJavaCompletionProposal {
+case class ImportCompletionProposal(val importName: String) extends IJavaCompletionProposal {
   
   /**
    * Fixed relevance at 100 for now.
    */
   def getRelevance = 100
   
+  /**
+   * Inserts the proposed completion into the given document.
+   *
+   * @param document the document into which to insert the proposed completion
+   */
+  def apply(document: IDocument) {
+    // First, try to insert with an AST transformation, if that fails, use the (old) method
+    try {
+      applyByASTTransformation(document)
+    } catch {
+      case t => {
+        ScalaPlugin.plugin.logError("failed to update import by AST transformation, fallback to text implementation", t)
+        applyByTextTransformation(document)
+      }
+    }
+  }
   
   /**
    * Inserts the proposed completion into the given document.
    *
    * @param document the document into which to insert the proposed completion
    */
-  def apply(document : IDocument) : Unit = {
+  private def applyByASTTransformation(document: IDocument) {
     
-    withScalaFileAndSelection { (scalaSourceFile, iTextSelection) =>
+    withScalaFileAndSelection { (scalaSourceFile, textSelection) =>
     
-      val changes = scalaSourceFile.withCompilerResult { crh =>
+      val changes = scalaSourceFile.withSourceFile { (sourceFile, compiler) =>
             
-        val refactoring = new AddImportStatement {
-          val global = crh.compiler
-          
-          val selection = {
-            val start = iTextSelection.getOffset
-            val end = start + iTextSelection.getLength
-            val file = crh.sourceFile.file
-            // start and end are not yet used
-            new FileSelection(file, start, end)
-          }
-        }
+        val refactoring = new AddImportStatement { val global = compiler }
        
-        refactoring.addImport(refactoring.selection, importName)
-      }
+        refactoring.addImport(scalaSourceFile.file, importName)
+      }(Nil)
       
-      scalaSourceFile.file match {
-        case EclipseResource(file: IFile) => 
-          val textFileChange = createTextFileChange(file, changes)
-          textFileChange.getEdit.apply(document)
-      }
+      EditorHelpers.applyChangesToFileWhileKeepingSelection(document, textSelection, scalaSourceFile.file, changes)
       
       None
     }
+  }
+  
+  /**
+   * Inserts the proposed completion into the given document. (text based transformation)
+   *
+   * @param document the document into which to insert the proposed completion
+   */
+  private def applyByTextTransformation(document: IDocument) {
+    val lineDelimiter = TextUtilities.getDefaultLineDelimiter(document)
+
+    // Find the package declaration
+    val text = document.get
+    var insertIndex = 0
+    val packageIndex = text.indexOf("package", insertIndex)
+    var preInsert = "" 
+    
+    if (packageIndex != -1) {
+      // Insert on the line after the last package declaration, with a line of whitespace first if needed
+      var nextLineIndex = text.indexOf(lineDelimiter, packageIndex) + 1
+      var nextLineEndIndex = text.indexOf(lineDelimiter, nextLineIndex)
+      var nextLine = text.substring(nextLineIndex, nextLineEndIndex).trim()
+      
+      // scan to see if package declaration is not multi-line
+      while (nextLine.startsWith("package")) {
+        nextLineIndex = text.indexOf(lineDelimiter, nextLineIndex) + 1
+        nextLineEndIndex = text.indexOf(lineDelimiter, nextLineIndex)
+        nextLine = text.substring(nextLineIndex, nextLineEndIndex).trim()
+      }
+
+      // Get the next line to see if it is already whitespace
+      if (nextLine.trim() == "") {
+        // This is a whitespace line, add the import here
+        insertIndex = nextLineEndIndex + 1
+      } else {
+        // Need to insert whitespace after the package declaration and insert
+        preInsert = lineDelimiter
+        insertIndex = nextLineIndex
+      }
+    } else {
+      // Insert at the top of the file
+      insertIndex = 0
+    }
+    
+    // Insert the import as the third line in the file... RISKY AS HELL :D
+    document.replace(insertIndex, 0, preInsert + "import " + importName + lineDelimiter);
   }
   
   /**
@@ -74,7 +114,7 @@ case class ImportCompletionProposal(val importName : String) extends IJavaComple
    * @param document the document into which the proposed completion has been inserted
    * @return the new selection in absolute document coordinates
    */
-  def getSelection(document : IDocument) : Point = null
+  def getSelection(document: IDocument): Point = null
   
 
   /**
@@ -87,7 +127,7 @@ case class ImportCompletionProposal(val importName : String) extends IJavaComple
    *
    * @return the additional information or <code>null</code>
    */
-  def getAdditionalProposalInfo() : String = null
+  def getAdditionalProposalInfo(): String = null
   
 
   /**
@@ -97,7 +137,7 @@ case class ImportCompletionProposal(val importName : String) extends IJavaComple
    * 
    * @see ICompletionProposalExtension6#getStyledDisplayString()
    */
-  def getDisplayString() : String = "Import " + importName
+  def getDisplayString(): String = "Import " + importName
     
 
   /**
@@ -106,7 +146,7 @@ case class ImportCompletionProposal(val importName : String) extends IJavaComple
    *
    * @return the image to be shown or <code>null</code> if no image is desired
    */
-  def getImage() : Image = JavaUI.getSharedImages().getImage(ISharedImages.IMG_OBJS_IMPDECL)
+  def getImage(): Image = JavaUI.getSharedImages().getImage(ISharedImages.IMG_OBJS_IMPDECL)
 
   
   /**
@@ -116,5 +156,5 @@ case class ImportCompletionProposal(val importName : String) extends IJavaComple
    *
    * @return the context information for this proposal or <code>null</code>
    */
-  def getContextInformation : IContextInformation = null
+  def getContextInformation: IContextInformation = null
 }

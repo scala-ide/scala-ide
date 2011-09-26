@@ -45,6 +45,7 @@ import org.eclipse.jdt.internal.core.ClassFile;
 import org.eclipse.jdt.internal.core.CompilationUnitElementInfo;
 import org.eclipse.jdt.internal.core.ImportDeclaration;
 import org.eclipse.jdt.internal.core.JavaElement;
+import org.eclipse.jdt.internal.core.BufferManager;
 import org.eclipse.jdt.internal.core.NameLookup;
 import org.eclipse.jdt.internal.core.Openable;
 import org.eclipse.jdt.internal.core.PackageFragment;
@@ -75,17 +76,20 @@ public privileged aspect ClassFileProviderAspect {
     execution(public String ClassFile.getTypeName()) &&
     target(cf);
 
-  pointcut getType(ClassFile cf) :
-    call(public IType IClassFile.getType()) &&
-    target(cf);
-  
-  pointcut mapSource() :
+  // For 3.6
+  pointcut mapSource(ClassFile cf, SourceMapper mapper, IBinaryType info, IClassFile owner) :
+    execution(IBuffer ClassFile.mapSource(SourceMapper, IBinaryType, IClassFile)) &&
+    target(cf) &&
+    target(IScalaClassFile) &&
+    args(mapper, info, owner);
+
+  // For 3.5
+  pointcut mapSource2(ClassFile cf, SourceMapper mapper, IBinaryType info) :
     execution(IBuffer ClassFile.mapSource(SourceMapper, IBinaryType)) &&
-    target(IScalaClassFile);
-  
-  pointcut mapSource2() :
-    execution(void SourceMapper.mapSource(IType, char[], IBinaryType));
-  
+    target(cf) &&
+    target(IScalaClassFile) &&
+    args(mapper, info);
+
   pointcut getSourceFileName(BinaryType bt) :
     execution(String BinaryType.getSourceFileName(IBinaryType)) &&
     target(bt);
@@ -156,20 +160,31 @@ public privileged aspect ClassFileProviderAspect {
     return javaClassFile;
   }
   
-  void around() :
-    mapSource2() &&
-    cflow(mapSource()) {
-    return;
+  IBuffer around(ClassFile cf, SourceMapper mapper, IBinaryType info, IClassFile owner) :
+    mapSource(cf, mapper, info, owner) {
+    return mapSourceSubst(cf, mapper, info);
   }
-  
-  IType around(ClassFile cf) :
-    getType(cf) &&
-    cflow(mapSource()) {
-    if (cf.binaryType == null)
-      cf.binaryType = new BinaryType(cf, cf.getTypeName());
-    return cf.binaryType;
+
+  IBuffer around(ClassFile cf, SourceMapper mapper, IBinaryType info) :
+    mapSource2(cf, mapper, info) {
+    return mapSourceSubst(cf, mapper, info);
   }
-  
+
+  IBuffer mapSourceSubst(ClassFile cf, SourceMapper mapper, IBinaryType info) {
+    char[] contents = mapper.findSource(cf.getType(), info);
+    IBuffer buffer;
+    if (contents != null) {
+      buffer = BufferManager.createBuffer(cf);
+      buffer.setContents(contents);
+    } else {
+      buffer = BufferManager.createNullBuffer(cf);
+    }
+    BufferManager bufManager = cf.getBufferManager();
+    bufManager.addBuffer(buffer);
+    buffer.addBufferChangedListener(cf);
+    return buffer;
+  }
+
   String around(ClassFile cf) :
     getTypeName(cf) {
     if(cf instanceof IScalaClassFile) {
@@ -224,8 +239,7 @@ public privileged aspect ClassFileProviderAspect {
   
   void around(HierarchyResolver hr, IType type, ReferenceBinding typeBinding) :
     remember(hr, type, typeBinding) {
-    IOpenable openable = (IOpenable) type.getCompilationUnit();
-    if (openable != null && openable.isOpen()) {
+    if (((IOpenable)type.getCompilationUnit()).isOpen()) {
       try {
         IGenericType genericType = (IGenericType)((JavaElement)type).getElementInfo();
         hr.remember(genericType, typeBinding);
@@ -276,9 +290,10 @@ public privileged aspect ClassFileProviderAspect {
   
   String around(BinaryType bt) :
     getSourceFileName(bt) {
-    IJavaElement parent = bt.getParent(); 
-    if (parent instanceof IScalaClassFile)
+    IJavaElement parent = bt.getTypeRoot(); 
+    if (parent instanceof IScalaClassFile) {
       return ((IScalaClassFile)parent).getSourceFileName();
+    }
     else
       return proceed(bt);
   }
@@ -299,7 +314,7 @@ public privileged aspect ClassFileProviderAspect {
     stc.unit = new CompilationUnitDeclaration(stc.problemReporter, compilationResult, 0);
     // not filled at this point
 
-    if (sourceTypes.length == 0) return stc.unit;
+    if (sourceTypes.length == 0 || sourceTypes[0] == null) return stc.unit;
     SourceTypeElementInfo topLevelTypeInfo = (SourceTypeElementInfo) sourceTypes[0];
     org.eclipse.jdt.core.ICompilationUnit cuHandle = topLevelTypeInfo.getHandle().getCompilationUnit();
     stc.cu = (ICompilationUnit) cuHandle;
@@ -319,28 +334,25 @@ public privileged aspect ClassFileProviderAspect {
     int start = topLevelTypeInfo.getNameSourceStart();
     int end = topLevelTypeInfo.getNameSourceEnd();
 
-    //cuHanlde could be null if this member is not declared in a compilation unit (for example, a binary type) (see javadoc of getCompilationUnit)
-    if (cuHandle != null) {
-      /* convert package and imports */
-      String[] packageName = ((PackageFragment) cuHandle.getParent()).names;
-      if (packageName.length > 0)
-        // if its null then it is defined in the default package
-        stc.unit.currentPackage =
-          stc.createImportReference(packageName, start, end, false, ClassFileConstants.AccDefault);
-      IImportDeclaration[] importDeclarations = cuHandle.getImports();
-      int importCount = importDeclarations.length;
-      stc.unit.imports = new ImportReference[importCount];
-      for (int i = 0; i < importCount; i++) {
-        ImportDeclaration importDeclaration = (ImportDeclaration) importDeclarations[i];
-        ISourceImport sourceImport = (ISourceImport) importDeclaration.getElementInfo();
-        String nameWithoutStar = importDeclaration.getNameWithoutStar();
-        stc.unit.imports[i] = stc.createImportReference(
-          Util.splitOn('.', nameWithoutStar, 0, nameWithoutStar.length()),
-          sourceImport.getDeclarationSourceStart(),
-          sourceImport.getDeclarationSourceEnd(),
-          importDeclaration.isOnDemand(),
-          sourceImport.getModifiers());
-      }
+    /* convert package and imports */
+    String[] packageName = ((PackageFragment) cuHandle.getParent()).names;
+    if (packageName.length > 0)
+      // if its null then it is defined in the default package
+      stc.unit.currentPackage =
+        stc.createImportReference(packageName, start, end, false, ClassFileConstants.AccDefault);
+    IImportDeclaration[] importDeclarations = topLevelTypeInfo.getHandle().getCompilationUnit().getImports();
+    int importCount = importDeclarations.length;
+    stc.unit.imports = new ImportReference[importCount];
+    for (int i = 0; i < importCount; i++) {
+      ImportDeclaration importDeclaration = (ImportDeclaration) importDeclarations[i];
+      ISourceImport sourceImport = (ISourceImport) importDeclaration.getElementInfo();
+      String nameWithoutStar = importDeclaration.getNameWithoutStar();
+      stc.unit.imports[i] = stc.createImportReference(
+        Util.splitOn('.', nameWithoutStar, 0, nameWithoutStar.length()),
+        sourceImport.getDeclarationSourceStart(),
+        sourceImport.getDeclarationSourceEnd(),
+        importDeclaration.isOnDemand(),
+        sourceImport.getModifiers());
     }
     /* convert type(s) */
     try {

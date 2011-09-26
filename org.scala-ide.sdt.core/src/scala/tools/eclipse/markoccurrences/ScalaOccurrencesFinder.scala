@@ -1,44 +1,39 @@
-package scala.tools.eclipse.markoccurrences
+package scala.tools.eclipse
+package markoccurrences
 
-import scala.tools.refactoring.common.Selections
-import scala.tools.refactoring.implementations.MarkOccurrences
-import org.eclipse.jface.text.Region
-import org.eclipse.jface.text.ITextSelection
-import scala.tools.eclipse.javaelements.ScalaSourceFile
-import scala.tools.nsc.interactive.Global
+import scala.tools.eclipse.javaelements.ScalaCompilationUnit
 import scala.tools.refactoring.analysis.GlobalIndexes
+import scala.tools.refactoring.implementations.MarkOccurrences
+
+import org.eclipse.jface.text.Region
 
 case class Occurrences(name: String, locations: List[Region])
 
-class ScalaOccurrencesFinder(file: ScalaSourceFile, offset: Int, length: Int) {
+class ScalaOccurrencesFinder(file: ScalaCompilationUnit, offset: Int, length: Int) {
 
   def findOccurrences(): Option[Occurrences] = {
-
     val (from, to) = (offset, offset + length)
-    file.withCompilerResult { crh =>
-    
-      if (crh.body.pos == crh.compiler.NoPosition)
-        return None
-    
-      val mo = new MarkOccurrences with GlobalIndexes {
-        val global = crh.compiler
-        lazy val index = GlobalIndex(global.unitOf(crh.body.pos.source).body)
-      }
-      
-      val (selectedTree, os) = mo.occurrencesOf(crh.body.pos.source.file, from, to)
-      
-      val symbol = selectedTree.symbol
-      
-      if (symbol == null || symbol.name.isOperatorName)
-        return None
+    file.withSourceFile { (sourceFile, compiler) =>
+      compiler.askOption { () =>
+        val mo = new MarkOccurrences with GlobalIndexes {
+          val global = compiler
+          lazy val index = GlobalIndex(global.body(sourceFile))
+        }
 
-      val symbolName = selectedTree.symbol.nameString
-      
-      val positions = os map (p => (p.start, p.end - p.start))
-      val locations = positions collect { case (offset, length) if length == symbolName.length => new Region(offset, length) }
-      
-      Some(Occurrences(symbolName, locations.toList))
-    }
+        if (!compiler.unitOfFile.contains(sourceFile.file)) 
+          None 
+        else {
+          val (selectedTree, occurrences) = mo.occurrencesOf(sourceFile.file, from, to)       
+          
+          Option(selectedTree.symbol) filter (!_.name.isOperatorName) map { sym =>
+            val locations = occurrences map { pos => 
+              new Region(pos.start, pos.end - pos.start)
+            }
+            Occurrences(sym.nameString, locations)
+          }
+        }
+      } getOrElse None
+    }(None)
   }
 }
 

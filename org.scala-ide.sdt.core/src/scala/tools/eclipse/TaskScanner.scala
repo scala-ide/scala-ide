@@ -10,14 +10,20 @@ import scala.tools.nsc.util.{ Position, RangePosition }
 
 class TaskScanner(project : ScalaProject) {
   import TaskScanner._
+
+  def getJavaOptions(key: String): Array[String] = {
+    val options = project.javaProject.getOptions(true).asInstanceOf[ju.Map[String, String]]
+    options.get(key) match {
+      case "" => Array()
+      case o => o.split(",").map(_.trim)
+    }
+  }
   
-  val options = project.javaProject.getOptions(true).asInstanceOf[ju.Map[String, String]]
-  
-  val taskTags = options.get(JavaCore.COMPILER_TASK_TAGS).split(",").map(_.trim)
-  val taskPriorities = options.get(JavaCore.COMPILER_TASK_PRIORITIES).split(",").map(_.trim)
-  val tagPriority = Map() ++ (taskTags zip taskPriorities)
-  val tasks = taskTags zip taskPriorities
-  val taskCaseSensitive = options.get(JavaCore.COMPILER_TASK_CASE_SENSITIVE) != JavaCore.DISABLED
+  lazy val taskTags = getJavaOptions(JavaCore.COMPILER_TASK_TAGS)
+  lazy val tagPriority = {
+    val taskPriorities = getJavaOptions(JavaCore.COMPILER_TASK_PRIORITIES)
+    Map() ++ (taskTags zip taskPriorities)
+  }
 
   def extractTasks(comment : String, pos : Position) : List[Task] = {
     def extractTasksFromLine(line : String, offset : Int) : List[Task] = {

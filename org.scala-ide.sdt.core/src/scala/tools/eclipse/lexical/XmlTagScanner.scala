@@ -3,11 +3,15 @@ import org.eclipse.jface.text._
 import org.eclipse.jface.text.rules._
 import org.eclipse.jdt.ui.text.IColorManager
 import org.eclipse.jdt.internal.ui.text.CombinedWordRule
-import scala.tools.eclipse.lexical.XmlColours._
 import scala.annotation.{ switch, tailrec }
 import org.eclipse.swt.SWT
+import scala.tools.eclipse.properties.ScalaSyntaxClass
+import scala.tools.eclipse.properties.ScalaSyntaxClasses._
+import scala.tools.eclipse.properties.ScalaSyntaxClasses
+import org.eclipse.jface.util.PropertyChangeEvent
+import org.eclipse.jface.preference.IPreferenceStore
 
-class XmlTagScanner(colorManager: IColorManager) extends ITokenScanner {
+class XmlTagScanner(val colorManager: IColorManager, val preferenceStore: IPreferenceStore) extends AbstractScalaScanner {
   import XmlTagScanner._
 
   var pos: Int = -1
@@ -23,9 +27,9 @@ class XmlTagScanner(colorManager: IColorManager) extends ITokenScanner {
   var tokenLength: Int = -1
 
   def getTokenOffset = tokenOffset
-  
+
   def getTokenLength = tokenLength
-  
+
   def setRange(document: IDocument, offset: Int, length: Int) {
     this.document = document
     this.pos = offset
@@ -54,25 +58,25 @@ class XmlTagScanner(colorManager: IColorManager) extends ITokenScanner {
       case '<' =>
         accept()
         afterTagStart = true
-        tagDelimiterToken
+        getToken(XML_TAG_DELIMITER)
       case EOF => Token.EOF
       case '\'' =>
         accept()
         getXmlAttributeValue('\'')
-        attributeValueToken
+        getToken(XML_ATTRIBUTE_VALUE)
       case '"' =>
         accept()
         getXmlAttributeValue('"')
-        attributeValueToken
+        getToken(XML_ATTRIBUTE_VALUE)
       case '/' if (ch(1) == '>') =>
         accept(2)
-        tagDelimiterToken
+        getToken(XML_TAG_DELIMITER)
       case '>' =>
         accept()
-        tagDelimiterToken
+        getToken(XML_TAG_DELIMITER)
       case '=' =>
         accept()
-        attributeEqualsToken
+        getToken(XML_ATTRIBUTE_EQUALS)
       case ' ' | '\r' | '\n' | '\t' =>
         accept()
         getWhitespace
@@ -80,11 +84,11 @@ class XmlTagScanner(colorManager: IColorManager) extends ITokenScanner {
       case _ if wasAfterTagStart =>
         accept()
         getXmlName
-        tagNameToken
+        getToken(XML_TAG_NAME)
       case _ =>
         accept()
         getXmlName
-        attributeNameToken
+        getToken(XML_ATTRIBUTE_NAME)
     }
     tokenOffset = start
     tokenLength = pos - start
@@ -120,15 +124,6 @@ class XmlTagScanner(colorManager: IColorManager) extends ITokenScanner {
         getXmlAttributeValue(quote)
     }
 
-  private val attributeValueToken = new Token(new TextAttribute(colorManager.getColor(XmlColours.XML_ATTRIBUTE_VALUE), null, SWT.ITALIC))
-
-  private val tagNameToken = new Token(new TextAttribute(colorManager.getColor(XmlColours.XML_TAG_NAME)))
-
-  private val attributeNameToken = new Token(new TextAttribute(colorManager.getColor(XmlColours.XML_ATTRIBUTE_NAME)))
-
-  private val attributeEqualsToken = new Token(null)
-
-  private val tagDelimiterToken = new Token(new TextAttribute(colorManager.getColor(XmlColours.XML_TAG_DELIMITER)))
 
 }
 

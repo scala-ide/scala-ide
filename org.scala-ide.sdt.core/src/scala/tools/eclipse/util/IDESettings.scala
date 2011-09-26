@@ -8,12 +8,39 @@ package scala.tools.eclipse.util
 import scala.tools.nsc.Settings
 
 object IDESettings {
-  def shownSettings(s : Settings) : List[Settings#Setting]= {
+
+  import ScalaPluginSettings._
+  case class Box(name: String, userSettings: List[Settings#Setting])
+
+  def shownSettings(s : Settings) : List[Box] = {
     import s._
+
     List(
-      deprecation, g, optimise, target, unchecked,
-      checkInit, noassertions, elidebelow, Xexperimental, future, XlogImplicits, Xmigration28, nouescape, plugin, disable, require, pluginsDir, pluginOptions,
-      Xcloselim, Xdce, Xdetach, inline, Xlinearizer, Ynogenericsig, noimports, nopredefs, Yrecursion, selfInAnnots, Xsqueeze, refinementMethodDispatch, nospecialization,
-      Xwarnfatal, Xwarninit, Xchecknull, Ywarndeadcode)
+      Box("Standard",
+        List(deprecation, g, optimise, target, unchecked,
+             pluginOptions, nospecialization, verbose, explaintypes, nowarn)),
+      Box("Advanced",
+    	List(checkInit, Xchecknull, elidebelow,
+             Xexperimental, future, XlogImplicits,
+             Xmigration28, noassertions, nouescape, plugin, disable,
+             require, pluginsDir, Xwarnfatal)),
+      Box("Private",
+        List(Ynogenericsig, noimports,
+             selfInAnnots, Yrecursion, refinementMethodDispatch,
+             Ywarndeadcode, Ybuildmanagerdebug)),
+      Box("Presentation Compiler",
+        List(YpresentationDebug, YpresentationVerbose, YpresentationLog, YpresentationReplay, YpresentationDelay)))
   }
+  
+  def pluginSettings: List[Box] =
+    List(Box("Scala Plugin Debugging", List(YPlugininfo)))
+  
+  def buildManagerSettings: List[Box] =
+    List(Box("Build manager", List(buildManager)))
+}
+
+object ScalaPluginSettings extends Settings {
+  val YPlugininfo = BooleanSetting("-plugininfo", "Enable logging of the Scala Plugin info")
+  val buildManager = ChoiceSetting("-buildmanager", "which", "Build manager to use", List("refined", "sbt"), "refined")
+
 }

@@ -6,7 +6,7 @@
       <page
             class="scala.tools.eclipse.properties.CompilerSettings"
             id="org.scala-ide.sdt.core.properties.compilerPropertyPage"
-            name="Scala Compiler Properties">
+            name="Scala Compiler">
          <filter
                name="nature"
                value="org.scala-ide.sdt.core.scalanature"/>
@@ -17,10 +17,47 @@
          </enabledWhen>
       </page>
    </extension>
+   <extension
+         point="org.eclipse.ui.propertyPages">
+      <page
+            class="scala.tools.eclipse.formatter.FormatterPreferencePage"
+            id="scala.tools.eclipse.formatter.FormatterPropertyPage"
+            name="Scala Formatter">
+         <filter
+               name="nature"
+               value="org.scala-ide.sdt.core.scalanature"/>
+         <enabledWhen>
+         <or> <instanceof value="org.eclipse.jdt.core.IJavaProject"/>
+              <instanceof value="org.eclipse.core.resources.IProject"/>
+         </or>
+         </enabledWhen>
+      </page>
+   </extension>
+      <extension
+         point="org.eclipse.ui.propertyPages">
+      <page
+            class="scala.tools.eclipse.properties.OrganizeImportsPreferencesPage"
+            id="scala.tools.eclipse.properties.OrganizeImportsPreferencesPage"
+            name="Scala Organize Imports">
+         <filter
+               name="nature"
+               value="org.scala-ide.sdt.core.scalanature"/>
+         <enabledWhen>
+         <or> <instanceof value="org.eclipse.jdt.core.IJavaProject"/>
+              <instanceof value="org.eclipse.core.resources.IProject"/>
+         </or>
+         </enabledWhen>
+      </page>
+   </extension>
+   
    <extension point="org.eclipse.ui.preferencePages">
       <page class="scala.tools.eclipse.properties.ScalaPreferences"
             name="Scala"
             id="org.scala-ide.sdt.core.preferences"/>
+      <page class="scala.tools.eclipse.properties.SyntaxColouringPreferencePage"
+            category="org.scala-ide.sdt.core.preferences"
+            name="Syntax Coloring"
+            id="org.scala-ide.sdt.core.properties.SyntaxColouringPreferencePage"/>
       <page
             category="org.scala-ide.sdt.core.preferences"
             class="scala.tools.eclipse.properties.CompilerSettings"
@@ -39,20 +76,18 @@
             id="org.scala-ide.sdt.core.preferences.Templates"
             name="Templates">
       </page>
+      <page
+            category="org.scala-ide.sdt.core.preferences"
+            class="scala.tools.eclipse.properties.OrganizeImportsPreferencesPage"
+            id="scala.tools.eclipse.properties.OrganizeImportsPreferencesPage"
+            name="Organize Imports">
+      </page>
    </extension>
 
-   <extension point="org.eclipse.core.expressions.propertyTesters">
-      <propertyTester
-            class="scala.tools.eclipse.launching.ScalaLaunchableTester"
-            id="scala.tools.eclipse.launching.ScalaLaunchableTester"
-            namespace="scala.tools.eclipse.launching"
-            properties="hasMain"
-            type="org.eclipse.core.runtime.IAdaptable"/>            
-   </extension>
 
-  <extension point="org.eclipse.core.runtime.contentTypes">
+  <extension point="org.eclipse.core.contenttype.contentTypes">
     <content-type id="scala.tools.eclipse.scalaSource" name="Scala Source File"
-      base-type="org.eclipse.core.runtime.text"
+      base-type="org.eclipse.jdt.core.javaSource"
       priority="high"
       file-extensions="scala"/>
     <content-type id="scala.tools.eclipse.scalaClass" name="Scala Class File"
@@ -70,7 +105,7 @@
             default="true"
             icon="icons/full/obj16/scu_obj.gif"
             extensions="scala"
-            contributorClass="org.eclipse.jdt.internal.ui.javaeditor.CompilationUnitEditorActionContributor"
+            contributorClass="scala.tools.eclipse.actions.ScalaCompilationUnitEditorActionContributor"
             class="scala.tools.eclipse.ScalaSourceFileEditor"
             symbolicFontName="org.eclipse.jdt.ui.editors.textfont"
             id="scala.tools.eclipse.ScalaSourceFileEditor">
@@ -87,6 +122,8 @@
             <contentTypeBinding contentTypeId="scala.tools.eclipse.scalaClass"/>
       </editor>
    </extension>
+   
+   <!-- Breakpoints for scala source/class editors -->
 
    <extension point="org.eclipse.ui.editorActions">
       <editorContribution
@@ -113,7 +150,7 @@
          </action>
       </editorContribution>
    </extension>
-
+   
    <extension point="org.eclipse.ui.editorActions">
       <editorContribution
          targetID="scala.tools.eclipse.ScalaClassFileEditor"
@@ -147,6 +184,64 @@
        <adapter type="org.eclipse.debug.ui.actions.IRunToLineTarget"/>
        <adapter type="org.eclipse.debug.ui.actions.IToggleBreakpointsTarget"/>
      </factory>
+   </extension>
+   <extension point="org.eclipse.core.runtime.adapters">
+     <factory
+       class="scala.tools.eclipse.ScalaRetargettableActionAdapterFactory"
+       adaptableType="scala.tools.eclipse.ScalaClassFileEditor">
+       <adapter type="org.eclipse.debug.ui.actions.IRunToLineTarget"/>
+       <adapter type="org.eclipse.debug.ui.actions.IToggleBreakpointsTarget"/>
+     </factory>
+   </extension>
+   <!-- end of extensions for breakpoints -->
+   
+
+   <extension point = "org.eclipse.ui.actionSets">         
+     <actionSet id="org.scala-ide.sdt.ui.scalaMenu.actionSet"
+       label="Scala Diagnostics" 
+       visible="false">
+       <menu id="org_scala-ide_sdt_ui_menu"
+         label="Scala"
+         path="additions"> 
+         <groupMarker name="diagnostics"/>
+         <groupMarker name="additions"/>
+       </menu>
+       <action id="org.scala-ide.sdt.ui.runDiag.action"
+         label="Run Setup Diagnostics..."
+         menubarPath="org_scala-ide_sdt_ui_menu/diagnostics"
+         tooltip="Verify that Scala configuration is correct"
+         class="scala.tools.eclipse.actions.RunDiagnosticAction"
+         enablesFor="*">
+       </action>
+       <action id="org.scala-ide.sdt.ui.reportBug.action"
+         label="Report a Bug..."
+         menubarPath="org_scala-ide_sdt_ui_menu/additions"
+         tooltip="Report a bug in the Scala Development Tools"
+         class="scala.tools.eclipse.actions.RunDiagnosticAction"
+         enablesFor="*">
+       </action>       
+     </actionSet>
+   </extension>
+
+  <extension
+         point="org.eclipse.ui.actionSets">
+      <actionSet
+            label="Scala text editor"
+            visible="true"
+            id="scala.texteditor.actionset">
+         <action
+               allowLabelUpdate="true"
+               definitionId="showInferredSemicolonsAction"
+               icon="icons/show_inferred_semicolons.png"
+               id="showInferredSemicolonsAction"
+               label="Show inferred semicolons"
+               retarget="true"
+               style="toggle"
+               toolbarPath="Normal/Presentation"
+               tooltip="Show inferred semicolons">
+        </action>
+
+      </actionSet>
    </extension>
 
    <extension
@@ -201,6 +296,17 @@
             name="Scala Object"
             id="org.scala-ide.sdt.core.wizards.newObject">
             <description>Create a Scala object</description>
+            <selection class="java.lang.Object"/>
+      </wizard>
+      <wizard
+            class="scala.tools.eclipse.wizards.NewPackageObjectWizard"
+            icon="icons/full/etool16/newpackage_object_wiz.png"
+            finalPerspective="org.scala-ide.sdt.core.perspective"
+            category="org.scala-ide.sdt.core.wizards"
+            project="false"
+            name="Scala Package Object"
+            id="org.scala-ide.sdt.core.wizards.newPackageObject">
+            <description>Create a Scala Package Object</description>
             <selection class="java.lang.Object"/>
       </wizard>
       <wizard
@@ -301,10 +407,10 @@
    </extension>
    <extension point = "org.eclipse.debug.core.launchConfigurationTypes">
      <launchConfigurationType
-           delegate="org.eclipse.jdt.launching.JavaLaunchDelegate"
+           id="scala.application"
+           delegate="scala.tools.eclipse.launching.ScalaLaunchDelegate"
            delegateDescription="The Scala JVM Launcher supports running and debugging of local Scala applications compiled to the JVM"
            delegateName="Scala JVM Launcher"
-           id="scala.application"
            modes="run, debug"
            name="Scala Application"
            public="true"
@@ -351,7 +457,7 @@
         <launchMode
               mode="debug"
               description="Runs an interpreter in Debug mode"
-              perspective="Debug">
+              perspective="org.eclipse.debug.ui.DebugPerspective">
         </launchMode>
     </launchConfigurationTabGroup>
    </extension>
@@ -387,6 +493,9 @@
    </extension>
    <extension
          point="org.eclipse.ui.perspectiveExtensions">
+      <perspectiveExtension targetID="org.scala-ide.sdt.core.perspective">
+         <actionSet id="org.scala-ide.sdt.ui.scalaMenu.actionSet"/>
+      </perspectiveExtension>
       <perspectiveExtension targetID="org.eclipse.jdt.ui.JavaPerspective">
          <perspectiveShortcut id="org.scala-ide.sdt.core.perspective"/>
       </perspectiveExtension>
@@ -398,6 +507,7 @@
       </perspectiveExtension>
       <perspectiveExtension targetID="org.scala-ide.sdt.core.perspective">
          <perspectiveShortcut id="org.eclipse.debug.ui.DebugPerspective"/>
+         <actionSet id="org.eclipse.debug.ui.breakpointActionSet" />
       </perspectiveExtension>
    </extension>
    <extension point="org.eclipse.ui.actionSetPartAssociations">
@@ -457,12 +567,12 @@
       id="org.scala-ide.sdt.ui.interperter.start"
       objectClass="org.eclipse.jdt.core.IJavaElement">
       <action
-        class="scala.tools.eclipse.interpreter.Action"
+        class="scala.tools.eclipse.actions.InterpreterAction"
         enablesFor="1"
         menubarPath="org.scala-ide.sdt.core.popupMenu/content"
         icon="icons/full/etool16/scala_app.gif"
         id="org.scala-ide.sdt.ui.createInt"
-        label="Create Scala Interperter"
+        label="Create Scala Interpreter"
         tooltip="Create a Scala interpreter"/>
 
       <visibility>
@@ -480,13 +590,36 @@
 
 
     </objectContribution>
+    <objectContribution
+          adaptable="true"
+          id="org.scala-ide.sdt.core.addScalaLibrary"
+          nameFilter="*"
+          objectClass="org.eclipse.jdt.core.IJavaProject">
+        <action
+             class="scala.tools.eclipse.actions.AddScalaLibraryAction"
+             enablesFor="+"
+             id="org.scala-ide.sdt.core.action.addScalaLibrary"
+             label="Add Scala Library to Build Path"
+             menubarPath="org.scala-ide.sdt.core.popupMenu/content"
+             tooltip="Add the Scala standard library to the project build path">
+        </action>
+        <visibility>
+        <and>
+          <or>
+            <objectState name="projectNature" value="org.scala-ide.sdt.core.scalanature"/>
+            <objectState name="projectNature" value="ch.epfl.lamp.sdt.core.scalanature"/>
+          </or>
+          <objectClass name="org.eclipse.jdt.core.IJavaProject"/>
+        </and>
+      </visibility>
+    </objectContribution>
       <objectContribution
             adaptable="true"
             objectClass="org.eclipse.jdt.core.IJavaProject"
             nameFilter="*"
             id="org.scala-ide.sdt.core.natures.contribution1">
          <action
-               class="scala.tools.eclipse.ToggleScalaNatureAction"
+               class="scala.tools.eclipse.actions.ToggleScalaNatureAction"
                enablesFor="+"
                id="org.scala-ide.sdt.core.natures.ToggleNatureAction"
                label="Remove Scala Nature"
@@ -510,7 +643,7 @@
             nameFilter="*"
             id="org.scala-ide.sdt.core.natures.contribution2">
          <action
-               class="scala.tools.eclipse.ToggleScalaNatureAction"
+               class="scala.tools.eclipse.actions.ToggleScalaNatureAction"
                enablesFor="+"
                id="org.scala-ide.sdt.core.natures.ToggleNatureAction"
                icon="icons/full/etool16/newsprj_wiz.gif"
@@ -530,8 +663,8 @@
           </and>
          </visibility>
       </objectContribution>
-
   </extension>
+    
 
   <extension
          point="org.eclipse.ui.console.consoleFactories">
@@ -541,24 +674,37 @@
             label="Scala Console"/>
    </extension>
 
-  <extension point="org.eclipse.ui.console.consolePageParticipants">
-    <consolePageParticipant
-      class="scala.tools.eclipse.interpreter.PageParticipant"
-      id="org.scala-ide.sdt.ui.interpreter.PP">
-      <enablement>
-        <instanceof value="scala.tools.eclipse.interpreter.Console"/>
-      </enablement>
-    </consolePageParticipant>
-  </extension>
   <extension
         id="org.scala-ide.sdt.core.preferences"
         point="org.eclipse.core.runtime.preferences">
+     <initializer
+           class="scala.tools.eclipse.properties.ColourPreferenceInitializer">
+     </initializer>    
      <initializer
            class="scala.tools.eclipse.properties.ScalaCompilerPreferenceInitializer">
      </initializer>
      <initializer
            class="scala.tools.eclipse.formatter.ScalaFormatterPreferenceInitializer">
      </initializer>
+     <initializer
+           class="scala.tools.eclipse.properties.OrganizeImportsPreferencesInitializer">
+     </initializer>
+  </extension>
+
+  <extension point="org.eclipse.core.expressions.propertyTesters">
+     <propertyTester
+           class="scala.tools.eclipse.launching.ScalaLaunchableTester"
+           id="scala.tools.eclipse.launching.ScalaLaunchableTester"
+           namespace="scala.tools.eclipse.launching"
+           properties="hasMain,canLaunchAsJUnit"
+           type="org.eclipse.core.runtime.IAdaptable"/>            
+      <propertyTester
+            properties="canLaunchAsJUnit"
+            namespace="scala.tools.eclipse.launching.junit"
+            type="org.eclipse.core.runtime.IAdaptable"
+            class="scala.tools.eclipse.launching.JUnitPropertyTester"
+            id="scala.tools.eclipse.launching.JUnitPropertyTester">
+      </propertyTester>
   </extension>
 
   <extension point="org.eclipse.debug.ui.launchShortcuts">
@@ -582,6 +728,43 @@
         </enablement>
       </contextualLaunch>
     </shortcut>
+      <shortcut
+            label="%JUnitShortcut.label"
+            icon="$nl$/icons/full/obj16/julaunch.gif"
+            helpContextId="org.eclipse.jdt.junit.launch_shortcut"
+            class="org.eclipse.jdt.junit.launcher.JUnitLaunchShortcut"
+            modes="run, debug"
+            id="scala.tools.eclipse.scalatest.junitShortcut">
+         <contextualLaunch>
+            <enablement>
+               <with variable="selection">
+                  <count value="1"/>
+               	  <iterate>
+                     <adapt type="org.eclipse.jdt.core.IJavaElement">
+		                <test property="org.eclipse.debug.ui.matchesPattern" value="*.scala"/>
+		                <test property="org.eclipse.jdt.core.isInJavaProject"/>
+		                <test property="org.eclipse.jdt.core.hasTypeOnClasspath" value="junit.framework.Test"/>
+		                <or>
+                        <test property="scala.tools.eclipse.launching.canLaunchAsJUnit" forcePluginActivation="true"/>
+                        <test property="scala.tools.eclipse.launching.junit.canLaunchAsJUnit" forcePluginActivation="true"/>
+                        </or>
+		             </adapt>
+		          </iterate>
+               </with>
+            </enablement>
+         </contextualLaunch>
+         <configurationType
+               id="org.eclipse.jdt.junit.launchconfig">
+         </configurationType>
+         <description
+               description="%DebugJUnitLaunchShortcut.description"
+               mode="debug">
+         </description>
+         <description
+               description="%RunJUnitLaunchShortcut.description"
+               mode="run">
+         </description>
+      </shortcut>
   </extension>
 
   <extension point="org.eclipse.ui.commands">
@@ -599,6 +782,13 @@
       description="Debug Scala Application"
       id="org.eclipse.shortcut.scala.debug"
       name="Debug Scala Application" />
+     <command
+	  name="Show inferred semicolons"
+	  description="Shows inferred semicolons in the current editor"
+	  categoryId="org.eclipse.ui.category.textEditor"
+	  id="scala.tools.eclipse.toggleShowInferredSemicolonsAction"/>
+	  
+      
   </extension>
 
   <extension point="org.eclipse.ui.bindings">
@@ -635,6 +825,10 @@
     <provider class="scala.tools.eclipse.formatter.ScalaFormatterCleanUpProvider" />
   </extension>
 
+  <extension point="org.scala-ide.sdt.aspects.method_verifier">
+    <provider class="scala.tools.eclipse.jcompiler.ScalaMethodVerifierProvider" />
+  </extension>
+  
   <extension point="org.eclipse.contribution.weaving.jdt.imagedescriptorselector">
     <selector
       class="scala.tools.eclipse.javaelements.ScalaImageDescriptorSelector">
@@ -664,8 +858,8 @@
   <extension
          point="org.eclipse.ui.actionSets">
       <actionSet
-            label="CodingActionSet.label"
-            description="CodingActionSet.description"
+            label="Scala"
+            description="Scala Actions"
             visible="false"
             id="scala.tools.eclipse.refactoring.CodingActionSet">
          <menu
@@ -722,7 +916,7 @@
                tooltip="Organize Imports">
          </action>
          <action
-               class="scala.tools.eclipse.refactoring.RenameAction"
+               class="scala.tools.eclipse.refactoring.rename.RenameAction"
                definitionId="scala.tools.eclipse.refactoring.command.Rename"
                id="scala.tools.eclipse.refactoring.renameAction"
                label="Rename"
@@ -734,27 +928,18 @@
                </objectClass>
             </enablement>
          </action>
-	 <!--<action
-               class="scala.tools.eclipse.refactoring.ShowReferencesAction"
-               definitionId="scala.tools.eclipse.refactoring.command.ShowReferences"
-               id="scala.tools.eclipse.refactoring.showReferencesAction"
-               label="Show References"
-               menubarPath="scala.tools.eclipse.refactoring.refactoringMenu/scala.tools.eclipse.refactoring.sourceGeneratorGroup"
-               tooltip="Show References">
-            <enablement>
-               <objectClass
-                     name="org.eclipse.jface.text.TextSelection">
-               </objectClass>
-            </enablement>
-	</action>-->
          <action
-               class="scala.tools.eclipse.quickfix.AddImportAction"
-               definitionId="scala.tools.eclipse.refactoring.command.AddImport"
-               id="scala.tools.eclipse.refactoring.addImportAction"
-               label="Add Import"
-               tooltip="Add Import">
-         </action>
-              </actionSet>
+               class="scala.tools.eclipse.actions.RunSelectionAction"
+               definitionId="scala.tools.eclipse.interpreter.RunSelection"
+               disabledIcon="icons/full/dtool16/run_interpreter.gif"
+               hoverIcon="icons/full/etool16/run_interpreter.gif"
+               icon="icons/full/etool16/run_interpreter.gif"
+               id="scala.tools.eclipse.interpreter.runSelectionAction"
+               label="Run Selection in Scala Interpreter"
+               toolbarPath="org.eclipse.debug.ui.launchActionSet/debug"
+               tooltip="Run Selection in Scala Interpreter">
+         </action>         
+     </actionSet>
    </extension>
 
    <extension
@@ -763,6 +948,11 @@
          description="Refactorings"
          id="scala.tools.eclipse.refactoring.commands.refactoring"
          name="Refactor - Scala"/>
+      <command
+         name="Refactor Quick Menu"
+         description="Shows the refactor quick menu"
+         categoryId="scala.tools.eclipse.refactoring.commands.refactoring"
+         id="scala.tools.eclipse.refactoring.commands.quickMenu"/>
       <command
          categoryId="scala.tools.eclipse.refactoring.commands.refactoring"
          id="scala.tools.eclipse.refactoring.command.ExtractMethod"
@@ -783,25 +973,28 @@
          categoryId="scala.tools.eclipse.refactoring.commands.refactoring"
          id="scala.tools.eclipse.refactoring.command.Rename"
          name="Rename"/>
-      <!--<command
-         categoryId="scala.tools.eclipse.refactoring.commands.refactoring"
-         id="scala.tools.eclipse.refactoring.command.ShowReferences"
-	 name="Show References"/>-->
       <command
-         categoryId="scala.tools.eclipse.refactoring.commands.refactoring"
-         id="scala.tools.eclipse.refactoring.command.AddImport"
-         name="Add Import"/>
+         categoryId="org.eclipse.debug.ui.category.run"
+         id="scala.tools.eclipse.interpreter.RunSelection"
+         name="Send Selection to Scala Interpreter"/>
 </extension>
 
    <extension point="org.eclipse.ui.contexts">
-     <context name="scala.tools.eclipse.scalaEditorScope"
+     <context name="Editing Scala Source"
               description="Scala source file editor"
               parentId="org.eclipse.jdt.ui.javaEditorScope"
               id="scala.tools.eclipse.scalaEditorScope" />
    </extension>
 
 <extension
-      point="org.eclipse.ui.bindings"> <!-- M1 == Ctrl, M2 == Shift M3 == Alt -->
+      point="org.eclipse.ui.bindings"> <!-- M1 == Ctrl/Cmd, M2 == Shift M3 == Alt -->
+   <!-- Bindings to be replaced with Mac bindings like in the JDT (see http://dev.eclipse.org/viewcvs/viewvc.cgi/org.eclipse.jdt.ui/plugin.xml) -->
+   <sequenceModifier find="M2+M3" replace="M1+M3" platforms="cocoa,carbon" />
+   <key
+         commandId="scala.tools.eclipse.refactoring.commands.quickMenu"
+         schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+         contextId="scala.tools.eclipse.scalaEditorScope"
+         sequence="M2+M3+T"/> 
    <key
    		 commandId="scala.tools.eclipse.refactoring.command.ExtractMethod"
    		 schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
@@ -822,16 +1015,18 @@
    		 schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
    		 contextId="scala.tools.eclipse.scalaEditorScope"
    		 sequence="M2+M3+R"/>
+   </extension>
+   <extension point="org.eclipse.ui.bindings"> <!-- Cross-platform bindings -->
    <key
    		 commandId="scala.tools.eclipse.refactoring.command.OrganizeImports"
    		 schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
    		 contextId="scala.tools.eclipse.scalaEditorScope"
    		 sequence="M1+M2+O"/>
    <key
-   		 commandId="scala.tools.eclipse.refactoring.command.AddImport"
-   		 schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-   		 contextId="scala.tools.eclipse.scalaEditorScope"
-   		 sequence="M1+M2+M"/>
+       commandId="scala.tools.eclipse.interpreter.RunSelection"
+       schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+       contextId="scala.tools.eclipse.scalaEditorScope"
+       sequence="M1+M2+X"/>
 
    </extension>
    <extension
@@ -866,4 +1061,57 @@
       <partition type="__dftl_partition_content_type"/>
    </javaCompletionProposalComputer>
  </extension>
+   <extension
+       id="scala_completions"
+       name="Scala Completions"
+       point="org.eclipse.jdt.ui.javaCompletionProposalComputer">
+    <proposalCategory
+          icon="icons/scala.png">
+    </proposalCategory>
+ </extension>
+ <extension
+       id="scala.tools.eclipse.ui.ScalaCompletionProposalComputer"
+       name="Scala Completion Proposal Computer"
+       point="org.eclipse.jdt.ui.javaCompletionProposalComputer">
+    <javaCompletionProposalComputer
+          categoryId="org.scala-ide.sdt.core.scala_completions"
+          class="scala.tools.eclipse.ui.ScalaCompletionProposalComputer">
+       <partition
+             type="__dftl_partition_content_type">
+       </partition>
+    </javaCompletionProposalComputer>
+ </extension>
+ <extension
+       id="scala.tools.eclipse.consoleView"
+       point="org.eclipse.ui.views">
+    <view
+          allowMultiple="true"
+          class="scala.tools.eclipse.interpreter.ReplConsoleView"
+          icon="icons/full/etool16/scala_app.gif"
+          id="org.scala-ide.sdt.core.consoleView"
+          name="Scala Interpreter"
+          restorable="false">
+    </view>
+ </extension>
+ <extension
+       id="scala_java_completions"
+       name="Scala Completions (Java sources)"
+       point="org.eclipse.jdt.ui.javaCompletionProposalComputer">
+    <proposalCategory
+          icon="icons/scala.png">
+    </proposalCategory>
+ </extension>
+ <extension
+       id="JavaTraitMembersCompletions"
+       name="Scala Trait Member Completions for Java"
+       point="org.eclipse.jdt.ui.javaCompletionProposalComputer">
+    <javaCompletionProposalComputer
+          activate="false"
+          categoryId="org.scala-ide.sdt.core.scala_java_completions"
+          class="scala.tools.eclipse.completion.ScalaJavaCompletionProposalComputer">
+       <partition
+             type="__dftl_partition_content_type">
+       </partition>
+    </javaCompletionProposalComputer>
+ </extension> 
 </plugin>

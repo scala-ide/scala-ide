@@ -10,18 +10,17 @@ import scala.collection.mutable.HashSet
 import java.{ lang => jl, util => ju }
 
 import org.eclipse.core.resources.{ IFile, IncrementalProjectBuilder, IProject, IResource, IResourceDelta, IResourceDeltaVisitor, IResourceVisitor }
-import org.eclipse.core.runtime.{ IProgressMonitor, IPath }
+import org.eclipse.core.runtime.{ IProgressMonitor, IPath, SubMonitor }
 import org.eclipse.jdt.internal.core.JavaModelManager
 import org.eclipse.jdt.internal.core.builder.{ JavaBuilder, NameEnvironment, State }
 
-import scala.tools.eclipse.contribution.weaving.jdt.builderoptions.ScalaJavaBuilder
 import scala.tools.eclipse.javaelements.JDTUtils
 import scala.tools.eclipse.util.{ FileUtils, ReflectionUtils }
 
 class ScalaBuilder extends IncrementalProjectBuilder {
   def plugin = ScalaPlugin.plugin
 
-  private val scalaJavaBuilder = new ScalaJavaBuilder
+  private val scalaJavaBuilder = new GeneralScalaJavaBuilder
   
   override def clean(monitor : IProgressMonitor) {
     super.clean(monitor)
@@ -30,28 +29,19 @@ class ScalaBuilder extends IncrementalProjectBuilder {
     
     ensureProject
     scalaJavaBuilder.clean(monitor)
+    project.buildManager.clean(monitor)
     JDTUtils.refreshPackageExplorer
   }
   
-  override def build(kind0 : Int, ignored : ju.Map[_, _], monitor : IProgressMonitor) : Array[IProject] = {
+  override def build(kind : Int, ignored : ju.Map[_, _], monitor : IProgressMonitor) : Array[IProject] = {
     import IncrementalProjectBuilder._
+    import buildmanager.sbtintegration.EclipseSbtBuildManager
 
     val project = plugin.getScalaProject(getProject)
-    val kind = if (!project.forceClean)
-      kind0
-    else {
-      project.forceClean = false
-      if (kind0 != CLEAN_BUILD)
-        clean(monitor)
-      CLEAN_BUILD
-    }
     
     val allSourceFiles = project.allSourceFiles()
-    val dependeeProjectChanged =
-      project.externalDepends.exists(
-        x => { val delta = getDelta(x); delta == null || delta.getKind != IResourceDelta.NO_CHANGE})
     
-    val (addedOrUpdated, removed) = if (project.prepareBuild() || dependeeProjectChanged)
+    val (addedOrUpdated, removed) = if (project.prepareBuild())
       (allSourceFiles, Set.empty[IFile])
     else {
       kind match {
@@ -62,7 +52,7 @@ class ScalaBuilder extends IncrementalProjectBuilder {
           getDelta(project.underlying).accept(new IResourceDeltaVisitor {
             def visit(delta : IResourceDelta) = {
               delta.getResource match {
-                case file : IFile if plugin.isBuildable(file) && project.sourceFolders.exists(_.getLocation.isPrefixOf(file.getLocation)) =>
+                case file : IFile if plugin.isBuildable(file) && project.sourceFolders.exists(_.isPrefixOf(file.getLocation)) =>
                   delta.getKind match {
                     case IResourceDelta.ADDED | IResourceDelta.CHANGED =>
                       addedOrUpdated0 += file
@@ -75,23 +65,37 @@ class ScalaBuilder extends IncrementalProjectBuilder {
               true
             }
           })
+          // Only for sbt which is able to track external dependencies properly
+          project.buildManager match {
+            case _: EclipseSbtBuildManager =>
+              if (project.externalDepends.exists(
+                x => { val delta = getDelta(x); delta == null || delta.getKind != IResourceDelta.NO_CHANGE})) {
+                // in theory need to be able to identify the exact dependencies
+                // but this is deeply rooted inside the sbt dependency tracking mechanism
+                // so we just tell it to have a look at all the files 
+                // and it will figure out the exact changes during initialization
+                addedOrUpdated0 ++= allSourceFiles
+              }
+            case _ => 
+          }
           (Set.empty ++ addedOrUpdated0, Set.empty ++ removed0)
         case CLEAN_BUILD | FULL_BUILD =>
           (allSourceFiles, Set.empty[IFile])
       }
     }
-    
-    if (monitor != null)
-      monitor.beginTask("build all", 100)
+
+    val subMonitor = SubMonitor.convert(monitor, 100).newChild(100, SubMonitor.SUPPRESS_NONE)
+    subMonitor.beginTask("Running Scala Builder", 100)
       
-    project.build(addedOrUpdated, removed, monitor)
+    project.build(addedOrUpdated, removed, subMonitor)
     
     val depends = project.externalDepends.toList.toArray
-    if (allSourceFiles.exists(FileUtils.hasBuildErrors(_)))
+    // SBT build manager already calls java builder internally
+    if (allSourceFiles.exists(FileUtils.hasBuildErrors(_)) || project.buildManager.isInstanceOf[EclipseSbtBuildManager])
       depends
     else {
       ensureProject
-      val javaDepends = scalaJavaBuilder.build(kind, ignored, monitor)
+      val javaDepends = scalaJavaBuilder.build(kind, ignored, subMonitor) 
       val modelManager = JavaModelManager.getJavaModelManager
       val state = modelManager.getLastBuiltState(getProject, null).asInstanceOf[State]
       val newState = if (state ne null) state
@@ -111,16 +115,6 @@ class ScalaBuilder extends IncrementalProjectBuilder {
     if (scalaJavaBuilder.getProject == null)
       scalaJavaBuilder.setProject0(getProject)
   }
-}
-
-object ScalaJavaBuilderUtils extends ReflectionUtils {
-  private val ibClazz = Class.forName("org.eclipse.core.internal.events.InternalBuilder")
-  private val setProjectMethod = getDeclaredMethod(ibClazz, "setProject", classOf[IProject])
-  private val jbClazz = Class.forName("org.eclipse.jdt.internal.core.builder.JavaBuilder")
-  private val initializeBuilderMethod = getDeclaredMethod(jbClazz, "initializeBuilder", classOf[Int], classOf[Boolean])
-  
-  def setProject(builder : ScalaJavaBuilder, project : IProject) = setProjectMethod.invoke(builder, project)
-  def initializeBuilder(builder : ScalaJavaBuilder, kind : Int, forBuild : Boolean) = initializeBuilderMethod.invoke(builder, int2Integer(kind), boolean2Boolean(forBuild))
 }
 
 object StateUtils extends ReflectionUtils {

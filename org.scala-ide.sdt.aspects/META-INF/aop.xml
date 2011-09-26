@@ -12,19 +12,19 @@
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.core.SourceLookupAspect"/>
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.hierarchy.HierarchyAspect"/>
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.indexerprovider.IndexerProviderAspect"/>
+<aspect name="scala.tools.eclipse.contribution.weaving.jdt.jcompiler.MethodVerifierAspect"/>
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.launching.JavaLaunchableTesterAspect"/>
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.search.SearchAspect"/>
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.ui.ScalaOverrideLabelAspect"/>
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.ClassFileEditorIdAspect"/>
-<aspect name="scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.CompletionAspect"/>
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.HoversAspect"/>
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.ScalaCloseStringsAspect"/>
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.ScalaEditorPreferencesAspect"/>
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.formatter.FormatterCleanUpRegistryAspect"/>
-<aspect name="scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.SaveParticipantRegistryAspect"/>
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.ScalaPartitionerAspect"/>
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.spellingengineprovider.SpellingEngineProviderAspect"/>
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.debug.SuppressBreakpointMarkerUpdaterAspect"/>
+<aspect name="scala.tools.eclipse.contribution.weaving.jdt.debug.JDIModelPresentationAspect"/>
 <aspect name="scala.tools.eclipse.contribution.weaving.pde.ui.PluginImportAspect"/>
 </aspects>
 </aspectj>

@@ -23,7 +23,7 @@ object ScalaWordFinder extends IScalaWordFinder {
   }
   
   def bufferToSeq(buf : IBuffer) = new IndexedSeq[Char] {
-    override def apply(i : Int) = buf.getChar(i)
+    override def apply(i : Int) = if (i >= buf.getLength()) '\0' else buf.getChar(i)
     override def length = buf.getLength
   }
 
@@ -82,20 +82,16 @@ object ScalaWordFinder extends IScalaWordFinder {
   def findCompletionPoint(buffer : IBuffer, offset : Int) : IRegion =
     findCompletionPoint(bufferToSeq(buffer), offset)
 
-  def findCompletionPoint(document : Seq[Char], offset : Int) : IRegion = {
+  def findCompletionPoint(document : Seq[Char], offset0 : Int) : IRegion = {
     def isWordPart(ch : Char) = isIdentifierPart(ch) || isOperatorPart(ch)
-    def isWhitespace(ch : Char) =
-      ch match {
-        case ' ' | '\t' | CR | LF | FF => true
-        case _ => false
-      }
-    
+  
+    val offset = if (offset0 >= document.length) (document.length - 1) else offset0
     val ch = document(offset)
     if (isWordPart(ch))
       findWord(document, offset)
-    else if(offset > 0 && isWhitespace(ch) && isWordPart(document(offset-1)))
+    else if(offset > 0 && isWordPart(document(offset-1)))
       findWord(document, offset-1)
     else
-      null
+      new Region(offset, 0)
   }
 }

@@ -59,7 +59,9 @@ class NewScalaProjectWizardPageTwo(pageOne : NewJavaProjectWizardPageOne) extend
     val project = getJavaProject.getProject
     if (!project.hasNature(JavaCore.NATURE_ID)) {
       val desc = project.getDescription
-      val natures = ArrayBuffer(desc.getNatureIds : _*) + ScalaPlugin.plugin.natureId + JavaCore.NATURE_ID
+      val natures = ArrayBuffer(desc.getNatureIds : _*)
+      natures += ScalaPlugin.plugin.natureId
+      natures += JavaCore.NATURE_ID
       desc.setNatureIds(natures.toArray)
       project.setDescription(desc, monitor)
     } else {

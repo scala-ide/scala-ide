@@ -5,4 +5,6 @@
 
 package scala.tools.eclipse.contribution.weaving.jdt.ui;
 
-public interface IMethodOverrideInfo {}
+public interface IMethodOverrideInfo {
+    int getOverrideInfo();
+}
