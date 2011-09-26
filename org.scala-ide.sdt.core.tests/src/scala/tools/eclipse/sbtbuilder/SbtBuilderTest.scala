@@ -10,6 +10,7 @@ import org.junit.Assert
 import org.eclipse.core.resources.IMarker
 import scala.tools.eclipse.testsetup.SDTTestUtils
 import org.eclipse.core.resources.IFile
+import org.junit.Ignore
 
 object SbtBuilderTest extends testsetup.TestProjectSetup("builder")
 
@@ -45,7 +46,7 @@ class SbtBuilderTest {
     }
   }
   
-  @Test def dependencyTest() {
+  @Test @Ignore def dependencyTest() {
     object depProject extends testsetup.TestProjectSetup("builder-sub")
     
     val problemsDep = rebuild(depProject.project)
