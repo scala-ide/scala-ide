@@ -6,34 +6,6 @@
 	<classpathentry kind="con" path="org.eclipse.pde.core.requiredPlugins"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
 	<classpathentry kind="lib" path="lib/miglayout-3.7.4-swt.jar"/>
-	<classpathentry kind="lib" path="/org.scala-ide.sbt/lib/actions_2.10.0-SNAPSHOT.jar"/>
-	<classpathentry kind="lib" path="/org.scala-ide.sbt/lib/api_2.10.0-SNAPSHOT.jar"/>
-	<classpathentry kind="lib" path="/org.scala-ide.sbt/lib/cache_2.10.0-SNAPSHOT.jar"/>
-	<classpathentry kind="lib" path="/org.scala-ide.sbt/lib/classfile_2.10.0-SNAPSHOT.jar"/>
-	<classpathentry kind="lib" path="/org.scala-ide.sbt/lib/classpath_2.10.0-SNAPSHOT.jar"/>
-	<classpathentry kind="lib" path="/org.scala-ide.sbt/lib/collections_2.10.0-SNAPSHOT.jar"/>
-	<classpathentry kind="lib" path="/org.scala-ide.sbt/lib/compile_2.10.0-SNAPSHOT.jar"/>
-	<classpathentry kind="lib" path="/org.scala-ide.sbt/lib/completion_2.10.0-SNAPSHOT.jar"/>
-	<classpathentry kind="lib" path="/org.scala-ide.sbt/lib/control_2.10.0-SNAPSHOT.jar"/>
-	<classpathentry kind="lib" path="/org.scala-ide.sbt/lib/discovery_2.10.0-SNAPSHOT.jar"/>
-	<classpathentry kind="lib" path="/org.scala-ide.sbt/lib/incremental-compiler_2.10.0-SNAPSHOT.jar"/>
-	<classpathentry kind="lib" path="/org.scala-ide.sbt/lib/interface_2.10.0-SNAPSHOT.jar"/>
-	<classpathentry kind="lib" path="/org.scala-ide.sbt/lib/io_2.10.0-SNAPSHOT.jar"/>
-	<classpathentry kind="lib" path="/org.scala-ide.sbt/lib/ivy_2.10.0-SNAPSHOT.jar"/>
-	<classpathentry kind="lib" path="/org.scala-ide.sbt/lib/ivy.jar"/>
-	<classpathentry kind="lib" path="/org.scala-ide.sbt/lib/jline.jar"/>
-	<classpathentry kind="lib" path="/org.scala-ide.sbt/lib/launcher_2.10.0-SNAPSHOT.jar"/>
-	<classpathentry kind="lib" path="/org.scala-ide.sbt/lib/launcher-interface_2.10.0-SNAPSHOT.jar"/>
-	<classpathentry kind="lib" path="/org.scala-ide.sbt/lib/logging_2.10.0-SNAPSHOT.jar"/>
-	<classpathentry kind="lib" path="/org.scala-ide.sbt/lib/main_2.10.0-SNAPSHOT.jar"/>
-	<classpathentry kind="lib" path="/org.scala-ide.sbt/lib/persist_2.10.0-SNAPSHOT.jar"/>
-	<classpathentry kind="lib" path="/org.scala-ide.sbt/lib/precompiled-2.10.0-SNAPSHOT-2_10_0-SNAPSHOT.jar"/>
-	<classpathentry kind="lib" path="/org.scala-ide.sbt/lib/process_2.10.0-SNAPSHOT.jar"/>
-	<classpathentry kind="lib" path="/org.scala-ide.sbt/lib/run_2.10.0-SNAPSHOT.jar"/>
-	<classpathentry kind="lib" path="/org.scala-ide.sbt/lib/sbinary_2.10.0-SNAPSHOT.jar"/>
-	<classpathentry kind="lib" path="/org.scala-ide.sbt/lib/sbt_2.10.0-SNAPSHOT.jar"/>
-	<classpathentry kind="lib" path="/org.scala-ide.sbt/lib/task-system_2.10.0-SNAPSHOT.jar"/>
-	<classpathentry kind="lib" path="/org.scala-ide.sbt/lib/tasks_2.10.0-SNAPSHOT.jar"/>
 	<classpathentry kind="con" path="org.scala-ide.sdt.launching.SCALA_CONTAINER"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="output" path="target/classes"/>

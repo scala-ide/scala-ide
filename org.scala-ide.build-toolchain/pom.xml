@@ -17,7 +17,7 @@
   <modules>
     <module>../org.scala-ide.scala.compiler</module>
     <module>../org.scala-ide.scala.library</module>
-    <module>../org.scala-ide.sbt</module>
+    <module>../org.scala-ide.sbt.full.library</module>
   </modules>
   <dependencyManagement>
     <dependencies>
