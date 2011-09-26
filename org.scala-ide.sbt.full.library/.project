@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>org.scala-ide.sbt</name>
+	<name>org.scala-ide.sbt.full.library</name>
 	<comment></comment>
 	<buildSpec>
 		<buildCommand>

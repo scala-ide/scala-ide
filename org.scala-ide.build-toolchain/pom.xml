@@ -9,7 +9,7 @@
   <packaging>pom</packaging>
 
   <properties>
-    <sbt.version>0.11.0</sbt.version>
+    <sbt.version>0.11.1</sbt.version>
     <patch.level>p0002</patch.level>
     <encoding>UTF-8</encoding>
   </properties>
@@ -17,7 +17,7 @@
   <modules>
     <module>../org.scala-ide.scala.compiler</module>
     <module>../org.scala-ide.scala.library</module>
-    <module>../org.scala-ide.sbt</module>
+    <module>../org.scala-ide.sbt.full.library</module>
   </modules>
   <dependencyManagement>
     <dependencies>
