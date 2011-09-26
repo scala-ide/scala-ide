@@ -54,7 +54,7 @@ class SbtBuilderTest {
     
     val fooCU = depProject.compilationUnit("subpack/Foo.scala")
     println("IFile: " + fooCU.getResource().getAdapter(classOf[IFile]).asInstanceOf[IFile])
-    SDTTestUtils.changeContentOfFile(depProject.project.underlying, fooCU.getResource().getAdapter(classOf[IFile]).asInstanceOf[IFile], "")
+    SDTTestUtils.changeContentOfFile(depProject.project.underlying, fooCU.getResource().getAdapter(classOf[IFile]).asInstanceOf[IFile], changedFooScala)
     
     rebuild(depProject.project)
     val problems = rebuild(project)
