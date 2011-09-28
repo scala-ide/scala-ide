@@ -180,9 +180,11 @@ class ScalaProject(val underlying: IProject) {
             val absPath = plugin.workspaceRoot.findMember(cpe.getPath)
             if (absPath != null)
               path += absPath.getLocation
-            else
+            else {
               path += cpe.getPath
-          }
+            }
+          } else
+            ScalaPlugin.plugin.logError("Classpath computation encountered a null path for " + cpe, null)
         case IClasspathEntry.CPE_SOURCE =>
           val cpeOutput = cpe.getOutputLocation
           val outputLocation = if (cpeOutput != null) cpeOutput else project.getOutputLocation
@@ -194,6 +196,7 @@ class ScalaProject(val underlying: IProject) {
           }  
 
         case _ =>
+          ScalaPlugin.plugin.logWarning("Classpath computation encountered unknown entry: " + cpe)
       }
     }
     computeClasspath(javaProject, false)
