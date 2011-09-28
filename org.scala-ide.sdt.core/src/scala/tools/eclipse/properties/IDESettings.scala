@@ -3,7 +3,7 @@
  */
 // $Id$
 
-package scala.tools.eclipse.util
+package scala.tools.eclipse.properties
 
 import scala.tools.nsc.Settings
 
@@ -41,6 +41,6 @@ object IDESettings {
 
 object ScalaPluginSettings extends Settings {
   val YPlugininfo = BooleanSetting("-plugininfo", "Enable logging of the Scala Plugin info")
-  val buildManager = ChoiceSetting("-buildmanager", "which", "Build manager to use", List("refined", "sbt"), "refined")
+  val buildManager = ChoiceSetting("-buildmanager", "which", "Build manager to use", List("refined", "sbt"), "sbt")
 
 }

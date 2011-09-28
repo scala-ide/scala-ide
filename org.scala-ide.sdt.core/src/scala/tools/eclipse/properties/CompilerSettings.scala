@@ -18,8 +18,7 @@ import org.eclipse.swt.layout.{ GridData, GridLayout, RowLayout }
 import org.eclipse.swt.widgets.{ Button, Combo, Composite, Group, Label, Control, TabFolder, TabItem, Text }
 import scala.tools.nsc.Settings
 import scala.tools.eclipse.{ ScalaPlugin, SettingConverterUtil }
-import scala.tools.eclipse.util.IDESettings
-import scala.tools.eclipse.util.ScalaPluginSettings
+import scala.tools.eclipse.properties.{IDESettings, ScalaPluginSettings }
 import scala.tools.eclipse.util.SWTUtils
 import org.eclipse.jface.fieldassist.FieldDecorationRegistry
 import org.eclipse.jface.fieldassist.ControlDecoration

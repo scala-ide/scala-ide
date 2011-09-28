@@ -18,7 +18,6 @@ import org.eclipse.core.resources.IProject
 import scala.tools.eclipse.ScalaPlugin
 
 import scala.tools.nsc.Settings
-import scala.tools.eclipse.util.{IDESettings, ScalaPluginSettings}
 import scala.tools.eclipse.{SettingConverterUtil }
 
 class ScalaPreferences extends PropertyPage with IWorkbenchPreferencePage with EclipseSettings

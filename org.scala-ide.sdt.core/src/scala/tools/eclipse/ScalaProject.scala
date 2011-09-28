@@ -20,7 +20,8 @@ import scala.tools.nsc.{ Settings, MissingRequirementError }
 import scala.tools.nsc.util.SourceFile
 import scala.tools.eclipse.javaelements.ScalaCompilationUnit
 import scala.tools.eclipse.properties.PropertyStore
-import scala.tools.eclipse.util.{ Cached, EclipseResource, IDESettings, OSGiUtils, ReflectionUtils, EclipseUtils }
+import scala.tools.eclipse.util.{ Cached, EclipseResource, OSGiUtils, ReflectionUtils, EclipseUtils }
+import scala.tools.eclipse.properties.IDESettings
 import util.SWTUtils.asyncExec
 import EclipseUtils.workspaceRunnableIn
 import scala.tools.eclipse.properties.CompilerSettings
@@ -407,7 +408,7 @@ class ScalaProject(val underlying: IProject) {
   }
   
   private def buildManagerInitialize: String =
-    storage.getString(SettingConverterUtil.convertNameToProperty(util.ScalaPluginSettings.buildManager.name))
+    storage.getString(SettingConverterUtil.convertNameToProperty(properties.ScalaPluginSettings.buildManager.name))
   
   def storage = {
     val workspaceStore = ScalaPlugin.plugin.getPreferenceStore
