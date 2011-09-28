@@ -36,7 +36,6 @@ trait EclipseSettings {
       case setting: Settings#ChoiceSetting => new ComboSetting(setting)
     }
 
-    import scala.tools.eclipse.util.IDESettings
     case class EclipseBox(name: String, eSettings: List[EclipseSetting])
     def toEclipseBox(userBox: IDESettings.Box, preferenceStore: IPreferenceStore): EclipseBox = {
       val eSettings = userBox.userSettings.map { s: Settings#Setting =>

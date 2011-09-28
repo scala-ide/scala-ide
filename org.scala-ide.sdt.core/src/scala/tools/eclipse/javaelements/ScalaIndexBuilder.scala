@@ -12,7 +12,7 @@ import scala.tools.nsc.symtab.Flags
 
 import scala.tools.eclipse.{ ScalaPlugin, ScalaPresentationCompiler,
 	                           ScalaSourceIndexer, SettingConverterUtil }
-import scala.tools.eclipse.util.ScalaPluginSettings
+import scala.tools.eclipse.properties.ScalaPluginSettings
 
 /** Add entries to the JDT index. This class traverses an *unattributed* Scala AST. This 
  *  means a tree without symbols or types. However, a tree that was typed may still get here
