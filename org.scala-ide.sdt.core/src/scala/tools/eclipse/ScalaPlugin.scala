@@ -97,6 +97,7 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
   lazy val shortScalaVer = cutVersion(scalaVer)
 
   val scalaCompilerBundle = Platform.getBundle(ScalaPlugin.plugin.compilerPluginId)
+  val scalaCompilerBundleVersion = scalaCompilerBundle.getVersion()
   val compilerClasses = pathInBundle(scalaCompilerBundle, "/lib/scala-compiler.jar")
   val continuationsClasses = pathInBundle(scalaCompilerBundle, "/lib/continuations.jar")
   val compilerSources = pathInBundle(scalaCompilerBundle, "/lib/scala-compiler-src.jar")
@@ -107,7 +108,15 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
   //lazy val sbtScalaLib = pathInBundle(sbtCompilerBundle, "/lib/scala-" + shortScalaVer + "/lib/scala-library.jar")
   //lazy val sbtScalaCompiler = pathInBundle(sbtCompilerBundle, "/lib/scala-" + shortScalaVer + "/lib/scala-compiler.jar")
   
-  val scalaLibBundle = Platform.getBundle(ScalaPlugin.plugin.libraryPluginId)
+  val scalaLibBundle = {
+    val bundles = Platform.getBundles(ScalaPlugin.plugin.libraryPluginId, scalaCompilerBundleVersion.toString())
+    println("[scalaLibBundle] Found %d bundles: %s".format(bundles.size, bundles.toList.mkString(", ")))
+    bundles.find(_.getVersion() == scalaCompilerBundleVersion).getOrElse {
+      ScalaPlugin.plugin.logWarning("Couldnt find a match for %s in %s. Using default.".format(scalaCompilerBundleVersion, bundles.toList.mkString(", ")))
+      Platform.getBundle(ScalaPlugin.plugin.libraryPluginId)
+    }
+  }
+  
   val libClasses = pathInBundle(scalaLibBundle, "/lib/scala-library.jar")
   val libSources = pathInBundle(scalaLibBundle, "/lib/scala-library-src.jar")
   val dbcClasses = pathInBundle(scalaLibBundle, "/lib/scala-dbc.jar")
