@@ -253,9 +253,16 @@ class EclipseSbtBuildManager(project: ScalaProject, settings0: Settings)
 	lazy val reporter: xsbti.Reporter = new SbtBuildReporter(_buildReporter)
 	val pendingSources = new mutable.HashSet[IFile]
 
+	/** Filter the classpath. Return the original classpath without the Scala compiler and library jars.
+	 *  The second element of the tuple contains the Scala library jar.
+	 */
 	private def filterOutScalaJars(l: Seq[IPath]): (Seq[IPath], Option[IPath]) = {
 		val jars = l.partition(p => p.lastSegment() == ScalaCompilerConf.LIBRARY_SUFFIX || p.lastSegment() == ScalaCompilerConf.COMPILER_SUFFIX)
-		(jars._2, jars._1.find(p => p.lastSegment() == ScalaCompilerConf.LIBRARY_SUFFIX))
+		
+		// make sure the library file exists on disk. You can have several scala-library.jar entries in 
+		// the classpath, coming from MANIFEST.MF (ClassPath: entry) expansion of other jars.
+		// Such jars may not exist on disk, though.
+		(jars._2, jars._1.find(p => p.lastSegment() == ScalaCompilerConf.LIBRARY_SUFFIX && p.toFile().exists()))
 	}
 	
 	lazy val scalaVersion = {
