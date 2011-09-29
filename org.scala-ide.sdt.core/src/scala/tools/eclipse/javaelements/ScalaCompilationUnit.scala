@@ -27,6 +27,12 @@ import scala.tools.nsc.util.{ BatchSourceFile, SourceFile }
 import scala.tools.eclipse.contribution.weaving.jdt.{ IScalaCompilationUnit, IScalaWordFinder }
 import scala.tools.eclipse.{ ScalaImages, ScalaPlugin, ScalaPresentationCompiler, ScalaSourceIndexer, ScalaWordFinder }
 import scala.tools.eclipse.util.ReflectionUtils
+import org.eclipse.jdt.core.IField
+import org.eclipse.jdt.core.IMethod
+import org.eclipse.jdt.core.ISourceReference
+import org.eclipse.jdt.core.IParent
+import org.eclipse.jdt.internal.core.JavaElement
+import org.eclipse.jdt.internal.core.SourceRefElement
 
 trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with ScalaElement with IScalaCompilationUnit with IBufferChangedListener {
   val project = ScalaPlugin.plugin.getScalaProject(getJavaProject.getProject)
@@ -112,9 +118,45 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
     newSearchableEnvironment(DefaultWorkingCopyOwner.PRIMARY)
   
   override def getSourceElementAt(pos : Int) : IJavaElement = {
-    super.getSourceElementAt(pos) match {
+    getChildAt(this, pos) match {
       case smie : ScalaModuleInstanceElement => smie.getParent;
-      case elem => elem 
+      case null => this
+      case elem => elem
+    }
+  }
+  
+  def getChildAt(element: IJavaElement, pos: Int): IJavaElement = {
+    /* companion-class can be selected instead of the object in the JDT-'super' 
+       implementation and make the private method and fields unreachable.
+       To avoid this, we look for deepest element containing the position
+     */
+    
+    def depth(e: IJavaElement): Int = if (e == element) 0 else (depth(e.getParent()) + 1)
+    
+    element match {
+      case parent: IParent => {
+        var resultElement= element
+        // look through the list of children from the end, because the constructor (at
+        // the beginning) covers the whole source code
+        for (child <- parent.getChildren().reverse) {
+          child match {
+            case sourceReference: ISourceReference => {
+              // check if the range of the child contains the position
+              val range= sourceReference.getSourceRange
+              val rangeStart= range.getOffset
+              if (rangeStart <= pos && pos <= rangeStart + range.getLength) {
+                // look in the child itself
+                val foundChild = getChildAt(child, pos)
+                // check if the found element is more precise than the one previously found
+                if (depth(foundChild) > depth(resultElement))
+                  resultElement = foundChild
+              }
+            }
+          }
+        }
+        resultElement
+      }
+      case elem => elem
     }
   }
     
