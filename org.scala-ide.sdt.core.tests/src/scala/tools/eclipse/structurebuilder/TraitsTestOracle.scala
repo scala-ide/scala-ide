@@ -24,7 +24,7 @@ C1.scala [in traits [in src [in simple-structure-builder]]]
   import org.junit.Test
   class C
     int _x
-    T _y
+    traits.C.T _y
     C(int, T)
     C(T)
     int x

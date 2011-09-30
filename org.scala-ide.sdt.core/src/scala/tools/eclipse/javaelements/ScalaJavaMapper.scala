@@ -7,12 +7,12 @@ package scala.tools.eclipse.javaelements
 
 
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants
-
 import scala.tools.nsc.symtab.Flags
 import scala.tools.eclipse.ScalaPresentationCompiler
 import ch.epfl.lamp.fjbg.{ JObjectType, JType }
+import scala.tools.eclipse.util.HasLogger
 
-trait ScalaJavaMapper extends ScalaAnnotationHelper { self : ScalaPresentationCompiler => 
+trait ScalaJavaMapper extends ScalaAnnotationHelper with HasLogger { self : ScalaPresentationCompiler => 
 
   def mapType(t : Tree) : String = {
     (t match {
@@ -143,20 +143,27 @@ trait ScalaJavaMapper extends ScalaAnnotationHelper { self : ScalaPresentationCo
       case "scala.Float" => "float"
       case "scala.Double" => "double"
       case "<NoSymbol>" => "void"
-      case n =>
-        if(s.isTypeParameter) s.encodedName
-        else n
+      case n => n
     }
   }
   
-  def mapType(t: Type): String = {
-	val base = mapType(t.typeSymbol)
+  /** 
+   * Map a Scala `Type` that '''does not take type parameters''' into its
+   * Java representation. 
+   * A special case exists for Scala `Array` since in Java array do not take 
+   * type parameters.
+   * */
+  def mapType(tpe: Type): String = {
+	val base = mapType(tpe.typeSymbol)
 	base match {
 	  case "scala.Array" => 
-	    val paramTypes = t.typeArgs.map(mapType(_))
+	    val paramTypes = tpe.typeArgs.map(mapType(_))
 	    assert(paramTypes.size == 1)
         paramTypes.head + "[]"
-	  case refTpe => refTpe
+	  case basicTpe => 
+	    if(tpe.typeParams.nonEmpty) 
+	      logger.debug("mapType(Type) is not expected to be used with a type that has type parameters. (passed type was %s)".format(tpe))
+	    basicTpe
 	}
   }
   

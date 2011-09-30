@@ -7,17 +7,13 @@ trait JavaSig { pc: ScalaPresentationCompiler =>
 
   /*
    * An utility class that allows to extract information from the `symbol`'s java signature.
-   * If the passed `symbol` does not need a Java signature, default (empty) values will be 
-   * returned where it makes sense.
+   * If the passed `symbol` does not need a Java signature, empty values are returned.
    * 
-   * Examples:
-   * (1) Given the following method declaration:
-   * <code>
-   * 	def foo[T <: Foo, U <: ArrayList[_ >: Class[T]]](u: U, t: T):T  = t
-   * </code>
+   * @example Given the following method declaration:
+   * {{{ def foo[T <: Foo, U <: ArrayList[_ >: Class[T]]](u: U, t: T):T  = t }}}
    * 
    * The following are the values computed by JavaSignatureConverter:
-   * <code>
+   * {{{
    * 	sig <- <T:LFoo;U:Ljava.util.ArrayList<-Ljava.lang.Class<TT;>;>;>(TU;TT;)TT;
    * 	paramsCount <- 2
    * 	paramsType <- [[U], [T]]
@@ -25,19 +21,17 @@ trait JavaSig { pc: ScalaPresentationCompiler =>
    * 	typeVars <- [T, U]
    * 	typeParamsSig <- [T:LFoo;, U:Ljava.util.ArrayList<-Ljava.lang.Class<TT;>;>;]
    * 	typeParamsBounds <- [[LFoo;], [Ljava.util.ArrayList<-Ljava.lang.Class<TT;>;>;]]
-   * 	typeParamsBoundsReadable <- [[F, o, o], [j, a, v, a, ., u, t, i, l, ., A, r, r, a, y, L, i, s, t, <, ?,  , s, u, p, e, r,  , j, a, v, a, ., l, a, n, g, ., C, l, a, s, s, <, T, >, >]]
+   * 	typeParamsBoundsReadable <- [[Foo], [java.util.ArrayList<? super java.lang.Class<T>>]]
    * 	returnTypeSig <- TT;
    * 	returnType <- T
    * 	exceptionTypes <- []
-   * </code>
+   * }}}
    *
-   * (2) Given the following method declaration:
-   * <code>
-   * 	def foo[U <: List[Array[String]]](u: U, s: Int):U  = u
-   * </code>
+   * @example Given the following method declaration:
+   * {{{ def foo[U <: List[Array[String]]](u: U, s: Int):U  = u }}}
    * 
    * The following are the values computed by JavaSignatureConverter:
-   * <code>
+   * {{{
    * 	sig <- <U:Lscala.collection.immutable.List<[Ljava.lang.String;>;>(TU;I)TU;
    * 	paramsCount <- 2
    * 	paramsType <- [[U], [i, n, t]]
@@ -45,25 +39,25 @@ trait JavaSig { pc: ScalaPresentationCompiler =>
    * 	typeVars <- [U]
    * 	typeParamsSig <- [U:Lscala.collection.immutable.List<[Ljava.lang.String;>;]
    * 	typeParamsBounds <- [[Lscala.collection.immutable.List<[Ljava.lang.String;>;]]
-   * 	typeParamsBoundsReadable <- [[s, c, a, l, a, ., c, o, l, l, e, c, t, i, o, n, ., i, m, m, u, t, a, b, l, e, ., L, i, s, t, <, j, a, v, a, ., l, a, n, g, ., S, t, r, i, n, g, [, ], >]]
+   * 	typeParamsBoundsReadable <- [[scala.collection.immutable.List<java.lang.String[]>]]
    * 	returnTypeSig <- TU;
    * 	returnType <- U
    * 	expceptionTypes <- []
-   * </code>
+   * }}}
    */
-  class JavaSignature(sym: Symbol) {
+  class JavaSignature(symbol: Symbol) {
     import org.eclipse.jdt.core.Signature
 
     private lazy val sig: Option[String] = {
       // make sure to execute this call in the presentation compiler's thread
-      pc.ask { () =>
-	      if (erasure.needsJavaSig(sym.info)) {
+      pc.askOption { () =>
+	      if (erasure.needsJavaSig(symbol.info)) {
 	        // it's *really* important we ran pc.atPhase so that symbol's type is updated! (atPhase does side-effects on the type!)
-	        for (signature <- erasure.javaSig(sym, pc.atPhase(pc.currentRun.erasurePhase)(sym.info)))
+	        for (signature <- erasure.javaSig(symbol, pc.atPhase(pc.currentRun.erasurePhase)(symbol.info)))
 	          yield signature.replace("/", ".")
 	      } 
 	      else None
-      }
+      }.getOrElse(None)
     }
 
     def isDefined: Boolean = sig.isDefined
