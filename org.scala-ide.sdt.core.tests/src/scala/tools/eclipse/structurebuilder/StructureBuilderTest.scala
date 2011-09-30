@@ -250,4 +250,23 @@ class StructureBuilderTest {
     // verify
     verify(requestor, times(0)).acceptProblem(any())
   }
+  
+  @Test
+  def exposeJavaGenericSigOfScalaClass() {
+    //when
+    val requestor = mock(classOf[IProblemRequestor])
+    when(requestor.isActive()).thenReturn(true)
+    
+    val owner = mock(classOf[WorkingCopyOwner])
+    when(owner.getProblemRequestor(any())).thenReturn(requestor)
+    
+    val unit = compilationUnit("t1000625/MyFoo.java")
+    
+    // then
+    // this will trigger the java reconciler so that the problems will be reported to the `requestor`
+    unit.getWorkingCopy(owner, new NullProgressMonitor)
+
+    // verify
+    verify(requestor, times(0)).acceptProblem(any())
+  }
 }
