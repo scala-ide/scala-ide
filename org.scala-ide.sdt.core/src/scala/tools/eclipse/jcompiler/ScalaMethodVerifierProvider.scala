@@ -76,17 +76,20 @@ class ScalaMethodVerifierProvider extends IMethodVerifierProvider with Logger {
           methodOwner.info.members.find { m =>
 
             def haveSameTpeParams(abstractMethod: MethodBinding, method: Symbol) = {
-              // make sure the method type has been uncurried
-              uncurry.transformInfo(m, m.info)
-
               val fps = m.paramss.flatten
+              
+              val javaSig = javaSigOf(method)
+              
               // mapping Scala params' types to be Java conform, so that comparison
               // with `abstractMethod` is meaningful
-              val paramTypes = fps map (v => mapType(v.info.typeSymbol))
+              val paramsTypeSigs =
+                if(javaSig.isDefined) javaSig.paramsType.map(_.mkString)
+                else fps.map(s => mapParamTypeName(s.info)).toArray
 
-              if (abstractMethod.parameters.length == paramTypes.size) {
-                val pairedParams = paramTypes.zip(abstractMethod.parameters.map(_.readableName().mkString))
-                pairedParams forall { case (jdtTpe, scalacTpe) => jdtTpe == scalacTpe }
+              if (abstractMethod.parameters.length == paramsTypeSigs.size) {
+                val pairedParams = paramsTypeSigs.zip(abstractMethod.parameters.map(_.readableName().mkString))
+                val res = pairedParams forall { case (jdtTpe, scalacTpe) => jdtTpe == scalacTpe }
+                res
               } else
                 false
             }
@@ -127,9 +130,9 @@ class ScalaMethodVerifierProvider extends IMethodVerifierProvider with Logger {
         methodOwner.isTrait && {
           // Checks if `methodOwner`'s contain a non-deferred (i.e. concrete) member that matches `abstractMethod` definition
           val methodSymbol = findMethodSymbol(methodOwner, abstractMethod)
-          val isNotDeferred = methodSymbol.exists(!_.isDeferred)
+          val isDeferredMethod = methodSymbol.exists(_.isDeferred)
           debug("found %s method symbol: %s" format (abstractMethod.selector.mkString, methodSymbol))
-          isNotDeferred
+          !isDeferredMethod
         }
 
       }.getOrElse {

@@ -143,9 +143,23 @@ trait ScalaJavaMapper extends ScalaAnnotationHelper { self : ScalaPresentationCo
       case "scala.Float" => "float"
       case "scala.Double" => "double"
       case "<NoSymbol>" => "void"
-      case n => n
+      case n =>
+        if(s.isTypeParameter) s.encodedName
+        else n
     }
   }
+  
+  def mapType(t: Type): String = {
+	val base = mapType(t.typeSymbol)
+	base match {
+	  case "scala.Array" => 
+	    val paramTypes = t.typeArgs.map(mapType(_))
+	    assert(paramTypes.size == 1)
+        paramTypes.head + "[]"
+	  case refTpe => refTpe
+	}
+  }
+  
   
   def mapParamTypePackageName(t : Type) : String = {
     if (t.typeSymbolDirect.isTypeParameter)
