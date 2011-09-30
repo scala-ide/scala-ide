@@ -7,12 +7,10 @@ package scala.tools.eclipse
 package javaelements
 
 import java.{ util => ju }
-
 import ch.epfl.lamp.fjbg.JObjectType
 import ch.epfl.lamp.fjbg.JType
 import scala.collection.mutable.ArrayBuffer
 import scala.tools.nsc.symtab.Flags
-
 import org.eclipse.jdt.core.Signature
 import org.eclipse.jdt.core.compiler.{ CharOperation, InvalidInputException }
 import org.eclipse.jdt.core.search.IJavaSearchConstants
@@ -21,10 +19,9 @@ import org.eclipse.jdt.internal.codeassist.impl.{ AssistParser, Engine }
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants
 import org.eclipse.jdt.internal.compiler.env.{ICompilationUnit, AccessRestriction}
 import org.eclipse.jdt.internal.core.{ JavaElement, SearchableEnvironment }
+import scala.tools.eclipse.util.HasLogger
 
-import util.Logger
-
-class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: ISelectionRequestor, settings: ju.Map[_, _]) extends Engine(settings) with ISearchRequestor with Logger {
+class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: ISelectionRequestor, settings: ju.Map[_, _]) extends Engine(settings) with ISearchRequestor with HasLogger {
 
   var actualSelectionStart: Int = _
   var actualSelectionEnd: Int = _
@@ -59,7 +56,7 @@ class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: IS
       val length = 1 + selectionEnd - selectionStart
       selectedIdentifier = new Array(length)
       Array.copy(source, selectionStart, selectedIdentifier, 0, length)
-      log("selectedIdentifier: " + selectedIdentifier.mkString("", "", ""))
+      logger.info("selectedIdentifier: " + selectedIdentifier.mkString("", "", ""))
 
       val ssr = requestor.asInstanceOf[ScalaSelectionRequestor]
 
@@ -186,7 +183,7 @@ class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: IS
                   case t: compiler.TermSymbol if t.pos.isDefined =>
                     if (t.isMethod) acceptMethod(t) else if (t.isLocal) acceptLocalDefinition(t) else acceptField(t)
                   case sym =>
-                    log("Unhandled: " + sym.getClass.getName)
+                    logger.info("Unhandled: " + sym.getClass.getName)
                     Cont.Noop
                 }
 
@@ -236,7 +233,7 @@ class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: IS
                     case t: compiler.TypeSymbol =>
                       acceptField(t)
                     case _ =>
-                      log("Unhandled: " + tree.getClass.getName)
+                      logger.info("Unhandled: " + tree.getClass.getName)
                       Cont.Noop
                   }
                 }
@@ -256,12 +253,12 @@ class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: IS
                   Cont.Noop
 
               case _ =>
-                log("Unhandled: " + tree.getClass.getName)
+                logger.info("Unhandled: " + tree.getClass.getName)
                 Cont.Noop
             }
           }
           case None =>
-            log("No tree")
+            logger.info("No tree")
             Cont.Noop
         }
       } getOrElse Cont.Noop

@@ -5,7 +5,7 @@ import scala.tools.eclipse.{EclipseBuildManager, TaskScanner, ScalaProject}
 import scala.tools.nsc.Settings
 import scala.tools.nsc.reporters.Reporter
 import scala.tools.nsc.util.{ Position, NoPosition }
-import scala.tools.eclipse.util.{ EclipseResource, FileUtils, Logger }
+import scala.tools.eclipse.util.{ EclipseResource, FileUtils, HasLogger }
 
 import scala.collection.mutable.ListBuffer
 
@@ -14,7 +14,7 @@ import org.eclipse.core.runtime.IProgressMonitor
 
 case class BuildProblem(severity: Reporter#Severity, msg: String, pos: Position)
 
-abstract class BuildReporter(project0: ScalaProject, settings0: Settings) extends Reporter with Logger {
+abstract class BuildReporter(project0: ScalaProject, settings0: Settings) extends Reporter with HasLogger {
   val buildManager: EclipseBuildManager
   val prob: ListBuffer[BuildProblem] = ListBuffer.empty
 
@@ -40,9 +40,9 @@ abstract class BuildReporter(project0: ScalaProject, settings0: Settings) extend
             if (!pos.source.file.hasExtension("java"))
               FileUtils.buildError(i, eclipseSeverity, msg, pos.point, length, pos.line, null)
             else
-              log("suppressed error in Java file: %s".format(msg))
+              logger.info("suppressed error in Java file: %s".format(msg))
           case f =>
-            log("no EclipseResource associated to %s [%s]".format(f.path, f.getClass))
+            logger.info("no EclipseResource associated to %s [%s]".format(f.path, f.getClass))
             EclipseResource.fromString(source.file.path) match {
               case Some(i: IFile) => 
                 // this may happen if a file was compileLate by the build compiler
@@ -51,7 +51,7 @@ abstract class BuildReporter(project0: ScalaProject, settings0: Settings) extend
                 prob += new BuildProblem(severity, msg, pos)
                 FileUtils.buildError(i, eclipseSeverity, msg, pos.point, length, pos.line, null)
               case _ =>
-                log("no EclipseResource associated to %s [%s]".format(f.path, f.getClass))
+                logger.info("no EclipseResource associated to %s [%s]".format(f.path, f.getClass))
                 prob += new BuildProblem(severity, msg, NoPosition)
                 project0.buildError(eclipseSeverity, msg, null)
             }
@@ -61,7 +61,7 @@ abstract class BuildReporter(project0: ScalaProject, settings0: Settings) extend
         eclipseSeverity match {
           case IMarker.SEVERITY_INFO if (settings0.Ybuildmanagerdebug.value) =>
 	      	  // print only to console, better debugging
-	      	  log("[Buildmanager info] " + msg)
+	      	  logger.info("[Buildmanager info] " + msg)
           case _ =>
 	      	  prob += new BuildProblem(severity, msg, NoPosition)
 	      	  project0.buildError(eclipseSeverity, msg, null)

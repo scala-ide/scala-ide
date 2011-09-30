@@ -12,11 +12,10 @@ import org.eclipse.ui.texteditor.ITextEditor
 import org.eclipse.jdt.internal.ui.javaeditor.{ EditorUtility, JavaElementHyperlink }
 import org.eclipse.jdt.ui.actions.OpenAction
 import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor
-
 import javaelements.{ ScalaCompilationUnit, ScalaSelectionEngine, ScalaSelectionRequestor }
-import util.Logger
+import scala.tools.eclipse.util.HasLogger
 
-class ScalaHyperlinkDetector extends AbstractHyperlinkDetector with Logger {
+class ScalaHyperlinkDetector extends AbstractHyperlinkDetector with HasLogger {
   def detectHyperlinks(viewer: ITextViewer, region: IRegion, canShowMultipleHyperlinks: Boolean): Array[IHyperlink] = {
     val textEditor = getAdapter(classOf[ITextEditor]).asInstanceOf[ITextEditor]
     detectHyperlinks(textEditor, region, canShowMultipleHyperlinks)
@@ -51,7 +50,7 @@ class ScalaHyperlinkDetector extends AbstractHyperlinkDetector with Logger {
         askTypeAt(pos, response)
         val typed = response.get
 
-        log("detectHyperlinks: wordRegion = " + wordRegion)
+        logger.info("detectHyperlinks: wordRegion = " + wordRegion)
         compiler.askOption { () =>
           typed.left.toOption map {
             case Import(expr, sels) => 
@@ -74,7 +73,7 @@ class ScalaHyperlinkDetector extends AbstractHyperlinkDetector with Logger {
               }
             case Annotated(atp, _) => List(atp.symbol)
             case st: SymTree       => List(st.symbol)
-            case t                 => log("unhandled tree " + t.getClass); List()
+            case t                 => logger.info("unhandled tree " + t.getClass); List()
           } flatMap { list =>
             val filteredSyms = list filterNot { sym => sym.isPackage || sym == NoSymbol }
             if (filteredSyms.isEmpty) None else Some(
@@ -93,7 +92,7 @@ class ScalaHyperlinkDetector extends AbstractHyperlinkDetector with Logger {
           }
         }.flatten.headOption match {
           case links @ Some(List()) =>
-            log("Falling back to selection engine for %s!".format(typed.left), Category.ERROR)
+            logger.error("Falling back to selection engine for %s!".format(typed.left))
             links
           case links =>
             links 
