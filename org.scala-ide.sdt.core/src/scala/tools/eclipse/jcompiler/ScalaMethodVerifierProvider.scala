@@ -7,7 +7,7 @@ import org.eclipse.core.runtime.Path
 import org.eclipse.core.resources.ResourcesPlugin
 import scala.tools.eclipse.ScalaProject
 import org.eclipse.core.resources.IProject
-import scala.tools.eclipse.util.Logger
+import scala.tools.eclipse.util.HasLogger
 
 /**
  * <p>
@@ -34,7 +34,7 @@ import scala.tools.eclipse.util.Logger
  * in `org.scala-ide.sdt.aspects` project for checking how the extension point is created.
  * </p>
  */
-class ScalaMethodVerifierProvider extends IMethodVerifierProvider with Logger {
+class ScalaMethodVerifierProvider extends IMethodVerifierProvider with HasLogger {
   import ScalaMethodVerifierProvider.JDTMethodVerifierCarryOnMsg
 
   /**
@@ -47,7 +47,7 @@ class ScalaMethodVerifierProvider extends IMethodVerifierProvider with Logger {
       val scalaProject = ScalaPlugin.plugin.getScalaProject(project)
       isNotDeferredTraitMethod(abstractMethod, scalaProject)
     } else {
-      debug("`%s` is not a Scala Project. %s".format(project.getName(), JDTMethodVerifierCarryOnMsg))
+      logger.debug("`%s` is not a Scala Project. %s".format(project.getName(), JDTMethodVerifierCarryOnMsg))
       false
     }
   }
@@ -61,7 +61,7 @@ class ScalaMethodVerifierProvider extends IMethodVerifierProvider with Logger {
 
     val project = file.getProject()
 
-    debug("Found definition for `%s` in file `%s` of project `%s`".format(abstractMethod, qualifiedFileName, project.getName()))
+    logger.debug("Found definition for `%s` in file `%s` of project `%s`".format(abstractMethod, qualifiedFileName, project.getName()))
 
     project
   }
@@ -104,7 +104,7 @@ class ScalaMethodVerifierProvider extends IMethodVerifierProvider with Logger {
         def findMethodOwnerSymbol(abstractMethod: MethodBinding) = {
           val packageName = abstractMethod.declaringClass.getPackage().readableName().mkString
           val typeName = abstractMethod.declaringClass.qualifiedSourceName().mkString
-          debug("Looking for class symbol in package `%s` for name `%s`" format (packageName, typeName))
+          logger.debug("Looking for class symbol in package `%s` for name `%s`" format (packageName, typeName))
 
           // When looking for the typename, the strategy is different when the type is defined in the
           // the empty package.
@@ -115,7 +115,7 @@ class ScalaMethodVerifierProvider extends IMethodVerifierProvider with Logger {
               pc.definitions.getModule(packageName.toTermName).info.member(typeName.toTypeName)
             } catch {
               case _ =>
-                info("Failed to retrieve class symbol for `%s`".format(packageName + "." + typeName))
+                logger.info("Failed to retrieve class symbol for `%s`".format(packageName + "." + typeName))
                 NoSymbol
             }
           }
@@ -125,22 +125,22 @@ class ScalaMethodVerifierProvider extends IMethodVerifierProvider with Logger {
         // makes sure the symbol has been fully initialized. This is needed for example after a project's clean to ensure 
         // the symbol's flags are correctly set.
         methodOwner.initialize
-        debug("found %s owner: %s" format (abstractMethod.selector.mkString, methodOwner))
+        logger.debug("found %s owner: %s" format (abstractMethod.selector.mkString, methodOwner))
 
         methodOwner.isTrait && {
           // Checks if `methodOwner`'s contain a non-deferred (i.e. concrete) member that matches `abstractMethod` definition
           val methodSymbol = findMethodSymbol(methodOwner, abstractMethod)
           val isDeferredMethod = methodSymbol.exists(_.isDeferred)
-          debug("found %s method symbol: %s" format (abstractMethod.selector.mkString, methodSymbol))
+          logger.debug("found %s method symbol: %s" format (abstractMethod.selector.mkString, methodSymbol))
           !isDeferredMethod
         }
 
       }.getOrElse {
-        info("`askOption` failed. Check the Presentation Compiler log for more information. %s".format(JDTMethodVerifierCarryOnMsg))
+        logger.info("`askOption` failed. Check the Presentation Compiler log for more information. %s".format(JDTMethodVerifierCarryOnMsg))
         false
       }
     } {
-      info("Failed to instantiate Presentation Compiler. %s".format(JDTMethodVerifierCarryOnMsg))
+      logger.info("Failed to instantiate Presentation Compiler. %s".format(JDTMethodVerifierCarryOnMsg))
       false
     }
   }

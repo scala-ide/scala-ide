@@ -104,7 +104,6 @@ class StructureBuilderTest {
     val fragment = srcPackageRoot.getPackageFragment("traits")
     // then
     val jdtStructure = compilationUnitsStructure(fragment)
-    println(jdtStructure)
     // verify
     assertEquals(TraitsTestOracle.expectedFragment, jdtStructure)
   }

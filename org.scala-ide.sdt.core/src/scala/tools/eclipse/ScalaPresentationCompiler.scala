@@ -18,7 +18,7 @@ import scala.tools.nsc.util.{ BatchSourceFile, Position, SourceFile }
 import scala.tools.eclipse.javaelements.{
   ScalaCompilationUnit, ScalaIndexBuilder, ScalaJavaMapper, ScalaMatchLocator, ScalaStructureBuilder,
   ScalaOverrideIndicatorBuilder }
-import scala.tools.eclipse.util.{ Cached, EclipseFile, EclipseResource }
+import scala.tools.eclipse.util.{ Cached, EclipseFile, EclipseResource, HasLogger }
 import scala.tools.nsc.util.FailedInterrupt
 import scala.tools.nsc.symtab.Flags
 import scala.tools.eclipse.completion.CompletionProposal
@@ -32,7 +32,8 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
   with ScalaJavaMapper 
   with JavaSig
   with JVMUtils 
-  with LocateSymbol { self =>
+  with LocateSymbol 
+  with HasLogger { self =>
   
   def presentationReporter = reporter.asInstanceOf[ScalaPresentationCompiler.PresentationReporter]
   presentationReporter.compiler = this
