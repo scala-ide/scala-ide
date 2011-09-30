@@ -7,27 +7,23 @@ package scala.tools.eclipse.javaelements
 
 import java.io.{ PrintWriter, StringWriter }
 import java.util.{ Map => JMap }
-
 import org.eclipse.core.resources.IFile
 import org.eclipse.jdt.core.{ IAnnotation, ICompilationUnit, IJavaElement, IMemberValuePair, Signature }
 import org.eclipse.jdt.core.compiler.CharOperation
 import org.eclipse.jdt.internal.core.{
   Annotation, AnnotationInfo => JDTAnnotationInfo, AnnotatableInfo, CompilationUnit => JDTCompilationUnit, ImportContainer,
   ImportContainerInfo, ImportDeclaration, ImportDeclarationElementInfo, JavaElement, JavaElementInfo,
-  MemberValuePair, OpenableElementInfo, SourceRefElement, TypeParameter, TypeParameterElementInfo }
+  MemberValuePair, OpenableElementInfo, SourceRefElement, TypeParameter, TypeParameterElementInfo}
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants
 import org.eclipse.jdt.ui.JavaElementImageDescriptor
-
 import scala.collection.Map
 import scala.collection.mutable.HashMap
-
 import scala.tools.nsc.symtab.Flags
 import scala.tools.nsc.util.{ NoPosition, Position }
-
 import scala.tools.eclipse.ScalaPresentationCompiler
 import scala.tools.eclipse.util.ReflectionUtils
 
-trait ScalaStructureBuilder extends ScalaAnnotationHelper { self : ScalaPresentationCompiler =>
+trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentationCompiler =>
 
   class StructureBuilderTraverser(scu : ScalaCompilationUnit, unitInfo : OpenableElementInfo, newElements0 : JMap[AnyRef, AnyRef], sourceLength : Int) {
     private def companionClassOf(s: Symbol): Symbol =
@@ -146,30 +142,22 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { self : ScalaPresenta
         }
 
         def addForwarder(classElem: ScalaElement, classElemInfo : ScalaElementInfo, module: Symbol, d: Symbol) {
-          //val moduleName = javaName(module) // + "$"
-          //val className = moduleName.substring(0, moduleName.length() - 1)
-
           val nm = d.name
-          
-          val fps = for(vps <- d.tpe.paramss; vp <- vps) yield vp
-          
-          def paramType(sym : Symbol) = {
-            val tpe = sym.tpe
-            if (sym.isType || tpe != null)
-              uncurry.transformInfo(sym, tpe).typeSymbol
-            else {
-              NoSymbol
-            }
-          }
-          
-          val paramTypes = Array(fps.map(v => Signature.createTypeSignature(mapType(paramType(v)), false)) : _*)
+
+          val fps = d.paramss.flatten
           val paramNames = Array(fps.map(n => nme.getterName(n.name).toChars) : _*)
+          
+          val javaSig = javaSigOf(d)
+          
+          val paramsTypeSigs =
+            if(javaSig.isDefined) javaSig.paramsTypeSig
+            else fps.map(s => mapParamTypeSignature(s.info)).toArray
           
           val defElem = 
             if(d.hasFlag(Flags.ACCESSOR))
-              new ScalaAccessorElement(classElem, nm.toString, paramTypes)
+              new ScalaAccessorElement(classElem, nm.toString, paramsTypeSigs)
             else
-              new ScalaDefElement(classElem, nm.toString, paramTypes, true, nm.toString, overrideInfos(d))
+              new ScalaDefElement(classElem, nm.toString, paramsTypeSigs, true, nm.toString, overrideInfos(d))
           resolveDuplicates(defElem)
           classElemInfo.addChild0(defElem)
           
@@ -177,8 +165,9 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { self : ScalaPresenta
           
           defElemInfo.setArgumentNames(paramNames)
           defElemInfo.setExceptionTypeNames(Array.empty)
-          val tn = mapType(d.tpe.finalResultType.typeSymbol).toArray
-          defElemInfo.asInstanceOf[FnInfo].setReturnType(tn)
+          
+          val tn = javaSig.returnType.getOrElse(mapType(d.info.finalResultType)).toArray
+          defElemInfo.setReturnType(tn)
   
           val annotsPos = addAnnotations(d, defElemInfo, defElem)
   
@@ -198,6 +187,8 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { self : ScalaPresenta
           defElemInfo.setNameSourceEnd0(nameEnd)
           defElemInfo.setSourceRangeStart0(start)
           defElemInfo.setSourceRangeEnd0(end)
+          
+          acceptTypeParameters(d, defElem, defElemInfo)
           
           newElements0.put(defElem, defElemInfo)
         } 
@@ -232,6 +223,40 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { self : ScalaPresenta
             addForwarders(classElem, classElemInfo, m.moduleClass)
           }
         }
+      }
+    
+      def acceptTypeParameters(sym: Symbol, elem: JavaElement, info: FnInfo) = {
+        case class TypeParam(name: String, bounds: Array[Array[Char]])
+        
+        // The type parameter's symbol need to be provided for accessing the symbol's position
+        def acceptTypeParameter(tpSymbol: Symbol, tp: TypeParam, elem: JavaElement) = {
+          val typeParameter = new TypeParameter(elem, tp.name)
+          resolveDuplicates(typeParameter)
+          
+          val tpElementInfo = new TypeParameterScalaElementInfo
+          
+          tpElementInfo.bounds = tp.bounds
+          
+          val start = tpSymbol.pos.startOrPoint
+          val end = tpSymbol.pos.endOrPoint
+	      tpElementInfo.setSourceRangeStart0(start)
+	      tpElementInfo.nameStart = start
+	      tpElementInfo.nameEnd = end
+	      tpElementInfo.setSourceRangeEnd0(end)
+	          
+          newElements0.put(typeParameter, tpElementInfo)
+          typeParameter
+        }
+        
+        val javaSig = javaSigOf(sym)
+        
+        val typeParams = javaSig.typeVars.zip(javaSig.typeParamsBoundsReadable) map {
+          case (tpVar, tpBounds) => TypeParam(tpVar, tpBounds)
+        }
+        
+        val jdtTypeParams = sym.typeParams.zip(typeParams) map {case (tpSym,tp) => acceptTypeParameter(tpSym, tp, elem)}
+        
+        info setTypeParameters jdtTypeParams.toArray
       }
     }
     
@@ -504,7 +529,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { self : ScalaPresenta
         setSourceRange(valElemInfo, sym, annotsPos)
         newElements0.put(valElem, valElemInfo)
 
-        val tn = mapType(sym.info.typeSymbol).toArray
+        val tn = mapType(sym.info).toArray
         valElemInfo.setTypeName(tn)
         
         // TODO: this is a hack needed until building is rewritten to traverse scopes rather than trees.
@@ -581,24 +606,25 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { self : ScalaPresenta
             sym.owner.simpleName + (if (sym.owner.isModuleClass) "$" else "")
           else
             sym.name.toString
-        
-        // make sure the method type has been uncurried
-        uncurry.transformInfo(sym, sym.info)
-        
+            
         val fps = sym.paramss.flatten
-        
-        val paramTypes = Array(fps.map(v => Signature.createTypeSignature(mapType(v.info.typeSymbol), false)) : _*)
         val paramNames = Array(fps.map(n => nme.getterName(n.name).toChars) : _*)
+        
+        val javaSig = javaSigOf(sym)
+        
+        val paramsTypeSigs =
+            if(javaSig.isDefined) javaSig.paramsTypeSig
+            else fps.map(s => mapParamTypeSignature(s.info)).toArray
         
         val display = if (sym ne NoSymbol) sym.nameString + sym.infoString(sym.info) else sym.name.toString + " (no info)"
 
         val defElem = 
           if(sym hasFlag Flags.ACCESSOR)
-            new ScalaAccessorElement(element, nameString, paramTypes)
+            new ScalaAccessorElement(element, nameString, paramsTypeSigs)
           else if (isTemplate)
-            new ScalaDefElement(element, nameString, paramTypes, sym hasFlag Flags.SYNTHETIC, display, overrideInfos(sym))
+            new ScalaDefElement(element, nameString, paramsTypeSigs, sym hasFlag Flags.SYNTHETIC, display, overrideInfos(sym))
           else
-            new ScalaFunctionElement(template.element, element, nameString, paramTypes, display)
+            new ScalaFunctionElement(template.element, element, nameString, paramsTypeSigs, display)
         resolveDuplicates(defElem)
         addChild(defElem)
         
@@ -610,8 +636,9 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { self : ScalaPresenta
         
         defElemInfo.setArgumentNames(paramNames)
         defElemInfo.setExceptionTypeNames(Array.empty)
-        val tn = mapType(sym.info.resultType.typeSymbol).toArray
-        defElemInfo.asInstanceOf[FnInfo].setReturnType(tn)
+        
+        val tn = javaSig.returnType.getOrElse(mapType(sym.info.finalResultType)).toArray
+        defElemInfo.setReturnType(tn)
 
         val annotsPos = addAnnotations(sym, defElemInfo, defElem)
 
@@ -646,6 +673,8 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { self : ScalaPresenta
           setSourceRange(defElemInfo, sym, annotsPos)
         }
         
+        acceptTypeParameters(sym, defElem, defElemInfo)
+        
         newElements0.put(defElem, defElemInfo)
         
         new Builder {
@@ -659,7 +688,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { self : ScalaPresenta
         }
       }
     }
-      
+    
     def resolveDuplicates(handle : SourceRefElement) {
       while (newElements0.containsKey(handle)) {
         handle.occurrenceCount += 1

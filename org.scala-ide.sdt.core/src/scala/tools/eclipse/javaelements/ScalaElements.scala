@@ -12,7 +12,7 @@ import org.eclipse.jdt.core.{ IField, IJavaElement, IMember, IMethod, IType, ITy
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants
 import org.eclipse.jdt.internal.core.{
   BinaryType, JavaElement, JavaElementInfo, LocalVariable, SourceConstructorInfo, SourceField, SourceFieldElementInfo,
-  SourceMethod, SourceMethodElementInfo, SourceMethodInfo, SourceType, SourceTypeElementInfo, OpenableElementInfo }
+  SourceMethod, SourceMethodElementInfo, SourceMethodInfo, SourceType, SourceTypeElementInfo, OpenableElementInfo, TypeParameterElementInfo }
 import org.eclipse.jdt.internal.ui.JavaPlugin
 import org.eclipse.jdt.internal.ui.viewsupport.{ JavaElementImageProvider }
 import org.eclipse.jdt.ui.JavaElementImageDescriptor
@@ -203,7 +203,16 @@ object ScalaMemberElementInfo extends ReflectionUtils {
   val addChildMethod = if (hasChildrenField) getDeclaredMethod(jeiClazz, "addChild", classOf[IJavaElement]) else null
 }
 
-trait ScalaMemberElementInfo extends JavaElementInfo {
+trait SourceRefScalaElementInfo extends JavaElementInfo {
+  import ScalaMemberElementInfo._
+  
+  def getDeclarationSourceStart0 : Int = getDeclarationSourceStartMethod.invoke(this).asInstanceOf[Integer].intValue
+  def getDeclarationSourceEnd0 : Int = getDeclarationSourceEndMethod.invoke(this).asInstanceOf[Integer].intValue
+  def setSourceRangeStart0(start : Int) : Unit = setSourceRangeStartMethod.invoke(this, new Integer(start))
+  def setSourceRangeEnd0(end : Int) : Unit = setSourceRangeEndMethod.invoke(this, new Integer(end))
+}
+
+trait ScalaMemberElementInfo extends SourceRefScalaElementInfo { 
   import ScalaMemberElementInfo._
   import java.lang.Integer
   
@@ -214,10 +223,6 @@ trait ScalaMemberElementInfo extends JavaElementInfo {
   def getNameSourceEnd0 : Int = getNameSourceEndMethod.invoke(this).asInstanceOf[Integer].intValue
   def setNameSourceStart0(start : Int) = setNameSourceStartMethod.invoke(this, new Integer(start)) 
   def setNameSourceEnd0(end : Int) = setNameSourceEndMethod.invoke(this, new Integer(end)) 
-  def getDeclarationSourceStart0 : Int = getDeclarationSourceStartMethod.invoke(this).asInstanceOf[Integer].intValue
-  def getDeclarationSourceEnd0 : Int = getDeclarationSourceEndMethod.invoke(this).asInstanceOf[Integer].intValue
-  def setSourceRangeStart0(start : Int) : Unit = setSourceRangeStartMethod.invoke(this, new Integer(start))
-  def setSourceRangeEnd0(end : Int) : Unit = setSourceRangeEndMethod.invoke(this, new Integer(end))
 }
 
 trait AuxChildrenElementInfo extends JavaElementInfo {
@@ -236,7 +241,13 @@ trait AuxChildrenElementInfo extends JavaElementInfo {
       auxChildren = auxChildren ++ Seq(child)
 }
 
-class ScalaElementInfo extends SourceTypeElementInfo with ScalaMemberElementInfo {
+trait HasTypeParameters {
+  def setTypeParameters(typeParams: Array[ITypeParameter])
+}
+
+class TypeParameterScalaElementInfo extends TypeParameterElementInfo with SourceRefScalaElementInfo
+
+class ScalaElementInfo extends SourceTypeElementInfo with ScalaMemberElementInfo with HasTypeParameters {
   import ScalaMemberElementInfo._
   
   override def addChild0(child : IJavaElement) : Unit = {
@@ -251,23 +262,29 @@ class ScalaElementInfo extends SourceTypeElementInfo with ScalaMemberElementInfo
   override def setHandle(handle : IType) = super.setHandle(handle)
   override def setSuperclassName(superclassName : Array[Char]) = super.setSuperclassName(superclassName)
   override def setSuperInterfaceNames(superInterfaceNames : Array[Array[Char]]) = super.setSuperInterfaceNames(superInterfaceNames)
-  def setTypeParameters(tps : Array[ITypeParameter]) {
+  override def setTypeParameters(tps : Array[ITypeParameter]) {
     typeParameters = tps
   }
 }
 
-trait FnInfo extends SourceMethodElementInfo with ScalaMemberElementInfo {
+trait FnInfo extends SourceMethodElementInfo with ScalaMemberElementInfo with HasTypeParameters {
   override def setArgumentNames(argumentNames : Array[Array[Char]]) = super.setArgumentNames(argumentNames)
   def setReturnType(returnType : Array[Char])
   override def setExceptionTypeNames(exceptionTypeNames : Array[Array[Char]]) = super.setExceptionTypeNames(exceptionTypeNames)
 }
 
-class ScalaSourceConstructorInfo extends SourceConstructorInfo with FnInfo with AuxChildrenElementInfo {
+class ScalaSourceConstructorInfo extends SourceConstructorInfo with FnInfo with AuxChildrenElementInfo with HasTypeParameters {
   override def setReturnType(returnType : Array[Char]) = super.setReturnType(returnType)
+  override def setTypeParameters(tps : Array[ITypeParameter]) {
+    typeParameters = tps
+  }
 }
 
-class ScalaSourceMethodInfo extends SourceMethodInfo with FnInfo with AuxChildrenElementInfo {
+class ScalaSourceMethodInfo extends SourceMethodInfo with FnInfo with AuxChildrenElementInfo with HasTypeParameters {
   override def setReturnType(returnType : Array[Char]) = super.setReturnType(returnType)
+  override def setTypeParameters(tps : Array[ITypeParameter]) {
+    typeParameters = tps
+  }
 }
 
 class ScalaSourceFieldElementInfo extends SourceFieldElementInfo with ScalaMemberElementInfo with AuxChildrenElementInfo {

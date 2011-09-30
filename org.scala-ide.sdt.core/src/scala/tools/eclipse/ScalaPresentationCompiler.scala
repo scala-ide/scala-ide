@@ -30,6 +30,7 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
   with ScalaMatchLocator
   with ScalaOverrideIndicatorBuilder 
   with ScalaJavaMapper 
+  with JavaSig
   with JVMUtils 
   with LocateSymbol { self =>
   

@@ -4,6 +4,8 @@ package structurebuilder
 
 import org.junit._
 import Assert._
+import org.mockito.Mockito._
+import org.mockito.Matchers._
 import scala.tools.eclipse.testsetup.SDTTestUtils
 import org.eclipse.jdt.core._
 import org.eclipse.core.runtime.Path
@@ -11,6 +13,7 @@ import org.eclipse.jdt.core.search._
 import scala.collection.mutable.ListBuffer
 import scala.tools.eclipse.javaelements.ScalaCompilationUnit
 import org.eclipse.jdt.internal.corext.util.JavaModelUtil
+import org.eclipse.core.runtime.NullProgressMonitor
 
 object StructureBuilderTest extends testsetup.TestProjectSetup("simple-structure-builder")
 
@@ -33,7 +36,7 @@ class StructureBuilderTest {
       buf.append(cu)
       buf.append('\n')
     }
-    buf.toString
+    buf.toString.trim
   }
   
   @Test def testAnnotations() {
@@ -97,78 +100,155 @@ class StructureBuilderTest {
    *  retrieve the package `traits' and compare the toString output.
    */
   @Test def testStructure() {
+    // when
     val fragment = srcPackageRoot.getPackageFragment("traits")
-    assertNotNull(fragment)
-    assertEquals(expectedFragment, compilationUnitsStructure(fragment).trim)
+    // then
+    val jdtStructure = compilationUnitsStructure(fragment)
+    println(jdtStructure)
+    // verify
+    assertEquals(TraitsTestOracle.expectedFragment, jdtStructure)
   }
   
-  lazy val expectedFragment = """
-T1.scala [in traits [in src [in simple-structure-builder]]]
-  package traits
-  interface T1
-    scala.Nothing notImplemented()
-    java.lang.Object t
-    java.lang.Object t()
-    scala.collection.immutable.List xs
-    scala.collection.immutable.List xs()
-    scala.Nothing m(int, int)
-    java.lang.Object n(int, int, int)
-    java.lang.Object T
-    java.lang.Object U
-    java.lang.Object Z
-    class Inner
-      Inner()
-C1.scala [in traits [in src [in simple-structure-builder]]]
-  package traits
-  import scala.annotation.*
-  import scala.reflect.BeanProperty
-  import org.junit.Test
-  class C
-    int _x
-    traits.C.T _y
-    C(int, traits.C.T)
-    C(traits.C.T)
-    int x
-    int x()
-    int lz
-    int lz()
-    java.lang.String v
-    java.lang.String v()
-    void v_$eq(java.lang.String)
-    java.lang.Object volVar
-    java.lang.Object volVar()
-    void volVar_$eq(java.lang.Object)
-    java.lang.String CONSTANT
-    java.lang.String CONSTANT()
-    int beanVal
-    int beanVal()
-    int getBeanVal()
-    int beanVar
-    int beanVar()
-    void beanVar_$eq(int)
-    int getBeanVar()
-    void setBeanVar(int)
-    boolean nullaryMethod()
-    void method()
-    void annotatedMethod()
-    java.lang.Object curriedMethod(int, int)
-    boolean nullaryMethod1()
-    void method1()
-    void method2()
-    java.lang.Object curriedMethod1(int, int)
-    class InnerC
-      int x
-      int x()
-      InnerC(int)
-    java.lang.Object T
-    java.lang.Object U
-    java.lang.Object map(scala.Function1)
-    scala.Null takeArray(scala.Array)
-    scala.Null takeArray2(scala.Array)
-    java.lang.Object localClass(int)
-      class class Object
-        $anon()
-        void run()
-    int localMethod(int)
-    long localVals(int)""".trim
+  @Test def correctlyExposeToJDT_ScalaArray_1000586() {
+    // when
+    val fragment = srcPackageRoot.getPackageFragment("t1000586")
+    // then
+    val jdtStructure = compilationUnitsStructure(fragment)
+    // verify
+    assertEquals(T1000586TestOracle.expectedFragment, jdtStructure)
+  }
+  
+  @Test def correctlyExposeToJDT_ScalaMethodReturnType_WithTypeParameters_1000568() {
+    // when
+    val fragment = srcPackageRoot.getPackageFragment("t1000568")
+    // then
+    val jdtStructure = compilationUnitsStructure(fragment)
+    // verify
+    assertEquals(T1000568TestOracle.expectedFragment, jdtStructure)
+  }
+  
+  import org.eclipse.jdt.core.compiler.IProblem
+  private class ProblemReporterAdapter extends IProblemRequestor {
+    def acceptProblem(problem: IProblem) {}
+    def beginReporting() {}
+    def endReporting() {}
+    def isActive(): Boolean = true
+  }
+  
+  @Test
+  def t1000524_neg_JavaCodeCannotCall_ScalaModuleMethodThatIsDefinedWithTheSameSignatureInTheCompanionClass() {
+    val expectedProblem = "Pb(201) Cannot make a static reference to the non-static method getOpt1(Option<T>) from the type OptTest"
+    
+    //when
+    val unit = compilationUnit("t1000524_neg/opttest/java/OT.java")
+    
+    val owner = new WorkingCopyOwner() {
+      override def getProblemRequestor(unit: org.eclipse.jdt.core.ICompilationUnit): IProblemRequestor =
+        new ProblemReporterAdapter {
+          override def acceptProblem(problem: IProblem) {
+            //verify
+            assertEquals(expectedProblem, problem.toString())
+          }
+        }
+    }
+
+    // then
+    // this will trigger the java reconciler so that the problems will be reported to the `requestor`
+    unit.getWorkingCopy(owner, new NullProgressMonitor)
+  }
+  
+  @Test
+  def t1000524_pos_JavaCodeCanCall_ScalaMethodWithParametricTypes() {
+    //when
+    val requestor = mock(classOf[IProblemRequestor])
+    when(requestor.isActive()).thenReturn(true)
+    
+    val owner = mock(classOf[WorkingCopyOwner])
+    when(owner.getProblemRequestor(any())).thenReturn(requestor)
+    
+    val unit = compilationUnit("t1000524_pos/opttest/java/OT.java")
+    
+    // then
+    // this will trigger the java reconciler so that the problems will be reported to the `requestor`
+    unit.getWorkingCopy(owner, new NullProgressMonitor)
+
+    // verify
+    verify(requestor, times(0)).acceptProblem(any())
+  }
+  
+  @Test
+  def t1000524_1_JavaCodeCanCall_ScalaMethodWithParametricBoundedType() {
+    //when
+    val requestor = mock(classOf[IProblemRequestor])
+    when(requestor.isActive()).thenReturn(true)
+    
+    val owner = mock(classOf[WorkingCopyOwner])
+    when(owner.getProblemRequestor(any())).thenReturn(requestor)
+    
+    val unit = compilationUnit("t1000524_1/opttest/java/OT.java")
+    
+    // then
+    // this will trigger the java reconciler so that the problems will be reported to the `requestor`
+    unit.getWorkingCopy(owner, new NullProgressMonitor)
+
+    // verify
+    verify(requestor, times(0)).acceptProblem(any())
+  }
+  
+  @Test
+  def t1000524_2_JavaCodeCanCall_ScalaMethodWithParametricBoundedType() {
+    //when
+    val requestor = mock(classOf[IProblemRequestor])
+    when(requestor.isActive()).thenReturn(true)
+    
+    val owner = mock(classOf[WorkingCopyOwner])
+    when(owner.getProblemRequestor(any())).thenReturn(requestor)
+    
+    val unit = compilationUnit("t1000524_2/opttest/java/OT.java")
+    
+    // then
+    // this will trigger the java reconciler so that the problems will be reported to the `requestor`
+    unit.getWorkingCopy(owner, new NullProgressMonitor)
+
+    // verify
+    verify(requestor, times(0)).acceptProblem(any())
+  }
+  
+  @Test
+  def genericSignature_ofScalaMember_is_correctlyExposedToJDT() {
+    //when
+    val requestor = mock(classOf[IProblemRequestor])
+    when(requestor.isActive()).thenReturn(true)
+    
+    val owner = mock(classOf[WorkingCopyOwner])
+    when(owner.getProblemRequestor(any())).thenReturn(requestor)
+    
+    val unit = compilationUnit("generic_signature/akka/Actor.java")
+    
+    // then
+    // this will trigger the java reconciler so that the problems will be reported to the `requestor`
+    unit.getWorkingCopy(owner, new NullProgressMonitor)
+
+    // verify
+    verify(requestor, times(0)).acceptProblem(any())
+  }
+  
+  @Test
+  def javaCalls_ScalaMethod_withContravariantArgumentType() {
+    //when
+    val requestor = mock(classOf[IProblemRequestor])
+    when(requestor.isActive()).thenReturn(true)
+    
+    val owner = mock(classOf[WorkingCopyOwner])
+    when(owner.getProblemRequestor(any())).thenReturn(requestor)
+    
+    val unit = compilationUnit("method_with_type_contravariance/Foo.java")
+    
+    // then
+    // this will trigger the java reconciler so that the problems will be reported to the `requestor`
+    unit.getWorkingCopy(owner, new NullProgressMonitor)
+
+    // verify
+    verify(requestor, times(0)).acceptProblem(any())
+  }
 }
