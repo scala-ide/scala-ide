@@ -237,12 +237,17 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
           
           tpElementInfo.bounds = tp.bounds
           
-          val start = tpSymbol.pos.startOrPoint
-          val end = tpSymbol.pos.endOrPoint
-	      tpElementInfo.setSourceRangeStart0(start)
-	      tpElementInfo.nameStart = start
-	      tpElementInfo.nameEnd = end
-	      tpElementInfo.setSourceRangeEnd0(end)
+          val tpPos = tpSymbol.pos
+          if(tpPos.isDefined) {
+            val start = tpPos.startOrPoint
+            val end = tpPos.endOrPoint
+	        tpElementInfo.setSourceRangeStart0(start)
+	        tpElementInfo.nameStart = start
+	        tpElementInfo.nameEnd = end
+	        tpElementInfo.setSourceRangeEnd0(end)
+          }
+          else
+            logger.debug("type parameter `%s` of `%s` has no position".format(tp.name, sym))
 	          
           newElements0.put(typeParameter, tpElementInfo)
           typeParameter
