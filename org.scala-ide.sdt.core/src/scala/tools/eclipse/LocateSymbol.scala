@@ -16,7 +16,7 @@ import org.eclipse.jdt.internal.compiler.env.ICompilationUnit
 import org.eclipse.jdt.ui.actions.SelectionDispatchAction
 import org.eclipse.jdt.internal.ui.javaeditor.{EditorUtility, JavaElementHyperlink}
 
-import scala.reflect.generic.Flags._
+import tools.nsc.symtab.Flags._
 import scala.tools.nsc.io.AbstractFile
 
 import javaelements.{ScalaSourceFile, ScalaClassFile, ScalaCompilationUnit}
