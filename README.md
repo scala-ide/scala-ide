@@ -5,8 +5,8 @@ This is the new home of the Scala IDE for Eclipse. Previously, source code was h
 
 Tickets and documentation are still hosted by Assembla:
 
-https://www.assembla.com/spaces/scala-ide/tickets
-https://www.assembla.com/spaces/scala-ide/wiki
+* https://www.assembla.com/spaces/scala-ide/tickets
+* https://www.assembla.com/spaces/scala-ide/wiki
 
 
 Build
