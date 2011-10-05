@@ -36,9 +36,21 @@ class LocalRenameAction extends RefactoringAction {
     
     def runInlineRename(r: RenameScalaIdeRefactoring) {
       import r.refactoring._
-      import r.selection.selectedSymbolTree
+      import r.selection.selectedSymbolTree      
       
-      val positions = index.occurences(selectedSymbolTree.get.symbol) map (_.namePosition) map (pos => (pos.start, pos.end - pos.start))
+      val positions = for {
+        // there's always a selected tree, otherwise
+        // the refactoring won't be called.
+        selected <- selectedSymbolTree.toList
+        t <- index.occurences(selected.symbol)
+      } yield {
+        val pos = t.namePosition
+        if(pos.source.content(pos.start) == '`') {
+          (pos.start + 1, pos.end - pos.start - 2)
+        } else {
+          (pos.start, pos.end - pos.start)
+        }    
+      }
       
       EditorHelpers.enterLinkedModeUi(positions)
     }
