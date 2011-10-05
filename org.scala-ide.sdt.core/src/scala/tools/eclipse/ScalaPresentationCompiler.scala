@@ -50,6 +50,11 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
     } 
   }
   
+  /** Return the Scala compilation units that are currently maintained by this presentation compiler.
+   */
+  def compilationUnits: List[ScalaCompilationUnit] = 
+    sourceFiles.keysIterator.toList
+  
   private def problemsOf(file : AbstractFile) : List[IProblem] = {
     unitOfFile get file match {
       case Some(unit) => 
@@ -171,7 +176,7 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
     println("shutting down presentation compiler on project: " + project)
     // TODO: Why is this needed? (ID)
     sourceFiles.keysIterator.foreach(_.scheduleReconcile)
-    askShutdown
+    askShutdown()
   }
   
 
