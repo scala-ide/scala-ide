@@ -41,9 +41,10 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
 
   override def getMainTypeName : Array[Char] =
     getElementName.substring(0, getElementName.length - ".scala".length).toCharArray()
-  
+
+  /** Schedule this compilation unit for reconciliation.
+   */
   override def scheduleReconcile() = {
-//    Display.getDefault.asyncExec(new Runnable { def run = JavaModelUtil.reconcile(ScalaSourceFile.this) })
     JavaModelUtil.reconcile(this)
   }
 
