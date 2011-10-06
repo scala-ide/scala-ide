@@ -1,11 +1,11 @@
 package scala.tools.eclipse.util
 import org.junit.Test
+import junit.framework.Assert
 
 class CachedTest {
 
   val reentrant: Cached[Int] = new Cached[Int] {
     def create() = {
-      println("in create")
       reentrant(x => x + 1)
     }
 
@@ -15,8 +15,21 @@ class CachedTest {
 
   @Test(expected = classOf[RuntimeException]) def testDeadlock {
     reentrant { x =>
-      println("in testDeadlock")
       x + 1
     }
+  }
+  
+  @Test def testCorrectInit {
+    val testVal = new Cached[Int] {
+      def create() = {
+        42
+      }
+      
+      def destroy(x: Int) {
+        
+      }
+    }
+    
+    Assert.assertEquals("Initialized value", 42, testVal(x => x))
   }
 }
