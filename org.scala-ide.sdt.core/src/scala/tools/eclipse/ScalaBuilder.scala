@@ -70,6 +70,10 @@ class ScalaBuilder extends IncrementalProjectBuilder {
             case _: EclipseSbtBuildManager =>
               if (project.externalDepends.exists(
                 x => { val delta = getDelta(x); delta == null || delta.getKind != IResourceDelta.NO_CHANGE})) {
+                // reset presentation compilers if a dependency has been rebuilt
+                println("Resetting presentation compiler for %s due to dependent project change".format(project.underlying.getName()))
+                project.resetPresentationCompiler
+                
                 // in theory need to be able to identify the exact dependencies
                 // but this is deeply rooted inside the sbt dependency tracking mechanism
                 // so we just tell it to have a look at all the files 
