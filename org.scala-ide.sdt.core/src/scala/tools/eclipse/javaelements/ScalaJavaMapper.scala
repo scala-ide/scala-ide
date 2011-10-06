@@ -158,7 +158,7 @@ trait ScalaJavaMapper extends ScalaAnnotationHelper with HasLogger { self : Scal
 	base match {
 	  case "scala.Array" => 
 	    val paramTypes = tpe.typeArgs.map(mapType(_))
-	    assert(paramTypes.size == 1)
+	    assert(paramTypes.size == 1, "Expected exactly one type parameter, found %d [%s]".format(paramTypes.size, tpe))
         paramTypes.head + "[]"
 	  case basicTpe => 
 	    if(tpe.typeParams.nonEmpty) 
