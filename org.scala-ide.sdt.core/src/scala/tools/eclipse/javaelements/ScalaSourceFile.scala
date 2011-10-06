@@ -45,7 +45,11 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
   /** Schedule this compilation unit for reconciliation.
    */
   override def scheduleReconcile() = {
-    JavaModelUtil.reconcile(this)
+    this.reconcile(
+        ICompilationUnit.NO_AST,
+        false /* don't force problem detection */,
+        null /* use primary owner */,
+        null /* no progress monitor */);
   }
 
   override def reconcile(
