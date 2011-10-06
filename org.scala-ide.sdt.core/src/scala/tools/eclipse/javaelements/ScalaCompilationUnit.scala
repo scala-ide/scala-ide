@@ -99,7 +99,7 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
       info.isStructureKnown
     }) (false)
 
-  def scheduleReconcile : Unit = ()
+  def scheduleReconcile(): Unit = ()
   
   def addToIndexer(indexer : ScalaSourceIndexer) {
     doWithSourceFile { (source, compiler) =>

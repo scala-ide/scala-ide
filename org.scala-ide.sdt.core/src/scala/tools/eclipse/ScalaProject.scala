@@ -47,7 +47,7 @@ class ScalaProject(val underlying: IProject) {
 
   private val presentationCompiler = new Cached[Option[ScalaPresentationCompiler]] {
     override def create() = {
-      checkClasspathTimeStamp()
+      checkClasspathTimeStamp(shouldReset = false)
       try {
         val settings = new Settings
         settings.printtypes.tryToSet(Nil)
@@ -338,12 +338,12 @@ class ScalaProject(val underlying: IProject) {
       case _ =>
     }
   }
-
+  
   /** Check if the .classpath file has been changed since the last check.
    *  If the saved timestamp does not match the file timestamp, reset the
    *  two compilers.
    */
-  def checkClasspathTimeStamp(): Unit = plugin.check {
+  def checkClasspathTimeStamp(shouldReset: Boolean): Unit = plugin.check {
     val cp = underlying.getFile(".classpath")
     if (cp.exists)
       classpathUpdate match {
@@ -351,7 +351,7 @@ class ScalaProject(val underlying: IProject) {
         case stamp if stamp == cp.getModificationStamp() =>
         case _ =>
           classpathUpdate = cp.getModificationStamp()
-          resetCompilers
+          if (shouldReset) resetCompilers()
       }
   }
 
@@ -464,12 +464,20 @@ class ScalaProject(val underlying: IProject) {
     } {orElse}
   }
 
-  def resetPresentationCompiler {
+  /** Shutdown the presentation compiler, and force a reinitialization but asking to reconcile all 
+   *  compilation units that were serviced by the previous instance of the PC.
+   */
+  def resetPresentationCompiler() {
+    val units: List[ScalaCompilationUnit] = withPresentationCompiler(_.compilationUnits)(Nil)
+    
     presentationCompiler.invalidate
+    
+    println("Scheduling for reconcile: " + units.map(_.file))
+    units.foreach(_.scheduleReconcile())
   }
 
   def buildManager = {
-    checkClasspathTimeStamp()
+    checkClasspathTimeStamp(shouldReset = true)
     if (buildManager0 == null) {
       val settings = new Settings
       initialize(settings, _ => true)
