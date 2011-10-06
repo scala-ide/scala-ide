@@ -81,8 +81,8 @@ class CompletionTests {
         
         // remove parens as the compiler trees' printer has been slightly modified in 2.10 
         // (and we need the test to pass for 2.9.0/-1 and 2.8.x as well).
-        val completionsNoParens: List[String] = completions.map(_.display.replace("(","").replace(")","")).sorted
-        val expectedNoParens: List[String] = expectedCompletions(i).map(_.replace("(","").replace(")","")).sorted
+        val completionsNoParens: List[String] = completions.map(c => normalizeCompletion(c.display)).sorted
+        val expectedNoParens: List[String] = expectedCompletions(i).map(normalizeCompletion).sorted
         
         println("Found following completions @ position %d (%d,%d):".format(pos, position.line, position.column))
         completionsNoParens.foreach(e => println("\t" + e))
@@ -102,6 +102,17 @@ class CompletionTests {
         }
       }
     }()
+  }
+  
+  /** Transform the given completion proposal into a string that is (hopefully)
+   *  compiler-version independent. 
+   *  
+   *  Transformations are:
+   *    - remove parenthesis
+   *    - java.lang.String => String
+   */
+  private def normalizeCompletion(str: String): String = {
+    str.replace("(","").replace(")","").replace("java.lang.String", "String")
   }
   
   @Test
