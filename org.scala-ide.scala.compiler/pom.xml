@@ -46,6 +46,11 @@
         <artifactId>maven-dependency-plugin</artifactId>
         <version>2.1</version>
         <executions>
+          <!-- We need to unpack scala-compiler.jar to repackage it without
+               its manifest file and also access the content of compiler.properties.
+               We need to get rid of the manifest file because otherwise tycho is referencing
+               the scala-compiler.jar instead of the org.scala-ide.scala.compiler jar as being
+               the bundle, and it creates problem when running the tests -->
           <execution>
             <id>unpack</id>
             <phase>initialize</phase>
@@ -58,8 +63,7 @@
                   <groupId>${scala.compiler.groupid}</groupId>
                   <artifactId>scala-compiler</artifactId>
                   <version>${scala.compiler.version}</version>
-                  <outputDirectory>${project.build.directory}</outputDirectory>
-                  <includes>compiler.properties</includes>
+                  <outputDirectory>${project.build.directory}/compiler</outputDirectory>
                 </artifactItem>
               </artifactItems>
             </configuration>
@@ -94,6 +98,25 @@
         </executions>
       </plugin>
       <plugin>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <version>1.6</version>
+        <executions>
+          <!-- Repackaging the scala-compiler.jar, without the original manifest data.
+               See earlier comment. -->
+          <execution>
+            <phase>initialize</phase>
+            <goals>
+              <goal>run</goal>
+            </goals>
+            <configuration>
+              <target>
+                 <jar destfile="${project.build.directory}/lib/scala-compiler.jar" basedir="${project.build.directory}/compiler"/>
+              </target>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>properties-maven-plugin</artifactId>
         <version>1.0-alpha-2</version>
@@ -105,7 +128,7 @@
             </goals>
             <configuration>
               <files>
-                <file>${project.build.directory}/compiler.properties</file>
+                <file>${project.build.directory}/compiler/compiler.properties</file>
               </files>
             </configuration>
           </execution>
