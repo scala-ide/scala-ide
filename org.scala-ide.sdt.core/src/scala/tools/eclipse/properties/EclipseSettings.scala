@@ -21,10 +21,10 @@ trait EclipseSettings {
       case setting: Settings#StringSetting =>
         setting.name match {
           case "-Ypresentation-log" | "-Ypresentation-replay" =>
-            println("file setting for " + setting.name)
+            logger.info("file setting for " + setting.name)
             new FileSetting(setting)
           case _ =>
-            println("plain old string setting " + setting.name)
+            logger.info("plain old string setting " + setting.name)
             new StringSetting(setting)
         }
       //    case setting : Settings#PhasesSetting  => new StringSetting(setting) // !!!

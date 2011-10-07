@@ -33,8 +33,9 @@ import org.eclipse.jdt.core.ISourceReference
 import org.eclipse.jdt.core.IParent
 import org.eclipse.jdt.internal.core.JavaElement
 import org.eclipse.jdt.internal.core.SourceRefElement
+import scala.tools.eclipse.util.HasLogger
 
-trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with ScalaElement with IScalaCompilationUnit with IBufferChangedListener {
+trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with ScalaElement with IScalaCompilationUnit with IBufferChangedListener with HasLogger {
   val project = ScalaPlugin.plugin.getScalaProject(getJavaProject.getProject)
 
   val file : AbstractFile
@@ -69,7 +70,7 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
       val sourceLength = sourceFile.length
       
       try {
-        println("[%s] buildStructure for %s".format(project.underlying.getName(), this.getResource()))
+        logger.info("[%s] buildStructure for %s".format(project.underlying.getName(), this.getResource()))
         compiler.withStructure(sourceFile) { tree =>
           compiler.askOption { () =>
               new compiler.StructureBuilderTraverser(this, info, tmpMap, sourceLength).traverse(tree)
@@ -86,13 +87,13 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
       } catch {
         case e: InterruptedException =>
           Thread.currentThread().interrupt()
-          println("ignored InterruptedException in build structure")
+          logger.info("ignored InterruptedException in build structure")
           info.setIsStructureKnown(false)
           
         case ex => 
           if (lastCrash != ex) {
             lastCrash = ex
-            ScalaPlugin.plugin.logError("Compiler crash while building structure for %s".format(sourceFile), ex)
+            logger.error("Compiler crash while building structure for %s".format(sourceFile), ex)
           }
           info.setIsStructureKnown(false)
       }
@@ -197,7 +198,7 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
       } catch {
         case ex =>
           // any exception thrown here is likely to crash the reconciler. Better not
-          println("Exception thrown while creating override indicators: " + ex)
+          logger.error("Exception thrown while creating override indicators", ex)
       }
     }
   }

@@ -9,25 +9,21 @@ import sbt.inc.{AnalysisFormats, AnalysisStore, Analysis,
 	              Stamps, Stamp, ReadStamps, Incremental}
 import sbt.compiler.{JavaCompiler, CompilerArguments}
 import sbt.classpath.ClasspathUtilities
-
 import xsbti.{AnalysisCallback, Reporter, Controller}
 import xsbti.api.{Source}
 import xsbt.{InterfaceCompileFailed}
-
 import CompileOrder.{JavaThenScala, Mixed, ScalaThenJava}
-
 import sbinary.DefaultProtocol.{ immutableMapFormat, immutableSetFormat, StringFormat }
-
 import scala.collection.Seq
 import scala.tools.nsc.io.AbstractFile
 import scala.tools.nsc.util.NoPosition
 import scala.tools.nsc.{ Settings, MissingRequirementError }
 import scala.tools.eclipse.util.EclipseResource
-
 import java.io.File
+import scala.tools.eclipse.util.HasLogger
 
 
-class AnalysisCompile (conf: BasicConfiguration, bm: EclipseSbtBuildManager, contr: Controller) {
+class AnalysisCompile (conf: BasicConfiguration, bm: EclipseSbtBuildManager, contr: Controller) extends HasLogger {
     import AnalysisFormats._
     private lazy val store = AnalysisStore.sync(AnalysisStore.cached(FileBasedStore(EclipseResource(conf.cacheLocation).file)))
     
@@ -73,12 +69,12 @@ class AnalysisCompile (conf: BasicConfiguration, bm: EclipseSbtBuildManager, con
         
         val ((previousAnalysis, previousSetup), tm) = util.Utils.timed(extract(store.get))
         
-        println("API store loaded in %0,3d ms".format(tm))
+        logger.debug("API store loaded in %0,3d ms".format(tm))
         	
         val compile0 = (include: Set[File], callback: AnalysisCallback) => {
             conf.outputDirectories.foreach(IO.createDirectory)
             val incSrc = sources.filter(include)
-            println("Compiling:\n\t" + incSrc.mkString("\n\t"))
+            logger.info("Compiling:\n\t" + incSrc.mkString("\n\t"))
             bm.buildingFiles(toAbstractFile(incSrc))
             val (javaSrcs, scalaSrcs) = incSrc partition javaOnly
             
@@ -140,22 +136,22 @@ class AnalysisCompile (conf: BasicConfiguration, bm: EclipseSbtBuildManager, con
               IncrementalCompile(sources.toSet, entry, compile0, analysis, getAnalysis, conf.outputDirectory, log)
             
           // Store if necessary
-          println("Compilation was successful")
-          //println("Modified: " + modified + " Analysis: " + result + " apis " + result.apis)
+          logger.info("Compilation was successful")
+          //logger.info("Modified: " + modified + " Analysis: " + result + " apis " + result.apis)
           if (modified) {
             store.set(result, currentSetup)
           }
           result
         } catch {
         	case e: xsbti.CompileFailed =>
-        	  println("Compilation failed")
+        	  logger.info("Compilation failed")
         	  null
         	case ex @ MissingRequirementError(required) =>
         	  reporter.log(SbtConverter.convertToSbt(NoPosition), "could not find a required class (incomplete classpath?): " + required, xsbti.Severity.Error)
             null
             
         	case ex =>
-        	  ScalaPlugin.plugin.logError("Crash in the Scala build compiler.", ex)
+        	  logger.error("Crash in the Scala build compiler.", ex)
         	  reporter.log(SbtConverter.convertToSbt(NoPosition), "The Scala compiler crashed while compiling your project. This is a bug in the Scala compiler, not the IDE. Check the Erorr Log for details.", xsbti.Severity.Error)
         	  null
         	  
@@ -167,10 +163,10 @@ class AnalysisCompile (conf: BasicConfiguration, bm: EclipseSbtBuildManager, con
     private def extract(previous: Option[(Analysis, CompileSetup)]): (Analysis, Option[CompileSetup]) =
       previous match {
         case Some((an, setup)) =>
-//        	println("restore previous setup")
+//        	logger.debug("restore previous setup")
           (an, Some(setup))
         case None =>
-//          println("previous step")
+//          logger.debug("previous step")
           (Analysis.Empty, None)
       }
     def javaOnly(f: File) = f.getName.endsWith(".java")

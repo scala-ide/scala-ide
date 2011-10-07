@@ -6,18 +6,15 @@
 package scala.tools.eclipse.javaelements
 
 import java.util.{ Map => JMap }
-
 import org.eclipse.jdt.ui.JavaUI
 import org.eclipse.jdt.internal.core.Openable
 import org.eclipse.jface.text.{ Position => JFacePosition }
 import org.eclipse.jface.text.source.Annotation
-
 import scala.tools.eclipse.contribution.weaving.jdt.IScalaOverrideIndicator
-
 import org.eclipse.ui.texteditor.ITextEditor
 import org.eclipse.jdt.internal.ui.javaeditor.EditorUtility
-
 import scala.tools.eclipse.{ ScalaPresentationCompiler, ScalaPlugin }
+import scala.tools.eclipse.util.HasLogger
 
 object ScalaOverrideIndicatorBuilder {
   val OVERRIDE_ANNOTATION_TYPE = "org.eclipse.jdt.ui.overrideIndicator"
@@ -43,7 +40,7 @@ case class JavaIndicator(scu: ScalaCompilationUnit,
   }
 }
 
-trait ScalaOverrideIndicatorBuilder { self : ScalaPresentationCompiler =>
+trait ScalaOverrideIndicatorBuilder extends HasLogger { self : ScalaPresentationCompiler =>
   import ScalaOverrideIndicatorBuilder.OVERRIDE_ANNOTATION_TYPE
   
   case class ScalaIndicator(scu: ScalaCompilationUnit, text: String, base: Symbol, val isOverwrite: Boolean)
@@ -79,7 +76,7 @@ trait ScalaOverrideIndicatorBuilder { self : ScalaPresentationCompiler =>
               } else annotationMap.put(ScalaIndicator(scu, text, base, isOverwrite), position)
             }
           } catch {
-            case ex => ScalaPlugin.plugin.logError("Error creating override indicators for %s".format(scu.file.path), ex) 
+            case ex => logger.error("Error creating override indicators for %s".format(scu.file.path), ex) 
           }
         case _ =>
       }

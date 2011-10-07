@@ -16,6 +16,7 @@ import sbt.compiler.{JavaCompiler}
 import sbt.{Process, ClasspathOptions}
 import scala.tools.eclipse.util.{ EclipseResource, FileUtils }
 import org.eclipse.core.resources.IResource
+import scala.tools.eclipse.util.HasLogger
 
 // The following code is based on sbt.AggressiveCompile
 // Copyright 2010 Mark Harrah
@@ -205,7 +206,7 @@ class SbtBuildLogger(underlying: BuildReporter) extends EclipseLogger {
 }
 
 class EclipseSbtBuildManager(project: ScalaProject, settings0: Settings)
-  extends EclipseBuildManager {
+  extends EclipseBuildManager with HasLogger {
   
   var monitor: SubMonitor = _
   
@@ -307,7 +308,7 @@ class EclipseSbtBuildManager(project: ScalaProject, settings0: Settings)
    *  them and their dependent files.
    */
   def update(added: scala.collection.Set[AbstractFile], removed: scala.collection.Set[AbstractFile]) {
-    println("update files: " + added)
+    logger.info("update files: " + added)
     if (!added.isEmpty || !removed.isEmpty) {
       buildingFiles(added)
       removeFiles(removed)
@@ -324,11 +325,11 @@ class EclipseSbtBuildManager(project: ScalaProject, settings0: Settings)
   	    case (_, Some(lib)) =>
   	      lib.toFile()
   	    case (_, None) =>
-  	      println("Cannot find Scala library on the classpath. Verify your build path! Using default library corresponding to the compiler")
+  	      logger.info("Cannot find Scala library on the classpath. Verify your build path! Using default library corresponding to the compiler")
   	      //ScalaPlugin.plugin.sbtScalaLib.get.toFile
   	      val e = new Exception("Cannot find Scala library on the classpath. Verify your build path!")
   	      project.buildError(IMarker.SEVERITY_ERROR, e.getMessage(), null)
-          ScalaPlugin.plugin.logError("Error in Scala SBT builder", e)
+          logger.error("Error in Scala SBT builder", e)
   	      return
   	  }
   	  //val compJar = ScalaPlugin.plugin.sbtScalaCompiler
@@ -378,7 +379,7 @@ class EclipseSbtBuildManager(project: ScalaProject, settings0: Settings)
       case e =>
         hasErrors = true
         project.buildError(IMarker.SEVERITY_ERROR, "Error in Scala compiler: " + e.getMessage, null)
-        ScalaPlugin.plugin.logError("Error in Scala compiler", e)
+        logger.error("Error in Scala compiler", e)
     }
     if (!hasErrors)
       pendingSources.clear

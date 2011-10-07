@@ -6,8 +6,9 @@ package diagnostic
 import org.eclipse.jface.dialogs.MessageDialog
 import org.eclipse.jface.dialogs.IDialogConstants
 import util.SWTUtils.asyncExec
+import scala.tools.eclipse.util.HasLogger
 
-object StartupDiagnostics {
+object StartupDiagnostics extends HasLogger {
   import ScalaPlugin.plugin
   
   val INSTALLED_VERSION_KEY = plugin.pluginId + ".diagnostic.currentPluginVersion" 
@@ -20,8 +21,8 @@ object StartupDiagnostics {
     prefStore.setDefault(ASK_DIAGNOSTICS, true)
     val askDiagnostics = prefStore.getBoolean(ASK_DIAGNOSTICS)
     
-    println("startup diagnostics: previous version = " + previousVersion)
-    println("startup diagnostics: CURRENT version = " + currentVersion)
+    logger.info("startup diagnostics: previous version = " + previousVersion)
+    logger.info("startup diagnostics: CURRENT version = " + currentVersion)
  
     if (previousVersion != currentVersion) {
       prefStore.setValue(INSTALLED_VERSION_KEY, currentVersion)

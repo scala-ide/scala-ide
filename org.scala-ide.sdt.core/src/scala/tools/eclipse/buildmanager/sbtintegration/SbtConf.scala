@@ -3,9 +3,10 @@ package buildmanager
 package sbtintegration
 
 import sbt.{ ScalaInstance, Path }
-import xsbt.boot.{Launcher, Repository }  // TODO get rid of this dependency
+import xsbt.boot.{Launcher, Repository }
 import java.io.File
 import org.eclipse.core.resources.ResourcesPlugin
+import scala.tools.eclipse.util.HasLogger
 
 object ScalaCompilerConf {
     val LIBRARY_SUFFIX = "scala-library.jar"
@@ -48,7 +49,7 @@ class BasicConfiguration(
     val classpath: Seq[File]
     // If I put default None here, I get NPE
     //    outputDir:Option[File]
-    ) {
+    ) extends HasLogger {
 	  import Path._
     
     private final val cacheSuffix = ".cache"
@@ -60,7 +61,7 @@ class BasicConfiguration(
       val outDirs = project.outputFolders.toList
       outDirs match {
         case Nil =>
-          println("[Warning] No output directory specified")
+          logger.info("[Warning] No output directory specified")
           List(project.underlying.getLocation().toFile / "default-bin")
         case dirs =>
           val root = ResourcesPlugin.getWorkspace().getRoot()

@@ -18,7 +18,6 @@ import org.eclipse.swt.layout.{ GridData, GridLayout, RowLayout }
 import org.eclipse.swt.widgets.{ Button, Combo, Composite, Group, Label, Control, TabFolder, TabItem, Text }
 import scala.tools.nsc.Settings
 import scala.tools.eclipse.{ ScalaPlugin, SettingConverterUtil }
-import scala.tools.eclipse.properties.{IDESettings, ScalaPluginSettings }
 import scala.tools.eclipse.util.SWTUtils
 import org.eclipse.jface.fieldassist.FieldDecorationRegistry
 import org.eclipse.jface.fieldassist.ControlDecoration
@@ -26,8 +25,9 @@ import org.eclipse.swt.events.VerifyEvent
 import scala.tools.nsc.CompilerCommand
 import org.eclipse.jface.fieldassist._
 import org.eclipse.jface.bindings.keys.KeyStroke
+import scala.tools.eclipse.util.HasLogger
 
-trait ScalaPluginPreferencePage {
+trait ScalaPluginPreferencePage extends HasLogger {
   self: PreferencePage with EclipseSettings =>
 
   val eclipseBoxes: List[EclipseSetting.EclipseBox]
@@ -227,7 +227,7 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
     buildIfNecessary()
     true
   } catch {
-    case ex => ScalaPlugin.plugin.logError(ex); false
+    case ex => logger.error(ex); false
   }
 
   //Make sure apply button isn't available until it should be
@@ -245,10 +245,10 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
       case None => //don't need to check
     }
     
-    println(eclipseBoxes.exists { box => 
-      println(box.eSettings.find(_.isChanged))
+    logger.info(eclipseBoxes.exists { box => 
+      logger.info(box.eSettings.find(_.isChanged).toString)
       box.eSettings.exists(_.isChanged)
-    })
+    }.toString)
 
     //check all our other settings
     additionalParamsWidget.isChanged || super.isChanged

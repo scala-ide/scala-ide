@@ -12,16 +12,15 @@ import org.eclipse.ui.dialogs.PropertyPage
 import org.eclipse.swt.widgets.{ Composite, Control, Group }
 import org.eclipse.swt.layout.{ GridLayout, GridData }
 import org.eclipse.swt.SWT
-
 import org.eclipse.jdt.core.IJavaProject
 import org.eclipse.core.resources.IProject
 import scala.tools.eclipse.ScalaPlugin
-
 import scala.tools.nsc.Settings
 import scala.tools.eclipse.{SettingConverterUtil }
+import scala.tools.eclipse.util.HasLogger
 
 class ScalaPreferences extends PropertyPage with IWorkbenchPreferencePage with EclipseSettings
-  with ScalaPluginPreferencePage {
+  with ScalaPluginPreferencePage with HasLogger {
 	
 	/** Pulls the preference store associated with this plugin */
   override def doGetPreferenceStore() : IPreferenceStore = {
@@ -67,7 +66,7 @@ class ScalaPreferences extends PropertyPage with IWorkbenchPreferencePage with E
     save()
     true
   } catch {
-    case ex => ScalaPlugin.plugin.logError(ex); false
+    case ex => logger.error(ex); false
   }
   
   def updateApply = updateApplyButton

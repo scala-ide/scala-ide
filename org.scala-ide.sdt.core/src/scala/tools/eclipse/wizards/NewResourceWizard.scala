@@ -7,7 +7,6 @@
 package scala.tools.eclipse.wizards
 
 import scala.collection.mutable.ArrayBuffer
-
 import org.eclipse.core.resources.{ IFile, IFolder, IncrementalProjectBuilder, IProject, IResource }
 import org.eclipse.core.runtime.IAdaptable
 import org.eclipse.jdt.core.{ IPackageFragment, IPackageFragmentRoot }
@@ -19,13 +18,12 @@ import org.eclipse.swt.widgets.{ Combo, Composite, Control, Group, Text }
 import org.eclipse.ui.IWorkbench
 import org.eclipse.ui.ide.IDE
 import org.eclipse.ui.wizards.newresource.BasicNewResourceWizard
-
 import scala.tools.nsc.util.Chars
-
 import scala.tools.eclipse.{ ScalaPlugin, ScalaProject }
 import scala.tools.eclipse.util.EclipseUtils._
+import scala.tools.eclipse.util.HasLogger
 
-trait NewResourceWizard extends BasicNewResourceWizard {
+trait NewResourceWizard extends BasicNewResourceWizard with HasLogger {
   def kind : String
   def adjective : String = ""
   def noun(toLower : Boolean) : String = {
@@ -90,7 +88,7 @@ trait NewResourceWizard extends BasicNewResourceWizard {
           addToGroup(group, text)
         }
     } catch {
-    case ex => ScalaPlugin.plugin.logError(ex)
+      case ex => logger.error(ex)
     }
   }
   private def label(parent : Composite, label : String) = {
@@ -176,7 +174,7 @@ trait NewResourceWizard extends BasicNewResourceWizard {
     
     true
   } catch {
-  case ex => ScalaPlugin.plugin.logError(ex); false
+    case ex => logger.error(ex); false
   }
   protected def postFinish(project : ScalaProject, file : IFile) = {}
   

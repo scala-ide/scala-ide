@@ -7,7 +7,6 @@
 package scala.tools.eclipse.wizards
 
 import org.eclipse.core.resources.IResource
-
 import org.eclipse.core.runtime.{
   CoreException,
   FileLocator,
@@ -18,7 +17,6 @@ import org.eclipse.core.runtime.{
   Path,
   SubProgressMonitor
 }
-
 import org.eclipse.jdt.core.{
   Flags,
   ICompilationUnit,
@@ -31,9 +29,7 @@ import org.eclipse.jdt.core.{
   Signature,
   WorkingCopyOwner
 }
-
 import org.eclipse.jdt.core.dom.{ AST, ASTParser, CompilationUnit }
-
 import org.eclipse.jdt.internal.corext.codemanipulation.StubUtility
 import org.eclipse.jdt.internal.corext.util.JavaModelUtil
 import org.eclipse.jdt.internal.ui.dialogs.StatusInfo
@@ -44,25 +40,20 @@ import org.eclipse.jdt.internal.ui.wizards.dialogfields.{
   LayoutUtil,
   SelectionButtonDialogFieldGroup
 }
-
 import org.eclipse.jdt.ui.wizards.NewTypeWizardPage
-
 import org.eclipse.jface.dialogs.{ Dialog, IDialogSettings }
 import org.eclipse.jface.resource.ImageDescriptor
 import org.eclipse.jface.viewers.IStructuredSelection
-
 import org.eclipse.swt.SWT
 import org.eclipse.swt.layout.{ GridData, GridLayout }
 import org.eclipse.swt.widgets.Composite
-
 import collection.Seq
 import collection.mutable.Buffer
-
 import scala.tools.eclipse.ScalaPlugin._
-
 import scala.tools.eclipse.formatter.ScalaFormatterCleanUpProvider
+import scala.tools.eclipse.util.HasLogger
 
-abstract class AbstractNewElementWizardPage extends NewTypeWizardPage(1, "") {
+abstract class AbstractNewElementWizardPage extends NewTypeWizardPage(1, "") with HasLogger {
 
   val declarationType: String
 
@@ -384,7 +375,7 @@ abstract class AbstractNewElementWizardPage extends NewTypeWizardPage(1, "") {
       cu.commitWorkingCopy(true, new SubProgressMonitor(monitor, 1))
       parentCU.discardWorkingCopy
     } catch {
-      case ex: JavaModelException => println("<<<<<<< Error >>>>>>>\n" + ex)
+      case ex: JavaModelException => logger.error(ex)
     } finally {
       monitor done
     }
@@ -426,7 +417,7 @@ abstract class AbstractNewElementWizardPage extends NewTypeWizardPage(1, "") {
   override protected def typeNameChanged(): IStatus = {
 
     var status = super.typeNameChanged.asInstanceOf[StatusInfo]
-    println(">>>> Status = " + status)
+    logger.info(">>>> Status = " + status)
     val pack = getPackageFragment
 
     if (pack != null) {
@@ -436,7 +427,7 @@ abstract class AbstractNewElementWizardPage extends NewTypeWizardPage(1, "") {
       try {
         if (!plugin.isScalaProject(project.getProject)) {
           val msg = project.getElementName + " is not a Scala project"
-          println(msg)
+          logger.info(msg)
           status.setError(msg)
         }
       } catch {

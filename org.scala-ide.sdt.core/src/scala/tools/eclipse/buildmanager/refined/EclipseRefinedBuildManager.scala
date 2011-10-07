@@ -4,20 +4,17 @@ package refined
 
 import org.eclipse.core.resources.{ IFile, IMarker, IResource }
 import org.eclipse.core.runtime.IProgressMonitor
-
 import scala.collection.mutable.HashSet
-
 import scala.tools.nsc.{ Global, Settings, Phase }
 import scala.tools.nsc.interactive.{ BuildManager, RefinedBuildManager }
 import scala.tools.nsc.io.AbstractFile
 import scala.tools.nsc.reporters.Reporter
-
 import scala.tools.eclipse.util.{ EclipseResource, FileUtils }
-
 import org.eclipse.core.runtime.{ SubMonitor, IPath, Path }
+import scala.tools.eclipse.util.HasLogger
 
 class EclipseRefinedBuildManager(project: ScalaProject, settings0: Settings)
-  extends RefinedBuildManager(settings0) with EclipseBuildManager {
+  extends RefinedBuildManager(settings0) with EclipseBuildManager with HasLogger {
   var depFile: IFile = project.underlying.getFile(".scala_dependencies")
   var monitor: SubMonitor = _
   val pendingSources = new HashSet[IFile]
@@ -85,7 +82,7 @@ class EclipseRefinedBuildManager(project: ScalaProject, settings0: Settings)
       case e =>
         hasErrors = true
         project.buildError(IMarker.SEVERITY_ERROR, "Error in Scala compiler: " + e.getMessage, null)
-        ScalaPlugin.plugin.logError("Error in Scala compiler", e)
+        logger.error("Error in Scala compiler", e)
     }
     if (!hasErrors)
       pendingSources.clear
