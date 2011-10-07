@@ -44,8 +44,19 @@ class TestProjectSetup(projectName: String) {
     srcPackageRoot.getPackageFragment(segments.init.mkString(".")).getCompilationUnit(segments.last)
   }
   
+  /** Return a sequence of compilation units corresponding to the given paths. */
+  def compilationUnits(paths: String*): Seq[ICompilationUnit] =
+    paths.map(compilationUnit)
+  
+  /** Return the Scala compilation unit corresponding to the given path, relative to the src folder.
+   *  for example: "scala/collection/Map.scala". 
+   */
   def scalaCompilationUnit(path: String): ScalaCompilationUnit =
     compilationUnit(path).asInstanceOf[ScalaCompilationUnit]
+
+  /** Return a sequence of Scala compilation units corresponding to the given paths. */
+  def scalaCompilationUnits(paths: String*): Seq[ScalaCompilationUnit] =
+    paths.map(scalaCompilationUnit)
   
   def reload(unit: ScalaCompilationUnit) {
     // first, 'open' the file by telling the compiler to load it
