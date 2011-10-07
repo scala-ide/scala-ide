@@ -9,8 +9,9 @@ import org.eclipse.swt.graphics.{Point, Image}
 import refactoring.EditorHelpers._
 import scala.tools.eclipse.refactoring.EditorHelpers
 import scala.tools.refactoring.implementations.AddImportStatement
+import scala.tools.eclipse.util.HasLogger
 
-case class ImportCompletionProposal(val importName: String) extends IJavaCompletionProposal {
+case class ImportCompletionProposal(val importName: String) extends IJavaCompletionProposal with HasLogger {
   
   /**
    * Fixed relevance at 100 for now.
@@ -28,7 +29,7 @@ case class ImportCompletionProposal(val importName: String) extends IJavaComplet
       applyByASTTransformation(document)
     } catch {
       case t => {
-        ScalaPlugin.plugin.logError("failed to update import by AST transformation, fallback to text implementation", t)
+        logger.error("failed to update import by AST transformation, fallback to text implementation", t)
         applyByTextTransformation(document)
       }
     }

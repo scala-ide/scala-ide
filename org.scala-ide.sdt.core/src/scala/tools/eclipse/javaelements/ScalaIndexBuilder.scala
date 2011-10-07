@@ -45,7 +45,7 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
     def addPackage(p : PackageDef) = {
       if (!packageName.isEmpty) packageName.append('.')
       if (p.name != nme.EMPTY_PACKAGE_NAME && p.name != nme.ROOTPKG) {
-        if (isInfo) println("Package defn: "+p.name+" ["+this+"]")
+        if (isInfo) logger.info("Package defn: "+p.name+" ["+this+"]")
         packageName.append(p.name)  
       }
     }
@@ -56,7 +56,7 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
       case AppliedTypeTree(fun: RefTree, args) => fun.name.toChars
       case tpt @ TypeTree()                    => tpt.tpe.typeSymbol.name.toChars // maybe the tree was typed
       case parent =>
-        println("superclass not understood: %s".format(parent))
+        logger.info("superclass not understood: %s".format(parent))
         "$$NoRef".toCharArray
     }) toArray
     
@@ -74,14 +74,14 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
     
     private def addAnnotations(sym: Symbol) =
       for (ann <- sym.annotations) {
-        if (isInfo) println("added annotation %s [using symbols]".format(ann.atp))
+        if (isInfo) logger.info("added annotation %s [using symbols]".format(ann.atp))
         indexer.addAnnotationTypeReference(ann.atp.toString.toChars)
       }
     
     private def addAnnotationRef(tree: Tree) {
       for (t <- tree) t match {
         case New(tpt) =>
-          if (isInfo) println("added annotation %s [using trees]".format(tpt))
+          if (isInfo) logger.info("added annotation %s [using trees]".format(tpt))
           indexer.addAnnotationTypeReference(tpt.toString.toChars)
         case _ => ()
       }
@@ -89,8 +89,8 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
       
     def addClass(c : ClassDef) {
    	  if (isInfo) {      		
-        println("Class defn: "+c.name+" ["+this+"]")
-        println("Parents: "+c.impl.parents)
+        logger.info("Class defn: "+c.name+" ["+this+"]")
+        logger.info("Parents: "+c.impl.parents)
       }
         
       indexer.addClassDeclaration(
@@ -109,7 +109,7 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
     
     def addModule(m : ModuleDef) {
       if (isInfo)
-        println("Module defn: "+m.name+" ["+this+"]")
+        logger.info("Module defn: "+m.name+" ["+this+"]")
       
       indexer.addClassDeclaration(
         mapModifiers(m.mods),
@@ -136,7 +136,7 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
     
     def addVal(v : ValDef) {
      if (isInfo)
-        println("Val defn: >"+nme.getterName(v.name)+"< ["+this+"]")
+        logger.info("Val defn: >"+nme.getterName(v.name)+"< ["+this+"]")
         
       indexer.addMethodDeclaration(
         nme.getterName(v.name).toChars,
@@ -157,7 +157,7 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
     
     def addDef(d : DefDef) {
       if (isInfo)
-        println("Def defn: "+d.name+" ["+this+"]")
+        logger.info("Def defn: "+d.name+" ["+this+"]")
       val name = if(nme.isConstructorName(d.name)) enclClassNames.head else d.name.toChars
         
       val fps = for(vps <- d.vparamss; vp <- vps) yield vp
@@ -213,7 +213,7 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
         
         case Apply(rt : RefTree, args) =>
           if (isInfo)
-            println("method reference: "+rt.name+" ["+args.length+"]")
+            logger.info("method reference: "+rt.name+" ["+args.length+"]")
 
           indexer.addMethodReference(rt.name.toChars, args.length)
           super.traverse(tree)

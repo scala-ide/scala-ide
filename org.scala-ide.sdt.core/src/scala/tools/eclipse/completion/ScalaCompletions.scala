@@ -6,13 +6,14 @@ import org.eclipse.jdt.core.search.{SearchEngine, IJavaSearchConstants, SearchPa
 import org.eclipse.jdt.core.IJavaElement
 import scala.collection.mutable
 import org.eclipse.core.runtime.NullProgressMonitor
+import scala.tools.eclipse.util.HasLogger
 
 /** Base class for Scala completions. No UI dependency, can be safely used in a
  *  headless testing environment.
  *  
  *  @see scala.tools.eclipse.ui.ScalaCompletinProposalComputer
  */
-class ScalaCompletions {
+class ScalaCompletions extends HasLogger {
   import org.eclipse.jface.text.IRegion
   
   def findCompletions(region: IRegion)(position: Int, scu: ScalaCompilationUnit)
@@ -87,7 +88,7 @@ class ScalaCompletions {
       case _ => null
     }
     
-    println("Search for: " + (if (packageName == null) "null" else new String(packageName)) + " . " + new String(prefix))
+    logger.info("Search for: " + (if (packageName == null) "null" else new String(packageName)) + " . " + new String(prefix))
     
     if (prefix.length > 0 || packageName != null) {
       // if there is data to work with, look for a type in the classpath
@@ -99,10 +100,10 @@ class ScalaCompletions {
 	      val simpleName= new String(simpleTypeName)
 	      val fullyQualifiedName= (if (packageName.length > 0) packageName + '.' else "") + simpleName
 	      
-	      println("Found type: " + fullyQualifiedName)
+	      logger.info("Found type: " + fullyQualifiedName)
 
 	      if (!alreadyListed(fullyQualifiedName)) {
-	        println("Adding type: " + fullyQualifiedName)
+	        logger.info("Adding type: " + fullyQualifiedName)
             // if the type is not already in the completion list, add it
 	        buff+= CompletionProposal(
 	            MemberKind.Object,

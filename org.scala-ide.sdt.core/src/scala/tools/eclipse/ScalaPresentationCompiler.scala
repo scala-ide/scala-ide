@@ -63,8 +63,8 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
         response.get
         unit.problems.toList flatMap presentationReporter.eclipseProblem
       case None => 
-        println("Missing unit for file %s when retrieving errors. Errors will not be shown in this file".format(file))
-        println(unitOfFile)
+        logger.info("Missing unit for file %s when retrieving errors. Errors will not be shown in this file".format(file))
+        logger.info(unitOfFile.toString)
         Nil
     }
   }
@@ -109,25 +109,25 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
       case fi: FailedInterrupt =>
         fi.getCause() match {
           case e: TypeError =>
-            println("TypeError in ask:\n" + e)
+            logger.info("TypeError in ask:\n" + e)
             None
           case f: FreshRunReq =>
-            println("FreshRunReq in ask:\n" + f)
-             None
+            logger.info("FreshRunReq in ask:\n" + f)
+            None
           case e @ InvalidCompanions(c1, c2) =>
             reporter.warning(c1.pos, e.getMessage)
             None
           case e: InterruptedException =>
             Thread.currentThread().interrupt()
-            println("interrupted exception in askOption")
+            logger.info("interrupted exception in askOption")
             None
             
           case e =>
-            ScalaPlugin.plugin.logError("Error during askOption", e)
+            logger.error("Error during askOption", e)
             None
         }
       case e =>
-        ScalaPlugin.plugin.logError("Error during askOption", e)
+        logger.error("Error during askOption", e)
         None
     }
   
@@ -148,7 +148,7 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
   }
   
   def filesDeleted(files : List[ScalaCompilationUnit]) {
-    println("files deleted:\n" + (files map (_.getPath) mkString "\n"))
+    logger.info("files deleted:\n" + (files map (_.getPath) mkString "\n"))
     synchronized {
       val srcs = files.map(sourceFiles remove _).foldLeft(List[SourceFile]()) {
         case (acc, None) => acc
@@ -160,7 +160,7 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
   }
 
  def discardSourceFile(scu : ScalaCompilationUnit) {
-   println("discarding " + scu.getPath)
+   logger.info("discarding " + scu.getPath)
    synchronized {
      sourceFiles.get(scu) foreach { source =>
        removeUnitOf(source)
@@ -170,10 +170,10 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
  }
 
   override def logError(msg : String, t : Throwable) =
-    ScalaPlugin.plugin.logError(msg, t)
+    logger.error(msg, t)
     
   def destroy() {
-    println("shutting down presentation compiler on project: " + project)
+    logger.info("shutting down presentation compiler on project: " + project)
     // TODO: Why is this needed? (ID)
     sourceFiles.keysIterator.foreach(_.scheduleReconcile)
     askShutdown()

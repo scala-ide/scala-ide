@@ -561,7 +561,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
     
     trait TypeOwner extends Owner { self =>
       override def addType(t : TypeDef) : Owner = {
-        //println("Type defn: >"+t.name.toString+"< ["+this+"]")
+        //logger.info("Type defn: >"+t.name.toString+"< ["+this+"]")
         
         val sym = t.symbol
         val name = t.name.toString
@@ -584,11 +584,11 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
         newElements0.put(typeElem, typeElemInfo)
         
         if(t.rhs.symbol == NoSymbol) {
-          //println("Type is abstract")
+          //logger.info("Type is abstract")
           val tn = "java.lang.Object".toArray
           typeElemInfo.setTypeName(tn)
         } else {
-          //println("Type has type: "+t.rhs.symbol.fullName)
+          //logger.info("Type has type: "+t.rhs.symbol.fullName)
           val tn = mapType(t.rhs.symbol).toArray
           typeElemInfo.setTypeName(tn)
         }

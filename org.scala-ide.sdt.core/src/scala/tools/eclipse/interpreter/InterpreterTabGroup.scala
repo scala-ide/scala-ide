@@ -21,8 +21,8 @@ import org.eclipse.jface.window._
 import org.eclipse.ui.dialogs._
 import org.eclipse.core.runtime._
 import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants
-
 import scala.tools.eclipse.ScalaPlugin
+import scala.tools.eclipse.util.HasLogger
 
 /**
  * This defines the configuration UI for a scala interpeter launch configuration.
@@ -44,7 +44,7 @@ class InterpreterTabGroup extends AbstractLaunchConfigurationTabGroup {
 
 
 /** This class allows selection of scala projects.*/
-class InterpreterMainTab extends JavaLaunchTab {
+class InterpreterMainTab extends JavaLaunchTab with HasLogger {
   protected var seedScriptText : Text = _
    /**
     * @see ILaunchConfigurationTab#isValid(ILaunchConfiguration)
@@ -164,7 +164,7 @@ class InterpreterMainTab extends JavaLaunchTab {
     catch {
       case jme : JavaModelException =>
         //TODO - Log
-        ScalaPlugin.plugin.logError("Java model exception", jme);
+        logger.error("Java model exception", jme);
     }
     val scalaProject= getScalaProject();
     if (scalaProject != null) {

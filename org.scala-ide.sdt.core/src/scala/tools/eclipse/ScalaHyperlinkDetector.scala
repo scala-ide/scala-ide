@@ -92,7 +92,7 @@ class ScalaHyperlinkDetector extends AbstractHyperlinkDetector with HasLogger {
           }
         }.flatten.headOption match {
           case links @ Some(List()) =>
-            logger.error("Falling back to selection engine for %s!".format(typed.left))
+            logger.info("Falling back to selection engine for %s!".format(typed.left))
             links
           case links =>
             links 

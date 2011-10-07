@@ -28,6 +28,7 @@ import scala.tools.eclipse.util.OSGiUtils.pathInBundle
 import scala.tools.eclipse.templates.ScalaTemplateManager
 import org.eclipse.jdt.ui.PreferenceConstants
 import org.eclipse.core.resources.IResourceDelta
+import scala.tools.eclipse.util.HasLogger
 
 object ScalaPlugin {
   var plugin: ScalaPlugin = _
@@ -40,7 +41,7 @@ object ScalaPlugin {
   def getShell: Shell = getWorkbenchWindow map (_.getShell) orNull
 }
 
-class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IElementChangedListener with IPartListener {
+class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IElementChangedListener with IPartListener with HasLogger {
   ScalaPlugin.plugin = this
 
   final val HEADLESS_TEST  = "sdtcore.headless"
@@ -110,9 +111,9 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
   
   val scalaLibBundle = {
     val bundles = Platform.getBundles(ScalaPlugin.plugin.libraryPluginId, scalaCompilerBundleVersion.toString())
-    println("[scalaLibBundle] Found %d bundles: %s".format(bundles.size, bundles.toList.mkString(", ")))
+    logger.debug("[scalaLibBundle] Found %d bundles: %s".format(bundles.size, bundles.toList.mkString(", ")))
     bundles.find(_.getVersion() == scalaCompilerBundleVersion).getOrElse {
-      ScalaPlugin.plugin.logWarning("Couldnt find a match for %s in %s. Using default.".format(scalaCompilerBundleVersion, bundles.toList.mkString(", ")))
+      logger.warning("Couldnt find a match for %s in %s. Using default.".format(scalaCompilerBundleVersion, bundles.toList.mkString(", ")))
       Platform.getBundle(ScalaPlugin.plugin.libraryPluginId)
     }
   }
@@ -139,7 +140,7 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
       ScalaPlugin.getWorkbenchWindow map (_.getPartService().addPartListener(ScalaPlugin.this))
       diagnostic.StartupDiagnostics.run
     }
-    println("Scala compiler bundle: " + scalaCompilerBundle.getLocation)
+    logger.info("Scala compiler bundle: " + scalaCompilerBundle.getLocation)
   }
 
   override def stop(context: BundleContext) = {
@@ -183,7 +184,7 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
           projects.get(project) match {
             case Some(scalaProject) =>
               projects.remove(project)
-              println("resetting compilers for " + project.getName)
+              logger.info("resetting compilers for " + project.getName)
               scalaProject.resetCompilers
             case None =>
           }
@@ -211,7 +212,7 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
 
         case PACKAGE_FRAGMENT_ROOT =>
           if (isRemoved || hasFlag(F_REMOVED_FROM_CLASSPATH | F_ADDED_TO_CLASSPATH | F_ARCHIVE_CONTENT_CHANGED)) {
-            println("package fragment root changed (resetting pres compiler): " + elem)
+            logger.info("package fragment root changed (resetting pres compiler): " + elem)
             getScalaProject(elem.getJavaProject.getProject).resetPresentationCompiler
             false
           } else true
@@ -238,26 +239,7 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
     }
   }
 
-  def logWarning(msg: String): Unit = getLog.log(new Status(IStatus.WARNING, pluginId, msg))
-
-  def logError(t: Throwable): Unit = logError(t.getClass + ":" + t.getMessage, t)
-
-  def logError(msg: String, t: Throwable): Unit = {
-    val t1 = if (t != null) t else { val ex = new Exception; ex.fillInStackTrace; ex }
-    val status1 = new Status(IStatus.ERROR, pluginId, IStatus.ERROR, msg, t1)
-    getLog.log(status1)
-
-    val status = t match {
-      case ce: ControlThrowable =>
-        val t2 = { val ex = new Exception; ex.fillInStackTrace; ex }
-        val status2 = new Status(
-          IStatus.ERROR, pluginId, IStatus.ERROR,
-          "Incorrectly logged ControlThrowable: " + ce.getClass.getSimpleName + "(" + ce.getMessage + ")", t2)
-        getLog.log(status2)
-      case _ =>
-    }
-  }
-
+  
   def bundlePath = check {
     val bundle = getBundle
     val bpath = bundle.getEntry("/")
@@ -270,7 +252,7 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
       Some(f)
     } catch {
       case e: Throwable =>
-        logError(e)
+        logger.error(e)
         None
     }
 
@@ -279,7 +261,7 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
       Some(f)
     } catch {
       case e: Throwable =>
-        logError(msgIfError, e)
+        logger.error(msgIfError, e)
         None
     }
   }
@@ -291,14 +273,14 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
   def partDeactivated(part: IWorkbenchPart) {}
   def partBroughtToTop(part: IWorkbenchPart) {}
   def partOpened(part: IWorkbenchPart) {
-    println("open " + part.getTitle)
+    logger.debug("open " + part.getTitle)
     doWithCompilerAndFile(part) { (compiler, ssf) =>
       compiler.askToDoFirst(ssf)
       compiler.askReload(ssf, ssf.getContents)
     }
   }
   def partClosed(part: IWorkbenchPart) {
-    println("close " + part.getTitle)
+    logger.debug("close " + part.getTitle)
     doWithCompilerAndFile(part) { (compiler, ssf) =>
       compiler.discardSourceFile(ssf)
     }

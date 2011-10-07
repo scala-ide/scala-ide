@@ -30,7 +30,7 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
   
   def MatchLocator(scu: ScalaCompilationUnit, matchLocator: MatchLocator, 
       pattern: SearchPattern, possibleMatch: PossibleMatch): MatchLocatorTraverser = {
-    println("Search pattern " + pattern)
+    logger.info("Search pattern " + pattern)
     pattern match {
       case p: OrPattern => 
         val locators = MatchLocatorUtils.orPatterns(p) map { p => MatchLocator(scu, matchLocator, p, possibleMatch) }
@@ -61,13 +61,13 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
     
     import MatchLocatorUtils._
     def report(sm: SearchMatch) = {
-      println("found a match: " + sm)
+      logger.info("found a match: " + sm)
       reportMethod.invoke(matchLocator, sm)
     }
 
     def checkQualifier(s: Select, className: Array[Char], pat: SearchPattern) = 
       s.qualifier.tpe.baseClasses exists { bc => 
-        println("Base class " + bc)
+        logger.info("Base class " + bc)
         pat.matchesName(bc.name.toChars, className)
       }
     
@@ -155,7 +155,7 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
       else false
     
     def reportMethodReference(tree: Tree, sym: Symbol, pat: MethodPattern) {
-      println("Trying " + tree)
+      logger.info("Trying " + tree)
         
       if (!pat.matchesName(pat.selector, sym.name.toChars) || !sym.pos.isDefined) return
       val proceed = tree match {

@@ -25,12 +25,13 @@ import scala.tools.eclipse.properties.IDESettings
 import util.SWTUtils.asyncExec
 import EclipseUtils.workspaceRunnableIn
 import scala.tools.eclipse.properties.CompilerSettings
+import scala.tools.eclipse.util.HasLogger
 
 trait BuildSuccessListener {
   def buildSuccessful(): Unit
 }
 
-class ScalaProject(val underlying: IProject) {
+class ScalaProject(val underlying: IProject) extends HasLogger {
   import ScalaPlugin.plugin
 
   private var classpathUpdate: Long = IResource.NULL_STAMP
@@ -56,14 +57,14 @@ class ScalaProject(val underlying: IProject) {
       } catch {
         case ex @ MissingRequirementError(required) =>
           failedCompilerInitialization("could not find a required class: " + required)
-          plugin.logError(ex)
+          logger.error(ex)
           None
         case ex =>
-          println("Throwable when intializing presentation compiler!!! " + ex.getMessage)
+          logger.info("Throwable when intializing presentation compiler!!! " + ex.getMessage)
           ex.printStackTrace()
           if (underlying.isOpen)
             failedCompilerInitialization("error initializing Scala compiler")
-          plugin.logError(ex)          
+          logger.error(ex)          
           None
       }
     }
@@ -185,7 +186,7 @@ class ScalaProject(val underlying: IProject) {
               path += cpe.getPath
             }
           } else
-            ScalaPlugin.plugin.logError("Classpath computation encountered a null path for " + cpe, null)
+            logger.error("Classpath computation encountered a null path for " + cpe, null)
         case IClasspathEntry.CPE_SOURCE =>
           val cpeOutput = cpe.getOutputLocation
           val outputLocation = if (cpeOutput != null) cpeOutput else project.getOutputLocation
@@ -197,7 +198,7 @@ class ScalaProject(val underlying: IProject) {
           }  
 
         case _ =>
-          ScalaPlugin.plugin.logWarning("Classpath computation encountered unknown entry: " + cpe)
+          logger.warning("Classpath computation encountered unknown entry: " + cpe)
       }
     }
     computeClasspath(javaProject, false)
@@ -316,7 +317,7 @@ class ScalaProject(val underlying: IProject) {
                     try {
                       cntnr.delete(true, monitor) // try again
                     } catch {
-                      case t => plugin.logError(t)
+                      case t => logger.error(t)
                     }
               }
             } else
@@ -325,7 +326,7 @@ class ScalaProject(val underlying: IProject) {
             try {
               file.delete(true, monitor)
             } catch {
-              case t => plugin.logError(t)
+              case t => logger.error(t)
             }
           case _ =>
         }
@@ -386,7 +387,7 @@ class ScalaProject(val underlying: IProject) {
       setting <- box.userSettings; if filter(setting)
     ) {
       val value0 = store.getString(SettingConverterUtil.convertNameToProperty(setting.name))
-      println("[%s] initializing %s to %s".format(underlying.getName(), setting.name, value0.toString))
+      logger.info("[%s] initializing %s to %s".format(underlying.getName(), setting.name, value0.toString))
       try {
         val value = if (setting ne settings.pluginsDir) value0 else {
           ScalaPlugin.plugin.continuationsClasses map {
@@ -397,13 +398,13 @@ class ScalaProject(val underlying: IProject) {
           setting.tryToSetFromPropertyValue(value)
         }
       } catch {
-        case t: Throwable => plugin.logError("Unable to set setting '" + setting.name + "' to '" + value0 + "'", t)
+        case t: Throwable => logger.error("Unable to set setting '" + setting.name + "' to '" + value0 + "'", t)
       }
     }
     
     // handle additional parameters
     val additional = store.getString(CompilerSettings.ADDITIONAL_PARAMS)
-    println("setting additional paramters: " + additional)
+    logger.info("setting additional paramters: " + additional)
     settings.processArgumentString(additional)
   }
   
@@ -472,7 +473,7 @@ class ScalaProject(val underlying: IProject) {
     
     presentationCompiler.invalidate
     
-    println("Scheduling for reconcile: " + units.map(_.file))
+    logger.info("Scheduling for reconcile: " + units.map(_.file))
     units.foreach(_.scheduleReconcile())
   }
 
@@ -493,13 +494,13 @@ class ScalaProject(val underlying: IProject) {
       val choice = buildManagerInitialize
       choice match {
       	case "refined" =>
-      	  println("BM: Refined Build Manager")
+      	  logger.info("BM: Refined Build Manager")
       	  buildManager0 = new buildmanager.refined.EclipseRefinedBuildManager(this, settings)
       	case "sbt"  =>
-      	  println("BM: SBT enhanced Build Manager for " + ScalaPlugin.plugin.scalaVer + " Scala library")
+      	  logger.info("BM: SBT enhanced Build Manager for " + ScalaPlugin.plugin.scalaVer + " Scala library")
       	  buildManager0 = new buildmanager.sbtintegration.EclipseSbtBuildManager(this, settings)
       	case _         =>
-      	  println("Invalid build manager choice '" + choice  + "'. Setting to (default) refined build manager")
+      	  logger.info("Invalid build manager choice '" + choice  + "'. Setting to (default) refined build manager")
       	  buildManager0 = new buildmanager.refined.EclipseRefinedBuildManager(this, settings)
       }
 
@@ -549,7 +550,7 @@ class ScalaProject(val underlying: IProject) {
   }
 
   def resetCompilers(implicit monitor: IProgressMonitor = null) = {
-    println("resetting compilers!  project: " + this.toString)
+    logger.info("resetting compilers!  project: " + this.toString)
     resetBuildCompiler
     resetPresentationCompiler
   }
