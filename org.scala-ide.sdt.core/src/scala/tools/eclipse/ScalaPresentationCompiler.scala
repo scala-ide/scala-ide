@@ -87,10 +87,10 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
     op(parseTree(sourceFile))
   }
 
-  def withStructure[T](sourceFile : SourceFile)(op : Tree => T) : T = {
+  def withStructure[T](sourceFile : SourceFile, keepLoaded: Boolean = false)(op : Tree => T) : T = {
     val tree = {
       val response = new Response[Tree]
-      askStructure(sourceFile, response)
+      askStructure(keepLoaded)(sourceFile, response)
       response.get match {
         case Left(tree) => tree 
         case Right(thr) => throw thr

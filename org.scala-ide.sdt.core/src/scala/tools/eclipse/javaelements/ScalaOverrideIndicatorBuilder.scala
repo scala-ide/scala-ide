@@ -40,7 +40,7 @@ case class JavaIndicator(scu: ScalaCompilationUnit,
   }
 }
 
-trait ScalaOverrideIndicatorBuilder extends HasLogger { self : ScalaPresentationCompiler =>
+trait ScalaOverrideIndicatorBuilder { self : ScalaPresentationCompiler =>
   import ScalaOverrideIndicatorBuilder.OVERRIDE_ANNOTATION_TYPE
   
   case class ScalaIndicator(scu: ScalaCompilationUnit, text: String, base: Symbol, val isOverwrite: Boolean)
@@ -56,7 +56,7 @@ trait ScalaOverrideIndicatorBuilder extends HasLogger { self : ScalaPresentation
     }
   }
   
-  class OverrideIndicatorBuilderTraverser(scu : ScalaCompilationUnit, annotationMap : JMap[AnyRef, AnyRef]) extends Traverser {
+  class OverrideIndicatorBuilderTraverser(scu : ScalaCompilationUnit, annotationMap : JMap[AnyRef, AnyRef]) extends Traverser with HasLogger {
     override def traverse(tree: Tree): Unit = {
       tree match {
         case defn: DefTree if (defn.symbol ne NoSymbol) && defn.symbol.pos.isOpaqueRange =>
