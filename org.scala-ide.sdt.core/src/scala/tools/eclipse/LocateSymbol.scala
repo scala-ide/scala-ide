@@ -37,23 +37,39 @@ trait LocateSymbol { self : ScalaPresentationCompiler =>
       val packName = sym.enclosingPackage.fullName
       val project = scu.getJavaProject.asInstanceOf[JavaProject]
       val pfs = new SearchableEnvironment(project, null: WorkingCopyOwner).nameLookup.findPackageFragments(packName, false)
-      if (pfs eq null) None else find(pfs) {
+      if (pfs eq null) None else find(pfs) { pf =>
         val top = sym.toplevelClass
         val name = top.name + (if (top.isModule) "$" else "") + ".class"
-        _.getClassFile(name) match {
+        val cf = pf.getClassFile(name)
+        println(cf)
+        cf match {
           case classFile : ScalaClassFile => Some(classFile)
           case _ => None
         }
       }
     }
-    (if (sym.sourceFile ne null) {
-       val path = new Path(sym.sourceFile.path)
-       val root = ResourcesPlugin.getWorkspace().getRoot()
-       root.findFilesForLocation(path) match {
-         case arr : Array[_] if arr.length == 1 =>
-           ScalaSourceFile.createFromPath(arr(0).getFullPath.toString)
-         case _ => findClassFile
-       }
+    
+    def findCompilationUnit() = {
+      println("Looking for a compilation unit for " + sym.fullName)
+      val project = scu.getJavaProject.asInstanceOf[JavaProject]
+      val nameLookup = new SearchableEnvironment(project, null: WorkingCopyOwner).nameLookup
+      val name = sym.toplevelClass.fullName
+      Option(nameLookup.findCompilationUnit(name)) map (_.getResource().getFullPath())
+    }
+    
+    def findSourceFile() = if (sym.sourceFile ne null) {
+      val path = new Path(sym.sourceFile.path)
+      val root = ResourcesPlugin.getWorkspace().getRoot()
+      root.findFilesForLocation(path) match {  
+         case arr : Array[_] if arr.length == 1 => Some(arr(0).getFullPath)
+         case _ => findCompilationUnit()
+      } 
+    } else findCompilationUnit()
+    
+    val sourceFile = findSourceFile()
+    
+    (if (sourceFile.isDefined) {
+      ScalaSourceFile.createFromPath(sourceFile.get.toString)
     } else findClassFile) flatMap { file =>
       (if (sym.pos eq NoPosition) {
         file.withSourceFile { (f, _) =>
