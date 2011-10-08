@@ -190,7 +190,7 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
   override def createOverrideIndicators(annotationMap : JMap[_, _]) {
     doWithSourceFile { (sourceFile, compiler) =>
       try {
-        compiler.withStructure(sourceFile) { tree =>
+        compiler.withStructure(sourceFile, keepLoaded = true) { tree =>
           compiler.askOption { () =>
             new compiler.OverrideIndicatorBuilderTraverser(this, annotationMap.asInstanceOf[JMap[AnyRef, AnyRef]]).traverse(tree)
           }
