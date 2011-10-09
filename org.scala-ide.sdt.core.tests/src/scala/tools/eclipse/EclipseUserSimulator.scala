@@ -65,8 +65,8 @@ class EclipseUserSimulator {
   def buildWorkspace {
     import org.eclipse.core.internal.resources.Workspace;
     import org.eclipse.core.resources.IncrementalProjectBuilder;
-    val buildManager = workspace.asInstanceOf[Workspace].getBuildManager();
-    buildManager.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, new NullProgressMonitor())
+
+    workspace.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, new NullProgressMonitor())
   }
 
   var fileEditorInput: FileEditorInput = null;
