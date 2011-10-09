@@ -33,7 +33,7 @@ class ScalaBuilder extends IncrementalProjectBuilder {
     JDTUtils.refreshPackageExplorer
   }
   
-  override def build(kind : Int, ignored : ju.Map[_, _], monitor : IProgressMonitor) : Array[IProject] = {
+  override def build(kind : Int, ignored : ju.Map[String, String], monitor : IProgressMonitor) : Array[IProject] = {
     import IncrementalProjectBuilder._
     import buildmanager.sbtintegration.EclipseSbtBuildManager
 

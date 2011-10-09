@@ -34,13 +34,13 @@ class ScalaCompletionProposalComputer extends ScalaCompletions with IJavaComplet
 
 
   def computeContextInformation(context : ContentAssistInvocationContext,
-      monitor : IProgressMonitor) : java.util.List[_] = {
+      monitor : IProgressMonitor) : java.util.List[IContextInformation] = {
     // Currently not supported
     java.util.Collections.emptyList()
   }
   
   def computeCompletionProposals(context : ContentAssistInvocationContext,
-         monitor : IProgressMonitor) : java.util.List[_] = {
+         monitor : IProgressMonitor) : java.util.List[ICompletionProposal] = {
     import java.util.Collections.{ emptyList => javaEmptyList }
     
     val position = context.getInvocationOffset()
