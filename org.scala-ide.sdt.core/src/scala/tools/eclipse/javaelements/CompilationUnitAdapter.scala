@@ -170,4 +170,5 @@ class CompilationUnitAdapter(classFile : ScalaClassFile) extends Openable(classF
   def reconcile(astLevel : Int, forceProblemDetection : Boolean, owner : WorkingCopyOwner, monitor : IProgressMonitor) : CompilationUnit = null
   def reconcile(astLevel : Int, forceProblemDetection : Boolean, enableStatementsRecovery : Boolean, owner : WorkingCopyOwner, monitor : IProgressMonitor) : CompilationUnit = null
   def reconcile(astLevel : Int, reconcileFlags : Int, owner : WorkingCopyOwner, monitor : IProgressMonitor) : CompilationUnit = null
+  def getNameRange() : ISourceRange = throw new UnsupportedOperationException
 }
