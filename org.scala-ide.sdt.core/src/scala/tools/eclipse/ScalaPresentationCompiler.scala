@@ -38,6 +38,11 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
   def presentationReporter = reporter.asInstanceOf[ScalaPresentationCompiler.PresentationReporter]
   presentationReporter.compiler = this
   
+  /** A map from compilation units to the BatchSourceFile that the compiler understands.
+   * 
+   *  This map is populated by having a default source file created when calling 'apply', 
+   *  which currently happens in 'withSourceFile'.
+   */
   private val sourceFiles = new mutable.HashMap[ScalaCompilationUnit, BatchSourceFile] {
     override def default(k : ScalaCompilationUnit) = { 
       val v = k.createSourceFile
@@ -71,6 +76,10 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
   
   def problemsOf(scu : ScalaCompilationUnit) : List[IProblem] = problemsOf(scu.file)
   
+  
+  /** Run the operation on the given compilation unit. If the source file is not yet tracked by 
+   *  the presentation compiler, a new BatchSourceFile is created and kept for future reference.
+   */
   def withSourceFile[T](scu : ScalaCompilationUnit)(op : (SourceFile, ScalaPresentationCompiler) => T) : T =
     op(sourceFiles(scu), this)
     
@@ -138,13 +147,26 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
   def askToDoFirst(scu: ScalaCompilationUnit) {
     sourceFiles.get(scu) foreach askToDoFirst
   }
-  
-  def askReload(scu : ScalaCompilationUnit, content : Array[Char]) {
-    sourceFiles.get(scu) foreach { f =>
-      val newF = new BatchSourceFile(f.file, content)
-      synchronized { sourceFiles(scu) = newF } 
-      askReload(List(newF), new Response[Unit])
+
+  /** Reload the given compilation unit. If this CU is not tracked by the presentation
+   *  compiler, it's a no-op. 
+   *  
+   *  TODO: This logic seems broken: the only way to add a source file to the sourceFiles
+   *        map is by a call to 'withSourceFile', which creates a default batch source file.
+   *        Come back to this and make it more explicit.
+   */
+  def askReload(scu: ScalaCompilationUnit, content: Array[Char]): Response[Unit] = {
+    val res = new Response[Unit]
+
+    sourceFiles.get(scu) match {
+      case Some(f) =>
+        val newF = new BatchSourceFile(f.file, content)
+        synchronized { sourceFiles(scu) = newF }
+        askReload(List(newF), res)
+      case None =>
+        res.set(()) // make sure nobody blocks waiting indefinitely
     }
+    res
   }
   
   def filesDeleted(files : List[ScalaCompilationUnit]) {

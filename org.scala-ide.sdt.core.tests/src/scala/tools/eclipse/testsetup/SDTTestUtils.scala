@@ -13,6 +13,9 @@ import scala.tools.nsc.util.SourceFile
 import scala.collection.mutable
 import scala.util.matching.Regex
 import org.eclipse.core.runtime.NullProgressMonitor
+import org.eclipse.jdt.core.ICompilationUnit
+import org.eclipse.jdt.core.IJavaModelMarker
+import org.eclipse.core.resources.IResource
 
 /** Utility functions for setting up test projects.
  *  
@@ -24,6 +27,18 @@ object SDTTestUtils {
     val bundle= Platform.getBundle("org.scala-ide.sdt.core.tests")
     OSGiUtils.pathInBundle(bundle, File.separatorChar + "test-workspace").get
   }
+  
+  /** Enable workspace auto-building */
+  def enableAutoBuild(enable: Boolean) {
+    // auto-building is on
+    val desc = SDTTestUtils.workspace.getDescription
+    desc.setAutoBuilding(enable)
+    SDTTestUtils.workspace.setDescription(desc)
+  }
+
+  /** Return the Java problem markers corresponding to the given compilation unit. */
+  def findProblemMarkers(unit: ICompilationUnit) = 
+    unit.getUnderlyingResource().findMarkers(IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER, true, IResource.DEPTH_INFINITE)
   
   lazy val workspace = ResourcesPlugin.getWorkspace
 
