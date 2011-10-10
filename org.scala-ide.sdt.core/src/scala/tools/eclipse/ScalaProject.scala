@@ -27,7 +27,8 @@ import EclipseUtils.workspaceRunnableIn
 import scala.tools.eclipse.properties.CompilerSettings
 import scala.tools.eclipse.util.HasLogger
 
-trait BuildSuccessListener {
+
+trait BuildSuccessListener {   
   def buildSuccessful(): Unit
 }
 
@@ -387,7 +388,7 @@ class ScalaProject(val underlying: IProject) extends HasLogger {
       setting <- box.userSettings; if filter(setting)
     ) {
       val value0 = store.getString(SettingConverterUtil.convertNameToProperty(setting.name))
-      logger.info("[%s] initializing %s to %s".format(underlying.getName(), setting.name, value0.toString))
+//      logger.info("[%s] initializing %s to %s".format(underlying.getName(), setting.name, value0.toString))
       try {
         val value = if (setting ne settings.pluginsDir) value0 else {
           ScalaPlugin.plugin.continuationsClasses map {

@@ -6,18 +6,16 @@
 package scala.tools.eclipse
 
 import scala.collection.mutable.HashSet
-
 import java.{ lang => jl, util => ju }
-
 import org.eclipse.core.resources.{ IFile, IncrementalProjectBuilder, IProject, IResource, IResourceDelta, IResourceDeltaVisitor, IResourceVisitor }
 import org.eclipse.core.runtime.{ IProgressMonitor, IPath, SubMonitor }
 import org.eclipse.jdt.internal.core.JavaModelManager
 import org.eclipse.jdt.internal.core.builder.{ JavaBuilder, NameEnvironment, State }
-
 import scala.tools.eclipse.javaelements.JDTUtils
 import scala.tools.eclipse.util.{ FileUtils, ReflectionUtils }
+import util.HasLogger
 
-class ScalaBuilder extends IncrementalProjectBuilder {
+class ScalaBuilder extends IncrementalProjectBuilder with HasLogger {
   def plugin = ScalaPlugin.plugin
 
   private val scalaJavaBuilder = new GeneralScalaJavaBuilder
@@ -68,8 +66,17 @@ class ScalaBuilder extends IncrementalProjectBuilder {
           // Only for sbt which is able to track external dependencies properly
           project.buildManager match {
             case _: EclipseSbtBuildManager =>
-              if (project.externalDepends.exists(
-                x => { val delta = getDelta(x); delta == null || delta.getKind != IResourceDelta.NO_CHANGE})) {
+              
+              def hasChanges(prj: IProject): Boolean = {
+                val delta = getDelta(prj)
+                delta == null || delta.getKind != IResourceDelta.NO_CHANGE
+              }
+              
+              if (project.externalDepends.exists(hasChanges)) {
+                // reset presentation compilers if a dependency has been rebuilt
+                logger.debug("Resetting presentation compiler for %s due to dependent project change".format(project.underlying.getName()))
+                project.resetPresentationCompiler
+                
                 // in theory need to be able to identify the exact dependencies
                 // but this is deeply rooted inside the sbt dependency tracking mechanism
                 // so we just tell it to have a look at all the files 
