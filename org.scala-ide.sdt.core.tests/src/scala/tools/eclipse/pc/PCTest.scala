@@ -27,6 +27,15 @@ object PCTest extends testsetup.TestProjectSetup("pc") {
     // this will trigger the Scala structure builder
     unit.getWorkingCopy(owner, new NullProgressMonitor)
   }
+  
+  private def assertNoError(project: ScalaProject, unit: ICompilationUnit) {
+    project.doWithPresentationCompiler { compiler =>
+      val oProblems = Option(unit.asInstanceOf[ScalaSourceFile].getProblems())
+
+      for (problems <- oProblems; problem <- problems)
+        fail("Found unexpected problem: " + problem.toString())
+    }
+  }
 }
 
 class PCTest {
@@ -82,11 +91,17 @@ class PCTest {
     }()
 
     // verify
-    project.doWithPresentationCompiler { compiler =>
-      val pcProblems = Option(dataFlowUnit.asInstanceOf[ScalaSourceFile].getProblems())
-
-      for (problem <- pcProblems)
-        fail("Found unexpected problem: " + problem.toString())
-    }
+    assertNoError(project, dataFlowUnit)
+  }
+  
+  @Ignore("Enable test when ticket is fixed")
+  @Test
+  def illegalCyclicReferenceInvolvingObject_t1000658() {
+    //when
+    val unit = compilationUnit("t1000658/ThreadPoolConfig.scala")
+    //then
+    reload(unit.asInstanceOf[ScalaCompilationUnit])
+    // verify
+    assertNoError(project, unit)
   }
 }
