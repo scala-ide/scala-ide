@@ -117,7 +117,7 @@ class CompletionTests {
   
   @Test
   def ticket1000475() {
-    val oraclePos73 = List("toString(): java.lang.String")
+    val oraclePos73 = List("toString(): String")
     val oraclePos116 = List("forallChar => Boolean: Boolean")
     val oraclePos147 = List("forallChar => Boolean: Boolean")
         
