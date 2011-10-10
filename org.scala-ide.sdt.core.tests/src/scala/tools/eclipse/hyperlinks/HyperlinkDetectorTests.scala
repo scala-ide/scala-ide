@@ -19,8 +19,7 @@ import org.junit.Ignore
 object HyperlinkDetectorTests extends TestProjectSetup("hyperlinks") {
   private final val HyperlinkMarker = "/*^*/"
   
-  case class Link(pos: Pos, length: Int, text: String)
-  case class Pos(line: Int, column: Int)
+  case class Link(text: String)
   
   /** Load a single Scala Compilation Unit. The file contains text markers that 
    * will be used to trigger hyperlinking requests to the presentation compiler. */
@@ -44,7 +43,7 @@ object HyperlinkDetectorTests extends TestProjectSetup("hyperlinks") {
           val maybeLinks = detector.scalaHyperlinks(unit, wordRegion)
           
           // Verify Expectations
-          assertTrue("no links found for `%s` @ (%d,%d)".format(word, oracle.pos.line, oracle.pos.column), maybeLinks.isDefined)
+          assertTrue("no links found for `%s`".format(word), maybeLinks.isDefined)
           val links = maybeLinks.get
           assertEquals("expected %d link, found %d".format(1, links.size), 1, links.size)
           val link = links.head
@@ -54,10 +53,7 @@ object HyperlinkDetectorTests extends TestProjectSetup("hyperlinks") {
             val offset = link.getHyperlinkRegion().getOffset()
             val length = link.getHyperlinkRegion().getLength
             val linkedPos = compiler.rangePos(sourceFile, offset, offset, offset + length)
-            assertEquals("@line:",oracle.pos.line, linkedPos.line)
-            assertEquals("@line:",oracle.pos.column, linkedPos.column)
           })(None)
-          assertEquals("length", oracle.length, link.getHyperlinkRegion().getLength())
         }
       }
     }
@@ -91,10 +87,10 @@ class HyperlinkDetectorTests {
   
   @Test
   def bug1000560() {
-    val oracle = List(Link(Pos(12,10), 5, "object bug1000560.Outer"),
-    			      Link(Pos(12,22), 3, "value bug1000560.Outer.bbb"),
-    			      Link(Pos(12,37), 1, "value bug1000560.Outer.a"),
-    			      Link(Pos(14,10), 5, "object bug1000560.Outer")
+    val oracle = List(Link("object bug1000560.Outer"),
+    			      Link("value bug1000560.Outer.bbb"),
+    			      Link("value bug1000560.Outer.a"),
+    			      Link("object bug1000560.Outer")
   )
     
     loadTestUnit("bug1000560/Test1.scala").andCheckAgainst(oracle)
@@ -102,9 +98,19 @@ class HyperlinkDetectorTests {
   
   @Test @Ignore
   def bug1000560_2() {
-    val oracle = List(Link(Pos(10,10), 3, "value bug1000560.Test2.foo"),
-                      Link(Pos(10,20), 3, "method bug1000560.Foo.bar"))
+    val oracle = List(Link("value bug1000560.Test2.foo"),
+                      Link("method bug1000560.Foo.bar"))
     
     loadTestUnit("bug1000560/Test2.scala").andCheckAgainst(oracle)
+  }
+  
+  @Test
+  def test1000656() {
+    object hyperlinksSubProject extends TestProjectSetup("hyperlinks-sub")
+    hyperlinksSubProject.project        // force initialization of this project
+    project.resetPresentationCompiler() // re-read the classpath (pointing to the dependent project)
+    
+    val oracle = List(Link("type util.Box.myInt"), Link("method util.Full.apply"))
+    loadTestUnit("bug1000656/Client.scala").andCheckAgainst(oracle)
   }
 }
