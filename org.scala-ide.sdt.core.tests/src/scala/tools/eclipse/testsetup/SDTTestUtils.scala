@@ -12,7 +12,7 @@ import scala.tools.eclipse.util.{ OSGiUtils, EclipseUtils }
 import scala.tools.nsc.util.SourceFile
 import scala.collection.mutable
 import scala.util.matching.Regex
-import org.eclipse.core.runtime.NullProgressMonitor
+
 
 /** Utility functions for setting up test projects.
  *  
