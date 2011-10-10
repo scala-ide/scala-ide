@@ -69,17 +69,24 @@ trait LocateSymbol { self : ScalaPresentationCompiler =>
     
     val sourceFile = findSourceFile()
     
-    (if (sourceFile.isDefined) {
-      ScalaSourceFile.createFromPath(sourceFile.get.toString)
-    } else findClassFile) flatMap { file =>
-      (if (sym.pos eq NoPosition) {
+    val target = 
+      if (sourceFile.isDefined) 
+        ScalaSourceFile.createFromPath(sourceFile.get.toString)
+      else 
+        findClassFile
+    
+    target flatMap { file =>
+      val pos = if (sym.pos eq NoPosition) {
         file.withSourceFile { (f, _) =>
           val pos = new Response[Position]
           askLinkPos(sym, f, pos)
 //          askReload(scu, scu.getContents) // TODO: Find out why this was necessary
           pos.get.left.toOption
         } (None)
-      } else Some(sym.pos)) flatMap { p =>
+      } else 
+        Some(sym.pos)
+        
+      pos flatMap { p =>
         if (p eq NoPosition) None else Some(file, p.point)
       }
     }
