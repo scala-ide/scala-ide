@@ -41,7 +41,6 @@ trait LocateSymbol { self : ScalaPresentationCompiler =>
         val top = sym.toplevelClass
         val name = top.name + (if (top.isModule) "$" else "") + ".class"
         val cf = pf.getClassFile(name)
-        println(cf)
         cf match {
           case classFile : ScalaClassFile => Some(classFile)
           case _ => None
@@ -50,21 +49,23 @@ trait LocateSymbol { self : ScalaPresentationCompiler =>
     }
     
     def findCompilationUnit() = {
-      println("Looking for a compilation unit for " + sym.fullName)
+      logger.info("Looking for a compilation unit for " + sym.fullName)
       val project = scu.getJavaProject.asInstanceOf[JavaProject]
       val nameLookup = new SearchableEnvironment(project, null: WorkingCopyOwner).nameLookup
       val name = sym.toplevelClass.fullName
       Option(nameLookup.findCompilationUnit(name)) map (_.getResource().getFullPath())
     }
     
-    def findSourceFile() = if (sym.sourceFile ne null) {
-      val path = new Path(sym.sourceFile.path)
-      val root = ResourcesPlugin.getWorkspace().getRoot()
-      root.findFilesForLocation(path) match {  
-         case arr : Array[_] if arr.length == 1 => Some(arr(0).getFullPath)
-         case _ => findCompilationUnit()
-      } 
-    } else findCompilationUnit()
+    def findSourceFile() =
+      if (sym.sourceFile ne null) {
+        val path = new Path(sym.sourceFile.path)
+        val root = ResourcesPlugin.getWorkspace().getRoot()
+        root.findFilesForLocation(path) match {
+          case arr: Array[_] if arr.length == 1 => Some(arr(0).getFullPath)
+          case _                                => findCompilationUnit()
+        }
+      } else
+        findCompilationUnit()
     
     val sourceFile = findSourceFile()
     
