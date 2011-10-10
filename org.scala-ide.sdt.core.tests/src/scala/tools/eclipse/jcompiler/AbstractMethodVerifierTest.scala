@@ -71,4 +71,23 @@ class AbstractMethodVerifierTest {
     verify(requestor, times(1)).acceptProblem(any())
   }
 
+  @Test
+  def JavaClassExtendingScalaClassesWithDeferredMethods_ErrorsAreDisplayedInJavaEditor_t1000607() {
+    //when
+    val unit = compilationUnit("t1000607/C.java")
+    
+    val requestor = mock(classOf[IProblemRequestor])
+    when(requestor.isActive()).thenReturn(true)
+    
+    val owner = new WorkingCopyOwner() {
+      override def getProblemRequestor(unit: org.eclipse.jdt.core.ICompilationUnit): IProblemRequestor = requestor
+    }
+
+    // then
+    // this will trigger the java reconciler so that the problems will be reported to the `requestor`
+    unit.getWorkingCopy(owner, new NullProgressMonitor)
+
+    // verify
+    verify(requestor, times(1)).acceptProblem(any())
+  }
 }
