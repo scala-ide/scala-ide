@@ -103,4 +103,14 @@ class HyperlinkDetectorTests {
     
     loadTestUnit("bug1000560/Test2.scala").andCheckAgainst(oracle)
   }
+  
+  @Test
+  def test1000656() {
+    object hyperlinksSubProject extends TestProjectSetup("hyperlinks-sub")
+    hyperlinksSubProject.project        // force initialization of this project
+    project.resetPresentationCompiler() // re-read the classpath (pointing to the dependent project)
+    
+    val oracle = List(Link("type util.Box.myInt"), Link("method util.Full.apply"))
+    loadTestUnit("bug1000656/Client.scala").andCheckAgainst(oracle)
+  }
 }
