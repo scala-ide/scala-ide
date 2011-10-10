@@ -13,6 +13,8 @@ import org.eclipse.jface.text.Document
 import scala.tools.eclipse.ScalaImages
 import scala.tools.eclipse.ui.ScalaCompletionProposal
 
+import org.eclipse.jface.text.contentassist.ICompletionProposal
+
 /** A completion proposal for Java sources. This adds mixed-in concrete members to scope
  *  completions in Java.
  *  
@@ -34,7 +36,7 @@ class ScalaJavaCompletionProposalComputer extends IJavaCompletionProposalCompute
   def sessionEnded() {}
   def getErrorMessage() = null
 
-  def computeCompletionProposals(context: ContentAssistInvocationContext, monitor: IProgressMonitor): java.util.List[_] = {
+  def computeCompletionProposals(context: ContentAssistInvocationContext, monitor: IProgressMonitor): java.util.List[ICompletionProposal] = {
     context match {
       case jc: JavaContentAssistInvocationContext => 
         if (ScalaPlugin.plugin.isScalaProject(jc.getProject()))
@@ -64,7 +66,7 @@ class ScalaJavaCompletionProposalComputer extends IJavaCompletionProposalCompute
   
   /** Return completion proposals for mixed-in methods.
    */
-  def mixedInCompletions(jc: JavaContentAssistInvocationContext): java.util.List[_] = {
+  def mixedInCompletions(jc: JavaContentAssistInvocationContext): java.util.List[ICompletionProposal] = {
     val coreContext = jc.getCoreContext()
     val elem = if (coreContext.isExtended) coreContext.getEnclosingElement else jc.getCompilationUnit().getElementAt(jc.getInvocationOffset)
     val doc = jc.getDocument
@@ -105,7 +107,7 @@ class ScalaJavaCompletionProposalComputer extends IJavaCompletionProposalCompute
           } (Nil)
         case _ => Nil
       }
-      completionProposals: java.util.List[_]
+      completionProposals: java.util.List[ICompletionProposal]
     } else
       javaEmptyList()
   }

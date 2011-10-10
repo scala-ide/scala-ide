@@ -17,10 +17,8 @@
     <maven.compiler.source>1.5</maven.compiler.source>
     <maven.compiler.target>1.5</maven.compiler.target>
     <encoding>UTF-8</encoding>
-    <!-- <repo.scala-ide>file:/Users/dragos/workspace/git/plugin/mkrepo</repo.scala-ide> -->
     <repo.scala-ide>http://download.scala-ide.org</repo.scala-ide>
-    <repo.helios>http://download.eclipse.org/releases/helios/</repo.helios>
-    <!-- <repo.helios>file:/Users/dragos/Sites/helios/helios-mirror</repo.helios> -->
+    <repo.indigo>http://download.eclipse.org/releases/indigo/</repo.indigo>
   </properties>
 
   <prerequisites>
@@ -103,17 +101,17 @@
   </build>
   <repositories>
     <repository>
-      <id>Helios</id>
-      <name>Eclipse Helios p2 repository</name>
+      <id>Indigo</id>
+      <name>Eclipse Indigo p2 repository</name>
       <layout>p2</layout>
-      <url>${repo.helios}</url>
+      <url>${repo.indigo}</url>
       <snapshots><enabled>false</enabled></snapshots>
     </repository>
     <repository>
-      <id>ajdt-helios</id>
-      <name>AJDT for Eclipse Helios p2 repository</name>
+      <id>ajdt-indigo</id>
+      <name>AJDT for Eclipse Indigo p2 repository</name>
       <layout>p2</layout>
-      <url>http://download.eclipse.org/tools/ajdt/36/update</url>
+      <url>http://download.eclipse.org/tools/ajdt/37/update</url>
       <snapshots><enabled>false</enabled></snapshots>
     </repository>
     <repository>
