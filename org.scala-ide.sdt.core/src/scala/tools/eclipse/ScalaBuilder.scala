@@ -6,16 +6,18 @@
 package scala.tools.eclipse
 
 import scala.collection.mutable.HashSet
+
 import java.{ lang => jl, util => ju }
+
 import org.eclipse.core.resources.{ IFile, IncrementalProjectBuilder, IProject, IResource, IResourceDelta, IResourceDeltaVisitor, IResourceVisitor }
 import org.eclipse.core.runtime.{ IProgressMonitor, IPath, SubMonitor }
 import org.eclipse.jdt.internal.core.JavaModelManager
 import org.eclipse.jdt.internal.core.builder.{ JavaBuilder, State }
+
 import scala.tools.eclipse.javaelements.JDTUtils
 import scala.tools.eclipse.util.{ FileUtils, ReflectionUtils }
-import util.HasLogger
 
-class ScalaBuilder extends IncrementalProjectBuilder with HasLogger {
+class ScalaBuilder extends IncrementalProjectBuilder {
   def plugin = ScalaPlugin.plugin
 
   private val scalaJavaBuilder = new GeneralScalaJavaBuilder
@@ -34,6 +36,12 @@ class ScalaBuilder extends IncrementalProjectBuilder with HasLogger {
   override def build(kind : Int, ignored : ju.Map[_, _], monitor : IProgressMonitor) : Array[IProject] = {
     import IncrementalProjectBuilder._
     import buildmanager.sbtintegration.EclipseSbtBuildManager
+    
+    // check the classpath
+    if (!plugin.getScalaProject(getProject).isClasspathValid()) {
+      // bail out is the classpath in not valid
+      return new Array[IProject](0)
+    }
 
     val project = plugin.getScalaProject(getProject)
     
@@ -66,17 +74,8 @@ class ScalaBuilder extends IncrementalProjectBuilder with HasLogger {
           // Only for sbt which is able to track external dependencies properly
           project.buildManager match {
             case _: EclipseSbtBuildManager =>
-              
-              def hasChanges(prj: IProject): Boolean = {
-                val delta = getDelta(prj)
-                delta == null || delta.getKind != IResourceDelta.NO_CHANGE
-              }
-              
-              if (project.externalDepends.exists(hasChanges)) {
-                // reset presentation compilers if a dependency has been rebuilt
-                logger.debug("Resetting presentation compiler for %s due to dependent project change".format(project.underlying.getName()))
-                project.resetPresentationCompiler
-                
+              if (project.externalDepends.exists(
+                x => { val delta = getDelta(x); delta == null || delta.getKind != IResourceDelta.NO_CHANGE})) {
                 // in theory need to be able to identify the exact dependencies
                 // but this is deeply rooted inside the sbt dependency tracking mechanism
                 // so we just tell it to have a look at all the files 

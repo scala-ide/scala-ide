@@ -84,7 +84,7 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
   val javaFileExtn = ".java"
   val jarFileExtn = ".jar"
 
-  private def cutVersion(version: String): String = {
+  def cutVersion(version: String): String = {
           val pattern = "(\\d)\\.(\\d+)\\..*".r
           version match {
             case pattern(major, minor)=>
@@ -135,12 +135,12 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
 
     if (!headlessMode) {
       ResourcesPlugin.getWorkspace.addResourceChangeListener(this, IResourceChangeEvent.PRE_CLOSE)
-      JavaCore.addElementChangedListener(this)
       PlatformUI.getWorkbench.getEditorRegistry.setDefaultEditor("*.scala", editorId)
       ScalaPlugin.getWorkbenchWindow map (_.getPartService().addPartListener(ScalaPlugin.this))
       diagnostic.StartupDiagnostics.run
     }
-    logger.info("Scala compiler bundle: " + scalaCompilerBundle.getLocation)
+    JavaCore.addElementChangedListener(this)
+    println("Scala compiler bundle: " + scalaCompilerBundle.getLocation)
   }
 
   override def stop(context: BundleContext) = {
@@ -195,12 +195,29 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
   
   override def elementChanged(event: ElementChangedEvent) {
     import scala.collection.mutable.ListBuffer
+    import IJavaElement._
+    import IJavaElementDelta._
+
+    // check if the changes are linked with the build path
+    val modelDelta= event.getDelta()
+    if (JAVA_MODEL == modelDelta.getElement().getElementType() && modelDelta.getKind() == CHANGED && (modelDelta.getFlags() & F_CHILDREN) != 0) {
+      val innerDelta= modelDelta.getAffectedChildren()(0)
+      if (innerDelta.getKind() == IJavaElementDelta.CHANGED && (innerDelta.getFlags() & IJavaElementDelta.F_RESOLVED_CLASSPATH_CHANGED) != 0) {
+        innerDelta.getElement() match {
+          case javaProject: IJavaProject => {
+            if (isScalaProject(javaProject)) {
+              getScalaProject(javaProject.getProject()).classpathHasChanged()
+            }
+          }
+          case _ =>
+        }
+      }
+    }
+
+    // process deleted files
     val buff = new ListBuffer[ScalaSourceFile]
 
     def findRemovedSources(delta: IJavaElementDelta) {
-      import IJavaElement._
-      import IJavaElementDelta._
-
       val isChanged = delta.getKind == CHANGED
       val isRemoved = delta.getKind == REMOVED
       def hasFlag(flag: Int) = (delta.getFlags & flag) != 0
