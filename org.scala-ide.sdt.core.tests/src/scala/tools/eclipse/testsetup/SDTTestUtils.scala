@@ -35,12 +35,15 @@ object SDTTestUtils {
     SDTTestUtils.workspace.setDescription(desc)
   }
 
+  enableAutoBuild(false)
+
   /** Return the Java problem markers corresponding to the given compilation unit. */
   def findProblemMarkers(unit: ICompilationUnit) = 
     unit.getUnderlyingResource().findMarkers(IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER, true, IResource.DEPTH_INFINITE)
   
   lazy val workspace = ResourcesPlugin.getWorkspace
-
+  
+  
   /** Setup the project in the target workspace. The 'name' project should
    *  exist in the source workspace.
    */
