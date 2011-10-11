@@ -12,7 +12,6 @@ import scala.tools.eclipse.util.{ OSGiUtils, EclipseUtils }
 import scala.tools.nsc.util.SourceFile
 import scala.collection.mutable
 import scala.util.matching.Regex
-import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.core.IJavaModelMarker
 import org.eclipse.core.resources.IResource
