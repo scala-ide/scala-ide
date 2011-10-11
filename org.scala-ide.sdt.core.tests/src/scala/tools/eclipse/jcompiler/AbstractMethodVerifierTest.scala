@@ -26,7 +26,7 @@ class AbstractMethodVerifierTest {
   import AbstractMethodVerifierTest._
 
   @Test
-  def javaClassExtendingScalaClassesWithConcreteMethodsInSuperTrait_NoErrorIsDisplayedInJavaEditor_t1000594_pos() {
+  def javaClassExtendingScalaClassWithConcreteMethodsInSuperTrait_NoErrorIsDisplayedInJavaEditor_t1000594_pos() {
     //when
     val unit = compilationUnit("t1000594_pos/C.java")
     
@@ -45,7 +45,7 @@ class AbstractMethodVerifierTest {
   }
 
   @Test
-  def javaClassExtendingScalaClassesWithDeferredMethodsInSuperTrait_ErrorsAreDisplayedInJavaEditor_t1000594_neg() {
+  def javaClassExtendingScalaClassWithDeferredMethodsInSuperTrait_ErrorsAreDisplayedInJavaEditor_t1000594_neg() {
     //when
     val unit = compilationUnit("t1000594_neg/C.java")
     
@@ -64,7 +64,7 @@ class AbstractMethodVerifierTest {
   }
 
   @Test
-  def javaClassExtendingScalaClassesWithDeferredMethodsInSuperTrait_ErrorsAreDisplayedInJavaEditor_t1000607() {
+  def javaClassExtendingScalaClassWithDeferredMethodsInSuperTrait_ErrorsAreDisplayedInJavaEditor_t1000607() {
     //when
     val unit = compilationUnit("t1000607/C.java")
     
