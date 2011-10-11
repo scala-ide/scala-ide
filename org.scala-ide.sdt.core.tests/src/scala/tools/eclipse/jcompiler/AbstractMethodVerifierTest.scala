@@ -19,9 +19,11 @@ import org.eclipse.core.resources.IMarker
 import org.eclipse.jdt.core.IJavaModelMarker
 import org.mockito.Mockito._
 import org.mockito.Matchers.any
+import org.junit.Ignore
 
 object AbstractMethodVerifierTest extends TestProjectSetup("jcompiler")
 
+@Ignore("Enable this test class when ticket http://scala-ide-portfolio.assembla.com/spaces/scala-ide/tickets/1000662 is fixed.")
 class AbstractMethodVerifierTest {
   import AbstractMethodVerifierTest._
 
@@ -81,4 +83,3 @@ class AbstractMethodVerifierTest {
     // verify
     verify(requestor, times(1)).acceptProblem(any())
   }
-}
