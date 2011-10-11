@@ -13,7 +13,6 @@ import org.junit._
 import org.mockito.Matchers._
 import org.mockito.Mockito._
 import scala.tools.eclipse.testsetup.CustomAssertion.assertNoErrors
-import scala.tools.eclipse.testsetup.SDTTestUtils.{triggerScalaStructureBuilderFor, waitUntilTypechecked}
 
 object PresentationCompilerTest extends testsetup.TestProjectSetup("pc")
 
@@ -23,8 +22,7 @@ class PresentationCompilerTest {
   @Test
   def creatingOverrideIndicator_ShouldNotReportError_t1000531() {
     // when
-    val unit = compilationUnit("t1000531/A.scala")
-    triggerScalaStructureBuilderFor(unit)
+    val unit = open("t1000531/A.scala")
     val mockLogger = mock(classOf[Logger])
 
     // then
@@ -51,27 +49,23 @@ class PresentationCompilerTest {
   @Test
   def implicitConversionFromPackageObjectShouldBeInScope_t1000647() {
     //when
-    val packageUnit = compilationUnit("t1000647/foo/package.scala")
-    triggerScalaStructureBuilderFor(packageUnit)
-    reload(packageUnit)
+    open("t1000647/foo/package.scala")
 
     // then
-    val dataFlowUnit = compilationUnit("t1000647/bar/DataFlow.scala")
-    triggerScalaStructureBuilderFor(dataFlowUnit)
-    reload(dataFlowUnit)
+    val dataFlowUnit = open("t1000647/bar/DataFlow.scala")
     
     // give a chance to the background compiler to report the error
-    waitUntilTypechecked(project, dataFlowUnit)
+    waitUntilTypechecked(dataFlowUnit)
 
     // verify
     assertNoErrors(project, dataFlowUnit)
   }
 
-  @Ignore("Enable test when ticket is fixed")
+  @Ignore("Enable test when ticket #1000658 is fixed")
   @Test
   def illegalCyclicReferenceInvolvingObject_t1000658() {
     //when
-    val unit = compilationUnit("t1000658/ThreadPoolConfig.scala")
+    val unit = scalaCompilationUnit("t1000658/ThreadPoolConfig.scala")
     //then
     reload(unit)
     // verify

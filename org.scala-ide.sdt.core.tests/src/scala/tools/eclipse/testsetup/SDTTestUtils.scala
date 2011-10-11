@@ -12,11 +12,7 @@ import scala.tools.eclipse.util.{ OSGiUtils, EclipseUtils }
 import scala.tools.nsc.util.SourceFile
 import scala.collection.mutable
 import scala.util.matching.Regex
-import org.eclipse.core.runtime.NullProgressMonitor
-import org.eclipse.jdt.core.ICompilationUnit
-import org.mockito.Mockito.{mock, when}
-import org.eclipse.jdt.core.IProblemRequestor
-import org.eclipse.jdt.core.WorkingCopyOwner
+
 
 /** Utility functions for setting up test projects.
  *  
@@ -150,36 +146,5 @@ object SDTTestUtils {
       inputStream.close
     }
     stringBuilder.toString
-  }
-  
-  /** Trigger the scala structure builder for the passed `unit` */
-  def triggerScalaStructureBuilderFor(unit: ICompilationUnit) {
-    val requestor = mock(classOf[IProblemRequestor])
-    // the requestor must be active, or unit.getWorkingCopy won't trigger the Scala
-    // structure builder
-    when(requestor.isActive()).thenReturn(true)
-
-    val owner = new WorkingCopyOwner() {
-      override def getProblemRequestor(unit: org.eclipse.jdt.core.ICompilationUnit): IProblemRequestor = requestor
-    }
-
-    // this will trigger the Scala structure builder
-    unit.getWorkingCopy(owner, new NullProgressMonitor)
-  }
-  
-  /**
-   * Wait until the passed `unit` is entirely typechecked.
-   * @param project Is needed to access the underlying compiler.
-   * 
-   * @pre the `project` contains the passed `unit`   
-   * */
-  def waitUntilTypechecked(project: ScalaProject, unit: ICompilationUnit) {
-    // give a chance to the background compiler to report the error
-    project.withSourceFile(unit) { (source, compiler) =>
-      import scala.tools.nsc.interactive.Response
-      val res = new Response[compiler.Tree]
-      compiler.askLoadedTyped(source, res)
-      res.get // wait until unit is typechecked
-    }()
   }
 }
