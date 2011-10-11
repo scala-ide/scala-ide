@@ -15,6 +15,10 @@ import scala.tools.eclipse.ScalaWordFinder
 import scala.tools.eclipse.testsetup.TestProjectSetup
 import org.eclipse.jface.text.IRegion
 import org.junit.Ignore
+import org.eclipse.core.resources.IncrementalProjectBuilder
+import org.eclipse.core.runtime.NullProgressMonitor
+import org.eclipse.core.resources.IMarker
+import org.junit.Assert
 
 object HyperlinkDetectorTests extends TestProjectSetup("hyperlinks") {
   private final val HyperlinkMarker = "/*^*/"
@@ -106,9 +110,22 @@ class HyperlinkDetectorTests {
   
   @Test
   def test1000656() {
+    SDTTestUtils.enableAutoBuild(false)  // make sure no auto-building is happening
+    
     object hyperlinksSubProject extends TestProjectSetup("hyperlinks-sub")
     hyperlinksSubProject.project        // force initialization of this project
-    project.resetPresentationCompiler() // re-read the classpath (pointing to the dependent project)
+    hyperlinksSubProject.project.underlying.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, new NullProgressMonitor)
+    
+    val markers = SDTTestUtils.findProblemMarkers(hyperlinksSubProject.compilationUnit("util/Box.scala")).toList
+    val errorMessages: List[String] = for (p <- markers) yield p.getAttribute(IMarker.MESSAGE).toString
+    
+    println(errorMessages)
+    
+    Assert.assertTrue("No build errors expected", errorMessages.isEmpty)
+
+    // since auto-building is off, we need to do this manually
+    // and make sure the classpath is up to date
+    project.resetPresentationCompiler()
     
     val oracle = List(Link("type util.Box.myInt"), Link("method util.Full.apply"))
     loadTestUnit("bug1000656/Client.scala").andCheckAgainst(oracle)
