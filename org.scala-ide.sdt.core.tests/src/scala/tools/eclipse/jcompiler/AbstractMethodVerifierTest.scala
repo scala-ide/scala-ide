@@ -83,3 +83,4 @@ class AbstractMethodVerifierTest {
     // verify
     verify(requestor, times(1)).acceptProblem(any())
   }
+}
