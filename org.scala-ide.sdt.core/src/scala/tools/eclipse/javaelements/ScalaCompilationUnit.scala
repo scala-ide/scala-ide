@@ -34,6 +34,7 @@ import org.eclipse.jdt.core.IParent
 import org.eclipse.jdt.internal.core.JavaElement
 import org.eclipse.jdt.internal.core.SourceRefElement
 import scala.tools.eclipse.util.HasLogger
+import org.eclipse.jdt.core.compiler.CharOperation
 
 trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with ScalaElement with IScalaCompilationUnit with IBufferChangedListener with HasLogger {
   val project = ScalaPlugin.plugin.getScalaProject(getJavaProject.getProject)
@@ -58,7 +59,9 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
   }
   
   def createSourceFile : BatchSourceFile = {
-    new BatchSourceFile(file, getContents)
+    // call getContent() only when the underlying resource exists, otherwise
+    // it logs an exception
+    new BatchSourceFile(file, if (getResource.exists) getContents else CharOperation.NO_CHAR)
   }
 
   def getProblemRequestor : IProblemRequestor = null
