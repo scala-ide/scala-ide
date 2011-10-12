@@ -157,15 +157,11 @@ class ScalaProject(val underlying: IProject) extends HasLogger {
     all.filter { _ ne null }
   }
 
-  def outputFolders: Seq[IPath] = {
-    val outputs = new LinkedHashSet[IPath]
-    for (cpe <- javaProject.getResolvedClasspath(true) if cpe.getEntryKind == IClasspathEntry.CPE_SOURCE) {
-      val cpeOutput = cpe.getOutputLocation
-      val output = if (cpeOutput == null) javaProject.getOutputLocation else cpeOutput
-      outputs += output
-    }
-    outputs.toSeq
-  }
+  /** Return the output folders of this project. Paths are relative to the workspace root, 
+   *  and they are handles only (may not exist).
+   */
+  def outputFolders: Seq[IPath] =
+    sourceOutputFolders map (_._2.getFullPath())
 
   def classpath: Seq[IPath] = {
     val path = new LinkedHashSet[IPath]
@@ -208,11 +204,27 @@ class ScalaProject(val underlying: IProject) extends HasLogger {
     path.toList
   }
 
-  def sourceOutputFolders(env: NameEnvironment): Seq[(IContainer, IContainer)] = {
-    val sourceLocations = NameEnvironmentUtils.sourceLocations(env)
-    sourceLocations.map(cl => (ClasspathLocationUtils.sourceFolder(cl), ClasspathLocationUtils.binaryFolder(cl)))
-  }
+  /** Return the source folders and their corresponding output locations
+   *  without relying on NameEnvironment. Does not create folders if they
+   *  don't exist already. 
+   *  
+   *  @return A sequence of pairs of source folders and their corresponding
+   *          output folder.
+   */
+  def sourceOutputFolders: Seq[(IContainer, IContainer)] = {
+    val cpes = javaProject.getResolvedClasspath(true)
 
+    for (cpe <- cpes if cpe.getEntryKind == IClasspathEntry.CPE_SOURCE) yield {
+      val cpeOutput = cpe.getOutputLocation
+      val outputLocation = if (cpeOutput != null) cpeOutput else javaProject.getOutputLocation
+
+      val wsroot = ScalaPlugin.plugin.workspaceRoot
+      val srcPath = cpe.getPath()
+      val binPath = wsroot.getFolder(outputLocation)
+      (wsroot.getFolder(srcPath), binPath)
+    }
+  }
+  
   def isExcludedFromProject(env: NameEnvironment, childPath: IPath): Boolean = {
     // answer whether the folder should be ignored when walking the project as a source folder
     if (childPath.segmentCount() > 2) return false // is a subfolder of a package
@@ -285,26 +297,6 @@ class ScalaProject(val underlying: IProject) extends HasLogger {
     Set.empty ++ sourceFiles
   }
 
-  def createOutputFolders = {
-    for (outputPath <- outputFolders) plugin.workspaceRoot.findMember(outputPath) match {
-      case fldr: IFolder =>
-        def createParentFolder(parent: IContainer) {
-          if (!parent.exists()) {
-            createParentFolder(parent.getParent)
-            parent.asInstanceOf[IFolder].create(true, true, null)
-            parent.setDerived(true)
-          }
-        }
-
-        fldr.refreshLocal(IResource.DEPTH_ZERO, null)
-        if (!fldr.exists()) {
-          createParentFolder(fldr.getParent)
-          fldr.create(IResource.FORCE | IResource.DERIVED, true, null)
-        }
-      case _ =>
-    }
-  }
-
   def cleanOutputFolders(implicit monitor: IProgressMonitor) = {
     def delete(container: IContainer, deleteDirs: Boolean)(f: String => Boolean): Unit =
       if (container.exists()) {
@@ -366,16 +358,15 @@ class ScalaProject(val underlying: IProject) extends HasLogger {
   }
 
   def initialize(settings: Settings, filter: Settings#Setting => Boolean) = {
-    
     // if the workspace project doesn't exist, it is a virtual project used by Eclipse.
     // As such the source folders don't exist.
     if (underlying.exists()) {
-      val env = new NameEnvironment(javaProject)
-  
-      for ((src, dst) <- sourceOutputFolders(env))
+      for ((src, dst) <- sourceOutputFolders) {
+        logger.debug("Added output folder: " + src + ": " + dst)
         settings.outputDirs.add(EclipseResource(src), EclipseResource(dst))
+      }
     }
-
+    
     // TODO Per-file encodings
     val sfs = sourceFolders
     if (!sfs.isEmpty) {
