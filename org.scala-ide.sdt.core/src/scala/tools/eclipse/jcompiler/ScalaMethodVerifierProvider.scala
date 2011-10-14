@@ -40,12 +40,12 @@ class ScalaMethodVerifierProvider extends IMethodVerifierProvider with HasLogger
   /**
    * Checks that `abstractMethod` is a non-deferred member of a Scala Trait.
    */
-  def isNotDeferredTraitMethod(abstractMethod: MethodBinding): Boolean = {
+  def isConcreteTraitMethod(abstractMethod: MethodBinding): Boolean = {
     val project = findProjectOf(abstractMethod)
 
     if (ScalaPlugin.plugin.isScalaProject(project)) {
       val scalaProject = ScalaPlugin.plugin.getScalaProject(project)
-      isNotDeferredTraitMethod(abstractMethod, scalaProject)
+      isConcreteTraitMethod(abstractMethod, scalaProject)
     } else {
       logger.debug("`%s` is not a Scala Project. %s".format(project.getName(), JDTMethodVerifierCarryOnMsg))
       false
@@ -66,7 +66,7 @@ class ScalaMethodVerifierProvider extends IMethodVerifierProvider with HasLogger
     project
   }
 
-  private def isNotDeferredTraitMethod(abstractMethod: MethodBinding, project: ScalaProject): Boolean = {
+  private def isConcreteTraitMethod(abstractMethod: MethodBinding, project: ScalaProject): Boolean = {
     project.withPresentationCompiler { pc =>
       pc.askOption { () =>
         import pc._
@@ -88,8 +88,7 @@ class ScalaMethodVerifierProvider extends IMethodVerifierProvider with HasLogger
 
               if (abstractMethod.parameters.length == paramsTypeSigs.size) {
                 val pairedParams = paramsTypeSigs.zip(abstractMethod.parameters.map(_.readableName().mkString))
-                val res = pairedParams forall { case (jdtTpe, scalacTpe) => jdtTpe == scalacTpe }
-                res
+                pairedParams forall { case (jdtTpe, scalacTpe) => jdtTpe == scalacTpe }
               } else
                 false
             }
@@ -120,21 +119,24 @@ class ScalaMethodVerifierProvider extends IMethodVerifierProvider with HasLogger
             }
           }
         }
+        
+        def isConcreteMethod(methodOwner: Symbol, abstractMethod: MethodBinding) = {
+          // Checks if `methodOwner`'s contain a non-deferred (i.e. concrete) member that matches `abstractMethod` definition
+          val methodSymbol = findMethodSymbol(methodOwner, abstractMethod)
+          val isConcreteMethod = methodSymbol.nonEmpty && {
+            val isDeferredMethod = methodSymbol.exists(_.isDeferred)
+            logger.debug("found %s method symbol: %s" format (abstractMethod.selector.mkString, methodSymbol))
+            !isDeferredMethod
+          }
+          isConcreteMethod
+        }
 
         val methodOwner = findMethodOwnerSymbol(abstractMethod)
         // makes sure the symbol has been fully initialized. This is needed for example after a project's clean to ensure 
         // the symbol's flags are correctly set.
         methodOwner.initialize
-        logger.debug("found %s owner: %s" format (abstractMethod.selector.mkString, methodOwner))
 
-        methodOwner.isTrait && {
-          // Checks if `methodOwner`'s contain a non-deferred (i.e. concrete) member that matches `abstractMethod` definition
-          val methodSymbol = findMethodSymbol(methodOwner, abstractMethod)
-          val isDeferredMethod = methodSymbol.exists(_.isDeferred)
-          logger.debug("found %s method symbol: %s" format (abstractMethod.selector.mkString, methodSymbol))
-          !isDeferredMethod
-        }
-
+        methodOwner.isTrait && isConcreteMethod(methodOwner, abstractMethod)
       }.getOrElse {
         logger.info("`askOption` failed. Check the Presentation Compiler log for more information. %s".format(JDTMethodVerifierCarryOnMsg))
         false

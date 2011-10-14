@@ -23,7 +23,7 @@ import org.junit.Ignore
 
 object AbstractMethodVerifierTest extends TestProjectSetup("jcompiler")
 
-@Ignore("Enable this test class when ticket http://scala-ide-portfolio.assembla.com/spaces/scala-ide/tickets/1000662 is fixed.")
+//@Ignore("Enable this test class when ticket http://scala-ide-portfolio.assembla.com/spaces/scala-ide/tickets/1000662 is fixed.")
 class AbstractMethodVerifierTest {
   import AbstractMethodVerifierTest._
 
@@ -69,6 +69,25 @@ class AbstractMethodVerifierTest {
   def javaClassExtendingScalaClassWithDeferredMethodsInSuperTrait_ErrorsAreDisplayedInJavaEditor_t1000607() {
     //when
     val unit = compilationUnit("t1000607/C.java")
+    
+    val requestor = mock(classOf[IProblemRequestor])
+    when(requestor.isActive()).thenReturn(true)
+    
+    val owner = mock(classOf[WorkingCopyOwner])
+    when(owner.getProblemRequestor(any())).thenReturn(requestor)
+    
+    // then
+    // this will trigger the java reconciler so that the problems will be reported to the `requestor`
+    unit.getWorkingCopy(owner, new NullProgressMonitor)
+
+    // verify
+    verify(requestor, times(1)).acceptProblem(any())
+  }
+  
+  @Test
+  def javaClassExtendingPureScalaInterface_JavaEditorShouldDisplayErrorsForUnimplementedDeferredMethod_t10006xx() {
+    //when
+    val unit = compilationUnit("t1000670/JFoo.java")
     
     val requestor = mock(classOf[IProblemRequestor])
     when(requestor.isActive()).thenReturn(true)
