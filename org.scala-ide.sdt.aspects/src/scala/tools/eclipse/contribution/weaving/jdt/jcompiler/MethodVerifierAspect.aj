@@ -33,7 +33,7 @@ public aspect MethodVerifierAspect {
 
 		IMethodVerifierProvider provider = providers.get(0);
 
-		if (provider.isNotDeferredTraitMethod(abstractMethod))
+		if (provider.isConcreteTraitMethod(abstractMethod))
 			// stop the abstract method's check if the method is a non-deferred (i.e. concrete) trait method
 			return; 
 		else
