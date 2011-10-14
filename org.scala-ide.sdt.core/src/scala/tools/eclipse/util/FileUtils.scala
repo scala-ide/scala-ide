@@ -94,7 +94,7 @@ object FileUtils {
 
       if (offset != -1) {
         mrk.setAttribute(IMarker.CHAR_START, offset)
-        mrk.setAttribute(IMarker.CHAR_END, offset + length + 1)
+        mrk.setAttribute(IMarker.CHAR_END, offset + math.max(length, 1))
         mrk.setAttribute(IMarker.LINE_NUMBER, line)
       }
     }
