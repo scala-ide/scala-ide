@@ -291,7 +291,7 @@ object ScalaPresentationCompiler {
                   new Array[String](0),
                   nscSeverityToEclipse(severityLevel),
                   pos1.startOrPoint,
-                  pos1.endOrPoint,
+                  math.max(pos1.startOrPoint, pos1.endOrPoint - 1),
                   pos1.line,
                   pos1.column
                 ))
