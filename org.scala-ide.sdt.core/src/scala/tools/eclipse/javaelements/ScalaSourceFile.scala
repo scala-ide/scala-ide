@@ -6,7 +6,6 @@
 package scala.tools.eclipse.javaelements
 
 import java.util.{ HashMap => JHashMap, Map => JMap }
-
 import org.eclipse.core.resources.{ IFile, IResource }
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.jdt.core.{ IBuffer, ICompilationUnit, IJavaElement, IType, WorkingCopyOwner }
@@ -15,12 +14,10 @@ import org.eclipse.jdt.internal.core.util.HandleFactory
 import org.eclipse.jdt.internal.core.{ BufferManager, CompilationUnit => JDTCompilationUnit, OpenableElementInfo, PackageFragment }
 import org.eclipse.jdt.internal.corext.util.JavaModelUtil
 import org.eclipse.swt.widgets.Display
-
 import scala.tools.nsc.io.{ AbstractFile, VirtualFile }
-
 import scala.tools.eclipse.contribution.weaving.jdt.IScalaSourceFile
-
 import scala.tools.eclipse.util.EclipseFile
+import org.eclipse.jdt.core.compiler.CharOperation
 
 object ScalaSourceFile {
   val handleFactory = new HandleFactory
@@ -90,4 +87,12 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
   } (null)
   
   override def getType(name : String) : IType = new LazyToplevelClass(this, name)
+  
+  override def getContents() : Array[Char] = {
+    // in the following case, super#getContents() logs an exception for no good reason
+    if (getBufferManager().getBuffer(this) == null && getResource().getLocation() == null && getResource().getLocationURI() == null) {
+      return CharOperation.NO_CHAR
+    }
+    return super.getContents()
+  }
 }
