@@ -58,7 +58,7 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
   }
   
   def createSourceFile : BatchSourceFile = {
-    new BatchSourceFile(file, getContents)
+    new BatchSourceFile(file, getContents())
   }
 
   def getProblemRequestor : IProblemRequestor = null
