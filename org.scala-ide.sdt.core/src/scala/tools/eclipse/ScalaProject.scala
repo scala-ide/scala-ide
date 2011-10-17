@@ -142,8 +142,6 @@ class ScalaProject(val underlying: IProject) extends HasLogger {
   def externalDepends = underlying.getReferencedProjects
 
   lazy val javaProject = {
-    if (!underlying.exists())
-      underlying.create(null)
     JavaCore.create(underlying)
   }
 
@@ -364,10 +362,15 @@ class ScalaProject(val underlying: IProject) extends HasLogger {
   }
 
   def initialize(settings: Settings, filter: Settings#Setting => Boolean) = {
-    val env = new NameEnvironment(javaProject)
-
-    for ((src, dst) <- sourceOutputFolders(env))
-      settings.outputDirs.add(EclipseResource(src), EclipseResource(dst))
+    
+    // if the workspace project doesn't exist, it is a virtual project used by Eclipse.
+    // As such the source folders don't exist.
+    if (underlying.exists()) {
+      val env = new NameEnvironment(javaProject)
+  
+      for ((src, dst) <- sourceOutputFolders(env))
+        settings.outputDirs.add(EclipseResource(src), EclipseResource(dst))
+    }
 
     // TODO Per-file encodings
     val sfs = sourceFolders
