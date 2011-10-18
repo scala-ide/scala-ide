@@ -140,7 +140,7 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
       diagnostic.StartupDiagnostics.run
     }
     JavaCore.addElementChangedListener(this)
-    println("Scala compiler bundle: " + scalaCompilerBundle.getLocation)
+    logger.info("Scala compiler bundle: " + scalaCompilerBundle.getLocation)
   }
 
   override def stop(context: BundleContext) = {

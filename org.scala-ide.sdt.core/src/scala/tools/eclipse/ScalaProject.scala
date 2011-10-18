@@ -346,23 +346,7 @@ class ScalaProject(val underlying: IProject) extends HasLogger {
       case _ =>
     }
   }
-  
-//  /** Check if the .classpath file has been changed since the last check.
-//   *  If the saved timestamp does not match the file timestamp, reset the
-//   *  two compilers.
-//   */
-//  def checkClasspathTimeStamp(shouldReset: Boolean): Unit = plugin.check {
-//    val cp = underlying.getFile(".classpath")
-//    if (cp.exists)
-//      classpathUpdate match {
-//        case IResource.NULL_STAMP => classpathUpdate = cp.getModificationStamp()
-//        case stamp if stamp == cp.getModificationStamp() =>
-//        case _ =>
-//          classpathUpdate = cp.getModificationStamp()
-//          if (shouldReset) resetCompilers()
-//      }
-//  }
-  
+
   /**
    * Manage the possible classpath error/warning reported on the project.
    */
@@ -497,7 +481,7 @@ class ScalaProject(val underlying: IProject) extends HasLogger {
       setting <- box.userSettings; if filter(setting)
     ) {
       val value0 = store.getString(SettingConverterUtil.convertNameToProperty(setting.name))
-      logger.info("[%s] initializing %s to %s".format(underlying.getName(), setting.name, value0.toString))
+//      logger.info("[%s] initializing %s to %s".format(underlying.getName(), setting.name, value0.toString))
       try {
         val value = if (setting ne settings.pluginsDir) value0 else {
           ScalaPlugin.plugin.continuationsClasses map {
