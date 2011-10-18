@@ -20,6 +20,8 @@ import scala.tools.nsc.util.NoPosition
 import scala.tools.nsc.{ Settings, MissingRequirementError }
 import scala.tools.eclipse.util.EclipseResource
 import java.io.File
+import org.eclipse.jdt.launching.JavaRuntime
+import org.eclipse.jdt.core.{ JavaCore, IJavaProject }
 import scala.tools.eclipse.util.HasLogger
 
 
@@ -47,6 +49,22 @@ class AnalysisCompile (conf: BasicConfiguration, bm: EclipseSbtBuildManager, con
       }
     }
     
+    def getPluginBootClasspath(jProject: IJavaProject) = {
+      val rawClasspath = bm.project.javaProject.getRawClasspath()
+      rawClasspath.toSeq.flatMap(cp =>
+        cp.getEntryKind match {
+          case org.eclipse.jdt.core.IClasspathEntry.CPE_CONTAINER =>
+            val path0 = cp.getPath
+            if (!path0.isEmpty && path0.segment(0) == JavaRuntime.JRE_CONTAINER) {
+              val container = JavaCore.getClasspathContainer(cp.getPath, bm.project.javaProject)
+              Some(container.getClasspathEntries.toSeq.map(_.getPath.toFile))
+            } else None
+          case _ => None
+          
+        }).flatten
+    }
+
+    
     def doCompile(scalac: ScalaSbtCompiler, javac: JavaEclipseCompiler,
               sources: Seq[File],  reporter: Reporter, settings: Settings,
               compOptions: Seq[String] = Nil, javaSrcBases: Seq[File] = Nil,
@@ -63,9 +81,14 @@ class AnalysisCompile (conf: BasicConfiguration, bm: EclipseSbtBuildManager, con
             extApis.get _
         }
         val apiOption = (api: Either[Boolean, Source]) => api.right.toOption
+        
+        // Resolve classpath correctly
         val compArgs = new CompilerArguments(scalac.scalaInstance, scalac.cp)
-        val searchClasspath = withBootclasspath(compArgs, conf.classpath)
-        val entry = Locate.entry(searchClasspath, Locate.definesClass) // use default defineClass for now
+        val bootClasspath = getPluginBootClasspath(bm.project.javaProject)
+        val classpathWithoutJVM: Set[File] = conf.classpath.toSet -- bootClasspath
+        val searchClasspath = classpathWithoutJVM ++ bootClasspath
+        val entry = Locate.entry(searchClasspath.toSeq, Locate.definesClass) // use default defineClass for now
+
         
         val ((previousAnalysis, previousSetup), tm) = util.Utils.timed(extract(store.get))
         
@@ -90,7 +113,11 @@ class AnalysisCompile (conf: BasicConfiguration, bm: EclipseSbtBuildManager, con
             def compileScala() =
 				      if(!scalaSrcs.isEmpty) {
 				      	val sources0 = if(order == Mixed) incSrc else scalaSrcs
-				      	val arguments = removeSbtOutputDirs(compArgs(sources0, conf.classpath, conf.outputDirectory, options.options).toList)
+                val argsWithoutOutput = removeSbtOutputDirs(compArgs(sources0, classpathWithoutJVM.toSeq, conf.outputDirectory, options.options).toList)
+                val bootClasspathArgs: Seq[String] =
+                  Seq("-bootclasspath", CompilerArguments.absString(bootClasspath) + File.pathSeparator + scalac.scalaInstance.libraryJar.getAbsolutePath)
+                val arguments = bootClasspathArgs ++ argsWithoutOutput
+
 				      	try {
 				      	  scalac.compile(arguments, callback, maxErrors, log, contr, settings)
 				      	} catch {
@@ -152,7 +179,7 @@ class AnalysisCompile (conf: BasicConfiguration, bm: EclipseSbtBuildManager, con
             
         	case ex =>
         	  logger.error("Crash in the Scala build compiler.", ex)
-        	  reporter.log(SbtConverter.convertToSbt(NoPosition), "The Scala compiler crashed while compiling your project. This is a bug in the Scala compiler, not the IDE. Check the Erorr Log for details.", xsbti.Severity.Error)
+        	  reporter.log(SbtConverter.convertToSbt(NoPosition), "The Scala compiler crashed while compiling your project. This is a bug in the Scala compiler, not the IDE. Check the Erorr Log for details. The error message is: " + ex.getMessage(), xsbti.Severity.Error)
         	  null
         	  
         } finally {
