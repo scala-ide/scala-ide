@@ -60,6 +60,8 @@ class SbtBuilderTest {
     }
 
     object depProject extends testsetup.TestProjectSetup("builder-sub")
+    depProject.project        // force initialization of this project
+    depProject.project.underlying.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, new NullProgressMonitor)
 
     println("=== Dependency Test === ")
     project.clean(new NullProgressMonitor())
@@ -93,7 +95,6 @@ class SbtBuilderTest {
     }
 
     val pcProblems = fooClientCU.asInstanceOf[ScalaSourceFile].getProblems()
-    println(pcProblems)
     Assert.assertEquals("Presentation compiler errors.", 2, pcProblems.size)
   }
   
