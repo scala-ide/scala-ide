@@ -118,9 +118,14 @@ object SDTTestUtils {
       deleteRecursive(rootDir)
   }
 
+  /** Add a new file to the given project. The given path is relative to the 
+   *  project.
+   *  
+   *  The file must not exist.
+   */
   def addFileToProject(project : IProject, path : String, content : String) : IFile = {
     val filePath = new Path(path)
-    val segments = filePath.segments
+    val segments = filePath.segments.init
     segments.foldLeft(project : IContainer) { (container, segment) =>
       val folder = container.getFolder(new Path(segment))
       if (!folder.exists())

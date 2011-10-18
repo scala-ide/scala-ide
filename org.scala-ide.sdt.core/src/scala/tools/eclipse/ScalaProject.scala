@@ -5,15 +5,14 @@
 
 package scala.tools.eclipse
 
-import scala.collection.immutable.Set
-import scala.collection.mutable.{ LinkedHashSet, HashMap, HashSet }
+import scala.collection.immutable
+import scala.collection.mutable
 import java.io.File.pathSeparator
 import org.eclipse.core.resources.{ IContainer, IFile, IFolder, IMarker, IProject, IResource, IResourceProxy, IResourceProxyVisitor }
 import org.eclipse.core.runtime.{ FileLocator, IPath, IProgressMonitor, Path, SubMonitor }
 import org.eclipse.jdt.core.{ IClasspathEntry, IJavaProject, JavaCore }
 import org.eclipse.jdt.core.compiler.IProblem
 import org.eclipse.jdt.internal.core.JavaProject
-import org.eclipse.jdt.internal.core.builder.{ ClasspathDirectory, ClasspathLocation, NameEnvironment }
 import org.eclipse.jdt.internal.core.util.Util
 import org.eclipse.swt.widgets.{ Display, Shell }
 import scala.tools.nsc.{ Settings, MissingRequirementError }
@@ -41,7 +40,7 @@ class ScalaProject(val underlying: IProject) extends HasLogger {
   private val resetPendingLock = new Object
   private var resetPending = false
   
-  private val buildListeners = new HashSet[BuildSuccessListener]
+  private val buildListeners = new mutable.HashSet[BuildSuccessListener]
 
   case class InvalidCompilerSettings() extends RuntimeException(
         "Scala compiler cannot initialize for project: " + underlying.getName +
@@ -164,7 +163,7 @@ class ScalaProject(val underlying: IProject) extends HasLogger {
     sourceOutputFolders map (_._2.getFullPath())
 
   def classpath: Seq[IPath] = {
-    val path = new LinkedHashSet[IPath]
+    val path = new mutable.LinkedHashSet[IPath]
 
     def computeClasspath(project: IJavaProject, exportedOnly: Boolean): Unit = {
       val cpes = project.getResolvedClasspath(true)
@@ -219,84 +218,90 @@ class ScalaProject(val underlying: IProject) extends HasLogger {
       val outputLocation = if (cpeOutput != null) cpeOutput else javaProject.getOutputLocation
 
       val wsroot = ScalaPlugin.plugin.workspaceRoot
-      val srcPath = cpe.getPath()
-      val binPath = wsroot.getFolder(outputLocation)
-      (wsroot.getFolder(srcPath), binPath)
+      val binPath = wsroot.getFolder(outputLocation)  // may not exist
+      val srcContainer = Option(wsroot.findMember(cpe.getPath()).asInstanceOf[IContainer]) getOrElse {
+        // may be null if source folder does not exist
+        logger.debug("Could not retrieve source folder %s for project %s".format(cpe.getPath(), underlying))
+        wsroot.getFolder(cpe.getPath())
+      }
+      
+      (srcContainer, binPath)
     }
   }
   
-  def isExcludedFromProject(env: NameEnvironment, childPath: IPath): Boolean = {
-    // answer whether the folder should be ignored when walking the project as a source folder
-    if (childPath.segmentCount() > 2) return false // is a subfolder of a package
-
-    val sourceLocations = NameEnvironmentUtils.sourceLocations(env)
-    for (sl <- sourceLocations) {
-      val binaryFolder = ClasspathLocationUtils.binaryFolder(sl)
-      if (childPath == binaryFolder.getFullPath) return true
-      val sourceFolder = ClasspathLocationUtils.sourceFolder(sl)
-      if (childPath == sourceFolder.getFullPath) return true
+  /** Return all the source files in the current project. It walks all source entries in the classpath
+   *  and respects inclusion and exclusion filters.
+   */
+  def allSourceFiles(): Set[IFile] = {
+    
+    /** Return the inclusion patterns of `entry` as an Array[Array[Char]], ready for consumption
+     *  by the JDT.
+     *  
+     *  @see org.eclipse.jdt.internal.core.ClassPathEntry.fullInclusionPatternChars()
+     */
+    def fullPatternChars(entry: IClasspathEntry, patterns: Array[IPath]): Array[Array[Char]] = {
+      if (patterns.isEmpty) 
+        null
+      else {
+        val prefixPath = entry.getPath().removeTrailingSeparator();
+        for (pattern <- patterns) 
+          yield prefixPath.append(pattern).toString().toCharArray();
+      }
     }
 
-    // skip default output folder which may not be used by any source folder
-    return childPath == javaProject.getOutputLocation
-  }
+    /** Logic is copied from existing code ('isExcludedFromProject'). Code is trying to 
+     *  see if the given path is a source or output folder for any source entry in the
+     *  classpath of this project.
+     */
+    def sourceOrBinaryFolder(path: IPath): Boolean = {
+      if (path.segmentCount() > 2) return false // is a subfolder of a package
 
-  def allSourceFiles(): Set[IFile] = allSourceFiles(new NameEnvironment(javaProject))
+      sourceOutputFolders exists {
+        case (srcFolder, binFolder) =>
+          (srcFolder.getFullPath() == path || binFolder.getFullPath() == path)
+      }
+    }
 
-  def allSourceFiles(env: NameEnvironment): Set[IFile] = {
-    val sourceFiles = new HashSet[IFile]
-    val sourceLocations = NameEnvironmentUtils.sourceLocations(env)
+    var sourceFiles = new immutable.HashSet[IFile]
+    
+    for (srcEntry <- javaProject.getResolvedClasspath(true) if srcEntry.getEntryKind() == IClasspathEntry.CPE_SOURCE) {
+      val srcFolder = ScalaPlugin.plugin.workspaceRoot.findMember(srcEntry.getPath())
+      val inclusionPatterns = fullPatternChars(srcEntry, srcEntry.getInclusionPatterns())
+      val exclusionPatterns = fullPatternChars(srcEntry, srcEntry.getExclusionPatterns())
+      val isAlsoProject = srcFolder == underlying  // source folder is the project itself
 
-    for (sourceLocation <- sourceLocations) {
-      val sourceFolder = ClasspathLocationUtils.sourceFolder(sourceLocation)
-      val exclusionPatterns = ClasspathLocationUtils.exclusionPatterns(sourceLocation)
-      val inclusionPatterns = ClasspathLocationUtils.inclusionPatterns(sourceLocation)
-      val isAlsoProject = sourceFolder == javaProject
-      val segmentCount = sourceFolder.getFullPath.segmentCount
-      val outputFolder = ClasspathLocationUtils.binaryFolder(sourceLocation)
-      val isOutputFolder = sourceFolder == outputFolder
-      sourceFolder.accept(
+      srcFolder.accept(
         new IResourceProxyVisitor {
           def visit(proxy: IResourceProxy): Boolean = {
             proxy.getType match {
               case IResource.FILE =>
-                val resource = proxy.requestResource
-                if (plugin.isBuildable(resource.asInstanceOf[IFile])) {
-                  if (exclusionPatterns != null || inclusionPatterns != null)
-                    if (Util.isExcluded(resource.getFullPath, inclusionPatterns, exclusionPatterns, false))
-                      return false
-                  sourceFiles += resource.asInstanceOf[IFile]
-                }
-                return false
+                if (plugin.isBuildable(proxy.getName())
+                    && !Util.isExcluded(proxy.requestFullPath(), inclusionPatterns, exclusionPatterns, false))
+                  sourceFiles += proxy.requestResource().asInstanceOf[IFile]
+                
+                false // don't recurse, it's a file anyway
 
               case IResource.FOLDER =>
-                var folderPath: IPath = null
                 if (isAlsoProject) {
-                  folderPath = proxy.requestFullPath
-                  if (isExcludedFromProject(env, folderPath))
-                    return false
-                }
-                if (exclusionPatterns != null) {
-                  if (folderPath == null)
-                    folderPath = proxy.requestFullPath
-                  if (Util.isExcluded(folderPath, inclusionPatterns, exclusionPatterns, true)) {
+                  !sourceOrBinaryFolder(proxy.requestFullPath)  // recurse iff not on a source or binary folder path
+                } else if (exclusionPatterns != null) {
+                  if (Util.isExcluded(proxy.requestFullPath, inclusionPatterns, exclusionPatterns, true)) {
                     // must walk children if inclusionPatterns != null, can skip them if == null
                     // but folder is excluded so do not create it in the output folder
-                    return inclusionPatterns != null
-                  }
-                }
-
+                    inclusionPatterns != null
+                  } else true
+                } else true  // recurse into subfolders
+                
               case _ =>
+                true
             }
-            return true
-          }
-        },
-        IResource.NONE)
+         }
+        }, IResource.NONE)
     }
-
-    Set.empty ++ sourceFiles
+    
+    sourceFiles
   }
-
+  
   def cleanOutputFolders(implicit monitor: IProgressMonitor) = {
     def delete(container: IContainer, deleteDirs: Boolean)(f: String => Boolean): Unit =
       if (container.exists()) {
@@ -553,26 +558,4 @@ class ScalaProject(val underlying: IProject) extends HasLogger {
     resetBuildCompiler
     resetPresentationCompiler
   }
-}
-
-object NameEnvironmentUtils extends ReflectionUtils {
-  val neClazz = classOf[NameEnvironment]
-  val sourceLocationsField = getDeclaredField(neClazz, "sourceLocations")
-
-  def sourceLocations(env: NameEnvironment) = sourceLocationsField.get(env).asInstanceOf[Array[ClasspathLocation]]
-}
-
-object ClasspathLocationUtils extends ReflectionUtils {
-  val cdClazz = classOf[ClasspathDirectory]
-  val binaryFolderField = getDeclaredField(cdClazz, "binaryFolder")
-
-  val cpmlClazz = Class.forName("org.eclipse.jdt.internal.core.builder.ClasspathMultiDirectory")
-  val sourceFolderField = getDeclaredField(cpmlClazz, "sourceFolder")
-  val inclusionPatternsField = getDeclaredField(cpmlClazz, "inclusionPatterns")
-  val exclusionPatternsField = getDeclaredField(cpmlClazz, "exclusionPatterns")
-
-  def binaryFolder(cl: ClasspathLocation) = binaryFolderField.get(cl).asInstanceOf[IContainer]
-  def sourceFolder(cl: ClasspathLocation) = sourceFolderField.get(cl).asInstanceOf[IContainer]
-  def inclusionPatterns(cl: ClasspathLocation) = inclusionPatternsField.get(cl).asInstanceOf[Array[Array[Char]]]
-  def exclusionPatterns(cl: ClasspathLocation) = exclusionPatternsField.get(cl).asInstanceOf[Array[Array[Char]]]
 }

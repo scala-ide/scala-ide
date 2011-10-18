@@ -7,6 +7,7 @@ import scala.tools.eclipse.jcompiler.AbstractMethodVerifierTest;
 import scala.tools.eclipse.lexical.ScalaDocumentPartitionerTest;
 import scala.tools.eclipse.lexical.ScalaPartitionTokeniserTest;
 import scala.tools.eclipse.occurrences.OccurrencesFinderTest;
+import scala.tools.eclipse.sbtbuilder.OutputFoldersTest;
 import scala.tools.eclipse.sbtbuilder.SbtBuilderTest;
 import scala.tools.eclipse.structurebuilder.StructureBuilderTest;
 import scala.tools.eclipse.pc.PresentationCompilerTest;
@@ -33,6 +34,7 @@ import org.junit.runners.Suite;
   CompletionTests.class,
   AbstractMethodVerifierTest.class,
   SbtBuilderTest.class,
-  PresentationCompilerTest.class
+  PresentationCompilerTest.class,
+  OutputFoldersTest.class,
 })
 class TestsSuite { }
