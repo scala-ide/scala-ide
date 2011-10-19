@@ -30,6 +30,9 @@ import scala.actors.Actor
 import org.eclipse.jdt.core.IJarEntryResource
 import java.util.Properties
 import org.eclipse.jdt.core.IPackageFragmentRoot
+import org.eclipse.core.runtime.jobs.Job
+import org.eclipse.core.runtime.IStatus
+import org.eclipse.core.runtime.Status
 
 trait BuildSuccessListener {
   def buildSuccessful(): Unit
@@ -351,11 +354,15 @@ class ScalaProject(val underlying: IProject) extends HasLogger {
    * Manage the possible classpath error/warning reported on the project.
    */
   private def setClasspathError(severity: Int, message: String) {
-          // set the state
-          classpathValid= severity != IMarker.SEVERITY_ERROR
-          classpathHasBeenChecked= true
-    new Thread() {
-      override def run() {
+    // set the state
+    classpathValid= severity != IMarker.SEVERITY_ERROR
+    classpathHasBeenChecked= true
+    
+    // the marker manipulation need to be done in a Job, because it requires
+    // a change on the IProject, which is locked for modification during
+    // the classpath change notification
+    val markerJob= new Job("Update classpath error marker") {
+      override def run(monitor: IProgressMonitor): IStatus = {
           // clean the markers
           underlying.deleteMarkers(plugin.problemMarkerId, false, IResource.DEPTH_ZERO)
           
@@ -367,9 +374,11 @@ class ScalaProject(val underlying: IProject) extends HasLogger {
               marker.setAttribute(IMarker.SEVERITY, severity)
             case _ =>
           }
-          
+          Status.OK_STATUS
       }
-    }.start()
+    }
+    markerJob.setRule(underlying)
+    markerJob.schedule()
   }
   
   /**
