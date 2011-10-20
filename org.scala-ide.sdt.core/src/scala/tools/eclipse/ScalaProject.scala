@@ -233,6 +233,8 @@ class ScalaProject(val underlying: IProject) extends HasLogger {
    *  and respects inclusion and exclusion filters.
    */
   def allSourceFiles(): Set[IFile] = {
+    /** Cache it for the duration of this call */
+    lazy val currentSourceOutputFolders = sourceOutputFolders
     
     /** Return the inclusion patterns of `entry` as an Array[Array[Char]], ready for consumption
      *  by the JDT.
@@ -256,7 +258,7 @@ class ScalaProject(val underlying: IProject) extends HasLogger {
     def sourceOrBinaryFolder(path: IPath): Boolean = {
       if (path.segmentCount() > 2) return false // is a subfolder of a package
 
-      sourceOutputFolders exists {
+      currentSourceOutputFolders exists {
         case (srcFolder, binFolder) =>
           (srcFolder.getFullPath() == path || binFolder.getFullPath() == path)
       }
@@ -277,13 +279,13 @@ class ScalaProject(val underlying: IProject) extends HasLogger {
               case IResource.FILE =>
                 if (plugin.isBuildable(proxy.getName())
                     && !Util.isExcluded(proxy.requestFullPath(), inclusionPatterns, exclusionPatterns, false))
-                  sourceFiles += proxy.requestResource().asInstanceOf[IFile]
+                  sourceFiles += proxy.requestResource().asInstanceOf[IFile] // must be an IFile, otherwise we wouldn't be here
                 
                 false // don't recurse, it's a file anyway
 
               case IResource.FOLDER =>
                 if (isAlsoProject) {
-                  !sourceOrBinaryFolder(proxy.requestFullPath)  // recurse iff not on a source or binary folder path
+                  !sourceOrBinaryFolder(proxy.requestFullPath)  // recurse if not on a source or binary folder path
                 } else if (exclusionPatterns != null) {
                   if (Util.isExcluded(proxy.requestFullPath, inclusionPatterns, exclusionPatterns, true)) {
                     // must walk children if inclusionPatterns != null, can skip them if == null

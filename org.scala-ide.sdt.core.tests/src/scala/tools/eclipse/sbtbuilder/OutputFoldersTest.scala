@@ -63,7 +63,6 @@ class OutputFoldersTest {
         yield JavaCore.newSourceEntry(dirPath, inclPats, exclPats, binPath)
     
     project.javaProject.setRawClasspath((project.javaProject.getRawClasspath() ++ srcEntries).toArray, null);
-    ScalaPlugin
     project
   }
 

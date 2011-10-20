@@ -125,8 +125,8 @@ object SDTTestUtils {
    */
   def addFileToProject(project : IProject, path : String, content : String) : IFile = {
     val filePath = new Path(path)
-    val segments = filePath.segments.init
-    segments.foldLeft(project : IContainer) { (container, segment) =>
+    val dirNames = filePath.segments.init // last segment is the file
+    dirNames.foldLeft(project : IContainer) { (container, segment) =>
       val folder = container.getFolder(new Path(segment))
       if (!folder.exists())
         folder.create(false, true, null)
