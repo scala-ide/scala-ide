@@ -17,6 +17,9 @@ T1.scala [in traits [in src [in simple-structure-builder]]]
     java.lang.Object Z
     class Inner
       Inner()
+    class InnerWithGenericParams
+      scala.collection.immutable.List xs
+      InnerWithGenericParams(traits.T1, scala.collection.immutable.List<java.lang.Object>)
 C1.scala [in traits [in src [in simple-structure-builder]]]
   package traits
   import scala.annotation.*
