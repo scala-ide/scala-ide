@@ -118,6 +118,10 @@ class ScalaProject(val underlying: IProject) extends HasLogger {
   }
 
   override def toString = underlying.getName
+  
+  /** Does this project have the Scala nature? */
+  def hasScalaNature = 
+    ScalaPlugin.plugin.isScalaProject(underlying)
 
   /** Generic build error, without a source position. It creates a marker in the
    *  Problem views.
