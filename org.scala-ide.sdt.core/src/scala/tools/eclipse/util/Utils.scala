@@ -8,7 +8,7 @@ object Utils extends HasLogger {
     f
     System.currentTimeMillis() - start
   }
-  
+
   /** Evaluate 'f' and return its value and the time required to compute it. */
   def timed[A](f: => A): (A, Long) = {
     val start = System.currentTimeMillis()
@@ -25,4 +25,15 @@ object Utils extends HasLogger {
         orElse
     }
   }
+
+  class WithAsInstanceOfOpt(obj: AnyRef) {
+    def asInstanceOfOpt[B](implicit m: Manifest[B]): Option[B] =
+      if (Manifest.singleType(obj) <:< m)
+        Some(obj.asInstanceOf[B])
+      else
+        None
+  }
+
+  implicit def any2optionable(obj: AnyRef): WithAsInstanceOfOpt = new WithAsInstanceOfOpt(obj)
+
 }

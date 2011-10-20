@@ -1,14 +1,15 @@
 package scala.tools.eclipse.util
 
-import org.eclipse.text.edits.{ TextEdit => EclipseTextEdit, _ }
-import scalariform.utils.TextEdit
-import org.eclipse.jface.text.IDocumentExtension4
+import scala.collection.JavaConversions._
+
+import org.eclipse.core.resources._
+import org.eclipse.core.runtime._
 import org.eclipse.jface.text.IDocument
-import org.eclipse.core.runtime.IAdaptable
-import PartialFunction._
-import org.eclipse.core.resources.IWorkspace
-import org.eclipse.core.runtime.IProgressMonitor
-import org.eclipse.core.resources.IWorkspaceRunnable
+import org.eclipse.jface.viewers.IStructuredSelection
+import org.eclipse.text.edits.{ ReplaceEdit, TextEdit => EclipseTextEdit }
+import org.eclipse.ui.ide.IDE
+
+import scalariform.utils.TextEdit
 
 object EclipseUtils {
 
@@ -30,10 +31,11 @@ object EclipseUtils {
 
   }
 
-  implicit def asEclipseTextEdit(edit: TextEdit): EclipseTextEdit = new ReplaceEdit(edit.position, edit.length, edit.replacement)
+  implicit def asEclipseTextEdit(edit: TextEdit): EclipseTextEdit =
+    new ReplaceEdit(edit.position, edit.length, edit.replacement)
 
   /** Run the given function as a workspace runnable inside `wspace`.
-   * 
+   *
    * @param wspace the workspace
    * @param monitor the progress monitor (defaults to null for no progress monitor).
    */
@@ -44,4 +46,8 @@ object EclipseUtils {
       }
     }, monitor)
   }
+
+  def computeSelectedResources(selection: IStructuredSelection): List[IResource] =
+    IDE.computeSelectedResources(selection).toList.asInstanceOf[List[IResource]]
+
 }
