@@ -8,6 +8,7 @@ import org.eclipse.core.resources.ResourcesPlugin
 import scala.tools.eclipse.ScalaProject
 import org.eclipse.core.resources.IProject
 import scala.tools.eclipse.util.HasLogger
+import scala.tools.eclipse.util.Utils
 
 /**
  * <p>
@@ -45,7 +46,9 @@ class ScalaMethodVerifierProvider extends IMethodVerifierProvider with HasLogger
 
     if (ScalaPlugin.plugin.isScalaProject(project)) {
       val scalaProject = ScalaPlugin.plugin.getScalaProject(project)
-      isConcreteTraitMethod(abstractMethod, scalaProject)
+      Utils.tryExecute {
+        isConcreteTraitMethod(abstractMethod, scalaProject)
+      }(orElse = false)
     } else {
       logger.debug("`%s` is not a Scala Project. %s".format(project.getName(), JDTMethodVerifierCarryOnMsg))
       false
