@@ -5,5 +5,8 @@ package scala.tools.eclipse.util
  * Clients are allowed to inject a different logger.
  */
 trait HasLogger {
-  protected[this] val logger: Logger = DefaultLogger
+  protected[this] val logger: Logger = {
+    val clazz = this.getClass
+    DefaultLogger(clazz)
+  }
 }
