@@ -4,5 +4,5 @@ import org.eclipse.jdt.internal.compiler.lookup.MethodBinding;
 
 @SuppressWarnings("restriction")
 public interface IMethodVerifierProvider {
-	boolean isNotDeferredTraitMethod(MethodBinding abstractMethod);
+	boolean isConcreteTraitMethod(MethodBinding abstractMethod);
 }

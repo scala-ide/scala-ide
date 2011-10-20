@@ -1,6 +1,6 @@
 package scala.tools.eclipse.util
 
-object Utils {
+object Utils extends HasLogger {
 
   /** Return the time in ms required to evaluate `f()`. */
   def time(f: => Any): Long = {
@@ -14,5 +14,15 @@ object Utils {
     val start = System.currentTimeMillis()
     val res = f
     (res, System.currentTimeMillis() - start)
+  }
+  
+  /** Try executing the passed `action` and log any exception occurring. */
+  def tryExecute[T](action: => T)(orElse: => T): T = {
+    try action
+    catch { 
+      case t => 
+        logger.error(t)
+        orElse
+    }
   }
 }
