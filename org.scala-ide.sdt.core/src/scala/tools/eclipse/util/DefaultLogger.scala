@@ -5,6 +5,13 @@ import org.eclipse.core.runtime.Status
 import org.eclipse.core.runtime.IStatus
 import scala.util.control.ControlThrowable
 
+private[util] object DefaultLogger {
+  def apply(clazz: Class[_]): Logger = {
+   val name = if(clazz.isAnonymousClass()) clazz.getName else clazz.getSimpleName
+   new DefaultLogger(name)
+  }
+}
+
 /**
  * The `DefaultLogger` is a minimal implementation of a logger. 
  * On the one hand, calling {{{info}}} or {{{debug}}} will output 
@@ -18,7 +25,7 @@ import scala.util.control.ControlThrowable
  * [In the future the default logger should become somewhat more robust and
  * easy to configure, using Log4J or similar seem a good solution.
  */
-private[util] object DefaultLogger extends Logger {
+private class DefaultLogger(name: String) extends Logger {
   private object Category extends Enumeration {
     val INFO, DEBUG, ERROR = Value
   }
@@ -30,7 +37,6 @@ private[util] object DefaultLogger extends Logger {
 
   private def log(message: String, cat: Value = INFO) = {
     val printer = if (cat eq ERROR) System.err else System.out
-    val name = if (getClass().isAnonymousClass) getClass.getName else getClass.getSimpleName
 
     printer.format("[%s] %s%n", name, message)
   }
