@@ -273,12 +273,7 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings)
 	
   def compilers(settings: Settings, libJar: File, compJar:File, compInterfaceJar: File): (ScalaSbtCompiler, JavaEclipseCompiler) = {
     val scalacInstance = ScalaCompilerConf(scalaVersion, libJar, compJar, compInterfaceJar)
-    val scalac = new ScalaSbtCompiler(scalacInstance,
-      // do not include autoBoot becuase then bootclasspath takes
-     // whatever is set by the env variable and not necessairly what was given
-     // in the project definition
-     ClasspathOptions(true, true, true, false, true),
-     reporter)
+    val scalac = new ScalaSbtCompiler(scalacInstance, reporter)
     val javac = new JavaEclipseCompiler(project.underlying, monitor)
     (scalac, javac)
   }

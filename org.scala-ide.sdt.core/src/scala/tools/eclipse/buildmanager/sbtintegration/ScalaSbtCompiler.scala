@@ -28,7 +28,7 @@ object SettingsCleanup {
  * So this is a simplified interface for the compiler that doesn't need dual loader.
  * But in the near future this will use a dual loader.
  */
-class ScalaSbtCompiler(val scalaInstance: ScalaInstance, val cp: ClasspathOptions, reporter: Reporter) {
+class ScalaSbtCompiler(val scalaInstance: ScalaInstance, reporter: Reporter) {
   def compile(args: Seq[String], callback: AnalysisCallback, maxErrors:Int, log: Logger, contr: Controller, s: Settings) {
     val cInterface = new xsbt.CompilerInterface
     val properSettingsWithErrorReporting = SettingsCleanup(s, log)

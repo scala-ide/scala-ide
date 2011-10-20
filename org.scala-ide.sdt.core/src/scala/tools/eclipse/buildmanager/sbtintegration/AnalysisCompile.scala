@@ -70,7 +70,6 @@ class AnalysisCompile (conf: BasicConfiguration, bm: EclipseSbtBuildManager, con
               compOptions: Seq[String] = Nil, javaSrcBases: Seq[File] = Nil,
               javacOptions: Seq[String] = Nil, compOrder: CompileOrder.Value = Mixed,
               analysisMap: Map[File, Analysis] = Map.empty, maxErrors: Int = 100)(implicit log: EclipseLogger): Analysis = {
-
         val currentSetup = new CompileSetup(conf.outputDirectory, new CompileOptions(compOptions, javacOptions),
                                          scalac.scalaInstance.actualVersion, Mixed)
         import currentSetup._
@@ -83,7 +82,11 @@ class AnalysisCompile (conf: BasicConfiguration, bm: EclipseSbtBuildManager, con
         val apiOption = (api: Either[Boolean, Source]) => api.right.toOption
         
         // Resolve classpath correctly
-        val compArgs = new CompilerArguments(scalac.scalaInstance, scalac.cp)
+        val compArgs = new CompilerArguments(scalac.scalaInstance,
+            // do not include autoBoot becuase then bootclasspath takes
+            // whatever is set by the env variable and not necessairly what was given
+            // in the project definition
+            ClasspathOptions(true, false, true, false, true))
         val bootClasspath = getPluginBootClasspath(bm.project.javaProject)
         val classpathWithoutJVM: Set[File] = conf.classpath.toSet -- bootClasspath
         val searchClasspath = classpathWithoutJVM ++ bootClasspath
@@ -114,18 +117,17 @@ class AnalysisCompile (conf: BasicConfiguration, bm: EclipseSbtBuildManager, con
 				      if(!scalaSrcs.isEmpty) {
 				      	val sources0 = if(order == Mixed) incSrc else scalaSrcs
                 val argsWithoutOutput = removeSbtOutputDirs(compArgs(sources0, classpathWithoutJVM.toSeq, conf.outputDirectory, options.options).toList)
-                val bootClasspathArgs: Seq[String] =
-                  Seq("-bootclasspath", CompilerArguments.absString(bootClasspath) + File.pathSeparator + scalac.scalaInstance.libraryJar.getAbsolutePath)
-                val arguments = bootClasspathArgs ++ argsWithoutOutput
-
-				      	try {
-				      	  scalac.compile(arguments, callback, maxErrors, log, contr, settings)
-				      	} catch {
-				      	 
-				      	  case err: xsbti.CompileFailed =>
-				      	    scalaError = Some(err)
-				      	}
-				      }
+                
+                val bootClasspathArgs: String = CompilerArguments.absString(bootClasspath) + File.pathSeparator + scalac.scalaInstance.libraryJar.getAbsolutePath
+                val arguments = Seq("-bootclasspath", bootClasspathArgs) ++ argsWithoutOutput
+                settings.javabootclasspath.tryToSet(List(bootClasspathArgs)) // otherwise scala compiler ignores JDK settings
+                try {
+                  scalac.compile(arguments, callback, maxErrors, log, contr, settings)
+                } catch {
+                  case err: xsbti.CompileFailed =>
+                    scalaError = Some(err)
+                }
+              }
             def compileJava() =
               if(!javaSrcs.isEmpty) {
                 import sbt.Path._
