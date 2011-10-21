@@ -56,7 +56,6 @@ object AbstractMethodVerifierTest extends TestProjectSetup("jcompiler") {
   private def one: VerificationMode = times(1)
 }
 
-//@Ignore("Enable this test class when ticket http://scala-ide-portfolio.assembla.com/spaces/scala-ide/tickets/1000662 is fixed.")
 class AbstractMethodVerifierTest {
   import AbstractMethodVerifierTest._
 
