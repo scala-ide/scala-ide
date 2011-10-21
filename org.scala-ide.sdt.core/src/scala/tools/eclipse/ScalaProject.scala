@@ -408,52 +408,50 @@ class ScalaProject(val underlying: IProject) extends HasLogger {
       }
     }
   }
-    
+
   private def checkClasspath() {
-	  // look for all package fragment roots containing instances of scala.Predef
-	  val fragmentRoots= new ListBuffer[IPackageFragmentRoot]
-      for (fragmentRoot <- javaProject.getAllPackageFragmentRoots()) {
-        val fragment= fragmentRoot.getPackageFragment("scala")
-        fragmentRoot.getKind() match {
-          case IPackageFragmentRoot.K_BINARY =>
-            if (fragment.getClassFile("Predef.class").exists())
-              fragmentRoots+= fragmentRoot
-          case _ => // look only in jars. SBT doesn't start without one, and refined is not really happy either
-        }
+    // look for all package fragment roots containing instances of scala.Predef
+    val fragmentRoots = new ListBuffer[IPackageFragmentRoot]
+    for (fragmentRoot <- javaProject.getAllPackageFragmentRoots()) {
+      val fragment = fragmentRoot.getPackageFragment("scala")
+      fragmentRoot.getKind() match {
+        case IPackageFragmentRoot.K_BINARY =>
+          if (fragment.getClassFile("Predef.class").exists())
+            fragmentRoots += fragmentRoot
+        case _ => // look only in jars. SBT doesn't start without one, and refined is not really happy either
       }
-	  
-      // check the found package fragment roots
-	  fragmentRoots.length match {
-	    case 0 => // unable to find any trace of scala library
-          setClasspathError(IMarker.SEVERITY_ERROR, "Unable to find a scala library. Please add the scala container or a scala library jar to the build path.")
-	    case 1 => // one and only one, now check if the version number is contained in library.properties
-          for (resource <- fragmentRoots(0).getNonJavaResources())
-            resource match {
-              case jarEntry: IJarEntryResource if jarEntry.isFile() && "library.properties".equals(jarEntry.getName) =>
-                val properties= new Properties()
-                properties.load(jarEntry.getContents())
-                val version= properties.getProperty("version.number")
-                if (version != null && version == plugin.scalaVer) {
-                  // exactly the same version, should be from the container. Perfect
-                  setClasspathError(0, null)
-                } else {
-                  if (version != null && plugin.cutVersion(version) == plugin.shortScalaVer) {
-                    // compatible version. Still, add warning message
-                    setClasspathError(IMarker.SEVERITY_WARNING, "The version of scala library found in the build path is different from the one provided by scala IDE: " + version + ". Expected: " + plugin.scalaVer + ". Make sure you know what you are doing.")
-                  } else {
-                    // incompatible version
-                    setClasspathError(IMarker.SEVERITY_ERROR, "The version of scala library found in the build path is incompatible with the one provided by scala IDE: " + version + ". Expected: " + plugin.scalaVer + ". Please replace the scala library with the scala container or a compatible scala library jar.")
-                  }
-                }
-                return
-              case _ =>
-            }
-          // no library.properties, not good
-          setClasspathError(IMarker.SEVERITY_ERROR, "The scala library found in the build path doesn't contain a library.properties file. Please replace the scala library with the scala container or a valid scala library jar")
-	    case _ =>  // 2 or more of them, not good
-          setClasspathError(IMarker.SEVERITY_ERROR, "More than one scala library found in the build path. Please update the project build path so it contains only one scala library reference")
-	  }
- }
+    }
+
+    // check the found package fragment roots
+    fragmentRoots.length match {
+      case 0 => // unable to find any trace of scala library
+        setClasspathError(IMarker.SEVERITY_ERROR, "Unable to find a scala library. Please add the scala container or a scala library jar to the build path.")
+      case 1 => // one and only one, now check if the version number is contained in library.properties
+        for (resource <- fragmentRoots(0).getNonJavaResources())
+          resource match {
+            case jarEntry: IJarEntryResource if jarEntry.isFile() && "library.properties".equals(jarEntry.getName) =>
+              val properties = new Properties()
+              properties.load(jarEntry.getContents())
+              val version = properties.getProperty("version.number")
+              if (version != null && version == plugin.scalaVer) {
+                // exactly the same version, should be from the container. Perfect
+                setClasspathError(0, null)
+              } else if (version != null && plugin.cutVersion(version) == plugin.shortScalaVer) {
+                // compatible version (major, minor are the same). Still, add warning message
+                setClasspathError(IMarker.SEVERITY_WARNING, "The version of scala library found in the build path is different from the one provided by scala IDE: " + version + ". Expected: " + plugin.scalaVer + ". Make sure you know what you are doing.")
+              } else {
+                // incompatible version
+                setClasspathError(IMarker.SEVERITY_ERROR, "The version of scala library found in the build path is incompatible with the one provided by scala IDE: " + version + ". Expected: " + plugin.scalaVer + ". Please replace the scala library with the scala container or a compatible scala library jar.")
+              }
+              return
+            case _ =>
+          }
+        // no library.properties, not good
+        setClasspathError(IMarker.SEVERITY_ERROR, "The scala library found in the build path doesn't contain a library.properties file. Please replace the scala library with the scala container or a valid scala library jar")
+      case _ => // 2 or more of them, not good
+        setClasspathError(IMarker.SEVERITY_ERROR, "More than one scala library found in the build path. Please update the project build path so it contains only one scala library reference")
+    }
+  }
   
   private def refreshOutput: Unit = {
     val res = plugin.workspaceRoot.findMember(javaProject.getOutputLocation)

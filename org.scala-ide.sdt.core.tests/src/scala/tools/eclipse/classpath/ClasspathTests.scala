@@ -14,12 +14,16 @@ import org.eclipse.core.resources.IMarker
 import scala.tools.eclipse.ScalaPlugin
 import org.junit.After
 import org.junit.Ignore
+import scala.tools.eclipse.EclipseUserSimulator
+import scala.tools.eclipse.ScalaProject
 
 object ClasspathTests extends TestProjectSetup("classpath")
 
 class ClasspathTests {
   
   import ClasspathTests._
+  
+  val simulator = new EclipseUserSimulator
   
   /**
    * The default classpath, with the eclipse scala container.
@@ -76,8 +80,39 @@ class ClasspathTests {
   @Test
   def usingClasspathVariable() {
     // create a classpath variable
-    JavaCore.setClasspathVariable("CLASSPATH_TEST_LIB", new Path("/classpath/lib/" + ScalaPlugin.plugin.shortScalaVer + ".x/"), new NullProgressMonitor)
+    JavaCore.setClasspathVariable("CLASSPATH_TEST_LIB", new Path(project.underlying.getLocation().toOSString()).append("/lib/" + ScalaPlugin.plugin.shortScalaVer + ".x/"), new NullProgressMonitor)
     setRawClasspathAndCheckMarkers(cleanRawClasspath :+ JavaCore.newVariableEntry(new Path("CLASSPATH_TEST_LIB/scala-library.jar"), null, null), 1, 0)
+  }
+  
+  /**
+   * Two projects are setup with the scala library is defined using a classpath variable.
+   * First the variable points to a different but compatible version, then it points to a bad library.
+   */
+  @Test
+  def changeImpactsMultipleProjects() {
+    // create a classpath variable
+    JavaCore.setClasspathVariable("CLASSPATH_TEST_LIB", new Path(project.underlying.getLocation().toOSString()).append("/lib/" + ScalaPlugin.plugin.shortScalaVer + ".x/"), new NullProgressMonitor)
+    
+    // set the classpath of the 'default' project
+    setRawClasspathAndCheckMarkers(cleanRawClasspath :+ JavaCore.newVariableEntry(new Path("CLASSPATH_TEST_LIB/scala-library.jar"), null, null), 1, 0)
+    
+    // create a second project
+    val secondProject= simulator.createProjectInWorkspace("classpathMultipleProject")
+    
+    val secondProjectCleanRawClasspath= for (classpathEntry <- secondProject.javaProject.getRawClasspath()
+        if classpathEntry.getPath().toPortableString() != "org.scala-ide.sdt.launching.SCALA_CONTAINER")
+      yield classpathEntry
+      
+    // set the classpath of the second project
+    setRawClasspathAndCheckMarkers(secondProjectCleanRawClasspath :+ JavaCore.newVariableEntry(new Path("CLASSPATH_TEST_LIB/scala-library.jar"), null, null), 1, 0, secondProject)
+    
+    // change the classpath variable value to a bad scala library
+    JavaCore.setClasspathVariable("CLASSPATH_TEST_LIB", new Path(project.underlying.getLocation().toOSString()).append("/lib/noproperties/"), new NullProgressMonitor)
+    
+    // check the markers (no warning, one error)
+    checkMarkers(0, 1)
+    checkMarkers(0, 1, secondProject)
+    
   }
 
   /**
@@ -199,28 +234,30 @@ class ClasspathTests {
   /**
    * Set the new classpath and check the number of errors and warnings attached to the project.
    */
-  private def setRawClasspathAndCheckMarkers(newRawClasspath: Array[IClasspathEntry], expectedNbOfWarningMarker: Int, expectedNbOfErrorMarker: Int) {
-    project.javaProject.setRawClasspath(newRawClasspath, new NullProgressMonitor)
-    checkMarkers(expectedNbOfWarningMarker, expectedNbOfErrorMarker)
+  private def setRawClasspathAndCheckMarkers(newRawClasspath: Array[IClasspathEntry], expectedNbOfWarningMarker: Int, expectedNbOfErrorMarker: Int, scalaProject: ScalaProject = project) {
+    scalaProject.javaProject.setRawClasspath(newRawClasspath, new NullProgressMonitor)
+    checkMarkers(expectedNbOfWarningMarker, expectedNbOfErrorMarker, scalaProject)
   }
   
   /**
    * Check the number of errors and warnings attached to the project.
    */
-  private def checkMarkers(expectedNbOfWarningMarker: Int, expectedNbOfErrorMarker: Int) {
-    val TIMEOUT= 5000
+  private def checkMarkers(expectedNbOfWarningMarker: Int, expectedNbOfErrorMarker: Int, scalaProject: ScalaProject= project) {
+    // try for 5 seconds, checking every 200ms
+    val TIMEOUT= 5000 // 5s
+    val STEP= 200 //200ms
     
     // check the classpathValid state
-    assertEquals("Unexpected classpath validity state", expectedNbOfErrorMarker == 0, project.isClasspathValid())
+    assertEquals("Unexpected classpath validity state", expectedNbOfErrorMarker == 0, scalaProject.isClasspathValid())
     
     var nbOfWarningMarker= 0
     var nbOfErrorMarker= 0
     
-    for (i <- 1 to (TIMEOUT / 200)) {
+    for (i <- 1 to (TIMEOUT / STEP)) {
       // count the markers on the project
       nbOfWarningMarker= 0
       nbOfErrorMarker= 0
-      for (marker <- project.underlying.findMarkers("org.scala-ide.sdt.core.problem", false, IResource.DEPTH_ZERO))
+      for (marker <- scalaProject.underlying.findMarkers("org.scala-ide.sdt.core.problem", false, IResource.DEPTH_ZERO))
         marker.getAttribute(IMarker.SEVERITY, 0) match {
         case IMarker.SEVERITY_ERROR => nbOfErrorMarker+=1
         case IMarker.SEVERITY_WARNING => nbOfWarningMarker+=1
@@ -233,7 +270,7 @@ class ClasspathTests {
       }
       
       // wait a bit before trying again
-      Thread.sleep(200)
+      Thread.sleep(STEP)
     }
     
     // after TIMEOUT, we didn't get the expected value

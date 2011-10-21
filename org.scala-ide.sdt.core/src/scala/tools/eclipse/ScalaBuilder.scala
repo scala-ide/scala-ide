@@ -36,14 +36,14 @@ class ScalaBuilder extends IncrementalProjectBuilder with HasLogger {
     import IncrementalProjectBuilder._
     import buildmanager.sbtintegration.EclipseSbtBuildManager
     
+    val project = plugin.getScalaProject(getProject)
+    
     // check the classpath
-    if (!plugin.getScalaProject(getProject).isClasspathValid()) {
+    if (!project.isClasspathValid()) {
       // bail out is the classpath in not valid
       return new Array[IProject](0)
     }
 
-    val project = plugin.getScalaProject(getProject)
-    
     val allSourceFiles = project.allSourceFiles()
     
     val (addedOrUpdated, removed) = if (project.prepareBuild())
