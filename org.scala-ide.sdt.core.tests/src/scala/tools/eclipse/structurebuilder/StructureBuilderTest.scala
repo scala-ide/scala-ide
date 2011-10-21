@@ -14,6 +14,7 @@ import scala.collection.mutable.ListBuffer
 import scala.tools.eclipse.javaelements.ScalaCompilationUnit
 import org.eclipse.jdt.internal.corext.util.JavaModelUtil
 import org.eclipse.core.runtime.NullProgressMonitor
+import org.eclipse.jdt.internal.junit.launcher.JUnit4TestFinder
 
 object StructureBuilderTest extends testsetup.TestProjectSetup("simple-structure-builder")
 
@@ -94,6 +95,15 @@ class StructureBuilderTest {
 
     // search again for annotations
     testSearchIndexAnnotations()
+  }
+  
+  @Test def junit4TestRunnerSearch {
+    val root = compilationUnit("annots/ScalaTestSuite.scala").getJavaProject()
+    val finder = new JUnit4TestFinder
+    val set = new java.util.HashSet[Object]()
+    
+    finder.findTestsInContainer(root, set, null)
+    Assert.assertEquals("Should find tests using the JUnit 4 test finder", 1, set.size())
   }
 
   /** Test the structure as seen by the JDT. Use the JDT API to 
