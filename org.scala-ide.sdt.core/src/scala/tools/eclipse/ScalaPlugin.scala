@@ -212,8 +212,10 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
 
         case PACKAGE_FRAGMENT_ROOT =>
           if (isRemoved || hasFlag(F_REMOVED_FROM_CLASSPATH | F_ADDED_TO_CLASSPATH | F_ARCHIVE_CONTENT_CHANGED)) {
-            logger.info("package fragment root changed (resetting pres compiler): " + elem)
-            getScalaProject(elem.getJavaProject.getProject).resetPresentationCompiler
+            if (isScalaProject(elem.getJavaProject())) {
+              logger.info("package fragment root changed (resetting pres compiler): " + elem)
+              getScalaProject(elem.getJavaProject.getProject).resetPresentationCompiler
+            }
             false
           } else true
 
@@ -266,7 +268,20 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
     }
   }
 
-  def isBuildable(file: IFile) = (file.getName.endsWith(scalaFileExtn) || file.getName.endsWith(javaFileExtn))
+  /** Is the file buildable by the Scala plugin? In other words, is it a
+   *  Java or Scala source file?
+   *  
+   *  @note If you don't have an IFile yet, prefer the String overload, as 
+   *        creating an IFile is usually expensive
+   */
+  def isBuildable(file: IFile): Boolean = 
+    isBuildable(file.getName())
+  
+  /** Is the file buildable by the Scala plugin? In other words, is it a
+   *  Java or Scala source file?
+   */
+  def isBuildable(fileName: String): Boolean = 
+    (fileName.endsWith(scalaFileExtn) || fileName.endsWith(javaFileExtn))
 
   // IPartListener
   def partActivated(part: IWorkbenchPart) {}

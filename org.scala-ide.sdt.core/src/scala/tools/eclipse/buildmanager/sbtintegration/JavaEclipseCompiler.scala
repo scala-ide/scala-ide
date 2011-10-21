@@ -7,7 +7,7 @@ import org.eclipse.core.resources.{ IncrementalProjectBuilder, IProject}
 import scala.tools.eclipse.javaelements.JDTUtils
 import scala.tools.eclipse.util.FileUtils
 import org.eclipse.jdt.internal.core.JavaModelManager
-import org.eclipse.jdt.internal.core.builder.{ JavaBuilder, NameEnvironment, State }
+import org.eclipse.jdt.internal.core.builder.{ JavaBuilder, State }
 import org.eclipse.core.resources.ResourcesPlugin
 import org.eclipse.core.resources.IResource
 
