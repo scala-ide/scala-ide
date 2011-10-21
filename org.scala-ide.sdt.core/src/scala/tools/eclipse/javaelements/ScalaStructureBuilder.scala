@@ -605,6 +605,8 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
       override def addDef(d: DefDef): Owner = addDef(d.symbol)
 
       override def addDef(sym: Symbol): Owner = {
+        
+        
         val isCtor0 = sym.isConstructor
         val nameString =
           if(isCtor0)
@@ -613,14 +615,31 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
             sym.name.toString
             
         val fps = sym.paramss.flatten
-        val paramNames = Array(fps.map(n => nme.getterName(n.name).toChars) : _*)
-        
         val javaSig = javaSigOf(sym)
         
         val paramsTypeSigs =
             if(javaSig.isDefined) javaSig.paramsTypeSig
             else fps.map(s => mapParamTypeSignature(s.info)).toArray
+
+        /** Return the parameter names. Make sure that parameter names and the
+         *  parameter types have the same length. A mismatch here will crash the JDT later.
+         */
+        def paramNames: (Array[Array[Char]]) = {
+          val originalParamNames = fps.map(n => nme.getterName(n.name).toChars)
+          val res = ((paramsTypeSigs.length - originalParamNames.length ) match {
+            case 0 => 
+              originalParamNames
+            case 1 => 
+              "outer".toCharArray() :: originalParamNames
+            case _ => 
+              logger.debug("Parameter names and signatures differ by more than 1: %s, %s".format(originalParamNames, paramsTypeSigs))
+              originalParamNames.zip(paramsTypeSigs).map(_._1) // `zip` stops at the shortest list, so this trims to the shortest of the two
+          })
+          
+          res.toArray
+        }
         
+
         val display = if (sym ne NoSymbol) sym.nameString + sym.infoString(sym.info) else sym.name.toString + " (no info)"
 
         val defElem = 

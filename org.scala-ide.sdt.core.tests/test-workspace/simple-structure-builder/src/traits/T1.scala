@@ -17,4 +17,7 @@ trait T1 {
   type Z
   
   class Inner
+
+  class InnerWithGenericParams(xs: List[Int]) {
+  }
 }
