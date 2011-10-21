@@ -8,7 +8,7 @@ import org.eclipse.core.runtime.CoreException
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.core.search.IJavaSearchConstants
 import org.eclipse.jdt.internal.codeassist.ISearchRequestor
-import org.eclipse.jdt.internal.compiler.env.{ AccessRestriction, INameEnvironment }
+import org.eclipse.jdt.internal.compiler.env.{ AccessRestriction }
 import org.eclipse.jdt.internal.core.{ DefaultWorkingCopyOwner, JavaProject }
 import org.eclipse.jdt.internal.ui.text.correction.{ SimilarElement, SimilarElementsRequestor }
 import org.eclipse.jdt.ui.text.java._

@@ -10,7 +10,7 @@ import java.{ lang => jl, util => ju }
 import org.eclipse.core.resources.{ IFile, IncrementalProjectBuilder, IProject, IResource, IResourceDelta, IResourceDeltaVisitor, IResourceVisitor }
 import org.eclipse.core.runtime.{ IProgressMonitor, IPath, SubMonitor }
 import org.eclipse.jdt.internal.core.JavaModelManager
-import org.eclipse.jdt.internal.core.builder.{ JavaBuilder, NameEnvironment, State }
+import org.eclipse.jdt.internal.core.builder.{ JavaBuilder, State }
 import scala.tools.eclipse.javaelements.JDTUtils
 import scala.tools.eclipse.util.{ FileUtils, ReflectionUtils }
 import util.HasLogger
