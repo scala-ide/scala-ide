@@ -91,21 +91,35 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
           info.setIsStructureKnown(false)
           
         case ex => 
-          if (lastCrash != ex) {
-            lastCrash = ex
-            logger.error("Compiler crash while building structure for %s".format(sourceFile), ex)
-          }
+          handleCrash("Compiler crash while building structure for %s".format(file), ex)
           info.setIsStructureKnown(false)
       }
       info.isStructureKnown
     }) (false)
 
   def scheduleReconcile(): Unit = ()
+
+  /** Log an error at most once for this source file. */
+  private def handleCrash(msg: String, ex: Throwable) {
+    if (lastCrash != ex) {
+      lastCrash = ex
+      logger.error(msg, ex)
+    }
+  }
   
+  /** Index this source file, but only if the project has the Scala nature.
+   * 
+   *  This avoids crashes if the indexer kicks in on a project that has Scala sources
+   *  but no Scala library on the classpath.
+   */
   def addToIndexer(indexer : ScalaSourceIndexer) {
-    doWithSourceFile { (source, compiler) =>
-      compiler.withParseTree(source) { tree =>
-        new compiler.IndexBuilderTraverser(indexer).traverse(tree)
+    if (project.hasScalaNature) {
+      try doWithSourceFile { (source, compiler) =>
+        compiler.withParseTree(source) { tree =>
+          new compiler.IndexBuilderTraverser(indexer).traverse(tree)
+        }
+      } catch {
+        case ex => handleCrash("Compiler crash during indexing of %s".format(getResource()), ex)
       }
     }
   }
@@ -188,19 +202,19 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
   }
   
   override def createOverrideIndicators(annotationMap : JMap[_, _]) {
-    doWithSourceFile { (sourceFile, compiler) =>
-      try {
-        compiler.withStructure(sourceFile, keepLoaded = true) { tree =>
-          compiler.askOption { () =>
-            new compiler.OverrideIndicatorBuilderTraverser(this, annotationMap.asInstanceOf[JMap[AnyRef, AnyRef]]).traverse(tree)
+    if (project.hasScalaNature)
+      doWithSourceFile { (sourceFile, compiler) =>
+        try {
+          compiler.withStructure(sourceFile, keepLoaded = true) { tree =>
+            compiler.askOption { () =>
+              new compiler.OverrideIndicatorBuilderTraverser(this, annotationMap.asInstanceOf[JMap[AnyRef, AnyRef]]).traverse(tree)
+            }
           }
+        } catch {
+          case ex =>
+            handleCrash("Exception thrown while creating override indicators for %s".format(sourceFile), ex)
         }
-      } catch {
-        case ex =>
-          // any exception thrown here is likely to crash the reconciler. Better not
-          logger.error("Exception thrown while creating override indicators", ex)
       }
-    }
   }
   
   override def getImageDescriptor = {
