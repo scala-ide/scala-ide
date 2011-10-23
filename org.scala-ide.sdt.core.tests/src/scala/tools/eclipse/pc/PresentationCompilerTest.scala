@@ -6,15 +6,14 @@ import scala.tools.eclipse.javaelements.ScalaSourceFile
 import scala.tools.eclipse.testsetup.SDTTestUtils
 import scala.tools.eclipse.util.Logger
 import scala.tools.nsc.interactive.InteractiveReporter
-
 import org.eclipse.jdt.core.ICompilationUnit
 import org.junit.Assert._
 import org.junit._
 import org.mockito.Matchers._
 import org.mockito.Mockito._
-import scala.tools.eclipse.testsetup.CustomAssertion.assertNoErrors
+import scala.tools.eclipse.hyperlinks.HyperlinkTester
 
-object PresentationCompilerTest extends testsetup.TestProjectSetup("pc")
+object PresentationCompilerTest extends testsetup.TestProjectSetup("pc") with HyperlinkTester
 
 class PresentationCompilerTest {
   import PresentationCompilerTest._
@@ -58,7 +57,7 @@ class PresentationCompilerTest {
     waitUntilTypechecked(dataFlowUnit)
 
     // verify
-    assertNoErrors(project, dataFlowUnit)
+    assertNoErrors(dataFlowUnit)
   }
 
   @Ignore("Enable test when ticket #1000658 is fixed")
@@ -69,6 +68,20 @@ class PresentationCompilerTest {
     //then
     reload(unit)
     // verify
-    assertNoErrors(project, unit)
+    assertNoErrors(unit)
+  }
+  
+  @Ignore("Enable test when ticket #1000692 is fixed")
+  @Test
+  def notEnoughArgumentsForCconstructorError_ShouldNotBeReported_t1000692() {
+    //when
+    val unit = scalaCompilationUnit("t1000692/akka/util/ReflectiveAccess.scala")
+    val oracle = List(Link("class t1000692.akka.config.ModuleNotAvailableException"))
+    //then
+    // it is important to ask hyperlinking before reloading!
+    loadTestUnit(unit).andCheckAgainst(oracle) 
+    reload(unit)
+    // verify
+    assertNoErrors(unit)
   }
 }
