@@ -22,7 +22,6 @@ import scala.tools.eclipse.util.EclipseResource
 import java.io.File
 import scala.tools.eclipse.util.HasLogger
 
-
 class AnalysisCompile (conf: BasicConfiguration, bm: EclipseSbtBuildManager, contr: Controller) extends HasLogger {
     import AnalysisFormats._
     private lazy val store = AnalysisStore.sync(AnalysisStore.cached(FileBasedStore(EclipseResource(conf.cacheLocation).file)))
@@ -49,8 +48,8 @@ class AnalysisCompile (conf: BasicConfiguration, bm: EclipseSbtBuildManager, con
     
     def doCompile(scalac: ScalaSbtCompiler, javac: JavaEclipseCompiler,
               sources: Seq[File],  reporter: Reporter, settings: Settings,
-              compOptions: Seq[String] = Nil, javaSrcBases: Seq[File] = Nil,
-              javacOptions: Seq[String] = Nil, compOrder: CompileOrder.Value = Mixed,
+              compOrder: CompileOrder.Value, compOptions: Seq[String] = Nil,
+              javaSrcBases: Seq[File] = Nil, javacOptions: Seq[String] = Nil, 
               analysisMap: Map[File, Analysis] = Map.empty, maxErrors: Int = 100)(implicit log: EclipseLogger): Analysis = {
 
         val currentSetup = new CompileSetup(conf.outputDirectory, new CompileOptions(compOptions, javacOptions),

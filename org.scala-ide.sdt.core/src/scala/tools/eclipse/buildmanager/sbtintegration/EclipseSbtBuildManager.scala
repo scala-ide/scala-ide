@@ -150,9 +150,20 @@ private class SbtBuildReporter(underlying: BuildReporter) extends xsbti.Reporter
 	}
 }
 
-
 trait EclipseLogger extends sbt.Logger {
   def flush(): Unit
+}
+
+object CompileOrderMapper {
+  import sbt.CompileOrder
+  import CompileOrder.{JavaThenScala, Mixed, ScalaThenJava}
+  def apply(order: String): CompileOrder.Value = 
+    order match {
+      case "Mixed"         => Mixed
+      case "JavaThenScala" => JavaThenScala
+      case "ScalaThenJava" => ScalaThenJava
+      case _               => Mixed
+  }
 }
 
 class SbtBuildLogger(underlying: BuildReporter) extends EclipseLogger {
@@ -345,8 +356,9 @@ class EclipseSbtBuildManager(project: ScalaProject, settings0: Settings)
               project, Seq(scalac.scalaInstance.libraryJar, compInterfaceJar.get.toFile) ++ cp)
       
       val analysisComp = new AnalysisCompile(conf, this, new SbtProgress())
+  	  val order = project.storage.getString(SettingConverterUtil.convertNameToProperty(properties.ScalaPluginSettings.compileOrder.name))
       val result = analysisComp.doCompile(
-              scalac, javac, sources, reporter, settings0)
+              scalac, javac, sources, reporter, settings0, CompileOrderMapper(order))
   }
   
   /** Not supported */
