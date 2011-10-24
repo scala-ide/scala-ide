@@ -84,7 +84,7 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
   val javaFileExtn = ".java"
   val jarFileExtn = ".jar"
 
-  private def cutVersion(version: String): String = {
+  def cutVersion(version: String): String = {
           val pattern = "(\\d)\\.(\\d+)\\..*".r
           version match {
             case pattern(major, minor)=>
@@ -135,11 +135,11 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
 
     if (!headlessMode) {
       ResourcesPlugin.getWorkspace.addResourceChangeListener(this, IResourceChangeEvent.PRE_CLOSE)
-      JavaCore.addElementChangedListener(this)
       PlatformUI.getWorkbench.getEditorRegistry.setDefaultEditor("*.scala", editorId)
       ScalaPlugin.getWorkbenchWindow map (_.getPartService().addPartListener(ScalaPlugin.this))
       diagnostic.StartupDiagnostics.run
     }
+    JavaCore.addElementChangedListener(this)
     logger.info("Scala compiler bundle: " + scalaCompilerBundle.getLocation)
   }
 
@@ -159,6 +159,17 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
         val scalaProject = new ScalaProject(project)
         projects(project) = scalaProject
         scalaProject
+    }
+  }
+  
+  /**
+   * Return Some(ScalaProject) if the project has the Scala nature, None otherwise.
+   */
+  def asScalaProject(project: IProject): Option[ScalaProject]= {
+    if (isScalaProject(project)) {
+      Some(getScalaProject(project))
+    } else {
+      None
     }
   }
 
@@ -195,12 +206,32 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
   
   override def elementChanged(event: ElementChangedEvent) {
     import scala.collection.mutable.ListBuffer
+    import IJavaElement._
+    import IJavaElementDelta._
+
+    // check if the changes are linked with the build path
+    val modelDelta= event.getDelta()
+    
+    // check that the notification is about a change (CHANGE) of some elements (F_CHILDREN) of the java model (JAVA_MODEL)
+    if (JAVA_MODEL == modelDelta.getElement().getElementType() && modelDelta.getKind() == CHANGED && (modelDelta.getFlags() & F_CHILDREN) != 0) {
+      for (innerDelta <- modelDelta.getAffectedChildren()) {
+        // check that the notification no the child is about a change (CHANDED) relative to a resolved classpath change (F_RESOLVED_CLASSPATH_CHANGED)
+        if (innerDelta.getKind() == CHANGED && (innerDelta.getFlags() & IJavaElementDelta.F_RESOLVED_CLASSPATH_CHANGED) != 0) {
+          innerDelta.getElement() match {
+            // classpath change should only impact projects
+            case javaProject: IJavaProject => {
+              asScalaProject(javaProject.getProject()).foreach(_.classpathHasChanged())
+            }
+            case _ =>
+          }
+        }
+      }
+    }
+
+    // process deleted files
     val buff = new ListBuffer[ScalaSourceFile]
 
     def findRemovedSources(delta: IJavaElementDelta) {
-      import IJavaElement._
-      import IJavaElementDelta._
-
       val isChanged = delta.getKind == CHANGED
       val isRemoved = delta.getKind == REMOVED
       def hasFlag(flag: Int) = (delta.getFlags & flag) != 0
@@ -212,10 +243,8 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
 
         case PACKAGE_FRAGMENT_ROOT =>
           if (isRemoved || hasFlag(F_REMOVED_FROM_CLASSPATH | F_ADDED_TO_CLASSPATH | F_ARCHIVE_CONTENT_CHANGED)) {
-            if (isScalaProject(elem.getJavaProject())) {
-              logger.info("package fragment root changed (resetting pres compiler): " + elem)
-              getScalaProject(elem.getJavaProject.getProject).resetPresentationCompiler
-            }
+            logger.info("package fragment root changed (resetting pres compiler): " + elem)
+            asScalaProject(elem.getJavaProject.getProject).foreach(_.resetPresentationCompiler)
             false
           } else true
 

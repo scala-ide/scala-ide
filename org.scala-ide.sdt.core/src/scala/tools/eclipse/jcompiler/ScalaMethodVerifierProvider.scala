@@ -43,16 +43,17 @@ class ScalaMethodVerifierProvider extends IMethodVerifierProvider with HasLogger
    */
   def isConcreteTraitMethod(abstractMethod: MethodBinding): Boolean = {
     val project = findProjectOf(abstractMethod)
-
-    if (ScalaPlugin.plugin.isScalaProject(project)) {
-      val scalaProject = ScalaPlugin.plugin.getScalaProject(project)
-      Utils.tryExecute {
-        isConcreteTraitMethod(abstractMethod, scalaProject)
-      }(orElse = false)
-    } else {
-      logger.debug("`%s` is not a Scala Project. %s".format(project.getName(), JDTMethodVerifierCarryOnMsg))
-      false
+    
+    ScalaPlugin.plugin.asScalaProject(project) match {
+      case Some(scalaProject) =>
+        Utils.tryExecute {
+          isConcreteTraitMethod(abstractMethod, scalaProject)
+        }(orElse = false)
+      case None =>
+        logger.debug("`%s` is not a Scala Project. %s".format(project.getName(), JDTMethodVerifierCarryOnMsg))
+        false
     }
+
   }
 
   private def findProjectOf(abstractMethod: MethodBinding): IProject = {
