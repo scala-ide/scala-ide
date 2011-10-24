@@ -12,7 +12,7 @@ object SettingsCleanup {
     val toDefault = Set(s.d, s.Ybuildmanagerdebug, s.Ybuilderdebug, s.sourcepath, s.sourcedir,
                          s.YpresentationDebug, s.YpresentationDelay, s.YpresentationLog,
                          s.YpresentationReplay, s.YpresentationVerbose,
-                         s.classpath)
+                         s.classpath, s.bootclasspath)
     val s1 = new Settings(Log.settingsError(log))
     val xs = (s.userSetSettings -- toDefault).toList flatMap (_.unparse)
 
@@ -28,10 +28,7 @@ object SettingsCleanup {
  * So this is a simplified interface for the compiler that doesn't need dual loader.
  * But in the near future this will use a dual loader.
  */
-class ScalaSbtCompiler(val settings: Settings,
-        val scalaInstance: ScalaInstance,
-        val cp: ClasspathOptions,
-        reporter: Reporter) {
+class ScalaSbtCompiler(val scalaInstance: ScalaInstance, reporter: Reporter) {
   def compile(args: Seq[String], callback: AnalysisCallback, maxErrors:Int, log: Logger, contr: Controller, s: Settings) {
     val cInterface = new xsbt.CompilerInterface
     val properSettingsWithErrorReporting = SettingsCleanup(s, log)
