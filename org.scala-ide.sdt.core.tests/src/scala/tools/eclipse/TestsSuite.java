@@ -1,5 +1,6 @@
 package scala.tools.eclipse;
 
+import scala.tools.eclipse.classpath.ClasspathTests;
 import scala.tools.eclipse.completion.CompletionTests;
 
 import scala.tools.eclipse.hyperlinks.HyperlinkDetectorTests;
@@ -36,5 +37,6 @@ import org.junit.runners.Suite;
   SbtBuilderTest.class,
   PresentationCompilerTest.class,
   OutputFoldersTest.class,
+  ClasspathTests.class,
 })
 class TestsSuite { }

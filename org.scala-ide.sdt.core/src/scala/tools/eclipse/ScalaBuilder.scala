@@ -11,6 +11,7 @@ import org.eclipse.core.resources.{ IFile, IncrementalProjectBuilder, IProject, 
 import org.eclipse.core.runtime.{ IProgressMonitor, IPath, SubMonitor }
 import org.eclipse.jdt.internal.core.JavaModelManager
 import org.eclipse.jdt.internal.core.builder.{ JavaBuilder, State }
+
 import scala.tools.eclipse.javaelements.JDTUtils
 import scala.tools.eclipse.util.{ FileUtils, ReflectionUtils }
 import util.HasLogger
@@ -34,9 +35,15 @@ class ScalaBuilder extends IncrementalProjectBuilder with HasLogger {
   override def build(kind : Int, ignored : ju.Map[_, _], monitor : IProgressMonitor) : Array[IProject] = {
     import IncrementalProjectBuilder._
     import buildmanager.sbtintegration.EclipseSbtBuildManager
-
+    
     val project = plugin.getScalaProject(getProject)
     
+    // check the classpath
+    if (!project.isClasspathValid()) {
+      // bail out is the classpath in not valid
+      return new Array[IProject](0)
+    }
+
     val allSourceFiles = project.allSourceFiles()
     
     val (addedOrUpdated, removed) = if (project.prepareBuild())

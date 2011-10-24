@@ -25,9 +25,16 @@ import util.SWTUtils.asyncExec
 import EclipseUtils.workspaceRunnableIn
 import scala.tools.eclipse.properties.CompilerSettings
 import scala.tools.eclipse.util.HasLogger
+import scala.collection.mutable.ListBuffer
+import scala.actors.Actor
+import org.eclipse.jdt.core.IJarEntryResource
+import java.util.Properties
+import org.eclipse.jdt.core.IPackageFragmentRoot
+import org.eclipse.core.runtime.jobs.Job
+import org.eclipse.core.runtime.IStatus
+import org.eclipse.core.runtime.Status
 
-
-trait BuildSuccessListener {   
+trait BuildSuccessListener {
   def buildSuccessful(): Unit
 }
 
@@ -37,8 +44,10 @@ class ScalaProject(val underlying: IProject) extends HasLogger {
   private var classpathUpdate: Long = IResource.NULL_STAMP
   private var buildManager0: EclipseBuildManager = null
   private var hasBeenBuilt = false
-  private val resetPendingLock = new Object
-  private var resetPending = false
+  
+  private var classpathCheckLock= new Object
+  private var classpathHasBeenChecked= false
+  private var classpathValid= false;
   
   private val buildListeners = new mutable.HashSet[BuildSuccessListener]
 
@@ -48,7 +57,6 @@ class ScalaProject(val underlying: IProject) extends HasLogger {
 
   private val presentationCompiler = new Cached[Option[ScalaPresentationCompiler]] {
     override def create() = {
-      checkClasspathTimeStamp(shouldReset = false)
       try {
         val settings = new Settings
         settings.printtypes.tryToSet(Nil)
@@ -341,23 +349,110 @@ class ScalaProject(val underlying: IProject) extends HasLogger {
       case _ =>
     }
   }
-  
-  /** Check if the .classpath file has been changed since the last check.
-   *  If the saved timestamp does not match the file timestamp, reset the
-   *  two compilers.
+
+  /**
+   * Manage the possible classpath error/warning reported on the project.
    */
-  def checkClasspathTimeStamp(shouldReset: Boolean): Unit = plugin.check {
-    val cp = underlying.getFile(".classpath")
-    if (cp.exists)
-      classpathUpdate match {
-        case IResource.NULL_STAMP => classpathUpdate = cp.getModificationStamp()
-        case stamp if stamp == cp.getModificationStamp() =>
-        case _ =>
-          classpathUpdate = cp.getModificationStamp()
-          if (shouldReset) resetCompilers()
+  private def setClasspathError(severity: Int, message: String) {
+    // set the state
+    classpathValid= severity != IMarker.SEVERITY_ERROR
+    classpathHasBeenChecked= true
+    
+    // the marker manipulation need to be done in a Job, because it requires
+    // a change on the IProject, which is locked for modification during
+    // the classpath change notification
+    val markerJob= new Job("Update classpath error marker") {
+      override def run(monitor: IProgressMonitor): IStatus = {
+          // clean the markers
+          underlying.deleteMarkers(plugin.problemMarkerId, false, IResource.DEPTH_ZERO)
+          
+          // add a new marker if needed
+          severity match {
+            case IMarker.SEVERITY_ERROR | IMarker.SEVERITY_WARNING =>
+              val marker= underlying.createMarker(plugin.problemMarkerId)
+              marker.setAttribute(IMarker.MESSAGE, message)
+              marker.setAttribute(IMarker.SEVERITY, severity)
+            case _ =>
+          }
+          Status.OK_STATUS
       }
+    }
+    markerJob.setRule(underlying)
+    markerJob.schedule()
+  }
+  
+  /**
+   * Return <code>true</code> if the classpath is deemed valid.
+   * Check the classpath if it has not been checked yet.
+   */
+  def isClasspathValid(): Boolean = {
+    classpathCheckLock.synchronized {
+      if (!classpathHasBeenChecked)
+        checkClasspath()
+      classpathValid
+    }
+  }
+  
+  /**
+   * Check if the classpath is valid for scala.
+   * It is said valid if it contains one and only scala library jar, with a version compatible
+   * with the one from the scala-ide plug-in
+   */
+  def classpathHasChanged() {
+    classpathCheckLock.synchronized {
+      try {
+        resetCompilers()
+        // mark as in progress
+        classpathHasBeenChecked= false
+        checkClasspath()
+      }
+    }
   }
 
+  private def checkClasspath() {
+    // look for all package fragment roots containing instances of scala.Predef
+    val fragmentRoots = new ListBuffer[IPackageFragmentRoot]
+    for (fragmentRoot <- javaProject.getAllPackageFragmentRoots()) {
+      val fragment = fragmentRoot.getPackageFragment("scala")
+      fragmentRoot.getKind() match {
+        case IPackageFragmentRoot.K_BINARY =>
+          if (fragment.getClassFile("Predef.class").exists())
+            fragmentRoots += fragmentRoot
+        case _ => // look only in jars. SBT doesn't start without one, and refined is not really happy either
+      }
+    }
+
+    // check the found package fragment roots
+    fragmentRoots.length match {
+      case 0 => // unable to find any trace of scala library
+        setClasspathError(IMarker.SEVERITY_ERROR, "Unable to find a scala library. Please add the scala container or a scala library jar to the build path.")
+      case 1 => // one and only one, now check if the version number is contained in library.properties
+        for (resource <- fragmentRoots(0).getNonJavaResources())
+          resource match {
+            case jarEntry: IJarEntryResource if jarEntry.isFile() && "library.properties".equals(jarEntry.getName) =>
+              val properties = new Properties()
+              properties.load(jarEntry.getContents())
+              val version = properties.getProperty("version.number")
+              if (version != null && version == plugin.scalaVer) {
+                // exactly the same version, should be from the container. Perfect
+                setClasspathError(0, null)
+              } else if (version != null && plugin.cutVersion(version) == plugin.shortScalaVer) {
+                // compatible version (major, minor are the same). Still, add warning message
+                setClasspathError(IMarker.SEVERITY_WARNING, "The version of scala library found in the build path is different from the one provided by scala IDE: " + version + ". Expected: " + plugin.scalaVer + ". Make sure you know what you are doing.")
+              } else {
+                // incompatible version
+                setClasspathError(IMarker.SEVERITY_ERROR, "The version of scala library found in the build path is incompatible with the one provided by scala IDE: " + version + ". Expected: " + plugin.scalaVer + ". Please replace the scala library with the scala container or a compatible scala library jar.")
+              }
+              return
+            case _ =>
+          }
+        // no library.properties, not good
+        setClasspathError(IMarker.SEVERITY_ERROR, "The scala library found in the build path doesn't contain a library.properties file. Please replace the scala library with the scala container or a valid scala library jar")
+      case _ => // 2 or more of them, not good
+        setClasspathError(IMarker.SEVERITY_ERROR, "More than one scala library found in the build path. Please update the project build path so it contains only one scala library reference")
+    }
+  }
+  
   private def refreshOutput: Unit = {
     val res = plugin.workspaceRoot.findMember(javaProject.getOutputLocation)
     if (res ne null)
@@ -484,7 +579,6 @@ class ScalaProject(val underlying: IProject) extends HasLogger {
   }
 
   def buildManager = {
-    checkClasspathTimeStamp(shouldReset = true)
     if (buildManager0 == null) {
       val settings = new Settings
       initialize(settings, _ => true)
@@ -544,6 +638,10 @@ class ScalaProject(val underlying: IProject) extends HasLogger {
 
   def clean(implicit monitor: IProgressMonitor) = {
     underlying.deleteMarkers(plugin.problemMarkerId, true, IResource.DEPTH_INFINITE)
+    // mark the classpath as not checked
+    classpathCheckLock.synchronized {
+      classpathHasBeenChecked= false
+    }
     resetCompilers
     if (buildManager0 != null)
       buildManager0.clean(monitor)
