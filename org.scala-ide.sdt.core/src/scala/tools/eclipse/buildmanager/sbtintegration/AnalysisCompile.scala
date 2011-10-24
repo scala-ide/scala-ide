@@ -49,7 +49,7 @@ class AnalysisCompile (conf: BasicConfiguration, bm: EclipseSbtBuildManager, con
       }
     }
     
-    def getPluginBootClasspath(jProject: IJavaProject) = {
+    def getJdkPath(jProject: IJavaProject) = {
       val rawClasspath = bm.project.javaProject.getRawClasspath()
       rawClasspath.toSeq.flatMap(cp =>
         cp.getEntryKind match {
@@ -86,10 +86,10 @@ class AnalysisCompile (conf: BasicConfiguration, bm: EclipseSbtBuildManager, con
             // do not include autoBoot becuase then bootclasspath takes
             // whatever is set by the env variable and not necessairly what was given
             // in the project definition
-            ClasspathOptions(true, false, true, false, true))
-        val bootClasspath = getPluginBootClasspath(bm.project.javaProject)
-        val classpathWithoutJVM: Set[File] = conf.classpath.toSet -- bootClasspath
-        val searchClasspath = classpathWithoutJVM ++ bootClasspath
+            ClasspathOptions(bootLibrary = true, compiler = false, extra = true, autoBoot = false, filterLibrary = true))
+        val jrePath = getJdkPath(bm.project.javaProject)
+        val classpathWithoutJVM: Set[File] = conf.classpath.toSet -- jrePath
+        val searchClasspath = classpathWithoutJVM ++ jrePath
         val entry = Locate.entry(searchClasspath.toSeq, Locate.definesClass) // use default defineClass for now
 
         
@@ -118,7 +118,7 @@ class AnalysisCompile (conf: BasicConfiguration, bm: EclipseSbtBuildManager, con
 				      	val sources0 = if(order == Mixed) incSrc else scalaSrcs
                 val argsWithoutOutput = removeSbtOutputDirs(compArgs(sources0, classpathWithoutJVM.toSeq, conf.outputDirectory, options.options).toList)
                 
-                val bootClasspathArgs: String = CompilerArguments.absString(bootClasspath) + File.pathSeparator + scalac.scalaInstance.libraryJar.getAbsolutePath
+                val bootClasspathArgs: String = CompilerArguments.absString(jrePath) + File.pathSeparator + scalac.scalaInstance.libraryJar.getAbsolutePath
                 val arguments = Seq("-bootclasspath", bootClasspathArgs) ++ argsWithoutOutput
                 settings.javabootclasspath.tryToSet(List(bootClasspathArgs)) // otherwise scala compiler ignores JDK settings
                 try {
