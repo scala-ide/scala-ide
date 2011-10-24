@@ -26,6 +26,7 @@ import scala.tools.eclipse.util.ReflectionUtils
 trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentationCompiler =>
 
   class StructureBuilderTraverser(scu : ScalaCompilationUnit, unitInfo : OpenableElementInfo, newElements0 : JMap[AnyRef, AnyRef], sourceLength : Int) {
+    
     private def companionClassOf(s: Symbol): Symbol =
       try {
         s.companionClass
@@ -63,7 +64,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
      */
     def unresolvedType(tree: Tree): String = "null-Type"
     
-    trait Owner {
+    trait Owner {self =>
       def parent : Owner
       def jdtOwner = this
 
@@ -100,7 +101,22 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
       def modules : Map[Symbol, ScalaElementInfo] = Map.empty 
       def classes : Map[Symbol, (ScalaElement, ScalaElementInfo)] = Map.empty
       
-      def complete {
+      def complete(treeTraverser: TreeTraverser) {
+        def addModuleInnerClasses(classElem : ScalaElement, classElemInfo : ScalaElementInfo, module: Symbol) {
+          for(nestedClasses <- treeTraverser.module2innerClassDefs.get(module); nestedClazz <- nestedClasses) {
+            /* The nested classes are exposed as children of the module's companion class. */
+            val classBuilder = new Builder {
+              val parent = self
+              val element = classElem
+              val elementInfo = classElemInfo
+
+              override def isTemplate = true
+              override def template = this
+            }
+            treeTraverser.traverse(nestedClazz, classBuilder)
+          }
+        }
+        
         def addForwarders(classElem : ScalaElement, classElemInfo : ScalaElementInfo, module: Symbol) {
           def conflictsIn(cls: Symbol, name: Name) =
             if (cls != NoSymbol)
@@ -198,6 +214,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
           if (c != NoSymbol) {
             classes.get(c) match {
               case Some((classElem, classElemInfo)) =>
+                addModuleInnerClasses(classElem, classElemInfo, m.moduleClass)
                 addForwarders(classElem, classElemInfo, m.moduleClass)
               case _ =>
             }
@@ -220,6 +237,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
             
             newElements0.put(classElem, classElemInfo)
             
+            addModuleInnerClasses(classElem, classElemInfo, m.moduleClass)
             addForwarders(classElem, classElemInfo, m.moduleClass)
           }
         }
@@ -393,7 +411,11 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
         
         classElemInfo.setHandle(classElem)
         val mask = ~(if (isAnon) ClassFileConstants.AccPublic else 0)
-        classElemInfo.setFlags0(mapModifiers(sym) & mask)
+        /* We need to check if the class' owner is a module, if that is the case then the static flag 
+         * needs to be added or the class won't be accessible from Java. */
+        val staticFlag = if(sym.owner.isModuleClass) ClassFileConstants.AccStatic else 0
+        
+        classElemInfo.setFlags0((mapModifiers(sym) & mask) | staticFlag)
         
         val annotsPos = addAnnotations(sym, classElemInfo, classElem)
 
@@ -435,6 +457,9 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
 
       override def addModule(m : ModuleDef) : Owner = {
         val sym = m.symbol
+        // make sure classes are completed
+        sym.initialize
+        
     	val isSynthetic = sym.hasFlag(Flags.SYNTHETIC)
         val moduleElem = if(sym.isPackageObject)  new ScalaPackageModuleElement(element, m.name.toString, isSynthetic) 
           				 else new ScalaModuleElement(element, m.name.toString, isSynthetic)
@@ -605,8 +630,6 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
       override def addDef(d: DefDef): Owner = addDef(d.symbol)
 
       override def addDef(sym: Symbol): Owner = {
-        
-        
         val isCtor0 = sym.isConstructor
         val nameString =
           if(isCtor0)
@@ -837,39 +860,53 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
       info.setSourceRangeEnd0(end)
     }
     
-    def traverse(tree: Tree) {
-      traverse(tree, new CompilationUnitBuilder)
+    
+    def traverse(tree: Tree) {  
+      val traverser = new TreeTraverser
+      traverser.traverse(tree, new CompilationUnitBuilder)
     }
 
-    def traverse(tree: Tree, builder : Owner) {
-      val (newBuilder, children) = {
-        tree match {
-          case _ : Import =>
-          case _ => builder.resetImportContainer
-        }
+    private[this] class TreeTraverser {
+      /** Holds the sequence of inner classes declared in a module.
+       * The map's key refer to the module's symbol (it should really be of type {{{ModuleClassSymbol}}}). */
+      val module2innerClassDefs = collection.mutable.Map.empty[pc.Symbol, List[ClassDef]]
       
-        tree match {
-          case dt : DefTree if dt.symbol.isSynthetic ||
-            // Accessors are added in ValOwner, when they are not, remove. 
-            dt.symbol.hasFlag(Flags.ACCESSOR) => (builder, Nil)
-          case pd : PackageDef => (builder.addPackage(pd), pd.stats)
-          case i : Import => (builder.addImport(i), Nil)
-          case cd : ClassDef => (builder.addClass(cd), List(cd.impl))
-          case md : ModuleDef => (builder.addModule(md), List(md.impl))
-          case vd : ValDef =>  (builder.addVal(vd), List(vd.rhs))
-          case td : TypeDef => (builder.addType(td), List(td.rhs))
-          case dd : DefDef => {
-            if(dd.name != nme.MIXIN_CONSTRUCTOR && (dd.symbol ne NoSymbol)) {
-              (builder.addDef(dd), List(dd.tpt, dd.rhs))
-            } else (builder, Nil)
+      def traverse(tree: Tree, builder : Owner) {
+        val (newBuilder, children) = {
+          tree match {
+            case _ : Import =>
+            case _ => builder.resetImportContainer
           }
-          case Template(parents, self,  body) => (builder, body)
-          case Function(vparams, body) => (builder, Nil)
-          case _ => (builder, tree.children)
+
+          tree match {
+            case dt : DefTree if dt.symbol.isSynthetic ||
+              // Accessors are added in ValOwner, when they are not, remove. 
+              dt.symbol.hasFlag(Flags.ACCESSOR) => (builder, Nil)
+            case pd : PackageDef => (builder.addPackage(pd), pd.stats)
+            case i : Import => (builder.addImport(i), Nil)
+            case cd : ClassDef if builder.element.isInstanceOf[ScalaModuleElement] =>
+              /* Traversing of classes nested in a module has to be delayed because inner classes have to be exposed 
+               * as children of the module's companion class. The module's inner classes are traversed in {{{ newBuilder.complete }}}. */
+              val symOwner = tree.symbol.owner
+              module2innerClassDefs += symOwner -> (cd :: module2innerClassDefs.get(symOwner).getOrElse(Nil))
+              (builder, Nil)
+            case cd : ClassDef => (builder.addClass(cd), List(cd.impl))
+            case md : ModuleDef => (builder.addModule(md), List(md.impl))
+            case vd : ValDef =>  (builder.addVal(vd), List(vd.rhs))
+            case td : TypeDef => (builder.addType(td), List(td.rhs))
+            case dd : DefDef =>
+              if(dd.name != nme.MIXIN_CONSTRUCTOR && (dd.symbol ne NoSymbol))
+                (builder.addDef(dd), List(dd.tpt, dd.rhs))
+              else (builder, Nil)
+            case Template(parents, self,  body) => (builder, body)
+            case Function(vparams, body) => (builder, Nil)
+            case _ => (builder, tree.children)
+          }
         }
+        
+        children.foreach {traverse(_, newBuilder)}
+        if (newBuilder ne builder) newBuilder.complete(this)
       }
-      children.foreach {traverse(_, newBuilder)}
-      if (newBuilder ne builder) newBuilder.complete
     }
   }
 }
