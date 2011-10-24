@@ -97,6 +97,7 @@ class StructureBuilderTest {
     testSearchIndexAnnotations()
   }
   
+  @Ignore("Failing only on 2.8, re-enable when we drop support for 2.8.")
   @Test def junit4TestRunnerSearch {
     val root = compilationUnit("annots/ScalaTestSuite.scala").getJavaProject()
     val finder = new JUnit4TestFinder
@@ -105,6 +106,22 @@ class StructureBuilderTest {
     finder.findTestsInContainer(root, set, null)
     Assert.assertEquals("Should find tests using the JUnit 4 test finder", 1, set.size())
   }
+  
+  @Test def testStructureForGenericInnerClass() {
+    val cunit = compilationUnit("traits/T1.scala")
+    val innerCls = cunit.getAllTypes().find(_.getElementName() == "InnerWithGenericParams")
+    innerCls match {
+      case Some(cls) =>
+        cls.getMethods().foreach { m =>
+          Assert.assertTrue("Parameter names and types should have same length (%s, %s)".format(m.getParameterNames().toSeq, m.getParameterTypes().toSeq),
+              m.getParameterNames().length == m.getParameterTypes().length)
+        }
+
+      case _ =>
+        Assert.fail("Could not find type")
+    }
+  }
+  
 
   /** Test the structure as seen by the JDT. Use the JDT API to 
    *  retrieve the package `traits' and compare the toString output.
