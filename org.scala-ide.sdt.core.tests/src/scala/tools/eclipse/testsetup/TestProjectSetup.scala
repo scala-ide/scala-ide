@@ -15,6 +15,7 @@ import scala.tools.eclipse.javaelements.ScalaCompilationUnit
 import scala.tools.eclipse.javaelements.ScalaSourceFile
 import org.eclipse.core.runtime.NullProgressMonitor
 
+
 import org.mockito.Mockito.{mock, when}
 
 /** Base class for setting up tests that depend on a project found in the test-workspace.
@@ -29,7 +30,9 @@ import org.mockito.Mockito.{mock, when}
  *  Example: `object HyperlinkDetectorTests extends TestProjectSetup("hyperlinks")'
  * 
  */
-class TestProjectSetup(projectName: String) {
+class TestProjectSetup(projectName: String) extends CustomAssertion {
+  type ScalaUnit = ScalaCompilationUnit with ICompilationUnit
+  
   /** The ScalaProject corresponding to projectName, after copying to the test workspace. */
   lazy val project: ScalaProject = SDTTestUtils.setupProject(projectName)
   
@@ -58,13 +61,13 @@ class TestProjectSetup(projectName: String) {
     paths.map(compilationUnit)
   
   /** Return a sequence of Scala compilation units corresponding to the given paths. */
-  def scalaCompilationUnits(paths: String*): Seq[ScalaCompilationUnit with ICompilationUnit] =
+  def scalaCompilationUnits(paths: String*): Seq[ScalaUnit] =
     paths.map(scalaCompilationUnit)
 
   /** Return the Scala compilation unit corresponding to the given path, relative to the src folder.
    *  for example: "scala/collection/Map.scala". 
    */
-  def scalaCompilationUnit(path: String): ScalaCompilationUnit with ICompilationUnit =
+  def scalaCompilationUnit(path: String): ScalaUnit =
     compilationUnit(path).asInstanceOf[ScalaSourceFile]
 
   
@@ -98,7 +101,7 @@ class TestProjectSetup(projectName: String) {
   }
   
   /** Open a working copy of the passed `unit` */
-  private def openWorkingCopyFor(unit: ScalaCompilationUnit with ICompilationUnit) {
+  private def openWorkingCopyFor(unit: ScalaUnit) {
     val requestor = mock(classOf[IProblemRequestor])
     // the requestor must be active, or unit.getWorkingCopy won't trigger the Scala
     // structure builder

@@ -1,68 +1,19 @@
 package scala.tools.eclipse.hyperlinks
 
-import scala.tools.eclipse.javaelements.ScalaCompilationUnit
 import scala.tools.eclipse.testsetup.SDTTestUtils
-import scala.tools.eclipse.ScalaHyperlinkDetector
-import scala.tools.nsc.interactive.Response
-import org.eclipse.core.runtime.Path
-import org.eclipse.jdt.core.IPackageFragmentRoot
-import org.eclipse.jdt.core.JavaCore
-import org.eclipse.jface.text.Region
-import org.eclipse.ui.texteditor.ITextEditor
-import org.junit.Assert._
-import org.junit.Test
-import scala.tools.eclipse.ScalaWordFinder
 import scala.tools.eclipse.testsetup.TestProjectSetup
-import org.eclipse.jface.text.IRegion
-import org.junit.Ignore
+import scala.tools.eclipse.ScalaHyperlinkDetector
+import scala.tools.eclipse.ScalaWordFinder
+
+import org.eclipse.core.resources.IMarker
 import org.eclipse.core.resources.IncrementalProjectBuilder
 import org.eclipse.core.runtime.NullProgressMonitor
-import org.eclipse.core.resources.IMarker
-import org.junit.Assert
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
+import org.junit.Ignore
+import org.junit.Test
 
-object HyperlinkDetectorTests extends TestProjectSetup("hyperlinks") {
-  private final val HyperlinkMarker = "/*^*/"
-  
-  case class Link(text: String)
-  
-  /** Load a single Scala Compilation Unit. The file contains text markers that 
-   * will be used to trigger hyperlinking requests to the presentation compiler. */
-  def loadTestUnit(path2unit: String) = {
-    val unit = scalaCompilationUnit(path2unit)
-    reload(unit)
-    new {
-      /** @param expectations A collection of expected `Link` (test's oracle). */
-      def andCheckAgainst(expectations: List[Link]) = {
-        val positions = findMarker(HyperlinkMarker).in(unit)
-  
-        println("checking %d positions".format(positions.size))
-        assertEquals(positions.size, expectations.size)
-        for ((pos, oracle) <- positions.zip(expectations)) {
-          val wordRegion = ScalaWordFinder.findWord(unit.getContents, pos)
-          val word = new String(unit.getContents.slice(wordRegion.getOffset, wordRegion.getOffset + wordRegion.getLength))
-          println("hyperlinking at position %d (%s)".format(pos, word))
-          
-          // Execute SUT
-          val detector = new ScalaHyperlinkDetector
-          val maybeLinks = detector.scalaHyperlinks(unit, wordRegion)
-          
-          // Verify Expectations
-          assertTrue("no links found for `%s`".format(word), maybeLinks.isDefined)
-          val links = maybeLinks.get
-          assertEquals("expected %d link, found %d".format(1, links.size), 1, links.size)
-          val link = links.head
-          assertEquals("text", oracle.text, link.getHyperlinkText())
-          //assertEquals("offset", oracle.region.getOffset(), link.getHyperlinkRegion().getOffset())
-          unit.withSourceFile({ (sourceFile, compiler) =>
-            val offset = link.getHyperlinkRegion().getOffset()
-            val length = link.getHyperlinkRegion().getLength
-            val linkedPos = compiler.rangePos(sourceFile, offset, offset, offset + length)
-          })(None)
-        }
-      }
-    }
-  }
-}
+object HyperlinkDetectorTests extends TestProjectSetup("hyperlinks") with HyperlinkTester
 
 class HyperlinkDetectorTests {
   import HyperlinkDetectorTests._
@@ -121,7 +72,7 @@ class HyperlinkDetectorTests {
     
     println(errorMessages)
     
-    Assert.assertTrue("No build errors expected", errorMessages.isEmpty)
+    assertTrue("No build errors expected", errorMessages.isEmpty)
 
     // since auto-building is off, we need to do this manually
     // and make sure the classpath is up to date

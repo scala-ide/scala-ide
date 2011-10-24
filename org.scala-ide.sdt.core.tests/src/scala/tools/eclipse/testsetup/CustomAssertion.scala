@@ -5,14 +5,10 @@ import org.eclipse.jdt.core.ICompilationUnit
 import scala.tools.eclipse.javaelements.ScalaSourceFile
 import org.junit.Assert._
 
-object CustomAssertion {
+trait CustomAssertion { self: TestProjectSetup =>
 
-  /** Assert that no errors are reported for the passed `unit`.
-   *  @param project Is needed to access the underlying compiler.
-   *   
-   *  @pre the `project` contains the passed `unit` 
-   * */
-  def assertNoErrors(project: ScalaProject, unit: ICompilationUnit) {
+  /** Assert that no errors are reported for the passed `unit`. */
+  def assertNoErrors(unit: ScalaUnit) {
     project.doWithPresentationCompiler { compiler =>
       val oProblems = Option(unit.asInstanceOf[ScalaSourceFile].getProblems())
       for (problems <- oProblems if problems.nonEmpty) {

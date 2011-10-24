@@ -80,7 +80,6 @@ trait LocateSymbol { self : ScalaPresentationCompiler =>
         file.withSourceFile { (f, _) =>
           val pos = new Response[Position]
           askLinkPos(sym, f, pos)
-//          askReload(scu, scu.getContents) // TODO: Find out why this was necessary
           pos.get.left.toOption
         } (None)
       } else 
