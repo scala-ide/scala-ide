@@ -4,7 +4,7 @@ import java.io.StringBufferInputStream
 
 import scala.collection.JavaConversions._
 import scala.collection.mutable.ArrayBuffer
-import scala.reflect.internal.Chars._
+import scala.tools.nsc.util.Chars._
 import scala.tools.eclipse.formatter.FormatterPreferences
 import scala.tools.eclipse.util.EclipseUtils._
 import scala.tools.eclipse.util.Utils._
@@ -92,13 +92,7 @@ class NewApplicationWizard extends BasicNewResourceWizard with HasLogger {
   }
 
   override def performFinish: Boolean =
-    try
-      createApplication(page.getApplicationName, page.getSelectedPackage)
-    catch {
-      case e =>
-        logger.error(e)
-        false
-    }
+    tryExecute(createApplication(page.getApplicationName, page.getSelectedPackage))(orElse = false)
 
   private def openInEditor(file: IFile) = {
     selectAndReveal(file)
