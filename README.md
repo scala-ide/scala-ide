@@ -43,7 +43,7 @@ $ cd org.scala-ide.build
 
 ```bash
 # For builds relative to Scala 2.8.0.final
-$ ./build-ide-2.8.0.final
+$ ./build-ide-2.8.3-SNAPSHOT
 #
 # For builds relative to Scala 2.9.0.final
 $ ./build-ide-2.9.2-SNAPSHOT
