@@ -103,7 +103,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
       
       def complete(treeTraverser: TreeTraverser) {
         def addModuleInnerClasses(classElem : ScalaElement, classElemInfo : ScalaElementInfo, module: Symbol) {
-          for(nestedClasses <- treeTraverser.module2innerClassDefs.get(module); nestedClazz <- nestedClasses) {
+          for(innerClasses <- treeTraverser.module2innerClassDefs.get(module); innerClass <- innerClasses) {
             /* The nested classes are exposed as children of the module's companion class. */
             val classBuilder = new Builder {
               val parent = self
@@ -113,7 +113,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
               override def isTemplate = true
               override def template = this
             }
-            treeTraverser.traverse(nestedClazz, classBuilder)
+            treeTraverser.traverse(innerClass, classBuilder)
           }
         }
         
@@ -413,7 +413,12 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
         val mask = ~(if (isAnon) ClassFileConstants.AccPublic else 0)
         /* We need to check if the class' owner is a module, if that is the case then the static flag 
          * needs to be added or the class won't be accessible from Java. */
-        val staticFlag = if(sym.owner.isModuleClass) ClassFileConstants.AccStatic else 0
+        def isInnerClassDefOfModule(sym: Symbol) = {
+          val classOwner = sym.owner
+          classOwner.initialize
+          classOwner.isModuleClass && !classOwner.isPackageClass
+        }
+        val staticFlag = if(isInnerClassDefOfModule(sym)) ClassFileConstants.AccStatic else 0
         
         classElemInfo.setFlags0((mapModifiers(sym) & mask) | staticFlag)
         
