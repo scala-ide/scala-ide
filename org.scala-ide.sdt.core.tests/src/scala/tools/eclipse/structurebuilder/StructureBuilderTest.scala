@@ -96,7 +96,8 @@ class StructureBuilderTest {
     testSearchIndexAnnotations()
   }
 
-  @Ignore("Failing only on 2.8, re-enable when we drop support for 2.8.") @Test def junit4TestRunnerSearch {
+  @Ignore("Failing only on 2.8, re-enable when we drop support for 2.8.") 
+  @Test def junit4TestRunnerSearch {
     val root = compilationUnit("annots/ScalaTestSuite.scala").getJavaProject()
     val finder = new JUnit4TestFinder
     val set = new java.util.HashSet[Object]()
@@ -120,10 +121,8 @@ class StructureBuilderTest {
     }
   }
 
-  /**
-   * Test the structure as seen by the JDT. Use the JDT API to
-   *  retrieve the package `traits' and compare the toString output.
-   */
+  /** Test the structure as seen by the JDT. Use the JDT API to
+   *  retrieve the package `traits' and compare the toString output. */
   @Test def testStructure() {
     // when
     val fragment = srcPackageRoot.getPackageFragment("traits")
@@ -197,7 +196,7 @@ class StructureBuilderTest {
     unit.getWorkingCopy(owner, new NullProgressMonitor)
 
     // verify
-    //verify(requestor, times(0)).acceptProblem(any())
+    verify(requestor, times(0)).acceptProblem(any())
   }
 
   @Test
@@ -296,7 +295,7 @@ class StructureBuilderTest {
   }
 
   @Test
-  def javaCodeShouldBeAbleToReferToNestedClassedDeclInAnObject_t1000678() {
+  def javaCodeShouldBeAbleToReferToInnerClassedDeclInAnObject_t1000678() {
     //when
     val requestor = mock(classOf[IProblemRequestor])
     when(requestor.isActive()).thenReturn(true)
@@ -334,7 +333,7 @@ class StructureBuilderTest {
   }
   
   @Test
-  def javaCodeReferenceNestedClasses_t1000678_2() {
+  def javaCodeReferenceInnerClasses_t1000678_2() {
     //when
     val requestor = mock(classOf[IProblemRequestor])
     when(requestor.isActive()).thenReturn(true)
@@ -353,7 +352,7 @@ class StructureBuilderTest {
   }
   
   @Test
-  def javaCodeReferenceNestedClassOfModule_t1000678_3() {
+  def javaCodeReferenceInnerClassOfModule_t1000678_3() {
     //when
     val requestor = mock(classOf[IProblemRequestor])
     when(requestor.isActive()).thenReturn(true)
@@ -372,7 +371,7 @@ class StructureBuilderTest {
   }
 
   @Test
-  def javaCodeCannotReferenceModuleNestedInAModule_t1000678_4() {
+  def javaCodeCannotReferenceModuleInnerInAModule_t1000678_4() {
     val expectedProblem = "Pb(70) B cannot be resolved or is not a field"
     
     //when
@@ -429,5 +428,83 @@ class StructureBuilderTest {
 
     // verify
     verify(requestor, times(0)).acceptProblem(any())
+  }
+  
+  @Test
+  def javaCodeReferenceInnerClassOfModule_t1000678_7() {
+    //when
+    val requestor = mock(classOf[IProblemRequestor])
+    when(requestor.isActive()).thenReturn(true)
+
+    val owner = mock(classOf[WorkingCopyOwner])
+    when(owner.getProblemRequestor(any())).thenReturn(requestor)
+
+    val unit = compilationUnit("t1000678_7/JTest.java")
+
+    // then
+    // this will trigger the java reconciler so that the problems will be reported to the `requestor`
+    unit.getWorkingCopy(owner, new NullProgressMonitor)
+
+    // verify
+    verify(requestor, times(0)).acceptProblem(any())
+  }
+  
+  @Test
+  def javaCodeReferenceInnerTraitsOfModule_t1000678_8() {
+    //when
+    val requestor = mock(classOf[IProblemRequestor])
+    when(requestor.isActive()).thenReturn(true)
+
+    val owner = mock(classOf[WorkingCopyOwner])
+    when(owner.getProblemRequestor(any())).thenReturn(requestor)
+
+    val unit = compilationUnit("t1000678_8/JTest.java")
+
+    // then
+    // this will trigger the java reconciler so that the problems will be reported to the `requestor`
+    unit.getWorkingCopy(owner, new NullProgressMonitor)
+
+    // verify
+    verify(requestor, times(0)).acceptProblem(any())
+  }
+  
+  @Test
+  def javaCodeReferenceClassesInsideTrait_t1000678_9() {
+    //when
+    val requestor = mock(classOf[IProblemRequestor])
+    when(requestor.isActive()).thenReturn(true)
+
+    val owner = mock(classOf[WorkingCopyOwner])
+    when(owner.getProblemRequestor(any())).thenReturn(requestor)
+
+    val unit = compilationUnit("t1000678_9/JTest.java")
+
+    // then
+    // this will trigger the java reconciler so that the problems will be reported to the `requestor`
+    unit.getWorkingCopy(owner, new NullProgressMonitor)
+
+    // verify
+    verify(requestor, times(0)).acceptProblem(any())
+  }
+  
+  @Test
+  def javaCodeCannotInstantiateScalaClassesInsideTrait_t1000678_10() {
+    val expectedProblem = "Pb(23) Illegal enclosing instance specification for type Loggable.A.B"
+    //when
+    val unit = compilationUnit("t1000678_10/JTest.java")
+
+    val owner = new WorkingCopyOwner() {
+      override def getProblemRequestor(unit: org.eclipse.jdt.core.ICompilationUnit): IProblemRequestor =
+        new ProblemReporterAdapter {
+          override def acceptProblem(problem: IProblem) {
+            //verify
+            assertEquals(expectedProblem, problem.toString())
+          }
+        }
+    }
+    
+    // then
+    // this will trigger the java reconciler so that the problems will be reported to the `requestor`
+    unit.getWorkingCopy(owner, new NullProgressMonitor)
   }
 }
