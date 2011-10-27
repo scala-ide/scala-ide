@@ -28,24 +28,12 @@ object Utils extends HasLogger {
 
   class WithAsInstanceOfOpt(obj: AnyRef) {
     def asInstanceOfOpt[B](implicit m: Manifest[B]): Option[B] =
-      if (ManifestUtil.singleType(obj) <:< m)
+      if (Manifest.singleType(obj) <:< m)
         Some(obj.asInstanceOf[B])
       else
         None
   }
-  
-  @deprecated("Remove module when 2.8 support is dropped")
-  object ManifestUtil {
-    private class SingletonTypeManifest[T <: AnyRef](value: AnyRef) extends Manifest[T] {
-      lazy val erasure = value.getClass
-      override lazy val toString = value.toString + ".type"
-    }
-
-    /** Manifest for the singleton type `value.type'. */
-    @deprecated("Use Manifest.singleType when support for 2.8 is dropped")
-    def singleType[T <: AnyRef](value: AnyRef): Manifest[T] =
-      new SingletonTypeManifest[T](value)
-  }
 
   implicit def any2optionable(obj: AnyRef): WithAsInstanceOfOpt = new WithAsInstanceOfOpt(obj)
+
 }
