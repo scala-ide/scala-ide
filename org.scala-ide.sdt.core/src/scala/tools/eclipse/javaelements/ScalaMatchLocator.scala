@@ -39,7 +39,7 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
       case p: TypeDeclarationPattern => new TypeDeclarationLocator(scu, matchLocator, p, possibleMatch)
       case p: MethodPattern => new MethodLocator(scu, matchLocator, p, possibleMatch)
       case p: FieldPattern => new FieldLocator(scu, matchLocator, p, possibleMatch)
-      case p => logError("Could not handle pattern in match request: "+ p, null); NoLocator
+      case p => logger.debug("Could not handle pattern in match request: "+ p); NoLocator
     }
   }
   
