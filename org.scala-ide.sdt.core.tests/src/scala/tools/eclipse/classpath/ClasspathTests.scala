@@ -53,7 +53,7 @@ class ClasspathTests {
   /**
    * No scala library defined in the classpath
    */
-  @Test
+  @Test @Ignore
   def noScalaLibrary() {
     setRawClasspathAndCheckMarkers(cleanRawClasspath, 0, 1)
   }
