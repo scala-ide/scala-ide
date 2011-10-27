@@ -27,6 +27,7 @@ object Utils extends HasLogger {
   }
 
   class WithAsInstanceOfOpt(obj: AnyRef) {
+    import scala.reflect.Manifest // this is needed for 2.8 compatibility
     def asInstanceOfOpt[B](implicit m: Manifest[B]): Option[B] =
       if (Manifest.singleType(obj) <:< m)
         Some(obj.asInstanceOf[B])

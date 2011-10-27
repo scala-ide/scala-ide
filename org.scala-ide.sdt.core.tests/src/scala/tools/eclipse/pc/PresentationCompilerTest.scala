@@ -71,7 +71,8 @@ class PresentationCompilerTest {
     assertNoErrors(unit)
   }
   
-  @Ignore("Enable test when ticket #1000692 is fixed")
+  @Ignore("Ticket #1000692 is fixed (at least it looks like it is working). However this test it is still failing. "+
+      "We decided to look at it and understand why it is not passing only after 2.0 release.")
   @Test
   def notEnoughArgumentsForCconstructorError_ShouldNotBeReported_t1000692() {
     //when
