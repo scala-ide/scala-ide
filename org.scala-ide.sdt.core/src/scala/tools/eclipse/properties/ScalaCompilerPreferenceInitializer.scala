@@ -12,7 +12,6 @@ import scala.tools.nsc.Settings
 
 import scala.tools.eclipse.ScalaPlugin
 import scala.tools.eclipse.SettingConverterUtil._
-import scala.tools.eclipse.properties.IDESettings
 
 /**
  * This is responsible for initializing Scala Compiler

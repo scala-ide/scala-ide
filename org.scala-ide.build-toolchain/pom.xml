@@ -9,7 +9,7 @@
   <packaging>pom</packaging>
 
   <properties>
-    <sbt.version>0.11.1</sbt.version>
+    <sbt.version>0.11.3</sbt.version>
     <patch.level>p0002</patch.level>
     <encoding>UTF-8</encoding>
   </properties>
