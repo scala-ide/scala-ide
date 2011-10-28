@@ -46,12 +46,18 @@ case class ImportCompletionProposal(val importName: String) extends IJavaComplet
     
       val changes = scalaSourceFile.withSourceFile { (sourceFile, compiler) =>
        
-         compiler.askOption {() => 
-           
-           val refactoring = new AddImportStatement { val global = compiler }
-           refactoring.addImport(scalaSourceFile.file, importName)
-           
-         } getOrElse Nil
+         val r = new compiler.Response[compiler.Tree]
+         compiler.askLoadedTyped(sourceFile, r)
+         (r.get match {
+           case Right(error) =>
+             logger.error(error)
+             None
+           case _ =>
+             compiler.askOption {() =>
+               val refactoring = new AddImportStatement { val global = compiler }
+               refactoring.addImport(scalaSourceFile.file, importName)
+             }
+         }) getOrElse Nil
         
       }(Nil)
       
