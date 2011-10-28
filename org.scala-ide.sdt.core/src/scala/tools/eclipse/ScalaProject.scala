@@ -401,10 +401,14 @@ class ScalaProject(val underlying: IProject) extends HasLogger {
   def classpathHasChanged() {
     classpathCheckLock.synchronized {
       try {
-        resetCompilers()
         // mark as in progress
         classpathHasBeenChecked= false
         checkClasspath()
+        if (classpathValid) {
+          // no point to reset the compilers on an invalid classpath,
+          // it would not work anyway
+          resetCompilers()
+        }
       }
     }
   }
