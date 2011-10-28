@@ -216,7 +216,7 @@ class SbtBuildLogger(underlying: BuildReporter) extends EclipseLogger {
 	}
 }
 
-class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings)
+class EclipseSbtBuildManager(project: ScalaProject, settings0: Settings)
   extends EclipseBuildManager with HasLogger {
   
   var monitor: SubMonitor = _
@@ -284,7 +284,11 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings)
 	
   def compilers(settings: Settings, libJar: File, compJar:File, compInterfaceJar: File): (ScalaSbtCompiler, JavaEclipseCompiler) = {
     val scalacInstance = ScalaCompilerConf(scalaVersion, libJar, compJar, compInterfaceJar)
-    val scalac = new ScalaSbtCompiler(scalacInstance, reporter)
+    val scalac = new ScalaSbtCompiler(settings,
+            scalacInstance,
+            ClasspathOptions.auto, 
+            reporter)
+    //val javac = JavaCompiler.directOrFork(scalac.cp, scalac.scalaInstance)( (args: Seq[String], log: sbt.Logger) => Process("javac", args) ! log )
     val javac = new JavaEclipseCompiler(project.underlying, monitor)
     (scalac, javac)
   }
