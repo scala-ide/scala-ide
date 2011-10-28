@@ -134,11 +134,11 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
     super.start(context)
 
     if (!headlessMode) {
-      ResourcesPlugin.getWorkspace.addResourceChangeListener(this, IResourceChangeEvent.PRE_CLOSE)
       PlatformUI.getWorkbench.getEditorRegistry.setDefaultEditor("*.scala", editorId)
       ScalaPlugin.getWorkbenchWindow map (_.getPartService().addPartListener(ScalaPlugin.this))
       diagnostic.StartupDiagnostics.run
     }
+    ResourcesPlugin.getWorkspace.addResourceChangeListener(this, IResourceChangeEvent.PRE_CLOSE)
     JavaCore.addElementChangedListener(this)
     logger.info("Scala compiler bundle: " + scalaCompilerBundle.getLocation)
   }
