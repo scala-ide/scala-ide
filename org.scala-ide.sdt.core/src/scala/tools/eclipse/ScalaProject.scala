@@ -567,16 +567,24 @@ class ScalaProject(val underlying: IProject) extends HasLogger {
   }
 
   /** Shutdown the presentation compiler, and force a reinitialization but asking to reconcile all 
-   *  compilation units that were serviced by the previous instance of the PC.
+   *  compilation units that were serviced by the previous instance of the PC. Does nothing if
+   *  the presentation compiler is not yet initialized.
+   *  
+   *  @return true if the presentation compiler was initialized at the time of this call.
    */
-  def resetPresentationCompiler() {
-    val units: List[ScalaCompilationUnit] = withPresentationCompiler(_.compilationUnits)(Nil)
-    
-    presentationCompiler.invalidate
-    
-    logger.info("Scheduling for reconcile: " + units.map(_.file))
-    units.foreach(_.scheduleReconcile())
-  }
+  def resetPresentationCompiler(): Boolean =
+    if (presentationCompiler.initialized) {
+      val units: List[ScalaCompilationUnit] = withPresentationCompiler(_.compilationUnits)(Nil)
+      
+      presentationCompiler.invalidate
+      
+      logger.info("Scheduling for reconcile: " + units.map(_.file))
+      units.foreach(_.scheduleReconcile())
+      true
+    } else {
+      logger.info("[%s] Presentation compiler was not yet initialized, ignoring reset.".format(underlying.getName()))
+      false
+    }
 
   def buildManager = {
     if (buildManager0 == null) {

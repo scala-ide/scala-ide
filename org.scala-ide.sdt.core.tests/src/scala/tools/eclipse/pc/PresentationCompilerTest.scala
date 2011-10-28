@@ -85,4 +85,11 @@ class PresentationCompilerTest {
     // verify
     assertNoErrors(unit)
   }
+  
+  
+  @Test def resetWhilePresentationCompilerIsInitializing_should_do_nothing() {
+    project.underlying.close(null) // closing the project resets compilers
+    Assert.assertFalse("Reset should do nothing when PC is not yet initialized", project.resetPresentationCompiler())
+  }
+  
 }
