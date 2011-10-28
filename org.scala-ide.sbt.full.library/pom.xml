@@ -54,11 +54,6 @@
     </dependency>
     <dependency>
       <groupId>org.scala-tools.sbt</groupId>
-      <artifactId>discovery_${sbt.compiled.version}</artifactId>
-      <version>${sbt.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.scala-tools.sbt</groupId>
       <artifactId>incremental-compiler_${sbt.compiled.version}</artifactId>
       <version>${sbt.version}</version>
     </dependency>
@@ -239,12 +234,6 @@
                 <artifactItem>
                   <groupId>org.scala-tools.sbt</groupId>
                   <artifactId>control_${sbt.compiled.version}</artifactId>
-                  <version>${sbt.version}</version>
-                  <outputDirectory>${project.build.directory}</outputDirectory>
-                </artifactItem>
-                <artifactItem>
-                  <groupId>org.scala-tools.sbt</groupId>
-                  <artifactId>discovery_${sbt.compiled.version}</artifactId>
                   <version>${sbt.version}</version>
                   <outputDirectory>${project.build.directory}</outputDirectory>
                 </artifactItem>

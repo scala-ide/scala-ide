@@ -15,7 +15,7 @@ package scala.tools.eclipse.util
  */
 trait Cached[T] {
   private var inProgress = false
-  private var elem: Option[T] = None
+  @volatile private var elem: Option[T] = None
 
   def apply[U](op: T => U): U = {
     val e = synchronized {
@@ -40,6 +40,9 @@ trait Cached[T] {
 
     op(e)
   }
+  
+  /** Is the cached object initialized, at this point in time? */
+  def initialized: Boolean = elem.isDefined
 
   def invalidate() {
     val oldElem = synchronized {
