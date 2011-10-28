@@ -39,7 +39,7 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
       case p: TypeDeclarationPattern => new TypeDeclarationLocator(scu, matchLocator, p, possibleMatch)
       case p: MethodPattern => new MethodLocator(scu, matchLocator, p, possibleMatch)
       case p: FieldPattern => new FieldLocator(scu, matchLocator, p, possibleMatch)
-      case p => logError("Could not handle pattern in match request: "+ p, null); NoLocator
+      case p => logger.debug("Could not handle pattern in match request: "+ p); NoLocator
     }
   }
   
@@ -65,11 +65,13 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
       reportMethod.invoke(matchLocator, sm)
     }
 
-    def checkQualifier(s: Select, className: Array[Char], pat: SearchPattern) = 
-      s.qualifier.tpe.baseClasses exists { bc => 
-        logger.info("Base class " + bc)
-        pat.matchesName(bc.name.toChars, className)
+    def checkQualifier(s: Select, className: Array[Char], pat: SearchPattern) =  {
+      (className eq null) || {
+        s.qualifier.tpe.baseClasses exists { bc => 
+          pat.matchesName(className, bc.name.toChars)
+        }
       }
+    }
     
     def posToLong(pos: Position): Long = pos.startOrPoint << 32 | pos.endOrPoint
     
@@ -141,42 +143,60 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
       case _ =>
     }
     
+    /** Does the method type match the desired number of parameters? Correctly handles
+     *  vararg methods. 
+     *  
+     *  TODO: check for curried method definitions
+     */
+    def parameterSizeMatches(desiredCount: Int, tpe: MethodType): Boolean =
+      ((desiredCount == tpe.paramTypes.size)
+        || ((desiredCount > tpe.paramTypes.size)
+             && (tpe.paramTypes.last.typeSymbol == definitions.RepeatedParamClass))
+      )
+    
+    /** Does the method type match the pattern? */
     def checkSignature(tpe: MethodType, pat: MethodPattern): Boolean =
-      if (pat.parameterCount == tpe.paramTypes.size) {
-        val searchedParamTypes = pat.parameterSimpleNames
-        val currentParamTypes = tpe.paramTypes
-         
-        for (i <- 0 to currentParamTypes.size - 1) 
-          if (!currentParamTypes(i).baseClasses.exists { bc => 
-            pat.matchesName(searchedParamTypes(i), bc.name.toChars)
-          }) return false        
-        true
-      }
-      else false
+      (pat.parameterCount == -1) || (parameterSizeMatches(pat.parameterCount, tpe) && {
+          val searchedParamTypes = pat.parameterSimpleNames
+          val currentParamTypes = tpe.paramTypes
+           
+          for (i <- 0 to currentParamTypes.size - 1) 
+            if (!currentParamTypes(i).baseClasses.exists { bc => 
+              pat.matchesName(searchedParamTypes(i), bc.name.toChars)
+            }) return false        
+          true
+      })
     
     def reportMethodReference(tree: Tree, sym: Symbol, pat: MethodPattern) {
-      logger.info("Trying " + tree)
-        
-      if (!pat.matchesName(pat.selector, sym.name.toChars) || !sym.pos.isDefined) return
+      if (!pat.matchesName(pat.selector, sym.name.toChars) || !sym.pos.isDefined) {
+        logger.debug("Name didn't match: [%s] pos.isDefined: %b".format(sym.name, sym.pos.isDefined))
+        return
+      }
+
       val proceed = tree match {
         case t: Select => checkQualifier(t, pat.declaringSimpleName, pat)
         case _ => true
       }
       
       if (proceed) {
+        logger.info("Qualifier matched")
+
         val hit = sym.tpe match {
           case t: MethodType => checkSignature(t, pat)
-          case _ => pat.parameterCount == 0
+          case _ => pat.parameterCount <= 0 // negative means that pattern can match any number of arguments
         }
         
-        if (hit) {        
+        if (hit) {
           val enclosingElement = scu match {
-            case ssf: ScalaSourceFile => ssf.getElementAt(sym.pos.start)
+            case ssf: ScalaSourceFile => ssf.getElementAt(tree.pos.startOrPoint)
             case _ => null
           }
+          
           val accuracy = SearchMatch.A_INACCURATE
-          val offset = sym.pos.start
-          val length = sym.pos.end - offset
+          val (offset, length) = if (tree.isDef)
+            (tree.pos.startOrPoint + 4, tree.symbol.name.length)
+          else (tree.pos.startOrPoint, tree.pos.endOrPoint - tree.pos.startOrPoint)
+              
           val insideDocComment = false
           val participant = possibleMatch.document.getParticipant
           val resource = possibleMatch.resource
