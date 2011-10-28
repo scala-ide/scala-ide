@@ -34,6 +34,7 @@ import org.eclipse.jdt.core.IParent
 import org.eclipse.jdt.internal.core.JavaElement
 import org.eclipse.jdt.internal.core.SourceRefElement
 import scala.tools.eclipse.util.HasLogger
+import scala.tools.nsc.interactive.Response
 
 trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with ScalaElement with IScalaCompilationUnit with IBufferChangedListener with HasLogger {
   val project = ScalaPlugin.plugin.getScalaProject(getJavaProject.getProject)
@@ -193,11 +194,16 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
   
   override def reportMatches(matchLocator : MatchLocator, possibleMatch : PossibleMatch) {
     doWithSourceFile { (sourceFile, compiler) =>
-      compiler.withStructure(sourceFile) { tree =>
-        compiler.askOption { () =>
-          compiler.MatchLocator(this, matchLocator, possibleMatch).traverse(tree)
-        }
+      val response = new Response[compiler.Tree]
+      compiler.askLoadedTyped(sourceFile, response)
+      response.get match {
+        case Left(tree) => 
+          compiler.askOption { () =>
+            compiler.MatchLocator(this, matchLocator, possibleMatch).traverse(tree)
+          }
+        case _ => () // no op
       }
+      
     }
   }
   
