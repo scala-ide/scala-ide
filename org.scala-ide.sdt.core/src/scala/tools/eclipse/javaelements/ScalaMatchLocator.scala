@@ -66,14 +66,9 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
     }
 
     def checkQualifier(s: Select, className: Array[Char], pat: SearchPattern) =  {
-//      println("looking for parent classname " + new String(className))
       (className eq null) || {
         s.qualifier.tpe.baseClasses exists { bc => 
-          logger.info("Base class " + bc)
-          val res = pat.matchesName(className, bc.name.toChars)
-          if (res) 
-            println("\t match for " + bc)
-          res
+          pat.matchesName(className, bc.name.toChars)
         }
       }
     }
@@ -148,10 +143,18 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
       case _ =>
     }
     
+    /** Does the method type match the desired number of parameters? Correctly handles
+     *  vararg methods. 
+     *  
+     *  TODO: check for curried method definitions
+     */
     def parameterSizeMatches(desiredCount: Int, tpe: MethodType): Boolean =
       ((desiredCount == tpe.paramTypes.size)
-        || (tpe.paramTypes.last.typeSymbol == definitions.RepeatedParamClass))
+        || ((desiredCount > tpe.paramTypes.size)
+             && (tpe.paramTypes.last.typeSymbol == definitions.RepeatedParamClass))
+      )
     
+    /** Does the method type match the pattern? */
     def checkSignature(tpe: MethodType, pat: MethodPattern): Boolean =
       (pat.parameterCount == -1) || (parameterSizeMatches(pat.parameterCount, tpe) && {
           val searchedParamTypes = pat.parameterSimpleNames
@@ -165,11 +168,11 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
       })
     
     def reportMethodReference(tree: Tree, sym: Symbol, pat: MethodPattern) {
-      if (!pat.matchesName(pat.selector, sym.name.toChars) || !sym.pos.isDefined) 
+      if (!pat.matchesName(pat.selector, sym.name.toChars) || !sym.pos.isDefined) {
+        logger.debug("Name didn't match: [%s] pos.isDefined: %b".format(sym.name, sym.pos.isDefined))
         return
+      }
 
-      logger.info("Trying " + tree)
-        
       val proceed = tree match {
         case t: Select => checkQualifier(t, pat.declaringSimpleName, pat)
         case _ => true
@@ -180,12 +183,12 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
 
         val hit = sym.tpe match {
           case t: MethodType => checkSignature(t, pat)
-          case _ => pat.parameterCount <= 0
+          case _ => pat.parameterCount <= 0 // negtive means that pattern can match any number of arguments
         }
         
         if (hit) {
           val enclosingElement = scu match {
-            case ssf: ScalaSourceFile => ssf.getElementAt(tree.pos.start)
+            case ssf: ScalaSourceFile => ssf.getElementAt(tree.pos.startOrPoint)
             case _ => null
           }
           
