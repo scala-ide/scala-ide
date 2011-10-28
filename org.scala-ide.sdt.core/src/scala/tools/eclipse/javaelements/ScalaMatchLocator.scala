@@ -183,7 +183,7 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
 
         val hit = sym.tpe match {
           case t: MethodType => checkSignature(t, pat)
-          case _ => pat.parameterCount <= 0 // negtive means that pattern can match any number of arguments
+          case _ => pat.parameterCount <= 0 // negative means that pattern can match any number of arguments
         }
         
         if (hit) {
