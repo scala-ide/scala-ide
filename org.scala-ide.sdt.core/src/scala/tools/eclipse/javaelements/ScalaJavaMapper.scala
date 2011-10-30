@@ -155,15 +155,16 @@ trait ScalaJavaMapper extends ScalaAnnotationHelper with HasLogger { self : Scal
    * */
   def mapType(tpe: Type): String = {
 	val base = mapType(tpe.typeSymbol)
-	base match {
-	  case "scala.Array" => 
+	tpe.typeSymbol match {
+    // only the Array class has type parameters. the Array object is non-parametric
+	  case definitions.ArrayClass => 
 	    val paramTypes = tpe.typeArgs.map(mapType(_))
 	    assert(paramTypes.size == 1, "Expected exactly one type parameter, found %d [%s]".format(paramTypes.size, tpe))
         paramTypes.head + "[]"
-	  case basicTpe => 
+	  case _ => 
 	    if(tpe.typeParams.nonEmpty) 
 	      logger.debug("mapType(Type) is not expected to be used with a type that has type parameters. (passed type was %s)".format(tpe))
-	    basicTpe
+	    base
 	}
   }
   
