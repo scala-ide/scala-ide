@@ -86,10 +86,26 @@ class PresentationCompilerTest {
     assertNoErrors(unit)
   }
   
-  
-  @Test def resetWhilePresentationCompilerIsInitializing_should_do_nothing() {
-    project.underlying.close(null) // closing the project resets compilers
-    Assert.assertFalse("Reset should do nothing when PC is not yet initialized", project.resetPresentationCompiler())
+  @Test
+  def psShouldReportTheCorrectCompilationUnitsItKnowsAbout() {
+    def managedUnits() = project.withPresentationCompiler(_.compilationUnits)()
+    
+    project.shutDownCompilers()
+    
+    // should be empty
+    Assert.assertTrue("Presentation compiler should not maintain any units after a shutdown request", managedUnits().isEmpty)
+    
+    val cu = scalaCompilationUnit("t1000692/akka/util/ReflectiveAccess.scala")
+    
+    
+    // still no units should be loaded
+    Assert.assertTrue("Presentation compiler should not maintain any units after structure build (%s)".format(managedUnits()), managedUnits().isEmpty)
+    
+    println("adding a new unit")
+    cu.scheduleReconcile().get
+
+    println("moving on")
+    // now the unit should be managed
+    Assert.assertEquals("Presentation compiler should maintain one unit after reload (%s)".format(managedUnits()), 1, managedUnits().size)
   }
-  
 }

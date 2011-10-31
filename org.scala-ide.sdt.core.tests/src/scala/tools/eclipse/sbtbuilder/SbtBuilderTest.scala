@@ -20,6 +20,7 @@ import scala.tools.eclipse.javaelements.ScalaSourceFile
 import scala.util.matching.Regex
 
 object SbtBuilderTest extends testsetup.TestProjectSetup("builder")
+object depProject extends testsetup.TestProjectSetup("builder-sub")
 
 class SbtBuilderTest {
 
@@ -45,7 +46,7 @@ class SbtBuilderTest {
     Assert.assertTrue("Build errors found", noErrors)
   }
 
-  @Test def dependencyTest() {
+  @Test def dependent_projects_are_rebuilt_and_PC_notified() {
 
     def rebuild(prj: ScalaProject): List[IMarker] = {
       println("building " + prj)
@@ -54,13 +55,7 @@ class SbtBuilderTest {
       getProblemMarkers()
     }
 
-    def getProblemMarkers(): List[IMarker] = {
-      val units = compilationUnits("test/ja/JClassA.java", "test/sc/ClassA.scala", "test/dependency/FooClient.scala").toList
-      units.flatMap(SDTTestUtils.findProblemMarkers)
-    }
-
-    object depProject extends testsetup.TestProjectSetup("builder-sub")
-    depProject.project        // force initialization of this project
+    depProject.project // force initialization of this project
     depProject.project.underlying.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, new NullProgressMonitor)
 
     println("=== Dependency Test === ")
@@ -68,7 +63,7 @@ class SbtBuilderTest {
 
     val problemsDep = rebuild(depProject.project)
     val problemsOrig = rebuild(project)
-    Assert.assertTrue("Should succeed compilation", problemsOrig.isEmpty)
+    Assert.assertTrue("Should succeed compilation " + problemsOrig, problemsOrig.isEmpty)
 
     val fooCU = depProject.compilationUnit("subpack/Foo.scala")
     println("IFile: " + fooCU.getResource().getAdapter(classOf[IFile]).asInstanceOf[IFile])
@@ -97,6 +92,44 @@ class SbtBuilderTest {
     val pcProblems = fooClientCU.asInstanceOf[ScalaSourceFile].getProblems()
     Assert.assertEquals("Presentation compiler errors.", 2, pcProblems.size)
   }
+
+  private def getProblemMarkers(): List[IMarker] = {
+    val units = compilationUnits("test/ja/JClassA.java", "test/sc/ClassA.scala", "test/dependency/FooClient.scala").toList
+    units.flatMap(SDTTestUtils.findProblemMarkers)
+  }
+
+  private def buildWith(resource: IResource, contents: String): List[String] = {
+    SDTTestUtils.changeContentOfFile(depProject.project.underlying, resource.asInstanceOf[IFile], contents)
+
+    println("=== Rebuilding workspace === ")
+    SDTTestUtils.workspace.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, null)
+
+    val problems = getProblemMarkers()
+
+    for (p <- problems) yield p.getAttribute(IMarker.MESSAGE).toString
+  }
+  
+  
+  @Test def dependentProject_should_restart_PC_after_build() {
+    val fooCU = depProject.compilationUnit("subpack/Foo.scala")
+    val changedErrors = buildWith(fooCU.getResource, changedFooScala)
+    
+    Assert.assertEquals("Build problems " + changedErrors, 2, changedErrors.size)
+    
+    val errorMessages = buildWith(fooCU.getResource, originalFooScala)
+    Assert.assertEquals("No build problems: " + errorMessages, 0, errorMessages.size)
+
+    val fooClientCU = scalaCompilationUnit("test/dependency/FooClient.scala")
+
+    fooClientCU.doWithSourceFile { (sf, comp) =>
+      comp.askReload(fooClientCU, fooClientCU.getContents()).get // synchronize with the good compiler
+    }
+
+    val pcProblems = fooClientCU.asInstanceOf[ScalaSourceFile].getProblems()
+    Assert.assertTrue("Presentation compiler should not have errors.", pcProblems eq null)
+  }
+  
+  
   
   /** Returns true if the expected regular expression matches the given error message. */
   private def similarErrorMessage(msg: String)(expected: String): Boolean = {
@@ -107,6 +140,12 @@ class SbtBuilderTest {
     package subpack
 
 class Foo1
+"""
+
+    lazy val originalFooScala = """
+    package subpack
+
+class Foo
 """
 
   /** Each error message is a regular expression. This allows some variation between compiler versions. */

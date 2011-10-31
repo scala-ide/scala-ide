@@ -57,8 +57,13 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
   
   /** Return the Scala compilation units that are currently maintained by this presentation compiler.
    */
-  def compilationUnits: List[ScalaCompilationUnit] = 
-    sourceFiles.keysIterator.toList
+  def compilationUnits: Seq[ScalaCompilationUnit] = {
+    val managedFiles = unitOfFile.keySet
+    (for {
+      (cu, sourceFile) <- sourceFiles
+      if managedFiles(sourceFile.file)
+    } yield cu).toSeq
+  }
   
   private def problemsOf(file : AbstractFile) : List[IProblem] = {
     unitOfFile get file match {
@@ -196,8 +201,6 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
     
   def destroy() {
     logger.info("shutting down presentation compiler on project: " + project)
-    // TODO: Why is this needed? (ID)
-    sourceFiles.keysIterator.foreach(_.scheduleReconcile)
     askShutdown()
   }
   
