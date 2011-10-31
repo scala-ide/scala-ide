@@ -220,7 +220,7 @@ class SbtBuildLogger(underlying: BuildReporter) extends EclipseLogger {
 	}
 }
 
-class EclipseSbtBuildManager(project: ScalaProject, settings0: Settings)
+class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings)
   extends EclipseBuildManager with HasLogger {
   
   var monitor: SubMonitor = _
@@ -269,11 +269,11 @@ class EclipseSbtBuildManager(project: ScalaProject, settings0: Settings)
 	lazy val reporter: xsbti.Reporter = new SbtBuildReporter(_buildReporter)
 	val pendingSources = new mutable.HashSet[IFile]
 
-	/** Filter the classpath. Return the original classpath without the Scala compiler and library jars.
+	/** Filter the classpath. Return the original classpath without the Scala library jar.
 	 *  The second element of the tuple contains the Scala library jar.
 	 */
-	private def filterOutScalaJars(l: Seq[IPath]): (Seq[IPath], Option[IPath]) = {
-		val jars = l.partition(p => p.lastSegment() == ScalaCompilerConf.LIBRARY_SUFFIX || p.lastSegment() == ScalaCompilerConf.COMPILER_SUFFIX)
+	private def filterOutScalaLibrary(l: Seq[IPath]): (Seq[IPath], Option[IPath]) = {
+		val jars = l.partition(p => p.lastSegment() == ScalaCompilerConf.LIBRARY_SUFFIX)
 		
 		// make sure the library file exists on disk. You can have several scala-library.jar entries in 
 		// the classpath, coming from MANIFEST.MF (ClassPath: entry) expansion of other jars.
@@ -288,11 +288,7 @@ class EclipseSbtBuildManager(project: ScalaProject, settings0: Settings)
 	
   def compilers(settings: Settings, libJar: File, compJar:File, compInterfaceJar: File): (ScalaSbtCompiler, JavaEclipseCompiler) = {
     val scalacInstance = ScalaCompilerConf(scalaVersion, libJar, compJar, compInterfaceJar)
-    val scalac = new ScalaSbtCompiler(settings,
-            scalacInstance,
-            ClasspathOptions.auto, 
-            reporter)
-    //val javac = JavaCompiler.directOrFork(scalac.cp, scalac.scalaInstance)( (args: Seq[String], log: sbt.Logger) => Process("javac", args) ! log )
+    val scalac = new ScalaSbtCompiler(scalacInstance, reporter)
     val javac = new JavaEclipseCompiler(project.underlying, monitor)
     (scalac, javac)
   }
@@ -334,7 +330,7 @@ class EclipseSbtBuildManager(project: ScalaProject, settings0: Settings)
   
   private def runCompiler(sources: Seq[File]) {
       // setup the settings
-  	  val allJarsAndLibrary = filterOutScalaJars(project.classpath)
+  	  val allJarsAndLibrary = filterOutScalaLibrary(project.classpath)
   	  // Fixed 2.9 for now
   	  val libJar = allJarsAndLibrary match {
   	    case (_, Some(lib)) =>

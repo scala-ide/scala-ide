@@ -12,6 +12,8 @@ import scala.tools.eclipse.sbtbuilder.OutputFoldersTest;
 import scala.tools.eclipse.sbtbuilder.SbtBuilderTest;
 import scala.tools.eclipse.sbtbuilder.TodoBuilderTest;
 import scala.tools.eclipse.semantic.ImplicitsHighlightingTest;
+import scala.tools.eclipse.sbtbuilder.ScalaCompilerClasspathTest;
+import scala.tools.eclipse.sbtbuilder.ScalaJavaDepTest;
 import scala.tools.eclipse.structurebuilder.StructureBuilderTest;
 import scala.tools.eclipse.pc.PresentationCompilerTest;
 import scala.tools.eclipse.wizards.*;
@@ -37,10 +39,12 @@ import org.junit.runners.Suite;
   CompletionTests.class,
   AbstractMethodVerifierTest.class,
   SbtBuilderTest.class,
-  PresentationCompilerTest.class,
   OutputFoldersTest.class,
+  ScalaCompilerClasspathTest.class,
+  PresentationCompilerTest.class,
   ClasspathTests.class,
   TodoBuilderTest.class,
   ImplicitsHighlightingTest.class,
+  ScalaJavaDepTest.class,
 })
 class TestsSuite { }
