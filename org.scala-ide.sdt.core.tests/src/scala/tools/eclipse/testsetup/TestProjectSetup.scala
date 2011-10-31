@@ -8,11 +8,8 @@ import scala.tools.eclipse.ScalaProject
 import org.eclipse.jdt.core.ICompilationUnit
 import scala.tools.eclipse.javaelements.ScalaSourceFile
 import scala.tools.eclipse.javaelements.ScalaCompilationUnit
-import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.core.IProblemRequestor
 import org.eclipse.jdt.core.WorkingCopyOwner
-import scala.tools.eclipse.javaelements.ScalaCompilationUnit
-import scala.tools.eclipse.javaelements.ScalaSourceFile
 import org.eclipse.core.runtime.NullProgressMonitor
 
 
