@@ -7,8 +7,9 @@ import org.junit.Assert
 import testsetup.SDTTestUtils
 import org.eclipse.core.resources.IFile
 import scala.tools.eclipse.util.EclipseUtils
+import scala.tools.eclipse.testsetup._
 
-object PresentationCompilerRefreshTest extends testsetup.TestProjectSetup("pc_refresh")
+object PresentationCompilerRefreshTest extends TestProjectSetup("pc_refresh") with CustomAssertion
 
 class PresentationCompilerRefreshTest {
   import PresentationCompilerRefreshTest._
@@ -20,8 +21,7 @@ class PresentationCompilerRefreshTest {
       comp.askReload(unitA, unitA.getContents()).get // synchronize with the presentation compiler
     }
     
-    val problemsInA = unitA.asInstanceOf[ScalaSourceFile].getProblems()
-    Assert.assertTrue("no errors in A.scala", problemsInA eq null)
+    assertNoErrors(unitA)
     
     EclipseUtils.workspaceRunnableIn(SDTTestUtils.workspace) { monitor =>
       SDTTestUtils.addFileToProject(project.underlying, "src/b/C.scala", C_scala)
@@ -31,11 +31,8 @@ class PresentationCompilerRefreshTest {
     unitA.doWithSourceFile { (sf, comp) =>
       comp.askReload(unitA, unitA.getContents()).get // synchronize with the presentation compiler
     }
-    
 
-    val problemsInANew = unitA.asInstanceOf[ScalaSourceFile].getProblems()
-    
-    Assert.assertTrue("no errors in A.scala after change " + problemsInANew, problemsInANew eq null)
+    assertNoErrors(unitA)
   }
   
   val new_A_scala = """

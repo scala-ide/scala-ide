@@ -667,7 +667,7 @@ class ScalaProject private (val underlying: IProject) extends HasLogger {
   def resetDependentProjects() {
     for {
       prj <- underlying.getReferencingProjects()
-      if (prj.isOpen()) && ScalaPlugin.plugin.isScalaProject(prj)
+      if prj.isOpen() && ScalaPlugin.plugin.isScalaProject(prj)
       dependentScalaProject <- ScalaPlugin.plugin.asScalaProject(prj)
     } {
       logger.debug("[%s] Reset PC of referring project %s".format(this, dependentScalaProject))

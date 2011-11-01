@@ -18,9 +18,10 @@ import org.eclipse.jdt.core.IProblemRequestor
 import org.eclipse.jdt.core.WorkingCopyOwner
 import scala.tools.eclipse.javaelements.ScalaSourceFile
 import scala.util.matching.Regex
+import testsetup._
 
-object SbtBuilderTest extends testsetup.TestProjectSetup("builder")
-object depProject extends testsetup.TestProjectSetup("builder-sub")
+object SbtBuilderTest extends TestProjectSetup("builder") with CustomAssertion
+object depProject extends TestProjectSetup("builder-sub")
 
 class SbtBuilderTest {
 
@@ -121,12 +122,9 @@ class SbtBuilderTest {
 
     val fooClientCU = scalaCompilationUnit("test/dependency/FooClient.scala")
 
-    fooClientCU.doWithSourceFile { (sf, comp) =>
-      comp.askReload(fooClientCU, fooClientCU.getContents()).get // synchronize with the good compiler
-    }
-
-    val pcProblems = fooClientCU.asInstanceOf[ScalaSourceFile].getProblems()
-    Assert.assertTrue("Presentation compiler should not have errors.", pcProblems eq null)
+    reload(fooClientCU)
+    
+    assertNoErrors(fooClientCU)
   }
   
   
