@@ -367,6 +367,7 @@ class ScalaProject(val underlying: IProject) extends HasLogger {
     // the classpath change notification
     val markerJob= new Job("Update classpath error marker") {
       override def run(monitor: IProgressMonitor): IStatus = {
+        if (underlying.isOpen()) { // cannot change markers on closed project
           // clean the markers
           underlying.deleteMarkers(plugin.problemMarkerId, false, IResource.DEPTH_ZERO)
           
@@ -378,7 +379,8 @@ class ScalaProject(val underlying: IProject) extends HasLogger {
               marker.setAttribute(IMarker.SEVERITY, severity)
             case _ =>
           }
-          Status.OK_STATUS
+        }
+        Status.OK_STATUS
       }
     }
     markerJob.setRule(underlying)
