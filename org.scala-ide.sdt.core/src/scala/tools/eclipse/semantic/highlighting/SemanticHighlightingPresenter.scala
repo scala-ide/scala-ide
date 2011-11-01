@@ -4,21 +4,28 @@
 package scala.tools.eclipse
 package semantic.highlighting
 
-import org.eclipse.core.runtime.IPath
-import reconciliation.ReconciliationParticipant
+import java.util.Collections
+
 import org.eclipse.core.runtime.IProgressMonitor
-import org.eclipse.ui.IWorkbenchPage
 import org.eclipse.jdt.core.WorkingCopyOwner
 import org.eclipse.jdt.internal.ui.JavaPlugin
-import org.eclipse.jface.preference.{ PreferenceConverter, IPreferenceStore }
-import org.eclipse.jface.text.IPainter
-import org.eclipse.jface.text.source.{ IAnnotationAccess, AnnotationPainter, Annotation, ISourceViewer }
-import org.eclipse.jface.util.{ PropertyChangeEvent, IPropertyChangeListener }
+import org.eclipse.jface.preference.{PreferenceConverter, IPreferenceStore}
+import org.eclipse.jface.text.source.{ISourceViewer, IAnnotationAccess, AnnotationPainter, Annotation}
+import org.eclipse.jface.text.{Position, IPainter}
+import org.eclipse.jface.util.{PropertyChangeEvent, IPropertyChangeListener}
 import org.eclipse.swt.SWT
-import org.eclipse.ui.{ PlatformUI, IPartListener, IWorkbenchPart }
 import org.eclipse.ui.part.FileEditorInput
-import scala.collection._
+import org.eclipse.ui.{PlatformUI, IWorkbenchPart, IPartListener}
+
+import scala.collection.mutable.SynchronizedMap
+import scala.collection.mutable.HashMap
 import scala.tools.eclipse.javaelements.ScalaCompilationUnit
+import scala.tools.eclipse.properties.ImplicitsPreferencePage.{P_ITALIC, P_BOLD, P_ACTIVE}
+import scala.tools.eclipse.util.HasLogger
+import scala.tools.eclipse.{ScalaSourceFileEditor, ScalaPresentationCompiler}
+import scala.tools.nsc.util.SourceFile
+
+import reconciliation.ReconciliationParticipant
 
 /**
  * This class is instantiated by the reconciliationParticipants extension point and
@@ -43,8 +50,8 @@ class SemanticHighlightingReconciliationParticipant extends ReconciliationPartic
  */
 object SemanticHighlightingReconciliation {
 
-  // TODO use an actor to manage "Thread Safely" the map
-  private val participants = new collection.mutable.HashMap[ScalaCompilationUnit, SemanticHighlightingPresenter]
+  private val participants = new HashMap[ScalaCompilationUnit, SemanticHighlightingPresenter] 
+    with SynchronizedMap[ScalaCompilationUnit, SemanticHighlightingPresenter] 
 
   /**
    *  A listener that removes a  SemanticHighlightingPresenter when the part is closed.
@@ -66,7 +73,7 @@ object SemanticHighlightingReconciliation {
    * an instance of SemanticHighlightingPresenter. A listener is registered at the editor
    * to remove the SemanticHighlightingPresenter when the editor is closed.
    */
-  def createSemantigHighlighterForEditor(scu: ScalaCompilationUnit) = {
+  private def createSemanticHighlighterForEditor(scu: ScalaCompilationUnit) = {
 
     def getPagesWithEditors = {
       PlatformUI.getWorkbench.getWorkbenchWindows flatMap (_.getPages) flatMap { page =>
@@ -93,7 +100,7 @@ object SemanticHighlightingReconciliation {
     val firstTimeReconciliation = !participants.contains(scu)
 
     if (firstTimeReconciliation) {
-      createSemantigHighlighterForEditor(scu) foreach (participants(scu) = _)
+      createSemanticHighlighterForEditor(scu) foreach (participants(scu) = _)
     }
 
     participants(scu).update(scu)
@@ -105,8 +112,9 @@ object SemanticHighlightingReconciliation {
  * @author David Bernard
  *
  */
-class SemanticHighlightingPresenter(editor: FileEditorInput, sourceViewer: ISourceViewer) {
+class SemanticHighlightingPresenter(editor: FileEditorInput, sourceViewer: ISourceViewer) extends HasLogger {
   import scala.tools.eclipse.properties.ImplicitsPreferencePage._
+  import SemanticHighlightingPresenter._
 
   val annotationAccess = new IAnnotationAccess() {
     def getType(annotation: Annotation) = annotation.getType();
@@ -114,12 +122,12 @@ class SemanticHighlightingPresenter(editor: FileEditorInput, sourceViewer: ISour
     def isTemporary(annotation: Annotation) = true
   }
 
-  private def fFontStyle_BOLD = pluginStore.getBoolean(P_BOLD) match {
+  private def isFontStyleBold = pluginStore.getBoolean(P_BOLD) match {
     case true => SWT.BOLD
     case _ => SWT.NORMAL
   }
 
-  private def fFontStyle_ITALIC = pluginStore.getBoolean(P_ITALIC) match {
+  private def isFontStyleItalic = pluginStore.getBoolean(P_ITALIC) match {
     case true => SWT.ITALIC
     case _ => SWT.NORMAL
   }
@@ -132,7 +140,7 @@ class SemanticHighlightingPresenter(editor: FileEditorInput, sourceViewer: ISour
 
   def fColorValue = ColorManager.getDefault.getColor(PreferenceConverter.getColor(editorsStore, P_COLOR))
 
-  val impTextStyleStrategy = new ImplicitConversionsOrArgsTextStyleStrategy(fFontStyle_BOLD | fFontStyle_ITALIC)
+  val impTextStyleStrategy = new ImplicitConversionsOrArgsTextStyleStrategy(isFontStyleBold | isFontStyleItalic)
 
   val painter: AnnotationPainter = {
     val b = new AnnotationPainter(sourceViewer, annotationAccess)
@@ -148,9 +156,7 @@ class SemanticHighlightingPresenter(editor: FileEditorInput, sourceViewer: ISour
   private val _listener = new IPropertyChangeListener {
     def propertyChange(event: PropertyChangeEvent) {
       val changed = event.getProperty() match {
-        case P_BOLD => true
-        case P_ITALIC => true
-        case P_COLOR => true
+        case P_BOLD | P_ITALIC | P_COLOR => true
         case P_ACTIVE => {
           refresh()
           false
@@ -158,7 +164,7 @@ class SemanticHighlightingPresenter(editor: FileEditorInput, sourceViewer: ISour
         case _ => false
       }
       if (changed) {
-        impTextStyleStrategy.fFontStyle = fFontStyle_BOLD | fFontStyle_ITALIC
+        impTextStyleStrategy.fontStyle = isFontStyleBold | isFontStyleItalic
         painter.setAnnotationTypeColor(AnnotationsTypes.Implicits, fColorValue)
         painter.paint(IPainter.CONFIGURATION)
       }
@@ -188,52 +194,75 @@ class SemanticHighlightingPresenter(editor: FileEditorInput, sourceViewer: ISour
   //TODO monitor P_ACTIVATE to register/unregister update
   //TODO monitor P_ACTIVATE to remove existings annotation (true => false) or update openning file (false => true)
   def update(scu: ScalaCompilationUnit) = {
-    //val cu = JavaPlugin.getDefault().getWorkingCopyManager().getWorkingCopy(fEditor.getEditorInput());
-    //val scu = cu.asInstanceOf[ScalaCompilationUnit]
-    //FIXME : avoid having several SemanticHighlighter notified on single file update (=> move listeners at document level, or move SemanticHighliter at plugin level ?)
+    
     if (scu.getResource.getLocation == editor.getPath.makeAbsolute) {
       scu.doWithSourceFile { (sourceFile, compiler) =>
-        val toAdds = new java.util.HashMap[Annotation, org.eclipse.jface.text.Position]
 
+        var annotationsToAdd = Collections.emptyMap[Annotation, Position]()
+        
         if (pluginStore.getBoolean(P_ACTIVE)) {
-          object viewsCollector extends compiler.Traverser {
-            override def traverse(t: compiler.Tree): Unit = t match {
-              case v: compiler.ApplyImplicitView =>
-                val txt = new String(sourceFile.content, v.pos.startOrPoint, math.max(0, v.pos.endOrPoint - v.pos.startOrPoint)).trim()
-                val ia = new ImplicitConversionsOrArgsAnnotation("Implicit conversions found: " + txt + " => " + v.fun.symbol.name + "(" + txt + ")")
-                val pos = new org.eclipse.jface.text.Position(v.pos.startOrPoint, txt.length)
-                toAdds.put(ia, pos)
-                super.traverse(t)
-              case v: compiler.ApplyToImplicitArgs =>
-                val txt = new String(sourceFile.content, v.pos.startOrPoint, math.max(0, v.pos.endOrPoint - v.pos.startOrPoint)).trim()
-                // Defensive, but why x.symbol is null (see bug 1000477) for "Some(x.flatten))"
-                // TODO find the implicit args value
-                val argsStr = v.args match {
-                  case null => ""
-                  case l => l.collect{case x if x.hasSymbol => x.symbol.name }.mkString("( ", ", ", " )")
-                }
-                val ia = new ImplicitConversionsOrArgsAnnotation("Implicit arguments found: " + txt + " => " + txt + argsStr)
-                val pos = new org.eclipse.jface.text.Position(v.pos.startOrPoint, txt.length)
-                toAdds.put(ia, pos)
-                super.traverse(t)
-              case _ =>
-                super.traverse(t)
-            }
-          }
-          
           val response = new compiler.Response[compiler.Tree]
           compiler.askLoadedTyped(sourceFile, response)
           response.get(200) match {
-            case Some(Left(tree)) => tree
-              viewsCollector.traverse(tree)
+            case Some(Left(_)) =>
+              annotationsToAdd = findAllImplicitConversions(compiler, sourceFile)
             case Some(Right(exc)) => 
-              ScalaPlugin.plugin.logError(exc)
+              logger.error(exc)
             case None =>
-              ScalaPlugin.plugin.logWarning("Timeout while waiting for `askLoadedTyped` during implicit highlighting.")
+              logger.warning("Timeout while waiting for `askLoadedTyped` during implicit highlighting.")
           }
         }
-        Annotations.update(sourceViewer, AnnotationsTypes.Implicits, toAdds)
+        
+        Annotations.update(sourceViewer, AnnotationsTypes.Implicits, annotationsToAdd)
       }
     }
+  }
+}
+
+object SemanticHighlightingPresenter {
+  val DisplayStringSeparator = " => "
+    
+  def findAllImplicitConversions(compiler: ScalaPresentationCompiler, sourceFile: SourceFile) = {
+    
+    import compiler.{Tree, Traverser, ApplyImplicitView, ApplyToImplicitArgs}
+    
+    def mkImplicitConversionAnnotation(t: ApplyImplicitView) = {
+      val txt = new String(sourceFile.content, t.pos.startOrPoint, math.max(0, t.pos.endOrPoint - t.pos.startOrPoint)).trim()
+      val annotation = new ImplicitConversionsOrArgsAnnotation("Implicit conversions found: " + txt + DisplayStringSeparator + t.fun.symbol.name + "(" + txt + ")")
+      val pos = new Position(t.pos.startOrPoint, txt.length)
+      (annotation, pos)
+    }
+    
+    def mkImplicitArgumentAnnotation(t: ApplyToImplicitArgs) = {
+      val txt = new String(sourceFile.content, t.pos.startOrPoint, math.max(0, t.pos.endOrPoint - t.pos.startOrPoint)).trim()
+      // Defensive, but why x.symbol is null (see bug 1000477) for "Some(x.flatten))"
+      // TODO find the implicit args value
+      val argsStr = t.args match {
+        case null => ""
+        case l => l.collect{case x if x.hasSymbol => x.symbol.name }.mkString("( ", ", ", " )")
+      }
+      val annotation = new ImplicitConversionsOrArgsAnnotation("Implicit arguments found: " + txt + DisplayStringSeparator + txt + argsStr)
+      val pos = new Position(t.pos.startOrPoint, txt.length)
+      (annotation, pos)
+    }
+    
+    val implicits = new java.util.HashMap[Annotation, Position]
+
+    new Traverser {
+      override def traverse(t: Tree): Unit = {
+        t match {
+          case v: ApplyImplicitView =>
+            val (annotation, pos) = mkImplicitConversionAnnotation(v)
+            implicits.put(annotation, pos)
+          case v: ApplyToImplicitArgs =>
+            val (annotation, pos) = mkImplicitArgumentAnnotation(v)
+            implicits.put(annotation, pos)
+          case _ =>
+        }
+        super.traverse(t)
+      }
+    }.traverse(compiler.body(sourceFile))
+          
+    implicits
   }
 }

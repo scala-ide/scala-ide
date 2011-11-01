@@ -17,18 +17,12 @@ object Annotations {
   def update(model: IAnnotationModel, annotationType: String, toAdds: java.util.Map[Annotation, org.eclipse.jface.text.Position]): Unit = {
     if (model ne null) {
       model.asInstanceOf[ISynchronizable].getLockObject() synchronized {
-        var toRemove: List[Annotation] = Nil
-        val it = model.getAnnotationIterator()
-        while (it.hasNext) {
-          val annot = it.next.asInstanceOf[Annotation]
-          if (annotationType == annot.getType) {
-            toRemove = annot :: toRemove
-          }
-        }
+        import scala.collection.JavaConversions._
+        val annotations = model.getAnnotationIterator() collect { case ann: Annotation => ann }
+        val toRemove = annotations.filter(annotationType == _.getType)
         val am = model.asInstanceOf[IAnnotationModelExtension]
         am.replaceAnnotations(toRemove.toArray, toAdds)
       }
     }
   }
 }
-

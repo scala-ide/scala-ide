@@ -20,56 +20,60 @@ import scala.util.matching.Regex
 import org.eclipse.jface.text.Position
 import scala.collection.JavaConversions._
 
-class ScalaQuickAssistProcessor extends org.eclipse.jdt.ui.text.java.IQuickAssistProcessor{
-  private val implicitConversionFound = new Regex("Implicit conversions found: (.*)")
-  private val implicitArgFound = new Regex("Implicit arguments found: (.*)")
+class ScalaQuickAssistProcessor extends org.eclipse.jdt.ui.text.java.IQuickAssistProcessor {
 
-  override def hasAssists(context: IInvocationContext) : Boolean = true
-
-  // FIXME There's a lot of duplicated code from ScalaQuickFixProcessor in here;
-  // maybe we could merge these two traits? --Mirko
+  import ScalaQuickAssistProcessor._
   
-  override def getAssists(context : IInvocationContext, locations : Array[IProblemLocation]) : Array[IJavaCompletionProposal] =
+  override def hasAssists(context: IInvocationContext): Boolean = true
+
+  override def getAssists(context: IInvocationContext, locations: Array[IProblemLocation]): Array[IJavaCompletionProposal] =
     context.getCompilationUnit match {
-      case ssf : ScalaSourceFile => {
-      	val editor = JavaUI.openInEditor(context.getCompilationUnit)
-          val corrections = {
-          	for ((ann, pos) <- getAnnotationsAtOffset(editor, context.getSelectionOffset())) yield {
-           	  suggestAssist(context.getCompilationUnit(), ann.getText, pos)
-          	}
-      	  }.flatten
-          corrections match {
-            case Nil => null
-            case l => l.distinct.toArray
+      case ssf: ScalaSourceFile => {
+        val editor = JavaUI.openInEditor(context.getCompilationUnit)
+        val corrections = {
+          for ((ann, pos) <- getAnnotationsAtOffset(editor, context.getSelectionOffset())) yield {
+            suggestAssist(context.getCompilationUnit(), ann.getText, pos)
           }
+        }.flatten
+        corrections match {
+          case Nil => null
+          case correction => correction.distinct.toArray
         }
+      }
+      // The caller expects null to mean "no assists".
       case _ => null
-  }
-  
+    }
+
   private def getAnnotationsAtOffset(part: IEditorPart, offset: Int): List[Pair[Annotation, Position]] = {
-	  import ScalaQuickAssistProcessor._ 
-	  
+    import ScalaQuickAssistProcessor._
     val model = JavaUI.getDocumentProvider.getAnnotationModel(part.getEditorInput)
-    model.getAnnotationIterator collect {
-	    case ann: Annotation => (ann, model.getPosition(ann))
-	  } filter { 
-	    case (_, pos) => isInside(offset, pos.offset, pos.offset + pos.length)
-	  } toList
+    val annotationsWithPositions = model.getAnnotationIterator collect {
+      case ann: Annotation => (ann, model.getPosition(ann))
+    } 
+    val annotationsAtOffset = annotationsWithPositions filter {
+      case (_, pos) => isInside(offset, pos.offset, pos.offset + pos.length)
+    }
+    annotationsAtOffset.toList
   }
 
   private def suggestAssist(compilationUnit: ICompilationUnit, problemMessage: String, location: Position): List[IJavaCompletionProposal] = {
-	  
+
     problemMessage match {
-      case implicitConversionFound(s) => List(new ImplicitConversionExpandingProposal(s,location)) 
-      case implicitArgFound(s) =>   List(new ImplicitArgumentExpandingProposal(s,location))
+      case ImplicitConversionFound(s) => List(new ImplicitConversionExpandingProposal(s, location))
+      case ImplicitArgFound(s) => List(new ImplicitArgumentExpandingProposal(s, location))
       case _ => Nil
     }
   }
 }
 
 object ScalaQuickAssistProcessor {
-	private def isInside(offset: Int, start: Int,end: Int): Boolean = {
-		return offset == start || offset == end || (offset > start && offset < end); // make sure to handle 0-length ranges
-    }
+  
+  private def isInside(offset: Int, start: Int, end: Int) = {
+    (start to end) contains offset
+  }
+  
+  private final val ImplicitConversionFound = "Implicit conversions found: (.*)".r
+  
+  private final val ImplicitArgFound = "Implicit arguments found: (.*)".r
 }
 

@@ -9,6 +9,7 @@ import org.eclipse.core.runtime.CoreException
 import org.eclipse.core.runtime.{Platform, IProgressMonitor}
 import org.eclipse.jdt.core.WorkingCopyOwner
 import scala.tools.eclipse.javaelements.ScalaCompilationUnit
+import scala.tools.eclipse.util.HasLogger
 
 /**
  * The implementation for the org.scala-ide.sdt.core.reconciliationParticipants
@@ -19,7 +20,7 @@ import scala.tools.eclipse.javaelements.ScalaCompilationUnit
  * 
  * @author Mirko Stocker
  */
-object ReconciliationParticipantsExtensionPoint {
+object ReconciliationParticipantsExtensionPoint extends HasLogger {
   
   val PARTICIPANTS_ID = "org.scala-ide.sdt.core.reconciliationParticipants"
     
@@ -27,7 +28,7 @@ object ReconciliationParticipantsExtensionPoint {
     val configs = Platform.getExtensionRegistry.getConfigurationElementsFor(PARTICIPANTS_ID).toList
 
     configs map { e =>
-      tryOrLog {
+      ScalaPlugin.plugin.check {
         e.createExecutableExtension("class")
       }
     } collect {
@@ -37,7 +38,7 @@ object ReconciliationParticipantsExtensionPoint {
   
   def runBefore(scu: ScalaCompilationUnit, monitor: IProgressMonitor, workingCopyOwner: WorkingCopyOwner) {
     extensions foreach { extension =>
-      tryOrLog {
+      ScalaPlugin.plugin.check {
         extension.beforeReconciliation(scu, monitor, workingCopyOwner)
       }
     }
@@ -45,19 +46,9 @@ object ReconciliationParticipantsExtensionPoint {
   
   def runAfter(scu: ScalaCompilationUnit, monitor: IProgressMonitor, workingCopyOwner: WorkingCopyOwner) {
     extensions foreach { extension =>
-      tryOrLog {
+      ScalaPlugin.plugin.check {
         extension.afterReconciliation(scu, monitor, workingCopyOwner)
       }
-    }
-  }
-  
-  private def tryOrLog[T](f : => T): Option[T] = {
-    try {
-      Some(f)
-    } catch {
-      case t => 
-        ScalaPlugin.plugin.logError(t)
-        None
     }
   }
 }

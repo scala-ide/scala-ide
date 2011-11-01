@@ -5,7 +5,7 @@ import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.jface.util.IPropertyChangeListener
 import org.eclipse.jface.util.PropertyChangeEvent
 
-class PropertyChangeListenerProxy(l : IPropertyChangeListener, val stores : IPreferenceStore*) extends IPropertyChangeListener {
+class PropertyChangeListenerProxy(l : IPropertyChangeListener, private val stores : IPreferenceStore*) extends IPropertyChangeListener {
   import java.lang.ref.WeakReference
   val ref = new WeakReference(l)
   
