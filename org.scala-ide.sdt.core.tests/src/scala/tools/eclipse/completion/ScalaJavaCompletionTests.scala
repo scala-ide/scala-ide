@@ -82,12 +82,7 @@ class ScalaJavaCompletionTests {
       oneCompletion // foo13
       )
 
-    val scalaUnit = compilationUnit("ticket_1000412/model/ClassA.scala").asInstanceOf[ScalaCompilationUnit]
-    project.withSourceFile(scalaUnit) { (src, compiler) =>
-      val dummy = new Response[Unit]
-      compiler.askReload(List(src), dummy)
-      dummy.get
-    }()
+    reload(scalaCompilationUnit("ticket_1000412/model/ClassA.scala"))
 
     runTest("ticket_1000412/test/TestJavaReference.java", oracle)
   }
@@ -114,12 +109,7 @@ class ScalaJavaCompletionTests {
       oneCompletion // bar11
       )
 
-    val scalaUnit = compilationUnit("ticket_1000412/model/ClassA.scala").asInstanceOf[ScalaCompilationUnit]
-    project.withSourceFile(scalaUnit) { (src, compiler) =>
-      val dummy = new Response[Unit]
-      compiler.askReload(List(src), dummy)
-      dummy.get
-    }()
+    reload(scalaCompilationUnit("ticket_1000412/model/ClassA.scala"))
 
     runTest("ticket_1000412/test/TestJavaExtends.java", oracle)
   }

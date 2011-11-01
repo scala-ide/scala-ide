@@ -52,7 +52,7 @@ import org.eclipse.jdt.core.dom.ClassInstanceCreation
  *  
  *  This class only proposes concrete methods coming from Scala traits.
  * 
- * The test- references the cases from <code>ScalaJavaCompletionTests</code>
+ * The //test comments reference the test cases from <code>ScalaJavaCompletionTests</code>
  */
 class ScalaJavaCompletionProposalComputer extends IJavaCompletionProposalComputer {
   def sessionStarted() {}
