@@ -274,8 +274,12 @@ class ScalaProject(val underlying: IProject) extends HasLogger {
 
     var sourceFiles = new immutable.HashSet[IFile]
     
-    for (srcEntry <- javaProject.getResolvedClasspath(true) if srcEntry.getEntryKind() == IClasspathEntry.CPE_SOURCE) {
-      val srcFolder = ScalaPlugin.plugin.workspaceRoot.findMember(srcEntry.getPath())
+    for {
+      srcEntry <- javaProject.getResolvedClasspath(true)
+      if srcEntry.getEntryKind() == IClasspathEntry.CPE_SOURCE
+      val srcFolder = ScalaPlugin.plugin.workspaceRoot.findMember(srcEntry.getPath()) 
+      if srcFolder ne null
+    } {
       val inclusionPatterns = fullPatternChars(srcEntry, srcEntry.getInclusionPatterns())
       val exclusionPatterns = fullPatternChars(srcEntry, srcEntry.getExclusionPatterns())
       val isAlsoProject = srcFolder == underlying  // source folder is the project itself
