@@ -42,18 +42,18 @@ class ScalaMethodVerifierProvider extends IMethodVerifierProvider with HasLogger
    * Checks that `abstractMethod` is a non-deferred member of a Scala Trait.
    */
   def isConcreteTraitMethod(abstractMethod: MethodBinding): Boolean = {
-    val project = findProjectOf(abstractMethod)
-    
-    ScalaPlugin.plugin.asScalaProject(project) match {
-      case Some(scalaProject) =>
-        Utils.tryExecute {
+    Utils.tryExecute {
+      val project = findProjectOf(abstractMethod)
+      
+      ScalaPlugin.plugin.asScalaProject(project) match {
+        case Some(scalaProject) => 
           isConcreteTraitMethod(abstractMethod, scalaProject)
-        }(orElse = false)
-      case None =>
-        logger.debug("`%s` is not a Scala Project. %s".format(project.getName(), JDTMethodVerifierCarryOnMsg))
-        false
-    }
-
+          
+        case None =>
+          logger.debug("`%s` is not a Scala Project. %s".format(project.getName(), JDTMethodVerifierCarryOnMsg))
+          false
+      }
+    }(orElse = false)
   }
 
   private def findProjectOf(abstractMethod: MethodBinding): IProject = {
