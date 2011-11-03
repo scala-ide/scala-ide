@@ -35,7 +35,9 @@ class NewNameWizardPage(
     val textField = new LabeledTextField(main, newNameEntered, "New Name:", defaultName)
 
     textField.setLayoutData(new GridData(GridData.FILL_HORIZONTAL))
-    
+
+    textField.setFocus()
+
     setControl(main)
   }
   
