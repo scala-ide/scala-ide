@@ -12,8 +12,9 @@ import org.junit._
 import org.mockito.Matchers._
 import org.mockito.Mockito._
 import scala.tools.eclipse.hyperlinks.HyperlinkTester
+import scala.tools.eclipse.testsetup.CustomAssertion
 
-object PresentationCompilerTest extends testsetup.TestProjectSetup("pc") with HyperlinkTester
+object PresentationCompilerTest extends testsetup.TestProjectSetup("pc") with CustomAssertion with HyperlinkTester
 
 class PresentationCompilerTest {
   import PresentationCompilerTest._
@@ -86,10 +87,23 @@ class PresentationCompilerTest {
     assertNoErrors(unit)
   }
   
-  
-  @Test def resetWhilePresentationCompilerIsInitializing_should_do_nothing() {
-    project.underlying.close(null) // closing the project resets compilers
-    Assert.assertFalse("Reset should do nothing when PC is not yet initialized", project.resetPresentationCompiler())
+  @Test
+  def psShouldReportTheCorrectCompilationUnitsItKnowsAbout() {
+    def managedUnits() = project.withPresentationCompiler(_.compilationUnits)()
+    
+    project.shutDownCompilers()
+    
+    // should be empty
+    Assert.assertTrue("Presentation compiler should not maintain any units after a shutdown request", managedUnits().isEmpty)
+    
+    val cu = scalaCompilationUnit("t1000692/akka/util/ReflectiveAccess.scala")
+    
+    // still no units should be loaded
+    Assert.assertTrue("Presentation compiler should not maintain any units after structure build (%s)".format(managedUnits()), managedUnits().isEmpty)
+    
+    cu.scheduleReconcile().get
+
+    // now the unit should be managed
+    Assert.assertEquals("Presentation compiler should maintain one unit after reload (%s)".format(managedUnits()), 1, managedUnits().size)
   }
-  
 }

@@ -18,6 +18,7 @@ import scala.tools.nsc.io.{ AbstractFile, VirtualFile }
 import scala.tools.eclipse.contribution.weaving.jdt.IScalaSourceFile
 import scala.tools.eclipse.util.EclipseFile
 import org.eclipse.jdt.core.compiler.CharOperation
+import scala.tools.nsc.interactive.Response
 
 object ScalaSourceFile {
   val handleFactory = new HandleFactory
@@ -39,14 +40,22 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
   override def getMainTypeName : Array[Char] =
     getElementName.substring(0, getElementName.length - ".scala".length).toCharArray()
 
-  /** Schedule this compilation unit for reconciliation.
+  /** Schedule this source file for reconciliation. Add the file to 
+   *  the loaded files managed by the presentation compiler.
    */
-  override def scheduleReconcile() = {
+  override def scheduleReconcile(): Response[Unit] = {
+    // askReload first
+    val res = project.withSourceFile(this) { (sf, compiler) =>
+      compiler.askReload(this, getContents)
+    } ()
+    
     this.reconcile(
         ICompilationUnit.NO_AST,
         false /* don't force problem detection */,
         null /* use primary owner */,
         null /* no progress monitor */);
+    
+    res
   }
 
   override def reconcile(

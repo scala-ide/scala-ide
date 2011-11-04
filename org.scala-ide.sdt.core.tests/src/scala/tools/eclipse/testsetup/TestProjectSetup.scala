@@ -30,7 +30,7 @@ import org.mockito.Mockito.{mock, when}
  *  Example: `object HyperlinkDetectorTests extends TestProjectSetup("hyperlinks")'
  * 
  */
-class TestProjectSetup(projectName: String) extends CustomAssertion {
+class TestProjectSetup(projectName: String)  {
   type ScalaUnit = ScalaCompilationUnit with ICompilationUnit
   
   /** The ScalaProject corresponding to projectName, after copying to the test workspace. */
