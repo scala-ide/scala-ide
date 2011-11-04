@@ -38,7 +38,11 @@ trait BuildSuccessListener {
   def buildSuccessful(): Unit
 }
 
-class ScalaProject(val underlying: IProject) extends HasLogger {
+object ScalaProject {
+  def apply(underlying: IProject) = new ScalaProject(underlying)
+}
+
+class ScalaProject private (val underlying: IProject) extends HasLogger {
   import ScalaPlugin.plugin
 
   private var classpathUpdate: Long = IResource.NULL_STAMP
@@ -492,6 +496,9 @@ class ScalaProject(val underlying: IProject) extends HasLogger {
     settings.classpath.value = classpath.map(_.toOSString).mkString(pathSeparator)
     settings.sourcepath.value = sfs.map(_.toOSString).mkString(pathSeparator)
 
+    logger.debug("CLASSPATH: " + classpath.mkString("\n"))
+    logger.debug("SOURCEPATH: " + sfs.mkString("\n"))
+    
     val store = storage
     for (
       box <- IDESettings.shownSettings(settings);
@@ -576,7 +583,7 @@ class ScalaProject(val underlying: IProject) extends HasLogger {
     } {orElse}
   }
 
-  /** Shutdown the presentation compiler, and force a reinitialization but asking to reconcile all 
+  /** Shutdown the presentation compiler, and force a re-initialization but asking to reconcile all 
    *  compilation units that were serviced by the previous instance of the PC. Does nothing if
    *  the presentation compiler is not yet initialized.
    *  
@@ -584,7 +591,7 @@ class ScalaProject(val underlying: IProject) extends HasLogger {
    */
   def resetPresentationCompiler(): Boolean =
     if (presentationCompiler.initialized) {
-      val units: List[ScalaCompilationUnit] = withPresentationCompiler(_.compilationUnits)(Nil)
+      val units: Seq[ScalaCompilationUnit] = withPresentationCompiler(_.compilationUnits)(Nil)
       
       presentationCompiler.invalidate
       
@@ -642,8 +649,30 @@ class ScalaProject(val underlying: IProject) extends HasLogger {
 
     // Already performs saving the dependencies
     
-    if (!buildManager.hasErrors) 
+    if (!buildManager.hasErrors) {
+      // reset presentation compilers of projects that depend on this one
+      // since the output directory now contains the up-to-date version of this project
+      // note: ScalaBuilder resets the presentation compiler when a referred project
+      // is built, but only when it has changes! this call makes sure that a rebuild,
+      // even when there are no changes, propagates the classpath to dependent projects
+      resetDependentProjects()
       buildListeners foreach { _.buildSuccessful }
+    }
+  }
+
+  /** Reset the presentation compiler of projects that depend on this one.
+   *  This should be done after a successful build, since the output directory
+   *  now contains an up-to-date version of this project.
+   */
+  def resetDependentProjects() {
+    for {
+      prj <- underlying.getReferencingProjects()
+      if prj.isOpen() && ScalaPlugin.plugin.isScalaProject(prj)
+      dependentScalaProject <- ScalaPlugin.plugin.asScalaProject(prj)
+    } {
+      logger.debug("[%s] Reset PC of referring project %s".format(this, dependentScalaProject))
+      dependentScalaProject.resetPresentationCompiler()
+    }
   }
   
   def addBuildSuccessListener(listener: BuildSuccessListener) {
@@ -660,20 +689,30 @@ class ScalaProject(val underlying: IProject) extends HasLogger {
     classpathCheckLock.synchronized {
       classpathHasBeenChecked= false
     }
-    resetCompilers
     if (buildManager0 != null)
       buildManager0.clean(monitor)
     cleanOutputFolders
+    resetCompilers // reset them only after the output directory is emptied
   }
 
-  def resetBuildCompiler(implicit monitor: IProgressMonitor) {
+  def resetBuildCompiler() {
     buildManager0 = null
     hasBeenBuilt = false
   }
 
   def resetCompilers(implicit monitor: IProgressMonitor = null) = {
     logger.info("resetting compilers!  project: " + this.toString)
-    resetBuildCompiler
-    resetPresentationCompiler
+    resetBuildCompiler()
+    resetPresentationCompiler()
+  }
+  
+  def shutDownCompilers() {
+    resetBuildCompiler()
+    shutDownPresentationCompiler()
+  }
+  
+  /** Shut down presentation compiler without scheduling a reconcile for open files. */
+  def shutDownPresentationCompiler() {
+    presentationCompiler.invalidate()
   }
 }

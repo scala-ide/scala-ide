@@ -6,7 +6,7 @@
 package scala.tools.eclipse
 
 import org.eclipse.jdt.core.IJavaProject
-import scala.collection.mutable.HashMap
+import scala.collection.mutable
 import scala.util.control.ControlThrowable
 import org.eclipse.core.resources.{ IFile, IProject, IResourceChangeEvent, IResourceChangeListener, ResourcesPlugin }
 import org.eclipse.core.runtime.{ CoreException, FileLocator, IStatus, Platform, Status }
@@ -128,7 +128,7 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
   lazy val templateManager = new ScalaTemplateManager()
   lazy val headlessMode = System.getProperty(HEADLESS_TEST) ne null
 
-  private val projects = new HashMap[IProject, ScalaProject]
+  private val projects = new mutable.HashMap[IProject, ScalaProject]
 
   override def start(context: BundleContext) = {
     super.start(context)
@@ -156,7 +156,7 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
     projects.get(project) match {
       case Some(scalaProject) => scalaProject
       case None =>
-        val scalaProject = new ScalaProject(project)
+        val scalaProject = ScalaProject(project)
         projects(project) = scalaProject
         scalaProject
     }
@@ -195,8 +195,8 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
           projects.get(project) match {
             case Some(scalaProject) =>
               projects.remove(project)
-              logger.info("resetting compilers for " + project.getName)
-              scalaProject.resetCompilers
+              logger.info("shutting down compilers for " + project.getName)
+              scalaProject.shutDownCompilers()
             case None =>
           }
         }
@@ -230,13 +230,17 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
 
     // process deleted files
     val buff = new ListBuffer[ScalaSourceFile]
+    val projectsToReset = new mutable.HashSet[ScalaProject]
 
     def findRemovedSources(delta: IJavaElementDelta) {
       val isChanged = delta.getKind == CHANGED
       val isRemoved = delta.getKind == REMOVED
+      val isAdded   = delta.getKind == ADDED
+      
       def hasFlag(flag: Int) = (delta.getFlags & flag) != 0
 
       val elem = delta.getElement
+      
       val processChildren: Boolean = elem.getElementType match {
         case JAVA_MODEL => true
         case JAVA_PROJECT if !isRemoved && !hasFlag(F_CLOSED) => true
@@ -244,14 +248,25 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
         case PACKAGE_FRAGMENT_ROOT =>
           if (isRemoved || hasFlag(F_REMOVED_FROM_CLASSPATH | F_ADDED_TO_CLASSPATH | F_ARCHIVE_CONTENT_CHANGED)) {
             logger.info("package fragment root changed (resetting pres compiler): " + elem)
-            asScalaProject(elem.getJavaProject.getProject).foreach(_.resetPresentationCompiler)
+            asScalaProject(elem.getJavaProject().getProject).foreach(projectsToReset +=)
             false
           } else true
 
-        case PACKAGE_FRAGMENT => true
+        case PACKAGE_FRAGMENT => 
+          if (isAdded || isRemoved) {
+            logger.debug("package framgent added or removed" + elem.getElementName())
+            asScalaProject(elem.getJavaProject().getProject).foreach(projectsToReset +=)
+            false // stop recursion, we need to reset the PC anyway
+          } else 
+            true
 
         case COMPILATION_UNIT if elem.isInstanceOf[ScalaSourceFile] && isRemoved =>
           buff += elem.asInstanceOf[ScalaSourceFile]
+          false
+          
+        case COMPILATION_UNIT if isAdded =>
+          logger.debug("added compilation unit " + elem.getElementName())
+          asScalaProject(elem.getJavaProject().getProject).foreach(projectsToReset +=)
           false
 
         case _ => false
@@ -261,11 +276,16 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
         delta.getAffectedChildren foreach { findRemovedSources(_) }
     }
     findRemovedSources(event.getDelta)
-    if(!buff.isEmpty) {
+    
+    
+    projectsToReset.foreach(_.resetPresentationCompiler)
+    if(buff.nonEmpty) {
       buff.toList groupBy (_.getJavaProject.getProject) foreach {
         case (project, srcs) =>
-          if (project.isOpen)
-            getScalaProject(project) doWithPresentationCompiler (_.filesDeleted(srcs))
+          asScalaProject(project) foreach { p =>
+            if (project.isOpen && !projectsToReset(p))
+              getScalaProject(project) doWithPresentationCompiler (_.filesDeleted(srcs))
+          }
       }
     }
   }
