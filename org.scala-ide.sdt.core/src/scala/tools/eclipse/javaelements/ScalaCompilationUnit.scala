@@ -98,7 +98,19 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
       info.isStructureKnown
     }) (false)
 
-  def scheduleReconcile(): Unit = ()
+    
+  /** Schedule this unit for reconciliation. This implementation does nothing, subclasses
+   *  implement custom behavior. @see ScalaSourceFile
+   * 
+   *  @return A response on which clients can synchronize. The response
+   *          only notifies when the unit was added to the managed sources list, *not*
+   *          that it was typechecked.
+   */
+  def scheduleReconcile(): Response[Unit] = {
+    val r = (new Response[Unit])
+    r.set()
+    r
+  }
 
   /** Log an error at most once for this source file. */
   private def handleCrash(msg: String, ex: Throwable) {
