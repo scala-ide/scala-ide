@@ -5,6 +5,9 @@
 # Scala compiler version to be used as a dependency
 SCALA_VERSION=2.8.3-SNAPSHOT
 
+# Scala library version
+SCALA_LIBRARY_VERSION=2.8.3-SNAPSHOT
+
 #THIS NEEDS TO BE UPDATED ONCE WE HAVE SNAPSHOTS
 
 # The precompiled compiler-interface.jar that SBT uses to communicate with scalac
