@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Scala JDT Weaving
 Bundle-SymbolicName: org.scala-ide.sdt.aspects;singleton:=true
-Bundle-Version: 2.1.0.qualifier
+Bundle-Version: 2.0.0.qualifier
 Bundle-Vendor: scala-ide.org
 Bundle-Activator: scala.tools.eclipse.contribution.weaving.jdt.ScalaJDTWeavingPlugin
 Require-Bundle: 
