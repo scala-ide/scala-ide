@@ -24,13 +24,13 @@ class ScalaJavaDepTest {
 
   @Before
   def setupWorkspace {
-    SDTTestUtils.enableAutoBuild(true)
+    SDTTestUtils.enableAutoBuild(false)
   }
   
   @Test def testSimpleScalaDep() {
     println("building " + project)
     project.clean(new NullProgressMonitor())
-    rebuild(project)
+    rebuild(project, false)
 
     val problems0 = getProblemMarkers
     Assert.assertTrue("Build errors found: " + userFriendlyMarkers(problems0), problems0.isEmpty)
@@ -52,7 +52,7 @@ class ScalaJavaDepTest {
   @Test def testSimpleJavaDep() {
     println("building " + project)
     project.clean(new NullProgressMonitor())
-    rebuild(project)
+    rebuild(project, false)
 
     val problems0 = getProblemMarkers()
     Assert.assertTrue("Build errors found: " + userFriendlyMarkers(problems0), problems0.isEmpty)
@@ -69,11 +69,12 @@ class ScalaJavaDepTest {
     rebuild(project)
     val problems2 = getProblemMarkers()
     Assert.assertTrue("Build errors found: " + userFriendlyMarkers(problems2), problems2.isEmpty)
-  }  
+  }
   
-  def rebuild(prj: ScalaProject): List[IMarker] = {
+  def rebuild(prj: ScalaProject, incremental: Boolean = true): List[IMarker] = {
     println("building " + prj)
-    prj.underlying.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, new NullProgressMonitor)
+    val buildType = if (incremental) IncrementalProjectBuilder.INCREMENTAL_BUILD else IncrementalProjectBuilder.FULL_BUILD
+    prj.underlying.build(buildType, new NullProgressMonitor)
     getProblemMarkers()
   }
 
