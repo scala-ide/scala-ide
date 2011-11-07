@@ -148,6 +148,10 @@ private class SbtBuildReporter(underlying: BuildReporter) extends xsbti.Reporter
 			case Error => underlying.error(pos, msg)
 		}
 	}
+	
+	def comment(pos: xsbti.Position, msg: String) {
+	  underlying.comment(pos, msg)
+	}
 }
 
 trait EclipseLogger extends sbt.Logger {
