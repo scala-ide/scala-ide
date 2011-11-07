@@ -507,4 +507,13 @@ class StructureBuilderTest {
     // this will trigger the java reconciler so that the problems will be reported to the `requestor`
     unit.getWorkingCopy(owner, new NullProgressMonitor)
   }
+
+  @Test def buildStructureOfModuleWithNestedTypeDefinitions_1000711() {
+    // when
+    val fragment = srcPackageRoot.getPackageFragment("t1000711")
+    // then
+    val jdtStructure = compilationUnitsStructure(fragment)
+    // verify
+    assertEquals(T1000711TestOracle.expectedFragment, jdtStructure)
+  }
 }
