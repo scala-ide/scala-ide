@@ -40,13 +40,12 @@ class ScalaCompilerClasspathTest {
     Assert.assertTrue("Single compiler error expected", errors.length == 1)
   }
   
-    val baseRawClasspath= project.javaProject.getRawClasspath()
-  
   @Test def testWithCompilerOnClasspath() {
     println("building " + project)
     project.clean(new NullProgressMonitor())
-    val p = new Path("/builder-compiler-classpath/lib/2.10.x/scala-compiler.jar").toFile().exists()
-    val newRawClasspath = project.javaProject.getRawClasspath() :+ JavaCore.newLibraryEntry(new Path("/builder-compiler-classpath/lib/2.10.x/scala-compiler.jar"), null, null)
+    val p = new Path("/builder-compiler-classpath/lib/2.10.x/scala-compiler.jar")
+    Assert.assertTrue("scala compiler exists in the test framework", p.toFile().exists())
+    val newRawClasspath = project.javaProject.getRawClasspath() :+ JavaCore.newLibraryEntry(p, null, null)
     project.javaProject.setRawClasspath(newRawClasspath, new NullProgressMonitor)
     project.underlying.build(IncrementalProjectBuilder.FULL_BUILD, new NullProgressMonitor)
 
