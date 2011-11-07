@@ -84,7 +84,7 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
   val javaFileExtn = ".java"
   val jarFileExtn = ".jar"
 
-  def cutVersion(version: String): String = {
+  private def cutVersion(version: String): String = {
           val pattern = "(\\d)\\.(\\d+)\\..*".r
           version match {
             case pattern(major, minor)=>
@@ -93,6 +93,20 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
               "(unknown)"
           }
       }
+  
+  /**
+   * Check if the given version is compatible with the current plug-in version.
+   * Check on the major/minor number, discard the maintenance number.
+   * 2.9.1 and 2.9.2-SNAPSHOT are compatible
+   * 2.8.1 and 2.9.0 are no compatible
+   */
+  def isCompatibleVersion(version: Option[String]): Boolean =
+    version match {
+    case Some(v) =>
+      cutVersion(v) == shortScalaVer
+    case None =>
+      false
+  }
 
   lazy val scalaVer = scala.util.Properties.scalaPropOrElse("version.number", "(unknown)")
   lazy val shortScalaVer = cutVersion(scalaVer)
