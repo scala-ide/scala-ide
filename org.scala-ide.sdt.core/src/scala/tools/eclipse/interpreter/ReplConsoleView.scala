@@ -40,6 +40,7 @@ import org.eclipse.core.resources.IResourceChangeEvent
 import org.eclipse.core.resources.IProject
 import org.eclipse.core.resources.IResourceDeltaVisitor
 import org.eclipse.core.resources.IResourceDelta
+import scala.tools.eclipse.util.SWTUtils
 
 class ReplConsoleView extends ViewPart {
 
@@ -212,11 +213,9 @@ class ReplConsoleView extends ViewPart {
       if (event.getDelta() != null) {
         event.getDelta().accept(resourceDeltaVisitor)
         if (resourceDeltaVisitor.isProjectChange) {
-          projectList.getDisplay().asyncExec(new Runnable() {
-            override def run() {
-              refreshProjectList()
-            }
-          })
+          SWTUtils.asyncExec {
+            refreshProjectList()
+          }
         }
       }
     }
