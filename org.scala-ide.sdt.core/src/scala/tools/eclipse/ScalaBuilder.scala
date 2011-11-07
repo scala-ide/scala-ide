@@ -11,10 +11,10 @@ import org.eclipse.core.resources.{ IFile, IncrementalProjectBuilder, IProject, 
 import org.eclipse.core.runtime.{ IProgressMonitor, IPath, SubMonitor }
 import org.eclipse.jdt.internal.core.JavaModelManager
 import org.eclipse.jdt.internal.core.builder.{ JavaBuilder, State }
-
 import scala.tools.eclipse.javaelements.JDTUtils
 import scala.tools.eclipse.util.{ FileUtils, ReflectionUtils }
 import util.HasLogger
+import scala.tools.nsc.interactive.RefinedBuildManager
 
 class ScalaBuilder extends IncrementalProjectBuilder with HasLogger {
   def plugin = ScalaPlugin.plugin
@@ -114,7 +114,7 @@ class ScalaBuilder extends IncrementalProjectBuilder with HasLogger {
      *  (since the SBT builder automatically calls the JDT builder internally if there are modified Java sources).
      */
     def shouldRunJavaBuilder: Boolean = {
-      (!project.buildManager.isInstanceOf[EclipseSbtBuildManager]
+      (project.buildManager.isInstanceOf[RefinedBuildManager]
          || (needToCopyResources && !addedOrUpdated.exists(_.getName().endsWith(plugin.javaFileExtn)))
       )
     }
