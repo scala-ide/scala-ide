@@ -32,19 +32,21 @@ class ScalaJavaDepTest {
     project.clean(new NullProgressMonitor())
     rebuild(project)
 
-    Assert.assertTrue("Build errors found", getProblemMarkers.isEmpty)
+    val problems0 = getProblemMarkers
+    Assert.assertTrue("Build errors found: " + userFriendlyMarkers(problems0), problems0.isEmpty)
     
     val JJavaCU = compilationUnit("test/J.java")
-    val originalJJava = SDTTestUtils.slurpAndClose(project.underlying.getFile("test/J.java").getContents)
-    println("IFile: " + JJavaCU.getResource().getAdapter(classOf[IFile]).asInstanceOf[IFile])
+    val originalJJava = SDTTestUtils.slurpAndClose(project.underlying.getFile("src/test/J.java").getContents)
     SDTTestUtils.changeContentOfFile(project.underlying, JJavaCU.getResource().getAdapter(classOf[IFile]).asInstanceOf[IFile], changedJJava)
     rebuild(project)
-    Assert.assertTrue("One build error expected", getProblemMarkers().length == 1) // do more precise matching later
+    val problems1 = getProblemMarkers()
+    Assert.assertTrue("One build error expected, got: " + userFriendlyMarkers(problems1), problems1.length == 1) // do more precise matching later
     
     val JJavaCU2 = compilationUnit("test/J.java")
-    println("IFile: " + JJavaCU.getResource().getAdapter(classOf[IFile]).asInstanceOf[IFile])
-    SDTTestUtils.changeContentOfFile(project.underlying, JJavaCU.getResource().getAdapter(classOf[IFile]).asInstanceOf[IFile], originalJJava)
-    Assert.assertTrue("Build errors found", getProblemMarkers().isEmpty)
+    SDTTestUtils.changeContentOfFile(project.underlying, JJavaCU2.getResource().getAdapter(classOf[IFile]).asInstanceOf[IFile], originalJJava)
+    rebuild(project)
+    val problems2 = getProblemMarkers()
+    Assert.assertTrue("Build errors found: " + userFriendlyMarkers(problems2), problems2.isEmpty)
   }
 
   @Test def testSimpleJavaDep() {
@@ -52,19 +54,21 @@ class ScalaJavaDepTest {
     project.clean(new NullProgressMonitor())
     rebuild(project)
 
-    Assert.assertTrue("Build errors found", getProblemMarkers.isEmpty)
+    val problems0 = getProblemMarkers()
+    Assert.assertTrue("Build errors found: " + userFriendlyMarkers(problems0), problems0.isEmpty)
     
     val SScalaCU = compilationUnit("test/S.scala")
-    val originalSScala = SDTTestUtils.slurpAndClose(project.underlying.getFile("test/S.scala").getContents)
-    println("IFile: " + SScalaCU.getResource().getAdapter(classOf[IFile]).asInstanceOf[IFile])
+    val originalSScala = SDTTestUtils.slurpAndClose(project.underlying.getFile("src/test/S.scala").getContents)
     SDTTestUtils.changeContentOfFile(project.underlying, SScalaCU.getResource().getAdapter(classOf[IFile]).asInstanceOf[IFile], changedSScala)
     rebuild(project)
-    Assert.assertTrue("One build error expected", getProblemMarkers().length == 1) // do more precise matching later
+    val problems1 = getProblemMarkers()
+    Assert.assertTrue("One build error expected: " + userFriendlyMarkers(problems1), problems1.length == 1) // do more precise matching later
     
-    val JJavaCU2 = compilationUnit("test/S.scala")
-    println("IFile: " + SScalaCU.getResource().getAdapter(classOf[IFile]).asInstanceOf[IFile])
-    SDTTestUtils.changeContentOfFile(project.underlying, SScalaCU.getResource().getAdapter(classOf[IFile]).asInstanceOf[IFile], originalSScala)
-    Assert.assertTrue("Build errors found", getProblemMarkers().isEmpty)
+    val SScalaCU2 = compilationUnit("test/S.scala")
+    SDTTestUtils.changeContentOfFile(project.underlying, SScalaCU2.getResource().getAdapter(classOf[IFile]).asInstanceOf[IFile], originalSScala)
+    rebuild(project)
+    val problems2 = getProblemMarkers()
+    Assert.assertTrue("Build errors found: " + userFriendlyMarkers(problems2), problems2.isEmpty)
   }  
   
   def rebuild(prj: ScalaProject): List[IMarker] = {
@@ -78,8 +82,10 @@ class ScalaJavaDepTest {
     units.flatMap(SDTTestUtils.findProblemMarkers)
   }
   
+  def userFriendlyMarkers(markers: List[IMarker]) = markers.map(_.getAttribute(IMarker.MESSAGE))
+  
   lazy val changedJJava = """
-package test
+package test;
 
 public class J {
 	public static void main(String[] args) {

@@ -15,8 +15,7 @@ import org.eclipse.core.resources.IMarker
 
 import scala.tools.eclipse.testsetup.SDTTestUtils
 import org.eclipse.core.resources.IFile
-import org.junit.Ignore
-import org.junit.Before
+import org.junit.{Ignore, Before, After}
 
 object ScalaCompilerClasspathTest extends testsetup.TestProjectSetup("builder-compiler-classpath")
 
@@ -24,11 +23,13 @@ class ScalaCompilerClasspathTest {
 
   import ScalaCompilerClasspathTest._
 
+  val baseRawClasspath= project.javaProject.getRawClasspath()
+  
   @Before
   def setupWorkspace {
-    SDTTestUtils.enableAutoBuild(true)
+    SDTTestUtils.enableAutoBuild(false)
   }
-
+  
   @Test def testWithoutCompilerOnClasspath() {
     println("building " + project)
     project.clean(new NullProgressMonitor())
@@ -43,9 +44,9 @@ class ScalaCompilerClasspathTest {
   @Test def testWithCompilerOnClasspath() {
     println("building " + project)
     project.clean(new NullProgressMonitor())
-    val p = new Path("/builder-compiler-classpath/lib/2.10.x/scala-compiler.jar")
+    val p = new Path(project.underlying.getLocation().toOSString()).append("/lib/2.10.x/scala-compiler.jar")
     Assert.assertTrue("scala compiler exists in the test framework", p.toFile().exists())
-    val newRawClasspath = project.javaProject.getRawClasspath() :+ JavaCore.newLibraryEntry(p, null, null)
+    val newRawClasspath = baseRawClasspath :+ JavaCore.newLibraryEntry(p, null, null)
     project.javaProject.setRawClasspath(newRawClasspath, new NullProgressMonitor)
     project.underlying.build(IncrementalProjectBuilder.FULL_BUILD, new NullProgressMonitor)
 
