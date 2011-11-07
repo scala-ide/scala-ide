@@ -241,10 +241,18 @@ class ScalaProject private (val underlying: IProject) extends HasLogger {
     }
   }
   
-  /** Return all the source files in the current project. It walks all source entries in the classpath
-   *  and respects inclusion and exclusion filters.
+  /** Return all source files in the source path. It only returns buildable files (meaning
+   *  Java or Scala sources).
    */
   def allSourceFiles(): Set[IFile] = {
+    allFilesInSourceDirs() filter (f => plugin.isBuildable(f.getName))
+  }
+  
+  /** Return all the files in the current project. It walks all source entries in the classpath
+   *  and respects inclusion and exclusion filters. It returns both buildable files (java or scala)
+   *  and all other files in the source path.
+   */
+  def allFilesInSourceDirs(): Set[IFile] = {
     /** Cache it for the duration of this call */
     lazy val currentSourceOutputFolders = sourceOutputFolders
     
@@ -293,8 +301,7 @@ class ScalaProject private (val underlying: IProject) extends HasLogger {
           def visit(proxy: IResourceProxy): Boolean = {
             proxy.getType match {
               case IResource.FILE =>
-                if (plugin.isBuildable(proxy.getName())
-                    && !Util.isExcluded(proxy.requestFullPath(), inclusionPatterns, exclusionPatterns, false))
+                if (!Util.isExcluded(proxy.requestFullPath(), inclusionPatterns, exclusionPatterns, false))
                   sourceFiles += proxy.requestResource().asInstanceOf[IFile] // must be an IFile, otherwise we wouldn't be here
                 
                 false // don't recurse, it's a file anyway
