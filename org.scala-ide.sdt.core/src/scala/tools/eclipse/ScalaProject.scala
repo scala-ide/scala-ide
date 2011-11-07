@@ -448,30 +448,45 @@ class ScalaProject private (val underlying: IProject) extends HasLogger {
       case 0 => // unable to find any trace of scala library
         setClasspathError(IMarker.SEVERITY_ERROR, "Unable to find a scala library. Please add the scala container or a scala library jar to the build path.")
       case 1 => // one and only one, now check if the version number is contained in library.properties
-        for (resource <- fragmentRoots(0).getNonJavaResources())
-          resource match {
-            case jarEntry: IJarEntryResource if jarEntry.isFile() && "library.properties".equals(jarEntry.getName) =>
-              val properties = new Properties()
-              properties.load(jarEntry.getContents())
-              val version = properties.getProperty("version.number")
-              if (version != null && version == plugin.scalaVer) {
-                // exactly the same version, should be from the container. Perfect
-                setClasspathError(0, null)
-              } else if (version != null && plugin.cutVersion(version) == plugin.shortScalaVer) {
-                // compatible version (major, minor are the same). Still, add warning message
-                setClasspathError(IMarker.SEVERITY_WARNING, "The version of scala library found in the build path is different from the one provided by scala IDE: " + version + ". Expected: " + plugin.scalaVer + ". Make sure you know what you are doing.")
-              } else {
-                // incompatible version
-                setClasspathError(IMarker.SEVERITY_ERROR, "The version of scala library found in the build path is incompatible with the one provided by scala IDE: " + version + ". Expected: " + plugin.scalaVer + ". Please replace the scala library with the scala container or a compatible scala library jar.")
-              }
-              return
-            case _ =>
-          }
-        // no library.properties, not good
-        setClasspathError(IMarker.SEVERITY_ERROR, "The scala library found in the build path doesn't contain a library.properties file. Please replace the scala library with the scala container or a valid scala library jar")
-      case _ => // 2 or more of them, not good
-        setClasspathError(IMarker.SEVERITY_ERROR, "More than one scala library found in the build path. Please update the project build path so it contains only one scala library reference")
+        getVersionNumber(fragmentRoots(0)) match {
+          case Some(v) if v == plugin.scalaVer =>
+            // exactly the same version, should be from the container. Perfect
+            setClasspathError(0, null)
+          case v if plugin.isCompatibleVersion(v) =>
+            // compatible version (major, minor are the same). Still, add warning message
+            setClasspathError(IMarker.SEVERITY_WARNING, "The version of scala library found in the build path is different from the one provided by scala IDE: " + v.get + ". Expected: " + plugin.scalaVer + ". Make sure you know what you are doing.")
+          case Some(v) =>
+            // incompatible version
+            setClasspathError(IMarker.SEVERITY_ERROR, "The version of scala library found in the build path is incompatible with the one provided by scala IDE: " + v + ". Expected: " + plugin.scalaVer + ". Please replace the scala library with the scala container or a compatible scala library jar.")
+          case None =>
+            // no version found
+            setClasspathError(IMarker.SEVERITY_ERROR, "The scala library found in the build path doesn't expose its version. Please replace the scala library with the scala container or a valid scala library jar")
+        }
+      case _ => // 2 or more of them, not great
+        if (fragmentRoots.exists(fragmentRoot => !plugin.isCompatibleVersion(getVersionNumber(fragmentRoot))))
+          setClasspathError(IMarker.SEVERITY_ERROR, "More than one scala library found in the build path, including at least one with an incompatible version. Please update the project build path so it contains only compatible scala libraries")
+        else
+          setClasspathError(IMarker.SEVERITY_WARNING, "More than one scala library found in the build path, all with compatible versions. This is not an optimal configuration, try to limit to one scala library in the build path.")
     }
+  }
+  
+  /**
+   * Return the version number contained in library.properties if it exists.
+   */
+  private def getVersionNumber(fragmentRoot: IPackageFragmentRoot): Option[String] = {
+    for (resource <- fragmentRoot.getNonJavaResources())
+      resource match {
+        case jarEntry: IJarEntryResource if jarEntry.isFile() && "library.properties".equals(jarEntry.getName) =>
+          val properties = new Properties()
+          properties.load(jarEntry.getContents())
+          val version = properties.getProperty("version.number")
+          if (version == null) {
+            return None
+          }
+          return Option(version)
+        case _ =>
+    }
+    None
   }
   
   private def refreshOutput: Unit = {

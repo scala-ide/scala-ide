@@ -53,7 +53,7 @@ class ClasspathTests {
   /**
    * No scala library defined in the classpath
    */
-  @Test @Ignore
+  @Test
   def noScalaLibrary() {
     setRawClasspathAndCheckMarkers(cleanRawClasspath, 0, 1)
   }
@@ -63,7 +63,7 @@ class ClasspathTests {
    */
   @Test
   def twoScalaLibraries() {
-    setRawClasspathAndCheckMarkers(baseRawClasspath :+ JavaCore.newLibraryEntry(new Path("/classpath/lib/2.10.x/scala-library.jar"), null, null), 0, 1)
+    setRawClasspathAndCheckMarkers(baseRawClasspath :+  JavaCore.newLibraryEntry(new Path("/classpath/lib/" + ScalaPlugin.plugin.shortScalaVer + ".x/scala-library.jar"), null, null), 1, 0)
   }
   
   /**
@@ -71,7 +71,15 @@ class ClasspathTests {
    */
   @Test
   def twoScalaLibrariesWithDifferentName() {
-    setRawClasspathAndCheckMarkers(baseRawClasspath :+ JavaCore.newLibraryEntry(new Path("/classpath/lib/2.10.x/my-scala-library.jar"), null, null), 0, 1)
+    setRawClasspathAndCheckMarkers(baseRawClasspath :+  JavaCore.newLibraryEntry(new Path("/classpath/lib/" + ScalaPlugin.plugin.shortScalaVer + ".x/scala-library.jar"), null, null), 1, 0)
+  }
+  
+  /**
+   * Two scala library defined in the classpath, the eclipse container one, and one incompatible.
+   */
+  @Test
+  def twoScalaLibrariesWithOneIncompatbile() {
+    setRawClasspathAndCheckMarkers(baseRawClasspath :+ createIncompatibleScalaLibraryEntry(), 0, 1)
   }
   
   /**
@@ -128,16 +136,8 @@ class ClasspathTests {
    */
   @Test
   def differentAndIncompatibleVersion() {
-    val newRawClasspath= cleanRawClasspath :+
-      JavaCore.newLibraryEntry(new Path("/classpath/lib/" +
-        (ScalaPlugin.plugin.shortScalaVer match {
-          case "2.8" => "2.9"
-          case "2.9" => "2.10"
-          case "2.10" => "2.8"
-          case _ =>
-            fail("Unsupported embedded scala library version " + ScalaPlugin.plugin.scalaVer +". Please update the test.")
-            ""
-        }) + ".x/scala-library.jar"), null, null)
+    val newRawClasspath= cleanRawClasspath :+ createIncompatibleScalaLibraryEntry()
+      
         
     setRawClasspathAndCheckMarkers(newRawClasspath, 0, 1)
   }
@@ -171,16 +171,7 @@ class ClasspathTests {
    */
   @Test
   def differentNameWithIncompatibleVersion() {
-    val newRawClasspath= cleanRawClasspath :+
-      JavaCore.newLibraryEntry(new Path("/classpath/lib/" +
-        (ScalaPlugin.plugin.shortScalaVer match {
-          case "2.8" => "2.9"
-          case "2.9" => "2.10"
-          case "2.10" => "2.8"
-          case _ =>
-            fail("Unsupported embedded scala library version " + ScalaPlugin.plugin.scalaVer +". Please update the test.")
-            ""
-        }) + ".x/my-scala-library.jar"), null, null)
+    val newRawClasspath= cleanRawClasspath :+ createIncompatibleScalaLibraryEntry()
         
     setRawClasspathAndCheckMarkers(newRawClasspath, 0, 1)
   }
@@ -230,6 +221,20 @@ class ClasspathTests {
     markers= project.underlying.findMarkers("org.scala-ide.sdt.core.problem", false, IResource.DEPTH_INFINITE)
     assertEquals("Unexpected number of scala problems in project", 1, markers.length)
   }
+  
+  /**
+   * Generate library entry for an incompatible scala library
+   */
+  private def createIncompatibleScalaLibraryEntry(): IClasspathEntry =
+    JavaCore.newLibraryEntry(new Path("/classpath/lib/" +
+        (ScalaPlugin.plugin.shortScalaVer match {
+          case "2.8" => "2.9"
+          case "2.9" => "2.10"
+          case "2.10" => "2.8"
+          case _ =>
+            fail("Unsupported embedded scala library version " + ScalaPlugin.plugin.scalaVer +". Please update the test.")
+            ""
+        }) + ".x/scala-library.jar"), null, null)
   
   /**
    * Set the new classpath and check the number of errors and warnings attached to the project.
