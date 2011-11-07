@@ -45,6 +45,9 @@ class ScalaBuilder extends IncrementalProjectBuilder with HasLogger {
     }
 
     val allSourceFiles = project.allSourceFiles()
+    val allFilesInSourceDirs = project.allFilesInSourceDirs()
+    
+    val needToCopyResources = allSourceFiles.size != allFilesInSourceDirs.size
     
     val (addedOrUpdated, removed) = if (project.prepareBuild())
       (allSourceFiles, Set.empty[IFile])
@@ -104,8 +107,20 @@ class ScalaBuilder extends IncrementalProjectBuilder with HasLogger {
     project.build(addedOrUpdated, removed, subMonitor)
     
     val depends = project.externalDepends.toList.toArray
+    
+    /** The Java builder has to be run for copying resources (non-source files) to the output directory.
+     * 
+     *  We need to run it when using the refined builder, or the SBT builder and no Java sources have been modified 
+     *  (since the SBT builder automatically calls the JDT builder internally if there are modified Java sources).
+     */
+    def shouldRunJavaBuilder: Boolean = {
+      (!project.buildManager.isInstanceOf[EclipseSbtBuildManager]
+         || (needToCopyResources && !addedOrUpdated.exists(_.getName().endsWith(plugin.javaFileExtn)))
+      )
+    }
+    
     // SBT build manager already calls java builder internally
-    if (allSourceFiles.exists(FileUtils.hasBuildErrors(_)) || project.buildManager.isInstanceOf[EclipseSbtBuildManager])
+    if (allSourceFiles.exists(FileUtils.hasBuildErrors(_)) || !shouldRunJavaBuilder)
       depends
     else {
       ensureProject

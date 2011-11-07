@@ -19,6 +19,7 @@ import org.eclipse.jdt.core.WorkingCopyOwner
 import scala.tools.eclipse.javaelements.ScalaSourceFile
 import scala.util.matching.Regex
 import testsetup._
+import org.eclipse.core.runtime.Path
 
 object SbtBuilderTest extends TestProjectSetup("builder") with CustomAssertion
 object depProject extends TestProjectSetup("builder-sub")
@@ -45,6 +46,17 @@ class SbtBuilderTest {
     }
 
     Assert.assertTrue("Build errors found", noErrors)
+  }
+
+  @Test def testSimpleBuildWithResources() {
+    println("building " + depProject)
+    depProject.project.clean(new NullProgressMonitor())
+    depProject.project.underlying.build(IncrementalProjectBuilder.FULL_BUILD, new NullProgressMonitor)
+    
+    val targetResource = depProject.project.javaProject.getOutputLocation().append(new Path("resource.txt"))
+    val file = ScalaPlugin.plugin.workspaceRoot.findMember(targetResource)
+    Assert.assertNotNull("Resource has been copied to the output directory", file ne null)
+    Assert.assertTrue("Resource has been copied to the output directory and exists", file.exists())
   }
 
   @Test def dependent_projects_are_rebuilt_and_PC_notified() {
@@ -109,26 +121,23 @@ class SbtBuilderTest {
 
     for (p <- problems) yield p.getAttribute(IMarker.MESSAGE).toString
   }
-  
-  
+
   @Test def dependentProject_should_restart_PC_after_build() {
     val fooCU = depProject.compilationUnit("subpack/Foo.scala")
     val changedErrors = buildWith(fooCU.getResource, changedFooScala)
-    
+
     Assert.assertEquals("Build problems " + changedErrors, 2, changedErrors.size)
-    
+
     val errorMessages = buildWith(fooCU.getResource, originalFooScala)
     Assert.assertEquals("No build problems: " + errorMessages, 0, errorMessages.size)
 
     val fooClientCU = scalaCompilationUnit("test/dependency/FooClient.scala")
 
     reload(fooClientCU)
-    
+
     assertNoErrors(fooClientCU)
   }
-  
-  
-  
+
   /** Returns true if the expected regular expression matches the given error message. */
   private def similarErrorMessage(msg: String)(expected: String): Boolean = {
     msg.matches(expected)
@@ -140,7 +149,7 @@ class SbtBuilderTest {
 class Foo1
 """
 
-    lazy val originalFooScala = """
+  lazy val originalFooScala = """
     package subpack
 
 class Foo
