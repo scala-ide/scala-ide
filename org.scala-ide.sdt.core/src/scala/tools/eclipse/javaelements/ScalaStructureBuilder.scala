@@ -102,8 +102,8 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
       def classes : Map[Symbol, (ScalaElement, ScalaElementInfo)] = Map.empty
       
       def complete(treeTraverser: TreeTraverser) {
-        def addModuleInnerClasses(classElem : ScalaElement, classElemInfo : ScalaElementInfo, module: Symbol) {
-          for(innerClasses <- treeTraverser.module2innerClassDefs.get(module); innerClass <- innerClasses) {
+        def addModuleInnerClasses(classElem : ScalaElement, classElemInfo : ScalaElementInfo, mInfo: ScalaElementInfo) {
+          for(innerClasses <- treeTraverser.moduleInfo2innerClassDefs.get(mInfo); innerClass <- innerClasses) {
             /* The nested classes are exposed as children of the module's companion class. */
             val classBuilder = new Builder {
               val parent = self
@@ -214,7 +214,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
           if (c != NoSymbol) {
             classes.get(c) match {
               case Some((classElem, classElemInfo)) =>
-                addModuleInnerClasses(classElem, classElemInfo, m.moduleClass)
+                addModuleInnerClasses(classElem, classElemInfo, mInfo)
                 addForwarders(classElem, classElemInfo, m.moduleClass)
               case _ =>
             }
@@ -237,7 +237,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
             
             newElements0.put(classElem, classElemInfo)
             
-            addModuleInnerClasses(classElem, classElemInfo, m.moduleClass)
+            addModuleInnerClasses(classElem, classElemInfo, mInfo)
             addForwarders(classElem, classElemInfo, m.moduleClass)
           }
         }
@@ -874,7 +874,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
     private[this] class TreeTraverser {
       /** Holds the sequence of inner classes declared in a module.
        * The map's key refer to the module's symbol (it should really be of type {{{ModuleClassSymbol}}}). */
-      val module2innerClassDefs = collection.mutable.Map.empty[pc.Symbol, List[ClassDef]]
+      val moduleInfo2innerClassDefs = collection.mutable.Map.empty[ScalaElementInfo, List[ClassDef]]
       
       def traverse(tree: Tree, builder : Owner) {
         val (newBuilder, children) = {
@@ -889,13 +889,14 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
               dt.symbol.hasFlag(Flags.ACCESSOR) => (builder, Nil)
             case pd : PackageDef => (builder.addPackage(pd), pd.stats)
             case i : Import => (builder.addImport(i), Nil)
-            case cd : ClassDef if builder.element.isInstanceOf[ScalaModuleElement] =>
-              /* Traversing of classes nested in a module has to be delayed because inner classes have to be exposed 
-               * as children of the module's companion class. The module's inner classes are traversed in {{{ newBuilder.complete }}}. */
-              val symOwner = tree.symbol.owner
-              module2innerClassDefs += symOwner -> (cd :: module2innerClassDefs.get(symOwner).getOrElse(Nil))
-              (builder, Nil)
-            case cd : ClassDef => (builder.addClass(cd), List(cd.impl))
+            case cd : ClassDef =>
+              if(builder.element.isInstanceOf[ScalaModuleElement]) {
+                /* To be visible from Java sources, classes nested in a module have to be exposed as 
+                 * children of the module's companion class (this matches the Scala compiler's behavior). */
+                val moduleInfo = builder.elementInfo.asInstanceOf[ScalaElementInfo]
+                moduleInfo2innerClassDefs += moduleInfo -> (cd :: moduleInfo2innerClassDefs.get(moduleInfo).getOrElse(Nil))
+              }
+              (builder.addClass(cd), List(cd.impl))
             case md : ModuleDef => (builder.addModule(md), List(md.impl))
             case vd : ValDef =>  (builder.addVal(vd), List(vd.rhs))
             case td : TypeDef => (builder.addType(td), List(td.rhs))
