@@ -38,7 +38,11 @@ trait BuildSuccessListener {
   def buildSuccessful(): Unit
 }
 
-class ScalaProject(val underlying: IProject) extends HasLogger {
+object ScalaProject {
+  def apply(underlying: IProject) = new ScalaProject(underlying)
+}
+
+class ScalaProject private (val underlying: IProject) extends HasLogger {
   import ScalaPlugin.plugin
 
   private var classpathUpdate: Long = IResource.NULL_STAMP
@@ -237,10 +241,18 @@ class ScalaProject(val underlying: IProject) extends HasLogger {
     }
   }
   
-  /** Return all the source files in the current project. It walks all source entries in the classpath
-   *  and respects inclusion and exclusion filters.
+  /** Return all source files in the source path. It only returns buildable files (meaning
+   *  Java or Scala sources).
    */
   def allSourceFiles(): Set[IFile] = {
+    allFilesInSourceDirs() filter (f => plugin.isBuildable(f.getName))
+  }
+  
+  /** Return all the files in the current project. It walks all source entries in the classpath
+   *  and respects inclusion and exclusion filters. It returns both buildable files (java or scala)
+   *  and all other files in the source path.
+   */
+  def allFilesInSourceDirs(): Set[IFile] = {
     /** Cache it for the duration of this call */
     lazy val currentSourceOutputFolders = sourceOutputFolders
     
@@ -274,8 +286,12 @@ class ScalaProject(val underlying: IProject) extends HasLogger {
 
     var sourceFiles = new immutable.HashSet[IFile]
     
-    for (srcEntry <- javaProject.getResolvedClasspath(true) if srcEntry.getEntryKind() == IClasspathEntry.CPE_SOURCE) {
-      val srcFolder = ScalaPlugin.plugin.workspaceRoot.findMember(srcEntry.getPath())
+    for {
+      srcEntry <- javaProject.getResolvedClasspath(true)
+      if srcEntry.getEntryKind() == IClasspathEntry.CPE_SOURCE
+      val srcFolder = ScalaPlugin.plugin.workspaceRoot.findMember(srcEntry.getPath()) 
+      if srcFolder ne null
+    } {
       val inclusionPatterns = fullPatternChars(srcEntry, srcEntry.getInclusionPatterns())
       val exclusionPatterns = fullPatternChars(srcEntry, srcEntry.getExclusionPatterns())
       val isAlsoProject = srcFolder == underlying  // source folder is the project itself
@@ -285,8 +301,7 @@ class ScalaProject(val underlying: IProject) extends HasLogger {
           def visit(proxy: IResourceProxy): Boolean = {
             proxy.getType match {
               case IResource.FILE =>
-                if (plugin.isBuildable(proxy.getName())
-                    && !Util.isExcluded(proxy.requestFullPath(), inclusionPatterns, exclusionPatterns, false))
+                if (!Util.isExcluded(proxy.requestFullPath(), inclusionPatterns, exclusionPatterns, false))
                   sourceFiles += proxy.requestResource().asInstanceOf[IFile] // must be an IFile, otherwise we wouldn't be here
                 
                 false // don't recurse, it's a file anyway
@@ -363,6 +378,7 @@ class ScalaProject(val underlying: IProject) extends HasLogger {
     // the classpath change notification
     val markerJob= new Job("Update classpath error marker") {
       override def run(monitor: IProgressMonitor): IStatus = {
+        if (underlying.isOpen()) { // cannot change markers on closed project
           // clean the markers
           underlying.deleteMarkers(plugin.problemMarkerId, false, IResource.DEPTH_ZERO)
           
@@ -374,7 +390,8 @@ class ScalaProject(val underlying: IProject) extends HasLogger {
               marker.setAttribute(IMarker.SEVERITY, severity)
             case _ =>
           }
-          Status.OK_STATUS
+        }
+        Status.OK_STATUS
       }
     }
     markerJob.setRule(underlying)
@@ -401,10 +418,14 @@ class ScalaProject(val underlying: IProject) extends HasLogger {
   def classpathHasChanged() {
     classpathCheckLock.synchronized {
       try {
-        resetCompilers()
         // mark as in progress
         classpathHasBeenChecked= false
         checkClasspath()
+        if (classpathValid) {
+          // no point to reset the compilers on an invalid classpath,
+          // it would not work anyway
+          resetCompilers()
+        }
       }
     }
   }
@@ -427,30 +448,45 @@ class ScalaProject(val underlying: IProject) extends HasLogger {
       case 0 => // unable to find any trace of scala library
         setClasspathError(IMarker.SEVERITY_ERROR, "Unable to find a scala library. Please add the scala container or a scala library jar to the build path.")
       case 1 => // one and only one, now check if the version number is contained in library.properties
-        for (resource <- fragmentRoots(0).getNonJavaResources())
-          resource match {
-            case jarEntry: IJarEntryResource if jarEntry.isFile() && "library.properties".equals(jarEntry.getName) =>
-              val properties = new Properties()
-              properties.load(jarEntry.getContents())
-              val version = properties.getProperty("version.number")
-              if (version != null && version == plugin.scalaVer) {
-                // exactly the same version, should be from the container. Perfect
-                setClasspathError(0, null)
-              } else if (version != null && plugin.cutVersion(version) == plugin.shortScalaVer) {
-                // compatible version (major, minor are the same). Still, add warning message
-                setClasspathError(IMarker.SEVERITY_WARNING, "The version of scala library found in the build path is different from the one provided by scala IDE: " + version + ". Expected: " + plugin.scalaVer + ". Make sure you know what you are doing.")
-              } else {
-                // incompatible version
-                setClasspathError(IMarker.SEVERITY_ERROR, "The version of scala library found in the build path is incompatible with the one provided by scala IDE: " + version + ". Expected: " + plugin.scalaVer + ". Please replace the scala library with the scala container or a compatible scala library jar.")
-              }
-              return
-            case _ =>
-          }
-        // no library.properties, not good
-        setClasspathError(IMarker.SEVERITY_ERROR, "The scala library found in the build path doesn't contain a library.properties file. Please replace the scala library with the scala container or a valid scala library jar")
-      case _ => // 2 or more of them, not good
-        setClasspathError(IMarker.SEVERITY_ERROR, "More than one scala library found in the build path. Please update the project build path so it contains only one scala library reference")
+        getVersionNumber(fragmentRoots(0)) match {
+          case Some(v) if v == plugin.scalaVer =>
+            // exactly the same version, should be from the container. Perfect
+            setClasspathError(0, null)
+          case v if plugin.isCompatibleVersion(v) =>
+            // compatible version (major, minor are the same). Still, add warning message
+            setClasspathError(IMarker.SEVERITY_WARNING, "The version of scala library found in the build path is different from the one provided by scala IDE: " + v.get + ". Expected: " + plugin.scalaVer + ". Make sure you know what you are doing.")
+          case Some(v) =>
+            // incompatible version
+            setClasspathError(IMarker.SEVERITY_ERROR, "The version of scala library found in the build path is incompatible with the one provided by scala IDE: " + v + ". Expected: " + plugin.scalaVer + ". Please replace the scala library with the scala container or a compatible scala library jar.")
+          case None =>
+            // no version found
+            setClasspathError(IMarker.SEVERITY_ERROR, "The scala library found in the build path doesn't expose its version. Please replace the scala library with the scala container or a valid scala library jar")
+        }
+      case _ => // 2 or more of them, not great
+        if (fragmentRoots.exists(fragmentRoot => !plugin.isCompatibleVersion(getVersionNumber(fragmentRoot))))
+          setClasspathError(IMarker.SEVERITY_ERROR, "More than one scala library found in the build path, including at least one with an incompatible version. Please update the project build path so it contains only compatible scala libraries")
+        else
+          setClasspathError(IMarker.SEVERITY_WARNING, "More than one scala library found in the build path, all with compatible versions. This is not an optimal configuration, try to limit to one scala library in the build path.")
     }
+  }
+  
+  /**
+   * Return the version number contained in library.properties if it exists.
+   */
+  private def getVersionNumber(fragmentRoot: IPackageFragmentRoot): Option[String] = {
+    for (resource <- fragmentRoot.getNonJavaResources())
+      resource match {
+        case jarEntry: IJarEntryResource if jarEntry.isFile() && "library.properties".equals(jarEntry.getName) =>
+          val properties = new Properties()
+          properties.load(jarEntry.getContents())
+          val version = properties.getProperty("version.number")
+          if (version == null) {
+            return None
+          }
+          return Option(version)
+        case _ =>
+    }
+    None
   }
   
   private def refreshOutput: Unit = {
@@ -482,6 +518,9 @@ class ScalaProject(val underlying: IProject) extends HasLogger {
     settings.classpath.value = classpath.map(_.toOSString).mkString(pathSeparator)
     settings.sourcepath.value = sfs.map(_.toOSString).mkString(pathSeparator)
 
+    logger.debug("CLASSPATH: " + classpath.mkString("\n"))
+    logger.debug("SOURCEPATH: " + sfs.mkString("\n"))
+    
     val store = storage
     for (
       box <- IDESettings.shownSettings(settings);
@@ -566,17 +605,25 @@ class ScalaProject(val underlying: IProject) extends HasLogger {
     } {orElse}
   }
 
-  /** Shutdown the presentation compiler, and force a reinitialization but asking to reconcile all 
-   *  compilation units that were serviced by the previous instance of the PC.
+  /** Shutdown the presentation compiler, and force a re-initialization but asking to reconcile all 
+   *  compilation units that were serviced by the previous instance of the PC. Does nothing if
+   *  the presentation compiler is not yet initialized.
+   *  
+   *  @return true if the presentation compiler was initialized at the time of this call.
    */
-  def resetPresentationCompiler() {
-    val units: List[ScalaCompilationUnit] = withPresentationCompiler(_.compilationUnits)(Nil)
-    
-    presentationCompiler.invalidate
-    
-    logger.info("Scheduling for reconcile: " + units.map(_.file))
-    units.foreach(_.scheduleReconcile())
-  }
+  def resetPresentationCompiler(): Boolean =
+    if (presentationCompiler.initialized) {
+      val units: Seq[ScalaCompilationUnit] = withPresentationCompiler(_.compilationUnits)(Nil)
+      
+      presentationCompiler.invalidate
+      
+      logger.info("Scheduling for reconcile: " + units.map(_.file))
+      units.foreach(_.scheduleReconcile())
+      true
+    } else {
+      logger.info("[%s] Presentation compiler was not yet initialized, ignoring reset.".format(underlying.getName()))
+      false
+    }
 
   def buildManager = {
     if (buildManager0 == null) {
@@ -624,8 +671,30 @@ class ScalaProject(val underlying: IProject) extends HasLogger {
 
     // Already performs saving the dependencies
     
-    if (!buildManager.hasErrors) 
+    if (!buildManager.hasErrors) {
+      // reset presentation compilers of projects that depend on this one
+      // since the output directory now contains the up-to-date version of this project
+      // note: ScalaBuilder resets the presentation compiler when a referred project
+      // is built, but only when it has changes! this call makes sure that a rebuild,
+      // even when there are no changes, propagates the classpath to dependent projects
+      resetDependentProjects()
       buildListeners foreach { _.buildSuccessful }
+    }
+  }
+
+  /** Reset the presentation compiler of projects that depend on this one.
+   *  This should be done after a successful build, since the output directory
+   *  now contains an up-to-date version of this project.
+   */
+  def resetDependentProjects() {
+    for {
+      prj <- underlying.getReferencingProjects()
+      if prj.isOpen() && ScalaPlugin.plugin.isScalaProject(prj)
+      dependentScalaProject <- ScalaPlugin.plugin.asScalaProject(prj)
+    } {
+      logger.debug("[%s] Reset PC of referring project %s".format(this, dependentScalaProject))
+      dependentScalaProject.resetPresentationCompiler()
+    }
   }
   
   def addBuildSuccessListener(listener: BuildSuccessListener) {
@@ -642,20 +711,30 @@ class ScalaProject(val underlying: IProject) extends HasLogger {
     classpathCheckLock.synchronized {
       classpathHasBeenChecked= false
     }
-    resetCompilers
     if (buildManager0 != null)
       buildManager0.clean(monitor)
     cleanOutputFolders
+    resetCompilers // reset them only after the output directory is emptied
   }
 
-  def resetBuildCompiler(implicit monitor: IProgressMonitor) {
+  def resetBuildCompiler() {
     buildManager0 = null
     hasBeenBuilt = false
   }
 
   def resetCompilers(implicit monitor: IProgressMonitor = null) = {
     logger.info("resetting compilers!  project: " + this.toString)
-    resetBuildCompiler
-    resetPresentationCompiler
+    resetBuildCompiler()
+    resetPresentationCompiler()
+  }
+  
+  def shutDownCompilers() {
+    resetBuildCompiler()
+    shutDownPresentationCompiler()
+  }
+  
+  /** Shut down presentation compiler without scheduling a reconcile for open files. */
+  def shutDownPresentationCompiler() {
+    presentationCompiler.invalidate()
   }
 }

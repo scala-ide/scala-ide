@@ -51,12 +51,17 @@ trait JavaSig { pc: ScalaPresentationCompiler =>
     private lazy val sig: Option[String] = {
       // make sure to execute this call in the presentation compiler's thread
       pc.askOption { () =>
-	      if (erasure.needsJavaSig(symbol.info)) {
-	        // it's *really* important we ran pc.atPhase so that symbol's type is updated! (atPhase does side-effects on the type!)
-	        for (signature <- erasure.javaSig(symbol, pc.atPhase(pc.currentRun.erasurePhase)(symbol.info)))
-	          yield signature.replace("/", ".")
-	      } 
-	      else None
+        def needsJavaSig: Boolean = {
+          // there is no need to generate the generic type information for local symbols
+          !symbol.isLocal && erasure.needsJavaSig(symbol.info)
+        }
+        
+        if (needsJavaSig) {
+	      // it's *really* important we ran pc.atPhase so that symbol's type is updated! (atPhase does side-effects on the type!)
+	      for (signature <- erasure.javaSig(symbol, pc.atPhase(pc.currentRun.erasurePhase)(symbol.info)))
+	        yield signature.replace("/", ".")
+	    } 
+	    else None
       }.getOrElse(None)
     }
 

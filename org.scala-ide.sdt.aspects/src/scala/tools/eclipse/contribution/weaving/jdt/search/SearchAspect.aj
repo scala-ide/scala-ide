@@ -36,7 +36,7 @@ public privileged aspect SearchAspect {
     if (ml.numberOfMatches == size)
       System.arraycopy(ml.matchesToProcess, 0, ml.matchesToProcess = new PossibleMatch[size == 0 ? 1 : size * 2], 0, ml.numberOfMatches);
     ml.matchesToProcess[ml.numberOfMatches++] = possibleMatch;
-    return false;
+    return true;
   }
   
   void around(MatchLocator ml, PossibleMatch possibleMatch, boolean bindingsWereCreated) throws CoreException :

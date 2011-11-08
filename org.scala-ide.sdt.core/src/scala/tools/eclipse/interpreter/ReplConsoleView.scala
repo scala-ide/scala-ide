@@ -18,18 +18,29 @@ import org.eclipse.swt.widgets.{Label, Caret}
 import org.eclipse.swt.layout.GridData
 import org.eclipse.swt.layout.GridLayout
 import scala.tools.eclipse.ui.CommandField
-
-// for the toolbar images
 import org.eclipse.debug.internal.ui.IInternalDebugUIConstants
 import org.eclipse.debug.internal.ui.DebugPluginImages
 import org.eclipse.ui.internal.console.IInternalConsoleConstants
 import org.eclipse.ui.console.IConsoleConstants
 import org.eclipse.ui.internal.console.ConsolePluginImages
 import org.eclipse.jface.action.IAction
-
 import org.eclipse.jdt.internal.ui.JavaPlugin
 import scala.tools.eclipse.properties.ScalariformToSyntaxClass
 import scalariform.lexer.ScalaLexer
+import org.eclipse.swt.widgets.Text
+import org.eclipse.swt.widgets.List
+import org.eclipse.swt.widgets.Button
+import org.eclipse.swt.events.SelectionListener
+import org.eclipse.swt.events.SelectionEvent
+import org.eclipse.ui.IWorkbenchPage
+import org.eclipse.ui.internal.WorkbenchPlugin
+import org.eclipse.core.resources.ResourcesPlugin
+import org.eclipse.core.resources.IResourceChangeListener
+import org.eclipse.core.resources.IResourceChangeEvent
+import org.eclipse.core.resources.IProject
+import org.eclipse.core.resources.IResourceDeltaVisitor
+import org.eclipse.core.resources.IResourceDelta
+import scala.tools.eclipse.util.SWTUtils
 
 class ReplConsoleView extends ViewPart {
 
@@ -50,6 +61,7 @@ class ReplConsoleView extends ViewPart {
   private var scalaProject: ScalaProject = null
   private var isStopped = true
   private var inputField: CommandField = null
+  private var projectList: List = null
    
   def setScalaProject(project: ScalaProject) {
     scalaProject = project
@@ -162,10 +174,125 @@ class ReplConsoleView extends ViewPart {
     
     setContentDescription("<terminated> " + getContentDescription)
   }
-    
+
   override def createPartControl(parent: Composite) {
+    // if the view has no secondary id, display UI to choose a project
     projectName = getViewSite.getSecondaryId
-    if (projectName == null) projectName = ""
+    if (projectName == null) {
+      createProjectChooserPartControl(parent)
+    } else {
+      createInterpreterPartControl(parent)
+    }
+  }
+
+  /**
+   * Check if the delta is about a project availability change.
+   */
+  class ResourceDeltaVisitor extends IResourceDeltaVisitor {
+    var isProjectChange = false
+    override def visit(delta: IResourceDelta): Boolean = {
+      delta.getResource() match {
+        case project: IProject =>
+          // the project has been opened, closed, added or removed
+          isProjectChange |= ((delta.getFlags() & IResourceDelta.OPEN) | (delta.getKind() & (IResourceDelta.ADDED | IResourceDelta.REMOVED))) != 0
+
+          false // we only care about projects, no need to go inside them
+        case _ =>
+          true
+      }
+    }
+  }
+
+  /**
+   * resource change listener to refresh the project list when
+   * projects are opened or closed
+   */
+  val resourceChangeListener = new IResourceChangeListener() {
+    def resourceChanged(event: IResourceChangeEvent) {
+      val resourceDeltaVisitor = new ResourceDeltaVisitor()
+      if (event.getDelta() != null) {
+        event.getDelta().accept(resourceDeltaVisitor)
+        if (resourceDeltaVisitor.isProjectChange) {
+          SWTUtils.asyncExec {
+            refreshProjectList()
+          }
+        }
+      }
+    }
+  }
+
+  /**
+   * Create the project chooser UI
+   */
+  def createProjectChooserPartControl(parent: Composite) {
+    val panel = new Composite(parent, SWT.NONE)
+    panel.setLayout(new GridLayout(1, false))
+
+    // text
+    val label = new Label(panel, SWT.NONE)
+    label.setText("Please select the scala project to be used by the interpreter:")
+
+    // list widget
+    projectList = new List(panel, SWT.SINGLE | SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL)
+    projectList.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_FILL | GridData.FILL_VERTICAL))
+
+    // ok button
+    val okButton = new Button(panel, SWT.PUSH)
+    okButton.setText("OK")
+    okButton.setEnabled(false)
+
+    // scala projects
+    refreshProjectList()
+    ResourcesPlugin.getWorkspace().addResourceChangeListener(resourceChangeListener)
+
+    // listeners
+    projectList.addSelectionListener(new SelectionListener() {
+      override def widgetSelected(e: SelectionEvent) {
+        okButton.setEnabled(true)
+      }
+
+      override def widgetDefaultSelected(e: SelectionEvent) {
+        projectSelected(projectList.getSelection()(0))
+      }
+    })
+
+    okButton.addSelectionListener(new SelectionListener() {
+      override def widgetSelected(e: SelectionEvent) {
+        projectSelected(projectList.getSelection()(0))
+      }
+
+      override def widgetDefaultSelected(e: SelectionEvent) {
+      }
+    })
+  }
+
+  /**
+   * Reset the project list to the current set of open projects
+   */
+  def refreshProjectList() {
+    val scalaProjectNames = for (project <- ResourcesPlugin.getWorkspace().getRoot().getProjects()
+        if (ScalaPlugin.plugin.isScalaProject(project)))
+      yield project.getName()
+    projectList.setItems(scalaProjectNames)
+  }
+
+  /**
+   * A project has been selected, close the current view and open the right one.
+   */
+  def projectSelected(selectedProjectName: String) {
+    val workbenchPage = getViewSite().getPage()
+    workbenchPage.hideView(this)
+
+    val view = workbenchPage.showView(
+      "org.scala-ide.sdt.core.consoleView", selectedProjectName,
+      IWorkbenchPage.VIEW_VISIBLE)
+    workbenchPage.activate(view)
+  }
+    
+  /**
+   * Create the interpreter UI
+   */
+  private def createInterpreterPartControl(parent: Composite) {
     
     codeBgColor = new Color(parent.getDisplay, 230, 230, 230)   // light gray
     codeFgColor = new Color(parent.getDisplay, 64, 0, 128)      // eggplant
@@ -206,6 +333,10 @@ class ReplConsoleView extends ViewPart {
     toolbarManager.add(refreshOnRebuildAction)
     
     setPartName("Scala Interpreter (" + projectName + ")")
+    
+    // Register the interpreter for the project
+    scalaProject= ScalaPlugin.plugin.getScalaProject(ResourcesPlugin.getWorkspace().getRoot().getProject(projectName))
+    EclipseRepl.replForProject(scalaProject, this)
     setStarted
   }
 
@@ -255,13 +386,19 @@ class ReplConsoleView extends ViewPart {
   }
   
   override def dispose() {
-    codeBgColor.dispose
-    codeFgColor.dispose
-    errorFgColor.dispose
+    if (projectName == null) {
+      // elements of the project chooser view
+      ResourcesPlugin.getWorkspace().removeResourceChangeListener(resourceChangeListener)
+    } else {
+      // elements of the interpreter view
+      codeBgColor.dispose
+      codeFgColor.dispose
+      errorFgColor.dispose
     
-    if (!isStopped)
-      EclipseRepl.stopRepl(scalaProject, flush = false)
+      if (!isStopped)
+        EclipseRepl.stopRepl(scalaProject, flush = false)
       
-    scalaProject removeBuildSuccessListener refreshOnRebuildAction
+      scalaProject removeBuildSuccessListener refreshOnRebuildAction
+    }
   }
 }

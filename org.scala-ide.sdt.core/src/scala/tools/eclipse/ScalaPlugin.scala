@@ -6,7 +6,7 @@
 package scala.tools.eclipse
 
 import org.eclipse.jdt.core.IJavaProject
-import scala.collection.mutable.HashMap
+import scala.collection.mutable
 import scala.util.control.ControlThrowable
 import org.eclipse.core.resources.{ IFile, IProject, IResourceChangeEvent, IResourceChangeListener, ResourcesPlugin }
 import org.eclipse.core.runtime.{ CoreException, FileLocator, IStatus, Platform, Status }
@@ -29,6 +29,7 @@ import scala.tools.eclipse.templates.ScalaTemplateManager
 import org.eclipse.jdt.ui.PreferenceConstants
 import org.eclipse.core.resources.IResourceDelta
 import scala.tools.eclipse.util.HasLogger
+import org.osgi.framework.Bundle
 
 object ScalaPlugin {
   var plugin: ScalaPlugin = _
@@ -84,7 +85,7 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
   val javaFileExtn = ".java"
   val jarFileExtn = ".jar"
 
-  def cutVersion(version: String): String = {
+  private def cutVersion(version: String): String = {
           val pattern = "(\\d)\\.(\\d+)\\..*".r
           version match {
             case pattern(major, minor)=>
@@ -93,6 +94,20 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
               "(unknown)"
           }
       }
+  
+  /**
+   * Check if the given version is compatible with the current plug-in version.
+   * Check on the major/minor number, discard the maintenance number.
+   * 2.9.1 and 2.9.2-SNAPSHOT are compatible
+   * 2.8.1 and 2.9.0 are no compatible
+   */
+  def isCompatibleVersion(version: Option[String]): Boolean =
+    version match {
+    case Some(v) =>
+      cutVersion(v) == shortScalaVer
+    case None =>
+      false
+  }
 
   lazy val scalaVer = scala.util.Properties.scalaPropOrElse("version.number", "(unknown)")
   lazy val shortScalaVer = cutVersion(scalaVer)
@@ -110,7 +125,7 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
   //lazy val sbtScalaCompiler = pathInBundle(sbtCompilerBundle, "/lib/scala-" + shortScalaVer + "/lib/scala-compiler.jar")
   
   val scalaLibBundle = {
-    val bundles = Platform.getBundles(ScalaPlugin.plugin.libraryPluginId, scalaCompilerBundleVersion.toString())
+    val bundles = Option(Platform.getBundles(ScalaPlugin.plugin.libraryPluginId, scalaCompilerBundleVersion.toString())).getOrElse(Array[Bundle]())
     logger.debug("[scalaLibBundle] Found %d bundles: %s".format(bundles.size, bundles.toList.mkString(", ")))
     bundles.find(_.getVersion() == scalaCompilerBundleVersion).getOrElse {
       logger.warning("Couldnt find a match for %s in %s. Using default.".format(scalaCompilerBundleVersion, bundles.toList.mkString(", ")))
@@ -128,17 +143,17 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
   lazy val templateManager = new ScalaTemplateManager()
   lazy val headlessMode = System.getProperty(HEADLESS_TEST) ne null
 
-  private val projects = new HashMap[IProject, ScalaProject]
+  private val projects = new mutable.HashMap[IProject, ScalaProject]
 
   override def start(context: BundleContext) = {
     super.start(context)
 
     if (!headlessMode) {
-      ResourcesPlugin.getWorkspace.addResourceChangeListener(this, IResourceChangeEvent.PRE_CLOSE)
       PlatformUI.getWorkbench.getEditorRegistry.setDefaultEditor("*.scala", editorId)
       ScalaPlugin.getWorkbenchWindow map (_.getPartService().addPartListener(ScalaPlugin.this))
       diagnostic.StartupDiagnostics.run
     }
+    ResourcesPlugin.getWorkspace.addResourceChangeListener(this, IResourceChangeEvent.PRE_CLOSE)
     JavaCore.addElementChangedListener(this)
     logger.info("Scala compiler bundle: " + scalaCompilerBundle.getLocation)
   }
@@ -156,7 +171,7 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
     projects.get(project) match {
       case Some(scalaProject) => scalaProject
       case None =>
-        val scalaProject = new ScalaProject(project)
+        val scalaProject = ScalaProject(project)
         projects(project) = scalaProject
         scalaProject
     }
@@ -169,14 +184,9 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
     if (isScalaProject(project)) {
       Some(getScalaProject(project))
     } else {
+      logger.debug("`%s` is not a Scala Project.".format(project.getName()))
       None
     }
-  }
-
-  def getScalaProject(input: IEditorInput): ScalaProject = input match {
-    case fei: IFileEditorInput => getScalaProject(fei.getFile.getProject)
-    case cfei: IClassFileEditorInput => getScalaProject(cfei.getClassFile.getJavaProject.getProject)
-    case _ => null
   }
 
   def isScalaProject(project: IJavaProject): Boolean = isScalaProject(project.getProject)
@@ -195,8 +205,8 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
           projects.get(project) match {
             case Some(scalaProject) =>
               projects.remove(project)
-              logger.info("resetting compilers for " + project.getName)
-              scalaProject.resetCompilers
+              logger.info("shutting down compilers for " + project.getName)
+              scalaProject.shutDownCompilers()
             case None =>
           }
         }
@@ -230,13 +240,17 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
 
     // process deleted files
     val buff = new ListBuffer[ScalaSourceFile]
+    val projectsToReset = new mutable.HashSet[ScalaProject]
 
     def findRemovedSources(delta: IJavaElementDelta) {
       val isChanged = delta.getKind == CHANGED
       val isRemoved = delta.getKind == REMOVED
+      val isAdded   = delta.getKind == ADDED
+      
       def hasFlag(flag: Int) = (delta.getFlags & flag) != 0
 
       val elem = delta.getElement
+      
       val processChildren: Boolean = elem.getElementType match {
         case JAVA_MODEL => true
         case JAVA_PROJECT if !isRemoved && !hasFlag(F_CLOSED) => true
@@ -244,14 +258,25 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
         case PACKAGE_FRAGMENT_ROOT =>
           if (isRemoved || hasFlag(F_REMOVED_FROM_CLASSPATH | F_ADDED_TO_CLASSPATH | F_ARCHIVE_CONTENT_CHANGED)) {
             logger.info("package fragment root changed (resetting pres compiler): " + elem)
-            asScalaProject(elem.getJavaProject.getProject).foreach(_.resetPresentationCompiler)
+            asScalaProject(elem.getJavaProject().getProject).foreach(projectsToReset +=)
             false
           } else true
 
-        case PACKAGE_FRAGMENT => true
+        case PACKAGE_FRAGMENT => 
+          if (isAdded || isRemoved) {
+            logger.debug("package framgent added or removed" + elem.getElementName())
+            asScalaProject(elem.getJavaProject().getProject).foreach(projectsToReset +=)
+            false // stop recursion, we need to reset the PC anyway
+          } else 
+            true
 
         case COMPILATION_UNIT if elem.isInstanceOf[ScalaSourceFile] && isRemoved =>
           buff += elem.asInstanceOf[ScalaSourceFile]
+          false
+          
+        case COMPILATION_UNIT if isAdded =>
+          logger.debug("added compilation unit " + elem.getElementName())
+          asScalaProject(elem.getJavaProject().getProject).foreach(projectsToReset +=)
           false
 
         case _ => false
@@ -261,11 +286,16 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
         delta.getAffectedChildren foreach { findRemovedSources(_) }
     }
     findRemovedSources(event.getDelta)
-    if(!buff.isEmpty) {
+    
+    
+    projectsToReset.foreach(_.resetPresentationCompiler)
+    if(buff.nonEmpty) {
       buff.toList groupBy (_.getJavaProject.getProject) foreach {
         case (project, srcs) =>
-          if (project.isOpen)
-            getScalaProject(project) doWithPresentationCompiler (_.filesDeleted(srcs))
+          asScalaProject(project) foreach { p =>
+            if (project.isOpen && !projectsToReset(p))
+              p doWithPresentationCompiler (_.filesDeleted(srcs))
+          }
       }
     }
   }

@@ -6,10 +6,10 @@ import org.eclipse.jdt.ui.{ISharedImages, JavaUI}
 import org.eclipse.jface.text.contentassist.IContextInformation
 import org.eclipse.jface.text.{TextUtilities, IDocument}
 import org.eclipse.swt.graphics.{Point, Image}
-import refactoring.EditorHelpers._
+
 import scala.tools.eclipse.refactoring.EditorHelpers
-import scala.tools.refactoring.implementations.AddImportStatement
 import scala.tools.eclipse.util.HasLogger
+import scala.tools.refactoring.implementations.AddImportStatement
 
 case class ImportCompletionProposal(val importName: String) extends IJavaCompletionProposal with HasLogger {
   
@@ -42,13 +42,23 @@ case class ImportCompletionProposal(val importName: String) extends IJavaComplet
    */
   private def applyByASTTransformation(document: IDocument) {
     
-    withScalaFileAndSelection { (scalaSourceFile, textSelection) =>
+    EditorHelpers.withScalaFileAndSelection { (scalaSourceFile, textSelection) =>
     
       val changes = scalaSourceFile.withSourceFile { (sourceFile, compiler) =>
-            
-        val refactoring = new AddImportStatement { val global = compiler }
        
-        refactoring.addImport(scalaSourceFile.file, importName)
+         val r = new compiler.Response[compiler.Tree]
+         compiler.askLoadedTyped(sourceFile, r)
+         (r.get match {
+           case Right(error) =>
+             logger.error(error)
+             None
+           case _ =>
+             compiler.askOption {() =>
+               val refactoring = new AddImportStatement { val global = compiler }
+               refactoring.addImport(scalaSourceFile.file, importName)
+             }
+         }) getOrElse Nil
+        
       }(Nil)
       
       EditorHelpers.applyChangesToFileWhileKeepingSelection(document, textSelection, scalaSourceFile.file, changes)
