@@ -1,7 +1,7 @@
 package scala.tools.eclipse.structurebuilder
 
-object T1000568TestOracle {
-  lazy val expectedFragment = """
+object T1000568TestOracle extends BaseTestOracle {
+  override protected lazy val oracle = """
 Entity.scala [in t1000568 [in src [in simple-structure-builder]]]
   package t1000568
   class Entity
@@ -11,5 +11,5 @@ ExtensionTester.java [in t1000568 [in src [in simple-structure-builder]]]
   package t1000568
   class ExtensionTester
     void doSomething()
-""".trim
+"""
 }
