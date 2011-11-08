@@ -189,19 +189,6 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
     }
   }
 
-  /** Get the active project via the Eclipse UI workbench. */
-  def getActiveScalaProject: Option[ScalaProject] = {
-    def getScalaProject(input: IEditorInput): Option[ScalaProject] = input match {
-      case fei: IFileEditorInput => asScalaProject(fei.getFile.getProject)
-      case cfei: IClassFileEditorInput => asScalaProject(cfei.getClassFile.getJavaProject.getProject)
-      case _ => None
-    }
-    ScalaPlugin.getWorkbenchWindow flatMap { workbench =>
-      val editorPart = workbench.getActivePage().getActiveEditor()
-      getScalaProject(editorPart.getEditorInput())
-    }
-  }
-
   def isScalaProject(project: IJavaProject): Boolean = isScalaProject(project.getProject)
 
   def isScalaProject(project: IProject): Boolean =
