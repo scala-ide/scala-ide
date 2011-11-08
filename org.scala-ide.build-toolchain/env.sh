@@ -21,10 +21,17 @@ set_version()
 
 build()
 {
+    if [ -z $SCALA_LIBRARY_VERSION ]
+    then
+        echo "SCALA_LIBRARY_VERSION is undefined. Please specify a corresponding scala library for the scala compiler version ${SCALA_VERSION}"
+        exit 1
+    fi
+
     ${MAVEN} \
         -U \
         $PROFILE \
         -Dscala.version=${SCALA_VERSION} \
+        -Dscala.library.version=${SCALA_LIBRARY_VERSION} \
         -Dsbt.scala.version=${SBT_SCALA_VERSION} \
         -Dsbinary.version=${SBINARY_VERSION} \
         -Dscala.precompiled.version=${SCALA_PRECOMPILED} \

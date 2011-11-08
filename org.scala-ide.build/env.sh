@@ -34,6 +34,7 @@ build()
   ${MAVEN} \
     $PROFILE_NAME -U \
     -Dscala.version=${SCALA_VERSION} \
+    -Dscala.library.version=${SCALA_LIBRARY_VERSION} \
     -Dgit.hash=${GIT_HASH} \
     -Dversion.tag=${VERSION_TAG}\
     clean install $*

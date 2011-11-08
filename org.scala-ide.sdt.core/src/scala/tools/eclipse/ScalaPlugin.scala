@@ -29,6 +29,7 @@ import scala.tools.eclipse.templates.ScalaTemplateManager
 import org.eclipse.jdt.ui.PreferenceConstants
 import org.eclipse.core.resources.IResourceDelta
 import scala.tools.eclipse.util.HasLogger
+import org.osgi.framework.Bundle
 
 object ScalaPlugin {
   var plugin: ScalaPlugin = _
@@ -124,7 +125,7 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
   //lazy val sbtScalaCompiler = pathInBundle(sbtCompilerBundle, "/lib/scala-" + shortScalaVer + "/lib/scala-compiler.jar")
   
   val scalaLibBundle = {
-    val bundles = Platform.getBundles(ScalaPlugin.plugin.libraryPluginId, scalaCompilerBundleVersion.toString())
+    val bundles = Option(Platform.getBundles(ScalaPlugin.plugin.libraryPluginId, scalaCompilerBundleVersion.toString())).getOrElse(Array[Bundle]())
     logger.debug("[scalaLibBundle] Found %d bundles: %s".format(bundles.size, bundles.toList.mkString(", ")))
     bundles.find(_.getVersion() == scalaCompilerBundleVersion).getOrElse {
       logger.warning("Couldnt find a match for %s in %s. Using default.".format(scalaCompilerBundleVersion, bundles.toList.mkString(", ")))
