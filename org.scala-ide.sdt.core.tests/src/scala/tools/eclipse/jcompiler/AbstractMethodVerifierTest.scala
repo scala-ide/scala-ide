@@ -56,6 +56,7 @@ object AbstractMethodVerifierTest extends TestProjectSetup("jcompiler") {
   private def one: VerificationMode = times(1)
 }
 
+@Ignore
 class AbstractMethodVerifierTest {
   import AbstractMethodVerifierTest._
 
