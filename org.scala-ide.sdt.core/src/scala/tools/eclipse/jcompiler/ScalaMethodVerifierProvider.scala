@@ -9,6 +9,8 @@ import scala.tools.eclipse.ScalaProject
 import org.eclipse.core.resources.IProject
 import scala.tools.eclipse.util.HasLogger
 import scala.tools.eclipse.util.Utils
+import org.eclipse.ui.IEditorInput
+import org.eclipse.ui.IFileEditorInput
 
 /**
  * <p>
@@ -38,36 +40,28 @@ import scala.tools.eclipse.util.Utils
 class ScalaMethodVerifierProvider extends IMethodVerifierProvider with HasLogger {
   import ScalaMethodVerifierProvider.JDTMethodVerifierCarryOnMsg
 
-  /**
-   * Checks that `abstractMethod` is a non-deferred member of a Scala Trait.
-   */
+  /** Get the active project via the Eclipse UI workbench. */
+  private def getActiveScalaProject: Option[ScalaProject] = {
+    def getScalaProject(input: IEditorInput): Option[ScalaProject] = input match {
+      case fei: IFileEditorInput => ScalaPlugin.plugin.asScalaProject(fei.getFile.getProject)
+      case _ => None
+    }
+    ScalaPlugin.getWorkbenchWindow flatMap { workbench =>
+      val editorPart = workbench.getActivePage().getActiveEditor()
+      getScalaProject(editorPart.getEditorInput())
+    }
+  }
+  
+  /** Checks that `abstractMethod` is a non-deferred member of a Scala Trait. */
   def isConcreteTraitMethod(abstractMethod: MethodBinding): Boolean = {
     Utils.tryExecute {
-      val project = findProjectOf(abstractMethod)
-      
-      ScalaPlugin.plugin.asScalaProject(project) match {
+      getActiveScalaProject match {
         case Some(scalaProject) => 
           isConcreteTraitMethod(abstractMethod, scalaProject)
-          
-        case None =>
-          logger.debug("`%s` is not a Scala Project. %s".format(project.getName(), JDTMethodVerifierCarryOnMsg))
-          false
+              
+        case None => false
       }
     }(orElse = false)
-  }
-
-  private def findProjectOf(abstractMethod: MethodBinding): IProject = {
-    // File name containing the abstractMethod definition. 
-    // Note that the returned path contains includes the project's folder where the file resides. 
-    val qualifiedFileName = abstractMethod.declaringClass.getFileName().mkString
-    // File containing the `abstractMethod` definition. From a file we can find the project the file belongs to.
-    val file = ResourcesPlugin.getWorkspace().getRoot().getFile(Path.fromPortableString(qualifiedFileName))
-
-    val project = file.getProject()
-
-    logger.debug("Found definition for `%s` in file `%s` of project `%s`".format(abstractMethod, qualifiedFileName, project.getName()))
-
-    project
   }
 
   private def isConcreteTraitMethod(abstractMethod: MethodBinding, project: ScalaProject): Boolean = {
