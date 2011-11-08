@@ -63,7 +63,7 @@ class NewApplicationWizard extends BasicNewResourceWizard with HasLogger {
   }
 
   private def createSource(applicationName: String, pkg: IPackageFragment): String = {
-    val appExists = try { Class.forName("scala.App"); true } catch { case _ ⇒ false }
+    val appExists = try { Class.forName("scala.App"); true } catch { case _ => false }
     val packageDeclaration = if (pkg.isDefaultPackage) "" else "package " + pkg.getElementName + "\n\n"
     val objectTemplate = if (appExists) TEMPLATE_WITH_APP else TEMPLATE_WITHOUT_APP
     val unformatted = packageDeclaration + objectTemplate.format(applicationName)
