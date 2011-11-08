@@ -1,7 +1,7 @@
 package scala.tools.eclipse.structurebuilder
 
-object TraitsTestOracle {
-  lazy val expectedFragment = """
+object TraitsTestOracle extends BaseTestOracle {
+  override protected lazy val oracle = """
 T1.scala [in traits [in src [in simple-structure-builder]]]
   package traits
   interface T1
@@ -72,5 +72,5 @@ C1.scala [in traits [in src [in simple-structure-builder]]]
         $anon()
         void run()
     int localMethod(int)
-    long localVals(int)""".trim
+    long localVals(int)"""
 }
