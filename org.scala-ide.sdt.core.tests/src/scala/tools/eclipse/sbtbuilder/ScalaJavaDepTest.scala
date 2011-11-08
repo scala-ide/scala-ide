@@ -49,6 +49,7 @@ class ScalaJavaDepTest {
     Assert.assertTrue("Build errors found: " + userFriendlyMarkers(problems2), problems2.isEmpty)
   }
 
+  @Ignore
   @Test def testSimpleJavaDep() {
     println("building " + project)
     project.clean(new NullProgressMonitor())
