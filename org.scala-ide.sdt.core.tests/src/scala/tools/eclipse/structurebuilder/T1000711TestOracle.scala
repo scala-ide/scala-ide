@@ -1,7 +1,7 @@
 package scala.tools.eclipse.structurebuilder
 
-object T1000711TestOracle {
-  lazy val expectedFragment = """
+object T1000711TestOracle extends BaseTestOracle {
+  override protected lazy val oracle = """
 Nested.scala [in t1000711 [in src [in simple-structure-builder]]]
   package t1000711
   class Nested$
@@ -47,5 +47,5 @@ Nested.scala [in t1000711 [in src [in simple-structure-builder]]]
       class C$
         t1000711.Nested.A.C MODULE$
         C$()
-""".trim
+"""
 }
