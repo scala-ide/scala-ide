@@ -83,7 +83,7 @@ class AnalysisCompile (conf: BasicConfiguration, bm: EclipseSbtBuildManager, con
         // Resolve classpath correctly
         val compArgs = new CompilerArguments(scalac.scalaInstance,
             // do not include autoBoot becuase then bootclasspath takes
-            // whatever is set by the env variable and not necessairly what was given
+            // whatever is set by the env variable and not necessarily what was given
             // in the project definition
             ClasspathOptions(bootLibrary = true, compiler = false, extra = true, autoBoot = false, filterLibrary = true))
         val jrePath = getJdkPath(bm.project.javaProject)
