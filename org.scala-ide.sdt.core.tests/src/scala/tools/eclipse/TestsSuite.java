@@ -11,6 +11,7 @@ import scala.tools.eclipse.occurrences.OccurrencesFinderTest;
 import scala.tools.eclipse.sbtbuilder.OutputFoldersTest;
 import scala.tools.eclipse.sbtbuilder.SbtBuilderTest;
 import scala.tools.eclipse.sbtbuilder.TodoBuilderTest;
+import scala.tools.eclipse.semantic.ImplicitsHighlightingTest;
 import scala.tools.eclipse.structurebuilder.StructureBuilderTest;
 import scala.tools.eclipse.pc.PresentationCompilerTest;
 import scala.tools.eclipse.wizards.*;
@@ -40,5 +41,6 @@ import org.junit.runners.Suite;
   OutputFoldersTest.class,
   ClasspathTests.class,
   TodoBuilderTest.class,
+  ImplicitsHighlightingTest.class,
 })
 class TestsSuite { }

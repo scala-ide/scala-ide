@@ -22,7 +22,7 @@ import scala.tools.eclipse.util.HasLogger
  */
 object ReconciliationParticipantsExtensionPoint extends HasLogger {
   
-  val PARTICIPANTS_ID = "org.scala-ide.sdt.core.reconciliationParticipants"
+  final val PARTICIPANTS_ID = "org.scala-ide.sdt.core.reconciliationParticipants"
     
   lazy val extensions: List[ReconciliationParticipant] = {
     val configs = Platform.getExtensionRegistry.getConfigurationElementsFor(PARTICIPANTS_ID).toList

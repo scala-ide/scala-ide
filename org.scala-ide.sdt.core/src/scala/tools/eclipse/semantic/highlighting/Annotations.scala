@@ -5,7 +5,7 @@ import org.eclipse.jface.text.source.{ IAnnotationModelExtension, Annotation, IA
 import org.eclipse.jface.text.ISynchronizable
 
 object AnnotationsTypes {
-  val Implicits = "scala.tools.eclipse.semantic.highlighting.implicitConversionsOrArgsAnnotation"
+  final val Implicits = "scala.tools.eclipse.semantic.highlighting.implicitConversionsOrArgsAnnotation"
 }
 
 object Annotations {

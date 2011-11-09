@@ -220,7 +220,7 @@ class SemanticHighlightingPresenter(editor: FileEditorInput, sourceViewer: ISour
 }
 
 object SemanticHighlightingPresenter {
-  val DisplayStringSeparator = " => "
+  final val DisplayStringSeparator = " => "
     
   def findAllImplicitConversions(compiler: ScalaPresentationCompiler, sourceFile: SourceFile) = {
     
