@@ -189,7 +189,8 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
     }
   }
 
-  def isScalaProject(project: IJavaProject): Boolean = isScalaProject(project.getProject)
+  def isScalaProject(project: IJavaProject): Boolean = 
+    (project ne null) && isScalaProject(project.getProject)
 
   def isScalaProject(project: IProject): Boolean =
     try {
