@@ -34,7 +34,9 @@ import reconciliation.ReconciliationParticipant
 class SemanticHighlightingReconciliationParticipant extends ReconciliationParticipant {
 
   override def afterReconciliation(scu: ScalaCompilationUnit, monitor: IProgressMonitor, workingCopyOwner: WorkingCopyOwner) {
-    SemanticHighlightingReconciliation.afterReconciliation(scu, monitor, workingCopyOwner)
+    if (!ScalaPlugin.plugin.headlessMode) {
+      SemanticHighlightingReconciliation.afterReconciliation(scu, monitor, workingCopyOwner)
+    }
   }
 }
 
