@@ -146,15 +146,16 @@ public privileged aspect ClassFileProviderAspect {
     byte[] bytes;
     
     try {
-      bytes = javaClassFile.getBytes();
+        for (IClassFileProvider provider : ClassFileProviderRegistry.getInstance().getProviders()) {
+          if (provider.isInteresting(javaClassFile)) {
+            bytes = javaClassFile.getBytes();
+            ClassFile cf = provider.create(bytes, parent, name);
+            if (cf != null)
+              return cf;
+          }
+        }
     } catch(Throwable t) {
       return javaClassFile; 
-    }
-    
-    for (IClassFileProvider provider : ClassFileProviderRegistry.getInstance().getProviders()) {
-      ClassFile cf = provider.create(bytes, parent, name);
-      if (cf != null)
-        return cf;
     }
     
     return javaClassFile;
