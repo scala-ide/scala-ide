@@ -11,6 +11,7 @@ import scala.tools.eclipse.util.HasLogger
 import scala.tools.eclipse.util.Utils
 import org.eclipse.ui.IEditorInput
 import org.eclipse.ui.IFileEditorInput
+import org.eclipse.core.resources.IFile
 
 /**
  * <p>
@@ -40,28 +41,46 @@ import org.eclipse.ui.IFileEditorInput
 class ScalaMethodVerifierProvider extends IMethodVerifierProvider with HasLogger {
   import ScalaMethodVerifierProvider.JDTMethodVerifierCarryOnMsg
 
-  /** Get the active project via the Eclipse UI workbench. */
-  private def getActiveScalaProject: Option[ScalaProject] = {
-    def getScalaProject(input: IEditorInput): Option[ScalaProject] = input match {
-      case fei: IFileEditorInput => ScalaPlugin.plugin.asScalaProject(fei.getFile.getProject)
-      case _ => None
-    }
-    ScalaPlugin.getWorkbenchWindow flatMap { workbench =>
-      val editorPart = workbench.getActivePage().getActiveEditor()
-      getScalaProject(editorPart.getEditorInput())
-    }
-  }
-  
   /** Checks that `abstractMethod` is a non-deferred member of a Scala Trait. */
   def isConcreteTraitMethod(abstractMethod: MethodBinding): Boolean = {
     Utils.tryExecute {
-      getActiveScalaProject match {
-        case Some(scalaProject) => 
-          isConcreteTraitMethod(abstractMethod, scalaProject)
-              
-        case None => false
+      // get the file containing the declaration of the abstract method
+      val file = getFile(abstractMethod)
+
+      val fileExtension = file.getFullPath().getFileExtension()
+
+      /* If it is a Scala source file, then we need to check if the source belongs to a Scala
+       * Project and if that is the case check if the passed `abstractMethod` is a concrete 
+       * method defined in a trait.
+       * 
+       * Java sources do not need to be considered because if the `abstractMethod` belongs to 
+       * a Java source, then the method is abstract by definition.
+       * 
+       * Class binaries are also ignored because we know the Scala mix-in phase has been executed. 
+       */
+      (fileExtension == "scala") && {
+        val project = file.getProject
+
+        logger.debug("Found definition for `%s` in file `%s` of project `%s`".format(abstractMethod, file.getFullPath(), project.getName()))
+
+        ScalaPlugin.plugin.asScalaProject(project) match {
+          case Some(scalaProject) =>
+            isConcreteTraitMethod(abstractMethod, scalaProject)
+
+          case None => false
+        }
       }
     }(orElse = false)
+  }
+
+  private def getFile(abstractMethod: MethodBinding): IFile = {
+    /* File name containing the abstractMethod definition. 
+     * Note that the returned path contains includes the project's folder where the file resides. */
+    val qualifiedFileName = abstractMethod.declaringClass.getFileName().mkString
+
+    // File containing the `abstractMethod` definition. From a file we can find the project the file belongs to.
+    val fileName = Path.fromOSString(qualifiedFileName)
+    ResourcesPlugin.getWorkspace().getRoot().getFile(fileName)
   }
 
   private def isConcreteTraitMethod(abstractMethod: MethodBinding, project: ScalaProject): Boolean = {
@@ -75,13 +94,13 @@ class ScalaMethodVerifierProvider extends IMethodVerifierProvider with HasLogger
 
             def haveSameTpeParams(abstractMethod: MethodBinding, method: Symbol) = {
               val fps = m.paramss.flatten
-              
+
               val javaSig = javaSigOf(method)
-              
+
               // mapping Scala params' types to be Java conform, so that comparison
               // with `abstractMethod` is meaningful
               val paramsTypeSigs =
-                if(javaSig.isDefined) javaSig.paramsType.map(_.mkString)
+                if (javaSig.isDefined) javaSig.paramsType.map(_.mkString)
                 else fps.map(s => s.info.typeSymbol.fullName).toArray
 
               if (abstractMethod.parameters.length == paramsTypeSigs.size) {
@@ -117,7 +136,7 @@ class ScalaMethodVerifierProvider extends IMethodVerifierProvider with HasLogger
             }
           }
         }
-        
+
         def isConcreteMethod(methodOwner: Symbol, abstractMethod: MethodBinding) = {
           // Checks if `methodOwner`'s contain a non-deferred (i.e. concrete) member that matches `abstractMethod` definition
           val methodSymbol = findMethodSymbol(methodOwner, abstractMethod)

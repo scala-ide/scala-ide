@@ -50,13 +50,39 @@ object AbstractMethodVerifierTest extends TestProjectSetup("jcompiler") {
         }
       }
     }
+
+    def verifyThat(expectedProblem: String) = new {
+      def is = new {
+        def reported = {
+          //when
+          val unit = compilationUnit(path2unit)
+          
+          val owner = new WorkingCopyOwner() {
+            override def getProblemRequestor(unit: ICompilationUnit): IProblemRequestor = {
+              new IProblemRequestor {
+                override def acceptProblem(problem: IProblem) {
+                  //verify
+                  assertEquals(expectedProblem, problem.toString())
+                }
+                def beginReporting() {}
+                def endReporting() {}
+                def isActive(): Boolean = true
+              }
+            }
+          }
+          
+          //then
+          // this will trigger the java reconciler so that the problems will be reported in the ProblemReporter
+          unit.getWorkingCopy(owner, new NullProgressMonitor)
+        }
+      }
+    }
   }
 
   private def no: VerificationMode = never()
   private def one: VerificationMode = times(1)
 }
 
-@Ignore
 class AbstractMethodVerifierTest {
   import AbstractMethodVerifierTest._
 
@@ -88,5 +114,12 @@ class AbstractMethodVerifierTest {
   @Test
   def javaClassExtendingAbstractScalaClassWithMixedDeferredAndConcreteMembersWithSameSignature_JavaEditorShouldNotReportErrorsForUnimplementedDeferredMethod_t1000670_2() {
     whenOpening("t1000670_2/JFoo.java").verifyThat(no).errors.are.reported
+  }
+
+  @Test
+  def scalaMethodVerifierProvider_isNotExecutedOnJavaSources_t1000660() {
+    val expectedProblem = "Pb(400) The type ScalaTest must implement the inherited abstract method Runnable.run()"
+
+    whenOpening("t1000660/ScalaTest.java").verifyThat(expectedProblem).is.reported
   }
 }
