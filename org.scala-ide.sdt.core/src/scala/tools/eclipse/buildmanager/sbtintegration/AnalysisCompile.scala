@@ -23,6 +23,7 @@ import java.io.File
 import org.eclipse.jdt.launching.JavaRuntime
 import org.eclipse.jdt.core.{ JavaCore, IJavaProject }
 import scala.tools.eclipse.util.HasLogger
+import scala.tools.eclipse.contribution.weaving.jdt.jcompiler.BuildManagerStore
 
 class AnalysisCompile (conf: BasicConfiguration, bm: EclipseSbtBuildManager, contr: Controller) extends HasLogger {
     import AnalysisFormats._
@@ -130,7 +131,6 @@ class AnalysisCompile (conf: BasicConfiguration, bm: EclipseSbtBuildManager, con
               if(!javaSrcs.isEmpty) {
                 import sbt.Path._
                 val loader = ClasspathUtilities.toLoader(conf.classpath, scalac.scalaInstance.loader)
-                
                 def handleError(e: Throwable) {
                   logger.debug("Error running the SBT builder on Java sources:\n " + e)
                   logger.debug("Running a full Java build")
@@ -141,10 +141,14 @@ class AnalysisCompile (conf: BasicConfiguration, bm: EclipseSbtBuildManager, con
                 try {
                   def readAPI(source: File, classes: Seq[Class[_]]) { callback.api(source, sbt.ClassToAPI(classes)) }
 
+                  BuildManagerStore.INSTANCE.setJavaSourceFilesToCompile(javaSrcs.toArray, conf.project.underlying)
+                
                   sbt.classfile.Analyze(conf.outputDirectories, javaSrcs, log)(callback, loader, readAPI) {
                     javac.build(org.eclipse.core.resources.IncrementalProjectBuilder.INCREMENTAL_BUILD)
                     log.flush()
                   }
+                  
+                  BuildManagerStore.INSTANCE.setJavaSourceFilesToCompile(null, conf.project.underlying)
                 } catch {
                   case e: Throwable => 
                     handleError(e)
