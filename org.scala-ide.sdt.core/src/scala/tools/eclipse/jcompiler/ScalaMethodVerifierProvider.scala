@@ -61,7 +61,7 @@ class ScalaMethodVerifierProvider extends IMethodVerifierProvider with HasLogger
               
         case None => false
       }
-    }(orElse = false)
+    }.getOrElse(false)
   }
 
   private def isConcreteTraitMethod(abstractMethod: MethodBinding, project: ScalaProject): Boolean = {

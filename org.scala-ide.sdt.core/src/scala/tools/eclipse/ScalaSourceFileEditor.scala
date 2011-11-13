@@ -30,6 +30,7 @@ import scala.collection.mutable
 import scala.tools.eclipse.javaelements.{ ScalaSourceFile, ScalaCompilationUnit }
 import scala.tools.eclipse.markoccurrences.{ ScalaOccurrencesFinder, Occurrences }
 import scala.tools.eclipse.semicolon._
+import scala.tools.eclipse.util.Utils
 
 class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
 
@@ -130,8 +131,8 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
 
       case _ =>
         // TODO: pop up a dialog explaining what needs to be fixed or fix it ourselves
-        thePlugin checkOrElse (adaptable.asInstanceOf[ScalaSourceFile], // trigger the exception, so as to get a diagnostic stack trace 
-          "Could not recompute occurrence annotations: configuration problem")
+        Utils tryExecute (adaptable.asInstanceOf[ScalaSourceFile], // trigger the exception, so as to get a diagnostic stack trace 
+          msgIfError = Some("Could not recompute occurrence annotations: configuration problem"))
     }
   }
 

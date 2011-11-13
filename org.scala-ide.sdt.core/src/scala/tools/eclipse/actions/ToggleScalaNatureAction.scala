@@ -12,6 +12,7 @@ import org.eclipse.jface.viewers.{ ISelection, IStructuredSelection }
 import org.eclipse.core.runtime.Platform
 import org.eclipse.ui.{ IObjectActionDelegate, IWorkbenchPart }
 import ScalaPlugin.plugin
+import scala.tools.eclipse.util.Utils
 
 object ToggleScalaNatureAction {
   val PDE_PLUGIN_NATURE = "org.eclipse.pde.PluginNature" /* == org.eclipse.pde.internal.core.natures.PDE.PLUGIN_NATURE */
@@ -26,7 +27,7 @@ class ToggleScalaNatureAction extends AbstractPopupAction {
   }
   
   private def toggleScalaNature(project: IProject) =
-    plugin check {
+    Utils tryExecute {
       if (project.hasNature(plugin.natureId) || project.hasNature(plugin.oldNatureId)) {
         doIfPdePresent(project) { ScalaLibraryPluginDependencyUtils.removeScalaLibraryRequirement(project) }
         updateNatureIds(project) { _ filterNot Set(plugin.natureId, plugin.oldNatureId) }

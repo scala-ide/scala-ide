@@ -7,13 +7,12 @@
 package scala.tools.eclipse
 
 import scala.collection.mutable.ArrayBuffer
-
 import org.eclipse.core.resources.{ ICommand, IProject, IProjectNature, IResource }
 import org.eclipse.jdt.core.{ IClasspathEntry, IJavaProject, JavaCore }
 import org.eclipse.jdt.launching.JavaRuntime
 import org.eclipse.core.runtime.Path
-
 import ScalaPlugin.plugin 
+import scala.tools.eclipse.util.Utils
 
 object Nature {
   
@@ -60,7 +59,7 @@ class Nature extends IProjectNature {
     
     updateBuilders(project, List(JavaCore.BUILDER_ID, plugin.oldBuilderId), plugin.builderId)
     
-    plugin check {
+    Utils tryExecute {
       Nature.addScalaLibAndSave(getProject)
     }
   }
@@ -71,7 +70,7 @@ class Nature extends IProjectNature {
 
     updateBuilders(project, List(plugin.builderId, plugin.oldBuilderId), JavaCore.BUILDER_ID)
 
-    plugin check {
+    Utils tryExecute {
       val jp = JavaCore.create(getProject)
       Nature.removeScalaLib(jp)
       jp.save(null, true)
@@ -79,7 +78,7 @@ class Nature extends IProjectNature {
   }
   
   private def updateBuilders(project: IProject, buildersToRemove: List[String], builderToAdd: String) {
-    plugin.check {
+    Utils tryExecute {
       val description = project.getDescription
       val previousCommands = description.getBuildSpec
       val filteredCommands = previousCommands.filterNot(buildersToRemove contains _.getBuilderName)

@@ -7,11 +7,10 @@
 package scala.tools.eclipse.properties
 
 import org.eclipse.core.runtime.preferences.{ AbstractPreferenceInitializer, DefaultScope }
-
 import scala.tools.nsc.Settings
-
 import scala.tools.eclipse.ScalaPlugin
 import scala.tools.eclipse.SettingConverterUtil._
+import scala.tools.eclipse.util.Utils
 
 /**
  * This is responsible for initializing Scala Compiler
@@ -22,7 +21,7 @@ class ScalaCompilerPreferenceInitializer extends AbstractPreferenceInitializer {
   /** Actually initializes preferences */
   def initializeDefaultPreferences() : Unit = {
 	  
-    ScalaPlugin.plugin.check {
+    Utils.tryExecute {
       val node = new DefaultScope().getNode(ScalaPlugin.plugin.pluginId)
       val store = ScalaPlugin.plugin.getPluginPreferences
       
