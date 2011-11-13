@@ -92,7 +92,7 @@ class NewApplicationWizard extends BasicNewResourceWizard with HasLogger {
   }
 
   override def performFinish: Boolean =
-    tryExecute(createApplication(page.getApplicationName, page.getSelectedPackage))(orElse = false)
+    tryExecute(createApplication(page.getApplicationName, page.getSelectedPackage)).getOrElse(false)
 
   private def openInEditor(file: IFile) = {
     selectAndReveal(file)

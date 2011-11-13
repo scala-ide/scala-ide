@@ -4,12 +4,12 @@
 package scala.tools.eclipse
 package reconciliation
 
-import scala.tools.eclipse.ScalaPlugin
 import org.eclipse.core.runtime.CoreException
 import org.eclipse.core.runtime.{Platform, IProgressMonitor}
 import org.eclipse.jdt.core.WorkingCopyOwner
 import scala.tools.eclipse.javaelements.ScalaCompilationUnit
 import scala.tools.eclipse.util.HasLogger
+import scala.tools.eclipse.util.Utils
 
 /**
  * The implementation for the org.scala-ide.sdt.core.reconciliationParticipants
@@ -28,7 +28,7 @@ object ReconciliationParticipantsExtensionPoint extends HasLogger {
     val configs = Platform.getExtensionRegistry.getConfigurationElementsFor(PARTICIPANTS_ID).toList
 
     configs map { e =>
-      ScalaPlugin.plugin.check {
+      Utils.tryExecute {
         e.createExecutableExtension("class")
       }
     } collect {
@@ -38,7 +38,7 @@ object ReconciliationParticipantsExtensionPoint extends HasLogger {
   
   def runBefore(scu: ScalaCompilationUnit, monitor: IProgressMonitor, workingCopyOwner: WorkingCopyOwner) {
     extensions foreach { extension =>
-      ScalaPlugin.plugin.check {
+      Utils.tryExecute {
         extension.beforeReconciliation(scu, monitor, workingCopyOwner)
       }
     }
@@ -46,7 +46,7 @@ object ReconciliationParticipantsExtensionPoint extends HasLogger {
   
   def runAfter(scu: ScalaCompilationUnit, monitor: IProgressMonitor, workingCopyOwner: WorkingCopyOwner) {
     extensions foreach { extension =>
-      ScalaPlugin.plugin.check {
+      Utils.tryExecute {
         extension.afterReconciliation(scu, monitor, workingCopyOwner)
       }
     }

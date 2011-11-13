@@ -17,12 +17,15 @@ object Utils extends HasLogger {
   }
   
   /** Try executing the passed `action` and log any exception occurring. */
-  def tryExecute[T](action: => T)(orElse: => T): T = {
-    try action
+  def tryExecute[T](action: => T, msgIfError: => Option[String] = None): Option[T] = {
+    try Some(action)
     catch { 
       case t => 
-        logger.error(t)
-        orElse
+        msgIfError match {
+          case Some(errMsg) => logger.error(errMsg, t)
+          case None => logger.error(t)
+        }
+        None
     }
   }
 
