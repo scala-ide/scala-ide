@@ -122,4 +122,9 @@ class AbstractMethodVerifierTest {
 
     whenOpening("t1000660/ScalaTest.java").verifyThat(expectedProblem).is.reported
   }
+  
+  @Test
+  def t1000741() {
+    whenOpening("t1000741/FooImpl.java").verifyThat(no).errors.are.reported
+  }
 }
