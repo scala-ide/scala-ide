@@ -899,7 +899,15 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
               (builder.addClass(cd), List(cd.impl))
             case md : ModuleDef => (builder.addModule(md), List(md.impl))
             case vd : ValDef =>  (builder.addVal(vd), List(vd.rhs))
-            case td : TypeDef => (builder.addType(td), List(td.rhs))
+            case td : TypeDef => 
+              /* Entities nested in a Type Member definition are *not* traversed, because the Eclipse Java 
+               * Outline that we currently use does not handle members defined in a 
+               * {{{ org.eclipse.jdt.internal.core.SourceField }}} (which is the data structure we use to 
+               * expose type members definition to JDT). 
+               * For instance, the following is not correctly handled by the Outline when you click on the nested 
+               * member `a`: {{{type AkkaConfig = a.type forSome { val a: AnyRef }. Hence, for safety, currently 
+               * it is better to skip all children altogether. */ 
+              (builder.addType(td), Nil)
             case dd : DefDef =>
               if(dd.name != nme.MIXIN_CONSTRUCTOR && (dd.symbol ne NoSymbol))
                 (builder.addDef(dd), List(dd.tpt, dd.rhs))
@@ -908,8 +916,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
             case Function(vparams, body) => (builder, Nil)
             case _ => (builder, tree.children)
           }
-        }
-        
+        } 
         children.foreach {traverse(_, newBuilder)}
         if (newBuilder ne builder) newBuilder.complete(this)
       }
