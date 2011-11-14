@@ -899,7 +899,19 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
               (builder.addClass(cd), List(cd.impl))
             case md : ModuleDef => (builder.addModule(md), List(md.impl))
             case vd : ValDef =>  (builder.addVal(vd), List(vd.rhs))
-            case td : TypeDef => (builder.addType(td), List(td.rhs))
+            case td : TypeDef =>
+              /* For instance, the following type member decl can crash the Eclipse Outline:
+               * {{{  type Tpe = a.type forSome { val a: AnyRef } }}}. 
+               * At the moment the best solution is to simply ignore existential types.  
+               */
+              def mayCrashTheEclipseOutline = td.rhs.isInstanceOf[ExistentialTypeTree]
+              
+              if (mayCrashTheEclipseOutline) {
+                (builder, Nil)
+              }
+              else {
+                (builder.addType(td), List(td.rhs))
+              }
             case dd : DefDef =>
               if(dd.name != nme.MIXIN_CONSTRUCTOR && (dd.symbol ne NoSymbol))
                 (builder.addDef(dd), List(dd.tpt, dd.rhs))
