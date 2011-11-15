@@ -45,42 +45,48 @@ class ScalaMethodVerifierProvider extends IMethodVerifierProvider with HasLogger
   def isConcreteTraitMethod(abstractMethod: MethodBinding): Boolean = {
     Utils.tryExecute {
       // get the file containing the declaration of the abstract method
-      val file = getFile(abstractMethod)
+      val maybeFile = getFile(abstractMethod)
 
-      val fileExtension = file.getFullPath().getFileExtension()
+      maybeFile.map {file =>
+        val fileExtension = file.getFullPath().getFileExtension()
 
-      /* If it is a Scala source file, then we need to check if the source belongs to a Scala
-       * Project and if that is the case check if the passed `abstractMethod` is a concrete 
-       * method defined in a trait.
-       * 
-       * Java sources do not need to be considered because if the `abstractMethod` belongs to 
-       * a Java source, then the method is abstract by definition.
-       * 
-       * Class binaries are also ignored because we know the Scala mix-in phase has been executed. 
-       */
-      (fileExtension == "scala") && {
-        val project = file.getProject
+        /* If it is a Scala source file, then we need to check if the source belongs to a Scala
+         * Project and if that is the case check if the passed `abstractMethod` is a concrete 
+         * method defined in a trait.
+         * 
+         * Java sources do not need to be considered because if the `abstractMethod` belongs to 
+         * a Java source, then the method is abstract by definition.
+         * 
+         * Class binaries are also ignored because we know the Scala mix-in phase has been executed. 
+         */
+        (fileExtension == "scala") && {
+          val project = file.getProject
 
-        logger.debug("Found definition for `%s` in file `%s` of project `%s`".format(abstractMethod, file.getFullPath(), project.getName()))
+          logger.debug("Found definition for `%s` in file `%s` of project `%s`".format(abstractMethod, file.getFullPath(), project.getName()))
 
-        ScalaPlugin.plugin.asScalaProject(project) match {
-          case Some(scalaProject) =>
-            isConcreteTraitMethod(abstractMethod, scalaProject)
+          ScalaPlugin.plugin.asScalaProject(project) match {
+            case Some(scalaProject) =>
+              isConcreteTraitMethod(abstractMethod, scalaProject)
 
-          case None => false
+            case None => false
+          }
         }
-      }
+      }.getOrElse(false)
     }(orElse = false)
   }
 
-  private def getFile(abstractMethod: MethodBinding): IFile = {
+  private def getFile(abstractMethod: MethodBinding): Option[IFile] = {
     /* File name containing the abstractMethod definition. 
      * Note that the returned path contains includes the project's folder where the file resides. */
-    val qualifiedFileName = abstractMethod.declaringClass.getFileName().mkString
+    val fileName = Option(abstractMethod.declaringClass.getFileName())
+    
+    fileName.map {name => 
+      val qualifiedFileName = name.mkString
 
-    // File containing the `abstractMethod` definition. From a file we can find the project the file belongs to.
-    val fileName = Path.fromOSString(qualifiedFileName)
-    ResourcesPlugin.getWorkspace().getRoot().getFile(fileName)
+      // File containing the `abstractMethod` definition. From a file we can find the project the file belongs to.
+      val fileName = Path.fromOSString(qualifiedFileName)
+      ResourcesPlugin.getWorkspace().getRoot().getFile(fileName)
+    }
   }
 
   private def isConcreteTraitMethod(abstractMethod: MethodBinding, project: ScalaProject): Boolean = {
