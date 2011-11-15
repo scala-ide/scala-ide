@@ -127,4 +127,29 @@ class AbstractMethodVerifierTest {
   def t1000741() {
     whenOpening("t1000741/FooImpl.java").verifyThat(no).errors.are.reported
   }
+    
+  @Test
+  def protectedScalaEntitiesNeedToBeExposedToJDTAsPublic_t1000751() {
+    whenOpening("t1000751/J.java").verifyThat(no).errors.are.reported
+  }
+  
+  @Test
+  def scalaAnyRefNeedToBeMappedIntoJavaLangObject_ToBeCorrectlyExposedToJDT_1000752() {
+    whenOpening("t1000752/J.java").verifyThat(no).errors.are.reported
+  }
+  
+  @Test
+  def scalaArrayNeedToBeMappedIntoJavaArray_ToBeCorrectlyExposedToJDT_t1000752_1() {
+    whenOpening("t1000752_1/J.java").verifyThat(no).errors.are.reported
+  }
+  
+  @Test
+  def simplifiedExampleFromAkkaSources_ThatWasCausingWrongErrorsToBeReportedInTheJavaEditor_t1000752_2() {
+    whenOpening("t1000752_2/JavaAPITestActor.java").verifyThat(no).errors.are.reported
+  }
+  
+  @Test
+  def wideningAccessModifiersOfInherithedMethod_t1000752_3() {
+    whenOpening("t1000752_3/J.java").verifyThat(no).errors.are.reported
+  }
 }
