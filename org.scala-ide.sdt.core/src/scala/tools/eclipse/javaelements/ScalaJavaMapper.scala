@@ -60,7 +60,7 @@ trait ScalaJavaMapper extends ScalaAnnotationHelper with HasLogger { self : Scal
     if(owner.hasFlag(Flags.PRIVATE))
       jdtMods = jdtMods | ClassFileConstants.AccPrivate
     else
-      // protected members also need to be exposed as public to match scala compiler's behavior.
+      // protected entities need to be exposed as public to match scala compiler's behavior.
       jdtMods = jdtMods | ClassFileConstants.AccPublic
     
     if(owner.hasFlag(Flags.ABSTRACT) || owner.hasFlag(Flags.DEFERRED))
@@ -109,7 +109,7 @@ trait ScalaJavaMapper extends ScalaAnnotationHelper with HasLogger { self : Scal
     if(owner.hasFlag(Flags.PRIVATE))
       jdtMods = jdtMods | ClassFileConstants.AccPrivate
     else
-      // protected members also need to be exposed as public to match scala compiler's behavior.
+      // protected entities need to be exposed as public to match scala compiler's behavior.
       jdtMods = jdtMods | ClassFileConstants.AccPublic
     
     if(owner.hasFlag(Flags.ABSTRACT) || owner.hasFlag(Flags.DEFERRED))
