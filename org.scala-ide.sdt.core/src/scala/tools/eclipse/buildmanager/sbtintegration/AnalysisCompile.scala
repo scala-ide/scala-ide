@@ -29,11 +29,10 @@ class AnalysisCompile (conf: BasicConfiguration, bm: EclipseSbtBuildManager, con
     private lazy val store = AnalysisStore.sync(AnalysisStore.cached(FileBasedStore(EclipseResource(conf.cacheLocation).file)))
     
     private def withBootclasspath(args: CompilerArguments, classpath: Seq[File]): Seq[File] =
-		  args.bootClasspath ++ args.finishClasspath(classpath)
-		  
-		implicit def toAbstractFile(files: Seq[File]): Set[AbstractFile] =
-		  files.flatMap(f => EclipseResource.fromString(f.getPath)).toSet
-		  
+      args.bootClasspath ++ args.finishClasspath(classpath)
+    implicit def toAbstractFile(files: Seq[File]): Set[AbstractFile] =
+      files.flatMap(f => EclipseResource.fromString(f.getPath)).toSet
+
     def removeSbtOutputDirs(args: List[String]) = {
       val outputOpt = "-d"
       val left = args.takeWhile(_ != outputOpt)
@@ -95,7 +94,7 @@ class AnalysisCompile (conf: BasicConfiguration, bm: EclipseSbtBuildManager, con
         val ((previousAnalysis, previousSetup), tm) = util.Utils.timed(extract(store.get))
         
         logger.debug("API store loaded in %0,3d ms".format(tm))
-        	
+
         val compile0 = (include: Set[File], callback: AnalysisCallback) => {
             conf.outputDirectories.foreach(IO.createDirectory)
             val incSrc = sources.filter(include)
@@ -113,8 +112,8 @@ class AnalysisCompile (conf: BasicConfiguration, bm: EclipseSbtBuildManager, con
             }
             
             def compileScala() =
-				      if(!scalaSrcs.isEmpty) {
-				      	val sources0 = if(order == Mixed) incSrc else scalaSrcs
+              if(!scalaSrcs.isEmpty) {
+                val sources0 = if(order == Mixed) incSrc else scalaSrcs
                 val argsWithoutOutput = removeSbtOutputDirs(compArgs(sources0, classpathWithoutJVM.toSeq, conf.outputDirectory, options.options).toList)
                 
                 val bootClasspathArgs: String = CompilerArguments.absString(jrePath) + File.pathSeparator + scalac.scalaInstance.libraryJar.getAbsolutePath
@@ -131,13 +130,26 @@ class AnalysisCompile (conf: BasicConfiguration, bm: EclipseSbtBuildManager, con
               if(!javaSrcs.isEmpty) {
                 import sbt.Path._
                 val loader = ClasspathUtilities.toLoader(conf.classpath, scalac.scalaInstance.loader)
-                def readAPI(source: File, classes: Seq[Class[_]]) { callback.api(source, sbt.ClassToAPI(classes)) }
-	            	
-                sbt.classfile.Analyze(conf.outputDirectories, javaSrcs, log)(callback, loader, readAPI) {
-                  javac.build(org.eclipse.core.resources.IncrementalProjectBuilder.INCREMENTAL_BUILD)
+                
+                def handleError(e: Throwable) {
+                  logger.debug("Error running the SBT builder on Java sources:\n " + e)
+                  logger.debug("Running a full Java build")
+                  javac.build(org.eclipse.core.resources.IncrementalProjectBuilder.FULL_BUILD)
                   log.flush()
                 }
-            	}
+                
+                try {
+                  def readAPI(source: File, classes: Seq[Class[_]]) { callback.api(source, sbt.ClassToAPI(classes)) }
+
+                  sbt.classfile.Analyze(conf.outputDirectories, javaSrcs, log)(callback, loader, readAPI) {
+                    javac.build(org.eclipse.core.resources.IncrementalProjectBuilder.INCREMENTAL_BUILD)
+                    log.flush()
+                  }
+                } catch {
+                  case e: Throwable => 
+                    handleError(e)
+                }
+              }
             
             if(order == JavaThenScala) {
               compileJava(); compileScala()
@@ -154,10 +166,10 @@ class AnalysisCompile (conf: BasicConfiguration, bm: EclipseSbtBuildManager, con
         try {
           import CompileSetup._
           
-		      val analysis = previousSetup match {
-			      case Some(previous) if equivCompileSetup.equiv(previous, currentSetup) => previousAnalysis
-			      case _ => Incremental.prune(sources.toSet, previousAnalysis)
-		      }
+            val analysis = previousSetup match {
+            case Some(previous) if equivCompileSetup.equiv(previous, currentSetup) => previousAnalysis
+            case _ => Incremental.prune(sources.toSet, previousAnalysis)
+          }
           
           // Seems ok to just provide conf.outputDirectory
           val (modified, result) : (Boolean, Analysis) = 
@@ -171,18 +183,18 @@ class AnalysisCompile (conf: BasicConfiguration, bm: EclipseSbtBuildManager, con
           }
           result
         } catch {
-        	case e: xsbti.CompileFailed =>
-        	  logger.info("Compilation failed")
-        	  null
-        	case ex @ MissingRequirementError(required) =>
-        	  reporter.log(SbtConverter.convertToSbt(NoPosition), "could not find a required class (incomplete classpath?): " + required, xsbti.Severity.Error)
+          case e: xsbti.CompileFailed =>
+            logger.info("Compilation failed")
+            null
+          case ex @ MissingRequirementError(required) =>
+            reporter.log(SbtConverter.convertToSbt(NoPosition), "could not find a required class (incomplete classpath?): " + required, xsbti.Severity.Error)
             null
             
-        	case ex =>
-        	  logger.error("Crash in the Scala build compiler.", ex)
-        	  reporter.log(SbtConverter.convertToSbt(NoPosition), "The Scala compiler crashed while compiling your project. This is a bug in the Scala compiler, not the IDE. Check the Erorr Log for details. The error message is: " + ex.getMessage(), xsbti.Severity.Error)
-        	  null
-        	  
+          case ex =>
+            logger.error("Crash in the build compiler.", ex)
+            reporter.log(SbtConverter.convertToSbt(NoPosition), "The SBT builder crashed while compiling your project. This is a bug in the Scala compiler or SBT. Check the Erorr Log for details. The error message is: " + ex.getMessage(), xsbti.Severity.Error)
+            null
+            
         } finally {
           log.flush()
         }
