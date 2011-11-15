@@ -34,6 +34,8 @@ import org.eclipse.core.runtime.jobs.Job
 import org.eclipse.core.runtime.IStatus
 import org.eclipse.core.runtime.Status
 import scala.tools.eclipse.util.Utils
+import org.eclipse.jdt.core.IJavaModelMarker
+import scala.tools.eclipse.util.FileUtils
 
 trait BuildSuccessListener {
   def buildSuccessful(): Unit
@@ -149,12 +151,25 @@ class ScalaProject private (val underlying: IProject) extends HasLogger {
       }.mkString("", "", "")
       mrk.setAttribute(IMarker.MESSAGE, string)
     }
+  
+  def settingsError(severity: Int, msg: String, monitor: IProgressMonitor) =
+    workspaceRunnableIn(underlying.getWorkspace, monitor) { m =>
+      val mrk = underlying.createMarker(plugin.settingProblemMarkerId)
+      mrk.setAttribute(IMarker.SEVERITY, severity)
+      mrk.setAttribute(IMarker.MESSAGE, msg)
+    }
 
-  def clearBuildErrors =
+  def clearBuildErrors() =
     workspaceRunnableIn(underlying.getWorkspace) { m =>
       underlying.deleteMarkers(plugin.problemMarkerId, true, IResource.DEPTH_ZERO)
     }
 
+  def clearSettingsErrors() =
+    workspaceRunnableIn(underlying.getWorkspace) { m =>
+      underlying.deleteMarkers(plugin.settingProblemMarkerId, true, IResource.DEPTH_ZERO)
+    }
+
+  
   def externalDepends = underlying.getReferencedProjects
 
   lazy val javaProject = {
@@ -380,15 +395,23 @@ class ScalaProject private (val underlying: IProject) extends HasLogger {
     val markerJob= new Job("Update classpath error marker") {
       override def run(monitor: IProgressMonitor): IStatus = {
         if (underlying.isOpen()) { // cannot change markers on closed project
-          // clean the markers
-          underlying.deleteMarkers(plugin.problemMarkerId, false, IResource.DEPTH_ZERO)
+          // clean the classpath markers
+          underlying.deleteMarkers(plugin.classpathProblemMarkerId, false, IResource.DEPTH_ZERO)
           
           // add a new marker if needed
           severity match {
             case IMarker.SEVERITY_ERROR | IMarker.SEVERITY_WARNING =>
-              val marker= underlying.createMarker(plugin.problemMarkerId)
+              if (severity == IMarker.SEVERITY_ERROR) {
+                // delete all other Scala and Java error markers
+                underlying.deleteMarkers(plugin.problemMarkerId, false, IResource.DEPTH_ZERO)
+                underlying.deleteMarkers(IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER, false, IResource.DEPTH_ZERO)
+              }
+              
+              // create the classpath problem marker
+              val marker= underlying.createMarker(plugin.classpathProblemMarkerId)
               marker.setAttribute(IMarker.MESSAGE, message)
               marker.setAttribute(IMarker.SEVERITY, severity)
+
             case _ =>
           }
         }
@@ -628,7 +651,8 @@ class ScalaProject private (val underlying: IProject) extends HasLogger {
 
   def buildManager = {
     if (buildManager0 == null) {
-      val settings = new Settings
+      val settings = new Settings(msg => settingsError(IMarker.SEVERITY_ERROR, msg, null))
+      clearSettingsErrors()
       initialize(settings, _ => true)
       // source path should be emtpy. The build manager decides what files get recompiled when.
       // if scalac finds a source file newer than its corresponding classfile, it will 'compileLate'
