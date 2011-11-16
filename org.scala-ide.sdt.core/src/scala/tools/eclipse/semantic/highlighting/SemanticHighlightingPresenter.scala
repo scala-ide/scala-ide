@@ -105,7 +105,9 @@ object SemanticHighlightingReconciliation {
       createSemanticHighlighterForEditor(scu) foreach (participants(scu) = _)
     }
 
-    participants(scu).update(scu)
+    // sometimes we reconcile compilation units that are not open in an editor,
+    // so we need to guard against the case where there's no semantic highlighter 
+    participants.get(scu).map(_.update(scu))
   }
 }
 
