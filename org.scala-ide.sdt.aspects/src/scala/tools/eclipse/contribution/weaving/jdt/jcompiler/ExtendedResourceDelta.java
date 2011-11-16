@@ -28,18 +28,15 @@ public class ExtendedResourceDelta extends PlatformObject implements IResourceDe
     this.resource= resource;
   }
 
-  @Override
   public void accept(IResourceDeltaVisitor visitor) throws CoreException {
     accept(visitor, IResource.NONE);
   }
 
-  @Override
   public void accept(IResourceDeltaVisitor visitor, boolean includePhantoms)
       throws CoreException {
     accept(visitor, includePhantoms ? IContainer.INCLUDE_PHANTOMS : IResource.NONE);
   }
 
-  @Override
   public void accept(IResourceDeltaVisitor visitor, int memberFlags)
       throws CoreException {
     for (IResourceDelta child: getAffectedChildren(ADDED | REMOVED | CHANGED, memberFlags)) {
@@ -47,7 +44,6 @@ public class ExtendedResourceDelta extends PlatformObject implements IResourceDe
     }
   }
 
-  @Override
   public IResourceDelta findMember(IPath path) {
     if (path.segmentCount() == 0)
       return this;
@@ -64,17 +60,14 @@ public class ExtendedResourceDelta extends PlatformObject implements IResourceDe
     return null;
   }
 
-  @Override
   public IResourceDelta[] getAffectedChildren() {
     return getAffectedChildren(ADDED | REMOVED | CHANGED, IResource.NONE);
   }
 
-  @Override
   public IResourceDelta[] getAffectedChildren(int kindMask) {
     return getAffectedChildren(kindMask, IResource.NONE);
   }
 
-  @Override
   public IResourceDelta[] getAffectedChildren(int kindMask, int memberFlags) {
     List<IResourceDelta> affectedChildren= new ArrayList<IResourceDelta>();
     if ((memberFlags & IContainer.INCLUDE_PHANTOMS) != 0) {
@@ -92,56 +85,48 @@ public class ExtendedResourceDelta extends PlatformObject implements IResourceDe
     return affectedChildren.toArray(new IResourceDelta[affectedChildren.size()]);
   }
 
-  @Override
   public int getFlags() {
     if (wrapped != null) 
       return wrapped.getFlags();
     return IResourceDelta.CONTENT;
   }
 
-  @Override
   public IPath getFullPath() {
     if (wrapped != null) 
       return wrapped.getFullPath();
     return resource.getFullPath();
   }
 
-  @Override
   public int getKind() {
     if (wrapped != null)
       return wrapped.getKind();
     return IResourceDelta.CHANGED;
   }
 
-  @Override
   public IMarkerDelta[] getMarkerDeltas() {
     if (wrapped != null)
       return wrapped.getMarkerDeltas();
     return new IMarkerDelta[0];
   }
 
-  @Override
   public IPath getMovedFromPath() {
     if (wrapped != null)
       return wrapped.getMovedFromPath();
     return null;
   }
 
-  @Override
   public IPath getMovedToPath() {
     if (wrapped != null)
       return wrapped.getMovedToPath();
     return null;
   }
 
-  @Override
   public IPath getProjectRelativePath() {
     if (wrapped != null) 
       return wrapped.getProjectRelativePath();
     return resource.getFullPath().makeRelativeTo(resource.getProject().getFullPath());
   }
 
-  @Override
   public IResource getResource() {
     if (wrapped != null) 
       return wrapped.getResource();
