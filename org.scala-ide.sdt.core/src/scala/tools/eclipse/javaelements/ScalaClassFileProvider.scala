@@ -31,7 +31,7 @@ class ScalaClassFileProvider extends IClassFileProvider with HasLogger {
   override def isInteresting(classFile: IClassFile): Boolean = {
     val res = ScalaPlugin.plugin.isScalaProject(classFile.getJavaProject())
     if (!res) 
-      logger.debug("Not interested in %s in project %s".format(classFile, classFile.getJavaProject()))
+      logger.debug("Not interested in %s in project %s".format(classFile.getElementName(), classFile.getJavaProject()))
     res
   }
 }
