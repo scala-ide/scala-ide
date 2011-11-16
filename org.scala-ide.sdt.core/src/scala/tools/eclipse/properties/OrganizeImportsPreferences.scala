@@ -18,6 +18,9 @@ import scala.tools.eclipse.util.SWTUtils.{byNameToSelectionAdapter, fnToSelectio
 import scala.tools.eclipse.ScalaPlugin
 import org.eclipse.jface.preference.RadioGroupFieldEditor
 import org.eclipse.jface.preference.FieldEditor
+import scala.tools.eclipse.util.Utils
+
+
 
 class OrganizeImportsPreferencesPage extends PropertyPage with IWorkbenchPreferencePage {
   import OrganizeImportsPreferences._
@@ -212,7 +215,7 @@ class OrganizeImportsPreferencesInitializer extends AbstractPreferenceInitialize
   /** Actually initializes preferences */
   def initializeDefaultPreferences() : Unit = {
     
-    ScalaPlugin.plugin.check {
+    Utils.tryExecute {
       val node = new DefaultScope().getNode(ScalaPlugin.plugin.pluginId)
       node.put(OrganizeImportsPreferences.groupsKey, "java$scala$org$com")      
       node.put(OrganizeImportsPreferences.wildcardsKey, "scalaz$scalaz.Scalaz")      

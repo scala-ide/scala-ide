@@ -4,9 +4,9 @@ package actions
 import org.eclipse.jface.action.IAction
 import org.eclipse.jface.viewers.{ ISelection, IStructuredSelection }
 import org.eclipse.ui.{ IObjectActionDelegate, IWorkbenchPart, IWorkbenchWindowActionDelegate, IWorkbenchWindow, PlatformUI }
-
 import scala.tools.eclipse.ScalaPlugin.plugin
 import scala.tools.eclipse.javaelements.JDTUtils
+import scala.tools.eclipse.util.Utils
 
 class RunDiagnosticAction extends IObjectActionDelegate with IWorkbenchWindowActionDelegate {
   private var parentWindow: IWorkbenchWindow = null
@@ -23,7 +23,7 @@ class RunDiagnosticAction extends IObjectActionDelegate with IWorkbenchWindowAct
 	def selectionChanged(action: IAction, selection: ISelection) {  }
   
   def run(action: IAction) { 
-    plugin check {
+    Utils tryExecute {
       action.getId match {
         case RUN_DIAGNOSTICS =>
           val shell = if (parentWindow == null) ScalaPlugin.getShell else parentWindow.getShell        

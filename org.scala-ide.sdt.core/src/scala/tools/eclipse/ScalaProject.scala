@@ -33,6 +33,7 @@ import org.eclipse.jdt.core.IPackageFragmentRoot
 import org.eclipse.core.runtime.jobs.Job
 import org.eclipse.core.runtime.IStatus
 import org.eclipse.core.runtime.Status
+import scala.tools.eclipse.util.Utils
 
 trait BuildSuccessListener {
   def buildSuccessful(): Unit
@@ -119,7 +120,7 @@ class ScalaProject private (val underlying: IProject) extends HasLogger {
                "Add the Scala library to the classpath of project %s?") 
               .format(msg, underlying.getName))
           if (doAdd) {
-            plugin check {
+            Utils tryExecute {
               Nature.addScalaLibAndSave(underlying)
             }
           }

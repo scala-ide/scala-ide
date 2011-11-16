@@ -30,6 +30,7 @@ import org.eclipse.jdt.ui.PreferenceConstants
 import org.eclipse.core.resources.IResourceDelta
 import scala.tools.eclipse.util.HasLogger
 import org.osgi.framework.Bundle
+import scala.tools.eclipse.util.Utils
 
 object ScalaPlugin {
   var plugin: ScalaPlugin = _
@@ -302,31 +303,12 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
   }
 
   
-  def bundlePath = check {
+  def bundlePath = Utils.tryExecute {
     val bundle = getBundle
     val bpath = bundle.getEntry("/")
     val rpath = FileLocator.resolve(bpath)
     rpath.getPath
   }.getOrElse("unresolved")
-
-  final def check[T](f: => T) =
-    try {
-      Some(f)
-    } catch {
-      case e: Throwable =>
-        logger.error(e)
-        None
-    }
-
-  final def checkOrElse[T](f: => T, msgIfError: String): Option[T] = {
-    try {
-      Some(f)
-    } catch {
-      case e: Throwable =>
-        logger.error(msgIfError, e)
-        None
-    }
-  }
 
   /** Is the file buildable by the Scala plugin? In other words, is it a
    *  Java or Scala source file?
