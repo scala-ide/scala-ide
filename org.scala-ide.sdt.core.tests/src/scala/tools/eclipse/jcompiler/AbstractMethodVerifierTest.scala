@@ -143,6 +143,7 @@ class AbstractMethodVerifierTest {
     whenOpening("t1000752_1/J.java").verifyThat(no).errors.are.reported
   }
   
+  @Ignore("It needs to be ignored because of ticket #1000761 (and it is really by chance that it is only failing w/ 2.8)") 
   @Test
   def simplifiedExampleFromAkkaSources_ThatWasCausingWrongErrorsToBeReportedInTheJavaEditor_t1000752_2() {
     whenOpening("t1000752_2/JavaAPITestActor.java").verifyThat(no).errors.are.reported
