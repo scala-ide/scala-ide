@@ -62,7 +62,7 @@ class ScalaMethodVerifierProvider extends IMethodVerifierProvider with HasLogger
         (fileExtension == "scala") && {
           val project = file.getProject
 
-          logger.debug("Found definition for `%s` in file `%s` of project `%s`".format(abstractMethod, file.getFullPath(), project.getName()))
+          //logger.debug("Found definition for `%s` in file `%s` of project `%s`".format(abstractMethod, file.getFullPath(), project.getName()))
 
           ScalaPlugin.plugin.asScalaProject(project) match {
             case Some(scalaProject) =>
@@ -126,7 +126,7 @@ class ScalaMethodVerifierProvider extends IMethodVerifierProvider with HasLogger
         def findMethodOwnerSymbol(abstractMethod: MethodBinding) = {
           val packageName = abstractMethod.declaringClass.getPackage().readableName().mkString
           val typeName = abstractMethod.declaringClass.qualifiedSourceName().mkString
-          logger.debug("Looking for class symbol in package `%s` for name `%s`" format (packageName, typeName))
+          //logger.debug("Looking for class symbol in package `%s` for name `%s`" format (packageName, typeName))
 
           // When looking for the typename, the strategy is different when the type is defined in the
           // the empty package.
@@ -148,7 +148,7 @@ class ScalaMethodVerifierProvider extends IMethodVerifierProvider with HasLogger
           val methodSymbol = findMethodSymbol(methodOwner, abstractMethod)
           val isConcreteMethod = methodSymbol.nonEmpty && {
             val isDeferredMethod = methodSymbol.exists(_.isDeferred)
-            logger.debug("found %s method symbol: %s" format (abstractMethod.selector.mkString, methodSymbol))
+            //logger.debug("found %s method symbol: %s" format (abstractMethod.selector.mkString, methodSymbol))
             !isDeferredMethod
           }
           isConcreteMethod
