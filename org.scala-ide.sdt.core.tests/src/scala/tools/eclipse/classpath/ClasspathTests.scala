@@ -260,20 +260,14 @@ class ClasspathTests {
     checkMarkers(0, 0)
     
     // two excepted code errors
-    var markers= project.underlying.findMarkers(ScalaPlugin.plugin.problemMarkerId, false, IResource.DEPTH_INFINITE)
+    var markers= project.underlying.findMarkers(ScalaPlugin.plugin.problemMarkerId, true, IResource.DEPTH_INFINITE)
     assertEquals("Unexpected number of scala problems in project", 2, markers.length)
     
     // switch to an invalid classpath
     setRawClasspathAndCheckMarkers(cleanRawClasspath, 0, 1)
     
-    project.underlying.build(IncrementalProjectBuilder.CLEAN_BUILD, new NullProgressMonitor)
-    project.underlying.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, new NullProgressMonitor)
-    
-    // one error on the project
-    checkMarkers(0, 1)
-    
-    // no additional code errors
-    markers= project.underlying.findMarkers(ScalaPlugin.plugin.problemMarkerId, false, IResource.DEPTH_INFINITE)
+    // no code errors visible anymore
+    markers= project.underlying.findMarkers(ScalaPlugin.plugin.problemMarkerId, true, IResource.DEPTH_INFINITE)
     assertEquals("Unexpected number of scala problems in project", 0, markers.length)
   }
   
