@@ -252,6 +252,9 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
       val isAdded   = delta.getKind == ADDED
       
       def hasFlag(flag: Int) = (delta.getFlags & flag) != 0
+      
+      def isChangeInClassFolder(packageFragmentRoot: IPackageFragmentRoot)=
+        (packageFragmentRoot.getKind() & IPackageFragmentRoot.K_BINARY) != 0 && hasFlag(F_CHILDREN)
 
       val elem = delta.getElement
       
@@ -260,7 +263,8 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
         case JAVA_PROJECT if !isRemoved && !hasFlag(F_CLOSED) => true
 
         case PACKAGE_FRAGMENT_ROOT =>
-          if (isRemoved || hasFlag(F_REMOVED_FROM_CLASSPATH | F_ADDED_TO_CLASSPATH | F_ARCHIVE_CONTENT_CHANGED)) {
+          if (isRemoved || hasFlag(F_REMOVED_FROM_CLASSPATH | F_ADDED_TO_CLASSPATH | F_ARCHIVE_CONTENT_CHANGED) || 
+              isChangeInClassFolder(elem.asInstanceOf[IPackageFragmentRoot])) {
             logger.info("package fragment root changed (resetting pres compiler): " + elem)
             asScalaProject(elem.getJavaProject().getProject).foreach(projectsToReset +=)
             false
