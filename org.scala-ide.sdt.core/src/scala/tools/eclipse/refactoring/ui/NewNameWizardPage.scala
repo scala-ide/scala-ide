@@ -49,7 +49,10 @@ class NewNameWizardPage(
   }
   
   def newNameEntered(name: String) {
-    if(isValidName(name)) {
+    if(name == defaultName) {
+      setPageComplete(false)
+      setErrorMessage(null)
+    } else if(isValidName(name)) {
       setPageComplete(true)
       setErrorMessage(null)
       nameChanged(name)
