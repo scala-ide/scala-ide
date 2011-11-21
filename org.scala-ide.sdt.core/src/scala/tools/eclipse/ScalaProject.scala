@@ -403,8 +403,8 @@ class ScalaProject private (val underlying: IProject) extends HasLogger {
             case IMarker.SEVERITY_ERROR | IMarker.SEVERITY_WARNING =>
               if (severity == IMarker.SEVERITY_ERROR) {
                 // delete all other Scala and Java error markers
-                underlying.deleteMarkers(plugin.problemMarkerId, false, IResource.DEPTH_ZERO)
-                underlying.deleteMarkers(IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER, false, IResource.DEPTH_ZERO)
+                underlying.deleteMarkers(plugin.problemMarkerId, true, IResource.DEPTH_INFINITE)
+                underlying.deleteMarkers(IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER, true, IResource.DEPTH_INFINITE)
               }
               
               // create the classpath problem marker

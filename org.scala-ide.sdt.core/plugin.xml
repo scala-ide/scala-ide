@@ -361,6 +361,24 @@
       <super type="org.eclipse.jdt.core.problem"/>
       <persistent value="true"/>
    </extension>
+      
+   <extension
+         id="classpathProblem"
+         name="Scala Classpath Problem"
+         point="org.eclipse.core.resources.markers">
+      <super type="org.eclipse.core.resources.problemmarker"/>
+      <super type="org.eclipse.jdt.core.problem"/>
+      <persistent value="true"/>
+   </extension>
+   
+   <extension
+         id="settingProblem"
+         name="Scala Setting Problem"
+         point="org.eclipse.core.resources.markers">
+      <super type="org.eclipse.core.resources.problemmarker"/>
+      <super type="org.eclipse.jdt.core.problem"/>
+      <persistent value="true"/>
+   </extension>
 
    <extension
          point="org.eclipse.ui.editors.annotationTypes">
