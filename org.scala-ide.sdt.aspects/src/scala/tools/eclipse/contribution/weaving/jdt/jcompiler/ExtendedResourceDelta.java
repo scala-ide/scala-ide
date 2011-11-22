@@ -98,7 +98,7 @@ public class ExtendedResourceDelta extends PlatformObject implements IResourceDe
   }
 
   public int getKind() {
-    if (wrapped != null)
+    if (wrapped != null && wrapped.getKind() != IResourceDelta.NO_CHANGE)
       return wrapped.getKind();
     return IResourceDelta.CHANGED;
   }
