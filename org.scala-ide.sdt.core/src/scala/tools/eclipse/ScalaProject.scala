@@ -10,7 +10,7 @@ import scala.collection.mutable
 import java.io.File.pathSeparator
 import org.eclipse.core.resources.{ IContainer, IFile, IFolder, IMarker, IProject, IResource, IResourceProxy, IResourceProxyVisitor }
 import org.eclipse.core.runtime.{ FileLocator, IPath, IProgressMonitor, Path, SubMonitor }
-import org.eclipse.jdt.core.{ IClasspathEntry, IJavaProject, JavaCore }
+import org.eclipse.jdt.core.{ IClasspathEntry, IJavaProject, JavaCore, ICompilationUnit }
 import org.eclipse.jdt.core.compiler.IProblem
 import org.eclipse.jdt.internal.core.JavaProject
 import org.eclipse.jdt.internal.core.util.Util
@@ -36,6 +36,9 @@ import org.eclipse.core.runtime.Status
 import scala.tools.eclipse.util.Utils
 import org.eclipse.jdt.core.IJavaModelMarker
 import scala.tools.eclipse.util.FileUtils
+import scala.tools.nsc.util.BatchSourceFile
+import java.io.InputStream
+import java.io.InputStreamReader
 
 trait BuildSuccessListener {
   def buildSuccessful(): Unit
@@ -761,5 +764,48 @@ class ScalaProject private (val underlying: IProject) extends HasLogger {
   /** Shut down presentation compiler without scheduling a reconcile for open files. */
   def shutDownPresentationCompiler() {
     presentationCompiler.invalidate()
+  }
+  
+  /**
+   * Return the full content of the given file in a Char array.
+   * 
+   * Need to replace this with an utility method. I cannot believe it doesn't
+   * exist somewhere else.
+   */
+  private def readFully(file: IFile): Array[Char] = {
+    val reader= new InputStreamReader(file.getContents, file.getCharset())
+    val buf= new ListBuffer[Char]
+    var c= reader.read
+    while (c >= 0) {
+      buf+= c.asInstanceOf[Char]
+      c= reader.read
+    }
+    buf.toArray
+  }
+  
+  /**
+   * Tell the presentation compiler to refresh the given files,
+   * if they are not managed by the presentation compiler already.
+   */
+  def refreshChangedFiles(files: List[IFile]) {
+    // transform to batch source files
+    val abstractfiles= files.map(file => new BatchSourceFile(EclipseResource(file), readFully(file))) 
+      
+    withPresentationCompiler {compiler =>
+      import compiler._
+      // only the files not already managed should be refreshed
+      val notLoadedFiles= abstractfiles.filter(compiler.getUnitOf(_).isEmpty)
+            
+      notLoadedFiles.foreach(file => {
+        // call askParsedEntered to force the refresh without loading the file
+        val r = new Response[Tree]
+        compiler.askParsedEntered(file, false, r)
+        r.get.left
+      })
+      
+      // reconcile the opened editors if some files have been refreshed
+      if (notLoadedFiles.nonEmpty)
+        compiler.compilationUnits.foreach(_.scheduleReconcile())
+    }(Nil)
   }
 }
