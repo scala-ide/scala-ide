@@ -31,6 +31,9 @@ import org.eclipse.core.resources.IResourceDelta
 import scala.tools.eclipse.util.HasLogger
 import org.osgi.framework.Bundle
 import scala.tools.eclipse.util.Utils
+import org.eclipse.jdt.core.ICompilationUnit
+import scala.tools.nsc.io.AbstractFile
+import scala.tools.eclipse.util.EclipseResource
 
 object ScalaPlugin {
   var plugin: ScalaPlugin = _
@@ -244,6 +247,7 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
 
     // process deleted files
     val buff = new ListBuffer[ScalaSourceFile]
+    val changed = new ListBuffer[ICompilationUnit]
     val projectsToReset = new mutable.HashSet[ScalaProject]
 
     def findRemovedSources(delta: IJavaElementDelta) {
@@ -274,6 +278,12 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
           } else 
             true
 
+        // TODO: the check should be done with isInstanceOf[ScalaSourceFile] instead of
+        // endsWith(scalaFileExtn), but it is not working for Play 2.0 because of #1000434
+        case COMPILATION_UNIT if isChanged && elem.getResource.getName.endsWith(scalaFileExtn) =>
+          // marked the changed scala files to be refreshed in the presentation compiler if needed
+          changed += elem.asInstanceOf[ICompilationUnit]
+          false
         case COMPILATION_UNIT if elem.isInstanceOf[ScalaSourceFile] && isRemoved =>
           buff += elem.asInstanceOf[ScalaSourceFile]
           false
@@ -291,6 +301,17 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
     }
     findRemovedSources(event.getDelta)
     
+    // ask for the changed scala files to be refreshed in each project presentation compiler if needed
+    if (changed.nonEmpty) {
+      changed.toList groupBy(_.getJavaProject.getProject) foreach {
+        case (project, units) =>
+          asScalaProject(project) foreach { p =>
+            if (project.isOpen && !projectsToReset(p)) {
+              p.refreshChangedFiles(units.map(_.getResource.asInstanceOf[IFile]))
+            }
+          }
+      }
+    }
     
     projectsToReset.foreach(_.resetPresentationCompiler)
     if(buff.nonEmpty) {
