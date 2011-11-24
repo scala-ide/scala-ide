@@ -12,19 +12,39 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.PlatformObject;
 
-public class ExtendedResourceDelta extends PlatformObject implements IResourceDelta {
+/**
+ * A resource delta which allows addition of a Resource change in its tree, and 
+ * use wrapped IResourceDelta for other nodes.<br>
+ * It is used to tell the Eclipse Java compiler to compile more file than the set
+ * that was marked at the beginning of the build.
+ */
+public class ExpandableResourceDelta extends PlatformObject implements IResourceDelta {
 
+  /**
+   * A wrapped resource. If it is set, it is used for all information except
+   * the list of children.
+   */
   private IResourceDelta wrapped;
   
-  private List<ExtendedResourceDelta> children= new ArrayList<ExtendedResourceDelta>();
+  /**
+   * The children of this resource delta.
+   */
+  private List<ExpandableResourceDelta> children= new ArrayList<ExpandableResourceDelta>();
   
+  /**
+   * A resource. If it is set, this resource delta is content change for this resource.
+   */
   private IResource resource;
 
-  private ExtendedResourceDelta(IResourceDelta resourceDelta) {
+  /**
+   * 
+   * @param resourceDelta
+   */
+  private ExpandableResourceDelta(IResourceDelta resourceDelta) {
     wrapped= resourceDelta;
   }
   
-  private ExtendedResourceDelta(IResource resource) {
+  private ExpandableResourceDelta(IResource resource) {
     this.resource= resource;
   }
 
@@ -137,23 +157,23 @@ public class ExtendedResourceDelta extends PlatformObject implements IResourceDe
     getOrAddResource(changedResource);
   }
   
-  private ExtendedResourceDelta getOrAddResource(IResource newResource) {
+  private ExpandableResourceDelta getOrAddResource(IResource newResource) {
     if (getResource().equals(newResource)) {
       return this;
     }
-    ExtendedResourceDelta parentResourceDelta= getOrAddResource(newResource.getParent());
-    for (ExtendedResourceDelta childResourceDelta: parentResourceDelta.children) {
+    ExpandableResourceDelta parentResourceDelta= getOrAddResource(newResource.getParent());
+    for (ExpandableResourceDelta childResourceDelta: parentResourceDelta.children) {
       if (childResourceDelta.getResource().equals(newResource)) {
         return childResourceDelta;
       }
     }
-    ExtendedResourceDelta newResourceDelta= new ExtendedResourceDelta(newResource);
+    ExpandableResourceDelta newResourceDelta= new ExpandableResourceDelta(newResource);
     parentResourceDelta.children.add(newResourceDelta);
     return newResourceDelta;
   }
 
-  public static ExtendedResourceDelta duplicate(IResourceDelta original) {
-    ExtendedResourceDelta newDelta = new ExtendedResourceDelta(original);
+  public static ExpandableResourceDelta duplicate(IResourceDelta original) {
+    ExpandableResourceDelta newDelta = new ExpandableResourceDelta(original);
     for (IResourceDelta child: original.getAffectedChildren(ALL_WITH_PHANTOMS, IContainer.INCLUDE_HIDDEN | IContainer.INCLUDE_PHANTOMS | IContainer.INCLUDE_TEAM_PRIVATE_MEMBERS)) {
       newDelta.children.add(duplicate(child));
     }

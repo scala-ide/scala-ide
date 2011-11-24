@@ -30,7 +30,7 @@ public class BuildManagerStore {
     }
 
     // create a new delta
-    ExtendedResourceDelta newDelta= ExtendedResourceDelta.duplicate(delta);
+    ExpandableResourceDelta newDelta= ExpandableResourceDelta.duplicate(delta);
     
     // add the additional files
     IWorkspaceRoot workspaceRoot = ResourcesPlugin.getWorkspace().getRoot();
