@@ -12,6 +12,10 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.PlatformObject;
 
+/*
+ * Tests needed, for all test cases, and also for the one described at https://github.com/froden/scala-ide-test
+ */
+
 /**
  * A resource delta which allows addition of a Resource change in its tree, and 
  * use wrapped IResourceDelta for other nodes.<br>
@@ -154,14 +158,21 @@ public class ExpandableResourceDelta extends PlatformObject implements IResource
   }
   
   public void addChangedResource(IResource changedResource) {
-    getOrAddResource(changedResource);
+    getOrAddResourceForChange(changedResource);
   }
   
-  private ExpandableResourceDelta getOrAddResource(IResource newResource) {
+  private ExpandableResourceDelta getOrAddResourceForChange(IResource newResource) {
     if (getResource().equals(newResource)) {
+      
+      // if the existing node is marked as NO_CHANGE, we need to unwrap it (thus making it CHANGE),
+      // otherwise it would not be traversed
+      if (getKind() == IResourceDelta.NO_CHANGE) {
+        resource= wrapped.getResource();
+        wrapped= null;
+      }
       return this;
     }
-    ExpandableResourceDelta parentResourceDelta= getOrAddResource(newResource.getParent());
+    ExpandableResourceDelta parentResourceDelta= getOrAddResourceForChange(newResource.getParent());
     for (ExpandableResourceDelta childResourceDelta: parentResourceDelta.children) {
       if (childResourceDelta.getResource().equals(newResource)) {
         return childResourceDelta;
