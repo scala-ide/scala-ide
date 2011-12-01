@@ -36,7 +36,10 @@ public class BuildManagerStore {
     IWorkspaceRoot workspaceRoot = ResourcesPlugin.getWorkspace().getRoot();
     for (File file: files) {
       for (IFile resource: workspaceRoot.findFilesForLocationURI(file.toURI())) {
-        newDelta.addChangedResource(resource);
+        // filter only the resources on the right project, to support nested projects
+        if (resource.getProject() == project) {
+          newDelta.addChangedResource(resource);
+        }
       }
     }
     
