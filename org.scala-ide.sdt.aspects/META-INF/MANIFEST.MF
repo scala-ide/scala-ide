@@ -33,8 +33,11 @@ Eclipse-SupplementBundle:
 Bundle-ActivationPolicy: lazy
 Export-Package: 
  scala.tools.eclipse.contribution.weaving.jdt,
+ scala.tools.eclipse.contribution.weaving.jdt.configuration,
  scala.tools.eclipse.contribution.weaving.jdt.builderoptions,
  scala.tools.eclipse.contribution.weaving.jdt.cfprovider,
+ scala.tools.eclipse.contribution.weaving.jdt.cuprovider,
+ scala.tools.eclipse.contribution.weaving.jdt.imagedescriptor,
  scala.tools.eclipse.contribution.weaving.jdt.core,
  scala.tools.eclipse.contribution.weaving.jdt.debug,
  scala.tools.eclipse.contribution.weaving.jdt.hierarchy,
@@ -48,3 +51,6 @@ Export-Package:
  scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.formatter,
  scala.tools.eclipse.contribution.weaving.pde.ui
 Bundle-RequiredExecutionEnvironment: J2SE-1.5
+Import-Package: org.eclipse.equinox.frameworkadmin,
+ org.eclipse.equinox.internal.simpleconfigurator.manipulator,
+ org.eclipse.equinox.simpleconfigurator.manipulator
