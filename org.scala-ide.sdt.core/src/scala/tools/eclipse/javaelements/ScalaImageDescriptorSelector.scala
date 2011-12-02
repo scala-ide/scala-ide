@@ -1,6 +1,6 @@
 package scala.tools.eclipse.javaelements
 
-import org.eclipse.contribution.jdt.imagedescriptor.IImageDescriptorSelector
+import scala.tools.eclipse.contribution.weaving.jdt.imagedescriptor.IImageDescriptorSelector
 import org.eclipse.jdt.core.JavaModelException
 import org.eclipse.jdt.internal.ui.text.java.LazyJavaCompletionProposal;
 import org.eclipse.jface.resource.ImageDescriptor;
