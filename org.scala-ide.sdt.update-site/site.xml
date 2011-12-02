@@ -3,17 +3,9 @@
    <feature url="features/org.scala-ide.sdt.feature_0.0.0.jar" id="org.scala-ide.sdt.feature" version="0.0.0">
       <category name="sdt"/>
    </feature>
-   <feature url="features/org.scala-ide.sdt.weaving.feature_0.0.0.jar" id="org.scala-ide.sdt.weaving.feature" version="0.0.0">
-      <category name="sdt-weaving"/>
-   </feature>
    <feature url="features/org.scala-ide.sdt.source.feature_0.0.0.jar" id="org.scala-ide.sdt.source.feature" version="0.0.0">
       <category name="sdt-source"/>
    </feature>
    <category-def name="sdt" label="Scala IDE for Eclipse"/>
-   <category-def name="sdt-weaving" label="JDT Weaving">
-      <description>
-         JDT Weaving for Scala provides the Java Development Tools Weaving service for Eclipse. If you already have it installed (for instance, if you installed AspectJ or Springsource ToolSuite), do *not* install this version.
-      </description>
-   </category-def>
    <category-def name="sdt-source" label="Scala IDE for Eclipse Source Feature"/>
 </site>

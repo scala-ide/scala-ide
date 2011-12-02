@@ -6,4 +6,6 @@
    <extension-point id="indexerprovider" name="Indexer Provider" schema="indexerprovider.exsd"/>
    <extension-point id="formatterCleanUp" name="Formatter Clean Up" schema="formatterCleanUp.exsd"/>
    <extension-point id="method_verifier" name="Method Verifier" schema="methodVerifier.exsd"/>
+   <extension-point id="cuprovider" name="Compilation Unit Provider" schema="cuprovider.exsd"/>
+   <extension-point id="imagedescriptorselector" name="Image Descriptor Selector" schema="imagedescriptorselector.exsd"/>
 </plugin>

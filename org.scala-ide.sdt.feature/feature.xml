@@ -55,8 +55,12 @@ SUCH DAMAGE.
    </license>
 
    <url>
-      <update label="Scala IDE for Eclipse update site" url="http://download.scala-ide.org/update-current-35"/>
+      <update label="Scala IDE for Eclipse update site" url="http://download.scala-ide.org/update-current"/>
    </url>
+
+   <includes
+         id="org.scala-ide.sdt.weaving.feature"
+         version="0.0.0"/>
 
    <requires>
       <import plugin="org.eclipse.equinox.weaving.aspectj"/>
@@ -100,13 +104,6 @@ SUCH DAMAGE.
          unpack="false"/>
 
    <plugin
-         id="org.scala-ide.sdt.aspects"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
          id="org.scala-ide.sdt.core"
          download-size="0"
          install-size="0"
@@ -126,7 +123,7 @@ SUCH DAMAGE.
          install-size="0"
          version="0.0.0"
          unpack="false"/>
-         
+
    <plugin
          id="org.scala-ide.sbt.full.library"
          download-size="0"

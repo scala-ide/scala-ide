@@ -1,6 +1,6 @@
 package scala.tools.eclipse.javaelements
 
-import org.eclipse.contribution.jdt.cuprovider.ICompilationUnitProvider
+import scala.tools.eclipse.contribution.weaving.jdt.cuprovider.ICompilationUnitProvider
 import org.eclipse.jdt.core.WorkingCopyOwner
 import org.eclipse.jdt.internal.core.PackageFragment
 
