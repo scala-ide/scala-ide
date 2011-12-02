@@ -855,7 +855,7 @@
       sequence="M2+M3+D S" />
   </extension>
 
-  <extension point="org.eclipse.contribution.weaving.jdt.cuprovider">
+  <extension point="org.scala-ide.sdt.aspects.cuprovider">
     <provider
       class="scala.tools.eclipse.javaelements.ScalaCompilationUnitProvider"
       file_extension="scala">
@@ -882,7 +882,7 @@
     <provider class="scala.tools.eclipse.jcompiler.ScalaMethodVerifierProvider" />
   </extension>
   
-  <extension point="org.eclipse.contribution.weaving.jdt.imagedescriptorselector">
+  <extension point="org.scala-ide.sdt.aspects.imagedescriptorselector">
     <selector
       class="scala.tools.eclipse.javaelements.ScalaImageDescriptorSelector">
     </selector>

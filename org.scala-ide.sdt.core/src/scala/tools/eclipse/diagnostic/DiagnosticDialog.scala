@@ -17,7 +17,7 @@ import org.eclipse.jdt.internal.ui.preferences.PreferencesMessages
 import org.eclipse.jdt.internal.corext.util.Messages
 
 import org.eclipse.core.runtime.IStatus
-import org.eclipse.contribution.jdt.preferences.{ WeavingStateConfigurer, WeavingStateConfigurerUI, JDTWeavingPreferences }
+import scala.tools.eclipse.contribution.weaving.jdt.configuration.{ WeavingStateConfigurer }
 import org.eclipse.ui.PlatformUI
 import org.eclipse.ui.browser.IWorkbenchBrowserSupport 
 
@@ -345,7 +345,7 @@ class DiagnosticDialog(shell: Shell) extends Dialog(shell) {
   }
   
   def turnWeavingOn() {
-    JDTWeavingPreferences.setAskToEnableWeaving(false)
+//    JDTWeavingPreferences.setAskToEnableWeaving(false)
     
     val changeResult: IStatus = configurer.changeWeavingState(true)    
     

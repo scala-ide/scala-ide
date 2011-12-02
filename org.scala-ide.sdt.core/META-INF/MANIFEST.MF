@@ -47,15 +47,15 @@ Require-Bundle:
  org.junit4;bundle-version="4.5.0",
  org.eclipse.ui.browser;bundle-version="3.3.0"
 Import-Package: 
- org.eclipse.contribution.jdt.cuprovider;apply-aspects:=false,
- org.eclipse.contribution.jdt.imagedescriptor;apply-aspects:=false,
- org.eclipse.contribution.jdt.preferences;apply-aspects:=false,
- org.eclipse.contribution.jdt.sourceprovider;apply-aspects:=false,
+ com.ibm.icu.text;apply-aspects:=false;org.eclipse.swt.graphics;apply-aspects:=false,
  scala.tools.eclipse.contribution.weaving.jdt;apply-aspects:=false,
  scala.tools.eclipse.contribution.weaving.jdt.builderoptions;apply-aspects:=false,
  scala.tools.eclipse.contribution.weaving.jdt.cfprovider;apply-aspects:=false,
+ scala.tools.eclipse.contribution.weaving.jdt.configuration;apply-aspects:=false,
  scala.tools.eclipse.contribution.weaving.jdt.core;apply-aspects:=false,
+ scala.tools.eclipse.contribution.weaving.jdt.cuprovider;apply-aspects:=false,
  scala.tools.eclipse.contribution.weaving.jdt.hierarchy;apply-aspects:=false,
+ scala.tools.eclipse.contribution.weaving.jdt.imagedescriptor;apply-aspects:=false,
  scala.tools.eclipse.contribution.weaving.jdt.indexerprovider;apply-aspects:=false,
  scala.tools.eclipse.contribution.weaving.jdt.jcompiler;apply-aspects:=false,
  scala.tools.eclipse.contribution.weaving.jdt.launching;apply-aspects:=false,
@@ -63,9 +63,7 @@ Import-Package:
  scala.tools.eclipse.contribution.weaving.jdt.spellingengineprovider;apply-aspects:=false,
  scala.tools.eclipse.contribution.weaving.jdt.ui;apply-aspects:=false,
  scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor;apply-aspects:=false,
- scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.formatter;apply-aspects:=false,
- com.ibm.icu.text;apply-aspects:=false;
- org.eclipse.swt.graphics;apply-aspects:=false
+ scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.formatter;apply-aspects:=false
 Export-Package: 
  scala.tools.eclipse,
  scala.tools.eclipse.actions,
