@@ -128,12 +128,19 @@ class CompletionTests {
    * Test completion for 'any' Java type visible in the project
    */
   @Test
-  def ticket100476() {
+  def ticket1000476() {
     val oraclePos4_26 = List("ArrayList", "ArrayLister")
     val oraclePos6_33 = List("ArrayList")
     val oraclePos11_16 = List("TreeSet")
 
     runTest("ticket_1000476/Ticket1000476.scala", true)(oraclePos4_26, oraclePos6_33, oraclePos11_16)
+  }
+  
+  @Test
+  def ticket1000654() {
+    val oraclePos10_13 = List("t654_a(String): Unit", "t654_a(Int): Unit")
+    
+    runTest("ticket_1000654/Ticket1000654.scala", true)(oraclePos10_13)
   }
   
 }

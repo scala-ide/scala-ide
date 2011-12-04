@@ -52,19 +52,21 @@ class ScalaCompletions extends HasLogger {
     
     val buff = new mutable.ListBuffer[CompletionProposal]
     
-    def alreadyListed(fullyQualifiedName: String) = buff.exists((completion) => fullyQualifiedName.equals(completion.fullyQualifiedName))
+    def isAlreadyListed(fullyQualifiedName: String, display: String) = buff.exists((completion) => fullyQualifiedName.equals(completion.fullyQualifiedName) && display == completion.display)
 
+    def isCompletionAlreadyListed(completion: CompletionProposal) = isAlreadyListed(completion.fullyQualifiedName, completion.display)
+      
     for (completions <- completed.get.left.toOption) {
       compiler.askOption { () =>
         for (completion <- completions) {
           completion match {
             case compiler.TypeMember(sym, tpe, accessible, inherited, viaView) if !sym.isConstructor && nameMatches(sym) =>
               val completionProposal= compiler.mkCompletionProposal(start, sym, tpe, inherited, viaView)
-              if (!alreadyListed(completionProposal.fullyQualifiedName))
+              if (!isCompletionAlreadyListed(completionProposal))
                 buff += completionProposal
             case compiler.ScopeMember(sym, tpe, accessible, _) if !sym.isConstructor && nameMatches(sym) =>
               val completionProposal= compiler.mkCompletionProposal(start, sym, tpe, false, compiler.NoSymbol)
-              if (!alreadyListed(completionProposal.fullyQualifiedName))
+              if (!isCompletionAlreadyListed(completionProposal))
               	buff += completionProposal
             case _ =>
           }
@@ -102,7 +104,7 @@ class ScalaCompletions extends HasLogger {
 	      
 	      logger.info("Found type: " + fullyQualifiedName)
 
-	      if (!alreadyListed(fullyQualifiedName)) {
+	      if (!isAlreadyListed(fullyQualifiedName, simpleName)) {
 	        logger.info("Adding type: " + fullyQualifiedName)
             // if the type is not already in the completion list, add it
 	        buff+= CompletionProposal(
