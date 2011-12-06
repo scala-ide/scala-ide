@@ -14,19 +14,26 @@ import org.eclipse.jdt.core.IPackageFragmentRoot
 import scala.tools.eclipse.testsetup.SDTTestUtils
 import org.eclipse.core.resources.IFile
 
+/**
+ * Test for test cases requiring nested projects (one project root is a subfolder of an other project)
+ */
 object NestedProjectsTest extends TestProjectSetup("nested-parent") {
   
   final val scalaProjectName= "nested-scala"
 
+  /**
+   * The nested scala project
+   */
   lazy val scalaProject: ScalaProject = {
     val workspace = ResourcesPlugin.getWorkspace()
     EclipseUtils.workspaceRunnableIn(workspace) { monitor =>
-      val project= workspace.getRoot().getProject("nested-scala")
-      val projectDescription= workspace.newProjectDescription("nested-scala")
-      projectDescription.setLocation(workspace.getRoot().getLocation().append("nested-parent/nested-scala"))
-      project.create(projectDescription, null)
-      project.open(null)
-      JavaCore.create(project)
+      // create the project
+      val newProject= workspace.getRoot().getProject(scalaProjectName)
+      val projectDescription= workspace.newProjectDescription(scalaProjectName)
+      projectDescription.setLocation(project.underlying.getLocation().append(scalaProjectName))
+      newProject.create(projectDescription, null)
+      newProject.open(null)
+      JavaCore.create(newProject)
     }
     ScalaPlugin.plugin.getScalaProject(workspace.getRoot.getProject(scalaProjectName))
   }
@@ -41,10 +48,11 @@ class NestedProjectsTest {
 
   /**
    * At first, the ExpandableResourceDelta was crashing when used for nested projects. This test checks that it is not
-   * happening.
+   * happening any more.
    */
   @Test
   def checkJavaCompilesInNestedProject() {
+    // clean the nested project
     scalaProject.underlying.build(IncrementalProjectBuilder.CLEAN_BUILD, new NullProgressMonitor)
     scalaProject.underlying.build(IncrementalProjectBuilder.FULL_BUILD, new NullProgressMonitor)
     
