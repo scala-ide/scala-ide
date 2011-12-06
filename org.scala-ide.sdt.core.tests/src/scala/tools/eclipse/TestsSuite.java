@@ -8,6 +8,7 @@ import scala.tools.eclipse.jcompiler.AbstractMethodVerifierTest;
 import scala.tools.eclipse.lexical.ScalaDocumentPartitionerTest;
 import scala.tools.eclipse.lexical.ScalaPartitionTokeniserTest;
 import scala.tools.eclipse.occurrences.OccurrencesFinderTest;
+import scala.tools.eclipse.sbtbuilder.NestedProjectsTest;
 import scala.tools.eclipse.sbtbuilder.OutputFoldersTest;
 import scala.tools.eclipse.sbtbuilder.SbtBuilderTest;
 import scala.tools.eclipse.sbtbuilder.TodoBuilderTest;
@@ -46,5 +47,6 @@ import org.junit.runners.Suite;
   TodoBuilderTest.class,
   ImplicitsHighlightingTest.class,
   ScalaJavaDepTest.class,
+  NestedProjectsTest.class,
 })
 class TestsSuite { }
