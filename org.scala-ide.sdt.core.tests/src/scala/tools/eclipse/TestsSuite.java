@@ -14,6 +14,7 @@ import scala.tools.eclipse.sbtbuilder.TodoBuilderTest;
 import scala.tools.eclipse.semantic.ImplicitsHighlightingTest;
 import scala.tools.eclipse.sbtbuilder.ScalaCompilerClasspathTest;
 import scala.tools.eclipse.sbtbuilder.ScalaJavaDepTest;
+import scala.tools.eclipse.sbtbuilder.MultipleErrorsTest;
 import scala.tools.eclipse.structurebuilder.StructureBuilderTest;
 import scala.tools.eclipse.pc.PresentationCompilerTest;
 import scala.tools.eclipse.wizards.*;
@@ -46,5 +47,6 @@ import org.junit.runners.Suite;
   TodoBuilderTest.class,
   ImplicitsHighlightingTest.class,
   ScalaJavaDepTest.class,
+  MultipleErrorsTest.class
 })
 class TestsSuite { }
