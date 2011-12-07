@@ -1,11 +1,9 @@
 package scala.tools.eclipse
 
 import org.eclipse.core.internal.resources.{ Workspace, Project, File }
-import org.eclipse.ui.part.FileEditorInput;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.runtime.NullProgressMonitor
-import org.eclipse.ui.PlatformUI;
 import org.eclipse.jdt.core.search.SearchRequestor
 import org.eclipse.jdt.core.search.SearchMatch
 
@@ -69,31 +67,6 @@ class EclipseUserSimulator {
 
     workspace.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, new NullProgressMonitor())
   }
-
-  var fileEditorInput: FileEditorInput = null;
-  var currentEditor: ScalaSourceFileEditor = null;
-  def openInEditor(compilationUnit: ICompilationUnit) = {
-    import org.eclipse.ui.internal.WorkbenchPage;
-
-    val activePage = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
-    val editorManager = activePage.asInstanceOf[WorkbenchPage].getEditorManager()
-
-    val root = workspace.getRoot()
-    val path = workspace.asInstanceOf[Workspace].getFileSystemManager().locationFor(compilationUnit.getResource)
-
-    fileEditorInput = new FileEditorInput(root.getFileForLocation(path));
-    editorManager.openEditor("scala.tools.eclipse.ScalaSourceFileEditor",
-      fileEditorInput,
-      true, null)
-
-    currentEditor = activePage.getActiveEditor().asInstanceOf[ScalaSourceFileEditor];
-  }
-
-  def saveCurrentEditor() =
-    currentEditor.doSave(new NullProgressMonitor())
-
-  def setContentOfCurrentEditor(code: String) =
-    currentEditor.getDocumentProvider().getDocument(fileEditorInput).set(code)
 
   def searchType(typeName: String) = {
     import org.eclipse.jdt.core.search._
