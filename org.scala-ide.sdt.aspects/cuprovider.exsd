@@ -1,6 +1,17 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <!-- Schema file written by PDE -->
 <schema targetNamespace="scala.tools.eclipse.contribution.weaving.jdt" xmlns="http://www.w3.org/2001/XMLSchema">
+
+<!--
+ Added to the Scala plugin to fix interoperability issues between the 
+ Spring IDE and the Scala IDE. This plugin now implements the cuprovider and
+ imagedescriptorselector extension points, previously provided by the 
+ JDT weaving plugin.
+
+ Repo: git://git.eclipse.org/gitroot/ajdt/org.eclipse.ajdt.git
+ File: src/org.eclipse.contribution.weaving.jdt/schema/cuprovider.exsd
+--> 
+
 <annotation>
       <appInfo>
          <meta.schema plugin="scala.tools.eclipse.contribution.weaving.jdt" id="cuprovider" name="Compilation Unit Provider"/>
