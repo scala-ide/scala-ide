@@ -8,6 +8,9 @@ import org.eclipse.jdt.core.ToolFactory;
  * imagedescriptorselector extension points, previously provided by the 
  * JDT weaving plugin.
  * 
+ * Repo: git://git.eclipse.org/gitroot/ajdt/org.eclipse.ajdt.git
+ * File: src/org.eclipse.contribution.weaving.jdt/src/org/eclipse/contribution/jdt/IsWovenTester.aj
+ * 
  *******************************************************************************/
 
 
