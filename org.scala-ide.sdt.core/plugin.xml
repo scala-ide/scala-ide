@@ -545,6 +545,9 @@
          point="org.eclipse.ui.perspectiveExtensions">
       <perspectiveExtension targetID="org.scala-ide.sdt.core.perspective">
          <actionSet id="org.scala-ide.sdt.ui.scalaMenu.actionSet"/>
+         <viewShortcut
+               id="org.scala-ide.sdt.core.consoleView">
+         </viewShortcut>
       </perspectiveExtension>
       <perspectiveExtension targetID="org.eclipse.jdt.ui.JavaPerspective">
          <perspectiveShortcut id="org.scala-ide.sdt.core.perspective"/>
@@ -1188,12 +1191,17 @@
        point="org.eclipse.ui.views">
     <view
           allowMultiple="true"
+          category="org.scala-ide.sdt.core.viewCategory"
           class="scala.tools.eclipse.interpreter.ReplConsoleView"
           icon="icons/full/etool16/scala_app.gif"
           id="org.scala-ide.sdt.core.consoleView"
           name="Scala Interpreter"
           restorable="false">
     </view>
+    <category
+          id="org.scala-ide.sdt.core.viewCategory"
+          name="Scala">
+    </category>
  </extension>
  <extension
        id="scala_java_completions"
