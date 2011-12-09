@@ -54,7 +54,7 @@ object ScalariformToSyntaxClass {
     case MULTILINE_COMMENT => ScalaSyntaxClasses.MULTI_LINE_COMMENT
     case PLUS | MINUS | STAR | PIPE | TILDE | EXCLAMATION => ScalaSyntaxClasses.OPERATOR
     case DOT | COMMA | COLON | USCORE | EQUALS | SEMI | LARROW | ARROW | SUBTYPE | SUPERTYPE | VIEWBOUND => ScalaSyntaxClasses.OPERATOR
-    case VARID if ScalaOnlyLexer.isOperatorPart(token.getText(0)) => ScalaSyntaxClasses.OPERATOR
+    case VARID if Chars.isOperatorPart(token.getText(0)) => ScalaSyntaxClasses.OPERATOR
     case XML_START_OPEN | XML_EMPTY_CLOSE | XML_TAG_CLOSE | XML_END_OPEN => ScalaSyntaxClasses.XML_TAG_DELIMITER
     case XML_NAME => ScalaSyntaxClasses.XML_TAG_NAME
     case XML_ATTR_EQ => ScalaSyntaxClasses.XML_ATTRIBUTE_EQUALS
