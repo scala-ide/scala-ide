@@ -131,10 +131,11 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
   //lazy val sbtScalaCompiler = pathInBundle(sbtCompilerBundle, "/lib/scala-" + shortScalaVer + "/lib/scala-compiler.jar")
   
   val scalaLibBundle = {
-    val bundles = Option(Platform.getBundles(ScalaPlugin.plugin.libraryPluginId, scalaCompilerBundleVersion.toString())).getOrElse(Array[Bundle]())
+    // all library bundles
+    val bundles = Option(Platform.getBundles(ScalaPlugin.plugin.libraryPluginId, null)).getOrElse(Array[Bundle]())
     logger.debug("[scalaLibBundle] Found %d bundles: %s".format(bundles.size, bundles.toList.mkString(", ")))
-    bundles.find(_.getVersion() == scalaCompilerBundleVersion).getOrElse {
-      logger.warning("Couldnt find a match for %s in %s. Using default.".format(scalaCompilerBundleVersion, bundles.toList.mkString(", ")))
+    bundles.find(b => b.getVersion().getMajor() == scalaCompilerBundleVersion.getMajor() && b.getVersion().getMinor() == scalaCompilerBundleVersion.getMinor()).getOrElse {
+      logger.error("Could not find a match for %s in %s. Using default.".format(scalaCompilerBundleVersion, bundles.toList.mkString(", ")), null)
       Platform.getBundle(ScalaPlugin.plugin.libraryPluginId)
     }
   }
