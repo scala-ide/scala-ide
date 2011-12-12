@@ -30,7 +30,8 @@ Eclipse-SupplementBundle:
  org.eclipse.jdt.debug.ui,
  org.eclipse.jdt.launching,
  org.eclipse.jdt.ui,
- org.eclipse.pde.ui
+ org.eclipse.pde.ui,
+ org.eclipse.jdt.groovy.core
 Bundle-ActivationPolicy: lazy
 Export-Package: 
  scala.tools.eclipse.contribution.weaving.jdt,
