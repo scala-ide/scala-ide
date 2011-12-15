@@ -311,6 +311,35 @@
         </repository>
       </repositories>
     </profile>
+    <profile>
+      <id>scala-virtualized-trunk</id>
+      <activation>
+        <property>
+          <name>scala.version</name>
+          <value>2.10.0-virtualized-SNAPSHOT</value>
+        </property>
+      </activation>
+      <repositories>
+        <repository>
+          <id>scala-refactoring-virtualized</id>
+          <name>Scala Refactoring Scala virtualized p2 repository</name>
+          <layout>p2</layout>
+          <url>${repo.scala-ide}/scala-refactoring-virtualized</url>
+        </repository>
+        <repository>
+          <id>scalariform-trunk</id>
+          <name>Scalariform Scala virtualized p2 repo</name>
+          <layout>p2</layout>
+          <url>${repo.scala-ide}/scalariform-virtualized</url>
+        </repository>
+        <repository>
+          <id>scala-toolchain-trunk</id>
+          <name>Scala Toolchain virtualized p2 repository</name>
+          <layout>p2</layout>
+          <url>${repo.scala-ide}/scala-eclipse-toolchain-osgi-virtualized</url>
+        </repository>
+      </repositories>
+    </profile>
     <!-- local 2.9.x-SNAPSHOT -->
     <profile>
       <id>local-scala-2.9.x</id>
