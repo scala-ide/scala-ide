@@ -230,7 +230,7 @@ class DiagnosticDialog(shell: Shell) extends Dialog(shell) {
     val otherGroup = newGroup("Additional", control, new GridLayout(1, true))
     
     val knownIssuesLink = new Link(otherGroup, SWT.NONE)
-    knownIssuesLink.setText("See list of <a href=\"https://www.assembla.com/wiki/show/scala-ide/Known_Issues\">known issues</a>" +
+    knownIssuesLink.setText("See list of <a href=\"http://scala-ide.org/docs/user/faq.html#know-issues\">known issues</a>" +
          " for known problems and workarounds")      
     knownIssuesLink.addListener(SWT.Selection, DiagnosticDialog.linkListener)
     
