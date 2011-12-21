@@ -17,7 +17,7 @@ class TemplatePreferences extends TemplatePreferencePage with IWorkbenchPreferen
 
   override def isShowFormatterSetting() = false
     
-  setPreferenceStore(ScalaPlugin.plugin.getPreferenceStore())
+  setPreferenceStore(ScalaPlugin.prefStore)
   setTemplateStore(ScalaPlugin.plugin.templateManager.templateStore)
   setContextTypeRegistry(ScalaPlugin.plugin.templateManager.contextTypeRegistry)
 }

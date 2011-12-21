@@ -1,12 +1,18 @@
-package scala.tools.eclipse
-package semantic.highlighting
+package scala.tools.eclipse.semantichighlighting.implicits
 
 import org.eclipse.jface.text.source.Annotation
 import org.eclipse.jface.text.source.AnnotationPainter
 import org.eclipse.swt.custom.StyleRange
 import org.eclipse.swt.graphics.Color
 
-class ImplicitConversionsOrArgsAnnotation(text: String, isPersistent: Boolean = false) extends Annotation(AnnotationsTypes.Implicits, isPersistent, text)
+object ImplicitConversionsOrArgsAnnotation {
+
+  final val ID = "scala.tools.eclipse.semantichighlighting.implicits.implicitConversionsOrArgsAnnotation"
+
+}
+
+class ImplicitConversionsOrArgsAnnotation(text: String, isPersistent: Boolean = false)
+  extends Annotation(ImplicitConversionsOrArgsAnnotation.ID, isPersistent, text)
 
 class ImplicitConversionsOrArgsTextStyleStrategy(var fontStyle: Int) extends AnnotationPainter.ITextStyleStrategy {
 

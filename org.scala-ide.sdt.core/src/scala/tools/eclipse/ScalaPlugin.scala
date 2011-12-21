@@ -36,7 +36,10 @@ import scala.tools.nsc.io.AbstractFile
 import scala.tools.eclipse.util.EclipseResource
 
 object ScalaPlugin {
+  
   var plugin: ScalaPlugin = _
+  
+  def prefStore = plugin.getPreferenceStore
   
   def getWorkbenchWindow = {
     val workbench = PlatformUI.getWorkbench

@@ -31,7 +31,7 @@ import scala.tools.eclipse.properties.ScalaPluginSettings
 trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
 
   object IndexBuilderTraverser {
-  	lazy val store = ScalaPlugin.plugin.getPreferenceStore
+  	lazy val store = ScalaPlugin.prefStore
   	lazy val infoName = 
   		SettingConverterUtil.convertNameToProperty(ScalaPluginSettings.YPlugininfo.name)
   	@inline def isInfo = store.getBoolean(infoName)
