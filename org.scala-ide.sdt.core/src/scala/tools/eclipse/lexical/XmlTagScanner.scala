@@ -5,9 +5,9 @@ import org.eclipse.jdt.ui.text.IColorManager
 import org.eclipse.jdt.internal.ui.text.CombinedWordRule
 import scala.annotation.{ switch, tailrec }
 import org.eclipse.swt.SWT
-import scala.tools.eclipse.properties.ScalaSyntaxClass
-import scala.tools.eclipse.properties.ScalaSyntaxClasses._
-import scala.tools.eclipse.properties.ScalaSyntaxClasses
+import scala.tools.eclipse.properties.syntaxcolouring.ScalaSyntaxClass
+import scala.tools.eclipse.properties.syntaxcolouring.ScalaSyntaxClasses._
+import scala.tools.eclipse.properties.syntaxcolouring.ScalaSyntaxClasses
 import org.eclipse.jface.util.PropertyChangeEvent
 import org.eclipse.jface.preference.IPreferenceStore
 

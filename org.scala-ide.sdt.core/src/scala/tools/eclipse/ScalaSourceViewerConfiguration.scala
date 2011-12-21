@@ -33,8 +33,8 @@ import scala.tools.eclipse.ui.{ JdtPreferenceProvider, ScalaAutoIndentStrategy, 
 import scala.tools.eclipse.util.ReflectionUtils
 import scala.tools.eclipse.lexical._
 import scala.tools.eclipse.formatter.ScalaFormattingStrategy
-import scala.tools.eclipse.properties.ScalaSyntaxClasses
 import scala.tools.eclipse.ui.AutoCloseBracketStrategy
+import scala.tools.eclipse.properties.syntaxcolouring.ScalaSyntaxClasses
 
 class ScalaSourceViewerConfiguration(store: IPreferenceStore, scalaPreferenceStore: IPreferenceStore, editor: ITextEditor)
    extends JavaSourceViewerConfiguration(JavaPlugin.getDefault.getJavaTextTools.getColorManager, store, editor, IJavaPartitions.JAVA_PARTITIONING) {

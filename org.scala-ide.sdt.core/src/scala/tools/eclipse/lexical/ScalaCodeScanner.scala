@@ -9,16 +9,16 @@ import org.eclipse.jdt.internal.ui.javaeditor.SemanticHighlightings
 import org.eclipse.jdt.internal.ui.text.AbstractJavaScanner
 import scalariform.lexer.{ ScalaLexer, UnicodeEscapeReader, ScalaOnlyLexer }
 import scalariform.lexer.Tokens._
-import scala.tools.eclipse.properties._
 import scala.tools.eclipse.ScalaPlugin
 import org.eclipse.jface.util.PropertyChangeEvent
+import scala.tools.eclipse.properties.syntaxcolouring.ScalariformToSyntaxClass
 
 class ScalaCodeScanner(val colorManager: IColorManager, val preferenceStore: IPreferenceStore) extends AbstractScalaScanner {
 
   def nextToken(): IToken = {
     val scalaToken = lexer.nextToken()
     getTokenLength = scalaToken.length
-    getTokenOffset = scalaToken.startIndex + offset
+    getTokenOffset = scalaToken.offset + offset
     scalaToken.tokenType match {
       case WS => Token.WHITESPACE
       case EOF => Token.EOF
@@ -35,7 +35,8 @@ class ScalaCodeScanner(val colorManager: IColorManager, val preferenceStore: IPr
   def setRange(document: IDocument, offset: Int, length: Int) {
     this.document = document
     this.offset = offset
-    this.lexer = new ScalaLexer(new UnicodeEscapeReader(document.get(offset, length), forgiveLexerErrors = true), forgiveErrors = true)
+    val source = document.get(offset, length)
+    this.lexer = ScalaLexer.createRawLexer(source, forgiveErrors = true)
   }
 
 }

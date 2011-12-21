@@ -26,10 +26,6 @@ object Colors {
   val mocha = rgb(142, 62, 0)
 
   object colorMap extends LinkedHashMap[RGB, Color] {
-    override def apply(rgb : RGB) : Color = rgb match {
-    case rgb if rgb == PreferenceConverter.COLOR_DEFAULT_DEFAULT => null
-    case rgb => super.apply(rgb)
-    }
     override def default(rgb : RGB) = {
       val ret = new Color(Display.getDefault(), rgb)
       this(rgb) = ret

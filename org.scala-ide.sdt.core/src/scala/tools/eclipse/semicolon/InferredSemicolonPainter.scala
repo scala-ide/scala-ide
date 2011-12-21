@@ -90,7 +90,7 @@ class InferredSemicolonPainter(textViewer: ITextViewer with ITextViewerExtension
     val offset = event.getOffset
     val change = event.getText.size - event.getLength
     inferredSemis.map { semi =>
-      if (semi.startIndex >= offset)
+      if (semi.offset >= offset)
         semi.copy(offset = semi.offset + change)
       else
         semi
@@ -120,7 +120,7 @@ class InferredSemicolonPainter(textViewer: ITextViewer with ITextViewerExtension
   private def textWidget = textViewer.getTextWidget
 
   private def getBestPositionToDraw(token: Token, document: IDocument): Int = {
-    var pos = token.startIndex
+    var pos = token.offset
     while (pos < document.getLength)
       document(pos) match {
         // A good place to draw is a space before a single-line comment
