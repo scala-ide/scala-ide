@@ -13,8 +13,8 @@ import org.junit.Test
 import scala.tools.eclipse.testsetup.TestProjectSetup
 import org.eclipse.jdt.core.search.{SearchEngine, IJavaSearchConstants, IJavaSearchScope, SearchPattern, TypeNameRequestor}
 import org.eclipse.jdt.core.IJavaElement
-
 import org.junit.Ignore
+import scala.tools.nsc.util.OffsetPosition
 
 object CompletionTests extends TestProjectSetup("completion")
 
@@ -26,10 +26,7 @@ class CompletionTests {
   import org.eclipse.jface.text.IDocument
   import org.eclipse.jdt.ui.text.java.ContentAssistInvocationContext
 
-  /**
-   * @param withImportProposal take in account proposal for types not imported yet
-   */
-  private def runTest(path2source: String, withImportProposal: Boolean)(expectedCompletions: List[String]*) {
+  private def withCompletions(path2source: String)(body:  (Int, OffsetPosition, List[CompletionProposal]) => Unit) {
     val unit = compilationUnit(path2source).asInstanceOf[ScalaCompilationUnit]
 
     // first, 'open' the file by telling the compiler to load it
@@ -49,8 +46,8 @@ class CompletionTests {
       val content = unit.getContents.mkString
       
       val completion = new ScalaCompletions
-      for (i <- 0 until positions.size) yield {
-        val pos = positions(i) 
+      for (i <- 0 until positions.size) {
+        val pos = positions(i)
         
         val position = new scala.tools.nsc.util.OffsetPosition(src, pos)
         var wordRegion = ScalaWordFinder.findWord(content, position.offset.get)
@@ -74,34 +71,41 @@ class CompletionTests {
         val completions: List[ICompletionProposal] = completion.computeCompletionProposals(context, monitor).map(_.asInstanceOf[ICompletionProposal]).toList
         */
         
-        var completions = completion.findCompletions(wordRegion)(pos+1, unit)(src, compiler)
-        
-        if (!withImportProposal)
-          completions= completions.filter((c) => !c.needImport)
-        
-        // remove parens as the compiler trees' printer has been slightly modified in 2.10 
-        // (and we need the test to pass for 2.9.0/-1 and 2.8.x as well).
-        val completionsNoParens: List[String] = completions.map(c => normalizeCompletion(c.display)).sorted
-        val expectedNoParens: List[String] = expectedCompletions(i).map(normalizeCompletion).sorted
-        
-        println("Found following completions @ position %d (%d,%d):".format(pos, position.line, position.column))
-        completionsNoParens.foreach(e => println("\t" + e))
-        println()
-        
-        println("Expected completions:")
-        expectedNoParens.foreach(e => println("\t" + e))
-        println()
-        
-        assertTrue("Found %d completions @ position %d (%d,%d), Expected %d"
-            .format(completionsNoParens.size, pos, position.line, position.column, expectedNoParens.size),
-            completionsNoParens.size == expectedNoParens.size) // <-- checked condition
-            
-        completionsNoParens.zip(expectedNoParens).foreach {
-          case (found, expected) =>  
-            assertTrue("Found `%s`, expected `%s`".format(found, expected), found == expected)
-        }
+        body(i, position, completion.findCompletions(wordRegion)(pos+1, unit)(src, compiler))
       }
     }()
+  }
+
+  /** @param withImportProposal take in account proposal for types not imported yet
+   */
+  private def runTest(path2source: String, withImportProposal: Boolean)(expectedCompletions: List[String]*) {
+
+    withCompletions(path2source) { (i, position, compl) =>
+
+      var completions = if (!withImportProposal) compl.filter(!_.needImport) else compl
+
+      // remove parens as the compiler trees' printer has been slightly modified in 2.10 
+      // (and we need the test to pass for 2.9.0/-1 and 2.8.x as well).
+      val completionsNoParens: List[String] = completions.map(c => normalizeCompletion(c.display)).sorted
+      val expectedNoParens: List[String] = expectedCompletions(i).map(normalizeCompletion).sorted
+
+      println("Found following completions @ position (%d,%d):".format(position.line, position.column))
+      completionsNoParens.foreach(e => println("\t" + e))
+      println()
+
+      println("Expected completions:")
+      expectedNoParens.foreach(e => println("\t" + e))
+      println()
+
+      assertTrue("Found %d completions @ position (%d,%d), Expected %d"
+        .format(completionsNoParens.size, position.line, position.column, expectedNoParens.size),
+        completionsNoParens.size == expectedNoParens.size) // <-- checked condition
+
+      completionsNoParens.zip(expectedNoParens).foreach {
+        case (found, expected) =>
+          assertTrue("Found `%s`, expected `%s`".format(found, expected), found == expected)
+      }
+    }
   }
   
   /** Transform the given completion proposal into a string that is (hopefully)
@@ -142,5 +146,14 @@ class CompletionTests {
     
     runTest("ticket_1000654/Ticket1000654.scala", true)(oraclePos10_13)
   }
-  
+ 
+  @Test
+  def ticket1000772() {
+    val OracleNames = List(List("param1", "param2"), List("secondSectionParam1"))
+    withCompletions("ticket_1000772/CompletionsWithName.scala") { (idx, position, completions) =>
+      assertEquals("Only one completion expected at (%d, %d)".format(position.line, position.column), 1, completions.size)
+      assertEquals("Expected the following names: %s".format(OracleNames),
+          OracleNames, completions(0).explicitParamNames)
+    }
+  }
 }
