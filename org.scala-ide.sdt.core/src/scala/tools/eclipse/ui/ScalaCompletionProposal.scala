@@ -13,6 +13,14 @@ import org.eclipse.jdt.internal.ui.JavaPluginImages
 import refactoring.EditorHelpers
 import refactoring.EditorHelpers._
 import scala.tools.refactoring.implementations.AddImportStatement
+import org.eclipse.jface.text.link._
+import org.eclipse.jface.text.Position
+import org.eclipse.ui.texteditor.link.EditorLinkedModeUI
+import org.eclipse.jdt.internal.ui.text.java.AbstractJavaCompletionProposal.ExitPolicy
+import org.eclipse.jface.text.link.LinkedModeUI.IExitPolicy
+import org.eclipse.swt.events.VerifyEvent
+import org.eclipse.jface.text.link.LinkedModeUI.ExitFlags
+import org.eclipse.swt.SWT
 
 
 /** A UI class for displaying completion proposals.
@@ -47,11 +55,28 @@ class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: I
   
   def getImage = image
   
-  val completionString = if (hasArgs == HasArgs.NoArgs) completion else completion + "()"
+  /** The string that will be inserted in the document if this proposal is chosen.
+   *  It consists of the method name, followed by all explicit parameter sections,
+   *  and inside each section the parameter names, delimited by commas.
+   */
+  val completionString =
+    if (hasArgs == HasArgs.NoArgs)
+      completion
+    else {
+      val buffer = new StringBuffer(completion)
+
+      for (section <- explicitParamNames)
+        buffer.append(section.mkString("(", ", ", ")"))
+      buffer.toString
+    }
   
+  /** Position after the opening parenthesis of this proposal */
+  val startOfArgumentList = startPos + completion.length + 1
+  
+  /** The information that is displayed in a small hover window above the completion, showing parameter names and types. */
   def getContextInformation(): IContextInformation =
-    if (tooltip.size > 0)
-      new ScalaContextInformation(display, tooltip, image)
+    if (tooltip.length > 0)
+      new ScalaContextInformation(display, tooltip, image, startOfArgumentList)
     else null
  
   /**
@@ -64,7 +89,7 @@ class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: I
    */
   def getStyledDisplayString() : StyledString = {
        val styledString= new StyledString(display)
-       if (displayDetail != null && displayDetail.size > 0)
+       if (displayDetail != null && displayDetail.length > 0)
          styledString.append(" - ", StyledString.QUALIFIER_STYLER).append(displayDetail, StyledString.QUALIFIER_STYLER)
       styledString
     }
@@ -86,6 +111,7 @@ class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: I
         // present in the source file.
         val viewCaretOffset = viewer.getTextWidget().getCaretOffset()
         viewer.getTextWidget().setCaretOffset(viewCaretOffset -1 )
+        addArgumentTemplates(d, viewer)
       case _ => () 
     }
     if (needImport) { // add an import statement if required
@@ -101,9 +127,81 @@ class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: I
     }
   }
   def getTriggerCharacters = null
-  def getContextInformationPosition = 0
+  def getContextInformationPosition = startOfArgumentList
+  
   def isValidFor(d: IDocument, pos: Int) = 
     prefixMatches(completion.toArray, d.get.substring(startPos, pos).toArray)
+
+  /** Insert a completion proposal, with placeholders for each explicit argument.
+   *  For each argument, it inserts its name, and puts the editor in linked mode.
+   *  This means that TAB can be used to navigate to the next argument, and Enter or Esc
+   *  can be used to exit this mode.
+   */
+  def addArgumentTemplates(document: IDocument, textViewer: ITextViewer) {
+    val model= new LinkedModeModel()
+
+    document.addPositionCategory(ScalaProposalCategory)
+    var offset = startPos + completion.length
+
+    for (section <- explicitParamNames) {
+      offset += 1 // open parenthesis
+      var idx = 0 // the index of the current argument
+      for (proposal <- section) {
+        val group = new LinkedPositionGroup();
+        val positionOffset = offset + 2 * idx // each argument is followed by ", "
+        val positionLength = proposal.length
+        offset += positionLength
+
+        document.addPosition(ScalaProposalCategory, new Position(positionOffset, positionLength))
+        group.addPosition(new LinkedPosition(document, positionOffset, positionLength, LinkedPositionGroup.NO_STOP))
+        model.addGroup(group);
+        idx += 1
+      }
+      offset += 1 + 2 * (idx - 1) // close parenthesis around section (and the last argument isn't followed by comma and space)
+    }
+
+    model.addLinkingListener(new ILinkedModeListener() {
+      def left(environment: LinkedModeModel, flags: Int) {
+        document.removePositionCategory(ScalaProposalCategory);
+      }
+
+      def suspend(environment: LinkedModeModel) {}
+      def resume(environment: LinkedModeModel, flags: Int) {}
+    })
+
+    model.forceInstall();
+
+    val ui = mkEditorLinkedMode(document, textViewer, model)
+    ui.enter();
+  }
+
+  /** Prepare a linked mode for the given editor. */
+  private def mkEditorLinkedMode(document: IDocument, textViewer: ITextViewer, model: LinkedModeModel): EditorLinkedModeUI = {
+    val ui = new EditorLinkedModeUI(model, textViewer)
+    ui.setExitPosition(textViewer, startPos + completionString.length(), 0, Integer.MAX_VALUE)
+    ui.setExitPolicy(new IExitPolicy {
+      def doExit(environment: LinkedModeModel, event: VerifyEvent, offset: Int, length: Int) = {
+        event.character match {
+          case ';' => 
+            // go to the end of the completion proposal
+            new ExitFlags(ILinkedModeListener.UPDATE_CARET, !environment.anyPositionContains(offset))
+
+          case SWT.CR if (offset > 0 && document.getChar(offset - 1) == '{') =>
+            // if we hit enter after opening a brace, it's probably a closure. Exit linked mode
+            new ExitFlags(ILinkedModeListener.EXIT_ALL, true)
+
+          case _ => 
+            // stay in linked mode otherwise
+            null
+        }
+      }
+    });
+    ui.setCyclingMode(LinkedModeUI.CYCLE_WHEN_NO_PARENT);
+    ui.setDoContextInfo(true);
+    ui
+  }
+
+  private val ScalaProposalCategory = "ScalaProposal"
 }
 
 object ScalaCompletionProposal {

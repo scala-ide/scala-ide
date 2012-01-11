@@ -253,6 +253,11 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
      
      val contextString = sym.paramss.map(_.map(p => "%s: %s".format(p.decodedName, p.tpe)).mkString("(", ", ", ")")).mkString("")
      
+     val paramNames = for {
+       section <- sym.paramss
+       if section.nonEmpty && !section.head.isImplicit
+     } yield for (param <- section) yield param.name.toString
+     
      import scala.tools.eclipse.completion.HasArgs
      CompletionProposal(kind,
          start, 
@@ -263,6 +268,7 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
          relevance,
          HasArgs.from(sym.paramss),
          sym.isJavaDefined,
+         paramNames,
          sym.fullName,
          false)
   }
