@@ -13,6 +13,7 @@ import org.eclipse.jdt.internal.ui.JavaPluginImages
 import refactoring.EditorHelpers
 import refactoring.EditorHelpers._
 import scala.tools.refactoring.implementations.AddImportStatement
+import scala.tools.refactoring.common.Change
 
 
 /** A UI class for displaying completion proposals.
@@ -77,29 +78,45 @@ class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: I
   def apply(d: IDocument) { throw new IllegalStateException("Shouldn't be called") }
 
   def apply(d: IDocument, trigger: Char, offset: Int) {
-    d.replace(startPos, offset - startPos, completionString)
-    selectionProvider.setSelection(new TextSelection(startPos + completionString.length, 0))
+
+    withScalaFileAndSelection { (scalaSourceFile, textSelection) =>
+
+      val completionChange = Change(scalaSourceFile.file, startPos, offset, completionString)
+      
+      val importStmt = if (needImport) { // add an import statement if required
+        scalaSourceFile.withSourceFile { (_, compiler) =>
+          val refactoring = new AddImportStatement { val global = compiler }
+          refactoring.addImport(scalaSourceFile.file, fullyQualifiedName)
+        }(Nil)
+      } else {
+        Nil
+      }
+      
+      // Apply the two changes in one step, if done separately we would need an
+      // another `waitLoadedType` to update the positions for the refactoring
+      // to work properly.
+      EditorHelpers.applyChangesToFileWhileKeepingSelection(
+          d, textSelection, scalaSourceFile.file, completionChange :: importStmt)            
+     
+      None
+    }
+        
     selectionProvider match {
       case viewer: ITextViewer if hasArgs == HasArgs.NonEmptyArgs =>
         // obtain the relative offset in the screen (this is needed to correctly 
         // update the caret position when folded comments/imports/classes are
         // present in the source file.
-        val viewCaretOffset = viewer.getTextWidget().getCaretOffset()
-        viewer.getTextWidget().setCaretOffset(viewCaretOffset -1 )
+        //
+        // Mirko: It doesn't seem to be needed anymore since we use the 
+        //        `applyChangesToFileWhileKeepingSelection`, but it would
+        //        be better if someone else also checked this.
+        //
+        //val viewCaretOffset = viewer.getTextWidget().getCaretOffset()
+        //viewer.getTextWidget().setCaretOffset(viewCaretOffset -1 )
       case _ => () 
     }
-    if (needImport) { // add an import statement if required
-      // [luc] code copied from scala.tools.eclipse.quickfix.ImportCompletionProposal
-      withScalaFileAndSelection { (scalaSourceFile, textSelection) =>
-        val changes = scalaSourceFile.withSourceFile { (sourceFile, compiler) =>
-          val refactoring = new AddImportStatement { val global = compiler }
-          refactoring.addImport(scalaSourceFile.file, fullyQualifiedName)
-        }(Nil)
-        EditorHelpers.applyChangesToFileWhileKeepingSelection(d, textSelection, scalaSourceFile.file, changes)
-        None
-      }
-    }
   }
+  
   def getTriggerCharacters = null
   def getContextInformationPosition = 0
   def isValidFor(d: IDocument, pos: Int) = 
