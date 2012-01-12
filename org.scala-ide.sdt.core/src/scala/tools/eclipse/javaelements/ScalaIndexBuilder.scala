@@ -6,7 +6,6 @@
 package scala.tools.eclipse.javaelements
 
 import org.eclipse.core.resources.IFile
-import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants
 
 import scala.tools.nsc.symtab.Flags
 
