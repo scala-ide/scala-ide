@@ -38,6 +38,8 @@ import org.eclipse.jdt.core.dom.FieldAccess
 import org.eclipse.jdt.core.dom.VariableDeclarationStatement
 import org.eclipse.jdt.core.dom.ClassInstanceCreation
 
+import org.eclipse.jface.text.contentassist.ICompletionProposal
+
 /** A completion proposal for Java sources. This adds mixed-in concrete members to scope
  *  completions in Java.
  *  
@@ -62,7 +64,7 @@ class ScalaJavaCompletionProposalComputer extends IJavaCompletionProposalCompute
   def computeContextInformation(context: ContentAssistInvocationContext, monitor: IProgressMonitor) = 
     javaEmptyList()
     
-  def computeCompletionProposals(context: ContentAssistInvocationContext, monitor: IProgressMonitor): java.util.List[_] = {
+  def computeCompletionProposals(context: ContentAssistInvocationContext, monitor: IProgressMonitor): java.util.List[ICompletionProposal] = {
     context match {
       case jc: JavaContentAssistInvocationContext => 
         if (ScalaPlugin.plugin.isScalaProject(jc.getProject()))
@@ -78,7 +80,7 @@ class ScalaJavaCompletionProposalComputer extends IJavaCompletionProposalCompute
   /**
    * Return completion proposals for mixed-in methods.
    */
-  def mixedInCompletions(unit: ICompilationUnit, invocationOffset: Int, selectionProvider: ISelectionProvider, monitor: IProgressMonitor): java.util.List[_] = {
+  def mixedInCompletions(unit: ICompilationUnit, invocationOffset: Int, selectionProvider: ISelectionProvider, monitor: IProgressMonitor): java.util.List[ICompletionProposal] = {
     // make sure the unit is consistent with the editor buffer
     unit.makeConsistent(monitor)
     // ask for the Java AST of the source
@@ -130,7 +132,7 @@ class ScalaJavaCompletionProposalComputer extends IJavaCompletionProposalCompute
 
     import scala.collection.JavaConversions._
 
-    completionProposals: java.util.List[_]
+    completionProposals: java.util.List[ICompletionProposal]
   }
 
 }

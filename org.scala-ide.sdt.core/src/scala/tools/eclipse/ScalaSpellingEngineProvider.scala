@@ -3,7 +3,7 @@ package scala.tools.eclipse
 import scala.tools.eclipse.contribution.weaving.jdt.spellingengineprovider.ISpellingEngineProvider
 import scala.tools.eclipse.lexical.ScalaPartitions._
 
-import org.eclipse.ui.texteditor.spelling.ISpellingEngine
+import org.eclipse.jdt.internal.ui.text.spelling.SpellingEngine
 
 import org.eclipse.jdt.internal.ui.text.spelling.SpellingEngine
 import org.eclipse.core.runtime.AssertionFailedException
@@ -31,7 +31,7 @@ import org.eclipse.jdt.internal.ui.text.spelling.JavaSpellingProblem
  */
 class ScalaSpellingEngineProvider extends ISpellingEngineProvider {
 
-  def getScalaSpellingEngine: ISpellingEngine = new ScalaSpellingEngine
+  def getScalaSpellingEngine: SpellingEngine = new ScalaSpellingEngine
 
   class ScalaSpellingEngine extends SpellingEngine {
 

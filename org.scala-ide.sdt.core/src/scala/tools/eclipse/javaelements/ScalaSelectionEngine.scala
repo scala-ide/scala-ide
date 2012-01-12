@@ -138,6 +138,11 @@ class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: IS
             case jt if jt == JType.UNKNOWN | jt == JType.ADDRESS | jt == JType.REFERENCE => JObjectType.JAVA_LANG_OBJECT
             case jt => jt
           }
+
+          val isMember = defn.owner.isClass
+
+          val jdtFlags = mapModifiers(defn)
+
           val localVar = new ScalaLocalVariableElement(
             parent.asInstanceOf[JavaElement],
             name,
@@ -146,7 +151,7 @@ class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: IS
             defn.pos.point,
             defn.pos.point + name.length - 1,
             jtype.getSignature,
-            name + " : " + defn.tpe.toString)
+            name + " : " + defn.tpe.toString, jdtFlags, isMember)
           Cont(ssr.addElement(localVar))
         } else Cont.Noop
       }
