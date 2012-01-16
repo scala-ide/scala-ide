@@ -24,6 +24,11 @@ import scala.tools.eclipse.ScalaPresentationCompiler
 import scala.tools.eclipse.util.ReflectionUtils
 
 trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentationCompiler =>
+  
+  // We cache these names since they are used for each ValDef during structure building
+  val GET = newTermName("get")
+  val IS  = newTermName("is") 
+  val SET = newTermName("set") 
 
   class StructureBuilderTraverser(scu : ScalaCompilationUnit, unitInfo : OpenableElementInfo, newElements0 : JMap[AnyRef, AnyRef], sourceLength : Int) {
     
@@ -584,7 +589,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
       def addBeanAccessors(sym: Symbol) {
         var beanName = nme.localToGetter(sym.name).toString.capitalize
         val ownerInfo = sym.owner.info
-        val accessors = List(ownerInfo.decl("get" + beanName), ownerInfo.decl("is" + beanName), ownerInfo.decl("set" + beanName)).filter(_ ne NoSymbol)
+        val accessors = List(ownerInfo.decl(GET append beanName), ownerInfo.decl(IS append beanName), ownerInfo.decl(SET append beanName)).filter(_ ne NoSymbol)
         accessors.foreach(addDef)
       }
     }
