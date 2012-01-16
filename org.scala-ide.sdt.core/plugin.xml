@@ -941,7 +941,20 @@
                path="edit">
             <separator name="scala.tools.eclipse.refactoring.refactoringGroup"/>
          </menu>
-           <action
+         <action
+               class="scala.tools.eclipse.refactoring.move.MoveClassAction"
+               definitionId="scala.tools.eclipse.refactoring.command.MoveClass"
+               id="scala.tools.eclipse.refactoring.moveClassAction"
+               label="Move Class/Object/Trait"
+               menubarPath="scala.tools.eclipse.refactoring.refactoringMenu/scala.tools.eclipse.refactoring.sourceGeneratorGroup"
+               tooltip="Move Class/Object/Trait">
+            <!--<enablement>
+               <objectClass
+                     name="org.eclipse.jface.text.TextSelection">
+               </objectClass>
+            </enablement>-->
+         </action>
+         <action
                class="scala.tools.eclipse.refactoring.ExtractMethodAction"
                definitionId="scala.tools.eclipse.refactoring.command.ExtractMethod"
                id="scala.tools.eclipse.refactoring.extractMethodAction"
@@ -954,7 +967,7 @@
                </objectClass>
             </enablement>
          </action>
-           <action
+         <action
                class="scala.tools.eclipse.refactoring.ExtractLocalAction"
                definitionId="scala.tools.eclipse.refactoring.command.ExtractLocal"
                id="scala.tools.eclipse.refactoring.extractLocalAction"
@@ -1026,6 +1039,10 @@
          description="Shows the refactor quick menu"
          categoryId="scala.tools.eclipse.refactoring.commands.refactoring"
          id="scala.tools.eclipse.refactoring.commands.quickMenu"/>
+      <command
+         categoryId="scala.tools.eclipse.refactoring.commands.refactoring"
+         id="scala.tools.eclipse.refactoring.command.MoveClass"
+         name="Move Class/Object/Trait"/>
       <command
          categoryId="scala.tools.eclipse.refactoring.commands.refactoring"
          id="scala.tools.eclipse.refactoring.command.ExtractMethod"
@@ -1231,5 +1248,20 @@
           id="org.scala-ide.sdt.core.SemanticHighlightingPresenter"
           name="Semantic Highlighting">
     </participant>
+ </extension>
+ <extension
+       point="org.eclipse.ltk.core.refactoring.moveParticipants">
+    <moveParticipant
+          class="scala.tools.eclipse.refactoring.move.ScalaMoveParticipant"
+          id="org.scala-ide.sdt.core.moveParticipant"
+          name="Scala Move Participant">
+       <enablement>
+          <with variable="element">
+             <instanceof
+                   value="org.eclipse.core.resources.IResource">
+             </instanceof>
+          </with>
+       </enablement>
+    </moveParticipant>
  </extension>
 </plugin>
