@@ -6,10 +6,10 @@ trait ScalaAnnotationHelper { self: ScalaPresentationCompiler =>
 
   // The following two fiels can be removed once we drop support for 2.8.x. Simply use
   // definitions.TransientAttr and deficitions.ScalaStrictFPAttr
-  private lazy val TransientAttr: Symbol = definitions.getClass("scala.transient")
+  private lazy val TransientAttr: Symbol = definitions.getClass(newTypeName("scala.transient"))
   private lazy val ScalaStrictFPAttr: Symbol = {
     try {
-      definitions.getClass("scala.annotation.strictfp")
+      definitions.getClass(newTypeName("scala.annotation.strictfp"))
     } catch {
       // this annotation does not exists on 2.8.x, therefore
       // we intercept the exception
