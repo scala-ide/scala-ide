@@ -21,7 +21,7 @@ import org.eclipse.jface.text.link.LinkedModeUI.IExitPolicy
 import org.eclipse.swt.events.VerifyEvent
 import org.eclipse.jface.text.link.LinkedModeUI.ExitFlags
 import org.eclipse.swt.SWT
-import scala.tools.refactoring.common.Change
+import scala.tools.refactoring.common.TextChange
 
 
 /** A UI class for displaying completion proposals.
@@ -106,7 +106,9 @@ class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: I
 
     withScalaFileAndSelection { (scalaSourceFile, textSelection) =>
 
-      val completionChange = Change(scalaSourceFile.file, startPos, offset, completionString)
+      val completionChange = scalaSourceFile.withSourceFile { (sourceFile, _) =>
+        TextChange(sourceFile, startPos, offset, completionString)
+      }()
       
       val importStmt = if (needImport) { // add an import statement if required
         scalaSourceFile.withSourceFile { (_, compiler) =>
