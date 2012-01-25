@@ -5,6 +5,9 @@
 # Scala compiler version to be used as a dependency
 SCALA_VERSION=2.10.0-SNAPSHOT
 
+# Scala library version
+SCALA_LIBRARY_VERSION=2.10.0-SNAPSHOT
+
 # The precompiled compiler-interface.jar that SBT uses to communicate with scalac
 # This is usually the same as Scala version, and it is not enough to be just binary 
 # compatible (compiler interface depends on scalac, not just std library)
