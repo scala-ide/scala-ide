@@ -1,8 +1,6 @@
-package scala.tools.eclipse
-package semantic.highlighting
+package scala.tools.eclipse.semantichighlighting.implicits
 
 import scala.tools.eclipse.properties.ImplicitsPreferencePage
-
 import org.eclipse.core.commands.AbstractHandler
 import org.eclipse.core.commands.ExecutionEvent
 import org.eclipse.jface.preference.IPreferenceStore
@@ -12,6 +10,7 @@ import org.eclipse.ui.commands.ICommandService
 import org.eclipse.ui.commands.IElementUpdater
 import org.eclipse.ui.menus.UIElement
 import org.eclipse.ui.PlatformUI
+import scala.tools.eclipse.ScalaPlugin
 
 /**
  * Handler to toggle the Implicits Display (shortcut to avoid open Preferences,...)
@@ -70,5 +69,5 @@ class ToggleImplicitsDisplayHandler extends AbstractHandler with IElementUpdater
   
   protected def pluginStore : IPreferenceStore = ScalaPlugin.plugin.getPreferenceStore
 
-  new PropertyChangeListenerProxy(_listener, pluginStore).autoRegister()
+  PropertyChangeListenerProxy(_listener, pluginStore).autoRegister()
 }

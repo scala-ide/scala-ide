@@ -105,7 +105,7 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
 
   /** Pulls the preference store associated with this plugin */
   override def doGetPreferenceStore(): IPreferenceStore = {
-    ScalaPlugin.plugin.getPreferenceStore
+    ScalaPlugin.prefStore
   }
 
   var useProjectSettingsWidget: Option[UseProjectSettingsWidget] = None

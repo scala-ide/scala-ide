@@ -1,6 +1,7 @@
 package scala.tools.eclipse.lexical
+
 import org.eclipse.jface.text.rules._
-import scala.tools.eclipse.properties.ScalaSyntaxClass
+import scala.tools.eclipse.properties.syntaxcolouring.ScalaSyntaxClass
 import org.eclipse.jface.util.PropertyChangeEvent
 import org.eclipse.jdt.ui.text.IColorManager
 import org.eclipse.jface.preference.IPreferenceStore
@@ -26,6 +27,6 @@ trait AbstractScalaScanner extends ITokenScanner {
     for ((syntaxClass, token) <- tokens)
       token.setData(getTextAttribute(syntaxClass))
 
-  private def getTextAttribute(syntaxClass: ScalaSyntaxClass) = syntaxClass.getTextAttribute(colorManager, preferenceStore)
+  private def getTextAttribute(syntaxClass: ScalaSyntaxClass) = syntaxClass.getTextAttribute(preferenceStore)
 
 }

@@ -24,7 +24,7 @@ class ScalaPreferences extends PropertyPage with IWorkbenchPreferencePage with E
 	
 	/** Pulls the preference store associated with this plugin */
   override def doGetPreferenceStore() : IPreferenceStore = {
-	    ScalaPlugin.plugin.getPreferenceStore
+	    ScalaPlugin.prefStore
   }
   
   override def init(wb : IWorkbench) { }

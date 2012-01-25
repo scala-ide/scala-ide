@@ -55,10 +55,10 @@
       <page class="scala.tools.eclipse.properties.ScalaPreferences"
             name="Scala"
             id="org.scala-ide.sdt.core.preferences"/>
-      <page class="scala.tools.eclipse.properties.SyntaxColouringPreferencePage"
+      <page class="scala.tools.eclipse.properties.syntaxcolouring.SyntaxColouringPreferencePage"
             category="org.scala-ide.sdt.core.preferences"
             name="Syntax Coloring"
-            id="org.scala-ide.sdt.core.properties.SyntaxColouringPreferencePage"/>
+            id="org.scala-ide.sdt.core.properties.syntaxcolouring.SyntaxColouringPreferencePage"/>
       <page
             category="org.scala-ide.sdt.core.preferences"
             class="scala.tools.eclipse.properties.CompilerSettings"
@@ -401,13 +401,13 @@
          markerSeverity="0">
       </type>
       <type
-            name="scala.tools.eclipse.semantic.highlighting.implicitConversionsOrArgsAnnotation"/>
+            name="scala.tools.eclipse.semantichighlighting.implicits.implicitConversionsOrArgsAnnotation"/>
    </extension>
    
    <extension
          point="org.eclipse.ui.editors.markerAnnotationSpecification">
      <specification
-          annotationType="scala.tools.eclipse.semantic.highlighting.implicitConversionsOrArgsAnnotation"
+          annotationType="scala.tools.eclipse.semantichighlighting.implicits.implicitConversionsOrArgsAnnotation"
           colorPreferenceKey="scala.tools.eclipse.ui.preferences.implicit.color"
           colorPreferenceValue="183,239,176"
           contributesToHeader="false"
@@ -731,7 +731,7 @@
         id="org.scala-ide.sdt.core.preferences"
         point="org.eclipse.core.runtime.preferences">
      <initializer
-           class="scala.tools.eclipse.properties.ColourPreferenceInitializer">
+           class="scala.tools.eclipse.properties.syntaxcolouring.ColourPreferenceInitializer">
      </initializer>    
      <initializer
            class="scala.tools.eclipse.properties.ScalaCompilerPreferenceInitializer">
@@ -1137,7 +1137,7 @@
  <extension
        point="org.eclipse.ui.handlers">
     <handler
-          class="scala.tools.eclipse.semantic.highlighting.ToggleImplicitsDisplayHandler"
+          class="scala.tools.eclipse.semantichighlighting.implicits.ToggleImplicitsDisplayHandler"
           commandId="org.scala-ide.sdt.core.commands.ToggleImplicitsDisplay">
     </handler>
  </extension>
@@ -1227,7 +1227,7 @@
  <extension
        point="org.scala-ide.sdt.core.reconciliationParticipants">
     <participant
-          class="scala.tools.eclipse.semantic.highlighting.SemanticHighlightingReconciliationParticipant"
+          class="scala.tools.eclipse.semantichighlighting.SemanticHighlightingReconciliationParticipant"
           id="org.scala-ide.sdt.core.SemanticHighlightingPresenter"
           name="Semantic Highlighting">
     </participant>

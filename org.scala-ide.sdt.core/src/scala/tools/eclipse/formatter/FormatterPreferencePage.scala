@@ -221,7 +221,7 @@ class FormatterPreferencePage extends PropertyPage with IWorkbenchPreferencePage
 
   private def initUnderlyingPreferenceStore() {
     val pluginId = ScalaPlugin.plugin.pluginId
-    val scalaPrefStore = ScalaPlugin.plugin.getPreferenceStore
+    val scalaPrefStore = ScalaPlugin.prefStore
     setPreferenceStore(getElement match {
       case project: IProject => new PropertyStore(project, scalaPrefStore, pluginId)
       case project: IJavaProject => new PropertyStore(project.getProject, scalaPrefStore, pluginId)
@@ -254,7 +254,7 @@ class FormatterPreferencePage extends PropertyPage with IWorkbenchPreferencePage
 
       val link = new Link(control, SWT.NONE)
       link.setText("<a>" + PreferencesMessages.PropertyAndPreferencePage_useworkspacesettings_change + "</a>")
-      link.addSelectionListener {
+      link.addSelectionListener { () =>
         PreferencesUtil.createPreferenceDialogOn(getShell, PAGE_ID, Array(PAGE_ID), null).open()
       }
       link.setLayoutData(new CC().alignX("right").wrap)
@@ -285,12 +285,12 @@ class FormatterPreferencePage extends PropertyPage with IWorkbenchPreferencePage
       val importButton = new Button(buttonPanel, SWT.PUSH)
       importButton.setText("Import...")
       importButton.setLayoutData(new CC().sizeGroupX("button"))
-      importButton.addSelectionListener { importPreferences() }
+      importButton.addSelectionListener { () => importPreferences() }
 
       val exportButton = new Button(buttonPanel, SWT.PUSH)
       exportButton.setText("Export...")
       exportButton.setLayoutData(new CC().sizeGroupX("button").wrap)
-      exportButton.addSelectionListener { exportPreferences() }
+      exportButton.addSelectionListener { () => exportPreferences() }
 
       buttonPanel.setLayoutData(new CC().spanX(2).growX.wrap)
       allEnableDisableControls ++= Set(link, importButton, exportButton)

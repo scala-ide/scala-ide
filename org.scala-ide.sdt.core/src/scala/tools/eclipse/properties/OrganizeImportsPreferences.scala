@@ -14,7 +14,7 @@ import org.eclipse.swt.widgets.{Button, Composite, Control, Display, Label, Link
 import org.eclipse.swt.SWT
 import org.eclipse.ui.dialogs.{PreferencesUtil, PropertyPage}
 import org.eclipse.ui.{IWorkbench, IWorkbenchPreferencePage}
-import scala.tools.eclipse.util.SWTUtils.{byNameToSelectionAdapter, fnToSelectionAdapter}
+import scala.tools.eclipse.util.SWTUtils._
 import scala.tools.eclipse.ScalaPlugin
 import org.eclipse.jface.preference.RadioGroupFieldEditor
 import org.eclipse.jface.preference.FieldEditor
@@ -39,7 +39,7 @@ class OrganizeImportsPreferencesPage extends PropertyPage with IWorkbenchPrefere
 
   private def initUnderlyingPreferenceStore() {
     val pluginId = ScalaPlugin.plugin.pluginId
-    val scalaPrefStore = ScalaPlugin.plugin.getPreferenceStore
+    val scalaPrefStore = ScalaPlugin.prefStore
     setPreferenceStore(getElement match {
       case project: IProject => new PropertyStore(project, scalaPrefStore, pluginId)
       case project: IJavaProject => new PropertyStore(project.getProject, scalaPrefStore, pluginId)
@@ -82,7 +82,7 @@ class OrganizeImportsPreferencesPage extends PropertyPage with IWorkbenchPrefere
       val projectSpecificButton = new Button(control, SWT.CHECK | SWT.WRAP)
       projectSpecificButton.setText("Enable project specific settings")
       projectSpecificButton.setSelection(getPreferenceStore.getBoolean(USE_PROJECT_SPECIFIC_SETTINGS_KEY))
-      projectSpecificButton.addSelectionListener { e: SelectionEvent =>
+      projectSpecificButton.addSelectionListener { () =>
         val enabled = projectSpecificButton.getSelection
         getPreferenceStore.setValue(USE_PROJECT_SPECIFIC_SETTINGS_KEY, enabled)
         allEnableDisableControls foreach { _.setEnabled(enabled) }
@@ -91,7 +91,7 @@ class OrganizeImportsPreferencesPage extends PropertyPage with IWorkbenchPrefere
 
       val link = new Link(control, SWT.NONE)
       link.setText("<a>" + PreferencesMessages.PropertyAndPreferencePage_useworkspacesettings_change + "</a>")
-      link.addSelectionListener {
+      link.addSelectionListener { () =>
         PreferencesUtil.createPreferenceDialogOn(getShell, PAGE_ID, Array(PAGE_ID), null).open()
       }
       link.setLayoutData(new CC().alignX("right").wrap)
@@ -187,10 +187,10 @@ object OrganizeImportsPreferences extends Enumeration {
   val expandCollapseKey = PREFIX +".expandcollapse"
 
   private def getPreferenceStore(project: IProject): IPreferenceStore = {
-    val workspaceStore = ScalaPlugin.plugin.getPreferenceStore
+    val workspaceStore = ScalaPlugin.prefStore
     val projectStore = new PropertyStore(project, workspaceStore, ScalaPlugin.plugin.pluginId)
     val useProjectSettings = projectStore.getBoolean(USE_PROJECT_SPECIFIC_SETTINGS_KEY)
-    val prefStore = if (useProjectSettings) projectStore else ScalaPlugin.plugin.getPreferenceStore
+    val prefStore = if (useProjectSettings) projectStore else ScalaPlugin.prefStore
     prefStore
   }  
   

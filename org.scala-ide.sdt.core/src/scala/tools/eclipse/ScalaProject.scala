@@ -579,7 +579,7 @@ class ScalaProject private (val underlying: IProject) extends HasLogger {
     storage.getString(SettingConverterUtil.convertNameToProperty(properties.ScalaPluginSettings.buildManager.name))
   
   def storage = {
-    val workspaceStore = ScalaPlugin.plugin.getPreferenceStore
+    val workspaceStore = ScalaPlugin.prefStore
     val projectStore = new PropertyStore(underlying, workspaceStore, plugin.pluginId)
     val useProjectSettings = projectStore.getBoolean(SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE)
 
