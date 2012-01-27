@@ -11,19 +11,43 @@
   <artifactId>org.scala-ide.sdt.core</artifactId>
   <packaging>eclipse-plugin</packaging>
 
+  <properties>
+    <miglayout.version>3.7.4</miglayout.version>
+    <log4j.version>1.2.16</log4j.version>
+  </properties>
+
   <dependencies>
     <dependency>
     	<groupId>com.miglayout</groupId>
     	<artifactId>miglayout</artifactId>
-    	<version>3.7.4</version>
+    	<version>${miglayout.version}</version>
     	<type>jar</type>
     	<scope>compile</scope>
     </dependency>
-    <!-- <dependency> -->
-    <!--   <groupId>org.scala-ide</groupId> -->
-    <!--   <artifactId>org.scala-ide.sbt.full.library</artifactId> -->
-    <!--   <version>${sbt.version}.${version.suffix}</version> -->
-    <!-- </dependency> -->
+    <dependency>
+	  <groupId>log4j</groupId>
+	  <artifactId>log4j</artifactId>
+	  <version>${log4j.version}</version>
+	  <scope>compile</scope>
+	  <exclusions>
+        <exclusion>
+          <groupId>javax.mail</groupId>
+          <artifactId>mail</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>javax.jms</groupId>
+          <artifactId>jms</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.sun.jdmk</groupId>
+          <artifactId>jmxtools</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.sun.jmx</groupId>
+          <artifactId>jmxri</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
   </dependencies>
 
   <build>
@@ -65,14 +89,74 @@
           </jvmArgs>
         </configuration>
       </plugin>
+      <plugin>
+        <artifactId>maven-clean-plugin</artifactId>
+        <version>2.4.1</version>
+        <configuration>
+          <excludeDefaultDirectories>true</excludeDefaultDirectories>
+          <filesets>
+            <fileset>
+              <directory>./</directory>
+              <includes>
+                <include>lib/**/*</include>
+                <include>lib</include>
+                <include>target/**/*</include>
+                <include>target</include>
+              </includes>
+              <followSymlinks>false</followSymlinks>
+            </fileset>
+          </filesets>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <version>2.4</version>
+        <executions>
+        <execution>
+            <id>copy</id>
+            <phase>initialize</phase>
+            <goals>
+              <goal>copy</goal>
+            </goals>
+            <configuration>
+              <artifactItems>
+                <artifactItem>
+                  <groupId>log4j</groupId>
+                  <artifactId>log4j</artifactId>
+                  <version>${log4j.version}</version>
+                  <outputDirectory>${basedir}/lib</outputDirectory>
+                </artifactItem>
+                <artifactItem>
+                  <groupId>log4j</groupId>
+                  <artifactId>log4j</artifactId>
+                  <version>${log4j.version}</version>
+                  <outputDirectory>${basedir}/lib</outputDirectory>
+                  <classifier>sources</classifier>
+                </artifactItem>
+                <artifactItem>
+                  <groupId>com.miglayout</groupId>
+                  <artifactId>miglayout</artifactId>
+                  <version>${miglayout.version}</version>
+                  <outputDirectory>${basedir}/lib</outputDirectory>
+                </artifactItem>
+              </artifactItems>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>attach-sources</id>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
-<!--
-    <resources>
-      <resource>
-        <directory>src/resources</directory>
-        <filtering>true</filtering>
-        <targetPath>${basedir}/META-INF</targetPath>
-      </resource>
-    </resources> -->
   </build>
 </project>

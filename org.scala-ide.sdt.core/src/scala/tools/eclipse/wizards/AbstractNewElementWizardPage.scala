@@ -51,7 +51,7 @@ import collection.Seq
 import collection.mutable.Buffer
 import scala.tools.eclipse.ScalaPlugin._
 import scala.tools.eclipse.formatter.ScalaFormatterCleanUpProvider
-import scala.tools.eclipse.util.HasLogger
+import scala.tools.eclipse.logging.HasLogger
 
 abstract class AbstractNewElementWizardPage extends NewTypeWizardPage(1, "") with HasLogger {
 
@@ -375,7 +375,7 @@ abstract class AbstractNewElementWizardPage extends NewTypeWizardPage(1, "") wit
       cu.commitWorkingCopy(true, new SubProgressMonitor(monitor, 1))
       parentCU.discardWorkingCopy
     } catch {
-      case ex: JavaModelException => logger.error(ex)
+      case ex: JavaModelException => eclipseLog.error(ex)
     } finally {
       monitor done
     }

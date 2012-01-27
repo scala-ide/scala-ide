@@ -39,7 +39,7 @@ import scala.tools.eclipse.util.FileUtils._
 import scala.tools.eclipse.util.SWTUtils._
 import scalariform.formatter._
 import scalariform.formatter.preferences._
-import scala.tools.eclipse.util.HasLogger
+import scala.tools.eclipse.logging.HasLogger
 
 class FormatterPreferencePage extends PropertyPage with IWorkbenchPreferencePage with HasLogger {
   import FormatterPreferencePage._
@@ -352,7 +352,7 @@ class FormatterPreferencePage extends PropertyPage with IWorkbenchPreferencePage
         PreferencesImporterExporter.savePreferences(fileName, preferences)
       catch {
         case e: IOException =>
-          logger.error(e)
+          eclipseLog.error(e)
           MessageDialog.openError(getShell, "Error writing to " + fileName, e.getMessage)
       }
     }
@@ -364,7 +364,7 @@ class FormatterPreferencePage extends PropertyPage with IWorkbenchPreferencePage
         PreferencesImporterExporter.loadPreferences(fileName)
       catch {
         case e: IOException =>
-          logger.error(e)
+          eclipseLog.error(e)
           MessageDialog.openError(getShell, "Error opening " + fileName, e.getMessage)
           return
       }

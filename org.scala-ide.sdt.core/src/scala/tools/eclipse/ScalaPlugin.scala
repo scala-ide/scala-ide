@@ -28,12 +28,13 @@ import scala.tools.eclipse.util.OSGiUtils.pathInBundle
 import scala.tools.eclipse.templates.ScalaTemplateManager
 import org.eclipse.jdt.ui.PreferenceConstants
 import org.eclipse.core.resources.IResourceDelta
-import scala.tools.eclipse.util.HasLogger
+import scala.tools.eclipse.logging.HasLogger
 import org.osgi.framework.Bundle
 import scala.tools.eclipse.util.Utils
 import org.eclipse.jdt.core.ICompilationUnit
 import scala.tools.nsc.io.AbstractFile
 import scala.tools.eclipse.util.EclipseResource
+import scala.tools.eclipse.logging.PluginLogConfigurator
 
 object ScalaPlugin {
   var plugin: ScalaPlugin = _
@@ -46,7 +47,7 @@ object ScalaPlugin {
   def getShell: Shell = getWorkbenchWindow map (_.getShell) orNull
 }
 
-class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IElementChangedListener with IPartListener with HasLogger {
+class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IResourceChangeListener with IElementChangedListener with IPartListener with HasLogger {
   ScalaPlugin.plugin = this
 
   final val HEADLESS_TEST  = "sdtcore.headless"
@@ -135,7 +136,7 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
     val bundles = Option(Platform.getBundles(ScalaPlugin.plugin.libraryPluginId, null)).getOrElse(Array[Bundle]())
     logger.debug("[scalaLibBundle] Found %d bundles: %s".format(bundles.size, bundles.toList.mkString(", ")))
     bundles.find(b => b.getVersion().getMajor() == scalaCompilerBundleVersion.getMajor() && b.getVersion().getMinor() == scalaCompilerBundleVersion.getMinor()).getOrElse {
-      logger.error("Could not find a match for %s in %s. Using default.".format(scalaCompilerBundleVersion, bundles.toList.mkString(", ")), null)
+      eclipseLog.error("Could not find a match for %s in %s. Using default.".format(scalaCompilerBundleVersion, bundles.toList.mkString(", ")), null)
       Platform.getBundle(ScalaPlugin.plugin.libraryPluginId)
     }
   }

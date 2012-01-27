@@ -6,7 +6,7 @@ import org.eclipse.jdt.core.search.{SearchEngine, IJavaSearchConstants, SearchPa
 import org.eclipse.jdt.core.IJavaElement
 import scala.collection.mutable
 import org.eclipse.core.runtime.NullProgressMonitor
-import scala.tools.eclipse.util.HasLogger
+import scala.tools.eclipse.logging.HasLogger
 
 /** Base class for Scala completions. No UI dependency, can be safely used in a
  *  headless testing environment.

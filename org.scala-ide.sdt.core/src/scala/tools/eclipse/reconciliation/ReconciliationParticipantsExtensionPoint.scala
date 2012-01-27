@@ -8,7 +8,7 @@ import org.eclipse.core.runtime.CoreException
 import org.eclipse.core.runtime.{Platform, IProgressMonitor}
 import org.eclipse.jdt.core.WorkingCopyOwner
 import scala.tools.eclipse.javaelements.ScalaCompilationUnit
-import scala.tools.eclipse.util.HasLogger
+import scala.tools.eclipse.logging.HasLogger
 import scala.tools.eclipse.util.Utils
 
 /**

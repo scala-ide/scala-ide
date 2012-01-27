@@ -17,7 +17,7 @@ import org.eclipse.core.resources.IProject
 import scala.tools.eclipse.ScalaPlugin
 import scala.tools.nsc.Settings
 import scala.tools.eclipse.{SettingConverterUtil }
-import scala.tools.eclipse.util.HasLogger
+import scala.tools.eclipse.logging.HasLogger
 
 class ScalaPreferences extends PropertyPage with IWorkbenchPreferencePage with EclipseSettings
   with ScalaPluginPreferencePage with HasLogger {
@@ -66,7 +66,7 @@ class ScalaPreferences extends PropertyPage with IWorkbenchPreferencePage with E
     save()
     true
   } catch {
-    case ex => logger.error(ex); false
+    case ex => eclipseLog.error(ex); false
   }
   
   def updateApply = updateApplyButton

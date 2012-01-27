@@ -5,21 +5,21 @@ import org.eclipse.jface.window.Window
 import org.eclipse.jface.dialogs.{ MessageDialog, ErrorDialog, Dialog, IDialogConstants }
 import org.eclipse.jface.action.IAction
 import org.eclipse.jface.preference.IPreferenceStore
-
 import org.eclipse.swt.widgets.{ List => SWTList, _ }
 import org.eclipse.swt.layout.{ GridLayout, GridData }
 import org.eclipse.swt.SWT
 import org.eclipse.swt.events.{ ModifyListener, ModifyEvent, SelectionAdapter, SelectionListener, SelectionEvent }
 import org.eclipse.swt.graphics.{ Font, FontData }
-
 import org.eclipse.jdt.ui.PreferenceConstants
 import org.eclipse.jdt.internal.ui.preferences.PreferencesMessages
 import org.eclipse.jdt.internal.corext.util.Messages
-
 import org.eclipse.core.runtime.IStatus
 import scala.tools.eclipse.contribution.weaving.jdt.configuration.{ WeavingStateConfigurer }
 import org.eclipse.ui.PlatformUI
-import org.eclipse.ui.browser.IWorkbenchBrowserSupport 
+import org.eclipse.ui.browser.IWorkbenchBrowserSupport
+import scala.tools.eclipse.logging.LogPreferenceConstants
+import scala.tools.eclipse.logging.LogManager
+import scala.tools.eclipse.logging.HasLogger
 
 class DiagnosticDialog(shell: Shell) extends Dialog(shell) {
 
@@ -77,7 +77,9 @@ class DiagnosticDialog(shell: Shell) extends Dialog(shell) {
   protected val autoActivationData = new BoolWidgetData(PreferenceConstants.CODEASSIST_AUTOACTIVATION, true)
   protected val activationDelayData = new IntWidgetData(PreferenceConstants.CODEASSIST_AUTOACTIVATION_DELAY, 500)
   
-  protected var widgetDataList: List[WidgetData] = List(completionData, autoActivationData, activationDelayData) // , markOccurrencesData
+  private val appendLogInConsoleData = new BoolWidgetData(LogPreferenceConstants.IsConsoleAppenderEnabled, false)
+  
+  protected var widgetDataList: List[WidgetData] = List(completionData, autoActivationData, activationDelayData, appendLogInConsoleData) // , markOccurrencesData
      
   // helper classes for loading and storing widget values
   abstract class WidgetData {
@@ -226,7 +228,20 @@ class DiagnosticDialog(shell: Shell) extends Dialog(shell) {
                     
       link.addListener(SWT.Selection, DiagnosticDialog.linkListener)
     }
+    
+    val loggingGroup = newGroup("Logging", control, new GridLayout(2, false))
 
+    val levelLabel = new Label(loggingGroup, SWT.LEFT)
+    levelLabel.setText("Log Level:")
+    val logLevel = new Combo(loggingGroup, SWT.DROP_DOWN | SWT.READ_ONLY)
+    for (level <- scala.tools.eclipse.logging.Level.values)
+      logLevel.add(level.toString)
+    logLevel.addSelectionListener(new LogLevelListener(logLevel))
+    val level = LogManager.currentLogLevel
+    logLevel.select(level.id)
+    
+    val appendLogInConsole = newCheckboxButton(loggingGroup, "Output log in the console.", appendLogInConsoleData)
+    
     val otherGroup = newGroup("Additional", control, new GridLayout(1, true))
     
     val knownIssuesLink = new Link(otherGroup, SWT.NONE)
@@ -405,5 +420,34 @@ object DiagnosticDialog {
         case e: Exception => e.printStackTrace
       }
     }  
-  }  
+  }
+  
+  import org.eclipse.core.filesystem.EFS
+  import org.eclipse.core.runtime.Path
+  import org.eclipse.ui.PartInitException
+  import org.eclipse.ui.ide.IDE
+  import java.io.File
+  
+  class openFile(file: Option[File]) extends Listener with HasLogger {
+    import scala.util.control.Exception.catching
+
+    def handleEvent(e: Event): Unit = file match { 
+      case Some(file) =>
+        val parentLocation = file.getParent
+        var fileStore = EFS.getLocalFileSystem().getStore(new Path(parentLocation));
+
+        val fileName = file.getName
+        fileStore = fileStore.getChild(fileName)
+        if (!fileStore.fetchInfo().isDirectory() && fileStore.fetchInfo().exists()) {
+          val wb = PlatformUI.getWorkbench
+          val win = wb.getActiveWorkbenchWindow
+          val page = win.getActivePage
+          
+          catching(classOf[PartInitException]) {
+            IDE.openEditorOnFileStore(page, fileStore)
+          }
+        }
+      case None => logger.warn("Cannot open non-existing file")
+    }
+  }
 }
