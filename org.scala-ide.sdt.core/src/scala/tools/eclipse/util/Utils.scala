@@ -1,5 +1,7 @@
 package scala.tools.eclipse.util
 
+import scala.tools.eclipse.logging.HasLogger
+
 object Utils extends HasLogger {
 
   /** Return the time in ms required to evaluate `f()`. */
@@ -22,8 +24,8 @@ object Utils extends HasLogger {
     catch { 
       case t => 
         msgIfError match {
-          case Some(errMsg) => logger.error(errMsg, t)
-          case None => logger.error(t)
+          case Some(errMsg) => eclipseLog.error(errMsg, t)
+          case None => eclipseLog.error(t)
         }
         None
     }

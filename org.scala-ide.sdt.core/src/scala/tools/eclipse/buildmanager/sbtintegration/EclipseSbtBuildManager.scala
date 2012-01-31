@@ -16,7 +16,7 @@ import sbt.compiler.{JavaCompiler}
 import sbt.{Process, ClasspathOptions}
 import scala.tools.eclipse.util.{ EclipseResource, FileUtils }
 import org.eclipse.core.resources.IResource
-import scala.tools.eclipse.util.HasLogger
+import scala.tools.eclipse.logging.HasLogger
 
 // The following code is based on sbt.AggressiveCompile
 // Copyright 2010 Mark Harrah
@@ -340,7 +340,7 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings)
   	      //ScalaPlugin.plugin.sbtScalaLib.get.toFile
   	      val e = new Exception("Cannot find Scala library on the classpath. Verify your build path!")
   	      project.buildError(IMarker.SEVERITY_ERROR, e.getMessage(), null)
-          logger.error("Error in Scala SBT builder", e)
+          eclipseLog.error("Error in Scala SBT builder", e)
   	      return
   	  }
   	  //val compJar = ScalaPlugin.plugin.sbtScalaCompiler
@@ -391,7 +391,7 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings)
       case e =>
         hasErrors = true
         project.buildError(IMarker.SEVERITY_ERROR, "Error in Scala compiler: " + e.getMessage, null)
-        logger.error("Error in Scala compiler", e)
+        eclipseLog.error("Error in Scala compiler", e)
     }
     if (!hasErrors)
       pendingSources.clear

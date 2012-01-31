@@ -32,15 +32,11 @@ object IDESettings {
         List(YpresentationDebug, YpresentationVerbose, YpresentationLog, YpresentationReplay, YpresentationDelay)))
   }
   
-  def pluginSettings: List[Box] =
-    List(Box("Scala Plugin Debugging", List(YPlugininfo)))
-  
   def buildManagerSettings: List[Box] =
     List(Box("Build manager", List(buildManager, compileOrder)))
 }
 
 object ScalaPluginSettings extends Settings {
-  val YPlugininfo = BooleanSetting("-plugininfo", "Enable logging of the Scala Plugin info")
   val buildManager = ChoiceSetting("-buildmanager", "which", "Build manager to use", List("refined", "sbt"), "sbt")
   val compileOrder = ChoiceSetting("-compileorder", "which", "Compilation order",
       List("Mixed", "JavaThenScala", "ScalaThenJava"), "Mixed")

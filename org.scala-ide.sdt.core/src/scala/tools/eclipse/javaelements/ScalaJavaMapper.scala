@@ -10,7 +10,7 @@ import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants
 import scala.tools.nsc.symtab.Flags
 import scala.tools.eclipse.ScalaPresentationCompiler
 import ch.epfl.lamp.fjbg.{ JObjectType, JType }
-import scala.tools.eclipse.util.HasLogger
+import scala.tools.eclipse.logging.HasLogger
 
 trait ScalaJavaMapper extends ScalaAnnotationHelper with HasLogger { self : ScalaPresentationCompiler => 
 

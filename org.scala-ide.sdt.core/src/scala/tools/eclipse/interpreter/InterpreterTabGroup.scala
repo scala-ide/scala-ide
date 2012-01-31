@@ -22,7 +22,7 @@ import org.eclipse.ui.dialogs._
 import org.eclipse.core.runtime._
 import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants
 import scala.tools.eclipse.ScalaPlugin
-import scala.tools.eclipse.util.HasLogger
+import scala.tools.eclipse.logging.HasLogger
 
 /**
  * This defines the configuration UI for a scala interpeter launch configuration.
@@ -164,7 +164,7 @@ class InterpreterMainTab extends JavaLaunchTab with HasLogger {
     catch {
       case jme : JavaModelException =>
         //TODO - Log
-        logger.error("Java model exception", jme);
+        eclipseLog.error("Java model exception", jme);
     }
     val scalaProject= getScalaProject();
     if (scalaProject != null) {

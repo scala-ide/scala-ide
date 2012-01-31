@@ -7,7 +7,7 @@ import org.eclipse.core.runtime.Path
 import org.eclipse.core.resources.ResourcesPlugin
 import scala.tools.eclipse.ScalaProject
 import org.eclipse.core.resources.IProject
-import scala.tools.eclipse.util.HasLogger
+import scala.tools.eclipse.logging.HasLogger
 import scala.tools.eclipse.util.Utils
 import org.eclipse.ui.IEditorInput
 import org.eclipse.ui.IFileEditorInput

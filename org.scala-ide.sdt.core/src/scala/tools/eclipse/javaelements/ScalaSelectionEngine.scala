@@ -19,7 +19,7 @@ import org.eclipse.jdt.internal.codeassist.impl.{ AssistParser, Engine }
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants
 import org.eclipse.jdt.internal.compiler.env.{ICompilationUnit, AccessRestriction}
 import org.eclipse.jdt.internal.core.{ JavaElement, SearchableEnvironment }
-import scala.tools.eclipse.util.HasLogger
+import scala.tools.eclipse.logging.HasLogger
 
 class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: ISelectionRequestor, settings: ju.Map[_, _]) extends Engine(settings) with ISearchRequestor with HasLogger {
 
