@@ -31,8 +31,7 @@ class ScalaPreferences extends PropertyPage with IWorkbenchPreferencePage with E
   
   /** Returns the id of what preference page we use */
   import EclipseSetting.toEclipseBox
-  lazy val scalaBoxes   = IDESettings.pluginSettings
-  lazy val eclipseBoxes = scalaBoxes.map { s => toEclipseBox(s, getPreferenceStore) }
+  override val eclipseBoxes: List[EclipseSetting.EclipseBox] = Nil
   
   def createContents(parent : Composite) : Control = {
     val composite = {
@@ -83,8 +82,6 @@ class ScalaPreferences extends PropertyPage with IWorkbenchPreferencePage with E
   }
   
   def save(): Unit = {
-  	save(scalaBoxes, getPreferenceStore)
-
     //Don't let user click "apply" again until a change
     updateApplyButton
   }

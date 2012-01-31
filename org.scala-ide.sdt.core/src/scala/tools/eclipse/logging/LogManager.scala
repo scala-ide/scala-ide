@@ -6,30 +6,40 @@ import org.eclipse.jdt.internal.ui.viewsupport.IProblemChangedListener
 import org.eclipse.jface.util.IPropertyChangeListener
 import org.eclipse.jface.util.PropertyChangeEvent
 import org.eclipse.jdt.ui.PreferenceConstants
+import scala.tools.eclipse.util.SWTUtils
+import java.io.File
 
 object LogManager extends Log4JFacade with HasLogger {
-  import LogPreferenceConstants._
+  import ui.properties.LoggingPreferenceConstants._
 
-  override protected val logFileName = "scala-ide.log"
-  
-  private class ConsoleAppenderEnablerPropertyListener extends IPropertyChangeListener {
-    override def propertyChange(event: PropertyChangeEvent) {
-      if (event.getProperty == IsConsoleAppenderEnabled) {
-        val enable = event.getNewValue.asInstanceOf[Boolean]
-        if (enable) updateConsoleAppender(enable)
+  private def updateLogLevel: IPropertyChangeListener = {
+    SWTUtils.fnToPropertyChangeListener { event =>
+      if (event.getProperty == LogLevel) {
+        val level = event.getNewValue.asInstanceOf[String]
+        setLogLevel(Level.withName(level))
       }
     }
   }
 
-  override def configure(preferredLogLevel: Level.Value) {
-    PreferenceConstants.getPreferenceStore.addPropertyChangeListener(new ConsoleAppenderEnablerPropertyListener)
-    super.configure(preferredLogLevel)
+  private def updateConsoleAppenderStatus: IPropertyChangeListener = {
+    SWTUtils.fnToPropertyChangeListener { event =>
+      if (event.getProperty == IsConsoleAppenderEnabled) {
+        val enable = event.getNewValue.asInstanceOf[Boolean]
+        updateConsoleAppender(enable)
+      }
+    }
   }
 
-  override def setLogLevel(level: Level.Value) {
+  override protected def logFileName = "scala-ide.log"
+
+  override def configure(logOutputLocation: String, preferredLogLevel: Level.Value) {
+    super.configure(logOutputLocation, preferredLogLevel)
+    ScalaPlugin.plugin.getPreferenceStore.addPropertyChangeListener(updateLogLevel)
+    ScalaPlugin.plugin.getPreferenceStore.addPropertyChangeListener(updateConsoleAppenderStatus)
+  }
+
+  override protected def setLogLevel(level: Level.Value) {
     super.setLogLevel(level)
-    ScalaPlugin.plugin.getPreferenceStore.setValue(LogLevel, level.toString)
-    ScalaPlugin.plugin.savePluginPreferences
     logger.info("Log level is `%s`".format(level))
   }
 
@@ -39,15 +49,8 @@ object LogManager extends Log4JFacade with HasLogger {
     else Level.withName(levelName)
   }
 
-  private def defaultLogLevel: Level.Value = Level.WARN
+  private[logging] def defaultLogLevel: Level.Value = Level.WARN
 
   override def isConsoleAppenderEnabled: Boolean =
-    PreferenceConstants.getPreferenceStore.getBoolean(IsConsoleAppenderEnabled)
-
-}
-
-object LogPreferenceConstants {
-  private final val Prefix = "log-pref." 
-  final val LogLevel = Prefix + "level"
-  final val IsConsoleAppenderEnabled = Prefix + "isConsoleAppenderEnabled"
+    ScalaPlugin.plugin.getPreferenceStore.getBoolean(IsConsoleAppenderEnabled)
 }

@@ -21,7 +21,7 @@ private[logging] object EclipseLogger extends Logger {
   }
 
   def info(message: => Any, t: Throwable) {
-    log(IStatus.INFO, message, Option(t))
+    log(IStatus.INFO, message, t)
   }
 
   def warn(message: => Any) {
@@ -29,7 +29,7 @@ private[logging] object EclipseLogger extends Logger {
   }
 
   def warn(message: => Any, t: Throwable) {
-    log(IStatus.WARNING, message, Option(t))
+    log(IStatus.WARNING, message, t)
   }
 
   def error(message: => Any) {
@@ -37,7 +37,7 @@ private[logging] object EclipseLogger extends Logger {
   }
 
   def error(message: => Any, t: Throwable) {
-    log(IStatus.ERROR, message, Option(t))
+    log(IStatus.ERROR, message, t)
   }
 
   def fatal(message: => Any) {
@@ -48,13 +48,12 @@ private[logging] object EclipseLogger extends Logger {
     error(message, t)
   }
   
-  private def log(severity: Int, message: => Any, t: Option[Throwable] = None) {
-    lazy val t1 = { val ex = new Exception; ex.fillInStackTrace; ex }
-    pluginLogger.log(createStatus(severity, message, t.getOrElse(t1)))
-    t.collect {
+  private def log(severity: Int, message: => Any, t: Throwable = null) {
+    pluginLogger.log(createStatus(severity, message, t))
+    t match {
       case ce: ControlThrowable =>
-        val t2 = { val ex = new Exception; ex.fillInStackTrace; ex }
-        error("Incorrectly logged ControlThrowable: " + ce.getClass.getSimpleName + "(" + ce.getMessage + ")", t2)
+        pluginLogger.log(createStatus(IStatus.ERROR, "Incorrectly logged ControlThrowable: " + ce.getClass.getSimpleName + "(" + ce.getMessage + ")", t))
+      case _ => () // do nothing
     }
   }
 

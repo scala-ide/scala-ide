@@ -36,11 +36,7 @@ class ReportBugDialog(shell: Shell) extends Dialog(shell) {
     val reportBugLink = new Link(control, SWT.NONE)
     reportBugLink.setText("<a href=\"" + SDT_TRACKER_URL + "\">Report a bug</a> on Assembla")      
     reportBugLink.addListener(SWT.Selection, DiagnosticDialog.linkListener)
-    
-    val openLog = new Link(control, SWT.NONE)
-    openLog.setText("<a href=\"" + SDT_TRACKER_URL + "\">Open Log file</a>")
-    openLog.addListener(SWT.Selection, new DiagnosticDialog.openFile(LogManager.logFile))
-    
+
     control
   }
   

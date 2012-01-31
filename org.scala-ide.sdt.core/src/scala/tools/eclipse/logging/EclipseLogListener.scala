@@ -18,30 +18,17 @@ class EclipseLogListener(log: ILog, logger: Logger) extends ILogListener {
   log.addLogListener(this)
   
   /** Remove {{{this}}} listener from the Eclipse logging framework. */
-  def dispose() {
-    Option(log) map {
-      _.removeLogListener(this)
-    }
-  }
+  def dispose() { log.removeLogListener(this) }
 
   override def logging(status: IStatus, plugin: String) {
-    if (null == this.logger || null == status) return
-
-    val message = "%s - %s - %s - %s".format(plugin, status.getPlugin, status.getCode, status.getMessage)
-
-    val flog: (=> String, Throwable) => Unit = status.getSeverity() match {
-      case IStatus.ERROR => logger.error
-      case IStatus.WARNING => logger.warn
-      case IStatus.INFO => logger.info
-      case IStatus.CANCEL => logger.info
-    }
     
-    val exception = Option(status.getException).getOrElse {
-      val ex = new Exception
-      ex.fillInStackTrace
-      ex
+    lazy val message = "%s - %s - %s - %s".format(plugin, status.getPlugin, status.getCode, status.getMessage)
+
+    status.getSeverity() match {
+      case IStatus.INFO => logger.info(message, status.getException)
+      case IStatus.WARNING => logger.warn(message, status.getException)
+      case IStatus.ERROR => logger.error(message, status.getException)
+      case IStatus.CANCEL => logger.info(message, status.getException)
     }
-    
-    flog(message, status.getException)
   }
 }

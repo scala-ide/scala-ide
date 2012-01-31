@@ -19,40 +19,20 @@ import java.io.File
  * features that we currently use/need (which, in practice, are not that many).
  */
 private[logging] abstract class Log4JFacade {
-
-  protected val logFileName: String
-
-  private var _logFilePath: String = _
-
-  private final val config: Log4JConfig = new Log4JConfig(this)
-
-  def configure(preferredLogLevel: Level.Value) {
-    config.configure(logFileName, toLog4JLevel(preferredLogLevel))
-  }
-
-  /** Change the root logger's output location. */
-  def setLogFileLocation(location: String) {
-    synchronized {
-      _logFilePath = location + java.io.File.separator + logFileName
-      val appenders = LogManager.getRootLogger.getAllAppenders
-      while (appenders.hasMoreElements) {
-        appenders.nextElement match {
-          case fileAppender: FileAppender =>
-            fileAppender.setFile(_logFilePath)
-            // Next line is needed to force the {{{fileAppender}}} to update the file's output location.
-            fileAppender.activateOptions()
-          case _ => // do nothing
-        }
-      }
-    }
-  }
   
-  def logFile: Option[File] = {
-    val filePath = synchronized { _logFilePath }
-    val file = new File(filePath)
-    
-    if(file.exists) Some(file)
-    else None
+  private final val config: Log4JConfig = new Log4JConfig(this)
+  
+  private var _logFile: File = _
+  
+  def logFile: File = synchronized { _logFile } 
+  
+  protected def logFileName: String
+
+  def configure(logOutputLocation: String, preferredLogLevel: Level.Value) {
+    synchronized {
+      _logFile = new File(logOutputLocation + java.io.File.separator + logFileName)
+    }
+    config.configure(_logFile, toLog4JLevel(preferredLogLevel))
   }
 
   private[log4j] def getRootLogger: Log4JLogger = LogManager.getRootLogger
@@ -60,7 +40,7 @@ private[logging] abstract class Log4JFacade {
   def currentLogLevel: Level.Value
 
   /** Programmatically change the root logger's log level. */
-  def setLogLevel(level: Level.Value) {
+  protected def setLogLevel(level: Level.Value) {
     val log4JLevel = toLog4JLevel(level)
     LogManager.getRootLogger.setLevel(log4JLevel)
   }
