@@ -761,6 +761,12 @@
             class="scala.tools.eclipse.launching.JUnitPropertyTester"
             id="scala.tools.eclipse.launching.JUnitPropertyTester">
       </propertyTester>
+      <propertyTester
+           class="scala.tools.eclipse.launching.ScalaTestLaunchableTester"
+           id="scala.tools.eclipse.launching.ScalaTestLaunchableTester"
+           namespace="scala.tools.eclipse.launching"
+           properties="canLaunchAsScalaTest"
+           type="org.eclipse.core.runtime.IAdaptable"/>
   </extension>
 
   <extension point="org.eclipse.debug.ui.launchShortcuts">
@@ -820,6 +826,26 @@
                description="%RunJUnitLaunchShortcut.description"
                mode="run">
          </description>
+      </shortcut>
+      <shortcut
+        class="scala.tools.eclipse.launching.ScalaTestLaunchShortcut"
+        icon="icons/full/obj16/scu_obj.gif"
+        id="org.eclipse.shortcut.scalatest"
+        label="ScalaTest"
+        modes="run,debug">
+        <contextualLaunch>
+          <enablement>
+            <with variable="selection">
+              <count value="1" />
+              <iterate>
+                <adapt type="org.eclipse.jdt.core.IJavaElement">
+		          <test property="org.eclipse.jdt.core.isInJavaProject"/>
+		          <test property="scala.tools.eclipse.launching.canLaunchAsScalaTest" forcePluginActivation="true" />
+		        </adapt>
+		      </iterate>
+            </with>
+          </enablement>
+        </contextualLaunch>
       </shortcut>
   </extension>
 

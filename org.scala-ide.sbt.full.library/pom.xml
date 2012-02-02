@@ -150,6 +150,11 @@
       <artifactId>sbinary_${sbt.compiled.version}</artifactId>
       <version>${sbinary.version}</version>
     </dependency>
+    <!--<dependency>
+      <groupId>org.scalatest</groupId>
+      <artifactId>scalatest_2.9.0</artifactId>
+      <version>1.7.RC2</version>
+    </dependency>-->
     <!-- Should be the one with which we built sbt, for now, let's use 2.9.0 -->
   </dependencies>
   <build>
@@ -354,6 +359,12 @@
                   <version>${sbinary.version}</version>
                   <outputDirectory>${project.build.directory}</outputDirectory>
                 </artifactItem>
+                <!--<artifactItem>
+                  <groupId>org.scalatest</groupId>
+                  <artifactId>scalatest_2.9.0</artifactId>
+                  <version>1.7.RC2</version>
+                  <outputDirectory>${project.build.directory}</outputDirectory>
+                </artifactItem>-->                
               </artifactItems>
             </configuration>
           </execution>
