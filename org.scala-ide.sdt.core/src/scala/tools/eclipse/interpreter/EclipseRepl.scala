@@ -1,11 +1,12 @@
-package scala.tools.eclipse
-package interpreter
+package scala.tools.eclipse.interpreter
 
 import scala.actors.Actor
 import scala.collection.mutable.ListBuffer
-import scala.tools.nsc.Interpreter
 import scala.tools.nsc.InterpreterResults.Result
 import scala.tools.nsc.Settings
+
+// Unit tests found in org.scala-ide.sdt.core.tests/src:
+//   scala.tools.eclipse.interpreter.EclipseReplTest
 
 /** An `EclipseRepl` is a simple Finite State Machine with 4 states based on
   * whether the REPL is running/not and whether the history `isEmpty`/not.
@@ -109,6 +110,9 @@ object EclipseRepl
       * @param request the `Init`, `Exec`, etc. message
       */
     def failed(request: Any, thrown: Throwable, output: String) {}
+
+    /** Sent for any unrecognized message. */
+    def unknown(request:Any) {}
   }
 
   // implementation note: request and status messages were originally like:
@@ -119,6 +123,38 @@ object EclipseRepl
   //   case object Stopped extends Status
   // etc., etc., with `type Client = (Status => Unit)`
   // it was all very pretty, but the resulting bytecode was too bloated.
+
+  /** The API we use from the Scala Interpreter. @see Builder */
+  trait Interpreter
+  {
+    /** prints the output to `Console.out` */
+    def interpret(e: Exec):Result
+  }
+
+  /** Allows plugging in alternate (i.e. test) `Interpreter`s. */
+  trait Builder
+  {
+    /** Called by `EclipseRepl` constructor, calls its `Actor.start`. */
+    def constructed(a: EclipseRepl) { a.start() }
+
+    /** Returns a new `Interpreter`. */
+    def interpreter(i: Init): Interpreter
+  }
+
+  /** Returns instances of the Scala Interpreter. */
+  object DefaultBuilder extends Builder
+  {
+    def interpreter(i: Init) = new Interpreter
+    {
+      val intp = new scala.tools.nsc.Interpreter(i)
+      intp.initializeSynchronous()
+
+      def interpret(e: Exec) = {
+        val r = intp.interpret(e)
+        intp.reporter.flush()
+        r }
+    }
+  }
 }
 
 import EclipseRepl._
@@ -128,7 +164,8 @@ import EclipseRepl._
   * previous lines, each `EclipseRepl` should be used only by a single entity.
   * Typically that entity is the `Client` passed to the constructor.
   * 
-  * The constructor calls `Actor.start`.
+  * The default `Builder` calls `Actor.start` as the last step of the
+  * `EclipseRepl` constructor.
   * 
   * `EclipseRepl` uses `Actor.react`, allowing it to share threads with other
   * `Actor`s. Because the interpreter might take an arbitrary amount of time to
@@ -138,8 +175,10 @@ import EclipseRepl._
   * These five convenience methods are available: `init`, `exec`, `drop`,
   * `stop`, and `quit`. All they do is send the corresponding request message.
   */
-class EclipseRepl(client: Client) extends Actor
+class EclipseRepl(client: Client, builder: Builder) extends Actor
 {
+  def this(client: Client) = this(client, DefaultBuilder)
+
   def init(settings: Init) { this ! settings }
   def exec(line: Exec) { this ! line }
   def drop() { this ! Drop }
@@ -152,8 +191,7 @@ class EclipseRepl(client: Client) extends Actor
 
   private def boot(i: Init, b: BAOS) {
     client.starting(i)
-    intp = new Interpreter(i)
-    intp.initializeSynchronous()
+    intp = builder.interpreter(i)
     redo(i, b)
     client.started(i)
   }
@@ -195,7 +233,6 @@ class EclipseRepl(client: Client) extends Actor
     if (intp != null) {
       client.doing(e)
       val r = intp.interpret(e)
-      intp.reporter.flush()
       client.done(e, r, b.toString)
       b.reset()
     }
@@ -235,7 +272,10 @@ class EclipseRepl(client: Client) extends Actor
       safely(haltZap, Quit, recovery_unnecessary)
       client.terminating()
       // no act() here
+    case u =>
+      client.unknown(u)
+      act()
   }}
 
-  this.start()
+  builder.constructed(this)
 }
