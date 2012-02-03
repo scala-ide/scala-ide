@@ -17,6 +17,9 @@ import sbt.{Process, ClasspathOptions}
 import scala.tools.eclipse.util.{ EclipseResource, FileUtils }
 import org.eclipse.core.resources.IResource
 import scala.tools.eclipse.util.HasLogger
+import sbt.inc.{ AnalysisFormats, AnalysisStore, Analysis, FileBasedStore }
+import org.eclipse.core.resources.IProject
+import sbinary.DefaultProtocol.{ immutableMapFormat, immutableSetFormat, StringFormat }
 
 // The following code is based on sbt.AggressiveCompile
 // Copyright 2010 Mark Harrah
@@ -357,9 +360,51 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings)
               project, Seq(scalac.scalaInstance.libraryJar, compInterfaceJar.get.toFile) ++ cp)
       
       val analysisComp = new AnalysisCompile(conf, this, new SbtProgress())
+
+    val extraAnalysis = upstreamAnalysis(project.underlying)
+
+    logger.debug("Retrieved the following upstream analysis: " + extraAnalysis)
+
   	  val order = project.storage.getString(SettingConverterUtil.convertNameToProperty(properties.ScalaPluginSettings.compileOrder.name))
-      val result = analysisComp.doCompile(
-              scalac, javac, sources, reporter, settings0, CompileOrderMapper(order))
+    analysisComp.doCompile(
+      scalac, javac, sources, reporter, settings0, CompileOrderMapper(order), analysisMap = extraAnalysis)
+  }
+
+  /** Return the Analysis for all the dependencies that are Scala projects, and that 
+   *  have associated Analysis information, transitively.
+   *  
+   *  This works only if they are also built using the Sbt build manager
+   */
+  private def upstreamAnalysis(project: IProject): Map[File, Analysis] = {
+    val projectsWithBuilders = for {
+      p <- project.getReferencedProjects
+      dep <- ScalaPlugin.plugin.asScalaProject(p)
+    } yield (dep, dep.buildManager)
+
+    Map.empty ++ projectsWithBuilders.collect {
+      case (dep, sbtBM: EclipseSbtBuildManager) 
+        if dep.outputFolders.nonEmpty && sbtBM.latestAnalysis.isDefined =>
+        val output = dep.outputFolders.head
+        
+        (ScalaPlugin.plugin.workspaceRoot.getFolder(output).getLocation.toFile, sbtBM.latestAnalysis.get)
+    } ++ project.getReferencedProjects.flatMap(upstreamAnalysis)
+  }
+  
+  private var _latestAnalysis: Option[Analysis] = None
+
+  import AnalysisFormats._
+  private val store = AnalysisStore.sync(
+      new WeaklyCachedStore(
+          FileBasedStore(
+              EclipseResource(ScalaCompilerConf.cacheLocation(project.underlying)).file) ))
+
+  /** Get the store where this builder keeps the API analysis. */
+  def analysisStore: AnalysisStore = store
+  
+  /** Return the latest sbt Analysis for this builder. */
+  def latestAnalysis: Option[Analysis] = analysisStore.get() match {
+    case Some((analysis, _)) => Option(analysis)
+    case _ => None
   }
   
   /** Not supported */

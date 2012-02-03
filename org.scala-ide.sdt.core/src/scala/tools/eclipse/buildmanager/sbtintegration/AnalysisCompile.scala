@@ -2,32 +2,44 @@ package scala.tools.eclipse
 package buildmanager
 package sbtintegration
 
-import sbt.{Logger, IO, CompileSetup, CompileOptions,
-            ClasspathOptions, CompileOrder}
-import sbt.inc.{AnalysisFormats, AnalysisStore, Analysis,
-	              FileBasedStore, Locate, IncrementalCompile,
-	              Stamps, Stamp, ReadStamps, Incremental}
-import sbt.compiler.{JavaCompiler, CompilerArguments}
-import sbt.classpath.ClasspathUtilities
-import xsbti.{AnalysisCallback, Reporter, Controller}
-import xsbti.api.{Source}
-import xsbt.{InterfaceCompileFailed}
-import CompileOrder.{JavaThenScala, Mixed, ScalaThenJava}
-import sbinary.DefaultProtocol.{ immutableMapFormat, immutableSetFormat, StringFormat }
+import java.io.File
+
+import scala.Option.option2Iterable
 import scala.collection.Seq
+import scala.tools.eclipse.contribution.weaving.jdt.jcompiler.BuildManagerStore
+import scala.tools.eclipse.util.EclipseResource
 import scala.tools.nsc.io.AbstractFile
 import scala.tools.nsc.util.NoPosition
-import scala.tools.nsc.{ Settings, MissingRequirementError }
-import scala.tools.eclipse.util.EclipseResource
-import java.io.File
+import scala.tools.nsc.MissingRequirementError
+import scala.tools.nsc.Settings
+
+import org.eclipse.jdt.core.IJavaProject
+import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jdt.launching.JavaRuntime
 import org.eclipse.jdt.core.{ JavaCore, IJavaProject }
 import scala.tools.eclipse.util.HasLogger
 import scala.tools.eclipse.contribution.weaving.jdt.jcompiler.BuildManagerStore
+import sbt.CompileOrder.JavaThenScala
+import sbt.CompileOrder.Mixed
+import sbt.CompileSetup.equivCompileSetup
+import sbt.classpath.ClasspathUtilities
+import sbt.compiler.CompilerArguments
+import sbt.inc.Analysis
+import sbt.inc.Incremental
+import sbt.inc.IncrementalCompile
+import sbt.inc.Locate
+import sbt.ClasspathOptions
+import sbt.CompileOptions
+import sbt.CompileOrder
+import sbt.CompileSetup
+import sbt.IO
+import xsbti.api.Source
+import xsbti.AnalysisCallback
+import xsbti.Controller
+import xsbti.Reporter
 
 class AnalysisCompile (conf: BasicConfiguration, bm: EclipseSbtBuildManager, contr: Controller) extends HasLogger {
-    import AnalysisFormats._
-    private lazy val store = AnalysisStore.sync(AnalysisStore.cached(FileBasedStore(EclipseResource(conf.cacheLocation).file)))
+    private lazy val store = bm.analysisStore
     
     private def withBootclasspath(args: CompilerArguments, classpath: Seq[File]): Seq[File] =
       args.bootClasspath ++ args.finishClasspath(classpath)
@@ -95,6 +107,7 @@ class AnalysisCompile (conf: BasicConfiguration, bm: EclipseSbtBuildManager, con
         val ((previousAnalysis, previousSetup), tm) = util.Utils.timed(extract(store.get))
         
         logger.debug("API store loaded in %0,3d ms".format(tm))
+        logger.debug("\t" + previousAnalysis)
 
         val compile0 = (include: Set[File], callback: AnalysisCallback) => {
             conf.outputDirectories.foreach(IO.createDirectory)

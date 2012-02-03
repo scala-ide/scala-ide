@@ -7,10 +7,15 @@ import xsbt.boot.{Launcher, Repository }
 import java.io.File
 import org.eclipse.core.resources.ResourcesPlugin
 import scala.tools.eclipse.util.HasLogger
+import org.eclipse.core.resources.IProject
+import org.eclipse.core.resources.IFile
 
 object ScalaCompilerConf {
-    val LIBRARY_SUFFIX = "scala-library.jar"
-    val COMPILER_SUFFIX = "scala-compiler.jar"
+    final val LIBRARY_SUFFIX = "scala-library.jar"
+    final val COMPILER_SUFFIX = "scala-compiler.jar"
+      
+    final val CACHE_SUFFIX = ".cache"
+
     private val _bootdir = (new File("")).getAbsoluteFile
     	
     def apply(scalaHome: File): ScalaInstance = {
@@ -42,6 +47,9 @@ object ScalaCompilerConf {
     private def findJar(dir: File, prefix: String, version: String):File = {
         new File(dir, prefix + version + ".jar")
     }
+    
+    def cacheLocation(project: IProject): IFile =
+      project.getFile(CACHE_SUFFIX)
 }
 
 class BasicConfiguration(
@@ -52,10 +60,10 @@ class BasicConfiguration(
     ) extends HasLogger {
 	  import Path._
     
-    private final val cacheSuffix = ".cache"
     private final val outSuffix   = "target"
     
-    def cacheLocation = project.underlying.getFile(cacheSuffix)
+    def cacheLocation: IFile = 
+      ScalaCompilerConf.cacheLocation(project.underlying)
     
     def outputDirectories: List[File] = {
       val outDirs = project.outputFolders.toList
