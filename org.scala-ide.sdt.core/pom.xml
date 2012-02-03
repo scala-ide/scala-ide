@@ -13,6 +13,7 @@
 
   <properties>
     <miglayout.version>3.7.4</miglayout.version>
+    <log4j.version>1.2.16</log4j.version>
   </properties>
 
   <dependencies>
@@ -22,6 +23,30 @@
     	<version>${miglayout.version}</version>
     	<type>jar</type>
     	<scope>compile</scope>
+    </dependency>
+    <dependency>
+	  <groupId>log4j</groupId>
+	  <artifactId>log4j</artifactId>
+	  <version>${log4j.version}</version>
+	  <scope>compile</scope>
+	  <exclusions>
+        <exclusion>
+          <groupId>javax.mail</groupId>
+          <artifactId>mail</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>javax.jms</groupId>
+          <artifactId>jms</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.sun.jdmk</groupId>
+          <artifactId>jmxtools</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.sun.jmx</groupId>
+          <artifactId>jmxri</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
   </dependencies>
 
@@ -96,6 +121,19 @@
             </goals>
             <configuration>
               <artifactItems>
+                <artifactItem>
+                  <groupId>log4j</groupId>
+                  <artifactId>log4j</artifactId>
+                  <version>${log4j.version}</version>
+                  <outputDirectory>${basedir}/lib</outputDirectory>
+                </artifactItem>
+                <artifactItem>
+                  <groupId>log4j</groupId>
+                  <artifactId>log4j</artifactId>
+                  <version>${log4j.version}</version>
+                  <outputDirectory>${basedir}/lib</outputDirectory>
+                  <classifier>sources</classifier>
+                </artifactItem>
                 <artifactItem>
                   <groupId>com.miglayout</groupId>
                   <artifactId>miglayout</artifactId>

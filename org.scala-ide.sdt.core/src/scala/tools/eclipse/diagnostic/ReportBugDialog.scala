@@ -3,12 +3,13 @@ package scala.tools.eclipse
 package diagnostic
 
 import org.eclipse.jface.dialogs.{ Dialog, IDialogConstants }
-
 import org.eclipse.swt.widgets.{ List => SWTList, _ }
 import org.eclipse.swt.layout.{ GridLayout, GridData }
 import org.eclipse.swt.SWT
 import org.eclipse.swt.events.{ ModifyListener, ModifyEvent, SelectionAdapter, SelectionListener, SelectionEvent }
 import org.eclipse.core.runtime.Platform
+import scala.tools.eclipse.logging.LogManager
+
 
 class ReportBugDialog(shell: Shell) extends Dialog(shell) {
   
@@ -34,8 +35,8 @@ class ReportBugDialog(shell: Shell) extends Dialog(shell) {
     
     val reportBugLink = new Link(control, SWT.NONE)
     reportBugLink.setText("<a href=\"" + SDT_TRACKER_URL + "\">Report a bug</a> on Assembla")      
-    reportBugLink.addListener(SWT.Selection, DiagnosticDialog.linkListener)    
-      
+    reportBugLink.addListener(SWT.Selection, DiagnosticDialog.linkListener)
+
     control
   }
   

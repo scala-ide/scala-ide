@@ -90,5 +90,6 @@ Export-Package:
  scala.tools.eclipse.wizards
 Bundle-RequiredExecutionEnvironment: J2SE-1.5
 Bundle-ClassPath: .,
- lib/miglayout-3.7.4.jar
+ lib/miglayout-3.7.4.jar,
+ lib/log4j-1.2.16.jar
 

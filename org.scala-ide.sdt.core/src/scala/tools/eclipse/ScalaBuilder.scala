@@ -13,7 +13,7 @@ import org.eclipse.jdt.internal.core.JavaModelManager
 import org.eclipse.jdt.internal.core.builder.{ JavaBuilder, State }
 import scala.tools.eclipse.javaelements.JDTUtils
 import scala.tools.eclipse.util.{ FileUtils, ReflectionUtils }
-import util.HasLogger
+import scala.tools.eclipse.logging.HasLogger
 import scala.tools.nsc.interactive.RefinedBuildManager
 
 class ScalaBuilder extends IncrementalProjectBuilder with HasLogger {
