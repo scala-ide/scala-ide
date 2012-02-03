@@ -267,6 +267,7 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings)
 	}
 	
 	lazy val reporter: xsbti.Reporter = new SbtBuildReporter(_buildReporter)
+	
 	val pendingSources = new mutable.HashSet[IFile]
 
 	/** Filter the classpath. Return the original classpath without the Scala library jar.
@@ -393,6 +394,8 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings)
         project.buildError(IMarker.SEVERITY_ERROR, "Error in Scala compiler: " + e.getMessage, null)
         logger.error("Error in Scala compiler", e)
     }
+    
+    hasBuildErrors = reporter.hasErrors || hasErrors
     if (!hasErrors)
       pendingSources.clear
   }
