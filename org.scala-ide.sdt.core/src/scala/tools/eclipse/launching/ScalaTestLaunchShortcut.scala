@@ -51,6 +51,7 @@ class ScalaTestLaunchShortcut extends ILaunchShortcut {
     //Runner.run(Array());
   }
   
+  @tailrec
   private def getClassElement(element: IJavaElement): ScalaClassElement = {
     element match {
       case scClassElement: ScalaClassElement => 
@@ -115,6 +116,7 @@ class ScalaTestLaunchShortcut extends ILaunchShortcut {
             
             val classPosition = new OffsetPosition(scu.createSourceFile, classElement.getSourceRange.getOffset)
             val rootTree = compiler.locateTree(classPosition)
+            println(rootTree.symbol.info.baseClasses)
             
             val position = new OffsetPosition(scu.createSourceFile, textSelection.getOffset)
             val selectedTree = compiler.locateTree(position)
