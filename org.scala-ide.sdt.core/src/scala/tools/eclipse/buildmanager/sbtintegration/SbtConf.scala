@@ -6,7 +6,7 @@ import sbt.{ ScalaInstance, Path }
 import xsbt.boot.{Launcher, Repository }
 import java.io.File
 import org.eclipse.core.resources.ResourcesPlugin
-import scala.tools.eclipse.util.HasLogger
+import scala.tools.eclipse.logging.HasLogger
 
 object ScalaCompilerConf {
     val LIBRARY_SUFFIX = "scala-library.jar"

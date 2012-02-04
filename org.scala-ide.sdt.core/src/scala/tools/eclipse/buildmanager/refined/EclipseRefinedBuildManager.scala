@@ -11,7 +11,7 @@ import scala.tools.nsc.io.AbstractFile
 import scala.tools.nsc.reporters.Reporter
 import scala.tools.eclipse.util.{ EclipseResource, FileUtils }
 import org.eclipse.core.runtime.{ SubMonitor, IPath, Path }
-import scala.tools.eclipse.util.HasLogger
+import scala.tools.eclipse.logging.HasLogger
 
 class EclipseRefinedBuildManager(project: ScalaProject, settings0: Settings)
   extends RefinedBuildManager(settings0) with EclipseBuildManager with HasLogger {
@@ -82,7 +82,7 @@ class EclipseRefinedBuildManager(project: ScalaProject, settings0: Settings)
       case e =>
         hasErrors = true
         project.buildError(IMarker.SEVERITY_ERROR, "Error in Scala compiler: " + e.getMessage, null)
-        logger.error("Error in Scala compiler", e)
+        eclipseLog.error("Error in Scala compiler", e)
     }
     if (!hasErrors)
       pendingSources.clear

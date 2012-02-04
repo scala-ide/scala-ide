@@ -5,21 +5,20 @@ import org.eclipse.jface.window.Window
 import org.eclipse.jface.dialogs.{ MessageDialog, ErrorDialog, Dialog, IDialogConstants }
 import org.eclipse.jface.action.IAction
 import org.eclipse.jface.preference.IPreferenceStore
-
 import org.eclipse.swt.widgets.{ List => SWTList, _ }
 import org.eclipse.swt.layout.{ GridLayout, GridData }
 import org.eclipse.swt.SWT
 import org.eclipse.swt.events.{ ModifyListener, ModifyEvent, SelectionAdapter, SelectionListener, SelectionEvent }
 import org.eclipse.swt.graphics.{ Font, FontData }
-
 import org.eclipse.jdt.ui.PreferenceConstants
 import org.eclipse.jdt.internal.ui.preferences.PreferencesMessages
 import org.eclipse.jdt.internal.corext.util.Messages
-
 import org.eclipse.core.runtime.IStatus
 import scala.tools.eclipse.contribution.weaving.jdt.configuration.{ WeavingStateConfigurer }
 import org.eclipse.ui.PlatformUI
-import org.eclipse.ui.browser.IWorkbenchBrowserSupport 
+import org.eclipse.ui.browser.IWorkbenchBrowserSupport
+import scala.tools.eclipse.logging.LogManager
+import scala.tools.eclipse.logging.HasLogger
 
 class DiagnosticDialog(shell: Shell) extends Dialog(shell) {
 
@@ -226,7 +225,7 @@ class DiagnosticDialog(shell: Shell) extends Dialog(shell) {
                     
       link.addListener(SWT.Selection, DiagnosticDialog.linkListener)
     }
-
+        
     val otherGroup = newGroup("Additional", control, new GridLayout(1, true))
     
     val knownIssuesLink = new Link(otherGroup, SWT.NONE)
@@ -405,5 +404,5 @@ object DiagnosticDialog {
         case e: Exception => e.printStackTrace
       }
     }  
-  }  
+  }
 }

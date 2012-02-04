@@ -8,7 +8,7 @@ import org.eclipse.jface.text.{TextUtilities, IDocument}
 import org.eclipse.swt.graphics.{Point, Image}
 
 import scala.tools.eclipse.refactoring.EditorHelpers
-import scala.tools.eclipse.util.HasLogger
+import scala.tools.eclipse.logging.HasLogger
 import scala.tools.refactoring.implementations.AddImportStatement
 
 case class ImportCompletionProposal(val importName: String) extends IJavaCompletionProposal with HasLogger {
@@ -29,7 +29,7 @@ case class ImportCompletionProposal(val importName: String) extends IJavaComplet
       applyByASTTransformation(document)
     } catch {
       case t => {
-        logger.error("failed to update import by AST transformation, fallback to text implementation", t)
+        eclipseLog.error("failed to update import by AST transformation, fallback to text implementation", t)
         applyByTextTransformation(document)
       }
     }
@@ -50,7 +50,7 @@ case class ImportCompletionProposal(val importName: String) extends IJavaComplet
          compiler.askLoadedTyped(sourceFile, r)
          (r.get match {
            case Right(error) =>
-             logger.error(error)
+             eclipseLog.error(error)
              None
            case _ =>
              compiler.askOption {() =>

@@ -33,7 +33,7 @@ import org.eclipse.jdt.core.ISourceReference
 import org.eclipse.jdt.core.IParent
 import org.eclipse.jdt.internal.core.JavaElement
 import org.eclipse.jdt.internal.core.SourceRefElement
-import scala.tools.eclipse.util.HasLogger
+import scala.tools.eclipse.logging.HasLogger
 import scala.tools.nsc.interactive.Response
 
 trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with ScalaElement with IScalaCompilationUnit with IBufferChangedListener with HasLogger {
@@ -116,7 +116,7 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
   private def handleCrash(msg: String, ex: Throwable) {
     if (lastCrash != ex) {
       lastCrash = ex
-      logger.error(msg, ex)
+      eclipseLog.error(msg, ex)
     }
   }
   

@@ -4,7 +4,7 @@ package pc
 import scala.tools.eclipse.javaelements.ScalaCompilationUnit
 import scala.tools.eclipse.javaelements.ScalaSourceFile
 import scala.tools.eclipse.testsetup.SDTTestUtils
-import scala.tools.eclipse.util.Logger
+import scala.tools.eclipse.logging.Logger
 import scala.tools.nsc.interactive.InteractiveReporter
 import org.eclipse.jdt.core.ICompilationUnit
 import org.junit.Assert._
@@ -31,7 +31,7 @@ class PresentationCompilerTest {
         compiler.withStructure(sourceFile, keepLoaded = true) { tree =>
           compiler.askOption { () =>
             val overrideIndicatorBuilder = new compiler.OverrideIndicatorBuilderTraverser(unit, new java.util.HashMap) {
-              override val logger = mockLogger
+              override val eclipseLog = mockLogger
             }
             // if the unit is not kept loaded (i.e., `keepLoaded = false`), then a message 
             // "Error creating override indicators" is reported. That is why this test checks
@@ -43,7 +43,7 @@ class PresentationCompilerTest {
     }()
 
     // verify
-    verify(mockLogger, times(0)).error(any(), any())
+    verify(mockLogger, times(0)).error(any())
   }
 
   @Test

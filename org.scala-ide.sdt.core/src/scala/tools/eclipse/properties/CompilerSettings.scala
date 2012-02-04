@@ -25,7 +25,7 @@ import org.eclipse.swt.events.VerifyEvent
 import scala.tools.nsc.CompilerCommand
 import org.eclipse.jface.fieldassist._
 import org.eclipse.jface.bindings.keys.KeyStroke
-import scala.tools.eclipse.util.HasLogger
+import scala.tools.eclipse.logging.HasLogger
 
 trait ScalaPluginPreferencePage extends HasLogger {
   self: PreferencePage with EclipseSettings =>
@@ -227,7 +227,7 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
     buildIfNecessary()
     true
   } catch {
-    case ex => logger.error(ex); false
+    case ex => eclipseLog.error(ex); false
   }
 
   //Make sure apply button isn't available until it should be

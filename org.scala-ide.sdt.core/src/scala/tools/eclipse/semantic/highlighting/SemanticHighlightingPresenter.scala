@@ -21,7 +21,7 @@ import scala.collection.mutable.SynchronizedMap
 import scala.collection.mutable.HashMap
 import scala.tools.eclipse.javaelements.ScalaCompilationUnit
 import scala.tools.eclipse.properties.ImplicitsPreferencePage.{P_ITALIC, P_BOLD, P_ACTIVE}
-import scala.tools.eclipse.util.HasLogger
+import scala.tools.eclipse.logging.HasLogger
 import scala.tools.eclipse.{ScalaSourceFileEditor, ScalaPresentationCompiler}
 import scala.tools.nsc.util.SourceFile
 
@@ -211,9 +211,9 @@ class SemanticHighlightingPresenter(editor: FileEditorInput, sourceViewer: ISour
             case Some(Left(_)) =>
               annotationsToAdd = findAllImplicitConversions(compiler, sourceFile)
             case Some(Right(exc)) => 
-              logger.error(exc)
+              eclipseLog.error(exc)
             case None =>
-              logger.warning("Timeout while waiting for `askLoadedTyped` during implicit highlighting.")
+              logger.warn("Timeout while waiting for `askLoadedTyped` during implicit highlighting.")
           }
         }
         

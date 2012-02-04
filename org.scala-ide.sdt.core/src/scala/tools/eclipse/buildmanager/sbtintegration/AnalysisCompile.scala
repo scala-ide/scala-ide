@@ -22,7 +22,7 @@ import scala.tools.eclipse.util.EclipseResource
 import java.io.File
 import org.eclipse.jdt.launching.JavaRuntime
 import org.eclipse.jdt.core.{ JavaCore, IJavaProject }
-import scala.tools.eclipse.util.HasLogger
+import scala.tools.eclipse.logging.HasLogger
 import scala.tools.eclipse.contribution.weaving.jdt.jcompiler.BuildManagerStore
 
 class AnalysisCompile (conf: BasicConfiguration, bm: EclipseSbtBuildManager, contr: Controller) extends HasLogger {
@@ -195,7 +195,7 @@ class AnalysisCompile (conf: BasicConfiguration, bm: EclipseSbtBuildManager, con
             null
             
           case ex =>
-            logger.error("Crash in the build compiler.", ex)
+            eclipseLog.error("Crash in the build compiler.", ex)
             reporter.log(SbtConverter.convertToSbt(NoPosition), "The SBT builder crashed while compiling your project. This is a bug in the Scala compiler or SBT. Check the Erorr Log for details. The error message is: " + ex.getMessage(), xsbti.Severity.Error)
             null
             

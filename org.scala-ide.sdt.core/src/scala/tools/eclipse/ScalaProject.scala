@@ -24,7 +24,7 @@ import scala.tools.eclipse.properties.IDESettings
 import util.SWTUtils.asyncExec
 import EclipseUtils.workspaceRunnableIn
 import scala.tools.eclipse.properties.CompilerSettings
-import scala.tools.eclipse.util.HasLogger
+import scala.tools.eclipse.logging.HasLogger
 import scala.collection.mutable.ListBuffer
 import scala.actors.Actor
 import org.eclipse.jdt.core.IJarEntryResource
@@ -75,14 +75,14 @@ class ScalaProject private (val underlying: IProject) extends HasLogger {
       } catch {
         case ex @ MissingRequirementError(required) =>
           failedCompilerInitialization("could not find a required class: " + required)
-          logger.error(ex)
+          eclipseLog.error(ex)
           None
         case ex =>
           logger.info("Throwable when intializing presentation compiler!!! " + ex.getMessage)
           ex.printStackTrace()
           if (underlying.isOpen)
             failedCompilerInitialization("error initializing Scala compiler")
-          logger.error(ex)          
+          eclipseLog.error(ex)          
           None
       }
     }
@@ -227,7 +227,7 @@ class ScalaProject private (val underlying: IProject) extends HasLogger {
           }  
 
         case _ =>
-          logger.warning("Classpath computation encountered unknown entry: " + cpe)
+          logger.warn("Classpath computation encountered unknown entry: " + cpe)
       }
     }
     computeClasspath(javaProject, false)
@@ -361,7 +361,7 @@ class ScalaProject private (val underlying: IProject) extends HasLogger {
                     try {
                       cntnr.delete(true, monitor) // try again
                     } catch {
-                      case t => logger.error(t)
+                      case t => eclipseLog.error(t)
                     }
               }
             } else
@@ -370,7 +370,7 @@ class ScalaProject private (val underlying: IProject) extends HasLogger {
             try {
               file.delete(true, monitor)
             } catch {
-              case t => logger.error(t)
+              case t => eclipseLog.error(t)
             }
           case _ =>
         }
@@ -565,7 +565,7 @@ class ScalaProject private (val underlying: IProject) extends HasLogger {
           setting.tryToSetFromPropertyValue(value)
         }
       } catch {
-        case t: Throwable => logger.error("Unable to set setting '" + setting.name + "' to '" + value0 + "'", t)
+        case t: Throwable => eclipseLog.error("Unable to set setting '" + setting.name + "' to '" + value0 + "'", t)
       }
     }
     

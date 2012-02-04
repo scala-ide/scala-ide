@@ -6,7 +6,7 @@ package diagnostic
 import org.eclipse.jface.dialogs.MessageDialog
 import org.eclipse.jface.dialogs.IDialogConstants
 import util.SWTUtils.asyncExec
-import scala.tools.eclipse.util.HasLogger
+import scala.tools.eclipse.logging.HasLogger
 
 object StartupDiagnostics extends HasLogger {
   import ScalaPlugin.plugin
