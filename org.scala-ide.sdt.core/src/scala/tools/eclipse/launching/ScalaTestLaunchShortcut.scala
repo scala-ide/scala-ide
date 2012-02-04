@@ -21,6 +21,7 @@ import scala.reflect.generic.Trees
 import scala.tools.eclipse.javaelements.ScalaCompilationUnit
 import scala.tools.nsc.util.OffsetPosition
 import scala.tools.eclipse.javaelements.ScalaClassElement
+import scala.annotation.tailrec
 //import org.scalatest.tools.Runner
 
 class ScalaTestLaunchShortcut extends ILaunchShortcut {
@@ -71,7 +72,8 @@ class ScalaTestLaunchShortcut extends ILaunchShortcut {
   
   case class ParentChild(parent: Tree, child: Tree)
   
-  def getParent(candidates: Array[ParentChild], node: Tree): Option[Tree] = {
+  @tailrec
+  private def getParent(candidates: Array[ParentChild], node: Tree): Option[Tree] = {
     import scala.collection.mutable.ListBuffer
     val foundOpt = candidates.find(c => c.child == node)
     foundOpt match {
