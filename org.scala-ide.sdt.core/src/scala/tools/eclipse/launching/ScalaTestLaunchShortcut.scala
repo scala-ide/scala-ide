@@ -64,13 +64,6 @@ class ScalaTestLaunchShortcut extends ILaunchShortcut {
     }
   }
   
-  def printTree(node: Tree, level: Int): Unit = {
-    println(("+" * level) + node.getClass.getName)
-    node.children.foreach { child =>
-      printTree(child, level + 1)
-    }
-  }
-  
   case class ParentChild(parent: Tree, child: Tree)
   
   @tailrec
@@ -91,6 +84,56 @@ class ScalaTestLaunchShortcut extends ILaunchShortcut {
           getParent(nextLevel.toArray, node)
         else
           None
+    }
+  }
+  
+  private def getTarget(apply: Trees#Apply): String = {
+    apply.fun match {
+      case select: Trees#Select => 
+        val q = select.qualifier
+        select.qualifier match {
+          case lit: Trees#Literal =>
+            lit.value.stringValue
+          case impl: scala.tools.nsc.ast.Trees$ApplyImplicitView => 
+            val implFirstArg: Tree = impl.args(0)
+            implFirstArg match {
+              case litArg: Trees#Literal =>
+                litArg.value.stringValue
+              case _ => 
+                implFirstArg.toString
+            }
+          case _ =>
+            select.qualifier.toString
+        }
+      case _ =>
+        apply.fun.toString
+    }
+  }
+  
+  private def transformAst(selectedTree: Tree, root: Tree): Unit = {
+    println("#####selectedTree: " + selectedTree.getClass.getName)
+    selectedTree match {
+      case defDef: Trees#DefDef =>
+        println("#####name: " + defDef.name)
+        println("#####param types: " + defDef.vparamss.flatten.toList.map(valDef => valDef.tpt.symbol.fullName))
+      case apply: Trees#Apply =>
+        println("#####target: " + getTarget(apply))
+        println("#####name: " + apply.symbol.name)
+        println("#####params: " + apply.args.map(arg => arg match {
+          case lit: Trees#Literal =>
+            lit.value.stringValue
+          case _ =>
+            arg.toString
+        }))
+      case template: Trees#Template =>
+        println("#####children count: " + template.children.length)
+      case _ =>
+        val parentOpt = getParent(root.children.map(t => ParentChild(root, t)).toArray, selectedTree)
+        parentOpt match {
+          case Some(parent) =>
+            transformAst(parent, root)
+          case None =>
+        }
     }
   }
   
@@ -120,9 +163,10 @@ class ScalaTestLaunchShortcut extends ILaunchShortcut {
             
             val position = new OffsetPosition(scu.createSourceFile, textSelection.getOffset)
             val selectedTree = compiler.locateTree(position)
+            transformAst(selectedTree, rootTree)
             val parentOpt = getParent(rootTree.children.map(t => ParentChild(rootTree, t)).toArray, selectedTree)
             parentOpt match {
-              case Some(parent) => println("#####Found!!, parent is: " + parent)
+              case Some(parent) => println("#####Found!!, parent is: " + parent.getClass.getName + ", toString: " + parent)
               case None => println("#####Parent Not Found")
             }
             compiler.locateTree(position)
