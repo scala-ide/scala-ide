@@ -119,8 +119,8 @@ class ScalaTestLaunchShortcut extends ILaunchShortcut {
       case defDef: Trees#DefDef =>
         val defDefSym = defDef.symbol
         println("#####name: " + defDefSym.decodedName)
-        //This does not work?
-        //println("#####param types: " + defDefSym.info.paramsType)
+        //This does not work?  Error: value paramsType is not a member of Symbols.this.Type
+        //println("#####param types: " + defDefSym.info.paramTypes)
         println("#####param types: " + defDef.vparamss.flatten.toList.map(valDef => valDef.tpt.symbol.fullName))
       case apply: Trees#Apply =>
         println("#####target: " + getTarget(apply))
