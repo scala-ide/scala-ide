@@ -117,11 +117,14 @@ class ScalaTestLaunchShortcut extends ILaunchShortcut {
     println("#####selectedTree: " + selectedTree.getClass.getName)
     selectedTree match {
       case defDef: Trees#DefDef =>
-        println("#####name: " + defDef.name)
+        val defDefSym = defDef.symbol
+        println("#####name: " + defDefSym.decodedName)
+        //This does not work?
+        //println("#####param types: " + defDefSym.info.paramsType)
         println("#####param types: " + defDef.vparamss.flatten.toList.map(valDef => valDef.tpt.symbol.fullName))
       case apply: Trees#Apply =>
         println("#####target: " + getTarget(apply))
-        println("#####name: " + apply.symbol.name)
+        println("#####name: " + apply.symbol.decodedName)
         println("#####params: " + apply.args.map(arg => arg match {
           case lit: Trees#Literal =>
             lit.value.stringValue
