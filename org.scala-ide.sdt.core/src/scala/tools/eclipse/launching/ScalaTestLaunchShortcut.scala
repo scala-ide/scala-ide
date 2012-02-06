@@ -22,6 +22,8 @@ import scala.tools.eclipse.javaelements.ScalaCompilationUnit
 import scala.tools.nsc.util.OffsetPosition
 import scala.tools.eclipse.javaelements.ScalaClassElement
 import scala.annotation.tailrec
+import scala.tools.nsc.util.Position
+import scala.tools.nsc.util.Position$
 //import org.scalatest.tools.Runner
 
 class ScalaTestLaunchShortcut extends ILaunchShortcut {
@@ -64,26 +66,27 @@ class ScalaTestLaunchShortcut extends ILaunchShortcut {
     }
   }
   
-  case class ParentChild(parent: Tree, child: Tree)
-  
   @tailrec
-  private def getParent(candidates: Array[ParentChild], node: Tree): Option[Tree] = {
+  private def getParent(candidate: Tree, node: Tree): Option[Tree] = {
     import scala.collection.mutable.ListBuffer
-    val foundOpt = candidates.find(c => c.child == node)
+    val foundOpt = candidate.children.find(c => c == node)
     foundOpt match {
       case Some(a) =>
-        Some(a.parent)
+        Some(candidate)
       case _ =>
-        val nextLevel = new ListBuffer[ParentChild]
-        candidates.foreach { c => 
-          c.child.children.foreach{ child => 
-            nextLevel += ParentChild(c.child, child)
-          }
+        val nextCandidateOpt = candidate.children.find {c => 
+          // Why the following does not compile?  value includes is not a member of scala.reflect.generic.Trees#Position
+          // c.pos includes node.pos
+          // These are ugly but does compile and work
+          val pos = c.pos.asInstanceOf[scala.tools.nsc.util.Position]
+          pos.includes(node.pos.asInstanceOf[scala.tools.nsc.util.Position])
         }
-        if (nextLevel.length > 0)
-          getParent(nextLevel.toArray, node)
-        else
-          None
+        nextCandidateOpt match {
+          case Some(nextCandidate) => 
+            getParent(nextCandidate, node)
+          case None => 
+            None
+        }
     }
   }
   
@@ -128,7 +131,7 @@ class ScalaTestLaunchShortcut extends ILaunchShortcut {
       case template: Trees#Template =>
         println("#####children count: " + template.children.length)
       case _ =>
-        val parentOpt = getParent(root.children.map(t => ParentChild(root, t)).toArray, selectedTree)
+        val parentOpt = getParent(root, selectedTree)
         parentOpt match {
           case Some(parent) =>
             transformAst(parent, root)
@@ -164,7 +167,7 @@ class ScalaTestLaunchShortcut extends ILaunchShortcut {
             val position = new OffsetPosition(scu.createSourceFile, textSelection.getOffset)
             val selectedTree = compiler.locateTree(position)
             transformAst(selectedTree, rootTree)
-            val parentOpt = getParent(rootTree.children.map(t => ParentChild(rootTree, t)).toArray, selectedTree)
+            val parentOpt = getParent(rootTree, selectedTree)
             parentOpt match {
               case Some(parent) => println("#####Found!!, parent is: " + parent.getClass.getName + ", toString: " + parent)
               case None => println("#####Parent Not Found")
