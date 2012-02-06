@@ -11,6 +11,7 @@ import scala.tools.refactoring.analysis.GlobalIndexes
 import scala.tools.refactoring.common.{Change, Selections}
 import scala.tools.refactoring.implementations.ExtractLocal
 import org.eclipse.ui.PlatformUI
+import scala.tools.refactoring.common.TextChange
 
 /**
  * From a selected expression, the Extract Local refactoring will create a new 
@@ -39,7 +40,7 @@ class ExtractLocalAction extends RefactoringAction {
      * that does not exist and then looking up the position of these
      * names in the generated change.
      */
-    def doInlineExtraction(change: Change, name: String) {
+    def doInlineExtraction(change: TextChange, name: String) {
       EditorHelpers.doWithCurrentEditor { editor =>
                 
         EditorHelpers.applyRefactoringChangeToEditor(change, editor)
@@ -60,7 +61,7 @@ class ExtractLocalAction extends RefactoringAction {
       case Some(r: ExtractLocalScalaIdeRefactoring) => 
               
         r.preparationResult.right.map(_ => r.performRefactoring()) match {
-          case Right((change: Change) :: Nil) =>
+          case Right((change: TextChange) :: Nil) =>
             doInlineExtraction(change, r.name)
           case _ =>
             runRefactoring(createWizardForRefactoring(Some(r)), shell)

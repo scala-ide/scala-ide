@@ -110,12 +110,7 @@ class OrganizeImportsAction extends RefactoringAction with ActionWithNoWizard {
       def createChanges(scalaSourceFile: ScalaSourceFile, imports: Iterable[TypeNameMatch], pm: IProgressMonitor) = {
         scalaSourceFile.withSourceFile { (sourceFile, compiler) =>
           val refactoring = new AddImportStatement { 
-            val global = compiler 
-            // The editor has not necessarily been saved, so we need to make 
-            // sure the refactoring gets the correct content of the document.
-            override def getContentForFile(file: AbstractFile): Array[Char] = {
-              sourceFile.content
-            }
+            val global = compiler
           }
           refactoring.addImports(scalaSourceFile.file, imports map (_.getFullyQualifiedName))
         }(Nil)
@@ -145,7 +140,7 @@ class OrganizeImportsAction extends RefactoringAction with ActionWithNoWizard {
 
       val typeSearchDialog = {
         val labelProvider = new TypeNameMatchLabelProvider(TypeNameMatchLabelProvider.SHOW_FULLYQUALIFIED)
-        new MultiElementListSelectionDialog(shell, labelProvider) {
+        new MultiElementListSelectionDialog(ProgressHelpers.shell, labelProvider) {
           setTitle(ActionMessages.OrganizeImportsAction_selectiondialog_title)
           setMessage(ActionMessages.OrganizeImportsAction_selectiondialog_message)
         }
@@ -208,7 +203,7 @@ class OrganizeImportsAction extends RefactoringAction with ActionWithNoWizard {
           // continue with organizing imports
           runRefactoringInUiJob()
         case missingTypes =>
-          runInProgressDialog { pm =>
+          ProgressHelpers.runInProgressDialogBlockUi { pm =>
             pm.beginTask("Organizing Imports", 4)
             addMissingImportsToFile(missingTypes, file, pm)
             pm.done
