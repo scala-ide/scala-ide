@@ -25,7 +25,11 @@ class ScalaFormatterCleanUpProvider extends IFormatterCleanUpProvider {
     val preferences = FormatterPreferences.getPreferences(cu.getJavaProject)
     val edits =
       try ScalaFormatter.formatAsEdits(cu.getSource, preferences, Some(lineDelimiter))
-      catch { case e: ScalaParserException => return null }
+      catch {
+        case e: ScalaParserException =>
+          // failed to format file, return no edits
+          List.empty
+      }
 
     val multiEdit = new MultiTextEdit
     multiEdit.addChildren(edits map asEclipseTextEdit toArray)
