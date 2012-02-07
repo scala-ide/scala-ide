@@ -23,14 +23,12 @@ import org.eclipse.jface.dialogs.ProgressMonitorDialog
 trait ActionWithNoWizard {
   this: RefactoringAction =>
 
-  val shell = PlatformUI.getWorkbench.getActiveWorkbenchWindow.getShell
-
   override def run(action: IAction) {
     runRefactoringInUiJob()
   }
   
   def runRefactoringInUiJob() {
-    runInUiJob { (pm, shell) =>
+    ProgressHelpers.runInUiJob { (pm, shell) =>
       createScalaIdeRefactoringForCurrentEditorAndSelection() match {
         case Some(refactoring: ScalaIdeRefactoring) =>
           val status = refactoring.checkInitialConditions(pm)
@@ -46,23 +44,5 @@ trait ActionWithNoWizard {
       
       Status.OK_STATUS
     }
-  }
-  
-  def runInUiJob(block: (IProgressMonitor, Shell) => IStatus) {
-    new UIJob("Refactoring") {
-      def runInUIThread(pm: IProgressMonitor): IStatus = {
-        block(pm, shell)
-      }
-    }.schedule
-  }
-  
-  def runInProgressDialog(block: IProgressMonitor => Unit) {
-    
-    val runnable = new IRunnableWithProgress {
-      def run(pm: IProgressMonitor) = block(pm)
-    }
-    
-    val dialog = new ProgressMonitorDialog(PlatformUI.getWorkbench.getActiveWorkbenchWindow.getShell)
-    dialog.run(false /*run in ui thread!*/, true /*cancelable*/, runnable)
   }
 }

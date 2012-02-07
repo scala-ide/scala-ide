@@ -28,6 +28,7 @@ import org.eclipse.jface.text.link.LinkedModeModel
 import org.eclipse.jface.text.link.LinkedPositionGroup
 import org.eclipse.jface.text.link.LinkedPosition
 import org.eclipse.jface.text.link.LinkedModeUI
+import scala.tools.refactoring.common.TextChange
 
 object EditorHelpers {
    
@@ -75,7 +76,7 @@ object EditorHelpers {
     }
   }
   
-  def createTextFileChange(file: IFile, fileChanges: List[scala.tools.refactoring.common.Change]): TextFileChange = {
+  def createTextFileChange(file: IFile, fileChanges: List[TextChange]): TextFileChange = {
     new TextFileChange(file.getName(), file) {
             
       val fileChangeRootEdit = new MultiTextEdit
@@ -97,7 +98,7 @@ object EditorHelpers {
    * @param file The file that we're currently editing (the document alone isn't enough because we need to get an IFile).
    * @param changes The changes that should be applied.
    */
-  def applyChangesToFileWhileKeepingSelection(document: IDocument, textSelection: ITextSelection, file: AbstractFile, changes: List[Change])  { 
+  def applyChangesToFileWhileKeepingSelection(document: IDocument, textSelection: ITextSelection, file: AbstractFile, changes: List[TextChange])  { 
     
     def selectionIsInManipulatedRegion(region: IRegion): Boolean = {
       val (regionStart, regionEnd) = {
@@ -149,7 +150,7 @@ object EditorHelpers {
     }
   }
   
-  def applyRefactoringChangeToEditor(change: Change, editor: ScalaSourceFileEditor) = {
+  def applyRefactoringChangeToEditor(change: TextChange, editor: ScalaSourceFileEditor) = {
     val edit = new ReplaceEdit(change.from, change.to - change.from, change.text)
     val document = editor.getDocumentProvider.getDocument(editor.getEditorInput)
     edit.apply(document)
