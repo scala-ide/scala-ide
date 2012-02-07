@@ -4,7 +4,7 @@ package refactoring
 import org.eclipse.core.resources.IFile
 import org.eclipse.core.runtime.IProgressMonitor
 import scala.tools.eclipse.javaelements.ScalaSourceFile
-import scala.tools.eclipse.util.HasLogger
+import scala.tools.eclipse.logging.HasLogger
 import scala.tools.nsc.util.SourceFile
 import scala.tools.refactoring.analysis.GlobalIndexes
 import scala.tools.refactoring.common.InteractiveScalaCompiler
