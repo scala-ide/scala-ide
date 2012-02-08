@@ -47,26 +47,31 @@ class EclipseReplTest
   def allTransitions :Seq[Expect] = // start in Z, go thru every possible path
     Expect(drop,stop)/*Z*/ ++ execAdded("1")/*H*/ ++ Expect(stop) ++
     execAdded("2") ++ Expect(drop,Dropped)/*Z*/ ++ initStarted/*R*/ ++
-    Expect(drop,stop,Stopped)/*Z*/ ++ initStarted/*R*/ ++ initStarted ++
-    helloWorld.execDone(0)/*B*/ ++ Expect(stop,Stopped)/*H*/ ++
+    Expect(drop,stop,Stopped)/*Z*/ ++ initStarted/*R*/ ++ Expect(Stopped) ++
+    initStarted ++ helloWorld.execDone(0)/*B*/ ++ Expect(stop,Stopped)/*H*/ ++
     onePlusOne.execAdded ++ initReplay(helloWorld,onePlusOne)/*B*/ ++
-    onePlusOne.execDone(2) ++ initReplay(helloWorld,onePlusOne,onePlusOne) ++
-    Expect(drop,Dropped)/*R*/ ++ onePlusOne.execDone(3)/*B*/ ++
-    onePlusOne.execDone(4) ++ initReplay(onePlusOne,onePlusOne) ++ quitFromB
+    onePlusOne.execDone(2) ++ Expect(Stopped) ++
+    initReplay(helloWorld,onePlusOne,onePlusOne) ++ Expect(drop,Dropped)/*R*/ ++
+    onePlusOne.execDone(3)/*B*/ ++ onePlusOne.execDone(4) ++ Expect(Stopped) ++
+    initReplay(onePlusOne,onePlusOne) ++ quitFromB
 
-  def failures :Seq[Expect] = // OK, allTransitions ignored the recovery ones
+  def failures1 :Seq[Expect] =
     Echopreter.steal(initStarted/*R*/ ++ onePlusOne.execDone(0)/*B*/) ++
-    Failder.initFailed/*H*/ ++ Expect(stop) ++ 
-    Failpreter.initReplayingFailed(onePlusOne)/*H*/ ++ // note: boot_fail
-    Expect(stop,drop,Dropped)/*Z*/ ++ Failpreter.initStarted/*R*/ ++
-    helloWorld.execFailed ++ quitFromB
+    Expect(Stopped) ++ Failder.initFailed/*H*/ ++ quitFromH
+  def failures2 :Seq[Expect] =
+    onePlusOne.execAdded ++ Failpreter.initReplayingFailed(onePlusOne)/*B*/ ++
+    quitFromB
+  def failures3 :Seq[Expect] =
+    Failpreter.initStarted/*R*/ ++ helloWorld.execFailed ++ quitFromB
+  def failures :Seq[Seq[Expect]] =
+    Seq(failures1,failures2,failures3) map Echopreter.editOutput
 
   def unknowns:Seq[Expect] = { // some request messages that aren't recognized
     val anys = Seq(1, 0.0, true, 'J', null, new Object, new Throwable)
     (anys map {a => Expect(bad(a),Unknown(a))}).flatten ++ quitFromZ }
 
   def multiple(n:Int) :Seq[Seq[Expect]] = { // all the above at once
-    val tests = Seq(failures,failures,failures) ++ // cheap load balancing
+    val tests = failures++failures++failures ++ // cheap "load balancing"
       (Seq(allTransitions,unknowns,unknowns,unknowns) map Echopreter.steal)
     val stream = Stream.continually(tests.toStream).flatten
     stream take(n * tests.size) toSeq }
@@ -77,7 +82,7 @@ class EclipseReplTest
     test(STScheduler, Echopreter.steal(allTransitions)) }
 
   @Test def failures_Failpreter {
-    test(STScheduler, Echopreter.editOutput(failures)) }
+    test(STScheduler, failures :_*) }
 
   @Test def unknowns_Echopreter {
     test(STScheduler, Echopreter.steal(unknowns)) }
@@ -105,7 +110,10 @@ object EclipseReplTest
     rs foreach { _.assertMatches() }
   }
 
-  val TheOneException = new RuntimeException("TheOne")
+  val TheOneException = new RuntimeException("TheOne") {
+    // can't prevent actors framework from printing exceptions, 
+    // but can at least suppress the useless stack traces...
+    setStackTrace(Array.empty[StackTraceElement]) }
 
   trait Expect
   def Expect(es: Expect *): Seq[Expect] = es
@@ -135,6 +143,7 @@ object EclipseReplTest
   case class Unknown(request:Any) extends Reply
 
   def quitFromZ = Expect(quit,Terminating)
+  def quitFromH = Expect(quit,Dropped,Terminating)
   def quitFromB = Expect(quit,Stopped,Dropped,Terminating)
 
   def execAdded(line:Exec) =

@@ -29,9 +29,9 @@ import scala.tools.nsc.Settings
   */
 object EclipseRepl
 {
-  /** Requests the REPL start over again using the given settings.
-    * Always calls `boot`, which calls `redo` if there is any history.
-    * {{{ (Z|R)->{boot}->R. (H|B)->{boot;redo}->B. }}}
+  /** Requests the REPL start over again using the given settings. Calls `halt`
+    * if needed, then calls `boot`, which calls `redo` if there is any history.
+    * {{{ Init: (R{halt}|Z)->{boot}->R. (B{halt}|H)->{boot;redo}->B. }}}
     * WARNING: `Settings` will be changed to `ImmutableSettings` ASAP.
     * Until then it is up to the caller to avoid race conditions (e.g. by
     * copying the settings before sending and never changing them after).
@@ -39,19 +39,19 @@ object EclipseRepl
   type Init = Settings //TODO when ImmutableSettings gets written...
 
   /** Requests the REPL shut down, allowing it to be garbage collected.
-    * {{{ Z->Z. H->H. R->{halt}->Z. B->{halt}->H. }}}
+    * {{{ Stop: Z->Z. H->H. R->{halt}->Z. B->{halt}->H. }}}
     */
   val Stop = new Object { override def toString = "Stop" }
 
   /** Requests the REPL run a line of code (now if running, or later as
     * part of replaying history if not).
     * Always calls `add`, which calls `doit` if the REPL is running.
-    * {{{ (Z|H)->{add}->H. (R|B)->{add;doit}->B. }}}
+    * {{{ Exec: (Z|H)->{add}->H. (R|B)->{add;doit}->B. }}}
     */
   type Exec = String
 
   /** Requests the REPL history be erased.
-    * {{{ Z->Z. R->R. H->{zap}->Z. B->{zap}->R. }}}
+    * {{{ Drop: Z->Z. R->R. H->{zap}->Z. B->{zap}->R. }}}
     */
   val Drop = new Object { override def toString = "Drop" }
 
@@ -67,42 +67,44 @@ object EclipseRepl
     */
   trait Client
   {
-    /** Sent on entry to `boot`. */
-    def starting(init: Init) {}
+    /** Called just before initialization of a new Interpreter. */
+    def starting(init: Init) {} // after `halt` on entry to `boot` : `Init`
 
-    /** Sent at successful exit from `boot`. */
-    def started(init: Init) {}
+    /** Called after successful initialization of a new Interpreter. */
+    def started(init: Init) {} // at successful exit from `boot` : `Init`
 
-    /** Sent by `halt`. */
-    def stopped() {}
+    /** Called whenever an Interpreter is stopped. */
+    def stopped() {} // by `halt` : `Init`, `Stop`, `Quit`
 
-    /** Sent on entry to `redo`. */
-    def replaying() {}
+    /** Called after initialization before replaying of the history. */
+    def replaying() {} // on entry to `redo` : `Init`
 
-    /** Sent at exit from `redo`. */
-    def replayed() {}
+    /** Called upon completion of the replaying of the history. */
+    def replayed() {} // at exit from `redo` : `Init`
 
-    /** Sent by `zap`. */
-    def dropped() {}
+    /** Called whenever the history is cleared. */
+    def dropped() {} // by `zap` : `Drop`, `Quit`
 
-    /** Sent by `add`. */
-    def added(exec: Exec) {}
+    /** Called when a line of code is added to the history. */
+    def added(exec: Exec) {} // by `add` : `Exec`
 
-    /** Sent on entry to `doit`. */
-    def doing(exec: Exec) {}
+    /** Called just before the interpretation of a line of code. */
+    def doing(exec: Exec) {} // on entry to `doit` : `Init`, `Exec`
 
-    /** Sent at exit from `doit`. */
+    /** Called after interpretation of a line of code. */
     def done(exec: Exec, result: Result, output: String) {}
+    // at exit from `doit` : `Init`, `Exec`
 
-    /** Sent at exit from the handler for `Quit`. */
-    def terminating() {}
+    /** Called just before the `Actor` enters its `Terminated` state. */
+    def terminating() {} // at exit from the handler for `Quit`, in catch
 
-    /** Sent when something goes wrong.
+    /** Called for any unrecognized message. */
+    def unknown(request:Any) {}
+
+    /** Called when something is thrown. The `Actor` responds to any exception
+      * by behaving as if `Quit` had been called.
       *
-      * `boot` can fail if the settings are bad, in which case the REPL
-      * goes to the not running state (obviously without calling `redo`).
-      * {{{ (Z|R)->{boot_fail}->Z. (H|B)->{boot_fail}->H. }}}
-      *
+      * `boot` can fail if the settings are bad.
       * None of the other actions should fail under normal circumstances.
       * For example, the interpreter catches exceptions and returns a
       * `Result` of type `Error`, which `doit` reports via `done`.
@@ -110,9 +112,6 @@ object EclipseRepl
       * @param request the `Init`, `Exec`, etc. message
       */
     def failed(request: Any, thrown: Throwable, output: String) {}
-
-    /** Sent for any unrecognized message. */
-    def unknown(request:Any) {}
   }
 
   // implementation note: request and status messages were originally like:
@@ -190,13 +189,12 @@ class EclipseRepl(client: Client, builder: Builder) extends Actor
   private var intp: Interpreter = null
 
   private def boot(i: Init, b: BAOS) {
+    halt(i, b)
     client.starting(i)
     intp = builder.interpreter(i)
-    redo(i, b)
+    intp.getClass // throw new NullPointerException
+    redo(b)
     client.started(i)
-  }
-  private def boot_fail() {
-    intp = null
   }
 
   private def halt(r: Any, b:BAOS) {
@@ -221,7 +219,7 @@ class EclipseRepl(client: Client, builder: Builder) extends Actor
     }
   }
 
-  private def redo(r: Any, b: BAOS) {
+  private def redo(b: BAOS) {
     if (!hist.isEmpty) {
       client.replaying()
       hist foreach { doit(_, b) }
@@ -233,48 +231,44 @@ class EclipseRepl(client: Client, builder: Builder) extends Actor
     if (intp != null) {
       client.doing(e)
       val r = intp.interpret(e)
-      client.done(e, r, b.toString)
-      b.reset()
+      val o = b.toString ; b.reset()
+      client.done(e, r, o)
     }
   }
 
-  private def haltZap(r: Any, b:BAOS) {
+  private def term(r: Any, b: BAOS) {
     halt(r, b)
     zap(r, b)
+    client.terminating()
   }
 
-  private def recovery_unnecessary() {}
+  private def unkn(r: Any, b: BAOS) {
+    client.unknown(r)
+  }
 
-  private def safely[T](work: (T, BAOS) => Unit, r: T, recover: => Unit) {
+  private def safely[T](work: (T, BAOS) => Unit, r: T, loop: Boolean) {
     val b = new BAOS
-    try { Console.withOut(b) { Console.withErr(b) {
-      work(r, b)
-    }}} catch { case t =>
-      recover
-      client.failed(r, t, b.toString)
-    }
+    Console.withOut(b) { Console.withErr(b) {
+      try work(r, b)
+      catch { case t =>
+        try {
+          val o = b.toString ; b.reset()
+          client.failed(r, t, o)
+          term(r, b)
+        } finally
+          throw t // actor framework will print t
+      }
+    }}
+    if (loop) act() // must be outside try/catch
   }
 
   def act() { react {
-    case e: Exec =>
-      safely(add, e, recovery_unnecessary)
-      act()
-    case i: Init =>
-      safely(boot, i, boot_fail)
-      act()
-    case Stop =>
-      safely(halt, Stop, recovery_unnecessary)
-      act()
-    case Drop =>
-      safely(zap, Drop, recovery_unnecessary)
-      act()
-    case Quit =>
-      safely(haltZap, Quit, recovery_unnecessary)
-      client.terminating()
-      // no act() here
-    case u =>
-      client.unknown(u)
-      act()
+    case e: Exec => safely(add, e, true)
+    case i: Init => safely(boot, i, true)
+    case Stop =>    safely(halt, Stop, true)
+    case Drop =>    safely(zap, Drop, true)
+    case Quit =>    safely(term, Quit, false)
+    case u =>       safely(unkn, u, true)
   }}
 
   builder.constructed(this)

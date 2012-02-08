@@ -166,7 +166,19 @@ class ReplConsoleView extends ViewPart {
   }
   
   private def setStarted {
-    repl.init(scalaProject.withPresentationCompiler(_.settings.copy)(new Settings))
+    val settings = new Settings
+    scalaProject.initialize(settings, _ => true)
+    // TODO ? move into ScalaPlugin.getScalaProject or ScalaProject.classpath
+    var cp = settings.classpath.value
+    for { opt <- Seq( ScalaPlugin.plugin.swingClasses,
+                      ScalaPlugin.plugin.dbcClasses,
+                      ScalaPlugin.plugin.libClasses )
+          p <- opt ; val s = p.toOSString }
+      if(!cp.contains(s))
+        cp = s + java.io.File.pathSeparator + cp
+    settings.classpath.value = cp
+    // end to do ? move
+    repl.init(settings)
     isStopped = false
 
     stopReplAction.setEnabled(true)
@@ -279,7 +291,7 @@ class ReplConsoleView extends ViewPart {
    */
   def refreshProjectList() {
     val scalaProjectNames = for (project <- ResourcesPlugin.getWorkspace().getRoot().getProjects()
-        if (ScalaPlugin.plugin.isScalaProject(project)))
+        if project.isOpen && project.hasNature(org.eclipse.jdt.core.JavaCore.NATURE_ID))
       yield project.getName()
     projectList.setItems(scalaProjectNames)
   }
@@ -416,6 +428,8 @@ class ReplConsoleView extends ViewPart {
 object ReplConsoleView
 {
   private def show(mode: Int, project: IProject, page: IWorkbenchPage): ReplConsoleView = {
+    if (! project.isOpen)
+      throw new org.eclipse.ui.PartInitException("project is not open ("+project.getName+")");
     ScalaPlugin.plugin.getScalaProject(project) // creates if given project isn't already
     val viewPart = page.showView("org.scala-ide.sdt.core.consoleView", project.getName, mode)
     viewPart.asInstanceOf[interpreter.ReplConsoleView]
