@@ -5,10 +5,12 @@ import org.eclipse.core.resources.{IFolder, IFile}
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.ltk.core.refactoring.participants.{MoveParticipant, CheckConditionsContext}
 import org.eclipse.ltk.core.refactoring.{RefactoringStatus, CompositeChange, Change}
+import org.eclipse.ui.PlatformUI
+
 import scala.tools.eclipse.javaelements.ScalaSourceFile
+import scala.tools.eclipse.refactoring.ProgressHelpers
 import scala.tools.eclipse.ScalaPlugin
 import scala.tools.refactoring.common.TextChange
-import scala.tools.eclipse.refactoring.ProgressHelpers
 
 class ScalaMoveParticipant extends MoveParticipant {
   
@@ -41,10 +43,7 @@ class ScalaMoveParticipant extends MoveParticipant {
           
           var initialConditions: Option[RefactoringStatus] = None
           
-          // The Move refactoring in JDT is so fast that it doesn't need a cancelable
-          // progress monitor, so we run the refactoring in our own.
-          ProgressHelpers.runInProgressDialogNonblocking { pm =>
-            
+          def runRefactoring(pm: IProgressMonitor) {
             initialConditions = Some(moveRefactoring.checkInitialConditions(pm))
             moveRefactoring.setMoveSingleImpl(false /*move all classes in the file*/)
             moveRefactoring.target = targetPackage
@@ -63,6 +62,20 @@ class ScalaMoveParticipant extends MoveParticipant {
             }
           }
           
+          val isRunAsEclipseMoveResource = {
+            // If there's no active workbench window, then we are run as
+            // part of Eclipse's generic Move Resource refactoring.
+            PlatformUI.getWorkbench.getActiveWorkbenchWindow == null
+          }
+
+          if(isRunAsEclipseMoveResource) {
+            runRefactoring(pm)
+          } else {
+            // The drag-and-drop Move refactoring in JDT is so fast that it doesn't
+            // need a cancelable progress monitor, so we run the refactoring in our own.
+            ProgressHelpers.runInProgressDialogNonblocking(runRefactoring _)
+          }
+
           moveRefactoring.cleanup()
           
           new RefactoringStatus {

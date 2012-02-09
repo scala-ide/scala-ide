@@ -9,13 +9,13 @@ import org.eclipse.ui.progress.UIJob
 import org.eclipse.ui.PlatformUI
 
 object ProgressHelpers {
-  
+
   def shell = PlatformUI.getWorkbench.getActiveWorkbenchWindow.getShell
   
   def runInUiJob(block: (IProgressMonitor, Shell) => IStatus) {
     new UIJob("Refactoring") {
       def runInUIThread(pm: IProgressMonitor): IStatus = {
-        block(pm, shell)
+        block(pm, getDisplay.getActiveShell)
       }
     }.schedule
   }
@@ -34,7 +34,7 @@ object ProgressHelpers {
       def run(pm: IProgressMonitor) = block(pm)
     }
     
-    val dialog = new ProgressMonitorDialog(PlatformUI.getWorkbench.getActiveWorkbenchWindow.getShell)
+    val dialog = new ProgressMonitorDialog(shell)
     dialog.run(fork, true /*cancelable*/, runnable)
   } 
 }
