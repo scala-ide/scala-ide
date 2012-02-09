@@ -43,6 +43,7 @@ import org.junit.runners.Suite;
   OutputFoldersTest.class,
   ScalaCompilerClasspathTest.class,
   PresentationCompilerTest.class,
+  //scala.tools.eclipse.interpreter.EclipseReplTest.class, // see comments there
   ClasspathTests.class,
   TodoBuilderTest.class,
   ImplicitsHighlightingTest.class,
