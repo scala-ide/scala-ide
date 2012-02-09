@@ -16,13 +16,19 @@ function usage()
 Options:
     --eclipse-dir <path>      Path to the Eclipse installation that you want to modify
 
+    --branch <branch>         What branch to use? (e.g. master or 2-0-x)
+
 Commands:
     list                      List available plugins. (useless right now, as it uses the Eclipse repo).
 
     install <id>              Install plugin. It is the version number of the Scala installation
                               For instance: 2.9.1.final or trunk
 
+    install-local <path>      Install from a local update site given by <path>
+
     uninstall                 Uninstall the currently installed Scala plugin
+
+    install-bundle <id>       Install the given bundle
 
     uninstall-bundle <id>     Uninstall the given bundle
 
@@ -64,6 +70,15 @@ while [ $# -gt 0 ]; do
             $eclipse_dir/eclipse $eclipse_opt \
                 -application $app \
                 -repository "$scala_repo-$branch-$2" \
+                -installIU org.scala-ide.sdt.feature.feature.group
+            shift 2
+            ;;
+
+        "install-local")
+            echo "Installing $2.."
+            $eclipse_dir/eclipse $eclipse_opt \
+                -application $app \
+                -repository "file://$2" \
                 -installIU org.scala-ide.sdt.feature.feature.group
             shift 2
             ;;
