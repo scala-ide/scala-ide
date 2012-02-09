@@ -1,6 +1,7 @@
 package scala.tools.eclipse;
 
 import scala.tools.eclipse.classpath.ClasspathTests;
+import scala.tools.eclipse.compiler.settings.CompilerSettingsTest;
 import scala.tools.eclipse.completion.CompletionTests;
 
 import scala.tools.eclipse.hyperlinks.HyperlinkDetectorTests;
@@ -46,5 +47,6 @@ import org.junit.runners.Suite;
   TodoBuilderTest.class,
   ScalaJavaDepTest.class,
   NestedProjectsTest.class,
+  CompilerSettingsTest.class,
 })
 class TestsSuite { }
