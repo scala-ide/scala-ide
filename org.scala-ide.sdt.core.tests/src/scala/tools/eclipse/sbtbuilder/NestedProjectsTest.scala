@@ -58,7 +58,7 @@ class NestedProjectsTest {
     
     // update and recompile Java_01.java
     val compilationUnit= scalaSrcPackageRoot.getPackageFragment("test").getCompilationUnit("Java_01.java")
-    SDTTestUtils.changeContentOfFile(project.underlying, compilationUnit.getResource().asInstanceOf[IFile], changed_test_Java_01)
+    SDTTestUtils.changeContentOfFile(compilationUnit.getResource().asInstanceOf[IFile], changed_test_Java_01)
     
     scalaProject.underlying.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, new NullProgressMonitor)
     

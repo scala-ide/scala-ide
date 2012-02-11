@@ -11,6 +11,7 @@ import scala.tools.eclipse.lexical.ScalaPartitionTokeniserTest;
 import scala.tools.eclipse.occurrences.OccurrencesFinderTest;
 import scala.tools.eclipse.sbtbuilder.NestedProjectsTest;
 import scala.tools.eclipse.sbtbuilder.OutputFoldersTest;
+import scala.tools.eclipse.sbtbuilder.ProjectDependenciesTest;
 import scala.tools.eclipse.sbtbuilder.SbtBuilderTest;
 import scala.tools.eclipse.sbtbuilder.TodoBuilderTest;
 import scala.tools.eclipse.sbtbuilder.ScalaCompilerClasspathTest;
@@ -48,5 +49,6 @@ import org.junit.runners.Suite;
   ScalaJavaDepTest.class,
   NestedProjectsTest.class,
   CompilerSettingsTest.class,
+  ProjectDependenciesTest.class,
 })
 class TestsSuite { }

@@ -15,6 +15,8 @@ import scala.util.matching.Regex
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.core.IJavaModelMarker
 import org.eclipse.core.resources.IResource
+import org.eclipse.core.resources.IncrementalProjectBuilder
+import org.eclipse.core.resources.IMarker
 
 /** Utility functions for setting up test projects.
  *  
@@ -137,10 +139,29 @@ object SDTTestUtils {
     file
   }
 
-  def changeContentOfFile(project : IProject, file : IFile, newContent : String) : IFile = {
-    file.setContents(new ByteArrayInputStream(newContent.getBytes(project.getDefaultCharset())), 0, null)
+  def changeContentOfFile(file : IFile, newContent : String, encoding: String = workspace.getRoot.getDefaultCharset()) : IFile = {
+    file.setContents(new ByteArrayInputStream(newContent.getBytes(encoding)), 0, null)
     file
   }
+  
+  def getProblemMarkers(units: ICompilationUnit*): List[IMarker] = {
+    units.flatMap(findProblemMarkers).toList
+  }
+  
+  def getErrorMessages(units: ICompilationUnit*): List[String] =
+    for (p <- getProblemMarkers(units: _*)) yield p.getAttribute(IMarker.MESSAGE).toString
+
+  def buildWith(resource: IResource, contents: String, unitsToWatch: Seq[ICompilationUnit]): List[String] = {
+    SDTTestUtils.changeContentOfFile(resource.asInstanceOf[IFile], contents)
+
+    println("=== Rebuilding workspace === ")
+    SDTTestUtils.workspace.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, null)
+
+    val problems = getProblemMarkers(unitsToWatch:_*)
+
+    for (p <- problems) yield p.getAttribute(IMarker.MESSAGE).toString
+  }
+
 
   def createProjectInLocalFileSystem(parentFile : File, projectName : String) : IProject = {
     val project = ResourcesPlugin.getWorkspace.getRoot.getProject(projectName)

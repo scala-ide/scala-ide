@@ -39,12 +39,12 @@ class ScalaJavaDepTest {
     assertTrue("Build errors found: " + userFriendlyMarkers(problems0), problems0.isEmpty)
     
     val originalJJava = SDTTestUtils.slurpAndClose(project.underlying.getFile("src/test/J.java").getContents)
-    SDTTestUtils.changeContentOfFile(project.underlying, JJavaCU.getResource().getAdapter(classOf[IFile]).asInstanceOf[IFile], changedJJava)
+    SDTTestUtils.changeContentOfFile(JJavaCU.getResource().getAdapter(classOf[IFile]).asInstanceOf[IFile], changedJJava)
     rebuild(project)
     val problems1 = getProblemMarkers
     assertTrue("One build error expected, got: " + userFriendlyMarkers(problems1), problems1.length == 1) // do more precise matching later
     
-    SDTTestUtils.changeContentOfFile(project.underlying, JJavaCU.getResource().getAdapter(classOf[IFile]).asInstanceOf[IFile], originalJJava)
+    SDTTestUtils.changeContentOfFile(JJavaCU.getResource().getAdapter(classOf[IFile]).asInstanceOf[IFile], originalJJava)
     rebuild(project)
     val problems2 = getProblemMarkers
     assertTrue("Build errors found: " + userFriendlyMarkers(problems2), problems2.isEmpty)
@@ -64,12 +64,12 @@ class ScalaJavaDepTest {
     assertTrue("Build errors found: " + userFriendlyMarkers(problems0), problems0.isEmpty)
     
     val originalSScala = SDTTestUtils.slurpAndClose(project.underlying.getFile("src/test/S.scala").getContents)
-    SDTTestUtils.changeContentOfFile(project.underlying, SScalaCU.getResource().getAdapter(classOf[IFile]).asInstanceOf[IFile], changedSScala)
+    SDTTestUtils.changeContentOfFile(SScalaCU.getResource().getAdapter(classOf[IFile]).asInstanceOf[IFile], changedSScala)
     rebuild(project)
     val problems1 = getProblemMarkers
     assertTrue("One build error expected: " + userFriendlyMarkers(problems1), problems1.length == 1) // do more precise matching later
     
-    SDTTestUtils.changeContentOfFile(project.underlying, SScalaCU.getResource().getAdapter(classOf[IFile]).asInstanceOf[IFile], originalSScala)
+    SDTTestUtils.changeContentOfFile(SScalaCU.getResource().getAdapter(classOf[IFile]).asInstanceOf[IFile], originalSScala)
     rebuild(project)
     val problems2 = getProblemMarkers
     assertTrue("Build errors found: " + userFriendlyMarkers(problems2), problems2.isEmpty)
@@ -97,7 +97,7 @@ class ScalaJavaDepTest {
     assertEquals("One error expected: " + userFriendlyMarkers(problems), 1, problems.size)
     
     // "fix" the scala code
-    SDTTestUtils.changeContentOfFile(project.underlying, aClass.getResource().asInstanceOf[IFile], changed_ticket_1000607_A)
+    SDTTestUtils.changeContentOfFile(aClass.getResource().asInstanceOf[IFile], changed_ticket_1000607_A)
     
     // trigger incremental compile
     project.underlying.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, new NullProgressMonitor)
