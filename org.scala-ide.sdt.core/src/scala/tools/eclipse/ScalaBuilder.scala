@@ -84,7 +84,7 @@ class ScalaBuilder extends IncrementalProjectBuilder with HasLogger {
                 delta == null || delta.getKind != IResourceDelta.NO_CHANGE
               }
               
-              if (project.externalDepends.exists(hasChanges)) {
+              if (project.directDependencies.exists(hasChanges)) {
                 // reset presentation compilers if a dependency has been rebuilt
                 logger.debug("Resetting presentation compiler for %s due to dependent project change".format(project.underlying.getName()))
                 project.resetPresentationCompiler
@@ -106,14 +106,15 @@ class ScalaBuilder extends IncrementalProjectBuilder with HasLogger {
     val subMonitor = SubMonitor.convert(monitor, 100).newChild(100, SubMonitor.SUPPRESS_NONE)
     subMonitor.beginTask("Running Scala Builder on " + project.underlying.getName, 100)
       
-    if (stopBuildOnErrors && project.externalDepends.exists(p => plugin.getScalaProject(p).buildManager.hasBuildErrors))
-      logger.debug("Skipped dependent project %s build because of upstream compilation errors".format(project.underlying.getName))
-    else {
-      logger.debug("Building project " + project)
+    if (stopBuildOnErrors && project.transitiveDependencies.exists(p => plugin.getScalaProject(p).buildManager.hasBuildErrors)) {
+      val projectsInError = project.transitiveDependencies.filter(p => plugin.getScalaProject(p).buildManager.hasBuildErrors)
+      logger.info("Skipped dependent project %s build because of upstream compilation errors in %s".format(project.underlying.getName, projectsInError))
+    } else {
+      logger.info("Building project " + project)
       project.build(addedOrUpdated, removed, subMonitor)
     }
     
-    val depends = project.externalDepends
+    val depends = project.transitiveDependencies
     
     /** The Java builder has to be run for copying resources (non-source files) to the output directory.
      * 
@@ -128,7 +129,7 @@ class ScalaBuilder extends IncrementalProjectBuilder with HasLogger {
     
     // SBT build manager already calls java builder internally
     if (allSourceFiles.exists(FileUtils.hasBuildErrors(_)) || !shouldRunJavaBuilder)
-      depends
+      depends.toArray
     else {
       ensureProject
       val javaDepends = scalaJavaBuilder.build(kind, ignored, subMonitor) 
