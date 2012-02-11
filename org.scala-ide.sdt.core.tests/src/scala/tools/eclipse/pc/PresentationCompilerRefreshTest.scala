@@ -25,7 +25,7 @@ class PresentationCompilerRefreshTest {
     
     EclipseUtils.workspaceRunnableIn(SDTTestUtils.workspace) { monitor =>
       SDTTestUtils.addFileToProject(project.underlying, "src/b/C.scala", C_scala)
-      SDTTestUtils.changeContentOfFile(project.underlying, unitA.getResource().getAdapter(classOf[IFile]).asInstanceOf[IFile], new_A_scala)
+      SDTTestUtils.changeContentOfFile(unitA.getResource().getAdapter(classOf[IFile]).asInstanceOf[IFile], new_A_scala)
     }
 
     unitA.doWithSourceFile { (sf, comp) =>
