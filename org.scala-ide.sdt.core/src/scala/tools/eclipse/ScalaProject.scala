@@ -174,8 +174,33 @@ class ScalaProject private (val underlying: IProject) extends HasLogger {
     }
 
   
-  def externalDepends = underlying.getReferencedProjects
+  /** The direct dependencies of this project. */
+  def directDependencies: Seq[IProject] = 
+    underlying.getReferencedProjects
 
+  /** All direct and indirect dependencies of this project.
+   * 
+   *  Indirect dependencies are considered only if that dependency is exported by the dependent project.
+   *  Consider the following dependency graph:
+   *     A -> B -> C
+   *     
+   *  transitiveDependencies(C) = {A, B} iff B *exports* the A project in its classpath
+   */
+  def transitiveDependencies: Seq[IProject] = {
+    import ScalaPlugin.plugin
+    directDependencies ++ (directDependencies flatMap (p => plugin.getScalaProject(p).exportedDependencies))
+  }
+  
+  /** Return the exported dependencies of this project. An exported dependency is
+   *  another project his project depends on, and which is exported to downstream
+   *  dependencies.
+   */
+  def exportedDependencies: Seq[IProject] = {
+    for { entry <- javaProject.getRawClasspath
+          if entry.getEntryKind == IClasspathEntry.CPE_PROJECT && entry.isExported
+    } yield ScalaPlugin.plugin.workspaceRoot.getProject(entry.getPath().toString)
+  }
+    
   lazy val javaProject = {
     JavaCore.create(underlying)
   }
