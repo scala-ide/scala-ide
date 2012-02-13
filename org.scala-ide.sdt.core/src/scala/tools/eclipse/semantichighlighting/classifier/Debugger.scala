@@ -11,7 +11,7 @@ trait SymbolClassificationDebugger { self: SymbolClassification =>
     println()
     println()
     println(" -- source -----------------------------------------------------------------------------")
-    println(source)
+    println(sourceFile.content.mkString)
     println(" -- scalariform ------------------------------------------------------------------------")
     import syntacticInfo._
     println("namedArgs: " + namedArgs)

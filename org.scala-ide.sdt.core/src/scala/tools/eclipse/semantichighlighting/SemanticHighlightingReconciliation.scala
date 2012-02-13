@@ -57,7 +57,7 @@ object SemanticHighlightingReconciliation {
       for {
         page <- EclipseUtils.getWorkbenchPages
         editorReference <- page.getEditorReferences
-        editor = editorReference.getEditor(false)
+        editor <- Option(editorReference.getEditor(false))
         scalaEditor <- editor.asInstanceOfOpt[ScalaSourceFileEditor]
         editorInput <- Option(scalaEditor.getEditorInput)
         fileEditorInput <- editorInput.asInstanceOfOpt[FileEditorInput]

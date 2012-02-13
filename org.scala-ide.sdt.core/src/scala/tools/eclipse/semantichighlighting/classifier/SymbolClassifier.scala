@@ -1,11 +1,11 @@
 package scala.tools.eclipse.semantichighlighting.classifier
 
-import scala.tools.nsc.interactive.Global
 import scala.tools.nsc.util.SourceFile
+import scala.tools.eclipse.ScalaPresentationCompiler
 
 object SymbolClassifier {
 
-  def classifySymbols(sourceFile: SourceFile, global: Global, useSyntacticHints: Boolean): List[SymbolInfo] =
-    new SymbolClassification(sourceFile, global, useSyntacticHints).classifySymbols
+  def classifySymbols(sourceFile: SourceFile, compiler: ScalaPresentationCompiler, useSyntacticHints: Boolean): List[SymbolInfo] =
+    new SymbolClassification(sourceFile, compiler, useSyntacticHints).classifySymbols
 
 }

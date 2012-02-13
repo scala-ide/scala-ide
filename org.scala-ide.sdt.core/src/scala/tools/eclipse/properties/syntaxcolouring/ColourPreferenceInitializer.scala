@@ -104,10 +104,10 @@ class ColourPreferenceInitializer extends AbstractPreferenceInitializer {
   // Mirror across the colour preferences into the Java preference store so that they can be read by the annotation
   // mechanism.
   private def mirrorColourPreferencesIntoJavaPreferenceStore(scalaPrefStore: IPreferenceStore, javaPrefStore: IPreferenceStore) {
-    for (key ← ALL_KEYS)
+    for (key <- ALL_KEYS)
       javaPrefStore.setDefault(key, scalaPrefStore getDefaultString key)
 
-    scalaPrefStore.addPropertyChangeListener { event: PropertyChangeEvent ⇒
+    scalaPrefStore.addPropertyChangeListener { event: PropertyChangeEvent =>
       val key = event.getProperty
       if (ALL_KEYS contains key)
         javaPrefStore.setValue(key, event.getNewValue.toString)

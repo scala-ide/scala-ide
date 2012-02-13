@@ -14,6 +14,7 @@ import scalariform.parser.{ Type => _, Param => _, Annotation => _, _ }
 import scalariform.parser.Argument
 import scalariform.utils.Utils.time
 import scala.tools.refactoring.util.TreeCreationMethods
+import scala.tools.eclipse.ScalaPresentationCompiler
 
 object SymbolClassification {
 
@@ -33,28 +34,34 @@ object SymbolClassification {
   val debug = false
 }
 
-class SymbolClassification(protected val sourceFile: SourceFile, val global: Global, useSyntacticHints: Boolean)
-  extends Selections with GlobalIndexes with SymbolClassificationDebugger with SymbolTests with TreeCreationMethods {
+class SymbolClassification(protected val sourceFile: SourceFile, val global: ScalaPresentationCompiler, useSyntacticHints: Boolean)
+  extends Selections with GlobalIndexes with SymbolClassificationDebugger with SymbolTests {
 
   import SymbolClassification._
   import global._
 
-  protected val source = sourceFile.content.mkString
-
   protected val syntacticInfo =
-    if (useSyntacticHints) SyntacticInfo.getSyntacticInfo(source) else SyntacticInfo.noSyntacticInfo
+    if (useSyntacticHints) SyntacticInfo.getSyntacticInfo(sourceFile.content.mkString) else SyntacticInfo.noSyntacticInfo
 
-  protected val tree = treeFrom(sourceFile)
-  val index = GlobalIndex(tree)
+  lazy val index = {
+    val tree = global.body(sourceFile)
+    global.askOption {() => GlobalIndex(tree) } getOrElse GlobalIndex(Nil)
+  }
 
   def classifySymbols: List[SymbolInfo] = {
-    val allSymbols = index.allSymbols
-    allSymbols foreach (_.initialize) // some symbol properties (e.g. _.isJavaDefined) appear to be able to change after init
-
-    if (debug)
-      printSymbolInfo()
-
+    val allSymbols: List[Symbol] = global.askOption { () =>
+      for(sym <- index.allSymbols) yield {
+        //TODO: Remove the following code once symbols are initialized by 
+        //      the `GlobalIndex` (https://github.com/scala-ide/scala-ide/pull/61#r358833) 
+        sym.initialize // some symbol properties (e.g. _.isJavaDefined) appear to be able to change after init
+        sym
+      }
+    } getOrElse Nil
+    
+    if (debug) printSymbolInfo()
+      
     val rawSymbolInfos: List[SymbolInfo] = allSymbols map getSymbolInfo
+    
     val prunedSymbolInfos = prune(rawSymbolInfos)
     val all: Set[Region] = rawSymbolInfos flatMap (_.regions) toSet
     val localVars: Set[Region] = rawSymbolInfos.collect { case SymbolInfo(LocalVar, regions, _) => regions }.flatten.toSet
@@ -70,7 +77,7 @@ class SymbolClassification(protected val sourceFile: SourceFile, val global: Glo
 
   private def getOccurrenceRegion(sym: Symbol)(occurrence: Tree): Option[Region] =
     getNameRegion(occurrence) flatMap { region =>
-      val text = region of source
+      val text = region of sourceFile.content
       val symName = sym.nameString
       if (text == symName || text == "`" + symName + "`")
         Some(region)

@@ -24,7 +24,8 @@ class SemanticHighlightingAnnotationsManager(sourceViewer: ISourceViewer) extend
     if (semanticHighlightingRequired)
       scu.doWithSourceFile { (sourceFile, compiler) =>
         val useSyntacticHints = prefStore.getBoolean(ScalaSyntaxClasses.USE_SYNTACTIC_HINTS)
-        val symbolInfos =
+        
+        val symbolInfos = 
           try SymbolClassifier.classifySymbols(sourceFile, compiler, useSyntacticHints)
           catch {
             case e =>
@@ -60,7 +61,7 @@ class SemanticHighlightingAnnotationsManager(sourceViewer: ISourceViewer) extend
 
   private def removeAllAnnotations() =
     if (annotations.nonEmpty)
-      for (annotationModel ← annotationModelOpt)
+      for (annotationModel <- annotationModelOpt)
         annotationModel.withLock {
           annotationModel.deleteAnnotations(annotations)
           annotations = Set()
