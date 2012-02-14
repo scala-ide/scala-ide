@@ -477,6 +477,17 @@
            sourcePathComputerId="org.eclipse.jdt.launching.sourceLookup.javaSourcePathComputer"
            name="Scala Interpreter">
      </launchConfigurationType>
+     <launchConfigurationType
+           id="scala.scalatest"
+           delegate="scala.tools.eclipse.launching.ScalaTestLaunchDelegate"
+           delegateDescription="The ScalaTest Launcher supports running and debugging tests written in ScalaTest."
+           delegateName="ScalaTest Launcher"
+           modes="run, debug"
+           name="ScalaTest"
+           public="true"
+           sourceLocatorId="org.eclipse.jdt.launching.sourceLocator.JavaSourceLookupDirector"
+           sourcePathComputerId="org.eclipse.jdt.launching.sourceLookup.javaSourcePathComputer">
+     </launchConfigurationType>
    </extension>
    <extension point="org.eclipse.debug.ui.launchConfigurationTypeImages">
      <launchConfigurationTypeImage
@@ -488,6 +499,11 @@
            configTypeID="scala.interpreter"
            icon="icons/full/etool16/scala_app.gif"
            id="scala.interpreter.image">
+     </launchConfigurationTypeImage>
+     <launchConfigurationTypeImage
+           configTypeID="scala.scalatest"
+           icon="icons/full/etool16/scala_app.gif"
+           id="scala.scalatest.image">
      </launchConfigurationTypeImage>
    </extension>
    <extension point="org.eclipse.debug.ui.launchConfigurationTabGroups">
@@ -509,6 +525,11 @@
               description="Runs an interpreter in Debug mode"
               perspective="org.eclipse.debug.ui.DebugPerspective">
         </launchMode>
+    </launchConfigurationTabGroup>
+    <launchConfigurationTabGroup
+        type="scala.scalatest"
+        class="scala.tools.eclipse.launching.ScalaTestTabGroup"
+        id="scala.scalatest.tabGroup">
     </launchConfigurationTabGroup>
    </extension>
    <extension id="scalanature"

@@ -70,12 +70,6 @@ class ScalaTestLaunchShortcut extends ILaunchShortcut {
 
 object ScalaTestLaunchShortcut {
   def getScalaTestSuites(element: AnyRef):List[IType] = {
-    def isScalaTestSuite(iType: IType): Boolean = {
-      val typeHier:ITypeHierarchy = iType.newSupertypeHierarchy(null)
-      val superTypeArr:Array[IType] = typeHier.getAllSupertypes(iType)
-      superTypeArr.findIndexOf {superType => superType.getFullyQualifiedName == "org.scalatest.Suite"} >= 0
-    }
-    
     val je = element.asInstanceOf[IAdaptable].getAdapter(classOf[IJavaElement]).asInstanceOf[IJavaElement]
     je.getOpenable match {
       case scu: ScalaSourceFile => 
@@ -84,5 +78,11 @@ object ScalaTestLaunchShortcut {
           tpe.isInstanceOf[ScalaClassElement] && isScalaTestSuite(tpe)
         }.toList
     }
+  }
+  
+  def isScalaTestSuite(iType: IType): Boolean = {
+    val typeHier:ITypeHierarchy = iType.newSupertypeHierarchy(null)
+    val superTypeArr:Array[IType] = typeHier.getAllSupertypes(iType)
+    superTypeArr.findIndexOf {superType => superType.getFullyQualifiedName == "org.scalatest.Suite"} >= 0
   }
 }
