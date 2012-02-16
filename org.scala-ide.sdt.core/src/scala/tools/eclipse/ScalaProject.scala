@@ -554,9 +554,8 @@ class ScalaProject private (val underlying: IProject) extends HasLogger {
       setting <- box.userSettings; if filter(setting)
     ) {
       val value0 = store.getString(SettingConverterUtil.convertNameToProperty(setting.name))
-//      logger.info("[%s] initializing %s to %s".format(underlying.getName(), setting.name, value0.toString))
+      
       try {
-        
         val value = if (setting ne settings.pluginsDir) value0 else {
           ScalaPlugin.plugin.continuationsClasses map {
             _.removeLastSegments(1).toOSString + (if (value0 == null || value0.length == 0) "" else pathSeparator + value0)
@@ -565,6 +564,7 @@ class ScalaProject private (val underlying: IProject) extends HasLogger {
         if (value != null && value.length != 0) {
           setting.tryToSetFromPropertyValue(value)
         }
+        logger.debug("[%s] initializing %s to %s".format(underlying.getName(), setting.name, setting.value.toString))
       } catch {
         case t: Throwable => eclipseLog.error("Unable to set setting '" + setting.name + "' to '" + value0 + "'", t)
       }
