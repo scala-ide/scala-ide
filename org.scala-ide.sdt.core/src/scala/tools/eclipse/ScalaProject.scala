@@ -650,7 +650,7 @@ class ScalaProject private (val underlying: IProject) extends HasLogger {
 
   def buildManager = {
     if (buildManager0 == null) {
-      val settings = new Settings(msg => settingsError(IMarker.SEVERITY_ERROR, msg, null))
+      val settings = ScalaPlugin.defaultScalaSettings(msg => settingsError(IMarker.SEVERITY_ERROR, msg, null))
       clearSettingsErrors()
       initialize(settings, _ => true)
       // source path should be emtpy. The build manager decides what files get recompiled when.

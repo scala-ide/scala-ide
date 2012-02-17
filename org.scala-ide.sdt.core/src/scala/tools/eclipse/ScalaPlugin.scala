@@ -48,7 +48,9 @@ object ScalaPlugin {
   
   def getShell: Shell = getWorkbenchWindow map (_.getShell) orNull
   
-  def defaultScalaSettings: Settings = new Settings {
+  def defaultScalaSettings : Settings = defaultScalaSettings(Console.println)
+  
+  def defaultScalaSettings(errorFn: String => Unit): Settings = new Settings(errorFn) {
     override val pluginsDir = StringSetting("-Xpluginsdir", "path", "Path to search compiler plugins.", ScalaPlugin.plugin.defaultPluginsDir getOrElse "")
   } 
 }

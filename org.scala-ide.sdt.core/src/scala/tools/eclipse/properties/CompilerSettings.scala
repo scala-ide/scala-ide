@@ -332,7 +332,7 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
 
       additionalParametersControl.addModifyListener { (event: ModifyEvent) =>
         var errors = new StringBuffer
-        val settings = new Settings(e => errors append ("\n" + e))
+        val settings = ScalaPlugin.defaultScalaSettings(e => errors append ("\n" + e))
         val result = settings.processArgumentString(additionalParametersControl.getText())
         if (result._2.nonEmpty || errors.length() > 0) {
           errorDecoration.setDescriptionText(errors.toString)
@@ -347,7 +347,7 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
         updateApplyButton()
       }
 
-      val settings = new Settings
+      val settings = ScalaPlugin.defaultScalaSettings
       val proposals = settings.visibleSettings.map(_.name)
 
       val provider = new IContentProposalProvider {
