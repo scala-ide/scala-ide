@@ -35,6 +35,8 @@ import org.eclipse.jdt.core.ICompilationUnit
 import scala.tools.nsc.io.AbstractFile
 import scala.tools.eclipse.util.EclipseResource
 import scala.tools.eclipse.logging.PluginLogConfigurator
+import scala.tools.eclipse.util.Trim
+import scala.tools.nsc.Settings
 
 object ScalaPlugin {
   var plugin: ScalaPlugin = _
@@ -45,6 +47,12 @@ object ScalaPlugin {
   }
   
   def getShell: Shell = getWorkbenchWindow map (_.getShell) orNull
+  
+  def defaultScalaSettings : Settings = defaultScalaSettings(Console.println)
+  
+  def defaultScalaSettings(errorFn: String => Unit): Settings = new Settings(errorFn) {
+    override val pluginsDir = StringSetting("-Xpluginsdir", "path", "Path to search compiler plugins.", ScalaPlugin.plugin.defaultPluginsDir getOrElse "")
+  } 
 }
 
 class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IResourceChangeListener with IElementChangedListener with IPartListener with HasLogger {
@@ -124,6 +132,9 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
   val compilerClasses = pathInBundle(scalaCompilerBundle, "/lib/scala-compiler.jar")
   val continuationsClasses = pathInBundle(scalaCompilerBundle, "/lib/continuations.jar")
   val compilerSources = pathInBundle(scalaCompilerBundle, "/lib/scala-compiler-src.jar")
+  
+  def defaultPluginsDir: Option[String] = 
+    Trim(ScalaPlugin.plugin.continuationsClasses map { _.removeLastSegments(1).toOSString })
   
   lazy val sbtCompilerBundle = Platform.getBundle(ScalaPlugin.plugin.sbtPluginId)
   lazy val sbtCompilerInterface = pathInBundle(sbtCompilerBundle, "/lib/scala-" + shortScalaVer + "/lib/compiler-interface.jar")

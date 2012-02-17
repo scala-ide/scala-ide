@@ -17,15 +17,16 @@ class CompilerSettingsTest {
   
   @Test
   def continuations_plugin_works() {
+    val plugins = loadedPlugins(project)
     Assert.assertEquals("Loaded plugins: ", List("continuations"), loadedPlugins(project))
   }
   
   @Test
-  def pluginsDir_does_not_break_continuations() {
+  def continuationPluginCannotBeLoadedWhen_pluginsDir_pointsToDirectoryThatDoesNotContainContinuationsPluginJar() {
     project.storage.setValue("Xpluginsdir", "/doesnotexist")
     project.resetPresentationCompiler()
     
-    Assert.assertEquals("Loaded plugins: ", List("continuations"), loadedPlugins(project))
+    Assert.assertEquals("Loaded plugins: ", Nil, loadedPlugins(project))
   }
   
   private def loadedPlugins(project: ScalaProject): List[String] = {

@@ -37,7 +37,7 @@ class ScalaPreferences extends PropertyPage with IWorkbenchPreferencePage with E
     val composite = {
         //No Outer Composite
         val tmp = new Composite(parent, SWT.NONE)
-	      val layout = new GridLayout(1, false)
+	    val layout = new GridLayout(1, false)
         tmp.setLayout(layout)
         val data = new GridData(GridData.FILL)
         data.grabExcessHorizontalSpace = true

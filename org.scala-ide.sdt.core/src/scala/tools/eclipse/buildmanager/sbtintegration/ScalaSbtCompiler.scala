@@ -1,10 +1,10 @@
 package scala.tools.eclipse.buildmanager.sbtintegration
 
 import scala.tools.nsc.Settings
-
 import sbt.{ScalaInstance, LoggerReporter, ClasspathOptions}
 import xsbti.{AnalysisCallback, Reporter, Logger, Controller}
 import xsbt.Log
+import scala.tools.eclipse.ScalaPlugin
 
 
 object SettingsCleanup {
@@ -13,7 +13,7 @@ object SettingsCleanup {
                          s.YpresentationDebug, s.YpresentationDelay, s.YpresentationLog,
                          s.YpresentationReplay, s.YpresentationVerbose,
                          s.classpath, s.bootclasspath)
-    val s1 = new Settings(Log.settingsError(log))
+    val s1 = ScalaPlugin.defaultScalaSettings(Log.settingsError(log))
     val xs = (s.userSetSettings -- toDefault).toList flatMap (_.unparse)
 
     s1.processArguments(xs.toList, true)
