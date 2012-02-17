@@ -145,10 +145,8 @@ trait EclipseSettings {
       control = new Text(page, SWT.SINGLE | SWT.BORDER)
       control.setText(setting.value)
       var layout = data
-      if (setting.value.isEmpty) {
-        layout = new GridData()
-        layout.widthHint = 100
-      }
+      layout = new GridData()
+      layout.widthHint = 150
       control.setLayoutData(layout)
       control.addModifyListener(ModifyListenerSing)
     }
