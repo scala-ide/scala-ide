@@ -25,7 +25,9 @@ object LogManager extends Log4JFacade with HasLogger {
     SWTUtils.fnToPropertyChangeListener { event =>
       if (event.getProperty == IsConsoleAppenderEnabled) {
         val enable = event.getNewValue.asInstanceOf[Boolean]
-        updateConsoleAppender(enable)
+        withoutConsoleRedirects {
+          updateConsoleAppender(enable)
+        }
       }
     }
   }
@@ -36,6 +38,8 @@ object LogManager extends Log4JFacade with HasLogger {
     super.configure(logOutputLocation, preferredLogLevel)
     ScalaPlugin.plugin.getPreferenceStore.addPropertyChangeListener(updateLogLevel)
     ScalaPlugin.plugin.getPreferenceStore.addPropertyChangeListener(updateConsoleAppenderStatus)
+    
+    redirectStdOutAndStdErr()
   }
 
   override protected def setLogLevel(level: Level.Value) {
@@ -53,4 +57,22 @@ object LogManager extends Log4JFacade with HasLogger {
 
   override def isConsoleAppenderEnabled: Boolean =
     ScalaPlugin.plugin.getPreferenceStore.getBoolean(IsConsoleAppenderEnabled)
+    
+  private def withoutConsoleRedirects(f: => Unit) {
+    try {
+      disableRedirectStdOutAndStdErr()
+      f
+    }
+    finally { redirectStdOutAndStdErr() }
+  }  
+    
+  private def redirectStdOutAndStdErr() {
+    StreamRedirect.redirectStdOutput()
+    StreamRedirect.redirectStdError()
+  }
+  
+  private def disableRedirectStdOutAndStdErr() {
+    StreamRedirect.disableRedirectStdOutput()
+    StreamRedirect.disableRedirectStdError()
+  }
 }
