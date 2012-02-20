@@ -13,7 +13,8 @@ object SettingsCleanup {
                          s.YpresentationDebug, s.YpresentationDelay, s.YpresentationLog,
                          s.YpresentationReplay, s.YpresentationVerbose,
                          s.classpath, s.bootclasspath)
-    val s1 = ScalaPlugin.defaultScalaSettings(Log.settingsError(log))
+    // FIXME: For no apparent reason calling `ScalaPlugin.defaultScalaSettings` is not the same as using `new Settings`!?
+    val s1 = new Settings(Log.settingsError(log))
     val xs = (s.userSetSettings -- toDefault).toList flatMap (_.unparse)
 
     s1.processArguments(xs.toList, true)
