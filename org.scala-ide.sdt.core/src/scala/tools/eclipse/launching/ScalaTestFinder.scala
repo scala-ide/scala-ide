@@ -66,17 +66,19 @@ class ScalaTestFinder(val compiler: ScalaPresentationCompiler) {
       // Remove the primary constructor method definition.
       rawChildren match {
         case primary :: rest => 
-          if (primary.isInstanceOf[MethodDefinition] && primary.name == "this")
-            rest.toArray
-          else
-            rawChildren.toArray
+          primary match {
+            case MethodDefinition(_, _, _, "this", _) =>
+              rest.toArray
+            case _ =>
+              rawChildren.toArray
+          }
         case _ =>
           rawChildren.toArray
       }
     }
   }
 
-  class MethodDefinition(
+  case class MethodDefinition(
     pClassName: String,
     rootTree: Tree,
     nodeTree: Tree,
@@ -87,7 +89,7 @@ class ScalaTestFinder(val compiler: ScalaPresentationCompiler) {
     override lazy val children = getChildren(pClassName, rootTree, nodeTree)
   }
   
-  class MethodInvocation(
+  case class MethodInvocation(
     pClassName: String,
     pTarget: AstNode, 
     rootTree: Tree,
@@ -99,13 +101,13 @@ class ScalaTestFinder(val compiler: ScalaPresentationCompiler) {
     override lazy val children = getChildren(pClassName, rootTree, nodeTree)
   }
   
-  class StringLiteral(pClassName: String, rootTree: Tree, nodeTree: Tree, pValue: String)
+  case class StringLiteral(pClassName: String, rootTree: Tree, nodeTree: Tree, pValue: String)
     extends org.scalatest.spi.location.StringLiteral(pClassName, null, pValue) with TreeSupport {
     override def getParent() = getParent(pClassName, rootTree, nodeTree)
   }
   
-  class ToStringTarget(pClassName: String, rootTree: Tree, nodeTree: Tree, target: AnyRef) 
-    extends org.scalatest.spi.location.ToStringTarget(pClassName, null, Array.empty, target) with TreeSupport {
+  case class ToStringTarget(pClassName: String, rootTree: Tree, nodeTree: Tree, pTarget: AnyRef) 
+    extends org.scalatest.spi.location.ToStringTarget(pClassName, null, Array.empty, pTarget) with TreeSupport {
     override def getParent() = getParent(pClassName, rootTree, nodeTree)
     override lazy val children = getChildren(pClassName, rootTree, nodeTree)
   }
