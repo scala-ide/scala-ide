@@ -46,7 +46,13 @@ class LoggingPreferencePage extends FieldEditorPreferencePage with IWorkbenchPre
 class LoggingPreferencePageInitializer extends AbstractPreferenceInitializer {
   override def initializeDefaultPreferences() {
     val store = ScalaPlugin.plugin.getPreferenceStore
-    store.setDefault(LoggingPreferenceConstants.LogLevel, LogManager.defaultLogLevel.toString)
-    store.setDefault(LoggingPreferenceConstants.IsConsoleAppenderEnabled, false)
+    if(ScalaPlugin.plugin.headlessMode) {
+      store.setDefault(LoggingPreferenceConstants.LogLevel, Level.DEBUG.toString)
+      store.setDefault(LoggingPreferenceConstants.IsConsoleAppenderEnabled, true)
+    } 
+    else {
+      store.setDefault(LoggingPreferenceConstants.LogLevel, LogManager.defaultLogLevel.toString)
+      store.setDefault(LoggingPreferenceConstants.IsConsoleAppenderEnabled, false)
+    }
   }
 }
