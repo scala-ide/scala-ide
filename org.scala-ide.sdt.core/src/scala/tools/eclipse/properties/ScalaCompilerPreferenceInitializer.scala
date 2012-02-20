@@ -36,7 +36,7 @@ class ScalaCompilerPreferenceInitializer extends AbstractPreferenceInitializer {
           }
       }
 
-      IDESettings.shownSettings(new Settings).foreach {_.userSettings.foreach (defaultPreference)}
+      IDESettings.shownSettings(ScalaPlugin.defaultScalaSettings).foreach {_.userSettings.foreach (defaultPreference)}
       IDESettings.pluginSettings.foreach {_.userSettings.foreach (defaultPreference)}
       IDESettings.buildManagerSettings.foreach {_.userSettings.foreach(defaultPreference)}
     }
