@@ -27,6 +27,9 @@ import scala.tools.nsc.util.Position$
 import org.scalatest.spi.location.AstNode
 import org.scalatest.spi.location.Selection
 import org.scalatest.Style
+import java.net.URLClassLoader
+import java.net.URL
+import java.io.File
 
 class ScalaTestLaunchShortcut extends ILaunchShortcut {
   
@@ -60,9 +63,26 @@ class ScalaTestLaunchShortcut extends ILaunchShortcut {
       val element = SelectionConverter.getElementAtOffset(typeRoot, selection.asInstanceOf[ITextSelection])
       val project = editorPart.getEditorInput.asInstanceOf[IFileEditorInput].getFile.getProject
       val scProject = ScalaPlugin.plugin.getScalaProject(project)
+      val loaderUrls = scProject.classpath.map{ cp =>
+        val cpFile = new File(cp.toString)
+        if (cpFile.exists && cpFile.isDirectory && !cp.toString.endsWith(File.separator))
+          new URL("file://" + cp + "/")
+        else
+          new URL("file://" + cp)
+      }
+      val loader:ClassLoader = new URLClassLoader(loaderUrls.toArray, getClass.getClassLoader)
+      
       scProject.withPresentationCompiler { compiler =>
-        val scalatestFinder = new ScalaTestFinder(compiler)
-        scalatestFinder.find(textSelection, element)
+        val scalatestFinder = new ScalaTestFinder(compiler, loader)
+        try {
+          scalatestFinder.find(textSelection, element)
+        }
+        catch {
+          // This could due to custom classes not compiled.
+          case e: Exception => 
+            e.printStackTrace()
+          None
+        }
       } (null)
     }
   }
