@@ -24,9 +24,8 @@ import scala.tools.eclipse.javaelements.ScalaClassElement
 import scala.annotation.tailrec
 import scala.tools.nsc.util.Position
 import scala.tools.nsc.util.Position$
-import org.scalatest.spi.location.AstNode
-import org.scalatest.spi.location.Selection
-import org.scalatest.Style
+import org.scalatest.finders.AstNode
+import org.scalatest.finders.Selection
 import java.net.URLClassLoader
 import java.net.URL
 import java.io.File

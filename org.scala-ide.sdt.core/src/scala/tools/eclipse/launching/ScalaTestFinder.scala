@@ -1,7 +1,7 @@
 package scala.tools.eclipse.launching
 
 import scala.tools.eclipse.ScalaPresentationCompiler
-import org.scalatest.spi.location.AstNode
+import org.scalatest.finders.AstNode
 import scala.annotation.tailrec
 import org.eclipse.jdt.core.IJavaElement
 import scala.tools.eclipse.javaelements.ScalaClassElement
@@ -10,9 +10,8 @@ import scala.tools.eclipse.ScalaPlugin
 import org.eclipse.core.resources.IProject
 import scala.tools.eclipse.javaelements.ScalaCompilationUnit
 import scala.tools.nsc.util.OffsetPosition
-import org.scalatest.Style
 import org.eclipse.jface.text.ITextSelection
-import org.scalatest.spi.location.Selection
+import org.scalatest.finders.Selection
 
 class ScalaTestFinder(val compiler: ScalaPresentationCompiler, loader: ClassLoader) {
   
@@ -61,7 +60,7 @@ class ScalaTestFinder(val compiler: ScalaPresentationCompiler, loader: ClassLoad
   }
   
   class ConstructorBlock(pClassName: String, rootTree: Tree, nodeTree: Tree) 
-    extends org.scalatest.spi.location.ConstructorBlock(pClassName, Array.empty) with TreeSupport {
+    extends org.scalatest.finders.ConstructorBlock(pClassName, Array.empty) with TreeSupport {
     override lazy val children = {
       val rawChildren = getChildren(pClassName, rootTree, nodeTree).toList
       // Remove the primary constructor method definition.
@@ -85,7 +84,7 @@ class ScalaTestFinder(val compiler: ScalaPresentationCompiler, loader: ClassLoad
     nodeTree: Tree,
     pName: String, 
     pParamTypes: String*)
-    extends org.scalatest.spi.location.MethodDefinition(pClassName, null, Array.empty, pName, pParamTypes.toList: _*) with TreeSupport {
+    extends org.scalatest.finders.MethodDefinition(pClassName, null, Array.empty, pName, pParamTypes.toList: _*) with TreeSupport {
     override def getParent() = getParent(pClassName, rootTree, nodeTree)
     override lazy val children = getChildren(pClassName, rootTree, nodeTree)
   }
@@ -97,18 +96,18 @@ class ScalaTestFinder(val compiler: ScalaPresentationCompiler, loader: ClassLoad
     nodeTree: Tree,
     pName: String, 
     pArgs: AstNode*)
-    extends org.scalatest.spi.location.MethodInvocation(pClassName, pTarget, null, Array.empty, pName, pArgs.toList: _*) with TreeSupport {
+    extends org.scalatest.finders.MethodInvocation(pClassName, pTarget, null, Array.empty, pName, pArgs.toList: _*) with TreeSupport {
     override def getParent() = getParent(pClassName, rootTree, nodeTree)
     override lazy val children = getChildren(pClassName, rootTree, nodeTree)
   }
   
   case class StringLiteral(pClassName: String, rootTree: Tree, nodeTree: Tree, pValue: String)
-    extends org.scalatest.spi.location.StringLiteral(pClassName, null, pValue) with TreeSupport {
+    extends org.scalatest.finders.StringLiteral(pClassName, null, pValue) with TreeSupport {
     override def getParent() = getParent(pClassName, rootTree, nodeTree)
   }
   
   case class ToStringTarget(pClassName: String, rootTree: Tree, nodeTree: Tree, pTarget: AnyRef) 
-    extends org.scalatest.spi.location.ToStringTarget(pClassName, null, Array.empty, pTarget) with TreeSupport {
+    extends org.scalatest.finders.ToStringTarget(pClassName, null, Array.empty, pTarget) with TreeSupport {
     override def getParent() = getParent(pClassName, rootTree, nodeTree)
     override lazy val children = getChildren(pClassName, rootTree, nodeTree)
   }
@@ -253,7 +252,8 @@ class ScalaTestFinder(val compiler: ScalaPresentationCompiler, loader: ClassLoad
             //val style = suiteClass.getAnnotation(styleClass)
             val styleAnnotation = suiteClass.getAnnotations.find(annt => annt.annotationType.getName == "org.scalatest.Style").get
             val valueMethod = styleAnnotation.annotationType.getMethod("value")
-            val finderClass = valueMethod.invoke(styleAnnotation).asInstanceOf[Class[_]]
+            val finderClassName = valueMethod.invoke(styleAnnotation).asInstanceOf[String]
+            val finderClass = loader.loadClass(finderClassName)
             val finder = finderClass.newInstance
                 
             val position = new OffsetPosition(scu.createSourceFile, textSelection.getOffset)
@@ -264,7 +264,7 @@ class ScalaTestFinder(val compiler: ScalaPresentationCompiler, loader: ClassLoad
               case Some(scalatestAst) => 
                 //finder.find(scalatestAst)
                 val findMethod = finder.getClass.getMethods.find { mtd =>
-                  mtd.getName == "find" && mtd.getParameterTypes.length == 1 && mtd.getParameterTypes()(0).getName == "org.scalatest.spi.location.AstNode"
+                  mtd.getName == "find" && mtd.getParameterTypes.length == 1 && mtd.getParameterTypes()(0).getName == "org.scalatest.finders.AstNode"
                 }.get
                 findMethod.invoke(finder, scalatestAst).asInstanceOf[Option[Selection]]
               case None => 

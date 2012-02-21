@@ -28,6 +28,6 @@
 	<classpathentry exported="true" kind="lib" path="lib/sbt_2.9.1.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/task-system_2.9.1.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/tasks_2.9.1.jar"/>
-	<classpathentry exported="true" kind="lib" path="lib/scalatest_2.9.0.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/scalatest-finders_2.9.1.jar"/>
 	<classpathentry kind="output" path="classes"/>
 </classpath>
