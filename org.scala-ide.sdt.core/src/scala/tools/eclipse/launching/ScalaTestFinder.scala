@@ -22,10 +22,29 @@ class ScalaTestFinder(val compiler: ScalaPresentationCompiler, loader: ClassLoad
     def getParent(className: String, root: Tree, node: Tree): AstNode = {
       val parentTreeOpt = getParentTree(root, node)
       parentTreeOpt match {
-        case Some(parentTree) =>
-          transformAst(className, parentTree, root).getOrElse(null)
+        case Some(parentTree) => {
+          val skippedParentTree = skipApplyToImplicit(parentTree, root)
+          transformAst(className, skippedParentTree, root).getOrElse(null)
+        }
         case None => 
           null
+      }
+    }
+    
+    @tailrec
+    private def skipApplyToImplicit(nodeTree: Tree, rootTree: Tree): Tree = {
+      nodeTree match {
+        case _: ApplyToImplicitArgs | 
+             _: ApplyImplicitView =>  
+          val nextParentOpt = getParentTree(rootTree, nodeTree)
+          nextParentOpt match {
+            case Some(nextParent) => 
+              skipApplyToImplicit(nextParent, rootTree)
+            case None => 
+              nodeTree
+          }
+        case _ =>
+          nodeTree
       }
     }
   
@@ -59,7 +78,7 @@ class ScalaTestFinder(val compiler: ScalaPresentationCompiler, loader: ClassLoad
     }
   }
   
-  class ConstructorBlock(pClassName: String, rootTree: Tree, nodeTree: Tree) 
+  private case class ConstructorBlock(pClassName: String, rootTree: Tree, nodeTree: Tree) 
     extends org.scalatest.finders.ConstructorBlock(pClassName, Array.empty) with TreeSupport {
     override lazy val children = {
       val rawChildren = getChildren(pClassName, rootTree, nodeTree).toList
@@ -76,9 +95,11 @@ class ScalaTestFinder(val compiler: ScalaPresentationCompiler, loader: ClassLoad
           rawChildren.toArray
       }
     }
+    override def equals(other: Any) = if (other != null && other.isInstanceOf[ConstructorBlock]) nodeTree eq other.asInstanceOf[ConstructorBlock].nodeTree else false 
+    override def hashCode = nodeTree.hashCode
   }
 
-  case class MethodDefinition(
+  private case class MethodDefinition(
     pClassName: String,
     rootTree: Tree,
     nodeTree: Tree,
@@ -87,9 +108,11 @@ class ScalaTestFinder(val compiler: ScalaPresentationCompiler, loader: ClassLoad
     extends org.scalatest.finders.MethodDefinition(pClassName, null, Array.empty, pName, pParamTypes.toList: _*) with TreeSupport {
     override def getParent() = getParent(pClassName, rootTree, nodeTree)
     override lazy val children = getChildren(pClassName, rootTree, nodeTree)
+    override def equals(other: Any) = if (other != null && other.isInstanceOf[MethodDefinition]) nodeTree eq other.asInstanceOf[MethodDefinition].nodeTree else false
+    override def hashCode = nodeTree.hashCode
   }
   
-  case class MethodInvocation(
+  private case class MethodInvocation(
     pClassName: String,
     pTarget: AstNode, 
     rootTree: Tree,
@@ -99,17 +122,23 @@ class ScalaTestFinder(val compiler: ScalaPresentationCompiler, loader: ClassLoad
     extends org.scalatest.finders.MethodInvocation(pClassName, pTarget, null, Array.empty, pName, pArgs.toList: _*) with TreeSupport {
     override def getParent() = getParent(pClassName, rootTree, nodeTree)
     override lazy val children = getChildren(pClassName, rootTree, nodeTree)
+    override def equals(other: Any) = if (other != null && other.isInstanceOf[MethodInvocation]) nodeTree eq other.asInstanceOf[MethodInvocation].nodeTree else false
+    override def hashCode = nodeTree.hashCode
   }
   
-  case class StringLiteral(pClassName: String, rootTree: Tree, nodeTree: Tree, pValue: String)
+  private case class StringLiteral(pClassName: String, rootTree: Tree, nodeTree: Tree, pValue: String)
     extends org.scalatest.finders.StringLiteral(pClassName, null, pValue) with TreeSupport {
     override def getParent() = getParent(pClassName, rootTree, nodeTree)
+    override def equals(other: Any) = if (other != null && other.isInstanceOf[StringLiteral]) nodeTree eq other.asInstanceOf[StringLiteral].nodeTree else false
+    override def hashCode = nodeTree.hashCode
   }
   
-  case class ToStringTarget(pClassName: String, rootTree: Tree, nodeTree: Tree, pTarget: AnyRef) 
+  private case class ToStringTarget(pClassName: String, rootTree: Tree, nodeTree: Tree, pTarget: AnyRef) 
     extends org.scalatest.finders.ToStringTarget(pClassName, null, Array.empty, pTarget) with TreeSupport {
     override def getParent() = getParent(pClassName, rootTree, nodeTree)
     override lazy val children = getChildren(pClassName, rootTree, nodeTree)
+    override def equals(other: Any) = if (other != null && other.isInstanceOf[ToStringTarget]) nodeTree eq other.asInstanceOf[ToStringTarget].nodeTree else false
+    override def hashCode = nodeTree.hashCode
   }
   
   @tailrec
@@ -162,20 +191,23 @@ class ScalaTestFinder(val compiler: ScalaPresentationCompiler, loader: ClassLoad
                   case implArgsApply: Apply =>
                     mapApplyToMethodInvocation(className, implArgsApply, rootTree)
                   case _ =>
-                    new ToStringTarget(className, rootTree, apply, implArgs.fun)
+                    new ToStringTarget(className, rootTree, select.qualifier, implArgs.fun)
                 }
               case _ => 
-                new ToStringTarget(className, rootTree, apply, implFirstArg.toString)
+                new ToStringTarget(className, rootTree, select.qualifier, implFirstArg.toString)
             }
-          case apply: Apply =>
+          case qualifierApply: Apply =>
             println("#####target is a apply")
-            mapApplyToMethodInvocation(className, apply, rootTree)
+            mapApplyToMethodInvocation(className, qualifierApply, rootTree)
+          case qualiferSelect: Select => 
+            println("#####target is a select")
+            new ToStringTarget(className, rootTree, qualiferSelect, qualiferSelect.name)
           case _ =>
             println("#####target is a something else, which is: " + select.qualifier.getClass.getName)
-            new ToStringTarget(className, rootTree, apply, select.name)
+            new ToStringTarget(className, rootTree, select.qualifier, select.name)
         }
       case _ =>
-        new ToStringTarget(className, rootTree, apply, apply.fun.toString)
+        new ToStringTarget(className, rootTree, apply.fun, apply.fun.toString)
     }
   }
   
