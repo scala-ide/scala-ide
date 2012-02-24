@@ -50,11 +50,11 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
       }
     }
 
-    def getSuperNames(supers: List[Tree]) = supers map (_ match {
+    def getSuperNames(supers: List[Tree]): Array[Array[Char]] = supers map (_ match {
       case Ident(id)                           => id.toChars
       case Select(_, name)                     => name.toChars
       case AppliedTypeTree(fun: RefTree, args) => fun.name.toChars
-      case tpt @ TypeTree()                    => tpt.tpe.typeSymbol.name.toChars // maybe the tree was typed
+      case tpt @ TypeTree()                    => mapType(tpt).toCharArray // maybe the tree was typed
       case parent =>
         logger.info("superclass not understood: %s".format(parent))
         "$$NoRef".toCharArray
