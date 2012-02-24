@@ -17,10 +17,12 @@ trait ScalaJavaMapper extends ScalaAnnotationHelper with HasLogger { self : Scal
   def mapType(t : Tree) : String = {
     (t match {
       case tt : TypeTree => {
-        if(tt.symbol == null || tt.symbol == NoSymbol || tt.symbol.isRefinementClass || tt.symbol.owner.isRefinementClass)
-          "scala.AnyRef"
-        else
-          tt.symbol.fullName
+        askOption { () => 
+          if(tt.symbol == null || tt.symbol == NoSymbol || tt.symbol.isRefinementClass || tt.symbol.owner.isRefinementClass)
+            "scala.AnyRef"
+          else
+            tt.symbol.fullName
+        }.getOrElse("scala.AnyRef")
       }
       case Select(_, name) => name.toString
       case Ident(name) => name.toString
