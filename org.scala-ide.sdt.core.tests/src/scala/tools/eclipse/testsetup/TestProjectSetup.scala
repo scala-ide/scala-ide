@@ -27,7 +27,7 @@ import org.mockito.Mockito.{mock, when}
  *  Example: `object HyperlinkDetectorTests extends TestProjectSetup("hyperlinks")'
  * 
  */
-class TestProjectSetup(projectName: String, srcRoot: String = "/%s/src/")  {
+class TestProjectSetup(projectName: String, srcRoot: String = "/%s/src/") extends ProjectBuilder {
   type ScalaUnit = ScalaCompilationUnit with ICompilationUnit
   
   /** The ScalaProject corresponding to projectName, after copying to the test workspace. */
