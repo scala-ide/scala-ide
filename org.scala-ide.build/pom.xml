@@ -118,13 +118,13 @@
     <repository>
       <id>scala-tools.release</id>
       <name>Scala Tools maven release repository</name>
-      <url>http://scala-tools.org/repo-releases</url>
+      <url>https://oss.sonatype.org/content/repositories/releases/</url>
       <snapshots><enabled>false</enabled></snapshots>
     </repository>
     <repository>
       <id>scala-tools.snapshot</id>
       <name>Scala Tools maven snapshot repository</name>
-      <url>http://scala-tools.org/repo-snapshots</url>
+      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
       <snapshots>
         <updatePolicy>daily</updatePolicy>
       </snapshots>
@@ -142,13 +142,13 @@
     <pluginRepository>
       <id>scala-tools.release</id>
       <name>Scala Tools maven release repository</name>
-      <url>http://scala-tools.org/repo-releases</url>
+      <url>https://oss.sonatype.org/content/repositories/releases/</url>
       <snapshots><enabled>false</enabled></snapshots>
     </pluginRepository>
     <pluginRepository>
       <id>scala-tools.snapshot</id>
       <name>Scala Tools maven snapshot repository</name>
-      <url>http://scala-tools.org/repo-snapshots</url>
+      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
     </pluginRepository>
   </pluginRepositories>
   <profiles>

@@ -35,6 +35,8 @@ import org.eclipse.jdt.core.ICompilationUnit
 import scala.tools.nsc.io.AbstractFile
 import scala.tools.eclipse.util.EclipseResource
 import scala.tools.eclipse.logging.PluginLogConfigurator
+import scala.tools.eclipse.util.Trim
+import scala.tools.nsc.Settings
 
 object ScalaPlugin {
   var plugin: ScalaPlugin = _
@@ -45,6 +47,12 @@ object ScalaPlugin {
   }
   
   def getShell: Shell = getWorkbenchWindow map (_.getShell) orNull
+  
+  def defaultScalaSettings : Settings = defaultScalaSettings(Console.println)
+  
+  def defaultScalaSettings(errorFn: String => Unit): Settings = new Settings(errorFn) {
+    override val pluginsDir = StringSetting("-Xpluginsdir", "path", "Path to search compiler plugins.", ScalaPlugin.plugin.defaultPluginsDir getOrElse "")
+  } 
 }
 
 class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IResourceChangeListener with IElementChangedListener with IPartListener with HasLogger {
@@ -125,13 +133,16 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
   val continuationsClasses = pathInBundle(scalaCompilerBundle, "/lib/continuations.jar")
   val compilerSources = pathInBundle(scalaCompilerBundle, "/lib/scala-compiler-src.jar")
   
+  def defaultPluginsDir: Option[String] = 
+    Trim(ScalaPlugin.plugin.continuationsClasses map { _.removeLastSegments(1).toOSString })
+  
   lazy val sbtCompilerBundle = Platform.getBundle(ScalaPlugin.plugin.sbtPluginId)
   lazy val sbtCompilerInterface = pathInBundle(sbtCompilerBundle, "/lib/scala-" + shortScalaVer + "/lib/compiler-interface.jar")
   // Disable for now, until we introduce a way to have multiple scala libraries, compilers available for the builder
   //lazy val sbtScalaLib = pathInBundle(sbtCompilerBundle, "/lib/scala-" + shortScalaVer + "/lib/scala-library.jar")
   //lazy val sbtScalaCompiler = pathInBundle(sbtCompilerBundle, "/lib/scala-" + shortScalaVer + "/lib/scala-compiler.jar")
   
-  val scalaLibBundle = {
+  lazy val scalaLibBundle = {
     // all library bundles
     val bundles = Option(Platform.getBundles(ScalaPlugin.plugin.libraryPluginId, null)).getOrElse(Array[Bundle]())
     logger.debug("[scalaLibBundle] Found %d bundles: %s".format(bundles.size, bundles.toList.mkString(", ")))
@@ -141,12 +152,12 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
     }
   }
   
-  val libClasses = pathInBundle(scalaLibBundle, "/lib/scala-library.jar")
-  val libSources = pathInBundle(scalaLibBundle, "/lib/scala-library-src.jar")
-  val dbcClasses = pathInBundle(scalaLibBundle, "/lib/scala-dbc.jar")
-  val dbcSources = pathInBundle(scalaLibBundle, "/lib/scala-dbc-src.jar")
-  val swingClasses = pathInBundle(scalaLibBundle, "/lib/scala-swing.jar")
-  val swingSources = pathInBundle(scalaLibBundle, "/lib/scala-swing-src.jar")
+  lazy val libClasses = pathInBundle(scalaLibBundle, "/lib/scala-library.jar")
+  lazy val libSources = pathInBundle(scalaLibBundle, "/lib/scala-library-src.jar")
+  lazy val dbcClasses = pathInBundle(scalaLibBundle, "/lib/scala-dbc.jar")
+  lazy val dbcSources = pathInBundle(scalaLibBundle, "/lib/scala-dbc-src.jar")
+  lazy val swingClasses = pathInBundle(scalaLibBundle, "/lib/scala-swing.jar")
+  lazy val swingSources = pathInBundle(scalaLibBundle, "/lib/scala-swing-src.jar")
 
   lazy val templateManager = new ScalaTemplateManager()
   lazy val headlessMode = System.getProperty(HEADLESS_TEST) ne null

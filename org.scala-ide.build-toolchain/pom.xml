@@ -9,7 +9,7 @@
   <packaging>pom</packaging>
 
   <properties>
-    <sbt.version>0.11.2-scalaide-01</sbt.version>
+    <sbt.version>0.11.2-scalaide-02</sbt.version>
     <patch.level>p0002</patch.level>
     <encoding>UTF-8</encoding>
     <scala.library.version>${scala.version}</scala.library.version>
@@ -75,14 +75,14 @@
 
       <repositories>
         <repository>
-          <id>scala-tools.org</id>
-          <name>Scala Tools Maven2 Repository</name>
-          <url>http://scala-tools.org/repo-releases</url>
+          <id>sonatype.releases</id>
+          <name>Replacement for Scala Tools Maven2 Repository</name>
+          <url>https://oss.sonatype.org/content/repositories/releases/</url>
         </repository>
         <repository>
-          <id>scala-tools.snapshot</id>
-          <name>Scala Tools maven snapshot repository</name>
-          <url>http://scala-tools.org/repo-snapshots</url>
+          <id>sonatype.snapshot</id>
+          <name>Replacement for Scala Tools maven snapshot repository</name>
+          <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
           <snapshots>
             <updatePolicy>daily</updatePolicy>
           </snapshots>

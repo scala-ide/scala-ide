@@ -29,7 +29,9 @@ private class OpenExternalFile private (file: File) extends Listener with HasLog
       val page = win.getActivePage
 
       catching(classOf[PartInitException]) {
-        IDE.openEditorOnFileStore(page, fileStore)
+        // After opening the file, if any change occurs to the file a 
+        // popup will ask the user to refresh the resource.
+        IDE.openInternalEditorOnFileStore(page, fileStore)
       }
     }
   }

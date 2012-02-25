@@ -39,6 +39,7 @@ import scala.tools.eclipse.util.FileUtils
 import scala.tools.nsc.util.BatchSourceFile
 import java.io.InputStream
 import java.io.InputStreamReader
+import scala.tools.eclipse.util.Trim
 
 trait BuildSuccessListener {
   def buildSuccessful(): Unit
@@ -68,7 +69,7 @@ class ScalaProject private (val underlying: IProject) extends HasLogger {
   private val presentationCompiler = new Cached[Option[ScalaPresentationCompiler]] {
     override def create() = {
       try {
-        val settings = new Settings
+        val settings = ScalaPlugin.defaultScalaSettings
         settings.printtypes.tryToSet(Nil)
         initialize(settings, isPCSetting(settings))
         Some(new ScalaPresentationCompiler(ScalaProject.this, settings))
@@ -553,17 +554,11 @@ class ScalaProject private (val underlying: IProject) extends HasLogger {
       box <- IDESettings.shownSettings(settings);
       setting <- box.userSettings; if filter(setting)
     ) {
-      val value0 = store.getString(SettingConverterUtil.convertNameToProperty(setting.name))
-//      logger.info("[%s] initializing %s to %s".format(underlying.getName(), setting.name, value0.toString))
+      val value0 = Trim(store.getString(SettingConverterUtil.convertNameToProperty(setting.name)))
+      
       try {
-        val value = if (setting ne settings.pluginsDir) value0 else {
-          ScalaPlugin.plugin.continuationsClasses map {
-            _.removeLastSegments(1).toOSString + (if (value0 == null || value0.length == 0) "" else ":" + value0)
-          } getOrElse value0
-        }
-        if (value != null && value.length != 0) {
-          setting.tryToSetFromPropertyValue(value)
-        }
+        value0 foreach setting.tryToSetFromPropertyValue
+        logger.debug("[%s] initializing %s to %s".format(underlying.getName(), setting.name, setting.value.toString))
       } catch {
         case t: Throwable => eclipseLog.error("Unable to set setting '" + setting.name + "' to '" + value0 + "'", t)
       }
@@ -574,7 +569,7 @@ class ScalaProject private (val underlying: IProject) extends HasLogger {
     logger.info("setting additional paramters: " + additional)
     settings.processArgumentString(additional)
   }
-  
+
   private def buildManagerInitialize: String =
     storage.getString(SettingConverterUtil.convertNameToProperty(properties.ScalaPluginSettings.buildManager.name))
   
@@ -644,8 +639,9 @@ class ScalaProject private (val underlying: IProject) extends HasLogger {
       
       presentationCompiler.invalidate
       
-      logger.info("Scheduling for reconcile: " + units.map(_.file))
-      units.foreach(_.scheduleReconcile())
+      val existingUnits = units.filter(_.exists) 
+      logger.info("Scheduling for reconcile: " + existingUnits.map(_.file))
+      existingUnits.foreach(_.scheduleReconcile())
       true
     } else {
       logger.info("[%s] Presentation compiler was not yet initialized, ignoring reset.".format(underlying.getName()))
@@ -654,7 +650,7 @@ class ScalaProject private (val underlying: IProject) extends HasLogger {
 
   def buildManager = {
     if (buildManager0 == null) {
-      val settings = new Settings(msg => settingsError(IMarker.SEVERITY_ERROR, msg, null))
+      val settings = ScalaPlugin.defaultScalaSettings(msg => settingsError(IMarker.SEVERITY_ERROR, msg, null))
       clearSettingsErrors()
       initialize(settings, _ => true)
       // source path should be emtpy. The build manager decides what files get recompiled when.
@@ -789,7 +785,12 @@ class ScalaProject private (val underlying: IProject) extends HasLogger {
    */
   def refreshChangedFiles(files: List[IFile]) {
     // transform to batch source files
-    val abstractfiles= files.map(file => new BatchSourceFile(EclipseResource(file), readFully(file))) 
+    val abstractfiles = files.collect {
+      // When a compilation unit is moved (e.g. using the Move refactoring) between packages, 
+      // an ElementChangedEvent is fired but with the old IFile name. Ignoring the file does
+      // not seem to cause any bad effects later on, so we simply ignore these files -- Mirko
+      case file if file.exists => new BatchSourceFile(EclipseResource(file), readFully(file))
+    }
       
     withPresentationCompiler {compiler =>
       import compiler._

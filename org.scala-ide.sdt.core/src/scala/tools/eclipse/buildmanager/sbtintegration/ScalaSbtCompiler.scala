@@ -1,10 +1,10 @@
 package scala.tools.eclipse.buildmanager.sbtintegration
 
 import scala.tools.nsc.Settings
-
 import sbt.{ScalaInstance, LoggerReporter, ClasspathOptions}
 import xsbti.{AnalysisCallback, Reporter, Logger, Controller}
 import xsbt.Log
+import scala.tools.eclipse.ScalaPlugin
 
 
 object SettingsCleanup {
@@ -13,6 +13,7 @@ object SettingsCleanup {
                          s.YpresentationDebug, s.YpresentationDelay, s.YpresentationLog,
                          s.YpresentationReplay, s.YpresentationVerbose,
                          s.classpath, s.bootclasspath)
+    // FIXME: For no apparent reason calling `ScalaPlugin.defaultScalaSettings` is not the same as using `new Settings`!?
     val s1 = new Settings(Log.settingsError(log))
     val xs = (s.userSetSettings -- toDefault).toList flatMap (_.unparse)
 
