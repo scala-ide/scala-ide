@@ -153,7 +153,7 @@
     <dependency>
       <groupId>org.scalatest</groupId>
       <artifactId>scalatest-finders_2.9.1</artifactId>
-      <version>0.1.0</version>
+      <version>1.0.0</version>
     </dependency>
     <!-- Should be the one with which we built sbt, for now, let's use 2.9.0 -->
   </dependencies>
@@ -362,7 +362,7 @@
                 <artifactItem>
                   <groupId>org.scalatest</groupId>
                   <artifactId>scalatest-finders_2.9.1</artifactId>
-                  <version>0.1.0</version>
+                  <version>1.0.0</version>
                   <outputDirectory>${project.build.directory}</outputDirectory>
                 </artifactItem>              
               </artifactItems>
@@ -452,7 +452,7 @@
             <!-- put a '-' after the sbt.version since it already has a '-scalaide-01' qualifier. Remove it the qualifier is gone. -->
             <Bundle-Version>${sbt.version}-${version.suffix}-${maven.build.timestamp}</Bundle-Version>
             <Embed-Dependency>*;scope=compile|runtime;inline=false</Embed-Dependency>
-            <_exportcontents>sbt.*;version=${sbt.version},xsbt.*;version=${sbt.version},xsbti.*;version=${sbt.version},sbinary.*;version=${sbinary.version},jline.*;version=0.9.94,org.apache.ivy.*;version=2.2.0,org.scalatest.finders.*;version=0.1.0</_exportcontents>
+            <_exportcontents>sbt.*;version=${sbt.version},xsbt.*;version=${sbt.version},xsbti.*;version=${sbt.version},sbinary.*;version=${sbinary.version},jline.*;version=0.9.94,org.apache.ivy.*;version=2.2.0,org.scalatest.finders.*;version=1.0.0</_exportcontents>
             <Embed-Directory>lib</Embed-Directory>
             <Embed-StripVersion>true</Embed-StripVersion>
             <Include-Resource>lib=${project.build.directory}/lib</Include-Resource>
