@@ -1,8 +1,14 @@
-# run it with 'R CMD BATCH graph-it.R'
+# run it with 'Rscript graph-it.R <filename>'
 
 library(ggplot2)
 
-data <- read.table("usedmem-2012-02-24.txt")
+args <- commandArgs(TRUE)
+if (length(args) < 1) {
+	stop("Please pass the filename with the memory data.")
+}
+
+
+data <- read.table(args[1])
 y <- data$usedMem
 x <- 1:20
 coef <- lm(y~x)
