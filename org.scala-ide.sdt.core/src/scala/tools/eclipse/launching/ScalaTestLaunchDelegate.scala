@@ -2,18 +2,15 @@ package scala.tools.eclipse.launching
 
 import org.eclipse.jdt.launching.{AbstractJavaLaunchConfigurationDelegate, JavaRuntime,
 	                                IRuntimeClasspathEntry, VMRunnerConfiguration, ExecutionArguments}
-
 import scala.tools.eclipse.ScalaPlugin
-
 import java.io.File
 import com.ibm.icu.text.MessageFormat
-
 import org.eclipse.core.runtime.{Path, CoreException, IProgressMonitor, NullProgressMonitor}
 import org.eclipse.debug.core.{ILaunch, ILaunchConfiguration}
 import org.eclipse.jdt.internal.launching.LaunchingMessages
-
 import scala.collection.JavaConversions._
 import scala.collection.mutable
+import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants
 
 class ScalaTestLaunchDelegate extends AbstractJavaLaunchConfigurationDelegate {
   def launch(configuration: ILaunchConfiguration, mode: String, launch: ILaunch, monitor0: IProgressMonitor) {
@@ -28,17 +25,20 @@ class ScalaTestLaunchDelegate extends AbstractJavaLaunchConfigurationDelegate {
 		try {
 			monitor.subTask(LaunchingMessages.JavaLocalApplicationLaunchConfigurationDelegate_Verifying_launch_attributes____1) 
 							
-			val mainTypeName = verifyMainTypeName(configuration)
+			val mainTypeName = "org.scalatest.tools.Runner"
 			val runner = getVMRunner(configuration, mode)
 	
 			val workingDir = verifyWorkingDirectory(configuration)
-		  val workingDirName = if (workingDir != null) workingDir.getAbsolutePath() else null
+		    val workingDirName = if (workingDir != null) workingDir.getAbsolutePath() else null
 			
 			// Environment variables
 			val envp = getEnvironment(configuration)
 			
+			// Test Class
+			val testClass = getTestClass(configuration)
+			
 			// Program & VM arguments
-			val pgmArgs = getProgramArguments(configuration)
+			val pgmArgs = getProgramArguments(configuration) + " -s " + testClass + " -oW -g"		
 			val vmArgs = getVMArguments(configuration)
 			val execArgs = new ExecutionArguments(vmArgs, pgmArgs)
 			
@@ -110,8 +110,12 @@ class ScalaTestLaunchDelegate extends AbstractJavaLaunchConfigurationDelegate {
 		}
 	}
 	
-	private def resolveClasspath(a: IRuntimeClasspathEntry, configuration: ILaunchConfiguration): List[String] = {
-		val bootEntry = JavaRuntime.resolveRuntimeClasspath(Array(a), configuration)
-		bootEntry.toList.map(_.getLocation())
-	}
+  private def resolveClasspath(a: IRuntimeClasspathEntry, configuration: ILaunchConfiguration): List[String] = {
+    val bootEntry = JavaRuntime.resolveRuntimeClasspath(Array(a), configuration)
+    bootEntry.toList.map(_.getLocation())
+  }
+  
+  private def getTestClass(configuration: ILaunchConfiguration): String = {
+    configuration.getAttribute(IJavaLaunchConfigurationConstants.ATTR_MAIN_TYPE_NAME, "")
+  }
 }

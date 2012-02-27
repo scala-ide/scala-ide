@@ -160,7 +160,7 @@ class ScalaTestMainTab extends SharedJavaMainTab {
     }
     name = fMainText.getText.trim
     if (name.length == 0) {
-      setErrorMessage(LauncherMessages.JavaMainTab_Main_type_not_specified_16) 
+      setErrorMessage("Test Class cannot be empty.") 
       return false
     }
     return true

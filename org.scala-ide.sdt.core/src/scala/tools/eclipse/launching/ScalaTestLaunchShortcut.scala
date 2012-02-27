@@ -29,6 +29,9 @@ import org.scalatest.finders.Selection
 import java.net.URLClassLoader
 import java.net.URL
 import java.io.File
+import org.eclipse.debug.core.DebugPlugin
+import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants
+import org.eclipse.debug.ui.DebugUITools
 
 class ScalaTestLaunchShortcut extends ILaunchShortcut {
   
@@ -44,12 +47,30 @@ class ScalaTestLaunchShortcut extends ILaunchShortcut {
       case Some(selection) => 
         println("***Test Found, display name: " + selection.displayName() + ", test name(s):")
         selection.testNames.foreach(println(_))
+        
+        val configType = getLaunchManager.getLaunchConfigurationType("scala.scalatest")
+        val existingConfigs = getLaunchManager.getLaunchConfigurations(configType)
+        val existingConfigOpt = existingConfigs.find(config => config.getName == selection.displayName)
+        val config = existingConfigOpt match {
+                       case Some(existingConfig) => existingConfig
+                       case None => 
+                         val wc = configType.newInstance(null, getLaunchManager.generateUniqueLaunchConfigurationNameFrom(selection.displayName))
+                         val project = editorPart.getEditorInput.asInstanceOf[IFileEditorInput].getFile.getProject
+                         val scProject = ScalaPlugin.plugin.getScalaProject(project)
+                         wc.setAttribute(IJavaLaunchConfigurationConstants.ATTR_MAIN_TYPE_NAME, selection.className)
+                         wc.setAttribute(IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME, project.getName)
+                         wc.doSave
+                     }
+        DebugUITools.launch(config, mode)
+        
       case None =>
         println("#####Launch all suites within the source file")
     }
   }
   
-  def resolveSelectedAst(editorPart: IEditorPart, typeRoot: ITypeRoot): Option[Selection] = {
+  private def getLaunchManager = DebugPlugin.getDefault.getLaunchManager
+  
+  private def resolveSelectedAst(editorPart: IEditorPart, typeRoot: ITypeRoot): Option[Selection] = {
     val selectionProvider:ISelectionProvider = editorPart.getSite().getSelectionProvider()
     if(selectionProvider == null)
       None
