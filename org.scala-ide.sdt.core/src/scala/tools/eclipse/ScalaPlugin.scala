@@ -51,8 +51,18 @@ object ScalaPlugin {
   def defaultScalaSettings : Settings = defaultScalaSettings(Console.println)
   
   def defaultScalaSettings(errorFn: String => Unit): Settings = new Settings(errorFn) {
-    override val pluginsDir = StringSetting("-Xpluginsdir", "path", "Path to search compiler plugins.", ScalaPlugin.plugin.defaultPluginsDir getOrElse "")
-  } 
+    // [dotta]:
+    // Passing a default location for pluginsDir does not play nicely with the SBT builder for some 
+    // reason which I currently fail to understand. The workaround is hence to set the default location 
+    // of plugins only when the user clicks on the "Use Project Settings" checkbox (located in the Scala 
+    // Compiler Preferences); have a look at CompilerSettings.scala to see the dirty hack in action.
+    // 
+    // The issue I refer to seem to arise only when a user tries to enable the continuations plugin 
+    // by explicitly passing the location of the continuations.jar via the -Xplugin setting (and 
+    // -Xpluginsdir is given no value). By the way, the mentioned issue only shows up with the SBT builder, 
+    // with the Refined Build Manager it all works as expected.
+    override val pluginsDir = StringSetting("-Xpluginsdir", "path", "Path to search compiler plugins.", "")
+  }
 }
 
 class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IResourceChangeListener with IElementChangedListener with IPartListener with HasLogger {
@@ -133,6 +143,9 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
   val continuationsClasses = pathInBundle(scalaCompilerBundle, "/lib/continuations.jar")
   val compilerSources = pathInBundle(scalaCompilerBundle, "/lib/scala-compiler-src.jar")
   
+  /** The default location used to load compiler's plugins. The convention is that the continuations.jar 
+   * plugin should be always loaded, so that a user can enable continuations by only passing 
+   * -P:continuations:enable flag. This matches `scalac` behavior. */
   def defaultPluginsDir: Option[String] = 
     Trim(ScalaPlugin.plugin.continuationsClasses map { _.removeLastSegments(1).toOSString })
   

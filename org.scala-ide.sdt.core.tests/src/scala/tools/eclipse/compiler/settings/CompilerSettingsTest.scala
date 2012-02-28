@@ -16,7 +16,15 @@ class CompilerSettingsTest {
   import CompilerSettingsTest._
   
   @Test
-  def continuations_plugin_works() {
+  def loadContinuationsPluginVia_XpluginsdirCompilerSetting() {
+    ScalaPlugin.plugin.defaultPluginsDir.foreach(project.storage.setValue("Xpluginsdir", _))
+    val plugins = loadedPlugins(project)
+    Assert.assertEquals("Loaded plugins: ", List("continuations"), loadedPlugins(project))
+  }
+  
+  @Test
+  def loadContinuationsPluginVia_XpluginCompilerSetting() {
+    ScalaPlugin.plugin.defaultPluginsDir.foreach(project.storage.setValue("Xplugin", _))
     val plugins = loadedPlugins(project)
     Assert.assertEquals("Loaded plugins: ", List("continuations"), loadedPlugins(project))
   }

@@ -2,13 +2,12 @@ package scala.tools.eclipse.properties
 
 import scala.tools.nsc.Settings
 import scala.tools.eclipse.{ SettingConverterUtil }
-
 import org.eclipse.swt.widgets.{ Button, Combo, Composite, Control, Event, Group, Label, Listener, Text }
 import org.eclipse.swt.layout.{ GridData, GridLayout }
 import org.eclipse.swt.SWT
 import org.eclipse.swt.events.{ ModifyEvent, ModifyListener, SelectionAdapter, SelectionEvent, SelectionListener }
-
 import org.eclipse.jface.preference.IPreferenceStore
+import scala.tools.eclipse.util.Trim
 
 trait EclipseSettings {
   self: ScalaPluginPreferencePage =>
@@ -144,9 +143,8 @@ trait EclipseSettings {
     def createControl(page: Composite) {
       control = new Text(page, SWT.SINGLE | SWT.BORDER)
       control.setText(setting.value)
-      var layout = data
-      layout = new GridData()
-      layout.widthHint = 150
+      val layout = new GridData()
+      layout.widthHint = 200
       control.setLayoutData(layout)
       control.addModifyListener(ModifyListenerSing)
     }
@@ -163,14 +161,18 @@ trait EclipseSettings {
     var control: Text = _
     def createControl(page: Composite) {
       control = new Text(page, SWT.SINGLE | SWT.BORDER)
-      control.setLayoutData(data)
-      control.setText(setting.value.mkString(" "))
+      val layout = new GridData()
+      layout.widthHint = 200
+      control.setLayoutData(layout)
+      control.setText(setting.value.mkString(", "))
       control.addModifyListener(ModifyListenerSing)
     }
 
-    def isChanged = setting.value.mkString(" ") != control.getText
+    def values: List[String] = control.getText().split(',').flatMap(Trim(_)).toList
+    
+    def isChanged = setting.value != values
     def reset() { control.setText("") }
-    def apply() { setting.value = control.getText.trim.split(" +").toList }
+    def apply() { setting.value = values }
   }
 
   /** Text setting selectable using a drop down combo box.
@@ -202,11 +204,8 @@ trait EclipseSettings {
     def createControl(page: Composite) {
       control = new Text(page, SWT.SINGLE | SWT.BORDER)
       control.setText(setting.value)
-      var layout = data
-      if (setting.value.isEmpty) {
-        layout = new GridData()
-        layout.widthHint = 200
-      }
+      val layout = new GridData()
+      layout.widthHint = 200
       control.setLayoutData(layout)
       control.setMessage("Path is relative to the workspace")
       control.addModifyListener(ModifyListenerSing)
@@ -223,17 +222,14 @@ trait EclipseSettings {
       control = new Text(page, SWT.SINGLE | SWT.BORDER)
       control.setText(setting.value.mkString(", "))
       var layout = data
-      if (setting.value.isEmpty) {
-        layout = new GridData()
-        layout.widthHint = 200
-      }
+      layout.widthHint = 200
       control.setLayoutData(layout)
       control.setMessage("Path is relative to the workspace")
       control.addModifyListener(ModifyListenerSing)
     }
 
-    def fileNames() = {
-      control.getText().split(',').map(f => fileName(f.trim)).toList
+    def fileNames(): List[String] = {
+      control.getText().split(',').flatMap(f => Trim(f).map(fileName)).toList
     }
 
     override def isChanged = setting.value != fileNames()
