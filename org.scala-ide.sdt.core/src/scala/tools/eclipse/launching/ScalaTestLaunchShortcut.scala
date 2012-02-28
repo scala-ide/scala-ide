@@ -117,6 +117,8 @@ object ScalaTestLaunchShortcut {
         ts.filter {tpe => 
           tpe.isInstanceOf[ScalaClassElement] && isScalaTestSuite(tpe)
         }.toList
+      case _ =>
+        List.empty
     }
   }
   

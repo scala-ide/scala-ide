@@ -47,29 +47,33 @@ class ScalaTestFinder(val compiler: ScalaPresentationCompiler, loader: ClassLoad
           nodeTree
       }
     }
+    
+    @tailrec
+    private def findBlock(apply: Apply): Option[Block] = {
+      if (apply.args.length > 0 && apply.args.last.isInstanceOf[Block])
+        Some(apply.args.last.asInstanceOf[Block])
+      else if (apply.args.length > 0 && apply.args.first.isInstanceOf[Apply])
+        findBlock(apply.args.first.asInstanceOf[Apply])
+      else
+        None
+    }
   
     def getChildren(className: String, root: Tree, node: Tree): Array[AstNode] = {
       val children = node match {
-        case apply: Apply =>
-          apply.fun match {
-            case funApply: Apply => 
-              if (apply.children.length > 0 && apply.children.last.isInstanceOf[Block]) 
-                apply.children.last.children
-              else
-                apply.children
-            case funSelect: Select =>
-              val applyParentOpt = getParentTree(root, funSelect)
-              applyParentOpt match {
-                case Some(applyParent) => 
-                  if (applyParent.children.length > 0 && applyParent.children.last.isInstanceOf[Block])
-                    applyParent.children.last.children
-                  else
-                    node.children
-                case None =>
-                  node.children
-              }              
+        case implArgs: ApplyToImplicitArgs => 
+          implArgs.children.first match {
+            case implApply: Apply => 
+              implApply.children.last.children
             case _ =>
               node.children
+          }
+        case apply: Apply =>
+          val blockOpt = findBlock(apply)
+          blockOpt match {
+            case Some(block) => 
+              block.children
+            case None => 
+              List.empty
           }
         case _ =>
           node.children
@@ -206,7 +210,10 @@ class ScalaTestFinder(val compiler: ScalaPresentationCompiler, loader: ClassLoad
             println("#####target is a something else, which is: " + select.qualifier.getClass.getName)
             new ToStringTarget(className, rootTree, select.qualifier, select.name)
         }
-      case _ =>
+      case funApply: Apply => 
+        getTarget(className, funApply, rootTree)
+      case other =>
+        println("#####apply.fun is other: " + apply.fun.getClass.getName)
         new ToStringTarget(className, rootTree, apply.fun, apply.fun.toString)
     }
   }
@@ -234,7 +241,17 @@ class ScalaTestFinder(val compiler: ScalaPresentationCompiler, loader: ClassLoad
       case applyImplicitView: ApplyImplicitView =>
         None
       case apply: Apply =>
-        Some(mapApplyToMethodInvocation(className, apply, rootTree))
+        val applyParentOpt = getParentTree(rootTree, apply)
+        applyParentOpt match {
+          case Some(applyParent) =>
+            if (applyParent.isInstanceOf[Apply])
+              Some(mapApplyToMethodInvocation(className, applyParent.asInstanceOf[Apply], rootTree))
+            else
+              Some(mapApplyToMethodInvocation(className, apply, rootTree))
+          case None => 
+            Some(mapApplyToMethodInvocation(className, apply, rootTree))
+        }
+        //Some(mapApplyToMethodInvocation(className, apply, rootTree))
       case template: Template =>
         Some(new ConstructorBlock(className, rootTree, selectedTree))
       case _ =>
