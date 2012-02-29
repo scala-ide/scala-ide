@@ -36,6 +36,7 @@ class SbtBuilderTest {
   @Test def testSimpleBuild() {
     println("building " + project)
     project.clean(new NullProgressMonitor())
+    depProject // initialize
     project.underlying.build(IncrementalProjectBuilder.FULL_BUILD, new NullProgressMonitor)
 
     val units = compilationUnits("test/ja/JClassA.java", "test/sc/ClassA.scala")
@@ -80,7 +81,7 @@ class SbtBuilderTest {
 
     val fooCU = depProject.compilationUnit("subpack/Foo.scala")
     println("IFile: " + fooCU.getResource().getAdapter(classOf[IFile]).asInstanceOf[IFile])
-    SDTTestUtils.changeContentOfFile(depProject.project.underlying, fooCU.getResource().getAdapter(classOf[IFile]).asInstanceOf[IFile], changedFooScala)
+    SDTTestUtils.changeContentOfFile(fooCU.getResource().getAdapter(classOf[IFile]).asInstanceOf[IFile], changedFooScala)
 
     val fooClientCU = scalaCompilationUnit("test/dependency/FooClient.scala")
 
@@ -106,29 +107,20 @@ class SbtBuilderTest {
     Assert.assertEquals("Presentation compiler errors.", 2, pcProblems.size)
   }
 
+  /** Where we look for errors. */
+  val unitsToWatch = compilationUnits("test/ja/JClassA.java", "test/sc/ClassA.scala", "test/dependency/FooClient.scala").toList
+  
   private def getProblemMarkers(): List[IMarker] = {
-    val units = compilationUnits("test/ja/JClassA.java", "test/sc/ClassA.scala", "test/dependency/FooClient.scala").toList
-    units.flatMap(SDTTestUtils.findProblemMarkers)
-  }
-
-  private def buildWith(resource: IResource, contents: String): List[String] = {
-    SDTTestUtils.changeContentOfFile(depProject.project.underlying, resource.asInstanceOf[IFile], contents)
-
-    println("=== Rebuilding workspace === ")
-    SDTTestUtils.workspace.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, null)
-
-    val problems = getProblemMarkers()
-
-    for (p <- problems) yield p.getAttribute(IMarker.MESSAGE).toString
+    unitsToWatch.flatMap(SDTTestUtils.findProblemMarkers)
   }
 
   @Test def dependentProject_should_restart_PC_after_build() {
     val fooCU = depProject.compilationUnit("subpack/Foo.scala")
-    val changedErrors = buildWith(fooCU.getResource, changedFooScala)
+    val changedErrors = SDTTestUtils.buildWith(fooCU.getResource, changedFooScala, unitsToWatch)
 
     Assert.assertEquals("Build problems " + changedErrors, 2, changedErrors.size)
 
-    val errorMessages = buildWith(fooCU.getResource, originalFooScala)
+    val errorMessages = SDTTestUtils.buildWith(fooCU.getResource, originalFooScala, unitsToWatch)
     Assert.assertEquals("No build problems: " + errorMessages, 0, errorMessages.size)
 
     val fooClientCU = scalaCompilationUnit("test/dependency/FooClient.scala")
