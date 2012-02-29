@@ -192,7 +192,7 @@ class ScalaProject private (val underlying: IProject) extends HasLogger {
   }
   
   /** Return the exported dependencies of this project. An exported dependency is
-   *  another project his project depends on, and which is exported to downstream
+   *  another project this project depends on, and which is exported to downstream
    *  dependencies.
    */
   def exportedDependencies: Seq[IProject] = {

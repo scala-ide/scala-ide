@@ -16,6 +16,7 @@ import org.eclipse.jdt.core.IPackageFragment
 class ProjectDependenciesTest {
 
   val simulator = new EclipseUserSimulator
+  import SDTTestUtils._
 
   @Test def transitive_dependencies_no_export() {
     val Seq(prjA, prjB, prjC) = createProjects("A", "B", "C")
@@ -88,22 +89,5 @@ class ProjectDependenciesTest {
     Assert.assertEquals("No errors in A, B or C", Seq(), errors3)
 
     deleteProjects(prjA, prjB, prjC)
-  }
-
-  private def createSourcePackage(name: String)(project: ScalaProject): IPackageFragment =
-    project.javaProject.getPackageFragmentRoot(project.underlying.getFolder("/src")).createPackageFragment(name, true, null)
-
-  private def addToClasspath(prj: ScalaProject, entries: IClasspathEntry*) {
-    val existing = prj.javaProject.getRawClasspath
-    prj.javaProject.setRawClasspath(existing ++ entries, null)
-  }
-
-  private def createProjects(names: String*): Seq[ScalaProject] =
-    names map (n => simulator.createProjectInWorkspace(n, true))
-
-  private def deleteProjects(projects: ScalaProject*) {
-    workspaceRunnableIn(ScalaPlugin.plugin.workspaceRoot.getWorkspace) { _ =>
-      projects foreach (_.underlying.delete(true, null))
-    }
   }
 }
