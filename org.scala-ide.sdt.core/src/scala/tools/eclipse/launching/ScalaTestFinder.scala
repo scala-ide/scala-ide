@@ -146,19 +146,6 @@ class ScalaTestFinder(val compiler: ScalaPresentationCompiler, loader: ClassLoad
   }
   
   @tailrec
-  private def getClassElement(element: IJavaElement): ScalaClassElement = {
-    element match {
-      case scClassElement: ScalaClassElement => 
-        scClassElement
-      case _ =>
-        if (element.getParent != null)
-          getClassElement(element.getParent)
-        else
-          null
-    }
-  }
-  
-  @tailrec
   final def getParentTree(candidate: Tree, node: Tree): Option[Tree] = {
     val foundOpt = candidate.children.find(c => c == node)
     foundOpt match {
@@ -277,10 +264,12 @@ class ScalaTestFinder(val compiler: ScalaPresentationCompiler, loader: ClassLoad
     }
   }
   
-  def find(textSelection: ITextSelection, element: IJavaElement) = {
+  def find(textSelection: ITextSelection, element: IJavaElement): Option[Selection] = {
     element match {
       case scElement: ScalaElement => 
-        val classElement = getClassElement(element)
+        val classElement = ScalaTestLaunchShortcut.getClassElement(element)
+        if (classElement == null)
+          return None
         println("#####scElement: " + scElement.getClass.getName + ", children count: " + scElement.getChildren.length)
         val scu = scElement.getCompilationUnit.asInstanceOf[ScalaCompilationUnit]
           

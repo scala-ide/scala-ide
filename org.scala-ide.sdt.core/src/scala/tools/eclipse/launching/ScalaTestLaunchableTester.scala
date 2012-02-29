@@ -18,7 +18,7 @@ class ScalaTestLaunchableTester extends PropertyTester {
       false
   }
   
-  private def canLaunchAsScalaTest(element: IJavaElement):Boolean = {
+  private def canLaunchAsScalaTest(element: IJavaElement): Boolean = {
     try {
       ScalaTestLaunchShortcut.getScalaTestSuites(element).length > 0
     } catch {

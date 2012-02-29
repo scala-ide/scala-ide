@@ -789,8 +789,8 @@
            properties="canLaunchAsScalaTest"
            type="org.eclipse.core.runtime.IAdaptable"/>
   </extension>
-
-  <extension point="org.eclipse.debug.ui.launchShortcuts">
+  
+  <extension point="org.eclipse.debug.ui.launchShortcuts">  
     <shortcut
       class="scala.tools.eclipse.launching.ScalaLaunchShortcut"
       icon="icons/full/obj16/scu_obj.gif"
@@ -849,10 +849,30 @@
          </description>
       </shortcut>
       <shortcut
-        class="scala.tools.eclipse.launching.ScalaTestLaunchShortcut"
+        class="scala.tools.eclipse.launching.ScalaTestSuiteLaunchShortcut"
         icon="icons/full/obj16/scu_obj.gif"
-        id="org.eclipse.shortcut.scalatest"
-        label="ScalaTest"
+        id="org.eclipse.shortcut.scalatest.suite"
+        label="ScalaTest - Suite"
+        modes="run,debug">
+        <contextualLaunch>
+          <enablement>
+            <with variable="selection">
+              <count value="1" />
+              <iterate>
+                <adapt type="org.eclipse.jdt.core.IJavaElement">
+		          <test property="org.eclipse.jdt.core.isInJavaProject"/>
+		          <test property="scala.tools.eclipse.launching.canLaunchAsScalaTest" forcePluginActivation="true" />
+		        </adapt>
+		      </iterate>
+            </with>
+          </enablement>
+        </contextualLaunch>
+      </shortcut>
+      <shortcut
+        class="scala.tools.eclipse.launching.ScalaTestTestLaunchShortcut"
+        icon="icons/full/obj16/scu_obj.gif"
+        id="org.eclipse.shortcut.scalatest.test"
+        label="ScalaTest - Test"
         modes="run,debug">
         <contextualLaunch>
           <enablement>
