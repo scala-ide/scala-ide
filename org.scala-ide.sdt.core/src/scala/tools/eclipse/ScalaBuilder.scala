@@ -106,8 +106,8 @@ class ScalaBuilder extends IncrementalProjectBuilder with HasLogger {
     val subMonitor = SubMonitor.convert(monitor, 100).newChild(100, SubMonitor.SUPPRESS_NONE)
     subMonitor.beginTask("Running Scala Builder on " + project.underlying.getName, 100)
       
-    if (stopBuildOnErrors && project.transitiveDependencies.exists(p => plugin.getScalaProject(p).buildManager.hasBuildErrors)) {
-      val projectsInError = project.transitiveDependencies.filter(p => plugin.getScalaProject(p).buildManager.hasBuildErrors)
+    val projectsInError = project.transitiveDependencies.filter(p => plugin.getScalaProject(p).buildManager.hasErrors)
+    if (stopBuildOnErrors && projectsInError.nonEmpty) {
       logger.info("Skipped dependent project %s build because of upstream compilation errors in %s".format(project.underlying.getName, projectsInError))
     } else {
       logger.info("Building project " + project)

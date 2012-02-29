@@ -22,9 +22,6 @@ class EclipseRefinedBuildManager(project: ScalaProject, settings0: Settings)
 
   class EclipseBuildCompiler(settings: Settings, reporter: Reporter) extends BuilderGlobal(settings, reporter) {
 
-    def hasBuildErrors = 
-      reporter.hasErrors
-    
     override def newRun() =
       new Run {
         var lastWorked = 0
@@ -95,7 +92,7 @@ class EclipseRefinedBuildManager(project: ScalaProject, settings0: Settings)
     depFile.setDerived(true, monitor)
     depFile.refreshLocal(IResource.DEPTH_INFINITE, null)
 
-    hasBuildErrors = compiler.reporter.hasErrors
+    hasErrors = compiler.reporter.hasErrors
     val targets = compiler.dependencyAnalysis.dependencies.targets
     toBuild flatMap targets foreach {
       case EclipseResource(f) =>
