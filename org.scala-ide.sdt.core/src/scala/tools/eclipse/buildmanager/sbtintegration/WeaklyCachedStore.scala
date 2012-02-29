@@ -12,6 +12,7 @@ import sbt.inc.Analysis
  *  is expensive, but don't want to waste memory unnecessarily.
  */
 class WeaklyCachedStore(backing: AnalysisStore) extends AnalysisStore {
+  @volatile 
   private var store: WeakReference[Option[(Analysis, CompileSetup)]] = new WeakReference(null)
   
   def get(): Option[(Analysis, CompileSetup)] = store.get match {

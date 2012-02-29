@@ -17,18 +17,20 @@ import org.eclipse.jdt.core.IJavaModelMarker
 import org.eclipse.core.resources.IResource
 import org.eclipse.core.resources.IncrementalProjectBuilder
 import org.eclipse.core.resources.IMarker
+import org.eclipse.jdt.core.IPackageFragment
+import org.eclipse.jdt.core.IClasspathEntry
 
 /** Utility functions for setting up test projects.
- *  
+ *
  *  @author Miles Sabin
  */
 object SDTTestUtils {
-  
+
   lazy val sourceWorkspaceLoc = {
-    val bundle= Platform.getBundle("org.scala-ide.sdt.core.tests")
+    val bundle = Platform.getBundle("org.scala-ide.sdt.core.tests")
     OSGiUtils.pathInBundle(bundle, File.separatorChar + "test-workspace").get
   }
-  
+
   /** Enable workspace auto-building */
   def enableAutoBuild(enable: Boolean) {
     // auto-building is on
@@ -40,12 +42,11 @@ object SDTTestUtils {
   enableAutoBuild(false)
 
   /** Return the Java problem markers corresponding to the given compilation unit. */
-  def findProblemMarkers(unit: ICompilationUnit) = 
+  def findProblemMarkers(unit: ICompilationUnit) =
     unit.getUnderlyingResource().findMarkers(IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER, true, IResource.DEPTH_INFINITE)
-  
+
   lazy val workspace = ResourcesPlugin.getWorkspace
-  
-  
+
   /** Setup the project in the target workspace. The 'name' project should
    *  exist in the source workspace.
    */
@@ -63,15 +64,15 @@ object SDTTestUtils {
     }
     ScalaPlugin.plugin.getScalaProject(workspace.getRoot.getProject(name))
   }
-  
-  /** Return all positions (offsets) of the given str in the given source file. 
+
+  /** Return all positions (offsets) of the given str in the given source file.
    */
   def positionsOf(source: Array[Char], str: String): Seq[Int] = {
     val buf = new mutable.ListBuffer[Int]
     var pos = source.indexOfSlice(str)
     while (pos >= 0) {
       buf += pos - 1 // we need the position before the first character of this marker
-      pos = source.indexOfSlice(str, pos + 1) 
+      pos = source.indexOfSlice(str, pos + 1)
     }
     buf.toList
   }
@@ -87,15 +88,14 @@ object SDTTestUtils {
     for (m <- it) {
       buf += ((it.start, it.group(1).toInt))
     }
-    
+
     buf.toSeq
   }
 
-  
-  def deleteRecursive(d : File) {
+  def deleteRecursive(d: File) {
     if (d.exists) {
       val filesOpt = Option(d.listFiles)
-      for (files <- filesOpt ; file <- files)
+      for (files <- filesOpt; file <- files)
         if (file.isDirectory)
           deleteRecursive(file)
         else
@@ -104,7 +104,7 @@ object SDTTestUtils {
     }
   }
 
-  def createTempDir(name : String) : File = {
+  def createTempDir(name: String): File = {
     val userHome = new File(System.getProperty("user.home")).getAbsolutePath
     val rootDir = new File(userHome, "SDTCoreTestTempDir")
     val result = new File(rootDir, name)
@@ -120,15 +120,15 @@ object SDTTestUtils {
       deleteRecursive(rootDir)
   }
 
-  /** Add a new file to the given project. The given path is relative to the 
+  /** Add a new file to the given project. The given path is relative to the
    *  project.
-   *  
+   *
    *  The file must not exist.
    */
-  def addFileToProject(project : IProject, path : String, content : String) : IFile = {
+  def addFileToProject(project: IProject, path: String, content: String): IFile = {
     val filePath = new Path(path)
     val dirNames = filePath.segments.init // last segment is the file
-    dirNames.foldLeft(project : IContainer) { (container, segment) =>
+    dirNames.foldLeft(project: IContainer) { (container, segment) =>
       val folder = container.getFolder(new Path(segment))
       if (!folder.exists())
         folder.create(false, true, null)
@@ -139,15 +139,15 @@ object SDTTestUtils {
     file
   }
 
-  def changeContentOfFile(file : IFile, newContent : String, encoding: String = workspace.getRoot.getDefaultCharset()) : IFile = {
+  def changeContentOfFile(file: IFile, newContent: String, encoding: String = workspace.getRoot.getDefaultCharset()): IFile = {
     file.setContents(new ByteArrayInputStream(newContent.getBytes(encoding)), 0, null)
     file
   }
-  
+
   def getProblemMarkers(units: ICompilationUnit*): List[IMarker] = {
     units.flatMap(findProblemMarkers).toList
   }
-  
+
   def getErrorMessages(units: ICompilationUnit*): List[String] =
     for (p <- getProblemMarkers(units: _*)) yield p.getAttribute(IMarker.MESSAGE).toString
 
@@ -157,13 +157,12 @@ object SDTTestUtils {
     println("=== Rebuilding workspace === ")
     SDTTestUtils.workspace.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, null)
 
-    val problems = getProblemMarkers(unitsToWatch:_*)
+    val problems = getProblemMarkers(unitsToWatch: _*)
 
     for (p <- problems) yield p.getAttribute(IMarker.MESSAGE).toString
   }
 
-
-  def createProjectInLocalFileSystem(parentFile : File, projectName : String) : IProject = {
+  def createProjectInLocalFileSystem(parentFile: File, projectName: String): IProject = {
     val project = ResourcesPlugin.getWorkspace.getRoot.getProject(projectName)
     if (project.exists)
       project.delete(true, null)
@@ -178,10 +177,10 @@ object SDTTestUtils {
     project
   }
 
-  def slurpAndClose(inputStream : InputStream) : String = {
+  def slurpAndClose(inputStream: InputStream): String = {
     val stringBuilder = new StringBuilder
     try {
-      var ch : Int = 0
+      var ch: Int = 0
       while ({ ch = inputStream.read; ch } != -1) {
         stringBuilder.append(ch.toChar)
       }
@@ -189,5 +188,25 @@ object SDTTestUtils {
       inputStream.close
     }
     stringBuilder.toString
+  }
+  
+  val simulator = new EclipseUserSimulator
+
+
+  def createSourcePackage(name: String)(project: ScalaProject): IPackageFragment =
+    project.javaProject.getPackageFragmentRoot(project.underlying.getFolder("/src")).createPackageFragment(name, true, null)
+
+  def addToClasspath(prj: ScalaProject, entries: IClasspathEntry*) {
+    val existing = prj.javaProject.getRawClasspath
+    prj.javaProject.setRawClasspath(existing ++ entries, null)
+  }
+
+  def createProjects(names: String*): Seq[ScalaProject] =
+    names map (n => simulator.createProjectInWorkspace(n, true))
+
+  def deleteProjects(projects: ScalaProject*) {
+    util.EclipseUtils.workspaceRunnableIn(ScalaPlugin.plugin.workspaceRoot.getWorkspace) { _ =>
+      projects foreach (_.underlying.delete(true, null))
+    }
   }
 }

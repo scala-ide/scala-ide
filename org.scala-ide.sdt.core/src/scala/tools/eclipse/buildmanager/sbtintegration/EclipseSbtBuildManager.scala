@@ -361,7 +361,7 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings)
 
     val analysisComp = new AnalysisCompile(conf, this, new SbtProgress())
 
-    val extraAnalysis = upstreamAnalysis(project.underlying)
+    val extraAnalysis = upstreamAnalysis(project)
 
     logger.debug("Retrieved the following upstream analysis: " + extraAnalysis)
 
@@ -375,9 +375,9 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings)
    *  
    *  This works only if they are also built using the Sbt build manager
    */
-  private def upstreamAnalysis(project: IProject): Map[File, Analysis] = {
+  private def upstreamAnalysis(project: ScalaProject): Map[File, Analysis] = {
     val projectsWithBuilders = for {
-      p <- project.getReferencedProjects
+      p <- project.transitiveDependencies
       dep <- ScalaPlugin.plugin.asScalaProject(p)
     } yield (dep, dep.buildManager)
 
@@ -387,11 +387,9 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings)
         val output = dep.outputFolders.head
         
         (ScalaPlugin.plugin.workspaceRoot.getFolder(output).getLocation.toFile, sbtBM.latestAnalysis.get)
-    } ++ project.getReferencedProjects.flatMap(upstreamAnalysis)
+    }
   }
   
-  private var _latestAnalysis: Option[Analysis] = None
-
   import AnalysisFormats._
   private val store = AnalysisStore.sync(
       new WeaklyCachedStore(
@@ -441,7 +439,7 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings)
     }
     
     hasBuildErrors = reporter.hasErrors || hasErrors
-    if (!hasErrors)
+    if (!hasBuildErrors)
       pendingSources.clear
   }
   
