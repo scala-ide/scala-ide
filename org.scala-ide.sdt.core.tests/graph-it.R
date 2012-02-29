@@ -7,11 +7,20 @@ if (length(args) < 1) {
 	stop("Please pass the filename with the memory data.")
 }
 
+filename <- args[1]
+if (grepl("https://", filename)) {
+	temporaryFile <- tempfile()
+	download.file(filename,destfile=temporaryFile, method="curl")
+	data <- read.table(temporaryFile)
+} else {
+	data <- read.table(filename)
+}
 
-data <- read.table(args[1])
 y <- data$usedMem
 x <- 1:20
-coef <- lm(y~x)
+y1 = y[2:20]
+x1 = 2:20
+coef <- lm(y1~x1)
 a <- coef$coefficients[1]
 b <- coef$coefficients[2]
 
