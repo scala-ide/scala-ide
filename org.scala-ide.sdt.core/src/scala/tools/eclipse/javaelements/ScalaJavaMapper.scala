@@ -146,26 +146,25 @@ trait ScalaJavaMapper extends ScalaAnnotationHelper with HasLogger { self : Scal
       case n => n
     }
   }
-  
-  /** 
-   * Map a Scala `Type` that '''does not take type parameters''' into its
-   * Java representation. 
-   * A special case exists for Scala `Array` since in Java array do not take 
-   * type parameters.
-   * */
+
+  /** Map a Scala `Type` that '''does not take type parameters''' into its
+   *  Java representation.
+   *  A special case exists for Scala `Array` since in Java arrays do not take
+   *  type parameters.
+   */
   def mapType(tpe: Type): String = {
-	val base = mapType(tpe.typeSymbol)
-	tpe.typeSymbol match {
-    // only the Array class has type parameters. the Array object is non-parametric
-	  case definitions.ArrayClass => 
-	    val paramTypes = tpe.typeArgs.map(mapType(_))
-	    assert(paramTypes.size == 1, "Expected exactly one type parameter, found %d [%s]".format(paramTypes.size, tpe))
+    val base = mapType(tpe.typeSymbol)
+    tpe.typeSymbol match {
+      // only the Array class has type parameters. the Array object is non-parametric
+      case definitions.ArrayClass =>
+        val paramTypes = tpe.normalize.typeArgs.map(mapType(_)) // normalize is needed when you have `type BitSet = Array[Int]`
+        assert(paramTypes.size == 1, "Expected exactly one type parameter, found %d [%s]".format(paramTypes.size, tpe))
         paramTypes.head + "[]"
-	  case _ => 
-	    if(tpe.typeParams.nonEmpty) 
-	      logger.debug("mapType(Type) is not expected to be used with a type that has type parameters. (passed type was %s)".format(tpe))
-	    base
-	}
+      case _ =>
+        if (tpe.typeParams.nonEmpty)
+          logger.debug("mapType(Type) is not expected to be used with a type that has type parameters. (passed type was %s)".format(tpe))
+        base
+    }
   }
   
   
