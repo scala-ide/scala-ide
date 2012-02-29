@@ -22,11 +22,8 @@ trait EclipseBuildManager extends BuildManager {
   def build(addedOrUpdated: Set[IFile], removed: Set[IFile], monitor: SubMonitor): Unit
   var depFile: IFile
   
-  /** Has the compiler crashed? */
-  var hasErrors = false
-  
   /** Has build errors? Only valid if the project has been built before. */
-  var hasBuildErrors: Boolean = false
+  var hasErrors: Boolean = false
   
   def invalidateAfterLoad: Boolean
   def clean(implicit monitor: IProgressMonitor): Unit

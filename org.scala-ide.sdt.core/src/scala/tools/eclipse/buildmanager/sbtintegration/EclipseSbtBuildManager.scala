@@ -438,8 +438,8 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings)
         eclipseLog.error("Error in Scala compiler", e)
     }
     
-    hasBuildErrors = reporter.hasErrors || hasErrors
-    if (!hasBuildErrors)
+    hasErrors = reporter.hasErrors || hasErrors
+    if (!hasErrors)
       pendingSources.clear
   }
   
