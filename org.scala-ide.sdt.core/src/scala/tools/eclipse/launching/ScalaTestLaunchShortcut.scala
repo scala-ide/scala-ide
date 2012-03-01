@@ -34,35 +34,51 @@ import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants
 import org.eclipse.debug.ui.DebugUITools
 import org.eclipse.jface.dialogs.MessageDialog
 import ScalaTestLaunchConstants._
+import org.eclipse.jface.viewers.ITreeSelection
+import org.eclipse.core.resources.IProject
 
 class ScalaTestFileLaunchShortcut extends ILaunchShortcut {
+  
+  private def launchScalaSourceFile(scSrcFile: ScalaSourceFile, mode: String) {
+    val configType = getLaunchManager.getLaunchConfigurationType("scala.scalatest")
+    val existingConfigs = getLaunchManager.getLaunchConfigurations(configType)
+    val simpleName = scSrcFile.getElementName
+    val existingConfigOpt = existingConfigs.find(config => config.getName == simpleName)
+    val config = existingConfigOpt match {
+                   case Some(existingConfig) => existingConfig
+                   case None => 
+                     val wc = configType.newInstance(null, getLaunchManager.generateUniqueLaunchConfigurationNameFrom(simpleName))
+                     val project = scSrcFile.getJavaProject.getProject
+                     val scProject = ScalaPlugin.plugin.getScalaProject(project)
+                     wc.setAttribute(IJavaLaunchConfigurationConstants.ATTR_MAIN_TYPE_NAME, scSrcFile.getPath.toPortableString)
+                     wc.setAttribute(IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME, project.getName)
+                     wc.setAttribute(SCALATEST_LAUNCH_TYPE_NAME, TYPE_FILE)
+                     wc.setAttribute(SCALATEST_LAUNCH_INCLUDE_NESTED_NAME, INCLUDE_NESTED_FALSE)
+                     wc.doSave
+                   }
+    DebugUITools.launch(config, mode)
+  }
   
   def launch(selection:ISelection, mode:String) {
     // This get called when user right-clicked .scala file on package navigator and choose 'Run As' -> ScalaTest
     // Should just run all suites within the selected file.
+    selection match {
+      case treeSelection: ITreeSelection => 
+        val scSrcFilePaths = treeSelection.getPaths.filter(p => p.getLastSegment.isInstanceOf[ScalaSourceFile])//.find(p => p.isInstanceOf[ScalaSourceFile])
+        if (scSrcFilePaths.length > 0)
+          launchScalaSourceFile(scSrcFilePaths(0).getLastSegment.asInstanceOf[ScalaSourceFile], mode)
+        else
+          MessageDialog.openError(null, "Error", "Please select a Scala source file.")
+      case _ => 
+        MessageDialog.openError(null, "Error", "Please select a Scala source file.")
+    }
   }
   
   def launch(editorPart:IEditorPart, mode:String) {
     val typeRoot = JavaUI.getEditorInputTypeRoot(editorPart.getEditorInput)
     typeRoot match {
       case scSrcFile: ScalaSourceFile => 
-        val configType = getLaunchManager.getLaunchConfigurationType("scala.scalatest")
-          val existingConfigs = getLaunchManager.getLaunchConfigurations(configType)
-          val simpleName = scSrcFile.getElementName
-          val existingConfigOpt = existingConfigs.find(config => config.getName == simpleName)
-          val config = existingConfigOpt match {
-                         case Some(existingConfig) => existingConfig
-                         case None => 
-                           val wc = configType.newInstance(null, getLaunchManager.generateUniqueLaunchConfigurationNameFrom(simpleName))
-                           val project = editorPart.getEditorInput.asInstanceOf[IFileEditorInput].getFile.getProject
-                           val scProject = ScalaPlugin.plugin.getScalaProject(project)
-                           wc.setAttribute(IJavaLaunchConfigurationConstants.ATTR_MAIN_TYPE_NAME, scSrcFile.getPath.toPortableString)
-                           wc.setAttribute(IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME, project.getName)
-                           wc.setAttribute(SCALATEST_LAUNCH_TYPE_NAME, TYPE_FILE)
-                           wc.setAttribute(SCALATEST_LAUNCH_INCLUDE_NESTED_NAME, INCLUDE_NESTED_FALSE)
-                           wc.doSave
-                         }
-          DebugUITools.launch(config, mode)
+        launchScalaSourceFile(scSrcFile, mode)
       case _ => 
         MessageDialog.openError(null, "Error", "Please select a Scala source file.")
     }
