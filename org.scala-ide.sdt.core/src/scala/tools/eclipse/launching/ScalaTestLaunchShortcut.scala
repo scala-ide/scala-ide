@@ -33,6 +33,7 @@ import org.eclipse.debug.core.DebugPlugin
 import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants
 import org.eclipse.debug.ui.DebugUITools
 import org.eclipse.jface.dialogs.MessageDialog
+import ScalaTestLaunchConstants._
 
 class ScalaTestSuiteLaunchShortcut extends ILaunchShortcut {
   
@@ -64,6 +65,8 @@ class ScalaTestSuiteLaunchShortcut extends ILaunchShortcut {
                            val scProject = ScalaPlugin.plugin.getScalaProject(project)
                            wc.setAttribute(IJavaLaunchConfigurationConstants.ATTR_MAIN_TYPE_NAME, classElement.getFullyQualifiedName)
                            wc.setAttribute(IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME, project.getName)
+                           wc.setAttribute(SCALATEST_LAUNCH_TYPE_NAME, TYPE_SUITE)
+                           wc.setAttribute(SCALATEST_LAUNCH_INCLUDE_NESTED_NAME, INCLUDE_NESTED_FALSE)
                            wc.doSave
                          }
           DebugUITools.launch(config, mode)

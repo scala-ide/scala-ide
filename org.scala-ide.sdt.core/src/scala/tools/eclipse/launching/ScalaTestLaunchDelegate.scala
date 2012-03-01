@@ -11,6 +11,10 @@ import org.eclipse.jdt.internal.launching.LaunchingMessages
 import scala.collection.JavaConversions._
 import scala.collection.mutable
 import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants
+import ScalaTestLaunchConstants._
+import scala.tools.eclipse.javaelements.ScalaSourceFile
+import org.eclipse.jface.dialogs.MessageDialog
+import org.eclipse.core.resources.ResourcesPlugin
 
 class ScalaTestLaunchDelegate extends AbstractJavaLaunchConfigurationDelegate {
   def launch(configuration: ILaunchConfiguration, mode: String, launch: ILaunch, monitor0: IProgressMonitor) {
@@ -35,10 +39,10 @@ class ScalaTestLaunchDelegate extends AbstractJavaLaunchConfigurationDelegate {
 			val envp = getEnvironment(configuration)
 			
 			// Test Class
-			val testClass = getTestClass(configuration)
+			val stArgs = getScalaTestArgs(configuration)
 			
 			// Program & VM arguments
-			val pgmArgs = getProgramArguments(configuration) + " -s " + testClass + " -oW -g"		
+			val pgmArgs = getProgramArguments(configuration) + " " + stArgs + " -oW -g"		
 			val vmArgs = getVMArguments(configuration)
 			val execArgs = new ExecutionArguments(vmArgs, pgmArgs)
 			
@@ -115,7 +119,44 @@ class ScalaTestLaunchDelegate extends AbstractJavaLaunchConfigurationDelegate {
     bootEntry.toList.map(_.getLocation())
   }
   
-  private def getTestClass(configuration: ILaunchConfiguration): String = {
-    configuration.getAttribute(IJavaLaunchConfigurationConstants.ATTR_MAIN_TYPE_NAME, "")
+  private def getScalaTestArgs(configuration: ILaunchConfiguration): String = {
+    val launchType = configuration.getAttribute(SCALATEST_LAUNCH_TYPE_NAME, TYPE_SUITE)
+    launchType match {
+      case TYPE_SUITE => 
+        val suiteClass = configuration.getAttribute(IJavaLaunchConfigurationConstants.ATTR_MAIN_TYPE_NAME, "")
+        if (suiteClass.length > 0) "-s " + suiteClass else ""
+      case TYPE_FILE =>
+        val filePortablePath = configuration.getAttribute(IJavaLaunchConfigurationConstants.ATTR_MAIN_TYPE_NAME, "")
+        if (filePortablePath.length > 0) {
+          val scSrcFileOpt = ScalaSourceFile.createFromPath(filePortablePath)
+          scSrcFileOpt match {
+            case Some(scSrcFile) => 
+              scSrcFile.getTypes
+                .filter(ScalaTestLaunchShortcut.isScalaTestSuite(_))
+                .map(iType => "-s " + iType.getFullyQualifiedName)
+                .mkString(" ")
+            case None => 
+              MessageDialog.openError(null, "Error", "File '" + filePortablePath + "' not found.")
+              ""
+          }
+        }
+        else
+          ""
+      case TYPE_PACKAGE =>
+        val packageName = configuration.getAttribute(IJavaLaunchConfigurationConstants.ATTR_MAIN_TYPE_NAME, "")
+        val workspace = ResourcesPlugin.getWorkspace()
+        val outputDir = new File(workspace.getRoot.getLocation.toFile, JavaRuntime.getProjectOutputDirectory(configuration)).getAbsolutePath
+        if (packageName.length > 0) {
+          val includeNested = configuration.getAttribute(SCALATEST_LAUNCH_INCLUDE_NESTED_NAME, INCLUDE_NESTED_FALSE)
+          if (includeNested == INCLUDE_NESTED_TRUE) 
+            "-p \"" + outputDir + "\" -w " + packageName
+          else
+            "-p \"" + outputDir + "\" -m " + packageName
+        }
+        else
+          ""
+      case _ =>
+        ""
+    }
   }
 }
