@@ -1,36 +1,52 @@
-package scala.tools.eclipse
-package compiler.settings
+package scala.tools.eclipse.compiler.settings
 
-import scala.tools.nsc.plugins.Plugin
-
+import scala.tools.eclipse.testsetup.TestProjectSetup
 import org.junit.Test
-import org.junit.Assert
+import org.junit.Assert.assertTrue
+import scala.tools.eclipse.ScalaPlugin
 
-object CompilerSettingsTest {
-  private val simulator = new EclipseUserSimulator
-  lazy val projectName = "test_settings"
-  lazy val project = simulator.createProjectInWorkspace(projectName, false)
-}
+object CompilerSettingsTest extends TestProjectSetup("compiler-settings")
 
 class CompilerSettingsTest {
   import CompilerSettingsTest._
   
   @Test
-  def continuations_plugin_works() {
-    val plugins = loadedPlugins(project)
-    Assert.assertEquals("Loaded plugins: ", List("continuations"), loadedPlugins(project))
+  def failingToBuildSourceThatRequiresContinuationPlugin() {
+    val unit = scalaCompilationUnit("cps/CPS.scala")
+    
+    cleanProject()
+    fullProjectBuild()
+    
+    val errors = allBuildErrorsOf(unit)
+    
+    if(ScalaPlugin.plugin.shortScalaVer == "2.9") 
+      assertTrue(errors.nonEmpty)
+    else 
+      assertTrue(errors.isEmpty) // continuations plugin is enabled by default in 2.10+
   }
   
   @Test
-  def continuationPluginCannotBeLoadedWhen_pluginsDir_pointsToDirectoryThatDoesNotContainContinuationsPluginJar() {
-    project.storage.setValue("Xpluginsdir", "/doesnotexist")
-    project.resetPresentationCompiler()
+  def successfullyBuildingSourceRequiringContinuationPluginEnabled() {
+    withContinuationPluginEnabled {
+      val unit = scalaCompilationUnit("cps/CPS.scala")
     
-    Assert.assertEquals("Loaded plugins: ", Nil, loadedPlugins(project))
+      cleanProject()
+      fullProjectBuild()
+    
+      val errors = allBuildErrorsOf(unit)
+    
+      assertTrue(errors.isEmpty)
+    }
   }
   
-  private def loadedPlugins(project: ScalaProject): List[String] = {
-    val plugins = project.withPresentationCompiler(comp => comp.plugins)(List[Plugin]())
-    plugins.map(_.name)
+  private def withContinuationPluginEnabled(body: => Unit) {
+    val value = project.storage.getString("P")
+    try {
+      project.storage.setValue("P", "continuations:enable")
+      body
+    }
+    finally {
+      project.storage.setValue("P", value)
+    }
   }
 }
