@@ -888,6 +888,26 @@
           </enablement>
         </contextualLaunch>
       </shortcut>
+      <shortcut
+        class="scala.tools.eclipse.launching.ScalaTestFileLaunchShortcut"
+        icon="icons/full/obj16/scu_obj.gif"
+        id="org.eclipse.shortcut.scalatest.test"
+        label="ScalaTest - File"
+        modes="run,debug">
+        <contextualLaunch>
+          <enablement>
+            <with variable="selection">
+              <count value="1" />
+              <iterate>
+                <adapt type="org.eclipse.jdt.core.IJavaElement">
+		          <test property="org.eclipse.jdt.core.isInJavaProject"/>
+		          <test property="scala.tools.eclipse.launching.canLaunchAsScalaTest" forcePluginActivation="true" />
+		        </adapt>
+		      </iterate>
+            </with>
+          </enablement>
+        </contextualLaunch>
+      </shortcut>
   </extension>
 
   <extension point="org.eclipse.ui.commands">
