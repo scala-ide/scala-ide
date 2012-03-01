@@ -20,7 +20,7 @@ class ScalaTestLaunchableTester extends PropertyTester {
   
   private def canLaunchAsScalaTest(element: IJavaElement): Boolean = {
     try {
-      ScalaTestLaunchShortcut.getScalaTestSuites(element).length > 0
+      ScalaTestLaunchShortcut.containsScalaTestSuite(element)
     } catch {
       case e:Exception => false
     }
