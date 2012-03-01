@@ -6,10 +6,12 @@ import org.eclipse.jdt.core.IType
 import org.eclipse.jdt.core.ITypeHierarchy
 import org.eclipse.jdt.core.IJavaElement
 import org.eclipse.core.runtime.IAdaptable
+import org.eclipse.jdt.internal.core.PackageFragment
 
 class ScalaTestLaunchableTester extends PropertyTester {
   
   def test(receiver: Object, property: String, args: Array[Object], expectedValue: Object): Boolean = {
+    println("#####receiver: " + receiver.getClass.getName)
     if(receiver.isInstanceOf[IAdaptable]) {
       val je = receiver.asInstanceOf[IAdaptable].getAdapter(classOf[IJavaElement]).asInstanceOf[IJavaElement]
       canLaunchAsScalaTest(je)
@@ -23,6 +25,18 @@ class ScalaTestLaunchableTester extends PropertyTester {
       ScalaTestLaunchShortcut.containsScalaTestSuite(element)
     } catch {
       case e:Exception => false
+    }
+  }
+}
+
+class ScalaTestPackageTester extends PropertyTester {
+  
+  def test(receiver: Object, property: String, args: Array[Object], expectedValue: Object): Boolean = {
+    receiver match {
+      case packageFragment: PackageFragment => 
+        true
+      case _ => 
+        false
     }
   }
 }

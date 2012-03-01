@@ -36,6 +36,7 @@ import org.eclipse.jface.dialogs.MessageDialog
 import ScalaTestLaunchConstants._
 import org.eclipse.jface.viewers.ITreeSelection
 import org.eclipse.core.resources.IProject
+import org.eclipse.jdt.internal.core.PackageFragment
 
 class ScalaTestFileLaunchShortcut extends ILaunchShortcut {
   
@@ -131,6 +132,49 @@ class ScalaTestSuiteLaunchShortcut extends ILaunchShortcut {
   }
   
   private def getLaunchManager = DebugPlugin.getDefault.getLaunchManager
+}
+
+class ScalaTestPackageLaunchShortcut extends ILaunchShortcut {
+  
+  private def launchPackage(packageFragment: PackageFragment, mode: String) {
+    val configType = getLaunchManager.getLaunchConfigurationType("scala.scalatest")
+    val existingConfigs = getLaunchManager.getLaunchConfigurations(configType)
+    val simpleName = packageFragment.getElementName
+    val existingConfigOpt = existingConfigs.find(config => config.getName == simpleName)
+    val config = existingConfigOpt match {
+                   case Some(existingConfig) => existingConfig
+                   case None => 
+                     val wc = configType.newInstance(null, getLaunchManager.generateUniqueLaunchConfigurationNameFrom(simpleName))
+                     val project = packageFragment.getJavaProject.getProject
+                     val scProject = ScalaPlugin.plugin.getScalaProject(project)
+                     wc.setAttribute(IJavaLaunchConfigurationConstants.ATTR_MAIN_TYPE_NAME, simpleName)
+                     wc.setAttribute(IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME, project.getName)
+                     wc.setAttribute(SCALATEST_LAUNCH_TYPE_NAME, TYPE_PACKAGE)
+                     wc.setAttribute(SCALATEST_LAUNCH_INCLUDE_NESTED_NAME, INCLUDE_NESTED_FALSE)
+                     wc.doSave
+                   }
+    DebugUITools.launch(config, mode)
+  }
+  
+  def launch(selection:ISelection, mode:String) {
+    selection match {
+      case treeSelection: ITreeSelection => 
+        val packagePaths = treeSelection.getPaths.filter(p => p.getLastSegment.isInstanceOf[PackageFragment])//.find(p => p.isInstanceOf[ScalaSourceFile])
+        if (packagePaths.length > 0)
+          launchPackage(packagePaths(0).getLastSegment.asInstanceOf[PackageFragment], mode)
+        else
+          MessageDialog.openError(null, "Error", "Please select a Scala source file.")
+      case _ => 
+        MessageDialog.openError(null, "Error", "Please select a Scala source file.")
+    }
+  }
+  
+  def launch(editorPart:IEditorPart, mode:String) {
+    
+  }
+  
+  private def getLaunchManager = DebugPlugin.getDefault.getLaunchManager
+  
 }
 
 class ScalaTestTestLaunchShortcut extends ILaunchShortcut {
