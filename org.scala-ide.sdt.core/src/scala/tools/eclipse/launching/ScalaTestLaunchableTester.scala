@@ -7,6 +7,7 @@ import org.eclipse.jdt.core.ITypeHierarchy
 import org.eclipse.jdt.core.IJavaElement
 import org.eclipse.core.runtime.IAdaptable
 import org.eclipse.jdt.internal.core.PackageFragment
+import scala.tools.eclipse.ScalaSourceFileEditor
 
 class ScalaTestLaunchableTester extends PropertyTester {
   
@@ -36,6 +37,29 @@ class ScalaTestPackageTester extends PropertyTester {
       case packageFragment: PackageFragment => 
         true
       case _ => 
+        false
+    }
+  }
+}
+
+class ScalaTestTestTester extends PropertyTester {
+  
+  def test(receiver: Object, property: String, args: Array[Object], expectedValue: Object): Boolean = {
+    receiver match {
+      case scEditor: ScalaSourceFileEditor => 
+        try {
+          val selectionOpt = ScalaTestLaunchShortcut.resolveSelectedAst(scEditor.getEditorInput, scEditor.getEditorSite.getSelectionProvider)
+          selectionOpt match {
+            case Some(selection) => 
+              true
+            case None => 
+              false
+          }
+        }
+        catch {
+          case _ => false
+        }
+      case _ =>
         false
     }
   }

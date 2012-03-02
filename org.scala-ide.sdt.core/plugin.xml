@@ -794,6 +794,12 @@
            namespace="scala.tools.eclipse.launching"
            properties="canLaunchAsScalaTestPackage"
            type="org.eclipse.core.runtime.IAdaptable"/>
+      <propertyTester
+           class="scala.tools.eclipse.launching.ScalaTestTestTester"
+           id="scala.tools.eclipse.launching.ScalaTestTestTester"
+           namespace="scala.tools.eclipse.launching"
+           properties="canLaunchAsScalaTestTest"
+           type="org.eclipse.core.runtime.IAdaptable"/>
   </extension>
   
   <extension point="org.eclipse.debug.ui.launchShortcuts">  
@@ -882,14 +888,8 @@
         modes="run,debug">
         <contextualLaunch>
           <enablement>
-            <with variable="selection">
-              <count value="1" />
-              <iterate>
-                <adapt type="org.eclipse.jdt.core.IJavaElement">
-		          <test property="org.eclipse.jdt.core.isInJavaProject"/>
-		          <test property="scala.tools.eclipse.launching.canLaunchAsScalaTest" forcePluginActivation="true" />
-		        </adapt>
-		      </iterate>
+            <with variable="activePart">
+              <test property="scala.tools.eclipse.launching.canLaunchAsScalaTestTest" forcePluginActivation="true" />
             </with>
           </enablement>
         </contextualLaunch>

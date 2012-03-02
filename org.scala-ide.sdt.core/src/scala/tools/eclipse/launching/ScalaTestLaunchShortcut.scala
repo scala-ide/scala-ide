@@ -38,6 +38,8 @@ import org.eclipse.jface.viewers.ITreeSelection
 import org.eclipse.core.resources.IProject
 import org.eclipse.jdt.internal.core.PackageFragment
 import ScalaTestLaunchShortcut._
+import org.eclipse.ui.IEditorSite
+import org.eclipse.ui.IEditorInput
 
 class ScalaTestFileLaunchShortcut extends ILaunchShortcut {
   
@@ -133,7 +135,7 @@ class ScalaTestTestLaunchShortcut extends ILaunchShortcut {
   }
   
   def launch(editorPart:IEditorPart, mode:String) {
-    val selectionOpt = ScalaTestLaunchShortcut.resolveSelectedAst(editorPart, JavaUI.getEditorInputTypeRoot(editorPart.getEditorInput()))
+    val selectionOpt = ScalaTestLaunchShortcut.resolveSelectedAst(editorPart.getEditorInput, editorPart.getEditorSite.getSelectionProvider)
     selectionOpt match {
       case Some(selection) => 
         println("***Test Found, display name: " + selection.displayName() + ", test name(s):")
@@ -195,8 +197,8 @@ object ScalaTestLaunchShortcut {
     }
   }
   
-  def resolveSelectedAst(editorPart: IEditorPart, typeRoot: ITypeRoot): Option[Selection] = {
-    val selectionProvider:ISelectionProvider = editorPart.getSite().getSelectionProvider()
+  def resolveSelectedAst(editorInput: IEditorInput, selectionProvider: ISelectionProvider): Option[Selection] = {
+    val typeRoot: ITypeRoot = JavaUI.getEditorInputTypeRoot(editorInput)
     if(selectionProvider == null)
       None
     val selection:ISelection = selectionProvider.getSelection()
@@ -206,7 +208,7 @@ object ScalaTestLaunchShortcut {
     else {
       val textSelection:ITextSelection = selection.asInstanceOf[ITextSelection]
       val element = SelectionConverter.getElementAtOffset(typeRoot, selection.asInstanceOf[ITextSelection])
-      val project = editorPart.getEditorInput.asInstanceOf[IFileEditorInput].getFile.getProject
+      val project = typeRoot.getJavaProject.getProject
       val scProject = ScalaPlugin.plugin.getScalaProject(project)
       val loaderUrls = scProject.classpath.map{ cp =>
         val cpFile = new File(cp.toString)
