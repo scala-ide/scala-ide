@@ -42,15 +42,14 @@ import ScalaTestLaunchShortcut._
 class ScalaTestFileLaunchShortcut extends ILaunchShortcut {
   
   def launch(selection:ISelection, mode:String) {
-    // This get called when user right-clicked .scala file on package navigator and choose 'Run As' -> ScalaTest
-    // Should just run all suites within the selected file.
     selection match {
       case treeSelection: ITreeSelection => 
-        val scSrcFilePaths = treeSelection.getPaths.filter(p => p.getLastSegment.isInstanceOf[ScalaSourceFile])//.find(p => p.isInstanceOf[ScalaSourceFile])
-        if (scSrcFilePaths.length > 0)
-          launchScalaSourceFile(scSrcFilePaths(0).getLastSegment.asInstanceOf[ScalaSourceFile], mode)
-        else
-          MessageDialog.openError(null, "Error", "Please select a Scala source file.")
+        treeSelection.getFirstElement match {
+          case scSrcFile: ScalaSourceFile => 
+            launchScalaSourceFile(scSrcFile, mode)
+          case _ => 
+            MessageDialog.openError(null, "Error", "Please select a Scala source file.")
+        }
       case _ => 
         MessageDialog.openError(null, "Error", "Please select a Scala source file.")
     }
@@ -110,13 +109,14 @@ class ScalaTestPackageLaunchShortcut extends ILaunchShortcut {
   def launch(selection:ISelection, mode:String) {
     selection match {
       case treeSelection: ITreeSelection => 
-        val packagePaths = treeSelection.getPaths.filter(p => p.getLastSegment.isInstanceOf[PackageFragment])//.find(p => p.isInstanceOf[ScalaSourceFile])
-        if (packagePaths.length > 0)
-          launchPackage(packagePaths(0).getLastSegment.asInstanceOf[PackageFragment], mode)
-        else
-          MessageDialog.openError(null, "Error", "Please select a Scala source file.")
+        treeSelection.getFirstElement match {
+          case packageFragment: PackageFragment => 
+            launchPackage(packageFragment, mode)
+          case _ => 
+            MessageDialog.openError(null, "Error", "Please select a package.")
+        }
       case _ => 
-        MessageDialog.openError(null, "Error", "Please select a Scala source file.")
+        MessageDialog.openError(null, "Error", "Please select a package.")
     }
   }
   
