@@ -170,17 +170,11 @@ object ScalaTestLaunchShortcut {
     superTypeArr.findIndexOf {superType => superType.getFullyQualifiedName == "org.scalatest.Suite"} >= 0
   }
   
-  def containsScalaTestSuite(element: AnyRef): Boolean = {
-    val je = element.asInstanceOf[IAdaptable].getAdapter(classOf[IJavaElement]).asInstanceOf[IJavaElement]
-    je.getOpenable match {
-      case scu: ScalaSourceFile => 
-        val suiteOpt = scu.getAllTypes().find { tpe => tpe.isInstanceOf[ScalaClassElement] && isScalaTestSuite(tpe) }
-        suiteOpt match {
-          case Some(suite) => true
-          case None => false
-        }
-      case _ =>
-        false
+  def containsScalaTestSuite(scSrcFile: ScalaSourceFile): Boolean = {
+    val suiteOpt = scSrcFile.getAllTypes().find { tpe => tpe.isInstanceOf[ScalaClassElement] && isScalaTestSuite(tpe) }
+    suiteOpt match {
+      case Some(suite) => true
+      case None => false
     }
   }
   

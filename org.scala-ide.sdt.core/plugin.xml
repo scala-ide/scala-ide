@@ -783,10 +783,10 @@
             id="scala.tools.eclipse.launching.JUnitPropertyTester">
       </propertyTester>
       <propertyTester
-           class="scala.tools.eclipse.launching.ScalaTestLaunchableTester"
-           id="scala.tools.eclipse.launching.ScalaTestLaunchableTester"
+           class="scala.tools.eclipse.launching.ScalaTestFileTester"
+           id="scala.tools.eclipse.launching.ScalaTestFileTester"
            namespace="scala.tools.eclipse.launching"
-           properties="canLaunchAsScalaTest"
+           properties="canLaunchAsScalaTestFile"
            type="org.eclipse.core.runtime.IAdaptable"/>
       <propertyTester
            class="scala.tools.eclipse.launching.ScalaTestPackageTester"
@@ -799,6 +799,12 @@
            id="scala.tools.eclipse.launching.ScalaTestTestTester"
            namespace="scala.tools.eclipse.launching"
            properties="canLaunchAsScalaTestTest"
+           type="org.eclipse.core.runtime.IAdaptable"/>
+      <propertyTester
+           class="scala.tools.eclipse.launching.ScalaTestSuiteTester"
+           id="scala.tools.eclipse.launching.ScalaTestSuiteTester"
+           namespace="scala.tools.eclipse.launching"
+           properties="canLaunchAsScalaTestSuite"
            type="org.eclipse.core.runtime.IAdaptable"/>
   </extension>
   
@@ -871,10 +877,7 @@
             <with variable="selection">
               <count value="1" />
               <iterate>
-                <adapt type="org.eclipse.jdt.core.IJavaElement">
-		          <test property="org.eclipse.jdt.core.isInJavaProject"/>
-		          <test property="scala.tools.eclipse.launching.canLaunchAsScalaTest" forcePluginActivation="true" />
-		        </adapt>
+		        <test property="scala.tools.eclipse.launching.canLaunchAsScalaTestSuite" forcePluginActivation="true" />
 		      </iterate>
             </with>
           </enablement>
@@ -905,10 +908,7 @@
             <with variable="selection">
               <count value="1" />
               <iterate>
-                <adapt type="org.eclipse.jdt.core.IJavaElement">
-		          <test property="org.eclipse.jdt.core.isInJavaProject"/>
-		          <test property="scala.tools.eclipse.launching.canLaunchAsScalaTest" forcePluginActivation="true" />
-		        </adapt>
+		        <test property="scala.tools.eclipse.launching.canLaunchAsScalaTestFile" forcePluginActivation="true" />
 		      </iterate>
             </with>
           </enablement>
