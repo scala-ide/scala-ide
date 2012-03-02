@@ -70,8 +70,18 @@ class ScalaTestFileLaunchShortcut extends ILaunchShortcut {
 class ScalaTestSuiteLaunchShortcut extends ILaunchShortcut {
   
   def launch(selection:ISelection, mode:String) {
-    // This get called when user right-clicked .scala file on package navigator and choose 'Run As' -> ScalaTest
-    // Should just run all suites within the selected file.
+    println(selection)
+    selection match {
+      case treeSelection: ITreeSelection => 
+        treeSelection.getFirstElement match {
+          case classElement: ScalaClassElement => 
+            launchSuite(classElement, mode)
+          case _ => 
+            MessageDialog.openError(null, "Error", "Please select a ScalaTest suite to launch.")
+        }
+      case _ => 
+        MessageDialog.openError(null, "Error", "Please select a ScalaTest suite to launch.")
+    }
   }
   
   def launch(editorPart:IEditorPart, mode:String) {
