@@ -13,12 +13,12 @@ class AutoCloseBracketStrategy extends IAutoEditStrategy {
         command.caretOffset = command.offset + 1
         command.shiftsCaret = false
       case "}" => // jump over closing brace
-        if (document.get(command.offset, 1) == "}") {
+        if (document.getLength > command.offset && document.get(command.offset, 1) == "}") {
           command.text = ""
           command.caretOffset = command.offset + 1
         }
       case "" => // remove closing brace
-        if (command.length == 1 && document.get(command.offset, 2) == "{}") {
+        if (document.getLength > command.offset + 1 && command.length == 1 && document.get(command.offset, 2) == "{}") {
           command.length = 2
         }
       case _ =>

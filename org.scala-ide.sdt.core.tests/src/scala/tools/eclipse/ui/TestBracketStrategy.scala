@@ -57,6 +57,17 @@ class TestBracketStrategy {
   }
   
   @Test
+  def addClosingEndOfFile() {
+    val document = new SimpleDocument("------")
+    
+    val command = new TestCommand(6, 0, "}", -1, true, true)
+    
+    new AutoCloseBracketStrategy().customizeDocumentCommand(document, command)
+
+    checkCommand(6, 0, "}", -1, true, true, command)
+  }
+  
+  @Test
   def autoDeleteClosing() {
     val document = new SimpleDocument("---{}---")
     
@@ -78,6 +89,17 @@ class TestBracketStrategy {
     checkCommand(3, 1, "", -1, true, true, command)
   }
 
+  @Test
+  def deleteSingleOpeningEndOfFile() {
+    val document = new SimpleDocument("------{")
+    
+    val command = new TestCommand(6, 1, "", -1, true, true)
+    
+    new AutoCloseBracketStrategy().customizeDocumentCommand(document, command)
+
+    checkCommand(6, 1, "", -1, true, true, command)
+  }
+  
   def checkCommand(offset: Int, length: Int, text: String, caretOffset: Int, shiftsCaret: Boolean, doit: Boolean, command: DocumentCommand) {
     assertEquals("Bad resulting offset", offset, command.offset)
     assertEquals("Bad resulting lenght", length, command.length)
