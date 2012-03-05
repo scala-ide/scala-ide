@@ -1,14 +1,11 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Scala Plugin (Test)
-Bundle-SymbolicName: org.scala-ide.sdt.core.tests
+Bundle-SymbolicName: org.scala-ide.sdt.debug.tests
 Bundle-Version: 2.1.0.qualifier
 Bundle-Vendor: scala-ide.org
-Fragment-Host: org.scala-ide.sdt.core
+Fragment-Host: org.scala-ide.sdt.debug
 Bundle-RequiredExecutionEnvironment: J2SE-1.5
-Bundle-ClassPath: .,
- lib/mockito-all-1.8.5.jar
 Require-Bundle: org.scala-ide.scala.library,
- org.eclipse.equinox.weaving.aspectj
-Export-Package: 
- scala.tools.eclipse.testsetup
+ org.eclipse.equinox.weaving.aspectj,
+ org.scala-ide.sdt.core
