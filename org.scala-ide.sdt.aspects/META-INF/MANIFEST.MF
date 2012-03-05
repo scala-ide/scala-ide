@@ -49,6 +49,7 @@ Export-Package:
  scala.tools.eclipse.contribution.weaving.jdt.search,
  scala.tools.eclipse.contribution.weaving.jdt.spellingengineprovider,
  scala.tools.eclipse.contribution.weaving.jdt.ui,
+ scala.tools.eclipse.contribution.weaving.jdt.ui.actions,
  scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor,
  scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.formatter,
  scala.tools.eclipse.contribution.weaving.pde.ui
