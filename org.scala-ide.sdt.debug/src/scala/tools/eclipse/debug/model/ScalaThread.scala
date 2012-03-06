@@ -2,10 +2,11 @@ package scala.tools.eclipse.debug.model
 
 import scala.collection.JavaConverters.asScalaBufferConverter
 import scala.tools.eclipse.debug.command.{ScalaStepOver, ScalaStep}
-
 import org.eclipse.debug.core.model.{IThread, IBreakpoint}
-
 import com.sun.jdi.ThreadReference
+import com.sun.jdi.VMDisconnectedException
+import com.sun.jdi.ObjectCollectedException
+import org.eclipse.debug.core.DebugEvent
 
 class ScalaThread(target: ScalaDebugTarget, val thread: ThreadReference) extends ScalaDebugElement(target) with IThread {
 
@@ -19,38 +20,61 @@ class ScalaThread(target: ScalaDebugTarget, val thread: ThreadReference) extends
 
   def stepOver(): Unit = {
     // top stack frame
-    currentStep = Some(ScalaStepOver(stackFrames.find(sf => true).get))
-    currentStep.get.step
+    ScalaStepOver(stackFrames.head).step
   }
 
   def stepReturn(): Unit = ???
 
   // Members declared in org.eclipse.debug.core.model.ISuspendResume
 
-  def canResume(): Boolean = false // TODO: need real logic
+  def canResume(): Boolean = !suspended // TODO: need real logic
   def canSuspend(): Boolean = false // TODO: need real logic
   def isSuspended(): Boolean = suspended // TODO: need real logic
-  def resume(): Unit = ???
+  def resume(): Unit = {
+    resumedFromScala(DebugEvent.RESUME)
+    thread.resume
+  }
   def suspend(): Unit = ???
 
   // Members declared in org.eclipse.debug.core.model.IThread
 
   def getBreakpoints(): Array[IBreakpoint] = Array() // TODO: need real logic
-  def getName(): String = thread.name
+  
+  def getName(): String = {
+    try {
+      name= thread.name
+    } catch {
+      case e: ObjectCollectedException =>
+        name= "<garbage collected>"
+      case e: VMDisconnectedException =>
+        name= "<disconnected>"
+    }
+    name
+  }
+  
   def getPriority(): Int = ???
   def getStackFrames(): Array[org.eclipse.debug.core.model.IStackFrame] = stackFrames.toArray
-  def getTopStackFrame(): org.eclipse.debug.core.model.IStackFrame = stackFrames.find(sf => true).getOrElse(null)
+  def getTopStackFrame(): org.eclipse.debug.core.model.IStackFrame = stackFrames.headOption.getOrElse(null)
   def hasStackFrames(): Boolean = !stackFrames.isEmpty
 
   // ----
 
+  // state
   var suspended = thread.isSuspended
-
-  var currentStep: Option[ScalaStep] = None
 
   var stackFrames: List[ScalaStackFrame] = Nil
 
+  // initialize name
+  private var name: String= null
+
+  val isSystemThread: Boolean= {
+    thread.threadGroup.name == "system"
+  }
+  
   fireCreationEvent
+  
+  // step management
+  var currentStep: Option[ScalaStep] = None
 
   def suspendedFromJava(eventDetail: Int) {
     import scala.collection.JavaConverters._
@@ -74,5 +98,8 @@ class ScalaThread(target: ScalaDebugTarget, val thread: ThreadReference) extends
     stackFrames = Nil
     fireResumeEvent(eventDetail)
   }
+  
+  // ----
+  
 
 }

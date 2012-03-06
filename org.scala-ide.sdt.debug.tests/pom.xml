@@ -140,7 +140,7 @@
           <!-- </includes> -->
           <argLine>${tycho.test.jvmArgs}</argLine>
           <testSuite>${project.artifactId}</testSuite>
-          <testClass>scala.tools.eclipse.debug.ScalaDebugSteppingTest</testClass>
+          <testClass>scala.tools.eclipse.debug.ScalaDebugTestSuite</testClass>
         </configuration>
       </plugin>
 
@@ -152,6 +152,31 @@
           <resolver>p2</resolver>
           <pomDependencies>consider</pomDependencies>
         </configuration>
+      </plugin>
+      
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <version>2.4</version>
+        <executions>
+        <execution>
+            <id>copy</id>
+            <phase>initialize</phase>
+            <goals>
+              <goal>copy</goal>
+            </goals>
+            <configuration>
+              <artifactItems>
+                <artifactItem>
+                  <groupId>org.mockito</groupId>
+                  <artifactId>mockito-all</artifactId>
+                  <version>1.8.5</version>
+                  <outputDirectory>${basedir}/lib</outputDirectory>
+                </artifactItem>
+              </artifactItems>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
 
     </plugins>

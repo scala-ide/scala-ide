@@ -107,7 +107,7 @@ class ScalaDebugTarget(val javaTarget: JDIDebugTarget, threadStartRequest: Threa
       case threadStartEvent: ThreadStartEvent =>
         threads += new ScalaThread(this, threadStartEvent.thread)
       case threadDeathEvent: ThreadDeathEvent =>
-        threads --= threads.find(_.thread == threadDeathEvent.thread)
+        threads --= threads.find(_.thread == threadDeathEvent.thread) // TODO: use immutable list
       case _ =>
         ???
     }

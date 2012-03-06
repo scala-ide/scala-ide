@@ -103,7 +103,7 @@ class ScalaDebugTestSession(launchConfigurationFile: IFile) extends IDebugEventS
     if (state eq NOT_LAUNCHED) {
       launch()
     } else {
-      currentStackFrame.resume
+      resume()
     }
 
     waitUntilSuspended
@@ -121,6 +121,16 @@ class ScalaDebugTestSession(launchConfigurationFile: IFile) extends IDebugEventS
 
     assertEquals("Bad state after stepOver", SUSPENDED, state)
   }
+  
+  def resumeToCompletion() {
+    assertEquals("Bad state before resumeToCompletion", SUSPENDED, state)
+
+    resume
+
+    waitUntilSuspended
+
+    assertEquals("Bad state after resumeToCompletion", TERMINATED, state)
+  }
 
   def terminate() {
     if ((state ne NOT_LAUNCHED) && (state ne TERMINATED)) {
@@ -133,6 +143,10 @@ class ScalaDebugTestSession(launchConfigurationFile: IFile) extends IDebugEventS
   private def launch() {
     val launchConfiguration = DebugPlugin.getDefault.getLaunchManager.getLaunchConfiguration(launchConfigurationFile)
     launchConfiguration.launch(ILaunchManager.DEBUG_MODE, null).getDebugTarget.asInstanceOf[JDIDebugTarget]
+  }
+  
+  private def resume() {
+    currentStackFrame.resume
   }
 
   // -----

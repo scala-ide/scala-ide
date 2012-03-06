@@ -5,15 +5,7 @@ import org.junit.{Test, Before, After}
 import org.eclipse.core.resources.IncrementalProjectBuilder
 import org.eclipse.core.runtime.NullProgressMonitor
 
-object ScalaDebugSteppingTest extends TestProjectSetup("debug", bundleName= "org.scala-ide.sdt.debug.tests") {
-
-  val TYPENAME_FC_LS = "stepping.ForComprehensionListString"
-  val TYPENAME_FC_LS2 = "stepping.ForComprehensionListString2"
-  val TYPENAME_FC_LO = "stepping.ForComprehensionListObject"
-  val TYPENAME_FC_LI = "stepping.ForComprehensionListInt"
-  val TYPENAME_AF_LS = "stepping.AnonFunOnListString"
-
-}
+object ScalaDebugSteppingTest extends TestProjectSetup("debug", bundleName= "org.scala-ide.sdt.debug.tests") with ScalaDebugRunningTest
 
 class ScalaDebugSteppingTest {
 

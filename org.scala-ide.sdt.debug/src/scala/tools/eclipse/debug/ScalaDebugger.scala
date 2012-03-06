@@ -1,15 +1,18 @@
 package scala.tools.eclipse.debug
 
 import scala.collection.mutable.Buffer
-
 import org.eclipse.debug.core.model.IDebugModelProvider
-import org.eclipse.debug.core.{IDebugEventSetListener, DebugPlugin, DebugEvent}
-import org.eclipse.jdt.debug.core.{IJavaStackFrame, IJavaDebugTarget}
-import org.eclipse.jdt.internal.debug.core.model.{JDIThread, JDIDebugTarget}
-
+import org.eclipse.debug.core.{ IDebugEventSetListener, DebugPlugin, DebugEvent }
+import org.eclipse.jdt.debug.core.{ IJavaStackFrame, IJavaDebugTarget }
+import org.eclipse.jdt.internal.debug.core.model.{ JDIThread, JDIDebugTarget }
 import model.ScalaDebugTarget
+import org.eclipse.ui.internal.WorkbenchPlugin
+import org.eclipse.ui.ISelectionListener
+import model.ScalaThread
+import org.eclipse.jface.viewers.IStructuredSelection
+import model.ScalaStackFrame
 
-object ScalaDebugger extends IDebugEventSetListener {
+object ScalaDebugger extends IDebugEventSetListener with ISelectionListener {
 
   val classIDebugModelProvider = classOf[IDebugModelProvider]
   val classIJavaDebugTarget = classOf[IJavaDebugTarget]
@@ -53,12 +56,35 @@ object ScalaDebugger extends IDebugEventSetListener {
     })
   }
 
+  // Members declared in org.eclipse.ui.ISelectionListener
+
+  def selectionChanged(part: org.eclipse.ui.IWorkbenchPart, selection: org.eclipse.jface.viewers.ISelection) {
+    currentThread= selection match {
+      case structuredSelection: IStructuredSelection =>
+        structuredSelection.getFirstElement match {
+          case scalaThread: ScalaThread =>
+            scalaThread
+          case scalaStackFrame: ScalaStackFrame =>
+            scalaStackFrame.thread
+          case _ =>
+            null
+        }
+      case _ =>
+        null
+    }
+  }
+
   // ----
 
   val debugTargets = Buffer[ScalaDebugTarget]()
 
+  var currentThread: ScalaThread = null
+
   def init() {
     DebugPlugin.getDefault.addDebugEventListener(this)
+    // TODO: really ugly. Need to keep track of current selection per window.
+    // TODO: disable during headless tests
+    //WorkbenchPlugin.getDefault.getWorkbench.getWorkbenchWindows.apply(0).getSelectionService.addSelectionListener("org.eclipse.debug.ui.DebugView", this)
   }
 
   private def javaDebugTargetCreated(target: JDIDebugTarget) {

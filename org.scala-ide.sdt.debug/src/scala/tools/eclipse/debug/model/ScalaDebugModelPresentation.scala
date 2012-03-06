@@ -2,10 +2,10 @@ package scala.tools.eclipse.debug.model
 
 import org.eclipse.core.resources.IFile
 import org.eclipse.debug.core.model.IValue
-import org.eclipse.debug.ui.{IValueDetailListener, IDebugUIConstants, IDebugModelPresentation, DebugUITools}
+import org.eclipse.debug.ui.{ IValueDetailListener, IDebugUIConstants, IDebugModelPresentation, DebugUITools }
 import org.eclipse.ui.ide.IDE
 import org.eclipse.ui.part.FileEditorInput
-import org.eclipse.ui.{IFileEditorInput, IEditorInput}
+import org.eclipse.ui.{ IFileEditorInput, IEditorInput }
 
 class ScalaDebugModelPresentation extends IDebugModelPresentation {
 
@@ -47,9 +47,9 @@ class ScalaDebugModelPresentation extends IDebugModelPresentation {
       case target: ScalaDebugTarget =>
         target.getName // TODO: everything
       case thread: ScalaThread =>
-        thread.getName // TODO: everything
+        getScalaThreadText(thread)
       case stackFrame: ScalaStackFrame =>
-        stackFrame.getName // TODO: everything
+        getScalaStackFrameText(stackFrame)
       case _ =>
         ???
     }
@@ -78,5 +78,29 @@ class ScalaDebugModelPresentation extends IDebugModelPresentation {
   }
 
   // ----
+
+  /*
+   * TODO: add support for thread state (running, suspended at ...)
+   */
+  def getScalaThreadText(thread: ScalaThread): String = {
+    if (thread.isSystemThread)
+      "Deamon System Thread [%s]".format(thread.getName)
+    else
+      "Thread [%s]".format(thread.getName)
+  }
+
+  /*
+   * TODO: support for missing line numbers
+   */
+  def getScalaStackFrameText(stackFrame: ScalaStackFrame): String = {
+    "%s line: %s".format(stackFrame.getMethodFullName, {
+      val lineNumber = stackFrame.getLineNumber
+      if (lineNumber == -1) {
+        "not available"
+      } else {
+        lineNumber.toString
+      }
+    })
+  }
 
 }

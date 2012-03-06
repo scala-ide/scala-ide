@@ -1,8 +1,8 @@
 package scala.tools.eclipse.debug.model
 
 import org.eclipse.debug.core.model.IVariable
-
 import com.sun.jdi.{LocalVariable, Field, ArrayType}
+import com.sun.jdi.ObjectReference
 
 abstract class ScalaVariable(target: ScalaDebugTarget) extends ScalaDebugElement(target) with IVariable {
 
@@ -17,6 +17,15 @@ abstract class ScalaVariable(target: ScalaDebugTarget) extends ScalaDebugElement
   // Members declared in org.eclipse.debug.core.model.IVariable
 
   def hasValueChanged(): Boolean = false // TODO: need real logic
+}
+
+class ScalaThisVariable(value: ObjectReference, stackFrame: ScalaStackFrame) extends ScalaVariable(stackFrame.getScalaDebugTarget) {
+  
+  // Members declared in org.eclipse.debug.core.model.IVariable
+
+  def getName(): String = "this"
+  def getReferenceTypeName(): String = value.referenceType.name
+  def getValue(): org.eclipse.debug.core.model.IValue = new ScalaObjectReference(value, getScalaDebugTarget)
 }
 
 class ScalaLocalVariable(variable: LocalVariable, stackFrame: ScalaStackFrame) extends ScalaVariable(stackFrame.getScalaDebugTarget) {

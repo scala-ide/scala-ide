@@ -9,6 +9,11 @@ import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants
 
 import model.ScalaStackFrame
 
+/*
+ * TODO: bad, bad implementation of ISourceLocator
+ * Kind of work for current project, or in workspace plug-in projects
+ */
+
 class ScalaSourceLocator(launch: ILaunch) extends ISourceLocator {
 
   def getSourceElement(stackFrame: IStackFrame): AnyRef = {
@@ -22,14 +27,22 @@ class ScalaSourceLocator(launch: ILaunch) extends ISourceLocator {
 
   def getSourceElement(stackFrame: ScalaStackFrame): AnyRef = {
     val sourceName = stackFrame.getSourceName
+    
+    val attributes = launch.getLaunchConfiguration.getAttributes
 
-    val projectName = launch.getLaunchConfiguration.getAttribute(IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME, "") // TODO: should be null here
-
-    val project = ResourcesPlugin.getWorkspace.getRoot.getProject(projectName)
-
-    val scalaProject = ScalaPlugin.plugin.asScalaProject(project)
-
-    scalaProject.flatMap(_.allSourceFiles.find(_.getName == sourceName)).getOrElse(null)
+    val projectName = launch.getLaunchConfiguration.getAttribute(IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME, null.asInstanceOf[String])
+    
+    val scalaProjects = if (projectName != null) { // launch configuration on one project
+      val project = ResourcesPlugin.getWorkspace.getRoot.getProject(projectName)
+  
+      Array(ScalaPlugin.plugin.asScalaProject(project)).flatMap(s => s)
+  
+    } else { // launch configuration for plugins
+      val workspacePlugins= launch.getLaunchConfiguration.getAttribute("selected_workspace_plugins", "").split(',')
+      workspacePlugins.flatMap(s => ScalaPlugin.plugin.asScalaProject(ResourcesPlugin.getWorkspace.getRoot.getProject(s.substring(0, s.indexOf('@')))))
+    }
+    val t= scalaProjects.flatMap(_.allSourceFiles.find(_.getName == sourceName))
+    t.headOption.getOrElse(null)
   }
 
 }

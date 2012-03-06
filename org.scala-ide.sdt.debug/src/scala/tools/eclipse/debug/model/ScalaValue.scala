@@ -14,23 +14,23 @@ object ScalaValue {
         new ScalaArrayReference(arrayReference, target)
       case booleanValue: BooleanValue =>
         // TODO: cache the values?
-        new ScalaPrimitiveValue("boolean", booleanValue.value.toString, target)
+        new ScalaPrimitiveValue("scala.Boolean", booleanValue.value.toString, target)
       case byteValue: ByteValue =>
-        new ScalaPrimitiveValue("byte", byteValue.value.toString, target)
+        new ScalaPrimitiveValue("scala.Byte", byteValue.value.toString, target)
       case charValue: CharValue =>
-        new ScalaPrimitiveValue("char", charValue.value.toString, target)
+        new ScalaPrimitiveValue("scala.Char", charValue.value.toString, target)
       case doubleValue: DoubleValue =>
-        new ScalaPrimitiveValue("double", doubleValue.value.toString, target)
+        new ScalaPrimitiveValue("scala.Double", doubleValue.value.toString, target)
       case floatValue: FloatValue =>
-        new ScalaPrimitiveValue("fload", floatValue.value.toString, target)
+        new ScalaPrimitiveValue("scala.Float", floatValue.value.toString, target)
       case integerValue: IntegerValue =>
-        new ScalaPrimitiveValue("integer", integerValue.value.toString, target)
+        new ScalaPrimitiveValue("scala.Int", integerValue.value.toString, target)
       case longValue: LongValue =>
-        new ScalaPrimitiveValue("long", longValue.value.toString, target)
+        new ScalaPrimitiveValue("scala.Long", longValue.value.toString, target)
       case shortValue: ShortValue =>
-        new ScalaPrimitiveValue("short", shortValue.value.toString, target)
+        new ScalaPrimitiveValue("scala.Short", shortValue.value.toString, target)
       case stringReference: StringReference =>
-        new ScalaPrimitiveValue("java.lang.String", stringReference.value, target)
+        new ScalaStringReference(stringReference, target)
       case objectReference: ObjectReference => // include ClassLoaderReference, ClassObjectReference, ThreadGroupReference, ThreadReference
         new ScalaObjectReference(objectReference, target)
       case null =>
@@ -57,8 +57,8 @@ class ScalaArrayReference(val arrayReference: ArrayReference, target: ScalaDebug
 
   // Members declared in org.eclipse.debug.core.model.IValue
 
-  def getReferenceTypeName(): String = arrayReference.`type`.name
-  def getValueString(): String = "an array" // TODO: need real value
+  def getReferenceTypeName(): String = "scala.Array"
+  def getValueString(): String = "%s(%d) (id=%d)".format(ScalaStackFrame.getSimpleName(arrayReference.referenceType), arrayReference.length, arrayReference.uniqueID) // TODO: need real value
   def getVariables(): Array[org.eclipse.debug.core.model.IVariable] = {
     (0 until arrayReference.length).map(new ScalaArrayVariable(_, this)).toArray
   }
@@ -67,6 +67,8 @@ class ScalaArrayReference(val arrayReference: ArrayReference, target: ScalaDebug
 
 class ScalaPrimitiveValue(typeName: String, value: String, target: ScalaDebugTarget) extends ScalaValue(target) {
 
+  // Members declared in org.eclipse.debug.core.model.IValue
+
   def getReferenceTypeName(): String = typeName
   def getValueString(): String = value
   def getVariables(): Array[org.eclipse.debug.core.model.IVariable] = Array()
@@ -74,10 +76,19 @@ class ScalaPrimitiveValue(typeName: String, value: String, target: ScalaDebugTar
 
 }
 
+class ScalaStringReference(stringReference: StringReference, target: ScalaDebugTarget) extends ScalaObjectReference(stringReference, target) {
+
+  override def getReferenceTypeName() = "java.lang.String"
+  override def getValueString(): String = """"%s" (id=%d)""".format(stringReference.value, stringReference.uniqueID)
+  
+}
+
 class ScalaObjectReference(val objectReference: ObjectReference, target: ScalaDebugTarget) extends ScalaValue(target) {
 
+  // Members declared in org.eclipse.debug.core.model.IValue
+
   def getReferenceTypeName(): String = objectReference.referenceType.name
-  def getValueString(): String = "an object" // TODO: need real value
+  def getValueString(): String = "%s (id=%d)".format(ScalaStackFrame.getSimpleName(objectReference.referenceType), objectReference.uniqueID) // TODO: need real value
   def getVariables(): Array[org.eclipse.debug.core.model.IVariable] = {
     import scala.collection.JavaConverters._
     objectReference.referenceType.allFields.asScala.map(new ScalaFieldVariable(_, this)).toArray
@@ -87,6 +98,8 @@ class ScalaObjectReference(val objectReference: ObjectReference, target: ScalaDe
 }
 
 class ScalaNullValue(target: ScalaDebugTarget) extends ScalaValue(target) {
+
+  // Members declared in org.eclipse.debug.core.model.IValue
 
   def getReferenceTypeName(): String = "null"
   def getValueString(): String = "null"
