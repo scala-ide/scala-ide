@@ -19,6 +19,7 @@ import scala.tools.eclipse.sbtbuilder.ScalaCompilerClasspathTest;
 import scala.tools.eclipse.sbtbuilder.ScalaJavaDepTest;
 import scala.tools.eclipse.sbtbuilder.MultipleErrorsTest;
 import scala.tools.eclipse.structurebuilder.StructureBuilderTest;
+import scala.tools.eclipse.ui.TestBracketStrategy;
 import scala.tools.eclipse.pc.PresentationCompilerTest;
 import scala.tools.eclipse.wizards.*;
 
@@ -54,6 +55,7 @@ import org.junit.runners.Suite;
   NestedProjectsTest.class,
   CompilerSettingsTest.class,
   ProjectDependenciesTest.class,
-  MultipleErrorsTest.class
+  MultipleErrorsTest.class,
+  TestBracketStrategy.class
 })
 class TestsSuite { }
