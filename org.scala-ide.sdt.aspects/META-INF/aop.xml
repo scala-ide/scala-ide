@@ -20,6 +20,7 @@
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.launching.JavaLaunchableTesterAspect"/>
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.search.SearchAspect"/>
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.ui.ScalaOverrideLabelAspect"/>
+<aspect name="scala.tools.eclipse.contribution.weaving.jdt.ui.actions.OpenActionProviderAspect" />
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.ClassFileEditorIdAspect"/>
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.HoversAspect"/>
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.ScalaCloseStringsAspect"/>
