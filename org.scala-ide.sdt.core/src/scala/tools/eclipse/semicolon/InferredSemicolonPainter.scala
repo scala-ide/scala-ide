@@ -91,7 +91,7 @@ class InferredSemicolonPainter(textViewer: ITextViewer with ITextViewerExtension
     val change = event.getText.size - event.getLength
     inferredSemis.map { semi =>
       if (semi.startIndex >= offset)
-        semi.copy(offset = semi.offset + change)
+        semi.copy(startIndex = semi.startIndex + change, stopIndex = semi.stopIndex + change)
       else
         semi
     }
