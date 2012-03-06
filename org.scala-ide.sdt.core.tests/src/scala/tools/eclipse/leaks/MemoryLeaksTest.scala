@@ -79,8 +79,8 @@ class MemoryLeaksTest extends HasLogger {
       outputFile.println("%d\t%d".format(i, dataPoint))
     }
     outputFile.close()
-    // drop the first measurement, since the compiler needs some memory when initializing
-    val (a, b) = linearModel((2L to N).toSeq, usedMem.tail)
+    // drop the first two measurements, since the compiler needs some memory when initializing
+    val (a, b) = linearModel((3L to N).toSeq, usedMem.drop(2))
     info("LinearModel: alfa: %.4f\tbeta:%.4f".format(a, b))
     
     Assert.assertTrue("Rate of memory consumption is alarming! %.4f".format(b), b < 1.0)
