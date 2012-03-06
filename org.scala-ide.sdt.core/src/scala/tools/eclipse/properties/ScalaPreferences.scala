@@ -68,8 +68,6 @@ class ScalaPreferences extends PropertyPage with IWorkbenchPreferencePage with E
     case ex => eclipseLog.error(ex); false
   }
   
-  def updateApply = updateApplyButton
-  
   /** Updates the apply button with the appropriate enablement. */
   protected override def updateApplyButton() : Unit = {
     if(getApplyButton != null) {
@@ -83,6 +81,6 @@ class ScalaPreferences extends PropertyPage with IWorkbenchPreferencePage with E
   
   def save(): Unit = {
     //Don't let user click "apply" again until a change
-    updateApplyButton
+    updateApplyButton()
   }
 }
