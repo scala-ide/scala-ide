@@ -205,8 +205,9 @@ object ScalaLaunchShortcut {
         })
     }
 
-    val je = element.asInstanceOf[IAdaptable].adaptTo[IJavaElement]
-    je.getOpenable match {
+    (for {
+      je <- element.asInstanceOf[IAdaptable].adaptToSafe[IJavaElement] 
+    } yield je.getOpenable match {
       case scu: ScalaSourceFile =>
         def isTopLevel(tpe: IType) = tpe.getDeclaringType == null
         def hasAncestralMainMethod(tpe: IType) =
@@ -217,6 +218,6 @@ object ScalaLaunchShortcut {
             && isTopLevel(tpe)
             && hasAncestralMainMethod(tpe)).toList
       case _ => Nil
-    }
+    }) getOrElse Nil
   }
 }

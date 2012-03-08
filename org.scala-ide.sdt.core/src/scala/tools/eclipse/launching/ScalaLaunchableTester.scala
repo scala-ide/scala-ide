@@ -84,7 +84,7 @@ class ScalaLaunchableTester extends PropertyTester {
 
     if (receiver.isInstanceOf[IAdaptable]) {
       element = receiver.asInstanceOf[IAdaptable].adaptTo[IJavaElement]
-      if (element != null && !element.exists()) {
+      if (element == null || !element.exists()) {
         return false
       }
     }
