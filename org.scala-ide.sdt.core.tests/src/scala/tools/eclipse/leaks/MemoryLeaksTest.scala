@@ -39,7 +39,7 @@ class MemoryLeaksTest extends HasLogger {
     import compilerProject._
     import logger._
 
-    val N = 20
+    val N = 50
     val filename = "usedmem-%tF.txt".format(Calendar.getInstance.getTime)
 
 
