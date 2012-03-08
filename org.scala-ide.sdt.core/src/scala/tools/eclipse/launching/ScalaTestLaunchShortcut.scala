@@ -165,9 +165,10 @@ object ScalaTestLaunchShortcut {
   }
   
   def isScalaTestSuite(iType: IType): Boolean = {
-    val typeHier:ITypeHierarchy = iType.newSupertypeHierarchy(null)
-    val superTypeArr:Array[IType] = typeHier.getAllSupertypes(iType)
-    superTypeArr.findIndexOf {superType => superType.getFullyQualifiedName == "org.scalatest.Suite"} >= 0
+    //val typeHier:ITypeHierarchy = iType.newSupertypeHierarchy(null)
+    //val superTypeArr:Array[IType] = typeHier.getAllSupertypes(iType)
+    //superTypeArr.findIndexOf {superType => superType.getFullyQualifiedName == "org.scalatest.Suite"} >= 0
+    iType.getSuperInterfaceNames().contains("org.scalatest.Suite")
   }
   
   def containsScalaTestSuite(scSrcFile: ScalaSourceFile): Boolean = {
