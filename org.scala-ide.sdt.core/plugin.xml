@@ -965,7 +965,65 @@
                path="edit">
             <separator name="scala.tools.eclipse.refactoring.refactoringGroup"/>
             <separator name="scala.tools.eclipse.refactoring.quickfixGroup"/>
+            <separator name="scala.tools.eclipse.refactoring.generatorOnlyGroup"/>
+            <separator name="scala.tools.eclipse.refactoring.methodSignatureGroup"/>
          </menu>
+         <action
+               class="scala.tools.eclipse.refactoring.source.GenerateHashcodeAndEqualsAction"
+               definitionId="scala.tools.eclipse.refactoring.source.command.GenerateHashcodeAndEquals"
+               id="scala.tools.eclipse.refactoring.source.generateHashcodeAndEqualsAction"
+               label="Generate hashCode and equals"
+               menubarPath="scala.tools.eclipse.refactoring.refactoringMenu/scala.tools.eclipse.refactoring.generatorOnlyGroup"
+               tooltip="Generate hashCode and equals">
+         </action>
+         <action
+               class="scala.tools.eclipse.refactoring.source.IntroduceProductNTraitAction"
+               definitionId="scala.tools.eclipse.refactoring.source.command.IntroduceProductNTrait"
+               id="scala.tools.eclipse.refactoring.source.introduceProductNTraitAction"
+               label="Introduce ProductN trait"
+               menubarPath="scala.tools.eclipse.refactoring.refactoringMenu/scala.tools.eclipse.refactoring.generatorOnlyGroup"
+               tooltip="Introduce ProductN trait">
+         </action>
+         <action
+               class="scala.tools.eclipse.refactoring.method.SplitParameterListsAction"
+               definitionId="scala.tools.eclipse.refactoring.method.command.SplitParameterLists"
+               id="scala.tools.eclipse.refactoring.method.splitParameterListsAction"
+               label="Split parameter lists"
+               menubarPath="scala.tools.eclipse.refactoring.refactoringMenu/scala.tools.eclipse.refactoring.methodSignatureGroup"
+               tooltip="Split parameter lists">
+         </action>
+         <action
+               class="scala.tools.eclipse.refactoring.method.MergeParameterListsAction"
+               definitionId="scala.tools.eclipse.refactoring.method.command.MergeParameterLists"
+               id="scala.tools.eclipse.refactoring.method.mergeParameterListsAction"
+               label="Merge parameter lists"
+               menubarPath="scala.tools.eclipse.refactoring.refactoringMenu/scala.tools.eclipse.refactoring.methodSignatureGroup"
+               tooltip="Merge parameter lists">
+         </action>
+         <action
+               class="scala.tools.eclipse.refactoring.method.ChangeParameterOrderAction"
+               definitionId="scala.tools.eclipse.refactoring.method.command.ChangeParameterOrder"
+               id="scala.tools.eclipse.refactoring.method.changeParameterOrderAction"
+               label="Change parameter order"
+               menubarPath="scala.tools.eclipse.refactoring.refactoringMenu/scala.tools.eclipse.refactoring.methodSignatureGroup"
+               tooltip="Change parameter order">
+         </action>
+         <action
+               class="scala.tools.eclipse.refactoring.MoveConstructorToCompanionObjectAction"
+               definitionId="scala.tools.eclipse.refactoring.command.MoveConstructorToCompanionObject"
+               id="scala.tools.eclipse.refactoring.moveConstructorToCompanionObjectAction"
+               label="Move constructor to companion object"
+               menubarPath="scala.tools.eclipse.refactoring.refactoringMenu/scala.tools.eclipse.refactoring.sourceGeneratorGroup"
+               tooltip="Move constructor to companion object">
+         </action>
+         <action
+               class="scala.tools.eclipse.refactoring.ExtractTraitAction"
+               definitionId="scala.tools.eclipse.refactoring.command.ExtractTrait"
+               id="scala.tools.eclipse.refactoring.extractTraitAction"
+               label="Extract trait"
+               menubarPath="scala.tools.eclipse.refactoring.refactoringMenu/scala.tools.eclipse.refactoring.sourceGeneratorGroup"
+               tooltip="Extract trait">
+         </action>
          <action
                class="scala.tools.eclipse.refactoring.move.MoveClassAction"
                definitionId="scala.tools.eclipse.refactoring.command.MoveClass"
@@ -1066,17 +1124,53 @@
      </actionSet>
    </extension>
 
-   <extension
+  <extension
       point="org.eclipse.ui.commands">
    <category
          description="Refactorings"
          id="scala.tools.eclipse.refactoring.commands.refactoring"
          name="Refactor - Scala"/>
+   <category
+         description="Method Signature Refactorings"
+         id="scala.tools.eclipse.refactoring.commands.methodsignature"
+         name="Method Signature Refactoring - Scala"/>
+   <category
+         description="Source Generation Refactorings"
+         id="scala.tools.eclipse.refactoring.commands.sourcegeneration"
+         name="Source - Scala"/>
       <command
          name="Refactor Quick Menu"
          description="Shows the refactor quick menu"
          categoryId="scala.tools.eclipse.refactoring.commands.refactoring"
          id="scala.tools.eclipse.refactoring.commands.quickMenu"/>
+      <command
+         categoryId="scala.tools.eclipse.refactoring.commands.sourcegeneration"
+         id="scala.tools.eclipse.refactoring.source.command.GenerateHashcodeAndEquals"
+         name="Generate hashCode and equals" />
+      <command
+         categoryId="scala.tools.eclipse.refactoring.commands.sourcegeneration"
+         id="scala.tools.eclipse.refactoring.source.command.IntroduceProductNTrait"
+         name="Introduce ProductN trait" />
+      <command
+         categoryId="scala.tools.eclipse.refactoring.commands.methodsignature"
+         id="scala.tools.eclipse.refactoring.method.command.SplitParameterLists"
+         name="Split parameter lists" />
+      <command
+         categoryId="scala.tools.eclipse.refactoring.commands.methodsignature"
+         id="scala.tools.eclipse.refactoring.method.command.MergeParameterLists"
+         name="Merge parameter lists" />
+      <command
+         categoryId="scala.tools.eclipse.refactoring.commands.methodsignature"
+         id="scala.tools.eclipse.refactoring.method.command.ChangeParameterOrder"
+         name="Change parameter order" />
+      <command
+         categoryId="scala.tools.eclipse.refactoring.commands.refactoring"
+         id="scala.tools.eclipse.refactoring.command.MoveConstructorToCompanionObject"
+         name="Move constructor to companion object" />
+      <command
+         categoryId="scala.tools.eclipse.refactoring.commands.refactoring"
+         id="scala.tools.eclipse.refactoring.command.ExtractTrait"
+         name="Extract Trait" />
       <command
          categoryId="scala.tools.eclipse.refactoring.commands.refactoring"
          id="scala.tools.eclipse.refactoring.command.MoveClass"

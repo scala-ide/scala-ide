@@ -12,6 +12,7 @@ import org.eclipse.core.commands.Command
 import org.eclipse.jface.action.{ Action, IAction, IMenuManager, IMenuListener, ActionContributionItem }
 import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor
 import org.eclipse.jdt.internal.ui.actions.JDTQuickMenuCreator
+import org.eclipse.jface.action.Separator
 
 /**
  * Unfortunately, it seems we cannot simply define a context menu on the Scala source editor via 
@@ -28,6 +29,8 @@ protected[eclipse] object RefactoringMenu {
     val QuickMenu = Value("scala.tools.eclipse.refactoring.commands.quickMenu")
     val ContextMenu = Value("org.eclipse.jdt.ui.refactoring.menu")
     val CommandsCategory = Value("scala.tools.eclipse.refactoring.commands.refactoring")
+    val CommandsSourceCategory = Value("scala.tools.eclipse.refactoring.commands.sourcegeneration")
+    val CommandsMethodSignatureCategory = Value("scala.tools.eclipse.refactoring.commands.methodsignature")
     type Id = Value; implicit def toString(id: Id.Value) = id.toString
   }
 
@@ -55,13 +58,25 @@ protected[eclipse] object RefactoringMenu {
   private def fillFromPluginXml(menu: IMenuManager, editor: EditorPart, all: Boolean): Unit = {
 
     menu.removeAll
-    for (command <- refactoringCommandsDefinedInPluginXml) menu.add(wrapped(command))
 
-    def refactoringCommandsDefinedInPluginXml = {
-      val service = commandService(editor)
+    val service = commandService(editor)
+    val categories = {
       val refactoringCategory = service.getCategory(Id.CommandsCategory)
-      service.getDefinedCommands.filter((command: Command) =>
-        command.getCategory == refactoringCategory && (all || command.getId != Id.QuickMenu.toString))
+      val sourceCategory = service.getCategory(Id.CommandsSourceCategory)
+      val methodSignatureCategory = service.getCategory(Id.CommandsMethodSignatureCategory)
+      List(refactoringCategory, sourceCategory, methodSignatureCategory)
+    }
+
+    for(category <- categories) 
+      menu.add(new Separator(category.getId))
+    
+    for (command <- refactoringCommandsDefinedInPluginXml) 
+      menu.appendToGroup(command.getCategory.getId, wrapped(command))
+    
+    def refactoringCommandsDefinedInPluginXml = {
+      val refactoringCommands = service.getDefinedCommands.filter((command: Command) =>
+        (categories contains command.getCategory) && (all || command.getId != Id.QuickMenu.toString))
+      refactoringCommands      
     }
 
     def wrapped(command: Command) = new Action {
