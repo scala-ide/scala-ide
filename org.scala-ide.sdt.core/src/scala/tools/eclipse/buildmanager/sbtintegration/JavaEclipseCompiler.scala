@@ -22,14 +22,12 @@ class JavaEclipseCompiler(project: IProject, monitor: SubMonitor) {
   def getProject = project
   
   def build(kind: Int): Array[IProject] = {
-    
-    
     val project = plugin.getScalaProject(getProject)
     
     val allSourceFiles = project.allSourceFiles()
-    val depends = project.externalDepends.toList.toArray
+    val depends = project.directDependencies
     if (allSourceFiles.exists(FileUtils.hasBuildErrors(_)))
-      depends
+      depends.toArray
     else {
       ensureProject
       

@@ -68,7 +68,7 @@ class EclipseRefinedBuildManager(project: ScalaProject, settings0: Settings)
       }
 
   }
-
+  
   def build(addedOrUpdated: Set[IFile], removed: Set[IFile], submon: SubMonitor) {
     monitor = submon
 
@@ -92,6 +92,7 @@ class EclipseRefinedBuildManager(project: ScalaProject, settings0: Settings)
     depFile.setDerived(true, monitor)
     depFile.refreshLocal(IResource.DEPTH_INFINITE, null)
 
+    hasErrors = compiler.reporter.hasErrors
     val targets = compiler.dependencyAnalysis.dependencies.targets
     toBuild flatMap targets foreach {
       case EclipseResource(f) =>

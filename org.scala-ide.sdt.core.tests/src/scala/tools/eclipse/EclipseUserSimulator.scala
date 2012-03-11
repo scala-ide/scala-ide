@@ -52,7 +52,7 @@ class EclipseUserSimulator {
     ScalaPlugin.plugin.getScalaProject(project);
   }
 
-  def createPackage(packageName: String) =
+  def createPackage(packageName: String): IPackageFragment =
     root.createPackageFragment(packageName, false, null);
 
   def createCompilationUnit(pack: IPackageFragment, name: String, sourceCode: String) = {

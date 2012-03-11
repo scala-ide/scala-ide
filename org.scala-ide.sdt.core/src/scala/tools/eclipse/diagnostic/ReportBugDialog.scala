@@ -30,7 +30,9 @@ class ReportBugDialog(shell: Shell) extends Dialog(shell) {
     val messageField = new Text(group1, SWT.READ_ONLY | SWT.MULTI | SWT.BORDER)
     messageField.setLayoutData(new GridData(GridData.GRAB_HORIZONTAL | GridData.HORIZONTAL_ALIGN_FILL))
     messageField.setText(
-        "Scala plugin version: " + ScalaPlugin.plugin.getBundle.getVersion + "\n\n" + // padding 
+        "Scala plugin version: " + ScalaPlugin.plugin.getBundle.getVersion + "\n\n" +
+        "Scala compiler version:\t" + ScalaPlugin.plugin.scalaCompilerBundleVersion + "\n" +
+        "Scala library version:\t" + ScalaPlugin.plugin.scalaLibBundle.getVersion + "\n" +
         "Eclipse version: " + Platform.getBundle("org.eclipse.platform").getVersion)    
     
     val reportBugLink = new Link(control, SWT.NONE)

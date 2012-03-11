@@ -119,6 +119,11 @@ function update_jar() {
 
     jar uvmf /tmp/manf $latest_file -C $base_dir $1
     rm /tmp/manf
+
+    cached_lib=`find $eclipse_dir -iname scala-$2.jar`
+    cached_dir=`dirname $cached_lib`
+    echo -e "Removing cached version in $cached_dir"
+    rm -rf $cached_dir
 }
 
 

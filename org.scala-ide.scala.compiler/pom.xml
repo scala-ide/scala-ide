@@ -8,6 +8,12 @@
     <version>2.9.2-SNAPSHOT</version>
     <relativePath>../org.scala-ide.build-toolchain/pom.xml</relativePath>
   </parent>
+
+  <properties>
+    <test.workspace.dir>../org.scala-ide.sdt.core.tests/test-workspace</test.workspace.dir>
+  </properties>
+
+
   <artifactId>org.scala-ide.scala.compiler</artifactId>
   <packaging>bundle</packaging>
   <dependencies>
@@ -38,6 +44,9 @@
               </includes>
               <followSymlinks>false</followSymlinks>
             </fileset>
+            <fileset>
+              <directory>${test.workspace.dir}/scala-compiler</directory>
+            </fileset>
           </filesets>
         </configuration>
       </plugin>
@@ -64,6 +73,14 @@
                   <artifactId>scala-compiler</artifactId>
                   <version>${scala.compiler.version}</version>
                   <outputDirectory>${project.build.directory}/compiler</outputDirectory>
+                </artifactItem>
+                <artifactItem>
+                  <groupId>${scala.compiler.groupid}</groupId>
+                  <artifactId>scala-compiler</artifactId>
+                  <version>${scala.compiler.version}</version>
+                  <classifier>sources</classifier>
+                  <outputDirectory>${test.workspace.dir}/scala-compiler/src</outputDirectory>
+                  <includes>scala/</includes>
                 </artifactItem>
               </artifactItems>
             </configuration>
@@ -134,6 +151,31 @@
           </execution>
         </executions>
       </plugin>
+
+      <plugin>
+        <artifactId>maven-resources-plugin</artifactId>
+        <version>2.5</version>
+        <executions>
+          <execution>
+            <id>copy-resources</id>
+            <phase>validate</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <!-- copy the .classpath and .project files to the scala-compiler project -->
+              <outputDirectory>${test.workspace.dir}/scala-compiler/</outputDirectory>
+              <resources>          
+                <resource>
+                  <directory>resources/scala-compiler</directory>
+                  <filtering>false</filtering>
+                </resource>
+              </resources>              
+            </configuration>            
+          </execution>
+        </executions>
+      </plugin>
+
       <plugin>
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-bundle-plugin</artifactId>

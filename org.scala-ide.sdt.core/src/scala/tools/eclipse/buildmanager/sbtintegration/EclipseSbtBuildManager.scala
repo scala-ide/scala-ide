@@ -17,6 +17,9 @@ import sbt.{Process, ClasspathOptions}
 import scala.tools.eclipse.util.{ EclipseResource, FileUtils }
 import org.eclipse.core.resources.IResource
 import scala.tools.eclipse.logging.HasLogger
+import sbt.inc.{ AnalysisFormats, AnalysisStore, Analysis, FileBasedStore }
+import org.eclipse.core.resources.IProject
+import sbinary.DefaultProtocol.{ immutableMapFormat, immutableSetFormat, StringFormat }
 
 // The following code is based on sbt.AggressiveCompile
 // Copyright 2010 Mark Harrah
@@ -267,6 +270,7 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings)
 	}
 	
 	lazy val reporter: xsbti.Reporter = new SbtBuildReporter(_buildReporter)
+	
 	val pendingSources = new mutable.HashSet[IFile]
 
 	/** Filter the classpath. Return the original classpath without the Scala library jar.
@@ -327,38 +331,78 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings)
       runCompiler(sources)
     }
   }
-  
+
   private def runCompiler(sources: Seq[File]) {
-      // setup the settings
-  	  val allJarsAndLibrary = filterOutScalaLibrary(project.classpath)
-  	  // Fixed 2.9 for now
-  	  val libJar = allJarsAndLibrary match {
-  	    case (_, Some(lib)) =>
-  	      lib.toFile()
-  	    case (_, None) =>
-  	      logger.info("Cannot find Scala library on the classpath. Verify your build path! Using default library corresponding to the compiler")
-  	      //ScalaPlugin.plugin.sbtScalaLib.get.toFile
-  	      val e = new Exception("Cannot find Scala library on the classpath. Verify your build path!")
-  	      project.buildError(IMarker.SEVERITY_ERROR, e.getMessage(), null)
-          eclipseLog.error("Error in Scala SBT builder", e)
-  	      return
-  	  }
-  	  //val compJar = ScalaPlugin.plugin.sbtScalaCompiler
-  	  val compJar = ScalaPlugin.plugin.compilerClasses
-  	  // TODO pull the actual version from properties and select the correct one
-  	  val compInterfaceJar = ScalaPlugin.plugin.sbtCompilerInterface
-  	  
-      val (scalac, javac) = compilers(settings0, libJar, compJar.get.toFile, compInterfaceJar.get.toFile)
-      // read settings properly
-      //val cp = disintegrateClasspath(settings.classpath.value)
-      val cp = allJarsAndLibrary._1.map(_.toFile)
-      val conf = new BasicConfiguration(
-              project, Seq(scalac.scalaInstance.libraryJar, compInterfaceJar.get.toFile) ++ cp)
-      
-      val analysisComp = new AnalysisCompile(conf, this, new SbtProgress())
-  	  val order = project.storage.getString(SettingConverterUtil.convertNameToProperty(properties.ScalaPluginSettings.compileOrder.name))
-      val result = analysisComp.doCompile(
-              scalac, javac, sources, reporter, settings0, CompileOrderMapper(order))
+    // setup the settings
+    val allJarsAndLibrary = filterOutScalaLibrary(project.classpath)
+    // Fixed 2.9 for now
+    val libJar = allJarsAndLibrary match {
+      case (_, Some(lib)) =>
+        lib.toFile()
+      case (_, None) =>
+        logger.info("Cannot find Scala library on the classpath. Verify your build path! Using default library corresponding to the compiler")
+        //ScalaPlugin.plugin.sbtScalaLib.get.toFile
+        val e = new Exception("Cannot find Scala library on the classpath. Verify your build path!")
+        project.buildError(IMarker.SEVERITY_ERROR, e.getMessage(), null)
+        logger.error("Error in Scala SBT builder", e)
+        return
+    }
+    //val compJar = ScalaPlugin.plugin.sbtScalaCompiler
+    val compJar = ScalaPlugin.plugin.compilerClasses
+    // TODO pull the actual version from properties and select the correct one
+    val compInterfaceJar = ScalaPlugin.plugin.sbtCompilerInterface
+
+    val (scalac, javac) = compilers(settings0, libJar, compJar.get.toFile, compInterfaceJar.get.toFile)
+    // read settings properly
+    //val cp = disintegrateClasspath(settings.classpath.value)
+    val cp = allJarsAndLibrary._1.map(_.toFile)
+    val conf = new BasicConfiguration(
+      project, Seq(scalac.scalaInstance.libraryJar, compInterfaceJar.get.toFile) ++ cp)
+
+    val analysisComp = new AnalysisCompile(conf, this, new SbtProgress())
+
+    val extraAnalysis = upstreamAnalysis(project)
+
+    logger.debug("Retrieved the following upstream analysis: " + extraAnalysis)
+
+    val order = project.storage.getString(SettingConverterUtil.convertNameToProperty(properties.ScalaPluginSettings.compileOrder.name))
+    analysisComp.doCompile(
+      scalac, javac, sources, reporter, settings0, CompileOrderMapper(order), analysisMap = extraAnalysis)
+  }
+
+  /** Return the Analysis for all the dependencies that are Scala projects, and that 
+   *  have associated Analysis information, transitively.
+   *  
+   *  This works only if they are also built using the Sbt build manager
+   */
+  private def upstreamAnalysis(project: ScalaProject): Map[File, Analysis] = {
+    val projectsWithBuilders = for {
+      p <- project.transitiveDependencies
+      dep <- ScalaPlugin.plugin.asScalaProject(p)
+    } yield (dep, dep.buildManager)
+
+    Map.empty ++ projectsWithBuilders.collect {
+      case (dep, sbtBM: EclipseSbtBuildManager) 
+        if dep.outputFolders.nonEmpty && sbtBM.latestAnalysis.isDefined =>
+        val output = dep.outputFolders.head
+        
+        (ScalaPlugin.plugin.workspaceRoot.getFolder(output).getLocation.toFile, sbtBM.latestAnalysis.get)
+    }
+  }
+  
+  import AnalysisFormats._
+  private val store = AnalysisStore.sync(
+      new WeaklyCachedStore(
+          FileBasedStore(
+              EclipseResource(ScalaCompilerConf.cacheLocation(project.underlying)).file) ))
+
+  /** Get the store where this builder keeps the API analysis. */
+  def analysisStore: AnalysisStore = store
+  
+  /** Return the latest sbt Analysis for this builder. */
+  def latestAnalysis: Option[Analysis] = analysisStore.get() match {
+    case Some((analysis, _)) => Option(analysis)
+    case _ => None
   }
   
   /** Not supported */
@@ -393,6 +437,8 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings)
         project.buildError(IMarker.SEVERITY_ERROR, "Error in Scala compiler: " + e.getMessage, null)
         eclipseLog.error("Error in Scala compiler", e)
     }
+    
+    hasErrors = reporter.hasErrors || hasErrors
     if (!hasErrors)
       pendingSources.clear
   }

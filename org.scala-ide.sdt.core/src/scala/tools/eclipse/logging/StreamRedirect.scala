@@ -1,5 +1,7 @@
 package scala.tools.eclipse.logging
 
+import scala.tools.eclipse.util.Trim
+
 private[logging] object StreamRedirect {
   import java.io.{ OutputStream, PrintStream }
 
@@ -50,7 +52,9 @@ private[logging] object StreamRedirect {
     }
 
     override def write(b: Array[Byte], off: Int, len: Int) {
-      to(new String(b, off, len));
+      val str = new String(b, off, len).trim 
+      if (str.length > 0)
+        to(str);
     }
 
     override def write(b: Array[Byte]) {

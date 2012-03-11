@@ -37,10 +37,12 @@ class ScalaBuilder extends IncrementalProjectBuilder with HasLogger {
     import buildmanager.sbtintegration.EclipseSbtBuildManager
     
     val project = plugin.getScalaProject(getProject)
-    
+    val stopBuildOnErrors = 
+      project.storage.getBoolean(SettingConverterUtil.convertNameToProperty(properties.ScalaPluginSettings.stopBuildOnErrors.name))
+
     // check the classpath
     if (!project.isClasspathValid()) {
-      // bail out is the classpath in not valid
+      // bail out if the classpath in not valid
       return new Array[IProject](0)
     }
 
@@ -82,7 +84,7 @@ class ScalaBuilder extends IncrementalProjectBuilder with HasLogger {
                 delta == null || delta.getKind != IResourceDelta.NO_CHANGE
               }
               
-              if (project.externalDepends.exists(hasChanges)) {
+              if (project.directDependencies.exists(hasChanges)) {
                 // reset presentation compilers if a dependency has been rebuilt
                 logger.debug("Resetting presentation compiler for %s due to dependent project change".format(project.underlying.getName()))
                 project.resetPresentationCompiler
@@ -102,11 +104,17 @@ class ScalaBuilder extends IncrementalProjectBuilder with HasLogger {
     }
 
     val subMonitor = SubMonitor.convert(monitor, 100).newChild(100, SubMonitor.SUPPRESS_NONE)
-    subMonitor.beginTask("Running Scala Builder", 100)
+    subMonitor.beginTask("Running Scala Builder on " + project.underlying.getName, 100)
       
-    project.build(addedOrUpdated, removed, subMonitor)
+    val projectsInError = project.transitiveDependencies.filter(p => plugin.getScalaProject(p).buildManager.hasErrors)
+    if (stopBuildOnErrors && projectsInError.nonEmpty) {
+      logger.info("Skipped dependent project %s build because of upstream compilation errors in %s".format(project.underlying.getName, projectsInError))
+    } else {
+      logger.info("Building project " + project)
+      project.build(addedOrUpdated, removed, subMonitor)
+    }
     
-    val depends = project.externalDepends.toList.toArray
+    val depends = project.transitiveDependencies
     
     /** The Java builder has to be run for copying resources (non-source files) to the output directory.
      * 
@@ -121,7 +129,7 @@ class ScalaBuilder extends IncrementalProjectBuilder with HasLogger {
     
     // SBT build manager already calls java builder internally
     if (allSourceFiles.exists(FileUtils.hasBuildErrors(_)) || !shouldRunJavaBuilder)
-      depends
+      depends.toArray
     else {
       ensureProject
       val javaDepends = scalaJavaBuilder.build(kind, ignored, subMonitor) 

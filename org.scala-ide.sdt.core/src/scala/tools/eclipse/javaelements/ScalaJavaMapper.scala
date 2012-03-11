@@ -11,9 +11,56 @@ import scala.tools.nsc.symtab.Flags
 import scala.tools.eclipse.ScalaPresentationCompiler
 import ch.epfl.lamp.fjbg.{ JObjectType, JType }
 import scala.tools.eclipse.logging.HasLogger
+import org.eclipse.jdt.core._
+import org.eclipse.jdt.internal.core.JavaModelManager
+import org.eclipse.core.runtime.Path
 
 trait ScalaJavaMapper extends ScalaAnnotationHelper with HasLogger { self : ScalaPresentationCompiler => 
 
+  /** Return the Java Element corresponding to the given Scala Symbol, looking in the
+   *  given project list
+   * 
+   *  If the symbol exists in several projects, it returns one of them.
+   */
+  def getJavaElement(sym: Symbol, projects: IJavaProject*): Option[IJavaElement] = {
+    assert(sym ne null)
+    if (sym == NoSymbol) return None
+    
+    def matchesMethod(meth: IMethod): Boolean = {
+      import Signature._
+      askOption { () =>
+        ((meth.getElementName == sym.name.toString)
+          && meth.getParameterTypes.map(tp => getTypeErasure(getElementType(tp)))
+                                   .sameElements(sym.tpe.paramTypes.map(mapParamTypeSignature)))
+      }.getOrElse(false)
+    }
+
+    if (sym.isPackage) {
+      val fullName = sym.fullName
+      val results = projects.map(p => Option(p.findPackageFragment(new Path(fullName))))
+      results.flatten.headOption
+    } else if (sym.isClass || sym.isModule) {
+      val fullClassName = mapType(sym)
+      val results = projects.map(p => Option(p.findType(fullClassName)))
+      results.find(_.isDefined).flatten.headOption
+    } else getJavaElement(sym.owner) match {
+        case Some(ownerClass: IType) => 
+          if (sym.isMethod) ownerClass.getMethods.find(matchesMethod)
+          else ownerClass.getFields.find(_.getElementName == sym.name.toString)
+        case _ => None
+    }
+  }
+  
+  /** Return the Java Element corresponding to the given Scala Symbol, looking in the
+   *  all existing Java projects.
+   *  
+   *  If the symbol exists in several projects, it returns one of them.
+   */
+  def getJavaElement(sym: Symbol): Option[IJavaElement] = {
+    val javaModel = JavaModelManager.getJavaModelManager.getJavaModel
+    getJavaElement(sym, javaModel.getJavaProjects(): _*)
+  }
+  
   def mapType(t : Tree) : String = {
     (t match {
       case tt : TypeTree => {
@@ -146,26 +193,25 @@ trait ScalaJavaMapper extends ScalaAnnotationHelper with HasLogger { self : Scal
       case n => n
     }
   }
-  
-  /** 
-   * Map a Scala `Type` that '''does not take type parameters''' into its
-   * Java representation. 
-   * A special case exists for Scala `Array` since in Java array do not take 
-   * type parameters.
-   * */
+
+  /** Map a Scala `Type` that '''does not take type parameters''' into its
+   *  Java representation.
+   *  A special case exists for Scala `Array` since in Java arrays do not take
+   *  type parameters.
+   */
   def mapType(tpe: Type): String = {
-	val base = mapType(tpe.typeSymbol)
-	tpe.typeSymbol match {
-    // only the Array class has type parameters. the Array object is non-parametric
-	  case definitions.ArrayClass => 
-	    val paramTypes = tpe.typeArgs.map(mapType(_))
-	    assert(paramTypes.size == 1, "Expected exactly one type parameter, found %d [%s]".format(paramTypes.size, tpe))
+    val base = mapType(tpe.typeSymbol)
+    tpe.typeSymbol match {
+      // only the Array class has type parameters. the Array object is non-parametric
+      case definitions.ArrayClass =>
+        val paramTypes = tpe.normalize.typeArgs.map(mapType(_)) // normalize is needed when you have `type BitSet = Array[Int]`
+        assert(paramTypes.size == 1, "Expected exactly one type parameter, found %d [%s]".format(paramTypes.size, tpe))
         paramTypes.head + "[]"
-	  case _ => 
-	    if(tpe.typeParams.nonEmpty) 
-	      logger.debug("mapType(Type) is not expected to be used with a type that has type parameters. (passed type was %s)".format(tpe))
-	    base
-	}
+      case _ =>
+        if (tpe.typeParams.nonEmpty)
+          logger.debug("mapType(Type) is not expected to be used with a type that has type parameters. (passed type was %s)".format(tpe))
+        base
+    }
   }
   
   
