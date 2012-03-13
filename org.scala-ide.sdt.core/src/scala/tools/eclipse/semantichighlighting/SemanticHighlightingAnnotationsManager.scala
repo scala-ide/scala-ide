@@ -7,7 +7,7 @@ import scala.tools.eclipse.properties.syntaxcolouring.ScalaSyntaxClasses
 import scala.tools.eclipse.semantichighlighting.classifier._
 import scala.tools.eclipse.ScalaPlugin
 import scala.tools.eclipse.util.RichAnnotationModel._
-import scala.tools.eclipse.util.HasLogger
+import scala.tools.eclipse.logging.HasLogger
 import org.eclipse.jface.text.source._
 import org.eclipse.jface.text.Position
 

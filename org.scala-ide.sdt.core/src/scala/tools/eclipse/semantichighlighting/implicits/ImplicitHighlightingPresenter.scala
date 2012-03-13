@@ -6,7 +6,7 @@ import scala.tools.eclipse.properties.ImplicitsPreferencePage._
 import scala.tools.eclipse.reconciliation.ReconciliationParticipant
 import scala.tools.eclipse.util.Utils.any2optionable
 import scala.tools.eclipse.util.EclipseUtils
-import scala.tools.eclipse.util.HasLogger
+import scala.tools.eclipse.logging.HasLogger
 import scala.tools.eclipse.ScalaPlugin
 import scala.tools.eclipse.ScalaPresentationCompiler
 import scala.tools.nsc.util.SourceFile
@@ -128,7 +128,7 @@ class ImplicitHighlightingPresenter(editor: FileEditorInput, sourceViewer: ISour
             case Some(Right(exc)) =>
               logger.error(exc)
             case None =>
-              logger.warning("Timeout while waiting for `askLoadedTyped` during implicit highlighting.")
+              logger.warn("Timeout while waiting for `askLoadedTyped` during implicit highlighting.")
           }
         }
 
