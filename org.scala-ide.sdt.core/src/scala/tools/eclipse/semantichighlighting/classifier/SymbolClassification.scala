@@ -71,7 +71,8 @@ class SymbolClassification(protected val sourceFile: SourceFile, val global: Sca
   }
 
   private def getSymbolInfo(sym: Symbol): SymbolInfo = {
-    val regions = index occurences sym flatMap getOccurrenceRegion(sym)
+    val occurrences = global.askOption {() => index occurences sym } getOrElse(Nil)
+    val regions = occurrences flatMap getOccurrenceRegion(sym)
     SymbolInfo(getSymbolType(sym), regions, sym.isDeprecated)
   }
 
