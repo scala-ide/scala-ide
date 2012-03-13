@@ -27,6 +27,7 @@ class TypeTest extends AbstractSymbolClassifierTest {
       Map("TP" -> Type))
   }
 
+  @Ignore
   @Test
   def set_is_a_type() {
     checkSymbolClassification("""
