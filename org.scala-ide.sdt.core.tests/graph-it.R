@@ -17,9 +17,12 @@ if (grepl("https://", filename)) {
 }
 
 y <- data$usedMem
-x <- 1:20
-y1 = y[2:20]
-x1 = 2:20
+n = length(y)
+
+x <- 1:n
+y1 = y[2:n]
+x1 = 2:n
+
 coef <- lm(y1~x1)
 a <- coef$coefficients[1]
 b <- coef$coefficients[2]

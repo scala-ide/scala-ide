@@ -1,0 +1,133 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>Memory Leaks Test results</title>
+
+		<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+		<script type="text/javascript">
+var chart;
+$(document).ready(function () {
+	chart = new Highcharts.Chart(makeChart());
+
+	$('input').change(displayVal);
+});
+
+function makeChart() {
+	options = {
+		chart: {
+			renderTo: 'container',
+			defaultSeriesType: 'line',
+			marginRight: 130,
+			marginBottom: 25,
+			zoomType: 'x',
+		},
+		title: {
+			text: 'Memory usage in Scala IDE',
+			x: -20 //center
+		},
+		subtitle: {
+			text: 'Typing one character inside Typer.scala, per typechecker run',
+			x: -20
+		},
+		xAxis: {
+		},
+		yAxis: {
+			title: {
+				text: 'Memory (MB)'
+			},
+			plotLines: [{
+				value: 0,
+				width: 1,
+				color: '#808080'
+			}]
+		},
+		tooltip: {
+			formatter: function() {
+					return '<b>'+ this.series.name +'</b><br/>'+
+					this.x +': '+ this.y +' MB';
+			}
+		},
+		legend: {
+			layout: 'vertical',
+			align: 'right',
+			verticalAlign: 'top',
+			x: 0,
+			y: 400,
+			borderWidth: 0
+		},
+		series: []
+	};
+
+	dt = new Date();
+
+	day = pad(dt.getDate());
+	month = pad(dt.getMonth() + 1); 
+	year = dt.getFullYear();
+
+	function pad(n) {
+		if (n < 10)
+			return "0" + n;
+		else
+			return n;
+	}
+
+	$.ajaxSetup({
+	  async: false
+	});
+
+	for (var i = $('#days_back').val() - 1; i >= 0; i--)	
+		loadSeries(options, "../usedmem-"+year+"-"+month+"-"+pad(day - i) +".txt");
+
+	return options;
+}
+
+
+function loadSeries(options, filename) {
+	jQuery.get(filename, function(tsv, state, xhr) {
+		var lines = [],
+			date,
+			// set up the two data series
+			mem = []
+
+		// inconsistency
+		if (typeof tsv !== 'string') {
+			tsv = xhr.responseText;
+		}
+
+		// split the data return into lines and parse them
+		tsv = tsv.split(/\n/g);
+		jQuery.each(tsv, function(i, line) {
+			if (i > 1 && line.length > 0) { // skip first line
+				line = line.split(/\t/);
+				mem.push(parseInt(line[1], 10));
+			}
+		});
+
+		var s = {
+			name: filename,
+			data: mem
+		}
+
+		options.series.push(s);
+	});
+}
+
+function displayVal() {
+	chart = new Highcharts.Chart(makeChart());
+}
+		</script>
+	</head>
+	<body>
+<script type="text/javascript" src="http://scala-ide.org/resources/javascript/highcharts/highcharts.js"></script>
+<script type="text/javascript" src="http://scala-ide/org/resources/javascript/highcharts/modules/exporting.js"></script>
+
+<div id="container" style="width: 1000px; height: 500px; margin: 0 auto"></div>
+
+<div style="width:600px; height:200px; margin: 0 auto">
+	<label name="days_back">How many days back should be plotted?</label>
+	<input type="text" id="days_back" value="2"/>
+</div>
+
+	</body>
+</html>

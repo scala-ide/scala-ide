@@ -26,6 +26,10 @@ public class ScalaJDTWeavingPlugin extends Plugin
       INSTANCE.getLog().log(new Status(IStatus.ERROR, ID, t.getMessage(), t));
   }
   
+  public static void logErrorMessage(String msg) {
+      INSTANCE.getLog().log(new Status(IStatus.ERROR, ID, msg));
+  }
+  
   
   public static ScalaJDTWeavingPlugin getInstance() {
       return INSTANCE;
