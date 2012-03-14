@@ -49,10 +49,13 @@ private[logging] object EclipseLogger extends Logger {
   }
   
   private def log(severity: Int, message: => Any, t: Throwable = null) {
-    pluginLogger.log(createStatus(severity, message, t))
+    // Because of a potential deadlock in the Eclipse internals (look at #1000914), the log action need to be executed in the UI thread.
+    def log(status: Status) = scala.tools.eclipse.util.SWTUtils.asyncExec { pluginLogger.log(status) }
+    
+    log(createStatus(severity, message, t))
     t match {
       case ce: ControlThrowable =>
-        pluginLogger.log(createStatus(IStatus.ERROR, "Incorrectly logged ControlThrowable: " + ce.getClass.getSimpleName + "(" + ce.getMessage + ")", t))
+        log(createStatus(IStatus.ERROR, "Incorrectly logged ControlThrowable: " + ce.getClass.getSimpleName + "(" + ce.getMessage + ")", t))
       case _ => () // do nothing
     }
   }
