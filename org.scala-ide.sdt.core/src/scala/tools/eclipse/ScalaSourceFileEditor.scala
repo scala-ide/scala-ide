@@ -31,6 +31,7 @@ import scala.tools.eclipse.javaelements.{ ScalaSourceFile, ScalaCompilationUnit 
 import scala.tools.eclipse.markoccurrences.{ ScalaOccurrencesFinder, Occurrences }
 import scala.tools.eclipse.semicolon._
 import scala.tools.eclipse.util.Utils
+import scala.tools.eclipse.util.SWTUtils
 
 class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
 
@@ -259,7 +260,12 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
       case ShowInferredSemicolonsAction.PREFERENCE_KEY =>
         getAction(ShowInferredSemicolonsAction.ACTION_ID).asInstanceOf[IUpdate].update()
       case _ =>
-        super.handlePreferenceStoreChanged(event)
+        if (affectsTextPresentation(event)) {
+          // those events will trigger a UI change
+          SWTUtils.asyncExec(super.handlePreferenceStoreChanged(event))
+        } else {
+          super.handlePreferenceStoreChanged(event)
+        }
     }
 
 }
