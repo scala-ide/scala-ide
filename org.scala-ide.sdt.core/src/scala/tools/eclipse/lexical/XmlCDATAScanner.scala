@@ -4,7 +4,7 @@ import org.eclipse.jface.text.rules._
 import org.eclipse.jdt.ui.text.IColorManager
 import scala.collection.mutable.ListBuffer
 import org.eclipse.jface.util.PropertyChangeEvent
-import scala.tools.eclipse.properties.ScalaSyntaxClasses._
+import scala.tools.eclipse.properties.syntaxcolouring.ScalaSyntaxClasses._
 import org.eclipse.jface.preference.IPreferenceStore
 
 class XmlCDATAScanner(val colorManager: IColorManager, val preferenceStore: IPreferenceStore) extends AbstractScalaScanner {

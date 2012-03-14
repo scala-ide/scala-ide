@@ -10,7 +10,7 @@ import org.eclipse.jface.text.TextUtilities
 import org.eclipse.jdt.ui.text.java.IProblemLocation
 import org.eclipse.jface.text.Position
 import scala.util.matching.Regex
-import scala.tools.eclipse.semantic.highlighting.SemanticHighlightingPresenter
+import scala.tools.eclipse.semantichighlighting.implicits.ImplicitHighlightingPresenter
 
 class ExpandingProposalBase(msg: String, displayString: String, pos: Position) extends IJavaCompletionProposal {
   /**
@@ -25,7 +25,7 @@ class ExpandingProposalBase(msg: String, displayString: String, pos: Position) e
    */
   def apply(document: IDocument): Unit = {
     // We extract the replacement string from the marker's message.
-    val ReplacementExtractor = new Regex(".*"+ SemanticHighlightingPresenter.DisplayStringSeparator +"(.*)")
+    val ReplacementExtractor = new Regex(".*"+ ImplicitHighlightingPresenter.DisplayStringSeparator +"(.*)")
     val ReplacementExtractor(replacement) = msg
     document.replace(pos.getOffset(), pos.getLength(), replacement);
   }

@@ -5,7 +5,7 @@ import org.junit.Assert
 
 import scala.collection.JavaConversions.mapAsScalaMap
 import scala.tools.eclipse.javaelements.ScalaSourceFile
-import scala.tools.eclipse.semantic.highlighting.SemanticHighlightingPresenter
+import scala.tools.eclipse.semantichighlighting.implicits.ImplicitHighlightingPresenter
 import scala.tools.eclipse.testsetup.TestProjectSetup
 import scala.tools.eclipse.ScalaPresentationCompiler
 import scala.tools.nsc.interactive.Response
@@ -73,7 +73,7 @@ class ImplicitsHighlightingTest {
   }
   
   def implicits(src: SourceFile, compiler: ScalaPresentationCompiler) = {
-    val implicits = SemanticHighlightingPresenter.findAllImplicitConversions(compiler, src)
+    val implicits = ImplicitHighlightingPresenter.findAllImplicitConversions(compiler, src)
     implicits.toList map {
       case (ann, p) =>
         ann.getText() +" ["+ p.getOffset() + ", "+ p.getLength() +"]"

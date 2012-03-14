@@ -39,7 +39,10 @@ import scala.tools.eclipse.util.Trim
 import scala.tools.nsc.Settings
 
 object ScalaPlugin {
+  
   var plugin: ScalaPlugin = _
+  
+  def prefStore = plugin.getPreferenceStore
   
   def getWorkbenchWindow = {
     val workbench = PlatformUI.getWorkbench
