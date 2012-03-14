@@ -49,14 +49,8 @@ class SymbolClassification(protected val sourceFile: SourceFile, val global: Sca
   }
 
   def classifySymbols: List[SymbolInfo] = {
-    val allSymbols: List[Symbol] = global.askOption { () =>
-      for(sym <- index.allSymbols) yield {
-        //TODO: Remove the following code once symbols are initialized by 
-        //      the `GlobalIndex` (https://github.com/scala-ide/scala-ide/pull/61#r358833) 
-        sym.initialize // some symbol properties (e.g. _.isJavaDefined) appear to be able to change after init
-        sym
-      }
-    } getOrElse Nil
+    // index.allSymbols will call `Symbol.initialize` on each symbol, hence it has to be executed inside an `ask`
+    val allSymbols: List[Symbol] = global.askOption { () => index.allSymbols } getOrElse Nil
     
     if (debug) printSymbolInfo()
       
