@@ -29,11 +29,11 @@
             class="scala.tools.eclipse.debug.ScalaDebugPlugin">
       </startup>
    </extension>
-<!--   <extension
+   <extension
          point="org.eclipse.debug.core.logicalStructureProviders">
       <logicalStructureProvider
             class="scala.tools.eclipse.debug.model.ScalaLogicalStructureProvider"
             modelIdentifier="org.scala-ide.sdt.debug">
       </logicalStructureProvider>
-   </extension> -->
+   </extension>
 </plugin>

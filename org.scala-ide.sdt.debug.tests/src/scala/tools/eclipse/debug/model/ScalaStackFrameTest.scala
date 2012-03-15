@@ -270,6 +270,17 @@ class ScalaStackFrameTest {
   }
   
   @Test
+  def getFullMethodNameWithEncoding() {
+    val scalaThread = mock(classOf[ScalaThread])
+
+    val jdiStackFrame = createJDIStackFrame("package.name.TypeName", "$colon$plus$minus$qmark")
+
+    val scalaStackFrame = new ScalaStackFrame(scalaThread, jdiStackFrame)
+
+    assertEquals("Bad full method name", "TypeName.:+-?()", scalaStackFrame.getMethodFullName)
+  }
+  
+  @Test
   def getVariableNonStaticMethod() {
     import scala.collection.JavaConverters._
     

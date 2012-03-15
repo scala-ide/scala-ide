@@ -6,6 +6,91 @@ import org.eclipse.debug.ui.{ IValueDetailListener, IDebugUIConstants, IDebugMod
 import org.eclipse.ui.ide.IDE
 import org.eclipse.ui.part.FileEditorInput
 import org.eclipse.ui.{ IFileEditorInput, IEditorInput }
+import com.sun.jdi.Value
+import com.sun.jdi.ArrayReference
+import com.sun.jdi.BooleanValue
+import com.sun.jdi.ByteValue
+import com.sun.jdi.CharValue
+import com.sun.jdi.DoubleValue
+import com.sun.jdi.FloatValue
+import com.sun.jdi.IntegerValue
+import com.sun.jdi.LongValue
+import com.sun.jdi.ShortValue
+import com.sun.jdi.StringReference
+import com.sun.jdi.ObjectReference
+import com.sun.jdi.VoidValue
+import com.sun.jdi.ClassType
+import scala.tools.eclipse.debug.ScalaDebugger
+import org.eclipse.core.runtime.jobs.Job
+import org.eclipse.core.runtime.IProgressMonitor
+import org.eclipse.core.runtime.IStatus
+import org.eclipse.core.runtime.Status
+import scala.tools.eclipse.debug.ScalaDebugPlugin
+
+object ScalaDebugModelPresentation {
+  def computeDetail(value: IValue): String = {
+    value match {
+      case v: ScalaPrimitiveValue =>
+        v.getValueString
+      case v: ScalaStringReference =>
+        v.stringReference.value
+      case v: ScalaNullValue =>
+        "null"
+      case arrayReference: ScalaArrayReference =>
+        computeDetail(arrayReference.arrayReference)
+      case objecReference: ScalaObjectReference =>
+        computeDetail(objecReference.objectReference)
+      case _ =>
+        ???
+    }
+  }
+  
+  def computeDetail(arrayReference: ArrayReference): String = {
+    import scala.collection.JavaConverters._
+    arrayReference.getValues.asScala.map(computeDetail(_)).mkString("Array(", ", ", ")")
+  }
+  
+  def computeDetail(objectReference: ObjectReference): String = {
+    val method= objectReference.referenceType.asInstanceOf[ClassType].concreteMethodByName("toString", "()Ljava/lang/String;")
+    // TODO: check toString() return null
+    ScalaDebugger.currentThread.invokeMethod(objectReference, method).asInstanceOf[StringReference].value
+  }
+  
+  def computeDetail(value: Value): String = {
+    // TODO: some of this is duplicate of ScalaValue#apply()
+    value match {
+      case arrayReference: ArrayReference =>
+        computeDetail(arrayReference)
+      case booleanValue: BooleanValue =>
+        booleanValue.value.toString
+      case byteValue: ByteValue =>
+        byteValue.value.toString
+      case charValue: CharValue =>
+        charValue.value.toString
+      case doubleValue: DoubleValue =>
+        doubleValue.value.toString
+      case floatValue: FloatValue =>
+        floatValue.value.toString
+      case integerValue: IntegerValue =>
+        integerValue.value.toString
+      case longValue: LongValue =>
+        longValue.value.toString
+      case shortValue: ShortValue =>
+        shortValue.value.toString
+      case stringReference: StringReference =>
+        stringReference.value
+      case objectReference: ObjectReference => // include ClassLoaderReference, ClassObjectReference, ThreadGroupReference, ThreadReference
+        computeDetail(objectReference)
+      case null =>
+        // TODO : cache
+        "null"
+      case voidValue: VoidValue =>
+        ??? // TODO: in what cases do we get this value ?
+      case _ =>
+        ???
+    }
+  }
+}
 
 class ScalaDebugModelPresentation extends IDebugModelPresentation {
 
@@ -19,8 +104,13 @@ class ScalaDebugModelPresentation extends IDebugModelPresentation {
   // Members declared in org.eclipse.debug.ui.IDebugModelPresentation
 
   def computeDetail(value: IValue, listener: IValueDetailListener): Unit = {
-    // TODO: the real work
-    listener.detailComputed(value, null)
+    new Job("Computing Scala debug details") {
+      override def run(progressMonitor: IProgressMonitor): IStatus = {
+        // TODO: support error cases
+        listener.detailComputed(value, ScalaDebugModelPresentation.computeDetail(value))
+        Status.OK_STATUS
+      }
+    }.schedule
   }
 
   def getImage(element: Any): org.eclipse.swt.graphics.Image = {

@@ -69,17 +69,15 @@ object ScalaCollectionLogicalStructureType extends ILogicalStructureType {
     val manifestObjectEntity = objectReference.virtualMachine.classesByName("scala/reflect/Manifest$").get(0).asInstanceOf[ClassType]
     val manifestObjectField = manifestObjectEntity.fieldByName("MODULE$")
     val manifestObject = manifestObjectEntity.getValue(manifestObjectField).asInstanceOf[ObjectReference]
-    val manifestMethod = manifestObjectEntity.concreteMethodByName("Int", "()Lscala/reflect/AnyValManifest;")
+    val manifestMethod = manifestObjectEntity.concreteMethodByName("Any", "()Lscala/reflect/Manifest;")
 
-    val thread= ScalaDebugger.currentThread.thread
-    
-    val anyValManifestObject= manifestObject.invokeMethod(thread, manifestMethod, new ArrayList(), 0)
+    val anyValManifestObject= ScalaDebugger.currentThread.invokeMethod(manifestObject, manifestMethod)
     
     val toArrayMethod = objectReference.referenceType.asInstanceOf[ClassType].concreteMethodByName("toArray", "(Lscala/reflect/ClassManifest;)Ljava/lang/Object;")
     
     import scala.collection.JavaConverters._
     
-    ScalaValue(objectReference.invokeMethod(thread, toArrayMethod, List(anyValManifestObject).asJava, 0), scalaValue.getScalaDebugTarget)
+    ScalaValue(ScalaDebugger.currentThread.invokeMethod(objectReference, toArrayMethod, anyValManifestObject), scalaValue.getScalaDebugTarget)
   }
   
   def providesLogicalStructure(value: IValue): Boolean = true // TODO: check that as it is created by the provider, it is never used with other values

@@ -222,6 +222,20 @@ class ScalaValueTest {
   }
   
   @Test
+  def objectReferenceValueWithEncodedName() {
+    val jdiValue = mock(classOf[ObjectReference])
+    when(jdiValue.uniqueID).thenReturn(666)
+    val jdiReferenceType = mock(classOf[ClassType])
+    when(jdiValue.referenceType).thenReturn(jdiReferenceType)
+    when(jdiReferenceType.name).thenReturn("scala.collection.immutable.$colon$colon")
+
+    val scalaValue = ScalaValue(jdiValue, null)
+
+    assertEquals("Bad type", "scala.collection.immutable.$colon$colon", scalaValue.getReferenceTypeName)
+    assertEquals("Bad value", ":: (id=666)", scalaValue.getValueString)
+  }
+  
+  @Test
   def arrayReferenecValue() {
     val jdiValue = mock(classOf[ArrayReference])
     when(jdiValue.length).thenReturn(3)

@@ -37,11 +37,11 @@ class ScalaLocalVariable(variable: LocalVariable, stackFrame: ScalaStackFrame) e
   def getValue(): org.eclipse.debug.core.model.IValue = ScalaValue(stackFrame.stackFrame.getValue(variable), getScalaDebugTarget)
 }
 
-class ScalaArrayVariable(index: Int, arrayReference: ScalaArrayReference) extends ScalaVariable(arrayReference.getScalaDebugTarget) {
+class ScalaArrayElementVariable(index: Int, arrayReference: ScalaArrayReference) extends ScalaVariable(arrayReference.getScalaDebugTarget) {
 
   // Members declared in org.eclipse.debug.core.model.IVariable
 
-  def getName(): String = index.toString
+  def getName(): String = "(%s)".format(index)
   def getReferenceTypeName(): String = arrayReference.arrayReference.referenceType.asInstanceOf[ArrayType].componentTypeName
   def getValue(): org.eclipse.debug.core.model.IValue = ScalaValue(arrayReference.arrayReference.getValue(index), getScalaDebugTarget)
 

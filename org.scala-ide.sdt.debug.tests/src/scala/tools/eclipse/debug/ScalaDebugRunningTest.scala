@@ -9,5 +9,6 @@ trait ScalaDebugRunningTest {
   val TYPENAME_FC_LO = "stepping.ForComprehensionListObject"
   val TYPENAME_FC_LI = "stepping.ForComprehensionListInt"
   val TYPENAME_AF_LS = "stepping.AnonFunOnListString"
+  val TYPENAME_VARIABLES = "debug.Variables"
 
 }

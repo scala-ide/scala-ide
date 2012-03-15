@@ -7,6 +7,9 @@ import com.sun.jdi.ThreadReference
 import com.sun.jdi.VMDisconnectedException
 import com.sun.jdi.ObjectCollectedException
 import org.eclipse.debug.core.DebugEvent
+import com.sun.jdi.Value
+import com.sun.jdi.ObjectReference
+import com.sun.jdi.Method
 
 class ScalaThread(target: ScalaDebugTarget, val thread: ThreadReference) extends ScalaDebugElement(target) with IThread {
 
@@ -99,7 +102,21 @@ class ScalaThread(target: ScalaDebugTarget, val thread: ThreadReference) extends
     fireResumeEvent(eventDetail)
   }
   
+  def updateStackFramesAfterInvocation() {
+    import scala.collection.JavaConverters._
+    thread.frames.asScala.iterator.zip(stackFrames.iterator).foreach(
+        v => v._2.rebind(v._1)
+        )
+  }
+  
   // ----
+  
+  def invokeMethod(objectReference: ObjectReference, method: Method, args: Value*): Value = {
+    import scala.collection.JavaConverters._
+    val result= objectReference.invokeMethod(thread, method, args.asJava, 0)
+    updateStackFramesAfterInvocation()
+    result
+  }
   
 
 }

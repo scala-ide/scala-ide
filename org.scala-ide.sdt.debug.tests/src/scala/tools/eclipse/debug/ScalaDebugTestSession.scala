@@ -69,6 +69,7 @@ class ScalaDebugTestSession(launchConfigurationFile: IFile) extends IDebugEventS
   def setSuspended(stackFrame: ScalaStackFrame) {
     this.synchronized {
       currentStackFrame = stackFrame
+      ScalaDebugger.currentThread = stackFrame.thread
       state = SUSPENDED
       this.notify
     }

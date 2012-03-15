@@ -11,6 +11,7 @@ import org.eclipse.ui.ISelectionListener
 import model.ScalaThread
 import org.eclipse.jface.viewers.IStructuredSelection
 import model.ScalaStackFrame
+import scala.tools.eclipse.ScalaPlugin
 
 object ScalaDebugger extends IDebugEventSetListener with ISelectionListener {
 
@@ -82,9 +83,10 @@ object ScalaDebugger extends IDebugEventSetListener with ISelectionListener {
 
   def init() {
     DebugPlugin.getDefault.addDebugEventListener(this)
-    // TODO: really ugly. Need to keep track of current selection per window.
-    // TODO: disable during headless tests
-    //WorkbenchPlugin.getDefault.getWorkbench.getWorkbenchWindows.apply(0).getSelectionService.addSelectionListener("org.eclipse.debug.ui.DebugView", this)
+    if (!ScalaPlugin.plugin.headlessMode) {
+      // TODO: really ugly. Need to keep track of current selection per window.
+      WorkbenchPlugin.getDefault.getWorkbench.getWorkbenchWindows.apply(0).getSelectionService.addSelectionListener("org.eclipse.debug.ui.DebugView", this)
+    }
   }
 
   private def javaDebugTargetCreated(target: JDIDebugTarget) {

@@ -11,6 +11,12 @@ import com.sun.jdi.StackFrame
 import com.sun.jdi.Location
 import com.sun.jdi.Method
 import com.sun.jdi.ReferenceType
+import com.sun.jdi.StringReference
+import com.sun.jdi.ArrayReference
+import com.sun.jdi.IntegerValue
+import com.sun.jdi.Value
+import com.sun.jdi.ObjectReference
+import com.sun.jdi.ClassType
 
 class ScalaDebugModelPresentationTest {
 
@@ -78,5 +84,55 @@ class ScalaDebugModelPresentationTest {
 
     assertEquals("Bad display name for Scala stack frame", "TypeName.methodName() line: not available", modelPres.getText(scalaStackFrame))
   }
+  
+  @Test
+  def computeDetailNull() {
+    val scalaValue = mock(classOf[ScalaNullValue])
+    
+    val computedDetail= ScalaDebugModelPresentation.computeDetail(scalaValue)
+    
+    assertEquals("Bad return value for computeDetail", "null", computedDetail)
+  }
+  
+  @Test
+  def computeDetailPrimitiveNotString() {
+    val scalaValue = new ScalaPrimitiveValue(null, "a value", null)
+    
+    val computedDetail= ScalaDebugModelPresentation.computeDetail(scalaValue)
+    
+    assertEquals("Bad return value for computeDetail", "a value", computedDetail)
+  }
+  
+  @Test
+  def computeDetailString() {
+    val stringReference = mock(classOf[StringReference])
+    when(stringReference.value).thenReturn("a string value")
+    
+    val computedDetail= ScalaDebugModelPresentation.computeDetail(new ScalaStringReference(stringReference, null))
+    
+    assertEquals("Bad return value for computeDetail", "a string value", computedDetail)
+  }
+  
+  @Test
+  def computeDetailArrayOfPrimitive() {
+    val arrayReference= mock(classOf[ArrayReference])
+    import scala.collection.JavaConverters._
+    val values= List(createIntValue(1), createIntValue(2), createIntValue(4)).asJava
+    when(arrayReference.getValues).thenReturn(values)
+    
+    val computedDetail= ScalaDebugModelPresentation.computeDetail(new ScalaArrayReference(arrayReference, null))
+    
+    assertEquals("Bad return value for computeDetail", "Array(1, 2, 4)", computedDetail)
+  }
+  
+  // TODO: test for array of object reference
+  
+  // -----
 
+  def createIntValue(i: Int): Value = {
+    val value= mock(classOf[IntegerValue])
+    when(value.value).thenReturn(i)
+    value
+  }
+  
 }
