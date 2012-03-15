@@ -4,8 +4,8 @@ import org.eclipse.jface.text._
 import org.eclipse.jface.text.rules._
 import org.eclipse.jdt.ui.text.IColorManager
 import org.eclipse.jface.util.PropertyChangeEvent
-import scala.tools.eclipse.properties.ScalaSyntaxClasses._
-import scala.tools.eclipse.properties.ScalaSyntaxClass
+import scala.tools.eclipse.properties.syntaxcolouring.ScalaSyntaxClasses._
+import scala.tools.eclipse.properties.syntaxcolouring.ScalaSyntaxClass
 import org.eclipse.jface.preference.IPreferenceStore
 
 class SingleTokenScanner(
