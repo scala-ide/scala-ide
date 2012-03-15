@@ -47,6 +47,7 @@ import org.eclipse.jdt.internal.ui.JavaPlugin
 import org.eclipse.swt.SWT
 import scala.tools.eclipse.util.Colors
 import scala.PartialFunction.condOpt
+import scala.tools.eclipse.util.SWTUtils
 
 class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
 
@@ -274,7 +275,12 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
       case ShowInferredSemicolonsAction.PREFERENCE_KEY =>
         getAction(ShowInferredSemicolonsAction.ACTION_ID).asInstanceOf[IUpdate].update()
       case _ =>
-        super.handlePreferenceStoreChanged(event)
+        if (affectsTextPresentation(event)) {
+          // those events will trigger a UI change
+          SWTUtils.asyncExec(super.handlePreferenceStoreChanged(event))
+        } else {
+          super.handlePreferenceStoreChanged(event)
+        }
     }
 
   override def configureSourceViewerDecorationSupport(support: SourceViewerDecorationSupport) {
