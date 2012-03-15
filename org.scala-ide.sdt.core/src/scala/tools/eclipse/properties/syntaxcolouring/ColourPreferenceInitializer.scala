@@ -22,7 +22,12 @@ class ColourPreferenceInitializer extends AbstractPreferenceInitializer {
 
   import ColourPreferenceInitializer._
 
-  def initializeDefaultPreferences() {
+  override def initializeDefaultPreferences() {
+    if (!ScalaPlugin.plugin.headlessMode)
+      doInitializeDefaultPreferences()
+  }
+  
+  private def doInitializeDefaultPreferences() {
     val scalaPrefStore = ScalaPlugin.prefStore
 
     scalaPrefStore.setDefault(ENABLE_SEMANTIC_HIGHLIGHTING, false)
