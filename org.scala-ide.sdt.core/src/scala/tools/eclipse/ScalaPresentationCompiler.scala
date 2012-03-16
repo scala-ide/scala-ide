@@ -98,6 +98,15 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
     }
   }
   
+  def loadedType(sourceFile: SourceFile) = {
+    val response = new Response[Tree]
+    askLoadedTyped(sourceFile, response)
+    response.get match {
+      case Left(tree) => tree
+      case Right(exc) => throw exc
+    }
+  }
+  
   def withParseTree[T](sourceFile : SourceFile)(op : Tree => T) : T = {
     op(parseTree(sourceFile))
   }
