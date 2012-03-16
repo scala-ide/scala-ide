@@ -3,10 +3,10 @@
 . $(dirname $0)/env.sh
 
 # Scala compiler version to be used as a dependency
-SCALA_VERSION=2.9.2-SNAPSHOT
+SCALA_VERSION=2.9.2-RC1
 
 # Scala library version
-SCALA_LIBRARY_VERSION=2.9.1
+SCALA_LIBRARY_VERSION=2.9.2-RC1
 
 #THIS NEEDS TO BE UPDATED ONCE WE HAVE SNAPSHOTS
 
@@ -24,6 +24,6 @@ SBINARY_VERSION=0.4.0
 
 set_version ${SCALA_VERSION}
 
-PROFILE="-P sbt-2.9,default"
+# PROFILE="-P "
 
 build $*

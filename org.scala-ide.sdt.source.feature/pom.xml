@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>org.scala-ide</groupId>
-    <artifactId>scala-ide-for-eclipse</artifactId>
+    <artifactId>org.scala-ide.build</artifactId>
     <version>2.0.1-SNAPSHOT</version>
     <relativePath>../org.scala-ide.build/pom.xml</relativePath>
   </parent>

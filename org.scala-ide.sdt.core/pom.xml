@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>org.scala-ide</groupId>
-    <artifactId>scala-ide-for-eclipse</artifactId>
+    <artifactId>org.scala-ide.build</artifactId>
     <version>2.0.1-SNAPSHOT</version>
     <relativePath>../org.scala-ide.build/pom.xml</relativePath>
   </parent>
@@ -19,11 +19,6 @@
     	<type>jar</type>
     	<scope>compile</scope>
     </dependency>
-    <!-- <dependency> -->
-    <!--   <groupId>org.scala-ide</groupId> -->
-    <!--   <artifactId>org.scala-ide.sbt.full.library</artifactId> -->
-    <!--   <version>${sbt.version}.${version.suffix}</version> -->
-    <!-- </dependency> -->
   </dependencies>
 
   <build>
@@ -66,13 +61,5 @@
         </configuration>
       </plugin>
     </plugins>
-<!--
-    <resources>
-      <resource>
-        <directory>src/resources</directory>
-        <filtering>true</filtering>
-        <targetPath>${basedir}/META-INF</targetPath>
-      </resource>
-    </resources> -->
   </build>
 </project>

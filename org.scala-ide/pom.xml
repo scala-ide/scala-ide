@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.scala-ide</groupId>
+  <artifactId>scala-ide-for-eclipse</artifactId>
+  <version>1</version>
+  <name>The Scala IDE for Eclipse</name>
+  <packaging>pom</packaging>
+
+  <properties>
+    <sbt.version>0.11.4</sbt.version>
+    <encoding>UTF-8</encoding>
+    <version.suffix>2_09</version.suffix>
+    <scala.version.short>2.9</scala.version.short>
+  </properties>
+
+  <prerequisites>
+    <maven>3.0</maven>
+  </prerequisites>
+  
+  <repositories>
+    <repository>
+      <id>sonatype.release</id>
+      <name>Sonatype maven release repository</name>
+      <url>https://oss.sonatype.org/content/repositories/releases/</url>
+      <snapshots><enabled>false</enabled></snapshots>
+    </repository>
+    <repository>
+      <id>sonatype.snapshot</id>
+      <name>Sonatype maven snapshot repository</name>
+      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+      <snapshots>
+        <updatePolicy>daily</updatePolicy>
+      </snapshots>
+    </repository>
+  </repositories>
+
+</project>

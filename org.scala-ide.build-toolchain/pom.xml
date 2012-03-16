@@ -2,17 +2,20 @@
 <project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>org.scala-ide</groupId>
+  <parent>
+    <groupId>org.scala-ide</groupId>
+    <artifactId>scala-ide-for-eclipse</artifactId>
+    <version>1</version>
+    <relativePath>../org.scala-ide/pom.xml</relativePath>
+  </parent>
+  <version>2.9.2-RC1</version>
   <artifactId>scala-toolchain-for-eclipse</artifactId>
-  <version>2.9.2-SNAPSHOT</version>
-  <name>The Scala Toolchain for Eclipse</name>
   <packaging>pom</packaging>
 
   <properties>
-    <sbt.version>0.11.4</sbt.version>
-    <patch.level>p0002</patch.level>
-    <encoding>UTF-8</encoding>
+    <scala.compiler.groupid>org.scala-lang</scala.compiler.groupid>
     <scala.library.version>${scala.version}</scala.library.version>
+    <scala.compiler.version>${scala.version}</scala.compiler.version>
   </properties>
 
   <modules>
@@ -20,6 +23,7 @@
     <module>../org.scala-ide.scala.library</module>
     <module>../org.scala-ide.sbt.full.library</module>
   </modules>
+  
   <dependencyManagement>
     <dependencies>
       <dependency>
@@ -44,6 +48,7 @@
       </dependency>
     </dependencies>
   </dependencyManagement>
+  
   <build>
     <pluginManagement>
       <plugins>
@@ -60,63 +65,19 @@
       </plugins>
     </pluginManagement>
   </build>
+  
   <profiles>
     <profile>
-      <id>default</id>
-      <activation>
-        <activeByDefault>true</activeByDefault>
-      </activation>
-      <properties>
-        <scala.compiler.groupid>org.scala-lang</scala.compiler.groupid>
-        <scala.compiler.version>${scala.version}</scala.compiler.version>
-        <maintenance.suffix></maintenance.suffix>
-        <patch.level.suffix></patch.level.suffix>
-      </properties>
-
-      <repositories>
-        <repository>
-          <id>sonatype.releases</id>
-          <name>Replacement for Scala Tools Maven2 Repository</name>
-          <url>https://oss.sonatype.org/content/repositories/releases/</url>
-        </repository>
-        <repository>
-          <id>sonatype.snapshot</id>
-          <name>Replacement for Scala Tools maven snapshot repository</name>
-          <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
-          <snapshots>
-            <updatePolicy>daily</updatePolicy>
-          </snapshots>
-        </repository>
-      </repositories>
-    </profile>
-
-    <profile>
-      <id>local</id>
-      <activation>
-        <activeByDefault>true</activeByDefault>
-      </activation>
-      <properties>
-        <scala.compiler.groupid>org.scala-lang</scala.compiler.groupid>
-        <scala.compiler.version>${scala.version}</scala.compiler.version>
-        <maintenance.suffix></maintenance.suffix>
-        <patch.level.suffix></patch.level.suffix>
-      </properties>
-    </profile>
-    <profile>
       <id>sbt-2.9</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
       <properties>
-        <scala.compiler.groupid>org.scala-lang</scala.compiler.groupid>
-        <scala.compiler.version>${scala.version}</scala.compiler.version>
-        <version.suffix>2_09</version.suffix>
-
         <!-- Used as part of the directory name for compiler-interface.jar. -->
-        <scala.major.minor.version>2.9</scala.major.minor.version>
+        <scala.major.minor.version>${scala.version.short}</scala.major.minor.version>
 
         <!-- Used as part of the artifact name for SBT cross-compiled modules. -->
         <sbt.compiled.version>${sbt.scala.version}</sbt.compiled.version>
-
-        <maintenance.suffix></maintenance.suffix>
-        <patch.level.suffix></patch.level.suffix>
       </properties>
       <repositories>
         <repository>
