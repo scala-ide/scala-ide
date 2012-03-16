@@ -7,9 +7,14 @@ trait SymbolTests { self: SymbolClassification =>
 
   import global._
 
+  def posToSym(pos: Position): Option[Symbol] = {
+    val t = locateTree(pos) 
+    if (t.hasSymbol) safeSymbol(t).headOption.map(_._1) else None
+  }
+  
   private lazy val forValSymbols: Set[Symbol] = for {
     region <- syntacticInfo.forVals
-    symbol <- index.positionToSymbol(rangePosition(region))
+    symbol <- posToSym(rangePosition(region))
   } yield symbol
 
   private def rangePosition(region: Region): RangePosition = {
@@ -21,6 +26,14 @@ trait SymbolTests { self: SymbolClassification =>
     import sym._
     if (isPackage)
       Package
+    else if (isLazy)
+      if (isLocal) LazyLocalVal else LazyTemplateVal
+    else if (isSetter)
+      TemplateVar
+    else if (isGetter && accessed.isMutable)
+      TemplateVar
+    else if (isGetter)
+      TemplateVal
     else if (isSourceMethod)
       Method
     else if (isModule) {
