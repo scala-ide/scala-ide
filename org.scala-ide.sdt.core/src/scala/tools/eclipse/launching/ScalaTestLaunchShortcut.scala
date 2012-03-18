@@ -135,18 +135,55 @@ class ScalaTestTestLaunchShortcut extends ILaunchShortcut {
   }
   
   def launch(editorPart:IEditorPart, mode:String) {
+    val typeRoot = JavaUI.getEditorInputTypeRoot(editorPart.getEditorInput())
     val selectionOpt = ScalaTestLaunchShortcut.resolveSelectedAst(editorPart.getEditorInput, editorPart.getEditorSite.getSelectionProvider)
     selectionOpt match {
       case Some(selection) => 
-        println("***Test Found, display name: " + selection.displayName() + ", test name(s):")
-        selection.testNames.foreach(println(_))
+        launchTests(typeRoot.getJavaProject.getProject, selection.className, selection.displayName, selection.testNames, mode)
+      case None =>
+        MessageDialog.openError(null, "Error", "Sorry, unable to determine selected test.")
+    }
+    
+    
+    
+    /*val selectionProvider:ISelectionProvider = editorPart.getSite().getSelectionProvider()
+    if (selectionProvider != null) {
+      val selection:ISelection = selectionProvider.getSelection()
+      val textSelection:ITextSelection = selection.asInstanceOf[ITextSelection]
+      val element = SelectionConverter.getElementAtOffset(typeRoot, selection.asInstanceOf[ITextSelection])
+      val classElementOpt = ScalaTestLaunchShortcut.getScalaTestSuite(element)
+      classElementOpt match {
+        case Some(classElement) => 
+          val testSelectionOpt = ScalaTestLaunchShortcut.resolveSelectedAst(editorPart.getEditorInput, editorPart.getEditorSite.getSelectionProvider)
+          testSelectionOpt match {
+            case Some(testSelection) => 
+              launchSuite(classElement, mode)
+            case None => 
+              MessageDialog.openError(null, "Error", "Sorry, unable to determine selected test.")
+          }
+        case None => 
+          MessageDialog.openError(null, "Error", "Please select a ScalaTest suite to launch.")
+      }
+    }
+    else
+      MessageDialog.openError(null, "Error", "Please select a ScalaTest suite to launch.")
+    
+    
+    
+    
+    val selectionOpt = ScalaTestLaunchShortcut.resolveSelectedAst(editorPart.getEditorInput, editorPart.getEditorSite.getSelectionProvider)
+    selectionOpt match {
+      case Some(testSelection) => 
+        println("***Test Found, display name: " + testSelection.displayName() + ", test name(s):")
+        /*selection.testNames.foreach(println(_))
         val message = "Display Name: " + selection.displayName + "\n" + 
                       "Tests: \n" + selection.testNames.mkString("\n")
-        MessageDialog.openInformation(null, "Test Found", message)
+        MessageDialog.openInformation(null, "Test Found", message)*/
+        
       case None =>
         println("#####Unable to determine selected test, nothing to launch.")
         MessageDialog.openError(null, "Error", "Sorry, unable to determine selected test.")
-    }
+    }*/
   }
 }
 
@@ -299,6 +336,29 @@ object ScalaTestLaunchShortcut {
                      wc.setAttribute(IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME, project.getName)
                      wc.setAttribute(SCALATEST_LAUNCH_TYPE_NAME, TYPE_SUITE)
                      wc.setAttribute(SCALATEST_LAUNCH_INCLUDE_NESTED_NAME, INCLUDE_NESTED_FALSE)
+                     wc.setAttribute(SCALATEST_LAUNCH_TESTS_NAME, new java.util.HashSet[String]())
+                     wc.doSave
+                 }
+    DebugUITools.launch(config, mode)
+  }
+  
+  def launchTests(project: IProject, className: String, displayName: String, testNames: Array[String], mode: String) {
+    val configType = getLaunchManager.getLaunchConfigurationType("scala.scalatest")
+    val existingConfigs = getLaunchManager.getLaunchConfigurations(configType)
+    val simpleName = displayName
+    val existingConfigOpt = existingConfigs.find(config => config.getName == simpleName)
+    val config = existingConfigOpt match {
+                   case Some(existingConfig) => existingConfig
+                   case None => 
+                     val wc = configType.newInstance(null, getLaunchManager.generateUniqueLaunchConfigurationNameFrom(simpleName))
+                     val scProject = ScalaPlugin.plugin.getScalaProject(project)
+                     wc.setAttribute(IJavaLaunchConfigurationConstants.ATTR_MAIN_TYPE_NAME, className)
+                     wc.setAttribute(IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME, project.getName)
+                     wc.setAttribute(SCALATEST_LAUNCH_TYPE_NAME, TYPE_SUITE)
+                     wc.setAttribute(SCALATEST_LAUNCH_INCLUDE_NESTED_NAME, INCLUDE_NESTED_FALSE)
+                     val testNameSet = new java.util.HashSet[String]()
+                     testNames.foreach(tn => testNameSet.add(tn))
+                     wc.setAttribute(SCALATEST_LAUNCH_TESTS_NAME, testNameSet)
                      wc.doSave
                  }
     DebugUITools.launch(config, mode)

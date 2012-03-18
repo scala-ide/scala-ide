@@ -124,7 +124,11 @@ class ScalaTestLaunchDelegate extends AbstractJavaLaunchConfigurationDelegate {
     launchType match {
       case TYPE_SUITE => 
         val suiteClass = configuration.getAttribute(IJavaLaunchConfigurationConstants.ATTR_MAIN_TYPE_NAME, "")
-        if (suiteClass.length > 0) "-s " + suiteClass else ""
+        val testSet: java.util.Set[String] = configuration.getAttribute(SCALATEST_LAUNCH_TESTS_NAME, new java.util.HashSet[String]()).asInstanceOf[java.util.Set[String]]
+        if (testSet.size == 0) 
+          "-s " + suiteClass
+        else
+          "-s " + suiteClass + " " + testSet.map("-t \"" + _ + "\"").mkString(" ")
       case TYPE_FILE =>
         val filePortablePath = configuration.getAttribute(IJavaLaunchConfigurationConstants.ATTR_MAIN_TYPE_NAME, "")
         if (filePortablePath.length > 0) {

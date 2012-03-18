@@ -52,6 +52,14 @@ import org.eclipse.ui.dialogs.ElementListSelectionDialog
 import org.eclipse.jface.viewers.LabelProvider
 import org.eclipse.core.resources.IProject
 import ScalaTestLaunchConstants._
+import org.eclipse.jface.viewers.TableViewer
+import org.eclipse.swt.SWT
+import org.eclipse.swt.widgets.TableColumn
+import org.eclipse.swt.widgets.Table
+import org.eclipse.jface.viewers.TableViewerColumn
+import org.eclipse.swt.widgets.TableItem
+import org.eclipse.swt.custom.TableEditor
+import org.eclipse.swt.events.SelectionAdapter
 
 class ScalaTestMainTab extends SharedJavaMainTab {
   // UI widgets
@@ -64,6 +72,9 @@ class ScalaTestMainTab extends SharedJavaMainTab {
   private var fFileRadioButton: Button = null
   private var fPackageRadioButton: Button = null
   private var fIncludeNestedCheckBox: Button = null
+  
+  private var fTestNamesTable: Table = null
+  private var fTestNamesEditor: TableEditor = null
   
   def createControl(parent: Composite) {
     val comp = SWTFactory.createComposite(parent, parent.getFont(), 1, 1, GridData.FILL_BOTH)
@@ -78,14 +89,17 @@ class ScalaTestMainTab extends SharedJavaMainTab {
   private def updateUI() {
     if (fSuiteRadioButton.getSelection) {
       fIncludeNestedCheckBox.setVisible(false)
+      fTestNamesTable.setVisible(true)
       mainGroup.setText("Suite Class")
     }
     else if (fFileRadioButton.getSelection) {
       fIncludeNestedCheckBox.setVisible(false)
+      fTestNamesTable.setVisible(false)
       mainGroup.setText("Suite File")
     }
     else {
       fIncludeNestedCheckBox.setVisible(true)
+      fTestNamesTable.setVisible(false)
       mainGroup.setText("Package Name")
     }
   }
@@ -118,11 +132,11 @@ class ScalaTestMainTab extends SharedJavaMainTab {
     fMainText = SWTFactory.createSingleText(mainGroup, 1);
     fMainText.addModifyListener(new ModifyListener() {
       def modifyText(e: ModifyEvent) {
-        updateLaunchConfigurationDialog();
+        updateLaunchConfigurationDialog()
       }
     })
     //ControlAccessibleListener.addListener(fMainText, mainGroup.getText());
-    fSearchButton = createPushButton(mainGroup, LauncherMessages.AbstractJavaMainTab_2, null); 
+    fSearchButton = createPushButton(mainGroup, LauncherMessages.AbstractJavaMainTab_2, null)
     fSearchButton.addSelectionListener(new SelectionListener() {
       def widgetDefaultSelected(e: SelectionEvent) {}
 	  def widgetSelected(e: SelectionEvent) {
@@ -130,20 +144,81 @@ class ScalaTestMainTab extends SharedJavaMainTab {
       }
     })
     createMainTypeExtensions(mainGroup)
+    
+    val testNamesGroup = SWTFactory.createGroup(parent, "Test Names", 2, 1, GridData.FILL_BOTH)
+    createTestNamesTable(testNamesGroup)
   }
   
   override protected def createMainTypeExtensions(parent: Composite) {
     fIncludeNestedCheckBox = SWTFactory.createCheckButton(parent, "Include nested", null, false, 1)
     fIncludeNestedCheckBox.addSelectionListener(getDefaultListener)
+  }
+  
+  protected def createTestNamesTable(parent: Composite) {
+    fTestNamesTable = new Table(parent, SWT.H_SCROLL | SWT.V_SCROLL | SWT.FULL_SELECTION | SWT.BORDER)
+    fTestNamesTable.setLayoutData(new GridData(GridData.FILL_BOTH))
     
-    /*fSearchExternalJarsCheckButton = SWTFactory.createCheckButton(parent, LauncherMessages.JavaMainTab_E_xt__jars_6, null, false, 2)
-    fSearchExternalJarsCheckButton.addSelectionListener(getDefaultListener())
-
-    fConsiderInheritedMainButton = SWTFactory.createCheckButton(parent, LauncherMessages.JavaMainTab_22, null, false, 2)
-    fConsiderInheritedMainButton.addSelectionListener(getDefaultListener())
-		
-    fStopInMainCheckButton = SWTFactory.createCheckButton(parent, LauncherMessages.JavaMainTab_St_op_in_main_1, null, false, 1)
-    fStopInMainCheckButton.addSelectionListener(getDefaultListener())*/
+    val column1 = new TableColumn(fTestNamesTable, SWT.NONE)
+	column1.pack()
+	
+	fTestNamesEditor = new TableEditor(fTestNamesTable)
+	fTestNamesEditor.horizontalAlignment = SWT.LEFT
+	fTestNamesEditor.grabHorizontal = true
+	fTestNamesEditor.minimumWidth = 300
+	
+	fTestNamesTable.addSelectionListener(new SelectionAdapter() {
+	  override def widgetSelected(e: SelectionEvent) {
+	    val oldEditor = fTestNamesEditor.getEditor
+	    if (oldEditor != null)
+	      oldEditor.dispose()
+	      
+	      val item = e.item.asInstanceOf[TableItem]
+	      if (item == null)
+	        return
+	        
+	      val newEditor = new Text(fTestNamesTable, SWT.NONE)
+	      newEditor.setText(item.getText(0))
+	      newEditor.addModifyListener(new ModifyListener() {
+	        override def modifyText(me: ModifyEvent) {
+	          val text = fTestNamesEditor.getEditor.asInstanceOf[Text]
+	          fTestNamesEditor.getItem.setText(0, text.getText)
+	          updateLaunchConfigurationDialog()
+	        }
+	      })
+	      newEditor.selectAll()
+	      newEditor.setFocus()
+	      fTestNamesEditor.setEditor(newEditor, item, 0)
+	  }
+	})
+	
+	val comp = new Composite(parent, SWT.NONE)
+	val gridLayout = new GridLayout()
+	gridLayout.numColumns = 1
+	comp.setLayout(gridLayout)
+	comp.setLayoutData(new GridData(GridData.VERTICAL_ALIGN_BEGINNING))
+	
+	val addTestButton = createPushButton(comp, "Add", null)
+	addTestButton.addSelectionListener(new SelectionListener() {
+      def widgetDefaultSelected(e: SelectionEvent) { widgetSelected(e) }
+	  def widgetSelected(e: SelectionEvent) {
+        val item = new TableItem(fTestNamesTable, SWT.NONE)
+        item.setText(Array[String]("[enter test name]"))
+        updateLaunchConfigurationDialog()
+      }
+    })
+	
+	val removeTestButton = createPushButton(comp, "Remove", null)
+	removeTestButton.addSelectionListener(new SelectionListener() {
+	  def widgetDefaultSelected(e: SelectionEvent) { widgetSelected(e) }
+	  def widgetSelected(e: SelectionEvent) {
+	      val editor = fTestNamesEditor.getEditor
+	      if (editor != null)
+	        editor.dispose()
+	      fTestNamesTable.remove(fTestNamesTable.getSelectionIndices())
+	      fTestNamesTable.update()
+	      updateLaunchConfigurationDialog()
+	  }
+	})
   }
   
   override def getImage = JavaUI.getSharedImages().getImage(ISharedImages.IMG_OBJS_CLASS);
@@ -153,48 +228,6 @@ class ScalaTestMainTab extends SharedJavaMainTab {
   override def getId = "scala.tools.eclipse.launching.scalaTestMainTab"; //$NON-NLS-1$
   
   protected def handleSearchButtonSelected() {
-    /*val project = getJavaProject()
-    var projects: Array[IJavaProject] = null
-    if ((project == null) || !project.exists) {
-      val model = JavaCore.create(ResourcesPlugin.getWorkspace.getRoot)
-      if (model != null) {
-        try {
-          projects = model.getJavaProjects.filter(proj => ScalaPlugin.plugin.isScalaProject(proj))
-        }
-        catch { case e: JavaModelException => JDIDebugUIPlugin.log(e) }
-      }
-	}
-    else {
-      projects = Array(project)//new IJavaElement[]{project};
-    }
-    if (projects == null) {
-      projects = Array.empty
-    }
-    
-    var types: Array[IType] = projects.map{ proj => 
-      val scProject = ScalaPlugin.plugin.getScalaProject(proj.getProject) 
-      scProject.allSourceFiles
-    }.flatten.map { file =>
-      val scSrcFileOpt = ScalaSourceFile.createFromPath(file.getFullPath.toString)
-      scSrcFileOpt match {
-          case Some(scSrcFile) =>
-            scSrcFile.getAllTypes.toList
-          case None =>
-            List.empty
-      }
-    }.flatten.filter(iType => ScalaTestLaunchShortcut.isScalaTestSuite(iType)).toArray
-    
-    val mmsd = new DebugTypeSelectionDialog(getShell(), types, LauncherMessages.JavaMainTab_Choose_Main_Type_11) 
-	if (mmsd.open() == Window.CANCEL) 
-	  return
-	
-    val results = mmsd.getResult();	
-    val selectedType = results(0).asInstanceOf[IType];
-    if (selectedType != null) {
-      fMainText.setText(selectedType.getFullyQualifiedName());
-      fProjText.setText(selectedType.getJavaProject().getElementName());
-    }*/
-    
     val project = getJavaProject()
     var projects: Array[IJavaProject] = null
     if ((project == null) || !project.exists) {
@@ -336,7 +369,16 @@ class ScalaTestMainTab extends SharedJavaMainTab {
     if (includeNestedStr == INCLUDE_NESTED_TRUE)
       fIncludeNestedCheckBox.setSelection(true)
     else
-      fIncludeNestedCheckBox.setSelection(false)	
+      fIncludeNestedCheckBox.setSelection(false)
+    
+    fTestNamesTable.removeAll()
+    val rawTestSet = config.getAttributes.get(SCALATEST_LAUNCH_TESTS_NAME)
+    val testSet: java.util.HashSet[String] = if (rawTestSet != null) rawTestSet.asInstanceOf[java.util.HashSet[String]] else new java.util.HashSet[String]()
+    val testItr = testSet.iterator
+    while (testItr.hasNext) {
+      val item = new TableItem(fTestNamesTable, SWT.NONE)
+      item.setText(Array[String](testItr.next))
+    }
     
     updateUI()
   }
@@ -378,17 +420,27 @@ class ScalaTestMainTab extends SharedJavaMainTab {
   }
   
   def performApply(config: ILaunchConfigurationWorkingCopy) {
-    config.setAttribute(IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME, fProjText.getText.trim)
-    config.setAttribute(IJavaLaunchConfigurationConstants.ATTR_MAIN_TYPE_NAME, fMainText.getText.trim)
     val launchType = 
       if (fSuiteRadioButton.getSelection)
         TYPE_SUITE
       else if (fFileRadioButton.getSelection)
         TYPE_FILE
       else
-        TYPE_PACKAGE  
-    config.setAttribute(SCALATEST_LAUNCH_TYPE_NAME, launchType)
-    config.setAttribute(SCALATEST_LAUNCH_INCLUDE_NESTED_NAME, if (fIncludeNestedCheckBox.getSelection) INCLUDE_NESTED_TRUE else INCLUDE_NESTED_FALSE)
+        TYPE_PACKAGE 
+    val includeNested = if (fIncludeNestedCheckBox.getSelection) INCLUDE_NESTED_TRUE else INCLUDE_NESTED_FALSE
+    
+    val testNameSet = new java.util.HashSet[String]()
+    val items = fTestNamesTable.getItems
+    items.foreach(i => testNameSet.add(i.getText(0)))
+    
+    val configMap = new java.util.HashMap[Any, Any]()
+    configMap.put(IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME, fProjText.getText.trim)
+    configMap.put(IJavaLaunchConfigurationConstants.ATTR_MAIN_TYPE_NAME, fMainText.getText.trim) 
+    configMap.put(SCALATEST_LAUNCH_TYPE_NAME, launchType) 
+    configMap.put(SCALATEST_LAUNCH_INCLUDE_NESTED_NAME, includeNested) 
+    configMap.put(SCALATEST_LAUNCH_TESTS_NAME, testNameSet)
+    
+    config.setAttributes(configMap)
     mapResources(config)
   }
   
@@ -401,5 +453,6 @@ class ScalaTestMainTab extends SharedJavaMainTab {
     initializeMainTypeAndName(javaElement, config)
     config.setAttribute(SCALATEST_LAUNCH_TYPE_NAME, TYPE_SUITE)
     config.setAttribute(SCALATEST_LAUNCH_INCLUDE_NESTED_NAME, INCLUDE_NESTED_FALSE)
+    config.setAttribute(SCALATEST_LAUNCH_TESTS_NAME, new java.util.HashSet[String]())
   }
 }
