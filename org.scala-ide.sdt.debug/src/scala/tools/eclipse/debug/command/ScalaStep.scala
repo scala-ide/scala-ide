@@ -8,7 +8,7 @@ trait ScalaStep {
   def step()
   
   /**
-   * Terminates the step action
+   * Terminates the step action and clean the resources
    */
   def stop()
 

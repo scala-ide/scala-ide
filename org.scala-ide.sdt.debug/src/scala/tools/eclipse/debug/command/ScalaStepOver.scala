@@ -2,7 +2,7 @@ package scala.tools.eclipse.debug.command
 
 import scala.Option.option2Iterable
 import scala.collection.JavaConverters.asScalaBufferConverter
-import scala.collection.mutable.Buffer
+import scala.collection.mutable.ListBuffer
 import scala.tools.eclipse.debug.JDIUtil.methodToLines
 import scala.tools.eclipse.debug.model.{ScalaThread, ScalaStackFrame, ScalaDebugTarget}
 
@@ -11,12 +11,14 @@ import org.eclipse.jdt.internal.debug.core.model.JDIDebugTarget
 import org.eclipse.jdt.internal.debug.core.IJDIEventListener
 
 import com.sun.jdi.event.{StepEvent, EventSet, Event, ClassPrepareEvent, BreakpointEvent}
-import com.sun.jdi.request.{StepRequest, EventRequest, ClassPrepareRequest, BreakpointRequest}
+import com.sun.jdi.request.{StepRequest, EventRequest}
 import com.sun.jdi.{ThreadReference, ReferenceType, Method}
 
 import ScalaStepOver.{createMethodEntryBreakpoint, anonFunctionsInRange}
 
 object ScalaStepOver {
+
+  final val LINE_NUMBER_UNAVAILABLE = -1
 
   def apply(scalaStackFrame: ScalaStackFrame): ScalaStepOver = {
 
@@ -24,29 +26,41 @@ object ScalaStepOver {
     import scala.collection.JavaConverters._
 
     val eventRequestManager = scalaStackFrame.stackFrame.virtualMachine.eventRequestManager
-
-    val classPrepareRequest = eventRequestManager.createClassPrepareRequest
     val location = scalaStackFrame.stackFrame.location
-    classPrepareRequest.addClassFilter(location.declaringType.name + "$*")
 
     val stepOverRequest = eventRequestManager.createStepRequest(scalaStackFrame.stackFrame.thread, StepRequest.STEP_LINE, StepRequest.STEP_OVER)
     stepOverRequest.setSuspendPolicy(EventRequest.SUSPEND_EVENT_THREAD)
 
-    // find anonFunction in range
-    val currentMethodLastLine = methodToLines(location.method).max
+    val requests = ListBuffer[EventRequest](stepOverRequest)
 
-    val range = Range(location.lineNumber, (location.method.declaringType.methods.asScala.flatten(methodToLines(_)).filter(_ > currentMethodLastLine) :+ Int.MaxValue).min)
+    if (location.lineNumber == LINE_NUMBER_UNAVAILABLE) {
 
-    val loadedAnonFunctionsInRange = location.method.declaringType.nestedTypes.asScala.flatMap(anonFunctionsInRange(_, range))
+      new ScalaStepOver(scalaStackFrame.getScalaDebugTarget, null, scalaStackFrame.thread, requests)
 
-    // if we are in an anonymous function, add the method
-    if (location.declaringType.name.contains("$$anonfun$")) {
-      loadedAnonFunctionsInRange ++= scalaStackFrame.getScalaDebugTarget.findAnonFunction(location.declaringType)
+    } else {
+
+      val classPrepareRequest = eventRequestManager.createClassPrepareRequest
+      classPrepareRequest.addClassFilter(location.declaringType.name + "$*")
+
+      requests += classPrepareRequest
+
+      // find anonFunction in range
+      val currentMethodLastLine = methodToLines(location.method).max
+
+      val range = Range(location.lineNumber, (location.method.declaringType.methods.asScala.flatten(methodToLines(_)).filter(_ > currentMethodLastLine) :+ Int.MaxValue).min)
+
+      val loadedAnonFunctionsInRange = location.method.declaringType.nestedTypes.asScala.flatMap(anonFunctionsInRange(_, range))
+
+      // if we are in an anonymous function, add the method
+      if (location.declaringType.name.contains("$$anonfun$")) {
+        loadedAnonFunctionsInRange ++= scalaStackFrame.getScalaDebugTarget.findAnonFunction(location.declaringType)
+      }
+
+      requests ++= loadedAnonFunctionsInRange.map(createMethodEntryBreakpoint(_, scalaStackFrame.stackFrame.thread))
+
+      new ScalaStepOver(scalaStackFrame.getScalaDebugTarget, range, scalaStackFrame.thread, requests)
     }
 
-    val entryBreakpoints = loadedAnonFunctionsInRange.map(createMethodEntryBreakpoint(_, scalaStackFrame.stackFrame.thread))
-
-    new ScalaStepOver(scalaStackFrame.getScalaDebugTarget, range, scalaStackFrame.thread, classPrepareRequest, stepOverRequest, entryBreakpoints)
   }
 
   def createMethodEntryBreakpoint(method: Method, thread: ThreadReference) = {
@@ -84,9 +98,10 @@ object ScalaStepOver {
   }
 }
 
-class ScalaStepOver(target: ScalaDebugTarget, range: Range, thread: ScalaThread, classPrepareRequest: ClassPrepareRequest, stepOverRequest: StepRequest, entryBreakpoints: Buffer[BreakpointRequest]) extends IJDIEventListener with ScalaStep {
+class ScalaStepOver(target: ScalaDebugTarget, range: Range, thread: ScalaThread, requests: ListBuffer[EventRequest]) extends IJDIEventListener with ScalaStep {
   import ScalaStepOver._
-  /* from IJDIEventListener */
+
+  // Members declared in org.eclipse.jdt.internal.debug.core.IJDIEventListener
 
   def eventSetComplete(event: Event, target: JDIDebugTarget, suspend: Boolean, eventSet: EventSet): Unit = {
     // nothing to do
@@ -97,7 +112,7 @@ class ScalaStepOver(target: ScalaDebugTarget, range: Range, thread: ScalaThread,
       case classPrepareEvent: ClassPrepareEvent =>
         anonFunctionsInRange(classPrepareEvent.referenceType, range).foreach(method => {
           val breakpoint = createMethodEntryBreakpoint(method, thread.thread)
-          entryBreakpoints += breakpoint
+          requests += breakpoint
           javaTarget.getEventDispatcher.addJDIEventListener(this, breakpoint)
           breakpoint.enable
         })
@@ -119,23 +134,16 @@ class ScalaStepOver(target: ScalaDebugTarget, range: Range, thread: ScalaThread,
     }
   }
 
-  // ----
+  // Members declared in scala.tools.eclipse.debug.command.ScalaStep
 
   def step() {
     val eventDispatcher = target.javaTarget.getEventDispatcher
 
-    // TODO: they are all request, and have the same life cycle, they can be combined in one collection
-
-    eventDispatcher.addJDIEventListener(this, classPrepareRequest)
-    classPrepareRequest.enable
-
-    entryBreakpoints.foreach(breakpoint => {
+    requests.foreach(breakpoint => {
       eventDispatcher.addJDIEventListener(this, breakpoint)
       breakpoint.enable
     })
 
-    eventDispatcher.addJDIEventListener(this, stepOverRequest)
-    stepOverRequest.enable
     thread.resumedFromScala(DebugEvent.STEP_OVER)
     thread.thread.resume
   }
@@ -145,20 +153,11 @@ class ScalaStepOver(target: ScalaDebugTarget, range: Range, thread: ScalaThread,
 
     val eventRequestManager = thread.thread.virtualMachine.eventRequestManager
 
-    classPrepareRequest.disable
-    eventDispatcher.removeJDIEventListener(this, classPrepareRequest)
-    eventRequestManager.deleteEventRequest(classPrepareRequest)
-
-    entryBreakpoints.foreach(breakpoint => {
+    requests.foreach(breakpoint => {
       breakpoint.disable
       eventDispatcher.removeJDIEventListener(this, breakpoint)
       eventRequestManager.deleteEventRequest(breakpoint)
     })
-
-    stepOverRequest.disable
-    eventDispatcher.removeJDIEventListener(this, stepOverRequest)
-    eventRequestManager.deleteEventRequest(stepOverRequest)
-
   }
 
 }

@@ -26,6 +26,8 @@ import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.core.runtime.IStatus
 import org.eclipse.core.runtime.Status
 import scala.tools.eclipse.debug.ScalaDebugPlugin
+import com.sun.jdi.PrimitiveValue
+import org.eclipse.jdt.internal.ui.javaeditor.EditorUtility
 
 object ScalaDebugModelPresentation {
   def computeDetail(value: IValue): String = {
@@ -47,7 +49,13 @@ object ScalaDebugModelPresentation {
   
   def computeDetail(arrayReference: ArrayReference): String = {
     import scala.collection.JavaConverters._
-    arrayReference.getValues.asScala.map(computeDetail(_)).mkString("Array(", ", ", ")")
+    // There's a bug in the JDI implementation provided by the JDT, calling getValues()
+    // on an array of size zero generates a java.lang.IndexOutOfBoundsException
+    if (arrayReference.length == 0) {
+      "Array()"
+    } else {
+      arrayReference.getValues.asScala.map(computeDetail(_)).mkString("Array(", ", ", ")")
+    }
   }
   
   def computeDetail(objectReference: ObjectReference): String = {
@@ -59,8 +67,26 @@ object ScalaDebugModelPresentation {
   def computeDetail(value: Value): String = {
     // TODO: some of this is duplicate of ScalaValue#apply()
     value match {
+      case primitiveValue: PrimitiveValue =>
+        computeDetail(primitiveValue)
       case arrayReference: ArrayReference =>
         computeDetail(arrayReference)
+      case stringReference: StringReference =>
+        stringReference.value
+      case objectReference: ObjectReference => // include ClassLoaderReference, ClassObjectReference, ThreadGroupReference, ThreadReference
+        computeDetail(objectReference)
+      case null =>
+        // TODO : cache
+        "null"
+      case voidValue: VoidValue =>
+        ??? // TODO: in what cases do we get this value ?
+      case _ =>
+        ???
+    }
+  }
+  
+  def computeDetail(value: PrimitiveValue): String = {
+    value match {
       case booleanValue: BooleanValue =>
         booleanValue.value.toString
       case byteValue: ByteValue =>
@@ -77,17 +103,6 @@ object ScalaDebugModelPresentation {
         longValue.value.toString
       case shortValue: ShortValue =>
         shortValue.value.toString
-      case stringReference: StringReference =>
-        stringReference.value
-      case objectReference: ObjectReference => // include ClassLoaderReference, ClassObjectReference, ThreadGroupReference, ThreadReference
-        computeDetail(objectReference)
-      case null =>
-        // TODO : cache
-        "null"
-      case voidValue: VoidValue =>
-        ??? // TODO: in what cases do we get this value ?
-      case _ =>
-        ???
     }
   }
 }
@@ -150,21 +165,11 @@ class ScalaDebugModelPresentation extends IDebugModelPresentation {
   // Members declared in org.eclipse.debug.ui.ISourcePresentation
 
   def getEditorId(input: IEditorInput, element: Any): String = {
-    input match {
-      case fileInput: IFileEditorInput =>
-        IDE.getEditorDescriptor(fileInput.getFile).getId
-      case _ =>
-        null
-    }
+    EditorUtility.getEditorID(input)
   }
 
   def getEditorInput(input: Any): IEditorInput = {
-    input match {
-      case file: IFile =>
-        new FileEditorInput(file)
-      case _ =>
-        ???
-    }
+    EditorUtility.getEditorInput(input)
   }
 
   // ----

@@ -3,6 +3,7 @@ package scala.tools.eclipse.debug.model
 import org.eclipse.debug.core.model.IVariable
 import com.sun.jdi.{LocalVariable, Field, ArrayType}
 import com.sun.jdi.ObjectReference
+import org.eclipse.debug.core.model.IValue
 
 abstract class ScalaVariable(target: ScalaDebugTarget) extends ScalaDebugElement(target) with IVariable {
 
@@ -34,7 +35,9 @@ class ScalaLocalVariable(variable: LocalVariable, stackFrame: ScalaStackFrame) e
 
   def getName(): String = variable.name
   def getReferenceTypeName(): String = variable.typeName
-  def getValue(): org.eclipse.debug.core.model.IValue = ScalaValue(stackFrame.stackFrame.getValue(variable), getScalaDebugTarget)
+  
+  // fetching the value for local variables cannot be delayed because the underlying stackframe element may become invalid at any time
+  val getValue: IValue = ScalaValue(stackFrame.stackFrame.getValue(variable), getScalaDebugTarget)
 }
 
 class ScalaArrayElementVariable(index: Int, arrayReference: ScalaArrayReference) extends ScalaVariable(arrayReference.getScalaDebugTarget) {

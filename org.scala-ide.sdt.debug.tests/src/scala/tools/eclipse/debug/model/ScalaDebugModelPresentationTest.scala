@@ -18,6 +18,10 @@ import com.sun.jdi.Value
 import com.sun.jdi.ObjectReference
 import com.sun.jdi.ClassType
 
+/**
+ * More tests related of the ScalaDebugModelPresentation are in ScalaDebugComputeDetailTest.
+ *
+ */
 class ScalaDebugModelPresentationTest {
 
   val modelPres = new ScalaDebugModelPresentation
@@ -60,79 +64,94 @@ class ScalaDebugModelPresentationTest {
     val scalaThread = mock(classOf[ScalaThread])
 
     import ScalaStackFrameTest._
-    
-    val jdiStackFrame = createJDIStackFrame("some.package.TypeName", "methodName", List(referenceType("a.b.ParamType1"), referenceType("a.b.ParamType2")))
-    val location= jdiStackFrame.location
+
+    val jdiStackFrame = createJDIStackFrame("Lsome/package/TypeName;", "methodName", "(La/b/ParamType1;La/b/ParamType2;)V")
+    val location = jdiStackFrame.location
     when(location.lineNumber).thenReturn(42)
 
     val scalaStackFrame = new ScalaStackFrame(scalaThread, jdiStackFrame)
 
     assertEquals("Bad display name for Scala stack frame", "TypeName.methodName(ParamType1, ParamType2) line: 42", modelPres.getText(scalaStackFrame))
   }
-  
+
   @Test
   def scalaStackFrameLineNotAvailable() {
     val scalaThread = mock(classOf[ScalaThread])
 
     import ScalaStackFrameTest._
-    
-    val jdiStackFrame = createJDIStackFrame("some.package.TypeName", "methodName", Nil)
-    val location= jdiStackFrame.location
+
+    val jdiStackFrame = createJDIStackFrame("Lsome/package/TypeName;", "methodName", "()V")
+    val location = jdiStackFrame.location
     when(location.lineNumber).thenReturn(-1)
 
     val scalaStackFrame = new ScalaStackFrame(scalaThread, jdiStackFrame)
 
     assertEquals("Bad display name for Scala stack frame", "TypeName.methodName() line: not available", modelPres.getText(scalaStackFrame))
   }
-  
+
   @Test
   def computeDetailNull() {
     val scalaValue = mock(classOf[ScalaNullValue])
-    
-    val computedDetail= ScalaDebugModelPresentation.computeDetail(scalaValue)
-    
+
+    val computedDetail = ScalaDebugModelPresentation.computeDetail(scalaValue)
+
     assertEquals("Bad return value for computeDetail", "null", computedDetail)
   }
-  
+
   @Test
   def computeDetailPrimitiveNotString() {
     val scalaValue = new ScalaPrimitiveValue(null, "a value", null)
-    
-    val computedDetail= ScalaDebugModelPresentation.computeDetail(scalaValue)
-    
+
+    val computedDetail = ScalaDebugModelPresentation.computeDetail(scalaValue)
+
     assertEquals("Bad return value for computeDetail", "a value", computedDetail)
   }
-  
+
   @Test
   def computeDetailString() {
     val stringReference = mock(classOf[StringReference])
     when(stringReference.value).thenReturn("a string value")
-    
-    val computedDetail= ScalaDebugModelPresentation.computeDetail(new ScalaStringReference(stringReference, null))
-    
+
+    val computedDetail = ScalaDebugModelPresentation.computeDetail(new ScalaStringReference(stringReference, null))
+
     assertEquals("Bad return value for computeDetail", "a string value", computedDetail)
   }
-  
+
   @Test
   def computeDetailArrayOfPrimitive() {
-    val arrayReference= mock(classOf[ArrayReference])
+    val arrayReference = mock(classOf[ArrayReference])
     import scala.collection.JavaConverters._
-    val values= List(createIntValue(1), createIntValue(2), createIntValue(4)).asJava
+    val values = List(createIntValue(1), createIntValue(2), createIntValue(4)).asJava
+    when(arrayReference.length).thenReturn(3)
     when(arrayReference.getValues).thenReturn(values)
-    
-    val computedDetail= ScalaDebugModelPresentation.computeDetail(new ScalaArrayReference(arrayReference, null))
-    
+
+    val computedDetail = ScalaDebugModelPresentation.computeDetail(new ScalaArrayReference(arrayReference, null))
+
     assertEquals("Bad return value for computeDetail", "Array(1, 2, 4)", computedDetail)
   }
-  
-  // TODO: test for array of object reference
-  
+
+  /**
+   * There is a bug in the JDT implementation of JDI.
+   * ArrayReference#getValues() return an IndexOutOfBoundsException when called on an empty array.
+   */
+  @Test
+  def computeDetailEmptyArrayJDIBug() {
+    // simulate JDT/JDI bug
+    val arrayReference = mock(classOf[ArrayReference])
+    when(arrayReference.length).thenReturn(0)
+    when(arrayReference.getValues).thenThrow(new IndexOutOfBoundsException)
+    
+    val computedDetail = ScalaDebugModelPresentation.computeDetail(new ScalaArrayReference(arrayReference, null))
+    
+    assertEquals("Bad return value for computeDetail", "Array()", computedDetail)
+  }
+
   // -----
 
   def createIntValue(i: Int): Value = {
-    val value= mock(classOf[IntegerValue])
+    val value = mock(classOf[IntegerValue])
     when(value.value).thenReturn(i)
     value
   }
-  
+
 }

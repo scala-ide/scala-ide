@@ -19,40 +19,68 @@ import com.sun.jdi.ArrayType
 import scala.reflect.NameTransformer
 
 object ScalaStackFrame {
+
+  // regexp for JNI signature
+  final val typeSignature = """L([^;]*);""".r
+  final val arraySignature = """\[(.*)""".r
+  final val argumentsInMethodSignature = """\(([^\)]*)\).*""".r
   
-  def getSimpleName(tpe: Type): String = {
-    tpe match {
-      case booleanType: BooleanType =>
-        "Boolean"
-      case byteType: ByteType =>
+  def getSimpleName(signature: String): String = {
+    signature match {
+      case typeSignature(typeName) =>
+        NameTransformer.decode(typeName.split('/').last)
+      case arraySignature(elementSignature) =>
+        "Array[%s]".format(getSimpleName(elementSignature))
+      case "B" =>
         "Byte"
-      case charType: CharType =>
+      case "C" =>
         "Char"
-      case doubleType: DoubleType =>
+      case "D" =>
         "Double"
-      case floatType: FloatType =>
+      case "F" =>
         "Float"
-      case intType: IntegerType =>
+      case "I" =>
         "Int"
-      case longType: LongType =>
+      case "J" =>
         "Long"
-      case shortType: ShortType =>
+      case "S" =>
         "Short"
-      case arrayType: ArrayType =>
-        "Array[%s]".format(getSimpleName(arrayType.componentType))
-      case refType: ReferenceType =>
-        NameTransformer.decode(refType.name.split('.').last)
-      case _ =>
-        ???
+      case "Z" =>
+        "Boolean"
     }
   }
   
+  // TODO: need unit tests
+  def getArgumentSimpleNames(methodSignature: String): List[String] = {
+    val argumentsInMethodSignature(argString)= methodSignature
+    
+    def parseArguments(args: String) : List[String] = {
+      if (args.isEmpty) {
+        Nil
+      } else {
+        args.head match {
+          case 'L' =>
+            val typeSignatureLength= args.indexOf(';') + 1
+            getSimpleName(args.substring(0, typeSignatureLength)) +: parseArguments(args.substring(typeSignatureLength))
+          case '[' =>
+            val parsedArguments= parseArguments(args.tail)
+            "Array[%s]".format(parsedArguments.head) +: parsedArguments.tail
+          case c =>
+            getSimpleName(c.toString) +: parseArguments(args.tail)
+        }
+      }
+    }
+    
+    parseArguments(argString)
+  }
+
   def getFullName(method: Method): String = {
-    import scala.collection.JavaConverters._
+//    import scala.collection.JavaConverters._
     "%s.%s(%s)".format(
-        getSimpleName(method.declaringType),
-        NameTransformer.decode(method.name),
-        method.argumentTypes.asScala.map(getSimpleName(_)).mkString(", "))
+      getSimpleName(method.declaringType.signature),
+      NameTransformer.decode(method.name),
+      getArgumentSimpleNames(method.signature).mkString(", "))
+//      method.arguments.asScala.map(a => getSimpleName(a.signature)).mkString(", "))
   }
 }
 
@@ -73,13 +101,13 @@ class ScalaStackFrame(val thread: ScalaThread, var stackFrame: StackFrame) exten
 
   // Members declared in org.eclipse.debug.core.model.IStep
 
-  def canStepInto(): Boolean = false // TODO: need real logic
+  def canStepInto(): Boolean = true // TODO: need real logic
   def canStepOver(): Boolean = true // TODO: need real logic
-  def canStepReturn(): Boolean = false // TODO: need real logic
+  def canStepReturn(): Boolean = true // TODO: need real logic
   def isStepping(): Boolean = ???
-  def stepInto(): Unit = ???
+  def stepInto(): Unit = thread.stepInto
   def stepOver(): Unit = thread.stepOver
-  def stepReturn(): Unit = ???
+  def stepReturn(): Unit = thread.stepReturn
 
   // Members declared in org.eclipse.debug.core.model.ISuspendResume
 
@@ -95,7 +123,7 @@ class ScalaStackFrame(val thread: ScalaThread, var stackFrame: StackFrame) exten
 
   val variables: Seq[ScalaVariable] = {
     import scala.collection.JavaConverters._
-    val visibleVariables= try {
+    val visibleVariables = try {
       stackFrame.visibleVariables.asScala.map(new ScalaLocalVariable(_, this))
     } catch {
       case e: AbsentInformationException => Seq()
@@ -108,13 +136,13 @@ class ScalaStackFrame(val thread: ScalaThread, var stackFrame: StackFrame) exten
   }
 
   def getSourceName(): String = stackFrame.location.sourceName
-  
+
   def getMethodFullName(): String = {
     getFullName(stackFrame.location.method)
   }
-  
+
   def rebind(newStackFrame: StackFrame) {
-    stackFrame= newStackFrame
+    stackFrame = newStackFrame
   }
 
 }

@@ -1,11 +1,16 @@
 package scala.tools.eclipse.debug
 
 import scala.tools.eclipse.testsetup.TestProjectSetup
-import org.junit.{Test, Before, After}
+import org.junit.{ Test, Before, After }
 import org.eclipse.core.resources.IncrementalProjectBuilder
 import org.eclipse.core.runtime.NullProgressMonitor
+import org.junit.Ignore
 
-object ScalaDebugSteppingTest extends TestProjectSetup("debug", bundleName= "org.scala-ide.sdt.debug.tests") with ScalaDebugRunningTest
+object ScalaDebugSteppingTest extends TestProjectSetup("debug", bundleName = "org.scala-ide.sdt.debug.tests") with ScalaDebugRunningTest {
+
+  def initDebugSession(launchConfigurationName: String): ScalaDebugTestSession = new ScalaDebugTestSession(file(launchConfigurationName + ".launch"))
+
+}
 
 class ScalaDebugSteppingTest {
 
@@ -17,7 +22,7 @@ class ScalaDebugSteppingTest {
   def setScalaDebugMode() {
     ScalaDebugPlugin.plugin.getPreferenceStore.setValue(DebugPreferencePage.P_ENABLE, true)
   }
-  
+
   @Before
   def refreshBinaryFiles() {
     project.underlying.build(IncrementalProjectBuilder.CLEAN_BUILD, new NullProgressMonitor)
@@ -39,7 +44,7 @@ class ScalaDebugSteppingTest {
   @Test
   def StepOverIntoForComprehensionListStringInObjectMain() {
 
-    session = new ScalaDebugTestSession(file("ForComprehensionListString.launch"))
+    session = initDebugSession("ForComprehensionListString")
 
     session.runToLine(TYPENAME_FC_LS + "$", 9)
 
@@ -53,7 +58,7 @@ class ScalaDebugSteppingTest {
   @Test
   def StepOverIntoForComprehensionListStringInObjectFoo() {
 
-    session = new ScalaDebugTestSession(file("ForComprehensionListString.launch"))
+    session = initDebugSession("ForComprehensionListString")
 
     session.runToLine(TYPENAME_FC_LS + "$", 19)
 
@@ -67,7 +72,7 @@ class ScalaDebugSteppingTest {
   @Test
   def StepOverIntoForComprehensionListStringInClassConstructor() {
 
-    session = new ScalaDebugTestSession(file("ForComprehensionListString.launch"))
+    session = initDebugSession("ForComprehensionListString")
 
     session.runToLine(TYPENAME_FC_LS, 29)
 
@@ -81,7 +86,7 @@ class ScalaDebugSteppingTest {
   @Test
   def StepOverIntoForComprehensionListStringInClassBar() {
 
-    session = new ScalaDebugTestSession(file("ForComprehensionListString.launch"))
+    session = initDebugSession("ForComprehensionListString")
 
     session.runToLine(TYPENAME_FC_LS, 35)
 
@@ -99,7 +104,7 @@ class ScalaDebugSteppingTest {
   @Test
   def StepOverBackInForComprehentionListString() {
 
-    session = new ScalaDebugTestSession(file("ForComprehensionListString.launch"))
+    session = initDebugSession("ForComprehensionListString")
 
     session.runToLine(TYPENAME_FC_LS + "$", 10)
 
@@ -117,7 +122,7 @@ class ScalaDebugSteppingTest {
   @Test
   def StepOverOutForComprehentionListString() {
 
-    session = new ScalaDebugTestSession(file("ForComprehensionListString2.launch"))
+    session = initDebugSession("ForComprehensionListString2")
 
     session.runToLine(TYPENAME_FC_LS2 + "$", 12)
 
@@ -135,7 +140,7 @@ class ScalaDebugSteppingTest {
   @Test
   def StepOverIntoForComprehensionListObjectInObjectMain() {
 
-    session = new ScalaDebugTestSession(file("ForComprehensionListObject.launch"))
+    session = initDebugSession("ForComprehensionListObject")
 
     session.runToLine(TYPENAME_FC_LO + "$", 9)
 
@@ -149,7 +154,7 @@ class ScalaDebugSteppingTest {
   @Test
   def StepOverIntoForComprehensionListObjectInObjectFoo() {
 
-    session = new ScalaDebugTestSession(file("ForComprehensionListObject.launch"))
+    session = initDebugSession("ForComprehensionListObject")
 
     session.runToLine(TYPENAME_FC_LO + "$", 19)
 
@@ -163,7 +168,7 @@ class ScalaDebugSteppingTest {
   @Test
   def StepOverIntoForComprehensionListObjectInClassConstructor() {
 
-    session = new ScalaDebugTestSession(file("ForComprehensionListObject.launch"))
+    session = initDebugSession("ForComprehensionListObject")
 
     session.runToLine(TYPENAME_FC_LO, 29)
 
@@ -177,7 +182,7 @@ class ScalaDebugSteppingTest {
   @Test
   def StepOverIntoForComprehensionListObjectInClassBar() {
 
-    session = new ScalaDebugTestSession(file("ForComprehensionListObject.launch"))
+    session = initDebugSession("ForComprehensionListObject")
 
     session.runToLine(TYPENAME_FC_LO, 35)
 
@@ -195,7 +200,7 @@ class ScalaDebugSteppingTest {
   @Test
   def StepOverIntoForComprehensionListIntInObjectMain() {
 
-    session = new ScalaDebugTestSession(file("ForComprehensionListInt.launch"))
+    session = initDebugSession("ForComprehensionListInt")
 
     session.runToLine(TYPENAME_FC_LI + "$", 11)
 
@@ -209,7 +214,7 @@ class ScalaDebugSteppingTest {
   @Test
   def StepOverIntoForComprehensionListIntInObjectFoo() {
 
-    session = new ScalaDebugTestSession(file("ForComprehensionListInt.launch"))
+    session = initDebugSession("ForComprehensionListInt")
 
     session.runToLine(TYPENAME_FC_LI + "$", 21)
 
@@ -223,7 +228,7 @@ class ScalaDebugSteppingTest {
   @Test
   def StepOverIntoForComprehensionListIntInClassConstructor() {
 
-    session = new ScalaDebugTestSession(file("ForComprehensionListInt.launch"))
+    session = initDebugSession("ForComprehensionListInt")
 
     session.runToLine(TYPENAME_FC_LI, 31)
 
@@ -237,7 +242,7 @@ class ScalaDebugSteppingTest {
   @Test
   def StepOverIntoForComprehensionListIntInClassBar() {
 
-    session = new ScalaDebugTestSession(file("ForComprehensionListInt.launch"))
+    session = initDebugSession("ForComprehensionListInt")
 
     session.runToLine(TYPENAME_FC_LI, 37)
 
@@ -255,7 +260,7 @@ class ScalaDebugSteppingTest {
   @Test
   def StepOverIntoListStringForEach() {
 
-    session = new ScalaDebugTestSession(file("AnonFunOnListString.launch"))
+    session = initDebugSession("AnonFunOnListString")
 
     session.runToLine(TYPENAME_AF_LS + "$", 11)
 
@@ -269,7 +274,7 @@ class ScalaDebugSteppingTest {
   @Test
   def StepOverIntoListStringFind() {
 
-    session = new ScalaDebugTestSession(file("AnonFunOnListString.launch"))
+    session = initDebugSession("AnonFunOnListString")
 
     session.runToLine(TYPENAME_AF_LS + "$", 13)
 
@@ -283,7 +288,7 @@ class ScalaDebugSteppingTest {
   @Test
   def StepOverIntoListStringMap() {
 
-    session = new ScalaDebugTestSession(file("AnonFunOnListString.launch"))
+    session = initDebugSession("AnonFunOnListString")
 
     session.runToLine(TYPENAME_AF_LS + "$", 15)
 
@@ -297,7 +302,7 @@ class ScalaDebugSteppingTest {
   @Test
   def StepOverIntoListStringFoldLeft() {
 
-    session = new ScalaDebugTestSession(file("AnonFunOnListString.launch"))
+    session = initDebugSession("AnonFunOnListString")
 
     session.runToLine(TYPENAME_AF_LS + "$", 17)
 
@@ -306,6 +311,78 @@ class ScalaDebugSteppingTest {
     session.stepOver()
 
     session.checkStackFrame(TYPENAME_AF_LS + "$$anonfun$main$4", "apply(ILjava/lang/String;)I", 17)
+  }
+
+  // Simple stepping into/over/out tests
+
+  @Test
+  def StepIntoSimpleTest() {
+    session = initDebugSession("SimpleStepping")
+
+    session.runToLine(TYPENAME_SIMPLE_STEPPING, 8)
+
+    session.checkStackFrame(TYPENAME_SIMPLE_STEPPING, "foo()V", 8)
+
+    session.stepInto()
+
+    session.checkStackFrame(TYPENAME_SIMPLE_STEPPING, "bar()V", 12)
+  }
+
+  @Test
+  def StepOverSimpleTest() {
+    session = initDebugSession("SimpleStepping")
+
+    session.runToLine(TYPENAME_SIMPLE_STEPPING, 12)
+
+    session.checkStackFrame(TYPENAME_SIMPLE_STEPPING, "bar()V", 12)
+
+    session.stepOver()
+
+    session.checkStackFrame(TYPENAME_SIMPLE_STEPPING, "bar()V", 13)
+  }
+
+  @Test
+  def StepReturnSimpleTest() {
+    session = initDebugSession("SimpleStepping")
+
+    session.runToLine(TYPENAME_SIMPLE_STEPPING, 12)
+
+    session.checkStackFrame(TYPENAME_SIMPLE_STEPPING, "bar()V", 12)
+
+    session.stepReturn()
+
+    session.checkStackFrame(TYPENAME_SIMPLE_STEPPING, "foo()V", 8)
+  }
+
+  // stepping out of anonymous functions
+  @Test
+  def StepIntoForComprehensionListStringInObjectMain() {
+
+    session = initDebugSession("ForComprehensionListString")
+
+    session.runToLine(TYPENAME_FC_LS + "$", 9)
+
+    session.checkStackFrame(TYPENAME_FC_LS + "$", "main([Ljava/lang/String;)V", 9)
+
+    session.stepInto()
+
+    session.checkStackFrame(TYPENAME_FC_LS + "$$anonfun$main$1", "apply(Ljava/lang/String;)I", 10)
+  }
+
+  // stepping out of anonymous functions
+
+  @Test
+  def StepReturnForComprehensionListStringInObjectMain() {
+
+    session = initDebugSession("ForComprehensionListString")
+
+    session.runToLine(TYPENAME_FC_LS + "$", 10)
+
+    session.checkStackFrame(TYPENAME_FC_LS + "$$anonfun$main$1", "apply(Ljava/lang/String;)I", 10)
+
+    session.stepReturn()
+
+    session.checkStackFrame(TYPENAME_FC_LS + "$", "main([Ljava/lang/String;)V", 13)
   }
 
 }

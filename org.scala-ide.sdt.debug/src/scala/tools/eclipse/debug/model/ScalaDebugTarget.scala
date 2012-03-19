@@ -5,12 +5,12 @@ import scala.collection.JavaConverters.asScalaBufferConverter
 import scala.tools.eclipse.debug.ScalaDebugger
 
 import org.eclipse.debug.core.model.IDebugTarget
-import org.eclipse.jdt.internal.debug.core.model.{JDIThread, JDIDebugTarget}
+import org.eclipse.jdt.internal.debug.core.model.{ JDIThread, JDIDebugTarget }
 import org.eclipse.jdt.internal.debug.core.IJDIEventListener
 
-import com.sun.jdi.event.{ThreadStartEvent, ThreadDeathEvent, EventSet, Event}
-import com.sun.jdi.request.{ThreadStartRequest, ThreadDeathRequest, EventRequest}
-import com.sun.jdi.{ReferenceType, Method, Location}
+import com.sun.jdi.event.{ ThreadStartEvent, ThreadDeathEvent, EventSet, Event }
+import com.sun.jdi.request.{ ThreadStartRequest, ThreadDeathRequest, EventRequest }
+import com.sun.jdi.{ ReferenceType, Method, Location }
 
 object ScalaDebugTarget {
 
@@ -162,12 +162,16 @@ class ScalaDebugTarget(val javaTarget: JDIDebugTarget, threadStartRequest: Threa
     val typeName = location.declaringType.name
     // TODO: use better pattern matching
     // TODO: check for bridge methods?
-    if (typeName.startsWith("scala.collection"))
+    if (typeName.startsWith("scala.collection") || typeName.startsWith("scala.runtime") || typeName.equals("java.lang.ClassLoader"))
       false
     else if (typeName.contains("$$anonfun$")) {
       findAnonFunction(location.declaringType).exists(_ == location.method)
     } else
       true
+  }
+
+  def shouldNotStepInto(location: Location): Boolean = {
+    location.method.isConstructor || location.declaringType.name.equals("java.lang.ClassLoader")
   }
 
 }

@@ -1,9 +1,9 @@
 package scala.tools.eclipse.debug
 
-import scala.tools.eclipse.debug.model.{ScalaThread, ScalaStackFrame, ScalaDebugTarget}
+import scala.tools.eclipse.debug.model.{ ScalaThread, ScalaStackFrame, ScalaDebugTarget }
 
-import org.eclipse.core.resources.{ResourcesPlugin, IFile}
-import org.eclipse.debug.core.{ILaunchManager, IDebugEventSetListener, DebugPlugin, DebugEvent}
+import org.eclipse.core.resources.{ ResourcesPlugin, IFile }
+import org.eclipse.debug.core.{ ILaunchManager, IDebugEventSetListener, DebugPlugin, DebugEvent }
 import org.eclipse.jdt.debug.core.JDIDebugModel
 import org.eclipse.jdt.internal.debug.core.model.JDIDebugTarget
 import org.hamcrest.CoreMatchers._
@@ -13,7 +13,7 @@ class ScalaDebugTestSession(launchConfigurationFile: IFile) extends IDebugEventS
 
   object State extends Enumeration {
     type State = Value
-    val NOT_LAUNCHED, RUNNING, SUSPENDED, TERMINATED = Value
+    val ACTION_REQUESTED, NOT_LAUNCHED, RUNNING, SUSPENDED, TERMINATED = Value
   }
   import State._
 
@@ -59,6 +59,10 @@ class ScalaDebugTestSession(launchConfigurationFile: IFile) extends IDebugEventS
     }
   }
 
+  def setActionRequested() {
+    state = ACTION_REQUESTED
+  }
+
   def setRunning() {
     this.synchronized {
       state = RUNNING
@@ -90,6 +94,13 @@ class ScalaDebugTestSession(launchConfigurationFile: IFile) extends IDebugEventS
     }
   }
 
+  def waitUntilTerminated() {
+    this.synchronized {
+      if (state != TERMINATED)
+        this.wait
+    }
+  }
+
   // ----
 
   var state = NOT_LAUNCHED
@@ -104,7 +115,8 @@ class ScalaDebugTestSession(launchConfigurationFile: IFile) extends IDebugEventS
     if (state eq NOT_LAUNCHED) {
       launch()
     } else {
-      resume()
+      setActionRequested
+      currentStackFrame.resume
     }
 
     waitUntilSuspended
@@ -116,17 +128,41 @@ class ScalaDebugTestSession(launchConfigurationFile: IFile) extends IDebugEventS
   def stepOver() {
     assertEquals("Bad state before stepOver", SUSPENDED, state)
 
+    setActionRequested
     currentStackFrame.stepOver
 
     waitUntilSuspended
 
     assertEquals("Bad state after stepOver", SUSPENDED, state)
   }
-  
+
+  def stepInto() {
+    assertEquals("Bad state before stepIn", SUSPENDED, state)
+
+    setActionRequested
+    currentStackFrame.stepInto
+
+    waitUntilSuspended
+
+    assertEquals("Bad state after stepIn", SUSPENDED, state)
+  }
+
+  def stepReturn() {
+    assertEquals("Bad state before stepReturn", SUSPENDED, state)
+
+    setActionRequested
+    currentStackFrame.stepReturn
+
+    waitUntilSuspended
+
+    assertEquals("Bad state after stepReturn", SUSPENDED, state)
+  }
+
   def resumeToCompletion() {
     assertEquals("Bad state before resumeToCompletion", SUSPENDED, state)
 
-    resume
+    setActionRequested
+    currentStackFrame.resume
 
     waitUntilSuspended
 
@@ -136,7 +172,7 @@ class ScalaDebugTestSession(launchConfigurationFile: IFile) extends IDebugEventS
   def terminate() {
     if ((state ne NOT_LAUNCHED) && (state ne TERMINATED)) {
       debugTarget.terminate
-      waitUntilSuspended
+      waitUntilTerminated
       assertEquals("Bad state after terminate", TERMINATED, state)
     }
   }
@@ -144,10 +180,6 @@ class ScalaDebugTestSession(launchConfigurationFile: IFile) extends IDebugEventS
   private def launch() {
     val launchConfiguration = DebugPlugin.getDefault.getLaunchManager.getLaunchConfiguration(launchConfigurationFile)
     launchConfiguration.launch(ILaunchManager.DEBUG_MODE, null).getDebugTarget.asInstanceOf[JDIDebugTarget]
-  }
-  
-  private def resume() {
-    currentStackFrame.resume
   }
 
   // -----
