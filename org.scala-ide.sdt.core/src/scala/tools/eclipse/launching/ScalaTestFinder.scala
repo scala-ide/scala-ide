@@ -228,7 +228,7 @@ class ScalaTestFinder(val compiler: ScalaPresentationCompiler, loader: ClassLoad
       case applyImplicitView: ApplyImplicitView =>
         None
       case apply: Apply =>
-        val applyParentOpt = getParentTree(rootTree, apply)
+        /*val applyParentOpt = getParentTree(rootTree, apply)
         applyParentOpt match {
           case Some(applyParent) =>
             if (applyParent.isInstanceOf[Apply])
@@ -237,8 +237,8 @@ class ScalaTestFinder(val compiler: ScalaPresentationCompiler, loader: ClassLoad
               Some(mapApplyToMethodInvocation(className, apply, rootTree))
           case None => 
             Some(mapApplyToMethodInvocation(className, apply, rootTree))
-        }
-        //Some(mapApplyToMethodInvocation(className, apply, rootTree))
+        }*/
+        Some(mapApplyToMethodInvocation(className, apply, rootTree))
       case template: Template =>
         Some(new ConstructorBlock(className, rootTree, selectedTree))
       case _ =>
@@ -301,6 +301,7 @@ class ScalaTestFinder(val compiler: ScalaPresentationCompiler, loader: ClassLoad
             scalatestAstOpt match {
               case Some(scalatestAst) => 
                 //finder.find(scalatestAst)
+                val parent = scalatestAst.parent
                 val findMethod = finder.getClass.getMethods.find { mtd =>
                   mtd.getName == "find" && mtd.getParameterTypes.length == 1 && mtd.getParameterTypes()(0).getName == "org.scalatest.finders.AstNode"
                 }.get
