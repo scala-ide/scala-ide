@@ -51,7 +51,8 @@ class ScalaCompilerClasspathTest {
     project.underlying.build(IncrementalProjectBuilder.FULL_BUILD, new NullProgressMonitor)
 
     val unit = compilationUnit("test/CompilerDep.scala")
-    val errors = unit.getUnderlyingResource().findMarkers(IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER, true, IResource.DEPTH_INFINITE)
+    // val errors = unit.getUnderlyingResource().findMarkers(IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER, true, IResource.DEPTH_INFINITE)
+    val errors = SDTTestUtils.getErrorMessages(unit)
     println("problem: %s: %s".format(unit, errors.toList))
     Assert.assertTrue("Build errors found", errors.isEmpty)
   }
