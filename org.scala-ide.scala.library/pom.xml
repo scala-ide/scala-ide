@@ -25,6 +25,55 @@
       <artifactId>scala-dbc</artifactId>
     </dependency>
   </dependencies>
+
+  <profiles>
+    <profile>
+      <id>scala-2.10.0-SNAPSHOT</id>
+      <activation>
+        <property>
+          <name>scala.version</name>
+          <value>2.10.0-SNAPSHOT</value>
+        </property>
+      </activation>
+      <dependencies>
+        <dependency>
+          <groupId>org.scala-lang</groupId>
+          <artifactId>scala-actors</artifactId>
+        </dependency>
+      </dependencies>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-dependency-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>copy</id>
+                <phase>compile</phase>
+                <goals>
+                  <goal>copy</goal>
+                </goals>
+                <configuration>
+                  <artifactItems>
+                    <artifactItem>
+                      <groupId>org.scala-lang</groupId>
+                      <artifactId>scala-actors</artifactId>
+                      <version>${scala.library.version}</version>
+                      <classifier>sources</classifier>
+                      <type>jar</type>
+                      <destFileName>scala-actors-src.jar</destFileName>
+                    </artifactItem>
+                  </artifactItems>
+                  <outputDirectory>${project.build.directory}/lib</outputDirectory>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+
   <build>
     <outputDirectory>${basedir}</outputDirectory>
     <plugins>

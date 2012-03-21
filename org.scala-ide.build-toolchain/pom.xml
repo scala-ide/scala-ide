@@ -42,6 +42,11 @@
         <artifactId>scala-dbc</artifactId>
         <version>${scala.library.version}</version>
       </dependency>
+      <dependency>
+        <groupId>org.scala-lang</groupId>
+        <artifactId>scala-actors</artifactId>
+        <version>${scala.library.version}</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
   <build>
