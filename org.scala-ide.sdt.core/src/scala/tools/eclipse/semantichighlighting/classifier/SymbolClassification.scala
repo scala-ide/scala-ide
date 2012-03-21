@@ -19,6 +19,7 @@ import scala.tools.eclipse.ScalaPresentationCompiler
 import scala.tools.refactoring.common.CompilerAccess
 import scala.tools.nsc.io.AbstractFile
 import scala.tools.eclipse.logging.HasLogger
+import org.eclipse.core.internal.localstore.IsSynchronizedVisitor
 
 object SymbolClassification {
 
@@ -118,6 +119,7 @@ class SymbolClassification(protected val sourceFile: SourceFile, val global: Sca
         t <- unitTree
         if (t.hasSymbol || t.isType) && t.pos.isRange && !t.pos.isTransparent
         (sym, pos) <- safeSymbol(t)
+        if !sym.isSynthetic && !sym.isAnonymousClass
       } yield (sym, pos)
     }
     

@@ -177,7 +177,10 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
       case Some(f) =>
         val newF = new BatchSourceFile(f.file, content)
         synchronized { sourceFiles(scu) = newF }
-        askReload(List(newF), res)
+        
+        // avoid race condition by looking up the source file, as someone else 
+        // might have swapped it in the meantime
+        askReload(List(sourceFiles(scu)), res)
       case None =>
         res.set(()) // make sure nobody blocks waiting indefinitely
     }
