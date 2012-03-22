@@ -156,7 +156,7 @@
           <id>scala-toolchain-scalaide-2.0.x</id>
           <name>Scala Toolchain for Scala IDE 2.0.x p2 repository</name>
           <layout>p2</layout>
-          <url>${repo.scala-ide}/scala-eclipse-toolchain-osgi-2.9.2-SNAPSHOT</url>
+          <url>${repo.scala-ide}/scala-eclipse-toolchain-osgi-2.0.x</url>
         </repository>
       </repositories>
     </profile>
