@@ -91,6 +91,18 @@
       <dependencies>
         <dependency>
           <groupId>org.scala-lang</groupId>
+          <artifactId>scala-library</artifactId>
+        </dependency>
+        <dependency>
+          <groupId>org.scala-lang</groupId>
+          <artifactId>scala-swing</artifactId>
+        </dependency>
+        <dependency>
+          <groupId>org.scala-lang</groupId>
+          <artifactId>scala-dbc</artifactId>
+        </dependency>
+        <dependency>
+          <groupId>org.scala-lang</groupId>
           <artifactId>scala-actors</artifactId>
         </dependency>
       </dependencies>
