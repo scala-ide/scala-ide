@@ -9,6 +9,7 @@
     <relativePath>../org.scala-ide.build-toolchain/pom.xml</relativePath>
   </parent>
   <artifactId>org.scala-ide.sbt.full.library</artifactId>
+  <version>${sbt.version}-${version.suffix}-${maven.build.timestamp}</version>
   <packaging>bundle</packaging>
   
   <dependencies>
