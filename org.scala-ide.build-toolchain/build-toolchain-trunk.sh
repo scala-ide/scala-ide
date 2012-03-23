@@ -22,6 +22,6 @@ SBINARY_VERSION=0.4.0
 
 set_version ${SCALA_VERSION}
 
-PROFILE="-P sbt-2.10,default"
+PROFILE="-P sbt-2.10"
 
 build $*

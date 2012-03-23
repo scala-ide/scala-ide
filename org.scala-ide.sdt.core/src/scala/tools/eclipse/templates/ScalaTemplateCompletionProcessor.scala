@@ -24,7 +24,7 @@ class ScalaTemplateManager {
   val TEMPLATE_STORE_ID = ScalaPlugin.plugin.pluginId + ".preferences.Templates"
     
   lazy val templateStore = {
-    val b = new ContributionTemplateStore(contextTypeRegistry, ScalaPlugin.plugin.getPreferenceStore(), TEMPLATE_STORE_ID)
+    val b = new ContributionTemplateStore(contextTypeRegistry, ScalaPlugin.prefStore, TEMPLATE_STORE_ID)
     b.load()
     b
   }

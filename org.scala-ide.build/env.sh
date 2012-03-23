@@ -32,7 +32,7 @@ build()
 {
 
   ${MAVEN} \
-    $PROFILE_NAME -U \
+    $PROFILE -U \
     -Dscala.version=${SCALA_VERSION} \
     -Dscala.library.version=${SCALA_LIBRARY_VERSION} \
     -Dgit.hash=${GIT_HASH} \

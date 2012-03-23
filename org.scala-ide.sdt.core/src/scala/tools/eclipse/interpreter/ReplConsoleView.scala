@@ -22,7 +22,7 @@ import org.eclipse.ui.console.IConsoleConstants
 import org.eclipse.ui.internal.console.ConsolePluginImages
 import org.eclipse.jface.action.IAction
 import org.eclipse.jdt.internal.ui.JavaPlugin
-import scala.tools.eclipse.properties.ScalariformToSyntaxClass
+import scala.tools.eclipse.properties.syntaxcolouring.ScalariformToSyntaxClass
 import scalariform.lexer.ScalaLexer
 import org.eclipse.swt.widgets.List
 import org.eclipse.swt.widgets.Button
@@ -374,8 +374,9 @@ class ReplConsoleView extends ViewPart {
     val colorManager = JavaPlugin.getDefault.getJavaTextTools.getColorManager
     val prefStore = ScalaPlugin.plugin.getPreferenceStore
     for (token <- ScalaLexer.rawTokenise(text, forgiveErrors = true)) {
-      val textAttribute = ScalariformToSyntaxClass(token).getTextAttribute(colorManager, prefStore)
-      appendText(token.text, textAttribute.getForeground, codeBgColor, textAttribute.getStyle, insertNewline = false)
+      val textAttribute = ScalariformToSyntaxClass(token).getTextAttribute(prefStore)
+      val bgColor = Option(textAttribute.getBackground) getOrElse codeBgColor
+      appendText(token.text, textAttribute.getForeground, bgColor, textAttribute.getStyle, insertNewline = false)
     }
     appendText("\n\n", codeFgColor, codeBgColor, SWT.NORMAL, insertNewline = false)
   }
@@ -402,7 +403,9 @@ class ReplConsoleView extends ViewPart {
     val lastLine = textWidget.getLineCount
     if (bgColor != null)
       textWidget.setLineBackground(oldLastLine - 1, lastLine - oldLastLine, bgColor)
-    textWidget.setTopIndex(textWidget.getLineCount - 1)  
+    textWidget.setTopIndex(textWidget.getLineCount - 1)
+    textWidget.setStyleRange(new StyleRange(lastOffset, outputStr.length, fgColor, bgColor, fontStyle))
+
     
     clearConsoleAction.setEnabled(true)
   }

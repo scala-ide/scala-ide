@@ -58,7 +58,7 @@ function get_version() {
 # It replaces the maven-style qualifier (2.10.0-M2) with a . (2.10.0.M2)
 #
 function get_properties_version() {
-    unzip -c "$1" "$2.properties" | grep "version.number" | cut -d =  -f 2 | sed 's/\([0-9]\)-M/\1.M/'
+    unzip -c "$1" "$2.properties" | grep "osgi.version.number" | cut -d =  -f 2 # | sed 's/\([0-9]\)-M/\1.M/'
 }
 
 latest_file=""

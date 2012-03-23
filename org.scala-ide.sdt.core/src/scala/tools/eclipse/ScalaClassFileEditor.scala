@@ -17,13 +17,13 @@ import scala.tools.eclipse.javaelements.{ScalaClassFile, ScalaCompilationUnit}
 
 class ScalaClassFileEditor extends ClassFileEditor with ScalaEditor {
   override def createJavaSourceViewerConfiguration : JavaSourceViewerConfiguration =
-    new ScalaSourceViewerConfiguration(getPreferenceStore, ScalaPlugin.plugin.getPreferenceStore, this)
+    new ScalaSourceViewerConfiguration(getPreferenceStore, ScalaPlugin.prefStore, this)
 
   override def setSourceViewerConfiguration(configuration : SourceViewerConfiguration) {
     super.setSourceViewerConfiguration(
       configuration match {
         case svc : ScalaSourceViewerConfiguration => svc
-        case _ => new ScalaSourceViewerConfiguration(getPreferenceStore, ScalaPlugin.plugin.getPreferenceStore, this)
+        case _ => new ScalaSourceViewerConfiguration(getPreferenceStore, ScalaPlugin.prefStore, this)
       })
   }
 

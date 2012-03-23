@@ -30,9 +30,9 @@ object SWTUtils {
       override def widgetSelected(e: SelectionEvent) { p(e) }
     }
 
-  implicit def byNameToSelectionAdapter(p: => Any): SelectionAdapter =
+  implicit def noArgFnToSelectionAdapter(p: () => Any): SelectionAdapter =
     new SelectionAdapter() {
-      override def widgetSelected(e: SelectionEvent) { p }
+      override def widgetSelected(e: SelectionEvent) { p() }
     }
 
   implicit def fnToPropertyChangeListener(p: PropertyChangeEvent => Any): IPropertyChangeListener =
@@ -40,9 +40,9 @@ object SWTUtils {
       def propertyChange(e: PropertyChangeEvent) { p(e) }
     }
 
-  implicit def byNameToSelectionChangedListener(p: => Any): ISelectionChangedListener =
+  implicit def noArgFnToSelectionChangedListener(p: () => Any): ISelectionChangedListener =
     new ISelectionChangedListener {
-      def selectionChanged(event: SelectionChangedEvent) { p }
+      def selectionChanged(event: SelectionChangedEvent) { p() }
     }
 
   implicit def fnToDoubleClickListener(p: DoubleClickEvent => Any): IDoubleClickListener =
