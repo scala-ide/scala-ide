@@ -2,6 +2,7 @@ package scala.tools.eclipse.logging
 
 import org.eclipse.core.runtime.Status
 import scala.tools.eclipse.ScalaPlugin
+import scala.tools.eclipse.util.SWTUtils
 import org.eclipse.core.runtime.{ ILog, IStatus }
 import scala.util.control.ControlThrowable
 
@@ -50,7 +51,9 @@ private[logging] object EclipseLogger extends Logger {
   
   private def log(severity: Int, message: => Any, t: Throwable = null) {
     // Because of a potential deadlock in the Eclipse internals (look at #1000914), the log action need to be executed in the UI thread.
-    def log(status: Status) = scala.tools.eclipse.util.SWTUtils.asyncExec { pluginLogger.log(status) }
+    def log(status: Status) = 
+      if (ScalaPlugin.plugin.headlessMode) pluginLogger.log(status)
+      else SWTUtils.asyncExec { pluginLogger.log(status) }
     
     log(createStatus(severity, message, t))
     t match {

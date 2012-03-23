@@ -12,19 +12,13 @@ import org.eclipse.jface.resource.StringConverter
 import org.eclipse.jface.util.PropertyChangeEvent
 import org.eclipse.swt.graphics.RGB
 
-object ColourPreferenceInitializer {
-
-  val WHITE = new RGB(255, 255, 255)
-
-}
-
 class ColourPreferenceInitializer extends AbstractPreferenceInitializer {
 
-  import ColourPreferenceInitializer._
-
   override def initializeDefaultPreferences() {
-    if (!ScalaPlugin.plugin.headlessMode)
+    if (!ScalaPlugin.plugin.headlessMode) {
+      println("\n\n ********* Initializing colour preferences ****************\n\n")
       doInitializeDefaultPreferences()
+    }
   }
   
   private def doInitializeDefaultPreferences() {
@@ -35,7 +29,28 @@ class ColourPreferenceInitializer extends AbstractPreferenceInitializer {
     scalaPrefStore.setDefault(STRIKETHROUGH_DEPRECATED, true)
 
     setDefaultsForSyntaxClasses(scalaPrefStore)
+    initializePreferencesIndirectly(scalaPrefStore)
+  }
 
+  /** This closure is needed in order to hide the reference to UI code behind an
+   *  anonymous class. In headless tests, when there is no Xserver, it is imperative
+   *  that no UI code is initialized. Without this indirection, the JVM would attempt
+   *  to load `AbstractUIPlugin`, which is the owner of `getPreferenceStore` when
+   *  preparing this class (even when this code is not executed). The reference exists
+   *  in bytecode:
+   *
+   *    invokevirtual	#78; //Method org/eclipse/ui/plugin/AbstractUIPlugin.getPreferenceStore:
+   *
+   *  Contrary to what we believe, this is enough to trigger initialization of
+   *  `AbstractUIPlugin`, regardless whether this is ever executed.
+   *
+   *  The JVM will not attempt to load classes indirectly, until they are needed
+   *  for execution, so the solution was to hide the call behind a closure.
+   *
+   *  TODO: Remove once we have a UI bundle, and a clear separation between UI and core.
+   *  
+   */
+  lazy val initializePreferencesIndirectly = (scalaPrefStore: IPreferenceStore) => {
     val javaPrefStore = JavaPlugin.getDefault.getPreferenceStore
     SemanticHighlightingAnnotations.initAnnotationPreferences(javaPrefStore)
 
@@ -52,6 +67,7 @@ class ColourPreferenceInitializer extends AbstractPreferenceInitializer {
     strikethrough: Boolean = false,
     underline: Boolean = false)(implicit scalaPrefStore: IPreferenceStore) =
     {
+      lazy val WHITE = new RGB(255, 255, 255)
       scalaPrefStore.setDefault(syntaxClass.enabledKey, enabled)
       scalaPrefStore.setDefault(syntaxClass.foregroundColourKey, StringConverter.asString(foregroundRGB))
       val defaultBackgroundColour = StringConverter.asString(backgroundRGBOpt getOrElse WHITE)

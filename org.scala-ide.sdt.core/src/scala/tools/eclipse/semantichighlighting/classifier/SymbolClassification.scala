@@ -67,7 +67,9 @@ class SymbolClassification(protected val sourceFile: SourceFile, val global: Sca
   private def getSymbolInfo(sym: Symbol): SymbolInfo = {
     val occurrences = global.askOption {() => index occurences sym } getOrElse(Nil)
     val regions = occurrences flatMap getOccurrenceRegion(sym)
-    SymbolInfo(getSymbolType(sym), regions, sym.isDeprecated)
+    // isDeprecated may trigger type completion for annotations
+    val deprecated = sym.annotations.nonEmpty && global.askOption(() => sym.isDeprecated).getOrElse(false)
+    SymbolInfo(getSymbolType(sym), regions, deprecated)
   }
 
   private def getOccurrenceRegion(sym: Symbol)(occurrence: Tree): Option[Region] =
