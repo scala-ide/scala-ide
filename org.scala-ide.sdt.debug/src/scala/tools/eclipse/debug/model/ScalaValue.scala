@@ -44,7 +44,7 @@ object ScalaValue {
   }
 
   final val BOXED_PRIMITIVE_TYPES = List("Ljava/lang/Integer;", "Ljava/lang/Long;", "Ljava/lang/Boolean;", "Ljava/lang/Byte;", "Ljava/lang/Double;", "Ljava/lang/Float;", "Ljava/lang/Short;")
-  final val BOXED_CHAR_TYPE = "Ljava/lang/Char;"
+  final val BOXED_CHAR_TYPE = "Ljava/lang/Character;"
 
 }
 

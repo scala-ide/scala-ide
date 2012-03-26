@@ -316,7 +316,7 @@ class ScalaValueTest {
     when(jdiValue.uniqueID).thenReturn(256)
     val jdiReferenceType = mock(classOf[ClassType])
     when(jdiValue.referenceType).thenReturn(jdiReferenceType)
-    when(jdiReferenceType.signature).thenReturn("Ljava/lang/Char;")
+    when(jdiReferenceType.signature).thenReturn("Ljava/lang/Character;")
     val jdiField = mock(classOf[Field])
     when(jdiReferenceType.fieldByName("value")).thenReturn(jdiField)
     val jdiPrimitiveValue = mock(classOf[CharValue])
@@ -325,7 +325,7 @@ class ScalaValueTest {
 
     val scalaValue = ScalaValue(jdiValue, null)
 
-    assertEquals("Bad value", "Char 't' (id=256)", scalaValue.getValueString)
+    assertEquals("Bad value", "Character 't' (id=256)", scalaValue.getValueString)
   }
 
   @Test
