@@ -311,6 +311,24 @@ class ScalaValueTest {
   }
 
   @Test
+  def objectReferenceBoxedChar() {
+    val jdiValue = mock(classOf[ObjectReference])
+    when(jdiValue.uniqueID).thenReturn(256)
+    val jdiReferenceType = mock(classOf[ClassType])
+    when(jdiValue.referenceType).thenReturn(jdiReferenceType)
+    when(jdiReferenceType.signature).thenReturn("Ljava/lang/Char;")
+    val jdiField = mock(classOf[Field])
+    when(jdiReferenceType.fieldByName("value")).thenReturn(jdiField)
+    val jdiPrimitiveValue = mock(classOf[CharValue])
+    when(jdiValue.getValue(jdiField)).thenReturn(jdiPrimitiveValue)
+    when(jdiPrimitiveValue.value).thenReturn('t')
+
+    val scalaValue = ScalaValue(jdiValue, null)
+
+    assertEquals("Bad value", "Char 't' (id=256)", scalaValue.getValueString)
+  }
+
+  @Test
   def objectReferenceBoxedDouble() {
     val jdiValue = mock(classOf[ObjectReference])
     when(jdiValue.uniqueID).thenReturn(32)

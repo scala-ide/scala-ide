@@ -43,7 +43,8 @@ object ScalaValue {
     }
   }
 
-  val boxedPrimitiveTypes = List("Ljava/lang/Integer;", "Ljava/lang/Long;", "Ljava/lang/Boolean;", "Ljava/lang/Byte;", "Ljava/lang/Double;", "Ljava/lang/Float;", "Ljava/lang/Short;")
+  final val BOXED_PRIMITIVE_TYPES = List("Ljava/lang/Integer;", "Ljava/lang/Long;", "Ljava/lang/Boolean;", "Ljava/lang/Byte;", "Ljava/lang/Double;", "Ljava/lang/Float;", "Ljava/lang/Short;")
+  final val BOXED_CHAR_TYPE = "Ljava/lang/Char;"
 
 }
 
@@ -96,8 +97,10 @@ class ScalaObjectReference(val objectReference: ObjectReference, target: ScalaDe
 
   def getValueString(): String = {
     // TODO: move to string builder?
-    if (boxedPrimitiveTypes.contains(objectReference.referenceType.signature)) {
+    if (BOXED_PRIMITIVE_TYPES.contains(objectReference.referenceType.signature)) {
       "%s %s (id=%d)".format(ScalaStackFrame.getSimpleName(objectReference.referenceType.signature), getBoxedPrimitiveValue(objectReference), objectReference.uniqueID)
+    } else if (BOXED_CHAR_TYPE == objectReference.referenceType.signature) {
+      "%s '%s' (id=%d)".format(ScalaStackFrame.getSimpleName(objectReference.referenceType.signature), getBoxedPrimitiveValue(objectReference), objectReference.uniqueID)
     } else {
       "%s (id=%d)".format(ScalaStackFrame.getSimpleName(objectReference.referenceType.signature), objectReference.uniqueID)
     }
