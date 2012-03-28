@@ -14,16 +14,11 @@ import org.eclipse.jface.text.Position
 class SemanticHighlightingAnnotationsManager(sourceViewer: ISourceViewer) extends HasLogger {
 
   private var annotations: Set[Annotation] = Set()
-  private val prefStore = ScalaPlugin.prefStore
-
-  private def semanticHighlightingRequired: Boolean =
-    prefStore.getBoolean(ScalaSyntaxClasses.ENABLE_SEMANTIC_HIGHLIGHTING) &&
-      (ScalaSyntaxClasses.scalaSemanticCategory.children.map(_.enabledKey) exists prefStore.getBoolean)
 
   def updateSymbolAnnotations(scu: ScalaCompilationUnit) {
     if (semanticHighlightingRequired)
       scu.doWithSourceFile { (sourceFile, compiler) =>
-        val useSyntacticHints = prefStore.getBoolean(ScalaSyntaxClasses.USE_SYNTACTIC_HINTS)
+        val useSyntacticHints = isUseSyntacticHintsEnabled
         
         val symbolInfos = 
           try SymbolClassifier.classifySymbols(sourceFile, compiler, useSyntacticHints)
@@ -38,8 +33,18 @@ class SemanticHighlightingAnnotationsManager(sourceViewer: ISourceViewer) extend
       removeAllAnnotations()
   }
 
+  private def semanticHighlightingRequired: Boolean =
+    isSemanticHighlightingEnabled &&
+      (ScalaSyntaxClasses.scalaSemanticCategory.children.map(_.enabledKey) exists prefStore.getBoolean)
+
+  private def prefStore = ScalaPlugin.prefStore
+    
+  private def isSemanticHighlightingEnabled: Boolean = prefStore.getBoolean(ScalaSyntaxClasses.ENABLE_SEMANTIC_HIGHLIGHTING)
+  private def isUseSyntacticHintsEnabled: Boolean = prefStore.getBoolean(ScalaSyntaxClasses.USE_SYNTACTIC_HINTS)
+  
+  
   private def makeAnnotations(symbolInfos: List[SymbolInfo]): Map[Annotation, Position] = {
-    val strikethroughDeprecatedSymbols = ScalaPlugin.prefStore.getBoolean(ScalaSyntaxClasses.STRIKETHROUGH_DEPRECATED)
+    val strikethroughDeprecatedSymbols = isStrikethroughDeprecatedDecorationEnabled
     for {
       SymbolInfo(symbolType, regions, isDeprecated) <- symbolInfos
       region <- regions
@@ -47,6 +52,9 @@ class SemanticHighlightingAnnotationsManager(sourceViewer: ISourceViewer) extend
       annotation = SemanticHighlightingAnnotations.symbolAnnotation(symbolType, deprecated)
     } yield (annotation -> asPosition(region))
   }.toMap
+  
+  private def isStrikethroughDeprecatedDecorationEnabled: Boolean = 
+    prefStore.getBoolean(ScalaSyntaxClasses.STRIKETHROUGH_DEPRECATED)
 
   private def setAnnotations(symbolInfos: List[SymbolInfo]) {
     val annotationsToPositions: Map[Annotation, Position] = makeAnnotations(symbolInfos)
