@@ -48,6 +48,7 @@ import org.eclipse.swt.SWT
 import scala.tools.eclipse.util.Colors
 import scala.PartialFunction.condOpt
 import scala.tools.eclipse.util.SWTUtils
+import scala.tools.eclipse.reconciliation.ReconciliationParticipantsExtensionPoint
 
 class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
 
@@ -93,7 +94,7 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
 
     val openAction = new Action {
       override def run {
-        Option(getInputJavaElement) map (_.asInstanceOf[ScalaCompilationUnit]) foreach { scu =>
+        scalaCompilationUnit foreach { scu =>
           scu.followReference(ScalaSourceFileEditor.this, getSelectionProvider.getSelection.asInstanceOf[ITextSelection])
         }
       }
@@ -101,6 +102,9 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
     openAction.setActionDefinitionId(IJavaEditorActionDefinitionIds.OPEN_EDITOR)
     setAction("OpenEditor", openAction)
   }
+  
+  private def scalaCompilationUnit: Option[ScalaCompilationUnit] = 
+    Option(getInputJavaElement) map (_.asInstanceOf[ScalaCompilationUnit])
 
   override protected def initializeKeyBindingScopes() {
     setKeyBindingScopes(Array(SCALA_EDITOR_SCOPE))
