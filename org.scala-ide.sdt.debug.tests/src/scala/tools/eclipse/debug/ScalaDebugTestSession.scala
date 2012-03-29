@@ -183,6 +183,19 @@ class ScalaDebugTestSession(launchConfigurationFile: IFile) extends IDebugEventS
   }
 
   // -----
+  
+  /**
+   * Check that all threads have a suspended count of 0, except the one of the current thread which should be 1
+   */
+  def checkThreadsState() {
+    assertEquals("Bad state before checkThreadsState", SUSPENDED, state)
+    
+    val currentThread= currentStackFrame.stackFrame.thread
+    import scala.collection.JavaConverters._
+    debugTarget.javaTarget.getVM.allThreads.asScala.foreach(thread =>
+      assertEquals("Wrong suspended count", if (thread == currentThread) 1 else 0, thread.suspendCount)
+    )
+  }
 
   def checkStackFrame(typeName: String, methodFullSignature: String, line: Int) {
     assertEquals("Bad state before checkStackFrame", SUSPENDED, state)

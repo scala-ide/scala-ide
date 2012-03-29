@@ -3,14 +3,13 @@ package scala.tools.eclipse.debug.model
 import scala.Option.option2Iterable
 import scala.collection.JavaConverters.asScalaBufferConverter
 import scala.tools.eclipse.debug.ScalaDebugger
-
 import org.eclipse.debug.core.model.IDebugTarget
 import org.eclipse.jdt.internal.debug.core.model.{ JDIThread, JDIDebugTarget }
 import org.eclipse.jdt.internal.debug.core.IJDIEventListener
-
 import com.sun.jdi.event.{ ThreadStartEvent, ThreadDeathEvent, EventSet, Event }
 import com.sun.jdi.request.{ ThreadStartRequest, ThreadDeathRequest, EventRequest }
 import com.sun.jdi.{ ReferenceType, Method, Location }
+import scala.actors.Actor
 
 object ScalaDebugTarget {
 
@@ -67,7 +66,7 @@ class ScalaDebugTarget(val javaTarget: JDIDebugTarget, threadStartRequest: Threa
 
   def getName(): String = "Scala Debug Target" // TODO: need better name
   def getProcess(): org.eclipse.debug.core.model.IProcess = javaTarget.getProcess
-  def getThreads(): Array[org.eclipse.debug.core.model.IThread] = threads.toArray
+  def getThreads(): Array[org.eclipse.debug.core.model.IThread] = threads.toArray // TODO: handle through the actor?
   def hasThreads(): Boolean = !threads.isEmpty
   def supportsBreakpoint(x$1: org.eclipse.debug.core.model.IBreakpoint): Boolean = ???
 
@@ -105,34 +104,69 @@ class ScalaDebugTarget(val javaTarget: JDIDebugTarget, threadStartRequest: Threa
   def handleEvent(event: Event, target: JDIDebugTarget, suspendVote: Boolean, eventSet: EventSet): Boolean = {
     event match {
       case threadStartEvent: ThreadStartEvent =>
-        threads += new ScalaThread(this, threadStartEvent.thread)
+        actor !? threadStartEvent
       case threadDeathEvent: ThreadDeathEvent =>
-        threads --= threads.find(_.thread == threadDeathEvent.thread) // TODO: use immutable list
+        actor !? threadDeathEvent
       case _ =>
         ???
     }
     suspendVote
   }
+  
+  // event handling actor
+  
+  case object TerminatedFromJava
+  
+  case class ThreadSuspendedFromJava(thread: JDIThread, eventDetail: Int)
+  
+  class EventActor extends Actor {
+
+    start
+
+    def act() {
+      loop {
+        react {
+          case threadStartEvent: ThreadStartEvent =>
+            if (!threads.exists(_.thread == threadStartEvent.thread))
+              threads = threads :+ new ScalaThread(ScalaDebugTarget.this, threadStartEvent.thread)
+            reply(this)
+          case threadDeathEvent: ThreadDeathEvent =>
+            val (removed, remainder) = threads.partition(_.thread == threadDeathEvent.thread)
+            threads = remainder
+            removed.foreach(_.terminatedFromScala)
+            reply(this)
+          case ThreadSuspendedFromJava(thread, eventDetail) =>
+            threads.find(_.thread == thread.getUnderlyingThread).get.suspendedFromJava(eventDetail)
+            reply(this)
+          case TerminatedFromJava =>
+            threads = Nil
+            running = false
+            fireTerminateEvent
+            exit
+        }
+      }
+    }
+  }
 
   // ---
 
   var running: Boolean = true
+  
+  val actor = new EventActor
 
-  val threads = {
+  var threads = {
     import scala.collection.JavaConverters._
-    javaTarget.getVM.allThreads.asScala.map(new ScalaThread(this, _))
+    javaTarget.getVM.allThreads.asScala.toList.map(new ScalaThread(this, _))
   }
 
   fireCreationEvent
 
   def javaThreadSuspended(thread: JDIThread, eventDetail: Int) {
-    threads.find(_.thread == thread.getUnderlyingThread).get.suspendedFromJava(eventDetail)
+    actor !? ThreadSuspendedFromJava(thread, eventDetail)
   }
 
   def terminatedFromJava() {
-    threads.clear
-    running = false
-    fireTerminateEvent
+    actor ! TerminatedFromJava
   }
 
   def findAnonFunction(refType: ReferenceType): Option[Method] = {

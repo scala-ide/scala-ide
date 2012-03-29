@@ -330,6 +330,31 @@ class ScalaStackFrameTest {
     }
   }
 
+  @Test
+  def getVariableNativeMethod() {
+    import scala.collection.JavaConverters._
+    
+    val scalaThread = mock(classOf[ScalaThread])
+    
+    val jdiStackFrame = mock(classOf[StackFrame])
+    val jdiLocation = mock(classOf[Location])
+    when(jdiStackFrame.location).thenReturn(jdiLocation)
+    val jdiMethod = mock(classOf[Method])
+    when(jdiLocation.method).thenReturn(jdiMethod)
+    when(jdiMethod.isNative).thenReturn(true)
+    val jdiLocalVariable = mock(classOf[LocalVariable])
+    when(jdiStackFrame.visibleVariables).thenReturn(List(jdiLocalVariable, jdiLocalVariable, jdiLocalVariable).asJava)
+
+    val scalaStackFrame = new ScalaStackFrame(scalaThread, jdiStackFrame)
+    
+    val variables= scalaStackFrame.getVariables
+    
+    assertEquals("Bad number of variables", 3, variables.length)
+    variables.foreach {v =>
+      assertTrue("Bad local variable type", v.isInstanceOf[ScalaLocalVariable])
+    }
+  }
+
   // Signature reading tests
   
   @Test

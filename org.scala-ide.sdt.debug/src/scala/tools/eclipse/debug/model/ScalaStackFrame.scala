@@ -128,7 +128,9 @@ class ScalaStackFrame(val thread: ScalaThread, var stackFrame: StackFrame) exten
     } catch {
       case e: AbsentInformationException => Seq()
     }
-    if (stackFrame.location.method.isStatic) {
+    val currentMethod = stackFrame.location.method
+    if (currentMethod.isNative || currentMethod.isStatic) {
+      // 'this' is not available for native and static methods
       visibleVariables
     } else {
       new ScalaThisVariable(stackFrame.thisObject, this) +: visibleVariables

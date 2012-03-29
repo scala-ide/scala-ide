@@ -53,6 +53,8 @@ class ScalaDebugSteppingTest {
     session.stepOver()
 
     session.checkStackFrame(TYPENAME_FC_LS + "$$anonfun$main$1", "apply(Ljava/lang/String;)I", 10)
+    
+    session.checkThreadsState
   }
 
   @Test
@@ -195,8 +197,10 @@ class ScalaDebugSteppingTest {
 
   /*
    * Testing step over/in for comprehension through List[Int]
+   * This tests are disable due to the changes and problem reported in SI-5646
    */
 
+  @Ignore
   @Test
   def StepOverIntoForComprehensionListIntInObjectMain() {
 
@@ -211,6 +215,7 @@ class ScalaDebugSteppingTest {
     session.checkStackFrame(TYPENAME_FC_LI + "$$anonfun$main$1", "apply$mcVI$sp(I)V", 12)
   }
 
+  @Ignore
   @Test
   def StepOverIntoForComprehensionListIntInObjectFoo() {
 
@@ -225,6 +230,7 @@ class ScalaDebugSteppingTest {
     session.checkStackFrame(TYPENAME_FC_LI + "$$anonfun$foo$1", "apply$mcVI$sp(I)V", 22)
   }
 
+  @Ignore
   @Test
   def StepOverIntoForComprehensionListIntInClassConstructor() {
 
@@ -239,6 +245,7 @@ class ScalaDebugSteppingTest {
     session.checkStackFrame(TYPENAME_FC_LI + "$$anonfun$1", "apply$mcVI$sp(I)V", 32)
   }
 
+  @Ignore
   @Test
   def StepOverIntoForComprehensionListIntInClassBar() {
 

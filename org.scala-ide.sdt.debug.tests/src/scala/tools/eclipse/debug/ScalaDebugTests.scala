@@ -7,6 +7,7 @@ import scala.tools.eclipse.debug.model.ScalaThreadTest
 import scala.tools.eclipse.debug.model.ScalaDebugModelPresentationTest
 import scala.tools.eclipse.debug.model.ScalaStackFrameTest
 import scala.tools.eclipse.debug.model.ScalaValueTest
+import scala.tools.eclipse.debug.model.ScalaDebugTargetTest
 
 /**
  * Junit test suite for the Scala debugger.
@@ -20,6 +21,7 @@ import scala.tools.eclipse.debug.model.ScalaValueTest
     classOf[ScalaThreadTest],
 //    classOf[ScalaDebugModelPresentationTest], // TODO: find where to put this test
     classOf[ScalaStackFrameTest],
-    classOf[ScalaValueTest]))
+    classOf[ScalaValueTest],
+    classOf[ScalaDebugTargetTest]))
 class ScalaDebugTestSuite {
 }

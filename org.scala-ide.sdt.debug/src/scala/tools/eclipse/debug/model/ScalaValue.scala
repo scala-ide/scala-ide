@@ -108,7 +108,7 @@ class ScalaObjectReference(val objectReference: ObjectReference, target: ScalaDe
 
   def getVariables(): Array[org.eclipse.debug.core.model.IVariable] = {
     import scala.collection.JavaConverters._
-    objectReference.referenceType.allFields.asScala.map(new ScalaFieldVariable(_, this)).toArray
+    objectReference.referenceType.allFields.asScala.map(new ScalaFieldVariable(_, this)).sortBy(_.getName).toArray
   }
   def hasVariables(): Boolean = !objectReference.referenceType.allFields.isEmpty
 

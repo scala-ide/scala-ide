@@ -35,7 +35,9 @@ object ScalaValueTest {
       case 0 =>
         Nil
       case _ =>
-        createFieldsRec(size - 1) :+ mock(classOf[Field])
+        val field = mock(classOf[Field])
+        when(field.name).thenReturn("field" + size)
+        createFieldsRec(size - 1) :+ field
     }
   }
 }

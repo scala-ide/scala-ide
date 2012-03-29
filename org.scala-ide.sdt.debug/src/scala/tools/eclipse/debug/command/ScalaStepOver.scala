@@ -41,6 +41,7 @@ object ScalaStepOver {
 
       val classPrepareRequest = eventRequestManager.createClassPrepareRequest
       classPrepareRequest.addClassFilter(location.declaringType.name + "$*")
+      classPrepareRequest.setSuspendPolicy(EventRequest.SUSPEND_EVENT_THREAD)
 
       requests += classPrepareRequest
 
@@ -67,6 +68,7 @@ object ScalaStepOver {
     import scala.collection.JavaConverters._
 
     val breakpointRequest = thread.virtualMachine.eventRequestManager.createBreakpointRequest(method.location)
+    breakpointRequest.setSuspendPolicy(EventRequest.SUSPEND_EVENT_THREAD)
     breakpointRequest.addThreadFilter(thread)
 
     breakpointRequest
@@ -76,7 +78,7 @@ object ScalaStepOver {
   def anonFunctionsInRange(refType: ReferenceType, range: Range) = {
     import scala.collection.JavaConverters._
     val methods = refType.methods.asScala.filter(method =>
-      range.contains(method.location.lineNumber) && method.name.startsWith("apply"))
+       method.name.startsWith("apply") && !method.isAbstract && range.contains(method.location.lineNumber))
 
     // TODO: using isBridge was not working with List[Int]. Should check if we can use it by default with some extra checks when it fails.
     //      methods.find(!_.isBridge)
