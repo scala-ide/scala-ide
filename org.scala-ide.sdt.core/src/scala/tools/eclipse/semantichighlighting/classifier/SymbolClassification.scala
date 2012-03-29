@@ -123,7 +123,7 @@ class SymbolClassification(protected val sourceFile: SourceFile, val global: Sca
         t <- unitTree
         if (t.hasSymbol || t.isType) && t.pos.isRange && !t.pos.isTransparent
         (sym, pos) <- safeSymbol(t)
-        if !sym.isSynthetic && !sym.isAnonymousClass
+        if !sym.isAnonymousFunction && !sym.isAnonymousClass
       } yield (sym, pos)
     }
     
