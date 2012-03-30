@@ -27,7 +27,6 @@ class TypeTest extends AbstractSymbolClassifierTest {
       Map("TP" -> Type))
   }
 
-  @Ignore
   @Test
   def set_is_a_type() {
     checkSymbolClassification("""
@@ -36,12 +35,12 @@ class TypeTest extends AbstractSymbolClassifierTest {
         val Bob(s) = Bob(Set())
       }
       """, """
-      case class Bob(s: $T$[Int])
+      case class Bob(s: $T$[$C$])
       object X {
         val Bob(s) = Bob($V$())
       }
       """,
-      Map("T" -> Type, "V" -> TemplateVal))
+      Map("T" -> Type, "V" -> TemplateVal, "C" -> Class))
   }
 
 }

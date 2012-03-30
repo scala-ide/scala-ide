@@ -82,7 +82,12 @@ class SymbolClassification(protected val sourceFile: SourceFile, val global: Sca
   def safeSymbol(t: Tree): List[(Symbol, Position)] = {
     val syms = t match {
       case tpeTree: TypeTree =>
-        val originalSym = safeSymbol(tpeTree.original)
+        //val originalSym = safeSymbol(tpeTree.original)
+        val originalSym = tpeTree.original match {
+          // we need to decompose types that take type parameters.
+          case AppliedTypeTree(tpt, args) => (tpt :: args) flatMap(safeSymbol)
+          case t @ _ => safeSymbol(t)
+        }
 
         // if the original tree did not find anything, we need to call
         // symbol, which may trigger type checking of the underlying tree, so we
@@ -121,7 +126,6 @@ class SymbolClassification(protected val sourceFile: SourceFile, val global: Sca
   }
 
   def classifySymbols: List[SymbolInfo] = {
-    // index.allSymbols will call `Symbol.initialize` on each symbol, hence it has to be executed inside an `ask`
     val allSymbols: List[(Symbol, Position)] = {
       for {
         t <- unitTree
