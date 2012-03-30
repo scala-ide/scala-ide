@@ -65,6 +65,12 @@ trait SymbolTests { self: SymbolClassification =>
           LazyTemplateVal
         else if (isVariable)
           TemplateVar
+        else if (!hasGetter && !isThisSym && !isJavaDefined)
+          // Short explanations of the above condition
+          // hasGetter     -> must be a TemplateVal
+          // isThisSym     -> self ref are categorized as TemplateVal
+          // isJavaDefined -> fields in Java do not have default getters, but we still want to categorize them as TemplateVal
+          Param
         else
           TemplateVal
       }
@@ -82,7 +88,7 @@ trait SymbolTests { self: SymbolClassification =>
       Class
     else if (isParameter) // isTypeParam?
       TypeParameter
-    else
+    else // isTypeAlias?
       Type
   }
 
