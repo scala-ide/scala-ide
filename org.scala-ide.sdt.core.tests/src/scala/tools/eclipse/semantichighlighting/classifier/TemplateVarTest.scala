@@ -38,9 +38,9 @@ class TemplateVarTest extends AbstractSymbolClassifierTest {
     checkSymbolClassification("""
       class A(var xxxxxx: String) extends RuntimeException(xxxxxx)
       """, """
-      class A(var $TVAR$: String) extends RuntimeException($TVAR$)
+      class A(var $TVAR$: String) extends RuntimeException($PARA$)
       """,
-      Map("TVAR" -> TemplateVar))
+      Map("TVAR" -> TemplateVar, "PARA" -> Param))
   }
    
   @Test
