@@ -95,9 +95,8 @@
     <profile>
       <id>sbt-2.9</id>
       <properties>
-        <scala.compiler.groupid>org.scala-lang</scala.compiler.groupid>
-        <scala.compiler.version>${scala.version}</scala.compiler.version>
         <version.suffix>2_09</version.suffix>
+        <scala.version.short>2.9</scala.version.short>
 
         <!-- Used as part of the directory name for compiler-interface.jar. -->
         <scala.major.minor.version>${scala.version.short}</scala.major.minor.version>
