@@ -65,9 +65,9 @@ object SyntacticInfo {
             text = selfRefToken.text
             token <- astNode.tokens.filter { token => token.text == text || token.text == "`" + text + "`" }
           } maybeSelfRefs += token.range
-        case Annotation(_, annotationType, _, _) =>
-          for (token <- annotationType.tokens.filter { _.tokenType.isId })
-            annotations += token.range
+        case ann @ Annotation(_, annotationType, _, _) =>
+          val tokens = annotationType.tokens.filter(_.tokenType.isId)
+          tokens.lastOption foreach ( annotations += _.range)
         case _ =>
       }
       astNode.immediateChildren.foreach(scan)
@@ -81,5 +81,4 @@ object SyntacticInfo {
 
     SyntacticInfo(namedArgs, forVals, maybeSelfRefs, maybeClassOfs, annotations)
   }
-
 }

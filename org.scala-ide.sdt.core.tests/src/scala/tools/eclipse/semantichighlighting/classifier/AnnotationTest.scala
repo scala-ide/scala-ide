@@ -18,24 +18,22 @@ class AnnotationTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  @Ignore
   def annotation_imports() {
     checkSymbolClassification("""
       import scala.annotation.tailrec
       """, """
-      import scala.annotation.$ANNOT$
+      import scala.annotation.$CLASS$
       """,
-      Map("ANNOT" -> Annotation))
+      Map("CLASS" -> Class))
   }
 
   @Test
-  @Ignore
   def fully_qualified_annotation() {
     checkSymbolClassification("""
       @scala.annotation.tailrec
       class X 
       """, """
-      @$PKG$.$   PKG  $.$ANNOT$
+      @scala.annotation.$ANNOT$
       class X 
       """,
       Map(
