@@ -50,8 +50,7 @@ class ClassTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  @Ignore
-  def problem_with_java_import() {
+  def java_import() {
     checkSymbolClassification("""
       import java.util.Properties
      """, """
@@ -73,6 +72,34 @@ class ClassTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
+  def import_a_class() {
+    checkSymbolClassification("""
+      import scala.collection.generic.GenMapFactory
+        """, """
+      import scala.collection.generic.$   CL      $
+        """,
+      Map("CL" -> Class))
+  }
+  
+  @Test
+  def import_a_renamed_class() {
+    checkSymbolClassification("""
+      import scala.concurrent.{Lock => LOCK}
+      
+      object Foo {
+        var lock: LOCK = _
+      }  
+        """, """
+      import scala.concurrent.{$ CL $ => LOCK}
+        
+      object Foo {
+        var lock: $ CL $ = _
+      }  
+        """,
+      Map("CL" -> Class))
+  }
+  
+   @Test
   def import_symbol_which_is_both_a_class_and_an_object() {
     checkSymbolClassification("""
       import scala.collection.immutable.List
@@ -81,5 +108,4 @@ class ClassTest extends AbstractSymbolClassifierTest {
         """,
       Map("CL" -> Class))
   }
-  
 }
