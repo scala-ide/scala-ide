@@ -23,6 +23,7 @@ import scala.tools.nsc.util.RangePosition
 import scala.tools.nsc.util.SourceFile
 import scala.tools.refactoring.common.CompilerAccess
 import scala.tools.refactoring.common.PimpedTrees
+import scala.tools.eclipse.util.Utils
 
 
 object SymbolClassification {
@@ -86,7 +87,9 @@ class SymbolClassification(protected val sourceFile: SourceFile, val global: Sca
         val originalSym = tpeTree.original match {
           // we need to decompose types that take type parameters.
           case AppliedTypeTree(tpt, args) => (tpt :: args) flatMap(safeSymbol)
-          case t @ _ => safeSymbol(t)
+          case original @ _ => 
+            //XXX: [mirco] Is this really safe? Why is it safe to assume that `ForAll t. original != t`?
+            safeSymbol(original) 
         }
 
         // if the original tree did not find anything, we need to call
@@ -115,21 +118,29 @@ class SymbolClassification(protected val sourceFile: SourceFile, val global: Sca
         }).flatten
 
       case _ =>
-        // the local variable backing a lazy value is called 'originalName$lzy'. We swap it here for its
-        // accessor, otherwise this symbol would fail the test in `getNameRegion`
-        val sym1 = Option(t.symbol).map(sym => if (sym.isLazy && sym.isMutable) sym.lazyAccessor else sym).toList
+        if(isSourceTree(t)) {
+          // the local variable backing a lazy value is called 'originalName$lzy'. We swap it here for its
+          // accessor, otherwise this symbol would fail the test in `getNameRegion`
+          val sym1 = Option(t.symbol).map(sym => if (sym.isLazy && sym.isMutable) sym.lazyAccessor else sym).toList
         
-        sym1.zip(t.namePosition :: Nil)
+          sym1.zip(t.namePosition :: Nil)
+        }
+        else Nil
     }
     
     syms
   }
 
+  /** Trees that have a direct correspondence in the source code have a RangePosition. 
+   * TransparentPositions come into play for trees that don't have a source-code 
+   * correspondence but still have children that are visible in the source.*/
+  def isSourceTree(t: Tree): Boolean = t.pos.isRange && !t.pos.isTransparent
+  
   def classifySymbols: List[SymbolInfo] = {
     val allSymbols: List[(Symbol, Position)] = {
       for {
         t <- unitTree
-        if (t.hasSymbol || t.isType) && t.pos.isRange && !t.pos.isTransparent
+        if (t.hasSymbol || t.isType) && isSourceTree(t)
         (sym, pos) <- safeSymbol(t)
         if !sym.isAnonymousFunction && !sym.isAnonymousClass
       } yield (sym, pos)
