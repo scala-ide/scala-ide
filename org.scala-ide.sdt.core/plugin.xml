@@ -1311,6 +1311,14 @@
           name="Scala Interpreter"
           restorable="false">
     </view>
+    <view
+            name="ScalaTest"
+            icon="icons/full/etool16/scala_app.gif"
+            category="org.scala-ide.sdt.core.viewCategory"
+            fastViewWidthRatio="0.40"
+            class="scala.tools.eclipse.ui.ScalaTestRunnerViewPart"
+            id="scala.tools.eclipse.ui.ScalaTestResultView">
+    </view>
     <category
           id="org.scala-ide.sdt.core.viewCategory"
           name="Scala">

@@ -15,8 +15,16 @@ import ScalaTestLaunchConstants._
 import scala.tools.eclipse.javaelements.ScalaSourceFile
 import org.eclipse.jface.dialogs.MessageDialog
 import org.eclipse.core.resources.ResourcesPlugin
+import java.net.URL
+import java.net.URLClassLoader
+import scala.tools.eclipse.ui.ScalaTestPlugin
 
 class ScalaTestLaunchDelegate extends AbstractJavaLaunchConfigurationDelegate {
+  
+  private def getDisplay() = {
+    
+  }
+  
   def launch(configuration: ILaunchConfiguration, mode: String, launch: ILaunch, monitor0: IProgressMonitor) {
 		
 		val monitor = if (monitor0 == null) new NullProgressMonitor() else monitor0
@@ -38,14 +46,6 @@ class ScalaTestLaunchDelegate extends AbstractJavaLaunchConfigurationDelegate {
 			// Environment variables
 			val envp = getEnvironment(configuration)
 			
-			// Test Class
-			val stArgs = getScalaTestArgs(configuration)
-			
-			// Program & VM arguments
-			val pgmArgs = getProgramArguments(configuration) + " " + stArgs + " -oW -g"		
-			val vmArgs = getVMArguments(configuration)
-			val execArgs = new ExecutionArguments(vmArgs, pgmArgs)
-			
 			// VM-specific attributes
 			val vmAttributesMap = getVMSpecificAttributesMap(configuration)
 
@@ -57,6 +57,35 @@ class ScalaTestLaunchDelegate extends AbstractJavaLaunchConfigurationDelegate {
 			// Classpath
 			// Add scala libraries that were missed in VM attributes
 			val classpath = (classpath0.toList):::missingScalaLibraries
+			
+			// Program & VM arguments	
+			val vmArgs = getVMArguments(configuration)
+			
+			val loaderUrls = classpath.map{ cp =>
+              val cpFile = new File(cp.toString)
+              if (cpFile.exists && cpFile.isDirectory && !cp.toString.endsWith(File.separator))
+                new URL("file://" + cp + "/")
+              else
+                new URL("file://" + cp)
+            }
+            val loader:ClassLoader = new URLClassLoader(loaderUrls.toArray, getClass.getClassLoader)
+            // Test Class
+			val stArgs = getScalaTestArgs(configuration)
+            val pgmArgs = 
+            try {
+              loader.loadClass("org.scalatest.tools.SocketReporter")
+              println("#####SocketReporter found!")
+              ScalaTestPlugin.asyncShowTestRunnerViewPart()
+              val port = ScalaTestPlugin.listener.getPort
+              getProgramArguments(configuration) + " " + stArgs + " -oW -k localhost " + port
+            }
+            catch {
+              case e: Throwable => 
+                println("#####SocketReporter not found!")
+                getProgramArguments(configuration) + " " + stArgs + " -oW -g"
+            }
+            
+            val execArgs = new ExecutionArguments(vmArgs, pgmArgs)
 			
 			// Create VM config
 			val runConfig = new VMRunnerConfiguration(mainTypeName, classpath.toArray)
