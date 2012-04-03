@@ -17,6 +17,7 @@ import scala.tools.eclipse.semantichighlighting.classifier.SymbolTypes.Param
 import scala.tools.eclipse.semantichighlighting.classifier.SymbolTypes.TemplateVal
 import scala.tools.eclipse.semantichighlighting.classifier.SymbolTypes.TemplateVar
 import scala.tools.eclipse.semantichighlighting.classifier.SymbolTypes.Type
+import scala.tools.eclipse.semantichighlighting.classifier.SymbolTypes.Package
 import scala.tools.eclipse.ScalaPresentationCompiler
 import scala.tools.nsc.io.AbstractFile
 import scala.tools.nsc.util.RangePosition
@@ -54,7 +55,7 @@ class SymbolClassification(protected val sourceFile: SourceFile, val global: Sca
   
   def compilationUnitOfFile(f: AbstractFile) = global.unitOfFile.get(f)
 
-  protected val syntacticInfo =
+  protected lazy val syntacticInfo =
     if (useSyntacticHints) SyntacticInfo.getSyntacticInfo(sourceFile.content.mkString) else SyntacticInfo.noSyntacticInfo
 
   lazy val unitTree = global.loadedType(sourceFile)
@@ -88,7 +89,7 @@ class SymbolClassification(protected val sourceFile: SourceFile, val global: Sca
           // we need to decompose types that take type parameters.
           case AppliedTypeTree(tpt, args) => (tpt :: args) flatMap(safeSymbol)
           case original @ _ => 
-            //XXX: [mirco] Is this really safe? Why is it safe to assume that `ForAll t. original != t`?
+            //XXX: [mirco] Is this really safe? Why `ForAll t. original != t`?
             safeSymbol(original) 
         }
 
@@ -201,13 +202,14 @@ class SymbolClassification(protected val sourceFile: SourceFile, val global: Sca
     }
 
   private def getSymbolInfosFromSyntax(syntacticInfo: SyntacticInfo, localVars: Set[Region], all: Set[Region]): List[SymbolInfo] = {
-    val SyntacticInfo(namedArgs, forVals, maybeSelfRefs, maybeClassOfs, annotations) = syntacticInfo
+    val SyntacticInfo(namedArgs, forVals, maybeSelfRefs, maybeClassOfs, annotations, packages) = syntacticInfo
     List(
       SymbolInfo(LocalVal, forVals toList, deprecated = false),
       SymbolInfo(Param, namedArgs filterNot localVars toList, deprecated = false),
       SymbolInfo(TemplateVal, maybeSelfRefs filterNot all toList, deprecated = false),
       SymbolInfo(Method, maybeClassOfs filterNot all toList, deprecated = false),
-      SymbolInfo(Annotation, annotations filterNot all toList, deprecated = false))
+      SymbolInfo(Annotation, annotations filterNot all toList, deprecated = false),
+      SymbolInfo(Package, packages filterNot all toList, deprecated = false))
   }
 
   private def prune(rawSymbolInfos: Seq[SymbolInfo]): Seq[SymbolInfo] = {

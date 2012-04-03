@@ -41,5 +41,5 @@ object Utils extends HasLogger {
   }
 
   implicit def any2optionable(obj: AnyRef): WithAsInstanceOfOpt = new WithAsInstanceOfOpt(obj)
-
+  
 }

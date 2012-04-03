@@ -33,7 +33,7 @@ class AnnotationTest extends AbstractSymbolClassifierTest {
       @scala.annotation.tailrec
       class X 
       """, """
-      @scala.annotation.$ANNOT$
+      @$PKG$.$   PKG  $.$ANNOT$
       class X 
       """,
       Map(
