@@ -68,7 +68,7 @@ class MethodTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  @Ignore
+  @Ignore("The renamed method doesn't have a symbol and the current classification strategy needs the symbol's name.")
   def import_renaming() {
     checkSymbolClassification("""
       import System.{ currentTimeMillis => bobble }
