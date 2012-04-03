@@ -171,7 +171,7 @@ class TemplateValTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  @Ignore
+  @Ignore("Package object symbols are special, need to investigate")
   def in_package_object() {
     checkSymbolClassification("""
       package object packageObject {
