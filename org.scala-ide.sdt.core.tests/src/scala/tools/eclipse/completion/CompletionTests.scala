@@ -161,11 +161,20 @@ class CompletionTests {
    * This is more a structure builder problem, but it is visible through completion
    */
   @Test
-  def ticket1000855() {
+  def ticket1000855_1() {
     withCompletions("ticket_1000855/a/A.scala") { (idx, position, completions) =>
       assertEquals("Only one completion expected at (%d, %d)".format(position.line, position.column), 1, completions.size)
       assertEquals("Unexpected the class name", "T855B", completions(0).display)
       assertEquals("Unexpected package name", "a.b", completions(0).displayDetail)
+    }
+  }
+  
+  @Test
+  def ticket1000855_2() {
+    withCompletions("ticket_1000855/d/D.scala") { (idx, position, completions) =>
+      assertEquals("Only one completion expected at (%d, %d)".format(position.line, position.column), 1, completions.size)
+      assertEquals("Unexpected the class name", "T855C", completions(0).display)
+      assertEquals("Unexpected package name", "a.b.c", completions(0).displayDetail)
     }
   }
 }
