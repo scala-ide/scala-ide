@@ -6,10 +6,11 @@ import org.eclipse.core.runtime.Status
 import org.eclipse.core.runtime.IStatus
 import org.eclipse.ui.PartInitException
 import org.eclipse.ui.IWorkbenchPage
+import org.eclipse.debug.core.ILaunch
 
 object ScalaTestPlugin extends AbstractUIPlugin {
   
-  private val PLUGIN_ID= "scala.tools.eclipse.scalatest"
+  private val PLUGIN_ID = "scala.tools.eclipse.scalatest"
   private val VIEW_PART_NAME = "scala.tools.eclipse.ui.ScalaTestResultView"
     
   val listener = new ScalaTestListener()
@@ -65,15 +66,17 @@ object ScalaTestPlugin extends AbstractUIPlugin {
     }
   }
   
-  def asyncShowTestRunnerViewPart() {
+  def asyncShowTestRunnerViewPart(fLaunch: ILaunch, fRunName: String) {
     listener.bindSocket()
     getDisplay.asyncExec(new Runnable() {
       def run() {
         val view = showTestRunnerViewPartInActivePage()
-        if (view != null) 
+        if (view != null) {
           listener.addObserver(view)
-        val thread = new Thread(listener)
-        thread.start()
+          view.setSession(new ScalaTestRunSession(fLaunch, fRunName))
+          val thread = new Thread(listener)
+          thread.start()
+        }
       }
     })
     listener.getPort

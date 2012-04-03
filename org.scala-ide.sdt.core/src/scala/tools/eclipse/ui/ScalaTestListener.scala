@@ -44,10 +44,11 @@ class ScalaTestListener extends Observable with Runnable {
             }
             catch {
               case e: SAXException => 
-                Thread.sleep(10)
+                if (!in.ready)
+                  Thread.sleep(10)
             }
           }
-          else
+          else if (!in.ready)
             Thread.sleep(10)
         }
         if (eventXml != null) {
@@ -292,7 +293,8 @@ class ScalaTestListener extends Observable with Runnable {
               )
           }
         }
-        Thread.sleep(10)
+        if (!in.ready)
+          Thread.sleep(10)
       }
     }
     finally {

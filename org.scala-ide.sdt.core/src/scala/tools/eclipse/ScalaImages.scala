@@ -35,6 +35,10 @@ object ScalaImages  {
   
   val REFRESH_REPL_TOOLBAR = create("icons/full/etool16/refresh_interpreter.gif")
   
+  val SCALATEST_SUCCESS = create("icons/full/ovr16/scalatest_success.gif")
+  val SCALATEST_ERROR = create("icons/full/ovr16/scalatest_error.gif")
+  val SCALATEST_FAILED = create("icons/full/ovr16/scalatest_failed.gif")
+  
   private def create(localPath : String) = {
     try {
       val pluginInstallURL : URL = ScalaPlugin.plugin.getBundle.getEntry("/")
