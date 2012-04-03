@@ -35,7 +35,7 @@ cat <<EOF
 	The P2 repository is in: ${REPO} 
 
 	To build the IDE using the local repository for trunk, use the following command
-	../org.scala-ide.build/build-ide-local-trunk.sh -Drepo.toolchain="${SOURCE}"
+	../org.scala-ide.build/build-ide-local-trunk.sh -Drepo.toolchain="file:${SOURCE}"
 EOF
 
 #scp -r ${SOURCE}/${REPO_NAME} scalaide@scala-ide.dreamhosters.com:scala-ide.dreamhosters.com/incoming-toolchain-osgi-${REPO_SUFFIX}/
