@@ -38,7 +38,7 @@ import RunStatus._
 
 case class Node
 
-final case class Test(
+final case class TestModel(
   testName: String,
   testText: String,
   decodedTestName: Option[String],
@@ -52,7 +52,7 @@ final case class Test(
   var status: TestStatus
 ) extends Node
 
-final case class Scope(
+final case class ScopeModel(
   message: String,
   nameInfo: NameInfo,
   location: Option[Location],
@@ -64,7 +64,7 @@ final case class Scope(
   def children = childrenBuffer.toList
 }
 
-final case class Suite(
+final case class SuiteModel(
   suiteName: String,
   suiteId: String,
   suiteClassName: Option[String],
@@ -82,7 +82,7 @@ final case class Suite(
   def children = childrenBuffer.toList
 }
 
-final case class Run(
+final case class RunModel(
   testCount: Int, 
   var duration: Option[Long] = None,
   var summary: Option[Summary] = None,
@@ -93,7 +93,7 @@ final case class Run(
   var status: RunStatus
 )
 
-final case class Info(
+final case class InfoModel(
   message: String,
   nameInfo: Option[NameInfo],
   aboutAPendingTest: Option[Boolean],
@@ -105,7 +105,7 @@ final case class Info(
   timeStamp: Long
 ) extends Node
 
-final case class Markup(
+final case class MarkupModel(
   text: String,
   nameInfo: Option[NameInfo],
   aboutAPendingTest: Option[Boolean],
