@@ -156,4 +156,16 @@ class CompletionTests {
           OracleNames, completions(0).explicitParamNames)
     }
   }
+  
+  /**
+   * This is more a structure builder problem, but it is visible through completion
+   */
+  @Test
+  def ticket1000855() {
+    withCompletions("ticket_1000855/a/A.scala") { (idx, position, completions) =>
+      assertEquals("Only one completion expected at (%d, %d)".format(position.line, position.column), 1, completions.size)
+      assertEquals("Unexpected the class name", "T855B", completions(0).display)
+      assertEquals("Unexpected package name", "a.b", completions(0).displayDetail)
+    }
+  }
 }
