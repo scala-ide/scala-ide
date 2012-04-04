@@ -17,16 +17,18 @@ abstract class ProposalRefactoringActionAdapter(
     displayString: String)
 	extends IJavaCompletionProposal {
   
-  def apply(document: IDocument): Unit = {
+  override def apply(document: IDocument): Unit = {
+    // document is not used because the refactoring actions use the current editor
+    // TODO not sure if this null here is very safe
     action.run(null)
   }
   
   override def getRelevance = relevance
-  def getDisplayString(): String = displayString
-  def getSelection(document: IDocument): Point = null
-  def getAdditionalProposalInfo(): String = null
-  def getImage(): Image = null
-  def getContextInformation: IContextInformation = null
+  override def getDisplayString(): String = displayString
+  override def getSelection(document: IDocument): Point = null
+  override def getAdditionalProposalInfo(): String = null
+  override def getImage(): Image = null
+  override def getContextInformation: IContextInformation = null
 
   def isValidProposal : Boolean = {
     val ra = action match {
@@ -34,6 +36,7 @@ abstract class ProposalRefactoringActionAdapter(
       case renameAction : RenameAction => renameAction.getRenameAction
     }
     ra.createScalaIdeRefactoringForCurrentEditorAndSelection match {
+      // TODO not sure if this null here is very safe
     	case Some(refactoring) => !refactoring.checkInitialConditions(null).hasWarning
     	case None	=> false
     }
