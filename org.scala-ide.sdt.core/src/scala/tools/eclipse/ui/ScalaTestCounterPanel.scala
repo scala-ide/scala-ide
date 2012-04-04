@@ -27,6 +27,9 @@ class ScalaTestCounterPanel(parent: Composite) extends Composite(parent, SWT.WRA
   private val fSuccessIcon = ScalaImages.SCALATEST_SUCCESS.createImage
   private val fErrorIcon = ScalaImages.SCALATEST_ERROR.createImage
   private val fFailureIcon = ScalaImages.SCALATEST_FAILED.createImage
+  private val fSuiteRunIcon = ScalaImages.SCALATEST_SUITE_RUN.createImage
+  private val fSuiteIcon = ScalaImages.SCALATEST_SUITE.createImage
+  private val fSuiteAbortedIcon = ScalaImages.SCALATEST_SUITE_ABORTED.createImage
   
   createComponents()
   
@@ -37,14 +40,14 @@ class ScalaTestCounterPanel(parent: Composite) extends Composite(parent, SWT.WRA
     gridLayout.marginWidth = 0
     setLayout(gridLayout)
     
-    fNumberOfRuns = createLabel("Runs: ", null, " 0/0  ") //$NON-NLS-1$
+    fNumberOfRuns = createLabel("Runs: ", fSuiteRunIcon, " 0/0  ") //$NON-NLS-1$
     fNumberOfSucceed = createLabel("Succeed: ", fSuccessIcon, " 0 ")
     fNumberOfFailure = createLabel("Failure: ", fFailureIcon, " 0 ") //$NON-NLS-1$
     fNumberOfIgnored = createLabel("Ignored: ", fErrorIcon, " 0 ") //$NON-NLS-1$
     fNumberOfPending = createLabel("Pending: ", fErrorIcon, " 0 ")
     fNumberOfCanceled = createLabel("Canceled: ", fErrorIcon, " 0 ")
-    fNumberOfSuites = createLabel("Suites: ", null, " 0 ")
-    fNumberOfSuiteAborted = createLabel("Aborted: ", fErrorIcon, " 0 ")
+    fNumberOfSuites = createLabel("Suites: ", fSuiteIcon, " 0 ")
+    fNumberOfSuiteAborted = createLabel("Aborted: ", fSuiteAbortedIcon, " 0 ")
     
     addDisposeListener(new DisposeListener() {
 	  def widgetDisposed(e: DisposeEvent) {
@@ -57,6 +60,9 @@ class ScalaTestCounterPanel(parent: Composite) extends Composite(parent, SWT.WRA
     fSuccessIcon.dispose()
     fErrorIcon.dispose()
     fFailureIcon.dispose()
+    fSuiteIcon.dispose()
+    fSuiteAbortedIcon.dispose()
+    fSuiteRunIcon.dispose()
   }
   
   private def createLabel(name: String, image: Image, init: String): Text = {

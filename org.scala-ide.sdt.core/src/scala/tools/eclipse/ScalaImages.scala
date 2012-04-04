@@ -35,6 +35,11 @@ object ScalaImages  {
   
   val REFRESH_REPL_TOOLBAR = create("icons/full/etool16/refresh_interpreter.gif")
   
+  val SCALATEST_SUITE = create("icons/full/obj16/scalatest_suite.gif")
+  val SCALATEST_SUITE_OK = create("icons/full/obj16/scalatest_suite_succeed.gif")
+  val SCALATEST_SUITE_FAIL = create("icons/full/obj16/scalatest_suite_fail.gif")
+  val SCALATEST_SUITE_ABORTED = create("icons/full/obj16/scalatest_suite_aborted.gif")
+  val SCALATEST_SUITE_RUN = create("icons/full/obj16/scalatest_suite_run.gif")
   val SCALATEST_SUCCESS = create("icons/full/ovr16/scalatest_success.gif")
   val SCALATEST_ERROR = create("icons/full/ovr16/scalatest_error.gif")
   val SCALATEST_FAILED = create("icons/full/ovr16/scalatest_failed.gif")
