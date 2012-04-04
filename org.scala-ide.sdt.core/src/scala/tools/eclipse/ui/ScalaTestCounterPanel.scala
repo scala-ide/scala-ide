@@ -13,12 +13,18 @@ import org.eclipse.swt.events.DisposeEvent
 import java.text.MessageFormat
 
 class ScalaTestCounterPanel(parent: Composite) extends Composite(parent, SWT.WRAP) {
-  protected var fNumberOfErrors: Text = null
-  protected var fNumberOfFailures: Text = null
   protected var fNumberOfRuns: Text = null
-  protected var fTotal: Int = 0
-  protected var fIgnoredCount: Int = 0
+  protected var fNumberOfSucceed: Text = null
+  protected var fNumberOfFailure: Text = null
+  protected var fNumberOfIgnored: Text = null
+  protected var fNumberOfPending: Text = null
+  protected var fNumberOfCanceled: Text = null
+  protected var fNumberOfSuites: Text = null
+  protected var fNumberOfSuiteAborted: Text = null
   
+  protected var fTotal: Int = 0
+  
+  private val fSuccessIcon = ScalaImages.SCALATEST_SUCCESS.createImage
   private val fErrorIcon = ScalaImages.SCALATEST_ERROR.createImage
   private val fFailureIcon = ScalaImages.SCALATEST_FAILED.createImage
   
@@ -31,18 +37,24 @@ class ScalaTestCounterPanel(parent: Composite) extends Composite(parent, SWT.WRA
     gridLayout.marginWidth = 0
     setLayout(gridLayout)
     
-    fNumberOfRuns = createLabel("Runs: ", null, " 0/0  "); //$NON-NLS-1$
-    fNumberOfErrors = createLabel("Errors: ", fErrorIcon, " 0 "); //$NON-NLS-1$
-    fNumberOfFailures = createLabel("Failures: ", fFailureIcon, " 0 "); //$NON-NLS-1$
+    fNumberOfRuns = createLabel("Runs: ", null, " 0/0  ") //$NON-NLS-1$
+    fNumberOfSucceed = createLabel("Succeed: ", fSuccessIcon, " 0 ")
+    fNumberOfFailure = createLabel("Failure: ", fFailureIcon, " 0 ") //$NON-NLS-1$
+    fNumberOfIgnored = createLabel("Ignored: ", fErrorIcon, " 0 ") //$NON-NLS-1$
+    fNumberOfPending = createLabel("Pending: ", fErrorIcon, " 0 ")
+    fNumberOfCanceled = createLabel("Canceled: ", fErrorIcon, " 0 ")
+    fNumberOfSuites = createLabel("Suites: ", null, " 0 ")
+    fNumberOfSuiteAborted = createLabel("Aborted: ", fErrorIcon, " 0 ")
     
     addDisposeListener(new DisposeListener() {
 	  def widgetDisposed(e: DisposeEvent) {
-        disposeIcons();
+        disposeIcons()
       }
     })
   }
   
   private def disposeIcons() {
+    fSuccessIcon.dispose()
     fErrorIcon.dispose()
     fFailureIcon.dispose()
   }
@@ -69,9 +81,14 @@ class ScalaTestCounterPanel(parent: Composite) extends Composite(parent, SWT.WRA
   }
   
   def reset() {
-    setErrorValue(0)
+    setSucceedValue(0)
     setFailureValue(0)
-    setRunValue(0, 0)
+    setIgnoredValue(0)
+    setPendingValue(0)
+    setCanceledValue(0)
+    setRunValue(0)
+    setSuites(0)
+    setSuiteAborted(0)
     fTotal = 0
   }
 
@@ -83,33 +100,51 @@ class ScalaTestCounterPanel(parent: Composite) extends Composite(parent, SWT.WRA
     fTotal;
   }
   
-  def setRunValue(value: Int, ignoredCount: Int) {
-    val runString =
-    if (ignoredCount == 0)
-      " " + value + "/" + fTotal
-      //MessageFormat.format(" {0}/{1}", Array[String](value.toString, fTotal.toString))
-    else
-      " " + value + "/" + fTotal + " (" + ignoredCount + " ignored)"
-      //MessageFormat.format(" {0}/{1} ({2} ignored)", Array[String](value.toString, fTotal.toString, ignoredCount.toString))
+  def setRunValue(value: Int) {
+    val runString = " " + value + "/" + fTotal
     
     fNumberOfRuns.setText(runString)
+    fNumberOfRuns.redraw()
 
-    if (fIgnoredCount == 0 && ignoredCount > 0 || fIgnoredCount != 0 && ignoredCount == 0) {
+    /*if (fIgnoredCount == 0 && ignoredCount > 0 || fIgnoredCount != 0 && ignoredCount == 0) {
       layout()
     } else {
       fNumberOfRuns.redraw()
       redraw()
     }
-    fIgnoredCount= ignoredCount;
+    fIgnoredCount= ignoredCount;*/
   }
 
-  def setErrorValue(value: Int) {
-    fNumberOfErrors.setText(value.toString)
+  def setSucceedValue(value: Int) {
+    fNumberOfSucceed.setText(value.toString)
     redraw()
+  }
+  
+  def setIgnoredValue(value: Int) {
+    fNumberOfIgnored.setText(value.toString)
+    redraw()
+  }
+  
+  def setPendingValue(value: Int) {
+    fNumberOfPending.setText(value.toString)
+  }
+  
+  def setCanceledValue(value: Int) {
+    fNumberOfCanceled.setText(value.toString)
   }
 
   def setFailureValue(value: Int) {
-    fNumberOfFailures.setText(value.toString)
+    fNumberOfFailure.setText(value.toString)
+    redraw()
+  }
+  
+  def setSuites(value: Int) {
+    fNumberOfSuites.setText(value.toString)
+    redraw()
+  }
+  
+  def setSuiteAborted(value: Int) {
+    fNumberOfSuiteAborted.setText(value.toString)
     redraw()
   }
 }

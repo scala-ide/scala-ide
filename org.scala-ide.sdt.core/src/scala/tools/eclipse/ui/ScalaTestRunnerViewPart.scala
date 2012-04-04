@@ -82,10 +82,10 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
     arg match {
       case testStarting: TestStarting => 
         println("***TestStarting")
+        fTestRunSession.startedCount += 1
       case testSucceeded: TestSucceeded => 
         println("***TestSucceeded")
-        //fTestRunSession.
-        fTestRunSession.startedCount += 1
+        fTestRunSession.succeedCount += 1
       case testFailed: TestFailed => 
         println("***TestFailed")
         fTestRunSession.failureCount += 1
@@ -94,13 +94,18 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
         fTestRunSession.ignoredCount += 1
       case testPending: TestPending => 
         println("***TestPending")
-        fTestRunSession.ignoredCount += 1
+        fTestRunSession.pendingCount += 1
       case testCanceled: TestCanceled => 
         println("***TestCanceled")
-        fTestRunSession.ignoredCount += 1
-      case suiteStarting: SuiteStarting => println("***SuiteStarting")
-      case suiteCompleted: SuiteCompleted => println("***SuiteCompleted")
-      case suiteAborted: SuiteAborted => println("***SuiteAborted")
+        fTestRunSession.canceledCount += 1
+      case suiteStarting: SuiteStarting => 
+        println("***SuiteStarting")
+        fTestRunSession.suiteCount += 1
+      case suiteCompleted: SuiteCompleted => 
+        println("***SuiteCompleted")
+      case suiteAborted: SuiteAborted => 
+        println("***SuiteAborted")
+        fTestRunSession.suiteAbortedCount += 1
       case runStarting: RunStarting => 
         println("***RunStarting")
         startUpdateJobs()
@@ -160,36 +165,56 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
     // - improve components to only redraw on changes (once!).
 
     var startedCount: Int = 0
-    var ignoredCount: Int = 0
-    var totalCount: Int = 0
-    var errorCount: Int = 0
+    var succeedCount: Int = 0
     var failureCount: Int = 0
-    var hasErrorsOrFailures: Boolean = false
+    var ignoredCount: Int = 0
+    var pendingCount: Int = 0
+    var canceledCount: Int = 0
+    var totalCount: Int = 0
+    var suiteCount: Int = 0
+    var suiteAbortedCount: Int = 0
+    
+    var hasFailures: Boolean = false
     var stopped: Boolean = false
 
     if (fTestRunSession != null) {
       startedCount = fTestRunSession.startedCount
-      ignoredCount= fTestRunSession.ignoredCount
+      succeedCount = fTestRunSession.succeedCount
+      failureCount = fTestRunSession.failureCount
+      ignoredCount = fTestRunSession.ignoredCount
+      pendingCount = fTestRunSession.pendingCount
+      canceledCount = fTestRunSession.canceledCount
       totalCount= fTestRunSession.totalCount
-      errorCount= fTestRunSession.errorCount
-      failureCount= fTestRunSession.failureCount
-      hasErrorsOrFailures= errorCount + failureCount > 0
-      stopped= fTestRunSession.isStopped
+      suiteCount = fTestRunSession.suiteCount
+      suiteAbortedCount = fTestRunSession.suiteAbortedCount
+      
+      hasFailures = failureCount > 0
+      stopped = fTestRunSession.isStopped
     } 
     else {
       startedCount = 0
-      ignoredCount = 0
-      totalCount = 0
-      errorCount = 0
+      succeedCount = 0
       failureCount = 0
-      hasErrorsOrFailures = false
-      stopped= false
+      ignoredCount = 0
+      pendingCount = 0
+      canceledCount = 0
+      totalCount = 0
+      suiteCount = 0
+      suiteAbortedCount = 0
+      
+      hasFailures = false
+      stopped = false
     }
 
     fCounterPanel.setTotal(totalCount)
-    fCounterPanel.setRunValue(startedCount, ignoredCount)
-    fCounterPanel.setErrorValue(errorCount)
+    fCounterPanel.setRunValue(startedCount)
+    fCounterPanel.setSucceedValue(succeedCount)
     fCounterPanel.setFailureValue(failureCount)
+    fCounterPanel.setIgnoredValue(ignoredCount)
+    fCounterPanel.setPendingValue(pendingCount)
+    fCounterPanel.setCanceledValue(canceledCount)
+    fCounterPanel.setSuites(suiteCount)
+    fCounterPanel.setSuiteAborted(suiteAbortedCount)
 
     val ticksDone = 
     if (startedCount == 0)
@@ -199,7 +224,7 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
     else
       startedCount - 1
 
-    fProgressBar.reset(hasErrorsOrFailures, stopped, ticksDone, totalCount);
+    fProgressBar.reset(hasFailures, stopped, ticksDone, totalCount);
   }
   
   private def startUpdateJobs() {

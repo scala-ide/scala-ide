@@ -7,10 +7,15 @@ class ScalaTestRunSession(fLaunch: ILaunch, fRunName: String) {
   //private var 
   
   var startedCount = 0
-  var ignoredCount = 0
-  var totalCount = 0
-  var errorCount = 0
+  var succeedCount = 0
   var failureCount = 0
+  var ignoredCount = 0
+  var pendingCount = 0
+  var canceledCount = 0
+  var totalCount = 0
+  var suiteCount = 0
+  var suiteAbortedCount = 0
+  
   private var running = false
   
   def run() {
