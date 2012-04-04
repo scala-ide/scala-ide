@@ -35,10 +35,8 @@ trait SymbolTests { self: SymbolClassification =>
       if (isLocal) LazyLocalVal else LazyTemplateVal
     else if (isSetter)
       TemplateVar
-    else if (isGetter && accessed.isMutable)
-      TemplateVar
-    else if (isGetter)
-      TemplateVal
+    else if (isGetter) 
+      if(hasSetter(sym)) TemplateVar else TemplateVal
     else if (isSourceMethod)
       Method
     else if (isModule) {
@@ -76,6 +74,16 @@ trait SymbolTests { self: SymbolClassification =>
       }
     } else
       throw new AssertionError("Unknown symbol type: " + sym)
+  }
+
+  /** Check if a setter exists for the passed getter {{{sym}}}.
+   * @precondition sym.isGetter
+   */
+  private def hasSetter(sym: Symbol): Boolean = {
+    assert(sym.isGetter)
+    val setterName = global.nme.getterToSetter(sym.name)
+    val setterSym = sym.owner.tpe.member(setterName)
+    setterSym != NoSymbol
   }
 
   private def classifyType(sym: Symbol): SymbolType = {

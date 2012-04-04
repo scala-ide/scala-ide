@@ -54,5 +54,23 @@ class TemplateVarTest extends AbstractSymbolClassifierTest {
         """,
       Map("TVAR" -> TemplateVar))
   }
+  
+   @Test
+  def structural_type_with_template_var() {
+     checkSymbolClassification("""
+      object A {
+        val deeep = new AnyRef { var deepVar = 1 }
+        val deepVal = deeep.deepVar
+        deeep.deepVar
+      }
+      """, """
+      object A {
+        val $TVL$ = new AnyRef { var $ TVR $ = 1 }
+        val $ TVL $ = $TVL$.$ TVR $
+        $TVL$.$ TVR $
+      }
+      """,
+      Map("TVL" -> TemplateVal, "TVR" -> TemplateVar))
+   }
  
 }
