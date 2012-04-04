@@ -1,25 +1,29 @@
 package scala.tools.eclipse.semantichighlighting.classifier
 
+import scala.PartialFunction.condOpt
 import scala.collection.mutable
-import scala.tools.nsc.interactive.Global
-import scala.tools.nsc.util.SourceFile
-import scala.tools.refactoring.analysis.GlobalIndexes
-import scala.tools.refactoring.common.Selections
-import scala.tools.eclipse.semantichighlighting.classifier.SymbolTypes._
-import scala.PartialFunction.{ cond, condOpt }
-import scala.tools.nsc.util.BatchSourceFile
-import scala.tools.nsc.util.RangePosition
-import scalariform.parser.ScalaParser
-import scalariform.lexer.ScalaLexer
-import scalariform.parser.{ Type => _, Param => _, Annotation => _, _ }
-import scalariform.parser.Argument
-import scalariform.utils.Utils.time
-import scala.tools.refactoring.util.TreeCreationMethods
-import scala.tools.eclipse.ScalaPresentationCompiler
-import scala.tools.refactoring.common.CompilerAccess
-import scala.tools.nsc.io.AbstractFile
 import scala.tools.eclipse.logging.HasLogger
-import org.eclipse.core.internal.localstore.IsSynchronizedVisitor
+import scala.tools.eclipse.semantichighlighting.classifier.SymbolTypes.Annotation
+import scala.tools.eclipse.semantichighlighting.classifier.SymbolTypes.CaseClass
+import scala.tools.eclipse.semantichighlighting.classifier.SymbolTypes.CaseObject
+import scala.tools.eclipse.semantichighlighting.classifier.SymbolTypes.Class
+import scala.tools.eclipse.semantichighlighting.classifier.SymbolTypes.LazyLocalVal
+import scala.tools.eclipse.semantichighlighting.classifier.SymbolTypes.LazyTemplateVal
+import scala.tools.eclipse.semantichighlighting.classifier.SymbolTypes.LocalVal
+import scala.tools.eclipse.semantichighlighting.classifier.SymbolTypes.LocalVar
+import scala.tools.eclipse.semantichighlighting.classifier.SymbolTypes.Method
+import scala.tools.eclipse.semantichighlighting.classifier.SymbolTypes.Object
+import scala.tools.eclipse.semantichighlighting.classifier.SymbolTypes.Param
+import scala.tools.eclipse.semantichighlighting.classifier.SymbolTypes.TemplateVal
+import scala.tools.eclipse.semantichighlighting.classifier.SymbolTypes.TemplateVar
+import scala.tools.eclipse.semantichighlighting.classifier.SymbolTypes.Type
+import scala.tools.eclipse.ScalaPresentationCompiler
+import scala.tools.nsc.io.AbstractFile
+import scala.tools.nsc.util.RangePosition
+import scala.tools.nsc.util.SourceFile
+import scala.tools.refactoring.common.CompilerAccess
+import scala.tools.refactoring.common.PimpedTrees
+
 
 object SymbolClassification {
 
@@ -41,7 +45,7 @@ object SymbolClassification {
 }
 
 class SymbolClassification(protected val sourceFile: SourceFile, val global: ScalaPresentationCompiler, useSyntacticHints: Boolean)
-  extends Selections with CompilerAccess with SymbolClassificationDebugger with SymbolTests with HasLogger {
+  extends CompilerAccess with PimpedTrees with SymbolClassificationDebugger with SymbolTests with HasLogger {
 
   import SymbolClassification._
   import global._

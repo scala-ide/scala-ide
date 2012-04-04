@@ -14,7 +14,8 @@ trait SymbolTests { self: SymbolClassification =>
   
   private lazy val forValSymbols: Set[Symbol] = for {
     region <- syntacticInfo.forVals
-    symbol <- posToSym(rangePosition(region))
+    pos = rangePosition(region)
+    symbol <- posToSym(pos)
   } yield symbol
 
   private def rangePosition(region: Region): RangePosition = {
