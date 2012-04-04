@@ -13,8 +13,10 @@ import org.eclipse.jdt.core.WorkingCopyOwner
  */
 class SemanticHighlightingReconciliationParticipant extends ReconciliationParticipant {
 
+  private val reconciler: SemanticHighlightingReconciliation = new SemanticHighlightingReconciliation
+  
   override def afterReconciliation(scu: ScalaCompilationUnit, monitor: IProgressMonitor, workingCopyOwner: WorkingCopyOwner) {
     if (!ScalaPlugin.plugin.headlessMode)
-      SemanticHighlightingReconciliation.afterReconciliation(scu, monitor, workingCopyOwner)
+      reconciler.afterReconciliation(scu, monitor, workingCopyOwner)
   }
 }

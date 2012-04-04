@@ -1,7 +1,5 @@
 package scala.tools.eclipse.semantichighlighting
 
-import scala.collection.mutable.SynchronizedMap
-import scala.collection.mutable.HashMap
 import scala.tools.eclipse.javaelements.ScalaCompilationUnit
 import scala.tools.eclipse.util.Utils._
 import scala.tools.eclipse.util.EclipseUtils
@@ -12,6 +10,7 @@ import org.eclipse.ui.part.FileEditorInput
 import org.eclipse.ui.IPartListener
 import org.eclipse.ui.IWorkbenchPart
 import scala.tools.eclipse.semantichighlighting.implicits.ImplicitHighlightingPresenter
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Manages the SemanticHighlightingPresenter instances for the open editors.
@@ -23,20 +22,18 @@ import scala.tools.eclipse.semantichighlighting.implicits.ImplicitHighlightingPr
  *
  * @author Mirko Stocker
  */
-object SemanticHighlightingReconciliation {
+class SemanticHighlightingReconciliation {
 
   private case class SemanticDecorationManagers(
     implicitHighlightingPresenter: ImplicitHighlightingPresenter,
-    semanticHighlightingAnnotationsManager: SemanticHighlightingAnnotationsManager)
-
-  private val semanticDecorationManagers =
-    new HashMap[ScalaCompilationUnit, SemanticDecorationManagers] with SynchronizedMap[ScalaCompilationUnit, SemanticDecorationManagers]
+    semanticHighlightingAnnotationsManager: SemanticHighlightingAnnotationsManager)  
+    
+  private val semanticDecorationManagers: java.util.Map[ScalaCompilationUnit, SemanticDecorationManagers] = new ConcurrentHashMap
 
   /**
    *  A listener that removes a  SemanticHighlightingPresenter when the part is closed.
    */
   private class UnregisteringPartListener(scu: ScalaCompilationUnit) extends IPartListener {
-
     override def partClosed(part: IWorkbenchPart) {
       semanticDecorationManagers.remove(scu)
     }
@@ -73,16 +70,16 @@ object SemanticHighlightingReconciliation {
 
   def afterReconciliation(scu: ScalaCompilationUnit, monitor: IProgressMonitor, workingCopyOwner: WorkingCopyOwner) {
 
-    val firstTimeReconciliation = !semanticDecorationManagers.contains(scu)
+    val firstTimeReconciliation = !semanticDecorationManagers.containsKey(scu)
 
     if (firstTimeReconciliation) {
       for (semanticDecorationManager <- createSemanticDecorationManagers(scu))
-        semanticDecorationManagers(scu) = semanticDecorationManager
+        semanticDecorationManagers.put(scu, semanticDecorationManager)
     }
 
     // sometimes we reconcile compilation units that are not open in an editor,
     // so we need to guard against the case where there's no semantic highlighter 
-    for (semanticDecorationManager <- semanticDecorationManagers.get(scu)) {
+    for (semanticDecorationManager <- Option(semanticDecorationManagers.get(scu))) {
       semanticDecorationManager.implicitHighlightingPresenter.update(scu)
       semanticDecorationManager.semanticHighlightingAnnotationsManager.updateSymbolAnnotations(scu)
     }
