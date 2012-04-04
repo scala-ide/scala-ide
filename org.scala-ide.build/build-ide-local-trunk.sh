@@ -4,6 +4,6 @@
 
 SCALA_VERSION=2.10.0-SNAPSHOT
 SCALA_LIBRARY_VERSION=2.10.0-SNAPSHOT
-PROFILE_NAME="-P local-scala-trunk,!scala-trunk"
+PROFILE="-P local-scala-trunk,!scala-trunk"
 
 build $*
