@@ -35,7 +35,14 @@ class SemanticHighlightingReconciliation {
    */
   private class UnregisteringPartListener(scu: ScalaCompilationUnit) extends IPartListener {
     override def partClosed(part: IWorkbenchPart) {
-      semanticDecorationManagers.remove(scu)
+      for {
+        scalaEditor <- part.asInstanceOfOpt[ScalaSourceFileEditor]
+        editorInput <- Option(scalaEditor.getEditorInput)
+        fileEditorInput <- editorInput.asInstanceOfOpt[FileEditorInput]
+        if fileEditorInput.getPath == scu.getResource.getLocation
+      } { 
+        semanticDecorationManagers.remove(scu)
+      }
     }
 
     override def partActivated(part: IWorkbenchPart) {}
