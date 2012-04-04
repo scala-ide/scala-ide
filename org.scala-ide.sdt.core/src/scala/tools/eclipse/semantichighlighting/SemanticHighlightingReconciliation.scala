@@ -11,6 +11,7 @@ import org.eclipse.ui.IPartListener
 import org.eclipse.ui.IWorkbenchPart
 import scala.tools.eclipse.semantichighlighting.implicits.ImplicitHighlightingPresenter
 import java.util.concurrent.ConcurrentHashMap
+import scala.tools.eclipse.semantic.SemanticAction
 
 /**
  * Manages the SemanticHighlightingPresenter instances for the open editors.
@@ -24,15 +25,11 @@ import java.util.concurrent.ConcurrentHashMap
  */
 class SemanticHighlightingReconciliation {
 
-  private case class SemanticDecorationManagers(
-    implicitHighlightingPresenter: ImplicitHighlightingPresenter,
-    semanticHighlightingAnnotationsManager: SemanticHighlightingAnnotationsManager)  
-    
+  private case class SemanticDecorationManagers(actions: List[SemanticAction])
+
   private val semanticDecorationManagers: java.util.Map[ScalaCompilationUnit, SemanticDecorationManagers] = new ConcurrentHashMap
 
-  /**
-   *  A listener that removes a  SemanticHighlightingPresenter when the part is closed.
-   */
+  /** A listener that removes a  SemanticHighlightingPresenter when the part is closed. */
   private class UnregisteringPartListener(scu: ScalaCompilationUnit) extends IPartListener {
     override def partClosed(part: IWorkbenchPart) {
       for {
@@ -68,9 +65,11 @@ class SemanticHighlightingReconciliation {
         if fileEditorInput.getPath == scu.getResource.getLocation
       } yield {
         page.addPartListener(new UnregisteringPartListener(scu))
-        SemanticDecorationManagers(
-          new ImplicitHighlightingPresenter(fileEditorInput, scalaEditor.sourceViewer),
-          new SemanticHighlightingAnnotationsManager(scalaEditor.sourceViewer))
+        val semanticActions = List(
+            new ImplicitHighlightingPresenter(fileEditorInput, scalaEditor.sourceViewer), 
+            new SemanticHighlightingAnnotationsManager(scalaEditor.sourceViewer)
+        )
+        SemanticDecorationManagers(semanticActions)
       }
     presenters.headOption
   }
@@ -86,9 +85,9 @@ class SemanticHighlightingReconciliation {
 
     // sometimes we reconcile compilation units that are not open in an editor,
     // so we need to guard against the case where there's no semantic highlighter 
-    for (semanticDecorationManager <- Option(semanticDecorationManagers.get(scu))) {
-      semanticDecorationManager.implicitHighlightingPresenter.update(scu)
-      semanticDecorationManager.semanticHighlightingAnnotationsManager.updateSymbolAnnotations(scu)
-    }
+    for {
+      semanticDecorationManager <- Option(semanticDecorationManagers.get(scu))
+      action <- semanticDecorationManager.actions
+    } action.update(scu)
   }
 }
