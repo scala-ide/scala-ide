@@ -81,9 +81,7 @@ trait SymbolTests { self: SymbolClassification =>
    */
   private def hasSetter(sym: Symbol): Boolean = {
     assert(sym.isGetter)
-    val setterName = global.nme.getterToSetter(sym.name)
-    val setterSym = sym.owner.tpe.member(setterName)
-    setterSym != NoSymbol
+    sym.setter(sym.owner) != NoSymbol
   }
 
   private def classifyType(sym: Symbol): SymbolType = {
