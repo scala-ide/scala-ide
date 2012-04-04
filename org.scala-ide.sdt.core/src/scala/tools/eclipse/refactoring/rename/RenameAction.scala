@@ -29,12 +29,12 @@ import scala.tools.refactoring.common.{ ConsoleTracing, InteractiveScalaCompiler
 class RenameAction extends ActionAdapter {
 
   override def run(action: IAction) {
-    val renameAction = {
-      if (isLocalRename) new LocalRenameAction else new GlobalRenameAction
-    }
+    val renameAction = getRenameAction
     renameAction.run(action)
   }
 
+  def getRenameAction = if (isLocalRename) new LocalRenameAction else new GlobalRenameAction
+  
   /**
    * Using the currently opened file and selection, determines whether the
    * selected SymbolTree is only locally visible or not.
