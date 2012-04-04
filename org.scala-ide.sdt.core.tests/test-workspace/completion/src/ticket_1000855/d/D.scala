@@ -2,6 +2,12 @@ package d
 
 class D {
 
-  val c= new T855C /*!*/
-  
+  def f1() {
+    val c = new T855C /*!*/
+  }
+
+  def f2() {
+    val e = new T855E /*!*/
+  }
+
 }
