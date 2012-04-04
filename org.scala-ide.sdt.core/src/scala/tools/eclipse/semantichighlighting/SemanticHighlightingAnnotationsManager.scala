@@ -10,12 +10,13 @@ import scala.tools.eclipse.util.RichAnnotationModel._
 import scala.tools.eclipse.logging.HasLogger
 import org.eclipse.jface.text.source._
 import org.eclipse.jface.text.Position
+import scala.tools.eclipse.semantic.SemanticAction
 
-class SemanticHighlightingAnnotationsManager(sourceViewer: ISourceViewer) extends HasLogger {
+class SemanticHighlightingAnnotationsManager(sourceViewer: ISourceViewer) extends SemanticAction with HasLogger {
 
   private var annotations: Set[Annotation] = Set()
 
-  def updateSymbolAnnotations(scu: ScalaCompilationUnit) {
+  override def update(scu: ScalaCompilationUnit) {
     if (semanticHighlightingRequired)
       scu.doWithSourceFile { (sourceFile, compiler) =>
         val useSyntacticHints = isUseSyntacticHintsEnabled
@@ -37,7 +38,7 @@ class SemanticHighlightingAnnotationsManager(sourceViewer: ISourceViewer) extend
     isSemanticHighlightingEnabled &&
       (ScalaSyntaxClasses.scalaSemanticCategory.children.map(_.enabledKey) exists prefStore.getBoolean)
 
-  private def prefStore = ScalaPlugin.prefStore
+  @inline private def prefStore = ScalaPlugin.prefStore
     
   private def isSemanticHighlightingEnabled: Boolean = prefStore.getBoolean(ScalaSyntaxClasses.ENABLE_SEMANTIC_HIGHLIGHTING)
   private def isUseSyntacticHintsEnabled: Boolean = prefStore.getBoolean(ScalaSyntaxClasses.USE_SYNTACTIC_HINTS)
