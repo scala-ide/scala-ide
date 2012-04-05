@@ -68,6 +68,8 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
   val testErrorIcon = ScalaImages.SCALATEST_ERROR.createImage
   val testFailedIcon = ScalaImages.SCALATEST_FAILED.createImage
   val testIgnoredIcon = ScalaImages.SCALATEST_IGNORED.createImage
+  val infoIcon = ScalaImages.SCALATEST_INFO.createImage
+  val markupIcon = ScalaImages.SCALATEST_MARKUP.createImage
   
   def setSession(session: ScalaTestRunSession) {
     fTestRunSession = session
@@ -99,6 +101,8 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
     testErrorIcon.dispose()
     testFailedIcon.dispose()
     testIgnoredIcon.dispose()
+    infoIcon.dispose()
+    markupIcon.dispose()
   }
   
   override def saveState(memento: IMemento) {
@@ -192,6 +196,7 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
         suiteMap.get(testSucceeded.suiteId) match {
           case Some(suite) => 
             val test = suite.updateTest(testSucceeded.testName, TestStatus.SUCCEEDED, testSucceeded.duration, None, None)
+            suite.closeScope()
             fTestViewer.registerAutoScrollTarget(test)
             fTestViewer.registerViewerUpdate(test)
           case None => 
@@ -204,6 +209,7 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
         suiteMap.get(testFailed.suiteId) match {
           case Some(suite) => 
             val test = suite.updateTest(testFailed.testName, TestStatus.FAILED, testFailed.duration, testFailed.errorMessage, testFailed.errorStackTraces)
+            suite.closeScope()
             fTestViewer.registerAutoScrollTarget(test)
             fTestViewer.registerViewerUpdate(test)
           case None => 
@@ -213,9 +219,23 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
       case testIgnored: TestIgnored => 
         println("***TestIgnored")
         fTestRunSession.ignoredCount += 1
+        val test = 
+          TestModel(
+            testIgnored.testName,
+            testIgnored.testText,
+            testIgnored.decodedTestName,
+            None,
+            None, 
+            None, 
+            testIgnored.location,
+            None,
+            testIgnored.threadName,
+            testIgnored.timeStamp, 
+            TestStatus.IGNORED
+          )
         suiteMap.get(testIgnored.suiteId) match {
           case Some(suite) => 
-            val test = suite.updateTest(testIgnored.testName, TestStatus.IGNORED, None, None, None)
+            suite.addChild(test)
             fTestViewer.registerAutoScrollTarget(test)
             fTestViewer.registerViewerUpdate(test)
           case None => 
@@ -228,6 +248,7 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
         suiteMap.get(testPending.suiteId) match {
           case Some(suite) => 
             val test = suite.updateTest(testPending.testName, TestStatus.PENDING, testPending.duration, None, None)
+            suite.closeScope()
             fTestViewer.registerAutoScrollTarget(test)
             fTestViewer.registerViewerUpdate(test)
           case None => 
@@ -240,6 +261,7 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
         suiteMap.get(testCanceled.suiteId) match {
           case Some(suite) => 
             val test = suite.updateTest(testCanceled.testName, TestStatus.CANCELED, testCanceled.duration, testCanceled.errorMessage, testCanceled.errorStackTraces)
+            suite.closeScope()
             fTestViewer.registerAutoScrollTarget(test)
             fTestViewer.registerViewerUpdate(test)
           case None => 
@@ -342,10 +364,58 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
         fTestViewer.registerAutoScrollTarget(null)
       case infoProvided: InfoProvided => 
         println("***InfoProvided")
-        // fTestViewer.registerAutoScrollTarget(testCaseElement)
-        // fTestViewer.registerViewerUpdate(testCaseElement)
+        val info = 
+          InfoModel(
+            infoProvided.message,
+            infoProvided.nameInfo,
+            infoProvided.aboutAPendingTest,
+            infoProvided.aboutACanceledTest,
+            infoProvided.errorMessage, 
+            infoProvided.errorStackTraces, 
+            infoProvided.location, 
+            infoProvided.threadName,
+            infoProvided.timeStamp
+          )
+        infoProvided.nameInfo match {
+          case Some(nameInfo) => 
+            suiteMap.get(nameInfo.suiteId) match {
+              case Some(suite) => 
+                suite.addChild(info)
+                fTestViewer.registerAutoScrollTarget(info)
+                fTestViewer.registerViewerUpdate(info)
+              case None => 
+                // Should not happen
+               throw new IllegalStateException("Unable to find suite model for InfoProvided, suiteId: " + nameInfo.suiteId)
+            }
+          case None => 
+            fTestRunSession.rootNode.addChild(info)
+        }
       case markupProvided: MarkupProvided => 
         println("***MarkupProvided")
+        val markup = 
+          MarkupModel(
+            markupProvided.text,
+            markupProvided.nameInfo,
+            markupProvided.aboutAPendingTest,
+            markupProvided.aboutACanceledTest,
+            markupProvided.location,
+            markupProvided.threadName,
+            markupProvided.timeStamp
+          )
+        markupProvided.nameInfo match {
+          case Some(nameInfo) => 
+            suiteMap.get(nameInfo.suiteId) match {
+              case Some(suite) => 
+                suite.addChild(markup)
+                fTestViewer.registerAutoScrollTarget(markup)
+                fTestViewer.registerViewerUpdate(markup)
+              case None => 
+                // Should not happen
+               throw new IllegalStateException("Unable to find suite model for MarkupProvided, suiteId: " + nameInfo.suiteId)
+            }
+          case None => 
+            fTestRunSession.rootNode.addChild(markup)
+        }
         // fTestViewer.registerAutoScrollTarget(testCaseElement)
         // fTestViewer.registerViewerUpdate(testCaseElement)
       case scopeOpened: ScopeOpened => 

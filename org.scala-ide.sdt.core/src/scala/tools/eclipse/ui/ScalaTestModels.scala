@@ -102,7 +102,7 @@ final case class SuiteModel(
   var status: SuiteStatus
 ) extends Node {
   
-  private val scopeStack: Stack[ScopeModel] = Stack[ScopeModel]()
+  private val scopeStack: Stack[Node] = Stack[Node]()
   private var flatTestsCache: ListBuffer[TestModel] = new ListBuffer[TestModel]()
   
   override def addChild(child: Node) {
@@ -114,9 +114,11 @@ final case class SuiteModel(
     child match {
       case scope: ScopeModel => 
         scopeStack.push(scope)
+      case test: TestModel =>
+        scopeStack.push(test)
+        flatTestsCache += test
       case _ => 
-        if (child.isInstanceOf[TestModel])
-          flatTestsCache += child.asInstanceOf[TestModel]
+        // Do nothing for other type of child
     }
   }
   

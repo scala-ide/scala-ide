@@ -384,9 +384,9 @@ private class TestSessionLabelProvider(fTestRunnerPart: ScalaTestRunnerViewPart,
             fTestRunnerPart.suiteAbortedIcon
         }
       case info: InfoModel => 
-        fTestRunnerPart.suiteIcon
+        fTestRunnerPart.infoIcon
       case markup: MarkupModel => 
-        fTestRunnerPart.suiteIcon
+        fTestRunnerPart.markupIcon
       case _ => 
         throw new IllegalArgumentException(String.valueOf(element))
     }
