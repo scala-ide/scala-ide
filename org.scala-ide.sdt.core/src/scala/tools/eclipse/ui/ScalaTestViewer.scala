@@ -17,6 +17,15 @@ import org.eclipse.swt.graphics.Image
 import org.eclipse.jface.viewers.LabelProviderChangedEvent
 import org.eclipse.swt.widgets.Control
 import org.eclipse.jface.viewers.StructuredViewer
+import org.eclipse.jface.action.Action
+import scala.tools.eclipse.ScalaProject
+import org.eclipse.jdt.core.JavaCore
+import org.eclipse.core.resources.ResourcesPlugin
+import org.eclipse.jdt.ui.JavaUI
+import org.eclipse.swt.events.SelectionAdapter
+import org.eclipse.swt.events.SelectionEvent
+import org.eclipse.jdt.internal.ui.viewsupport.SelectionProviderMediator
+import org.eclipse.jface.viewers.IStructuredSelection
 
 class ScalaTestViewer(parent: Composite, fTestRunnerPart: ScalaTestRunnerViewPart) {
 
@@ -24,6 +33,7 @@ class ScalaTestViewer(parent: Composite, fTestRunnerPart: ScalaTestRunnerViewPar
   private var fTreeViewer: TreeViewer = null
   private var fTreeContentProvider: TestSessionTreeContentProvider = null
   private var fTreeLabelProvider: TestSessionLabelProvider = null
+  private var fSelectionProvider: SelectionProviderMediator = null
   
   private var fTreeNeedsRefresh = false
   private var fNeedUpdate: Set[Node] = null
@@ -57,11 +67,12 @@ class ScalaTestViewer(parent: Composite, fTestRunnerPart: ScalaTestRunnerViewPar
     fTableLabelProvider= new TestSessionLabelProvider(fTestRunnerPart, TestRunnerViewPart.LAYOUT_FLAT);
     fTableViewer.setLabelProvider(new ColoringLabelProvider(fTableLabelProvider));*/
 
-    /*fSelectionProvider= new SelectionProviderMediator(new StructuredViewer[] { fTreeViewer, fTableViewer }, fTreeViewer);
-    fSelectionProvider.addSelectionChangedListener(new TestSelectionListener());
-    TestOpenListener testOpenListener= new TestOpenListener();
-    fTreeViewer.getTree().addSelectionListener(testOpenListener);
-    fTableViewer.getTable().addSelectionListener(testOpenListener);*/
+    //fSelectionProvider= new SelectionProviderMediator(new StructuredViewer[] { fTreeViewer, fTableViewer }, fTreeViewer);
+	fSelectionProvider= new SelectionProviderMediator(Array[StructuredViewer](fTreeViewer), fTreeViewer)
+    //fSelectionProvider.addSelectionChangedListener(new TestSelectionListener());
+    val openSourceCodeListener= new OpenSourceCodeListener(fTestRunnerPart, fSelectionProvider)
+    fTreeViewer.getTree().addSelectionListener(openSourceCodeListener)
+    //fTableViewer.getTable().addSelectionListener(testOpenListener);
 
     //fTestRunnerPart.getSite().setSelectionProvider(fSelectionProvider);
 
@@ -395,5 +406,82 @@ private class TestSessionLabelProvider(fTestRunnerPart: ScalaTestRunnerViewPart,
   def setShowTime(showTime: Boolean) {
     fShowTime = showTime
     fireLabelProviderChanged(new LabelProviderChangedEvent(this));
+  }
+}
+
+private class OpenSourceCodeListener(fTestRunnerPart: ScalaTestRunnerViewPart, fSelectionProvider: SelectionProviderMediator) extends SelectionAdapter {
+  override def widgetDefaultSelected(e: SelectionEvent) {
+    val selection= fSelectionProvider.getSelection().asInstanceOf[IStructuredSelection]
+    if (selection.size() != 1)
+      return
+      
+    val node = selection.getFirstElement.asInstanceOf[Node]
+    val action = new GoToSourceAction(node, fTestRunnerPart)
+    if (action.isEnabled)
+      action.run()
+
+		/*TestElement testElement= (TestElement) selection.getFirstElement();
+
+		OpenTestAction action;
+		if (testElement instanceof TestSuiteElement) {
+			action= new OpenTestAction(fTestRunnerPart, testElement.getTestName());
+		} else if (testElement instanceof TestCaseElement){
+			TestCaseElement testCase= (TestCaseElement) testElement;
+			action= new OpenTestAction(fTestRunnerPart, testCase);
+		} else {
+			throw new IllegalStateException(String.valueOf(testElement));
+		}
+
+		if (action.isEnabled())
+			action.run();*/
+  }
+}
+
+private class GoToSourceAction(node: Node, fTestRunnerPart: ScalaTestRunnerViewPart) extends Action {
+  
+  override def run() {
+    node match {
+      case test: TestModel => 
+        
+      case suite: SuiteModel =>
+        goToLocation(suite.location)
+      case _ =>
+        
+    }
+  }
+  
+  private def goToLocation(location: Option[Location]) {
+    println("#####location: " + location)
+    location match {
+      case Some(location) =>
+        location match {
+          case topOfClass: TopOfClass => 
+            val scProj = getScalaProject(fTestRunnerPart.fTestRunSession.projectName)
+            scProj match {
+              case Some(scProj) => 
+                val iType = scProj.javaProject.findType(topOfClass.className)
+                if (iType != null)
+                  JavaUI.openInEditor(iType, true, true)
+              case None =>
+                
+            }
+          case topOfMethod: TopOfMethod => 
+        
+          case lineInFile: LineInFile =>
+        
+          case SeeStackDepthException =>
+        }  
+      case None =>
+      
+    }
+  }
+  
+  private def getScalaProject(projectName: String): Option[ScalaProject] = {
+    val model = JavaCore.create(ResourcesPlugin.getWorkspace.getRoot)
+    val javaProject = model.getJavaProject(projectName)
+    if (javaProject != null)
+      Some(ScalaProject(javaProject.getProject))
+    else
+      None
   }
 }

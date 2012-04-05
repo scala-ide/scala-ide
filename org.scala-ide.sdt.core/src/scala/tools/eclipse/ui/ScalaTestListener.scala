@@ -180,6 +180,7 @@ class ScalaTestListener extends Observable with Runnable {
                 )    
               )
             case "SuiteStarting" => 
+              println(eventRawXml)
               send(
                 SuiteStarting (
                   (eventXml \ "suiteName").text,
@@ -336,7 +337,8 @@ class ScalaTestListener extends Observable with Runnable {
   }
   
   private def locationOpt(nodeSeq: NodeSeq) = {
-    val nodeOpt = nodeSeq.toSeq.find(node => node.label == "TopOfClass" || node.label == "TopOfMethod" || node.label == "LineInFile" || node.label == "SeeStackDepthException")
+    val location = nodeSeq.head
+    val nodeOpt = location.child.find(node => node.label == "TopOfClass" || node.label == "TopOfMethod" || node.label == "LineInFile" || node.label == "SeeStackDepthException")
     nodeOpt match {
       case Some(node) => 
         node.label match {

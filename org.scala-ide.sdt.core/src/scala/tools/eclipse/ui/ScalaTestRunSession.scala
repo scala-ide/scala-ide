@@ -1,8 +1,9 @@
 package scala.tools.eclipse.ui
 
 import org.eclipse.debug.core.ILaunch
+import scala.tools.eclipse.ScalaProject
 
-class ScalaTestRunSession(fLaunch: ILaunch, fRunName: String) {
+class ScalaTestRunSession(val fLaunch: ILaunch, val fRunName: String, val projectName: String) {
   //private var fLaunch: ILaunch
   //private var 
   

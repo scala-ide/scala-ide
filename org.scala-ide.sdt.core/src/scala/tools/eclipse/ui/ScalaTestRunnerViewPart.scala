@@ -269,7 +269,7 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
             throw new IllegalStateException("Unable to find suite model for TestCanceled, suiteId: " + testCanceled.suiteId + ", test name: " + testCanceled.testName)
         }
       case suiteStarting: SuiteStarting => 
-        println("***SuiteStarting: " + suiteStarting.suiteId)
+        println("***SuiteStarting: " + suiteStarting.suiteId + ", location: " + suiteStarting.location)
         fTestRunSession.suiteCount += 1
         val suite = SuiteModel(
                       suiteStarting.suiteName,

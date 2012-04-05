@@ -75,7 +75,7 @@ class ScalaTestLaunchDelegate extends AbstractJavaLaunchConfigurationDelegate {
             try {
               loader.loadClass("org.scalatest.tools.SocketReporter")
               println("#####SocketReporter found!")
-              ScalaTestPlugin.asyncShowTestRunnerViewPart(launch, configuration.getName)
+              ScalaTestPlugin.asyncShowTestRunnerViewPart(launch, configuration.getName, configuration.getAttribute(IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME, ""))
               val port = ScalaTestPlugin.listener.getPort
               getProgramArguments(configuration) + " " + stArgs + " -oW -k localhost " + port
             }

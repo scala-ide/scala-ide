@@ -66,14 +66,14 @@ object ScalaTestPlugin extends AbstractUIPlugin {
     }
   }
   
-  def asyncShowTestRunnerViewPart(fLaunch: ILaunch, fRunName: String) {
+  def asyncShowTestRunnerViewPart(fLaunch: ILaunch, fRunName: String, projectName: String) {
     listener.bindSocket()
     getDisplay.asyncExec(new Runnable() {
       def run() {
         val view = showTestRunnerViewPartInActivePage()
         if (view != null) {
           listener.addObserver(view)
-          view.setSession(new ScalaTestRunSession(fLaunch, fRunName))
+          view.setSession(new ScalaTestRunSession(fLaunch, fRunName, projectName))
           val thread = new Thread(listener)
           thread.start()
         }
