@@ -3,10 +3,10 @@
 . $(dirname $0)/env.sh
 
 # Scala compiler version to be used as a dependency
-SCALA_VERSION=2.9.2-RC2
+SCALA_VERSION=2.9.2-RC3
 
 # Scala library version
-SCALA_LIBRARY_VERSION=2.9.2-RC2
+SCALA_LIBRARY_VERSION=2.9.2-RC3
 
 #THIS NEEDS TO BE UPDATED ONCE WE HAVE SNAPSHOTS
 
