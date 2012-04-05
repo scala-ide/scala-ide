@@ -31,11 +31,21 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
 
   class IndexBuilderTraverser(indexer : ScalaSourceIndexer) extends Traverser {
     var packageName = new StringBuilder
+    
+    def addPackageName(p: Tree) {
+      p match {
+        case i: Ident =>
+          packageName.append(i.name)
+        case r: Select =>
+          addPackageName(r.qualifier)
+          packageName.append('.').append(r.name)
+      }
+    }
       
     def addPackage(p : PackageDef) = {
       if (!packageName.isEmpty) packageName.append('.')
       if (p.name != nme.EMPTY_PACKAGE_NAME && p.name != nme.ROOTPKG) {
-        packageName.append(p.name)  
+        addPackageName(p.pid)  
       }
     }
 
