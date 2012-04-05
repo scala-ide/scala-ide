@@ -9,4 +9,4 @@ import scala.tools.eclipse.refactoring.ExtractLocalAction
 
 object ExtractLocalProposal 
 	extends ProposalRefactoringActionAdapter(
-	    new ExtractLocalAction, 100, "Extract to local value")
+	    new ExtractLocalAction, "Extract to local value")

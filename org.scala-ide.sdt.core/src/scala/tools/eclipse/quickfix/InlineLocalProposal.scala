@@ -10,4 +10,4 @@ import scala.tools.eclipse.refactoring.InlineLocalAction
 
 object InlineLocalProposal 
 	extends ProposalRefactoringActionAdapter(
-	    new InlineLocalAction, 100, "Inline local value")
+	    new InlineLocalAction, "Inline local value")

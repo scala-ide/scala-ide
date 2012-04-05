@@ -9,4 +9,4 @@ import scala.tools.eclipse.refactoring.ExtractMethodAction
 
 object ExtractMethodProposal 
 	extends ProposalRefactoringActionAdapter(
-	    new ExtractMethodAction, 100, "Extract method")
+	    new ExtractMethodAction, "Extract method")

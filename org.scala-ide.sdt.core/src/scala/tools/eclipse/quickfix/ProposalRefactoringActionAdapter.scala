@@ -12,9 +12,9 @@ import scala.tools.eclipse.refactoring.ScalaIdeRefactoring
 import scala.tools.eclipse.logging.HasLogger
 
 abstract class ProposalRefactoringActionAdapter(
-    val action: ActionAdapter, 
-    relevance: Int, 
-    displayString: String)
+    action: ActionAdapter, 
+    displayString: String,
+    relevance: Int = 100) 
 	extends IJavaCompletionProposal {
   
   override def apply(document: IDocument): Unit = {
