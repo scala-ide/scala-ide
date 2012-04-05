@@ -1,6 +1,7 @@
 package scala.tools.eclipse.ui
 
 import scala.collection.mutable.ListBuffer
+import scala.collection.mutable.Stack
 
 final case class Summary(testsSucceededCount: Int, testsFailedCount: Int, testsIgnoredCount: Int, testsPendingCount: Int, testsCanceledCount: Int,
   suitesCompletedCount: Int, suitesAbortedCount: Int) {
@@ -9,7 +10,7 @@ final case class Summary(testsSucceededCount: Int, testsFailedCount: Int, testsI
 
 case class TestNameInfo(testName: String, decodedTestName: Option[String])
 
-final case class NameInfo(suiteName: String, suiteID: String, suiteClassName: Option[String], decodedSuiteName:Option[String],  testName: Option[TestNameInfo])
+final case class NameInfo(suiteName: String, suiteId: String, suiteClassName: Option[String], decodedSuiteName:Option[String],  testName: Option[TestNameInfo])
 
 object TestStatus extends Enumeration {
   type TestStatus = Value
@@ -23,7 +24,7 @@ object ScopeStatus extends Enumeration {
 
 object SuiteStatus extends Enumeration {
   type SuiteStatus = Value
-  val STARTED, COMPLETED, ABORTED = Value
+  val STARTED, SUCCEED, FAILED, ABORTED = Value
 }
 
 object RunStatus extends Enumeration {
@@ -36,7 +37,17 @@ import ScopeStatus._
 import SuiteStatus._
 import RunStatus._
 
-case class Node
+sealed abstract class Node {
+  private var childrenBuffer = new ListBuffer[Node]()
+  var parent: Node = null
+  def addChild(child: Node) {
+    synchronized {
+      childrenBuffer += child
+    }
+  } 
+  def children = childrenBuffer.toArray
+  def hasChildren = children.length > 0
+}
 
 final case class TestModel(
   testName: String,
@@ -60,8 +71,20 @@ final case class ScopeModel(
   timeStamp: Long, 
   var status: ScopeStatus
 ) extends Node {
-  private val childrenBuffer = new ListBuffer[Node]()
-  def children = childrenBuffer.toList
+  
+  def scopeSucceed: Boolean = {
+    children.forall { child => 
+      child match {
+        case test: TestModel => 
+          test.status != TestStatus.FAILED
+        case scope: ScopeModel => 
+          scope.scopeSucceed
+        case _ =>
+          true
+      }
+    }
+  }
+  
 }
 
 final case class SuiteModel(
@@ -78,8 +101,48 @@ final case class SuiteModel(
   timeStamp: Long, 
   var status: SuiteStatus
 ) extends Node {
-  private val childrenBuffer = new ListBuffer[Node]()
-  def children = childrenBuffer.toList
+  
+  private val scopeStack: Stack[ScopeModel] = Stack[ScopeModel]()
+  private var flatTestsCache: ListBuffer[TestModel] = new ListBuffer[TestModel]()
+  
+  override def addChild(child: Node) {
+    if (scopeStack.isEmpty)
+      super.addChild(child)
+    else 
+      scopeStack.head.addChild(child)
+    
+    child match {
+      case scope: ScopeModel => 
+        scopeStack.push(scope)
+      case _ => 
+        if (child.isInstanceOf[TestModel])
+          flatTestsCache += child.asInstanceOf[TestModel]
+    }
+  }
+  
+  def closeScope() {
+    scopeStack.pop()
+  }
+  
+  def updateTest(testName: String, status: TestStatus, duration: Option[Long], errorMessage: Option[String], errorStackTrace: Option[String]) = {
+    val node = flatTestsCache.toArray.find(node => node.isInstanceOf[TestModel] && node.asInstanceOf[TestModel].testName == testName)
+    node match {
+      case Some(node) => 
+        val test = node.asInstanceOf[TestModel]
+        test.status = status
+        test.duration = duration
+        test.errorMessage = errorMessage
+        test.errorStackTrace = errorStackTrace
+        test
+      case None => 
+        // Should not happen
+        throw new IllegalStateException("Unable to find test name: " + testName + ", suiteId: " + suiteId)
+    }
+  }
+  
+  def suiteSucceeded = {
+    flatTestsCache.toArray.forall(child => child.status != TestStatus.FAILED)
+  }
 }
 
 final case class RunModel(
@@ -91,7 +154,7 @@ final case class RunModel(
   threadName: String,
   timeStamp: Long, 
   var status: RunStatus
-)
+) extends Node 
 
 final case class InfoModel(
   message: String,

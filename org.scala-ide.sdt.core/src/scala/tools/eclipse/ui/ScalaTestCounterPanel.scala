@@ -24,9 +24,10 @@ class ScalaTestCounterPanel(parent: Composite) extends Composite(parent, SWT.WRA
   
   protected var fTotal: Int = 0
   
-  private val fSuccessIcon = ScalaImages.SCALATEST_SUCCESS.createImage
+  private val fSucceedIcon = ScalaImages.SCALATEST_SUCCEED.createImage
   private val fErrorIcon = ScalaImages.SCALATEST_ERROR.createImage
   private val fFailureIcon = ScalaImages.SCALATEST_FAILED.createImage
+  private val fIgnoredIcon = ScalaImages.SCALATEST_IGNORED.createImage
   private val fSuiteRunIcon = ScalaImages.SCALATEST_SUITE_RUN.createImage
   private val fSuiteIcon = ScalaImages.SCALATEST_SUITE.createImage
   private val fSuiteAbortedIcon = ScalaImages.SCALATEST_SUITE_ABORTED.createImage
@@ -41,11 +42,11 @@ class ScalaTestCounterPanel(parent: Composite) extends Composite(parent, SWT.WRA
     setLayout(gridLayout)
     
     fNumberOfRuns = createLabel("Runs: ", fSuiteRunIcon, " 0/0  ") //$NON-NLS-1$
-    fNumberOfSucceed = createLabel("Succeed: ", fSuccessIcon, " 0 ")
+    fNumberOfSucceed = createLabel("Succeed: ", fSucceedIcon, " 0 ")
     fNumberOfFailure = createLabel("Failure: ", fFailureIcon, " 0 ") //$NON-NLS-1$
-    fNumberOfIgnored = createLabel("Ignored: ", fErrorIcon, " 0 ") //$NON-NLS-1$
-    fNumberOfPending = createLabel("Pending: ", fErrorIcon, " 0 ")
-    fNumberOfCanceled = createLabel("Canceled: ", fErrorIcon, " 0 ")
+    fNumberOfIgnored = createLabel("Ignored: ", fIgnoredIcon, " 0 ") //$NON-NLS-1$
+    fNumberOfPending = createLabel("Pending: ", fIgnoredIcon, " 0 ")
+    fNumberOfCanceled = createLabel("Canceled: ", fIgnoredIcon, " 0 ")
     fNumberOfSuites = createLabel("Suites: ", fSuiteIcon, " 0 ")
     fNumberOfSuiteAborted = createLabel("Aborted: ", fSuiteAbortedIcon, " 0 ")
     
@@ -57,9 +58,10 @@ class ScalaTestCounterPanel(parent: Composite) extends Composite(parent, SWT.WRA
   }
   
   private def disposeIcons() {
-    fSuccessIcon.dispose()
+    fSucceedIcon.dispose()
     fErrorIcon.dispose()
     fFailureIcon.dispose()
+    fIgnoredIcon.dispose()
     fSuiteIcon.dispose()
     fSuiteAbortedIcon.dispose()
     fSuiteRunIcon.dispose()

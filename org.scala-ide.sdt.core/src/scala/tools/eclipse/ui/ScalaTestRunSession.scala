@@ -16,6 +16,8 @@ class ScalaTestRunSession(fLaunch: ILaunch, fRunName: String) {
   var suiteCount = 0
   var suiteAbortedCount = 0
   
+  var rootNode: RunModel = null
+  
   private var running = false
   
   def run() {

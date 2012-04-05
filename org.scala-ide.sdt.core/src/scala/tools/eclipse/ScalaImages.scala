@@ -40,9 +40,12 @@ object ScalaImages  {
   val SCALATEST_SUITE_FAIL = create("icons/full/obj16/scalatest_suite_fail.gif")
   val SCALATEST_SUITE_ABORTED = create("icons/full/obj16/scalatest_suite_aborted.gif")
   val SCALATEST_SUITE_RUN = create("icons/full/obj16/scalatest_suite_run.gif")
-  val SCALATEST_SUCCESS = create("icons/full/ovr16/scalatest_success.gif")
-  val SCALATEST_ERROR = create("icons/full/ovr16/scalatest_error.gif")
-  val SCALATEST_FAILED = create("icons/full/ovr16/scalatest_failed.gif")
+  val SCALATEST_RUN = create("icons/full/obj16/scalatest_test_run.gif")
+  val SCALATEST_SUCCEED = create("icons/full/obj16/scalatest_test_succeed.gif")
+  val SCALATEST_ERROR = create("icons/full/obj16/scalatest_test_error.gif")
+  val SCALATEST_FAILED = create("icons/full/obj16/scalatest_test_failed.gif")
+  val SCALATEST_IGNORED = create("icons/full/obj16/scalatest_test_ignored.gif")
+  val SCALATEST_SCOPE = create("icons/full/obj16/scalatest_test_scope.gif")
   
   private def create(localPath : String) = {
     try {
