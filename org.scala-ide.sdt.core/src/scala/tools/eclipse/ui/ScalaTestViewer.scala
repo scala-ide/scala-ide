@@ -26,6 +26,10 @@ import org.eclipse.swt.events.SelectionAdapter
 import org.eclipse.swt.events.SelectionEvent
 import org.eclipse.jdt.internal.ui.viewsupport.SelectionProviderMediator
 import org.eclipse.jface.viewers.IStructuredSelection
+import org.eclipse.jface.dialogs.MessageDialog
+import org.eclipse.ui.PlatformUI
+import org.eclipse.ui.part.FileEditorInput
+import org.eclipse.ui.texteditor.ITextEditor
 
 class ScalaTestViewer(parent: Composite, fTestRunnerPart: ScalaTestRunnerViewPart) {
 
@@ -442,16 +446,27 @@ private class GoToSourceAction(node: Node, fTestRunnerPart: ScalaTestRunnerViewP
   override def run() {
     node match {
       case test: TestModel => 
-        
+        goToLocation(test.location)
+      case scope: ScopeModel =>
+        goToLocation(scope.location)
+      case info: InfoModel =>
+        goToLocation(info.location)
+      case markup: MarkupModel => 
+        goToLocation(markup.location)
       case suite: SuiteModel =>
         goToLocation(suite.location)
       case _ =>
-        
     }
   }
   
+  private def getShell = fTestRunnerPart.getSite.getShell
+  
+  private def notifyLocationNotFound() {
+    MessageDialog.openError(getShell, "Cannot Open Editor", 
+                            "Cannot identify source location of the selected element")
+  }
+  
   private def goToLocation(location: Option[Location]) {
-    println("#####location: " + location)
     location match {
       case Some(location) =>
         location match {
@@ -462,13 +477,58 @@ private class GoToSourceAction(node: Node, fTestRunnerPart: ScalaTestRunnerViewP
                 val iType = scProj.javaProject.findType(topOfClass.className)
                 if (iType != null)
                   JavaUI.openInEditor(iType, true, true)
+                else
+                  notifyLocationNotFound()
               case None =>
-                
+                notifyLocationNotFound()
             }
           case topOfMethod: TopOfMethod => 
-        
+            val scProj = getScalaProject(fTestRunnerPart.fTestRunSession.projectName)
+            scProj match {
+              case Some(scProj) => 
+                val iType = scProj.javaProject.findType(topOfMethod.className)
+                val methodId = topOfMethod.methodId
+                val methodName = methodId.substring(methodId.lastIndexOf('.') + 1, methodId.lastIndexOf('('))
+                val methodRawParamTypes = methodId.substring(methodId.lastIndexOf('(') + 1, methodId.length - 1)
+                val methodParamTypes = 
+                  if (methodRawParamTypes.length > 0)
+                    methodRawParamTypes.split(",").map(paramType => paramType.trim)
+                  else
+                    Array.empty[String]
+                val method = iType.getMethod(methodName, methodParamTypes)
+                if (method != null)
+                  JavaUI.openInEditor(method, true, true)
+                else
+                  notifyLocationNotFound()
+              case None =>
+                notifyLocationNotFound()
+            }
           case lineInFile: LineInFile =>
-        
+            val scProj = getScalaProject(fTestRunnerPart.fTestRunSession.projectName)
+            scProj match {
+              case Some(scProj) =>
+                val fileName = lineInFile.fileName
+                val sourceFile = scProj.allSourceFiles.find(file => file.getName == fileName)
+                sourceFile match {
+                  case Some(sourceFile) => 
+                    val page = PlatformUI.getWorkbench.getActiveWorkbenchWindow.getActivePage
+                    val desc = PlatformUI.getWorkbench.getEditorRegistry.getDefaultEditor(sourceFile.getName)
+                    val editorPart = page.openEditor(new FileEditorInput(sourceFile), desc.getId)
+                    editorPart match {
+                      case textEditor: ITextEditor => 
+                        val document = textEditor.getDocumentProvider.getDocument(textEditor.getEditorInput)
+                        val lineOffset = document.getLineOffset(lineInFile.lineNumber - 1)
+                        val lineLength = document.getLineLength(lineInFile.lineNumber - 1)
+                        textEditor.selectAndReveal(lineOffset, lineLength)
+                      case _ =>
+                        notifyLocationNotFound()
+                    }
+                  case None => 
+                    notifyLocationNotFound()
+                }
+              case None => 
+                notifyLocationNotFound()
+            }
           case SeeStackDepthException =>
         }  
       case None =>
