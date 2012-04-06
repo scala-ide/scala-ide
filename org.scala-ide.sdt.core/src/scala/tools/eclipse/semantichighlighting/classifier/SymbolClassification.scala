@@ -24,8 +24,7 @@ import scala.tools.nsc.util.RangePosition
 import scala.tools.nsc.util.SourceFile
 import scala.tools.refactoring.common.CompilerAccess
 import scala.tools.refactoring.common.PimpedTrees
-import scala.tools.eclipse.util.Utils
-
+import scala.tools.eclipse.util.Utils._
 
 object SymbolClassification {
 
@@ -138,7 +137,7 @@ class SymbolClassification(protected val sourceFile: SourceFile, val global: Sca
   def isSourceTree(t: Tree): Boolean = t.pos.isRange && !t.pos.isTransparent
   
   def classifySymbols: List[SymbolInfo] = {
-    val allSymbols: List[(Symbol, Position)] = {
+    val allSymbols: List[(Symbol, Position)] = debugTimed("allSymbols") {
       for {
         t <- unitTree
         if (t.hasSymbol || t.isType) && isSourceTree(t)
@@ -149,7 +148,7 @@ class SymbolClassification(protected val sourceFile: SourceFile, val global: Sca
     
     if (debug) printSymbolInfo()
 
-    val rawSymbolInfos: Seq[SymbolInfo] = {
+    val rawSymbolInfos: Seq[SymbolInfo] = debugTimed("rawSymbolInfos") {
       val symAndPos = mutable.HashMap[Symbol, List[Position]]()
       for {
         (sym, pos) <- allSymbols
@@ -159,15 +158,15 @@ class SymbolClassification(protected val sourceFile: SourceFile, val global: Sca
       
       (for {
         (sym, poss) <- symAndPos
-      } yield getSymbolInfo(sym, poss)).toStream
+      } yield getSymbolInfo(sym, poss)).toList
     }
     
-    val prunedSymbolInfos = prune(rawSymbolInfos)
+    val prunedSymbolInfos = debugTimed("pruned")(prune(rawSymbolInfos))
     val all: Set[Region] = rawSymbolInfos flatMap (_.regions) toSet
     val localVars: Set[Region] = rawSymbolInfos.collect { case SymbolInfo(LocalVar, regions, _) => regions }.flatten.toSet
-    val symbolInfosFromSyntax = getSymbolInfosFromSyntax(syntacticInfo, localVars, all)
+    val symbolInfosFromSyntax = debugTimed("symbolInfosFromSyntax")(getSymbolInfosFromSyntax(syntacticInfo, localVars, all))
 
-    val res = (symbolInfosFromSyntax ++ prunedSymbolInfos) filter { _.regions.nonEmpty } distinct
+    val res = debugTimed("res")((symbolInfosFromSyntax ++ prunedSymbolInfos) filter { _.regions.nonEmpty } distinct)
     
     logger.debug("raw symbols: %d, pruned symbols: %d".format(rawSymbolInfos.size, prunedSymbolInfos.size))
     res
@@ -213,18 +212,27 @@ class SymbolClassification(protected val sourceFile: SourceFile, val global: Sca
   }
 
   private def prune(rawSymbolInfos: Seq[SymbolInfo]): Seq[SymbolInfo] = {
-    def findRegionsWithSymbolType(symbolType: SymbolType): Set[Region] =
+    def findRegionsWithSymbolType(symbolType: SymbolType): Set[Region] = 
       rawSymbolInfos.collect { case SymbolInfo(`symbolType`, regions, _) => regions }.flatten.toSet
 
-    val symbolTypeToRegion: Map[SymbolType, Set[Region]] = pruneTable mapValues (_ flatMap findRegionsWithSymbolType)
+    val symbolTypeToRegion: Map[SymbolType, Set[Region]] = debugTimed("symbolTypeToRegion") {
+      // we use `map' instead of the more elegant `mapValue(f)` because the latter is
+      // a `view': it applies `f' for each retrieved key, wihtout any caching. This
+      // causes quadratic behavior: `findRegionsWithSymbolType` is linear in rawSymbolInfos,
+      // and this map is called for each symbol in rawSymbolInfos
+      // `map' is strict, and creates a new result map that leads to much better runtime behavior.
+      pruneTable map {
+        case (symType, regions) => (symType, regions flatMap findRegionsWithSymbolType)
+      }
+    }
 
-    def pruneMisidentifiedSymbols(symbolInfo: SymbolInfo): SymbolInfo =
+    def pruneMisidentifiedSymbols(symbolInfo: SymbolInfo): SymbolInfo = 
       symbolTypeToRegion.get(symbolInfo.symbolType) match {
         case Some(regionsToRemove) => symbolInfo.copy(regions = symbolInfo.regions filterNot regionsToRemove)
         case None => symbolInfo
       }
 
-    rawSymbolInfos.map(pruneMisidentifiedSymbols)
+    debugTimed("pruneMisidentifiedSymbols")(rawSymbolInfos.map(pruneMisidentifiedSymbols))
   }
 
 }

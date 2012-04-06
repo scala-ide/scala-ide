@@ -12,6 +12,8 @@ import org.eclipse.jface.text.source._
 import org.eclipse.jface.text.Position
 import scala.tools.eclipse.semantic.SemanticAction
 
+import scala.tools.eclipse.util.Utils.debugTimed
+
 class SemanticHighlightingAnnotationsManager(sourceViewer: ISourceViewer) extends SemanticAction with HasLogger {
 
   private var annotations: Set[Annotation] = Set()
@@ -58,10 +60,10 @@ class SemanticHighlightingAnnotationsManager(sourceViewer: ISourceViewer) extend
     prefStore.getBoolean(ScalaSyntaxClasses.STRIKETHROUGH_DEPRECATED)
 
   private def setAnnotations(symbolInfos: List[SymbolInfo]) {
-    val annotationsToPositions: Map[Annotation, Position] = makeAnnotations(symbolInfos)
+    val annotationsToPositions: Map[Annotation, Position] = debugTimed("makeAnnotations")(makeAnnotations(symbolInfos))
     for (annotationModel <- annotationModelOpt)
       annotationModel.withLock {
-        annotationModel.replaceAnnotations(annotations, annotationsToPositions)
+        debugTimed("replaceAnnotations")(annotationModel.replaceAnnotations(annotations, annotationsToPositions))
         annotations = annotationsToPositions.keySet
       }
   }
