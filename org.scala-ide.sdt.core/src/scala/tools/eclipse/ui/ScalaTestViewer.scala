@@ -446,15 +446,15 @@ private class GoToSourceAction(node: Node, fTestRunnerPart: ScalaTestRunnerViewP
   override def run() {
     node match {
       case test: TestModel => 
-        goToLocation(test.location)
+        goToLocation(test.location, test.errorDepth, test.errorStackTrace)
       case scope: ScopeModel =>
-        goToLocation(scope.location)
+        goToLocation(scope.location, None, None)
       case info: InfoModel =>
-        goToLocation(info.location)
+        goToLocation(info.location, info.errorDepth, info.errorStackTrace)
       case markup: MarkupModel => 
-        goToLocation(markup.location)
+        goToLocation(markup.location, None, None)
       case suite: SuiteModel =>
-        goToLocation(suite.location)
+        goToLocation(suite.location, suite.errorDepth, suite.errorStackTrace)
       case _ =>
     }
   }
@@ -466,7 +466,28 @@ private class GoToSourceAction(node: Node, fTestRunnerPart: ScalaTestRunnerViewP
                             "Cannot identify source location of the selected element")
   }
   
-  private def goToLocation(location: Option[Location]) {
+  private def openSourceFileLineNumber(scProj: ScalaProject, fileName: String, lineNumber: Int) {
+    val sourceFile = scProj.allSourceFiles.find(file => file.getName == fileName)
+    sourceFile match {
+      case Some(sourceFile) => 
+        val page = PlatformUI.getWorkbench.getActiveWorkbenchWindow.getActivePage
+        val desc = PlatformUI.getWorkbench.getEditorRegistry.getDefaultEditor(sourceFile.getName)
+        val editorPart = page.openEditor(new FileEditorInput(sourceFile), desc.getId)
+        editorPart match {
+          case textEditor: ITextEditor => 
+            val document = textEditor.getDocumentProvider.getDocument(textEditor.getEditorInput)
+            val lineOffset = document.getLineOffset(lineNumber - 1)
+            val lineLength = document.getLineLength(lineNumber - 1)
+            textEditor.selectAndReveal(lineOffset, lineLength)
+          case _ =>
+            notifyLocationNotFound()
+        }
+      case None => 
+        notifyLocationNotFound()
+    }
+  }
+  
+  private def goToLocation(location: Option[Location], errorDepth: Option[Int], errorStackTraces: Option[Array[StackTraceElement]]) {
     location match {
       case Some(location) =>
         location match {
@@ -508,31 +529,34 @@ private class GoToSourceAction(node: Node, fTestRunnerPart: ScalaTestRunnerViewP
             scProj match {
               case Some(scProj) =>
                 val fileName = lineInFile.fileName
-                val sourceFile = scProj.allSourceFiles.find(file => file.getName == fileName)
-                sourceFile match {
-                  case Some(sourceFile) => 
-                    val page = PlatformUI.getWorkbench.getActiveWorkbenchWindow.getActivePage
-                    val desc = PlatformUI.getWorkbench.getEditorRegistry.getDefaultEditor(sourceFile.getName)
-                    val editorPart = page.openEditor(new FileEditorInput(sourceFile), desc.getId)
-                    editorPart match {
-                      case textEditor: ITextEditor => 
-                        val document = textEditor.getDocumentProvider.getDocument(textEditor.getEditorInput)
-                        val lineOffset = document.getLineOffset(lineInFile.lineNumber - 1)
-                        val lineLength = document.getLineLength(lineInFile.lineNumber - 1)
-                        textEditor.selectAndReveal(lineOffset, lineLength)
-                      case _ =>
-                        notifyLocationNotFound()
-                    }
-                  case None => 
-                    notifyLocationNotFound()
-                }
+                val lineNumber = lineInFile.lineNumber
+                openSourceFileLineNumber(scProj, fileName, lineNumber)
               case None => 
                 notifyLocationNotFound()
             }
           case SeeStackDepthException =>
+            val scProj = getScalaProject(fTestRunnerPart.fTestRunSession.projectName)
+            scProj match {
+              case Some(scProj) =>
+                if (errorDepth.isDefined && errorStackTraces.isDefined) {
+                  val errorDepthValue = errorDepth.get
+                  if (errorDepthValue >= 0) {
+                    val stackTrace = errorStackTraces.get(errorDepthValue)
+                    val fileName = stackTrace.fileName
+                    val lineNumber = stackTrace.lineNumber
+                    openSourceFileLineNumber(scProj, fileName, lineNumber)
+                  }
+                  else
+                    notifyLocationNotFound()
+                }
+                else
+                  notifyLocationNotFound()
+              case None => 
+                notifyLocationNotFound()
+            }
         }  
       case None =>
-      
+        notifyLocationNotFound()
     }
   }
   

@@ -12,6 +12,10 @@ case class TestNameInfo(testName: String, decodedTestName: Option[String])
 
 final case class NameInfo(suiteName: String, suiteId: String, suiteClassName: Option[String], decodedSuiteName:Option[String],  testName: Option[TestNameInfo])
 
+case class StackTraceElement(className: String, methodName: String, fileName: String, lineNumber: Int, isNative: Boolean, toStringValue: String) {
+  override def toString = toStringValue
+}
+
 object TestStatus extends Enumeration {
   type TestStatus = Value
   val STARTED, SUCCEEDED, FAILED, IGNORED, PENDING, CANCELED = Value
@@ -55,8 +59,9 @@ final case class TestModel(
   decodedTestName: Option[String],
   var duration: Option[Long],
   var errorMessage: Option[String], 
-  var errorStackTrace: Option[String], 
-  location: Option[Location],
+  var errorDepth: Option[Int], 
+  var errorStackTrace: Option[Array[StackTraceElement]], 
+  var location: Option[Location],
   rerunner: Option[String],
   threadName: String,
   timeStamp: Long, 
@@ -92,11 +97,12 @@ final case class SuiteModel(
   suiteId: String,
   suiteClassName: Option[String],
   decodedSuiteName: Option[String],
-  location: Option[Location],
+  var location: Option[Location],
   rerunner: Option[String],
   var duration: Option[Long] = None,
   var errorMessage: Option[String], 
-  var errorStackTrace: Option[String], 
+  var errorDepth: Option[Int], 
+  var errorStackTrace: Option[Array[StackTraceElement]], 
   threadName: String,
   timeStamp: Long, 
   var status: SuiteStatus
@@ -126,14 +132,16 @@ final case class SuiteModel(
     scopeStack.pop()
   }
   
-  def updateTest(testName: String, status: TestStatus, duration: Option[Long], errorMessage: Option[String], errorStackTrace: Option[String]) = {
+  def updateTest(testName: String, status: TestStatus, duration: Option[Long], location: Option[Location], errorMessage: Option[String], errorDepth: Option[Int], errorStackTrace: Option[Array[StackTraceElement]]) = {
     val node = flatTestsCache.toArray.find(node => node.isInstanceOf[TestModel] && node.asInstanceOf[TestModel].testName == testName)
     node match {
       case Some(node) => 
         val test = node.asInstanceOf[TestModel]
         test.status = status
         test.duration = duration
+        test.location = location
         test.errorMessage = errorMessage
+        test.errorDepth = errorDepth
         test.errorStackTrace = errorStackTrace
         test
       case None => 
@@ -152,7 +160,8 @@ final case class RunModel(
   var duration: Option[Long] = None,
   var summary: Option[Summary] = None,
   var errorMessage: Option[String], 
-  var errorStackTrace: Option[String], 
+  var errorDepth: Option[Int],
+  var errorStackTrace: Option[Array[StackTraceElement]], 
   threadName: String,
   timeStamp: Long, 
   var status: RunStatus
@@ -164,7 +173,8 @@ final case class InfoModel(
   aboutAPendingTest: Option[Boolean],
   aboutACanceledTest: Option[Boolean],
   errorMessage: Option[String], 
-  errorStackTrace: Option[String], 
+  errorDepth: Option[Int],
+  errorStackTrace: Option[Array[StackTraceElement]], 
   location: Option[Location], 
   threadName: String,
   timeStamp: Long

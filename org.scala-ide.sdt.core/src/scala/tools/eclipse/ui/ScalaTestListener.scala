@@ -97,7 +97,8 @@ class ScalaTestListener extends Observable with Runnable {
                   (eventXml \ "testText").text,
                   stringOpt(eventXml \ "decodedTestName"),
                   stringOpt(eventXml \ "throwable" \ "message"),
-                  stringOpt(eventXml \ "throwable" \ "stackTraces"),
+                  intOpt(eventXml \ "throwable" \ "depth"),
+                  stackTracesOpt(eventXml \ "throwable" \ "stackTraces"),
                   longOpt(eventXml \ "duration"),
                   locationOpt(eventXml \ "location"),
                   stringOpt(eventXml \ "rerunner"),
@@ -148,7 +149,8 @@ class ScalaTestListener extends Observable with Runnable {
                   (eventXml \ "testText").text,
                   stringOpt(eventXml \ "decodedTestName"),
                   stringOpt(eventXml \ "throwable" \ "message"),
-                  stringOpt(eventXml \ "throwable" \ "stackTraces"),
+                  intOpt(eventXml \ "throwable" \ "depth"),
+                  stackTracesOpt(eventXml \ "throwable" \ "stackTraces"),
                   longOpt(eventXml \ "duration"),
                   locationOpt(eventXml \ "location"),
                   (eventXml \ "threadName").text,
@@ -216,7 +218,8 @@ class ScalaTestListener extends Observable with Runnable {
                   stringOpt(eventXml \ "suiteClassName"),
                   stringOpt(eventXml \ "decodedSuiteName"),
                   stringOpt(eventXml \ "throwable" \ "message"),
-                  stringOpt(eventXml \ "throwable" \ "stackTraces"),
+                  intOpt(eventXml \ "throwable" \ "depth"),
+                  stackTracesOpt(eventXml \ "throwable" \ "stackTraces"),
                   longOpt(eventXml \ "duration"),
                   locationOpt(eventXml \ "location"),
                   stringOpt(eventXml \ "rerunner"),
@@ -257,7 +260,8 @@ class ScalaTestListener extends Observable with Runnable {
                 RunAborted (
                   (eventXml \ "message").text,
                   stringOpt(eventXml \ "throwable" \ "message"),
-                  stringOpt(eventXml \ "throwable" \ "stackTraces"),
+                  intOpt(eventXml \ "throwable" \ "depth"),
+                  stackTracesOpt(eventXml \ "throwable" \ "stackTraces"),
                   longOpt(eventXml \ "duration"),
                   summaryOpt(eventXml \ "summary"),
                   locationOpt(eventXml \ "location"),
@@ -274,7 +278,8 @@ class ScalaTestListener extends Observable with Runnable {
                   booleanOpt(eventXml \ "aboutAPendingTest"),
                   booleanOpt(eventXml \ "aboutACanceledTest"),
                   stringOpt(eventXml \ "throwable" \ "message"),
-                  stringOpt(eventXml \ "throwable" \ "stackTraces"),
+                  intOpt(eventXml \ "throwable" \ "depth"),
+                  stackTracesOpt(eventXml \ "throwable" \ "stackTraces"),
                   locationOpt(eventXml \ "location"),
                   (eventXml \ "threadName").text,
                   (eventXml \ "timeStamp").text.toLong
@@ -322,6 +327,13 @@ class ScalaTestListener extends Observable with Runnable {
       Some(nodeSeq.text)
   }
   
+  private def intOpt(nodeSeq: NodeSeq) = {
+    if (nodeSeq.text == "")
+      None
+    else
+      Some(nodeSeq.text.toInt)
+  }
+  
   private def longOpt(nodeSeq: NodeSeq) = {
     if (nodeSeq.text == "")
       None
@@ -355,6 +367,22 @@ class ScalaTestListener extends Observable with Runnable {
         }
       case None => 
         None
+    }
+  }
+  
+  private def stackTracesOpt(nodeSeq: NodeSeq): Option[Array[StackTraceElement]] = {
+    if (nodeSeq.text == "")
+      None
+    else {
+      val stackTraces = nodeSeq.head.child.filter(c => c.text.trim.length > 0)
+      Some(stackTraces.map { st => 
+        StackTraceElement((st \ "className").text, 
+                          (st \ "methodName").text, 
+                          (st \ "fileName").text, 
+                          (st \ "lineNumber").text.toInt, 
+                          (st \ "isNative").text.toBoolean, 
+                          (st \ "toString").text)  
+      }.toArray)
     }
   }
   
