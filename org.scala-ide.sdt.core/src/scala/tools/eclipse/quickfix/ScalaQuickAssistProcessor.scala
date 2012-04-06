@@ -57,12 +57,17 @@ class ScalaQuickAssistProcessor extends org.eclipse.jdt.ui.text.java.IQuickAssis
   }
 
   private def suggestAssist(compilationUnit: ICompilationUnit, problemMessage: String, location: Position): List[IJavaCompletionProposal] = {
-
-    problemMessage match {
+    List(
+        ExtractLocalProposal, 
+        InlineLocalProposal, 
+        RenameProposal, 
+        ExtractMethodProposal
+    ).filter(_.isValidProposal) :::
+    (problemMessage match {
       case ImplicitConversionFound(s) => List(new ImplicitConversionExpandingProposal(s, location))
       case ImplicitArgFound(s) => List(new ImplicitArgumentExpandingProposal(s, location))
       case _ => Nil
-    }
+    })
   }
 }
 
