@@ -55,6 +55,7 @@ sealed abstract class Node {
 }
 
 final case class TestModel(
+  suiteId: String, 
   testName: String,
   testText: String,
   decodedTestName: Option[String],

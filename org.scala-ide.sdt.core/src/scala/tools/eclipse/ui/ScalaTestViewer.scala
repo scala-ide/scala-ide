@@ -32,6 +32,9 @@ import org.eclipse.ui.part.FileEditorInput
 import org.eclipse.ui.texteditor.ITextEditor
 import org.eclipse.jface.viewers.ISelectionChangedListener
 import org.eclipse.jface.viewers.SelectionChangedEvent
+import org.eclipse.jface.action.IMenuManager
+import org.eclipse.jface.action.MenuManager
+import org.eclipse.jface.action.IMenuListener
 
 class ScalaTestViewer(parent: Composite, fTestRunnerPart: ScalaTestRunnerViewPart) {
   
@@ -60,7 +63,21 @@ class ScalaTestViewer(parent: Composite, fTestRunnerPart: ScalaTestRunnerViewPar
 
   registerViewersRefresh()
 
-  //initContextMenu()
+  initContextMenu()
+  
+  private def initContextMenu() {
+    val menuMgr = new MenuManager("#PopupMenu"); //$NON-NLS-1$
+    menuMgr.setRemoveAllWhenShown(true)
+    menuMgr.addMenuListener(new IMenuListener() {
+      def menuAboutToShow(manager: IMenuManager) {
+        handleMenuAboutToShow(manager)
+      }
+    })
+    fTestRunnerPart.getSite.registerContextMenu(menuMgr, fSelectionProvider)
+    val menu = menuMgr.createContextMenu(fViewerbook);
+    fTreeViewer.getTree.setMenu(menu);
+    //fTableViewer.getTable().setMenu(menu);
+  }
   
   private def createTestViewers(parent: Composite) {
     fViewerbook = new PageBook(parent, SWT.NULL);
@@ -89,6 +106,68 @@ class ScalaTestViewer(parent: Composite, fTestRunnerPart: ScalaTestRunnerViewPar
     //fTestRunnerPart.getSite().setSelectionProvider(fSelectionProvider);
 
     fViewerbook.showPage(fTreeViewer.getTree());
+  }
+  
+  def handleMenuAboutToShow(manager: IMenuManager) {
+    val selection = fSelectionProvider.getSelection.asInstanceOf[IStructuredSelection]
+    if (!selection.isEmpty) {
+      val node = selection.getFirstElement.asInstanceOf[Node]
+      node match {
+        case test: TestModel => 
+          test.rerunner match {
+            case Some(rerunner) => 
+              manager.add(new RerunTestAction("Rerun Test", fTestRunnerPart, rerunner, test.suiteId, test.testName))
+            case None => 
+          }
+        case suite: SuiteModel => 
+          suite.rerunner match {
+            case Some(rerunner) => 
+              manager.add(new RerunSuiteAction("Rerun Suite", fTestRunnerPart, rerunner, suite.suiteId))
+            case None =>
+          }
+        case _ =>
+      }
+    }
+    /*IStructuredSelection selection= (IStructuredSelection) fSelectionProvider.getSelection();
+    if (! selection.isEmpty()) {
+      TestElement testElement= (TestElement) selection.getFirstElement();
+
+      String testLabel= testElement.getTestName();
+      String className= testElement.getClassName();
+      if (testElement instanceof TestSuiteElement) {
+        manager.add(new OpenTestAction(fTestRunnerPart, testLabel));
+        manager.add(new Separator());
+        if (testClassExists(className) && !fTestRunnerPart.lastLaunchIsKeptAlive()) {
+          manager.add(new RerunAction(JUnitMessages.RerunAction_label_run, fTestRunnerPart, testElement.getId(), className, null, ILaunchManager.RUN_MODE));
+          manager.add(new RerunAction(JUnitMessages.RerunAction_label_debug, fTestRunnerPart, testElement.getId(), className, null, ILaunchManager.DEBUG_MODE));
+        }
+      } 
+      else {
+        TestCaseElement testCaseElement= (TestCaseElement) testElement;
+        String testMethodName= testCaseElement.getTestMethodName();
+        manager.add(new OpenTestAction(fTestRunnerPart, testCaseElement));
+        manager.add(new Separator());
+        if (fTestRunnerPart.lastLaunchIsKeptAlive()) {
+          manager.add(new RerunAction(JUnitMessages.RerunAction_label_rerun, fTestRunnerPart, testElement.getId(), className, testMethodName, ILaunchManager.RUN_MODE));
+        } 
+        else {
+          manager.add(new RerunAction(JUnitMessages.RerunAction_label_run, fTestRunnerPart, testElement.getId(), className, testMethodName, ILaunchManager.RUN_MODE));
+          manager.add(new RerunAction(JUnitMessages.RerunAction_label_debug, fTestRunnerPart, testElement.getId(), className, testMethodName, ILaunchManager.DEBUG_MODE));
+        }
+      }
+      if (fLayoutMode == TestRunnerViewPart.LAYOUT_HIERARCHICAL) {
+        manager.add(new Separator());
+        manager.add(new ExpandAllAction());
+      }
+
+    }
+    if (fTestRunSession != null && fTestRunSession.getFailureCount() + fTestRunSession.getErrorCount() > 0) {
+      if (fLayoutMode != TestRunnerViewPart.LAYOUT_HIERARCHICAL)
+        manager.add(new Separator());
+        manager.add(new CopyFailureListAction(fTestRunnerPart, fClipboard));
+    }
+    manager.add(new Separator(IWorkbenchActionConstants.MB_ADDITIONS));
+    manager.add(new Separator(IWorkbenchActionConstants.MB_ADDITIONS + "-end")); //$NON-NLS-1$*/
   }
   
   def registerViewersRefresh() {
@@ -578,5 +657,19 @@ private class GoToSourceAction(node: Node, fTestRunnerPart: ScalaTestRunnerViewP
       Some(ScalaProject(javaProject.getProject))
     else
       None
+  }
+}
+
+private class RerunSuiteAction(actionName: String, fTestRunnerPart: ScalaTestRunnerViewPart, suiteClassName: String, 
+                               suiteId: String) extends Action(actionName) {
+  override def run() {
+    MessageDialog.openInformation(fTestRunnerPart.getSite.getShell, "To Be Implemented", "This feature is yet to be implemented.")
+  }
+}
+
+private class RerunTestAction(actionName: String, fTestRunnerPart: ScalaTestRunnerViewPart, suiteClassName: String, 
+                               suiteId: String, testName: String) extends Action(actionName) {
+  override def run() {
+    MessageDialog.openInformation(fTestRunnerPart.getSite.getShell, "To Be Implemented", "This feature is yet to be implemented.")
   }
 }

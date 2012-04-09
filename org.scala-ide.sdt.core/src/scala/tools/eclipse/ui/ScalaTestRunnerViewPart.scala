@@ -167,6 +167,7 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
         fTestRunSession.startedCount += 1
         val test = 
           TestModel(
+            testStarting.suiteId, 
             testStarting.testName,
             testStarting.testText,
             testStarting.decodedTestName,
@@ -220,6 +221,7 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
         fTestRunSession.ignoredCount += 1
         val test = 
           TestModel(
+            testIgnored.suiteId, 
             testIgnored.testName,
             testIgnored.testText,
             testIgnored.decodedTestName,
