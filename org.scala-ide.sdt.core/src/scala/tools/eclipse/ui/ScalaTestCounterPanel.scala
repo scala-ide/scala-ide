@@ -25,7 +25,6 @@ class ScalaTestCounterPanel(parent: Composite) extends Composite(parent, SWT.WRA
   protected var fTotal: Int = 0
   
   private val fSucceedIcon = ScalaImages.SCALATEST_SUCCEED.createImage
-  private val fErrorIcon = ScalaImages.SCALATEST_ERROR.createImage
   private val fFailureIcon = ScalaImages.SCALATEST_FAILED.createImage
   private val fIgnoredIcon = ScalaImages.SCALATEST_IGNORED.createImage
   private val fSuiteRunIcon = ScalaImages.SCALATEST_SUITE_RUN.createImage
@@ -42,8 +41,8 @@ class ScalaTestCounterPanel(parent: Composite) extends Composite(parent, SWT.WRA
     setLayout(gridLayout)
     
     fNumberOfRuns = createLabel("Runs: ", fSuiteRunIcon, " 0/0  ") //$NON-NLS-1$
-    fNumberOfSucceed = createLabel("Succeed: ", fSucceedIcon, " 0 ")
-    fNumberOfFailure = createLabel("Failure: ", fFailureIcon, " 0 ") //$NON-NLS-1$
+    fNumberOfSucceed = createLabel("Succeeded: ", fSucceedIcon, " 0 ")
+    fNumberOfFailure = createLabel("Failed: ", fFailureIcon, " 0 ") //$NON-NLS-1$
     fNumberOfIgnored = createLabel("Ignored: ", fIgnoredIcon, " 0 ") //$NON-NLS-1$
     fNumberOfPending = createLabel("Pending: ", fIgnoredIcon, " 0 ")
     fNumberOfCanceled = createLabel("Canceled: ", fIgnoredIcon, " 0 ")
@@ -59,7 +58,6 @@ class ScalaTestCounterPanel(parent: Composite) extends Composite(parent, SWT.WRA
   
   private def disposeIcons() {
     fSucceedIcon.dispose()
-    fErrorIcon.dispose()
     fFailureIcon.dispose()
     fIgnoredIcon.dispose()
     fSuiteIcon.dispose()

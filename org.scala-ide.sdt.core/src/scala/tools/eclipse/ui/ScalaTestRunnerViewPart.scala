@@ -65,11 +65,9 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
   val scopeIcon = ScalaImages.SCALATEST_SCOPE.createImage
   val testRunIcon = ScalaImages.SCALATEST_RUN.createImage
   val testSucceedIcon = ScalaImages.SCALATEST_SUCCEED.createImage
-  val testErrorIcon = ScalaImages.SCALATEST_ERROR.createImage
   val testFailedIcon = ScalaImages.SCALATEST_FAILED.createImage
   val testIgnoredIcon = ScalaImages.SCALATEST_IGNORED.createImage
   val infoIcon = ScalaImages.SCALATEST_INFO.createImage
-  val markupIcon = ScalaImages.SCALATEST_MARKUP.createImage
   
   def setSession(session: ScalaTestRunSession) {
     fTestRunSession = session
@@ -98,11 +96,9 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
     scopeIcon.dispose()
     testRunIcon.dispose()
     testSucceedIcon.dispose()
-    testErrorIcon.dispose()
     testFailedIcon.dispose()
     testIgnoredIcon.dispose()
     infoIcon.dispose()
-    markupIcon.dispose()
   }
   
   override def saveState(memento: IMemento) {
@@ -272,59 +268,65 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
         }
       case suiteStarting: SuiteStarting => 
         println("***SuiteStarting: " + suiteStarting.suiteId + ", location: " + suiteStarting.location)
-        fTestRunSession.suiteCount += 1
-        val suite = SuiteModel(
-                      suiteStarting.suiteName,
-                      suiteStarting.suiteId,
-                      suiteStarting.suiteClassName,
-                      suiteStarting.decodedSuiteName,
-                      suiteStarting.location,
-                      suiteStarting.rerunner,
-                      None,
-                      None,
-                      None, 
-                      None, 
-                      suiteStarting.threadName,
-                      suiteStarting.timeStamp, 
-                      SuiteStatus.STARTED
-                    )
-        suiteMap += (suite.suiteId -> suite)
-        fTestRunSession.rootNode.addChild(suite)
-        fTestViewer.registerAutoScrollTarget(suite)
-        fTestViewer.registerViewerUpdate(suite)
+        if (suiteStarting.suiteId != "org.scalatest.tools.DiscoverySuite") {
+          fTestRunSession.suiteCount += 1
+          val suite = SuiteModel(
+                        suiteStarting.suiteName,
+                        suiteStarting.suiteId,
+                        suiteStarting.suiteClassName,
+                        suiteStarting.decodedSuiteName,
+                        suiteStarting.location,
+                        suiteStarting.rerunner,
+                        None,
+                        None,
+                        None, 
+                        None, 
+                        suiteStarting.threadName,
+                        suiteStarting.timeStamp, 
+                        SuiteStatus.STARTED
+                      )
+          suiteMap += (suite.suiteId -> suite)
+          fTestRunSession.rootNode.addChild(suite)
+          fTestViewer.registerAutoScrollTarget(suite)
+          fTestViewer.registerViewerUpdate(suite)
+        }
       case suiteCompleted: SuiteCompleted => 
         println("***SuiteCompleted")
-        suiteMap.get(suiteCompleted.suiteId) match {
-          case Some(suite) => 
-            suite.duration = suiteCompleted.duration
-            suite.location = suiteCompleted.location
-            suite.status = 
-              if (suite.suiteSucceeded)
-                SuiteStatus.SUCCEED
-              else
-                SuiteStatus.FAILED
-            fTestViewer.registerAutoScrollTarget(suite)
-            fTestViewer.registerViewerUpdate(suite)
-          case None => 
-            // Should not happen
-            throw new IllegalStateException("Unable to find suite model for SuiteCompleted, suiteId: " + suiteCompleted.suiteId)
+        if (suiteCompleted.suiteId != "org.scalatest.tools.DiscoverySuite") {
+          suiteMap.get(suiteCompleted.suiteId) match {
+            case Some(suite) => 
+              suite.duration = suiteCompleted.duration
+              suite.location = suiteCompleted.location
+              suite.status = 
+                if (suite.suiteSucceeded)
+                  SuiteStatus.SUCCEED
+                else
+                  SuiteStatus.FAILED
+              fTestViewer.registerAutoScrollTarget(suite)
+              fTestViewer.registerViewerUpdate(suite)
+            case None => 
+              // Should not happen
+              throw new IllegalStateException("Unable to find suite model for SuiteCompleted, suiteId: " + suiteCompleted.suiteId)
+          }
         }
       case suiteAborted: SuiteAborted => 
         println("***SuiteAborted")
-        fTestRunSession.suiteAbortedCount += 1
-        suiteMap.get(suiteAborted.suiteId) match {
-          case Some(suite) => 
-            suite.duration = suiteAborted.duration
-            suite.location = suiteAborted.location
-            suite.errorMessage = suiteAborted.errorMessage
-            suite.errorDepth = suiteAborted.errorDepth
-            suite.errorStackTrace = suiteAborted.errorStackTraces
-            suite.status = SuiteStatus.ABORTED
-            fTestViewer.registerAutoScrollTarget(suite)
-            fTestViewer.registerViewerUpdate(suite)
-          case None => 
-            // Should not happend
-            throw new IllegalStateException("Unable to find suite model for SuiteAborted, suiteId: " + suiteAborted.suiteId)
+        if (suiteAborted.suiteId != "org.scalatest.tools.DiscoverySuite") {
+          fTestRunSession.suiteAbortedCount += 1
+          suiteMap.get(suiteAborted.suiteId) match {
+            case Some(suite) => 
+              suite.duration = suiteAborted.duration
+              suite.location = suiteAborted.location
+              suite.errorMessage = suiteAborted.errorMessage
+              suite.errorDepth = suiteAborted.errorDepth
+              suite.errorStackTrace = suiteAborted.errorStackTraces
+              suite.status = SuiteStatus.ABORTED
+              fTestViewer.registerAutoScrollTarget(suite)
+              fTestViewer.registerViewerUpdate(suite)
+            case None => 
+              // Should not happend
+              throw new IllegalStateException("Unable to find suite model for SuiteAborted, suiteId: " + suiteAborted.suiteId)
+          }
         }
       case runStarting: RunStarting => 
         println("***RunStarting")
@@ -403,32 +405,7 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
         }
       case markupProvided: MarkupProvided => 
         println("***MarkupProvided")
-        val markup = 
-          MarkupModel(
-            markupProvided.text,
-            markupProvided.nameInfo,
-            markupProvided.aboutAPendingTest,
-            markupProvided.aboutACanceledTest,
-            markupProvided.location,
-            markupProvided.threadName,
-            markupProvided.timeStamp
-          )
-        markupProvided.nameInfo match {
-          case Some(nameInfo) => 
-            suiteMap.get(nameInfo.suiteId) match {
-              case Some(suite) => 
-                suite.addChild(markup)
-                fTestViewer.registerAutoScrollTarget(markup)
-                fTestViewer.registerViewerUpdate(markup)
-              case None => 
-                // Should not happen
-               throw new IllegalStateException("Unable to find suite model for MarkupProvided, suiteId: " + nameInfo.suiteId)
-            }
-          case None => 
-            fTestRunSession.rootNode.addChild(markup)
-        }
-        // fTestViewer.registerAutoScrollTarget(testCaseElement)
-        // fTestViewer.registerViewerUpdate(testCaseElement)
+        // Do nothing for MarkupProvided, markup info should be shown in HtmlReporter only.
       case scopeOpened: ScopeOpened => 
         println("***ScopeOpened")
         suiteMap.get(scopeOpened.nameInfo.suiteId) match {

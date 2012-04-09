@@ -179,13 +179,3 @@ final case class InfoModel(
   threadName: String,
   timeStamp: Long
 ) extends Node
-
-final case class MarkupModel(
-  text: String,
-  nameInfo: Option[NameInfo],
-  aboutAPendingTest: Option[Boolean],
-  aboutACanceledTest: Option[Boolean],
-  location: Option[Location],
-  threadName: String,
-  timeStamp: Long
-) extends Node

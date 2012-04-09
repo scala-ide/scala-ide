@@ -313,7 +313,6 @@ private class TestSessionLabelProvider(fTestRunnerPart: ScalaTestRunnerViewPart,
         case suite: SuiteModel => suite.duration
         case run: RunModel => run.duration
         case info: InfoModel => None
-        case markup: MarkupModel => None
       }
     return addElapsedTime(text, duration)
   }
@@ -346,7 +345,6 @@ private class TestSessionLabelProvider(fTestRunnerPart: ScalaTestRunnerViewPart,
       case suite: SuiteModel => suite.suiteName
       case run: RunModel => "Run"
       case info: InfoModel => info.message
-      case markup: MarkupModel => markup.text
       case _ => element.toString
     }
   }
@@ -363,7 +361,6 @@ private class TestSessionLabelProvider(fTestRunnerPart: ScalaTestRunnerViewPart,
         case suite: SuiteModel => suite.duration
         case run: RunModel => run.duration
         case info: InfoModel => None
-        case markup: MarkupModel => None
       }
     return addElapsedTime(label, duration)
   }
@@ -400,8 +397,6 @@ private class TestSessionLabelProvider(fTestRunnerPart: ScalaTestRunnerViewPart,
         }
       case info: InfoModel => 
         fTestRunnerPart.infoIcon
-      case markup: MarkupModel => 
-        fTestRunnerPart.markupIcon
       case _ => 
         throw new IllegalArgumentException(String.valueOf(element))
     }
@@ -451,8 +446,6 @@ private class GoToSourceAction(node: Node, fTestRunnerPart: ScalaTestRunnerViewP
         goToLocation(scope.location, None, None)
       case info: InfoModel =>
         goToLocation(info.location, info.errorDepth, info.errorStackTrace)
-      case markup: MarkupModel => 
-        goToLocation(markup.location, None, None)
       case suite: SuiteModel =>
         goToLocation(suite.location, suite.errorDepth, suite.errorStackTrace)
       case _ =>
