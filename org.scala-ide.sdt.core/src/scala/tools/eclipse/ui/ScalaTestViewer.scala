@@ -30,8 +30,16 @@ import org.eclipse.jface.dialogs.MessageDialog
 import org.eclipse.ui.PlatformUI
 import org.eclipse.ui.part.FileEditorInput
 import org.eclipse.ui.texteditor.ITextEditor
+import org.eclipse.jface.viewers.ISelectionChangedListener
+import org.eclipse.jface.viewers.SelectionChangedEvent
 
 class ScalaTestViewer(parent: Composite, fTestRunnerPart: ScalaTestRunnerViewPart) {
+  
+  private class TestSelectionListener extends ISelectionChangedListener {
+    def selectionChanged(event: SelectionChangedEvent) {
+      handleSelected()
+    }
+  }
 
   private var fViewerbook: PageBook = null
   private var fTreeViewer: TreeViewer = null
@@ -73,7 +81,7 @@ class ScalaTestViewer(parent: Composite, fTestRunnerPart: ScalaTestRunnerViewPar
 
     //fSelectionProvider= new SelectionProviderMediator(new StructuredViewer[] { fTreeViewer, fTableViewer }, fTreeViewer);
 	fSelectionProvider= new SelectionProviderMediator(Array[StructuredViewer](fTreeViewer), fTreeViewer)
-    //fSelectionProvider.addSelectionChangedListener(new TestSelectionListener());
+    fSelectionProvider.addSelectionChangedListener(new TestSelectionListener())
     val openSourceCodeListener= new OpenSourceCodeListener(fTestRunnerPart, fSelectionProvider)
     fTreeViewer.getTree().addSelectionListener(openSourceCodeListener)
     //fTableViewer.getTable().addSelectionListener(testOpenListener);
@@ -259,6 +267,16 @@ class ScalaTestViewer(parent: Composite, fTestRunnerPart: ScalaTestRunnerViewPar
     }*/
     if (current != null)
       fTreeViewer.reveal(current);
+  }
+  
+  private def handleSelected() {
+    val selection = fSelectionProvider.getSelection.asInstanceOf[IStructuredSelection]
+    val node = 
+      if (selection.size == 1)
+        Some(selection.getFirstElement.asInstanceOf[Node])
+      else
+        None
+    fTestRunnerPart.handleTestSelected(node)
   }
 }
 
@@ -456,10 +474,10 @@ private class GoToSourceAction(node: Node, fTestRunnerPart: ScalaTestRunnerViewP
   
   private def notifyLocationNotFound() {
     MessageDialog.openError(getShell, "Cannot Open Editor", 
-                            "Cannot identify source location of the selected element")
+                            "Cannot open source location of the selected element")
   }
   
-  private def openSourceFileLineNumber(scProj: ScalaProject, fileName: String, lineNumber: Int) {
+  def openSourceFileLineNumber(scProj: ScalaProject, fileName: String, lineNumber: Int) {
     val sourceFile = scProj.allSourceFiles.find(file => file.getName == fileName)
     sourceFile match {
       case Some(sourceFile) => 

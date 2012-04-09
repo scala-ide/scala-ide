@@ -22,6 +22,7 @@ import org.eclipse.swt.widgets.Layout
 import org.eclipse.swt.graphics.Point
 import org.eclipse.jdt.internal.junit.ui.TestViewer
 import org.eclipse.swt.custom.CLabel
+import org.eclipse.swt.widgets.ToolBar
 
 object ScalaTestRunnerViewPart {
   //orientations
@@ -48,6 +49,7 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
   protected var fCounterComposite: Composite = null
   protected var fCounterPanel: ScalaTestCounterPanel = null
   protected var fTestViewer: ScalaTestViewer = null
+  protected var fStackTrace: ScalaTestStackTrace = null
   
   private var fIsDisposed: Boolean = false
   
@@ -68,6 +70,7 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
   val testFailedIcon = ScalaImages.SCALATEST_FAILED.createImage
   val testIgnoredIcon = ScalaImages.SCALATEST_IGNORED.createImage
   val infoIcon = ScalaImages.SCALATEST_INFO.createImage
+  val stackTraceIcon = ScalaImages.SCALATEST_STACKTRACE.createImage
   
   def setSession(session: ScalaTestRunSession) {
     fTestRunSession = session
@@ -99,6 +102,7 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
     testFailedIcon.dispose()
     testIgnoredIcon.dispose()
     infoIcon.dispose()
+    stackTraceIcon.dispose()
   }
   
   override def saveState(memento: IMemento) {
@@ -139,20 +143,18 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
     fTestViewer = new ScalaTestViewer(top, this)
     top.setContent(fTestViewer.getTestViewerControl)
 
-    /*val bottom = new ViewForm(fSashForm, SWT.NONE)
+    val bottom = new ViewForm(fSashForm, SWT.NONE)
 
     val label = new CLabel(bottom, SWT.NONE)
-    label.setText("Failure Trace")
-    label.setImage(fStackViewIcon)
+    label.setText("Stack Trace")
+    label.setImage(stackTraceIcon)
     bottom.setTopLeft(label)
-    ToolBar failureToolBar= new ToolBar(bottom, SWT.FLAT | SWT.WRAP);
-    bottom.setTopCenter(failureToolBar);
-    fFailureTrace= new FailureTrace(bottom, fClipboard, this, failureToolBar);
-    bottom.setContent(fFailureTrace.getComposite());*/
+    val stackTraceToolBar= new ToolBar(bottom, SWT.FLAT | SWT.WRAP)
+    bottom.setTopCenter(stackTraceToolBar)
+    fStackTrace= new ScalaTestStackTrace(bottom, this, stackTraceToolBar)
+    bottom.setContent(fStackTrace.getComposite)
 
-    // TODO: Should use back this when has stack trace view later
-    //fSashForm.setWeights(Array[Int](50, 50))
-    fSashForm.setWeights(Array[Int](50))
+    fSashForm.setWeights(Array[Int](50, 50))
     fSashForm
   }
   
@@ -587,6 +589,26 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
       fTestViewer.processChangesInUI()
     //}
   }
+  
+  def handleTestSelected(node: Option[Node]) {
+    showFailure(node)
+  }
+  
+  private def showFailure(node: Option[Node]) {
+    postSyncRunnable(new Runnable() {
+      def run() {
+        if (!isDisposed)
+          fStackTrace.showFailure(node)
+      }
+    })
+  }
+  
+  private def postSyncRunnable(r: Runnable) {
+    if (!isDisposed)
+      getDisplay.syncExec(r)
+  }
+  
+  private def getDisplay = getViewSite.getShell.getDisplay
   
   private class UpdateUIJob(name: String) extends UIJob(name) {
     private var fRunning = true

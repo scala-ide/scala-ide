@@ -46,6 +46,7 @@ object ScalaImages  {
   val SCALATEST_IGNORED = create("icons/full/obj16/scalatest_test_ignored.gif")
   val SCALATEST_SCOPE = create("icons/full/obj16/scalatest_test_scope.gif")
   val SCALATEST_INFO = create("icons/full/obj16/scalatest_info.gif")
+  val SCALATEST_STACKTRACE = create("icons/full/obj16/scalatest_stacktrace.gif")
   
   private def create(localPath : String) = {
     try {

@@ -51,6 +51,7 @@ sealed abstract class Node {
   } 
   def children = childrenBuffer.toArray
   def hasChildren = children.length > 0
+  def getStackTraces: Option[Array[StackTraceElement]]
 }
 
 final case class TestModel(
@@ -66,7 +67,9 @@ final case class TestModel(
   threadName: String,
   timeStamp: Long, 
   var status: TestStatus
-) extends Node
+) extends Node {
+  def getStackTraces = errorStackTrace
+}
 
 final case class ScopeModel(
   message: String,
@@ -90,6 +93,7 @@ final case class ScopeModel(
     }
   }
   
+  def getStackTraces = None
 }
 
 final case class SuiteModel(
@@ -153,6 +157,8 @@ final case class SuiteModel(
   def suiteSucceeded = {
     flatTestsCache.toArray.forall(child => child.status != TestStatus.FAILED)
   }
+  
+  def getStackTraces = errorStackTrace
 }
 
 final case class RunModel(
@@ -165,7 +171,9 @@ final case class RunModel(
   threadName: String,
   timeStamp: Long, 
   var status: RunStatus
-) extends Node 
+) extends Node {
+  def getStackTraces = errorStackTrace
+}
 
 final case class InfoModel(
   message: String,
@@ -178,4 +186,6 @@ final case class InfoModel(
   location: Option[Location], 
   threadName: String,
   timeStamp: Long
-) extends Node
+) extends Node {
+  def getStackTraces = errorStackTrace
+}
