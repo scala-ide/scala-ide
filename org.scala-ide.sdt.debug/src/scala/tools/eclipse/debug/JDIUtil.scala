@@ -7,7 +7,7 @@ object JDIUtil {
   /**
    * Return the list of executable lines of the given method.
    */
-  def methodToLines(m: Method) = {
+  def methodToLines(m: Method): Seq[Int] = {
     import scala.collection.JavaConverters._
 
     try {

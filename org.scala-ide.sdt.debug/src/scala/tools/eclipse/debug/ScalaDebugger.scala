@@ -12,6 +12,18 @@ import model.ScalaThread
 import org.eclipse.jface.viewers.IStructuredSelection
 import model.ScalaStackFrame
 import scala.tools.eclipse.ScalaPlugin
+import org.eclipse.debug.core.model.DebugElement
+
+object EclipseDebugEvent {
+  def unapply(event: DebugEvent): Option[(Int, DebugElement)] = {
+    event.getSource match {
+      case debugElement: DebugElement =>
+        Some(event.getKind, debugElement)
+      case _ =>
+        None
+    }
+  }
+}
 
 object ScalaDebugger extends IDebugEventSetListener with ISelectionListener {
 
@@ -30,37 +42,24 @@ object ScalaDebugger extends IDebugEventSetListener with ISelectionListener {
   // Members declared in org.eclipse.debug.core.IDebugEventSetListener
 
   def handleDebugEvents(events: Array[DebugEvent]) {
-    events.foreach(event => {
-      event.getKind match {
-        case DebugEvent.CREATE =>
-          event.getSource match {
-            case target: JDIDebugTarget =>
-              if (ScalaDebugPlugin.plugin.getPreferenceStore.getBoolean(DebugPreferencePage.P_ENABLE)) {
-                javaDebugTargetCreated(target)
-              }
-            case _ =>
+    events.foreach(event =>
+      event match {
+        case EclipseDebugEvent(DebugEvent.CREATE, target: JDIDebugTarget) =>
+          if (ScalaDebugPlugin.plugin.getPreferenceStore.getBoolean(DebugPreferencePage.P_ENABLE)) {
+            javaDebugTargetCreated(target)
           }
-        case DebugEvent.SUSPEND =>
-          event.getSource match {
-            case thread: JDIThread =>
-              javaThreadSuspended(thread, event.getDetail)
-            case _ =>
-          }
-        case DebugEvent.TERMINATE =>
-          event.getSource match {
-            case target: JDIDebugTarget =>
-              javaDebugTargetTerminated(target)
-            case _ =>
-          }
+        case EclipseDebugEvent(DebugEvent.SUSPEND, thread: JDIThread) =>
+          javaThreadSuspended(thread, event.getDetail)
+        case EclipseDebugEvent(DebugEvent.TERMINATE, target: JDIDebugTarget) =>
+          javaDebugTargetTerminated(target)
         case _ =>
-      }
-    })
+      })
   }
 
   // Members declared in org.eclipse.ui.ISelectionListener
 
   def selectionChanged(part: org.eclipse.ui.IWorkbenchPart, selection: org.eclipse.jface.viewers.ISelection) {
-    currentThread= selection match {
+    currentThread = selection match {
       case structuredSelection: IStructuredSelection =>
         structuredSelection.getFirstElement match {
           case scalaThread: ScalaThread =>

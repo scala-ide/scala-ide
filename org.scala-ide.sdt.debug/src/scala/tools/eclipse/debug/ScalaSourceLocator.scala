@@ -26,6 +26,9 @@ class ScalaSourceLocator(launch: ILaunch) extends ISourceLocator {
     }
   }
 
+  /**
+   * Return an IFile for source file contained in the workspaces, on IType for binary type.
+   */
   def getSourceElement(stackFrame: ScalaStackFrame): AnyRef = {
     val sourceName = stackFrame.getSourceName
     

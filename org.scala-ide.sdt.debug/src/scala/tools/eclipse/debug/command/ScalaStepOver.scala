@@ -14,8 +14,6 @@ import com.sun.jdi.event.{StepEvent, EventSet, Event, ClassPrepareEvent, Breakpo
 import com.sun.jdi.request.{StepRequest, EventRequest}
 import com.sun.jdi.{ThreadReference, ReferenceType, Method}
 
-import ScalaStepOver.{createMethodEntryBreakpoint, anonFunctionsInRange}
-
 object ScalaStepOver {
 
   final val LINE_NUMBER_UNAVAILABLE = -1
@@ -50,7 +48,8 @@ object ScalaStepOver {
 
       val range = Range(location.lineNumber, (location.method.declaringType.methods.asScala.flatten(methodToLines(_)).filter(_ > currentMethodLastLine) :+ Int.MaxValue).min)
 
-      val loadedAnonFunctionsInRange = location.method.declaringType.nestedTypes.asScala.flatMap(anonFunctionsInRange(_, range))
+      // TODO: nestedTypes triggers a AllClasses request to the VM. Having the list of nested types managed and cached by the debug target should be more effective.
+      val loadedAnonFunctionsInRange = location.method.declaringType.nestedTypes.asScala.flatMap(scalaStackFrame.getScalaDebugTarget.anonFunctionsInRange(_, range))
 
       // if we are in an anonymous function, add the method
       if (location.declaringType.name.contains("$$anonfun$")) {
@@ -74,30 +73,6 @@ object ScalaStepOver {
     breakpointRequest
   }
 
-  // TODO: use ScalaDebugTarget#findAnonFunction
-  def anonFunctionsInRange(refType: ReferenceType, range: Range) = {
-    import scala.collection.JavaConverters._
-    val methods = refType.methods.asScala.filter(method =>
-       method.name.startsWith("apply") && !method.isAbstract && range.contains(method.location.lineNumber))
-
-    // TODO: using isBridge was not working with List[Int]. Should check if we can use it by default with some extra checks when it fails.
-    //      methods.find(!_.isBridge)
-
-    methods.size match {
-      case 3 =>
-        // method with primitive parameter
-        methods.find(_.name.startsWith("apply$")).orElse({
-          // method with primitive return type (with specialization in 2.10.0)
-          methods.find(!_.signature.startsWith("(Ljava/lang/Object;)"))
-        })
-      case 2 =>
-        methods.find(_.signature != "(Ljava/lang/Object;)Ljava/lang/Object;")
-      case 1 =>
-        methods.headOption
-      case _ =>
-        None
-    }
-  }
 }
 
 class ScalaStepOver(target: ScalaDebugTarget, range: Range, thread: ScalaThread, requests: ListBuffer[EventRequest]) extends IJDIEventListener with ScalaStep {
@@ -112,7 +87,7 @@ class ScalaStepOver(target: ScalaDebugTarget, range: Range, thread: ScalaThread,
   def handleEvent(event: Event, javaTarget: JDIDebugTarget, suspendVote: Boolean, eventSet: EventSet): Boolean = {
     event match {
       case classPrepareEvent: ClassPrepareEvent =>
-        anonFunctionsInRange(classPrepareEvent.referenceType, range).foreach(method => {
+        thread.getScalaDebugTarget.anonFunctionsInRange(classPrepareEvent.referenceType, range).foreach(method => {
           val breakpoint = createMethodEntryBreakpoint(method, thread.thread)
           requests += breakpoint
           javaTarget.getEventDispatcher.addJDIEventListener(this, breakpoint)

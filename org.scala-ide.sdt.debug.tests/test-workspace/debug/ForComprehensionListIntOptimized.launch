@@ -2,11 +2,11 @@
 <launchConfiguration type="scala.application">
 <stringAttribute key="bad_container_name" value="/debug/f"/>
 <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">
-<listEntry value="/debug"/>
+<listEntry value="/debug/src/stepping/ForComprehensionListIntOptimized.scala"/>
 </listAttribute>
 <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_TYPES">
-<listEntry value="4"/>
+<listEntry value="1"/>
 </listAttribute>
-<stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="stepping.ForComprehensionListInt"/>
+<stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="stepping.ForComprehensionListIntOptimized"/>
 <stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="debug"/>
 </launchConfiguration>

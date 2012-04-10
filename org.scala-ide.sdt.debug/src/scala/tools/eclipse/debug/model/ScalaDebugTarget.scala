@@ -169,24 +169,49 @@ class ScalaDebugTarget(val javaTarget: JDIDebugTarget, threadStartRequest: Threa
     actor ! TerminatedFromJava
   }
 
+  /**
+   * Return the method containing the actual code of the anon func, if it is contained 
+   * in the given range, <code>None</code> otherwise.
+   */
+  def anonFunctionsInRange(refType: ReferenceType, range: Range): Option[Method] = {
+    findAnonFunction(refType).filter(method => range.contains(method.location.lineNumber))
+  }
+  
+  /**
+   * Return the method containing the actual code of the anon func.
+   * Return <code>None</code> if no method can be identified has being it.
+   */
   def findAnonFunction(refType: ReferenceType): Option[Method] = {
+    // TODO: check super type at some point
     import scala.collection.JavaConverters._
-    val methods = refType.methods.asScala.filter(method => method.name.startsWith("apply"))
-
-    // TODO: using isBridge was not working with List[Int]. Should check if we can use it by default with some extra checks when it fails.
-    //      methods.find(!_.isBridge)
+    val methods = refType.methods.asScala.filter(method => !method.isBridge && method.name.startsWith("apply"))
 
     methods.size match {
-      case 3 =>
-        // method with primitive parameter
-        methods.find(_.name.startsWith("apply$")).orElse({
-          // method with primitive return type (with specialization in 2.10.0)
-          methods.find(!_.signature.startsWith("(Ljava/lang/Object;)"))
-        })
-      case 2 =>
-        methods.find(_.signature != "(Ljava/lang/Object;)Ljava/lang/Object;")
       case 1 =>
+        // one non bridge apply method, just use it
         methods.headOption
+      case 2 =>
+        // this is more complex.
+        // the compiler may have 'forgotten' to flag the 'apply' as a bridge method,
+        // or both the 'apply' and the 'apply$__$sp' contains the actual code
+        
+        // if the 'apply' and the 'apply$__$sp' contains the same code, we are in the optimization case, the 'apply' method
+        // will be used, otherwise, the 'apply$__$sp" will be used.
+        val applyMethod= methods.find(_.name == "apply")
+        val applySpMethod= methods.find(_.name.startsWith("apply$"))
+        if (applyMethod.isDefined) {
+          if (applySpMethod.isDefined) {
+            if (applyMethod.get.bytecodes.sameElements(applySpMethod.get.bytecodes)) {
+              applyMethod
+            } else {
+              applySpMethod
+            }
+          } else {
+            applyMethod
+          }
+        } else {
+          applySpMethod
+        }
       case _ =>
         None
     }

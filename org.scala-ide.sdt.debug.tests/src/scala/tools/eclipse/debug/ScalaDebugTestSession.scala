@@ -1,13 +1,15 @@
 package scala.tools.eclipse.debug
 
 import scala.tools.eclipse.debug.model.{ ScalaThread, ScalaStackFrame, ScalaDebugTarget }
-
 import org.eclipse.core.resources.{ ResourcesPlugin, IFile }
 import org.eclipse.debug.core.{ ILaunchManager, IDebugEventSetListener, DebugPlugin, DebugEvent }
 import org.eclipse.jdt.debug.core.JDIDebugModel
 import org.eclipse.jdt.internal.debug.core.model.JDIDebugTarget
 import org.hamcrest.CoreMatchers._
 import org.junit.Assert._
+import org.eclipse.debug.core.model.DebugElement
+import scala.tools.eclipse.debug.model.ScalaDebugElement
+import org.eclipse.jdt.internal.debug.core.model.JDIDebugElement
 
 class ScalaDebugTestSession(launchConfigurationFile: IFile) extends IDebugEventSetListener {
 
@@ -22,32 +24,23 @@ class ScalaDebugTestSession(launchConfigurationFile: IFile) extends IDebugEventS
   DebugPlugin.getDefault.addDebugEventListener(this)
 
   def handleDebugEvents(events: Array[DebugEvent]) {
-    events.foreach(event =>
-      event.getKind match {
-        case DebugEvent.CREATE =>
-          event.getSource match {
-            case target: ScalaDebugTarget =>
-              setLaunched(target)
-            case _ =>
-          }
-        case DebugEvent.RESUME =>
+
+    events.foreach(
+      _ match {
+        case EclipseDebugEvent(DebugEvent.CREATE, target: ScalaDebugTarget) =>
+          setLaunched(target)
+        case EclipseDebugEvent(DebugEvent.RESUME, x) =>
           setRunning
-        case DebugEvent.SUSPEND =>
-          event.getSource match {
-            case thread: ScalaThread =>
-              setSuspended(thread.getTopStackFrame.asInstanceOf[ScalaStackFrame])
-            case target: ScalaDebugTarget =>
-              setSuspended(null)
-            case _ =>
-          }
-        case DebugEvent.TERMINATE =>
-          event.getSource match {
-            case target: ScalaDebugTarget =>
-              setTerminated
-            case _ =>
-          }
+        case EclipseDebugEvent(DebugEvent.SUSPEND, thread: ScalaThread) =>
+          setSuspended(thread.getTopStackFrame.asInstanceOf[ScalaStackFrame])
+        case EclipseDebugEvent(DebugEvent.SUSPEND, target: ScalaDebugTarget) =>
+          setSuspended(null)
+        case EclipseDebugEvent(DebugEvent.TERMINATE, target: ScalaDebugTarget) =>
+          setTerminated()
         case _ =>
-      })
+      }
+    )
+
   }
 
   // ----
@@ -106,6 +99,9 @@ class ScalaDebugTestSession(launchConfigurationFile: IFile) extends IDebugEventS
   var state = NOT_LAUNCHED
   var debugTarget: ScalaDebugTarget = null
   var currentStackFrame: ScalaStackFrame = null
+  
+  // if is not Scala 2.0, it is Scala 2.09
+  lazy val isScala210 = debugTarget.javaTarget.getVM.classesByName("scala.ScalaObject").isEmpty
 
   def runToLine(typeName: String, breakpointLine: Int) {
     assertThat("Bad state before runToBreakpoint", state, anyOf(is(NOT_LAUNCHED), is(SUSPENDED)))
@@ -183,18 +179,17 @@ class ScalaDebugTestSession(launchConfigurationFile: IFile) extends IDebugEventS
   }
 
   // -----
-  
+
   /**
    * Check that all threads have a suspended count of 0, except the one of the current thread which should be 1
    */
   def checkThreadsState() {
     assertEquals("Bad state before checkThreadsState", SUSPENDED, state)
-    
-    val currentThread= currentStackFrame.stackFrame.thread
+
+    val currentThread = currentStackFrame.stackFrame.thread
     import scala.collection.JavaConverters._
     debugTarget.javaTarget.getVM.allThreads.asScala.foreach(thread =>
-      assertEquals("Wrong suspended count", if (thread == currentThread) 1 else 0, thread.suspendCount)
-    )
+      assertEquals("Wrong suspended count", if (thread == currentThread) 1 else 0, thread.suspendCount))
   }
 
   def checkStackFrame(typeName: String, methodFullSignature: String, line: Int) {

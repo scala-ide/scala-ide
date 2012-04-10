@@ -2,7 +2,7 @@ package stepping
 
 import debug.Helper._
 
-object ForComprehensionListInt {
+object ForComprehensionListIntOptimized {
 
   def main(args: Array[String]) {
 
@@ -10,17 +10,15 @@ object ForComprehensionListInt {
 
     for (n <- l) {
       noop(n)
-      noop(n)
     }
 
     foo(l)
-    new ForComprehensionListInt(l).bar
+    new ForComprehensionListIntOptimized(l).bar
   }
 
   def foo(l: List[Int]) {
 
     for (n <- l) {
-      noop(n)
       noop(n)
     }
 
@@ -28,17 +26,15 @@ object ForComprehensionListInt {
 
 }
 
-class ForComprehensionListInt(l: List[Int]) {
+class ForComprehensionListIntOptimized(l: List[Int]) {
 
   for (n <- l) {
-    noop(n)
     noop(n)
   }
 
   def bar() {
 
     for (n <- l) {
-      noop(n)
       noop(n)
     }
 

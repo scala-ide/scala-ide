@@ -8,6 +8,8 @@ import org.junit.Ignore
 
 object ScalaDebugSteppingTest extends TestProjectSetup("debug", bundleName = "org.scala-ide.sdt.debug.tests") with ScalaDebugRunningTest {
 
+  var initialized = false
+
   def initDebugSession(launchConfigurationName: String): ScalaDebugTestSession = new ScalaDebugTestSession(file(launchConfigurationName + ".launch"))
 
 }
@@ -19,14 +21,13 @@ class ScalaDebugSteppingTest {
   var session: ScalaDebugTestSession = null
 
   @Before
-  def setScalaDebugMode() {
-    ScalaDebugPlugin.plugin.getPreferenceStore.setValue(DebugPreferencePage.P_ENABLE, true)
-  }
-
-  @Before
-  def refreshBinaryFiles() {
-    project.underlying.build(IncrementalProjectBuilder.CLEAN_BUILD, new NullProgressMonitor)
-    project.underlying.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, new NullProgressMonitor)
+  def initializeTests() {
+    if (!initialized) {
+      ScalaDebugPlugin.plugin.getPreferenceStore.setValue(DebugPreferencePage.P_ENABLE, true)
+      project.underlying.build(IncrementalProjectBuilder.CLEAN_BUILD, new NullProgressMonitor)
+      project.underlying.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, new NullProgressMonitor)
+      initialized = true
+    }
   }
 
   @After
@@ -53,7 +54,7 @@ class ScalaDebugSteppingTest {
     session.stepOver()
 
     session.checkStackFrame(TYPENAME_FC_LS + "$$anonfun$main$1", "apply(Ljava/lang/String;)I", 10)
-    
+
     session.checkThreadsState
   }
 
@@ -200,7 +201,6 @@ class ScalaDebugSteppingTest {
    * This tests are disable due to the changes and problem reported in SI-5646
    */
 
-  @Ignore
   @Test
   def StepOverIntoForComprehensionListIntInObjectMain() {
 
@@ -215,49 +215,123 @@ class ScalaDebugSteppingTest {
     session.checkStackFrame(TYPENAME_FC_LI + "$$anonfun$main$1", "apply$mcVI$sp(I)V", 12)
   }
 
-  @Ignore
   @Test
   def StepOverIntoForComprehensionListIntInObjectFoo() {
 
     session = initDebugSession("ForComprehensionListInt")
 
-    session.runToLine(TYPENAME_FC_LI + "$", 21)
+    session.runToLine(TYPENAME_FC_LI + "$", 22)
 
-    session.checkStackFrame(TYPENAME_FC_LI + "$", "foo(Lscala/collection/immutable/List;)V", 21)
+    session.checkStackFrame(TYPENAME_FC_LI + "$", "foo(Lscala/collection/immutable/List;)V", 22)
 
     session.stepOver()
 
-    session.checkStackFrame(TYPENAME_FC_LI + "$$anonfun$foo$1", "apply$mcVI$sp(I)V", 22)
+    session.checkStackFrame(TYPENAME_FC_LI + "$$anonfun$foo$1", "apply$mcVI$sp(I)V", 23)
   }
 
-  @Ignore
   @Test
   def StepOverIntoForComprehensionListIntInClassConstructor() {
 
     session = initDebugSession("ForComprehensionListInt")
 
-    session.runToLine(TYPENAME_FC_LI, 31)
+    session.runToLine(TYPENAME_FC_LI, 33)
 
-    session.checkStackFrame(TYPENAME_FC_LI, "<init>(Lscala/collection/immutable/List;)V", 31)
+    session.checkStackFrame(TYPENAME_FC_LI, "<init>(Lscala/collection/immutable/List;)V", 33)
 
     session.stepOver()
 
-    session.checkStackFrame(TYPENAME_FC_LI + "$$anonfun$1", "apply$mcVI$sp(I)V", 32)
+    session.checkStackFrame(TYPENAME_FC_LI + "$$anonfun$1", "apply$mcVI$sp(I)V", 34)
   }
 
-  @Ignore
   @Test
   def StepOverIntoForComprehensionListIntInClassBar() {
 
     session = initDebugSession("ForComprehensionListInt")
 
-    session.runToLine(TYPENAME_FC_LI, 37)
+    session.runToLine(TYPENAME_FC_LI, 40)
 
-    session.checkStackFrame(TYPENAME_FC_LI, "bar()V", 37)
+    session.checkStackFrame(TYPENAME_FC_LI, "bar()V", 40)
 
     session.stepOver()
 
-    session.checkStackFrame(TYPENAME_FC_LI + "$$anonfun$bar$1", "apply$mcVI$sp(I)V", 38)
+    session.checkStackFrame(TYPENAME_FC_LI + "$$anonfun$bar$1", "apply$mcVI$sp(I)V", 41)
+  }
+
+  @Test
+  def StepOverIntoForComprehensionListIntInObjectMainOptimized() {
+
+    session = initDebugSession("ForComprehensionListIntOptimized")
+
+    session.runToLine(TYPENAME_FC_LIO + "$", 11)
+
+    session.checkStackFrame(TYPENAME_FC_LIO + "$", "main([Ljava/lang/String;)V", 11)
+
+    session.stepOver()
+
+    if (session.isScala210) {
+      // TODO: set line number to 12 when SI-5646 is fixed
+      session.checkStackFrame(TYPENAME_FC_LIO + "$$anonfun$main$1", "apply(I)V", 11)
+    } else {
+      session.checkStackFrame(TYPENAME_FC_LIO + "$$anonfun$main$1", "apply$mcVI$sp(I)V", 12)
+    }
+
+  }
+
+  @Test
+  def StepOverIntoForComprehensionListIntInObjectFooOptimized() {
+
+    session = initDebugSession("ForComprehensionListIntOptimized")
+
+    session.runToLine(TYPENAME_FC_LIO + "$", 21)
+
+    session.checkStackFrame(TYPENAME_FC_LIO + "$", "foo(Lscala/collection/immutable/List;)V", 21)
+
+    session.stepOver()
+
+    if (session.isScala210) {
+      // TODO: set line number to 22 when SI-5646 is fixed
+      session.checkStackFrame(TYPENAME_FC_LIO + "$$anonfun$foo$1", "apply(I)V", 21)
+    } else {
+      session.checkStackFrame(TYPENAME_FC_LIO + "$$anonfun$foo$1", "apply$mcVI$sp(I)V", 22)
+    }
+  }
+
+  @Test
+  def StepOverIntoForComprehensionListIntInClassConstructorOptimized() {
+
+    session = initDebugSession("ForComprehensionListIntOptimized")
+
+    session.runToLine(TYPENAME_FC_LIO, 31)
+
+    session.checkStackFrame(TYPENAME_FC_LIO, "<init>(Lscala/collection/immutable/List;)V", 31)
+
+    session.stepOver()
+
+    if (session.isScala210) {
+      // TODO: set line number to 32 when SI-5646 is fixed
+      session.checkStackFrame(TYPENAME_FC_LIO + "$$anonfun$1", "apply(I)V", 31)
+    } else {
+      session.checkStackFrame(TYPENAME_FC_LIO + "$$anonfun$1", "apply$mcVI$sp(I)V", 32)
+    }
+  }
+
+  @Test
+  def StepOverIntoForComprehensionListIntInClassBarOptimized() {
+
+    session = initDebugSession("ForComprehensionListIntOptimized")
+
+    session.runToLine(TYPENAME_FC_LIO, 37)
+
+    session.checkStackFrame(TYPENAME_FC_LIO, "bar()V", 37)
+
+    session.stepOver()
+
+    if (session.isScala210) {
+      // TODO: set line number to 38 when SI-5646 is fixed
+      session.checkStackFrame(TYPENAME_FC_LIO + "$$anonfun$bar$1", "apply(I)V", 37)
+    } else {
+      session.checkStackFrame(TYPENAME_FC_LIO + "$$anonfun$bar$1", "apply$mcVI$sp(I)V", 38)
+    }
   }
 
   /*
@@ -269,13 +343,13 @@ class ScalaDebugSteppingTest {
 
     session = initDebugSession("AnonFunOnListString")
 
-    session.runToLine(TYPENAME_AF_LS + "$", 11)
+    session.runToLine(TYPENAME_AF_LS + "$", 19)
 
-    session.checkStackFrame(TYPENAME_AF_LS + "$", "main([Ljava/lang/String;)V", 11)
+    session.checkStackFrame(TYPENAME_AF_LS + "$", "a(Lscala/collection/immutable/List;)V", 19)
 
     session.stepOver()
 
-    session.checkStackFrame(TYPENAME_AF_LS + "$$anonfun$main$1", "apply(Ljava/lang/String;)V", 11)
+    session.checkStackFrame(TYPENAME_AF_LS + "$$anonfun$a$1", "apply(Ljava/lang/String;)V", 19)
   }
 
   @Test
@@ -283,13 +357,13 @@ class ScalaDebugSteppingTest {
 
     session = initDebugSession("AnonFunOnListString")
 
-    session.runToLine(TYPENAME_AF_LS + "$", 13)
+    session.runToLine(TYPENAME_AF_LS + "$", 25)
 
-    session.checkStackFrame(TYPENAME_AF_LS + "$", "main([Ljava/lang/String;)V", 13)
+    session.checkStackFrame(TYPENAME_AF_LS + "$", "b(Lscala/collection/immutable/List;)V", 25)
 
     session.stepOver()
 
-    session.checkStackFrame(TYPENAME_AF_LS + "$$anonfun$main$2", "apply(Ljava/lang/String;)Z", 13)
+    session.checkStackFrame(TYPENAME_AF_LS + "$$anonfun$b$1", "apply(Ljava/lang/String;)Z", 25)
   }
 
   @Test
@@ -297,13 +371,13 @@ class ScalaDebugSteppingTest {
 
     session = initDebugSession("AnonFunOnListString")
 
-    session.runToLine(TYPENAME_AF_LS + "$", 15)
+    session.runToLine(TYPENAME_AF_LS + "$", 31)
 
-    session.checkStackFrame(TYPENAME_AF_LS + "$", "main([Ljava/lang/String;)V", 15)
+    session.checkStackFrame(TYPENAME_AF_LS + "$", "c(Lscala/collection/immutable/List;)V", 31)
 
     session.stepOver()
 
-    session.checkStackFrame(TYPENAME_AF_LS + "$$anonfun$main$3", "apply(Ljava/lang/String;)I", 15)
+    session.checkStackFrame(TYPENAME_AF_LS + "$$anonfun$c$1", "apply(Ljava/lang/String;)I", 31)
   }
 
   @Test
@@ -311,13 +385,13 @@ class ScalaDebugSteppingTest {
 
     session = initDebugSession("AnonFunOnListString")
 
-    session.runToLine(TYPENAME_AF_LS + "$", 17)
+    session.runToLine(TYPENAME_AF_LS + "$", 37)
 
-    session.checkStackFrame(TYPENAME_AF_LS + "$", "main([Ljava/lang/String;)V", 17)
+    session.checkStackFrame(TYPENAME_AF_LS + "$", "d(Lscala/collection/immutable/List;)V", 37)
 
     session.stepOver()
 
-    session.checkStackFrame(TYPENAME_AF_LS + "$$anonfun$main$4", "apply(ILjava/lang/String;)I", 17)
+    session.checkStackFrame(TYPENAME_AF_LS + "$$anonfun$d$1", "apply(ILjava/lang/String;)I", 37)
   }
 
   // Simple stepping into/over/out tests
