@@ -52,6 +52,7 @@ sealed abstract class Node {
   def children = childrenBuffer.toArray
   def hasChildren = children.length > 0
   def getStackTraces: Option[Array[StackTraceElement]]
+  def getStackDepth: Option[Int]
 }
 
 final case class TestModel(
@@ -70,6 +71,7 @@ final case class TestModel(
   var status: TestStatus
 ) extends Node {
   def getStackTraces = errorStackTrace
+  def getStackDepth = errorDepth
 }
 
 final case class ScopeModel(
@@ -95,6 +97,7 @@ final case class ScopeModel(
   }
   
   def getStackTraces = None
+  def getStackDepth = None
 }
 
 final case class SuiteModel(
@@ -160,6 +163,7 @@ final case class SuiteModel(
   }
   
   def getStackTraces = errorStackTrace
+  def getStackDepth = errorDepth
 }
 
 final case class RunModel(
@@ -174,6 +178,7 @@ final case class RunModel(
   var status: RunStatus
 ) extends Node {
   def getStackTraces = errorStackTrace
+  def getStackDepth = errorDepth
 }
 
 final case class InfoModel(
@@ -189,4 +194,5 @@ final case class InfoModel(
   timeStamp: Long
 ) extends Node {
   def getStackTraces = errorStackTrace
+  def getStackDepth = errorDepth
 }

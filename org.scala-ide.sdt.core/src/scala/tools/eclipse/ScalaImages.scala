@@ -51,6 +51,8 @@ object ScalaImages  {
   val SCALATEST_RERUN_FAILED_TESTS_ENABLED = create("icons/full/elcl16/scalatest_rerun_failed.gif")
   val SCALATEST_RERUN_ALL_TESTS_DISABLED = create("icons/full/dlcl16/scalatest_rerun_all.gif")
   val SCALATEST_RERUN_FAILED_TESTS_DISABLED = create("icons/full/dlcl16/scalatest_rerun_failed.gif")
+  val SCALATEST_STACK_FOLD_ENABLED = create("icons/full/elcl16/scalatest_stack_fold.gif")
+  val SCALATEST_STACK_FOLD_DISABLED = create("icons/full/dlcl16/scalatest_stack_fold.gif")
   
   private def create(localPath : String) = {
     try {
