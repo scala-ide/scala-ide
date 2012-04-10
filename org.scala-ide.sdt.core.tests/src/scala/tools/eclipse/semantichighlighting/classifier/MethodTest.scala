@@ -81,4 +81,22 @@ class MethodTest extends AbstractSymbolClassifierTest {
       }""",
       Map("METH" -> Method))
   }
+  
+  @Test
+  def test_synthetic_function_param() {
+    checkSymbolClassification("""
+      object A {
+        {
+          def addOne(x: Int): Int = x + 1
+          List(3) map addOne
+        }
+      }""", """
+      object A {
+        {
+          def addOne(x: Int): Int = x + 1
+          List(3) map $METH$
+        }
+      }""",
+      Map("METH" -> Method))
+  }
 }

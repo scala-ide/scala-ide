@@ -88,6 +88,6 @@ class SemanticHighlightingReconciliation {
     for {
       semanticDecorationManager <- Option(semanticDecorationManagers.get(scu))
       action <- semanticDecorationManager.actions
-    } action.update(scu)
+    } action(scu)
   }
 }

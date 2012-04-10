@@ -105,7 +105,7 @@ class ImplicitHighlightingPresenter(editor: FileEditorInput, sourceViewer: ISour
       editorInput <- Option(editorReference.getEditorInput)
       compilationUnit = JavaPlugin.getDefault.getWorkingCopyManager.getWorkingCopy(editorInput)
       scu <- compilationUnit.asInstanceOfOpt[ScalaCompilationUnit]
-    } update(scu)
+    } apply(scu)
 
   private def pluginStore: IPreferenceStore = ScalaPlugin.plugin.getPreferenceStore
 
@@ -113,7 +113,7 @@ class ImplicitHighlightingPresenter(editor: FileEditorInput, sourceViewer: ISour
 
   //TODO monitor P_ACTIVATE to register/unregister update
   //TODO monitor P_ACTIVATE to remove existings annotation (true => false) or update openning file (false => true)
-  override def update(scu: ScalaCompilationUnit): Unit = {
+  override def apply(scu: ScalaCompilationUnit): Unit = {
 
     if (scu.getResource.getLocation == editor.getPath.makeAbsolute) {
       scu.doWithSourceFile { (sourceFile, compiler) =>
