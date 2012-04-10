@@ -202,8 +202,6 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
           )
         suiteMap.get(testStarting.suiteId) match {
           case Some(suite) => 
-            // TODO: To confirm with if we should do this or fix in ScalaTest.
-            test.rerunner = suite.rerunner
             suite.addChild(test)
             fTestViewer.registerAutoScrollTarget(test)
             fTestViewer.registerViewerUpdate(test)
