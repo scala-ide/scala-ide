@@ -64,7 +64,7 @@ final case class TestModel(
   var errorDepth: Option[Int], 
   var errorStackTrace: Option[Array[StackTraceElement]], 
   var location: Option[Location],
-  rerunner: Option[String],
+  var rerunner: Option[String],
   threadName: String,
   timeStamp: Long, 
   var status: TestStatus

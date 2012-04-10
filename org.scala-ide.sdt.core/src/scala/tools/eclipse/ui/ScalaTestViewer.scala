@@ -35,6 +35,8 @@ import org.eclipse.jface.viewers.SelectionChangedEvent
 import org.eclipse.jface.action.IMenuManager
 import org.eclipse.jface.action.MenuManager
 import org.eclipse.jface.action.IMenuListener
+import org.eclipse.debug.ui.DebugUITools
+import scala.tools.eclipse.launching.ScalaTestLaunchDelegate
 
 class ScalaTestViewer(parent: Composite, fTestRunnerPart: ScalaTestRunnerViewPart) {
   
@@ -660,16 +662,42 @@ private class GoToSourceAction(node: Node, fTestRunnerPart: ScalaTestRunnerViewP
   }
 }
 
+object RerunHelper {
+  
+  def rerun(fTestRunnerPart: ScalaTestRunnerViewPart, delegate: ScalaTestLaunchDelegate, stArgs: String) {
+    val launch = fTestRunnerPart.fTestRunSession.fLaunch
+    if (launch != null) {
+      val launchConfig = launch.getLaunchConfiguration
+      if (launchConfig != null) {
+        delegate.launchScalaTest(launchConfig, launch.getLaunchMode, launch, null, stArgs)
+      }
+      else
+        MessageDialog.openError(fTestRunnerPart.getSite.getShell, "Error", 
+                            "Cannot find launch configuration.")
+    }
+    else
+      MessageDialog.openError(fTestRunnerPart.getSite.getShell, "Error", 
+                            "Cannot find launch object.")
+  }
+  
+}
+
+import RerunHelper._
+
 private class RerunSuiteAction(actionName: String, fTestRunnerPart: ScalaTestRunnerViewPart, suiteClassName: String, 
                                suiteId: String) extends Action(actionName) {
   override def run() {
-    MessageDialog.openInformation(fTestRunnerPart.getSite.getShell, "To Be Implemented", "This feature is yet to be implemented.")
+    val delegate = new ScalaTestLaunchDelegate()
+    val stArgs = delegate.getScalaTestArgsForSuite(suiteClassName, suiteId)
+    rerun(fTestRunnerPart, delegate, stArgs)
   }
 }
 
 private class RerunTestAction(actionName: String, fTestRunnerPart: ScalaTestRunnerViewPart, suiteClassName: String, 
                                suiteId: String, testName: String) extends Action(actionName) {
   override def run() {
-    MessageDialog.openInformation(fTestRunnerPart.getSite.getShell, "To Be Implemented", "This feature is yet to be implemented.")
+    val delegate = new ScalaTestLaunchDelegate()
+    val stArgs = delegate.getScalaTestArgsForTest(suiteClassName, suiteId, testName)
+    rerun(fTestRunnerPart, delegate, stArgs)
   }
 }
