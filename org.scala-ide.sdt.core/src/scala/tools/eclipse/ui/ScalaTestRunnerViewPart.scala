@@ -23,6 +23,13 @@ import org.eclipse.swt.graphics.Point
 import org.eclipse.jdt.internal.junit.ui.TestViewer
 import org.eclipse.swt.custom.CLabel
 import org.eclipse.swt.widgets.ToolBar
+import org.eclipse.jface.action.Action
+import org.eclipse.ui.handlers.IHandlerService
+import org.eclipse.core.commands.AbstractHandler
+import org.eclipse.core.commands.ExecutionEvent
+import org.eclipse.debug.ui.DebugUITools
+import org.eclipse.debug.core.ILaunch
+import scala.tools.eclipse.launching.ScalaTestLaunchDelegate
 
 object ScalaTestRunnerViewPart {
   //orientations
@@ -44,12 +51,15 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
   protected var fParent: Composite = null
   
   private var fSashForm: SashForm = null
-  protected var fProgressBar: JUnitProgressBar = null
+  private var fProgressBar: JUnitProgressBar = null
   
-  protected var fCounterComposite: Composite = null
-  protected var fCounterPanel: ScalaTestCounterPanel = null
-  protected var fTestViewer: ScalaTestViewer = null
-  protected var fStackTrace: ScalaTestStackTrace = null
+  private var fCounterComposite: Composite = null
+  private var fCounterPanel: ScalaTestCounterPanel = null
+  private var fTestViewer: ScalaTestViewer = null
+  private var fStackTrace: ScalaTestStackTrace = null
+  
+  private var fRerunAllTestsAction: RerunAllTestsAction = null
+  private var fRerunFailedTestsAction: RerunFailedTestsAction = null
   
   private var fIsDisposed: Boolean = false
   
@@ -74,6 +84,8 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
   
   def setSession(session: ScalaTestRunSession) {
     fTestRunSession = session
+    fRerunAllTestsAction.session = session
+    fRerunFailedTestsAction.session = session
   }
   
   def createPartControl(parent: Composite) {
@@ -83,6 +95,8 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
     gridLayout.marginWidth = 0
     gridLayout.marginHeight = 0
     parent.setLayout(gridLayout)
+    
+    configureToolBar()
     
     fCounterComposite = createProgressCountPanel(parent)
 	fCounterComposite.setLayoutData(new GridData(GridData.GRAB_HORIZONTAL | GridData.HORIZONTAL_ALIGN_FILL))
@@ -156,6 +170,11 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
 
     fSashForm.setWeights(Array[Int](50, 50))
     fSashForm
+  }
+  
+  private def enableToolbarControls(enable: Boolean) {
+    fRerunAllTestsAction.setEnabled(enable)
+    fRerunFailedTestsAction.setEnabled(enable)
   }
   
   private var suiteMap: Map[String, SuiteModel] = null
@@ -336,6 +355,7 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
         }
       case runStarting: RunStarting => 
         println("***RunStarting")
+        enableToolbarControls(false)
         suiteMap = Map.empty[String, SuiteModel]
         fTestRunSession.rootNode = 
           RunModel(
@@ -361,6 +381,7 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
         fTestRunSession.rootNode.status = RunStatus.COMPLETED
         stopUpdateJobs()
         fTestViewer.registerAutoScrollTarget(null)
+        enableToolbarControls(true)
       case runStopped: RunStopped => 
         println("***RunStopped")
         fTestRunSession.stop()
@@ -369,6 +390,7 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
         fTestRunSession.rootNode.status = RunStatus.STOPPED
         stopUpdateJobs()
         fTestViewer.registerAutoScrollTarget(null)
+        enableToolbarControls(true)
       case runAborted: RunAborted => 
         println("***RunAborted")
         fTestRunSession.stop()
@@ -380,6 +402,7 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
         fTestRunSession.rootNode.status = RunStatus.ABORTED
         stopUpdateJobs()
         fTestViewer.registerAutoScrollTarget(null)
+        enableToolbarControls(true)
       case infoProvided: InfoProvided => 
         println("***InfoProvided")
         val info = 
@@ -614,6 +637,39 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
   
   private def getDisplay = getViewSite.getShell.getDisplay
   
+  private def configureToolBar() {
+    val actionBars = getViewSite.getActionBars
+    val toolBar = actionBars.getToolBarManager
+    val viewMenu = actionBars.getMenuManager
+    
+    fRerunAllTestsAction = new RerunAllTestsAction()
+    val rerunAllTestsHandler = new AbstractHandler() {
+      def execute(event: ExecutionEvent): AnyRef = {
+        fRerunAllTestsAction.run()
+        return null
+      }
+      override def isEnabled = fRerunAllTestsAction.isEnabled
+    }
+    
+    fRerunFailedTestsAction = new RerunFailedTestsAction()
+    val rerunFailedTestsHandler = new AbstractHandler() {
+      def execute(event: ExecutionEvent): AnyRef = {
+        fRerunFailedTestsAction.run()
+        return null
+      }
+      override def isEnabled = fRerunFailedTestsAction.isEnabled
+    }
+    
+    val handlerService = getSite.getWorkbenchWindow.getService(classOf[IHandlerService]).asInstanceOf[IHandlerService]
+    handlerService.activateHandler("Rerun All Tests", rerunAllTestsHandler)
+    handlerService.activateHandler("Rerun Failed Tests", rerunFailedTestsHandler)
+    
+    toolBar.add(fRerunAllTestsAction)
+    toolBar.add(fRerunFailedTestsAction)
+    
+    actionBars.updateActionBars()
+  }
+  
   private class UpdateUIJob(name: String) extends UIJob(name) {
     private var fRunning = true
     
@@ -633,6 +689,40 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
 	
     override def shouldSchedule(): Boolean = {
       return fRunning
+    }
+  }
+  
+  private class RerunAllTestsAction extends Action {
+    setText("Rerun All Tests")
+    setToolTipText("Rerun All Tests")
+    setImageDescriptor(ScalaImages.SCALATEST_RERUN_ALL_TESTS_ENABLED)
+    setDisabledImageDescriptor(ScalaImages.SCALATEST_RERUN_ALL_TESTS_DISABLED)
+    setEnabled(false)
+    setActionDefinitionId("scala.tools.eclipse.scalatest.shortcut.rerunAll")
+    
+    var session: ScalaTestRunSession = null
+    
+    override def run() {
+      val launch = session.fLaunch
+      DebugUITools.launch(launch.getLaunchConfiguration, launch.getLaunchMode)
+    }
+  }
+  
+  private class RerunFailedTestsAction extends Action {
+    setText("Rerun Failed Tests")
+    setToolTipText("Rerun Failed Tests")
+    setImageDescriptor(ScalaImages.SCALATEST_RERUN_FAILED_TESTS_ENABLED)
+    setDisabledImageDescriptor(ScalaImages.SCALATEST_RERUN_FAILED_TESTS_DISABLED)
+    setEnabled(false)
+    setActionDefinitionId("scala.tools.eclipse.scalatest.shortcut.rerunFailed")
+    
+    var session: ScalaTestRunSession = null
+    
+    override def run() {
+      val launch = session.fLaunch
+      val delegate = new ScalaTestLaunchDelegate()
+      val stArgs = delegate.getScalaTestArgsForFailedTests(session.rootNode)
+      delegate.launchScalaTest(launch.getLaunchConfiguration, launch.getLaunchMode, launch, null, stArgs)
     }
   }
 }

@@ -18,6 +18,10 @@ import org.eclipse.core.resources.ResourcesPlugin
 import java.net.URL
 import java.net.URLClassLoader
 import scala.tools.eclipse.ui.ScalaTestPlugin
+import scala.tools.eclipse.ui.Node
+import scala.tools.eclipse.ui.TestModel
+import scala.tools.eclipse.ui.TestStatus
+import scala.annotation.tailrec
 
 class ScalaTestLaunchDelegate extends AbstractJavaLaunchConfigurationDelegate {
   
@@ -208,5 +212,32 @@ class ScalaTestLaunchDelegate extends AbstractJavaLaunchConfigurationDelegate {
       "-s " + suiteClassName + " -t \"" + testName + "\""
     else
       "-s " + suiteClassName + " -i \"" + suiteId + "\" -t \"" + testName + "\""
+  }
+  
+  def getScalaTestArgsForFailedTests(node: Node) = {
+    @tailrec
+    def getFailedTestsAcc(acc: List[TestModel], children: List[Node]): List[TestModel] = {
+      children match {
+        case Nil => 
+          acc
+        case head :: rest => 
+          val newAcc = head match {
+            case test: TestModel if test.status == TestStatus.FAILED => 
+              test :: acc
+            case _ =>
+              acc
+          }
+          getFailedTestsAcc(newAcc, rest ++ head.children)
+      }
+    }
+    val failedTests = getFailedTestsAcc(Nil, List(node))
+    failedTests.map { test => 
+      test.rerunner match {
+        case Some(rerunner) => 
+          getScalaTestArgsForTest(rerunner, test.suiteId, test.testName)
+        case None => 
+          ""
+      }
+    }.filter(_ != "").mkString(" ")
   }
 }
