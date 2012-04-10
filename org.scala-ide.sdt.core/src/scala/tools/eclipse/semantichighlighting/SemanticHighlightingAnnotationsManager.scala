@@ -18,7 +18,7 @@ class SemanticHighlightingAnnotationsManager(sourceViewer: ISourceViewer) extend
 
   private var annotations: Set[Annotation] = Set()
 
-  override def update(scu: ScalaCompilationUnit) {
+  override def apply(scu: ScalaCompilationUnit) {
     if (semanticHighlightingRequired)
       scu.doWithSourceFile { (sourceFile, compiler) =>
         val useSyntacticHints = isUseSyntacticHintsEnabled

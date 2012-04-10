@@ -1,6 +1,5 @@
 package scala.tools.eclipse.util
 
-// XXX: [mirco] Should we consider a pull request in the Scala project for the below methods?
 object CollectionUtil {
   
   import scala.collection.GenTraversable
@@ -15,9 +14,9 @@ object CollectionUtil {
   import scala.collection.mutable.ListBuffer
   
   /** Split the passed traversable collection at the last element, returning a pair {{{(xs.init, xs.lastOption)}}}. If the 
-   * collection is empty then {{{(None, xs)}}} is returned.*/
-  def splitAtLast[A](xs: GenTraversable[A]): (GenTraversable[A], Option[A]) =
-    if(xs.isEmpty) (xs, None)
+   * collection is empty then {{{(Nil, None)}}} is returned.*/
+  def splitAtLast[A](xs: GenTraversable[A]): (List[A], Option[A]) =
+    if(xs.isEmpty) (xs.toList, None)
     else {
       val init = new ListBuffer[A]
       val it = xs.toIterator
