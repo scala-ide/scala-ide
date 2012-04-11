@@ -21,7 +21,7 @@ trait SymbolClassificationDebugger { self: SymbolClassification =>
     println("annotations: " + annotations)
     println(" -- symbols ----------------------------------------------------------------------------")
 
-    index.allSymbols filterNot (_ == NoSymbol) sortBy (_.toString) foreach printSym
+    //allSymbols filterNot (_ == NoSymbol) sortBy (_.toString) foreach printSym
   }
 
   private def printSym(sym: Symbol) {
@@ -56,11 +56,11 @@ trait SymbolClassificationDebugger { self: SymbolClassification =>
     printFlag("variable", _.isVariable)
 
     println()
-    for (occurrence <- index.occurences(sym)) {
-      print(pad(" \\-" + occurrence.getClass.getSimpleName, 16))
-      print(pad("   " + occurrence.namePosition, 45))
-      println()
-    }
+//    for (occurrence <- index.occurences(sym)) {
+//      print(pad(" \\-" + occurrence.getClass.getSimpleName, 16))
+//      print(pad("   " + occurrence.namePosition, 45))
+//      println()
+//    }
     for (annotation <- sym.annotations) {
       print(pad(" @-" + annotation, 95))
       val atp = annotation.atp

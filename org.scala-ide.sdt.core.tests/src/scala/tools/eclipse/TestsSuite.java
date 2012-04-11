@@ -22,6 +22,7 @@ import scala.tools.eclipse.structurebuilder.StructureBuilderTest;
 import scala.tools.eclipse.ui.TestBracketStrategy;
 import scala.tools.eclipse.pc.PresentationCompilerTest;
 import scala.tools.eclipse.wizards.*;
+import scala.tools.eclipse.util.*;
 
 
 import org.junit.runner.RunWith;
@@ -59,6 +60,8 @@ import scala.tools.eclipse.semantichighlighting.classifier.SymbolClassifierTestS
   ProjectDependenciesTest.class,
   MultipleErrorsTest.class,
   TestBracketStrategy.class,
-  SymbolClassifierTestSuite.class
+  SymbolClassifierTestSuite.class,
+  CachedTest.class,
+  CollectionUtilTest.class
 })
 class TestsSuite { }

@@ -29,13 +29,14 @@ import org.eclipse.ui.editors.text.EditorsUI
 import org.eclipse.ui.part.FileEditorInput
 import scala.tools.eclipse.util.AnnotationUtils
 import scala.tools.eclipse.semantichighlighting.ColorManager
+import scala.tools.eclipse.semantic.SemanticAction
 
 /**
  * @author Jin Mingjian
  * @author David Bernard
  *
  */
-class ImplicitHighlightingPresenter(editor: FileEditorInput, sourceViewer: ISourceViewer) extends HasLogger {
+class ImplicitHighlightingPresenter(editor: FileEditorInput, sourceViewer: ISourceViewer) extends SemanticAction with HasLogger {
   import ImplicitHighlightingPresenter._
 
   val annotationAccess = new IAnnotationAccess {
@@ -104,7 +105,7 @@ class ImplicitHighlightingPresenter(editor: FileEditorInput, sourceViewer: ISour
       editorInput <- Option(editorReference.getEditorInput)
       compilationUnit = JavaPlugin.getDefault.getWorkingCopyManager.getWorkingCopy(editorInput)
       scu <- compilationUnit.asInstanceOfOpt[ScalaCompilationUnit]
-    } update(scu)
+    } apply(scu)
 
   private def pluginStore: IPreferenceStore = ScalaPlugin.plugin.getPreferenceStore
 
@@ -112,7 +113,7 @@ class ImplicitHighlightingPresenter(editor: FileEditorInput, sourceViewer: ISour
 
   //TODO monitor P_ACTIVATE to register/unregister update
   //TODO monitor P_ACTIVATE to remove existings annotation (true => false) or update openning file (false => true)
-  def update(scu: ScalaCompilationUnit) = {
+  override def apply(scu: ScalaCompilationUnit): Unit = {
 
     if (scu.getResource.getLocation == editor.getPath.makeAbsolute) {
       scu.doWithSourceFile { (sourceFile, compiler) =>
