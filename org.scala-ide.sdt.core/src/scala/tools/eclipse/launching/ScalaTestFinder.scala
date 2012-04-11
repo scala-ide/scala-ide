@@ -162,7 +162,7 @@ class ScalaTestFinder(val compiler: ScalaPresentationCompiler, loader: ClassLoad
     }
   }
    
-  private def getTarget(className: String, apply: Apply, rootTree: Tree): AstNode = {
+  private def getTarget(className: String, apply: GenericApply, rootTree: Tree): AstNode = {
     println("#####Getting target for: " + apply.symbol.decodedName)
     apply.fun match {
       case select: Select => 
@@ -199,6 +199,8 @@ class ScalaTestFinder(val compiler: ScalaPresentationCompiler, loader: ClassLoad
         }
       case funApply: Apply => 
         getTarget(className, funApply, rootTree)
+      case typeApply: TypeApply => 
+        getTarget(className, typeApply, rootTree)
       case other =>
         println("#####apply.fun is other: " + apply.fun.getClass.getName)
         new ToStringTarget(className, rootTree, apply.fun, apply.fun.toString)
@@ -275,20 +277,28 @@ class ScalaTestFinder(val compiler: ScalaPresentationCompiler, loader: ClassLoad
           
         val classPosition = new OffsetPosition(scu.createSourceFile, classElement.getSourceRange.getOffset)
         val rootTree = compiler.locateTree(classPosition)
-            
-        val linearizedBaseClasses = rootTree.symbol.info.baseClasses
-        val styleAnnotatedBaseClassOpt = linearizedBaseClasses.find(baseClass => baseClass.annotations.exists(aInfo => aInfo.atp.toString == "org.scalatest.Style"))
-        styleAnnotatedBaseClassOpt match {
-          case Some(styleAnnotattedBaseClass) => 
-            /*val suiteClass = Class.forName(styleAnnotattedBaseClass.info.typeSymbol.fullName)
-            val style = suiteClass.getAnnotation(classOf[Style])
-            val finderClass = style.value
-            val finder = finderClass.newInstance*/
-            
-            val suiteClass: Class[_] = loader.loadClass(styleAnnotattedBaseClass.info.typeSymbol.fullName)
-            //val styleClass: Class[_ <: java.lang.annotation.Annotation] = loader.loadClass("org.scalatest.Style").asInstanceOf[Class[_ <: java.lang.annotation.Annotation]]
-            //val style = suiteClass.getAnnotation(styleClass)
-            val styleAnnotation = suiteClass.getAnnotations.find(annt => annt.annotationType.getName == "org.scalatest.Style").get
+        
+        val suiteClass: Class[_] = loader.loadClass(classElement.getFullyQualifiedName)
+        val wrapWithAnnotation = suiteClass.getAnnotations.find(annt => annt.annotationType.getName == "org.scalatest.WrapWith")
+        val styleAnnotation = 
+          wrapWithAnnotation match {
+            case Some(wrapWithAnnotation) =>
+              val valueMethod = wrapWithAnnotation.annotationType.getMethod("value")
+              val runnerClass = valueMethod.invoke(wrapWithAnnotation).asInstanceOf[Class[_]]
+              runnerClass.getAnnotations.find(annt => annt.annotationType.getName == "org.scalatest.Style")
+            case None =>
+              val linearizedBaseClasses = rootTree.symbol.info.baseClasses
+              linearizedBaseClasses.find(baseClass => baseClass.annotations.exists(aInfo => aInfo.atp.toString == "org.scalatest.Style")) match {
+                case Some(styleAnnotattedBaseClass) =>
+                  val styleAnnotattedClass: Class[_] = loader.loadClass(styleAnnotattedBaseClass.info.typeSymbol.fullName)
+                  styleAnnotattedClass.getAnnotations.find(annt => annt.annotationType.getName == "org.scalatest.Style")
+                case None => 
+                  None
+              }
+          }
+          
+        styleAnnotation match {
+          case Some(styleAnnotation) => 
             val valueMethod = styleAnnotation.annotationType.getMethod("value")
             val finderClassName = valueMethod.invoke(styleAnnotation).asInstanceOf[String]
             val finderClass = loader.loadClass(finderClassName)
@@ -310,7 +320,6 @@ class ScalaTestFinder(val compiler: ScalaPresentationCompiler, loader: ClassLoad
                 None
             }
           case None =>
-            println("#####Base class not found")
             None
         }
       case _ =>

@@ -205,7 +205,8 @@ object ScalaTestLaunchShortcut {
     //val typeHier:ITypeHierarchy = iType.newSupertypeHierarchy(null)
     //val superTypeArr:Array[IType] = typeHier.getAllSupertypes(iType)
     //superTypeArr.findIndexOf {superType => superType.getFullyQualifiedName == "org.scalatest.Suite"} >= 0
-    iType.getSuperInterfaceNames().contains("org.scalatest.Suite")
+    iType.getSuperInterfaceNames().contains("org.scalatest.Suite") || 
+    iType.getAnnotation("org.scalatest.WrapWith") != null
   }
   
   def containsScalaTestSuite(scSrcFile: ScalaSourceFile): Boolean = {
@@ -350,7 +351,7 @@ object ScalaTestLaunchShortcut {
     val config = existingConfigOpt match {
                    case Some(existingConfig) => existingConfig
                    case None => 
-                     val wc = configType.newInstance(null, getLaunchManager.generateUniqueLaunchConfigurationNameFrom(simpleName.replaceAll(":", "-").replaceAll("\"", "'")))
+                     val wc = configType.newInstance(null, getLaunchManager.generateUniqueLaunchConfigurationNameFrom(simpleName.replaceAll(":", "-").replaceAll("\"", "'").replaceAll(">", "-").replaceAll("<", "-")))
                      val scProject = ScalaPlugin.plugin.getScalaProject(project)
                      wc.setAttribute(IJavaLaunchConfigurationConstants.ATTR_MAIN_TYPE_NAME, className)
                      wc.setAttribute(IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME, project.getName)

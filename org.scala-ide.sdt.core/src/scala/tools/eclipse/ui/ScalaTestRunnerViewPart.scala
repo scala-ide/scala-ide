@@ -352,7 +352,7 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
           }
         }
       case runStarting: RunStarting => 
-        println("***RunStarting")
+        println("***RunStarting, test count: " + runStarting.testCount)
         enableToolbarControls(false)
         suiteMap = Map.empty[String, SuiteModel]
         fTestRunSession.rootNode = 
@@ -696,7 +696,7 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
     setImageDescriptor(ScalaImages.SCALATEST_RERUN_ALL_TESTS_ENABLED)
     setDisabledImageDescriptor(ScalaImages.SCALATEST_RERUN_ALL_TESTS_DISABLED)
     setEnabled(false)
-    setActionDefinitionId("scala.tools.eclipse.scalatest.shortcut.rerunAll")
+    //setActionDefinitionId("scala.tools.eclipse.scalatest.shortcut.rerunAll")
     
     var session: ScalaTestRunSession = null
     
@@ -712,7 +712,7 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
     setImageDescriptor(ScalaImages.SCALATEST_RERUN_FAILED_TESTS_ENABLED)
     setDisabledImageDescriptor(ScalaImages.SCALATEST_RERUN_FAILED_TESTS_DISABLED)
     setEnabled(false)
-    setActionDefinitionId("scala.tools.eclipse.scalatest.shortcut.rerunFailed")
+    //setActionDefinitionId("scala.tools.eclipse.scalatest.shortcut.rerunFailed")
     
     var session: ScalaTestRunSession = null
     
