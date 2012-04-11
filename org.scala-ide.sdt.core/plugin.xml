@@ -220,16 +220,23 @@
          <groupMarker name="additions"/>
        </menu>
        <action id="org.scala-ide.sdt.ui.runDiag.action"
-         label="Run Setup Diagnostics..."
+         label="Run Setup Diagnostics"
          menubarPath="org_scala-ide_sdt_ui_menu/diagnostics"
          tooltip="Verify that Scala configuration is correct"
          class="scala.tools.eclipse.actions.RunDiagnosticAction"
          enablesFor="*">
        </action>
        <action id="org.scala-ide.sdt.ui.reportBug.action"
-         label="Report a Bug..."
+         label="Report a Bug"
          menubarPath="org_scala-ide_sdt_ui_menu/additions"
          tooltip="Report a bug in the Scala Development Tools"
+         class="scala.tools.eclipse.actions.RunDiagnosticAction"
+         enablesFor="*">
+       </action>
+       <action id="org.scala-ide.sdt.ui.openLogFile.action"
+         label="Open the Log"
+         menubarPath="org_scala-ide_sdt_ui_menu/additions"
+         tooltip="Open the Log file in an editor"
          class="scala.tools.eclipse.actions.RunDiagnosticAction"
          enablesFor="*">
        </action>       
