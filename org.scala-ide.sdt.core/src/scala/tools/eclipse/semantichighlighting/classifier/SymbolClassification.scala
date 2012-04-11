@@ -46,10 +46,10 @@ object SymbolClassification {
 }
 
 class SymbolClassification(protected val sourceFile: SourceFile, val global: ScalaPresentationCompiler, useSyntacticHints: Boolean)
-  extends SafeSymbol with SymbolClassificationDebugger with SymbolTests with HasLogger {
+  extends SafeSymbol with TypeTreeTraverser with SymbolClassificationDebugger with SymbolTests with HasLogger {
 
   import SymbolClassification._
-  import global._
+  import global.{ Symbol, Position, NoSymbol }
   
   def compilationUnitOfFile(f: AbstractFile) = global.unitOfFile.get(f)
 
