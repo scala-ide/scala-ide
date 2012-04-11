@@ -17,13 +17,21 @@ trait TypeTreeTraverser {
    * traverse the Tree.
    */
   class TreeWrapper(tree: Tree) {
-    private val adaptee = new TreeOps(tree)
 
-    def isType: Boolean = adaptee.isType
+    def isType: Boolean = tree match {
+      case _: TypTree        => true
+      case Bind(name, _)     => name.isTypeName
+      case Select(_, name)   => name.isTypeName
+      case Ident(name)       => name.isTypeName
+      case Annotated(_, arg) => tree2treeWrapper(arg).isType
+      case DocDef(_, defn)   => tree2treeWrapper(defn).isType
+      case _                 => false
+    }
 
     def foreach(f: Tree => Unit) {
       new ForeachTypeTreeTraverser(f).traverse(tree)
     }
+
     // TODO: Need to replace {{{filter}} with {{{withFilter}}}
     def filter(p: Tree => Boolean): List[Tree] = {
       val ft = new FilterTypeTreeTraverser(p)
