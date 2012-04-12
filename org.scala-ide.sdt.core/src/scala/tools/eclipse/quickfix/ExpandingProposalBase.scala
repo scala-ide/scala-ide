@@ -25,7 +25,7 @@ class ExpandingProposalBase(msg: String, displayString: String, pos: Position) e
    */
   def apply(document: IDocument): Unit = {
     // We extract the replacement string from the marker's message.
-    val ReplacementExtractor = new Regex(".*"+ ImplicitHighlightingPresenter.DisplayStringSeparator +"(.*)")
+    val ReplacementExtractor = new Regex("(?s).*"+ ImplicitHighlightingPresenter.DisplayStringSeparator +"(.*)")
     val ReplacementExtractor(replacement) = msg
     document.replace(pos.getOffset(), pos.getLength(), replacement);
   }
