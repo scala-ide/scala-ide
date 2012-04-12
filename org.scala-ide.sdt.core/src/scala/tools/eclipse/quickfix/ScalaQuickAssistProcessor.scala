@@ -19,8 +19,9 @@ import scala.tools.eclipse.util.FileUtils
 import scala.util.matching.Regex
 import org.eclipse.jface.text.Position
 import scala.collection.JavaConversions._
+import scala.tools.eclipse.logging.HasLogger
 
-class ScalaQuickAssistProcessor extends org.eclipse.jdt.ui.text.java.IQuickAssistProcessor {
+class ScalaQuickAssistProcessor extends org.eclipse.jdt.ui.text.java.IQuickAssistProcessor with HasLogger {
 
   import ScalaQuickAssistProcessor._
 
@@ -64,7 +65,9 @@ class ScalaQuickAssistProcessor extends org.eclipse.jdt.ui.text.java.IQuickAssis
         RenameProposal,
         ExtractMethodProposal).par.filter(_.isValidProposal).seq
     } catch {
-      case e: Exception => List()
+      case e: Exception => 
+        logger.debug("Exception when building quick assist list: " + e.getMessage, e)
+        List()
     }
 
     refactoringSuggestions ++
