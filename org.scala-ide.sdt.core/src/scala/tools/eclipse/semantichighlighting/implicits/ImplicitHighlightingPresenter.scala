@@ -30,6 +30,7 @@ import org.eclipse.ui.part.FileEditorInput
 import scala.tools.eclipse.util.AnnotationUtils
 import scala.tools.eclipse.semantichighlighting.ColorManager
 import scala.tools.eclipse.semantic.SemanticAction
+import scala.tools.eclipse.properties.ImplicitsPreferencePage
 
 /**
  * @author Jin Mingjian
@@ -142,14 +143,25 @@ class ImplicitHighlightingPresenter(editor: FileEditorInput, sourceViewer: ISour
 object ImplicitHighlightingPresenter {
   final val DisplayStringSeparator = " => "
 
-  def findAllImplicitConversions(compiler: ScalaPresentationCompiler, sourceFile: SourceFile) = {
+  private def pluginStore: IPreferenceStore = ScalaPlugin.plugin.getPreferenceStore
 
+  def findAllImplicitConversions(compiler: ScalaPresentationCompiler, sourceFile: SourceFile) = {
     import compiler.{ Tree, Traverser, ApplyImplicitView, ApplyToImplicitArgs }
+    
+    def mkPosition(pos: compiler.Position, txt: String): Position = {
+      val start = pos.startOrPoint
+      val end = if (pluginStore.getBoolean(ImplicitsPreferencePage.P_FIRST_LINE_ONLY)) {
+        val eol = txt.indexOf('\n')
+        if (eol > -1) eol else txt.length
+      } else txt.length
+      
+      new Position(start, end)
+    }
 
     def mkImplicitConversionAnnotation(t: ApplyImplicitView) = {
       val txt = new String(sourceFile.content, t.pos.startOrPoint, math.max(0, t.pos.endOrPoint - t.pos.startOrPoint)).trim()
       val annotation = new ImplicitConversionsOrArgsAnnotation("Implicit conversions found: " + txt + DisplayStringSeparator + t.fun.symbol.name + "(" + txt + ")")
-      val pos = new Position(t.pos.startOrPoint, txt.length)
+      val pos = mkPosition(t.pos, txt)
       (annotation, pos)
     }
 
@@ -162,7 +174,7 @@ object ImplicitHighlightingPresenter {
         case l => l.collect { case x if x.hasSymbol => x.symbol.name }.mkString("( ", ", ", " )")
       }
       val annotation = new ImplicitConversionsOrArgsAnnotation("Implicit arguments found: " + txt + DisplayStringSeparator + txt + argsStr)
-      val pos = new Position(t.pos.startOrPoint, txt.length)
+      val pos = mkPosition(t.pos, txt)
       (annotation, pos)
     }
 
@@ -174,7 +186,7 @@ object ImplicitHighlightingPresenter {
           case v: ApplyImplicitView =>
             val (annotation, pos) = mkImplicitConversionAnnotation(v)
             implicits += (annotation -> pos)
-          case v: ApplyToImplicitArgs =>
+          case v: ApplyToImplicitArgs if !pluginStore.getBoolean(ImplicitsPreferencePage.P_CONVERSIONS_ONLY) =>
             val (annotation, pos) = mkImplicitArgumentAnnotation(v)
             implicits += (annotation -> pos)
           case _ =>

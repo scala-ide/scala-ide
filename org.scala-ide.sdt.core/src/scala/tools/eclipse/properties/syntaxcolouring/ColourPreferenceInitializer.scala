@@ -16,7 +16,6 @@ class ColourPreferenceInitializer extends AbstractPreferenceInitializer {
 
   override def initializeDefaultPreferences() {
     if (!ScalaPlugin.plugin.headlessMode) {
-      println("\n\n ********* Initializing colour preferences ****************\n\n")
       doInitializeDefaultPreferences()
     }
   }
