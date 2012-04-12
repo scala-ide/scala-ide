@@ -175,7 +175,7 @@ class ScalaDebugTestSession(launchConfigurationFile: IFile) extends IDebugEventS
 
   private def launch() {
     val launchConfiguration = DebugPlugin.getDefault.getLaunchManager.getLaunchConfiguration(launchConfigurationFile)
-    launchConfiguration.launch(ILaunchManager.DEBUG_MODE, null).getDebugTarget.asInstanceOf[JDIDebugTarget]
+    launchConfiguration.launch(ILaunchManager.DEBUG_MODE, null)
   }
 
   // -----
