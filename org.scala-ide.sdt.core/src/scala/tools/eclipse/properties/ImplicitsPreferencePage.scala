@@ -27,7 +27,7 @@ Set the highlighting for implicit conversions and implicit parameters.
   override def createContents(parent: Composite): Control = {
     val control = super.createContents(parent).asInstanceOf[Composite]
     val link = new Link(control, SWT.NONE)
-    link.setText("""More options for highlighting for implicit conversions on the <a href="org.eclipse.ui.preferencePages.GeneralTextEditor">Text Editors</a>/<a href="org.eclipse.ui.editors.preferencePages.Annotations">Annotations</a> preference page.""")
+    link.setText("""More options for highlighting for implicit conversions on the <a href="org.eclipse.ui.editors.preferencePages.Annotations">Text Editors/Annotations</a> preference page.""")
     link.addSelectionListener { e: SelectionEvent =>
       PreferencesUtil.createPreferenceDialogOn(parent.getShell, e.text, null, null)
     }
@@ -39,6 +39,8 @@ Set the highlighting for implicit conversions and implicit parameters.
     addField(new BooleanFieldEditor(P_ACTIVE, "Active", getFieldEditorParent))
     addField(new BooleanFieldEditor(P_BOLD, "Bold", getFieldEditorParent))
     addField(new BooleanFieldEditor(P_ITALIC, "Italic", getFieldEditorParent))
+    addField(new BooleanFieldEditor(P_CONVERSIONS_ONLY, "Only highlight implicit conversions", getFieldEditorParent))
+    addField(new BooleanFieldEditor(P_FIRST_LINE_ONLY, "Only highlight the first line in an implicit conversion", getFieldEditorParent))
   }
 
   def init(workbench: IWorkbench) {}
@@ -50,6 +52,8 @@ object ImplicitsPreferencePage {
   val P_ACTIVE = BASE + "enabled"
   val P_BOLD = BASE + "text.bold"
   val P_ITALIC = BASE + "text.italic"
+  val P_CONVERSIONS_ONLY = BASE + "conversions.only"
+  val P_FIRST_LINE_ONLY  = BASE + "firstline.only"
 }
 
 class ImplicitsPagePreferenceInitializer extends AbstractPreferenceInitializer {
@@ -61,5 +65,7 @@ class ImplicitsPagePreferenceInitializer extends AbstractPreferenceInitializer {
     store.setDefault(P_ACTIVE, false)
     store.setDefault(P_BOLD, false)
     store.setDefault(P_ITALIC, false)
+    store.setDefault(P_CONVERSIONS_ONLY, true)
+    store.setDefault(P_FIRST_LINE_ONLY, false)
   }
 }
