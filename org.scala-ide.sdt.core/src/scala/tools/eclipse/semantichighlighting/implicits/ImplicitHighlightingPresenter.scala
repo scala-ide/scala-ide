@@ -103,7 +103,7 @@ class ImplicitHighlightingPresenter(editor: FileEditorInput, sourceViewer: ISour
       page <- EclipseUtils.getWorkbenchPages
       editorReference <- page.getEditorReferences
       editorInput <- Option(editorReference.getEditorInput)
-      compilationUnit = JavaPlugin.getDefault.getWorkingCopyManager.getWorkingCopy(editorInput)
+      compilationUnit <- Option(JavaPlugin.getDefault.getWorkingCopyManager.getWorkingCopy(editorInput))
       scu <- compilationUnit.asInstanceOfOpt[ScalaCompilationUnit]
     } apply(scu)
 
