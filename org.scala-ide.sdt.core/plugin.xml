@@ -422,7 +422,7 @@
      <specification
           annotationType="scala.tools.eclipse.semantichighlighting.implicits.implicitConversionsOrArgsAnnotation"
           colorPreferenceKey="scala.tools.eclipse.ui.preferences.implicit.color"
-          colorPreferenceValue="183,239,176"
+          colorPreferenceValue="51,102,0"
           contributesToHeader="false"
           includeOnPreferencePage="true"
           icon="icons/full/elcl16/implicit_co.gif"
@@ -434,7 +434,7 @@
           textPreferenceKey="scala.tools.eclipse.ui.preferences.implicit.text"
           textPreferenceValue="true"
           textStylePreferenceKey="scala.tools.eclipse.ui.preferences.implicit.textStylePreference"
-          textStylePreferenceValue="SQUIGGLES"
+          textStylePreferenceValue="UNDERLINE"
           verticalRulerPreferenceKey="scala.tools.eclipse.ui.preferences.implicit.rulers.vertical"
           verticalRulerPreferenceValue="true">
      </specification>
