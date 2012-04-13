@@ -15,7 +15,7 @@ class PackageTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  @Ignore
+  @Ignore("Packages' symbol seem to take a TransparentPosition, why?")
   def package_in_visibility_classifier() {
     checkSymbolClassification("""
       package packageName1

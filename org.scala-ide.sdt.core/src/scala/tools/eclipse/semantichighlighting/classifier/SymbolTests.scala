@@ -7,9 +7,15 @@ trait SymbolTests { self: SymbolClassification =>
 
   import global._
 
+  def posToSym(pos: Position): Option[Symbol] = {
+    val t = locateTree(pos) 
+    if (t.hasSymbol) safeSymbol(t).headOption.map(_._1) else None
+  }
+  
   private lazy val forValSymbols: Set[Symbol] = for {
     region <- syntacticInfo.forVals
-    symbol <- index.positionToSymbol(rangePosition(region))
+    pos = rangePosition(region)
+    symbol <- posToSym(pos)
   } yield symbol
 
   private def rangePosition(region: Region): RangePosition = {
@@ -18,13 +24,23 @@ trait SymbolTests { self: SymbolClassification =>
   }
 
   private def classifyTerm(sym: Symbol): SymbolType = {
+    
+    lazy val isCaseModule = 
+      global.askOption( () => sym.companionClass.isCaseClass).getOrElse(false)
+    
     import sym._
     if (isPackage)
       Package
+    else if (isLazy)
+      if (isLocal) LazyLocalVal else LazyTemplateVal
+    else if (isSetter)
+      TemplateVar
+    else if (isGetter) 
+      if(hasSetter(sym)) TemplateVar else TemplateVal
     else if (isSourceMethod)
       Method
     else if (isModule) {
-      if (companionClass.isCaseClass)
+      if (isCaseModule)
         CaseClass
       else if (isCase)
         CaseObject
@@ -47,11 +63,25 @@ trait SymbolTests { self: SymbolClassification =>
           LazyTemplateVal
         else if (isVariable)
           TemplateVar
+        else if (!hasGetter && !isThisSym && !isJavaDefined)
+          // Short explanations of the above condition
+          // hasGetter     -> must be a TemplateVal
+          // isThisSym     -> self ref are categorized as TemplateVal
+          // isJavaDefined -> fields in Java do not have default getters, but we still want to categorize them as TemplateVal
+          Param
         else
           TemplateVal
       }
     } else
       throw new AssertionError("Unknown symbol type: " + sym)
+  }
+
+  /** Check if a setter exists for the passed getter {{{sym}}}.
+   * @precondition sym.isGetter
+   */
+  private def hasSetter(sym: Symbol): Boolean = {
+    assert(sym.isGetter)
+    sym.setter(sym.owner) != NoSymbol
   }
 
   private def classifyType(sym: Symbol): SymbolType = {
@@ -64,7 +94,7 @@ trait SymbolTests { self: SymbolClassification =>
       Class
     else if (isParameter) // isTypeParam?
       TypeParameter
-    else
+    else // isTypeAlias?
       Type
   }
 

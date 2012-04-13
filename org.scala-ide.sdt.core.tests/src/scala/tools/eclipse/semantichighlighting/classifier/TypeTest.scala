@@ -27,8 +27,8 @@ class TypeTest extends AbstractSymbolClassifierTest {
       Map("TP" -> Type))
   }
 
-  @Ignore
   @Test
+  @Ignore("Fails with 2.10. Need to investigate.")
   def set_is_a_type() {
     checkSymbolClassification("""
       case class Bob(s: Set[Int])
@@ -36,12 +36,46 @@ class TypeTest extends AbstractSymbolClassifierTest {
         val Bob(s) = Bob(Set())
       }
       """, """
-      case class Bob(s: $T$[Int])
+      case class Bob(s: $T$[$C$])
       object X {
         val Bob(s) = Bob($V$())
       }
       """,
-      Map("T" -> Type, "V" -> TemplateVal))
+      Map("T" -> Type, "V" -> TemplateVal, "C" -> Class))
+  }
+  
+  @Test
+  @Ignore
+  def classify_existential_type_1() {
+    checkSymbolClassification(
+    """
+      object O {
+        def m(x : t forSome {type t <: AnyRef}) = x
+      }
+    """", 
+    """
+      object O {
+        def m(x : t forSome {type t <: $ TPE$ }) = x
+      }
+    """", 
+    Map("TPE" -> Type))
+  }
+  
+  @Test
+  @Ignore
+  def classify_existential_type_2() {
+    checkSymbolClassification(
+    """
+      object O {
+        def m(x : t forSome {type t <: List [_]}) = x
+      }
+    """", 
+    """
+      object O {
+        def m(x : t forSome {type t <: $TPE$[_]}) = x
+      }
+    """", 
+    Map("TPE" -> Type))
   }
 
 }

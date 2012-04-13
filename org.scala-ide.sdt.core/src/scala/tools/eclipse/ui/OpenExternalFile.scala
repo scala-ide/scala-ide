@@ -11,13 +11,15 @@ import org.eclipse.swt.widgets.Event
 import org.eclipse.ui.PlatformUI
 
 /** This class can be used to open an editor on a file outside the workspace. */
-private class OpenExternalFile private (file: File) extends Listener with HasLogger {
+class OpenExternalFile private (file: File) extends Listener with HasLogger {
   require(file != null, "file should not be null.")
   require(file.exists, "file %s does not exist.".format(file.getAbsolutePath))
 
   import scala.util.control.Exception.catching
 
-  def handleEvent(e: Event): Unit = {
+  def handleEvent(e: Event): Unit = open()
+  
+  def open(): Unit = {
     val parentLocation = file.getParent
     var fileStore = EFS.getLocalFileSystem().getStore(new Path(parentLocation));
 
@@ -38,5 +40,5 @@ private class OpenExternalFile private (file: File) extends Listener with HasLog
 }
 
 object OpenExternalFile {
-  def apply(file: File): Listener = new OpenExternalFile(file)
+  def apply(file: File): OpenExternalFile = new OpenExternalFile(file)
 }

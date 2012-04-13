@@ -10,3 +10,5 @@ Bundle-ClassPath: .,
  lib/mockito-all-1.8.5.jar
 Require-Bundle: org.scala-ide.scala.library,
  org.eclipse.equinox.weaving.aspectj
+Export-Package: 
+ scala.tools.eclipse.testsetup

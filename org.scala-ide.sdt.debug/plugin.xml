@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.2"?>
+<plugin>
+   <extension
+         point="org.eclipse.ui.preferencePages">
+      <page
+            category="org.scala-ide.sdt.core.preferences"
+            class="scala.tools.eclipse.debug.DebugPreferencePage"
+            id="org.scala-ide.sdt.debug.preferences"
+            name="Debug">
+      </page>
+   </extension>
+   <extension
+         point="org.eclipse.core.runtime.preferences">
+      <initializer
+            class="scala.tools.eclipse.debug.DebugPreferenceInitializer">
+      </initializer>
+   </extension>
+   <extension
+         point="org.eclipse.debug.ui.debugModelPresentations">
+      <debugModelPresentation
+            class="scala.tools.eclipse.debug.model.ScalaDebugModelPresentation"
+            id="org.scala-ide.sdt.debug">
+      </debugModelPresentation>
+   </extension>
+   <extension
+         point="org.eclipse.ui.startup">
+      <startup
+            class="scala.tools.eclipse.debug.ScalaDebugPlugin">
+      </startup>
+   </extension>
+   <extension
+         point="org.eclipse.debug.core.logicalStructureProviders">
+      <logicalStructureProvider
+            class="scala.tools.eclipse.debug.model.ScalaLogicalStructureProvider"
+            modelIdentifier="org.scala-ide.sdt.debug">
+      </logicalStructureProvider>
+   </extension>
+</plugin>

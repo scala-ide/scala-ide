@@ -11,9 +11,8 @@ import scala.tools.eclipse.javaelements.ScalaCompilationUnit
 import org.eclipse.jdt.core.IProblemRequestor
 import org.eclipse.jdt.core.WorkingCopyOwner
 import org.eclipse.core.runtime.NullProgressMonitor
-
-
 import org.mockito.Mockito.{mock, when}
+import org.eclipse.core.resources.IFile
 
 /** Base class for setting up tests that depend on a project found in the test-workspace.
  * 
@@ -27,11 +26,11 @@ import org.mockito.Mockito.{mock, when}
  *  Example: `object HyperlinkDetectorTests extends TestProjectSetup("hyperlinks")'
  * 
  */
-class TestProjectSetup(projectName: String, srcRoot: String = "/%s/src/") extends ProjectBuilder {
+class TestProjectSetup(projectName: String, srcRoot: String = "/%s/src/", bundleName: String = "org.scala-ide.sdt.core.tests") extends ProjectBuilder {
   type ScalaUnit = ScalaCompilationUnit with ICompilationUnit
   
   /** The ScalaProject corresponding to projectName, after copying to the test workspace. */
-  lazy val project: ScalaProject = SDTTestUtils.setupProject(projectName)
+  lazy val project: ScalaProject = SDTTestUtils.setupProject(projectName, bundleName)
   
   /** The package root corresponding to /src inside the project. */
   lazy val srcPackageRoot: IPackageFragmentRoot = {
@@ -44,6 +43,10 @@ class TestProjectSetup(projectName: String, srcRoot: String = "/%s/src/") extend
   assertNotNull(srcPackageRoot)
 
   srcPackageRoot.open(null)
+  
+  def file(path: String): IFile = {
+    project.underlying.getFile(path)
+  }
   
   /** Return the compilation unit corresponding to the given path, relative to the src folder.
    *  for example: "scala/collection/Map.scala"
