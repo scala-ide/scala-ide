@@ -141,6 +141,9 @@
   <profiles>
     <profile>
       <id>release-ide-29</id>
+      <properties>
+        <version.suffix>2_09</version.suffix>
+      </properties>
       <repositories>
         <repository>
           <id>scala-refactoring-scalaide-2.0</id>
