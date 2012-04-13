@@ -140,6 +140,30 @@
   </pluginRepositories>
   <profiles>
     <profile>
+      <id>release-ide-29</id>
+      <repositories>
+        <repository>
+          <id>scala-refactoring-scalaide-2.0</id>
+          <name>Scala Refactoring for Scala IDE 2.0 p2 repository</name>
+          <layout>p2</layout>
+          <url>${repo.scala-ide}/incoming-release-29/dependencies/scala-refactoring</url>
+        </repository>
+        <repository>
+          <id>scalariform-scalaide-2.0</id>
+          <name>Scalariform for Scala IDE 2.0 p2 repo</name>
+          <layout>p2</layout>
+          <url>${repo.scala-ide}/incoming-release-29/dependencies/scalariform</url>
+        </repository>
+        <repository>
+          <id>scala-toolchain-scalaide-2.0</id>
+          <name>Scala Toolchain for Scala IDE 2.0 p2 repository</name>
+          <layout>p2</layout>
+          <url>${repo.scala-ide}/incoming-release-29/dependencies/osgi-toolchain</url>
+        </repository>
+      </repositories>
+    </profile>
+    
+    <profile>
       <id>scala-2.9.2-SNAPSHOT</id>
       <activation>
         <property>
