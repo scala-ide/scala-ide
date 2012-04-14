@@ -19,11 +19,12 @@ import scala.tools.eclipse.util.FileUtils
 import scala.util.matching.Regex
 import org.eclipse.jface.text.Position
 import scala.collection.JavaConversions._
+import scala.tools.eclipse.logging.HasLogger
 
-class ScalaQuickAssistProcessor extends org.eclipse.jdt.ui.text.java.IQuickAssistProcessor {
+class ScalaQuickAssistProcessor extends org.eclipse.jdt.ui.text.java.IQuickAssistProcessor with HasLogger {
 
   import ScalaQuickAssistProcessor._
-  
+
   override def hasAssists(context: IInvocationContext): Boolean = true
 
   override def getAssists(context: IInvocationContext, locations: Array[IProblemLocation]): Array[IJavaCompletionProposal] =
@@ -36,7 +37,7 @@ class ScalaQuickAssistProcessor extends org.eclipse.jdt.ui.text.java.IQuickAssis
           }
         }.flatten
         corrections match {
-          case Nil => null
+          case Nil        => null
           case correction => correction.distinct.toArray
         }
       }
@@ -49,36 +50,43 @@ class ScalaQuickAssistProcessor extends org.eclipse.jdt.ui.text.java.IQuickAssis
     val model = JavaUI.getDocumentProvider.getAnnotationModel(part.getEditorInput)
     val annotationsWithPositions = model.getAnnotationIterator collect {
       case ann: Annotation => (ann, model.getPosition(ann))
-    } 
+    }
     val annotationsAtOffset = annotationsWithPositions filter {
       case (_, pos) => isInside(offset, pos.offset, pos.offset + pos.length)
     }
     annotationsAtOffset.toList
   }
 
-  private def suggestAssist(compilationUnit: ICompilationUnit, problemMessage: String, location: Position): List[IJavaCompletionProposal] = {
-    List(
-        ExtractLocalProposal, 
-        InlineLocalProposal, 
-        RenameProposal, 
-        ExtractMethodProposal
-    ).filter(_.isValidProposal) :::
-    (problemMessage match {
-      case ImplicitConversionFound(s) => List(new ImplicitConversionExpandingProposal(s, location))
-      case ImplicitArgFound(s) => List(new ImplicitArgumentExpandingProposal(s, location))
-      case _ => Nil
-    })
+  private def suggestAssist(compilationUnit: ICompilationUnit, problemMessage: String, location: Position): Seq[IJavaCompletionProposal] = {
+    val refactoringSuggestions: Seq[IJavaCompletionProposal] = try {
+      List(
+        ExtractLocalProposal,
+        InlineLocalProposal,
+        RenameProposal,
+        ExtractMethodProposal).par.filter(_.isValidProposal).seq
+    } catch {
+      case e: Exception => 
+        logger.debug("Exception when building quick assist list: " + e.getMessage, e)
+        List()
+    }
+
+    refactoringSuggestions ++
+      (problemMessage match {
+        case ImplicitConversionFound(s) => List(new ImplicitConversionExpandingProposal(s, location))
+        case ImplicitArgFound(s)        => List(new ImplicitArgumentExpandingProposal(s, location))
+        case _                          => Nil
+      })
   }
 }
 
 object ScalaQuickAssistProcessor {
-  
+
   private def isInside(offset: Int, start: Int, end: Int) = {
     (start to end) contains offset
   }
-  
-  private final val ImplicitConversionFound = "Implicit conversions found: (.*)".r
-  
-  private final val ImplicitArgFound = "Implicit arguments found: (.*)".r
+
+  private final val ImplicitConversionFound = "(?s)Implicit conversions found: (.*)".r
+
+  private final val ImplicitArgFound = "(?s)Implicit arguments found: (.*)".r
 }
 

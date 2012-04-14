@@ -10,6 +10,7 @@ import scala.tools.eclipse.refactoring.ActionAdapter
 import scala.tools.eclipse.refactoring.rename.RenameAction
 import scala.tools.eclipse.refactoring.ScalaIdeRefactoring
 import scala.tools.eclipse.logging.HasLogger
+import org.eclipse.core.runtime.NullProgressMonitor
 
 abstract class ProposalRefactoringActionAdapter(
     action: ActionAdapter, 
@@ -37,7 +38,7 @@ abstract class ProposalRefactoringActionAdapter(
     }
     ra.createScalaIdeRefactoringForCurrentEditorAndSelection match {
       // TODO not sure if this null here is very safe
-    	case Some(refactoring) => !refactoring.checkInitialConditions(null).hasWarning
+    	case Some(refactoring) => !refactoring.checkInitialConditions(new NullProgressMonitor).hasWarning
     	case None	=> false
     }
   }
