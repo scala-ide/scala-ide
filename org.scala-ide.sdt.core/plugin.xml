@@ -960,6 +960,7 @@
                label="Refactor"
                path="edit">
             <separator name="scala.tools.eclipse.refactoring.refactoringGroup"/>
+            <separator name="scala.tools.eclipse.refactoring.quickfixGroup"/>
          </menu>
          <action
                class="scala.tools.eclipse.refactoring.move.MoveClassAction"
@@ -1035,6 +1036,19 @@
             </enablement>
          </action>
          <action
+               class="scala.tools.eclipse.refactoring.ExpandCaseClassBindingAction"
+               definitionId="scala.tools.eclipse.refactoring.command.ExpandCaseClassBinding"
+               id="scala.tools.eclipse.refactoring.expandCaseClassBindingAction"
+               label="Expand Case Class Binding"
+               menubarPath="scala.tools.eclipse.refactoring.refactoringMenu/scala.tools.eclipse.refactoring.quickfixGroup"
+               tooltip="Expand Case Class Binding">
+            <enablement>
+               <objectClass
+                     name="org.eclipse.jface.text.TextSelection">
+               </objectClass>
+            </enablement>
+         </action>
+         <action
                class="scala.tools.eclipse.actions.RunSelectionAction"
                definitionId="scala.tools.eclipse.interpreter.RunSelection"
                disabledIcon="icons/full/dtool16/run_interpreter.gif"
@@ -1083,6 +1097,10 @@
          categoryId="scala.tools.eclipse.refactoring.commands.refactoring"
          id="scala.tools.eclipse.refactoring.command.Rename"
          name="Rename"/>
+      <command
+         categoryId="scala.tools.eclipse.refactoring.commands.refactoring"
+         id="scala.tools.eclipse.refactoring.command.ExpandCaseClassBinding"
+         name="Expand Case Class Binding"/>
       <command
          categoryId="scala.tools.eclipse.category"
          id="org.scala-ide.sdt.core.commands.ToggleImplicitsDisplay"
