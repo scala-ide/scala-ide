@@ -40,6 +40,7 @@ import scala.tools.eclipse.launching.ScalaTestLaunchDelegate
 import RerunHelper._
 import org.eclipse.debug.internal.ui.DebugUIPlugin
 import org.eclipse.debug.ui.IDebugUIConstants
+import org.eclipse.jface.viewers.StructuredSelection
 
 class ScalaTestViewer(parent: Composite, fTestRunnerPart: ScalaTestRunnerViewPart) {
   
@@ -303,7 +304,7 @@ class ScalaTestViewer(parent: Composite, fTestRunnerPart: ScalaTestRunnerViewPar
       // TODO: The above code to update node selectively doesn't work, use the full refresh for now.
       fTreeViewer.refresh()
     }
-    autoScrollInUI();
+    autoScrollInUI()
   }
   
   private def autoScrollInUI() {
@@ -329,6 +330,9 @@ class ScalaTestViewer(parent: Composite, fTestRunnerPart: ScalaTestRunnerViewPar
 
     val current = fAutoScrollTarget
     fAutoScrollTarget = null
+    
+    if (fAutoExpand.length > 0)
+      getActiveViewer.setSelection(new StructuredSelection(fAutoExpand.last), true)
 
     // Not sure what's the following is doing, TODO later.
     /*TestSuiteElement parent= current == null ? null : (TestSuiteElement) fTreeContentProvider.getParent(current);
@@ -353,6 +357,20 @@ class ScalaTestViewer(parent: Composite, fTestRunnerPart: ScalaTestRunnerViewPar
     }*/
     //if (current != null)
       //fTreeViewer.reveal(current)
+  }
+  
+  def selectedNode = {
+    val selection = getActiveViewer.getSelection.asInstanceOf[IStructuredSelection]
+    if (!selection.isEmpty)
+	  Some(selection.getFirstElement().asInstanceOf[Node])
+    else
+      None
+  }
+  
+  def selectNode(node: Node) {
+    println("#####selectNode: " + node)
+    fTreeViewer.reveal(node)
+    getActiveViewer.setSelection(new StructuredSelection(node), true)
   }
   
   private def handleSelected() {

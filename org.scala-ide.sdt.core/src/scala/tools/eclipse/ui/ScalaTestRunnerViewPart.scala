@@ -32,6 +32,10 @@ import org.eclipse.debug.core.ILaunch
 import scala.tools.eclipse.launching.ScalaTestLaunchDelegate
 import org.eclipse.debug.internal.ui.DebugUIPlugin
 import org.eclipse.debug.ui.IDebugUIConstants
+import org.eclipse.ui.actions.ActionFactory
+import scala.collection.mutable.ListBuffer
+import scala.annotation.tailrec
+import org.eclipse.jface.dialogs.MessageDialog
 
 object ScalaTestRunnerViewPart {
   //orientations
@@ -60,6 +64,8 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
   private var fTestViewer: ScalaTestViewer = null
   private var fStackTrace: ScalaTestStackTrace = null
   
+  private var fNextAction: ShowNextFailureAction = null
+  private var fPreviousAction: ShowPreviousFailureAction = null
   private var fRerunAllTestsAction: RerunAllTestsAction = null
   private var fRerunFailedTestsAction: RerunFailedTestsAction = null
   
@@ -70,6 +76,10 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
   private var fUpdateJob: UpdateUIJob = null
   
   var autoScroll: Boolean = true
+  
+  private val suiteList = new ListBuffer[Node]()
+  private var nodeList: List[Node] = null
+  private var suiteMap: Map[String, SuiteModel] = null
   
   val suiteIcon = ScalaImages.SCALATEST_SUITE.createImage
   val suiteSucceedIcon = ScalaImages.SCALATEST_SUITE_OK.createImage
@@ -177,9 +187,9 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
   private def enableToolbarControls(enable: Boolean) {
     fRerunAllTestsAction.setEnabled(enable)
     fRerunFailedTestsAction.setEnabled(enable)
+    fNextAction.setEnabled(enable)
+    fPreviousAction.setEnabled(enable)
   }
-  
-  private var suiteMap: Map[String, SuiteModel] = null
   
   def update(o: Observable, arg: AnyRef) {
     arg match {
@@ -311,6 +321,7 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
                         suiteStarting.timeStamp, 
                         SuiteStatus.STARTED
                       )
+          suiteList += suite
           suiteMap += (suite.suiteId -> suite)
           fTestRunSession.rootNode.addChild(suite)
           fTestViewer.registerAutoScrollTarget(suite)
@@ -357,6 +368,7 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
       case runStarting: RunStarting => 
         println("***RunStarting, test count: " + runStarting.testCount)
         enableToolbarControls(false)
+        suiteList.clear()
         suiteMap = Map.empty[String, SuiteModel]
         fTestRunSession.rootNode = 
           RunModel(
@@ -381,6 +393,7 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
         fTestRunSession.rootNode.summary = runCompleted.summary
         fTestRunSession.rootNode.status = RunStatus.COMPLETED
         stopUpdateJobs()
+        nodeList = getFlattenNode(suiteList.toList)
         fTestViewer.registerAutoScrollTarget(null)
         enableToolbarControls(true)
       case runStopped: RunStopped => 
@@ -390,6 +403,7 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
         fTestRunSession.rootNode.summary = runStopped.summary
         fTestRunSession.rootNode.status = RunStatus.STOPPED
         stopUpdateJobs()
+        nodeList = getFlattenNode(suiteList.toList)
         fTestViewer.registerAutoScrollTarget(null)
         enableToolbarControls(true)
       case runAborted: RunAborted => 
@@ -402,6 +416,7 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
         fTestRunSession.rootNode.errorStackTrace = runAborted.errorStackTraces
         fTestRunSession.rootNode.status = RunStatus.ABORTED
         stopUpdateJobs()
+        nodeList = getFlattenNode(suiteList.toList)
         fTestViewer.registerAutoScrollTarget(null)
         enableToolbarControls(true)
       case infoProvided: InfoProvided => 
@@ -469,6 +484,19 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
         // fTestViewer.registerAutoScrollTarget(testCaseElement)
         // fTestViewer.registerViewerUpdate(testCaseElement)
     }
+  }
+  
+  private def getFlattenNode(suiteList: List[Node]) = {
+    @tailrec
+    def getFlattenNodeAcc(acc: List[Node], suiteList: List[Node]): List[Node] = {
+      suiteList match {
+        case Nil => 
+          acc
+        case head :: rest =>
+          getFlattenNodeAcc(head :: acc, head.children.toList ::: rest)
+      }
+    }
+    getFlattenNodeAcc(List.empty, suiteList).reverse
   }
   
   /*def computeOrientation() {
@@ -631,6 +659,48 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
     })
   }
   
+  def showNextFailure() {
+    val currentList = fTestViewer.selectedNode match {
+      case Some(selected) => 
+        nodeList.dropWhile(node => node != selected).tail
+      case None =>
+        nodeList
+    }
+    val next = currentList.find { node => 
+      node match {
+        case test: TestModel if test.status == TestStatus.FAILED => true
+        case _ => false
+      }
+    }
+    next match {
+      case Some(next) => 
+        fTestViewer.selectNode(next)
+      case None => 
+        MessageDialog.openError(null, "Error", "No more next failed test.")
+    }
+  }
+  
+  def showPreviousFailure() {
+    val currentList = fTestViewer.selectedNode match {
+      case Some(selected) => 
+        nodeList.takeWhile(node => node != selected).reverse
+      case None =>
+        nodeList.reverse
+    }
+    val previous = currentList.find { node => 
+      node match {
+        case test: TestModel if test.status == TestStatus.FAILED => true
+        case _ => false
+      }
+    }
+    previous match {
+      case Some(previous) => 
+        fTestViewer.selectNode(previous)
+      case None => 
+        MessageDialog.openError(null, "Error", "No more previous failed test.")
+    }
+  }
+  
   private def postSyncRunnable(r: Runnable) {
     if (!isDisposed)
       getDisplay.syncExec(r)
@@ -642,6 +712,14 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
     val actionBars = getViewSite.getActionBars
     val toolBar = actionBars.getToolBarManager
     val viewMenu = actionBars.getMenuManager
+    
+    fNextAction= new ShowNextFailureAction(this);
+    fNextAction.setEnabled(false);
+    actionBars.setGlobalActionHandler(ActionFactory.NEXT.getId(), fNextAction);
+
+    fPreviousAction= new ShowPreviousFailureAction(this);
+    fPreviousAction.setEnabled(false);
+    actionBars.setGlobalActionHandler(ActionFactory.PREVIOUS.getId(), fPreviousAction);
     
     fRerunAllTestsAction = new RerunAllTestsAction()
     val rerunAllTestsHandler = new AbstractHandler() {
@@ -665,6 +743,8 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
     handlerService.activateHandler("Rerun All Tests", rerunAllTestsHandler)
     handlerService.activateHandler("Rerun Failed Tests", rerunFailedTestsHandler)
     
+    toolBar.add(fNextAction)
+    toolBar.add(fPreviousAction)
     toolBar.add(fRerunAllTestsAction)
     toolBar.add(fRerunFailedTestsAction)
     
@@ -727,6 +807,28 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
       if (buildBeforeLaunch)
         ScalaTestPlugin.doBuild()
       delegate.launchScalaTest(launch.getLaunchConfiguration, launch.getLaunchMode, launch, null, stArgs)
+    }
+  }
+  
+  private class ShowNextFailureAction(fPart: ScalaTestRunnerViewPart) extends Action("Next Failure") {
+    setDisabledImageDescriptor(ScalaImages.SCALATEST_NEXT_FAILED_DISABLED)
+    setHoverImageDescriptor(ScalaImages.SCALATEST_NEXT_FAILED_ENABLED)
+    setImageDescriptor(ScalaImages.SCALATEST_NEXT_FAILED_ENABLED)
+    setToolTipText("Next Failed Test")
+    
+    override def run() {
+      fPart.showNextFailure()
+    }
+  }
+  
+  private class ShowPreviousFailureAction(fPart: ScalaTestRunnerViewPart) extends Action("Previous Failure") {
+    setDisabledImageDescriptor(ScalaImages.SCALATEST_PREV_FAILED_DISABLED)
+    setHoverImageDescriptor(ScalaImages.SCALATEST_PREV_FAILED_ENABLED)
+    setImageDescriptor(ScalaImages.SCALATEST_PREV_FAILED_ENABLED)
+    setToolTipText("Previous Failed Test")
+    
+    override def run() {
+      fPart.showPreviousFailure()
     }
   }
 }
