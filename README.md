@@ -16,7 +16,7 @@ The Scala IDE for Eclipse can be built on the command line using Maven, as is do
 
 * Requirements,
     * The Git command line tools (this will be available as a standard package for Linux distributions)
-    * A recent JDK [current Oracle JDK](the (http://www.oracle.com/technetwork/java/javase/downloads/index.html) is recommended)
+    * A recent JDK (the [current Oracle JDK](http://www.oracle.com/technetwork/java/javase/downloads/index.html) is recommended)
     * [Maven 3](http://maven.apache.org/download.html)
 * (Inital setup) Retrieve the source from its git repository, and make sure to checkout the `master` branch
 
