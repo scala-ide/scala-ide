@@ -47,6 +47,7 @@ sealed abstract class Node {
   def addChild(child: Node) {
     synchronized {
       childrenBuffer += child
+      child.parent = this
     }
   } 
   def children = childrenBuffer.toArray

@@ -231,7 +231,8 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
           case Some(suite) => 
             val test = suite.updateTest(testFailed.testName, TestStatus.FAILED, testFailed.duration, testFailed.location, testFailed.errorMessage, testFailed.errorDepth, testFailed.errorStackTraces)
             suite.closeScope()
-            fTestViewer.registerAutoScrollTarget(test)
+            //fTestViewer.registerAutoScrollTarget(test)
+            fTestViewer.registerFailedForAutoScroll(test)
             fTestViewer.registerViewerUpdate(test)
           case None => 
             // Should not happen

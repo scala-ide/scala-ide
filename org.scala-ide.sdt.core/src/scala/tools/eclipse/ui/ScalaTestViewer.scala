@@ -60,7 +60,7 @@ class ScalaTestViewer(parent: Composite, fTestRunnerPart: ScalaTestRunnerViewPar
   private var fAutoScrollTarget: Node = null
   
   private var fAutoClose: List[Node] = null
-  private var fAutoExpand: Set[Node] = null
+  private var fAutoExpand: List[Node] = null
   
   private var fLayoutMode: Int = ScalaTestRunnerViewPart.LAYOUT_HIERARCHICAL
   
@@ -186,7 +186,7 @@ class ScalaTestViewer(parent: Composite, fTestRunnerPart: ScalaTestRunnerViewPar
   private def clearUpdateAndExpansion() {
     fNeedUpdate = Set[Node]()
     fAutoClose = List[Node]()
-    fAutoExpand = Set[Node]()
+    fAutoExpand = List[Node]()
   }
   
   def registerTestAdded(node: Node) {
@@ -205,7 +205,7 @@ class ScalaTestViewer(parent: Composite, fTestRunnerPart: ScalaTestRunnerViewPar
 
   private def clearAutoExpand() {
     synchronized {
-      fAutoExpand = Set.empty[Node]
+      fAutoExpand = List.empty[Node]
     }
   }
 
@@ -215,9 +215,10 @@ class ScalaTestViewer(parent: Composite, fTestRunnerPart: ScalaTestRunnerViewPar
 
   def registerFailedForAutoScroll(node: Node) {
     synchronized {
-      val parent = fTreeContentProvider.getParent(node)
+      /*val parent = fTreeContentProvider.getParent(node)
       if (parent != null)
-        fAutoExpand += parent.asInstanceOf[Node]
+        fAutoExpand += parent.asInstanceOf[Node]*/
+      fAutoExpand = node :: fAutoExpand
     }
   }
 
@@ -320,12 +321,13 @@ class ScalaTestViewer(parent: Composite, fTestRunnerPart: ScalaTestRunnerViewPar
 
     synchronized {
       for (node <- fAutoExpand) {
-        fTreeViewer.setExpandedState(node, true)
+        //fTreeViewer.setExpandedState(node, true)
+        fTreeViewer.reveal(node)
       }
-      clearAutoExpand()
+      //clearAutoExpand()
     }
 
-	val current = fAutoScrollTarget
+    val current = fAutoScrollTarget
     fAutoScrollTarget = null
 
     // Not sure what's the following is doing, TODO later.
@@ -349,8 +351,8 @@ class ScalaTestViewer(parent: Composite, fTestRunnerPart: ScalaTestRunnerViewPar
         parent= (TestSuiteElement) fTreeContentProvider.getParent(parent);
       }
     }*/
-    if (current != null)
-      fTreeViewer.reveal(current);
+    //if (current != null)
+      //fTreeViewer.reveal(current)
   }
   
   private def handleSelected() {
