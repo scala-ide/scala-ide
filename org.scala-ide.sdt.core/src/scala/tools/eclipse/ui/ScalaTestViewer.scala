@@ -37,6 +37,9 @@ import org.eclipse.jface.action.MenuManager
 import org.eclipse.jface.action.IMenuListener
 import org.eclipse.debug.ui.DebugUITools
 import scala.tools.eclipse.launching.ScalaTestLaunchDelegate
+import RerunHelper._
+import org.eclipse.debug.internal.ui.DebugUIPlugin
+import org.eclipse.debug.ui.IDebugUIConstants
 
 class ScalaTestViewer(parent: Composite, fTestRunnerPart: ScalaTestRunnerViewPart) {
   
@@ -669,6 +672,9 @@ object RerunHelper {
     if (launch != null) {
       val launchConfig = launch.getLaunchConfiguration
       if (launchConfig != null) {
+        val buildBeforeLaunch = DebugUIPlugin.getDefault().getPreferenceStore().getBoolean(IDebugUIConstants.PREF_BUILD_BEFORE_LAUNCH)
+        if (buildBeforeLaunch)
+          ScalaTestPlugin.doBuild()
         delegate.launchScalaTest(launchConfig, launch.getLaunchMode, launch, null, stArgs)
       }
       else
@@ -681,8 +687,6 @@ object RerunHelper {
   }
   
 }
-
-import RerunHelper._
 
 private class RerunSuiteAction(actionName: String, fTestRunnerPart: ScalaTestRunnerViewPart, suiteClassName: String, 
                                suiteId: String) extends Action(actionName) {

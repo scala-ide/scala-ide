@@ -7,6 +7,15 @@ import org.eclipse.core.runtime.IStatus
 import org.eclipse.ui.PartInitException
 import org.eclipse.ui.IWorkbenchPage
 import org.eclipse.debug.core.ILaunch
+import org.eclipse.ui.PlatformUI
+import org.eclipse.jface.operation.IRunnableWithProgress
+import org.eclipse.core.runtime.IProgressMonitor
+import org.eclipse.core.resources.ResourcesPlugin
+import org.eclipse.core.resources.IncrementalProjectBuilder
+import org.eclipse.core.runtime.CoreException
+import java.lang.reflect.InvocationTargetException
+import org.eclipse.debug.internal.ui.DebugUIMessages
+import org.eclipse.debug.internal.ui.DebugUIPlugin
 
 object ScalaTestPlugin extends AbstractUIPlugin {
   
@@ -90,5 +99,33 @@ object ScalaTestPlugin extends AbstractUIPlugin {
   
   def log(status: IStatus) {
     getLog().log(status);
+  }
+  
+  def doBuild(): Boolean = {
+    try {
+      PlatformUI.getWorkbench().getProgressService().busyCursorWhile(new IRunnableWithProgress() {
+        def run(monitor: IProgressMonitor)  {
+          try {
+            ResourcesPlugin.getWorkspace().build(IncrementalProjectBuilder.INCREMENTAL_BUILD, monitor);
+          } 
+          catch {
+            case e: CoreException =>
+              throw new InvocationTargetException(e);
+          }
+        }
+      });
+    } 
+    catch {
+      case e: InterruptedException =>
+        return false // canceled by user
+      case e: InvocationTargetException =>
+        val title = DebugUIMessages.DebugUIPlugin_Run_Debug_1
+        val message= DebugUIMessages.DebugUIPlugin_Build_error__Check_log_for_details__2
+        val t = e.getTargetException();
+        DebugUIPlugin.errorDialog(DebugUIPlugin.getShell, title, message, t);
+        return false
+    } 
+
+    return true
   }
 }
