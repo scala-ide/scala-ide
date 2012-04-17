@@ -20,13 +20,21 @@ class ScalaTestRunSession(val fLaunch: ILaunch, val fRunName: String, val projec
   var rootNode: RunModel = null
   
   private var running = false
+  private var userStop = false
   
   def run() {
     running = true
+    userStop = false
+  }
+  
+  def done() {
+    running = false
   }
   
   def stop() {
+    fLaunch.terminate()
     running = false
+    userStop = true
   }
   
   def isStopped = false  // should change when user stop it

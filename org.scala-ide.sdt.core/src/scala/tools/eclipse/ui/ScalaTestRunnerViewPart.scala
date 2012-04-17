@@ -36,6 +36,8 @@ import org.eclipse.ui.actions.ActionFactory
 import scala.collection.mutable.ListBuffer
 import scala.annotation.tailrec
 import org.eclipse.jface.dialogs.MessageDialog
+import org.eclipse.swt.events.ControlListener
+import org.eclipse.swt.events.ControlEvent
 
 object ScalaTestRunnerViewPart {
   //orientations
@@ -66,6 +68,7 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
   
   private var fNextAction: ShowNextFailureAction = null
   private var fPreviousAction: ShowPreviousFailureAction = null
+  private var fStopAction: StopAction = null
   private var fRerunAllTestsAction: RerunAllTestsAction = null
   private var fRerunFailedTestsAction: RerunFailedTestsAction = null
   
@@ -102,6 +105,7 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
   
   def createPartControl(parent: Composite) {
     fParent = parent
+    addResizeListener(parent)
     
     val gridLayout = new GridLayout()
     gridLayout.marginWidth = 0
@@ -187,6 +191,7 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
   private def enableToolbarControls(enable: Boolean) {
     fRerunAllTestsAction.setEnabled(enable)
     fRerunFailedTestsAction.setEnabled(enable)
+    fStopAction.setEnabled(!enable)
     fNextAction.setEnabled(enable)
     fPreviousAction.setEnabled(enable)
   }
@@ -388,7 +393,7 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
         fTestRunSession.totalCount = runStarting.testCount
       case runCompleted: RunCompleted =>
         println("***RunCompleted")
-        fTestRunSession.stop()
+        fTestRunSession.done()
         fTestRunSession.rootNode.duration = runCompleted.duration
         fTestRunSession.rootNode.summary = runCompleted.summary
         fTestRunSession.rootNode.status = RunStatus.COMPLETED
@@ -499,23 +504,37 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
     getFlattenNodeAcc(List.empty, suiteList).reverse
   }
   
-  /*def computeOrientation() {
-    
+  private def addResizeListener(parent: Composite) {
+    parent.addControlListener(new ControlListener() {
+      def controlMoved(e: ControlEvent) {
+      }
+      def controlResized(e: ControlEvent) {
+        computeOrientation()
+      }
+    })
+  }
+  
+  def computeOrientation() {
+    // compute orientation automatically
+    val size = fParent.getSize
+    if (size.x != 0 && size.y != 0) {
+      if (size.x > size.y)
+        setOrientation(VIEW_ORIENTATION_HORIZONTAL)
+      else
+        setOrientation(VIEW_ORIENTATION_VERTICAL)
+    }
   }
   
   private def setOrientation(orientation: Int) {
     if ((fSashForm == null) || fSashForm.isDisposed())
-      return;
-    val horizontal = orientation == VIEW_ORIENTATION_HORIZONTAL;
+      return
+    val horizontal = orientation == VIEW_ORIENTATION_HORIZONTAL
     fSashForm.setOrientation(if (horizontal) SWT.HORIZONTAL else SWT.VERTICAL);
-    //for (int i = 0; i < fToggleOrientationActions.length; ++i)
-      //fToggleOrientationActions[i].setChecked(fOrientation == fToggleOrientationActions[i].getOrientation());
-    for (fToggleOrientationAction <- fToggleOrientationActions)
     fCurrentOrientation = orientation;
-    GridLayout layout= (GridLayout) fCounterComposite.getLayout();
-    setCounterColumns(layout);
-    fParent.layout();
-  }*/
+    val layout = fCounterComposite.getLayout().asInstanceOf[GridLayout]
+    setCounterColumns(layout)
+    fParent.layout()
+  }
   
   private def setCounterColumns(layout: GridLayout) {
     if (fCurrentOrientation == VIEW_ORIENTATION_HORIZONTAL)
@@ -701,6 +720,14 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
     }
   }
   
+  def terminateRun() {
+    fTestRunSession.stop()
+    stopUpdateJobs()
+    nodeList = getFlattenNode(suiteList.toList)
+    fTestViewer.registerAutoScrollTarget(null)
+    enableToolbarControls(true)
+  }
+  
   private def postSyncRunnable(r: Runnable) {
     if (!isDisposed)
       getDisplay.syncExec(r)
@@ -713,11 +740,14 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
     val toolBar = actionBars.getToolBarManager
     val viewMenu = actionBars.getMenuManager
     
-    fNextAction= new ShowNextFailureAction(this);
+    fNextAction = new ShowNextFailureAction(this)
     fNextAction.setEnabled(false);
-    actionBars.setGlobalActionHandler(ActionFactory.NEXT.getId(), fNextAction);
+    actionBars.setGlobalActionHandler(ActionFactory.NEXT.getId(), fNextAction)
 
-    fPreviousAction= new ShowPreviousFailureAction(this);
+    fStopAction = new StopAction(this)
+    fStopAction.setEnabled(false)
+    
+    fPreviousAction= new ShowPreviousFailureAction(this)
     fPreviousAction.setEnabled(false);
     actionBars.setGlobalActionHandler(ActionFactory.PREVIOUS.getId(), fPreviousAction);
     
@@ -745,6 +775,7 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
     
     toolBar.add(fNextAction)
     toolBar.add(fPreviousAction)
+    toolBar.add(fStopAction)
     toolBar.add(fRerunAllTestsAction)
     toolBar.add(fRerunFailedTestsAction)
     
@@ -829,6 +860,17 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
     
     override def run() {
       fPart.showPreviousFailure()
+    }
+  }
+  
+  private class StopAction(fPart: ScalaTestRunnerViewPart) extends Action {
+    setText("Stop Running ScalaTest")
+    setToolTipText("Stop ScalaTest Run")
+    setImageDescriptor(ScalaImages.SCALATEST_STOP_ENABLED)
+    setDisabledImageDescriptor(ScalaImages.SCALATEST_STOP_DISABLED)
+    
+    override def run() {
+      fPart.terminateRun()
     }
   }
 }
