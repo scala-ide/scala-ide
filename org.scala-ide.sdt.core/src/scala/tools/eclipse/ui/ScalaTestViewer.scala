@@ -134,63 +134,22 @@ class ScalaTestViewer(parent: Composite, fTestRunnerPart: ScalaTestRunnerViewPar
         case _ =>
       }
     }
-    /*IStructuredSelection selection= (IStructuredSelection) fSelectionProvider.getSelection();
-    if (! selection.isEmpty()) {
-      TestElement testElement= (TestElement) selection.getFirstElement();
-
-      String testLabel= testElement.getTestName();
-      String className= testElement.getClassName();
-      if (testElement instanceof TestSuiteElement) {
-        manager.add(new OpenTestAction(fTestRunnerPart, testLabel));
-        manager.add(new Separator());
-        if (testClassExists(className) && !fTestRunnerPart.lastLaunchIsKeptAlive()) {
-          manager.add(new RerunAction(JUnitMessages.RerunAction_label_run, fTestRunnerPart, testElement.getId(), className, null, ILaunchManager.RUN_MODE));
-          manager.add(new RerunAction(JUnitMessages.RerunAction_label_debug, fTestRunnerPart, testElement.getId(), className, null, ILaunchManager.DEBUG_MODE));
-        }
-      } 
-      else {
-        TestCaseElement testCaseElement= (TestCaseElement) testElement;
-        String testMethodName= testCaseElement.getTestMethodName();
-        manager.add(new OpenTestAction(fTestRunnerPart, testCaseElement));
-        manager.add(new Separator());
-        if (fTestRunnerPart.lastLaunchIsKeptAlive()) {
-          manager.add(new RerunAction(JUnitMessages.RerunAction_label_rerun, fTestRunnerPart, testElement.getId(), className, testMethodName, ILaunchManager.RUN_MODE));
-        } 
-        else {
-          manager.add(new RerunAction(JUnitMessages.RerunAction_label_run, fTestRunnerPart, testElement.getId(), className, testMethodName, ILaunchManager.RUN_MODE));
-          manager.add(new RerunAction(JUnitMessages.RerunAction_label_debug, fTestRunnerPart, testElement.getId(), className, testMethodName, ILaunchManager.DEBUG_MODE));
-        }
-      }
-      if (fLayoutMode == TestRunnerViewPart.LAYOUT_HIERARCHICAL) {
-        manager.add(new Separator());
-        manager.add(new ExpandAllAction());
-      }
-
-    }
-    if (fTestRunSession != null && fTestRunSession.getFailureCount() + fTestRunSession.getErrorCount() > 0) {
-      if (fLayoutMode != TestRunnerViewPart.LAYOUT_HIERARCHICAL)
-        manager.add(new Separator());
-        manager.add(new CopyFailureListAction(fTestRunnerPart, fClipboard));
-    }
-    manager.add(new Separator(IWorkbenchActionConstants.MB_ADDITIONS));
-    manager.add(new Separator(IWorkbenchActionConstants.MB_ADDITIONS + "-end")); //$NON-NLS-1$*/
   }
   
   def registerViewersRefresh() {
 	synchronized {
       fTreeNeedsRefresh= true
       //fTableNeedsRefresh= true
-      clearUpdateAndExpansion()
+      //clearUpdateAndExpansion()
     }
   }
   
   private def clearUpdateAndExpansion() {
     fNeedUpdate = Set[Node]()
     fAutoClose = List[Node]()
-    fAutoExpand = List[Node]()
   }
   
-  def registerTestAdded(node: Node) {
+  def registerNodeAdded(node: Node) {
     synchronized {
       //TODO: performance: would only need to refresh parent of added element
       fTreeNeedsRefresh= true
@@ -204,7 +163,7 @@ class ScalaTestViewer(parent: Composite, fTestRunnerPart: ScalaTestRunnerViewPar
     }
   }
 
-  private def clearAutoExpand() {
+  def clearAutoExpand() {
     synchronized {
       fAutoExpand = List.empty[Node]
     }
@@ -251,7 +210,7 @@ class ScalaTestViewer(parent: Composite, fTestRunnerPart: ScalaTestRunnerViewPar
   }
   
   def processChangesInUI() {
-    if (fTestRunnerPart.fTestRunSession == null) {
+    if (fTestRunnerPart.getSession == null) {
       registerViewersRefresh()
       fTreeNeedsRefresh= false
       //fTableNeedsRefresh= false
@@ -260,7 +219,7 @@ class ScalaTestViewer(parent: Composite, fTestRunnerPart: ScalaTestRunnerViewPar
       return
     }
 
-    val testRoot = fTestRunnerPart.fTestRunSession.rootNode
+    val testRoot = fTestRunnerPart.getSession.rootNode
 
     val viewer = getActiveViewer()
     if (getActiveViewerNeedsRefresh) {
@@ -269,94 +228,58 @@ class ScalaTestViewer(parent: Composite, fTestRunnerPart: ScalaTestRunnerViewPar
       viewer.setInput(testRoot)
     } 
     else {
-      var toUpdate: Array[AnyRef] = null
+      var toUpdate: Array[Node] = null
       synchronized {
         toUpdate= fNeedUpdate.toArray
         fNeedUpdate = Set.empty[Node]
       }
-      /*if (!fTreeNeedsRefresh && toUpdate.length > 0) {
-        if (fTreeHasFilter)
+      if (!fTreeNeedsRefresh && toUpdate.length > 0) {
+        /*if (fTreeHasFilter)
           for (Object element : toUpdate)
             updateElementInTree((TestElement) element);
-        else {
-          var toUpdateWithParents = Set[AnyRef]()
+        else {*/
+          var toUpdateWithParents = Set[Node]()
           toUpdateWithParents ++= toUpdate
-          for (element <- toUpdate) {
-            var parent= element.asInstanceOf[Node].parent
+          for (node <- toUpdate) {
+            var parent= node.parent
             while (parent != null) {
               toUpdateWithParents += parent
               parent = parent.parent
             }
           }
           val nullStringArray: Array[String] = null
-          val toUpdateWithParentsArray: Array[Any] = toUpdateWithParents.toArray
-          println("#####to update with parents: " + toUpdateWithParentsArray.length)
+          val toUpdateWithParentsArray: Array[Node] = toUpdateWithParents.toArray
           fTreeViewer.update(toUpdateWithParentsArray, nullStringArray)
-        }
+        //}
       }
-      if (! fTableNeedsRefresh && toUpdate.length > 0) {
+      /*if (! fTableNeedsRefresh && toUpdate.length > 0) {
           if (fTableHasFilter)
             for (Object element : toUpdate)
               updateElementInTable((TestElement) element);
           else
             fTableViewer.update(toUpdate, null);
       }*/
-      // TODO: The above code to update node selectively doesn't work, use the full refresh for now.
-      fTreeViewer.refresh()
     }
-    autoScrollInUI()
+    //autoScrollInUI()
   }
   
-  private def autoScrollInUI() {
-    if (!fTestRunnerPart.autoScroll) {
-      clearAutoExpand()
-      fAutoClose = List[Node]()
-      return
-    }
-
-    /*if (fLayoutMode == ScalaTestRunnerViewPart.LAYOUT_FLAT) {
-      if (fAutoScrollTarget != null)
-        fTableViewer.reveal(fAutoScrollTarget);
-        return;
-    }*/
+  def autoExpandFailedTests() {
 
     synchronized {
       for (node <- fAutoExpand) {
         //fTreeViewer.setExpandedState(node, true)
         fTreeViewer.reveal(node)
       }
-      //clearAutoExpand()
     }
 
     val current = fAutoScrollTarget
     fAutoScrollTarget = null
     
-    if (fAutoExpand.length > 0)
-      getActiveViewer.setSelection(new StructuredSelection(fAutoExpand.last), true)
-
-    // Not sure what's the following is doing, TODO later.
-    /*TestSuiteElement parent= current == null ? null : (TestSuiteElement) fTreeContentProvider.getParent(current);
-    if (fAutoClose.isEmpty() || ! fAutoClose.getLast().equals(parent)) {
-      // we're in a new branch, so let's close old OK branches:
-      for (ListIterator<TestSuiteElement> iter= fAutoClose.listIterator(fAutoClose.size()); iter.hasPrevious();) {
-        TestSuiteElement previousAutoOpened= iter.previous()
-        if (previousAutoOpened.equals(parent))
-          break;
-
-        if (previousAutoOpened.getStatus() == TestElement.Status.OK) {
-          // auto-opened the element, and all children are OK -> auto close
-          iter.remove();
-          fTreeViewer.collapseToLevel(previousAutoOpened, AbstractTreeViewer.ALL_LEVELS);
-        }
-      }
-
-      while (parent != null && ! fTestRunSession.getTestRoot().equals(parent) && fTreeViewer.getExpandedState(parent) == false) {
-        fAutoClose.add(parent); // add to auto-opened elements -> close later if STATUS_OK
-        parent= (TestSuiteElement) fTreeContentProvider.getParent(parent);
-      }
-    }*/
-    //if (current != null)
-      //fTreeViewer.reveal(current)
+    if (fAutoExpand.length > 0) {
+      val last = fAutoExpand.last
+      fTreeViewer.reveal(last)
+      getActiveViewer.setSelection(new StructuredSelection(last), true)
+    }
   }
   
   def selectedNode = {
@@ -368,7 +291,6 @@ class ScalaTestViewer(parent: Composite, fTestRunnerPart: ScalaTestRunnerViewPar
   }
   
   def selectNode(node: Node) {
-    println("#####selectNode: " + node)
     fTreeViewer.reveal(node)
     getActiveViewer.setSelection(new StructuredSelection(node), true)
   }
@@ -540,21 +462,6 @@ private class OpenSourceCodeListener(fTestRunnerPart: ScalaTestRunnerViewPart, f
     val action = new GoToSourceAction(node, fTestRunnerPart)
     if (action.isEnabled)
       action.run()
-
-		/*TestElement testElement= (TestElement) selection.getFirstElement();
-
-		OpenTestAction action;
-		if (testElement instanceof TestSuiteElement) {
-			action= new OpenTestAction(fTestRunnerPart, testElement.getTestName());
-		} else if (testElement instanceof TestCaseElement){
-			TestCaseElement testCase= (TestCaseElement) testElement;
-			action= new OpenTestAction(fTestRunnerPart, testCase);
-		} else {
-			throw new IllegalStateException(String.valueOf(testElement));
-		}
-
-		if (action.isEnabled())
-			action.run();*/
   }
 }
 
@@ -607,7 +514,7 @@ private class GoToSourceAction(node: Node, fTestRunnerPart: ScalaTestRunnerViewP
       case Some(location) =>
         location match {
           case topOfClass: TopOfClass => 
-            val scProj = getScalaProject(fTestRunnerPart.fTestRunSession.projectName)
+            val scProj = getScalaProject(fTestRunnerPart.getSession.projectName)
             scProj match {
               case Some(scProj) => 
                 val iType = scProj.javaProject.findType(topOfClass.className)
@@ -619,7 +526,7 @@ private class GoToSourceAction(node: Node, fTestRunnerPart: ScalaTestRunnerViewP
                 notifyLocationNotFound()
             }
           case topOfMethod: TopOfMethod => 
-            val scProj = getScalaProject(fTestRunnerPart.fTestRunSession.projectName)
+            val scProj = getScalaProject(fTestRunnerPart.getSession.projectName)
             scProj match {
               case Some(scProj) => 
                 val iType = scProj.javaProject.findType(topOfMethod.className)
@@ -640,7 +547,7 @@ private class GoToSourceAction(node: Node, fTestRunnerPart: ScalaTestRunnerViewP
                 notifyLocationNotFound()
             }
           case lineInFile: LineInFile =>
-            val scProj = getScalaProject(fTestRunnerPart.fTestRunSession.projectName)
+            val scProj = getScalaProject(fTestRunnerPart.getSession.projectName)
             scProj match {
               case Some(scProj) =>
                 val fileName = lineInFile.fileName
@@ -650,7 +557,7 @@ private class GoToSourceAction(node: Node, fTestRunnerPart: ScalaTestRunnerViewP
                 notifyLocationNotFound()
             }
           case SeeStackDepthException =>
-            val scProj = getScalaProject(fTestRunnerPart.fTestRunSession.projectName)
+            val scProj = getScalaProject(fTestRunnerPart.getSession.projectName)
             scProj match {
               case Some(scProj) =>
                 if (errorDepth.isDefined && errorStackTraces.isDefined) {
@@ -688,7 +595,7 @@ private class GoToSourceAction(node: Node, fTestRunnerPart: ScalaTestRunnerViewP
 object RerunHelper {
   
   def rerun(fTestRunnerPart: ScalaTestRunnerViewPart, delegate: ScalaTestLaunchDelegate, stArgs: String) {
-    val launch = fTestRunnerPart.fTestRunSession.fLaunch
+    val launch = fTestRunnerPart.getSession.fLaunch
     if (launch != null) {
       val launchConfig = launch.getLaunchConfiguration
       if (launchConfig != null) {

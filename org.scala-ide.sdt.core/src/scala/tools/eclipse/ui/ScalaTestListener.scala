@@ -17,8 +17,6 @@ class ScalaTestListener extends Observable with Runnable {
   private var serverSocket: ServerSocket = null
   private var connection: Socket = null
   private var in: BufferedReader = null
-  @volatile
-  private var ready: Boolean = false
 
   def getPort = serverSocket.getLocalPort
   
@@ -27,26 +25,24 @@ class ScalaTestListener extends Observable with Runnable {
   }
   
   def run() {
-    ready = false
     stopped = false
     try {
       connection = serverSocket.accept()
       in = new BufferedReader(new InputStreamReader(connection.getInputStream))
-      while (!stopped || in.ready) {
+      while (!connection.isClosed && (!stopped || in.ready)) {
         var eventRawXml = ""
+        var endingXml = ""
         var eventXml: Elem = null
-        while (eventXml == null && (!stopped || in.ready)) {
+        while (eventXml == null && !connection.isClosed && (!stopped || in.ready)) {
           val line = in.readLine
           if (line != null) {
+            if (eventRawXml == "" && line.length > 0)
+              endingXml = line.substring(0, 1) + "/" + line.substring(1)
             eventRawXml += line
-            try {
+            if (line.trim == endingXml.trim) 
               eventXml = XML.loadString(eventRawXml)
-            }
-            catch {
-              case e: SAXException => 
-                if (!in.ready)
-                  Thread.sleep(10)
-            }
+            else if (!connection.isClosed && !in.ready)
+              Thread.sleep(10)
           }
           else if (!in.ready)
             Thread.sleep(10)
@@ -297,17 +293,17 @@ class ScalaTestListener extends Observable with Runnable {
                   (eventXml \ "timeStamp").text.toLong
                 )
               )
+            case _ => 
+              // Ignore others
           }
         }
-        if (!in.ready)
+        if (!connection.isClosed && !in.ready)
           Thread.sleep(10)
       }
     }
     finally {
       in.close()
       connection.close()
-      ready = true
-      println("#######stopped successfully!")
     }
   }
   

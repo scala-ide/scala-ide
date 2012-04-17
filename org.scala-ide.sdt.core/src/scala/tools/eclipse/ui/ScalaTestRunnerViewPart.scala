@@ -38,6 +38,8 @@ import scala.annotation.tailrec
 import org.eclipse.jface.dialogs.MessageDialog
 import org.eclipse.swt.events.ControlListener
 import org.eclipse.swt.events.ControlEvent
+import org.eclipse.core.runtime.jobs.Job
+import org.eclipse.core.runtime.jobs.ILock
 
 object ScalaTestRunnerViewPart {
   //orientations
@@ -53,10 +55,9 @@ object ScalaTestRunnerViewPart {
 
 class ScalaTestRunnerViewPart extends ViewPart with Observer {
   
-  private var fOrientation = VIEW_ORIENTATION_AUTOMATIC
   private var fCurrentOrientation: Int = 0
 
-  protected var fParent: Composite = null
+  private var fParent: Composite = null
   
   private var fSashForm: SashForm = null
   private var fProgressBar: JUnitProgressBar = null
@@ -74,15 +75,15 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
   
   private var fIsDisposed: Boolean = false
   
-  var fTestRunSession: ScalaTestRunSession = null
+  private var fTestRunSession: ScalaTestRunSession = null
   
   private var fUpdateJob: UpdateUIJob = null
-  
-  var autoScroll: Boolean = true
+  private var fRunningLock: ILock = null
   
   private val suiteList = new ListBuffer[Node]()
   private var nodeList: List[Node] = null
   private var suiteMap: Map[String, SuiteModel] = null
+  private var hasFailedTest: Boolean = false
   
   val suiteIcon = ScalaImages.SCALATEST_SUITE.createImage
   val suiteSucceedIcon = ScalaImages.SCALATEST_SUITE_OK.createImage
@@ -96,6 +97,8 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
   val testIgnoredIcon = ScalaImages.SCALATEST_IGNORED.createImage
   val infoIcon = ScalaImages.SCALATEST_INFO.createImage
   val stackTraceIcon = ScalaImages.SCALATEST_STACKTRACE.createImage
+  
+  def getSession = fTestRunSession
   
   def setSession(session: ScalaTestRunSession) {
     fTestRunSession = session
@@ -135,15 +138,7 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
     stackTraceIcon.dispose()
   }
   
-  override def saveState(memento: IMemento) {
-    
-  }
-  
-  def setFocus() {
-
-  }
-  
-  protected def createProgressCountPanel(parent: Composite): Composite = {
+  private def createProgressCountPanel(parent: Composite): Composite = {
     val composite = new Composite(parent, SWT.NONE)
     val layout= new GridLayout()
     composite.setLayout(layout)
@@ -188,6 +183,11 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
     fSashForm
   }
   
+  def setFocus() {
+    if (fTestViewer != null)
+      fTestViewer.getTestViewerControl.setFocus()
+  }
+  
   private def enableToolbarControls(enable: Boolean) {
     fRerunAllTestsAction.setEnabled(enable)
     fRerunFailedTestsAction.setEnabled(enable)
@@ -199,7 +199,6 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
   def update(o: Observable, arg: AnyRef) {
     arg match {
       case testStarting: TestStarting => 
-        println("***TestStarting")
         fTestRunSession.startedCount += 1
         val test = 
           TestModel(
@@ -221,13 +220,12 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
           case Some(suite) => 
             suite.addChild(test)
             fTestViewer.registerAutoScrollTarget(test)
-            fTestViewer.registerViewerUpdate(test)
+            fTestViewer.registerNodeAdded(test)
           case None => 
             // Should not happen
             throw new IllegalStateException("Unable to find suite model for TestStarting, suiteId: " + testStarting.suiteId + ", test name: " + testStarting.testName)
         }
       case testSucceeded: TestSucceeded => 
-        println("***TestSucceeded")
         fTestRunSession.succeedCount += 1
         suiteMap.get(testSucceeded.suiteId) match {
           case Some(suite) => 
@@ -240,13 +238,12 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
             throw new IllegalStateException("Unable to find suite model for TestSucceeded, suiteId: " + testSucceeded.suiteId + ", test name: " + testSucceeded.testName)
         }
       case testFailed: TestFailed => 
-        println("***TestFailed")
         fTestRunSession.failureCount += 1
         suiteMap.get(testFailed.suiteId) match {
           case Some(suite) => 
             val test = suite.updateTest(testFailed.testName, TestStatus.FAILED, testFailed.duration, testFailed.location, testFailed.errorMessage, testFailed.errorDepth, testFailed.errorStackTraces)
             suite.closeScope()
-            //fTestViewer.registerAutoScrollTarget(test)
+            hasFailedTest = true
             fTestViewer.registerFailedForAutoScroll(test)
             fTestViewer.registerViewerUpdate(test)
           case None => 
@@ -254,7 +251,6 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
             throw new IllegalStateException("Unable to find suite model for TestFailed, suiteId: " + testFailed.suiteId + ", test name: " + testFailed.testName)
         }
       case testIgnored: TestIgnored => 
-        println("***TestIgnored")
         fTestRunSession.ignoredCount += 1
         val test = 
           TestModel(
@@ -276,13 +272,12 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
           case Some(suite) => 
             suite.addChild(test)
             fTestViewer.registerAutoScrollTarget(test)
-            fTestViewer.registerViewerUpdate(test)
+            fTestViewer.registerNodeAdded(test)
           case None => 
             // Should not happen
             throw new IllegalStateException("Unable to find suite model for TestIgnored, suiteId: " + testIgnored.suiteId + ", test name: " + testIgnored.testName)
         }
       case testPending: TestPending => 
-        println("***TestPending")
         fTestRunSession.pendingCount += 1
         suiteMap.get(testPending.suiteId) match {
           case Some(suite) => 
@@ -295,7 +290,6 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
             throw new IllegalStateException("Unable to find suite model for TestPending, suiteId: " + testPending.suiteId + ", test name: " + testPending.testName)
         }
       case testCanceled: TestCanceled => 
-        println("***TestCanceled")
         fTestRunSession.canceledCount += 1
         suiteMap.get(testCanceled.suiteId) match {
           case Some(suite) => 
@@ -308,7 +302,6 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
             throw new IllegalStateException("Unable to find suite model for TestCanceled, suiteId: " + testCanceled.suiteId + ", test name: " + testCanceled.testName)
         }
       case suiteStarting: SuiteStarting => 
-        println("***SuiteStarting: " + suiteStarting.suiteId + ", location: " + suiteStarting.location)
         if (suiteStarting.suiteId != "org.scalatest.tools.DiscoverySuite") {
           fTestRunSession.suiteCount += 1
           val suite = SuiteModel(
@@ -330,10 +323,9 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
           suiteMap += (suite.suiteId -> suite)
           fTestRunSession.rootNode.addChild(suite)
           fTestViewer.registerAutoScrollTarget(suite)
-          fTestViewer.registerViewerUpdate(suite)
+          fTestViewer.registerNodeAdded(suite)
         }
       case suiteCompleted: SuiteCompleted => 
-        println("***SuiteCompleted")
         if (suiteCompleted.suiteId != "org.scalatest.tools.DiscoverySuite") {
           suiteMap.get(suiteCompleted.suiteId) match {
             case Some(suite) => 
@@ -352,7 +344,6 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
           }
         }
       case suiteAborted: SuiteAborted => 
-        println("***SuiteAborted")
         if (suiteAborted.suiteId != "org.scalatest.tools.DiscoverySuite") {
           fTestRunSession.suiteAbortedCount += 1
           suiteMap.get(suiteAborted.suiteId) match {
@@ -371,9 +362,9 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
           }
         }
       case runStarting: RunStarting => 
-        println("***RunStarting, test count: " + runStarting.testCount)
         enableToolbarControls(false)
         suiteList.clear()
+        hasFailedTest = false
         suiteMap = Map.empty[String, SuiteModel]
         fTestRunSession.rootNode = 
           RunModel(
@@ -388,11 +379,11 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
             RunStatus.STARTED
           )
         fTestViewer.registerViewersRefresh()
+        fTestViewer.clearAutoExpand()
         startUpdateJobs()
         fTestRunSession.run()
         fTestRunSession.totalCount = runStarting.testCount
       case runCompleted: RunCompleted =>
-        println("***RunCompleted")
         fTestRunSession.done()
         fTestRunSession.rootNode.duration = runCompleted.duration
         fTestRunSession.rootNode.summary = runCompleted.summary
@@ -402,7 +393,6 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
         fTestViewer.registerAutoScrollTarget(null)
         enableToolbarControls(true)
       case runStopped: RunStopped => 
-        println("***RunStopped")
         fTestRunSession.stop()
         fTestRunSession.rootNode.duration = runStopped.duration
         fTestRunSession.rootNode.summary = runStopped.summary
@@ -412,7 +402,6 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
         fTestViewer.registerAutoScrollTarget(null)
         enableToolbarControls(true)
       case runAborted: RunAborted => 
-        println("***RunAborted")
         fTestRunSession.stop()
         fTestRunSession.rootNode.duration = runAborted.duration
         fTestRunSession.rootNode.summary = runAborted.summary
@@ -425,7 +414,6 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
         fTestViewer.registerAutoScrollTarget(null)
         enableToolbarControls(true)
       case infoProvided: InfoProvided => 
-        println("***InfoProvided")
         val info = 
           InfoModel(
             infoProvided.message,
@@ -445,7 +433,7 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
               case Some(suite) => 
                 suite.addChild(info)
                 fTestViewer.registerAutoScrollTarget(info)
-                fTestViewer.registerViewerUpdate(info)
+                fTestViewer.registerNodeAdded(info)
               case None => 
                 // Should not happen
                throw new IllegalStateException("Unable to find suite model for InfoProvided, suiteId: " + nameInfo.suiteId)
@@ -454,14 +442,10 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
             fTestRunSession.rootNode.addChild(info)
         }
       case markupProvided: MarkupProvided => 
-        println("***MarkupProvided")
         // Do nothing for MarkupProvided, markup info should be shown in HtmlReporter only.
       case scopeOpened: ScopeOpened => 
-        println("***ScopeOpened")
         suiteMap.get(scopeOpened.nameInfo.suiteId) match {
           case Some(suite) => 
-            //suite.duration = suiteAborted.duration
-            //suite.status = SuiteStatus.ABORTED
             val scope = 
               ScopeModel(
                 scopeOpened.message,
@@ -473,21 +457,18 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
               )
             suite.addChild(scope)
             fTestViewer.registerAutoScrollTarget(scope)
-            fTestViewer.registerViewerUpdate(scope)
+            fTestViewer.registerNodeAdded(scope)
           case None => 
             // Should not happend
             throw new IllegalStateException("Unable to find suite model for ScopeOpened, suiteId: " + scopeOpened.nameInfo.suiteId)
         }
       case scopeClosed: ScopeClosed => 
-        println("***ScopeClosed")
         suiteMap.get(scopeClosed.nameInfo.suiteId) match {
           case Some(suite) => 
             suite.closeScope()
           case None => 
             throw new IllegalStateException("Unable to find suite model for ScopeClosed, suiteId: " + scopeClosed.nameInfo.suiteId)
         }
-        // fTestViewer.registerAutoScrollTarget(testCaseElement)
-        // fTestViewer.registerViewerUpdate(testCaseElement)
     }
   }
   
@@ -514,7 +495,7 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
     })
   }
   
-  def computeOrientation() {
+  private def computeOrientation() {
     // compute orientation automatically
     val size = fParent.getSize
     if (size.x != 0 && size.y != 0) {
@@ -615,54 +596,59 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
     fProgressBar.reset(hasFailures, stopped, ticksDone, totalCount);
   }
   
+  private def postSyncProcessChanges() {
+    postSyncRunnable(new Runnable() {
+      def run() {
+        processChangesInUI()
+        expandFailedTests()
+      }
+    })
+  }
+  
   private def startUpdateJobs() {
-    //postSyncProcessChanges();
-
+    postSyncProcessChanges()
+    
     if (fUpdateJob != null) {
       return
     }
-    /*fJUnitIsRunningJob= new JUnitIsRunningJob(JUnitMessages.TestRunnerViewPart_wrapperJobName);
-    fJUnitIsRunningLock= Job.getJobManager().newLock();
-    // acquire lock while a test run is running
-    // the lock is released when the test run terminates
-    // the wrapper job will wait on this lock.
-    fJUnitIsRunningLock.acquire();
-    getProgressService().schedule(fJUnitIsRunningJob);*/
+    
+    fRunningLock = Job.getJobManager.newLock
+    fRunningLock.acquire()
 
     fUpdateJob = new UpdateUIJob("Update ScalaTest")
-    fUpdateJob.schedule(REFRESH_INTERVAL);
+    fUpdateJob.schedule(REFRESH_INTERVAL)
   }
 
   private def stopUpdateJobs() {
     Thread.sleep(REFRESH_INTERVAL)
+    
     if (fUpdateJob != null) {
       fUpdateJob.stop()
-      fUpdateJob= null
+      fUpdateJob = null
     }
-    /*if (fJUnitIsRunningJob != null && fJUnitIsRunningLock != null) {
-      fJUnitIsRunningLock.release();
-      fJUnitIsRunningJob= null;
+    
+    if (fRunningLock != null) {
+      fRunningLock.release()
+      fRunningLock = null
     }
-    postSyncProcessChanges();*/
+    
+    postSyncProcessChanges();
   }
   
   private def processChangesInUI() {
-    //if (!fSashForm.isDisposed())
-    //{
-      //doShowInfoMessage()
+    if (!fSashForm.isDisposed())
+    {
       refreshCounters();
 
-      /*if (!fPartIsVisible)
-        updateViewTitleProgress();
-      else {
-        updateViewIcon();
-      }
-      boolean hasErrorsOrFailures= hasErrorsOrFailures();
-      fNextAction.setEnabled(hasErrorsOrFailures);
-      fPreviousAction.setEnabled(hasErrorsOrFailures);*/
-
+      fNextAction.setEnabled(hasFailedTest)
+      fPreviousAction.setEnabled(hasFailedTest)
+      
       fTestViewer.processChangesInUI()
-    //}
+    }
+  }
+  
+  private def expandFailedTests() {
+    fTestViewer.autoExpandFailedTests()
   }
   
   def handleTestSelected(node: Option[Node]) {
@@ -721,6 +707,7 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
   }
   
   def terminateRun() {
+    ScalaTestPlugin.listener.stop()
     fTestRunSession.stop()
     stopUpdateJobs()
     nodeList = getFlattenNode(suiteList.toList)
@@ -810,7 +797,6 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
     setImageDescriptor(ScalaImages.SCALATEST_RERUN_ALL_TESTS_ENABLED)
     setDisabledImageDescriptor(ScalaImages.SCALATEST_RERUN_ALL_TESTS_DISABLED)
     setEnabled(false)
-    //setActionDefinitionId("scala.tools.eclipse.scalatest.shortcut.rerunAll")
     
     var session: ScalaTestRunSession = null
     
@@ -826,7 +812,6 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
     setImageDescriptor(ScalaImages.SCALATEST_RERUN_FAILED_TESTS_ENABLED)
     setDisabledImageDescriptor(ScalaImages.SCALATEST_RERUN_FAILED_TESTS_DISABLED)
     setEnabled(false)
-    //setActionDefinitionId("scala.tools.eclipse.scalatest.shortcut.rerunFailed")
     
     var session: ScalaTestRunSession = null
     

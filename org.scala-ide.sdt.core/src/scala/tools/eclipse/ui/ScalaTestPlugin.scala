@@ -22,7 +22,7 @@ object ScalaTestPlugin extends AbstractUIPlugin {
   private val PLUGIN_ID = "scala.tools.eclipse.scalatest"
   private val VIEW_PART_NAME = "scala.tools.eclipse.ui.ScalaTestResultView"
     
-  val listener = new ScalaTestListener()
+  var listener: ScalaTestListener = null
 
   private def getDisplay = {
     val display= Display.getCurrent
@@ -56,14 +56,6 @@ object ScalaTestPlugin extends AbstractUIPlugin {
       if (page == null) 
         null
       else {
-        /*val view = page.findView(VIEW_PART_NAME).asInstanceOf[ScalaTestRunnerViewPart];
-        if (view == null) {
-          //	create and show the result view if it isn't created yet.
-          page.showView(VIEW_PART_NAME, null, IWorkbenchPage.VIEW_VISIBLE).asInstanceOf[ScalaTestRunnerViewPart];
-        } 
-        else {
-          view
-        }*/
         page.showView(VIEW_PART_NAME).asInstanceOf[ScalaTestRunnerViewPart]
       }
     } 
@@ -76,6 +68,8 @@ object ScalaTestPlugin extends AbstractUIPlugin {
   }
   
   def asyncShowTestRunnerViewPart(fLaunch: ILaunch, fRunName: String, projectName: String) {
+    
+    listener = new ScalaTestListener()
     listener.bindSocket()
     getDisplay.asyncExec(new Runnable() {
       def run() {

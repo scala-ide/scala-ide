@@ -4,8 +4,6 @@ import org.eclipse.debug.core.ILaunch
 import scala.tools.eclipse.ScalaProject
 
 class ScalaTestRunSession(val fLaunch: ILaunch, val fRunName: String, val projectName: String) {
-  //private var fLaunch: ILaunch
-  //private var 
   
   var startedCount = 0
   var succeedCount = 0
@@ -37,7 +35,7 @@ class ScalaTestRunSession(val fLaunch: ILaunch, val fRunName: String, val projec
     userStop = true
   }
   
-  def isStopped = false  // should change when user stop it
+  def isStopped = userStop 
   
   def isRunning = running
 }

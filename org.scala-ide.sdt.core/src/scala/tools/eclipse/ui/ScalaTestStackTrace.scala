@@ -52,7 +52,7 @@ class ScalaTestStackTrace(parent: Composite, fTestRunner: ScalaTestRunnerViewPar
             val foldedStackTraces = getFoldedStackTraces(stackTraces)
             val stackTraceElement = foldedStackTraces(selectedIdx)
             val model = JavaCore.create(ResourcesPlugin.getWorkspace.getRoot)
-            val javaProject = model.getJavaProject(fTestRunner.fTestRunSession.projectName)
+            val javaProject = model.getJavaProject(fTestRunner.getSession.projectName)
             if (javaProject != null) {
               val openAction = new GoToSourceAction(node, fTestRunner)
               openAction.openSourceFileLineNumber(ScalaProject(javaProject.getProject), stackTraceElement.fileName, stackTraceElement.lineNumber)

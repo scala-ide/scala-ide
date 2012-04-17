@@ -95,7 +95,6 @@ class ScalaTestLaunchDelegate extends AbstractJavaLaunchConfigurationDelegate {
       runConfig.setVMArguments(execArgs.getVMArgumentsArray())
       runConfig.setWorkingDirectory(workingDirName)
       runConfig.setVMSpecificAttributesMap(vmAttributesMap)
-	
 
       // Bootpath
       runConfig.setBootClassPath(getBootpath(configuration))
