@@ -120,7 +120,7 @@ class CompletionTests {
   }
 
   /**
-   * Test completion for 'any' Java type visible in the project
+   * Test that completion shows only accessible members.
    */
   @Test
   def accessibilityTests() {
