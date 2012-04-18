@@ -40,6 +40,8 @@ import org.eclipse.swt.events.ControlListener
 import org.eclipse.swt.events.ControlEvent
 import org.eclipse.core.runtime.jobs.Job
 import org.eclipse.core.runtime.jobs.ILock
+import org.eclipse.jface.action.Separator
+import org.eclipse.jface.action.IAction
 
 object ScalaTestRunnerViewPart {
   //orientations
@@ -69,6 +71,7 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
   
   private var fNextAction: ShowNextFailureAction = null
   private var fPreviousAction: ShowPreviousFailureAction = null
+  private var fFailedTestsOnlyFilterAction: FailedTestsOnlyFilterAction = null
   private var fStopAction: StopAction = null
   private var fRerunAllTestsAction: RerunAllTestsAction = null
   private var fRerunFailedTestsAction: RerunFailedTestsAction = null
@@ -730,13 +733,12 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
     fNextAction = new ShowNextFailureAction(this)
     fNextAction.setEnabled(false);
     actionBars.setGlobalActionHandler(ActionFactory.NEXT.getId(), fNextAction)
-
-    fStopAction = new StopAction(this)
-    fStopAction.setEnabled(false)
     
     fPreviousAction= new ShowPreviousFailureAction(this)
     fPreviousAction.setEnabled(false);
-    actionBars.setGlobalActionHandler(ActionFactory.PREVIOUS.getId(), fPreviousAction);
+    actionBars.setGlobalActionHandler(ActionFactory.PREVIOUS.getId(), fPreviousAction)
+    
+    fFailedTestsOnlyFilterAction = new FailedTestsOnlyFilterAction
     
     fRerunAllTestsAction = new RerunAllTestsAction()
     val rerunAllTestsHandler = new AbstractHandler() {
@@ -756,17 +758,26 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
       override def isEnabled = fRerunFailedTestsAction.isEnabled
     }
     
+    fStopAction = new StopAction(this)
+    fStopAction.setEnabled(false)
+    
     val handlerService = getSite.getWorkbenchWindow.getService(classOf[IHandlerService]).asInstanceOf[IHandlerService]
     handlerService.activateHandler("Rerun All Tests", rerunAllTestsHandler)
     handlerService.activateHandler("Rerun Failed Tests", rerunFailedTestsHandler)
     
     toolBar.add(fNextAction)
     toolBar.add(fPreviousAction)
-    toolBar.add(fStopAction)
+    toolBar.add(fFailedTestsOnlyFilterAction)
+    toolBar.add(new Separator())
     toolBar.add(fRerunAllTestsAction)
     toolBar.add(fRerunFailedTestsAction)
+    toolBar.add(fStopAction)
     
     actionBars.updateActionBars()
+  }
+  
+  def setShowFailedTestsOnly(failedTestsOnly: Boolean) {
+    fTestViewer.setShowFailedTestsOnly(failedTestsOnly)
   }
   
   private class UpdateUIJob(name: String) extends UIJob(name) {
@@ -856,6 +867,15 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
     
     override def run() {
       fPart.terminateRun()
+    }
+  }
+  
+  private class FailedTestsOnlyFilterAction extends Action("Show Failed Tests Only", IAction.AS_CHECK_BOX) {
+    setToolTipText("Show Failed Tests Only")
+    setImageDescriptor(ScalaImages.SCALATEST_SHOW_FAILED_TESTS_ONLY)
+    
+    override def run() {
+      setShowFailedTestsOnly(isChecked)
     }
   }
 }

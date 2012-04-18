@@ -41,6 +41,7 @@ import RerunHelper._
 import org.eclipse.debug.internal.ui.DebugUIPlugin
 import org.eclipse.debug.ui.IDebugUIConstants
 import org.eclipse.jface.viewers.StructuredSelection
+import org.eclipse.jface.viewers.ViewerFilter
 
 class ScalaTestViewer(parent: Composite, fTestRunnerPart: ScalaTestRunnerViewPart) {
   
@@ -64,6 +65,8 @@ class ScalaTestViewer(parent: Composite, fTestRunnerPart: ScalaTestRunnerViewPar
   private var fAutoExpand: List[Node] = null
   
   private var fLayoutMode: Int = ScalaTestRunnerViewPart.LAYOUT_HIERARCHICAL
+  
+  private val fFailedTestsOnlyFilter = new FailedTestsOnlyFilter()
   
   createTestViewers(parent)
 
@@ -303,6 +306,20 @@ class ScalaTestViewer(parent: Composite, fTestRunnerPart: ScalaTestRunnerViewPar
       else
         None
     fTestRunnerPart.handleTestSelected(node)
+  }
+  
+  def setShowFailedTestsOnly(failedTestsOnly: Boolean) {
+    synchronized {
+      val viewer = getActiveViewer()
+      setActiveViewerNeedsRefresh(true)
+      viewer.setInput(null)
+      if (failedTestsOnly)
+        viewer.addFilter(fFailedTestsOnlyFilter)
+      else
+        viewer.removeFilter(fFailedTestsOnlyFilter)
+      processChangesInUI()
+      autoExpandFailedTests()
+    }
   }
 }
 
@@ -631,4 +648,23 @@ private class RerunTestAction(actionName: String, fTestRunnerPart: ScalaTestRunn
     val stArgs = delegate.getScalaTestArgsForTest(suiteClassName, suiteId, testName)
     rerun(fTestRunnerPart, delegate, stArgs)
   }
+}
+
+private class FailedTestsOnlyFilter extends ViewerFilter {
+  
+  override def select(viewer: Viewer, parentElement: AnyRef, element: AnyRef): Boolean = {
+    select(element.asInstanceOf[Node])
+  }
+  
+  private def select(node: Node): Boolean = {
+    node match {
+      case test: TestModel => 
+        test.status == TestStatus.FAILED
+      case suite: SuiteModel => 
+        suite.status == SuiteStatus.FAILED
+      case _ =>
+        true
+    }
+  }
+  
 }
