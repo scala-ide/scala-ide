@@ -167,34 +167,28 @@
     </profile>
     
     <profile>
-      <id>scala-2.9.2-SNAPSHOT</id>
-      <activation>
-        <property>
-          <name>scala.version</name>
-          <value>2.9.2-SNAPSHOT</value>
-        </property>
-      </activation>
+      <id>scala-2.9.x</id>
       <properties>
         <version.suffix>2_09</version.suffix>
       </properties>
       <repositories>
         <repository>
-          <id>scala-refactoring-trunk</id>
-          <name>Scala Refactoring Scala 2.9.2-SNAPSHOT p2 repository</name>
+          <id>scala-refactoring-29x</id>
+          <name>Scala Refactoring Scala 2.9.x p2 repository</name>
           <layout>p2</layout>
-          <url>${repo.scala-ide}/scala-refactoring-2.9.2-SNAPSHOT</url>
+          <url>${repo.scala-ide}/scala-refactoring-29x</url>
         </repository>
         <repository>
-          <id>scalariform-trunk</id>
-          <name>Scalariform Scala 2.9.2-SNAPSHOT p2 repo</name>
+          <id>scalariform-29x</id>
+          <name>Scalariform Scala 2.9.x p2 repo</name>
           <layout>p2</layout>
-          <url>${repo.scala-ide}/scalariform-2.9.2-SNAPSHOT</url>
+          <url>${repo.scala-ide}/scalariform-29x</url>
         </repository>
         <repository>
-          <id>scala-toolchain-2.9.2-SNAPSHOT</id>
-          <name>Scala Toolchain 2.9.2-SNAPSHOT p2 repository</name>
+          <id>scala-toolchain-29x</id>
+          <name>Scala Toolchain 2.9.x p2 repository</name>
           <layout>p2</layout>
-          <url>${repo.scala-ide}/scala-eclipse-toolchain-osgi-2.9.2-SNAPSHOT</url>
+          <url>${repo.scala-ide}/scala-eclipse-toolchain-osgi-29x</url>
           <!-- <url>file:/absolute/path/to/org.scala-ide.build-toolchain/mkrepo/scala-eclipse-toolchain-osgi-2.9.2-SNAPSHOT</url> -->
         </repository>
       </repositories>
@@ -202,12 +196,6 @@
     
     <profile>
       <id>scala-trunk</id>
-      <activation>
-        <property>
-          <name>scala.version</name>
-          <value>2.10.0-SNAPSHOT</value>
-        </property>
-      </activation>
       <repositories>
         <repository>
           <id>scala-refactoring-trunk</id>
@@ -229,6 +217,7 @@
         </repository>
       </repositories>
     </profile>
+    
     <!-- local 2.9.x-SNAPSHOT -->
     <profile>
       <id>local-scala-2.9.x</id>
