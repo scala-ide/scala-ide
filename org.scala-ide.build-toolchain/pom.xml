@@ -10,7 +10,7 @@
   </parent>
   
   <artifactId>scala-toolchain-for-eclipse</artifactId>
-  <version>2.9.2-SNAPSHOT</version>
+  <version>2.9.3-SNAPSHOT</version>
   <name>The Scala Toolchain for Eclipse</name>
   <packaging>pom</packaging>
 
