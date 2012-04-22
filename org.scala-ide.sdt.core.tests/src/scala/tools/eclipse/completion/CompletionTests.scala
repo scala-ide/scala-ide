@@ -119,6 +119,34 @@ class CompletionTests {
     str.replace("(", "").replace(")", "").replace("java.lang.String", "String")
   }
 
+  /**
+   * Test that completion shows only accessible members.
+   */
+  @Test
+  def accessibilityTests() {
+    val oraclePos14 = List("secretPrivate: Unit",
+      "secretProtected: Unit",
+      "secretProtectedInPackage: Unit",
+      "secretPublic: Unit")
+
+    val oraclePos16 = List("secretPrivate: Unit",
+      "secretPrivateThis: Unit",
+      "secretProtected: Unit",
+      "secretProtectedInPackage: Unit",
+      "secretPublic: Unit")
+    val oraclePos22 = List(
+      "secretProtected: Unit",
+      "secretProtectedInPackage: Unit",
+      "secretPublic: Unit")
+    val oraclePos28 = List(
+      "secretProtectedInPackage: Unit",
+      "secretPublic: Unit")
+    val oraclePos37 = List(
+      "secretPublic: Unit")
+
+    runTest("accessibility/AccessibilityTest.scala", true)(oraclePos14, oraclePos16, oraclePos22, oraclePos28, oraclePos37)
+  }
+
   @Test
   def ticket1000475() {
     val oraclePos73 = List("toString(): String")
