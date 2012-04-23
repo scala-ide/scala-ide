@@ -63,9 +63,6 @@ import org.eclipse.swt.events.SelectionAdapter
 
 class ScalaTestMainTab extends SharedJavaMainTab {
   // UI widgets
-  /*private var fSearchExternalJarsCheckButton: Button = null
-  private var fConsiderInheritedMainButton: Button = null
-  private var fStopInMainCheckButton: Button = null*/
   private var mainGroup: Group = null
   private var fSearchButton: Button = null
   private var fSuiteRadioButton: Button = null
@@ -127,7 +124,6 @@ class ScalaTestMainTab extends SharedJavaMainTab {
     fPackageRadioButton.addSelectionListener(getDefaultListener)
     fPackageRadioButton.addSelectionListener(typeChangeListener)
     
-    //super.createMainTypeEditor(parent, text)
     mainGroup = SWTFactory.createGroup(parent, text, 2, 1, GridData.FILL_HORIZONTAL); 
     fMainText = SWTFactory.createSingleText(mainGroup, 1);
     fMainText.addModifyListener(new ModifyListener() {
@@ -135,7 +131,7 @@ class ScalaTestMainTab extends SharedJavaMainTab {
         updateLaunchConfigurationDialog()
       }
     })
-    //ControlAccessibleListener.addListener(fMainText, mainGroup.getText());
+    
     fSearchButton = createPushButton(mainGroup, LauncherMessages.AbstractJavaMainTab_2, null)
     fSearchButton.addSelectionListener(new SelectionListener() {
       def widgetDefaultSelected(e: SelectionEvent) {}
@@ -240,7 +236,7 @@ class ScalaTestMainTab extends SharedJavaMainTab {
       }
 	}
     else {
-      projects = Array(project)//new IJavaElement[]{project};
+      projects = Array(project)
     }
     if (projects == null) {
       projects = Array.empty
@@ -343,9 +339,6 @@ class ScalaTestMainTab extends SharedJavaMainTab {
   override def initializeFrom(config: ILaunchConfiguration) {
     super.initializeFrom(config)
     updateMainTypeFromConfig(config)
-    //updateStopInMainFromConfig(config)
-    //updateInheritedMainsFromConfig(config)
-    //updateExternalJars(config)
   }
   
   override protected def updateMainTypeFromConfig(config: ILaunchConfiguration) {

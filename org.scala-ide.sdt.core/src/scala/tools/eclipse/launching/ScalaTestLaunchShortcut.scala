@@ -131,7 +131,7 @@ class ScalaTestTestLaunchShortcut extends ILaunchShortcut {
   
   def launch(selection:ISelection, mode:String) {
     // This get called when user right-clicked .scala file on package navigator and choose 'Run As' -> ScalaTest
-    // Should just run all suites within the selected file.
+    // Not applicable for launch selected test in source now, unless more details of class is shown in package navigator.
   }
   
   def launch(editorPart:IEditorPart, mode:String) {
@@ -143,47 +143,6 @@ class ScalaTestTestLaunchShortcut extends ILaunchShortcut {
       case None =>
         MessageDialog.openError(null, "Error", "Sorry, unable to determine selected test.")
     }
-    
-    
-    
-    /*val selectionProvider:ISelectionProvider = editorPart.getSite().getSelectionProvider()
-    if (selectionProvider != null) {
-      val selection:ISelection = selectionProvider.getSelection()
-      val textSelection:ITextSelection = selection.asInstanceOf[ITextSelection]
-      val element = SelectionConverter.getElementAtOffset(typeRoot, selection.asInstanceOf[ITextSelection])
-      val classElementOpt = ScalaTestLaunchShortcut.getScalaTestSuite(element)
-      classElementOpt match {
-        case Some(classElement) => 
-          val testSelectionOpt = ScalaTestLaunchShortcut.resolveSelectedAst(editorPart.getEditorInput, editorPart.getEditorSite.getSelectionProvider)
-          testSelectionOpt match {
-            case Some(testSelection) => 
-              launchSuite(classElement, mode)
-            case None => 
-              MessageDialog.openError(null, "Error", "Sorry, unable to determine selected test.")
-          }
-        case None => 
-          MessageDialog.openError(null, "Error", "Please select a ScalaTest suite to launch.")
-      }
-    }
-    else
-      MessageDialog.openError(null, "Error", "Please select a ScalaTest suite to launch.")
-    
-    
-    
-    
-    val selectionOpt = ScalaTestLaunchShortcut.resolveSelectedAst(editorPart.getEditorInput, editorPart.getEditorSite.getSelectionProvider)
-    selectionOpt match {
-      case Some(testSelection) => 
-        println("***Test Found, display name: " + testSelection.displayName() + ", test name(s):")
-        /*selection.testNames.foreach(println(_))
-        val message = "Display Name: " + selection.displayName + "\n" + 
-                      "Tests: \n" + selection.testNames.mkString("\n")
-        MessageDialog.openInformation(null, "Test Found", message)*/
-        
-      case None =>
-        println("#####Unable to determine selected test, nothing to launch.")
-        MessageDialog.openError(null, "Error", "Sorry, unable to determine selected test.")
-    }*/
   }
 }
 
@@ -206,7 +165,7 @@ object ScalaTestLaunchShortcut {
     //val superTypeArr:Array[IType] = typeHier.getAllSupertypes(iType)
     //superTypeArr.findIndexOf {superType => superType.getFullyQualifiedName == "org.scalatest.Suite"} >= 0
     iType.getSuperInterfaceNames().contains("org.scalatest.Suite") || 
-    iType.getAnnotation("org.scalatest.WrapWith") != null
+    iType.getAnnotations.exists(annt => annt.getElementName == "WrapWith") // org.scalatest.WrapWith does not work
   }
   
   def containsScalaTestSuite(scSrcFile: ScalaSourceFile): Boolean = {

@@ -61,8 +61,8 @@ class ScalaTestViewer(parent: Composite, fTestRunnerPart: ScalaTestRunnerViewPar
   private var fNeedUpdate: Set[Node] = null
   private var fAutoScrollTarget: Node = null
   
-  private var fAutoClose: List[Node] = null
-  private var fAutoExpand: List[Node] = null
+  private var fAutoClose: List[Node] = Nil
+  private var fAutoExpand: List[Node] = Nil
   
   private var fLayoutMode: Int = ScalaTestRunnerViewPart.LAYOUT_HIERARCHICAL
   

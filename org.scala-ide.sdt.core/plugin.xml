@@ -870,7 +870,7 @@
         class="scala.tools.eclipse.launching.ScalaTestSuiteLaunchShortcut"
         icon="icons/full/obj16/scu_obj.gif"
         id="org.eclipse.shortcut.scalatest.suite"
-        label="ScalaTest - Suite"
+        label="%ScalaTestSuiteShortcut.label"
         modes="run,debug">
         <contextualLaunch>
           <enablement>
@@ -887,7 +887,7 @@
         class="scala.tools.eclipse.launching.ScalaTestTestLaunchShortcut"
         icon="icons/full/obj16/scu_obj.gif"
         id="org.eclipse.shortcut.scalatest.test"
-        label="ScalaTest - Test"
+        label="%ScalaTestTestShortcut.label"
         modes="run,debug">
         <contextualLaunch>
           <enablement>
@@ -900,8 +900,8 @@
       <shortcut
         class="scala.tools.eclipse.launching.ScalaTestFileLaunchShortcut"
         icon="icons/full/obj16/scu_obj.gif"
-        id="org.eclipse.shortcut.scalatest.test"
-        label="ScalaTest - File"
+        id="org.eclipse.shortcut.scalatest.file"
+        label="%ScalaTestFileShortcut.label"
         modes="run,debug">
         <contextualLaunch>
           <enablement>
@@ -918,7 +918,7 @@
         class="scala.tools.eclipse.launching.ScalaTestPackageLaunchShortcut"
         icon="icons/full/obj16/scu_obj.gif"
         id="org.eclipse.shortcut.scalatest.package"
-        label="ScalaTest - Package"
+        label="%ScalaTestPackageShortcut.label"
         modes="run,debug">
         <contextualLaunch>
           <enablement>

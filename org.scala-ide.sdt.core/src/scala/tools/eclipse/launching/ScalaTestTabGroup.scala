@@ -7,7 +7,6 @@ import org.eclipse.jdt.ui._
 class ScalaTestTabGroup extends AbstractLaunchConfigurationTabGroup {
   override def createTabs(dialog : ILaunchConfigurationDialog, mode : String) = {
     setTabs(Array[ILaunchConfigurationTab](
-      //new JavaMainTab(),
       new ScalaTestMainTab(), 
       new JavaArgumentsTab(),
       new JavaJRETab(),

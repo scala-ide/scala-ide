@@ -163,15 +163,12 @@ class ScalaTestFinder(val compiler: ScalaPresentationCompiler, loader: ClassLoad
   }
    
   private def getTarget(className: String, apply: GenericApply, rootTree: Tree): AstNode = {
-    println("#####Getting target for: " + apply.symbol.decodedName)
     apply.fun match {
       case select: Select => 
         select.qualifier match {
           case lit: Literal =>
-            println("#####target is a literal")
             new ToStringTarget(className, rootTree, apply, lit.value.stringValue)
           case impl: ApplyImplicitView => 
-            println("#####target is a apply implicit view")
             val implFirstArg: Tree = impl.args(0)
             implFirstArg match {
               case litArg: Literal =>
@@ -188,13 +185,10 @@ class ScalaTestFinder(val compiler: ScalaPresentationCompiler, loader: ClassLoad
                 new ToStringTarget(className, rootTree, select.qualifier, implFirstArg.toString)
             }
           case qualifierApply: Apply =>
-            println("#####target is a apply")
             mapApplyToMethodInvocation(className, qualifierApply, rootTree)
           case qualiferSelect: Select => 
-            println("#####target is a select")
             new ToStringTarget(className, rootTree, qualiferSelect, qualiferSelect.name)
           case _ =>
-            println("#####target is a something else, which is: " + select.qualifier.getClass.getName)
             new ToStringTarget(className, rootTree, select.qualifier, select.name)
         }
       case funApply: Apply => 
@@ -202,7 +196,6 @@ class ScalaTestFinder(val compiler: ScalaPresentationCompiler, loader: ClassLoad
       case typeApply: TypeApply => 
         getTarget(className, typeApply, rootTree)
       case other =>
-        println("#####apply.fun is other: " + apply.fun.getClass.getName)
         new ToStringTarget(className, rootTree, apply.fun, apply.fun.toString)
     }
   }
@@ -224,22 +217,13 @@ class ScalaTestFinder(val compiler: ScalaPresentationCompiler, loader: ClassLoad
     selectedTree match {
       case defDef: DefDef =>
         val defDefSym = defDef.symbol
-        //println("#####param types: " + defDefSym.info.paramTypes.map(t => t.typeSymbol.fullName))
-        //println("$$$$$param types: " + defDef.vparamss.flatten.toList.map(valDef => valDef.tpt.symbol.fullName))
+        // Some approaches used before
+        // param types: " + defDefSym.info.paramTypes.map(t => t.typeSymbol.fullName)
+        // param types: " + defDef.vparamss.flatten.toList.map(valDef => valDef.tpt.symbol.fullName)
         Some(new MethodDefinition(className, rootTree, selectedTree, defDefSym.decodedName, defDefSym.info.paramTypes.map(t => t.typeSymbol.fullName): _*))
       case applyImplicitView: ApplyImplicitView =>
         None
       case apply: Apply =>
-        /*val applyParentOpt = getParentTree(rootTree, apply)
-        applyParentOpt match {
-          case Some(applyParent) =>
-            if (applyParent.isInstanceOf[Apply])
-              Some(mapApplyToMethodInvocation(className, applyParent.asInstanceOf[Apply], rootTree))
-            else
-              Some(mapApplyToMethodInvocation(className, apply, rootTree))
-          case None => 
-            Some(mapApplyToMethodInvocation(className, apply, rootTree))
-        }*/
         Some(mapApplyToMethodInvocation(className, apply, rootTree))
       case template: Template =>
         Some(new ConstructorBlock(className, rootTree, selectedTree))
@@ -251,14 +235,12 @@ class ScalaTestFinder(val compiler: ScalaPresentationCompiler, loader: ClassLoad
   @tailrec
   private def transformAst(className: String, selectedTree: Tree, rootTree: Tree): Option[AstNode] = {
     val astNodeOpt = mapAst(className, selectedTree, rootTree)
-    println("#####selectedTree: " + selectedTree.getClass.getName + ", astNodeOpt: " + astNodeOpt)
     astNodeOpt match {
       case Some(astNode) => astNodeOpt
       case None => 
         val parentOpt = getParentTree(rootTree, selectedTree)
         parentOpt match {
           case Some(parent) =>
-            println("#####parent is: " + parent.getClass.getName)
             transformAst(className, parent, rootTree)
           case None =>
             None
@@ -272,7 +254,6 @@ class ScalaTestFinder(val compiler: ScalaPresentationCompiler, loader: ClassLoad
         val classElement = ScalaTestLaunchShortcut.getClassElement(element)
         if (classElement == null)
           return None
-        println("#####scElement: " + scElement.getClass.getName + ", children count: " + scElement.getChildren.length)
         val scu = scElement.getCompilationUnit.asInstanceOf[ScalaCompilationUnit]
           
         val classPosition = new OffsetPosition(scu.createSourceFile, classElement.getSourceRange.getOffset)
@@ -310,7 +291,6 @@ class ScalaTestFinder(val compiler: ScalaPresentationCompiler, loader: ClassLoad
             val scalatestAstOpt = transformAst(classElement.getFullyQualifiedName, selectedTree, rootTree)
             scalatestAstOpt match {
               case Some(scalatestAst) => 
-                //finder.find(scalatestAst)
                 val parent = scalatestAst.parent
                 val findMethod = finder.getClass.getMethods.find { mtd =>
                   mtd.getName == "find" && mtd.getParameterTypes.length == 1 && mtd.getParameterTypes()(0).getName == "org.scalatest.finders.AstNode"

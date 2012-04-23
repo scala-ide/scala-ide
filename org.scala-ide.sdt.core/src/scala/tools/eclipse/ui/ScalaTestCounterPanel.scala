@@ -76,7 +76,6 @@ class ScalaTestCounterPanel(parent: Composite) extends Composite(parent, SWT.WRA
     label = new Label(this, SWT.NONE)
     label.setText(name)
     label.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_BEGINNING))
-    //label.setFont(JFaceResources.getBannerFont());
 
     val value= new Text(this, SWT.READ_ONLY)
     value.setText(init)
@@ -111,14 +110,6 @@ class ScalaTestCounterPanel(parent: Composite) extends Composite(parent, SWT.WRA
     
     fNumberOfRuns.setText(runString)
     fNumberOfRuns.redraw()
-
-    /*if (fIgnoredCount == 0 && ignoredCount > 0 || fIgnoredCount != 0 && ignoredCount == 0) {
-      layout()
-    } else {
-      fNumberOfRuns.redraw()
-      redraw()
-    }
-    fIgnoredCount= ignoredCount;*/
   }
 
   def setSucceedValue(value: Int) {

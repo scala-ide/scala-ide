@@ -68,13 +68,6 @@ class ScalaTestStackTrace(parent: Composite, fTestRunner: ScalaTestRunnerViewPar
     }
   })
   
-  /*ToolBarManager failureToolBarmanager= new ToolBarManager(toolBar);
-  failureToolBarmanager.add(new EnableStackFilterAction(this));
-  fCompareAction = new CompareResultsAction(this);
-  fCompareAction.setEnabled(false);
-  failureToolBarmanager.add(fCompareAction);
-  failureToolBarmanager.update(true);*/
-  
   def clear() {
     fTable.removeAll()
     fStackDepth = None

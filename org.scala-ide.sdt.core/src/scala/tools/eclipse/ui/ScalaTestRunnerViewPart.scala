@@ -403,12 +403,14 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
         enableToolbarControls(true)
       case runAborted: RunAborted => 
         fTestRunSession.stop()
-        fTestRunSession.rootNode.duration = runAborted.duration
-        fTestRunSession.rootNode.summary = runAborted.summary
-        fTestRunSession.rootNode.errorMessage = runAborted.errorMessage
-        fTestRunSession.rootNode.errorDepth = runAborted.errorDepth
-        fTestRunSession.rootNode.errorStackTrace = runAborted.errorStackTraces
-        fTestRunSession.rootNode.status = RunStatus.ABORTED
+        if (fTestRunSession.rootNode != null) {
+          fTestRunSession.rootNode.duration = runAborted.duration
+          fTestRunSession.rootNode.summary = runAborted.summary
+          fTestRunSession.rootNode.errorMessage = runAborted.errorMessage
+          fTestRunSession.rootNode.errorDepth = runAborted.errorDepth
+          fTestRunSession.rootNode.errorStackTrace = runAborted.errorStackTraces
+          fTestRunSession.rootNode.status = RunStatus.ABORTED
+        }
         stopUpdateJobs()
         nodeList = getFlattenNode(suiteList.toList)
         fTestViewer.registerAutoScrollTarget(null)
