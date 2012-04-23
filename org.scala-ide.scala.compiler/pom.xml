@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>org.scala-ide</groupId>
-    <version>2.9.2-RC1</version>
+    <version>2.9.2</version>
     <artifactId>scala-toolchain-for-eclipse</artifactId>
     <relativePath>../org.scala-ide.build-toolchain/pom.xml</relativePath>
   </parent>
@@ -144,16 +144,16 @@
           <instructions>
             <Bundle-SymbolicName>org.scala-ide.scala.compiler</Bundle-SymbolicName>
             <Bundle-Name>Scala Compiler for Eclipse</Bundle-Name>
-            <Bundle-Version>${osgi.version.number}</Bundle-Version>
+            <Bundle-Version>${osgi.version.number}-vfinal</Bundle-Version>
             <Bundle-Vendor>scala-ide.org</Bundle-Vendor>
             <Embed-Dependency>*;scope=compile|runtime;inline=false</Embed-Dependency>
-            <_exportcontents>scala.reflect.internal.*;version=${osgi.version.number},
-            scala.reflect.api.*;version=${osgi.version.number},
-            scala.reflect.runtime.*;version=${osgi.version.number},
-            scala.reflect.std.*;version=${osgi.version.number},
-            scala.reflect.internal.transform.*;version=${osgi.version.number},
-            scala.tools.*;version=${osgi.version.number},
-            ch.epfl.lamp.*;version=${osgi.version.number}</_exportcontents>
+            <_exportcontents>scala.reflect.internal.*;version=${osgi.version.number}-vfinal,
+            scala.reflect.api.*;version=${osgi.version.number}-vfinal,
+            scala.reflect.runtime.*;version=${osgi.version.number}-vfinal,
+            scala.reflect.std.*;version=${osgi.version.number}-vfinal,
+            scala.reflect.internal.transform.*;version=${osgi.version.number}-vfinal,
+            scala.tools.*;version=${osgi.version.number}-vfinal,
+            ch.epfl.lamp.*;version=${osgi.version.number}-vfinal</_exportcontents>
             <Embed-Directory>lib</Embed-Directory>
             <Embed-StripVersion>true</Embed-StripVersion>
             <Include-Resource>lib=${project.build.directory}/lib</Include-Resource>
