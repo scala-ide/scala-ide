@@ -84,9 +84,8 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
   private var fRunningLock: ILock = null
   
   private val suiteList = new ListBuffer[Node]()
-  private var nodeList: List[Node] = null
+  private var nodeList: List[Node] = Nil
   private var suiteMap: Map[String, SuiteModel] = null
-  private var hasFailedTest: Boolean = false
   
   val suiteIcon = ScalaImages.SCALATEST_SUITE.createImage
   val suiteSucceedIcon = ScalaImages.SCALATEST_SUITE_OK.createImage
@@ -246,7 +245,6 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
           case Some(suite) => 
             val test = suite.updateTest(testFailed.testName, TestStatus.FAILED, testFailed.duration, testFailed.location, testFailed.errorMessage, testFailed.errorDepth, testFailed.errorStackTraces)
             suite.closeScope()
-            hasFailedTest = true
             fTestViewer.registerFailedForAutoScroll(test)
             fTestViewer.registerViewerUpdate(test)
           case None => 
@@ -367,7 +365,6 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
       case runStarting: RunStarting => 
         enableToolbarControls(false)
         suiteList.clear()
-        hasFailedTest = false
         suiteMap = Map.empty[String, SuiteModel]
         fTestRunSession.rootNode = 
           RunModel(
@@ -641,13 +638,15 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
   private def processChangesInUI() {
     if (!fSashForm.isDisposed())
     {
-      refreshCounters();
-
-      fNextAction.setEnabled(hasFailedTest)
-      fPreviousAction.setEnabled(hasFailedTest)
-      
+      refreshCounters()
+      enableNextPreviousButton()
       fTestViewer.processChangesInUI()
     }
+  }
+  
+  private def enableNextPreviousButton() {
+    fNextAction.setEnabled(findNextFailure.isDefined)
+    fPreviousAction.setEnabled(findPreviousFailure.isDefined)
   }
   
   private def expandFailedTests() {
@@ -667,19 +666,27 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
     })
   }
   
-  def showNextFailure() {
+  def findNextFailure = {
     val currentList = fTestViewer.selectedNode match {
       case Some(selected) => 
-        nodeList.dropWhile(node => node != selected).tail
+        val dropList = nodeList.dropWhile(node => node != selected)
+        if (dropList.isEmpty)
+          Nil
+        else
+          dropList.tail
       case None =>
         nodeList
     }
-    val next = currentList.find { node => 
+    currentList.find { node => 
       node match {
         case test: TestModel if test.status == TestStatus.FAILED => true
         case _ => false
       }
     }
+  }
+  
+  def showNextFailure() {
+    val next = findNextFailure
     next match {
       case Some(next) => 
         fTestViewer.selectNode(next)
@@ -688,19 +695,23 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
     }
   }
   
-  def showPreviousFailure() {
+  def findPreviousFailure = {
     val currentList = fTestViewer.selectedNode match {
       case Some(selected) => 
         nodeList.takeWhile(node => node != selected).reverse
       case None =>
         nodeList.reverse
     }
-    val previous = currentList.find { node => 
+    currentList.find { node => 
       node match {
         case test: TestModel if test.status == TestStatus.FAILED => true
         case _ => false
       }
     }
+  }
+  
+  def showPreviousFailure() {
+    val previous = findPreviousFailure
     previous match {
       case Some(previous) => 
         fTestViewer.selectNode(previous)
@@ -730,11 +741,11 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
     val toolBar = actionBars.getToolBarManager
     val viewMenu = actionBars.getMenuManager
     
-    fNextAction = new ShowNextFailureAction(this)
+    fNextAction = new ShowNextFailureAction()
     fNextAction.setEnabled(false);
     actionBars.setGlobalActionHandler(ActionFactory.NEXT.getId(), fNextAction)
     
-    fPreviousAction= new ShowPreviousFailureAction(this)
+    fPreviousAction= new ShowPreviousFailureAction()
     fPreviousAction.setEnabled(false);
     actionBars.setGlobalActionHandler(ActionFactory.PREVIOUS.getId(), fPreviousAction)
     
@@ -758,7 +769,7 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
       override def isEnabled = fRerunFailedTestsAction.isEnabled
     }
     
-    fStopAction = new StopAction(this)
+    fStopAction = new StopAction()
     fStopAction.setEnabled(false)
     
     val handlerService = getSite.getWorkbenchWindow.getService(classOf[IHandlerService]).asInstanceOf[IHandlerService]
@@ -837,36 +848,38 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
     }
   }
   
-  private class ShowNextFailureAction(fPart: ScalaTestRunnerViewPart) extends Action("Next Failure") {
+  private class ShowNextFailureAction extends Action("Next Failure") {
     setDisabledImageDescriptor(ScalaImages.SCALATEST_NEXT_FAILED_DISABLED)
     setHoverImageDescriptor(ScalaImages.SCALATEST_NEXT_FAILED_ENABLED)
     setImageDescriptor(ScalaImages.SCALATEST_NEXT_FAILED_ENABLED)
     setToolTipText("Next Failed Test")
     
     override def run() {
-      fPart.showNextFailure()
+      showNextFailure()
+      enableNextPreviousButton()
     }
   }
   
-  private class ShowPreviousFailureAction(fPart: ScalaTestRunnerViewPart) extends Action("Previous Failure") {
+  private class ShowPreviousFailureAction extends Action("Previous Failure") {
     setDisabledImageDescriptor(ScalaImages.SCALATEST_PREV_FAILED_DISABLED)
     setHoverImageDescriptor(ScalaImages.SCALATEST_PREV_FAILED_ENABLED)
     setImageDescriptor(ScalaImages.SCALATEST_PREV_FAILED_ENABLED)
     setToolTipText("Previous Failed Test")
     
     override def run() {
-      fPart.showPreviousFailure()
+      showPreviousFailure()
+      enableNextPreviousButton()
     }
   }
   
-  private class StopAction(fPart: ScalaTestRunnerViewPart) extends Action {
+  private class StopAction extends Action {
     setText("Stop Running ScalaTest")
     setToolTipText("Stop ScalaTest Run")
     setImageDescriptor(ScalaImages.SCALATEST_STOP_ENABLED)
     setDisabledImageDescriptor(ScalaImages.SCALATEST_STOP_DISABLED)
     
     override def run() {
-      fPart.terminateRun()
+      terminateRun()
     }
   }
   
@@ -876,6 +889,7 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
     
     override def run() {
       setShowFailedTestsOnly(isChecked)
+      enableNextPreviousButton()
     }
   }
 }
