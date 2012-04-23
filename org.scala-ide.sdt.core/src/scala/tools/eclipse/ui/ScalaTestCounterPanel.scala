@@ -40,7 +40,7 @@ class ScalaTestCounterPanel(parent: Composite) extends Composite(parent, SWT.WRA
     gridLayout.marginWidth = 0
     setLayout(gridLayout)
     
-    fNumberOfRuns = createLabel("Runs: ", fSuiteRunIcon, " 0/0  ") //$NON-NLS-1$
+    fNumberOfRuns = createLabel("Tests: ", fSuiteRunIcon, " 0/0  ") //$NON-NLS-1$
     fNumberOfSucceed = createLabel("Succeeded: ", fSucceedIcon, " 0 ")
     fNumberOfFailure = createLabel("Failed: ", fFailureIcon, " 0 ") //$NON-NLS-1$
     fNumberOfIgnored = createLabel("Ignored: ", fIgnoredIcon, " 0 ") //$NON-NLS-1$
