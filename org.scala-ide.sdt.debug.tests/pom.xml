@@ -26,7 +26,7 @@
             <plugin>
               <groupId>org.eclipse.tycho</groupId>
               <artifactId>tycho-surefire-plugin</artifactId>
-              <version>${tycho-version}</version>
+              <version>${tycho.version}</version>
               <configuration>
                 <dependencies>
                   <dependency>
@@ -74,7 +74,7 @@
     <dependency>
       <groupId>org.scala-ide</groupId>
       <artifactId>org.scala-ide.sdt.core.tests</artifactId>
-      <version>${version}</version>
+      <version>${project.version}</version>
       <type>eclipse-plugin</type>
     </dependency>
   </dependencies>
@@ -124,7 +124,7 @@
             <frameworkExtension>
               <groupId>org.scala-ide</groupId>
               <artifactId>org.scala-ide.sdt.core.tests</artifactId>
-              <version>${version}</version>
+              <version>${project.version}</version>
               <type>eclipse-plugin</type>
             </frameworkExtension>
           </frameworkExtensions>
