@@ -193,7 +193,7 @@ object ImplicitHighlightingPresenter {
         }
         super.traverse(t)
       }
-    }.traverse(compiler.body(sourceFile))
+    }.traverse(compiler.loadedType(sourceFile))
 
     implicits
   }
