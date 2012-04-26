@@ -38,13 +38,15 @@ trait LocateSymbol { self : ScalaPresentationCompiler =>
       val packName = sym.enclosingPackage.fullName
       val project = scu.getJavaProject.asInstanceOf[JavaProject]
       val pfs = new SearchableEnvironment(project, null: WorkingCopyOwner).nameLookup.findPackageFragments(packName, false)
-      logger.debug("Found package fragments: " + pfs)
       if (pfs eq null) None else find(pfs) { pf =>
         val top = sym.toplevelClass
-        val name = if (sym.owner.isPackageObject) "package$.class" else top.name + (if (top.isModule) "$" else "") + ".class"
+        val name = if (sym.owner.isPackageObjectClass) "package$.class" else top.name + (if (top.isModuleClass) "$" else "") + ".class"
+        logger.debug("Trying out to get " + name)
         val cf = pf.getClassFile(name)
         cf match {
-          case classFile : ScalaClassFile => Some(classFile)
+          case classFile : ScalaClassFile => 
+            logger.debug("Found Scala class file: " + classFile)
+            Some(classFile)
           case _ => None
         }
       }

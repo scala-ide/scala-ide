@@ -6,14 +6,13 @@
 package scala.tools.eclipse
 
 import java.io.{ DataInputStream, InputStream, IOException }
-
 import scala.annotation.switch
 import scala.collection.mutable.HashMap
-
 import org.eclipse.core.runtime.QualifiedName
 import org.eclipse.core.runtime.content.{ IContentDescriber, IContentDescription }
+import scala.tools.eclipse.logging.HasLogger
 
-object ScalaClassFileDescriber {
+object ScalaClassFileDescriber extends HasLogger {
   final val JAVA_MAGIC = 0xCAFEBABE
   final val CONSTANT_UTF8 = 1
   final val CONSTANT_UNICODE = 2
@@ -60,7 +59,7 @@ object ScalaClassFileDescriber {
               else if (sourceFileIndex == -1 && str == "SourceFile")
                 sourceFileIndex = i
             }
-          case CONSTANT_UTF8 | CONSTANT_UNICODE => 
+          case CONSTANT_UNICODE => 
             val toSkip = in.readUnsignedShort()
             if (in.skipBytes(toSkip) != toSkip) return None
           case CONSTANT_CLASS | CONSTANT_STRING =>
@@ -71,7 +70,8 @@ object ScalaClassFileDescriber {
           case CONSTANT_LONG | CONSTANT_DOUBLE =>
             if (in.skipBytes(8) != 8) return None
             i += 1
-          case _ =>
+          case other =>
+            logger.debug("Unknown constant pool id: " + other)
             return None
         }
         i += 1

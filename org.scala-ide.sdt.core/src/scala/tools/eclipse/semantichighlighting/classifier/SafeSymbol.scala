@@ -46,7 +46,7 @@ trait SafeSymbol extends CompilerAccess with PimpedTrees {
 
     case tpeTree: TypeTree =>
       val originalSym =
-        if (tpeTree.original == tpeTree) Nil
+        if ((tpeTree.original eq null) || tpeTree.original == tpeTree) Nil
         else safeSymbol(tpeTree.original)
 
       // if the original tree did not find anything, we need to call
