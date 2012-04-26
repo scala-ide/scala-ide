@@ -21,18 +21,6 @@ class ScalaHyperlinkDetector extends AbstractHyperlinkDetector with HasLogger {
     detectHyperlinks(textEditor, region, canShowMultipleHyperlinks)
   }
 
-  case class Hyperlink(file: Openable, pos: Int, len: Int, text: String)(wordRegion: IRegion) extends IHyperlink {
-    def getHyperlinkRegion = wordRegion
-    def getTypeLabel = null
-    def getHyperlinkText = text
-    def open = {
-      EditorUtility.openInEditor(file, true) match {
-        case editor: ITextEditor => editor.selectAndReveal(pos, len)
-        case _                   =>
-      }
-    }
-  }
-
   def scalaHyperlinks(scu: ScalaCompilationUnit, wordRegion: IRegion): Option[List[IHyperlink]] = {
     scu.withSourceFile({ (sourceFile, compiler) =>
       if (wordRegion == null || wordRegion.getLength == 0)
@@ -77,17 +65,17 @@ class ScalaHyperlinkDetector extends AbstractHyperlinkDetector with HasLogger {
           } flatMap { list =>
             val filteredSyms = list filterNot { sym => sym.isPackage || sym == NoSymbol }
             if (filteredSyms.isEmpty) None else Some(
-              filteredSyms.foldLeft(List[IHyperlink]()) { (l, sym) =>
-                if (sym.isJavaDefined)
-                  l
-                else
-                  compiler.locate(sym, scu) match {
-                    case Some((f, pos)) => {
-                      val text = sym.kindString + " " + sym.fullName
-                      (Hyperlink(f, pos, wordRegion.getLength, text)(wordRegion): IHyperlink) :: l
-                    }
-                    case _ => l
+              filteredSyms.foldLeft(List[IHyperlink]()) { (links, sym) =>
+                if (sym.isJavaDefined) links
+                else {
+                  object DeclarationHyperlinkFactory extends scala.tools.eclipse.hyperlink.DeclarationHyperlinkFactory {
+                    protected val global: compiler.type = compiler
                   }
+                  DeclarationHyperlinkFactory.create(scu, sym, wordRegion) match {
+                    case None => links
+                    case Some(l) => l :: links
+                  }
+                }
               })
           }
         }.flatten.headOption match {
@@ -101,18 +89,34 @@ class ScalaHyperlinkDetector extends AbstractHyperlinkDetector with HasLogger {
     })(None)
   }
 
-  def detectHyperlinks(textEditor: ITextEditor, region: IRegion, canShowMultipleHyperlinks: Boolean): Array[IHyperlink] = {
+  def detectHyperlinks(textEditor: ITextEditor, currentSelection: IRegion, canShowMultipleHyperlinks: Boolean): Array[IHyperlink] = {
     if (textEditor == null) // can be null if generated through ScalaPreviewerFactory
       null
     else
       EditorUtility.getEditorInputJavaElement(textEditor, false) match {
         case scu: ScalaCompilationUnit =>
-          val wordRegion = ScalaWordFinder.findWord(scu.getContents, region.getOffset)
+          import scala.tools.eclipse.semantichighlighting.implicits.ImplicitConversionAnnotation
+          import scala.tools.eclipse.ui.EditorUtils.{withEditor, getAnnotationsAtOffset}
+          import scala.collection.mutable.ListBuffer
+          
+          var links = ListBuffer[IHyperlink]()
+          
+          withEditor(scu) { editor =>
+            for ((ann, pos) <- getAnnotationsAtOffset(editor, currentSelection.getOffset)) ann match {
+              case a: ImplicitConversionAnnotation if a.sourceLink.isDefined => 
+                a.sourceLink.get +: links
+              case _ => ()
+            }  
+          }
+
+          val wordRegion = ScalaWordFinder.findWord(scu.getContents, currentSelection.getOffset)
 
           scalaHyperlinks(scu, wordRegion) match {
             case None             => null // do not try to use codeSelect.
-            case Some(List())     => codeSelect(textEditor, wordRegion, scu)
-            case Some(hyperlinks) => hyperlinks.toArray
+            case Some(List())    => 
+              codeSelect(textEditor, wordRegion, scu)
+            case Some(hyperlinks) =>    
+             (hyperlinks ::: links.toList).toArray 
           }
 
         case _ => null
