@@ -807,8 +807,14 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
                   case FloatTag   => (IMemberValuePair.K_FLOAT, const.floatValue)
                   case DoubleTag  => (IMemberValuePair.K_DOUBLE, const.doubleValue)
                   case StringTag  => (IMemberValuePair.K_STRING, const.stringValue)
-                  case ClassTag   => (IMemberValuePair.K_CLASS, const.typeValue.typeSymbol.fullName)
                   case EnumTag    => (IMemberValuePair.K_QUALIFIED_NAME, const.tpe.typeSymbol.fullName+"."+const.symbolValue.name.toString)
+                  case _          => 
+                    // COMPAT: 2.10 vs 2.9 compatibility issue: ClassTag is now a class defined in Predef,
+                    // and the corresponding tag is called now `ClazzTag`.
+                    // we assume there can't be any other constant class
+                    // must be `ClazzTag` (IMemberValuePair.K_CLASS, const.typeValue.typeSymbol.fullName)
+                    (IMemberValuePair.K_CLASS, const.typeValue.typeSymbol.fullName)
+
                 }
               case ArrayAnnotArg(args) =>
                 val taggedValues = args.map(getMemberValue)
