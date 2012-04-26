@@ -49,7 +49,7 @@ trait HyperlinkTester extends TestProjectSetup {
           val links = maybeLinks.get
           assertEquals("expected %d link, found %d".format(1, links.size), 1, links.size)
           val link = links.head
-          assertEquals("text", oracle.text, link.getHyperlinkText())
+          assertEquals("text", oracle.text, link.getTypeLabel)
           //assertEquals("offset", oracle.region.getOffset(), link.getHyperlinkRegion().getOffset())
           unit.withSourceFile({ (sourceFile, compiler) =>
             val offset = link.getHyperlinkRegion().getOffset()
