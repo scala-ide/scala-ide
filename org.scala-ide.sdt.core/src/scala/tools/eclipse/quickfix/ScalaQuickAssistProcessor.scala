@@ -61,6 +61,7 @@ class ScalaQuickAssistProcessor extends org.eclipse.jdt.ui.text.java.IQuickAssis
     val refactoringSuggestions: Seq[IJavaCompletionProposal] = try {
       List(
         ExtractLocalProposal,
+        ExpandCaseClassBindingProposal,
         InlineLocalProposal,
         RenameProposal,
         ExtractMethodProposal).par.filter(_.isValidProposal).seq
