@@ -68,7 +68,7 @@ class MethodTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  @Ignore
+  @Ignore("The renamed method doesn't have a symbol and the current classification strategy needs the symbol's name.")
   def import_renaming() {
     checkSymbolClassification("""
       import System.{ currentTimeMillis => bobble }
@@ -78,6 +78,24 @@ class MethodTest extends AbstractSymbolClassifierTest {
       import System.{ $     METH      $ => $METH$ }
       class A {
         $METH$
+      }""",
+      Map("METH" -> Method))
+  }
+  
+  @Test
+  def test_synthetic_function_param() {
+    checkSymbolClassification("""
+      object A {
+        {
+          def addOne(x: Int): Int = x + 1
+          List(3) map addOne
+        }
+      }""", """
+      object A {
+        {
+          def addOne(x: Int): Int = x + 1
+          List(3) map $METH$
+        }
       }""",
       Map("METH" -> Method))
   }

@@ -50,8 +50,7 @@ class ClassTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  @Ignore
-  def problem_with_java_import() {
+  def java_import() {
     checkSymbolClassification("""
       import java.util.Properties
      """, """
@@ -73,6 +72,54 @@ class ClassTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
+  def import_a_class() {
+    checkSymbolClassification("""
+      import scala.collection.generic.GenMapFactory
+        """, """
+      import scala.collection.generic.$   CL      $
+        """,
+      Map("CL" -> Class))
+  }
+  
+  @Test
+  @Ignore("Packages' symbol seem to take a TransparentPosition, why?")
+  def import_a_renamed_class() {
+    checkSymbolClassification("""
+      import scala.concurrent.{Lock => LOCK}
+      
+      object Foo {
+        var lock: LOCK = _
+      }  
+        """, """
+      import $PKG$.$   PKG  $.{$CL$ => LOCK}
+        
+      object Foo {
+        var lock: LOCK = _
+      }  
+        """,
+      Map("CL" -> Class, "PKG" -> Package))
+  }
+  
+  @Test
+  @Ignore("The renamed class doesn't have a symbol and the current classification strategy needs the symbol's name.")
+  def import_a_renamed_class_and_color_it() {
+    checkSymbolClassification("""
+      import scala.concurrent.{ Lock => Alock }
+      
+      object Foo {
+        def foo( f: Alock ) {}
+      }  
+        """, """
+      import $PKG$.$   PKG  $.{ $C1$ => $ C2$ }
+      
+      object Foo {
+        def foo( f: $ C2$ ) {}
+      }  
+        """,
+      Map("C1" -> Class, "PKG" -> Package, "C2" -> Class))
+  }
+  
+   @Test
   def import_symbol_which_is_both_a_class_and_an_object() {
     checkSymbolClassification("""
       import scala.collection.immutable.List
@@ -81,5 +128,4 @@ class ClassTest extends AbstractSymbolClassifierTest {
         """,
       Map("CL" -> Class))
   }
-  
 }

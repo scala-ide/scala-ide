@@ -81,13 +81,13 @@ class TemplateValTest extends AbstractSymbolClassifierTest {
   @Test
   def class_params() {
     checkSymbolClassification("""
-      class A(xxxxxx: String)
+      class A(xxxxxxx: String)
       class B(val xxxxxx: String)
       """, """
-      class A($TVAL$: String)
+      class A($PARAM$: String)
       class B(val $TVAL$: String)
       """,
-      Map("TVAL" -> TemplateVal))
+      Map("PARAM" -> Param, "TVAL" -> TemplateVal))
   }
 
   @Test
@@ -95,20 +95,19 @@ class TemplateValTest extends AbstractSymbolClassifierTest {
     checkSymbolClassification("""
       class A(xxxxxx: String) extends RuntimeException(xxxxxx)
       """, """
-      class A($TVAL$: String) extends RuntimeException($TVAL$)
+      class A($PARA$: String) extends RuntimeException($PARA$)
       """,
-      Map("TVAL" -> TemplateVal))
+      Map("PARA" -> Param))
   }
 
   @Test
-  @Ignore
   def val_class_params_passed_into_super_constructor() {
     checkSymbolClassification("""
       class A(val xxxxxx: String) extends RuntimeException(xxxxxx)
       """, """
-      class A(val $TVAL$: String) extends RuntimeException($TVAL$)
+      class A(val $TVAL$: String) extends RuntimeException($PARA$)
       """,
-      Map("TVAL" -> TemplateVal))
+      Map("TVAL" -> TemplateVal, "PARA" -> Param))
   }
   
   @Test
@@ -116,9 +115,9 @@ class TemplateValTest extends AbstractSymbolClassifierTest {
     checkSymbolClassification("""
       class A(xxxxxx: String) extends RuntimeException(xxxxxx + "")
       """, """
-      class A($TVAL$: String) extends RuntimeException($TVAL$ + "")
+      class A($PARA$: String) extends RuntimeException($PARA$ + "")
       """,
-      Map("TVAL" -> TemplateVal))
+      Map("PARA" -> Param))
   }
   
   @Test
@@ -130,7 +129,7 @@ class TemplateValTest extends AbstractSymbolClassifierTest {
       class A { $TV$: AnyRef =>
         $TV$
       }""",
-      Map("TV" -> TemplateVal, "MD" -> Method))
+      Map("TV" -> TemplateVal))
   }
 
   @Test
@@ -172,7 +171,7 @@ class TemplateValTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  @Ignore
+  @Ignore("Package object symbols are special, need to investigate")
   def in_package_object() {
     checkSymbolClassification("""
       package object packageObject {

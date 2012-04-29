@@ -220,16 +220,23 @@
          <groupMarker name="additions"/>
        </menu>
        <action id="org.scala-ide.sdt.ui.runDiag.action"
-         label="Run Setup Diagnostics..."
+         label="Run Setup Diagnostics"
          menubarPath="org_scala-ide_sdt_ui_menu/diagnostics"
          tooltip="Verify that Scala configuration is correct"
          class="scala.tools.eclipse.actions.RunDiagnosticAction"
          enablesFor="*">
        </action>
        <action id="org.scala-ide.sdt.ui.reportBug.action"
-         label="Report a Bug..."
+         label="Report a Bug"
          menubarPath="org_scala-ide_sdt_ui_menu/additions"
          tooltip="Report a bug in the Scala Development Tools"
+         class="scala.tools.eclipse.actions.RunDiagnosticAction"
+         enablesFor="*">
+       </action>
+       <action id="org.scala-ide.sdt.ui.openLogFile.action"
+         label="Open the Log"
+         menubarPath="org_scala-ide_sdt_ui_menu/additions"
+         tooltip="Open the Log file in an editor"
          class="scala.tools.eclipse.actions.RunDiagnosticAction"
          enablesFor="*">
        </action>       
@@ -415,7 +422,7 @@
      <specification
           annotationType="scala.tools.eclipse.semantichighlighting.implicits.implicitConversionsOrArgsAnnotation"
           colorPreferenceKey="scala.tools.eclipse.ui.preferences.implicit.color"
-          colorPreferenceValue="183,239,176"
+          colorPreferenceValue="51,102,0"
           contributesToHeader="false"
           includeOnPreferencePage="true"
           icon="icons/full/elcl16/implicit_co.gif"
@@ -427,7 +434,7 @@
           textPreferenceKey="scala.tools.eclipse.ui.preferences.implicit.text"
           textPreferenceValue="true"
           textStylePreferenceKey="scala.tools.eclipse.ui.preferences.implicit.textStylePreference"
-          textStylePreferenceValue="SQUIGGLES"
+          textStylePreferenceValue="UNDERLINE"
           verticalRulerPreferenceKey="scala.tools.eclipse.ui.preferences.implicit.rulers.vertical"
           verticalRulerPreferenceValue="true">
      </specification>
@@ -953,6 +960,7 @@
                label="Refactor"
                path="edit">
             <separator name="scala.tools.eclipse.refactoring.refactoringGroup"/>
+            <separator name="scala.tools.eclipse.refactoring.quickfixGroup"/>
          </menu>
          <action
                class="scala.tools.eclipse.refactoring.move.MoveClassAction"
@@ -1028,6 +1036,19 @@
             </enablement>
          </action>
          <action
+               class="scala.tools.eclipse.refactoring.ExpandCaseClassBindingAction"
+               definitionId="scala.tools.eclipse.refactoring.command.ExpandCaseClassBinding"
+               id="scala.tools.eclipse.refactoring.expandCaseClassBindingAction"
+               label="Expand Case Class Binding"
+               menubarPath="scala.tools.eclipse.refactoring.refactoringMenu/scala.tools.eclipse.refactoring.quickfixGroup"
+               tooltip="Expand Case Class Binding">
+            <enablement>
+               <objectClass
+                     name="org.eclipse.jface.text.TextSelection">
+               </objectClass>
+            </enablement>
+         </action>
+         <action
                class="scala.tools.eclipse.actions.RunSelectionAction"
                definitionId="scala.tools.eclipse.interpreter.RunSelection"
                disabledIcon="icons/full/dtool16/run_interpreter.gif"
@@ -1076,6 +1097,10 @@
          categoryId="scala.tools.eclipse.refactoring.commands.refactoring"
          id="scala.tools.eclipse.refactoring.command.Rename"
          name="Rename"/>
+      <command
+         categoryId="scala.tools.eclipse.refactoring.commands.refactoring"
+         id="scala.tools.eclipse.refactoring.command.ExpandCaseClassBinding"
+         name="Expand Case Class Binding"/>
       <command
          categoryId="scala.tools.eclipse.category"
          id="org.scala-ide.sdt.core.commands.ToggleImplicitsDisplay"

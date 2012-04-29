@@ -10,12 +10,12 @@
   </parent>
   
   <artifactId>scala-toolchain-for-eclipse</artifactId>
-  <version>2.9.2-SNAPSHOT</version>
+  <version>2.9.3-SNAPSHOT</version>
   <name>The Scala Toolchain for Eclipse</name>
   <packaging>pom</packaging>
 
   <properties>
-    <sbt.version>0.11.2-scalaide-04</sbt.version>
+    <sbt.version>0.11.2-scalaide-05</sbt.version>
     <scala.compiler.groupid>org.scala-lang</scala.compiler.groupid>
     <scala.library.version>${scala.version}</scala.library.version>
     <scala.compiler.version>${scala.version}</scala.compiler.version>

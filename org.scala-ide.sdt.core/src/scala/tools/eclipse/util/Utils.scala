@@ -17,15 +17,26 @@ object Utils extends HasLogger {
     val res = f
     (res, System.currentTimeMillis() - start)
   }
-  
+
+  /** Evaluated `op' and log the time in ms it took to execute it.
+   */
+  def debugTimed[A](name: String)(op: => A): A = {
+    val start = System.currentTimeMillis
+    val res = op
+    val end = System.currentTimeMillis
+
+    logger.debug("%s: \t %,3d ms".format(name, end - start))
+    res
+  }
+
   /** Try executing the passed `action` and log any exception occurring. */
   def tryExecute[T](action: => T, msgIfError: => Option[String] = None): Option[T] = {
     try Some(action)
-    catch { 
-      case t => 
+    catch {
+      case t =>
         msgIfError match {
           case Some(errMsg) => eclipseLog.error(errMsg, t)
-          case None => eclipseLog.error(t)
+          case None         => eclipseLog.error(t)
         }
         None
     }

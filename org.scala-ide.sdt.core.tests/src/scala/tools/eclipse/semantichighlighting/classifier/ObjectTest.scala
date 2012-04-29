@@ -48,4 +48,14 @@ class ObjectTest extends AbstractSymbolClassifierTest {
       Map("OBJ" -> Object))
   }
   
+  @Test
+  @Ignore
+  def import_all_members_of_an_object() {
+    checkSymbolClassification("""
+      import scala.collection.JavaConverters._
+        """, """
+      import $PKG$.$   PKG  $.$    OBJ     $._
+        """,
+      Map("OBJ" -> Object, "PKG" -> Package))
+  }
 }

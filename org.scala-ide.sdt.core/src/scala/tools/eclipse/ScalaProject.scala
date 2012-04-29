@@ -115,9 +115,10 @@ class ScalaProject private (val underlying: IProject) extends HasLogger {
   private var messageShowed = false
 
   private def failedCompilerInitialization(msg: String) {
+    logger.debug("failedCompilerInitialization: " + msg)
     import org.eclipse.jface.dialogs.MessageDialog
     synchronized {
-      if (!messageShowed) {
+      if (!ScalaPlugin.plugin.headlessMode && !messageShowed) {
         messageShowed = true
         asyncExec {
           val doAdd = MessageDialog.openQuestion(ScalaPlugin.getShell, "Add Scala library to project classpath?", 

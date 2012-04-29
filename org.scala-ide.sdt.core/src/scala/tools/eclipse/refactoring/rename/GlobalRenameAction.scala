@@ -65,8 +65,8 @@ class GlobalRenameAction extends RefactoringAction {
       val status = super.checkInitialConditions(pm)
 
       if(!status.hasError) {
-        val selectedName = preparationResult.right.get.selectedTree.symbol.nameString
-        val (index, cleanupHandler) = buildFullProjectIndex(pm, selectedName :: Nil)
+        name = preparationResult.right.get.selectedTree.symbol.nameString
+        val (index, cleanupHandler) = buildFullProjectIndex(pm, name :: Nil)
         
         refactoring.index = index
         
