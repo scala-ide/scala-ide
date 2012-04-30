@@ -9,7 +9,7 @@ import scala.tools.eclipse.{ScalaPresentationCompiler => compiler}
 import org.eclipse.jface.text.hyperlink.IHyperlink
 import org.eclipse.jface.text.IRegion
 
-class HyperlinksResolver extends HasLogger {
+private[hyperlink] class HyperlinksResolver extends HasLogger {
   def findHyperlinks(scu: ScalaCompilationUnit, wordRegion: IRegion): Option[List[IHyperlink]] = {
     scu.withSourceFile({ (sourceFile, compiler) =>
       if (wordRegion == null || wordRegion.getLength == 0)
