@@ -1,4 +1,4 @@
-package scala.tools.eclipse.ui
+package scala.tools.eclipse.scalatest.ui
 
 import org.eclipse.swt.widgets.Table
 import org.eclipse.swt.widgets.Composite
@@ -15,7 +15,7 @@ import org.eclipse.jface.dialogs.MessageDialog
 import scala.tools.eclipse.ScalaProject
 import org.eclipse.jface.action.ToolBarManager
 import org.eclipse.jface.action.Action
-import scala.tools.eclipse.ScalaImages
+import scala.tools.eclipse.scalatest.ScalaTestImages
 
 class ScalaTestStackTrace(parent: Composite, fTestRunner: ScalaTestRunnerViewPart, toolBar: ToolBar) {
   
@@ -128,9 +128,9 @@ class ScalaTestStackTrace(parent: Composite, fTestRunner: ScalaTestRunnerViewPar
   private class EnableStackFoldingAction(fView: ScalaTestStackTrace) extends Action("Stack Folding") {
     setDescription("Fold the Stack Trace")
     setToolTipText("Fold Stack Trace")
-    setDisabledImageDescriptor(ScalaImages.SCALATEST_STACK_FOLD_DISABLED)
-    setHoverImageDescriptor(ScalaImages.SCALATEST_STACK_FOLD_ENABLED)
-    setImageDescriptor(ScalaImages.SCALATEST_STACK_FOLD_ENABLED)
+    setDisabledImageDescriptor(ScalaTestImages.SCALATEST_STACK_FOLD_DISABLED)
+    setHoverImageDescriptor(ScalaTestImages.SCALATEST_STACK_FOLD_ENABLED)
+    setImageDescriptor(ScalaTestImages.SCALATEST_STACK_FOLD_ENABLED)
     setChecked(true)
     
     override def run() {

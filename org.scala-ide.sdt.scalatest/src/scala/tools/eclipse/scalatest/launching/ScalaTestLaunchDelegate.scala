@@ -1,4 +1,4 @@
-package scala.tools.eclipse.launching
+package scala.tools.eclipse.scalatest.launching
 
 import org.eclipse.jdt.launching.{AbstractJavaLaunchConfigurationDelegate, JavaRuntime,
 	                                IRuntimeClasspathEntry, VMRunnerConfiguration, ExecutionArguments}
@@ -17,10 +17,10 @@ import org.eclipse.jface.dialogs.MessageDialog
 import org.eclipse.core.resources.ResourcesPlugin
 import java.net.URL
 import java.net.URLClassLoader
-import scala.tools.eclipse.ui.ScalaTestPlugin
-import scala.tools.eclipse.ui.Node
-import scala.tools.eclipse.ui.TestModel
-import scala.tools.eclipse.ui.TestStatus
+import scala.tools.eclipse.scalatest.ui.ScalaTestPlugin
+import scala.tools.eclipse.scalatest.ui.Node
+import scala.tools.eclipse.scalatest.ui.TestModel
+import scala.tools.eclipse.scalatest.ui.TestStatus
 import scala.annotation.tailrec
 
 class ScalaTestLaunchDelegate extends AbstractJavaLaunchConfigurationDelegate {

@@ -1,9 +1,9 @@
-package scala.tools.eclipse.ui
+package scala.tools.eclipse.scalatest.ui
 
 import org.eclipse.swt.widgets.Composite
 import org.eclipse.swt.SWT
 import org.eclipse.swt.widgets.Text
-import scala.tools.eclipse.ScalaImages
+import scala.tools.eclipse.scalatest.ScalaTestImages
 import org.eclipse.swt.layout.GridLayout
 import org.eclipse.swt.widgets.Label
 import org.eclipse.swt.graphics.Image
@@ -24,12 +24,12 @@ class ScalaTestCounterPanel(parent: Composite) extends Composite(parent, SWT.WRA
   
   protected var fTotal: Int = 0
   
-  private val fSucceedIcon = ScalaImages.SCALATEST_SUCCEED.createImage
-  private val fFailureIcon = ScalaImages.SCALATEST_FAILED.createImage
-  private val fIgnoredIcon = ScalaImages.SCALATEST_IGNORED.createImage
-  private val fSuiteRunIcon = ScalaImages.SCALATEST_SUITE_RUN.createImage
-  private val fSuiteIcon = ScalaImages.SCALATEST_SUITE.createImage
-  private val fSuiteAbortedIcon = ScalaImages.SCALATEST_SUITE_ABORTED.createImage
+  private val fSucceedIcon = ScalaTestImages.SCALATEST_SUCCEED.createImage
+  private val fFailureIcon = ScalaTestImages.SCALATEST_FAILED.createImage
+  private val fIgnoredIcon = ScalaTestImages.SCALATEST_IGNORED.createImage
+  private val fSuiteRunIcon = ScalaTestImages.SCALATEST_SUITE_RUN.createImage
+  private val fSuiteIcon = ScalaTestImages.SCALATEST_SUITE.createImage
+  private val fSuiteAbortedIcon = ScalaTestImages.SCALATEST_SUITE_ABORTED.createImage
   
   createComponents()
   

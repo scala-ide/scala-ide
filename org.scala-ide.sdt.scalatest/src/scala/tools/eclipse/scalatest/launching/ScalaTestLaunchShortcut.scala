@@ -1,4 +1,4 @@
-package scala.tools.eclipse.launching
+package scala.tools.eclipse.scalatest.launching
 
 import org.eclipse.debug.ui.ILaunchShortcut
 import org.eclipse.jface.viewers.ISelection

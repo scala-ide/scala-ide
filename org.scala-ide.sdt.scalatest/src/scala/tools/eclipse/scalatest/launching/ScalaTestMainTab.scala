@@ -1,4 +1,4 @@
-package scala.tools.eclipse.launching
+package scala.tools.eclipse.scalatest.launching
 
 import org.eclipse.jdt.debug.ui.launchConfigurations.JavaMainTab
 import org.eclipse.swt.widgets.Composite

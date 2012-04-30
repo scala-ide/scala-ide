@@ -1,4 +1,4 @@
-package scala.tools.eclipse.ui
+package scala.tools.eclipse.scalatest.ui
 
 import org.eclipse.swt.widgets.Display
 import org.eclipse.ui.plugin.AbstractUIPlugin
@@ -19,8 +19,8 @@ import org.eclipse.debug.internal.ui.DebugUIPlugin
 
 object ScalaTestPlugin extends AbstractUIPlugin {
   
-  private val PLUGIN_ID = "scala.tools.eclipse.scalatest"
-  private val VIEW_PART_NAME = "scala.tools.eclipse.ui.ScalaTestResultView"
+  private val PLUGIN_ID = "org.scala-ide.sdt.scalatest"
+  private val VIEW_PART_NAME = "scala.tools.eclipse.scalatest.ui.ScalaTestResultView"
     
   var listener: ScalaTestListener = null
 

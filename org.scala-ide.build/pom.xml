@@ -34,6 +34,7 @@
     <module>../org.scala-ide.sdt.feature</module>
     <module>../org.scala-ide.sdt.source.feature</module>
     <module>../org.scala-ide.sdt.update-site</module>
+    <module>../org.scala-ide.sdt.scalatest</module>
   </modules>
 
   <build>

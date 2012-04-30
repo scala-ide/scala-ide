@@ -1,4 +1,4 @@
-package scala.tools.eclipse.launching
+package scala.tools.eclipse.scalatest.launching
 
 import scala.tools.eclipse.ScalaPresentationCompiler
 import org.scalatest.finders.AstNode

@@ -1,4 +1,4 @@
-package scala.tools.eclipse.ui
+package scala.tools.eclipse.scalatest.ui
 
 import org.eclipse.ui.part.ViewPart
 import org.eclipse.jdt.internal.junit.ui.JUnitProgressBar
@@ -16,7 +16,7 @@ import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.core.runtime.IStatus
 import org.eclipse.core.runtime.Status
 import ScalaTestRunnerViewPart._
-import scala.tools.eclipse.ScalaImages
+import scala.tools.eclipse.scalatest.ScalaTestImages
 import org.eclipse.swt.custom.ViewForm
 import org.eclipse.swt.widgets.Layout
 import org.eclipse.swt.graphics.Point
@@ -29,7 +29,7 @@ import org.eclipse.core.commands.AbstractHandler
 import org.eclipse.core.commands.ExecutionEvent
 import org.eclipse.debug.ui.DebugUITools
 import org.eclipse.debug.core.ILaunch
-import scala.tools.eclipse.launching.ScalaTestLaunchDelegate
+import scala.tools.eclipse.scalatest.launching.ScalaTestLaunchDelegate
 import org.eclipse.debug.internal.ui.DebugUIPlugin
 import org.eclipse.debug.ui.IDebugUIConstants
 import org.eclipse.ui.actions.ActionFactory
@@ -87,18 +87,18 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
   private var nodeList: List[Node] = Nil
   private var suiteMap: Map[String, SuiteModel] = null
   
-  val suiteIcon = ScalaImages.SCALATEST_SUITE.createImage
-  val suiteSucceedIcon = ScalaImages.SCALATEST_SUITE_OK.createImage
-  val suiteFailIcon = ScalaImages.SCALATEST_SUITE_FAIL.createImage
-  val suiteAbortedIcon = ScalaImages.SCALATEST_SUITE_ABORTED.createImage
-  val suiteRunIcon = ScalaImages.SCALATEST_SUITE_RUN.createImage
-  val scopeIcon = ScalaImages.SCALATEST_SCOPE.createImage
-  val testRunIcon = ScalaImages.SCALATEST_RUN.createImage
-  val testSucceedIcon = ScalaImages.SCALATEST_SUCCEED.createImage
-  val testFailedIcon = ScalaImages.SCALATEST_FAILED.createImage
-  val testIgnoredIcon = ScalaImages.SCALATEST_IGNORED.createImage
-  val infoIcon = ScalaImages.SCALATEST_INFO.createImage
-  val stackTraceIcon = ScalaImages.SCALATEST_STACKTRACE.createImage
+  val suiteIcon = ScalaTestImages.SCALATEST_SUITE.createImage
+  val suiteSucceedIcon = ScalaTestImages.SCALATEST_SUITE_OK.createImage
+  val suiteFailIcon = ScalaTestImages.SCALATEST_SUITE_FAIL.createImage
+  val suiteAbortedIcon = ScalaTestImages.SCALATEST_SUITE_ABORTED.createImage
+  val suiteRunIcon = ScalaTestImages.SCALATEST_SUITE_RUN.createImage
+  val scopeIcon = ScalaTestImages.SCALATEST_SCOPE.createImage
+  val testRunIcon = ScalaTestImages.SCALATEST_RUN.createImage
+  val testSucceedIcon = ScalaTestImages.SCALATEST_SUCCEED.createImage
+  val testFailedIcon = ScalaTestImages.SCALATEST_FAILED.createImage
+  val testIgnoredIcon = ScalaTestImages.SCALATEST_IGNORED.createImage
+  val infoIcon = ScalaTestImages.SCALATEST_INFO.createImage
+  val stackTraceIcon = ScalaTestImages.SCALATEST_STACKTRACE.createImage
   
   def getSession = fTestRunSession
   
@@ -818,8 +818,8 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
   private class RerunAllTestsAction extends Action {
     setText("Rerun All Tests")
     setToolTipText("Rerun All Tests")
-    setImageDescriptor(ScalaImages.SCALATEST_RERUN_ALL_TESTS_ENABLED)
-    setDisabledImageDescriptor(ScalaImages.SCALATEST_RERUN_ALL_TESTS_DISABLED)
+    setImageDescriptor(ScalaTestImages.SCALATEST_RERUN_ALL_TESTS_ENABLED)
+    setDisabledImageDescriptor(ScalaTestImages.SCALATEST_RERUN_ALL_TESTS_DISABLED)
     setEnabled(false)
     
     var session: ScalaTestRunSession = null
@@ -833,8 +833,8 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
   private class RerunFailedTestsAction extends Action {
     setText("Rerun Failed Tests")
     setToolTipText("Rerun Failed Tests")
-    setImageDescriptor(ScalaImages.SCALATEST_RERUN_FAILED_TESTS_ENABLED)
-    setDisabledImageDescriptor(ScalaImages.SCALATEST_RERUN_FAILED_TESTS_DISABLED)
+    setImageDescriptor(ScalaTestImages.SCALATEST_RERUN_FAILED_TESTS_ENABLED)
+    setDisabledImageDescriptor(ScalaTestImages.SCALATEST_RERUN_FAILED_TESTS_DISABLED)
     setEnabled(false)
     
     var session: ScalaTestRunSession = null
@@ -851,9 +851,9 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
   }
   
   private class ShowNextFailureAction extends Action("Next Failure") {
-    setDisabledImageDescriptor(ScalaImages.SCALATEST_NEXT_FAILED_DISABLED)
-    setHoverImageDescriptor(ScalaImages.SCALATEST_NEXT_FAILED_ENABLED)
-    setImageDescriptor(ScalaImages.SCALATEST_NEXT_FAILED_ENABLED)
+    setDisabledImageDescriptor(ScalaTestImages.SCALATEST_NEXT_FAILED_DISABLED)
+    setHoverImageDescriptor(ScalaTestImages.SCALATEST_NEXT_FAILED_ENABLED)
+    setImageDescriptor(ScalaTestImages.SCALATEST_NEXT_FAILED_ENABLED)
     setToolTipText("Next Failed Test")
     
     override def run() {
@@ -863,9 +863,9 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
   }
   
   private class ShowPreviousFailureAction extends Action("Previous Failure") {
-    setDisabledImageDescriptor(ScalaImages.SCALATEST_PREV_FAILED_DISABLED)
-    setHoverImageDescriptor(ScalaImages.SCALATEST_PREV_FAILED_ENABLED)
-    setImageDescriptor(ScalaImages.SCALATEST_PREV_FAILED_ENABLED)
+    setDisabledImageDescriptor(ScalaTestImages.SCALATEST_PREV_FAILED_DISABLED)
+    setHoverImageDescriptor(ScalaTestImages.SCALATEST_PREV_FAILED_ENABLED)
+    setImageDescriptor(ScalaTestImages.SCALATEST_PREV_FAILED_ENABLED)
     setToolTipText("Previous Failed Test")
     
     override def run() {
@@ -877,8 +877,8 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
   private class StopAction extends Action {
     setText("Stop Running ScalaTest")
     setToolTipText("Stop ScalaTest Run")
-    setImageDescriptor(ScalaImages.SCALATEST_STOP_ENABLED)
-    setDisabledImageDescriptor(ScalaImages.SCALATEST_STOP_DISABLED)
+    setImageDescriptor(ScalaTestImages.SCALATEST_STOP_ENABLED)
+    setDisabledImageDescriptor(ScalaTestImages.SCALATEST_STOP_DISABLED)
     
     override def run() {
       terminateRun()
@@ -887,7 +887,7 @@ class ScalaTestRunnerViewPart extends ViewPart with Observer {
   
   private class FailedTestsOnlyFilterAction extends Action("Show Failed Tests Only", IAction.AS_CHECK_BOX) {
     setToolTipText("Show Failed Tests Only")
-    setImageDescriptor(ScalaImages.SCALATEST_SHOW_FAILED_TESTS_ONLY)
+    setImageDescriptor(ScalaTestImages.SCALATEST_SHOW_FAILED_TESTS_ONLY)
     
     override def run() {
       setShowFailedTestsOnly(isChecked)

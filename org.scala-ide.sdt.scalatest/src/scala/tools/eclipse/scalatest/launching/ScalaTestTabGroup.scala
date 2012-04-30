@@ -1,4 +1,4 @@
-package scala.tools.eclipse.launching
+package scala.tools.eclipse.scalatest.launching
 import org.eclipse.debug.ui._
 import org.eclipse.debug.ui.sourcelookup._
 import org.eclipse.jdt.debug.ui.launchConfigurations._

@@ -1,4 +1,4 @@
-package scala.tools.eclipse.ui
+package scala.tools.eclipse.scalatest.ui
 
 /**
  * Location in source code about which an event concerns.

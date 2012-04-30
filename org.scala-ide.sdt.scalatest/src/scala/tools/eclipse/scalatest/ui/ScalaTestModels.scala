@@ -1,4 +1,4 @@
-package scala.tools.eclipse.ui
+package scala.tools.eclipse.scalatest.ui
 
 import scala.collection.mutable.ListBuffer
 import scala.collection.mutable.Stack

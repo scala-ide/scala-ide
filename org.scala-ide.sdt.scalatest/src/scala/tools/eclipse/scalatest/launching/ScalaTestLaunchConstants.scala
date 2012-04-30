@@ -1,4 +1,4 @@
-package scala.tools.eclipse.launching
+package scala.tools.eclipse.scalatest.launching
 
 object ScalaTestLaunchConstants {
   val SCALATEST_LAUNCH_TYPE_NAME = "SCALATEST_LAUNCH_TYPE"

@@ -1,4 +1,4 @@
-package scala.tools.eclipse.ui
+package scala.tools.eclipse.scalatest.ui
 
 import org.eclipse.ui.part.PageBook
 import org.eclipse.swt.widgets.Composite
@@ -36,7 +36,7 @@ import org.eclipse.jface.action.IMenuManager
 import org.eclipse.jface.action.MenuManager
 import org.eclipse.jface.action.IMenuListener
 import org.eclipse.debug.ui.DebugUITools
-import scala.tools.eclipse.launching.ScalaTestLaunchDelegate
+import scala.tools.eclipse.scalatest.launching.ScalaTestLaunchDelegate
 import RerunHelper._
 import org.eclipse.debug.internal.ui.DebugUIPlugin
 import org.eclipse.debug.ui.IDebugUIConstants

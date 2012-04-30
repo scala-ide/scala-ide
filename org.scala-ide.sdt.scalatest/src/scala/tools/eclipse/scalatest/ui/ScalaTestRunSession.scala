@@ -1,4 +1,4 @@
-package scala.tools.eclipse.ui
+package scala.tools.eclipse.scalatest.ui
 
 import org.eclipse.debug.core.ILaunch
 import scala.tools.eclipse.ScalaProject
