@@ -854,13 +854,11 @@
       description="Debug Scala Application"
       id="org.eclipse.shortcut.scala.debug"
       name="Debug Scala Application" />
-     <command
-	  name="Show inferred semicolons"
-	  description="Shows inferred semicolons in the current editor"
-	  categoryId="org.eclipse.ui.category.textEditor"
-	  id="scala.tools.eclipse.toggleShowInferredSemicolonsAction"/>
-	  
-      
+    <command
+      name="Show inferred semicolons"
+      description="Shows inferred semicolons in the current editor"
+      categoryId="org.eclipse.ui.category.textEditor"
+      id="scala.tools.eclipse.toggleShowInferredSemicolonsAction"/>
   </extension>
 
   <extension point="org.eclipse.ui.bindings">
@@ -1109,6 +1107,12 @@
          categoryId="org.eclipse.debug.ui.category.run"
          id="scala.tools.eclipse.interpreter.RunSelection"
          name="Send Selection to Scala Interpreter"/>
+      <command
+            categoryId="scala.tools.eclipse.category"
+            description="Shows the type of the current selection"
+            id="scala.tools.eclipse.editor.ShowTypeOfSelection"
+            name="Show Type">
+      </command>
 </extension>
 
    <extension point="org.eclipse.ui.contexts">
@@ -1147,6 +1151,12 @@
    		 schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
    		 contextId="scala.tools.eclipse.scalaEditorScope"
    		 sequence="M2+M3+R"/>
+   <key
+         commandId="scala.tools.eclipse.editor.ShowTypeOfSelection"
+         contextId="scala.tools.eclipse.scalaEditorScope"
+         schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+         sequence="M2+M1+S T">
+   </key>
    </extension>
    <extension point="org.eclipse.ui.bindings"> <!-- Cross-platform bindings -->
    <key
@@ -1195,6 +1205,10 @@
           class="scala.tools.eclipse.semantichighlighting.implicits.ToggleImplicitsDisplayHandler"
           commandId="org.scala-ide.sdt.core.commands.ToggleImplicitsDisplay">
     </handler>
+    <handler
+          class="scala.tools.eclipse.actions.ShowTypeOfSelectionCommand"
+          commandId="scala.tools.eclipse.editor.ShowTypeOfSelection">
+    </handler>
  </extension>
  <extension
        point="org.eclipse.ui.menus">
@@ -1209,6 +1223,26 @@
                 style="toggle">
           </command>
        </toolbar>
+    </menuContribution>
+    <menuContribution
+          locationURI="popup:#CompilationUnitEditorContext?before=additions">
+       <command
+             commandId="scala.tools.eclipse.editor.ShowTypeOfSelection"
+             id="one"
+             label="Show Type"
+             mnemonic="S"
+             style="push"
+             tooltip="Shows the type of the current selection">
+          <visibleWhen
+                checkEnabled="false">
+             <with
+                   variable="activeEditorId">
+                <equals
+                      value="scala.tools.eclipse.ScalaSourceFileEditor">
+                </equals>
+             </with>
+          </visibleWhen>
+       </command>
     </menuContribution>
  </extension>  
   

@@ -6,49 +6,68 @@
 
 package scala.tools.eclipse
 
-import org.eclipse.jdt.internal.ui.javaeditor.JavaSourceViewer
-import org.eclipse.jface.util.PropertyChangeEvent
-import org.eclipse.jface.util.IPropertyChangeListener
 import java.util.ResourceBundle
-import org.eclipse.core.runtime.{ IAdaptable, IProgressMonitor }
-import org.eclipse.jdt.core.IJavaElement
+
+import scala.Option.option2Iterable
+import scala.tools.eclipse.javaelements.ScalaCompilationUnit
+import scala.tools.eclipse.javaelements.ScalaSourceFile
+import scala.tools.eclipse.markoccurrences.Occurrences
+import scala.tools.eclipse.markoccurrences.ScalaOccurrencesFinder
+import scala.tools.eclipse.semantichighlighting.SemanticHighlightingAnnotations
+import scala.tools.eclipse.semicolon.ShowInferredSemicolonsAction
+import scala.tools.eclipse.semicolon.ShowInferredSemicolonsBundle
+import scala.tools.eclipse.util.RichAnnotationModel.annotationModel2RichAnnotationModel
+import scala.tools.eclipse.util.SWTUtils.fnToPropertyChangeListener
+import scala.tools.eclipse.util.SWTUtils
+import scala.tools.eclipse.util.Utils
+
+import org.eclipse.core.runtime.jobs.Job
+import org.eclipse.core.runtime.IAdaptable
+import org.eclipse.core.runtime.IProgressMonitor
+import org.eclipse.core.runtime.IStatus
+import org.eclipse.core.runtime.Status
 import org.eclipse.jdt.core.dom.CompilationUnit
+import org.eclipse.jdt.core.IJavaElement
+import org.eclipse.jdt.internal.ui.javaeditor.selectionactions.SelectionHistory
+import org.eclipse.jdt.internal.ui.javaeditor.selectionactions.StructureSelectHistoryAction
+import org.eclipse.jdt.internal.ui.javaeditor.selectionactions.StructureSelectionAction
 import org.eclipse.jdt.internal.ui.javaeditor.CompilationUnitEditor
-import org.eclipse.jdt.internal.ui.javaeditor.selectionactions._
-import org.eclipse.jdt.internal.ui.search.IOccurrencesFinder._
+import org.eclipse.jdt.internal.ui.javaeditor.JavaSourceViewer
 import org.eclipse.jdt.ui.actions.IJavaEditorActionDefinitionIds
 import org.eclipse.jdt.ui.text.JavaSourceViewerConfiguration
-import org.eclipse.jface.action._
-import org.eclipse.jface.preference.IPreferenceStore
-import org.eclipse.jface.text._
-import org.eclipse.jface.text.source._
-import org.eclipse.jface.viewers.ISelection
-import org.eclipse.swt.graphics.Color
-import org.eclipse.swt.custom.StyleRange
-import org.eclipse.ui.{ IWorkbenchPart, ISelectionListener, IFileEditorInput }
-import org.eclipse.ui.editors.text.{ ForwardingDocumentProvider, TextFileDocumentProvider }
-import org.eclipse.ui.texteditor.{ IAbstractTextEditorHelpContextIds, ITextEditorActionConstants, IUpdate, IWorkbenchActionDefinitionIds, TextOperationAction }
-import scala.collection.JavaConversions._
-import scala.collection.mutable
-import scala.tools.eclipse.javaelements.{ ScalaSourceFile, ScalaCompilationUnit }
-import scala.tools.eclipse.markoccurrences.{ ScalaOccurrencesFinder, Occurrences }
-import scala.tools.eclipse.semicolon._
-import scala.tools.eclipse.util.Utils
-import scala.tools.eclipse.util.EclipseUtils._
-import scala.tools.eclipse.util.RichAnnotationModel._
-import scala.tools.eclipse.semantichighlighting._
-import scala.tools.eclipse.util.SWTUtils._
 import org.eclipse.jface.action.Action
-import org.eclipse.jface.action.MenuManager
 import org.eclipse.jface.action.IContributionItem
+import org.eclipse.jface.action.MenuManager
 import org.eclipse.jface.action.Separator
+import org.eclipse.jface.text.information.InformationPresenter
+import org.eclipse.jface.text.source.Annotation
+import org.eclipse.jface.text.source.AnnotationPainter
+import org.eclipse.jface.text.source.IAnnotationModel
+import org.eclipse.jface.text.source.ISourceViewer
+import org.eclipse.jface.text.source.SourceViewerConfiguration
+import org.eclipse.jface.text.AbstractReusableInformationControlCreator
+import org.eclipse.jface.text.DefaultInformationControl
+import org.eclipse.jface.text.IDocument
+import org.eclipse.jface.text.ITextOperationTarget
+import org.eclipse.jface.text.ITextSelection
+import org.eclipse.jface.text.Position
+import org.eclipse.jface.util.IPropertyChangeListener
+import org.eclipse.jface.util.PropertyChangeEvent
+import org.eclipse.jface.viewers.ISelection
+import org.eclipse.swt.widgets.Shell
+import org.eclipse.ui.texteditor.IAbstractTextEditorHelpContextIds
+import org.eclipse.ui.texteditor.ITextEditorActionConstants
+import org.eclipse.ui.texteditor.IUpdate
+import org.eclipse.ui.texteditor.IWorkbenchActionDefinitionIds
 import org.eclipse.ui.texteditor.SourceViewerDecorationSupport
-import org.eclipse.jdt.internal.ui.JavaPlugin
-import org.eclipse.swt.SWT
-import scala.tools.eclipse.util.Colors
-import scala.PartialFunction.condOpt
-import scala.tools.eclipse.util.SWTUtils
-import scala.tools.eclipse.reconciliation.ReconciliationParticipantsExtensionPoint
+import org.eclipse.ui.texteditor.TextOperationAction
+import org.eclipse.ui.ISelectionListener
+import org.eclipse.ui.IWorkbenchPart
+
+import ScalaSourceFileEditor.OCCURRENCE_ANNOTATION
+import ScalaSourceFileEditor.SCALA_EDITOR_SCOPE
+import ScalaSourceFileEditor.bundleForConstructedKeys
+
 
 class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
 
@@ -226,6 +245,24 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
     super.dispose()
     scalaPrefStore.removePropertyChangeListener(preferenceListener)
   }
+  
+  private object controlCreator extends AbstractReusableInformationControlCreator {
+    override def doCreateInformationControl(shell: Shell) = 
+      new DefaultInformationControl(shell, true)
+  }
+  
+  private lazy val tpePresenter = {
+    val infoPresenter = new InformationPresenter(controlCreator) 
+    infoPresenter.install(getSourceViewer)
+    infoPresenter.setInformationProvider(actions.TypeOfExpressionProvider, IDocument.DEFAULT_CONTENT_TYPE)
+    infoPresenter
+  }
+  
+  /** Return the `InformationPresenter` used to display the type of
+   *  the selected expression.
+   */
+  def typeOfExpressionPresenter: InformationPresenter = 
+    tpePresenter
 
   override def editorContextMenuAboutToShow(menu: org.eclipse.jface.action.IMenuManager): Unit = {
     super.editorContextMenuAboutToShow(menu)

@@ -10,6 +10,7 @@ import org.eclipse.jface.text.{ ITextViewer, IRegion, ITextHover }
 
 import scala.tools.eclipse.javaelements.ScalaCompilationUnit
 import scala.tools.nsc.symtab.Flags
+import scala.tools.eclipse.util.EclipseUtils._
 
 class ScalaHover(codeAssist : () => Option[ICodeAssist]) extends ITextHover {
   
@@ -39,8 +40,7 @@ class ScalaHover(codeAssist : () => Option[ICodeAssist]) extends ITextHover {
 
           
           val resp = new Response[Tree]
-          val range = compiler.rangePos(src, start, start, end)
-          askTypeAt(range, resp)
+          askTypeAt(region.toRangePos(src), resp)
           (for (t <- resp.get.left.toOption;
               hover <- hoverInfo(t)) yield hover) getOrElse NoHoverInfo
         }) (NoHoverInfo)
