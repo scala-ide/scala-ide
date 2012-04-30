@@ -39,13 +39,15 @@ class HyperlinksDetector extends AbstractHyperlinkDetector {
         case scu: ScalaCompilationUnit =>
           val wordRegion = ScalaWordFinder.findWord(scu.getContents, currentSelection.getOffset)
 
-          resolver.findHyperlinks(scu, wordRegion) match {
-            case None             => null // do not try to use codeSelect.
-            case Some(hyperlinks) =>
-              val implicitHyperlinks = findHyperlinkToImplicit(scu, currentSelection.getOffset)
-              if (hyperlinks.isEmpty) codeSelect(textEditor, wordRegion, scu) ++: implicitHyperlinks.toArray
-              else (hyperlinks ::: implicitHyperlinks).toArray
+          val declarationHyperlinks = resolver.findHyperlinks(scu, wordRegion) match {
+            case None => List()
+            case Some(List()) => codeSelect(textEditor, wordRegion, scu)
+            case Some(hyperlinks) => hyperlinks
           }
+
+          val implicitHyperlinks = findHyperlinkToImplicit(scu, currentSelection.getOffset)
+
+          (declarationHyperlinks ::: implicitHyperlinks).toArray
 
         case _ => null
       }
@@ -78,24 +80,20 @@ class HyperlinksDetector extends AbstractHyperlinkDetector {
   }
 
   //Default path used for selecting.
-  private def codeSelect(textEditor: ITextEditor, wordRegion: IRegion, scu: ScalaCompilationUnit): Array[IHyperlink] = {
+  private def codeSelect(textEditor: ITextEditor, wordRegion: IRegion, scu: ScalaCompilationUnit): List[IHyperlink] = {
     try {
       val environment = scu.newSearchableEnvironment()
       val requestor = new ScalaSelectionRequestor(environment.nameLookup, scu)
       val engine = new ScalaSelectionEngine(environment, requestor, scu.getJavaProject.getOptions(true))
       val offset = wordRegion.getOffset
       engine.select(scu, offset, offset + wordRegion.getLength - 1)
-      val elements = requestor.getElements
+      val elements = requestor.getElements.toList
 
-      if (elements.length == 0)
-        null
-      else {
-        val qualify = elements.length > 1
-        val openAction = new OpenAction(textEditor.asInstanceOf[JavaEditor])
-        elements.map(new JavaElementHyperlink(wordRegion, openAction, _, qualify))
-      }
+      lazy val qualify = elements.length > 1
+      lazy val openAction = new OpenAction(textEditor.asInstanceOf[JavaEditor])
+      elements.map(new JavaElementHyperlink(wordRegion, openAction, _, qualify))
     } catch {
-      case _ => null
+      case _ => List[IHyperlink]()
     }
   }
 }
