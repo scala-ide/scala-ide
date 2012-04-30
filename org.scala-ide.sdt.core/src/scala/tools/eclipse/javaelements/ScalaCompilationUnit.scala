@@ -32,6 +32,7 @@ import org.eclipse.jdt.internal.core.JavaElement
 import org.eclipse.jdt.internal.core.SourceRefElement
 import scala.tools.eclipse.logging.HasLogger
 import scala.tools.nsc.interactive.Response
+import scala.tools.eclipse.hyperlink.text.HyperlinksDetector
 
 trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with ScalaElement with IScalaCompilationUnit with IBufferChangedListener with HasLogger {
   val project = ScalaPlugin.plugin.getScalaProject(getJavaProject.getProject)
@@ -261,7 +262,8 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
       def getOffset = selection.getOffset
       def getLength = selection.getLength
     }
-    new ScalaHyperlinkDetector().detectHyperlinks(editor, region, false) match {
+
+    new HyperlinksDetector().detectHyperlinks(editor, region, canShowMultipleHyperlinks = false) match {
       case Array(hyp) => hyp.open
       case _ =>  
     }

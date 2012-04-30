@@ -1,7 +1,7 @@
 package scala.tools.eclipse.hyperlinks
 
 import scala.tools.eclipse.testsetup.TestProjectSetup
-import scala.tools.eclipse.ScalaHyperlinkDetector
+import scala.tools.eclipse.hyperlink.HyperlinksResolver
 import scala.tools.eclipse.ScalaWordFinder
 
 import org.junit.Assert.assertEquals
@@ -41,8 +41,8 @@ trait HyperlinkTester extends TestProjectSetup {
           println("hyperlinking at position %d (%s)".format(pos, word))
 
           // Execute SUT
-          val detector = new ScalaHyperlinkDetector
-          val maybeLinks = detector.scalaHyperlinks(unit, wordRegion)
+          val resolver = new HyperlinksResolver
+          val maybeLinks = resolver.findHyperlinks(unit, wordRegion)
 
           // Verify Expectations
           assertTrue("no links found for `%s`".format(word), maybeLinks.isDefined)
