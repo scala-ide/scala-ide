@@ -18,7 +18,8 @@ import scala.tools.nsc.util.{ BatchSourceFile, Position, SourceFile }
 import scala.tools.eclipse.javaelements.{
   ScalaCompilationUnit, ScalaIndexBuilder, ScalaJavaMapper, ScalaMatchLocator, ScalaStructureBuilder,
   ScalaOverrideIndicatorBuilder }
-import scala.tools.eclipse.util.{ Cached, EclipseFile, EclipseResource, HasLogger }
+import scala.tools.eclipse.util.{ Cached, EclipseFile, EclipseResource }
+import scala.tools.eclipse.logging.HasLogger
 import scala.tools.nsc.util.FailedInterrupt
 import scala.tools.nsc.symtab.Flags
 import scala.tools.eclipse.completion.CompletionProposal
@@ -97,6 +98,15 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
     }
   }
   
+  def loadedType(sourceFile: SourceFile) = {
+    val response = new Response[Tree]
+    askLoadedTyped(sourceFile, response)
+    response.get match {
+      case Left(tree) => tree
+      case Right(exc) => throw exc
+    }
+  }
+  
   def withParseTree[T](sourceFile : SourceFile)(op : Tree => T) : T = {
     op(parseTree(sourceFile))
   }
@@ -137,11 +147,11 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
             None
             
           case e =>
-            logger.error("Error during askOption", e)
+            eclipseLog.error("Error during askOption", e)
             None
         }
       case e =>
-        logger.error("Error during askOption", e)
+        eclipseLog.error("Error during askOption", e)
         None
     }
   
@@ -167,7 +177,10 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
       case Some(f) =>
         val newF = new BatchSourceFile(f.file, content)
         synchronized { sourceFiles(scu) = newF }
-        askReload(List(newF), res)
+        
+        // avoid race condition by looking up the source file, as someone else 
+        // might have swapped it in the meantime
+        askReload(List(sourceFiles(scu)), res)
       case None =>
         res.set(()) // make sure nobody blocks waiting indefinitely
     }
@@ -197,7 +210,7 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
  }
 
   override def logError(msg : String, t : Throwable) =
-    logger.error(msg, t)
+    eclipseLog.error(msg, t)
     
   def destroy() {
     logger.info("shutting down presentation compiler on project: " + project)

@@ -5,16 +5,18 @@
 package scala.tools.eclipse
 package refactoring
 
-import org.eclipse.core.resources.IFile
-import org.eclipse.core.runtime.{CoreException, IProgressMonitor, IStatus, Status}
-import org.eclipse.ltk.core.refactoring.{Change, CompositeChange, Refactoring => LTKRefactoring, RefactoringStatus}
+import org.eclipse.core.runtime.{Status, IStatus, IProgressMonitor, CoreException}
+import org.eclipse.ltk.core.refactoring.{RefactoringStatus, Refactoring => LTKRefactoring, CompositeChange}
 import org.eclipse.ltk.ui.refactoring.RefactoringWizardPage
+
 import scala.tools.eclipse.javaelements.ScalaSourceFile
 import scala.tools.eclipse.util.FileUtils
+import scala.tools.eclipse.ScalaPresentationCompiler
 import scala.tools.eclipse.ScalaPlugin
-import scala.tools.refactoring.common.{InteractiveScalaCompiler, Selections, TreeNotFound}
-import scala.tools.refactoring.MultiStageRefactoring
 import scala.tools.nsc.util.SourceFile
+import scala.tools.refactoring.common.InteractiveScalaCompiler
+import scala.tools.refactoring.common.{TextChange, Change}
+import scala.tools.refactoring.MultiStageRefactoring
 
 /**
  * This is the abstract base class for all the concrete refactoring instances.
@@ -40,7 +42,7 @@ import scala.tools.nsc.util.SourceFile
  * @param getName The displayable name of this refactoring.
  * @param file The file this refactoring started from.
  */
-abstract class ScalaIdeRefactoring(val getName: String, file: ScalaSourceFile, selectionStart: Int, selectionEnd: Int) extends LTKRefactoring {
+abstract class ScalaIdeRefactoring(val getName: String, val file: ScalaSourceFile, selectionStart: Int, selectionEnd: Int) extends LTKRefactoring {
       
   /**
    * Every refactoring subclass needs to provide a specific refactoring instance.
@@ -75,9 +77,18 @@ abstract class ScalaIdeRefactoring(val getName: String, file: ScalaSourceFile, s
     }
   }
   
+  /**
+   * Performs the refactoring and converts the resulting changes to an
+   * Eclipse CompositeChange. Note that NewFileChanges are ignored! At
+   * the moment, there is only one refactoring (Move Class) that creates 
+   * these, which overrides this method.
+   */
   def createChange(pm: IProgressMonitor): CompositeChange = {
+    val changes = performRefactoring() collect {
+      case tc: TextChange => tc
+    }
     new CompositeChange(getName) {
-      scalaChangesToEclipseChanges(performRefactoring()) foreach add
+      scalaChangesToEclipseChanges(changes) foreach add
     }
   }
       
@@ -110,13 +121,13 @@ abstract class ScalaIdeRefactoring(val getName: String, file: ScalaSourceFile, s
    * 
    * @throws Throws a CoreException if the IFile for the corresponding AbstractFile can't be found.
    */
-  private [refactoring] def scalaChangesToEclipseChanges(changes: List[tools.refactoring.common.Change]) = {
-    changes groupBy (_.file) map {
-      case (abstractFile, fileChanges) =>
-        FileUtils.toIFile(abstractFile) map { file =>
+  private [refactoring] def scalaChangesToEclipseChanges(changes: List[TextChange]) = {
+    changes groupBy (_.sourceFile.file) map {
+      case (file, fileChanges) =>
+        FileUtils.toIFile(file) map { file =>
           EditorHelpers.createTextFileChange(file, fileChanges)
         } getOrElse {
-          val msg = "Could not find the corresponding IFile for "+ abstractFile.path
+          val msg = "Could not find the corresponding IFile for "+ file.path
           throw new CoreException(new Status(IStatus.ERROR, ScalaPlugin.plugin.pluginId, 0, msg, null))
         }
     }
@@ -133,7 +144,7 @@ abstract class ScalaIdeRefactoring(val getName: String, file: ScalaSourceFile, s
    * 
    * @return The list of changes or an empty list when an error occurred. 
    */
-  private [refactoring] def performRefactoring(): List[tools.refactoring.common.Change] = {
+  private [refactoring] def performRefactoring(): List[Change] = {
     
     val params = refactoringParameters
     
@@ -149,14 +160,14 @@ abstract class ScalaIdeRefactoring(val getName: String, file: ScalaSourceFile, s
       case _ => 
         refactoringError = Some("An error occurred, please check the log file")
         Nil
-    }    
+    }
   }
   
   private [refactoring] def withCompiler[T](f: ScalaPresentationCompiler => T) = {
     file.withSourceFile((_, c) => f(c))(fail())
   }
   
-  private [refactoring] def withSourceFile[T](f: scala.tools.nsc.util.SourceFile => T) = {
+  private [refactoring] def withSourceFile[T](f: SourceFile => T) = {
     file.withSourceFile((s, _) => f(s))(fail())
   }
   

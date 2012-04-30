@@ -24,7 +24,7 @@ import scala.tools.eclipse.properties.IDESettings
 import util.SWTUtils.asyncExec
 import EclipseUtils.workspaceRunnableIn
 import scala.tools.eclipse.properties.CompilerSettings
-import scala.tools.eclipse.util.HasLogger
+import scala.tools.eclipse.logging.HasLogger
 import scala.collection.mutable.ListBuffer
 import scala.actors.Actor
 import org.eclipse.jdt.core.IJarEntryResource
@@ -39,6 +39,7 @@ import scala.tools.eclipse.util.FileUtils
 import scala.tools.nsc.util.BatchSourceFile
 import java.io.InputStream
 import java.io.InputStreamReader
+import scala.tools.eclipse.util.Trim
 
 trait BuildSuccessListener {
   def buildSuccessful(): Unit
@@ -68,21 +69,21 @@ class ScalaProject private (val underlying: IProject) extends HasLogger {
   private val presentationCompiler = new Cached[Option[ScalaPresentationCompiler]] {
     override def create() = {
       try {
-        val settings = new Settings
+        val settings = ScalaPlugin.defaultScalaSettings
         settings.printtypes.tryToSet(Nil)
         initialize(settings, isPCSetting(settings))
         Some(new ScalaPresentationCompiler(ScalaProject.this, settings))
       } catch {
         case ex @ MissingRequirementError(required) =>
           failedCompilerInitialization("could not find a required class: " + required)
-          logger.error(ex)
+          eclipseLog.error(ex)
           None
         case ex =>
           logger.info("Throwable when intializing presentation compiler!!! " + ex.getMessage)
           ex.printStackTrace()
           if (underlying.isOpen)
             failedCompilerInitialization("error initializing Scala compiler")
-          logger.error(ex)          
+          eclipseLog.error(ex)          
           None
       }
     }
@@ -114,9 +115,10 @@ class ScalaProject private (val underlying: IProject) extends HasLogger {
   private var messageShowed = false
 
   private def failedCompilerInitialization(msg: String) {
+    logger.debug("failedCompilerInitialization: " + msg)
     import org.eclipse.jface.dialogs.MessageDialog
     synchronized {
-      if (!messageShowed) {
+      if (!ScalaPlugin.plugin.headlessMode && !messageShowed) {
         messageShowed = true
         asyncExec {
           val doAdd = MessageDialog.openQuestion(ScalaPlugin.getShell, "Add Scala library to project classpath?", 
@@ -173,8 +175,33 @@ class ScalaProject private (val underlying: IProject) extends HasLogger {
     }
 
   
-  def externalDepends = underlying.getReferencedProjects
+  /** The direct dependencies of this project. */
+  def directDependencies: Seq[IProject] = 
+    underlying.getReferencedProjects
 
+  /** All direct and indirect dependencies of this project.
+   * 
+   *  Indirect dependencies are considered only if that dependency is exported by the dependent project.
+   *  Consider the following dependency graph:
+   *     A -> B -> C
+   *     
+   *  transitiveDependencies(C) = {A, B} iff B *exports* the A project in its classpath
+   */
+  def transitiveDependencies: Seq[IProject] = {
+    import ScalaPlugin.plugin
+    directDependencies ++ (directDependencies flatMap (p => plugin.getScalaProject(p).exportedDependencies))
+  }
+  
+  /** Return the exported dependencies of this project. An exported dependency is
+   *  another project this project depends on, and which is exported to downstream
+   *  dependencies.
+   */
+  def exportedDependencies: Seq[IProject] = {
+    for { entry <- javaProject.getRawClasspath
+          if entry.getEntryKind == IClasspathEntry.CPE_PROJECT && entry.isExported
+    } yield ScalaPlugin.plugin.workspaceRoot.getProject(entry.getPath().toString)
+  }
+    
   lazy val javaProject = {
     JavaCore.create(underlying)
   }
@@ -227,7 +254,7 @@ class ScalaProject private (val underlying: IProject) extends HasLogger {
           }  
 
         case _ =>
-          logger.warning("Classpath computation encountered unknown entry: " + cpe)
+          logger.warn("Classpath computation encountered unknown entry: " + cpe)
       }
     }
     computeClasspath(javaProject, false)
@@ -361,7 +388,7 @@ class ScalaProject private (val underlying: IProject) extends HasLogger {
                     try {
                       cntnr.delete(true, monitor) // try again
                     } catch {
-                      case t => logger.error(t)
+                      case t => eclipseLog.error(t)
                     }
               }
             } else
@@ -370,7 +397,7 @@ class ScalaProject private (val underlying: IProject) extends HasLogger {
             try {
               file.delete(true, monitor)
             } catch {
-              case t => logger.error(t)
+              case t => eclipseLog.error(t)
             }
           case _ =>
         }
@@ -553,19 +580,13 @@ class ScalaProject private (val underlying: IProject) extends HasLogger {
       box <- IDESettings.shownSettings(settings);
       setting <- box.userSettings; if filter(setting)
     ) {
-      val value0 = store.getString(SettingConverterUtil.convertNameToProperty(setting.name))
-//      logger.info("[%s] initializing %s to %s".format(underlying.getName(), setting.name, value0.toString))
+      val value0 = Trim(store.getString(SettingConverterUtil.convertNameToProperty(setting.name)))
+      
       try {
-        val value = if (setting ne settings.pluginsDir) value0 else {
-          ScalaPlugin.plugin.continuationsClasses map {
-            _.removeLastSegments(1).toOSString + (if (value0 == null || value0.length == 0) "" else ":" + value0)
-          } getOrElse value0
-        }
-        if (value != null && value.length != 0) {
-          setting.tryToSetFromPropertyValue(value)
-        }
+        value0 foreach setting.tryToSetFromPropertyValue
+        logger.debug("[%s] initializing %s to %s".format(underlying.getName(), setting.name, setting.value.toString))
       } catch {
-        case t: Throwable => logger.error("Unable to set setting '" + setting.name + "' to '" + value0 + "'", t)
+        case t: Throwable => eclipseLog.error("Unable to set setting '" + setting.name + "' to '" + value0 + "'", t)
       }
     }
     
@@ -574,12 +595,12 @@ class ScalaProject private (val underlying: IProject) extends HasLogger {
     logger.info("setting additional paramters: " + additional)
     settings.processArgumentString(additional)
   }
-  
+
   private def buildManagerInitialize: String =
     storage.getString(SettingConverterUtil.convertNameToProperty(properties.ScalaPluginSettings.buildManager.name))
   
   def storage = {
-    val workspaceStore = ScalaPlugin.plugin.getPreferenceStore
+    val workspaceStore = ScalaPlugin.prefStore
     val projectStore = new PropertyStore(underlying, workspaceStore, plugin.pluginId)
     val useProjectSettings = projectStore.getBoolean(SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE)
 
@@ -644,8 +665,9 @@ class ScalaProject private (val underlying: IProject) extends HasLogger {
       
       presentationCompiler.invalidate
       
-      logger.info("Scheduling for reconcile: " + units.map(_.file))
-      units.foreach(_.scheduleReconcile())
+      val existingUnits = units.filter(_.exists) 
+      logger.info("Scheduling for reconcile: " + existingUnits.map(_.file))
+      existingUnits.foreach(_.scheduleReconcile())
       true
     } else {
       logger.info("[%s] Presentation compiler was not yet initialized, ignoring reset.".format(underlying.getName()))
@@ -654,7 +676,7 @@ class ScalaProject private (val underlying: IProject) extends HasLogger {
 
   def buildManager = {
     if (buildManager0 == null) {
-      val settings = new Settings(msg => settingsError(IMarker.SEVERITY_ERROR, msg, null))
+      val settings = ScalaPlugin.defaultScalaSettings(msg => settingsError(IMarker.SEVERITY_ERROR, msg, null))
       clearSettingsErrors()
       initialize(settings, _ => true)
       // source path should be emtpy. The build manager decides what files get recompiled when.
@@ -789,7 +811,12 @@ class ScalaProject private (val underlying: IProject) extends HasLogger {
    */
   def refreshChangedFiles(files: List[IFile]) {
     // transform to batch source files
-    val abstractfiles= files.map(file => new BatchSourceFile(EclipseResource(file), readFully(file))) 
+    val abstractfiles = files.collect {
+      // When a compilation unit is moved (e.g. using the Move refactoring) between packages, 
+      // an ElementChangedEvent is fired but with the old IFile name. Ignoring the file does
+      // not seem to cause any bad effects later on, so we simply ignore these files -- Mirko
+      case file if file.exists => new BatchSourceFile(EclipseResource(file), readFully(file))
+    }
       
     withPresentationCompiler {compiler =>
       import compiler._

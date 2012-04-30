@@ -32,11 +32,10 @@ class HyperlinkDetectorTests {
     for (pos <- positions) {
       val wordRegion = ScalaWordFinder.findWord(unit.getContents, pos - 1)
       val word = new String(unit.getContents.slice(wordRegion.getOffset, wordRegion.getOffset + wordRegion.getLength))
-      println("hyperlinking at position %d (%s)".format(pos, word))
       val links = detector.scalaHyperlinks(unit, wordRegion)
       println("Found links: " + links)
       assertTrue(links.isDefined)
-      assertEquals(1, links.get.size)
+      assertEquals("Failed hyperlinking at position %d (%s)".format(pos, word), 1, links.get.size)
     }
   }
   

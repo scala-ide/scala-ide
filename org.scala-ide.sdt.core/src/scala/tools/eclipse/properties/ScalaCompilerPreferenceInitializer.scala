@@ -25,19 +25,25 @@ class ScalaCompilerPreferenceInitializer extends AbstractPreferenceInitializer {
       val node = new DefaultScope().getNode(ScalaPlugin.plugin.pluginId)
       val store = ScalaPlugin.plugin.getPluginPreferences
       
+      store.setDefault(convertNameToProperty(ScalaPluginSettings.stopBuildOnErrors.name), true)
+      
       def defaultPreference(s: Settings#Setting) {
       	val preferenceName = convertNameToProperty(s.name)
           s match {
             case bs : Settings#BooleanSetting => node.put(preferenceName, "false")
             case is : Settings#IntSetting => node.put(preferenceName, is.default.toString)
-            case ss : Settings#StringSetting => node.put(preferenceName, ss.default)
+            case ss : Settings#StringSetting =>
+              val default = 
+                if(preferenceName == "Xpluginsdir")
+                  ScalaPlugin.plugin.defaultPluginsDir getOrElse ss.default
+                else ss.default
+              node.put(preferenceName, default)
             case ms : Settings#MultiStringSetting => node.put(preferenceName, "")
             case cs : Settings#ChoiceSetting => node.put(preferenceName, cs.default)
           }
       }
 
-      IDESettings.shownSettings(new Settings).foreach {_.userSettings.foreach (defaultPreference)}
-      IDESettings.pluginSettings.foreach {_.userSettings.foreach (defaultPreference)}
+      IDESettings.shownSettings(ScalaPlugin.defaultScalaSettings).foreach {_.userSettings.foreach (defaultPreference)}
       IDESettings.buildManagerSettings.foreach {_.userSettings.foreach(defaultPreference)}
     }
   }

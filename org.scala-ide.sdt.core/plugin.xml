@@ -55,10 +55,10 @@
       <page class="scala.tools.eclipse.properties.ScalaPreferences"
             name="Scala"
             id="org.scala-ide.sdt.core.preferences"/>
-      <page class="scala.tools.eclipse.properties.SyntaxColouringPreferencePage"
+      <page class="scala.tools.eclipse.properties.syntaxcolouring.SyntaxColouringPreferencePage"
             category="org.scala-ide.sdt.core.preferences"
             name="Syntax Coloring"
-            id="org.scala-ide.sdt.core.properties.SyntaxColouringPreferencePage"/>
+            id="org.scala-ide.sdt.core.properties.syntaxcolouring.SyntaxColouringPreferencePage"/>
       <page
             category="org.scala-ide.sdt.core.preferences"
             class="scala.tools.eclipse.properties.CompilerSettings"
@@ -88,6 +88,12 @@
             class="scala.tools.eclipse.properties.ImplicitsPreferencePage"
             id="org.scala-ide.sdt.core.properties.Implicits"
             name="Implicits">
+      </page>
+      <page
+            category="org.scala-ide.sdt.core.preferences"
+            class="scala.tools.eclipse.logging.ui.properties.LoggingPreferencePage"
+            id="org.scala-ide.sdt.core.properties.Logging"
+            name="Logging">
       </page>      
    </extension>
 
@@ -214,16 +220,23 @@
          <groupMarker name="additions"/>
        </menu>
        <action id="org.scala-ide.sdt.ui.runDiag.action"
-         label="Run Setup Diagnostics..."
+         label="Run Setup Diagnostics"
          menubarPath="org_scala-ide_sdt_ui_menu/diagnostics"
          tooltip="Verify that Scala configuration is correct"
          class="scala.tools.eclipse.actions.RunDiagnosticAction"
          enablesFor="*">
        </action>
        <action id="org.scala-ide.sdt.ui.reportBug.action"
-         label="Report a Bug..."
+         label="Report a Bug"
          menubarPath="org_scala-ide_sdt_ui_menu/additions"
          tooltip="Report a bug in the Scala Development Tools"
+         class="scala.tools.eclipse.actions.RunDiagnosticAction"
+         enablesFor="*">
+       </action>
+       <action id="org.scala-ide.sdt.ui.openLogFile.action"
+         label="Open the Log"
+         menubarPath="org_scala-ide_sdt_ui_menu/additions"
+         tooltip="Open the Log file in an editor"
          class="scala.tools.eclipse.actions.RunDiagnosticAction"
          enablesFor="*">
        </action>       
@@ -401,15 +414,15 @@
          markerSeverity="0">
       </type>
       <type
-            name="scala.tools.eclipse.semantic.highlighting.implicitConversionsOrArgsAnnotation"/>
+            name="scala.tools.eclipse.semantichighlighting.implicits.implicitConversionsOrArgsAnnotation"/>
    </extension>
    
    <extension
          point="org.eclipse.ui.editors.markerAnnotationSpecification">
      <specification
-          annotationType="scala.tools.eclipse.semantic.highlighting.implicitConversionsOrArgsAnnotation"
+          annotationType="scala.tools.eclipse.semantichighlighting.implicits.implicitConversionsOrArgsAnnotation"
           colorPreferenceKey="scala.tools.eclipse.ui.preferences.implicit.color"
-          colorPreferenceValue="183,239,176"
+          colorPreferenceValue="51,102,0"
           contributesToHeader="false"
           includeOnPreferencePage="true"
           icon="icons/full/elcl16/implicit_co.gif"
@@ -421,7 +434,7 @@
           textPreferenceKey="scala.tools.eclipse.ui.preferences.implicit.text"
           textPreferenceValue="true"
           textStylePreferenceKey="scala.tools.eclipse.ui.preferences.implicit.textStylePreference"
-          textStylePreferenceValue="SQUIGGLES"
+          textStylePreferenceValue="UNDERLINE"
           verticalRulerPreferenceKey="scala.tools.eclipse.ui.preferences.implicit.rulers.vertical"
           verticalRulerPreferenceValue="true">
      </specification>
@@ -731,7 +744,7 @@
         id="org.scala-ide.sdt.core.preferences"
         point="org.eclipse.core.runtime.preferences">
      <initializer
-           class="scala.tools.eclipse.properties.ColourPreferenceInitializer">
+           class="scala.tools.eclipse.properties.syntaxcolouring.ColourPreferenceInitializer">
      </initializer>    
      <initializer
            class="scala.tools.eclipse.properties.ScalaCompilerPreferenceInitializer">
@@ -744,6 +757,9 @@
      </initializer>
      <initializer
            class="scala.tools.eclipse.properties.ImplicitsPagePreferenceInitializer">
+     </initializer>
+     <initializer
+           class="scala.tools.eclipse.logging.ui.properties.LoggingPreferencePageInitializer">
      </initializer>
   </extension>
 
@@ -876,6 +892,10 @@
   <extension point="org.scala-ide.sdt.aspects.spellingengineprovider">
     <provider class="scala.tools.eclipse.ScalaSpellingEngineProvider" />
   </extension> 
+  
+  <extension point="org.scala-ide.sdt.aspects.openactionprovider">
+    <provider class="scala.tools.eclipse.ui.actions.OpenActionProvider" />
+  </extension> 
 
   <extension point="org.scala-ide.sdt.aspects.formatterCleanUp">
     <provider class="scala.tools.eclipse.formatter.ScalaFormatterCleanUpProvider" />
@@ -940,8 +960,22 @@
                label="Refactor"
                path="edit">
             <separator name="scala.tools.eclipse.refactoring.refactoringGroup"/>
+            <separator name="scala.tools.eclipse.refactoring.quickfixGroup"/>
          </menu>
-           <action
+         <action
+               class="scala.tools.eclipse.refactoring.move.MoveClassAction"
+               definitionId="scala.tools.eclipse.refactoring.command.MoveClass"
+               id="scala.tools.eclipse.refactoring.moveClassAction"
+               label="Move Class/Object/Trait"
+               menubarPath="scala.tools.eclipse.refactoring.refactoringMenu/scala.tools.eclipse.refactoring.sourceGeneratorGroup"
+               tooltip="Move Class/Object/Trait">
+            <!--<enablement>
+               <objectClass
+                     name="org.eclipse.jface.text.TextSelection">
+               </objectClass>
+            </enablement>-->
+         </action>
+         <action
                class="scala.tools.eclipse.refactoring.ExtractMethodAction"
                definitionId="scala.tools.eclipse.refactoring.command.ExtractMethod"
                id="scala.tools.eclipse.refactoring.extractMethodAction"
@@ -954,7 +988,7 @@
                </objectClass>
             </enablement>
          </action>
-           <action
+         <action
                class="scala.tools.eclipse.refactoring.ExtractLocalAction"
                definitionId="scala.tools.eclipse.refactoring.command.ExtractLocal"
                id="scala.tools.eclipse.refactoring.extractLocalAction"
@@ -1002,6 +1036,19 @@
             </enablement>
          </action>
          <action
+               class="scala.tools.eclipse.refactoring.ExpandCaseClassBindingAction"
+               definitionId="scala.tools.eclipse.refactoring.command.ExpandCaseClassBinding"
+               id="scala.tools.eclipse.refactoring.expandCaseClassBindingAction"
+               label="Expand Case Class Binding"
+               menubarPath="scala.tools.eclipse.refactoring.refactoringMenu/scala.tools.eclipse.refactoring.quickfixGroup"
+               tooltip="Expand Case Class Binding">
+            <enablement>
+               <objectClass
+                     name="org.eclipse.jface.text.TextSelection">
+               </objectClass>
+            </enablement>
+         </action>
+         <action
                class="scala.tools.eclipse.actions.RunSelectionAction"
                definitionId="scala.tools.eclipse.interpreter.RunSelection"
                disabledIcon="icons/full/dtool16/run_interpreter.gif"
@@ -1028,6 +1075,10 @@
          id="scala.tools.eclipse.refactoring.commands.quickMenu"/>
       <command
          categoryId="scala.tools.eclipse.refactoring.commands.refactoring"
+         id="scala.tools.eclipse.refactoring.command.MoveClass"
+         name="Move Class/Object/Trait"/>
+      <command
+         categoryId="scala.tools.eclipse.refactoring.commands.refactoring"
          id="scala.tools.eclipse.refactoring.command.ExtractMethod"
          name="Extract Method"/>
       <command
@@ -1046,6 +1097,10 @@
          categoryId="scala.tools.eclipse.refactoring.commands.refactoring"
          id="scala.tools.eclipse.refactoring.command.Rename"
          name="Rename"/>
+      <command
+         categoryId="scala.tools.eclipse.refactoring.commands.refactoring"
+         id="scala.tools.eclipse.refactoring.command.ExpandCaseClassBinding"
+         name="Expand Case Class Binding"/>
       <command
          categoryId="scala.tools.eclipse.category"
          id="org.scala-ide.sdt.core.commands.ToggleImplicitsDisplay"
@@ -1137,7 +1192,7 @@
  <extension
        point="org.eclipse.ui.handlers">
     <handler
-          class="scala.tools.eclipse.semantic.highlighting.ToggleImplicitsDisplayHandler"
+          class="scala.tools.eclipse.semantichighlighting.implicits.ToggleImplicitsDisplayHandler"
           commandId="org.scala-ide.sdt.core.commands.ToggleImplicitsDisplay">
     </handler>
  </extension>
@@ -1227,9 +1282,24 @@
  <extension
        point="org.scala-ide.sdt.core.reconciliationParticipants">
     <participant
-          class="scala.tools.eclipse.semantic.highlighting.SemanticHighlightingReconciliationParticipant"
+          class="scala.tools.eclipse.semantichighlighting.SemanticHighlightingReconciliationParticipant"
           id="org.scala-ide.sdt.core.SemanticHighlightingPresenter"
           name="Semantic Highlighting">
     </participant>
+ </extension>
+ <extension
+       point="org.eclipse.ltk.core.refactoring.moveParticipants">
+    <moveParticipant
+          class="scala.tools.eclipse.refactoring.move.ScalaMoveParticipant"
+          id="org.scala-ide.sdt.core.moveParticipant"
+          name="Scala Move Participant">
+       <enablement>
+          <with variable="element">
+             <instanceof
+                   value="org.eclipse.core.resources.IResource">
+             </instanceof>
+          </with>
+       </enablement>
+    </moveParticipant>
  </extension>
 </plugin>

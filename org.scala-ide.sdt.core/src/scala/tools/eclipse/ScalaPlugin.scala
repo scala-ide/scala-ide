@@ -28,15 +28,21 @@ import scala.tools.eclipse.util.OSGiUtils.pathInBundle
 import scala.tools.eclipse.templates.ScalaTemplateManager
 import org.eclipse.jdt.ui.PreferenceConstants
 import org.eclipse.core.resources.IResourceDelta
-import scala.tools.eclipse.util.HasLogger
+import scala.tools.eclipse.logging.HasLogger
 import org.osgi.framework.Bundle
 import scala.tools.eclipse.util.Utils
 import org.eclipse.jdt.core.ICompilationUnit
 import scala.tools.nsc.io.AbstractFile
 import scala.tools.eclipse.util.EclipseResource
+import scala.tools.eclipse.logging.PluginLogConfigurator
+import scala.tools.eclipse.util.Trim
+import scala.tools.nsc.Settings
 
 object ScalaPlugin {
+  
   var plugin: ScalaPlugin = _
+  
+  def prefStore = plugin.getPreferenceStore
   
   def getWorkbenchWindow = {
     val workbench = PlatformUI.getWorkbench
@@ -44,9 +50,25 @@ object ScalaPlugin {
   }
   
   def getShell: Shell = getWorkbenchWindow map (_.getShell) orNull
+  
+  def defaultScalaSettings : Settings = defaultScalaSettings(Console.println)
+  
+  def defaultScalaSettings(errorFn: String => Unit): Settings = new Settings(errorFn) {
+    // [dotta]:
+    // Passing a default location for pluginsDir does not play nicely with the SBT builder for some 
+    // reason which I currently fail to understand. The workaround is hence to set the default location 
+    // of plugins only when the user clicks on the "Use Project Settings" checkbox (located in the Scala 
+    // Compiler Preferences); have a look at CompilerSettings.scala to see the dirty hack in action.
+    // 
+    // The issue I refer to seem to arise only when a user tries to enable the continuations plugin 
+    // by explicitly passing the location of the continuations.jar via the -Xplugin setting (and 
+    // -Xpluginsdir is given no value). By the way, the mentioned issue only shows up with the SBT builder, 
+    // with the Refined Build Manager it all works as expected.
+    override val pluginsDir = StringSetting("-Xpluginsdir", "path", "Path to search compiler plugins.", "")
+  }
 }
 
-class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IElementChangedListener with IPartListener with HasLogger {
+class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IResourceChangeListener with IElementChangedListener with IPartListener with HasLogger {
   ScalaPlugin.plugin = this
 
   final val HEADLESS_TEST  = "sdtcore.headless"
@@ -124,28 +146,34 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
   val continuationsClasses = pathInBundle(scalaCompilerBundle, "/lib/continuations.jar")
   val compilerSources = pathInBundle(scalaCompilerBundle, "/lib/scala-compiler-src.jar")
   
+  /** The default location used to load compiler's plugins. The convention is that the continuations.jar 
+   * plugin should be always loaded, so that a user can enable continuations by only passing 
+   * -P:continuations:enable flag. This matches `scalac` behavior. */
+  def defaultPluginsDir: Option[String] = 
+    Trim(ScalaPlugin.plugin.continuationsClasses map { _.removeLastSegments(1).toOSString })
+  
   lazy val sbtCompilerBundle = Platform.getBundle(ScalaPlugin.plugin.sbtPluginId)
   lazy val sbtCompilerInterface = pathInBundle(sbtCompilerBundle, "/lib/scala-" + shortScalaVer + "/lib/compiler-interface.jar")
   // Disable for now, until we introduce a way to have multiple scala libraries, compilers available for the builder
   //lazy val sbtScalaLib = pathInBundle(sbtCompilerBundle, "/lib/scala-" + shortScalaVer + "/lib/scala-library.jar")
   //lazy val sbtScalaCompiler = pathInBundle(sbtCompilerBundle, "/lib/scala-" + shortScalaVer + "/lib/scala-compiler.jar")
   
-  val scalaLibBundle = {
+  lazy val scalaLibBundle = {
     // all library bundles
     val bundles = Option(Platform.getBundles(ScalaPlugin.plugin.libraryPluginId, null)).getOrElse(Array[Bundle]())
     logger.debug("[scalaLibBundle] Found %d bundles: %s".format(bundles.size, bundles.toList.mkString(", ")))
     bundles.find(b => b.getVersion().getMajor() == scalaCompilerBundleVersion.getMajor() && b.getVersion().getMinor() == scalaCompilerBundleVersion.getMinor()).getOrElse {
-      logger.error("Could not find a match for %s in %s. Using default.".format(scalaCompilerBundleVersion, bundles.toList.mkString(", ")), null)
+      eclipseLog.error("Could not find a match for %s in %s. Using default.".format(scalaCompilerBundleVersion, bundles.toList.mkString(", ")), null)
       Platform.getBundle(ScalaPlugin.plugin.libraryPluginId)
     }
   }
   
-  val libClasses = pathInBundle(scalaLibBundle, "/lib/scala-library.jar")
-  val libSources = pathInBundle(scalaLibBundle, "/lib/scala-library-src.jar")
-  val dbcClasses = pathInBundle(scalaLibBundle, "/lib/scala-dbc.jar")
-  val dbcSources = pathInBundle(scalaLibBundle, "/lib/scala-dbc-src.jar")
-  val swingClasses = pathInBundle(scalaLibBundle, "/lib/scala-swing.jar")
-  val swingSources = pathInBundle(scalaLibBundle, "/lib/scala-swing-src.jar")
+  lazy val libClasses = pathInBundle(scalaLibBundle, "/lib/scala-library.jar")
+  lazy val libSources = pathInBundle(scalaLibBundle, "/lib/scala-library-src.jar")
+  lazy val dbcClasses = pathInBundle(scalaLibBundle, "/lib/scala-dbc.jar")
+  lazy val dbcSources = pathInBundle(scalaLibBundle, "/lib/scala-dbc-src.jar")
+  lazy val swingClasses = pathInBundle(scalaLibBundle, "/lib/scala-swing.jar")
+  lazy val swingSources = pathInBundle(scalaLibBundle, "/lib/scala-swing-src.jar")
 
   lazy val templateManager = new ScalaTemplateManager()
   lazy val headlessMode = System.getProperty(HEADLESS_TEST) ne null
@@ -282,8 +310,10 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
         // TODO: the check should be done with isInstanceOf[ScalaSourceFile] instead of
         // endsWith(scalaFileExtn), but it is not working for Play 2.0 because of #1000434
         case COMPILATION_UNIT if isChanged && elem.getResource.getName.endsWith(scalaFileExtn) =>
-          // marked the changed scala files to be refreshed in the presentation compiler if needed
-          changed += elem.asInstanceOf[ICompilationUnit]
+          val hasChangedContent = hasFlag(IJavaElementDelta.F_CONTENT)
+          if(hasChangedContent) 
+            // marked the changed scala files to be refreshed in the presentation compiler if needed
+            changed += elem.asInstanceOf[ICompilationUnit]
           false
         case COMPILATION_UNIT if elem.isInstanceOf[ScalaSourceFile] && isRemoved =>
           buff += elem.asInstanceOf[ScalaSourceFile]

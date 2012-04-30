@@ -47,7 +47,7 @@ object FormatterPreferences {
 
   }
 
-  def getPreferences: IFormattingPreferences = getPreferences(ScalaPlugin.plugin.getPreferenceStore)
+  def getPreferences: IFormattingPreferences = getPreferences(ScalaPlugin.prefStore)
 
   def getPreferences(preferenceStore: IPreferenceStore): IFormattingPreferences =
     AllPreferences.preferences.foldLeft(FormattingPreferences()) { (preferences, pref) =>
@@ -62,10 +62,10 @@ object FormatterPreferences {
   def getPreferences(project: IJavaProject): IFormattingPreferences = getPreferences(project.getProject)
 
   private def getPreferenceStore(project: IProject): IPreferenceStore = {
-    val workspaceStore = ScalaPlugin.plugin.getPreferenceStore
+    val workspaceStore = ScalaPlugin.prefStore
     val projectStore = new PropertyStore(project, workspaceStore, ScalaPlugin.plugin.pluginId)
     val useProjectSettings = projectStore.getBoolean(FormatterPreferences.USE_PROJECT_SPECIFIC_SETTINGS_KEY)
-    val prefStore = if (useProjectSettings) projectStore else ScalaPlugin.plugin.getPreferenceStore
+    val prefStore = if (useProjectSettings) projectStore else ScalaPlugin.prefStore
     prefStore
   }
 

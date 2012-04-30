@@ -6,7 +6,7 @@ import org.eclipse.jdt.core.search.{SearchEngine, IJavaSearchConstants, SearchPa
 import org.eclipse.jdt.core.IJavaElement
 import scala.collection.mutable
 import org.eclipse.core.runtime.NullProgressMonitor
-import scala.tools.eclipse.util.HasLogger
+import scala.tools.eclipse.logging.HasLogger
 
 /** Base class for Scala completions. No UI dependency, can be safely used in a
  *  headless testing environment.
@@ -60,11 +60,11 @@ class ScalaCompletions extends HasLogger {
       compiler.askOption { () =>
         for (completion <- completions) {
           completion match {
-            case compiler.TypeMember(sym, tpe, accessible, inherited, viaView) if !sym.isConstructor && nameMatches(sym) =>
+            case compiler.TypeMember(sym, tpe, true, inherited, viaView) if !sym.isConstructor && nameMatches(sym) =>
               val completionProposal= compiler.mkCompletionProposal(start, sym, tpe, inherited, viaView)
               if (!isCompletionAlreadyListed(completionProposal))
                 buff += completionProposal
-            case compiler.ScopeMember(sym, tpe, accessible, _) if !sym.isConstructor && nameMatches(sym) =>
+            case compiler.ScopeMember(sym, tpe, true, _) if !sym.isConstructor && nameMatches(sym) =>
               val completionProposal= compiler.mkCompletionProposal(start, sym, tpe, false, compiler.NoSymbol)
               if (!isCompletionAlreadyListed(completionProposal))
               	buff += completionProposal

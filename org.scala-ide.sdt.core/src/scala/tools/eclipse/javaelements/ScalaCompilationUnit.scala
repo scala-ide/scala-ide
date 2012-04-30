@@ -27,13 +27,10 @@ import scala.tools.nsc.util.{ BatchSourceFile, SourceFile }
 import scala.tools.eclipse.contribution.weaving.jdt.{ IScalaCompilationUnit, IScalaWordFinder }
 import scala.tools.eclipse.{ ScalaImages, ScalaPlugin, ScalaPresentationCompiler, ScalaSourceIndexer, ScalaWordFinder }
 import scala.tools.eclipse.util.ReflectionUtils
-import org.eclipse.jdt.core.IField
-import org.eclipse.jdt.core.IMethod
-import org.eclipse.jdt.core.ISourceReference
-import org.eclipse.jdt.core.IParent
+import org.eclipse.jdt.core._
 import org.eclipse.jdt.internal.core.JavaElement
 import org.eclipse.jdt.internal.core.SourceRefElement
-import scala.tools.eclipse.util.HasLogger
+import scala.tools.eclipse.logging.HasLogger
 import scala.tools.nsc.interactive.Response
 
 trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with ScalaElement with IScalaCompilationUnit with IBufferChangedListener with HasLogger {
@@ -116,7 +113,7 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
   private def handleCrash(msg: String, ex: Throwable) {
     if (lastCrash != ex) {
       lastCrash = ex
-      logger.error(msg, ex)
+      eclipseLog.error(msg, ex)
     }
   }
   
@@ -187,9 +184,23 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
       case elem => elem
     }
   }
-    
-  override def codeSelect(cu : env.ICompilationUnit, offset : Int, length : Int, workingCopyOwner : WorkingCopyOwner) : Array[IJavaElement] = {
-    Array.empty
+
+  override def codeSelect(cu: env.ICompilationUnit, offset: Int, length: Int, workingCopyOwner: WorkingCopyOwner): Array[IJavaElement] = {
+    withSourceFile { (srcFile, compiler) =>
+      val pos = compiler.rangePos(srcFile, offset, offset, offset)
+
+      val typed = new compiler.Response[compiler.Tree]
+      compiler.askTypeAt(pos, typed)
+      val typedRes = typed.get
+      val element = for {
+       t <- typedRes.left.toOption
+       if t.hasSymbol
+       element <- compiler.getJavaElement(t.symbol)
+      } yield Array(element: IJavaElement)
+      
+      val res = element.getOrElse(Array.empty[IJavaElement])
+      res
+    }(Array.empty[IJavaElement])
   }
 
   def codeComplete

@@ -39,7 +39,7 @@ import scala.tools.eclipse.util.FileUtils._
 import scala.tools.eclipse.util.SWTUtils._
 import scalariform.formatter._
 import scalariform.formatter.preferences._
-import scala.tools.eclipse.util.HasLogger
+import scala.tools.eclipse.logging.HasLogger
 
 class FormatterPreferencePage extends PropertyPage with IWorkbenchPreferencePage with HasLogger {
   import FormatterPreferencePage._
@@ -221,7 +221,7 @@ class FormatterPreferencePage extends PropertyPage with IWorkbenchPreferencePage
 
   private def initUnderlyingPreferenceStore() {
     val pluginId = ScalaPlugin.plugin.pluginId
-    val scalaPrefStore = ScalaPlugin.plugin.getPreferenceStore
+    val scalaPrefStore = ScalaPlugin.prefStore
     setPreferenceStore(getElement match {
       case project: IProject => new PropertyStore(project, scalaPrefStore, pluginId)
       case project: IJavaProject => new PropertyStore(project.getProject, scalaPrefStore, pluginId)
@@ -254,7 +254,7 @@ class FormatterPreferencePage extends PropertyPage with IWorkbenchPreferencePage
 
       val link = new Link(control, SWT.NONE)
       link.setText("<a>" + PreferencesMessages.PropertyAndPreferencePage_useworkspacesettings_change + "</a>")
-      link.addSelectionListener {
+      link.addSelectionListener { () =>
         PreferencesUtil.createPreferenceDialogOn(getShell, PAGE_ID, Array(PAGE_ID), null).open()
       }
       link.setLayoutData(new CC().alignX("right").wrap)
@@ -285,12 +285,12 @@ class FormatterPreferencePage extends PropertyPage with IWorkbenchPreferencePage
       val importButton = new Button(buttonPanel, SWT.PUSH)
       importButton.setText("Import...")
       importButton.setLayoutData(new CC().sizeGroupX("button"))
-      importButton.addSelectionListener { importPreferences() }
+      importButton.addSelectionListener { () => importPreferences() }
 
       val exportButton = new Button(buttonPanel, SWT.PUSH)
       exportButton.setText("Export...")
       exportButton.setLayoutData(new CC().sizeGroupX("button").wrap)
-      exportButton.addSelectionListener { exportPreferences() }
+      exportButton.addSelectionListener { () => exportPreferences() }
 
       buttonPanel.setLayoutData(new CC().spanX(2).growX.wrap)
       allEnableDisableControls ++= Set(link, importButton, exportButton)
@@ -352,7 +352,7 @@ class FormatterPreferencePage extends PropertyPage with IWorkbenchPreferencePage
         PreferencesImporterExporter.savePreferences(fileName, preferences)
       catch {
         case e: IOException =>
-          logger.error(e)
+          eclipseLog.error(e)
           MessageDialog.openError(getShell, "Error writing to " + fileName, e.getMessage)
       }
     }
@@ -364,7 +364,7 @@ class FormatterPreferencePage extends PropertyPage with IWorkbenchPreferencePage
         PreferencesImporterExporter.loadPreferences(fileName)
       catch {
         case e: IOException =>
-          logger.error(e)
+          eclipseLog.error(e)
           MessageDialog.openError(getShell, "Error opening " + fileName, e.getMessage)
           return
       }

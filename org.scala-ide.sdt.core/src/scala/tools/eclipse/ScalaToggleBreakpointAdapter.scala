@@ -20,7 +20,7 @@ import org.eclipse.ui.IWorkbenchPart
 import scala.tools.eclipse.util.ReflectionUtils
 import scala.tools.eclipse.javaelements.ScalaClassElement
 import scala.tools.eclipse.javaelements.ScalaSourceTypeElement
-import scala.tools.eclipse.util.HasLogger
+import scala.tools.eclipse.logging.HasLogger
 
 class ScalaToggleBreakpointAdapter extends ToggleBreakpointAdapter with HasLogger { self =>
   import ScalaToggleBreakpointAdapterUtils._

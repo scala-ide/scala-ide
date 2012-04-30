@@ -34,15 +34,19 @@ trait LocateSymbol { self : ScalaPresentationCompiler =>
       None
     }
     def findClassFile = {
+      logger.debug("Looking for a classfile for " + sym.fullName)
       val packName = sym.enclosingPackage.fullName
       val project = scu.getJavaProject.asInstanceOf[JavaProject]
       val pfs = new SearchableEnvironment(project, null: WorkingCopyOwner).nameLookup.findPackageFragments(packName, false)
       if (pfs eq null) None else find(pfs) { pf =>
         val top = sym.toplevelClass
-        val name = top.name + (if (top.isModule) "$" else "") + ".class"
+        val name = if (sym.owner.isPackageObjectClass) "package$.class" else top.name + (if (top.isModuleClass) "$" else "") + ".class"
+        logger.debug("Trying out to get " + name)
         val cf = pf.getClassFile(name)
         cf match {
-          case classFile : ScalaClassFile => Some(classFile)
+          case classFile : ScalaClassFile => 
+            logger.debug("Found Scala class file: " + classFile)
+            Some(classFile)
           case _ => None
         }
       }
@@ -52,7 +56,9 @@ trait LocateSymbol { self : ScalaPresentationCompiler =>
       logger.info("Looking for a compilation unit for " + sym.fullName)
       val project = scu.getJavaProject.asInstanceOf[JavaProject]
       val nameLookup = new SearchableEnvironment(project, null: WorkingCopyOwner).nameLookup
-      val name = sym.toplevelClass.fullName
+      
+      val name = if (sym.owner.isPackageObject) sym.owner.owner.fullName + ".package" else sym.toplevelClass.fullName
+      logger.debug("Looking for compilation unit " + name)
       Option(nameLookup.findCompilationUnit(name)) map (_.getResource().getFullPath())
     }
     

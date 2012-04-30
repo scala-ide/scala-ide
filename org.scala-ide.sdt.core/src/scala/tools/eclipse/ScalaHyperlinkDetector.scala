@@ -13,7 +13,7 @@ import org.eclipse.jdt.internal.ui.javaeditor.{ EditorUtility, JavaElementHyperl
 import org.eclipse.jdt.ui.actions.OpenAction
 import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor
 import javaelements.{ ScalaCompilationUnit, ScalaSelectionEngine, ScalaSelectionRequestor }
-import scala.tools.eclipse.util.HasLogger
+import scala.tools.eclipse.logging.HasLogger
 
 class ScalaHyperlinkDetector extends AbstractHyperlinkDetector with HasLogger {
   def detectHyperlinks(viewer: ITextViewer, region: IRegion, canShowMultipleHyperlinks: Boolean): Array[IHyperlink] = {

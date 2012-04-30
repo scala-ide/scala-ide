@@ -29,31 +29,31 @@ import scala.tools.eclipse.properties.ScalaPluginSettings
  */
 trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
 
-  object IndexBuilderTraverser {
-  	lazy val store = ScalaPlugin.plugin.getPreferenceStore
-  	lazy val infoName = 
-  		SettingConverterUtil.convertNameToProperty(ScalaPluginSettings.YPlugininfo.name)
-  	@inline def isInfo = store.getBoolean(infoName)
-  }
-  
-  import IndexBuilderTraverser.isInfo
-  
   class IndexBuilderTraverser(indexer : ScalaSourceIndexer) extends Traverser {
     var packageName = new StringBuilder
+    
+    def addPackageName(p: Tree) {
+      p match {
+        case i: Ident =>
+          packageName.append(i.name)
+        case r: Select =>
+          addPackageName(r.qualifier)
+          packageName.append('.').append(r.name)
+      }
+    }
       
     def addPackage(p : PackageDef) = {
       if (!packageName.isEmpty) packageName.append('.')
       if (p.name != nme.EMPTY_PACKAGE_NAME && p.name != nme.ROOTPKG) {
-        if (isInfo) logger.info("Package defn: "+p.name+" ["+this+"]")
-        packageName.append(p.name)  
+        addPackageName(p.pid)  
       }
     }
 
-    def getSuperNames(supers: List[Tree]) = supers map (_ match {
+    def getSuperNames(supers: List[Tree]): Array[Array[Char]] = supers map (_ match {
       case Ident(id)                           => id.toChars
       case Select(_, name)                     => name.toChars
       case AppliedTypeTree(fun: RefTree, args) => fun.name.toChars
-      case tpt @ TypeTree()                    => tpt.tpe.typeSymbol.name.toChars // maybe the tree was typed
+      case tpt @ TypeTree()                    => mapType(tpt).toCharArray // maybe the tree was typed
       case parent =>
         logger.info("superclass not understood: %s".format(parent))
         "$$NoRef".toCharArray
@@ -73,25 +73,18 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
     
     private def addAnnotations(sym: Symbol) =
       for (ann <- sym.annotations) {
-        if (isInfo) logger.info("added annotation %s [using symbols]".format(ann.atp))
         indexer.addAnnotationTypeReference(ann.atp.toString.toCharArray)
       }
     
     private def addAnnotationRef(tree: Tree) {
       for (t <- tree) t match {
         case New(tpt) =>
-          if (isInfo) logger.info("added annotation %s [using trees]".format(tpt))
           indexer.addAnnotationTypeReference(tpt.toString.toCharArray)
         case _ => ()
       }
     }
       
     def addClass(c : ClassDef) {
-   	  if (isInfo) {      		
-        logger.info("Class defn: "+c.name+" ["+this+"]")
-        logger.info("Parents: "+c.impl.parents)
-      }
-        
       indexer.addClassDeclaration(
         mapModifiers(c.mods),
         packageName.toString.toCharArray,
@@ -107,9 +100,6 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
     }
     
     def addModule(m : ModuleDef) {
-      if (isInfo)
-        logger.info("Module defn: "+m.name+" ["+this+"]")
-      
       indexer.addClassDeclaration(
         mapModifiers(m.mods),
         packageName.toString.toCharArray,
@@ -134,9 +124,6 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
     }
     
     def addVal(v : ValDef) {
-     if (isInfo)
-        logger.info("Val defn: >"+nme.getterName(v.name)+"< ["+this+"]")
-        
       indexer.addMethodDeclaration(
         nme.getterName(v.name).toChars,
         Array.empty,
@@ -155,8 +142,6 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
     }
     
     def addDef(d : DefDef) {
-      if (isInfo)
-        logger.info("Def defn: "+d.name+" ["+this+"]")
       val name = if(nme.isConstructorName(d.name)) enclClassNames.head else d.name.toChars
         
       val fps = for(vps <- d.vparamss; vp <- vps) yield vp
@@ -211,9 +196,6 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
         case md : ModuleDef => inClass(md.name.append("$").toChars) { super.traverse(tree) }
         
         case Apply(rt : RefTree, args) =>
-          if (isInfo)
-            logger.info("method reference: "+rt.name+" ["+args.length+"]")
-
           indexer.addMethodReference(rt.name.toChars, args.length)
           super.traverse(tree)
           

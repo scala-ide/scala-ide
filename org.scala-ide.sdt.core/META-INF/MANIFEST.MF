@@ -62,6 +62,7 @@ Import-Package:
  scala.tools.eclipse.contribution.weaving.jdt.search;apply-aspects:=false,
  scala.tools.eclipse.contribution.weaving.jdt.spellingengineprovider;apply-aspects:=false,
  scala.tools.eclipse.contribution.weaving.jdt.ui;apply-aspects:=false,
+ scala.tools.eclipse.contribution.weaving.jdt.ui.actions;apply-aspects:=false,
  scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor;apply-aspects:=false,
  scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.formatter;apply-aspects:=false
 Export-Package: 
@@ -87,7 +88,13 @@ Export-Package:
  scala.tools.eclipse.templates,
  scala.tools.eclipse.ui,
  scala.tools.eclipse.util,
- scala.tools.eclipse.wizards
+ scala.tools.eclipse.wizards,
+ scala.tools.eclipse.logging
 Bundle-RequiredExecutionEnvironment: J2SE-1.5
 Bundle-ClassPath: .,
- lib/miglayout-3.7.4-swt.jar
+ lib/miglayout-3.7.4.jar,
+ lib/log4j-1.2.16.jar
+Eclipse-ExtensibleAPI: 
+ true
+
+

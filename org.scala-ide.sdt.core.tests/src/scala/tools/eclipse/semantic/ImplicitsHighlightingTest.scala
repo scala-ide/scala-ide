@@ -2,18 +2,25 @@ package scala.tools.eclipse.semantic
 
 import org.junit.Test
 import org.junit.Assert
-
 import scala.collection.JavaConversions.mapAsScalaMap
 import scala.tools.eclipse.javaelements.ScalaSourceFile
-import scala.tools.eclipse.semantic.highlighting.SemanticHighlightingPresenter
+import scala.tools.eclipse.semantichighlighting.implicits.ImplicitHighlightingPresenter
 import scala.tools.eclipse.testsetup.TestProjectSetup
 import scala.tools.eclipse.ScalaPresentationCompiler
 import scala.tools.nsc.interactive.Response
 import scala.tools.nsc.util.SourceFile
+import scala.tools.eclipse.ScalaPlugin
+import scala.tools.eclipse.properties.ImplicitsPreferencePage
+import org.junit.Before
 
 object ImplicitsHighlightingTest extends TestProjectSetup("implicits-highlighting")
 
 class ImplicitsHighlightingTest {
+
+  @Before
+  def setPreferences() {
+    ScalaPlugin.plugin.getPreferenceStore.setValue(ImplicitsPreferencePage.P_CONVERSIONS_ONLY, false)
+  }
 
   @Test 
   def implicitConversion() {
@@ -73,7 +80,7 @@ class ImplicitsHighlightingTest {
   }
   
   def implicits(src: SourceFile, compiler: ScalaPresentationCompiler) = {
-    val implicits = SemanticHighlightingPresenter.findAllImplicitConversions(compiler, src)
+    val implicits = ImplicitHighlightingPresenter.findAllImplicitConversions(compiler, src)
     implicits.toList map {
       case (ann, p) =>
         ann.getText() +" ["+ p.getOffset() + ", "+ p.getLength() +"]"

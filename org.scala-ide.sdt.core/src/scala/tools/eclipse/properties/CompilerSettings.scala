@@ -25,7 +25,7 @@ import org.eclipse.swt.events.VerifyEvent
 import scala.tools.nsc.CompilerCommand
 import org.eclipse.jface.fieldassist._
 import org.eclipse.jface.bindings.keys.KeyStroke
-import scala.tools.eclipse.util.HasLogger
+import scala.tools.eclipse.logging.HasLogger
 
 trait ScalaPluginPreferencePage extends HasLogger {
   self: PreferencePage with EclipseSettings =>
@@ -51,7 +51,7 @@ trait ScalaPluginPreferencePage extends HasLogger {
           store.setToDefault(name)
         else {
           val value = setting match {
-            case ms: Settings#MultiStringSetting => ms.value.mkString(" ")
+            case ms: Settings#MultiStringSetting => ms.value.mkString(",")
             case setting                         => setting.value.toString
           }
           store.setValue(name, value)
@@ -100,12 +100,12 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
 
   import EclipseSetting.toEclipseBox
   /** The settings we can change */
-  lazy val userBoxes = IDESettings.shownSettings(new Settings) ++ IDESettings.buildManagerSettings
+  lazy val userBoxes = IDESettings.shownSettings(ScalaPlugin.defaultScalaSettings) ++ IDESettings.buildManagerSettings
   lazy val eclipseBoxes = userBoxes.map { s => toEclipseBox(s, preferenceStore0) }
 
   /** Pulls the preference store associated with this plugin */
   override def doGetPreferenceStore(): IPreferenceStore = {
-    ScalaPlugin.plugin.getPreferenceStore
+    ScalaPlugin.prefStore
   }
 
   var useProjectSettingsWidget: Option[UseProjectSettingsWidget] = None
@@ -227,7 +227,7 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
     buildIfNecessary()
     true
   } catch {
-    case ex => logger.error(ex); false
+    case ex => eclipseLog.error(ex); false
   }
 
   //Make sure apply button isn't available until it should be
@@ -283,7 +283,24 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
       control.redraw
       control.addSelectionListener(new SelectionListener() {
         override def widgetDefaultSelected(e: SelectionEvent) {}
-        override def widgetSelected(e: SelectionEvent) { handleToggle }
+        override def widgetSelected(e: SelectionEvent) { 
+          handleToggle
+          // Every time we toogle "Use Project Settings", we make sure 
+          // to reset the default value assigned to -Xpluginsdir.  
+          setDefaultPluginsDirValue()
+        }
+        /** This is a ugly (needed) hack to make sure that the default location pointed by 
+         * -Xpluginsdir contain the continuations plugin. If you change this, make sure to 
+         * read the comment in {{{ScalaPlugin.defaultScalaSettings}}}.*/ 
+        private def setDefaultPluginsDirValue() {
+          for(box <- eclipseBoxes;
+              eclipseSetting <- box.eSettings if eclipseSetting.setting.name == "-Xpluginsdir") {
+            eclipseSetting.control match {
+              case t: Text => ScalaPlugin.plugin.defaultPluginsDir.foreach(t.setText(_))
+              case _ => 
+            }
+          }
+        }
       })
     }
 
@@ -332,7 +349,7 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
 
       additionalParametersControl.addModifyListener { (event: ModifyEvent) =>
         var errors = new StringBuffer
-        val settings = new Settings(e => errors append ("\n" + e))
+        val settings = ScalaPlugin.defaultScalaSettings(e => errors append ("\n" + e))
         val result = settings.processArgumentString(additionalParametersControl.getText())
         if (result._2.nonEmpty || errors.length() > 0) {
           errorDecoration.setDescriptionText(errors.toString)
@@ -347,7 +364,7 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
         updateApplyButton()
       }
 
-      val settings = new Settings
+      val settings = ScalaPlugin.defaultScalaSettings
       val proposals = settings.visibleSettings.map(_.name)
 
       val provider = new IContentProposalProvider {

@@ -1,6 +1,7 @@
 package scala.tools.eclipse;
 
 import scala.tools.eclipse.classpath.ClasspathTests;
+import scala.tools.eclipse.compiler.settings.CompilerSettingsTest;
 import scala.tools.eclipse.completion.CompletionTests;
 
 import scala.tools.eclipse.hyperlinks.HyperlinkDetectorTests;
@@ -10,18 +11,24 @@ import scala.tools.eclipse.lexical.ScalaPartitionTokeniserTest;
 import scala.tools.eclipse.occurrences.OccurrencesFinderTest;
 import scala.tools.eclipse.sbtbuilder.NestedProjectsTest;
 import scala.tools.eclipse.sbtbuilder.OutputFoldersTest;
+import scala.tools.eclipse.sbtbuilder.ProjectDependenciesTest;
 import scala.tools.eclipse.sbtbuilder.SbtBuilderTest;
 import scala.tools.eclipse.sbtbuilder.TodoBuilderTest;
 import scala.tools.eclipse.semantic.ImplicitsHighlightingTest;
 import scala.tools.eclipse.sbtbuilder.ScalaCompilerClasspathTest;
 import scala.tools.eclipse.sbtbuilder.ScalaJavaDepTest;
+import scala.tools.eclipse.sbtbuilder.MultipleErrorsTest;
 import scala.tools.eclipse.structurebuilder.StructureBuilderTest;
+import scala.tools.eclipse.ui.TestBracketStrategy;
 import scala.tools.eclipse.pc.PresentationCompilerTest;
 import scala.tools.eclipse.wizards.*;
+import scala.tools.eclipse.util.*;
 
 
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
+
+import scala.tools.eclipse.semantichighlighting.classifier.SymbolClassifierTestSuite;
 
 
 /**
@@ -43,10 +50,18 @@ import org.junit.runners.Suite;
   OutputFoldersTest.class,
   ScalaCompilerClasspathTest.class,
   PresentationCompilerTest.class,
+  //scala.tools.eclipse.interpreter.EclipseReplTest.class, // see comments there
   ClasspathTests.class,
   TodoBuilderTest.class,
   ImplicitsHighlightingTest.class,
   ScalaJavaDepTest.class,
   NestedProjectsTest.class,
+  CompilerSettingsTest.class,
+  ProjectDependenciesTest.class,
+  MultipleErrorsTest.class,
+  TestBracketStrategy.class,
+  SymbolClassifierTestSuite.class,
+  CachedTest.class,
+  CollectionUtilTest.class
 })
 class TestsSuite { }

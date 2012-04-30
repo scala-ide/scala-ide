@@ -10,6 +10,7 @@ import scala.tools.eclipse.javaelements.ScalaSourceFile
 import tools.nsc.util.{ NoPosition, Position, RangePosition }
 import org.eclipse.ltk.core.refactoring.CompositeChange
 import scala.tools.eclipse.util.FileUtils
+import scala.tools.refactoring.common.TextChange
 
 /**
  * This rename participant hooks into the JDT's Rename File refactoring and renames the
@@ -76,7 +77,10 @@ class RenameParticipant extends LtkRenameParticipant {
             pm.setCanceled(false)
           } else {
             change = new CompositeChange("Rename Scala Class") {
-              scalaChangesToEclipseChanges(performRefactoring) foreach add
+              val changes = performRefactoring() collect {
+                case tc: TextChange => tc
+              }
+              scalaChangesToEclipseChanges(changes) foreach add
             }
           }
           

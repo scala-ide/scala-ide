@@ -8,7 +8,7 @@ import scala.tools.nsc.util.Chars._
 import scala.tools.eclipse.formatter.FormatterPreferences
 import scala.tools.eclipse.util.EclipseUtils._
 import scala.tools.eclipse.util.Utils._
-import scala.tools.eclipse.util.HasLogger
+import scala.tools.eclipse.logging.HasLogger
 import scala.tools.eclipse.ScalaPlugin
 import scalariform.formatter.ScalaFormatter
 
