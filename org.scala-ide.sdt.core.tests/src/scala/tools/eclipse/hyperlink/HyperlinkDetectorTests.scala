@@ -1,8 +1,7 @@
-package scala.tools.eclipse.hyperlinks
+package scala.tools.eclipse.hyperlink
 
 import scala.tools.eclipse.testsetup.SDTTestUtils
 import scala.tools.eclipse.testsetup.TestProjectSetup
-import scala.tools.eclipse.hyperlink.HyperlinksResolver
 import scala.tools.eclipse.ScalaWordFinder
 
 import org.eclipse.core.resources.IMarker
