@@ -12,9 +12,15 @@
   <packaging>eclipse-plugin</packaging>
 
   <properties>
+    <scalatest.version>0.9.1-SNAPSHOT</scalatest.version>
   </properties>
 
   <dependencies>
+    <dependency>
+      <groupId>org.scalatest</groupId>
+      <artifactId>scalatest-finders_2.9.0</artifactId>
+      <version>${scalatest.version}</version>
+    </dependency>
   </dependencies>
 
   <build>
@@ -74,6 +80,30 @@
             </fileset>
           </filesets>
         </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <version>2.4</version>
+        <executions>
+        <execution>
+            <id>copy</id>
+            <phase>initialize</phase>
+            <goals>
+              <goal>copy</goal>
+            </goals>
+            <configuration>
+              <artifactItems>
+                <artifactItem>
+                  <groupId>org.scalatest</groupId>
+                  <artifactId>scalatest-finders_2.9.0</artifactId>
+                  <version>${scalatest.version}</version>
+                  <outputDirectory>${basedir}/lib</outputDirectory>
+                </artifactItem>
+              </artifactItems>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
