@@ -29,15 +29,14 @@
     <module>../org.scala-ide.sdt.weaving.feature</module>
     <module>../org.scala-ide.sdt.aspects</module>
     <module>../org.scala-ide.sdt.core</module>
-    <module>../org.scala-ide.sdt.scalatest</module>
-    <module>../org.scala-ide.sdt.scalatest.tests</module>
     <module>../org.scala-ide.sdt.core.tests</module>
     <module>../org.scala-ide.sdt.debug</module>
     <module>../org.scala-ide.sdt.debug.tests</module>
     <module>../org.scala-ide.sdt.feature</module>
     <module>../org.scala-ide.sdt.source.feature</module>
     <module>../org.scala-ide.sdt.update-site</module>
-    
+    <module>../org.scala-ide.sdt.scalatest</module>
+    <module>../org.scala-ide.sdt.scalatest.tests</module>
   </modules>
 
   <build>
