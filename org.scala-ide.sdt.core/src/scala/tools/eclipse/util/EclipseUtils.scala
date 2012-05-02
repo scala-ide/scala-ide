@@ -24,6 +24,11 @@ import org.eclipse.jface.preference.PreferenceConverter
 import org.eclipse.swt.graphics.RGB
 import org.eclipse.ui.IWorkbenchPage
 import org.eclipse.ui.PlatformUI
+import org.eclipse.jface.text.IRegion
+import scala.tools.nsc.util.Position
+import scala.tools.nsc.util.SourceFile
+import scala.tools.nsc.interactive.RangePositions
+import scala.tools.nsc.util.RangePosition
 
 object EclipseUtils {
 
@@ -52,6 +57,15 @@ object EclipseUtils {
     def apply(offset: Int): Char = document.getChar(offset)
 
   }
+  
+  class PimpedRegion(region: IRegion) {
+    def toRangePos(src: SourceFile): Position = {
+      val offset = region.getOffset
+      new RangePosition(src, offset, offset, offset + region.getLength)
+    }
+  }
+  
+  implicit def pimpedRegion(region: IRegion) = new PimpedRegion(region)
 
   implicit def asEclipseTextEdit(edit: TextEdit): EclipseTextEdit =
     new ReplaceEdit(edit.position, edit.length, edit.replacement)
