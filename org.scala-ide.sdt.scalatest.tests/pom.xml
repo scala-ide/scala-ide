@@ -77,6 +77,21 @@
       <version>${project.version}</version>
       <type>eclipse-plugin</type>
     </dependency>
+    <dependency> 
+      <groupId>org.scala-tools.testing</groupId> 
+      <artifactId>scalacheck_2.9.0</artifactId> 
+      <version>1.9</version> 
+    </dependency>
+    <dependency> 
+      <groupId>org.scalatest</groupId> 
+      <artifactId>scalatest_2.9.0</artifactId> 
+      <version>1.7.2</version> 
+    </dependency>
+    <dependency>
+	  <groupId>org.scala-tools.testing</groupId>
+	  <artifactId>specs_2.9.0</artifactId>
+	  <version>1.6.8</version>
+    </dependency>
   </dependencies>
     
   <build>
@@ -159,8 +174,8 @@
         <artifactId>maven-dependency-plugin</artifactId>
         <version>2.4</version>
         <executions>
-        <execution>
-            <id>copy</id>
+          <execution>
+            <id>copy-mockito</id>
             <phase>initialize</phase>
             <goals>
               <goal>copy</goal>
@@ -172,6 +187,57 @@
                   <artifactId>mockito-all</artifactId>
                   <version>1.8.5</version>
                   <outputDirectory>${basedir}/lib</outputDirectory>
+                </artifactItem>
+              </artifactItems>
+            </configuration>
+          </execution>
+          <execution>
+            <id>copy-scalacheck</id>
+            <phase>initialize</phase>
+            <goals>
+              <goal>copy</goal>
+            </goals>
+            <configuration>
+              <artifactItems>
+                <artifactItem>
+                  <groupId>org.scala-tools.testing</groupId>
+                  <artifactId>scalacheck_2.9.0</artifactId>
+                  <version>1.9</version>
+                  <outputDirectory>${basedir}/test-workspace/scalatest/lib</outputDirectory>
+                </artifactItem>
+              </artifactItems>
+            </configuration>
+          </execution>
+          <execution>
+            <id>copy-scalatest</id>
+            <phase>initialize</phase>
+            <goals>
+              <goal>copy</goal>
+            </goals>
+            <configuration>
+              <artifactItems>
+                <artifactItem>
+                  <groupId>org.scalatest</groupId>
+                  <artifactId>scalatest_2.9.0</artifactId>
+                  <version>1.7.2</version>
+                  <outputDirectory>${basedir}/test-workspace/scalatest/lib</outputDirectory>
+                </artifactItem>
+              </artifactItems>
+            </configuration>
+          </execution>
+          <execution>
+            <id>copy-specs1</id>
+            <phase>initialize</phase>
+            <goals>
+              <goal>copy</goal>
+            </goals>
+            <configuration>
+              <artifactItems>
+                <artifactItem>
+                  <groupId>org.scala-tools.testing</groupId>
+                  <artifactId>specs_2.9.0</artifactId>
+                  <version>1.6.8</version>
+                  <outputDirectory>${basedir}/test-workspace/scalatest/lib</outputDirectory>
                 </artifactItem>
               </artifactItems>
             </configuration>
