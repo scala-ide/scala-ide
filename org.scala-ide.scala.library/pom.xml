@@ -98,10 +98,6 @@
         </dependency>
         <dependency>
           <groupId>org.scala-lang</groupId>
-          <artifactId>scala-dbc</artifactId>
-        </dependency>
-        <dependency>
-          <groupId>org.scala-lang</groupId>
           <artifactId>scala-actors</artifactId>
         </dependency>
       </dependencies>
@@ -147,14 +143,6 @@
                       <classifier>sources</classifier>
                       <type>jar</type>
                       <destFileName>scala-swing-src.jar</destFileName>
-                    </artifactItem>
-                    <artifactItem>
-                      <groupId>org.scala-lang</groupId>
-                      <artifactId>scala-dbc</artifactId>
-                      <version>${scala.library.version}</version>
-                      <classifier>sources</classifier>
-                      <type>jar</type>
-                      <destFileName>scala-dbc-src.jar</destFileName>
                     </artifactItem>
                   </artifactItems>
                   <outputDirectory>${project.build.directory}/lib</outputDirectory>
