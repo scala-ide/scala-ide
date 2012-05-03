@@ -64,11 +64,13 @@ trait SafeSymbol extends CompilerAccess with PimpedTrees {
         // with real positions, instead of just an Int
         val pos = rangePos(sourceFile, namePos, namePos, namePos + name.length)
 
-        val sym1 = global.askOption { () =>
+        val sym1 = if (expr.tpe ne null) global.askOption { () =>
           val typeSym = expr.tpe.member(name.toTypeName)
           if (typeSym.exists) typeSym
           else expr.tpe.member(name.toTermName)
         }.getOrElse(NoSymbol)
+        else NoSymbol
+        
         if (sym1 eq NoSymbol) List()
         else if (sym1.isOverloaded) sym1.alternatives.take(1).zip(List(pos))
         else List((sym1, pos))
