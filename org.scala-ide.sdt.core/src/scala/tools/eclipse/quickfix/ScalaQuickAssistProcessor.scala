@@ -30,13 +30,13 @@ class ScalaQuickAssistProcessor extends org.eclipse.jdt.ui.text.java.IQuickAssis
   override def getAssists(context: IInvocationContext, locations: Array[IProblemLocation]): Array[IJavaCompletionProposal] =
     context.getCompilationUnit match {
       case ssf: ScalaSourceFile => {
-        import scala.tools.eclipse.ui.EditorUtils.{withEditor, getAnnotationsAtOffset}
-        withEditor(ssf) { editor =>
+        import scala.tools.eclipse.util.EditorUtils.{openEditorAndApply, getAnnotationsAtOffset}
+        openEditorAndApply(ssf) { editor =>
           val corrections = {
             for ((ann, pos) <- getAnnotationsAtOffset(editor, context.getSelectionOffset())) yield {
               suggestAssist(context.getCompilationUnit(), ann.getText, pos)
             }
-          }.flatten
+          }.flatten.toList
           corrections match {
             case Nil        => null
             case correction => correction.distinct.toArray
