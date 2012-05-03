@@ -11,12 +11,12 @@ private[hyperlink] object Hyperlink {
   type Factory = (Openable, Int, Int, String, IRegion) => IHyperlink
 
   def toDeclaration(file: Openable, pos: Int, len: Int, label: String, wordRegion: IRegion): IHyperlink =
-    new OpenDeclaration(file, pos, len, label, wordRegion)
+    new ScalaHyperlink(file, pos, len, label, text = "Open Declaration", wordRegion)
 
-  def toImplicit(file: Openable, pos: Int, len: Int, text: String, wordRegion: IRegion): IHyperlink =
-    new OpenImplicit(file, pos, len, text, wordRegion)
+  def toImplicit(file: Openable, pos: Int, len: Int, label: String, wordRegion: IRegion): IHyperlink =
+    new ScalaHyperlink(file, pos, len, label, text = "Open Implicit", wordRegion)
 
-  abstract class Hyperlink(file: Openable, pos: Int, len: Int, label: String, text: String, wordRegion: IRegion) extends IHyperlink {
+  private class ScalaHyperlink(file: Openable, pos: Int, len: Int, label: String, text: String, wordRegion: IRegion) extends IHyperlink {
     def getHyperlinkRegion = wordRegion
     def getTypeLabel = label
     def getHyperlinkText = text
@@ -27,11 +27,5 @@ private[hyperlink] object Hyperlink {
       }
     }
   }
-
-  class OpenDeclaration(file: Openable, pos: Int, len: Int, label: String, region: IRegion)
-    extends Hyperlink(file, pos, len, label, text = "Open Declaration", region)
-
-  class OpenImplicit(file: Openable, pos: Int, len: Int, label: String, region: IRegion)
-    extends Hyperlink(file, pos, len, label, text = "Open Implicit", region)
 }
 

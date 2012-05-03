@@ -8,8 +8,6 @@ import scala.tools.eclipse.javaelements.ScalaCompilationUnit
 import scala.tools.eclipse.javaelements.ScalaSelectionEngine
 import scala.tools.eclipse.javaelements.ScalaSelectionRequestor
 import scala.tools.eclipse.semantichighlighting.implicits.ImplicitConversionAnnotation
-import scala.tools.eclipse.ui.EditorUtils.getAnnotationsAtOffset
-import scala.tools.eclipse.ui.EditorUtils.withEditor
 import scala.tools.eclipse.ScalaWordFinder
 
 import org.eclipse.jdt.internal.ui.javaeditor.EditorUtility
@@ -64,11 +62,11 @@ class HyperlinksDetector extends AbstractHyperlinkDetector {
   //        2) Because we use the editor's annotation model, this functionality cannot be tested in a UI-less environment.
   private def findHyperlinkToImplicit(scu: ScalaCompilationUnit, offset: Int): List[IHyperlink] = {
     import scala.tools.eclipse.semantichighlighting.implicits.ImplicitConversionAnnotation
-    import scala.tools.eclipse.ui.EditorUtils.{ withEditor, getAnnotationsAtOffset }
+    import scala.tools.eclipse.util.EditorUtils.{ openEditorAndApply, getAnnotationsAtOffset }
 
     var hyperlinks = List[IHyperlink]()
 
-    withEditor(scu) { editor =>
+    openEditorAndApply(scu) { editor =>
       for ((ann, pos) <- getAnnotationsAtOffset(editor, offset)) ann match {
         case a: ImplicitConversionAnnotation if a.sourceLink.isDefined =>
           hyperlinks = a.sourceLink.get :: hyperlinks

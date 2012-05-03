@@ -1,26 +1,34 @@
-package scala.tools.eclipse.ui
+package scala.tools.eclipse.util
 
-import org.eclipse.ui.IEditorPart
-import org.eclipse.jface.text.source.Annotation
-import org.eclipse.jface.text.Position
 import org.eclipse.jdt.internal.core.JavaElement
+import org.eclipse.jface.text.Position
+import org.eclipse.jface.text.source.Annotation
+import org.eclipse.ui.IEditorPart
+import scala.collection.JavaConverters._
+import org.eclipse.jface.text.source.IAnnotationModelExtension2
+import scala.tools.eclipse.ScalaWordFinder
 
 object EditorUtils {
 
-  def withEditor[T](element: JavaElement)(editor: IEditorPart => T): T =
+  def openEditorAndApply[T](element: JavaElement)(editor: IEditorPart => T): T =
     editor(org.eclipse.jdt.ui.JavaUI.openInEditor(element))
 
-  def getAnnotationsAtOffset(part: org.eclipse.ui.IEditorPart, offset: Int): List[(Annotation, Position)] = {
+  def getAnnotationsAtOffset(part: org.eclipse.ui.IEditorPart, offset: Int): Iterator[(Annotation, Position)] = {
     val model = org.eclipse.jdt.ui.JavaUI.getDocumentProvider.getAnnotationModel(part.getEditorInput)
-    import scala.collection.JavaConversions._
 
-    val annotationsWithPositions = model.getAnnotationIterator collect {
+    val annotations = model match {
+      case am2: IAnnotationModelExtension2 => am2.getAnnotationIterator(offset, 1, true, true)
+      case _                               => model.getAnnotationIterator
+    }
+    
+    val annotationsWithPositions = annotations.asScala collect {
       case ann: Annotation => (ann, model.getPosition(ann))
     }
 
     val annotationsAtOffset = annotationsWithPositions filter {
       case (_, pos) => pos.includes(offset)
     }
-    annotationsAtOffset.toList
+    
+    annotationsAtOffset
   }
 }
