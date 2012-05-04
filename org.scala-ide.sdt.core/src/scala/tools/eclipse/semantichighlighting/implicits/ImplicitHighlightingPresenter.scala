@@ -164,7 +164,7 @@ object ImplicitHighlightingPresenter {
       val pos = mkPosition(t.pos, txt)
       val region = new Region(pos.offset, pos.getLength)
 
-      object ImplicitHyperlinkFactory extends scala.tools.eclipse.hyperlink.ImplicitHyperlinkFactory {
+      object ImplicitHyperlinkFactory extends scala.tools.eclipse.hyperlink.text.ImplicitHyperlinkFactory {
         protected val global: compiler.type = compiler
       }
       

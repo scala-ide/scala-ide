@@ -114,7 +114,7 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
     val openAction = new Action {
       override def run {
         scalaCompilationUnit foreach { scu =>
-          scu.followReference(ScalaSourceFileEditor.this, getSelectionProvider.getSelection.asInstanceOf[ITextSelection])
+          scu.followDeclaration(ScalaSourceFileEditor.this, getSelectionProvider.getSelection.asInstanceOf[ITextSelection])
         }
       }
     }
