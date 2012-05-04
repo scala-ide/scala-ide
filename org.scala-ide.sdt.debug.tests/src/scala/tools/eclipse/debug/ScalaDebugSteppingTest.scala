@@ -268,13 +268,7 @@ class ScalaDebugSteppingTest {
 
     session.stepOver()
 
-    if (session.isScala210) {
-      // TODO: set line number to 12 when SI-5646 is fixed
-      session.checkStackFrame(TYPENAME_FC_LIO + "$$anonfun$main$1", "apply(I)V", 11)
-    } else {
-      session.checkStackFrame(TYPENAME_FC_LIO + "$$anonfun$main$1", "apply$mcVI$sp(I)V", 12)
-    }
-
+    session.checkStackFrame(TYPENAME_FC_LIO + "$$anonfun$main$1", "apply$mcVI$sp(I)V", 12)
   }
 
   @Test
@@ -288,12 +282,7 @@ class ScalaDebugSteppingTest {
 
     session.stepOver()
 
-    if (session.isScala210) {
-      // TODO: set line number to 22 when SI-5646 is fixed
-      session.checkStackFrame(TYPENAME_FC_LIO + "$$anonfun$foo$1", "apply(I)V", 21)
-    } else {
-      session.checkStackFrame(TYPENAME_FC_LIO + "$$anonfun$foo$1", "apply$mcVI$sp(I)V", 22)
-    }
+    session.checkStackFrame(TYPENAME_FC_LIO + "$$anonfun$foo$1", "apply$mcVI$sp(I)V", 22)
   }
 
   @Test
@@ -307,12 +296,7 @@ class ScalaDebugSteppingTest {
 
     session.stepOver()
 
-    if (session.isScala210) {
-      // TODO: set line number to 32 when SI-5646 is fixed
-      session.checkStackFrame(TYPENAME_FC_LIO + "$$anonfun$1", "apply(I)V", 31)
-    } else {
-      session.checkStackFrame(TYPENAME_FC_LIO + "$$anonfun$1", "apply$mcVI$sp(I)V", 32)
-    }
+    session.checkStackFrame(TYPENAME_FC_LIO + "$$anonfun$1", "apply$mcVI$sp(I)V", 32)
   }
 
   @Test
@@ -326,12 +310,7 @@ class ScalaDebugSteppingTest {
 
     session.stepOver()
 
-    if (session.isScala210) {
-      // TODO: set line number to 38 when SI-5646 is fixed
-      session.checkStackFrame(TYPENAME_FC_LIO + "$$anonfun$bar$1", "apply(I)V", 37)
-    } else {
-      session.checkStackFrame(TYPENAME_FC_LIO + "$$anonfun$bar$1", "apply$mcVI$sp(I)V", 38)
-    }
+    session.checkStackFrame(TYPENAME_FC_LIO + "$$anonfun$bar$1", "apply$mcVI$sp(I)V", 38)
   }
 
   /*
