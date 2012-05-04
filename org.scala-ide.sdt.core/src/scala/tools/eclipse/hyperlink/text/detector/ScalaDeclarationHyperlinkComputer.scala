@@ -1,15 +1,13 @@
-package scala.tools.eclipse.hyperlink
+package scala.tools.eclipse.hyperlink.text.detector
 
+import org.eclipse.jface.text.IRegion
+import org.eclipse.jface.text.hyperlink.IHyperlink
 import scala.Option.option2Iterable
-import scala.annotation.tailrec
+import scala.tools.eclipse.{ScalaPresentationCompiler => compiler}
 import scala.tools.eclipse.javaelements.ScalaCompilationUnit
 import scala.tools.eclipse.logging.HasLogger
-import scala.tools.eclipse.{ScalaPresentationCompiler => compiler}
 
-import org.eclipse.jface.text.hyperlink.IHyperlink
-import org.eclipse.jface.text.IRegion
-
-private[hyperlink] class HyperlinksResolver extends HasLogger {
+private[hyperlink] class ScalaDeclarationHyperlinkComputer extends HasLogger {
   def findHyperlinks(scu: ScalaCompilationUnit, wordRegion: IRegion): Option[List[IHyperlink]] = {
     scu.withSourceFile({ (sourceFile, compiler) =>
       if (wordRegion == null || wordRegion.getLength == 0)
@@ -57,7 +55,7 @@ private[hyperlink] class HyperlinksResolver extends HasLogger {
               filteredSyms.foldLeft(List[IHyperlink]()) { (links, sym) =>
                 if (sym.isJavaDefined) links
                 else {
-                  object DeclarationHyperlinkFactory extends scala.tools.eclipse.hyperlink.DeclarationHyperlinkFactory {
+                  object DeclarationHyperlinkFactory extends scala.tools.eclipse.hyperlink.text.DeclarationHyperlinkFactory {
                     protected val global: compiler.type = compiler
                   }
                   DeclarationHyperlinkFactory.create(scu, sym, wordRegion) match {

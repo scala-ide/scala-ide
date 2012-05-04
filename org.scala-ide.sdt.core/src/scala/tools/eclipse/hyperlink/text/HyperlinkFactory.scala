@@ -1,11 +1,9 @@
-package scala.tools.eclipse.hyperlink
+package scala.tools.eclipse.hyperlink.text
 
-import scala.tools.eclipse.ScalaPresentationCompiler
-import org.eclipse.jface.text.hyperlink.IHyperlink
-import scala.tools.eclipse.javaelements.ScalaCompilationUnit
-import org.eclipse.jface.text.Region
-import scala.tools.eclipse.hyperlink.text.Hyperlink
 import org.eclipse.jface.text.IRegion
+import org.eclipse.jface.text.hyperlink.IHyperlink
+import scala.tools.eclipse.ScalaPresentationCompiler
+import scala.tools.eclipse.javaelements.ScalaCompilationUnit
 
 private[hyperlink] abstract class HyperlinkFactory {
   protected val global: ScalaPresentationCompiler

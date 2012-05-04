@@ -1108,10 +1108,16 @@
          id="scala.tools.eclipse.interpreter.RunSelection"
          name="Send Selection to Scala Interpreter"/>
       <command
-            categoryId="scala.tools.eclipse.category"
-            description="Shows the type of the current selection"
-            id="scala.tools.eclipse.editor.ShowTypeOfSelection"
-            name="Show Type">
+         categoryId="scala.tools.eclipse.category"
+         description="Shows the type of the current selection"
+         id="scala.tools.eclipse.editor.ShowTypeOfSelection"
+         name="Show Type">
+      </command>
+      <command
+         categoryId="scala.tools.eclipse.category"
+         description="Open an editor on the selected implicit conversion"
+         id="scala.tools.eclipse.editor.OpenImplicit"
+         name="Open Implicit">
       </command>
 </extension>
 
@@ -1156,6 +1162,12 @@
          contextId="scala.tools.eclipse.scalaEditorScope"
          schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
          sequence="M2+M1+S T">
+   </key>
+   <key
+         commandId="scala.tools.eclipse.editor.OpenImplicit"
+         contextId="scala.tools.eclipse.scalaEditorScope"
+         schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+         sequence="M3+F3">
    </key>
    </extension>
    <extension point="org.eclipse.ui.bindings"> <!-- Cross-platform bindings -->
@@ -1209,6 +1221,10 @@
           class="scala.tools.eclipse.actions.ShowTypeOfSelectionCommand"
           commandId="scala.tools.eclipse.editor.ShowTypeOfSelection">
     </handler>
+    <handler
+          class="scala.tools.eclipse.actions.OpenImplicitCommand"
+          commandId="scala.tools.eclipse.editor.OpenImplicit">
+    </handler>
  </extension>
  <extension
        point="org.eclipse.ui.menus">
@@ -1225,6 +1241,26 @@
        </toolbar>
     </menuContribution>
     <menuContribution
+          locationURI="menu:navigate?after=open.ext">
+       <command
+             commandId="scala.tools.eclipse.editor.OpenImplicit"
+             id="one"
+             label="Open Implicit"
+             mnemonic="I"
+             style="push"
+             tooltip="Open an editor on the selected implicit conversion">
+          <visibleWhen
+                checkEnabled="false">
+             <with
+                   variable="activeEditorId">
+                <equals
+                      value="scala.tools.eclipse.ScalaSourceFileEditor">
+                </equals>
+             </with>
+          </visibleWhen>
+       </command>
+    </menuContribution>
+    <menuContribution
           locationURI="popup:#CompilationUnitEditorContext?before=additions">
        <command
              commandId="scala.tools.eclipse.editor.ShowTypeOfSelection"
@@ -1233,6 +1269,26 @@
              mnemonic="S"
              style="push"
              tooltip="Shows the type of the current selection">
+          <visibleWhen
+                checkEnabled="false">
+             <with
+                   variable="activeEditorId">
+                <equals
+                      value="scala.tools.eclipse.ScalaSourceFileEditor">
+                </equals>
+             </with>
+          </visibleWhen>
+       </command>
+    </menuContribution>
+    <menuContribution
+          locationURI="popup:#CompilationUnitEditorContext?before=additions">
+       <command
+             commandId="scala.tools.eclipse.editor.OpenImplicit"
+             id="two"
+             label="Open Implicit"
+             mnemonic="I"
+             style="push"
+             tooltip="Open an editor on the selected implicit conversion">
           <visibleWhen
                 checkEnabled="false">
              <with
