@@ -3,7 +3,6 @@ package scala.tools.eclipse.hyperlink
 import scala.tools.eclipse.testsetup.SDTTestUtils
 import scala.tools.eclipse.testsetup.TestProjectSetup
 import scala.tools.eclipse.ScalaWordFinder
-
 import org.eclipse.core.resources.IMarker
 import org.eclipse.core.resources.IncrementalProjectBuilder
 import org.eclipse.core.runtime.NullProgressMonitor
@@ -11,6 +10,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Ignore
 import org.junit.Test
+import scala.tools.eclipse.hyperlink.text.detector.ScalaDeclarationHyperlinkComputer
 
 object HyperlinkDetectorTests extends TestProjectSetup("hyperlinks") with HyperlinkTester
 
@@ -27,7 +27,7 @@ class HyperlinkDetectorTests {
     val positions = SDTTestUtils.positionsOf(contents, "/*^*/")
 
     println("checking %d positions".format(positions.size))
-    val resolver = new HyperlinksResolver
+    val resolver = new ScalaDeclarationHyperlinkComputer
     for (pos <- positions) {
       val wordRegion = ScalaWordFinder.findWord(unit.getContents, pos - 1)
       val word = new String(unit.getContents.slice(wordRegion.getOffset, wordRegion.getOffset + wordRegion.getLength))
