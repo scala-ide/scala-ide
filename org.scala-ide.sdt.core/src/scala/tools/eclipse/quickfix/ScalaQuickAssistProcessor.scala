@@ -30,32 +30,22 @@ class ScalaQuickAssistProcessor extends org.eclipse.jdt.ui.text.java.IQuickAssis
   override def getAssists(context: IInvocationContext, locations: Array[IProblemLocation]): Array[IJavaCompletionProposal] =
     context.getCompilationUnit match {
       case ssf: ScalaSourceFile => {
-        val editor = JavaUI.openInEditor(context.getCompilationUnit)
-        val corrections = {
-          for ((ann, pos) <- getAnnotationsAtOffset(editor, context.getSelectionOffset())) yield {
-            suggestAssist(context.getCompilationUnit(), ann.getText, pos)
+        import scala.tools.eclipse.util.EditorUtils.{openEditorAndApply, getAnnotationsAtOffset}
+        openEditorAndApply(ssf) { editor =>
+          val corrections = {
+            for ((ann, pos) <- getAnnotationsAtOffset(editor, context.getSelectionOffset())) yield {
+              suggestAssist(context.getCompilationUnit(), ann.getText, pos)
+            }
+          }.flatten.toList
+          corrections match {
+            case Nil        => null
+            case correction => correction.distinct.toArray
           }
-        }.flatten
-        corrections match {
-          case Nil        => null
-          case correction => correction.distinct.toArray
         }
       }
       // The caller expects null to mean "no assists".
       case _ => null
     }
-
-  private def getAnnotationsAtOffset(part: IEditorPart, offset: Int): List[Pair[Annotation, Position]] = {
-    import ScalaQuickAssistProcessor._
-    val model = JavaUI.getDocumentProvider.getAnnotationModel(part.getEditorInput)
-    val annotationsWithPositions = model.getAnnotationIterator collect {
-      case ann: Annotation => (ann, model.getPosition(ann))
-    }
-    val annotationsAtOffset = annotationsWithPositions filter {
-      case (_, pos) => isInside(offset, pos.offset, pos.offset + pos.length)
-    }
-    annotationsAtOffset.toList
-  }
 
   private def suggestAssist(compilationUnit: ICompilationUnit, problemMessage: String, location: Position): Seq[IJavaCompletionProposal] = {
     val refactoringSuggestions: Seq[IJavaCompletionProposal] = try {
@@ -81,11 +71,6 @@ class ScalaQuickAssistProcessor extends org.eclipse.jdt.ui.text.java.IQuickAssis
 }
 
 object ScalaQuickAssistProcessor {
-
-  private def isInside(offset: Int, start: Int, end: Int) = {
-    (start to end) contains offset
-  }
-
   private final val ImplicitConversionFound = "(?s)Implicit conversions found: (.*)".r
 
   private final val ImplicitArgFound = "(?s)Implicit arguments found: (.*)".r

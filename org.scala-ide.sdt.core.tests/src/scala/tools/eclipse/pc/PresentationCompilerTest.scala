@@ -11,7 +11,7 @@ import org.junit.Assert._
 import org.junit._
 import org.mockito.Matchers._
 import org.mockito.Mockito._
-import scala.tools.eclipse.hyperlinks.HyperlinkTester
+import scala.tools.eclipse.hyperlink.HyperlinkTester
 import scala.tools.eclipse.testsetup.CustomAssertion
 
 object PresentationCompilerTest extends testsetup.TestProjectSetup("pc") with CustomAssertion with HyperlinkTester

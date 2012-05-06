@@ -31,6 +31,7 @@ import scala.tools.eclipse.util.AnnotationUtils
 import scala.tools.eclipse.semantichighlighting.ColorManager
 import scala.tools.eclipse.semantic.SemanticAction
 import scala.tools.eclipse.properties.ImplicitsPreferencePage
+import org.eclipse.jface.text.Region
 
 /**
  * @author Jin Mingjian
@@ -58,7 +59,7 @@ class ImplicitHighlightingPresenter(editor: FileEditorInput, sourceViewer: ISour
 
   private lazy val P_COLOR = {
     val lookup = new org.eclipse.ui.texteditor.AnnotationPreferenceLookup()
-    val pref = lookup.getAnnotationPreference(ImplicitConversionsOrArgsAnnotation.ID)
+    val pref = lookup.getAnnotationPreference(ImplicitAnnotation.ID)
     pref.getColorPreferenceKey()
   }
 
@@ -67,14 +68,14 @@ class ImplicitHighlightingPresenter(editor: FileEditorInput, sourceViewer: ISour
     ColorManager.colorManager.getColor(rgb)
   }
 
-  private val impTextStyleStrategy = new ImplicitConversionsOrArgsTextStyleStrategy(isFontStyleBold | isFontStyleItalic)
+  private val impTextStyleStrategy = new ImpliticAnnotationTextStyleStrategy(isFontStyleBold | isFontStyleItalic)
 
   private val painter: AnnotationPainter = {
     val p = new AnnotationPainter(sourceViewer, annotationAccess)
-    p.addAnnotationType(ImplicitConversionsOrArgsAnnotation.ID, ImplicitConversionsOrArgsAnnotation.ID)
-    p.addTextStyleStrategy(ImplicitConversionsOrArgsAnnotation.ID, impTextStyleStrategy)
+    p.addAnnotationType(ImplicitAnnotation.ID, ImplicitAnnotation.ID)
+    p.addTextStyleStrategy(ImplicitAnnotation.ID, impTextStyleStrategy)
     //FIXME settings color of the underline is required to active TextStyle (bug ??, better way ??)
-    p.setAnnotationTypeColor(ImplicitConversionsOrArgsAnnotation.ID, colorValue)
+    p.setAnnotationTypeColor(ImplicitAnnotation.ID, colorValue)
     val textViewer = sourceViewer.asInstanceOf[TextViewer]
     textViewer.addPainter(p)
     textViewer.addTextPresentationListener(p)
@@ -93,7 +94,7 @@ class ImplicitHighlightingPresenter(editor: FileEditorInput, sourceViewer: ISour
       }
       if (changed) {
         impTextStyleStrategy.fontStyle = isFontStyleBold | isFontStyleItalic
-        painter.setAnnotationTypeColor(ImplicitConversionsOrArgsAnnotation.ID, colorValue)
+        painter.setAnnotationTypeColor(ImplicitAnnotation.ID, colorValue)
         painter.paint(IPainter.CONFIGURATION)
       }
     }
@@ -126,7 +127,7 @@ class ImplicitHighlightingPresenter(editor: FileEditorInput, sourceViewer: ISour
           compiler.askLoadedTyped(sourceFile, response)
           response.get(200) match {
             case Some(Left(_)) =>
-              annotationsToAdd = findAllImplicitConversions(compiler, sourceFile)
+              annotationsToAdd = findAllImplicitConversions(compiler, scu, sourceFile)
             case Some(Right(exc)) =>
               logger.error(exc)
             case None =>
@@ -134,7 +135,7 @@ class ImplicitHighlightingPresenter(editor: FileEditorInput, sourceViewer: ISour
           }
         }
 
-        AnnotationUtils.update(sourceViewer, ImplicitConversionsOrArgsAnnotation.ID, annotationsToAdd)
+        AnnotationUtils.update(sourceViewer, ImplicitAnnotation.ID, annotationsToAdd)
       }
     }
   }
@@ -145,7 +146,7 @@ object ImplicitHighlightingPresenter {
 
   private def pluginStore: IPreferenceStore = ScalaPlugin.plugin.getPreferenceStore
 
-  def findAllImplicitConversions(compiler: ScalaPresentationCompiler, sourceFile: SourceFile) = {
+  def findAllImplicitConversions(compiler: ScalaPresentationCompiler, scu: ScalaCompilationUnit, sourceFile: SourceFile) = {
     import compiler.{ Tree, Traverser, ApplyImplicitView, ApplyToImplicitArgs }
     
     def mkPosition(pos: compiler.Position, txt: String): Position = {
@@ -159,9 +160,18 @@ object ImplicitHighlightingPresenter {
     }
 
     def mkImplicitConversionAnnotation(t: ApplyImplicitView) = {
-      val txt = new String(sourceFile.content, t.pos.startOrPoint, math.max(0, t.pos.endOrPoint - t.pos.startOrPoint)).trim()
-      val annotation = new ImplicitConversionsOrArgsAnnotation("Implicit conversions found: " + txt + DisplayStringSeparator + t.fun.symbol.name + "(" + txt + ")")
+      val txt = new String(sourceFile.content, t.pos.startOrPoint, math.max(0, t.pos.endOrPoint - t.pos.startOrPoint)).trim()      
       val pos = mkPosition(t.pos, txt)
+      val region = new Region(pos.offset, pos.getLength)
+
+      object ImplicitHyperlinkFactory extends scala.tools.eclipse.hyperlink.text.ImplicitHyperlinkFactory {
+        protected val global: compiler.type = compiler
+      }
+      
+      val sourceLink = ImplicitHyperlinkFactory.create(scu, t, region)
+      
+      val annotation = new ImplicitConversionAnnotation(sourceLink, "Implicit conversions found: " + txt + DisplayStringSeparator + t.fun.symbol.name + "(" + txt + ")")
+      
       (annotation, pos)
     }
 
@@ -173,7 +183,7 @@ object ImplicitHighlightingPresenter {
         case null => ""
         case l => l.collect { case x if x.hasSymbol => x.symbol.name }.mkString("( ", ", ", " )")
       }
-      val annotation = new ImplicitConversionsOrArgsAnnotation("Implicit arguments found: " + txt + DisplayStringSeparator + txt + argsStr)
+      val annotation = new ImplicitArgAnnotation("Implicit arguments found: " + txt + DisplayStringSeparator + txt + argsStr)
       val pos = mkPosition(t.pos, txt)
       (annotation, pos)
     }

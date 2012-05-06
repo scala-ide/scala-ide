@@ -1,18 +1,18 @@
 package scala.tools.eclipse.debug
 
 import scala.collection.mutable.Buffer
-import org.eclipse.debug.core.model.IDebugModelProvider
-import org.eclipse.debug.core.{ IDebugEventSetListener, DebugPlugin, DebugEvent }
-import org.eclipse.jdt.debug.core.{ IJavaStackFrame, IJavaDebugTarget }
-import org.eclipse.jdt.internal.debug.core.model.{ JDIThread, JDIDebugTarget }
-import model.ScalaDebugTarget
-import org.eclipse.ui.internal.WorkbenchPlugin
-import org.eclipse.ui.ISelectionListener
-import model.ScalaThread
-import org.eclipse.jface.viewers.IStructuredSelection
-import model.ScalaStackFrame
 import scala.tools.eclipse.ScalaPlugin
-import org.eclipse.debug.core.model.DebugElement
+import scala.tools.eclipse.logging.HasLogger
+
+import org.eclipse.debug.core.{IDebugEventSetListener, DebugPlugin, DebugEvent}
+import org.eclipse.debug.core.model.{IDebugModelProvider, DebugElement}
+import org.eclipse.debug.core.sourcelookup.ISourceLookupDirector
+import org.eclipse.jdt.debug.core.{IJavaStackFrame, IJavaDebugTarget}
+import org.eclipse.jdt.internal.debug.core.model.{JDIThread, JDIDebugTarget}
+import org.eclipse.jface.viewers.IStructuredSelection
+import org.eclipse.ui.{PlatformUI, ISelectionListener}
+
+import model.{ScalaThread, ScalaStackFrame, ScalaDebugTarget}
 
 object EclipseDebugEvent {
   def unapply(event: DebugEvent): Option[(Int, DebugElement)] = {
@@ -25,7 +25,7 @@ object EclipseDebugEvent {
   }
 }
 
-object ScalaDebugger extends IDebugEventSetListener with ISelectionListener {
+object ScalaDebugger extends IDebugEventSetListener with ISelectionListener with HasLogger {
 
   val classIDebugModelProvider = classOf[IDebugModelProvider]
   val classIJavaDebugTarget = classOf[IJavaDebugTarget]
@@ -84,7 +84,7 @@ object ScalaDebugger extends IDebugEventSetListener with ISelectionListener {
     DebugPlugin.getDefault.addDebugEventListener(this)
     if (!ScalaPlugin.plugin.headlessMode) {
       // TODO: really ugly. Need to keep track of current selection per window.
-      WorkbenchPlugin.getDefault.getWorkbench.getWorkbenchWindows.apply(0).getSelectionService.addSelectionListener("org.eclipse.debug.ui.DebugView", this)
+      PlatformUI.getWorkbench.getWorkbenchWindows.apply(0).getSelectionService.addSelectionListener("org.eclipse.debug.ui.DebugView", this)
     }
   }
 
@@ -95,8 +95,14 @@ object ScalaDebugger extends IDebugEventSetListener with ISelectionListener {
     launch.removeDebugTarget(target)
     launch.addDebugTarget(scalaTarget)
 
-    // TODO: do that in a better place
-    launch.setSourceLocator(new ScalaSourceLocator(launch))
+    // add the Scala participant to provide source file name
+    // when debugging application with the Scala debugger
+    launch.getSourceLocator match {
+      case sourceLookupDirector: ISourceLookupDirector =>
+        sourceLookupDirector.addParticipants(Array(ScalaSourceLookupParticipant))
+      case sourceLocator =>
+        logger.warn("unable to recognize source locator %s, cannot add Scala participant".format(sourceLocator))
+    }
   }
 
   private def javaDebugTargetTerminated(target: JDIDebugTarget) {
@@ -108,5 +114,3 @@ object ScalaDebugger extends IDebugEventSetListener with ISelectionListener {
   }
 
 }
-
-class ScalaDebugger

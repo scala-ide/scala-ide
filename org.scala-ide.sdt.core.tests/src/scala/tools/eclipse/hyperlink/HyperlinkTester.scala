@@ -1,11 +1,10 @@
-package scala.tools.eclipse.hyperlinks
+package scala.tools.eclipse.hyperlink
 
 import scala.tools.eclipse.testsetup.TestProjectSetup
-import scala.tools.eclipse.ScalaHyperlinkDetector
 import scala.tools.eclipse.ScalaWordFinder
-
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import scala.tools.eclipse.hyperlink.text.detector.ScalaDeclarationHyperlinkComputer
 
 
 trait HyperlinkTester extends TestProjectSetup {
@@ -41,15 +40,15 @@ trait HyperlinkTester extends TestProjectSetup {
           println("hyperlinking at position %d (%s)".format(pos, word))
 
           // Execute SUT
-          val detector = new ScalaHyperlinkDetector
-          val maybeLinks = detector.scalaHyperlinks(unit, wordRegion)
+          val resolver = new ScalaDeclarationHyperlinkComputer
+          val maybeLinks = resolver.findHyperlinks(unit, wordRegion)
 
           // Verify Expectations
           assertTrue("no links found for `%s`".format(word), maybeLinks.isDefined)
           val links = maybeLinks.get
           assertEquals("expected %d link, found %d".format(1, links.size), 1, links.size)
           val link = links.head
-          assertEquals("text", oracle.text, link.getHyperlinkText())
+          assertEquals("text", oracle.text, link.getTypeLabel)
           //assertEquals("offset", oracle.region.getOffset(), link.getHyperlinkRegion().getOffset())
           unit.withSourceFile({ (sourceFile, compiler) =>
             val offset = link.getHyperlinkRegion().getOffset()

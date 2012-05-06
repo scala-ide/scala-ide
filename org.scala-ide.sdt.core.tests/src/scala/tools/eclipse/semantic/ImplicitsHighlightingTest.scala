@@ -12,6 +12,7 @@ import scala.tools.nsc.util.SourceFile
 import scala.tools.eclipse.ScalaPlugin
 import scala.tools.eclipse.properties.ImplicitsPreferencePage
 import org.junit.Before
+import scala.tools.eclipse.javaelements.ScalaCompilationUnit
 
 object ImplicitsHighlightingTest extends TestProjectSetup("implicits-highlighting")
 
@@ -24,7 +25,7 @@ class ImplicitsHighlightingTest {
 
   @Test 
   def implicitConversion() {
-    withSourceFileAndCompiler("implicit-highlighting/Implicits.scala") { (src, compiler) =>
+    withCompilationUnitAndCompiler("implicit-highlighting/Implicits.scala") { (src, compiler) =>
       
       val expected = List(
         "Implicit conversions found: List(1,2) => listToString(List(1,2)) [184, 9]",
@@ -38,7 +39,7 @@ class ImplicitsHighlightingTest {
   
   @Test 
   def implicitConversionsFromPredef() {
-    withSourceFileAndCompiler("implicit-highlighting/DefaultImplicits.scala") { (src, compiler) =>
+    withCompilationUnitAndCompiler("implicit-highlighting/DefaultImplicits.scala") { (src, compiler) =>
  
       val expected = List(
         "Implicit conversions found: 1 => any2ArrowAssoc(1) [46, 1]"
@@ -51,7 +52,7 @@ class ImplicitsHighlightingTest {
   
   @Test 
   def implicitArguments() {
-    withSourceFileAndCompiler("implicit-highlighting/ImplicitArguments.scala") {(src, compiler) =>
+    withCompilationUnitAndCompiler("implicit-highlighting/ImplicitArguments.scala") {(src, compiler) =>
            
       val expected = List (
         "Implicit arguments found: takesImplArg => takesImplArg( s ) [124, 12]"
@@ -62,10 +63,10 @@ class ImplicitsHighlightingTest {
     }
   }
         
-  def withSourceFileAndCompiler(path: String)(test: (SourceFile, ScalaPresentationCompiler) => Unit) {
+  def withCompilationUnitAndCompiler(path: String)(test: (ScalaPresentationCompiler, ScalaCompilationUnit) => Unit) {
     import ImplicitsHighlightingTest._
     
-    val unit = compilationUnit(path).asInstanceOf[ScalaSourceFile]
+    val unit = scalaCompilationUnit(path)
     
     project.withSourceFile(unit) { (src, compiler) =>
       val dummy = new Response[Unit]
@@ -75,12 +76,12 @@ class ImplicitsHighlightingTest {
       val tree =  new Response[compiler.Tree]
       compiler.askType(src, false, tree)
       tree.get      
-      test(src, compiler)
+      test(compiler, unit)
     }()
   }
   
-  def implicits(src: SourceFile, compiler: ScalaPresentationCompiler) = {
-    val implicits = ImplicitHighlightingPresenter.findAllImplicitConversions(compiler, src)
+  def implicits(compiler: ScalaPresentationCompiler, scu: ScalaCompilationUnit) = {
+    val implicits = ImplicitHighlightingPresenter.findAllImplicitConversions(compiler, scu, scu.createSourceFile)
     implicits.toList map {
       case (ann, p) =>
         ann.getText() +" ["+ p.getOffset() + ", "+ p.getLength() +"]"

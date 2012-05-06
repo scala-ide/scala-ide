@@ -4,7 +4,7 @@ import scala.tools.eclipse.classpath.ClasspathTests;
 import scala.tools.eclipse.compiler.settings.CompilerSettingsTest;
 import scala.tools.eclipse.completion.CompletionTests;
 
-import scala.tools.eclipse.hyperlinks.HyperlinkDetectorTests;
+import scala.tools.eclipse.hyperlink.HyperlinkDetectorTests;
 import scala.tools.eclipse.jcompiler.AbstractMethodVerifierTest;
 import scala.tools.eclipse.lexical.ScalaDocumentPartitionerTest;
 import scala.tools.eclipse.lexical.ScalaPartitionTokeniserTest;

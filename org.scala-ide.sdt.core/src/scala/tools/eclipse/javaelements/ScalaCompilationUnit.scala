@@ -21,7 +21,6 @@ import org.eclipse.jdt.internal.core.{
 import org.eclipse.jdt.internal.core.search.matching.{ MatchLocator, PossibleMatch }
 import org.eclipse.jdt.internal.ui.javaeditor.DocumentAdapter
 import org.eclipse.jface.text.{IRegion, ITextSelection}
-import org.eclipse.ui.texteditor.ITextEditor
 import scala.tools.nsc.io.AbstractFile
 import scala.tools.nsc.util.{ BatchSourceFile, SourceFile }
 import scala.tools.eclipse.contribution.weaving.jdt.{ IScalaCompilationUnit, IScalaWordFinder }
@@ -32,6 +31,11 @@ import org.eclipse.jdt.internal.core.JavaElement
 import org.eclipse.jdt.internal.core.SourceRefElement
 import scala.tools.eclipse.logging.HasLogger
 import scala.tools.nsc.interactive.Response
+import org.eclipse.jface.text.source.ISourceViewer
+import scala.tools.eclipse.hyperlink.text.detector.DeclarationHyperlinkDetector
+import org.eclipse.ui.texteditor.ITextEditor
+import scala.tools.eclipse.hyperlink.text.detector.BaseHyperlinkDetector
+import scala.tools.eclipse.util.EditorUtils
 
 trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with ScalaElement with IScalaCompilationUnit with IBufferChangedListener with HasLogger {
   val project = ScalaPlugin.plugin.getScalaProject(getJavaProject.getProject)
@@ -256,14 +260,15 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
   
   override def getScalaWordFinder() : IScalaWordFinder = ScalaWordFinder
   
-  def followReference(editor : ITextEditor, selection : ITextSelection) = {
-    val region = new IRegion {
-      def getOffset = selection.getOffset
-      def getLength = selection.getLength
-    }
-    new ScalaHyperlinkDetector().detectHyperlinks(editor, region, false) match {
-      case Array(hyp) => hyp.open
-      case _ =>  
+  def followDeclaration(editor : ITextEditor, selection : ITextSelection): Unit = 
+    followReference(DeclarationHyperlinkDetector(), editor, selection)
+  
+  def followReference(detectionStrategy: BaseHyperlinkDetector, editor : ITextEditor, selection : ITextSelection): Unit = {
+    val region = EditorUtils.textSelection2region(selection)
+
+    Option(detectionStrategy.detectHyperlinks(editor, region, canShowMultipleHyperlinks = false)) match {
+      case Some(Array(first, _*)) => first.open	
+      case _ => ()
     }
   }
 }

@@ -15,15 +15,15 @@
   <packaging>pom</packaging>
 
   <properties>
-    <sbt.version>0.11.2-scalaide-05</sbt.version>
+    <sbt.version>0.11.2-scalaide-07</sbt.version>
     <scala.compiler.groupid>org.scala-lang</scala.compiler.groupid>
     <scala.library.version>${scala.version}</scala.library.version>
     <scala.compiler.version>${scala.version}</scala.compiler.version>
   </properties>
 
   <modules>
-    <module>../org.scala-ide.scala.compiler</module>
     <module>../org.scala-ide.scala.library</module>
+    <module>../org.scala-ide.scala.compiler</module>
     <module>../org.scala-ide.sbt.full.library</module>
   </modules>
   <dependencyManagement>

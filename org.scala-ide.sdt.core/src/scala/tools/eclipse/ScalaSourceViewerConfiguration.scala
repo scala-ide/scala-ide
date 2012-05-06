@@ -35,6 +35,7 @@ import scala.tools.eclipse.lexical._
 import scala.tools.eclipse.formatter.ScalaFormattingStrategy
 import scala.tools.eclipse.ui.AutoCloseBracketStrategy
 import scala.tools.eclipse.properties.syntaxcolouring.ScalaSyntaxClasses
+import scala.tools.eclipse.hyperlink.text.detector.HyperlinksDetector
 
 class ScalaSourceViewerConfiguration(store: IPreferenceStore, scalaPreferenceStore: IPreferenceStore, editor: ITextEditor)
    extends JavaSourceViewerConfiguration(JavaPlugin.getDefault.getJavaTextTools.getColorManager, store, editor, IJavaPartitions.JAVA_PARTITIONING) {
@@ -85,11 +86,10 @@ class ScalaSourceViewerConfiguration(store: IPreferenceStore, scalaPreferenceSto
      new ScalaHover(getCodeAssist _)
    }
 
-   override def getHyperlinkDetectors(sv: ISourceViewer) = {
-      val shd = new ScalaHyperlinkDetector
-      if (editor != null)
-         shd.setContext(editor)
-      Array(shd)
+   override def getHyperlinkDetectors(sv: ISourceViewer): Array[IHyperlinkDetector] = {
+     val detector = HyperlinksDetector()
+     if (editor != null) detector.setContext(editor)
+     Array(detector)
    }
 
    def getCodeAssist: Option[ICodeAssist] = Option(editor) map { editor =>

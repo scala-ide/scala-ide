@@ -138,6 +138,20 @@ class ScalaStackFrame(val thread: ScalaThread, var stackFrame: StackFrame) exten
   }
 
   def getSourceName(): String = stackFrame.location.sourceName
+  
+  /**
+   * Return the source path based on source name and the package.
+   * Segments are separated by '/'.
+   */
+  def getSourcePath(): String = {
+    // we shoudn't use location#sourcePath, as it is platform dependent
+    stackFrame.location.declaringType.name.split('.').init match {
+      case Array() =>
+        getSourceName
+      case packageSegments =>
+        packageSegments.mkString("", "/", "/") + getSourceName
+    }
+  }
 
   def getMethodFullName(): String = {
     getFullName(stackFrame.location.method)

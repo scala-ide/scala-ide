@@ -7,7 +7,6 @@
 package scala.tools.eclipse
 
 import java.util.ResourceBundle
-
 import scala.Option.option2Iterable
 import scala.tools.eclipse.javaelements.ScalaCompilationUnit
 import scala.tools.eclipse.javaelements.ScalaSourceFile
@@ -20,7 +19,6 @@ import scala.tools.eclipse.util.RichAnnotationModel.annotationModel2RichAnnotati
 import scala.tools.eclipse.util.SWTUtils.fnToPropertyChangeListener
 import scala.tools.eclipse.util.SWTUtils
 import scala.tools.eclipse.util.Utils
-
 import org.eclipse.core.runtime.jobs.Job
 import org.eclipse.core.runtime.IAdaptable
 import org.eclipse.core.runtime.IProgressMonitor
@@ -63,10 +61,12 @@ import org.eclipse.ui.texteditor.SourceViewerDecorationSupport
 import org.eclipse.ui.texteditor.TextOperationAction
 import org.eclipse.ui.ISelectionListener
 import org.eclipse.ui.IWorkbenchPart
-
 import ScalaSourceFileEditor.OCCURRENCE_ANNOTATION
 import ScalaSourceFileEditor.SCALA_EDITOR_SCOPE
 import ScalaSourceFileEditor.bundleForConstructedKeys
+import org.eclipse.swt.events.VerifyEvent
+import org.eclipse.jface.text.ITextViewerExtension
+import scala.tools.eclipse.ui.SurroundSelectionStrategy
 
 
 class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
@@ -114,7 +114,7 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
     val openAction = new Action {
       override def run {
         scalaCompilationUnit foreach { scu =>
-          scu.followReference(ScalaSourceFileEditor.this, getSelectionProvider.getSelection.asInstanceOf[ITextSelection])
+          scu.followDeclaration(ScalaSourceFileEditor.this, getSelectionProvider.getSelection.asInstanceOf[ITextSelection])
         }
       }
     }
@@ -309,6 +309,11 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
   override def createPartControl(parent: org.eclipse.swt.widgets.Composite) {
     super.createPartControl(parent)
     refactoring.RefactoringMenu.fillQuickMenu(this)
+    getSourceViewer match {
+      case sourceViewer: ITextViewerExtension =>
+        sourceViewer.prependVerifyKeyListener(new SurroundSelectionStrategy(getSourceViewer))
+      case _ =>
+    }
   }
 
   override def handlePreferenceStoreChanged(event: PropertyChangeEvent) =
