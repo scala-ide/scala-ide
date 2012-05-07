@@ -19,7 +19,7 @@
     <repo.toolchain>${repo.scala-ide}</repo.toolchain>
     <repo.juno>http://download.eclipse.org/releases/juno/</repo.juno>
     <!--repo.juno>http://download.eclipse.org/eclipse/updates/4.2-I-builds</repo.juno -->
-    <repo.ajdt>http://download.eclipse.org/tools/ajdt/37/dev/update/</repo.ajdt>
+    <repo.ajdt>http://download.eclipse.org/tools/ajdt/42/dev/update/</repo.ajdt>
   </properties>
 
   <prerequisites>
