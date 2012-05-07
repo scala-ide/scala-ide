@@ -22,6 +22,7 @@ import org.eclipse.jdt.internal.debug.core.model.JDIReferenceType
 import com.sun.jdi.ArrayReference
 import com.sun.jdi.ArrayType
 import com.sun.jdi.ClassType
+import org.eclipse.debug.core.model.IIndexedValue
 
 object ScalaValueTest {
   def createFields(size: Int): JList[Field] = {
@@ -385,7 +386,7 @@ class ScalaValueTest {
   }
 
   @Test
-  def arrayRefereneceValue() {
+  def arrayReferenceValue() {
     val jdiValue = mock(classOf[ArrayReference])
     when(jdiValue.length).thenReturn(3)
     when(jdiValue.uniqueID).thenReturn(65)
@@ -393,16 +394,26 @@ class ScalaValueTest {
     when(jdiValue.referenceType).thenReturn(jdiReferenceType)
     when(jdiReferenceType.signature).thenReturn("[Lelement/package/ElementClass;")
 
-    val scalaValue = ScalaValue(jdiValue, null)
+    val scalaValue = ScalaValue(jdiValue, null).asInstanceOf[IIndexedValue]
 
     assertEquals("Bad type", "scala.Array", scalaValue.getReferenceTypeName)
     assertEquals("Bad value", "Array[ElementClass](3) (id=65)", scalaValue.getValueString)
-    assertTrue("Should not have variables", scalaValue.hasVariables)
-    assertEquals("Should not have variables", 3, scalaValue.getVariables.length)
+    assertTrue("Should have variables", scalaValue.hasVariables)
+    assertEquals("Should have 3 variables", 3, scalaValue.getVariables().length)
+    
+    // methods from IIndexedValue
+    
+    assertEquals("Should start at 0", 0, scalaValue.getInitialOffset)
+    assertEquals("Should have 3 variables", 3, scalaValue.getSize)
+    assertEquals("Wrong element 0", "(0)", scalaValue.getVariable(0).getName)
+    val elements1to2= scalaValue.getVariables(1, 2)
+    assertEquals("Wrong size for sublist", 2, elements1to2.length)
+    assertEquals("Wrong element 1", "(1)", elements1to2(0).getName)
+    assertEquals("Wrong element 2", "(2)", elements1to2(1).getName)
   }
 
   @Test
-  def arrayReferenecValueZeroLength() {
+  def arrayReferenceValueZeroLength() {
     val jdiValue = mock(classOf[ArrayReference])
     when(jdiValue.length).thenReturn(0)
     when(jdiValue.uniqueID).thenReturn(92)
@@ -410,11 +421,17 @@ class ScalaValueTest {
     when(jdiValue.referenceType).thenReturn(jdiReferenceType)
     when(jdiReferenceType.signature).thenReturn("[LAClass;")
 
-    val scalaValue = ScalaValue(jdiValue, null)
+    val scalaValue = ScalaValue(jdiValue, null).asInstanceOf[IIndexedValue]
 
     assertEquals("Bad type", "scala.Array", scalaValue.getReferenceTypeName)
     assertEquals("Bad value", "Array[AClass](0) (id=92)", scalaValue.getValueString)
     assertFalse("Should not have variables", scalaValue.hasVariables)
-    assertEquals("Should not have variables", 0, scalaValue.getVariables.length)
+    assertEquals("Should not have variables", 0, scalaValue.getVariables().length)
+    
+    // methods from IIndexedValue
+    
+    assertEquals("Should start at 0", 0, scalaValue.getInitialOffset)
+    assertEquals("Should have 3 variables", 0, scalaValue.getSize)
+    // not point of testing getVariable(Int) and getVariables(Int, Int)
   }
 }

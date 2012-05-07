@@ -5,6 +5,8 @@ import org.eclipse.debug.core.model.IValue
 import com.sun.jdi.{ VoidValue, Value, StringReference, ShortValue, ObjectReference, LongValue, IntegerValue, FloatValue, DoubleValue, CharValue, ByteValue, BooleanValue, ArrayReference }
 import com.sun.jdi.ClassType
 import com.sun.jdi.PrimitiveValue
+import org.eclipse.debug.core.model.IIndexedValue
+import org.eclipse.debug.core.model.IVariable
 
 object ScalaValue {
 
@@ -58,16 +60,24 @@ abstract class ScalaValue(target: ScalaDebugTarget) extends ScalaDebugElement(ta
 
 }
 
-class ScalaArrayReference(val arrayReference: ArrayReference, target: ScalaDebugTarget) extends ScalaValue(target) {
+class ScalaArrayReference(val arrayReference: ArrayReference, target: ScalaDebugTarget) extends ScalaValue(target) with IIndexedValue {
 
   // Members declared in org.eclipse.debug.core.model.IValue
 
   def getReferenceTypeName(): String = "scala.Array"
   def getValueString(): String = "%s(%d) (id=%d)".format(ScalaStackFrame.getSimpleName(arrayReference.referenceType.signature), arrayReference.length, arrayReference.uniqueID)
-  def getVariables(): Array[org.eclipse.debug.core.model.IVariable] = {
-    (0 until arrayReference.length).map(new ScalaArrayElementVariable(_, this)).toArray
-  }
+  def getVariables(): Array[IVariable] = getVariables(0, arrayReference.length)
   def hasVariables(): Boolean = arrayReference.length > 0
+  
+  // Members declared in org.eclipse.debug.core.model.IIndexedValue
+  
+  def getVariable(offset: Int) : IVariable = new ScalaArrayElementVariable(offset, this)
+  
+  def getVariables(offset: Int, length: Int) : Array[IVariable] = (offset until offset + length).map(new ScalaArrayElementVariable(_, this)).toArray
+  
+  def getSize(): Int = arrayReference.length	
+
+  def getInitialOffset(): Int = 0
 }
 
 class ScalaPrimitiveValue(typeName: String, value: String, target: ScalaDebugTarget) extends ScalaValue(target) {
