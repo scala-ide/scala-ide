@@ -25,6 +25,18 @@ import scala.tools.eclipse.util.ReflectionUtils
 
 trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentationCompiler =>
   
+  object Throws {
+    def unapply(sym: Symbol): Option[Array[Array[Char]]] = {
+      val throwsAnnotations = sym.annotations.filter(_.atp.typeSymbol == definitions.ThrowsClass)
+      
+      val typeNames = for(AnnotationInfo(_, List(Literal(Constant(typeName: Type))), _) <- throwsAnnotations) 
+        yield mapType(typeName).toCharArray
+      
+      if(typeNames.isEmpty) None
+      else Some(typeNames.toArray)
+    }
+  }
+  
   // We cache these names since they are used for each ValDef during structure building
   val GET = newTermName("get")
   val IS  = newTermName("is") 
@@ -185,7 +197,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
           val defElemInfo = new ScalaSourceMethodInfo
           
           defElemInfo.setArgumentNames(paramNames)
-          defElemInfo.setExceptionTypeNames(Array.empty)
+          setExceptionTypeNames(d, defElemInfo)
           
           val tn = javaSig.returnType.getOrElse(mapType(d.info.finalResultType)).toArray
           defElemInfo.setReturnType(tn)
@@ -285,6 +297,14 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
         val jdtTypeParams = sym.typeParams.zip(typeParams) map {case (tpSym,tp) => acceptTypeParameter(tpSym, tp, elem)}
         
         info setTypeParameters jdtTypeParams.toArray
+      }
+      
+      protected def setExceptionTypeNames(sym: Symbol, element: FnInfo): Unit = {
+        val exceptionTypeNames = sym match {
+          case Throws(typeNames) => typeNames
+          case _ => Array.empty[Array[Char]]
+        }
+        element.setExceptionTypeNames(exceptionTypeNames)
       }
     }
     
@@ -692,7 +712,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
             new ScalaSourceMethodInfo
         
         defElemInfo.setArgumentNames(paramNames)
-        defElemInfo.setExceptionTypeNames(Array.empty)
+        setExceptionTypeNames(sym, defElemInfo)
         
         val tn = javaSig.returnType.getOrElse(mapType(sym.info.finalResultType)).toArray
         defElemInfo.setReturnType(tn)
