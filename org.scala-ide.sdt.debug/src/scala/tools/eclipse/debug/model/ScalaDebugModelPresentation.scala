@@ -28,6 +28,7 @@ import org.eclipse.core.runtime.Status
 import scala.tools.eclipse.debug.ScalaDebugPlugin
 import com.sun.jdi.PrimitiveValue
 import org.eclipse.jdt.internal.ui.javaeditor.EditorUtility
+import org.eclipse.debug.internal.ui.views.variables.IndexedVariablePartition
 
 object ScalaDebugModelPresentation {
   def computeDetail(value: IValue): String = {
@@ -142,8 +143,10 @@ class ScalaDebugModelPresentation extends IDebugModelPresentation {
       case variable: ScalaVariable =>
         // TODO: right image depending on ?
         DebugUITools.getImage(IDebugUIConstants.IMG_OBJS_VARIABLE)
-      case _ =>
-        ???
+      case variable: IndexedVariablePartition =>
+        // variable used to split large arrays
+        // TODO: see ScalaVariable before
+        DebugUITools.getImage(IDebugUIConstants.IMG_OBJS_VARIABLE)
     }
   }
 
@@ -155,8 +158,6 @@ class ScalaDebugModelPresentation extends IDebugModelPresentation {
         getScalaThreadText(thread)
       case stackFrame: ScalaStackFrame =>
         getScalaStackFrameText(stackFrame)
-      case _ =>
-        ???
     }
   }
 
