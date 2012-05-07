@@ -10,21 +10,21 @@ class ScalaTestLaunchShortcutTest {
   
   @Test
   def testGetScalaTestSuites() {
-    val singleSpecSuiteList = ScalaTestLaunchShortcut.getScalaTestSuites(file("src/com/test/SingleSpec.scala"))
+    val singleSpecSuiteList = ScalaTestLaunchShortcut.getScalaTestSuites(scalaCompilationUnit("com/test/SingleSpec.scala"))
     assertEquals(1, singleSpecSuiteList.size)
     assertTrue(singleSpecSuiteList.exists(t => t.getFullyQualifiedName == "com.test.SingleSpec"))
     
-    val multiSpecSuiteList = ScalaTestLaunchShortcut.getScalaTestSuites(file("src/com/test/MultiSpec.scala"))
+    val multiSpecSuiteList = ScalaTestLaunchShortcut.getScalaTestSuites(scalaCompilationUnit("com/test/MultiSpec.scala"))
     assertEquals(3, multiSpecSuiteList.size)
     assertTrue(multiSpecSuiteList.exists(t => t.getFullyQualifiedName == "com.test.TestingFunSuite"))
     assertTrue(multiSpecSuiteList.exists(t => t.getFullyQualifiedName == "com.test.TestingFreeSpec"))
     assertTrue(multiSpecSuiteList.exists(t => t.getFullyQualifiedName == "com.test.StackSpec2"))
     
-    /*val exampleSpec1SuiteList = ScalaTestLaunchShortcut.getScalaTestSuites(file("src/com/test/ExampleSpec1.scala"))
+    /*val exampleSpec1SuiteList = ScalaTestLaunchShortcut.getScalaTestSuites(scalaCompilationUnit("com/test/ExampleSpec1.scala"))
     assertEquals(1, exampleSpec1SuiteList.size)
     assertTrue(exampleSpec1SuiteList.exists(t => t.getFullyQualifiedName == "com.test.ExampleSpec1"))
     
-    val stringSpecificationSuiteList = ScalaTestLaunchShortcut.getScalaTestSuites(file("src/com/test/StringSpecification.scala"))
+    val stringSpecificationSuiteList = ScalaTestLaunchShortcut.getScalaTestSuites(scalaCompilationUnit("com/test/StringSpecification.scala"))
     assertEquals(1, stringSpecificationSuiteList.size)
     assertTrue(stringSpecificationSuiteList.exists(t => t.getFullyQualifiedName == "com.test.StringSpecification"))*/
   }
