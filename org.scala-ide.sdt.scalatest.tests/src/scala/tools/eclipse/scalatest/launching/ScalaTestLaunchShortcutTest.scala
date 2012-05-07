@@ -20,13 +20,13 @@ class ScalaTestLaunchShortcutTest {
     assertTrue(multiSpecSuiteList.exists(t => t.getFullyQualifiedName == "com.test.TestingFreeSpec"))
     assertTrue(multiSpecSuiteList.exists(t => t.getFullyQualifiedName == "com.test.StackSpec2"))
     
-    val exampleSpec1SuiteList = ScalaTestLaunchShortcut.getScalaTestSuites(file("src/com/test/ExampleSpec1.scala"))
+    /*val exampleSpec1SuiteList = ScalaTestLaunchShortcut.getScalaTestSuites(file("src/com/test/ExampleSpec1.scala"))
     assertEquals(1, exampleSpec1SuiteList.size)
     assertTrue(exampleSpec1SuiteList.exists(t => t.getFullyQualifiedName == "com.test.ExampleSpec1"))
     
     val stringSpecificationSuiteList = ScalaTestLaunchShortcut.getScalaTestSuites(file("src/com/test/StringSpecification.scala"))
     assertEquals(1, stringSpecificationSuiteList.size)
-    assertTrue(stringSpecificationSuiteList.exists(t => t.getFullyQualifiedName == "com.test.StringSpecification"))
+    assertTrue(stringSpecificationSuiteList.exists(t => t.getFullyQualifiedName == "com.test.StringSpecification"))*/
   }
   
   @Test
@@ -44,7 +44,7 @@ class ScalaTestLaunchShortcutTest {
         assertTrue(t.getFullyQualifiedName + " expected as a ScalaTest suite, but it is not.", ScalaTestLaunchShortcut.isScalaTestSuite(t))
     }
     
-    val exampleSpec1File = scalaCompilationUnit("com/test/ExampleSpec1.scala")
+    /*val exampleSpec1File = scalaCompilationUnit("com/test/ExampleSpec1.scala")
     exampleSpec1File.getAllTypes.foreach { t =>
       assertTrue(t.getFullyQualifiedName + " expected as a ScalaTest suite, but it is not.", ScalaTestLaunchShortcut.isScalaTestSuite(t))
     }
@@ -52,7 +52,7 @@ class ScalaTestLaunchShortcutTest {
     val stringSpecificationFile = scalaCompilationUnit("com/test/StringSpecification.scala")
     stringSpecificationFile.getAllTypes.foreach { t =>
       assertTrue(t.getFullyQualifiedName + " expected as a ScalaTest suite, but it is not.", ScalaTestLaunchShortcut.isScalaTestSuite(t))
-    }
+    }*/
   }
   
   @Test
@@ -63,11 +63,11 @@ class ScalaTestLaunchShortcutTest {
     val multiSpecFile = scalaCompilationUnit("com/test/MultiSpec.scala").asInstanceOf[ScalaSourceFile]
     assertTrue(ScalaTestLaunchShortcut.containsScalaTestSuite(multiSpecFile))
     
-    val exampleSpec1File = scalaCompilationUnit("com/test/ExampleSpec1.scala").asInstanceOf[ScalaSourceFile]
+    /*val exampleSpec1File = scalaCompilationUnit("com/test/ExampleSpec1.scala").asInstanceOf[ScalaSourceFile]
     assertTrue(ScalaTestLaunchShortcut.containsScalaTestSuite(exampleSpec1File))
     
     val stringSpecificationFile = scalaCompilationUnit("com/test/StringSpecification.scala").asInstanceOf[ScalaSourceFile]
-    assertTrue(ScalaTestLaunchShortcut.containsScalaTestSuite(stringSpecificationFile))
+    assertTrue(ScalaTestLaunchShortcut.containsScalaTestSuite(stringSpecificationFile))*/
   }
   
   @Test
