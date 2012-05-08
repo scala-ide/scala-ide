@@ -11,6 +11,4 @@ class HyperlinkOpenAction(editor: JavaEditor) extends OpenAction(editor) with Hy
   override protected val detectionStrategy: BaseHyperlinkDetector = DeclarationHyperlinkDetector()
   
   override def run() { openHyperlink(editor) }
-  
-  override def isEnabled: Boolean = isEnabled(editor)
 }

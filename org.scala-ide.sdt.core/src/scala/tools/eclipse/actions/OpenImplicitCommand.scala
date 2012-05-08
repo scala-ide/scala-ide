@@ -23,8 +23,4 @@ class OpenImplicitCommand extends AbstractHandler with HyperlinkOpenActionStrate
     }
     null
   }
-
-  override def isEnabled: Boolean = EditorHelpers.withCurrentEditor { editor =>
-    Some(isEnabled(editor))
-  }.getOrElse(false)
 }
