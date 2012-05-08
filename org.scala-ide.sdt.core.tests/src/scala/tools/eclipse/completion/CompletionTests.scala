@@ -206,4 +206,15 @@ class CompletionTests {
   def ticket1000855_2() {
     checkPackageNameOnSingleCompletion("ticket_1000855/d/D.scala", Seq(("a.b.c", "T855C"), ("a.b.e", "T855E")))
   }
+
+  @Test
+  @Ignore("Enable this test once the ticket is fixed.")
+  def t1001014 {
+    val oracle = List("xx")
+    
+    val unit = scalaCompilationUnit("t1001014/F.scala")
+    reload(unit)
+
+    runTest("t1001014/F.scala", false)(oracle)
+  }
 }

@@ -93,7 +93,7 @@ class TestProjectSetup(projectName: String, srcRoot: String = "/%s/src/", bundle
    * 
    * @param srcPath the path to the scala source file 
    * */
-  def open(srcPath: String) = {
+  def open(srcPath: String): ScalaUnit = {
     val unit = scalaCompilationUnit(srcPath)
     openWorkingCopyFor(unit)
     reload(unit)
