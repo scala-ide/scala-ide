@@ -14,13 +14,20 @@ import scala.tools.eclipse.semantic.SemanticAction
 import scala.tools.eclipse.util.Utils.debugTimed
 import org.eclipse.core.runtime._
 import org.eclipse.core.runtime.jobs.Job
+import scala.tools.eclipse.javaelements.ScalaCompilationUnit
 
 class SemanticHighlightingAnnotationsManager(sourceViewer: ISourceViewer) extends SemanticAction with HasLogger {
 
   private var annotations: Set[Annotation] = Set()
 
+  /** One job family per annotation manager, so we can cancel existing jobs before scheduling another job */
+  private val jobFamily = new Object
+
   override def apply(scu: ScalaCompilationUnit) {
     if (semanticHighlightingRequired) {
+      // cancel any in-progress or not-yet-scheduled jobs for this family
+      Job.getJobManager.cancel(jobFamily)
+
       val job = semanticHighlightingJob(scu)
 
       job.setPriority(Job.DECORATE)
@@ -30,23 +37,7 @@ class SemanticHighlightingAnnotationsManager(sourceViewer: ISourceViewer) extend
   }
 
   private def semanticHighlightingJob(scu: ScalaCompilationUnit): Job =
-    new Job("semantic highlighting") {
-      def run(monitor: IProgressMonitor): IStatus = {
-        scu.doWithSourceFile { (sourceFile, compiler) =>
-          val useSyntacticHints = isUseSyntacticHintsEnabled
-          logger.info("Semantic highlighting " + scu.getResource.getName)
-          val symbolInfos =
-            try SymbolClassifier.classifySymbols(sourceFile, compiler, useSyntacticHints)
-            catch {
-              case e =>
-                logger.error("Error performing semantic highlighting", e)
-                Nil
-            }
-          setAnnotations(symbolInfos)
-        }
-        Status.OK_STATUS
-      }
-    }
+    new SemanticHighlightingJob(scu)
 
   private def semanticHighlightingRequired: Boolean =
     isSemanticHighlightingEnabled &&
@@ -92,4 +83,32 @@ class SemanticHighlightingAnnotationsManager(sourceViewer: ISourceViewer) extend
 
   private def annotationModelOpt = Option(sourceViewer.getAnnotationModel)
 
+  /** A background job that performs semantic highlighting. */
+  private class SemanticHighlightingJob(scu: ScalaCompilationUnit) extends Job("semantic highlighting") {
+    @volatile private var cancelled = false
+
+    def run(monitor: IProgressMonitor): IStatus = {
+      scu.doWithSourceFile { (sourceFile, compiler) =>
+        val useSyntacticHints = isUseSyntacticHintsEnabled
+        logger.info("Semantic highlighting " + scu.getResource.getName)
+        val symbolInfos =
+          try SymbolClassifier.classifySymbols(sourceFile, compiler, useSyntacticHints)
+          catch {
+            case e =>
+              logger.error("Error performing semantic highlighting", e)
+              Nil
+          }
+        if (!cancelled) setAnnotations(symbolInfos)
+      }
+      Status.OK_STATUS
+    }
+
+    override def canceling() {
+      cancelled = true
+    }
+
+    /** It belongs to the semantic highlighting family. */
+    override def belongsTo(family: Object) =
+      jobFamily eq family
+  }
 }
