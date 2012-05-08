@@ -6,5 +6,5 @@ import org.eclipse.jdt.ui.actions.OpenAction
 import scala.tools.eclipse.hyperlink.text.detector.DeclarationHyperlinkDetector
 
 class OpenActionProvider extends IOpenActionProvider {
-  override def getOpenAction(editor: JavaEditor): OpenAction = new HyperlinkOpenAction(DeclarationHyperlinkDetector(), editor)
+  override def getOpenAction(editor: JavaEditor): OpenAction = new HyperlinkOpenAction(editor)
 }
