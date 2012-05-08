@@ -11,41 +11,52 @@ import scala.tools.eclipse.logging.HasLogger
 import org.eclipse.jface.text.source._
 import org.eclipse.jface.text.Position
 import scala.tools.eclipse.semantic.SemanticAction
-
 import scala.tools.eclipse.util.Utils.debugTimed
+import org.eclipse.core.runtime._
+import org.eclipse.core.runtime.jobs.Job
 
 class SemanticHighlightingAnnotationsManager(sourceViewer: ISourceViewer) extends SemanticAction with HasLogger {
 
   private var annotations: Set[Annotation] = Set()
 
   override def apply(scu: ScalaCompilationUnit) {
-    if (semanticHighlightingRequired)
-      scu.doWithSourceFile { (sourceFile, compiler) =>
-        val useSyntacticHints = isUseSyntacticHintsEnabled
-        
-        val symbolInfos = 
-          try SymbolClassifier.classifySymbols(sourceFile, compiler, useSyntacticHints)
-          catch {
-            case e =>
-              logger.error("Error performing semantic highlighting", e)
-              Nil
-          }
-        setAnnotations(symbolInfos)
-      }
-    else
+    if (semanticHighlightingRequired) {
+      val job = semanticHighlightingJob(scu)
+
+      job.setPriority(Job.DECORATE)
+      job.schedule()
+    } else
       removeAllAnnotations()
   }
+
+  private def semanticHighlightingJob(scu: ScalaCompilationUnit): Job =
+    new Job("semantic highlighting") {
+      def run(monitor: IProgressMonitor): IStatus = {
+        scu.doWithSourceFile { (sourceFile, compiler) =>
+          val useSyntacticHints = isUseSyntacticHintsEnabled
+          logger.info("Semantic highlighting " + scu.getResource.getName)
+          val symbolInfos =
+            try SymbolClassifier.classifySymbols(sourceFile, compiler, useSyntacticHints)
+            catch {
+              case e =>
+                logger.error("Error performing semantic highlighting", e)
+                Nil
+            }
+          setAnnotations(symbolInfos)
+        }
+        Status.OK_STATUS
+      }
+    }
 
   private def semanticHighlightingRequired: Boolean =
     isSemanticHighlightingEnabled &&
       (ScalaSyntaxClasses.scalaSemanticCategory.children.map(_.enabledKey) exists prefStore.getBoolean)
 
   @inline private def prefStore = ScalaPlugin.prefStore
-    
+
   private def isSemanticHighlightingEnabled: Boolean = prefStore.getBoolean(ScalaSyntaxClasses.ENABLE_SEMANTIC_HIGHLIGHTING)
   private def isUseSyntacticHintsEnabled: Boolean = prefStore.getBoolean(ScalaSyntaxClasses.USE_SYNTACTIC_HINTS)
-  
-  
+
   private def makeAnnotations(symbolInfos: List[SymbolInfo]): Map[Annotation, Position] = {
     val strikethroughDeprecatedSymbols = isStrikethroughDeprecatedDecorationEnabled
     for {
@@ -55,17 +66,18 @@ class SemanticHighlightingAnnotationsManager(sourceViewer: ISourceViewer) extend
       annotation = SemanticHighlightingAnnotations.symbolAnnotation(symbolType, deprecated)
     } yield (annotation -> asPosition(region))
   }.toMap
-  
-  private def isStrikethroughDeprecatedDecorationEnabled: Boolean = 
+
+  private def isStrikethroughDeprecatedDecorationEnabled: Boolean =
     prefStore.getBoolean(ScalaSyntaxClasses.STRIKETHROUGH_DEPRECATED)
 
   private def setAnnotations(symbolInfos: List[SymbolInfo]) {
     val annotationsToPositions: Map[Annotation, Position] = debugTimed("makeAnnotations")(makeAnnotations(symbolInfos))
-    for (annotationModel <- annotationModelOpt)
+    for (annotationModel <- annotationModelOpt) {
       annotationModel.withLock {
         debugTimed("replaceAnnotations")(annotationModel.replaceAnnotations(annotations, annotationsToPositions))
         annotations = annotationsToPositions.keySet
       }
+    }
   }
 
   private def asPosition(region: Region) = new Position(region.offset, region.length)
