@@ -1,32 +1,16 @@
 package scala.tools.eclipse.ui.actions
 
 import scala.tools.eclipse.hyperlink.text.detector.BaseHyperlinkDetector
-import scala.tools.eclipse.javaelements.ScalaCompilationUnit
-import scala.tools.eclipse.util.EditorUtils
+import scala.tools.eclipse.hyperlink.text.detector.DeclarationHyperlinkDetector
 
-import org.eclipse.jdt.internal.ui.javaeditor.EditorUtility
 import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor
 import org.eclipse.jdt.ui.actions.OpenAction
-import org.eclipse.jface.text.ITextSelection
-import org.eclipse.jface.text.TextSelection
 
-class HyperlinkOpenAction(detectionStrategy: BaseHyperlinkDetector, editor: JavaEditor) extends OpenAction(editor) {
+class HyperlinkOpenAction(editor: JavaEditor) extends OpenAction(editor) with HyperlinkOpenActionStrategy {
 
-  override def run() {
-    withScalaCompilatioUnit {
-      _.followReference(detectionStrategy, editor, getSelectionProvider.getSelection.asInstanceOf[ITextSelection])
-    }
-  }
-
-  private def withScalaCompilatioUnit[T](f: ScalaCompilationUnit => T): Option[T] = {
-    val inputJavaElement = EditorUtility.getEditorInputJavaElement(editor, false)
-    Option(inputJavaElement) map (_.asInstanceOf[ScalaCompilationUnit]) map (f)
-  }
+  override protected val detectionStrategy: BaseHyperlinkDetector = DeclarationHyperlinkDetector()
   
-  override def isEnabled: Boolean = getSelectionProvider.getSelection match {
-    case textSelection: TextSelection =>
-      val region = EditorUtils.textSelection2region(textSelection)
-      detectionStrategy.detectHyperlinks(editor, region, canShowMultipleHyperlinks = false) != null
-    case _ => false
-  }
+  override def run() { openHyperlink(editor) }
+  
+  override def isEnabled: Boolean = isEnabled(editor)
 }
