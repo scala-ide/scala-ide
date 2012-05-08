@@ -20,11 +20,12 @@ object EditorUtils {
     val model = org.eclipse.jdt.ui.JavaUI.getDocumentProvider.getAnnotationModel(part.getEditorInput)
 
     val annotations = model match {
-      case am2: IAnnotationModelExtension2 => am2.getAnnotationIterator(offset, 1, true, true)
-      case _                               => model.getAnnotationIterator
+      case null                            => Iterator.empty
+      case am2: IAnnotationModelExtension2 => am2.getAnnotationIterator(offset, 1, true, true).asScala
+      case _                               => model.getAnnotationIterator.asScala
     }
 
-    val annotationsWithPositions = annotations.asScala collect {
+    val annotationsWithPositions = annotations collect {
       case ann: Annotation => (ann, model.getPosition(ann))
     }
 
