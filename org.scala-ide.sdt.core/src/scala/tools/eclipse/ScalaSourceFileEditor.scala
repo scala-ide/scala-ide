@@ -239,7 +239,7 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
       val groups = groupMenuItemsByGroupId(mm.getItems)
 
       // these two contributions won't work on Scala files, so we remove them
-      val blacklist = List("codeGroup", "importGroup")
+      val blacklist = List("codeGroup", "importGroup", "generateGroup", "externalizeGroup")
 
       // and provide our own organize imports instead
       mm.appendToGroup("importGroup", new refactoring.OrganizeImportsAction { setText("Organize Imports") })
