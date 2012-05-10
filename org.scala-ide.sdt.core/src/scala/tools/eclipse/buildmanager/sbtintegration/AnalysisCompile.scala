@@ -60,22 +60,6 @@ class AnalysisCompile (conf: BasicConfiguration, bm: EclipseSbtBuildManager, con
       }
     }
     
-    def getJdkPath(jProject: IJavaProject) = {
-      val rawClasspath = bm.project.javaProject.getRawClasspath()
-      rawClasspath.toSeq.flatMap(cp =>
-        cp.getEntryKind match {
-          case org.eclipse.jdt.core.IClasspathEntry.CPE_CONTAINER =>
-            val path0 = cp.getPath
-            if (!path0.isEmpty && path0.segment(0) == JavaRuntime.JRE_CONTAINER) {
-              val container = JavaCore.getClasspathContainer(cp.getPath, bm.project.javaProject)
-              Some(container.getClasspathEntries.toSeq.map(_.getPath.toFile))
-            } else None
-          case _ => None
-          
-        }).flatten
-    }
-
-    
     def doCompile(scalac: ScalaSbtCompiler, javac: JavaEclipseCompiler,
               sources: Seq[File],  reporter: Reporter, settings: Settings,
               compOrder: CompileOrder.Value, compOptions: Seq[String] = Nil,
@@ -98,7 +82,7 @@ class AnalysisCompile (conf: BasicConfiguration, bm: EclipseSbtBuildManager, con
             // whatever is set by the env variable and not necessarily what was given
             // in the project definition
             ClasspathOptions(bootLibrary = true, compiler = false, extra = true, autoBoot = false, filterLibrary = true))
-        val jrePath = getJdkPath(bm.project.javaProject)
+        val jrePath = bm.project.jdkPaths.map(_.toFile)
         val classpathWithoutJVM: Set[File] = conf.classpath.toSet -- jrePath
         val searchClasspath = classpathWithoutJVM ++ jrePath
         val entry = Locate.entry(searchClasspath.toSeq, Locate.definesClass) // use default defineClass for now
