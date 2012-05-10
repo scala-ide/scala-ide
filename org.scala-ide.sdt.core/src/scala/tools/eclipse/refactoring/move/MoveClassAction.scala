@@ -54,7 +54,7 @@ class MoveClassAction extends RefactoringAction {
         
         /* The initial index is empty, it will be filled during the initialization
          * where we can show a progress bar and let the user cancel the operation.*/
-        var index = GlobalIndex(Nil)
+        var index = EmptyIndex
       }
     }
     
