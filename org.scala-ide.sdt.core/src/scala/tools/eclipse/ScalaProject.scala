@@ -615,7 +615,7 @@ class ScalaProject private (val underlying: IProject) extends HasLogger {
     
     // handle additional parameters
     val additional = store.getString(CompilerSettings.ADDITIONAL_PARAMS)
-    logger.info("setting additional paramters: " + additional)
+    logger.info("setting additional parameters: " + additional)
     settings.processArgumentString(additional)
   }
 

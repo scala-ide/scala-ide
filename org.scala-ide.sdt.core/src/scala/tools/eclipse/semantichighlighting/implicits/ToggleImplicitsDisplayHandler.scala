@@ -38,7 +38,7 @@ class ToggleImplicitsDisplayHandler extends AbstractHandler with IElementUpdater
   /**
    * refresh widget linked to this handlers (button, menu items,...)
    */
-  def updateElement(element : UIElement, paramters : java.util.Map[_,_]) {
+  def updateElement(element : UIElement, parameters : java.util.Map[_,_]) {
     element.setChecked(isChecked)    
   }
 
