@@ -40,6 +40,7 @@ import scala.tools.nsc.util.BatchSourceFile
 import java.io.InputStream
 import java.io.InputStreamReader
 import scala.tools.eclipse.util.Trim
+import org.eclipse.jdt.launching.JavaRuntime
 
 trait BuildSuccessListener {
   def buildSuccessful(): Unit
@@ -72,7 +73,9 @@ class ScalaProject private (val underlying: IProject) extends HasLogger {
         val settings = ScalaPlugin.defaultScalaSettings
         settings.printtypes.tryToSet(Nil)
         initialize(settings, isPCSetting(settings))
-        Some(new ScalaPresentationCompiler(ScalaProject.this, settings))
+        val pc = new ScalaPresentationCompiler(ScalaProject.this, settings)
+        logger.debug("Presentation compiler classpath: " + pc.classPath)
+        Some(pc)
       } catch {
         case ex @ MissingRequirementError(required) =>
           failedCompilerInitialization("could not find a required class: " + required)
@@ -102,6 +105,7 @@ class ScalaProject private (val underlying: IProject) extends HasLogger {
         verbose,
         Xexperimental, 
         future, 
+        Ylogcp,
         Xmigration28, 
         pluginSetting,
         pluginsDir,
@@ -220,6 +224,28 @@ class ScalaProject private (val underlying: IProject) extends HasLogger {
   def outputFolders: Seq[IPath] =
     sourceOutputFolders map (_._2.getFullPath())
 
+  /** Return the classpath entries coming from the JDK.  */
+  def jdkPaths: Seq[IPath] = {
+    val rawClasspath = javaProject.getRawClasspath()
+
+    rawClasspath.toSeq.flatMap(cp =>
+      cp.getEntryKind match {
+        case IClasspathEntry.CPE_CONTAINER =>
+          val path0 = cp.getPath
+          if (!path0.isEmpty && path0.segment(0) == JavaRuntime.JRE_CONTAINER) {
+            val container = JavaCore.getClasspathContainer(path0, javaProject)
+            Some(container.getClasspathEntries.toSeq.map(_.getPath))
+          } else None
+
+        case _ => None
+
+      }).flatten
+  }
+
+  /** Return the fully resolved classpath of this project.
+   *
+   *  It includes the Scala library and the JDK entries.
+   */
   def classpath: Seq[IPath] = {
     val path = new mutable.LinkedHashSet[IPath]
 
@@ -548,7 +574,7 @@ class ScalaProject private (val underlying: IProject) extends HasLogger {
     if (res ne null)
       res.refreshLocal(IResource.DEPTH_INFINITE, null)
   }
-
+  
   def initialize(settings: Settings, filter: Settings#Setting => Boolean) = {
     // if the workspace project doesn't exist, it is a virtual project used by Eclipse.
     // As such the source folders don't exist.
@@ -569,11 +595,8 @@ class ScalaProject private (val underlying: IProject) extends HasLogger {
       }
     }
 
-    settings.classpath.value = classpath.map(_.toOSString).mkString(pathSeparator)
+    setupCompilerClasspath(settings)
     settings.sourcepath.value = sfs.map(_.toOSString).mkString(pathSeparator)
-
-    logger.debug("CLASSPATH: " + classpath.mkString("\n"))
-    logger.debug("SOURCEPATH: " + sfs.mkString("\n"))
     
     val store = storage
     for (
@@ -594,6 +617,14 @@ class ScalaProject private (val underlying: IProject) extends HasLogger {
     val additional = store.getString(CompilerSettings.ADDITIONAL_PARAMS)
     logger.info("setting additional paramters: " + additional)
     settings.processArgumentString(additional)
+  }
+
+  private def setupCompilerClasspath(settings: Settings) {
+    val jdkEntries = jdkPaths
+    settings.javabootclasspath.value = jdkEntries.map(_.toOSString).mkString(pathSeparator)
+    settings.classpath.value = classpath.filterNot(jdkEntries.toSet).map(_.toOSString).mkString(pathSeparator)
+    logger.debug("javabootclasspath: " + settings.javabootclasspath.value)
+    logger.debug("user classpath: " + settings.classpath.value)
   }
 
   private def buildManagerInitialize: String =
