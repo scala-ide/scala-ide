@@ -1,15 +1,21 @@
 package scala.tools.eclipse.hyperlink.text.detector
 
+
 import org.eclipse.jface.text.IRegion
 import org.eclipse.jface.text.hyperlink.IHyperlink
 import scala.Option.option2Iterable
 import scala.tools.eclipse.{ScalaPresentationCompiler => compiler}
 import scala.tools.eclipse.javaelements.ScalaCompilationUnit
 import scala.tools.eclipse.logging.HasLogger
+import scala.tools.eclipse.hyperlink.text._
 
 private[hyperlink] class ScalaDeclarationHyperlinkComputer extends HasLogger {
   def findHyperlinks(scu: ScalaCompilationUnit, wordRegion: IRegion): Option[List[IHyperlink]] = {
     scu.withSourceFile({ (sourceFile, compiler) =>
+      object DeclarationHyperlinkFactory extends HyperlinkFactory {
+        protected val global: compiler.type = compiler
+      }
+      
       if (wordRegion == null || wordRegion.getLength == 0)
         None
       else {
@@ -54,15 +60,8 @@ private[hyperlink] class ScalaDeclarationHyperlinkComputer extends HasLogger {
             if (filteredSyms.isEmpty) None else Some(
               filteredSyms.foldLeft(List[IHyperlink]()) { (links, sym) =>
                 if (sym.isJavaDefined) links
-                else {
-                  object DeclarationHyperlinkFactory extends scala.tools.eclipse.hyperlink.text.DeclarationHyperlinkFactory {
-                    protected val global: compiler.type = compiler
-                  }
-                  DeclarationHyperlinkFactory.create(scu, sym, wordRegion) match {
-                    case None => links
-                    case Some(l) => l :: links
-                  }
-                }
+                else
+                  DeclarationHyperlinkFactory.create(Hyperlink.withText("Open Declaration"), scu, sym, wordRegion).toList ::: links
               })
           }
         }.flatten.headOption match {

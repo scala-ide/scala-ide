@@ -6,16 +6,18 @@ import org.eclipse.jface.text.hyperlink.IHyperlink
 import org.eclipse.jface.text.IRegion
 import org.eclipse.ui.texteditor.ITextEditor
 
-private[hyperlink] object Hyperlink {
+/** A creator of resolved hyperlinks.
+ *  
+ *  Most often you will use a `HyperlinkFactory`, that resolves compiler `Symbols` to hyperlinks.
+ *  This is just a facade to the concrete implementation of the `IHyperlink` interface.
+ */
+object Hyperlink {
  
   type Factory = (Openable, Int, Int, String, IRegion) => IHyperlink
 
-  def toDeclaration(file: Openable, pos: Int, len: Int, label: String, wordRegion: IRegion): IHyperlink =
-    new ScalaHyperlink(file, pos, len, label, text = "Open Declaration", wordRegion)
-
-  def toImplicit(file: Openable, pos: Int, len: Int, label: String, wordRegion: IRegion): IHyperlink =
-    new ScalaHyperlink(file, pos, len, label, text = "Open Implicit", wordRegion)
-
+  def withText(name: String)(file: Openable, pos: Int, len: Int, label: String, wordRegion: IRegion): IHyperlink = 
+    new ScalaHyperlink(file, pos, len, label, text = name, wordRegion)
+  
   private class ScalaHyperlink(file: Openable, pos: Int, len: Int, label: String, text: String, wordRegion: IRegion) extends IHyperlink {
     def getHyperlinkRegion = wordRegion
     def getTypeLabel = label
