@@ -77,7 +77,7 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
     problems : JHashMap[_,_],
     monitor : IProgressMonitor) : org.eclipse.jdt.core.dom.CompilationUnit = {
     val info = createElementInfo.asInstanceOf[OpenableElementInfo]
-    openWhenClosed(info, monitor)
+    openWhenClosed(info, true, monitor)
     null
   }
 
