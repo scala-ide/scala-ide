@@ -138,6 +138,8 @@
         <configuration>
           <resolver>p2</resolver>
           <pomDependencies>consider</pomDependencies>
+          <environments combine.self="override">
+          </environments>
         </configuration>
       </plugin>
 
