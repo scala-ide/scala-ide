@@ -7,6 +7,7 @@ Bundle-Vendor: scala-ide.org
 Fragment-Host: org.scala-ide.sdt.debug
 Bundle-RequiredExecutionEnvironment: J2SE-1.5
 Require-Bundle: org.scala-ide.scala.library,
+ org.aspectj.weaver,
  org.eclipse.equinox.weaving.aspectj,
  org.scala-ide.sdt.core
 Bundle-ClassPath: .,
