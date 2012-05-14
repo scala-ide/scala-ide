@@ -15,7 +15,7 @@
   <packaging>pom</packaging>
 
   <properties>
-    <sbt.version>0.11.2-scalaide-07</sbt.version>
+    <sbt.version>0.11.2-scalaide-08</sbt.version>
     <scala.compiler.groupid>org.scala-lang</scala.compiler.groupid>
     <scala.library.version>${scala.version}</scala.library.version>
     <scala.compiler.version>${scala.version}</scala.compiler.version>
