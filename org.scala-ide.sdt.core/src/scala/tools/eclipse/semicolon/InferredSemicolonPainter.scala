@@ -99,7 +99,7 @@ class InferredSemicolonPainter(textViewer: ITextViewer with ITextViewerExtension
 
   private def findInferredSemis: List[Token] =
     try {
-      val (hiddenTokenInfo, tokens) = ScalaLexer.tokeniseFull(textViewer.getDocument.get)
+      val tokens = ScalaLexer.tokenise(textViewer.getDocument.get)
       InferredSemicolonScalaParser.findSemicolons(tokens.toArray).toList
     } catch {
       case e: ScalaParserException => Nil
