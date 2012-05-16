@@ -361,7 +361,7 @@ class ScalaProject private (val underlying: IProject) extends HasLogger {
     for {
       srcEntry <- javaProject.getResolvedClasspath(true)
       if srcEntry.getEntryKind() == IClasspathEntry.CPE_SOURCE
-      val srcFolder = ScalaPlugin.plugin.workspaceRoot.findMember(srcEntry.getPath()) 
+      srcFolder = ScalaPlugin.plugin.workspaceRoot.findMember(srcEntry.getPath()) 
       if srcFolder ne null
     } {
       val inclusionPatterns = fullPatternChars(srcEntry, srcEntry.getInclusionPatterns())

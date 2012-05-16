@@ -101,7 +101,7 @@ class InterpreterLaunchConfigurationDelegate extends AbstractJavaLaunchConfigura
       def seedInterpreter(namespace : Option[String], asNamespace : Boolean) {
        for {pkg <- namespace
            process <- launch.getProcesses
-           val streamProxy = process.getStreamsProxy
+           streamProxy = process.getStreamsProxy
            if streamProxy != null
        } {
          //TODO - Don't just write, flush!
