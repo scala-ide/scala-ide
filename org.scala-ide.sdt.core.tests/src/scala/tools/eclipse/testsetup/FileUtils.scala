@@ -50,7 +50,7 @@ object FileUtils {
     val files = source.listFiles();
     if (files == null) return;
     
-    for (src <- files; val name = src.getName; if !shouldSkip(src.getName)) {
+    for (src <- files; name = src.getName; if !shouldSkip(src.getName)) {
       val targetChild = new File(target, name)
       if (src.isDirectory)
         copyDirectory(src, targetChild)
