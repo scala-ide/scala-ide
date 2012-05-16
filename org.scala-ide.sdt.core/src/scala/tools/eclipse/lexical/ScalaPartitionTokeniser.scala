@@ -65,10 +65,16 @@ class ScalaPartitionTokeniser(text: String) extends TokenTests {
 
   def nextToken(): ScalaPartitionRegion = {
     require(tokensRemain)
-    if (modeStack.head.isInstanceOf[ScalaState])
-      getScalaToken()
-    else
-      getXmlToken()
+
+    modeStack.head match {
+      case ScalaState(_) =>
+        getScalaToken()
+      case XmlState(_, _) =>
+        getXmlToken()
+      case StringInterpolationState(multiline, embeddedIdentifierNext) =>
+        getStringInterpolationToken(multiline, embeddedIdentifierNext)
+    }
+
     val contentType = contentTypeOpt.get
     val tokenStart = previousTokenEnd + 1
     val tokenEnd = pos - 1
@@ -90,14 +96,18 @@ class ScalaPartitionTokeniser(text: String) extends TokenTests {
           getOrdinaryScala()
       }
       case '"' =>
-        if (ch(1) == '"' && ch(2) == '"') {
+        val multiline = ch(1) == '"' && ch(2) == '"'
+        val isInterpolation = Character.isUnicodeIdentifierPart(ch(-1)) // TODO: More precise detection
+        if (isInterpolation)
+          nestIntoStringInterpolationMode(multiline)
+        if (multiline) {
           setContentType(SCALA_MULTI_LINE_STRING)
           accept(3)
-          getMultiLineStringLit(quotesRequired = 3)
+          getMultiLineStringLit(quotesRequired = 3, isInterpolation)
         } else {
           setContentType(JAVA_STRING)
           accept()
-          getStringLit()
+          getStringLit(isInterpolation)
         }
       case '/' =>
         (ch(1): @switch) match {
@@ -161,18 +171,37 @@ class ScalaPartitionTokeniser(text: String) extends TokenTests {
       None
 
   @tailrec
-  private def getStringLit(): Unit =
+  private def getStringLit(isInterpolation: Boolean): Unit =
     (ch: @switch) match {
-      case '"' => accept()
+      case '"' =>
+        accept()
+        if (isInterpolation)
+          modeStack.pop()
       case EOF =>
-      case '\n' => accept()
+        if (isInterpolation)
+          modeStack.pop()
+      case '\n' =>
+        accept()
+        if (isInterpolation)
+          modeStack.pop()
       case '\r' if ch(1) != '\n' =>
+        if (isInterpolation)
+          modeStack.pop()
       case '\\' if ch(1) == '"' || ch(1) == '\\' =>
         accept(2)
-        getStringLit()
+        getStringLit(isInterpolation)
+      case '$' if ch(1) == '$' =>
+        accept(2)
+        getStringLit(isInterpolation)
+      case '$' if isInterpolation && ch(1) == '{' =>
+        accept()
+        nestIntoScalaMode()
+      case '$' if isInterpolation =>
+        accept()
+        stringInterpolationState.embeddedIdentifierNext = true
       case _ =>
         accept()
-        getStringLit()
+        getStringLit(isInterpolation)
     }
 
   @tailrec
@@ -188,17 +217,29 @@ class ScalaPartitionTokeniser(text: String) extends TokenTests {
     }
 
   @tailrec
-  private def getMultiLineStringLit(quotesRequired: Int): Unit =
+  private def getMultiLineStringLit(quotesRequired: Int, isInterpolation: Boolean): Unit =
     (ch: @switch) match {
       case '"' =>
         accept()
-        getMultiLineStringLit(quotesRequired - 1)
+        getMultiLineStringLit(quotesRequired - 1, isInterpolation)
       case EOF =>
+        if (isInterpolation)
+          modeStack.pop()
+      case '$' if ch(1) == '$' =>
+        accept(2)
+        getMultiLineStringLit(quotesRequired, isInterpolation)
+      case '$' if isInterpolation && ch(1) == '{' =>
+        accept()
+        nestIntoScalaMode()
+      case '$' if isInterpolation =>
+        accept()
+        stringInterpolationState.embeddedIdentifierNext = true
       case _ =>
         if (quotesRequired > 0) {
           accept()
-          getMultiLineStringLit(3)
-        }
+          getMultiLineStringLit(3, isInterpolation)
+        } else if (isInterpolation)
+          modeStack.pop()
     }
 
   @tailrec
@@ -265,9 +306,29 @@ class ScalaPartitionTokeniser(text: String) extends TokenTests {
         getSingleLineComment()
     }
 
-  private abstract trait ScannerMode
-  private class XmlState(var nesting: Int, var inTag: Option[Boolean]) extends ScannerMode
-  private class ScalaState(var nesting: Int) extends ScannerMode
+  private def getStringInterpolationToken(multiline: Boolean, embeddedIdentifierNext: Boolean) {
+    if (embeddedIdentifierNext) {
+      setContentType(DEFAULT_CONTENT_TYPE)
+      stringInterpolationState.embeddedIdentifierNext = false
+      do
+        accept()
+      while (ch != EOF && Character.isUnicodeIdentifierPart(ch))
+    } else {
+      if (multiline) {
+        setContentType(SCALA_MULTI_LINE_STRING)
+        getMultiLineStringLit(quotesRequired = 3, isInterpolation = true)
+      } else {
+        setContentType(JAVA_STRING)
+        getStringLit(isInterpolation = true)
+      }
+    }
+  }
+
+  private sealed trait ScannerMode
+  private case class XmlState(var nesting: Int, var inTag: Option[Boolean]) extends ScannerMode
+  private case class ScalaState(var nesting: Int) extends ScannerMode
+  private case class StringInterpolationState(multiline: Boolean, var embeddedIdentifierNext: Boolean) extends ScannerMode
+
   private val modeStack: Stack[ScannerMode] = {
     val stack = new Stack[ScannerMode]
     stack.push(new ScalaState(nesting = 0))
@@ -276,13 +337,18 @@ class ScalaPartitionTokeniser(text: String) extends TokenTests {
 
   private def xmlState = modeStack.head.asInstanceOf[XmlState]
   private def scalaState = modeStack.head.asInstanceOf[ScalaState]
+  private def stringInterpolationState = modeStack.head.asInstanceOf[StringInterpolationState]
 
   private def nestIntoScalaMode() {
-    modeStack.push(new ScalaState(nesting = 0))
+    modeStack.push(ScalaState(nesting = 0))
   }
 
   private def nestIntoXmlMode() {
-    modeStack.push(new XmlState(nesting = 0, inTag = None))
+    modeStack.push(XmlState(nesting = 0, inTag = None))
+  }
+
+  private def nestIntoStringInterpolationMode(multiline: Boolean) {
+    modeStack.push(StringInterpolationState(multiline, embeddedIdentifierNext = false))
   }
 
   private def getXmlToken(): Unit =

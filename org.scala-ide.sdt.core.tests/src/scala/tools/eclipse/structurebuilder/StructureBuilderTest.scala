@@ -516,4 +516,61 @@ class StructureBuilderTest {
     // verify
     assertEquals(T1000711TestOracle.expectedFragment, jdtStructure)
   }
+  
+  @Test
+  def throwsAnnotationOfClassConstructorsAndMethodsAreAvailableInJava_t100105() {
+    //when
+    val requestor = mock(classOf[IProblemRequestor])
+    when(requestor.isActive()).thenReturn(true)
+
+    val owner = mock(classOf[WorkingCopyOwner])
+    when(owner.getProblemRequestor(any())).thenReturn(requestor)
+
+    val unit = compilationUnit("t1001005/Caller.java")
+    
+    // then
+    // this will trigger the java reconciler so that the problems will be reported to the `requestor`
+    unit.getWorkingCopy(owner, new NullProgressMonitor)
+
+    // verify
+    verify(requestor, times(0)).acceptProblem(any())
+  }
+  
+  @Test
+  def throwsAnnotationOfTraitMethodsAreAvailableInJava_t1000707() {
+    //when
+    val requestor = mock(classOf[IProblemRequestor])
+    when(requestor.isActive()).thenReturn(true)
+
+    val owner = mock(classOf[WorkingCopyOwner])
+    when(owner.getProblemRequestor(any())).thenReturn(requestor)
+
+    val unit = compilationUnit("t1000707/Bar.java")
+    
+    // then
+    // this will trigger the java reconciler so that the problems will be reported to the `requestor`
+    unit.getWorkingCopy(owner, new NullProgressMonitor)
+
+    // verify
+    verify(requestor, times(0)).acceptProblem(any())
+  }
+  
+  @Test
+  def throwsAnnotationOfTraitMethodsAreAvailableInJava_t1000800() {
+    //when
+    val requestor = mock(classOf[IProblemRequestor])
+    when(requestor.isActive()).thenReturn(true)
+
+    val owner = mock(classOf[WorkingCopyOwner])
+    when(owner.getProblemRequestor(any())).thenReturn(requestor)
+
+    val unit = compilationUnit("t1000800/ThrowingClass.java")
+    
+    // then
+    // this will trigger the java reconciler so that the problems will be reported to the `requestor`
+    unit.getWorkingCopy(owner, new NullProgressMonitor)
+   
+    // verify
+    verify(requestor, times(0)).acceptProblem(any())
+  }
 }

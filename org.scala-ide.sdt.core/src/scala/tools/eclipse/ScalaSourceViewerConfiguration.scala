@@ -36,11 +36,12 @@ import scala.tools.eclipse.formatter.ScalaFormattingStrategy
 import scala.tools.eclipse.ui.AutoCloseBracketStrategy
 import scala.tools.eclipse.properties.syntaxcolouring.ScalaSyntaxClasses
 import scala.tools.eclipse.hyperlink.text.detector.HyperlinksDetector
+import scalariform.ScalaVersions
 
 class ScalaSourceViewerConfiguration(store: IPreferenceStore, scalaPreferenceStore: IPreferenceStore, editor: ITextEditor)
    extends JavaSourceViewerConfiguration(JavaPlugin.getDefault.getJavaTextTools.getColorManager, store, editor, IJavaPartitions.JAVA_PARTITIONING) {
 
-   private val codeScanner = new ScalaCodeScanner(getColorManager, store)
+   private val codeScanner = new ScalaCodeScanner(getColorManager, store, ScalaVersions.DEFAULT)
 
    override def getPresentationReconciler(sv: ISourceViewer) = {
       val reconciler = super.getPresentationReconciler(sv).asInstanceOf[PresentationReconciler]
@@ -70,7 +71,7 @@ class ScalaSourceViewerConfiguration(store: IPreferenceStore, scalaPreferenceSto
       reconciler
    }
 
-   private val scalaCodeScanner = new ScalaCodeScanner(getColorManager, scalaPreferenceStore)
+   private val scalaCodeScanner = new ScalaCodeScanner(getColorManager, scalaPreferenceStore, ScalaVersions.DEFAULT)
    private val singleLineCommentScanner = new SingleTokenScanner(ScalaSyntaxClasses.SINGLE_LINE_COMMENT, getColorManager, scalaPreferenceStore)
    private val multiLineCommentScanner = new SingleTokenScanner(ScalaSyntaxClasses.MULTI_LINE_COMMENT, getColorManager, scalaPreferenceStore)
    private val scaladocScanner = new SingleTokenScanner(ScalaSyntaxClasses.SCALADOC, getColorManager, scalaPreferenceStore)

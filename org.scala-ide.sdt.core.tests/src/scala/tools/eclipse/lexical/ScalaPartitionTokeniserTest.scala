@@ -76,6 +76,30 @@ class ScalaPartitionTokeniserTest {
     <t>"""scala multiline string"""</t> ==> ((SCALA_MULTI_LINE_STRING, 0, 27))
   }
 
+  @Test
+  def stringInterpolation {
+    // 000000000011111111112222222222333333333344444444445
+    // 012345678901234567890123456789012345678901234567890 
+    <t>s"my name is $name"</t> ==>
+      ((DEFAULT_CONTENT_TYPE, 0, 0), (JAVA_STRING, 1, 13), (DEFAULT_CONTENT_TYPE, 14, 17), (JAVA_STRING, 18, 18))
+
+    // 000000000011111111112222222222333333333344444444445
+    // 012345678901234567890123456789012345678901234567890 
+    <t>s"""my name is $name"""</t> ==>
+      ((DEFAULT_CONTENT_TYPE, 0, 0), (SCALA_MULTI_LINE_STRING, 1, 15), (DEFAULT_CONTENT_TYPE, 16, 19), (SCALA_MULTI_LINE_STRING, 20, 22))
+
+    // 000000000011111111112222222222333333333344444444445
+    // 012345678901234567890123456789012345678901234567890 
+    """s"my name is ${person.name}"""" ==>
+      ((DEFAULT_CONTENT_TYPE, 0, 0), (JAVA_STRING, 1, 13), (DEFAULT_CONTENT_TYPE, 14, 26), (JAVA_STRING, 27, 27))
+
+    // 0 0 00000001111111111222222222 2 3 33333333344444444445
+    // 1 2 34567890123456789012345678 9 0 12345678901234567890 
+    "s\"\"\"my name is ${person.name}\"\"\"" ==>
+      ((DEFAULT_CONTENT_TYPE, 0, 0), (SCALA_MULTI_LINE_STRING, 1, 15), (DEFAULT_CONTENT_TYPE, 16, 28), (SCALA_MULTI_LINE_STRING, 29, 31))
+
+  }
+
 }
 
 object ScalaPartitionTokeniserTest {
@@ -85,7 +109,7 @@ object ScalaPartitionTokeniserTest {
   class PimpedString(source: String) {
     def ==>(expectedPartitions: List[(String, Int, Int)]) {
       val actualPartitions = ScalaPartitionTokeniser.tokenise(source)
-      assertEquals(expectedPartitions map ScalaPartitionRegion.tupled toList, actualPartitions)
+      assertEquals(source, expectedPartitions map ScalaPartitionRegion.tupled toList, actualPartitions)
     }
     def ==>(expectedPartitions: (String, Int, Int)*) { this ==> expectedPartitions.toList }
   }
