@@ -12,7 +12,10 @@ object ImplicitAnnotation {
 
 abstract class ImplicitAnnotation(text: String) extends Annotation(ImplicitAnnotation.ID, /*isPersistent*/ false, text)
 
-class ImplicitConversionAnnotation(val sourceLink: Option[IHyperlink], text: String) extends ImplicitAnnotation(text)
+/** The source of this implicit conversion is computed lazily, only when needed. */
+class ImplicitConversionAnnotation(_sourceLink: => Option[IHyperlink], text: String) extends ImplicitAnnotation(text) {
+  lazy val sourceLink = _sourceLink
+}
 
 class ImplicitArgAnnotation(text: String) extends ImplicitAnnotation(text)
 
