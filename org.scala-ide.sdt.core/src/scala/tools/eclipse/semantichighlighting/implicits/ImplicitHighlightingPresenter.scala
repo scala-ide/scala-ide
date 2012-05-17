@@ -32,6 +32,9 @@ import scala.tools.eclipse.semantichighlighting.ColorManager
 import scala.tools.eclipse.semantic.SemanticAction
 import scala.tools.eclipse.properties.ImplicitsPreferencePage
 import org.eclipse.jface.text.Region
+import scala.tools.eclipse.hyperlink.text._
+
+
 
 /**
  * @author Jin Mingjian
@@ -148,7 +151,11 @@ object ImplicitHighlightingPresenter {
 
   def findAllImplicitConversions(compiler: ScalaPresentationCompiler, scu: ScalaCompilationUnit, sourceFile: SourceFile) = {
     import compiler.{ Tree, Traverser, ApplyImplicitView, ApplyToImplicitArgs }
-    
+
+    object ImplicitHyperlinkFactory extends HyperlinkFactory {
+      protected val global: compiler.type = compiler
+    }
+
     def mkPosition(pos: compiler.Position, txt: String): Position = {
       val start = pos.startOrPoint
       val end = if (pluginStore.getBoolean(ImplicitsPreferencePage.P_FIRST_LINE_ONLY)) {
@@ -164,11 +171,7 @@ object ImplicitHighlightingPresenter {
       val pos = mkPosition(t.pos, txt)
       val region = new Region(pos.offset, pos.getLength)
 
-      object ImplicitHyperlinkFactory extends scala.tools.eclipse.hyperlink.text.ImplicitHyperlinkFactory {
-        protected val global: compiler.type = compiler
-      }
-      
-      val sourceLink = ImplicitHyperlinkFactory.create(scu, t, region)
+      val sourceLink = ImplicitHyperlinkFactory.create(Hyperlink.withText("Open Implicit"), scu, t.symbol, region)
       
       val annotation = new ImplicitConversionAnnotation(sourceLink, "Implicit conversions found: " + txt + DisplayStringSeparator + t.fun.symbol.name + "(" + txt + ")")
       

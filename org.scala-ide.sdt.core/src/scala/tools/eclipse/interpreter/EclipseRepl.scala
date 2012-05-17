@@ -2,7 +2,7 @@ package scala.tools.eclipse.interpreter
 
 import scala.actors.Actor
 import scala.collection.mutable.ListBuffer
-import scala.tools.nsc.InterpreterResults.Result
+import scala.tools.nsc.interpreter.Results.Result
 import scala.tools.nsc.Settings
 
 // Unit tests found in org.scala-ide.sdt.core.tests/src:
@@ -145,7 +145,7 @@ object EclipseRepl
   {
     def interpreter(i: Init) = new Interpreter
     {
-      val intp = new scala.tools.nsc.Interpreter(i)
+      val intp = new scala.tools.nsc.interpreter.IMain(i)
       intp.initializeSynchronous()
 
       def interpret(e: Exec) = {

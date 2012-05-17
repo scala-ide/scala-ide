@@ -55,7 +55,7 @@ private object SbtConverter {
 		if(!line.isEmpty)
 		{
 			val lineContent = pos.lineContent.stripLineEnd
-			val offsetO = o(pos.offset)
+			val offsetO = o(pos.point)
 			val opt(pointer, pointerSpace) =
 				for(offset <- offsetO; src <- srcO) yield
 				{

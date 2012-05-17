@@ -49,7 +49,7 @@ class CompletionTests {
         val pos = positions(i)
 
         val position = new scala.tools.nsc.util.OffsetPosition(src, pos)
-        var wordRegion = ScalaWordFinder.findWord(content, position.offset.get)
+        var wordRegion = ScalaWordFinder.findWord(content, position.point)
 
         //        val selection = mock(classOf[ISelectionProvider])
 

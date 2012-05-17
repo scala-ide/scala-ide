@@ -57,7 +57,7 @@ class ReplConsoleView extends ViewPart {
     new EclipseRepl.Client {
       def run(f: => Unit) = SWTUtils.asyncExec(if (view != null) f)
       import EclipseRepl._
-      import scala.tools.nsc.InterpreterResults._
+      import scala.tools.nsc.interpreter.Results._
 
       override def done(exec: Exec, result: Result, output: String) {run{
         if (exec ne ReplConsoleView.HideBareExit) {
@@ -173,7 +173,7 @@ class ReplConsoleView extends ViewPart {
     for { opt <- Seq( ScalaPlugin.plugin.swingClasses,
                       ScalaPlugin.plugin.dbcClasses,
                       ScalaPlugin.plugin.libClasses )
-          p <- opt ; val s = p.toOSString }
+          p <- opt ; s = p.toOSString }
       if(!cp.contains(s))
         cp = s + java.io.File.pathSeparator + cp
     settings.classpath.value = cp
