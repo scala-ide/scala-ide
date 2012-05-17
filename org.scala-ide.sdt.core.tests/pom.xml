@@ -112,7 +112,7 @@
             <frameworkExtension>
               <groupId>p2.osgi.bundle</groupId>
               <artifactId>org.eclipse.equinox.weaving.hook</artifactId>
-              <version>1.0.200.I20120427-0800</version>
+              <version>1.0.200.v20120307-1407</version>
             </frameworkExtension>
           </frameworkExtensions>
           <bundleStartLevel>
