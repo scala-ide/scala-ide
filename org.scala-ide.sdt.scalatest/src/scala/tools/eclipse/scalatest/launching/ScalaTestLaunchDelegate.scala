@@ -102,10 +102,12 @@ class ScalaTestLaunchDelegate extends AbstractJavaLaunchConfigurationDelegate {
 			
       val loaderUrls = classpath.map{ cp =>
         val cpFile = new File(cp.toString)
-        if (cpFile.exists && cpFile.isDirectory && !cp.toString.endsWith(File.separator))
-          new URL("file://" + cp + "/")
-        else
-          new URL("file://" + cp)
+//        if (cpFile.exists && cpFile.isDirectory && !cp.toString.endsWith(File.separator))
+//          new URL("file://" + cp + "/")
+//        else
+//          new URL("file://" + cp)
+//          cpFile.toURI.toURL
+        cpFile.toURI.toURL
       }
 
       val loader:ClassLoader = new URLClassLoader(loaderUrls.toArray, getClass.getClassLoader)
