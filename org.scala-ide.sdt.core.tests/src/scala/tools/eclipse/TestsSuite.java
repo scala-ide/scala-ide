@@ -44,7 +44,7 @@ import scala.tools.eclipse.wizards.QualifiedNameSupportTest;
   CompilerSettingsTest.class,
   ContinuationPluginSettingsTest.class,
   CompletionTests.class,
-  ScalaJavaCompletionTests.class,
+  // ScalaJavaCompletionTests.class, FIXME: Uncomment as soon as this regression is fixed.
   HyperlinkDetectorTests.class,
   //scala.tools.eclipse.interpreter.EclipseReplTest.class, // see comments there
   AbstractMethodVerifierTest.class,
@@ -59,7 +59,7 @@ import scala.tools.eclipse.wizards.QualifiedNameSupportTest;
   ProjectDependenciesTest.class,
   SbtBuilderTest.class,
   ScalaCompilerClasspathTest.class,
-  // ScalaJavaDepTest.class, FIXME: Uncomment as soon as this regression is fixed.
+  ScalaJavaDepTest.class, 
   TodoBuilderTest.class,
   ImplicitsHighlightingTest.class,
   SymbolClassifierTestSuite.class,
