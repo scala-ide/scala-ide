@@ -44,7 +44,14 @@ class LocalRenameAction extends RefactoringAction {
         selected <- selectedSymbolTree.toList
         t <- index.occurences(selected.symbol)
       } yield {
-        val pos = t.namePosition
+        val pos = t match {
+          case ImportSelectorTree(name, global.EmptyTree) =>
+            name.pos
+          case ImportSelectorTree(_, rename) =>
+            rename.pos
+          case t => 
+            t.namePosition 
+        }
         if(pos.source.content(pos.start) == '`') {
           (pos.start + 1, pos.end - pos.start - 2)
         } else {
