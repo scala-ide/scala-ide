@@ -12,6 +12,7 @@ import scala.tools.nsc.symtab.Flags
 import scala.tools.nsc.util.SourceFile
 import scala.tools.refactoring.analysis.{ GlobalIndexes, Indexes }
 import scala.tools.refactoring.common.{ ConsoleTracing, InteractiveScalaCompiler, Selections }
+import scala.tools.refactoring.implementations.Rename
 
 /**
  * This implementation supports renaming of all identifiers that occur in the program. 
@@ -41,31 +42,26 @@ class RenameAction extends ActionAdapter {
    */
   private def isLocalRename: Boolean = {
 
-    def getCurrentSelection: Option[Selections#FileSelection] = {
-      EditorHelpers.withScalaFileAndSelection { (scalaFile, selected) =>
-
-        val selection = scalaFile.withSourceFile { (file, compiler) =>
-          val selections = new Selections with InteractiveScalaCompiler {
-            val global = compiler
-          }
-
+    val isLocalRename = EditorHelpers.withScalaFileAndSelection { (scalaFile, selected) =>
+      scalaFile.withSourceFile{(file, compiler) => 
+        val refactoring = new Rename with GlobalIndexes { 
+          val global = compiler
+          val index = EmptyIndex
+        }
+        
+        val selection = refactoring.askLoadedAndTypedTreeForFile(file).left.toOption map { tree =>
           val start = selected.getOffset
           val end = start + selected.getLength
-
-          selections.askLoadedAndTypedTreeForFile(file).left.map { tree =>
-            new selections.FileSelection(file.file, tree, start, end)
-          }
-        }()
-
-        Some(selection)
-      } flatMap (_.left.toOption)
-    }
-
-    getCurrentSelection flatMap { selection =>
-      selection.selectedSymbolTree map { t =>
-        // a very simplistic check if the symbol we want to rename is only locally visible
-        (t.symbol.isPrivate || t.symbol.isLocal) && !t.symbol.hasFlag(Flags.ACCESSOR)
-      }
+          new refactoring.FileSelection(file.file, tree, start, end)
+        }
+        
+        selection map refactoring.prepare flatMap (_.right.toOption) map {
+          case refactoring.PreparationResult(_, isLocal) => isLocal
+          case _ => false
+        }
+      }()
     } getOrElse false
+
+    isLocalRename
   }
 }
