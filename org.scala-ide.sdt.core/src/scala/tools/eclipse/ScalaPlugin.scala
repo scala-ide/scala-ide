@@ -296,7 +296,7 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
 
         case PACKAGE_FRAGMENT_ROOT =>
           if (isRemoved || hasFlag(F_REMOVED_FROM_CLASSPATH | F_ADDED_TO_CLASSPATH | F_ARCHIVE_CONTENT_CHANGED)) {
-            logger.info("package fragment root changed (resetting pres compiler): " + elem)
+            logger.info("package fragment root changed (resetting pres compiler): " + elem.getElementName())
             asScalaProject(elem.getJavaProject().getProject).foreach(projectsToReset +=)
             false
           } else true

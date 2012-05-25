@@ -41,9 +41,7 @@ import xsbti.Reporter
 class AnalysisCompile (conf: BasicConfiguration, bm: EclipseSbtBuildManager, contr: Controller) extends HasLogger {
     private lazy val store = bm.analysisStore
     
-    private def withBootclasspath(args: CompilerArguments, classpath: Seq[File]): Seq[File] =
-      args.bootClasspath ++ args.finishClasspath(classpath)
-    implicit def toAbstractFile(files: Seq[File]): Set[AbstractFile] =
+    def toAbstractFile(files: Seq[File]): Set[AbstractFile] =
       files.flatMap(f => EclipseResource.fromString(f.getPath)).toSet
 
     def removeSbtOutputDirs(args: List[String]) = {
@@ -64,9 +62,9 @@ class AnalysisCompile (conf: BasicConfiguration, bm: EclipseSbtBuildManager, con
               sources: Seq[File],  reporter: Reporter, settings: Settings,
               compOrder: CompileOrder.Value, compOptions: Seq[String] = Nil,
               javaSrcBases: Seq[File] = Nil, javacOptions: Seq[String] = Nil, 
-              analysisMap: Map[File, Analysis] = Map.empty, maxErrors: Int = 100)(implicit log: EclipseLogger): Analysis = {
+              analysisMap: Map[File, Analysis] = Map.empty, maxErrors: Int = 100)(log: sbt.Logger): Analysis = {
         val currentSetup = new CompileSetup(conf.outputDirectory, new CompileOptions(compOptions, javacOptions),
-                                         scalac.scalaInstance.actualVersion, Mixed)
+                                         scalac.scalaInstance.actualVersion, compOrder)
         import currentSetup._
 
         val getAnalysis = analysisMap.get _
@@ -132,7 +130,6 @@ class AnalysisCompile (conf: BasicConfiguration, bm: EclipseSbtBuildManager, con
                   logger.debug("Error running the SBT builder on Java sources:\n " + e)
                   logger.debug("Running a full Java build")
                   javac.build(org.eclipse.core.resources.IncrementalProjectBuilder.FULL_BUILD)
-                  log.flush()
                 }
                 
                 try {
@@ -142,7 +139,6 @@ class AnalysisCompile (conf: BasicConfiguration, bm: EclipseSbtBuildManager, con
                 
                   sbt.classfile.Analyze(conf.outputDirectories, javaSrcs, log)(callback, loader, readAPI) {
                     javac.build(org.eclipse.core.resources.IncrementalProjectBuilder.INCREMENTAL_BUILD)
-                    log.flush()
                   }
                   
                   BuildManagerStore.INSTANCE.setJavaSourceFilesToCompile(null, conf.project.underlying)
@@ -196,18 +192,14 @@ class AnalysisCompile (conf: BasicConfiguration, bm: EclipseSbtBuildManager, con
             reporter.log(SbtConverter.convertToSbt(NoPosition), "The SBT builder crashed while compiling your project. This is a bug in the Scala compiler or SBT. Check the Erorr Log for details. The error message is: " + ex.getMessage(), xsbti.Severity.Error)
             null
             
-        } finally {
-          log.flush()
         }
     }
     
     private def extract(previous: Option[(Analysis, CompileSetup)]): (Analysis, Option[CompileSetup]) =
       previous match {
         case Some((an, setup)) =>
-//        	logger.debug("restore previous setup")
           (an, Some(setup))
         case None =>
-//          logger.debug("previous step")
           (Analysis.Empty, None)
       }
     def javaOnly(f: File) = f.getName.endsWith(".java")
