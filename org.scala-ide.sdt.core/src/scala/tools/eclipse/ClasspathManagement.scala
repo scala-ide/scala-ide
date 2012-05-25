@@ -54,20 +54,12 @@ object ScalaClasspath {
  *  JDK entries, Scala library entries, and user entries. It also validates the classpath and
  *  manages the classpath error markers for the given Scala project.
  */
-trait ClasspathManagement extends HasLogger {
-
-  val scalaProject: ScalaProject
-
-  /** Hook to reset compilers when the classpath has changed. */
-  def resetCompilers(implicit monitor: IProgressMonitor = null): Unit
-
-  private def javaProject: IJavaProject = scalaProject.javaProject
-  private def underlying: IProject = scalaProject.underlying
+trait ClasspathManagement extends HasLogger { self: ScalaProject =>
 
   /** Return the Scala classpath breakdown for the managed project. */
   def scalaClasspath: ScalaClasspath = {
     val jdkEntries = jdkPaths
-    val cp = scalaProject.classpath.filterNot(jdkEntries.toSet)
+    val cp = classpath.filterNot(jdkEntries.toSet)
 
     scalaPackageFragments match {
       case Seq((pf, version), _*) => new ScalaClasspath(jdkEntries, Some(pf.getPath()), cp.filterNot(_ == pf.getPath), version)
