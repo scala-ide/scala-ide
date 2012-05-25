@@ -29,6 +29,17 @@ object SettingsCleanup {
  * But in the near future this will use a dual loader.
  */
 class ScalaSbtCompiler(val scalaInstance: ScalaInstance, reporter: Reporter) {
+  
+  /** Compile the given sources.
+   *  
+   *  @param args The compiler command line arguments
+   *  @param s    compiler Settings. They are used as a baseline on which `args` are added. This means
+   *              `args' take precedence when there are conflicts.
+   *              
+   *  This method instantiates `CompilerInterface` directly, meaning that `ScalaInstance` and its class loader
+   *  isn't used here. That's necessary, since we need to pass a `Settings` object, which the usual Sbt machinery
+   *  does not allow.
+   */
   def compile(args: Seq[String], callback: AnalysisCallback, maxErrors:Int, log: Logger, contr: Controller, s: Settings) {
     val cInterface = new xsbt.CompilerInterface
     val properSettingsWithErrorReporting = SettingsCleanup(s, log)
