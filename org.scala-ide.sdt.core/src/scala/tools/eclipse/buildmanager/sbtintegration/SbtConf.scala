@@ -10,6 +10,10 @@ import scala.tools.eclipse.logging.HasLogger
 import org.eclipse.core.resources.IProject
 import org.eclipse.core.resources.IFile
 
+/** Create an sbt ScalaInstance given the library and compiler jar. An
+ *  Sbt ScalaInstance can be used to compile source files, and encapsulates
+ *  a classloader used to instantiate the Scala compiler.
+ */
 object ScalaCompilerConf {
     final val LIBRARY_SUFFIX = "scala-library.jar"
     final val COMPILER_SUFFIX = "scala-compiler.jar"
