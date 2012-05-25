@@ -136,8 +136,8 @@
   </build>
   <repositories>
     <repository>
-      <id>Indigo</id>
-      <name>Eclipse Indigo p2 repository</name>
+      <id>Juno</id>
+      <name>Eclipse Juno p2 repository</name>
       <layout>p2</layout>
       <url>${repo.juno}</url>
       <snapshots><enabled>false</enabled></snapshots>
