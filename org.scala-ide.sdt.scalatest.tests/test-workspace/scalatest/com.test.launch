@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<launchConfiguration type="scala.scalatest">
+<stringAttribute key="SCALATEST_LAUNCH_INCLUDE_NESTED" value="false"/>
+<setAttribute key="SCALATEST_LAUNCH_TESTS_NAME"/>
+<stringAttribute key="SCALATEST_LAUNCH_TYPE" value="PACKAGE"/>
+<listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">
+<listEntry value="/scalatest"/>
+</listAttribute>
+<listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_TYPES">
+<listEntry value="4"/>
+</listAttribute>
+<stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="com.test"/>
+<stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="scalatest"/>
+</launchConfiguration>

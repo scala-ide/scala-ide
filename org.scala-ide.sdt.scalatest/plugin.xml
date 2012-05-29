@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.2"?>
+<plugin>
+
+  <extension point = "org.eclipse.debug.core.launchConfigurationTypes">
+  
+    <launchConfigurationType
+           id="scala.scalatest"
+           delegate="scala.tools.eclipse.scalatest.launching.ScalaTestLaunchDelegate"
+           delegateDescription="The ScalaTest Launcher supports running and debugging tests written in ScalaTest."
+           delegateName="ScalaTest Launcher"
+           modes="run, debug"
+           name="ScalaTest"
+           public="true"
+           sourceLocatorId="org.eclipse.jdt.launching.sourceLocator.JavaSourceLookupDirector"
+           sourcePathComputerId="org.eclipse.jdt.launching.sourceLookup.javaSourcePathComputer">
+    </launchConfigurationType>
+  
+  </extension>
+  
+  <extension point="org.eclipse.debug.ui.launchConfigurationTypeImages">
+  
+    <launchConfigurationTypeImage
+           configTypeID="scala.scalatest"
+           icon="icons/full/etool16/scalatest.gif"
+           id="scala.scalatest.image">
+    </launchConfigurationTypeImage>
+  
+  </extension>
+  
+  <extension point="org.eclipse.debug.ui.launchConfigurationTabGroups">
+    
+    <launchConfigurationTabGroup
+        type="scala.scalatest"
+        class="scala.tools.eclipse.scalatest.launching.ScalaTestTabGroup"
+        id="scala.scalatest.tabGroup">
+    </launchConfigurationTabGroup>
+    
+  </extension>
+  
+  <extension point="org.eclipse.core.expressions.propertyTesters">
+    
+    <propertyTester
+           class="scala.tools.eclipse.scalatest.launching.ScalaTestFileTester"
+           id="scala.tools.eclipse.scalatest.launching.ScalaTestFileTester"
+           namespace="scala.tools.eclipse.scalatest.launching"
+           properties="canLaunchAsScalaTestFile"
+           type="org.eclipse.core.runtime.IAdaptable"/>
+      <propertyTester
+           class="scala.tools.eclipse.scalatest.launching.ScalaTestPackageTester"
+           id="scala.tools.eclipse.scalatest.launching.ScalaTestPackageTester"
+           namespace="scala.tools.eclipse.scalatest.launching"
+           properties="canLaunchAsScalaTestPackage"
+           type="org.eclipse.core.runtime.IAdaptable"/>
+      <propertyTester
+           class="scala.tools.eclipse.scalatest.launching.ScalaTestTestTester"
+           id="scala.tools.eclipse.scalatest.launching.ScalaTestTestTester"
+           namespace="scala.tools.eclipse.scalatest.launching"
+           properties="canLaunchAsScalaTestTest"
+           type="org.eclipse.core.runtime.IAdaptable"/>
+      <propertyTester
+           class="scala.tools.eclipse.scalatest.launching.ScalaTestSuiteTester"
+           id="scala.tools.eclipse.scalatest.launching.ScalaTestSuiteTester"
+           namespace="scala.tools.eclipse.scalatest.launching"
+           properties="canLaunchAsScalaTestSuite"
+           type="org.eclipse.core.runtime.IAdaptable"/>  
+    
+  </extension>
+  
+  <extension point="org.eclipse.debug.ui.launchShortcuts">
+    
+    <shortcut
+        class="scala.tools.eclipse.scalatest.launching.ScalaTestSuiteLaunchShortcut"
+        icon="icons/full/obj16/scu_obj.gif"
+        id="org.eclipse.shortcut.scalatest.suite"
+        label="%ScalaTestSuiteShortcut.label"
+        modes="run,debug">
+      <contextualLaunch>
+        <enablement>
+          <with variable="selection">
+            <count value="1" />
+            <iterate>
+		      <test property="scala.tools.eclipse.scalatest.launching.canLaunchAsScalaTestSuite" forcePluginActivation="true" />
+		    </iterate>
+          </with>
+        </enablement>
+      </contextualLaunch>
+    </shortcut>
+    <shortcut
+        class="scala.tools.eclipse.scalatest.launching.ScalaTestTestLaunchShortcut"
+        icon="icons/full/obj16/scu_obj.gif"
+        id="org.eclipse.shortcut.scalatest.test"
+        label="%ScalaTestTestShortcut.label"
+        modes="run,debug">
+      <contextualLaunch>
+        <enablement>
+          <with variable="activePart">
+            <test property="scala.tools.eclipse.scalatest.launching.canLaunchAsScalaTestTest" forcePluginActivation="true" />
+          </with>
+        </enablement>
+      </contextualLaunch>
+    </shortcut>
+    <shortcut
+        class="scala.tools.eclipse.scalatest.launching.ScalaTestFileLaunchShortcut"
+        icon="icons/full/obj16/scu_obj.gif"
+        id="org.eclipse.shortcut.scalatest.file"
+        label="%ScalaTestFileShortcut.label"
+        modes="run,debug">
+      <contextualLaunch>
+        <enablement>
+          <with variable="selection">
+            <count value="1" />
+            <iterate>
+		      <test property="scala.tools.eclipse.scalatest.launching.canLaunchAsScalaTestFile" forcePluginActivation="true" />
+		    </iterate>
+          </with>
+        </enablement>
+      </contextualLaunch>
+    </shortcut>
+    <shortcut
+        class="scala.tools.eclipse.scalatest.launching.ScalaTestPackageLaunchShortcut"
+        icon="icons/full/obj16/scu_obj.gif"
+        id="org.eclipse.shortcut.scalatest.package"
+        label="%ScalaTestPackageShortcut.label"
+        modes="run,debug">
+      <contextualLaunch>
+        <enablement>
+          <with variable="selection">
+            <count value="1" />
+            <iterate>
+              <adapt type="org.eclipse.jdt.core.IJavaElement">
+		        <test property="org.eclipse.jdt.core.isInJavaProject"/>
+		        <test property="scala.tools.eclipse.scalatest.launching.canLaunchAsScalaTestPackage" forcePluginActivation="true" />
+		      </adapt>
+		    </iterate>
+          </with>
+        </enablement>
+      </contextualLaunch>
+    </shortcut>
+    
+  </extension>
+  
+  <extension
+       id="scala.tools.eclipse.consoleView"
+       point="org.eclipse.ui.views">
+     
+    <view name="ScalaTest"
+           icon="icons/full/etool16/scalatest.gif"
+           category="org.scala-ide.sdt.core.viewCategory"
+           fastViewWidthRatio="0.40"
+           class="scala.tools.eclipse.scalatest.ui.ScalaTestRunnerViewPart"
+           id="scala.tools.eclipse.scalatest.ui.ScalaTestResultView">
+    </view>
+       
+  </extension>
+
+</plugin>

@@ -1,0 +1,13 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Scala Plugin (Test)
+Bundle-SymbolicName: org.scala-ide.sdt.scalatest.tests
+Bundle-Version: 2.1.0.qualifier
+Bundle-Vendor: scala-ide.org
+Fragment-Host: org.scala-ide.sdt.scalatest
+Bundle-RequiredExecutionEnvironment: J2SE-1.5
+Require-Bundle: org.scala-ide.scala.library,
+ org.eclipse.equinox.weaving.aspectj,
+ org.scala-ide.sdt.core
+Bundle-ClassPath: .,
+ lib/mockito-all-1.8.5.jar

@@ -778,8 +778,8 @@
             id="scala.tools.eclipse.launching.JUnitPropertyTester">
       </propertyTester>
   </extension>
-
-  <extension point="org.eclipse.debug.ui.launchShortcuts">
+  
+  <extension point="org.eclipse.debug.ui.launchShortcuts">  
     <shortcut
       class="scala.tools.eclipse.launching.ScalaLaunchShortcut"
       icon="icons/full/obj16/scu_obj.gif"
