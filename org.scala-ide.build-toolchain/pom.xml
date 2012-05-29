@@ -4,113 +4,17 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>org.scala-ide</groupId>
-    <artifactId>scala-ide-for-eclipse</artifactId>
-    <version>1</version>
-    <relativePath>../org.scala-ide/pom.xml</relativePath>
+    <artifactId>org.scala-ide.build</artifactId>
+    <version>2.1.0-SNAPSHOT</version>
   </parent>
   
-  <artifactId>scala-toolchain-for-eclipse</artifactId>
-  <version>2.9.3-SNAPSHOT</version>
-  <name>The Scala Toolchain for Eclipse</name>
+  <artifactId>org.scala-ide.build-toolchain</artifactId>
+  <description>The Scala Toolchain for Scala Eclipse plugins</description>
   <packaging>pom</packaging>
-
-  <properties>
-    <sbt.version>0.11.2-scalaide-08</sbt.version>
-    <scala.compiler.groupid>org.scala-lang</scala.compiler.groupid>
-    <scala.library.version>${scala.version}</scala.library.version>
-    <scala.compiler.version>${scala.version}</scala.compiler.version>
-  </properties>
 
   <modules>
     <module>../org.scala-ide.scala.library</module>
     <module>../org.scala-ide.scala.compiler</module>
     <module>../org.scala-ide.sbt.full.library</module>
   </modules>
-  <dependencyManagement>
-    <dependencies>
-      <dependency>
-        <groupId>org.scala-lang</groupId>
-        <artifactId>scala-compiler</artifactId>
-        <version>${scala.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.scala-lang</groupId>
-        <artifactId>scala-library</artifactId>
-        <version>${scala.library.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.scala-lang</groupId>
-        <artifactId>scala-swing</artifactId>
-        <version>${scala.library.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.scala-lang</groupId>
-        <artifactId>scala-dbc</artifactId>
-        <version>${scala.library.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.scala-lang</groupId>
-        <artifactId>scala-actors</artifactId>
-        <version>${scala.library.version}</version>
-      </dependency>
-    </dependencies>
-  </dependencyManagement>
-  <build>
-    <pluginManagement>
-      <plugins>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-resources-plugin</artifactId>
-          <version>2.4.3</version>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-dependency-plugin</artifactId>
-          <version>2.1</version>
-        </plugin>
-      </plugins>
-    </pluginManagement>
-  </build>
-  <profiles>
-    <profile>
-      <id>sbt-2.10</id>
-      <properties>
-        <version.suffix>2_10</version.suffix>
-
-        <!-- Used as part of the artifact name for SBT cross-compiled modules. -->
-        <scala.major.minor.version>${scala.version.short}</scala.major.minor.version>
-
-        <!-- Used as part of the artifact name for SBT cross-compiled modules. -->
-        <sbt.compiled.version>${sbt.scala.version}</sbt.compiled.version>
-      </properties>
-      <repositories>
-        <repository>
-          <id>typesafe-ide-2.10</id>
-          <name>Typesafe IDE 2.10 repository</name>
-          <url>http://repo.typesafe.com/typesafe/ide-2.10</url>
-        </repository>
-      </repositories>
-    </profile>
-    
-    <profile>
-      <id>sbt-2.9</id>
-      <properties>
-        <version.suffix>2_09</version.suffix>
-        <scala.version.short>2.9</scala.version.short>
-
-        <!-- Used as part of the directory name for compiler-interface.jar. -->
-        <scala.major.minor.version>${scala.version.short}</scala.major.minor.version>
-
-        <!-- Used as part of the artifact name for SBT cross-compiled modules. -->
-        <sbt.compiled.version>${sbt.scala.version}</sbt.compiled.version>
-      </properties>
-      <repositories>
-        <repository>
-          <id>typesafe-ide-2.9</id>
-          <name>Typesafe IDE 2.9 repository</name>
-          <url>http://repo.typesafe.com/typesafe/ide-2.9</url>
-        </repository>
-      </repositories>
-    </profile>
-  </profiles>
 </project>

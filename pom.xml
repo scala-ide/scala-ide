@@ -1,0 +1,421 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <modelVersion>4.0.0</modelVersion>
+  <prerequisites>
+    <maven>3.0</maven>
+  </prerequisites>
+  <groupId>org.scala-ide</groupId>
+  <artifactId>org.scala-ide.build</artifactId>
+  <version>2.1.0-SNAPSHOT</version>
+  <description>Default config holder (value, profiles, versions, ...) for the build of Scala IDE for Eclipse</description>
+  <packaging>pom</packaging>
+
+  <properties>
+    <encoding>UTF-8</encoding>
+    <!-- p2 repositories location -->
+    <repo.eclipse.indigo>http://download.eclipse.org/releases/indigo/</repo.eclipse.indigo>
+    <repo.eclipse.juno>http://download.eclipse.org/eclipse/updates/4.2milestones</repo.eclipse.juno>
+    <repo.ajdt.indigo>http://download.eclipse.org/tools/ajdt/37/dev/update</repo.ajdt.indigo>
+    <repo.scala-ide.root>http://download.scala-ide.org</repo.scala-ide.root>
+
+    <!-- fixed versions -->
+    <sbt.version>0.11.2-scalaide-08</sbt.version>
+    <sbinary.version>0.4.0</sbinary.version>
+    <jline.version>0.9.94</jline.version>
+    <ivy.version>2.2.0</ivy.version>
+    <aspectj.version>1.6.12</aspectj.version>
+    <aspectj.plugin.version>1.4</aspectj.plugin.version>
+    <tycho.version>0.14.1</tycho.version>
+    <miglayout.version>3.7.4</miglayout.version>
+    <log4j.version>1.2.16</log4j.version>
+    <junit.version>4.10</junit.version>
+    <mockito.version>1.9.0</mockito.version>
+    <scala.plugin.version>3.0.2</scala.plugin.version>
+
+    <!-- tycho test related -->
+    <tycho.test.OSspecific></tycho.test.OSspecific>
+    <!-- Partial workaround against JDT Weaving deadlocks. See #1000317 and the original ticket on https://issuetracker.springsource.com/browse/STS-1445 -->
+    <tycho.test.weaving>-XX:+UnlockDiagnosticVMOptions -XX:+UnsyncloadClass -Dosgi.classloader.lock=classname</tycho.test.weaving>
+    <tycho.test.jvmArgs>-Xmx800m -XX:MaxPermSize=256m -Dsdtcore.headless ${tycho.test.weaving} ${tycho.test.OSspecific}</tycho.test.jvmArgs>
+
+    <!-- dependencies repos -->
+    <repo.eclipse>${repo.eclipse.indigo}</repo.eclipse>
+    <repo.ajdt>${repo.ajdt.indigo}</repo.ajdt>
+
+    <!-- default values, can be overwritten by profiles -->
+    <scala.version>2.9.3-SNAPSHOT</scala.version>
+    <scala.major.minor.version>2.9</scala.major.minor.version>
+    <scala.library.version>${scala.version}</scala.library.version>
+    <sbt.compiled.version>2.9.1</sbt.compiled.version>
+    <scala.precompiled.version>2_9_1</scala.precompiled.version>
+    <version.suffix>2_09</version.suffix>
+    <version.tag>local</version.tag>
+
+    <!-- the repos containing the Scala dependencies -->
+    <repo.scala-refactoring>${repo.scala-ide.root}/scala-refactoring-29x</repo.scala-refactoring>
+    <repo.scalariform>${repo.scala-ide.root}/scalariform-29x</repo.scalariform>
+    <repo.typesafe>http://repo.typesafe.com/typesafe/ide-2.9</repo.typesafe>
+  </properties>
+
+  <profiles>
+    <profile>
+      <!--- the profile using the default values. Scala 2.9.x -->
+      <id>scala-2.9.x</id>
+    </profile>
+
+    <profile>
+      <!-- Scala 2.10.x -->
+      <id>scala-2.10.x</id>
+      <properties>
+        <scala.version>2.10.0-SNAPSHOT</scala.version>
+        <scala.major.minor.version>2.10</scala.major.minor.version>
+        <scala.library.version>${scala.version}</scala.library.version>
+        <sbt.compiled.version>2.10.0-SNAPSHOT</sbt.compiled.version>
+        <scala.precompiled.version>2_10_0-SNAPSHOT</scala.precompiled.version>
+        <version.suffix>2_10</version.suffix>
+
+        <repo.scala-refactoring>${repo.scala-ide.root}/scala-refactoring-trunk</repo.scala-refactoring>
+        <repo.scalariform>${repo.scala-ide.root}/scalariform-trunk</repo.scalariform>
+        <repo.typesafe>http://repo.typesafe.com/typesafe/ide-2.10</repo.typesafe>
+      </properties>
+    </profile>
+
+    <profile>
+      <!-- some extra configuration for running tests with tycho on Mac OS -->
+      <id>macOs</id>
+      <activation>
+        <os>
+          <family>mac</family>
+        </os>
+      </activation>
+      <properties>
+        <tycho.test.OSspecific>-Dosgi.ws=cocoa -XstartOnFirstThread</tycho.test.OSspecific>
+      </properties>
+       <build>
+        <pluginManagement>
+          <plugins>
+            <plugin>
+              <groupId>org.eclipse.tycho</groupId>
+              <artifactId>tycho-surefire-plugin</artifactId>
+              <configuration>
+                <dependencies>
+                  <dependency>
+                    <artifactId>org.eclipse.jdt.launching.macosx</artifactId>
+                    <type>eclipse-plugin</type>
+                  </dependency>
+                </dependencies>
+              </configuration>
+            </plugin>
+          </plugins>
+        </pluginManagement>
+      </build>
+    </profile>
+  </profiles>
+
+  <repositories>
+    <!-- the sonatype repos -->
+    <repository>
+      <id>sonatype.release</id>
+      <name>Sonatype maven release repository</name>
+      <url>https://oss.sonatype.org/content/repositories/releases/</url>
+      <snapshots><enabled>false</enabled></snapshots>
+    </repository>
+    <repository>
+      <id>sonatype.snapshot</id>
+      <name>Sonatype maven snapshot repository</name>
+      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+      <snapshots>
+        <updatePolicy>daily</updatePolicy>
+      </snapshots>
+    </repository>
+  </repositories>
+
+  <dependencyManagement>
+    <dependencies>
+      <!-- toolchain, Scala library -->
+      <dependency>
+        <groupId>org.scala-lang</groupId>
+        <artifactId>scala-library</artifactId>
+        <version>${scala.library.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.scala-lang</groupId>
+        <artifactId>scala-swing</artifactId>
+        <version>${scala.library.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.scala-lang</groupId>
+        <artifactId>scala-dbc</artifactId>
+        <version>${scala.library.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.scala-lang</groupId>
+        <artifactId>scala-actors</artifactId>
+        <version>${scala.library.version}</version>
+      </dependency>
+      <!-- toolchain, Scala compiler -->
+      <dependency>
+        <groupId>org.scala-lang</groupId>
+        <artifactId>scala-compiler</artifactId>
+        <version>${scala.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.scala-lang.plugins</groupId>
+        <artifactId>continuations</artifactId>
+        <version>${scala.version}</version>
+      </dependency>
+      <!-- toolchain, sbt -->
+      <dependency>
+        <groupId>org.scala-tools.sbt</groupId>
+        <artifactId>actions_${sbt.compiled.version}</artifactId>
+        <version>${sbt.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.scala-tools.sbt</groupId>
+        <artifactId>api_${sbt.compiled.version}</artifactId>
+        <version>${sbt.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.scala-tools.sbt</groupId>
+        <artifactId>cache_${sbt.compiled.version}</artifactId>
+        <version>${sbt.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.scala-tools.sbt</groupId>
+        <artifactId>classfile_${sbt.compiled.version}</artifactId>
+        <version>${sbt.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.scala-tools.sbt</groupId>
+        <artifactId>classpath_${sbt.compiled.version}</artifactId>
+        <version>${sbt.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.scala-tools.sbt</groupId>
+        <artifactId>collections_${sbt.compiled.version}</artifactId>
+        <version>${sbt.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.scala-tools.sbt</groupId>
+        <artifactId>compile_${sbt.compiled.version}</artifactId>
+        <version>${sbt.version}</version>
+      </dependency>
+       <dependency>
+        <groupId>org.scala-tools.sbt</groupId>
+        <artifactId>control_${sbt.compiled.version}</artifactId>
+        <version>${sbt.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.scala-tools.sbt</groupId>
+        <artifactId>incremental-compiler_${sbt.compiled.version}</artifactId>
+        <version>${sbt.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.scala-tools.sbt</groupId>
+        <artifactId>io_${sbt.compiled.version}</artifactId>
+        <version>${sbt.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.scala-tools.sbt</groupId>
+        <artifactId>ivy_${sbt.compiled.version}</artifactId>
+        <version>${sbt.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.scala-tools.sbt</groupId>
+        <artifactId>launcher-interface_${sbt.compiled.version}</artifactId>
+        <version>${sbt.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.scala-tools.sbt</groupId>
+        <artifactId>logging_${sbt.compiled.version}</artifactId>
+        <version>${sbt.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.scala-tools.sbt</groupId>
+        <artifactId>main_${sbt.compiled.version}</artifactId>
+        <version>${sbt.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.scala-tools.sbt</groupId>
+        <artifactId>persist_${sbt.compiled.version}</artifactId>
+        <version>${sbt.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.scala-tools.sbt</groupId>
+        <artifactId>process_${sbt.compiled.version}</artifactId>
+        <version>${sbt.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.scala-tools.sbt</groupId>
+        <artifactId>run_${sbt.compiled.version}</artifactId>
+        <version>${sbt.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.scala-tools.sbt</groupId>
+        <artifactId>tasks_${sbt.compiled.version}</artifactId>
+        <version>${sbt.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.scala-tools.sbt</groupId>
+        <artifactId>task-system_${sbt.compiled.version}</artifactId>
+        <version>${sbt.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.scala-tools.sbt</groupId>
+        <artifactId>sbt_${sbt.compiled.version}</artifactId>
+        <version>${sbt.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.scala-tools.sbt</groupId>
+        <artifactId>completion_${sbt.compiled.version}</artifactId>
+        <version>${sbt.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.scala-tools.sbt</groupId>
+        <artifactId>launcher_${sbt.compiled.version}</artifactId>
+        <version>${sbt.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.scala-tools.sbt</groupId>
+        <artifactId>precompiled-${sbt.compiled.version}-${scala.precompiled.version}</artifactId>
+        <version>${sbt.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.scala-tools.sbt</groupId>
+        <artifactId>interface_${sbt.compiled.version}</artifactId>
+        <version>${sbt.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>jline</groupId>
+        <artifactId>jline</artifactId>
+        <version>${jline.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.ivy</groupId>
+        <artifactId>ivy</artifactId>
+        <version>${ivy.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.scala-tools.sbinary</groupId>
+        <artifactId>sbinary_${sbt.compiled.version}</artifactId>
+        <version>${sbinary.version}</version>
+      </dependency>
+      <!-- aspectJ support -->
+      <dependency>
+        <groupId>org.aspectj</groupId>
+        <artifactId>aspectjrt</artifactId>
+        <version>${aspectj.version}</version>
+      </dependency>
+      <!-- sdt.core dependencies -->
+      <dependency>
+        <groupId>com.miglayout</groupId>
+        <artifactId>miglayout</artifactId>
+        <version>${miglayout.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>log4j</groupId>
+        <artifactId>log4j</artifactId>
+        <version>${log4j.version}</version>
+      </dependency>
+      <!-- test support -->
+      <dependency>
+        <groupId>junit</groupId>
+        <artifactId>junit</artifactId>
+        <version>${junit.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.mockito</groupId>
+        <artifactId>mockito-all</artifactId>
+        <version>${mockito.version}</version>
+        <scope>compile</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+  <build>
+    <pluginManagement>
+      <!-- define the version of all used plugins, and some default configuration -->
+      <plugins>
+        <!-- osgi bundle builder -->
+        <plugin>
+          <groupId>org.apache.felix</groupId>
+          <artifactId>maven-bundle-plugin</artifactId>
+          <version>2.3.7</version>
+          <extensions>true</extensions>
+          <configuration>
+            <unpackBundle>true</unpackBundle>
+            <manifestLocation>${project.build.directory}/META-INF</manifestLocation>
+          </configuration>
+        </plugin>
+        <!-- set property value from file -->
+        <plugin>
+          <groupId>org.kuali.maven.plugins</groupId>
+          <artifactId>properties-maven-plugin</artifactId>
+          <version>1.1.10</version>
+        </plugin>
+        <!-- tycho plugins -->
+        <plugin>
+          <groupId>org.eclipse.tycho</groupId>
+          <artifactId>tycho-maven-plugin</artifactId>
+          <version>${tycho.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.eclipse.tycho</groupId>
+          <artifactId>tycho-compiler-plugin</artifactId>
+          <version>${tycho.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.eclipse.tycho</groupId>
+          <artifactId>target-platform-configuration</artifactId>
+          <version>${tycho.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.eclipse.tycho</groupId>
+          <artifactId>tycho-packaging-plugin</artifactId>
+          <version>${tycho.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.eclipse.tycho</groupId>
+          <artifactId>tycho-surefire-plugin</artifactId>
+          <version>${tycho.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.eclipse.tycho</groupId>
+          <artifactId>tycho-source-plugin</artifactId>
+          <version>${tycho.version}</version>
+        </plugin>
+        <!-- aspectJ support -->
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>aspectj-maven-plugin</artifactId>
+          <version>${aspectj.plugin.version}</version>
+        </plugin>
+        <!-- scala compiler -->
+        <plugin>
+          <groupId>net.alchim31.maven</groupId>
+          <artifactId>scala-maven-plugin</artifactId>
+          <version>${scala.plugin.version}</version>
+        </plugin>
+        <!-- git hash extractor -->
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>buildnumber-maven-plugin</artifactId>
+          <version>1.1</version>
+        </plugin>
+        <!-- creating maven source artefact -->
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-source-plugin</artifactId>
+          <version>2.1.2</version>
+        </plugin>
+        <plugin>
+          <artifactId>maven-clean-plugin</artifactId>
+          <version>2.5</version>
+        </plugin>
+       </plugins>
+    </pluginManagement>
+  </build>
+
+
+</project>
