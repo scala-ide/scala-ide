@@ -33,6 +33,18 @@ object CompileOrderMapper {
   }
 }
 
+/** An Eclipse builder using the Sbt engine.
+ * 
+ *  Unlike the command line Sbt, this builder always instantiates the 
+ *  compiler that is shipped with Eclipse. This is by-design, since our Sbt engine
+ *  should not download any artifacts (other versions of the compiler), therefore
+ *  it can only use the one deployed inside Eclipse. This can be improved in the future.
+ *  
+ *  The classpath is handled by delegating to the underlying project. That means
+ *  a valid Scala library has to exist on the classpath, but it's not limited to
+ *  being called 'scala-library.jar': @see [[scala.tools.eclipse.ClasspathManagement]] for
+ *  how the library is resolved (it can be any jar or even an existing dependent project).
+ */
 class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings)
   extends EclipseBuildManager with HasLogger {
   
@@ -144,12 +156,12 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings)
 
   private def runCompiler(sources: Seq[File]) {
     // setup the settings
-    val allJarsAndLibrary = filterOutScalaLibrary(project.classpath)
+    val ScalaClasspath(jdkPaths, scalaLib, userCp, _) = project.scalaClasspath
+    
     // Fixed 2.9 for now
-    val libJar = allJarsAndLibrary match {
-      case (_, Some(lib)) =>
-        lib.toFile()
-      case (_, None) =>
+    val libJar = scalaLib match {
+      case Some(lib) => lib.toFile()
+      case None =>
         logger.info("Cannot find Scala library on the classpath. Verify your build path! Using default library corresponding to the compiler")
         //ScalaPlugin.plugin.sbtScalaLib.get.toFile
         val e = new Exception("Cannot find Scala library on the classpath. Verify your build path!")
@@ -159,17 +171,16 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings)
     }
     //val compJar = ScalaPlugin.plugin.sbtScalaCompiler
     val compJar = ScalaPlugin.plugin.compilerClasses
+    val runningLibJar = ScalaPlugin.plugin.libClasses
     // TODO pull the actual version from properties and select the correct one
     val compInterfaceJar = ScalaPlugin.plugin.sbtCompilerInterface
 
-    val (scalac, javac) = compilers(libJar, compJar.get.toFile, compInterfaceJar.get.toFile)
-    // read settings properly
-    //val cp = disintegrateClasspath(settings.classpath.value)
-    val cp = allJarsAndLibrary._1.map(_.toFile)
-    val conf = new BasicConfiguration(project, Seq(scalac.scalaInstance.libraryJar/*, compInterfaceJar.get.toFile*/) ++ cp)
+    // the Scala instance is always using the shipped Scala library/compiler
+    val (scalac, javac) = compilers(runningLibJar.get.toFile, compJar.get.toFile, compInterfaceJar.get.toFile)
+//    val conf = new BasicConfiguration(project, scalac.scalaInstance, Seq(scalac.scalaInstance.libraryJar/*, compInterfaceJar.get.toFile*/) ++ cp)
+    val conf = new BasicConfiguration(project, scalac.scalaInstance)
 
     val analysisComp = new AnalysisCompile(conf, this, new SbtProgress())
-
     val extraAnalysis = upstreamAnalysis(project)
 
     logger.debug("Retrieved the following upstream analysis: " + extraAnalysis)
@@ -221,9 +232,9 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings)
   def saveTo(file: AbstractFile, fromFile: AbstractFile => String) {}
 	
   def clean(implicit monitor: IProgressMonitor) {
-    val dummy = new BasicConfiguration(project, Seq())
-    dummy.cacheLocation.refreshLocal(IResource.DEPTH_ZERO, null)
-    dummy.cacheLocation.delete(true, false, monitor)
+    val cacheLocation = ScalaCompilerConf.cacheLocation(project.underlying)
+    cacheLocation.refreshLocal(IResource.DEPTH_ZERO, null)
+    cacheLocation.delete(true, false, monitor)
     // refresh explorer
   }
   def invalidateAfterLoad: Boolean = true

@@ -20,6 +20,8 @@ import scala.tools.eclipse.javaelements.ScalaSourceFile
 import scala.util.matching.Regex
 import testsetup._
 import org.eclipse.core.runtime.Path
+import org.eclipse.jdt.core.JavaCore
+import scala.tools.eclipse.buildmanager.sbtintegration._
 
 object SbtBuilderTest extends TestProjectSetup("builder") with CustomAssertion
 object depProject extends TestProjectSetup("builder-sub")
@@ -53,7 +55,7 @@ class SbtBuilderTest {
     println("building " + depProject)
     depProject.project.clean(new NullProgressMonitor())
     depProject.project.underlying.build(IncrementalProjectBuilder.FULL_BUILD, new NullProgressMonitor)
-    
+
     val targetResource = depProject.project.javaProject.getOutputLocation().append(new Path("resource.txt"))
     val file = ScalaPlugin.plugin.workspaceRoot.findMember(targetResource)
     Assert.assertNotNull("Resource has been copied to the output directory", file ne null)
@@ -109,7 +111,7 @@ class SbtBuilderTest {
 
   /** Where we look for errors. */
   val unitsToWatch = compilationUnits("test/ja/JClassA.java", "test/sc/ClassA.scala", "test/dependency/FooClient.scala").toList
-  
+
   private def getProblemMarkers(): List[IMarker] = {
     unitsToWatch.flatMap(SDTTestUtils.findProblemMarkers)
   }
@@ -128,6 +130,43 @@ class SbtBuilderTest {
     reload(fooClientCU)
 
     assertNoErrors(fooClientCU)
+  }
+
+  @Test def scalaLibrary_shouldBe_on_BootClasspath() {
+    import SDTTestUtils._
+
+    val Seq(prjClient) = createProjects("client")
+
+    Assert.assertTrue("Found Scala library", prjClient.scalaClasspath.scalaLib.isDefined)
+    val basicConf = new BasicConfiguration(prjClient, ScalaCompilerConf.deployedInstance)
+    val args = basicConf.buildArguments(Seq())
+    Assert.assertTrue("BasicConfiguration bootclasspath " + args, args.mkString(" ").contains("-bootclasspath %s".format(prjClient.scalaClasspath.scalaLib.get.toFile.getAbsolutePath)))
+    deleteProjects(prjClient)
+  }
+  
+  @Test def scalaLibrary_in_dependent_project_shouldBe_on_BootClasspath() {
+    import SDTTestUtils._
+
+    val Seq(prjClient, prjLib) = createProjects("client", "library")
+    val Seq(packClient, packLib) = Seq(prjClient, prjLib).map(createSourcePackage("scala"))
+    val baseRawClasspath= prjClient.javaProject.getRawClasspath()
+    
+    /* The classpath, with the eclipse scala container removed. */
+    def cleanRawClasspath = for (
+      classpathEntry <- baseRawClasspath if classpathEntry.getPath().toPortableString() != "org.scala-ide.sdt.launching.SCALA_CONTAINER"
+    ) yield classpathEntry
+
+    prjClient.javaProject.setRawClasspath(cleanRawClasspath, null)
+
+    packLib.createCompilationUnit("Predef.scala", "object Predef", true, null)
+    addToClasspath(prjClient, JavaCore.newProjectEntry(prjLib.underlying.getFullPath, true))
+
+    Assert.assertTrue("Found Scala library", prjClient.scalaClasspath.scalaLib.isDefined)
+    Assert.assertEquals("Unexpected Scala lib", new Path("/library/src"), prjClient.scalaClasspath.scalaLib.get)
+    val basicConf = new BasicConfiguration(prjClient, ScalaCompilerConf.deployedInstance)
+    val args = basicConf.buildArguments(Seq())
+    Assert.assertTrue("BasicConfiguration bootclasspath " + args, args.mkString(" ").contains("-bootclasspath /library/src"))
+    deleteProjects(prjClient, prjLib)
   }
 
   /** Returns true if the expected regular expression matches the given error message. */
