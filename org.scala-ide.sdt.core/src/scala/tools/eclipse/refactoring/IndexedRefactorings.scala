@@ -29,9 +29,9 @@ abstract class IndexedIdeRefactoring(refactoringName: String, start: Int, end: I
   val refactoring: MultiStageRefactoring with GlobalIndexes with Indexed
   
   /**
-     * A cleanup handler, will later be set by the refactoring
-     * to remove all loaded compilation units from the compiler.
-     */
+   * A cleanup handler, will later be set by the refactoring
+   * to remove all loaded compilation units from the compiler.
+   */
   var cleanup = () => ()
 
   override def checkInitialConditions(pm: IProgressMonitor): RefactoringStatus = {
@@ -39,7 +39,7 @@ abstract class IndexedIdeRefactoring(refactoringName: String, start: Int, end: I
 
     if (!status.hasError) { 
       // the hints parameter is not used, this can slow down the refactoring considerably!
-      val (index, cleanupIndex) = buildFullProjectIndex(pm, Nil)
+      val (index, cleanupIndex) = buildFullProjectIndex(pm, indexHints)
       refactoring.index = index
       // will be called after the refactoring has finished
       cleanup = cleanupIndex
@@ -51,6 +51,11 @@ abstract class IndexedIdeRefactoring(refactoringName: String, start: Int, end: I
 
     status
   }
+  
+  /**
+   * Provide hints for index building. 
+   */
+  def indexHints(): List[String] = Nil
 
   override def createChange(pm: IProgressMonitor) = {
     val change = super.createChange(pm)
