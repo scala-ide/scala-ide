@@ -18,9 +18,6 @@ import sbt.ClasspathOptions
  *  a classloader used to instantiate the Scala compiler.
  */
 object ScalaCompilerConf {
-  final val LIBRARY_SUFFIX = "scala-library.jar"
-  final val COMPILER_SUFFIX = "scala-compiler.jar"
-
   final val CACHE_SUFFIX = ".cache"
 
   private val _bootdir = (new File("")).getAbsoluteFile
@@ -42,22 +39,9 @@ object ScalaCompilerConf {
     ScalaInstance(version, libraryJar, compilerJar, launcher, extraJar)
   }
 
-  def apply(version: String, eclipsePluginDir: File): ScalaInstance = {
-    val launcher = Launcher(_bootdir, Nil)
-    val libraryJar = findJar(eclipsePluginDir, LIBRARY_SUFFIX, version)
-    val compilerJar = findJar(eclipsePluginDir, COMPILER_SUFFIX, version)
-    //val libraryJar = ScalaPlugin.plugin.sbtScalaLib
-    //val compilerJar = ScalaPlugin.plugin.sbtScalaCompiler
-    ScalaInstance(libraryJar, compilerJar, launcher)
-  }
-  
   def deployedInstance(): ScalaInstance = {
     val launcher = Launcher(_bootdir, Nil)
     ScalaInstance(ScalaPlugin.plugin.libClasses.get.toFile, ScalaPlugin.plugin.compilerClasses.get.toFile, launcher)
-  }
-
-  private def findJar(dir: File, prefix: String, version: String): File = {
-    new File(dir, prefix + version + ".jar")
   }
 
   def cacheLocation(project: IProject): IFile =
