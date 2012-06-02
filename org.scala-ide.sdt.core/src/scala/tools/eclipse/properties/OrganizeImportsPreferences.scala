@@ -123,8 +123,12 @@ class OrganizeImportsPreferencesPage extends PropertyPage with IWorkbenchPrefere
     }
     
     fieldEditors += addNewFieldEditorWrappedInComposite(parent = control) { parent =>
-      val options = Array(Array("one import statement per importee", ExpandImports.toString), Array("collapse into single import statement", CollapseImports.toString))      
-      new RadioGroupFieldEditor(expandCollapseKey, "Multiple imports from the same package or type:", 2, options, parent, true) {
+      val options = Array(
+          Array("one import statement per importee", ExpandImports.toString),
+          Array("collapse into single import statement", CollapseImports.toString),
+          Array("preserve existing groups", PreserveExistingGroups.toString)
+      )
+      new RadioGroupFieldEditor(expandCollapseKey, "Multiple imports from the same package or type:", 1, options, parent, true) {
         allEnableDisableControls += getRadioBoxControl(parent)
       }
     }
@@ -181,6 +185,7 @@ object OrganizeImportsPreferences extends Enumeration {
   
   val ExpandImports = Value("expand")
   val CollapseImports = Value("collapse")
+  val PreserveExistingGroups = Value("preserve")
     
   val groupsKey         = PREFIX +".groups"
   val wildcardsKey      = PREFIX +".wildcards"
@@ -202,10 +207,11 @@ object OrganizeImportsPreferences extends Enumeration {
     getPreferenceStore(project).getString(wildcardsKey).split("\\$")
   }
   
-  def getExpandOrCollapseForProject(project: IProject) = {
+  def getOrganizeImportStrategy(project: IProject) = {
     getPreferenceStore(project).getString(expandCollapseKey) match {
       case x if x == ExpandImports.toString => ExpandImports
       case x if x == CollapseImports.toString => CollapseImports 
+      case x if x == PreserveExistingGroups.toString => PreserveExistingGroups
     }
   }
 }

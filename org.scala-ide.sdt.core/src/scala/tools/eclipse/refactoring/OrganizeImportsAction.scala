@@ -20,7 +20,7 @@ import org.eclipse.jface.action.IAction
 import org.eclipse.jface.window.Window
 
 import scala.tools.eclipse.javaelements.{ScalaSourceFile, ScalaElement, LazyToplevelClass}
-import scala.tools.eclipse.properties.OrganizeImportsPreferences.{getWildcardImportsForProject, getGroupsForProject, getExpandOrCollapseForProject, ExpandImports, CollapseImports}
+import scala.tools.eclipse.properties.OrganizeImportsPreferences._
 import scala.tools.nsc.io.AbstractFile
 import scala.tools.refactoring.implementations.{OrganizeImports, AddImportStatement}
 
@@ -227,25 +227,31 @@ class OrganizeImportsAction extends RefactoringAction with ActionWithNoWizard {
     }
     
     def refactoringParameters = { 
-      val options = {    
-        val project = file.getJavaProject.getProject
+      val project = file.getJavaProject.getProject
+      val organizationStrategy = getOrganizeImportStrategy(project)
+      
+      val options = {
         
-        val expandOrCollapse = getExpandOrCollapseForProject(project) match {
-          case ExpandImports => refactoring.ExpandImports
-          case CollapseImports => refactoring.CollapseImports
+        val expandOrCollapse = organizationStrategy match {
+          case ExpandImports => List(refactoring.ExpandImports)
+          case CollapseImports => List(refactoring.CollapseImports)
+          case PreserveExistingGroups => Nil // this is not passed as an option
         }
         
         val wildcards = refactoring.AlwaysUseWildcards(getWildcardImportsForProject(project).toSet)
         
         val groups = getGroupsForProject(project).toList
         
-        List(expandOrCollapse, wildcards, refactoring.SortImports, refactoring.GroupImports(groups))
+        expandOrCollapse ::: List(wildcards, refactoring.SortImports, refactoring.GroupImports(groups))
       }
       
       val deps = {
         if(compilationUnitHasProblems) {
           // this is safer when there are problems in the compilation unit
           refactoring.Dependencies.RemoveUnneeded
+        } else if (organizationStrategy == PreserveExistingGroups) {
+          // preserve the existing grouping of imports, but still remove all unneeded ones
+          refactoring.Dependencies.RecomputeAndModify
         } else {
           refactoring.Dependencies.FullyRecompute
         }
