@@ -31,21 +31,21 @@ class ExtractTraitAction extends RefactoringAction {
     val refactoring = withCompiler { c =>
       new ExtractTrait with GlobalIndexes {
         val global = c
-        var index = GlobalIndex(Nil)
+        val index = EmptyIndex
       }
     }
     
     def refactoringParameters = refactoring.RefactoringParameters(traitName, name => selectedMembers contains name)
     
     // The preparation result provides a list of members that can be extracted
-    val extractableMembers = preparationResult.right.get.extractableMembers
+    private val extractableMembers = preparationResult.right.get.extractableMembers
     
     // The members selected for extraction in the wizard
-    var selectedMembers: List[refactoring.global.ValOrDefDef] = Nil
+    private var selectedMembers: List[refactoring.global.ValOrDefDef] = Nil
     // The name of the extracted trait, will be set in the wizard
-    var traitName = "ExtractedTrait"
+    private var traitName = "ExtractedTrait"
     
-    val configPage = mkConfigPage(
+    private val configPage = mkConfigPage(
         extractableMembers, 
         members => selectedMembers = members, 
         name => traitName = name)
@@ -54,10 +54,10 @@ class ExtractTraitAction extends RefactoringAction {
 
     override def createChange(pm: IProgressMonitor): CompositeChange = {
       val (textChanges, newFileChanges) = {
-        performRefactoring().foldRight((List[TextChange](), List[NewFileChange]())) {
-          case (change: TextChange, (textChanges, newFiles)) =>
+        performRefactoring().foldLeft((List[TextChange](), List[NewFileChange]())) {
+          case ((textChanges, newFiles), change: TextChange) =>
             (change :: textChanges, newFiles)
-          case (change: NewFileChange, (textChanges, newFilesChanges)) =>
+          case ((textChanges, newFilesChanges), change: NewFileChange) =>
             (textChanges, change :: newFilesChanges)
         }
       }
@@ -70,10 +70,7 @@ class ExtractTraitAction extends RefactoringAction {
       })
       
       val changes = fileChange.toList ::: scalaChangesToEclipseChanges(textChanges).toList
-      val compositeChange = new CompositeChange(getName)
-      changes.foreach(compositeChange.add)
-      
-      compositeChange
+      new CompositeChange(getName, changes.toArray)
     }
     
   }

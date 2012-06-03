@@ -26,7 +26,7 @@ class IntroduceProductNTraitAction extends RefactoringAction {
       }
     }
     
-    val configPage = new IntroduceProductNTraitConfigurationPage(
+    override val configPage = new IntroduceProductNTraitConfigurationPage(
         classParams.map(_.name.toString),
         selectedNames => selectedClassParamNames = selectedNames,
         callSuperNew => callSuper = callSuperNew)

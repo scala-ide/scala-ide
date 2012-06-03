@@ -23,7 +23,7 @@ class GenerateHashcodeAndEqualsConfigurationPage(
     selectedParamsObs: List[String] => Unit,
     callSuperObs: Boolean => Unit) extends UserInputWizardPage("Generate hashCode and equals") {
 
-  val headerLabelText = "Select the class parameters to include in the hashCode() and equals() methods"
+  val headerLabelText: String = "Select the class parameters to include in the hashCode() and equals() methods"
   
   def createControl(parent: Composite) {
     initializeDialogUnits(parent)

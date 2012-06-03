@@ -25,7 +25,7 @@ class GenerateHashcodeAndEqualsAction extends RefactoringAction {
       }
     }
     
-    val configPage = new GenerateHashcodeAndEqualsConfigurationPage(
+    override val configPage = new GenerateHashcodeAndEqualsConfigurationPage(
         classParams.map(_.name.toString), 
         selectedClassParamNames_=,
         callSuper_=)

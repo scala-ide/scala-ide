@@ -51,9 +51,14 @@ trait MethodSignatureRefactoringConfigurationPageGenerator {
    */
   case class InsertedSeparator(paramListIndex: Int, splitPosition: Int) extends ParamListSeparator
   
+  /**
+   * Convenience type to shorten type notation
+   */
+  type ParamOrSeparator = Either[ValDef, ParamListSeparator]
+  
   type MSRefactoringParameters
   
-  val refactoringCaption: String
+  private[method] val refactoringCaption: String
   
   // Generates the wizard.
   def mkConfigPage(method: DefDef, paramsObs: MSRefactoringParameters => Unit): UserInputWizardPage
@@ -74,20 +79,20 @@ trait MethodSignatureRefactoringConfigurationPageGenerator {
     val headerLabelText: String
     
     // Captions of the buttons that operate on the parameter table
-    val firstBtnText = "Split"
-    val secondBtnText = "Merge"
+    val firstBtnText: String = "Split"
+    val secondBtnText: String = "Merge"
 
     def createControl(parent: Composite) {
       initializeDialogUnits(parent)
 
       // this represents all parameter lists of the method
-      var paramsWithSeparators: List[Either[ValDef, ParamListSeparator]] = intersperse(method.vparamss, nr => OriginalSeparator(nr))
+      var paramsWithSeparators: List[ParamOrSeparator] = intersperse(method.vparamss, nr => OriginalSeparator(nr))
       // function that provides the parameters to the parameter table
-      val methodProvider: () => List[Either[ValDef, ParamListSeparator]] = () => paramsWithSeparators
+      val methodProvider: () => List[ParamOrSeparator] = () => paramsWithSeparators
       // the currently selected item in the parameter table
-      var selection: Either[ValDef, ParamListSeparator] = Right(OriginalSeparator(0))
+      var selection: ParamOrSeparator = Right(OriginalSeparator(0))
       
-      type SelectedParamHandler = Either[ValDef, ParamListSeparator] => Unit
+      type SelectedParamHandler = ParamOrSeparator => Unit
       
       // Convenience implicit conversion of SelectedParamHandlers to MouseListeners
       implicit def partial2MouseUpListener(f: SelectedParamHandler): MouseListener = new MouseAdapter {
@@ -122,7 +127,7 @@ trait MethodSignatureRefactoringConfigurationPageGenerator {
       val spacingLabel = new Label(composite, SWT.NONE)
       spacingLabel.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1))
       
-      def setBtnStatesForSelection(sel: Either[ValDef, ParamListSeparator]): Unit = sel match {
+      def setBtnStatesForSelection(sel: ParamOrSeparator): Unit = sel match {
         case Left(param) => setBtnStatesForParameter(param, paramsWithSeparators, firstBtn, secondBtn)
         case Right(separator) => setBtnStatesForSeparator(separator, paramsWithSeparators, firstBtn, secondBtn)
       }
@@ -184,23 +189,23 @@ trait MethodSignatureRefactoringConfigurationPageGenerator {
     // responsible for setting the states of the two buttons when a parameter is selected in the parameter table
     def setBtnStatesForParameter(
       param: ValDef,
-      paramsWithSeparators: List[Either[ValDef, ParamListSeparator]],
+      paramsWithSeparators: List[ParamOrSeparator],
       firstBtn: Button,
       secondBtn: Button): Unit
 
     // responsible for setting the states of the two buttons when a ParamListSeparator is selected in the parameter table
     def setBtnStatesForSeparator(
       separator: ParamListSeparator,
-      paramsWithSeparators: List[Either[ValDef, ParamListSeparator]],
+      paramsWithSeparators: List[ParamOrSeparator],
       firstBtn: Button,
       seecondBtn: Button): Unit
     
     // responsible to compute the refactoring parameters that correspond to the current state of this wizard
-    def computeParameters(paramsWithSeparators: List[Either[ValDef, ParamListSeparator]]): MSRefactoringParameters
+    def computeParameters(paramsWithSeparators: List[ParamOrSeparator]): MSRefactoringParameters
     
-    def handleFirstBtn(selection: Either[ValDef, ParamListSeparator], paramsWithSeparators: List[Either[ValDef, ParamListSeparator]]): List[Either[ValDef, ParamListSeparator]]
+    def handleFirstBtn(selection: ParamOrSeparator, paramsWithSeparators: List[ParamOrSeparator]): List[ParamOrSeparator]
     
-    def handleSecondBtn(selection: Either[ValDef, ParamListSeparator], paramsWithSeparators: List[Either[ValDef, ParamListSeparator]]): List[Either[ValDef, ParamListSeparator]]
+    def handleSecondBtn(selection: ParamOrSeparator, paramsWithSeparators: List[ParamOrSeparator]): List[ParamOrSeparator]
   }
   
   /**
@@ -217,7 +222,7 @@ trait MethodSignatureRefactoringConfigurationPageGenerator {
    * Reconstructs the list of parameter lists from the flattened withSeparators list.
    * Inverse operation to intersperse.
    */
-  protected def extractParamLists(withSeparators: List[Either[ValDef, ParamListSeparator]]): List[List[ValDef]] = withSeparators match {
+  protected def extractParamLists(withSeparators: List[ParamOrSeparator]): List[List[ValDef]] = withSeparators match {
     case Nil => Nil
     case _ => {
       val vals = withSeparators.takeWhile(_.isLeft) collect { case Left(v) => v}
@@ -229,56 +234,59 @@ trait MethodSignatureRefactoringConfigurationPageGenerator {
   /**
    * Finds the separator of type S that follows the given item of type A in the given list.
    */
-  protected def followingSeparator[A, S](item: A, separatedItems: List[Either[A, S]]) = {
+  protected def followingSeparator[A, S](item: A, separatedItems: List[Either[A, S]]): Option[S] = {
     separatedItems.sliding(2).collect({ case Left(p)::Right(sep)::Nil if p == item => sep}).toList.headOption
   }
   
   /**
    * Finds the separator of type S that precedes the given item of type A in the given list.
    */
-  protected def precedingSeparator[A, S](item: A, separatedItems: List[Either[A, S]]) = {
+  protected def precedingSeparator[A, S](item: A, separatedItems: List[Either[A, S]]): Option[S] = {
     separatedItems.sliding(2).collect({case Right(sep)::Left(p)::Nil if p == item => sep}).toList.headOption
   }
   
   /**
    * Checks whether the given element is followed by a separator in the given list.
    */
-  protected def isBeforeSeparator[A, S](item: A, separatedItems: List[Either[A, S]]) = {
+  protected def isBeforeSeparator[A, S](item: A, separatedItems: List[Either[A, S]]): Boolean = {
     followingSeparator(item, separatedItems).isDefined
   }
   
   /**
    * Checks whether the given element is preceded by a separator in the given list.
    */
-  protected def isAfterSeparator[A, S](item: A, separatedItems: List[Either[A, S]]) = {
+  protected def isAfterSeparator[A, S](item: A, separatedItems: List[Either[A, S]]): Boolean = {
     precedingSeparator(item, separatedItems).isDefined
   }
   
   /**
    * Checks whether the given parameter is the first one in its parameter list.
    */
-  protected def isFirstInParamList(param: ValDef, paramsWithSeparators: List[Either[ValDef, ParamListSeparator]]) = {
+  protected def isFirstInParamList(param: ValDef, paramsWithSeparators: List[ParamOrSeparator]): Boolean = {
     isAfterSeparator(param, Right(OriginalSeparator(0))::paramsWithSeparators)
   }
   
   /**
    * Checks whether the given parameter is the last one in its parameter list.
    */
-  protected def isLastInParamList(param: ValDef, paramsWithSeparators: List[Either[ValDef, ParamListSeparator]]) = {
+  protected def isLastInParamList(param: ValDef, paramsWithSeparators: List[ParamOrSeparator]): Boolean = {
     isBeforeSeparator(param, paramsWithSeparators ::: List(Right(OriginalSeparator(0))))
   }
 
   /**
    * Checks if the parameter list can be splitted after the given parameter.
    */
-  protected def isInSplitPosition(param: ValDef, paramsWithSeparators: List[Either[ValDef, ParamListSeparator]]) =
+  protected def isInSplitPosition(param: ValDef, paramsWithSeparators: List[ParamOrSeparator]): Boolean =
     !isLastInParamList(param, paramsWithSeparators)
 
   /**
    * Inserts the given separator after the given parameter in paramsWithSeparators.
    */
-  protected def insertSeparatorAfter(param: ValDef, separator: ParamListSeparator, paramsWithSeparators: List[Either[ValDef, ParamListSeparator]]) = {
-    paramsWithSeparators.foldRight(Nil: List[Either[ValDef, ParamListSeparator]])((el, acc) => el match {
+  protected def insertSeparatorAfter(
+      param: ValDef, 
+      separator: ParamListSeparator, 
+      paramsWithSeparators: List[ParamOrSeparator]): List[ParamOrSeparator] = {
+    paramsWithSeparators.foldRight(Nil: List[ParamOrSeparator])((el, acc) => el match {
       case Left(p) if p == param => el::Right(separator)::acc
       case _ => el::acc
     })
@@ -287,8 +295,8 @@ trait MethodSignatureRefactoringConfigurationPageGenerator {
   /**
    * Inserts a new separator after the given parameter in paramsWithSeparators.
    */
-  protected def addSplitPositionAfter(param: ValDef, paramsWithSeparators: List[Either[ValDef, ParamListSeparator]]) = {
-    def computePos(paramListIndex: Int, posCounter: Int, m: List[Either[ValDef, ParamListSeparator]]): Option[(Int, Int)] = m match {
+  protected def addSplitPositionAfter(param: ValDef, paramsWithSeparators: List[ParamOrSeparator]): List[ParamOrSeparator] = {
+    def computePos(paramListIndex: Int, posCounter: Int, m: List[ParamOrSeparator]): Option[(Int, Int)] = m match {
       case Nil => None
       case Left(p)::ms if p == param => Some(paramListIndex, posCounter + 1)
       case Left(_)::ms => computePos(paramListIndex, posCounter + 1, ms)
@@ -303,14 +311,14 @@ trait MethodSignatureRefactoringConfigurationPageGenerator {
   /**
    * Removes the given separator from paramsWithSeparators
    */
-  protected def removeSeparator(separator: ParamListSeparator, paramsWithSeparators: List[Either[ValDef, ParamListSeparator]]) = {
+  protected def removeSeparator(separator: ParamListSeparator, paramsWithSeparators: List[ParamOrSeparator]): List[ParamOrSeparator] = {
     paramsWithSeparators.filter(_ != Right(separator))
   }
 
   /**
    * Generates the preview string for the refactored method signature
    */
-  protected def previewString(method: DefDef, paramsWithSeparators: List[Either[ValDef, ParamListSeparator]]) = {
+  protected def previewString(method: DefDef, paramsWithSeparators: List[ParamOrSeparator]): String = {
     val paramLists = extractParamLists(paramsWithSeparators)
     val paramListStrings = paramLists.map(params => params.map(p => p.name + ": " + p.tpt.symbol.name)).map(_.mkString(", "))
     "def " + method.name + "(" + paramListStrings.mkString(")(") + "): " + method.tpt.symbol.name
@@ -321,7 +329,7 @@ trait MethodSignatureRefactoringConfigurationPageGenerator {
    */
   class ParamsTable(
       parent: Composite, 
-      methodProvider: () => List[Either[ValDef, ParamListSeparator]]) extends Composite(parent, SWT.NONE) {
+      methodProvider: () => List[ParamOrSeparator]) extends Composite(parent, SWT.NONE) {
     
     var selectionObs: IStructuredSelection => Unit = _
     
@@ -343,7 +351,7 @@ trait MethodSignatureRefactoringConfigurationPageGenerator {
 
       object ParamsContentProvider extends IStructuredContentProvider {
         override def getElements(paramsWithSeparators: AnyRef): Array[AnyRef] = {
-          val elems = paramsWithSeparators.asInstanceOf[List[Either[ValDef, ParamListSeparator]]]
+          val elems = paramsWithSeparators.asInstanceOf[List[ParamOrSeparator]]
           Array(elems: _*)
         }
         override def inputChanged(viewer: Viewer, oldInput: Any, newInput: Any) {}
@@ -358,7 +366,7 @@ trait MethodSignatureRefactoringConfigurationPageGenerator {
 
       nameColumn.setLabelProvider(new ColumnLabelProvider {
         override def getText(element: Any): String = {
-          val row = element.asInstanceOf[Either[ValDef, ParamListSeparator]]
+          val row = element.asInstanceOf[ParamOrSeparator]
           row match {
             case Left(param) => param.symbol.nameString
             case Right(separator) => "-"
@@ -368,7 +376,7 @@ trait MethodSignatureRefactoringConfigurationPageGenerator {
 
       typeColumn.setLabelProvider(new ColumnLabelProvider {
         override def getText(element: Any): String = {
-          val row = element.asInstanceOf[Either[ValDef, ParamListSeparator]]
+          val row = element.asInstanceOf[ParamOrSeparator]
           row match {
             case Left(param) => param.tpt.symbol.nameString
             // maybe display original/inserted separators differently
@@ -398,7 +406,7 @@ trait MethodSignatureRefactoringConfigurationPageGenerator {
       })
     }
       
-    def updateTable() {
+    private[method] def updateTable() {
       viewer.setInput(methodProvider.apply)
       viewer.refresh()
     }

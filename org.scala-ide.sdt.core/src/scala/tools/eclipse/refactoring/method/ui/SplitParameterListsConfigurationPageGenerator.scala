@@ -31,7 +31,7 @@ trait SplitParameterListsConfigurationPageGenerator extends MethodSignatureRefac
     // is in a splittable position (not the last parameter in its list).
     override def setBtnStatesForParameter(
         param: ValDef, 
-        paramsWithSeparators: List[Either[ValDef, ParamListSeparator]], 
+        paramsWithSeparators: List[ParamOrSeparator], 
         splitBtn: Button, 
         mergeBtn: Button) {
       mergeBtn.setEnabled(false)
@@ -43,7 +43,7 @@ trait SplitParameterListsConfigurationPageGenerator extends MethodSignatureRefac
     // to make it possible to revert this decision.
     override def setBtnStatesForSeparator(
       separator: ParamListSeparator,
-      paramsWithSeparators: List[Either[ValDef, ParamListSeparator]],
+      paramsWithSeparators: List[ParamOrSeparator],
       splitBtn: Button,
       mergeBtn: Button) {
       separator match {
@@ -53,7 +53,7 @@ trait SplitParameterListsConfigurationPageGenerator extends MethodSignatureRefac
       splitBtn.setEnabled(false)
     }
 
-    override def computeParameters(paramsWithSeparators: List[Either[ValDef, ParamListSeparator]]) = {
+    override def computeParameters(paramsWithSeparators: List[ParamOrSeparator]) = {
       val splitters = paramsWithSeparators collect { case Right(sep @ InsertedSeparator(_, _)) => sep }
       val grouped = splitters.groupBy(sep => sep.paramListIndex).withDefaultValue(Nil)
       val splitterLists =
@@ -64,13 +64,13 @@ trait SplitParameterListsConfigurationPageGenerator extends MethodSignatureRefac
     }
     
     // Handles a click of the split button; inserts a separator after the selected parameter.
-    override def handleFirstBtn(selection: Either[ValDef, ParamListSeparator], paramsWithSeparators: List[Either[ValDef, ParamListSeparator]]) = selection match {
+    override def handleFirstBtn(selection: ParamOrSeparator, paramsWithSeparators: List[ParamOrSeparator]) = selection match {
       case Left(param) if isInSplitPosition(param, paramsWithSeparators) => addSplitPositionAfter(param, paramsWithSeparators)
       case _ => paramsWithSeparators
     }
     
     // Handles a click of the merge button; removes the selected inserted separator.
-    override def handleSecondBtn(selection: Either[ValDef, ParamListSeparator], paramsWithSeparators: List[Either[ValDef, ParamListSeparator]]) = selection match {
+    override def handleSecondBtn(selection: ParamOrSeparator, paramsWithSeparators: List[ParamOrSeparator]) = selection match {
       case Right(sep: InsertedSeparator) => removeSeparator(sep, paramsWithSeparators)
       case _ => paramsWithSeparators
     }

@@ -3,9 +3,9 @@ package scala.tools.eclipse.refactoring
 import scala.tools.eclipse.javaelements.ScalaSourceFile
 import scala.tools.refactoring.analysis.GlobalIndexes
 import scala.tools.refactoring.MultiStageRefactoring
-
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.ltk.core.refactoring.RefactoringStatus
+import scala.tools.eclipse.ScalaProject
 
 /**
  * Helper trait that adds an index variable to a refactoring. 
@@ -15,7 +15,7 @@ import org.eclipse.ltk.core.refactoring.RefactoringStatus
  */
 trait Indexed {
   this: GlobalIndexes =>
-  var index = GlobalIndex(Nil)
+  var index = EmptyIndex
 }
 
 /**
@@ -24,7 +24,7 @@ trait Indexed {
 abstract class IndexedIdeRefactoring(refactoringName: String, start: Int, end: Int, sourcefile: ScalaSourceFile) 
   extends ScalaIdeRefactoring(refactoringName, sourcefile, start, end) with FullProjectIndex {
 
-  val project = sourcefile.project
+  val project: ScalaProject = sourcefile.project
   
   val refactoring: MultiStageRefactoring with GlobalIndexes with Indexed
   
@@ -32,13 +32,12 @@ abstract class IndexedIdeRefactoring(refactoringName: String, start: Int, end: I
    * A cleanup handler, will later be set by the refactoring
    * to remove all loaded compilation units from the compiler.
    */
-  var cleanup = () => ()
+  var cleanup: () => Unit = () => ()
 
   override def checkInitialConditions(pm: IProgressMonitor): RefactoringStatus = {
     val status = super.checkInitialConditions(pm)
 
     if (!status.hasError) { 
-      // the hints parameter is not used, this can slow down the refactoring considerably!
       val (index, cleanupIndex) = buildFullProjectIndex(pm, indexHints)
       refactoring.index = index
       // will be called after the refactoring has finished
@@ -53,7 +52,9 @@ abstract class IndexedIdeRefactoring(refactoringName: String, start: Int, end: I
   }
   
   /**
-   * Provide hints for index building. 
+   * Provide hints for index building.
+   * If no hints are provided, the full project index is built, 
+   * this can slow down the refactoring considerably.
    */
   def indexHints(): List[String] = Nil
 

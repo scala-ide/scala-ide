@@ -24,6 +24,7 @@ class MoveConstructorToCompanionObjectAction extends RefactoringAction {
     
     val refactoringParameters = new refactoring.RefactoringParameters
     
+    
     override def indexHints() = {
       val classdef = preparationResult.right.toOption
       classdef.map(_.symbol.nameString).toList

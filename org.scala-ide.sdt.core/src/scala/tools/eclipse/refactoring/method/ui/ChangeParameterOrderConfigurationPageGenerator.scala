@@ -37,27 +37,27 @@ trait ChangeParameterOrderConfigurationPageGenerator extends MethodSignatureRefa
     //   the last one in its parameter list and disable it otherwise
     override def setBtnStatesForParameter(
         param: ValDef, 
-        paramsWithSeparators: List[Either[ValDef, ParamListSeparator]], 
+        paramsWithSeparators: List[ParamOrSeparator], 
         upBtn: Button, 
         downBtn: Button) {
       val isLast = isLastInParamList(param, paramsWithSeparators)
       val isFirst = isFirstInParamList(param, paramsWithSeparators)
       
-      downBtn.setEnabled(!(isLast && isFirst) && !isLast)
-      upBtn.setEnabled(!(isLast && isFirst) && !isFirst)
+      downBtn.setEnabled(!isLast)
+      upBtn.setEnabled(!isFirst)
     }
   
     // If a parameter is selected we disable both buttons.
     override def setBtnStatesForSeparator(
         separator: ParamListSeparator, 
-        paramsWithSeparators: List[Either[ValDef, ParamListSeparator]], 
+        paramsWithSeparators: List[ParamOrSeparator], 
         upBtn: Button, 
         downBtn: Button) {
       downBtn.setEnabled(false)
       upBtn.setEnabled(false)
     }
   
-    override def computeParameters(paramsWithSeparators: List[Either[ValDef, ParamListSeparator]]) = {
+    override def computeParameters(paramsWithSeparators: List[ParamOrSeparator]) = {
       def computePermutation(paramLists: (List[ValDef], List[ValDef])) = {
         val original = paramLists._1
         val permuted = paramLists._2
@@ -72,15 +72,15 @@ trait ChangeParameterOrderConfigurationPageGenerator extends MethodSignatureRefa
     }
     
     // Handles a click on the up button; moves the selected parameter up
-    override def handleFirstBtn(selection: Either[ValDef, ParamListSeparator], paramsWithSeparators: List[Either[ValDef, ParamListSeparator]]) = selection match {
+    override def handleFirstBtn(selection: ParamOrSeparator, paramsWithSeparators: List[ParamOrSeparator]) = selection match {
       case Left(param) => moveParamUp(param, paramsWithSeparators)
       case _ => paramsWithSeparators
     }
     
     private def moveParamUp(
         param: ValDef,
-        paramsWithSeparators: List[Either[ValDef, ParamListSeparator]]):
-          List[Either[ValDef, ParamListSeparator]] = paramsWithSeparators match {
+        paramsWithSeparators: List[ParamOrSeparator]):
+          List[ParamOrSeparator] = paramsWithSeparators match {
       case Nil => Nil
       case p::Nil => paramsWithSeparators
       case Left(first)::Left(second)::rest if second == param => Left(second)::Left(first)::rest
@@ -88,15 +88,15 @@ trait ChangeParameterOrderConfigurationPageGenerator extends MethodSignatureRefa
     }
     
     // Handles a click on the down button; moves the selected parameter down
-    override def handleSecondBtn(selection: Either[ValDef, ParamListSeparator], paramsWithSeparators: List[Either[ValDef, ParamListSeparator]]) = selection match {
+    override def handleSecondBtn(selection: ParamOrSeparator, paramsWithSeparators: List[ParamOrSeparator]) = selection match {
       case Left(param) => moveParamDown(param, paramsWithSeparators)
       case _ => paramsWithSeparators
     }
     
     private def moveParamDown(
         param: ValDef, 
-        paramsWithSeparators: List[Either[ValDef, ParamListSeparator]]): 
-          List[Either[ValDef, ParamListSeparator]] = paramsWithSeparators match {
+        paramsWithSeparators: List[ParamOrSeparator]): 
+          List[ParamOrSeparator] = paramsWithSeparators match {
       case Nil => Nil
       case p::Nil => paramsWithSeparators
       case Left(first)::Left(second)::rest if first == param => Left(second)::Left(first)::rest

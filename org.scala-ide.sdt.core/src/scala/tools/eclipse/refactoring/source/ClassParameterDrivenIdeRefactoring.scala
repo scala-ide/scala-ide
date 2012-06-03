@@ -15,27 +15,24 @@ import org.eclipse.ltk.ui.refactoring.RefactoringWizardPage
 abstract class ClassParameterDrivenIdeRefactoring(name: String, start: Int, end: Int, sourcefile: ScalaSourceFile)
   extends ScalaIdeRefactoring(name, sourcefile, start, end) {
   
-  val project = file.project
-  
   val refactoring: ClassParameterDrivenSourceGeneration
   
-  var selectedClassParamNames: List[String] = Nil
-  var callSuper = false
-  var prime = None
-
+  import refactoring.global.ValDef
+  
+  private[source] var selectedClassParamNames: List[String] = Nil
+  private[source] var callSuper = false
+  
   def refactoringParameters = refactoring.RefactoringParameters(callSuper, selectByNames(selectedClassParamNames))
 
   // The preparation result contains the list of class parameters of the primary constructor
-  lazy val classParams = preparationResult.right.get.classParams.map(t => t._1)
+  private[source] lazy val classParams: List[ValDef] = preparationResult.right.get.classParams.map(t => t._1)
 
-  val configPage: RefactoringWizardPage
+  private[source] val configPage: RefactoringWizardPage
 
   override def getPages = configPage :: Nil
 
   import refactoring.global.ValDef
-  def selectByNames(names: List[String]): Option[ValDef => Boolean] = names match {
-    case Nil => None
-    case _ => Some((param: ValDef) => names.contains(param.name.toString))
-  }
+  private def selectByNames(names: List[String]): Option[ValDef => Boolean] = 
+    Some((param: ValDef) => names.contains(param.name.toString))
 
 }
