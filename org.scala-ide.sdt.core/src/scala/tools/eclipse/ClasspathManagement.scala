@@ -32,7 +32,7 @@ import scala.tools.eclipse.logging.HasLogger
  *
  *  The Scala compiler needs these entries to be separated for proper setup.
  */
-class ScalaClasspath(val jdkPaths: Seq[IPath], // JDK classpath
+case class ScalaClasspath(val jdkPaths: Seq[IPath], // JDK classpath
   val scalaLib: Option[IPath], // scala library
   val userCp: Seq[IPath], // user classpath, excluding the Scala library and JDK
   val scalaVersion: Option[String]) {
@@ -137,6 +137,16 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
    *        this method can't rely on the compiler being present.
    */
   def scalaPackageFragments: Seq[(IPackageFragmentRoot, Option[String])] = {
+    val pathToPredef = new Path("scala/Predef.class")
+
+    def isZipFileScalaLib(p: IPath): Boolean = {
+      // catch any JavaModelException and pretend it's not the scala library
+      failAsValue(classOf[JavaModelException], classOf[IOException])(false) {
+        val jarFile = JavaModelManager.getJavaModelManager().getZipFile(p)
+        jarFile.getEntry("scala/Predef.class") ne null
+      }
+    }
+
     // look for all package fragment roots containing instances of scala.Predef
     val fragmentRoots = new ListBuffer[(IPackageFragmentRoot, Option[String])]
 
@@ -145,18 +155,18 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
         case IPackageFragmentRoot.K_BINARY =>
           val resource = fragmentRoot.getUnderlyingResource
 
-          val entry = resource match {
-            case folder: IFolder => folder.findMember(new Path("scala/Predef.class"))
-            case _               => // it must be a jar file
-              // catch any JavaModelException and pretend it's not the scala library
-              failAsValue(classOf[JavaModelException])(null) {
-                val jarFile = JavaModelManager.getJavaModelManager().getZipFile(fragmentRoot.getPath())
-                jarFile.getEntry("scala/Predef.class")
+          val foundIt: Boolean = resource match {
+            case folder: IFolder => folder.findMember(pathToPredef) ne null
+            case file: IFile     => isZipFileScalaLib(file.getFullPath)
+            case _ =>
+              val file = fragmentRoot.getPath.toFile
+              file.exists && {
+                if (file.isFile) isZipFileScalaLib(fragmentRoot.getPath)
+                else fragmentRoot.getPath.append(pathToPredef).toFile.exists
               }
           }
 
-          if (entry ne null)
-            fragmentRoots += ((fragmentRoot, getVersionNumber(fragmentRoot)))
+          if (foundIt) fragmentRoots += ((fragmentRoot, getVersionNumber(fragmentRoot)))
 
         case IPackageFragmentRoot.K_SOURCE =>
           for {
