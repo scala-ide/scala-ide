@@ -1,6 +1,6 @@
 package scala.tools.eclipse
 
-import scala.collection.mutable.ListBuffer
+import scala.collection.mutable
 import org.eclipse.jdt.core.IPackageFragmentRoot
 import org.eclipse.jdt.core.IJavaProject
 import org.eclipse.core.resources.IMarker
@@ -27,10 +27,15 @@ import org.eclipse.core.runtime.Path
 import scala.util.control.Exception._
 import org.eclipse.jdt.core.JavaModelException
 import scala.tools.eclipse.logging.HasLogger
+import java.io.File
+import org.eclipse.jdt.internal.core.JavaProject
 
 /** The Scala classpath broken down in the JDK, Scala library and user library.
  *
  *  The Scala compiler needs these entries to be separated for proper setup.
+ *
+ *  @note All paths are file-system absolute paths. Any path variables or
+ *        linked resources are resolved.
  */
 case class ScalaClasspath(val jdkPaths: Seq[IPath], // JDK classpath
   val scalaLib: Option[IPath], // scala library
@@ -44,6 +49,18 @@ case class ScalaClasspath(val jdkPaths: Seq[IPath], // JDK classpath
     scalaVersion: %s
     
     """.format(jdkPaths, scalaLib, userCp, scalaVersion)
+
+  def scalaLibraryFile: Option[File] =
+    scalaLib.map(_.toFile.getAbsoluteFile)
+
+  private def toPath(ps: Seq[IPath]): Seq[File] = ps map (_.toFile.getAbsoluteFile)
+
+  /** Return the full classpath of this project.
+   *
+   *  It puts the JDK and the Scala library in front of the user classpath.
+   */
+  def fullClasspath: Seq[File] =
+    toPath(jdkPaths) ++ scalaLibraryFile.toSeq ++ toPath(userCp)
 }
 
 object ScalaClasspath {
@@ -62,7 +79,7 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
     val cp = classpath.filterNot(jdkEntries.toSet)
 
     scalaPackageFragments match {
-      case Seq((pf, version), _*) => new ScalaClasspath(jdkEntries, Some(pf.getPath()), cp.filterNot(_ == pf.getPath), version)
+      case Seq((pf, version), _*) => new ScalaClasspath(jdkEntries, Some(pf), cp.filterNot(_ == pf), version)
       case _                      => new ScalaClasspath(jdkEntries, None, cp, None)
     }
   }
@@ -83,6 +100,56 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
         case _ => None
 
       }).flatten
+  }
+
+  /** Return the fully resolved classpath of this project.
+   *
+   *  It includes the Scala library and the JDK entries.
+   *
+   *  @note This is almost never what you need. See the [[scalaClasspath]] method
+   *        inherited from `ClasspathManagement`.
+   */
+  private[eclipse] def classpath: Seq[IPath] = {
+    val path = new mutable.LinkedHashSet[IPath]
+
+    def computeClasspath(project: IJavaProject, exportedOnly: Boolean): Unit = {
+      val cpes = project.getResolvedClasspath(true)
+
+      for (
+        cpe <- cpes if !exportedOnly || cpe.isExported ||
+          cpe.getEntryKind == IClasspathEntry.CPE_SOURCE
+      ) cpe.getEntryKind match {
+        case IClasspathEntry.CPE_PROJECT =>
+          val depProject = plugin.workspaceRoot.getProject(cpe.getPath.lastSegment)
+          if (JavaProject.hasJavaNature(depProject)) {
+            computeClasspath(JavaCore.create(depProject), true)
+          }
+        case IClasspathEntry.CPE_LIBRARY =>
+          if (cpe.getPath != null) {
+            val absPath = plugin.workspaceRoot.findMember(cpe.getPath)
+            if (absPath != null)
+              path += absPath.getLocation
+            else {
+              path += cpe.getPath
+            }
+          } else
+            logger.error("Classpath computation encountered a null path for " + cpe, null)
+        case IClasspathEntry.CPE_SOURCE =>
+          val cpeOutput = cpe.getOutputLocation
+          val outputLocation = if (cpeOutput != null) cpeOutput else project.getOutputLocation
+
+          if (outputLocation != null) {
+            val absPath = plugin.workspaceRoot.findMember(outputLocation)
+            if (absPath != null)
+              path += absPath.getLocation
+          }
+
+        case _ =>
+          logger.warn("Classpath computation encountered unknown entry: " + cpe)
+      }
+    }
+    computeClasspath(javaProject, false)
+    path.toList
   }
 
   private var classpathCheckLock = new Object
@@ -135,8 +202,11 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
    *        presentation compiler for opening Scala source or class files. Since this method
    *        is called during the Scala compiler initialization (to determine the Scala library),
    *        this method can't rely on the compiler being present.
+   *
+   *  @return the absolute file-system path to package fragments that define `scala.Predef`.
+   *          If it contains path variables or is a linked resources, the path is resolved.
    */
-  def scalaPackageFragments: Seq[(IPackageFragmentRoot, Option[String])] = {
+  def scalaPackageFragments: Seq[(IPath, Option[String])] = {
     val pathToPredef = new Path("scala/Predef.class")
 
     def isZipFileScalaLib(p: IPath): Boolean = {
@@ -148,7 +218,7 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
     }
 
     // look for all package fragment roots containing instances of scala.Predef
-    val fragmentRoots = new ListBuffer[(IPackageFragmentRoot, Option[String])]
+    val fragmentRoots = new mutable.ListBuffer[(IPath, Option[String])]
 
     for (fragmentRoot <- javaProject.getAllPackageFragmentRoots() if fragmentRoot.getPackageFragment("scala").exists) {
       fragmentRoot.getKind() match {
@@ -166,13 +236,19 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
               }
           }
 
-          if (foundIt) fragmentRoots += ((fragmentRoot, getVersionNumber(fragmentRoot)))
+          if (foundIt) fragmentRoots += ((fragmentRoot.getPath, getVersionNumber(fragmentRoot)))
 
         case IPackageFragmentRoot.K_SOURCE =>
           for {
             folder <- Option(fragmentRoot.getUnderlyingResource.asInstanceOf[IFolder])
             if folder.findMember(new Path("scala/Predef.scala")) ne null
-          } fragmentRoots += ((fragmentRoot, getVersionNumber(fragmentRoot)))
+            if (folder.getProject != underlying) // only consider a source library if it comes from a different project
+            dependentPrj <- ScalaPlugin.plugin.asScalaProject(folder.getProject)
+            (srcPath, binFolder) <- dependentPrj.sourceOutputFolders
+            if srcPath.getProjectRelativePath == folder.getProjectRelativePath
+          } {
+            fragmentRoots += ((binFolder.getLocation, getVersionNumber(fragmentRoot)))
+          }
 
         case _ =>
       }
