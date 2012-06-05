@@ -188,14 +188,6 @@ class ClasspathTests {
   }
 
   /**
-   * One scala library defined in the classpath, as a source folder
-   */
-  @Test
-  def sourceFolderLibrary() {
-    setRawClasspathAndCheckMarkers(cleanRawClasspath :+  JavaCore.newSourceEntry(new Path("/classpath/lib/" + ScalaPlugin.plugin.shortScalaVer + ".x/source-scala-library")), 0, 0)
-  }
-
-  /**
    * check that the error marker is kept even after a clean
    */
   @Test

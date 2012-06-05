@@ -62,7 +62,7 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
     val cp = classpath.filterNot(jdkEntries.toSet)
 
     scalaPackageFragments match {
-      case Seq((pf, version), _*) => new ScalaClasspath(jdkEntries, Some(pf.getPath()), cp.filterNot(_ == pf.getPath), version)
+      case Seq((pf, version), _*) => new ScalaClasspath(jdkEntries, Some(pf), cp.filterNot(_ == pf), version)
       case _                      => new ScalaClasspath(jdkEntries, None, cp, None)
     }
   }
@@ -136,7 +136,7 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
    *        is called during the Scala compiler initialization (to determine the Scala library),
    *        this method can't rely on the compiler being present.
    */
-  def scalaPackageFragments: Seq[(IPackageFragmentRoot, Option[String])] = {
+  def scalaPackageFragments: Seq[(IPath, Option[String])] = {
     val pathToPredef = new Path("scala/Predef.class")
 
     def isZipFileScalaLib(p: IPath): Boolean = {
@@ -148,7 +148,7 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
     }
 
     // look for all package fragment roots containing instances of scala.Predef
-    val fragmentRoots = new ListBuffer[(IPackageFragmentRoot, Option[String])]
+    val fragmentRoots = new ListBuffer[(IPath, Option[String])]
 
     for (fragmentRoot <- javaProject.getAllPackageFragmentRoots() if fragmentRoot.getPackageFragment("scala").exists) {
       fragmentRoot.getKind() match {
@@ -166,13 +166,19 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
               }
           }
 
-          if (foundIt) fragmentRoots += ((fragmentRoot, getVersionNumber(fragmentRoot)))
+          if (foundIt) fragmentRoots += ((fragmentRoot.getPath, getVersionNumber(fragmentRoot)))
 
         case IPackageFragmentRoot.K_SOURCE =>
           for {
             folder <- Option(fragmentRoot.getUnderlyingResource.asInstanceOf[IFolder])
             if folder.findMember(new Path("scala/Predef.scala")) ne null
-          } fragmentRoots += ((fragmentRoot, getVersionNumber(fragmentRoot)))
+            if (folder.getProject != underlying) // only consider a source library if it comes from a different project
+            dependentPrj <- ScalaPlugin.plugin.asScalaProject(folder.getProject)
+            (srcPath, binFolder) <- dependentPrj.sourceOutputFolders
+            if srcPath.getProjectRelativePath == folder.getProjectRelativePath
+          } {
+            fragmentRoots += ((binFolder.getLocation, getVersionNumber(fragmentRoot)))
+          }
 
         case _ =>
       }
