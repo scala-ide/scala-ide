@@ -25,140 +25,140 @@
     <dependency>
       <groupId>org.scala-tools.sbt</groupId>
       <artifactId>actions_${sbt.compiled.version}</artifactId>
-      <optional/>
+      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>org.scala-tools.sbt</groupId>
       <artifactId>api_${sbt.compiled.version}</artifactId>
-      <optional/>
+      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>org.scala-tools.sbt</groupId>
       <artifactId>cache_${sbt.compiled.version}</artifactId>
-      <optional/>
+      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>org.scala-tools.sbt</groupId>
       <artifactId>classfile_${sbt.compiled.version}</artifactId>
-      <optional/>
+      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>org.scala-tools.sbt</groupId>
       <artifactId>classpath_${sbt.compiled.version}</artifactId>
-      <optional/>
+      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>org.scala-tools.sbt</groupId>
       <artifactId>collections_${sbt.compiled.version}</artifactId>
-      <optional/>
+      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>org.scala-tools.sbt</groupId>
       <artifactId>compile_${sbt.compiled.version}</artifactId>
-      <optional/>
+      <optional>true</optional>
     </dependency>
      <dependency>
       <groupId>org.scala-tools.sbt</groupId>
       <artifactId>control_${sbt.compiled.version}</artifactId>
-      <optional/>
+      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>org.scala-tools.sbt</groupId>
       <artifactId>incremental-compiler_${sbt.compiled.version}</artifactId>
-      <optional/>
+      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>org.scala-tools.sbt</groupId>
       <artifactId>io_${sbt.compiled.version}</artifactId>
-      <optional/>
+      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>org.scala-tools.sbt</groupId>
       <artifactId>ivy_${sbt.compiled.version}</artifactId>
-      <optional/>
+      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>org.scala-tools.sbt</groupId>
       <artifactId>launcher-interface_${sbt.compiled.version}</artifactId>
-      <optional/>
+      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>org.scala-tools.sbt</groupId>
       <artifactId>logging_${sbt.compiled.version}</artifactId>
-      <optional/>
+      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>org.scala-tools.sbt</groupId>
       <artifactId>main_${sbt.compiled.version}</artifactId>
-      <optional/>
+      <optional>true</optional>
     </dependency>    
     <dependency>
       <groupId>org.scala-tools.sbt</groupId>
       <artifactId>persist_${sbt.compiled.version}</artifactId>
-      <optional/>
+      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>org.scala-tools.sbt</groupId>
       <artifactId>process_${sbt.compiled.version}</artifactId>
-      <optional/>
+      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>org.scala-tools.sbt</groupId>
       <artifactId>run_${sbt.compiled.version}</artifactId>
-      <optional/>
+      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>org.scala-tools.sbt</groupId>
       <artifactId>tasks_${sbt.compiled.version}</artifactId>
-      <optional/>
+      <optional>true</optional>
     </dependency>    
     <dependency>
       <groupId>org.scala-tools.sbt</groupId>
       <artifactId>task-system_${sbt.compiled.version}</artifactId>
-      <optional/>
+      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>org.scala-tools.sbt</groupId>
       <artifactId>sbt_${sbt.compiled.version}</artifactId>
-      <optional/>
+      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>org.scala-tools.sbt</groupId>
       <artifactId>completion_${sbt.compiled.version}</artifactId>
-      <optional/>
+      <optional>true</optional>
     </dependency>
     <!-- all the other dependencies -->
     <dependency>
       <groupId>org.scala-tools.sbt</groupId>
       <artifactId>launcher_${sbt.compiled.version}</artifactId>
-      <optional/>
+      <optional>true</optional>
     </dependency>
     <!-- use the interface with which we were built -->
     <dependency>
       <groupId>org.scala-tools.sbt</groupId>
       <artifactId>precompiled-${sbt.compiled.version}-${scala.precompiled.version}</artifactId>
-      <optional/>
+      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>org.scala-tools.sbt</groupId>
       <artifactId>interface_${sbt.compiled.version}</artifactId>
-      <optional/>
+      <optional>true</optional>
     </dependency>
     <!-- all the dependencies necessary for running like sbinary, ivy, jline -->
     <dependency>
       <groupId>jline</groupId>
       <artifactId>jline</artifactId>
-      <optional/>
+      <optional>true</optional>
     </dependency>    
     <dependency>
       <groupId>org.apache.ivy</groupId>
       <artifactId>ivy</artifactId>
-      <optional/>
+      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>org.scala-tools.sbinary</groupId>
       <artifactId>sbinary_${sbt.compiled.version}</artifactId>
-      <optional/>
+      <optional>true</optional>
     </dependency>
   </dependencies>
 
