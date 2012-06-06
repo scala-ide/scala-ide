@@ -40,12 +40,7 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-dependency-plugin</artifactId>
         <executions>
-          <!-- TODO check if still required -->
-          <!-- We need to unpack scala-compiler.jar to repackage it without
-               its manifest file and also access the content of compiler.properties.
-               We need to get rid of the manifest file because otherwise tycho is referencing
-               the scala-compiler.jar instead of the org.scala-ide.scala.compiler jar as being
-               the bundle, and it creates problem when running the tests -->
+          <!-- extract the compiler.properties file, to get the osgi.version.number value -->
           <execution>
             <id>unpack</id>
             <phase>initialize</phase>
@@ -57,7 +52,8 @@
                 <artifactItem>
                   <groupId>org.scala-lang</groupId>
                   <artifactId>scala-compiler</artifactId>
-                  <outputDirectory>${project.build.directory}/compiler</outputDirectory>
+                  <outputDirectory>${project.build.directory}</outputDirectory>
+                  <includes>compiler.properties</includes>
                 </artifactItem>
 <!--  Needed for memorytest
                 <artifactItem>
@@ -100,24 +96,6 @@
         </executions>
       </plugin>
       <plugin>
-        <artifactId>maven-antrun-plugin</artifactId>
-        <executions>
-          <!-- Repackaging the scala-compiler.jar, without the original manifest data.
-               See earlier comment. -->
-          <execution>
-            <phase>initialize</phase>
-            <goals>
-              <goal>run</goal>
-            </goals>
-            <configuration>
-              <target>
-                 <jar destfile="${project.build.directory}/lib/scala-compiler.jar" basedir="${project.build.directory}/compiler"/>
-              </target>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
         <!-- extract the osgi.version.number value from compiler.properties -->
         <groupId>org.kuali.maven.plugins</groupId>
         <artifactId>properties-maven-plugin</artifactId>
@@ -129,7 +107,7 @@
             </goals>
             <configuration>
               <locations>
-                <location>${project.build.directory}/compiler/compiler.properties</location>
+                <location>${project.build.directory}/compiler.properties</location>
               </locations>
             </configuration>
           </execution>
