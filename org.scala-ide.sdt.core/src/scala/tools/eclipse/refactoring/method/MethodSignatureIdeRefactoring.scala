@@ -29,12 +29,12 @@ abstract class MethodSignatureScalaIdeRefactoring(refactoringName: String, start
   var refactoringParameters: MSRefactoringParameters
   
   // The selected DefDef that will be refactored
-  private[method] def defdef: refactoring.global.DefDef = preparationResult.right.get.defdef
+  private[method] def defdefOrError: Either[refactoring.PreparationError, refactoring.global.DefDef] = preparationResult.right.map(_.defdef)
 
-  // Generates the wizard page
-  private def configPage = mkConfigPage(defdef, refactoringParameters_=)
-  
   private[method] def mkConfigPage(defdef: refactoring.global.DefDef, paramsObs: refactoring.RefactoringParameters => Unit): UserInputWizardPage
 
-  override def getPages = configPage :: Nil
+  override def getPages = defdefOrError match {
+    case Left(error) => Nil
+    case Right(defdef) => mkConfigPage(defdef, refactoringParameters_=)::Nil
+  }
 } 

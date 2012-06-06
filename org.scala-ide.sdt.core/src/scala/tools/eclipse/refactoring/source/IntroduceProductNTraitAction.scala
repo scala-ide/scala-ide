@@ -3,9 +3,9 @@ package refactoring.source
 
 import scala.tools.eclipse.refactoring.RefactoringAction
 import scala.tools.refactoring.implementations.IntroduceProductNTrait
-
 import javaelements.ScalaSourceFile
 import ui.IntroduceProductNTraitConfigurationPage
+import org.eclipse.ltk.ui.refactoring.RefactoringWizardPage
 /**
  * This refactoring implements the ProductN trait for a class.
  * Given N selected class parameters this refactoring generates
@@ -26,9 +26,13 @@ class IntroduceProductNTraitAction extends RefactoringAction {
       }
     }
     
-    override val configPage = new IntroduceProductNTraitConfigurationPage(
-        classParams.map(_.name.toString),
-        selectedNames => selectedClassParamNames = selectedNames,
-        callSuperNew => callSuper = callSuperNew)
+    import refactoring.global.ValDef
+    
+    override def configPage(classParams: List[ValDef]): RefactoringWizardPage = 
+      new IntroduceProductNTraitConfigurationPage(
+        classParams.map(_.name.toString), 
+        selectedClassParamNames_=,
+        callSuper_=)
+
   }
 }

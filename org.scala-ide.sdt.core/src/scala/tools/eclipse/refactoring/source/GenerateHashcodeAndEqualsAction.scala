@@ -3,9 +3,9 @@ package refactoring.source
 
 import scala.tools.eclipse.refactoring.RefactoringAction
 import scala.tools.refactoring.implementations.GenerateHashcodeAndEquals
-
 import javaelements.ScalaSourceFile
 import ui.GenerateHashcodeAndEqualsConfigurationPage
+import org.eclipse.ltk.ui.refactoring.RefactoringWizardPage
 
 /**
  * This refactoring that generates hashCode and equals implementations 
@@ -25,9 +25,13 @@ class GenerateHashcodeAndEqualsAction extends RefactoringAction {
       }
     }
     
-    override val configPage = new GenerateHashcodeAndEqualsConfigurationPage(
+    import refactoring.global.ValDef
+  
+    override def configPage(classParams: List[ValDef]): RefactoringWizardPage = 
+      new GenerateHashcodeAndEqualsConfigurationPage(
         classParams.map(_.name.toString), 
         selectedClassParamNames_=,
         callSuper_=)
+
   }
 }

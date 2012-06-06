@@ -29,7 +29,6 @@ protected[eclipse] object RefactoringMenu {
     val QuickMenu = Value("scala.tools.eclipse.refactoring.commands.quickMenu")
     val ContextMenu = Value("org.eclipse.jdt.ui.refactoring.menu")
     val CommandsCategory = Value("scala.tools.eclipse.refactoring.commands.refactoring")
-    val CommandsSourceCategory = Value("scala.tools.eclipse.refactoring.commands.sourcegeneration")
     val CommandsMethodSignatureCategory = Value("scala.tools.eclipse.refactoring.commands.methodsignature")
     type Id = Value; implicit def toString(id: Id.Value) = id.toString
   }
@@ -62,9 +61,8 @@ protected[eclipse] object RefactoringMenu {
     val service = commandService(editor)
     val categories = {
       val refactoringCategory = service.getCategory(Id.CommandsCategory)
-      val sourceCategory = service.getCategory(Id.CommandsSourceCategory)
       val methodSignatureCategory = service.getCategory(Id.CommandsMethodSignatureCategory)
-      List(refactoringCategory, sourceCategory, methodSignatureCategory)
+      List(refactoringCategory, methodSignatureCategory)
     }
 
     for(category <- categories) 

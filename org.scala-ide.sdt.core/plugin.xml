@@ -965,25 +965,8 @@
                path="edit">
             <separator name="scala.tools.eclipse.refactoring.refactoringGroup"/>
             <separator name="scala.tools.eclipse.refactoring.quickfixGroup"/>
-            <separator name="scala.tools.eclipse.refactoring.generatorOnlyGroup"/>
             <separator name="scala.tools.eclipse.refactoring.methodSignatureGroup"/>
          </menu>
-         <action
-               class="scala.tools.eclipse.refactoring.source.GenerateHashcodeAndEqualsAction"
-               definitionId="scala.tools.eclipse.refactoring.source.command.GenerateHashcodeAndEquals"
-               id="scala.tools.eclipse.refactoring.source.generateHashcodeAndEqualsAction"
-               label="Generate hashCode and equals"
-               menubarPath="scala.tools.eclipse.refactoring.refactoringMenu/scala.tools.eclipse.refactoring.generatorOnlyGroup"
-               tooltip="Generate hashCode and equals">
-         </action>
-         <action
-               class="scala.tools.eclipse.refactoring.source.IntroduceProductNTraitAction"
-               definitionId="scala.tools.eclipse.refactoring.source.command.IntroduceProductNTrait"
-               id="scala.tools.eclipse.refactoring.source.introduceProductNTraitAction"
-               label="Introduce ProductN trait"
-               menubarPath="scala.tools.eclipse.refactoring.refactoringMenu/scala.tools.eclipse.refactoring.generatorOnlyGroup"
-               tooltip="Introduce ProductN trait">
-         </action>
          <action
                class="scala.tools.eclipse.refactoring.method.SplitParameterListsAction"
                definitionId="scala.tools.eclipse.refactoring.method.command.SplitParameterLists"
@@ -1134,23 +1117,11 @@
          description="Method Signature Refactorings"
          id="scala.tools.eclipse.refactoring.commands.methodsignature"
          name="Method Signature Refactoring - Scala"/>
-   <category
-         description="Source Generation Refactorings"
-         id="scala.tools.eclipse.refactoring.commands.sourcegeneration"
-         name="Source - Scala"/>
       <command
          name="Refactor Quick Menu"
          description="Shows the refactor quick menu"
          categoryId="scala.tools.eclipse.refactoring.commands.refactoring"
          id="scala.tools.eclipse.refactoring.commands.quickMenu"/>
-      <command
-         categoryId="scala.tools.eclipse.refactoring.commands.sourcegeneration"
-         id="scala.tools.eclipse.refactoring.source.command.GenerateHashcodeAndEquals"
-         name="Generate hashCode and equals" />
-      <command
-         categoryId="scala.tools.eclipse.refactoring.commands.sourcegeneration"
-         id="scala.tools.eclipse.refactoring.source.command.IntroduceProductNTrait"
-         name="Introduce ProductN trait" />
       <command
          categoryId="scala.tools.eclipse.refactoring.commands.methodsignature"
          id="scala.tools.eclipse.refactoring.method.command.SplitParameterLists"
