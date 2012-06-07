@@ -24,14 +24,20 @@
     <sbinary.version>0.4.0</sbinary.version>
     <jline.version>0.9.94</jline.version>
     <ivy.version>2.2.0</ivy.version>
-    <aspectj.version>1.6.12</aspectj.version>
-    <aspectj.plugin.version>1.4</aspectj.plugin.version>
-    <tycho.version>0.14.1</tycho.version>
     <miglayout.version>3.7.4</miglayout.version>
     <log4j.version>1.2.16</log4j.version>
     <junit.version>4.10</junit.version>
     <mockito.version>1.9.0</mockito.version>
+
+    <!-- plugin versions -->
+    <tycho.plugin.version>0.15.0</tycho.plugin.version>
     <scala.plugin.version>3.0.2</scala.plugin.version>
+    <aspectj.plugin.version>1.4</aspectj.plugin.version>
+    <maven-bunble.plugin.version>2.3.7</maven-bunble.plugin.version>
+    <properties-maven.plugin.version>1.1.10</properties-maven.plugin.version>
+    <buildnumber-maven.plugin.version>1.1</buildnumber-maven.plugin.version>
+    <maven-source.plugin.version>2.1.2</maven-source.plugin.version>
+    <maven-clean.plugin.version>2.5</maven-clean.plugin.version>
 
     <!-- tycho test related -->
     <tycho.test.OSspecific></tycho.test.OSspecific>
@@ -40,6 +46,7 @@
     <tycho.test.jvmArgs>-Xmx800m -XX:MaxPermSize=256m -Dsdtcore.headless ${tycho.test.weaving} ${tycho.test.OSspecific}</tycho.test.jvmArgs>
 
     <!-- dependencies repos -->
+    <eclipse.codename>indigo</eclipse.codename>
     <repo.eclipse>${repo.eclipse.indigo}</repo.eclipse>
     <repo.ajdt>${repo.ajdt.indigo}</repo.ajdt>
 
@@ -301,12 +308,6 @@
         <artifactId>sbinary_${sbt.compiled.version}</artifactId>
         <version>${sbinary.version}</version>
       </dependency>
-      <!-- aspectJ support -->
-      <dependency>
-        <groupId>org.aspectj</groupId>
-        <artifactId>aspectjrt</artifactId>
-        <version>${aspectj.version}</version>
-      </dependency>
       <!-- sdt.core dependencies -->
       <dependency>
         <groupId>com.miglayout</groupId>
@@ -341,7 +342,7 @@
         <plugin>
           <groupId>org.apache.felix</groupId>
           <artifactId>maven-bundle-plugin</artifactId>
-          <version>2.3.7</version>
+          <version>${maven-bunble.plugin.version}</version>
           <extensions>true</extensions>
           <configuration>
             <unpackBundle>true</unpackBundle>
@@ -352,38 +353,38 @@
         <plugin>
           <groupId>org.kuali.maven.plugins</groupId>
           <artifactId>properties-maven-plugin</artifactId>
-          <version>1.1.10</version>
+          <version>${properties-maven.plugin.version}</version>
         </plugin>
         <!-- tycho plugins -->
         <plugin>
           <groupId>org.eclipse.tycho</groupId>
           <artifactId>tycho-maven-plugin</artifactId>
-          <version>${tycho.version}</version>
+          <version>${tycho.plugin.version}</version>
         </plugin>
         <plugin>
           <groupId>org.eclipse.tycho</groupId>
           <artifactId>tycho-compiler-plugin</artifactId>
-          <version>${tycho.version}</version>
+          <version>${tycho.plugin.version}</version>
         </plugin>
         <plugin>
           <groupId>org.eclipse.tycho</groupId>
           <artifactId>target-platform-configuration</artifactId>
-          <version>${tycho.version}</version>
+          <version>${tycho.plugin.version}</version>
         </plugin>
         <plugin>
           <groupId>org.eclipse.tycho</groupId>
           <artifactId>tycho-packaging-plugin</artifactId>
-          <version>${tycho.version}</version>
+          <version>${tycho.plugin.version}</version>
         </plugin>
         <plugin>
           <groupId>org.eclipse.tycho</groupId>
           <artifactId>tycho-surefire-plugin</artifactId>
-          <version>${tycho.version}</version>
+          <version>${tycho.plugin.version}</version>
         </plugin>
         <plugin>
           <groupId>org.eclipse.tycho</groupId>
           <artifactId>tycho-source-plugin</artifactId>
-          <version>${tycho.version}</version>
+          <version>${tycho.plugin.version}</version>
         </plugin>
         <!-- aspectJ support -->
         <plugin>
@@ -401,17 +402,17 @@
         <plugin>
           <groupId>org.codehaus.mojo</groupId>
           <artifactId>buildnumber-maven-plugin</artifactId>
-          <version>1.1</version>
+          <version>${buildnumber-maven.plugin.version}</version>
         </plugin>
         <!-- creating maven source artefact -->
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-source-plugin</artifactId>
-          <version>2.1.2</version>
+          <version>${maven-source.plugin.version}</version>
         </plugin>
         <plugin>
           <artifactId>maven-clean-plugin</artifactId>
-          <version>2.5</version>
+          <version>${maven-clean.plugin.version}</version>
         </plugin>
        </plugins>
     </pluginManagement>

@@ -37,14 +37,17 @@
     <dependency>
       <groupId>org.scala-lang</groupId>
       <artifactId>scala-library</artifactId>
+      <optional/>
     </dependency>
     <dependency>
       <groupId>org.scala-lang</groupId>
       <artifactId>scala-swing</artifactId>
+      <optional/>
     </dependency>
     <dependency>
       <groupId>org.scala-lang</groupId>
       <artifactId>${scala.library.third-part}</artifactId>
+      <optional/>
     </dependency>
   </dependencies>
 

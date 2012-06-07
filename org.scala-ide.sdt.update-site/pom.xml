@@ -10,4 +10,19 @@
   </parent>
   <artifactId>org.scala-ide.sdt.update-site</artifactId>
   <packaging>eclipse-update-site</packaging>
+
+  <build>
+    <plugins>
+      <plugin>
+        <!-- using the Scala jars from the local repo generates version conflicts
+             this option disable the checks -->
+        <groupId>org.eclipse.tycho</groupId>
+        <artifactId>target-platform-configuration</artifactId>
+        <configuration>
+          <allowConflictingDependencies>true</allowConflictingDependencies>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
 </project>

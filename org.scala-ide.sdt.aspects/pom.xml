@@ -11,16 +11,10 @@
   <artifactId>org.scala-ide.sdt.aspects</artifactId>
   <packaging>eclipse-plugin</packaging>
 
-  <dependencies>
-    <dependency>
-      <groupId>org.aspectj</groupId>
-      <artifactId>aspectjrt</artifactId>
-    </dependency>
-  </dependencies>
   <build>
     <plugins>
       <plugin>
-        <!-- do not use maven repositories no resolve the dependencies, only p2 -->
+        <!-- do not use maven repositories to resolve the dependencies, only p2 -->
         <groupId>org.eclipse.tycho</groupId>
         <artifactId>target-platform-configuration</artifactId>
         <configuration>
@@ -39,7 +33,7 @@
         </configuration>
       </plugin>
       <plugin>
-        <!-- compile the aspec files -->
+        <!-- compile the aspect files -->
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>aspectj-maven-plugin</artifactId>
         <executions>
