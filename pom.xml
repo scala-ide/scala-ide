@@ -419,7 +419,7 @@
           <artifactId>maven-clean-plugin</artifactId>
           <version>${maven-clean.plugin.version}</version>
         </plugin>
-       </plugins>
+      </plugins>
     </pluginManagement>
   </build>
 
