@@ -48,7 +48,7 @@
             <executions>
               <execution>
                 <!-- add the source jar, to be able to attach the source to the Scala container. And the continuation plug-in -->
-                <id>copy</id>
+                <id>copy.reflect</id>
                 <phase>compile</phase>
                 <goals>
                   <goal>copy</goal>
