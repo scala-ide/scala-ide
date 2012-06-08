@@ -15,7 +15,7 @@ class ChangeParameterOrderAction extends RefactoringAction {
   def createRefactoring(start: Int, end: Int, file: ScalaSourceFile) = new ChangeParameterOrderIdeRefactoring(start, end, file)
 
   class ChangeParameterOrderIdeRefactoring(start: Int, end: Int, f: ScalaSourceFile)
-    extends MethodSignatureScalaIdeRefactoring("Change parameter order", start, end, f) with ChangeParameterOrderConfigurationPageGenerator {
+    extends MethodSignatureIdeRefactoring("Change parameter order", start, end, f) with ChangeParameterOrderConfigurationPageGenerator {
 
     override val refactoring = withCompiler { compiler =>
       new ChangeParamOrder with IndexedMethodSignatureRefactoring {

@@ -14,7 +14,7 @@ class MergeParameterListsAction extends RefactoringAction {
   def createRefactoring(start: Int, end: Int, file: ScalaSourceFile) = new MergeParameterListsIdeRefactoring(start, end, file)
 
   class MergeParameterListsIdeRefactoring(start: Int, end: Int, f: ScalaSourceFile)
-    extends MethodSignatureScalaIdeRefactoring("Merge parameter lists", start, end, f) with MergeParameterListsConfigurationPageGenerator {
+    extends MethodSignatureIdeRefactoring("Merge parameter lists", start, end, f) with MergeParameterListsConfigurationPageGenerator {
 
     override val refactoring = withCompiler { compiler =>
       new MergeParameterLists with IndexedMethodSignatureRefactoring {

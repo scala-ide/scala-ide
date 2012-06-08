@@ -14,7 +14,7 @@ class SplitParameterListsAction extends RefactoringAction {
   def createRefactoring(start: Int, end: Int, file: ScalaSourceFile) = new SplitParameterListsIdeRefactoring(start, end, file)
 
   class SplitParameterListsIdeRefactoring(start: Int, end: Int, f: ScalaSourceFile)
-    extends MethodSignatureScalaIdeRefactoring("Split parameter lists", start, end, f) with SplitParameterListsConfigurationPageGenerator {
+    extends MethodSignatureIdeRefactoring("Split parameter lists", start, end, f) with SplitParameterListsConfigurationPageGenerator {
 
     override val refactoring = withCompiler { compiler =>
       new SplitParameterLists with IndexedMethodSignatureRefactoring {

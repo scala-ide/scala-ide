@@ -4,7 +4,7 @@ package refactoring.source
 import scala.tools.eclipse.refactoring.RefactoringAction
 import scala.tools.refactoring.implementations.GenerateHashcodeAndEquals
 import javaelements.ScalaSourceFile
-import ui.GenerateHashcodeAndEqualsConfigurationPage
+import ui.GenerateHashcodeAndEqualsConfigurationPageGenerator
 import org.eclipse.ltk.ui.refactoring.RefactoringWizardPage
 
 /**
@@ -17,7 +17,7 @@ class GenerateHashcodeAndEqualsAction extends RefactoringAction {
   def createRefactoring(selectionStart: Int, selectionEnd: Int, file: ScalaSourceFile) = new GenerateHashcodeAndEqualsScalaIdeRefactoring(selectionStart, selectionEnd, file)
   
   class GenerateHashcodeAndEqualsScalaIdeRefactoring(start: Int, end: Int, file: ScalaSourceFile) 
-    extends ClassParameterDrivenIdeRefactoring("Generate hashCode and equals", start, end, file) {
+    extends ClassParameterDrivenIdeRefactoring("Generate hashCode and equals", start, end, file) with GenerateHashcodeAndEqualsConfigurationPageGenerator {
     
     val refactoring = withCompiler { c => 
       new GenerateHashcodeAndEquals {
@@ -27,11 +27,12 @@ class GenerateHashcodeAndEqualsAction extends RefactoringAction {
     
     import refactoring.global.ValDef
   
-    override def configPage(classParams: List[ValDef]): RefactoringWizardPage = 
+    override private[source] def configPage(prepResult: refactoring.PreparationResult): RefactoringWizardPage = 
       new GenerateHashcodeAndEqualsConfigurationPage(
-        classParams.map(_.name.toString), 
+        prepResult, 
         selectedClassParamNames_=,
-        callSuper_=)
+        callSuper_=, 
+        keepExistingEqualityMethods_=)
 
   }
 }
