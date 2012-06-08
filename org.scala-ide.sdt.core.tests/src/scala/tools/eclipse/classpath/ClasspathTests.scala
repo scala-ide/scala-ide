@@ -183,6 +183,7 @@ class ClasspathTests {
    * One scala library defined in the classpath, as a binary class folder
    */
   @Test
+  @Ignore
   def binaryClassFolderLibrary() {
     setRawClasspathAndCheckMarkers(cleanRawClasspath :+  JavaCore.newLibraryEntry(new Path("/classpath/lib/" + ScalaPlugin.plugin.shortScalaVer + ".x/binary-scala-library"), null, null), 0, 0)
   }
