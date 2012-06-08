@@ -83,7 +83,7 @@ class BasicConfiguration(val project: ScalaProject, val scalaInstance: ScalaInst
     val scalaClassPath = project.scalaClasspath
 
     // Resolve classpath correctly
-    val compArgs = new CompilerArguments(scalaInstance, ClasspathOptions(bootLibrary = true, compiler = false, extra = true, autoBoot = false, filterLibrary = true))
+    val compArgs = new CompilerArguments(scalaInstance, ClasspathOptions(bootLibrary = true, compiler = false, extra = true, autoBoot = false, filterLibrary = false))
     val jrePath = scalaClassPath.jdkPaths.map(_.toFile)
     val classpathWithoutJVM = scalaClassPath.userCp.map(_.toFile) // no scala library in here!
 

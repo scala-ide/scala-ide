@@ -157,15 +157,16 @@ class SbtBuilderTest {
     ) yield classpathEntry
 
     prjClient.javaProject.setRawClasspath(cleanRawClasspath, null)
-
-    packLib.createCompilationUnit("Predef.scala", "object Predef", true, null)
     addToClasspath(prjClient, JavaCore.newProjectEntry(prjLib.underlying.getFullPath, true))
 
+    packLib.createCompilationUnit("Predef.scala", "package scala; class Predef", true, null)
+    prjLib.underlying.build(IncrementalProjectBuilder.FULL_BUILD, new NullProgressMonitor)
+
     Assert.assertTrue("Found Scala library", prjClient.scalaClasspath.scalaLib.isDefined)
-    Assert.assertEquals("Unexpected Scala lib", new Path("/library/src"), prjClient.scalaClasspath.scalaLib.get)
+    Assert.assertEquals("Unexpected Scala lib", new Path("/library/bin"), prjClient.scalaClasspath.scalaLib.get)
     val basicConf = new BasicConfiguration(prjClient, ScalaCompilerConf.deployedInstance)
     val args = basicConf.buildArguments(Seq())
-    Assert.assertTrue("BasicConfiguration bootclasspath " + args, args.mkString(" ").contains("-bootclasspath /library/src"))
+    Assert.assertTrue("BasicConfiguration bootclasspath " + args, args.mkString(" ").contains("-bootclasspath /library/bin"))
     deleteProjects(prjClient, prjLib)
   }
 
