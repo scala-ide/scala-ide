@@ -65,7 +65,7 @@ import scala.tools.eclipse.wizards.QualifiedNameSupportTest;
   SymbolClassifierTestSuite.class,
   StructureBuilderTest.class,
   TestBracketStrategy.class,
-  TestScalaIndenter.class,
+  // TestScalaIndenter.class,
   CachedTest.class,
   CollectionUtilTest.class,
   ImportSupportTest.class,

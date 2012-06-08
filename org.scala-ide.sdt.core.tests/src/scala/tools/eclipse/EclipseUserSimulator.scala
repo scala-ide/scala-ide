@@ -15,7 +15,6 @@ class EclipseUserSimulator {
 
   def createProjectInWorkspace(projectName: String, withSourceRoot: Boolean = true) = {
     import org.eclipse.core.resources.ResourcesPlugin;
-    import org.eclipse.pde.internal.core.util.CoreUtility;
     import org.eclipse.jdt.internal.core.JavaProject;
     import org.eclipse.jdt.core._;
     import org.eclipse.jdt.launching.JavaRuntime;
