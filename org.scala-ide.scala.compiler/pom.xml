@@ -4,62 +4,94 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>org.scala-ide</groupId>
-    <artifactId>scala-toolchain-for-eclipse</artifactId>
-    <version>2.9.3-SNAPSHOT</version>
+    <artifactId>org.scala-ide.build-toolchain</artifactId>
+    <version>2.1.0-SNAPSHOT</version>
     <relativePath>../org.scala-ide.build-toolchain/pom.xml</relativePath>
   </parent>
-
-  <properties>
-    <test.workspace.dir>../org.scala-ide.sdt.core.tests/test-workspace</test.workspace.dir>
-  </properties>
-
-
   <artifactId>org.scala-ide.scala.compiler</artifactId>
   <packaging>bundle</packaging>
+
+<!--  Needed for memorytest
+  <properties>
+    <test.workspace.dir>../org.scala-ide.sdt.core.tests/test-workspace</test.workspace.dir>
+  </properties> -->
+
   <dependencies>
     <dependency>
-      <groupId>${scala.compiler.groupid}</groupId>
+      <groupId>org.scala-lang</groupId>
       <artifactId>scala-compiler</artifactId>
-      <version>${scala.compiler.version}</version>
+      <optional>true</optional>
     </dependency>
   </dependencies>
+
+  <profiles>
+    <profile>
+      <!--- the profile using the default values. Scala 2.9.x -->
+      <id>scala-2.9.x</id>
+    </profile>
+
+    <profile>
+      <!-- Scala 2.10.x -->
+      <!-- Scala reflect was extracted in a different jar in 2.10 -->
+      <id>scala-2.10.x</id>
+      <dependencies>
+        <dependency>
+          <groupId>org.scala-lang</groupId>
+          <artifactId>scala-reflect</artifactId>
+        </dependency>
+      </dependencies>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-dependency-plugin</artifactId>
+            <executions>
+              <execution>
+                <!-- add the source jar, to be able to attach the source to the Scala container. And the continuation plug-in -->
+                <id>copy</id>
+                <phase>compile</phase>
+                <goals>
+                  <goal>copy</goal>
+                </goals>
+                <configuration>
+                  <artifactItems>
+                    <artifactItem>
+                      <groupId>org.scala-lang</groupId>
+                      <artifactId>scala-reflect</artifactId>
+                      <classifier>sources</classifier>
+                      <type>jar</type>
+                      <destFileName>scala-reflect-src.jar</destFileName>
+                    </artifactItem>
+                  </artifactItems>
+                  <stripVersion>true</stripVersion>
+                  <outputDirectory>${project.build.directory}/lib</outputDirectory>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+
   <build>
-    <outputDirectory>${basedir}</outputDirectory>
     <plugins>
+<!--  Needed for memorytest
       <plugin>
         <artifactId>maven-clean-plugin</artifactId>
-        <version>2.4.1</version>
         <configuration>
-          <excludeDefaultDirectories>true</excludeDefaultDirectories>
           <filesets>
-            <fileset>
-              <directory>./</directory>
-              <includes>
-                <include>META-INF/**/*</include>
-                <include>META-INF</include>
-                <include>lib/**/*</include>
-                <include>lib</include>
-                <include>target/**/*</include>
-                <include>target</include>
-              </includes>
-              <followSymlinks>false</followSymlinks>
-            </fileset>
             <fileset>
               <directory>${test.workspace.dir}/scala-compiler</directory>
             </fileset>
           </filesets>
         </configuration>
-      </plugin>
+      </plugin>-->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-dependency-plugin</artifactId>
-        <version>2.1</version>
         <executions>
-          <!-- We need to unpack scala-compiler.jar to repackage it without
-               its manifest file and also access the content of compiler.properties.
-               We need to get rid of the manifest file because otherwise tycho is referencing
-               the scala-compiler.jar instead of the org.scala-ide.scala.compiler jar as being
-               the bundle, and it creates problem when running the tests -->
+          <!-- extract the compiler.properties file, to get the osgi.version.number value -->
           <execution>
             <id>unpack</id>
             <phase>initialize</phase>
@@ -69,11 +101,12 @@
             <configuration>
               <artifactItems>
                 <artifactItem>
-                  <groupId>${scala.compiler.groupid}</groupId>
+                  <groupId>org.scala-lang</groupId>
                   <artifactId>scala-compiler</artifactId>
-                  <version>${scala.compiler.version}</version>
-                  <outputDirectory>${project.build.directory}/compiler</outputDirectory>
+                  <outputDirectory>${project.build.directory}</outputDirectory>
+                  <includes>compiler.properties</includes>
                 </artifactItem>
+<!--  Needed for memorytest
                 <artifactItem>
                   <groupId>${scala.compiler.groupid}</groupId>
                   <artifactId>scala-compiler</artifactId>
@@ -81,11 +114,12 @@
                   <classifier>sources</classifier>
                   <outputDirectory>${test.workspace.dir}/scala-compiler/src</outputDirectory>
                   <includes>scala/</includes>
-                </artifactItem>
+                </artifactItem>-->
               </artifactItems>
             </configuration>
           </execution>
           <execution>
+            <!-- add the source jar, to be able to attach the source to the Scala container. And the continuation plug-in -->
             <id>copy</id>
             <phase>compile</phase>
             <goals>
@@ -94,9 +128,8 @@
             <configuration>
               <artifactItems>
                 <artifactItem>
-                  <groupId>${scala.compiler.groupid}</groupId>
+                  <groupId>org.scala-lang</groupId>
                   <artifactId>scala-compiler</artifactId>
-                  <version>${scala.compiler.version}</version>
                   <classifier>sources</classifier>
                   <type>jar</type>
                   <destFileName>scala-compiler-src.jar</destFileName>
@@ -104,7 +137,6 @@
                 <artifactItem>
                   <groupId>org.scala-lang.plugins</groupId>
                   <artifactId>continuations</artifactId>
-                  <version>${scala.version}</version>
                   <type>jar</type>
                 </artifactItem>
               </artifactItems>
@@ -115,28 +147,9 @@
         </executions>
       </plugin>
       <plugin>
-        <artifactId>maven-antrun-plugin</artifactId>
-        <version>1.6</version>
-        <executions>
-          <!-- Repackaging the scala-compiler.jar, without the original manifest data.
-               See earlier comment. -->
-          <execution>
-            <phase>initialize</phase>
-            <goals>
-              <goal>run</goal>
-            </goals>
-            <configuration>
-              <target>
-                 <jar destfile="${project.build.directory}/lib/scala-compiler.jar" basedir="${project.build.directory}/compiler"/>
-              </target>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
+        <!-- extract the osgi.version.number value from compiler.properties -->
+        <groupId>org.kuali.maven.plugins</groupId>
         <artifactId>properties-maven-plugin</artifactId>
-        <version>1.0-alpha-2</version>
         <executions>
           <execution>
             <phase>initialize</phase>
@@ -144,17 +157,17 @@
               <goal>read-project-properties</goal>
             </goals>
             <configuration>
-              <files>
-                <file>${project.build.directory}/compiler/compiler.properties</file>
-              </files>
+              <locations>
+                <location>${project.build.directory}/compiler.properties</location>
+              </locations>
             </configuration>
           </execution>
         </executions>
       </plugin>
 
+<!--  Needed for memorytest
       <plugin>
         <artifactId>maven-resources-plugin</artifactId>
-        <version>2.5</version>
         <executions>
           <execution>
             <id>copy-resources</id>
@@ -162,9 +175,9 @@
             <goals>
               <goal>copy-resources</goal>
             </goals>
-            <configuration>
+            <configuration> -->
               <!-- copy the .classpath and .project files to the scala-compiler project -->
-              <outputDirectory>${test.workspace.dir}/scala-compiler/</outputDirectory>
+<!--              <outputDirectory>${test.workspace.dir}/scala-compiler/</outputDirectory>
               <resources>          
                 <resource>
                   <directory>resources/scala-compiler</directory>
@@ -174,15 +187,13 @@
             </configuration>            
           </execution>
         </executions>
-      </plugin>
+      </plugin>-->
 
       <plugin>
+        <!-- generate the bundle -->
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-bundle-plugin</artifactId>
-        <version>2.1.0</version>
-        <extensions>true</extensions>
         <configuration>
-          <unpackBundle>true</unpackBundle>
           <instructions>
             <Bundle-SymbolicName>org.scala-ide.scala.compiler</Bundle-SymbolicName>
             <Bundle-Name>Scala Compiler for Eclipse</Bundle-Name>

@@ -4,35 +4,28 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>org.scala-ide</groupId>
-    <artifactId>org.scala-ide.build</artifactId>
+    <artifactId>org.scala-ide.sdt.build</artifactId>
     <version>2.1.0-SNAPSHOT</version>
-    <relativePath>../org.scala-ide.build/pom.xml</relativePath>
+    <relativePath>../org.scala-ide.sdt.build/pom.xml</relativePath>
   </parent>
   <artifactId>org.scala-ide.sdt.aspects</artifactId>
   <packaging>eclipse-plugin</packaging>
 
-  <dependencies>
-    <dependency>
-      <groupId>org.aspectj</groupId>
-      <artifactId>aspectjrt</artifactId>
-      <version>1.6.9</version>
-    </dependency>
-  </dependencies>
   <build>
     <plugins>
       <plugin>
+        <!-- do not use maven repositories to resolve the dependencies, only p2 -->
         <groupId>org.eclipse.tycho</groupId>
         <artifactId>target-platform-configuration</artifactId>
-        <version>${tycho.version}</version>
         <configuration>
           <resolver>p2</resolver>
           <pomDependencies>ignore</pomDependencies>
         </configuration>
       </plugin>
       <plugin>
+        <!-- have the tycho compiler skip the aspect files -->
         <groupId>org.eclipse.tycho</groupId>
         <artifactId>tycho-compiler-plugin</artifactId>
-        <version>${tycho.version}</version>
         <configuration>
           <excludeResources>
             <exludeResource>**/*.aj</exludeResource>
@@ -40,9 +33,9 @@
         </configuration>
       </plugin>
       <plugin>
+        <!-- compile the aspect files -->
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>aspectj-maven-plugin</artifactId>
-        <version>1.3</version>
         <executions>
           <execution>
             <phase>process-sources</phase>
