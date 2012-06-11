@@ -201,10 +201,7 @@
             <Bundle-Vendor>scala-ide.org</Bundle-Vendor>
             <Embed-Dependency>*;scope=compile|runtime;inline=false</Embed-Dependency>
             <_exportcontents>scala.reflect.internal.*;version=${osgi.version.number},
-            scala.reflect.api.*;version=${osgi.version.number},
-            scala.reflect.runtime.*;version=${osgi.version.number},
-            scala.reflect.std.*;version=${osgi.version.number},
-            scala.reflect.internal.transform.*;version=${osgi.version.number},
+            scala.reflect.*;version=${osgi.version.number},
             scala.tools.*;version=${osgi.version.number},
             ch.epfl.lamp.*;version=${osgi.version.number}</_exportcontents>
             <Embed-Directory>lib</Embed-Directory>
