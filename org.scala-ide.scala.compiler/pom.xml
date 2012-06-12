@@ -11,11 +11,6 @@
   <artifactId>org.scala-ide.scala.compiler</artifactId>
   <packaging>bundle</packaging>
 
-<!--  Needed for memorytest
-  <properties>
-    <test.workspace.dir>../org.scala-ide.sdt.core.tests/test-workspace</test.workspace.dir>
-  </properties> -->
-
   <dependencies>
     <dependency>
       <groupId>org.scala-lang</groupId>
@@ -76,17 +71,6 @@
 
   <build>
     <plugins>
-<!--  Needed for memorytest
-      <plugin>
-        <artifactId>maven-clean-plugin</artifactId>
-        <configuration>
-          <filesets>
-            <fileset>
-              <directory>${test.workspace.dir}/scala-compiler</directory>
-            </fileset>
-          </filesets>
-        </configuration>
-      </plugin>-->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-dependency-plugin</artifactId>
@@ -106,15 +90,6 @@
                   <outputDirectory>${project.build.directory}</outputDirectory>
                   <includes>compiler.properties</includes>
                 </artifactItem>
-<!--  Needed for memorytest
-                <artifactItem>
-                  <groupId>${scala.compiler.groupid}</groupId>
-                  <artifactId>scala-compiler</artifactId>
-                  <version>${scala.compiler.version}</version>
-                  <classifier>sources</classifier>
-                  <outputDirectory>${test.workspace.dir}/scala-compiler/src</outputDirectory>
-                  <includes>scala/</includes>
-                </artifactItem>-->
               </artifactItems>
             </configuration>
           </execution>
@@ -164,31 +139,6 @@
           </execution>
         </executions>
       </plugin>
-
-<!--  Needed for memorytest
-      <plugin>
-        <artifactId>maven-resources-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>copy-resources</id>
-            <phase>validate</phase>
-            <goals>
-              <goal>copy-resources</goal>
-            </goals>
-            <configuration> -->
-              <!-- copy the .classpath and .project files to the scala-compiler project -->
-<!--              <outputDirectory>${test.workspace.dir}/scala-compiler/</outputDirectory>
-              <resources>          
-                <resource>
-                  <directory>resources/scala-compiler</directory>
-                  <filtering>false</filtering>
-                </resource>
-              </resources>              
-            </configuration>            
-          </execution>
-        </executions>
-      </plugin>-->
-
       <plugin>
         <!-- generate the bundle -->
         <groupId>org.apache.felix</groupId>
