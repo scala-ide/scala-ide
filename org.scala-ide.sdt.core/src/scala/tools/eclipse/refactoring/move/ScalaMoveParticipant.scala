@@ -32,7 +32,13 @@ class ScalaMoveParticipant extends MoveParticipant {
     getArguments.getDestination match {
       case destination: IFolder =>
         val javaProject = ScalaPlugin.plugin.getJavaProject(resourceToMove.getProject)
-        val targetPackage = javaProject.findPackageFragment(destination.getFullPath())        
+        val targetPackage = javaProject.findPackageFragment(destination.getFullPath)
+        
+        if(targetPackage == null) {
+          val msg = "Could not find the target package for "+ destination.getFullPath +". Scala source files will not " +
+          		"be refactored."
+          return RefactoringStatus.createWarningStatus(msg)
+        }
             
         ScalaSourceFile.createFromPath(resourceToMove.getFullPath.toOSString) map { scalaSourceFile =>
     
