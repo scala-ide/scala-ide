@@ -93,7 +93,7 @@ abstract class ScalaIdeRefactoring(val getName: String, val file: ScalaSourceFil
   }
       
   def checkInitialConditions(pm: IProgressMonitor) = new RefactoringStatus {
-    preparationResult.fold(e => addError(e.cause), identity)
+    preparationResult.fold(e => addFatalError(e.cause), identity)
   }
   
   def checkFinalConditions(pm: IProgressMonitor): RefactoringStatus = {
