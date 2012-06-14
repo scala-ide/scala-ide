@@ -3,10 +3,10 @@ Scala IDE for Eclipse
 
 This is the new home of the Scala IDE for Eclipse. Previously, source code was hosted on Assembla.
 
-Tickets and documentation are still hosted by Assembla:
+Tickets are still hosted on Assembla, the documentation is available from the website:
 
 * https://www.assembla.com/spaces/scala-ide/tickets
-* https://www.assembla.com/spaces/scala-ide/wiki
+* http://www.scala-ide.org/docs/
 
 
 Build
