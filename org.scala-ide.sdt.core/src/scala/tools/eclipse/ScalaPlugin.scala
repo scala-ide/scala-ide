@@ -174,8 +174,12 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
   lazy val dbcSources = pathInBundle(scalaLibBundle, "/lib/scala-dbc-src.jar")
   lazy val swingClasses = pathInBundle(scalaLibBundle, "/lib/scala-swing.jar")
   lazy val swingSources = pathInBundle(scalaLibBundle, "/lib/scala-swing-src.jar")
+  
+  // 2.10 specific libraries
   lazy val actorsClasses = pathInBundle(scalaLibBundle, "/lib/scala-actors.jar")
   lazy val actorsSources = pathInBundle(scalaLibBundle, "/lib/scala-actors-src.jar")
+  lazy val reflectClasses = pathInBundle(scalaCompilerBundle, "/lib/scala-reflect.jar")
+  lazy val reflectSources = pathInBundle(scalaCompilerBundle, "/lib/scala-reflect-src.jar")
 
   lazy val templateManager = new ScalaTemplateManager()
   lazy val headlessMode = System.getProperty(HEADLESS_TEST) ne null

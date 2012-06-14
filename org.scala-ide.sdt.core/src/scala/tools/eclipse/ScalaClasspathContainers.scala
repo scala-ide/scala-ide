@@ -33,7 +33,8 @@ class ScalaLibraryClasspathContainerInitializer extends ScalaClasspathContainerI
     libClasses.map(classes => JavaCore.newLibraryEntry(classes, libSources.getOrElse(null), null)),
     dbcClasses.map(classes => JavaCore.newLibraryEntry(classes, dbcSources.getOrElse(null), null)),
     swingClasses.map(classes => JavaCore.newLibraryEntry(classes, swingSources.getOrElse(null), null)),
-    actorsClasses.map(classes => JavaCore.newLibraryEntry(classes, actorsSources.getOrElse(null), null))
+    actorsClasses.map(classes => JavaCore.newLibraryEntry(classes, actorsSources.getOrElse(null), null)),
+    reflectClasses.map(classes => JavaCore.newLibraryEntry(classes, reflectSources.getOrElse(null), null))
   ).flatten.toArray
 }
 
