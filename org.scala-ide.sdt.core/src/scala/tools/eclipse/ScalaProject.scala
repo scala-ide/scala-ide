@@ -41,6 +41,7 @@ import java.io.InputStream
 import java.io.InputStreamReader
 import scala.tools.eclipse.util.Trim
 import org.eclipse.jdt.launching.JavaRuntime
+import org.eclipse.jdt.internal.core.util.Util
 
 trait BuildSuccessListener {
   def buildSuccessful(): Unit
@@ -669,24 +670,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
   def shutDownPresentationCompiler() {
     presentationCompiler.invalidate()
   }
-  
-  /**
-   * Return the full content of the given file in a Char array.
-   * 
-   * Need to replace this with an utility method. I cannot believe it doesn't
-   * exist somewhere else.
-   */
-  private def readFully(file: IFile): Array[Char] = {
-    val reader= new InputStreamReader(file.getContents, file.getCharset())
-    val buf= new ListBuffer[Char]
-    var c= reader.read
-    while (c >= 0) {
-      buf+= c.asInstanceOf[Char]
-      c= reader.read
-    }
-    buf.toArray
-  }
-  
+
   /**
    * Tell the presentation compiler to refresh the given files,
    * if they are not managed by the presentation compiler already.
@@ -697,7 +681,9 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
       // When a compilation unit is moved (e.g. using the Move refactoring) between packages, 
       // an ElementChangedEvent is fired but with the old IFile name. Ignoring the file does
       // not seem to cause any bad effects later on, so we simply ignore these files -- Mirko
-      case file if file.exists => new BatchSourceFile(EclipseResource(file), readFully(file))
+      // using an Util class from jdt.internal to read the file, Eclipse doesn't seem to
+      // provide an API way to do it -- Luc
+      case file if file.exists => new BatchSourceFile(EclipseResource(file), Util.getResourceContentsAsCharArray(file))
     }
       
     withPresentationCompiler {compiler =>
