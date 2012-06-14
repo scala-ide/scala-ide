@@ -20,8 +20,86 @@
     </dependency>
   </dependencies>
 
+  <profiles>
+    <profile>
+      <!-- profile used to run the memory test -->
+      <id>memory-test</id>
+      <dependencies>
+        <dependency>
+          <groupId>org.scala-lang</groupId>
+          <artifactId>scala-compiler</artifactId>
+        </dependency>
+        <dependency>
+          <groupId>org.scala-lang</groupId>
+          <artifactId>scala-reflect</artifactId>
+        </dependency>
+      </dependencies>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-dependency-plugin</artifactId>
+            <executions>
+              <!-- unpack the compiler sources -->
+              <execution>
+                <id>unpack</id>
+                <phase>initialize</phase>
+                <goals>
+                  <goal>unpack</goal>
+                </goals>
+                <configuration>
+                  <artifactItems>
+                    <artifactItem>
+                      <groupId>org.scala-lang</groupId>
+                      <artifactId>scala-compiler</artifactId>
+                      <classifier>sources</classifier>
+                      <outputDirectory>${basedir}/test-workspace/scala-compiler/src</outputDirectory>
+                      <includes>scala/</includes>
+                    </artifactItem>
+                    <artifactItem>
+                      <groupId>org.scala-lang</groupId>
+                      <artifactId>scala-reflect</artifactId>
+                      <classifier>sources</classifier>
+                      <outputDirectory>${basedir}/test-workspace/scala-compiler/src</outputDirectory>
+                      <includes>scala/</includes>
+                    </artifactItem>
+                  </artifactItems>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <!-- configuration of which test to run -->
+            <groupId>org.eclipse.tycho</groupId>
+            <artifactId>tycho-surefire-plugin</artifactId>
+            <configuration>
+              <testSuite>${project.artifactId}</testSuite>
+              <testClass>scala.tools.eclipse.leaks.MemoryLeaksTest</testClass>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+
   <build>
     <plugins>
+      <plugin>
+        <!-- automatically clean up the sources which are unpacked for the memory test -->
+        <artifactId>maven-clean-plugin</artifactId>
+        <configuration>
+          <filesets>
+            <fileset>
+              <directory>./</directory>
+              <includes>
+                <include>test-workspace/scala-compiler/src/**/*</include>
+                <include>test-workspace/scala-compiler/src</include>
+              </includes>
+              <followSymlinks>false</followSymlinks>
+            </fileset>
+          </filesets>
+        </configuration>
+      </plugin>
       <plugin>
         <!-- force run the scala compiler projects before tycho compilation is run -->
         <groupId>net.alchim31.maven</groupId>
