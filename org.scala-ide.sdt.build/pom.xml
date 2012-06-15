@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.scala-ide</groupId>
+    <artifactId>org.scala-ide.build</artifactId>
+    <version>2.1.0-SNAPSHOT</version>
+  </parent>
+  <artifactId>org.scala-ide.sdt.build</artifactId>
+  <packaging>pom</packaging>
+
+  <!-- scm configuration is require to extract the github hash-->
+  <scm>
+    <connection>scm:git://github.com/scala-ide/scala-ide.git</connection>
+    <url>https://github.com/scala-ide/scala-ide</url>
+  </scm>
+
+  <modules>
+    <module>../org.scala-ide.sdt.aspects</module>
+    <module>../org.scala-ide.sdt.core</module>
+    <module>../org.scala-ide.sdt.core.tests</module>
+    <module>../org.scala-ide.sdt.debug</module>
+    <module>../org.scala-ide.sdt.debug.tests</module>
+    <module>../org.scala-ide.sdt.weaving.feature</module>
+    <module>../org.scala-ide.sdt.feature</module>
+    <module>../org.scala-ide.sdt.dev.feature</module>
+    <module>../org.scala-ide.sdt.source.feature</module>
+    <module>../org.scala-ide.sdt.update-site</module>
+  </modules>
+
+
+  <repositories>
+    <repository>
+      <id>eclipse.${eclipse.codename}</id>
+      <name>Eclipse p2 repository</name>
+      <layout>p2</layout>
+      <url>${repo.eclipse}</url>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </repository>
+    <repository>
+      <id>ajdt.${eclipse.codename}</id>
+      <name>AJDT for Eclipse p2 repository</name>
+      <layout>p2</layout>
+      <url>${repo.ajdt}</url>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </repository>
+    <repository>
+      <id>scala-refactoring</id>
+      <name>Scala Refactoring p2 repository</name>
+      <layout>p2</layout>
+      <url>${repo.scala-refactoring}</url>
+    </repository>
+    <repository>
+      <id>scalariform</id>
+      <name>Scalariform Scala p2 repository</name>
+      <layout>p2</layout>
+      <url>${repo.scalariform}</url>
+    </repository>
+  </repositories>
+
+  <dependencies>
+    <!-- because the Scala plugins were build locally in build-toolchain, and
+         are only available in the local maven repository, we need to reference
+         then as maven dependencies -->
+    <dependency>
+      <groupId>org.scala-ide</groupId>
+      <artifactId>org.scala-ide.scala.library</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.scala-ide</groupId>
+      <artifactId>org.scala-ide.scala.compiler</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.scala-ide</groupId>
+      <artifactId>org.scala-ide.sbt.full.library</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+  </dependencies>
+
+
+
+  <build>
+    <plugins>
+      <plugin>
+        <!-- enable tycho to support eclipse type artifacts -->
+        <groupId>org.eclipse.tycho</groupId>
+        <artifactId>tycho-maven-plugin</artifactId>
+        <extensions>true</extensions>
+      </plugin>
+      <plugin>
+        <!-- configuration to be able to use maven bundle as osgi bundles -->
+        <groupId>org.eclipse.tycho</groupId>
+        <artifactId>target-platform-configuration</artifactId>
+        <configuration>
+          <resolver>p2</resolver>
+          <pomDependencies>consider</pomDependencies>
+        </configuration>
+      </plugin>
+      <plugin>
+        <!-- tycho shouldn't try to process scala files -->
+        <groupId>org.eclipse.tycho</groupId>
+        <artifactId>tycho-compiler-plugin</artifactId>
+        <configuration>
+          <excludeResources>
+            <excludeResource>**/*.scala</excludeResource>
+          </excludeResources>
+        </configuration>
+      </plugin>
+      <plugin>
+        <!-- configuration of the scala compiler -->
+        <groupId>net.alchim31.maven</groupId>
+        <artifactId>scala-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>compile</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <jvmArgs>
+            <jvmArg>-Xms512m</jvmArg>
+            <jvmArg>-Xmx1024m</jvmArg>
+          </jvmArgs>
+        </configuration>
+      </plugin>
+      <!-- create a package with the sources -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>attach-sources</id>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <!-- create the source plug-in -->
+      <plugin>
+        <groupId>org.eclipse.tycho</groupId>
+        <artifactId>tycho-source-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>attach-source</id>
+            <goals>
+              <goal>plugin-source</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <!-- plugin used to extract the git hash and store it in ${buildNumber} -->
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>buildnumber-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <phase>validate</phase>
+            <goals>
+              <goal>create</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <doCheck>false</doCheck>
+          <doUpdate>false</doUpdate>
+          <shortRevisionLength>7</shortRevisionLength>
+        </configuration>
+      </plugin>
+      <plugin>
+        <!-- create a better version number -->
+        <groupId>org.eclipse.tycho</groupId>
+        <artifactId>tycho-packaging-plugin</artifactId>
+        <configuration>
+          <format>'${version.tag}-${version.suffix}-'yyyyMMddHHmm'-${buildNumber}'</format>
+          <archiveSite>true</archiveSite>
+        </configuration>
+      </plugin>
+    </plugins>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.eclipse.tycho</groupId>
+          <artifactId>tycho-surefire-plugin</artifactId>
+          <configuration>
+            <useUIHarness>false</useUIHarness>
+            <useUIThread>false</useUIThread>
+
+            <!-- Enable JDT weaving -->
+            <systemProperties combine.children="append">
+              <aj.weaving.verbose>true</aj.weaving.verbose>
+              <org.aspectj.weaver.showWeaveInfo>true</org.aspectj.weaver.showWeaveInfo>
+              <org.aspectj.osgi.verbose>true</org.aspectj.osgi.verbose>
+            </systemProperties>
+            <frameworkExtensions>
+              <frameworkExtension>
+                <groupId>p2.osgi.bundle</groupId>
+                <artifactId>org.eclipse.equinox.weaving.hook</artifactId>
+                <version>1.0.200.I20120427-0800</version>
+              </frameworkExtension>
+            </frameworkExtensions>
+            <bundleStartLevel>
+              <bundle>
+                <id>org.eclipse.equinox.weaving.aspectj</id>
+                <level>2</level>
+                <autoStart>true</autoStart>
+              </bundle>
+            </bundleStartLevel>
+            <argLine>${tycho.test.jvmArgs}</argLine>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+  </build>
+
+</project>

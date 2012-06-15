@@ -10,5 +10,6 @@ Require-Bundle: org.scala-ide.scala.library,
  org.aspectj.weaver,
  org.eclipse.equinox.weaving.aspectj,
  org.scala-ide.sdt.core
+Import-Package: scala.tools.eclipse.testsetup
 Bundle-ClassPath: .,
- lib/mockito-all-1.8.5.jar
+ target/lib/mockito-all-1.9.0.jar

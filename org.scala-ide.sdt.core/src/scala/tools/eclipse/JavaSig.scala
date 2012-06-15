@@ -94,6 +94,6 @@ trait JavaSig { pc: ScalaPresentationCompiler =>
       returnTypeSig.map(r => Signature.toCharArray(r.toArray).mkString)
 
     def exceptionTypes: Array[Array[Char]] =
-      sig.map(Signature.getThrownExceptionTypes).getOrElse(Array.empty).map(_.toCharArray)
+      sig.map(Signature.getThrownExceptionTypes).getOrElse(Array.empty[String]).map(_.toCharArray)
   }
 }

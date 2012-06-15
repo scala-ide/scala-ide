@@ -18,6 +18,7 @@ The Scala IDE for Eclipse can be built on the command line using Maven, as is do
     * The Git command line tools (this will be available as a standard package for Linux distributions)
     * A recent JDK (the [current Oracle JDK](http://www.oracle.com/technetwork/java/javase/downloads/index.html) is recommended)
     * [Maven 3](http://maven.apache.org/download.html)
+
 * (Inital setup) Retrieve the source from its git repository, and make sure to checkout the `master` branch
 
 	```bash
@@ -33,26 +34,14 @@ The Scala IDE for Eclipse can be built on the command line using Maven, as is do
 	$ git pull
 	```
 
-* Navigate to the build directory,
+* Build
 
-	```bash
-	$ cd org.scala-ide.build
-	```
-
-* Build using scripts provided,
-
-	```bash
-	# For builds relative to Scala 2.8.0.final
-	$ ./build-ide-2.8.3-SNAPSHOT
-	#
-	# For builds relative to Scala 2.9.0.final
-	$ ./build-ide-2.9.2-SNAPSHOT
-	#
-	# For builds relative to Scala trunk
-	$ ./build-ide-trunk.sh
-	```
+The first time, run ``./build-all.sh`` (or ``./build-all.sh install -P scala-2.10.x`` for 2.10) from the root to generate an initial build and install the top pom locally.
 
 Assuming your build is successful you should find an Eclipse update site has been built in `org.scala-ide.sdt.update-site/target/site` and a zipped version of the same at `org.scala-ide.sdt.update-site/target/site_assembly.zip`. You can install directly into Eclipse from this update site by adding it as a local update site via the Eclipse "Install New Software ..." action. Alternatively, if you make the unpacked site available via a web server, then the http URL of its root directory is acceptable as an ordinary Eclipse update site URL.
+
+After that, normal maven calls can be used from any part of the project. Use the scala-2.10.x profile (``-P scala-2.10.x``) to compile the 2.10 version.
+
 
 Working with local version of the Scala Presentation Compiler
 ==========================
