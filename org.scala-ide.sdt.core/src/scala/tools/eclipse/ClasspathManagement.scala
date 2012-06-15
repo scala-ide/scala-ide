@@ -63,10 +63,6 @@ case class ScalaClasspath(val jdkPaths: Seq[IPath], // JDK classpath
     toPath(jdkPaths) ++ scalaLibraryFile.toSeq ++ toPath(userCp)
 }
 
-object ScalaClasspath {
-  def fromProject(project: ScalaProject): ScalaClasspath = null
-}
-
 /** Scala project classpath management. This class is responsible for breaking down the classpath in
  *  JDK entries, Scala library entries, and user entries. It also validates the classpath and
  *  manages the classpath error markers for the given Scala project.
@@ -78,7 +74,7 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
     val jdkEntries = jdkPaths
     val cp = classpath.filterNot(jdkEntries.toSet)
 
-    scalaPackageFragments match {
+    scalaLibraries match {
       case Seq((pf, version), _*) => new ScalaClasspath(jdkEntries, Some(pf), cp.filterNot(_ == pf), version)
       case _                      => new ScalaClasspath(jdkEntries, None, cp, None)
     }
@@ -106,10 +102,9 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
    *
    *  It includes the Scala library and the JDK entries.
    *
-   *  @note This is almost never what you need. See the [[scalaClasspath]] method
-   *        inherited from `ClasspathManagement`.
+   *  @note This is almost never what you need. See the [[scalaClasspath.fullClasspath]] method
    */
-  private[eclipse] def classpath: Seq[IPath] = {
+  private def classpath: Seq[IPath] = {
     val path = new mutable.LinkedHashSet[IPath]
 
     def computeClasspath(project: IJavaProject, exportedOnly: Boolean): Unit = {
@@ -152,7 +147,7 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
     path.toList
   }
 
-  private var classpathCheckLock = new Object
+  private val classpathCheckLock = new Object
   private var classpathHasBeenChecked = false
   private var classpathValid = false;
 
@@ -206,7 +201,7 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
    *  @return the absolute file-system path to package fragments that define `scala.Predef`.
    *          If it contains path variables or is a linked resources, the path is resolved.
    */
-  def scalaPackageFragments: Seq[(IPath, Option[String])] = {
+  def scalaLibraries: Seq[(IPath, Option[String])] = {
     val pathToPredef = new Path("scala/Predef.class")
 
     def isZipFileScalaLib(p: IPath): Boolean = {
@@ -259,7 +254,7 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
 
   private def checkClasspath() {
     // look for all package fragment roots containing instances of scala.Predef
-    val fragmentRoots = scalaPackageFragments
+    val fragmentRoots = scalaLibraries
 
     // check the found package fragment roots
     fragmentRoots.length match {
