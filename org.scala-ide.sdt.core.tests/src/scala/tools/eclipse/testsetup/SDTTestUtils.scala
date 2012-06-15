@@ -26,8 +26,8 @@ import org.eclipse.jdt.core.IClasspathEntry
  */
 object SDTTestUtils {
 
-  lazy val sourceWorkspaceLoc = {
-    val bundle = Platform.getBundle("org.scala-ide.sdt.core.tests")
+  def sourceWorkspaceLoc(bundleName: String) = {
+    val bundle = Platform.getBundle(bundleName) //"org.scala-ide.sdt.core.tests"
     OSGiUtils.pathInBundle(bundle, File.separatorChar + "test-workspace").get
   }
 
@@ -50,10 +50,10 @@ object SDTTestUtils {
   /** Setup the project in the target workspace. The 'name' project should
    *  exist in the source workspace.
    */
-  def setupProject(name: String): ScalaProject = {
+  def setupProject(name: String, bundleName: String): ScalaProject = {
     EclipseUtils.workspaceRunnableIn(workspace) { monitor =>
       val wspaceLoc = workspace.getRoot.getLocation
-      val src = new File(sourceWorkspaceLoc.toFile().getAbsolutePath + File.separatorChar + name)
+      val src = new File(sourceWorkspaceLoc(bundleName).toFile().getAbsolutePath + File.separatorChar + name)
       val dst = new File(wspaceLoc.toFile().getAbsolutePath + File.separatorChar + name)
       println("copying %s to %s".format(src, dst))
       FileUtils.copyDirectory(src, dst)
