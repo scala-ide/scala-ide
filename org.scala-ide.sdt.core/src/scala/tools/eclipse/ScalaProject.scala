@@ -659,10 +659,10 @@ class ScalaProject private (val underlying: IProject) extends HasLogger {
   }
   
   def defaultOrElse[T]: T = {  
-    if (underlying.isOpen)
-      failedCompilerInitialization("")
-    
-    throw InvalidCompilerSettings() 
+	  if (underlying.isOpen)
+		  failedCompilerInitialization("")
+
+			  throw InvalidCompilerSettings() 
   }
 
   /** 
@@ -671,16 +671,16 @@ class ScalaProject private (val underlying: IProject) extends HasLogger {
    * If T = Unit, then doWithPresentationCompiler can be used, which does not throw.
    */
   def withPresentationCompiler[T](op: ScalaPresentationCompiler => T)(orElse: => T = defaultOrElse): T = {
-    presentationCompiler {
-      case Some(c) => op(c)
-      case None => orElse
-    }
+	  presentationCompiler {
+		  case Some(c) => op(c)
+			  case None => orElse
+	  }
   }
 
   def withSourceFile[T](scu: ScalaCompilationUnit)(op: (SourceFile, ScalaPresentationCompiler) => T)(orElse: => T = defaultOrElse): T = {
-    withPresentationCompiler { compiler =>
-      compiler.withSourceFile(scu)(op)
-    } {orElse}
+	  withPresentationCompiler { compiler =>
+		  compiler.withSourceFile(scu)(op)
+	  } {orElse}
   }
 
   /** Shutdown the presentation compiler, and force a re-initialization but asking to reconcile all 
@@ -690,157 +690,147 @@ class ScalaProject private (val underlying: IProject) extends HasLogger {
    *  @return true if the presentation compiler was initialized at the time of this call.
    */
   def resetPresentationCompiler(): Boolean =
-    if (presentationCompiler.initialized) {
-      val units: Seq[ScalaCompilationUnit] = withPresentationCompiler(_.compilationUnits)(Nil)
-      
-      presentationCompiler.invalidate
-      
-      logger.info("Scheduling for reconcile: " + units.map(_.file))
-      units.foreach(_.scheduleReconcile())
-      true
-    } else {
-      logger.info("[%s] Presentation compiler was not yet initialized, ignoring reset.".format(underlying.getName()))
-      false
-    }
+				   if (presentationCompiler.initialized) {
+					   val units: Seq[ScalaCompilationUnit] = withPresentationCompiler(_.compilationUnits)(Nil)
+
+						   presentationCompiler.invalidate
+
+						   logger.info("Scheduling for reconcile: " + units.map(_.file))
+						   units.foreach(_.scheduleReconcile())
+						   true
+				   } else {
+					   logger.info("[%s] Presentation compiler was not yet initialized, ignoring reset.".format(underlying.getName()))
+						   false
+				   }
 
   def buildManager = {
-    if (buildManager0 == null) {
-      val settings = ScalaPlugin.defaultScalaSettings(msg => settingsError(IMarker.SEVERITY_ERROR, msg, null))
-      clearSettingsErrors()
-      initialize(settings, _ => true)
-      // source path should be emtpy. The build manager decides what files get recompiled when.
-      // if scalac finds a source file newer than its corresponding classfile, it will 'compileLate'
-      // that file, using an AbstractFile/PlainFile instead of the EclipseResource instance. This later
-      // causes problems if errors are reported against that file. Anyway, it's wrong to have a sourcepath
-      // when using the build manager.
-      settings.sourcepath.value = ""
-      	
-      // Which build manager?
-      // We assume that build manager setting has only single box
-      val choice = buildManagerInitialize
-      choice match {
-      	case "refined" =>
-      	  logger.info("BM: Refined Build Manager")
-      	  buildManager0 = new buildmanager.refined.EclipseRefinedBuildManager(this, settings)
-      	case "sbt"  =>
-      	  logger.info("BM: SBT enhanced Build Manager for " + ScalaPlugin.plugin.scalaVer + " Scala library")
-      	  buildManager0 = new buildmanager.sbtintegration.EclipseSbtBuildManager(this, settings)
-      	case _         =>
-      	  logger.info("Invalid build manager choice '" + choice  + "'. Setting to (default) refined build manager")
-      	  buildManager0 = new buildmanager.refined.EclipseRefinedBuildManager(this, settings)
-      }
+	  if (buildManager0 == null) {
+		  val settings = ScalaPlugin.defaultScalaSettings(msg => settingsError(IMarker.SEVERITY_ERROR, msg, null))
+			  clearSettingsErrors()
+			  initialize(settings, _ => true)
+			  // source path should be emtpy. The build manager decides what files get recompiled when.
+			  // if scalac finds a source file newer than its corresponding classfile, it will 'compileLate'
+			  // that file, using an AbstractFile/PlainFile instead of the EclipseResource instance. This later
+			  // causes problems if errors are reported against that file. Anyway, it's wrong to have a sourcepath
+			  // when using the build manager.
+			  settings.sourcepath.value = ""
 
-      //buildManager0 = new EclipseBuildManager(this, settings)
-    }
-    buildManager0
+			  // Which build manager?
+			  // We assume that build manager setting has only single box
+			  val choice = buildManagerInitialize
+			  choice match {
+				  case "refined" =>
+					  logger.info("BM: Refined Build Manager")
+						  buildManager0 = new buildmanager.refined.EclipseRefinedBuildManager(this, settings)
+				  case "sbt"  =>
+						  logger.info("BM: SBT enhanced Build Manager for " + ScalaPlugin.plugin.scalaVer + " Scala library")
+							  buildManager0 = new buildmanager.sbtintegration.EclipseSbtBuildManager(this, settings)
+							  case _         =>
+							  logger.info("Invalid build manager choice '" + choice  + "'. Setting to (default) refined build manager")
+							  buildManager0 = new buildmanager.refined.EclipseRefinedBuildManager(this, settings)
+			  }
+
+		  //buildManager0 = new EclipseBuildManager(this, settings)
+	  }
+	  buildManager0
   }
 
   /* If true, then it means that all source files have to be reloaded */
   def prepareBuild(): Boolean = if (!hasBeenBuilt) buildManager.invalidateAfterLoad else false
-  
-  def build(addedOrUpdated: Set[IFile], removed: Set[IFile], monitor: SubMonitor) {
-    if (addedOrUpdated.isEmpty && removed.isEmpty)
-      return
 
-    hasBeenBuilt = true
+		      def build(addedOrUpdated: Set[IFile], removed: Set[IFile], monitor: SubMonitor) {
+			      if (addedOrUpdated.isEmpty && removed.isEmpty)
+				      return
 
-    clearBuildErrors
-    buildManager.build(addedOrUpdated, removed, monitor)
-    refreshOutput
+					      hasBeenBuilt = true
 
-    // Already performs saving the dependencies
-    
-    if (!buildManager.hasErrors) {
-      // reset presentation compilers of projects that depend on this one
-      // since the output directory now contains the up-to-date version of this project
-      // note: ScalaBuilder resets the presentation compiler when a referred project
-      // is built, but only when it has changes! this call makes sure that a rebuild,
-      // even when there are no changes, propagates the classpath to dependent projects
-      resetDependentProjects()
-      buildListeners foreach { _.buildSuccessful }
-    }
-  }
+					      clearBuildErrors
+					      buildManager.build(addedOrUpdated, removed, monitor)
+					      refreshOutput
+
+					      // Already performs saving the dependencies
+
+					      if (!buildManager.hasErrors) {
+						      // reset presentation compilers of projects that depend on this one
+						      // since the output directory now contains the up-to-date version of this project
+						      // note: ScalaBuilder resets the presentation compiler when a referred project
+						      // is built, but only when it has changes! this call makes sure that a rebuild,
+						      // even when there are no changes, propagates the classpath to dependent projects
+						      resetDependentProjects()
+							      buildListeners foreach { _.buildSuccessful }
+					      }
+		      }
 
   /** Reset the presentation compiler of projects that depend on this one.
    *  This should be done after a successful build, since the output directory
    *  now contains an up-to-date version of this project.
    */
   def resetDependentProjects() {
-    for {
-      prj <- underlying.getReferencingProjects()
-      if prj.isOpen() && ScalaPlugin.plugin.isScalaProject(prj)
-      dependentScalaProject <- ScalaPlugin.plugin.asScalaProject(prj)
-    } {
-      logger.debug("[%s] Reset PC of referring project %s".format(this, dependentScalaProject))
-      dependentScalaProject.resetPresentationCompiler()
-    }
+	  for {
+		  prj <- underlying.getReferencingProjects()
+			  if prj.isOpen() && ScalaPlugin.plugin.isScalaProject(prj)
+				  dependentScalaProject <- ScalaPlugin.plugin.asScalaProject(prj)
+	  } {
+		  logger.debug("[%s] Reset PC of referring project %s".format(this, dependentScalaProject))
+			  dependentScalaProject.resetPresentationCompiler()
+	  }
   }
-  
+
   def addBuildSuccessListener(listener: BuildSuccessListener) {
-    buildListeners add listener
+	  buildListeners add listener
   }
-  
+
   def removeBuildSuccessListener(listener: BuildSuccessListener) {
-    buildListeners remove listener
+	  buildListeners remove listener
   }
 
   def clean(implicit monitor: IProgressMonitor) = {
-    underlying.deleteMarkers(plugin.problemMarkerId, true, IResource.DEPTH_INFINITE)
-    // mark the classpath as not checked
-    classpathCheckLock.synchronized {
-      classpathHasBeenChecked= false
-    }
-    if (buildManager0 != null)
-      buildManager0.clean(monitor)
-    cleanOutputFolders
-    resetCompilers // reset them only after the output directory is emptied
+	  underlying.deleteMarkers(plugin.problemMarkerId, true, IResource.DEPTH_INFINITE)
+		  // mark the classpath as not checked
+		  classpathCheckLock.synchronized {
+			  classpathHasBeenChecked= false
+		  }
+	  if (buildManager0 != null)
+		  buildManager0.clean(monitor)
+			  cleanOutputFolders
+			  resetCompilers // reset them only after the output directory is emptied
   }
 
   def resetBuildCompiler() {
-    buildManager0 = null
-    hasBeenBuilt = false
+	  buildManager0 = null
+		  hasBeenBuilt = false
   }
 
   def resetCompilers(implicit monitor: IProgressMonitor = null) = {
-    logger.info("resetting compilers!  project: " + this.toString)
-    resetBuildCompiler()
-    resetPresentationCompiler()
+	  logger.info("resetting compilers!  project: " + this.toString)
+		  resetBuildCompiler()
+		  resetPresentationCompiler()
   }
-  
+
   def shutDownCompilers() {
-    resetBuildCompiler()
-    shutDownPresentationCompiler()
+	  resetBuildCompiler()
+		  shutDownPresentationCompiler()
   }
-  
+
   /** Shut down presentation compiler without scheduling a reconcile for open files. */
   def shutDownPresentationCompiler() {
-    presentationCompiler.invalidate()
+	  presentationCompiler.invalidate()
   }
-  
-  /**
-   * Return the full content of the given file in a Char array.
-   * 
-   * Need to replace this with an utility method. I cannot believe it doesn't
-   * exist somewhere else.
-   */
-  private def readFully(file: IFile): Array[Char] = {
-    val reader= new InputStreamReader(file.getContents, file.getCharset())
-    val buf= new ListBuffer[Char]
-    var c= reader.read
-    while (c >= 0) {
-      buf+= c.asInstanceOf[Char]
-      c= reader.read
-    }
-    buf.toArray
-  }
-  
+
   /**
    * Tell the presentation compiler to refresh the given files,
    * if they are not managed by the presentation compiler already.
    */
   def refreshChangedFiles(files: List[IFile]) {
     // transform to batch source files
-    val abstractfiles= files.map(file => new BatchSourceFile(EclipseResource(file), readFully(file))) 
+    val abstractfiles = files.collect {
+      // When a compilation unit is moved (e.g. using the Move refactoring) between packages,
+      // an ElementChangedEvent is fired but with the old IFile name. Ignoring the file does
+      // not seem to cause any bad effects later on, so we simply ignore these files -- Mirko
+      // using an Util class from jdt.internal to read the file, Eclipse doesn't seem to
+      // provide an API way to do it -- Luc
+      case file if file.exists => new BatchSourceFile(EclipseResource(file), Util.getResourceContentsAsCharArray(file))
+    }
       
     withPresentationCompiler {compiler =>
       import compiler._
