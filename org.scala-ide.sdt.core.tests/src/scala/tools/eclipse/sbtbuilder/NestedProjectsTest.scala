@@ -13,6 +13,9 @@ import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.jdt.core.IPackageFragmentRoot
 import scala.tools.eclipse.testsetup.SDTTestUtils
 import org.eclipse.core.resources.IFile
+import org.eclipse.jdt.core.IJavaModelMarker
+import org.eclipse.core.resources.IResource
+import junit.framework.Assert
 
 /**
  * Test for test cases requiring nested projects (one project root is a subfolder of an other project)
@@ -66,7 +69,26 @@ class NestedProjectsTest {
     val classFile= scalaProject.underlying.getFile("bin/test/Java_01.class")
     assertTrue("Missing class file", classFile.exists())
   }
-  
+
+  @Test
+  def checkErrorsAreReported_onTheNestedProject() {
+    // clean the nested project
+    scalaProject.underlying.build(IncrementalProjectBuilder.CLEAN_BUILD, new NullProgressMonitor)
+    scalaProject.underlying.build(IncrementalProjectBuilder.FULL_BUILD, new NullProgressMonitor)
+
+    // update and recompile Java_01.java
+    val compilationUnit = scalaSrcPackageRoot.getPackageFragment("test").getCompilationUnit("Scala_01.scala")
+    SDTTestUtils.changeContentOfFile(compilationUnit.getResource().asInstanceOf[IFile], changed_test_Scala_01)
+
+    scalaProject.underlying.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, new NullProgressMonitor)
+
+    val topLevelErrors = project.underlying.findMarkers(IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER, true, IResource.DEPTH_INFINITE)
+    assertEquals("No errors in top-level project", 0, topLevelErrors.length)
+
+    val nestedErrors = scalaProject.underlying.findMarkers(IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER, true, IResource.DEPTH_INFINITE)
+    assertEquals("One error in nested project", 1, nestedErrors.length)
+  }
+
   // no real change, just a space after foo
   lazy val changed_test_Java_01 = """
 package test;
@@ -78,4 +100,11 @@ public class Java_01 {
 }
 """
 
+  lazy val changed_test_Scala_01 = """
+package test
+
+class Scala_01 {
+  ] // error
+}
+"""
 }

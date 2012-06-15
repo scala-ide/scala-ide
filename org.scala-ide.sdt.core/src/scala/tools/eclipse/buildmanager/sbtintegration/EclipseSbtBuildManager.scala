@@ -124,7 +124,7 @@ private class SbtBuildReporter(underlying: BuildReporter) extends xsbti.Reporter
 	    case (false, false, false) => 
 	      NoPosition
 	    case _ =>
-	      val ifile = EclipseResource.fromString(srcpath0.get)
+	      val ifile = EclipseResource.fromString(srcpath0.get, underlying.project0.underlying.getFullPath)
 	      ifile match {
 	        case None =>
 	          NoPosition

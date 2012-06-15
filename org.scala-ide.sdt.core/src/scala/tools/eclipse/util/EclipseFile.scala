@@ -29,19 +29,37 @@ object EclipseResource {
       case container : IContainer => new EclipseContainer(container)
     }
   }
-
+    
   def unapply(file: AbstractFile): Option[IResource] = file match {
     case ef : EclipseFile => Some(ef.underlying)
     case ec : EclipseContainer => Some(ec.underlying)
     case _ => None
   }
-  
-  def fromString(path: String): Option[EclipseResource[_ <: IResource]] = {
+    
+  /** Return an `AbstractFile` implementation over Eclipse resources, corresponding to the given
+   *   file-system path.
+   *
+   *   @note A file-system path may correspond to several paths in the workspace. This can happen if
+   *         projects are nested: the top-level project sees the file as /toplevel/submodule/file,
+   *         and if the submodule is a project itself, the same file will appear as
+   *         /submodule/file. See ticket #1000734.
+   *
+   *   @param path The file-system path for which we need a resource handle
+   *
+   *   @param prefix An optional workspace-relative path that will be used to filter the possible answers.
+   *                 It is usually the name of a project in the workspace, to limit results to resources
+   *                 under that project.
+   */
+  def fromString(path: String, prefix: IPath = Path.EMPTY): Option[EclipseResource[IResource]] = {
     def resourceForPath(p: IPath) = {
       val resources = ResourcesPlugin.getWorkspace.getRoot.findFilesForLocationURI(URIUtil.toURI(p))
-      if (resources != null && resources.length > 0) Some(resources(0)) else None
+
+      resources match {
+        case Array(_, _*) => resources.find(prefix isPrefixOf _.getFullPath)
+        case _            => None
+      }
     }
-    
+  
     val path0 = new Path(path)
     resourceForPath(path0) match {
       case Some(res) => Some(EclipseResource(res))
@@ -56,13 +74,13 @@ object EclipseResource {
     }
   }
 }
-
-abstract class EclipseResource[R <: IResource] extends AbstractFile {
-  val underlying: R
   
+abstract class EclipseResource[+R <: IResource] extends AbstractFile {
+  val underlying: R
+
   if (underlying eq null)
     throw new NullPointerException("underlying == null")
-  
+
   def name: String = underlying.getName
 
   def path: String = {
