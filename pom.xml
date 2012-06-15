@@ -17,6 +17,7 @@
     <repo.eclipse.indigo>http://download.eclipse.org/releases/indigo/</repo.eclipse.indigo>
     <repo.eclipse.juno>http://download.eclipse.org/eclipse/updates/4.2milestones</repo.eclipse.juno>
     <repo.ajdt.indigo>http://download.eclipse.org/tools/ajdt/37/dev/update</repo.ajdt.indigo>
+    <repo.ajdt.juno>http://download.eclipse.org/tools/ajdt/42/dev/update</repo.ajdt.juno>
     <repo.scala-ide.root>http://download.scala-ide.org</repo.scala-ide.root>
 
     <!-- fixed versions -->
@@ -46,9 +47,9 @@
     <tycho.test.jvmArgs>-Xmx800m -XX:MaxPermSize=256m -Dsdtcore.headless ${tycho.test.weaving} ${tycho.test.OSspecific}</tycho.test.jvmArgs>
 
     <!-- dependencies repos -->
-    <eclipse.codename>indigo</eclipse.codename>
-    <repo.eclipse>${repo.eclipse.indigo}</repo.eclipse>
-    <repo.ajdt>${repo.ajdt.indigo}</repo.ajdt>
+    <eclipse.codename>juno</eclipse.codename>
+    <repo.eclipse>${repo.eclipse.juno}</repo.eclipse>
+    <repo.ajdt>${repo.ajdt.juno}</repo.ajdt>
 
     <!-- default values, can be overwritten by profiles -->
     <scala.version>2.9.3-SNAPSHOT</scala.version>
