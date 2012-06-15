@@ -15,7 +15,7 @@ import org.eclipse.core.runtime.IProgressMonitor
 
 case class BuildProblem(severity: Reporter#Severity, msg: String, pos: Position)
 
-abstract class BuildReporter(project0: ScalaProject, settings0: Settings) extends Reporter with HasLogger {
+abstract class BuildReporter(private[buildmanager] val project0: ScalaProject, settings0: Settings) extends Reporter with HasLogger {
   val buildManager: EclipseBuildManager
   val prob: ListBuffer[BuildProblem] = ListBuffer.empty
 
@@ -47,7 +47,7 @@ abstract class BuildReporter(project0: ScalaProject, settings0: Settings) extend
 	              logger.info("suppressed error in Java file: %s".format(msg))
 	          case f =>
 	            logger.info("no EclipseResource associated to %s [%s]".format(f.path, f.getClass))
-	            EclipseResource.fromString(source.file.path) match {
+	            EclipseResource.fromString(source.file.path, project0.underlying.getFullPath) match {
 	              case Some(i: IFile) => 
 	                // this may happen if a file was compileLate by the build compiler
 	                // for instance, when a source file (on the sourcepath) is newer than the classfile

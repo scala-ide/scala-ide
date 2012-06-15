@@ -32,7 +32,7 @@ private[sbtintegration] class SbtBuildReporter(underlying: BuildReporter) extend
       case (false, false, false) => 
         NoPosition
       case _ =>
-        val ifile = EclipseResource.fromString(srcpath0.get)
+        val ifile = EclipseResource.fromString(srcpath0.get, underlying.project0.underlying.getFullPath)
         ifile match {
           case None =>
             NoPosition
