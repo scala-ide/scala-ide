@@ -6,11 +6,11 @@ import org.eclipse.swt.widgets.{ Button, Combo, Composite, Control, Event, Group
 import org.eclipse.swt.layout.{ GridData, GridLayout }
 import org.eclipse.swt.SWT
 import org.eclipse.swt.events.{ ModifyEvent, ModifyListener, SelectionAdapter, SelectionEvent, SelectionListener }
-import org.eclipse.jface.preference.IPreferenceStore
+import org.eclipse.jface.preference.{IPreferenceStore, PreferencePage}
 import scala.tools.eclipse.util.Trim
 
 trait EclipseSettings {
-  self: ScalaPluginPreferencePage =>
+  self: PreferencePage with ScalaPluginPreferencePage =>
 
   object EclipseSetting {
     /** Function to map a Scala compiler setting to an Eclipse plugin setting */
@@ -47,11 +47,11 @@ trait EclipseSettings {
   }
 
   private object SelectionListenerSing extends SelectionAdapter {
-    override def widgetSelected(e: SelectionEvent): Unit = updateApply
+    override def widgetSelected(e: SelectionEvent): Unit = updateApplyButton()
   }
 
   private object ModifyListenerSing extends ModifyListener {
-    def modifyText(e: ModifyEvent) = updateApply
+    def modifyText(e: ModifyEvent) = updateApplyButton()
   }
 
   /** Represents a setting that may by changed within Eclipse.
