@@ -23,7 +23,7 @@ trait EclipseBuildManager extends BuildManager {
   var depFile: IFile
   
   /** Has build errors? Only valid if the project has been built before. */
-  var hasErrors: Boolean = false
+  @volatile var hasErrors: Boolean = false
   
   def invalidateAfterLoad: Boolean
   def clean(implicit monitor: IProgressMonitor): Unit
