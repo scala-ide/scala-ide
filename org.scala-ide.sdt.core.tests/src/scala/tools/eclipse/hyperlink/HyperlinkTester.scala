@@ -5,6 +5,7 @@ import scala.tools.eclipse.ScalaWordFinder
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import scala.tools.eclipse.hyperlink.text.detector.ScalaDeclarationHyperlinkComputer
+import scala.tools.eclipse.javaelements.ScalaSourceFile
 
 
 trait HyperlinkTester extends TestProjectSetup {
@@ -25,7 +26,7 @@ trait HyperlinkTester extends TestProjectSetup {
   /** Load a scala `unit` that contains text markers used 
    *  to generate hyperlinking requests to the presentation compiler.
    */
-  def loadTestUnit(unit: ScalaUnit): VerifyHyperlink = {
+  def loadTestUnit(unit: ScalaSourceFile): VerifyHyperlink = {
     reload(unit)
     new {
       /** @param expectations A collection of expected `Link` (test's oracle). */

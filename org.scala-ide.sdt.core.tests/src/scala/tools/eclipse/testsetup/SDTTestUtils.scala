@@ -26,7 +26,7 @@ import org.eclipse.jdt.core.IClasspathEntry
  */
 object SDTTestUtils {
 
-  def sourceWorkspaceLoc(bundleName: String) = {
+  def sourceWorkspaceLoc(bundleName: String): IPath = {
     val bundle = Platform.getBundle(bundleName) //"org.scala-ide.sdt.core.tests"
     OSGiUtils.pathInBundle(bundle, File.separatorChar + "test-workspace").get
   }
@@ -125,7 +125,10 @@ object SDTTestUtils {
    *
    *  The file must not exist.
    */
-  def addFileToProject(project: IProject, path: String, content: String): IFile = {
+  def addFileToProject(project: IProject, path: String, content: String): IFile = 
+    addFileToProject(project, path, content.getBytes(project.getDefaultCharset()))
+  
+  def addFileToProject(project: IProject, path: String, content: Array[Byte]): IFile = {
     val filePath = new Path(path)
     val dirNames = filePath.segments.init // last segment is the file
     dirNames.foldLeft(project: IContainer) { (container, segment) =>
@@ -135,7 +138,7 @@ object SDTTestUtils {
       folder
     }
     val file = project.getFile(filePath);
-    file.create(new ByteArrayInputStream(content.getBytes(project.getDefaultCharset())), true, null);
+    file.create(new ByteArrayInputStream(content), true, null)
     file
   }
 
@@ -188,6 +191,14 @@ object SDTTestUtils {
       inputStream.close
     }
     stringBuilder.toString
+  }
+  
+  def findMarker(marker: String) = new {
+    import org.eclipse.jdt.internal.compiler.env.ICompilationUnit
+    def in(unit: ICompilationUnit): Seq[Int] = {
+    	val contents = unit.getContents()
+    	SDTTestUtils.positionsOf(contents, marker)
+    }
   }
   
   val simulator = new EclipseUserSimulator

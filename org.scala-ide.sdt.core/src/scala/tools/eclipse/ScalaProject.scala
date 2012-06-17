@@ -203,7 +203,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
     } yield ScalaPlugin.plugin.workspaceRoot.getProject(entry.getPath().toString)
   }
     
-  lazy val javaProject = {
+  lazy val javaProject: IJavaProject = {
     JavaCore.create(underlying)
   }
 
