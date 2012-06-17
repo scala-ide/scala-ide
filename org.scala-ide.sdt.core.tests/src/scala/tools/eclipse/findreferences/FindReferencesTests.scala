@@ -130,4 +130,16 @@ class FindReferencesTests extends FindReferencesTester {
     val expected = fieldVal("aVal") isReferencedBy method("anotherMethod") and method("yetAnotherMethod")
     runTest("bug1000067_3", "FindReferencesOfClassFieldVal.scala", expected)
   }
+
+  @Test
+  def findReferencesOfClassConstructor_bug1000063_1() {
+    val expected = clazz("ReferredClass") isReferencedBy method("foo") and method("bar")
+    runTest("bug1000063_1", "FindReferencesOfClassConstructor.scala", expected)
+  }
+
+  @Test
+  def findReferencesOfClassTypeInMethodTypeBound_bug1000063_2() {
+    val expected = clazz("ReferredClass") isReferencedBy clazzConstructor("ReferringClass") and typeAlias("typedSet") and method("foo")
+    runTest("bug1000063_2", "FindReferencesOfClassType.scala", expected)
+  }
 }
