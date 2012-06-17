@@ -66,6 +66,7 @@ trait ScalaPluginPreferencePage extends HasLogger {
 
   // There seems to be a bug in the compiler that appears in runtime (#2296)
   // So updateApply is going to forward to real updateApplyButton
+  def updateApply: Unit
 }
 
 /** Provides a property page to allow Scala compiler settings to be changed.
@@ -121,8 +122,10 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
     save(userBoxes, preferenceStore0)
 
     //Don't let user click "apply" again until a change
-    updateApplyButton()
+    updateApplyButton
   }
+
+  def updateApply = updateApplyButton
 
   /** Updates the apply button with the appropriate enablement. */
   protected override def updateApplyButton(): Unit = {
@@ -199,7 +202,7 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
   /** We override this so we can update the status of the apply button after all components have been added */
   override def createControl(parent: Composite): Unit = {
     super.createControl(parent)
-    updateApplyButton()
+    updateApplyButton
   }
 
   /** Check who needs to rebuild with new compiler flags */
@@ -306,7 +309,7 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
       val selected = control.getSelection
       eclipseBoxes.foreach(_.eSettings.foreach(_.setEnabled(selected)))
       additionalParamsWidget.setEnabled(selected)
-      updateApplyButton()
+      updateApplyButton
     }
 
     def isChanged = getValue != control.getSelection
