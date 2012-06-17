@@ -191,17 +191,20 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
             case ssf: ScalaSourceFile => ssf.getElementAt(tree.pos.startOrPoint)
             case _ => null
           }
-          
-          val accuracy = SearchMatch.A_INACCURATE
-          val (offset, length) = if (tree.isDef)
-            (tree.pos.startOrPoint + 4, tree.symbol.name.length)
-          else (tree.pos.startOrPoint, tree.pos.endOrPoint - tree.pos.startOrPoint)
-              
-          val insideDocComment = false
-          val participant = possibleMatch.document.getParticipant
-          val resource = possibleMatch.resource
 
-          report(new MethodReferenceMatch(enclosingElement, accuracy, offset, length, insideDocComment, participant, resource))
+          if (enclosingElement != pat.focus) {
+
+            val accuracy = SearchMatch.A_INACCURATE
+            val (offset, length) = if (tree.isDef)
+              (tree.pos.startOrPoint + 4, tree.symbol.name.length)
+            else (tree.pos.startOrPoint, tree.pos.endOrPoint - tree.pos.startOrPoint)
+
+            val insideDocComment = false
+            val participant = possibleMatch.document.getParticipant
+            val resource = possibleMatch.resource
+
+            report(new MethodReferenceMatch(enclosingElement, accuracy, offset, length, insideDocComment, participant, resource))
+          }
         }
       }
     }
