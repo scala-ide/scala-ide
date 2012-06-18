@@ -24,8 +24,8 @@ import scala.tools.nsc.util.FailedInterrupt
 import scala.tools.nsc.symtab.Flags
 import scala.tools.eclipse.completion.CompletionProposal
 
-class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
-  extends Global(settings, new ScalaPresentationCompiler.PresentationReporter, project.underlying.getName)
+class ScalaPresentationCompiler(project: ScalaProject, settings: Settings)
+  extends Global(settings, new ScalaPresentationCompiler.PresentationReporter(project), project.underlying.getName)
   with ScalaStructureBuilder 
   with ScalaIndexBuilder 
   with ScalaMatchLocator
@@ -288,46 +288,46 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
 }
 
 object ScalaPresentationCompiler {
-  class PresentationReporter extends InteractiveReporter {
-    var compiler : ScalaPresentationCompiler = null
-      
-    def nscSeverityToEclipse(severityLevel: Int) = 
+  class PresentationReporter(project: ScalaProject) extends InteractiveReporter with HasLogger {
+    var compiler: ScalaPresentationCompiler = null
+
+    def nscSeverityToEclipse(severityLevel: Int) =
       severityLevel match {
-        case ERROR.id => ProblemSeverities.Error
+        case ERROR.id   => ProblemSeverities.Error
         case WARNING.id => ProblemSeverities.Warning
-        case INFO.id => ProblemSeverities.Ignore
+        case INFO.id    => ProblemSeverities.Ignore
       }
-    
+
     def eclipseProblem(prob: Problem): Option[IProblem] = {
       import prob._
       if (pos.isDefined) {
-          val source = pos.source
-          val pos1 = pos.toSingleLine
-          source.file match {
-            case ef@EclipseFile(file) =>
-              Some(
-                new DefaultProblem(
-                  file.getFullPath.toString.toCharArray,
-                  formatMessage(msg),
-                  0,
-                  new Array[String](0),
-                  nscSeverityToEclipse(severityLevel),
-                  pos1.startOrPoint,
-                  math.max(pos1.startOrPoint, pos1.endOrPoint - 1),
-                  pos1.line,
-                  pos1.column
-                ))
-            case _ => None
-          }
-        } else None
-      }   
+        val source = pos.source
+        val pos1 = pos.toSingleLine
+        source.file match {
+          case ef @ EclipseFile(file) =>
+            Some(
+              new DefaultProblem(
+                file.getFullPath.toString.toCharArray,
+                formatMessage(msg),
+                0,
+                new Array[String](0),
+                nscSeverityToEclipse(severityLevel),
+                pos1.startOrPoint,
+                math.max(pos1.startOrPoint, pos1.endOrPoint - 1),
+                pos1.line,
+                pos1.column))
+          case _ => None
+        }
+      } else None
+    }
 
-      def formatMessage(msg : String) = msg.map{
-        case '\n' => ' '
-        case '\r' => ' '
-        case c => c
-      }
+    def formatMessage(msg: String) = msg.map {
+      case '\n' => ' '
+      case '\r' => ' '
+      case c    => c
+    }
+    
+    override def echo(str: String): Unit = 
+      logger.debug("[%s] %s".format(project, str))
   }
 }
-
-

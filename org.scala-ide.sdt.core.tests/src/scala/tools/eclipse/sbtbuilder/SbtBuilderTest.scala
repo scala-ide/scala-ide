@@ -146,9 +146,10 @@ class SbtBuilderTest {
   
   @Test def scalaLibrary_in_dependent_project_shouldBe_on_BootClasspath() {
     import SDTTestUtils._
+    import ScalaPlugin.plugin
 
     val Seq(prjClient, prjLib) = createProjects("client", "library")
-    val Seq(packClient, packLib) = Seq(prjClient, prjLib).map(createSourcePackage("scala"))
+    val packLib = createSourcePackage("scala")(prjLib)
     val baseRawClasspath= prjClient.javaProject.getRawClasspath()
     
     /* The classpath, with the eclipse scala container removed. */
@@ -157,15 +158,18 @@ class SbtBuilderTest {
     ) yield classpathEntry
 
     prjClient.javaProject.setRawClasspath(cleanRawClasspath, null)
-
-    packLib.createCompilationUnit("Predef.scala", "object Predef", true, null)
     addToClasspath(prjClient, JavaCore.newProjectEntry(prjLib.underlying.getFullPath, true))
 
+    packLib.createCompilationUnit("Predef.scala", "package scala; class Predef", true, null)
+    prjLib.underlying.build(IncrementalProjectBuilder.FULL_BUILD, new NullProgressMonitor)
+
     Assert.assertTrue("Found Scala library", prjClient.scalaClasspath.scalaLib.isDefined)
-    Assert.assertEquals("Unexpected Scala lib", new Path("/library/src"), prjClient.scalaClasspath.scalaLib.get)
+    
+    val expectedLib = plugin.workspaceRoot.findMember("/library/bin").getLocation
+    Assert.assertEquals("Unexpected Scala lib", expectedLib, prjClient.scalaClasspath.scalaLib.get)
     val basicConf = new BasicConfiguration(prjClient, ScalaCompilerConf.deployedInstance)
     val args = basicConf.buildArguments(Seq())
-    Assert.assertTrue("BasicConfiguration bootclasspath " + args, args.mkString(" ").contains("-bootclasspath /library/src"))
+    Assert.assertTrue("BasicConfiguration bootclasspath " + args, args.mkString(" ").contains("-bootclasspath " + expectedLib))
     deleteProjects(prjClient, prjLib)
   }
 
@@ -191,3 +195,4 @@ class Foo
     "(object )?Foo is not a member of (package )?subpack",
     "not found: type Foo")
 }
+
