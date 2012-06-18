@@ -45,7 +45,8 @@ trait ScalaJavaMapper extends ScalaAnnotationHelper with HasLogger { self : Scal
       results.find(_.isDefined).flatten.headOption
     } else getJavaElement(sym.owner) match {
         case Some(ownerClass: IType) => 
-          if (sym.isMethod) ownerClass.getMethods.find(matchesMethod)
+          def isGetterOrSetter: Boolean = sym.isGetter || sym.isSetter
+          if (sym.isMethod && !isGetterOrSetter) ownerClass.getMethods.find(matchesMethod)
           else ownerClass.getFields.find(_.getElementName == sym.name.toString)
         case _ => None
     }

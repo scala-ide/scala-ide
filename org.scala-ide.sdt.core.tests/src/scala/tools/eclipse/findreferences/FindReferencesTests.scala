@@ -112,4 +112,10 @@ class FindReferencesTests extends FindReferencesTester {
       val msg = "Don't know how to convert element `%s` of type `%s`".format(e.getElementName, e.getClass)
       throw new IllegalArgumentException(msg)
   }
+
+  @Test
+  def findReferencesOfClassFieldVar_bug1000067_1() {
+    val expected = fieldVar("aVar") isReferencedBy method("anotherMethod") and method("yetAnotherMethod")
+    runTest("bug1000067_1", "FindReferencesOfClassFieldVar.scala", expected)
+  }
 }
