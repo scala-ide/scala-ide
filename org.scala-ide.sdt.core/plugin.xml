@@ -94,6 +94,12 @@
             class="scala.tools.eclipse.logging.ui.properties.LoggingPreferencePage"
             id="org.scala-ide.sdt.core.properties.Logging"
             name="Logging">
+      </page>
+      <page
+            category="org.scala-ide.sdt.core.preferences"
+            class="scala.tools.eclipse.properties.EditorPreferencePage"
+            id="org.scala-ide.sdt.core.editor"
+            name="Editor">
       </page>      
    </extension>
 
