@@ -163,17 +163,23 @@
   </dependencies>
 
   <build>
+    <outputDirectory>${basedir}</outputDirectory>
     <plugins>
       <plugin>
         <!-- automatically clean up the generated META-INF folder -->
         <artifactId>maven-clean-plugin</artifactId>
         <configuration>
+          <excludeDefaultDirectories>true</excludeDefaultDirectories>
           <filesets>
             <fileset>
               <directory>./</directory>
               <includes>
+                <include>lib/**/*</include>
+                <include>lib</include>
                 <include>META-INF/**/*</include>
                 <include>META-INF</include>
+                <include>target/**/*</include>
+                <include>target</include>
               </includes>
               <followSymlinks>false</followSymlinks>
             </fileset>
