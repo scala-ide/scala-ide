@@ -53,9 +53,6 @@ object ScalaProject {
 
 class ScalaProject private (val underlying: IProject) extends ClasspathManagement with HasLogger {
   import ScalaPlugin.plugin
-  
-  /** Implementing inherited abstract value from `ClasspathManagement` */
-  val scalaProject: ScalaProject = this
 
   private var classpathUpdate: Long = IResource.NULL_STAMP
   private var buildManager0: EclipseBuildManager = null
@@ -336,7 +333,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
     sourceFiles
   }
   
-  def cleanOutputFolders(implicit monitor: IProgressMonitor) = {
+  private def cleanOutputFolders(implicit monitor: IProgressMonitor) = {
     def delete(container: IContainer, deleteDirs: Boolean)(f: String => Boolean): Unit =
       if (container.exists()) {
         container.members.foreach {
@@ -605,12 +602,12 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
     resetCompilers // reset them only after the output directory is emptied
   }
 
-  def resetBuildCompiler() {
+  private def resetBuildCompiler() {
     buildManager0 = null
     hasBeenBuilt = false
   }
 
-  def resetCompilers(implicit monitor: IProgressMonitor = null) = {
+  protected def resetCompilers(implicit monitor: IProgressMonitor = null) = {
     logger.info("resetting compilers!  project: " + this.toString)
     resetBuildCompiler()
     resetPresentationCompiler()
@@ -622,7 +619,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
   }
   
   /** Shut down presentation compiler without scheduling a reconcile for open files. */
-  def shutDownPresentationCompiler() {
+  private def shutDownPresentationCompiler() {
     presentationCompiler.invalidate()
   }
 
