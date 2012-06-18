@@ -148,4 +148,10 @@ class FindReferencesTests extends FindReferencesTester {
     val expected = clazz("Foo") isReferencedBy clazz("Bar")
     runTest("bug1001084", "FindReferencesOfClassType.scala", expected)
   }
+
+  @Test
+  def findReferencesInsideCompanionObject_ex1() {
+    val expected = fieldVal("ss") isReferencedBy moduleConstructor("Foo")
+    runTest("ex1", "Ex1.scala", expected)
+  }
 }

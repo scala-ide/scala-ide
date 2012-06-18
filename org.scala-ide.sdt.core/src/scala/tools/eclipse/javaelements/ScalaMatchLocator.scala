@@ -6,16 +6,14 @@
 package scala.tools.eclipse.javaelements
 
 import org.eclipse.jdt.core.search.{ SearchMatch, SearchPattern, SearchParticipant, TypeDeclarationMatch, TypeReferenceMatch, MethodReferenceMatch, FieldReferenceMatch }
-
 import org.eclipse.jdt.core.compiler.{ CharOperation => CharOp }
 import org.eclipse.jdt.internal.compiler.ast.{ SingleTypeReference, TypeDeclaration }
 import org.eclipse.jdt.internal.core.search.matching.{ MatchLocator, PossibleMatch }
-
 import scala.tools.nsc.util.{ RangePosition, Position }
-
 import scala.tools.eclipse.ScalaPresentationCompiler
 import scala.tools.eclipse.util.ReflectionUtils
 import org.eclipse.jdt.internal.core.search.matching.{ PatternLocator, FieldPattern, MethodPattern, TypeReferencePattern, TypeDeclarationPattern, OrPattern };
+import org.eclipse.jdt.core.IJavaElement
 
 //FIXME should report all and let matcher to the selection OR only report matcher interest (pre select by type) OR ...
 
@@ -68,7 +66,7 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
     def checkQualifier(s: Select, className: Array[Char], pat: SearchPattern) =  {
       (className eq null) || {
         s.qualifier.tpe.baseClasses exists { bc => 
-          pat.matchesName(className, bc.name.toChars)
+          pat.matchesName(className, mapSimpleType(bc).toCharArray)
         }
       }
     }
@@ -214,10 +212,12 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
     import MatchLocatorUtils._
 
     def report(tree: Tree) = tree match {
-      case s: Select => s.symbol match {
-        case sym : MethodSymbol => reportVariableReference(s, pattern)
-        case _ =>
-      }
+      case s @ Select(qualifier, _) =>
+        report(qualifier)
+        s.symbol match {
+          case sym : MethodSymbol => reportVariableReference(s, pattern)
+          case _ =>
+        }
       case _ =>
     }
     
@@ -297,9 +297,9 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
     
     def reportObjectReference(pat: TypeReferencePattern, symbol: Symbol, pos: Position) {
         val searchedName = simpleName(pat)
-        val symName = symbol.name.toChars
+        val symName = mapSimpleType(symbol).toCharArray
         // TODO: better char array handling
-        if (pat.matchesName(searchedName, symName) || pat.matchesName(searchedName, CharOp.append(symName, '$'))) {
+        if (pat.matchesName(searchedName, symName)) {
           val enclosingElement = scu match {
               case ssf: ScalaSourceFile => 
                 ssf.getElementAt(pos.start) match {
@@ -323,7 +323,7 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
     
     def reportTypeReference(tpe: Type, refPos: Position) {
       if (tpe eq null) return
-      val ref = new SingleTypeReference(tpe.typeSymbol.nameString.toArray, posToLong(refPos))
+      val ref = new SingleTypeReference(tpe.typeSymbol.nameString.toCharArray, posToLong(refPos))
       if (matchLocator.patternLocator.`match`(ref, possibleMatch.nodeSet) > 0) {
         val enclosingElement = scu match {
           case ssf: ScalaSourceFile => ssf.getElementAt(refPos.start)
@@ -355,7 +355,7 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
     
     def reportTypeDefinition(tpe: Type, declPos: Position) {
       val decl = new TypeDeclaration(null)
-      decl.name = tpe.typeSymbol.nameString.toArray
+      decl.name = tpe.typeSymbol.nameString.toCharArray
       if (matchLocator.patternLocator.`match`(decl, possibleMatch.nodeSet) > 0) {
         val element = scu match {
           case ssf: ScalaSourceFile => ssf.getElementAt(declPos.start)

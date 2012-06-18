@@ -1,5 +1,6 @@
 package scala.tools.eclipse.findreferences
 
+import scala.tools.eclipse.javaelements.SymbolNameUtil
 
 trait FindReferencesTester {
 
@@ -23,8 +24,8 @@ trait FindReferencesTester {
   def fieldVal(name: String): Element = FieldVal(name)
   def clazz(name: String): Element = Clazz(name)
   def clazzConstructor(name: String): Element = Method(name)
-  def module(name: String): Element = Module(name+"$")
-  def moduleConstructor(name: String): Element = Method(name+"$")
+  def module(name: String): Element = Module(name + SymbolNameUtil.MODULE_SUFFIX_STRING)
+  def moduleConstructor(name: String): Element = Method(name + SymbolNameUtil.MODULE_SUFFIX_STRING)
   def typeAlias(name: String): Element = TypeAlias(name)
 
   class TestDef(e: Element) {
