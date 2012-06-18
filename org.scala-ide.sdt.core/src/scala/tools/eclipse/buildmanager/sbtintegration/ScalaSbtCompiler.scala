@@ -9,7 +9,7 @@ import scala.tools.eclipse.ScalaPlugin
 
 object SettingsCleanup {
   def apply(s: Settings, log: Logger): Settings = {
-    val toDefault = Set(s.d, s.Ybuildmanagerdebug, s.Ybuilderdebug, s.sourcepath, s.sourcedir,
+    val toDefault = Set(s.d, s.Ybuildmanagerdebug, s.Ybuilderdebug, s.sourcedir,
                          s.YpresentationDebug, s.YpresentationDelay, s.YpresentationLog,
                          s.YpresentationReplay, s.YpresentationVerbose,
                          s.classpath, s.bootclasspath)
