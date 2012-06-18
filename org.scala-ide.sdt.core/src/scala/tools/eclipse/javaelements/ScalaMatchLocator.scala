@@ -301,7 +301,11 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
         // TODO: better char array handling
         if (pat.matchesName(searchedName, symName) || pat.matchesName(searchedName, CharOp.append(symName, '$'))) {
           val enclosingElement = scu match {
-              case ssf: ScalaSourceFile => ssf.getElementAt(pos.start)
+              case ssf: ScalaSourceFile => 
+                ssf.getElementAt(pos.start) match {
+                  case e: ScalaDefElement if e.isConstructor => e.getParent
+                  case e => e 
+                }
               case _ => null
             }
           //since we consider only the object name (and not its fully qualified name), 

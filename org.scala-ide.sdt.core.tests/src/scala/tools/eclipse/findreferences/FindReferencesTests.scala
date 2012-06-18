@@ -142,4 +142,10 @@ class FindReferencesTests extends FindReferencesTester {
     val expected = clazz("ReferredClass") isReferencedBy clazzConstructor("ReferringClass") and typeAlias("typedSet") and method("foo")
     runTest("bug1000063_2", "FindReferencesOfClassType.scala", expected)
   }
+
+  @Test
+  def findReferencesOfClassType_bug1001084() {
+    val expected = clazz("Foo") isReferencedBy clazz("Bar")
+    runTest("bug1001084", "FindReferencesOfClassType.scala", expected)
+  }
 }
