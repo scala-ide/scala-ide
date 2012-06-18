@@ -6,6 +6,7 @@ import scala.tools.eclipse.completion.CompletionTests;
 
 import scala.tools.eclipse.hyperlinks.HyperlinkDetectorTests;
 import scala.tools.eclipse.jcompiler.AbstractMethodVerifierTest;
+import scala.tools.eclipse.launching.MainClassVerifierTest;
 import scala.tools.eclipse.lexical.ScalaDocumentPartitionerTest;
 import scala.tools.eclipse.lexical.ScalaPartitionTokeniserTest;
 import scala.tools.eclipse.occurrences.OccurrencesFinderTest;
@@ -41,6 +42,7 @@ import org.junit.runners.Suite;
   StructureBuilderTest.class,
   CompletionTests.class,
   AbstractMethodVerifierTest.class,
+  MainClassVerifierTest.class,
   SbtBuilderTest.class,
   OutputFoldersTest.class,
   ScalaCompilerClasspathTest.class,

@@ -2,18 +2,19 @@ package scala.tools.eclipse.launching
 
 import org.eclipse.jdt.launching.{AbstractJavaLaunchConfigurationDelegate, JavaRuntime,
 	                                IRuntimeClasspathEntry, VMRunnerConfiguration, ExecutionArguments}
-
 import scala.tools.eclipse.ScalaPlugin
-
 import java.io.File
 import com.ibm.icu.text.MessageFormat
-
 import org.eclipse.core.runtime.{Path, CoreException, IProgressMonitor, NullProgressMonitor}
 import org.eclipse.debug.core.{ILaunch, ILaunchConfiguration}
 import org.eclipse.jdt.internal.launching.LaunchingMessages
-
 import scala.collection.JavaConversions._
 import scala.collection.mutable
+import scala.tools.eclipse.ScalaProject
+import org.eclipse.jface.dialogs.MessageDialog
+import scala.tools.eclipse.util.SWTUtils
+import org.eclipse.core.runtime.IPath
+import org.eclipse.jdt.core.IJavaProject
 
 class ScalaLaunchDelegate extends AbstractJavaLaunchConfigurationDelegate {
 	def launch(configuration: ILaunchConfiguration, mode: String, launch: ILaunch, monitor0: IProgressMonitor) {
@@ -32,7 +33,7 @@ class ScalaLaunchDelegate extends AbstractJavaLaunchConfigurationDelegate {
 			val runner = getVMRunner(configuration, mode)
 	
 			val workingDir = verifyWorkingDirectory(configuration)
-		  val workingDirName = if (workingDir != null) workingDir.getAbsolutePath() else null
+		    val workingDirName = if (workingDir != null) workingDir.getAbsolutePath() else null
 			
 			// Environment variables
 			val envp = getEnvironment(configuration)
@@ -72,10 +73,20 @@ class ScalaLaunchDelegate extends AbstractJavaLaunchConfigurationDelegate {
 			
 			// stop in main
 			prepareStopInMain(configuration)
-			
+
+			// verify that the main classfile exists
+			val project = getJavaProject(configuration)
+			ScalaPlugin.plugin.asScalaProject(project.getProject).foreach { scalaProject =>
+			  val mainClassVerifier = new MainClassVerifier(new UIErrorReporter)
+			  val mainClassFileOk = mainClassVerifier.execute(scalaProject, mainTypeName)
+			  if(!mainClassFileOk) return
+			}
+
 			// done the verification phase
 			monitor.worked(1)
 			
+		    // check for cancellation
+			if (monitor.isCanceled()) return
 			monitor.subTask(LaunchingMessages.JavaLocalApplicationLaunchConfigurationDelegate_Creating_source_locator____2) 
 			// set the default source locator if required
 			setDefaultSourceLocator(launch, configuration)
@@ -114,4 +125,10 @@ class ScalaLaunchDelegate extends AbstractJavaLaunchConfigurationDelegate {
 		val bootEntry = JavaRuntime.resolveRuntimeClasspath(Array(a), configuration)
 		bootEntry.toList.map(_.getLocation())
 	}
+
+  private class UIErrorReporter extends MainClassVerifier.ErrorReporter {
+    def report(msg: String): Unit = SWTUtils.asyncExec {
+      MessageDialog.openInformation(ScalaPlugin.getShell, "Failed to run Scala Application", msg)
+    }
+  }
 }
