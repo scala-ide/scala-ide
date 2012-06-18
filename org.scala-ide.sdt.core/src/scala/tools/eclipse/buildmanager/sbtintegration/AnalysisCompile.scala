@@ -62,7 +62,7 @@ class AnalysisCompile(conf: BasicConfiguration, bm: EclipseSbtBuildManager, cont
     }
     val apiOption = (api: Either[Boolean, Source]) => api.right.toOption
 
-    val entry = Locate.entry(conf.project.classpath.map(_.toFile), Locate.definesClass) // use default defineClass for now
+    val entry = Locate.entry(conf.project.scalaClasspath.fullClasspath, Locate.definesClass) // use default defineClass for now
 
     val ((previousAnalysis, previousSetup), tm) = util.Utils.timed(extract(store.get))
 
@@ -100,7 +100,7 @@ class AnalysisCompile(conf: BasicConfiguration, bm: EclipseSbtBuildManager, cont
       def compileJava() =
         if (!javaSrcs.isEmpty) {
           import sbt.Path._
-          val loader = ClasspathUtilities.toLoader(conf.project.classpath.map(_.toFile), scalac.scalaInstance.loader)
+          val loader = ClasspathUtilities.toLoader(conf.project.scalaClasspath.fullClasspath, scalac.scalaInstance.loader)
           def handleError(e: Throwable) {
             logger.debug("Error running the SBT builder on Java sources:\n " + e)
             logger.debug("Running a full Java build")

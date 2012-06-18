@@ -53,9 +53,6 @@ object ScalaProject {
 
 class ScalaProject private (val underlying: IProject) extends ClasspathManagement with HasLogger {
   import ScalaPlugin.plugin
-  
-  /** Implementing inherited abstract value from `ClasspathManagement` */
-  val scalaProject: ScalaProject = this
 
   private var classpathUpdate: Long = IResource.NULL_STAMP
   private var buildManager0: EclipseBuildManager = null
@@ -224,51 +221,6 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
   def outputFolders: Seq[IPath] =
     sourceOutputFolders map (_._2.getFullPath())
 
-  /** Return the fully resolved classpath of this project.
-   *
-   *  It includes the Scala library and the JDK entries.
-   */
-  def classpath: Seq[IPath] = {
-    val path = new mutable.LinkedHashSet[IPath]
-
-    def computeClasspath(project: IJavaProject, exportedOnly: Boolean): Unit = {
-      val cpes = project.getResolvedClasspath(true)
-
-      for (cpe <- cpes if !exportedOnly || cpe.isExported ||
-    		            cpe.getEntryKind == IClasspathEntry.CPE_SOURCE) cpe.getEntryKind match {
-        case IClasspathEntry.CPE_PROJECT =>
-          val depProject = plugin.workspaceRoot.getProject(cpe.getPath.lastSegment)
-          if (JavaProject.hasJavaNature(depProject)) {
-            computeClasspath(JavaCore.create(depProject), true)
-          }
-        case IClasspathEntry.CPE_LIBRARY =>
-          if (cpe.getPath != null) {
-            val absPath = plugin.workspaceRoot.findMember(cpe.getPath)
-            if (absPath != null)
-              path += absPath.getLocation
-            else {
-              path += cpe.getPath
-            }
-          } else
-            logger.error("Classpath computation encountered a null path for " + cpe, null)
-        case IClasspathEntry.CPE_SOURCE =>
-          val cpeOutput = cpe.getOutputLocation
-          val outputLocation = if (cpeOutput != null) cpeOutput else project.getOutputLocation
-              
-          if (outputLocation != null) {
-            val absPath = plugin.workspaceRoot.findMember(outputLocation)
-            if (absPath != null) 
-              path += absPath.getLocation
-          }  
-
-        case _ =>
-          logger.warn("Classpath computation encountered unknown entry: " + cpe)
-      }
-    }
-    computeClasspath(javaProject, false)
-    path.toList
-  }
-
   /** Return the source folders and their corresponding output locations
    *  without relying on NameEnvironment. Does not create folders if they
    *  don't exist already. 
@@ -381,7 +333,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
     sourceFiles
   }
   
-  def cleanOutputFolders(implicit monitor: IProgressMonitor) = {
+  private def cleanOutputFolders(implicit monitor: IProgressMonitor) = {
     def delete(container: IContainer, deleteDirs: Boolean)(f: String => Boolean): Unit =
       if (container.exists()) {
         container.members.foreach {
@@ -650,12 +602,12 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
     resetCompilers // reset them only after the output directory is emptied
   }
 
-  def resetBuildCompiler() {
+  private def resetBuildCompiler() {
     buildManager0 = null
     hasBeenBuilt = false
   }
 
-  def resetCompilers(implicit monitor: IProgressMonitor = null) = {
+  protected def resetCompilers(implicit monitor: IProgressMonitor = null) = {
     logger.info("resetting compilers!  project: " + this.toString)
     resetBuildCompiler()
     resetPresentationCompiler()
@@ -667,7 +619,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
   }
   
   /** Shut down presentation compiler without scheduling a reconcile for open files. */
-  def shutDownPresentationCompiler() {
+  private def shutDownPresentationCompiler() {
     presentationCompiler.invalidate()
   }
 
