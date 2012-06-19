@@ -184,7 +184,7 @@ class ClasspathTests {
    */
   @Test
   def binaryClassFolderLibrary() {
-    setRawClasspathAndCheckMarkers(cleanRawClasspath :+  JavaCore.newLibraryEntry(new Path("/classpath/lib/" + ScalaPlugin.plugin.shortScalaVer + ".x/binary-scala-library"), null, null), 0, 0)
+    setRawClasspathAndCheckMarkers(cleanRawClasspath :+  JavaCore.newLibraryEntry(new Path("/classpath/lib/" + ScalaPlugin.plugin.shortScalaVer + ".x/binary-scala-library"), null, null), 1, 0)
   }
 
   /**
