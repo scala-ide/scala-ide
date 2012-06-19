@@ -79,7 +79,7 @@ class MoveClassAction extends RefactoringAction {
     override def createChange(pm: IProgressMonitor): CompositeChange = {
 
       val (index, cleanupHandler) = {
-        val toMove = refactoring.statsToMove(selection, refactoringParameters) collect {
+        val toMove = refactoring.statsToMove(selection(), refactoringParameters) collect {
           case impl: refactoring.global.ImplDef => impl.name.toString
         }
         buildFullProjectIndex(pm, toMove)

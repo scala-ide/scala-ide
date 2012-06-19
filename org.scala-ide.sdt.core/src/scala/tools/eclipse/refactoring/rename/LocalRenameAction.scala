@@ -36,7 +36,7 @@ class LocalRenameAction extends RefactoringAction {
     
     def runInlineRename(r: RenameScalaIdeRefactoring) {
       import r.refactoring._
-      import r.selection.selectedSymbolTree      
+      val selectedSymbolTree = r.selection().selectedSymbolTree      
       
       val positions = for {
         // there's always a selected tree, otherwise
