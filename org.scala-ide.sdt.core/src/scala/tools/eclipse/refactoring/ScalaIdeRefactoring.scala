@@ -66,9 +66,11 @@ abstract class ScalaIdeRefactoring(val getName: String, val file: ScalaSourceFil
    * Holds the result of preparing this refactoring. We can keep this
    * in a lazy var because it will only be evaluated once.
    */
-  private [refactoring] lazy val preparationResult = {    
-    // evaluate the selection in this thread
-    val sel = selection
+  private [refactoring] 
+  def preparationResult(): Either[refactoring.PreparationError, refactoring.PreparationResult] = {    
+    // evaluate the selection in this thread, this
+    // will also type-check the current file
+    val sel = selection()
     
     withCompiler{ compiler => 
       compiler.askOption { () =>
@@ -92,8 +94,8 @@ abstract class ScalaIdeRefactoring(val getName: String, val file: ScalaSourceFil
     }
   }
       
-  def checkInitialConditions(pm: IProgressMonitor) = new RefactoringStatus {
-    preparationResult.fold(e => addFatalError(e.cause), identity)
+  def checkInitialConditions(pm: IProgressMonitor): RefactoringStatus = new RefactoringStatus {
+    preparationResult().fold(e => addFatalError(e.cause), identity)
   }
   
   def checkFinalConditions(pm: IProgressMonitor): RefactoringStatus = {
@@ -105,7 +107,7 @@ abstract class ScalaIdeRefactoring(val getName: String, val file: ScalaSourceFil
    * 
    * @throws Throws an exception if an error in the compiler occurred.
    */
-  private [refactoring] lazy val selection: refactoring.Selection = {
+  private [refactoring] def selection(): refactoring.Selection = {
     withSourceFile { sourceFile =>
       import refactoring.global
       
@@ -147,10 +149,11 @@ abstract class ScalaIdeRefactoring(val getName: String, val file: ScalaSourceFil
   private [refactoring] def performRefactoring(): List[Change] = {
     
     val params = refactoringParameters
+    val sel = selection()
     
     val result = withCompiler { compiler =>
       compiler.askOption {() =>
-        refactoring.perform(selection, preparationResult.right.get, params)
+        refactoring.perform(sel, preparationResult().right.get, params)
       }
     }
 
@@ -163,13 +166,15 @@ abstract class ScalaIdeRefactoring(val getName: String, val file: ScalaSourceFil
     }
   }
   
-  private [refactoring] def withCompiler[T](f: ScalaPresentationCompiler => T) = {
+  private [refactoring] def withCompiler[T](f: ScalaPresentationCompiler => T): T = {
     file.withSourceFile((_, c) => f(c))(fail())
   }
   
-  private [refactoring] def withSourceFile[T](f: SourceFile => T) = {
+  private [refactoring] def withSourceFile[T](f: SourceFile => T): T = {
     file.withSourceFile((s, _) => f(s))(fail())
   }
   
-  def fail(msg: String = "Could not get the source file.") = throw new CoreException(new Status(IStatus.ERROR, ScalaPlugin.plugin.pluginId, msg))
+  def fail(msg: String = "Could not get the source file."): Nothing = {
+    throw new CoreException(new Status(IStatus.ERROR, ScalaPlugin.plugin.pluginId, msg))
+  }
 }
