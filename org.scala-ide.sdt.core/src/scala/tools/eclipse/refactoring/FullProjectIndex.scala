@@ -62,9 +62,10 @@ trait FullProjectIndex extends HasLogger {
         
         val scope = SearchEngine.createJavaSearchScope(Array[IJavaElement](project.javaProject), IJavaSearchScope.SOURCES)
         
-        val combinedPattern = hints map { hint =>
-          SearchPattern.createPattern(
-              hint, IJavaSearchConstants.TYPE, IJavaSearchConstants.ALL_OCCURRENCES,  SearchPattern.R_EXACT_MATCH)
+        val combinedPattern = hints flatMap { hint =>
+          import IJavaSearchConstants._
+          val searchFor = SearchPattern.createPattern(hint, _: Int, ALL_OCCURRENCES,  SearchPattern.R_EXACT_MATCH) 
+          searchFor(TYPE) :: searchFor(METHOD) :: searchFor(FIELD) :: searchFor(PACKAGE) :: Nil
         } reduceLeft SearchPattern.createOrPattern
         
         val pathCollector = new PathCollector
