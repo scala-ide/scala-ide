@@ -14,19 +14,23 @@ import org.eclipse.core.runtime.Path
 import scala.io.Source
 import scala.io.Codec
 import org.eclipse.core.resources.IResource
+import org.eclipse.debug.core.ILaunchesListener2
+import org.eclipse.debug.core.ILaunch
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 
 object LibraryJarInBootstrapTest extends TestProjectSetup("launching-1000919", bundleName = "org.scala-ide.sdt.debug.tests")
 
 class LibraryJarInBootstrapTest {
-  
+
   import LibraryJarInBootstrapTest._
-  
+
   @Before
   def initializeTests() {
     project.underlying.build(IncrementalProjectBuilder.CLEAN_BUILD, new NullProgressMonitor)
     project.underlying.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, new NullProgressMonitor)
   }
-  
+
   /**
    * Ticket 1000919.
    * Before the fix, if order of the Scala library container and the JRE container was 'wrong', the Scala library was not added
@@ -34,30 +38,49 @@ class LibraryJarInBootstrapTest {
    */
   @Test
   def checkTestIsCorrectlyExecutedWhenLibraryJarAfterJRE() {
+
+    val launchConfigurationName = "t1000919.ScalaTest"
+
+    val latch = new CountDownLatch(1)
+
+    DebugPlugin.getDefault().getLaunchManager.addLaunchListener(onLaunchTerminates(launchConfigurationName, latch.countDown))
+
     // launch the saved launch configuration
-    val launchConfiguration = DebugPlugin.getDefault.getLaunchManager.getLaunchConfiguration(file("t1000919.ScalaTest.launch"))
-    val launch= launchConfiguration.launch(ILaunchManager.RUN_MODE, null)
-    
-    // wait for it to terminates
-    while (!launch.isTerminated) {
-      Thread.sleep(250)
-    }
-    
+    val launchConfiguration = DebugPlugin.getDefault.getLaunchManager.getLaunchConfiguration(file(launchConfigurationName + ".launch"))
+    val launch = launchConfiguration.launch(ILaunchManager.RUN_MODE, null)
+
+    // wait for the launch to terminate
+    latch.await(10, TimeUnit.SECONDS)
+    assertTrue("launch did not terminate in 10s", launch.isTerminated)
+
     // check the result
-    implicit val codec= Codec.UTF8
     // refresh the project to be able to see the new file
     project.underlying.refreshLocal(IResource.DEPTH_ONE, new NullProgressMonitor)
     val resultFile = file("t1000919.result")
     assertTrue("No result file, the launched test likely failed to run", resultFile.exists)
-    
+
     // check the content
-    val source= Source.fromInputStream(resultFile.getContents)
+    val source = Source.fromInputStream(resultFile.getContents)(Codec.UTF8)
     try {
       assertEquals("Wrong result file content", "t1000919 success", source.mkString)
-    } finally {    
+    } finally {
       source.close
     }
-  
+
+  }
+
+  /**
+   * Create a launch listener for launchTerminated events on a launch of the given launchConfiguration.
+   */
+  private def onLaunchTerminates(launchConfigurationName: String, f: () => Unit) = new ILaunchesListener2() {
+    override def launchesTerminated(launches: Array[ILaunch]): Unit = {
+      if (launches.exists(_.getLaunchConfiguration.getName == launchConfigurationName)) {
+        f()
+      }
+    }
+    override def launchesAdded(launches: Array[ILaunch]): Unit = {}
+    override def launchesRemoved(launches: Array[ILaunch]): Unit = {}
+    override def launchesChanged(launches: Array[ILaunch]): Unit = {}
   }
 
 }
