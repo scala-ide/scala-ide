@@ -21,7 +21,7 @@ abstract class ScalaClasspathContainerInitializer(desc : String) extends Classpa
       def getPath = containerPath
       def getClasspathEntries = entries
       def getDescription = desc+" [" + scala.util.Properties.scalaPropOrElse("version.number", "(unknown)")+"]"
-      def getKind = IClasspathContainer.K_DEFAULT_SYSTEM
+      def getKind = IClasspathContainer.K_SYSTEM
     }), null)
 }
 
