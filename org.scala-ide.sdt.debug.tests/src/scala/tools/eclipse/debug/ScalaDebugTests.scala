@@ -8,6 +8,7 @@ import scala.tools.eclipse.debug.model.ScalaDebugModelPresentationTest
 import scala.tools.eclipse.debug.model.ScalaStackFrameTest
 import scala.tools.eclipse.debug.model.ScalaValueTest
 import scala.tools.eclipse.debug.model.ScalaDebugTargetTest
+import scala.tools.eclipse.launching.LibraryJarInBootstrapTest
 
 /**
  * Junit test suite for the Scala debugger.
@@ -22,6 +23,7 @@ import scala.tools.eclipse.debug.model.ScalaDebugTargetTest
 //    classOf[ScalaDebugModelPresentationTest], // TODO: find where to put this test
     classOf[ScalaStackFrameTest],
     classOf[ScalaValueTest],
+//    classOf[LibraryJarInBootstrapTest], // the test is not running on command line right now
     classOf[ScalaDebugTargetTest]))
 class ScalaDebugTestSuite {
 }
