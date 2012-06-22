@@ -106,4 +106,22 @@ class PresentationCompilerTest {
     // now the unit should be managed
     Assert.assertEquals("Presentation compiler should maintain one unit after reload (%s)".format(managedUnits()), 1, managedUnits().size)
   }
+  
+  @Test
+  @Ignore("Enable this test once #1000976 is fixed")
+  def correctlyTypecheckClassesWithDefaultArguments_t1000976() {
+    def openUnitAndTypecheck(path: String): ScalaSourceFile = {
+      val unit = scalaCompilationUnit(path).asInstanceOf[ScalaSourceFile]
+      unit.reload()
+      waitUntilTypechecked(unit)
+      unit
+    }
+
+    // SUT: Opening A.scala w/ full typecheck and then B.scala determines the "ghost error" to show up 
+    openUnitAndTypecheck("t1000976/a/A.scala")
+    val unitB = openUnitAndTypecheck("t1000976/b/B.scala")
+
+    // verify
+    assertNoErrors(unitB)
+  }
 }
