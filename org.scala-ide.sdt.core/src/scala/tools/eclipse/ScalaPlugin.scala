@@ -37,6 +37,7 @@ import scala.tools.eclipse.util.EclipseResource
 import scala.tools.eclipse.logging.PluginLogConfigurator
 import scala.tools.eclipse.util.Trim
 import scala.tools.nsc.Settings
+import scala.tools.eclipse.ui.PartAdapter
 
 object ScalaPlugin {
   
@@ -68,7 +69,7 @@ object ScalaPlugin {
   }
 }
 
-class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IResourceChangeListener with IElementChangedListener with IPartListener with HasLogger {
+class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IResourceChangeListener with IElementChangedListener with PartAdapter with HasLogger {
   ScalaPlugin.plugin = this
 
   final val HEADLESS_TEST  = "sdtcore.headless"
@@ -385,18 +386,16 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
   def isBuildable(fileName: String): Boolean = 
     (fileName.endsWith(scalaFileExtn) || fileName.endsWith(javaFileExtn))
 
-  // IPartListener
-  def partActivated(part: IWorkbenchPart) {}
-  def partDeactivated(part: IWorkbenchPart) {}
-  def partBroughtToTop(part: IWorkbenchPart) {}
-  def partOpened(part: IWorkbenchPart) {
+  
+  override def partOpened(part: IWorkbenchPart) {
     logger.debug("open " + part.getTitle)
     doWithCompilerAndFile(part) { (compiler, ssf) =>
       compiler.askToDoFirst(ssf)
       compiler.askReload(ssf, ssf.getContents)
     }
   }
-  def partClosed(part: IWorkbenchPart) {
+
+  override def partClosed(part: IWorkbenchPart) {
     logger.debug("close " + part.getTitle)
     doWithCompilerAndFile(part) { (compiler, ssf) =>
       compiler.discardSourceFile(ssf)
