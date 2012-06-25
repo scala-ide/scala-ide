@@ -390,15 +390,14 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
   override def partOpened(part: IWorkbenchPart) {
     logger.debug("open " + part.getTitle)
     doWithCompilerAndFile(part) { (compiler, ssf) =>
-      compiler.askToDoFirst(ssf)
-      compiler.askReload(ssf, ssf.getContents)
+      ssf.forceReload()
     }
   }
 
   override def partClosed(part: IWorkbenchPart) {
     logger.debug("close " + part.getTitle)
     doWithCompilerAndFile(part) { (compiler, ssf) =>
-      compiler.discardSourceFile(ssf)
+      ssf.discard()
     }
   }
 
