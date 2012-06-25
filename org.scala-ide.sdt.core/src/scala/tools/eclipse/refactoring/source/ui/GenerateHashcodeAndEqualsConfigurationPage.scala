@@ -51,12 +51,13 @@ trait GenerateHashcodeAndEqualsConfigurationPageGenerator {
             case names => names.mkString(", ") + "."
           }
           val existingLabel = new Label(composite, SWT.WRAP)
-          existingLabel.setText("Found existing implementations for " + existingMethodNames)
+          val implStr = if(ms.size == 1) "implementation" else "implementations"
+          existingLabel.setText("Found existing " + implStr + " for " + existingMethodNames)
           val existingLabelGridData = new GridData(SWT.LEFT, SWT.CENTER, false, false, 2, 1)
           existingLabel.setLayoutData(existingLabelGridData)
           
           val keepOrReplaceLabel = new Label(composite, SWT.WRAP)
-          keepOrReplaceLabel.setText("Do you want to keep or replace the existing implementations?")
+          keepOrReplaceLabel.setText("Do you want to keep or replace the existing " + implStr + "?")
           val keepOrReplaceLabelGridData = new GridData(SWT.LEFT, SWT.CENTER, false, false, 2, 1)
           keepOrReplaceLabel.setLayoutData(keepOrReplaceLabelGridData)
           
