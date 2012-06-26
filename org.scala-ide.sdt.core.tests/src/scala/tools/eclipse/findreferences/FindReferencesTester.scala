@@ -9,24 +9,33 @@ trait FindReferencesTester {
   }
 
   abstract class Element {
-    def name: String
+    /** The fully qualified name for the element.*/
+    def fullName: String
   }
 
-  case class Method(name: String) extends Element
-  case class FieldVar(name: String) extends Element
-  case class FieldVal(name: String) extends Element
-  case class Clazz(name: String) extends Element
-  case class TypeAlias(name: String) extends Element
-  case class Module(name: String) extends Element
+  case class Method(fullName: String) extends Element
+  object Method {
+    def apply(fullName: String, args: List[String]): Method = Method(fullName + args.mkString("(", "'", ")"))
+  }
+  case class FieldVar(fullName: String) extends Element
+  case class FieldVal(fullName: String) extends Element
+  case class Clazz(fullName: String) extends Element
+  case class TypeAlias(fullName: String) extends Element
+  case class Module(fullName: String) extends Element
 
-  def method(name: String): Element = Method(name)
-  def fieldVar(name: String): Element = FieldVar(name)
-  def fieldVal(name: String): Element = FieldVal(name)
-  def clazz(name: String): Element = Clazz(name)
-  def clazzConstructor(name: String): Element = Method(name)
-  def module(name: String): Element = Module(name + SymbolNameUtil.MODULE_SUFFIX_STRING)
-  def moduleConstructor(name: String): Element = Method(name + SymbolNameUtil.MODULE_SUFFIX_STRING)
-  def typeAlias(name: String): Element = TypeAlias(name)
+  def method(fullName: String, args: List[String] = Nil): Element = Method(fullName, args)
+  def fieldVar(fullName: String): Element = FieldVar(fullName)
+  def fieldVal(fullName: String): Element = FieldVal(fullName)
+  def clazz(fullName: String): Element = Clazz(fullName)
+  def clazzConstructor(classFullName: String, args: List[String] = Nil): Element = Method(constructorFullName(classFullName), args)
+  def module(fullName: String): Element = Module(fullName + SymbolNameUtil.MODULE_SUFFIX_STRING)
+  def moduleConstructor(fullName: String, args: List[String] = Nil): Element = Method(constructorFullName(fullName + SymbolNameUtil.MODULE_SUFFIX_STRING), args)
+  def typeAlias(fullName: String): Element = TypeAlias(fullName)
+
+  private def constructorFullName(classFullName: String): String = {
+    val constructorMethodName = classFullName.split('.').last
+    classFullName + "." + constructorMethodName
+  }
 
   class TestDef(e: Element) {
     def isReferencedBy(that: Element): FindReferencesTestBuilder =
