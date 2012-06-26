@@ -14,6 +14,8 @@ import org.junit.Before
  *  folders for a project.
  */
 class OutputFoldersTest {
+  val NoContent: String = ""
+  
   val simulator = new EclipseUserSimulator
 
   implicit def stringsArePaths(str: String): Path = new Path(str)
@@ -83,7 +85,7 @@ class OutputFoldersTest {
     val project = makeDefaultLayoutProject("allSources1")
     
     val sources = List("src/main/scala/A.scala", "src/main/scala/B.scala", "src/test/scala/C.scala")
-    val srcPaths = (for (path <- sources) yield SDTTestUtils.addFileToProject(project.underlying, path, "")).toSet
+    val srcPaths = (for (path <- sources) yield SDTTestUtils.addFileToProject(project.underlying, path, NoContent)).toSet
     
     val allSources = project.allSourceFiles()
     Assert.assertEquals("All sources without filters", srcPaths, allSources)
@@ -97,9 +99,9 @@ class OutputFoldersTest {
         
     val included = List("src/main/scala/included/A.scala", "src/test/scala/included2/B.scala")
     val notIncluded = List("src/main/scala/Z.scala", "src/test/scala/non-included/Y.scala")
-    val srcPathsIn = (for (path <- included) yield SDTTestUtils.addFileToProject(project.underlying, path, "")).toSet
+    val srcPathsIn = (for (path <- included) yield SDTTestUtils.addFileToProject(project.underlying, path, NoContent)).toSet
     
-    for (path <- notIncluded) SDTTestUtils.addFileToProject(project.underlying, path, "")
+    for (path <- notIncluded) SDTTestUtils.addFileToProject(project.underlying, path, NoContent)
     
     val allSources = project.allSourceFiles()
     Assert.assertEquals("All sources with inclusion filters", srcPathsIn, allSources)
@@ -113,9 +115,9 @@ class OutputFoldersTest {
         
     val included = List("src/main/scala/included/A.scala", "src/test/scala/included2/B.scala", "src/main/scala/excluded/included-again/C.scala")
     val notIncluded = List("src/main/scala/excluded/Z.scala", "src/main/scala/excluded2/X.scala", "src/test/scala/excluded/Y.scala")
-    val srcPathsIn = (for (path <- included) yield SDTTestUtils.addFileToProject(project.underlying, path, "")).toSet
+    val srcPathsIn = (for (path <- included) yield SDTTestUtils.addFileToProject(project.underlying, path, NoContent)).toSet
     
-    for (path <- notIncluded) SDTTestUtils.addFileToProject(project.underlying, path, "")
+    for (path <- notIncluded) SDTTestUtils.addFileToProject(project.underlying, path, NoContent)
     
     val allSources = project.allSourceFiles()
     Assert.assertEquals("All sources with exclusion filters", srcPathsIn, allSources)
@@ -129,9 +131,9 @@ class OutputFoldersTest {
         
     val included = List("src/main/scala/included/A.scala", "src/test/scala/included/included-again/B.scala")
     val notIncluded = List("src/main/scala/included/excluded-again/Z.scala", "src/main/scala/excluded2/X.scala")
-    val srcPathsIn = (for (path <- included) yield SDTTestUtils.addFileToProject(project.underlying, path, "")).toSet
+    val srcPathsIn = (for (path <- included) yield SDTTestUtils.addFileToProject(project.underlying, path, NoContent)).toSet
     
-    for (path <- notIncluded) SDTTestUtils.addFileToProject(project.underlying, path, "")
+    for (path <- notIncluded) SDTTestUtils.addFileToProject(project.underlying, path, NoContent)
     
     val allSources = project.allSourceFiles()
     Assert.assertEquals("All sources with exclusion filters", srcPathsIn, allSources)
@@ -144,9 +146,9 @@ class OutputFoldersTest {
 
     val included = List("included/A.scala", "B.scala", "included-again/C.scala", "src/test/scala/D.scala")
     val notIncluded = List("bin/Z.scala", "included/excluded/X.scala")
-    val srcPathsIn = (for (path <- included) yield SDTTestUtils.addFileToProject(project.underlying, path, "")).toSet
+    val srcPathsIn = (for (path <- included) yield SDTTestUtils.addFileToProject(project.underlying, path, NoContent)).toSet
 
-    for (path <- notIncluded) SDTTestUtils.addFileToProject(project.underlying, path, "")
+    for (path <- notIncluded) SDTTestUtils.addFileToProject(project.underlying, path, NoContent)
 
     val allSources = project.allSourceFiles()
     Assert.assertEquals("All sources with overlapping root and source folders filters", srcPathsIn, allSources)

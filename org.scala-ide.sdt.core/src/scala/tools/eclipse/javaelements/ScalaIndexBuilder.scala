@@ -216,6 +216,7 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
           val name = rt.name.toChars
           indexer.addTypeReference(name)
           indexer.addFieldReference(name)
+          indexer.addMethodReference(name, 0) 
           super.traverse(tree)
           
         case _ => super.traverse(tree)
