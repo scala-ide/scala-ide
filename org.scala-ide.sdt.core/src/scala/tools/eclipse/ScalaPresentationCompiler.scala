@@ -285,6 +285,9 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
          sym.fullName,
          false)
   }
+
+  override def inform(msg: String): Unit =
+    logger.debug("[%s]: %s".format(project, msg))
 }
 
 object ScalaPresentationCompiler {
