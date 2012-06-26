@@ -21,7 +21,7 @@ import org.eclipse.jdt.internal.compiler.env.{ICompilationUnit, AccessRestrictio
 import org.eclipse.jdt.internal.core.{ JavaElement, SearchableEnvironment }
 import scala.tools.eclipse.logging.HasLogger
 
-class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: ISelectionRequestor, settings: ju.Map[_, _]) extends Engine(settings) with ISearchRequestor with HasLogger {
+class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: ScalaSelectionRequestor, settings: ju.Map[_, _]) extends Engine(settings) with ISearchRequestor with HasLogger {
 
   var actualSelectionStart: Int = _
   var actualSelectionEnd: Int = _
@@ -32,9 +32,7 @@ class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: IS
   val acceptedEnums = new ArrayBuffer[(Array[Char], Array[Char], Int)]
   val acceptedAnnotations = new ArrayBuffer[(Array[Char], Array[Char], Int)]
 
-  def select(cu: ICompilationUnit, selectionStart0: Int, selectionEnd0: Int) {
-    val scu = cu.asInstanceOf[ScalaCompilationUnit]
-
+  def select(scu: ScalaCompilationUnit, selectionStart0: Int, selectionEnd0: Int) {
     scu.doWithSourceFile { (src, compiler) =>
 
       import compiler.{ log => _, _ }
@@ -58,7 +56,7 @@ class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: IS
       Array.copy(source, selectionStart, selectedIdentifier, 0, length)
       logger.info("selectedIdentifier: " + selectedIdentifier.mkString("", "", ""))
 
-      val ssr = requestor.asInstanceOf[ScalaSelectionRequestor]
+      val ssr = requestor
 
       /** Delay the action. Necessary so that the payload is run outside of 'ask'. */
       class Cont(f: () => Unit) {

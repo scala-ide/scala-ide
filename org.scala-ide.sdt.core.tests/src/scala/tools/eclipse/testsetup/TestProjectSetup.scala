@@ -26,9 +26,7 @@ import org.eclipse.core.resources.IFile
  *  Example: `object HyperlinkDetectorTests extends TestProjectSetup("hyperlinks")'
  * 
  */
-class TestProjectSetup(projectName: String, srcRoot: String = "/%s/src/", bundleName: String = "org.scala-ide.sdt.core.tests") extends ProjectBuilder {
-  type ScalaUnit = ScalaCompilationUnit with ICompilationUnit
-  
+class TestProjectSetup(projectName: String, srcRoot: String = "/%s/src/", val bundleName: String = "org.scala-ide.sdt.core.tests") extends ProjectBuilder {
   /** The ScalaProject corresponding to projectName, after copying to the test workspace. */
   lazy val project: ScalaProject = SDTTestUtils.setupProject(projectName, bundleName)
   
@@ -61,13 +59,13 @@ class TestProjectSetup(projectName: String, srcRoot: String = "/%s/src/", bundle
     paths.map(compilationUnit)
   
   /** Return a sequence of Scala compilation units corresponding to the given paths. */
-  def scalaCompilationUnits(paths: String*): Seq[ScalaUnit] =
+  def scalaCompilationUnits(paths: String*): Seq[ScalaSourceFile] =
     paths.map(scalaCompilationUnit)
 
   /** Return the Scala compilation unit corresponding to the given path, relative to the src folder.
    *  for example: "scala/collection/Map.scala". 
    */
-  def scalaCompilationUnit(path: String): ScalaUnit =
+  def scalaCompilationUnit(path: String): ScalaSourceFile =
     compilationUnit(path).asInstanceOf[ScalaSourceFile]
 
   
@@ -80,20 +78,14 @@ class TestProjectSetup(projectName: String, srcRoot: String = "/%s/src/", bundle
     }()
   }
   
-  def findMarker(marker: String) = new {
-    import org.eclipse.jdt.internal.compiler.env.ICompilationUnit
-    def in(unit: ICompilationUnit): Seq[Int] = {
-    	val contents = unit.getContents()
-    	SDTTestUtils.positionsOf(contents, marker)
-    }
-  }
+  def findMarker(marker: String) = SDTTestUtils.findMarker(marker)
   
   /** Emulate the opening of a scala source file (i.e., it tries to 
    * reproduce the steps performed by JDT when opening a file in an editor). 
    * 
    * @param srcPath the path to the scala source file 
    * */
-  def open(srcPath: String): ScalaUnit = {
+  def open(srcPath: String): ScalaSourceFile = {
     val unit = scalaCompilationUnit(srcPath)
     openWorkingCopyFor(unit)
     reload(unit)
@@ -101,7 +93,7 @@ class TestProjectSetup(projectName: String, srcRoot: String = "/%s/src/", bundle
   }
   
   /** Open a working copy of the passed `unit` */
-  private def openWorkingCopyFor(unit: ScalaUnit) {
+  private def openWorkingCopyFor(unit: ScalaSourceFile) {
     val requestor = mock(classOf[IProblemRequestor])
     // the requestor must be active, or unit.getWorkingCopy won't trigger the Scala
     // structure builder

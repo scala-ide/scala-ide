@@ -15,7 +15,7 @@ import org.eclipse.jdt.core._
 import org.eclipse.jdt.internal.core.JavaModelManager
 import org.eclipse.core.runtime.Path
 
-trait ScalaJavaMapper extends ScalaAnnotationHelper with HasLogger { self : ScalaPresentationCompiler => 
+trait ScalaJavaMapper extends ScalaAnnotationHelper with SymbolNameUtil with HasLogger { self : ScalaPresentationCompiler => 
 
   /** Return the Java Element corresponding to the given Scala Symbol, looking in the
    *  given project list
@@ -45,8 +45,15 @@ trait ScalaJavaMapper extends ScalaAnnotationHelper with HasLogger { self : Scal
       results.find(_.isDefined).flatten.headOption
     } else getJavaElement(sym.owner) match {
         case Some(ownerClass: IType) => 
-          if (sym.isMethod) ownerClass.getMethods.find(matchesMethod)
-          else ownerClass.getFields.find(_.getElementName == sym.name.toString)
+          def isGetterOrSetter: Boolean = sym.isGetter || sym.isSetter
+          if (sym.isMethod && !isGetterOrSetter) ownerClass.getMethods.find(matchesMethod)
+          else {
+            val fieldName = 
+              if(self.nme.isLocalName(sym.name)) self.nme.localToGetter(sym.name)
+              else sym.name
+
+            ownerClass.getFields.find(_.getElementName == fieldName.toString)
+          }
         case _ => None
     }
   }
@@ -172,13 +179,16 @@ trait ScalaJavaMapper extends ScalaAnnotationHelper with HasLogger { self : Scal
     
     jdtMods
   }
+    
+  def mapType(s: Symbol): String = mapType(s, javaClassName(_))
 
-  
-  def mapType(s : Symbol) : String = {
+  def mapSimpleType(s: Symbol): String = mapType(s, javaSimpleName(_))
+
+  private def mapType(s : Symbol, namer: Symbol => String) : String = {
     (if(s == null || s == NoSymbol || s.isRefinementClass || s.owner.isRefinementClass)
         "scala.AnyRef"
-      else
-        s.fullName
+      else  
+        namer(s)
     ) match {
       case "scala.AnyRef" | "scala.Any" => "java.lang.Object"
       case "scala.Unit" => "void"
