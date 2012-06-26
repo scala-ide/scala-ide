@@ -18,6 +18,8 @@ import org.mockito.verification.VerificationMode
 
 @RunWith(classOf[JUnit4])
 class MainClassVerifierTest {
+  import MainClassVerifierTest.EmptyPackage
+
   protected val simulator = new EclipseUserSimulator
 
   private var project: ScalaProject = _
@@ -36,7 +38,6 @@ class MainClassVerifierTest {
 
   @Test
   def reportErrorWhenMainContainsCompilationErrors() {
-    val noPkg = ""
     val mainName = "MainWithCompilationErrors"
     val main = """
     object %s extends App {
@@ -44,7 +45,7 @@ class MainClassVerifierTest {
     }
     """.format(mainName)
 
-    createSource(noPkg, mainName, main)
+    createSource(EmptyPackage, mainName, main)
     val mainTypeName = mainName
 
     runTest(mainTypeName, main, times(1)) // if there are compilation errors then no binaries are produced!
@@ -56,8 +57,24 @@ class MainClassVerifierTest {
     val mainName = "Main"
     val main = "object %s extends App".format(mainName) // note: no package declaration here!
 
-    createSource(pkg, mainName, main) // source is created in foo/ (look at the value of `pkg`
-    val mainTypeName = mainName       // this is correct fully-qualified name
+    createSource(pkg, mainName, main) // source is created in foo/ (look at the value of `pkg`)
+    val mainTypeName = mainName // this is the correct fully-qualified name
+
+    runTest(mainTypeName, main, times(1))
+  }
+  
+  @Test
+  def reportErrorWhenPackageDeclarationInMainTypeDoesntMatchPhysicalLocation2() {
+    val sourceLocation = "foo"
+    val pkg = "bar"
+    val mainName = "Main"
+    val main = """
+      package %s
+      object %s extends App
+    """.format(pkg, mainName) // note: no package declaration here!
+
+    createSource(sourceLocation, mainName, main) // source is created in foo/
+    val mainTypeName = pkg + "." + mainName // this is the correct fully-qualified name
 
     runTest(mainTypeName, main, times(1))
   }
@@ -92,6 +109,24 @@ class MainClassVerifierTest {
     runTest(mainTypeName, main, never())
   }
 
+  @Test
+  def runScalaAppOnSourceWithSeveralPackageDeclaration_t1001096() {
+    val mainName = "Test1"
+    val main = """
+    package pp {
+      class X
+    }
+    object %s extends App {
+      println("ok")
+    }
+    """.format(mainName)
+
+    createSource(EmptyPackage, mainName, main)
+    val mainTypeName = mainName
+
+    runTest(mainTypeName, main, never())
+  }
+
   private def runTest(mainTypeName: String, mainContent: String, expectedCallsToErrorReportder: VerificationMode): Unit = {
     project.underlying.build(IncrementalProjectBuilder.FULL_BUILD, new NullProgressMonitor)
 
@@ -108,4 +143,8 @@ class MainClassVerifierTest {
     val fileName = typeName + ".scala"
     simulator.createCompilationUnit(pkg, fileName, content).asInstanceOf[ScalaCompilationUnit]
   }
+}
+
+object MainClassVerifierTest {
+  private final val EmptyPackage = ""
 }
