@@ -40,8 +40,9 @@ import scala.tools.nsc.Settings
 import scala.tools.eclipse.ui.PartAdapter
 
 object ScalaPlugin {
-  
-  var plugin: ScalaPlugin = _
+  private final val HeadlessTest  = "sdtcore.headless"
+
+  @volatile var plugin: ScalaPlugin = _
   
   def prefStore = plugin.getPreferenceStore
   
@@ -70,10 +71,6 @@ object ScalaPlugin {
 }
 
 class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IResourceChangeListener with IElementChangedListener with PartAdapter with HasLogger {
-  ScalaPlugin.plugin = this
-
-  final val HEADLESS_TEST  = "sdtcore.headless"
-  
   def pluginId = "org.scala-ide.sdt.core"
   def compilerPluginId = "org.scala-ide.scala.compiler"
   def libraryPluginId = "org.scala-ide.scala.library"
@@ -141,7 +138,7 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
   lazy val scalaVer = scala.util.Properties.scalaPropOrElse("version.number", "(unknown)")
   lazy val shortScalaVer = cutVersion(scalaVer)
 
-  val scalaCompilerBundle = Platform.getBundle(ScalaPlugin.plugin.compilerPluginId)
+  val scalaCompilerBundle = Platform.getBundle(compilerPluginId)
   val scalaCompilerBundleVersion = scalaCompilerBundle.getVersion()
   val compilerClasses = pathInBundle(scalaCompilerBundle, "/lib/scala-compiler.jar")
   val continuationsClasses = pathInBundle(scalaCompilerBundle, "/lib/continuations.jar")
@@ -151,9 +148,9 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
    * plugin should be always loaded, so that a user can enable continuations by only passing 
    * -P:continuations:enable flag. This matches `scalac` behavior. */
   def defaultPluginsDir: Option[String] = 
-    Trim(ScalaPlugin.plugin.continuationsClasses map { _.removeLastSegments(1).toOSString })
+    Trim(continuationsClasses map { _.removeLastSegments(1).toOSString })
   
-  lazy val sbtCompilerBundle = Platform.getBundle(ScalaPlugin.plugin.sbtPluginId)
+  lazy val sbtCompilerBundle = Platform.getBundle(sbtPluginId)
   lazy val sbtCompilerInterface = pathInBundle(sbtCompilerBundle, "/lib/scala-" + shortScalaVer + "/lib/compiler-interface.jar")
   // Disable for now, until we introduce a way to have multiple scala libraries, compilers available for the builder
   //lazy val sbtScalaLib = pathInBundle(sbtCompilerBundle, "/lib/scala-" + shortScalaVer + "/lib/scala-library.jar")
@@ -161,11 +158,11 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
   
   lazy val scalaLibBundle = {
     // all library bundles
-    val bundles = Option(Platform.getBundles(ScalaPlugin.plugin.libraryPluginId, null)).getOrElse(Array[Bundle]())
+    val bundles = Option(Platform.getBundles(libraryPluginId, null)).getOrElse(Array[Bundle]())
     logger.debug("[scalaLibBundle] Found %d bundles: %s".format(bundles.size, bundles.toList.mkString(", ")))
     bundles.find(b => b.getVersion().getMajor() == scalaCompilerBundleVersion.getMajor() && b.getVersion().getMinor() == scalaCompilerBundleVersion.getMinor()).getOrElse {
       eclipseLog.error("Could not find a match for %s in %s. Using default.".format(scalaCompilerBundleVersion, bundles.toList.mkString(", ")), null)
-      Platform.getBundle(ScalaPlugin.plugin.libraryPluginId)
+      Platform.getBundle(libraryPluginId)
     }
   }
   
@@ -183,11 +180,12 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
   lazy val reflectSources = pathInBundle(scalaCompilerBundle, "/lib/scala-reflect-src.jar")
 
   lazy val templateManager = new ScalaTemplateManager()
-  lazy val headlessMode = System.getProperty(HEADLESS_TEST) ne null
+  lazy val headlessMode = System.getProperty(ScalaPlugin.HeadlessTest) ne null
 
   private val projects = new mutable.HashMap[IProject, ScalaProject]
 
   override def start(context: BundleContext) = {
+    ScalaPlugin.plugin = this
     super.start(context)
 
     if (!headlessMode) {
@@ -203,6 +201,7 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
   override def stop(context: BundleContext) = {
     ResourcesPlugin.getWorkspace.removeResourceChangeListener(this)
     super.stop(context)
+    ScalaPlugin.plugin = null
   }
 
   def workspaceRoot = ResourcesPlugin.getWorkspace.getRoot
