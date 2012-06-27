@@ -11,7 +11,7 @@ RUNNING_DIR=${PWD}
 
 if [ -z "$*" ]
 then
-  ARGS=install
+  ARGS="clean install"
 else
   ARGS="$*"
 fi
