@@ -12,6 +12,7 @@ import org.eclipse.ui.IWorkbenchPart
 import scala.tools.eclipse.semantichighlighting.implicits.ImplicitHighlightingPresenter
 import java.util.concurrent.ConcurrentHashMap
 import scala.tools.eclipse.semantic.SemanticAction
+import scala.tools.eclipse.ui.PartAdapter
 
 /**
  * Manages the SemanticHighlightingPresenter instances for the open editors.
@@ -30,7 +31,7 @@ class SemanticHighlightingReconciliation {
   private val semanticDecorationManagers: java.util.Map[ScalaCompilationUnit, SemanticDecorationManagers] = new ConcurrentHashMap
 
   /** A listener that removes a  SemanticHighlightingPresenter when the part is closed. */
-  private class UnregisteringPartListener(scu: ScalaCompilationUnit) extends IPartListener {
+  private class UnregisteringPartListener(scu: ScalaCompilationUnit) extends PartAdapter {
     override def partClosed(part: IWorkbenchPart) {
       for {
         scalaEditor <- part.asInstanceOfOpt[ScalaSourceFileEditor]
@@ -41,11 +42,6 @@ class SemanticHighlightingReconciliation {
         semanticDecorationManagers.remove(scu)
       }
     }
-
-    override def partActivated(part: IWorkbenchPart) {}
-    override def partBroughtToTop(part: IWorkbenchPart) {}
-    override def partDeactivated(part: IWorkbenchPart) {}
-    override def partOpened(part: IWorkbenchPart) {}
   }
 
   /**

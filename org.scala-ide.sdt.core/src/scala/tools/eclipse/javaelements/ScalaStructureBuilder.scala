@@ -734,6 +734,9 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
               defElemInfo.setNameSourceEnd0(smei.getNameSourceEnd0)
               if (sym.isPrimaryConstructor) {
                 defElemInfo.setSourceRangeStart0(smei.getNameSourceEnd0)
+                // Expressions occurring inside a class declaration are part of the primary 
+                // constructor, hence the constructor's elemInfo need to span over the whole 
+                // class' definition (that is why ``smei.getDeclarationSourceEnd0`` is used here).
                 defElemInfo.setSourceRangeEnd0(smei.getDeclarationSourceEnd0)
               } else {
                 defElemInfo.setSourceRangeStart0(smei.getDeclarationSourceStart0)

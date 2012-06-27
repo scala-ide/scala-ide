@@ -66,26 +66,4 @@ class EclipseUserSimulator {
 
     workspace.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, new NullProgressMonitor())
   }
-
-  def searchType(typeName: String) = {
-    import org.eclipse.jdt.core.search._
-    val searchPattern = SearchPattern.createPattern(typeName,
-      IJavaSearchConstants.CLASS,
-      IJavaSearchConstants.REFERENCES,
-      SearchPattern.R_EXACT_MATCH | SearchPattern.R_CASE_SENSITIVE);
-    val engine = new SearchEngine;
-    val requestor = new ClassSearchRequestor
-    engine.search(searchPattern, Array(SearchEngine.getDefaultSearchParticipant()), SearchEngine.createWorkspaceScope, requestor, null)
-
-    requestor.matches
-  }
-
-  class ClassSearchRequestor extends SearchRequestor {
-
-    var matches = List.empty[SearchMatch]
-
-    def acceptSearchMatch(sm: SearchMatch) {
-      matches = sm :: matches;
-    }
-  }
 }

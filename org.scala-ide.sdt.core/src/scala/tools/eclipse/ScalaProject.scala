@@ -203,16 +203,15 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
     } yield ScalaPlugin.plugin.workspaceRoot.getProject(entry.getPath().toString)
   }
     
-  lazy val javaProject = {
+  lazy val javaProject: IJavaProject = {
     JavaCore.create(underlying)
   }
 
   def sourceFolders: Seq[IPath] = {
-    val all = for (cpe <- javaProject.getResolvedClasspath(true) if cpe.getEntryKind == IClasspathEntry.CPE_SOURCE) yield {
-      val resource = plugin.workspaceRoot.findMember(cpe.getPath)
-      if (resource == null) null else resource.getLocation
-    }
-    all.filter { _ ne null }
+    for {
+      cpe <- javaProject.getResolvedClasspath(true) if cpe.getEntryKind == IClasspathEntry.CPE_SOURCE
+      resource <- Option(plugin.workspaceRoot.findMember(cpe.getPath))
+    } yield resource.getLocation
   }
 
   /** Return the output folders of this project. Paths are relative to the workspace root, 
