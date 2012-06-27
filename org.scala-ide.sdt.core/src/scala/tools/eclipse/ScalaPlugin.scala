@@ -40,7 +40,8 @@ import scala.tools.nsc.Settings
 import scala.tools.eclipse.ui.PartAdapter
 
 object ScalaPlugin {
-  
+  private final val HeadlessTest  = "sdtcore.headless"
+
   @volatile var plugin: ScalaPlugin = _
   
   def prefStore = plugin.getPreferenceStore
@@ -70,8 +71,6 @@ object ScalaPlugin {
 }
 
 class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IResourceChangeListener with IElementChangedListener with PartAdapter with HasLogger {
-  final val HEADLESS_TEST  = "sdtcore.headless"
-  
   def pluginId = "org.scala-ide.sdt.core"
   def compilerPluginId = "org.scala-ide.scala.compiler"
   def libraryPluginId = "org.scala-ide.scala.library"
@@ -181,7 +180,7 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
   lazy val reflectSources = pathInBundle(scalaCompilerBundle, "/lib/scala-reflect-src.jar")
 
   lazy val templateManager = new ScalaTemplateManager()
-  lazy val headlessMode = System.getProperty(HEADLESS_TEST) ne null
+  lazy val headlessMode = System.getProperty(ScalaPlugin.HeadlessTest) ne null
 
   private val projects = new mutable.HashMap[IProject, ScalaProject]
 
