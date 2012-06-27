@@ -108,4 +108,18 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
     }
     return super.getContents()
   }
+
+  /** Makes sure {{{this}}} source is not in the ignore buffer of the compiler and ask the compiler to reload it. */
+  final def forceReload(): Unit = project.doWithPresentationCompiler { compiler =>
+    compiler.askToDoFirst(this)
+    reload()
+  }
+  
+  /** Ask the compiler to reload {{{this}}} source. */
+  final def reload(): Unit = project.doWithPresentationCompiler { _.askReload(this, getContents) }
+
+  /** Ask the compiler to discard {{{this}}} source. */
+  final def discard(): Unit = project.doWithPresentationCompiler { compiler =>
+    compiler.discardSourceFile(this)
+  }
 }
