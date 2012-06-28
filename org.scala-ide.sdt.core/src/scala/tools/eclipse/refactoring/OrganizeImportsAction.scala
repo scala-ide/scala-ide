@@ -9,9 +9,9 @@ import java.text.Collator
 import java.util.Comparator
 
 import org.eclipse.core.runtime.IProgressMonitor
+import org.eclipse.jdt.core.IJavaElement
 import org.eclipse.jdt.core.compiler.IProblem
 import org.eclipse.jdt.core.search.{TypeNameMatch, SearchEngine, IJavaSearchConstants}
-import org.eclipse.jdt.core.IJavaElement
 import org.eclipse.jdt.internal.corext.util.{TypeNameMatchCollector, QualifiedTypeNameHistory}
 import org.eclipse.jdt.internal.ui.actions.ActionMessages
 import org.eclipse.jdt.internal.ui.dialogs.MultiElementListSelectionDialog
@@ -20,8 +20,7 @@ import org.eclipse.jface.action.IAction
 import org.eclipse.jface.window.Window
 
 import scala.tools.eclipse.javaelements.{ScalaSourceFile, ScalaElement, LazyToplevelClass}
-import scala.tools.eclipse.properties.OrganizeImportsPreferences._
-import scala.tools.nsc.io.AbstractFile
+import scala.tools.eclipse.properties.OrganizeImportsPreferences.{getWildcardImportsForProject, getOrganizeImportStrategy, getGroupsForProject, PreserveExistingGroups, ExpandImports, CollapseImports}
 import scala.tools.refactoring.implementations.{OrganizeImports, AddImportStatement}
 
 /**
@@ -216,7 +215,7 @@ class OrganizeImportsAction extends RefactoringAction with ActionWithNoWizard {
     
     lazy val compilationUnitHasProblems = file.getProblems != null && file.getProblems.exists(_.isError)
                   
-    val refactoring = withCompiler( c => new OrganizeImports { val global = c })
+    val refactoring = withCompiler( c => new OrganizeImports with FormattingOverrides { val global = c })
 
     override def checkInitialConditions(pm: IProgressMonitor) = {
       val status = super.checkInitialConditions(pm)

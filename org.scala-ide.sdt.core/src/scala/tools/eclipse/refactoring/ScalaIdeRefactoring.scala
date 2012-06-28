@@ -42,7 +42,8 @@ import scala.tools.refactoring.MultiStageRefactoring
  * @param getName The displayable name of this refactoring.
  * @param file The file this refactoring started from.
  */
-abstract class ScalaIdeRefactoring(val getName: String, val file: ScalaSourceFile, selectionStart: Int, selectionEnd: Int) extends LTKRefactoring {
+abstract class ScalaIdeRefactoring(val getName: String, val file: ScalaSourceFile, selectionStart: Int, selectionEnd: Int) 
+  extends LTKRefactoring with UserPreferencesFormatting {
       
   /**
    * Every refactoring subclass needs to provide a specific refactoring instance.
