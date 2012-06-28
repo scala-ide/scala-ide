@@ -34,6 +34,10 @@ object SWTUtils {
     new SelectionAdapter() {
       override def widgetSelected(e: SelectionEvent) { p() }
     }
+  
+  implicit def noArgFnToMouseUpListener(f: () => Any): MouseAdapter = new MouseAdapter {
+    override def mouseUp(me: MouseEvent) = f()
+  }
 
   implicit def fnToPropertyChangeListener(p: PropertyChangeEvent => Any): IPropertyChangeListener =
     new IPropertyChangeListener() {

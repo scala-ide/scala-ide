@@ -1,24 +1,27 @@
 package scala.tools.eclipse
 package refactoring.source.ui
 
+import refactoring.source.ClassParameterDrivenIdeRefactoring
+import scala.tools.eclipse.util.SWTUtils.noArgFnToSelectionAdapter
+import scala.tools.eclipse.util.SWTUtils.noArgFnToMouseUpListener
+
 import org.eclipse.ltk.ui.refactoring.UserInputWizardPage
+import org.eclipse.swt.SWT
 import org.eclipse.swt.events.MouseAdapter
 import org.eclipse.swt.events.MouseEvent
+import org.eclipse.swt.events.SelectionAdapter
+import org.eclipse.swt.events.SelectionEvent
+import org.eclipse.swt.layout.FillLayout
 import org.eclipse.swt.layout.GridData
 import org.eclipse.swt.layout.GridLayout
 import org.eclipse.swt.widgets.Button
 import org.eclipse.swt.widgets.Composite
 import org.eclipse.swt.widgets.Event
+import org.eclipse.swt.widgets.Group
 import org.eclipse.swt.widgets.Label
 import org.eclipse.swt.widgets.Listener
 import org.eclipse.swt.widgets.Table
 import org.eclipse.swt.widgets.TableItem
-import org.eclipse.swt.SWT
-import refactoring.source.ClassParameterDrivenIdeRefactoring
-import org.eclipse.swt.events.SelectionAdapter
-import org.eclipse.swt.events.SelectionEvent
-import org.eclipse.swt.widgets.Group
-import org.eclipse.swt.layout.FillLayout
 
 trait GenerateHashcodeAndEqualsConfigurationPageGenerator {
 
@@ -74,22 +77,19 @@ trait GenerateHashcodeAndEqualsConfigurationPageGenerator {
           
           keepBtn setSelection true
           keepExistingEqualityMethodsObs(true)
-          keepBtn.addSelectionListener(new SelectionAdapter {
-            override def widgetSelected(evt: SelectionEvent) {
-              keepBtn setSelection true
-              replaceBtn setSelection false
-              keepExistingEqualityMethodsObs(true)
-            }
-          })
+                      
+          keepBtn addSelectionListener { () => 
+            keepBtn setSelection true
+            replaceBtn setSelection false
+            keepExistingEqualityMethodsObs(true)
+          }
           
           replaceBtn setSelection false
-          replaceBtn.addSelectionListener(new SelectionAdapter {
-            override def widgetSelected(evt: SelectionEvent) {
+          replaceBtn addSelectionListener { () =>
               replaceBtn setSelection true
               keepBtn setSelection false
               keepExistingEqualityMethodsObs(false)
-            }
-          })
+          }
           
         }
       }
@@ -104,9 +104,9 @@ trait GenerateHashcodeAndEqualsConfigurationPageGenerator {
       val paramTableGridData = new GridData(SWT.FILL, SWT.FILL, true, true, 1, 2)
       paramTable.setLayoutData(paramTableGridData)
       
-      val tableItems = prepResult.classParams.map { param =>
+      val tableItems = prepResult.classParams.map { case (param, _) =>
         val tableItem = new TableItem(paramTable, SWT.NONE)
-        tableItem.setText(param._1.nameString)
+        tableItem.setText(param.nameString)
         tableItem
       }
       
@@ -115,41 +115,29 @@ trait GenerateHashcodeAndEqualsConfigurationPageGenerator {
         selectedParamsObs(checkedParams)
       }
       
-      paramTable.addListener(SWT.Selection, new Listener {
-        def handleEvent(event: Event) {
-          updateSelectedParams()
-        }
-      })
+      paramTable addSelectionListener { () => updateSelectedParams() }
       
       val selectAllButton = new Button(composite, SWT.NONE)
       selectAllButton.setText("Select all")
       val selectAllButtonGridData = new GridData(SWT.CENTER, SWT.CENTER, false, false, 1, 1)
       selectAllButton.setLayoutData(selectAllButtonGridData)
-      selectAllButton.addMouseListener(new MouseAdapter {
-        override def mouseUp(me: MouseEvent) = {
-          tableItems.foreach(_.setChecked(true))
-          updateSelectedParams()
-        }
-      })
+      selectAllButton addMouseListener { () =>
+        tableItems.foreach(_.setChecked(true))
+        updateSelectedParams()
+      }
       
       val deselectAllButton = new Button(composite, SWT.NONE)
       deselectAllButton.setText("Deselect all")
       val deselectAllButtonGridData = new GridData(SWT.CENTER, SWT.CENTER, false, false, 1, 1)
       deselectAllButton setLayoutData deselectAllButtonGridData
-      deselectAllButton.addMouseListener(new MouseAdapter {
-        override def mouseUp(me: MouseEvent) = {
-          tableItems.foreach(_.setChecked(false))
-          updateSelectedParams()
-        }
-      })
+      deselectAllButton addMouseListener { () =>
+        tableItems.foreach(_.setChecked(false))
+        updateSelectedParams()
+      }
       
       val superCallButton = new Button(composite, SWT.CHECK)
       superCallButton.setText("Insert calls to super")
-      superCallButton.addMouseListener(new MouseAdapter() {
-        override def mouseUp(event: MouseEvent) {
-          callSuperObs(superCallButton.getSelection)
-        }
-      })
+      superCallButton addMouseListener { () => callSuperObs(superCallButton.getSelection) }
       
       val superCallButtonGridData = new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 1, 1)
       superCallButton.setLayoutData(superCallButtonGridData)
