@@ -296,11 +296,19 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
 
       // these two contributions won't work on Scala files, so we remove them
       val blacklist = List("codeGroup", "importGroup", "generateGroup", "externalizeGroup")
+      blacklist.flatMap(groups.get).flatten.foreach(mm.remove)
 
       // and provide our own organize imports instead
       mm.appendToGroup("importGroup", new refactoring.OrganizeImportsAction { setText("Organize Imports") })
+      
+      // add GenerateHashcodeAndEquals and IntroductProductN source generators
+      mm.appendToGroup("generateGroup", new refactoring.source.GenerateHashcodeAndEqualsAction { 
+        setText("Generate hashCode() and equals()...") 
+      })
+      mm.appendToGroup("generateGroup", new refactoring.source.IntroduceProductNTraitAction {
+        setText("Introduce ProductN trait...")
+      })
 
-      blacklist.flatMap(groups.get).flatten.foreach(mm.remove)
     }
 
     refactoring.RefactoringMenu.fillContextMenu(menu, this)
