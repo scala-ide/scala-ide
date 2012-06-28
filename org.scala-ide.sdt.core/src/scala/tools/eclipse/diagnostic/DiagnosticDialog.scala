@@ -20,7 +20,9 @@ import org.eclipse.ui.browser.IWorkbenchBrowserSupport
 import scala.tools.eclipse.logging.LogManager
 import scala.tools.eclipse.logging.HasLogger
 
-class DiagnosticDialog(shell: Shell) extends Dialog(shell) {
+class DiagnosticDialog(configurer: WeavingStateConfigurer, shell: Shell) extends Dialog(shell) {
+
+  def this(shell: Shell) = this(new WeavingStateConfigurer, shell)
 
   /* Dialog logic:
      * if current settings do not match default settings: 
@@ -30,8 +32,6 @@ class DiagnosticDialog(shell: Shell) extends Dialog(shell) {
            1) save all values
            2) "use other settings" is enabled.
   */
-  
-  protected val configurer = new WeavingStateConfigurer
   
   val heapSize = Runtime.getRuntime.maxMemory / (1024 * 1024)
   val recommendedHeap = 1024
