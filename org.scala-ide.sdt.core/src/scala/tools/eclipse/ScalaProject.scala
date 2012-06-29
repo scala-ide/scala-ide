@@ -142,21 +142,6 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
   /** Does this project have the Scala nature? */
   def hasScalaNature = 
     ScalaPlugin.plugin.isScalaProject(underlying)
-
-  /** Generic build error, without a source position. It creates a marker in the
-   *  Problem views.
-   */
-  def buildError(severity: Int, msg: String, monitor: IProgressMonitor) =
-    workspaceRunnableIn(underlying.getWorkspace, monitor) { m =>
-      val mrk = underlying.createMarker(plugin.problemMarkerId)
-      mrk.setAttribute(IMarker.SEVERITY, severity)
-      val string = msg.map {
-        case '\n' => ' '
-        case '\r' => ' '
-        case c    => c
-      }.mkString("", "", "")
-      mrk.setAttribute(IMarker.MESSAGE, string)
-    }
   
   def settingsError(severity: Int, msg: String, monitor: IProgressMonitor) =
     workspaceRunnableIn(underlying.getWorkspace, monitor) { m =>
