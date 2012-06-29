@@ -58,7 +58,7 @@ class NewApplicationWizard extends BasicNewResourceWizard with HasLogger {
       selection = getCurrentEditorAsSelection getOrElse selection
     val packageFragments = getPackageFragments(selection)
 
-    page = new NewApplicationPage(packageFragments)
+    page = NewApplicationPage(packageFragments)
     addPage(page)
   }
 
@@ -91,8 +91,11 @@ class NewApplicationWizard extends BasicNewResourceWizard with HasLogger {
     true
   }
 
-  override def performFinish: Boolean =
-    tryExecute(createApplication(page.getApplicationName, page.getSelectedPackage)).getOrElse(false)
+  override def performFinish: Boolean = page.getSelectedPackage match {
+    case None => true
+    case Some(pkg) =>
+      tryExecute(createApplication(page.getApplicationName, pkg)).getOrElse(false)
+  }    
 
   private def openInEditor(file: IFile) = {
     selectAndReveal(file)
@@ -134,6 +137,7 @@ class NewApplicationWizard extends BasicNewResourceWizard with HasLogger {
       case _ =>
         (for {
           resource <- computeSelectedResources(selection)
+          if resource.getProject.isOpen
           packageFragment <- getPackageFragments(resource.getProject)
         } yield packageFragment).distinct
     }
