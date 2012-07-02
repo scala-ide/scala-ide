@@ -42,7 +42,8 @@ import scala.tools.refactoring.MultiStageRefactoring
  * @param getName The displayable name of this refactoring.
  * @param file The file this refactoring started from.
  */
-abstract class ScalaIdeRefactoring(val getName: String, val file: ScalaSourceFile, selectionStart: Int, selectionEnd: Int) extends LTKRefactoring {
+abstract class ScalaIdeRefactoring(val getName: String, val file: ScalaSourceFile, selectionStart: Int, selectionEnd: Int) 
+  extends LTKRefactoring with UserPreferencesFormatting {
       
   /**
    * Every refactoring subclass needs to provide a specific refactoring instance.
@@ -66,8 +67,9 @@ abstract class ScalaIdeRefactoring(val getName: String, val file: ScalaSourceFil
    * Holds the result of preparing this refactoring. We can keep this
    * in a lazy var because it will only be evaluated once.
    */
-  private [refactoring] 
-  def preparationResult(): Either[refactoring.PreparationError, refactoring.PreparationResult] = {    
+  private [refactoring] def preparationResult(): 
+    Either[refactoring.PreparationError, refactoring.PreparationResult] = {    
+
     // evaluate the selection in this thread, this
     // will also type-check the current file
     val sel = selection()
