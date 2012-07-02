@@ -15,7 +15,6 @@
     <encoding>UTF-8</encoding>
     <!-- p2 repositories location -->
     <repo.eclipse.indigo>http://download.eclipse.org/releases/indigo/</repo.eclipse.indigo>
-    <!--repo.eclipse.juno>http://download.eclipse.org/eclipse/updates/4.2milestones</repo.eclipse.juno -->
     <repo.eclipse.juno>http://download.eclipse.org/releases/juno</repo.eclipse.juno>
     <repo.ajdt.indigo>http://download.eclipse.org/tools/ajdt/37/dev/update</repo.ajdt.indigo>
     <repo.ajdt.juno>http://download.eclipse.org/tools/ajdt/42/dev/update</repo.ajdt.juno>
