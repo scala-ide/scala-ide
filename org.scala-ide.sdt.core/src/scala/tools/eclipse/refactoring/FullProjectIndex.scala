@@ -1,27 +1,19 @@
 package scala.tools.eclipse
 package refactoring
 
-import org.eclipse.core.resources.IFile
+import java.util.regex.Pattern
+import org.eclipse.core.resources.IResource
 import org.eclipse.core.runtime.IProgressMonitor
+import org.eclipse.search.core.text.{TextSearchRequestor, TextSearchMatchAccess, TextSearchEngine}
+import org.eclipse.search.ui.text.FileTextSearchScope
+import scala.tools.eclipse.ScalaProject
 import scala.tools.eclipse.javaelements.ScalaSourceFile
 import scala.tools.eclipse.logging.HasLogger
 import scala.tools.nsc.util.SourceFile
+import scala.tools.refactoring.MultiStageRefactoring
 import scala.tools.refactoring.analysis.GlobalIndexes
 import scala.tools.refactoring.common.InteractiveScalaCompiler
-import scala.tools.refactoring.MultiStageRefactoring
-import org.eclipse.jdt.internal.core.search.PathCollector
-import org.eclipse.jdt.internal.core.search.indexing.IndexManager
-import org.eclipse.jdt.internal.core.JavaModelManager
-import org.eclipse.jdt.core.search.SearchEngine
-import org.eclipse.jdt.core.IJavaElement
-import org.eclipse.jdt.core.search.SearchPattern
-import org.eclipse.jdt.core.search.IJavaSearchConstants
-import org.eclipse.jdt.internal.core.search.PatternSearchJob
-import org.eclipse.jdt.core.search.SearchParticipant
-import org.eclipse.core.runtime.SubProgressMonitor
-import org.eclipse.jdt.internal.core.search.BasicSearchEngine
-import org.eclipse.jdt.core.search.IJavaSearchScope
-import org.eclipse.core.runtime.IPath
+import org.eclipse.search.internal.core.text.PatternConstructor
 
 /**
  * A trait that can be mixed into refactorings that need an index of the whole 
@@ -59,24 +51,22 @@ trait FullProjectIndex extends HasLogger {
       if(hints.isEmpty) {
         project.allSourceFiles map (_.getFullPath.toString) toSeq
       } else {
-        
-        val scope = SearchEngine.createJavaSearchScope(Array[IJavaElement](project.javaProject), IJavaSearchScope.SOURCES)
-        
-        val combinedPattern = hints flatMap { hint =>
-          import IJavaSearchConstants._
-          val searchFor = SearchPattern.createPattern(hint, _: Int, ALL_OCCURRENCES,  SearchPattern.R_EXACT_MATCH) 
-          searchFor(TYPE) :: searchFor(METHOD) :: searchFor(FIELD) :: searchFor(PACKAGE) :: Nil
-        } reduceLeft SearchPattern.createOrPattern
-        
-        val pathCollector = new PathCollector
-        val indexManager = JavaModelManager.getIndexManager
-        indexManager.performConcurrentJob(
-          new PatternSearchJob(combinedPattern, BasicSearchEngine.getDefaultSearchParticipant, scope, pathCollector),
-          IJavaSearchConstants.FORCE_IMMEDIATE_SEARCH,
-          new SubProgressMonitor(pm, hints.size)
-        )
+        val searchInProject = Array[IResource](project.javaProject.getResource)
+        val scope = FileTextSearchScope.newSearchScope(searchInProject, Array("*.scala"), false /*ignore derived resources*/)
 
-        pathCollector.getPaths
+        var result = List[String]()
+        
+        val requestor = new TextSearchRequestor {
+          override def acceptPatternMatch(matchAccess: TextSearchMatchAccess) = {
+            result ::= matchAccess.getFile.getFullPath.toString
+            false // don't report any more matches
+          }
+        }
+                
+        val patternForHints = Pattern.compile(hints.mkString("|"))
+        val status = TextSearchEngine.create.search(scope, requestor, patternForHints, pm)
+        
+        result
       }
     }
     
