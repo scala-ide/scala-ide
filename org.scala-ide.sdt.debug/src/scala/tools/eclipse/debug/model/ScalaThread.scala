@@ -13,6 +13,7 @@ import com.sun.jdi.Method
 import scala.tools.eclipse.debug.command.ScalaStepInto
 import scala.tools.eclipse.debug.command.ScalaStepReturn
 import scala.actors.Actor
+import scala.tools.eclipse.debug.ActorExit
 
 /**
  * TODO: kill current step when thread terminates?
@@ -73,32 +74,24 @@ class ScalaThread(target: ScalaDebugTarget, val thread: ThreadReference) extends
 
   // event handling actor
 
-  case class SuspendedFromJava(eventDetail: Int)
   case class SuspendedFromScala(eventDetail: Int)
   case class ResumedFromScala(eventDetail: Int)
   case class InvokeMethod(objectReference: ObjectReference, method: Method, args: List[Value])
   case class TerminatedFromScala
 
-  class EventActor extends Actor {
-
+  val eventActor= new Actor {
     start
-
     def act() {
       loop {
         react {
-          case SuspendedFromJava(eventDetail) =>
+          case SuspendedFromScala(eventDetail) =>
             import scala.collection.JavaConverters._
             currentStep.foreach(_.stop)
             suspended = true
             stackFrames = thread.frames.asScala.map(new ScalaStackFrame(ScalaThread.this, _)).toList
+            reply(None)
+            fireChangeEvent(DebugEvent.CONTENT)
             fireSuspendEvent(eventDetail)
-            reply(this)
-          case SuspendedFromScala(eventDetail) =>
-            import scala.collection.JavaConverters._
-            suspended = true
-            stackFrames = thread.frames.asScala.map(new ScalaStackFrame(ScalaThread.this, _)).toList
-            fireSuspendEvent(eventDetail)
-            reply(this)
           case ResumedFromScala(eventDetail) =>
             suspended = false
             stackFrames = Nil
@@ -130,8 +123,6 @@ class ScalaThread(target: ScalaDebugTarget, val thread: ThreadReference) extends
 
   var stackFrames: List[ScalaStackFrame] = Nil
 
-  val actor = new EventActor
-
   // initialize name
   private var name: String = null
 
@@ -148,29 +139,33 @@ class ScalaThread(target: ScalaDebugTarget, val thread: ThreadReference) extends
   // step management
   var currentStep: Option[ScalaStep] = None
 
-  def suspendedFromJava(eventDetail: Int) {
-    actor !? SuspendedFromJava(eventDetail)
-  }
-
   def suspendedFromScala(eventDetail: Int) {
-    actor !? SuspendedFromScala(eventDetail)
+    eventActor !? SuspendedFromScala(eventDetail)
   }
 
   def resumedFromScala(eventDetail: Int) {
-    actor ! ResumedFromScala(eventDetail)
+    eventActor ! ResumedFromScala(eventDetail)
   }
   
   def terminatedFromScala() {
-    actor ! TerminatedFromScala
+    eventActor ! TerminatedFromScala
   }
 
   def invokeMethod(objectReference: ObjectReference, method: Method, args: Value*): Value = {
-    val future = actor !! InvokeMethod(objectReference, method, args.toList)
+    val future = eventActor !! InvokeMethod(objectReference, method, args.toList)
 
     future.inputChannel.receive {
       case value: Value =>
         value
     }
+  }
+  
+  /**
+   * release all resources
+   */
+  def dispose() {
+    eventActor ! TerminatedFromScala
+    currentStep.foreach(_.stop)
   }
 
 }

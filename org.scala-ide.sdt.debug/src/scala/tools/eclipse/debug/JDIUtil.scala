@@ -1,6 +1,6 @@
 package scala.tools.eclipse.debug
 
-import com.sun.jdi.{Method, AbsentInformationException}
+import com.sun.jdi.{ Method, AbsentInformationException, ReferenceType, Location }
 
 object JDIUtil {
 
@@ -18,6 +18,24 @@ object JDIUtil {
       case e =>
         throw e
     }
+  }
+
+  /**
+   * Return the valid locations in the given reference type, without
+   * throwing AbsentInformationException if the information is missing.
+   */
+  def referenceTypeToLocations(t: ReferenceType): Seq[Location] = {
+    import scala.collection.JavaConverters._
+    t.methods.asScala.flatMap(
+      method =>
+        try {
+          method.allLineLocations.asScala
+        } catch {
+          case e: AbsentInformationException =>
+            Nil
+          case e =>
+            throw e
+        })
   }
 
 }

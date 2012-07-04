@@ -7,6 +7,9 @@
 <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_TYPES">
 <listEntry value="1"/>
 </listAttribute>
+<mapAttribute key="org.eclipse.debug.core.preferred_launchers">
+<mapEntry key="[debug]" value="scala.application.new"/>
+</mapAttribute>
 <stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="stepping.ForComprehensionListObject"/>
 <stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="debug"/>
 </launchConfiguration>
