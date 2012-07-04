@@ -16,6 +16,7 @@ private[logging] object StreamRedirect {
       val logger = LogManager.getLogger("System.out")
       val outStream = redirect(msg => logger.debug(msg))
       System.setOut(outStream)
+      Console.setOut(outStream)
       isStdOutRedirected = true
     }
   }
@@ -23,6 +24,7 @@ private[logging] object StreamRedirect {
   def disableRedirectStdOutput(): Unit = synchronized {
     if(isStdOutRedirected) {
       System.setOut(defaultStdOut)
+      Console.setOut(defaultStdOut)
       isStdOutRedirected = false
     }
   }
@@ -32,6 +34,7 @@ private[logging] object StreamRedirect {
       val logger = LogManager.getLogger("System.err")
       val errStream = redirect(msg => logger.error(msg))
       System.setErr(errStream)
+      Console.setErr(errStream)
       isStdErrRedirected = true
     }
   }
@@ -39,6 +42,7 @@ private[logging] object StreamRedirect {
   def disableRedirectStdError(): Unit = synchronized {
     if(isStdErrRedirected) {
       System.setErr(defaultStdErr)
+      Console.setErr(defaultStdErr)
       isStdErrRedirected = false
     }
   }
