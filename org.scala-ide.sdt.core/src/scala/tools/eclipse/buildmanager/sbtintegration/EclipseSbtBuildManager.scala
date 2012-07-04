@@ -343,7 +343,7 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings)
   	      logger.info("Cannot find Scala library on the classpath. Verify your build path! Using default library corresponding to the compiler")
   	      //ScalaPlugin.plugin.sbtScalaLib.get.toFile
   	      val e = new Exception("Cannot find Scala library on the classpath. Verify your build path!")
-  	      project.buildError(IMarker.SEVERITY_ERROR, e.getMessage(), null)
+  	      BuildProblemMarker.create(project.underlying, e.getMessage)
           logger.error("Error in Scala SBT builder", e)
   	      return
   	  }
@@ -361,13 +361,13 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings)
       
       val analysisComp = new AnalysisCompile(conf, this, new SbtProgress())
 
-    val extraAnalysis = upstreamAnalysis(project)
+      val extraAnalysis = upstreamAnalysis(project)
 
-    logger.debug("Retrieved the following upstream analysis: " + extraAnalysis)
+      logger.debug("Retrieved the following upstream analysis: " + extraAnalysis)
 
   	  val order = project.storage.getString(SettingConverterUtil.convertNameToProperty(properties.ScalaPluginSettings.compileOrder.name))
-    analysisComp.doCompile(
-      scalac, javac, sources, reporter, settings0, CompileOrderMapper(order), analysisMap = extraAnalysis)
+      analysisComp.doCompile(
+        scalac, javac, sources, reporter, settings0, CompileOrderMapper(order), analysisMap = extraAnalysis)
   }
 
   /** Return the Analysis for all the dependencies that are Scala projects, and that 
@@ -434,7 +434,7 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings)
     } catch {
       case e =>
         hasErrors = true
-        project.buildError(IMarker.SEVERITY_ERROR, "Error in Scala compiler: " + e.getMessage, null)
+        BuildProblemMarker.create(project, e)
         logger.error("Error in Scala compiler", e)
     }
     
