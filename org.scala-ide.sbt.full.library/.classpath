@@ -1,13 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry exported="true" kind="lib" path="lib/actions_2.9.1.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/api_2.9.1.jar"/>
-	<classpathentry exported="true" kind="lib" path="lib/cache_2.9.1.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/classfile_2.9.1.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/classpath_2.9.1.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/collections_2.9.1.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/compile_2.9.1.jar"/>
-	<classpathentry exported="true" kind="lib" path="lib/completion_2.9.1.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/control_2.9.1.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/incremental-compiler_2.9.1.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/interface_2.9.1.jar"/>
@@ -18,14 +15,9 @@
 	<classpathentry exported="true" kind="lib" path="lib/launcher_2.9.1.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/launcher-interface_2.9.1.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/logging_2.9.1.jar"/>
-	<classpathentry exported="true" kind="lib" path="lib/main_2.9.1.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/persist_2.9.1.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/precompiled-2.9.1-2_9_1.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/process_2.9.1.jar"/>
-	<classpathentry exported="true" kind="lib" path="lib/run_2.9.1.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/sbinary_2.9.1.jar"/>
-	<classpathentry exported="true" kind="lib" path="lib/sbt_2.9.1.jar"/>
-	<classpathentry exported="true" kind="lib" path="lib/task-system_2.9.1.jar"/>
-	<classpathentry exported="true" kind="lib" path="lib/tasks_2.9.1.jar"/>
 	<classpathentry kind="output" path="classes"/>
 </classpath>
