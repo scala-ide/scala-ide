@@ -19,6 +19,12 @@ import com.sun.jdi.ArrayType
 import scala.reflect.NameTransformer
 
 object ScalaStackFrame {
+  
+  def apply(thread: ScalaThread, stackFrame: StackFrame): ScalaStackFrame = {
+    val scalaStackFrame= new ScalaStackFrame(thread, stackFrame)
+    scalaStackFrame.fireCreationEvent
+    scalaStackFrame
+  }
 
   // regexp for JNI signature
   final val typeSignature = """L([^;]*);""".r
@@ -84,7 +90,7 @@ object ScalaStackFrame {
   }
 }
 
-class ScalaStackFrame(val thread: ScalaThread, var stackFrame: StackFrame) extends ScalaDebugElement(thread.getScalaDebugTarget) with IStackFrame {
+class ScalaStackFrame(val thread: ScalaThread, var stackFrame: StackFrame) extends ScalaDebugElement(thread.debugTarget) with IStackFrame {
   import ScalaStackFrame._
 
   // Members declared in org.eclipse.debug.core.model.IStackFrame
@@ -118,8 +124,6 @@ class ScalaStackFrame(val thread: ScalaThread, var stackFrame: StackFrame) exten
   def suspend(): Unit = ???
 
   // ---
-
-  fireCreationEvent
 
   val variables: Seq[ScalaVariable] = {
     import scala.collection.JavaConverters._

@@ -23,7 +23,6 @@ class ScalaDebugSteppingTest {
   @Before
   def initializeTests() {
     if (!initialized) {
-      ScalaDebugPlugin.plugin.getPreferenceStore.setValue(DebugPreferencePage.P_ENABLE, true)
       project.underlying.build(IncrementalProjectBuilder.CLEAN_BUILD, new NullProgressMonitor)
       project.underlying.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, new NullProgressMonitor)
       initialized = true

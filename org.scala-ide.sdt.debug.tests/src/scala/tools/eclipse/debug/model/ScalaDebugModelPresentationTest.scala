@@ -41,7 +41,7 @@ class ScalaDebugModelPresentationTest {
     when(jdiThread.threadGroup).thenReturn(jdiThreadGroup)
     when(jdiThreadGroup.name).thenReturn("not system")
 
-    val scalaThread = new ScalaThread(null, jdiThread)
+    val scalaThread = ScalaThread(null, jdiThread)
 
     assertEquals("Bad display name for Scala thread", "Thread [thread name]", modelPres.getText(scalaThread))
   }
@@ -54,7 +54,7 @@ class ScalaDebugModelPresentationTest {
     when(jdiThread.threadGroup).thenReturn(jdiThreadGroup)
     when(jdiThreadGroup.name).thenReturn("system")
 
-    val scalaThread = new ScalaThread(null, jdiThread)
+    val scalaThread = ScalaThread(null, jdiThread)
 
     assertEquals("Bad display name for Scala system thread", "Deamon System Thread [system thread name]", modelPres.getText(scalaThread))
   }

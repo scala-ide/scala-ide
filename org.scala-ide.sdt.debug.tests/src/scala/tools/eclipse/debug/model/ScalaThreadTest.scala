@@ -39,7 +39,7 @@ class ScalaThreadTest {
     val jdiThreadGroup = createThreadGroup();
     when(jdiThread.threadGroup).thenReturn(jdiThreadGroup)
 
-    val thread = new ScalaThread(null, jdiThread)
+    val thread = ScalaThread(null, jdiThread)
 
     assertEquals("Bad thread name", "some test string", thread.getName)
   }
@@ -52,7 +52,7 @@ class ScalaThreadTest {
     val jdiThreadGroup = createThreadGroup();
     when(jdiThread.threadGroup).thenReturn(jdiThreadGroup)
 
-    val thread = new ScalaThread(null, jdiThread)
+    val thread = ScalaThread(null, jdiThread)
 
     assertEquals("Bad thread name on VMDisconnectedException", "<disconnected>", thread.getName)
   }
@@ -65,7 +65,7 @@ class ScalaThreadTest {
     val jdiThreadGroup = createThreadGroup();
     when(jdiThread.threadGroup).thenReturn(jdiThreadGroup)
 
-    val thread = new ScalaThread(null, jdiThread)
+    val thread = ScalaThread(null, jdiThread)
 
     assertEquals("Bad thread name", "<garbage collected>", thread.getName)
   }

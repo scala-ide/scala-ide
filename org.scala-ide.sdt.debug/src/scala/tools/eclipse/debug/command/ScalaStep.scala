@@ -1,6 +1,12 @@
 package scala.tools.eclipse.debug.command
 
+object ScalaStep {
+  case object Step
+  case object Stop
+}
+
 trait ScalaStep {
+  
   
   /**
    * Initiate the step action
