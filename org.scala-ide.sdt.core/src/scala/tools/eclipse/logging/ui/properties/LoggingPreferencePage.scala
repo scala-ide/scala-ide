@@ -28,6 +28,7 @@ class LoggingPreferencePage extends FieldEditorPreferencePage with IWorkbenchPre
     
     addField(new ComboFieldEditor(LoggingPreferenceConstants.LogLevel, "Log Level", namesAndValues, getFieldEditorParent))
     addField(new BooleanFieldEditor(LoggingPreferenceConstants.IsConsoleAppenderEnabled, "Output log in terminal", getFieldEditorParent))
+    addField(new BooleanFieldEditor(LoggingPreferenceConstants.RedirectStdErrOut, "Redirect standard out/err to log file", getFieldEditorParent))
   }
 
   override def createContents(parent: Composite): Control = {
@@ -49,10 +50,12 @@ class LoggingPreferencePageInitializer extends AbstractPreferenceInitializer {
     if(ScalaPlugin.plugin.headlessMode) {
       store.setDefault(LoggingPreferenceConstants.LogLevel, Level.DEBUG.toString)
       store.setDefault(LoggingPreferenceConstants.IsConsoleAppenderEnabled, true)
+      store.setDefault(LoggingPreferenceConstants.RedirectStdErrOut, false)
     } 
     else {
       store.setDefault(LoggingPreferenceConstants.LogLevel, LogManager.defaultLogLevel.toString)
       store.setDefault(LoggingPreferenceConstants.IsConsoleAppenderEnabled, false)
+      store.setDefault(LoggingPreferenceConstants.RedirectStdErrOut, true)
     }
   }
 }
