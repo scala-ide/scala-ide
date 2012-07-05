@@ -20,7 +20,7 @@ import org.eclipse.jface.action.IAction
 import org.eclipse.jface.window.Window
 
 import scala.tools.eclipse.javaelements.{ScalaSourceFile, ScalaElement, LazyToplevelClass}
-import scala.tools.eclipse.properties.OrganizeImportsPreferences.{getWildcardImportsForProject, getOrganizeImportStrategy, getGroupsForProject, PreserveExistingGroups, ExpandImports, CollapseImports}
+import scala.tools.eclipse.properties.OrganizeImportsPreferences._
 import scala.tools.refactoring.implementations.{OrganizeImports, AddImportStatement}
 
 /**
@@ -241,7 +241,13 @@ class OrganizeImportsAction extends RefactoringAction with ActionWithNoWizard {
         
         val groups = getGroupsForProject(project).toList
         
-        expandOrCollapse ::: List(wildcards, refactoring.SortImports, refactoring.GroupImports(groups))
+        val scalaPackageStrategy = if (shouldOmitScalaPackage(project)){
+          refactoring.DropScalaPackage
+        } else {
+          refactoring.PrependScalaPackage
+        }
+        
+        expandOrCollapse ::: List(scalaPackageStrategy, wildcards, refactoring.SortImports, refactoring.GroupImports(groups))
       }
       
       val deps = {
