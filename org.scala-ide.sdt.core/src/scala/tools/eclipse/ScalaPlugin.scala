@@ -218,6 +218,17 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
     }
   }
   
+  /** Restart all presentation compilers in the workspace. Need to do it in order
+   *  for them to pick up the new std out/err streams.
+   */
+  def resetAllPresentationCompilers() {
+    for {
+      iProject <- ResourcesPlugin.getWorkspace.getRoot.getProjects
+      if iProject.isOpen
+      scalaProject <- asScalaProject(iProject)
+    } scalaProject.resetPresentationCompiler()
+  }
+
   /**
    * Return Some(ScalaProject) if the project has the Scala nature, None otherwise.
    */
