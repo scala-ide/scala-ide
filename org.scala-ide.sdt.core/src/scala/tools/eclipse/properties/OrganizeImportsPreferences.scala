@@ -19,6 +19,7 @@ import scala.tools.eclipse.ScalaPlugin
 import org.eclipse.jface.preference.RadioGroupFieldEditor
 import org.eclipse.jface.preference.FieldEditor
 import scala.tools.eclipse.util.Utils
+import org.eclipse.jface.preference.BooleanFieldEditor
 
 
 
@@ -130,6 +131,7 @@ class OrganizeImportsPreferencesPage extends PropertyPage with IWorkbenchPrefere
       )
       new RadioGroupFieldEditor(expandCollapseKey, "Multiple imports from the same package or type:", 1, options, parent, true) {
         allEnableDisableControls += getRadioBoxControl(parent)
+        allEnableDisableControls ++= getRadioBoxControl(parent).getChildren
       }
     }
     
@@ -155,6 +157,12 @@ class OrganizeImportsPreferencesPage extends PropertyPage with IWorkbenchPrefere
             null
           }
         }
+      }
+    }
+    
+    fieldEditors += addNewFieldEditorWrappedInComposite(parent = control) { parent => 
+      new BooleanFieldEditor(omitScalaPackage, "Omit the scala package prefix", parent) {
+        allEnableDisableControls += getChangeControl(parent)
       }
     }
 
@@ -190,6 +198,8 @@ object OrganizeImportsPreferences extends Enumeration {
   val groupsKey         = PREFIX +".groups"
   val wildcardsKey      = PREFIX +".wildcards"
   val expandCollapseKey = PREFIX +".expandcollapse"
+  
+  val omitScalaPackage = PREFIX +".scalapackage"
 
   private def getPreferenceStore(project: IProject): IPreferenceStore = {
     val workspaceStore = ScalaPlugin.prefStore
@@ -201,6 +211,10 @@ object OrganizeImportsPreferences extends Enumeration {
   
   def getGroupsForProject(project: IProject) = {
     getPreferenceStore(project).getString(groupsKey).split("\\$")
+  }
+  
+  def shouldOmitScalaPackage(project: IProject) = {
+    getPreferenceStore(project).getBoolean(omitScalaPackage)
   }
   
   def getWildcardImportsForProject(project: IProject) = {
@@ -223,6 +237,7 @@ class OrganizeImportsPreferencesInitializer extends AbstractPreferenceInitialize
     
     Utils.tryExecute {
       val node = new DefaultScope().getNode(ScalaPlugin.plugin.pluginId)
+      node.put(OrganizeImportsPreferences.omitScalaPackage, "false")      
       node.put(OrganizeImportsPreferences.groupsKey, "java$scala$org$com")      
       node.put(OrganizeImportsPreferences.wildcardsKey, "scalaz$scalaz.Scalaz")      
       node.put(OrganizeImportsPreferences.expandCollapseKey, OrganizeImportsPreferences.ExpandImports.toString)      
