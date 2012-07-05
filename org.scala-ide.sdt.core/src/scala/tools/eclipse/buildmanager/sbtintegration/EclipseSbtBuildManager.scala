@@ -153,7 +153,7 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings)
         logger.info("Cannot find Scala library on the classpath. Verify your build path! Using default library corresponding to the compiler")
         //ScalaPlugin.plugin.sbtScalaLib.get.toFile
         val e = new Exception("Cannot find Scala library on the classpath. Verify your build path!")
-        project.buildError(IMarker.SEVERITY_ERROR, e.getMessage(), null)
+        BuildProblemMarker.create(project.underlying, e.getMessage)
         logger.error("Error in Scala SBT builder", e)
         return
     }
@@ -242,7 +242,7 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings)
     } catch {
       case e =>
         hasErrors = true
-        project.buildError(IMarker.SEVERITY_ERROR, "Error in Scala compiler: " + e.getMessage, null)
+        BuildProblemMarker.create(project, e)
         eclipseLog.error("Error in Scala compiler", e)
     }
     

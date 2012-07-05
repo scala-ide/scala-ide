@@ -59,10 +59,9 @@ class ScalaMoveParticipant extends MoveParticipant {
               // but we skip our part. Really? Test! Add warning to the status.
               pm.setCanceled(false)
             } else {
+              
               change = new CompositeChange("Move Scala Class") {
-                val changes = moveRefactoring.performRefactoring() collect {
-                  case tc: TextChange => tc
-                }
+                val changes = moveRefactoring.createRefactoringChanges(pm)._1
                 moveRefactoring.scalaChangesToEclipseChanges(changes) foreach add
               }
             }
