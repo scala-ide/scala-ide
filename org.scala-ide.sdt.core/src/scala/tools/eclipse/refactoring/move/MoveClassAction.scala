@@ -77,7 +77,34 @@ class MoveClassAction extends RefactoringAction {
     }
     
     override def createChange(pm: IProgressMonitor): CompositeChange = {
+        
+      val (textChanges, newFileChanges) = createRefactoringChanges(pm)
+          
+      new CompositeChange(getName) {
 
+        scalaChangesToEclipseChanges(textChanges) foreach add
+        
+        newFileChanges match {
+          
+          // If there's no new file to create, we move the current file.
+          case Nil => 
+            add(new MoveResourceChange(file.getResource, target.getCorrespondingResource.asInstanceOf[IFolder]))
+
+          // Otherwise, create a new file with the changes's content.
+          case newFile :: rest =>
+            val pth = target.getPath.append(preparationResult.right.get.get.name.toString + ".scala")
+            add(new CreateFileChange(pth, newFile.text, file.getResource.asInstanceOf[IFile].getCharset)) 
+        }
+      }
+    }
+      
+    override def getPages = {
+      val selectedImpl = preparationResult.right.toOption flatMap (_.map(_.name.toString))
+      List(new ui.MoveClassRefactoringConfigurationPage(file.getResource(), selectedImpl, target_=, setMoveSingleImpl))
+    }
+    
+    private[move] def createRefactoringChanges(pm: IProgressMonitor) = {
+      
       val (index, cleanupHandler) = {
         val toMove = refactoring.statsToMove(selection(), refactoringParameters) collect {
           case impl: refactoring.global.ImplDef => impl.name.toString
@@ -100,32 +127,10 @@ class MoveClassAction extends RefactoringAction {
             (textChanges, change :: newFilesChanges)
         }
       }
-        
-      val change = new CompositeChange(getName) {
-
-        scalaChangesToEclipseChanges(textChanges) foreach add
-        
-        newFileChanges match {
-          
-          // If there's no new file to create, we move the current file.
-          case Nil => 
-            add(new MoveResourceChange(file.getResource, target.getCorrespondingResource.asInstanceOf[IFolder]))
-
-          // Otherwise, create a new file with the changes's content.
-          case newFile :: rest =>
-            val pth = target.getPath.append(preparationResult.right.get.get.name.toString + ".scala")
-            add(new CreateFileChange(pth, newFile.text, file.getResource.asInstanceOf[IFile].getCharset)) 
-        }
-      }
       
       cleanup()
       
-      change
-    }
-      
-    override def getPages = {
-      val selectedImpl = preparationResult.right.toOption flatMap (_.map(_.name.toString))
-      List(new ui.MoveClassRefactoringConfigurationPage(file.getResource(), selectedImpl, target_=, setMoveSingleImpl))
+      (textChanges, newFileChanges)
     }
   }
 }

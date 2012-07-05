@@ -8,38 +8,56 @@ import org.eclipse.jface.util.PropertyChangeEvent
 import org.eclipse.jdt.ui.PreferenceConstants
 import scala.tools.eclipse.util.SWTUtils
 import java.io.File
+import org.eclipse.core.resources.ResourcesPlugin
 
 object LogManager extends Log4JFacade with HasLogger {
   import ui.properties.LoggingPreferenceConstants._
 
-  private def updateLogLevel: IPropertyChangeListener = {
-    SWTUtils.fnToPropertyChangeListener { event =>
-      if (event.getProperty == LogLevel) {
-        val level = event.getNewValue.asInstanceOf[String]
-        setLogLevel(Level.withName(level))
+  private def updateLogLevel(event: PropertyChangeEvent): Unit = {
+    if (event.getProperty == LogLevel) {
+      val level = event.getNewValue.asInstanceOf[String]
+      setLogLevel(Level.withName(level))
+    }
+  }
+
+  private def updateConsoleAppenderStatus(event: PropertyChangeEvent): Unit = {
+    if (event.getProperty == IsConsoleAppenderEnabled) {
+      val enable = event.getNewValue.asInstanceOf[Boolean]
+      withoutConsoleRedirects {
+        updateConsoleAppender(enable)
       }
     }
   }
 
-  private def updateConsoleAppenderStatus: IPropertyChangeListener = {
-    SWTUtils.fnToPropertyChangeListener { event =>
-      if (event.getProperty == IsConsoleAppenderEnabled) {
-        val enable = event.getNewValue.asInstanceOf[Boolean]
-        withoutConsoleRedirects {
-          updateConsoleAppender(enable)
-        }
-      }
+  private def updateStdRedirectStatus(event: PropertyChangeEvent): Unit = {
+    if (event.getProperty == RedirectStdErrOut) {
+      val enable = event.getNewValue.asInstanceOf[Boolean]
+      if (enable) redirectStdOutAndStdErr()
+      else disableRedirectStdOutAndStdErr()
+
+      // we need to restart the presentation compilers so that
+      // the std out/err streams are refreshed by Console.in/out
+      if (enable != event.getOldValue.asInstanceOf[Boolean])
+        ScalaPlugin.plugin.resetAllPresentationCompilers()
     }
   }
-
+  
   override protected def logFileName = "scala-ide.log"
 
   override def configure(logOutputLocation: String, preferredLogLevel: Level.Value) {
+    import SWTUtils.fnToPropertyChangeListener
+
     super.configure(logOutputLocation, preferredLogLevel)
-    ScalaPlugin.plugin.getPreferenceStore.addPropertyChangeListener(updateLogLevel)
-    ScalaPlugin.plugin.getPreferenceStore.addPropertyChangeListener(updateConsoleAppenderStatus)
-    
-    redirectStdOutAndStdErr()
+
+    val prefStore = ScalaPlugin.plugin.getPreferenceStore
+    prefStore.addPropertyChangeListener(updateLogLevel _)
+    prefStore.addPropertyChangeListener(updateConsoleAppenderStatus _)
+    prefStore.addPropertyChangeListener(updateStdRedirectStatus _)
+
+    if (prefStore.getBoolean(RedirectStdErrOut)) {
+      redirectStdOutAndStdErr()
+      ScalaPlugin.plugin.resetAllPresentationCompilers()
+    }
   }
 
   override protected def setLogLevel(level: Level.Value) {

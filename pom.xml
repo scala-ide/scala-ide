@@ -15,13 +15,17 @@
     <encoding>UTF-8</encoding>
     <!-- p2 repositories location -->
     <repo.eclipse.indigo>http://download.eclipse.org/releases/indigo/</repo.eclipse.indigo>
+<<<<<<< HEAD
+=======
+    <!--repo.eclipse.juno>http://download.eclipse.org/eclipse/updates/4.2milestones</repo.eclipse.juno -->
+>>>>>>> platform/juno
     <repo.eclipse.juno>http://download.eclipse.org/releases/juno</repo.eclipse.juno>
     <repo.ajdt.indigo>http://download.eclipse.org/tools/ajdt/37/dev/update</repo.ajdt.indigo>
     <repo.ajdt.juno>http://download.eclipse.org/tools/ajdt/42/dev/update</repo.ajdt.juno>
     <repo.scala-ide.root>http://download.scala-ide.org</repo.scala-ide.root>
 
     <!-- fixed versions -->
-    <sbt.version>0.11.2-scalaide-09</sbt.version>
+    <sbt.version>0.11.2-scalaide-10</sbt.version>
     <sbinary.version>0.4.0</sbinary.version>
     <jline.version>0.9.94</jline.version>
     <ivy.version>2.2.0</ivy.version>
