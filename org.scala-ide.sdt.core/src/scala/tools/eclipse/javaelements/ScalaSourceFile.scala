@@ -5,9 +5,11 @@
 
 package scala.tools.eclipse.javaelements
 
+import java.lang.reflect.InvocationTargetException
 import java.util.{ HashMap => JHashMap, Map => JMap }
 import org.eclipse.core.resources.{ IFile, IResource }
 import org.eclipse.core.runtime.IProgressMonitor
+import org.eclipse.core.runtime.Platform
 import org.eclipse.jdt.core.{ IBuffer, ICompilationUnit, IJavaElement, IType, WorkingCopyOwner }
 import org.eclipse.jdt.core.compiler.IProblem
 import org.eclipse.jdt.internal.core.util.HandleFactory
@@ -37,6 +39,30 @@ object ScalaSourceFile {
 
 class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCopyOwner : WorkingCopyOwner) 
   extends JDTCompilationUnit(fragment, elementName, workingCopyOwner) with ScalaCompilationUnit with IScalaSourceFile {
+
+  lazy val JDTVersion = Platform.getBundle("org.eclipse.jdt.core").getVersion
+  lazy val isMajorThree = JDTVersion.getMajor == 3
+  lazy val isLessThanJuno = isMajorThree && JDTVersion.getMinor < 8
+
+  def versionAwareOpenWhenClosed(info: OpenableElementInfo, monitor: IProgressMonitor): Unit = {
+    
+    if (isLessThanJuno) {
+      try {
+        val clazz = classOf[JDTCompilationUnit]
+        val method = clazz.getMethod("openWhenClosed", classOf[OpenableElementInfo], classOf[IProgressMonitor])
+        method.invoke(this, info, monitor)
+      } catch {
+        case e: IllegalArgumentException =>
+          throw new RuntimeException(e)
+        case e: IllegalAccessException =>
+          throw new RuntimeException(e);
+        case e: InvocationTargetException =>
+          throw new RuntimeException(e);
+      }
+    } else {
+      openWhenClosed(info, true, monitor)
+    }
+  }
 
   override def getMainTypeName : Array[Char] =
     getElementName.substring(0, getElementName.length - ".scala".length).toCharArray()
@@ -77,7 +103,7 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
     problems : JHashMap[_,_],
     monitor : IProgressMonitor) : org.eclipse.jdt.core.dom.CompilationUnit = {
     val info = createElementInfo.asInstanceOf[OpenableElementInfo]
-    openWhenClosed(info, monitor)
+    versionAwareOpenWhenClosed(info, monitor)
     null
   }
 
