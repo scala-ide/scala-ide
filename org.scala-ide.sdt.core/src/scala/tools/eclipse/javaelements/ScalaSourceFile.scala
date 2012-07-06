@@ -40,11 +40,12 @@ object ScalaSourceFile {
 class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCopyOwner : WorkingCopyOwner) 
   extends JDTCompilationUnit(fragment, elementName, workingCopyOwner) with ScalaCompilationUnit with IScalaSourceFile {
 
-  lazy val JDTVersion = Platform.getBundle("org.eclipse.jdt.core").getVersion
-  lazy val isMajorThree = JDTVersion.getMajor == 3
-  lazy val isLessThanJuno = isMajorThree && JDTVersion.getMinor < 8
+  private lazy val isLessThanJuno = {
+    val JDTVersion = Platform.getBundle("org.eclipse.jdt.core").getVersion
+    JDTVersion.getMajor == 3 && JDTVersion.getMinor < 8
+  } 
 
-  def versionAwareOpenWhenClosed(info: OpenableElementInfo, monitor: IProgressMonitor): Unit = {
+  private def versionAwareOpenWhenClosed(info: OpenableElementInfo, monitor: IProgressMonitor): Unit = {
     
     if (isLessThanJuno) {
       try {
