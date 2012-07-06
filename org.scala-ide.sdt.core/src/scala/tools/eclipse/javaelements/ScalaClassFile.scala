@@ -115,4 +115,5 @@ class ScalaClassFile(parent : PackageFragment, name : String, sourceFile : Strin
   def openAncestors0(newElements : JHashMap[_, _], monitor : IProgressMonitor) { super.openAncestors(newElements, monitor) }
   def getHandleMementoDelimiter0() = super.getHandleMementoDelimiter()
   def isSourceElement0() : Boolean = super.isSourceElement()
+  def ignoreOptionalProblems() :  Boolean = false
 }
