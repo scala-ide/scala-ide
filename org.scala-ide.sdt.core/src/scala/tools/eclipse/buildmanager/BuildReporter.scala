@@ -1,7 +1,6 @@
 package scala.tools.eclipse.buildmanager
 
 import scala.tools.eclipse.{EclipseBuildManager, TaskScanner, ScalaProject}
-import scala.tools.eclipse.resources.MarkerFactory
 import scala.tools.nsc.Settings
 import scala.tools.nsc.reporters.Reporter
 import scala.tools.nsc.util.{ Position, NoPosition }
@@ -39,7 +38,7 @@ abstract class BuildReporter(private[buildmanager] val project0: ScalaProject, s
 	        source.file match {
 	          case EclipseResource(i : IFile) => 
 	            if (!pos.source.file.hasExtension("java")) {
-	              BuildProblemMarker.create(i, eclipseSeverity, msg, MarkerFactory.Position(pos.point, length, pos.line))
+	              BuildProblemMarker().severity(eclipseSeverity).message(msg).line(pos.line).region(pos.point, length).createIn(i)
 	              prob += new BuildProblem(severity, msg, pos)
 	            } else
 	              logger.info("suppressed error in Java file: %s".format(msg))
@@ -51,11 +50,11 @@ abstract class BuildReporter(private[buildmanager] val project0: ScalaProject, s
 	                // for instance, when a source file (on the sourcepath) is newer than the classfile
 	                // the compiler will create PlainFile instances in that case
 	                prob += new BuildProblem(severity, msg, pos)
-	                BuildProblemMarker.create(i, eclipseSeverity, msg, MarkerFactory.Position(pos.point, length, pos.line))
+	                BuildProblemMarker().severity(eclipseSeverity).message(msg).line(pos.line).region(pos.point, length).createIn(i)
 	              case _ =>
 	                logger.info("no EclipseResource associated to %s [%s]".format(f.path, f.getClass))
 	                prob += new BuildProblem(severity, msg, NoPosition)
-	                BuildProblemMarker.create(project0.underlying, eclipseSeverity, msg)
+	                BuildProblemMarker().severity(eclipseSeverity).message(msg).createIn(project0.underlying)
 	            }
 	        }
 	      }
@@ -66,12 +65,12 @@ abstract class BuildReporter(private[buildmanager] val project0: ScalaProject, s
 		      	  logger.info("[Buildmanager info] " + msg)
 	          case _ =>
 		      	  prob += new BuildProblem(severity, msg, NoPosition)
-		      	  BuildProblemMarker.create(project0.underlying, eclipseSeverity, msg)
+		      	  BuildProblemMarker().severity(eclipseSeverity).message(msg).createIn(project0.underlying)
 	        }
 	    } catch {
 	      case ex : UnsupportedOperationException => 
 	        prob += new BuildProblem(severity, msg, NoPosition)
-	        BuildProblemMarker.create(project0.underlying, eclipseSeverity, msg)
+	        BuildProblemMarker().severity(eclipseSeverity).message(msg).createIn(project0.underlying)
 	    }
     }
   }
