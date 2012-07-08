@@ -81,7 +81,7 @@ class EclipseRefinedBuildManager(project: ScalaProject, settings0: Settings)
     } catch {
       case e =>
         hasErrors = true
-        BuildProblemMarker.create(project, e)
+        BuildProblemMarker().error().message("Error in Scala compiler: " + e.getMessage).createIn(project.underlying)
         eclipseLog.error("Error in Scala compiler", e)
     }
     if (!hasErrors)
