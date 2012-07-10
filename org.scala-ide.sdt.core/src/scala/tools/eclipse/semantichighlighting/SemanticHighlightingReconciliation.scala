@@ -33,14 +33,7 @@ class SemanticHighlightingReconciliation {
   /** A listener that removes a  SemanticHighlightingPresenter when the part is closed. */
   private class UnregisteringPartListener(scu: ScalaCompilationUnit) extends PartAdapter {
     override def partClosed(part: IWorkbenchPart) {
-      for {
-        scalaEditor <- part.asInstanceOfOpt[ScalaSourceFileEditor]
-        editorInput <- Option(scalaEditor.getEditorInput)
-        fileEditorInput <- editorInput.asInstanceOfOpt[FileEditorInput]
-        if fileEditorInput.getPath == scu.getResource.getLocation
-      } { 
-        semanticDecorationManagers.remove(scu)
-      }
+      semanticDecorationManagers.remove(scu)
     }
   }
 
@@ -70,15 +63,22 @@ class SemanticHighlightingReconciliation {
     presenters.headOption
   }
 
-  def afterReconciliation(scu: ScalaCompilationUnit, monitor: IProgressMonitor, workingCopyOwner: WorkingCopyOwner) {
+  def beforeReconciliation(scu: ScalaCompilationUnit, monitor: IProgressMonitor, workingCopyOwner: WorkingCopyOwner) {
+    val project = scu.getResource.getProject
 
-    val firstTimeReconciliation = !semanticDecorationManagers.containsKey(scu)
+    if(project == null || !project.exists()) 
+      semanticDecorationManagers.remove(scu)
+    else {
+      val firstTimeReconciliation = !semanticDecorationManagers.containsKey(scu)
 
-    if (firstTimeReconciliation) {
-      for (semanticDecorationManager <- createSemanticDecorationManagers(scu))
-        semanticDecorationManagers.put(scu, semanticDecorationManager)
+      if (firstTimeReconciliation) {
+        for (semanticDecorationManager <- createSemanticDecorationManagers(scu))
+          semanticDecorationManagers.put(scu, semanticDecorationManager)
+      }
     }
-
+  }
+  
+  def afterReconciliation(scu: ScalaCompilationUnit, monitor: IProgressMonitor, workingCopyOwner: WorkingCopyOwner) {
     // sometimes we reconcile compilation units that are not open in an editor,
     // so we need to guard against the case where there's no semantic highlighter 
     for {
