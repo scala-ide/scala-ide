@@ -150,7 +150,6 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
   class MethodLocator(val scu: ScalaCompilationUnit, val matchLocator: MatchLocator, val pattern: MethodPattern, val possibleMatch: PossibleMatch) extends MatchLocatorTraverser {
     def report(tree: Tree) = tree match {
       case t: Select if t.symbol.isMethod => reportMethodReference(t, t.symbol, pattern)
-      case t: DefDef => reportMethodReference(t, t.symbol, pattern)
       case _ =>
     }
     
@@ -162,7 +161,8 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
     def parameterSizeMatches(desiredCount: Int, tpe: MethodType): Boolean =
       ((desiredCount == tpe.paramTypes.size)
         || ((desiredCount > tpe.paramTypes.size)
-             && (tpe.paramTypes.last.typeSymbol == definitions.RepeatedParamClass))
+             && (tpe.paramTypes.nonEmpty && 
+                 tpe.paramTypes.last.typeSymbol == definitions.RepeatedParamClass))
       )
     
     /** Does the method type match the pattern? */
@@ -180,7 +180,7 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
     
     def reportMethodReference(tree: Tree, sym: Symbol, pat: MethodPattern) {
       if (!pat.matchesName(pat.selector, sym.name.toChars) || !sym.pos.isDefined) {
-        logger.debug("Name didn't match: [%s] pos.isDefined: %b".format(sym.name, sym.pos.isDefined))
+        logger.debug("Name didn't match: [%s] pos.isDefined: %b".format(sym.fullName, sym.pos.isDefined))
         return
       }
 
@@ -198,23 +198,17 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
         }
         
         if (hit) {
-          val enclosingElement = scu match {
-            case ssf: ScalaSourceFile => ssf.getElementAt(tree.pos.startOrPoint)
-            case _ => null
-          }
-
-          if (enclosingElement != pat.focus) {
-
-            val accuracy = SearchMatch.A_INACCURATE
-            val (offset, length) = if (tree.isDef)
-              (tree.pos.startOrPoint + 4, tree.symbol.name.length)
-            else (tree.pos.startOrPoint, tree.pos.endOrPoint - tree.pos.startOrPoint)
+          getJavaElement(enclosingMethod, scu.project.javaProject).foreach { element =>
+            val accuracy = SearchMatch.A_ACCURATE
+            val (offset, length) = 
+              if (tree.isDef) (tree.pos.startOrPoint + 4, tree.symbol.name.length)
+              else (tree.pos.startOrPoint, tree.pos.endOrPoint - tree.pos.startOrPoint)
 
             val insideDocComment = false
             val participant = possibleMatch.document.getParticipant
             val resource = possibleMatch.resource
 
-            report(new MethodReferenceMatch(enclosingElement, accuracy, offset, length, insideDocComment, participant, resource))
+            report(new MethodReferenceMatch(element, accuracy, offset, length, insideDocComment, participant, resource))   
           }
         }
       }
