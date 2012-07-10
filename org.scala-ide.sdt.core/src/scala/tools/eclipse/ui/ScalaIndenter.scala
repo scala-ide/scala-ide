@@ -788,7 +788,8 @@ class ScalaIndenter(
     }
 
     nextToken
-    fToken match {
+    // TODO: Remove once SI-6011 is fixed
+    (fToken: Any) match {
       // check for an arrow token and increase indentation (handles 'case' and closures)
       case Symbols.TokenGREATERTHAN if scanner.previousToken(fPosition - 1, UNBOUND) == Symbols.TokenEQUAL  =>
           handleScopeIntroduction(offset + 1)
