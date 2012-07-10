@@ -72,7 +72,20 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
     }
     
     def posToLong(pos: Position): Long = pos.startOrPoint << 32 | pos.endOrPoint
-    
+
+    /** Returns the method symbol enclosing the tree that is currently traversed.
+     * 
+     * $enclosingMethod should be used only when traversing expressions (the assumption is that all 
+     * expression Tree nodes are nested inside a method). 
+     * 
+     * @return The enclosing method symbol or [[NoSymbol]] if no enclosing method exist 
+     *         (e.g., if the $enclosingMethod is called while traversing a top-level declaration).
+     */
+    protected def enclosingMethod(): Symbol = currentOwner.enclMethod.orElse {
+      val constructor = currentOwner.enclClass.info.member(self.nme.CONSTRUCTOR)
+      constructor
+    }
+
     /* simplified from org.eclipse.jdt.internal.core.search.matching.PatternLocator */
     /*def qualifiedPattern(simpleNamePattern: Array[Char], qualificationPattern: Array[Char]): Array[Char] =
       // NOTE: if case insensitive search then simpleNamePattern & qualificationPattern are assumed to be lowercase
@@ -214,34 +227,31 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
     def report(tree: Tree) = tree match {
       case s @ Select(qualifier, _) =>
         report(qualifier)
-        s.symbol match {
-          case sym : MethodSymbol => reportVariableReference(s, pattern)
-          case _ =>
-        }
+        if(s.symbol.isValue || s.symbol.isVariable)
+          reportVariableReference(s, pattern)
       case _ =>
     }
     
     def reportVariableReference(s: Select, pat: FieldPattern) {
       val searchedVar = pat.getIndexKey
-        
-      if (!s.pos.isDefined || 
-          (!pat.matchesName(searchedVar, s.name.toChars) &&
-           !pat.matchesName(CharOp.concat(searchedVar, "_$eq".toCharArray), s.name.toChars)) ||
-           !checkQualifier(s, declaringSimpleName(pat), pat)) 
-        return
-  
-      val enclosingElement = scu match {
-        case ssf: ScalaSourceFile => ssf.getElementAt(s.pos.start)
-        case _ => null
-      }
-      val accuracy = SearchMatch.A_INACCURATE
-      val offset = s.pos.start
-      val length = s.pos.end - offset
-      val insideDocComment = false
-      val participant = possibleMatch.document.getParticipant
-      val resource = possibleMatch.resource
 
-      report(new FieldReferenceMatch(enclosingElement, accuracy, offset, length, true, false, insideDocComment, participant, resource))
+      lazy val noPosition = !s.pos.isDefined
+      lazy val nameNoMatch = !pat.matchesName(searchedVar, s.name.toChars)
+      lazy val varNoMatch = !pat.matchesName(CharOp.concat(searchedVar, "_$eq".toCharArray), s.name.toChars)
+      lazy val qualifierNoMatch = !checkQualifier(s, declaringSimpleName(pat), pat)
+      
+      if (noPosition || (nameNoMatch && varNoMatch) || qualifierNoMatch) return
+
+      getJavaElement(enclosingMethod, scu.project.javaProject).foreach { enclosingElement =>
+        val accuracy = SearchMatch.A_ACCURATE
+        val offset = s.pos.start
+        val length = s.pos.end - offset
+        val insideDocComment = false
+        val participant = possibleMatch.document.getParticipant
+        val resource = possibleMatch.resource
+
+        report(new FieldReferenceMatch(enclosingElement, accuracy, offset, length, /*isReadAccess*/true, /*isWriteAccess*/false, insideDocComment, participant, resource))  
+      }
     }
   }
   
