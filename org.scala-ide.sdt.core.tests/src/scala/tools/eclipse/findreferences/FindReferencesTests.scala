@@ -9,15 +9,19 @@ import scala.tools.eclipse.javaelements.ScalaModuleElement
 import scala.tools.eclipse.javaelements.ScalaTypeElement
 import scala.tools.eclipse.javaelements.ScalaValElement
 import scala.tools.eclipse.javaelements.ScalaVarElement
+import scala.tools.eclipse.logging.HasLogger
 import scala.tools.eclipse.testsetup.FileUtils
 import scala.tools.eclipse.testsetup.SDTTestUtils
 import scala.tools.eclipse.testsetup.SearchOps
 import scala.tools.eclipse.testsetup.TestProjectSetup
-import org.eclipse.core.resources.IProject
+
+import org.eclipse.core.resources.IResource
 import org.eclipse.core.runtime.IPath
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.core.runtime.Path
 import org.eclipse.jdt.core.IJavaElement
+import org.eclipse.jdt.core.IType
+import org.eclipse.jdt.internal.core.JavaElement
 import org.eclipse.jdt.internal.core.SourceType
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -26,9 +30,6 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
-import scala.tools.eclipse.logging.HasLogger
-import org.eclipse.jdt.internal.core.JavaElement
-import org.eclipse.core.resources.IResource
 
 @RunWith(classOf[JUnit4])
 class FindReferencesTests extends FindReferencesTester with HasLogger {
@@ -118,7 +119,16 @@ class FindReferencesTests extends FindReferencesTester with HasLogger {
         val msg = "Don't know how to convert element `%s` of type `%s`".format(e.getElementName, e.getClass)
         throw new IllegalArgumentException(msg)
     }
-    testElement(e.readableName)
+    testElement(fullyQualifiedName(e))
+  }
+
+  private def fullyQualifiedName(e: JavaElement): String = {
+    // Ugly hack for extracting the fully-qualified name of a JavaElement. If anyone has a better idea, please say something.
+    val pkg =
+      if (e.getElementType == IJavaElement.METHOD) e.getParent.asInstanceOf[IType].getPackageFragment.getElementName
+      else ""
+
+    (if (pkg.nonEmpty) pkg + "." else "") + e.readableName
   }
 
   @Test
@@ -161,5 +171,23 @@ class FindReferencesTests extends FindReferencesTester with HasLogger {
   def findReferencesInsideCompanionObject_ex1() {
     val expected = fieldVal("Foo$.ss") isReferencedBy moduleConstructor("Foo")
     runTest("ex1", "Ex1.scala", expected)
+  }
+
+  @Test
+  def findReferencesInConstructorSuperCall() {
+    val expected = fieldVal("Bar$.v") isReferencedBy clazzConstructor("foo.Foo")
+    runTest("super", "foo/Bar.scala", expected)
+  }
+
+  @Test
+  def bug1001135() {
+    val expected = method("foo.Bar$.configure", List("java.lang.String")) isReferencedBy method("foo.Foo.configure")
+    runTest("bug1001135", "foo/Bar.scala", expected)
+  }
+  
+  @Test
+  def findReferencesInClassFields() {
+    val expected = fieldVal("Bar$.v") isReferencedBy fieldVal("Foo.v")
+    runTest("field-ref", "Bar.scala", expected)
   }
 }

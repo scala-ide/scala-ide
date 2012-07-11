@@ -29,9 +29,11 @@ trait ScalaJavaMapper extends ScalaAnnotationHelper with SymbolNameUtil with Has
     def matchesMethod(meth: IMethod): Boolean = {
       import Signature._
       askOption { () =>
-        ((meth.getElementName == sym.name.toString)
-          && meth.getParameterTypes.map(tp => getTypeErasure(getElementType(tp)))
-                                   .sameElements(sym.tpe.paramTypes.map(mapParamTypeSignature)))
+        lazy val methName = meth.getElementName
+        lazy val symName = (if(sym.isConstructor) sym.owner.simpleName.toString + (if (sym.owner.isModuleClass) "$" else "") else sym.name.toString)
+        lazy val sameName = methName == symName
+        lazy val sameParams = meth.getParameterTypes.map(tp => getTypeErasure(getElementType(tp))).sameElements(sym.tpe.paramTypes.map(mapParamTypeSignature))
+        sameName && sameParams
       }.getOrElse(false)
     }
 
