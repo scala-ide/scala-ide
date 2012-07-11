@@ -63,6 +63,15 @@ case class ScalaClasspath(val jdkPaths: Seq[IPath], // JDK classpath
     toPath(jdkPaths) ++ scalaLibraryFile.toSeq ++ toPath(userCp)
 }
 
+/** A Scala library definition. 
+ * 
+ *  @param location  The file-system absolute path to the root of the Scala library
+ *  @param version   An option version, retrieved from library.properties, if present
+ *  @param isProject Whether the library is provided by a project inside the workspace
+ * 
+ */
+case class ScalaLibrary(location: IPath, version: Option[String], isProject: Boolean)
+
 /** Scala project classpath management. This class is responsible for breaking down the classpath in
  *  JDK entries, Scala library entries, and user entries. It also validates the classpath and
  *  manages the classpath error markers for the given Scala project.
@@ -75,8 +84,10 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
     val cp = classpath.filterNot(jdkEntries.toSet)
 
     scalaLibraries match {
-      case Seq((pf, version), _*) => new ScalaClasspath(jdkEntries, Some(pf), cp.filterNot(_ == pf), version)
-      case _                      => new ScalaClasspath(jdkEntries, None, cp, None)
+      case Seq(ScalaLibrary(pf, version, _), _*) => 
+        new ScalaClasspath(jdkEntries, Some(pf), cp.filterNot(_ == pf), version)
+      case _ => 
+        new ScalaClasspath(jdkEntries, None, cp, None)
     }
   }
 
@@ -201,7 +212,7 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
    *  @return the absolute file-system path to package fragments that define `scala.Predef`.
    *          If it contains path variables or is a linked resources, the path is resolved.
    */
-  def scalaLibraries: Seq[(IPath, Option[String])] = {
+  def scalaLibraries: Seq[ScalaLibrary] = {
     val pathToPredef = new Path("scala/Predef.class")
 
     def isZipFileScalaLib(p: IPath): Boolean = {
@@ -213,7 +224,7 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
     }
 
     // look for all package fragment roots containing instances of scala.Predef
-    val fragmentRoots = new mutable.ListBuffer[(IPath, Option[String])]
+    val fragmentRoots = new mutable.ListBuffer[ScalaLibrary]
 
     for (fragmentRoot <- javaProject.getAllPackageFragmentRoots() if fragmentRoot.getPackageFragment("scala").exists) {
       fragmentRoot.getKind() match {
@@ -231,7 +242,7 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
               }
           }
 
-          if (foundIt) fragmentRoots += ((fragmentRoot.getPath, getVersionNumber(fragmentRoot)))
+          if (foundIt) fragmentRoots += ScalaLibrary(fragmentRoot.getPath, getVersionNumber(fragmentRoot), isProject = false)
 
         case IPackageFragmentRoot.K_SOURCE =>
           for {
@@ -242,7 +253,7 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
             (srcPath, binFolder) <- dependentPrj.sourceOutputFolders
             if srcPath.getProjectRelativePath == folder.getProjectRelativePath
           } {
-            fragmentRoots += ((binFolder.getLocation, getVersionNumber(fragmentRoot)))
+            fragmentRoots += ScalaLibrary(binFolder.getLocation, getVersionNumber(fragmentRoot), isProject = true)
           }
 
         case _ =>
@@ -253,6 +264,11 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
   }
 
   private def checkClasspath() {
+    def incompatibleScalaLibrary(scalaLib: ScalaLibrary) = scalaLib match { 
+      case ScalaLibrary(_, version, false) => !plugin.isCompatibleVersion(version) 
+      case _ => false 
+    }
+
     // look for all package fragment roots containing instances of scala.Predef
     val fragmentRoots = scalaLibraries
 
@@ -261,7 +277,10 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
       case 0 => // unable to find any trace of scala library
         setClasspathError(IMarker.SEVERITY_ERROR, "Unable to find a scala library. Please add the scala container or a scala library jar to the build path.")
       case 1 => // one and only one, now check if the version number is contained in library.properties
-        fragmentRoots(0)._2 match {
+        if (fragmentRoots(0).isProject) {
+          // if the library is provided by a project in the workspace, disable the warning (the version file is missing anyway)
+          setClasspathError(0, null)
+        } else fragmentRoots(0).version match {
           case Some(v) if v == plugin.scalaVer =>
             // exactly the same version, should be from the container. Perfect
             setClasspathError(0, null)
@@ -275,12 +294,18 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
             // no version found
             setClasspathError(IMarker.SEVERITY_ERROR, "The scala library found in the build path doesn't expose its version. Please replace the scala library with the scala container or a valid scala library jar")
         }
-      case _ => // 2 or more of them, not great
-        if (fragmentRoots.exists { case (_, version) => !plugin.isCompatibleVersion(version) })
-          setClasspathError(IMarker.SEVERITY_ERROR, "More than one scala library found in the build path, including at least one with an incompatible version. Please update the project build path so it contains only compatible scala libraries")
+      case _ => // 2 or more of them, not great, but warn only if the library is not a project
+        if (fragmentRoots.exists(incompatibleScalaLibrary))
+          setClasspathError(IMarker.SEVERITY_ERROR, moreThanOneLibraryError(fragmentRoots.map(_.location), compatible = false))
         else
-          setClasspathError(IMarker.SEVERITY_WARNING, "More than one scala library found in the build path, all with compatible versions. This is not an optimal configuration, try to limit to one scala library in the build path.")
+          setClasspathError(IMarker.SEVERITY_WARNING, moreThanOneLibraryError(fragmentRoots.map(_.location), compatible = true))
     }
+  }
+  
+  private def moreThanOneLibraryError(libs: Seq[IPath], compatible: Boolean): String = {
+    val first =  "More than one scala library found in the build path (%s).".format(libs.mkString(", "))
+    if (compatible) first + "This is not an optimal configuration, try to limit to one Scala library in the build path."
+    else first + "At least one has an incompatible version. Please update the project build path so it contains only compatible scala libraries."
   }
 
   /** Return the version number contained in library.properties if it exists.
