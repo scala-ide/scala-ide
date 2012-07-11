@@ -184,4 +184,10 @@ class FindReferencesTests extends FindReferencesTester with HasLogger {
     val expected = method("foo.Bar$.configure", List("java.lang.String")) isReferencedBy method("foo.Foo.configure")
     runTest("bug1001135", "foo/Bar.scala", expected)
   }
+  
+  @Test
+  def findReferencesInClassFields() {
+    val expected = fieldVal("Bar$.v") isReferencedBy fieldVal("Foo.v")
+    runTest("field-ref", "Bar.scala", expected)
+  }
 }

@@ -73,17 +73,17 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
     
     def posToLong(pos: Position): Long = pos.startOrPoint << 32 | pos.endOrPoint
 
-    /** Returns the method symbol enclosing the tree that is currently traversed.
-     * 
-     * $enclosingMethod should be used only when traversing expressions (the assumption is that all 
-     * expression Tree nodes are nested inside a method). 
-     * 
-     * @return The enclosing method symbol or [[NoSymbol]] if no enclosing method exist 
-     *         (e.g., if the $enclosingMethod is called while traversing a top-level declaration).
-     */
-    protected def enclosingMethod(): Symbol = currentOwner.enclMethod.orElse {
-      val constructor = currentOwner.enclClass.info.member(self.nme.CONSTRUCTOR)
-      constructor
+    /** Returns the class/method/field symbol enclosing the tree node that is currently traversed.*/
+    protected def enclosingDeclaration(): Symbol = {
+      if(currentOwner.isLocalDummy) {
+        // expressions in an entity's body are flagged as "local dummy", which is basically a synthetic owner of 
+        // the expression. Since these expression are effectively evaluated in the entity's primary constructor, 
+        // it makes sense to return the constructor symbol as the enclosing declaration owning the expression.
+        // TODO: I now wonder how this will work with traits and nested method declarations. Need to test this!
+        val constructor = currentOwner.enclClass.info.member(self.nme.CONSTRUCTOR)
+        constructor
+      }
+      else currentOwner
     }
 
     /* simplified from org.eclipse.jdt.internal.core.search.matching.PatternLocator */
@@ -198,7 +198,7 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
         }
         
         if (hit) {
-          getJavaElement(enclosingMethod, scu.project.javaProject).foreach { element =>
+          getJavaElement(enclosingDeclaration, scu.project.javaProject).foreach { element =>
             val accuracy = SearchMatch.A_ACCURATE
             val (offset, length) = 
               if (tree.isDef) (tree.pos.startOrPoint + 4, tree.symbol.name.length)
@@ -236,7 +236,7 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
       
       if (noPosition || (nameNoMatch && varNoMatch) || qualifierNoMatch) return
 
-      getJavaElement(enclosingMethod, scu.project.javaProject).foreach { enclosingElement =>
+      getJavaElement(enclosingDeclaration, scu.project.javaProject).foreach { enclosingElement =>
         val accuracy = SearchMatch.A_ACCURATE
         val offset = s.pos.start
         val length = s.pos.end - offset

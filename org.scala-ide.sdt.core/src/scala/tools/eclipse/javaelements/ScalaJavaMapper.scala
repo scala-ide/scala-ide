@@ -31,7 +31,7 @@ trait ScalaJavaMapper extends ScalaAnnotationHelper with SymbolNameUtil with Has
       askOption { () =>
         lazy val methName = meth.getElementName
         lazy val symName = (if(sym.isConstructor) sym.owner.simpleName.toString + (if (sym.owner.isModuleClass) "$" else "") else sym.name.toString)
-        lazy val sameName = meth.getElementName == symName
+        lazy val sameName = methName == symName
         lazy val sameParams = meth.getParameterTypes.map(tp => getTypeErasure(getElementType(tp))).sameElements(sym.tpe.paramTypes.map(mapParamTypeSignature))
         sameName && sameParams
       }.getOrElse(false)
