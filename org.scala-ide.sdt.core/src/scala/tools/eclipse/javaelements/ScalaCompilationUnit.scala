@@ -38,11 +38,12 @@ import scala.tools.eclipse.hyperlink.text.detector.BaseHyperlinkDetector
 import scala.tools.eclipse.util.EditorUtils
 
 trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with ScalaElement with IScalaCompilationUnit with IBufferChangedListener with HasLogger {
+  @deprecated("This member will be made private before Helium M2. Use doWithSourceFile or withSourceFile")
   val project = ScalaPlugin.plugin.getScalaProject(getJavaProject.getProject)
 
   val file : AbstractFile
   
-  private var lastCrash: Throwable = null
+  @volatile private var lastCrash: Throwable = null
 
   def doWithSourceFile(op : (SourceFile, ScalaPresentationCompiler) => Unit) {
     project.withSourceFile(this)(op)(())
@@ -62,8 +63,6 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
   def createSourceFile : BatchSourceFile = {
     new BatchSourceFile(file, getContents())
   }
-
-  def getProblemRequestor : IProblemRequestor = null
 
   override def buildStructure(info : OpenableElementInfo, pm : IProgressMonitor, newElements : JMap[_, _], underlyingResource : IResource) : Boolean =
     withSourceFile({ (sourceFile, compiler) =>
@@ -114,6 +113,7 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
 
   /** Log an error at most once for this source file. */
   private def handleCrash(msg: String, ex: Throwable) {
+    // The if-then-act check is a classic race-condition. Though, this is not on a critical path, so a lost update wouldn't hurt too much.  
     if (lastCrash != ex) {
       lastCrash = ex
       eclipseLog.error(msg, ex)
@@ -153,7 +153,7 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
     }
   }
   
-  def getChildAt(element: IJavaElement, pos: Int): IJavaElement = {
+  private def getChildAt(element: IJavaElement, pos: Int): IJavaElement = {
     /* companion-class can be selected instead of the object in the JDT-'super' 
        implementation and make the private method and fields unreachable.
        To avoid this, we look for deepest element containing the position
@@ -205,17 +205,10 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
       res
     }(Array.empty[IJavaElement])
   }
-
-  def codeComplete
-    (cu : env.ICompilationUnit, unitToSkip : env.ICompilationUnit,
-     position : Int,  requestor : CompletionRequestor, owner : WorkingCopyOwner, typeRoot : ITypeRoot) {
-     codeComplete(cu, unitToSkip, position, requestor, owner, typeRoot, null) 
-  }
     
-  override def codeComplete
-    (cu : env.ICompilationUnit, unitToSkip : env.ICompilationUnit,
-     position : Int,  requestor : CompletionRequestor, owner : WorkingCopyOwner, typeRoot : ITypeRoot,
-     monitor : IProgressMonitor) {
+  override def codeComplete(cu : env.ICompilationUnit, unitToSkip : env.ICompilationUnit, position : Int,  
+                            requestor : CompletionRequestor, owner : WorkingCopyOwner, typeRoot : ITypeRoot, monitor : IProgressMonitor) {
+    // This is a no-op!?
   }
   
   override def reportMatches(matchLocator : MatchLocator, possibleMatch : PossibleMatch) {
