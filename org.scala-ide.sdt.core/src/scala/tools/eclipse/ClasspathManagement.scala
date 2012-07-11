@@ -72,7 +72,7 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
   /** Return the Scala classpath breakdown for the managed project. */
   def scalaClasspath: ScalaClasspath = {
     val jdkEntries = jdkPaths
-    val cp = classpath.filterNot(jdkEntries.toSet)
+    val cp = javaClasspath.filterNot(jdkEntries.toSet)
 
     scalaLibraries match {
       case Seq((pf, version), _*) => new ScalaClasspath(jdkEntries, Some(pf), cp.filterNot(_ == pf), version)
@@ -80,6 +80,13 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
     }
   }
 
+  /** Return the full classpath of this project.
+   *  Each entry is an absolute file-system path.
+   */
+  @deprecated("Please use `scalaClasspath.fullClasspath instead", "2.1.0")
+  def classpath: Seq[IPath] = 
+    scalaClasspath.fullClasspath.map(p => new Path(p.getAbsolutePath))
+  
   /** Return the classpath entries coming from the JDK.  */
   def jdkPaths: Seq[IPath] = {
     val rawClasspath = javaProject.getRawClasspath()
@@ -104,7 +111,7 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
    *
    *  @note This is almost never what you need. See the [[scalaClasspath.fullClasspath]] method
    */
-  private def classpath: Seq[IPath] = {
+  private def javaClasspath: Seq[IPath] = {
     val path = new mutable.LinkedHashSet[IPath]
 
     def computeClasspath(project: IJavaProject, exportedOnly: Boolean): Unit = {
