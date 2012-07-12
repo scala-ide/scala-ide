@@ -53,7 +53,7 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
       case Ident(id)                           => id.toChars
       case Select(_, name)                     => name.toChars
       case AppliedTypeTree(fun: RefTree, args) => fun.name.toChars
-      case tpt @ TypeTree()                    => mapType(tpt).toCharArray // maybe the tree was typed
+      case tpt @ TypeTree()                    => mapType(tpt.symbol).toCharArray // maybe the tree was typed
       case parent =>
         logger.info("superclass not understood: %s".format(parent))
         "$$NoRef".toCharArray
@@ -127,7 +127,7 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
       indexer.addMethodDeclaration(
         nme.getterName(v.name).toChars,
         Array.empty,
-        mapType(v.tpt).toArray,
+        mapType(v.tpt.symbol).toArray,
         Array.empty
       )
         
@@ -135,7 +135,7 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
         indexer.addMethodDeclaration(
           nme.getterToSetter(nme.getterName(v.name)).toChars,
           Array.empty,
-          mapType(v.tpt).toArray,
+          mapType(v.tpt.symbol).toArray,
           Array.empty
         )
       addAnnotations(v)
@@ -146,11 +146,11 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
         
       val fps = for(vps <- d.vparamss; vp <- vps) yield vp
         
-      val paramTypes = fps.map(v => mapType(v.tpt))
+      val paramTypes = fps.map(v => mapType(v.tpt.symbol))
       indexer.addMethodDeclaration(
         name,
         paramTypes.map(_.toCharArray).toArray,
-        mapType(d.tpt).toArray,
+        mapType(d.tpt.symbol).toArray,
         Array.empty
       )
       addAnnotations(d)
@@ -180,6 +180,20 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
         enclClassNames = old
       }
       
+      /** Add several method reference in the indexer for the passed [[RefTree]].  
+       * 
+       * Adding method references in the indexer is tricky for methods that have default arguments. 
+       * The problem is that method entries are encoded as selector '/' Arity, i.e., foo/0 for `foo()`.
+       * 
+       * Hence, `addApproximateMethodReferences` adds {{{22 - minArgsNumber}} method reference entries in 
+       * the indexer, for the passed [[RefTree]].
+       */
+      def addApproximateMethodReferences(tree: RefTree, minArgsNumber: Int = 0): Unit = {
+        val maxArgs = 22  // just arbitrary choice.
+        for (i <- minArgsNumber to maxArgs) 
+          indexer.addMethodReference(tree.name.toChars, i)
+      }
+      
       tree match {
         case pd : PackageDef => addPackage(pd)
         case cd : ClassDef => addClass(cd)
@@ -196,18 +210,16 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
         case md : ModuleDef => inClass(md.name.append("$").toChars) { super.traverse(tree) }
         
         case Apply(rt : RefTree, args) =>
-          indexer.addMethodReference(rt.name.toChars, args.length)
+          addApproximateMethodReferences(rt, args.size)
           super.traverse(tree)
           
         // Partial apply.
         case Typed(ttree, Function(_, _)) => 
           ttree match {
-            case rt : RefTree => 
-              val name = rt.name.toChars
-              for (i <- 0 to maxArgs) indexer.addMethodReference(name, i)
-            case Apply(rt : RefTree, args) => 
-              val name = rt.name.toChars
-              for (i <- args.length to maxArgs) indexer.addMethodReference(name, i)
+            case rt : RefTree =>
+              addApproximateMethodReferences(rt)
+            case Apply(rt : RefTree, args) =>
+              addApproximateMethodReferences(rt, args.size)
             case _ =>
           }
           super.traverse(tree)
@@ -222,7 +234,5 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
         case _ => super.traverse(tree)
       }
     }
-    
-    val maxArgs = 22  // just arbitrary choice.
   }
 }

@@ -108,13 +108,13 @@ class FindReferencesTests extends FindReferencesTester with HasLogger {
 
   private def jdtElement2testElement(e: JavaElement): Element = {
     val testElement: String => Element = e match {
-      case e: ScalaDefElement => Method.apply _
-      case e: ScalaVarElement => FieldVar.apply _
-      case e: ScalaValElement => FieldVal.apply _
-      case e: ScalaClassElement => Clazz.apply _
-      case e: ScalaTypeElement => TypeAlias.apply _
+      case e: ScalaDefElement    => Method.apply _
+      case e: ScalaVarElement    => FieldVar.apply _
+      case e: ScalaValElement    => FieldVal.apply _
+      case e: ScalaClassElement  => Clazz.apply _
+      case e: ScalaTypeElement   => TypeAlias.apply _
       case e: ScalaModuleElement => Module.apply _
-      case e: SourceType => Clazz.apply _
+      case e: SourceType         => Clazz.apply _
       case _ =>
         val msg = "Don't know how to convert element `%s` of type `%s`".format(e.getElementName, e.getClass)
         throw new IllegalArgumentException(msg)
@@ -184,10 +184,22 @@ class FindReferencesTests extends FindReferencesTester with HasLogger {
     val expected = method("foo.Bar$.configure", List("java.lang.String")) isReferencedBy method("foo.Foo.configure")
     runTest("bug1001135", "foo/Bar.scala", expected)
   }
-  
+
   @Test
   def findReferencesInClassFields() {
     val expected = fieldVal("Bar$.v") isReferencedBy fieldVal("Foo.v")
     runTest("field-ref", "Bar.scala", expected)
+  }
+
+  @Test
+  def findReferencesOfCurriedMethod_bug1001146() {
+    val expected = method("util.EclipseUtils$.workspaceRunnableIn", List("java.lang.String", "java.lang.Object", "scala.Function1<java.lang.Object,scala.runtime.BoxedUnit>")) isReferencedBy method("util.FileUtils$.foo")
+    runTest("bug1001146", "util/EclipseUtils.scala", expected)
+  }
+
+  @Test
+  def findReferencesOfMethodDeclaredWithDefaultArgs_bug1001146_1() {
+    val expected = method("util.EclipseUtils$.workspaceRunnableIn", List("java.lang.String", "java.lang.Object", "scala.Function1<java.lang.Object,scala.runtime.BoxedUnit>")) isReferencedBy method("util.FileUtils$.foo")
+    runTest("bug1001146_1", "util/EclipseUtils.scala", expected)
   }
 }

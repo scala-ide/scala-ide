@@ -32,7 +32,9 @@ trait ScalaJavaMapper extends ScalaAnnotationHelper with SymbolNameUtil with Has
         lazy val methName = meth.getElementName
         lazy val symName = (if(sym.isConstructor) sym.owner.simpleName.toString + (if (sym.owner.isModuleClass) "$" else "") else sym.name.toString)
         lazy val sameName = methName == symName
-        lazy val sameParams = meth.getParameterTypes.map(tp => getTypeErasure(getElementType(tp))).sameElements(sym.tpe.paramTypes.map(mapParamTypeSignature))
+        lazy val methParamsTpe = meth.getParameterTypes.map(tp => getTypeErasure(getElementType(tp)))
+        lazy val symParamsTpe = sym.paramss.flatten.map(param => mapParamTypeSignature(param.tpe))
+        lazy val sameParams = methParamsTpe.sameElements(symParamsTpe)
         sameName && sameParams
       }.getOrElse(false)
     }
@@ -138,9 +140,6 @@ trait ScalaJavaMapper extends ScalaAnnotationHelper with SymbolNameUtil with Has
     
     jdtMods
   }
-  
-  /** Returns the fully-qualified name for the passed type tree*/ 
-  def mapType(typeTree: Tree): String = mapType(typeTree.symbol)
 
   /** Returns the fully-qualified name for the passed symbol (it expects the symbol to be a type).*/
   def mapType(s: Symbol): String = mapType(s, javaClassName(_))

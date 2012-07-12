@@ -15,7 +15,7 @@ trait FindReferencesTester {
 
   case class Method(fullName: String) extends Element
   object Method {
-    def apply(fullName: String, args: List[String]): Method = Method(fullName + args.mkString("(", "'", ")"))
+    def apply(fullName: String, args: List[String]): Method = Method(fullName + args.mkString("(", ", ", ")"))
   }
   case class FieldVar(fullName: String) extends Element
   case class FieldVal(fullName: String) extends Element
