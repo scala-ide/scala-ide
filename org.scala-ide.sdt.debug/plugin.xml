@@ -36,4 +36,17 @@
             modelIdentifier="org.scala-ide.sdt.debug">
       </logicalStructureProvider>
    </extension>
+   <extension
+         point="org.eclipse.debug.core.launchDelegates">
+      <launchDelegate
+            delegate="scala.tools.eclipse.launching.ScalaApplicationLaunchConfigurationDelegate"
+            delegateDescription="The Scala JVM Launcher supports debugging of local Scala using the new Scala debugger"
+            id="scala.application.new"
+            modes="debug"
+            name="Scala Application (new debugger)"
+            sourceLocatorId="org.eclipse.jdt.launching.sourceLocator.JavaSourceLookupDirector"
+            sourcePathComputerId="org.eclipse.jdt.launching.sourceLookup.javaSourcePathComputer"
+            type="scala.application">
+      </launchDelegate>
+    </extension>
 </plugin>

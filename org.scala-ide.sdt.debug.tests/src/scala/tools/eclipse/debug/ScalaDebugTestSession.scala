@@ -11,6 +11,17 @@ import org.eclipse.debug.core.model.DebugElement
 import scala.tools.eclipse.debug.model.ScalaDebugElement
 import org.eclipse.jdt.internal.debug.core.model.JDIDebugElement
 
+object EclipseDebugEvent {
+  def unapply(event: DebugEvent): Option[(Int, DebugElement)] = {
+    event.getSource match {
+      case debugElement: DebugElement =>
+        Some(event.getKind, debugElement)
+      case _ =>
+        None
+    }
+  }
+}
+
 class ScalaDebugTestSession(launchConfigurationFile: IFile) extends IDebugEventSetListener {
 
   object State extends Enumeration {
@@ -100,13 +111,11 @@ class ScalaDebugTestSession(launchConfigurationFile: IFile) extends IDebugEventS
   var debugTarget: ScalaDebugTarget = null
   var currentStackFrame: ScalaStackFrame = null
   
-  // if is not Scala 2.0, it is Scala 2.09
-  lazy val isScala210 = debugTarget.javaTarget.getVM.classesByName("scala.ScalaObject").isEmpty
-
   def runToLine(typeName: String, breakpointLine: Int) {
     assertThat("Bad state before runToBreakpoint", state, anyOf(is(NOT_LAUNCHED), is(SUSPENDED)))
 
     val breakpoint = JDIDebugModel.createLineBreakpoint(ResourcesPlugin.getWorkspace.getRoot, typeName, breakpointLine, -1, -1, -1, true, null)
+    waitForBreakpointsToBeInstalled
 
     if (state eq NOT_LAUNCHED) {
       launch()
@@ -177,18 +186,29 @@ class ScalaDebugTestSession(launchConfigurationFile: IFile) extends IDebugEventS
     val launchConfiguration = DebugPlugin.getDefault.getLaunchManager.getLaunchConfiguration(launchConfigurationFile)
     launchConfiguration.launch(ILaunchManager.DEBUG_MODE, null)
   }
+  
+  /**
+   * Breakpoints are set asynchronously. It is fine in the UI, but it create timing problems
+   * while running test.
+   * This method make sure there are no outstanding requests
+   */
+  private def waitForBreakpointsToBeInstalled() {
+    if (state ne NOT_LAUNCHED) {
+      debugTarget.breakpointManager.eventActor !? ActorDebug
+    }
+  }
 
   // -----
 
   /**
-   * Check that all threads have a suspended count of 0, except the one of the current thread which should be 1
+   * Check that all threads have a suspended count of 0, except the one of the current thread, which should be 1
    */
   def checkThreadsState() {
     assertEquals("Bad state before checkThreadsState", SUSPENDED, state)
 
     val currentThread = currentStackFrame.stackFrame.thread
     import scala.collection.JavaConverters._
-    debugTarget.javaTarget.getVM.allThreads.asScala.foreach(thread =>
+    debugTarget.virtualMachine.allThreads.asScala.foreach(thread =>
       assertEquals("Wrong suspended count", if (thread == currentThread) 1 else 0, thread.suspendCount))
   }
 

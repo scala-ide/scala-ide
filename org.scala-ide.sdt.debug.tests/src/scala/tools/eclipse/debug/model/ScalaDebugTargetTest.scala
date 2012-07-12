@@ -31,14 +31,14 @@ class ScalaDebugTargetTest {
     when(event.thread).thenReturn(thread)
     when(thread.name).thenReturn(THREAD_NAME)
     
-    debugTarget.handleEvent(event, null, false, null)
+    debugTarget.eventActor !? event
     
     val threads1= debugTarget.getThreads
     assertEquals("Wrong number of threads", 1, threads1.length)
     assertEquals("Wrong thread name", THREAD_NAME, threads1(0).getName)
     
     // a second start event should not result in a duplicate entry
-    debugTarget.handleEvent(event, null, false, null)
+    debugTarget.eventActor !? event
     
     val threads2= debugTarget.getThreads
     assertEquals("Wrong number of threads", 1, threads2.length)
@@ -46,11 +46,9 @@ class ScalaDebugTargetTest {
   }
   
   def createDebugTarget(): ScalaDebugTarget = {
-    val javaDebugTarget= mock(classOf[JDIDebugTarget])
     val vm= mock(classOf[VirtualMachine])
-    when(javaDebugTarget.getVM).thenReturn(vm)
     when(vm.allThreads).thenReturn(new ArrayList[ThreadReference]())
-    new ScalaDebugTarget(javaDebugTarget, null, null)
+    new ScalaDebugTarget(vm, null, null, null, null)
   }
 
 }

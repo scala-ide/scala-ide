@@ -4,15 +4,14 @@ import scala.Option.option2Iterable
 import scala.collection.JavaConverters.asScalaBufferConverter
 import scala.collection.mutable.ListBuffer
 import scala.tools.eclipse.debug.JDIUtil.methodToLines
-import scala.tools.eclipse.debug.model.{ScalaThread, ScalaStackFrame, ScalaDebugTarget}
-
+import scala.tools.eclipse.debug.model.{ ScalaThread, ScalaStackFrame, ScalaDebugTarget }
 import org.eclipse.debug.core.DebugEvent
-import org.eclipse.jdt.internal.debug.core.model.JDIDebugTarget
-import org.eclipse.jdt.internal.debug.core.IJDIEventListener
-
-import com.sun.jdi.event.{StepEvent, EventSet, Event, ClassPrepareEvent, BreakpointEvent}
-import com.sun.jdi.request.{StepRequest, EventRequest}
-import com.sun.jdi.{ThreadReference, ReferenceType, Method}
+import com.sun.jdi.event.{ StepEvent, EventSet, Event, ClassPrepareEvent, BreakpointEvent }
+import com.sun.jdi.request.{ StepRequest, EventRequest }
+import com.sun.jdi.{ ThreadReference, ReferenceType, Method }
+import scala.actors.Actor
+import com.sun.jdi.request.BreakpointRequest
+import scala.tools.eclipse.debug.ActorExit
 
 object ScalaStepOver {
 
@@ -63,7 +62,10 @@ object ScalaStepOver {
 
   }
 
-  def createMethodEntryBreakpoint(method: Method, thread: ThreadReference) = {
+  /**
+   * Create a breakpoint on the first instruction of the method
+   */
+  def createMethodEntryBreakpoint(method: Method, thread: ThreadReference): BreakpointRequest = {
     import scala.collection.JavaConverters._
 
     val breakpointRequest = thread.virtualMachine.eventRequestManager.createBreakpointRequest(method.location)
@@ -75,66 +77,74 @@ object ScalaStepOver {
 
 }
 
-class ScalaStepOver(target: ScalaDebugTarget, range: Range, thread: ScalaThread, requests: ListBuffer[EventRequest]) extends IJDIEventListener with ScalaStep {
+class ScalaStepOver(target: ScalaDebugTarget, range: Range, thread: ScalaThread, requests: ListBuffer[EventRequest]) extends ScalaStep {
   import ScalaStepOver._
-
-  // Members declared in org.eclipse.jdt.internal.debug.core.IJDIEventListener
-
-  def eventSetComplete(event: Event, target: JDIDebugTarget, suspend: Boolean, eventSet: EventSet): Unit = {
-    // nothing to do
-  }
-
-  def handleEvent(event: Event, javaTarget: JDIDebugTarget, suspendVote: Boolean, eventSet: EventSet): Boolean = {
-    event match {
-      case classPrepareEvent: ClassPrepareEvent =>
-        thread.getScalaDebugTarget.anonFunctionsInRange(classPrepareEvent.referenceType, range).foreach(method => {
-          val breakpoint = createMethodEntryBreakpoint(method, thread.thread)
-          requests += breakpoint
-          javaTarget.getEventDispatcher.addJDIEventListener(this, breakpoint)
-          breakpoint.enable
-        })
-        true
-      case stepEvent: StepEvent =>
-        if (target.isValidLocation(stepEvent.location)) {
-          stop
-          thread.suspendedFromScala(DebugEvent.STEP_OVER)
-          false
-        } else {
-          true
-        }
-      case breakpointEvent: BreakpointEvent =>
-        stop
-        thread.suspendedFromScala(DebugEvent.STEP_OVER)
-        false
-      case _ =>
-        suspendVote
-    }
-  }
 
   // Members declared in scala.tools.eclipse.debug.command.ScalaStep
 
   def step() {
-    val eventDispatcher = target.javaTarget.getEventDispatcher
+    val eventDispatcher = target.eventDispatcher
 
-    requests.foreach(breakpoint => {
-      eventDispatcher.addJDIEventListener(this, breakpoint)
-      breakpoint.enable
-    })
+    requests.foreach {
+      request =>
+        eventDispatcher.setActorFor(eventActor, request)
+        request.enable
+    }
 
     thread.resumedFromScala(DebugEvent.STEP_OVER)
     thread.thread.resume
   }
 
   def stop() {
-    val eventDispatcher = target.javaTarget.getEventDispatcher
+    val eventDispatcher = target.eventDispatcher
 
     val eventRequestManager = thread.thread.virtualMachine.eventRequestManager
 
-    requests.foreach(breakpoint => {
-      breakpoint.disable
-      eventDispatcher.removeJDIEventListener(this, breakpoint)
-      eventRequestManager.deleteEventRequest(breakpoint)
-    })
+    requests.foreach {
+      request =>
+        request.disable
+        eventDispatcher.unsetActorFor(request)
+        eventRequestManager.deleteEventRequest(request)
+    }
+    
+    eventActor ! ActorExit
+
   }
 
+  // ----------------
+
+  /**
+   *  process the debug events
+   */
+  val eventActor = new Actor {
+    start
+    def act() {
+      loop {
+        react {
+          case classPrepareEvent: ClassPrepareEvent =>
+            thread.getScalaDebugTarget.anonFunctionsInRange(classPrepareEvent.referenceType, range).foreach(method => {
+              val breakpoint = createMethodEntryBreakpoint(method, thread.thread)
+              requests += breakpoint
+              target.eventDispatcher.setActorFor(this, breakpoint)
+              breakpoint.enable
+            })
+            reply(false)
+          case stepEvent: StepEvent =>
+            reply(if (target.isValidLocation(stepEvent.location)) {
+              stop
+              thread.suspendedFromScala(DebugEvent.STEP_OVER)
+              true
+            } else {
+              false
+            })
+          case breakpointEvent: BreakpointEvent =>
+            stop
+            thread.suspendedFromScala(DebugEvent.STEP_OVER)
+            reply(true)
+          case ActorExit =>
+            exit
+        }
+      }
+    }
+  }
 }
