@@ -69,50 +69,7 @@ trait ScalaJavaMapper extends ScalaAnnotationHelper with SymbolNameUtil with Has
     val javaModel = JavaModelManager.getJavaModelManager.getJavaModel
     getJavaElement(sym, javaModel.getJavaProjects(): _*)
   }
-  
-  def mapType(t : Tree) : String = {
-    (t match {
-      case tt : TypeTree => {
-        askOption { () => 
-          if(tt.symbol == null || tt.symbol == NoSymbol || tt.symbol.isRefinementClass || tt.symbol.owner.isRefinementClass)
-            "scala.AnyRef"
-          else
-            tt.symbol.fullName
-        }.getOrElse("scala.AnyRef")
-      }
-      case Select(_, name) => name.toString
-      case Ident(name) => name.toString
-      case _ => "scala.AnyRef"
-    }) match {
-      case "scala.AnyRef" => "java.lang.Object"
-      case "scala.Unit" => "void"
-      case "scala.Boolean" => "boolean"
-      case "scala.Byte" => "byte"
-      case "scala.Short" => "short"
-      case "scala.Int" => "int"
-      case "scala.Long" => "long"
-      case "scala.Float" => "float"
-      case "scala.Double" => "double"
-      case "<NoSymbol>" => "void"
-      case n => n
-    }
-  }
 
-  /** Compatible with both 2.8 and 2.9 (interface HasFlags appears in 2.9).
-   * 
-   *  COMPAT: Once we drop 2.8, rewrite to use the HasFlags trait in scala.reflect.generic
-   */
-  
-  
-/* Re-add when ticket #4560 is fixed.
-  type HasFlags = {
-      /** Whether this entity has ANY of the flags in the given mask. */
-      def hasFlag(flag: Long): Boolean
-      def isFinal: Boolean
-      def isTrait: Boolean
-  }
-*/  
-  
   def mapModifiers(owner: Symbol) : Int = {
     var jdtMods = 0
     if(owner.hasFlag(Flags.PRIVATE))
@@ -181,28 +138,32 @@ trait ScalaJavaMapper extends ScalaAnnotationHelper with SymbolNameUtil with Has
     
     jdtMods
   }
-    
+  
+  /** Returns the fully-qualified name for the passed type tree*/ 
+  def mapType(typeTree: Tree): String = mapType(typeTree.symbol)
+
+  /** Returns the fully-qualified name for the passed symbol (it expects the symbol to be a type).*/
   def mapType(s: Symbol): String = mapType(s, javaClassName(_))
 
+  /** Returns the simple name for the passed symbol (it expects the symbol to be a type).*/ 
   def mapSimpleType(s: Symbol): String = mapType(s, javaSimpleName(_))
 
-  private def mapType(s : Symbol, namer: Symbol => String) : String = {
-    (if(s == null || s == NoSymbol || s.isRefinementClass || s.owner.isRefinementClass)
-        "scala.AnyRef"
-      else  
-        namer(s)
-    ) match {
-      case "scala.AnyRef" | "scala.Any" => "java.lang.Object"
-      case "scala.Unit" => "void"
-      case "scala.Boolean" => "boolean"
-      case "scala.Byte" => "byte"
-      case "scala.Short" => "short"
-      case "scala.Int" => "int"
-      case "scala.Long" => "long"
-      case "scala.Float" => "float"
-      case "scala.Double" => "double"
-      case "<NoSymbol>" => "void"
-      case n => n
+  private def mapType(symbolType: Symbol, symbolType2StringName: Symbol => String) : String = {
+    val normalizedSymbol = 
+      if(symbolType == null || symbolType == NoSymbol || symbolType.isRefinementClass || symbolType.owner.isRefinementClass || 
+         symbolType == definitions.AnyRefClass || symbolType == definitions.AnyClass) 
+        definitions.ObjectClass
+      else symbolType
+    normalizedSymbol match {
+      case definitions.UnitClass    => "void"
+      case definitions.BooleanClass => "boolean"
+      case definitions.ByteClass    => "byte"
+      case definitions.ShortClass   => "short"
+      case definitions.IntClass     => "int"
+      case definitions.LongClass    => "long"
+      case definitions.FloatClass   => "float"
+      case definitions.DoubleClass  => "double"
+      case n => symbolType2StringName(n)
     }
   }
 
