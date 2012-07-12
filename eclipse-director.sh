@@ -22,10 +22,10 @@ Commands:
     list                        List available plugins. (useless right now, as it uses the Eclipse repo).
 
     install <version>           Install plugin. It is the version number of the Scala installation
-                                For instance: 2.9.2-SNAPSHOT or trunk
+                                For instance: 2.9.x or trunk
 
     install <version>/YYYYMMDD  Install the nightly for the given date. <version> is one of 'trunk' or 
-                                '2.9.2-SNAPSHOT'
+                                '2.9.x'
 
     install-local <path>        Install from a local update site given by <path>
 
@@ -85,13 +85,13 @@ function install()
             find_latest_build "http://download.scala-ide.org/builds/nightly-$branch-trunk" $repo_date
             ;;
 
-        2.9.2-SNAPSHOT )
-            update_site="$scala_repo-$branch-trunk"
+        2.9.x )
+            update_site="$scala_repo-$branch-29x"
             ;;
 
-        2.9.2-SNAPSHOT/[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9] )
+        2.9.x/[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9] )
             repo_date=`echo $1 | cut -d \/ -f 2`
-            find_latest_build "http://download.scala-ide.org/builds/nightly-$branch-2.9.2-SNAPSHOT" $repo_date
+            find_latest_build "http://download.scala-ide.org/builds/nightly-$branch-29x" $repo_date
             ;;
 
         * )
