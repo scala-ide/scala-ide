@@ -63,10 +63,14 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
       reportMethod.invoke(matchLocator, sm)
     }
 
+    def fullyQualifiedName(qualification: Array[Char], simpleName: Array[Char]): Array[Char] =
+      if(qualification.length == 0) simpleName
+      else Array.concat(qualification, Array('.'), simpleName)
+
     def checkQualifier(s: Select, className: Array[Char], pat: SearchPattern) =  {
       (className eq null) || {
         s.qualifier.tpe.baseClasses exists { bc => 
-          pat.matchesName(className, mapSimpleType(bc).toCharArray)
+          pat.matchesName(className, mapType(bc).toCharArray)
         }
       }
     }
@@ -158,23 +162,32 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
      *  
      *  TODO: check for curried method definitions
      */
-    def parameterSizeMatches(desiredCount: Int, tpe: MethodType): Boolean =
-      ((desiredCount == tpe.paramTypes.size)
-        || ((desiredCount > tpe.paramTypes.size)
-             && (tpe.paramTypes.nonEmpty && 
-                 tpe.paramTypes.last.typeSymbol == definitions.RepeatedParamClass))
+    def parameterSizeMatches(desiredCount: Int, tpe: MethodType): Boolean = {
+      val paramss = tpe.paramss.flatten
+      ((desiredCount == paramss.size)
+        || ((desiredCount > paramss.size)
+             && (paramss.nonEmpty && paramss.last == definitions.RepeatedParamClass))
       )
+    }
     
     /** Does the method type match the pattern? */
     def checkSignature(tpe: MethodType, pat: MethodPattern): Boolean =
       (pat.parameterCount == -1) || (parameterSizeMatches(pat.parameterCount, tpe) && {
-          val searchedParamTypes = pat.parameterSimpleNames
-          val currentParamTypes = tpe.paramTypes
-           
-          for (i <- 0 to currentParamTypes.size - 1) 
-            if (!currentParamTypes(i).baseClasses.exists { bc => 
-              pat.matchesName(searchedParamTypes(i), bc.name.toChars)
-            }) return false        
+          val searchedParamTypes = pat.parameterQualifications.zip(pat.parameterSimpleNames) map {
+            case (qualifier,name) => fullyQualifiedName(qualifier, name)
+          }
+
+          val currentParamsTypes = tpe.paramss.flatten
+
+          for((searchedParamTpe, paramTpe) <- searchedParamTypes.zip(currentParamsTypes)) {
+            val tpeBaseClasses = paramTpe.tpe.baseClasses
+            val noMatch = !tpeBaseClasses.exists { bc =>
+              pat.matchesName(searchedParamTpe, mapType(bc).toCharArray)
+            }
+            if (noMatch) 
+              return false
+          }
+
           true
       })
     
@@ -185,7 +198,7 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
       }
 
       val proceed = tree match {
-        case t: Select => checkQualifier(t, pat.declaringSimpleName, pat)
+        case t: Select => checkQualifier(t, fullyQualifiedName(pat.declaringQualification, pat.declaringSimpleName), pat)
         case _ => true
       }
       
@@ -232,7 +245,7 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
       lazy val noPosition = !s.pos.isDefined
       lazy val nameNoMatch = !pat.matchesName(searchedVar, s.name.toChars)
       lazy val varNoMatch = !pat.matchesName(CharOp.concat(searchedVar, "_$eq".toCharArray), s.name.toChars)
-      lazy val qualifierNoMatch = !checkQualifier(s, declaringSimpleName(pat), pat)
+      lazy val qualifierNoMatch = !checkQualifier(s, fullyQualifiedName(declaringQualification(pat), declaringSimpleName(pat)), pat)
       
       if (noPosition || (nameNoMatch && varNoMatch) || qualifierNoMatch) return
 
@@ -444,7 +457,9 @@ object MatchLocatorUtils extends ReflectionUtils {
   
   val fpClazz = classOf[FieldPattern]
   val declaringSimpleNameField = getDeclaredField(fpClazz, "declaringSimpleName")
+  val declaringQualificationField = getDeclaredField(fpClazz, "declaringQualification")
   def declaringSimpleName(fp : FieldPattern) = declaringSimpleNameField.get(fp).asInstanceOf[Array[Char]]
+  def declaringQualification(fp : FieldPattern) = declaringQualificationField.get(fp).asInstanceOf[Array[Char]]
   
   val ftrClazz = classOf[TypeReferencePattern]
   val simpleNameField = getDeclaredField(ftrClazz, "simpleName")
