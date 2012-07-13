@@ -150,7 +150,7 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
             eclipseLog.error("Error during askOption", e)
             None
         }
-      case e =>
+      case e: Throwable =>
         eclipseLog.error("Error during askOption", e)
         None
     }

@@ -127,7 +127,7 @@ class SymbolClassification(protected val sourceFile: SourceFile, val global: Sca
         case rangePosition: RangePosition => Region(rangePosition.start, rangePosition.end - rangePosition.start)
       }
     catch {
-      case e => None
+      case e: Exception => None
     }
 
   private def getSymbolInfosFromSyntax(syntacticInfo: SyntacticInfo, localVars: Set[Region], all: Set[Region]): List[SymbolInfo] = {

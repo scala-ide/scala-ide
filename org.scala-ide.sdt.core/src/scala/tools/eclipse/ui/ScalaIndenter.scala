@@ -27,6 +27,8 @@ import scala.tools.eclipse.ScalaPlugin
 import scala.tools.eclipse.formatter.FormatterPreferences
 import scalariform.formatter.preferences.IndentSpaces
 
+import scala.util.control.Exception
+
 // TODO Move this out into a new file
 trait PreferenceProvider {
   private val preferences = Map.empty[String, String]
@@ -275,13 +277,9 @@ class ScalaIndenter(
     DefaultCodeFormatterConstants.NEXT_LINE_SHIFTED.equals(getCoreFormatterOption(DefaultCodeFormatterConstants.FORMATTER_BRACE_POSITION_FOR_TYPE_DECLARATION))
 
   private def prefContinuationIndent: Int = {
-    try {
-      return Integer.parseInt(getCoreFormatterOption(DefaultCodeFormatterConstants.FORMATTER_CONTINUATION_INDENTATION))
-    } catch {
-      case _ => // ignore and return default
+    Exception.failAsValue(classOf[Exception])(2) {
+      Integer.parseInt(getCoreFormatterOption(DefaultCodeFormatterConstants.FORMATTER_CONTINUATION_INDENTATION))
     }
-
-    return 2 // sensible default
   }
 
   private def hasGenerics: Boolean = true

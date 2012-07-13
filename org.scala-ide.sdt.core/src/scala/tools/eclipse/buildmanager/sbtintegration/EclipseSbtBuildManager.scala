@@ -240,7 +240,7 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings)
     try {
       update(toBuild, removedFiles)
     } catch {
-      case e =>
+      case e: Throwable =>
         hasErrors = true
         BuildProblemMarker.create(project, e)
         eclipseLog.error("Error in Scala compiler", e)

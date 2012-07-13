@@ -162,7 +162,7 @@ class AnalysisCompile(conf: BasicConfiguration, bm: EclipseSbtBuildManager, cont
         reporter.log(SbtConverter.convertToSbt(NoPosition), "could not find a required class (incomplete classpath?): " + required, xsbti.Severity.Error)
         null
 
-      case ex =>
+      case ex: Throwable =>
         eclipseLog.error("Crash in the build compiler.", ex)
         reporter.log(SbtConverter.convertToSbt(NoPosition), "The SBT builder crashed while compiling your project. This is a bug in the Scala compiler or SBT. Check the Erorr Log for details. The error message is: " + ex.getMessage(), xsbti.Severity.Error)
         null

@@ -250,7 +250,7 @@ class EclipseRepl(client: Client, builder: Builder) extends Actor
     val b = new BAOS
     Console.withOut(b) { Console.withErr(b) {
       try work(r, b)
-      catch { case t =>
+      catch { case t: Throwable =>
         try {
           val o = b.toString ; b.reset()
           client.failed(r, t, o)
