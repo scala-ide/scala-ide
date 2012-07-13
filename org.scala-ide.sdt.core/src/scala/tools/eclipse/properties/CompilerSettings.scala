@@ -227,7 +227,7 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
     buildIfNecessary()
     true
   } catch {
-    case ex => eclipseLog.error(ex); false
+    case ex: Throwable => eclipseLog.error(ex); false
   }
 
   //Make sure apply button isn't available until it should be

@@ -28,7 +28,7 @@ case class ImportCompletionProposal(val importName: String) extends IJavaComplet
     try {
       applyByASTTransformation(document)
     } catch {
-      case t => {
+      case t: Exception => {
         eclipseLog.error("failed to update import by AST transformation, fallback to text implementation", t)
         applyByTextTransformation(document)
       }

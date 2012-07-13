@@ -9,6 +9,7 @@ import org.eclipse.ui.IWorkbenchWindow
 import org.eclipse.ui.IWorkbenchWindowActionDelegate
 import org.eclipse.ui.IFileEditorInput
 import interpreter.ReplConsoleView
+import util.Utils._
 
 class RunSelectionAction extends ActionDelegate with IWorkbenchWindowActionDelegate {
   var workbenchWindow: IWorkbenchWindow = null
@@ -16,20 +17,13 @@ class RunSelectionAction extends ActionDelegate with IWorkbenchWindowActionDeleg
   def init(window: IWorkbenchWindow) {
     workbenchWindow = window
   }
-     
-  def doCast[T](obj: Any): Option[T] = {
-    obj match {
-      case t: T => Some(t)
-      case _ => None
-    }
-  }
-  
+
   override def run(action: IAction) {
 
     for (editor <- Option(workbenchWindow.getActivePage.getActiveEditor);
-        input <- doCast[IFileEditorInput](editor.getEditorInput);
-        textEditor <- doCast[ITextEditor](editor);
-        selection <- doCast[ITextSelection](textEditor.getSelectionProvider.getSelection)) 
+        input <- editor.getEditorInput.asInstanceOfOpt[IFileEditorInput];
+        textEditor <- editor.asInstanceOfOpt[ITextEditor];
+        selection <- textEditor.getSelectionProvider.getSelection.asInstanceOfOpt[ITextSelection]) 
     {
       val project = input.getFile.getProject
       var text = selection.getText
