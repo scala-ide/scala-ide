@@ -11,8 +11,9 @@ import scala.tools.eclipse.ScalaWordFinder
 import scala.tools.eclipse.javaelements.ScalaCompilationUnit
 import scala.tools.eclipse.javaelements.ScalaSelectionEngine
 import scala.tools.eclipse.javaelements.ScalaSelectionRequestor
+import scala.tools.eclipse.logging.HasLogger
 
-class DeclarationHyperlinkDetector extends BaseHyperlinkDetector {
+class DeclarationHyperlinkDetector extends BaseHyperlinkDetector with HasLogger {
 
   private val resolver: ScalaDeclarationHyperlinkComputer = new ScalaDeclarationHyperlinkComputer
 
@@ -39,7 +40,9 @@ class DeclarationHyperlinkDetector extends BaseHyperlinkDetector {
       lazy val openAction = new OpenAction(textEditor.asInstanceOf[JavaEditor])
       elements.map(new JavaElementHyperlink(wordRegion, openAction, _, qualify))
     } catch {
-      case _ => List[IHyperlink]()
+      case t: Throwable => 
+        logger.debug("Exception while computing hyperlink", t)
+        Nil
     }
   }
 }

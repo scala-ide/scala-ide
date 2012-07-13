@@ -132,7 +132,7 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
           new compiler.IndexBuilderTraverser(indexer).traverse(tree)
         }
       } catch {
-        case ex => handleCrash("Compiler crash during indexing of %s".format(getResource()), ex)
+        case ex: Throwable => handleCrash("Compiler crash during indexing of %s".format(getResource()), ex)
       }
     }
   }
