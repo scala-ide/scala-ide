@@ -17,6 +17,7 @@ import org.junit.Ignore
 import scala.tools.eclipse.EclipseUserSimulator
 import scala.tools.eclipse.ScalaProject
 import scala.tools.eclipse.properties.CompilerSettings
+import scala.tools.eclipse.testsetup.SDTTestUtils
 
 object ClasspathTests extends TestProjectSetup("classpath")
 
@@ -185,6 +186,22 @@ class ClasspathTests {
   @Test
   def binaryClassFolderLibrary() {
     setRawClasspathAndCheckMarkers(cleanRawClasspath :+  JavaCore.newLibraryEntry(new Path("/classpath/lib/" + ScalaPlugin.plugin.shortScalaVer + ".x/binary-scala-library"), null, null), 1, 0)
+  }
+  
+  @Test
+  def dependentProjectLibrary() {
+    import SDTTestUtils._
+
+    val Seq(scalaLibProject) = createProjects("scala-library")
+    try {
+      val packScala = createSourcePackage("scala")(scalaLibProject)
+
+      val unitA = packScala.createCompilationUnit("Predef.scala", "class Predef", true, null)
+
+      setRawClasspathAndCheckMarkers(cleanRawClasspath :+ JavaCore.newProjectEntry(scalaLibProject.underlying.getFullPath, true), 0, 0)
+    } finally {
+      deleteProjects(scalaLibProject)
+    }
   }
 
   /**

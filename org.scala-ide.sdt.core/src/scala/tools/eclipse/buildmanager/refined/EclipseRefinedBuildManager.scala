@@ -79,7 +79,7 @@ class EclipseRefinedBuildManager(project: ScalaProject, settings0: Settings)
     try {
       super.update(toBuild, removedFiles)
     } catch {
-      case e =>
+      case e: Throwable =>
         hasErrors = true
         BuildProblemMarker.create(project, e)
         eclipseLog.error("Error in Scala compiler", e)
@@ -145,7 +145,7 @@ class EclipseRefinedBuildManager(project: ScalaProject, settings0: Settings)
     else {
       try {
         !loadFrom(EclipseResource(depFile), EclipseResource.fromString(_).getOrElse(null))
-      } catch { case _ => true }
+      } catch { case _: Throwable => true }
     }
   }
 }

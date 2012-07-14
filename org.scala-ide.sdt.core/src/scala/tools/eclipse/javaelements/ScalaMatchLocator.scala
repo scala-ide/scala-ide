@@ -63,16 +63,33 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
       reportMethod.invoke(matchLocator, sm)
     }
 
+    def fullyQualifiedName(qualification: Array[Char], simpleName: Array[Char]): Array[Char] =
+      if(qualification.length == 0) simpleName
+      else Array.concat(qualification, Array('.'), simpleName)
+
     def checkQualifier(s: Select, className: Array[Char], pat: SearchPattern) =  {
       (className eq null) || {
         s.qualifier.tpe.baseClasses exists { bc => 
-          pat.matchesName(className, mapSimpleType(bc).toCharArray)
+          pat.matchesName(className, mapType(bc).toCharArray)
         }
       }
     }
     
     def posToLong(pos: Position): Long = pos.startOrPoint << 32 | pos.endOrPoint
-    
+
+    /** Returns the class/method/field symbol enclosing the tree node that is currently traversed.*/
+    protected def enclosingDeclaration(): Symbol = {
+      if(currentOwner.isLocalDummy) {
+        // expressions in an entity's body are flagged as "local dummy", which is basically a synthetic owner of 
+        // the expression. Since these expression are effectively evaluated in the entity's primary constructor, 
+        // it makes sense to return the constructor symbol as the enclosing declaration owning the expression.
+        // TODO: I now wonder how this will work with traits and nested method declarations. Need to test this!
+        val constructor = currentOwner.enclClass.info.member(self.nme.CONSTRUCTOR)
+        constructor
+      }
+      else currentOwner
+    }
+
     /* simplified from org.eclipse.jdt.internal.core.search.matching.PatternLocator */
     /*def qualifiedPattern(simpleNamePattern: Array[Char], qualificationPattern: Array[Char]): Array[Char] =
       // NOTE: if case insensitive search then simpleNamePattern & qualificationPattern are assumed to be lowercase
@@ -137,7 +154,6 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
   class MethodLocator(val scu: ScalaCompilationUnit, val matchLocator: MatchLocator, val pattern: MethodPattern, val possibleMatch: PossibleMatch) extends MatchLocatorTraverser {
     def report(tree: Tree) = tree match {
       case t: Select if t.symbol.isMethod => reportMethodReference(t, t.symbol, pattern)
-      case t: DefDef => reportMethodReference(t, t.symbol, pattern)
       case _ =>
     }
     
@@ -146,33 +162,43 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
      *  
      *  TODO: check for curried method definitions
      */
-    def parameterSizeMatches(desiredCount: Int, tpe: MethodType): Boolean =
-      ((desiredCount == tpe.paramTypes.size)
-        || ((desiredCount > tpe.paramTypes.size)
-             && (tpe.paramTypes.last.typeSymbol == definitions.RepeatedParamClass))
+    def parameterSizeMatches(desiredCount: Int, tpe: MethodType): Boolean = {
+      val paramss = tpe.paramss.flatten
+      ((desiredCount == paramss.size)
+        || ((desiredCount > paramss.size)
+             && (paramss.nonEmpty && paramss.last == definitions.RepeatedParamClass))
       )
+    }
     
     /** Does the method type match the pattern? */
     def checkSignature(tpe: MethodType, pat: MethodPattern): Boolean =
       (pat.parameterCount == -1) || (parameterSizeMatches(pat.parameterCount, tpe) && {
-          val searchedParamTypes = pat.parameterSimpleNames
-          val currentParamTypes = tpe.paramTypes
-           
-          for (i <- 0 to currentParamTypes.size - 1) 
-            if (!currentParamTypes(i).baseClasses.exists { bc => 
-              pat.matchesName(searchedParamTypes(i), bc.name.toChars)
-            }) return false        
+          val searchedParamTypes = pat.parameterQualifications.zip(pat.parameterSimpleNames) map {
+            case (qualifier,name) => fullyQualifiedName(qualifier, name)
+          }
+
+          val currentParamsTypes = tpe.paramss.flatten
+
+          for((searchedParamTpe, paramTpe) <- searchedParamTypes.zip(currentParamsTypes)) {
+            val tpeBaseClasses = paramTpe.tpe.baseClasses
+            val noMatch = !tpeBaseClasses.exists { bc =>
+              pat.matchesName(searchedParamTpe, mapType(bc).toCharArray)
+            }
+            if (noMatch) 
+              return false
+          }
+
           true
       })
     
     def reportMethodReference(tree: Tree, sym: Symbol, pat: MethodPattern) {
       if (!pat.matchesName(pat.selector, sym.name.toChars) || !sym.pos.isDefined) {
-        logger.debug("Name didn't match: [%s] pos.isDefined: %b".format(sym.name, sym.pos.isDefined))
+        logger.debug("Name didn't match: [%s] pos.isDefined: %b".format(sym.fullName, sym.pos.isDefined))
         return
       }
 
       val proceed = tree match {
-        case t: Select => checkQualifier(t, pat.declaringSimpleName, pat)
+        case t: Select => checkQualifier(t, fullyQualifiedName(pat.declaringQualification, pat.declaringSimpleName), pat)
         case _ => true
       }
       
@@ -185,23 +211,17 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
         }
         
         if (hit) {
-          val enclosingElement = scu match {
-            case ssf: ScalaSourceFile => ssf.getElementAt(tree.pos.startOrPoint)
-            case _ => null
-          }
-
-          if (enclosingElement != pat.focus) {
-
-            val accuracy = SearchMatch.A_INACCURATE
-            val (offset, length) = if (tree.isDef)
-              (tree.pos.startOrPoint + 4, tree.symbol.name.length)
-            else (tree.pos.startOrPoint, tree.pos.endOrPoint - tree.pos.startOrPoint)
+          getJavaElement(enclosingDeclaration, scu.project.javaProject).foreach { element =>
+            val accuracy = SearchMatch.A_ACCURATE
+            val (offset, length) = 
+              if (tree.isDef) (tree.pos.startOrPoint + 4, tree.symbol.name.length)
+              else (tree.pos.startOrPoint, tree.pos.endOrPoint - tree.pos.startOrPoint)
 
             val insideDocComment = false
             val participant = possibleMatch.document.getParticipant
             val resource = possibleMatch.resource
 
-            report(new MethodReferenceMatch(enclosingElement, accuracy, offset, length, insideDocComment, participant, resource))
+            report(new MethodReferenceMatch(element, accuracy, offset, length, insideDocComment, participant, resource))   
           }
         }
       }
@@ -214,34 +234,31 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
     def report(tree: Tree) = tree match {
       case s @ Select(qualifier, _) =>
         report(qualifier)
-        s.symbol match {
-          case sym : MethodSymbol => reportVariableReference(s, pattern)
-          case _ =>
-        }
+        if(s.symbol.isValue || s.symbol.isVariable)
+          reportVariableReference(s, pattern)
       case _ =>
     }
     
     def reportVariableReference(s: Select, pat: FieldPattern) {
       val searchedVar = pat.getIndexKey
-        
-      if (!s.pos.isDefined || 
-          (!pat.matchesName(searchedVar, s.name.toChars) &&
-           !pat.matchesName(CharOp.concat(searchedVar, "_$eq".toCharArray), s.name.toChars)) ||
-           !checkQualifier(s, declaringSimpleName(pat), pat)) 
-        return
-  
-      val enclosingElement = scu match {
-        case ssf: ScalaSourceFile => ssf.getElementAt(s.pos.start)
-        case _ => null
-      }
-      val accuracy = SearchMatch.A_INACCURATE
-      val offset = s.pos.start
-      val length = s.pos.end - offset
-      val insideDocComment = false
-      val participant = possibleMatch.document.getParticipant
-      val resource = possibleMatch.resource
 
-      report(new FieldReferenceMatch(enclosingElement, accuracy, offset, length, true, false, insideDocComment, participant, resource))
+      lazy val noPosition = !s.pos.isDefined
+      lazy val nameNoMatch = !pat.matchesName(searchedVar, s.name.toChars)
+      lazy val varNoMatch = !pat.matchesName(CharOp.concat(searchedVar, "_$eq".toCharArray), s.name.toChars)
+      lazy val qualifierNoMatch = !checkQualifier(s, fullyQualifiedName(declaringQualification(pat), declaringSimpleName(pat)), pat)
+      
+      if (noPosition || (nameNoMatch && varNoMatch) || qualifierNoMatch) return
+
+      getJavaElement(enclosingDeclaration, scu.project.javaProject).foreach { enclosingElement =>
+        val accuracy = SearchMatch.A_ACCURATE
+        val offset = s.pos.start
+        val length = s.pos.end - offset
+        val insideDocComment = false
+        val participant = possibleMatch.document.getParticipant
+        val resource = possibleMatch.resource
+
+        report(new FieldReferenceMatch(enclosingElement, accuracy, offset, length, /*isReadAccess*/true, /*isWriteAccess*/false, insideDocComment, participant, resource))  
+      }
     }
   }
   
@@ -440,7 +457,9 @@ object MatchLocatorUtils extends ReflectionUtils {
   
   val fpClazz = classOf[FieldPattern]
   val declaringSimpleNameField = getDeclaredField(fpClazz, "declaringSimpleName")
+  val declaringQualificationField = getDeclaredField(fpClazz, "declaringQualification")
   def declaringSimpleName(fp : FieldPattern) = declaringSimpleNameField.get(fp).asInstanceOf[Array[Char]]
+  def declaringQualification(fp : FieldPattern) = declaringQualificationField.get(fp).asInstanceOf[Array[Char]]
   
   val ftrClazz = classOf[TypeReferencePattern]
   val simpleNameField = getDeclaredField(ftrClazz, "simpleName")

@@ -128,7 +128,7 @@ trait QualifiedNameSupport extends SuperTypeSupport {
   def concat(vals: Any, sep: String = ".") = {
     vals match {
       case l: List[_] => l.mkString(sep)
-      case t: (String, String) => t._1 + sep + t._2
+      case (v1, v2) => v1 + sep + v2
     }
   }
   

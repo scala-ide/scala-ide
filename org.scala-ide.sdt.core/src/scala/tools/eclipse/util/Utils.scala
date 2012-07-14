@@ -33,7 +33,7 @@ object Utils extends HasLogger {
   def tryExecute[T](action: => T, msgIfError: => Option[String] = None): Option[T] = {
     try Some(action)
     catch {
-      case t =>
+      case t: Throwable =>
         msgIfError match {
           case Some(errMsg) => eclipseLog.error(errMsg, t)
           case None         => eclipseLog.error(t)
