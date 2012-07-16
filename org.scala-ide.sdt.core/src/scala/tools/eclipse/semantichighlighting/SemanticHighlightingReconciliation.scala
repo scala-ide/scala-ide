@@ -13,6 +13,10 @@ import scala.tools.eclipse.semantichighlighting.implicits.ImplicitHighlightingPr
 import java.util.concurrent.ConcurrentHashMap
 import scala.tools.eclipse.semantic.SemanticAction
 import scala.tools.eclipse.ui.PartAdapter
+import org.eclipse.jdt.internal.ui.JavaPlugin
+import org.eclipse.ui.IEditorInput
+import org.eclipse.jdt.core.ICompilationUnit
+import scala.tools.eclipse.logging.HasLogger
 
 /**
  * Manages the SemanticHighlightingPresenter instances for the open editors.
@@ -24,7 +28,7 @@ import scala.tools.eclipse.ui.PartAdapter
  *
  * @author Mirko Stocker
  */
-class SemanticHighlightingReconciliation {
+class SemanticHighlightingReconciliation extends HasLogger {
 
   private case class SemanticDecorationManagers(actions: List[SemanticAction])
 
@@ -36,12 +40,19 @@ class SemanticHighlightingReconciliation {
       for {
         scalaEditor <- part.asInstanceOfOpt[ScalaSourceFileEditor]
         editorInput <- Option(scalaEditor.getEditorInput)
-        fileEditorInput <- editorInput.asInstanceOfOpt[FileEditorInput]
-        if fileEditorInput.getPath == scu.getResource.getLocation
-      } { 
+        compilationUnit <- getCompilationUnitOf(editorInput)
+        if scu == compilationUnit
+      } 
         semanticDecorationManagers.remove(scu)
-      }
     }
+  }
+  
+  /* Following Iulian's suggestion (https://github.com/scala-ide/scala-ide/pull/154#discussion_r1179403).
+   * Hopefully, we will be able to eliminate all this fuzzy code once we fix #1001156 */
+  private def getCompilationUnitOf(editorInput: IEditorInput): Option[ICompilationUnit] = {
+    val cu = JavaPlugin.getDefault.getWorkingCopyManager.getWorkingCopy(editorInput)
+    if (cu == null) logger.warn("Compilation unit for EditorInput %s is `null`. This could indicate a regression.".format(editorInput.getName))
+    Option(cu)
   }
 
   /**
@@ -57,12 +68,12 @@ class SemanticHighlightingReconciliation {
         editor <- Option(editorReference.getEditor(false))
         scalaEditor <- editor.asInstanceOfOpt[ScalaSourceFileEditor]
         editorInput <- Option(scalaEditor.getEditorInput)
-        fileEditorInput <- editorInput.asInstanceOfOpt[FileEditorInput]
-        if fileEditorInput.getPath == scu.getResource.getLocation
+        compilationUnit <- getCompilationUnitOf(editorInput)
+        if scu == compilationUnit
       } yield {
         page.addPartListener(new UnregisteringPartListener(scu))
         val semanticActions = List(
-            new ImplicitHighlightingPresenter(fileEditorInput, scalaEditor.sourceViewer), 
+            new ImplicitHighlightingPresenter(scalaEditor.sourceViewer), 
             new SemanticHighlightingAnnotationsManager(scalaEditor.sourceViewer)
         )
         SemanticDecorationManagers(semanticActions)
@@ -70,15 +81,16 @@ class SemanticHighlightingReconciliation {
     presenters.headOption
   }
 
-  def afterReconciliation(scu: ScalaCompilationUnit, monitor: IProgressMonitor, workingCopyOwner: WorkingCopyOwner) {
-
+  def beforeReconciliation(scu: ScalaCompilationUnit, monitor: IProgressMonitor, workingCopyOwner: WorkingCopyOwner) {
     val firstTimeReconciliation = !semanticDecorationManagers.containsKey(scu)
 
     if (firstTimeReconciliation) {
       for (semanticDecorationManager <- createSemanticDecorationManagers(scu))
         semanticDecorationManagers.put(scu, semanticDecorationManager)
-    }
-
+    }   
+  }
+  
+  def afterReconciliation(scu: ScalaCompilationUnit, monitor: IProgressMonitor, workingCopyOwner: WorkingCopyOwner) {
     // sometimes we reconcile compilation units that are not open in an editor,
     // so we need to guard against the case where there's no semantic highlighter 
     for {
