@@ -67,7 +67,7 @@ class ExtractLocalAction extends RefactoringAction {
             runRefactoring(createWizardForRefactoring(Some(r)), shell)
         }
         
-      case None => runRefactoring(createWizardForRefactoring(None), shell)
+      case _ => runRefactoring(createWizardForRefactoring(None), shell)
     }
   }
 }

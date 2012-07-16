@@ -76,7 +76,7 @@ trait ScalaOverrideIndicatorBuilder { self : ScalaPresentationCompiler =>
               } else annotationMap.put(ScalaIndicator(scu, text, base, isOverwrite), position)
             }
           } catch {
-            case ex => eclipseLog.error("Error creating override indicators for %s".format(scu.file.path), ex) 
+            case ex: Throwable => eclipseLog.error("Error creating override indicators for %s".format(scu.file.path), ex) 
           }
         case _ =>
       }

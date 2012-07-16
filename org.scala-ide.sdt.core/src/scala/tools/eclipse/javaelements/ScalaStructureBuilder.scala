@@ -888,7 +888,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
                 case cpos => cpos.startOrPoint
               }
             } catch {
-              case _ => pos0.startOrPoint
+              case _: Exception => pos0.startOrPoint
             }
           (start0, pos0.endOrPoint-1)
         }

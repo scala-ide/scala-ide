@@ -59,7 +59,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
           failedCompilerInitialization("could not find a required class: " + required)
           eclipseLog.error(ex)
           None
-        case ex =>
+        case ex: Throwable =>
           logger.info("Throwable when intializing presentation compiler!!! " + ex.getMessage)
           ex.printStackTrace()
           if (underlying.isOpen)
@@ -145,9 +145,9 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
     }
 
   
-  /** The direct dependencies of this project. */
+  /** The direct dependencies of this project. It only returns existing projects. */
   def directDependencies: Seq[IProject] = 
-    underlying.getReferencedProjects
+    underlying.getReferencedProjects.filter(_.exists)
 
   /** All direct and indirect dependencies of this project.
    * 
@@ -306,13 +306,13 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
               try {
                 cntnr.delete(true, monitor) // might not work.
               } catch {
-                case _ =>
+                case _: Exception =>
                   delete(cntnr, deleteDirs)(f)
                   if (deleteDirs)
                     try {
                       cntnr.delete(true, monitor) // try again
                     } catch {
-                      case t => eclipseLog.error(t)
+                      case t: Exception => eclipseLog.error(t)
                     }
               }
             } else
@@ -321,7 +321,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
             try {
               file.delete(true, monitor)
             } catch {
-              case t => eclipseLog.error(t)
+              case t: Exception => eclipseLog.error(t)
             }
           case _ =>
         }

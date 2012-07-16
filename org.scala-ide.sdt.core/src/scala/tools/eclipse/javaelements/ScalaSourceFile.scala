@@ -22,6 +22,7 @@ import scala.tools.eclipse.util.EclipseFile
 import org.eclipse.jdt.core.compiler.CharOperation
 import scala.tools.nsc.interactive.Response
 import scala.tools.eclipse.reconciliation.ReconciliationParticipantsExtensionPoint
+import org.eclipse.jdt.core.JavaModelException
 
 object ScalaSourceFile {
   val handleFactory = new HandleFactory
@@ -114,7 +115,7 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
   override def getProblemRequestor = getPerWorkingCopyInfo
 
   override lazy val file : AbstractFile = { 
-    val res = try { getCorrespondingResource } catch { case _ => null }
+    val res = try { getCorrespondingResource } catch { case _: JavaModelException => null }
     res match {
       case f : IFile => new EclipseFile(f)
       case _ => new VirtualFile(getElementName, getPath.toString)
