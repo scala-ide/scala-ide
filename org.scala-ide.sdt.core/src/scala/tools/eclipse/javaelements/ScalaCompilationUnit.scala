@@ -63,8 +63,6 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
     new BatchSourceFile(file, getContents())
   }
 
-  def getProblemRequestor : IProblemRequestor = null
-
   override def buildStructure(info : OpenableElementInfo, pm : IProgressMonitor, newElements : JMap[_, _], underlyingResource : IResource) : Boolean =
     withSourceFile({ (sourceFile, compiler) =>
       val unsafeElements = newElements.asInstanceOf[JMap[AnyRef, AnyRef]]
@@ -153,7 +151,7 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
     }
   }
   
-  def getChildAt(element: IJavaElement, pos: Int): IJavaElement = {
+  private def getChildAt(element: IJavaElement, pos: Int): IJavaElement = {
     /* companion-class can be selected instead of the object in the JDT-'super' 
        implementation and make the private method and fields unreachable.
        To avoid this, we look for deepest element containing the position
@@ -205,17 +203,10 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
       res
     }(Array.empty[IJavaElement])
   }
-
-  def codeComplete
-    (cu : env.ICompilationUnit, unitToSkip : env.ICompilationUnit,
-     position : Int,  requestor : CompletionRequestor, owner : WorkingCopyOwner, typeRoot : ITypeRoot) {
-     codeComplete(cu, unitToSkip, position, requestor, owner, typeRoot, null) 
-  }
     
-  override def codeComplete
-    (cu : env.ICompilationUnit, unitToSkip : env.ICompilationUnit,
-     position : Int,  requestor : CompletionRequestor, owner : WorkingCopyOwner, typeRoot : ITypeRoot,
-     monitor : IProgressMonitor) {
+  override def codeComplete(cu : env.ICompilationUnit, unitToSkip : env.ICompilationUnit, position : Int,  
+                            requestor : CompletionRequestor, owner : WorkingCopyOwner, typeRoot : ITypeRoot, monitor : IProgressMonitor) {
+    // This is a no-op. The Scala IDE provides code completions via an extension point
   }
   
   override def reportMatches(matchLocator : MatchLocator, possibleMatch : PossibleMatch) {

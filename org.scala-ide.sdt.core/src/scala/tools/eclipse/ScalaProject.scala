@@ -50,7 +50,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
       try {
         val settings = ScalaPlugin.defaultScalaSettings
         settings.printtypes.tryToSet(Nil)
-        initialize(settings, isPCSetting(settings))
+        initializeCompilerSettings(settings, isPCSetting(settings))
         val pc = new ScalaPresentationCompiler(ScalaProject.this, settings)
         logger.debug("Presentation compiler classpath: " + pc.classPath)
         Some(pc)
@@ -341,7 +341,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
       res.refreshLocal(IResource.DEPTH_INFINITE, null)
   }
   
-  def initialize(settings: Settings, filter: Settings#Setting => Boolean): Unit = {
+  def initializeCompilerSettings(settings: Settings, filter: Settings#Setting => Boolean): Unit = {
     // if the workspace project doesn't exist, it is a virtual project used by Eclipse.
     // As such the source folders don't exist.
     if (underlying.exists()) {
@@ -464,7 +464,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
     if (presentationCompiler.initialized) {
       val units: Seq[ScalaCompilationUnit] = withPresentationCompiler(_.compilationUnits)(Nil)
       
-      presentationCompiler.invalidate
+      shutDownPresentationCompiler()
       
       val existingUnits = units.filter(_.exists) 
       logger.info("Scheduling for reconcile: " + existingUnits.map(_.file))
@@ -479,7 +479,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
     if (buildManager0 == null) {
       val settings = ScalaPlugin.defaultScalaSettings(msg => settingsError(IMarker.SEVERITY_ERROR, msg, null))
       clearSettingsErrors()
-      initialize(settings, _ => true)
+      initializeCompilerSettings(settings, _ => true)
       // source path should be emtpy. The build manager decides what files get recompiled when.
       // if scalac finds a source file newer than its corresponding classfile, it will 'compileLate'
       // that file, using an AbstractFile/PlainFile instead of the EclipseResource instance. This later
