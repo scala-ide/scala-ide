@@ -48,21 +48,22 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
 
   private def versionAwareOpenWhenClosed(info: OpenableElementInfo, monitor: IProgressMonitor): Unit = {
     
-    if (isLessThanJuno) {
-      try {
-        val clazz = classOf[JDTCompilationUnit]
-        val method = clazz.getMethod("openWhenClosed", classOf[OpenableElementInfo], classOf[IProgressMonitor])
+    try {
+      val clazz = classOf[org.eclipse.jdt.internal.core.JavaElement]
+      if (isLessThanJuno) {
+        val method = clazz.getDeclaredMethod("openWhenClosed", classOf[java.lang.Object], classOf[IProgressMonitor])
         method.invoke(this, info, monitor)
-      } catch {
+      } else {
+        val method = clazz.getDeclaredMethod("openWhenClosed", classOf[java.lang.Object], classOf[Boolean], classOf[IProgressMonitor])
+        method.invoke(this, info, new java.lang.Boolean(true), monitor)
+      }
+    } catch {
         case e: IllegalArgumentException =>
           throw new RuntimeException(e)
         case e: IllegalAccessException =>
           throw new RuntimeException(e);
         case e: InvocationTargetException =>
           throw new RuntimeException(e);
-      }
-    } else {
-      openWhenClosed(info, true, monitor)
     }
   }
 

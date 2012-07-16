@@ -15,8 +15,9 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.internal.core.builder.BatchImageBuilder;
 import org.eclipse.jdt.internal.core.builder.JavaBuilder;
-//import org.eclipse.jdt.internal.core.builder.ClasspathMultiDirectory;
 import org.eclipse.jdt.internal.core.util.Util;
+
+import java.lang.reflect.Field;
 
 @SuppressWarnings("restriction")
 public privileged aspect ScalaJavaBuilderAspect {
@@ -40,11 +41,20 @@ public privileged aspect ScalaJavaBuilderAspect {
     cleanOutputFolders(copyBack) &&
     cflow(build()) {
     // Suppress the cleaning behaviour but do the extra resource copying if requested
-    if (copyBack)
+    if (copyBack) 
       for (int i = 0, l = builder.sourceLocations.length; i < l; i++) {
         org.eclipse.jdt.internal.core.builder.ClasspathMultiDirectory sourceLocation = builder.sourceLocations[i];
-        if (sourceLocation.hasIndependentOutputFolder)
-          builder.copyExtraResourcesBack(sourceLocation, false);
+        Class c = sourceLocation.getClass();
+
+        try {
+          Field field = c.getDeclaredField("hasIndependentOutputFolder");
+          field.setAccessible(true);
+
+          if (field.getBoolean(sourceLocation))
+            builder.copyExtraResourcesBack(sourceLocation, false);
+        } catch (Exception ex) {
+          throw new RuntimeException(ex);
+        }
       }
   }
   
