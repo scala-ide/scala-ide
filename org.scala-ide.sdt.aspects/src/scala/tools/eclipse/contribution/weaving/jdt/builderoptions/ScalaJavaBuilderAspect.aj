@@ -5,8 +5,7 @@
 
 package scala.tools.eclipse.contribution.weaving.jdt.builderoptions;
 
-import org.eclipse.core.resources.IResource;
-
+import java.lang.reflect.Field;
 import java.util.Map;
 
 import org.eclipse.core.resources.IProject;
