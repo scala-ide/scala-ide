@@ -10,8 +10,10 @@ import java.io.File.pathSeparator
 import scala.collection.immutable
 import scala.collection.mutable
 import scala.tools.eclipse.javaelements.ScalaCompilationUnit
+import scala.tools.eclipse.javaelements.ScalaSourceFile
 import scala.tools.eclipse.logging.HasLogger
 import scala.tools.eclipse.properties.{CompilerSettings, IDESettings, PropertyStore}
+import scala.tools.eclipse.ui.PartAdapter
 import scala.tools.eclipse.util.{Cached, EclipseResource, Trim, Utils}
 import scala.tools.eclipse.util.EclipseUtils.workspaceRunnableIn
 import scala.tools.eclipse.util.SWTUtils.asyncExec
@@ -23,13 +25,56 @@ import org.eclipse.core.resources.{IContainer, IFile, IMarker, IProject, IResour
 import org.eclipse.core.runtime.{IPath, IProgressMonitor, Path, SubMonitor}
 import org.eclipse.jdt.core.{IClasspathEntry, IJavaProject, JavaCore}
 import org.eclipse.jdt.internal.core.util.Util
+import org.eclipse.ui.IEditorPart
+import org.eclipse.ui.IPartListener
+import org.eclipse.ui.IWorkbenchPart
+import org.eclipse.ui.part.FileEditorInput
 
 trait BuildSuccessListener {
   def buildSuccessful(): Unit
 }
 
 object ScalaProject {
-  def apply(underlying: IProject) = new ScalaProject(underlying)
+  def apply(underlying: IProject): ScalaProject = {
+    val project = new ScalaProject(underlying)
+    project.init()
+    project
+  }
+
+  /** Listen for [[IWorkbenchPart]] event and takes care of loading/discarding scala compilation units.*/
+  private class ProjectPartListener(project: ScalaProject) extends PartAdapter with HasLogger {
+    override def partOpened(part: IWorkbenchPart) {
+      logger.debug("open " + part.getTitle)
+      doWithCompilerAndFile(part) { (compiler, ssf) =>
+        ssf.forceReload()
+      }
+    }
+
+    override def partClosed(part: IWorkbenchPart) {
+      logger.debug("close " + part.getTitle)
+      doWithCompilerAndFile(part) { (compiler, ssf) =>
+        ssf.discard()
+      }
+    }
+
+    private def doWithCompilerAndFile(part: IWorkbenchPart)(op: (ScalaPresentationCompiler, ScalaSourceFile) => Unit) {
+      part match {
+        case editor: IEditorPart =>
+          editor.getEditorInput match {
+            case fei: FileEditorInput =>
+              val f = fei.getFile
+              if (f.getName.endsWith(ScalaPlugin.plugin.scalaFileExtn)) {
+                for (ssf <- ScalaSourceFile.createFromPath(f.getFullPath.toString)) {
+                  if (project.underlying.isOpen)
+                    project.doWithPresentationCompiler(op(_, ssf)) // so that an exception is not thrown
+                }
+              }
+            case _ =>
+          }
+        case _ =>
+      }
+    }
+  }
 }
 
 class ScalaProject private (val underlying: IProject) extends ClasspathManagement with HasLogger {
@@ -40,6 +85,8 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
   private var hasBeenBuilt = false
   
   private val buildListeners = new mutable.HashSet[BuildSuccessListener]
+  
+  private val worbenchPartListener: IPartListener = new ScalaProject.ProjectPartListener(this)
 
   case class InvalidCompilerSettings() extends RuntimeException(
         "Scala compiler cannot initialize for project: " + underlying.getName +
@@ -72,6 +119,14 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
     override def destroy(compiler: Option[ScalaPresentationCompiler]) {
       compiler.map(_.destroy())
     }
+  }
+
+  /** To avoid letting 'this' reference escape during initialization, this method is called right after a 
+   * [[ScalaPlugin]] instance has been fully initialized.
+   */
+  private def init(): Unit = {
+    if(!ScalaPlugin.plugin.headlessMode)
+      ScalaPlugin.getWorkbenchWindow map (_.getPartService().addPartListener(worbenchPartListener))
   }
 
   /** Compiler settings that are honored by the presentation compiler. */
@@ -578,6 +633,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
   }
   
   def shutDownCompilers() {
+    logger.info("shutting down compilers for " + this)
     resetBuildCompiler()
     shutDownPresentationCompiler()
   }
@@ -618,6 +674,12 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
       if (notLoadedFiles.nonEmpty)
         compiler.compilationUnits.foreach(_.scheduleReconcile())
     }(Nil)
+  }
+  
+  def dispose(): Unit = {
+    if(!ScalaPlugin.plugin.headlessMode)
+      ScalaPlugin.getWorkbenchWindow map (_.getPartService().removePartListener(worbenchPartListener))
+    shutDownCompilers()
   }
 
   override def toString: String = underlying.getName

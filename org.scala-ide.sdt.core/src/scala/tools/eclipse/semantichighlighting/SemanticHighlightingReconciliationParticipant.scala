@@ -15,8 +15,21 @@ class SemanticHighlightingReconciliationParticipant extends ReconciliationPartic
 
   private val reconciler: SemanticHighlightingReconciliation = new SemanticHighlightingReconciliation
   
+  override def beforeReconciliation(scu: ScalaCompilationUnit, monitor: IProgressMonitor, workingCopyOwner: WorkingCopyOwner) {
+    if (shouldRunReconciler(scu))
+      reconciler.beforeReconciliation(scu, monitor, workingCopyOwner)
+  }
+  
   override def afterReconciliation(scu: ScalaCompilationUnit, monitor: IProgressMonitor, workingCopyOwner: WorkingCopyOwner) {
-    if (!ScalaPlugin.plugin.headlessMode)
+    if (shouldRunReconciler(scu))
       reconciler.afterReconciliation(scu, monitor, workingCopyOwner)
+  }
+  
+  private def shouldRunReconciler(scu: ScalaCompilationUnit): Boolean = {
+    def checkProjectExists(scu: ScalaCompilationUnit): Boolean = {
+      val project = scu.getResource.getProject
+      project != null && project.isOpen() && project.exists()
+    }
+    !ScalaPlugin.plugin.headlessMode && checkProjectExists(scu)
   }
 }

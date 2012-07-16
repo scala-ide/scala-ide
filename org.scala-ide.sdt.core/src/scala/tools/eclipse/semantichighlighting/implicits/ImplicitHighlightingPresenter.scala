@@ -41,7 +41,7 @@ import scala.tools.eclipse.hyperlink.text._
  * @author David Bernard
  *
  */
-class ImplicitHighlightingPresenter(editor: FileEditorInput, sourceViewer: ISourceViewer) extends SemanticAction with HasLogger {
+class ImplicitHighlightingPresenter(sourceViewer: ISourceViewer) extends SemanticAction with HasLogger {
   import ImplicitHighlightingPresenter._
 
   val annotationAccess = new IAnnotationAccess {
@@ -119,27 +119,23 @@ class ImplicitHighlightingPresenter(editor: FileEditorInput, sourceViewer: ISour
   //TODO monitor P_ACTIVATE to register/unregister update
   //TODO monitor P_ACTIVATE to remove existings annotation (true => false) or update openning file (false => true)
   override def apply(scu: ScalaCompilationUnit): Unit = {
+    scu.doWithSourceFile { (sourceFile, compiler) =>
+      var annotationsToAdd = Map[Annotation, Position]()
 
-    if (scu.getResource.getLocation == editor.getPath.makeAbsolute) {
-      scu.doWithSourceFile { (sourceFile, compiler) =>
-
-        var annotationsToAdd = Map[Annotation, Position]()
-
-        if (pluginStore.getBoolean(P_ACTIVE)) {
-          val response = new compiler.Response[compiler.Tree]
-          compiler.askLoadedTyped(sourceFile, response)
-          response.get(200) match {
-            case Some(Left(_)) =>
-              annotationsToAdd = findAllImplicitConversions(compiler, scu, sourceFile)
-            case Some(Right(exc)) =>
-              logger.error(exc)
-            case None =>
-              logger.warn("Timeout while waiting for `askLoadedTyped` during implicit highlighting.")
-          }
+      if (pluginStore.getBoolean(P_ACTIVE)) {
+        val response = new compiler.Response[compiler.Tree]
+        compiler.askLoadedTyped(sourceFile, response)
+        response.get(200) match {
+          case Some(Left(_)) =>
+            annotationsToAdd = findAllImplicitConversions(compiler, scu, sourceFile)
+          case Some(Right(exc)) =>
+            logger.error(exc)
+          case None =>
+            logger.warn("Timeout while waiting for `askLoadedTyped` during implicit highlighting.")
         }
-
-        AnnotationUtils.update(sourceViewer, ImplicitAnnotation.ID, annotationsToAdd)
       }
+
+      AnnotationUtils.update(sourceViewer, ImplicitAnnotation.ID, annotationsToAdd)
     }
   }
 }
