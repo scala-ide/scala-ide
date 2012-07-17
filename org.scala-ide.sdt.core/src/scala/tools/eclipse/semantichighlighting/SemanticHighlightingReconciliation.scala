@@ -14,6 +14,9 @@ import java.util.concurrent.ConcurrentHashMap
 import scala.tools.eclipse.semantic.SemanticAction
 import scala.tools.eclipse.ui.PartAdapter
 import org.eclipse.jdt.internal.ui.JavaPlugin
+import org.eclipse.ui.IEditorInput
+import org.eclipse.jdt.core.ICompilationUnit
+import scala.tools.eclipse.logging.HasLogger
 
 /**
  * Manages the SemanticHighlightingPresenter instances for the open editors.
@@ -25,7 +28,7 @@ import org.eclipse.jdt.internal.ui.JavaPlugin
  *
  * @author Mirko Stocker
  */
-class SemanticHighlightingReconciliation {
+class SemanticHighlightingReconciliation extends HasLogger {
 
   private case class SemanticDecorationManagers(actions: List[SemanticAction])
 
@@ -37,11 +40,19 @@ class SemanticHighlightingReconciliation {
       for {
         scalaEditor <- part.asInstanceOfOpt[ScalaSourceFileEditor]
         editorInput <- Option(scalaEditor.getEditorInput)
-        compilationUnit <- Option(JavaPlugin.getDefault.getWorkingCopyManager.getWorkingCopy(editorInput))
+        compilationUnit <- getCompilationUnitOf(editorInput)
         if scu == compilationUnit
       } 
         semanticDecorationManagers.remove(scu)
     }
+  }
+  
+  /* Following Iulian's suggestion (https://github.com/scala-ide/scala-ide/pull/154#discussion_r1179403).
+   * Hopefully, we will be able to eliminate all this fuzzy code once we fix #1001156 */
+  private def getCompilationUnitOf(editorInput: IEditorInput): Option[ICompilationUnit] = {
+    val cu = JavaPlugin.getDefault.getWorkingCopyManager.getWorkingCopy(editorInput)
+    if (cu == null) logger.warn("Compilation unit for EditorInput %s is `null`. This could indicate a regression.".format(editorInput.getName))
+    Option(cu)
   }
 
   /**
@@ -57,7 +68,7 @@ class SemanticHighlightingReconciliation {
         editor <- Option(editorReference.getEditor(false))
         scalaEditor <- editor.asInstanceOfOpt[ScalaSourceFileEditor]
         editorInput <- Option(scalaEditor.getEditorInput)
-        compilationUnit <- Option(JavaPlugin.getDefault.getWorkingCopyManager.getWorkingCopy(editorInput))
+        compilationUnit <- getCompilationUnitOf(editorInput)
         if scu == compilationUnit
       } yield {
         page.addPartListener(new UnregisteringPartListener(scu))
