@@ -41,8 +41,6 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
   val project = ScalaPlugin.plugin.getScalaProject(getJavaProject.getProject)
 
   val file : AbstractFile
-  
-  private var lastCrash: Throwable = null
 
   def doWithSourceFile(op : (SourceFile, ScalaPresentationCompiler) => Unit) {
     project.withSourceFile(this)(op)(())
@@ -91,7 +89,7 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
           false
           
         case ex => 
-          handleCrash("Compiler crash while building structure for %s".format(file), ex)
+          logger.error("Compiler crash while building structure for %s".format(file), ex)
           false
       }
     }) (false)
@@ -109,14 +107,6 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
     r.set()
     r
   }
-
-  /** Log an error at most once for this source file. */
-  private def handleCrash(msg: String, ex: Throwable) {
-    if (lastCrash != ex) {
-      lastCrash = ex
-      eclipseLog.error(msg, ex)
-    }
-  }
   
   /** Index this source file, but only if the project has the Scala nature.
    * 
@@ -130,7 +120,7 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
           new compiler.IndexBuilderTraverser(indexer).traverse(tree)
         }
       } catch {
-        case ex: Throwable => handleCrash("Compiler crash during indexing of %s".format(getResource()), ex)
+        case ex: Throwable => logger.error("Compiler crash during indexing of %s".format(getResource()), ex)
       }
     }
   }
@@ -235,7 +225,7 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
           }
         } catch {
           case ex =>
-            handleCrash("Exception thrown while creating override indicators for %s".format(sourceFile), ex)
+           logger.error("Exception thrown while creating override indicators for %s".format(sourceFile), ex)
         }
       }
   }
