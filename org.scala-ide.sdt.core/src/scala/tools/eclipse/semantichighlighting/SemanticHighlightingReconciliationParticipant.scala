@@ -15,6 +15,11 @@ class SemanticHighlightingReconciliationParticipant extends ReconciliationPartic
 
   private val reconciler: SemanticHighlightingReconciliation = new SemanticHighlightingReconciliation
   
+  override def beforeReconciliation(scu: ScalaCompilationUnit, monitor: IProgressMonitor, workingCopyOwner: WorkingCopyOwner) {
+    if (!ScalaPlugin.plugin.headlessMode)
+      reconciler.beforeReconciliation(scu, monitor, workingCopyOwner)
+  }
+  
   override def afterReconciliation(scu: ScalaCompilationUnit, monitor: IProgressMonitor, workingCopyOwner: WorkingCopyOwner) {
     if (!ScalaPlugin.plugin.headlessMode)
       reconciler.afterReconciliation(scu, monitor, workingCopyOwner)
