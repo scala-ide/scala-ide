@@ -41,8 +41,6 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
   val project = ScalaPlugin.plugin.getScalaProject(getJavaProject.getProject)
 
   val file : AbstractFile
-  
-  private var lastCrash: Throwable = null
 
   def doWithSourceFile(op : (SourceFile, ScalaPresentationCompiler) => Unit) {
     project.withSourceFile(this)(op)(())
@@ -62,8 +60,6 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
   def createSourceFile : BatchSourceFile = {
     new BatchSourceFile(file, getContents())
   }
-
-  def getProblemRequestor : IProblemRequestor = null
 
   override def buildStructure(info : OpenableElementInfo, pm : IProgressMonitor, newElements : JMap[_, _], underlyingResource : IResource) : Boolean =
     withSourceFile({ (sourceFile, compiler) =>
@@ -93,7 +89,7 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
           false
           
         case ex => 
-          handleCrash("Compiler crash while building structure for %s".format(file), ex)
+          logger.error("Compiler crash while building structure for %s".format(file), ex)
           false
       }
     }) (false)
@@ -111,14 +107,6 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
     r.set()
     r
   }
-
-  /** Log an error at most once for this source file. */
-  private def handleCrash(msg: String, ex: Throwable) {
-    if (lastCrash != ex) {
-      lastCrash = ex
-      eclipseLog.error(msg, ex)
-    }
-  }
   
   /** Index this source file, but only if the project has the Scala nature.
    * 
@@ -132,7 +120,7 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
           new compiler.IndexBuilderTraverser(indexer).traverse(tree)
         }
       } catch {
-        case ex: Throwable => handleCrash("Compiler crash during indexing of %s".format(getResource()), ex)
+        case ex: Throwable => logger.error("Compiler crash during indexing of %s".format(getResource()), ex)
       }
     }
   }
@@ -153,7 +141,7 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
     }
   }
   
-  def getChildAt(element: IJavaElement, pos: Int): IJavaElement = {
+  private def getChildAt(element: IJavaElement, pos: Int): IJavaElement = {
     /* companion-class can be selected instead of the object in the JDT-'super' 
        implementation and make the private method and fields unreachable.
        To avoid this, we look for deepest element containing the position
@@ -205,17 +193,10 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
       res
     }(Array.empty[IJavaElement])
   }
-
-  def codeComplete
-    (cu : env.ICompilationUnit, unitToSkip : env.ICompilationUnit,
-     position : Int,  requestor : CompletionRequestor, owner : WorkingCopyOwner, typeRoot : ITypeRoot) {
-     codeComplete(cu, unitToSkip, position, requestor, owner, typeRoot, null) 
-  }
     
-  override def codeComplete
-    (cu : env.ICompilationUnit, unitToSkip : env.ICompilationUnit,
-     position : Int,  requestor : CompletionRequestor, owner : WorkingCopyOwner, typeRoot : ITypeRoot,
-     monitor : IProgressMonitor) {
+  override def codeComplete(cu : env.ICompilationUnit, unitToSkip : env.ICompilationUnit, position : Int,  
+                            requestor : CompletionRequestor, owner : WorkingCopyOwner, typeRoot : ITypeRoot, monitor : IProgressMonitor) {
+    // This is a no-op. The Scala IDE provides code completions via an extension point
   }
   
   override def reportMatches(matchLocator : MatchLocator, possibleMatch : PossibleMatch) {
@@ -244,7 +225,7 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
           }
         } catch {
           case ex =>
-            handleCrash("Exception thrown while creating override indicators for %s".format(sourceFile), ex)
+           logger.error("Exception thrown while creating override indicators for %s".format(sourceFile), ex)
         }
       }
   }
