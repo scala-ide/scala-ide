@@ -51,7 +51,7 @@ class FindReferencesTests extends FindReferencesTester with HasLogger {
 
   @After
   def deleteProject() {
-    project.underlying.delete( /*deleteContent*/ true, /*force*/ true, new NullProgressMonitor)
+    SDTTestUtils.deleteProjects(project)
   }
 
   def runTest(testProjectName: String, sourceName: String, testDefinition: TestBuilder): Unit = {
