@@ -22,7 +22,7 @@ class InterpreterLaunchConfigurationDelegate extends AbstractJavaLaunchConfigura
     val mon : IProgressMonitor = if(monitor == null) new NullProgressMonitor() else monitor
     //Helper method to actually perform the launch inside a try-catch block.
     def doTheLaunch() {        
-      val mainClass = "scala.tools.nsc.MainInterpreter"
+      val mainClass = "scala.tools.nsc.MainGenericRunner"
       
       mon.beginTask(configuration.getName(), 3); //$NON-NLS-1$
       //We need lots of early outs if possible...
@@ -131,6 +131,6 @@ class InterpreterLaunchConfigurationDelegate extends AbstractJavaLaunchConfigura
   def toolClassPath = {
     val plugin = ScalaPlugin.plugin
     import plugin._
-    (libClasses :: dbcClasses :: swingClasses :: compilerClasses :: Nil).flatMap(_.toList).map(_.toOSString)
+    (libClasses :: dbcClasses :: swingClasses :: compilerClasses :: reflectClasses :: Nil).flatMap(_.toList).map(_.toOSString)
   }
 }
