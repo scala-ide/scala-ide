@@ -44,6 +44,7 @@ class MemoryLeaksTest extends HasLogger {
 
 
     val typerUnit = scalaCompilationUnit("scala/tools/nsc/typechecker/Typers.scala")
+    val implicitsUnit = scalaCompilationUnit("scala/tools/nsc/typechecker/Implicits.scala")
     val typesUnit = scalaCompilationUnit("scala/reflect/internal/Types.scala")
     val treesUnit = scalaCompilationUnit("scala/reflect/internal/Trees.scala")
 
@@ -65,6 +66,7 @@ class MemoryLeaksTest extends HasLogger {
 
       val usedMem = withGC {
         typeCheckWith(typerUnit, src)
+        typeCheckWith(implicitsUnit, new String(implicitsUnit.getContents))
       }
 
       info("UsedMem:\t%d\t%d".format(i, usedMem / mega))
