@@ -105,11 +105,13 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
       }).flatten
   }
 
-  /** Return the fully resolved classpath of this project.
-   *
-   *  It includes the Scala library and the JDK entries.
-   *
-   *  @note This is almost never what you need. See the [[scalaClasspath.fullClasspath]] method
+  /** Return the fully resolved classpath of this project, including the 
+   *  Scala library and the JDK entries, in the *project-defined order*.
+   *  
+   *  The Scala compiler needs the JDK and Scala library on the bootclasspath,
+   *  meaning that during compilation the effective order is with these two
+   *  components at the head of the list. This method *does not* move them
+   *  in front.
    */
   private def javaClasspath: Seq[IPath] = {
     val path = new mutable.LinkedHashSet[IPath]
