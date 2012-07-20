@@ -81,7 +81,7 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
   /** Return the Scala classpath breakdown for the managed project. */
   def scalaClasspath: ScalaClasspath = {
     val jdkEntries = jdkPaths
-    val cp = classpath.filterNot(jdkEntries.toSet)
+    val cp = javaClasspath.filterNot(jdkEntries.toSet)
 
     scalaLibraries match {
       case Seq(ScalaLibrary(pf, version, _), _*) => 
@@ -91,6 +91,13 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
     }
   }
 
+  /** Return the full classpath of this project.
+   *  Each entry is an absolute file-system path.
+   */
+  @deprecated("Please use `scalaClasspath.fullClasspath instead", "2.1.0")
+  def classpath: Seq[IPath] = 
+    scalaClasspath.fullClasspath.map(p => new Path(p.getAbsolutePath))
+  
   /** Return the classpath entries coming from the JDK.  */
   def jdkPaths: Seq[IPath] = {
     val rawClasspath = javaProject.getRawClasspath()
@@ -109,13 +116,15 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
       }).flatten
   }
 
-  /** Return the fully resolved classpath of this project.
-   *
-   *  It includes the Scala library and the JDK entries.
-   *
-   *  @note This is almost never what you need. See the [[scalaClasspath.fullClasspath]] method
+  /** Return the fully resolved classpath of this project, including the 
+   *  Scala library and the JDK entries, in the *project-defined order*.
+   *  
+   *  The Scala compiler needs the JDK and Scala library on the bootclasspath,
+   *  meaning that during compilation the effective order is with these two
+   *  components at the head of the list. This method *does not* move them
+   *  in front.
    */
-  private def classpath: Seq[IPath] = {
+  private def javaClasspath: Seq[IPath] = {
     val path = new mutable.LinkedHashSet[IPath]
 
     def computeClasspath(project: IJavaProject, exportedOnly: Boolean): Unit = {
