@@ -63,7 +63,7 @@ object ScalaProject {
           editor.getEditorInput match {
             case fei: FileEditorInput =>
               val f = fei.getFile
-              if (f.getName.endsWith(ScalaPlugin.plugin.scalaFileExtn)) {
+              if (f.getProject == project.underlying &&  f.getName.endsWith(ScalaPlugin.plugin.scalaFileExtn)) {
                 for (ssf <- ScalaSourceFile.createFromPath(f.getFullPath.toString)) {
                   if (project.underlying.isOpen)
                     project.doWithPresentationCompiler(op(_, ssf)) // so that an exception is not thrown
