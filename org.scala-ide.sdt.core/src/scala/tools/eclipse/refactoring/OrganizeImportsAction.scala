@@ -233,7 +233,7 @@ class OrganizeImportsAction extends RefactoringAction with ActionWithNoWizard {
         
         val expandOrCollapse = organizationStrategy match {
           case ExpandImports => List(refactoring.ExpandImports)
-          case CollapseImports => List(refactoring.CollapseImports)
+          case CollapseImports => List(refactoring.CollapseImports, refactoring.SortImportSelectors)
           case PreserveExistingGroups => Nil // this is not passed as an option
         }
         
