@@ -36,7 +36,7 @@ Set the highlighting for implicit conversions and implicit parameters.
   }
 
   override def createFieldEditors() {
-    addField(new BooleanFieldEditor(P_ACTIVE, "Active", getFieldEditorParent))
+    addField(new BooleanFieldEditor(P_ACTIVE, "Enabled", getFieldEditorParent))
     addField(new BooleanFieldEditor(P_BOLD, "Bold", getFieldEditorParent))
     addField(new BooleanFieldEditor(P_ITALIC, "Italic", getFieldEditorParent))
     addField(new BooleanFieldEditor(P_CONVERSIONS_ONLY, "Only highlight implicit conversions", getFieldEditorParent))

@@ -428,7 +428,7 @@
      <specification
           annotationType="scala.tools.eclipse.semantichighlighting.implicits.implicitConversionsOrArgsAnnotation"
           colorPreferenceKey="scala.tools.eclipse.ui.preferences.implicit.color"
-          colorPreferenceValue="51,102,0"
+          colorPreferenceValue="153,153,153"
           contributesToHeader="false"
           includeOnPreferencePage="true"
           icon="icons/full/elcl16/implicit_co.gif"
@@ -1232,7 +1232,7 @@
          commandId="scala.tools.eclipse.editor.ShowTypeOfSelection"
          contextId="scala.tools.eclipse.scalaEditorScope"
          schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-         sequence="M2+M1+S T">
+         sequence="M2+M1+W T">
    </key>
    <key
          commandId="scala.tools.eclipse.editor.OpenImplicit"
