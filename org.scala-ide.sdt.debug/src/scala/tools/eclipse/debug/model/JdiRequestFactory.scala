@@ -1,17 +1,19 @@
 package scala.tools.eclipse.debug.model
 import scala.tools.eclipse.debug.JDIUtil
+
 import com.sun.jdi.Method
 import com.sun.jdi.ReferenceType
+import com.sun.jdi.VirtualMachine
 import com.sun.jdi.request.BreakpointRequest
 import com.sun.jdi.request.ClassPrepareRequest
 import com.sun.jdi.request.EventRequest
 import com.sun.jdi.request.StepRequest
 import com.sun.jdi.request.ThreadDeathRequest
 import com.sun.jdi.request.ThreadStartRequest
-import com.sun.jdi.VirtualMachine
 
 /**
- * 
+ * Utility methods used to create JDI request.
+ * This object doesn't use any internal field, and is thread safe.
  */
 object JdiRequestFactory {
 

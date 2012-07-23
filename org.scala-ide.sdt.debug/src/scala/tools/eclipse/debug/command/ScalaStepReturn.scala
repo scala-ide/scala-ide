@@ -1,22 +1,20 @@
 package scala.tools.eclipse.debug.command
 
-import com.sun.jdi.event.Event
-import com.sun.jdi.event.EventSet
-import scala.tools.eclipse.debug.model.ScalaStackFrame
-import com.sun.jdi.request.StepRequest
-import com.sun.jdi.request.EventRequest
-import scala.tools.eclipse.debug.model.ScalaThread
-import scala.tools.eclipse.debug.model.ScalaDebugTarget
-import org.eclipse.debug.core.DebugEvent
-import com.sun.jdi.event.StepEvent
 import scala.actors.Actor
 import scala.tools.eclipse.debug.ActorExit
-import com.sun.jdi.request.EventRequestManager
 import scala.tools.eclipse.debug.model.JdiRequestFactory
+import scala.tools.eclipse.debug.model.ScalaDebugTarget
+import scala.tools.eclipse.debug.model.ScalaStackFrame
+import scala.tools.eclipse.debug.model.ScalaThread
+
+import org.eclipse.debug.core.DebugEvent
+
+import com.sun.jdi.event.StepEvent
+import com.sun.jdi.request.StepRequest
 
 object ScalaStepReturn {
 
-  def apply(scalaStackFrame: ScalaStackFrame): ScalaStepReturn = {
+  def apply(scalaStackFrame: ScalaStackFrame): ScalaStep = {
 
     val stepReturnRequest = JdiRequestFactory.createStepRequest(StepRequest.STEP_LINE, StepRequest.STEP_OUT, scalaStackFrame.thread)
 
@@ -29,8 +27,12 @@ object ScalaStepReturn {
 
 }
 
+/**
+ * A step return in the Scala debug model.
+ * This class is thread safe. Instances have be created through its companion object.
+ */
+private class ScalaStepReturn private (eventActor: ScalaStepReturnActor) extends ScalaStep {
 // TODO: when implementing support without filtering, need to workaround problem reported in Eclipse bug #38744
-class ScalaStepReturn private (eventActor: ScalaStepReturnActor) extends ScalaStep {
 
   // Members declared in scala.tools.eclipse.debug.command.ScalaStep
   
@@ -46,6 +48,10 @@ class ScalaStepReturn private (eventActor: ScalaStepReturnActor) extends ScalaSt
 
 }
 
+/**
+ * Actor used to manage a Scala step return. It keeps track of the request needed to perform this step.
+ * This class is thread safe. Instances are not to be created outside of the ScalaStepReturn object.
+ */
 private[command] class ScalaStepReturnActor(debugTarget: ScalaDebugTarget, thread: ScalaThread, stepReturnRequest: StepRequest) extends Actor {
   
   private var scalaStep: ScalaStepReturn = _
@@ -62,7 +68,7 @@ private[command] class ScalaStepReturnActor(debugTarget: ScalaDebugTarget, threa
         case stepEvent: StepEvent =>
           reply(
             if (debugTarget.isValidLocation(stepEvent.location)) {
-              dispose
+              dispose()
               thread.suspendedFromScala(DebugEvent.STEP_RETURN)
               true
             } else {
@@ -70,12 +76,12 @@ private[command] class ScalaStepReturnActor(debugTarget: ScalaDebugTarget, threa
             })
         // user step request
         case ScalaStep.Step =>
-          step
+          step()
         // step is terminated
         case ScalaStep.Stop =>
-          dispose
+          dispose()
         case ActorExit =>
-          exit
+          exit()
       }
     }
   }
@@ -84,7 +90,7 @@ private[command] class ScalaStepReturnActor(debugTarget: ScalaDebugTarget, threa
     val eventDispatcher = debugTarget.eventDispatcher
 
     eventDispatcher.setActorFor(this, stepReturnRequest)
-    stepReturnRequest.enable
+    stepReturnRequest.enable()
     thread.resumeFromScala(scalaStep, DebugEvent.STEP_RETURN)
   }
 
@@ -93,7 +99,7 @@ private[command] class ScalaStepReturnActor(debugTarget: ScalaDebugTarget, threa
 
     val eventRequestManager = debugTarget.virtualMachine.eventRequestManager
 
-    stepReturnRequest.disable
+    stepReturnRequest.disable()
     eventDispatcher.unsetActorFor(stepReturnRequest)
     eventRequestManager.deleteEventRequest(stepReturnRequest)
 

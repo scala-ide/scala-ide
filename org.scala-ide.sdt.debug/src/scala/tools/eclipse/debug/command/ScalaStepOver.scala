@@ -1,23 +1,24 @@
 package scala.tools.eclipse.debug.command
+
 import scala.Option.option2Iterable
 import scala.actors.Actor
 import scala.collection.JavaConverters.asScalaBufferConverter
 import scala.collection.mutable.ListBuffer
 import scala.tools.eclipse.debug.ActorExit
 import scala.tools.eclipse.debug.JDIUtil.methodToLines
-import scala.tools.eclipse.debug.model.{ ScalaThread, ScalaStackFrame, ScalaDebugTarget }
+import scala.tools.eclipse.debug.model.{ScalaThread, ScalaStackFrame, ScalaDebugTarget}
+import scala.tools.eclipse.debug.model.JdiRequestFactory
+
 import org.eclipse.debug.core.DebugEvent
-import com.sun.jdi.{ ThreadReference, Method }
+
 import com.sun.jdi.event.{ StepEvent, ClassPrepareEvent, BreakpointEvent }
 import com.sun.jdi.request.{ StepRequest, EventRequest }
-import com.sun.jdi.request.BreakpointRequest
-import scala.tools.eclipse.debug.model.JdiRequestFactory
 
 object ScalaStepOver {
 
   final val LINE_NUMBER_UNAVAILABLE = -1
 
-  def apply(scalaStackFrame: ScalaStackFrame): ScalaStepOver = {
+  def apply(scalaStackFrame: ScalaStackFrame): ScalaStep = {
 
     import scala.collection.JavaConverters._
 
@@ -62,7 +63,11 @@ object ScalaStepOver {
 
 }
 
-class ScalaStepOver private (eventActor: ScalaStepOverActor) extends ScalaStep {
+/**
+ * A step over in the Scala debug model.
+ * This class is thread safe. Instances have be created through its companion object.
+ */
+private class ScalaStepOver private (eventActor: ScalaStepOverActor) extends ScalaStep {
 
   // Members declared in scala.tools.eclipse.debug.command.ScalaStep
 
@@ -80,7 +85,8 @@ class ScalaStepOver private (eventActor: ScalaStepOverActor) extends ScalaStep {
 }
 
 /**
- *  process the debug events
+ * Actor used to manage a Scala step over. It keeps track of the request needed to perform this step.
+ * This class is thread safe. Instances are not to be created outside of the ScalaStepOver object.
  */
 private[command] class ScalaStepOverActor(target: ScalaDebugTarget, range: Range, thread: ScalaThread, requests: ListBuffer[EventRequest]) extends Actor {
 
@@ -101,13 +107,13 @@ private[command] class ScalaStepOverActor(target: ScalaDebugTarget, range: Range
             val breakpoint = JdiRequestFactory.createMethodEntryBreakpoint(method, thread)
             requests += breakpoint
             target.eventDispatcher.setActorFor(this, breakpoint)
-            breakpoint.enable
+            breakpoint.enable()
           })
           reply(false)
         // JDI event triggered when a step has been performed
         case stepEvent: StepEvent =>
           reply(if (target.isValidLocation(stepEvent.location)) {
-            dispose
+            dispose()
             thread.suspendedFromScala(DebugEvent.STEP_OVER)
             true
           } else {
@@ -115,17 +121,17 @@ private[command] class ScalaStepOverActor(target: ScalaDebugTarget, range: Range
           })
         // JDI event triggered when a breakpoint is hit
         case breakpointEvent: BreakpointEvent =>
-          dispose
+          dispose()
           thread.suspendedFromScala(DebugEvent.STEP_OVER)
           reply(true)
         // user step request
         case ScalaStep.Step =>
-          step
+          step()
         // step is terminated
         case ScalaStep.Stop =>
-          dispose
+          dispose()
         case ActorExit =>
-          exit
+          exit()
       }
     }
   }
@@ -136,7 +142,7 @@ private[command] class ScalaStepOverActor(target: ScalaDebugTarget, range: Range
     requests.foreach {
       request =>
         eventDispatcher.setActorFor(this, request)
-        request.enable
+        request.enable()
     }
 
     thread.resumeFromScala(scalaStep, DebugEvent.STEP_OVER)
@@ -149,7 +155,7 @@ private[command] class ScalaStepOverActor(target: ScalaDebugTarget, range: Range
 
     requests.foreach {
       request =>
-        request.disable
+        request.disable()
         eventDispatcher.unsetActorFor(request)
         eventRequestManager.deleteEventRequest(request)
     }

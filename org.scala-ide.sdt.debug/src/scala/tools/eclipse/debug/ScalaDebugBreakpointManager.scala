@@ -11,8 +11,7 @@ import org.eclipse.debug.core.model.IBreakpoint
 object ScalaDebugBreakpointManager {
 
   def apply(debugTarget: ScalaDebugTarget): ScalaDebugBreakpointManager = {
-    val eventActor = new ScalaDebugBreakpointManagerActor(debugTarget)
-    eventActor.start
+    val eventActor = ScalaDebugBreakpointManagerActor(debugTarget)
     new ScalaDebugBreakpointManager(eventActor)
   }
 }
@@ -20,21 +19,20 @@ object ScalaDebugBreakpointManager {
 /**
  * Setup the initial breakpoints, and listen to breakpoint changes, for the given ScalaDebugTarget
  */
-class ScalaDebugBreakpointManager private (eventActor: ScalaDebugBreakpointManagerActor) extends IBreakpointListener {
-  import ScalaDebugBreakpointManager._
+class ScalaDebugBreakpointManager private (eventActor: Actor) extends IBreakpointListener {
   import ScalaDebugBreakpointManagerActor._
 
   // from org.eclipse.debug.core.IBreakpointsListener
 
-  def breakpointChanged(breakpoint: IBreakpoint, delta: IMarkerDelta): Unit = {
+  override def breakpointChanged(breakpoint: IBreakpoint, delta: IMarkerDelta): Unit = {
     eventActor ! BreakpointChanged(breakpoint)
   }
 
-  def breakpointRemoved(breakpoint: IBreakpoint, delta: IMarkerDelta): Unit = {
+  override def breakpointRemoved(breakpoint: IBreakpoint, delta: IMarkerDelta): Unit = {
     eventActor ! BreakpointRemoved(breakpoint)
   }
 
-  def breakpointAdded(breakpoint: IBreakpoint): Unit = {
+  override def breakpointAdded(breakpoint: IBreakpoint): Unit = {
     eventActor ! BreakpointAdded(breakpoint)
   }
 
@@ -70,10 +68,16 @@ private[debug] object ScalaDebugBreakpointManagerActor {
   case class BreakpointRemoved(breakpoint: IBreakpoint)
   case class BreakpointChanged(breakpoint: IBreakpoint)
 
-  val JDT_DEBUG_UID = "org.eclipse.jdt.debug"
+  private val JdtDebugUID = "org.eclipse.jdt.debug"
+    
+  def apply(debugTarget: ScalaDebugTarget): Actor = {
+    val actor = new ScalaDebugBreakpointManagerActor(debugTarget)
+    actor.start()
+    actor
+  }
 }
 
-private[debug] class ScalaDebugBreakpointManagerActor(debugTarget: ScalaDebugTarget) extends Actor {
+private class ScalaDebugBreakpointManagerActor private(debugTarget: ScalaDebugTarget) extends Actor {
   import ScalaDebugBreakpointManagerActor._
 
   private var breakpoints = Map[IBreakpoint, BreakpointSupport]()
@@ -86,9 +90,7 @@ private[debug] class ScalaDebugBreakpointManagerActor(debugTarget: ScalaDebugTar
       react {
         case Initialize =>
           // Enable all existing breakpoints
-          DebugPlugin.getDefault.getBreakpointManager.getBreakpoints(JDT_DEBUG_UID).foreach {
-            createBreakpointSupport(_)
-          }
+          DebugPlugin.getDefault.getBreakpointManager.getBreakpoints(JdtDebugUID).foreach(createBreakpointSupport)
           reply(None)
         case BreakpointAdded(breakpoint) =>
           breakpoints.get(breakpoint) match {
@@ -124,7 +126,7 @@ private[debug] class ScalaDebugBreakpointManagerActor(debugTarget: ScalaDebugTar
     }
   }
 
-  private def createBreakpointSupport(breakpoint: org.eclipse.debug.core.model.IBreakpoint): Unit = {
+  private def createBreakpointSupport(breakpoint: IBreakpoint): Unit = {
     breakpoints += (breakpoint -> BreakpointSupport(breakpoint, debugTarget))
   }
 }

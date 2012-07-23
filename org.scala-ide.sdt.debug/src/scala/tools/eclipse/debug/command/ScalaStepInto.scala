@@ -2,21 +2,23 @@ package scala.tools.eclipse.debug.command
 
 import scala.actors.Actor
 import scala.tools.eclipse.debug.ActorExit
+import scala.tools.eclipse.debug.model.JdiRequestFactory
 import scala.tools.eclipse.debug.model.ScalaDebugTarget
 import scala.tools.eclipse.debug.model.ScalaStackFrame
 import scala.tools.eclipse.debug.model.ScalaThread
+
 import org.eclipse.debug.core.DebugEvent
+
 import com.sun.jdi.event.StepEvent
 import com.sun.jdi.request.EventRequest
 import com.sun.jdi.request.StepRequest
-import scala.tools.eclipse.debug.model.JdiRequestFactory
 
 object ScalaStepInto {
 
   /*
    * Initialize a Scala step into
    */
-  def apply(scalaStackFrame: ScalaStackFrame): ScalaStepInto = {
+  def apply(scalaStackFrame: ScalaStackFrame): ScalaStep = {
 
     val stepIntoRequest = JdiRequestFactory.createStepRequest(StepRequest.STEP_LINE, StepRequest.STEP_INTO, scalaStackFrame.thread)
     stepIntoRequest.setSuspendPolicy(EventRequest.SUSPEND_EVENT_THREAD)
@@ -33,7 +35,11 @@ object ScalaStepInto {
 
 }
 
-class ScalaStepInto private (eventActor: ScalaStepIntoActor) extends ScalaStep {
+/**
+ * A step into in the Scala debug model.
+ * This class is thread safe. Instances have be created through its companion object.
+ */
+private class ScalaStepInto private (eventActor: ScalaStepIntoActor) extends ScalaStep {
 
   // Members declared in scala.tools.eclipse.debug.command.ScalaStep
 
@@ -49,6 +55,10 @@ class ScalaStepInto private (eventActor: ScalaStepIntoActor) extends ScalaStep {
 
 }
 
+/**
+ * Actor used to manage a Scala step into. It keeps track of the request needed to perform this step.
+ * This class is thread safe. Instances are not to be created outside of the ScalaStepInto object.
+ */
 private[command] class ScalaStepIntoActor(debugTarget: ScalaDebugTarget, thread: ScalaThread, stepIntoRequest: StepRequest, stepOutRequest: StepRequest, stackDepth: Int, stackLine: Int) extends Actor {
 
   /**
@@ -71,7 +81,7 @@ private[command] class ScalaStepIntoActor(debugTarget: ScalaDebugTarget, thread:
           reply(stepEvent.request.asInstanceOf[StepRequest].depth match {
             case StepRequest.STEP_INTO =>
               if (debugTarget.isValidLocation(stepEvent.location)) {
-                dispose
+                dispose()
                 thread.suspendedFromScala(DebugEvent.STEP_INTO)
                 true
               } else {
@@ -86,27 +96,27 @@ private[command] class ScalaStepIntoActor(debugTarget: ScalaDebugTarget, thread:
             case StepRequest.STEP_OUT =>
               if (stepEvent.thread.frameCount == stackDepth && stepEvent.location.lineNumber != stackLine) {
                 // we are back on the method, but on a different line, stopping the stepping
-                dispose
+                dispose()
                 thread.suspendedFromScala(DebugEvent.STEP_INTO)
                 true
               } else {
                 // switch back to step into only if the step return has been effectively done.
                 if (stepEvent.thread.frameCount < stepOutStackDepth) {
                   // launch a new step into
-                  stepOutRequest.disable
-                  stepIntoRequest.enable
+                  stepOutRequest.disable()
+                  stepIntoRequest.enable()
                 }
                 false
               }
           })
         // user step request
         case ScalaStep.Step =>
-          step
+          step()
         case ScalaStep.Stop =>
-          dispose
+          dispose()
         // step is terminated
         case ActorExit =>
-          exit
+          exit()
       }
     }
   }
@@ -116,7 +126,7 @@ private[command] class ScalaStepIntoActor(debugTarget: ScalaDebugTarget, thread:
 
     eventDispatcher.setActorFor(this, stepIntoRequest)
     eventDispatcher.setActorFor(this, stepOutRequest)
-    stepIntoRequest.enable
+    stepIntoRequest.enable()
     thread.resumeFromScala(scalaStep, DebugEvent.STEP_INTO)
   }
 
@@ -125,8 +135,8 @@ private[command] class ScalaStepIntoActor(debugTarget: ScalaDebugTarget, thread:
 
     val eventRequestManager = debugTarget.virtualMachine.eventRequestManager
 
-    stepIntoRequest.disable
-    stepOutRequest.disable
+    stepIntoRequest.disable()
+    stepOutRequest.disable()
     eventDispatcher.unsetActorFor(stepIntoRequest)
     eventDispatcher.unsetActorFor(stepOutRequest)
     eventRequestManager.deleteEventRequest(stepIntoRequest)

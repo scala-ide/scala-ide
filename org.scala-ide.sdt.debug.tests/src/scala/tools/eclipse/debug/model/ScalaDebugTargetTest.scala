@@ -27,26 +27,26 @@ class ScalaDebugTargetTest {
 
   @Test
   def threadNotTwiceInList() {
-    val THREAD_NAME = "thread name"
+    val ThreadName = "thread name"
     val debugTarget = createDebugTarget()
 
     val event = mock(classOf[ThreadStartEvent])
     val thread = mock(classOf[ThreadReference])
     when(event.thread).thenReturn(thread)
-    when(thread.name).thenReturn(THREAD_NAME)
+    when(thread.name).thenReturn(ThreadName)
 
     debugTarget.eventActor !? event
 
     val threads1 = debugTarget.getThreads
     assertEquals("Wrong number of threads", 1, threads1.length)
-    assertEquals("Wrong thread name", THREAD_NAME, threads1(0).getName)
+    assertEquals("Wrong thread name", ThreadName, threads1(0).getName)
 
     // a second start event should not result in a duplicate entry
     debugTarget.eventActor !? event
 
     val threads2 = debugTarget.getThreads
     assertEquals("Wrong number of threads", 1, threads2.length)
-    assertEquals("Wrong thread name", THREAD_NAME, threads2(0).getName)
+    assertEquals("Wrong thread name", ThreadName, threads2(0).getName)
   }
 
   /**

@@ -1,36 +1,35 @@
 package scala.tools.eclipse.debug.model
 
-import com.sun.jdi.VirtualMachine
 import scala.actors.Actor
-import com.sun.jdi.request.EventRequest
-import scala.tools.eclipse.logging.HasLogger
-import com.sun.jdi.event.EventSet
-import com.sun.jdi.event.Event
-import scala.actors.Future
-import com.sun.jdi.VMDisconnectedException
-import com.sun.jdi.event.VMDisconnectEvent
-import com.sun.jdi.event.VMDeathEvent
-import com.sun.jdi.event.VMStartEvent
 import scala.tools.eclipse.debug.ActorExit
+import scala.tools.eclipse.logging.HasLogger
+
+import com.sun.jdi.VMDisconnectedException
+import com.sun.jdi.VirtualMachine
+import com.sun.jdi.event.EventSet
+import com.sun.jdi.event.VMDeathEvent
+import com.sun.jdi.event.VMDisconnectEvent
+import com.sun.jdi.event.VMStartEvent
+import com.sun.jdi.request.EventRequest
 
 object ScalaJdiEventDispatcher {
   def apply(virtualMachine: VirtualMachine, scalaDebugTargetActor: Actor): ScalaJdiEventDispatcher = {
-    val actor = new ScalaJdiEventDispatcherActor(scalaDebugTargetActor)
-    actor.start
+    val actor = ScalaJdiEventDispatcherActor(scalaDebugTargetActor)
     new ScalaJdiEventDispatcher(virtualMachine, actor)
   }
 }
 
 /**
  * Actor based system pulling event from the vm event queue, and dispatching
- * them to the registered actors
+ * them to the registered actors.
+ * This class is thread safe. Instances have be created through its companion object.
  */
-class ScalaJdiEventDispatcher private (virtualMachine: VirtualMachine, eventActor: ScalaJdiEventDispatcherActor) extends Runnable with HasLogger {
+class ScalaJdiEventDispatcher private (virtualMachine: VirtualMachine, eventActor: Actor) extends Runnable with HasLogger {
 
   @volatile
   private var running = true
 
-  def run() {
+  override def run() {
     // the polling loop runs until the VM is disconnected, or it is told to stop.
     // The events which have been already read will still be processed by the actor.
     val eventQueue = virtualMachine.eventQueue
@@ -56,7 +55,7 @@ class ScalaJdiEventDispatcher private (virtualMachine: VirtualMachine, eventActo
   /**
    * release all resources
    */
-  def dispose() {
+  private[model] def dispose() {
     running = false
     eventActor ! ActorExit
   }
@@ -80,43 +79,34 @@ class ScalaJdiEventDispatcher private (virtualMachine: VirtualMachine, eventActo
 private[model] object ScalaJdiEventDispatcherActor {
   case class SetActorFor(actor: Actor, request: EventRequest)
   case class UnsetActorFor(request: EventRequest)
+  
+  def apply(scalaDebugTargetActor: Actor): ScalaJdiEventDispatcherActor = {
+    val actor= new ScalaJdiEventDispatcherActor(scalaDebugTargetActor)
+    actor.start()
+    actor
+  }
 }
 
-private[model] class ScalaJdiEventDispatcherActor(scalaDebugTargetActor: Actor) extends Actor with HasLogger {
+/**
+ * Actor used to manage a Scala event dispatcher. It keeps track of the registered actors,
+ * and dispatches the JDI events.
+ * This class is thread safe. Instances are not to be created outside of the ScalaJdiEventDispatcher object.
+ */
+private class ScalaJdiEventDispatcherActor private (scalaDebugTargetActor: Actor) extends Actor with HasLogger {
   import ScalaJdiEventDispatcherActor._
 
-  /**
-   * event request to actor map
-   */
+  /** event request to actor map */
   private var eventActorMap = Map[EventRequest, Actor]()
 
   def act() {
     loop {
       react {
-        case SetActorFor(actor, request) =>
-          setActorFor_(actor, request)
-        case UnsetActorFor(request) =>
-          unsetActorFor_(request)
-        case eventSet: EventSet =>
-          processEventSet(eventSet)
-        case ActorExit =>
-          exit
+        case SetActorFor(actor, request) => eventActorMap += (request -> actor)
+        case UnsetActorFor(request)      => eventActorMap -= request
+        case eventSet: EventSet          => processEventSet(eventSet)
+        case ActorExit                   => exit()
       }
     }
-  }
-
-  /**
-   * store the actor for the request
-   */
-  private def setActorFor_(actor: Actor, request: EventRequest) {
-    eventActorMap += (request -> actor)
-  }
-
-  /**
-   * clear the actor for the request
-   */
-  private def unsetActorFor_(request: EventRequest) {
-    eventActorMap -= request
   }
 
   /**
@@ -129,11 +119,7 @@ private[model] class ScalaJdiEventDispatcherActor(scalaDebugTargetActor: Actor) 
 
     import scala.collection.JavaConverters._
 
-    var futures = List[Future[Boolean]]()
-
-    def addToFutures(future: Future[Any]): Unit = {
-      futures ::= future.asInstanceOf[Future[Boolean]]
-    }
+    var futures = List[Future[Any]]()
 
     /* Cannot use the eventSet directly. The JDI specification says it should implement java.util.Set,
      * but the eclipse implementation doesn't.
@@ -142,21 +128,20 @@ private[model] class ScalaJdiEventDispatcherActor(scalaDebugTargetActor: Actor) 
     // forward each event to the interested actor
     eventSet.eventIterator.asScala.foreach {
       case event: VMStartEvent =>
-        addToFutures(scalaDebugTargetActor !! event)
+        futures ::= (scalaDebugTargetActor !! event)
       case event: VMDisconnectEvent =>
-        addToFutures(scalaDebugTargetActor !! event)
+        futures ::= (scalaDebugTargetActor !! event)
       case event: VMDeathEvent =>
-        addToFutures(scalaDebugTargetActor !! event)
+        futures ::= (scalaDebugTargetActor !! event)
       case event =>
-        val interestedActor = eventActorMap.get(event.request)
-        if (interestedActor.isDefined) {
-          addToFutures(interestedActor.get !! event)
+        eventActorMap.get(event.request).foreach { interestedActor =>
+          futures ::= (interestedActor !! event)
         }
     }
 
     /**
      * wait for the answers of the actors and resume
-     * the threads if none of the actor request to keep
+     * the threads if none of the actor requested to keep
      * them suspended
      */
     val it = futures.iterator

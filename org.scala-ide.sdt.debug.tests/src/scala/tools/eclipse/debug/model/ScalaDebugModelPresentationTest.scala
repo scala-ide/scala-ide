@@ -69,7 +69,7 @@ class ScalaDebugModelPresentationTest {
     val location = jdiStackFrame.location
     when(location.lineNumber).thenReturn(42)
 
-    val scalaStackFrame = new ScalaStackFrame(scalaThread, jdiStackFrame)
+    val scalaStackFrame = ScalaStackFrame(scalaThread, jdiStackFrame)
 
     assertEquals("Bad display name for Scala stack frame", "TypeName.methodName(ParamType1, ParamType2) line: 42", modelPres.getText(scalaStackFrame))
   }
@@ -84,7 +84,7 @@ class ScalaDebugModelPresentationTest {
     val location = jdiStackFrame.location
     when(location.lineNumber).thenReturn(-1)
 
-    val scalaStackFrame = new ScalaStackFrame(scalaThread, jdiStackFrame)
+    val scalaStackFrame = ScalaStackFrame(scalaThread, jdiStackFrame)
 
     assertEquals("Bad display name for Scala stack frame", "TypeName.methodName() line: not available", modelPres.getText(scalaStackFrame))
   }

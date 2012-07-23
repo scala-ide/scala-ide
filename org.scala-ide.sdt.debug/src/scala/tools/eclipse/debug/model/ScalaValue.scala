@@ -1,12 +1,14 @@
 package scala.tools.eclipse.debug.model
 
 import scala.collection.JavaConverters.asScalaBufferConverter
+
+import org.eclipse.debug.core.model.IIndexedValue
 import org.eclipse.debug.core.model.IValue
+import org.eclipse.debug.core.model.IVariable
+
 import com.sun.jdi.{ VoidValue, Value, StringReference, ShortValue, ObjectReference, LongValue, IntegerValue, FloatValue, DoubleValue, CharValue, ByteValue, BooleanValue, ArrayReference }
 import com.sun.jdi.ClassType
 import com.sun.jdi.PrimitiveValue
-import org.eclipse.debug.core.model.IIndexedValue
-import org.eclipse.debug.core.model.IVariable
 
 object ScalaValue {
 

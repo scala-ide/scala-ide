@@ -1,32 +1,29 @@
 package scala.tools.eclipse.debug.model
 
-import scala.Option.option2Iterable
-import scala.collection.JavaConverters.asScalaBufferConverter
-import scala.tools.eclipse.debug.ScalaDebugger
-import org.eclipse.debug.core.model.IDebugTarget
-import org.eclipse.jdt.internal.debug.core.model.{ JDIThread, JDIDebugTarget }
-import org.eclipse.jdt.internal.debug.core.IJDIEventListener
-import com.sun.jdi.event.{ ThreadStartEvent, ThreadDeathEvent, EventSet, Event }
-import com.sun.jdi.request.{ ThreadStartRequest, ThreadDeathRequest, EventRequest }
-import com.sun.jdi.{ ReferenceType, Method, Location }
 import scala.actors.Actor
-import scala.actors.Actor.State
-import com.sun.jdi.VirtualMachine
-import org.eclipse.debug.core.model.IProcess
-import org.eclipse.debug.core.DebugPlugin
-import com.sun.jdi.request.VMDeathRequest
-import org.eclipse.debug.core.ILaunch
-import com.sun.jdi.event.VMDeathEvent
-import com.sun.jdi.event.VMDisconnectEvent
-import scala.tools.eclipse.debug.ScalaDebugBreakpointManager
-import com.sun.jdi.ThreadReference
-import com.sun.jdi.event.VMStartEvent
-import org.eclipse.debug.core.DebugEvent
-import org.eclipse.debug.core.sourcelookup.ISourceLookupDirector
-import scala.tools.eclipse.debug.ScalaSourceLookupParticipant
-import scala.tools.eclipse.logging.HasLogger
 import scala.actors.Future
 import scala.tools.eclipse.debug.ActorExit
+import scala.tools.eclipse.debug.ScalaDebugBreakpointManager
+import scala.tools.eclipse.debug.ScalaSourceLookupParticipant
+import scala.tools.eclipse.logging.HasLogger
+
+import org.eclipse.core.resources.IMarkerDelta
+import org.eclipse.debug.core.DebugEvent
+import org.eclipse.debug.core.DebugPlugin
+import org.eclipse.debug.core.ILaunch
+import org.eclipse.debug.core.model.IBreakpoint
+import org.eclipse.debug.core.model.IDebugTarget
+import org.eclipse.debug.core.model.IProcess
+import org.eclipse.debug.core.sourcelookup.ISourceLookupDirector
+
+import com.sun.jdi.{ ReferenceType, Method, Location }
+import com.sun.jdi.ThreadReference
+import com.sun.jdi.VirtualMachine
+import com.sun.jdi.event.{ThreadStartEvent, ThreadDeathEvent}
+import com.sun.jdi.event.VMDeathEvent
+import com.sun.jdi.event.VMDisconnectEvent
+import com.sun.jdi.event.VMStartEvent
+import com.sun.jdi.request.{ThreadStartRequest, ThreadDeathRequest}
 
 object ScalaDebugTarget extends HasLogger {
 
@@ -36,8 +33,11 @@ object ScalaDebugTarget extends HasLogger {
 
     val threadDeathRequest = JdiRequestFactory.createThreadDeathRequest(virtualMachine)
 
-    val actor = new ScalaDebugTargetActor(threadStartRequest, threadDeathRequest)
-    val debugTarget = new ScalaDebugTarget(virtualMachine, launch, process, actor)
+    val debugTarget = new ScalaDebugTarget(virtualMachine, launch, process) {
+      override val eventActor = ScalaDebugTargetActor(threadStartRequest, threadDeathRequest, this)
+      override val breakpointManager: ScalaDebugBreakpointManager = ScalaDebugBreakpointManager(this)
+      override val eventDispatcher: ScalaJdiEventDispatcher = ScalaJdiEventDispatcher(virtualMachine, eventActor)
+    }
 
     launch.addDebugTarget(debugTarget)
 
@@ -45,27 +45,33 @@ object ScalaDebugTarget extends HasLogger {
       case sourceLookupDirector: ISourceLookupDirector =>
         sourceLookupDirector.addParticipants(Array(ScalaSourceLookupParticipant))
       case sourceLocator =>
-        logger.warn("unable to recognize source locator %s, cannot add Scala participant".format(sourceLocator))
+        logger.warn("Unable to recognize source locator %s, cannot add Scala participant".format(sourceLocator))
     }
 
-    debugTarget.initialize
+    debugTarget.startJdiEventDispatcher()
+    
+    debugTarget.fireCreationEvent()
 
     debugTarget
   }
 
 }
 
-class ScalaDebugTarget private (val virtualMachine: VirtualMachine, launch: ILaunch, process: IProcess, private[model] val eventActor: ScalaDebugTargetActor) extends ScalaDebugElement(null) with IDebugTarget {
+/**
+ * A debug target in the Scala debug model.
+ * This class is thread safe. Instances have be created through its companion object.
+ */
+abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine, launch: ILaunch, process: IProcess) extends ScalaDebugElement(null) with IDebugTarget {
 
   // Members declared in org.eclipse.debug.core.IBreakpointListener
 
-  def breakpointAdded(x$1: org.eclipse.debug.core.model.IBreakpoint): Unit = ???
-  def breakpointChanged(x$1: org.eclipse.debug.core.model.IBreakpoint, x$2: org.eclipse.core.resources.IMarkerDelta): Unit = ???
-  def breakpointRemoved(x$1: org.eclipse.debug.core.model.IBreakpoint, x$2: org.eclipse.core.resources.IMarkerDelta): Unit = ???
+  def breakpointAdded(breakponit: IBreakpoint): Unit = ???
+  def breakpointChanged(breakpoint: IBreakpoint, delta: IMarkerDelta): Unit = ???
+  def breakpointRemoved(breakpoint: IBreakpoint, delta: IMarkerDelta): Unit = ???
 
   // Members declared in org.eclipse.debug.core.model.IDebugElement
 
-  override def getDebugTarget(): org.eclipse.debug.core.model.IDebugTarget = this
+  override def getDebugTarget(): org.eclipse.debug.core.model.IDebugTarget = debugTarget
   override def getLaunch(): org.eclipse.debug.core.ILaunch = launch
 
   // Members declared in org.eclipse.debug.core.model.IDebugTarget
@@ -74,7 +80,7 @@ class ScalaDebugTarget private (val virtualMachine: VirtualMachine, launch: ILau
   def getProcess(): org.eclipse.debug.core.model.IProcess = process
   def getThreads(): Array[org.eclipse.debug.core.model.IThread] = internalGetThreads.toArray
   def hasThreads(): Boolean = !internalGetThreads.isEmpty
-  def supportsBreakpoint(x$1: org.eclipse.debug.core.model.IBreakpoint): Boolean = ???
+  def supportsBreakpoint(breakpoint: IBreakpoint): Boolean = ???
 
   // Members declared in org.eclipse.debug.core.model.IDisconnect
 
@@ -84,7 +90,7 @@ class ScalaDebugTarget private (val virtualMachine: VirtualMachine, launch: ILau
 
   // Members declared in org.eclipse.debug.core.model.IMemoryBlockRetrieval
 
-  def getMemoryBlock(x$1: Long, x$2: Long): org.eclipse.debug.core.model.IMemoryBlock = ???
+  def getMemoryBlock(startAddress: Long, length: Long): org.eclipse.debug.core.model.IMemoryBlock = ???
   def supportsStorageRetrieval(): Boolean = ???
 
   // Members declared in org.eclipse.debug.core.model.ISuspendResume
@@ -102,32 +108,33 @@ class ScalaDebugTarget private (val virtualMachine: VirtualMachine, launch: ILau
   override def terminate(): Unit = {
     virtualMachine.dispose
   }
+  
+  // Members declared in scala.tools.eclipse.debug.model.ScalaDebugElement
+  
+  override val debugTarget= this
 
   // ---
 
   @volatile
   private var running: Boolean = true
 
-  protected[debug] val eventDispatcher = ScalaJdiEventDispatcher(virtualMachine, eventActor)
+  protected[debug] val eventDispatcher: ScalaJdiEventDispatcher
 
-  protected[debug] var breakpointManager: ScalaDebugBreakpointManager = _
+  protected[debug] val breakpointManager: ScalaDebugBreakpointManager
+  private[model] val eventActor: Actor
 
   /**
    * Initialize the dependent components
    */
-  private def initialize = {
-    // launch the actor
-    eventActor.start(this)
+  private def startJdiEventDispatcher() = {
     // start the event dispatcher thread
     DebugPlugin.getDefault.asyncExec(new Runnable() {
       def run() {
         val thread = new Thread(eventDispatcher, "Scala debugger JDI event dispatcher")
         thread.setDaemon(true)
-        thread.start
+        thread.start()
       }
     })
-    breakpointManager = ScalaDebugBreakpointManager(this)
-    fireCreationEvent
   }
 
   /**
@@ -145,7 +152,7 @@ class ScalaDebugTarget private (val virtualMachine: VirtualMachine, launch: ILau
     running = false
     eventDispatcher.dispose()
     breakpointManager.dispose()
-    fireTerminateEvent
+    fireTerminateEvent()
   }
 
   /**
@@ -154,7 +161,7 @@ class ScalaDebugTarget private (val virtualMachine: VirtualMachine, launch: ILau
   private[debug] def threadSuspended(thread: ThreadReference, eventDetail: Int) {
     eventActor !? ScalaDebugTargetActor.ThreadSuspended(thread, eventDetail)
   }
-  
+
   /**
    * Return the current list of threads, using the actor system
    */
@@ -196,23 +203,19 @@ class ScalaDebugTarget private (val virtualMachine: VirtualMachine, launch: ILau
         // will be used, otherwise, the 'apply$__$sp" will be used.
         val applyMethod = methods.find(_.name == "apply")
         val applySpMethod = methods.find(_.name.startsWith("apply$"))
-        if (applyMethod.isDefined) {
-          if (applySpMethod.isDefined) {
-            if (applyMethod.get.bytecodes.sameElements(applySpMethod.get.bytecodes)) {
-              applyMethod
-            } else {
-              applySpMethod
-            }
-          } else {
-            applyMethod
-          }
-        } else {
-          applySpMethod
+        (applyMethod, applySpMethod) match {
+          case (Some(m1), Some(m2)) if sameBytecode(m1, m2) => applyMethod
+          case (Some(_), Some(_))                           => applySpMethod
+          case (Some(_), None)                              => applyMethod
+          case (None, _)                                    => applySpMethod
         }
       case _ =>
+        // doesn't contain apply methods, so it is not an anonFunction
         None
     }
   }
+
+  private def sameBytecode(m1: Method, m2: Method): Boolean = m1.bytecodes.sameElements(m2.bytecodes)
 
   /**
    * Return true if it is not a filtered location
@@ -238,19 +241,22 @@ class ScalaDebugTarget private (val virtualMachine: VirtualMachine, launch: ILau
 private[model] object ScalaDebugTargetActor {
   case class ThreadSuspended(thread: ThreadReference, eventDetail: Int)
   case object GetThreads
+  
+  def apply(threadStartRequest: ThreadStartRequest, threadDeathRequest: ThreadDeathRequest, debugTarget: ScalaDebugTarget): ScalaDebugTargetActor = {
+    val actor= new ScalaDebugTargetActor(threadStartRequest, threadDeathRequest, debugTarget)
+    actor.start
+    actor
+  }
 }
 
-private[model] class ScalaDebugTargetActor(threadStartRequest: ThreadStartRequest, threadDeathRequest: ThreadDeathRequest) extends Actor {
+/**
+ * Actor used to manage a Scala debug target. It keeps track of the existing threads.
+ * This class is thread safe. Instances are not to be created outside of the ScalaDebugTarget object.
+ */
+private class ScalaDebugTargetActor private (threadStartRequest: ThreadStartRequest, threadDeathRequest: ThreadDeathRequest, debugTarget: ScalaDebugTarget) extends Actor {
   import ScalaDebugTargetActor._
 
   private var threads = List[ScalaThread]()
-
-  private var debugTarget: ScalaDebugTarget = _
-
-  def start(dt: ScalaDebugTarget) {
-    debugTarget = dt
-    start()
-  }
 
   /**
    *  process the debug events
@@ -259,22 +265,22 @@ private[model] class ScalaDebugTargetActor(threadStartRequest: ThreadStartReques
     loop {
       react {
         case _: VMStartEvent =>
-          vmStarted
+          vmStarted()
           reply(false)
         case threadStartEvent: ThreadStartEvent =>
           if (!threads.exists(_.thread == threadStartEvent.thread))
             threads = threads :+ ScalaThread(debugTarget, threadStartEvent.thread)
           reply(false)
         case threadDeathEvent: ThreadDeathEvent =>
-          val (removed, remainder) = threads.partition(_.thread == threadDeathEvent.thread)
+          val (removed, remainder) = threads.partition(_.thread eq threadDeathEvent.thread)
           threads = remainder
-          removed.foreach(_.terminatedFromScala)
+          removed.foreach(_.terminatedFromScala())
           reply(false)
         case _: VMDeathEvent =>
-          vmTerminated
+          vmTerminated()
           reply(false)
         case _: VMDisconnectEvent =>
-          vmTerminated
+          vmTerminated()
           reply(false)
         case ThreadSuspended(thread, eventDetail) =>
           // forward the event to the right thread
@@ -283,7 +289,7 @@ private[model] class ScalaDebugTargetActor(threadStartRequest: ThreadStartReques
         case GetThreads =>
           reply(threads)
         case ActorExit =>
-          exit
+          exit()
       }
     }
   }
@@ -292,19 +298,19 @@ private[model] class ScalaDebugTargetActor(threadStartRequest: ThreadStartReques
     val eventDispatcher = debugTarget.eventDispatcher
     // enable the thread management requests
     eventDispatcher.setActorFor(this, threadStartRequest)
-    threadStartRequest.enable
+    threadStartRequest.enable()
     eventDispatcher.setActorFor(this, threadDeathRequest)
-    threadDeathRequest.enable
+    threadDeathRequest.enable()
     // get the current requests
+    import scala.collection.JavaConverters._
     threads = debugTarget.virtualMachine.allThreads.asScala.toList.map(ScalaThread(debugTarget, _))
-    debugTarget.vmStarted
+    debugTarget.vmStarted()
   }
 
   private def vmTerminated() {
-    threads.foreach { _.dispose }
+    threads.foreach { _.dispose() }
     threads = Nil
-    debugTarget.vmTerminated
+    debugTarget.vmTerminated()
     this ! ActorExit
   }
-
 }
