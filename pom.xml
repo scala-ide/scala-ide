@@ -15,8 +15,9 @@
     <encoding>UTF-8</encoding>
     <!-- p2 repositories location -->
     <repo.eclipse.indigo>http://download.eclipse.org/releases/indigo/</repo.eclipse.indigo>
-    <repo.eclipse.juno>http://download.eclipse.org/eclipse/updates/4.2milestones</repo.eclipse.juno>
+    <repo.eclipse.juno>http://download.eclipse.org/releases/juno</repo.eclipse.juno>
     <repo.ajdt.indigo>http://download.eclipse.org/tools/ajdt/37/dev/update</repo.ajdt.indigo>
+    <repo.ajdt.juno>http://download.eclipse.org/tools/ajdt/42/dev/update</repo.ajdt.juno>
     <repo.scala-ide.root>http://download.scala-ide.org</repo.scala-ide.root>
 
     <!-- fixed versions -->
@@ -33,6 +34,7 @@
     <tycho.plugin.version>0.15.0</tycho.plugin.version>
     <scala.plugin.version>3.0.2</scala.plugin.version>
     <aspectj.plugin.version>1.4</aspectj.plugin.version>
+    <weaving.hook.plugin.version>1.0.200.v20120524-1707</weaving.hook.plugin.version>
     <maven-bunble.plugin.version>2.3.7</maven-bunble.plugin.version>
     <properties-maven.plugin.version>1.1.10</properties-maven.plugin.version>
     <buildnumber-maven.plugin.version>1.1</buildnumber-maven.plugin.version>
@@ -46,9 +48,9 @@
     <tycho.test.jvmArgs>-Xmx800m -XX:MaxPermSize=256m -Dsdtcore.headless ${tycho.test.weaving} ${tycho.test.OSspecific}</tycho.test.jvmArgs>
 
     <!-- dependencies repos -->
-    <eclipse.codename>indigo</eclipse.codename>
-    <repo.eclipse>${repo.eclipse.indigo}</repo.eclipse>
-    <repo.ajdt>${repo.ajdt.indigo}</repo.ajdt>
+    <eclipse.codename>juno</eclipse.codename>
+    <repo.eclipse>${repo.eclipse.juno}</repo.eclipse>
+    <repo.ajdt>${repo.ajdt.juno}</repo.ajdt>
 
     <!-- default values, can be overwritten by profiles -->
     <scala.version>2.9.3-SNAPSHOT</scala.version>
