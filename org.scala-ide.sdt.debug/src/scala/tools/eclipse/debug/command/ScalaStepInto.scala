@@ -88,8 +88,8 @@ private[command] class ScalaStepIntoActor(debugTarget: ScalaDebugTarget, thread:
                 if (debugTarget.shouldNotStepInto(stepEvent.location)) {
                   // don't step deeper into constructor from 'hidden' entities
                   stepOutStackDepth = stepEvent.thread.frameCount
-                  stepIntoRequest.disable
-                  stepOutRequest.enable
+                  stepIntoRequest.disable()
+                  stepOutRequest.enable()
                 }
                 false
               }

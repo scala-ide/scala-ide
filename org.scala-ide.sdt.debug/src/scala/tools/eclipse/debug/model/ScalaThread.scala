@@ -174,7 +174,7 @@ private[model] object ScalaThreadActor {
   
   def apply(scalaThread: ScalaThread, thread: ThreadReference): Actor = {
     val actor= new ScalaThreadActor(scalaThread, thread)
-    actor.start
+    actor.start()
     actor
   }
 }

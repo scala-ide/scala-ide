@@ -153,7 +153,7 @@ private class ScalaJdiEventDispatcherActor private (scalaDebugTargetActor: Actor
       }
     }.andThen {
       if (!staySuspended) {
-        eventSet.resume
+        eventSet.resume()
       }
       this ! None
     }

@@ -55,7 +55,7 @@ private[debug] object BreakpointSupportActor {
     val actor = new BreakpointSupportActor(breakpoint, debugTarget, eventRequests)
 
     enableRequests(debugTarget, actor, eventRequests)
-    actor.start
+    actor.start()
     actor
   }
 

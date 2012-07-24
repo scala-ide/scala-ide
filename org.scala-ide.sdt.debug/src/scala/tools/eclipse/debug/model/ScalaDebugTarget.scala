@@ -106,7 +106,7 @@ abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine, lau
   override def canTerminate(): Boolean = running // TODO: need real logic
   override def isTerminated(): Boolean = !running // TODO: need real logic
   override def terminate(): Unit = {
-    virtualMachine.dispose
+    virtualMachine.dispose()
   }
   
   // Members declared in scala.tools.eclipse.debug.model.ScalaDebugElement
@@ -244,7 +244,7 @@ private[model] object ScalaDebugTargetActor {
   
   def apply(threadStartRequest: ThreadStartRequest, threadDeathRequest: ThreadDeathRequest, debugTarget: ScalaDebugTarget): ScalaDebugTargetActor = {
     val actor= new ScalaDebugTargetActor(threadStartRequest, threadDeathRequest, debugTarget)
-    actor.start
+    actor.start()
     actor
   }
 }

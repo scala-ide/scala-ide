@@ -15,8 +15,6 @@ object JDIUtil {
     } catch {
       case e: AbsentInformationException =>
         Nil
-      case e =>
-        throw e
     }
   }
 
@@ -33,8 +31,6 @@ object JDIUtil {
         } catch {
           case e: AbsentInformationException =>
             Nil
-          case e =>
-            throw e
         })
   }
 
