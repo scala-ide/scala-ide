@@ -120,7 +120,7 @@ class ScalaStackFrameTest {
 
     val jdiStackFrame = createJDIStackFrame("Lpackage/name/TypeName;", "methodName", "()V")
 
-    val scalaStackFrame = new ScalaStackFrame(scalaThread, jdiStackFrame)
+    val scalaStackFrame = ScalaStackFrame(scalaThread, jdiStackFrame)
 
     assertEquals("Bad full method name", "TypeName.methodName()", scalaStackFrame.getMethodFullName)
   }
@@ -131,7 +131,7 @@ class ScalaStackFrameTest {
 
     val jdiStackFrame = createJDIStackFrame("LDefaultPackageTypeName;", "methodName", "()V")
 
-    val scalaStackFrame = new ScalaStackFrame(scalaThread, jdiStackFrame)
+    val scalaStackFrame = ScalaStackFrame(scalaThread, jdiStackFrame)
 
     assertEquals("Bad full method name", "DefaultPackageTypeName.methodName()", scalaStackFrame.getMethodFullName)
   }
@@ -142,7 +142,7 @@ class ScalaStackFrameTest {
 
     val jdiStackFrame = createJDIStackFrame("LTypeName;", "methodName", "(Z)V")
 
-    val scalaStackFrame = new ScalaStackFrame(scalaThread, jdiStackFrame)
+    val scalaStackFrame = ScalaStackFrame(scalaThread, jdiStackFrame)
 
     assertEquals("Bad full method name", "TypeName.methodName(Boolean)", scalaStackFrame.getMethodFullName)
   }
@@ -153,7 +153,7 @@ class ScalaStackFrameTest {
 
     val jdiStackFrame = createJDIStackFrame("LTypeName;", "methodName", "(B)V")
 
-    val scalaStackFrame = new ScalaStackFrame(scalaThread, jdiStackFrame)
+    val scalaStackFrame = ScalaStackFrame(scalaThread, jdiStackFrame)
 
     assertEquals("Bad full method name", "TypeName.methodName(Byte)", scalaStackFrame.getMethodFullName)
   }
@@ -164,7 +164,7 @@ class ScalaStackFrameTest {
 
     val jdiStackFrame = createJDIStackFrame("LTypeName;", "methodName", "(C)V")
 
-    val scalaStackFrame = new ScalaStackFrame(scalaThread, jdiStackFrame)
+    val scalaStackFrame = ScalaStackFrame(scalaThread, jdiStackFrame)
 
     assertEquals("Bad full method name", "TypeName.methodName(Char)", scalaStackFrame.getMethodFullName)
   }
@@ -175,7 +175,7 @@ class ScalaStackFrameTest {
 
     val jdiStackFrame = createJDIStackFrame("LTypeName;", "methodName", "(D)V")
 
-    val scalaStackFrame = new ScalaStackFrame(scalaThread, jdiStackFrame)
+    val scalaStackFrame = ScalaStackFrame(scalaThread, jdiStackFrame)
 
     assertEquals("Bad full method name", "TypeName.methodName(Double)", scalaStackFrame.getMethodFullName)
   }
@@ -186,7 +186,7 @@ class ScalaStackFrameTest {
 
     val jdiStackFrame = createJDIStackFrame("LTypeName;", "methodName", "(F)V")
 
-    val scalaStackFrame = new ScalaStackFrame(scalaThread, jdiStackFrame)
+    val scalaStackFrame = ScalaStackFrame(scalaThread, jdiStackFrame)
 
     assertEquals("Bad full method name", "TypeName.methodName(Float)", scalaStackFrame.getMethodFullName)
   }
@@ -197,7 +197,7 @@ class ScalaStackFrameTest {
 
     val jdiStackFrame = createJDIStackFrame("LTypeName;", "methodName", "(I)V")
 
-    val scalaStackFrame = new ScalaStackFrame(scalaThread, jdiStackFrame)
+    val scalaStackFrame = ScalaStackFrame(scalaThread, jdiStackFrame)
 
     assertEquals("Bad full method name", "TypeName.methodName(Int)", scalaStackFrame.getMethodFullName)
   }
@@ -208,7 +208,7 @@ class ScalaStackFrameTest {
 
     val jdiStackFrame = createJDIStackFrame("LTypeName;", "methodName", "(J)V")
 
-    val scalaStackFrame = new ScalaStackFrame(scalaThread, jdiStackFrame)
+    val scalaStackFrame = ScalaStackFrame(scalaThread, jdiStackFrame)
 
     assertEquals("Bad full method name", "TypeName.methodName(Long)", scalaStackFrame.getMethodFullName)
   }
@@ -219,7 +219,7 @@ class ScalaStackFrameTest {
 
     val jdiStackFrame = createJDIStackFrame("LTypeName;", "methodName", "(S)V")
 
-    val scalaStackFrame = new ScalaStackFrame(scalaThread, jdiStackFrame)
+    val scalaStackFrame = ScalaStackFrame(scalaThread, jdiStackFrame)
 
     assertEquals("Bad full method name", "TypeName.methodName(Short)", scalaStackFrame.getMethodFullName)
   }
@@ -230,7 +230,7 @@ class ScalaStackFrameTest {
 
     val jdiStackFrame = createJDIStackFrame("LTypeName;", "methodName", "(Lsome/package/ATypeName;)V")
 
-    val scalaStackFrame = new ScalaStackFrame(scalaThread, jdiStackFrame)
+    val scalaStackFrame = ScalaStackFrame(scalaThread, jdiStackFrame)
 
     assertEquals("Bad full method name", "TypeName.methodName(ATypeName)", scalaStackFrame.getMethodFullName)
   }
@@ -241,7 +241,7 @@ class ScalaStackFrameTest {
 
     val jdiStackFrame = createJDIStackFrame("LTypeName;", "methodName", "([Lsome/package/SomeTypeName;)V")
 
-    val scalaStackFrame = new ScalaStackFrame(scalaThread, jdiStackFrame)
+    val scalaStackFrame = ScalaStackFrame(scalaThread, jdiStackFrame)
 
     assertEquals("Bad full method name", "TypeName.methodName(Array[SomeTypeName])", scalaStackFrame.getMethodFullName)
   }
@@ -252,7 +252,7 @@ class ScalaStackFrameTest {
 
     val jdiStackFrame = createJDIStackFrame("LTypeName;", "methodName", "([I)V")
 
-    val scalaStackFrame = new ScalaStackFrame(scalaThread, jdiStackFrame)
+    val scalaStackFrame = ScalaStackFrame(scalaThread, jdiStackFrame)
 
     assertEquals("Bad full method name", "TypeName.methodName(Array[Int])", scalaStackFrame.getMethodFullName)
   }
@@ -263,7 +263,7 @@ class ScalaStackFrameTest {
 
     val jdiStackFrame = createJDIStackFrame("LTypeName;", "methodName", "(Z[IFLsome/package/SomeTypeA;[[Lpackage/SomeTypeB;)V")
 
-    val scalaStackFrame = new ScalaStackFrame(scalaThread, jdiStackFrame)
+    val scalaStackFrame = ScalaStackFrame(scalaThread, jdiStackFrame)
 
     assertEquals("Bad full method name", "TypeName.methodName(Boolean, Array[Int], Float, SomeTypeA, Array[Array[SomeTypeB]])", scalaStackFrame.getMethodFullName)
   }
@@ -274,7 +274,7 @@ class ScalaStackFrameTest {
 
     val jdiStackFrame = createJDIStackFrame("Lpackage/name/TypeName;", "$colon$plus$minus$qmark", "()V")
 
-    val scalaStackFrame = new ScalaStackFrame(scalaThread, jdiStackFrame)
+    val scalaStackFrame = ScalaStackFrame(scalaThread, jdiStackFrame)
 
     assertEquals("Bad full method name", "TypeName.:+-?()", scalaStackFrame.getMethodFullName)
   }
@@ -294,7 +294,7 @@ class ScalaStackFrameTest {
     val jdiLocalVariable = mock(classOf[LocalVariable])
     when(jdiStackFrame.visibleVariables).thenReturn(List(jdiLocalVariable, jdiLocalVariable, jdiLocalVariable, jdiLocalVariable).asJava)
 
-    val scalaStackFrame = new ScalaStackFrame(scalaThread, jdiStackFrame)
+    val scalaStackFrame = ScalaStackFrame(scalaThread, jdiStackFrame)
     
     val variables= scalaStackFrame.getVariables
     
@@ -320,7 +320,7 @@ class ScalaStackFrameTest {
     val jdiLocalVariable = mock(classOf[LocalVariable])
     when(jdiStackFrame.visibleVariables).thenReturn(List(jdiLocalVariable, jdiLocalVariable, jdiLocalVariable).asJava)
 
-    val scalaStackFrame = new ScalaStackFrame(scalaThread, jdiStackFrame)
+    val scalaStackFrame = ScalaStackFrame(scalaThread, jdiStackFrame)
     
     val variables= scalaStackFrame.getVariables
     
@@ -345,7 +345,7 @@ class ScalaStackFrameTest {
     val jdiLocalVariable = mock(classOf[LocalVariable])
     when(jdiStackFrame.visibleVariables).thenReturn(List(jdiLocalVariable, jdiLocalVariable, jdiLocalVariable).asJava)
 
-    val scalaStackFrame = new ScalaStackFrame(scalaThread, jdiStackFrame)
+    val scalaStackFrame = ScalaStackFrame(scalaThread, jdiStackFrame)
     
     val variables= scalaStackFrame.getVariables
     

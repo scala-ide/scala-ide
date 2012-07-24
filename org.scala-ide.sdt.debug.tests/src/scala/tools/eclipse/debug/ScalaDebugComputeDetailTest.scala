@@ -23,11 +23,6 @@ class ScalaDebugComputeDetailTest {
   var session: ScalaDebugTestSession = null
   
   @Before
-  def setScalaDebugMode() {
-    ScalaDebugPlugin.plugin.getPreferenceStore.setValue(DebugPreferencePage.P_ENABLE, true)
-  }
-  
-  @Before
   def refreshBinaryFiles() {
     project.underlying.build(IncrementalProjectBuilder.CLEAN_BUILD, new NullProgressMonitor)
     project.underlying.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, new NullProgressMonitor)

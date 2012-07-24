@@ -1,35 +1,37 @@
 package scala.tools.eclipse.debug.model
 
-import org.eclipse.core.resources.IFile
+import scala.tools.eclipse.debug.ScalaDebugger
+
+import org.eclipse.core.runtime.IProgressMonitor
+import org.eclipse.core.runtime.IStatus
+import org.eclipse.core.runtime.Status
+import org.eclipse.core.runtime.jobs.Job
 import org.eclipse.debug.core.model.IValue
+import org.eclipse.debug.internal.ui.views.variables.IndexedVariablePartition
 import org.eclipse.debug.ui.{ IValueDetailListener, IDebugUIConstants, IDebugModelPresentation, DebugUITools }
-import org.eclipse.ui.ide.IDE
-import org.eclipse.ui.part.FileEditorInput
-import org.eclipse.ui.{ IFileEditorInput, IEditorInput }
-import com.sun.jdi.Value
+import org.eclipse.jdt.internal.ui.javaeditor.EditorUtility
+import org.eclipse.ui.IEditorInput
+
 import com.sun.jdi.ArrayReference
 import com.sun.jdi.BooleanValue
 import com.sun.jdi.ByteValue
 import com.sun.jdi.CharValue
+import com.sun.jdi.ClassType
 import com.sun.jdi.DoubleValue
 import com.sun.jdi.FloatValue
 import com.sun.jdi.IntegerValue
 import com.sun.jdi.LongValue
+import com.sun.jdi.ObjectReference
+import com.sun.jdi.PrimitiveValue
 import com.sun.jdi.ShortValue
 import com.sun.jdi.StringReference
-import com.sun.jdi.ObjectReference
+import com.sun.jdi.Value
 import com.sun.jdi.VoidValue
-import com.sun.jdi.ClassType
-import scala.tools.eclipse.debug.ScalaDebugger
-import org.eclipse.core.runtime.jobs.Job
-import org.eclipse.core.runtime.IProgressMonitor
-import org.eclipse.core.runtime.IStatus
-import org.eclipse.core.runtime.Status
-import scala.tools.eclipse.debug.ScalaDebugPlugin
-import com.sun.jdi.PrimitiveValue
-import org.eclipse.jdt.internal.ui.javaeditor.EditorUtility
-import org.eclipse.debug.internal.ui.views.variables.IndexedVariablePartition
 
+/**
+ * Utility methods for the ScalaDebugModelPresentation class
+ * This object doesn't use any internal field, and is thread safe.
+ */
 object ScalaDebugModelPresentation {
   def computeDetail(value: IValue): String = {
     value match {
@@ -108,6 +110,10 @@ object ScalaDebugModelPresentation {
   }
 }
 
+/**
+ * Generate the elements used by the UI.
+ * This class doesn't use any internal field, and is thread safe.
+ */
 class ScalaDebugModelPresentation extends IDebugModelPresentation {
 
   // Members declared in org.eclipse.jface.viewers.IBaseLabelProvider

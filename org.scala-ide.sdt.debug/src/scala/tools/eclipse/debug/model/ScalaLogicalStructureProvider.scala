@@ -77,7 +77,7 @@ object ScalaCollectionLogicalStructureType extends ILogicalStructureType {
     
     import scala.collection.JavaConverters._
     
-    ScalaValue(ScalaDebugger.currentThread.invokeMethod(objectReference, toArrayMethod, anyValManifestObject), scalaValue.getScalaDebugTarget)
+    ScalaValue(ScalaDebugger.currentThread.invokeMethod(objectReference, toArrayMethod, anyValManifestObject), scalaValue.debugTarget)
   }
   
   def providesLogicalStructure(value: IValue): Boolean = true // TODO: check that as it is created by the provider, it is never used with other values
