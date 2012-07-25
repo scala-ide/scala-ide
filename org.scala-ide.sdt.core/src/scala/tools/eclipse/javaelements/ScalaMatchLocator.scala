@@ -12,7 +12,7 @@ import org.eclipse.jdt.internal.core.search.matching.{ MatchLocator, PossibleMat
 import scala.tools.nsc.util.{ RangePosition, Position }
 import scala.tools.eclipse.ScalaPresentationCompiler
 import scala.tools.eclipse.util.ReflectionUtils
-import org.eclipse.jdt.internal.core.search.matching.{ PatternLocator, FieldPattern, MethodPattern, TypeReferencePattern, TypeDeclarationPattern, OrPattern };
+import org.eclipse.jdt.internal.core.search.matching.{ PatternLocator, FieldPattern, MethodPattern, TypeReferencePattern, TypeDeclarationPattern, OrPattern }
 import org.eclipse.jdt.core.IJavaElement
 
 //FIXME should report all and let matcher to the selection OR only report matcher interest (pre select by type) OR ...
@@ -46,7 +46,10 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
     override def traverse(tree: Tree): Unit = try {
       if (tree.pos.isOpaqueRange && tree.pos.isDefined) {
         report(tree)
-        super.traverse(tree)
+        tree match { 
+         case Function(vparams, body) => traverseTrees(vparams); traverse(body)
+         case _ => super.traverse(tree)
+        }
       }
     } catch {
       case t: TypeError => logError("Error while searching Scala tree", t)
