@@ -159,7 +159,7 @@ class FindReferencesTests extends FindReferencesTester with HasLogger {
 
   @Test
   def findReferencesOfClassTypeInMethodTypeBound_bug1000063_2() {
-    val expected = clazz("ReferredClass") isReferencedBy clazzConstructor("ReferringClass") and typeAlias("ReferringClass.typedSet") and method("ReferringClass.foo")
+    val expected = clazz("ReferredClass") isReferencedBy clazz("ReferringClass") and typeAlias("ReferringClass.typedSet") and method("ReferringClass.foo")
     runTest("bug1000063_2", "FindReferencesOfClassType.scala", expected)
   }
 
@@ -209,6 +209,12 @@ class FindReferencesTests extends FindReferencesTester with HasLogger {
   def findReferencesOfMethodInsideAnonymousFunction() {
     val expected = method("Foo.foo") isReferencedBy moduleConstructor("Bar")
     runTest("anon-fun", "Foo.scala", expected)
+  }
+
+  @Test
+  def findReferencesOfAnonymousClass() {
+    val expected = clazz("Foo") isReferencedBy fieldVal("Bar$.f")
+    runTest("anon-class", "Foo.scala", expected)
   }
   
   @Test
