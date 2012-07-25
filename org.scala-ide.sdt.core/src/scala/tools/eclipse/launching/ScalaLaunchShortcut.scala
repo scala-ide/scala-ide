@@ -7,7 +7,6 @@
 package scala.tools.eclipse.launching
 
 import scala.collection.mutable.ArrayBuffer
-
 import org.eclipse.core.resources.IResource
 import org.eclipse.core.runtime.IAdaptable
 import org.eclipse.debug.core.{ DebugPlugin, ILaunchConfiguration, ILaunchConfigurationType }
@@ -17,9 +16,10 @@ import org.eclipse.jdt.debug.ui.launchConfigurations.JavaLaunchShortcut
 import org.eclipse.jdt.internal.debug.ui.launcher.LauncherMessages
 import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants
 import org.eclipse.jface.operation.IRunnableContext
-
 import scala.tools.eclipse.javaelements.{ ScalaModuleElement, ScalaClassElement, ScalaSourceFile }
 import scala.tools.eclipse.util.EclipseUtils._
+import scala.tools.eclipse.javaelements.ScalaJavaMapper
+import scala.tools.nsc.MissingRequirementError
 
 /* This class can be eliminated in favour of JavaApplicationLaunch shortcut as soon as 
  * the JDTs method search works correctly for Scala.
@@ -154,69 +154,99 @@ class ScalaLaunchShortcut extends JavaLaunchShortcut {
 }
 
 object ScalaLaunchShortcut {
-  def getJunitTestClasses(element: AnyRef) = {
-    
-    def contains(annotations: Array[org.eclipse.jdt.core.IAnnotation], names: String*): Boolean = {
-      annotations.exists(a => names.contains(a.getElementName))
-    }
-    
-	def isAnnotatedTestMethod(method: IMethod) = {
-      val flags = method.getFlags
-      
-      // This should work, but doesn't for some reason, so we just say that the class has junit tests and let the runner decide that there aren't any tests
-      // val hasAnnotations = contains(method.getAnnotations(), "Test", "org.junit.Test")
-      val hasAnnotations = true
-      
-      hasAnnotations && Flags.isPublic(flags) && method.getReturnType == "V";
-    }
 
-    def extendsTraitAssertionsForJUnit(iType: IType) = iType.getSuperInterfaceNames().contains("org.scalatest.junit.AssertionsForJUnit")
-    
-    def isJunitTestClass(iType: IType): Boolean = extendsTraitAssertionsForJUnit(iType) || iType.getMethods.exists(isAnnotatedTestMethod) 
-
+  /** Return all classes that contain @Test methods. */
+  def getJunitTestClasses(element: AnyRef): List[IType] = {
     val je = element.asInstanceOf[IAdaptable].getAdapter(classOf[IJavaElement]).asInstanceOf[IJavaElement]
     je.getOpenable match {
       case scu: ScalaSourceFile =>
         def isTopLevel(tpe: IType) = tpe.getDeclaringType == null
-        
-        val ts = scu.getAllTypes
-        ts.filter(tpe =>
-          tpe.isInstanceOf[ScalaClassElement]
-            && isTopLevel(tpe)
-            && isJunitTestClass(tpe)).toList
+
+        scu.withSourceFile { (source, comp) =>
+          import comp._
+
+          def isTestClass(cdef: Tree): Boolean =
+            comp.askOption { () =>
+              /** Don't crash if the class is not on the classpath. */
+              def getClassSafe(fullName: String): Option[Symbol] = try {
+                Some(definitions.getClass(newTypeName(fullName)))
+              } catch {
+                case _: MissingRequirementError => None
+              }
+
+              val TestAnnotationOpt = getClassSafe("org.junit.Test")
+              val ScalaTestAssertionsOpt = getClassSafe("org.scalatest.junit.AssertionsForJUnit")
+
+              println("looking at class " + cdef.symbol + "ann: " + cdef.symbol.annotations)
+
+              (TestAnnotationOpt.exists { ta => cdef.symbol.info.members.exists(_.hasAnnotation(ta)) }
+                || ScalaTestAssertionsOpt.exists { sta => cdef.symbol.info.baseClasses.contains(sta) })
+            } getOrElse false
+
+          val response = new Response[Tree]
+          comp.askParsedEntered(source, keepLoaded = false, response)
+
+          response.get match {
+            case Left(trees) =>
+              for {
+                cdef <- trees
+                if cdef.isInstanceOf[ClassDef]
+                if cdef.symbol.owner.isPackageClass && isTestClass(cdef)
+                javaElement <- comp.getJavaElement(cdef.symbol, scu.getJavaProject)
+              } yield javaElement.asInstanceOf[IType]
+
+            case Right(ex) =>
+              Nil
+          }
+
+        }()
+
       case _ => Nil
     }
   }
-  
-  def getMainMethods(element: AnyRef) = {
 
-    def isMainMethod(method: IMethod) = {
-      val flags = method.getFlags
-      val params = method.getParameterTypes
-      method.getElementName == "main" &&
-        Flags.isPublic(flags) &&
-        Flags.isStatic(flags) &&
-        method.getReturnType == "V" &&
-        params != null &&
-        params.length == 1 &&
-        (Signature.toString(params(0)) match {
-          case "scala.Array" | "java.lang.String[]" | "String[]" => true
-          case _ => false
-        })
-    }
+  /** Return all objects that have an executable main method. */
+  def getMainMethods(element: AnyRef): List[IType] = {
 
     (for {
-      je <- element.asInstanceOf[IAdaptable].adaptToSafe[IJavaElement] 
+      je <- element.asInstanceOf[IAdaptable].adaptToSafe[IJavaElement]
     } yield je.getOpenable match {
       case scu: ScalaSourceFile =>
-        def isTopLevel(tpe: IType) = tpe.getDeclaringType == null
-        def hasAncestralMainMethod(tpe: IType) =
-          tpe.getMethods.exists(isMainMethod) //newSupertypeHierarchy(null).getAllTypes.exists(t => isTopLevel(t) && t.getMethods.exists(isMainMethod)) 
-        val ts = scu.getAllTypes
-        ts.filter(tpe =>
-          tpe.isInstanceOf[ScalaClassElement]
-            && isTopLevel(tpe)
-            && hasAncestralMainMethod(tpe)).toList
+
+        scu.withSourceFile { (source, comp) =>
+          import comp._
+
+          import definitions._
+          // The given symbol is a method with the right name and signature to be a runnable java program.
+          def isJavaMainMethod(sym: Symbol) = (sym.name == nme.main) && (sym.info match {
+            case MethodType(p :: Nil, restpe) => isArrayOfSymbol(p.tpe, StringClass) && restpe.typeSymbol == UnitClass
+            case _                            => false
+          })
+          // The given class has a main method.
+          def hasJavaMainMethod(sym: Symbol): Boolean =
+            (sym.tpe member nme.main).alternatives exists isJavaMainMethod
+
+          def hasMainMethod(cdef: Tree): Boolean =
+            comp.askOption { () => hasJavaMainMethod(cdef.symbol) } getOrElse false
+
+          val response = new Response[Tree]
+          comp.askParsedEntered(source, keepLoaded = false, response)
+
+          response.get match {
+            case Left(trees) =>
+              for {
+                cdef <- trees
+                if cdef.isInstanceOf[ModuleDef]
+                if cdef.symbol.isModule && cdef.symbol.owner.isPackageClass && hasMainMethod(cdef)
+                javaElement <- comp.getJavaElement(cdef.symbol, scu.getJavaProject)
+              } yield javaElement.asInstanceOf[IType]
+
+            case Right(ex) =>
+              Nil
+          }
+
+        }()
+
       case _ => Nil
     }) getOrElse Nil
   }
