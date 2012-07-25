@@ -59,7 +59,7 @@ class StructureBuilderTest {
 
   @Test def testSearchIndexAnnotations() {
     import IJavaSearchConstants._
-    val pattern = SearchPattern.createPattern("org.junit.Test", TYPE, ANNOTATION_TYPE_REFERENCE, SearchPattern.R_PREFIX_MATCH)
+    val pattern = SearchPattern.createPattern("org.junit.Test", TYPE, ANNOTATION_TYPE_REFERENCE, SearchPattern.R_EXACT_MATCH)
     val scope = SearchEngine.createJavaSearchScope(Array(srcPackageRoot.getPackageFragment("annots"): IJavaElement))
 
     var elems = Set[IMethod]()
@@ -96,7 +96,6 @@ class StructureBuilderTest {
     testSearchIndexAnnotations()
   }
 
-  @Ignore("Failing only on 2.8, re-enable when we drop support for 2.8.") 
   @Test def junit4TestRunnerSearch {
     val root = compilationUnit("annots/ScalaTestSuite.scala").getJavaProject()
     val finder = new JUnit4TestFinder
@@ -148,6 +147,16 @@ class StructureBuilderTest {
     val jdtStructure = compilationUnitsStructure(fragment)
     // verify
     assertEquals(T1000568TestOracle.expectedFragment, jdtStructure)
+  }
+
+  @Test
+  def abstractMembers() {
+    // when
+    val fragment = srcPackageRoot.getPackageFragment("abstract_members")
+    // then
+    val jdtStructure = compilationUnitsStructure(fragment)
+    // verify
+    assertEquals(AbstractMembersTestOracle.expectedFragment, jdtStructure)
   }
 
   import org.eclipse.jdt.core.compiler.IProblem

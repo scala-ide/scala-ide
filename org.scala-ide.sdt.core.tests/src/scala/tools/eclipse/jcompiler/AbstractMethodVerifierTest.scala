@@ -21,6 +21,7 @@ import org.mockito.Mockito._
 import org.mockito.Matchers.any
 import org.junit.Ignore
 import org.mockito.verification.VerificationMode
+import scala.collection.mutable.ListBuffer
 
 object AbstractMethodVerifierTest extends TestProjectSetup("jcompiler") {
 
@@ -51,31 +52,37 @@ object AbstractMethodVerifierTest extends TestProjectSetup("jcompiler") {
       }
     }
 
-    def verifyThat(expectedProblem: String) = new {
+    def verifyThat(expectedProblem: String): WithExpecteProblems = verifyThat(Seq(expectedProblem))
+    def verifyThat(expectedProblems: Seq[String]): WithExpecteProblems = new WithExpecteProblems(expectedProblems)
+    
+    class WithExpecteProblems(expectedProblems: Seq[String]) {
       def is = new {
         def reported = {
           //when
+          val problemsCollector = new ProblemsCollector
           val unit = compilationUnit(path2unit)
           
           val owner = new WorkingCopyOwner() {
-            override def getProblemRequestor(unit: ICompilationUnit): IProblemRequestor = {
-              new IProblemRequestor {
-                override def acceptProblem(problem: IProblem) {
-                  //verify
-                  assertEquals(expectedProblem, problem.toString())
-                }
-                def beginReporting() {}
-                def endReporting() {}
-                def isActive(): Boolean = true
-              }
-            }
+            override def getProblemRequestor(unit: ICompilationUnit): IProblemRequestor = 
+              problemsCollector
           }
           
           //then
           // this will trigger the java reconciler so that the problems will be reported in the ProblemReporter
           unit.getWorkingCopy(owner, new NullProgressMonitor)
+          
+          // verify
+          assertArrayEquals(expectedProblems.toArray[Object], problemsCollector.problems.toArray[Object])
         }
       }
+    }
+    
+    class ProblemsCollector extends IProblemRequestor {
+      val problems: ListBuffer[String] = new ListBuffer
+      override def acceptProblem(problem: IProblem): Unit = problems += problem.toString
+      def beginReporting() {}
+      def endReporting() {}
+      def isActive(): Boolean = true
     }
   }
 
@@ -151,5 +158,16 @@ class AbstractMethodVerifierTest {
   @Test
   def wideningAccessModifiersOfInherithedMethod_t1000752_3() {
     whenOpening("t1000752_3/J.java").verifyThat(no).errors.are.reported
+  }
+
+  @Test
+  def unimplementedAbstractMembersAreCorrectlyReportedInJavaSources() {
+    val expectedProblems = Seq("Pb(400) The type FooImpl must implement the inherited abstract method Foo.obj2()", 
+                               "Pb(400) The type FooImpl must implement the inherited abstract method Foo.obj2_$eq(Object)", 
+                               "Pb(400) The type FooImpl must implement the inherited abstract method Foo.obj3()", 
+                               "Pb(400) The type FooImpl must implement the inherited abstract method Foo.obj4(String)", 
+                               "Pb(400) The type FooImpl must implement the inherited abstract method Foo.obj1()"
+                           )
+    whenOpening("abstract_members/FooImpl.java").verifyThat(expectedProblems).is.reported
   }
 }

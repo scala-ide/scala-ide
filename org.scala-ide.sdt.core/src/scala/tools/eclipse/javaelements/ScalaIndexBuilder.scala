@@ -227,8 +227,9 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
         case rt : RefTree =>
           val name = rt.name.toChars
           indexer.addTypeReference(name)
-          indexer.addFieldReference(name)
-          indexer.addMethodReference(name, 0) 
+          indexer.addMethodReference(name, 0)
+          if(nme.isSetterName(rt.name)) indexer.addFieldReference(nme.setterToGetter(rt.name).toChars)
+          else indexer.addFieldReference(name)
           super.traverse(tree)
           
         case _ => super.traverse(tree)
