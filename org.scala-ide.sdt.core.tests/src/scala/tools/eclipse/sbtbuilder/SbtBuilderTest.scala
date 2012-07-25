@@ -132,7 +132,7 @@ class SbtBuilderTest {
     assertNoErrors(fooClientCU)
   }
 
-  @Test def scalaLibrary_shouldBe_on_BootClasspath() {
+/*  @Test def scalaLibrary_shouldBe_on_BootClasspath() {
     import SDTTestUtils._
 
     val Seq(prjClient) = createProjects("client")
@@ -172,7 +172,7 @@ class SbtBuilderTest {
     Assert.assertTrue("BasicConfiguration bootclasspath " + args, args.mkString(" ").contains("-bootclasspath " + expectedLib))
     deleteProjects(prjClient, prjLib)
   }
-
+*/
   /** Returns true if the expected regular expression matches the given error message. */
   private def similarErrorMessage(msg: String)(expected: String): Boolean = {
     msg.matches(expected)

@@ -90,7 +90,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
 
   case class InvalidCompilerSettings() extends RuntimeException(
         "Scala compiler cannot initialize for project: " + underlying.getName +
-    		". Please check that your classpath contains the standard Scala library.")
+              ". Please check that your classpath contains the standard Scala library.")
 
   private val presentationCompiler = new Cached[Option[ScalaPresentationCompiler]] {
     override def create() = {
@@ -394,52 +394,66 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
     }
   }
 
-  private def refreshOutput: Unit = {
-    val res = plugin.workspaceRoot.findMember(javaProject.getOutputLocation)
-    if (res ne null)
-      res.refreshLocal(IResource.DEPTH_INFINITE, null)
+  private def refreshOutputFolders(): Unit = {
+    sourceOutputFolders foreach {
+      case (_, binFolder) => binFolder.refreshLocal(IResource.DEPTH_INFINITE, null)
+    }
   }
+
+  // TODO Per-file encodings
+  private def encoding: Option[String] =
+    sourceFolders.headOption flatMap { path =>
+      plugin.workspaceRoot.findContainersForLocation(path) match {
+        case Array(container) => Some(container.getDefaultCharset)
+        case _ => None
+      }
+    }
+
+  private def shownSettings(settings: Settings, filter: Settings#Setting => Boolean): Seq[(Settings#Setting, Option[String])] =
+    for (
+      box <- IDESettings.shownSettings(settings);
+      setting <- box.userSettings; if filter(setting)
+    ) yield {
+      val value = Trim(storage.getString(SettingConverterUtil.convertNameToProperty(setting.name)))
+      (setting, value)
+    }
+
+ def scalacArguments: Seq[String] = {
+   import ScalaPlugin.{defaultScalaSettings => settings}
+   val encArgs = encoding.toSeq flatMap (Seq("-encoding", _))
+   val shownArgs = shownSettings(settings, _ => true) flatMap {
+     case (setting, Some(value)) if value.equalsIgnoreCase("true") => Some(setting.name)
+     case _ => None
+   }
+   val extraArgs = settings.splitParams(storage.getString(CompilerSettings.ADDITIONAL_PARAMS))
+   shownArgs ++ encArgs ++ extraArgs
+ }
   
   def initializeCompilerSettings(settings: Settings, filter: Settings#Setting => Boolean): Unit = {
     // if the workspace project doesn't exist, it is a virtual project used by Eclipse.
     // As such the source folders don't exist.
-    if (underlying.exists()) {
+    if (underlying.exists())
       for ((src, dst) <- sourceOutputFolders) {
         logger.debug("Added output folder: " + src + ": " + dst)
         settings.outputDirs.add(EclipseResource(src), EclipseResource(dst))
       }
-    }
     
-    // TODO Per-file encodings
-    val sfs = sourceFolders
-    if (!sfs.isEmpty) {
-      val path = sfs.iterator.next
-      plugin.workspaceRoot.findContainersForLocation(path) match {
-        case Array(container) => settings.encoding.value = container.getDefaultCharset
-        case _ =>
-      }
-    }
+    for(enc <- encoding)
+      settings.encoding.value = enc
 
     setupCompilerClasspath(settings)
-    settings.sourcepath.value = sfs.map(_.toOSString).mkString(pathSeparator)
+    settings.sourcepath.value = sourceFolders.map(_.toOSString).mkString(pathSeparator)
     
-    val store = storage
-    for (
-      box <- IDESettings.shownSettings(settings);
-      setting <- box.userSettings; if filter(setting)
-    ) {
-      val value0 = Trim(store.getString(SettingConverterUtil.convertNameToProperty(setting.name)))
-      
+    for((setting, value) <- shownSettings(settings, filter))
       try {
-        value0 foreach setting.tryToSetFromPropertyValue
+        value foreach setting.tryToSetFromPropertyValue
         logger.debug("[%s] initializing %s to %s".format(underlying.getName(), setting.name, setting.value.toString))
       } catch {
-        case t: Throwable => eclipseLog.error("Unable to set setting '" + setting.name + "' to '" + value0 + "'", t)
+        case t: Throwable => eclipseLog.error("Unable to set setting '" + setting.name + "' to '" + value + "'", t)
       }
-    }
     
     // handle additional parameters
-    val additional = store.getString(CompilerSettings.ADDITIONAL_PARAMS)
+    val additional = storage.getString(CompilerSettings.ADDITIONAL_PARAMS)
     logger.info("setting additional parameters: " + additional)
     settings.processArgumentString(additional)
   }
@@ -459,7 +473,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
   private def buildManagerInitialize: String =
     storage.getString(SettingConverterUtil.convertNameToProperty(properties.ScalaPluginSettings.buildManager.name))
   
-  def storage = {
+  lazy val storage = {
     val workspaceStore = ScalaPlugin.prefStore
     val projectStore = new PropertyStore(underlying, workspaceStore, plugin.pluginId)
     val useProjectSettings = projectStore.getBoolean(SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE)
@@ -545,20 +559,20 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
       // causes problems if errors are reported against that file. Anyway, it's wrong to have a sourcepath
       // when using the build manager.
       settings.sourcepath.value = ""
-      	
+
       // Which build manager?
       // We assume that build manager setting has only single box
       val choice = buildManagerInitialize
       choice match {
-      	case "refined" =>
-      	  logger.info("BM: Refined Build Manager")
-      	  buildManager0 = new buildmanager.refined.EclipseRefinedBuildManager(this, settings)
-      	case "sbt"  =>
-      	  logger.info("BM: SBT enhanced Build Manager for " + plugin.scalaVer + " Scala library")
-      	  buildManager0 = new buildmanager.sbtintegration.EclipseSbtBuildManager(this, settings)
-      	case _         =>
-      	  logger.info("Invalid build manager choice '" + choice  + "'. Setting to (default) refined build manager")
-      	  buildManager0 = new buildmanager.refined.EclipseRefinedBuildManager(this, settings)
+        case "refined" =>
+          logger.info("BM: Refined Build Manager")
+          buildManager0 = new buildmanager.refined.EclipseRefinedBuildManager(this, settings)
+        case "sbt"  =>
+          logger.info("BM: SBT enhanced Build Manager for " + plugin.scalaVer + " Scala library")
+          buildManager0 = new buildmanager.sbtintegration.EclipseSbtBuildManager(this, settings)
+        case _ =>
+          logger.info("Invalid build manager choice '" + choice  + "'. Setting to (default) refined build manager")
+          buildManager0 = new buildmanager.refined.EclipseRefinedBuildManager(this, settings)
       }
 
       //buildManager0 = new EclipseBuildManager(this, settings)
@@ -577,7 +591,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
 
     clearBuildProblemMarker()
     buildManager.build(addedOrUpdated, removed, monitor)
-    refreshOutput
+    refreshOutputFolders()
 
     // Already performs saving the dependencies
     
