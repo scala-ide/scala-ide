@@ -19,9 +19,6 @@ import org.eclipse.jdt.core.IJavaElement
 
 trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
   val OneStar = Array('*')
-  val ImpossibleMatch = 0
-  val InaccurateMatch = 1
-  val AccurateMatch = 2
 
   def MatchLocator(scu: ScalaCompilationUnit, matchLocator: MatchLocator, possibleMatch: PossibleMatch): Traverser = 
      MatchLocator(scu, matchLocator, matchLocator.pattern, possibleMatch)
@@ -177,17 +174,18 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
             case (qualifier,name) => fullyQualifiedName(qualifier, name)
           }
 
-          val currentParamsTypes = tpe.paramss.flatten
+          val currentParamTypes = tpe.paramss.flatten
 
-          for((searchedParamTpe, paramTpe) <- searchedParamTypes.zip(currentParamsTypes)) {
-            val tpeBaseClasses = paramTpe.tpe.baseClasses
+          for (i <- 0 to currentParamTypes.size - 1) {
+            val tpeBaseClasses = currentParamTypes(i).tpe.baseClasses
             val noMatch = !tpeBaseClasses.exists { bc =>
-              pat.matchesName(searchedParamTpe, mapType(bc).toCharArray)
+              val tpe1 = searchedParamTypes(i)
+              val tpe2 = mapType(bc).toCharArray
+              pat.matchesName(tpe1, tpe2)
             }
             if (noMatch) 
-              return false
+              return false        
           }
-
           true
       })
     
@@ -245,7 +243,7 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
       lazy val noPosition = !s.pos.isDefined
       lazy val nameNoMatch = !pat.matchesName(searchedVar, s.name.toChars)
       lazy val varNoMatch = !pat.matchesName(CharOp.concat(searchedVar, "_$eq".toCharArray), s.name.toChars)
-      lazy val qualifierNoMatch = !checkQualifier(s, fullyQualifiedName(declaringQualification(pat), declaringSimpleName(pat)), pat)
+      lazy val qualifierNoMatch = !checkQualifier(s, fullyQualifiedName(declaringQualificationField(pat), declaringSimpleNameField(pat)), pat)
       
       if (noPosition || (nameNoMatch && varNoMatch) || qualifierNoMatch) return
 
@@ -448,18 +446,18 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
 }
 
 object MatchLocatorUtils extends ReflectionUtils {
-  val mlClazz = classOf[MatchLocator]
+  private val mlClazz = classOf[MatchLocator]
   val reportMethod = getDeclaredMethod(mlClazz, "report", classOf[SearchMatch])
   
-  val orClazz = classOf[OrPattern]
-  val orPatternsField = getDeclaredField(orClazz, "patterns")
-  def orPatterns(or: OrPattern) = orPatternsField.get(or).asInstanceOf[Array[SearchPattern]]
+  private val orClazz = classOf[OrPattern]
+  private val orPatternsField = getDeclaredField(orClazz, "patterns")
+  def orPatterns(or: OrPattern): Array[SearchPattern] = orPatternsField.get(or).asInstanceOf[Array[SearchPattern]]
   
-  val fpClazz = classOf[FieldPattern]
-  val declaringSimpleNameField = getDeclaredField(fpClazz, "declaringSimpleName")
-  val declaringQualificationField = getDeclaredField(fpClazz, "declaringQualification")
-  def declaringSimpleName(fp : FieldPattern) = declaringSimpleNameField.get(fp).asInstanceOf[Array[Char]]
-  def declaringQualification(fp : FieldPattern) = declaringQualificationField.get(fp).asInstanceOf[Array[Char]]
+  private val fpClazz = classOf[FieldPattern]
+  private val declaringSimpleNameField: java.lang.reflect.Field = getDeclaredField(fpClazz, "declaringSimpleName")
+  private val declaringQualificationField: java.lang.reflect.Field = getDeclaredField(fpClazz, "declaringQualification")
+  def declaringSimpleNameField(fp : FieldPattern): Array[Char] = declaringSimpleNameField.get(fp).asInstanceOf[Array[Char]]
+  def declaringQualificationField(fp : FieldPattern): Array[Char] = declaringQualificationField.get(fp).asInstanceOf[Array[Char]]
   
   val ftrClazz = classOf[TypeReferencePattern]
   val simpleNameField = getDeclaredField(ftrClazz, "simpleName")
