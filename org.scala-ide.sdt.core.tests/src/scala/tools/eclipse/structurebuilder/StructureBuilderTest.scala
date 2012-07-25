@@ -150,6 +150,16 @@ class StructureBuilderTest {
     assertEquals(T1000568TestOracle.expectedFragment, jdtStructure)
   }
 
+  @Test
+  def abstractMembers() {
+    // when
+    val fragment = srcPackageRoot.getPackageFragment("abstract_members")
+    // then
+    val jdtStructure = compilationUnitsStructure(fragment)
+    // verify
+    assertEquals(AbstractMembersTestOracle.expectedFragment, jdtStructure)
+  }
+
   import org.eclipse.jdt.core.compiler.IProblem
   private class ProblemReporterAdapter extends IProblemRequestor {
     def acceptProblem(problem: IProblem) {}
