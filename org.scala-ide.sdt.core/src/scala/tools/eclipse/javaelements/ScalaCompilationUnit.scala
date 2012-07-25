@@ -186,7 +186,8 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
       val element = for {
        t <- typedRes.left.toOption
        if t.hasSymbol
-       element <- compiler.getJavaElement(t.symbol)
+       sym = if (t.symbol.isSetter) t.symbol.getter(t.symbol.owner) else t.symbol 
+       element <- compiler.getJavaElement(sym)
       } yield Array(element: IJavaElement)
       
       val res = element.getOrElse(Array.empty[IJavaElement])
