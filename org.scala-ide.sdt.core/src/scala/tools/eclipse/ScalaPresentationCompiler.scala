@@ -66,7 +66,7 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
     } yield cu).toSeq
   }
   
-  private def problemsOf(file : AbstractFile) : List[IProblem] = {
+  def problemsOf(file : AbstractFile) : List[IProblem] = {
     unitOfFile get file match {
       case Some(unit) => 
         val response = new Response[Tree]
@@ -207,6 +207,12 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
        sourceFiles.remove(scu)
      }
    }
+ }
+ 
+ def withResponse[A](op: Response[A] => Any): Response[A] = {
+   val response = new Response[A]
+   op(response)
+   response
  }
 
   override def logError(msg : String, t : Throwable) =
