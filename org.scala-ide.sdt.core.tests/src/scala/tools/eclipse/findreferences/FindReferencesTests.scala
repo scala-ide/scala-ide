@@ -3,6 +3,7 @@ package scala.tools.eclipse.findreferences
 import scala.tools.eclipse.EclipseUserSimulator
 import scala.tools.eclipse.ScalaProject
 import scala.tools.eclipse.ScalaWordFinder
+import scala.tools.eclipse.javaelements.ScalaAccessorElement
 import scala.tools.eclipse.javaelements.ScalaClassElement
 import scala.tools.eclipse.javaelements.ScalaDefElement
 import scala.tools.eclipse.javaelements.ScalaModuleElement
@@ -108,13 +109,14 @@ class FindReferencesTests extends FindReferencesTester with HasLogger {
 
   private def jdtElement2testElement(e: JavaElement): Element = {
     val testElement: String => Element = e match {
-      case e: ScalaDefElement    => Method.apply _
-      case e: ScalaVarElement    => FieldVar.apply _
-      case e: ScalaValElement    => FieldVal.apply _
-      case e: ScalaClassElement  => Clazz.apply _
-      case e: ScalaTypeElement   => TypeAlias.apply _
-      case e: ScalaModuleElement => Module.apply _
-      case e: SourceType         => Clazz.apply _
+      case e: ScalaDefElement      => Method.apply _
+      case e: ScalaAccessorElement => Method.apply _
+      case e: ScalaVarElement      => FieldVar.apply _
+      case e: ScalaValElement      => FieldVal.apply _
+      case e: ScalaClassElement    => Clazz.apply _
+      case e: ScalaTypeElement     => TypeAlias.apply _
+      case e: ScalaModuleElement   => Module.apply _
+      case e: SourceType           => Clazz.apply _
       case _ =>
         val msg = "Don't know how to convert element `%s` of type `%s`".format(e.getElementName, e.getClass)
         throw new IllegalArgumentException(msg)
@@ -207,5 +209,11 @@ class FindReferencesTests extends FindReferencesTester with HasLogger {
   def findReferencesOfMethodInsideAnonymousFunction() {
     val expected = method("Foo.foo") isReferencedBy moduleConstructor("Bar")
     runTest("anon-fun", "Foo.scala", expected)
+  }
+  
+  @Test
+  def findReferencesOfAbstractMember() {
+    val expected = method("Foo.obj") isReferencedBy method("Foo.foo")
+    runTest("abstract-member", "Foo.scala", expected)
   }
 }
