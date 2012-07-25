@@ -59,7 +59,7 @@ class StructureBuilderTest {
 
   @Test def testSearchIndexAnnotations() {
     import IJavaSearchConstants._
-    val pattern = SearchPattern.createPattern("org.junit.Test", TYPE, ANNOTATION_TYPE_REFERENCE, SearchPattern.R_PREFIX_MATCH)
+    val pattern = SearchPattern.createPattern("org.junit.Test", TYPE, ANNOTATION_TYPE_REFERENCE, SearchPattern.R_EXACT_MATCH)
     val scope = SearchEngine.createJavaSearchScope(Array(srcPackageRoot.getPackageFragment("annots"): IJavaElement))
 
     var elems = Set[IMethod]()
