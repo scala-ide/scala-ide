@@ -96,7 +96,6 @@ class StructureBuilderTest {
     testSearchIndexAnnotations()
   }
 
-  @Ignore("Failing only on 2.8, re-enable when we drop support for 2.8.") 
   @Test def junit4TestRunnerSearch {
     val root = compilationUnit("annots/ScalaTestSuite.scala").getJavaProject()
     val finder = new JUnit4TestFinder

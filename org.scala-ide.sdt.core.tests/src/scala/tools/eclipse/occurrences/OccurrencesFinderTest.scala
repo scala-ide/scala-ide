@@ -18,8 +18,7 @@ object OccurrencesFinderTest extends TestProjectSetup("occurrences-hyperlinking"
 
 class OccurrencesFinderTest {
   import OccurrencesFinderTest._
-  
-  @Ignore("Test fails with trunk. It finds one extra occurrence for Int (highlights T, coming from `type T = Int`)")
+
   @Test def typeOccurrences() {
     val unit = compilationUnit("occ/DummyOccurrences.scala").asInstanceOf[ScalaCompilationUnit];
     

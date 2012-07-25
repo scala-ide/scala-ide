@@ -61,7 +61,6 @@ class PresentationCompilerTest {
     assertNoErrors(dataFlowUnit)
   }
 
-  @Ignore("Enable test when ticket #1000658 is fixed")
   @Test
   def illegalCyclicReferenceInvolvingObject_t1000658() {
     //when
