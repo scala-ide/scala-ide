@@ -1,74 +1,109 @@
 package scala.tools.eclipse.debug.command
 
-import com.sun.jdi.event.Event
-import org.eclipse.jdt.internal.debug.core.model.JDIDebugTarget
-import com.sun.jdi.event.EventSet
-import org.eclipse.jdt.internal.debug.core.IJDIEventListener
-import scala.tools.eclipse.debug.model.ScalaStackFrame
-import com.sun.jdi.request.StepRequest
-import com.sun.jdi.request.EventRequest
-import scala.tools.eclipse.debug.model.ScalaThread
+import scala.actors.Actor
+import scala.tools.eclipse.debug.ActorExit
+import scala.tools.eclipse.debug.model.JdiRequestFactory
 import scala.tools.eclipse.debug.model.ScalaDebugTarget
+import scala.tools.eclipse.debug.model.ScalaStackFrame
+import scala.tools.eclipse.debug.model.ScalaThread
+
 import org.eclipse.debug.core.DebugEvent
+
 import com.sun.jdi.event.StepEvent
+import com.sun.jdi.request.StepRequest
 
 object ScalaStepReturn {
 
-  def apply(scalaStackFrame: ScalaStackFrame): ScalaStepReturn = {
+  def apply(scalaStackFrame: ScalaStackFrame): ScalaStep = {
 
-    val eventRequestManager = scalaStackFrame.stackFrame.virtualMachine.eventRequestManager
+    val stepReturnRequest = JdiRequestFactory.createStepRequest(StepRequest.STEP_LINE, StepRequest.STEP_OUT, scalaStackFrame.thread)
 
-    val stepIntoRequest = eventRequestManager.createStepRequest(scalaStackFrame.stackFrame.thread, StepRequest.STEP_LINE, StepRequest.STEP_OUT)
-    stepIntoRequest.setSuspendPolicy(EventRequest.SUSPEND_EVENT_THREAD)
-
-    new ScalaStepReturn(scalaStackFrame.getScalaDebugTarget, scalaStackFrame.thread, stepIntoRequest)
+    val actor= new ScalaStepReturnActor(scalaStackFrame.debugTarget, scalaStackFrame.thread, stepReturnRequest)
+    
+    val step= new ScalaStepReturn(actor)
+    actor.start(step)
+    step
   }
 
 }
 
+/**
+ * A step return in the Scala debug model.
+ * This class is thread safe. Instances have be created through its companion object.
+ */
+private class ScalaStepReturn private (eventActor: ScalaStepReturnActor) extends ScalaStep {
 // TODO: when implementing support without filtering, need to workaround problem reported in Eclipse bug #38744
-class ScalaStepReturn(target: ScalaDebugTarget, thread: ScalaThread, stepReturnRequest: StepRequest) extends IJDIEventListener with ScalaStep {
 
-  // Members declared in org.eclipse.jdt.internal.debug.core.IJDIEventListener
-
-  def eventSetComplete(event: Event, target: JDIDebugTarget, suspend: Boolean, eventSet: EventSet): Unit = {
-    // nothing to do
+  // Members declared in scala.tools.eclipse.debug.command.ScalaStep
+  
+  def step() {
+    eventActor ! ScalaStep.Step
+  }
+  
+  def stop() {
+    eventActor ! ScalaStep.Stop
   }
 
-  def handleEvent(event: Event, javaTarget: JDIDebugTarget, suspendVote: Boolean, eventSet: EventSet): Boolean = {
-    event match {
-      case stepEvent: StepEvent =>
-        if (target.isValidLocation(stepEvent.location)) {
-          stop
-          thread.suspendedFromScala(DebugEvent.STEP_RETURN)
-          false
-        } else {
-          true
-        }
-      case _ =>
-        suspendVote
+  // --------------------
+
+}
+
+/**
+ * Actor used to manage a Scala step return. It keeps track of the request needed to perform this step.
+ * This class is thread safe. Instances are not to be created outside of the ScalaStepReturn object.
+ */
+private[command] class ScalaStepReturnActor(debugTarget: ScalaDebugTarget, thread: ScalaThread, stepReturnRequest: StepRequest) extends Actor {
+  
+  private var scalaStep: ScalaStepReturn = _
+  
+  def start(step: ScalaStepReturn) {
+    scalaStep= step
+    start()
+  }
+  
+  def act() {
+    loop {
+      react {
+        // JDI event triggered when a step has been performed
+        case stepEvent: StepEvent =>
+          reply(
+            if (debugTarget.isValidLocation(stepEvent.location)) {
+              dispose()
+              thread.suspendedFromScala(DebugEvent.STEP_RETURN)
+              true
+            } else {
+              false
+            })
+        // user step request
+        case ScalaStep.Step =>
+          step()
+        // step is terminated
+        case ScalaStep.Stop =>
+          dispose()
+        case ActorExit =>
+          exit()
+      }
     }
   }
 
-  // Members declared in scala.tools.eclipse.debug.command.ScalaStep
+  private def step() {
+    val eventDispatcher = debugTarget.eventDispatcher
 
-  def step() {
-    val eventDispatcher = target.javaTarget.getEventDispatcher
-
-    eventDispatcher.addJDIEventListener(this, stepReturnRequest)
-    stepReturnRequest.enable
-    thread.resumedFromScala(DebugEvent.STEP_RETURN)
-    thread.thread.resume
+    eventDispatcher.setActorFor(this, stepReturnRequest)
+    stepReturnRequest.enable()
+    thread.resumeFromScala(scalaStep, DebugEvent.STEP_RETURN)
   }
 
-  def stop() {
-    val eventDispatcher = target.javaTarget.getEventDispatcher
+  private def dispose() = {
+    val eventDispatcher = debugTarget.eventDispatcher
 
-    val eventRequestManager = thread.thread.virtualMachine.eventRequestManager
+    val eventRequestManager = debugTarget.virtualMachine.eventRequestManager
 
-    stepReturnRequest.disable
-    eventDispatcher.removeJDIEventListener(this, stepReturnRequest)
+    stepReturnRequest.disable()
+    eventDispatcher.unsetActorFor(stepReturnRequest)
     eventRequestManager.deleteEventRequest(stepReturnRequest)
+
+    this ! ActorExit
   }
 
 }

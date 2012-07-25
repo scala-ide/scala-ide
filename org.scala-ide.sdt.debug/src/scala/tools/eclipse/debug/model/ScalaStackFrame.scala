@@ -1,29 +1,29 @@
 package scala.tools.eclipse.debug.model
 
 import scala.collection.JavaConverters.asScalaBufferConverter
-import org.eclipse.debug.core.model.IStackFrame
-import com.sun.jdi.StackFrame
-import com.sun.jdi.AbsentInformationException
-import com.sun.jdi.Method
-import com.sun.jdi.Type
-import com.sun.jdi.ReferenceType
-import com.sun.jdi.BooleanType
-import com.sun.jdi.ByteType
-import com.sun.jdi.CharType
-import com.sun.jdi.DoubleType
-import com.sun.jdi.IntegerType
-import com.sun.jdi.FloatType
-import com.sun.jdi.LongType
-import com.sun.jdi.ShortType
-import com.sun.jdi.ArrayType
 import scala.reflect.NameTransformer
 
+import org.eclipse.debug.core.model.IRegisterGroup
+import org.eclipse.debug.core.model.IStackFrame
+import org.eclipse.debug.core.model.IThread
+import org.eclipse.debug.core.model.IVariable
+
+import com.sun.jdi.AbsentInformationException
+import com.sun.jdi.Method
+import com.sun.jdi.StackFrame
+
 object ScalaStackFrame {
+  
+  def apply(thread: ScalaThread, stackFrame: StackFrame): ScalaStackFrame = {
+    val scalaStackFrame= new ScalaStackFrame(thread, stackFrame)
+    scalaStackFrame.fireCreationEvent()
+    scalaStackFrame
+  }
 
   // regexp for JNI signature
-  final val typeSignature = """L([^;]*);""".r
-  final val arraySignature = """\[(.*)""".r
-  final val argumentsInMethodSignature = """\(([^\)]*)\).*""".r
+  private val typeSignature = """L([^;]*);""".r
+  private val arraySignature = """\[(.*)""".r
+  private val argumentsInMethodSignature = """\(([^\)]*)\).*""".r
   
   def getSimpleName(signature: String): String = {
     signature match {
@@ -75,16 +75,19 @@ object ScalaStackFrame {
   }
 
   def getFullName(method: Method): String = {
-//    import scala.collection.JavaConverters._
     "%s.%s(%s)".format(
       getSimpleName(method.declaringType.signature),
       NameTransformer.decode(method.name),
       getArgumentSimpleNames(method.signature).mkString(", "))
-//      method.arguments.asScala.map(a => getSimpleName(a.signature)).mkString(", "))
   }
 }
 
-class ScalaStackFrame(val thread: ScalaThread, var stackFrame: StackFrame) extends ScalaDebugElement(thread.getScalaDebugTarget) with IStackFrame {
+/**
+ * A stack frame in the Scala debug model.
+ * This class is NOT thread safe. 'stackFrame' variable can be 're-bound' at any time.
+ * Instances have be created through its companion object.
+ */
+class ScalaStackFrame private (val thread: ScalaThread, @volatile var stackFrame: StackFrame) extends ScalaDebugElement(thread.debugTarget) with IStackFrame {
   import ScalaStackFrame._
 
   // Members declared in org.eclipse.debug.core.model.IStackFrame
@@ -93,9 +96,9 @@ class ScalaStackFrame(val thread: ScalaThread, var stackFrame: StackFrame) exten
   def getCharStart(): Int = -1
   def getLineNumber(): Int = stackFrame.location.lineNumber // TODO: cache data ?
   def getName(): String = stackFrame.location.declaringType.name // TODO: cache data ?
-  def getRegisterGroups(): Array[org.eclipse.debug.core.model.IRegisterGroup] = ???
-  def getThread(): org.eclipse.debug.core.model.IThread = thread
-  def getVariables(): Array[org.eclipse.debug.core.model.IVariable] = variables.toArray // TODO: need real logic
+  def getRegisterGroups(): Array[IRegisterGroup] = ???
+  def getThread(): IThread = thread
+  def getVariables(): Array[IVariable] = variables.toArray // TODO: need real logic
   def hasRegisterGroups(): Boolean = ???
   def hasVariables(): Boolean = ???
 
@@ -118,8 +121,6 @@ class ScalaStackFrame(val thread: ScalaThread, var stackFrame: StackFrame) exten
   def suspend(): Unit = ???
 
   // ---
-
-  fireCreationEvent
 
   val variables: Seq[ScalaVariable] = {
     import scala.collection.JavaConverters._
