@@ -202,4 +202,10 @@ class FindReferencesTests extends FindReferencesTester with HasLogger {
     val expected = method("util.EclipseUtils$.workspaceRunnableIn", List("java.lang.String", "java.lang.Object", "scala.Function1<java.lang.Object,scala.runtime.BoxedUnit>")) isReferencedBy method("util.FileUtils$.foo")
     runTest("bug1001146_1", "util/EclipseUtils.scala", expected)
   }
+
+  @Test
+  def findReferencesOfMethodInsideAnonymousFunction() {
+    val expected = method("Foo.foo") isReferencedBy moduleConstructor("Bar")
+    runTest("anon-fun", "Foo.scala", expected)
+  }
 }
