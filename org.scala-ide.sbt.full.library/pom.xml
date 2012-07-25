@@ -23,101 +23,84 @@
 
   <dependencies>
     <dependency>
-      <groupId>org.scala-tools.sbt</groupId>
-      <artifactId>api_${sbt.compiled.version}</artifactId>
-      <optional>true</optional>
-    </dependency>
-    <dependency>
-      <groupId>org.scala-tools.sbt</groupId>
-      <artifactId>classfile_${sbt.compiled.version}</artifactId>
-      <optional>true</optional>
-    </dependency>
-    <dependency>
-      <groupId>org.scala-tools.sbt</groupId>
+      <groupId>org.scala-sbt</groupId>
       <artifactId>classpath_${sbt.compiled.version}</artifactId>
       <optional>true</optional>
     </dependency>
     <dependency>
-      <groupId>org.scala-tools.sbt</groupId>
-      <artifactId>collections_${sbt.compiled.version}</artifactId>
-      <optional>true</optional>
-    </dependency>
-    <dependency>
-      <groupId>org.scala-tools.sbt</groupId>
-      <artifactId>compile_${sbt.compiled.version}</artifactId>
-      <optional>true</optional>
-    </dependency>
-     <dependency>
-      <groupId>org.scala-tools.sbt</groupId>
-      <artifactId>control_${sbt.compiled.version}</artifactId>
-      <optional>true</optional>
-    </dependency>
-    <dependency>
-      <groupId>org.scala-tools.sbt</groupId>
-      <artifactId>incremental-compiler_${sbt.compiled.version}</artifactId>
-      <optional>true</optional>
-    </dependency>
-    <dependency>
-      <groupId>org.scala-tools.sbt</groupId>
-      <artifactId>io_${sbt.compiled.version}</artifactId>
-      <optional>true</optional>
-    </dependency>
-    <dependency>
-      <groupId>org.scala-tools.sbt</groupId>
-      <artifactId>ivy_${sbt.compiled.version}</artifactId>
-      <optional>true</optional>
-    </dependency>
-    <dependency>
-      <groupId>org.scala-tools.sbt</groupId>
-      <artifactId>launcher-interface_${sbt.compiled.version}</artifactId>
-      <optional>true</optional>
-    </dependency>
-    <dependency>
-      <groupId>org.scala-tools.sbt</groupId>
+      <groupId>org.scala-sbt</groupId>
       <artifactId>logging_${sbt.compiled.version}</artifactId>
       <optional>true</optional>
     </dependency>
     <dependency>
-      <groupId>org.scala-tools.sbt</groupId>
+      <groupId>org.scala-sbt</groupId>
+      <artifactId>io_${sbt.compiled.version}</artifactId>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>org.scala-sbt</groupId>
+      <artifactId>control_${sbt.compiled.version}</artifactId>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>org.scala-sbt</groupId>
+      <artifactId>classfile_${sbt.compiled.version}</artifactId>
+      <optional>true</optional>
+    </dependency>
+     <dependency>
+      <groupId>org.scala-sbt</groupId>
+      <artifactId>process_${sbt.compiled.version}</artifactId>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>org.scala-sbt</groupId>
+      <artifactId>relation_${sbt.compiled.version}</artifactId>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>org.scala-sbt</groupId>
+      <artifactId>interface_${sbt.compiled.version}</artifactId>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>org.scala-sbt</groupId>
       <artifactId>persist_${sbt.compiled.version}</artifactId>
       <optional>true</optional>
     </dependency>
     <dependency>
-      <groupId>org.scala-tools.sbt</groupId>
-      <artifactId>process_${sbt.compiled.version}</artifactId>
-      <optional>true</optional>
-    </dependency>
-    <!-- all the other dependencies -->
-    <dependency>
-      <groupId>org.scala-tools.sbt</groupId>
-      <artifactId>launcher_${sbt.compiled.version}</artifactId>
-      <optional>true</optional>
-    </dependency>
-    <!-- use the interface with which we were built -->
-    <dependency>
-      <groupId>org.scala-tools.sbt</groupId>
-      <artifactId>precompiled-${sbt.compiled.version}-${scala.precompiled.version}</artifactId>
+      <groupId>org.scala-sbt</groupId>
+      <artifactId>api_${sbt.compiled.version}</artifactId>
       <optional>true</optional>
     </dependency>
     <dependency>
-      <groupId>org.scala-tools.sbt</groupId>
-      <artifactId>interface_${sbt.compiled.version}</artifactId>
+      <groupId>org.scala-sbt</groupId>
+      <artifactId>compiler-integration_${sbt.compiled.version}</artifactId>
       <optional>true</optional>
     </dependency>
-    <!-- all the dependencies necessary for running like sbinary, ivy, jline -->
+    <dependency>
+      <groupId>org.scala-sbt</groupId>
+      <artifactId>incremental-compiler_${sbt.compiled.version}</artifactId>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>org.scala-sbt</groupId>
+      <artifactId>compile_${sbt.compiled.version}</artifactId>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>org.scala-sbt</groupId>
+      <artifactId>compiler-interface_${sbt.compiled.version}</artifactId>
+      <optional>true</optional>
+    </dependency>
+    <!-- all the dependencies necessary for running like sbinary, jline -->
     <dependency>
       <groupId>jline</groupId>
       <artifactId>jline</artifactId>
       <optional>true</optional>
     </dependency>    
     <dependency>
-      <groupId>org.apache.ivy</groupId>
-      <artifactId>ivy</artifactId>
-      <optional>true</optional>
-    </dependency>
-    <dependency>
       <groupId>org.scala-tools.sbinary</groupId>
-      <artifactId>sbinary_${sbt.compiled.version}</artifactId>
+      <artifactId>sbinary_${sbinary.compiled.version}</artifactId>
       <optional>true</optional>
     </dependency>
   </dependencies>
@@ -147,31 +130,6 @@
         </configuration>
       </plugin>
       <plugin>
-        <!-- copy the compiler interfaces with the right name -->
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-dependency-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>copy</id>
-            <phase>compile</phase>
-            <goals>
-              <goal>copy</goal>
-            </goals>
-            <configuration>
-              <artifactItems>
-                <artifactItem>
-                  <groupId>org.scala-tools.sbt</groupId>
-                  <artifactId>precompiled-${sbt.compiled.version}-${scala.precompiled.version}</artifactId>
-                  <type>jar</type>
-                  <destFileName>scala-${scala.major.minor.version}/lib/compiler-interface.jar</destFileName>
-                </artifactItem>
-              </artifactItems>
-              <outputDirectory>${project.build.directory}/lib</outputDirectory>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
         <!-- generate the MANIFEST.MF file, and create the bundle -->
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-bundle-plugin</artifactId>
@@ -186,7 +144,6 @@
             <_exportcontents>sbt.*;version=${sbt.version},xsbt.*;version=${sbt.version},xsbti.*;version=${sbt.version},sbinary.*;version=${sbinary.version},jline.*;version=0.9.94,org.apache.ivy.*;version=2.2.0</_exportcontents>
             <Embed-Directory>lib</Embed-Directory>
             <Embed-StripVersion>true</Embed-StripVersion>
-            <Include-Resource>lib=${project.build.directory}/lib</Include-Resource>
             <Import-Package>!org.apache.ivy.*,!org.bouncycastle.*,!org.scalatools.testing.*,!com.craft.*,!com.jcraft.*,!sun.misc,!org.apache.commons.vfs,!org.apache.commons.vfs.impl,!org.apache.oro.text,!org.apache.oro.text
  .regex,*</Import-Package>
           </instructions>
