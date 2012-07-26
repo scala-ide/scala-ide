@@ -409,25 +409,33 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
       }
     }
 
-  private def shownSettings(settings: Settings, filter: Settings#Setting => Boolean): Seq[(Settings#Setting, Option[String])] =
+  private def shownSettings(settings: Settings, filter: Settings#Setting => Boolean): Seq[(Settings#Setting, String)] =
     for (
       box <- IDESettings.shownSettings(settings);
-      setting <- box.userSettings; if filter(setting)
-    ) yield {
-      val value = Trim(storage.getString(SettingConverterUtil.convertNameToProperty(setting.name)))
-      (setting, value)
-    }
+      setting <- box.userSettings if filter(setting);
+      value <- Trim(storage.getString(SettingConverterUtil.convertNameToProperty(setting.name)))
+    ) yield (setting, value)
 
- def scalacArguments: Seq[String] = {
-   import ScalaPlugin.{defaultScalaSettings => settings}
-   val encArgs = encoding.toSeq flatMap (Seq("-encoding", _))
-   val shownArgs = shownSettings(settings, _ => true) flatMap {
-     case (setting, Some(value)) if value.equalsIgnoreCase("true") => Some(setting.name)
-     case _ => None
-   }
-   val extraArgs = settings.splitParams(storage.getString(CompilerSettings.ADDITIONAL_PARAMS))
-   shownArgs ++ encArgs ++ extraArgs
- }
+  def scalacArguments: Seq[String] = {
+    import ScalaPlugin.{defaultScalaSettings => settings}
+    val encArgs = encoding.toSeq flatMap (Seq("-encoding", _))
+    val shownArgs =
+      for ((setting, value) <- shownSettings(settings, _ => true)) yield {
+        initializeSetting(setting, value)
+        setting.unparse
+      }
+    val extraArgs = settings.splitParams(storage.getString(CompilerSettings.ADDITIONAL_PARAMS))
+    shownArgs.flatten ++ encArgs ++ extraArgs
+  }
+
+  def initializeSetting(setting: Settings#Setting, propValue: String) {
+    try {
+      setting.tryToSetFromPropertyValue(propValue)
+      logger.debug("[%s] initializing %s to %s".format(underlying.getName(), setting.name, setting.value.toString))
+    } catch {
+      case t: Throwable => eclipseLog.error("Unable to set setting '" + setting.name + "' to '" + propValue + "'", t)
+    }
+  }
   
   def initializeCompilerSettings(settings: Settings, filter: Settings#Setting => Boolean): Unit = {
     // if the workspace project doesn't exist, it is a virtual project used by Eclipse.
@@ -444,14 +452,10 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
     setupCompilerClasspath(settings)
     settings.sourcepath.value = sourceFolders.map(_.toOSString).mkString(pathSeparator)
     
-    for((setting, value) <- shownSettings(settings, filter))
-      try {
-        value foreach setting.tryToSetFromPropertyValue
-        logger.debug("[%s] initializing %s to %s".format(underlying.getName(), setting.name, setting.value.toString))
-      } catch {
-        case t: Throwable => eclipseLog.error("Unable to set setting '" + setting.name + "' to '" + value + "'", t)
-      }
-    
+    for ((setting, value) <- shownSettings(settings, filter)) {
+      initializeSetting(setting, value)
+    }
+
     // handle additional parameters
     val additional = storage.getString(CompilerSettings.ADDITIONAL_PARAMS)
     logger.info("setting additional parameters: " + additional)
