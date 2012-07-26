@@ -132,6 +132,32 @@ class SbtBuilderTest {
     assertNoErrors(fooClientCU)
   }
 
+  @Test def scalaLibrary_in_dependent_project_shouldBe_on_BootClasspath() {
+    import SDTTestUtils._
+    import ScalaPlugin.plugin
+
+    val Seq(prjClient, prjLib) = createProjects("client", "library")
+    val packLib = createSourcePackage("scala")(prjLib)
+    val baseRawClasspath= prjClient.javaProject.getRawClasspath()
+    
+    /* The classpath, with the eclipse scala container removed. */
+    def cleanRawClasspath = for (
+      classpathEntry <- baseRawClasspath if classpathEntry.getPath().toPortableString() != "org.scala-ide.sdt.launching.SCALA_CONTAINER"
+    ) yield classpathEntry
+
+    prjClient.javaProject.setRawClasspath(cleanRawClasspath, null)
+    addToClasspath(prjClient, JavaCore.newProjectEntry(prjLib.underlying.getFullPath, true))
+
+    packLib.createCompilationUnit("Predef.scala", "package scala; class Predef", true, null)
+    prjLib.underlying.build(IncrementalProjectBuilder.FULL_BUILD, new NullProgressMonitor)
+
+    Assert.assertTrue("Found Scala library", prjClient.scalaClasspath.scalaLib.isDefined)
+    
+    val expectedLib = plugin.workspaceRoot.findMember("/library/bin").getLocation
+    Assert.assertEquals("Unexpected Scala lib", expectedLib, prjClient.scalaClasspath.scalaLib.get)
+    deleteProjects(prjClient, prjLib)
+  }
+
   /** Returns true if the expected regular expression matches the given error message. */
   private def similarErrorMessage(msg: String)(expected: String): Boolean = {
     msg.matches(expected)
