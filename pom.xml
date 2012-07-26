@@ -59,8 +59,7 @@
     <scala.version>2.9.3-SNAPSHOT</scala.version>
     <scala.major.minor.version>2.9</scala.major.minor.version>
     <scala.library.version>${scala.version}</scala.library.version>
-    <sbt.compiled.version>2.9.1</sbt.compiled.version>
-    <scala.precompiled.version>2_9_1</scala.precompiled.version>
+    <sbt.compiled.version>2.9.2</sbt.compiled.version>
     <version.suffix>2_09</version.suffix>
     <version.tag>local</version.tag>
 
@@ -84,7 +83,6 @@
         <scala.major.minor.version>2.10</scala.major.minor.version>
         <scala.library.version>${scala.version}</scala.library.version>
         <sbt.compiled.version>2.10.0-SNAPSHOT</sbt.compiled.version>
-        <scala.precompiled.version>2_10_0-SNAPSHOT</scala.precompiled.version>
         <version.suffix>2_10</version.suffix>
 
         <repo.scala-refactoring>${repo.scala-ide.root}/scala-refactoring-trunk</repo.scala-refactoring>
