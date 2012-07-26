@@ -165,6 +165,10 @@ object ScalaLaunchShortcut {
         scu.withSourceFile { (source, comp) =>
           import comp._
 
+          def isTopLevelClass(cdef: Tree) =
+            (cdef.isInstanceOf[ClassDef]
+              && cdef.symbol.owner.isPackageClass)
+
           def isTestClass(cdef: Tree): Boolean =
             comp.askOption { () =>
               /** Don't crash if the class is not on the classpath. */
@@ -177,8 +181,6 @@ object ScalaLaunchShortcut {
               val TestAnnotationOpt = getClassSafe("org.junit.Test")
               val ScalaTestAssertionsOpt = getClassSafe("org.scalatest.junit.AssertionsForJUnit")
 
-              println("looking at class " + cdef.symbol + "ann: " + cdef.symbol.annotations)
-
               (TestAnnotationOpt.exists { ta => cdef.symbol.info.members.exists(_.hasAnnotation(ta)) }
                 || ScalaTestAssertionsOpt.exists { sta => cdef.symbol.info.baseClasses.contains(sta) })
             } getOrElse false
@@ -190,8 +192,7 @@ object ScalaLaunchShortcut {
             case Left(trees) =>
               for {
                 cdef <- trees
-                if cdef.isInstanceOf[ClassDef]
-                if cdef.symbol.owner.isPackageClass && isTestClass(cdef)
+                if isTopLevelClass(cdef) && isTestClass(cdef)
                 javaElement <- comp.getJavaElement(cdef.symbol, scu.getJavaProject)
               } yield javaElement.asInstanceOf[IType]
 
@@ -215,14 +216,22 @@ object ScalaLaunchShortcut {
 
         scu.withSourceFile { (source, comp) =>
           import comp._
-
           import definitions._
+
+          def isTopLevelModule(cdef: Tree) =
+            (cdef.isInstanceOf[ModuleDef]
+              && cdef.symbol.isModule
+              && cdef.symbol.owner.isPackageClass)
+
           // The given symbol is a method with the right name and signature to be a runnable java program.
+          // should be run inside `askOption`
           def isJavaMainMethod(sym: Symbol) = (sym.name == nme.main) && (sym.info match {
             case MethodType(p :: Nil, restpe) => isArrayOfSymbol(p.tpe, StringClass) && restpe.typeSymbol == UnitClass
             case _                            => false
           })
           // The given class has a main method.
+          // should be called inside `askOption`
+          // TODO: copied from 2.10.0 'definitions', should be dropped once 2.9 is gone
           def hasJavaMainMethod(sym: Symbol): Boolean =
             (sym.tpe member nme.main).alternatives exists isJavaMainMethod
 
@@ -236,8 +245,7 @@ object ScalaLaunchShortcut {
             case Left(trees) =>
               for {
                 cdef <- trees
-                if cdef.isInstanceOf[ModuleDef]
-                if cdef.symbol.isModule && cdef.symbol.owner.isPackageClass && hasMainMethod(cdef)
+                if isTopLevelModule(cdef) && hasMainMethod(cdef)
                 javaElement <- comp.getJavaElement(cdef.symbol, scu.getJavaProject)
               } yield javaElement.asInstanceOf[IType]
 
