@@ -72,7 +72,7 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
     }
 
     def fullyQualifiedName(qualification: Array[Char], simpleName: Array[Char]): Array[Char] =
-      if(qualification.length == 0) simpleName
+      if(qualification == null || qualification.length == 0) simpleName
       else Array.concat(qualification, Array('.'), simpleName)
 
     def checkQualifier(s: Select, className: Array[Char], pat: SearchPattern) =  {
