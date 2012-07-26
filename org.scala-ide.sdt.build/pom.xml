@@ -61,6 +61,12 @@
       <layout>p2</layout>
       <url>${repo.scalariform}</url>
     </repository>
+    <repository>
+      <id>equinox.launcher</id>
+      <name>Equinox weaving launcher p2 repository</name>
+      <layout>p2</layout>
+      <url>${repo.equinox.launcher}</url>
+    </repository>
   </repositories>
 
   <dependencies>

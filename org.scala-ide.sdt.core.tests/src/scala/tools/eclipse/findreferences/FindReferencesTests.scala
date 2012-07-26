@@ -46,12 +46,12 @@ class FindReferencesTests extends FindReferencesTester with HasLogger {
   def project: ScalaProject = projectSetup.project
 
   private var typeCheckUnitBeforeRunningTest: Boolean = _
-  
+
   @Before
   def setUp() {
     typeCheckUnitBeforeRunningTest = false
   }
-  
+
   @Before
   def createProject() {
     val scalaProject = simulator.createProjectInWorkspace(TestProjectName, withSourceRoot = true)
@@ -90,7 +90,7 @@ class FindReferencesTests extends FindReferencesTester with HasLogger {
     // FIXME: This should not be necessary, but if not done then tests randomly fail:
     //        "scala.tools.nsc.interactive.NoSuchUnitError: no unit found for file XXX"
     projectSetup.reload(unit)
-    if(typeCheckUnitBeforeRunningTest) projectSetup.waitUntilTypechecked(unit)
+    if (typeCheckUnitBeforeRunningTest) projectSetup.waitUntilTypechecked(unit)
 
     val offsets = projectSetup.findMarker(marker) in unit
 
@@ -245,23 +245,29 @@ class FindReferencesTests extends FindReferencesTester with HasLogger {
     val expected = clazz("Foo") isReferencedBy fieldVal("Bar$.f")
     runTest("anon-class", "Foo.scala", expected)
   }
-  
+
   @Test
   def findReferencesOfAbstractMember() {
     val expected = method("Foo.obj") isReferencedBy method("Foo.foo")
     runTest("abstract-member", "Foo.scala", expected)
   }
-  
+
   @Test
   def findReferencesOfVarSetter() {
     val expected = fieldVar("Foo.obj1") isReferencedBy clazzConstructor("Bar") and fieldVal("Bar.bar") and method("Bar.bar2")
     runTest("var_ref", "Bar.scala", expected)
   }
-  
+
   @Test
   def findReferencesOfVarSetterAfterUnitIsTypehecked() {
     typeCheckUnitBeforeRunningTest = true
     val expected = fieldVar("Foo.obj1") isReferencedBy clazzConstructor("Bar") and fieldVal("Bar.bar") and method("Bar.bar2")
     runTest("var_ref", "Bar.scala", expected)
+  }
+
+  @Test
+  def findReferencesOfMethodWithPrimitiveArgument_bug1001167_1() {
+    val expected = method("A.testA1", List("int")) isReferencedBy method("A.testA2")
+    runTest("bug1001167_1", "A.scala", expected)
   }
 }
