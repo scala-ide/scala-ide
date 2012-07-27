@@ -220,7 +220,7 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
         }
         
         if (hit) {
-          getJavaElement(enclosingDeclaration, scu.project.javaProject).foreach { element =>
+          getJavaElement(enclosingDeclaration, scu.scalaProject.javaProject).foreach { element =>
             val accuracy = SearchMatch.A_ACCURATE
             val (offset, length) = 
               if (tree.isDef) (tree.pos.startOrPoint + 4, tree.symbol.name.length)
@@ -258,7 +258,7 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
       
       if (noPosition || (nameNoMatch && varNoMatch) || qualifierNoMatch) return
 
-      getJavaElement(enclosingDeclaration, scu.project.javaProject).foreach { enclosingElement =>
+      getJavaElement(enclosingDeclaration, scu.scalaProject.javaProject).foreach { enclosingElement =>
         val accuracy = SearchMatch.A_ACCURATE
         val offset = s.pos.start
         val length = s.pos.end - offset

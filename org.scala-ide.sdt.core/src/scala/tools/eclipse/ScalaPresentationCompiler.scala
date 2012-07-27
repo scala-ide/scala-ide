@@ -44,9 +44,9 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
    *  This map is populated by having a default source file created when calling 'apply', 
    *  which currently happens in 'withSourceFile'.
    */
-  private val sourceFiles = new mutable.HashMap[ScalaCompilationUnit, BatchSourceFile] {
-    override def default(k : ScalaCompilationUnit) = { 
-      val v = k.createSourceFile
+  private val sourceFiles = new mutable.HashMap[InteractiveCompilationUnit, SourceFile] {
+    override def default(k : InteractiveCompilationUnit) = { 
+      val v = k.sourceFile()
       ScalaPresentationCompiler.this.synchronized {
         get(k) match {
           case Some(v) => v
@@ -58,7 +58,7 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
   
   /** Return the Scala compilation units that are currently maintained by this presentation compiler.
    */
-  def compilationUnits: Seq[ScalaCompilationUnit] = {
+  def compilationUnits: Seq[InteractiveCompilationUnit] = {
     val managedFiles = unitOfFile.keySet
     (for {
       (cu, sourceFile) <- sourceFiles
@@ -66,7 +66,7 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
     } yield cu).toSeq
   }
   
-  private def problemsOf(file : AbstractFile) : List[IProblem] = {
+  def problemsOf(file : AbstractFile) : List[IProblem] = {
     unitOfFile get file match {
       case Some(unit) => 
         val response = new Response[Tree]
@@ -86,7 +86,7 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
   /** Run the operation on the given compilation unit. If the source file is not yet tracked by 
    *  the presentation compiler, a new BatchSourceFile is created and kept for future reference.
    */
-  def withSourceFile[T](scu : ScalaCompilationUnit)(op : (SourceFile, ScalaPresentationCompiler) => T) : T =
+  def withSourceFile[T](scu : InteractiveCompilationUnit)(op : (SourceFile, ScalaPresentationCompiler) => T) : T =
     op(sourceFiles(scu), this)
     
   def body(sourceFile : SourceFile) = {
@@ -207,6 +207,12 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
        sourceFiles.remove(scu)
      }
    }
+ }
+ 
+ def withResponse[A](op: Response[A] => Any): Response[A] = {
+   val response = new Response[A]
+   op(response)
+   response
  }
 
   override def logError(msg : String, t : Throwable) =
