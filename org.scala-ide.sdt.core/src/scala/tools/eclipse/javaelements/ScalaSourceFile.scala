@@ -47,7 +47,7 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
    */
   override def scheduleReconcile(): Response[Unit] = {
     // askReload first
-    val res = project.withSourceFile(this) { (sf, compiler) =>
+    val res = scalaProject.withSourceFile(this) { (sf, compiler) =>
       compiler.askReload(this, getContents)
     } ()
     
@@ -59,6 +59,9 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
     
     res
   }
+
+  def reconcile(newContents: String): List[IProblem] = 
+    getProblems.toList
 
   override def reconcile(
       astLevel : Int,
@@ -93,10 +96,15 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
     }
   }
 
-  def getProblems : Array[IProblem] = withSourceFile { (src, compiler) =>
-    val problems = compiler.problemsOf(this)
-    if (problems.isEmpty) null else problems.toArray
-  } (null)
+  /** Implementing the weaving interface requires to return `null` for an empty array. */
+  def getProblems: Array[IProblem] = {
+    val probs = currentProblems()
+    if (probs.isEmpty) null else probs.toArray
+  }
+
+  def currentProblems(): List[IProblem] = withSourceFile { (src, compiler) =>
+    compiler.problemsOf(this)
+  } (List())
   
   override def getType(name : String) : IType = new LazyToplevelClass(this, name)
   
@@ -109,16 +117,16 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
   }
 
   /** Makes sure {{{this}}} source is not in the ignore buffer of the compiler and ask the compiler to reload it. */
-  final def forceReload(): Unit = project.doWithPresentationCompiler { compiler =>
+  final def forceReload(): Unit = scalaProject.doWithPresentationCompiler { compiler =>
     compiler.askToDoFirst(this)
     reload()
   }
   
   /** Ask the compiler to reload {{{this}}} source. */
-  final def reload(): Unit = project.doWithPresentationCompiler { _.askReload(this, getContents) }
+  final def reload(): Unit = scalaProject.doWithPresentationCompiler { _.askReload(this, getContents) }
 
   /** Ask the compiler to discard {{{this}}} source. */
-  final def discard(): Unit = project.doWithPresentationCompiler { compiler =>
+  final def discard(): Unit = scalaProject.doWithPresentationCompiler { compiler =>
     compiler.discardSourceFile(this)
   }
 }

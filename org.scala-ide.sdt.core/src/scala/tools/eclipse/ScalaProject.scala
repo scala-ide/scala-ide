@@ -238,7 +238,11 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
    *  and they are handles only (may not exist).
    */
   def outputFolders: Seq[IPath] =
-    sourceOutputFolders map (_._2.getFullPath())
+    sourceOutputFolders map (_._2.getFullPath)
+
+  /** The output folder file-system absolute paths. */
+  def outputFolderLocations: Seq[IPath] = 
+    sourceOutputFolders map (_._2.getLocation)
 
   /** Return the source folders and their corresponding output locations
    *  without relying on NameEnvironment. Does not create folders if they
@@ -503,7 +507,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
     }
   }
 
-  def withSourceFile[T](scu: ScalaCompilationUnit)(op: (SourceFile, ScalaPresentationCompiler) => T)(orElse: => T = defaultOrElse): T = {
+  def withSourceFile[T](scu: InteractiveCompilationUnit)(op: (SourceFile, ScalaPresentationCompiler) => T)(orElse: => T = defaultOrElse): T = {
     withPresentationCompiler { compiler =>
       compiler.withSourceFile(scu)(op)
     } {orElse}
@@ -517,7 +521,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
    */
   def resetPresentationCompiler(): Boolean =
     if (presentationCompiler.initialized) {
-      val units: Seq[ScalaCompilationUnit] = withPresentationCompiler(_.compilationUnits)(Nil)
+      val units: Seq[InteractiveCompilationUnit] = withPresentationCompiler(_.compilationUnits)(Nil)
       
       shutDownPresentationCompiler()
       
