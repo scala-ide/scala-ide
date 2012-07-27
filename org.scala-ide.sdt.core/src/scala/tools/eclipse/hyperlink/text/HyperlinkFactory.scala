@@ -4,6 +4,7 @@ import org.eclipse.jface.text.IRegion
 import org.eclipse.jface.text.hyperlink.IHyperlink
 import scala.tools.eclipse.ScalaPresentationCompiler
 import scala.tools.eclipse.javaelements.ScalaCompilationUnit
+import scala.tools.eclipse.InteractiveCompilationUnit
 
 /** A factory that builds IHyperlink instances from compiler Symbols.
  *
@@ -31,7 +32,7 @@ import scala.tools.eclipse.javaelements.ScalaCompilationUnit
 abstract class HyperlinkFactory {
   protected val global: ScalaPresentationCompiler
 
-  def create(createHyperlink: Hyperlink.Factory, scu: ScalaCompilationUnit, sym: global.Symbol, region: IRegion): Option[IHyperlink] = {
+  def create(createHyperlink: Hyperlink.Factory, scu: InteractiveCompilationUnit, sym: global.Symbol, region: IRegion): Option[IHyperlink] = {
     global.askOption { () =>
       global.locate(sym, scu) map {
         case (f, pos) =>
