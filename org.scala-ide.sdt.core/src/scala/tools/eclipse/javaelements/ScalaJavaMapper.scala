@@ -32,7 +32,7 @@ trait ScalaJavaMapper extends ScalaAnnotationHelper with SymbolNameUtil with Has
         lazy val methName = meth.getElementName
         lazy val symName = (if(sym.isConstructor) sym.owner.simpleName.toString + (if (sym.owner.isModuleClass) "$" else "") else sym.name.toString)
         lazy val sameName = methName == symName
-        lazy val methParamsTpe = meth.getParameterTypes.map(tp => getTypeErasure(getElementType(tp)))
+        lazy val methParamsTpe = meth.getParameterTypes.map(tp => getTypeErasure(tp))
         lazy val symParamsTpe = sym.paramss.flatten.map(param => mapParamTypeSignature(param.tpe))
         lazy val sameParams = methParamsTpe.sameElements(symParamsTpe)
         sameName && sameParams
