@@ -776,13 +776,6 @@
            namespace="scala.tools.eclipse.launching"
            properties="hasMain,canLaunchAsJUnit"
            type="org.eclipse.core.runtime.IAdaptable"/>            
-      <propertyTester
-            properties="canLaunchAsJUnit"
-            namespace="scala.tools.eclipse.launching.junit"
-            type="org.eclipse.core.runtime.IAdaptable"
-            class="scala.tools.eclipse.launching.JUnitPropertyTester"
-            id="scala.tools.eclipse.launching.JUnitPropertyTester">
-      </propertyTester>
   </extension>
 
   <extension point="org.eclipse.debug.ui.launchShortcuts">
