@@ -12,16 +12,13 @@ import org.eclipse.jdt.internal.core.search.matching.{ MatchLocator, PossibleMat
 import scala.tools.nsc.util.{ RangePosition, Position }
 import scala.tools.eclipse.ScalaPresentationCompiler
 import scala.tools.eclipse.util.ReflectionUtils
-import org.eclipse.jdt.internal.core.search.matching.{ PatternLocator, FieldPattern, MethodPattern, TypeReferencePattern, TypeDeclarationPattern, OrPattern };
+import org.eclipse.jdt.internal.core.search.matching.{ PatternLocator, FieldPattern, MethodPattern, TypeReferencePattern, TypeDeclarationPattern, OrPattern }
 import org.eclipse.jdt.core.IJavaElement
 
 //FIXME should report all and let matcher to the selection OR only report matcher interest (pre select by type) OR ...
 
 trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
   val OneStar = Array('*')
-  val ImpossibleMatch = 0
-  val InaccurateMatch = 1
-  val AccurateMatch = 2
 
   def MatchLocator(scu: ScalaCompilationUnit, matchLocator: MatchLocator, possibleMatch: PossibleMatch): Traverser = 
      MatchLocator(scu, matchLocator, matchLocator.pattern, possibleMatch)
@@ -49,7 +46,18 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
     override def traverse(tree: Tree): Unit = try {
       if (tree.pos.isOpaqueRange && tree.pos.isDefined) {
         report(tree)
-        super.traverse(tree)
+        /* We need to customize the traversal of the Tree to ensure that the `Traverser.currentOwner` 
+         * gets updated only when a declaration is traversed (have a look at `enclosingDeclaration`). 
+         * This is done because reference matches are always reported on the enclosing declaration.
+         * Ideally, we should create a Traverser subclass and move this ad-hoc logic there.*/
+        tree match { 
+         case ClassDef(mods, name, tparams, impl) if tree.symbol.isAnonymousClass => 
+           traverseTrees(mods.annotations); traverseTrees(tparams); traverse(impl)
+         case TypeDef(mods, name, tparams, rhs) if !tree.symbol.isAliasType =>
+           traverseTrees(mods.annotations); traverseTrees(tparams); traverse(rhs)
+         case Function(vparams, body) => traverseTrees(vparams); traverse(body)
+         case _ => super.traverse(tree)
+        }
       }
     } catch {
       case t: TypeError => logError("Error while searching Scala tree", t)
@@ -64,7 +72,7 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
     }
 
     def fullyQualifiedName(qualification: Array[Char], simpleName: Array[Char]): Array[Char] =
-      if(qualification.length == 0) simpleName
+      if(qualification == null || qualification.length == 0) simpleName
       else Array.concat(qualification, Array('.'), simpleName)
 
     def checkQualifier(s: Select, className: Array[Char], pat: SearchPattern) =  {
@@ -177,17 +185,18 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
             case (qualifier,name) => fullyQualifiedName(qualifier, name)
           }
 
-          val currentParamsTypes = tpe.paramss.flatten
+          val currentParamTypes = tpe.paramss.flatten
 
-          for((searchedParamTpe, paramTpe) <- searchedParamTypes.zip(currentParamsTypes)) {
-            val tpeBaseClasses = paramTpe.tpe.baseClasses
+          for (i <- 0 to currentParamTypes.size - 1) {
+            val tpeBaseClasses = currentParamTypes(i).tpe.baseClasses
             val noMatch = !tpeBaseClasses.exists { bc =>
-              pat.matchesName(searchedParamTpe, mapType(bc).toCharArray)
+              val tpe1 = searchedParamTypes(i)
+              val tpe2 = mapType(bc).toCharArray
+              pat.matchesName(tpe1, tpe2)
             }
             if (noMatch) 
-              return false
+              return false 
           }
-
           true
       })
     
@@ -245,7 +254,7 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
       lazy val noPosition = !s.pos.isDefined
       lazy val nameNoMatch = !pat.matchesName(searchedVar, s.name.toChars)
       lazy val varNoMatch = !pat.matchesName(CharOp.concat(searchedVar, "_$eq".toCharArray), s.name.toChars)
-      lazy val qualifierNoMatch = !checkQualifier(s, fullyQualifiedName(declaringQualification(pat), declaringSimpleName(pat)), pat)
+      lazy val qualifierNoMatch = !checkQualifier(s, fullyQualifiedName(declaringQualificationField(pat), declaringSimpleNameField(pat)), pat)
       
       if (noPosition || (nameNoMatch && varNoMatch) || qualifierNoMatch) return
 
@@ -301,7 +310,11 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
         case _ => 
       }
     
-      if (tree.symbol != null) reportAnnotations(tree.symbol)
+      if (tree.symbol != null) atOwner(tree.symbol) {
+        // This is executed inside `atOwner` so that the annotation's `currentOwner` is correctly set to 
+        // be the declaration (class or member) that is attached to the (about to be) traversed annotation.
+        reportAnnotations(tree.symbol)
+      }
     
     }
     
@@ -340,23 +353,18 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
     
     def reportTypeReference(tpe: Type, refPos: Position) {
       if (tpe eq null) return
-      val ref = new SingleTypeReference(tpe.typeSymbol.nameString.toCharArray, posToLong(refPos))
-      if (matchLocator.patternLocator.`match`(ref, possibleMatch.nodeSet) > 0) {
-        val enclosingElement = scu match {
-          case ssf: ScalaSourceFile => ssf.getElementAt(refPos.start)
-          case _ => null
-        }
-        //since we consider only the class name (and not its fully qualified name), 
-        //the search is inaccurate 
-        // Matt: JUnit search results require ACCURATE matches to locate its annotations 
-        val accuracy = SearchMatch.A_ACCURATE
-        val offset = refPos.start
-        val length = refPos.end - offset
-        val insideDocComment = false
-        val participant = possibleMatch.document.getParticipant
-        val resource = possibleMatch.resource
+      val patternFullyQualifiedName = fullyQualifiedName(qualification(pattern), simpleName(pattern))
+      if(pattern.matchesName(patternFullyQualifiedName, mapType(tpe.typeSymbol).toCharArray)) {
+        getJavaElement(enclosingDeclaration, scu.project.javaProject).foreach { enclosingElement => 
+          val accuracy = SearchMatch.A_ACCURATE
+          val offset = refPos.start
+          val length = refPos.end - offset
+          val insideDocComment = false
+          val participant = possibleMatch.document.getParticipant
+          val resource = possibleMatch.resource
 
-        report(new TypeReferenceMatch(enclosingElement, accuracy, offset, length, insideDocComment, participant, resource))
+          report(new TypeReferenceMatch(enclosingElement, accuracy, offset, length, insideDocComment, participant, resource))
+        }
       }
     }
   }
@@ -448,20 +456,22 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
 }
 
 object MatchLocatorUtils extends ReflectionUtils {
-  val mlClazz = classOf[MatchLocator]
+  private val mlClazz = classOf[MatchLocator]
   val reportMethod = getDeclaredMethod(mlClazz, "report", classOf[SearchMatch])
   
-  val orClazz = classOf[OrPattern]
-  val orPatternsField = getDeclaredField(orClazz, "patterns")
-  def orPatterns(or: OrPattern) = orPatternsField.get(or).asInstanceOf[Array[SearchPattern]]
+  private val orClazz = classOf[OrPattern]
+  private val orPatternsField = getDeclaredField(orClazz, "patterns")
+  def orPatterns(or: OrPattern): Array[SearchPattern] = orPatternsField.get(or).asInstanceOf[Array[SearchPattern]]
   
-  val fpClazz = classOf[FieldPattern]
-  val declaringSimpleNameField = getDeclaredField(fpClazz, "declaringSimpleName")
-  val declaringQualificationField = getDeclaredField(fpClazz, "declaringQualification")
-  def declaringSimpleName(fp : FieldPattern) = declaringSimpleNameField.get(fp).asInstanceOf[Array[Char]]
-  def declaringQualification(fp : FieldPattern) = declaringQualificationField.get(fp).asInstanceOf[Array[Char]]
+  private val fpClazz = classOf[FieldPattern]
+  private val declaringSimpleNameField: java.lang.reflect.Field = getDeclaredField(fpClazz, "declaringSimpleName")
+  private val declaringQualificationField: java.lang.reflect.Field = getDeclaredField(fpClazz, "declaringQualification")
+  def declaringSimpleNameField(fp : FieldPattern): Array[Char] = declaringSimpleNameField.get(fp).asInstanceOf[Array[Char]]
+  def declaringQualificationField(fp : FieldPattern): Array[Char] = declaringQualificationField.get(fp).asInstanceOf[Array[Char]]
   
-  val ftrClazz = classOf[TypeReferencePattern]
-  val simpleNameField = getDeclaredField(ftrClazz, "simpleName")
-  def simpleName(trp : TypeReferencePattern) = simpleNameField.get(trp).asInstanceOf[Array[Char]]
+  private val ftrClazz = classOf[TypeReferencePattern]
+  private val simpleNameField: java.lang.reflect.Field = getDeclaredField(ftrClazz, "simpleName")
+  private val qualificationField: java.lang.reflect.Field = getDeclaredField(ftrClazz, "qualification")
+  def simpleName(trp : TypeReferencePattern): Array[Char] = simpleNameField.get(trp).asInstanceOf[Array[Char]]
+  def qualification(trp : TypeReferencePattern): Array[Char] = qualificationField.get(trp).asInstanceOf[Array[Char]]
 }

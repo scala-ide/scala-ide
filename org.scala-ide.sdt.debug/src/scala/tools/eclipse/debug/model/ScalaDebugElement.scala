@@ -6,7 +6,11 @@ import scala.tools.eclipse.logging.HasLogger
 
 import org.eclipse.debug.core.model.{ITerminate, DebugElement}
 
-class ScalaDebugElement(target: ScalaDebugTarget) extends DebugElement(target) with ITerminate with HasLogger {
+/**
+ * Base class for debug elements in the Scala debug model
+ * This class is thread safe.
+ */
+abstract class ScalaDebugElement(val debugTarget: ScalaDebugTarget) extends DebugElement(debugTarget) with ITerminate with HasLogger {
 
   // Members declared in org.eclipse.core.runtime.IAdaptable
 
@@ -25,12 +29,10 @@ class ScalaDebugElement(target: ScalaDebugTarget) extends DebugElement(target) w
 
   // Members declared in org.eclipse.debug.core.model.ITerminate
 
-  def canTerminate(): Boolean = target.canTerminate
-  def isTerminated(): Boolean = target.isTerminated
-  def terminate(): Unit = target.terminate
+  def canTerminate(): Boolean = debugTarget.canTerminate
+  def isTerminated(): Boolean = debugTarget.isTerminated
+  def terminate(): Unit = debugTarget.terminate
 
   // ----
-
-  def getScalaDebugTarget(): ScalaDebugTarget = target
 
 }

@@ -6,6 +6,10 @@ T1.scala [in traits [in src [in simple-structure-builder]]]
   package traits
   interface T1
     scala.Nothing notImplemented()
+    int x
+    int x()
+    long y
+    long y()
     java.lang.Object t
     java.lang.Object t()
     scala.collection.immutable.List xs
@@ -68,7 +72,7 @@ C1.scala [in traits [in src [in simple-structure-builder]]]
     scala.runtime.Null. takeArray(scala.collection.immutable.List<java.lang.String>[])
     scala.Null takeArray2(byte[][])
     java.lang.Object localClass(int)
-      class class Object
+      class java.lang.Object
         $anon()
         void run()
     int localMethod(int)

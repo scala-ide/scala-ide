@@ -404,7 +404,8 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
         val parentTree = c.impl.parents.head
         val isAnon = sym.isAnonymousClass
         val superClass = sym.superClass
-        val superName = if (superClass ne NoSymbol) superClass.toString else "Object"
+        val superName = mapType(superClass)
+
         val classElem =
           if(sym hasFlag Flags.TRAIT)
             new ScalaTraitElement(element, name)
@@ -449,11 +450,8 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
         
         val annotsPos = addAnnotations(sym, classElemInfo, classElem)
 
-        classElemInfo.setSuperclassName(mapType(superClass).toCharArray)
-        
-        val interfaceNames = sym.mixinClasses.map { m => 
-          mapType(m).toCharArray
-        }
+        classElemInfo.setSuperclassName(superName.toCharArray)
+        val interfaceNames = sym.mixinClasses.map(mapType(_).toCharArray)
         classElemInfo.setSuperInterfaceNames(interfaceNames.toArray)
         
         val (start, end) = if (!isAnon) {
@@ -565,8 +563,8 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
       override def addVal(v : ValDef) : Owner = {
         val elemName = nme.getterName(v.name)
         val sym = v.symbol
-        val display = elemName.toString+" : "+sym.tpe.toString
-        
+        val display = elemName.toString+" : "+sym.info.resultType.toString
+
         val valElem =
           if(sym.hasFlag(Flags.MUTABLE))
             new ScalaVarElement(element, elemName.toString, display)
@@ -918,9 +916,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
           }
 
           tree match {
-            case dt : DefTree if dt.symbol.isSynthetic ||
-              // Accessors are added in ValOwner, when they are not, remove. 
-              dt.symbol.hasFlag(Flags.ACCESSOR) => (builder, Nil)
+            case dt : DefTree if dt.symbol.isSynthetic => (builder, Nil)
             case pd : PackageDef => (builder.addPackage(pd), pd.stats)
             case i : Import => (builder.addImport(i), Nil)
             case cd : ClassDef =>
