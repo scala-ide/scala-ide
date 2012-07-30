@@ -8,9 +8,10 @@ import scala.tools.eclipse.{ScalaPresentationCompiler => compiler}
 import scala.tools.eclipse.javaelements.ScalaCompilationUnit
 import scala.tools.eclipse.logging.HasLogger
 import scala.tools.eclipse.hyperlink.text._
+import scala.tools.eclipse.InteractiveCompilationUnit
 
 private[hyperlink] class ScalaDeclarationHyperlinkComputer extends HasLogger {
-  def findHyperlinks(scu: ScalaCompilationUnit, wordRegion: IRegion): Option[List[IHyperlink]] = {
+  def findHyperlinks(scu: InteractiveCompilationUnit, wordRegion: IRegion): Option[List[IHyperlink]] = {
     scu.withSourceFile({ (sourceFile, compiler) =>
       object DeclarationHyperlinkFactory extends HyperlinkFactory {
         protected val global: compiler.type = compiler

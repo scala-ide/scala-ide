@@ -142,9 +142,9 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings)
     }
   }
 
-  private def runCompiler(sources: Seq[File]) {
+  private def runCompiler(sources: Seq[File], additionalCpEntries: Seq[IPath] = Seq()) {
     // setup the settings
-    val ScalaClasspath(jdkPaths, scalaLib, userCp, _) = project.scalaClasspath
+    val ScalaClasspath(_, scalaLib, _, _) = project.scalaClasspath
     
     // Fixed 2.9 for now
     val libJar = scalaLib match {
@@ -166,7 +166,7 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings)
     // the Scala instance is always using the shipped Scala library/compiler
     val (scalac, javac) = compilers(runningLibJar.get.toFile, compJar.get.toFile, compInterfaceJar.get.toFile)
 //    val conf = new BasicConfiguration(project, scalac.scalaInstance, Seq(scalac.scalaInstance.libraryJar/*, compInterfaceJar.get.toFile*/) ++ cp)
-    val conf = new BasicConfiguration(project, scalac.scalaInstance)
+    val conf = new BasicConfiguration(project, scalac.scalaInstance, additionalCpEntries)
 
     val analysisComp = new AnalysisCompile(conf, this, new SbtProgress())
     val extraAnalysis = upstreamAnalysis(project)

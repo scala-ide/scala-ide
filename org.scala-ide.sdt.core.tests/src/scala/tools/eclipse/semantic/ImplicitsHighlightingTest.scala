@@ -81,7 +81,7 @@ class ImplicitsHighlightingTest {
   }
   
   def implicits(compiler: ScalaPresentationCompiler, scu: ScalaCompilationUnit) = {
-    val implicits = ImplicitHighlightingPresenter.findAllImplicitConversions(compiler, scu, scu.createSourceFile)
+    val implicits = ImplicitHighlightingPresenter.findAllImplicitConversions(compiler, scu, scu.sourceFile())
     implicits.toList map {
       case (ann, p) =>
         ann.getText() +" ["+ p.getOffset() + ", "+ p.getLength() +"]"
