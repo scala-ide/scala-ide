@@ -45,15 +45,13 @@ trait ScalaCompilationUnit extends Openable
   with InteractiveCompilationUnit
   with HasLogger {
 
-  def scalaProject = ScalaPlugin.plugin.getScalaProject(getJavaProject.getProject)
+  override def scalaProject = ScalaPlugin.plugin.getScalaProject(getJavaProject.getProject)
 
   val file : AbstractFile
   
-  def batchSourceFile(contents: Array[Char]): BatchSourceFile = new BatchSourceFile(file, contents)
-  
-  def sourceFile(contents: Array[Char]): SourceFile = batchSourceFile(contents)
+  override def sourceFile(contents: Array[Char]): SourceFile = new BatchSourceFile(file, contents)
 
-  def workspaceFile: IFile = getUnderlyingResource.asInstanceOf[IFile]
+  override def workspaceFile: IFile = getUnderlyingResource.asInstanceOf[IFile]
 
   override def bufferChanged(e : BufferChangedEvent) {
     if (!e.getBuffer.isClosed)
@@ -103,7 +101,7 @@ trait ScalaCompilationUnit extends Openable
    *          only notifies when the unit was added to the managed sources list, *not*
    *          that it was typechecked.
    */
-  def scheduleReconcile(): Response[Unit] = {
+  override def scheduleReconcile(): Response[Unit] = {
     val r = (new Response[Unit])
     r.set()
     r

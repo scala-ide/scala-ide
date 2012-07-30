@@ -60,7 +60,7 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
     res
   }
 
-  def reconcile(newContents: String): List[IProblem] = 
+  override def reconcile(newContents: String): List[IProblem] =
     getProblems.toList
 
   override def reconcile(
@@ -97,12 +97,12 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
   }
 
   /** Implementing the weaving interface requires to return `null` for an empty array. */
-  def getProblems: Array[IProblem] = {
+  override def getProblems: Array[IProblem] = {
     val probs = currentProblems()
     if (probs.isEmpty) null else probs.toArray
   }
 
-  def currentProblems(): List[IProblem] = withSourceFile { (src, compiler) =>
+  override def currentProblems(): List[IProblem] = withSourceFile { (src, compiler) =>
     compiler.problemsOf(this)
   } (List())
   

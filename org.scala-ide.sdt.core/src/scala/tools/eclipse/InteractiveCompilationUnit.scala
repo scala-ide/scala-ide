@@ -12,6 +12,7 @@ import scala.tools.nsc.io.AbstractFile
  *  Scala projects, or any other implementation (such as a specialized Scala DSL, a
  *  Script file, an Sbt build file, etc.).
  *
+ *  Implementations are expected to be thread-safe.
  */
 trait InteractiveCompilationUnit {
 
@@ -32,9 +33,6 @@ trait InteractiveCompilationUnit {
    */
   def sourceFile(contents: Array[Char] = getContents): SourceFile
 
-  /** Return a compiler batch source file (that needs a top-level definition). */
-  def batchSourceFile(contents: Array[Char] = getContents): BatchSourceFile
-
   /** Reconcile the unit. Return all compilation errors.
    *
    *  Blocks until the unit is type-checked.
@@ -48,7 +46,7 @@ trait InteractiveCompilationUnit {
   def currentProblems(): List[IProblem]
 
   /** Return the current contents of this compilation unit. */
-  def getContents: Array[Char]
+  def getContents(): Array[Char]
 
   /** Perform a side-effecting operation on the source file, with the current presentation compiler. */
   def doWithSourceFile(op: (SourceFile, ScalaPresentationCompiler) => Unit) {

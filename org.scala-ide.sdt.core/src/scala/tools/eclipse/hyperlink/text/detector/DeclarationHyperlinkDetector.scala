@@ -29,8 +29,14 @@ class DeclarationHyperlinkDetector extends BaseHyperlinkDetector with HasLogger 
       case None => List()
       case Some(List()) =>
         scu match {
-          case scalaCU: ScalaCompilationUnit => javaDeclarationHyperlinkComputer(textEditor, wordRegion, scalaCU)
-          case _                             => Nil
+          case scalaCU: ScalaCompilationUnit =>
+            // the following assumes too heavily a Java compilation unit, being based on the dreaded
+            // ScalaSelectionEngine. However, this is a last-resort hyperlinking that uses search for
+            // top-level types, and unless there are bugs, normal hyperlinking (through compiler symbols)
+            // would find it. So we go here only for `ScalaCompilationUnit`s.
+            javaDeclarationHyperlinkComputer(textEditor, wordRegion, scalaCU)
+          case _ =>
+            Nil
         }
       case Some(hyperlinks) =>
         hyperlinks
