@@ -58,7 +58,8 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
          case Function(vparams, body) => traverseTrees(vparams); traverse(body)
          case _ => super.traverse(tree)
         }
-      }
+      } else 
+        super.traverse(tree)
     } catch {
       case t: TypeError => logError("Error while searching Scala tree", t)
     }
@@ -212,7 +213,7 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
       }
       
       if (proceed) {
-        logger.info("Qualifier matched")
+        logger.info("Qualifier matched " + sym.name.toChars)
 
         val hit = sym.tpe match {
           case t: MethodType => checkSignature(t, pat)
@@ -220,7 +221,9 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
         }
         
         if (hit) {
-          getJavaElement(enclosingDeclaration, scu.project.javaProject).foreach { element =>
+          val javaElem = getJavaElement(enclosingDeclaration, scu.project.javaProject)
+          if (javaElem.isEmpty) logger.info("DROPPED MATCH: Couldn't find enclosing element for matched pattern: " + sym.fullName)
+          javaElem.foreach { element =>
             val accuracy = SearchMatch.A_ACCURATE
             val (offset, length) = 
               if (tree.isDef) (tree.pos.startOrPoint + 4, tree.symbol.name.length)
@@ -232,7 +235,8 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
 
             report(new MethodReferenceMatch(element, accuracy, offset, length, insideDocComment, participant, resource))   
           }
-        }
+        } else
+          logger.debug("signature didn't match: expected: %s, found: %s")
       }
     }
   }
