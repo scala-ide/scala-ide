@@ -37,28 +37,27 @@ import org.eclipse.ui.texteditor.ITextEditor
 import scala.tools.eclipse.hyperlink.text.detector.BaseHyperlinkDetector
 import scala.tools.eclipse.util.EditorUtils
 
-trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with ScalaElement with IScalaCompilationUnit with IBufferChangedListener with HasLogger {
-  val project = ScalaPlugin.plugin.getScalaProject(getJavaProject.getProject)
+trait ScalaCompilationUnit extends Openable
+  with env.ICompilationUnit
+  with ScalaElement
+  with IScalaCompilationUnit
+  with IBufferChangedListener
+  with InteractiveCompilationUnit
+  with HasLogger {
+
+  override def scalaProject = ScalaPlugin.plugin.getScalaProject(getJavaProject.getProject)
 
   val file : AbstractFile
+  
+  override def sourceFile(contents: Array[Char]): SourceFile = new BatchSourceFile(file, contents)
 
-  def doWithSourceFile(op : (SourceFile, ScalaPresentationCompiler) => Unit) {
-    project.withSourceFile(this)(op)(())
-  }
-  
-  def withSourceFile[T](op : (SourceFile, ScalaPresentationCompiler) => T)(orElse: => T = project.defaultOrElse) : T = {
-    project.withSourceFile(this)(op)(orElse)
-  }
-  
+  override def workspaceFile: IFile = getUnderlyingResource.asInstanceOf[IFile]
+
   override def bufferChanged(e : BufferChangedEvent) {
     if (!e.getBuffer.isClosed)
-      project.doWithPresentationCompiler(_.askReload(this, getContents))
+      scalaProject.doWithPresentationCompiler(_.askReload(this, getContents))
 
     super.bufferChanged(e)
-  }
-  
-  def createSourceFile : BatchSourceFile = {
-    new BatchSourceFile(file, getContents())
   }
 
   override def buildStructure(info : OpenableElementInfo, pm : IProgressMonitor, newElements : JMap[_, _], underlyingResource : IResource) : Boolean =
@@ -68,7 +67,7 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
       val sourceLength = sourceFile.length
       
       try {
-        logger.info("[%s] buildStructure for %s".format(project.underlying.getName(), this.getResource()))
+        logger.info("[%s] buildStructure for %s".format(scalaProject.underlying.getName(), this.getResource()))
         compiler.withStructure(sourceFile) { tree =>
           compiler.askOption { () =>
               new compiler.StructureBuilderTraverser(this, info, tmpMap, sourceLength).traverse(tree)
@@ -102,7 +101,7 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
    *          only notifies when the unit was added to the managed sources list, *not*
    *          that it was typechecked.
    */
-  def scheduleReconcile(): Response[Unit] = {
+  override def scheduleReconcile(): Response[Unit] = {
     val r = (new Response[Unit])
     r.set()
     r
@@ -114,7 +113,7 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
    *  but no Scala library on the classpath.
    */
   def addToIndexer(indexer : ScalaSourceIndexer) {
-    if (project.hasScalaNature) {
+    if (scalaProject.hasScalaNature) {
       try doWithSourceFile { (source, compiler) =>
         compiler.withParseTree(source) { tree =>
           new compiler.IndexBuilderTraverser(indexer).traverse(tree)
@@ -216,7 +215,7 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
   }
   
   override def createOverrideIndicators(annotationMap : JMap[_, _]) {
-    if (project.hasScalaNature)
+    if (scalaProject.hasScalaNature)
       doWithSourceFile { (sourceFile, compiler) =>
         try {
           compiler.withStructure(sourceFile, keepLoaded = true) { tree =>
@@ -234,7 +233,7 @@ trait ScalaCompilationUnit extends Openable with env.ICompilationUnit with Scala
   override def getImageDescriptor = {
     Option(getCorrespondingResource) map { file =>
       import ScalaImages.{ SCALA_FILE, EXCLUDED_SCALA_FILE }
-      val javaProject = JavaCore.create(project.underlying)
+      val javaProject = JavaCore.create(scalaProject.underlying)
       if (javaProject.isOnClasspath(file)) SCALA_FILE else EXCLUDED_SCALA_FILE
     } orNull
   }

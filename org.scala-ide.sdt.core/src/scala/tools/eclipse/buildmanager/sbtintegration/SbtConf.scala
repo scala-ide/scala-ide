@@ -12,6 +12,7 @@ import org.eclipse.core.resources.IFile
 import scala.tools.nsc.Settings
 import sbt.compiler.CompilerArguments
 import sbt.ClasspathOptions
+import org.eclipse.core.runtime.IPath
 
 /** Create an sbt ScalaInstance given the library and compiler jar. An
  *  Sbt ScalaInstance can be used to compile source files, and encapsulates
@@ -48,7 +49,7 @@ object ScalaCompilerConf {
     project.getFile(CACHE_SUFFIX)
 }
 
-class BasicConfiguration(val project: ScalaProject, val scalaInstance: ScalaInstance) extends HasLogger {
+class BasicConfiguration(val project: ScalaProject, val scalaInstance: ScalaInstance, additionalCpEntries: Seq[IPath] = Seq()) extends HasLogger {
   import Path._
 
   private final val outSuffix = "target"
@@ -85,7 +86,7 @@ class BasicConfiguration(val project: ScalaProject, val scalaInstance: ScalaInst
     // Resolve classpath correctly
     val compArgs = new CompilerArguments(scalaInstance, ClasspathOptions(bootLibrary = true, compiler = false, extra = true, autoBoot = false, filterLibrary = false))
     val jrePath = scalaClassPath.jdkPaths.map(_.toFile)
-    val classpathWithoutJVM = scalaClassPath.userCp.map(_.toFile) // no scala library in here!
+    val classpathWithoutJVM = scalaClassPath.userCp.map(_.toFile) ++ additionalCpEntries.map(_.toFile) // no scala library in here!
 
     val argsWithoutOutput = removeSbtOutputDirs(compArgs(sources, classpathWithoutJVM.toSeq, outputDirectory, Seq()).toList)
 
