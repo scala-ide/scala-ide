@@ -23,6 +23,7 @@ import scala.tools.eclipse.logging.HasLogger
 import scala.tools.nsc.util.FailedInterrupt
 import scala.tools.nsc.symtab.Flags
 import scala.tools.eclipse.completion.CompletionProposal
+import org.eclipse.jdt.core.IMethod
 
 class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
   extends Global(settings, new ScalaPresentationCompiler.PresentationReporter, project.underlying.getName)
@@ -264,26 +265,36 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
        relevance -= 40
      }
      
-     val contextString = sym.paramss.map(_.map(p => "%s: %s".format(p.decodedName, p.tpe)).mkString("(", ", ", ")")).mkString("")
-     
-     val paramNames = for {
+     val scalaParamNames = for {
        section <- sym.paramss
        if section.nonEmpty && !section.head.isImplicit
      } yield for (param <- section) yield param.name.toString
-     
-     import scala.tools.eclipse.completion.HasArgs
-     CompletionProposal(kind,
-         start, 
-         name, 
-         signature, 
-         contextString, 
-         container,
-         relevance,
-         HasArgs.from(sym.paramss),
-         sym.isJavaDefined,
-         paramNames,
-         sym.fullName,
-         false)
+
+    val paramNames = if (sym.isJavaDefined) {
+      getJavaElement(sym) collect {
+        case method: IMethod => List(method.getParameterNames.toList)
+      } getOrElse scalaParamNames
+    } else scalaParamNames
+
+    val contextInfo = for {
+      (names, syms) <- paramNames.zip(sym.paramss)
+    } yield for { (name, sym) <- names.zip(syms) } yield "%s: %s".format(name, sym.tpe)
+
+    val contextString = contextInfo.map(_.mkString("(", ", ", ")")).mkString("")
+
+    import scala.tools.eclipse.completion.HasArgs
+    CompletionProposal(kind,
+      start,
+      name,
+      signature,
+      contextString,
+      container,
+      relevance,
+      HasArgs.from(sym.paramss),
+      sym.isJavaDefined,
+      paramNames,
+      sym.fullName,
+      false)
   }
 
   override def inform(msg: String): Unit =
