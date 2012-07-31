@@ -119,7 +119,7 @@ class OrganizeImportsAction extends RefactoringAction with ActionWithNoWizard {
         
         pm.subTask("Waiting for the compiler to finish..")    
         
-        EditorHelpers.withScalaFileAndSelection { (scalaSourceFile, textSelection) =>
+        EditorHelpers.withScalaSourceFileAndSelection { (scalaSourceFile, textSelection) =>
           pm.subTask("Applying the changes.")
           val changes = createChanges(scalaSourceFile, imports, pm)
           val document = editor.getDocumentProvider.getDocument(editor.getEditorInput)

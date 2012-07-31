@@ -23,6 +23,7 @@ import scala.tools.eclipse.logging.HasLogger
 import scala.tools.nsc.util.FailedInterrupt
 import scala.tools.nsc.symtab.Flags
 import scala.tools.eclipse.completion.CompletionProposal
+import org.eclipse.jdt.core.IMethod
 
 class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
   extends Global(settings, new ScalaPresentationCompiler.PresentationReporter, project.underlying.getName)
@@ -44,9 +45,9 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
    *  This map is populated by having a default source file created when calling 'apply', 
    *  which currently happens in 'withSourceFile'.
    */
-  private val sourceFiles = new mutable.HashMap[ScalaCompilationUnit, BatchSourceFile] {
-    override def default(k : ScalaCompilationUnit) = { 
-      val v = k.createSourceFile
+  private val sourceFiles = new mutable.HashMap[InteractiveCompilationUnit, SourceFile] {
+    override def default(k : InteractiveCompilationUnit) = { 
+      val v = k.sourceFile()
       ScalaPresentationCompiler.this.synchronized {
         get(k) match {
           case Some(v) => v
@@ -58,7 +59,7 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
   
   /** Return the Scala compilation units that are currently maintained by this presentation compiler.
    */
-  def compilationUnits: Seq[ScalaCompilationUnit] = {
+  def compilationUnits: Seq[InteractiveCompilationUnit] = {
     val managedFiles = unitOfFile.keySet
     (for {
       (cu, sourceFile) <- sourceFiles
@@ -66,7 +67,7 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
     } yield cu).toSeq
   }
   
-  private def problemsOf(file : AbstractFile) : List[IProblem] = {
+  def problemsOf(file : AbstractFile) : List[IProblem] = {
     unitOfFile get file match {
       case Some(unit) => 
         val response = new Response[Tree]
@@ -86,7 +87,7 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
   /** Run the operation on the given compilation unit. If the source file is not yet tracked by 
    *  the presentation compiler, a new BatchSourceFile is created and kept for future reference.
    */
-  def withSourceFile[T](scu : ScalaCompilationUnit)(op : (SourceFile, ScalaPresentationCompiler) => T) : T =
+  def withSourceFile[T](scu : InteractiveCompilationUnit)(op : (SourceFile, ScalaPresentationCompiler) => T) : T =
     op(sourceFiles(scu), this)
     
   def body(sourceFile : SourceFile) = {
@@ -208,6 +209,12 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
      }
    }
  }
+ 
+ def withResponse[A](op: Response[A] => Any): Response[A] = {
+   val response = new Response[A]
+   op(response)
+   response
+ }
 
   override def logError(msg : String, t : Throwable) =
     eclipseLog.error(msg, t)
@@ -264,26 +271,36 @@ class ScalaPresentationCompiler(project : ScalaProject, settings : Settings)
        relevance -= 40
      }
      
-     val contextString = sym.paramss.map(_.map(p => "%s: %s".format(p.decodedName, p.tpe)).mkString("(", ", ", ")")).mkString("")
-     
-     val paramNames = for {
+     val scalaParamNames = for {
        section <- sym.paramss
        if section.nonEmpty && !section.head.isImplicit
      } yield for (param <- section) yield param.name.toString
-     
-     import scala.tools.eclipse.completion.HasArgs
-     CompletionProposal(kind,
-         start, 
-         name, 
-         signature, 
-         contextString, 
-         container,
-         relevance,
-         HasArgs.from(sym.paramss),
-         sym.isJavaDefined,
-         paramNames,
-         sym.fullName,
-         false)
+
+    val paramNames = if (sym.isJavaDefined) {
+      getJavaElement(sym) collect {
+        case method: IMethod => List(method.getParameterNames.toList)
+      } getOrElse scalaParamNames
+    } else scalaParamNames
+
+    val contextInfo = for {
+      (names, syms) <- paramNames.zip(sym.paramss)
+    } yield for { (name, sym) <- names.zip(syms) } yield "%s: %s".format(name, sym.tpe)
+
+    val contextString = contextInfo.map(_.mkString("(", ", ", ")")).mkString("")
+
+    import scala.tools.eclipse.completion.HasArgs
+    CompletionProposal(kind,
+      start,
+      name,
+      signature,
+      contextString,
+      container,
+      relevance,
+      HasArgs.from(sym.paramss),
+      sym.isJavaDefined,
+      paramNames,
+      sym.fullName,
+      false)
   }
 
   override def inform(msg: String): Unit =

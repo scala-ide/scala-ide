@@ -24,7 +24,7 @@ trait Indexed {
 abstract class IndexedIdeRefactoring(refactoringName: String, start: Int, end: Int, sourcefile: ScalaSourceFile) 
   extends ScalaIdeRefactoring(refactoringName, sourcefile, start, end) with FullProjectIndex {
 
-  val project: ScalaProject = sourcefile.project
+  val project: ScalaProject = sourcefile.scalaProject
   
   val refactoring: MultiStageRefactoring with GlobalIndexes with Indexed
   

@@ -36,6 +36,8 @@ class ScalaClassFile(parent : PackageFragment, name : String, sourceFile : Strin
     if (e == this) null else e
   }
 
+  def reconcile(contents: String): List[IProblem] = Nil
+
   def getCorrespondingElement(element : IJavaElement) : Option[IJavaElement] = {
     if (!validateExistence(resource).isOK)
       None
@@ -100,7 +102,7 @@ class ScalaClassFile(parent : PackageFragment, name : String, sourceFile : Strin
 	if ((underlyingResource ne null) && !underlyingResource.isAccessible) newDoesNotExistStatus() else JavaModelStatus.VERIFIED_OK
   }
 
-  def getProblems : Array[IProblem] = null
+  def currentProblems: List[IProblem] = Nil
     
   def closeBuffer0() = super.closeBuffer()
   def closing0(info : AnyRef) = super.closing(info)
