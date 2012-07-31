@@ -27,11 +27,11 @@ object EditorUtils {
    *  plugins may register adapters through `IAdapterManager` to allow other kinds of Scala-based units
    *  to be retrieved this way.
    */
-  def getEditorScalaInput(editor: ITextEditor): InteractiveCompilationUnit = {
+  def getEditorScalaInput(editor: ITextEditor): Option[InteractiveCompilationUnit] = {
     val input = editor.getEditorInput
     input.getAdapter(classOf[IJavaElement]) match {
-      case unit: InteractiveCompilationUnit => unit
-      case _  => input.getAdapter(classOf[InteractiveCompilationUnit]).asInstanceOf[InteractiveCompilationUnit]
+      case unit: InteractiveCompilationUnit => Some(unit)
+      case _  => Option(input.getAdapter(classOf[InteractiveCompilationUnit]).asInstanceOf[InteractiveCompilationUnit])
     }
   }
 

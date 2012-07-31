@@ -53,7 +53,7 @@ trait RefactoringAction extends ActionAdapter {
   def createScalaIdeRefactoringForCurrentEditorAndSelection(): Option[ScalaIdeRefactoring] = {
     import EditorHelpers._
     
-    withScalaFileAndSelection { (scalaFile, selection) =>
+    withScalaSourceFileAndSelection { (scalaFile, selection) =>
       Some(createRefactoring(selection.getOffset, selection.getOffset + selection.getLength, scalaFile))
     }
   }

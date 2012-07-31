@@ -5,7 +5,6 @@ import org.eclipse.jface.text.ITextViewer
 import org.eclipse.jface.text.hyperlink.AbstractHyperlinkDetector
 import org.eclipse.jface.text.hyperlink.IHyperlink
 import org.eclipse.ui.texteditor.ITextEditor
-
 import scala.tools.eclipse.InteractiveCompilationUnit
 import scala.tools.eclipse.util.EditorUtils
 
@@ -20,7 +19,7 @@ abstract class BaseHyperlinkDetector extends AbstractHyperlinkDetector {
     if (textEditor == null) null // can be null if generated through ScalaPreviewerFactory
     else {
       EditorUtils.getEditorScalaInput(textEditor) match {
-        case scu: InteractiveCompilationUnit =>
+        case Some(scu) =>
 
           val hyperlinks = runDetectionStrategy(scu, textEditor, currentSelection)
           hyperlinks match {

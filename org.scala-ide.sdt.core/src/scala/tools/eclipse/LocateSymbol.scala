@@ -45,7 +45,7 @@ trait LocateSymbol { self : ScalaPresentationCompiler =>
         val cf = pf.getClassFile(name)
         cf match {
           case classFile : ScalaClassFile => 
-            logger.debug("Found Scala class file: " + classFile)
+            logger.debug("Found Scala class file: " + classFile.getElementName)
             Some(classFile)
           case _ => None
         }
