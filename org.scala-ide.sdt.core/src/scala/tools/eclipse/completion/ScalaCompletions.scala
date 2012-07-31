@@ -7,6 +7,7 @@ import org.eclipse.jdt.core.IJavaElement
 import scala.collection.mutable
 import org.eclipse.core.runtime.NullProgressMonitor
 import scala.tools.eclipse.logging.HasLogger
+import scala.tools.eclipse.InteractiveCompilationUnit
 
 /** Base class for Scala completions. No UI dependency, can be safely used in a
  *  headless testing environment.
@@ -16,7 +17,7 @@ import scala.tools.eclipse.logging.HasLogger
 class ScalaCompletions extends HasLogger {
   import org.eclipse.jface.text.IRegion
   
-  def findCompletions(region: IRegion)(position: Int, scu: ScalaCompilationUnit)
+  def findCompletions(region: IRegion)(position: Int, scu: InteractiveCompilationUnit)
                              (sourceFile: SourceFile, compiler: ScalaPresentationCompiler): List[CompletionProposal] = {
     
     val pos = compiler.rangePos(sourceFile, position, position, position)
@@ -46,7 +47,7 @@ class ScalaCompletions extends HasLogger {
         compiler.askScopeCompletion(cpos, completed)
     }
     
-    val prefix = (if (position <= start) "" else scu.getBuffer.getText(start, position-start).trim).toArray
+    val prefix = (if (position <= start) "" else scu.getContents.slice(start, position).mkString.trim).toArray
     
     def nameMatches(sym : compiler.Symbol) = prefixMatches(sym.decodedName.toString.toArray, prefix)
     
@@ -131,7 +132,7 @@ class ScalaCompletions extends HasLogger {
           prefix,
           SearchPattern.R_PREFIX_MATCH,
           IJavaSearchConstants.TYPE,
-          SearchEngine.createJavaSearchScope(Array[IJavaElement](scu.getJavaProject()), true),
+          SearchEngine.createJavaSearchScope(Array[IJavaElement](scu.scalaProject.javaProject), true),
           requestor,
           IJavaSearchConstants.WAIT_UNTIL_READY_TO_SEARCH, // wait until all types are indexed by the JDT
           null)

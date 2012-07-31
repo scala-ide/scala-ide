@@ -29,24 +29,30 @@ import org.eclipse.jface.text.link.LinkedPositionGroup
 import org.eclipse.jface.text.link.LinkedPosition
 import org.eclipse.jface.text.link.LinkedModeUI
 import scala.tools.refactoring.common.TextChange
+import scala.tools.eclipse.util.EditorUtils
 
 object EditorHelpers {
    
   def activeWorkbenchWindow: Option[IWorkbenchWindow] = Option(PlatformUI.getWorkbench.getActiveWorkbenchWindow)
   def activePage(w: IWorkbenchWindow): Option[IWorkbenchPage] = Option(w.getActivePage)
   def activeEditor(p: IWorkbenchPage): Option[IEditorPart] = if(p.isEditorAreaVisible) Some(p.getActiveEditor) else None
-  def textEditor(e: IEditorPart): Option[ScalaSourceFileEditor] = e match {case t: ScalaSourceFileEditor => Some(t) case _ => None}
-  def file(e: ITextEditor): Option[IFile] = e.getEditorInput match {case f: IFileEditorInput => Some(f.getFile) case _ => None}
+  def textEditor(e: IEditorPart): Option[ISourceViewerEditor] = e match {case t: ISourceViewerEditor => Some(t) case _ => None}
+  def file(e: ITextEditor): Option[IFile] = e.getEditorInput match {
+    case f: IFileEditorInput =>
+      Some(f.getFile)
+    case _ => 
+      None
+  }
   def selection(e: ITextEditor): Option[ITextSelection] = e.getSelectionProvider.getSelection match {case s: ITextSelection => Some(s) case _ => None}
   
-  def doWithCurrentEditor(block: ScalaSourceFileEditor => Unit) {
+  def doWithCurrentEditor(block: ISourceViewerEditor => Unit) {
     withCurrentEditor { editor => 
       block(editor)
       None
     }
   }
   
-  def withCurrentEditor[T](block: ScalaSourceFileEditor => Option[T]): Option[T] = { 
+  def withCurrentEditor[T](block: ISourceViewerEditor => Option[T]): Option[T] = { 
     activeWorkbenchWindow flatMap { 
       activePage(_)         flatMap {
         activeEditor(_)       flatMap {
@@ -64,14 +70,21 @@ object EditorHelpers {
     }
   }
   
-  def withScalaFileAndSelection[T](block: (ScalaSourceFile, ITextSelection) => Option[T]): Option[T] = {
+  def withScalaFileAndSelection[T](block: (InteractiveCompilationUnit, ITextSelection) => Option[T]): Option[T] = {
     withCurrentEditor { textEditor =>
-      file(textEditor) flatMap { file =>
-        ScalaSourceFile.createFromPath(file.getFullPath.toString) flatMap { scalaFile =>
-          selection(textEditor) flatMap { selection =>
-            block(scalaFile, selection)
-          }
+      EditorUtils.getEditorScalaInput(textEditor) flatMap { icu =>
+        selection(textEditor) flatMap { selection =>
+          block(icu, selection)
         }
+      }
+    }
+  }
+  
+  def withScalaSourceFileAndSelection[T](block: (ScalaSourceFile, ITextSelection) => Option[T]): Option[T] = {
+    withScalaFileAndSelection { (icu, selection) =>
+      icu match {
+        case ssf: ScalaSourceFile => block(ssf, selection)
+        case _ => None
       }
     }
   }
@@ -150,7 +163,7 @@ object EditorHelpers {
     }
   }
   
-  def applyRefactoringChangeToEditor(change: TextChange, editor: ScalaSourceFileEditor) = {
+  def applyRefactoringChangeToEditor(change: TextChange, editor: ITextEditor) = {
     val edit = new ReplaceEdit(change.from, change.to - change.from, change.text)
     val document = editor.getDocumentProvider.getDocument(editor.getEditorInput)
     edit.apply(document)
@@ -172,7 +185,7 @@ object EditorHelpers {
         forceInstall
       }
 
-      (new LinkedModeUI(model, editor.sourceViewer)).enter
+      (new LinkedModeUI(model, editor.getViewer)).enter
     }
   }
 }

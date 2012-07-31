@@ -13,7 +13,7 @@ import org.eclipse.jdt.ui.text.IJavaPartitions
 import scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.IScalaEditor
 import scala.tools.eclipse.lexical._
 
-trait ScalaEditor extends IScalaEditor {
+trait ScalaEditor extends IScalaEditor with ISourceViewerEditor {
 
   def createDocumentPartitioner = new ScalaDocumentPartitioner
 
