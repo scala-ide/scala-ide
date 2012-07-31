@@ -566,7 +566,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
         val display = elemName.toString+" : "+sym.info.resultType.toString
 
         val valElem =
-          if(sym.hasFlag(Flags.MUTABLE))
+          if(sym.isMutable && !sym.isLazy)
             new ScalaVarElement(element, elemName.toString, display)
           else
             new ScalaValElement(element, elemName.toString, display)
