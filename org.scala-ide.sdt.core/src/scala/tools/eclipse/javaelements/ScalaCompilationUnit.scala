@@ -146,7 +146,7 @@ trait ScalaCompilationUnit extends Openable
        To avoid this, we look for deepest element containing the position
      */
     
-    def depth(e: IJavaElement): Int = if (e == element) 0 else (depth(e.getParent()) + 1)
+    def depth(e: IJavaElement): Int = if (e == element || e == null) 0 else (depth(e.getParent()) + 1)
     
     element match {
       case parent: IParent => {
