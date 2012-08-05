@@ -121,7 +121,7 @@ class ScalaJavaCompletionProposalComputer extends IJavaCompletionProposalCompute
 
       compiler.askOption { () =>
         val currentClass = definitions.getClass(newTypeName(referencedTypeName))
-        val proposals = currentClass.info.members.filter(mixedInMethod)
+        val proposals = currentClass.info.members.filter(mixedInMethod).toList
 
         for (sym <- proposals if sym.name.startsWith(prefix)) yield {
           val prop = compiler.mkCompletionProposal(start, sym = sym, tpe = sym.info, inherited = true, viaView = NoSymbol)
