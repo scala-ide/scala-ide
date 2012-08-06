@@ -30,11 +30,14 @@
     <log4j.version>1.2.16</log4j.version>
     <junit.version>4.10</junit.version>
     <mockito.version>1.9.0</mockito.version>
+    <weaving.hook.plugin.version.indigo>1.0.200.I20120427-0800</weaving.hook.plugin.version.indigo>
+    <weaving.hook.plugin.version.juno>1.0.200.v20120524-1707</weaving.hook.plugin.version.juno>
 
     <!-- plugin versions -->
     <tycho.plugin.version>0.15.0</tycho.plugin.version>
     <scala.plugin.version>3.0.2</scala.plugin.version>
     <aspectj.plugin.version>1.4</aspectj.plugin.version>
+    <weaving.hook.plugin.version>${weaving.hook.plugin.version.indigo}</weaving.hook.plugin.version>
     <maven-bunble.plugin.version>2.3.7</maven-bunble.plugin.version>
     <properties-maven.plugin.version>1.1.10</properties-maven.plugin.version>
     <buildnumber-maven.plugin.version>1.1</buildnumber-maven.plugin.version>
