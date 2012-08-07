@@ -6,8 +6,17 @@ import org.eclipse.core.resources.IMarker
 import org.eclipse.core.resources.IResource
 import org.eclipse.core.runtime.IProgressMonitor
 
-object MarkerFactory {
-  case class Position(offset: Int, length: Int, line: Int)
+object MarkerFactory {  
+  trait Position {
+    def isDefined: Boolean = false
+    def offset: Int = throw new UnsupportedOperationException("Position.offset")
+    def length: Int = throw new UnsupportedOperationException("Position.length")
+    def line: Int = throw new UnsupportedOperationException("Position.line")
+  }
+  case object NoPosition extends Position
+  case class RegionPosition(override val offset: Int, override val length: Int, override val line: Int) extends Position {
+    override def isDefined: Boolean = true
+  }
 }
 
 /** Generic factory for creating resource's markers.
@@ -29,9 +38,7 @@ abstract class MarkerFactory(markerType: String) {
     * @param msg      The text message displayed by the marker. Note, the passed message is truncated to 21000 chars.
     */
   def create(resource: IResource, severity: Int, msg: String): Unit = 
-    createMarkerInWorkspaceAndApply(resource) { marker =>
-      update(marker, severity, msg)
-    }
+    create(resource, severity, msg, MarkerFactory.NoPosition)
 
   /** Create marker with a source position in the Problem view.
     * @param resource The resource to use to create the marker (hence, the marker will be associated to the passed resource)
@@ -65,7 +72,7 @@ abstract class MarkerFactory(markerType: String) {
   }
 
   private def setPos(marker: IMarker, position: MarkerFactory.Position): IMarker = {
-    if (position.offset != -1) {
+    if (position.isDefined) {
       marker.setAttribute(IMarker.CHAR_START, position.offset)
       marker.setAttribute(IMarker.CHAR_END, position.offset + math.max(position.length, 1))
       marker.setAttribute(IMarker.LINE_NUMBER, position.line)

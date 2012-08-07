@@ -10,9 +10,16 @@ import org.eclipse.swt.events._
 
 object SWTUtils {
   
-  /** Run `f` on the UI thread.  */
+  /** Asynchronously run `f` on the UI thread.  */
   def asyncExec(f: => Unit) {
     Display.getDefault asyncExec new Runnable {
+      override def run() { f }
+    }
+  }
+
+  /** Synchronously run `f` on the UI thread.  */
+  def syncExec(f: => Unit) {
+    Display.getDefault syncExec new Runnable {
       override def run() { f }
     }
   }
