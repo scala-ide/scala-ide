@@ -100,7 +100,7 @@
     </dependency>    
     <dependency>
       <groupId>org.scala-tools.sbinary</groupId>
-      <artifactId>sbinary_${sbt.compiled.version}</artifactId>
+      <artifactId>sbinary_${sbinary.compiled.version}</artifactId>
       <optional>true</optional>
     </dependency>
   </dependencies>
