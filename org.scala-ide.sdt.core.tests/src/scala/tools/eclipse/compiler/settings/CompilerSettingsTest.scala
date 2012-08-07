@@ -19,10 +19,7 @@ class CompilerSettingsTest {
     
     val errors = allBuildErrorsOf(unit)
     
-    if(ScalaPlugin.plugin.shortScalaVer == "2.9") 
-      assertTrue(errors.nonEmpty)
-    else 
-      assertTrue(errors.isEmpty) // continuations plugin is enabled by default in 2.10+
+    assertTrue(errors.nonEmpty)
   }
   
   @Test
