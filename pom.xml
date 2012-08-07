@@ -82,7 +82,7 @@
         <scala.version>2.10.0-SNAPSHOT</scala.version>
         <scala.major.minor.version>2.10</scala.major.minor.version>
         <scala.library.version>${scala.version}</scala.library.version>
-        <sbt.compiled.version>2.10.0-SNAPSHOT</sbt.compiled.version>
+        <sbt.compiled.version>2.10</sbt.compiled.version>
         <version.suffix>2_10</version.suffix>
 
         <repo.scala-refactoring>${repo.scala-ide.root}/scala-refactoring-trunk</repo.scala-refactoring>
