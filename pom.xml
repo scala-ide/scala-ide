@@ -52,9 +52,9 @@
     <tycho.test.jvmArgs>-Xmx800m -XX:MaxPermSize=256m -Dsdtcore.headless ${tycho.test.weaving} ${tycho.test.OSspecific}</tycho.test.jvmArgs>
 
     <!-- dependencies repos -->
-    <eclipse.codename>juno</eclipse.codename>
-    <repo.eclipse>${repo.eclipse.juno}</repo.eclipse>
-    <repo.ajdt>${repo.ajdt.juno}</repo.ajdt>
+    <eclipse.codename>indigo</eclipse.codename>
+    <repo.eclipse>${repo.eclipse.indigo}</repo.eclipse>
+    <repo.ajdt>${repo.ajdt.indigo}</repo.ajdt>
 
     <!-- default values, can be overwritten by profiles -->
     <scala.version>2.9.3-SNAPSHOT</scala.version>
