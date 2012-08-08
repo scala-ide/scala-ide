@@ -132,18 +132,6 @@ class SbtBuilderTest {
     assertNoErrors(fooClientCU)
   }
 
-  @Test def scalaLibrary_shouldBe_on_BootClasspath() {
-    import SDTTestUtils._
-
-    val Seq(prjClient) = createProjects("client")
-
-    Assert.assertTrue("Found Scala library", prjClient.scalaClasspath.scalaLib.isDefined)
-    val basicConf = new BasicConfiguration(prjClient, ScalaCompilerConf.deployedInstance)
-    val args = basicConf.buildArguments(Seq())
-    Assert.assertTrue("BasicConfiguration bootclasspath " + args, args.mkString(" ").contains("-bootclasspath %s".format(prjClient.scalaClasspath.scalaLib.get.toFile.getAbsolutePath)))
-    deleteProjects(prjClient)
-  }
-  
   @Test def scalaLibrary_in_dependent_project_shouldBe_on_BootClasspath() {
     import SDTTestUtils._
     import ScalaPlugin.plugin
@@ -167,9 +155,6 @@ class SbtBuilderTest {
     
     val expectedLib = plugin.workspaceRoot.findMember("/library/bin").getLocation
     Assert.assertEquals("Unexpected Scala lib", expectedLib, prjClient.scalaClasspath.scalaLib.get)
-    val basicConf = new BasicConfiguration(prjClient, ScalaCompilerConf.deployedInstance)
-    val args = basicConf.buildArguments(Seq())
-    Assert.assertTrue("BasicConfiguration bootclasspath " + args, args.mkString(" ").contains("-bootclasspath " + expectedLib))
     deleteProjects(prjClient, prjLib)
   }
 

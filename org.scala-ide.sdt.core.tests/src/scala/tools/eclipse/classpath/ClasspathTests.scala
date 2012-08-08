@@ -234,10 +234,10 @@ class ClasspathTests {
     
     project.classpathHasChanged() // trick to make the check happen
 
-    val errors = projectErrors(ScalaPlugin.plugin.problemMarkerId, ScalaPlugin.plugin.settingProblemMarkerId)
+    val errors = projectErrors(ScalaPlugin.plugin.settingProblemMarkerId)
     
     // on 2.8 an invalid setting is reported twice, so the total number of errors is 3 or 4
-    assertTrue("unexpected number of scala problems in project: " + errors, errors.length >= 3)
+    assertTrue("unexpected number of scala problems in project: " + errors, errors.length >= 1)
     
     // back to normal
     project.storage.setValue(CompilerSettings.ADDITIONAL_PARAMS, "")

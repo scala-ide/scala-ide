@@ -77,15 +77,17 @@ abstract class BuildReporter(private[buildmanager] val project0: ScalaProject, s
   }
   
   override def comment(pos : Position, msg : String) {
-    val tasks = taskScanner.extractTasks(msg, pos)
-    for (TaskScanner.Task(tag, msg, priority, pos) <- tasks if pos.isDefined) {
-      val source = pos.source
-      val start = pos.startOrPoint
-      val length = pos.endOrPoint-start
-      source.file match {
-        case EclipseResource(i : IFile) =>
-          FileUtils.task(i, tag, msg, priority, start, length, pos.line, null)
-        case _ =>
+    if (pos.isDefined) {
+      val tasks = taskScanner.extractTasks(msg, pos)
+      for (TaskScanner.Task(tag, msg, priority, pos) <- tasks if pos.isDefined) {
+        val source = pos.source
+        val start = pos.startOrPoint
+        val length = pos.endOrPoint - start
+        source.file match {
+          case EclipseResource(i: IFile) =>
+            FileUtils.task(i, tag, msg, priority, start, length, pos.line, null)
+          case _ =>
+        }
       }
     }
   }
