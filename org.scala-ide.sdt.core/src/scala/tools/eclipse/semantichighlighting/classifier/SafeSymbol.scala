@@ -76,6 +76,9 @@ trait SafeSymbol extends CompilerAccess with PimpedTrees {
         else List((sym1, pos))
       }).flatten
 
+    case AppliedTypeTree(tpe, args) =>
+      tpe.symbol -> tpe.namePosition :: args.flatMap(safeSymbol)
+
     case _ =>
       // the local variable backing a lazy value is called 'originalName$lzy'. We swap it here for its
       // accessor, otherwise this symbol would fail the test in `getNameRegion`

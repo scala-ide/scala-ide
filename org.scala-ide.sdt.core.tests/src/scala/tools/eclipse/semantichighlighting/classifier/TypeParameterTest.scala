@@ -28,4 +28,46 @@ class TypeParameterTest extends AbstractSymbolClassifierTest {
       }""",
       Map("TPARAM" -> TypeParameter))
   }
+
+  @Test
+  def parameterized_type_param() {
+    checkSymbolClassification("""
+      trait X {
+        def xs[TypeParam]: Seq[TypeParam]
+      }
+      """, """
+      trait X {
+        def xs[$TPARAM $]: $T$[$TPARAM $]
+      }
+      """,
+      Map("TPARAM" -> TypeParameter, "T" -> Type))
+  }
+
+  @Test
+  def nested_parameterized_type_param() {
+    checkSymbolClassification("""
+      trait X {
+        def xs[TypeParam]: Seq[Seq[TypeParam]]
+      }
+      """, """
+      trait X {
+        def xs[$TPARAM $]: $T$[$T$[$TPARAM $]]
+      }
+      """,
+      Map("TPARAM" -> TypeParameter, "T" -> Type))
+  }
+
+  @Test
+  def multiple_parameterized_type_param() {
+    checkSymbolClassification("""
+      trait X {
+        def xs[TypeParam]: Map[TypeParam, Seq[TypeParam]]
+      }
+      """, """
+      trait X {
+        def xs[$TPARAM $]: $T$[$TPARAM $, $T$[$TPARAM $]]
+      }
+      """,
+      Map("TPARAM" -> TypeParameter, "T" -> Type))
+  }
 }
