@@ -210,11 +210,7 @@
               <frameworkExtension>
                 <groupId>p2.osgi.bundle</groupId>
                 <artifactId>org.eclipse.equinox.weaving.hook</artifactId>
-<<<<<<< HEAD
                 <version>${weaving.hook.plugin.version}</version>          
-=======
-                <version>${weaving.hook.plugin.version}</version>
->>>>>>> master
               </frameworkExtension>
             </frameworkExtensions>
             <bundleStartLevel>
