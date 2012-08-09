@@ -59,7 +59,6 @@ abstract class ScalaThread private (target: ScalaDebugTarget, private[model] val
   def canSuspend(): Boolean = !suspended // TODO: need real logic
   def isSuspended(): Boolean = suspended // TODO: need real logic
   def resume(): Unit = {
-    thread.resume()
     resumeFromScala(DebugEvent.CLIENT_REQUEST)
   }
   def suspend(): Unit = {
