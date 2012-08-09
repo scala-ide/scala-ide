@@ -23,7 +23,7 @@
 
     <!-- fixed versions -->
     <sbt.version>0.13.0-SNAPSHOT</sbt.version>
-    <sbinary.version>0.4.0</sbinary.version>
+    <sbinary.version>0.4.1-SNAPSHOT</sbinary.version>
     <jline.version>0.9.94</jline.version>
     <ivy.version>2.2.0</ivy.version>
     <miglayout.version>3.7.4</miglayout.version>
