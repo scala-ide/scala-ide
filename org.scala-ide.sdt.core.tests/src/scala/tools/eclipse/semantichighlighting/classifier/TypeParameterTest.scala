@@ -129,4 +129,20 @@ class TypeParameterTest extends AbstractSymbolClassifierTest {
       """,
       Map("TYPE" -> Type, "C" -> Class, "TRAIT" -> Trait))
   }
+
+  @Test
+  def tuple_literal_type_param() {
+    checkSymbolClassification("""
+      trait X {
+        def f: (Int, String)
+        def g: Tuple2[Int, String]
+      }
+      """, """
+      trait X {
+        def f: ($C$, $TYPE$)
+        def g: $CC  $[$C$, $TYPE$]
+      }
+      """,
+      Map("TYPE" -> Type, "C" -> Class, "CC" -> CaseClass))
+  }
 }
