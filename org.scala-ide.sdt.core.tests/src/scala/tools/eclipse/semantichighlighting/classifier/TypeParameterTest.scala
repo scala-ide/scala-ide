@@ -113,4 +113,20 @@ class TypeParameterTest extends AbstractSymbolClassifierTest {
       """,
       Map("TYPE" -> Type))
   }
+
+  @Test
+  def function_literal_type_param() {
+    checkSymbolClassification("""
+      trait X {
+        def f: Int => String
+        def g: Function1[Int, String]
+      }
+      """, """
+      trait X {
+        def f: $C$ => $TYPE$
+        def g: $TRAIT  $[$C$, $TYPE$]
+      }
+      """,
+      Map("TYPE" -> Type, "C" -> Class, "TRAIT" -> Trait))
+  }
 }

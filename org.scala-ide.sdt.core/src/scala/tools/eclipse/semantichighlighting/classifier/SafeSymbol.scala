@@ -76,6 +76,9 @@ trait SafeSymbol extends CompilerAccess with PimpedTrees {
         else List((sym1, pos))
       }).flatten
 
+    case AppliedTypeTree(tpe @ Select(qualifier, name), args) if isFunctionLiteral(tpe, qualifier, name) =>
+      args.flatMap(safeSymbol)
+
     case AppliedTypeTree(tpe, args) if isContextBound(args) =>
       List(tpe.symbol -> tpe.namePosition)
 
@@ -95,6 +98,12 @@ trait SafeSymbol extends CompilerAccess with PimpedTrees {
 
       sym1.zip(List(t.namePosition))
   }
+
+  private def isFunctionLiteral(tpt: Tree, qualifier: Tree, name: Name): Boolean = (
+       qualifier.nameString == "scala"
+    && name.toString.startsWith("Function")
+    && !tpt.pos.isRange
+  )
 
   private def isContextBound(args: List[Tree]): Boolean =
     args.size == 1 && !args.head.pos.isRange
