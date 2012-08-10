@@ -99,4 +99,18 @@ class TypeParameterTest extends AbstractSymbolClassifierTest {
       """,
       Map("TPARAM" -> TypeParameter, "T" -> Type, "TRAIT" -> Trait))
   }
+
+  @Test
+  def context_bound_type_param() {
+    checkSymbolClassification("""
+      trait X {
+        def xs[A : Ordering](a: A)
+      }
+      """, """
+      trait X {
+        def xs[A : $TYPE  $](a: A)
+      }
+      """,
+      Map("TYPE" -> Type))
+  }
 }

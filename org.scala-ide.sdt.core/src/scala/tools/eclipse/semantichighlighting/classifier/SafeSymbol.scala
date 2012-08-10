@@ -76,6 +76,9 @@ trait SafeSymbol extends CompilerAccess with PimpedTrees {
         else List((sym1, pos))
       }).flatten
 
+    case AppliedTypeTree(tpe, args) if isContextBound(args) =>
+      List(tpe.symbol -> tpe.namePosition)
+
     case AppliedTypeTree(tpe, args) =>
       tpe.symbol -> tpe.namePosition :: args.flatMap(safeSymbol)
 
@@ -92,4 +95,7 @@ trait SafeSymbol extends CompilerAccess with PimpedTrees {
 
       sym1.zip(List(t.namePosition))
   }
+
+  private def isContextBound(args: List[Tree]): Boolean =
+    args.size == 1 && !args.head.pos.isRange
 }
