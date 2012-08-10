@@ -70,4 +70,33 @@ class TypeParameterTest extends AbstractSymbolClassifierTest {
       """,
       Map("TPARAM" -> TypeParameter, "T" -> Type))
   }
+
+  @Test
+  def partial_compound_type_param() {
+    checkSymbolClassification("""
+      trait X {
+        def xs[TypeParam]: Seq[TypeParam] with collection.IterableLike[TypeParam, TypeParam]
+      }
+      """, """
+      trait X {
+        def xs[$TPARAM $]: Seq[$TPARAM $] with collection.IterableLike[$TPARAM $, $TPARAM $]
+      }
+      """,
+      Map("TPARAM" -> TypeParameter))
+  }
+
+  @Test
+  @Ignore("does not work until presentation compiler stores more information in the AST")
+  def full_compound_type_param() {
+    checkSymbolClassification("""
+      trait X {
+        def xs[TypeParam]: Seq[TypeParam] with collection.IterableLike[TypeParam, TypeParam]
+      }
+      """, """
+      trait X {
+        def xs[$TPARAM $]: $T$[$TPARAM $] with collection.$TRAIT     $[$TPARAM $, $TPARAM $]
+      }
+      """,
+      Map("TPARAM" -> TypeParameter, "T" -> Type, "TRAIT" -> Trait))
+  }
 }
