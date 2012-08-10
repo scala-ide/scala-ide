@@ -3,7 +3,9 @@ package scala.tools.eclipse.debug
 import scala.tools.eclipse.debug.model.{ ScalaThread, ScalaStackFrame, ScalaDebugTarget }
 import org.eclipse.core.resources.{ ResourcesPlugin, IFile }
 import org.eclipse.debug.core.{ ILaunchManager, IDebugEventSetListener, DebugPlugin, DebugEvent }
+import org.eclipse.debug.core.model.IBreakpoint
 import org.eclipse.jdt.debug.core.JDIDebugModel
+import org.eclipse.jdt.debug.core.IJavaLineBreakpoint
 import org.eclipse.jdt.internal.debug.core.model.JDIDebugTarget
 import org.hamcrest.CoreMatchers._
 import org.junit.Assert._
@@ -114,8 +116,7 @@ class ScalaDebugTestSession(launchConfigurationFile: IFile) extends IDebugEventS
   def runToLine(typeName: String, breakpointLine: Int) {
     assertThat("Bad state before runToBreakpoint", state, anyOf(is(NOT_LAUNCHED), is(SUSPENDED)))
 
-    val breakpoint = JDIDebugModel.createLineBreakpoint(ResourcesPlugin.getWorkspace.getRoot, typeName, breakpointLine, -1, -1, -1, true, null)
-    waitForBreakpointsToBeInstalled
+    val breakpoint = addLineBreakpoint(typeName, breakpointLine)
 
     if (state eq NOT_LAUNCHED) {
       launch()
@@ -125,9 +126,25 @@ class ScalaDebugTestSession(launchConfigurationFile: IFile) extends IDebugEventS
     }
 
     waitUntilSuspended
-    breakpoint.delete
+    removeBreakpoint(breakpoint)
 
     assertEquals("Bad state after runToBreakpoint", SUSPENDED, state)
+  }
+  
+  /**
+   * Add a breakpoint in the given type and its nested types at the given line (1 based)
+   */
+  def addLineBreakpoint(typeName: String, breakpointLine: Int): IJavaLineBreakpoint = {
+    val breakpoint = JDIDebugModel.createLineBreakpoint(ResourcesPlugin.getWorkspace.getRoot, typeName, breakpointLine, /*char start*/ -1, /*char end*/ -1, /*hit count*/ -1, /*register*/ true , /*attributes*/ null)
+    waitForBreakpointsToBeInstalled()
+    breakpoint
+  }
+  
+  /**
+   * Remove the given breakpoint
+   */
+  def removeBreakpoint(breakpoint: IBreakpoint) {
+    breakpoint.delete()
   }
 
   def stepOver() {
