@@ -206,4 +206,16 @@ class TypeParameterTest extends AbstractSymbolClassifierTest {
       """,
       Map("TPARAM" -> TypeParameter, "TYPE" -> Type))
   }
+
+  @Test
+  def higher_kinded_type_param() {
+    checkSymbolClassification("""
+      trait M[A[_]]
+      trait H extends M[List]
+      """, """
+      trait M[A[_]]
+      trait H extends M[$HK$]
+      """,
+      Map("HK" -> Type))
+  }
 }
