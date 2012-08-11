@@ -85,8 +85,8 @@ trait SafeSymbol extends CompilerAccess with PimpedTrees {
     case AppliedTypeTree(tpe, args) =>
       tpe.symbol -> tpe.namePosition :: args.flatMap(safeSymbol)
 
-    case CompoundTypeTree(tmpl) =>
-      tmpl.parents.flatMap(safeSymbol)
+    case CompoundTypeTree(Template(parents, _, body)) =>
+      (if (isStructuralType(parents)) body else parents).flatMap(safeSymbol)
 
     case _ =>
       // the local variable backing a lazy value is called 'originalName$lzy'. We swap it here for its
@@ -98,6 +98,9 @@ trait SafeSymbol extends CompilerAccess with PimpedTrees {
 
       sym1.zip(List(t.namePosition))
   }
+
+  private def isStructuralType(ts: List[Tree]): Boolean =
+    ts.size == 1
 
   private def isTupleOrFunctionLiteral(tpt: Tree): Boolean =
     tpt.toString.matches(""".*scala\.(Tuple|Function).*""") && !tpt.pos.isRange

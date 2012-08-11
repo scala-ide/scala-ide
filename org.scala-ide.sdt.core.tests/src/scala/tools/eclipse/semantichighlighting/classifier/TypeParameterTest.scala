@@ -145,4 +145,33 @@ class TypeParameterTest extends AbstractSymbolClassifierTest {
       """,
       Map("TYPE" -> Type, "C" -> Class, "CC" -> CaseClass))
   }
+
+  @Test
+  def partial_structural_type_param() {
+    checkSymbolClassification("""
+      trait X {
+        def f(s: { def foo[TypeParam](i: TypeParam): Int })
+      }
+      """, """
+      trait X {
+        def f(s: { def $M$[TypeParam](i: TypeParam): Int })
+      }
+      """,
+      Map("M" -> Method))
+  }
+
+  @Test
+  @Ignore("does not work until presentation compiler stores more information in the AST")
+  def full_structural_type_param() {
+    checkSymbolClassification("""
+      trait X {
+        def f(s: { def foo[TypeParam](i: TypeParam): Int })
+      }
+      """, """
+      trait X {
+        def f(s: { def $M$[$TPARAM $](i: $TPARAM $): $C$ })
+      }
+      """,
+      Map("TPARAM" -> TypeParameter, "C" -> Class, "M" -> Method))
+  }
 }
