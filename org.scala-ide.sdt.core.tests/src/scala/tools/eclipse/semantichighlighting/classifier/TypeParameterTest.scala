@@ -105,13 +105,15 @@ class TypeParameterTest extends AbstractSymbolClassifierTest {
     checkSymbolClassification("""
       trait X {
         def xs[A : Ordering](a: A)
+        def ys[TypeParam](a: TypeParam)(implicit evidence$1: Ordering[TypeParam])
       }
       """, """
       trait X {
         def xs[A : $TYPE  $](a: A)
+        def ys[$TPARAM $](a: $TPARAM $)(implicit evidence\$1: $TYPE  $[$TPARAM $])
       }
       """,
-      Map("TYPE" -> Type))
+      Map("TPARAM" -> TypeParameter, "TYPE" -> Type))
   }
 
   @Test
@@ -187,5 +189,21 @@ class TypeParameterTest extends AbstractSymbolClassifierTest {
       }
       """,
       Map("TPARAM" -> TypeParameter, "T" -> Type))
+  }
+
+  @Test
+  def view_bound_type_param() {
+    checkSymbolClassification("""
+      trait X {
+        def xs[TypeParam <% Ordering[TypeParam]](a: TypeParam)
+        def ys[TypeParam](a: TypeParam)(implicit evidence$1: TypeParam => Ordering[TypeParam])
+      }
+      """, """
+      trait X {
+        def xs[$TPARAM $ <% $TYPE  $[$TPARAM $]](a: $TPARAM $)
+        def ys[$TPARAM $](a: $TPARAM $)(implicit evidence\$1: $TPARAM $ => $TYPE  $[$TPARAM $])
+      }
+      """,
+      Map("TPARAM" -> TypeParameter, "TYPE" -> Type))
   }
 }
