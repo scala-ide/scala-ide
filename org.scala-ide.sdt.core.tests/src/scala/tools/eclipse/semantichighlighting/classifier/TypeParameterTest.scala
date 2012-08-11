@@ -174,4 +174,18 @@ class TypeParameterTest extends AbstractSymbolClassifierTest {
       """,
       Map("TPARAM" -> TypeParameter, "C" -> Class, "M" -> Method))
   }
+
+  @Test
+  def bounded_type_param() {
+    checkSymbolClassification("""
+      trait X {
+        type Type[TypeParam] >: List[TypeParam] <: Iterable[TypeParam]
+      }
+      """, """
+      trait X {
+        type $T $[$TPARAM $] >: $T $[$TPARAM $] <: $T     $[$TPARAM $]
+      }
+      """,
+      Map("TPARAM" -> TypeParameter, "T" -> Type))
+  }
 }

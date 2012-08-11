@@ -88,6 +88,9 @@ trait SafeSymbol extends CompilerAccess with PimpedTrees {
     case CompoundTypeTree(Template(parents, _, body)) =>
       (if (isStructuralType(parents)) body else parents).flatMap(safeSymbol)
 
+    case TypeBoundsTree(lo, hi) =>
+      List(lo, hi).flatMap(safeSymbol)
+
     case _ =>
       // the local variable backing a lazy value is called 'originalName$lzy'. We swap it here for its
       // accessor, otherwise this symbol would fail the test in `getNameRegion`
