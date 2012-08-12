@@ -98,6 +98,9 @@ trait SafeSymbol extends CompilerAccess with PimpedTrees {
           safeSymbol(tpt)
       }
 
+    case ExistentialTypeTree(tpt, whereClauses) =>
+      (tpt :: whereClauses).flatMap(safeSymbol)
+
     case _ =>
       // the local variable backing a lazy value is called 'originalName$lzy'. We swap it here for its
       // accessor, otherwise this symbol would fail the test in `getNameRegion`

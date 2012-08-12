@@ -218,4 +218,33 @@ class TypeParameterTest extends AbstractSymbolClassifierTest {
       """,
       Map("HK" -> Type))
   }
+
+  @Test
+  def partial_existential_type_param() {
+    checkSymbolClassification("""
+      trait X {
+        def xs[TypeParam]: Res[TypeParam] forSome { type Res[_] <: Seq[_] }
+      }
+      """, """
+      trait X {
+        def xs[$TPARAM $]: $T$[$TPARAM $] forSome { type $T$[_] <: Seq[_] }
+      }
+      """,
+      Map("TPARAM" -> TypeParameter, "T" -> Type))
+  }
+
+  @Test
+  @Ignore("does not work until presentation compiler stores more information in the AST")
+  def full_existential_type_param() {
+    checkSymbolClassification("""
+      trait X {
+        def xs[TypeParam]: Res[TypeParam] forSome { type Res[_] <: Seq[_] }
+      }
+      """, """
+      trait X {
+        def xs[$TPARAM $]: $T$[$TPARAM $] forSome { type $T$[_] <: $T$[_] }
+      }
+      """,
+      Map("TPARAM" -> TypeParameter, "T" -> Type))
+  }
 }
