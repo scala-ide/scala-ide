@@ -80,7 +80,10 @@ trait SafeSymbol extends CompilerAccess with PimpedTrees {
       args.flatMap(safeSymbol)
 
     case AppliedTypeTree(tpe, args) =>
-      tpe.symbol -> tpe.namePosition :: args.flatMap(safeSymbol)
+      (tpe :: args).flatMap(safeSymbol)
+
+    case tpe @ SelectFromTypeTree(qualifier, _) =>
+      global.askOption(() => tpe.symbol -> tpe.namePosition).toList ::: safeSymbol(qualifier)
 
     case CompoundTypeTree(Template(parents, _, body)) =>
       (if (isStructuralType(parents)) body else parents).flatMap(safeSymbol)

@@ -44,4 +44,35 @@ class TypeTest extends AbstractSymbolClassifierTest {
       Map("T" -> Type, "V" -> TemplateVal, "C" -> Class))
   }
 
+  @Test
+  def path_dependent_type() {
+    checkSymbolClassification("""
+      trait MTrait { trait KTrait[A] }
+      trait X {
+        def xs(m: MTrait)(k: m.KTrait[Int])
+      }
+      """, """
+      trait MTrait { trait KTrait[A] }
+      trait X {
+        def xs(m: $TT  $)(k: m.$TT  $[$C$])
+      }
+      """,
+      Map("C" -> Class, "TT" -> Trait))
+  }
+
+  @Test
+  def type_projection() {
+    checkSymbolClassification("""
+      trait MTrait { trait KTrait[A] }
+      trait X {
+        def xs(m: MTrait#KTrait[Int])
+      }
+      """, """
+      trait MTrait { trait KTrait[A] }
+      trait X {
+        def xs(m: $TT  $#$TT  $[$C$])
+      }
+      """,
+      Map("C" -> Class, "TT" -> Trait))
+  }
 }
