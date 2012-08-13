@@ -15,6 +15,10 @@ object AnonFunOnListInt {
     l.map(ret(_))
 
     l.foldLeft(0)(_ + ret(_))
+    
+    l foreach { i =>
+      noop(i)
+    }
 
   }
 
