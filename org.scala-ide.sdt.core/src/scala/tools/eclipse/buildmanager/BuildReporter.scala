@@ -1,7 +1,6 @@
 package scala.tools.eclipse.buildmanager
 
 import scala.tools.eclipse.{EclipseBuildManager, TaskScanner, ScalaProject}
-import scala.tools.eclipse.resources.MarkerFactory
 import scala.tools.nsc.Settings
 import scala.tools.nsc.reporters.Reporter
 import scala.tools.nsc.util.{ Position, NoPosition }
@@ -34,24 +33,22 @@ abstract class BuildReporter(private[buildmanager] val project0: ScalaProject, s
 	    
 	    try {
 	      if(pos.isDefined) {
-	        val source = pos.source
-	        val length = source.identifier(pos).map(_.length).getOrElse(0)
-	        source.file match {
-	          case EclipseResource(i : IFile) => 
-	            if (!pos.source.file.hasExtension("java")) {
-	              BuildProblemMarker.create(i, eclipseSeverity, msg, MarkerFactory.Position(pos.point, length, pos.line))
+	        pos.source.file match {
+	          case resource @ EclipseResource(i : IFile) => 
+	            if (!resource.hasExtension("java")) {
+	              BuildProblemMarker.create(i, eclipseSeverity, msg, pos)
 	              prob += new BuildProblem(severity, msg, pos)
 	            } else
 	              logger.info("suppressed error in Java file: %s".format(msg))
 	          case f =>
 	            logger.info("no EclipseResource associated to %s [%s]".format(f.path, f.getClass))
-	            EclipseResource.fromString(source.file.path, project0.underlying.getFullPath) match {
+	            EclipseResource.fromString(f.path, project0.underlying.getFullPath) match {
 	              case Some(i: IFile) => 
 	                // this may happen if a file was compileLate by the build compiler
 	                // for instance, when a source file (on the sourcepath) is newer than the classfile
 	                // the compiler will create PlainFile instances in that case
 	                prob += new BuildProblem(severity, msg, pos)
-	                BuildProblemMarker.create(i, eclipseSeverity, msg, MarkerFactory.Position(pos.point, length, pos.line))
+	                BuildProblemMarker.create(i, eclipseSeverity, msg, pos)
 	              case _ =>
 	                logger.info("no EclipseResource associated to %s [%s]".format(f.path, f.getClass))
 	                prob += new BuildProblem(severity, msg, NoPosition)
