@@ -35,5 +35,8 @@ abstract class BaseHyperlinkDetector extends AbstractHyperlinkDetector {
     }
   }
 
-  protected[detector] def runDetectionStrategy(scu: InteractiveCompilationUnit, textEditor: ITextEditor, currentSelection: IRegion): List[IHyperlink]
+  private[detector] def friendRunDetectionStrategy(scu: InteractiveCompilationUnit, textEditor: ITextEditor, currentSelection: IRegion): List[IHyperlink] =
+    runDetectionStrategy(scu, textEditor, currentSelection)
+  
+  protected def runDetectionStrategy(scu: InteractiveCompilationUnit, textEditor: ITextEditor, currentSelection: IRegion): List[IHyperlink]
 }
