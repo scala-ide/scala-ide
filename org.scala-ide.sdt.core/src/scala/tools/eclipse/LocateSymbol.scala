@@ -15,15 +15,15 @@ import org.eclipse.ui.texteditor.ITextEditor
 import org.eclipse.jdt.internal.compiler.env.ICompilationUnit
 import org.eclipse.jdt.ui.actions.SelectionDispatchAction
 import org.eclipse.jdt.internal.ui.javaeditor.{EditorUtility, JavaElementHyperlink}
-
 import tools.nsc.symtab.Flags._
 import scala.tools.nsc.io.AbstractFile
-
-import javaelements.{ScalaSourceFile, ScalaClassFile, ScalaCompilationUnit}
+import javaelements.{ScalaSourceFile, ScalaClassFile}
+import org.eclipse.core.runtime.IPath
+import scala.tools.eclipse.sourcefileprovider.SourceFileProviderRegistry
 
 trait LocateSymbol { self : ScalaPresentationCompiler => 
 
-  def locate(sym : Symbol, scu : InteractiveCompilationUnit): Option[(ScalaCompilationUnit, Int)] = {
+  def locate(sym : Symbol, scu : InteractiveCompilationUnit): Option[(InteractiveCompilationUnit, Int)] = {
     def find[T, V](arr : Array[T])(f : T => Option[V]) : Option[V] = {
       for(e <- arr) {
         f(e) match {
@@ -33,7 +33,7 @@ trait LocateSymbol { self : ScalaPresentationCompiler =>
       }
       None
     }
-    def findClassFile = {
+    def findClassFile(): Option[ScalaClassFile] = {
       logger.debug("Looking for a classfile for " + sym.fullName)
       val packName = sym.enclosingPackage.fullName
       val project = scu.scalaProject.javaProject.asInstanceOf[JavaProject]
@@ -52,7 +52,7 @@ trait LocateSymbol { self : ScalaPresentationCompiler =>
       }
     }
     
-    def findCompilationUnit() = {
+    def findCompilationUnit(): Option[IPath] = {
       logger.info("Looking for a compilation unit for " + sym.fullName)
       val project = scu.scalaProject.javaProject.asInstanceOf[JavaProject]
       val nameLookup = new SearchableEnvironment(project, null: WorkingCopyOwner).nameLookup
@@ -62,7 +62,7 @@ trait LocateSymbol { self : ScalaPresentationCompiler =>
       Option(nameLookup.findCompilationUnit(name)) map (_.getResource().getFullPath())
     }
     
-    def findSourceFile() =
+    def findSourceFile(): Option[IPath] =
       if (sym.sourceFile ne null) {
         val path = new Path(sym.sourceFile.path)
         val root = ResourcesPlugin.getWorkspace().getRoot()
@@ -76,10 +76,10 @@ trait LocateSymbol { self : ScalaPresentationCompiler =>
     val sourceFile = findSourceFile()
     
     val target = 
-      if (sourceFile.isDefined) 
-        ScalaSourceFile.createFromPath(sourceFile.get.toString)
+      if(sourceFile.isDefined) 
+        SourceFileProviderRegistry.getProvider(sourceFile.get).createFrom(sourceFile.get)
       else 
-        findClassFile
+        findClassFile()
     
     target flatMap { file =>
       val pos = if (sym.pos eq NoPosition) {
@@ -92,7 +92,8 @@ trait LocateSymbol { self : ScalaPresentationCompiler =>
         Some(sym.pos)
         
       pos flatMap { p =>
-        if (p eq NoPosition) None else Some(file, p.point)
+        if (p eq NoPosition) None 
+        else Some(file, p.point)
       }
     }
   }

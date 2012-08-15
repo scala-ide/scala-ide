@@ -35,7 +35,7 @@ import scala.tools.eclipse.lexical._
 import scala.tools.eclipse.formatter.ScalaFormattingStrategy
 import scala.tools.eclipse.ui.AutoCloseBracketStrategy
 import scala.tools.eclipse.properties.syntaxcolouring.ScalaSyntaxClasses
-import scala.tools.eclipse.hyperlink.text.detector.HyperlinksDetector
+import scala.tools.eclipse.hyperlink.text.detector.{CompositeHyperlinkDetector, DeclarationHyperlinkDetector, ImplicitHyperlinkDetector}
 import scalariform.ScalaVersions
 
 class ScalaSourceViewerConfiguration(store: IPreferenceStore, scalaPreferenceStore: IPreferenceStore, editor: ITextEditor)
@@ -88,7 +88,8 @@ class ScalaSourceViewerConfiguration(store: IPreferenceStore, scalaPreferenceSto
    }
 
    override def getHyperlinkDetectors(sv: ISourceViewer): Array[IHyperlinkDetector] = {
-     val detector = HyperlinksDetector()
+     val strategies = List(DeclarationHyperlinkDetector(), ImplicitHyperlinkDetector())
+     val detector = new CompositeHyperlinkDetector(strategies)
      if (editor != null) detector.setContext(editor)
      Array(detector)
    }

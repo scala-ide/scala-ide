@@ -21,6 +21,15 @@ import org.eclipse.jdt.core.compiler.CharOperation
 import scala.tools.nsc.interactive.Response
 import scala.tools.eclipse.reconciliation.ReconciliationParticipantsExtensionPoint
 import org.eclipse.jdt.core.JavaModelException
+import scala.tools.eclipse.InteractiveCompilationUnit
+import scala.tools.eclipse.sourcefileprovider.SourceFileProvider
+import org.eclipse.core.runtime.IPath
+
+
+class ScalaSourceFileProvider extends SourceFileProvider {
+  override def createFrom(path: IPath): Option[InteractiveCompilationUnit] = 
+    ScalaSourceFile.createFromPath(path.toString)
+}
 
 object ScalaSourceFile {
   val handleFactory = new HandleFactory
@@ -28,11 +37,13 @@ object ScalaSourceFile {
   def createFromPath(path : String) : Option[ScalaSourceFile] = {
     if (!path.endsWith(".scala"))
       None
-    else
-      handleFactory.createOpenable(path, null) match {
+    else {
+      val openable = handleFactory.createOpenable(path, null) 
+      openable match {
         case ssf : ScalaSourceFile => Some(ssf)
         case _ => None
       }
+    }
   }
 }
 

@@ -7,14 +7,7 @@ import org.eclipse.ui.texteditor.ITextEditor
 
 import scala.tools.eclipse.InteractiveCompilationUnit
 
-private class HyperlinksDetector extends BaseHyperlinkDetector {
-
-  private val strategies: List[BaseHyperlinkDetector] = List(DeclarationHyperlinkDetector(), ImplicitHyperlinkDetector())
-
+class CompositeHyperlinkDetector(strategies: List[BaseHyperlinkDetector]) extends BaseHyperlinkDetector {
   override protected[detector] def runDetectionStrategy(scu: InteractiveCompilationUnit, textEditor: ITextEditor, currentSelection: IRegion): List[IHyperlink] =
-    strategies flatMap { _.runDetectionStrategy(scu, textEditor, currentSelection) }
-}
-
-object HyperlinksDetector {
-  def apply(): AbstractHyperlinkDetector = new HyperlinksDetector
+    strategies flatMap { _.friendRunDetectionStrategy(scu, textEditor, currentSelection) }
 }
