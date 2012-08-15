@@ -2,6 +2,7 @@
 <?eclipse version="3.2"?>
 <plugin>
    <extension-point id="reconciliationParticipants" name="Reconcilation Participants" schema="schema/reconciliationParticipants.exsd"/>
+   <extension-point id="sourcefileprovider" name="Source file Providers" schema="schema/sourceFileProviders.exsd"/>
    <extension
          point="org.eclipse.ui.propertyPages">
       <page
@@ -869,6 +870,13 @@
       commandId="org.eclipse.shortcut.scala.debug"
       schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
       sequence="M2+M3+D S" />
+  </extension>
+
+  <extension point="org.scala-ide.sdt.core.sourcefileprovider">
+    <provider
+      class="scala.tools.eclipse.javaelements.ScalaSourceFileProvider"
+      file_extension="scala">
+    </provider>
   </extension>
 
   <extension point="org.scala-ide.sdt.aspects.cuprovider">
