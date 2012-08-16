@@ -2,7 +2,6 @@ package scala.tools.eclipse.formatter
 
 import org.eclipse.core.resources.IProject
 import org.eclipse.core.runtime.IAdaptable
-import org.eclipse.jdt.core.IJavaElement
 import org.eclipse.jface.text._
 import org.eclipse.jface.text.TextUtilities.getDefaultLineDelimiter
 import org.eclipse.jface.text.formatter._
@@ -11,15 +10,14 @@ import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.text.undo.DocumentUndoManagerRegistry
 import org.eclipse.text.edits.{ TextEdit => EclipseTextEdit, _ }
 import org.eclipse.ui.texteditor.ITextEditor
-
 import scalariform.formatter.ScalaFormatter
 import scalariform.formatter.preferences._
 import scalariform.parser.ScalaParserException
 import scalariform.utils.TextEdit
-
 import scala.tools.eclipse.properties.PropertyStore
 import scala.tools.eclipse.ScalaPlugin
 import scala.tools.eclipse.util.EclipseUtils._
+import org.eclipse.core.resources.IResource
 
 class ScalaFormattingStrategy(val editor: ITextEditor) extends IFormattingStrategy with IFormattingStrategyExtension {
 
@@ -85,7 +83,7 @@ class ScalaFormattingStrategy(val editor: ITextEditor) extends IFormattingStrate
     this.regionOpt = None
   }
 
-  private def getProject = editor.getEditorInput.asInstanceOf[IAdaptable].adaptTo[IJavaElement].getJavaProject
+  private def getProject = editor.getEditorInput.asInstanceOf[IAdaptable].adaptTo[IResource].getProject
 
   def format(content: String, isLineStart: Boolean, indentation: String, positions: Array[Int]): String = null
 

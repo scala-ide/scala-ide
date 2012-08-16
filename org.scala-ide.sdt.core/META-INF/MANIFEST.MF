@@ -103,6 +103,7 @@ Export-Package:
  scala.tools.eclipse.semantichighlighting.classifier,
  scala.tools.eclipse.semantichighlighting.implicits,
  scala.tools.eclipse.semicolon,
+ scala.tools.eclipse.sourcefileprovider,
  scala.tools.eclipse.templates,
  scala.tools.eclipse.ui,
  scala.tools.eclipse.ui.actions,

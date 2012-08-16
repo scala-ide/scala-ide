@@ -23,7 +23,7 @@
 
     <!-- fixed versions -->
     <sbt.version>0.13.0-SNAPSHOT</sbt.version>
-    <sbinary.version>0.4.0</sbinary.version>
+    <sbinary.version>0.4.1-SNAPSHOT</sbinary.version>
     <jline.version>0.9.94</jline.version>
     <ivy.version>2.2.0</ivy.version>
     <miglayout.version>3.7.4</miglayout.version>
@@ -61,7 +61,6 @@
     <scala.major.minor.version>2.9</scala.major.minor.version>
     <scala.library.version>${scala.version}</scala.library.version>
     <sbt.compiled.version>2.9.2</sbt.compiled.version>
-    <sbinary.compiled.version>2.9.2</sbinary.compiled.version>
     <version.suffix>2_09</version.suffix>
     <version.tag>local</version.tag>
 
@@ -85,7 +84,6 @@
         <scala.major.minor.version>2.10</scala.major.minor.version>
         <scala.library.version>${scala.version}</scala.library.version>
         <sbt.compiled.version>2.10</sbt.compiled.version>
-        <sbinary.compiled.version>2.10.0-SNAPSHOT</sbinary.compiled.version>
         <version.suffix>2_10</version.suffix>
 
         <repo.scala-refactoring>${repo.scala-ide.root}/scala-refactoring-trunk</repo.scala-refactoring>
@@ -272,7 +270,7 @@
       </dependency>
       <dependency>
         <groupId>org.scala-tools.sbinary</groupId>
-        <artifactId>sbinary_${sbinary.compiled.version}</artifactId>
+        <artifactId>sbinary_${sbt.compiled.version}</artifactId>
         <version>${sbinary.version}</version>
       </dependency>
       <!-- sdt.core dependencies -->

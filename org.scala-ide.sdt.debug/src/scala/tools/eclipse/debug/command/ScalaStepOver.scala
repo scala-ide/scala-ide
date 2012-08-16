@@ -76,8 +76,7 @@ private class ScalaStepOver private (eventActor: ScalaStepOverActor) extends Sca
   }
 
   def stop() {
-    eventActor ! ActorExit
-
+    eventActor ! ScalaStep.Stop
   }
 
   // ----------------
