@@ -58,4 +58,16 @@ class ObjectTest extends AbstractSymbolClassifierTest {
         """,
       Map("OBJ" -> Object, "PKG" -> Package))
   }
+
+  @Test
+  def object_member_within_type_param() {
+    checkSymbolClassification("""
+      object TypeA { class TypeB }
+      trait Trait extends Seq[TypeA.TypeB]
+      """, """
+      object TypeA { class TypeB }
+      trait Trait extends $T$[$OBJ$.$CLS$]
+      """,
+      Map("CLS" -> Class, "OBJ" -> Object, "T" -> Type))
+  }
 }
