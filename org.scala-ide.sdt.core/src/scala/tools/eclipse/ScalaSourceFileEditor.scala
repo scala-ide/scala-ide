@@ -67,6 +67,7 @@ import ScalaSourceFileEditor.bundleForConstructedKeys
 import org.eclipse.swt.events.VerifyEvent
 import org.eclipse.jface.text.ITextViewerExtension
 import scala.tools.eclipse.ui.SurroundSelectionStrategy
+import org.eclipse.jface.text.IDocumentExtension4
 
 
 class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
@@ -145,8 +146,7 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
   private var occurrenceAnnotations: Set[Annotation] = Set()
 
   override def updateOccurrenceAnnotations(selection: ITextSelection, astRoot: CompilationUnit) {
-    askForOccurrencesUpdate(selection, astRoot)
-    super.updateOccurrenceAnnotations(selection, astRoot)
+    askForOccurrencesUpdate(selection)
   }
 
   private def getAnnotationModelOpt: Option[IAnnotationModel] =
@@ -155,10 +155,7 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
       annotationModel <- Option(documentProvider.getAnnotationModel(getEditorInput))
     } yield annotationModel
   
-  private def performOccurrencesUpdate(selection: ITextSelection, astRoot: CompilationUnit) {
-
-    if (getDocumentProvider == null)
-      return
+  private def performOccurrencesUpdate(selection: ITextSelection, documentLastModified: Long) {
       
     // TODO: find out why this code does a cast to IAdaptable before calling getAdapter 
     val adaptable = getEditorInput.asInstanceOf[IAdaptable].getAdapter(classOf[IJavaElement])
@@ -166,7 +163,7 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
 
     adaptable match {
       case scalaSourceFile: ScalaSourceFile =>
-        val annotations = getAnnotations(selection, scalaSourceFile)
+        val annotations = getAnnotations(selection, scalaSourceFile, documentLastModified)
         for (annotationModel <- getAnnotationModelOpt) 
           annotationModel.withLock {
             annotationModel.replaceAnnotations(occurrenceAnnotations, annotations)
@@ -179,27 +176,37 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
     }
   }
 
-  private def getAnnotations(selection: ITextSelection, scalaSourceFile: ScalaSourceFile): Map[Annotation, Position] = {
-    val occurrencesFinder = new ScalaOccurrencesFinder(scalaSourceFile, selection.getOffset, selection.getLength)
+  private def getAnnotations(selection: ITextSelection, scalaSourceFile: ScalaSourceFile, documentLastModified: Long): Map[Annotation, Position] = {
+    val occurrences = ScalaOccurrencesFinder.findOccurrences(scalaSourceFile, selection.getOffset, selection.getLength, documentLastModified)
     for {
-      Occurrences(name, locations) <- occurrencesFinder.findOccurrences.toList
+      Occurrences(name, locations) <- occurrences.toList
       location <- locations
       annotation = new Annotation(OCCURRENCE_ANNOTATION, false, "Occurrence of '" + name + "'")
       position = new Position(location.getOffset, location.getLength)
     } yield annotation -> position
   }.toMap
 
-  def askForOccurrencesUpdate(selection: ITextSelection, astRoot: CompilationUnit) {
+  def askForOccurrencesUpdate(selection: ITextSelection) {
 
-    if (selection.getLength < 0 || selection.getOffset < 0) return
+    if (selection.getLength < 0 || selection.getOffset < 0) 
+      return
+    
+    if (getDocumentProvider == null || !isActiveEditor)
+      return
+    
+    val lastModified = getSourceViewer.getDocument match {
+      case document: IDocumentExtension4 =>
+        document.getModificationStamp
+      case _ => return
+    }
 
     import org.eclipse.core.runtime.jobs.Job
     import org.eclipse.core.runtime.IProgressMonitor
-    import org.eclipse.core.runtime.{ IStatus, Status }
+    import org.eclipse.core.runtime.Status
 
-    val job = new Job("updateOccurrenceAnnotations") {
-      def run(monitor: IProgressMonitor): IStatus = {
-        performOccurrencesUpdate(selection, astRoot)
+    val job = new Job("Updating occurrence annotations") {
+      def run(monitor: IProgressMonitor) = {
+        performOccurrencesUpdate(selection, lastModified)
         Status.OK_STATUS
       }
     }
@@ -213,7 +220,7 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
     val selectionProvider = getSelectionProvider
     if (selectionProvider != null)
       selectionProvider.getSelection match {
-        case textSel: ITextSelection => askForOccurrencesUpdate(textSel, null)
+        case textSel: ITextSelection => askForOccurrencesUpdate(textSel)
         case _ =>
       }
   }
@@ -221,7 +228,7 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
   lazy val selectionListener = new ISelectionListener() {
     def selectionChanged(part: IWorkbenchPart, selection: ISelection) {
       selection match {
-        case textSel: ITextSelection => askForOccurrencesUpdate(textSel, null)
+        case textSel: ITextSelection => askForOccurrencesUpdate(textSel)
         case _ =>
       }
     }
