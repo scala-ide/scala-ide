@@ -42,9 +42,6 @@
     <maven-source.plugin.version>2.1.2</maven-source.plugin.version>
     <maven-clean.plugin.version>2.5</maven-clean.plugin.version>
 
-    <!-- Weaving plugin version, default for Indigo -->
-    <weaving.hook.plugin.version>1.0.200.I20120427-0800</weaving.hook.plugin.version>
-
     <!-- tycho test related -->
     <tycho.test.OSspecific></tycho.test.OSspecific>
     <!-- Partial workaround against JDT Weaving deadlocks. See #1000317 and the original ticket on https://issuetracker.springsource.com/browse/STS-1445 -->
