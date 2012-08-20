@@ -12,9 +12,10 @@ import xsbti.compile.CompileProgress
 import xsbti.{ Logger, F0 }
 import sbt.{Process, ClasspathOptions}
 import scala.tools.eclipse.util.{ EclipseResource, FileUtils }
+import scala.tools.eclipse.properties.ScalaPluginSettings
 import org.eclipse.core.resources.IResource
 import scala.tools.eclipse.logging.HasLogger
-import sbt.inc.{ AnalysisStore, Analysis, FileBasedStore }
+import sbt.inc.{ AnalysisStore, Analysis, FileBasedStore, Incremental }
 import sbt.compiler.{ IC, CompileFailed }
 import org.eclipse.core.resources.IProject
 import java.lang.ref.SoftReference
@@ -119,6 +120,8 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings)
   }
 
   private def runCompiler(sources: Seq[File]) {
+    System.setProperty(Incremental.incDebugProp,
+      project.storage.getString(SettingConverterUtil.convertNameToProperty(ScalaPluginSettings.debugIncremental.name)))
     val inputs = new SbtInputs(sources.toSeq, project, monitor, new SbtProgress, cacheFile, sbtReporter, sbtLogger)
     val analysis =
       try
