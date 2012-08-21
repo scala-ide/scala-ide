@@ -137,11 +137,11 @@ class ScalaQuickFixProcessor extends IQuickFixProcessor with HasLogger {
         
         // map replacements strings into expanding proposals
         replacementStringList map {
-          replacementString =>
+          replacementString =>            
             // make markers message in form: "... =>replacement"
           	val markersMessage = annotationString + " " + ImplicitHighlightingPresenter.DisplayStringSeparator + replacementString
           	// construct a proposal with the appropriate location          	
-          	new ExpandingProposalBase(markersMessage, "Transform your code expression: ", location)
+          	new ExpandingProposalBase(markersMessage, "Transform expression: ", location)
         }
       // no match found for the problem message  
       case _ => Nil
