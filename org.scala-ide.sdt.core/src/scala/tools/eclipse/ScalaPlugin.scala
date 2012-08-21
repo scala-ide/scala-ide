@@ -24,7 +24,7 @@ import org.eclipse.ui.plugin.AbstractUIPlugin
 import util.SWTUtils.asyncExec
 import org.osgi.framework.BundleContext
 import scala.tools.eclipse.javaelements.{ ScalaElement, ScalaSourceFile }
-import scala.tools.eclipse.util.OSGiUtils.pathInBundle
+import scala.tools.eclipse.util.OSGiUtils._
 import scala.tools.eclipse.templates.ScalaTemplateManager
 import org.eclipse.jdt.ui.PreferenceConstants
 import org.eclipse.core.resources.IResourceDelta
@@ -151,7 +151,7 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
     Trim(continuationsClasses map { _.removeLastSegments(1).toOSString })
   
   lazy val sbtCompilerBundle = Platform.getBundle(sbtPluginId)
-  lazy val sbtCompilerInterface = pathInBundle(sbtCompilerBundle, "/lib/scala-" + shortScalaVer + "/lib/compiler-interface.jar")
+  lazy val sbtCompilerInterface = allPathsInBundle(sbtCompilerBundle, "/lib", "compiler-interface*.jar").toIterable.headOption
   // Disable for now, until we introduce a way to have multiple scala libraries, compilers available for the builder
   //lazy val sbtScalaLib = pathInBundle(sbtCompilerBundle, "/lib/scala-" + shortScalaVer + "/lib/scala-library.jar")
   //lazy val sbtScalaCompiler = pathInBundle(sbtCompilerBundle, "/lib/scala-" + shortScalaVer + "/lib/scala-compiler.jar")
