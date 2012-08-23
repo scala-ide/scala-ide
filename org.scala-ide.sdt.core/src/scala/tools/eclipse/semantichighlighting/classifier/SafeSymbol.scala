@@ -105,7 +105,9 @@ trait SafeSymbol extends CompilerAccess with PimpedTrees {
       (tpt :: whereClauses).flatMap(safeSymbol)
 
     case tpe @ Select(qualifier, _) =>
-      global.askOption(() => tpe.symbol -> tpe.namePosition).toList ::: safeSymbol(qualifier)
+      val tpeSym = if (hasSourceCodeRepresentation(tpe)) global.askOption(() => tpe.symbol -> tpe.namePosition).toList else Nil
+      val qualiSym = if(hasSourceCodeRepresentation(qualifier)) safeSymbol(qualifier) else Nil
+      tpeSym ::: qualiSym
 
     case _ =>
       // the local variable backing a lazy value is called 'originalName$lzy'. We swap it here for its
