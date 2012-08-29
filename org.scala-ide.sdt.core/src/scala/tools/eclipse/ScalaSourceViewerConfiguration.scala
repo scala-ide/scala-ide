@@ -43,14 +43,8 @@ import scala.tools.eclipse.javaelements.ScalaCompilationUnit
 class ScalaSourceViewerConfiguration(store: IPreferenceStore, scalaPreferenceStore: IPreferenceStore, editor: ITextEditor)
    extends JavaSourceViewerConfiguration(JavaPlugin.getDefault.getJavaTextTools.getColorManager, store, editor, IJavaPartitions.JAVA_PARTITIONING) {
 
-//   private val codeScanner = new ScalaCodeScanner(getColorManager, store, ScalaVersions.DEFAULT)
-
    override def getPresentationReconciler(sv: ISourceViewer) = {
       val reconciler = super.getPresentationReconciler(sv).asInstanceOf[PresentationReconciler]
-//      val dr = new ScalaDamagerRepairer(codeScanner)
-//
-//      reconciler.setDamager(dr, IDocument.DEFAULT_CONTENT_TYPE)
-//      reconciler.setRepairer(dr, IDocument.DEFAULT_CONTENT_TYPE)
 
       def handlePartition(partitionType: String, tokenScanner: ITokenScanner) {
          val dr = new DefaultDamagerRepairer(tokenScanner)
