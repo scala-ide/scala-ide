@@ -37,18 +37,14 @@ import scala.tools.eclipse.ui.AutoCloseBracketStrategy
 import scala.tools.eclipse.properties.syntaxcolouring.ScalaSyntaxClasses
 import scala.tools.eclipse.hyperlink.text.detector.{CompositeHyperlinkDetector, DeclarationHyperlinkDetector, ImplicitHyperlinkDetector}
 import scalariform.ScalaVersions
+import org.eclipse.jface.text.DefaultTextHover
+import scala.tools.eclipse.javaelements.ScalaCompilationUnit
 
 class ScalaSourceViewerConfiguration(store: IPreferenceStore, scalaPreferenceStore: IPreferenceStore, editor: ITextEditor)
    extends JavaSourceViewerConfiguration(JavaPlugin.getDefault.getJavaTextTools.getColorManager, store, editor, IJavaPartitions.JAVA_PARTITIONING) {
 
-   private val codeScanner = new ScalaCodeScanner(getColorManager, store, ScalaVersions.DEFAULT)
-
    override def getPresentationReconciler(sv: ISourceViewer) = {
       val reconciler = super.getPresentationReconciler(sv).asInstanceOf[PresentationReconciler]
-      val dr = new ScalaDamagerRepairer(codeScanner)
-
-      reconciler.setDamager(dr, IDocument.DEFAULT_CONTENT_TYPE)
-      reconciler.setRepairer(dr, IDocument.DEFAULT_CONTENT_TYPE)
 
       def handlePartition(partitionType: String, tokenScanner: ITokenScanner) {
          val dr = new DefaultDamagerRepairer(tokenScanner)
@@ -84,7 +80,15 @@ class ScalaSourceViewerConfiguration(store: IPreferenceStore, scalaPreferenceSto
    private val xmlPIScanner = new XmlPIScanner(getColorManager, scalaPreferenceStore)
 
    override def getTextHover(sv: ISourceViewer, contentType: String, stateMask: Int) = {
-     new ScalaHover(getCodeAssist _)
+//     new ScalaHover(getCodeAssist _)
+     val scuOption = getCodeAssist match {
+       case Some(scu: ScalaCompilationUnit) => Some(scu)
+       case _ => None
+     }
+     scuOption match {
+       case Some(scu) => new ScalaHover(scu)
+       case None => new DefaultTextHover(sv)
+     }
    }
 
    override def getHyperlinkDetectors(sv: ISourceViewer): Array[IHyperlinkDetector] = {
