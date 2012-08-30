@@ -28,7 +28,10 @@ class LocalRenameAction extends RefactoringAction {
     
     val refactoring = file.withSourceFile((file, compiler) => new Rename with GlobalIndexes { 
       val global = compiler
-      var index = GlobalIndex(askLoadedAndTypedTreeForFile(file).left.get)
+      var index = {
+        val tree = askLoadedAndTypedTreeForFile(file).left.get
+        global.ask(() => GlobalIndex(tree))
+      }
     })()
   }
   
