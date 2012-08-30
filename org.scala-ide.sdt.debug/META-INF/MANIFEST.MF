@@ -16,7 +16,7 @@ Require-Bundle:
  org.eclipse.debug.core,
  org.eclipse.debug.ui,
  org.eclipse.help,
- org.eclipse.jdt.core;bundle-version="[3.6.0,3.8.10)",
+ org.eclipse.jdt.core;bundle-version="[3.6.0,3.7.10)",
  org.eclipse.jdt.core.manipulation,
  org.eclipse.jdt.debug,
  org.eclipse.jdt.debug.ui,
@@ -44,8 +44,8 @@ Require-Bundle:
  org.scala-refactoring.library,
  org.scala-ide.sbt.full.library;bundle-version="[0.13,0.14)",
  scalariform,
- org.junit4
- org.eclipse.ui.browser
+ org.junit4;bundle-version="4.5.0",
+ org.eclipse.ui.browser;bundle-version="3.3.0",
  org.scala-ide.sdt.core;bundle-version="[2.1.0, 2.2.0)",
  org.scala-ide.equinox-weaving-launcher;bundle-version="[1.1.0,2.0.0)";resolution:=optional
 Import-Package: 
