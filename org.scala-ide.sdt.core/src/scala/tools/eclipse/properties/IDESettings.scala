@@ -33,7 +33,7 @@ object IDESettings {
   }
   
   def buildManagerSettings: List[Box] =
-    List(Box("Build manager", List(buildManager, compileOrder, stopBuildOnErrors)))
+    List(Box("Build manager", List(buildManager, compileOrder, stopBuildOnErrors, debugIncremental)))
 }
 
 object ScalaPluginSettings extends Settings {
@@ -41,4 +41,5 @@ object ScalaPluginSettings extends Settings {
   val compileOrder = ChoiceSetting("-compileorder", "which", "Compilation order",
       List("Mixed", "JavaThenScala", "ScalaThenJava"), "Mixed")
   val stopBuildOnErrors = BooleanSetting("-stopBuildOnError", "Stop build if dependent projects have errors.")
+  val debugIncremental = BooleanSetting("-debugIncremental", "Explain incremental compilation (sbt builder only)")
 }
