@@ -44,6 +44,7 @@ class ScalaCompilerPreferenceInitializer extends AbstractPreferenceInitializer {
       IDESettings.shownSettings(ScalaPlugin.defaultScalaSettings).foreach {_.userSettings.foreach (defaultPreference)}
       IDESettings.buildManagerSettings.foreach {_.userSettings.foreach(defaultPreference)}
       store.setDefault(convertNameToProperty(ScalaPluginSettings.stopBuildOnErrors.name), true)
+      store.setDefault(convertNameToProperty(ScalaPluginSettings.debugIncremental.name), false)
     }
   }
 }
