@@ -42,9 +42,8 @@ class OccurrencesFinderTest {
       println("looking at position %d for %d occurrences".format(pos, count))
       val region = ScalaWordFinder.findWord(contents, pos - 1)
       println("using word region: " + region)
-      val finder = new ScalaOccurrencesFinder(unit, region.getOffset, region.getLength)
-      val occurrences = finder.findOccurrences
-      assertTrue(finder.findOccurrences.isDefined)
+      val occurrences = ScalaOccurrencesFinder.findOccurrences(unit, region.getOffset, region.getLength, 1)
+      assertTrue(occurrences.isDefined)
       assertEquals(count, occurrences.get.locations.size)
     }
   }
