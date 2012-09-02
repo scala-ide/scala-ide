@@ -34,10 +34,7 @@ class EclipseUserSimulator {
     javaProject.setOutputLocation(new Path("/" + projectName + "/bin"), null);
 
     var entries = new ArrayBuffer[IClasspathEntry]();
-    val vmInstall = JavaRuntime.getDefaultVMInstall();
-    val locations = JavaRuntime.getLibraryLocations(vmInstall);
-    for (element <- locations)
-      entries += JavaCore.newLibraryEntry(element.getSystemLibraryPath(), null, null);
+    entries += JavaRuntime.getDefaultJREContainerEntry()
 
     if (withSourceRoot) {
       val sourceFolder = project.getFolder("/src");
