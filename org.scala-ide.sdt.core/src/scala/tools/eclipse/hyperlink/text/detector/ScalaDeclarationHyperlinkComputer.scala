@@ -11,6 +11,10 @@ import scala.tools.eclipse.hyperlink.text._
 import scala.tools.eclipse.InteractiveCompilationUnit
 
 class ScalaDeclarationHyperlinkComputer extends HasLogger {
+  def findHyperlinks(icu: InteractiveCompilationUnit, wordRegion: IRegion): Option[List[IHyperlink]] = {
+    findHyperlinks(icu, wordRegion, wordRegion)
+  }
+  
   def findHyperlinks(icu: InteractiveCompilationUnit, wordRegion: IRegion, mappedRegion: IRegion): Option[List[IHyperlink]] = {
     icu.withSourceFile({ (sourceFile, compiler) =>
       object DeclarationHyperlinkFactory extends HyperlinkFactory {
