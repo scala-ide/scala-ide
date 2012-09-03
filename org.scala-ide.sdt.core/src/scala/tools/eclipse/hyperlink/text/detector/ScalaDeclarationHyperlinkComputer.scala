@@ -10,18 +10,22 @@ import scala.tools.eclipse.logging.HasLogger
 import scala.tools.eclipse.hyperlink.text._
 import scala.tools.eclipse.InteractiveCompilationUnit
 
-private[hyperlink] class ScalaDeclarationHyperlinkComputer extends HasLogger {
-  def findHyperlinks(scu: InteractiveCompilationUnit, wordRegion: IRegion): Option[List[IHyperlink]] = {
-    scu.withSourceFile({ (sourceFile, compiler) =>
+class ScalaDeclarationHyperlinkComputer extends HasLogger {
+  def findHyperlinks(icu: InteractiveCompilationUnit, wordRegion: IRegion): Option[List[IHyperlink]] = {
+    findHyperlinks(icu, wordRegion, wordRegion)
+  }
+  
+  def findHyperlinks(icu: InteractiveCompilationUnit, wordRegion: IRegion, mappedRegion: IRegion): Option[List[IHyperlink]] = {
+    icu.withSourceFile({ (sourceFile, compiler) =>
       object DeclarationHyperlinkFactory extends HyperlinkFactory {
         protected val global: compiler.type = compiler
       }
       
-      if (wordRegion == null || wordRegion.getLength == 0)
+      if (mappedRegion == null || mappedRegion.getLength == 0)
         None
       else {
-        val start = wordRegion.getOffset
-        val regionEnd = wordRegion.getOffset + wordRegion.getLength
+        val start = mappedRegion.getOffset
+        val regionEnd = mappedRegion.getOffset + mappedRegion.getLength
         // removing 1 handles correctly hyperlinking requests @ EOF
         val end = if (sourceFile.length == regionEnd) regionEnd - 1 else regionEnd
 
@@ -33,7 +37,7 @@ private[hyperlink] class ScalaDeclarationHyperlinkComputer extends HasLogger {
         askTypeAt(pos, response)
         val typed = response.get
 
-        logger.info("detectHyperlinks: wordRegion = " + wordRegion)
+        logger.info("detectHyperlinks: wordRegion = " + mappedRegion)
         compiler.askOption { () =>
           typed.left.toOption map {
             case Import(expr, sels) =>
@@ -62,7 +66,7 @@ private[hyperlink] class ScalaDeclarationHyperlinkComputer extends HasLogger {
               filteredSyms.foldLeft(List[IHyperlink]()) { (links, sym) =>
                 if (sym.isJavaDefined) links
                 else
-                  DeclarationHyperlinkFactory.create(Hyperlink.withText("Open Declaration"), scu, sym, wordRegion).toList ::: links
+                  DeclarationHyperlinkFactory.create(Hyperlink.withText("Open Declaration"), icu, sym, wordRegion).toList ::: links
               })
           }
         }.flatten.headOption match {

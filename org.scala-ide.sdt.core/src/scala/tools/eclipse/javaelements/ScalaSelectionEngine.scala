@@ -32,12 +32,12 @@ class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: Sc
   val acceptedEnums = new ArrayBuffer[(Array[Char], Array[Char], Int)]
   val acceptedAnnotations = new ArrayBuffer[(Array[Char], Array[Char], Int)]
 
-  def select(scu: ScalaCompilationUnit, selectionStart0: Int, selectionEnd0: Int) {
-    scu.doWithSourceFile { (src, compiler) =>
+  def select(icu: InteractiveCompilationUnit, selectionStart0: Int, selectionEnd0: Int) {
+    icu.doWithSourceFile { (src, compiler) =>
 
       import compiler.{ log => _, _ }
 
-      val source = scu.getContents
+      val source = icu.getContents
       val region = ScalaWordFinder.findWord(source, selectionStart0)
 
       val (selectionStart, selectionEnd) =

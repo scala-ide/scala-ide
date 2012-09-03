@@ -95,8 +95,8 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings)
    * Run the operation on the given compilation unit. If the source file is not yet tracked by
    *  the presentation compiler, a new BatchSourceFile is created and kept for future reference.
    */
-  def withSourceFile[T](scu: InteractiveCompilationUnit)(op: (SourceFile, ScalaPresentationCompiler) => T): T =
-    op(sourceFiles(scu), this)
+  def withSourceFile[T](icu: InteractiveCompilationUnit)(op: (SourceFile, ScalaPresentationCompiler) => T): T =
+    op(sourceFiles(icu), this)
 
   def body(sourceFile: SourceFile) = {
     val response = new Response[Tree]

@@ -124,14 +124,6 @@ trait ScalaCompilationUnit extends Openable
     }
   }
   
-  def newSearchableEnvironment(workingCopyOwner : WorkingCopyOwner) : SearchableEnvironment = {
-    val javaProject = getJavaProject.asInstanceOf[JavaProject]
-    javaProject.newSearchableNameEnvironment(workingCopyOwner)
-  }
-
-  def newSearchableEnvironment() : SearchableEnvironment =
-    newSearchableEnvironment(DefaultWorkingCopyOwner.PRIMARY)
-  
   override def getSourceElementAt(pos : Int) : IJavaElement = {
     getChildAt(this, pos) match {
       case smie : ScalaModuleInstanceElement => smie.getParent;
