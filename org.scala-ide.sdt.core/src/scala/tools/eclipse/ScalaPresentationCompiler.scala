@@ -46,8 +46,7 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings)
   def presentationReporter = reporter.asInstanceOf[ScalaPresentationCompiler.PresentationReporter]
   presentationReporter.compiler = this
 
-  /**
-   * A map from compilation units to the BatchSourceFile that the compiler understands.
+  /** A map from compilation units to the BatchSourceFile that the compiler understands.
    *
    *  This map is populated by having a default source file created when calling 'apply',
    *  which currently happens in 'withSourceFile'.
@@ -58,14 +57,13 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings)
       ScalaPresentationCompiler.this.synchronized {
         get(k) match {
           case Some(v) => v
-          case None => put(k, v); v
+          case None    => put(k, v); v
         }
       }
     }
   }
 
-  /**
-   * Return the Scala compilation units that are currently maintained by this presentation compiler.
+  /** Return the Scala compilation units that are currently maintained by this presentation compiler.
    */
   def compilationUnits: Seq[InteractiveCompilationUnit] = {
     val managedFiles = unitOfFile.keySet
@@ -91,8 +89,7 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings)
 
   def problemsOf(scu: ScalaCompilationUnit): List[IProblem] = problemsOf(scu.file)
 
-  /**
-   * Run the operation on the given compilation unit. If the source file is not yet tracked by
+  /** Run the operation on the given compilation unit. If the source file is not yet tracked by
    *  the presentation compiler, a new BatchSourceFile is created and kept for future reference.
    */
   def withSourceFile[T](scu: InteractiveCompilationUnit)(op: (SourceFile, ScalaPresentationCompiler) => T): T =
@@ -132,41 +129,41 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings)
     op(tree)
   }
 
-  /**
-   * Perform `op' on the compiler thread. Catch all exceptions, and return
+  /** Perform `op' on the compiler thread. Catch all exceptions, and return
    *  None if an exception occured. TypeError and FreshRunReq are printed to
    *  stdout, all the others are logged in the platform error log.
+   *
+   *  There's a default timeout of 10s.
    */
-  def askOption[A](op: () => A): Option[A] =
-    try Some(ask(op))
-    catch {
-      case fi: FailedInterrupt =>
-        fi.getCause() match {
-          case e: TypeError =>
-            logger.info("TypeError in ask:\n" + e)
-            None
-          case f: FreshRunReq =>
-            logger.info("FreshRunReq in ask:\n" + f)
-            None
-          case e @ InvalidCompanions(c1, c2) =>
-            reporter.warning(c1.pos, e.getMessage)
-            None
-          case e: InterruptedException =>
-            Thread.currentThread().interrupt()
-            logger.info("interrupted exception in askOption")
+  def askOption[A](op: () => A, timeout: Int = 10000): Option[A] = {
+    val res = askForResponse(op)
+
+    res.get(timeout) match {
+      case None =>
+        eclipseLog.info("Timeout in askOption", new Throwable) // log a throwable for its stacktrace
+        None
+
+      case Some(result) =>
+        result match {
+          case Right(fi: FailedInterrupt) =>
+            fi.getCause() match {
+              case e: TypeError                  => logger.info("TypeError in ask:\n" + e)
+              case f: FreshRunReq                => logger.info("FreshRunReq in ask:\n" + f)
+              case e @ InvalidCompanions(c1, c2) => reporter.warning(c1.pos, e.getMessage)
+              case e                             => eclipseLog.error("Error during askOption", e)
+            }
             None
 
-          case e =>
+          case Right(e: Throwable) =>
             eclipseLog.error("Error during askOption", e)
             None
-        }
-      case e: Throwable =>
-        eclipseLog.error("Error during askOption", e)
-        None
-    }
 
-  /**
-   * Ask to put scu in the beginning of the list of files to be typechecked.
+          case Left(v) => Some(v)
+        }
+    }
+  }
+
+  /** Ask to put scu in the beginning of the list of files to be typechecked.
    *
    *  If the file has not been 'reloaded' first, it does nothing.
    */
@@ -174,8 +171,7 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings)
     sourceFiles.get(scu) foreach askToDoFirst
   }
 
-  /**
-   * Reload the given compilation unit. If this CU is not tracked by the presentation
+  /** Reload the given compilation unit. If this CU is not tracked by the presentation
    *  compiler, it's a no-op.
    *
    *  TODO: This logic seems broken: the only way to add a source file to the sourceFiles
@@ -203,7 +199,7 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings)
     logger.info("files deleted:\n" + (files map (_.getPath) mkString "\n"))
     synchronized {
       val srcs = files.map(sourceFiles remove _).foldLeft(List[SourceFile]()) {
-        case (acc, None) => acc
+        case (acc, None)    => acc
         case (acc, Some(f)) => f :: acc
       }
       if (!srcs.isEmpty)
@@ -235,8 +231,7 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings)
     askShutdown()
   }
 
-  /**
-   * Add a new completion proposal to the buffer. Skip constructors and accessors.
+  /** Add a new completion proposal to the buffer. Skip constructors and accessors.
    *
    *  Computes a very basic relevance metric based on where the symbol comes from
    *  (in decreasing order of relevance):
@@ -325,9 +320,9 @@ object ScalaPresentationCompiler {
 
     def nscSeverityToEclipse(severityLevel: Int) =
       severityLevel match {
-        case ERROR.id => ProblemSeverities.Error
+        case ERROR.id   => ProblemSeverities.Error
         case WARNING.id => ProblemSeverities.Warning
-        case INFO.id => ProblemSeverities.Ignore
+        case INFO.id    => ProblemSeverities.Ignore
       }
 
     def eclipseProblem(prob: Problem): Option[IProblem] = {
@@ -360,7 +355,7 @@ object ScalaPresentationCompiler {
     def formatMessage(msg: String) = msg.map {
       case '\n' => ' '
       case '\r' => ' '
-      case c => c
+      case c    => c
     }
   }
 }
