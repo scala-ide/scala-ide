@@ -6,6 +6,10 @@ import scala.tools.nsc.util.BatchSourceFile
 import scala.tools.nsc.util.SourceFile
 import scala.tools.nsc.interactive.Response
 import scala.tools.nsc.io.AbstractFile
+import org.eclipse.jdt.core.WorkingCopyOwner
+import org.eclipse.jdt.internal.core.DefaultWorkingCopyOwner
+import org.eclipse.jdt.internal.core.SearchableEnvironment
+import org.eclipse.jdt.internal.core.JavaProject
 
 /** A Scala compilation unit. It can be backed up by a `ScalaCompilationUnit` in usual
  *  Scala projects, or any other implementation (such as a specialized Scala DSL, a
@@ -66,4 +70,14 @@ trait InteractiveCompilationUnit {
    *  ensuring faster response when calling `getProblems`.
    */
   def scheduleReconcile(): Response[Unit]
+  
+  /** Returns a new search name environment for the scala project. 
+   *  
+   *  @param workingCopyOwner The owner of an this Compilation Unit in working copy mode.
+   */
+  def newSearchableEnvironment(workingCopyOwner : WorkingCopyOwner = DefaultWorkingCopyOwner.PRIMARY) : SearchableEnvironment = {
+    val javaProject = scalaProject.javaProject.asInstanceOf[JavaProject]
+    javaProject.newSearchableNameEnvironment(workingCopyOwner)
+  }
+
 }

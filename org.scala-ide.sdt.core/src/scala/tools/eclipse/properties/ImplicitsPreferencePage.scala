@@ -66,6 +66,6 @@ class ImplicitsPagePreferenceInitializer extends AbstractPreferenceInitializer {
     store.setDefault(P_BOLD, false)
     store.setDefault(P_ITALIC, false)
     store.setDefault(P_CONVERSIONS_ONLY, true)
-    store.setDefault(P_FIRST_LINE_ONLY, false)
+    store.setDefault(P_FIRST_LINE_ONLY, true)
   }
 }
