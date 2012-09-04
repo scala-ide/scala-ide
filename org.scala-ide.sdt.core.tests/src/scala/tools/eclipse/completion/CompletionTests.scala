@@ -217,4 +217,22 @@ class CompletionTests {
 
     runTest("t1001014/F.scala", false)(oracle)
   }
+
+  @Test
+  def t1001207() {
+    val unit = scalaCompilationUnit("ticket_1001207/T1207.scala")
+    reload(unit)
+
+    withCompletions("ticket_1001207/T1207.scala") {
+      (index, position, completions) =>
+        assertEquals("There is only one completion location", 0, index)
+        assertTrue("The completion should return java.util", completions.exists(
+          _ match {
+            case CompletionProposal(MemberKind.Package, _, "util", _, _, _, _, _, _, _, _, _) =>
+              true
+            case _ =>
+              false
+          }))
+    }
+  }
 }
