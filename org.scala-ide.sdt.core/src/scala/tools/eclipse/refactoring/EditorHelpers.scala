@@ -72,7 +72,7 @@ object EditorHelpers {
   
   def withScalaFileAndSelection[T](block: (InteractiveCompilationUnit, ITextSelection) => Option[T]): Option[T] = {
     withCurrentEditor { textEditor =>
-      EditorUtils.getEditorScalaInput(textEditor) flatMap { icu =>
+      EditorUtils.getEditorCompilationUnit(textEditor) flatMap { icu =>
         selection(textEditor) flatMap { selection =>
           block(icu, selection)
         }
