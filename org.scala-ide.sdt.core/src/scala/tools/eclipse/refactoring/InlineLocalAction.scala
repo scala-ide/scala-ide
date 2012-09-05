@@ -37,7 +37,10 @@ class InlineLocalAction extends RefactoringAction with ActionWithNoWizard {
           
     val refactoring = file.withSourceFile((sourceFile, compiler) => new InlineLocal with GlobalIndexes {
       val global = compiler
-      val index = GlobalIndex(askLoadedAndTypedTreeForFile(sourceFile).left.get)
+      val index = {
+        val tree = askLoadedAndTypedTreeForFile(sourceFile).left.get
+        global.ask(() => GlobalIndex(tree))
+      }
     })()
     
     /**
