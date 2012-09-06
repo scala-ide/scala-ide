@@ -53,4 +53,9 @@ class ScalaClassFileEditor extends ClassFileEditor with ScalaEditor {
     openAction.setActionDefinitionId(IJavaEditorActionDefinitionIds.OPEN_EDITOR)
     setAction("OpenEditor", openAction)
   }
+
+  override def getInteractiveCompilationUnit(): Option[InteractiveCompilationUnit] =
+    // getInputJavaElement always returns the right value
+    Some(getInputJavaElement().asInstanceOf[InteractiveCompilationUnit])
+
 }
