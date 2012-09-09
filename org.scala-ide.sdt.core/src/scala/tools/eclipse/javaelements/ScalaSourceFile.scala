@@ -5,7 +5,6 @@
 
 package scala.tools.eclipse.javaelements
 
-import java.lang.reflect.InvocationTargetException
 import java.util.{ HashMap => JHashMap, Map => JMap }
 import org.eclipse.core.resources.{ IFile, IResource }
 import org.eclipse.core.runtime.IProgressMonitor
@@ -52,32 +51,6 @@ object ScalaSourceFile {
 class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCopyOwner : WorkingCopyOwner) 
   extends JDTCompilationUnit(fragment, elementName, workingCopyOwner) with ScalaCompilationUnit with IScalaSourceFile {
 
-  private lazy val isLessThanJuno = {
-    val JDTVersion = Platform.getBundle("org.eclipse.jdt.core").getVersion
-    JDTVersion.getMajor == 3 && JDTVersion.getMinor < 8
-  } 
-
-  private def versionAwareOpenWhenClosed(info: OpenableElementInfo, monitor: IProgressMonitor): Unit = {
-    
-    try {
-      val clazz = classOf[org.eclipse.jdt.internal.core.JavaElement]
-      if (isLessThanJuno) {
-        val method = clazz.getDeclaredMethod("openWhenClosed", classOf[java.lang.Object], classOf[IProgressMonitor])
-        method.invoke(this, info, monitor)
-      } else {
-        val method = clazz.getDeclaredMethod("openWhenClosed", classOf[java.lang.Object], classOf[Boolean], classOf[IProgressMonitor])
-        method.invoke(this, info, new java.lang.Boolean(true), monitor)
-      }
-    } catch {
-        case e: IllegalArgumentException =>
-          throw new RuntimeException(e)
-        case e: IllegalAccessException =>
-          throw new RuntimeException(e);
-        case e: InvocationTargetException =>
-          throw new RuntimeException(e);
-    }
-  }
-
   override def getMainTypeName : Array[Char] =
     getElementName.substring(0, getElementName.length - ".scala".length).toCharArray()
 
@@ -120,7 +93,7 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
     problems : JHashMap[_,_],
     monitor : IProgressMonitor) : org.eclipse.jdt.core.dom.CompilationUnit = {
     val info = createElementInfo.asInstanceOf[OpenableElementInfo]
-    versionAwareOpenWhenClosed(info, monitor)
+    openWhenClosed(info, true, monitor)
     null
   }
 
