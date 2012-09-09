@@ -9,10 +9,10 @@ import org.eclipse.jface.text.source.Annotation
 import org.eclipse.jface.text.source.IAnnotationModelExtension2
 import org.eclipse.ui.IEditorPart
 import org.eclipse.ui.texteditor.ITextEditor
-
 import scala.collection.JavaConverters.asScalaIteratorConverter
 import scala.tools.eclipse.InteractiveCompilationUnit
 import scala.tools.eclipse.util.Utils.any2optionable
+import scala.tools.eclipse.ui.InteractiveCompilationUnitEditor
 
 // FIXME: This should be merged with merged with {{{scala.tools.eclipse.refactoring.EditorHelpers}}}
 object EditorUtils {
@@ -21,17 +21,13 @@ object EditorUtils {
     editor(org.eclipse.jdt.ui.JavaUI.openInEditor(element))
 
   /** Return the compilation unit open in the given editor.
-   *
-   *  It first tries to retrieve a compilation unit based on `IJavaElement` (a `ScalaCompilationUnit`),
-   *  otherwise it tries to get an adapter from the editor input to `InteractiveCompilationUnit`. Other
-   *  plugins may register adapters through `IAdapterManager` to allow other kinds of Scala-based units
-   *  to be retrieved this way.
    */
-  def getEditorScalaInput(editor: ITextEditor): Option[InteractiveCompilationUnit] = {
-    val input = editor.getEditorInput
-    input.getAdapter(classOf[IJavaElement]) match {
-      case unit: InteractiveCompilationUnit => Some(unit)
-      case _  => Option(input.getAdapter(classOf[InteractiveCompilationUnit]).asInstanceOf[InteractiveCompilationUnit])
+  def getEditorCompilationUnit(editor: ITextEditor): Option[InteractiveCompilationUnit] = {
+    editor match {
+      case icuEditor: InteractiveCompilationUnitEditor =>
+        icuEditor.getInteractiveCompilationUnit
+      case _ =>
+        None
     }
   }
 

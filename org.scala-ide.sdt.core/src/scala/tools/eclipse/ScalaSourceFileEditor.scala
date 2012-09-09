@@ -368,6 +368,10 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
 
   }
 
+  override def getInteractiveCompilationUnit(): Option[InteractiveCompilationUnit] =
+    // getInputJavaElement always returns the right value
+    Some(getInputJavaElement().asInstanceOf[InteractiveCompilationUnit])
+
 }
 
 object ScalaSourceFileEditor {

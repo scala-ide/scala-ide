@@ -7,13 +7,12 @@ package scala.tools.eclipse
 
 import org.eclipse.jface.text.rules.FastPartitioner
 import org.eclipse.jface.text.IDocumentPartitioner
-
 import org.eclipse.jdt.ui.text.IJavaPartitions
-
 import scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.IScalaEditor
 import scala.tools.eclipse.lexical._
+import scala.tools.eclipse.ui.InteractiveCompilationUnitEditor
 
-trait ScalaEditor extends IScalaEditor with ISourceViewerEditor {
+trait ScalaEditor extends IScalaEditor with ISourceViewerEditor with InteractiveCompilationUnitEditor {
 
   def createDocumentPartitioner = new ScalaDocumentPartitioner
 
