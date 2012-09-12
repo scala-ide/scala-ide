@@ -10,6 +10,6 @@ class Client {
 
     val t: b.myInt/*^*/ = 10
     
-    val x = Full.apply/*^*/("a") 
+    val x = Full/*^*/("a") 
   }
 }

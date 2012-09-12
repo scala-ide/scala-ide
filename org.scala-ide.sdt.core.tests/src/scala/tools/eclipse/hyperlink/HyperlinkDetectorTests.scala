@@ -16,26 +16,34 @@ object HyperlinkDetectorTests extends TestProjectSetup("hyperlinks") with Hyperl
 
 class HyperlinkDetectorTests {
   import HyperlinkDetectorTests._
-  
+
   @Test
   def simpleHyperlinks() {
-    val unit = scalaCompilationUnit("hyperlinks/SimpleHyperlinking.scala")
+    val oracle = List(
+      Link("type scala.Predef.Set"),
+      Link("type hyperlinks.SimpleHyperlinking.Tpe"),
+      Link("method scala.Array.apply", "object scala.Array"),
+      Link("method scala.collection.TraversableOnce.sum"),
+      Link("type scala.Predef.String"),
+      Link("object scala.Some"),
+      Link("class scala.Option"),
+      Link("type scala.Predef.String"))
 
-    reload(unit)
+    loadTestUnit("hyperlinks/SimpleHyperlinking.scala").andCheckAgainst(oracle)
+  }
+  
+  @Test
+  def scalaPackageLinks() {
+    val oracle = List(
+        Link("method scala.collection.immutable.List.apply", "object scala.collection.immutable.List"),
+        Link("object scala.collection.immutable.List"),
+        Link("method scala.collection.generic.GenericCompanion.apply", "object scala.collection.Seq"),
+        Link("object scala.collection.Seq"),
+        Link("object scala.collection.immutable.Nil"),
+        Link("method scala.collection.LinearSeqOptimized.apply", "value scalalinks.Foo.xs")
+    )
     
-    val contents = unit.getContents
-    val positions = SDTTestUtils.positionsOf(contents, "/*^*/")
-
-    println("checking %d positions".format(positions.size))
-    val resolver = new ScalaDeclarationHyperlinkComputer
-    for (pos <- positions) {
-      val wordRegion = ScalaWordFinder.findWord(unit.getContents, pos - 1)
-      val word = new String(unit.getContents.slice(wordRegion.getOffset, wordRegion.getOffset + wordRegion.getLength))
-      val links = resolver.findHyperlinks(unit, wordRegion)
-      println("Found links: " + links)
-      assertTrue(links.isDefined)
-      assertEquals("Failed hyperlinking at position %d (%s)".format(pos, word), 1, links.get.size)
-    }
+    loadTestUnit("scalalinks/ScalaListLinks.scala").andCheckAgainst(oracle)
   }
   
   @Test
@@ -76,7 +84,7 @@ class HyperlinkDetectorTests {
     // and make sure the classpath is up to date
     project.resetPresentationCompiler()
     
-    val oracle = List(Link("type util.Box.myInt"), Link("method util.Full.apply"))
+    val oracle = List(Link("type util.Box.myInt"), Link("method util.Full.apply", "object util.Full"))
     loadTestUnit("bug1000656/Client.scala").andCheckAgainst(oracle)
   }
 }
