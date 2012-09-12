@@ -1464,4 +1464,51 @@
        </enablement>
     </moveParticipant>
  </extension>
+ <extension
+       id="org.scala-ide.sdt.product"
+       point="org.eclipse.core.runtime.products">
+    <product
+          application="org.eclipse.ui.ide.workbench"
+          description="Scala IDE for Eclipse"
+          name="Scala IDE">
+       <property name="aboutImage" value="product.png"/>
+       <property name="aboutText" value="%productBlurb"/>
+       <property
+             name="preferenceCustomization"
+             value="plugin_customization.ini">
+       </property>
+       <property
+             name="introTitle"
+             value="%productIntroTitle"/>
+       <property
+             name="introBrandingImage"
+             value="product:intro-scala.png"/>
+       <property
+             name="startupForegroundColor"
+             value="C8D5EA"/>
+       <property
+             name="startupMessageRect"
+             value="7,220,441,20"/>
+       <property
+             name="startupProgressRect"
+             value="0,280,455,15"/> 
+       <property
+             name="buildIdLocation"
+             value="312,190">
+       </property>
+    </product>
+ </extension>
+ <extension point="org.eclipse.ui.intro">
+    <introProductBinding
+          introId="org.eclipse.ui.intro.universal"
+          productId="org.scala-ide.sdt.product">
+    </introProductBinding>
+ </extension>
+ <extension
+       point="org.eclipse.core.runtime.preferences">
+    <initializer
+          class="scala.tools.eclipse.PreferenceInitializer">
+    </initializer>
+ </extension>
+ 
 </plugin>
