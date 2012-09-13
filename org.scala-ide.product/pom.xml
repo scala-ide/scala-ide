@@ -12,8 +12,7 @@
 
   <properties>
     <!-- some default values, can be overwritten by profiles -->
-    <repo.scala-ide>${repo.scala-ide.root}/nightly-update-master-29x</repo.scala-ide>
-    <repo.worksheet>${repo.scala-ide.root}/nightly-build-worksheet-scalaide21-29/site/</repo.worksheet>
+    <repo.scala-ide.ecosystem>${repo.scala-ide.root}/ecosystem/dev-milestone-2.9/site/</repo.scala-ide.ecosystem>
   </properties>
 
   <profiles>
@@ -26,21 +25,16 @@
       <!-- Scala 2.10.x -->
       <id>scala-2.10.x</id>
       <properties>
-        <repo.scala-ide>${repo.scala-ide.root}/nightly-update-master-trunk</repo.scala-ide>
-        <repo.worksheet>${repo.scala-ide.root}/nightly-build-worksheet-scalaide21-210/site/</repo.worksheet>
+        <repo.scala-ide.ecosystem>${repo.scala-ide.root}/ecosystem/dev-milestone-milestone/site/</repo.scala-ide.ecosystem>
+        <scala.major.minor.version>2.10.0-M7</scala.major.minor.version>
       </properties>
     </profile>
   </profiles>
 
   <repositories>
     <repository>
-      <id>scala-ide</id>
-      <url>${repo.scala-ide}</url>
-      <layout>p2</layout>
-    </repository>
-    <repository>
-      <id>scala-worksheet</id>
-      <url>${repo.worksheet}</url>
+      <id>scala-ide ecosystem</id>
+      <url>${repo.scala-ide.ecosystem}</url>
       <layout>p2</layout>
     </repository>
     <repository>
@@ -60,24 +54,6 @@
       <snapshots>
         <enabled>false</enabled>
       </snapshots>
-    </repository>
-    <repository>
-      <id>scala-refactoring</id>
-      <name>Scala Refactoring p2 repository</name>
-      <layout>p2</layout>
-      <url>${repo.scala-refactoring}</url>
-    </repository>
-    <repository>
-      <id>scalariform</id>
-      <name>Scalariform Scala p2 repository</name>
-      <layout>p2</layout>
-      <url>${repo.scalariform}</url>
-    </repository>
-    <repository>
-      <id>equinox.launcher</id>
-      <name>Equinox weaving launcher p2 repository</name>
-      <layout>p2</layout>
-      <url>${repo.equinox.launcher}</url>
     </repository>
   </repositories>
 
@@ -101,7 +77,7 @@
               <ws>gtk</ws>
               <arch>x86_64</arch>
             </environment>
-<!--            <environment>
+            <environment>
               <os>linux</os>
               <ws>gtk</ws>
               <arch>x86</arch>
@@ -131,7 +107,7 @@
               <ws>win32</ws>
               <arch>x86_64</arch>
             </environment>
- -->          </environments>
+          </environments>
         </configuration>
       </plugin>
       <plugin>
@@ -161,10 +137,14 @@
           </execution>
         </executions>
         <configuration>
+          <formats>
+            <linux>tar.gz</linux>
+          </formats>
           <products>
             <product>
               <id>scalaide.product.id</id>
               <rootFolder>eclipse</rootFolder>
+              <archiveFileName>scala-SDK-2.1-M2-${scala.major.minor.version}</archiveFileName>
             </product>
           </products>
           <installFeatures>true</installFeatures>
