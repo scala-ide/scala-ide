@@ -74,7 +74,7 @@
 
       <property name="eclipse.p2.data.area" value="@config.dir/../p2/" />
       <property name="eclipse.p2.profile" value="SDKProfile" />
-      <property name="eclipse.buildId" value="Typesafe-01" />
+      <property name="eclipse.buildId" value="2.1-M2-Typesafe" />
    </configurations>
 
 </product>
