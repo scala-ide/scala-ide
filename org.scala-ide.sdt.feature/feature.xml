@@ -87,6 +87,7 @@ SUCH DAMAGE.
       <import plugin="org.eclipse.ui.navigator"/>
       <import plugin="org.eclipse.ui.navigator.resources"/>
       <import plugin="org.apache.ant"/>
+      <import plugin="org.eclipse.sdk"/> <!-- needed to be able to create a full Scala IDE SDK product -->
    </requires>
 
    <plugin
