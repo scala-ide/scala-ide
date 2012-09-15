@@ -16,8 +16,6 @@ import org.eclipse.jdt.internal.core.builder.BatchImageBuilder;
 import org.eclipse.jdt.internal.core.builder.JavaBuilder;
 import org.eclipse.jdt.internal.core.util.Util;
 
-import java.lang.reflect.Field;
-
 @SuppressWarnings("restriction")
 public privileged aspect ScalaJavaBuilderAspect {
   pointcut build() :
