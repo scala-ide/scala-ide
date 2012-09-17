@@ -11,7 +11,7 @@ import org.eclipse.core.resources.IFile
 import org.eclipse.jdt.core.{ IAnnotation, ICompilationUnit, IJavaElement, IMemberValuePair, Signature }
 import org.eclipse.jdt.core.compiler.CharOperation
 import org.eclipse.jdt.internal.core.{
-  Annotation, AnnotationInfo => JDTAnnotationInfo, AnnotatableInfo, CompilationUnit => JDTCompilationUnit, ImportContainer,
+  Annotation => JDTAnnotation, AnnotationInfo => JDTAnnotationInfo, AnnotatableInfo, CompilationUnit => JDTCompilationUnit, ImportContainer,
   ImportContainerInfo, ImportDeclaration, ImportDeclarationElementInfo, JavaElement, JavaElementInfo,
   MemberValuePair, OpenableElementInfo, SourceRefElement, TypeParameter, TypeParameterElementInfo}
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants
@@ -786,7 +786,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
           pos
         else {
           var name = annot.atp.typeSymbol.nameString
-          val handle = new Annotation(parentHandle, name)
+          val handle = new JDTAnnotation(parentHandle, name)
           
           val info = buildInfoForJavaAnnotation(annot, handle)
           
@@ -811,7 +811,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
       }}
       }
     
-      private def buildInfoForJavaAnnotation(ann: AnnotationInfo, handle: Annotation): JDTAnnotationInfo = {
+      private def buildInfoForJavaAnnotation(ann: AnnotationInfo, handle: JDTAnnotation): JDTAnnotationInfo = {
         assert(ann.atp.typeSymbolDirect.isJavaDefined, "You are passing a Scala annotation. Scala annotations cannot be exposed to JDT and they should be filtered out")
       
         def getMemberValuePairs(owner : JavaElement, memberValuePairs : List[(Name, ClassfileAnnotArg)]) : Array[IMemberValuePair] = {
@@ -857,7 +857,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
         val info = new JDTAnnotationInfo          
         info.nameStart = ann.pos.startOrPoint
         info.nameEnd = ann.pos.endOrPoint-1
-        info.members = if(ann.assocs.isEmpty) Annotation.NO_MEMBER_VALUE_PAIRS else getMemberValuePairs(handle, ann.assocs)
+        info.members = if(ann.assocs.isEmpty) JDTAnnotation.NO_MEMBER_VALUE_PAIRS else getMemberValuePairs(handle, ann.assocs)
         info
      }
   
