@@ -9,7 +9,7 @@ import java.util.{ Map => JMap }
 import org.eclipse.jdt.ui.JavaUI
 import org.eclipse.jdt.internal.core.Openable
 import org.eclipse.jface.text.{ Position => JFacePosition }
-import org.eclipse.jface.text.source.Annotation
+import org.eclipse.jface.text.source
 import scala.tools.eclipse.contribution.weaving.jdt.IScalaOverrideIndicator
 import org.eclipse.ui.texteditor.ITextEditor
 import org.eclipse.jdt.internal.ui.javaeditor.EditorUtility
@@ -26,7 +26,7 @@ case class JavaIndicator(scu: ScalaCompilationUnit,
   methodName: String,
   methodTypeSignatures: List[String],
   text: String,
-  val isOverwrite: Boolean) extends Annotation(ScalaOverrideIndicatorBuilder.OVERRIDE_ANNOTATION_TYPE, false, text) with IScalaOverrideIndicator {
+  val isOverwrite: Boolean) extends source.Annotation(ScalaOverrideIndicatorBuilder.OVERRIDE_ANNOTATION_TYPE, false, text) with IScalaOverrideIndicator {
 
   def open() {
     val tpe0 = JDTUtils.resolveType(scu.newSearchableEnvironment().nameLookup, packageName, typeNames, 0)
@@ -44,7 +44,7 @@ trait ScalaOverrideIndicatorBuilder { self : ScalaPresentationCompiler =>
   import ScalaOverrideIndicatorBuilder.OVERRIDE_ANNOTATION_TYPE
   
   case class ScalaIndicator(scu: ScalaCompilationUnit, text: String, base: Symbol, val isOverwrite: Boolean)
-    extends Annotation(OVERRIDE_ANNOTATION_TYPE, false, text) with IScalaOverrideIndicator {
+    extends source.Annotation(OVERRIDE_ANNOTATION_TYPE, false, text) with IScalaOverrideIndicator {
     def open = {
       ask { () => locate(base, scu) } map {
         case (file, pos) =>
