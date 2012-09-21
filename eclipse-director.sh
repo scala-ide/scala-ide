@@ -132,7 +132,9 @@ while [ $# -gt 0 ]; do
             $eclipse_dir/eclipse $eclipse_opt \
                 -application $app \
                 -repository $eclipse_repo \
-                -list
+                -list \
+                | grep feature.group \
+                | awk -F "=" '{print $1}'
             shift
             ;;
 
