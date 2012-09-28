@@ -87,4 +87,11 @@ class HyperlinkDetectorTests {
     val oracle = List(Link("type util.Box.myInt"), Link("method util.Full.apply", "object util.Full"))
     loadTestUnit("bug1000656/Client.scala").andCheckAgainst(oracle)
   }
+  
+  @Test
+  def hyperlinkOnList_t1001215() {
+    val oracle = List(Link("method scala.collection.immutable.List.apply", "object scala.collection.immutable.List"))
+    
+    loadTestUnit("t1001215/A.scala").andCheckAgainst(oracle)
+  }
 }
