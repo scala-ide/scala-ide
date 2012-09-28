@@ -24,7 +24,10 @@ class ExtractMethodAction extends RefactoringAction {
     
     val refactoring = file.withSourceFile((sourceFile, compiler) => new ExtractMethod with GlobalIndexes with NameValidation {
       val global = compiler
-      val index = GlobalIndex(askLoadedAndTypedTreeForFile(sourceFile).left.get)
+      val index = {
+        val tree = askLoadedAndTypedTreeForFile(sourceFile).left.get
+        global.ask(() => GlobalIndex(tree))
+      }
     })()
     
     var name = ""
