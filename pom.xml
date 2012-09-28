@@ -76,7 +76,6 @@
     </profile>
 
     <profile>
-      <!-- Scala 2.10.x -->
       <id>scala-2.10.x</id>
       <properties>
         <scala.version>2.10.0-SNAPSHOT</scala.version>
@@ -85,12 +84,27 @@
         <sbt.compiled.version>2.10</sbt.compiled.version>
         <version.suffix>2_10</version.suffix>
 
-        <repo.scala-refactoring>${repo.scala-ide.root}/scala-refactoring-trunk</repo.scala-refactoring>
-        <repo.scalariform>${repo.scala-ide.root}/scalariform-trunk</repo.scalariform>
+        <repo.scala-refactoring>${repo.scala-ide.root}/scala-refactoring-210x</repo.scala-refactoring>
+        <repo.scalariform>${repo.scala-ide.root}/scalariform-210x</repo.scalariform>
         <repo.typesafe>http://repo.typesafe.com/typesafe/ide-2.10</repo.typesafe>
       </properties>
     </profile>
 
+    <profile>
+      <id>scala-2.11.x</id>
+      <properties>
+        <scala.version>2.11.0-SNAPSHOT</scala.version>
+        <scala.major.minor.version>2.11</scala.major.minor.version>
+        <scala.library.version>${scala.version}</scala.library.version>
+        <sbt.compiled.version>2.11</sbt.compiled.version>
+        <version.suffix>2_11</version.suffix>
+
+        <repo.scala-refactoring>${repo.scala-ide.root}/scala-refactoring-211x</repo.scala-refactoring>
+        <repo.scalariform>${repo.scala-ide.root}/scalariform-211x</repo.scalariform>
+        <repo.typesafe>http://repo.typesafe.com/typesafe/ide-2.11</repo.typesafe>
+      </properties>
+    </profile>
+    
     <profile>
       <!-- Eclipse Juno -->
       <id>eclipse-juno</id>
