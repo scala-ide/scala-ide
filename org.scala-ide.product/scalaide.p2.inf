@@ -1,0 +1,7 @@
+instructions.configure=\
+  addRepository(type:0,location:http${#58}//download.eclipse.org/eclipse/updates/3.7,name:The Eclipse Project Updates);\
+  addRepository(type:1,location:http${#58}//download.eclipse.org/eclipse/updates/3.7,name:The Eclipse Project Updates);\
+  addRepository(type:0,location:http${#58}//download.eclipse.org/releases/indigo,name:Indigo);\
+  addRepository(type:1,location:http${#58}//download.eclipse.org/releases/indigo,name:Indigo);\
+  addRepository(type:0,location:http${#58}//download.scala-ide.org/ecosystem/dev-milestone-2.9/site/,name:Scala IDE);\
+  addRepository(type:1,location:http${#58}//download.scala-ide.org/ecosystem/dev-milestone-2.9/site/,name:Scala IDE);

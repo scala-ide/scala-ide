@@ -15,7 +15,7 @@ trait HyperlinkTester extends TestProjectSetup {
   
   private final val HyperlinkMarker = "/*^*/"
 
-  case class Link(text: String)
+  case class Link(text: String*)
 
   /** Given a source `path`, load the corresponding scala `unit`. */
   def loadTestUnit(path: String): VerifyHyperlink = {
@@ -47,15 +47,9 @@ trait HyperlinkTester extends TestProjectSetup {
           // Verify Expectations
           assertTrue("no links found for `%s`".format(word), maybeLinks.isDefined)
           val links = maybeLinks.get
-          assertEquals("expected %d link, found %d".format(1, links.size), 1, links.size)
-          val link = links.head
-          assertEquals("text", oracle.text, link.getTypeLabel)
-          //assertEquals("offset", oracle.region.getOffset(), link.getHyperlinkRegion().getOffset())
-          unit.withSourceFile({ (sourceFile, compiler) =>
-            val offset = link.getHyperlinkRegion().getOffset()
-            val length = link.getHyperlinkRegion().getLength
-            val linkedPos = compiler.rangePos(sourceFile, offset, offset, offset + length)
-          })(None)
+          assertEquals("expected %d link, found %d".format(oracle.text.size, links.size), oracle.text.size, links.size)
+          val linkResults = links map (_.getTypeLabel)
+          assertEquals("text", oracle.text.toList.toString, linkResults.toList.toString)
         }
       }
     }

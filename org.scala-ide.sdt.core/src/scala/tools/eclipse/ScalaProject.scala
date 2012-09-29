@@ -44,15 +44,15 @@ object ScalaProject {
   /** Listen for [[IWorkbenchPart]] event and takes care of loading/discarding scala compilation units.*/
   private class ProjectPartListener(project: ScalaProject) extends PartAdapter with HasLogger {
     override def partOpened(part: IWorkbenchPart) {
-      logger.debug("open " + part.getTitle)
       doWithCompilerAndFile(part) { (compiler, ssf) =>
+        logger.debug("open " + part.getTitle)
         ssf.forceReload()
       }
     }
 
     override def partClosed(part: IWorkbenchPart) {
-      logger.debug("close " + part.getTitle)
       doWithCompilerAndFile(part) { (compiler, ssf) =>
+        logger.debug("close " + part.getTitle)
         ssf.discard()
       }
     }

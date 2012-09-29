@@ -41,7 +41,7 @@ trait ScalaJavaMapper extends ScalaAnnotationHelper with SymbolNameUtil with Has
 
     if (sym.isPackage) {
       val fullName = sym.fullName
-      val results = projects.map(p => Option(p.findPackageFragment(new Path(fullName))))
+      val results = projects.map(p => Option(p.findElement(new Path(fullName.replace('.', '/')))))
       results.flatten.headOption
     } else if (sym.isClass || sym.isModule) {
       val fullClassName = mapType(sym)

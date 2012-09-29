@@ -14,7 +14,7 @@ object StartupDiagnostics extends HasLogger {
   import ScalaPlugin.plugin
   
   private val INSTALLED_VERSION_KEY = plugin.pluginId + ".diagnostic.currentPluginVersion" 
-  private val ASK_DIAGNOSTICS = plugin.pluginId + ".diagnostic.askOnUpgrade"
+  val ASK_DIAGNOSTICS = plugin.pluginId + ".diagnostic.askOnUpgrade"
   
   private val weavingState = new WeavingStateConfigurer
   
@@ -22,7 +22,6 @@ object StartupDiagnostics extends HasLogger {
     val prefStore = plugin.getPreferenceStore
     val previousVersion = prefStore.getString(INSTALLED_VERSION_KEY)
     val currentVersion = plugin.getBundle.getVersion.toString
-    prefStore.setDefault(ASK_DIAGNOSTICS, true)
     val askDiagnostics = prefStore.getBoolean(ASK_DIAGNOSTICS)
     
     logger.info("startup diagnostics: previous version = " + previousVersion)

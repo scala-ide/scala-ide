@@ -9,6 +9,12 @@ BUNDLE_DIR=$TARGET_DIR/site
 EXPECTED_ARGS=4
 E_BADARGS=65
 
+if [[ ! -f ${ECLIPSE} ]]; then
+	echo "Please update ECLIPSE (${ECLIPSE}) to point to an existing Eclipse installation."
+	echo "Aborting.."
+	exit 1
+fi
+
 if [ $# -ne $EXPECTED_ARGS ]
 then
   echo "Usage: ./plugin-signing <path to keystore> <alias> <store password> <key password>"

@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.scala-ide</groupId>
+    <artifactId>org.scala-ide.build</artifactId>
+    <version>2.1.0-SNAPSHOT</version>
+  </parent>
+  <artifactId>org.scala-ide.product</artifactId>
+  <packaging>eclipse-repository</packaging>
+
+  <properties>
+    <!-- some default values, can be overwritten by profiles -->
+    <repo.scala-ide.ecosystem>${repo.scala-ide.root}/ecosystem/dev-milestone-2.9/site/</repo.scala-ide.ecosystem>
+  </properties>
+
+  <profiles>
+    <profile>
+      <!--- the profile using the default values. Scala 2.9.x -->
+      <id>scala-2.9.x</id>
+    </profile>
+
+    <profile>
+      <!-- Scala 2.10.x -->
+      <id>scala-2.10.x</id>
+      <properties>
+        <repo.scala-ide.ecosystem>${repo.scala-ide.root}/ecosystem/dev-milestone-milestone/site/</repo.scala-ide.ecosystem>
+        <scala.major.minor.version>2.10.0-M7</scala.major.minor.version>
+      </properties>
+    </profile>
+  </profiles>
+
+  <repositories>
+    <repository>
+      <id>scala-ide ecosystem</id>
+      <url>${repo.scala-ide.ecosystem}</url>
+      <layout>p2</layout>
+    </repository>
+    <repository>
+      <id>eclipse.${eclipse.codename}</id>
+      <name>Eclipse p2 repository</name>
+      <layout>p2</layout>
+      <url>${repo.eclipse}</url>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </repository>
+    <repository>
+      <id>ajdt.${eclipse.codename}</id>
+      <name>AJDT for Eclipse p2 repository</name>
+      <layout>p2</layout>
+      <url>${repo.ajdt}</url>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </repository>
+  </repositories>
+
+
+  <build>
+    <plugins>
+      <plugin>
+        <!-- enable tycho to support eclipse type artifacts -->
+        <groupId>org.eclipse.tycho</groupId>
+        <artifactId>tycho-maven-plugin</artifactId>
+        <extensions>true</extensions>
+      </plugin>
+      <plugin>
+        <groupId>org.eclipse.tycho</groupId>
+        <artifactId>target-platform-configuration</artifactId>
+        <version>${tycho.plugin.version}</version>
+        <configuration>
+          <environments>
+            <environment>
+              <os>linux</os>
+              <ws>gtk</ws>
+              <arch>x86_64</arch>
+            </environment>
+            <environment>
+              <os>linux</os>
+              <ws>gtk</ws>
+              <arch>x86</arch>
+            </environment>
+            <environment>
+              <os>macosx</os>
+              <ws>carbon</ws>
+              <arch>x86</arch>
+            </environment>
+            <environment>
+              <os>macosx</os>
+              <ws>cocoa</ws>
+              <arch>x86</arch>
+            </environment>
+            <environment>
+              <os>macosx</os>
+              <ws>cocoa</ws>
+              <arch>x86_64</arch>
+            </environment>
+            <environment>
+              <os>win32</os>
+              <ws>win32</ws>
+              <arch>x86</arch>
+            </environment>
+            <environment>
+              <os>win32</os>
+              <ws>win32</ws>
+              <arch>x86_64</arch>
+            </environment>
+          </environments>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.eclipse.tycho</groupId>
+        <artifactId>tycho-p2-repository-plugin</artifactId>
+        <version>${tycho.plugin.version}</version>
+        <configuration>
+          <includeAllDependencies>true</includeAllDependencies>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.eclipse.tycho</groupId>
+        <artifactId>tycho-p2-director-plugin</artifactId>
+        <version>${tycho.plugin.version}</version>
+        <executions>
+          <execution>
+            <id>materialize-products</id>
+            <goals>
+              <goal>materialize-products</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>archive-products</id>
+            <goals>
+              <goal>archive-products</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <formats>
+            <linux>tar.gz</linux>
+          </formats>
+          <products>
+            <product>
+              <id>scalaide.product.id</id>
+              <rootFolder>eclipse</rootFolder>
+              <archiveFileName>scala-SDK-2.1-M2-${scala.major.minor.version}</archiveFileName>
+            </product>
+          </products>
+          <installFeatures>true</installFeatures>
+          <profile>SDKProfile</profile>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>

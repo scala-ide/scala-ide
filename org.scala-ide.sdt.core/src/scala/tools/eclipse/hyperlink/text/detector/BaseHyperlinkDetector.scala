@@ -18,7 +18,7 @@ abstract class BaseHyperlinkDetector extends AbstractHyperlinkDetector {
   final def detectHyperlinks(textEditor: ITextEditor, currentSelection: IRegion, canShowMultipleHyperlinks: Boolean): Array[IHyperlink] = {
     if (textEditor == null) null // can be null if generated through ScalaPreviewerFactory
     else {
-      EditorUtils.getEditorScalaInput(textEditor) match {
+      EditorUtils.getEditorCompilationUnit(textEditor) match {
         case Some(scu) =>
 
           val hyperlinks = runDetectionStrategy(scu, textEditor, currentSelection)

@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?pde version="3.5"?>
+
+<product name="Typesafe Scala IDE" uid="scalaide.product.id" id="org.scala-ide.sdt.product" application="org.eclipse.ui.ide.workbench" version="1.0.0.qualifier" useFeatures="true" includeLaunchers="true">
+
+   <aboutInfo>
+      <image path="eclipse_lg.gif"/>
+      <text>
+         %productBlurb
+      </text>
+   </aboutInfo>
+
+   <configIni use="default">
+<!--      <macosx>config.ini</macosx>
+      <linux>config.ini</linux>
+      <win32>config.ini</win32> -->
+   </configIni>
+
+   <launcherArgs>
+      <vmArgs>-Xmx1500m
+-Xms100m
+-XX:MaxPermSize=128m</vmArgs>
+      <vmArgsMac>
+-XstartOnFirstThread
+-Dorg.eclipse.swt.internal.carbon.smallFonts</vmArgsMac>
+   </launcherArgs>
+
+   <windowImages i16="eclipse.gif" i32="eclipse32.gif" i48="eclipse48.gif" i64="eclipse.png" i128="eclipse32.png"/>
+
+   <splash
+      location="org.eclipse.platform"
+      startupProgressRect="0,280,455,15"
+      startupMessageRect="7,220,441,20"
+      startupForegroundColor="C8D5EA" />
+   <launcher>
+      <solaris/>
+      <win useIco="false">
+         <bmp/>
+      </win>
+   </launcher>
+
+   <intro introId="org.eclipse.ui.intro.universal"/>
+
+   <vm>
+      <macos include="true">org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6</macos>
+   </vm>
+
+   <features>
+      <feature id="org.scala-ide.sdt.feature"/>
+      <feature id="org.scala-ide.sdt.weaving.feature"/>
+      <feature id="org.scalaide.worksheet.feature"/>
+      <feature id="org.eclipse.cvs"/>
+      <feature id="org.eclipse.equinox.p2.core.feature"/>
+      <feature id="org.eclipse.equinox.p2.extras.feature"/>
+      <feature id="org.eclipse.equinox.p2.rcp.feature"/>
+      <feature id="org.eclipse.equinox.p2.user.ui"/>
+      <feature id="org.eclipse.equinox.weaving.sdk"/>
+      <feature id="org.eclipse.help"/>
+      <feature id="org.eclipse.pde"/>
+      <feature id="org.eclipse.jdt"/>
+      <feature id="org.eclipse.platform"/>
+      <feature id="org.eclipse.rcp"/>
+   </features>
+   <configurations>
+      <plugin id="org.eclipse.core.runtime" autoStart="true" startLevel="4" />
+      <plugin id="org.eclipse.equinox.simpleconfigurator" autoStart="true" startLevel="1" />
+
+      <!-- Needed in order for the update manager to work. -->
+      <plugin id="org.eclipse.equinox.common" autostart="true" startLevel="2" />
+      <plugin id="org.eclipse.equinox.ds" autoStart="true" startLevel="4" />
+      <plugin id="org.eclipse.update.configurator" autostart="true" level="4" />
+      <property name="equinox.use.ds" value="true" />
+      <property name="org.eclipse.update.reconcile" value="false" />
+
+      <property name="eclipse.p2.data.area" value="@config.dir/../p2/" />
+      <property name="eclipse.p2.profile" value="SDKProfile" />
+      <property name="eclipse.buildId" value="2.1-M2-Typesafe" />
+   </configurations>
+
+</product>
