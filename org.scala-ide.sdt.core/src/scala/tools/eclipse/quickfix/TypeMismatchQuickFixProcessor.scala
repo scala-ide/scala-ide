@@ -4,7 +4,7 @@ package scala.tools.eclipse.quickfix
 import java.util.regex.Pattern
 
 /**
- * @author ivcha
+ * @author Ivan Kuraj
  * This object is used for applying code transformations based on the found and required type
  * extract from the annotation message (such as quick fix message) and the expression in the source code.
  * The object arguments are: found type string, required type string and annotation string, respective and
@@ -28,7 +28,7 @@ object TypeMismatchQuickFixProcessor extends
       ),
       // "type mismatch: found T; required Option[T]" -> suggest to wrap the result in Some()
       FoundToRequiredTypeCase(
-        List("Some(%s)"),
+        List("Option(%s)", "Some(%s)"),
         Pattern.compile("(.*)"), Pattern.compile("Option\\[(.*)\\]"), Pattern.compile("^(.*)$")
       )
     )
