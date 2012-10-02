@@ -7,7 +7,7 @@ import java.util.regex.Pattern
  * @author Ivan Kuraj
  * This object is used for applying code transformations based on the found and required type
  * extract from the annotation message (such as quick fix message) and the expression in the source code.
- * The object arguments are: found type string, required type string and annotation string, respective and
+ * The object arguments are: found type string, required type string and annotation string, respectively and
  * the result is a list of strings which should replace the annotation string
  */
 object TypeMismatchQuickFixProcessor extends
@@ -31,6 +31,13 @@ object TypeMismatchQuickFixProcessor extends
         List("Option(%s)", "Some(%s)"),
         Pattern.compile("(.*)"), Pattern.compile("Option\\[(.*)\\]"), Pattern.compile("^(.*)$")
       )
+      // TODO: compiler does not return annotations properly, uncomment this and tests when it is fixed
+      // "type mismatch: found BasicType(T); required Option[T]" -> suggest to wrap the result in Some()
+//      ,
+//      FoundToRequiredTypeCase(
+//        List("Option(%s)", "Some(%s)"),
+//        Pattern.compile("(?:java\\.lang\\.)([a-zA-Z&&[^\\(\\)]]+)\\(.*\\)"), Pattern.compile("Option\\[(.*)\\]"), Pattern.compile("^(.*)$")
+//      )
     )
   
   /**
@@ -73,6 +80,7 @@ abstract class SimpleFormatQuickFixCase(formatStrings: List[String]) extends Typ
  * capturing all groups according to the found and required patterns and compares them for match -
  * if all match, the replacement is proceeded by extracting inject strings from the annotation pattern
  * and applying them to SimpleFormatQuickFixCase
+ * 
  * found and required patterns should extract the same number of groups
  * annotation string should extract required number of groups to feed the given format string
  */
