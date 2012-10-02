@@ -53,4 +53,21 @@ class CaseClassTest extends AbstractSymbolClassifierTest {
       Map("CC" -> CaseClass))
   }
 
+  @Test
+  @Ignore("Enable when ticket #1001171 is fixed")
+  def infix_notation_for_extractors() {
+    checkSymbolClassification("""
+        class X {
+          val a Foo b = Foo(1, 2)
+        }
+        case class Foo(a: Int, b: Int)
+        """, """
+        class X {
+          val a $C$ b = $C$(1, 2)
+        }
+        case class $C$(a: Int, b: Int)
+        """,
+        Map("C" -> CaseClass))
+  }
+
 }
