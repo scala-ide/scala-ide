@@ -13,17 +13,23 @@
   <packaging>bundle</packaging>
 
   <properties>
-    <!-- default value for Scala 2.10+, can be overwritten by profiles -->
-    <!-- dirty trick to avoid code duplication -->
-    <scala.library.third-part>scala-actors</scala.library.third-part>
+    <!-- default value for Scala 2.9.x, can be overwritten by profiles -->
+    <scala.library.third-part>scala-dbc</scala.library.third-part>
   </properties>
 
   <profiles>
     <profile>
-      <!--- the profile using the default values. Scala 2.9.x -->
-      <id>scala-2.9.x</id>
+      <!--- the profile using the default values. Scala 2.10.x -->
+      <id>scala-2.10.x</id>
       <properties>
-        <scala.library.third-part>scala-dbc</scala.library.third-part>
+        <scala.library.third-part>scala-actors</scala.library.third-part>
+      </properties>
+    </profile>
+    <profile>
+      <!--- the profile using the default values. Scala 2.11.x -->
+      <id>scala-2.11.x</id>
+      <properties>
+        <scala.library.third-part>scala-actors</scala.library.third-part>
       </properties>
     </profile>
   </profiles>
