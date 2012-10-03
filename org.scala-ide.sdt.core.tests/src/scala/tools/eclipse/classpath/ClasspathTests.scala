@@ -21,6 +21,17 @@ import scala.tools.eclipse.testsetup.SDTTestUtils
 
 object ClasspathTests extends TestProjectSetup("classpath")
 
+/** This test class relies on JARs located in "test-workspace/classpath/lib/${Scala.shortVersion}.x". 
+ *  If you need to support a new Scala major version, you'll have to:
+ * 
+ *  - Add a new folder under "test-workspace/classpath/lib/". Name the folder "${Scala.shortVersion}.x".
+ *  - In the freshly created folder:
+ *     + Copy "binary-scala-library" from on of the existing "test-workspace/classpath/lib/${Scala.shortVersion}.x/binary-scala-library"
+ *     + Inside the copied "binary-scala-library", update the "version.number" in the library.properties.
+ *     + Create a JAR of "binary-scala-library" and call it "scala-library.jar"
+ *     + Create a copy of the freshly created "scala-library.jar" and name it "my-scala-library.jar"
+ *  - Update the logic in `ClasspathTests.createIncompatibleScalaLibraryEntry`
+ */
 class ClasspathTests {
   
   import ClasspathTests._
@@ -301,7 +312,8 @@ class ClasspathTests {
         (ScalaPlugin.plugin.shortScalaVer match {
           case "2.8" => "2.9"
           case "2.9" => "2.10"
-          case "2.10" => "2.8"
+          case "2.10" => "2.11"
+          case "2.11" => "2.9"
           case _ =>
             fail("Unsupported embedded scala library version " + ScalaPlugin.plugin.scalaVer +". Please update the test.")
             ""
