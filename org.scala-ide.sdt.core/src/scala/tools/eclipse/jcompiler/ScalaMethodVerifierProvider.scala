@@ -146,9 +146,11 @@ class ScalaMethodVerifierProvider extends IMethodVerifierProvider with HasLogger
         def isConcreteMethod(methodOwner: Symbol, abstractMethod: MethodBinding) = {
           // Checks if `methodOwner`'s contain a non-deferred (i.e. concrete) member that matches `abstractMethod` definition
           val methodSymbol = findMethodSymbol(methodOwner, abstractMethod)
-          val isConcreteMethod = methodSymbol.nonEmpty && {
-            val isDeferredMethod = methodSymbol.exists(_.isDeferred)
-            logger.debug("found %s method symbol: %s" format (abstractMethod.selector.mkString, methodSymbol))
+          val isConcreteMethod = methodSymbol exists { sym =>
+            val isDeferredMethod = sym.isDeferred
+            logger.debug("found %s method symbol: %s [deferred: %b]" format (abstractMethod.selector.mkString, sym, isDeferredMethod))
+            logger.debug("..but after sym.initialize: " + { sym.initialize; sym.isDeferred })
+
             !isDeferredMethod
           }
           isConcreteMethod
