@@ -7,15 +7,7 @@ import org.eclipse.jface.text.DocumentCommand
 import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.TextViewer
 
-class TestCommand(cOffset: Int, cLength: Int, cText: String, cCaretOffset: Int, cShiftsCaret: Boolean, cDoIt: Boolean) extends DocumentCommand {
-  caretOffset = cCaretOffset
-  doit = cDoIt
-  length = cLength
-  offset = cOffset
-  text = cText
-  shiftsCaret = cShiftsCaret
-  
-}
+import AutoEditStrategyTests._
 
 /**
  * Those are not real test (does not check the document after applying the change), just regression tests.
@@ -99,14 +91,4 @@ class TestBracketStrategy {
 
     checkCommand(6, 1, "", -1, true, true, command)
   }
-  
-  def checkCommand(offset: Int, length: Int, text: String, caretOffset: Int, shiftsCaret: Boolean, doit: Boolean, command: DocumentCommand) {
-    assertEquals("Bad resulting offset", offset, command.offset)
-    assertEquals("Bad resulting lenght", length, command.length)
-    assertEquals("Bad resulting text", text, command.text)
-    assertEquals("Bad resulting carretOffset", caretOffset, command.caretOffset)
-    assertEquals("Bad resulting shiftsCaret", shiftsCaret, command.shiftsCaret)
-    assertEquals("Bad resulting doit", doit, command.doit)
-  }
-
 }
