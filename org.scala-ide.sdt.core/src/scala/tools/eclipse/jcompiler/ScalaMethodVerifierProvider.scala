@@ -44,9 +44,11 @@ class ScalaMethodVerifierProvider extends IMethodVerifierProvider with HasLogger
   /** Checks that `abstractMethod` is a non-deferred member of a Scala Trait. */
   def isConcreteTraitMethod(abstractMethod: MethodBinding): Boolean = {
     Utils.tryExecute {
+      logger.debug("Entered `isConcreteTraitMethod`")
       // get the file containing the declaration of the abstract method
       val maybeFile = getFile(abstractMethod)
 
+      logger.debug("maybeFile: " + maybeFile)
       maybeFile.map {file =>
         val fileExtension = file.getFullPath().getFileExtension()
 
@@ -80,6 +82,7 @@ class ScalaMethodVerifierProvider extends IMethodVerifierProvider with HasLogger
      * Note that the returned path contains includes the project's folder where the file resides. */
     val fileName = Option(abstractMethod.declaringClass.getFileName())
     
+    logger.debug("getFile: " + fileName)
     fileName.map {name => 
       val qualifiedFileName = name.mkString
 
@@ -146,9 +149,11 @@ class ScalaMethodVerifierProvider extends IMethodVerifierProvider with HasLogger
         def isConcreteMethod(methodOwner: Symbol, abstractMethod: MethodBinding) = {
           // Checks if `methodOwner`'s contain a non-deferred (i.e. concrete) member that matches `abstractMethod` definition
           val methodSymbol = findMethodSymbol(methodOwner, abstractMethod)
-          val isConcreteMethod = methodSymbol.nonEmpty && {
-            val isDeferredMethod = methodSymbol.exists(_.isDeferred)
-            logger.debug("found %s method symbol: %s" format (abstractMethod.selector.mkString, methodSymbol))
+          val isConcreteMethod = methodSymbol exists { sym =>
+            val isDeferredMethod = sym.isDeferred
+            logger.debug("found %s method symbol: %s [deferred: %b]" format (abstractMethod.selector.mkString, sym, isDeferredMethod))
+            logger.debug("..but after sym.initialize: " + { sym.initialize; sym.isDeferred })
+
             !isDeferredMethod
           }
           isConcreteMethod

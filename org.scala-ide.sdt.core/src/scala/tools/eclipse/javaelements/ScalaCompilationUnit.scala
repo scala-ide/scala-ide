@@ -67,7 +67,8 @@ trait ScalaCompilationUnit extends Openable
       val sourceLength = sourceFile.length
       
       try {
-        logger.info("[%s] buildStructure for %s".format(scalaProject.underlying.getName(), this.getResource()))
+        logger.info("[%s] buildStructure for %s (%s)".format(scalaProject.underlying.getName(), this.getResource(), sourceFile.file))
+
         compiler.withStructure(sourceFile) { tree =>
           compiler.askOption { () =>
               new compiler.StructureBuilderTraverser(this, info, tmpMap, sourceLength).traverse(tree)
