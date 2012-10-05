@@ -28,23 +28,6 @@ class TypeTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  @Ignore("Fails with 2.10. Need to investigate.")
-  def set_is_a_type() {
-    checkSymbolClassification("""
-      case class Bob(s: Set[Int])
-      object X {
-        val Bob(s) = Bob(Set())
-      }
-      """, """
-      case class Bob(s: $T$[$C$])
-      object X {
-        val Bob(s) = Bob($V$())
-      }
-      """,
-      Map("T" -> Type, "V" -> TemplateVal, "C" -> Class))
-  }
-
-  @Test
   def path_dependent_type() {
     checkSymbolClassification("""
       trait MTrait { trait KTrait[A] }
@@ -74,5 +57,37 @@ class TypeTest extends AbstractSymbolClassifierTest {
       }
       """,
       Map("C" -> Class, "TT" -> Trait))
+  }
+
+  @Test
+  @Ignore("Enable when ticket #1001239 is fixed")
+  def deep_type_projection() {
+    checkSymbolClassification("""
+      trait MTrait { trait KTrait[A] { trait HTrait } }
+      trait X {
+        def xs(m: MTrait#KTrait[Int]#HTrait)
+      }
+      """, """
+      trait MTrait { trait KTrait[A] { trait HTrait } }
+      trait X {
+        def xs(m: $TT  $#$TT  $[$C$]#$TT  $)
+      }
+      """,
+      Map("C" -> Class, "TT" -> Trait))
+  }
+
+  @Test
+  @Ignore("Enable when ticket #1001046 is fixed")
+  def classify_type_in_abstract_val() {
+    checkSymbolClassification("""
+      trait X {
+        val s: String
+      }
+      """, """
+      trait X {
+        val s: $TPE $
+      }
+      """,
+      Map("TPE" -> Type))
   }
 }

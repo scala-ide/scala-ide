@@ -128,4 +128,21 @@ class ClassTest extends AbstractSymbolClassifierTest {
         """,
       Map("CL" -> Class))
   }
+
+  @Test
+  @Ignore("does not work until presentation compiler stores more information in the AST (ticket #1001260)")
+  def early_initializer_in_combination_with_trait() {
+    checkSymbolClassification("""
+      object X extends {
+        val o = new Object
+      } with T
+      trait T
+      """, """
+      object X extends {
+        val o = new $CLS $
+      } with T
+      trait T
+      """,
+      Map("CLS" -> Class))
+  }
 }

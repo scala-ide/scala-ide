@@ -70,4 +70,17 @@ class ObjectTest extends AbstractSymbolClassifierTest {
       """,
       Map("CLS" -> Class, "OBJ" -> Object, "T" -> Type))
   }
+
+  @Test
+  @Ignore("Enable when ticket #1001024 is fixed")
+  def companion_object_should_not_be_treated_as_case_class() {
+    checkSymbolClassification("""
+      case class FooBar()
+      object FooBar
+      """, """
+      case class $CCLS$()
+      object $OBJ $
+      """,
+      Map("OBJ" -> Object, "CCLS" -> CaseClass))
+  }
 }
