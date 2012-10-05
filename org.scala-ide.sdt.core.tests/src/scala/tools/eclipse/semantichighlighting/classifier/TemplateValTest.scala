@@ -171,18 +171,24 @@ class TemplateValTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  @Ignore("Package object symbols are special, need to investigate")
+  @Ignore("does not work until presentation compiler stores more information in the AST (ticket #1001261)")
   def in_package_object() {
     checkSymbolClassification("""
+      object X {
+        val pv = packageObject.packageVal
+      }
       package object packageObject {
         val packageVal = 42
-        packageObject.packageVal
-      }""", """
-      package object packageObject {
-        val $  TVAL  $ = 42
-        packageObject.$  TVAL  $
-      }""",
-      Map("TVAL" -> TemplateVal))
+      }
+      """, """
+      object X {
+        val pv = $POBJ       $.$TVAL    $
+      }
+      package object $POBJ       $ {
+        val $TVAL    $ = 42
+      }
+      """,
+      Map("TVAL" -> TemplateVal, "POBJ" -> Package))
   }
 
 }

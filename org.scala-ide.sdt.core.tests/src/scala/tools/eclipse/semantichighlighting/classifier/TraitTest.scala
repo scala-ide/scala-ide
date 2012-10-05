@@ -41,4 +41,28 @@ class TraitTest extends AbstractSymbolClassifierTest {
       Map("TRAIT" -> Trait))
   }
 
+  @Test
+  @Ignore("Enable when ticket #1001176 is fixed")
+  def imported_self_reference_is_classified_as_trait() {
+    checkSymbolClassification("""
+        package ab {
+          trait TheTrait
+        }
+        package cd {
+          trait K { self: ab.TheTrait => }
+          import ab.TheTrait
+          trait M { self: TheTrait => }
+        }
+        """, """
+        package ab {
+          trait $TRAIT $
+        }
+        package cd {
+          trait K { self: ab.$TRAIT $ => }
+          import ab.$TRAIT $
+          trait M { self: $TRAIT $ => }
+        }
+        """,
+        Map("TRAIT" -> Trait))
+  }
 }
