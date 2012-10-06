@@ -97,34 +97,34 @@ class ScalaCompletions extends HasLogger {
       // if there is data to work with, look for a type in the classpath
 
       // the requestor will receive the search results
-      val requestor= new TypeNameRequestor() {
+      val requestor = new TypeNameRequestor() {
         override def acceptType(modifiers: Int, packageNameArray: Array[Char], simpleTypeName: Array[Char], enclosingTypeName: Array[Array[Char]], path: String) {
-	      val packageName= new String(packageNameArray)
-	      val simpleName= new String(simpleTypeName)
-	      val fullyQualifiedName= (if (packageName.length > 0) packageName + '.' else "") + simpleName
-	      
-	      logger.info("Found type: " + fullyQualifiedName)
+          val packageName = new String(packageNameArray)
+          val simpleName = new String(simpleTypeName)
+          val fullyQualifiedName = (if (packageName.length > 0) packageName + '.' else "") + simpleName
 
-	      if (!isAlreadyListed(fullyQualifiedName, simpleName)) {
-	        logger.info("Adding type: " + fullyQualifiedName)
+          logger.info("Found type: " + fullyQualifiedName)
+
+          if (simpleName.indexOf('$') < 0 && !isAlreadyListed(fullyQualifiedName, simpleName)) {
+            logger.info("Adding type: " + fullyQualifiedName)
             // if the type is not already in the completion list, add it
-	        buff+= CompletionProposal(
-	            MemberKind.Object,
-	            start,
-	            simpleName,
-	            simpleName,
-	            "",
-	            packageName,
-	            50,
-	            HasArgs.NoArgs,
-	            true,
-	            List(),
-	            fullyQualifiedName,
-	            true)
-	      }
+            buff += CompletionProposal(
+              MemberKind.Object,
+              start,
+              simpleName,
+              simpleName,
+              "",
+              packageName,
+              50,
+              HasArgs.NoArgs,
+              true,
+              List(),
+              fullyQualifiedName,
+              true)
+          }
         }
       }
-      
+
       // launch the JDT search, for a type in the package, starting with the given prefix
       new SearchEngine().searchAllTypeNames(
           packageName,
@@ -134,7 +134,7 @@ class ScalaCompletions extends HasLogger {
           IJavaSearchConstants.TYPE,
           SearchEngine.createJavaSearchScope(Array[IJavaElement](scu.scalaProject.javaProject), true),
           requestor,
-          IJavaSearchConstants.WAIT_UNTIL_READY_TO_SEARCH, // wait until all types are indexed by the JDT
+          IJavaSearchConstants.FORCE_IMMEDIATE_SEARCH, // don't wait until all types are indexed by the JDT
           null)
           
     }
