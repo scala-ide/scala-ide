@@ -99,4 +99,66 @@ class MethodTest extends AbstractSymbolClassifierTest {
       }""",
       Map("METH" -> Method))
   }
+
+  @Test
+  @Ignore("does not work until presentation compiler stores more information in the AST (ticket #1001223)")
+  def param_of_classOf() {
+    checkSymbolClassification("""
+      object X {
+        val x = classOf[Int]
+      }
+      """, """
+      object X {
+        val x = classOf[$T$]
+      }
+      """,
+      Map("T" -> Type))
+  }
+
+  @Test
+  @Ignore("does not work until presentation compiler stores more information in the AST (ticket #1001228)")
+  def combination_of_implicit_conversion_and_higher_order_method_call() {
+    checkSymbolClassification("""
+      object X {
+        val s: String = Seq(1).map(param=>param)
+        implicit def l2s(i: Seq[Int]): String = i.mkString
+      }
+      """, """
+      object X {
+        val s: String = $O$(1).$M$($P  $=>$P  $)
+        implicit def l2s(i: Seq[Int]): String = i.mkString
+      }
+      """,
+      Map("O" -> Object, "M" -> Method, "P" -> Param))
+  }
+
+  @Test
+  @Ignore("does not work until presentation compiler stores more information in the AST (ticket #1001242)")
+  def internal_notation_of_operator_names() {
+    checkSymbolClassification("""
+      object X {
+        val xs = Nil $colon$colon 0
+      }
+      """, """
+      object X {
+        val xs = Nil $METHOD    $ 0
+      }
+      """,
+      Map("METHOD" -> Method))
+  }
+
+  @Test
+  @Ignore("does not work until presentation compiler stores more information in the AST (ticket #1001259)")
+  def param_of_super() {
+    checkSymbolClassification("""
+      object X {
+        val bool = super[Object].equals(this)
+      }
+      """, """
+      object X {
+        val bool = super[$CLS $].equals(this)
+      }
+      """,
+      Map("CLS" -> Class))
+  }
 }
