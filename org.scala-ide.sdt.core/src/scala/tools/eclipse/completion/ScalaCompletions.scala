@@ -8,6 +8,8 @@ import scala.collection.mutable
 import org.eclipse.core.runtime.NullProgressMonitor
 import scala.tools.eclipse.logging.HasLogger
 import scala.tools.eclipse.InteractiveCompilationUnit
+import scala.collection.mutable.MultiMap
+import scala.tools.eclipse.util.Utils
 
 /** Base class for Scala completions. No UI dependency, can be safely used in a
  *  headless testing environment.
@@ -51,11 +53,10 @@ class ScalaCompletions extends HasLogger {
     
     def nameMatches(sym : compiler.Symbol) = prefixMatches(sym.decodedName.toString.toArray, prefix)
     
-    val buff = new mutable.ListBuffer[CompletionProposal]
+    val listedTypes = new mutable.HashMap[String, mutable.Set[CompletionProposal]] with MultiMap[String, CompletionProposal]
     
-    def isAlreadyListed(fullyQualifiedName: String, display: String) = buff.exists((completion) => fullyQualifiedName.equals(completion.fullyQualifiedName) && display == completion.display)
-
-    def isCompletionAlreadyListed(completion: CompletionProposal) = isAlreadyListed(completion.fullyQualifiedName, completion.display)
+    def isAlreadyListed(fullyQualifiedName: String, display: String) = 
+      listedTypes.entryExists(fullyQualifiedName, _.display == display)
       
     for (completions <- completed.get.left.toOption) {
       compiler.askOption { () =>
@@ -63,12 +64,12 @@ class ScalaCompletions extends HasLogger {
           completion match {
             case compiler.TypeMember(sym, tpe, true, inherited, viaView) if !sym.isConstructor && nameMatches(sym) =>
               val completionProposal= compiler.mkCompletionProposal(start, sym, tpe, inherited, viaView)
-              if (!isCompletionAlreadyListed(completionProposal))
-                buff += completionProposal
+              if (!isAlreadyListed(completionProposal.fullyQualifiedName, completionProposal.display))
+                listedTypes.addBinding(completionProposal.fullyQualifiedName, completionProposal)
             case compiler.ScopeMember(sym, tpe, true, _) if !sym.isConstructor && nameMatches(sym) =>
               val completionProposal= compiler.mkCompletionProposal(start, sym, tpe, false, compiler.NoSymbol)
-              if (!isCompletionAlreadyListed(completionProposal))
-              	buff += completionProposal
+              if (!isAlreadyListed(completionProposal.fullyQualifiedName, completionProposal.display))
+              	listedTypes.addBinding(completionProposal.fullyQualifiedName, completionProposal)
             case _ =>
           }
         }
@@ -91,7 +92,7 @@ class ScalaCompletions extends HasLogger {
       case _ => null
     }
     
-    logger.info("Search for: " + (if (packageName == null) "null" else new String(packageName)) + " . " + new String(prefix))
+    logger.info("Search for: [" + Option(packageName).map(_.mkString) + "]." + new String(prefix))
     
     if (prefix.length > 0 || packageName != null) {
       // if there is data to work with, look for a type in the classpath
@@ -108,7 +109,7 @@ class ScalaCompletions extends HasLogger {
           if (simpleName.indexOf('$') < 0 && !isAlreadyListed(fullyQualifiedName, simpleName)) {
             logger.info("Adding type: " + fullyQualifiedName)
             // if the type is not already in the completion list, add it
-            buff += CompletionProposal(
+            listedTypes.addBinding(fullyQualifiedName, CompletionProposal(
               MemberKind.Object,
               start,
               simpleName,
@@ -120,7 +121,7 @@ class ScalaCompletions extends HasLogger {
               true,
               List(),
               fullyQualifiedName,
-              true)
+              true))
           }
         }
       }
@@ -139,6 +140,7 @@ class ScalaCompletions extends HasLogger {
           
     }
     
-    buff.toList
+    logger.debug("Added %d new types from classpath".format(listedTypes.size))
+    listedTypes.values.flatten.toList
   }
 }
