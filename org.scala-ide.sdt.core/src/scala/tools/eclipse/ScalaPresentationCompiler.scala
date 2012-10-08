@@ -130,13 +130,16 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings)
     op(tree)
   }
 
+  /** Ask with a default timeout. Keep around for compatibility with the m2 release. */
+  def askOption[A](op: () => A): Option[A] = askOption(op, 10000)
+  
   /** Perform `op' on the compiler thread. Catch all exceptions, and return
    *  None if an exception occured. TypeError and FreshRunReq are printed to
    *  stdout, all the others are logged in the platform error log.
    *
    *  There's a default timeout of 10s.
    */
-  def askOption[A](op: () => A, timeout: Int = 10000): Option[A] = {
+  def askOption[A](op: () => A, timeout: Int): Option[A] = {
     val res = askForResponse(op)
 
     res.get(timeout) match {
