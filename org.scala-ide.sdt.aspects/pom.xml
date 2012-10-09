@@ -45,7 +45,6 @@
               <target>1.5</target>
               <aspectDirectory>src</aspectDirectory>
               <Xlint>ignore</Xlint>
-              <Xreweavable>true</Xreweavable>
               <deprecation>true</deprecation>
             </configuration>
             <goals>
