@@ -30,6 +30,7 @@ import scala.tools.nsc.symtab.Flags
 import scala.tools.eclipse.completion.CompletionProposal
 import org.eclipse.jdt.core.IMethod
 import scala.tools.nsc.io.VirtualFile
+import scala.tools.nsc.interactive.MissingResponse
 
 class ScalaPresentationCompiler(project: ScalaProject, settings: Settings)
   extends Global(settings, new ScalaPresentationCompiler.PresentationReporter, project.underlying.getName)
@@ -136,13 +137,13 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings)
   /** Perform `op' on the compiler thread. Catch all exceptions, and return
    *  None if an exception occured. TypeError and FreshRunReq are printed to
    *  stdout, all the others are logged in the platform error log.
-   *
-   *  There's a default timeout of 10s.
    */
   def askOption[A](op: () => A, timeout: Int): Option[A] = {
-    val res = askForResponse(op)
+    val response = askForResponse(op)
 
-    res.get(timeout) match {
+    val res = if (ScalaPlugin.plugin.noTimeoutMode) Some(response.get) else response.get(timeout)
+
+    res match {
       case None =>
         eclipseLog.info("Timeout in askOption", new Throwable) // log a throwable for its stacktrace
         None
@@ -154,6 +155,7 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings)
               case e: TypeError                  => logger.info("TypeError in ask:\n" + e)
               case f: FreshRunReq                => logger.info("FreshRunReq in ask:\n" + f)
               case e @ InvalidCompanions(c1, c2) => reporter.warning(c1.pos, e.getMessage)
+              case m: MissingResponse            => logger.info("MissingResponse in ask. Called from: " + m.getStackTrace().mkString("\n"))
               case e                             => eclipseLog.error("Error during askOption", e)
             }
             None
