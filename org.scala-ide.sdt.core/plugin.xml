@@ -813,13 +813,10 @@
                   <count value="1"/>
                	  <iterate>
                      <adapt type="org.eclipse.jdt.core.IJavaElement">
-		                <test property="org.eclipse.debug.ui.matchesPattern" value="*.scala"/>
-		                <test property="org.eclipse.jdt.core.isInJavaProject"/>
-		                <test property="org.eclipse.jdt.core.hasTypeOnClasspath" value="junit.framework.Test"/>
-		                <or>
-                        <test property="scala.tools.eclipse.launching.canLaunchAsJUnit" forcePluginActivation="true"/>
-                        <test property="scala.tools.eclipse.launching.junit.canLaunchAsJUnit" forcePluginActivation="true"/>
-                        </or>
+                     <test property="org.eclipse.debug.ui.matchesPattern" value="*.scala"/>
+                     <test property="org.eclipse.jdt.core.isInJavaProject"/>
+                     <test property="org.eclipse.jdt.core.hasTypeOnClasspath" value="junit.framework.Test"/>
+                     <test property="scala.tools.eclipse.launching.canLaunchAsJUnit" forcePluginActivation="true"/>
 		             </adapt>
 		          </iterate>
                </with>
