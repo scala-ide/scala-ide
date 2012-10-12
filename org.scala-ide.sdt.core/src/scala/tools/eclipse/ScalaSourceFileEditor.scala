@@ -68,14 +68,18 @@ import org.eclipse.swt.events.VerifyEvent
 import org.eclipse.jface.text.ITextViewerExtension
 import scala.tools.eclipse.ui.SurroundSelectionStrategy
 import org.eclipse.jface.text.IDocumentExtension4
+import scala.tools.eclipse.util.EditorUtils
+import org.eclipse.swt.widgets.Composite
 
 
-class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
+class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor { self =>
 
   import ScalaSourceFileEditor._
 
   setPartName("Scala Editor")
 
+  private var occurrencesFinder: ScalaOccurrencesFinder = _
+  
   def scalaPrefStore = ScalaPlugin.prefStore
   def javaPrefStore = getPreferenceStore
 
@@ -156,28 +160,18 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
     } yield annotationModel
   
   private def performOccurrencesUpdate(selection: ITextSelection, documentLastModified: Long) {
-      
-    // TODO: find out why this code does a cast to IAdaptable before calling getAdapter 
-    val adaptable = getEditorInput.asInstanceOf[IAdaptable].getAdapter(classOf[IJavaElement])
-    // logger.info("adaptable: " + adaptable.getClass + " : " + adaptable.toString)
-
-    adaptable match {
-      case scalaSourceFile: ScalaSourceFile =>
-        val annotations = getAnnotations(selection, scalaSourceFile, documentLastModified)
-        for (annotationModel <- getAnnotationModelOpt) 
-          annotationModel.withLock {
-            annotationModel.replaceAnnotations(occurrenceAnnotations, annotations)
-            occurrenceAnnotations = annotations.keySet
-          }
-      case _ =>
-        // TODO: pop up a dialog explaining what needs to be fixed or fix it ourselves
-        Utils tryExecute (adaptable.asInstanceOf[ScalaSourceFile], // trigger the exception, so as to get a diagnostic stack trace 
-          msgIfError = Some("Could not recompute occurrence annotations: configuration problem"))
+    val annotations = getAnnotations(selection, getInteractiveCompilationUnit, documentLastModified)
+    for{
+      annotationModel <- getAnnotationModelOpt
+    } annotationModel.withLock {
+      annotationModel.replaceAnnotations(occurrenceAnnotations, annotations)
+      occurrenceAnnotations = annotations.keySet
     }
   }
 
-  private def getAnnotations(selection: ITextSelection, scalaSourceFile: ScalaSourceFile, documentLastModified: Long): Map[Annotation, Position] = {
-    val occurrences = ScalaOccurrencesFinder.findOccurrences(scalaSourceFile, selection.getOffset, selection.getLength, documentLastModified)
+  private def getAnnotations(selection: ITextSelection, unit: InteractiveCompilationUnit, documentLastModified: Long): Map[Annotation, Position] = {
+    val region = EditorUtils.textSelection2region(selection)
+    val occurrences = occurrencesFinder.findOccurrences(region, documentLastModified)
     for {
       Occurrences(name, locations) <- occurrences.toList
       location <- locations
@@ -206,12 +200,15 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
 
     val job = new Job("Updating occurrence annotations") {
       def run(monitor: IProgressMonitor) = {
-        performOccurrencesUpdate(selection, lastModified)
+        val fileName = getInteractiveCompilationUnit.file.name
+        Utils.debugTimed("Time elapsed for \"updateOccurrences\" in source " + fileName) { 
+          performOccurrencesUpdate(selection, lastModified)
+        }
         Status.OK_STATUS
       }
     }
-
-    job.setPriority(Job.INTERACTIVE)
+    // set low priority for update occurrences 
+    job.setPriority(Job.DECORATE)
     job.schedule()
   }
 
@@ -323,6 +320,7 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
 
   override def createPartControl(parent: org.eclipse.swt.widgets.Composite) {
     super.createPartControl(parent)
+    occurrencesFinder = new ScalaOccurrencesFinder(getInteractiveCompilationUnit)
     refactoring.RefactoringMenu.fillQuickMenu(this)
     getSourceViewer match {
       case sourceViewer: ITextViewerExtension =>
@@ -368,9 +366,10 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor {
 
   }
 
-  override def getInteractiveCompilationUnit(): Option[InteractiveCompilationUnit] =
+  override def getInteractiveCompilationUnit(): InteractiveCompilationUnit = {
     // getInputJavaElement always returns the right value
-    Some(getInputJavaElement().asInstanceOf[InteractiveCompilationUnit])
+    getInputJavaElement().asInstanceOf[InteractiveCompilationUnit]
+  }
 
 }
 

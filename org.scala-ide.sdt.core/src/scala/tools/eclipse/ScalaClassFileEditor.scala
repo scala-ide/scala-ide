@@ -54,8 +54,8 @@ class ScalaClassFileEditor extends ClassFileEditor with ScalaEditor {
     setAction("OpenEditor", openAction)
   }
 
-  override def getInteractiveCompilationUnit(): Option[InteractiveCompilationUnit] =
+  override def getInteractiveCompilationUnit(): InteractiveCompilationUnit = {
     // getInputJavaElement always returns the right value
-    Some(getInputJavaElement().asInstanceOf[InteractiveCompilationUnit])
-
+    getInputJavaElement().asInstanceOf[InteractiveCompilationUnit]
+  }
 }
