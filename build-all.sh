@@ -17,6 +17,16 @@ fi
 
 echo "Running with: mvn ${ARGS}"
 
+# the parent project
+cd ${ROOT_DIR}
+mvn ${ARGS}
+
+RES=$?
+if [ ${RES} != 0 ]
+then
+  exit ${RES}
+fi
+
 # the toolchain
 cd ${ROOT_DIR}/org.scala-ide.build-toolchain
 mvn ${ARGS}
