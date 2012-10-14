@@ -7,78 +7,90 @@
 package scala.tools.eclipse
 
 import java.util.ResourceBundle
+
 import scala.Option.option2Iterable
 import scala.tools.eclipse.javaelements.ScalaCompilationUnit
-import scala.tools.eclipse.javaelements.ScalaSourceFile
 import scala.tools.eclipse.markoccurrences.Occurrences
 import scala.tools.eclipse.markoccurrences.ScalaOccurrencesFinder
 import scala.tools.eclipse.semantichighlighting.SemanticHighlightingAnnotations
 import scala.tools.eclipse.semicolon.ShowInferredSemicolonsAction
 import scala.tools.eclipse.semicolon.ShowInferredSemicolonsBundle
+import scala.tools.eclipse.ui.SurroundSelectionStrategy
+import scala.tools.eclipse.util.EditorUtils
 import scala.tools.eclipse.util.RichAnnotationModel.annotationModel2RichAnnotationModel
-import scala.tools.eclipse.util.SWTUtils.fnToPropertyChangeListener
 import scala.tools.eclipse.util.SWTUtils
+import scala.tools.eclipse.util.SWTUtils.fnToPropertyChangeListener
 import scala.tools.eclipse.util.Utils
-import org.eclipse.core.runtime.jobs.Job
-import org.eclipse.core.runtime.IAdaptable
+
 import org.eclipse.core.runtime.IProgressMonitor
-import org.eclipse.core.runtime.IStatus
 import org.eclipse.core.runtime.Status
+import org.eclipse.core.runtime.jobs.Job
 import org.eclipse.jdt.core.dom.CompilationUnit
-import org.eclipse.jdt.core.IJavaElement
+import org.eclipse.jdt.internal.ui.javaeditor.CompilationUnitEditor
+import org.eclipse.jdt.internal.ui.javaeditor.JavaSourceViewer
 import org.eclipse.jdt.internal.ui.javaeditor.selectionactions.SelectionHistory
 import org.eclipse.jdt.internal.ui.javaeditor.selectionactions.StructureSelectHistoryAction
 import org.eclipse.jdt.internal.ui.javaeditor.selectionactions.StructureSelectionAction
-import org.eclipse.jdt.internal.ui.javaeditor.CompilationUnitEditor
-import org.eclipse.jdt.internal.ui.javaeditor.JavaSourceViewer
 import org.eclipse.jdt.ui.actions.IJavaEditorActionDefinitionIds
 import org.eclipse.jdt.ui.text.JavaSourceViewerConfiguration
 import org.eclipse.jface.action.Action
 import org.eclipse.jface.action.IContributionItem
 import org.eclipse.jface.action.MenuManager
 import org.eclipse.jface.action.Separator
-import org.eclipse.jface.text.information.InformationPresenter
-import org.eclipse.jface.text.source.Annotation
-import org.eclipse.jface.text.source.AnnotationPainter
-import org.eclipse.jface.text.source.IAnnotationModel
-import org.eclipse.jface.text.source.ISourceViewer
-import org.eclipse.jface.text.source.SourceViewerConfiguration
 import org.eclipse.jface.text.AbstractReusableInformationControlCreator
 import org.eclipse.jface.text.DefaultInformationControl
 import org.eclipse.jface.text.IDocument
+import org.eclipse.jface.text.IDocumentExtension4
 import org.eclipse.jface.text.ITextOperationTarget
 import org.eclipse.jface.text.ITextSelection
+import org.eclipse.jface.text.ITextViewerExtension
 import org.eclipse.jface.text.Position
+import org.eclipse.jface.text.information.InformationPresenter
+import org.eclipse.jface.text.source.Annotation
+import org.eclipse.jface.text.source.AnnotationPainter
+import org.eclipse.jface.text.source.IAnnotationAccess
+import org.eclipse.jface.text.source.IAnnotationModel
+import org.eclipse.jface.text.source.IOverviewRuler
+import org.eclipse.jface.text.source.ISharedTextColors
+import org.eclipse.jface.text.source.ISourceViewer
+import org.eclipse.jface.text.source.SourceViewerConfiguration
 import org.eclipse.jface.util.IPropertyChangeListener
 import org.eclipse.jface.util.PropertyChangeEvent
 import org.eclipse.jface.viewers.ISelection
 import org.eclipse.swt.widgets.Shell
+import org.eclipse.ui.ISelectionListener
+import org.eclipse.ui.IWorkbenchPart
 import org.eclipse.ui.texteditor.IAbstractTextEditorHelpContextIds
 import org.eclipse.ui.texteditor.ITextEditorActionConstants
 import org.eclipse.ui.texteditor.IUpdate
 import org.eclipse.ui.texteditor.IWorkbenchActionDefinitionIds
 import org.eclipse.ui.texteditor.SourceViewerDecorationSupport
 import org.eclipse.ui.texteditor.TextOperationAction
-import org.eclipse.ui.ISelectionListener
-import org.eclipse.ui.IWorkbenchPart
-import ScalaSourceFileEditor.OCCURRENCE_ANNOTATION
-import ScalaSourceFileEditor.SCALA_EDITOR_SCOPE
-import ScalaSourceFileEditor.bundleForConstructedKeys
-import org.eclipse.swt.events.VerifyEvent
-import org.eclipse.jface.text.ITextViewerExtension
-import scala.tools.eclipse.ui.SurroundSelectionStrategy
-import org.eclipse.jface.text.IDocumentExtension4
-import scala.tools.eclipse.util.EditorUtils
-import org.eclipse.swt.widgets.Composite
 
 
 class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor { self =>
-
   import ScalaSourceFileEditor._
 
-  setPartName("Scala Editor")
+  private var occurrenceAnnotations: Set[Annotation] = Set()
+  private var occurrencesFinder: ScalaOccurrencesFinder = _  
+  private val preferenceListener: IPropertyChangeListener = handlePreferenceStoreChanged _
+  private lazy val selectionListener = new ISelectionListener() {
+    def selectionChanged(part: IWorkbenchPart, selection: ISelection) {
+      selection match {
+        case textSel: ITextSelection => askForOccurrencesUpdate(textSel)
+        case _ =>
+      }
+    }
+  }
+  private lazy val tpePresenter = {
+    val infoPresenter = new InformationPresenter(controlCreator) 
+    infoPresenter.install(getSourceViewer)
+    infoPresenter.setInformationProvider(actions.TypeOfExpressionProvider, IDocument.DEFAULT_CONTENT_TYPE)
+    infoPresenter
+  }
 
-  private var occurrencesFinder: ScalaOccurrencesFinder = _
+  setPartName("Scala Editor")
+  scalaPrefStore.addPropertyChangeListener(preferenceListener)
   
   def scalaPrefStore = ScalaPlugin.prefStore
   def javaPrefStore = getPreferenceStore
@@ -117,6 +129,9 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor { sel
     setAction(ShowInferredSemicolonsAction.ACTION_ID, showInferredSemicolons)
 
     val openAction = new Action {
+      private def scalaCompilationUnit: Option[ScalaCompilationUnit] = 
+        Option(getInteractiveCompilationUnit) map (_.asInstanceOf[ScalaCompilationUnit])
+
       override def run {
         scalaCompilationUnit foreach { scu =>
           scu.followDeclaration(ScalaSourceFileEditor.this, getSelectionProvider.getSelection.asInstanceOf[ITextSelection])
@@ -126,9 +141,6 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor { sel
     openAction.setActionDefinitionId(IJavaEditorActionDefinitionIds.OPEN_EDITOR)
     setAction("OpenEditor", openAction)
   }
-  
-  private def scalaCompilationUnit: Option[ScalaCompilationUnit] = 
-    Option(getInputJavaElement) map (_.asInstanceOf[ScalaCompilationUnit])
 
   override protected def initializeKeyBindingScopes() {
     setKeyBindingScopes(Array(SCALA_EDITOR_SCOPE))
@@ -144,26 +156,22 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor { sel
         case _ => new ScalaSourceViewerConfiguration(javaPrefStore, scalaPrefStore, this)
       })
   }
-
   private[eclipse] def sourceViewer = getSourceViewer.asInstanceOf[JavaSourceViewer]
 
-  private var occurrenceAnnotations: Set[Annotation] = Set()
-
-  override def updateOccurrenceAnnotations(selection: ITextSelection, astRoot: CompilationUnit) {
+  override def updateOccurrenceAnnotations(selection: ITextSelection, astRoot: CompilationUnit): Unit = {
     askForOccurrencesUpdate(selection)
   }
-
-  private def getAnnotationModelOpt: Option[IAnnotationModel] =
-    for {
-      documentProvider <- Option(getDocumentProvider)
-      annotationModel <- Option(documentProvider.getAnnotationModel(getEditorInput))
-    } yield annotationModel
   
   private def performOccurrencesUpdate(selection: ITextSelection, documentLastModified: Long) {
+    def getAnnotationModelOpt: Option[IAnnotationModel] = {
+      for {
+        documentProvider <- Option(getDocumentProvider)
+        annotationModel <- Option(documentProvider.getAnnotationModel(getEditorInput))
+      } yield annotationModel
+    }
+
     val annotations = getAnnotations(selection, getInteractiveCompilationUnit, documentLastModified)
-    for{
-      annotationModel <- getAnnotationModelOpt
-    } annotationModel.withLock {
+    for(annotationModel <- getAnnotationModelOpt) annotationModel.withLock {
       annotationModel.replaceAnnotations(occurrenceAnnotations, annotations)
       occurrenceAnnotations = annotations.keySet
     }
@@ -180,7 +188,7 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor { sel
     } yield annotation -> position
   }.toMap
 
-  def askForOccurrencesUpdate(selection: ITextSelection) {
+  private def askForOccurrencesUpdate(selection: ITextSelection) {
 
     if (selection.getLength < 0 || selection.getOffset < 0) 
       return
@@ -222,15 +230,6 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor { sel
       }
   }
 
-  lazy val selectionListener = new ISelectionListener() {
-    def selectionChanged(part: IWorkbenchPart, selection: ISelection) {
-      selection match {
-        case textSel: ITextSelection => askForOccurrencesUpdate(textSel)
-        case _ =>
-      }
-    }
-  }
-
   override def installOccurrencesFinder(forceUpdate: Boolean) {
     super.installOccurrencesFinder(forceUpdate)
     getEditorSite.getPage.addPostSelectionListener(selectionListener)
@@ -241,32 +240,13 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor { sel
     super.uninstallOccurrencesFinder
   }
 
-  private val preferenceListener: IPropertyChangeListener = handlePreferenceStoreChanged _
-
-  scalaPrefStore.addPropertyChangeListener(preferenceListener)
-
   override def dispose() {
     super.dispose()
     scalaPrefStore.removePropertyChangeListener(preferenceListener)
   }
-  
-  private object controlCreator extends AbstractReusableInformationControlCreator {
-    override def doCreateInformationControl(shell: Shell) = 
-      new DefaultInformationControl(shell, true)
-  }
-  
-  private lazy val tpePresenter = {
-    val infoPresenter = new InformationPresenter(controlCreator) 
-    infoPresenter.install(getSourceViewer)
-    infoPresenter.setInformationProvider(actions.TypeOfExpressionProvider, IDocument.DEFAULT_CONTENT_TYPE)
-    infoPresenter
-  }
-  
-  /** Return the `InformationPresenter` used to display the type of
-   *  the selected expression.
-   */
-  def typeOfExpressionPresenter: InformationPresenter = 
-    tpePresenter
+
+  /** Return the `InformationPresenter` used to display the type of the selected expression.*/
+  def typeOfExpressionPresenter: InformationPresenter = tpePresenter
 
   override def editorContextMenuAboutToShow(menu: org.eclipse.jface.action.IMenuManager): Unit = {
     super.editorContextMenuAboutToShow(menu)
@@ -349,36 +329,39 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor { sel
 
   override protected def getSourceViewerDecorationSupport(viewer: ISourceViewer): SourceViewerDecorationSupport = {
     if (fSourceViewerDecorationSupport == null) {
-      fSourceViewerDecorationSupport = new ScalaSourceViewerDecorationSupport(viewer)
+      fSourceViewerDecorationSupport = new ScalaSourceViewerDecorationSupport(viewer, getOverviewRuler, getAnnotationAccess, getSharedColors)
       configureSourceViewerDecorationSupport(fSourceViewerDecorationSupport)
     }
     fSourceViewerDecorationSupport
   }
 
-  class ScalaSourceViewerDecorationSupport(viewer: ISourceViewer)
-    extends SourceViewerDecorationSupport(viewer, getOverviewRuler, getAnnotationAccess, getSharedColors) {
-
-    override protected def createAnnotationPainter(): AnnotationPainter = {
-      val annotationPainter = super.createAnnotationPainter
-      SemanticHighlightingAnnotations.addTextStyleStrategies(annotationPainter)
-      annotationPainter
-    }
-
-  }
 
   override def getInteractiveCompilationUnit(): InteractiveCompilationUnit = {
     // getInputJavaElement always returns the right value
     getInputJavaElement().asInstanceOf[InteractiveCompilationUnit]
   }
-
 }
 
 object ScalaSourceFileEditor {
-
   private val EDITOR_BUNDLE_FOR_CONSTRUCTED_KEYS = "org.eclipse.ui.texteditor.ConstructedEditorMessages"
   private val bundleForConstructedKeys = ResourceBundle.getBundle(EDITOR_BUNDLE_FOR_CONSTRUCTED_KEYS)
 
   private val SCALA_EDITOR_SCOPE = "scala.tools.eclipse.scalaEditorScope"
 
   private val OCCURRENCE_ANNOTATION = "org.eclipse.jdt.ui.occurrences"
+    
+  private object controlCreator extends AbstractReusableInformationControlCreator {
+    override def doCreateInformationControl(shell: Shell) = 
+      new DefaultInformationControl(shell, true)
+  }
+  
+ private class ScalaSourceViewerDecorationSupport(viewer: ISourceViewer, overviewRuler: IOverviewRuler, annotationAccess: IAnnotationAccess, sharedTextColors: ISharedTextColors)
+    extends SourceViewerDecorationSupport(viewer, overviewRuler, annotationAccess, sharedTextColors) {
+
+    override protected def createAnnotationPainter(): AnnotationPainter = {
+      val annotationPainter = super.createAnnotationPainter
+      SemanticHighlightingAnnotations.addTextStyleStrategies(annotationPainter)
+      annotationPainter
+    }
+  }
 }
