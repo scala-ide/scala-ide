@@ -25,7 +25,7 @@ object EditorUtils {
   def getEditorCompilationUnit(editor: ITextEditor): Option[InteractiveCompilationUnit] = {
     editor match {
       case icuEditor: InteractiveCompilationUnitEditor =>
-        icuEditor.getInteractiveCompilationUnit
+        Some(icuEditor.getInteractiveCompilationUnit)
       case _ =>
         None
     }

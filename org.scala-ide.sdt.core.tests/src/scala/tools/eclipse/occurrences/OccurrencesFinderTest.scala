@@ -19,7 +19,6 @@ object OccurrencesFinderTest extends TestProjectSetup("occurrences-hyperlinking"
 class OccurrencesFinderTest {
   import OccurrencesFinderTest._
 
-  @Ignore("Fails in 2.10.0-SNAPSHOT, not finding any occurrences of 'func'")
   @Test def typeOccurrences() {
     val unit = compilationUnit("occ/DummyOccurrences.scala").asInstanceOf[ScalaCompilationUnit];
     
@@ -44,10 +43,9 @@ class OccurrencesFinderTest {
       val region = ScalaWordFinder.findWord(contents, pos - 1)
       val word = new String(contents.slice(region.getOffset(), region.getOffset() + region.getLength()))
       println("using word region: " + region)
-      val occurrences = ScalaOccurrencesFinder.findOccurrences(unit, region.getOffset, region.getLength, 1)
+      val occurrences = new ScalaOccurrencesFinder(unit).findOccurrences(region, 1)
       assertTrue("No occurrences of %s".format(word), occurrences.isDefined)
       assertEquals("Not enough occurrences (%s): expected: %d, found: %d".format(word, count, occurrences.get.locations.size), count, occurrences.get.locations.size)
     }
   }
-
 }

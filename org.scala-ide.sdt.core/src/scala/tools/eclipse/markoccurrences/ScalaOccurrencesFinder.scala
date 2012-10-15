@@ -1,50 +1,68 @@
-package scala.tools.eclipse
-package markoccurrences
+package scala.tools.eclipse.markoccurrences
 
-import org.eclipse.jface.text.Region
-
-import scala.tools.eclipse.javaelements.ScalaCompilationUnit
+import scala.tools.eclipse.InteractiveCompilationUnit
+import scala.tools.eclipse.logging.HasLogger
 import scala.tools.nsc.util.SourceFile
 import scala.tools.refactoring.analysis.GlobalIndexes
 import scala.tools.refactoring.implementations.MarkOccurrences
+import org.eclipse.jface.text.IRegion
+import org.eclipse.jface.text.Region
+import scala.tools.eclipse.util.Utils
 
-case class Occurrences(name: String, locations: List[Region])
+case class Occurrences(name: String, locations: List[IRegion])
 
-object ScalaOccurrencesFinder {
+/** Finds all occurrences of a binding in a Scala source file. 
+ * 
+ * Note that the occurrences index is re-computed only if the document's modification timestamp 
+ * has changed.
+ * 
+ * This class is thread-safe.
+ */
+class ScalaOccurrencesFinder(unit: InteractiveCompilationUnit) extends HasLogger {
+  import ScalaOccurrencesFinder._
+
+  /* IMPORTANT: 
+   * In the current implementation, all access to `indexCache` are confined to the Presentation 
+   * Compiler thread (and this is why `indexCache` requires no synchronization policy). 
+   */
+  private var indexCache: Option[TimestampedIndex] = None
   
-  private var indexCache: Option[(SourceFile, Long, MarkOccurrences with GlobalIndexes)] = None
-  
-  private def getCachedIndex(sourceFile: SourceFile, lastModified: Long) = indexCache match {
-    case Some(Triple(`sourceFile`, `lastModified`, index)) => Some(index)
+  private def getCachedIndex(lastModified: Long): Option[MarkOccurrencesIndex] = indexCache match {
+    case Some(TimestampedIndex(`lastModified`, index)) => Some(index)
     case _ => None
   }
   
-  private def cacheIndex(sourceFile: SourceFile, lastModified: Long, index: MarkOccurrences with GlobalIndexes) {
-    indexCache = Some(Triple(sourceFile, lastModified, index))
+  private def cacheIndex(lastModified: Long, index: MarkOccurrencesIndex): Unit = {
+    indexCache = Some(TimestampedIndex(lastModified, index))
   }
-  
-  def findOccurrences(file: ScalaCompilationUnit, offset: Int, length: Int, lastModified: Long): Option[Occurrences] = {
-    val (from, to) = (offset, offset + length)
-    file.withSourceFile { (sourceFile, compiler) =>
+
+  def findOccurrences(region: IRegion, lastModified: Long): Option[Occurrences] = {
+    unit.withSourceFile { (sourceFile, compiler) =>
       compiler.askOption { () =>
+        def isNotLoadedInPresentationCompiler(source: SourceFile): Boolean = 
+          !compiler.unitOfFile.contains(source.file)
         
-        val occurrencesIndex = getCachedIndex(sourceFile, lastModified) getOrElse {
-          val occurrencesIndex = new MarkOccurrences with GlobalIndexes {
-            val global = compiler
-            lazy val index = GlobalIndex(global.body(sourceFile))
+        if(isNotLoadedInPresentationCompiler(sourceFile)) {
+          logger.info("Source %s is not loded in the presentation compiler. Aborting occurrences update."format(sourceFile.file.name))
+          None
+        } else {
+          val occurrencesIndex = getCachedIndex(lastModified) getOrElse {
+            val occurrencesIndex = new MarkOccurrencesIndex {
+              val global = compiler
+              lazy val index = Utils.debugTimed("Time elapsed for building mark occurrences index in source " + sourceFile.file.name) {
+                GlobalIndex(global.body(sourceFile))
+              }
+            }
+            cacheIndex(lastModified, occurrencesIndex)
+            occurrencesIndex
           }
-          cacheIndex(sourceFile, lastModified, occurrencesIndex)
-          occurrencesIndex
-        }
         
-        if (!compiler.unitOfFile.contains(sourceFile.file)) 
-          None 
-        else {
+          val (from, to) = (region.getOffset, region.getOffset + region.getLength)
           val (selectedTree, occurrences) = occurrencesIndex.occurrencesOf(sourceFile.file, from, to)       
           
           Option(selectedTree.symbol) filter (!_.name.isOperatorName) map { sym =>
             val locations = occurrences map { pos => 
-              new Region(pos.start, pos.end - pos.start)
+              new Region(pos.startOrPoint, pos.endOrPoint - pos.startOrPoint)
             }
             Occurrences(sym.nameString, locations)
           }
@@ -54,3 +72,7 @@ object ScalaOccurrencesFinder {
   }
 }
 
+object ScalaOccurrencesFinder {  
+  private abstract class MarkOccurrencesIndex extends MarkOccurrences with GlobalIndexes
+  private case class TimestampedIndex(timestamp: Long, index: MarkOccurrencesIndex)
+}
