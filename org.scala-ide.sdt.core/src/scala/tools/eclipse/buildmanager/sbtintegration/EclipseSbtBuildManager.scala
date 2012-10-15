@@ -4,6 +4,7 @@ package sbtintegration
 
 import scala.tools.nsc.{ Global, Settings }
 import scala.tools.nsc.io.AbstractFile
+import scala.tools.nsc.util.NoPosition
 import scala.collection.mutable
 import org.eclipse.core.resources.{ IFile, IMarker }
 import org.eclipse.core.runtime.{ IProgressMonitor, IPath, SubMonitor, Path}
@@ -176,6 +177,7 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings)
         hasErrors = true
         BuildProblemMarker.create(project, e)
         eclipseLog.error("Error in Scala compiler", e)
+        buildReporter.error(NoPosition, "SBT builder crashed while compiling. The error message is '" + e.getMessage() + "'. Check Error Log for details.")
     }
     
     hasErrors = sbtReporter.hasErrors || hasErrors
