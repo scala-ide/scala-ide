@@ -135,7 +135,7 @@ class ScalaCompletions extends HasLogger {
           IJavaSearchConstants.TYPE,
           SearchEngine.createJavaSearchScope(Array[IJavaElement](scu.scalaProject.javaProject), true),
           requestor,
-          IJavaSearchConstants.FORCE_IMMEDIATE_SEARCH, // don't wait until all types are indexed by the JDT
+          IJavaSearchConstants.WAIT_UNTIL_READY_TO_SEARCH, // wait until all types are indexed by the JDT
           null)
           
     }
