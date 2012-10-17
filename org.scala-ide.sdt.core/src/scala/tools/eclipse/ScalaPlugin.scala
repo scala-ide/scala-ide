@@ -41,6 +41,7 @@ import scala.tools.eclipse.ui.PartAdapter
 
 object ScalaPlugin {
   private final val HeadlessTest  = "sdtcore.headless"
+  private final val NoTimeouts = "sdtcore.notimeouts"
 
   @volatile var plugin: ScalaPlugin = _
   
@@ -181,6 +182,7 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
 
   lazy val templateManager = new ScalaTemplateManager()
   lazy val headlessMode = System.getProperty(ScalaPlugin.HeadlessTest) ne null
+  lazy val noTimeoutMode = System.getProperty(ScalaPlugin.NoTimeouts) ne null
 
   private val projects = new mutable.HashMap[IProject, ScalaProject]
 
