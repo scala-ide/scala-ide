@@ -13,5 +13,5 @@ trait ScalaDebugRunningTest {
   val TYPENAME_AF_LS = "stepping.AnonFunOnListString"
   val TYPENAME_VARIABLES = "debug.Variables"
   val TYPENAME_SIMPLE_STEPPING = "stepping.SimpleStepping"
-
+  val TYPENAME_STEP_FILTERS = "stepping.StepFilters"
 }

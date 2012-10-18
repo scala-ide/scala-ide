@@ -5,12 +5,20 @@ import org.junit.{ Test, Before, After }
 import org.eclipse.core.resources.IncrementalProjectBuilder
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.junit.Ignore
+import org.junit.BeforeClass
+import org.eclipse.debug.core.DebugPlugin
 
 object ScalaDebugSteppingTest extends TestProjectSetup("debug", bundleName = "org.scala-ide.sdt.debug.tests") with ScalaDebugRunningTest {
 
   var initialized = false
 
   def initDebugSession(launchConfigurationName: String): ScalaDebugTestSession = new ScalaDebugTestSession(file(launchConfigurationName + ".launch"))
+
+  @BeforeClass
+  def disableStatusHandlers() {
+    // disable UI-dependent checks done during pre-launch. Gets rid of annoying exceptions during tests
+    DebugPlugin.getDefault().getPluginPreferences().setValue("org.eclipse.debug.core.PREF_ENABLE_STATUS_HANDLERS", false)
+  }
 
 }
 
@@ -442,33 +450,124 @@ class ScalaDebugSteppingTest {
 
     session.checkStackFrame(TYPENAME_FC_LS + "$", "main([Ljava/lang/String;)V", 13)
   }
-    
+
   // Check that the jdi request created for a step over action are
   // correctly cleaned when the step is interrupted by a breakpoint.
   // Otherwise the whole system can hang.
-  @Test(timeout=10000)
+  @Test(timeout = 10000)
   def StepOverWithBreakpoint_1001201() {
     session = initDebugSession("AnonFunOnListInt")
-    
-    session.runToLine(TYPENAME_AF_LI + "$",  20)
-    
+
+    session.runToLine(TYPENAME_AF_LI + "$", 20)
+
     session.checkStackFrame(TYPENAME_AF_LI + "$$anonfun$main$5", "apply$mcVI$sp(I)V", 20)
-    
-    val breakpoint= session.addLineBreakpoint(TYPENAME_AF_LI + "$",  19)
-    
+
+    val breakpoint = session.addLineBreakpoint(TYPENAME_AF_LI + "$", 19)
+
     session.stepOver()
-    
+
     session.checkStackFrame(TYPENAME_AF_LI + "$$anonfun$main$5", "apply(I)V", 19)
-    
+
     session.stepOver()
-    
+
     session.checkStackFrame(TYPENAME_AF_LI + "$$anonfun$main$5", "apply$mcVI$sp(I)V", 20)
-    
+
     session.stepOver()
-    
+
     session.checkStackFrame(TYPENAME_AF_LI + "$$anonfun$main$5", "apply(I)V", 19)
-    
+
     session.removeBreakpoint(breakpoint)
   }
 
+  @Test
+  def StepIntoSkipsSetter() {
+
+    session = initDebugSession("StepFilters")
+
+    session.runToLine(TYPENAME_STEP_FILTERS, 11)
+    session.checkStackFrame(TYPENAME_STEP_FILTERS, "mainTest()V", 11)
+
+    session.stepInto()
+    session.checkStackFrame(TYPENAME_STEP_FILTERS, "mainTest()V", 13)
+  }
+
+  @Test
+  def StepIntoSkipsGetter() {
+
+    session = initDebugSession("StepFilters")
+
+    session.runToLine(TYPENAME_STEP_FILTERS, 13)
+    session.checkStackFrame(TYPENAME_STEP_FILTERS, "mainTest()V", 13)
+
+    session.stepInto()
+    session.checkStackFrame(TYPENAME_STEP_FILTERS, "mainTest()V", 15)
+  }
+
+  @Test
+  def StepIntoSkipsGetterAndSetterOnSameLine() {
+
+    session = initDebugSession("StepFilters")
+
+    session.runToLine(TYPENAME_STEP_FILTERS, 15)
+    session.checkStackFrame(TYPENAME_STEP_FILTERS, "mainTest()V", 15)
+
+    session.stepInto()
+    session.checkStackFrame(TYPENAME_STEP_FILTERS, "mainTest()V", 17)
+  }
+
+  @Test
+  def StepIntoSkipsGetterAndSetterInArgList() {
+
+    session = initDebugSession("StepFilters")
+
+    session.runToLine(TYPENAME_STEP_FILTERS, 17)
+    session.checkStackFrame(TYPENAME_STEP_FILTERS, "mainTest()V", 17)
+
+    session.stepInto()
+    session.checkStackFrame(TYPENAME_STEP_FILTERS, "foo(Ljava/lang/String;Ljava/lang/String;)V", 8)
+  }
+
+  @Test
+  def StepIntoSkipsGetterInsideFors() {
+
+    session = initDebugSession("StepFilters")
+
+    session.runToLine(TYPENAME_STEP_FILTERS, 25)
+    session.checkStackFrame(TYPENAME_STEP_FILTERS, "fors()V", 25)
+
+    session.stepInto()
+    session.checkStackFrame(TYPENAME_STEP_FILTERS + "$$anonfun$fors$1", "apply(Ljava/lang/String;)V", 26)
+
+    session.stepInto()
+    session.checkStackFrame("debug.Helper$", "noop(Ljava/lang/Object;)V", 5)
+
+    session.stepInto()
+    session.checkStackFrame(TYPENAME_STEP_FILTERS + "$$anonfun$fors$1", "apply(Ljava/lang/String;)V", 27) // back inside for
+  }
+
+  @Test
+  def StepIntoSkipsBridges() {
+
+    session = initDebugSession("StepFilters")
+
+    session.runToLine(TYPENAME_STEP_FILTERS, 34)
+    session.checkStackFrame(TYPENAME_STEP_FILTERS, "bridges()V", 34)
+
+    session.stepInto()
+    session.checkStackFrame("stepping.Concrete", "base(I)I", 49)
+  }
+
+  @Test
+  def StepIntoSkipsBridgesWithMultiExpressionsOnLine() {
+
+    session = initDebugSession("StepFilters")
+
+    session.runToLine(TYPENAME_STEP_FILTERS, 37)
+    session.checkStackFrame(TYPENAME_STEP_FILTERS, "bridges()V", 37)
+
+    session.stepInto()
+    session.checkStackFrame("stepping.Concrete", "base(I)I", 49)
+
+    session.stepReturn()
+  }
 }
