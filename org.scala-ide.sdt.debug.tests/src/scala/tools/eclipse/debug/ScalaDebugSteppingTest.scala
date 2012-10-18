@@ -7,6 +7,9 @@ import org.eclipse.core.runtime.NullProgressMonitor
 import org.junit.Ignore
 import org.junit.BeforeClass
 import org.eclipse.debug.core.DebugPlugin
+import org.eclipse.core.runtime.Platform
+import org.eclipse.ui.preferences.ScopedPreferenceStore
+import org.eclipse.core.runtime.preferences.InstanceScope
 
 object ScalaDebugSteppingTest extends TestProjectSetup("debug", bundleName = "org.scala-ide.sdt.debug.tests") with ScalaDebugRunningTest {
 
@@ -17,7 +20,8 @@ object ScalaDebugSteppingTest extends TestProjectSetup("debug", bundleName = "or
   @BeforeClass
   def disableStatusHandlers() {
     // disable UI-dependent checks done during pre-launch. Gets rid of annoying exceptions during tests
-    DebugPlugin.getDefault().getPluginPreferences().setValue("org.eclipse.debug.core.PREF_ENABLE_STATUS_HANDLERS", false)
+    val prefs = new ScopedPreferenceStore(new InstanceScope(), DebugPlugin.getDefault().getBundle().getSymbolicName());
+    prefs.setValue("org.eclipse.debug.core.PREF_ENABLE_STATUS_HANDLERS", false)
   }
 
 }
