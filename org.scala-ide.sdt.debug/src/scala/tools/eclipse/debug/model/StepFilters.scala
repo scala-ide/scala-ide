@@ -4,28 +4,39 @@ import com.sun.jdi.Location
 import scala.tools.eclipse.logging.HasLogger
 import com.sun.jdi.ReferenceType
 import com.sun.jdi.Method
+import scala.tools.eclipse.debug.ScalaDebugPlugin
+import scala.tools.eclipse.debug.preferences.DebuggerPreferences
+import org.eclipse.core.internal.localstore.IsSynchronizedVisitor
 
 /** Utility methods for deciding when a location should be filtered out from stepping into.
  */
 object StepFilters extends HasLogger {
 
-  /** Return `true` if the debugger should never stop at this location (but may 
-   *  stop further down in the call-graph). 
+  private lazy val prefStore = ScalaDebugPlugin.plugin.getPreferenceStore()
+
+  /** Return `true` if the debugger should never stop at this location (but may
+   *  stop further down in the call-graph).
    *
    *  Examples are: synthetic, bridges, getters, setters.
    */
   private def isTransparentMethod(location: Location): Boolean = {
-    def isGetter = {
-      location.declaringType().fieldByName(location.method().name()) ne null
-    }
+    import DebuggerPreferences._
+
+    def isGetter = location.declaringType().fieldByName(location.method().name()) ne null
+    def skipGetter = prefStore.getBoolean(FILTER_GETTER) && isGetter
 
     def isSetter = {
       val name = location.method().name()
       (name.endsWith("_$eq")
         && (location.declaringType().fieldByName(name.substring(0, name.length - 4)) ne null))
     }
+    def skipSetter = prefStore.getBoolean(FILTER_SETTER) && isSetter
+    def skipSynthetic = prefStore.getBoolean(FILTER_SYNTHETIC) && location.method.isSynthetic()
 
-    location.method().isSynthetic() || isGetter || isSetter
+    (location.method.isBridge()
+      || skipSynthetic
+      || skipGetter
+      || skipSetter)
   }
 
   /** Return true if it is a filtered location. */
