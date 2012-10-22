@@ -289,8 +289,8 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings)
       if section.nonEmpty && !section.head.isImplicit
     } yield for (param <- section) yield param.name.toString
 
-    val paramNames = if (sym.isJavaDefined) {
-      getJavaElement(sym) collect {
+    val paramNames = if (sym.isJavaDefined && sym.isMethod) {
+      getJavaElement(sym, project.javaProject) collect {
         case method: IMethod => List(method.getParameterNames.toList)
       } getOrElse scalaParamNames
     } else scalaParamNames
