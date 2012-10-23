@@ -155,9 +155,12 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings)
               case e: TypeError                  => logger.info("TypeError in ask:\n" + e)
               case f: FreshRunReq                => logger.info("FreshRunReq in ask:\n" + f)
               case e @ InvalidCompanions(c1, c2) => reporter.warning(c1.pos, e.getMessage)
-              case m: MissingResponse            => logger.info("MissingResponse in ask. Called from: " + m.getStackTrace().mkString("\n"))
               case e                             => eclipseLog.error("Error during askOption", e)
             }
+            None
+
+          case Right(m: MissingResponse) =>
+            logger.info("MissingResponse in ask. Called from: " + m.getStackTrace().mkString("\n"))
             None
 
           case Right(e: Throwable) =>
