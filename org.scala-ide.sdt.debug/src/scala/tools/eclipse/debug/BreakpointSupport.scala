@@ -103,7 +103,8 @@ private[debug] object BreakpointSupportActor {
   }
 
   private def createBreakpointRequest(breakpoint: IBreakpoint, debugTarget: ScalaDebugTarget, referenceType: ReferenceType): Option[BreakpointRequest] = {
-    JdiRequestFactory.createBreakpointRequest(referenceType, getLineNumber(breakpoint), debugTarget)
+    if(breakpoint.isEnabled) JdiRequestFactory.createBreakpointRequest(referenceType, getLineNumber(breakpoint), debugTarget)
+    else None
   }
 
   /**
