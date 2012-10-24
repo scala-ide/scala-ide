@@ -8,11 +8,10 @@ import scala.tools.eclipse.debug.ActorExit
 import scala.tools.eclipse.debug.JDIUtil.methodToLines
 import scala.tools.eclipse.debug.model.{ScalaThread, ScalaStackFrame, ScalaDebugTarget}
 import scala.tools.eclipse.debug.model.JdiRequestFactory
-
 import org.eclipse.debug.core.DebugEvent
-
 import com.sun.jdi.event.{ StepEvent, ClassPrepareEvent, BreakpointEvent }
 import com.sun.jdi.request.{ StepRequest, EventRequest }
+import scala.tools.eclipse.debug.model.StepFilters
 
 object ScalaStepOver {
 
@@ -44,11 +43,11 @@ object ScalaStepOver {
       val range = Range(location.lineNumber, (location.method.declaringType.methods.asScala.flatten(methodToLines(_)).filter(_ > currentMethodLastLine) :+ Int.MaxValue).min)
 
       // TODO: nestedTypes triggers a AllClasses request to the VM. Having the list of nested types managed and cached by the debug target should be more effective.
-      val loadedAnonFunctionsInRange = location.method.declaringType.nestedTypes.asScala.flatMap(scalaStackFrame.debugTarget.anonFunctionsInRange(_, range))
+      val loadedAnonFunctionsInRange = location.method.declaringType.nestedTypes.asScala.flatMap(StepFilters.anonFunctionsInRange(_, range))
 
       // if we are in an anonymous function, add the method
       if (location.declaringType.name.contains("$$anonfun$")) {
-        loadedAnonFunctionsInRange ++= scalaStackFrame.debugTarget.findAnonFunction(location.declaringType)
+        loadedAnonFunctionsInRange ++= StepFilters.findAnonFunction(location.declaringType)
       }
 
       requests ++= loadedAnonFunctionsInRange.map(JdiRequestFactory.createMethodEntryBreakpoint(_, scalaStackFrame.thread))
@@ -102,7 +101,7 @@ private[command] class ScalaStepOverActor(target: ScalaDebugTarget, range: Range
       react {
         // JDI event triggered when a class has been loaded
         case classPrepareEvent: ClassPrepareEvent =>
-          thread.debugTarget.anonFunctionsInRange(classPrepareEvent.referenceType, range).foreach(method => {
+          StepFilters.anonFunctionsInRange(classPrepareEvent.referenceType, range).foreach(method => {
             val breakpoint = JdiRequestFactory.createMethodEntryBreakpoint(method, thread)
             requests += breakpoint
             target.eventDispatcher.setActorFor(this, breakpoint)
@@ -111,7 +110,7 @@ private[command] class ScalaStepOverActor(target: ScalaDebugTarget, range: Range
           reply(false)
         // JDI event triggered when a step has been performed
         case stepEvent: StepEvent =>
-          reply(if (target.isValidLocation(stepEvent.location)) {
+          reply(if (!StepFilters.isTransparentLocation(stepEvent.location)) {
             dispose()
             thread.suspendedFromScala(DebugEvent.STEP_OVER)
             true

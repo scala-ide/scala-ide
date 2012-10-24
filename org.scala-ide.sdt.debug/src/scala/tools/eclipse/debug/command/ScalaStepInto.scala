@@ -6,12 +6,13 @@ import scala.tools.eclipse.debug.model.JdiRequestFactory
 import scala.tools.eclipse.debug.model.ScalaDebugTarget
 import scala.tools.eclipse.debug.model.ScalaStackFrame
 import scala.tools.eclipse.debug.model.ScalaThread
-
 import org.eclipse.debug.core.DebugEvent
-
 import com.sun.jdi.event.StepEvent
 import com.sun.jdi.request.EventRequest
 import com.sun.jdi.request.StepRequest
+import com.sun.jdi.event.Event
+import scala.tools.eclipse.debug.model.StepFilters
+import scala.tools.eclipse.logging.HasLogger
 
 object ScalaStepInto {
 
@@ -20,13 +21,17 @@ object ScalaStepInto {
    */
   def apply(scalaStackFrame: ScalaStackFrame): ScalaStep = {
 
-    val stepIntoRequest = JdiRequestFactory.createStepRequest(StepRequest.STEP_LINE, StepRequest.STEP_INTO, scalaStackFrame.thread)
+    // we noticed that STEP_LINE would miss events for stepping into BoxesRunTime. Might be because the
+    // file has no source file information, need to check
+    val stepIntoRequest = JdiRequestFactory.createStepRequest(StepRequest.STEP_MIN, StepRequest.STEP_INTO, scalaStackFrame.thread)
     stepIntoRequest.setSuspendPolicy(EventRequest.SUSPEND_EVENT_THREAD)
 
     val stepOutRequest = JdiRequestFactory.createStepRequest(StepRequest.STEP_LINE, StepRequest.STEP_OUT, scalaStackFrame.thread)
     stepOutRequest.setSuspendPolicy(EventRequest.SUSPEND_EVENT_THREAD)
 
-    val actor = new ScalaStepIntoActor(scalaStackFrame.debugTarget, scalaStackFrame.thread, stepIntoRequest, stepOutRequest, scalaStackFrame.thread.getStackFrames.indexOf(scalaStackFrame), scalaStackFrame.stackFrame.location.lineNumber)
+    val stackFrames = scalaStackFrame.thread.getStackFrames
+    val depth = stackFrames.length - stackFrames.indexOf(scalaStackFrame)
+    val actor = new ScalaStepIntoActor(scalaStackFrame.debugTarget, scalaStackFrame.thread, stepIntoRequest, stepOutRequest, depth, scalaStackFrame.stackFrame.location.lineNumber)
 
     val step= new ScalaStepInto(actor)
     actor.start(step)
@@ -59,7 +64,7 @@ private class ScalaStepInto private (eventActor: ScalaStepIntoActor) extends Sca
  * Actor used to manage a Scala step into. It keeps track of the request needed to perform this step.
  * This class is thread safe. Instances are not to be created outside of the ScalaStepInto object.
  */
-private[command] class ScalaStepIntoActor(debugTarget: ScalaDebugTarget, thread: ScalaThread, stepIntoRequest: StepRequest, stepOutRequest: StepRequest, stackDepth: Int, stackLine: Int) extends Actor {
+private[command] class ScalaStepIntoActor(debugTarget: ScalaDebugTarget, thread: ScalaThread, stepIntoRequest: StepRequest, stepOutRequest: StepRequest, stackDepth: Int, stackLine: Int) extends Actor with HasLogger {
 
   /**
    * Needed to perform a correct step out (see Eclipse bug report #38744)
@@ -80,19 +85,21 @@ private[command] class ScalaStepIntoActor(debugTarget: ScalaDebugTarget, thread:
         case stepEvent: StepEvent =>
           reply(stepEvent.request.asInstanceOf[StepRequest].depth match {
             case StepRequest.STEP_INTO =>
-              if (debugTarget.isValidLocation(stepEvent.location)) {
-                dispose()
-                thread.suspendedFromScala(DebugEvent.STEP_INTO)
-                true
-              } else {
-                if (debugTarget.shouldNotStepInto(stepEvent.location)) {
+              if (StepFilters.isOpaqueLocation(stepEvent.location)) {
                   // don't step deeper into constructor from 'hidden' entities
                   stepOutStackDepth = stepEvent.thread.frameCount
                   stepIntoRequest.disable()
                   stepOutRequest.enable()
+                  false
+                } else {
+                  if (!StepFilters.isTransparentLocation(stepEvent.location) && stepEvent.location.lineNumber != stackLine) {
+                    dispose()
+                    thread.suspendedFromScala(DebugEvent.STEP_INTO)
+                    true
+                  } else
+                    false
                 }
-                false
-              }
+
             case StepRequest.STEP_OUT =>
               if (stepEvent.thread.frameCount == stackDepth && stepEvent.location.lineNumber != stackLine) {
                 // we are back on the method, but on a different line, stopping the stepping
@@ -117,6 +124,8 @@ private[command] class ScalaStepIntoActor(debugTarget: ScalaDebugTarget, thread:
         // step is terminated
         case ActorExit =>
           exit()
+        case event: Event =>
+          logger.debug("untreated event! " + event)
       }
     }
   }
