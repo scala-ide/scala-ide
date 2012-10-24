@@ -90,7 +90,7 @@ class ScalaDebugTargetTest {
     when(eventRequestManager.createThreadStartRequest).thenReturn(threadStartRequest)
     val threadDeathRequest = mock(classOf[ThreadDeathRequest])
     when(eventRequestManager.createThreadDeathRequest).thenReturn(threadDeathRequest)
-    val debugTarget = ScalaDebugTarget(virtualMachine, mock(classOf[Launch]), null)
+    val debugTarget = ScalaDebugTarget(virtualMachine, mock(classOf[Launch]), null, false, true)
     actor = Some(debugTarget.companionActor)
     debugTarget
   }

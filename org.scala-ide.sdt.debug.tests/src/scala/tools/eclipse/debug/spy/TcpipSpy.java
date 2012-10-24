@@ -68,19 +68,22 @@ public class TcpipSpy extends Thread {
 	}
 
 	public static void main(String[] args) {
+	    boolean listenMode = false;
 		int inPort = 0;
 		String serverHost = null;
 		int outPort = 0;
 		String outputFile = null;
 		try {
-			inPort = Integer.parseInt(args[0]);
-			serverHost = args[1];
-			outPort = Integer.parseInt(args[2]);
-			if (args.length > 3) {
-				outputFile = args[3];
+		    listenMode = args[0].equals("-l");
+		    int argIndex = listenMode ? 1 : 0;
+			inPort = Integer.parseInt(args[argIndex ++]);
+			serverHost = args[argIndex++];
+			outPort = Integer.parseInt(args[argIndex++]);
+			if (args.length >= argIndex) {
+				outputFile = args[argIndex];
 			}
 		} catch (Exception e) {
-			out.println("usage: TcpipSpy <client port> <server host> <server port> [<output file>]"); //$NON-NLS-1$
+			out.println("usage: TcpipSpy [-l] <client port> <server host> <server port> [<output file>]"); //$NON-NLS-1$
 			System.exit(-1);
 		}
 
@@ -102,9 +105,9 @@ public class TcpipSpy extends Thread {
 			Socket inSock = serverSock.accept();
 			Socket outSock = new Socket(InetAddress.getByName(serverHost),
 					outPort);
-			new TcpipSpy(false, inSock.getInputStream(),
+			new TcpipSpy(listenMode, inSock.getInputStream(),
 					outSock.getOutputStream()).start();
-			new TcpipSpy(true, outSock.getInputStream(),
+			new TcpipSpy(!listenMode, outSock.getInputStream(),
 					inSock.getOutputStream()).start();
 		} catch (Exception e) {
 			out.println(e);

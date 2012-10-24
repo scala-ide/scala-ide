@@ -12,6 +12,7 @@ import org.junit.Assert._
 import org.eclipse.debug.core.model.DebugElement
 import scala.tools.eclipse.debug.model.ScalaDebugElement
 import org.eclipse.jdt.internal.debug.core.model.JDIDebugElement
+import org.eclipse.debug.core.ILaunchConfiguration
 
 object EclipseDebugEvent {
   def unapply(event: DebugEvent): Option[(Int, DebugElement)] = {
@@ -24,7 +25,9 @@ object EclipseDebugEvent {
   }
 }
 
-class ScalaDebugTestSession(launchConfigurationFile: IFile) extends IDebugEventSetListener {
+class ScalaDebugTestSession(launchConfiguration: ILaunchConfiguration) extends IDebugEventSetListener {
+  
+  def this(launchConfigurationFile: IFile) = this(DebugPlugin.getDefault.getLaunchManager.getLaunchConfiguration(launchConfigurationFile))
 
   object State extends Enumeration {
     type State = Value
@@ -94,7 +97,7 @@ class ScalaDebugTestSession(launchConfigurationFile: IFile) extends IDebugEventS
 
   def waitUntilSuspended() {
     this.synchronized {
-      if (state != SUSPENDED && state != TERMINATED)
+      while (state != SUSPENDED && state != TERMINATED)
         this.wait
     }
   }
@@ -112,7 +115,22 @@ class ScalaDebugTestSession(launchConfigurationFile: IFile) extends IDebugEventS
   var debugTarget: ScalaDebugTarget = null
   var currentStackFrame: ScalaStackFrame = null
   
+  /**
+   * Add a breakpoint at the specified location, 
+   * start or launch the session,
+   * and wait until the application is suspended
+   */
   def runToLine(typeName: String, breakpointLine: Int) {
+    runToLine(typeName, breakpointLine, ())
+  }
+  
+  /**
+   * Add a breakpoint at the specified location, 
+   * start or launch the session,
+   * perform the additional action,
+   * and wait until the application is suspended
+   */
+  def runToLine[T](typeName: String, breakpointLine: Int, additionalAction: => T): T = {
     assertThat("Bad state before runToBreakpoint", state, anyOf(is(NOT_LAUNCHED), is(SUSPENDED)))
 
     val breakpoint = addLineBreakpoint(typeName, breakpointLine)
@@ -124,10 +142,14 @@ class ScalaDebugTestSession(launchConfigurationFile: IFile) extends IDebugEventS
       currentStackFrame.resume
     }
 
+    val actionResult= additionalAction
+    
     waitUntilSuspended
     removeBreakpoint(breakpoint)
 
     assertEquals("Bad state after runToBreakpoint", SUSPENDED, state)
+    
+    actionResult
   }
   
   /**
@@ -192,14 +214,21 @@ class ScalaDebugTestSession(launchConfigurationFile: IFile) extends IDebugEventS
 
   def terminate() {
     if ((state ne NOT_LAUNCHED) && (state ne TERMINATED)) {
-      debugTarget.terminate
+      debugTarget.terminate()
+      waitUntilTerminated
+      assertEquals("Bad state after terminate", TERMINATED, state)
+    }
+  }
+  
+  def disconnect() {
+    if ((state ne NOT_LAUNCHED) && (state ne TERMINATED)) {
+      debugTarget.disconnect()
       waitUntilTerminated
       assertEquals("Bad state after terminate", TERMINATED, state)
     }
   }
 
-  private def launch() {
-    val launchConfiguration = DebugPlugin.getDefault.getLaunchManager.getLaunchConfiguration(launchConfigurationFile)
+  def launch() {
     launchConfiguration.launch(ILaunchManager.DEBUG_MODE, null)
   }
   
