@@ -155,9 +155,12 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings)
               case e: TypeError                  => logger.info("TypeError in ask:\n" + e)
               case f: FreshRunReq                => logger.info("FreshRunReq in ask:\n" + f)
               case e @ InvalidCompanions(c1, c2) => reporter.warning(c1.pos, e.getMessage)
-              case m: MissingResponse            => logger.info("MissingResponse in ask. Called from: " + m.getStackTrace().mkString("\n"))
               case e                             => eclipseLog.error("Error during askOption", e)
             }
+            None
+
+          case Right(m: MissingResponse) =>
+            logger.info("MissingResponse in ask. Called from: " + m.getStackTrace().mkString("\n"))
             None
 
           case Right(e: Throwable) =>
@@ -289,8 +292,8 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings)
       if section.nonEmpty && !section.head.isImplicit
     } yield for (param <- section) yield param.name.toString
 
-    val paramNames = if (sym.isJavaDefined) {
-      getJavaElement(sym) collect {
+    val paramNames = if (sym.isJavaDefined && sym.isMethod) {
+      getJavaElement(sym, project.javaProject) collect {
         case method: IMethod => List(method.getParameterNames.toList)
       } getOrElse scalaParamNames
     } else scalaParamNames
