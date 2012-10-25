@@ -26,13 +26,13 @@ abstract class ScalaDebugElement(debugTarget: ScalaDebugTarget) extends DebugEle
 
   // Members declared in org.eclipse.debug.core.model.IDebugElement
 
-  def getModelIdentifier(): String = modelId
+  override def getModelIdentifier: String = modelId
 
   // Members declared in org.eclipse.debug.core.model.ITerminate
 
-  def canTerminate(): Boolean = debugTarget.canTerminate
-  def isTerminated(): Boolean = debugTarget.isTerminated
-  def terminate(): Unit = debugTarget.terminate
+  override def canTerminate: Boolean = debugTarget.canTerminate
+  override def isTerminated: Boolean = debugTarget.isTerminated
+  override def terminate(): Unit = debugTarget.terminate()
 
   // ----
 

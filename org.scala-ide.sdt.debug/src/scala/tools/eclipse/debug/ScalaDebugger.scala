@@ -36,7 +36,7 @@ object ScalaDebugger extends ISelectionListener {
 
   // Members declared in org.eclipse.ui.ISelectionListener
 
-  def selectionChanged(part: org.eclipse.ui.IWorkbenchPart, selection: org.eclipse.jface.viewers.ISelection) {
+  override def selectionChanged(part: org.eclipse.ui.IWorkbenchPart, selection: org.eclipse.jface.viewers.ISelection) {
     // track the currently selected thread, to be able to invoke methods on the VM
     currentThread = selection match {
       case structuredSelection: IStructuredSelection =>

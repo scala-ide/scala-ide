@@ -118,7 +118,7 @@ private class ScalaDebugBreakpointManagerActor private(debugTarget: ScalaDebugTa
         case ActorExit =>
           // not cleaning the requests
           // the connection to the vm is closing or already closed at this point
-          exit
+          exit()
         case ActorDebug =>
           reply(None)
       }

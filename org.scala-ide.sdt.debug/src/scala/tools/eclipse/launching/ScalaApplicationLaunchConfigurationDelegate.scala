@@ -12,7 +12,7 @@ import org.eclipse.jdt.launching.IVMRunner
 class ScalaApplicationLaunchConfigurationDelegate extends ScalaLaunchDelegate {
 
   override def getVMRunner(configuration: ILaunchConfiguration, mode: String): IVMRunner = {
-    val vm = verifyVMInstall(configuration);
+    val vm = verifyVMInstall(configuration)
     new StandardVMScalaDebugger(vm)
   }
 

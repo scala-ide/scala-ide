@@ -38,39 +38,39 @@ abstract class ScalaThread private (target: ScalaDebugTarget, private[model] val
 
   // Members declared in org.eclipse.debug.core.model.IStep
 
-  def canStepInto(): Boolean = suspended // TODO: need real logic
-  def canStepOver(): Boolean = suspended // TODO: need real logic
-  def canStepReturn(): Boolean = suspended // TODO: need real logic
-  def isStepping(): Boolean = ???
-  def stepInto(): Unit = ScalaStepInto(internalGetStackFrames.head).step
+  override def canStepInto: Boolean = suspended // TODO: need real logic
+  override def canStepOver: Boolean = suspended // TODO: need real logic
+  override def canStepReturn: Boolean = suspended // TODO: need real logic
+  override def isStepping: Boolean = ???
+  override def stepInto(): Unit = ScalaStepInto(internalGetStackFrames.head).step
 
-  def stepOver(): Unit = {
+  override def stepOver(): Unit = {
     // top stack frame
     ScalaStepOver(internalGetStackFrames.head).step
   }
 
-  def stepReturn(): Unit = {
+  override def stepReturn(): Unit = {
     ScalaStepReturn(internalGetStackFrames.head).step
   }
 
   // Members declared in org.eclipse.debug.core.model.ISuspendResume
 
-  def canResume(): Boolean = suspended // TODO: need real logic
-  def canSuspend(): Boolean = !suspended // TODO: need real logic
-  def isSuspended(): Boolean = suspended // TODO: need real logic
-  def resume(): Unit = {
+  override def canResume: Boolean = suspended // TODO: need real logic
+  override def canSuspend: Boolean = !suspended // TODO: need real logic
+  override def isSuspended: Boolean = suspended // TODO: need real logic
+  override def resume(): Unit = {
     resumeFromScala(DebugEvent.CLIENT_REQUEST)
   }
-  def suspend(): Unit = {
+  override def suspend(): Unit = {
     thread.suspend()
     suspendedFromScala(DebugEvent.CLIENT_REQUEST)
   }
 
   // Members declared in org.eclipse.debug.core.model.IThread
 
-  def getBreakpoints(): Array[IBreakpoint] = Array() // TODO: need real logic
+  override def getBreakpoints: Array[IBreakpoint] = Array() // TODO: need real logic
 
-  def getName(): String = {
+  override def getName: String = {
     try {
       name = thread.name
     } catch {
@@ -82,10 +82,10 @@ abstract class ScalaThread private (target: ScalaDebugTarget, private[model] val
     name
   }
 
-  def getPriority(): Int = ???
-  def getStackFrames(): Array[org.eclipse.debug.core.model.IStackFrame] = internalGetStackFrames.toArray
-  def getTopStackFrame(): org.eclipse.debug.core.model.IStackFrame = internalGetStackFrames.headOption.getOrElse(null)
-  def hasStackFrames(): Boolean = !internalGetStackFrames.isEmpty
+  override def getPriority: Int = ???
+  override def getStackFrames: Array[org.eclipse.debug.core.model.IStackFrame] = internalGetStackFrames.toArray
+  override def getTopStackFrame: org.eclipse.debug.core.model.IStackFrame = internalGetStackFrames.headOption.getOrElse(null)
+  override def hasStackFrames: Boolean = !internalGetStackFrames.isEmpty
 
   // ----
 

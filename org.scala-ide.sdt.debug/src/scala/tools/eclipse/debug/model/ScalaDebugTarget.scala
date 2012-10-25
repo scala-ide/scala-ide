@@ -65,52 +65,50 @@ abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine, lau
 
   // Members declared in org.eclipse.debug.core.IBreakpointListener
 
-  def breakpointAdded(breakponit: IBreakpoint): Unit = ???
-  def breakpointChanged(breakpoint: IBreakpoint, delta: IMarkerDelta): Unit = ???
-  def breakpointRemoved(breakpoint: IBreakpoint, delta: IMarkerDelta): Unit = ???
+  override def breakpointAdded(breakponit: IBreakpoint): Unit = ???
+  override def breakpointChanged(breakpoint: IBreakpoint, delta: IMarkerDelta): Unit = ???
+  override def breakpointRemoved(breakpoint: IBreakpoint, delta: IMarkerDelta): Unit = ???
 
   // Members declared in org.eclipse.debug.core.model.IDebugElement
 
-  override def getLaunch(): org.eclipse.debug.core.ILaunch = launch
+  override def getLaunch: org.eclipse.debug.core.ILaunch = launch
 
   // Members declared in org.eclipse.debug.core.model.IDebugTarget
 
-  def getName(): String = "Scala Debug Target" // TODO: need better name
-  def getProcess(): org.eclipse.debug.core.model.IProcess = process
-  def getThreads(): Array[org.eclipse.debug.core.model.IThread] = internalGetThreads.toArray
-  def hasThreads(): Boolean = !internalGetThreads.isEmpty
-  def supportsBreakpoint(breakpoint: IBreakpoint): Boolean = ???
+  override def getName: String = "Scala Debug Target" // TODO: need better name
+  override def getProcess: org.eclipse.debug.core.model.IProcess = process
+  override def getThreads: Array[org.eclipse.debug.core.model.IThread] = internalGetThreads.toArray
+  override def hasThreads: Boolean = !internalGetThreads.isEmpty
+  override def supportsBreakpoint(breakpoint: IBreakpoint): Boolean = ???
 
   // Members declared in org.eclipse.debug.core.model.IDisconnect
 
-  def canDisconnect(): Boolean = false // TODO: need real logic
-  def disconnect(): Unit = ???
-  def isDisconnected(): Boolean = false // TODO: need real logic
+  override def canDisconnect: Boolean = false // TODO: need real logic
+  override def disconnect(): Unit = ???
+  override def isDisconnected: Boolean = false // TODO: need real logic
 
   // Members declared in org.eclipse.debug.core.model.IMemoryBlockRetrieval
 
-  def getMemoryBlock(startAddress: Long, length: Long): org.eclipse.debug.core.model.IMemoryBlock = ???
-  def supportsStorageRetrieval(): Boolean = ???
+  override def getMemoryBlock(startAddress: Long, length: Long): org.eclipse.debug.core.model.IMemoryBlock = ???
+  override def supportsStorageRetrieval: Boolean = ???
 
   // Members declared in org.eclipse.debug.core.model.ISuspendResume
 
-  def canResume(): Boolean = false // TODO: need real logic
-  def canSuspend(): Boolean = false // TODO: need real logic
-  def isSuspended(): Boolean = false // TODO: need real logic
-  def resume(): Unit = ???
-  def suspend(): Unit = ???
+  override def canResume: Boolean = false // TODO: need real logic
+  override def canSuspend: Boolean = false // TODO: need real logic
+  override def isSuspended: Boolean = false // TODO: need real logic
+  override def resume(): Unit = ???
+  override def suspend(): Unit = ???
 
   // Members declared in org.eclipse.debug.core.model.ITerminate
 
-  override def canTerminate(): Boolean = running // TODO: need real logic
-  override def isTerminated(): Boolean = !running // TODO: need real logic
-  override def terminate(): Unit = {
-    virtualMachine.dispose()
-  }
+  override def canTerminate: Boolean = running // TODO: need real logic
+  override def isTerminated: Boolean = !running // TODO: need real logic
+  override def terminate(): Unit = virtualMachine.dispose()
   
   // Members declared in scala.tools.eclipse.debug.model.ScalaDebugElement
-  
-  override val getDebugTarget: ScalaDebugTarget = this
+
+  override def getDebugTarget: ScalaDebugTarget = this
 
   // ---
 
