@@ -24,13 +24,6 @@ object ScalaDebuggerDisconnectTests extends TestProjectSetup("debug", bundleName
 
   def initDebugSession(launchConfigurationName: String): ScalaDebugTestSession = new ScalaDebugTestSession(file(launchConfigurationName + ".launch"))
 
-  @BeforeClass
-  def disableStatusHandlers() {
-    // disable UI-dependent checks done during pre-launch. Gets rid of annoying exceptions during tests
-    val prefs = new ScopedPreferenceStore(new InstanceScope(), DebugPlugin.getDefault().getBundle().getSymbolicName());
-    prefs.setValue("org.eclipse.debug.core.PREF_ENABLE_STATUS_HANDLERS", false)
-  }
-
   @AfterClass
   def deleteProject() {
     SDTTestUtils.deleteProjects(project)
