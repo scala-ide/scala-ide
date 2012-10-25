@@ -18,7 +18,7 @@ import com.sun.jdi.event.ClassPrepareEvent
 import com.sun.jdi.request.BreakpointRequest
 import com.sun.jdi.request.EventRequest
 
-object BreakpointSupport {
+private[debug] object BreakpointSupport {
   // Initialize a breakpoint support instance
   def apply(breakpoint: IBreakpoint, debugTarget: ScalaDebugTarget): BreakpointSupport = {
     val actor = BreakpointSupportActor(breakpoint, debugTarget)
@@ -29,7 +29,7 @@ object BreakpointSupport {
 /**
  * Manage the requests for one platform breakpoint.
  */
-class BreakpointSupport private (eventActor: Actor) {
+private[debug] class BreakpointSupport private (eventActor: Actor) {
 
   def changed() {
     eventActor ! BreakpointSupportActor.Changed
@@ -46,7 +46,7 @@ private[debug] object BreakpointSupportActor {
   case object Changed
 
   // attribute constants
-  private val AttributeTypeName = "org.eclipse.jdt.debug.core.typeName"
+  private final val AttributeTypeName = "org.eclipse.jdt.debug.core.typeName"
 
   def apply(breakpoint: IBreakpoint, debugTarget: ScalaDebugTarget): Actor = {
     val eventRequests = createClassPrepareRequests(breakpoint, debugTarget)
@@ -103,7 +103,8 @@ private[debug] object BreakpointSupportActor {
   }
 
   private def createBreakpointRequest(breakpoint: IBreakpoint, debugTarget: ScalaDebugTarget, referenceType: ReferenceType): Option[BreakpointRequest] = {
-    JdiRequestFactory.createBreakpointRequest(referenceType, getLineNumber(breakpoint), debugTarget)
+    if(breakpoint.isEnabled) JdiRequestFactory.createBreakpointRequest(referenceType, getLineNumber(breakpoint), debugTarget)
+    else None
   }
 
   /**
