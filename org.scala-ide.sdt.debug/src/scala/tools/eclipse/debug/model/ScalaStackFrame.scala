@@ -87,38 +87,38 @@ object ScalaStackFrame {
  * This class is NOT thread safe. 'stackFrame' variable can be 're-bound' at any time.
  * Instances have be created through its companion object.
  */
-class ScalaStackFrame private (val thread: ScalaThread, @volatile var stackFrame: StackFrame) extends ScalaDebugElement(thread.debugTarget) with IStackFrame {
+class ScalaStackFrame private (val thread: ScalaThread, @volatile var stackFrame: StackFrame) extends ScalaDebugElement(thread.getDebugTarget) with IStackFrame {
   import ScalaStackFrame._
 
   // Members declared in org.eclipse.debug.core.model.IStackFrame
 
-  def getCharEnd(): Int = -1
-  def getCharStart(): Int = -1
-  def getLineNumber(): Int = stackFrame.location.lineNumber // TODO: cache data ?
-  def getName(): String = stackFrame.location.declaringType.name // TODO: cache data ?
-  def getRegisterGroups(): Array[IRegisterGroup] = ???
-  def getThread(): IThread = thread
-  def getVariables(): Array[IVariable] = variables.toArray // TODO: need real logic
-  def hasRegisterGroups(): Boolean = ???
-  def hasVariables(): Boolean = ???
+  override def getCharEnd(): Int = -1
+  override def getCharStart(): Int = -1
+  override def getLineNumber(): Int = stackFrame.location.lineNumber // TODO: cache data ?
+  override def getName(): String = stackFrame.location.declaringType.name // TODO: cache data ?
+  override def getRegisterGroups(): Array[IRegisterGroup] = ???
+  override def getThread(): IThread = thread
+  override def getVariables(): Array[IVariable] = variables.toArray // TODO: need real logic
+  override def hasRegisterGroups(): Boolean = ???
+  override def hasVariables(): Boolean = ???
 
   // Members declared in org.eclipse.debug.core.model.IStep
 
-  def canStepInto(): Boolean = true // TODO: need real logic
-  def canStepOver(): Boolean = true // TODO: need real logic
-  def canStepReturn(): Boolean = true // TODO: need real logic
-  def isStepping(): Boolean = ???
-  def stepInto(): Unit = thread.stepInto
-  def stepOver(): Unit = thread.stepOver
-  def stepReturn(): Unit = thread.stepReturn
+  override def canStepInto(): Boolean = true // TODO: need real logic
+  override def canStepOver(): Boolean = true // TODO: need real logic
+  override def canStepReturn(): Boolean = true // TODO: need real logic
+  override def isStepping(): Boolean = ???
+  override def stepInto(): Unit = thread.stepInto
+  override def stepOver(): Unit = thread.stepOver
+  override def stepReturn(): Unit = thread.stepReturn
 
   // Members declared in org.eclipse.debug.core.model.ISuspendResume
 
-  def canResume(): Boolean = true
-  def canSuspend(): Boolean = false
-  def isSuspended(): Boolean = true
-  def resume(): Unit = thread.resume
-  def suspend(): Unit = ???
+  override def canResume(): Boolean = true
+  override def canSuspend(): Boolean = false
+  override def isSuspended(): Boolean = true
+  override def resume(): Unit = thread.resume
+  override def suspend(): Unit = ???
 
   // ---
 
@@ -154,9 +154,7 @@ class ScalaStackFrame private (val thread: ScalaThread, @volatile var stackFrame
     }
   }
 
-  def getMethodFullName(): String = {
-    getFullName(stackFrame.location.method)
-  }
+  def getMethodFullName(): String = getFullName(stackFrame.location.method)
 
   def rebind(newStackFrame: StackFrame) {
     stackFrame = newStackFrame

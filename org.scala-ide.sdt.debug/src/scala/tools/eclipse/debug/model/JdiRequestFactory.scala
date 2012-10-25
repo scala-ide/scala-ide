@@ -23,7 +23,7 @@ object JdiRequestFactory {
   def createMethodEntryBreakpoint(method: Method, thread: ScalaThread): BreakpointRequest = {
     import scala.collection.JavaConverters._
 
-    val breakpointRequest = thread.debugTarget.virtualMachine.eventRequestManager.createBreakpointRequest(method.location)
+    val breakpointRequest = thread.getDebugTarget.virtualMachine.eventRequestManager.createBreakpointRequest(method.location)
     breakpointRequest.setSuspendPolicy(EventRequest.SUSPEND_EVENT_THREAD)
     breakpointRequest.addThreadFilter(thread.thread)
 
@@ -34,7 +34,7 @@ object JdiRequestFactory {
    * create a step request on the given thread
    */
   def createStepRequest(size: Int, depth: Int, thread: ScalaThread): StepRequest = {
-    val stepOverRequest = thread.debugTarget.virtualMachine.eventRequestManager.createStepRequest(thread.thread, size, depth)
+    val stepOverRequest = thread.getDebugTarget.virtualMachine.eventRequestManager.createStepRequest(thread.thread, size, depth)
     stepOverRequest.setSuspendPolicy(EventRequest.SUSPEND_EVENT_THREAD)
     stepOverRequest
   }

@@ -39,10 +39,9 @@ class ScalaDebugBreakpointManager private (eventActor: Actor) extends IBreakpoin
   // ------------
 
   def init() {
-    val future = eventActor !! Initialize
-    DebugPlugin.getDefault.getBreakpointManager.addBreakpointListener(this)
     // need to wait for all existing breakpoint to be initialized before continuing, the caller will resume the VM
-    future()
+    eventActor !? Initialize
+    DebugPlugin.getDefault.getBreakpointManager.addBreakpointListener(this)
   }
 
   def dispose() {
@@ -68,7 +67,7 @@ private[debug] object ScalaDebugBreakpointManagerActor {
   case class BreakpointRemoved(breakpoint: IBreakpoint)
   case class BreakpointChanged(breakpoint: IBreakpoint)
 
-  private val JdtDebugUID = "org.eclipse.jdt.debug"
+  private final val JdtDebugUID = "org.eclipse.jdt.debug"
     
   def apply(debugTarget: ScalaDebugTarget): Actor = {
     val actor = new ScalaDebugBreakpointManagerActor(debugTarget)
@@ -119,7 +118,7 @@ private class ScalaDebugBreakpointManagerActor private(debugTarget: ScalaDebugTa
         case ActorExit =>
           // not cleaning the requests
           // the connection to the vm is closing or already closed at this point
-          exit
+          exit()
         case ActorDebug =>
           reply(None)
       }
