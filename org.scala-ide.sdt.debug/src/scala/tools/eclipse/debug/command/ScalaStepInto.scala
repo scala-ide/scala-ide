@@ -31,7 +31,7 @@ object ScalaStepInto {
 
     val stackFrames = scalaStackFrame.thread.getStackFrames
     val depth = stackFrames.length - stackFrames.indexOf(scalaStackFrame)
-    val actor = new ScalaStepIntoActor(scalaStackFrame.debugTarget, scalaStackFrame.thread, stepIntoRequest, stepOutRequest, depth, scalaStackFrame.stackFrame.location.lineNumber)
+    val actor = new ScalaStepIntoActor(scalaStackFrame.getDebugTarget, scalaStackFrame.thread, stepIntoRequest, stepOutRequest, depth, scalaStackFrame.stackFrame.location.lineNumber)
 
     val step= new ScalaStepInto(actor)
     actor.start(step)

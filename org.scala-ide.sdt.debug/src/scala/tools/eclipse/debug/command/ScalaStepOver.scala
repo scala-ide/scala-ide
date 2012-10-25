@@ -29,11 +29,11 @@ object ScalaStepOver {
 
     val actor = if (location.lineNumber == LINE_NUMBER_UNAVAILABLE) {
 
-      new ScalaStepOverActor(scalaStackFrame.debugTarget, null, scalaStackFrame.thread, requests)
+      new ScalaStepOverActor(scalaStackFrame.getDebugTarget, null, scalaStackFrame.thread, requests)
 
     } else {
 
-      val classPrepareRequest = JdiRequestFactory.createClassPrepareRequest(location.declaringType.name + "$*", scalaStackFrame.debugTarget)
+      val classPrepareRequest = JdiRequestFactory.createClassPrepareRequest(location.declaringType.name + "$*", scalaStackFrame.getDebugTarget)
 
       requests += classPrepareRequest
 
@@ -52,7 +52,7 @@ object ScalaStepOver {
 
       requests ++= loadedAnonFunctionsInRange.map(JdiRequestFactory.createMethodEntryBreakpoint(_, scalaStackFrame.thread))
 
-      new ScalaStepOverActor(scalaStackFrame.debugTarget, range, scalaStackFrame.thread, requests)
+      new ScalaStepOverActor(scalaStackFrame.getDebugTarget, range, scalaStackFrame.thread, requests)
     }
 
     val step = new ScalaStepOver(actor)

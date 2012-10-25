@@ -20,16 +20,16 @@ abstract class ScalaVariable(target: ScalaDebugTarget) extends ScalaDebugElement
   def hasValueChanged(): Boolean = false // TODO: need real logic
 }
 
-class ScalaThisVariable(value: ObjectReference, stackFrame: ScalaStackFrame) extends ScalaVariable(stackFrame.debugTarget) {
+class ScalaThisVariable(value: ObjectReference, stackFrame: ScalaStackFrame) extends ScalaVariable(stackFrame.getDebugTarget) {
   
   // Members declared in org.eclipse.debug.core.model.IVariable
 
   def getName(): String = "this"
   def getReferenceTypeName(): String = value.referenceType.name
-  def getValue(): org.eclipse.debug.core.model.IValue = new ScalaObjectReference(value, debugTarget)
+  def getValue(): org.eclipse.debug.core.model.IValue = new ScalaObjectReference(value, getDebugTarget)
 }
 
-class ScalaLocalVariable(variable: LocalVariable, stackFrame: ScalaStackFrame) extends ScalaVariable(stackFrame.debugTarget) {
+class ScalaLocalVariable(variable: LocalVariable, stackFrame: ScalaStackFrame) extends ScalaVariable(stackFrame.getDebugTarget) {
 
   // Members declared in org.eclipse.debug.core.model.IVariable
 
@@ -37,24 +37,24 @@ class ScalaLocalVariable(variable: LocalVariable, stackFrame: ScalaStackFrame) e
   def getReferenceTypeName(): String = variable.typeName
   
   // fetching the value for local variables cannot be delayed because the underlying stackframe element may become invalid at any time
-  val getValue: IValue = ScalaValue(stackFrame.stackFrame.getValue(variable), debugTarget)
+  val getValue: IValue = ScalaValue(stackFrame.stackFrame.getValue(variable), getDebugTarget)
 }
 
-class ScalaArrayElementVariable(index: Int, arrayReference: ScalaArrayReference) extends ScalaVariable(arrayReference.debugTarget) {
+class ScalaArrayElementVariable(index: Int, arrayReference: ScalaArrayReference) extends ScalaVariable(arrayReference. getDebugTarget) {
 
   // Members declared in org.eclipse.debug.core.model.IVariable
 
   def getName(): String = "(%s)".format(index)
   def getReferenceTypeName(): String = arrayReference.arrayReference.referenceType.asInstanceOf[ArrayType].componentTypeName
-  def getValue(): org.eclipse.debug.core.model.IValue = ScalaValue(arrayReference.arrayReference.getValue(index), debugTarget)
+  def getValue(): org.eclipse.debug.core.model.IValue = ScalaValue(arrayReference.arrayReference.getValue(index), getDebugTarget)
 
 }
 
-class ScalaFieldVariable(field: Field, objectReference: ScalaObjectReference) extends ScalaVariable(objectReference.debugTarget) {
+class ScalaFieldVariable(field: Field, objectReference: ScalaObjectReference) extends ScalaVariable(objectReference.getDebugTarget) {
 
   // Members declared in org.eclipse.debug.core.model.IVariable
 
   def getName(): String = field.name
   def getReferenceTypeName(): String = field.typeName
-  def getValue(): org.eclipse.debug.core.model.IValue = ScalaValue(objectReference.objectReference.getValue(field), debugTarget)
+  def getValue(): org.eclipse.debug.core.model.IValue = ScalaValue(objectReference.objectReference.getValue(field), getDebugTarget)
 }

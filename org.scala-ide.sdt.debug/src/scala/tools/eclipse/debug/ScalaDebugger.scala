@@ -55,7 +55,7 @@ object ScalaDebugger extends ISelectionListener {
 
   // ----
 
-  var currentThread: ScalaThread = null
+  @volatile var currentThread: ScalaThread = null
 
   def init() {
     if (!ScalaPlugin.plugin.headlessMode) {

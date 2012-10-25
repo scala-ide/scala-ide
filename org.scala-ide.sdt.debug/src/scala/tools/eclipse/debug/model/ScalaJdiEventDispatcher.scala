@@ -44,8 +44,8 @@ class ScalaJdiEventDispatcher private (virtualMachine: VirtualMachine, eventActo
         case e: VMDisconnectedException =>
           // it is likely that we will see this exception before being able to
           // shutdown the loop after a VMDisconnectedEvent
-          dispose
-        case e: Throwable =>
+          dispose()
+        case e: Exception =>
           // it should not die from any exception. Just logging
           logger.error("Error in jdi event loop", e)
       }

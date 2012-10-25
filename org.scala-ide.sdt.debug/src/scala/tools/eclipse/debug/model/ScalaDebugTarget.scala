@@ -71,7 +71,6 @@ abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine, lau
 
   // Members declared in org.eclipse.debug.core.model.IDebugElement
 
-  override def getDebugTarget(): org.eclipse.debug.core.model.IDebugTarget = debugTarget
   override def getLaunch(): org.eclipse.debug.core.ILaunch = launch
 
   // Members declared in org.eclipse.debug.core.model.IDebugTarget
@@ -111,7 +110,7 @@ abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine, lau
   
   // Members declared in scala.tools.eclipse.debug.model.ScalaDebugElement
   
-  override val debugTarget= this
+  override val getDebugTarget: ScalaDebugTarget = this
 
   // ---
 
