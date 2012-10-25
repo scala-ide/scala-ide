@@ -88,7 +88,6 @@ class ScalaDebugTestSession(launchConfigurationFile: IFile) extends IDebugEventS
   def setTerminated() {
     this.synchronized {
       state = TERMINATED
-      debugTarget = null
       this.notify
     }
   }

@@ -1,12 +1,5 @@
 package scala.tools.eclipse.debug.model
 
-import scala.actors.Actor
-import scala.actors.Future
-import scala.tools.eclipse.debug.ActorExit
-import scala.tools.eclipse.debug.ScalaDebugBreakpointManager
-import scala.tools.eclipse.debug.ScalaSourceLookupParticipant
-import scala.tools.eclipse.logging.HasLogger
-
 import org.eclipse.core.resources.IMarkerDelta
 import org.eclipse.debug.core.DebugEvent
 import org.eclipse.debug.core.DebugPlugin
@@ -16,14 +9,23 @@ import org.eclipse.debug.core.model.IDebugTarget
 import org.eclipse.debug.core.model.IProcess
 import org.eclipse.debug.core.sourcelookup.ISourceLookupDirector
 
-import com.sun.jdi.{ ReferenceType, Method, Location }
 import com.sun.jdi.ThreadReference
 import com.sun.jdi.VirtualMachine
-import com.sun.jdi.event.{ThreadStartEvent, ThreadDeathEvent}
+import com.sun.jdi.event.ThreadDeathEvent
+import com.sun.jdi.event.ThreadStartEvent
 import com.sun.jdi.event.VMDeathEvent
 import com.sun.jdi.event.VMDisconnectEvent
 import com.sun.jdi.event.VMStartEvent
-import com.sun.jdi.request.{ThreadStartRequest, ThreadDeathRequest}
+import com.sun.jdi.request.ThreadDeathRequest
+import com.sun.jdi.request.ThreadStartRequest
+
+import scala.actors.Actor
+import scala.actors.Future
+import scala.collection.JavaConverters.asScalaBufferConverter
+import scala.tools.eclipse.debug.ActorExit
+import scala.tools.eclipse.debug.ScalaDebugBreakpointManager
+import scala.tools.eclipse.debug.ScalaSourceLookupParticipant
+import scala.tools.eclipse.logging.HasLogger
 
 object ScalaDebugTarget extends HasLogger {
 
@@ -104,7 +106,12 @@ abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine, lau
 
   override def canTerminate: Boolean = running // TODO: need real logic
   override def isTerminated: Boolean = !running // TODO: need real logic
-  override def terminate(): Unit = virtualMachine.dispose()
+  override def terminate(): Unit = try {
+    virtualMachine.exit(1)
+    // manually clean up, as VMDeathEvent and VMDisconnectedEvent are not fired 
+    // when abruptly terminating the vM
+    vmDisconnected()
+  }
   
   // Members declared in scala.tools.eclipse.debug.model.ScalaDebugElement
 
@@ -145,7 +152,7 @@ abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine, lau
   /**
    * Callback from the actor when the connection with the vm as been lost
    */
-  private[model] def vmTerminated() {
+  def vmDisconnected() {
     running = false
     eventDispatcher.dispose()
     breakpointManager.dispose()
@@ -210,10 +217,10 @@ private class ScalaDebugTargetActor private (threadStartRequest: ThreadStartRequ
           removed.foreach(_.terminatedFromScala())
           reply(false)
         case _: VMDeathEvent =>
-          vmTerminated()
+          vmDisconnected()
           reply(false)
         case _: VMDisconnectEvent =>
-          vmTerminated()
+          vmDisconnected()
           reply(false)
         case ThreadSuspended(thread, eventDetail) =>
           // forward the event to the right thread
@@ -240,10 +247,14 @@ private class ScalaDebugTargetActor private (threadStartRequest: ThreadStartRequ
     debugTarget.vmStarted()
   }
 
-  private def vmTerminated() {
+  private def disposeThreads() {
     threads.foreach { _.dispose() }
     threads = Nil
-    debugTarget.vmTerminated()
+  }
+
+  private def vmDisconnected() {
+    disposeThreads()
+    debugTarget.vmDisconnected()
     this ! ActorExit
   }
 }
