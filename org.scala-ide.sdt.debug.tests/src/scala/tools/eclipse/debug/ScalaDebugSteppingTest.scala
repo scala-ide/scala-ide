@@ -10,6 +10,9 @@ import org.eclipse.debug.core.DebugPlugin
 import org.eclipse.core.runtime.Platform
 import org.eclipse.ui.preferences.ScopedPreferenceStore
 import org.eclipse.core.runtime.preferences.InstanceScope
+import org.junit.Assert
+import scala.tools.eclipse.testsetup.SDTTestUtils
+import org.junit.AfterClass
 
 object ScalaDebugSteppingTest extends TestProjectSetup("debug", bundleName = "org.scala-ide.sdt.debug.tests") with ScalaDebugRunningTest {
 
@@ -24,6 +27,10 @@ object ScalaDebugSteppingTest extends TestProjectSetup("debug", bundleName = "or
     prefs.setValue("org.eclipse.debug.core.PREF_ENABLE_STATUS_HANDLERS", false)
   }
 
+  @AfterClass
+  def deleteProject() {
+    SDTTestUtils.deleteProjects(project)
+  }
 }
 
 class ScalaDebugSteppingTest {
