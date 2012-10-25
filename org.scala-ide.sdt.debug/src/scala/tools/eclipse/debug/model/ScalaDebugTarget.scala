@@ -106,7 +106,7 @@ abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine, lau
 
   override def canTerminate: Boolean = running // TODO: need real logic
   override def isTerminated: Boolean = !running // TODO: need real logic
-  override def terminate(): Unit = try {
+  override def terminate(): Unit = {
     virtualMachine.exit(1)
     // manually clean up, as VMDeathEvent and VMDisconnectedEvent are not fired 
     // when abruptly terminating the vM
