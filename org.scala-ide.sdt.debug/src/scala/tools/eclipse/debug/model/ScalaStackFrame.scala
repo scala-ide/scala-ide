@@ -160,6 +160,9 @@ class ScalaStackFrame private (val thread: ScalaThread, @volatile var stackFrame
 
   def rebind(newStackFrame: StackFrame) {
     stackFrame = newStackFrame
+    //FIXME: I'm puzzled. Here we swap the stack frame, but the `ScalaStackFrame.variables` are 
+    //       not recomputed. My intuition is that this should actually create brand new 
+    //       ScalaStackFrame, so what am I missing? 
   }
 
 }
