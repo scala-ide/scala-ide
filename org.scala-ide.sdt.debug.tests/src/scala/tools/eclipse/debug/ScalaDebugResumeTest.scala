@@ -6,18 +6,24 @@ import org.junit.Before
 import org.eclipse.core.resources.IncrementalProjectBuilder
 import org.junit.After
 import org.eclipse.core.runtime.NullProgressMonitor
+import org.junit.AfterClass
+import scala.tools.eclipse.testsetup.SDTTestUtils
 
-object ScalaDebugResumeTest extends TestProjectSetup("debug", bundleName= "org.scala-ide.sdt.debug.tests") with ScalaDebugRunningTest
+object ScalaDebugResumeTest extends TestProjectSetup("debug", bundleName = "org.scala-ide.sdt.debug.tests") with ScalaDebugRunningTest {
+  @AfterClass
+  def deleteProject() {
+    SDTTestUtils.deleteProjects(project)
+  }
+}
 
-/**
- * Test the resume action
+/** Test the resume action
  */
 class ScalaDebugResumeTest {
 
-  import ScalaDebugSteppingTest._
+  import ScalaDebugResumeTest._
 
   var session: ScalaDebugTestSession = null
-  
+
   @Before
   def refreshBinaryFiles() {
     project.underlying.build(IncrementalProjectBuilder.CLEAN_BUILD, new NullProgressMonitor)
@@ -31,7 +37,7 @@ class ScalaDebugResumeTest {
       session = null
     }
   }
-  
+
   @Test
   def resumeToBreakpoindAndToCompletion() {
 
@@ -44,7 +50,7 @@ class ScalaDebugResumeTest {
     session.runToLine(TYPENAME_FC_LS, 35)
 
     session.checkStackFrame(TYPENAME_FC_LS, "bar()V", 35)
-    
+
     session.resumeToCompletion()
   }
 
