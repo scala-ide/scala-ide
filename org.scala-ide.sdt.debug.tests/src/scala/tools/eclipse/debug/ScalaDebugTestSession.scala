@@ -46,9 +46,9 @@ class ScalaDebugTestSession(launchConfigurationFile: IFile) extends IDebugEventS
           setRunning
         case EclipseDebugEvent(DebugEvent.SUSPEND, thread: ScalaThread) =>
           setSuspended(thread.getTopStackFrame.asInstanceOf[ScalaStackFrame])
-        case EclipseDebugEvent(DebugEvent.SUSPEND, target: ScalaDebugTarget) =>
+        case EclipseDebugEvent(DebugEvent.SUSPEND, target: ScalaDebugTarget) if target == debugTarget =>
           setSuspended(null)
-        case EclipseDebugEvent(DebugEvent.TERMINATE, target: ScalaDebugTarget) =>
+        case EclipseDebugEvent(DebugEvent.TERMINATE, target: ScalaDebugTarget) if target == debugTarget =>
           setTerminated()
         case _ =>
       }
@@ -88,7 +88,6 @@ class ScalaDebugTestSession(launchConfigurationFile: IFile) extends IDebugEventS
   def setTerminated() {
     this.synchronized {
       state = TERMINATED
-      debugTarget = null
       this.notify
     }
   }

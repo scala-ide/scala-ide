@@ -1,8 +1,20 @@
 package scala.tools.eclipse.debug
 
 import scala.tools.eclipse.testsetup.TestProjectSetup
+import org.eclipse.ui.preferences.ScopedPreferenceStore
+import org.eclipse.core.runtime.preferences.InstanceScope
+import org.eclipse.debug.core.DebugPlugin
 
 trait ScalaDebugRunningTest {
+
+  // debug tests need this
+  disableStatusHandlers()
+
+  def disableStatusHandlers() {
+    // disable UI-dependent checks done during pre-launch. Gets rid of annoying exceptions during tests
+    val prefs = new ScopedPreferenceStore(new InstanceScope(), DebugPlugin.getDefault().getBundle().getSymbolicName());
+    prefs.setValue("org.eclipse.debug.core.PREF_ENABLE_STATUS_HANDLERS", false)
+  }
 
   val TYPENAME_FC_LS = "stepping.ForComprehensionListString"
   val TYPENAME_FC_LS2 = "stepping.ForComprehensionListString2"

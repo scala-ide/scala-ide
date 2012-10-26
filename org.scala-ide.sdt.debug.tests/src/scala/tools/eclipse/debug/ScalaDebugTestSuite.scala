@@ -24,6 +24,7 @@ import scala.tools.eclipse.launching.LibraryJarInBootstrapTest
     classOf[ScalaStackFrameTest],
     classOf[ScalaValueTest],
 //    classOf[LibraryJarInBootstrapTest], // the test is not running on command line right now
-    classOf[ScalaDebugTargetTest]))
+    classOf[ScalaDebugTargetTest],
+    classOf[ScalaDebuggerDisconnectTests]))
 class ScalaDebugTestSuite {
 }
