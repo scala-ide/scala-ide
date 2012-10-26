@@ -111,6 +111,7 @@ abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine, lau
     // manually clean up, as VMDeathEvent and VMDisconnectedEvent are not fired 
     // when abruptly terminating the vM
     vmDisconnected()
+    eventActor ! ActorExit
   }
   
   // Members declared in scala.tools.eclipse.debug.model.ScalaDebugElement
@@ -229,6 +230,8 @@ private class ScalaDebugTargetActor private (threadStartRequest: ThreadStartRequ
         case GetThreads =>
           reply(threads)
         case ActorExit =>
+          disposeThreads()
+          debugTarget.vmDisconnected()
           exit()
       }
     }
@@ -253,8 +256,6 @@ private class ScalaDebugTargetActor private (threadStartRequest: ThreadStartRequ
   }
 
   private def vmDisconnected() {
-    disposeThreads()
-    debugTarget.vmDisconnected()
     this ! ActorExit
   }
 }
