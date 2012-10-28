@@ -167,7 +167,10 @@ class ScalaDebugModelPresentation extends IDebugModelPresentation {
     }
   }
 
-  def setAttribute(x$1: String, x$2: Any): Unit = ???
+  /** Currently we don't support any attributes. The standard one,
+   *  `show type names`, might get here but we ignore it.
+   */
+  def setAttribute(key: String, value: Any): Unit = {}
 
   // Members declared in org.eclipse.debug.ui.ISourcePresentation
 

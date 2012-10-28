@@ -3,14 +3,13 @@ package scala.tools.eclipse.debug.model
 import scala.tools.eclipse.debug.ScalaDebugger.{modelProvider, modelId}
 import scala.tools.eclipse.debug.ScalaDebugger
 import scala.tools.eclipse.logging.HasLogger
-
-import org.eclipse.debug.core.model.{ITerminate, DebugElement}
+import org.eclipse.debug.core.model.{IDebugTarget, ITerminate, DebugElement}
 
 /**
  * Base class for debug elements in the Scala debug model
  * This class is thread safe.
  */
-abstract class ScalaDebugElement(val debugTarget: ScalaDebugTarget) extends DebugElement(debugTarget) with ITerminate with HasLogger {
+abstract class ScalaDebugElement(debugTarget: ScalaDebugTarget) extends DebugElement(debugTarget) with ITerminate with HasLogger {
 
   // Members declared in org.eclipse.core.runtime.IAdaptable
 
@@ -22,16 +21,18 @@ abstract class ScalaDebugElement(val debugTarget: ScalaDebugTarget) extends Debu
         super.getAdapter(adapter)
     }
   }
+  
+  override def getDebugTarget: ScalaDebugTarget = debugTarget
 
   // Members declared in org.eclipse.debug.core.model.IDebugElement
 
-  def getModelIdentifier(): String = modelId
+  override def getModelIdentifier: String = modelId
 
   // Members declared in org.eclipse.debug.core.model.ITerminate
 
-  def canTerminate(): Boolean = debugTarget.canTerminate
-  def isTerminated(): Boolean = debugTarget.isTerminated
-  def terminate(): Unit = debugTarget.terminate
+  override def canTerminate: Boolean = debugTarget.canTerminate
+  override def isTerminated: Boolean = debugTarget.isTerminated
+  override def terminate(): Unit = debugTarget.terminate()
 
   // ----
 

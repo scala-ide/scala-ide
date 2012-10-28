@@ -17,7 +17,7 @@ object ScalaStepReturn {
 
     val stepReturnRequest = JdiRequestFactory.createStepRequest(StepRequest.STEP_LINE, StepRequest.STEP_OUT, scalaStackFrame.thread)
 
-    val actor= new ScalaStepReturnActor(scalaStackFrame.debugTarget, scalaStackFrame.thread, stepReturnRequest)
+    val actor= new ScalaStepReturnActor(scalaStackFrame.getDebugTarget, scalaStackFrame.thread, stepReturnRequest)
     
     val step= new ScalaStepReturn(actor)
     actor.start(step)

@@ -1,12 +1,5 @@
 package scala.tools.eclipse.debug.model
 
-import scala.actors.Actor
-import scala.actors.Future
-import scala.tools.eclipse.debug.ActorExit
-import scala.tools.eclipse.debug.ScalaDebugBreakpointManager
-import scala.tools.eclipse.debug.ScalaSourceLookupParticipant
-import scala.tools.eclipse.logging.HasLogger
-
 import org.eclipse.core.resources.IMarkerDelta
 import org.eclipse.debug.core.DebugEvent
 import org.eclipse.debug.core.DebugPlugin
@@ -16,14 +9,23 @@ import org.eclipse.debug.core.model.IDebugTarget
 import org.eclipse.debug.core.model.IProcess
 import org.eclipse.debug.core.sourcelookup.ISourceLookupDirector
 
-import com.sun.jdi.{ ReferenceType, Method, Location }
 import com.sun.jdi.ThreadReference
 import com.sun.jdi.VirtualMachine
-import com.sun.jdi.event.{ThreadStartEvent, ThreadDeathEvent}
+import com.sun.jdi.event.ThreadDeathEvent
+import com.sun.jdi.event.ThreadStartEvent
 import com.sun.jdi.event.VMDeathEvent
 import com.sun.jdi.event.VMDisconnectEvent
 import com.sun.jdi.event.VMStartEvent
-import com.sun.jdi.request.{ThreadStartRequest, ThreadDeathRequest}
+import com.sun.jdi.request.ThreadDeathRequest
+import com.sun.jdi.request.ThreadStartRequest
+
+import scala.actors.Actor
+import scala.actors.Future
+import scala.collection.JavaConverters.asScalaBufferConverter
+import scala.tools.eclipse.debug.ActorExit
+import scala.tools.eclipse.debug.ScalaDebugBreakpointManager
+import scala.tools.eclipse.debug.ScalaSourceLookupParticipant
+import scala.tools.eclipse.logging.HasLogger
 
 object ScalaDebugTarget extends HasLogger {
 
@@ -65,53 +67,56 @@ abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine, lau
 
   // Members declared in org.eclipse.debug.core.IBreakpointListener
 
-  def breakpointAdded(breakponit: IBreakpoint): Unit = ???
-  def breakpointChanged(breakpoint: IBreakpoint, delta: IMarkerDelta): Unit = ???
-  def breakpointRemoved(breakpoint: IBreakpoint, delta: IMarkerDelta): Unit = ???
+  override def breakpointAdded(breakponit: IBreakpoint): Unit = ???
+  override def breakpointChanged(breakpoint: IBreakpoint, delta: IMarkerDelta): Unit = ???
+  override def breakpointRemoved(breakpoint: IBreakpoint, delta: IMarkerDelta): Unit = ???
 
   // Members declared in org.eclipse.debug.core.model.IDebugElement
 
-  override def getDebugTarget(): org.eclipse.debug.core.model.IDebugTarget = debugTarget
-  override def getLaunch(): org.eclipse.debug.core.ILaunch = launch
+  override def getLaunch: org.eclipse.debug.core.ILaunch = launch
 
   // Members declared in org.eclipse.debug.core.model.IDebugTarget
 
-  def getName(): String = "Scala Debug Target" // TODO: need better name
-  def getProcess(): org.eclipse.debug.core.model.IProcess = process
-  def getThreads(): Array[org.eclipse.debug.core.model.IThread] = internalGetThreads.toArray
-  def hasThreads(): Boolean = !internalGetThreads.isEmpty
-  def supportsBreakpoint(breakpoint: IBreakpoint): Boolean = ???
+  override def getName: String = "Scala Debug Target" // TODO: need better name
+  override def getProcess: org.eclipse.debug.core.model.IProcess = process
+  override def getThreads: Array[org.eclipse.debug.core.model.IThread] = internalGetThreads.toArray
+  override def hasThreads: Boolean = !internalGetThreads.isEmpty
+  override def supportsBreakpoint(breakpoint: IBreakpoint): Boolean = ???
 
   // Members declared in org.eclipse.debug.core.model.IDisconnect
 
-  def canDisconnect(): Boolean = false // TODO: need real logic
-  def disconnect(): Unit = ???
-  def isDisconnected(): Boolean = false // TODO: need real logic
+  override def canDisconnect: Boolean = false // TODO: need real logic
+  override def disconnect(): Unit = ???
+  override def isDisconnected: Boolean = false // TODO: need real logic
 
   // Members declared in org.eclipse.debug.core.model.IMemoryBlockRetrieval
 
-  def getMemoryBlock(startAddress: Long, length: Long): org.eclipse.debug.core.model.IMemoryBlock = ???
-  def supportsStorageRetrieval(): Boolean = ???
+  override def getMemoryBlock(startAddress: Long, length: Long): org.eclipse.debug.core.model.IMemoryBlock = ???
+  override def supportsStorageRetrieval: Boolean = ???
 
   // Members declared in org.eclipse.debug.core.model.ISuspendResume
 
-  def canResume(): Boolean = false // TODO: need real logic
-  def canSuspend(): Boolean = false // TODO: need real logic
-  def isSuspended(): Boolean = false // TODO: need real logic
-  def resume(): Unit = ???
-  def suspend(): Unit = ???
+  override def canResume: Boolean = false // TODO: need real logic
+  override def canSuspend: Boolean = false // TODO: need real logic
+  override def isSuspended: Boolean = false // TODO: need real logic
+  override def resume(): Unit = ???
+  override def suspend(): Unit = ???
 
   // Members declared in org.eclipse.debug.core.model.ITerminate
 
-  override def canTerminate(): Boolean = running // TODO: need real logic
-  override def isTerminated(): Boolean = !running // TODO: need real logic
+  override def canTerminate: Boolean = running // TODO: need real logic
+  override def isTerminated: Boolean = !running // TODO: need real logic
   override def terminate(): Unit = {
-    virtualMachine.dispose()
+    virtualMachine.exit(1)
+    // manually clean up, as VMDeathEvent and VMDisconnectedEvent are not fired 
+    // when abruptly terminating the vM
+    vmDisconnected()
+    eventActor ! ActorExit
   }
   
   // Members declared in scala.tools.eclipse.debug.model.ScalaDebugElement
-  
-  override val debugTarget= this
+
+  override def getDebugTarget: ScalaDebugTarget = this
 
   // ---
 
@@ -148,7 +153,7 @@ abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine, lau
   /**
    * Callback from the actor when the connection with the vm as been lost
    */
-  private[model] def vmTerminated() {
+  def vmDisconnected() {
     running = false
     eventDispatcher.dispose()
     breakpointManager.dispose()
@@ -213,10 +218,10 @@ private class ScalaDebugTargetActor private (threadStartRequest: ThreadStartRequ
           removed.foreach(_.terminatedFromScala())
           reply(false)
         case _: VMDeathEvent =>
-          vmTerminated()
+          vmDisconnected()
           reply(false)
         case _: VMDisconnectEvent =>
-          vmTerminated()
+          vmDisconnected()
           reply(false)
         case ThreadSuspended(thread, eventDetail) =>
           // forward the event to the right thread
@@ -225,6 +230,8 @@ private class ScalaDebugTargetActor private (threadStartRequest: ThreadStartRequ
         case GetThreads =>
           reply(threads)
         case ActorExit =>
+          disposeThreads()
+          debugTarget.vmDisconnected()
           exit()
       }
     }
@@ -243,10 +250,12 @@ private class ScalaDebugTargetActor private (threadStartRequest: ThreadStartRequ
     debugTarget.vmStarted()
   }
 
-  private def vmTerminated() {
+  private def disposeThreads() {
     threads.foreach { _.dispose() }
     threads = Nil
-    debugTarget.vmTerminated()
+  }
+
+  private def vmDisconnected() {
     this ! ActorExit
   }
 }
