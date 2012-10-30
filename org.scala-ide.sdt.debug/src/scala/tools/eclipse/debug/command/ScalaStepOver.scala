@@ -68,21 +68,7 @@ object ScalaStepOver {
  * A step over in the Scala debug model.
  * This class is thread safe. Instances have be created through its companion object.
  */
-private class ScalaStepOver private (eventActor: ScalaStepOverActor) extends ScalaStep {
-
-  // Members declared in scala.tools.eclipse.debug.command.ScalaStep
-
-  def step() {
-    eventActor ! ScalaStep.Step
-  }
-
-  def stop() {
-    eventActor ! ScalaStep.Stop
-  }
-
-  // ----------------
-
-}
+private class ScalaStepOver private (eventActor: ScalaStepOverActor) extends BaseScalaStep[ScalaStepOverActor](eventActor)
 
 /**
  * Actor used to manage a Scala step over. It keeps track of the request needed to perform this step.

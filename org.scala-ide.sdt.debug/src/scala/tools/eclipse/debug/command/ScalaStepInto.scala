@@ -43,21 +43,7 @@ object ScalaStepInto {
  * A step into in the Scala debug model.
  * This class is thread safe. Instances have be created through its companion object.
  */
-private class ScalaStepInto private (eventActor: ScalaStepIntoActor) extends ScalaStep {
-
-  // Members declared in scala.tools.eclipse.debug.command.ScalaStep
-
-  def step() {
-    eventActor ! ScalaStep.Step
-  }
-
-  def stop() {
-    eventActor ! ScalaStep.Stop
-  }
-
-  // ------
-
-}
+private class ScalaStepInto private (eventActor: ScalaStepIntoActor) extends BaseScalaStep[ScalaStepIntoActor](eventActor)
 
 /**
  * Actor used to manage a Scala step into. It keeps track of the request needed to perform this step.

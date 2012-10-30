@@ -27,21 +27,8 @@ object ScalaStepReturn {
  * A step return in the Scala debug model.
  * This class is thread safe. Instances have be created through its companion object.
  */
-private class ScalaStepReturn private (eventActor: ScalaStepReturnActor) extends ScalaStep {
+private class ScalaStepReturn private (eventActor: ScalaStepReturnActor) extends BaseScalaStep[ScalaStepReturnActor](eventActor) {
 // TODO: when implementing support without filtering, need to workaround problem reported in Eclipse bug #38744
-
-  // Members declared in scala.tools.eclipse.debug.command.ScalaStep
-  
-  def step() {
-    eventActor ! ScalaStep.Step
-  }
-  
-  def stop() {
-    eventActor ! ScalaStep.Stop
-  }
-
-  // --------------------
-
 }
 
 /**
