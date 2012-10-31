@@ -38,30 +38,31 @@ class ScalaOccurrencesFinder(unit: InteractiveCompilationUnit) extends HasLogger
 
   def findOccurrences(region: IRegion, lastModified: Long): Option[Occurrences] = {
     unit.withSourceFile { (sourceFile, compiler) =>
-      compiler.askOption { () =>
-        def isNotLoadedInPresentationCompiler(source: SourceFile): Boolean = 
+
+        def isNotLoadedInPresentationCompiler(source: SourceFile): Boolean =
           !compiler.unitOfFile.contains(source.file)
-        
-        if(isNotLoadedInPresentationCompiler(sourceFile)) {
-          logger.info("Source %s is not loded in the presentation compiler. Aborting occurrences update."format(sourceFile.file.name))
+
+        if (isNotLoadedInPresentationCompiler(sourceFile)) {
+          logger.info("Source %s is not loded in the presentation compiler. Aborting occurrences update." format (sourceFile.file.name))
           None
         } else {
           val occurrencesIndex = getCachedIndex(lastModified) getOrElse {
             val occurrencesIndex = new MarkOccurrencesIndex {
               val global = compiler
-              lazy val index = Utils.debugTimed("Time elapsed for building mark occurrences index in source " + sourceFile.file.name) {
-                GlobalIndex(global.loadedType(sourceFile))
+              override lazy val index: IndexLookup = Utils.debugTimed("Time elapsed for building mark occurrences index in source " + sourceFile.file.name) {
+                val tree = global.loadedType(sourceFile)
+                compiler.askOption { () => GlobalIndex(tree) } getOrElse EmptyIndex
               }
             }
             cacheIndex(lastModified, occurrencesIndex)
             occurrencesIndex
           }
-        
+        compiler.askOption { () =>
           val (from, to) = (region.getOffset, region.getOffset + region.getLength)
-          val (selectedTree, occurrences) = occurrencesIndex.occurrencesOf(sourceFile.file, from, to)       
-          
+          val (selectedTree, occurrences) = occurrencesIndex.occurrencesOf(sourceFile.file, from, to)
+
           Option(selectedTree.symbol) filter (!_.name.isOperatorName) map { sym =>
-            val locations = occurrences map { pos => 
+            val locations = occurrences map { pos =>
               new Region(pos.startOrPoint, pos.endOrPoint - pos.startOrPoint)
             }
             Occurrences(sym.nameString, locations)
