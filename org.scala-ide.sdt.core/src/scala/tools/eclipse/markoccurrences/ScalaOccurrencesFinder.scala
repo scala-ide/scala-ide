@@ -39,24 +39,24 @@ class ScalaOccurrencesFinder(unit: InteractiveCompilationUnit) extends HasLogger
   def findOccurrences(region: IRegion, lastModified: Long): Option[Occurrences] = {
     unit.withSourceFile { (sourceFile, compiler) =>
 
-        def isNotLoadedInPresentationCompiler(source: SourceFile): Boolean =
-          !compiler.unitOfFile.contains(source.file)
+      def isNotLoadedInPresentationCompiler(source: SourceFile): Boolean =
+        !compiler.unitOfFile.contains(source.file)
 
-        if (isNotLoadedInPresentationCompiler(sourceFile)) {
-          logger.info("Source %s is not loded in the presentation compiler. Aborting occurrences update." format (sourceFile.file.name))
-          None
-        } else {
-          val occurrencesIndex = getCachedIndex(lastModified) getOrElse {
-            val occurrencesIndex = new MarkOccurrencesIndex {
-              val global = compiler
-              override lazy val index: IndexLookup = Utils.debugTimed("Time elapsed for building mark occurrences index in source " + sourceFile.file.name) {
-                val tree = global.loadedType(sourceFile)
-                compiler.askOption { () => GlobalIndex(tree) } getOrElse EmptyIndex
-              }
+      if (isNotLoadedInPresentationCompiler(sourceFile)) {
+        logger.info("Source %s is not loded in the presentation compiler. Aborting occurrences update." format (sourceFile.file.name))
+        None
+      } else {
+        val occurrencesIndex = getCachedIndex(lastModified) getOrElse {
+          val occurrencesIndex = new MarkOccurrencesIndex {
+            val global = compiler
+            override val index: IndexLookup = Utils.debugTimed("Time elapsed for building mark occurrences index in source " + sourceFile.file.name) {
+              val tree = global.loadedType(sourceFile)
+              compiler.askOption { () => GlobalIndex(tree) } getOrElse EmptyIndex
             }
-            cacheIndex(lastModified, occurrencesIndex)
-            occurrencesIndex
           }
+          cacheIndex(lastModified, occurrencesIndex)
+          occurrencesIndex
+        }
         compiler.askOption { () =>
           val (from, to) = (region.getOffset, region.getOffset + region.getLength)
           val (selectedTree, occurrences) = occurrencesIndex.occurrencesOf(sourceFile.file, from, to)
