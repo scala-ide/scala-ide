@@ -10,17 +10,6 @@ import org.eclipse.ui.PlatformUI
 import model.ScalaStackFrame
 import model.ScalaThread
 
-/**
- * A generic message to inform that an actor should terminates.
- * An equivalent to Akka PoisonPill
- */
-object ActorExit
-
-/**
- * A debug message used to wait until all required messages have been processed
- */
-object ActorDebug
-
 object ScalaDebugger extends ISelectionListener {
 
   val classIDebugModelProvider = classOf[IDebugModelProvider]
@@ -31,7 +20,7 @@ object ScalaDebugger extends ISelectionListener {
     }
   }
 
-  val modelId = "org.scala-ide.sdt.debug"
+  final val modelId = "org.scala-ide.sdt.debug"
 
 
   // Members declared in org.eclipse.ui.ISelectionListener
@@ -53,8 +42,6 @@ object ScalaDebugger extends ISelectionListener {
     }
   }
 
-  // ----
-
   @volatile var currentThread: ScalaThread = null
 
   def init() {
@@ -63,5 +50,4 @@ object ScalaDebugger extends ISelectionListener {
       PlatformUI.getWorkbench.getWorkbenchWindows.apply(0).getSelectionService.addSelectionListener("org.eclipse.debug.ui.DebugView", this)
     }
   }
-
 }
