@@ -14,7 +14,7 @@ import org.eclipse.core.runtime.preferences.InstanceScope
 import org.eclipse.debug.core.ILaunch
 import org.eclipse.core.runtime.CoreException
 import java.util.Date
-import java.util.{ Map => jMap }
+import java.util.{ Map => JMap }
 import org.eclipse.jdt.launching.JavaRuntime
 import org.junit.Before
 import org.eclipse.debug.core.IDebugEventSetListener
@@ -33,8 +33,8 @@ import java.net.SocketException
 
 object RemoteConnectorTest extends TestProjectSetup("debug", bundleName = "org.scala-ide.sdt.debug.tests") with ScalaDebugRunningTest {
 
-  val VmArgsKey = "org.eclipse.jdt.launching.VM_ARGUMENTS"
-  val ConnectKey = "org.eclipse.jdt.launching.CONNECT_MAP"
+  final val VmArgsKey = "org.eclipse.jdt.launching.VM_ARGUMENTS"
+  final val ConnectKey = "org.eclipse.jdt.launching.CONNECT_MAP"
 
   // Iterator to produce a different port number for each test
   val ConnectionPort = Iterator.from(8000)
@@ -47,8 +47,8 @@ object RemoteConnectorTest extends TestProjectSetup("debug", bundleName = "org.s
     val workingLaunchConfiguration = launchConfiguration.getWorkingCopy()
 
     // update the port number
-    val vmArgs = workingLaunchConfiguration.getAttribute(ConnectKey, null: jMap[_, _]).asInstanceOf[jMap[String, String]]
-    vmArgs.put(SocketListenConnectorScala.PortKey, port.toString)
+    val vmArgs = workingLaunchConfiguration.getAttribute(ConnectKey, null: JMap[_, _]).asInstanceOf[JMap[String, String]]
+    vmArgs.put(SocketConnectorScala.PortKey, port.toString)
     workingLaunchConfiguration.setAttribute(VmArgsKey, vmArgs)
 
     new ScalaDebugTestSession(workingLaunchConfiguration)
@@ -145,13 +145,6 @@ object RemoteConnectorTest extends TestProjectSetup("debug", bundleName = "org.s
     } finally {
       DebugPlugin.getDefault().removeDebugEventListener(eventListener)
     }
-
-    println("---Output Stream---")
-    println(process.getStreamsProxy().getOutputStreamMonitor().getContents())
-    println("---Error Stream---")
-    println(process.getStreamsProxy().getErrorStreamMonitor().getContents())
-    println("---   ---")
-
   }
 
   def getProcess(launch: ILaunch): IProcess = {
@@ -210,8 +203,10 @@ class RemoteConnectorTest {
    */
   @Test
   def attachToRunningVM() {
-    val port = ConnectionPort.next
+    val port = ConnectionPort.next()
     application = launchInRunMode("HelloWorld listening", port)
+
+    waitForOpenSocket(port)
 
     session = initDebugSession("Remote attaching", port)
 
@@ -227,9 +222,9 @@ class RemoteConnectorTest {
    * Test timeout set to 5s. The connection timeout is set to 3s.
    * A passing test should not be more than a couple of seconds.
    */
-  @Test(timeout = 25000)
+  @Test(timeout = 5000)
   def listenToAttachingVM() {
-    val port = ConnectionPort.next
+    val port = ConnectionPort.next()
     // tweak the timeout preference. 3s should be good enough.
     JavaRuntime.getPreferences().setValue(JavaRuntime.PREF_CONNECT_TIMEOUT, 3000)
 
@@ -246,7 +241,7 @@ class RemoteConnectorTest {
    */
   @Test(expected = classOf[CoreException])
   def attachToNothing() {
-    val port = ConnectionPort.next
+    val port = ConnectionPort.next()
     session = initDebugSession("Remote attaching", port)
 
     session.runToLine(TYPENAME_HELLOWORLD + "$", 6)
@@ -261,7 +256,7 @@ class RemoteConnectorTest {
    */
   @Test(timeout = 2000)
   def listeningToNobody() {
-    val port = ConnectionPort.next
+    val port = ConnectionPort.next()
     // tweak the timeout preference. 10ms to fail fast
     JavaRuntime.getPreferences().setValue(JavaRuntime.PREF_CONNECT_TIMEOUT, 10)
 
@@ -282,7 +277,7 @@ class RemoteConnectorTest {
 
     session = initDebugSession("Remote listening", port)
 
-    session.launch
+    session.launch()
 
     latch.await()
   }
@@ -292,7 +287,7 @@ class RemoteConnectorTest {
    */
   @Test(timeout = 5000)
   def disconnectReleaseRunningVM() {
-    val port = ConnectionPort.next
+    val port = ConnectionPort.next()
 
     application = launchInRunMode("HelloWorld listening", port)
 
@@ -323,7 +318,7 @@ class RemoteConnectorTest {
     }
     DebugPlugin.getDefault().addDebugEventListener(eventListener)
 
-    session.disconnect
+    session.disconnect()
 
     latch.await()
 
@@ -336,7 +331,7 @@ class RemoteConnectorTest {
    */
   @Test
   def cannotTerminate() {
-    val port = ConnectionPort.next
+    val port = ConnectionPort.next()
 
     application = launchInRunMode("HelloWorld listening", port)
 
@@ -359,7 +354,7 @@ class RemoteConnectorTest {
    */
   @Test(timeout = 5000)
   def terminateKillsRunningVM() {
-    val port = ConnectionPort.next
+    val port = ConnectionPort.next()
 
     application = launchInRunMode("HelloWorld listening", port)
 
@@ -392,7 +387,7 @@ class RemoteConnectorTest {
     }
     DebugPlugin.getDefault().addDebugEventListener(eventListener)
 
-    session.terminate
+    session.terminate()
 
     latch.await()
 

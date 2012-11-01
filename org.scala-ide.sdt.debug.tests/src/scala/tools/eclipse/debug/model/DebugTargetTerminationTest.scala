@@ -118,7 +118,7 @@ class DebugTargetTerminationTest extends HasLogger {
         if (isDebugTargetCreated) latch.countDown()
       }
 
-      debugTarget = ScalaDebugTarget(virtualMachine, mock(classOf[Launch]), mock(classOf[IProcess]))
+      debugTarget = ScalaDebugTarget(virtualMachine, mock(classOf[Launch]), mock(classOf[IProcess]), false, true)
     }
   }
 

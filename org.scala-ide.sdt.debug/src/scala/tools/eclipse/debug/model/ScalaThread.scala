@@ -107,7 +107,7 @@ abstract class ScalaThread private (target: ScalaDebugTarget, private[model] val
     }
   }
 
-  def suspendedFromScala(eventDetail: Int): Unit = companionActor !? SuspendedFromScala(eventDetail)
+  def suspendedFromScala(eventDetail: Int): Unit = companionActor ! SuspendedFromScala(eventDetail)
 
   def resumeFromScala(eventDetail: Int): Unit = companionActor ! ResumeFromScala(None, eventDetail)
 
@@ -143,8 +143,8 @@ abstract class ScalaThread private (target: ScalaDebugTarget, private[model] val
    * FOR THE COMPANION ACTOR ONLY.
    */
   private[model] def suspend(eventDetail: Int) { 
-    suspended = true
     stackFrames= thread.frames.asScala.map(ScalaStackFrame(this, _)).toList
+    suspended = true
     fireSuspendEvent(eventDetail)
   }
 
@@ -201,7 +201,6 @@ private[model] class ScalaThreadActor private(scalaThread: ScalaThread, thread: 
       currentStep.foreach(_.stop())
       currentStep = None
       scalaThread.suspend(eventDetail)
-      reply(None)
     case ResumeFromScala(step, eventDetail) =>
       currentStep = step
       scalaThread.resume(eventDetail)

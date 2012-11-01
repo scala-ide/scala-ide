@@ -150,7 +150,7 @@ abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine, lau
    * Callback from the breakpoint manager when a platform breakpoint is hit
    */
   private[debug] def threadSuspended(thread: ThreadReference, eventDetail: Int) {
-    companionActor !? ScalaDebugTargetActor.ThreadSuspended(thread, eventDetail)
+    companionActor ! ScalaDebugTargetActor.ThreadSuspended(thread, eventDetail)
   }
   
   /*
@@ -254,7 +254,6 @@ private class ScalaDebugTargetActor private (threadStartRequest: ThreadStartRequ
     case ThreadSuspended(thread, eventDetail) =>
       // forward the event to the right thread
       debugTarget.getScalaThreads.find(_.thread == thread).get.suspendedFromScala(eventDetail)
-      reply(None)
   }
 
   private def vmStarted() {
