@@ -81,7 +81,7 @@ trait SymbolTests { self: SymbolClassification =>
    */
   private def hasSetter(sym: Symbol): Boolean = {
     assert(sym.isGetter)
-    sym.setter(sym.owner) != NoSymbol
+    global.askOption(() => sym.setter(sym.owner) != NoSymbol).getOrElse(false)
   }
 
   private def classifyType(sym: Symbol): SymbolType = {
