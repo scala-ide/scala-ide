@@ -9,6 +9,7 @@ import org.junit.Before
 import org.eclipse.debug.core.DebugPlugin
 import com.sun.jdi.ObjectCollectedException
 import com.sun.jdi.ThreadGroupReference
+import scala.tools.eclipse.debug.BaseDebuggerActor
 
 object ScalaThreadTest {
   private def createThreadGroup() = {
@@ -31,15 +32,23 @@ class ScalaThreadTest {
     }
   }
 
+  private def anonDebugTarget: ScalaDebugTarget = { 
+    val debugTarget = mock(classOf[ScalaDebugTarget])
+    val debugTargetActor = mock(classOf[BaseDebuggerActor])
+    when(debugTarget.eventActor).thenReturn(debugTargetActor)
+    debugTarget
+  }
+  
+
   @Test
   def getName() {
     val jdiThread = mock(classOf[ThreadReference])
 
     when(jdiThread.name).thenReturn("some test string")
-    val jdiThreadGroup = createThreadGroup();
+    val jdiThreadGroup = createThreadGroup()
     when(jdiThread.threadGroup).thenReturn(jdiThreadGroup)
 
-    val thread = ScalaThread(null, jdiThread)
+    val thread = ScalaThread(anonDebugTarget, jdiThread)
 
     assertEquals("Bad thread name", "some test string", thread.getName)
   }
@@ -49,10 +58,10 @@ class ScalaThreadTest {
     val jdiThread = mock(classOf[ThreadReference])
 
     when(jdiThread.name).thenThrow(new VMDisconnectedException)
-    val jdiThreadGroup = createThreadGroup();
+    val jdiThreadGroup = createThreadGroup()
     when(jdiThread.threadGroup).thenReturn(jdiThreadGroup)
 
-    val thread = ScalaThread(null, jdiThread)
+    val thread = ScalaThread(anonDebugTarget, jdiThread)
 
     assertEquals("Bad thread name on VMDisconnectedException", "<disconnected>", thread.getName)
   }
@@ -62,10 +71,10 @@ class ScalaThreadTest {
     val jdiThread = mock(classOf[ThreadReference])
 
     when(jdiThread.name).thenThrow(new ObjectCollectedException)
-    val jdiThreadGroup = createThreadGroup();
+    val jdiThreadGroup = createThreadGroup()
     when(jdiThread.threadGroup).thenReturn(jdiThreadGroup)
 
-    val thread = ScalaThread(null, jdiThread)
+    val thread = ScalaThread(anonDebugTarget, jdiThread)
 
     assertEquals("Bad thread name", "<garbage collected>", thread.getName)
   }
@@ -78,7 +87,7 @@ class ScalaThreadTest {
   def threadResumedOnlyOnce_1001199() {
     val jdiThread = mock(classOf[ThreadReference])
 
-    val thread = ScalaThread(null, jdiThread)
+    val thread = ScalaThread(anonDebugTarget, jdiThread)
 
     thread.resume()
 

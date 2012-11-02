@@ -1,9 +1,6 @@
 package scala.tools.eclipse.debug.model
 
-import scala.actors.Actor
-import scala.tools.eclipse.debug.ActorExit
 import scala.tools.eclipse.logging.HasLogger
-
 import com.sun.jdi.VMDisconnectedException
 import com.sun.jdi.VirtualMachine
 import com.sun.jdi.event.EventSet
@@ -11,9 +8,12 @@ import com.sun.jdi.event.VMDeathEvent
 import com.sun.jdi.event.VMDisconnectEvent
 import com.sun.jdi.event.VMStartEvent
 import com.sun.jdi.request.EventRequest
+import scala.tools.eclipse.debug.BaseDebuggerActor
+import scala.tools.eclipse.debug.PoisonPill
+import scala.actors.Actor
 
 object ScalaJdiEventDispatcher {
-  def apply(virtualMachine: VirtualMachine, scalaDebugTargetActor: Actor): ScalaJdiEventDispatcher = {
+  def apply(virtualMachine: VirtualMachine, scalaDebugTargetActor: BaseDebuggerActor): ScalaJdiEventDispatcher = {
     val actor = ScalaJdiEventDispatcherActor(scalaDebugTargetActor)
     new ScalaJdiEventDispatcher(virtualMachine, actor)
   }
@@ -24,7 +24,8 @@ object ScalaJdiEventDispatcher {
  * them to the registered actors.
  * This class is thread safe. Instances have be created through its companion object.
  */
-class ScalaJdiEventDispatcher private (virtualMachine: VirtualMachine, eventActor: Actor) extends Runnable with HasLogger {
+
+class ScalaJdiEventDispatcher private (virtualMachine: VirtualMachine, protected[debug] val eventActor: Actor) extends Runnable with HasLogger {
 
   @volatile
   private var running = true
@@ -57,7 +58,7 @@ class ScalaJdiEventDispatcher private (virtualMachine: VirtualMachine, eventActo
    */
   private[model] def dispose() {
     running = false
-    eventActor ! ActorExit
+    eventActor ! PoisonPill
   }
 
   /**
@@ -75,7 +76,6 @@ class ScalaJdiEventDispatcher private (virtualMachine: VirtualMachine, eventActo
   def unsetActorFor(request: EventRequest) {
     eventActor ! ScalaJdiEventDispatcherActor.UnsetActorFor(request)
   }
-
 }
 
 private[model] object ScalaJdiEventDispatcherActor {
@@ -83,7 +83,7 @@ private[model] object ScalaJdiEventDispatcherActor {
   case class UnsetActorFor(request: EventRequest)
   
   def apply(scalaDebugTargetActor: Actor): ScalaJdiEventDispatcherActor = {
-    val actor= new ScalaJdiEventDispatcherActor(scalaDebugTargetActor)
+    val actor = new ScalaJdiEventDispatcherActor(scalaDebugTargetActor)
     actor.start()
     actor
   }
@@ -94,21 +94,18 @@ private[model] object ScalaJdiEventDispatcherActor {
  * and dispatches the JDI events.
  * This class is thread safe. Instances are not to be created outside of the ScalaJdiEventDispatcher object.
  */
-private class ScalaJdiEventDispatcherActor private (scalaDebugTargetActor: Actor) extends Actor with HasLogger {
+private class ScalaJdiEventDispatcherActor private (scalaDebugTargetActor: Actor) extends BaseDebuggerActor {
   import ScalaJdiEventDispatcherActor._
 
   /** event request to actor map */
-  private var eventActorMap = Map[EventRequest, Actor]()
+  private var eventActorMap = Map[EventRequest, Actor]()  
 
-  def act() {
-    loop {
-      react {
-        case SetActorFor(actor, request) => eventActorMap += (request -> actor)
-        case UnsetActorFor(request)      => eventActorMap -= request
-        case eventSet: EventSet          => processEventSet(eventSet)
-        case ActorExit                   => exit()
-      }
-    }
+  override protected def postStart(): Unit = link(scalaDebugTargetActor)
+
+  override protected def behavior = {
+    case SetActorFor(actor, request) => eventActorMap += (request -> actor)
+    case UnsetActorFor(request)      => eventActorMap -= request
+    case eventSet: EventSet          => processEventSet(eventSet)
   }
 
   /**
@@ -116,9 +113,7 @@ private class ScalaJdiEventDispatcherActor private (scalaDebugTargetActor: Actor
    * actors.
    * Resume or not the stopped threads depending on actor's answers
    */
-  private def processEventSet(eventSet: EventSet) {
-    var staySuspended = false
-
+  private def processEventSet(eventSet: EventSet): Unit = {
     import scala.collection.JavaConverters._
 
     var futures = List[Future[Any]]()
@@ -136,7 +131,6 @@ private class ScalaJdiEventDispatcherActor private (scalaDebugTargetActor: Actor
       case event: VMDeathEvent =>
         futures ::= (scalaDebugTargetActor !! event)
       case event =>
- //       println("GOT event: " + event)
         /* TODO: I think we should try to use JDI's mechanisms to associate the actor to the request:
          *  @see EventRequest.setProperty(k, v) and EventRequest.getProperty */
         eventActorMap.get(event.request).foreach { interestedActor =>
@@ -144,30 +138,28 @@ private class ScalaJdiEventDispatcherActor private (scalaDebugTargetActor: Actor
         }
     }
 
-    /**
-     * wait for the answers of the actors and resume
-     * the threads if none of the actor requested to keep
-     * them suspended
-     */
+    // Message sent upon completion of the `futures`. This message is used to modify `this` actor's behavior.   
+    object FutureComputed
+
+    // Change the actor's behavior to wait for the `futures` to complete
+    become { case FutureComputed => unbecome() }
+
+    var staySuspended = false
     val it = futures.iterator
     loopWhile(it.hasNext) {
       val future = it.next
-      future.inputChannel.react {
-        case result: Boolean =>
-          staySuspended |= result
+      //FIXME: If any of the actor sitting behind the future dies, it could prevent the `ScalaJdiEventDispatcherActor` to 
+      //       resume and effectively blocking the whole application! Unfortunately, it doesn't look like there is an easy 
+      //       fix (changing the future into synchronous calls doesn't look like a good idea, as it's hard to know in advance 
+      //       what would be the right timeout value to set). (ticket #1001311)
+      future.inputChannel.react { 
+        case result: Boolean => staySuspended |= result
       }
     }.andThen {
-      if (!staySuspended) {
-        eventSet.resume()
-      }
-      this ! None
+      try if (!staySuspended) eventSet.resume()
+      finally ScalaJdiEventDispatcherActor.this ! FutureComputed
     }
-
-    // invoking react here change the actor behavior. The next
-    // expected message is None. All other messages will be queued until 
-    // None is received
-    react {
-      case None =>
-    }
+    // Warning: Any code inserted here is never executed (it is effectively dead/unreachable code), because the above 
+    //          `loopWhile` never returns normally (i.e., it always throws an exception!).
   }
 }

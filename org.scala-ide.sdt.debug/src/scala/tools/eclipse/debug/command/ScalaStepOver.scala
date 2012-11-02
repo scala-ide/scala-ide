@@ -1,10 +1,8 @@
 package scala.tools.eclipse.debug.command
 
 import scala.Option.option2Iterable
-import scala.actors.Actor
 import scala.collection.JavaConverters.asScalaBufferConverter
 import scala.collection.mutable.ListBuffer
-import scala.tools.eclipse.debug.ActorExit
 import scala.tools.eclipse.debug.JDIUtil.methodToLines
 import scala.tools.eclipse.debug.model.{ScalaThread, ScalaStackFrame, ScalaDebugTarget}
 import scala.tools.eclipse.debug.model.JdiRequestFactory
@@ -12,6 +10,7 @@ import org.eclipse.debug.core.DebugEvent
 import com.sun.jdi.event.{ StepEvent, ClassPrepareEvent, BreakpointEvent }
 import com.sun.jdi.request.{ StepRequest, EventRequest }
 import scala.tools.eclipse.debug.model.StepFilters
+import scala.tools.eclipse.debug.BaseDebuggerActor
 
 object ScalaStepOver {
 
@@ -29,7 +28,9 @@ object ScalaStepOver {
 
     val actor = if (location.lineNumber == LINE_NUMBER_UNAVAILABLE) {
 
-      new ScalaStepOverActor(scalaStackFrame.getDebugTarget, null, scalaStackFrame.thread, requests)
+      new ScalaStepOverActor(scalaStackFrame.getDebugTarget, null, scalaStackFrame.thread, requests) {
+        override val scalaStep: ScalaStepOver = new ScalaStepOver(this)
+      }
 
     } else {
 
@@ -52,12 +53,13 @@ object ScalaStepOver {
 
       requests ++= loadedAnonFunctionsInRange.map(JdiRequestFactory.createMethodEntryBreakpoint(_, scalaStackFrame.thread))
 
-      new ScalaStepOverActor(scalaStackFrame.getDebugTarget, range, scalaStackFrame.thread, requests)
+      new ScalaStepOverActor(scalaStackFrame.getDebugTarget, range, scalaStackFrame.thread, requests) {
+        override val scalaStep: ScalaStepOver = new ScalaStepOver(this)
+      }
     }
 
-    val step = new ScalaStepOver(actor)
-    actor.start(step)
-    step
+    actor.start()
+    actor.scalaStep
   }
 
 }
@@ -66,72 +68,48 @@ object ScalaStepOver {
  * A step over in the Scala debug model.
  * This class is thread safe. Instances have be created through its companion object.
  */
-private class ScalaStepOver private (eventActor: ScalaStepOverActor) extends ScalaStep {
-
-  // Members declared in scala.tools.eclipse.debug.command.ScalaStep
-
-  def step() {
-    eventActor ! ScalaStep.Step
-  }
-
-  def stop() {
-    eventActor ! ScalaStep.Stop
-  }
-
-  // ----------------
-
-}
+private class ScalaStepOver private (eventActor: ScalaStepOverActor) extends BaseScalaStep[ScalaStepOverActor](eventActor)
 
 /**
  * Actor used to manage a Scala step over. It keeps track of the request needed to perform this step.
  * This class is thread safe. Instances are not to be created outside of the ScalaStepOver object.
  */
-private[command] class ScalaStepOverActor(target: ScalaDebugTarget, range: Range, thread: ScalaThread, requests: ListBuffer[EventRequest]) extends Actor {
+private[command] abstract class ScalaStepOverActor(target: ScalaDebugTarget, range: Range, thread: ScalaThread, requests: ListBuffer[EventRequest]) extends BaseDebuggerActor {
 
-    
-  private var scalaStep: ScalaStepOver = _
+  protected[command] def scalaStep: ScalaStepOver
+
+  override protected def postStart(): Unit = link(thread.eventActor)
   
-  def start(step: ScalaStepOver) {
-    scalaStep= step
-    start()
-  }
-  
-  def act() {
-    loop {
-      react {
-        // JDI event triggered when a class has been loaded
-        case classPrepareEvent: ClassPrepareEvent =>
-          StepFilters.anonFunctionsInRange(classPrepareEvent.referenceType, range).foreach(method => {
-            val breakpoint = JdiRequestFactory.createMethodEntryBreakpoint(method, thread)
-            requests += breakpoint
-            target.eventDispatcher.setActorFor(this, breakpoint)
-            breakpoint.enable()
-          })
-          reply(false)
-        // JDI event triggered when a step has been performed
-        case stepEvent: StepEvent =>
-          reply(if (!StepFilters.isTransparentLocation(stepEvent.location)) {
-            dispose()
-            thread.suspendedFromScala(DebugEvent.STEP_OVER)
-            true
-          } else {
-            false
-          })
-        // JDI event triggered when a breakpoint is hit
-        case breakpointEvent: BreakpointEvent =>
-          dispose()
-          thread.suspendedFromScala(DebugEvent.STEP_OVER)
-          reply(true)
-        // user step request
-        case ScalaStep.Step =>
-          step()
-        // step is terminated
-        case ScalaStep.Stop =>
-          dispose()
-        case ActorExit =>
-          exit()
-      }
-    }
+  override protected def behavior = {
+    // JDI event triggered when a class has been loaded
+    case classPrepareEvent: ClassPrepareEvent =>
+      StepFilters.anonFunctionsInRange(classPrepareEvent.referenceType, range).foreach(method => {
+        val breakpoint = JdiRequestFactory.createMethodEntryBreakpoint(method, thread)
+        requests += breakpoint
+        target.eventDispatcher.setActorFor(this, breakpoint)
+        breakpoint.enable()
+      })
+      reply(false)
+    // JDI event triggered when a step has been performed
+    case stepEvent: StepEvent =>
+      reply(if (!StepFilters.isTransparentLocation(stepEvent.location)) {
+        dispose()
+        thread.suspendedFromScala(DebugEvent.STEP_OVER)
+        true
+      } else {
+        false
+      })
+    // JDI event triggered when a breakpoint is hit
+    case breakpointEvent: BreakpointEvent =>
+      dispose()
+      thread.suspendedFromScala(DebugEvent.STEP_OVER)
+      reply(true)
+    // user step request
+    case ScalaStep.Step => 
+      step()
+    // step is terminated
+    case ScalaStep.Stop =>
+      dispose()
   }
 
   private def step() {
@@ -146,18 +124,18 @@ private[command] class ScalaStepOverActor(target: ScalaDebugTarget, range: Range
     thread.resumeFromScala(scalaStep, DebugEvent.STEP_OVER)
   }
 
-  private def dispose() {
+  private def dispose(): Unit = {
+    poison()
+    unlink(thread.eventActor)
     val eventDispatcher = target.eventDispatcher
-
     val eventRequestManager = target.virtualMachine.eventRequestManager
 
-    requests.foreach {
-      request =>
-        request.disable()
-        eventDispatcher.unsetActorFor(request)
-        eventRequestManager.deleteEventRequest(request)
+    for(request <- requests) {
+      request.disable()
+      eventDispatcher.unsetActorFor(request)
+      eventRequestManager.deleteEventRequest(request)
     }
-    
-    this ! ActorExit
   }
+
+  override protected def preExit(): Unit = dispose()
 }

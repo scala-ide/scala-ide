@@ -9,6 +9,7 @@ import scala.tools.eclipse.debug.model.ScalaStackFrameTest
 import scala.tools.eclipse.debug.model.ScalaValueTest
 import scala.tools.eclipse.debug.model.ScalaDebugTargetTest
 import scala.tools.eclipse.launching.LibraryJarInBootstrapTest
+import scala.tools.eclipse.debug.model.DebugTargetTerminationTest
 
 /**
  * Junit test suite for the Scala debugger.
@@ -25,6 +26,8 @@ import scala.tools.eclipse.launching.LibraryJarInBootstrapTest
     classOf[ScalaValueTest],
 //    classOf[LibraryJarInBootstrapTest], // the test is not running on command line right now
     classOf[ScalaDebugTargetTest],
-    classOf[ScalaDebuggerDisconnectTests]))
+    classOf[ScalaDebuggerDisconnectTests],
+    classOf[BaseDebuggerActorTest],
+    classOf[DebugTargetTerminationTest]))
 class ScalaDebugTestSuite {
 }

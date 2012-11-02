@@ -1,5 +1,10 @@
 package scala.tools.eclipse.debug.model
 
+import scala.actors.Future
+import scala.tools.eclipse.debug.BaseDebuggerActor
+import scala.tools.eclipse.debug.ScalaDebugBreakpointManager
+import scala.tools.eclipse.debug.ScalaSourceLookupParticipant
+import scala.tools.eclipse.logging.HasLogger
 import org.eclipse.core.resources.IMarkerDelta
 import org.eclipse.debug.core.DebugEvent
 import org.eclipse.debug.core.DebugPlugin
@@ -8,7 +13,6 @@ import org.eclipse.debug.core.model.IBreakpoint
 import org.eclipse.debug.core.model.IDebugTarget
 import org.eclipse.debug.core.model.IProcess
 import org.eclipse.debug.core.sourcelookup.ISourceLookupDirector
-
 import com.sun.jdi.ThreadReference
 import com.sun.jdi.VirtualMachine
 import com.sun.jdi.event.ThreadDeathEvent
@@ -18,14 +22,9 @@ import com.sun.jdi.event.VMDisconnectEvent
 import com.sun.jdi.event.VMStartEvent
 import com.sun.jdi.request.ThreadDeathRequest
 import com.sun.jdi.request.ThreadStartRequest
-
 import scala.actors.Actor
-import scala.actors.Future
-import scala.collection.JavaConverters.asScalaBufferConverter
-import scala.tools.eclipse.debug.ActorExit
-import scala.tools.eclipse.debug.ScalaDebugBreakpointManager
-import scala.tools.eclipse.debug.ScalaSourceLookupParticipant
-import scala.tools.eclipse.logging.HasLogger
+import scala.tools.eclipse.debug.PoisonPill
+
 
 object ScalaDebugTarget extends HasLogger {
 
@@ -111,7 +110,7 @@ abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine, lau
     // manually clean up, as VMDeathEvent and VMDisconnectedEvent are not fired 
     // when abruptly terminating the vM
     vmDisconnected()
-    eventActor ! ActorExit
+    eventActor ! PoisonPill
   }
   
   // Members declared in scala.tools.eclipse.debug.model.ScalaDebugElement
@@ -126,7 +125,7 @@ abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine, lau
   protected[debug] val eventDispatcher: ScalaJdiEventDispatcher
 
   protected[debug] val breakpointManager: ScalaDebugBreakpointManager
-  private[model] val eventActor: Actor
+  private[debug] val eventActor: Actor
 
   /**
    * Initialize the dependent components
@@ -172,10 +171,15 @@ abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine, lau
    */
   private def internalGetThreads(): List[ScalaThread] = {
     if (running) {
+    //FIXME: An unlucky timing can block the current thread forever. Example: If the `eventActor` has terminated, 
+    //       no answer will be sent back. However, using a timeout doesn't look like the right thing to do here, 
+    //       because it's hard to tell what should be the timeout's value. A better idea is to simply fire a 
+    //       CONTENT change event every time the `ScalaThread`s change. A correct synchronization policy has 
+    //       to be put in place, but there is a lot to gain from preventing blocking calls as the one below.  
+    //       (ticket #1001308)
       (eventActor !! ScalaDebugTargetActor.GetThreads).asInstanceOf[Future[List[ScalaThread]]]()
-    } else {
-      Nil
-    }
+    } 
+    else Nil
   }
 }
 
@@ -184,7 +188,7 @@ private[model] object ScalaDebugTargetActor {
   case object GetThreads
   
   def apply(threadStartRequest: ThreadStartRequest, threadDeathRequest: ThreadDeathRequest, debugTarget: ScalaDebugTarget): ScalaDebugTargetActor = {
-    val actor= new ScalaDebugTargetActor(threadStartRequest, threadDeathRequest, debugTarget)
+    val actor = new ScalaDebugTargetActor(threadStartRequest, threadDeathRequest, debugTarget)
     actor.start()
     actor
   }
@@ -193,49 +197,42 @@ private[model] object ScalaDebugTargetActor {
 /**
  * Actor used to manage a Scala debug target. It keeps track of the existing threads.
  * This class is thread safe. Instances are not to be created outside of the ScalaDebugTarget object.
+ * 
+ * The `ScalaDebugTargetActor` is linked to both the `ScalaJdiEventDispatcherActor and the 
+ * `ScalaDebugBreakpointManagerActor`, this implies that if any of the three actors terminates (independently 
+ * of the reason), all other actors will also be terminated (an `Exit` message will be sent to each of the 
+ * linked actors). 
  */
-private class ScalaDebugTargetActor private (threadStartRequest: ThreadStartRequest, threadDeathRequest: ThreadDeathRequest, debugTarget: ScalaDebugTarget) extends Actor {
+private class ScalaDebugTargetActor private (threadStartRequest: ThreadStartRequest, threadDeathRequest: ThreadDeathRequest, debugTarget: ScalaDebugTarget) extends BaseDebuggerActor {
   import ScalaDebugTargetActor._
 
   private var threads = List[ScalaThread]()
 
-  /**
-   *  process the debug events
-   */
-  def act() {
-    loop {
-      react {
-        case _: VMStartEvent =>
-          vmStarted()
-          reply(false)
-        case threadStartEvent: ThreadStartEvent =>
-          if (!threads.exists(_.thread == threadStartEvent.thread))
-            threads = threads :+ ScalaThread(debugTarget, threadStartEvent.thread)
-          reply(false)
-        case threadDeathEvent: ThreadDeathEvent =>
-          val (removed, remainder) = threads.partition(_.thread eq threadDeathEvent.thread)
-          threads = remainder
-          removed.foreach(_.terminatedFromScala())
-          reply(false)
-        case _: VMDeathEvent =>
-          vmDisconnected()
-          reply(false)
-        case _: VMDisconnectEvent =>
-          vmDisconnected()
-          reply(false)
-        case ThreadSuspended(thread, eventDetail) =>
-          // forward the event to the right thread
-          threads.find(_.thread == thread).get.suspendedFromScala(eventDetail)
-          reply(None)
-        case GetThreads =>
-          reply(threads)
-        case ActorExit =>
-          disposeThreads()
-          debugTarget.vmDisconnected()
-          exit()
-      }
-    }
+  override protected def behavior = {
+    case _: VMStartEvent =>
+      vmStarted()
+      reply(false)
+    case threadStartEvent: ThreadStartEvent =>
+      if (!threads.exists(_.thread == threadStartEvent.thread))
+        threads :+= createScalaThread(threadStartEvent.thread)
+      reply(false)
+    case threadDeathEvent: ThreadDeathEvent =>
+      val (removed, remainder) = threads.partition(_.thread eq threadDeathEvent.thread)
+      threads = remainder
+      removed.foreach(_.terminatedFromScala())
+      reply(false)
+    case _: VMDeathEvent | _: VMDisconnectEvent =>
+      vmDisconnected()
+      reply(false)
+    case ThreadSuspended(thread, eventDetail) =>
+      // forward the event to the right thread
+      threads.find(_.thread == thread).get.suspendedFromScala(eventDetail)
+      reply(None)
+    case GetThreads =>
+      reply(threads)
   }
+
+  private def createScalaThread(threadRef: ThreadReference): ScalaThread = ScalaThread(debugTarget, threadRef)
 
   private def vmStarted() {
     val eventDispatcher = debugTarget.eventDispatcher
@@ -246,8 +243,13 @@ private class ScalaDebugTargetActor private (threadStartRequest: ThreadStartRequ
     threadDeathRequest.enable()
     // get the current requests
     import scala.collection.JavaConverters._
-    threads = debugTarget.virtualMachine.allThreads.asScala.toList.map(ScalaThread(debugTarget, _))
+    threads = debugTarget.virtualMachine.allThreads.asScala.toList.map(createScalaThread)
     debugTarget.vmStarted()
+  }
+  
+  override protected def preExit(): Unit = {
+    debugTarget.vmDisconnected()
+    disposeThreads()
   }
 
   private def disposeThreads() {
@@ -255,7 +257,5 @@ private class ScalaDebugTargetActor private (threadStartRequest: ThreadStartRequ
     threads = Nil
   }
 
-  private def vmDisconnected() {
-    this ! ActorExit
-  }
+  private def vmDisconnected(): Unit = poison()
 }
