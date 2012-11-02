@@ -5,11 +5,9 @@ import scala.collection.JavaConverters.asScalaBufferConverter
 import scala.collection.mutable.ListBuffer
 import scala.tools.eclipse.debug.model.JdiRequestFactory
 import scala.tools.eclipse.debug.model.ScalaDebugTarget
-
 import org.eclipse.core.resources.IMarker
 import org.eclipse.debug.core.DebugEvent
 import org.eclipse.debug.core.model.IBreakpoint
-
 import com.sun.jdi.Location
 import com.sun.jdi.ReferenceType
 import com.sun.jdi.ThreadReference
@@ -30,13 +28,14 @@ private[debug] object BreakpointSupport {
  * Manage the requests for one platform breakpoint.
  */
 private[debug] class BreakpointSupport private (eventActor: Actor) {
+  import BreakpointSupportActor.Changed
 
   def changed() {
-    eventActor ! BreakpointSupportActor.Changed
+    eventActor ! Changed
   }
 
   def dispose() {
-    eventActor ! ActorExit
+    eventActor ! PoisonPill
   }
 
 }
@@ -121,35 +120,27 @@ private[debug] object BreakpointSupportActor {
   }
 }
 
-private class BreakpointSupportActor private (breakpoint: IBreakpoint, debugTarget: ScalaDebugTarget, eventRequests: ListBuffer[EventRequest]) extends Actor {
+private class BreakpointSupportActor private (breakpoint: IBreakpoint, debugTarget: ScalaDebugTarget, eventRequests: ListBuffer[EventRequest]) extends BaseDebuggerActor {
   import BreakpointSupportActor.{ Changed, createBreakpointRequest }
 
   // Manage the events
-  override def act() {
-    loop {
-      react {
-        case event: ClassPrepareEvent =>
-          // JDI event triggered when a class is loaded
-          classPrepared(event.referenceType)
-          reply(false)
-        case event: BreakpointEvent =>
-          // JDI event triggered when a breakpoint is hit
-          breakpointHit(event.location, event.thread)
-          reply(true)
-        case Changed =>
-          changed()
-        case ActorExit =>
-          // disable and clear the requests
-          dispose()
-          exit()
-      }
-    }
+  override protected def behavior: PartialFunction[Any, Unit] = {
+    case event: ClassPrepareEvent =>
+      // JDI event triggered when a class is loaded
+      classPrepared(event.referenceType)
+      reply(false)
+    case event: BreakpointEvent =>
+      // JDI event triggered when a breakpoint is hit
+      breakpointHit(event.location, event.thread)
+      reply(true)
+    case Changed =>
+      changed()
   }
 
   /**
    * Remove all created requests for this breakpoint
    */
-  private def dispose() {
+  override protected def preExit() {
     val eventDispatcher = debugTarget.eventDispatcher
     val eventRequestManager = debugTarget.virtualMachine.eventRequestManager
 
