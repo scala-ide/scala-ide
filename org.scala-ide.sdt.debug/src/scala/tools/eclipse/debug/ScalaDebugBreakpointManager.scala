@@ -1,14 +1,15 @@
 package scala.tools.eclipse.debug
 
-import scala.actors.Actor
 import scala.tools.eclipse.debug.model.ScalaDebugTarget
-
 import org.eclipse.core.resources.IMarkerDelta
 import org.eclipse.debug.core.DebugPlugin
 import org.eclipse.debug.core.IBreakpointListener
 import org.eclipse.debug.core.model.IBreakpoint
+import scala.actors.Actor
 
 object ScalaDebugBreakpointManager {
+  /** A debug message used to wait until all required messages have been processed. */
+  object ActorDebug
 
   def apply(debugTarget: ScalaDebugTarget): ScalaDebugBreakpointManager = {
     val eventActor = ScalaDebugBreakpointManagerActor(debugTarget)
@@ -19,7 +20,7 @@ object ScalaDebugBreakpointManager {
 /**
  * Setup the initial breakpoints, and listen to breakpoint changes, for the given ScalaDebugTarget
  */
-class ScalaDebugBreakpointManager private (eventActor: Actor) extends IBreakpointListener {
+class ScalaDebugBreakpointManager private (/*public field only for testing purposes */val eventActor: Actor) extends IBreakpointListener {
   import ScalaDebugBreakpointManagerActor._
 
   // from org.eclipse.debug.core.IBreakpointsListener
@@ -46,7 +47,7 @@ class ScalaDebugBreakpointManager private (eventActor: Actor) extends IBreakpoin
 
   def dispose() {
     DebugPlugin.getDefault.getBreakpointManager.removeBreakpointListener(this)
-    eventActor ! ActorExit
+    eventActor ! PoisonPill
   }
   
   /**
@@ -55,7 +56,7 @@ class ScalaDebugBreakpointManager private (eventActor: Actor) extends IBreakpoin
    * have been processed.
    */
   protected[debug] def waitForAllCurrentEvents() {
-    eventActor !? ActorDebug
+    eventActor !? ScalaDebugBreakpointManager.ActorDebug
   }
 
 }
@@ -76,56 +77,52 @@ private[debug] object ScalaDebugBreakpointManagerActor {
   }
 }
 
-private class ScalaDebugBreakpointManagerActor private(debugTarget: ScalaDebugTarget) extends Actor {
+private class ScalaDebugBreakpointManagerActor private(debugTarget: ScalaDebugTarget) extends BaseDebuggerActor {
   import ScalaDebugBreakpointManagerActor._
 
   private var breakpoints = Map[IBreakpoint, BreakpointSupport]()
 
+  override protected def postStart(): Unit = link(debugTarget.eventActor)
+
   /**
    * process the breakpoint events
    */
-  def act {
-    loop {
-      react {
-        case Initialize =>
-          // Enable all existing breakpoints
-          DebugPlugin.getDefault.getBreakpointManager.getBreakpoints(JdtDebugUID).foreach(createBreakpointSupport)
-          reply(None)
-        case BreakpointAdded(breakpoint) =>
-          breakpoints.get(breakpoint) match {
-            case None =>
-              createBreakpointSupport(breakpoint)
-            case _ =>
-            // This is only possible if the message was sent between when the InitializeExistingBreakpoints
-            // message was sent and when the list of the current breakpoint was fetched.
-            // Nothing to do, everything is already in the right state
-          }
-        case BreakpointRemoved(breakpoint) =>
-          breakpoints.get(breakpoint) match {
-            case Some(breakpointSupport) =>
-              breakpointSupport.dispose()
-              breakpoints -= breakpoint
-            case _ =>
-            // see previous comment
-          }
-        case BreakpointChanged(breakpoint) =>
-          breakpoints.get(breakpoint) match {
-            case Some(breakpointSupport) =>
-              breakpointSupport.changed()
-            case _ =>
-            // see previous comment
-          }
-        case ActorExit =>
-          // not cleaning the requests
-          // the connection to the vm is closing or already closed at this point
-          exit()
-        case ActorDebug =>
-          reply(None)
+  override protected def behavior = {
+    case Initialize =>
+      // Enable all existing breakpoints
+      DebugPlugin.getDefault.getBreakpointManager.getBreakpoints(JdtDebugUID).foreach(createBreakpointSupport)
+      reply(None)
+    case BreakpointAdded(breakpoint) =>
+      breakpoints.get(breakpoint) match {
+        case None =>
+          createBreakpointSupport(breakpoint)
+        case _ =>
+          // This is only possible if the message was sent between when the InitializeExistingBreakpoints
+          // message was sent and when the list of the current breakpoint was fetched.
+          // Nothing to do, everything is already in the right state
       }
-    }
+    case BreakpointRemoved(breakpoint) =>
+      breakpoints.get(breakpoint) match {
+        case Some(breakpointSupport) =>
+          breakpointSupport.dispose()
+          breakpoints -= breakpoint
+        case _ =>
+          // see previous comment
+      }
+    case BreakpointChanged(breakpoint) =>
+      breakpoints.get(breakpoint) match {
+        case Some(breakpointSupport) =>
+          breakpointSupport.changed()
+        case _ =>
+          // see previous comment
+      }
+    case ScalaDebugBreakpointManager.ActorDebug =>
+      reply(None)
   }
 
   private def createBreakpointSupport(breakpoint: IBreakpoint): Unit = {
     breakpoints += (breakpoint -> BreakpointSupport(breakpoint, debugTarget))
   }
+
+  override protected def preExit(): Unit = breakpoints.values.foreach(_.dispose())
 }
