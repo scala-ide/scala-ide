@@ -15,7 +15,8 @@ object ScalaStepReturn {
     val stepReturnRequest = JdiRequestFactory.createStepRequest(StepRequest.STEP_LINE, StepRequest.STEP_OUT, scalaStackFrame.thread)
 
     val actor = new ScalaStepReturnActor(scalaStackFrame.getDebugTarget, scalaStackFrame.thread, stepReturnRequest) {
-      override val scalaStep: ScalaStepReturn = new ScalaStepReturn(this) 
+      // TODO: when implementing support without filtering, need to workaround problem reported in Eclipse bug #38744
+      override val scalaStep: ScalaStep = new ScalaStepImpl(this) 
     }
     actor.start()
 
@@ -24,20 +25,12 @@ object ScalaStepReturn {
 }
 
 /**
- * A step return in the Scala debug model.
- * This class is thread safe. Instances have be created through its companion object.
- */
-private class ScalaStepReturn private (eventActor: ScalaStepReturnActor) extends BaseScalaStep[ScalaStepReturnActor](eventActor) {
-// TODO: when implementing support without filtering, need to workaround problem reported in Eclipse bug #38744
-}
-
-/**
  * Actor used to manage a Scala step return. It keeps track of the request needed to perform this step.
  * This class is thread safe. Instances are not to be created outside of the ScalaStepReturn object.
  */
 private[command] abstract class ScalaStepReturnActor(debugTarget: ScalaDebugTarget, thread: ScalaThread, stepReturnRequest: StepRequest) extends BaseDebuggerActor {
   
-  protected[command] def scalaStep: ScalaStepReturn
+  protected[command] def scalaStep: ScalaStep
 
   override protected def postStart(): Unit = link(thread.eventActor)
 
