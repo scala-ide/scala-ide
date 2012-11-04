@@ -574,4 +574,37 @@ class ScalaDebugSteppingTest {
 
     session.stepReturn()
   }
+
+  @Test
+  def StepIntoSkipsDefaultArgs() {
+    session = initDebugSession("MethodClassifiers")
+
+    session.runToLine("stepping.MethodClassifiers", 60)
+    session.stepInto()
+    session.checkStackFrame("stepping.Defaults", "methWithDefaults(Ljava/lang/String;)V", 6)
+  }
+
+  @Test
+  def StepIntoSkipsForwarder {
+    session = initDebugSession("MethodClassifiers")
+    session.runToLine("stepping.MethodClassifiers", 64)
+    session.stepInto
+    session.checkStackFrame("stepping.BaseTrait$class", "concreteTraitMethod1(Lstepping/BaseTrait;I)I", 12)
+  }
+
+  @Test
+  def StepIntoSkipsForwarderWithParams {
+    session = initDebugSession("MethodClassifiers")
+    session.runToLine("stepping.MethodClassifiers", 67)
+    session.stepInto
+    session.checkStackFrame("stepping.BaseTrait$class", "concreteTraitMethod4(Lstepping/BaseTrait;IDLjava/lang/String;Ljava/lang/Object;)V", 15)
+  }
+
+  @Test
+  def StepIntoSkipsForwarderWith22Params {
+    session = initDebugSession("MethodClassifiers")
+    session.runToLine("stepping.MethodClassifiers", 69)
+    session.stepInto
+    session.checkStackFrame("stepping.MaxArgs$class", "manyArgs(Lstepping/MaxArgs;DDDDDDDDDDDDDDDDDDDDDD)D", 105)
+  }
 }
