@@ -99,6 +99,8 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings)
 
   def body(sourceFile: SourceFile) = {
     val response = new Response[Tree]
+    if (self.onCompilerThread)
+      throw ScalaPresentationCompiler.InvalidThread("Tried to execute `askType` while inside `ask`")
     askType(sourceFile, false, response)
     response.get match {
       case Left(tree) => tree
@@ -108,6 +110,8 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings)
 
   def loadedType(sourceFile: SourceFile) = {
     val response = new Response[Tree]
+    if (self.onCompilerThread)
+      throw ScalaPresentationCompiler.InvalidThread("Tried to execute `askLoadedType` while inside `ask`")
     askLoadedTyped(sourceFile, response)
     response.get match {
       case Left(tree) => tree
@@ -325,6 +329,8 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings)
 }
 
 object ScalaPresentationCompiler {
+  case class InvalidThread(msg: String) extends RuntimeException(msg)
+
   class PresentationReporter extends InteractiveReporter {
     var compiler: ScalaPresentationCompiler = null
 
