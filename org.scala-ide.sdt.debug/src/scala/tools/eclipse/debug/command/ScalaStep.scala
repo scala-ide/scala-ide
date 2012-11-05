@@ -16,7 +16,7 @@ trait ScalaStep {
   def stop()
 }
 
-abstract class BaseScalaStep[T <: BaseDebuggerActor] protected(eventActor: T) extends ScalaStep {
+class ScalaStepImpl(eventActor: BaseDebuggerActor) extends ScalaStep {
   override def step(): Unit = eventActor ! ScalaStep.Step
   override def stop(): Unit = eventActor ! ScalaStep.Stop
 }
