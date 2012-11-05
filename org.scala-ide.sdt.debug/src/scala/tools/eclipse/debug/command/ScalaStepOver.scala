@@ -29,7 +29,7 @@ object ScalaStepOver {
     val actor = if (location.lineNumber == LINE_NUMBER_UNAVAILABLE) {
 
       new ScalaStepOverActor(scalaStackFrame.getDebugTarget, null, scalaStackFrame.thread, requests) {
-        override val scalaStep: ScalaStepOver = new ScalaStepOver(this)
+        override val scalaStep: ScalaStep = new ScalaStepImpl(this)
       }
 
     } else {
@@ -54,7 +54,7 @@ object ScalaStepOver {
       requests ++= loadedAnonFunctionsInRange.map(JdiRequestFactory.createMethodEntryBreakpoint(_, scalaStackFrame.thread))
 
       new ScalaStepOverActor(scalaStackFrame.getDebugTarget, range, scalaStackFrame.thread, requests) {
-        override val scalaStep: ScalaStepOver = new ScalaStepOver(this)
+        override val scalaStep: ScalaStep = new ScalaStepImpl(this)
       }
     }
 
@@ -65,18 +65,12 @@ object ScalaStepOver {
 }
 
 /**
- * A step over in the Scala debug model.
- * This class is thread safe. Instances have be created through its companion object.
- */
-private class ScalaStepOver private (eventActor: ScalaStepOverActor) extends BaseScalaStep[ScalaStepOverActor](eventActor)
-
-/**
  * Actor used to manage a Scala step over. It keeps track of the request needed to perform this step.
  * This class is thread safe. Instances are not to be created outside of the ScalaStepOver object.
  */
 private[command] abstract class ScalaStepOverActor(target: ScalaDebugTarget, range: Range, thread: ScalaThread, requests: ListBuffer[EventRequest]) extends BaseDebuggerActor {
 
-  protected[command] def scalaStep: ScalaStepOver
+  protected[command] def scalaStep: ScalaStep
 
   override protected def postStart(): Unit = link(thread.eventActor)
   

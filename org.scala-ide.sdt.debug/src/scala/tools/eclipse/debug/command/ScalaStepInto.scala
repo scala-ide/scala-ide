@@ -30,7 +30,7 @@ object ScalaStepInto {
     val stackFrames = scalaStackFrame.thread.getStackFrames
     val depth = stackFrames.length - stackFrames.indexOf(scalaStackFrame)
     val actor = new ScalaStepIntoActor(scalaStackFrame.getDebugTarget, scalaStackFrame.thread, stepIntoRequest, stepOutRequest, depth, scalaStackFrame.stackFrame.location.lineNumber) {
-      override val scalaStep: ScalaStepInto = new ScalaStepInto(this)
+      override val scalaStep: ScalaStep = new ScalaStepImpl(this)
     }
     actor.start()
     
@@ -38,12 +38,6 @@ object ScalaStepInto {
   }
 
 }
-
-/**
- * A step into in the Scala debug model.
- * This class is thread safe. Instances have be created through its companion object.
- */
-private class ScalaStepInto private (eventActor: ScalaStepIntoActor) extends BaseScalaStep[ScalaStepIntoActor](eventActor)
 
 /**
  * Actor used to manage a Scala step into. It keeps track of the request needed to perform this step.
@@ -55,7 +49,7 @@ private[command] abstract class ScalaStepIntoActor(debugTarget: ScalaDebugTarget
    */
   private var stepOutStackDepth = 0
   
-  protected[command] def scalaStep: ScalaStepInto
+  protected[command] def scalaStep: ScalaStep
 
   override protected def postStart(): Unit = link(thread.eventActor)
 
