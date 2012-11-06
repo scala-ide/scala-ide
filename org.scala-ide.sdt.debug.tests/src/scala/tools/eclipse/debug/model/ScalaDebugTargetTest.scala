@@ -15,14 +15,27 @@ import com.sun.jdi.request.ThreadStartRequest
 import com.sun.jdi.request.ThreadDeathRequest
 import org.eclipse.debug.core.Launch
 import com.sun.jdi.event.EventQueue
+import scala.tools.eclipse.debug.BaseDebuggerActor
+import org.junit.After
+import scala.tools.eclipse.debug.PoisonPill
 
 class ScalaDebugTargetTest {
+
+  /**
+   * The actor associated to the debug target currently being tested.
+   */
+  var actor: Option[BaseDebuggerActor] = None
 
   @Before
   def initializeDebugPlugin() {
     if (DebugPlugin.getDefault == null) {
       new DebugPlugin
     }
+  }
+
+  @After
+  def actorCleanup() {
+    actor.foreach(_ ! PoisonPill)
   }
 
   @Test
@@ -62,7 +75,9 @@ class ScalaDebugTargetTest {
     when(eventRequestManager.createThreadStartRequest).thenReturn(threadStartRequest)
     val threadDeathRequest = mock(classOf[ThreadDeathRequest])
     when(eventRequestManager.createThreadDeathRequest).thenReturn(threadDeathRequest)
-    ScalaDebugTarget(virtualMachine, mock(classOf[Launch]), null)
+    val debugTarget = ScalaDebugTarget(virtualMachine, mock(classOf[Launch]), null)
+    actor = Some(debugTarget.eventActor)
+    debugTarget
   }
 
 }

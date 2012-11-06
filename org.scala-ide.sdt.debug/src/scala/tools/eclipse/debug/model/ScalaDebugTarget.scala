@@ -125,7 +125,7 @@ abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine, lau
   protected[debug] val eventDispatcher: ScalaJdiEventDispatcher
 
   protected[debug] val breakpointManager: ScalaDebugBreakpointManager
-  private[debug] val eventActor: Actor
+  private[debug] val eventActor: BaseDebuggerActor
 
   /**
    * Initialize the dependent components

@@ -1,11 +1,11 @@
 package scala.tools.eclipse.debug
 
 import java.util.concurrent.CountDownLatch
-
 import org.junit.Assert.fail
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
+import org.junit.After
 
 object BaseDebuggerActorTest {
   /** An empty partial function, i.e., it's a function with an empty domain. */
@@ -19,11 +19,23 @@ object BaseDebuggerActorTest {
 class BaseDebuggerActorTest {
   import BaseDebuggerActorTest.NullPartialFunction
 
+  /** The actor currently being tested.
+   */
+  var sut: BaseDebuggerActor = null
+
+  @After
+  def actorCleanup() {
+    if (sut != null) {
+      sut ! PoisonPill
+    }
+    sut = null
+  }
+
   @Test(timeout = 1000)
   def postStartIsAlwaysExecutedBeforeTheActorProcessesTheFirstMessage() {
     //setting up test 
     val latch = new CountDownLatch(1)
-    val sut = new BaseDebuggerActor {
+    sut = new BaseDebuggerActor {
       override protected def postStart(): Unit = latch.countDown()
       override protected def behavior: Behavior = {
         case _ =>
@@ -42,7 +54,7 @@ class BaseDebuggerActorTest {
   def preExitIsAlwaysExecutedBeforeTheActorIsStopped() {
     //setting up test 
     val latch = new CountDownLatch(1)
-    val sut = new BaseDebuggerActor {
+    sut = new BaseDebuggerActor {
       override protected def behavior: Behavior = new NullPartialFunction // i.e., the exitBehavior is always executed!
       override protected def preExit(): Unit = latch.countDown()
     }
@@ -55,7 +67,7 @@ class BaseDebuggerActorTest {
   @Test(timeout = 1000)
   def itIsNotPossibleToRemoveTheInitialActorBehavior() {
     val latch = new CountDownLatch(1)
-    val sut = new BaseDebuggerActor {
+    sut = new BaseDebuggerActor {
       override def postStart(): Unit = unbecome()
       override def behavior: Behavior = {
         case _ => latch.countDown()
@@ -70,7 +82,7 @@ class BaseDebuggerActorTest {
   @Test(timeout = 1000)
   def callingBecomeChangesTheActorBehavior() {
     val latch = new CountDownLatch(1)
-    val sut = new BaseDebuggerActor {
+    sut = new BaseDebuggerActor {
       override def behavior: Behavior = {
         case 'firstMsg => become { case 'secondMsg => latch.countDown() }
       }
@@ -78,31 +90,31 @@ class BaseDebuggerActorTest {
 
     sut.start()
 
-    sut ! 'firstMsg  // this will trigger a change in the actor's behavior
+    sut ! 'firstMsg // this will trigger a change in the actor's behavior
     sut ! 'secondMsg // this will trigger a decrement in the latch counter
 
     latch.await()
   }
-  
+
   @Test(timeout = 1000)
   def poisonedActorIsNoLongerAllowedToModifyItsBehavior() {
     val latch = new CountDownLatch(1)
-    val sut = new BaseDebuggerActor {
+    sut = new BaseDebuggerActor {
       override def behavior: Behavior = {
         case 'poison =>
           poison() // poisoning an actor forces it to process only termination messages!
           // hence the `become` call should be ignored. 
           become { case _ => fail("You can't heal after being poisoned!") }
       }
-      
+
       override def preExit(): Unit = latch.countDown()
     }
-    
+
     sut.start()
-    
+
     sut ! 'poison
     sut ! 'msg
-    
+
     latch.await()
   }
 }
