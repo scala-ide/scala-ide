@@ -10,7 +10,9 @@ import org.eclipse.core.internal.localstore.IsSynchronizedVisitor
 
 /** Utility methods for deciding when a location should be filtered out from stepping into.
  */
-object StepFilters extends HasLogger {
+class StepFilters extends HasLogger {
+
+  val classifier = new MethodClassifier
 
   private lazy val prefStore = ScalaDebugPlugin.plugin.getPreferenceStore()
 
@@ -20,23 +22,10 @@ object StepFilters extends HasLogger {
    *  Examples are: synthetic, bridges, getters, setters.
    */
   private def isTransparentMethod(location: Location): Boolean = {
-    import DebuggerPreferences._
-
-    def isGetter = location.declaringType().fieldByName(location.method().name()) ne null
-    def skipGetter = prefStore.getBoolean(FILTER_GETTER) && isGetter
-
-    def isSetter = {
-      val name = location.method().name()
-      (name.endsWith("_$eq")
-        && (location.declaringType().fieldByName(name.substring(0, name.length - 4)) ne null))
-    }
-    def skipSetter = prefStore.getBoolean(FILTER_SETTER) && isSetter
-    def skipSynthetic = prefStore.getBoolean(FILTER_SYNTHETIC) && location.method.isSynthetic()
-
     (location.method.isBridge()
-      || skipSynthetic
-      || skipGetter
-      || skipSetter)
+      || MethodClassifier.values.exists { flag =>
+        prefStore.getBoolean(DebuggerPreferences.BASE_FILTER + flag.toString) && classifier.is(flag, location.method)
+      })
   }
 
   /** Return true if it is a filtered location. */

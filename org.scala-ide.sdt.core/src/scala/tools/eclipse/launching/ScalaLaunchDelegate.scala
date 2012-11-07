@@ -15,6 +15,8 @@ import org.eclipse.jface.dialogs.MessageDialog
 import scala.tools.eclipse.util.SWTUtils
 import org.eclipse.core.runtime.IPath
 import org.eclipse.jdt.core.IJavaProject
+import org.eclipse.core.runtime.Status
+import org.eclipse.core.runtime.IStatus
 
 class ScalaLaunchDelegate extends AbstractJavaLaunchConfigurationDelegate {
 	def launch(configuration: ILaunchConfiguration, mode: String, launch: ILaunch, monitor0: IProgressMonitor) {
@@ -78,8 +80,8 @@ class ScalaLaunchDelegate extends AbstractJavaLaunchConfigurationDelegate {
 			val project = getJavaProject(configuration)
 			ScalaPlugin.plugin.asScalaProject(project.getProject).foreach { scalaProject =>
 			  val mainClassVerifier = new MainClassVerifier(new UIErrorReporter)
-			  val mainClassFileOk = mainClassVerifier.execute(scalaProject, mainTypeName)
-			  if(!mainClassFileOk) return
+			  val status = mainClassVerifier.execute(scalaProject, mainTypeName)
+			  if (status.getCode() != IStatus.OK) throw new CoreException(status)
 			}
 
 			// done the verification phase

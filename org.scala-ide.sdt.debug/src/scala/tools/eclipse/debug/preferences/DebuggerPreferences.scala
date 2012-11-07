@@ -15,6 +15,7 @@ import org.eclipse.ui.dialogs.PreferencesUtil
 import scala.tools.eclipse.debug.ScalaDebugger
 import scala.tools.eclipse.debug.ScalaDebugPlugin
 import org.eclipse.swt.widgets.Label
+import scala.tools.eclipse.debug.model.MethodClassifier
 
 class DebuggerPreferences extends FieldEditorPreferencePage with IWorkbenchPreferencePage {
   import DebuggerPreferences._
@@ -29,6 +30,8 @@ Configured step filters:
     addField(new BooleanFieldEditor(FILTER_SYNTHETIC, "Filter SYNTHETIC methods", parent))
     addField(new BooleanFieldEditor(FILTER_GETTER, "Filter Scala getters", getFieldEditorParent))
     addField(new BooleanFieldEditor(FILTER_SETTER, "Filter Scala setters", getFieldEditorParent))
+    addField(new BooleanFieldEditor(FILTER_DEFAULT_GETTER, "Filter getters for default parameters", getFieldEditorParent))
+    addField(new BooleanFieldEditor(FILTER_FORWARDER, "Filter forwarder to trait methods", getFieldEditorParent))
   }
 
   def init(workbench: IWorkbench) {}
@@ -36,12 +39,15 @@ Configured step filters:
 }
 
 object DebuggerPreferences {
-  val BASE = "org.scala-ide.sdt.debug."
-  val FILTER_SYNTHETIC = BASE + "filerSynthetic"
-  val FILTER_GETTER = BASE + "filterGetter"
-  val FILTER_SETTER = BASE + "filterSetter"
-
+  import MethodClassifier._
   
+  val BASE = "org.scala-ide.sdt.debug."
+  val BASE_FILTER = BASE + "filter."
+  val FILTER_SYNTHETIC = BASE_FILTER + Synthetic
+  val FILTER_GETTER = BASE_FILTER + Getter
+  val FILTER_SETTER = BASE_FILTER + Setter
+  val FILTER_DEFAULT_GETTER = BASE_FILTER + DefaultGetter
+  val FILTER_FORWARDER = BASE_FILTER + Forwarder
 }
 
 class DebugerPreferencesInitializer extends AbstractPreferenceInitializer {
@@ -52,5 +58,7 @@ class DebugerPreferencesInitializer extends AbstractPreferenceInitializer {
     store.setDefault(FILTER_SYNTHETIC, true)
     store.setDefault(FILTER_GETTER, true)
     store.setDefault(FILTER_SETTER, true)
+    store.setDefault(FILTER_DEFAULT_GETTER, true)
+    store.setDefault(FILTER_FORWARDER, true)
   }
 }

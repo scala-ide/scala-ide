@@ -63,6 +63,8 @@ object ScalaDebugTarget extends HasLogger {
  */
 abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine, launch: ILaunch, process: IProcess) extends ScalaDebugElement(null) with IDebugTarget {
 
+  val stepFilters = new StepFilters
+
   // Members declared in org.eclipse.debug.core.IBreakpointListener
 
   override def breakpointAdded(breakponit: IBreakpoint): Unit = ???

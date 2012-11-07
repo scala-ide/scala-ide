@@ -38,7 +38,7 @@ private[command] abstract class ScalaStepReturnActor(debugTarget: ScalaDebugTarg
     // JDI event triggered when a step has been performed
     case stepEvent: StepEvent =>
       reply {
-        if (!StepFilters.isTransparentLocation(stepEvent.location)) {
+        if (!debugTarget.stepFilters.isTransparentLocation(stepEvent.location)) {
           dispose()
           thread.suspendedFromScala(DebugEvent.STEP_RETURN)
           true

@@ -58,14 +58,14 @@ private[command] abstract class ScalaStepIntoActor(debugTarget: ScalaDebugTarget
     case stepEvent: StepEvent =>
       reply(stepEvent.request.asInstanceOf[StepRequest].depth match {
         case StepRequest.STEP_INTO =>
-          if (StepFilters.isOpaqueLocation(stepEvent.location)) {
+          if (debugTarget.stepFilters.isOpaqueLocation(stepEvent.location)) {
             // don't step deeper into constructor from 'hidden' entities
             stepOutStackDepth = stepEvent.thread.frameCount
             stepIntoRequest.disable()
             stepOutRequest.enable()
             false
           } else {
-            if (!StepFilters.isTransparentLocation(stepEvent.location) && stepEvent.location.lineNumber != stackLine) {
+            if (!debugTarget.stepFilters.isTransparentLocation(stepEvent.location) && stepEvent.location.lineNumber != stackLine) {
               dispose()
               thread.suspendedFromScala(DebugEvent.STEP_INTO)
               true
