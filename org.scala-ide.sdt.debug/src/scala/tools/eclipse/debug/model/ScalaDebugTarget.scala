@@ -208,7 +208,7 @@ abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine, lau
   /**
    * Return the current list of threads
    */
-  private[model] def getScalaThreads= threads
+  private[model] def getScalaThreads: List[ScalaThread] = threads
   
 }
 
