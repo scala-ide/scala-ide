@@ -41,9 +41,9 @@ abstract class ScalaThread private (target: ScalaDebugTarget, private[model] val
   override def canStepReturn: Boolean = suspended // TODO: need real logic
   override def isStepping: Boolean = ???
 
-  override def stepInto(): Unit = ScalaStepInto(internalGetStackFrames.head).step()
-  override def stepOver(): Unit = ScalaStepOver(internalGetStackFrames.head).step()
-  override def stepReturn(): Unit = ScalaStepReturn(internalGetStackFrames.head).step()
+  override def stepInto(): Unit = ScalaStepInto(stackFrames.head).step()
+  override def stepOver(): Unit = ScalaStepOver(stackFrames.head).step()
+  override def stepReturn(): Unit = ScalaStepReturn(stackFrames.head).step()
 
   // Members declared in org.eclipse.debug.core.model.ISuspendResume
 
@@ -74,9 +74,9 @@ abstract class ScalaThread private (target: ScalaDebugTarget, private[model] val
   }
 
   override def getPriority: Int = ???
-  override def getStackFrames: Array[org.eclipse.debug.core.model.IStackFrame] = internalGetStackFrames.toArray
-  override def getTopStackFrame: org.eclipse.debug.core.model.IStackFrame = internalGetStackFrames.headOption.getOrElse(null)
-  override def hasStackFrames: Boolean = !internalGetStackFrames.isEmpty
+  override def getStackFrames: Array[org.eclipse.debug.core.model.IStackFrame] = stackFrames.toArray
+  override def getTopStackFrame: org.eclipse.debug.core.model.IStackFrame = stackFrames.headOption.getOrElse(null)
+  override def hasStackFrames: Boolean = !stackFrames.isEmpty
 
   // ----
 
@@ -85,6 +85,13 @@ abstract class ScalaThread private (target: ScalaDebugTarget, private[model] val
   private var suspended = false
   @volatile
   private var running = true
+  
+  /**
+   * The current list of stack frames.
+   * THE VALUE IS MODIFIED ONLY BY THE COMPANION ACTOR, USING METHODS DEFINED LOWER.
+   */
+  @volatile
+  private var stackFrames= List[ScalaStackFrame]()
 
   // keep the last known name around, for when the vm is not available anymore
   @volatile
@@ -122,31 +129,44 @@ abstract class ScalaThread private (target: ScalaDebugTarget, private[model] val
    */
   def dispose() {
     running = false
+    stackFrames= Nil
     eventActor ! TerminatedFromScala
   }
+  
+  /*
+   * Methods used by the companion actor to update this object internal states
+   * FOR THE COMPANION ACTOR ONLY.
+   */
 
+  /**
+   * Set the this object internal states to suspended.
+   * FOR THE COMPANION ACTOR ONLY.
+   */
   private[model] def suspend(eventDetail: Int) { 
     suspended = true
+    stackFrames= thread.frames.asScala.map(ScalaStackFrame(this, _)).toList
     fireSuspendEvent(eventDetail)
   }
 
+  /**
+   * Set the this object internal states to resumed.
+   * FOR THE COMPANION ACTOR ONLY.
+   */
   private[model] def resume(eventDetail: Int) {
     suspended = false
+    stackFrames= Nil
     fireResumeEvent(eventDetail)
   }
-  
+
   /**
-   * Return the current list of stack frames, using the actor system
+   * Rebind the Scala stack frame to the new underlying frames.
+   * TO BE USED ONLY IF THE NUMBER OF FRAMES MATCHES
+   * FOR THE COMPANION ACTOR ONLY.
    */
-  private def internalGetStackFrames(): List[ScalaStackFrame] = {
-    //FIXME: An unlucky timing can block the current thread forever. Example: If the `eventActor` has terminated, 
-    //       no answer will be sent back. However, using a timeout doesn't look like the right thing to do here, 
-    //       because it's hard to tell what should be the timeout's value. A better idea is to simply fire a 
-    //       CONTENT change event every time the `ScalaStackFrame`s change. A correct synchronization policy has 
-    //       to be put in place, but there is a lot to gain from preventing blocking calls as the one below. 
-    //       (ticket #1001308)
-    if (running) (eventActor !! GetStackFrames).asInstanceOf[Future[List[ScalaStackFrame]]]()
-    else Nil
+  private[model] def rebindScalaStackFrames() {
+    thread.frames.asScala.zip(stackFrames).foreach {
+      case (jdiStackFrame, scalaStackFrame) => scalaStackFrame.rebind(jdiStackFrame)
+    }    
   }
 
 }
@@ -156,7 +176,6 @@ private[model] object ScalaThreadActor {
   case class ResumeFromScala(step: Option[ScalaStep], eventDetail: Int)
   case class InvokeMethod(objectReference: ObjectReference, method: Method, args: List[Value])
   case object TerminatedFromScala
-  case object GetStackFrames
   
   def apply(scalaThread: ScalaThread, thread: ThreadReference): BaseDebuggerActor = {
     val actor = new ScalaThreadActor(scalaThread, thread)
@@ -169,13 +188,11 @@ private[model] object ScalaThreadActor {
  * Actor used to manage a Scala thread. It keeps track of the existing stack frames, and of the execution status.
  * This class is thread safe. Instances are not to be created outside of the ScalaThread object.
  */
-private class ScalaThreadActor private(scalaThread: ScalaThread, thread: ThreadReference) extends BaseDebuggerActor {
+private[model] class ScalaThreadActor private(scalaThread: ScalaThread, thread: ThreadReference) extends BaseDebuggerActor {
   import ScalaThreadActor._
 
   // step management
   private var currentStep: Option[ScalaStep] = None
-
-  private var stackFrames: List[ScalaStackFrame] = Nil
 
   override protected def postStart(): Unit = link(scalaThread.getDebugTarget.eventActor)
   
@@ -183,12 +200,10 @@ private class ScalaThreadActor private(scalaThread: ScalaThread, thread: ThreadR
     case SuspendedFromScala(eventDetail) =>
       currentStep.foreach(_.stop())
       currentStep = None
-      stackFrames = thread.frames.asScala.map(ScalaStackFrame(scalaThread, _)).toList
       scalaThread.suspend(eventDetail)
       reply(None)
     case ResumeFromScala(step, eventDetail) =>
       currentStep = step
-      stackFrames = Nil
       scalaThread.resume(eventDetail)
       thread.resume()
     case InvokeMethod(objectReference, method, args) =>
@@ -198,20 +213,15 @@ private class ScalaThreadActor private(scalaThread: ScalaThread, thread: ThreadR
       } else {
         import scala.collection.JavaConverters._
         val result = objectReference.invokeMethod(thread, method, args.asJava, ObjectReference.INVOKE_SINGLE_THREADED)
+        scalaThread.rebindScalaStackFrames()
         // update the stack frames
-        thread.frames.asScala.zip(stackFrames).foreach {
-          case (jdiStackFrame, scalaStackFrame) => scalaStackFrame.rebind(jdiStackFrame)
-        }
         reply(result)
       }
     case TerminatedFromScala =>
       currentStep.foreach(_.stop())
       currentStep = None
-      stackFrames = Nil
       scalaThread.fireTerminateEvent()
       poison()
-    case GetStackFrames =>
-      reply(stackFrames)
   }
   
   override protected def preExit(): Unit = {
