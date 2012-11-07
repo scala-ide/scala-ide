@@ -17,6 +17,9 @@ import com.sun.jdi.IntegerValue
 import com.sun.jdi.Value
 import com.sun.jdi.ObjectReference
 import com.sun.jdi.ClassType
+import scala.tools.eclipse.debug.BaseDebuggerActor
+import org.junit.After
+import scala.tools.eclipse.debug.PoisonPill
 
 /**
  * More tests related of the ScalaDebugModelPresentation are in ScalaDebugComputeDetailTest.
@@ -26,11 +29,28 @@ class ScalaDebugModelPresentationTest {
 
   val modelPres = new ScalaDebugModelPresentation
 
+  /**
+   * The actor associated to the element currently being tested.
+   */
+  var actor: Option[BaseDebuggerActor] = None
+
   @Before
   def initializeDebugPlugin() {
     if (DebugPlugin.getDefault == null) {
       new DebugPlugin
     }
+  }
+
+  @After
+  def actorCleanup() {
+    actor.foreach(_ ! PoisonPill)
+    actor = None
+  }
+
+  private def createThread(jdiThread: ThreadReference): ScalaThread = {
+    val scalaThread = ScalaThread(null, jdiThread)
+    actor = Some(scalaThread.eventActor)
+    scalaThread
   }
 
   @Test
@@ -41,7 +61,7 @@ class ScalaDebugModelPresentationTest {
     when(jdiThread.threadGroup).thenReturn(jdiThreadGroup)
     when(jdiThreadGroup.name).thenReturn("not system")
 
-    val scalaThread = ScalaThread(null, jdiThread)
+    val scalaThread = createThread(jdiThread)
 
     assertEquals("Bad display name for Scala thread", "Thread [thread name]", modelPres.getText(scalaThread))
   }
@@ -54,7 +74,7 @@ class ScalaDebugModelPresentationTest {
     when(jdiThread.threadGroup).thenReturn(jdiThreadGroup)
     when(jdiThreadGroup.name).thenReturn("system")
 
-    val scalaThread = ScalaThread(null, jdiThread)
+    val scalaThread = createThread(jdiThread)
 
     assertEquals("Bad display name for Scala system thread", "Deamon System Thread [system thread name]", modelPres.getText(scalaThread))
   }
@@ -140,9 +160,9 @@ class ScalaDebugModelPresentationTest {
     val arrayReference = mock(classOf[ArrayReference])
     when(arrayReference.length).thenReturn(0)
     when(arrayReference.getValues).thenThrow(new IndexOutOfBoundsException)
-    
+
     val computedDetail = ScalaDebugModelPresentation.computeDetail(new ScalaArrayReference(arrayReference, null))
-    
+
     assertEquals("Bad return value for computeDetail", "Array()", computedDetail)
   }
 
