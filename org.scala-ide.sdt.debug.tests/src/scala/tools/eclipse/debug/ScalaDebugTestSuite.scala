@@ -10,14 +10,15 @@ import scala.tools.eclipse.debug.model.ScalaValueTest
 import scala.tools.eclipse.debug.model.ScalaDebugTargetTest
 import scala.tools.eclipse.launching.LibraryJarInBootstrapTest
 import scala.tools.eclipse.debug.model.DebugTargetTerminationTest
+import scala.tools.eclipse.debug.model.MethodClassifierUnitTest
 
 /**
  * Junit test suite for the Scala debugger.
  */
-
 @RunWith(classOf[Suite])
 @Suite.SuiteClasses(
   Array(
+    classOf[MethodClassifierUnitTest],
     classOf[ScalaDebugSteppingTest],
     classOf[ScalaDebugResumeTest],
     classOf[ScalaThreadTest],
