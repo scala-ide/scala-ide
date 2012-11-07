@@ -18,6 +18,7 @@ import com.sun.jdi.event.EventQueue
 import scala.tools.eclipse.debug.BaseDebuggerActor
 import org.junit.After
 import scala.tools.eclipse.debug.PoisonPill
+import com.sun.jdi.event.VMDeathEvent
 
 class ScalaDebugTargetTest {
 
@@ -60,6 +61,20 @@ class ScalaDebugTargetTest {
     val threads2 = debugTarget.getThreads
     assertEquals("Wrong number of threads", 1, threads2.length)
     assertEquals("Wrong thread name", ThreadName, threads2(0).getName)
+  }
+
+  /**
+   * Check that calling #getThreads doesn't create a freeze. It used to be making a sync call to the actor, even if it was shutdown.
+   * #1001308
+   */
+  @Test(timeout = 2000)
+  def getThreadsFreeze() {
+    
+    val debugTarget= createDebugTarget
+
+    debugTarget.eventActor ! mock(classOf[VMDeathEvent])
+    debugTarget.getThreads
+
   }
 
   /**
