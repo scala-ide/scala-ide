@@ -29,7 +29,7 @@ object ScalaStepOver {
     val actor = if (location.lineNumber == LINE_NUMBER_UNAVAILABLE) {
 
       new ScalaStepOverActor(scalaStackFrame.getDebugTarget, null, scalaStackFrame.thread, requests) {
-        override val scalaStep: ScalaStepOver = new ScalaStepOver(this)
+        override val scalaStep: ScalaStep = new ScalaStepImpl(this)
       }
 
     } else {
@@ -44,17 +44,17 @@ object ScalaStepOver {
       val range = Range(location.lineNumber, (location.method.declaringType.methods.asScala.flatten(methodToLines(_)).filter(_ > currentMethodLastLine) :+ Int.MaxValue).min)
 
       // TODO: nestedTypes triggers a AllClasses request to the VM. Having the list of nested types managed and cached by the debug target should be more effective.
-      val loadedAnonFunctionsInRange = location.method.declaringType.nestedTypes.asScala.flatMap(StepFilters.anonFunctionsInRange(_, range))
+      val loadedAnonFunctionsInRange = location.method.declaringType.nestedTypes.asScala.flatMap(scalaStackFrame.getDebugTarget.stepFilters.anonFunctionsInRange(_, range))
 
       // if we are in an anonymous function, add the method
       if (location.declaringType.name.contains("$$anonfun$")) {
-        loadedAnonFunctionsInRange ++= StepFilters.findAnonFunction(location.declaringType)
+        loadedAnonFunctionsInRange ++= scalaStackFrame.getDebugTarget.stepFilters.findAnonFunction(location.declaringType)
       }
 
       requests ++= loadedAnonFunctionsInRange.map(JdiRequestFactory.createMethodEntryBreakpoint(_, scalaStackFrame.thread))
 
       new ScalaStepOverActor(scalaStackFrame.getDebugTarget, range, scalaStackFrame.thread, requests) {
-        override val scalaStep: ScalaStepOver = new ScalaStepOver(this)
+        override val scalaStep: ScalaStep = new ScalaStepImpl(this)
       }
     }
 
@@ -65,34 +65,28 @@ object ScalaStepOver {
 }
 
 /**
- * A step over in the Scala debug model.
- * This class is thread safe. Instances have be created through its companion object.
- */
-private class ScalaStepOver private (eventActor: ScalaStepOverActor) extends BaseScalaStep[ScalaStepOverActor](eventActor)
-
-/**
  * Actor used to manage a Scala step over. It keeps track of the request needed to perform this step.
  * This class is thread safe. Instances are not to be created outside of the ScalaStepOver object.
  */
-private[command] abstract class ScalaStepOverActor(target: ScalaDebugTarget, range: Range, thread: ScalaThread, requests: ListBuffer[EventRequest]) extends BaseDebuggerActor {
+private[command] abstract class ScalaStepOverActor(debugTarget: ScalaDebugTarget, range: Range, thread: ScalaThread, requests: ListBuffer[EventRequest]) extends BaseDebuggerActor {
 
-  protected[command] def scalaStep: ScalaStepOver
+  protected[command] def scalaStep: ScalaStep
 
   override protected def postStart(): Unit = link(thread.eventActor)
   
   override protected def behavior = {
     // JDI event triggered when a class has been loaded
     case classPrepareEvent: ClassPrepareEvent =>
-      StepFilters.anonFunctionsInRange(classPrepareEvent.referenceType, range).foreach(method => {
+      debugTarget.stepFilters.anonFunctionsInRange(classPrepareEvent.referenceType, range).foreach(method => {
         val breakpoint = JdiRequestFactory.createMethodEntryBreakpoint(method, thread)
         requests += breakpoint
-        target.eventDispatcher.setActorFor(this, breakpoint)
+        debugTarget.eventDispatcher.setActorFor(this, breakpoint)
         breakpoint.enable()
       })
       reply(false)
     // JDI event triggered when a step has been performed
     case stepEvent: StepEvent =>
-      reply(if (!StepFilters.isTransparentLocation(stepEvent.location)) {
+      reply(if (!debugTarget.stepFilters.isTransparentLocation(stepEvent.location)) {
         dispose()
         thread.suspendedFromScala(DebugEvent.STEP_OVER)
         true
@@ -113,7 +107,7 @@ private[command] abstract class ScalaStepOverActor(target: ScalaDebugTarget, ran
   }
 
   private def step() {
-    val eventDispatcher = target.eventDispatcher
+    val eventDispatcher = debugTarget.eventDispatcher
 
     requests.foreach {
       request =>
@@ -127,8 +121,8 @@ private[command] abstract class ScalaStepOverActor(target: ScalaDebugTarget, ran
   private def dispose(): Unit = {
     poison()
     unlink(thread.eventActor)
-    val eventDispatcher = target.eventDispatcher
-    val eventRequestManager = target.virtualMachine.eventRequestManager
+    val eventDispatcher = debugTarget.eventDispatcher
+    val eventRequestManager = debugTarget.virtualMachine.eventRequestManager
 
     for(request <- requests) {
       request.disable()

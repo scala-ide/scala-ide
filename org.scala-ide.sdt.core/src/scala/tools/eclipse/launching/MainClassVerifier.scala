@@ -1,6 +1,9 @@
 package scala.tools.eclipse.launching
 
 import scala.tools.eclipse.ScalaProject
+import org.eclipse.core.runtime.IStatus
+import org.eclipse.core.runtime.Status
+import scala.tools.eclipse.ScalaPlugin
 
 object MainClassVerifier {
   trait ErrorReporter {
@@ -14,11 +17,10 @@ class MainClassVerifier(reporter: MainClassVerifier.type#ErrorReporter) {
    * @project The scala project containing the main type.
    * @typeName The fully-qualified main type name.
    */
-  def execute(project: ScalaProject, mainTypeName: String): Boolean = {
+  def execute(project: ScalaProject, mainTypeName: String): IStatus = {
     // 1. No binaries are produced if the project contains compilation errors.
     if (project.buildManager.hasErrors) {
-      projectHasBuildErrors(project.underlying.getName)
-      return false
+      return projectHasBuildErrors(project.underlying.getName)
     }
 
     // Try to locate the type
@@ -27,23 +29,24 @@ class MainClassVerifier(reporter: MainClassVerifier.type#ErrorReporter) {
     // 2. The main type won't be found if the provided ``mainTypeName`` (fully-qualified name) doesn't 
     //    reference an existing type. (this is a workaround for #1000541).
     if (element == null) {
-      mainTypeCannotBeLocated(project.underlying.getName, mainTypeName)
-      return false
+      return mainTypeCannotBeLocated(project.underlying.getName, mainTypeName)
     }
 
-    true
+    new Status(IStatus.OK, ScalaPlugin.plugin.pluginId, "")
   }
 
-  private def projectHasBuildErrors(projectName: String): Unit = {
+  private def projectHasBuildErrors(projectName: String): IStatus = {
     val errMsg = "Project '%s' contains compilation errors (therefore, no binaries have been produced).".format(projectName)
     reporter.report(errMsg)
+    new Status(IStatus.ERROR, ScalaPlugin.plugin.pluginId, errMsg)
   }
 
-  private def mainTypeCannotBeLocated(projectName: String, mainTypeName: String): Unit = {
+  private def mainTypeCannotBeLocated(projectName: String, mainTypeName: String): IStatus = {
     val errMsg = ("Cannot locate main type '%s' in project '%s'. For this to work, the package name in " +
       "the source needs to match the source's physical location.\n" +
       "Hint: Move the source file containing the main type '%s' in folder '%s'."
       ).format(mainTypeName, projectName, mainTypeName, mainTypeName.split('.').init.mkString("/"))
     reporter.report(errMsg)
+    new Status(IStatus.ERROR, ScalaPlugin.plugin.pluginId, errMsg)
   }
 }
