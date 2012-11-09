@@ -50,8 +50,10 @@ class ScalaOccurrencesFinder(unit: InteractiveCompilationUnit) extends HasLogger
           val occurrencesIndex = new MarkOccurrencesIndex {
             val global = compiler
             override val index: IndexLookup = Utils.debugTimed("Time elapsed for building mark occurrences index in source " + sourceFile.file.name) {
-              val tree = global.loadedType(sourceFile)
-              compiler.askOption { () => GlobalIndex(tree) } getOrElse EmptyIndex
+              global.loadedType(sourceFile) match {
+                case Left(tree) => compiler.askOption { () => GlobalIndex(tree) } getOrElse EmptyIndex
+                case Right(ex)  => EmptyIndex
+              }
             }
           }
           cacheIndex(lastModified, occurrencesIndex)
