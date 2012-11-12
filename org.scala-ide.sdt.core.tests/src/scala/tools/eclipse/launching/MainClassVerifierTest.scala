@@ -15,6 +15,13 @@ import org.junit.runners.JUnit4
 import org.eclipse.core.resources.IncrementalProjectBuilder
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.mockito.verification.VerificationMode
+import org.eclipse.debug.core.ILaunchConfiguration
+import org.eclipse.debug.core.DebugPlugin
+import org.junit.Assert
+import org.eclipse.debug.core.ILaunchManager
+import scala.tools.eclipse.testsetup.FileUtils
+import scala.tools.eclipse.testsetup.SDTTestUtils
+import org.junit.Ignore
 
 @RunWith(classOf[JUnit4])
 class MainClassVerifierTest {
@@ -36,7 +43,16 @@ class MainClassVerifierTest {
     }
   }
 
-  @Test
+  /** This test is ignored becase there is no way to test it without seriously risking impairing the IDE
+   *
+   *  The launcher works by checking if there are build errors, and if yes delegating to a 'status handler'
+   *  The status handler displays a dialog and decides whether to proceed or not. If the status handler
+   *  extension point is not available, it always continues (`finalLaunchCheck` returns true).
+   *
+   *  If we add our own status handler in org.scala-ide.sdt.core.tests, we risk replacing the default
+   *  dialog if the user installed the 'tests' plugin, and never seeing the warning for build errors.
+   */
+  @Test @Ignore("There is no way to test launching without using an extension point that intercepts all status requests")
   def reportErrorWhenMainContainsCompilationErrors() {
     val mainName = "MainWithCompilationErrors"
     val main = """
@@ -45,10 +61,33 @@ class MainClassVerifierTest {
     }
     """.format(mainName)
 
-    createSource(EmptyPackage, mainName, main)
-    val mainTypeName = mainName
+    val launchMemento = """
+      <launchConfiguration type="scala.application">
+        <stringAttribute key="bad_container_name" value="/main-launcher/f"/>
+        <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">
+          <listEntry value="/main-launcher/src/MainWithCompilationErrors.scala"/>
+        </listAttribute>
+        <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_TYPES">
+          <listEntry value="1"/>
+        </listAttribute>
+        <mapAttribute key="org.eclipse.debug.core.preferred_launchers">
+          <mapEntry key="[debug]" value="scala.application.new"/>
+        </mapAttribute>
+        <stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="MainWithCompilationErrors"/>
+        <stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="main-launcher"/>
+      </launchConfiguration>
+"""
 
-    runTest(mainTypeName, main, times(1)) // if there are compilation errors then no binaries are produced!
+    createSource(EmptyPackage, mainName, main)
+    SDTTestUtils.addFileToProject(project.underlying, "Main.launch", launchMemento)
+
+    val config = DebugPlugin.getDefault().getLaunchManager().getLaunchConfiguration(project.underlying.getFile("Main.launch"))
+    val delegate = new ScalaLaunchDelegate()
+    project.underlying.build(IncrementalProjectBuilder.FULL_BUILD, new NullProgressMonitor)
+
+    Assert.assertFalse("Compilation errors prevent launching",
+      delegate.preLaunchCheck(config, ILaunchManager.DEBUG_MODE, new NullProgressMonitor)
+        && delegate.finalLaunchCheck(config, ILaunchManager.DEBUG_MODE, new NullProgressMonitor))
   }
 
   @Test
