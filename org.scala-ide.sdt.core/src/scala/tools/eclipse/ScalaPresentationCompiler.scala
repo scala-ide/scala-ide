@@ -97,42 +97,30 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings)
   def withSourceFile[T](icu: InteractiveCompilationUnit)(op: (SourceFile, ScalaPresentationCompiler) => T): T =
     op(sourceFiles(icu), this)
 
-  def body(sourceFile: SourceFile) = {
+  def body(sourceFile: SourceFile): Either[Tree, Throwable] = {
     val response = new Response[Tree]
     if (self.onCompilerThread)
       throw ScalaPresentationCompiler.InvalidThread("Tried to execute `askType` while inside `ask`")
     askType(sourceFile, false, response)
-    response.get match {
-      case Left(tree) => tree
-      case Right(exc) => throw exc
-    }
+    response.get
   }
 
-  def loadedType(sourceFile: SourceFile) = {
+  def loadedType(sourceFile: SourceFile): Either[Tree, Throwable] = {
     val response = new Response[Tree]
     if (self.onCompilerThread)
       throw ScalaPresentationCompiler.InvalidThread("Tried to execute `askLoadedType` while inside `ask`")
     askLoadedTyped(sourceFile, response)
-    response.get match {
-      case Left(tree) => tree
-      case Right(exc) => throw exc
-    }
+    response.get
   }
 
   def withParseTree[T](sourceFile: SourceFile)(op: Tree => T): T = {
     op(parseTree(sourceFile))
   }
 
-  def withStructure[T](sourceFile: SourceFile, keepLoaded: Boolean = false)(op: Tree => T): T = {
-    val tree = {
-      val response = new Response[Tree]
-      askStructure(keepLoaded)(sourceFile, response)
-      response.get match {
-        case Left(tree) => tree
-        case Right(thr) => throw thr
-      }
-    }
-    op(tree)
+  def withStructure[T](sourceFile: SourceFile, keepLoaded: Boolean = false)(op: Tree => T): Either[T, Throwable] = {
+    val response = new Response[Tree]
+    askStructure(keepLoaded)(sourceFile, response)
+    response.get.left.map(op)
   }
 
   /** Ask with a default timeout. Keep around for compatibility with the m2 release. */
