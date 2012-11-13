@@ -32,12 +32,8 @@ class SocketListenConnectorScala extends SocketConnectorScala {
 
   override def connector(): ListeningConnector = {
     import scala.collection.JavaConverters._
-    Bootstrap.virtualMachineManager().listeningConnectors().asScala.find(_.name() == SocketListenName) match {
-      case Some(c) =>
-        c
-      case None =>
-        throw ScalaDebugPlugin.wrapInCoreException("Unable to find JDI ListeningConnector", null)
-    }
+    Bootstrap.virtualMachineManager().listeningConnectors().asScala.find(_.name() == SocketListenName).getOrElse(
+        throw ScalaDebugPlugin.wrapInCoreException("Unable to find JDI ListeningConnector", null))
   }
 
   // from org.eclipse.jdt.launching.IVMConnector
@@ -47,7 +43,7 @@ class SocketListenConnectorScala extends SocketConnectorScala {
     List(PortKey).asJava
   }
 
-  override def getIdentifier(): String = "org.scala-ide.sdt.debug.socketListenConnector"
+  override val getIdentifier: String = ScalaDebugPlugin.id + ".socketListenConnector"
 
   override def getName(): String = "Scala debugger (Socket Listen)"
 
@@ -198,7 +194,7 @@ class ListenForConnectionJob(launch: ILaunch, process: ListenForConnectionProces
       case e: IOException =>
         connectionFailed("Problem while waiting to receive connection. See log for more details")
         ScalaDebugPlugin.wrapInErrorStatus("Problem while waiting to receive connection", e)
-      case e: Throwable =>
+      case e: Exception =>
         connectionFailed("Unexpected problem while waiting to receive connection. See log for more details")
         ScalaDebugPlugin.wrapInErrorStatus("Unexpected problem while waiting to receive connection", e)
     }

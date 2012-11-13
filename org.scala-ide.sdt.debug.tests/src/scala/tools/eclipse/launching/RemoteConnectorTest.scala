@@ -1,37 +1,33 @@
 package scala.tools.eclipse.launching
 
-import org.junit.Test
-import org.junit.Assert._
-import scala.tools.eclipse.debug.ScalaDebugRunningTest
-import scala.tools.eclipse.testsetup.TestProjectSetup
-import scala.tools.eclipse.debug.ScalaDebugTestSession
-import org.eclipse.debug.core.DebugPlugin
-import org.eclipse.debug.core.ILaunchManager
-import org.junit.After
-import org.junit.BeforeClass
-import org.eclipse.ui.preferences.ScopedPreferenceStore
-import org.eclipse.core.runtime.preferences.InstanceScope
-import org.eclipse.debug.core.ILaunch
-import org.eclipse.core.runtime.CoreException
-import java.util.Date
-import java.util.{ Map => JMap }
-import org.eclipse.jdt.launching.JavaRuntime
-import org.junit.Before
-import org.eclipse.debug.core.IDebugEventSetListener
-import org.eclipse.debug.core.IDebugEventSetListener
-import org.eclipse.debug.core.DebugEvent
-import java.util.concurrent.CountDownLatch
-import org.eclipse.debug.core.model.IProcess
-import org.eclipse.core.resources.IncrementalProjectBuilder
-import org.eclipse.core.runtime.NullProgressMonitor
-import org.junit.Ignore
-import java.net.Socket
-import java.net.SocketAddress
-import java.net.InetSocketAddress
 import java.net.ConnectException
+import java.net.InetSocketAddress
+import java.net.Socket
 import java.net.SocketException
+import java.util.{ Map => JMap }
+import java.util.concurrent.CountDownLatch
+import scala.tools.eclipse.debug.ScalaDebugRunningTest
+import scala.tools.eclipse.debug.ScalaDebugTestSession
+import scala.tools.eclipse.testsetup.TestProjectSetup
+import org.eclipse.core.resources.IncrementalProjectBuilder
+import org.eclipse.core.runtime.CoreException
+import org.eclipse.core.runtime.NullProgressMonitor
+import org.eclipse.debug.core.DebugEvent
+import org.eclipse.debug.core.DebugPlugin
+import org.eclipse.debug.core.IDebugEventSetListener
+import org.eclipse.debug.core.ILaunch
+import org.eclipse.debug.core.ILaunchManager
+import org.eclipse.debug.core.model.IProcess
+import org.eclipse.jdt.launching.JavaRuntime
+import org.junit.After
+import org.junit.Assert._
+import org.junit.Before
+import org.junit.BeforeClass
+import org.junit.Test
+import scala.tools.eclipse.debug.EclipseDebugEvent
 
 object RemoteConnectorTest extends TestProjectSetup("debug", bundleName = "org.scala-ide.sdt.debug.tests") with ScalaDebugRunningTest {
+  import ScalaDebugTestSession._
 
   final val VmArgsKey = "org.eclipse.jdt.launching.VM_ARGUMENTS"
   final val ConnectKey = "org.eclipse.jdt.launching.CONNECT_MAP"
@@ -61,18 +57,10 @@ object RemoteConnectorTest extends TestProjectSetup("debug", bundleName = "org.s
   def launchInRunMode(launchConfigurationName: String, port: Int): ILaunch = {
     // event listener to wait for the creation of the process
     val latch = new CountDownLatch(1)
-    val eventListener = new IDebugEventSetListener() {
-      def handleDebugEvents(eventSet: Array[DebugEvent]) {
-        eventSet foreach { e =>
-          e.getSource() match {
-            case p: IProcess if (e.getKind() == DebugEvent.CREATE) =>
-              latch.countDown()
-            case _ =>
-          }
-        }
-      }
+    val eventListener = addDebugEventListener {
+      case EclipseDebugEvent(DebugEvent.CREATE, p: IProcess) =>
+        latch.countDown()
     }
-    DebugPlugin.getDefault().addDebugEventListener(eventListener)
 
     try {
       val launchConfiguration = DebugPlugin.getDefault.getLaunchManager.getLaunchConfiguration(file(launchConfigurationName + ".launch"))
@@ -107,8 +95,7 @@ object RemoteConnectorTest extends TestProjectSetup("debug", bundleName = "org.s
           socket.connect(new InetSocketAddress("localhost", port))
           Thread.sleep(10)
         } catch {
-          case e: ConnectException =>
-          case e: SocketException =>
+          case _: ConnectException | _: SocketException =>
         }
       } while (!socket.isConnected())
     } finally {
@@ -124,18 +111,10 @@ object RemoteConnectorTest extends TestProjectSetup("debug", bundleName = "org.s
 
     val latch = new CountDownLatch(1)
 
-    val eventListener = new IDebugEventSetListener() {
-      def handleDebugEvents(eventSet: Array[DebugEvent]) {
-        eventSet foreach { e =>
-          e.getSource() match {
-            case `process` if (e.getKind() == DebugEvent.TERMINATE) =>
-              latch.countDown()
-            case _ =>
-          }
-        }
-      }
+    val eventListener = addDebugEventListener {
+      case EclipseDebugEvent(DebugEvent.TERMINATE, `process`) =>
+        latch.countDown()
     }
-    DebugPlugin.getDefault().addDebugEventListener(eventListener)
 
     try {
       if (!process.isTerminated()) {
@@ -165,12 +144,13 @@ object RemoteConnectorTest extends TestProjectSetup("debug", bundleName = "org.s
 class RemoteConnectorTest {
 
   import RemoteConnectorTest._
+  import ScalaDebugTestSession._
 
-  var session: ScalaDebugTestSession = null
-  var application: ILaunch = null
-  var eventListener: IDebugEventSetListener = null
+  private var session: ScalaDebugTestSession = null
+  private var application: ILaunch = null
+  private var debugEventListener: IDebugEventSetListener = null
 
-  var debugConnectionTimeout: Int = -1
+  private var debugConnectionTimeout: Int = -1
 
   @Before
   def savePreferences() {
@@ -192,16 +172,16 @@ class RemoteConnectorTest {
       terminateProcess(application)
       application = null
     }
-    if (eventListener ne null) {
-      DebugPlugin.getDefault().removeDebugEventListener(eventListener)
-      eventListener = null
+    if (debugEventListener ne null) {
+      DebugPlugin.getDefault().removeDebugEventListener(debugEventListener)
+      debugEventListener = null
     }
   }
 
   /**
    * Check if it is possible to connect to a running VM.
    */
-  @Test
+  @Test(timeout = 2000)
   def attachToRunningVM() {
     val port = ConnectionPort.next()
     application = launchInRunMode("HelloWorld listening", port)
@@ -231,7 +211,7 @@ class RemoteConnectorTest {
     session = initDebugSession("Remote listening", port)
 
     // this command actually launch the debugger
-    application = session.runToLine(TYPENAME_HELLOWORLD + "$", 6, launchInRunMode("HelloWorld attaching", port))
+    application = session.runToLine(TYPENAME_HELLOWORLD + "$", 6, () => launchInRunMode("HelloWorld attaching", port))
 
     session.checkStackFrame(TYPENAME_HELLOWORLD + "$", "main([Ljava/lang/String;)V", 6)
   }
@@ -256,24 +236,16 @@ class RemoteConnectorTest {
    */
   @Test(timeout = 2000)
   def listeningToNobody() {
-    val port = ConnectionPort.next()
+    val port = ConnectionPort.next() 
     // tweak the timeout preference. 10ms to fail fast
     JavaRuntime.getPreferences().setValue(JavaRuntime.PREF_CONNECT_TIMEOUT, 10)
 
     val latch = new CountDownLatch(1)
 
-    eventListener = new IDebugEventSetListener() {
-      def handleDebugEvents(eventSet: Array[DebugEvent]) {
-        eventSet foreach { e =>
-          e.getSource() match {
-            case p: ListenForConnectionProcess if (e.getKind() == DebugEvent.TERMINATE && p.getLabel.contains("timeout")) =>
-              latch.countDown()
-            case _ =>
-          }
-        }
-      }
+    debugEventListener = addDebugEventListener {
+      case EclipseDebugEvent(DebugEvent.TERMINATE, p: ListenForConnectionProcess) if p.getLabel.contains("timeout") =>
+        latch.countDown()
     }
-    DebugPlugin.getDefault().addDebugEventListener(eventListener)
 
     session = initDebugSession("Remote listening", port)
 
@@ -305,31 +277,23 @@ class RemoteConnectorTest {
 
     val CurrentProcess = getProcess(application)
 
-    eventListener = new IDebugEventSetListener() {
-      def handleDebugEvents(eventSet: Array[DebugEvent]) {
-        eventSet foreach { e =>
-          e.getSource() match {
-            case CurrentProcess if (e.getKind() == DebugEvent.TERMINATE) =>
-              latch.countDown()
-            case _ =>
-          }
-        }
-      }
+    debugEventListener = addDebugEventListener {
+      case EclipseDebugEvent(DebugEvent.TERMINATE, CurrentProcess) =>
+        latch.countDown()
     }
-    DebugPlugin.getDefault().addDebugEventListener(eventListener)
 
     session.disconnect()
 
     latch.await()
 
     // check the content of outputStream. Should contain the output
-    assertTrue("Invalid outputStream content", getProcess(application).getStreamsProxy().getOutputStreamMonitor().getContents().contains("Hello, World"))
+    assertTrue("Invalid outputStream content", CurrentProcess.getStreamsProxy().getOutputStreamMonitor().getContents().contains("Hello, World"))
   }
 
   /**
    * Check that canTerminate is correctly set
    */
-  @Test
+  @Test(timeout = 2000)
   def cannotTerminate() {
     val port = ConnectionPort.next()
 
@@ -344,11 +308,11 @@ class RemoteConnectorTest {
     session.runToLine(TYPENAME_HELLOWORLD + "$", 6)
 
     session.checkStackFrame(TYPENAME_HELLOWORLD + "$", "main([Ljava/lang/String;)V", 6)
-    
+
     assertFalse("canTerminate flag should be false", session.debugTarget.canTerminate)
 
   }
-  
+
   /**
    * Check that canTerminate is correctly enabled, and kill the VM when used.
    */
@@ -369,31 +333,22 @@ class RemoteConnectorTest {
     session.checkStackFrame(TYPENAME_HELLOWORLD + "$", "main([Ljava/lang/String;)V", 6)
 
     assertTrue("canTerminate flag should be true", session.debugTarget.canTerminate)
-    
+
     val latch = new CountDownLatch(1)
 
     val CurrentProcess = getProcess(application)
 
-    eventListener = new IDebugEventSetListener() {
-      def handleDebugEvents(eventSet: Array[DebugEvent]) {
-        eventSet foreach { e =>
-          e.getSource() match {
-            case CurrentProcess if (e.getKind() == DebugEvent.TERMINATE) =>
-              latch.countDown()
-            case _ =>
-          }
-        }
-      }
+    debugEventListener = addDebugEventListener {
+      case EclipseDebugEvent(DebugEvent.TERMINATE, CurrentProcess) =>
+        latch.countDown()
     }
-    DebugPlugin.getDefault().addDebugEventListener(eventListener)
 
     session.terminate()
 
     latch.await()
 
     // check the content of outputStream. Should not contain the output
-    assertFalse("Invalid outputStream content", getProcess(application).getStreamsProxy().getOutputStreamMonitor().getContents().contains("Hello, World"))
+    assertFalse("Invalid outputStream content", CurrentProcess.getStreamsProxy().getOutputStreamMonitor().getContents().contains("Hello, World"))
   }
-
 
 }

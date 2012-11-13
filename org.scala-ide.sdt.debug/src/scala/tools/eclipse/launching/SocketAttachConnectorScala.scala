@@ -27,12 +27,8 @@ class SocketAttachConnectorScala extends SocketConnectorScala {
 
   override def connector(): AttachingConnector = {
     import scala.collection.JavaConverters._
-    Bootstrap.virtualMachineManager().attachingConnectors().asScala.find(_.name() == SocketAttachName) match {
-      case Some(c) =>
-        c
-      case None =>
-        throw ScalaDebugPlugin.wrapInCoreException("Unable to find JDI AttachingConnector", null)
-    }
+    Bootstrap.virtualMachineManager().attachingConnectors().asScala.find(_.name() == SocketAttachName).getOrElse(
+        throw ScalaDebugPlugin.wrapInCoreException("Unable to find JDI AttachingConnector", null))
   }
 
   // from org.eclipse.jdt.launching.IVMConnector
@@ -42,7 +38,7 @@ class SocketAttachConnectorScala extends SocketConnectorScala {
     List(HostnameKey, PortKey).asJava
   }
 
-  override def getIdentifier(): String = "org.scala-ide.sdt.debug.socketAttachConnector"
+  override val getIdentifier: String = ScalaDebugPlugin.id + ".socketAttachConnector"
 
   override def getName(): String = "Scala debugger (Socket Attach)"
 

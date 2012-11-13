@@ -41,7 +41,7 @@ Configured step filters:
 object DebuggerPreferences {
   import MethodClassifier._
   
-  val BASE = "org.scala-ide.sdt.debug."
+  val BASE = ScalaDebugPlugin.id + "."
   val BASE_FILTER = BASE + "filter."
   val FILTER_SYNTHETIC = BASE_FILTER + Synthetic
   val FILTER_GETTER = BASE_FILTER + Getter

@@ -68,14 +68,14 @@ public class TcpipSpy extends Thread {
 	}
 
 	public static void main(String[] args) {
-	    boolean listenMode = false;
+		boolean listenMode = false;
 		int inPort = 0;
 		String serverHost = null;
 		int outPort = 0;
 		String outputFile = null;
 		try {
-		    listenMode = args[0].equals("-l");
-		    int argIndex = listenMode ? 1 : 0;
+			listenMode = args[0].equals("-l");
+			int argIndex = listenMode ? 1 : 0;
 			inPort = Integer.parseInt(args[argIndex ++]);
 			serverHost = args[argIndex++];
 			outPort = Integer.parseInt(args[argIndex++]);

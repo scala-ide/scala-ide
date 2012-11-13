@@ -1,9 +1,10 @@
 package scala.tools.eclipse.debug.model
 
-import scala.tools.eclipse.debug.ScalaDebugger.{modelProvider, modelId}
+import scala.tools.eclipse.debug.ScalaDebugger.modelProvider
 import scala.tools.eclipse.debug.ScalaDebugger
 import scala.tools.eclipse.logging.HasLogger
 import org.eclipse.debug.core.model.{IDebugTarget, ITerminate, DebugElement}
+import scala.tools.eclipse.debug.ScalaDebugPlugin
 
 /**
  * Base class for debug elements in the Scala debug model
@@ -26,7 +27,7 @@ abstract class ScalaDebugElement(debugTarget: ScalaDebugTarget) extends DebugEle
 
   // Members declared in org.eclipse.debug.core.model.IDebugElement
 
-  override def getModelIdentifier: String = modelId
+  override val getModelIdentifier: String = ScalaDebugPlugin.id
 
   // Members declared in org.eclipse.debug.core.model.ITerminate
 

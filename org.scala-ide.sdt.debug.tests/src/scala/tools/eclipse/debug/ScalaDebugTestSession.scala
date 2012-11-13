@@ -15,18 +15,26 @@ import org.eclipse.jdt.internal.debug.core.model.JDIDebugElement
 import org.eclipse.debug.core.ILaunchConfiguration
 
 object EclipseDebugEvent {
-  def unapply(event: DebugEvent): Option[(Int, DebugElement)] = {
-    event.getSource match {
-      case debugElement: DebugElement =>
-        Some(event.getKind, debugElement)
-      case _ =>
-        None
+  def unapply(event: DebugEvent): Option[(Int, AnyRef)] = Some((event.getKind, event.getSource()))
+}
+
+object ScalaDebugTestSession {
+  // function doing nothing
+  val Noop = () => ()
+
+  def addDebugEventListener(f: PartialFunction[DebugEvent, Unit]): IDebugEventSetListener = {
+    val debugEventListener= new IDebugEventSetListener {
+      def handleDebugEvents(events: Array[DebugEvent]) {
+        events.foreach(f orElse {case _ =>})
+      }
     }
+    DebugPlugin.getDefault.addDebugEventListener(debugEventListener)
+    debugEventListener
   }
 }
 
-class ScalaDebugTestSession(launchConfiguration: ILaunchConfiguration) extends IDebugEventSetListener {
-  
+class ScalaDebugTestSession(launchConfiguration: ILaunchConfiguration) {
+
   def this(launchConfigurationFile: IFile) = this(DebugPlugin.getDefault.getLaunchManager.getLaunchConfiguration(launchConfigurationFile))
 
   object State extends Enumeration {
@@ -35,36 +43,23 @@ class ScalaDebugTestSession(launchConfiguration: ILaunchConfiguration) extends I
   }
   import State._
 
-  // from IDebugEventSetListener
-
-  DebugPlugin.getDefault.addDebugEventListener(this)
-
-  def handleDebugEvents(events: Array[DebugEvent]) {
-
-    events.foreach(
-      _ match {
-        case EclipseDebugEvent(DebugEvent.CREATE, target: ScalaDebugTarget) =>
-          setLaunched(target)
-        case EclipseDebugEvent(DebugEvent.RESUME, x) =>
-          setRunning
-        case EclipseDebugEvent(DebugEvent.SUSPEND, thread: ScalaThread) =>
-          setSuspended(thread.getTopStackFrame.asInstanceOf[ScalaStackFrame])
-        case EclipseDebugEvent(DebugEvent.SUSPEND, target: ScalaDebugTarget) if target == debugTarget =>
-          setSuspended(null)
-        case EclipseDebugEvent(DebugEvent.TERMINATE, target: ScalaDebugTarget) if target == debugTarget =>
-          setTerminated()
-        case _ =>
-      }
-    )
-
+  val debugEventListener = ScalaDebugTestSession.addDebugEventListener {
+    case EclipseDebugEvent(DebugEvent.CREATE, target: ScalaDebugTarget) =>
+      setLaunched(target)
+    case EclipseDebugEvent(DebugEvent.RESUME, x) =>
+      setRunning()
+    case EclipseDebugEvent(DebugEvent.SUSPEND, thread: ScalaThread) =>
+      setSuspended(thread.getTopStackFrame.asInstanceOf[ScalaStackFrame])
+    case EclipseDebugEvent(DebugEvent.SUSPEND, target: ScalaDebugTarget) if target == debugTarget =>
+      setSuspended(null)
+    case EclipseDebugEvent(DebugEvent.TERMINATE, target: ScalaDebugTarget) if target == debugTarget =>
+      setTerminated()
   }
-
-  // ----
 
   def setLaunched(target: ScalaDebugTarget) {
     this.synchronized {
       debugTarget = target
-      setRunning
+      setRunning()
     }
   }
 
@@ -84,28 +79,28 @@ class ScalaDebugTestSession(launchConfiguration: ILaunchConfiguration) extends I
       currentStackFrame = stackFrame
       ScalaDebugger.currentThread = stackFrame.thread
       state = SUSPENDED
-      this.notify
+      this.notify()
     }
   }
 
   def setTerminated() {
     this.synchronized {
       state = TERMINATED
-      this.notify
+      this.notify()
     }
   }
 
   def waitUntilSuspended() {
     this.synchronized {
       while (state != SUSPENDED && state != TERMINATED)
-        this.wait
+        this.wait()
     }
   }
 
   def waitUntilTerminated() {
     this.synchronized {
       if (state != TERMINATED)
-        this.wait
+        this.wait()
     }
   }
 
@@ -114,23 +109,23 @@ class ScalaDebugTestSession(launchConfiguration: ILaunchConfiguration) extends I
   var state = NOT_LAUNCHED
   var debugTarget: ScalaDebugTarget = null
   var currentStackFrame: ScalaStackFrame = null
-  
+
   /**
-   * Add a breakpoint at the specified location, 
+   * Add a breakpoint at the specified location,
    * start or launch the session,
    * and wait until the application is suspended
    */
   def runToLine(typeName: String, breakpointLine: Int) {
-    runToLine(typeName, breakpointLine, ())
+    runToLine(typeName, breakpointLine, ScalaDebugTestSession.Noop)
   }
-  
+
   /**
-   * Add a breakpoint at the specified location, 
+   * Add a breakpoint at the specified location,
    * start or launch the session,
    * perform the additional action,
    * and wait until the application is suspended
    */
-  def runToLine[T](typeName: String, breakpointLine: Int, additionalAction: => T): T = {
+  def runToLine[T](typeName: String, breakpointLine: Int, additionalAction: () => T): T = {
     assertThat("Bad state before runToBreakpoint", state, anyOf(is(NOT_LAUNCHED), is(SUSPENDED)))
 
     val breakpoint = addLineBreakpoint(typeName, breakpointLine)
@@ -142,25 +137,25 @@ class ScalaDebugTestSession(launchConfiguration: ILaunchConfiguration) extends I
       currentStackFrame.resume
     }
 
-    val actionResult= additionalAction
-    
+    val actionResult = additionalAction()
+
     waitUntilSuspended
     removeBreakpoint(breakpoint)
 
     assertEquals("Bad state after runToBreakpoint", SUSPENDED, state)
-    
+
     actionResult
   }
-  
+
   /**
    * Add a breakpoint in the given type and its nested types at the given line (1 based)
    */
   def addLineBreakpoint(typeName: String, breakpointLine: Int): IJavaLineBreakpoint = {
-    val breakpoint = JDIDebugModel.createLineBreakpoint(ResourcesPlugin.getWorkspace.getRoot, typeName, breakpointLine, /*char start*/ -1, /*char end*/ -1, /*hit count*/ -1, /*register*/ true , /*attributes*/ null)
+    val breakpoint = JDIDebugModel.createLineBreakpoint(ResourcesPlugin.getWorkspace.getRoot, typeName, breakpointLine, /*char start*/ -1, /*char end*/ -1, /*hit count*/ -1, /*register*/ true, /*attributes*/ null)
     waitForBreakpointsToBeInstalled()
     breakpoint
   }
-  
+
   /**
    * Remove the given breakpoint
    */
@@ -218,8 +213,9 @@ class ScalaDebugTestSession(launchConfiguration: ILaunchConfiguration) extends I
       waitUntilTerminated
       assertEquals("Bad state after terminate", TERMINATED, state)
     }
+    DebugPlugin.getDefault().removeDebugEventListener(debugEventListener)
   }
-  
+
   def disconnect() {
     if ((state ne NOT_LAUNCHED) && (state ne TERMINATED)) {
       debugTarget.disconnect()
@@ -231,7 +227,7 @@ class ScalaDebugTestSession(launchConfiguration: ILaunchConfiguration) extends I
   def launch() {
     launchConfiguration.launch(ILaunchManager.DEBUG_MODE, null)
   }
-  
+
   /**
    * Breakpoints are set asynchronously. It is fine in the UI, but it create timing problems
    * while running test.
