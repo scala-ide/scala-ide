@@ -17,9 +17,12 @@ import org.eclipse.core.runtime.IPath
 import org.eclipse.jdt.core.IJavaProject
 import org.eclipse.core.runtime.Status
 import org.eclipse.core.runtime.IStatus
+import org.eclipse.core.resources.IMarker
+import org.eclipse.debug.core.model.LaunchConfigurationDelegate
 
 class ScalaLaunchDelegate extends AbstractJavaLaunchConfigurationDelegate {
-	def launch(configuration: ILaunchConfiguration, mode: String, launch: ILaunch, monitor0: IProgressMonitor) {
+  /** This code is very heavily inspired from `AbstractJavaLaunchConfigurationDelegate`. */
+  def launch(configuration: ILaunchConfiguration, mode: String, launch: ILaunch, monitor0: IProgressMonitor) {
 		
 		val monitor = if (monitor0 == null) new NullProgressMonitor() else monitor0
 		
@@ -48,6 +51,8 @@ class ScalaLaunchDelegate extends AbstractJavaLaunchConfigurationDelegate {
 			// VM-specific attributes
 			val vmAttributesMap = getVMSpecificAttributesMap(configuration)
 
+			// adding Scala libraries is the only difference compared to the Java Launcher
+			// TODO: do we still need this?
 			val modifiedAttrMap: mutable.Map[String, Array[String]] =
 				if (vmAttributesMap == null) mutable.Map() else vmAttributesMap.asInstanceOf[java.util.Map[String,Array[String]]]
 			val classpath0 = getClasspath(configuration)
@@ -76,14 +81,6 @@ class ScalaLaunchDelegate extends AbstractJavaLaunchConfigurationDelegate {
 			// stop in main
 			prepareStopInMain(configuration)
 
-			// verify that the main classfile exists
-			val project = getJavaProject(configuration)
-			ScalaPlugin.plugin.asScalaProject(project.getProject).foreach { scalaProject =>
-			  val mainClassVerifier = new MainClassVerifier(new UIErrorReporter)
-			  val status = mainClassVerifier.execute(scalaProject, mainTypeName)
-			  if (status.getCode() != IStatus.OK) throw new CoreException(status)
-			}
-
 			// done the verification phase
 			monitor.worked(1)
 			
@@ -105,6 +102,27 @@ class ScalaLaunchDelegate extends AbstractJavaLaunchConfigurationDelegate {
 			monitor.done()
 		}
 	}
+
+  /** Scala problem markers should prevent a launch. This integrates with the platform and correctly displays a dialog. */
+  override protected def isLaunchProblem(problemMarker: IMarker): Boolean =
+    super.isLaunchProblem(problemMarker) || {
+      val isError = Option(problemMarker.getAttribute(IMarker.SEVERITY)).map(_.asInstanceOf[Integer].intValue >= IMarker.SEVERITY_ERROR).getOrElse(false)
+      isError && ScalaPlugin.plugin.scalaErrorMarkers.contains(problemMarker.getType())
+    }
+
+  /** Stop a launch if the main class does not exist. */
+  override def finalLaunchCheck(configuration: ILaunchConfiguration, mode: String, monitor: IProgressMonitor): Boolean = {
+    super.finalLaunchCheck(configuration, mode, monitor) && {
+      // verify that the main classfile exists
+      val project = getJavaProject(configuration)
+      val mainTypeName = getMainTypeName(configuration)
+      ScalaPlugin.plugin.asScalaProject(project.getProject) map { scalaProject =>
+        val mainClassVerifier = new MainClassVerifier(new UIErrorReporter)
+        val status = mainClassVerifier.execute(scalaProject, mainTypeName)
+        status.getCode() == IStatus.OK
+      } getOrElse false
+    }
+  }
 	
 	private def toInclude(vmMap: mutable.Map[String, Array[String]], classpath: List[String],
 			          configuration: ILaunchConfiguration): List[String] =
