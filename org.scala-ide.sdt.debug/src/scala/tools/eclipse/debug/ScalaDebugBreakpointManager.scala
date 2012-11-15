@@ -18,7 +18,11 @@ object ScalaDebugBreakpointManager {
 }
 
 /**
- * Setup the initial breakpoints, and listen to breakpoint changes, for the given ScalaDebugTarget
+ * Setup the initial breakpoints, and listen to breakpoint changes, for the given ScalaDebugTarget.
+ *
+ * @note All breakpoint-event related methods in this class are asynchronous, by delegating to the companion
+ *       actor. This seems useless (listeners are run in their own thread) and makes things somewhat harder to test.
+ *       Maybe we should remove the companion actor in this case.
  */
 class ScalaDebugBreakpointManager private (/*public field only for testing purposes */val companionActor: Actor) extends IBreakpointListener {
   import ScalaDebugBreakpointManagerActor._
@@ -26,7 +30,7 @@ class ScalaDebugBreakpointManager private (/*public field only for testing purpo
   // from org.eclipse.debug.core.IBreakpointsListener
 
   override def breakpointChanged(breakpoint: IBreakpoint, delta: IMarkerDelta): Unit = {
-    companionActor ! BreakpointChanged(breakpoint)
+    companionActor ! BreakpointChanged(breakpoint, delta)
   }
 
   override def breakpointRemoved(breakpoint: IBreakpoint, delta: IMarkerDelta): Unit = {
@@ -66,7 +70,7 @@ private[debug] object ScalaDebugBreakpointManagerActor {
   case object Initialize
   case class BreakpointAdded(breakpoint: IBreakpoint)
   case class BreakpointRemoved(breakpoint: IBreakpoint)
-  case class BreakpointChanged(breakpoint: IBreakpoint)
+  case class BreakpointChanged(breakpoint: IBreakpoint, delta: IMarkerDelta)
 
   private final val JdtDebugUID = "org.eclipse.jdt.debug"
     
@@ -79,8 +83,9 @@ private[debug] object ScalaDebugBreakpointManagerActor {
 
 private class ScalaDebugBreakpointManagerActor private(debugTarget: ScalaDebugTarget) extends BaseDebuggerActor {
   import ScalaDebugBreakpointManagerActor._
+  import BreakpointSupportActor.Changed
 
-  private var breakpoints = Map[IBreakpoint, BreakpointSupport]()
+  private var breakpoints = Map[IBreakpoint, Actor]()
 
   override protected def postStart(): Unit = link(debugTarget.companionActor)
 
@@ -104,15 +109,15 @@ private class ScalaDebugBreakpointManagerActor private(debugTarget: ScalaDebugTa
     case BreakpointRemoved(breakpoint) =>
       breakpoints.get(breakpoint) match {
         case Some(breakpointSupport) =>
-          breakpointSupport.dispose()
+          breakpointSupport ! PoisonPill
           breakpoints -= breakpoint
         case _ =>
           // see previous comment
       }
-    case BreakpointChanged(breakpoint) =>
+    case BreakpointChanged(breakpoint, delta) =>
       breakpoints.get(breakpoint) match {
         case Some(breakpointSupport) =>
-          breakpointSupport.changed()
+          breakpointSupport ! Changed(delta)
         case _ =>
           // see previous comment
       }
@@ -124,5 +129,5 @@ private class ScalaDebugBreakpointManagerActor private(debugTarget: ScalaDebugTa
     breakpoints += (breakpoint -> BreakpointSupport(breakpoint, debugTarget))
   }
 
-  override protected def preExit(): Unit = breakpoints.values.foreach(_.dispose())
+  override protected def preExit(): Unit = breakpoints.values.foreach(_ ! PoisonPill)
 }

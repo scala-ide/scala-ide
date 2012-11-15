@@ -12,6 +12,13 @@ import org.junit.Assert._
 import org.eclipse.debug.core.model.DebugElement
 import scala.tools.eclipse.debug.model.ScalaDebugElement
 import org.eclipse.jdt.internal.debug.core.model.JDIDebugElement
+import org.eclipse.debug.core.IBreakpointListener
+import java.util.concurrent.CountDownLatch
+import org.eclipse.core.resources.IMarkerDelta
+import java.util.concurrent.TimeUnit
+import org.eclipse.core.resources.IMarker
+import scala.tools.eclipse.logging.HasLogger
+import scala.tools.eclipse.debug.BreakpointSupport
 import org.eclipse.debug.core.ILaunchConfiguration
 
 object EclipseDebugEvent {
@@ -33,7 +40,7 @@ object ScalaDebugTestSession {
   }
 }
 
-class ScalaDebugTestSession(launchConfiguration: ILaunchConfiguration) {
+class ScalaDebugTestSession(launchConfiguration: ILaunchConfiguration) extends HasLogger {
 
   def this(launchConfigurationFile: IFile) = this(DebugPlugin.getDefault.getLaunchManager.getLaunchConfiguration(launchConfigurationFile))
 
@@ -79,7 +86,8 @@ class ScalaDebugTestSession(launchConfiguration: ILaunchConfiguration) {
       currentStackFrame = stackFrame
       ScalaDebugger.currentThread = stackFrame.thread
       state = SUSPENDED
-      this.notify()
+      logger.info("SUSPENDED at: %s:%d".format(stackFrame.getMethodFullName, stackFrame.getLineNumber))
+      this.notify
     }
   }
 
@@ -151,8 +159,8 @@ class ScalaDebugTestSession(launchConfiguration: ILaunchConfiguration) {
    * Add a breakpoint in the given type and its nested types at the given line (1 based)
    */
   def addLineBreakpoint(typeName: String, breakpointLine: Int): IJavaLineBreakpoint = {
-    val breakpoint = JDIDebugModel.createLineBreakpoint(ResourcesPlugin.getWorkspace.getRoot, typeName, breakpointLine, /*char start*/ -1, /*char end*/ -1, /*hit count*/ -1, /*register*/ true, /*attributes*/ null)
-    waitForBreakpointsToBeInstalled()
+    val breakpoint = JDIDebugModel.createLineBreakpoint(ResourcesPlugin.getWorkspace.getRoot, typeName, breakpointLine, /*char start*/ -1, /*char end*/ -1, /*hit count*/ -1, /*register*/ true , /*attributes*/ null)
+    waitForBreakpointsToBeEnabled(breakpoint)
     breakpoint
   }
 
@@ -216,6 +224,11 @@ class ScalaDebugTestSession(launchConfiguration: ILaunchConfiguration) {
     DebugPlugin.getDefault().removeDebugEventListener(debugEventListener)
   }
 
+  def continue() {
+    setActionRequested
+    currentStackFrame.resume
+  }
+
   def disconnect() {
     if ((state ne NOT_LAUNCHED) && (state ne TERMINATED)) {
       debugTarget.disconnect()
@@ -229,14 +242,24 @@ class ScalaDebugTestSession(launchConfiguration: ILaunchConfiguration) {
   }
 
   /**
-   * Breakpoints are set asynchronously. It is fine in the UI, but it create timing problems
+   * Breakpoints are set asynchronously. It is fine in the UI, but it creates timing problems
    * while running test.
    * This method make sure there are no outstanding requests
    */
-  private def waitForBreakpointsToBeInstalled() {
+  def waitForBreakpointToBe(breakpoint: IBreakpoint, enabled: Boolean) {
+    import scala.tools.eclipse.testsetup.SDTTestUtils._
+
     if (state ne NOT_LAUNCHED) {
-      debugTarget.breakpointManager.waitForAllCurrentEvents
+      waitUntil(5000) {
+        breakpoint.getMarker().getAttribute(BreakpointSupport.ATTR_VM_REQUESTS_ENABLED, !enabled) == enabled
+      }
     }
+  }
+  def waitForBreakpointsToBeEnabled(breakpoint: IBreakpoint*) {
+    breakpoint.foreach(waitForBreakpointToBe(_, true))
+  }
+  def waitForBreakpointsToBeDisabled(breakpoint: IBreakpoint*) {
+    breakpoint.foreach(waitForBreakpointToBe(_, false))
   }
 
   // -----
@@ -257,8 +280,7 @@ class ScalaDebugTestSession(launchConfiguration: ILaunchConfiguration) {
     assertEquals("Bad state before checkStackFrame", SUSPENDED, state)
 
     assertEquals("Wrong typeName", typeName, currentStackFrame.stackFrame.location.declaringType.name)
-    assertEquals("Wrong method", methodFullSignature, currentStackFrame.stackFrame.location.method.name + currentStackFrame.stackFrame.location.method.signature)
+    assertEquals("Wrong method/line" + currentStackFrame.getLineNumber, methodFullSignature, currentStackFrame.stackFrame.location.method.name + currentStackFrame.stackFrame.location.method.signature)
     assertEquals("Wrong line", line, currentStackFrame.getLineNumber)
   }
-
 }
