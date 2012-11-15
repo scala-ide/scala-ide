@@ -100,6 +100,9 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
   def classpathProblemMarkerId = pluginId + ".classpathProblem"
   def settingProblemMarkerId = pluginId + ".settingProblem"
 
+  /** All Scala error markers. */
+  val scalaErrorMarkers = Set(classpathProblemMarkerId, problemMarkerId, settingProblemMarkerId)
+
   // Retained for backwards compatibility
   val oldPluginId = "ch.epfl.lamp.sdt.core"
   val oldLibraryPluginId = "scala.library"
