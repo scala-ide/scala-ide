@@ -149,7 +149,7 @@ class DebugTargetTerminationTest extends HasLogger {
 
   @Test
   def abruptTerminationOf_DebugTargetActor_is_gracefully_handled() {
-    val debugTargetActor = debugTarget.eventActor
+    val debugTargetActor = debugTarget.companionActor
 
     checkGracefulTerminationOf(debugTargetActor) when {
       debugTarget.terminate()
@@ -159,7 +159,7 @@ class DebugTargetTerminationTest extends HasLogger {
 
   @Test
   def normalTerminationOf_DebugTargetActor() {
-    val debugTargetActor = debugTarget.eventActor
+    val debugTargetActor = debugTarget.companionActor
 
     checkGracefulTerminationOf(debugTargetActor) when {
       debugTargetActor ! PoisonPill
@@ -168,8 +168,8 @@ class DebugTargetTerminationTest extends HasLogger {
 
   @Test
   def normalTerminationOf_DebugTargetActor_triggers_BreakpointManagerActor_termination() {
-    val debugTargetActor = debugTarget.eventActor
-    val breapointManagerActor = debugTarget.breakpointManager.eventActor
+    val debugTargetActor = debugTarget.companionActor
+    val breapointManagerActor = debugTarget.breakpointManager.companionActor
 
     checkGracefulTerminationOf(breapointManagerActor) when {
       debugTargetActor ! PoisonPill
@@ -178,8 +178,8 @@ class DebugTargetTerminationTest extends HasLogger {
 
   @Test
   def normalTerminationOf_BreakpointManagerActor_triggers_DebugTargetActor_termination() {
-    val debugTargetActor = debugTarget.eventActor
-    val breapointManagerActor = debugTarget.breakpointManager.eventActor
+    val debugTargetActor = debugTarget.companionActor
+    val breapointManagerActor = debugTarget.breakpointManager.companionActor
 
     checkGracefulTerminationOf(debugTargetActor) when {
       breapointManagerActor ! PoisonPill
@@ -188,8 +188,8 @@ class DebugTargetTerminationTest extends HasLogger {
 
   @Test
   def normalTerminationOf_DebugTargetActor_triggers_JdiEventDispatcherActor_termination() {
-    val debugTargetActor = debugTarget.eventActor
-    val jdiEventDispatcherActor = debugTarget.eventDispatcher.eventActor
+    val debugTargetActor = debugTarget.companionActor
+    val jdiEventDispatcherActor = debugTarget.eventDispatcher.companionActor
 
     checkGracefulTerminationOf(jdiEventDispatcherActor) when {
       debugTargetActor ! PoisonPill
@@ -198,8 +198,8 @@ class DebugTargetTerminationTest extends HasLogger {
 
   @Test
   def normalTerminationOf_JdiEventDispatcherActor_triggers_DebugTargetActor_termination() {
-    val debugTargetActor = debugTarget.eventActor
-    val jdiEventDispatcherActor = debugTarget.eventDispatcher.eventActor
+    val debugTargetActor = debugTarget.companionActor
+    val jdiEventDispatcherActor = debugTarget.eventDispatcher.companionActor
 
     checkGracefulTerminationOf(debugTargetActor) when {
       jdiEventDispatcherActor ! PoisonPill
@@ -208,8 +208,8 @@ class DebugTargetTerminationTest extends HasLogger {
 
   @Test
   def throwing_VMDisconnectedException_in_JdiEventDispatcher_triggers_DebugTargetActor_termination() {
-    val debugTargetActor = debugTarget.eventActor
-    val jdiEventDispatcherActor = debugTarget.eventDispatcher.eventActor
+    val debugTargetActor = debugTarget.companionActor
+    val jdiEventDispatcherActor = debugTarget.eventDispatcher.companionActor
 
     checkGracefulTerminationOf(debugTargetActor, jdiEventDispatcherActor) when {
       //eventQueue.remove happens every 1sec 
@@ -251,7 +251,7 @@ class DebugTargetTerminationTest extends HasLogger {
 
   @Test
   def anUnhandledExceptionGrafeullyTerminatesAllLinkedActors() {
-    val debugTargetActor = debugTarget.eventActor
+    val debugTargetActor = debugTarget.companionActor
 
     val sut = new BaseDebuggerActor {
       override protected def postStart(): Unit = link(debugTargetActor)

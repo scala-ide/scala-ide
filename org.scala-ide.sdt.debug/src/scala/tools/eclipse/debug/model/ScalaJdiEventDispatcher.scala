@@ -14,8 +14,8 @@ import scala.actors.Actor
 
 object ScalaJdiEventDispatcher {
   def apply(virtualMachine: VirtualMachine, scalaDebugTargetActor: BaseDebuggerActor): ScalaJdiEventDispatcher = {
-    val actor = ScalaJdiEventDispatcherActor(scalaDebugTargetActor)
-    new ScalaJdiEventDispatcher(virtualMachine, actor)
+    val companionActor = ScalaJdiEventDispatcherActor(scalaDebugTargetActor)
+    new ScalaJdiEventDispatcher(virtualMachine, companionActor)
   }
 }
 
@@ -25,7 +25,7 @@ object ScalaJdiEventDispatcher {
  * This class is thread safe. Instances have be created through its companion object.
  */
 
-class ScalaJdiEventDispatcher private (virtualMachine: VirtualMachine, protected[debug] val eventActor: Actor) extends Runnable with HasLogger {
+class ScalaJdiEventDispatcher private (virtualMachine: VirtualMachine, protected[debug] val companionActor: Actor) extends Runnable with HasLogger {
 
   @volatile
   private var running = true
@@ -39,7 +39,7 @@ class ScalaJdiEventDispatcher private (virtualMachine: VirtualMachine, protected
         // use a timeout of 1s, so it cleanly terminates on shut down
         val eventSet = eventQueue.remove(1000)
         if (eventSet != null) {
-          eventActor ! eventSet
+          companionActor ! eventSet
         }
       } catch {
         case e: VMDisconnectedException =>
@@ -58,7 +58,7 @@ class ScalaJdiEventDispatcher private (virtualMachine: VirtualMachine, protected
    */
   private[model] def dispose() {
     running = false
-    eventActor ! PoisonPill
+    companionActor ! PoisonPill
   }
 
   /**
@@ -67,14 +67,14 @@ class ScalaJdiEventDispatcher private (virtualMachine: VirtualMachine, protected
    *       @see EventRequest.setProperty(k, v) and EventRequest.getProperty
    */
   def setActorFor(actor: Actor, request: EventRequest) {
-    eventActor ! ScalaJdiEventDispatcherActor.SetActorFor(actor, request)
+    companionActor ! ScalaJdiEventDispatcherActor.SetActorFor(actor, request)
   }
 
   /**
    * Remove the call back target for the given request
    */
   def unsetActorFor(request: EventRequest) {
-    eventActor ! ScalaJdiEventDispatcherActor.UnsetActorFor(request)
+    companionActor ! ScalaJdiEventDispatcherActor.UnsetActorFor(request)
   }
 }
 
