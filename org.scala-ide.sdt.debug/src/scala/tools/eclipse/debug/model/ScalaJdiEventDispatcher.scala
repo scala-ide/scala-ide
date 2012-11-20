@@ -14,8 +14,8 @@ import scala.actors.Actor
 
 object ScalaJdiEventDispatcher {
   def apply(virtualMachine: VirtualMachine, scalaDebugTargetActor: BaseDebuggerActor): ScalaJdiEventDispatcher = {
-    val actor = ScalaJdiEventDispatcherActor(scalaDebugTargetActor)
-    new ScalaJdiEventDispatcher(virtualMachine, actor)
+    val companionActor = ScalaJdiEventDispatcherActor(scalaDebugTargetActor)
+    new ScalaJdiEventDispatcher(virtualMachine, companionActor)
   }
 }
 

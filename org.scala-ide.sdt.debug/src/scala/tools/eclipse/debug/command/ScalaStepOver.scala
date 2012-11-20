@@ -26,9 +26,9 @@ object ScalaStepOver {
 
     val requests = ListBuffer[EventRequest](stepOverRequest)
 
-    val actor = if (location.lineNumber == LINE_NUMBER_UNAVAILABLE) {
+    val companionActor = if (location.lineNumber == LINE_NUMBER_UNAVAILABLE) {
 
-      new ScalaStepOverActor(scalaStackFrame.getDebugTarget, null, scalaStackFrame.thread, requests) {
+      new ScalaStepOverActor(scalaStackFrame.getDebugTarget, rangeOpt = None, scalaStackFrame.thread, requests) {
         override val scalaStep: ScalaStep = new ScalaStepImpl(this)
       }
 
@@ -53,13 +53,13 @@ object ScalaStepOver {
 
       requests ++= loadedAnonFunctionsInRange.map(JdiRequestFactory.createMethodEntryBreakpoint(_, scalaStackFrame.thread))
 
-      new ScalaStepOverActor(scalaStackFrame.getDebugTarget, range, scalaStackFrame.thread, requests) {
+      new ScalaStepOverActor(scalaStackFrame.getDebugTarget, Some(range), scalaStackFrame.thread, requests) {
         override val scalaStep: ScalaStep = new ScalaStepImpl(this)
       }
     }
 
-    actor.start()
-    actor.scalaStep
+    companionActor.start()
+    companionActor.scalaStep
   }
 
 }
@@ -68,7 +68,7 @@ object ScalaStepOver {
  * Actor used to manage a Scala step over. It keeps track of the request needed to perform this step.
  * This class is thread safe. Instances are not to be created outside of the ScalaStepOver object.
  */
-private[command] abstract class ScalaStepOverActor(debugTarget: ScalaDebugTarget, range: Range, thread: ScalaThread, requests: ListBuffer[EventRequest]) extends BaseDebuggerActor {
+private[command] abstract class ScalaStepOverActor(debugTarget: ScalaDebugTarget, rangeOpt: Option[Range], thread: ScalaThread, requests: ListBuffer[EventRequest]) extends BaseDebuggerActor {
 
   protected[command] def scalaStep: ScalaStep
 
@@ -77,12 +77,15 @@ private[command] abstract class ScalaStepOverActor(debugTarget: ScalaDebugTarget
   override protected def behavior = {
     // JDI event triggered when a class has been loaded
     case classPrepareEvent: ClassPrepareEvent =>
-      debugTarget.stepFilters.anonFunctionsInRange(classPrepareEvent.referenceType, range).foreach(method => {
+      for {
+        range <- rangeOpt
+        method <- debugTarget.stepFilters.anonFunctionsInRange(classPrepareEvent.referenceType, range)
+      } {
         val breakpoint = JdiRequestFactory.createMethodEntryBreakpoint(method, thread)
         requests += breakpoint
         debugTarget.eventDispatcher.setActorFor(this, breakpoint)
         breakpoint.enable()
-      })
+      }
       reply(false)
     // JDI event triggered when a step has been performed
     case stepEvent: StepEvent =>

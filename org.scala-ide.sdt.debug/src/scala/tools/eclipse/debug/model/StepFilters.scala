@@ -9,7 +9,9 @@ import scala.tools.eclipse.debug.preferences.DebuggerPreferences
 import org.eclipse.core.internal.localstore.IsSynchronizedVisitor
 
 /** Utility methods for deciding when a location should be filtered out from stepping into.
- */
+  * 
+  * This class needs to be thread-safe.
+  */
 class StepFilters extends HasLogger {
 
   val classifier = new MethodClassifier
