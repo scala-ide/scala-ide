@@ -78,7 +78,8 @@ class ScalaDeclarationHyperlinkComputer extends HasLogger {
           }
         }.flatten.headOption match {
           case links @ Some(List()) =>
-            logger.info("Falling back to selection engine for %s!".format(typed.left))
+            for(tree <- typed.left)
+              logger.info("Falling back to selection engine for %s!".format(tree.shortClass))
             links
           case links =>
             links
