@@ -14,13 +14,13 @@ object ScalaStepReturn {
   def apply(scalaStackFrame: ScalaStackFrame): ScalaStep = {
     val stepReturnRequest = JdiRequestFactory.createStepRequest(StepRequest.STEP_LINE, StepRequest.STEP_OUT, scalaStackFrame.thread)
 
-    val actor = new ScalaStepReturnActor(scalaStackFrame.getDebugTarget, scalaStackFrame.thread, stepReturnRequest) {
+    val companionActor = new ScalaStepReturnActor(scalaStackFrame.getDebugTarget, scalaStackFrame.thread, stepReturnRequest) {
       // TODO: when implementing support without filtering, need to workaround problem reported in Eclipse bug #38744
       override val scalaStep: ScalaStep = new ScalaStepImpl(this) 
     }
-    actor.start()
+    companionActor.start()
 
-    actor.scalaStep
+    companionActor.scalaStep
   }
 }
 
