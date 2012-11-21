@@ -76,14 +76,7 @@ class ScalaDeclarationHyperlinkComputer extends HasLogger {
                   DeclarationHyperlinkFactory.create(Hyperlink.withText("Open Declaration (%s)".format(sym.toString)), icu, sym, wordRegion).toList ::: links
               })
           }
-        }.flatten.headOption match {
-          case links @ Some(List()) =>
-            for(tree <- typed.left)
-              logger.info("Falling back to selection engine for %s!".format(tree.shortClass))
-            links
-          case links =>
-            links
-        }
+        }.flatten.headOption
       }
     })(None)
   }
