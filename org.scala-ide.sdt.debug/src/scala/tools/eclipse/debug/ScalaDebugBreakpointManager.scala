@@ -12,42 +12,42 @@ object ScalaDebugBreakpointManager {
   object ActorDebug
 
   def apply(debugTarget: ScalaDebugTarget): ScalaDebugBreakpointManager = {
-    val eventActor = ScalaDebugBreakpointManagerActor(debugTarget)
-    new ScalaDebugBreakpointManager(eventActor)
+    val companionActor = ScalaDebugBreakpointManagerActor(debugTarget)
+    new ScalaDebugBreakpointManager(companionActor)
   }
 }
 
 /**
  * Setup the initial breakpoints, and listen to breakpoint changes, for the given ScalaDebugTarget
  */
-class ScalaDebugBreakpointManager private (/*public field only for testing purposes */val eventActor: Actor) extends IBreakpointListener {
+class ScalaDebugBreakpointManager private (/*public field only for testing purposes */val companionActor: Actor) extends IBreakpointListener {
   import ScalaDebugBreakpointManagerActor._
 
   // from org.eclipse.debug.core.IBreakpointsListener
 
   override def breakpointChanged(breakpoint: IBreakpoint, delta: IMarkerDelta): Unit = {
-    eventActor ! BreakpointChanged(breakpoint)
+    companionActor ! BreakpointChanged(breakpoint)
   }
 
   override def breakpointRemoved(breakpoint: IBreakpoint, delta: IMarkerDelta): Unit = {
-    eventActor ! BreakpointRemoved(breakpoint)
+    companionActor ! BreakpointRemoved(breakpoint)
   }
 
   override def breakpointAdded(breakpoint: IBreakpoint): Unit = {
-    eventActor ! BreakpointAdded(breakpoint)
+    companionActor ! BreakpointAdded(breakpoint)
   }
 
   // ------------
 
   def init() {
     // need to wait for all existing breakpoint to be initialized before continuing, the caller will resume the VM
-    eventActor !? Initialize
+    companionActor !? Initialize
     DebugPlugin.getDefault.getBreakpointManager.addBreakpointListener(this)
   }
 
   def dispose() {
     DebugPlugin.getDefault.getBreakpointManager.removeBreakpointListener(this)
-    eventActor ! PoisonPill
+    companionActor ! PoisonPill
   }
   
   /**
@@ -56,7 +56,7 @@ class ScalaDebugBreakpointManager private (/*public field only for testing purpo
    * have been processed.
    */
   protected[debug] def waitForAllCurrentEvents() {
-    eventActor !? ScalaDebugBreakpointManager.ActorDebug
+    companionActor !? ScalaDebugBreakpointManager.ActorDebug
   }
 
 }
@@ -82,7 +82,7 @@ private class ScalaDebugBreakpointManagerActor private(debugTarget: ScalaDebugTa
 
   private var breakpoints = Map[IBreakpoint, BreakpointSupport]()
 
-  override protected def postStart(): Unit = link(debugTarget.eventActor)
+  override protected def postStart(): Unit = link(debugTarget.companionActor)
 
   /**
    * process the breakpoint events

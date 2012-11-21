@@ -49,7 +49,7 @@ class ScalaDebugModelPresentationTest {
 
   private def createThread(jdiThread: ThreadReference): ScalaThread = {
     val scalaThread = ScalaThread(null, jdiThread)
-    actor = Some(scalaThread.eventActor)
+    actor = Some(scalaThread.companionActor)
     scalaThread
   }
 

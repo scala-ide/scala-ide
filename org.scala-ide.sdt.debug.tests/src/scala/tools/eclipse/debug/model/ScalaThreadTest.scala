@@ -60,13 +60,13 @@ class ScalaThreadTest {
   private def anonDebugTarget: ScalaDebugTarget = {
     val debugTarget = mock(classOf[ScalaDebugTarget])
     val debugTargetActor = mock(classOf[BaseDebuggerActor])
-    when(debugTarget.eventActor).thenReturn(debugTargetActor)
+    when(debugTarget.companionActor).thenReturn(debugTargetActor)
     debugTarget
   }
 
   private def createThread(jdiThread: ThreadReference): ScalaThread = {
     val thread = ScalaThread(anonDebugTarget, jdiThread)
-    actor = Some(thread.eventActor)
+    actor = Some(thread.companionActor)
     thread
   }
 
@@ -141,7 +141,7 @@ class ScalaThreadTest {
 
     val thread = createThread(jdiThread)
 
-    thread.eventActor ! ScalaThreadActor.TerminatedFromScala
+    thread.companionActor ! ScalaThreadActor.TerminatedFromScala
     thread.getStackFrames
   }
 
