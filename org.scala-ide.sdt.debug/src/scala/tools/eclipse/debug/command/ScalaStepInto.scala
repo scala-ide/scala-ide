@@ -29,12 +29,12 @@ object ScalaStepInto {
 
     val stackFrames = scalaStackFrame.thread.getStackFrames
     val depth = stackFrames.length - stackFrames.indexOf(scalaStackFrame)
-    val actor = new ScalaStepIntoActor(scalaStackFrame.getDebugTarget, scalaStackFrame.thread, stepIntoRequest, stepOutRequest, depth, scalaStackFrame.stackFrame.location.lineNumber) {
+    val companionActor = new ScalaStepIntoActor(scalaStackFrame.getDebugTarget, scalaStackFrame.thread, stepIntoRequest, stepOutRequest, depth, scalaStackFrame.stackFrame.location.lineNumber) {
       override val scalaStep: ScalaStep = new ScalaStepImpl(this)
     }
-    actor.start()
+    companionActor.start()
     
-    actor.scalaStep
+    companionActor.scalaStep
   }
 
 }
@@ -51,7 +51,7 @@ private[command] abstract class ScalaStepIntoActor(debugTarget: ScalaDebugTarget
   
   protected[command] def scalaStep: ScalaStep
 
-  override protected def postStart(): Unit = link(thread.eventActor)
+  override protected def postStart(): Unit = link(thread.companionActor)
 
   override protected def behavior = {
     // JDI event triggered when a step has been performed
@@ -107,7 +107,7 @@ private[command] abstract class ScalaStepIntoActor(debugTarget: ScalaDebugTarget
 
   private def dispose(): Unit = {
     poison()
-    unlink(thread.eventActor)
+    unlink(thread.companionActor)
     val eventDispatcher = debugTarget.eventDispatcher
     val eventRequestManager = debugTarget.virtualMachine.eventRequestManager
 

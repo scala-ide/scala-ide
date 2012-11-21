@@ -14,13 +14,13 @@ object ScalaStepReturn {
   def apply(scalaStackFrame: ScalaStackFrame): ScalaStep = {
     val stepReturnRequest = JdiRequestFactory.createStepRequest(StepRequest.STEP_LINE, StepRequest.STEP_OUT, scalaStackFrame.thread)
 
-    val actor = new ScalaStepReturnActor(scalaStackFrame.getDebugTarget, scalaStackFrame.thread, stepReturnRequest) {
+    val companionActor = new ScalaStepReturnActor(scalaStackFrame.getDebugTarget, scalaStackFrame.thread, stepReturnRequest) {
       // TODO: when implementing support without filtering, need to workaround problem reported in Eclipse bug #38744
       override val scalaStep: ScalaStep = new ScalaStepImpl(this) 
     }
-    actor.start()
+    companionActor.start()
 
-    actor.scalaStep
+    companionActor.scalaStep
   }
 }
 
@@ -32,7 +32,7 @@ private[command] abstract class ScalaStepReturnActor(debugTarget: ScalaDebugTarg
   
   protected[command] def scalaStep: ScalaStep
 
-  override protected def postStart(): Unit = link(thread.eventActor)
+  override protected def postStart(): Unit = link(thread.companionActor)
 
   override protected def behavior = {
     // JDI event triggered when a step has been performed
@@ -59,7 +59,7 @@ private[command] abstract class ScalaStepReturnActor(debugTarget: ScalaDebugTarg
 
   private def dispose(): Unit = {
     poison()
-    unlink(thread.eventActor)
+    unlink(thread.companionActor)
     val eventDispatcher = debugTarget.eventDispatcher
     val eventRequestManager = debugTarget.virtualMachine.eventRequestManager
 

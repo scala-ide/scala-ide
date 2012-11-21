@@ -18,6 +18,8 @@ object MethodClassifier extends Enumeration {
  *        a proper class does not play out because it would move detection strategies
  *        in the companion object, preventing caching (like the constant pool)
  *
+ *  This class is thread-safe.
+ *
  *  TODO: Cache expensive operations (currently `Forwarder` is the most expensive).
  */
 class MethodClassifier {
