@@ -11,6 +11,7 @@ import scala.tools.eclipse.debug.model.ScalaDebugTargetTest
 import scala.tools.eclipse.launching.LibraryJarInBootstrapTest
 import scala.tools.eclipse.debug.model.DebugTargetTerminationTest
 import scala.tools.eclipse.debug.model.MethodClassifierUnitTest
+import scala.tools.eclipse.launching.RemoteConnectorTest
 
 /**
  * Junit test suite for the Scala debugger.
@@ -29,6 +30,7 @@ import scala.tools.eclipse.debug.model.MethodClassifierUnitTest
     classOf[ScalaDebugTargetTest],
     classOf[ScalaDebuggerDisconnectTests],
     classOf[BaseDebuggerActorTest],
-    classOf[DebugTargetTerminationTest]))
+    classOf[DebugTargetTerminationTest],
+    classOf[RemoteConnectorTest]))
 class ScalaDebugTestSuite {
 }

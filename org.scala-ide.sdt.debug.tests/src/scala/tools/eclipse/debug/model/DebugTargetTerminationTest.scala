@@ -36,6 +36,8 @@ import com.sun.jdi.request.EventRequest
 import com.sun.jdi.request.EventRequestManager
 import com.sun.jdi.request.ThreadDeathRequest
 import com.sun.jdi.request.ThreadStartRequest
+import scala.tools.eclipse.debug.ScalaDebugTestSession
+import scala.tools.eclipse.debug.EclipseDebugEvent
 
 object DebugTargetTerminationTest {
   final val LatchTimeout = 5000L
@@ -112,13 +114,19 @@ class DebugTargetTerminationTest extends HasLogger {
     val threadDeathRequest = mock(classOf[ThreadDeathRequest])
     when(eventRequestManager.createThreadDeathRequest).thenReturn(threadDeathRequest)
 
-    withCountDownLatch(1) { latch =>
-      DebugPlugin.getDefault.addDebugEventListener { events: Array[DebugEvent] =>
-        def isDebugTargetCreated: Boolean = events.exists(event => event.getSource().isInstanceOf[ScalaDebugTarget] && event.getKind() == DebugEvent.CREATE)
-        if (isDebugTargetCreated) latch.countDown()
-      }
+    var debugEventListener: Option[IDebugEventSetListener] = None
 
-      debugTarget = ScalaDebugTarget(virtualMachine, mock(classOf[Launch]), mock(classOf[IProcess]))
+    try {
+      withCountDownLatch(1) { latch =>
+        debugEventListener = Some(ScalaDebugTestSession.addDebugEventListener {
+          case EclipseDebugEvent(DebugEvent.CREATE, _: ScalaDebugTarget) =>
+            latch.countDown()
+        })
+
+        debugTarget = ScalaDebugTarget(virtualMachine, mock(classOf[Launch]), mock(classOf[IProcess]), allowDisconnect = false, allowTerminate = true)
+      }
+    } finally {
+      debugEventListener.foreach(DebugPlugin.getDefault.removeDebugEventListener(_))
     }
   }
 

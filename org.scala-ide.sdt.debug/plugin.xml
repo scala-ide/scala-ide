@@ -69,4 +69,15 @@
             class="scala.tools.eclipse.debug.preferences.DebugerPreferencesInitializer">
       </initializer>
    </extension>
+   <extension
+         point="org.eclipse.jdt.launching.vmConnectors">
+      <vmConnector
+            class="scala.tools.eclipse.launching.SocketAttachConnectorScala"
+            id="org.scala-ide.sdt.debug.socketAttachConnector">
+      </vmConnector>
+      <vmConnector
+            class="scala.tools.eclipse.launching.SocketListenConnectorScala"
+            id="org.scala-ide.sdt.debug.socketListenConnector">
+      </vmConnector>
+   </extension>
 </plugin>
