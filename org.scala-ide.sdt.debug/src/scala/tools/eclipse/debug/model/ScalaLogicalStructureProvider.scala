@@ -9,6 +9,7 @@ import org.eclipse.debug.ui.DebugUITools
 import com.sun.jdi.ObjectReference
 import java.util.ArrayList
 import scala.tools.eclipse.debug.ScalaDebugger
+import scala.tools.eclipse.debug.ScalaDebugPlugin
 
 object ScalaLogicalStructureProvider {
   
@@ -53,13 +54,13 @@ object ScalaCollectionLogicalStructureType extends ILogicalStructureType {
   
   // Members declared in org.eclipse.debug.core.ILogicalStructureType
   
-  def getDescription(): String = "Flat the Scala collections"
+  override def getDescription(): String = "Flat the Scala collections"
   
-  def getId(): String = "org.scala-ide.sdt.debug.logicalstructure.collection"
+  override val getId: String = ScalaDebugPlugin.id + ".logicalstructure.collection"
   
   // Members declared in org.eclipse.debug.core.model.ILogicalStructureTypeDelegate
   
-  def getLogicalStructure(value: IValue): IValue = {
+  override def getLogicalStructure(value: IValue): IValue = {
     
     val scalaValue= value.asInstanceOf[ScalaObjectReference]
     
@@ -80,9 +81,9 @@ object ScalaCollectionLogicalStructureType extends ILogicalStructureType {
     ScalaValue(ScalaDebugger.currentThread.invokeMethod(objectReference, toArrayMethod, anyValManifestObject), scalaValue.getDebugTarget)
   }
   
-  def providesLogicalStructure(value: IValue): Boolean = true // TODO: check that as it is created by the provider, it is never used with other values
+  override def providesLogicalStructure(value: IValue): Boolean = true // TODO: check that as it is created by the provider, it is never used with other values
   
   // Members declared in org.eclipse.debug.core.model.ILogicalStructureTypeDelegate2
   
-  def getDescription(value: IValue): String = getDescription
+  override def getDescription(value: IValue): String = getDescription
 }
