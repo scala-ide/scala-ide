@@ -41,4 +41,20 @@ class AnnotationTest extends AbstractSymbolClassifierTest {
         "PKG" -> Package))
   }
 
+
+  @Test
+  @Ignore("does not work until presentation compiler stores more information in the AST (ticket #1001352)")
+  def annotated_type() {
+    checkSymbolClassification("""
+      trait X {
+        def f[TPE](a: TPE): TPE @ annotation.unchecked.uncheckedVariance
+      }
+      """, """
+      trait X {
+        def f[$T$](a: $T$): $T$ @ annotation.unchecked.$ANNOT          $
+      }
+      """,
+      Map("T" -> Type, "ANNOT" -> Annotation))
+  }
+
 }
