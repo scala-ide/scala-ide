@@ -145,4 +145,21 @@ class ClassTest extends AbstractSymbolClassifierTest {
       """,
       Map("CLS" -> Class))
   }
+  
+  @Test
+  @Ignore("does not work until presentation compiler stores more information in the AST (ticket #1001334)")
+  def default_arguments() {
+    checkSymbolClassification("""
+      class Foo(val f: Int = Bar.value)
+      object Bar {
+        val value = 0
+      }
+      """, """
+      class Foo(val f: Int = $C$.$VAL$)
+      object Bar {
+        val value = 0
+      }
+      """,
+      Map("C" -> Class, "VAL" -> TemplateVal))
+  }
 }
