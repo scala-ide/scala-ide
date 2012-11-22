@@ -32,8 +32,16 @@ object RemoteConnectorTest extends TestProjectSetup("debug", bundleName = "org.s
   final val VmArgsKey = "org.eclipse.jdt.launching.VM_ARGUMENTS"
   final val ConnectKey = "org.eclipse.jdt.launching.CONNECT_MAP"
 
-  // Iterator to produce a different port number for each test
-  val ConnectionPort = Iterator.from(8000)
+  /**
+   * Select a free port by letting the OS pick one and then closing it.
+   */
+  def freePort(): Int = {
+    val socket= new Socket()
+    socket.bind(new InetSocketAddress(0)) // bind on all network interface, on a port chosen by the OS
+    val port= socket.getLocalPort()
+    socket.close()
+    port
+  }
 
   /**
    * Create a debug session for the given launch configuration, using the given port.
@@ -183,7 +191,7 @@ class RemoteConnectorTest {
    */
   @Test(timeout = 2000)
   def attachToRunningVM() {
-    val port = ConnectionPort.next()
+    val port = freePort()
     application = launchInRunMode("HelloWorld listening", port)
 
     waitForOpenSocket(port)
@@ -204,7 +212,7 @@ class RemoteConnectorTest {
    */
   @Test(timeout = 5000)
   def listenToAttachingVM() {
-    val port = ConnectionPort.next()
+    val port = freePort()
     // tweak the timeout preference. 3s should be good enough.
     JavaRuntime.getPreferences().setValue(JavaRuntime.PREF_CONNECT_TIMEOUT, 3000)
 
@@ -221,7 +229,7 @@ class RemoteConnectorTest {
    */
   @Test(expected = classOf[CoreException])
   def attachToNothing() {
-    val port = ConnectionPort.next()
+    val port = freePort()
     session = initDebugSession("Remote attaching", port)
 
     session.runToLine(TYPENAME_HELLOWORLD + "$", 6)
@@ -236,7 +244,7 @@ class RemoteConnectorTest {
    */
   @Test(timeout = 2000)
   def listeningToNobody() {
-    val port = ConnectionPort.next() 
+    val port = freePort()
     // tweak the timeout preference. 10ms to fail fast
     JavaRuntime.getPreferences().setValue(JavaRuntime.PREF_CONNECT_TIMEOUT, 10)
 
@@ -259,7 +267,7 @@ class RemoteConnectorTest {
    */
   @Test(timeout = 5000)
   def disconnectReleaseRunningVM() {
-    val port = ConnectionPort.next()
+    val port = freePort()
 
     application = launchInRunMode("HelloWorld listening", port)
 
@@ -295,7 +303,7 @@ class RemoteConnectorTest {
    */
   @Test(timeout = 2000)
   def cannotTerminate() {
-    val port = ConnectionPort.next()
+    val port = freePort()
 
     application = launchInRunMode("HelloWorld listening", port)
 
@@ -318,7 +326,7 @@ class RemoteConnectorTest {
    */
   @Test(timeout = 5000)
   def terminateKillsRunningVM() {
-    val port = ConnectionPort.next()
+    val port = freePort()
 
     application = launchInRunMode("HelloWorld listening", port)
 
