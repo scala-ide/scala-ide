@@ -1,11 +1,9 @@
-package scala.tools.eclipse.debug
+package scala.tools.eclipse.debug.breakpoints
 
 import scala.actors.Actor
-import scala.collection.JavaConverters.asScalaBufferConverter
 import scala.collection.mutable.ListBuffer
 import scala.tools.eclipse.debug.model.JdiRequestFactory
 import scala.tools.eclipse.debug.model.ScalaDebugTarget
-import org.eclipse.core.resources.IMarker
 import org.eclipse.debug.core.DebugEvent
 import org.eclipse.debug.core.model.IBreakpoint
 import com.sun.jdi.Location
@@ -16,11 +14,14 @@ import com.sun.jdi.event.ClassPrepareEvent
 import com.sun.jdi.request.BreakpointRequest
 import com.sun.jdi.request.EventRequest
 import org.eclipse.core.resources.IMarkerDelta
-import breakpoints.RichBreakpoint._
+import RichBreakpoint._
 import scala.util.control.Exception
 import com.sun.jdi.VMDisconnectedException
 import com.sun.jdi.request.InvalidRequestStateException
 import com.sun.jdi.request.ClassPrepareRequest
+import com.sun.jdi.VMDisconnectedException
+import com.sun.jdi.request.InvalidRequestStateException
+import scala.tools.eclipse.debug.BaseDebuggerActor
 
 private[debug] object BreakpointSupport {
   /** Attribute Type Name */

@@ -1,4 +1,4 @@
-package scala.tools.eclipse.debug
+package scala.tools.eclipse.debug.breakpoints
 
 import scala.tools.eclipse.debug.model.ScalaDebugTarget
 import org.eclipse.core.resources.IMarkerDelta
@@ -6,6 +6,9 @@ import org.eclipse.debug.core.DebugPlugin
 import org.eclipse.debug.core.IBreakpointListener
 import org.eclipse.debug.core.model.IBreakpoint
 import scala.actors.Actor
+import BreakpointSupportActor.Changed
+import scala.tools.eclipse.debug.BaseDebuggerActor
+import scala.tools.eclipse.debug.PoisonPill
 
 object ScalaDebugBreakpointManager {
   /** A debug message used to wait until all required messages have been processed. */
