@@ -186,6 +186,7 @@ class ListenForConnectionJob(launch: ILaunch, process: ListenForConnectionProces
 
       ScalaDebugTarget(virtualMachine, launch, null, true, allowTerminate(launch))
 
+      connectionSuccesful()
       Status.OK_STATUS
     } catch {
       case e: TransportTimeoutException =>
