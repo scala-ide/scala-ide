@@ -2,7 +2,6 @@ package scala.tools.eclipse.debug.breakpoints
 
 import org.eclipse.debug.core.model.IBreakpoint
 import org.eclipse.core.resources.IMarker
-import scala.tools.eclipse.debug.BreakpointSupport
 
 /** A decorater class for platform breakpoints, as used from Scala. */
 class RichBreakpoint(bp: IBreakpoint) {
