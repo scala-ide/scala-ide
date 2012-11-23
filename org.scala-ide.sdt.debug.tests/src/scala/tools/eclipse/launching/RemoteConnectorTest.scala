@@ -189,7 +189,7 @@ class RemoteConnectorTest {
   /**
    * Check if it is possible to connect to a running VM.
    */
-  @Test(timeout = 2000)
+  @Test(timeout = 5000)
   def attachToRunningVM() {
     val port = freePort()
     application = launchInRunMode("HelloWorld listening", port)
@@ -242,7 +242,7 @@ class RemoteConnectorTest {
    * Test timeout set to 2s. The connection timeout is set to 10ms.
    * A passing test should not be more than 1second
    */
-  @Test(timeout = 2000)
+  @Test(timeout = 5000)
   def listeningToNobody() {
     val port = freePort()
     // tweak the timeout preference. 10ms to fail fast
