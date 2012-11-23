@@ -220,6 +220,8 @@ class RemoteConnectorTest {
 
     // this command actually launch the debugger
     application = session.runToLine(TYPENAME_HELLOWORLD + "$", 6, () => launchInRunMode("HelloWorld attaching", port))
+    
+    assertEquals("The 'fake' process should have been removed after connection", session.debugTarget.getLaunch().getProcesses().length, 0)
 
     session.checkStackFrame(TYPENAME_HELLOWORLD + "$", "main([Ljava/lang/String;)V", 6)
   }
