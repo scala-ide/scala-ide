@@ -29,6 +29,7 @@ import scala.tools.eclipse.debug.model.MethodClassifierUnitTest
     classOf[ScalaDebugTargetTest],
     classOf[ScalaDebuggerDisconnectTests],
     classOf[BaseDebuggerActorTest],
-    classOf[DebugTargetTerminationTest]))
+    classOf[DebugTargetTerminationTest],
+    classOf[ScalaDebugBreakpointTest]))
 class ScalaDebugTestSuite {
 }

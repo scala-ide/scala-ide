@@ -18,6 +18,7 @@ import org.eclipse.core.resources.IMarkerDelta
 import java.util.concurrent.TimeUnit
 import org.eclipse.core.resources.IMarker
 import scala.tools.eclipse.logging.HasLogger
+import scala.tools.eclipse.debug.breakpoints.BreakpointSupport
 
 object EclipseDebugEvent {
   def unapply(event: DebugEvent): Option[(Int, DebugElement)] = {
