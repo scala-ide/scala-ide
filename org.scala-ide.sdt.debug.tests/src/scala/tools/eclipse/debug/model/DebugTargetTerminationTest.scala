@@ -38,6 +38,7 @@ import com.sun.jdi.request.ThreadDeathRequest
 import com.sun.jdi.request.ThreadStartRequest
 import scala.tools.eclipse.debug.ScalaDebugTestSession
 import scala.tools.eclipse.debug.EclipseDebugEvent
+import com.sun.jdi.event.VMDisconnectEvent
 
 object DebugTargetTerminationTest {
   final val LatchTimeout = 5000L
@@ -221,7 +222,7 @@ class DebugTargetTerminationTest extends HasLogger {
 
     checkGracefulTerminationOf(debugTargetActor, jdiEventDispatcherActor) when {
       //eventQueue.remove happens every 1sec 
-      when(eventQueue.remove).thenThrow(new VMDisconnectedException).thenReturn(null)
+      when(eventQueue.remove(anyLong)).thenThrow(new VMDisconnectedException).thenReturn(null)
     }
   }
 
@@ -254,6 +255,11 @@ class DebugTargetTerminationTest extends HasLogger {
       // The `ScalaJDiEventDispatcher` thread should not dies when an unhandled exception is thrown, hence 
       // the `testActor` will eventually receive the `eventSet` message the decrease the `latch` counter. 
       when(eventQueue.remove(anyLong)).thenThrow(ExceptionForTestingPurposes_ThisIsOk).thenReturn(eventSet)
+    }
+    // don't leave the JDI event dispatcher running, otherwise the mocked queue will eat up all
+    // the heap and eventually start failing subsequent tests due to timeouts or OOM
+    checkGracefulTerminationOf(debugTarget.companionActor) when {
+      debugTarget.companionActor ! mock(classOf[VMDisconnectEvent])
     }
   }
 
