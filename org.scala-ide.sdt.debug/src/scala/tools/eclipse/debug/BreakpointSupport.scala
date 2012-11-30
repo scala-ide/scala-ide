@@ -19,23 +19,23 @@ import com.sun.jdi.request.EventRequest
 private[debug] object BreakpointSupport {
   // Initialize a breakpoint support instance
   def apply(breakpoint: IBreakpoint, debugTarget: ScalaDebugTarget): BreakpointSupport = {
-    val actor = BreakpointSupportActor(breakpoint, debugTarget)
-    new BreakpointSupport(actor)
+    val companionActor = BreakpointSupportActor(breakpoint, debugTarget)
+    new BreakpointSupport(companionActor)
   }
 }
 
 /**
  * Manage the requests for one platform breakpoint.
  */
-private[debug] class BreakpointSupport private (eventActor: Actor) {
+private[debug] class BreakpointSupport private (companionActor: Actor) {
   import BreakpointSupportActor.Changed
 
   def changed() {
-    eventActor ! Changed
+    companionActor ! Changed
   }
 
   def dispose() {
-    eventActor ! PoisonPill
+    companionActor ! PoisonPill
   }
 
 }

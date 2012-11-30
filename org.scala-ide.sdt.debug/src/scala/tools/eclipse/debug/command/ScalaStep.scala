@@ -16,7 +16,7 @@ trait ScalaStep {
   def stop()
 }
 
-class ScalaStepImpl(eventActor: BaseDebuggerActor) extends ScalaStep {
-  override def step(): Unit = eventActor ! ScalaStep.Step
-  override def stop(): Unit = eventActor ! ScalaStep.Stop
+class ScalaStepImpl(companionActor: BaseDebuggerActor) extends ScalaStep {
+  override def step(): Unit = companionActor ! ScalaStep.Step
+  override def stop(): Unit = companionActor ! ScalaStep.Stop
 }

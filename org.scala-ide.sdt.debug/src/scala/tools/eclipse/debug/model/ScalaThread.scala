@@ -20,7 +20,7 @@ class ThreadNotSuspendedException extends Exception
 object ScalaThread {
   def apply(target: ScalaDebugTarget, thread: ThreadReference): ScalaThread = {
     val scalaThread = new ScalaThread(target, thread) {
-      override val eventActor = ScalaThreadActor(this, thread)
+      override val companionActor = ScalaThreadActor(this, thread)
     }
     scalaThread.fireCreationEvent()
     scalaThread
@@ -97,7 +97,7 @@ abstract class ScalaThread private (target: ScalaDebugTarget, private[model] val
   @volatile
   private var name: String = null
   
-  protected[debug] val eventActor: BaseDebuggerActor
+  protected[debug] val companionActor: BaseDebuggerActor
 
   val isSystemThread: Boolean = {
     try Option(thread.threadGroup).exists(_.name == "system")
@@ -107,16 +107,16 @@ abstract class ScalaThread private (target: ScalaDebugTarget, private[model] val
     }
   }
 
-  def suspendedFromScala(eventDetail: Int): Unit = eventActor !? SuspendedFromScala(eventDetail)
+  def suspendedFromScala(eventDetail: Int): Unit = companionActor ! SuspendedFromScala(eventDetail)
 
-  def resumeFromScala(eventDetail: Int): Unit = eventActor ! ResumeFromScala(None, eventDetail)
+  def resumeFromScala(eventDetail: Int): Unit = companionActor ! ResumeFromScala(None, eventDetail)
 
-  def resumeFromScala(step: ScalaStep, eventDetail: Int): Unit = eventActor ! ResumeFromScala(Some(step), eventDetail)
+  def resumeFromScala(step: ScalaStep, eventDetail: Int): Unit = companionActor ! ResumeFromScala(Some(step), eventDetail)
 
   def terminatedFromScala(): Unit = dispose()
 
   def invokeMethod(objectReference: ObjectReference, method: Method, args: Value*): Value = {
-    val future = eventActor !! InvokeMethod(objectReference, method, args.toList)
+    val future = companionActor !! InvokeMethod(objectReference, method, args.toList)
 
     future.inputChannel.receive {
       case value: Value =>
@@ -130,7 +130,7 @@ abstract class ScalaThread private (target: ScalaDebugTarget, private[model] val
   def dispose() {
     running = false
     stackFrames= Nil
-    eventActor ! TerminatedFromScala
+    companionActor ! TerminatedFromScala
   }
   
   /*
@@ -143,8 +143,8 @@ abstract class ScalaThread private (target: ScalaDebugTarget, private[model] val
    * FOR THE COMPANION ACTOR ONLY.
    */
   private[model] def suspend(eventDetail: Int) { 
-    suspended = true
     stackFrames= thread.frames.asScala.map(ScalaStackFrame(this, _)).toList
+    suspended = true
     fireSuspendEvent(eventDetail)
   }
 
@@ -194,14 +194,13 @@ private[model] class ScalaThreadActor private(scalaThread: ScalaThread, thread: 
   // step management
   private var currentStep: Option[ScalaStep] = None
 
-  override protected def postStart(): Unit = link(scalaThread.getDebugTarget.eventActor)
+  override protected def postStart(): Unit = link(scalaThread.getDebugTarget.companionActor)
   
   override protected def behavior = {
     case SuspendedFromScala(eventDetail) =>
       currentStep.foreach(_.stop())
       currentStep = None
       scalaThread.suspend(eventDetail)
-      reply(None)
     case ResumeFromScala(step, eventDetail) =>
       currentStep = step
       scalaThread.resume(eventDetail)
@@ -227,6 +226,6 @@ private[model] class ScalaThreadActor private(scalaThread: ScalaThread, thread: 
   override protected def preExit(): Unit = {
     // before shutting down the actor we need to unlink it from the `debugTarget` actor to prevent that normal termination of 
     // a `ScalaThread` leads to shutting down the whole debug session.
-    unlink(scalaThread.getDebugTarget.eventActor)
+    unlink(scalaThread.getDebugTarget.companionActor)
   }
 }

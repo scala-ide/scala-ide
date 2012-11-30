@@ -16,12 +16,9 @@ object ScalaDebugger extends ISelectionListener {
 
   val modelProvider = new IDebugModelProvider {
     def getModelIdentifiers() = {
-      Array(modelId)
+      Array(ScalaDebugPlugin.id)
     }
   }
-
-  final val modelId = "org.scala-ide.sdt.debug"
-
 
   // Members declared in org.eclipse.ui.ISelectionListener
 

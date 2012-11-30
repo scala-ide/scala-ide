@@ -27,20 +27,20 @@ import scala.tools.eclipse.debug.PoisonPill
 
 object ScalaDebugTarget extends HasLogger {
 
-  def apply(virtualMachine: VirtualMachine, launch: ILaunch, process: IProcess): ScalaDebugTarget = {
+  def apply(virtualMachine: VirtualMachine, launch: ILaunch, process: IProcess, allowDisconnect: Boolean, allowTerminate: Boolean): ScalaDebugTarget = {
 
     val threadStartRequest = JdiRequestFactory.createThreadStartRequest(virtualMachine)
 
     val threadDeathRequest = JdiRequestFactory.createThreadDeathRequest(virtualMachine)
 
-    val debugTarget = new ScalaDebugTarget(virtualMachine, launch, process) {
-      override val eventActor = ScalaDebugTargetActor(threadStartRequest, threadDeathRequest, this)
+    val debugTarget = new ScalaDebugTarget(virtualMachine, launch, process, allowDisconnect, allowTerminate) {
+      override val companionActor = ScalaDebugTargetActor(threadStartRequest, threadDeathRequest, this)
       override val breakpointManager: ScalaDebugBreakpointManager = ScalaDebugBreakpointManager(this)
-      override val eventDispatcher: ScalaJdiEventDispatcher = ScalaJdiEventDispatcher(virtualMachine, eventActor)
+      override val eventDispatcher: ScalaJdiEventDispatcher = ScalaJdiEventDispatcher(virtualMachine, companionActor)
     }
 
     launch.addDebugTarget(debugTarget)
-
+ 
     launch.getSourceLocator match {
       case sourceLookupDirector: ISourceLookupDirector =>
         sourceLookupDirector.addParticipants(Array(ScalaSourceLookupParticipant))
@@ -61,7 +61,7 @@ object ScalaDebugTarget extends HasLogger {
  * A debug target in the Scala debug model.
  * This class is thread safe. Instances have be created through its companion object.
  */
-abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine, launch: ILaunch, process: IProcess) extends ScalaDebugElement(null) with IDebugTarget {
+abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine, launch: ILaunch, process: IProcess, allowDisconnect: Boolean, allowTerminate: Boolean) extends ScalaDebugElement(null) with IDebugTarget {
 
   val stepFilters = new StepFilters
 
@@ -85,9 +85,11 @@ abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine, lau
 
   // Members declared in org.eclipse.debug.core.model.IDisconnect
 
-  override def canDisconnect: Boolean = false // TODO: need real logic
-  override def disconnect(): Unit = ???
-  override def isDisconnected: Boolean = false // TODO: need real logic
+  def canDisconnect(): Boolean = allowDisconnect && running
+  def disconnect(): Unit = {
+    virtualMachine.dispose()
+  }
+  def isDisconnected(): Boolean = !running
 
   // Members declared in org.eclipse.debug.core.model.IMemoryBlockRetrieval
 
@@ -104,14 +106,14 @@ abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine, lau
 
   // Members declared in org.eclipse.debug.core.model.ITerminate
 
-  override def canTerminate: Boolean = running // TODO: need real logic
-  override def isTerminated: Boolean = !running // TODO: need real logic
+  override def canTerminate: Boolean = allowTerminate && running
+  override def isTerminated: Boolean = !running
   override def terminate(): Unit = {
     virtualMachine.exit(1)
     // manually clean up, as VMDeathEvent and VMDisconnectedEvent are not fired 
     // when abruptly terminating the vM
     vmDisconnected()
-    eventActor ! PoisonPill
+    companionActor ! PoisonPill
   }
 
   // Members declared in scala.tools.eclipse.debug.model.ScalaDebugElement
@@ -128,7 +130,7 @@ abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine, lau
   protected[debug] val eventDispatcher: ScalaJdiEventDispatcher
 
   protected[debug] val breakpointManager: ScalaDebugBreakpointManager
-  private[debug] val eventActor: BaseDebuggerActor
+  private[debug] val companionActor: BaseDebuggerActor
 
   /**
    * Initialize the dependent components
@@ -148,7 +150,7 @@ abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine, lau
    * Callback from the breakpoint manager when a platform breakpoint is hit
    */
   private[debug] def threadSuspended(thread: ThreadReference, eventDetail: Int) {
-    eventActor !? ScalaDebugTargetActor.ThreadSuspended(thread, eventDetail)
+    companionActor ! ScalaDebugTargetActor.ThreadSuspended(thread, eventDetail)
   }
   
   /*
@@ -252,7 +254,6 @@ private class ScalaDebugTargetActor private (threadStartRequest: ThreadStartRequ
     case ThreadSuspended(thread, eventDetail) =>
       // forward the event to the right thread
       debugTarget.getScalaThreads.find(_.thread == thread).get.suspendedFromScala(eventDetail)
-      reply(None)
   }
 
   private def vmStarted() {

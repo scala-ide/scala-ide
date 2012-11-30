@@ -1,6 +1,6 @@
 #!/bin/bash
 
-ECLIPSE=/Applications/dev/eclipse-helios/Eclipse.app/Contents/MacOS/eclipse
+: ${ECLIPSE:=$(which eclipse)} # ECLIPSE will take the declared value if not overridden
 
 THIS=$(pwd)
 TARGET_DIR=$THIS/target

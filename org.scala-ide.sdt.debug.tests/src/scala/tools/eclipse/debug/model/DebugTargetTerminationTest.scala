@@ -36,6 +36,9 @@ import com.sun.jdi.request.EventRequest
 import com.sun.jdi.request.EventRequestManager
 import com.sun.jdi.request.ThreadDeathRequest
 import com.sun.jdi.request.ThreadStartRequest
+import scala.tools.eclipse.debug.ScalaDebugTestSession
+import scala.tools.eclipse.debug.EclipseDebugEvent
+import com.sun.jdi.event.VMDisconnectEvent
 
 object DebugTargetTerminationTest {
   final val LatchTimeout = 5000L
@@ -112,13 +115,19 @@ class DebugTargetTerminationTest extends HasLogger {
     val threadDeathRequest = mock(classOf[ThreadDeathRequest])
     when(eventRequestManager.createThreadDeathRequest).thenReturn(threadDeathRequest)
 
-    withCountDownLatch(1) { latch =>
-      DebugPlugin.getDefault.addDebugEventListener { events: Array[DebugEvent] =>
-        def isDebugTargetCreated: Boolean = events.exists(event => event.getSource().isInstanceOf[ScalaDebugTarget] && event.getKind() == DebugEvent.CREATE)
-        if (isDebugTargetCreated) latch.countDown()
-      }
+    var debugEventListener: Option[IDebugEventSetListener] = None
 
-      debugTarget = ScalaDebugTarget(virtualMachine, mock(classOf[Launch]), mock(classOf[IProcess]))
+    try {
+      withCountDownLatch(1) { latch =>
+        debugEventListener = Some(ScalaDebugTestSession.addDebugEventListener {
+          case EclipseDebugEvent(DebugEvent.CREATE, _: ScalaDebugTarget) =>
+            latch.countDown()
+        })
+
+        debugTarget = ScalaDebugTarget(virtualMachine, mock(classOf[Launch]), mock(classOf[IProcess]), allowDisconnect = false, allowTerminate = true)
+      }
+    } finally {
+      debugEventListener.foreach(DebugPlugin.getDefault.removeDebugEventListener(_))
     }
   }
 
@@ -149,7 +158,7 @@ class DebugTargetTerminationTest extends HasLogger {
 
   @Test
   def abruptTerminationOf_DebugTargetActor_is_gracefully_handled() {
-    val debugTargetActor = debugTarget.eventActor
+    val debugTargetActor = debugTarget.companionActor
 
     checkGracefulTerminationOf(debugTargetActor) when {
       debugTarget.terminate()
@@ -159,7 +168,7 @@ class DebugTargetTerminationTest extends HasLogger {
 
   @Test
   def normalTerminationOf_DebugTargetActor() {
-    val debugTargetActor = debugTarget.eventActor
+    val debugTargetActor = debugTarget.companionActor
 
     checkGracefulTerminationOf(debugTargetActor) when {
       debugTargetActor ! PoisonPill
@@ -168,8 +177,8 @@ class DebugTargetTerminationTest extends HasLogger {
 
   @Test
   def normalTerminationOf_DebugTargetActor_triggers_BreakpointManagerActor_termination() {
-    val debugTargetActor = debugTarget.eventActor
-    val breapointManagerActor = debugTarget.breakpointManager.eventActor
+    val debugTargetActor = debugTarget.companionActor
+    val breapointManagerActor = debugTarget.breakpointManager.companionActor
 
     checkGracefulTerminationOf(breapointManagerActor) when {
       debugTargetActor ! PoisonPill
@@ -178,8 +187,8 @@ class DebugTargetTerminationTest extends HasLogger {
 
   @Test
   def normalTerminationOf_BreakpointManagerActor_triggers_DebugTargetActor_termination() {
-    val debugTargetActor = debugTarget.eventActor
-    val breapointManagerActor = debugTarget.breakpointManager.eventActor
+    val debugTargetActor = debugTarget.companionActor
+    val breapointManagerActor = debugTarget.breakpointManager.companionActor
 
     checkGracefulTerminationOf(debugTargetActor) when {
       breapointManagerActor ! PoisonPill
@@ -188,8 +197,8 @@ class DebugTargetTerminationTest extends HasLogger {
 
   @Test
   def normalTerminationOf_DebugTargetActor_triggers_JdiEventDispatcherActor_termination() {
-    val debugTargetActor = debugTarget.eventActor
-    val jdiEventDispatcherActor = debugTarget.eventDispatcher.eventActor
+    val debugTargetActor = debugTarget.companionActor
+    val jdiEventDispatcherActor = debugTarget.eventDispatcher.companionActor
 
     checkGracefulTerminationOf(jdiEventDispatcherActor) when {
       debugTargetActor ! PoisonPill
@@ -198,8 +207,8 @@ class DebugTargetTerminationTest extends HasLogger {
 
   @Test
   def normalTerminationOf_JdiEventDispatcherActor_triggers_DebugTargetActor_termination() {
-    val debugTargetActor = debugTarget.eventActor
-    val jdiEventDispatcherActor = debugTarget.eventDispatcher.eventActor
+    val debugTargetActor = debugTarget.companionActor
+    val jdiEventDispatcherActor = debugTarget.eventDispatcher.companionActor
 
     checkGracefulTerminationOf(debugTargetActor) when {
       jdiEventDispatcherActor ! PoisonPill
@@ -208,12 +217,12 @@ class DebugTargetTerminationTest extends HasLogger {
 
   @Test
   def throwing_VMDisconnectedException_in_JdiEventDispatcher_triggers_DebugTargetActor_termination() {
-    val debugTargetActor = debugTarget.eventActor
-    val jdiEventDispatcherActor = debugTarget.eventDispatcher.eventActor
+    val debugTargetActor = debugTarget.companionActor
+    val jdiEventDispatcherActor = debugTarget.eventDispatcher.companionActor
 
     checkGracefulTerminationOf(debugTargetActor, jdiEventDispatcherActor) when {
       //eventQueue.remove happens every 1sec 
-      when(eventQueue.remove).thenThrow(new VMDisconnectedException).thenReturn(null)
+      when(eventQueue.remove(anyLong)).thenThrow(new VMDisconnectedException).thenReturn(null)
     }
   }
 
@@ -247,11 +256,16 @@ class DebugTargetTerminationTest extends HasLogger {
       // the `testActor` will eventually receive the `eventSet` message the decrease the `latch` counter. 
       when(eventQueue.remove(anyLong)).thenThrow(ExceptionForTestingPurposes_ThisIsOk).thenReturn(eventSet)
     }
+    // don't leave the JDI event dispatcher running, otherwise the mocked queue will eat up all
+    // the heap and eventually start failing subsequent tests due to timeouts or OOM
+    checkGracefulTerminationOf(debugTarget.companionActor) when {
+      debugTarget.companionActor ! mock(classOf[VMDisconnectEvent])
+    }
   }
 
   @Test
   def anUnhandledExceptionGrafeullyTerminatesAllLinkedActors() {
-    val debugTargetActor = debugTarget.eventActor
+    val debugTargetActor = debugTarget.companionActor
 
     val sut = new BaseDebuggerActor {
       override protected def postStart(): Unit = link(debugTargetActor)
