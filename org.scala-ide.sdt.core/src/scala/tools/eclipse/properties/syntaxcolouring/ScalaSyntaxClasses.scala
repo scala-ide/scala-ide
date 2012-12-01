@@ -42,6 +42,7 @@ object ScalaSyntaxClasses {
   val TRAIT = ScalaSyntaxClass("Trait", "syntaxColouring.semantic.trait", canBeDisabled = true)
   val TYPE = ScalaSyntaxClass("Type", "syntaxColouring.semantic.type", canBeDisabled = true)
   val TYPE_PARAMETER = ScalaSyntaxClass("Type parameter", "syntaxColouring.semantic.typeParameter", canBeDisabled = true)
+  val SYMBOL = ScalaSyntaxClass("Symbol", "syntaxColouring.semantic.symbol", canBeDisabled = true)
 
   case class Category(name: String, children: List[ScalaSyntaxClass])
 
@@ -51,7 +52,7 @@ object ScalaSyntaxClasses {
   val scalaSemanticCategory = Category("Scala (semantic)", List(
     ANNOTATION, CASE_CLASS, CASE_OBJECT, CLASS, LAZY_LOCAL_VAL, LAZY_TEMPLATE_VAL,
     LOCAL_VAL, LOCAL_VAR, METHOD, OBJECT, PACKAGE, PARAM, TEMPLATE_VAL, TEMPLATE_VAR,
-    TRAIT, TYPE, TYPE_PARAMETER))
+    TRAIT, TYPE, TYPE_PARAMETER, SYMBOL))
 
   val commentsCategory = Category("Comments", List(
     SINGLE_LINE_COMMENT, MULTI_LINE_COMMENT, SCALADOC))

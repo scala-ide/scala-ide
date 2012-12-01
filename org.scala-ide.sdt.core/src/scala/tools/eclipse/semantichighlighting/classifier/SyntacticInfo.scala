@@ -4,6 +4,7 @@ import scalariform.lexer.ScalaLexer
 import scalariform.parser._
 import scalariform.utils.Range
 import scalariform.lexer.Token
+import scalariform.lexer.Tokens
 import tools.eclipse.util.CollectionUtil
 
 // Symbol information derived by purely syntactic means, via Scalariform's parser, because it (appears) 
@@ -14,7 +15,9 @@ case class SyntacticInfo(
   maybeSelfRefs: Set[Region],
   maybeClassOfs: Set[Region],
   annotations: Set[Region], 
-  packages: Set[Region])
+  packages: Set[Region],
+  symbols: Set[Region]
+)
 
 object SyntacticInfo {
 
@@ -26,7 +29,7 @@ object SyntacticInfo {
 
   private implicit def range2Region(range: Range): Region = Region(range.offset, range.length)
 
-  def noSyntacticInfo = SyntacticInfo(Set(), Set(), Set(), Set(), Set(), Set())
+  def noSyntacticInfo = SyntacticInfo(Set(), Set(), Set(), Set(), Set(), Set(), Set())
   
   def getSyntacticInfo(source: String): SyntacticInfo = {
     var namedArgs: Set[Region] = Set()
@@ -35,6 +38,7 @@ object SyntacticInfo {
     var maybeClassOfs: Set[Region] = Set()
     var annotations: Set[Region] = Set()
     var packages: Set[Region] = Set()
+    var symbols: Set[Region] = Set()
 
     def scan(astNode: AstNode) {
       astNode match {
@@ -74,6 +78,8 @@ object SyntacticInfo {
           val (pkges, annotation) = CollectionUtil.splitAtLast(tokens)
           pkges.foreach(packages += _.range)
           annotation foreach ( annotations += _.range)
+        case GeneralTokens(List(Token(Tokens.SYMBOL_LITERAL, text, offset, _))) =>
+          symbols += Region(offset, text.length())
         case _ =>
       }
       astNode.immediateChildren.foreach(scan)
@@ -85,6 +91,6 @@ object SyntacticInfo {
         maybeClassOfs += token.range
     }
 
-    SyntacticInfo(namedArgs, forVals, maybeSelfRefs, maybeClassOfs, annotations, packages)
+    SyntacticInfo(namedArgs, forVals, maybeSelfRefs, maybeClassOfs, annotations, packages, symbols)
   }
 }
