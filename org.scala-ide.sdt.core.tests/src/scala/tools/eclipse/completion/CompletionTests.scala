@@ -102,7 +102,7 @@ class CompletionTests {
 
       completionsNoParens.zip(expectedNoParens).foreach {
         case (found, expected) =>
-          assertTrue("Found `%s`, expected `%s`".format(found, expected), found == expected)
+          assertEquals("Wrong completion", expected, found)
       }
     }
   }
@@ -233,6 +233,24 @@ class CompletionTests {
             case _ =>
               false
           }))
+    }
+  }
+
+  @Test
+  def relevanceSortingTests() {
+    val unit = scalaCompilationUnit("relevance/RelevanceCompletions.scala")
+    reload(unit)
+
+    withCompletions("relevance/RelevanceCompletions.scala") { (idx, pos, proposals) =>
+      idx match {
+        case 0 =>
+          assertEquals("Relevance", "__stringLikeClass", proposals.head.completion)
+        case 1 =>
+          assertEquals("Relevance", "List", proposals.head.completion)
+          assertEquals("Relevance", "List", proposals(1).completion)
+        case _ =>
+          assert(false, "Unhandled completion position")
+      }
     }
   }
 }
