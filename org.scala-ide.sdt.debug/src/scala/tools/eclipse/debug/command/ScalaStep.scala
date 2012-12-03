@@ -20,3 +20,16 @@ class ScalaStepImpl(companionActor: BaseDebuggerActor) extends ScalaStep {
   override def step(): Unit = companionActor ! ScalaStep.Step
   override def stop(): Unit = companionActor ! ScalaStep.Stop
 }
+
+abstract class ScalaStepActor extends BaseDebuggerActor {
+  private var _dispose: Boolean = false
+  
+  protected final def dispose(): Unit = { 
+    if(!_dispose) {
+      _dispose = true
+      onDispose()
+    }
+  }
+  
+  protected def onDispose(): Unit 
+}

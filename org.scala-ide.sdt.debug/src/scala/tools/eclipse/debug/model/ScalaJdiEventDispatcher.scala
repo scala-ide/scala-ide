@@ -9,6 +9,7 @@ import com.sun.jdi.event.VMDisconnectEvent
 import com.sun.jdi.event.VMStartEvent
 import com.sun.jdi.request.EventRequest
 import scala.tools.eclipse.debug.BaseDebuggerActor
+import scala.tools.eclipse.debug.BaseDebuggerActor.EventRequestHandler
 import scala.tools.eclipse.debug.PoisonPill
 import scala.actors.Actor
 
@@ -60,27 +61,9 @@ class ScalaJdiEventDispatcher private (virtualMachine: VirtualMachine, protected
     running = false
     companionActor ! PoisonPill
   }
-
-  /**
-   * Register the actor as recipient of the call back for the given request
-   * TODO: I think we should try to use JDI's mechanisms to associate the actor to the request:
-   *       @see EventRequest.setProperty(k, v) and EventRequest.getProperty
-   */
-  def setActorFor(actor: Actor, request: EventRequest) {
-    companionActor ! ScalaJdiEventDispatcherActor.SetActorFor(actor, request)
-  }
-
-  /**
-   * Remove the call back target for the given request
-   */
-  def unsetActorFor(request: EventRequest) {
-    companionActor ! ScalaJdiEventDispatcherActor.UnsetActorFor(request)
-  }
 }
 
 private[model] object ScalaJdiEventDispatcherActor {
-  case class SetActorFor(actor: Actor, request: EventRequest)
-  case class UnsetActorFor(request: EventRequest)
   
   def apply(scalaDebugTargetActor: Actor): ScalaJdiEventDispatcherActor = {
     val actor = new ScalaJdiEventDispatcherActor(scalaDebugTargetActor)
@@ -97,15 +80,10 @@ private[model] object ScalaJdiEventDispatcherActor {
 private class ScalaJdiEventDispatcherActor private (scalaDebugTargetActor: Actor) extends BaseDebuggerActor {
   import ScalaJdiEventDispatcherActor._
 
-  /** event request to actor map */
-  private var eventActorMap = Map[EventRequest, Actor]()  
-
   override protected def postStart(): Unit = link(scalaDebugTargetActor)
 
   override protected def behavior = {
-    case SetActorFor(actor, request) => eventActorMap += (request -> actor)
-    case UnsetActorFor(request)      => eventActorMap -= request
-    case eventSet: EventSet          => processEventSet(eventSet)
+    case eventSet: EventSet => processEventSet(eventSet)
   }
 
   /**
@@ -131,11 +109,9 @@ private class ScalaJdiEventDispatcherActor private (scalaDebugTargetActor: Actor
       case event: VMDeathEvent =>
         futures ::= (scalaDebugTargetActor !! event)
       case event =>
-        /* TODO: I think we should try to use JDI's mechanisms to associate the actor to the request:
-         *  @see EventRequest.setProperty(k, v) and EventRequest.getProperty */
-        eventActorMap.get(event.request).foreach { interestedActor =>
+        import scala.tools.eclipse.util.Utils.any2optionable
+        for (interestedActor <- EventRequestHandler.attachedActorFor(event)) 
           futures ::= (interestedActor !! event)
-        }
     }
 
     // Message sent upon completion of the `futures`. This message is used to modify `this` actor's behavior.   

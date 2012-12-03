@@ -1,4 +1,5 @@
-package scala.tools.eclipse.debug.command
+package scala.tools.eclipse.debug
+package command
 
 import scala.tools.eclipse.debug.BaseDebuggerActor
 import scala.tools.eclipse.debug.model.JdiRequestFactory
@@ -28,7 +29,7 @@ object ScalaStepReturn {
  * Actor used to manage a Scala step return. It keeps track of the request needed to perform this step.
  * This class is thread safe. Instances are not to be created outside of the ScalaStepReturn object.
  */
-private[command] abstract class ScalaStepReturnActor(debugTarget: ScalaDebugTarget, thread: ScalaThread, stepReturnRequest: StepRequest) extends BaseDebuggerActor {
+private[command] abstract class ScalaStepReturnActor(debugTarget: ScalaDebugTarget, thread: ScalaThread, stepReturnRequest: StepRequest) extends ScalaStepActor {
   
   protected[command] def scalaStep: ScalaStep
 
@@ -50,21 +51,16 @@ private[command] abstract class ScalaStepReturnActor(debugTarget: ScalaDebugTarg
   }
 
   private def step() {
-    val eventDispatcher = debugTarget.eventDispatcher
-
-    eventDispatcher.setActorFor(this, stepReturnRequest)
-    stepReturnRequest.enable()
+    this.attach(stepReturnRequest, enableRequest = true)
     thread.resumeFromScala(scalaStep, DebugEvent.STEP_RETURN)
   }
 
-  private def dispose(): Unit = {
+  override protected def onDispose(): Unit = {
     poison()
     unlink(thread.companionActor)
-    val eventDispatcher = debugTarget.eventDispatcher
-    val eventRequestManager = debugTarget.virtualMachine.eventRequestManager
 
-    stepReturnRequest.disable()
-    eventDispatcher.unsetActorFor(stepReturnRequest)
+    val eventRequestManager = debugTarget.virtualMachine.eventRequestManager
+    this.detach(stepReturnRequest, disableRequest = true)
     eventRequestManager.deleteEventRequest(stepReturnRequest)
   }
   

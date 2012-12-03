@@ -68,7 +68,7 @@ object ScalaStepOver {
  * Actor used to manage a Scala step over. It keeps track of the request needed to perform this step.
  * This class is thread safe. Instances are not to be created outside of the ScalaStepOver object.
  */
-private[command] abstract class ScalaStepOverActor(debugTarget: ScalaDebugTarget, rangeOpt: Option[Range], thread: ScalaThread, requests: ListBuffer[EventRequest]) extends BaseDebuggerActor {
+private[command] abstract class ScalaStepOverActor(debugTarget: ScalaDebugTarget, rangeOpt: Option[Range], thread: ScalaThread, requests: ListBuffer[EventRequest]) extends ScalaStepActor {
 
   protected[command] def scalaStep: ScalaStep
 
@@ -83,8 +83,7 @@ private[command] abstract class ScalaStepOverActor(debugTarget: ScalaDebugTarget
       } {
         val breakpoint = JdiRequestFactory.createMethodEntryBreakpoint(method, thread)
         requests += breakpoint
-        debugTarget.eventDispatcher.setActorFor(this, breakpoint)
-        breakpoint.enable()
+        this.attach(breakpoint, enableRequest = true)
       }
       reply(false)
     // JDI event triggered when a step has been performed
@@ -110,26 +109,19 @@ private[command] abstract class ScalaStepOverActor(debugTarget: ScalaDebugTarget
   }
 
   private def step() {
-    val eventDispatcher = debugTarget.eventDispatcher
-
-    requests.foreach {
-      request =>
-        eventDispatcher.setActorFor(this, request)
-        request.enable()
-    }
+    for(request <- requests)
+      this.attach(request, enableRequest = true)
 
     thread.resumeFromScala(scalaStep, DebugEvent.STEP_OVER)
   }
 
-  private def dispose(): Unit = {
+  override protected def onDispose(): Unit = {
     poison()
     unlink(thread.companionActor)
-    val eventDispatcher = debugTarget.eventDispatcher
-    val eventRequestManager = debugTarget.virtualMachine.eventRequestManager
 
+    val eventRequestManager = debugTarget.virtualMachine.eventRequestManager
     for(request <- requests) {
-      request.disable()
-      eventDispatcher.unsetActorFor(request)
+      this.detach(request, disableRequest = true)
       eventRequestManager.deleteEventRequest(request)
     }
   }

@@ -52,8 +52,6 @@ private[debug] object BreakpointSupportActor {
     eventRequests appendAll createBreakpointsRequests(breakpoint, debugTarget)
 
     val actor = new BreakpointSupportActor(breakpoint, debugTarget, eventRequests)
-
-    enableRequests(debugTarget, actor, eventRequests)
     actor.start()
     actor
   }
@@ -102,27 +100,30 @@ private[debug] object BreakpointSupportActor {
   }
 
   private def createBreakpointRequest(breakpoint: IBreakpoint, debugTarget: ScalaDebugTarget, referenceType: ReferenceType): Option[BreakpointRequest] = {
+    // FIXME: Maybe the breakpoint request should always be created, and it should be enabled only if `breakpoint.isEnabled` is `true`  
     if(breakpoint.isEnabled) JdiRequestFactory.createBreakpointRequest(referenceType, getLineNumber(breakpoint), debugTarget)
     else None
-  }
-
-  /**
-   * Create all the requests needed at the time the breakpoint is added.
-   *  This should be done synchronously before starting the actor
-   */
-  private def enableRequests(debugTarget: ScalaDebugTarget, actor: Actor, eventRequests: ListBuffer[EventRequest]): Unit = {
-    val eventDispatcher = debugTarget.eventDispatcher
-    // enable the requests
-    eventRequests.foreach { eventRequest =>
-      eventDispatcher.setActorFor(actor, eventRequest)
-      eventRequest.enable()
-    }
   }
 }
 
 private class BreakpointSupportActor private (breakpoint: IBreakpoint, debugTarget: ScalaDebugTarget, eventRequests: ListBuffer[EventRequest]) extends BaseDebuggerActor {
   import BreakpointSupportActor.{ Changed, createBreakpointRequest }
 
+  override def start(): Actor = {
+    // it needs to be synchronized, or `initialize` could be called twice, if `start` is called concurrently by two different threads.
+    synchronized {
+      initialize()
+      super.start()
+    }
+  }
+
+  private def initialize(): Unit = {
+    // this needs to be called right after the instance is fully initialized to 
+    // avoid the `this` reference escapes at initialization.
+    for(request <- eventRequests) 
+      this.attach(request, enableRequest = true)
+  }
+  
   // Manage the events
   override protected def behavior: PartialFunction[Any, Unit] = {
     case event: ClassPrepareEvent =>
@@ -144,9 +145,9 @@ private class BreakpointSupportActor private (breakpoint: IBreakpoint, debugTarg
     val eventDispatcher = debugTarget.eventDispatcher
     val eventRequestManager = debugTarget.virtualMachine.eventRequestManager
 
-    eventRequests.foreach { request =>
+    for(request <- eventRequests) {
+      this.detach(request, disableRequest = true)
       eventRequestManager.deleteEventRequest(request)
-      eventDispatcher.unsetActorFor(request)
     }
   }
 
@@ -163,8 +164,7 @@ private class BreakpointSupportActor private (breakpoint: IBreakpoint, debugTarg
 
     breakpointRequest.foreach { br =>
       eventRequests append br
-      debugTarget.eventDispatcher.setActorFor(this, br)
-      br.enable()
+      this.attach(br, enableRequest = true)
     }
   }
 

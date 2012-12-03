@@ -5,7 +5,6 @@ import scala.actors.Exit
 import scala.actors.UncaughtException
 import scala.collection.mutable.Stack
 import scala.tools.eclipse.logging.HasLogger
-
 import com.sun.jdi.VMDisconnectedException
 
 /** A generic message to inform that an actor should terminate. */
@@ -136,4 +135,68 @@ trait BaseDebuggerActor extends Actor with HasLogger {
       val reason = UncaughtException(this, Some("Unhandled exception while actor %s was still running.".format(this)), Some(sender), Thread.currentThread(), e)
       exit(reason)
   }
+}
+
+object BaseDebuggerActor {
+  object EventRequestHandler {
+    private final val ActorForRequestKey = "ActorForRequest"
+    
+    import com.sun.jdi.event.Event
+    /** Get the actor responsible of processing the given `event`, if one exist. */
+    def attachedActorFor(event: Event): Option[Actor] = {
+      val request = event.request
+      import scala.tools.eclipse.util.Utils.any2optionable
+      // The map encapsulated by `request` is not thread-safe, therefore we need to synchronize to avoid visibility issues.
+      // Mind that the lock used call `request.getProperty` and `request.putProperty` must be the same, which is why we are using the `request`'s instance lock here.
+      request.synchronized { request.getProperty(ActorForRequestKey).asInstanceOfOpt[Actor] }
+    }
+  }
+
+  /** Connect an `actor` to an `EventRequest`, so that the `ScalaJdiEventDispatcher` can forward events that matches the `request` to the `actor`.
+    * 
+    * Note: A request can have at most one `actor` associated to it. This is a limitation of the current design, but it can of course be changed if needed.
+    * 
+    * @param The `actor` responsible of processing the events that matches the passed `request`. 
+    */
+  class EventRequestHandler(actor: Actor) extends HasLogger {
+    import com.sun.jdi.request.EventRequest
+    import EventRequestHandler.ActorForRequestKey
+
+    /** The `actor` registers his interest for the passed `request`.
+      *
+      * @param request       The request to link to the `actor`.         
+      * @param enableRequest If `true`, the `request` is enabled and the `ScalaJdiEventDispatcher` will start sending events that matches the registered `request`.
+      */
+    def attach(request: EventRequest, enableRequest: Boolean = false): Unit = request.synchronized {
+      val registered = request.getProperty(ActorForRequestKey)
+      if (registered != null) {
+        logger.error("The EventRequest '" + request + "' is already being tracked by actor '" + registered + "'. Most likely, a call " +
+          "to `actor.unregister(request)` is missing somewhere (unless multiple actors should really track this 'request' " +
+          "concurrently. If that is what you want, you need to implement the missing logic.\nIgnoring '" + request + "'.")
+      } 
+      else {
+        request.putProperty(ActorForRequestKey, actor)
+        if (enableRequest) request.enable() 
+      }
+    }
+
+    /** The `actor` unregisters his interest for the passed `request`.
+      *
+      * @param request        The request to unlink to the `actor`.
+      * @param disableRequest If `true`, the `request` is disabled and the `ScalaJdiEventDispatcher` will stop sending events that matches the passed `request`.
+      */   
+    def detach(request: EventRequest, disableRequest: Boolean = false): Unit = request.synchronized {
+      val registered = request.getProperty(ActorForRequestKey)
+      if (registered == null) {
+        logger.error("The EventRequest '" + request + "' was not being tracked by actor '" + actor + "'. Most likely, this is a bug. " +
+          "To fix this, make sure to call `actor.register(request)` *before* calling `actor.unregister(request)`.")
+      } 
+      else {
+        request.putProperty(ActorForRequestKey, null)
+        if(disableRequest) request.disable()
+      }
+    }
+  }
+
+  implicit def attachActor2eventRequest(actor: Actor): EventRequestHandler = new EventRequestHandler(actor)
 }

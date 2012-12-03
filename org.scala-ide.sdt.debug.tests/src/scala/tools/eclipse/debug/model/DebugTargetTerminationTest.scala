@@ -241,7 +241,7 @@ class DebugTargetTerminationTest extends HasLogger {
         }
       }
       // Ensures that the `ScalaJDiEventDispatcher` forwards `dummyEventRequest` to the `testActor`
-      debugTarget.eventDispatcher.setActorFor(testActor, dummyEventRequest)
+      BaseDebuggerActor.attachActor2eventRequest(testActor).attach(dummyEventRequest)
 
       // The `ScalaJDiEventDispatcher` thread should not dies when an unhandled exception is thrown, hence 
       // the `testActor` will eventually receive the `eventSet` message the decrease the `latch` counter. 

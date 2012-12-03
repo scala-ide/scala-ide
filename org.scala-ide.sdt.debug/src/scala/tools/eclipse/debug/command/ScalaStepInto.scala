@@ -43,7 +43,7 @@ object ScalaStepInto {
  * Actor used to manage a Scala step into. It keeps track of the request needed to perform this step.
  * This class is thread safe. Instances are not to be created outside of the ScalaStepInto object.
  */
-private[command] abstract class ScalaStepIntoActor(debugTarget: ScalaDebugTarget, thread: ScalaThread, stepIntoRequest: StepRequest, stepOutRequest: StepRequest, stackDepth: Int, stackLine: Int) extends BaseDebuggerActor {
+private[command] abstract class ScalaStepIntoActor(debugTarget: ScalaDebugTarget, thread: ScalaThread, stepIntoRequest: StepRequest, stepOutRequest: StepRequest, stackDepth: Int, stackLine: Int) extends ScalaStepActor {
   /**
    * Needed to perform a correct step out (see Eclipse bug report #38744)
    */
@@ -97,26 +97,19 @@ private[command] abstract class ScalaStepIntoActor(debugTarget: ScalaDebugTarget
   }
 
   private def step() {
-    val eventDispatcher = debugTarget.eventDispatcher
-
-    eventDispatcher.setActorFor(this, stepIntoRequest)
-    eventDispatcher.setActorFor(this, stepOutRequest)
-    stepIntoRequest.enable()
+    this.attach(stepIntoRequest, enableRequest = true)
+    this.attach(stepOutRequest)
     thread.resumeFromScala(scalaStep, DebugEvent.STEP_INTO)
   }
 
-  private def dispose(): Unit = {
+  override protected def onDispose(): Unit = {
     poison()
     unlink(thread.companionActor)
-    val eventDispatcher = debugTarget.eventDispatcher
     val eventRequestManager = debugTarget.virtualMachine.eventRequestManager
 
     // make sure that actors are gracefully shut down
-    eventDispatcher.unsetActorFor(stepIntoRequest)
-    eventDispatcher.unsetActorFor(stepOutRequest)
-
-    stepIntoRequest.disable()
-    stepOutRequest.disable()
+    this.detach(stepIntoRequest, disableRequest = true)
+    this.detach(stepOutRequest, disableRequest = true)
     eventRequestManager.deleteEventRequest(stepIntoRequest)
     eventRequestManager.deleteEventRequest(stepOutRequest)
   }

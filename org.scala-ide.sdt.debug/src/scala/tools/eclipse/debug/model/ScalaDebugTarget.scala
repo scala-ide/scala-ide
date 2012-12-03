@@ -257,10 +257,8 @@ private class ScalaDebugTargetActor private (threadStartRequest: ThreadStartRequ
   private def vmStarted() {
     val eventDispatcher = debugTarget.eventDispatcher
     // enable the thread management requests
-    eventDispatcher.setActorFor(this, threadStartRequest)
-    threadStartRequest.enable()
-    eventDispatcher.setActorFor(this, threadDeathRequest)
-    threadDeathRequest.enable()
+    this.attach(threadStartRequest, enableRequest = true)
+    this.attach(threadDeathRequest, enableRequest = true)
     // get the current requests
     import scala.collection.JavaConverters._
     debugTarget.initializeThreads(debugTarget.virtualMachine.allThreads.asScala.toList)
