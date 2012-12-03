@@ -246,7 +246,7 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings)
    *  TODO We should have a more refined strategy based on the context (inside an import, case
    *       pattern, 'new' call, etc.)
    */
-  def mkCompletionProposal(start: Int, sym: Symbol, tpe: Type, inherited: Boolean, viaView: Symbol): CompletionProposal = {
+  def mkCompletionProposal(prefix: Array[Char], start: Int, sym: Symbol, tpe: Type, inherited: Boolean, viaView: Symbol): CompletionProposal = {
     import scala.tools.eclipse.completion.MemberKind._
 
     val kind = if (sym.isSourceMethod && !sym.hasFlag(Flags.ACCESSOR | Flags.PARAMACCESSOR)) Def
@@ -269,6 +269,7 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings)
 
     // rudimentary relevance, place own members before ineherited ones, and before view-provided ones
     var relevance = 100
+    if (!sym.isLocal) relevance -= 10 // non-local symbols are less relevant than local ones
     if (inherited) relevance -= 10
     if (viaView != NoSymbol) relevance -= 20
     if (sym.isPackage) relevance -= 30
@@ -279,6 +280,8 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings)
       || sym.owner == definitions.ObjectClass) {
       relevance -= 40
     }
+    val casePenalty = if (name.take(prefix.length) != prefix.mkString) 50 else 0
+    relevance -= casePenalty
 
     val scalaParamNames = for {
       section <- sym.paramss

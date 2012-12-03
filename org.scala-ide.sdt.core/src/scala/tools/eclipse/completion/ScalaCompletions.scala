@@ -10,6 +10,7 @@ import scala.tools.eclipse.logging.HasLogger
 import scala.tools.eclipse.InteractiveCompilationUnit
 import scala.collection.mutable.MultiMap
 import scala.tools.eclipse.util.Utils
+import scala.tools.eclipse.ScalaPlugin
 
 /** Base class for Scala completions. No UI dependency, can be safely used in a
  *  headless testing environment.
@@ -63,11 +64,11 @@ class ScalaCompletions extends HasLogger {
         for (completion <- completions) {
           completion match {
             case compiler.TypeMember(sym, tpe, true, inherited, viaView) if !sym.isConstructor && nameMatches(sym) =>
-              val completionProposal= compiler.mkCompletionProposal(start, sym, tpe, inherited, viaView)
+              val completionProposal= compiler.mkCompletionProposal(prefix, start, sym, tpe, inherited, viaView)
               if (!isAlreadyListed(completionProposal.fullyQualifiedName, completionProposal.display))
                 listedTypes.addBinding(completionProposal.fullyQualifiedName, completionProposal)
             case compiler.ScopeMember(sym, tpe, true, _) if !sym.isConstructor && nameMatches(sym) =>
-              val completionProposal= compiler.mkCompletionProposal(start, sym, tpe, false, compiler.NoSymbol)
+              val completionProposal= compiler.mkCompletionProposal(prefix, start, sym, tpe, false, compiler.NoSymbol)
               if (!isAlreadyListed(completionProposal.fullyQualifiedName, completionProposal.display))
               	listedTypes.addBinding(completionProposal.fullyQualifiedName, completionProposal)
             case _ =>
@@ -135,7 +136,10 @@ class ScalaCompletions extends HasLogger {
           IJavaSearchConstants.TYPE,
           SearchEngine.createJavaSearchScope(Array[IJavaElement](scu.scalaProject.javaProject), true),
           requestor,
-          IJavaSearchConstants.WAIT_UNTIL_READY_TO_SEARCH, // wait until all types are indexed by the JDT
+          (if (ScalaPlugin.plugin.noTimeoutMode)
+            IJavaSearchConstants.WAIT_UNTIL_READY_TO_SEARCH // wait until all types are indexed by the JDT
+          else
+            IJavaSearchConstants.FORCE_IMMEDIATE_SEARCH),
           null)
           
     }
