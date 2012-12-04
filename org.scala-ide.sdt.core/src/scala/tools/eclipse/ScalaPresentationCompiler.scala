@@ -267,7 +267,7 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings)
       } else name
     val container = sym.owner.enclClass.fullName
 
-    // rudimentary relevance, place own members before ineherited ones, and before view-provided ones
+    // rudimentary relevance, place own members before inherited ones, and before view-provided ones
     var relevance = 100
     if (!sym.isLocal) relevance -= 10 // non-local symbols are less relevant than local ones
     if (inherited) relevance -= 10
