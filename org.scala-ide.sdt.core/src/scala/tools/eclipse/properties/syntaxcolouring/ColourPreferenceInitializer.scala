@@ -91,6 +91,7 @@ class ColourPreferenceInitializer extends AbstractPreferenceInitializer {
     setDefaultsForSyntaxClass(RETURN, new RGB(127, 0, 85), bold = true)
     setDefaultsForSyntaxClass(BRACKET, new RGB(0, 0, 0))
     setDefaultsForSyntaxClass(NUMBER_LITERAL, new RGB(196, 140, 255))
+    setDefaultsForSyntaxClass(ESCAPE_SEQUENCE, new RGB(196, 140, 255))
 
     // XML, see org.eclipse.wst.xml.ui.internal.preferences.XMLUIPreferenceInitializer
     setDefaultsForSyntaxClass(XML_COMMENT, new RGB(63, 85, 191))

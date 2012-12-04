@@ -17,6 +17,7 @@ object ScalaSyntaxClasses {
   val DEFAULT = ScalaSyntaxClass("Others", "syntaxColouring.default")
 
   val NUMBER_LITERAL = ScalaSyntaxClass("Number literals", "syntaxColouring.numberLiteral")
+  val ESCAPE_SEQUENCE = ScalaSyntaxClass("Escape sequences", "syntaxColouring.escapeSequence")
 
   val XML_COMMENT = ScalaSyntaxClass("Comments", "syntaxColouring.xml.comment")
   val XML_ATTRIBUTE_VALUE = ScalaSyntaxClass("Attribute values", "syntaxColouring.xml.attributeValue")
@@ -49,7 +50,7 @@ object ScalaSyntaxClasses {
   case class Category(name: String, children: List[ScalaSyntaxClass])
 
   val scalaSyntacticCategory = Category("Scala (syntactic)", List(
-    BRACKET, KEYWORD, RETURN, MULTI_LINE_STRING, OPERATOR, DEFAULT, STRING, NUMBER_LITERAL))
+    BRACKET, KEYWORD, RETURN, MULTI_LINE_STRING, OPERATOR, DEFAULT, STRING, NUMBER_LITERAL, ESCAPE_SEQUENCE))
 
   val scalaSemanticCategory = Category("Scala (semantic)", List(
     ANNOTATION, CASE_CLASS, CASE_OBJECT, CLASS, LAZY_LOCAL_VAL, LAZY_TEMPLATE_VAL,
