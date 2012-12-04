@@ -16,6 +16,8 @@ object ScalaSyntaxClasses {
   val BRACKET = ScalaSyntaxClass("Brackets", "syntaxColouring.bracket")
   val DEFAULT = ScalaSyntaxClass("Others", "syntaxColouring.default")
 
+  val NUMBER_LITERAL = ScalaSyntaxClass("Number literals", "syntaxColouring.numberLiteral")
+
   val XML_COMMENT = ScalaSyntaxClass("Comments", "syntaxColouring.xml.comment")
   val XML_ATTRIBUTE_VALUE = ScalaSyntaxClass("Attribute values", "syntaxColouring.xml.attributeValue")
   val XML_ATTRIBUTE_NAME = ScalaSyntaxClass("Attribute names", "syntaxColouring.xml.attributeName")
@@ -47,7 +49,7 @@ object ScalaSyntaxClasses {
   case class Category(name: String, children: List[ScalaSyntaxClass])
 
   val scalaSyntacticCategory = Category("Scala (syntactic)", List(
-    BRACKET, KEYWORD, RETURN, MULTI_LINE_STRING, OPERATOR, DEFAULT, STRING))
+    BRACKET, KEYWORD, RETURN, MULTI_LINE_STRING, OPERATOR, DEFAULT, STRING, NUMBER_LITERAL))
 
   val scalaSemanticCategory = Category("Scala (semantic)", List(
     ANNOTATION, CASE_CLASS, CASE_OBJECT, CLASS, LAZY_LOCAL_VAL, LAZY_TEMPLATE_VAL,
@@ -106,6 +108,7 @@ object ScalariformToSyntaxClass {
     case DOT | COMMA | COLON | USCORE | EQUALS | SEMI |
       LARROW | ARROW | SUBTYPE | SUPERTYPE | VIEWBOUND => ScalaSyntaxClasses.OPERATOR
     case VARID if Chars.isOperatorPart(token.text(0)) => ScalaSyntaxClasses.OPERATOR
+    case FLOATING_POINT_LITERAL | INTEGER_LITERAL => ScalaSyntaxClasses.NUMBER_LITERAL
     case XML_START_OPEN | XML_EMPTY_CLOSE | XML_TAG_CLOSE | XML_END_OPEN => ScalaSyntaxClasses.XML_TAG_DELIMITER
     case XML_NAME => ScalaSyntaxClasses.XML_TAG_NAME
     case XML_ATTR_EQ => ScalaSyntaxClasses.XML_ATTRIBUTE_EQUALS
