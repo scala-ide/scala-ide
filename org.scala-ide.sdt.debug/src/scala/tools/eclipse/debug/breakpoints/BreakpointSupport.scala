@@ -44,8 +44,11 @@ private[debug] object BreakpointSupportActor {
 
 
   def apply(breakpoint: IBreakpoint, debugTarget: ScalaDebugTarget): Actor = {
-    val classPrepareRequests = createClassPrepareRequests(breakpoint, debugTarget)
-    val breakpointRequests   = createBreakpointsRequests(breakpoint, debugTarget)
+    // to be sure to cover all possible nested elements, we use the name of the top level class as base name
+    val topLevelTypeName= breakpoint.typeName.takeWhile(_ != '$')
+    
+    val classPrepareRequests = createClassPrepareRequests(topLevelTypeName, debugTarget)
+    val breakpointRequests   = createBreakpointsRequests(breakpoint, topLevelTypeName, debugTarget)
 
     val actor = new BreakpointSupportActor(breakpoint, debugTarget, classPrepareRequests, ListBuffer(breakpointRequests: _*))
 
@@ -61,24 +64,24 @@ private[debug] object BreakpointSupportActor {
    * Create event requests to tell the VM to notify us when a class (or any of its inner classes) that contain the `breakpoint` is loaded.
    *  This is needed to set the breakpoint when the class gets loaded (meaning that you don't know at this point if the class has already been loaded or not)
    */
-  private def createClassPrepareRequests(breakpoint: IBreakpoint, debugTarget: ScalaDebugTarget): Seq[EventRequest] = {
+  private def createClassPrepareRequests(topLevelTypeName: String, debugTarget: ScalaDebugTarget): Seq[EventRequest] = {
     val requests = new ListBuffer[EventRequest]
 
     // class prepare requests for the type and its nested types
-    requests append JdiRequestFactory.createClassPrepareRequest(breakpoint.typeName, debugTarget)
-    requests append JdiRequestFactory.createClassPrepareRequest(breakpoint.typeName + "$*", debugTarget) // this is important for closures/anon-classes
+    requests append JdiRequestFactory.createClassPrepareRequest(topLevelTypeName, debugTarget)
+    requests append JdiRequestFactory.createClassPrepareRequest(topLevelTypeName + "$*", debugTarget) // this is important for closures/anon-classes
 
     requests.toSeq
   }
 
   /** Create event requests to tell the VM to notify us when it reaches the line for the current `breakpoint` */
-  private def createBreakpointsRequests(breakpoint: IBreakpoint, debugTarget: ScalaDebugTarget): Seq[EventRequest] = {
+  private def createBreakpointsRequests(breakpoint: IBreakpoint, topLevelTypeName: String, debugTarget: ScalaDebugTarget): Seq[EventRequest] = {
     val requests = new ListBuffer[EventRequest]
     val virtualMachine = debugTarget.virtualMachine
 
     import scala.collection.JavaConverters._
     // if the type is already loaded, add the breakpoint requests
-    val loadedClasses = virtualMachine.classesByName(breakpoint.typeName)
+    val loadedClasses = virtualMachine.classesByName(topLevelTypeName)
 
     loadedClasses.asScala.foreach { loadedClass =>
       val breakpointRequest = createBreakpointRequest(breakpoint, debugTarget, loadedClass)

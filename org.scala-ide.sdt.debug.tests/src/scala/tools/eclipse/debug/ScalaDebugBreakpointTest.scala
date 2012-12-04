@@ -18,7 +18,7 @@ import org.eclipse.debug.core.DebugPlugin
 import org.eclipse.core.resources.IMarker
 
 object ScalaDebugBreakpointTest extends TestProjectSetup("breakpoints", bundleName = "org.scala-ide.sdt.debug.tests") with ScalaDebugRunningTest {
-  val BP_TYPENAME = "breakpoints.Breakpoints"
+  final val BP_TYPENAME = "breakpoints.Breakpoints"
 
   var initialized = false
 
@@ -231,4 +231,49 @@ class ScalaDebugBreakpointTest {
       bp21.delete(); bp22.delete()
     }
   }
+
+  /** Test that breakpoint are correctly hit, even if not set in the right nested class.
+   *
+   * The breakpoint is set on the object, but the code is put in a $delayedInit$body nested class.
+   *
+   * see ticket #1001197
+   */
+  @Test
+  def breakpointInDelayedInit() {
+    val DI_TYPENAME = "breakpoints.DelayedInit"
+    session = initDebugSession("DelayedInit")
+
+    val bp4 = session.addLineBreakpoint(DI_TYPENAME + "$", 4)
+
+    try {
+      session.runToLine(DI_TYPENAME, 5)
+
+      session.checkStackFrame(DI_TYPENAME + "$delayedInit$body", "apply()Ljava/lang/Object;", 4)
+    } finally {
+      bp4.delete
+    }
+  }
+
+  /** Test that breakpoint are correctly hit, even if not set in the right nested class.
+   *
+   * The breakpoint is set with a bad type name (due to the structure builder in this case).
+   *
+   * Test case from ticket #1001367
+   */
+  @Test
+  def breakpointWithBadTypeName() {
+    val A_TYPENAME = "breakpoints.A_1001367"
+    session = initDebugSession("A_1001367")
+
+    val bp4 = session.addLineBreakpoint(A_TYPENAME + "$$B", 7)
+
+    try {
+      session.runToLine(A_TYPENAME, 12)
+
+      session.checkStackFrame(A_TYPENAME + "$B", "a()I", 7)
+    } finally {
+      bp4.delete
+    }
+  }
+
 }

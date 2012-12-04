@@ -56,6 +56,7 @@ object JdiRequestFactory {
     import scala.collection.JavaConverters._
     val locations = JDIUtil.referenceTypeToLocations(referenceType)
     // TODO: is it possible to have the same line number in multiple locations? need test case
+    // see #1001370
     val line = locations.find(_.lineNumber == lineNumber)
     line.map {
       l =>
