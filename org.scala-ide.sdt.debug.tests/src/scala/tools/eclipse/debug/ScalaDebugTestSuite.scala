@@ -31,6 +31,7 @@ import scala.tools.eclipse.launching.RemoteConnectorTest
     classOf[ScalaDebuggerDisconnectTests],
     classOf[BaseDebuggerActorTest],
     classOf[DebugTargetTerminationTest],
-    classOf[RemoteConnectorTest]))
+    classOf[RemoteConnectorTest],
+    classOf[ScalaDebugBreakpointTest]))
 class ScalaDebugTestSuite {
 }

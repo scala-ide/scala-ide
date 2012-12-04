@@ -2,7 +2,7 @@ package scala.tools.eclipse.debug.model
 
 import scala.actors.Future
 import scala.tools.eclipse.debug.BaseDebuggerActor
-import scala.tools.eclipse.debug.ScalaDebugBreakpointManager
+import scala.tools.eclipse.debug.breakpoints.ScalaDebugBreakpointManager
 import scala.tools.eclipse.debug.ScalaSourceLookupParticipant
 import scala.tools.eclipse.logging.HasLogger
 import org.eclipse.core.resources.IMarkerDelta
