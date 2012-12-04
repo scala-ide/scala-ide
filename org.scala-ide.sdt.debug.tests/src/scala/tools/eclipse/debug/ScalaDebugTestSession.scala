@@ -12,11 +12,6 @@ import org.junit.Assert._
 import org.eclipse.debug.core.model.DebugElement
 import scala.tools.eclipse.debug.model.ScalaDebugElement
 import org.eclipse.jdt.internal.debug.core.model.JDIDebugElement
-import org.eclipse.debug.core.IBreakpointListener
-import java.util.concurrent.CountDownLatch
-import org.eclipse.core.resources.IMarkerDelta
-import java.util.concurrent.TimeUnit
-import org.eclipse.core.resources.IMarker
 import scala.tools.eclipse.logging.HasLogger
 import org.eclipse.debug.core.ILaunchConfiguration
 import scala.tools.eclipse.debug.breakpoints.BreakpointSupport
@@ -159,7 +154,7 @@ class ScalaDebugTestSession(launchConfiguration: ILaunchConfiguration) extends H
    * Add a breakpoint in the given type and its nested types at the given line (1 based)
    */
   def addLineBreakpoint(typeName: String, breakpointLine: Int): IJavaLineBreakpoint = {
-    val breakpoint = JDIDebugModel.createLineBreakpoint(ResourcesPlugin.getWorkspace.getRoot, typeName, breakpointLine, /*char start*/ -1, /*char end*/ -1, /*hit count*/ -1, /*register*/ true , /*attributes*/ null)
+    val breakpoint = JDIDebugModel.createLineBreakpoint(ResourcesPlugin.getWorkspace.getRoot, typeName, breakpointLine, /*char start*/ -1, /*char end*/ -1, /*hit count*/ -1, /*register*/ true, /*attributes*/ null)
     waitForBreakpointsToBeEnabled(breakpoint)
     breakpoint
   }
@@ -224,9 +219,15 @@ class ScalaDebugTestSession(launchConfiguration: ILaunchConfiguration) extends H
     DebugPlugin.getDefault().removeDebugEventListener(debugEventListener)
   }
 
-  def continue() {
+  def resumetoSuspension() {
+    assertEquals("Bad state before resumeToCompletion", SUSPENDED, state)
+
     setActionRequested
     currentStackFrame.resume
+
+    waitUntilSuspended
+
+    assertEquals("Bad state after resumeToCompletion", SUSPENDED, state)
   }
 
   def disconnect() {

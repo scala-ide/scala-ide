@@ -55,7 +55,7 @@ class ScalaDebugBreakpointTest {
   }
 
   @Test
-  def simpleBreakpointEnableDisbale() {
+  def simpleBreakpointEnableDisable() {
     session = initDebugSession("Breakpoints")
     session.runToLine("breakpoints.Breakpoints", 32) // stop in main
 
@@ -64,19 +64,16 @@ class ScalaDebugBreakpointTest {
     try {
       session.waitForBreakpointsToBeEnabled(bp11, bp13)
 
-      session.continue()
-      session.waitUntilSuspended()
+      session.resumetoSuspension()
       session.checkStackFrame(BP_TYPENAME, "simple1()V", 11)
 
-      session.continue()
-      session.waitUntilSuspended()
+      session.resumetoSuspension()
       session.checkStackFrame(BP_TYPENAME, "simple1()V", 13)
 
       bp11.setEnabled(false)
       session.waitForBreakpointsToBeDisabled(bp11)
 
-      session.continue()
-      session.waitUntilSuspended()
+      session.resumetoSuspension()
       session.checkStackFrame(BP_TYPENAME, "simple1()V", 13)
 
       bp11.setEnabled(true); bp13.setEnabled(false)
@@ -84,12 +81,10 @@ class ScalaDebugBreakpointTest {
       session.waitForBreakpointsToBeEnabled(bp11)
       session.waitForBreakpointsToBeDisabled(bp13)
 
-      session.continue()
-      session.waitUntilSuspended()
+      session.resumetoSuspension()
       session.checkStackFrame(BP_TYPENAME, "simple1()V", 11)
 
-      session.continue()
-      session.waitUntilSuspended()
+      session.resumetoSuspension()
       session.checkStackFrame(BP_TYPENAME, "simple1()V", 11)
 
       session.resumeToCompletion()
@@ -113,15 +108,13 @@ class ScalaDebugBreakpointTest {
     try {
       session.waitForBreakpointsToBeEnabled(bp20, bp22, bp26)
 
-      session.continue()
-      session.waitUntilSuspended()
+      session.resumetoSuspension()
       session.checkStackFrame(BP_TYPENAME, "fors()V", 20)
 
       bp22.setEnabled(false)
       session.waitForBreakpointsToBeDisabled(bp22)
 
-      session.continue()
-      session.waitUntilSuspended()
+      session.resumetoSuspension()
       session.checkStackFrame(BP_TYPENAME + "$$anonfun$fors$2", "apply$mcVI$sp(I)V", 26)
 
       bp26.setEnabled(false)
@@ -154,8 +147,7 @@ class ScalaDebugBreakpointTest {
       bp11.setEnabled(true)
       session.waitForBreakpointsToBeEnabled(bp11)
 
-      session.continue()
-      session.waitUntilSuspended()
+      session.resumetoSuspension()
       session.checkStackFrame(BP_TYPENAME, "simple1()V", 11)
 
       bp11.setEnabled(false)
@@ -186,8 +178,7 @@ class ScalaDebugBreakpointTest {
       bp22.setEnabled(true)
       session.waitForBreakpointsToBeEnabled(bp22)
 
-      session.continue()
-      session.waitUntilSuspended()
+      session.resumetoSuspension()
       session.checkStackFrame(BP_TYPENAME + "$$anonfun$fors$1", "apply$mcVI$sp(I)V", 22)
 
       bp22.setEnabled(false)
@@ -217,8 +208,7 @@ class ScalaDebugBreakpointTest {
       bp21.setEnabled(true)
       session.waitForBreakpointsToBeEnabled(bp21)
 
-      session.continue()
-      session.waitUntilSuspended()
+      session.resumetoSuspension()
       session.checkStackFrame(BP_TYPENAME + "$$anonfun$fors$1", "apply$mcVI$sp(I)V", 21)
       // by now, the class has been loaded, so ClassPrepareEvent won't be triggered for the next breakpoint
 
@@ -230,8 +220,7 @@ class ScalaDebugBreakpointTest {
       bp22.setEnabled(true)
       session.waitForBreakpointsToBeEnabled(bp22)
 
-      session.continue()
-      session.waitUntilSuspended()
+      session.resumetoSuspension()
       session.checkStackFrame(BP_TYPENAME + "$$anonfun$fors$1", "apply$mcVI$sp(I)V", 22)
 
       bp22.setEnabled(false)

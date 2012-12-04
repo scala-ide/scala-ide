@@ -49,7 +49,10 @@ private[debug] object BreakpointSupportActor {
 
     val actor = new BreakpointSupportActor(breakpoint, debugTarget, classPrepareRequests, ListBuffer(breakpointRequests: _*))
 
-    enableRequests(breakpoint, debugTarget, actor, classPrepareRequests ++ breakpointRequests)
+    initializeVMRequests(breakpoint, debugTarget, actor, classPrepareRequests, enabled = true)
+    initializeVMRequests(breakpoint, debugTarget, actor, breakpointRequests, enabled = breakpoint.isEnabled())
+    breakpoint.setVmRequestEnabled(breakpoint.isEnabled())
+
     actor.start()
     actor
   }
@@ -93,19 +96,14 @@ private[debug] object BreakpointSupportActor {
     JdiRequestFactory.createBreakpointRequest(referenceType, breakpoint.lineNumber, debugTarget)
   }
 
-  /**
-   * Create all the requests needed at the time the breakpoint is added.
-   *  This should be done synchronously before starting the actor
-   */
-  private def enableRequests(breakpoint: IBreakpoint, debugTarget: ScalaDebugTarget, actor: Actor, eventRequests: Seq[EventRequest]): Unit = {
+  /** Register the actor for each event request, and enable/disbale the request according to the argument.  */
+  private def initializeVMRequests(breakpoint: IBreakpoint, debugTarget: ScalaDebugTarget, actor: Actor, eventRequests: Seq[EventRequest], enabled: Boolean): Unit = {
     val eventDispatcher = debugTarget.eventDispatcher
     // enable the requests
     eventRequests.foreach { eventRequest =>
       eventDispatcher.setActorFor(actor, eventRequest)
-      val enablement = if (eventRequest.isInstanceOf[ClassPrepareRequest]) true else breakpoint.isEnabled()
-      eventRequest.setEnabled(enablement)
+      eventRequest.setEnabled(enabled)
     }
-    breakpoint.setVmRequestEnabled(breakpoint.isEnabled())
   }
 }
 
@@ -148,7 +146,7 @@ private class BreakpointSupportActor private (breakpoint: IBreakpoint, debugTarg
     }
   }
 
-  /** Enable/disable VM breakpoint requests.
+  /** React to changes in the breakpoint marker and enable/disable VM breakpoint requests accordingly.
    *
    *  @note ClassPrepare events are always enabled, since the breakpoint at the specified line
    *        can be installed *only* after/when the class is loaded, and that might happen while this
