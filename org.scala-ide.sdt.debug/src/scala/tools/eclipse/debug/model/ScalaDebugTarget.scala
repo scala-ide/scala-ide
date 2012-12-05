@@ -127,9 +127,8 @@ abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine, lau
   @volatile
   private var threads = List[ScalaThread]()
 
-  protected[debug] val eventDispatcher: ScalaJdiEventDispatcher
-
-  protected[debug] val breakpointManager: ScalaDebugBreakpointManager
+  private[debug] val eventDispatcher: ScalaJdiEventDispatcher
+  private[debug] val breakpointManager: ScalaDebugBreakpointManager
   private[debug] val companionActor: BaseDebuggerActor
 
   /**
@@ -187,7 +186,7 @@ abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine, lau
    * FOR THE COMPANION ACTOR ONLY.
    */
   private[model] def addThread(thread: ThreadReference) {
-    if (!threads.exists(_.thread == thread))
+    if (!threads.exists(_.threadRef eq thread))
       threads = threads :+ ScalaThread(this, thread)
   }
 
@@ -196,7 +195,7 @@ abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine, lau
    * FOR THE COMPANION ACTOR ONLY.
    */
   private[model] def removeThread(thread: ThreadReference) {
-    val (removed, remainder) = threads.partition(_.thread eq thread)
+    val (removed, remainder) = threads.partition(_.threadRef eq thread)
     threads = remainder
     removed.foreach(_.terminatedFromScala())
   }
@@ -253,7 +252,7 @@ private class ScalaDebugTargetActor private (threadStartRequest: ThreadStartRequ
       reply(false)
     case ThreadSuspended(thread, eventDetail) =>
       // forward the event to the right thread
-      debugTarget.getScalaThreads.find(_.thread == thread).get.suspendedFromScala(eventDetail)
+      debugTarget.getScalaThreads.find(_.threadRef eq thread).get.suspendedFromScala(eventDetail)
   }
 
   private def vmStarted() {
