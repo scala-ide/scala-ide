@@ -165,9 +165,11 @@ object ScalaLaunchShortcut {
         scu.withSourceFile { (source, comp) =>
           import comp._
 
-          def isTopLevelClass(cdef: Tree) =
-            (cdef.isInstanceOf[ClassDef]
-              && cdef.symbol.owner.isPackageClass)
+          def isTopLevelClass(cdef: Tree) = (
+            cdef.isInstanceOf[ClassDef] && 
+            cdef.symbol.isClass         && 
+            cdef.symbol.owner.isPackageClass
+          )
 
           def isTestClass(cdef: Tree): Boolean =
             comp.askOption { () =>
@@ -218,10 +220,11 @@ object ScalaLaunchShortcut {
           import comp._
           import definitions._
 
-          def isTopLevelModule(cdef: Tree) =
-            (cdef.isInstanceOf[ModuleDef]
-              && cdef.symbol.isModule
-              && cdef.symbol.owner.isPackageClass)
+          def isTopLevelModule(cdef: Tree) = (
+             cdef.isInstanceOf[ModuleDef] && 
+             cdef.symbol.isModule         && 
+             cdef.symbol.owner.isPackageClass
+          )
 
           // The given symbol is a method with the right name and signature to be a runnable java program.
           // should be run inside `askOption`
