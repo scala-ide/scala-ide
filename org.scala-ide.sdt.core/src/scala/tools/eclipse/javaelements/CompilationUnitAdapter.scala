@@ -6,7 +6,6 @@
 package scala.tools.eclipse.javaelements
 
 import java.util.{ HashMap => JHashMap, Map => JMap }
-
 import org.eclipse.core.resources.{ IMarker, IResource }
 import org.eclipse.core.runtime.{ IAdaptable, IPath, IProgressMonitor, IStatus }
 import org.eclipse.core.runtime.jobs.ISchedulingRule
@@ -19,6 +18,7 @@ import org.eclipse.jdt.internal.compiler.env
 import org.eclipse.jdt.internal.core.{ BufferManager, DefaultWorkingCopyOwner, JavaElement, Openable, OpenableElementInfo, PackageFragmentRoot }
 import org.eclipse.jdt.internal.core.util.MementoTokenizer
 import org.eclipse.text.edits.{ TextEdit, UndoEdit }
+import org.eclipse.jdt.internal.core.PackageDeclaration
 
 class CompilationUnitAdapter(classFile : ScalaClassFile) extends Openable(classFile.getParent.asInstanceOf[JavaElement]) with ICompilationUnit with env.ICompilationUnit {
   override def getAdapter(adapter : Class[_]) : AnyRef = (classFile : IAdaptable).getAdapter(adapter)
@@ -161,7 +161,7 @@ class CompilationUnitAdapter(classFile : ScalaClassFile) extends Openable(classF
   def getPrimary() : ICompilationUnit = this
   def getOwner() : WorkingCopyOwner = DefaultWorkingCopyOwner.PRIMARY
   def getPackageDeclaration(name : String) : IPackageDeclaration = throw new UnsupportedOperationException
-  def getPackageDeclarations() : Array[IPackageDeclaration] = throw new UnsupportedOperationException
+  def getPackageDeclarations() : Array[IPackageDeclaration] = Array(new CompilationUnitAdapter.ScalaPackageDeclaration(classFile.getPackage))
   def getType(name : String) : IType = if (name == classFile.getTypeName()) classFile.getType() else throw new UnsupportedOperationException
   def getTypes() : Array[IType] = Array(classFile.getType())
   def getWorkingCopy(monitor : IProgressMonitor) : ICompilationUnit = classFile.getWorkingCopy(null, monitor)
@@ -171,4 +171,39 @@ class CompilationUnitAdapter(classFile : ScalaClassFile) extends Openable(classF
   def reconcile(astLevel : Int, forceProblemDetection : Boolean, enableStatementsRecovery : Boolean, owner : WorkingCopyOwner, monitor : IProgressMonitor) : CompilationUnit = null
   def reconcile(astLevel : Int, reconcileFlags : Int, owner : WorkingCopyOwner, monitor : IProgressMonitor) : CompilationUnit = null
   def getNameRange() : ISourceRange = throw new UnsupportedOperationException
+}
+
+object CompilationUnitAdapter {
+  import org.eclipse.jdt.internal.core.PackageFragment
+  import org.eclipse.jdt.core.IAnnotation
+
+  private class ScalaPackageDeclaration(_package: PackageFragment) extends IPackageDeclaration {
+    override def getElementName(): String = _package.getElementName()
+
+    override def getAnnotation(name: String): IAnnotation = throw new UnsupportedOperationException
+    override def getAnnotations(): Array[IAnnotation] = throw new UnsupportedOperationException
+    override def getNameRange: ISourceRange = throw new UnsupportedOperationException
+    override def getSourceRange: ISourceRange = throw new UnsupportedOperationException
+    override def getSource: String = throw new UnsupportedOperationException
+    override def exists(): Boolean = throw new UnsupportedOperationException
+
+    override def isStructureKnown: Boolean = throw new UnsupportedOperationException
+    override def isReadOnly: Boolean = throw new UnsupportedOperationException
+    override def getUnderlyingResource: IResource = throw new UnsupportedOperationException
+    override def getSchedulingRule: ISchedulingRule = throw new UnsupportedOperationException
+    override def getResource: IResource = throw new UnsupportedOperationException
+    override def getPrimaryElement: IJavaElement = throw new UnsupportedOperationException
+    override def getPath: IPath = throw new UnsupportedOperationException
+    override def getParent: IJavaElement = throw new UnsupportedOperationException
+    override def getOpenable: IOpenable = throw new UnsupportedOperationException
+    override def getJavaProject: IJavaProject = throw new UnsupportedOperationException
+    override def getJavaModel: IJavaModel = throw new UnsupportedOperationException
+    override def getHandleIdentifier: String = throw new UnsupportedOperationException
+    override def getElementType: Int = throw new UnsupportedOperationException
+    override def getCorrespondingResource: IResource = throw new UnsupportedOperationException
+    override def getAttachedJavadoc(monitor: IProgressMonitor): String = throw new UnsupportedOperationException
+    override def getAncestor(ancestorType: Int): IJavaElement = throw new UnsupportedOperationException
+    
+    override def getAdapter(adapter: Class[_]): AnyRef = throw new UnsupportedOperationException
+  }
 }
