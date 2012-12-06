@@ -48,7 +48,7 @@ class ScalaDebugBreakpointManager private (/*public field only for testing purpo
 
   def init() {
     // need to wait for all existing breakpoint to be initialized before continuing, the caller will resume the VM
-    companionActor !? Initialize
+    companionActor !? Initialize // FIXME: This could block forever
     DebugPlugin.getDefault.getBreakpointManager.addBreakpointListener(this)
   }
 

@@ -105,10 +105,16 @@ public class TcpipSpy extends Thread {
 			Socket inSock = serverSock.accept();
 			Socket outSock = new Socket(InetAddress.getByName(serverHost),
 					outPort);
-			new TcpipSpy(listenMode, inSock.getInputStream(),
-					outSock.getOutputStream()).start();
-			new TcpipSpy(!listenMode, outSock.getInputStream(),
-					inSock.getOutputStream()).start();
+			Thread inThread = new TcpipSpy(listenMode, inSock.getInputStream(),
+					outSock.getOutputStream());
+			Thread outThread = new TcpipSpy(!listenMode, outSock.getInputStream(),
+					inSock.getOutputStream());
+
+			inThread.start();
+			outThread.start();
+			
+			inThread.join();
+			outThread.join();
 		} catch (Exception e) {
 			out.println(e);
 		}
