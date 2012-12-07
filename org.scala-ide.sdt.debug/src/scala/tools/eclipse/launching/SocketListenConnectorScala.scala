@@ -25,7 +25,7 @@ import com.sun.jdi.connect.TransportTimeoutException
  * Listen connector creating a Scala debug session.
  * Added to the platform through extension point.
  */
-class SocketListenConnectorScala extends SocketConnectorScala {
+class SocketListenConnectorScala extends VMConnectorAdapter with SocketConnectorScala {
   import SocketConnectorScala._
 
   // from scala.tools.eclipse.launching.SocketConnectorScala
@@ -47,7 +47,7 @@ class SocketListenConnectorScala extends SocketConnectorScala {
 
   override def getName(): String = "Scala debugger (Socket Listen)"
 
-  override def connect(params: JMap[_, _], monitor: IProgressMonitor, launch: ILaunch) {
+  override def typedConnect(params: JMap[String, String], monitor: IProgressMonitor, launch: ILaunch) {
     val arguments = generateArguments(params)
 
     // the port number is needed for the process label. It should be available if we got that far

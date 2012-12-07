@@ -20,7 +20,7 @@ import org.eclipse.jdi.TimeoutException
  * Attach connector creating a Scala debug session.
  * Added to the platform through extension point.
  */
-class SocketAttachConnectorScala extends SocketConnectorScala {
+class SocketAttachConnectorScala extends VMConnectorAdapter with SocketConnectorScala {
   import SocketConnectorScala._
 
   // from scala.tools.eclipse.launching.SocketConnectorScala
@@ -42,7 +42,7 @@ class SocketAttachConnectorScala extends SocketConnectorScala {
 
   override def getName(): String = "Scala debugger (Socket Attach)"
 
-  override def connect(params: JMap[_, _], monitor: IProgressMonitor, launch: ILaunch) {
+  override def typedConnect(params: JMap[String, String], monitor: IProgressMonitor, launch: ILaunch) {
 
     val arguments = generateArguments(params)
 
