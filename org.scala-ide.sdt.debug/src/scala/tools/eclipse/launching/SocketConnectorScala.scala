@@ -57,15 +57,15 @@ trait SocketConnectorScala extends IVMConnector {
     }
     args
   }
-  
+
   /**
    * Create an argument map containing the values provided in the params map.
    */
-  def generateArguments(params: JMap[_, _]): JMap[String, Argument] = {
+  def generateArguments(params: JMap[String, String]): JMap[String, Argument] = {
     import scala.collection.JavaConverters._
     // convert to a usable type
-    val p = params.asInstanceOf[JMap[String, AnyRef]].asScala
-    
+    val p = params.asScala
+
     val arguments= connector.defaultArguments()
 
     // set the values from the params to the the connector arguments
@@ -78,7 +78,7 @@ trait SocketConnectorScala extends IVMConnector {
             throw ScalaDebugPlugin.wrapInCoreException("Unable to initialize connection, argument '%s' is not available".format(key), null)
         }
     }
-    
+
     arguments
   }
 
