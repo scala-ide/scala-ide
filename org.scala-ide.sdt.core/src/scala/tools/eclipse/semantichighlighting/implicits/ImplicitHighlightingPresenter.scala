@@ -178,7 +178,9 @@ object ImplicitHighlightingPresenter {
       // TODO find the implicit args value
       val argsStr = t.args match {
         case null => ""
-        case l => l.collect { case x if x.hasSymbol => x.symbol.name }.mkString("( ", ", ", " )")
+        case l => l.collect {
+          case x if x.symbol ne null => x.symbol.fullName
+        }.mkString("( ", ", ", " )")
       }
       val annotation = new ImplicitArgAnnotation("Implicit arguments found: " + txt + DisplayStringSeparator + txt + argsStr)
       val pos = mkPosition(t.pos, txt)
