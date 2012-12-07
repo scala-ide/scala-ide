@@ -15,7 +15,7 @@ object ScalaSyntaxClasses {
   val MULTI_LINE_STRING = ScalaSyntaxClass("Multi-line string", "syntaxColouring.multiLineString")
   val BRACKET = ScalaSyntaxClass("Brackets", "syntaxColouring.bracket")
   val DEFAULT = ScalaSyntaxClass("Others", "syntaxColouring.default")
-
+  val SYMBOL = ScalaSyntaxClass("Symbol", "syntaxColouring.symbol")
   val NUMBER_LITERAL = ScalaSyntaxClass("Number literals", "syntaxColouring.numberLiteral")
   val ESCAPE_SEQUENCE = ScalaSyntaxClass("Escape sequences", "syntaxColouring.escapeSequence")
 
@@ -45,17 +45,16 @@ object ScalaSyntaxClasses {
   val TRAIT = ScalaSyntaxClass("Trait", "syntaxColouring.semantic.trait", canBeDisabled = true)
   val TYPE = ScalaSyntaxClass("Type", "syntaxColouring.semantic.type", canBeDisabled = true)
   val TYPE_PARAMETER = ScalaSyntaxClass("Type parameter", "syntaxColouring.semantic.typeParameter", canBeDisabled = true)
-  val SYMBOL = ScalaSyntaxClass("Symbol", "syntaxColouring.semantic.symbol", canBeDisabled = true)
 
   case class Category(name: String, children: List[ScalaSyntaxClass])
 
   val scalaSyntacticCategory = Category("Scala (syntactic)", List(
-    BRACKET, KEYWORD, RETURN, MULTI_LINE_STRING, OPERATOR, DEFAULT, STRING, NUMBER_LITERAL, ESCAPE_SEQUENCE))
+    BRACKET, KEYWORD, RETURN, MULTI_LINE_STRING, OPERATOR, DEFAULT, STRING, NUMBER_LITERAL, ESCAPE_SEQUENCE, SYMBOL))
 
   val scalaSemanticCategory = Category("Scala (semantic)", List(
     ANNOTATION, CASE_CLASS, CASE_OBJECT, CLASS, LAZY_LOCAL_VAL, LAZY_TEMPLATE_VAL,
     LOCAL_VAL, LOCAL_VAR, METHOD, OBJECT, PACKAGE, PARAM, TEMPLATE_VAL, TEMPLATE_VAR,
-    TRAIT, TYPE, TYPE_PARAMETER, SYMBOL))
+    TRAIT, TYPE, TYPE_PARAMETER))
 
   val commentsCategory = Category("Comments", List(
     SINGLE_LINE_COMMENT, MULTI_LINE_COMMENT, SCALADOC))
@@ -110,6 +109,7 @@ object ScalariformToSyntaxClass {
       LARROW | ARROW | SUBTYPE | SUPERTYPE | VIEWBOUND => ScalaSyntaxClasses.OPERATOR
     case VARID if Chars.isOperatorPart(token.text(0)) => ScalaSyntaxClasses.OPERATOR
     case FLOATING_POINT_LITERAL | INTEGER_LITERAL => ScalaSyntaxClasses.NUMBER_LITERAL
+    case SYMBOL_LITERAL => ScalaSyntaxClasses.SYMBOL
     case XML_START_OPEN | XML_EMPTY_CLOSE | XML_TAG_CLOSE | XML_END_OPEN => ScalaSyntaxClasses.XML_TAG_DELIMITER
     case XML_NAME => ScalaSyntaxClasses.XML_TAG_NAME
     case XML_ATTR_EQ => ScalaSyntaxClasses.XML_ATTRIBUTE_EQUALS

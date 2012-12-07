@@ -92,6 +92,7 @@ class ColourPreferenceInitializer extends AbstractPreferenceInitializer {
     setDefaultsForSyntaxClass(BRACKET, new RGB(0, 0, 0))
     setDefaultsForSyntaxClass(NUMBER_LITERAL, new RGB(196, 140, 255))
     setDefaultsForSyntaxClass(ESCAPE_SEQUENCE, new RGB(196, 140, 255))
+    setDefaultsForSyntaxClass(SYMBOL, new RGB(173, 142, 0))
 
     // XML, see org.eclipse.wst.xml.ui.internal.preferences.XMLUIPreferenceInitializer
     setDefaultsForSyntaxClass(XML_COMMENT, new RGB(63, 85, 191))
@@ -121,7 +122,6 @@ class ColourPreferenceInitializer extends AbstractPreferenceInitializer {
     setDefaultsForSyntaxClass(PACKAGE, new RGB(0, 110, 4), enabled = false)
     setDefaultsForSyntaxClass(TYPE, new RGB(50, 147, 153), italic = true, enabled = false)
     setDefaultsForSyntaxClass(TYPE_PARAMETER, new RGB(23, 0, 129), underline = true, enabled = false)
-    setDefaultsForSyntaxClass(SYMBOL, new RGB(173, 142, 0), enabled = false)
   }
 
   // Mirror across the colour preferences into the Java preference store so that they can be read by the annotation
