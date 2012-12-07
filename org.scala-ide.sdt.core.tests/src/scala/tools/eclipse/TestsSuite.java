@@ -11,6 +11,7 @@ import scala.tools.eclipse.completion.ScalaJavaCompletionTests;
 import scala.tools.eclipse.hyperlink.HyperlinkDetectorTests;
 import scala.tools.eclipse.findreferences.FindReferencesTests;
 import scala.tools.eclipse.jcompiler.AbstractMethodVerifierTest;
+import scala.tools.eclipse.launching.RunAsTest;
 import scala.tools.eclipse.launching.MainClassVerifierTest;
 import scala.tools.eclipse.lexical.ScalaDocumentPartitionerTest;
 import scala.tools.eclipse.lexical.ScalaPartitionTokeniserTest;
@@ -46,6 +47,7 @@ import scala.tools.eclipse.wizards.QualifiedNameSupportTest;
   CompilerSettingsTest.class,
   ContinuationPluginSettingsTest.class,
   CompletionTests.class,
+  RunAsTest.class,
   // ScalaJavaCompletionTests.class, FIXME: Uncomment as soon as this regression is fixed.
   FindReferencesTests.class,
   HyperlinkDetectorTests.class,
