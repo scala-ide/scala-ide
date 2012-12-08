@@ -100,6 +100,58 @@ class ScalaPartitionTokeniserTest {
 
   }
 
+  @Test
+  def simple_scaladoc() {
+    "/**doc*/" ==> ((JAVA_DOC, 0, 7))
+  }
+
+  @Test
+  def scaladoc_with_normal_code() {
+    "val i = 0; /**doc*/ val j = 0" ==>
+      ((DEFAULT_CONTENT_TYPE, 0, 10), (JAVA_DOC, 11, 18), (DEFAULT_CONTENT_TYPE, 19, 28))
+  }
+
+  @Test
+  def scaladoc_with_codeblock() {
+    "/**{{{val i = 0}}}*/" ==>
+      ((JAVA_DOC, 0, 2), (SCALADOC_CODE_BLOCK, 3, 17), (JAVA_DOC, 18, 19))
+  }
+
+  @Test
+  def scaladoc_code_block_terminated_early() {
+    """/**{{{ "abc" */ val i = 0""" ==>
+      ((JAVA_DOC, 0, 2), (JAVA_DOC, 3, 14), (DEFAULT_CONTENT_TYPE, 15, 24))
+  }
+
+  @Test
+  def scaladoc_after_invalid_code_block() {
+    "/**}}}{{{*/" ==>
+      ((JAVA_DOC, 0, 5), (JAVA_DOC, 6, 10))
+  }
+
+  @Test
+  def scaladoc_code_block_with_second_code_block_start() {
+    "/**{{{ {{{ }}}*/" ==>
+      ((JAVA_DOC, 0, 2), (SCALADOC_CODE_BLOCK, 3, 13), (JAVA_DOC, 14, 15))
+  }
+
+  @Test
+  def scaladoc_code_block_opening_after_another_block() {
+    "/**{{{foo}}}{{{*/" ==>
+      ((JAVA_DOC, 0, 2), (SCALADOC_CODE_BLOCK, 3, 11), (JAVA_DOC, 12, 16))
+  }
+  @Test
+  def scaladoc_code_block_closing_after_another_block() {
+    "/**{{{foo}}}}}}*/" ==>
+      ((JAVA_DOC, 0, 2), (SCALADOC_CODE_BLOCK, 3, 11), (JAVA_DOC, 12, 16))
+  }
+
+  @Test
+  def multiple_scaladoc_code_blocks() {
+    "/**{{{foo}}}{{{foo}}}*/" ==>
+      ((JAVA_DOC, 0, 2), (SCALADOC_CODE_BLOCK, 3, 11), (SCALADOC_CODE_BLOCK, 12, 20), (JAVA_DOC, 21, 22))
+  }
+
 }
 
 object ScalaPartitionTokeniserTest {
@@ -109,7 +161,11 @@ object ScalaPartitionTokeniserTest {
   class PimpedString(source: String) {
     def ==>(expectedPartitions: List[(String, Int, Int)]) {
       val actualPartitions = ScalaPartitionTokeniser.tokenise(source)
-      assertEquals(source, expectedPartitions map ScalaPartitionRegion.tupled toList, actualPartitions)
+      val expected = expectedPartitions.map(ScalaPartitionRegion.tupled).toList
+      if (actualPartitions != expected)
+        throw new AssertionError("""Expected != Actual
+          |Expected: %s
+          |Actual:   %s""".stripMargin.format(expected, actualPartitions))
     }
     def ==>(expectedPartitions: (String, Int, Int)*) { this ==> expectedPartitions.toList }
   }

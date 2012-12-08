@@ -6,5 +6,6 @@ import org.junit.runners.Suite
 @RunWith(classOf[Suite])
 @Suite.SuiteClasses(Array(
   classOf[ScalaPartitionTokeniserTest],
-  classOf[StringTokenScannerTest]))
+  classOf[StringTokenScannerTest],
+  classOf[ScaladocTokenScannerTest]))
 class LexicalTestsSuite

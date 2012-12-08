@@ -8,6 +8,9 @@ object ScalaSyntaxClasses {
   val SINGLE_LINE_COMMENT = ScalaSyntaxClass("Single-line comment", "syntaxColouring.singleLineComment")
   val MULTI_LINE_COMMENT = ScalaSyntaxClass("Multi-line comment", "syntaxColouring.multiLineComment")
   val SCALADOC = ScalaSyntaxClass("Scaladoc comment", "syntaxColouring.scaladoc")
+  val SCALADOC_CODE_BLOCK = ScalaSyntaxClass("Scaladoc code block", "syntaxColouring.scaladocCodeBlock")
+  val SCALADOC_ANNOTATION = ScalaSyntaxClass("Scaladoc annotation", "syntaxColouring.scaladocAnnotation")
+  val SCALADOC_MACRO = ScalaSyntaxClass("Scaladoc macro", "syntaxColouring.scaladocMacro")
   val OPERATOR = ScalaSyntaxClass("Operator", "syntaxColouring.operator")
   val KEYWORD = ScalaSyntaxClass("Keywords (excluding 'return')", "syntaxColouring.keyword")
   val RETURN = ScalaSyntaxClass("Keyword 'return'", "syntaxColouring.return")
@@ -57,7 +60,7 @@ object ScalaSyntaxClasses {
     TRAIT, TYPE, TYPE_PARAMETER))
 
   val commentsCategory = Category("Comments", List(
-    SINGLE_LINE_COMMENT, MULTI_LINE_COMMENT, SCALADOC))
+    SINGLE_LINE_COMMENT, MULTI_LINE_COMMENT, SCALADOC, SCALADOC_CODE_BLOCK, SCALADOC_ANNOTATION, SCALADOC_MACRO))
 
   val xmlCategory = Category("XML", List(
     XML_ATTRIBUTE_NAME, XML_ATTRIBUTE_VALUE, XML_ATTRIBUTE_EQUALS, XML_CDATA_BORDER, XML_COMMENT, XML_TAG_DELIMITER,
