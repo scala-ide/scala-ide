@@ -33,20 +33,20 @@ class ScalaLocalVariable(variable: LocalVariable, stackFrame: ScalaStackFrame) e
 
   // Members declared in org.eclipse.debug.core.model.IVariable
 
-  def getName(): String = variable.name
-  def getReferenceTypeName(): String = variable.typeName
+  override def getName(): String = variable.name
+  override def getReferenceTypeName(): String = variable.typeName
   
   // fetching the value for local variables cannot be delayed because the underlying stackframe element may become invalid at any time
-  val getValue: IValue = ScalaValue(stackFrame.stackFrame.getValue(variable), getDebugTarget)
+  override val getValue: IValue = ScalaValue(stackFrame.stackFrame.getValue(variable), getDebugTarget)
 }
 
 class ScalaArrayElementVariable(index: Int, arrayReference: ScalaArrayReference) extends ScalaVariable(arrayReference. getDebugTarget) {
 
   // Members declared in org.eclipse.debug.core.model.IVariable
 
-  def getName(): String = "(%s)".format(index)
-  def getReferenceTypeName(): String = arrayReference.arrayReference.referenceType.asInstanceOf[ArrayType].componentTypeName
-  def getValue(): org.eclipse.debug.core.model.IValue = ScalaValue(arrayReference.arrayReference.getValue(index), getDebugTarget)
+  override def getName(): String = "(%s)".format(index)
+  override def getReferenceTypeName(): String = arrayReference.arrayReference.referenceType.asInstanceOf[ArrayType].componentTypeName
+  override def getValue(): org.eclipse.debug.core.model.IValue = ScalaValue(arrayReference.arrayReference.getValue(index), getDebugTarget)
 
 }
 
@@ -54,7 +54,7 @@ class ScalaFieldVariable(field: Field, objectReference: ScalaObjectReference) ex
 
   // Members declared in org.eclipse.debug.core.model.IVariable
 
-  def getName(): String = field.name
-  def getReferenceTypeName(): String = field.typeName
-  def getValue(): org.eclipse.debug.core.model.IValue = ScalaValue(objectReference.objectReference.getValue(field), getDebugTarget)
+  override def getName(): String = field.name
+  override def getReferenceTypeName(): String = field.typeName
+  override def getValue(): org.eclipse.debug.core.model.IValue = ScalaValue(objectReference.objectReference.getValue(field), getDebugTarget)
 }

@@ -118,14 +118,14 @@ class ScalaDebugModelPresentation extends IDebugModelPresentation {
 
   // Members declared in org.eclipse.jface.viewers.IBaseLabelProvider
 
-  def addListener(x$1: org.eclipse.jface.viewers.ILabelProviderListener): Unit = ???
-  def dispose(): Unit = {} // TODO: need real logic
-  def isLabelProperty(x$1: Any, x$2: String): Boolean = ???
-  def removeListener(x$1: org.eclipse.jface.viewers.ILabelProviderListener): Unit = ???
+  override def addListener(x$1: org.eclipse.jface.viewers.ILabelProviderListener): Unit = ???
+  override def dispose(): Unit = {} // TODO: need real logic
+  override def isLabelProperty(x$1: Any, x$2: String): Boolean = ???
+  override def removeListener(x$1: org.eclipse.jface.viewers.ILabelProviderListener): Unit = ???
 
   // Members declared in org.eclipse.debug.ui.IDebugModelPresentation
 
-  def computeDetail(value: IValue, listener: IValueDetailListener): Unit = {
+  override def computeDetail(value: IValue, listener: IValueDetailListener): Unit = {
     new Job("Computing Scala debug details") {
       override def run(progressMonitor: IProgressMonitor): IStatus = {
         // TODO: support error cases
@@ -135,7 +135,7 @@ class ScalaDebugModelPresentation extends IDebugModelPresentation {
     }.schedule
   }
 
-  def getImage(element: Any): org.eclipse.swt.graphics.Image = {
+  override def getImage(element: Any): org.eclipse.swt.graphics.Image = {
     element match {
       case target: ScalaDebugTarget =>
         // TODO: right image depending of state
@@ -156,7 +156,7 @@ class ScalaDebugModelPresentation extends IDebugModelPresentation {
     }
   }
 
-  def getText(element: Any): String = {
+  override def getText(element: Any): String = {
     element match {
       case target: ScalaDebugTarget =>
         target.getName // TODO: everything
@@ -170,15 +170,15 @@ class ScalaDebugModelPresentation extends IDebugModelPresentation {
   /** Currently we don't support any attributes. The standard one,
    *  `show type names`, might get here but we ignore it.
    */
-  def setAttribute(key: String, value: Any): Unit = {}
+  override def setAttribute(key: String, value: Any): Unit = {}
 
   // Members declared in org.eclipse.debug.ui.ISourcePresentation
 
-  def getEditorId(input: IEditorInput, element: Any): String = {
+  override def getEditorId(input: IEditorInput, element: Any): String = {
     EditorUtility.getEditorID(input)
   }
 
-  def getEditorInput(input: Any): IEditorInput = {
+  override def getEditorInput(input: Any): IEditorInput = {
     EditorUtility.getEditorInput(input)
   }
 

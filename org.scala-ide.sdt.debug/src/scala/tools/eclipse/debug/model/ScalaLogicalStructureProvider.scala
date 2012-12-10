@@ -35,7 +35,7 @@ object ScalaLogicalStructureProvider {
 class ScalaLogicalStructureProvider extends ILogicalStructureProvider {
   import ScalaLogicalStructureProvider._
 
-  def getLogicalStructureTypes(value: IValue) : Array[ILogicalStructureType] = {
+  override def getLogicalStructureTypes(value: IValue) : Array[ILogicalStructureType] = {
     value match {
       case objectReference: ScalaObjectReference =>
         if (isScalaCollection(objectReference)) {

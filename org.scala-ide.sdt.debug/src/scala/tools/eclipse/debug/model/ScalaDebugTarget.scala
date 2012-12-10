@@ -85,11 +85,11 @@ abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine, lau
 
   // Members declared in org.eclipse.debug.core.model.IDisconnect
 
-  def canDisconnect(): Boolean = allowDisconnect && running
-  def disconnect(): Unit = {
+  override def canDisconnect(): Boolean = allowDisconnect && running
+  override def disconnect(): Unit = {
     virtualMachine.dispose()
   }
-  def isDisconnected(): Boolean = !running
+  override def isDisconnected(): Boolean = !running
 
   // Members declared in org.eclipse.debug.core.model.IMemoryBlockRetrieval
 
@@ -137,7 +137,7 @@ abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine, lau
   private def startJdiEventDispatcher() = {
     // start the event dispatcher thread
     DebugPlugin.getDefault.asyncExec(new Runnable() {
-      def run() {
+      override def run() {
         val thread = new Thread(eventDispatcher, "Scala debugger JDI event dispatcher")
         thread.setDaemon(true)
         thread.start()
