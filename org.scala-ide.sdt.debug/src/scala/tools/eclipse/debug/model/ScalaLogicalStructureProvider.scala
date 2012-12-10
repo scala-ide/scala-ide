@@ -1,15 +1,14 @@
 package scala.tools.eclipse.debug.model
 
-import org.eclipse.debug.core.ILogicalStructureProvider
-import org.eclipse.debug.core.model.IValue
-import org.eclipse.debug.core.ILogicalStructureType
-import com.sun.jdi.ClassType
-import org.eclipse.debug.core.DebugPlugin
-import org.eclipse.debug.ui.DebugUITools
-import com.sun.jdi.ObjectReference
-import java.util.ArrayList
-import scala.tools.eclipse.debug.ScalaDebugger
 import scala.tools.eclipse.debug.ScalaDebugPlugin
+import scala.tools.eclipse.debug.ScalaDebugger
+import scala.tools.eclipse.logging.HasLogger
+
+import org.eclipse.debug.core.ILogicalStructureProvider
+import org.eclipse.debug.core.ILogicalStructureType
+import org.eclipse.debug.core.model.IValue
+
+import com.sun.jdi.ClassType
 
 object ScalaLogicalStructureProvider {
   
@@ -50,8 +49,8 @@ class ScalaLogicalStructureProvider extends ILogicalStructureProvider {
   
 }
 
-object ScalaCollectionLogicalStructureType extends ILogicalStructureType {
-  
+object ScalaCollectionLogicalStructureType extends ILogicalStructureType with HasLogger {
+
   // Members declared in org.eclipse.debug.core.ILogicalStructureType
   
   override def getDescription(): String = "Flat the Scala collections"
@@ -59,26 +58,36 @@ object ScalaCollectionLogicalStructureType extends ILogicalStructureType {
   override val getId: String = ScalaDebugPlugin.id + ".logicalstructure.collection"
   
   // Members declared in org.eclipse.debug.core.model.ILogicalStructureTypeDelegate
-  
+
   override def getLogicalStructure(value: IValue): IValue = {
-    
-    val scalaValue= value.asInstanceOf[ScalaObjectReference]
-    
-    val objectReference= scalaValue.objectReference
 
-    // TODO: get(0)....
-    val manifestObjectEntity = objectReference.virtualMachine.classesByName("scala/reflect/Manifest$").get(0).asInstanceOf[ClassType]
-    val manifestObjectField = manifestObjectEntity.fieldByName("MODULE$")
-    val manifestObject = manifestObjectEntity.getValue(manifestObjectField).asInstanceOf[ObjectReference]
-    val manifestMethod = manifestObjectEntity.concreteMethodByName("Any", "()Lscala/reflect/Manifest;")
+    val scalaValue = value.asInstanceOf[ScalaObjectReference]
 
-    val anyValManifestObject= ScalaDebugger.currentThread.invokeMethod(manifestObject, manifestMethod)
-    
-    val toArrayMethod = objectReference.referenceType.asInstanceOf[ClassType].concreteMethodByName("toArray", "(Lscala/reflect/ClassManifest;)Ljava/lang/Object;")
-    
-    import scala.collection.JavaConverters._
-    
-    ScalaValue(ScalaDebugger.currentThread.invokeMethod(objectReference, toArrayMethod, anyValManifestObject), scalaValue.getDebugTarget)
+    try {
+      // the way to call toArray on a collection is slightly different between Scala 2.9 and 2.10
+      // the base object to use to get the Manisfest and the method signature are different
+      val (manifestObject, toArraySignature) = if (scalaValue.getDebugTarget.is2_10Compatible(ScalaDebugger.currentThread)) {
+        (scalaValue.getDebugTarget().objectByName("scala.reflect.ClassManifestFactory", false, null), "(Lscala/reflect/ClassTag;)Ljava/lang/Object;")
+      } else {
+        (scalaValue.getDebugTarget().objectByName("scala.reflect.Manifest", false, null), "(Lscala/reflect/ClassManifest;)Ljava/lang/Object;")
+      }
+
+      // get Manifest.Any, needed to call toArray(..)
+      val anyManifestObject = manifestObject.invokeMethod("Any", ScalaDebugger.currentThread) match {
+        case o: ScalaObjectReference =>
+          o
+        case _ =>
+          // in case something changes in the next versions of Scala
+          throw new Exception("Unexpected return value for Manifest.Any()")
+      }
+
+      scalaValue.invokeMethod("toArray", toArraySignature, ScalaDebugger.currentThread, anyManifestObject)
+    } catch {
+      case e: Exception =>
+        // fail gracefully in case of problem
+        logger.debug("Failed to compute logical structure for '%s'".format(scalaValue), e)
+        scalaValue
+    }
   }
   
   override def providesLogicalStructure(value: IValue): Boolean = true // TODO: check that as it is created by the provider, it is never used with other values

@@ -1,10 +1,11 @@
 package scala.tools.eclipse.debug.model
 
-import scala.actors.Future
 import scala.tools.eclipse.debug.BaseDebuggerActor
-import scala.tools.eclipse.debug.breakpoints.ScalaDebugBreakpointManager
+import scala.tools.eclipse.debug.PoisonPill
 import scala.tools.eclipse.debug.ScalaSourceLookupParticipant
+import scala.tools.eclipse.debug.breakpoints.ScalaDebugBreakpointManager
 import scala.tools.eclipse.logging.HasLogger
+
 import org.eclipse.core.resources.IMarkerDelta
 import org.eclipse.debug.core.DebugEvent
 import org.eclipse.debug.core.DebugPlugin
@@ -13,6 +14,9 @@ import org.eclipse.debug.core.model.IBreakpoint
 import org.eclipse.debug.core.model.IDebugTarget
 import org.eclipse.debug.core.model.IProcess
 import org.eclipse.debug.core.sourcelookup.ISourceLookupDirector
+import org.osgi.framework.Version
+
+import com.sun.jdi.ClassNotLoadedException
 import com.sun.jdi.ThreadReference
 import com.sun.jdi.VirtualMachine
 import com.sun.jdi.event.ThreadDeathEvent
@@ -22,8 +26,6 @@ import com.sun.jdi.event.VMDisconnectEvent
 import com.sun.jdi.event.VMStartEvent
 import com.sun.jdi.request.ThreadDeathRequest
 import com.sun.jdi.request.ThreadStartRequest
-import scala.actors.Actor
-import scala.tools.eclipse.debug.PoisonPill
 
 object ScalaDebugTarget extends HasLogger {
 
@@ -55,13 +57,15 @@ object ScalaDebugTarget extends HasLogger {
     debugTarget
   }
 
+  val versionStringPattern = "version ([^-]*).*".r
+
 }
 
 /**
  * A debug target in the Scala debug model.
  * This class is thread safe. Instances have be created through its companion object.
  */
-abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine, launch: ILaunch, process: IProcess, allowDisconnect: Boolean, allowTerminate: Boolean) extends ScalaDebugElement(null) with IDebugTarget {
+abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine, launch: ILaunch, process: IProcess, allowDisconnect: Boolean, allowTerminate: Boolean) extends ScalaDebugElement(null) with IDebugTarget with HasLogger {
 
   val stepFilters = new StepFilters
 
@@ -151,7 +155,139 @@ abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine, lau
   private[debug] def threadSuspended(thread: ThreadReference, eventDetail: Int) {
     companionActor ! ScalaDebugTargetActor.ThreadSuspended(thread, eventDetail)
   }
+
+  /*
+   * Information about the VM being debugged
+   */
   
+  /** The version of Scala on the VM being debugged.
+   * The value is `None` if it has not been initialized yet, or if it is too early to know (scala.Predef is not loaded yet).
+   * The value is `Some(Version(0,0,0))` if there was a problem while try fetch the version.
+   * Otherwise it contains the value parsed from scala.util.Properties.versionString.
+   */
+  @volatile
+  private var scalaVersion: Option[Version] = None
+
+  private def getScalaVersion(thread: ScalaThread): Option[Version] = {
+    if (scalaVersion.isEmpty) {
+      scalaVersion = fetchScalaVersion(thread)
+    }
+    scalaVersion
+  }
+
+  /** Attempt to get a value for the Scala version.
+   * The possible return values are defined in {{scalaVersion}}.
+   */
+  private def fetchScalaVersion(thread: ScalaThread): Option[Version] = {
+    try {
+      val propertiesObject = objectByName("scala.util.Properties", true, thread)
+      propertiesObject.fieldValue("versionString") match {
+        case s: ScalaStringReference =>
+          s.stringReference.value() match {
+            case ScalaDebugTarget.versionStringPattern(version) =>
+              Some(new Version(version))
+            case _ =>
+              logger.warn("Unable to parse Properties.versionString")
+              Some(new Version(0, 0, 0))
+
+          }
+        case v =>
+          logger.warn("Properties.versionString returned an unexpected value: '%s'".format(v))
+          Some(new Version(0, 0, 0))
+      }
+
+    } catch {
+      case e: ClassNotLoadedException if e.getMessage().contains("scala.Predef") =>
+        logger.warn("Too early to get Scala version number from the VM: %s".format(e))
+        None
+      case e: IllegalArgumentException =>
+        logger.warn("Failed to parse Scala version number from the VM", e)
+        Some(new Version(0, 0, 0))
+      case e: Exception =>
+        logger.warn("Failed to get Scala version number from the VM: %s".format(e))
+        Some(new Version(0, 0, 0))
+    }
+  }
+
+  /** Return true if the version is >= 2.9.0 and < 3.0.0
+   */
+  def is2_9Compatible(thread: ScalaThread): Boolean = {
+    getScalaVersion(thread).exists(v => v.getMajor == 2 && v.getMinor >= 9)
+  }
+
+  /** Return true if the version is >= 2.10.0 and < 3.0.0
+   */
+  def is2_10Compatible(thread: ScalaThread): Boolean = {
+    getScalaVersion(thread).exists(v => v.getMajor == 2 && v.getMinor >= 10)
+  }
+  
+  /*
+   * JDI wrapper calls
+   */
+  /** Return a reference to the object with the given name in the debugged VM.
+   * 
+   * @param objectName the name of the object, as defined in code (without '$').
+   * @param tryForceLoad indicate if it should try to forceLoad the type if it is not loaded yet.
+   * @param thread the thread to use to if a force load is needed. Can be `null` if tryForceLoad is `false`.
+   * 
+   * @throws ClassNotLoadedException if the class was not loaded yet.
+   * @throws IllegalArgumentException if there is no object of the given name.
+   */
+  def objectByName(objectName: String, tryForceLoad: Boolean, thread: ScalaThread): ScalaObjectReference = {
+    classByName(objectName + '$', tryForceLoad: Boolean, thread: ScalaThread).fieldValue("MODULE$").asInstanceOf[ScalaObjectReference]
+  }
+
+  /** Return a reference to the type with the given name in the debugged VM.
+   * 
+   * @param objectName the name of the object, as defined in code (without '$').
+   * @param tryForceLoad indicate if it should try to forceLoad the type if it is not loaded yet.
+   * @param thread the thread to use to if a force load is needed. Can be `null` if tryForceLoad is `false`.
+   * 
+   * @throws ClassNotLoadedException if the class was not loaded yet.
+   */
+  def classByName(typeName: String, tryForceLoad: Boolean, thread: ScalaThread): ScalaReferenceType = {
+    import scala.collection.JavaConverters._
+    // TODO: need toList?
+    virtualMachine.classesByName(typeName).asScala.toList match {
+      case t :: _ =>
+        ScalaType(t, this)
+      case Nil =>
+        if (tryForceLoad) {
+          forceLoad(typeName, thread)
+        } else {
+          throw new ClassNotLoadedException(typeName, "No force load requested")
+        }
+    }
+  }
+  
+  /** Attempt to force load a type, by finding the classloader of `scala.Predef` and calling `loadClass` on it.
+   */
+  private def forceLoad(typeName: String, thread: ScalaThread): ScalaReferenceType = {
+    val predef = objectByName("scala.Predef", false, null)
+    val classLoader = getClassLoader(predef, thread)
+    classLoader.invokeMethod("loadClass", thread, ScalaValue(typeName, this))
+    val entities = virtualMachine.classesByName(typeName)
+      if (entities.isEmpty()) {
+        throw new ClassNotLoadedException(typeName, "Unable to force load")
+      } else {
+        ScalaType(entities.get(0), this)
+      }
+  }
+  
+  /** Return the classloader of the given object.
+   */
+  private def getClassLoader(instance: ScalaObjectReference, thread: ScalaThread): ScalaObjectReference = {
+    val typeClassLoader= instance.objectReference.referenceType().classLoader()
+    if (typeClassLoader == null) {
+      // JDI returns null for classLoader() if the classloader is the boot classloader.
+      // Fetch the boot classloader by using ClassLoader.getSystemClassLoader()
+      val classLoaderClass= classByName("java.lang.ClassLoader", false, null).asInstanceOf[ScalaClassType]
+      classLoaderClass.invokeMethod("getSystemClassLoader", thread).asInstanceOf[ScalaObjectReference]
+      } else {
+        new ScalaObjectReference(typeClassLoader, this)
+      }
+  }
+
   /*
    * Methods used by the companion actor to update this object internal states
    * FOR THE COMPANION ACTOR ONLY.

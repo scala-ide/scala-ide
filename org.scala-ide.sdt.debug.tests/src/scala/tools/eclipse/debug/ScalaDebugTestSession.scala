@@ -15,6 +15,7 @@ import org.eclipse.jdt.internal.debug.core.model.JDIDebugElement
 import scala.tools.eclipse.logging.HasLogger
 import org.eclipse.debug.core.ILaunchConfiguration
 import scala.tools.eclipse.debug.breakpoints.BreakpointSupport
+import scala.tools.eclipse.debug.model.ScalaValue
 
 object EclipseDebugEvent {
   def unapply(event: DebugEvent): Option[(Int, AnyRef)] = Some((event.getKind, event.getSource()))
@@ -285,4 +286,13 @@ class ScalaDebugTestSession(launchConfiguration: ILaunchConfiguration) extends H
     assertEquals("Wrong method/line" + currentStackFrame.getLineNumber, methodFullSignature, currentStackFrame.stackFrame.location.method.name + currentStackFrame.stackFrame.location.method.signature)
     assertEquals("Wrong line", line, currentStackFrame.getLineNumber)
   }
+  
+  // access data in the current stackframe
+  
+  def getLocalVariable(name: String): ScalaValue = {
+    assertEquals("Bad state before getLocalVariable", SUSPENDED, state)
+    
+    currentStackFrame.variables.find(_.getName == name).get.getValue.asInstanceOf[ScalaValue]
+  }
+
 }
