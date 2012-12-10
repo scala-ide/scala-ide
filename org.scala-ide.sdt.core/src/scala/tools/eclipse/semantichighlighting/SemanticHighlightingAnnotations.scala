@@ -82,6 +82,7 @@ object SemanticHighlightingAnnotations {
       case Trait => TRAIT
       case Type => TYPE
       case TypeParameter => TYPE_PARAMETER
+      case Symbol => SYMBOL
     }
   }
   

@@ -29,6 +29,7 @@ import org.eclipse.ui.IEditorPart
 import org.eclipse.ui.IPartListener
 import org.eclipse.ui.IWorkbenchPart
 import org.eclipse.ui.part.FileEditorInput
+import org.eclipse.jface.preference.IPreferenceStore
 
 trait BuildSuccessListener {
   def buildSuccessful(): Unit
@@ -409,13 +410,16 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
       }
     }
 
-  private def shownSettings(settings: Settings, filter: Settings#Setting => Boolean): Seq[(Settings#Setting, String)] =
+  private def shownSettings(settings: Settings, filter: Settings#Setting => Boolean): Seq[(Settings#Setting, String)] = {
+    // save the current preferences state, so we don't go through the logic of the workspace
+    // or project-specific settings for each setting in turn.
+    val currentStorage = storage
     for (
       box <- IDESettings.shownSettings(settings);
       setting <- box.userSettings if filter(setting);
-      value <- Trim(storage.getString(SettingConverterUtil.convertNameToProperty(setting.name)))
+      value <- Trim(currentStorage.getString(SettingConverterUtil.convertNameToProperty(setting.name)))
     ) yield (setting, value)
-
+  }
   def scalacArguments: Seq[String] = {
     import ScalaPlugin.{defaultScalaSettings => settings}
     val encArgs = encoding.toSeq flatMap (Seq("-encoding", _))
@@ -476,8 +480,15 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
 
   private def buildManagerInitialize: String =
     storage.getString(SettingConverterUtil.convertNameToProperty(properties.ScalaPluginSettings.buildManager.name))
-  
-  lazy val storage = {
+
+  /** Return the current project preference store.
+   *
+   *  The returned store won't track changes happening in the background, so it represents a
+   *  snapshot of this project's settings.
+   *
+   *  @see the half-broken implementation of `PropertyStore`
+   */
+  def storage: IPreferenceStore = {
     val workspaceStore = ScalaPlugin.prefStore
     val projectStore = new PropertyStore(underlying, workspaceStore, plugin.pluginId)
     val useProjectSettings = projectStore.getBoolean(SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE)
