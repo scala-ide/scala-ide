@@ -17,7 +17,47 @@ class StringTokenScanner(
   stringClass: ScalaSyntaxClass,
   val colorManager: IColorManager,
   val preferenceStore: IPreferenceStore)
-    extends AbstractScalaScanner {
+    extends AbstractScalaScanner with StringTokenizer {
+
+  private var offset: Int = _
+  private var length: Int = _
+  private var ranges: IndexedSeq[StyleRange] = _
+  private var index: Int = _
+
+  def setRange(document: IDocument, offset: Int, length: Int) {
+    ranges = tokenize(document, offset, length)
+    index = 0
+
+    val StyleRange(start, end, _) = ranges(index)
+    this.offset = start
+    this.length = end - start
+  }
+
+  def nextToken(): IToken =
+    if (index >= ranges.size)
+      Token.EOF
+    else {
+      val StyleRange(start, end, style) = ranges(index)
+      val tok = getToken(style match {
+        case EscapeSequence => escapeSequenceClass
+        case NormalString   => stringClass
+      })
+      index += 1
+      offset = start
+      length = end - start
+      tok
+    }
+
+  def getTokenOffset(): Int = offset
+
+  def getTokenLength(): Int = length
+
+}
+
+/**
+ * Separation of tokenizing logic from the `StringTokenScanner`.
+ */
+trait StringTokenizer {
 
   /** Denotes a set of possible styles a string can be separated to. */
   sealed abstract class Style
@@ -38,11 +78,6 @@ class StringTokenScanner(
    * is always 0 whereas the end index is always equal to the length of the input.
    */
   case class StyleRange(start: Int, end: Int, style: Style)
-
-  private var offset: Int = _
-  private var length: Int = _
-  private var ranges: IndexedSeq[StyleRange] = _
-  private var index: Int = _
 
   /** Tokenizes a string given by its offset and length in a document. */
   def tokenize(document: IDocument, offset: Int, length: Int): IndexedSeq[StyleRange] = {
@@ -126,33 +161,4 @@ class StringTokenScanner(
     }
     optimizedRanges
   }
-
-  def setRange(document: IDocument, offset: Int, length: Int) {
-    ranges = tokenize(document, offset, length)
-    index = 0
-
-    val StyleRange(start, end, _) = ranges(index)
-    this.offset = start
-    this.length = end - start
-  }
-
-  def nextToken(): IToken =
-    if (index >= ranges.size)
-      Token.EOF
-    else {
-      val StyleRange(start, end, style) = ranges(index)
-      val tok = getToken(style match {
-        case EscapeSequence => escapeSequenceClass
-        case NormalString   => stringClass
-      })
-      index += 1
-      offset = start
-      length = end - start
-      tok
-    }
-
-  def getTokenOffset(): Int = offset
-
-  def getTokenLength(): Int = length
-
 }

@@ -1,29 +1,22 @@
 package scala.tools.eclipse.lexical
 
-import scala.tools.eclipse.properties.syntaxcolouring.ScalaSyntaxClass
-
-import org.eclipse.jdt.ui.text.IColorManager
-import org.eclipse.jface.preference.IPreferenceStore
-import org.eclipse.jface.text.TextAttribute
-import org.eclipse.jface.text.rules.Token
 import org.junit.Test
-import org.mockito.Mockito._
 
 class StringTokenScannerTest {
 
-  var escapeAtt: TextAttribute = _
-  var stringAtt: TextAttribute = _
+  var escapeAtt: String = _
+  var stringAtt: String = _
 
   /**
    * Tokenizes a string literal and only a string literal. It is not allowed to
    * pass anything else to `str`.
    *
    * There is a sequence returned containing tuples where each tuple value
-   * represents a token. The first element is a `TextAttribute` specifying the
+   * represents a token. The first element is a string specifying the
    * content of the token. The second element is the offset of the token and the
    * last element is its length.
    */
-  def tokenize(str: String): Seq[(TextAttribute, Int, Int)] =
+  def tokenize(str: String): Seq[(String, Int, Int)] =
     tokenize(str, 0, str.length())
 
   /**
@@ -33,37 +26,22 @@ class StringTokenScannerTest {
    * and not at the first sign of the string. The length includes the `"` signs.
    *
    * There is a sequence returned containing tuples where each tuple value
-   * represents a token. The first element is a `TextAttribute` specifying the
+   * represents a token. The first element is a string specifying the
    * content of the token. The second element is the offset of the token and the
    * last element is its length.
    */
-  def tokenize(str: String, offset: Int, length: Int): Seq[(TextAttribute, Int, Int)] = {
-    val scalaPreferenceStore = mock(classOf[IPreferenceStore])
-    val colorManager = mock(classOf[IColorManager])
+  def tokenize(str: String, offset: Int, length: Int): Seq[(String, Int, Int)] = {
+    val scanner = new StringTokenizer {}
 
-    val escapeClass = mock(classOf[ScalaSyntaxClass])
-    escapeAtt = mock(classOf[TextAttribute])
-    when(escapeClass.getTextAttribute(scalaPreferenceStore)).thenReturn(escapeAtt)
-    when(escapeAtt.toString()).thenReturn("escapeSequenceTextAttribute")
-
-    val stringClass = mock(classOf[ScalaSyntaxClass])
-    stringAtt = mock(classOf[TextAttribute])
-    when(stringClass.getTextAttribute(scalaPreferenceStore)).thenReturn(stringAtt)
-    when(stringAtt.toString()).thenReturn("stringTextAttribute")
-
-    val scanner = new StringTokenScanner(
-      escapeClass, stringClass,
-      colorManager, scalaPreferenceStore)
+    escapeAtt = scanner.EscapeSequence.toString
+    stringAtt = scanner.NormalString.toString
 
     val document = new MockDocument(str)
-    scanner.setRange(document, offset, length)
-
-    val iter = Iterator continually { (scanner.nextToken(), scanner.getTokenOffset(), scanner.getTokenLength()) }
-    val data = iter takeWhile { _._1 != Token.EOF } map {
-      case (token, offset, length) => (token.getData().asInstanceOf[TextAttribute], offset, length)
+    val token = scanner.tokenize(document, offset, length) map {
+      case scanner.StyleRange(start, end, style) =>
+        (style.toString, start, end - start)
     }
-
-    data.toList
+    token.toList
   }
 
   class Assert_===[A](actual: A) {
