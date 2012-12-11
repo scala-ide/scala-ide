@@ -1,11 +1,12 @@
 package scala.tools.eclipse
 
 import org.eclipse.core.internal.resources.{ Workspace, Project, File }
-import org.eclipse.core.runtime.Path;
-import org.eclipse.core.resources.IWorkspace;
+import org.eclipse.core.runtime.Path
+import org.eclipse.core.resources.IWorkspace
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.jdt.core.search.SearchRequestor
 import org.eclipse.jdt.core.search.SearchMatch
+import org.eclipse.jdt.junit.JUnitCore
 
 class EclipseUserSimulator {
   import org.eclipse.jdt.core._;
@@ -13,7 +14,7 @@ class EclipseUserSimulator {
   var root: IPackageFragmentRoot = null;
   var workspace: IWorkspace = null;
 
-  def createProjectInWorkspace(projectName: String, withSourceRoot: Boolean = true) = {
+  def createProjectInWorkspace(projectName: String, withSourceRoot: Boolean = true, withJUnitTestContainer: Boolean = false) = {
     import org.eclipse.core.resources.ResourcesPlugin;
     import org.eclipse.jdt.internal.core.JavaProject;
     import org.eclipse.jdt.core._;
@@ -42,6 +43,10 @@ class EclipseUserSimulator {
       root = javaProject.getPackageFragmentRoot(sourceFolder);
       entries += JavaCore.newSourceEntry(root.getPath());
     }
+    if(withJUnitTestContainer) {
+      entries += JavaCore.newContainerEntry(JUnitCore.JUNIT4_CONTAINER_PATH)
+    }
+    
     entries += JavaCore.newContainerEntry(Path.fromPortableString(ScalaPlugin.plugin.scalaLibId))
     javaProject.setRawClasspath(entries.toArray[IClasspathEntry], null);
 
@@ -52,9 +57,9 @@ class EclipseUserSimulator {
     root.createPackageFragment(packageName, false, null);
 
   def createCompilationUnit(pack: IPackageFragment, name: String, sourceCode: String) = {
-    val cu = pack.createCompilationUnit(name, sourceCode, false, null);
+    val cu = pack.createCompilationUnit(name, sourceCode, false, null)
     Thread.sleep(200)
-    cu;
+    cu
   }
 
   def buildWorkspace {

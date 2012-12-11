@@ -13,6 +13,7 @@ import org.eclipse.jdt.core.WorkingCopyOwner
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.mockito.Mockito.{mock, when}
 import org.eclipse.core.resources.IFile
+import org.eclipse.jdt.core.IPackageFragment
 
 /** Base class for setting up tests that depend on a project found in the test-workspace.
  * 
@@ -68,6 +69,10 @@ class TestProjectSetup(projectName: String, srcRoot: String = "/%s/src/", val bu
   def scalaCompilationUnit(path: String): ScalaSourceFile =
     compilationUnit(path).asInstanceOf[ScalaSourceFile]
 
+  def createSourceFile(packageName: String, unitName: String)(contents: String): ScalaSourceFile = {
+    val pack = SDTTestUtils.createSourcePackage(packageName)(project)
+    new scala.tools.eclipse.EclipseUserSimulator().createCompilationUnit(pack, unitName, contents).asInstanceOf[ScalaSourceFile]
+  }
   
   def reload(unit: ScalaCompilationUnit) {
     // first, 'open' the file by telling the compiler to load it
