@@ -232,6 +232,47 @@ class JUnitTestClassesFinderTest {
     runnableJUnitTestClassesIn(cu) matches Set.empty
   }
 
+  @Ignore("Enable this when ticket #1001379 is fixed")
+  @Test
+  def findTestClass_WhenTestMethodIsDefinedInAbstractParent() {
+    val cu = projectSetup.createSourceFile("test", "MyTest.scala") {
+      """
+        |package test
+        |import org.junit.Test
+        |abstract class SuperTest {
+        |  @Test
+        |  def test1() {}
+        |}
+        |class MyTest extends SuperTest
+      """.stripMargin
+    }
+
+    runnableJUnitTestClassesIn(cu) matches Set("MyTest")
+  }
+
+  @Ignore("Enable this when ticket #1001379 is fixed")
+  @Test
+  def findTestClass2_WhenDefinedInAbstractParent_andSeparateCompilationUnit() {
+    projectSetup.createSourceFile("test", "SuperTest.scala") {
+      """
+        |package test
+        |import org.junit.Test
+        |abstract class SuperTest {
+        |  @Test
+        |  def test1() {}
+        |}
+      """.stripMargin
+    }
+    val cu = projectSetup.createSourceFile("test", "MyTest.scala") {
+      """
+        |package test
+        |class MyTest extends SuperTest
+      """.stripMargin
+    }
+
+    runnableJUnitTestClassesIn(cu) matches Set("MyTest")
+  }
+
   private def runnableJUnitTestClassesIn(source: ScalaSourceFile) = new {
     def matches(expectedClassNames: Set[String]): Unit = {
       val jUnitClasses = ScalaLaunchShortcut.getJunitTestClasses(source).toList.map(_.getElementName)
