@@ -3,45 +3,32 @@ package scala.tools.eclipse.debug.model
 import com.sun.jdi.ClassType
 import com.sun.jdi.ReferenceType
 import com.sun.jdi.Type
+import com.sun.jdi.Field
+import com.sun.jdi.Value
+import com.sun.jdi.Method
 
 /** A Reference type in the Scala debug model. Represente an array, an interface or a class type.
  */
-class ScalaReferenceType(jdiType: ReferenceType, debugTarget: ScalaDebugTarget) extends ScalaDebugElement(debugTarget) {
+class ScalaReferenceType(jdiType: ReferenceType, debugTarget: ScalaDebugTarget) extends ScalaDebugElement(debugTarget) with HasFieldValue {
 
-  /** Return the value of the static field with the given name.
-   * 
-   * @throws IllegalArgumentException if the no field with the given name exists.
-   */
-  def fieldValue(fieldName: String): ScalaValue = {
-    val field= jdiType.fieldByName(fieldName)
-    if (field == null) {
-      throw new IllegalArgumentException("Field '%s' doesn't exist for '%s'".format(fieldName, jdiType.name()))
-    }
-    ScalaValue(jdiType.getValue(field), debugTarget)
-  }
-
+  // Members declared in scala.tools.eclipse.debug.model.HasFieldValue
+  
+  protected[model] override def referenceType = jdiType
+  
+  protected[model] override def jdiFieldValue(field: Field) = jdiType.getValue(field)
+  
 }
 
 /** A Class type in the Scala debug model
  */
-class ScalaClassType(jdiType: ClassType, debugTarget: ScalaDebugTarget) extends ScalaReferenceType(jdiType, debugTarget) {
+class ScalaClassType(jdiType: ClassType, debugTarget: ScalaDebugTarget) extends ScalaReferenceType(jdiType, debugTarget) with HasMethodInvocation {
   
-  /** Invoke the static method with given name, using the given arguments.
-   * 
-   * @throws IllegalArgumentException if no method with given name exists, or more than one.
-   */
-  def invokeMethod(methodName: String, thread: ScalaThread, args: ScalaValue*): ScalaValue = {
-    val methods= jdiType.methodsByName(methodName)
-    methods.size match {
-      case 0 =>
-        throw new IllegalArgumentException("Method '%s(..)' doesn't exist for '%s'".format(methodName, jdiType.name()))
-      case 1 =>
-        thread.invokeStaticMethod(jdiType, methods.get(0), args:_*)
-      case _ =>
-        throw new IllegalArgumentException("More than on method '%s(..)' for '%s'".format(methodName, jdiType.name()))
-        
-    }
-  }
+  // Members declared in scala.tools.eclipse.debug.model.HasMethodInvocation
+  
+  protected[model] def classType() = jdiType
+  
+  protected[model] def jdiInvokeMethod(method: Method, thread: ScalaThread, args: Value*) = thread.invokeStaticMethod(jdiType, method, args:_*)
+  
 }
 
 object ScalaType {

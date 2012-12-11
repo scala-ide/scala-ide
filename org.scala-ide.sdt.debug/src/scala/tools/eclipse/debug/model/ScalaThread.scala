@@ -117,32 +117,31 @@ abstract class ScalaThread private (target: ScalaDebugTarget, private[model] val
   def terminatedFromScala(): Unit = dispose()
 
   /** Invoke the given method on the given instance with the given arguments.
-   * 
-   * This method should not be called directly.
-   * Use [[ScalaObjectReference.invokeMethod(String, ScalaThread, ScalaValue*)]]
-   * or [[ScalaObjectReference.invokeMethod(String, String, ScalaThread, ScalaValue*)]] instead.
+   *
+   *  This method should not be called directly.
+   *  Use [[ScalaObjectReference.invokeMethod(String, ScalaThread, ScalaValue*)]]
+   *  or [[ScalaObjectReference.invokeMethod(String, String, ScalaThread, ScalaValue*)]] instead.
    */
-  def invokeMethod(objectReference: ObjectReference, method: Method, args: ScalaValue*): ScalaValue = {
-    companionActor !? InvokeMethod(objectReference, method, args.toList) match {
-      case Right(res: ScalaValue) =>
-        res
-      case Left(e: Exception) =>
-        throw e
-    }
+  def invokeMethod(objectReference: ObjectReference, method: Method, args: Value*): Value = {
+    processMethodInvocationResult(companionActor !? InvokeMethod(objectReference, method, args.toList))
   }
 
   /** Invoke the given static method on the given type with the given arguments.
-   * 
-   * This method should not be called directly.
-   * Use [[ScalaClassType.invokeMethod(String, ScalaThread,ScalaValue*)]] instead.
+   *
+   *  This method should not be called directly.
+   *  Use [[ScalaClassType.invokeMethod(String, ScalaThread,ScalaValue*)]] instead.
    */
-  def invokeStaticMethod(classType: ClassType, method: Method, args: ScalaValue*): ScalaValue = {
-    companionActor !? InvokeStaticMethod(classType, method, args.toList) match {
-      case Right(res: ScalaValue) =>
-        res
-      case Left(e: Exception) =>
-        throw e
-    }
+  def invokeStaticMethod(classType: ClassType, method: Method, args: Value*): Value = {
+    processMethodInvocationResult(companionActor !? InvokeStaticMethod(classType, method, args.toList))
+  }
+
+  private def processMethodInvocationResult(res: Any): Value = res match {
+    case Right(null) =>
+      null
+    case Right(res: Value) =>
+      res
+    case Left(e: Exception) =>
+      throw e
   }
 
   /**
@@ -195,8 +194,8 @@ abstract class ScalaThread private (target: ScalaDebugTarget, private[model] val
 private[model] object ScalaThreadActor {
   case class SuspendedFromScala(eventDetail: Int)
   case class ResumeFromScala(step: Option[ScalaStep], eventDetail: Int)
-  case class InvokeMethod(objectReference: ObjectReference, method: Method, args: List[ScalaValue])
-  case class InvokeStaticMethod(classType: ClassType, method: Method, args: List[ScalaValue])
+  case class InvokeMethod(objectReference: ObjectReference, method: Method, args: List[Value])
+  case class InvokeStaticMethod(classType: ClassType, method: Method, args: List[Value])
   case object TerminatedFromScala
   
   def apply(thread: ScalaThread): BaseDebuggerActor = {
@@ -236,16 +235,15 @@ private[model] class ScalaThreadActor private(thread: ScalaThread) extends BaseD
           try {
             import scala.collection.JavaConverters._
             // invoke the method
-            val result = objectReference.invokeMethod(thread.threadRef, method, args.map(_.value).asJava, ObjectReference.INVOKE_SINGLE_THREADED)
+            val result = objectReference.invokeMethod(thread.threadRef, method, args.asJava, ObjectReference.INVOKE_SINGLE_THREADED)
             // update the stack frames
             thread.rebindScalaStackFrames()
-            Right(ScalaValue(result, thread.getDebugTarget()))
+            Right(result)
           } catch {
             case e: Exception =>
               Left(e)
           }
-        }
-      )
+        })
     case InvokeStaticMethod(classType, method, args) =>
       reply(
         if (!thread.isSuspended) {
@@ -255,16 +253,15 @@ private[model] class ScalaThreadActor private(thread: ScalaThread) extends BaseD
           try {
             import scala.collection.JavaConverters._
             // invoke the method
-            val result = classType.invokeMethod(thread.threadRef, method, args.map(_.value).asJava, ObjectReference.INVOKE_SINGLE_THREADED)
+            val result = classType.invokeMethod(thread.threadRef, method, args.asJava, ObjectReference.INVOKE_SINGLE_THREADED)
             // update the stack frames
             thread.rebindScalaStackFrames()
-            Right(ScalaValue(result, thread.getDebugTarget()))
+            Right(result)
           } catch {
             case e: Exception =>
               Left(e)
           }
-        }
-      )
+        })
     case TerminatedFromScala =>
       currentStep.foreach(_.stop())
       currentStep = None

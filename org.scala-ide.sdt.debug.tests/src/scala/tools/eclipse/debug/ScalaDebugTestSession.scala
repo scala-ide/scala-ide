@@ -289,6 +289,8 @@ class ScalaDebugTestSession(launchConfiguration: ILaunchConfiguration) extends H
   
   // access data in the current stackframe
   
+  /** Return the current value of a local variable.
+   */
   def getLocalVariable(name: String): ScalaValue = {
     assertEquals("Bad state before getLocalVariable", SUSPENDED, state)
     

@@ -7,6 +7,8 @@ import org.eclipse.debug.core.model.IVariable
 import com.sun.jdi.{ VoidValue, Value, StringReference, ShortValue, ObjectReference, LongValue, IntegerValue, FloatValue, DoubleValue, CharValue, ByteValue, BooleanValue, ArrayReference }
 import com.sun.jdi.ClassType
 import com.sun.jdi.PrimitiveValue
+import com.sun.jdi.Field
+import com.sun.jdi.Method
 
 object ScalaValue {
 
@@ -127,7 +129,7 @@ class ScalaStringReference(val stringReference: StringReference, target: ScalaDe
 
 }
 
-class ScalaObjectReference(val objectReference: ObjectReference, target: ScalaDebugTarget) extends ScalaValue(target) {
+class ScalaObjectReference(val objectReference: ObjectReference, target: ScalaDebugTarget) extends ScalaValue(target) with HasFieldValue with HasMethodInvocation {
   import ScalaValue._
 
   // Members declared in org.eclipse.debug.core.model.IValue
@@ -154,6 +156,18 @@ class ScalaObjectReference(val objectReference: ObjectReference, target: ScalaDe
   // Members declared in scala.tools.eclipse.debug.model.ScalaValue
 
   override def value = objectReference
+  
+  // Members declared in scala.tools.eclipse.debug.model.HasFieldValue
+  
+  protected[model] override def referenceType = objectReference.referenceType()
+  
+  protected[model] override def jdiFieldValue(field: Field) = objectReference.getValue(field)
+  
+  // Members declared in scala.tools.eclipse.debug.model.HasMethodInvocation
+  
+  protected[model] override def classType = objectReference.referenceType.asInstanceOf[ClassType]
+  
+  protected[model] def jdiInvokeMethod(method: Method, thread: ScalaThread, args: Value*) = thread.invokeMethod(objectReference, method, args:_*)
 
   // -----
 
@@ -164,47 +178,6 @@ class ScalaObjectReference(val objectReference: ObjectReference, target: ScalaDe
     ScalaDebugModelPresentation.computeDetail(fieldValue("value"))
   }
   
-  /** Invoke the method with given name, using the given arguments.
-   * 
-   * @throws IllegalArgumentException if no method with given name exists, or more than one.
-   */  
-  def invokeMethod(methodName: String, thread: ScalaThread, args: ScalaValue*): ScalaValue = {
-    val methods= objectReference.referenceType().methodsByName(methodName)
-    methods.size match {
-      case 0 =>
-        throw new IllegalArgumentException("Method '%s(..)' doesn't exist for '%s'".format(methodName, objectReference.referenceType().name()))
-      case 1 =>
-        thread.invokeMethod(objectReference, methods.get(0), args:_*)
-      case _ =>
-        throw new IllegalArgumentException("More than on method '%s(..)' for '%s'".format(methodName, objectReference.referenceType().name()))
-    }
-  }
-  
-  /** Invoke the method with given name and signature, using the given arguments.
-   * 
-   * @throws IllegalArgumentException if no method with given name exists.
-   */  
-  def invokeMethod(methodName: String, methodSignature: String, thread: ScalaThread, args: ScalaValue*): ScalaValue = {
-    val method= objectReference.referenceType().asInstanceOf[ClassType].concreteMethodByName(methodName, methodSignature)
-    if (method == null) {
-      throw new IllegalArgumentException("Method '%s%s' doesn't exist for '%s'".format(methodName, methodSignature, objectReference.referenceType().name()))
-    }
-    thread.invokeMethod(objectReference, method, args:_*)
-  }
-  
-  /** Return the value of the field with the given name.
-   * 
-   * @throws IllegalArgumentException if the no field with the given name exists.
-   */
-  def fieldValue(fieldName: String): ScalaValue = {
-    val field= objectReference.referenceType().fieldByName(fieldName)
-    if (field == null) {
-      throw new IllegalArgumentException("Field '%s' doesn't exist for '%s'".format(fieldName, objectReference.referenceType.name()))
-    }
-    ScalaValue(objectReference.getValue(field), target)
-  }
-
-
 }
 
 class ScalaNullValue(target: ScalaDebugTarget) extends ScalaValue(target) {
