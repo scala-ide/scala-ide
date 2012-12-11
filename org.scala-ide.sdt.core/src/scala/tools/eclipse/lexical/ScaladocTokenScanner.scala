@@ -20,13 +20,55 @@ class ScaladocTokenScanner(
   macroClass: ScalaSyntaxClass,
   val colorManager: IColorManager,
   val preferenceStore: IPreferenceStore)
-    extends AbstractScalaScanner {
+    extends AbstractScalaScanner with ScaladocTokenizer {
+
+  private val styles = Map[Style, ScalaSyntaxClass](
+    Scaladoc -> scaladocClass,
+    Annotation -> annotationClass,
+    Macro -> macroClass)
+
+  private var offset: Int = _
+  private var length: Int = _
+  private var ranges: IndexedSeq[StyleRange] = _
+  private var index: Int = _
+
+  def setRange(document: IDocument, offset: Int, length: Int) {
+    this.index = 0
+    this.ranges = tokenize(document, offset, length)
+
+    val sr @ StyleRange(start, end, _) = ranges(index)
+    this.offset = start
+    this.length = sr.length
+  }
+
+  def nextToken(): IToken =
+    if (index >= ranges.size)
+      Token.EOF
+    else {
+      val sr @ StyleRange(start, end, style) = ranges(index)
+      val tok = getToken(styles(style))
+      index += 1
+      offset = start
+      length = sr.length
+      tok
+    }
+
+  def getTokenOffset(): Int = offset
+
+  def getTokenLength(): Int = length
+
+}
+
+/**
+ * Separation of tokenizing logic from the `ScaladocTokenScanner`.
+ */
+trait ScaladocTokenizer {
 
   /** Denotes a set of possible styles for Scaladoc content. */
-  private sealed abstract class Style
-  private case object Annotation extends Style
-  private case object Scaladoc extends Style
-  private case object Macro extends Style
+  sealed abstract class Style
+  case object Annotation extends Style
+  case object Scaladoc extends Style
+  case object Macro extends Style
 
   /**
    * The start index denotes the position BEFORE the first sign of the range
@@ -41,21 +83,12 @@ class ScaladocTokenScanner(
    * If a range spans the whole content (as in the example above) the start index
    * is always 0 whereas the end index is always equal to the length of the input.
    */
-  private case class StyleRange(start: Int, end: Int, style: Style = Scaladoc) {
-    def length = end - start
+  case class StyleRange(start: Int, end: Int, style: Style = Scaladoc) {
+    def length: Int = end - start
   }
 
-  private val styles = Map[Style, ScalaSyntaxClass](
-    Scaladoc -> scaladocClass,
-    Annotation -> annotationClass,
-    Macro -> macroClass)
-
-  private var offset: Int = _
-  private var length: Int = _
-  private var ranges: IndexedSeq[StyleRange] = _
-  private var index: Int = _
-
-  def setRange(document: IDocument, offset: Int, length: Int) {
+  /** Tokenizes a string given by its offset and length in a document. */
+  def tokenize(document: IDocument, offset: Int, length: Int): IndexedSeq[StyleRange] = {
     val str = document.get(offset, length).toCharArray()
 
     def isNumber(c: Char) = c >= '0' && c <= '9'
@@ -119,28 +152,7 @@ class ScaladocTokenScanner(
       }
     }
 
-    this.index = 0
-    this.ranges = optimizedRanges
-
-    val sr @ StyleRange(start, end, _) = ranges(index)
-    this.offset = start
-    this.length = sr.length
+    optimizedRanges
   }
-
-  def nextToken(): IToken =
-    if (index >= ranges.size)
-      Token.EOF
-    else {
-      val sr @ StyleRange(start, end, style) = ranges(index)
-      val tok = getToken(styles(style))
-      index += 1
-      offset = start
-      length = sr.length
-      tok
-    }
-
-  def getTokenOffset(): Int = offset
-
-  def getTokenLength(): Int = length
 
 }

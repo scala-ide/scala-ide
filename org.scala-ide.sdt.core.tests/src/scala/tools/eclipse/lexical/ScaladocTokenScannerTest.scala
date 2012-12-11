@@ -1,30 +1,23 @@
 package scala.tools.eclipse.lexical
 
-import scala.tools.eclipse.properties.syntaxcolouring.ScalaSyntaxClass
-
-import org.eclipse.jdt.ui.text.IColorManager
-import org.eclipse.jface.preference.IPreferenceStore
-import org.eclipse.jface.text.TextAttribute
-import org.eclipse.jface.text.rules.Token
 import org.junit.Test
-import org.mockito.Mockito._
 
 class ScaladocTokenScannerTest {
 
-  var scaladocAtt: TextAttribute = _
-  var annotationAtt: TextAttribute = _
-  var macroAtt: TextAttribute = _
+  var scaladocAtt: String = _
+  var annotationAtt: String = _
+  var macroAtt: String = _
 
   /**
    * Tokenizes Scaladoc content. The complete input is handled as Scaladoc
    * content.
    *
    * There is a sequence returned containing tuples where each tuple value
-   * represents a token. The first element is a `TextAttribute` specifying the
+   * represents a token. The first element is a string specifying the
    * content of the token. The second element is the offset of the token and the
    * last element is its length.
    */
-  def tokenize(str: String): Seq[(TextAttribute, Int, Int)] =
+  def tokenize(str: String): Seq[(String, Int, Int)] =
     tokenize(str, 0, str.length())
 
   /**
@@ -35,42 +28,23 @@ class ScaladocTokenScannerTest {
    * Scaladoc.
    *
    * There is a sequence returned containing tuples where each tuple value
-   * represents a token. The first element is a `TextAttribute` specifying the
+   * represents a token. The first element is a string specifying the
    * content of the token. The second element is the offset of the token and the
    * last element is its length.
    */
-  def tokenize(str: String, offset: Int, length: Int): Seq[(TextAttribute, Int, Int)] = {
-    val scalaPreferenceStore = mock(classOf[IPreferenceStore])
-    val colorManager = mock(classOf[IColorManager])
+  def tokenize(str: String, offset: Int, length: Int): Seq[(String, Int, Int)] = {
+    val scanner = new ScaladocTokenizer {}
 
-    val scaladocClass = mock(classOf[ScalaSyntaxClass])
-    scaladocAtt = mock(classOf[TextAttribute])
-    when(scaladocClass.getTextAttribute(scalaPreferenceStore)).thenReturn(scaladocAtt)
-    when(scaladocAtt.toString()).thenReturn("scaladocTextAttribute")
-
-    val annotationClass = mock(classOf[ScalaSyntaxClass])
-    annotationAtt = mock(classOf[TextAttribute])
-    when(annotationClass.getTextAttribute(scalaPreferenceStore)).thenReturn(annotationAtt)
-    when(annotationAtt.toString()).thenReturn("annotationTextAttribute")
-
-    val macroClass = mock(classOf[ScalaSyntaxClass])
-    macroAtt = mock(classOf[TextAttribute])
-    when(macroClass.getTextAttribute(scalaPreferenceStore)).thenReturn(macroAtt)
-    when(macroAtt.toString()).thenReturn("macroTextAttribute")
-
-    val scanner = new ScaladocTokenScanner(
-      scaladocClass, annotationClass, macroClass,
-      colorManager, scalaPreferenceStore)
+    scaladocAtt = scanner.Scaladoc.toString
+    annotationAtt = scanner.Annotation.toString
+    macroAtt = scanner.Macro.toString
 
     val document = new MockDocument(str)
-    scanner.setRange(document, offset, length)
-
-    val iter = Iterator continually { (scanner.nextToken(), scanner.getTokenOffset(), scanner.getTokenLength()) }
-    val data = iter takeWhile { _._1 != Token.EOF } map {
-      case (token, offset, length) => (token.getData().asInstanceOf[TextAttribute], offset, length)
+    val token = scanner.tokenize(document, offset, length) map {
+      case scanner.StyleRange(start, end, style) =>
+        (style.toString, start, end - start)
     }
-
-    data.toList
+    token.toList
   }
 
   class Assert_===[A](actual: A) {
