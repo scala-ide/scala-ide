@@ -91,7 +91,11 @@ class GlobalRenameAction extends RefactoringAction {
     override def checkFinalConditions(pm: IProgressMonitor): RefactoringStatus = {
       val status = super.checkFinalConditions(pm)
       
-      refactoring.doesNameCollide(name, selection().selectedSymbolTree map (_.symbol) getOrElse refactoring.global.NoSymbol) match {
+      val selectedSymbol = selection().selectedSymbolTree map (_.symbol) getOrElse refactoring.global.NoSymbol
+
+      refactoring.global.askOption { () =>
+        refactoring.doesNameCollide(name, selectedSymbol)
+      } map {
         case Nil => ()
         case collisions => 
           val names = collisions map (s => s.fullName) mkString ", "
