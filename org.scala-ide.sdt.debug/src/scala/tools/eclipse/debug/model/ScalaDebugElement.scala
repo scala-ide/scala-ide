@@ -87,7 +87,7 @@ trait HasMethodInvocation {
       case 0 =>
         throw new IllegalArgumentException("Method '%s(..)' doesn't exist for '%s'".format(methodName, classType.name()))
       case 1 =>
-        ScalaValue(jdiInvokeMethod(methods.get(0), thread, args.map(_.value): _*), getDebugTarget)
+        ScalaValue(jdiInvokeMethod(methods.get(0), thread, args.map(_.underlying): _*), getDebugTarget)
       case _ =>
         throw new IllegalArgumentException("More than on method '%s(..)' for '%s'".format(methodName, classType.name()))
     }
@@ -102,6 +102,6 @@ trait HasMethodInvocation {
     if (method == null) {
       throw new IllegalArgumentException("Method '%s%s' doesn't exist for '%s'".format(methodName, methodSignature, classType().name()))
     }
-    ScalaValue(jdiInvokeMethod(method, thread, args.map(_.value): _*), getDebugTarget)
+    ScalaValue(jdiInvokeMethod(method, thread, args.map(_.underlying): _*), getDebugTarget)
   }
 }

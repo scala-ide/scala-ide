@@ -13,7 +13,7 @@ import com.sun.jdi.ClassType
 object ScalaLogicalStructureProvider {
   
   def isScalaCollection(objectReference: ScalaObjectReference): Boolean = {
-    objectReference.objectReference.referenceType match {
+    objectReference.underlying.referenceType match {
       case classType: ClassType =>
         implements(classType, "scala.collection.TraversableOnce")
       case _ => // TODO: ScalaObjectReference should always reference objects of class type, never of array type. Can we just cast?

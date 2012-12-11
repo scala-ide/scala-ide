@@ -183,7 +183,7 @@ abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine, lau
       val propertiesObject = objectByName("scala.util.Properties", true, thread)
       propertiesObject.fieldValue("versionString") match {
         case s: ScalaStringReference =>
-          s.stringReference.value() match {
+          s.underlying.value() match {
             case ScalaDebugTarget.versionStringPattern(version) =>
               Some(new Version(version))
             case _ =>
@@ -277,7 +277,7 @@ abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine, lau
   /** Return the classloader of the given object.
    */
   private def getClassLoader(instance: ScalaObjectReference, thread: ScalaThread): ScalaObjectReference = {
-    val typeClassLoader= instance.objectReference.referenceType().classLoader()
+    val typeClassLoader= instance.underlying.referenceType().classLoader()
     if (typeClassLoader == null) {
       // JDI returns null for classLoader() if the classloader is the boot classloader.
       // Fetch the boot classloader by using ClassLoader.getSystemClassLoader()

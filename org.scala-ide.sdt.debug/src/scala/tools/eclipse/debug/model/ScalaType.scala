@@ -9,25 +9,25 @@ import com.sun.jdi.Method
 
 /** A Reference type in the Scala debug model. Represente an array, an interface or a class type.
  */
-class ScalaReferenceType(jdiType: ReferenceType, debugTarget: ScalaDebugTarget) extends ScalaDebugElement(debugTarget) with HasFieldValue {
+class ScalaReferenceType(underlying: ReferenceType, debugTarget: ScalaDebugTarget) extends ScalaDebugElement(debugTarget) with HasFieldValue {
 
   // Members declared in scala.tools.eclipse.debug.model.HasFieldValue
   
-  protected[model] override def referenceType = jdiType
+  protected[model] override def referenceType = underlying
   
-  protected[model] override def jdiFieldValue(field: Field) = jdiType.getValue(field)
+  protected[model] override def jdiFieldValue(field: Field) = underlying.getValue(field)
   
 }
 
 /** A Class type in the Scala debug model
  */
-class ScalaClassType(jdiType: ClassType, debugTarget: ScalaDebugTarget) extends ScalaReferenceType(jdiType, debugTarget) with HasMethodInvocation {
+class ScalaClassType(underlying: ClassType, debugTarget: ScalaDebugTarget) extends ScalaReferenceType(underlying, debugTarget) with HasMethodInvocation {
   
   // Members declared in scala.tools.eclipse.debug.model.HasMethodInvocation
   
-  protected[model] def classType() = jdiType
+  protected[model] def classType() = underlying
   
-  protected[model] def jdiInvokeMethod(method: Method, thread: ScalaThread, args: Value*) = thread.invokeStaticMethod(jdiType, method, args:_*)
+  protected[model] def jdiInvokeMethod(method: Method, thread: ScalaThread, args: Value*) = thread.invokeStaticMethod(underlying, method, args:_*)
   
 }
 

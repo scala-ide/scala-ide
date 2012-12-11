@@ -68,7 +68,7 @@ object ScalaValue {
 
 // TODO: cache values?
 
-abstract class ScalaValue(target: ScalaDebugTarget) extends ScalaDebugElement(target) with IValue {
+abstract class ScalaValue(val underlying: Value, target: ScalaDebugTarget) extends ScalaDebugElement(target) with IValue {
 
   // Members declared in org.eclipse.debug.core.model.IValue
 
@@ -76,20 +76,16 @@ abstract class ScalaValue(target: ScalaDebugTarget) extends ScalaDebugElement(ta
 
   // new Members
 
-  /** Returns the JDI value wrapped inside this Scala debug model value.
-   */
-  def value: Value
-
 }
 
-class ScalaArrayReference(val arrayReference: ArrayReference, target: ScalaDebugTarget) extends ScalaValue(target) with IIndexedValue {
+class ScalaArrayReference(override val underlying: ArrayReference, target: ScalaDebugTarget) extends ScalaValue(underlying, target) with IIndexedValue {
 
   // Members declared in org.eclipse.debug.core.model.IValue
 
   override def getReferenceTypeName(): String = "scala.Array"
-  override def getValueString(): String = "%s(%d) (id=%d)".format(ScalaStackFrame.getSimpleName(arrayReference.referenceType.signature), arrayReference.length, arrayReference.uniqueID)
-  override def getVariables(): Array[IVariable] = getVariables(0, arrayReference.length)
-  override def hasVariables(): Boolean = arrayReference.length > 0
+  override def getValueString(): String = "%s(%d) (id=%d)".format(ScalaStackFrame.getSimpleName(underlying.referenceType.signature), underlying.length, underlying.uniqueID)
+  override def getVariables(): Array[IVariable] = getVariables(0, underlying.length)
+  override def hasVariables(): Boolean = underlying.length > 0
   
   // Members declared in org.eclipse.debug.core.model.IIndexedValue
   
@@ -97,17 +93,13 @@ class ScalaArrayReference(val arrayReference: ArrayReference, target: ScalaDebug
   
   override def getVariables(offset: Int, length: Int) : Array[IVariable] = (offset until offset + length).map(new ScalaArrayElementVariable(_, this)).toArray
   
-  override def getSize(): Int = arrayReference.length	
+  override def getSize(): Int = underlying.length	
 
   override def getInitialOffset(): Int = 0
 
-  // Members declared in scala.tools.eclipse.debug.model.ScalaValue
-
-  override def value = arrayReference
-
 }
 
-class ScalaPrimitiveValue(typeName: String, value: String, jdiValue: Value, target: ScalaDebugTarget) extends ScalaValue(target) {
+class ScalaPrimitiveValue(typeName: String, value: String, override val underlying: Value, target: ScalaDebugTarget) extends ScalaValue(underlying, target) {
 
   // Members declared in org.eclipse.debug.core.model.IValue
 
@@ -116,58 +108,50 @@ class ScalaPrimitiveValue(typeName: String, value: String, jdiValue: Value, targ
   override def getVariables(): Array[org.eclipse.debug.core.model.IVariable] = Array()
   override def hasVariables(): Boolean = false
 
-  // Members declared in scala.tools.eclipse.debug.model.ScalaValue
-
-  override def value = jdiValue
-
 }
 
-class ScalaStringReference(val stringReference: StringReference, target: ScalaDebugTarget) extends ScalaObjectReference(stringReference, target) {
+class ScalaStringReference(override val underlying: StringReference, target: ScalaDebugTarget) extends ScalaObjectReference(underlying, target) {
 
   override def getReferenceTypeName() = "java.lang.String"
-  override def getValueString(): String = """"%s" (id=%d)""".format(stringReference.value, stringReference.uniqueID)
+  override def getValueString(): String = """"%s" (id=%d)""".format(underlying.value, underlying.uniqueID)
 
 }
 
-class ScalaObjectReference(val objectReference: ObjectReference, target: ScalaDebugTarget) extends ScalaValue(target) with HasFieldValue with HasMethodInvocation {
+class ScalaObjectReference(override val underlying: ObjectReference, target: ScalaDebugTarget) extends ScalaValue(underlying, target) with HasFieldValue with HasMethodInvocation {
   import ScalaValue._
 
   // Members declared in org.eclipse.debug.core.model.IValue
 
-  override def getReferenceTypeName(): String = objectReference.referenceType.name
+  override def getReferenceTypeName(): String = underlying.referenceType.name
 
   override def getValueString(): String = {
     // TODO: move to string builder?
-    if (BOXED_PRIMITIVE_TYPES.contains(objectReference.referenceType.signature)) {
-      "%s %s (id=%d)".format(ScalaStackFrame.getSimpleName(objectReference.referenceType.signature), getBoxedPrimitiveValue(), objectReference.uniqueID)
-    } else if (BOXED_CHAR_TYPE == objectReference.referenceType.signature) {
-      "%s '%s' (id=%d)".format(ScalaStackFrame.getSimpleName(objectReference.referenceType.signature), getBoxedPrimitiveValue(), objectReference.uniqueID)
+    if (BOXED_PRIMITIVE_TYPES.contains(underlying.referenceType.signature)) {
+      "%s %s (id=%d)".format(ScalaStackFrame.getSimpleName(underlying.referenceType.signature), getBoxedPrimitiveValue(), underlying.uniqueID)
+    } else if (BOXED_CHAR_TYPE == underlying.referenceType.signature) {
+      "%s '%s' (id=%d)".format(ScalaStackFrame.getSimpleName(underlying.referenceType.signature), getBoxedPrimitiveValue(), underlying.uniqueID)
     } else {
-      "%s (id=%d)".format(ScalaStackFrame.getSimpleName(objectReference.referenceType.signature), objectReference.uniqueID)
+      "%s (id=%d)".format(ScalaStackFrame.getSimpleName(underlying.referenceType.signature), underlying.uniqueID)
     }
   }
 
   override def getVariables(): Array[org.eclipse.debug.core.model.IVariable] = {
     import scala.collection.JavaConverters._
-    objectReference.referenceType.allFields.asScala.map(new ScalaFieldVariable(_, this)).sortBy(_.getName).toArray
+    underlying.referenceType.allFields.asScala.map(new ScalaFieldVariable(_, this)).sortBy(_.getName).toArray
   }
-  override def hasVariables(): Boolean = !objectReference.referenceType.allFields.isEmpty
+  override def hasVariables(): Boolean = !underlying.referenceType.allFields.isEmpty
 
-  // Members declared in scala.tools.eclipse.debug.model.ScalaValue
-
-  override def value = objectReference
-  
   // Members declared in scala.tools.eclipse.debug.model.HasFieldValue
   
-  protected[model] override def referenceType = objectReference.referenceType()
+  protected[model] override def referenceType = underlying.referenceType()
   
-  protected[model] override def jdiFieldValue(field: Field) = objectReference.getValue(field)
+  protected[model] override def jdiFieldValue(field: Field) = underlying.getValue(field)
   
   // Members declared in scala.tools.eclipse.debug.model.HasMethodInvocation
   
-  protected[model] override def classType = objectReference.referenceType.asInstanceOf[ClassType]
+  protected[model] override def classType = underlying.referenceType.asInstanceOf[ClassType]
   
-  protected[model] def jdiInvokeMethod(method: Method, thread: ScalaThread, args: Value*) = thread.invokeMethod(objectReference, method, args:_*)
+  protected[model] def jdiInvokeMethod(method: Method, thread: ScalaThread, args: Value*) = thread.invokeMethod(underlying, method, args:_*)
 
   // -----
 
@@ -180,7 +164,7 @@ class ScalaObjectReference(val objectReference: ObjectReference, target: ScalaDe
   
 }
 
-class ScalaNullValue(target: ScalaDebugTarget) extends ScalaValue(target) {
+class ScalaNullValue(target: ScalaDebugTarget) extends ScalaValue(null, target) {
 
   // Members declared in org.eclipse.debug.core.model.IValue
 
@@ -188,7 +172,5 @@ class ScalaNullValue(target: ScalaDebugTarget) extends ScalaValue(target) {
   override def getValueString(): String = "null"
   override def getVariables(): Array[org.eclipse.debug.core.model.IVariable] = Array() // TODO: cached empty array?
   override def hasVariables(): Boolean = false
-
-  override def value = null
 
 }

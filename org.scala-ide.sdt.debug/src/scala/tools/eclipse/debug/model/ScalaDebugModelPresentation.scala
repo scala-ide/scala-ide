@@ -22,7 +22,7 @@ object ScalaDebugModelPresentation {
       case v: ScalaPrimitiveValue =>
         v.getValueString
       case v: ScalaStringReference =>
-        v.stringReference.value
+        v.underlying.value
       case v: ScalaNullValue =>
         "null"
       case arrayReference: ScalaArrayReference =>
@@ -40,7 +40,7 @@ object ScalaDebugModelPresentation {
     import scala.collection.JavaConverters._
     // There's a bug in the JDI implementation provided by the JDT, calling getValues()
     // on an array of size zero generates a java.lang.IndexOutOfBoundsException
-    val array= arrayReference.arrayReference
+    val array= arrayReference.underlying
     if (array.length == 0) {
       "Array()"
     } else {
@@ -54,7 +54,7 @@ object ScalaDebugModelPresentation {
     try {
       objectReference.invokeMethod("toString", "()Ljava/lang/String;", ScalaDebugger.currentThread) match {
         case s: ScalaStringReference =>
-          s.stringReference.value
+          s.underlying.value
         case n: ScalaNullValue =>
           "null"
       }
