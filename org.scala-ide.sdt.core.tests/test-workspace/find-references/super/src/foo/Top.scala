@@ -1,3 +1,3 @@
 package foo
 
-class Top(val v: Int)
+class Top(val vvvv: Int)
