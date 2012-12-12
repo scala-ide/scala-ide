@@ -1,3 +1,3 @@
 package foo
 
-class Foo extends Top(Bar.v)
+class Foo extends Top(Bar.vvvv)
