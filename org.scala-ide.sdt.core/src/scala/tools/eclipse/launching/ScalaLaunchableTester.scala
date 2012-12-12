@@ -48,10 +48,10 @@ class ScalaLaunchableTester extends PropertyTester {
   }
 
   /**
-   * Determines if the Scala element contains main method(s).
+   * Determines if the Scala element is in a source that contains one (or more) runnable JUnit test class.
    * 
    * @param element the element to check for the method 
-   * @return true if a method is found in the element, false otherwise
+   * @return true if one or more JUnit test classes are found in the element, false otherwise
    */
   private def canLaunchAsJUnit(element: IJavaElement): Boolean = {
     try {
