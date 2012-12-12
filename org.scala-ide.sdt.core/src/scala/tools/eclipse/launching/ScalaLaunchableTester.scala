@@ -20,6 +20,7 @@ import org.eclipse.jdt.core.IMethod
 import org.eclipse.jdt.core.IType
 import org.eclipse.jdt.core.JavaModelException
 import scala.tools.eclipse.util.EclipseUtils._
+import scala.tools.eclipse.javaelements.ScalaSourceFile
 
 class ScalaLaunchableTester extends PropertyTester {
   /**
@@ -55,7 +56,11 @@ class ScalaLaunchableTester extends PropertyTester {
    */
   private def canLaunchAsJUnit(element: IJavaElement): Boolean = {
     try {
-      ScalaLaunchShortcut.getJunitTestClasses(element).length > 0
+      element match {
+        case e: ScalaSourceFile =>
+          ScalaLaunchShortcut.getJunitTestClasses(element).nonEmpty
+        case _ => true
+      }
     } catch {
       case e: JavaModelException => false
       case e: CoreException => false

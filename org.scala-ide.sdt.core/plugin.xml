@@ -804,10 +804,10 @@
       </contextualLaunch>
     </shortcut>
       <shortcut
-            label="%JUnitShortcut.label"
+            label="Scala JUnit Test"
             icon="$nl$/icons/full/obj16/julaunch.gif"
             helpContextId="org.eclipse.jdt.junit.launch_shortcut"
-            class="org.eclipse.jdt.junit.launcher.JUnitLaunchShortcut"
+            class="scala.tools.eclipse.launching.ScalaJUnitLaunchShortcut"
             modes="run, debug"
             id="scala.tools.eclipse.scalatest.junitShortcut">
          <contextualLaunch>
@@ -816,8 +816,8 @@
                   <count value="1"/>
                	  <iterate>
                      <adapt type="org.eclipse.jdt.core.IJavaElement">
-                     <test property="org.eclipse.debug.ui.matchesPattern" value="*.scala"/>
                      <test property="org.eclipse.jdt.core.isInJavaProject"/>
+                     <test property="org.eclipse.jdt.launching.hasProjectNature" args="org.scala-ide.sdt.core.scalanature"/>
                      <test property="org.eclipse.jdt.core.hasTypeOnClasspath" value="junit.framework.Test"/>
                      <test property="scala.tools.eclipse.launching.canLaunchAsJUnit" forcePluginActivation="true"/>
 		             </adapt>
@@ -1463,5 +1463,21 @@
           </with>
        </enablement>
     </moveParticipant>
+ </extension>
+ <extension
+       point="org.eclipse.jdt.junit.internal_testKinds">
+       <!-- This extension point is copied from org.eclipse.jdt.junit.core, including the troubling questions. -->
+    <kind
+          displayName="Scala JUnit 4"
+          id="org.scala-ide.sdt.core.junit"
+          finderClass="scala.tools.eclipse.launching.JUnit4TestFinder"
+          loaderPluginId="org.eclipse.jdt.junit4.runtime"
+          loaderClass="org.eclipse.jdt.internal.junit4.runner.JUnit4TestLoader">
+         <runtimeClasspathEntry pluginId="org.eclipse.jdt.junit4.runtime" />
+         <!-- TODO: do we need these? -->
+         <runtimeClasspathEntry pluginId="org.eclipse.jdt.junit.core" />
+         <runtimeClasspathEntry pluginId="org.eclipse.jdt.junit.runtime"/>
+         <!-- END : do we need these? -->
+    </kind>
  </extension>
 </plugin>
