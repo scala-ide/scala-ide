@@ -72,9 +72,10 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
     }
     
     private def addAnnotations(sym: Symbol) =
-      for (ann <- sym.annotations) {
-        indexer.addAnnotationTypeReference(ann.atp.toString.toCharArray)
-      }
+      for { 
+        ann <- sym.annotations
+        annotationType <- self.askOption(() => ann.atp.toString.toCharArray) 
+      } indexer.addAnnotationTypeReference(annotationType)
     
     private def addAnnotationRef(tree: Tree) {
       for (t <- tree) t match {

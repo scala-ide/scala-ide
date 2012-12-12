@@ -60,12 +60,13 @@ class ScalaClassFile(parent : PackageFragment, name : String, sourceFile : Strin
     Util.concatWith(pkgFrag.names, sourceFile, '/')
   }
 
+  def getPackage(): PackageFragment = parent
+
   def getPackageName() : Array[Array[Char]] = {
-    val packageFragment = getParent.asInstanceOf[PackageFragment]
-    if (packageFragment == null)
+    if (getPackage == null)
       CharOperation.NO_CHAR_CHAR
     else
-      Util.toCharArrays(packageFragment.names)
+      Util.toCharArrays(getPackage.names)
   }
 
   class ScalaBinaryType(name : String) extends BinaryType(this, name) {

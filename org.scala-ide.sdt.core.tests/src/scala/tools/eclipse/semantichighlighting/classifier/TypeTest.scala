@@ -90,4 +90,18 @@ class TypeTest extends AbstractSymbolClassifierTest {
       """,
       Map("TPE" -> Type))
   }
+
+  @Test
+  def symbols() {
+    checkSymbolClassification("""
+      object X {
+        val sym = 'symbol
+      }
+      """, """
+      object X {
+        val sym = $SYM  $
+      }
+      """,
+      Map("SYM" -> Symbol))
+  }
 }

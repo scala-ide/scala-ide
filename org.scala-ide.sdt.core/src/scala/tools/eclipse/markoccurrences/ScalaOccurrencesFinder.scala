@@ -8,6 +8,8 @@ import scala.tools.refactoring.implementations.MarkOccurrences
 import org.eclipse.jface.text.IRegion
 import org.eclipse.jface.text.Region
 import scala.tools.eclipse.util.Utils
+import scala.tools.eclipse.ScalaPresentationCompiler
+import scala.ref.WeakReference
 
 case class Occurrences(name: String, locations: List[IRegion])
 
@@ -27,13 +29,20 @@ class ScalaOccurrencesFinder(unit: InteractiveCompilationUnit) extends HasLogger
    */
   private var indexCache: Option[TimestampedIndex] = None
   
-  private def getCachedIndex(lastModified: Long): Option[MarkOccurrencesIndex] = indexCache match {
-    case Some(TimestampedIndex(`lastModified`, index)) => Some(index)
-    case _ => None
+  private def getCachedIndex(lastModified: Long, currentCompiler: ScalaPresentationCompiler): Option[MarkOccurrencesIndex] = indexCache match {
+    case Some(TimestampedIndex(`lastModified`, WeakReference(index))) if index.global eq currentCompiler => Some(index)
+    case _ =>
+      logger.info("No valid MarkOccurrences index.")
+      None
   }
-  
+
+  /** We store the index in a weak reference. This way we trade-off memory consumption with
+   *  speed of execution: if the editor stays open for a long time (for instance, the user is
+   *  hyperlinking around), the VM might need more memory and it's a bad idea to hold on to
+   *  an index that can be easily recomputed.
+   */
   private def cacheIndex(lastModified: Long, index: MarkOccurrencesIndex): Unit = {
-    indexCache = Some(TimestampedIndex(lastModified, index))
+    indexCache = Some(TimestampedIndex(lastModified, new WeakReference(index)))
   }
 
   def findOccurrences(region: IRegion, lastModified: Long): Option[Occurrences] = {
@@ -46,7 +55,7 @@ class ScalaOccurrencesFinder(unit: InteractiveCompilationUnit) extends HasLogger
         logger.info("Source %s is not loded in the presentation compiler. Aborting occurrences update." format (sourceFile.file.name))
         None
       } else {
-        val occurrencesIndex = getCachedIndex(lastModified) getOrElse {
+        val occurrencesIndex = getCachedIndex(lastModified, compiler) getOrElse {
           val occurrencesIndex = new MarkOccurrencesIndex {
             val global = compiler
             override val index: IndexLookup = Utils.debugTimed("Time elapsed for building mark occurrences index in source " + sourceFile.file.name) {
@@ -73,9 +82,18 @@ class ScalaOccurrencesFinder(unit: InteractiveCompilationUnit) extends HasLogger
       } getOrElse None
     }(None)
   }
+
+  /** Backported for 2.9 from the 2.10 implementation. TODO: Remove when we drop 2.9 support. */
+  private object WeakReference {
+    /** Optionally returns the referenced value, or `None` if that value no longer exists */
+    def unapply[T <: AnyRef](wr: WeakReference[T]): Option[T] = {
+      val x = wr.underlying.get
+      if (x != null) Some(x) else None
+    }
+  }
 }
 
 object ScalaOccurrencesFinder {  
   private abstract class MarkOccurrencesIndex extends MarkOccurrences with GlobalIndexes
-  private case class TimestampedIndex(timestamp: Long, index: MarkOccurrencesIndex)
+  private case class TimestampedIndex(timestamp: Long, index: WeakReference[MarkOccurrencesIndex])
 }

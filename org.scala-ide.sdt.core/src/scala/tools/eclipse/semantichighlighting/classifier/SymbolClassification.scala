@@ -3,21 +3,7 @@ package scala.tools.eclipse.semantichighlighting.classifier
 import scala.PartialFunction.condOpt
 import scala.collection.mutable
 import scala.tools.eclipse.logging.HasLogger
-import scala.tools.eclipse.semantichighlighting.classifier.SymbolTypes.Annotation
-import scala.tools.eclipse.semantichighlighting.classifier.SymbolTypes.CaseClass
-import scala.tools.eclipse.semantichighlighting.classifier.SymbolTypes.CaseObject
-import scala.tools.eclipse.semantichighlighting.classifier.SymbolTypes.Class
-import scala.tools.eclipse.semantichighlighting.classifier.SymbolTypes.LazyLocalVal
-import scala.tools.eclipse.semantichighlighting.classifier.SymbolTypes.LazyTemplateVal
-import scala.tools.eclipse.semantichighlighting.classifier.SymbolTypes.LocalVal
-import scala.tools.eclipse.semantichighlighting.classifier.SymbolTypes.LocalVar
-import scala.tools.eclipse.semantichighlighting.classifier.SymbolTypes.Method
-import scala.tools.eclipse.semantichighlighting.classifier.SymbolTypes.Object
-import scala.tools.eclipse.semantichighlighting.classifier.SymbolTypes.Param
-import scala.tools.eclipse.semantichighlighting.classifier.SymbolTypes.TemplateVal
-import scala.tools.eclipse.semantichighlighting.classifier.SymbolTypes.TemplateVar
-import scala.tools.eclipse.semantichighlighting.classifier.SymbolTypes.Type
-import scala.tools.eclipse.semantichighlighting.classifier.SymbolTypes.Package
+import scala.tools.eclipse.semantichighlighting.classifier.SymbolTypes._
 import scala.tools.eclipse.ScalaPresentationCompiler
 import scala.tools.nsc.io.AbstractFile
 import scala.tools.nsc.util.RangePosition
@@ -131,14 +117,15 @@ class SymbolClassification(protected val sourceFile: SourceFile, val global: Sca
     }
 
   private def getSymbolInfosFromSyntax(syntacticInfo: SyntacticInfo, localVars: Set[Region], all: Set[Region]): List[SymbolInfo] = {
-    val SyntacticInfo(namedArgs, forVals, maybeSelfRefs, maybeClassOfs, annotations, packages) = syntacticInfo
+    val SyntacticInfo(namedArgs, forVals, maybeSelfRefs, maybeClassOfs, annotations, packages, symbols) = syntacticInfo
     List(
       SymbolInfo(LocalVal, forVals toList, deprecated = false),
       SymbolInfo(Param, namedArgs filterNot localVars toList, deprecated = false),
       SymbolInfo(TemplateVal, maybeSelfRefs filterNot all toList, deprecated = false),
       SymbolInfo(Method, maybeClassOfs filterNot all toList, deprecated = false),
       SymbolInfo(Annotation, annotations filterNot all toList, deprecated = false),
-      SymbolInfo(Package, packages filterNot all toList, deprecated = false))
+      SymbolInfo(Package, packages filterNot all toList, deprecated = false),
+      SymbolInfo(Symbol, symbols.toList, deprecated = false))
   }
 
   private def prune(rawSymbolInfos: Seq[SymbolInfo]): Seq[SymbolInfo] = {

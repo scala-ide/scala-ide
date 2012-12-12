@@ -14,13 +14,14 @@ import scala.tools.eclipse.debug.command.ScalaStepInto
 import scala.tools.eclipse.debug.command.ScalaStepReturn
 import scala.actors.Future
 import scala.tools.eclipse.debug.BaseDebuggerActor
+import com.sun.jdi.ClassType
 
 class ThreadNotSuspendedException extends Exception
 
 object ScalaThread {
   def apply(target: ScalaDebugTarget, thread: ThreadReference): ScalaThread = {
     val scalaThread = new ScalaThread(target, thread) {
-      override val companionActor = ScalaThreadActor(this, thread)
+      override val companionActor = ScalaThreadActor(this)
     }
     scalaThread.fireCreationEvent()
     scalaThread
@@ -31,7 +32,7 @@ object ScalaThread {
  * A thread in the Scala debug model.
  * This class is thread safe. Instances have be created through its companion object.
  */
-abstract class ScalaThread private (target: ScalaDebugTarget, private[model] val thread: ThreadReference) extends ScalaDebugElement(target) with IThread {
+abstract class ScalaThread private (target: ScalaDebugTarget, private[model] val threadRef: ThreadReference) extends ScalaDebugElement(target) with IThread {
   import ScalaThreadActor._
 
   // Members declared in org.eclipse.debug.core.model.IStep
@@ -53,17 +54,17 @@ abstract class ScalaThread private (target: ScalaDebugTarget, private[model] val
 
   override def resume(): Unit = resumeFromScala(DebugEvent.CLIENT_REQUEST)
   override def suspend(): Unit = {
-    thread.suspend()
+    threadRef.suspend()
     suspendedFromScala(DebugEvent.CLIENT_REQUEST)
   }
 
   // Members declared in org.eclipse.debug.core.model.IThread
 
-  override def getBreakpoints: Array[IBreakpoint] = Array() // TODO: need real logic
+  override def getBreakpoints: Array[IBreakpoint] = Array.empty // TODO: need real logic
 
   override def getName: String = {
     try {
-      name = thread.name
+      name = threadRef.name
     } catch {
       case e: ObjectCollectedException =>
         name = "<garbage collected>"
@@ -100,7 +101,7 @@ abstract class ScalaThread private (target: ScalaDebugTarget, private[model] val
   protected[debug] val companionActor: BaseDebuggerActor
 
   val isSystemThread: Boolean = {
-    try Option(thread.threadGroup).exists(_.name == "system")
+    try Option(threadRef.threadGroup).exists(_.name == "system")
     catch {
       // some thread get created when a program terminates, and connection already closed
       case e: VMDisconnectedException => false
@@ -115,13 +116,32 @@ abstract class ScalaThread private (target: ScalaDebugTarget, private[model] val
 
   def terminatedFromScala(): Unit = dispose()
 
+  /** Invoke the given method on the given instance with the given arguments.
+   *
+   *  This method should not be called directly.
+   *  Use [[ScalaObjectReference.invokeMethod(String, ScalaThread, ScalaValue*)]]
+   *  or [[ScalaObjectReference.invokeMethod(String, String, ScalaThread, ScalaValue*)]] instead.
+   */
   def invokeMethod(objectReference: ObjectReference, method: Method, args: Value*): Value = {
-    val future = companionActor !! InvokeMethod(objectReference, method, args.toList)
+    processMethodInvocationResult(companionActor !? InvokeMethod(objectReference, method, args.toList))
+  }
 
-    future.inputChannel.receive {
-      case value: Value =>
-        value
-    }
+  /** Invoke the given static method on the given type with the given arguments.
+   *
+   *  This method should not be called directly.
+   *  Use [[ScalaClassType.invokeMethod(String, ScalaThread,ScalaValue*)]] instead.
+   */
+  def invokeStaticMethod(classType: ClassType, method: Method, args: Value*): Value = {
+    processMethodInvocationResult(companionActor !? InvokeStaticMethod(classType, method, args.toList))
+  }
+
+  private def processMethodInvocationResult(res: Any): Value = res match {
+    case Right(null) =>
+      null
+    case Right(res: Value) =>
+      res
+    case Left(e: Exception) =>
+      throw e
   }
 
   /**
@@ -143,7 +163,7 @@ abstract class ScalaThread private (target: ScalaDebugTarget, private[model] val
    * FOR THE COMPANION ACTOR ONLY.
    */
   private[model] def suspend(eventDetail: Int) { 
-    stackFrames= thread.frames.asScala.map(ScalaStackFrame(this, _)).toList
+    stackFrames= threadRef.frames.asScala.map(ScalaStackFrame(this, _)).toList
     suspended = true
     fireSuspendEvent(eventDetail)
   }
@@ -164,7 +184,7 @@ abstract class ScalaThread private (target: ScalaDebugTarget, private[model] val
    * FOR THE COMPANION ACTOR ONLY.
    */
   private[model] def rebindScalaStackFrames() {
-    thread.frames.asScala.zip(stackFrames).foreach {
+    threadRef.frames.asScala.zip(stackFrames).foreach {
       case (jdiStackFrame, scalaStackFrame) => scalaStackFrame.rebind(jdiStackFrame)
     }    
   }
@@ -175,10 +195,11 @@ private[model] object ScalaThreadActor {
   case class SuspendedFromScala(eventDetail: Int)
   case class ResumeFromScala(step: Option[ScalaStep], eventDetail: Int)
   case class InvokeMethod(objectReference: ObjectReference, method: Method, args: List[Value])
+  case class InvokeStaticMethod(classType: ClassType, method: Method, args: List[Value])
   case object TerminatedFromScala
   
-  def apply(scalaThread: ScalaThread, thread: ThreadReference): BaseDebuggerActor = {
-    val actor = new ScalaThreadActor(scalaThread, thread)
+  def apply(thread: ScalaThread): BaseDebuggerActor = {
+    val actor = new ScalaThreadActor(thread)
     actor.start()
     actor
   }
@@ -188,44 +209,69 @@ private[model] object ScalaThreadActor {
  * Actor used to manage a Scala thread. It keeps track of the existing stack frames, and of the execution status.
  * This class is thread safe. Instances are not to be created outside of the ScalaThread object.
  */
-private[model] class ScalaThreadActor private(scalaThread: ScalaThread, thread: ThreadReference) extends BaseDebuggerActor {
+private[model] class ScalaThreadActor private(thread: ScalaThread) extends BaseDebuggerActor {
   import ScalaThreadActor._
 
   // step management
   private var currentStep: Option[ScalaStep] = None
 
-  override protected def postStart(): Unit = link(scalaThread.getDebugTarget.companionActor)
+  override protected def postStart(): Unit = link(thread.getDebugTarget.companionActor)
   
   override protected def behavior = {
     case SuspendedFromScala(eventDetail) =>
       currentStep.foreach(_.stop())
       currentStep = None
-      scalaThread.suspend(eventDetail)
+      thread.suspend(eventDetail)
     case ResumeFromScala(step, eventDetail) =>
       currentStep = step
-      scalaThread.resume(eventDetail)
-      thread.resume()
+      thread.resume(eventDetail)
+      thread.threadRef.resume()
     case InvokeMethod(objectReference, method, args) =>
-      if (!scalaThread.isSuspended) {
-        //FIXME: ticket #1001310
-        throw new ThreadNotSuspendedException()
-      } else {
-        import scala.collection.JavaConverters._
-        val result = objectReference.invokeMethod(thread, method, args.asJava, ObjectReference.INVOKE_SINGLE_THREADED)
-        scalaThread.rebindScalaStackFrames()
-        // update the stack frames
-        reply(result)
-      }
+      reply(
+        if (!thread.isSuspended) {
+          //FIXME: ticket #1001310
+          Left(new ThreadNotSuspendedException())
+        } else {
+          try {
+            import scala.collection.JavaConverters._
+            // invoke the method
+            val result = objectReference.invokeMethod(thread.threadRef, method, args.asJava, ObjectReference.INVOKE_SINGLE_THREADED)
+            // update the stack frames
+            thread.rebindScalaStackFrames()
+            Right(result)
+          } catch {
+            case e: Exception =>
+              Left(e)
+          }
+        })
+    case InvokeStaticMethod(classType, method, args) =>
+      reply(
+        if (!thread.isSuspended) {
+          //FIXME: ticket #1001310
+          Left(new ThreadNotSuspendedException())
+        } else {
+          try {
+            import scala.collection.JavaConverters._
+            // invoke the method
+            val result = classType.invokeMethod(thread.threadRef, method, args.asJava, ObjectReference.INVOKE_SINGLE_THREADED)
+            // update the stack frames
+            thread.rebindScalaStackFrames()
+            Right(result)
+          } catch {
+            case e: Exception =>
+              Left(e)
+          }
+        })
     case TerminatedFromScala =>
       currentStep.foreach(_.stop())
       currentStep = None
-      scalaThread.fireTerminateEvent()
+      thread.fireTerminateEvent()
       poison()
   }
   
   override protected def preExit(): Unit = {
     // before shutting down the actor we need to unlink it from the `debugTarget` actor to prevent that normal termination of 
     // a `ScalaThread` leads to shutting down the whole debug session.
-    unlink(scalaThread.getDebugTarget.companionActor)
+    unlink(thread.getDebugTarget.companionActor)
   }
 }
