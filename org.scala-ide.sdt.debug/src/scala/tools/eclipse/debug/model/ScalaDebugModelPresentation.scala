@@ -12,22 +12,6 @@ import org.eclipse.debug.ui.{ IValueDetailListener, IDebugUIConstants, IDebugMod
 import org.eclipse.jdt.internal.ui.javaeditor.EditorUtility
 import org.eclipse.ui.IEditorInput
 
-import com.sun.jdi.ArrayReference
-import com.sun.jdi.BooleanValue
-import com.sun.jdi.ByteValue
-import com.sun.jdi.CharValue
-import com.sun.jdi.ClassType
-import com.sun.jdi.DoubleValue
-import com.sun.jdi.FloatValue
-import com.sun.jdi.IntegerValue
-import com.sun.jdi.LongValue
-import com.sun.jdi.ObjectReference
-import com.sun.jdi.PrimitiveValue
-import com.sun.jdi.ShortValue
-import com.sun.jdi.StringReference
-import com.sun.jdi.Value
-import com.sun.jdi.VoidValue
-
 /**
  * Utility methods for the ScalaDebugModelPresentation class
  * This object doesn't use any internal field, and is thread safe.
@@ -38,76 +22,48 @@ object ScalaDebugModelPresentation {
       case v: ScalaPrimitiveValue =>
         v.getValueString
       case v: ScalaStringReference =>
-        v.stringReference.value
+        v.underlying.value
       case v: ScalaNullValue =>
         "null"
       case arrayReference: ScalaArrayReference =>
-        computeDetail(arrayReference.arrayReference)
+        computeDetail(arrayReference)
       case objecReference: ScalaObjectReference =>
-        computeDetail(objecReference.objectReference)
+        computeDetail(objecReference)
       case _ =>
         ???
     }
   }
   
-  def computeDetail(arrayReference: ArrayReference): String = {
+  /** Return the a toString() equivalent for an Array
+   */
+  private def computeDetail(arrayReference: ScalaArrayReference): String = {
     import scala.collection.JavaConverters._
     // There's a bug in the JDI implementation provided by the JDT, calling getValues()
     // on an array of size zero generates a java.lang.IndexOutOfBoundsException
-    if (arrayReference.length == 0) {
+    val array= arrayReference.underlying
+    if (array.length == 0) {
       "Array()"
     } else {
-      arrayReference.getValues.asScala.map(computeDetail(_)).mkString("Array(", ", ", ")")
+      array.getValues.asScala.map(value => computeDetail(ScalaValue(value, arrayReference.getDebugTarget()))).mkString("Array(", ", ", ")")
     }
   }
   
-  def computeDetail(objectReference: ObjectReference): String = {
-    val method= objectReference.referenceType.asInstanceOf[ClassType].concreteMethodByName("toString", "()Ljava/lang/String;")
-    // TODO: check toString() return null
-    ScalaDebugger.currentThread.invokeMethod(objectReference, method).asInstanceOf[StringReference].value
-  }
-  
-  def computeDetail(value: Value): String = {
-    // TODO: some of this is duplicate of ScalaValue#apply()
-    value match {
-      case primitiveValue: PrimitiveValue =>
-        computeDetail(primitiveValue)
-      case arrayReference: ArrayReference =>
-        computeDetail(arrayReference)
-      case stringReference: StringReference =>
-        stringReference.value
-      case objectReference: ObjectReference => // include ClassLoaderReference, ClassObjectReference, ThreadGroupReference, ThreadReference
-        computeDetail(objectReference)
-      case null =>
-        // TODO : cache
-        "null"
-      case voidValue: VoidValue =>
-        ??? // TODO: in what cases do we get this value ?
-      case _ =>
-        ???
+  /** Return the value produced by calling toString() on the object.
+   */
+  private def computeDetail(objectReference: ScalaObjectReference): String = {
+    try {
+      objectReference.invokeMethod("toString", "()Ljava/lang/String;", ScalaDebugger.currentThread) match {
+        case s: ScalaStringReference =>
+          s.underlying.value
+        case n: ScalaNullValue =>
+          "null"
+      }
+    } catch {
+      case e: Exception =>
+        "exception while invoking toString(): %s\n%s".format(e.getMessage(), e.getStackTraceString)
     }
   }
   
-  def computeDetail(value: PrimitiveValue): String = {
-    value match {
-      case booleanValue: BooleanValue =>
-        booleanValue.value.toString
-      case byteValue: ByteValue =>
-        byteValue.value.toString
-      case charValue: CharValue =>
-        charValue.value.toString
-      case doubleValue: DoubleValue =>
-        doubleValue.value.toString
-      case floatValue: FloatValue =>
-        floatValue.value.toString
-      case integerValue: IntegerValue =>
-        integerValue.value.toString
-      case longValue: LongValue =>
-        longValue.value.toString
-      case shortValue: ShortValue =>
-        shortValue.value.toString
-    }
-  }
 }
 
 /**
@@ -118,14 +74,14 @@ class ScalaDebugModelPresentation extends IDebugModelPresentation {
 
   // Members declared in org.eclipse.jface.viewers.IBaseLabelProvider
 
-  def addListener(x$1: org.eclipse.jface.viewers.ILabelProviderListener): Unit = ???
-  def dispose(): Unit = {} // TODO: need real logic
-  def isLabelProperty(x$1: Any, x$2: String): Boolean = ???
-  def removeListener(x$1: org.eclipse.jface.viewers.ILabelProviderListener): Unit = ???
+  override def addListener(x$1: org.eclipse.jface.viewers.ILabelProviderListener): Unit = ???
+  override def dispose(): Unit = {} // TODO: need real logic
+  override def isLabelProperty(x$1: Any, x$2: String): Boolean = ???
+  override def removeListener(x$1: org.eclipse.jface.viewers.ILabelProviderListener): Unit = ???
 
   // Members declared in org.eclipse.debug.ui.IDebugModelPresentation
 
-  def computeDetail(value: IValue, listener: IValueDetailListener): Unit = {
+  override def computeDetail(value: IValue, listener: IValueDetailListener): Unit = {
     new Job("Computing Scala debug details") {
       override def run(progressMonitor: IProgressMonitor): IStatus = {
         // TODO: support error cases
@@ -135,7 +91,7 @@ class ScalaDebugModelPresentation extends IDebugModelPresentation {
     }.schedule
   }
 
-  def getImage(element: Any): org.eclipse.swt.graphics.Image = {
+  override def getImage(element: Any): org.eclipse.swt.graphics.Image = {
     element match {
       case target: ScalaDebugTarget =>
         // TODO: right image depending of state
@@ -156,7 +112,7 @@ class ScalaDebugModelPresentation extends IDebugModelPresentation {
     }
   }
 
-  def getText(element: Any): String = {
+  override def getText(element: Any): String = {
     element match {
       case target: ScalaDebugTarget =>
         target.getName // TODO: everything
@@ -170,15 +126,15 @@ class ScalaDebugModelPresentation extends IDebugModelPresentation {
   /** Currently we don't support any attributes. The standard one,
    *  `show type names`, might get here but we ignore it.
    */
-  def setAttribute(key: String, value: Any): Unit = {}
+  override def setAttribute(key: String, value: Any): Unit = {}
 
   // Members declared in org.eclipse.debug.ui.ISourcePresentation
 
-  def getEditorId(input: IEditorInput, element: Any): String = {
+  override def getEditorId(input: IEditorInput, element: Any): String = {
     EditorUtility.getEditorID(input)
   }
 
-  def getEditorInput(input: Any): IEditorInput = {
+  override def getEditorInput(input: Any): IEditorInput = {
     EditorUtility.getEditorInput(input)
   }
 

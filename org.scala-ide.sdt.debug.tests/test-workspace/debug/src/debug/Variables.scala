@@ -16,7 +16,7 @@ object Variables {
     val i = Array(1, 2, 3)
     val j = List(4, 5, 6)
     val k = Array(One("one"), 1, true)
-    
+    val l = NullToString
     
     
     
@@ -34,4 +34,8 @@ object Variables {
 
 case class One(s: String) {
   override def toString() = s
+}
+
+object NullToString {
+  override def toString() = null
 }

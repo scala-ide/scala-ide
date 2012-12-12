@@ -120,7 +120,7 @@ class ScalaDebugModelPresentationTest {
 
   @Test
   def computeDetailPrimitiveNotString() {
-    val scalaValue = new ScalaPrimitiveValue(null, "a value", null)
+    val scalaValue = new ScalaPrimitiveValue(null, "a value", null, null)
 
     val computedDetail = ScalaDebugModelPresentation.computeDetail(scalaValue)
 
