@@ -2,8 +2,11 @@ package scala.tools.eclipse.sbtbuilder
 import org.junit.Test
 import scala.tools.eclipse.EclipseUserSimulator
 import org.junit.Assert
+import org.eclipse.core.resources.IFolder
+import org.eclipse.core.resources.IContainer
 import org.eclipse.core.runtime.Path
 import org.eclipse.jdt.core.JavaCore
+import org.eclipse.jdt.core.IClasspathEntry
 import org.eclipse.core.runtime.IPath
 import scala.tools.eclipse.ScalaProject
 import scala.tools.eclipse.testsetup.SDTTestUtils
@@ -55,17 +58,70 @@ class OutputFoldersTest {
   }
   
 
+  @Test def missingSourceDirectory() {
+    val projectName = "missingSources"
+    val srcMain = new Path("/" +projectName + "/src/main/scala")
+    val targetMain = new Path("/" +projectName + "/target/classes")
+    val srcTest = new Path("/" +projectName + "/src/test/scala")
+    val targetTest = new Path("/" +projectName + "/target/test-classes")
+
+    val project = makeDefaultLayoutProject(projectName)
+
+    project.underlying.getWorkspace().getRoot().getFolder(srcTest).delete(true, null)
+
+    // both source directories are defined in Eclipse classpath ...
+    val cpes = project.javaProject.getResolvedClasspath(true)
+    val srcEntryPaths = cpes.filter(_.getEntryKind == IClasspathEntry.CPE_SOURCE).map(_.getPath)
+
+    Assert.assertEquals("Source CPEs", Seq(srcMain, srcTest), srcEntryPaths.toSeq)
+
+    // ... but only the one that exists in the workspace  is passed to Scala compiler classpath
+    val sourcesOutputs = project.sourceOutputFolders
+
+    val sources = sourcesOutputs.map(_._1.getFullPath())
+    val outputs = sourcesOutputs.map(_._2.getFullPath())
+
+    Assert.assertEquals("Sources", Seq(srcMain), sources)
+    Assert.assertEquals("Outputs", Seq(targetMain), outputs)
+  }
+
+
   /** Create a project with the specified source folders, inclusion and exclusion patterns */
   private def makeProject(name: String, sourceFolders: (IPath, Array[IPath], Array[IPath], IPath)*): ScalaProject = {
     
     val project = simulator.createProjectInWorkspace(name, sourceFolders.isEmpty)
 
-    val srcEntries = 
-      for ((dirPath, inclPats, exclPats, binPath) <- sourceFolders) 
-        yield JavaCore.newSourceEntry(dirPath, inclPats, exclPats, binPath)
+    val srcEntries =
+      for ((dirPath, inclPats, exclPats, binPath) <- sourceFolders) yield {
+        for (path <- Seq(Some(dirPath), Option(binPath)))
+          path match {
+            case Some(path) => ensureFolderExists(project.underlying, path)
+            case None =>
+          }
+
+        JavaCore.newSourceEntry(dirPath, inclPats, exclPats, binPath)
+      }
     
     project.javaProject.setRawClasspath((project.javaProject.getRawClasspath() ++ srcEntries).toArray, null);
     project
+  }
+
+
+  /** Ensure that given folder exists in Eclipse workspace */
+  private def ensureFolderExists(top: IContainer, path: IPath) {
+    def ensureFolderExists(container: IContainer, segments: List[String]): IFolder = {
+      val folder = segments match {
+        case segment :: Nil =>
+           container.getFolder(segment)
+        case segment :: rest =>
+          ensureFolderExists(container, rest).getFolder(segment)
+      }
+      if (!folder.exists())
+        folder.create(false, true, null)
+      folder
+    }
+    if(path.segmentCount > 1)
+      ensureFolderExists(top, path.segments.toList.drop(1).reverse)
   }
 
   
