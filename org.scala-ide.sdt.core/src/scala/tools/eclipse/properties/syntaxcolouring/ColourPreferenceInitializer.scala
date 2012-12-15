@@ -87,6 +87,7 @@ class ColourPreferenceInitializer extends AbstractPreferenceInitializer {
     setDefaultsForSyntaxClass(SCALADOC_MACRO, new RGB(63, 95, 191), bold = true)
     setDefaultsForSyntaxClass(KEYWORD, new RGB(127, 0, 85), bold = true)
     setDefaultsForSyntaxClass(STRING, new RGB(42, 0, 255))
+    setDefaultsForSyntaxClass(CHARACTER, new RGB(42, 0, 255))
     setDefaultsForSyntaxClass(MULTI_LINE_STRING, new RGB(42, 0, 255))
     setDefaultsForSyntaxClass(DEFAULT, new RGB(0, 0, 0))
     setDefaultsForSyntaxClass(OPERATOR, new RGB(0, 0, 0))
