@@ -40,6 +40,7 @@ import scalariform.ScalaVersions
 import org.eclipse.jface.text.DefaultTextHover
 import scala.tools.eclipse.javaelements.ScalaCompilationUnit
 import scala.tools.eclipse.ui.ScaladocAutoIndentStrategy
+import org.eclipse.jface.text.hyperlink.URLHyperlinkDetector
 
 class ScalaSourceViewerConfiguration(store: IPreferenceStore, scalaPreferenceStore: IPreferenceStore, editor: ITextEditor)
    extends JavaSourceViewerConfiguration(JavaPlugin.getDefault.getJavaTextTools.getColorManager, store, editor, IJavaPartitions.JAVA_PARTITIONING) {
@@ -96,7 +97,7 @@ class ScalaSourceViewerConfiguration(store: IPreferenceStore, scalaPreferenceSto
      val strategies = List(DeclarationHyperlinkDetector(), ImplicitHyperlinkDetector())
      val detector = new CompositeHyperlinkDetector(strategies)
      if (editor != null) detector.setContext(editor)
-     Array(detector)
+     Array(detector, new URLHyperlinkDetector())
    }
 
    def getCodeAssist: Option[ICodeAssist] = Option(editor) map { editor =>
