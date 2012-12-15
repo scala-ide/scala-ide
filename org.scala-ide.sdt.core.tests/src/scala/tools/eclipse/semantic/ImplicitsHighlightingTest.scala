@@ -55,7 +55,7 @@ class ImplicitsHighlightingTest {
     withCompilationUnitAndCompiler("implicit-highlighting/ImplicitArguments.scala") {(src, compiler) =>
            
       val expected = List (
-        "Implicit arguments found: takesImplArg => takesImplArg( s ) [124, 12]"
+        "Implicit arguments found: takesImplArg => takesImplArg( implicits.ImplicitArguments.s ) [124, 12]"
       )
       val actual = implicits(src, compiler)
 

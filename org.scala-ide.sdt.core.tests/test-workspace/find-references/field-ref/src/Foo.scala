@@ -1,3 +1,3 @@
 class Foo {
-  val v = Bar.v
+  val vvvv = Bar.vvvv
 }

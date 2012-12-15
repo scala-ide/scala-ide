@@ -20,6 +20,7 @@ import org.eclipse.jdt.core.IMethod
 import org.eclipse.jdt.core.IType
 import org.eclipse.jdt.core.JavaModelException
 import scala.tools.eclipse.util.EclipseUtils._
+import scala.tools.eclipse.javaelements.ScalaSourceFile
 
 class ScalaLaunchableTester extends PropertyTester {
   /**
@@ -48,14 +49,18 @@ class ScalaLaunchableTester extends PropertyTester {
   }
 
   /**
-   * Determines if the Scala element contains main method(s).
+   * Determines if the Scala element is in a source that contains one (or more) runnable JUnit test class.
    * 
    * @param element the element to check for the method 
-   * @return true if a method is found in the element, false otherwise
+   * @return true if one or more JUnit test classes are found in the element, false otherwise
    */
   private def canLaunchAsJUnit(element: IJavaElement): Boolean = {
     try {
-      ScalaLaunchShortcut.getJunitTestClasses(element).length > 0
+      element match {
+        case e: ScalaSourceFile =>
+          ScalaLaunchShortcut.getJunitTestClasses(element).nonEmpty
+        case _ => true
+      }
     } catch {
       case e: JavaModelException => false
       case e: CoreException => false

@@ -15,7 +15,6 @@ import scala.tools.eclipse.testsetup.FileUtils
 import scala.tools.eclipse.testsetup.SDTTestUtils
 import scala.tools.eclipse.testsetup.SearchOps
 import scala.tools.eclipse.testsetup.TestProjectSetup
-
 import org.eclipse.core.resources.IResource
 import org.eclipse.core.runtime.IPath
 import org.eclipse.core.runtime.NullProgressMonitor
@@ -206,7 +205,7 @@ class FindReferencesTests extends FindReferencesTester with HasLogger {
 
   @Test
   def findReferencesInConstructorSuperCall() {
-    val expected = fieldVal("foo.Bar$.v") isReferencedBy clazzConstructor("foo.Foo")
+    val expected = fieldVal("foo.Bar$.vvvv") isReferencedBy clazzConstructor("foo.Foo")
     runTest("super", "foo/Bar.scala", expected)
   }
 
@@ -218,7 +217,7 @@ class FindReferencesTests extends FindReferencesTester with HasLogger {
 
   @Test
   def findReferencesInClassFields() {
-    val expected = fieldVal("Bar$.v") isReferencedBy fieldVal("Foo.v")
+    val expected = fieldVal("Bar$.vvvv") isReferencedBy fieldVal("Foo.vvvv")
     runTest("field-ref", "Bar.scala", expected)
   }
 
