@@ -55,33 +55,37 @@
     <repo.eclipse>${repo.eclipse.indigo}</repo.eclipse>
     <repo.ajdt>${repo.ajdt.indigo}</repo.ajdt>
 
-    <!-- default values, can be overwritten by profiles -->
-    <scala.version>2.9.3-SNAPSHOT</scala.version>
-    <scala.major.minor.version>2.9</scala.major.minor.version>
-    <scala.library.version>${scala.version}</scala.library.version>
-    <sbt.compiled.version>2.9.2</sbt.compiled.version>
-    <version.suffix>2_09</version.suffix>
-    <version.tag>local</version.tag>
+     <!-- default values, can be overwritten by profiles -->
+     <scala.version>2.9.3-SNAPSHOT</scala.version>
+     <scala.era.major.version>2.9</scala.era.major.version>
+     <scala.library.version>${scala.version}</scala.library.version>
+     <sbt.compiled.version>${scala.version}</sbt.compiled.version>
+     <version.suffix>2_09</version.suffix>
+     <version.tag>local</version.tag>
 
     <!-- the repos containing the Scala dependencies -->
-    <repo.scala-refactoring>${repo.scala-ide.root}/scala-refactoring-29x</repo.scala-refactoring>
-    <repo.scalariform>${repo.scala-ide.root}/scalariform-29x</repo.scalariform>
-    <repo.typesafe>http://repo.typesafe.com/typesafe/ide-2.9</repo.typesafe>
+    <repo.scala-refactoring>Select a profile</repo.scala-refactoring>
+    <repo.scalariform>Select a profile</repo.scalariform>
+    <repo.typesafe>Select a profile</repo.typesafe>
+
   </properties>
 
   <profiles>
     <profile>
       <!--- the profile using the default values. Scala 2.9.x -->
       <id>scala-2.9.x</id>
+      <properties>
+        <repo.scala-refactoring>${repo.scala-ide.root}/scala-refactoring-29x</repo.scala-refactoring>
+        <repo.scalariform>${repo.scala-ide.root}/scalariform-29x</repo.scalariform>
+        <repo.typesafe>http://repo.typesafe.com/typesafe/ide-2.9</repo.typesafe>
+      </properties>
     </profile>
 
     <profile>
       <id>scala-2.10.x</id>
       <properties>
         <scala.version>2.10.0-SNAPSHOT</scala.version>
-        <scala.major.minor.version>2.10</scala.major.minor.version>
-        <scala.library.version>${scala.version}</scala.library.version>
-        <sbt.compiled.version>2.10</sbt.compiled.version>
+        <scala.era.major.version>2.10</scala.era.major.version>
         <version.suffix>2_10</version.suffix>
 
         <repo.scala-refactoring>${repo.scala-ide.root}/scala-refactoring-210x</repo.scala-refactoring>
@@ -94,9 +98,7 @@
       <id>scala-2.11.x</id>
       <properties>
         <scala.version>2.11.0-SNAPSHOT</scala.version>
-        <scala.major.minor.version>2.11</scala.major.minor.version>
-        <scala.library.version>${scala.version}</scala.library.version>
-        <sbt.compiled.version>2.11</sbt.compiled.version>
+        <scala.era.major.version>2.11</scala.era.major.version>
         <version.suffix>2_11</version.suffix>
 
         <repo.scala-refactoring>${repo.scala-ide.root}/scala-refactoring-211x</repo.scala-refactoring>

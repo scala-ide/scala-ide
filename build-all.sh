@@ -10,7 +10,7 @@ ROOT_DIR=${PWD}
 
 if [ -z "$*" ]
 then
-  ARGS="clean install"
+  ARGS="-P scala-2.9.x clean install"
 else
   ARGS="$*"
 fi

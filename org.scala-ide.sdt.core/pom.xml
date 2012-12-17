@@ -94,7 +94,7 @@
             <goals><goal>add-source</goal></goals>
             <configuration>
               <sources>
-                <source>src-${scala.major.minor.version}</source>
+                <source>src-${scala.era.major.version}</source>
               </sources>
             </configuration>
           </execution>
