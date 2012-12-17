@@ -35,7 +35,6 @@ import org.eclipse.jface.text.Region
 import scala.tools.eclipse.hyperlink.text._
 
 
-
 /**
  * @author Jin Mingjian
  * @author David Bernard
@@ -178,7 +177,12 @@ object ImplicitHighlightingPresenter {
       // TODO find the implicit args value
       val argsStr = t.args match {
         case null => ""
-        case l => l.collect { case x if x.hasSymbol => x.symbol.name }.mkString("( ", ", ", " )")
+        case l => l.map { x =>
+          if ((x.symbol ne null) && (x.symbol ne compiler.NoSymbol))
+            x.symbol.fullName
+          else
+            "<error>"
+        }.mkString("( ", ", ", " )")
       }
       val annotation = new ImplicitArgAnnotation("Implicit arguments found: " + txt + DisplayStringSeparator + txt + argsStr)
       val pos = mkPosition(t.pos, txt)

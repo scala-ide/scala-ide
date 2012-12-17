@@ -1,8 +1,8 @@
 package scala.tools.eclipse
 
 import org.eclipse.core.internal.resources.{ Workspace, Project, File }
-import org.eclipse.core.runtime.Path;
-import org.eclipse.core.resources.IWorkspace;
+import org.eclipse.core.runtime.Path
+import org.eclipse.core.resources.IWorkspace
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.jdt.core.search.SearchRequestor
 import org.eclipse.jdt.core.search.SearchMatch
@@ -42,6 +42,7 @@ class EclipseUserSimulator {
       root = javaProject.getPackageFragmentRoot(sourceFolder);
       entries += JavaCore.newSourceEntry(root.getPath());
     }
+
     entries += JavaCore.newContainerEntry(Path.fromPortableString(ScalaPlugin.plugin.scalaLibId))
     javaProject.setRawClasspath(entries.toArray[IClasspathEntry], null);
 
@@ -52,9 +53,9 @@ class EclipseUserSimulator {
     root.createPackageFragment(packageName, false, null);
 
   def createCompilationUnit(pack: IPackageFragment, name: String, sourceCode: String) = {
-    val cu = pack.createCompilationUnit(name, sourceCode, false, null);
+    val cu = pack.createCompilationUnit(name, sourceCode, false, null)
     Thread.sleep(200)
-    cu;
+    cu
   }
 
   def buildWorkspace {

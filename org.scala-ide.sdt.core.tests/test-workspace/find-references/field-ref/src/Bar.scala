@@ -1,3 +1,3 @@
 object Bar {
-  val v/*ref*/ = 2
+  val vvvv/*ref*/ = 2
 }
