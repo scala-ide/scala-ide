@@ -92,7 +92,7 @@ class ScalaCodeScannerTest {
 
   @Test
   def operator_keywords() {
-    val xs = "_ : = => <- <: <% >: ⇒ ← . , ;"
+    val xs = "_ : = => <- <: <% >: ⇒ ← . , ; # @"
     xs split " " map (x => tokenize(x) -> x) foreach {
       case (token, x) => token === Seq((OPERATOR, 0, x.length()))
     }
