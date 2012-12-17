@@ -8,3 +8,5 @@
 * Disable Run As/Debug As Java in Scala sources :ticket:`1001178`
 * Correct partitioning of octal sequences in character literals - :ticket:`1001443`
 * Add syntax highlighting for escape sequences in character literals  - :ticket:`1001444`
+* Add syntax highlighting for escape sequences in character literals  - :ticket:`1001444`
+* Add syntax highlighting for @ and # signs - :ticket:`1001445`

@@ -86,7 +86,6 @@ class ScalaCodeScannerTest {
     }
   }
 
-  @Ignore("the current behavior of the tokenizing logic is not correct")
   @Test
   def at_and_hash_are_symbol_keywords() {
     tokenize("#") === Seq((OPERATOR, 0, 1))
