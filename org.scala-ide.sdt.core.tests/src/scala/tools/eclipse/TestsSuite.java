@@ -29,8 +29,7 @@ import scala.tools.eclipse.sbtbuilder.TodoBuilderTest;
 import scala.tools.eclipse.semantic.ImplicitsHighlightingTest;
 import scala.tools.eclipse.semantichighlighting.classifier.SymbolClassifierTestSuite;
 import scala.tools.eclipse.structurebuilder.StructureBuilderTest;
-import scala.tools.eclipse.ui.TestBracketStrategy;
-import scala.tools.eclipse.ui.TestScalaIndenter;
+import scala.tools.eclipse.ui.UITestSuite;
 import scala.tools.eclipse.util.CachedTest;
 import scala.tools.eclipse.util.CollectionUtilTest;
 import scala.tools.eclipse.wizards.ImportSupportTest;
@@ -70,8 +69,7 @@ import scala.tools.eclipse.wizards.QualifiedNameSupportTest;
   ImplicitsHighlightingTest.class,
   SymbolClassifierTestSuite.class,
   StructureBuilderTest.class,
-  TestBracketStrategy.class,
-  // TestScalaIndenter.class,
+  UITestSuite.class,
   CachedTest.class,
   CollectionUtilTest.class,
   ImportSupportTest.class,
