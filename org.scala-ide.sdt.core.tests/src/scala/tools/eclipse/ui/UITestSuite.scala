@@ -7,5 +7,7 @@ import org.junit.runners.Suite
 @Suite.SuiteClasses(Array(
 //  classOf[TestScalaIndenter],
   classOf[BracketAutoEditStrategyTest],
-  classOf[CommentAutoEditStrategyTest]))
+  classOf[CommentAutoEditStrategyTest],
+  classOf[LiteralAutoEditStrategyTest],
+  classOf[StringAutoEditStrategyTest]))
 class UITestSuite

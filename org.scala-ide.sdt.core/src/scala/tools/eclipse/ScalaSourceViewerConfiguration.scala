@@ -41,6 +41,8 @@ import org.eclipse.jface.text.DefaultTextHover
 import scala.tools.eclipse.javaelements.ScalaCompilationUnit
 import scala.tools.eclipse.ui.CommentAutoIndentStrategy
 import org.eclipse.jface.text.hyperlink.URLHyperlinkDetector
+import scala.tools.eclipse.ui.LiteralAutoEditStrategy
+import scala.tools.eclipse.ui.StringAutoEditStrategy
 
 class ScalaSourceViewerConfiguration(store: IPreferenceStore, scalaPreferenceStore: IPreferenceStore, editor: ITextEditor)
    extends JavaSourceViewerConfiguration(JavaPlugin.getDefault.getJavaTextTools.getColorManager, store, editor, IJavaPartitions.JAVA_PARTITIONING) {
@@ -135,9 +137,9 @@ class ScalaSourceViewerConfiguration(store: IPreferenceStore, scalaPreferenceSto
          case IJavaPartitions.JAVA_DOC | IJavaPartitions.JAVA_MULTI_LINE_COMMENT | ScalaPartitions.SCALADOC_CODE_BLOCK =>
            Array(new CommentAutoIndentStrategy(ScalaPlugin.prefStore, partitioning))
          case IJavaPartitions.JAVA_STRING =>
-            Array(new SmartSemicolonAutoEditStrategy(partitioning), new JavaStringAutoIndentStrategy(partitioning))
+            Array(new SmartSemicolonAutoEditStrategy(partitioning), new JavaStringAutoIndentStrategy(partitioning), new StringAutoEditStrategy)
          case IJavaPartitions.JAVA_CHARACTER | IDocument.DEFAULT_CONTENT_TYPE =>
-            Array(new SmartSemicolonAutoEditStrategy(partitioning), new ScalaAutoIndentStrategy(partitioning, getProject, sourceViewer, new JdtPreferenceProvider(getProject)), new BracketAutoEditStrategy(ScalaPlugin.prefStore))
+            Array(new SmartSemicolonAutoEditStrategy(partitioning), new ScalaAutoIndentStrategy(partitioning, getProject, sourceViewer, new JdtPreferenceProvider(getProject)), new BracketAutoEditStrategy(ScalaPlugin.prefStore), new LiteralAutoEditStrategy)
          case _ =>
             Array(new ScalaAutoIndentStrategy(partitioning, getProject, sourceViewer, new JdtPreferenceProvider(getProject)))
       }
