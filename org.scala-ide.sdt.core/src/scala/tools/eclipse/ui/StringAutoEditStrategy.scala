@@ -1,14 +1,20 @@
 package scala.tools.eclipse.ui
 
+import scala.tools.eclipse.properties.EditorPreferencePage
+
+import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.jface.text.{ DocumentCommand, IAutoEditStrategy, IDocument }
 
 /**
  * Applies several auto edit actions if one adds ore removes a sign inside of
  * a string.
  */
-class StringAutoEditStrategy extends IAutoEditStrategy {
+class StringAutoEditStrategy(prefStore: IPreferenceStore) extends IAutoEditStrategy {
 
   def customizeDocumentCommand(document: IDocument, command: DocumentCommand) {
+
+    val isAutoEscapeEnabled = prefStore.getBoolean(
+        EditorPreferencePage.P_ENABLE_AUTO_ESCAPE_LITERALS)
 
     def ch(i: Int, c: Char) = {
       val o = command.offset + i
@@ -30,11 +36,13 @@ class StringAutoEditStrategy extends IAutoEditStrategy {
     def handleClosingLiteral() {
       if (ch(0, '"') && ch(-1, '"') && !ch(-2, '\\'))
         jumpOverClosingLiteral()
-      else if (ch(-1, '\\')) {
-        if (ch(-2, '\\'))
-          command.text = "\\\""
+      else if (isAutoEscapeEnabled) {
+        if (ch(-1, '\\')) {
+          if (ch(-2, '\\'))
+            command.text = "\\\""
+        }
+        else command.text = "\\\""
       }
-      else command.text = "\\\""
     }
 
     def handleEscapeSign() {
@@ -57,10 +65,10 @@ class StringAutoEditStrategy extends IAutoEditStrategy {
     }
 
     command.text match {
-      case "\\" => handleEscapeSign()
-      case "\"" => handleClosingLiteral()
-      case ""   => removeClosingLiteral()
-      case _    =>
+      case "\\" if isAutoEscapeEnabled => handleEscapeSign()
+      case "\""                        => handleClosingLiteral()
+      case "" if isAutoEscapeEnabled   => removeClosingLiteral()
+      case _                           =>
     }
   }
 
