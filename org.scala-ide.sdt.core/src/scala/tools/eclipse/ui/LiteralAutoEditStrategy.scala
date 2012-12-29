@@ -1,11 +1,13 @@
 package scala.tools.eclipse.ui
 
+import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.jface.text.{ DocumentCommand, IAutoEditStrategy, IDocument }
+import scala.tools.eclipse.properties.EditorPreferencePage
 
 /**
  * Applies several auto edit actions to string and character literals.
  */
-class LiteralAutoEditStrategy extends IAutoEditStrategy {
+class LiteralAutoEditStrategy(prefStore: IPreferenceStore) extends IAutoEditStrategy {
 
   def customizeDocumentCommand(document: IDocument, command: DocumentCommand) {
     def ch(i: Int, c: Char) = {
@@ -67,11 +69,14 @@ class LiteralAutoEditStrategy extends IAutoEditStrategy {
         return
       }
 
+      val isAutoEscapeEnabled = prefStore.getBoolean(
+          EditorPreferencePage.P_ENABLE_AUTO_ESCAPE_LITERALS)
+
       command.text match {
-        case "\\" => handleEscapeSign()
-        case "'"  => handleClosingLiteral()
-        case ""   => removeEscapedSign()
-        case _    =>
+        case "\\" if isAutoEscapeEnabled => handleEscapeSign()
+        case "'"                         => handleClosingLiteral()
+        case "" if isAutoEscapeEnabled   => removeEscapedSign()
+        case _                           =>
       }
     }
 

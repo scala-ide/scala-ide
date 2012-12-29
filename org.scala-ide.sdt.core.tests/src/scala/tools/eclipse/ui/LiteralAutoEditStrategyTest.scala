@@ -1,8 +1,27 @@
 package scala.tools.eclipse.ui
 
-import org.junit.Test
+import scala.tools.eclipse.properties.EditorPreferencePage
 
-class LiteralAutoEditStrategyTest extends AutoEditStrategyTests(new LiteralAutoEditStrategy) {
+import org.eclipse.jface.preference.IPreferenceStore
+import org.junit.{ Before, Test }
+import org.mockito.Mockito._
+
+object LiteralAutoEditStrategyTest {
+
+  val prefStore = mock(classOf[IPreferenceStore])
+
+  def enableAutoEscape(enable: Boolean) {
+    when(prefStore.getBoolean(EditorPreferencePage.P_ENABLE_AUTO_ESCAPE_LITERALS)).thenReturn(enable)
+  }
+}
+
+class LiteralAutoEditStrategyTest extends AutoEditStrategyTests(
+    new LiteralAutoEditStrategy(LiteralAutoEditStrategyTest.prefStore)) {
+
+  @Before
+  def startUp() {
+    LiteralAutoEditStrategyTest.enableAutoEscape(true)
+  }
 
   @Test
   def auto_close_string_literal() {
@@ -68,8 +87,20 @@ class LiteralAutoEditStrategyTest extends AutoEditStrategyTests(new LiteralAutoE
   }
 
   @Test
+  def not_remove_escaped_character_literal_if_feature_deactivated() {
+    LiteralAutoEditStrategyTest.enableAutoEscape(false)
+    test(input = """ '\'^' """, expectedOutput = """ '\^' """, operation = Remove("'"))
+  }
+
+  @Test
   def auto_escape_backslash() {
     test(input = """ '^' """, expectedOutput = """ '\\^' """, operation = Add("\\"))
+  }
+
+  @Test
+  def no_auto_escape_backslash_if_feature_deactivated() {
+    LiteralAutoEditStrategyTest.enableAutoEscape(false)
+    test(input = """ '^' """, expectedOutput = """ '\^' """, operation = Add("\\"))
   }
 
   @Test
@@ -80,5 +111,11 @@ class LiteralAutoEditStrategyTest extends AutoEditStrategyTests(new LiteralAutoE
   @Test
   def remove_escape_backslash() {
     test(input = """ '\\^' """, expectedOutput = """ '^' """, operation = Remove("\\"))
+  }
+
+  @Test
+  def not_remove_escape_backslash_if_feature_deactivated() {
+    LiteralAutoEditStrategyTest.enableAutoEscape(false)
+    test(input = """ '\\^' """, expectedOutput = """ '\^' """, operation = Remove("\\"))
   }
 }
