@@ -231,7 +231,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
   def sourceFolders: Seq[IPath] = {
     for {
       cpe <- javaProject.getResolvedClasspath(true) if cpe.getEntryKind == IClasspathEntry.CPE_SOURCE
-      resource <- Option(plugin.workspaceRoot.findMember(cpe.getPath))
+      resource <- Option(plugin.workspaceRoot.findMember(cpe.getPath)) if resource.exists
     } yield resource.getLocation
   }
 
@@ -255,19 +255,17 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
   def sourceOutputFolders: Seq[(IContainer, IContainer)] = {
     val cpes = javaProject.getResolvedClasspath(true)
 
-    for (cpe <- cpes if cpe.getEntryKind == IClasspathEntry.CPE_SOURCE) yield {
+    for {
+      cpe <- cpes if cpe.getEntryKind == IClasspathEntry.CPE_SOURCE
+      source <- Option(plugin.workspaceRoot.findMember(cpe.getPath)) if source.exists
+    } yield {
       val cpeOutput = cpe.getOutputLocation
       val outputLocation = if (cpeOutput != null) cpeOutput else javaProject.getOutputLocation
 
       val wsroot = plugin.workspaceRoot
       val binPath = wsroot.getFolder(outputLocation)  // may not exist
-      val srcContainer = Option(wsroot.findMember(cpe.getPath()).asInstanceOf[IContainer]) getOrElse {
-        // may be null if source folder does not exist
-        logger.debug("Could not retrieve source folder %s for project %s".format(cpe.getPath(), underlying))
-        wsroot.getFolder(cpe.getPath())
-      }
       
-      (srcContainer, binPath)
+      (source.asInstanceOf[IContainer], binPath)
     }
   }
   
