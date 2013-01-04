@@ -109,19 +109,16 @@ class OutputFoldersTest {
 
   /** Ensure that given folder exists in Eclipse workspace */
   private def ensureFolderExists(top: IContainer, path: IPath) {
-    def ensureFolderExists(container: IContainer, segments: List[String]): IFolder = {
-      val folder = segments match {
-        case segment :: Nil =>
-           container.getFolder(segment)
+    def ensureFolderExists(container: IContainer, segments: List[String]) {
+      if (!container.exists())
+        container.getParent().getFolder(container.getName()).create(false, true, null)
+      segments match {
+        case Nil =>
         case segment :: rest =>
-          ensureFolderExists(container, rest).getFolder(segment)
+          ensureFolderExists(container.getFolder(segment), rest)
       }
-      if (!folder.exists())
-        folder.create(false, true, null)
-      folder
     }
-    if(path.segmentCount > 1)
-      ensureFolderExists(top, path.segments.toList.drop(1).reverse)
+    ensureFolderExists(top, path.segments.toList.drop(1))
   }
 
   
