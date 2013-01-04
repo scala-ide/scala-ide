@@ -4,9 +4,12 @@ import org.eclipse.jface.text.DocumentCommand
 import org.eclipse.jface.text.IAutoEditStrategy
 import org.eclipse.jface.text.IDocument
 
-/** Automatically adds a matching closing bracket whenever the user enters a left bracket. */
-class AutoCloseBracketStrategy extends IAutoEditStrategy {
-  def customizeDocumentCommand(document: IDocument, command: DocumentCommand) {
+/**
+ * Automatically applies several auto edit actions when a user enters or removes
+ * an opening or closing bracket.
+ */
+class BracketAutoEditStrategy extends IAutoEditStrategy {
+    def customizeDocumentCommand(document: IDocument, command: DocumentCommand) {
     command.text match {
       case "{" => // add a closing brace
         command.text = "{}"
