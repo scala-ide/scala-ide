@@ -13,6 +13,7 @@ import org.mockito.Matchers._
 import org.mockito.Mockito._
 import scala.tools.eclipse.hyperlink.HyperlinkTester
 import scala.tools.eclipse.testsetup.CustomAssertion
+import scala.tools.eclipse.testsetup.TestProjectSetup
 
 object PresentationCompilerTest extends testsetup.TestProjectSetup("pc") with CustomAssertion with HyperlinkTester
 
@@ -123,4 +124,72 @@ class PresentationCompilerTest {
     // verify
     assertNoErrors(unitB)
   }
+  
+  
+  @Test
+  def uniqueParseTree_t1001326() {
+
+    val cu = scalaCompilationUnit("t1001326/ParsedTree.scala")
+    val newTree = project.withSourceFile(cu) { (sf, compiler) =>
+      val parseTree1 = compiler.parseTree(sf)
+      val parseTree2 = compiler.parseTree(sf)
+      parseTree1 != parseTree2
+    } (false)
+
+    Assert.assertTrue("Asking twice for a parseTree on the same source should always return a new tree", newTree)
+  }
+
+  @Test
+  def unattributedParseTree_t1001326() {
+    val cu = scalaCompilationUnit("t1001326/ParsedTree.scala")
+    val noSymbols = project.withSourceFile(cu) { (sf, c) =>
+      noSymbolsOrTypes(new CompilerAndTree { 
+        val compiler = c
+        val tree = compiler.parseTree(sf)
+      })
+    } (false)
+    Assert.assertTrue("A parseTree should never contain any symbols or types", noSymbols)
+  }
+
+  @Test
+  def neverModifyParseTree_t1001326() {
+    val path = "t1001326/ParsedTree.scala"
+    val cu = scalaCompilationUnit(path)
+
+    val notChanged = project.withSourceFile(cu) { (sf, c) =>
+      val compilerAndTree = new CompilerAndTree { 
+        val compiler = c
+        val tree = compiler.parseTree(sf)
+      }
+      open(path)
+      noSymbolsOrTypes(compilerAndTree)
+    } (false)
+
+    Assert.assertTrue("Once you have obtained a parseTree it should never change", notChanged)
+
+  }
+
+  // We don't have dependent method types in Scala 2.9.x so this is a work-around.
+  private trait CompilerAndTree {
+    val compiler: ScalaPresentationCompiler
+    val tree: compiler.Tree
+  }
+
+  /**
+   * Traverses a tree and makes sure that there are no types or symbols present in the tree with
+   * the exception of the symbol for the package 'scala'. This is because that symbol will be
+   * present in some of the nodes that the compiler generates.
+   */
+  private def noSymbolsOrTypes(compilerandTree: CompilerAndTree): Boolean = {
+    import compilerandTree.compiler._
+    val existsSymbolsOrTypes = compilerandTree.tree.exists { t =>
+      t.symbol != null &&
+      t.symbol != NoSymbol &&
+      t.symbol != definitions.ScalaPackage && // ignore the symbol for the scala package for now
+      t.tpe != null &&
+      t.tpe != NoType
+    }
+    !existsSymbolsOrTypes
+  }
+
 }
