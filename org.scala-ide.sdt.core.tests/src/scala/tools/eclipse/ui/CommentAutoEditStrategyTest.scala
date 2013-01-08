@@ -3,12 +3,12 @@ package scala.tools.eclipse.ui
 import scala.tools.eclipse.lexical.ScalaDocumentPartitioner
 
 import org.eclipse.jdt.ui.text.IJavaPartitions
-import org.eclipse.jface.text.{ Document, IDocument }
-import org.junit.{ ComparisonFailure, Test }
+import org.eclipse.jface.text.{Document, IDocument}
+import org.junit.{ComparisonFailure, Test}
 
 import AutoEditStrategyTests.TestCommand
 
-class ScaladocAutoEditStrategyTest {
+class CommentAutoEditStrategyTest {
 
   /**
    * Tests if the input string is equal to the expected output.
@@ -41,7 +41,7 @@ class ScaladocAutoEditStrategyTest {
 
     val doc = createDocument(input)
     val cmd = createTestCommand(input)
-    val strategy = new ScaladocAutoIndentStrategy(IJavaPartitions.JAVA_PARTITIONING)
+    val strategy = new CommentAutoIndentStrategy(IJavaPartitions.JAVA_PARTITIONING)
 
     strategy.customizeDocumentCommand(doc, cmd)
     doc.replace(cmd.offset, 0, cmd.text)
@@ -67,6 +67,23 @@ class ScaladocAutoEditStrategyTest {
     val expectedOutput =
       """
       /**
+       * ^
+       */
+      class Foo
+      """
+    test(input, expectedOutput)
+  }
+
+  @Test
+  def openMultilineComment_topLevel() {
+    val input =
+      """
+      /*^
+      class Foo
+      """
+    val expectedOutput =
+      """
+      /*
        * ^
        */
       class Foo
@@ -187,7 +204,25 @@ class ScaladocAutoEditStrategyTest {
     val expectedOutput =
       """
       /** $
-       * ^blah */
+       *  ^blah */
+      class Foo {
+      }
+      """
+    test(input, expectedOutput)
+  }
+
+  @Test
+  def closedMultilineComment_topLevel() {
+    val input =
+      """
+      /*  ^blah */
+      class Foo {
+      }
+      """
+    val expectedOutput =
+      """
+      /*  $
+       *  ^blah */
       class Foo {
       }
       """
@@ -265,7 +300,7 @@ class ScaladocAutoEditStrategyTest {
   }
 
   @Test
-  def closedDocComment_first_char_of_line() {
+  def closedDocComment_no_asterisk_on_empty_line() {
     val input =
       """
       /**
@@ -278,7 +313,51 @@ class ScaladocAutoEditStrategyTest {
       """
       /**
       $
-      * ^
+      ^
+      */
+      class Foo {
+      }
+      """
+    test(input, expectedOutput)
+  }
+
+  @Test
+  def closedMultilineComment_no_asterisk_on_empty_line() {
+    val input =
+      """
+      /*
+      ^
+      */
+      class Foo {
+      }
+      """
+    val expectedOutput =
+      """
+      /*
+      $
+      ^
+      */
+      class Foo {
+      }
+      """
+    test(input, expectedOutput)
+  }
+
+  @Test
+  def closedDocComment_no_asterisk_on_line_not_starting_with_asterisk() {
+    val input =
+      """
+      /**
+      hello^
+      */
+      class Foo {
+      }
+      """
+    val expectedOutput =
+      """
+      /**
+      hello
+      ^
       */
       class Foo {
       }
@@ -298,7 +377,27 @@ class ScaladocAutoEditStrategyTest {
     val expectedOutput =
       """
       /** one
-       * ^two
+       *  ^two
+       */
+      class Foo {
+      }
+      """
+    test(input, expectedOutput)
+  }
+
+  @Test
+  def closedMultilineComment_line_break() {
+    val input =
+      """
+      /*  one^two
+       */
+      class Foo {
+      }
+      """
+    val expectedOutput =
+      """
+      /*  one
+       *  ^two
        */
       class Foo {
       }
@@ -320,7 +419,7 @@ class ScaladocAutoEditStrategyTest {
       """
       class Foo {
         /** one
-         * ^two
+         *  ^two
          */
         def meth() {}
       }
@@ -341,7 +440,7 @@ class ScaladocAutoEditStrategyTest {
       """
       class Foo {
         /** one two *
-         * ^/
+         *  ^/
         def meth() {}
       }
       """
@@ -364,6 +463,72 @@ class ScaladocAutoEditStrategyTest {
          * ^** one two */
         def meth() {}
       }
+      """
+    test(input, expectedOutput)
+  }
+
+  @Test
+  def openDocComment_keep_indentation() {
+    val input =
+      """
+      /**   hello^
+      """
+    val expectedOutput =
+      """
+      /**   hello
+       *    ^
+       */
+      """
+    test(input, expectedOutput)
+  }
+
+  @Test
+  def openMultilineComment_keep_indentation() {
+    val input =
+      """
+      /*   hello^
+      """
+    val expectedOutput =
+      """
+      /*   hello
+       *   ^
+       */
+      """
+    test(input, expectedOutput)
+  }
+
+  @Test
+  def docComment_keep_indentation() {
+    val input =
+      """
+      /**
+       *    hello^
+       */
+      """
+    val expectedOutput =
+      """
+      /**
+       *    hello
+       *    ^
+       */
+      """
+    test(input, expectedOutput)
+  }
+
+  @Test
+  def multilineComment_keep_indentation() {
+    val input =
+      """
+      /*
+       *    hello^
+       */
+      """
+    val expectedOutput =
+      """
+      /*
+       *    hello
+       *    ^
+       */
       """
     test(input, expectedOutput)
   }
