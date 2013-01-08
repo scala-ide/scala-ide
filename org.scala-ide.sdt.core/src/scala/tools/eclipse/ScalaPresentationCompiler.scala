@@ -31,6 +31,7 @@ import scala.tools.eclipse.completion.CompletionProposal
 import org.eclipse.jdt.core.IMethod
 import scala.tools.nsc.io.VirtualFile
 import scala.tools.nsc.interactive.MissingResponse
+import scala.tools.nsc.ast.parser.Parsers
 
 class ScalaPresentationCompiler(project: ScalaProject, settings: Settings)
   extends Global(settings, new ScalaPresentationCompiler.PresentationReporter, project.underlying.getName)
@@ -111,6 +112,10 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings)
       throw ScalaPresentationCompiler.InvalidThread("Tried to execute `askLoadedType` while inside `ask`")
     askLoadedTyped(sourceFile, response)
     response.get
+  }
+
+  override def parseTree(source: SourceFile): Tree = {
+    new syntaxAnalyzer.UnitParser(new CompilationUnit(source)).parse()
   }
 
   def withParseTree[T](sourceFile: SourceFile)(op: Tree => T): T = {
