@@ -229,7 +229,6 @@ private[model] class ScalaThreadActor private(thread: ScalaThread) extends BaseD
     case InvokeMethod(objectReference, method, args) =>
       reply(
         if (!thread.isSuspended) {
-          //FIXME: ticket #1001310
           Left(new ThreadNotSuspendedException())
         } else {
           try {
@@ -247,7 +246,6 @@ private[model] class ScalaThreadActor private(thread: ScalaThread) extends BaseD
     case InvokeStaticMethod(classType, method, args) =>
       reply(
         if (!thread.isSuspended) {
-          //FIXME: ticket #1001310
           Left(new ThreadNotSuspendedException())
         } else {
           try {
