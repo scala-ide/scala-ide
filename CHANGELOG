@@ -1,2 +1,3 @@
 * Fixed bug in PresentationCompiler.parseTree - :ticket:`1001326`
 * Ignore non-existent source classpath entries - :ticket:`1001394`
+* Correct auto indent behavior in comments - :ticket:`1001432`
