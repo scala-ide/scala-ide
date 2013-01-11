@@ -1,0 +1,1 @@
+* Fixed bug in PresentationCompiler.parseTree - :ticket:`1001326`
