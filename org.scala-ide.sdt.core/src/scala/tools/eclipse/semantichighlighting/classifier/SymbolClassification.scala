@@ -117,15 +117,14 @@ class SymbolClassification(protected val sourceFile: SourceFile, val global: Sca
     }
 
   private def getSymbolInfosFromSyntax(syntacticInfo: SyntacticInfo, localVars: Set[Region], all: Set[Region]): List[SymbolInfo] = {
-    val SyntacticInfo(namedArgs, forVals, maybeSelfRefs, maybeClassOfs, annotations, packages, symbols) = syntacticInfo
+    val SyntacticInfo(namedArgs, forVals, maybeSelfRefs, maybeClassOfs, annotations, packages) = syntacticInfo
     List(
       SymbolInfo(LocalVal, forVals toList, deprecated = false),
       SymbolInfo(Param, namedArgs filterNot localVars toList, deprecated = false),
       SymbolInfo(TemplateVal, maybeSelfRefs filterNot all toList, deprecated = false),
       SymbolInfo(Method, maybeClassOfs filterNot all toList, deprecated = false),
       SymbolInfo(Annotation, annotations filterNot all toList, deprecated = false),
-      SymbolInfo(Package, packages filterNot all toList, deprecated = false),
-      SymbolInfo(Symbol, symbols.toList, deprecated = false))
+      SymbolInfo(Package, packages filterNot all toList, deprecated = false))
   }
 
   private def prune(rawSymbolInfos: Seq[SymbolInfo]): Seq[SymbolInfo] = {
