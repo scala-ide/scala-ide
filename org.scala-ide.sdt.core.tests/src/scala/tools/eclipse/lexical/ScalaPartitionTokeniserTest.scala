@@ -152,6 +152,12 @@ class ScalaPartitionTokeniserTest {
       ((JAVA_DOC, 0, 2), (SCALADOC_CODE_BLOCK, 3, 11), (SCALADOC_CODE_BLOCK, 12, 20), (JAVA_DOC, 21, 22))
   }
 
+  @Test
+  def scaladoc_code_block_nested_in_multi_line_comment() {
+    "/*/**{{{/**/" ==>
+      ((JAVA_MULTI_LINE_COMMENT, 0, 11))
+  }
+
 }
 
 object ScalaPartitionTokeniserTest {

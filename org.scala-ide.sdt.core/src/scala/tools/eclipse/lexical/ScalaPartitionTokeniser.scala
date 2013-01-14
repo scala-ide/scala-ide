@@ -95,8 +95,8 @@ class ScalaPartitionTokeniser(text: String) extends TokenTests {
         getCodeBlockComment(nesting)
       case ScaladocState(nesting) =>
         modeStack.pop()
-        getMultiLineComment(nesting)
         setContentType(JAVA_DOC)
+        getMultiLineComment(nesting)
     }
 
     val contentType = contentTypeOpt.get
@@ -310,7 +310,7 @@ class ScalaPartitionTokeniser(text: String) extends TokenTests {
       case '/' if (ch(1) == '*') =>
         accept(2)
         getMultiLineComment(nesting + 1)
-      case '{' if ch(1) == '{' && ch(2) == '{' =>
+      case '{' if ch(1) == '{' && ch(2) == '{' && contentTypeOpt.exists(_ == JAVA_DOC) =>
         nestIntoScaladocCodeBlockMode(nesting)
       case EOF =>
       case _ =>
