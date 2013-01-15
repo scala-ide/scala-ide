@@ -56,6 +56,7 @@ class ScalaSourceViewerConfiguration(store: IPreferenceStore, scalaPreferenceSto
 
       handlePartition(IDocument.DEFAULT_CONTENT_TYPE, scalaCodeScanner)
       handlePartition(IJavaPartitions.JAVA_DOC, scaladocScanner)
+      handlePartition(ScalaPartitions.SCALADOC_CODE_BLOCK, scaladocCodeBlockScanner)
       handlePartition(IJavaPartitions.JAVA_SINGLE_LINE_COMMENT, singleLineCommentScanner)
       handlePartition(IJavaPartitions.JAVA_MULTI_LINE_COMMENT, multiLineCommentScanner)
       handlePartition(IJavaPartitions.JAVA_STRING, stringScanner)
@@ -72,8 +73,9 @@ class ScalaSourceViewerConfiguration(store: IPreferenceStore, scalaPreferenceSto
    private val scalaCodeScanner = new ScalaCodeScanner(getColorManager, scalaPreferenceStore, ScalaVersions.DEFAULT)
    private val singleLineCommentScanner = new SingleTokenScanner(ScalaSyntaxClasses.SINGLE_LINE_COMMENT, getColorManager, scalaPreferenceStore)
    private val multiLineCommentScanner = new SingleTokenScanner(ScalaSyntaxClasses.MULTI_LINE_COMMENT, getColorManager, scalaPreferenceStore)
-   private val scaladocScanner = new SingleTokenScanner(ScalaSyntaxClasses.SCALADOC, getColorManager, scalaPreferenceStore)
-   private val stringScanner = new SingleTokenScanner(ScalaSyntaxClasses.STRING, getColorManager, scalaPreferenceStore)
+   private val scaladocScanner = new ScaladocTokenScanner(ScalaSyntaxClasses.SCALADOC, ScalaSyntaxClasses.SCALADOC_ANNOTATION, ScalaSyntaxClasses.SCALADOC_MACRO, getColorManager, scalaPreferenceStore)
+   private val scaladocCodeBlockScanner = new SingleTokenScanner(ScalaSyntaxClasses.SCALADOC_CODE_BLOCK, getColorManager, scalaPreferenceStore)
+   private val stringScanner = new StringTokenScanner(ScalaSyntaxClasses.ESCAPE_SEQUENCE, ScalaSyntaxClasses.STRING, getColorManager, scalaPreferenceStore)
    private val multiLineStringScanner = new SingleTokenScanner(ScalaSyntaxClasses.MULTI_LINE_STRING, getColorManager, scalaPreferenceStore)
    private val xmlTagScanner = new XmlTagScanner(getColorManager, scalaPreferenceStore)
    private val xmlCommentScanner = new XmlCommentScanner(getColorManager, scalaPreferenceStore)
@@ -124,7 +126,7 @@ class ScalaSourceViewerConfiguration(store: IPreferenceStore, scalaPreferenceSto
    override def getAutoEditStrategies(sourceViewer: ISourceViewer, contentType: String): Array[IAutoEditStrategy] = {
       val partitioning = getConfiguredDocumentPartitioning(sourceViewer)
       contentType match {
-         case IJavaPartitions.JAVA_DOC | IJavaPartitions.JAVA_MULTI_LINE_COMMENT =>
+         case IJavaPartitions.JAVA_DOC | IJavaPartitions.JAVA_MULTI_LINE_COMMENT | ScalaPartitions.SCALADOC_CODE_BLOCK =>
            Array(new CommentAutoIndentStrategy(partitioning))
          case IJavaPartitions.JAVA_STRING =>
             Array(new SmartSemicolonAutoEditStrategy(partitioning), new JavaStringAutoIndentStrategy(partitioning))
@@ -145,6 +147,7 @@ class ScalaSourceViewerConfiguration(store: IPreferenceStore, scalaPreferenceSto
       super.handlePropertyChangeEvent(event)
       scalaCodeScanner.adaptToPreferenceChange(event)
       scaladocScanner.adaptToPreferenceChange(event)
+      scaladocCodeBlockScanner.adaptToPreferenceChange(event)
       stringScanner.adaptToPreferenceChange(event)
       multiLineStringScanner.adaptToPreferenceChange(event)
       singleLineCommentScanner.adaptToPreferenceChange(event)
@@ -155,12 +158,14 @@ class ScalaSourceViewerConfiguration(store: IPreferenceStore, scalaPreferenceSto
       xmlPCDATAScanner.adaptToPreferenceChange(event)
       xmlPIScanner.adaptToPreferenceChange(event)
    }
-   
-   override def getConfiguredContentTypes(sourceViewer: ISourceViewer): Array[String] = {
-     // Adds the SCALA_MULTI_LINE_STRING partition type to the list of configured content types, so it is
-     // supported for the comment out and shift left/right actions
-	 return super.getConfiguredContentTypes(sourceViewer) :+ ScalaPartitions.SCALA_MULTI_LINE_STRING
-   }
+
+   /**
+    * Adds Scala related partition types to the list of configured content types,
+    * in order that they are available for several features of the IDE.
+    */
+   override def getConfiguredContentTypes(sourceViewer: ISourceViewer): Array[String] =
+     super.getConfiguredContentTypes(sourceViewer) ++
+       Seq(ScalaPartitions.SCALA_MULTI_LINE_STRING, ScalaPartitions.SCALADOC_CODE_BLOCK)
 
    override def affectsTextPresentation(event: PropertyChangeEvent) = true
 

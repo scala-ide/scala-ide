@@ -6,7 +6,16 @@ import scalariform.lexer.ScalaLexer
 object SyntaxColouringPreviewText {
 
   val previewText = """package foo.bar.baz
-/** Scaladoc */
+/**
+ * Scaladoc
+ * @scaladocAnnotation value
+ * $SCALADOC_MACRO
+ * {{{
+ * @annotation.tailrec
+ * def f(i: Int): Int =
+ *   if (i > 0) f(i - 1) else 0
+ * }}}
+ */
 @Annotation
 class Class[T] extends Trait {
   object Object
@@ -19,8 +28,8 @@ class Class[T] extends Trait {
   def method(param: Int): Int = {
     // Single-line comment
     /* Multi-line comment */
-    val lazyLocalVal = 42
-    val localVal = "foo" + """ + "\"\"\"" + "multiline string" + "\"\"\"" + """
+    lazy val lazyLocalVal = 42
+    val localVal = "foo\nbar" + """ + "\"\"\"" + "multiline string" + "\"\"\"" + """
     var localVar =
       <tag attributeName="value">
         <!-- XML comment -->
@@ -28,6 +37,7 @@ class Class[T] extends Trait {
         <![CDATA[ CDATA ]]>
         PCDATA
       </tag>
+    val sym = 'symbol
     return 42
   }
 }"""
@@ -54,7 +64,8 @@ class Class[T] extends Trait {
     "templateVar" -> TEMPLATE_VAR,
     "T" -> TYPE_PARAMETER,
     "Type" -> TYPE,
-    "Object" -> OBJECT)
+    "Object" -> OBJECT,
+    "sym" -> LOCAL_VAL)
 
   val semanticLocations: List[ColouringLocation] =
     for {
