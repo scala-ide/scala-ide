@@ -1,3 +1,6 @@
 * Fixed bug in PresentationCompiler.parseTree - :ticket:`1001326`
 * Ignore non-existent source classpath entries - :ticket:`1001394`
 * Correct auto indent behavior in comments - :ticket:`1001432`
+* Add syntax highlighting for numeric literals - :ticket:`1001442`
+* Add syntax highlighting for escape sequences - :ticket:`1001372`
+* Add syntax highlighting for Scaladoc - :ticket:`1001172`
