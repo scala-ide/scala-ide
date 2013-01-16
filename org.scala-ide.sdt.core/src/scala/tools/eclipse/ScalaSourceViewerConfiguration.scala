@@ -33,13 +33,13 @@ import scala.tools.eclipse.ui.{ JdtPreferenceProvider, ScalaAutoIndentStrategy, 
 import scala.tools.eclipse.util.ReflectionUtils
 import scala.tools.eclipse.lexical._
 import scala.tools.eclipse.formatter.ScalaFormattingStrategy
-import scala.tools.eclipse.ui.AutoCloseBracketStrategy
+import scala.tools.eclipse.ui.BracketAutoEditStrategy
 import scala.tools.eclipse.properties.syntaxcolouring.ScalaSyntaxClasses
 import scala.tools.eclipse.hyperlink.text.detector.{CompositeHyperlinkDetector, DeclarationHyperlinkDetector, ImplicitHyperlinkDetector}
 import scalariform.ScalaVersions
 import org.eclipse.jface.text.DefaultTextHover
 import scala.tools.eclipse.javaelements.ScalaCompilationUnit
-import scala.tools.eclipse.ui.ScaladocAutoIndentStrategy
+import scala.tools.eclipse.ui.CommentAutoIndentStrategy
 import org.eclipse.jface.text.hyperlink.URLHyperlinkDetector
 
 class ScalaSourceViewerConfiguration(store: IPreferenceStore, scalaPreferenceStore: IPreferenceStore, editor: ITextEditor)
@@ -56,6 +56,7 @@ class ScalaSourceViewerConfiguration(store: IPreferenceStore, scalaPreferenceSto
 
       handlePartition(IDocument.DEFAULT_CONTENT_TYPE, scalaCodeScanner)
       handlePartition(IJavaPartitions.JAVA_DOC, scaladocScanner)
+      handlePartition(ScalaPartitions.SCALADOC_CODE_BLOCK, scaladocCodeBlockScanner)
       handlePartition(IJavaPartitions.JAVA_SINGLE_LINE_COMMENT, singleLineCommentScanner)
       handlePartition(IJavaPartitions.JAVA_MULTI_LINE_COMMENT, multiLineCommentScanner)
       handlePartition(IJavaPartitions.JAVA_STRING, stringScanner)
@@ -72,8 +73,9 @@ class ScalaSourceViewerConfiguration(store: IPreferenceStore, scalaPreferenceSto
    private val scalaCodeScanner = new ScalaCodeScanner(getColorManager, scalaPreferenceStore, ScalaVersions.DEFAULT)
    private val singleLineCommentScanner = new SingleTokenScanner(ScalaSyntaxClasses.SINGLE_LINE_COMMENT, getColorManager, scalaPreferenceStore)
    private val multiLineCommentScanner = new SingleTokenScanner(ScalaSyntaxClasses.MULTI_LINE_COMMENT, getColorManager, scalaPreferenceStore)
-   private val scaladocScanner = new SingleTokenScanner(ScalaSyntaxClasses.SCALADOC, getColorManager, scalaPreferenceStore)
-   private val stringScanner = new SingleTokenScanner(ScalaSyntaxClasses.STRING, getColorManager, scalaPreferenceStore)
+   private val scaladocScanner = new ScaladocTokenScanner(ScalaSyntaxClasses.SCALADOC, ScalaSyntaxClasses.SCALADOC_ANNOTATION, ScalaSyntaxClasses.SCALADOC_MACRO, getColorManager, scalaPreferenceStore)
+   private val scaladocCodeBlockScanner = new SingleTokenScanner(ScalaSyntaxClasses.SCALADOC_CODE_BLOCK, getColorManager, scalaPreferenceStore)
+   private val stringScanner = new StringTokenScanner(ScalaSyntaxClasses.ESCAPE_SEQUENCE, ScalaSyntaxClasses.STRING, getColorManager, scalaPreferenceStore)
    private val multiLineStringScanner = new SingleTokenScanner(ScalaSyntaxClasses.MULTI_LINE_STRING, getColorManager, scalaPreferenceStore)
    private val xmlTagScanner = new XmlTagScanner(getColorManager, scalaPreferenceStore)
    private val xmlCommentScanner = new XmlCommentScanner(getColorManager, scalaPreferenceStore)
@@ -124,12 +126,12 @@ class ScalaSourceViewerConfiguration(store: IPreferenceStore, scalaPreferenceSto
    override def getAutoEditStrategies(sourceViewer: ISourceViewer, contentType: String): Array[IAutoEditStrategy] = {
       val partitioning = getConfiguredDocumentPartitioning(sourceViewer)
       contentType match {
-         case IJavaPartitions.JAVA_DOC | IJavaPartitions.JAVA_MULTI_LINE_COMMENT =>
-           Array(new ScaladocAutoIndentStrategy(partitioning))
+         case IJavaPartitions.JAVA_DOC | IJavaPartitions.JAVA_MULTI_LINE_COMMENT | ScalaPartitions.SCALADOC_CODE_BLOCK =>
+           Array(new CommentAutoIndentStrategy(partitioning))
          case IJavaPartitions.JAVA_STRING =>
             Array(new SmartSemicolonAutoEditStrategy(partitioning), new JavaStringAutoIndentStrategy(partitioning))
          case IJavaPartitions.JAVA_CHARACTER | IDocument.DEFAULT_CONTENT_TYPE =>
-            Array(new SmartSemicolonAutoEditStrategy(partitioning), new ScalaAutoIndentStrategy(partitioning, getProject, sourceViewer, new JdtPreferenceProvider(getProject)), new AutoCloseBracketStrategy)
+            Array(new SmartSemicolonAutoEditStrategy(partitioning), new ScalaAutoIndentStrategy(partitioning, getProject, sourceViewer, new JdtPreferenceProvider(getProject)), new BracketAutoEditStrategy)
          case _ =>
             Array(new ScalaAutoIndentStrategy(partitioning, getProject, sourceViewer, new JdtPreferenceProvider(getProject)))
       }
@@ -145,6 +147,7 @@ class ScalaSourceViewerConfiguration(store: IPreferenceStore, scalaPreferenceSto
       super.handlePropertyChangeEvent(event)
       scalaCodeScanner.adaptToPreferenceChange(event)
       scaladocScanner.adaptToPreferenceChange(event)
+      scaladocCodeBlockScanner.adaptToPreferenceChange(event)
       stringScanner.adaptToPreferenceChange(event)
       multiLineStringScanner.adaptToPreferenceChange(event)
       singleLineCommentScanner.adaptToPreferenceChange(event)
@@ -155,12 +158,14 @@ class ScalaSourceViewerConfiguration(store: IPreferenceStore, scalaPreferenceSto
       xmlPCDATAScanner.adaptToPreferenceChange(event)
       xmlPIScanner.adaptToPreferenceChange(event)
    }
-   
-   override def getConfiguredContentTypes(sourceViewer: ISourceViewer): Array[String] = {
-     // Adds the SCALA_MULTI_LINE_STRING partition type to the list of configured content types, so it is
-     // supported for the comment out and shift left/right actions
-	 return super.getConfiguredContentTypes(sourceViewer) :+ ScalaPartitions.SCALA_MULTI_LINE_STRING
-   }
+
+   /**
+    * Adds Scala related partition types to the list of configured content types,
+    * in order that they are available for several features of the IDE.
+    */
+   override def getConfiguredContentTypes(sourceViewer: ISourceViewer): Array[String] =
+     super.getConfiguredContentTypes(sourceViewer) ++
+       Seq(ScalaPartitions.SCALA_MULTI_LINE_STRING, ScalaPartitions.SCALADOC_CODE_BLOCK)
 
    override def affectsTextPresentation(event: PropertyChangeEvent) = true
 
