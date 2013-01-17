@@ -23,6 +23,5 @@ object SymbolTypes {
   case object Trait extends SymbolType
   case object Type extends SymbolType
   case object TypeParameter extends SymbolType
-  case object Symbol extends SymbolType
 
 }

@@ -17,7 +17,7 @@ class MockDocument(private var s: String) extends IDocument {
 
   def get(): String = s
 
-  def get(offset: Int, length: Int): String = s.substring(offset, length)
+  def get(offset: Int, length: Int): String = s.substring(offset, offset+length)
 
   def set(text: String) { s = text }
 
