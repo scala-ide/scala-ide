@@ -34,7 +34,7 @@
     <mockito.version>1.9.0</mockito.version>
 
     <!-- plugin versions -->
-    <tycho.plugin.version>0.15.0</tycho.plugin.version>
+    <tycho.plugin.version>0.16.0</tycho.plugin.version>
     <scala.plugin.version>3.0.2</scala.plugin.version>
     <aspectj.plugin.version>1.4</aspectj.plugin.version>
     <weaving.hook.plugin.version>1.0.200.v20120524-1707</weaving.hook.plugin.version>
