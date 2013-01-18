@@ -158,6 +158,26 @@ class ScalaPartitionTokeniserTest {
       ((JAVA_MULTI_LINE_COMMENT, 0, 11))
   }
 
+  @Test
+  def char_literal() {
+    "'a'" ==> ((JAVA_CHARACTER, 0, 2))
+  }
+
+  @Test
+  def char_literal_containing_escape_sequence() {
+    """'\n'""" ==> ((JAVA_CHARACTER, 0, 3))
+  }
+
+  @Test
+  def char_literal_containing_unicode_sequence() {
+    "'\\u0000'" ==> ((JAVA_CHARACTER, 0, 7))
+  }
+
+  @Test
+  def char_literal_containing_octal_sequence() {
+    """'\123'""" ==> ((JAVA_CHARACTER, 0, 5))
+  }
+
 }
 
 object ScalaPartitionTokeniserTest {
