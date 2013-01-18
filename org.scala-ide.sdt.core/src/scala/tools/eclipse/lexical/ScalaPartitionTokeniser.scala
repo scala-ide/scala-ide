@@ -180,7 +180,7 @@ class ScalaPartitionTokeniser(text: String) extends TokenTests {
         else if (ch(6) == '\'') Some(6)
         else if (ch(7) == '\'') Some(7)
         else None
-      else if (ch(2) == '0')
+      else if (isOctalDigit(ch(2)))
         if (ch(3) == '\'') Some(3)
         else if (ch(4) == '\'') Some(4)
         else if (ch(5) == '\'') Some(5)
@@ -193,6 +193,9 @@ class ScalaPartitionTokeniser(text: String) extends TokenTests {
       Some(2)
     else
       None
+
+  private def isOctalDigit(c: Char): Boolean =
+    c >= '0' && c <= '7'
 
   @tailrec
   private def getStringLit(isInterpolation: Boolean): Unit =
