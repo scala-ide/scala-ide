@@ -29,6 +29,12 @@ class BracketAutoEditStrategyTest extends AutoEditStrategyTests(
   }
 
   @Test
+  def auto_closing_opening_brace_on_disabled_feature() {
+    BracketAutoEditStrategyTest.enableAutoClosing(false)
+    test(input = "^", expectedOutput = "{^}", operation = Add("{"))
+  }
+
+  @Test
   def remove_brace_pair() {
     test(input = "{^}", expectedOutput = "^", operation = Remove("{"))
   }
@@ -60,16 +66,31 @@ class BracketAutoEditStrategyTest extends AutoEditStrategyTests(
   }
 
   @Test
-  def prevent_auto_closing_brace_when_editing_an_existing_line() {
+  def auto_closing_brace_after_pending_closing_brace() {
+    BracketAutoEditStrategyTest.enableAutoClosing(false)
+    test(input = "} map {^}", expectedOutput = "} map {{^}}", operation = Add("{"))
+  }
+
+  @Test
+  def prevent_auto_closing_brace_when_caret_before_non_white_space() {
     BracketAutoEditStrategyTest.enableAutoClosing(false)
     test(
-        input = "List(1) map^ (_+1)",
-        expectedOutput = "List(1) map{^ (_+1)",
+        input = "List(1) map ^(_+1)",
+        expectedOutput = "List(1) map {^(_+1)",
         operation = Add("{"))
   }
 
   @Test
-  def not_prevent_auto_closing_brace_when_editing_an_existing_line() {
+  def not_prevent_auto_closing_brace_when_caret_non_white_space() {
+    test(
+        input = "List(1) map ^(_+1)",
+        expectedOutput = "List(1) map {^}(_+1)",
+        operation = Add("{"))
+  }
+
+  @Test
+  def auto_closing_brace_when_caret_before_white_space() {
+    BracketAutoEditStrategyTest.enableAutoClosing(false)
     test(
         input = "List(1) map^ (_+1)",
         expectedOutput = "List(1) map{^} (_+1)",
@@ -77,26 +98,26 @@ class BracketAutoEditStrategyTest extends AutoEditStrategyTests(
   }
 
   @Test
-  def auto_closing_brace_in_function_literal() {
-    BracketAutoEditStrategyTest.enableAutoClosing(false)
-    test(
-        input = "List(List(1)) map { _ map ^ }",
-        expectedOutput = "List(List(1)) map { _ map {^} }",
-        operation = Add("{"))
-  }
-
-  @Test
-  def auto_closing_brace_in_and_before_another_function_literal() {
-    BracketAutoEditStrategyTest.enableAutoClosing(false)
-    test(
-        input = "List(List(1)) map { _ map^ (_+1) }",
-        expectedOutput = "List(List(1)) map { _ map{^} (_+1) }",
-        operation = Add("{"))
-  }
-
-  @Test
-  def auto_closing_brace_before_trailing_whitespaces() {
+  def auto_closing_brace_before_white_space() {
     BracketAutoEditStrategyTest.enableAutoClosing(false)
     test(input = "^   ", expectedOutput = "{^}   ", operation = Add("{"))
+  }
+
+  @Test
+  def no_auto_closing_brace_on_missing_opening_bracket() {
+    BracketAutoEditStrategyTest.enableAutoClosing(false)
+    test(
+        input = "List(1) map {^}}",
+        expectedOutput = "List(1) map {{^}}",
+        operation = Add("{"))
+  }
+
+  @Test
+  def auto_closing_brace_before_matching_braces() {
+    BracketAutoEditStrategyTest.enableAutoClosing(false)
+    test(
+        input = "List(1) map {^{}}",
+        expectedOutput = "List(1) map {{^}{}}",
+        operation = Add("{"))
   }
 }

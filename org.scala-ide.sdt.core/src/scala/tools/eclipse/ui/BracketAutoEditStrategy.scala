@@ -10,13 +10,38 @@ import org.eclipse.jface.text.{ DocumentCommand, IAutoEditStrategy, IDocument }
  * an opening or closing bracket.
  */
 class BracketAutoEditStrategy(prefStore: IPreferenceStore) extends IAutoEditStrategy {
+
   def customizeDocumentCommand(document: IDocument, command: DocumentCommand) {
-    def isLineEndEmpty = {
+
+    /*
+     * Checks if it is necessary to insert a closing brace. Normally this is
+     * always the case with two exceptions:
+     *
+     * 1. The caret is positioned directly before non white space
+     * 2. There are unmatched closing braces after the caret position.
+     */
+    def autoClosingRequired = {
       val lineInfo = document.getLineInformationOfOffset(command.offset)
-      val str = document.get(command.offset, lineInfo.getLength() + lineInfo.getOffset() - command.offset)
-      val (open, close) = (str.count(_ == '{'), str.count(_ == '}'))
-      val hasUnmatchedClosingBracket = (open > 0 || close > 0) && open < close
-      hasUnmatchedClosingBracket || str.trim.length == 0
+      val lineAfterCaret = document.get(command.offset, lineInfo.getLength() + lineInfo.getOffset() - command.offset).toSeq
+
+      if (lineAfterCaret.isEmpty) true
+      else {
+        val lineComplete = document.get(lineInfo.getOffset(), lineInfo.getLength()).toSeq
+        val lineBeforeCaret = lineComplete.take(lineComplete.length - lineAfterCaret.length)
+
+        val bracesTotal = lineComplete.count(_ == '}') - lineComplete.count(_ == '{')
+        val bracesStart = lineComplete.takeWhile(_ != '{').count(_ == '}')
+        val bracesEnd = lineComplete.reverse.takeWhile(_ != '}').count(_ == '{')
+        val blacesRelevant = bracesTotal - bracesStart - bracesEnd
+
+        val hasClosingBracket = lineAfterCaret.contains('}') && !lineAfterCaret.takeWhile(_ == '}').contains('{')
+        val hasOpeningBracket = lineBeforeCaret.contains('{') && !lineBeforeCaret.reverse.takeWhile(_ == '{').contains('}')
+
+        if (hasOpeningBracket && hasClosingBracket)
+          blacesRelevant <= 0
+        else
+          lineAfterCaret(0) == ' ' || lineAfterCaret(0) == '\t'
+      }
     }
 
     def ch(i: Int, c: Char) = {
@@ -28,7 +53,7 @@ class BracketAutoEditStrategy(prefStore: IPreferenceStore) extends IAutoEditStra
       val isAutoClosingEnabled = prefStore.getBoolean(
           EditorPreferencePage.P_ENABLE_AUTO_CLOSING_BRACES)
 
-      if (isAutoClosingEnabled || isLineEndEmpty) {
+      if (isAutoClosingEnabled || autoClosingRequired) {
         command.text = "{}"
       }
       command.caretOffset = command.offset + 1
