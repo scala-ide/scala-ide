@@ -43,6 +43,11 @@
         <artifactId>incremental-compiler</artifactId>
         <optional>true</optional>
     </dependency>
+    <dependency>
+      <groupId>com.googlecode.java-diff-utils</groupId>
+      <artifactId>diffutils</artifactId>
+      <version>${diffutils.version}</version>
+    </dependency>
   </dependencies>
 
   <build>
@@ -58,7 +63,7 @@
             <Bundle-Name>Sbt Library for Eclipse</Bundle-Name>
             <Bundle-Version>${sbt.osgi.version}</Bundle-Version>
             <Embed-Dependency>*;scope=compile|runtime;inline=true</Embed-Dependency>
-            <_exportcontents>sbt.*;version=${sbt.osgi.version},xsbt.*;version=${sbt.osgi.version},xsbti.*;version=${sbt.osgi.version},sbinary.*;version=${sbt.osgi.version}</_exportcontents>
+            <_exportcontents>sbt.*;version=${sbt.osgi.version},xsbt.*;version=${sbt.osgi.version},xsbti.*;version=${sbt.osgi.version},sbinary.*;version=${sbt.osgi.version},difflib.*;version=${diffutils.version}</_exportcontents>
             <Embed-StripVersion>true</Embed-StripVersion>
           </instructions>
         </configuration>
