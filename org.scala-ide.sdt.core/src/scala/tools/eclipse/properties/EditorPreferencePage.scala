@@ -15,6 +15,8 @@ class EditorPreferencePage extends FieldEditorPreferencePage with IWorkbenchPref
     addField(new BooleanFieldEditor(P_ENABLE_SMART_BRACES, "Automatically surround selection with {braces}", getFieldEditorParent))
     addField(new BooleanFieldEditor(P_ENABLE_SMART_PARENS, "Automatically surround selection with (parenthesis)", getFieldEditorParent))
     addField(new BooleanFieldEditor(P_ENABLE_SMART_QUOTES, "Automatically surround selection with \"quotes\"", getFieldEditorParent))
+
+    addField(new BooleanFieldEditor(P_ENABLE_AUTO_CLOSING_BRACES, "Enable auto closing braces when editing an existing line", getFieldEditorParent))
   }
 
   def init(workbench: IWorkbench) {}
@@ -27,6 +29,8 @@ object EditorPreferencePage {
   final val P_ENABLE_SMART_BRACES = BASE + "smartBraces"
   final val P_ENABLE_SMART_PARENS = BASE + "smartParens"
   final val P_ENABLE_SMART_QUOTES = BASE + "smartQuotes"
+
+  final val P_ENABLE_AUTO_CLOSING_BRACES = BASE + "autoClosingBrace"
 }
 
 class DebugPreferenceInitializer extends AbstractPreferenceInitializer {
@@ -37,5 +41,7 @@ class DebugPreferenceInitializer extends AbstractPreferenceInitializer {
     store.setDefault(P_ENABLE_SMART_BRACES, false)
     store.setDefault(P_ENABLE_SMART_PARENS, false)
     store.setDefault(P_ENABLE_SMART_QUOTES, false)
+
+    store.setDefault(P_ENABLE_AUTO_CLOSING_BRACES, true)
   }
 }
