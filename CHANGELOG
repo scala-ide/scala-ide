@@ -4,3 +4,8 @@
 * Add syntax highlighting for numeric literals - :ticket:`1001442`
 * Add syntax highlighting for escape sequences - :ticket:`1001372`
 * Add syntax highlighting for Scaladoc - :ticket:`1001172`
+* Disable Java quick fixes/assists in Scala sources :ticket:`1001434`
+* Disable Run As/Debug As Java in Scala sources :ticket:`1001178`
+* Correct partitioning of octal sequences in character literals - :ticket:`1001443`
+* Add syntax highlighting for escape sequences in character literals  - :ticket:`1001444`
+* Prevent auto-insertion of closing brace when editing an existing line - :ticket:`1001309`

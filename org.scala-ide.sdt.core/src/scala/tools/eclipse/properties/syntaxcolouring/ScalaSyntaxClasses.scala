@@ -15,6 +15,7 @@ object ScalaSyntaxClasses {
   val KEYWORD = ScalaSyntaxClass("Keywords (excluding 'return')", "syntaxColouring.keyword")
   val RETURN = ScalaSyntaxClass("Keyword 'return'", "syntaxColouring.return")
   val STRING = ScalaSyntaxClass("Strings", "syntaxColouring.string")
+  val CHARACTER = ScalaSyntaxClass("Characters", "syntaxColouring.character")
   val MULTI_LINE_STRING = ScalaSyntaxClass("Multi-line string", "syntaxColouring.multiLineString")
   val BRACKET = ScalaSyntaxClass("Brackets", "syntaxColouring.bracket")
   val DEFAULT = ScalaSyntaxClass("Others", "syntaxColouring.default")
@@ -52,7 +53,7 @@ object ScalaSyntaxClasses {
   case class Category(name: String, children: List[ScalaSyntaxClass])
 
   val scalaSyntacticCategory = Category("Scala (syntactic)", List(
-    BRACKET, KEYWORD, RETURN, MULTI_LINE_STRING, OPERATOR, DEFAULT, STRING, NUMBER_LITERAL, ESCAPE_SEQUENCE, SYMBOL))
+    BRACKET, KEYWORD, RETURN, MULTI_LINE_STRING, OPERATOR, DEFAULT, STRING, CHARACTER, NUMBER_LITERAL, ESCAPE_SEQUENCE, SYMBOL))
 
   val scalaSemanticCategory = Category("Scala (semantic)", List(
     ANNOTATION, CASE_CLASS, CASE_OBJECT, CLASS, LAZY_LOCAL_VAL, LAZY_TEMPLATE_VAL,

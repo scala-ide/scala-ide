@@ -45,43 +45,48 @@ import org.eclipse.jface.text.hyperlink.URLHyperlinkDetector
 class ScalaSourceViewerConfiguration(store: IPreferenceStore, scalaPreferenceStore: IPreferenceStore, editor: ITextEditor)
    extends JavaSourceViewerConfiguration(JavaPlugin.getDefault.getJavaTextTools.getColorManager, store, editor, IJavaPartitions.JAVA_PARTITIONING) {
 
+  private val codeHighlightingScanners = {
+    val scalaCodeScanner = new ScalaCodeScanner(getColorManager, scalaPreferenceStore, ScalaVersions.DEFAULT)
+    val singleLineCommentScanner = new SingleTokenScanner(ScalaSyntaxClasses.SINGLE_LINE_COMMENT, getColorManager, scalaPreferenceStore)
+    val multiLineCommentScanner = new SingleTokenScanner(ScalaSyntaxClasses.MULTI_LINE_COMMENT, getColorManager, scalaPreferenceStore)
+    val scaladocScanner = new ScaladocTokenScanner(ScalaSyntaxClasses.SCALADOC, ScalaSyntaxClasses.SCALADOC_ANNOTATION, ScalaSyntaxClasses.SCALADOC_MACRO, getColorManager, scalaPreferenceStore)
+    val scaladocCodeBlockScanner = new SingleTokenScanner(ScalaSyntaxClasses.SCALADOC_CODE_BLOCK, getColorManager, scalaPreferenceStore)
+    val stringScanner = new StringTokenScanner(ScalaSyntaxClasses.ESCAPE_SEQUENCE, ScalaSyntaxClasses.STRING, getColorManager, scalaPreferenceStore)
+    val characterScanner = new StringTokenScanner(ScalaSyntaxClasses.ESCAPE_SEQUENCE, ScalaSyntaxClasses.CHARACTER, getColorManager, scalaPreferenceStore)
+    val multiLineStringScanner = new SingleTokenScanner(ScalaSyntaxClasses.MULTI_LINE_STRING, getColorManager, scalaPreferenceStore)
+    val xmlTagScanner = new XmlTagScanner(getColorManager, scalaPreferenceStore)
+    val xmlCommentScanner = new XmlCommentScanner(getColorManager, scalaPreferenceStore)
+    val xmlCDATAScanner = new XmlCDATAScanner(getColorManager, scalaPreferenceStore)
+    val xmlPCDATAScanner = new SingleTokenScanner(ScalaSyntaxClasses.DEFAULT, getColorManager, scalaPreferenceStore)
+    val xmlPIScanner = new XmlPIScanner(getColorManager, scalaPreferenceStore)
+
+    Map(
+      IDocument.DEFAULT_CONTENT_TYPE -> scalaCodeScanner,
+      IJavaPartitions.JAVA_DOC -> scaladocScanner,
+      ScalaPartitions.SCALADOC_CODE_BLOCK -> scaladocCodeBlockScanner,
+      IJavaPartitions.JAVA_SINGLE_LINE_COMMENT -> singleLineCommentScanner,
+      IJavaPartitions.JAVA_MULTI_LINE_COMMENT -> multiLineCommentScanner,
+      IJavaPartitions.JAVA_STRING -> stringScanner,
+      IJavaPartitions.JAVA_CHARACTER -> characterScanner,
+      ScalaPartitions.SCALA_MULTI_LINE_STRING -> multiLineStringScanner,
+      ScalaPartitions.XML_TAG -> xmlTagScanner,
+      ScalaPartitions.XML_COMMENT -> xmlCommentScanner,
+      ScalaPartitions.XML_CDATA -> xmlCDATAScanner,
+      ScalaPartitions.XML_PCDATA -> xmlPCDATAScanner,
+      ScalaPartitions.XML_PI -> xmlPIScanner
+    )
+  }
+
    override def getPresentationReconciler(sv: ISourceViewer) = {
       val reconciler = super.getPresentationReconciler(sv).asInstanceOf[PresentationReconciler]
 
-      def handlePartition(partitionType: String, tokenScanner: ITokenScanner) {
-         val dr = new DefaultDamagerRepairer(tokenScanner)
+      for ((partitionType, tokenScanner) <- codeHighlightingScanners) {
+        val dr = new DefaultDamagerRepairer(tokenScanner)
          reconciler.setDamager(dr, partitionType)
          reconciler.setRepairer(dr, partitionType)
       }
-
-      handlePartition(IDocument.DEFAULT_CONTENT_TYPE, scalaCodeScanner)
-      handlePartition(IJavaPartitions.JAVA_DOC, scaladocScanner)
-      handlePartition(ScalaPartitions.SCALADOC_CODE_BLOCK, scaladocCodeBlockScanner)
-      handlePartition(IJavaPartitions.JAVA_SINGLE_LINE_COMMENT, singleLineCommentScanner)
-      handlePartition(IJavaPartitions.JAVA_MULTI_LINE_COMMENT, multiLineCommentScanner)
-      handlePartition(IJavaPartitions.JAVA_STRING, stringScanner)
-      handlePartition(ScalaPartitions.SCALA_MULTI_LINE_STRING, multiLineStringScanner)
-      handlePartition(ScalaPartitions.XML_TAG, xmlTagScanner)
-      handlePartition(ScalaPartitions.XML_COMMENT, xmlCommentScanner)
-      handlePartition(ScalaPartitions.XML_CDATA, xmlCDATAScanner)
-      handlePartition(ScalaPartitions.XML_PCDATA, xmlPCDATAScanner)
-      handlePartition(ScalaPartitions.XML_PI, xmlPIScanner)
-
       reconciler
    }
-
-   private val scalaCodeScanner = new ScalaCodeScanner(getColorManager, scalaPreferenceStore, ScalaVersions.DEFAULT)
-   private val singleLineCommentScanner = new SingleTokenScanner(ScalaSyntaxClasses.SINGLE_LINE_COMMENT, getColorManager, scalaPreferenceStore)
-   private val multiLineCommentScanner = new SingleTokenScanner(ScalaSyntaxClasses.MULTI_LINE_COMMENT, getColorManager, scalaPreferenceStore)
-   private val scaladocScanner = new ScaladocTokenScanner(ScalaSyntaxClasses.SCALADOC, ScalaSyntaxClasses.SCALADOC_ANNOTATION, ScalaSyntaxClasses.SCALADOC_MACRO, getColorManager, scalaPreferenceStore)
-   private val scaladocCodeBlockScanner = new SingleTokenScanner(ScalaSyntaxClasses.SCALADOC_CODE_BLOCK, getColorManager, scalaPreferenceStore)
-   private val stringScanner = new StringTokenScanner(ScalaSyntaxClasses.ESCAPE_SEQUENCE, ScalaSyntaxClasses.STRING, getColorManager, scalaPreferenceStore)
-   private val multiLineStringScanner = new SingleTokenScanner(ScalaSyntaxClasses.MULTI_LINE_STRING, getColorManager, scalaPreferenceStore)
-   private val xmlTagScanner = new XmlTagScanner(getColorManager, scalaPreferenceStore)
-   private val xmlCommentScanner = new XmlCommentScanner(getColorManager, scalaPreferenceStore)
-   private val xmlCDATAScanner = new XmlCDATAScanner(getColorManager, scalaPreferenceStore)
-   private val xmlPCDATAScanner = new SingleTokenScanner(ScalaSyntaxClasses.DEFAULT, getColorManager, scalaPreferenceStore)
-   private val xmlPIScanner = new XmlPIScanner(getColorManager, scalaPreferenceStore)
 
    override def getTextHover(sv: ISourceViewer, contentType: String, stateMask: Int) = {
 //     new ScalaHover(getCodeAssist _)
@@ -131,7 +136,7 @@ class ScalaSourceViewerConfiguration(store: IPreferenceStore, scalaPreferenceSto
          case IJavaPartitions.JAVA_STRING =>
             Array(new SmartSemicolonAutoEditStrategy(partitioning), new JavaStringAutoIndentStrategy(partitioning))
          case IJavaPartitions.JAVA_CHARACTER | IDocument.DEFAULT_CONTENT_TYPE =>
-            Array(new SmartSemicolonAutoEditStrategy(partitioning), new ScalaAutoIndentStrategy(partitioning, getProject, sourceViewer, new JdtPreferenceProvider(getProject)), new BracketAutoEditStrategy)
+            Array(new SmartSemicolonAutoEditStrategy(partitioning), new ScalaAutoIndentStrategy(partitioning, getProject, sourceViewer, new JdtPreferenceProvider(getProject)), new BracketAutoEditStrategy(ScalaPlugin.prefStore))
          case _ =>
             Array(new ScalaAutoIndentStrategy(partitioning, getProject, sourceViewer, new JdtPreferenceProvider(getProject)))
       }
@@ -145,18 +150,7 @@ class ScalaSourceViewerConfiguration(store: IPreferenceStore, scalaPreferenceSto
 
    override def handlePropertyChangeEvent(event: PropertyChangeEvent) {
       super.handlePropertyChangeEvent(event)
-      scalaCodeScanner.adaptToPreferenceChange(event)
-      scaladocScanner.adaptToPreferenceChange(event)
-      scaladocCodeBlockScanner.adaptToPreferenceChange(event)
-      stringScanner.adaptToPreferenceChange(event)
-      multiLineStringScanner.adaptToPreferenceChange(event)
-      singleLineCommentScanner.adaptToPreferenceChange(event)
-      multiLineCommentScanner.adaptToPreferenceChange(event)
-      xmlTagScanner.adaptToPreferenceChange(event)
-      xmlCommentScanner.adaptToPreferenceChange(event)
-      xmlCDATAScanner.adaptToPreferenceChange(event)
-      xmlPCDATAScanner.adaptToPreferenceChange(event)
-      xmlPIScanner.adaptToPreferenceChange(event)
+      codeHighlightingScanners.values foreach (_ adaptToPreferenceChange event)
    }
 
    /**
