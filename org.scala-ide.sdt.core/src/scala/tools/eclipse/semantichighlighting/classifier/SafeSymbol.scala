@@ -104,6 +104,9 @@ trait SafeSymbol extends CompilerAccess with PimpedTrees {
     case ExistentialTypeTree(tpt, whereClauses) =>
       (tpt :: whereClauses).flatMap(safeSymbol)
 
+    case _: LabelDef =>
+      Nil
+
     case tpe @ Select(qualifier, _) =>
       val tpeSym = if (hasSourceCodeRepresentation(tpe)) global.askOption(() => tpe.symbol -> tpe.namePosition).toList else Nil
       val qualiSym = if(hasSourceCodeRepresentation(qualifier)) safeSymbol(qualifier) else Nil
