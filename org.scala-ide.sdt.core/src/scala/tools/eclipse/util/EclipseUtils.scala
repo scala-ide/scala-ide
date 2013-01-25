@@ -29,6 +29,8 @@ import scala.tools.nsc.util.Position
 import scala.tools.nsc.util.SourceFile
 import scala.tools.nsc.interactive.RangePositions
 import scala.tools.nsc.util.RangePosition
+import org.eclipse.core.runtime.jobs.Job
+import org.eclipse.core.runtime.jobs.ISchedulingRule
 
 object EclipseUtils {
 
@@ -82,6 +84,15 @@ object EclipseUtils {
         f(monitor)
       }
     }, monitor)
+  }
+
+  def scheduleJob(name: String, rule: ISchedulingRule)(f: IProgressMonitor => IStatus): Job = {
+    val job = new Job("Validate binary compatibility") {
+      override def run(monitor: IProgressMonitor): IStatus = f(monitor)
+    }
+    job.setRule(rule)
+    job.schedule()
+    job
   }
 
   def computeSelectedResources(selection: IStructuredSelection): List[IResource] =

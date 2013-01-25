@@ -29,6 +29,8 @@ import org.eclipse.jdt.core.JavaModelException
 import scala.tools.eclipse.logging.HasLogger
 import java.io.File
 import org.eclipse.jdt.internal.core.JavaProject
+import scala.tools.eclipse.resources.MarkerFactory
+import scala.tools.eclipse.util.EclipseUtils
 
 /** The Scala classpath broken down in the JDK, Scala library and user library.
  *
@@ -168,7 +170,9 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
   }
 
   private val classpathCheckLock = new Object
+  @volatile
   private var classpathHasBeenChecked = false
+  @volatile
   private var classpathValid = false;
 
   /** Return <code>true</code> if the classpath is deemed valid.
@@ -284,31 +288,34 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
     // check the found package fragment roots
     fragmentRoots.length match {
       case 0 => // unable to find any trace of scala library
-        setClasspathError(IMarker.SEVERITY_ERROR, "Unable to find a scala library. Please add the scala container or a scala library jar to the build path.")
+        setScalaLibraryError(IMarker.SEVERITY_ERROR, "Unable to find a scala library. Please add the scala container or a scala library jar to the build path.")
       case 1 => // one and only one, now check if the version number is contained in library.properties
         if (fragmentRoots(0).isProject) {
           // if the library is provided by a project in the workspace, disable the warning (the version file is missing anyway)
-          setClasspathError(0, null)
+          setScalaLibraryError(0, null)
         } else fragmentRoots(0).version match {
           case Some(v) if v == plugin.scalaVer =>
             // exactly the same version, should be from the container. Perfect
-            setClasspathError(0, null)
+            setScalaLibraryError(0, null)
           case v if plugin.isCompatibleVersion(v) =>
             // compatible version (major, minor are the same). Still, add warning message
-            setClasspathError(IMarker.SEVERITY_WARNING, "The version of scala library found in the build path is different from the one provided by scala IDE: " + v.get + ". Expected: " + plugin.scalaVer + ". Make sure you know what you are doing.")
+            setScalaLibraryError(IMarker.SEVERITY_WARNING, "The version of scala library found in the build path is different from the one provided by scala IDE: " + v.get + ". Expected: " + plugin.scalaVer + ". Make sure you know what you are doing.")
           case Some(v) =>
             // incompatible version
-            setClasspathError(IMarker.SEVERITY_ERROR, "The version of scala library found in the build path is incompatible with the one provided by scala IDE: " + v + ". Expected: " + plugin.scalaVer + ". Please replace the scala library with the scala container or a compatible scala library jar.")
+            setScalaLibraryError(IMarker.SEVERITY_ERROR, "The version of scala library found in the build path is incompatible with the one provided by scala IDE: " + v + ". Expected: " + plugin.scalaVer + ". Please replace the scala library with the scala container or a compatible scala library jar.")
           case None =>
             // no version found
-            setClasspathError(IMarker.SEVERITY_ERROR, "The scala library found in the build path doesn't expose its version. Please replace the scala library with the scala container or a valid scala library jar")
+            setScalaLibraryError(IMarker.SEVERITY_ERROR, "The scala library found in the build path doesn't expose its version. Please replace the scala library with the scala container or a valid scala library jar")
         }
       case _ => // 2 or more of them, not great, but warn only if the library is not a project
         if (fragmentRoots.exists(incompatibleScalaLibrary))
-          setClasspathError(IMarker.SEVERITY_ERROR, moreThanOneLibraryError(fragmentRoots.map(_.location), compatible = false))
+          setScalaLibraryError(IMarker.SEVERITY_ERROR, moreThanOneLibraryError(fragmentRoots.map(_.location), compatible = false))
         else
-          setClasspathError(IMarker.SEVERITY_WARNING, moreThanOneLibraryError(fragmentRoots.map(_.location), compatible = true))
+          setScalaLibraryError(IMarker.SEVERITY_WARNING, moreThanOneLibraryError(fragmentRoots.map(_.location), compatible = true))
     }
+
+    validateBinaryVersionsOnClasspath()
+    classpathHasBeenChecked = true
   }
   
   private def moreThanOneLibraryError(libs: Seq[IPath], compatible: Boolean): String = {
@@ -342,41 +349,65 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
 
   /** Manage the possible classpath error/warning reported on the project.
    */
-  private def setClasspathError(severity: Int, message: String) {
+  private def setScalaLibraryError(severity: Int, message: String) {
     // set the state
     classpathValid = severity != IMarker.SEVERITY_ERROR
-    classpathHasBeenChecked = true
 
     // the marker manipulation need to be done in a Job, because it requires
     // a change on the IProject, which is locked for modification during
     // the classpath change notification
-    val markerJob = new Job("Update classpath error marker") {
-      override def run(monitor: IProgressMonitor): IStatus = {
-        if (underlying.isOpen()) { // cannot change markers on closed project
-          // clean the classpath markers
-          underlying.deleteMarkers(plugin.classpathProblemMarkerId, false, IResource.DEPTH_ZERO)
+    EclipseUtils.scheduleJob("Update classpath error marker", underlying) { monitor =>
+      if (underlying.isOpen()) { // cannot change markers on closed project
+        // clean the classpath markers
+        underlying.deleteMarkers(plugin.classpathProblemMarkerId, false, IResource.DEPTH_ZERO)
 
-          // add a new marker if needed
-          severity match {
-            case IMarker.SEVERITY_ERROR | IMarker.SEVERITY_WARNING =>
-              if (severity == IMarker.SEVERITY_ERROR) {
-                // delete all other Scala and Java error markers
-                underlying.deleteMarkers(plugin.problemMarkerId, true, IResource.DEPTH_INFINITE)
-                underlying.deleteMarkers(IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER, true, IResource.DEPTH_INFINITE)
-              }
+        // add a new marker if needed
+        severity match {
+          case IMarker.SEVERITY_ERROR | IMarker.SEVERITY_WARNING =>
+            if (severity == IMarker.SEVERITY_ERROR) {
+              // delete all other Scala and Java error markers
+              underlying.deleteMarkers(plugin.problemMarkerId, true, IResource.DEPTH_INFINITE)
+              underlying.deleteMarkers(IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER, true, IResource.DEPTH_INFINITE)
+            }
 
-              // create the classpath problem marker
-              val marker = underlying.createMarker(plugin.classpathProblemMarkerId)
-              marker.setAttribute(IMarker.MESSAGE, message)
-              marker.setAttribute(IMarker.SEVERITY, severity)
+            // create the classpath problem marker
+            cpMarkerFactory.create(underlying, severity, message)
 
-            case _ =>
-          }
+          case _ =>
         }
-        Status.OK_STATUS
+      }
+      Status.OK_STATUS
+    }
+  }
+
+  private def validateBinaryVersionsOnClasspath() {
+    def roundUp(version: String) =
+      if (version.count(_ == '.') < 2) version + ".0" else version
+
+    val crossCompiled = """.*_(2\.\d+(\..*)?)(-.*)?.jar""".r
+    val entries = scalaClasspath.userCp
+    val errors = mutable.ListBuffer[(IPath, String)]()
+
+    for (entry <- entries) {
+      entry.lastSegment() match {
+        case crossCompiled(version, _, _) if !plugin.isCompatibleVersion(Some(roundUp(version))) =>
+          classpathValid = false
+          errors += ((entry, version))
+        case _ =>
+        // ignore libraries that aren't cross compiled/are compatible
       }
     }
-    markerJob.setRule(underlying)
-    markerJob.schedule()
+    EclipseUtils.scheduleJob("Validate binary compatibility", underlying) { monitor =>
+      errors.foreach(p => makeBinaryIncompatibleMarker(p._1, p._2))
+      Status.OK_STATUS
+    }
+  }
+
+  private object cpMarkerFactory extends MarkerFactory(plugin.classpathProblemMarkerId)
+
+  private def makeBinaryIncompatibleMarker(entry: IPath, binaryVersion: String) {
+    val errorMsg = "%s is cross-compiled with an incompatible version of Scala (%s)".format(entry.lastSegment, binaryVersion)
+    logger.info(errorMsg)
+    cpMarkerFactory.create(underlying, IMarker.SEVERITY_ERROR, errorMsg)
   }
 }
