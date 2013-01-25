@@ -29,7 +29,9 @@ object ScalaStepReturn {
  * This class is thread safe. Instances are not to be created outside of the ScalaStepReturn object.
  */
 private[command] abstract class ScalaStepReturnActor(debugTarget: ScalaDebugTarget, thread: ScalaThread, stepReturnRequest: StepRequest) extends BaseDebuggerActor {
-  
+
+  private var enabled = false
+
   protected[command] def scalaStep: ScalaStep
 
   override protected def postStart(): Unit = link(thread.companionActor)
@@ -39,34 +41,46 @@ private[command] abstract class ScalaStepReturnActor(debugTarget: ScalaDebugTarg
     case stepEvent: StepEvent =>
       reply {
         if (!debugTarget.stepFilters.isTransparentLocation(stepEvent.location)) {
-          dispose()
+          terminate()
           thread.suspendedFromScala(DebugEvent.STEP_RETURN)
           true
         } 
         else false
       }
     case ScalaStep.Step => step()    // user step request
-    case ScalaStep.Stop => dispose() // step is terminated
+    case ScalaStep.Stop => terminate() // step is terminated
   }
 
   private def step() {
-    val eventDispatcher = debugTarget.eventDispatcher
-
-    eventDispatcher.setActorFor(this, stepReturnRequest)
-    stepReturnRequest.enable()
+    enable()
     thread.resumeFromScala(scalaStep, DebugEvent.STEP_RETURN)
   }
 
-  private def dispose(): Unit = {
+  private def terminate() {
+    disable()
     poison()
-    unlink(thread.companionActor)
-    val eventDispatcher = debugTarget.eventDispatcher
-    val eventRequestManager = debugTarget.virtualMachine.eventRequestManager
-
-    stepReturnRequest.disable()
-    eventDispatcher.unsetActorFor(stepReturnRequest)
-    eventRequestManager.deleteEventRequest(stepReturnRequest)
   }
-  
-  override protected def preExit(): Unit = dispose()
+
+  private def enable() {
+    if (!enabled) {
+      debugTarget.eventDispatcher.setActorFor(this, stepReturnRequest)
+      stepReturnRequest.enable()
+      enabled = true
+    }
+  }
+
+  private def disable() {
+    if (enabled) {
+
+      stepReturnRequest.disable()
+      debugTarget.eventDispatcher.unsetActorFor(stepReturnRequest)
+      debugTarget.virtualMachine.eventRequestManager.deleteEventRequest(stepReturnRequest)
+      enabled = false
+    }
+  }
+
+  override protected def preExit(): Unit = {
+    unlink(thread.companionActor)
+    disable()
+  }
 }
