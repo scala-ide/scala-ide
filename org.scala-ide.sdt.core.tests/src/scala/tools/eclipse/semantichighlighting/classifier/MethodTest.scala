@@ -161,4 +161,18 @@ class MethodTest extends AbstractSymbolClassifierTest {
       """,
       Map("CLS" -> Class))
   }
+
+  @Test(expected = Predef.classOf[AssertionError])
+  def while_keyword_is_not_treated_as_method() {
+    checkSymbolClassification("""
+      object X {
+        while (false) {}
+      }
+      """, """
+      object X {
+        $MET$ (false) {}
+      }
+      """,
+      Map("MET" -> Method))
+  }
 }
