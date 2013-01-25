@@ -108,7 +108,7 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
           val path0 = cp.getPath
           if (!path0.isEmpty && path0.segment(0) == JavaRuntime.JRE_CONTAINER) {
             val container = JavaCore.getClasspathContainer(path0, javaProject)
-            Some(container.getClasspathEntries.toSeq.map(_.getPath))
+            Option(container).map(_.getClasspathEntries.toSeq.map(_.getPath))
           } else None
 
         case _ => None
