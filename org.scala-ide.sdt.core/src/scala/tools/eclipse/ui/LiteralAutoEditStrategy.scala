@@ -81,6 +81,14 @@ class LiteralAutoEditStrategy(prefStore: IPreferenceStore) extends IAutoEditStra
     }
 
     def customizeChar() {
+      if (command.length > 1) {
+        /*
+         * As in `customizeLiteral` this method can not handle changes of more
+         * than a single sign.
+         */
+        return
+      }
+
       command.text match {
         case "\"" | "'" => addClosingLiteral()
         case ""         => removeLiteral()

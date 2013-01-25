@@ -118,4 +118,9 @@ class LiteralAutoEditStrategyTest extends AutoEditStrategyTests(
     LiteralAutoEditStrategyTest.enableAutoEscape(false)
     test(input = """ '\\^' """, expectedOutput = """ '\^' """, operation = Remove("\\"))
   }
+
+  @Test
+  def remove_whole_character_literal() {
+    test(input = """ '''^ """, expectedOutput = """ ^ """, operation = Remove("'''"))
+  }
 }
