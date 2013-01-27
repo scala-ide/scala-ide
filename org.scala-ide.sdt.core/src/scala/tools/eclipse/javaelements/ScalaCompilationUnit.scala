@@ -94,7 +94,7 @@ trait ScalaCompilationUnit extends Openable
 
   override def bufferChanged(e : BufferChangedEvent) {
     if (!e.getBuffer.isClosed)
-      scalaProject.presentationCompiler(_.askReload(this, getContents))
+      scalaProject.presentationCompiler(_.scheduleReload(this, getContents))
 
     super.bufferChanged(e)
   }

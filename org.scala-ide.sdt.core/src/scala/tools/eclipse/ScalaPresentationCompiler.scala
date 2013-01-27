@@ -7,7 +7,9 @@ package scala.tools.eclipse
 
 import scala.tools.nsc.interactive.FreshRunReq
 import scala.collection.concurrent
+import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.SynchronizedMap
 import org.eclipse.jdt.core.compiler.IProblem
 import org.eclipse.jdt.internal.compiler.problem.DefaultProblem
 import org.eclipse.jdt.internal.compiler.problem.ProblemSeverities
@@ -82,6 +84,39 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings) exten
     askReload(compilationUnits)
   }
 
+  /**
+   * The set of compilation units to be reloaded at the next refresh round.
+   * Refresh rounds can be triggered by the reconciler, but also interactive requests
+   * (e.g. completion)
+   */
+  private val scheduledUnits = new mutable.HashMap[InteractiveCompilationUnit,Array[Char]]
+
+  /**
+   * Add a compilation unit (CU) to the set of CUs to be Reloaded at the next refresh round.
+   * If the CU is unknown by the compiler at scheduling, this is a no-op.
+   */
+  def scheduleReload(icu : InteractiveCompilationUnit, contents:Array[Char]) : Unit = {
+    if (compilationUnits.contains(icu))
+        synchronized { scheduledUnits += ((icu, contents)) }
+  }
+
+  /** Reload the scheduled compilation units and reset the set of scheduled reloads.
+   *  For any CU not tracked by the presentation compiler at schedule time, it's a no-op.
+   */
+  def flushScheduledReloads() : Response[Unit]= {
+    val reloadees = scheduledUnits.toList
+    scheduledUnits.clear()
+
+    val res = new Response[Unit]
+    if (reloadees.isEmpty) res.set(())
+    else {
+      val reloadFiles = reloadees map { case (s,c) => s.sourceFile(c) }
+      askReload(reloadFiles, res)
+      res.get
+    }
+    res
+  }
+
   def problemsOf(file: AbstractFile): List[IProblem] = {
     unitOfFile get file match {
       case Some(unit) =>
@@ -132,7 +167,7 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings) exten
   def askOption[A](op: () => A): Option[A] = askOption(op, 10000)
 
   /** Perform `op' on the compiler thread. Catch all exceptions, and return
-   *  None if an exception occured. TypeError and FreshRunReq are printed to
+   *  None if an exception occurred. TypeError and FreshRunReq are printed to
    *  stdout, all the others are logged in the platform error log.
    */
   def askOption[A](op: () => A, timeout: Int): Option[A] = {
@@ -184,7 +219,7 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings) exten
   /** Reload the given compilation unit. If the unit is not tracked by the presentation
    *  compiler, it will be from now on.
    */
-  def askReload(scu: ScalaCompilationUnit, content: Array[Char]): Response[Unit] = {
+  def askReload(scu: InteractiveCompilationUnit, content: Array[Char]): Response[Unit] = {
     withResponse[Unit] { res => askReload(List(scu.sourceFile(content)), res) }
   }
 
