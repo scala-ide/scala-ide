@@ -28,6 +28,7 @@ import scala.tools.eclipse.ui.MultiLineStringAutoEditStrategy
 import scala.tools.eclipse.ui.ScalaAutoIndentStrategy
 import scala.tools.eclipse.ui.StringAutoEditStrategy
 
+import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.jdt.core.ICodeAssist
 import org.eclipse.jdt.core.IJavaElement
 import org.eclipse.jdt.core.IJavaProject
@@ -49,17 +50,24 @@ import org.eclipse.jface.text.formatter.IContentFormatter
 import org.eclipse.jface.text.formatter.MultiPassContentFormatter
 import org.eclipse.jface.text.hyperlink.IHyperlinkDetector
 import org.eclipse.jface.text.hyperlink.URLHyperlinkDetector
+import org.eclipse.jface.text.reconciler.IReconciler
+import org.eclipse.jface.text.reconciler.MonoReconciler
 import org.eclipse.jface.text.rules.DefaultDamagerRepairer
 import org.eclipse.jface.text.source.ISourceViewer
 import org.eclipse.jface.util.PropertyChangeEvent
 import org.eclipse.ui.texteditor.ITextEditor
 
 import scalariform.ScalaVersions
+import org.eclipse.jface.text.DefaultTextHover
+import scala.tools.eclipse.javaelements.ScalaCompilationUnit
+import scala.tools.eclipse.ui.CommentAutoIndentStrategy
+import org.eclipse.jface.text.hyperlink.URLHyperlinkDetector
+import scala.tools.eclipse.reconciler.ScalaReconcilingStrategy
 
 class ScalaSourceViewerConfiguration(
   javaPreferenceStore: IPreferenceStore,
   scalaPreferenceStore: IPreferenceStore,
-  editor: ITextEditor)
+  editor: ScalaEditor)
     extends JavaSourceViewerConfiguration(
       JavaPlugin.getDefault.getJavaTextTools.getColorManager,
       javaPreferenceStore,
@@ -98,6 +106,14 @@ class ScalaSourceViewerConfiguration(
       ScalaPartitions.XML_PCDATA -> xmlPCDATAScanner,
       ScalaPartitions.XML_PI -> xmlPIScanner
     )
+  }
+
+  override def getReconciler(sourceViewer: ISourceViewer): IReconciler = {
+    val reconciler = new MonoReconciler(new ScalaReconcilingStrategy(editor), /*isIncremental = */ false)
+    reconciler.setDelay(500)
+    reconciler.install(sourceViewer)
+    reconciler.setProgressMonitor(new NullProgressMonitor())
+    reconciler
   }
 
   override def getPresentationReconciler(sourceViewer: ISourceViewer): ScalaPresentationReconciler = {
