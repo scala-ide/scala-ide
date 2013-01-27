@@ -65,6 +65,51 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings)
     }
   }
 
+  /**
+   * Freshen the contents of the given compilation unit's source file
+   * with some (presumably newer) string content.
+   */
+  private def sourceFileUpdate (scu : InteractiveCompilationUnit, content : Array[Char]) = {
+    for (f <- sourceFiles.get(scu)) {
+      val newF = new BatchSourceFile(f.file, content)
+      synchronized { sourceFiles(scu) = newF }
+    }
+  }
+
+  /**
+   * The set of compilation units to be reloaded at the next refresh round.
+   * Refresh rounds can be triggered by the reconciler, but also interactive requests
+   * (e.g. completion)
+   */
+  private val scheduledUnits = new mutable.HashMap[InteractiveCompilationUnit,Array[Char]]
+
+  /**
+   * Add a compilation unit (CU) to the set of CUs to be Reloaded at the next refresh round.
+   * If the CU is unknown by the compiler at scheduling, this is a no-op.
+   */
+  def scheduleReload(icu : InteractiveCompilationUnit, contents:Array[Char]) : Unit = {
+    if (sourceFiles.get(icu).isDefined)
+        synchronized { scheduledUnits += ((icu, contents)) }
+  }
+
+  /** Reload the scheduled compilation units and reset the set of scheduled reloads.
+   *  For any CU not tracked by the presentation compiler at schedule time, it's a no-op.
+   */
+  def flushScheduledReloads() : Response[Unit]= {
+    val reloadees = scheduledUnits.toList
+    scheduledUnits.clear()
+
+    val res = new Response[Unit]
+    if (reloadees.isEmpty) res.set(())
+    else {
+      for ((s,c) <- reloadees) sourceFileUpdate(s,c)
+      val reloadFiles = reloadees.flatMap {case (s,c) => sourceFiles.get(s)}
+      askReload(reloadFiles,res)
+      res.get
+    }
+    res
+  }
+
   /** Return the Scala compilation units that are currently maintained by this presentation compiler.
    */
   def compilationUnits: Seq[InteractiveCompilationUnit] = {
@@ -125,9 +170,9 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings)
 
   /** Ask with a default timeout. Keep around for compatibility with the m2 release. */
   def askOption[A](op: () => A): Option[A] = askOption(op, 10000)
-  
+
   /** Perform `op' on the compiler thread. Catch all exceptions, and return
-   *  None if an exception occured. TypeError and FreshRunReq are printed to
+   *  None if an exception occurred. TypeError and FreshRunReq are printed to
    *  stdout, all the others are logged in the platform error log.
    */
   def askOption[A](op: () => A, timeout: Int): Option[A] = {
