@@ -409,15 +409,7 @@ class ClasspathTests {
         getIncompatibleScalaVersion + ".x/scala-library.jar"), null, null)
 
   private def getIncompatibleScalaVersion: String = {
-    ScalaPlugin.plugin.shortScalaVer match {
-      case "2.8"  => "2.9"
-      case "2.9"  => "2.10"
-      case "2.10" => "2.11"
-      case "2.11" => "2.9"
-      case _ =>
-        fail("Unsupported embedded scala library version " + ScalaPlugin.plugin.scalaVer + ". Please update the test.")
-        ""
-    }
+    if (ScalaPlugin.plugin.shortScalaVer == "2.10") "2.9" else "2.10"
   }
 
   /**
@@ -433,36 +425,26 @@ class ClasspathTests {
    * only for classpath markers.
    */
   private def checkMarkers(expectedNbOfWarningMarker: Int, expectedNbOfErrorMarker: Int, scalaProject: ScalaProject= project) {
-    // try for 5 seconds, checking every 200ms
-    val TIMEOUT= 5000 // 5s
-    val STEP= 200 //200ms
-    
-    // check the classpathValid state
-    assertEquals("Unexpected classpath validity state", expectedNbOfErrorMarker == 0, scalaProject.isClasspathValid())
-    
-    var nbOfWarningMarker= 0
-    var nbOfErrorMarker= 0
-    
-    for (i <- 1 to (TIMEOUT / STEP)) {
+    def countMarkers(): (Int, Int) = {
       // count the markers on the project
-      nbOfWarningMarker= 0
-      nbOfErrorMarker= 0
+      var nbOfWarningMarker = 0
+      var nbOfErrorMarker = 0
+
       for (marker <- scalaProject.underlying.findMarkers(classpathMarkerId, false, IResource.DEPTH_ZERO))
         marker.getAttribute(IMarker.SEVERITY, 0) match {
-        case IMarker.SEVERITY_ERROR => nbOfErrorMarker+=1
-        case IMarker.SEVERITY_WARNING => nbOfWarningMarker+=1
-        case _ =>
-      }
-    
-      if (nbOfWarningMarker == expectedNbOfWarningMarker && nbOfErrorMarker == expectedNbOfErrorMarker) {
-        // markers are fine, we're done
-        return
-      }
-      
-      // wait a bit before trying again
-      Thread.sleep(STEP)
+          case IMarker.SEVERITY_ERROR   => nbOfErrorMarker += 1
+          case IMarker.SEVERITY_WARNING => nbOfWarningMarker += 1
+          case _                        =>
+        }
+      (nbOfErrorMarker, nbOfWarningMarker)
     }
-    
+
+    // check the classpathValid state
+    assertEquals("Unexpected classpath validity state", expectedNbOfErrorMarker == 0, scalaProject.isClasspathValid())
+
+    SDTTestUtils.waitUntil(5000)(countMarkers == (expectedNbOfErrorMarker, expectedNbOfWarningMarker))
+
+    val (nbOfErrorMarker, nbOfWarningMarker) = countMarkers
     // after TIMEOUT, we didn't get the expected value
     assertEquals("Unexpected nb of warning markers", expectedNbOfWarningMarker, nbOfWarningMarker)
     assertEquals("Unexpected nb of error markers", expectedNbOfErrorMarker, nbOfErrorMarker)
