@@ -23,7 +23,7 @@ import scala.tools.nsc.util.SourceFile
 
 import org.eclipse.core.resources.{IContainer, IFile, IMarker, IProject, IResource, IResourceProxy, IResourceProxyVisitor}
 import org.eclipse.core.runtime.{IPath, IProgressMonitor, Path, SubMonitor}
-import org.eclipse.jdt.core.{IClasspathEntry, IJavaProject, JavaCore}
+import org.eclipse.jdt.core.{IClasspathEntry, IJavaProject, JavaCore, JavaModelException}
 import org.eclipse.jdt.internal.core.util.Util
 import org.eclipse.ui.IEditorPart
 import org.eclipse.ui.IPartListener
@@ -187,17 +187,25 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
   /** Deletes the build problem marker associated to {{{this}}} Scala project. */
   private def clearBuildProblemMarker(): Unit = 
     workspaceRunnableIn(underlying.getWorkspace) { m =>
-      underlying.deleteMarkers(plugin.problemMarkerId, true, IResource.DEPTH_ZERO)
-    }
+      if (isUnderlyingValid) {
+        underlying.deleteMarkers(plugin.problemMarkerId, true, IResource.DEPTH_ZERO)
+      }
+    }    
  
   /** Deletes all build problem markers for all resources in {{{this}}} Scala project. */
   private def clearAllBuildProblemMarkers(): Unit = {
-    underlying.deleteMarkers(plugin.problemMarkerId, true, IResource.DEPTH_INFINITE)
+    workspaceRunnableIn(underlying.getWorkspace) { m =>
+      if (isUnderlyingValid) {
+        underlying.deleteMarkers(plugin.problemMarkerId, true, IResource.DEPTH_INFINITE)
+      }
+    }
   }
 
   private def clearSettingsErrors(): Unit =
     workspaceRunnableIn(underlying.getWorkspace) { m =>
-      underlying.deleteMarkers(plugin.settingProblemMarkerId, true, IResource.DEPTH_ZERO)
+      if (isUnderlyingValid) {
+        underlying.deleteMarkers(plugin.settingProblemMarkerId, true, IResource.DEPTH_ZERO)
+      }
     }
 
   
@@ -221,8 +229,8 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
    *  dependencies.
    */
   def exportedDependencies: Seq[IProject] = {
-    for { entry <- javaProject.getRawClasspath
-          if entry.getEntryKind == IClasspathEntry.CPE_PROJECT && entry.isExported
+    for { entry <- resolvedClasspath
+      if entry.getEntryKind == IClasspathEntry.CPE_PROJECT && entry.isExported
     } yield plugin.workspaceRoot.getProject(entry.getPath().toString)
   }
     
@@ -230,7 +238,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
 
   def sourceFolders: Seq[IPath] = {
     for {
-      cpe <- javaProject.getResolvedClasspath(true) if cpe.getEntryKind == IClasspathEntry.CPE_SOURCE
+      cpe <- resolvedClasspath if cpe.getEntryKind == IClasspathEntry.CPE_SOURCE
       resource <- Option(plugin.workspaceRoot.findMember(cpe.getPath)) if resource.exists
     } yield resource.getLocation
   }
@@ -253,7 +261,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
    *          output folder.
    */
   def sourceOutputFolders: Seq[(IContainer, IContainer)] = {
-    val cpes = javaProject.getResolvedClasspath(true)
+    val cpes = resolvedClasspath
 
     for {
       cpe <- cpes if cpe.getEntryKind == IClasspathEntry.CPE_SOURCE
@@ -268,6 +276,24 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
       (source.asInstanceOf[IContainer], binPath)
     }
   }
+
+  private def isUnderlyingValid = (underlying.exists() && underlying.isOpen)
+
+  /**
+   * This function checks that the underlying project is closed, if not, return the classpath, otherwise return Nil, 
+   * so avoids throwing an exceptions.
+   *  @return the classpath or Nil, if the underlying project is closed.
+   */ 
+  private def resolvedClasspath = 
+     try {
+       if (isUnderlyingValid) {
+         javaProject.getResolvedClasspath(true).toList
+       } else {
+         Nil
+       }
+     } catch { 
+       case e: JavaModelException => logger.error(e); Nil
+     }
   
   /** Return all source files in the source path. It only returns buildable files (meaning
    *  Java or Scala sources).
