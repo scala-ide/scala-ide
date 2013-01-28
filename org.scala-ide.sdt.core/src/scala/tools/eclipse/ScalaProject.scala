@@ -186,18 +186,24 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
 
   /** Deletes the build problem marker associated to {{{this}}} Scala project. */
   private def clearBuildProblemMarker(): Unit = 
-    workspaceRunnableIn(underlying.getWorkspace) { m =>
-      underlying.deleteMarkers(plugin.problemMarkerId, true, IResource.DEPTH_ZERO)
-    }
+    if (underlying.isOpen) {
+      workspaceRunnableIn(underlying.getWorkspace) { m =>
+        underlying.deleteMarkers(plugin.problemMarkerId, true, IResource.DEPTH_ZERO)
+      }
+    }    
  
   /** Deletes all build problem markers for all resources in {{{this}}} Scala project. */
   private def clearAllBuildProblemMarkers(): Unit = {
-    underlying.deleteMarkers(plugin.problemMarkerId, true, IResource.DEPTH_INFINITE)
+    if (underlying.isOpen) {
+      underlying.deleteMarkers(plugin.problemMarkerId, true, IResource.DEPTH_INFINITE)
+    }
   }
 
   private def clearSettingsErrors(): Unit =
-    workspaceRunnableIn(underlying.getWorkspace) { m =>
-      underlying.deleteMarkers(plugin.settingProblemMarkerId, true, IResource.DEPTH_ZERO)
+    if (underlying.isOpen) {
+      workspaceRunnableIn(underlying.getWorkspace) { m =>
+        underlying.deleteMarkers(plugin.settingProblemMarkerId, true, IResource.DEPTH_ZERO)
+      }
     }
 
   
@@ -221,9 +227,20 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
    *  dependencies.
    */
   def exportedDependencies: Seq[IProject] = {
-    for { entry <- javaProject.getRawClasspath
-          if entry.getEntryKind == IClasspathEntry.CPE_PROJECT && entry.isExported
-    } yield plugin.workspaceRoot.getProject(entry.getPath().toString)
+    try {
+      if (underlying.isOpen) {
+        for { entry <- javaProject.getRawClasspath
+            if entry.getEntryKind == IClasspathEntry.CPE_PROJECT && entry.isExported
+        } yield plugin.workspaceRoot.getProject(entry.getPath().toString)
+      } else {
+        Nil
+      } 
+    } catch {
+      case t: Exception => { 
+        eclipseLog.error("Unable to collect exported dependencies for " + underlying.getName, t)
+        Nil
+      }
+    } 
   }
     
   lazy val javaProject: IJavaProject = JavaCore.create(underlying)
