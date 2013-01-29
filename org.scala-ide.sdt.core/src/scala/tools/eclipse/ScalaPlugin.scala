@@ -116,14 +116,14 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
   val jarFileExtn = ".jar"
 
   private def cutVersion(version: String): String = {
-          val pattern = "(\\d)\\.(\\d+)\\..*".r
-          version match {
-            case pattern(major, minor)=>
-              major + "." + minor
-            case _ =>
-              "(unknown)"
-          }
-      }
+    val pattern = "(\\d)\\.(\\d+)\\..*".r
+    version match {
+      case pattern(major, minor) =>
+        major + "." + minor
+      case _ =>
+        "(unknown)"
+    }
+  }
   
   /**
    * Check if the given version is compatible with the current plug-in version.

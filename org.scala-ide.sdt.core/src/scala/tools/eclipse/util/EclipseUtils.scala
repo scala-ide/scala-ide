@@ -29,6 +29,8 @@ import scala.tools.nsc.util.Position
 import scala.tools.nsc.util.SourceFile
 import scala.tools.nsc.interactive.RangePositions
 import scala.tools.nsc.util.RangePosition
+import org.eclipse.core.runtime.jobs.Job
+import org.eclipse.core.runtime.jobs.ISchedulingRule
 
 object EclipseUtils {
 
@@ -82,6 +84,24 @@ object EclipseUtils {
         f(monitor)
       }
     }, monitor)
+  }
+
+  /**
+   * Create and schedule a job with the given name. Default values for scheduling rules and priority are taken
+   * from the `Job` implementation.
+   *
+   * @param rule The scheduling rule
+   * @param priority The job priority (defaults to Job.LONG, the lowest priority job there is)
+   * @return The job
+   */
+  def scheduleJob(name: String, rule: ISchedulingRule = null, priority: Int = Job.LONG)(f: IProgressMonitor => IStatus): Job = {
+    val job = new Job(name) {
+      override def run(monitor: IProgressMonitor): IStatus = f(monitor)
+    }
+    job.setRule(rule)
+    job.setPriority(priority)
+    job.schedule()
+    job
   }
 
   def computeSelectedResources(selection: IStructuredSelection): List[IResource] =
