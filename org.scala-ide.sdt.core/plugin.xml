@@ -1485,9 +1485,11 @@
  <extension
        point="org.eclipse.jdt.junit.internal_testKinds">
        <!-- This extension point is copied from org.eclipse.jdt.junit.core, including the troubling questions. -->
+       <!-- We are forced to use the same `id` as the Java JUnit4 test runner because of the runtime test in   -->
+       <!-- JUnitLaunchConfigurationTab.getMethodsForType                                                      -->
     <kind
           displayName="Scala JUnit 4"
-          id="org.scala-ide.sdt.core.junit"
+          id="org.eclipse.jdt.junit.loader.junit4"
           finderClass="scala.tools.eclipse.launching.JUnit4TestFinder"
           loaderPluginId="org.eclipse.jdt.junit4.runtime"
           loaderClass="org.eclipse.jdt.internal.junit4.runner.JUnit4TestLoader">
