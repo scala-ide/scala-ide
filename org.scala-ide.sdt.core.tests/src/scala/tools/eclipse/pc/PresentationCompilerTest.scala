@@ -48,6 +48,24 @@ class PresentationCompilerTest {
   }
 
   @Test
+  def freshFileReportsErrors() {
+    val contentsWithErrors = """
+package t1001094
+
+class FreshFile {
+  val x: ListBuffer[Int] = null
+}"""
+    val unit = open("t1001094/FreshFile.scala")
+    val errors = unit.currentProblems()
+    Assert.assertEquals("Unexpected errors", errors, Nil)
+
+    unit.getBuffer().setContents(contentsWithErrors)
+    SDTTestUtils.waitUntil(5000)(unit.currentProblems ne Nil)
+    val errors1 = unit.currentProblems()
+    Assert.assertNotSame("Unexpected clean source", errors1, Nil)
+  }
+
+  @Test
   def implicitConversionFromPackageObjectShouldBeInScope_t1000647() {
     //when
     open("t1000647/foo/package.scala")
