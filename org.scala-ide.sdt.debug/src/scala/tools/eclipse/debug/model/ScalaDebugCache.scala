@@ -10,11 +10,13 @@ import scala.tools.eclipse.debug.PoisonPill
 
 object ScalaDebugCache {
 
-  final val topLevelNameRegex = """([^\$]*)(\$.*)?""".r
+  private final val outerTypeNameRegex = """([^\$]*)(\$.*)?""".r
 
-  def extractTopLevelTypeName(typeName: String) = typeName match {
-    case topLevelNameRegex(topLevelTypeName, innerName) =>
-      topLevelTypeName
+  /** Return the the name of the lowest (outer) type containing the type with the given name (everything before the first '$').
+   */
+  private[model] def extractOuterTypeName(typeName: String) = typeName match {
+    case outerTypeNameRegex(outerTypeName, nestedTypeName) =>
+      outerTypeName
   }
 
   def apply(debugTarget: ScalaDebugTarget, scalaDebugTargetActor: BaseDebuggerActor): ScalaDebugCache = {
@@ -27,20 +29,25 @@ object ScalaDebugCache {
 
 }
 
-/** A cache used to keep the list of nested classes of a top level class.
+/** A cache used to keep the list of nested classes of a outer class.
  *  It is used by for the line breakpoints and step-over.
  *  
  *  Most of the methods are synchronous calls made to the underlying actor.
  */
 abstract class ScalaDebugCache(val debugTarget: ScalaDebugTarget) extends HasLogger {
+  import ScalaDebugCache._
 
   @volatile
   private[debug] var running = false
 
   private[debug] val actor: ScalaDebugCacheActor
 
-  def getLoadedNestedTypes(topLevelTypeName: String): Set[ReferenceType] = {
-    actor !? LoadedNestedTypes(topLevelTypeName) match {
+  /** Return the list of type which are nested under the same outer type as the type with the given name,
+   *  and which are currently loaded in the debugged VM.
+   */
+  def getLoadedNestedTypes(typeName: String): Set[ReferenceType] = {
+    val outerTypeName = extractOuterTypeName(typeName)
+    actor !? LoadedNestedTypes(outerTypeName) match {
       case LoadedNestedTypesAnswer(types) =>
         types
       case unknown =>
@@ -49,12 +56,23 @@ abstract class ScalaDebugCache(val debugTarget: ScalaDebugTarget) extends HasLog
     }
   }
 
-  def registerClassPrepareEventListener(listener: Actor, topLevelTypeName: String) {
-    actor !? RegisterClassPrepareEventListener(listener, topLevelTypeName)
+  /** Adds the given actor as a listener for class prepare events in the debugged VM,
+   *  for types which are nested under the same outer type as the type withe the given name.
+   *  The event is sent as a ClassPrepareEvent to the actor.
+   *  
+   *  Does nothing if the actor has already been added for the same outer type.
+   */
+  def addClassPrepareEventListener(listener: Actor, typeName: String) {
+    actor !? AddClassPrepareEventListener(listener, extractOuterTypeName(typeName))
   }
 
-  def deregisterClassPrepareEventListener(listener: Actor, topLevelTypeName: String) {
-    actor !? DeregisterClassPrepareEventListener(listener, topLevelTypeName)
+  /** Removes the given actor as being a listener for class prepare events in the debugged VM,
+   *  for types which are nested under the same outer type as the type with the given name.
+   *  
+   *  Does nothing if the actor was not registered as a listener for the outer type of the type with the given name.
+   */
+  def removeClassPrepareEventListener(listener: Actor, typeName: String) {
+    actor !? RemoveClassPrepareEventListener(listener, extractOuterTypeName(typeName))
   }
 
   def dispose() {
@@ -63,26 +81,26 @@ abstract class ScalaDebugCache(val debugTarget: ScalaDebugTarget) extends HasLog
 
 }
 
-case class LoadedNestedTypes(topLevelTypeName: String)
-case class LoadedNestedTypesAnswer(types: Set[ReferenceType])
-case class RegisterClassPrepareEventListener(actor: Actor, topLevelTypeName: String)
-case class DeregisterClassPrepareEventListener(actor: Actor, topLevelTypeName: String)
+private[model] case class LoadedNestedTypes(outerTypeName: String)
+private[model] case class LoadedNestedTypesAnswer(types: Set[ReferenceType])
+private[model] case class AddClassPrepareEventListener(actor: Actor, outerTypeName: String)
+private[model] case class RemoveClassPrepareEventListener(actor: Actor, outerTypeName: String)
 
 protected[debug] class ScalaDebugCacheActor(debugCache: ScalaDebugCache, debugTarget: ScalaDebugTarget, scalaDebugTargetActor: BaseDebuggerActor) extends BaseDebuggerActor with HasLogger {
 
-  val nestedTypesCache = scala.collection.mutable.HashMap[String, NestedTypesCache]()
+  private var nestedTypesCache = Map[String, NestedTypesCache]()
 
   override protected def behavior: Behavior = {
     case e: ClassPrepareEvent =>
       classLoaded(e)
       reply(false)
-    case LoadedNestedTypes(topLevelTypeName) =>
-      reply(LoadedNestedTypesAnswer(getLoadedNestedTypes(topLevelTypeName)))
-    case RegisterClassPrepareEventListener(actor, topLevelTypeName) =>
-      registerClassPreparedEventListener(actor, topLevelTypeName)
+    case LoadedNestedTypes(outerTypeName) =>
+      reply(LoadedNestedTypesAnswer(getLoadedNestedTypes(outerTypeName)))
+    case AddClassPrepareEventListener(actor, outerTypeName) =>
+      registerClassPreparedEventListener(actor, outerTypeName)
       reply(true)
-    case DeregisterClassPrepareEventListener(actor, topLevelTypeName) =>
-      deregisterClassPreparedEventListener(actor, topLevelTypeName)
+    case RemoveClassPrepareEventListener(actor, outerTypeName) =>
+      deregisterClassPreparedEventListener(actor, outerTypeName)
       reply(true)
   }
 
@@ -93,11 +111,11 @@ protected[debug] class ScalaDebugCacheActor(debugCache: ScalaDebugCache, debugTa
 
   private def classLoaded(event: ClassPrepareEvent) {
     val refType = event.referenceType()
-    val topLevelTypeName = ScalaDebugCache.extractTopLevelTypeName(refType.name())
+    val topLevelTypeName = ScalaDebugCache.extractOuterTypeName(refType.name())
     nestedTypesCache.get(topLevelTypeName) match {
       case Some(cache) =>
         // store the new type
-        cache.types = cache.types + refType
+        nestedTypesCache = nestedTypesCache + ((topLevelTypeName, cache.copy(types = cache.types + refType)))
         // dispatch to listeners
         cache.listeners.foreach {
           a => a !? event
@@ -107,18 +125,18 @@ protected[debug] class ScalaDebugCacheActor(debugCache: ScalaDebugCache, debugTa
     }
   }
 
-  private def getLoadedNestedTypes(topLevelTypeName: String): Set[ReferenceType] = {
-    nestedTypesCache.get(topLevelTypeName) match {
+  private def getLoadedNestedTypes(outerTypeName: String): Set[ReferenceType] = {
+    nestedTypesCache.get(outerTypeName) match {
       case Some(cache) =>
         cache.types
       case None =>
-        initializedRequestsAndCache(topLevelTypeName).types
+        initializedRequestsAndCache(outerTypeName).types
     }
   }
 
-  private def initializedRequestsAndCache(topLevelTypeName: String): NestedTypesCache = {
-    val simpleRequest = JdiRequestFactory.createClassPrepareRequest(topLevelTypeName, debugTarget)
-    val patternRequest = JdiRequestFactory.createClassPrepareRequest(topLevelTypeName + "$*", debugTarget)
+  private def initializedRequestsAndCache(outerTypeName: String): NestedTypesCache = {
+    val simpleRequest = JdiRequestFactory.createClassPrepareRequest(outerTypeName, debugTarget)
+    val patternRequest = JdiRequestFactory.createClassPrepareRequest(outerTypeName + "$*", debugTarget)
     debugTarget.eventDispatcher.setActorFor(ScalaDebugCacheActor.this, simpleRequest)
     debugTarget.eventDispatcher.setActorFor(ScalaDebugCacheActor.this, patternRequest)
     simpleRequest.enable()
@@ -126,44 +144,44 @@ protected[debug] class ScalaDebugCacheActor(debugCache: ScalaDebugCache, debugTa
 
     // define the filter to find the type and its nested types,
     // trying to minimize string operations (startsWith has shortcut if 'name' is too short)
-    val nameLength = topLevelTypeName.length()
+    val nameLength = outerTypeName.length()
     val nestedTypeFilter = (refType: ReferenceType) => {
       val name = refType.name
-      name.startsWith(topLevelTypeName) && (name.length == nameLength || name.charAt(nameLength) == '$')
+      name.startsWith(outerTypeName) && (name.length == nameLength || name.charAt(nameLength) == '$')
     }
     
     import scala.collection.JavaConverters._
     val types = debugTarget.virtualMachine.allClasses().asScala.filter(nestedTypeFilter).toSet
     
-    val cache = new NestedTypesCache(List(simpleRequest, patternRequest), types, Set())
-    nestedTypesCache += topLevelTypeName -> cache
+    val cache = new NestedTypesCache(types, Set())
+    nestedTypesCache = nestedTypesCache + ((outerTypeName, cache))
     cache
   }
 
-  private def registerClassPreparedEventListener(actor: Actor, topLevelTypeName: String) {
-    val cache = nestedTypesCache.get(topLevelTypeName) match {
+  private def registerClassPreparedEventListener(listener: Actor, outerTypeName: String) {
+    val cache = nestedTypesCache.get(outerTypeName) match {
       case Some(cache) =>
         cache
       case None =>
-        initializedRequestsAndCache(topLevelTypeName)
+        initializedRequestsAndCache(outerTypeName)
     }
-    cache.listeners = cache.listeners + actor
+    nestedTypesCache = nestedTypesCache + ((outerTypeName, cache.copy(listeners = cache.listeners + listener)))
   }
 
-  private def deregisterClassPreparedEventListener(actor: Actor, topLevelTypeName: String) {
-    val cache = nestedTypesCache.get(topLevelTypeName) match {
+  private def deregisterClassPreparedEventListener(listener: Actor, outerTypeName: String) {
+    val cache = nestedTypesCache.get(outerTypeName) match {
       case Some(cache) =>
-        cache.listeners = cache.listeners - actor
+      nestedTypesCache = nestedTypesCache + ((outerTypeName, cache.copy(listeners = cache.listeners - listener)))
       case None =>
     }
   }
 
   override protected def preExit() {
-    // no need to disable the request. This actor is shutdown only when the debug session is shut down
+    // no need to disable the requests. This actor is shutdown only when the debug session is shut down
     unlink(scalaDebugTargetActor)
     debugCache.running = false
   }
 
 }
 
-class NestedTypesCache(val requests: List[ClassPrepareRequest], @volatile var types: Set[ReferenceType], @volatile var listeners: Set[Actor])
+case class NestedTypesCache(types: Set[ReferenceType], listeners: Set[Actor])

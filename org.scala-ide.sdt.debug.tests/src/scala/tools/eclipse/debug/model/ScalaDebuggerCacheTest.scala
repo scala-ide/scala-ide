@@ -24,7 +24,7 @@ class ScaladebugCacheTest {
 
   @After
   def shutdownRegistered {
-
+	  toShutdown.foreach(_())
   }
 
   /** Test the returned nested class when no data was cached.
@@ -71,14 +71,14 @@ class ScaladebugCacheTest {
   /** Test that ClassPrepareEvent events are sent when needed, and not when no requested.
    */
   @Test
-  def registerAndDeregisterListener() {
+  def addAndRemoveListener() {
     val BaseName = "test03.a.Test"
 
     val (debugCache, classPrepareRequest1, classPrepareRequest2) = initMocks(BaseName, BaseName + "$", BaseName + "$a")
 
     // a latch listener actor. It releases the latch when it receives a ClassPrepareEvent
     val testActor = new BaseDebuggerActor {
-      var latch = new CountDownLatch(1)
+      @volatile var latch = new CountDownLatch(1)
 
       override def behavior = {
         case e: ClassPrepareEvent =>
@@ -99,7 +99,7 @@ class ScaladebugCacheTest {
 
     // register listener, and check get data
 
-    debugCache.registerClassPrepareEventListener(testActor, BaseName)
+    debugCache.addClassPrepareEventListener(testActor, BaseName)
 
     // 'receive' a ClassPrepareEvent from the VM
     debugCache.actor !? createClassPrepareEvent(BaseName + "$b")
@@ -108,7 +108,7 @@ class ScaladebugCacheTest {
 
     // unregister listener, and check get no data
 
-    debugCache.deregisterClassPrepareEventListener(testActor, BaseName)
+    debugCache.removeClassPrepareEventListener(testActor, BaseName)
 
     testActor.resetLatch
 

@@ -12,6 +12,7 @@ import com.sun.jdi.request.{ StepRequest, EventRequest }
 import scala.tools.eclipse.debug.model.StepFilters
 import scala.tools.eclipse.debug.BaseDebuggerActor
 import scala.tools.eclipse.debug.model.ScalaDebugCache
+import com.sun.jdi.ReferenceType
 
 object ScalaStepOver {
 
@@ -24,16 +25,16 @@ object ScalaStepOver {
     val debugTarget = scalaStackFrame.getDebugTarget
 
     val location = scalaStackFrame.stackFrame.location
+    
+    val typeName = location.declaringType.name
 
     val stepOverRequest = JdiRequestFactory.createStepRequest(StepRequest.STEP_LINE, StepRequest.STEP_OVER, scalaStackFrame.thread)
 
     val requests = ListBuffer[EventRequest](stepOverRequest)
 
-    val topLevelTypeName = ScalaDebugCache.extractTopLevelTypeName(location.declaringType.name)
-
     val companionActor = if (location.lineNumber == LINE_NUMBER_UNAVAILABLE) {
 
-      new ScalaStepOverActor(debugTarget, topLevelTypeName, rangeOpt = None, scalaStackFrame.thread, requests) {
+      new ScalaStepOverActor(debugTarget, typeName, rangeOpt = None, scalaStackFrame.thread, requests) {
         override val scalaStep: ScalaStep = new ScalaStepImpl(this)
       }
 
@@ -44,16 +45,22 @@ object ScalaStepOver {
 
       val range = Range(location.lineNumber, (location.method.declaringType.methods.asScala.flatten(methodToLines(_)).filter(_ > currentMethodLastLine) :+ Int.MaxValue).min)
 
-      val loadedAnonFunctionsInRange = debugTarget.cache.getLoadedNestedTypes(topLevelTypeName).filter(_.name().startsWith(location.declaringType.name + "$")).flatMap(debugTarget.stepFilters.anonFunctionsInRange(_, range)).toBuffer
+      val nestedAnonFuncPrefix = if (typeName.last == '$') {
+        typeName + "$anonfun$"
+      } else {
+        typeName + "$$anonfun$"
+      }
+      
+      val loadedAnonFunctionsInRange = debugTarget.cache.getLoadedNestedTypes(typeName).filter(_.name().startsWith(nestedAnonFuncPrefix)).flatMap(debugTarget.stepFilters.anonFunctionsInRange(_, range)).toBuffer
 
       // if we are in an anonymous function, add the method
-      if (location.declaringType.name.contains("$$anonfun$")) {
+      if (typeName.contains("$$anonfun$")) {
         loadedAnonFunctionsInRange ++= debugTarget.stepFilters.findAnonFunction(location.declaringType)
       }
 
       requests ++= loadedAnonFunctionsInRange.map(JdiRequestFactory.createMethodEntryBreakpoint(_, scalaStackFrame.thread))
 
-      new ScalaStepOverActor(debugTarget, topLevelTypeName, Some(range), scalaStackFrame.thread, requests) {
+      new ScalaStepOverActor(debugTarget, typeName, Some(range), scalaStackFrame.thread, requests) {
         override val scalaStep: ScalaStep = new ScalaStepImpl(this)
       }
     }
@@ -68,7 +75,7 @@ object ScalaStepOver {
  * Actor used to manage a Scala step over. It keeps track of the request needed to perform this step.
  * This class is thread safe. Instances are not to be created outside of the ScalaStepOver object.
  */
-private[command] abstract class ScalaStepOverActor(debugTarget: ScalaDebugTarget, topLevelTypeName: String, rangeOpt: Option[Range], thread: ScalaThread, requests: ListBuffer[EventRequest]) extends BaseDebuggerActor {
+private[command] abstract class ScalaStepOverActor(debugTarget: ScalaDebugTarget, typeName: String, rangeOpt: Option[Range], thread: ScalaThread, requests: ListBuffer[EventRequest]) extends BaseDebuggerActor {
 
   protected[command] def scalaStep: ScalaStep
 
@@ -125,7 +132,7 @@ private[command] abstract class ScalaStepOverActor(debugTarget: ScalaDebugTarget
     if (!enabled) {
       val eventDispatcher = debugTarget.eventDispatcher
 
-      debugTarget.cache.registerClassPrepareEventListener(this, topLevelTypeName)
+      debugTarget.cache.addClassPrepareEventListener(this, typeName)
       requests.foreach {
         request =>
           eventDispatcher.setActorFor(this, request)
@@ -145,7 +152,7 @@ private[command] abstract class ScalaStepOverActor(debugTarget: ScalaDebugTarget
         eventDispatcher.unsetActorFor(request)
         eventRequestManager.deleteEventRequest(request)
       }
-      debugTarget.cache.deregisterClassPrepareEventListener(this, topLevelTypeName)
+      debugTarget.cache.removeClassPrepareEventListener(this, typeName)
       enabled= false
     }
   }
