@@ -7,7 +7,6 @@
 package scala.tools.eclipse
 
 import java.util.ResourceBundle
-
 import scala.Option.option2Iterable
 import scala.tools.eclipse.javaelements.ScalaCompilationUnit
 import scala.tools.eclipse.markoccurrences.Occurrences
@@ -21,7 +20,6 @@ import scala.tools.eclipse.util.RichAnnotationModel.annotationModel2RichAnnotati
 import scala.tools.eclipse.util.SWTUtils
 import scala.tools.eclipse.util.SWTUtils.fnToPropertyChangeListener
 import scala.tools.eclipse.util.Utils
-
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.core.runtime.Status
 import org.eclipse.core.runtime.jobs.Job
@@ -66,6 +64,7 @@ import org.eclipse.ui.texteditor.IUpdate
 import org.eclipse.ui.texteditor.IWorkbenchActionDefinitionIds
 import org.eclipse.ui.texteditor.SourceViewerDecorationSupport
 import org.eclipse.ui.texteditor.TextOperationAction
+import scala.tools.eclipse.util.EclipseUtils
 
 
 class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor { self =>
@@ -202,22 +201,13 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor { sel
       case _ => return
     }
 
-    import org.eclipse.core.runtime.jobs.Job
-    import org.eclipse.core.runtime.IProgressMonitor
-    import org.eclipse.core.runtime.Status
-
-    val job = new Job("Updating occurrence annotations") {
-      def run(monitor: IProgressMonitor) = {
-        val fileName = getInteractiveCompilationUnit.file.name
-        Utils.debugTimed("Time elapsed for \"updateOccurrences\" in source " + fileName) { 
-          performOccurrencesUpdate(selection, lastModified)
-        }
-        Status.OK_STATUS
+    EclipseUtils.scheduleJob("Updating occurrence annotations", priority = Job.DECORATE) { monitor =>
+      val fileName = getInteractiveCompilationUnit.file.name
+      Utils.debugTimed("Time elapsed for \"updateOccurrences\" in source " + fileName) {
+        performOccurrencesUpdate(selection, lastModified)
       }
+      Status.OK_STATUS
     }
-    // set low priority for update occurrences 
-    job.setPriority(Job.DECORATE)
-    job.schedule()
   }
 
   override def doSelectionChanged(selection: ISelection) {
