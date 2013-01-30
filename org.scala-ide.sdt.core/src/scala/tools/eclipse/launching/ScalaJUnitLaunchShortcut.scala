@@ -32,5 +32,12 @@ class ScalaJUnitLaunchShortcut extends JUnitLaunchShortcut {
 }
 
 object ScalaJUnitLaunchShortcut {
-  final val SCALA_JUNIT_TEST_KIND = "org.scala-ide.sdt.core.junit"
+  /**
+   *  We're using the JUnit test kind ID because of an internal test in
+   *  JUnitLaunchConfigurationTab.getMethodsForType. That test kicks in
+   *  when the user presses the Search button for methods inside a class,
+   *  and based on the ID it filters methods by name (JUnit3-style) or by
+   *  annotation (JUnit 4 style).
+   */
+  final val SCALA_JUNIT_TEST_KIND = "org.eclipse.jdt.junit.loader.junit4"
 }
