@@ -11,6 +11,8 @@ import com.sun.jdi.event.{ StepEvent, ClassPrepareEvent, BreakpointEvent }
 import com.sun.jdi.request.{ StepRequest, EventRequest }
 import scala.tools.eclipse.debug.model.StepFilters
 import scala.tools.eclipse.debug.BaseDebuggerActor
+import scala.tools.eclipse.debug.model.ScalaDebugCache
+import com.sun.jdi.ReferenceType
 
 object ScalaStepOver {
 
@@ -20,7 +22,11 @@ object ScalaStepOver {
 
     import scala.collection.JavaConverters._
 
+    val debugTarget = scalaStackFrame.getDebugTarget
+
     val location = scalaStackFrame.stackFrame.location
+    
+    val typeName = location.declaringType.name
 
     val stepOverRequest = JdiRequestFactory.createStepRequest(StepRequest.STEP_LINE, StepRequest.STEP_OVER, scalaStackFrame.thread)
 
@@ -28,32 +34,33 @@ object ScalaStepOver {
 
     val companionActor = if (location.lineNumber == LINE_NUMBER_UNAVAILABLE) {
 
-      new ScalaStepOverActor(scalaStackFrame.getDebugTarget, rangeOpt = None, scalaStackFrame.thread, requests) {
+      new ScalaStepOverActor(debugTarget, typeName, rangeOpt = None, scalaStackFrame.thread, requests) {
         override val scalaStep: ScalaStep = new ScalaStepImpl(this)
       }
 
     } else {
-
-      val classPrepareRequest = JdiRequestFactory.createClassPrepareRequest(location.declaringType.name + "$*", scalaStackFrame.getDebugTarget)
-
-      requests += classPrepareRequest
 
       // find anonFunction in range
       val currentMethodLastLine = methodToLines(location.method).max
 
       val range = Range(location.lineNumber, (location.method.declaringType.methods.asScala.flatten(methodToLines(_)).filter(_ > currentMethodLastLine) :+ Int.MaxValue).min)
 
-      // TODO: nestedTypes triggers a AllClasses request to the VM. Having the list of nested types managed and cached by the debug target should be more effective.
-      val loadedAnonFunctionsInRange = location.method.declaringType.nestedTypes.asScala.flatMap(scalaStackFrame.getDebugTarget.stepFilters.anonFunctionsInRange(_, range))
+      val nestedAnonFuncPrefix = if (typeName.last == '$') {
+        typeName + "$anonfun$"
+      } else {
+        typeName + "$$anonfun$"
+      }
+      
+      val loadedAnonFunctionsInRange = debugTarget.cache.getLoadedNestedTypes(typeName).filter(_.name().startsWith(nestedAnonFuncPrefix)).flatMap(debugTarget.stepFilters.anonFunctionsInRange(_, range)).toBuffer
 
       // if we are in an anonymous function, add the method
-      if (location.declaringType.name.contains("$$anonfun$")) {
-        loadedAnonFunctionsInRange ++= scalaStackFrame.getDebugTarget.stepFilters.findAnonFunction(location.declaringType)
+      if (typeName.contains("$$anonfun$")) {
+        loadedAnonFunctionsInRange ++= debugTarget.stepFilters.findAnonFunction(location.declaringType)
       }
 
       requests ++= loadedAnonFunctionsInRange.map(JdiRequestFactory.createMethodEntryBreakpoint(_, scalaStackFrame.thread))
 
-      new ScalaStepOverActor(scalaStackFrame.getDebugTarget, Some(range), scalaStackFrame.thread, requests) {
+      new ScalaStepOverActor(debugTarget, typeName, Some(range), scalaStackFrame.thread, requests) {
         override val scalaStep: ScalaStep = new ScalaStepImpl(this)
       }
     }
@@ -68,9 +75,11 @@ object ScalaStepOver {
  * Actor used to manage a Scala step over. It keeps track of the request needed to perform this step.
  * This class is thread safe. Instances are not to be created outside of the ScalaStepOver object.
  */
-private[command] abstract class ScalaStepOverActor(debugTarget: ScalaDebugTarget, rangeOpt: Option[Range], thread: ScalaThread, requests: ListBuffer[EventRequest]) extends BaseDebuggerActor {
+private[command] abstract class ScalaStepOverActor(debugTarget: ScalaDebugTarget, typeName: String, rangeOpt: Option[Range], thread: ScalaThread, requests: ListBuffer[EventRequest]) extends BaseDebuggerActor {
 
   protected[command] def scalaStep: ScalaStep
+
+  private var enabled = false
 
   override protected def postStart(): Unit = link(thread.companionActor)
   
@@ -90,7 +99,7 @@ private[command] abstract class ScalaStepOverActor(debugTarget: ScalaDebugTarget
     // JDI event triggered when a step has been performed
     case stepEvent: StepEvent =>
       reply(if (!debugTarget.stepFilters.isTransparentLocation(stepEvent.location)) {
-        dispose()
+        terminate
         thread.suspendedFromScala(DebugEvent.STEP_OVER)
         true
       } else {
@@ -98,41 +107,58 @@ private[command] abstract class ScalaStepOverActor(debugTarget: ScalaDebugTarget
       })
     // JDI event triggered when a breakpoint is hit
     case breakpointEvent: BreakpointEvent =>
-      dispose()
+      terminate
       thread.suspendedFromScala(DebugEvent.STEP_OVER)
       reply(true)
     // user step request
-    case ScalaStep.Step => 
-      step()
+    case ScalaStep.Step =>
+      step
     // step is terminated
     case ScalaStep.Stop =>
-      dispose()
+      terminate
   }
 
   private def step() {
-    val eventDispatcher = debugTarget.eventDispatcher
-
-    requests.foreach {
-      request =>
-        eventDispatcher.setActorFor(this, request)
-        request.enable()
-    }
-
+    enable()
     thread.resumeFromScala(scalaStep, DebugEvent.STEP_OVER)
   }
-
-  private def dispose(): Unit = {
+  
+  private def terminate() {
+    disable()
     poison()
-    unlink(thread.companionActor)
-    val eventDispatcher = debugTarget.eventDispatcher
-    val eventRequestManager = debugTarget.virtualMachine.eventRequestManager
+  }
 
-    for(request <- requests) {
-      request.disable()
-      eventDispatcher.unsetActorFor(request)
-      eventRequestManager.deleteEventRequest(request)
+  private def enable() {
+    if (!enabled) {
+      val eventDispatcher = debugTarget.eventDispatcher
+
+      debugTarget.cache.addClassPrepareEventListener(this, typeName)
+      requests.foreach {
+        request =>
+          eventDispatcher.setActorFor(this, request)
+          request.enable()
+      }
+      enabled= true
     }
   }
 
-  override protected def preExit(): Unit = dispose()
+  private def disable() {
+    if (enabled) {
+      val eventDispatcher = debugTarget.eventDispatcher
+      val eventRequestManager = debugTarget.virtualMachine.eventRequestManager
+
+      for (request <- requests) {
+        request.disable()
+        eventDispatcher.unsetActorFor(request)
+        eventRequestManager.deleteEventRequest(request)
+      }
+      debugTarget.cache.removeClassPrepareEventListener(this, typeName)
+      enabled= false
+    }
+  }
+
+  override protected def preExit(): Unit = {
+    unlink(thread.companionActor)
+    disable()
+  }
 }

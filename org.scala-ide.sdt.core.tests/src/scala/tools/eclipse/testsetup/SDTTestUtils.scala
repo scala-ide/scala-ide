@@ -221,13 +221,4 @@ object SDTTestUtils {
     }
   }
 
-  /** Wait until `pred` is true, or timeout (in ms). */
-  def waitUntil(timeout: Int)(pred: => Boolean) {
-    val start = System.currentTimeMillis()
-    var cond = pred
-    while ((System.currentTimeMillis() < start + timeout) && !cond) {
-      Thread.sleep(100)
-      cond = pred
-    }
-  }
 }

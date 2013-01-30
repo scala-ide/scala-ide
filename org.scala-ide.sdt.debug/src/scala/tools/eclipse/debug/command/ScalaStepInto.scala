@@ -33,7 +33,7 @@ object ScalaStepInto {
       override val scalaStep: ScalaStep = new ScalaStepImpl(this)
     }
     companionActor.start()
-    
+
     companionActor.scalaStep
   }
 
@@ -48,7 +48,9 @@ private[command] abstract class ScalaStepIntoActor(debugTarget: ScalaDebugTarget
    * Needed to perform a correct step out (see Eclipse bug report #38744)
    */
   private var stepOutStackDepth = 0
-  
+
+  private var enabled = false
+
   protected[command] def scalaStep: ScalaStep
 
   override protected def postStart(): Unit = link(thread.companionActor)
@@ -66,7 +68,7 @@ private[command] abstract class ScalaStepIntoActor(debugTarget: ScalaDebugTarget
             false
           } else {
             if (!debugTarget.stepFilters.isTransparentLocation(stepEvent.location) && stepEvent.location.lineNumber != stackLine) {
-              dispose()
+              terminate()
               thread.suspendedFromScala(DebugEvent.STEP_INTO)
               true
             } 
@@ -76,7 +78,7 @@ private[command] abstract class ScalaStepIntoActor(debugTarget: ScalaDebugTarget
         case StepRequest.STEP_OUT =>
           if (stepEvent.thread.frameCount == stackDepth && stepEvent.location.lineNumber != stackLine) {
             // we are back on the method, but on a different line, stopping the stepping
-            dispose()
+            terminate()
             thread.suspendedFromScala(DebugEvent.STEP_INTO)
             true
           } else {
@@ -93,33 +95,49 @@ private[command] abstract class ScalaStepIntoActor(debugTarget: ScalaDebugTarget
     case ScalaStep.Step =>
       step()
     case ScalaStep.Stop =>
-      dispose()
+      terminate()
   }
 
   private def step() {
-    val eventDispatcher = debugTarget.eventDispatcher
-
-    eventDispatcher.setActorFor(this, stepIntoRequest)
-    eventDispatcher.setActorFor(this, stepOutRequest)
-    stepIntoRequest.enable()
+    enable()
     thread.resumeFromScala(scalaStep, DebugEvent.STEP_INTO)
   }
 
-  private def dispose(): Unit = {
+  private def terminate() {
+    disable()
     poison()
-    unlink(thread.companionActor)
-    val eventDispatcher = debugTarget.eventDispatcher
-    val eventRequestManager = debugTarget.virtualMachine.eventRequestManager
-
-    // make sure that actors are gracefully shut down
-    eventDispatcher.unsetActorFor(stepIntoRequest)
-    eventDispatcher.unsetActorFor(stepOutRequest)
-
-    stepIntoRequest.disable()
-    stepOutRequest.disable()
-    eventRequestManager.deleteEventRequest(stepIntoRequest)
-    eventRequestManager.deleteEventRequest(stepOutRequest)
   }
-  
-  override protected def preExit(): Unit = dispose()
+
+  private def enable() {
+    if (!enabled) {
+      val eventDispatcher = debugTarget.eventDispatcher
+
+      eventDispatcher.setActorFor(this, stepIntoRequest)
+      eventDispatcher.setActorFor(this, stepOutRequest)
+      stepIntoRequest.enable()
+      enabled = true
+    }
+  }
+
+  private def disable() {
+    if (enabled) {
+      val eventDispatcher = debugTarget.eventDispatcher
+      val eventRequestManager = debugTarget.virtualMachine.eventRequestManager
+
+      // make sure that actors are gracefully shut down
+      eventDispatcher.unsetActorFor(stepIntoRequest)
+      eventDispatcher.unsetActorFor(stepOutRequest)
+
+      stepIntoRequest.disable()
+      stepOutRequest.disable()
+      eventRequestManager.deleteEventRequest(stepIntoRequest)
+      eventRequestManager.deleteEventRequest(stepOutRequest)
+      enabled = false
+    }
+  }
+
+  override protected def preExit(): Unit = {
+    unlink(thread.companionActor)
+    disable()
+  }
 }
