@@ -380,7 +380,7 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
     def roundUp(version: String) =
       if (version.count(_ == '.') < 2) version + ".0" else version
 
-    val crossCompiled = """.*_(2\.\d+(\..*)?)(-.*)?.jar""".r
+    val crossCompiled = """.*_(2\.\d+(\.\d*)?)(-.*)?.jar""".r
     val entries = scalaClasspath.userCp
     val errors = mutable.ListBuffer[(Int, String)]()
 
