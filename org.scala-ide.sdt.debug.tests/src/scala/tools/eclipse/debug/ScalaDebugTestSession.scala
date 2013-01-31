@@ -249,7 +249,7 @@ class ScalaDebugTestSession(launchConfiguration: ILaunchConfiguration) extends H
    * This method make sure there are no outstanding requests
    */
   def waitForBreakpointToBe(breakpoint: IBreakpoint, enabled: Boolean) {
-    import scala.tools.eclipse.util.TestUtils._
+    import scala.tools.eclipse.testsetup.SDTTestUtils._
 
     if (state ne NOT_LAUNCHED) {
       debugTarget.breakpointManager.waitForAllCurrentEvents()

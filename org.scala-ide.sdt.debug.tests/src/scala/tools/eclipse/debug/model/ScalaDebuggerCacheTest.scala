@@ -10,7 +10,6 @@ import java.util.{ List => JList }
 import com.sun.jdi.event.ClassPrepareEvent
 import com.sun.jdi.request.EventRequestManager
 import com.sun.jdi.request.ClassPrepareRequest
-import scala.tools.eclipse.util.TestUtils
 import scala.actors.Actor
 import scala.tools.eclipse.debug.BaseDebuggerActor
 import java.util.concurrent.CountDownLatch
