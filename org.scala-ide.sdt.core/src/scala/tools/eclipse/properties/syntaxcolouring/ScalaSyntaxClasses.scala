@@ -110,7 +110,8 @@ object ScalariformToSyntaxClass {
     case MULTILINE_COMMENT => ScalaSyntaxClasses.MULTI_LINE_COMMENT
     case PLUS | MINUS | STAR | PIPE | TILDE | EXCLAMATION => ScalaSyntaxClasses.OPERATOR
     case DOT | COMMA | COLON | USCORE | EQUALS | SEMI |
-      LARROW | ARROW | SUBTYPE | SUPERTYPE | VIEWBOUND => ScalaSyntaxClasses.OPERATOR
+      LARROW | ARROW | SUBTYPE | SUPERTYPE | VIEWBOUND |
+      AT | HASH => ScalaSyntaxClasses.OPERATOR
     case VARID if Chars.isOperatorPart(token.text(0)) => ScalaSyntaxClasses.OPERATOR
     case FLOATING_POINT_LITERAL | INTEGER_LITERAL => ScalaSyntaxClasses.NUMBER_LITERAL
     case SYMBOL_LITERAL => ScalaSyntaxClasses.SYMBOL

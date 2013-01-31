@@ -230,4 +230,38 @@ object SDTTestUtils {
       cond = pred
     }
   }
+
+  /**
+   * Allows to run code that can access the presentation compiler. The code is
+   * executed in a separate project inside of the workspace. The project is created
+   * when this method is called and will be removed when it is left.
+   *
+   * @param testProjectName
+   *        The name of the test project the code should be executed in
+   * @param f
+   *        the function executed inside of the presentation compiler
+   *
+   * @example {{{
+   * testWithCompiler("testproject") { compiler =>
+   *   import compiler._
+   *   // use compiler member
+   * }
+   * }}}
+   */
+  def testWithCompiler[A](testProjectName: String)(f: ScalaPresentationCompiler => A) = {
+    var projectSetup: TestProjectSetup = null
+
+    try {
+      val simulator = new EclipseUserSimulator
+      val scalaProject = simulator.createProjectInWorkspace(testProjectName, withSourceRoot = true)
+
+      projectSetup = new TestProjectSetup(testProjectName) {
+        override lazy val project = scalaProject
+      }
+      projectSetup.project.withPresentationCompiler(c => Option(f(c)))(None)
+    }
+    finally EclipseUtils.workspaceRunnableIn(ScalaPlugin.plugin.workspaceRoot.getWorkspace) { _ =>
+      projectSetup.project.underlying.delete(true, null)
+    }
+  }
 }
