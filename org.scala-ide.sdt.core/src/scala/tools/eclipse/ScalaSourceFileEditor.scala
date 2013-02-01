@@ -147,6 +147,7 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor { sel
     setAction("OpenEditor", openAction)
   }
 
+  override protected def installSemanticHighlighting(): Unit = { /* Never install the Java semantic highlighting engine on a Scala Editor*/ }
 
   private def isScalaSemanticHighlightingEnabled(): Boolean = semanticHighlightingPreferences.isEnabled()
 
