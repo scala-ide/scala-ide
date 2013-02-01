@@ -39,8 +39,10 @@ Require-Bundle:
  org.eclipse.ui.workbench.texteditor,
  org.eclipse.pde.core;resolution:=optional,
  org.eclipse.pde.ui;resolution:=optional,
- org.scala-ide.scala.library,
- org.scala-ide.scala.compiler,
+ org.scala-lang.scala-library,
+ org.scala-lang.scala-actors,
+ org.scala-lang.scala-reflect,
+ org.scala-lang.scala-compiler,
  org.scala-refactoring.library,
  org.scala-ide.sbt.full.library;bundle-version="[0.13,0.14)",
  org.scala-ide.sbt.compiler.interface;bundle-version="[0.13,0.14)",
@@ -64,7 +66,9 @@ Import-Package:
  scala.tools.eclipse.contribution.weaving.jdt.ui;apply-aspects:=false,
  scala.tools.eclipse.contribution.weaving.jdt.ui.actions;apply-aspects:=false,
  scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor;apply-aspects:=false,
- scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.formatter;apply-aspects:=false
+ scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.formatter;apply-aspects:=false,
+ scala.xml,
+ scala.xml.parsing
 Export-Package: 
  scala.tools.eclipse,
  scala.tools.eclipse.actions,
@@ -110,7 +114,7 @@ Export-Package:
  scala.tools.eclipse.ui.actions,
  scala.tools.eclipse.util,
  scala.tools.eclipse.wizards
-Bundle-RequiredExecutionEnvironment: J2SE-1.5
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ClassPath: .,
  target/lib/miglayout-3.7.4.jar,
  target/lib/log4j-1.2.17.jar

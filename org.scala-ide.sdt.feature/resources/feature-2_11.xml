@@ -118,6 +118,20 @@ SUCH DAMAGE.
          unpack="false"/>
 
    <plugin
+         id="org.scala-lang.modules.scala-xml"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="org.scala-lang.modules.scala-parser-combinators"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
          id="org.scala-ide.sdt.core"
          download-size="0"
          install-size="0"
