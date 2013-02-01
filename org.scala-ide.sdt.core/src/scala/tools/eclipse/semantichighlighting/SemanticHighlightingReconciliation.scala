@@ -72,10 +72,7 @@ class SemanticHighlightingReconciliation extends HasLogger {
         if scu == compilationUnit
       } yield {
         page.addPartListener(new UnregisteringPartListener(scu))
-        val semanticActions = List(
-            new ImplicitHighlightingPresenter(scalaEditor.sourceViewer), 
-            new SemanticHighlightingAnnotationsManager(scalaEditor.sourceViewer)
-        )
+        val semanticActions = List(new ImplicitHighlightingPresenter(scalaEditor.sourceViewer))
         SemanticDecorationManagers(semanticActions)
       }
     presenters.headOption

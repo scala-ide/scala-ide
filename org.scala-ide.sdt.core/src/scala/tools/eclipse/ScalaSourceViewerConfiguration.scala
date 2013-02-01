@@ -77,16 +77,17 @@ class ScalaSourceViewerConfiguration(store: IPreferenceStore, scalaPreferenceSto
     )
   }
 
-   override def getPresentationReconciler(sv: ISourceViewer) = {
-      val reconciler = super.getPresentationReconciler(sv).asInstanceOf[PresentationReconciler]
+  override def getPresentationReconciler(sourceViewer: ISourceViewer): ScalaPresentationReconciler = {
+    val reconciler = new ScalaPresentationReconciler()
+    reconciler.setDocumentPartitioning(getConfiguredDocumentPartitioning(sourceViewer))
 
-      for ((partitionType, tokenScanner) <- codeHighlightingScanners) {
-        val dr = new DefaultDamagerRepairer(tokenScanner)
-         reconciler.setDamager(dr, partitionType)
-         reconciler.setRepairer(dr, partitionType)
-      }
-      reconciler
-   }
+    for ((partitionType, tokenScanner) <- codeHighlightingScanners) {
+      val dr = new DefaultDamagerRepairer(tokenScanner)
+      reconciler.setDamager(dr, partitionType)
+      reconciler.setRepairer(dr, partitionType)
+    }
+    reconciler
+ }
 
    override def getTextHover(sv: ISourceViewer, contentType: String, stateMask: Int) = {
 //     new ScalaHover(getCodeAssist _)

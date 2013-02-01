@@ -15,9 +15,7 @@ import scala.tools.eclipse.ui.OpenExternalFile
 
 
 class ReportBugDialog(shell: Shell) extends Dialog(shell) {
-  
-  val SDT_TRACKER_URL = "https://www.assembla.com/spaces/scala-ide/support/tickets"
-  
+
   protected override def isResizable = true
   
   protected override def createDialogArea(parent: Composite): Control = {
@@ -50,7 +48,7 @@ class ReportBugDialog(shell: Shell) extends Dialog(shell) {
     logFileLink.addListener(SWT.Selection, OpenExternalFile(LogManager.logFile))
 
     val reportBugLink = new Link(group2, SWT.NONE)
-    reportBugLink.setText("and <a href=\"" + SDT_TRACKER_URL + "\">report a bug</a>.")      
+    reportBugLink.setText("and <a href=\"" + ScalaPlugin.IssueTracker + "\">report a bug</a>.")      
     reportBugLink.addListener(SWT.Selection, DiagnosticDialog.linkListener)
     
     control
