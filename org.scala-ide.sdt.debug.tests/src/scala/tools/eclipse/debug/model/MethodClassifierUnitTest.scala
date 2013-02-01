@@ -165,15 +165,14 @@ class MethodClassifierUnitTest {
   }
 
   def assertForwarder(method: String, forwarder: Boolean) {
-    val classifier = new MethodClassifier
-    Assert.assertEquals("Forwarder test failed", forwarder, classifier.isForwarderBytecode(parser.methods(method).bytecode, parser.constantPoolBytes, parser.pool.size, method))
+    Assert.assertEquals("Forwarder test failed", forwarder, MethodClassifier.isForwarderBytecode(parser.methods(method).bytecode, parser.constantPoolBytes, parser.pool.size, method))
   }
 
   def assertDefaultGetter(name: String, expected: Boolean) {
     val method = mock(classOf[Method])
 
     when(method.name()).thenReturn(name)
-    Assert.assertEquals("Default getter", expected, (new MethodClassifier).is(DefaultGetter, method))
+    Assert.assertEquals("Default getter", expected, MethodClassifier.is(DefaultGetter, method))
   }
 
   def prepareGetterMock(name: String) = {
@@ -194,11 +193,11 @@ class MethodClassifierUnitTest {
   }
 
   def assertGetter(name: String, expected: Boolean) {
-    Assert.assertEquals("Getter", expected, (new MethodClassifier).is(Getter, prepareGetterMock(name)))
+    Assert.assertEquals("Getter", expected, MethodClassifier.is(Getter, prepareGetterMock(name)))
   }
 
   def assertSetter(name: String, expected: Boolean) {
-    Assert.assertEquals("Setter", expected, (new MethodClassifier).is(Setter, prepareGetterMock(name)))
+    Assert.assertEquals("Setter", expected, MethodClassifier.is(Setter, prepareGetterMock(name)))
   }
 
   // implicits

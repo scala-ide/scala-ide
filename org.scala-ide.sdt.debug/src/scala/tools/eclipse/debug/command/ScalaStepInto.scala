@@ -9,7 +9,6 @@ import com.sun.jdi.event.StepEvent
 import com.sun.jdi.request.EventRequest
 import com.sun.jdi.request.StepRequest
 import com.sun.jdi.event.Event
-import scala.tools.eclipse.debug.model.StepFilters
 import scala.tools.eclipse.debug.BaseDebuggerActor
 
 object ScalaStepInto {
@@ -60,14 +59,14 @@ private[command] abstract class ScalaStepIntoActor(debugTarget: ScalaDebugTarget
     case stepEvent: StepEvent =>
       reply(stepEvent.request.asInstanceOf[StepRequest].depth match {
         case StepRequest.STEP_INTO =>
-          if (debugTarget.stepFilters.isOpaqueLocation(stepEvent.location)) {
+          if (debugTarget.cache.isOpaqueLocation(stepEvent.location)) {
             // don't step deeper into constructor from 'hidden' entities
             stepOutStackDepth = stepEvent.thread.frameCount
             stepIntoRequest.disable()
             stepOutRequest.enable()
             false
           } else {
-            if (!debugTarget.stepFilters.isTransparentLocation(stepEvent.location) && stepEvent.location.lineNumber != stackLine) {
+            if (!debugTarget.cache.isTransparentLocation(stepEvent.location) && stepEvent.location.lineNumber != stackLine) {
               terminate()
               thread.suspendedFromScala(DebugEvent.STEP_INTO)
               true

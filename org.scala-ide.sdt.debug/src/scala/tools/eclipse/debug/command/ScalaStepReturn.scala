@@ -8,7 +8,6 @@ import scala.tools.eclipse.debug.model.ScalaThread
 import org.eclipse.debug.core.DebugEvent
 import com.sun.jdi.event.StepEvent
 import com.sun.jdi.request.StepRequest
-import scala.tools.eclipse.debug.model.StepFilters
 
 object ScalaStepReturn {
   def apply(scalaStackFrame: ScalaStackFrame): ScalaStep = {
@@ -40,7 +39,7 @@ private[command] abstract class ScalaStepReturnActor(debugTarget: ScalaDebugTarg
     // JDI event triggered when a step has been performed
     case stepEvent: StepEvent =>
       reply {
-        if (!debugTarget.stepFilters.isTransparentLocation(stepEvent.location)) {
+        if (!debugTarget.cache.isTransparentLocation(stepEvent.location)) {
           terminate()
           thread.suspendedFromScala(DebugEvent.STEP_RETURN)
           true
