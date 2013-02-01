@@ -60,26 +60,41 @@ trait ScalaCompilationUnit extends Openable
     super.bufferChanged(e)
   }
 
-  override def buildStructure(info : OpenableElementInfo, pm : IProgressMonitor, newElements : JMap[_, _], underlyingResource : IResource) : Boolean =
+  /** Ensure the underlying buffer is open. Otherwise, `bufferChanged` events won't be fired,
+   *  meaning `askReload` won't be called, and presentation compiler errors won't be reported.
+   *
+   *  This code is copied from org.eclipse.jdt.internal.core.CompilationUnit
+   */
+  private def ensureBufferOpen(info: OpenableElementInfo, pm: IProgressMonitor) {
+    // ensure buffer is opened
+    val buffer = super.getBufferManager().getBuffer(this);
+    if (buffer == null) {
+      super.openBuffer(pm, info); // open buffer independently from the info, since we are building the info
+    }
+  }
+
+  override def buildStructure(info: OpenableElementInfo, pm: IProgressMonitor, newElements: JMap[_, _], underlyingResource: IResource): Boolean = {
+    ensureBufferOpen(info, pm)
+
     withSourceFile({ (sourceFile, compiler) =>
       val unsafeElements = newElements.asInstanceOf[JMap[AnyRef, AnyRef]]
       val tmpMap = new java.util.HashMap[AnyRef, AnyRef]
       val sourceLength = sourceFile.length
-      
+
       try {
         logger.info("[%s] buildStructure for %s (%s)".format(scalaProject.underlying.getName(), this.getResource(), sourceFile.file))
 
         compiler.withStructure(sourceFile) { tree =>
           compiler.askOption { () =>
-              new compiler.StructureBuilderTraverser(this, info, tmpMap, sourceLength).traverse(tree)
+            new compiler.StructureBuilderTraverser(this, info, tmpMap, sourceLength).traverse(tree)
           }
         }
         info match {
-          case cuei : CompilationUnitElementInfo => 
+          case cuei: CompilationUnitElementInfo =>
             cuei.setSourceLength(sourceLength)
           case _ =>
         }
-    
+
         unsafeElements.putAll(tmpMap)
         true
       } catch {
@@ -87,12 +102,13 @@ trait ScalaCompilationUnit extends Openable
           Thread.currentThread().interrupt()
           logger.info("ignored InterruptedException in build structure")
           false
-          
-        case ex => 
+
+        case ex =>
           logger.error("Compiler crash while building structure for %s".format(file), ex)
           false
       }
-    }) (false)
+    })(false)
+  }
 
     
   /** Schedule this unit for reconciliation. This implementation does nothing, subclasses
