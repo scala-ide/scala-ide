@@ -12,6 +12,7 @@ import org.eclipse.jface.text._
 import org.eclipse.jface.preference.PreferenceConverter
 import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.jdt.internal.ui.JavaPlugin
+import scala.tools.eclipse.util.SWTUtils
 
 case class ScalaSyntaxClass(displayName: String, baseName: String, canBeDisabled: Boolean = false) {
 
@@ -54,13 +55,25 @@ case class ScalaSyntaxClass(displayName: String, baseName: String, canBeDisabled
     val colourManager = JavaPlugin.getDefault.getJavaTextTools.getColorManager
 
     val backgroundOpt =
-      if (preferenceStore getBoolean backgroundColourEnabledKey)
-        Some(colourManager.getColor(preferenceStore getColor backgroundColourKey))
+      if (preferenceStore getBoolean backgroundColourEnabledKey) {
+        var color: Color = null
+        // FIXME: Blocking on the UI thread is bad
+        SWTUtils.syncExec { 
+          color = colourManager.getColor(preferenceStore getColor backgroundColourKey) 
+        }
+        Some(color)
+      }
       else
         None
+    val foregroundColorPref = preferenceStore getColor foregroundColourKey
+    var foregroundColor: Color = null
+    // FIXME: Blocking on the UI thread is bad
+    SWTUtils.syncExec { 
+      foregroundColor = colourManager.getColor(foregroundColorPref) 
+    }
     StyleInfo(
       preferenceStore getBoolean enabledKey,
-      colourManager.getColor(preferenceStore getColor foregroundColourKey),
+      foregroundColor,
       backgroundOpt,
       preferenceStore getBoolean boldKey,
       preferenceStore getBoolean italicKey,

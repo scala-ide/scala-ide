@@ -1,6 +1,8 @@
 package scala.tools.eclipse.semantichighlighting.classifier
 
-case class SymbolInfo(symbolType: SymbolType, regions: List[Region], deprecated: Boolean)
+import org.eclipse.jface.text.IRegion
+
+case class SymbolInfo(symbolType: SymbolType, regions: List[IRegion], deprecated: Boolean)
 
 sealed trait SymbolType
 
