@@ -1,7 +1,6 @@
 package scala.tools.eclipse.properties.syntaxcolouring
 
 import scala.tools.eclipse.properties.syntaxcolouring.ScalaSyntaxClasses._
-import scala.tools.eclipse.semantichighlighting.SemanticHighlightingAnnotations
 import scala.tools.eclipse.util.SWTUtils.fnToPropertyChangeListener
 import scala.tools.eclipse.ScalaPlugin
 
@@ -28,54 +27,7 @@ class ColourPreferenceInitializer extends AbstractPreferenceInitializer {
     scalaPrefStore.setDefault(STRIKETHROUGH_DEPRECATED, true)
 
     setDefaultsForSyntaxClasses(scalaPrefStore)
-    initializePreferencesIndirectly(scalaPrefStore)
   }
-
-  /** This closure is needed in order to hide the reference to UI code behind an
-   *  anonymous class. In headless tests, when there is no Xserver, it is imperative
-   *  that no UI code is initialized. Without this indirection, the JVM would attempt
-   *  to load `AbstractUIPlugin`, which is the owner of `getPreferenceStore` when
-   *  preparing this class (even when this code is not executed). The reference exists
-   *  in bytecode:
-   *
-   *    invokevirtual	#78; //Method org/eclipse/ui/plugin/AbstractUIPlugin.getPreferenceStore:
-   *
-   *  Contrary to what we believe, this is enough to trigger initialization of
-   *  `AbstractUIPlugin`, regardless whether this is ever executed.
-   *
-   *  The JVM will not attempt to load classes indirectly, until they are needed
-   *  for execution, so the solution was to hide the call behind a closure.
-   *
-   *  TODO: Remove once we have a UI bundle, and a clear separation between UI and core.
-   *  
-   */
-  lazy val initializePreferencesIndirectly = (scalaPrefStore: IPreferenceStore) => {
-    val javaPrefStore = JavaPlugin.getDefault.getPreferenceStore
-    SemanticHighlightingAnnotations.initAnnotationPreferences(javaPrefStore)
-
-    mirrorColourPreferencesIntoJavaPreferenceStore(scalaPrefStore, javaPrefStore)
-  }
-
-  private def setDefaultsForSyntaxClass(
-    syntaxClass: ScalaSyntaxClass,
-    foregroundRGB: RGB,
-    enabled: Boolean = true,
-    backgroundRGBOpt: Option[RGB] = None,
-    bold: Boolean = false,
-    italic: Boolean = false,
-    strikethrough: Boolean = false,
-    underline: Boolean = false)(implicit scalaPrefStore: IPreferenceStore) =
-    {
-      lazy val WHITE = new RGB(255, 255, 255)
-      scalaPrefStore.setDefault(syntaxClass.enabledKey, enabled)
-      scalaPrefStore.setDefault(syntaxClass.foregroundColourKey, StringConverter.asString(foregroundRGB))
-      val defaultBackgroundColour = StringConverter.asString(backgroundRGBOpt getOrElse WHITE)
-      scalaPrefStore.setDefault(syntaxClass.backgroundColourKey, defaultBackgroundColour)
-      scalaPrefStore.setDefault(syntaxClass.backgroundColourEnabledKey, backgroundRGBOpt.isDefined)
-      scalaPrefStore.setDefault(syntaxClass.boldKey, bold)
-      scalaPrefStore.setDefault(syntaxClass.italicKey, italic)
-      scalaPrefStore.setDefault(syntaxClass.underlineKey, underline)
-    }
 
   private def setDefaultsForSyntaxClasses(implicit scalaPrefStore: IPreferenceStore) {
     // Scala syntactic
@@ -126,20 +78,27 @@ class ColourPreferenceInitializer extends AbstractPreferenceInitializer {
     setDefaultsForSyntaxClass(PACKAGE, new RGB(0, 110, 4), enabled = false)
     setDefaultsForSyntaxClass(TYPE, new RGB(50, 147, 153), italic = true, enabled = false)
     setDefaultsForSyntaxClass(TYPE_PARAMETER, new RGB(23, 0, 129), underline = true, enabled = false)
-  }
+  }  
 
-  // Mirror across the colour preferences into the Java preference store so that they can be read by the annotation
-  // mechanism.
-  private def mirrorColourPreferencesIntoJavaPreferenceStore(scalaPrefStore: IPreferenceStore, javaPrefStore: IPreferenceStore) {
-    for (key <- ALL_KEYS)
-      javaPrefStore.setDefault(key, scalaPrefStore getDefaultString key)
-
-    scalaPrefStore.addPropertyChangeListener { event: PropertyChangeEvent =>
-      val key = event.getProperty
-      if (ALL_KEYS contains key)
-        javaPrefStore.setValue(key, event.getNewValue.toString)
+  private def setDefaultsForSyntaxClass(
+    syntaxClass: ScalaSyntaxClass,
+    foregroundRGB: RGB,
+    enabled: Boolean = true,
+    backgroundRGBOpt: Option[RGB] = None,
+    bold: Boolean = false,
+    italic: Boolean = false,
+    strikethrough: Boolean = false,
+    underline: Boolean = false)(implicit scalaPrefStore: IPreferenceStore) =
+    {
+      lazy val WHITE = new RGB(255, 255, 255)
+      scalaPrefStore.setDefault(syntaxClass.enabledKey, enabled)
+      scalaPrefStore.setDefault(syntaxClass.foregroundColourKey, StringConverter.asString(foregroundRGB))
+      val defaultBackgroundColour = StringConverter.asString(backgroundRGBOpt getOrElse WHITE)
+      scalaPrefStore.setDefault(syntaxClass.backgroundColourKey, defaultBackgroundColour)
+      scalaPrefStore.setDefault(syntaxClass.backgroundColourEnabledKey, backgroundRGBOpt.isDefined)
+      scalaPrefStore.setDefault(syntaxClass.boldKey, bold)
+      scalaPrefStore.setDefault(syntaxClass.italicKey, italic)
+      scalaPrefStore.setDefault(syntaxClass.underlineKey, underline)
     }
-
-  }
 
 }

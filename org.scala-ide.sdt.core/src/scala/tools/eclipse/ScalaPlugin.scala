@@ -40,6 +40,8 @@ import scala.tools.nsc.Settings
 import scala.tools.eclipse.ui.PartAdapter
 
 object ScalaPlugin {
+  final val IssueTracker = "https://www.assembla.com/spaces/scala-ide/support/tickets"
+  
   private final val HeadlessTest  = "sdtcore.headless"
   private final val NoTimeouts = "sdtcore.notimeouts"
 
