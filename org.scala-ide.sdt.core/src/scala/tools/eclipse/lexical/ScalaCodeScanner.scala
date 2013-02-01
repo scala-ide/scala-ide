@@ -74,7 +74,7 @@ trait ScalaCodeTokenizer {
   /** Tokenizes a string given by its offset and length in a document. */
   def tokenize(document: IDocument, offset: Int, length: Int): IndexedSeq[Range] = {
     val source = document.get(offset, length)
-    val token = ScalaLexer.tokenise(source, forgiveErrors = true).toIndexedSeq.init
+    val token = ScalaLexer.createRawLexer(source, forgiveErrors = true).toIndexedSeq.init
 
     /**
      * Heuristic to distinguish the macro keyword from uses as an identifier. To be 100% accurate requires a full parse,
