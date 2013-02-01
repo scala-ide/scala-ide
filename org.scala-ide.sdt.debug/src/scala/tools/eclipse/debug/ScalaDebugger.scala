@@ -24,6 +24,7 @@ object ScalaDebugger extends ISelectionListener {
 
   override def selectionChanged(part: org.eclipse.ui.IWorkbenchPart, selection: org.eclipse.jface.viewers.ISelection) {
     // track the currently selected thread, to be able to invoke methods on the VM
+    //FIXME: How can this not be subject to a race condition?
     currentThread = selection match {
       case structuredSelection: IStructuredSelection =>
         structuredSelection.getFirstElement match {
