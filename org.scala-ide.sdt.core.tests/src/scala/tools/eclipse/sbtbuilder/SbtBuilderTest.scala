@@ -25,6 +25,12 @@ import scala.tools.eclipse.buildmanager.sbtintegration._
 
 object SbtBuilderTest extends TestProjectSetup("builder") with CustomAssertion
 object depProject extends TestProjectSetup("builder-sub")
+object closedProject extends TestProjectSetup("closed-project-test") {
+  
+  def closeProject() {
+    project.underlying.close(null)
+  }
+}
 
 class SbtBuilderTest {
 
@@ -156,6 +162,13 @@ class SbtBuilderTest {
     val expectedLib = plugin.workspaceRoot.findMember("/library/bin").getLocation
     Assert.assertEquals("Unexpected Scala lib", expectedLib, prjClient.scalaClasspath.scalaLib.get)
     deleteProjects(prjClient, prjLib)
+  }
+
+  @Test def checkClosedProject() { 
+    closedProject.closeProject()
+    Assert.assertEquals("exportedDependencies", Nil, closedProject.project.exportedDependencies)
+    Assert.assertEquals("sourceFolders", Nil, closedProject.project.sourceFolders)
+    Assert.assertEquals("sourceOutputFolders", Nil, closedProject.project.sourceOutputFolders)
   }
 
   /** Returns true if the expected regular expression matches the given error message. */

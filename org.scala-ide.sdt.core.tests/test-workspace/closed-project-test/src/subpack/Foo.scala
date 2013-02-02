@@ -1,0 +1,3 @@
+package subpack
+
+class Foo

@@ -228,13 +228,9 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
    */
   def exportedDependencies: Seq[IProject] = {
     try {
-      if (underlying.isOpen) {
-        for { entry <- javaProject.getRawClasspath
-            if entry.getEntryKind == IClasspathEntry.CPE_PROJECT && entry.isExported
-        } yield plugin.workspaceRoot.getProject(entry.getPath().toString)
-      } else {
-        Nil
-      } 
+      for { entry <- resolvedClasspath
+          if entry.getEntryKind == IClasspathEntry.CPE_PROJECT && entry.isExported
+      } yield plugin.workspaceRoot.getProject(entry.getPath().toString)
     } catch {
       case t: Exception => { 
         eclipseLog.error("Unable to collect exported dependencies for " + underlying.getName, t)
@@ -247,7 +243,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
 
   def sourceFolders: Seq[IPath] = {
     for {
-      cpe <- javaProject.getResolvedClasspath(true) if cpe.getEntryKind == IClasspathEntry.CPE_SOURCE
+      cpe <- resolvedClasspath if cpe.getEntryKind == IClasspathEntry.CPE_SOURCE
       resource <- Option(plugin.workspaceRoot.findMember(cpe.getPath)) if resource.exists
     } yield resource.getLocation
   }
@@ -270,7 +266,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
    *          output folder.
    */
   def sourceOutputFolders: Seq[(IContainer, IContainer)] = {
-    val cpes = javaProject.getResolvedClasspath(true)
+    val cpes = resolvedClasspath
 
     for {
       cpe <- cpes if cpe.getEntryKind == IClasspathEntry.CPE_SOURCE
@@ -285,6 +281,18 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
       (source.asInstanceOf[IContainer], binPath)
     }
   }
+
+  /**
+   * This function checks that the underlying project is closed, if not, return the classpath, otherwise return Nil, 
+   * so avoids throwing an exceptions.
+   *  @return the classpath or Nil, if the underlying project is closed.
+   */ 
+  private def resolvedClasspath = 
+     if (underlying.isOpen) {
+       List.fromArray(javaProject.getResolvedClasspath(true))
+     } else {
+       Nil
+     }
   
   /** Return all source files in the source path. It only returns buildable files (meaning
    *  Java or Scala sources).
