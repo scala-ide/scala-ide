@@ -23,7 +23,7 @@ import scala.tools.nsc.util.SourceFile
 
 import org.eclipse.core.resources.{IContainer, IFile, IMarker, IProject, IResource, IResourceProxy, IResourceProxyVisitor}
 import org.eclipse.core.runtime.{IPath, IProgressMonitor, Path, SubMonitor}
-import org.eclipse.jdt.core.{IClasspathEntry, IJavaProject, JavaCore}
+import org.eclipse.jdt.core.{IClasspathEntry, IJavaProject, JavaCore, JavaModelException}
 import org.eclipse.jdt.internal.core.util.Util
 import org.eclipse.ui.IEditorPart
 import org.eclipse.ui.IPartListener
@@ -186,7 +186,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
 
   /** Deletes the build problem marker associated to {{{this}}} Scala project. */
   private def clearBuildProblemMarker(): Unit = 
-    if (underlying.isOpen) {
+    if (isUnderlyingValid) {
       workspaceRunnableIn(underlying.getWorkspace) { m =>
         underlying.deleteMarkers(plugin.problemMarkerId, true, IResource.DEPTH_ZERO)
       }
@@ -194,13 +194,13 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
  
   /** Deletes all build problem markers for all resources in {{{this}}} Scala project. */
   private def clearAllBuildProblemMarkers(): Unit = {
-    if (underlying.isOpen) {
+    if (isUnderlyingValid) {
       underlying.deleteMarkers(plugin.problemMarkerId, true, IResource.DEPTH_INFINITE)
     }
   }
 
   private def clearSettingsErrors(): Unit =
-    if (underlying.isOpen) {
+    if (isUnderlyingValid) {
       workspaceRunnableIn(underlying.getWorkspace) { m =>
         underlying.deleteMarkers(plugin.settingProblemMarkerId, true, IResource.DEPTH_ZERO)
       }
@@ -282,16 +282,22 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
     }
   }
 
+  private def isUnderlyingValid = (underlying.exists() && underlying.isOpen)
+
   /**
    * This function checks that the underlying project is closed, if not, return the classpath, otherwise return Nil, 
    * so avoids throwing an exceptions.
    *  @return the classpath or Nil, if the underlying project is closed.
    */ 
   private def resolvedClasspath = 
-     if (underlying.isOpen) {
-       List.fromArray(javaProject.getResolvedClasspath(true))
-     } else {
-       Nil
+     try {
+       if (isUnderlyingValid) {
+         javaProject.getResolvedClasspath(true).toList
+       } else {
+         Nil
+       }
+     } catch { 
+       case e: JavaModelException => logger.error(e); Nil
      }
   
   /** Return all source files in the source path. It only returns buildable files (meaning
