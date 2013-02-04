@@ -2,10 +2,12 @@ package scala.tools.eclipse.semantichighlighting.ui
 
 import scala.tools.eclipse.InteractiveCompilationUnit
 import scala.tools.eclipse.ScalaSourceFileEditor
-import scala.tools.eclipse.semantichighlighting.TextPresentationProxy
+import scala.tools.eclipse.logging.HasLogger
+import scala.tools.eclipse.semantichighlighting.TextPresentationHighlighter
 import scala.tools.eclipse.ui.InteractiveCompilationUnitEditor
 import scala.tools.eclipse.util.SWTUtils
 import scala.tools.eclipse.util.withDocument
+
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.core.runtime.IStatus
 import org.eclipse.core.runtime.Status
@@ -13,15 +15,13 @@ import org.eclipse.core.runtime.jobs.Job
 import org.eclipse.jdt.core.dom.CompilationUnit
 import org.eclipse.jdt.internal.ui.javaeditor.JavaSourceViewer
 import org.eclipse.jdt.internal.ui.text.java.IJavaReconcilingListener
+import org.eclipse.jface.text.BadPositionCategoryException
 import org.eclipse.jface.text.IRegion
 import org.eclipse.jface.text.ITextPresentationListener
+import org.eclipse.jface.text.Position
 import org.eclipse.jface.text.TextPresentation
 import org.eclipse.jface.text.source.ISourceViewer
 import org.eclipse.swt.widgets.Display
-import scala.tools.eclipse.semantichighlighting.DocumentProxy
-import org.eclipse.jface.text.BadPositionCategoryException
-import scala.tools.eclipse.logging.HasLogger
-import org.eclipse.jface.text.Position
 
 /** This class is responsible of:
   * - Triggering the semantic highlighting reconciler job as soon as the `JavaReconciler` has reconciled the compilation unit.
@@ -29,7 +29,7 @@ import org.eclipse.jface.text.Position
   *
   * This class is thread-safe.
   */
-private class ScalaTextPresentationProxy(editor: ScalaSourceFileEditor) extends TextPresentationProxy with InteractiveCompilationUnitEditor {
+private class TextPresentationEditorHighlighter(editor: ScalaSourceFileEditor) extends TextPresentationHighlighter with InteractiveCompilationUnitEditor {
 
   private class PerformSemanticHighlightingOnReconcilation extends IJavaReconcilingListener {
     override def aboutToBeReconciled(): Unit = ()
@@ -53,10 +53,10 @@ private class ScalaTextPresentationProxy(editor: ScalaSourceFileEditor) extends 
   override def sourceViewer: JavaSourceViewer = editor.sourceViewer
   override def getInteractiveCompilationUnit: InteractiveCompilationUnit = editor.getInteractiveCompilationUnit
 
-  override def initialize(reconciler: Job, positionCategory: String): Unit = {
-    ScalaTextPresentationProxy.this.reconciler = reconciler
+  override def initialize(_reconciler: Job, _positionCategory: String): Unit = {
+    reconciler = _reconciler
     editor.addReconcilingListener(highlightingOnReconciliationListener)
-    ScalaTextPresentationProxy.this.textPresentationChangeListener = new ScalaTextPresentationProxy.ApplyHighlightingTextPresentationChanges(sourceViewer, positionCategory)
+    textPresentationChangeListener = new TextPresentationEditorHighlighter.ApplyHighlightingTextPresentationChanges(sourceViewer, _positionCategory)
     sourceViewer.prependTextPresentationListener(textPresentationChangeListener)
   }
 
@@ -69,27 +69,24 @@ private class ScalaTextPresentationProxy(editor: ScalaSourceFileEditor) extends 
     * This method expects the caller thread to be the one associated with the `reconciler` job.
     *
     * @return Always return Job.ASYNC_FINISH, because the `TextPresentation`'s update has to be
-    *    executed in the UI Thread asynchronously (it's done asynchronously because, as a
-    *    general rule, we never block the UI if we can do otherwise).
+    *  executed in the UI Thread asynchronously (it's done asynchronously because, as a
+    *  general rule, we never block the UI if we can do otherwise).
     */
-  override def updateTextPresentation(documentProxy: DocumentProxy, positionsChange: DocumentProxy#DocumentPositionsChange, damage: IRegion): IStatus = {
-    val textPresentation = createRepairDescription(damage)
-    reconciler.setThread(Display.getDefault.getThread())
-    SWTUtils.asyncExec {
-      // It's *really* important that the document's positions are updated inside the UI Thread, or performance can severely degrade to the point that you have to shut 
-      // down Eclipse. I'm actually not sure of the whys this happens (it looks like both Semantic Highlighting and the AnnotationPainter are fighting for accessing the 
-      // document, which is protected by a lock, so there could be a lot of contention), but updating the document's positions in the UI Thread seems to make it work.
-      // Let's see what happens after some real usage.
-      if (damage.getLength > 0) {
-        super.updateTextPresentation(documentProxy, positionsChange, damage)
+  override def updateTextPresentation(damage: IRegion): IStatus = {
+    if (damage.getLength > 0) {
+      reconciler.setThread(Thread.currentThread())
+      SWTUtils.asyncExec {
+        reconciler.setThread(Display.getDefault.getThread())
+        val textPresentation = createRepairDescription(damage)
         textPresentation match {
           case None     => sourceViewer.invalidateTextPresentation() // invalidate the whole editor's text presentation
           case Some(tp) => sourceViewer.changeTextPresentation(tp, /*controlRedraw=*/ false)
         }
+        reconciler.done(Status.OK_STATUS)
       }
-      reconciler.done(Status.OK_STATUS)
+      Job.ASYNC_FINISH
     }
-    Job.ASYNC_FINISH
+    else Status.OK_STATUS
   }
 
   private def createRepairDescription(damage: IRegion): Option[TextPresentation] = withDocument(sourceViewer) { document =>
@@ -99,15 +96,15 @@ private class ScalaTextPresentationProxy(editor: ScalaSourceFileEditor) extends 
   }
 }
 
-object ScalaTextPresentationProxy {
+object TextPresentationEditorHighlighter {
 
-  def apply(editor: ScalaSourceFileEditor): TextPresentationProxy with InteractiveCompilationUnitEditor = new ScalaTextPresentationProxy(editor)
+  def apply(editor: ScalaSourceFileEditor): TextPresentationHighlighter with InteractiveCompilationUnitEditor = new TextPresentationEditorHighlighter(editor)
 
   /** This class is responsible of side-effecting the editor's text presentation by applying the semantic highlighting styles for all positions registered
     * in the document for the passed `category`.
     *
-    * @sourceViewer Used to retrieve the document to which this listener is attached to. The document is needed to retrieve all the positions to semantically highlight.
-    * @category The position's category in the document.
+    * @param sourceViewer Used to retrieve the document to which this listener is attached to. The document is needed to retrieve all the positions to semantically highlight.
+    * @param category     The position's category in the document.
     */
   private class ApplyHighlightingTextPresentationChanges(sourceViewer: ISourceViewer, category: String) extends ITextPresentationListener with HasLogger {
     override def applyTextPresentation(textPresentation: TextPresentation): Unit = withDocument(sourceViewer) { document =>
@@ -129,7 +126,8 @@ object ScalaTextPresentationProxy {
       // shift positions' offset as needed when the document is edited.
       val styles = for {
         pos <- highlightedPositions
-        if (pos.getOffset >= offset) && (pos.getOffset <= end) && !pos.isDeleted()
+        val posOffset = pos.getOffset
+        if (posOffset >= offset) && (posOffset <= end) && !pos.isDeleted()
       } yield pos.asInstanceOf[HighlightedPosition].createStyleRange
 
       textPresentation.replaceStyleRanges(styles.toArray)

@@ -103,9 +103,7 @@ class SymbolClassification(protected val sourceFile: SourceFile, val global: Sca
     val symbolInfosFromSyntax = getSymbolInfosFromSyntax(syntacticInfo, localVars, all)
     if (progressMonitor.isCanceled()) return Nil
 
-    val res = (symbolInfosFromSyntax ++ prunedSymbolInfos) filter { _.regions.nonEmpty } distinct
-
-    res
+    (symbolInfosFromSyntax ++ prunedSymbolInfos) filter { _.regions.nonEmpty } distinct
   }
 
   private def getSymbolInfo(sym: Symbol, poss: List[Position]): SymbolInfo = {
@@ -117,8 +115,7 @@ class SymbolClassification(protected val sourceFile: SourceFile, val global: Sca
 
   private def getOccurrenceRegion(sym: Symbol)(pos: Position): Option[IRegion] =
     getNameRegion(pos) flatMap { region =>
-      import RegionOps.region2regionOps
-      val text = region of sourceFile.content
+      val text = RegionOps.of(region, sourceFile.content)
       val symName = sym.nameString
       if (symName.startsWith(text) || text == "`" + symName + "`")
         Some(region)
