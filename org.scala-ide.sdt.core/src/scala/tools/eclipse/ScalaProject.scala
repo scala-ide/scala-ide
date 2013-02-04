@@ -140,7 +140,6 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
         Xexperimental, 
         future, 
         Ylogcp,
-        Xmigration28, 
         pluginSetting,
         pluginsDir,
         YpresentationDebug, 
