@@ -54,23 +54,19 @@ case class ScalaSyntaxClass(displayName: String, baseName: String, canBeDisabled
   def getStyleInfo(preferenceStore: IPreferenceStore): StyleInfo = {
     val colourManager = JavaPlugin.getDefault.getJavaTextTools.getColorManager
 
-    val backgroundOpt =
-      if (preferenceStore getBoolean backgroundColourEnabledKey) {
-        var color: Color = null
-        // FIXME: Blocking on the UI thread is bad
-        SWTUtils.syncExec { 
-          color = colourManager.getColor(preferenceStore getColor backgroundColourKey) 
-        }
-        Some(color)
-      }
-      else
-        None
     val foregroundColorPref = preferenceStore getColor foregroundColourKey
     var foregroundColor: Color = null
-    // FIXME: Blocking on the UI thread is bad
-    SWTUtils.syncExec { 
-      foregroundColor = colourManager.getColor(foregroundColorPref) 
+    var backgroundOpt: Option[Color] = None
+
+    // FIXME: Blocking on the UI thread is bad. I'm pretty sure we can avoid this, but some refactoring is in needed. Basically, the 
+    //        different SyntaxClasses should be created by the editor right after checking if semantic highlighting is enabled, that 
+    //        way you know you are running inside the UI Thread. Re #1001489.
+    SWTUtils.syncExec {
+      foregroundColor = colourManager.getColor(foregroundColorPref)
+      if (preferenceStore getBoolean backgroundColourEnabledKey)
+        backgroundOpt = Option(colourManager.getColor(preferenceStore getColor backgroundColourKey))
     }
+
     StyleInfo(
       preferenceStore getBoolean enabledKey,
       foregroundColor,

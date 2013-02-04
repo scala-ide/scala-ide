@@ -11,15 +11,12 @@ import org.eclipse.core.runtime.Status
  *  component to apply the presentation styles in a text editor. This is needed for isolating all 
  *  UI logic so that it can be easily tested in a headless environment.
  */
-trait TextPresentationProxy {
+trait TextPresentationHighlighter {
   def sourceViewer: ISourceViewer
 
   def initialize(reconciler: Job, positionCategory: String): Unit
   def dispose(): Unit
   
   /** Triggers an update of the editor's `TextPresentation` based on the passed `damage` region.*/
-  def updateTextPresentation(documentProxy: DocumentProxy, positionsChange: DocumentProxy#DocumentPositionsChange, damage: IRegion): IStatus = {
-    if (damage.getLength > 0) documentProxy.updateDocumentPositions(positionsChange)
-    Status.OK_STATUS
-  }
+  def updateTextPresentation(damage: IRegion): IStatus
 }

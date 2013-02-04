@@ -7,6 +7,7 @@
 package scala.tools.eclipse
 
 import java.util.ResourceBundle
+
 import scala.Option.option2Iterable
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.SynchronizedBuffer
@@ -16,15 +17,17 @@ import scala.tools.eclipse.markoccurrences.ScalaOccurrencesFinder
 import scala.tools.eclipse.properties.syntaxcolouring.ScalaSyntaxClasses
 import scala.tools.eclipse.semantichighlighting.Presenter
 import scala.tools.eclipse.semantichighlighting.ui.HighlightedPosition
-import scala.tools.eclipse.semantichighlighting.ui.ScalaTextPresentationProxy
+import scala.tools.eclipse.semantichighlighting.ui.TextPresentationEditorHighlighter
 import scala.tools.eclipse.semicolon.ShowInferredSemicolonsAction
 import scala.tools.eclipse.semicolon.ShowInferredSemicolonsBundle
 import scala.tools.eclipse.ui.SurroundSelectionStrategy
+import scala.tools.eclipse.util.EclipseUtils
 import scala.tools.eclipse.util.EditorUtils
 import scala.tools.eclipse.util.RichAnnotationModel.annotationModel2RichAnnotationModel
 import scala.tools.eclipse.util.SWTUtils
 import scala.tools.eclipse.util.SWTUtils.fnToPropertyChangeListener
 import scala.tools.eclipse.util.Utils
+
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.core.runtime.Status
 import org.eclipse.core.runtime.jobs.Job
@@ -63,7 +66,6 @@ import org.eclipse.ui.texteditor.ITextEditorActionConstants
 import org.eclipse.ui.texteditor.IUpdate
 import org.eclipse.ui.texteditor.IWorkbenchActionDefinitionIds
 import org.eclipse.ui.texteditor.TextOperationAction
-import scala.tools.eclipse.util.EclipseUtils
 
 
 class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor { self =>
@@ -151,7 +153,7 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor { sel
 
   protected def installScalaSemanticHighlighting(): Unit = {
     if(semanticHighlightingPresenter == null) {
-      val editorProxy = ScalaTextPresentationProxy(this)
+      val editorProxy = TextPresentationEditorHighlighter(this)
       val positionsFactory = HighlightedPosition(semanticHighlightingPreferences) _
       semanticHighlightingPresenter = new Presenter(editorProxy, positionsFactory, semanticHighlightingPreferences)
       semanticHighlightingPresenter.initialize()
