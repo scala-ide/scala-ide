@@ -67,9 +67,8 @@ private class HighlightedPosition(
   override def undelete(): Unit = lock.synchronized { super.undelete() }
 
   override def equals(that: Any): Boolean = that match {
+    // This implementation of `equals` is NOT symmetric.
     case that: HighlightedPosition =>
-      // Current implementation of org.eclipse.jface.text.Position#equals is wrong wrt to inheritance (implementation is not symmetric)
-      // Also, go figure why `isDeleted` is not part of the equality contract. Bottom line, avoid using this class if at all possible.
       lock.synchronized { style == that.style && this.isDeleted() == that.isDeleted() && super.equals(that) }
     case _ => false
   }
@@ -90,11 +89,14 @@ private class HighlightedPosition(
 
   override def toString(): String = lock.synchronized { super.toString() }
 
+  private def getOffsetAndLenght(): (Int, Int) = lock.synchronized { (getOffset, getLength) }
+
   def createStyleRange: StyleRange = {
+    val (offset, length) = getOffsetAndLenght()
     val textAttribute = style.textAttribute
     val s = textAttribute.getStyle()
     val fontStyle = s & (SWT.ITALIC | SWT.BOLD | SWT.NORMAL)
-    val styleRange = new StyleRange(getOffset(), getLength(), textAttribute.getForeground(), textAttribute.getBackground(), fontStyle)
+    val styleRange = new StyleRange(offset, length, textAttribute.getForeground(), textAttribute.getBackground(), fontStyle)
     styleRange.strikeout = (s & TextAttribute.STRIKETHROUGH) != 0
     styleRange.underline = (s & TextAttribute.UNDERLINE) != 0
     styleRange

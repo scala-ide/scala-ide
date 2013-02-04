@@ -27,7 +27,7 @@ import org.eclipse.jface.text.source.ISourceViewer
   * @param positionFactory Factory for semantically highlighted positions.
   * @param preferences Semantic Highlighting user's preferences.
   */
-class Presenter(editorProxy: TextPresentationProxy with InteractiveCompilationUnitEditor, positionsFactory: Presenter.PositionsFactory, preferences: Preferences) {
+class Presenter(editorProxy: TextPresentationHighlighter with InteractiveCompilationUnitEditor, positionsFactory: Presenter.PositionsFactory, preferences: Preferences) {
 
   private val reconciler = {
     val job = new Reconciler(editorProxy.getInteractiveCompilationUnit)
@@ -39,10 +39,10 @@ class Presenter(editorProxy: TextPresentationProxy with InteractiveCompilationUn
   private val documentProxy = new DocumentProxy(editorProxy.sourceViewer, reconciler, getPositionCategory)
 
   /** True if method `initialize` was called, false otherwise.
-    * @GuardedBy initializationLock
+    * Guarded by initializationLock
     */
   private var initialized: Boolean = false
-  
+
   /** Lock used to protect initialization/disposal of this instance. */
   private val initializationLock: AnyRef = new Object
 
@@ -103,9 +103,13 @@ class Presenter(editorProxy: TextPresentationProxy with InteractiveCompilationUn
       }(Status.OK_STATUS)
     }
 
-    private def updateTextPresentation(positionsChange: DocumentProxy#DocumentPositionsChange): IStatus = {
+    private def updateTextPresentation(positionsChange: DocumentPositionsChange): IStatus = {
       val damage = positionsChange.createRegionChange()
-      editorProxy.updateTextPresentation(documentProxy, positionsChange, damage)
+      if (damage.getLength > 0) {
+        documentProxy.updateDocumentPositions(positionsChange)
+        editorProxy.updateTextPresentation(damage)
+      }
+      else Status.OK_STATUS
     }
   }
 }

@@ -1,12 +1,22 @@
 package scala.tools.eclipse.semantichighlighting
 
 import scala.collection.immutable
+import scala.tools.eclipse.EclipseUserSimulator
 import scala.tools.eclipse.InteractiveCompilationUnit
+import scala.tools.eclipse.ScalaPlugin
+import scala.tools.eclipse.ScalaProject
+import scala.tools.eclipse.javaelements.ScalaCompilationUnit
+import scala.tools.eclipse.properties.syntaxcolouring.ScalaSyntaxClasses
 import scala.tools.eclipse.semantichighlighting.classifier.SymbolInfo
-import scala.tools.eclipse.testsetup.TestProjectSetup
 import scala.tools.eclipse.ui.InteractiveCompilationUnitEditor
+import scala.tools.eclipse.util.EclipseUtils
+import scala.util.matching.Regex
+import scala.util.matching.Regex.Match
+
 import org.eclipse.core.internal.filebuffers.SynchronizableDocument
 import org.eclipse.core.runtime.IStatus
+import org.eclipse.core.runtime.IProgressMonitor
+import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.core.runtime.Status
 import org.eclipse.core.runtime.jobs.Job
 import org.eclipse.jface.preference.IPreferenceStore
@@ -15,31 +25,23 @@ import org.eclipse.jface.text.IRegion
 import org.eclipse.jface.text.Position
 import org.eclipse.jface.text.source.ISourceViewer
 import org.junit.{ Before, Test }
-import org.mockito.Mockito._
-import scala.tools.eclipse.ScalaPlugin
-import org.junit.Assert
-import org.eclipse.core.runtime.IProgressMonitor
-import org.eclipse.core.runtime.NullProgressMonitor
-import scala.tools.eclipse.util.EclipseUtils
 import org.junit.After
-import scala.tools.eclipse.ScalaProject
-import scala.tools.eclipse.EclipseUserSimulator
-import scala.tools.eclipse.javaelements.ScalaCompilationUnit
-import org.junit.BeforeClass
-import org.junit.AfterClass
-import org.eclipse.jdt.core.IBuffer
+import org.junit.Assert
+import org.mockito.Mockito._
 
 class SemanticHighlightingPositionsTest {
   import SemanticHighlightingPositionsTest._
 
-  private val MarkerChar = '^'
-  private val Marker = "/*" + MarkerChar + "*/"
+  private val MarkerRegex: Regex = """/\*\^\*/""".r
+  private val Marker = "/*^*/"
 
   protected val simulator = new EclipseUserSimulator
   private var project: ScalaProject = _
 
   private var sourceView: ISourceViewer = _
   private var document: IDocument = _
+
+  private var preferences: Preferences = _
 
   private var testCode: String = _
   private var unit: ScalaCompilationUnit = _
@@ -64,9 +66,13 @@ class SemanticHighlightingPositionsTest {
     sourceView = mock(classOf[ISourceViewer])
     document = new SynchronizableDocument
     when(sourceView.getDocument()).thenReturn(document)
+
+    val store = mock(classOf[IPreferenceStore])
+    when(store.getBoolean(ScalaSyntaxClasses.USE_SYNTACTIC_HINTS)).thenReturn(true)
+    preferences = new Preferences(store)
   }
 
-  trait Edit { 
+  trait Edit {
     def newText: String = ""
     def newPositions: List[Position] = Nil
   }
@@ -82,7 +88,7 @@ class SemanticHighlightingPositionsTest {
 
   private def createSemanticHighlightingPresenter(): Unit = {
     editor = EditorStub(unit, sourceView)
-    presenter = new Presenter(editor, PositionFactory(PreferencesStub), PreferencesStub)
+    presenter = new Presenter(editor, PositionFactory(preferences), preferences)
     presenter.initialize()
   }
 
@@ -92,6 +98,9 @@ class SemanticHighlightingPositionsTest {
     // performing side-effect on the document's positions each time the reconciler is triggered.
     highlighedPositions.map(pos => new Position(pos.getOffset(), pos.getLength()))
   }
+  
+  private def findAllMarkersIn(code: String): List[Match] = 
+    MarkerRegex.findAllIn(testCode).matchData.toList
 
   private def runTest(edit: Edit)(code: String): Unit = {
     setTestCode(code)
@@ -100,51 +109,46 @@ class SemanticHighlightingPositionsTest {
 
     val highlightedBeforeEdition = currentlyHighlightedPositionsInDocument()
 
-    val markerOccurrences = testCode.count(_ == MarkerChar)
+    val markers = findAllMarkersIn(testCode)
 
-    val offset = testCode.indexOf(Marker) // position of the first marker
-    val length: Int = {
-      if (markerOccurrences == 1) { // we are just adding some text at the offset delimited by the marker
-        Marker.length
-      } 
-      else if (markerOccurrences == 2) { // we are deleting the text that is in-between the markers (included the markers)
-        val to = testCode.indexOf(Marker, offset + Marker.length) + Marker.length
-        to - offset
-      } // sanity check 
-      else throw new AssertionError("Unsupported test definition. Found %d occurrences of %s in test code:\n%s".format(markerOccurrences, Marker, testCode))
+    val (start, end) = markers.size match {
+      case 1    => (markers.head.start, markers.head.end)
+      case 2    => (markers.head.start, markers.last.end)
+      case size => throw new AssertionError("Unsupported test definition. Found %d occurrences of %s in test code:\n%s".format(size, Marker, testCode))
     }
+    val length = end - start
 
     val positionShift = edit.newText.length - length
-    val expectedHighlightedPositionsAfterEdition = {
+    val expectedHighlightedPositionsAfterEdition: List[Position] = {
       // collect all positions in the document that are expected to still be highlighted after the edition
-      val positions = highlightedBeforeEdition.filterNot { _.overlapsWith(offset, length) }
+      val positions = highlightedBeforeEdition.filterNot { _.overlapsWith(start, length) }
       // of the above positions, shift the ones that are affected by the edition
       val shiftedPositions = positions.map { pos =>
-        if (pos.getOffset() >= offset) pos.setOffset(pos.getOffset() + positionShift)
+        if (pos.getOffset() >= start) pos.setOffset(pos.getOffset() + positionShift)
         pos
       }
-      // merge together the shifted positions and any additional position that is expected to be created by the test
-      val merged = (edit.newPositions  ++ positions)
+      // merge together the shifted positions and any additional position that is expected to be created by the edit
+      val merged = (edit.newPositions ++ positions)
       // Sort the position. This is needed because position's added to the document are expected to be sorted. 
       val sorted = merged.sorted(Presenter.PositionsByOffset)
       sorted
     }
 
-    // perform edition
-    unit.getBuffer().replace(offset, length, edit.newText)
-    
-    // sanity check
-    val currentTestCode = unit.getContents.mkString
-    if (currentTestCode.count(_ == MarkerChar) != 0)
-      throw new AssertionError("After edition, no marker `%s` should be present in test code:\n%s".format(MarkerChar, currentTestCode))
+    // perform edit
+    unit.getBuffer().replace(start, length, edit.newText)
 
-    // this will trigger semantic highlighting computation, which in turn will update the document's positions
+    // checks edit's postcondition
+    val currentTestCode = unit.getContents.mkString
+    if (findAllMarkersIn(currentTestCode).nonEmpty)
+      throw new AssertionError("After edition, no marker `%s` should be present in test code:\n%s".format(Marker, currentTestCode))
+
+    // This will trigger semantic highlighting computation, which in turn will update the document's positions (sequential execution!) 
     editor.reconcileNow()
 
-    val highlightedAfterEdition = currentlyHighlightedPositionsInDocument()
+    val highlightedAfterEdition = currentlyHighlightedPositionsInDocument().toList
 
     Assert.assertEquals(expectedHighlightedPositionsAfterEdition.size, highlightedAfterEdition.size)
-    Assert.assertEquals(expectedHighlightedPositionsAfterEdition.toList, highlightedAfterEdition.toList)
+    Assert.assertEquals(expectedHighlightedPositionsAfterEdition, highlightedAfterEdition)
   }
 
   @Test
@@ -170,7 +174,7 @@ class SemanticHighlightingPositionsTest {
       """
     }
   }
-  
+
   @Test
   def new_highlighted_positions_are_reported() {
     runTest(AddText("val bar = 2", List(new Position(17, 3)))) {
@@ -213,7 +217,7 @@ class SemanticHighlightingPositionsTest {
 
 object SemanticHighlightingPositionsTest {
 
-  class EditorStub(override val getInteractiveCompilationUnit: InteractiveCompilationUnit, override val sourceViewer: ISourceViewer) extends TextPresentationProxy with InteractiveCompilationUnitEditor {
+  class EditorStub(override val getInteractiveCompilationUnit: InteractiveCompilationUnit, override val sourceViewer: ISourceViewer) extends TextPresentationHighlighter with InteractiveCompilationUnitEditor {
     @volatile private var reconciler: Job = _
     @volatile var positionCategory: String = _
 
@@ -222,28 +226,19 @@ object SemanticHighlightingPositionsTest {
       this.positionCategory = positionCategory
       reconcileNow()
     }
+
     override def dispose(): Unit = {}
 
-    override def updateTextPresentation(documentProxy: DocumentProxy, positionsChange: DocumentProxy#DocumentPositionsChange, damage: IRegion): IStatus = {
-      println(damage)
-      super.updateTextPresentation(documentProxy, positionsChange, damage)
-    }
-
     def reconcileNow(): Unit = {
+      // `Job.run` is protected, but when we subclass it in `Presenter$Reconciler` we make the `run` method public, which is really useful for running the reconciler within the same thread of the test.
       reconciler.asInstanceOf[{ def run(monitor: IProgressMonitor): IStatus }].run(new NullProgressMonitor)
     }
+
+    override def updateTextPresentation(damage: IRegion): IStatus = Status.OK_STATUS
   }
 
   object EditorStub {
     def apply(unit: InteractiveCompilationUnit, sourceViewer: ISourceViewer): EditorStub = new EditorStub(unit, sourceViewer)
-  }
-
-  implicit object PreferencesStub extends Preferences {
-    override def isEnabled(): Boolean = true
-    override def isStrikethroughDeprecatedDecorationEnabled(): Boolean = true
-    override def isUseSyntacticHintsEnabled(): Boolean = true
-
-    override def store: IPreferenceStore = null
   }
 
   class PositionFactory(preferences: Preferences) extends (List[SymbolInfo] => immutable.HashSet[Position]) {
