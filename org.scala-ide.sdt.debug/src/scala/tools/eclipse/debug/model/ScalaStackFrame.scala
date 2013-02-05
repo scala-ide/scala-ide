@@ -138,6 +138,7 @@ class ScalaStackFrame private (val thread: ScalaThread, @volatile var stackFrame
     }
   }
 
+  //FIXME: Should handle checked exception `AbsentInformationException`
   def getSourceName(): String = stackFrame.location.sourceName
   
   /**
@@ -156,6 +157,11 @@ class ScalaStackFrame private (val thread: ScalaThread, @volatile var stackFrame
 
   def getMethodFullName(): String = getFullName(stackFrame.location.method)
 
+  /** Set the current stack frame to `newStackFrame`. The `ScalaStackFrame.variables` don't need 
+    *  to be recomputed because a variable (i.e., a `ScalaLocalVariable`) always uses the latest 
+    *  stack frame to compute its value, as it can be checked by looking at the implementation of 
+    *  `ScalaLocalVariable.getValue`
+    */
   def rebind(newStackFrame: StackFrame) {
     stackFrame = newStackFrame
   }
