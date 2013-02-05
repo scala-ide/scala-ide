@@ -57,18 +57,13 @@ class LiteralAutoEditStrategy(prefStore: IPreferenceStore) extends IAutoEditStra
       }
     }
 
-    def customizeLiteral() {
-      if (command.length > 1) {
-        /*
-         * The current auto edit strategy is not able to handle changes that added or
-         * removed more than a single sign, thus further calculations are aborted to
-         * avoid wrong behavior.
-         * This is only a temporary solution - in the future the needed behavior
-         * should be implemented.
-         */
-        return
-      }
+    def handleClosingMultiLineLiteral() {
+      command.caretOffset = command.offset + 1
+      command.text = command.text * 4
+      command.shiftsCaret = false
+    }
 
+    def customizeLiteral() {
       val isAutoEscapeEnabled = prefStore.getBoolean(
           EditorPreferencePage.P_ENABLE_AUTO_ESCAPE_LITERALS)
 
@@ -81,14 +76,6 @@ class LiteralAutoEditStrategy(prefStore: IPreferenceStore) extends IAutoEditStra
     }
 
     def customizeChar() {
-      if (command.length > 1) {
-        /*
-         * As in `customizeLiteral` this method can not handle changes of more
-         * than a single sign.
-         */
-        return
-      }
-
       command.text match {
         case "\"" | "'" => addClosingLiteral()
         case ""         => removeLiteral()
@@ -96,7 +83,26 @@ class LiteralAutoEditStrategy(prefStore: IPreferenceStore) extends IAutoEditStra
       }
     }
 
+    def customizeMultiLineLiteral() {
+      command.text match {
+        case "\"" => handleClosingMultiLineLiteral()
+        case _    =>
+      }
+    }
+
+    if (command.length > 1) {
+      /*
+       * The current auto edit strategy is not able to handle changes that added or
+       * removed more than a single sign, thus further calculations are aborted to
+       * avoid wrong behavior.
+       * This is only a temporary solution - in the future the needed behavior
+       * should be implemented.
+       */
+      return
+    }
+
     val isCharacterLiteral = (ch(-1, ''') || ch(-1, '\\')) && (ch(0, ''') || ch(0, '\\'))
+    val isMultiLineStringLiteral = ch(-2, '"') && ch(-1, '"')
 
     /*
      * Normally, character literals should be handled by its own component. But
@@ -110,7 +116,9 @@ class LiteralAutoEditStrategy(prefStore: IPreferenceStore) extends IAutoEditStra
      * `ScalaSourceViewerConfiguration`) otherwise the corresponding behavior is
      * not called
      */
-    if (isCharacterLiteral)
+    if (isMultiLineStringLiteral)
+      customizeMultiLineLiteral()
+    else if (isCharacterLiteral)
       customizeLiteral()
     else
       customizeChar()

@@ -9,5 +9,6 @@ import org.junit.runners.Suite
   classOf[BracketAutoEditStrategyTest],
   classOf[CommentAutoEditStrategyTest],
   classOf[LiteralAutoEditStrategyTest],
-  classOf[StringAutoEditStrategyTest]))
+  classOf[StringAutoEditStrategyTest],
+  classOf[MultiLineStringAutoEditStrategyTest]))
 class UITestSuite

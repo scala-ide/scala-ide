@@ -43,6 +43,7 @@ import scala.tools.eclipse.ui.CommentAutoIndentStrategy
 import org.eclipse.jface.text.hyperlink.URLHyperlinkDetector
 import scala.tools.eclipse.ui.LiteralAutoEditStrategy
 import scala.tools.eclipse.ui.StringAutoEditStrategy
+import scala.tools.eclipse.ui.MultiLineStringAutoEditStrategy
 
 class ScalaSourceViewerConfiguration(store: IPreferenceStore, scalaPreferenceStore: IPreferenceStore, editor: ITextEditor)
    extends JavaSourceViewerConfiguration(JavaPlugin.getDefault.getJavaTextTools.getColorManager, store, editor, IJavaPartitions.JAVA_PARTITIONING) {
@@ -136,6 +137,8 @@ class ScalaSourceViewerConfiguration(store: IPreferenceStore, scalaPreferenceSto
       contentType match {
          case IJavaPartitions.JAVA_DOC | IJavaPartitions.JAVA_MULTI_LINE_COMMENT | ScalaPartitions.SCALADOC_CODE_BLOCK =>
            Array(new CommentAutoIndentStrategy(ScalaPlugin.prefStore, partitioning))
+         case ScalaPartitions.SCALA_MULTI_LINE_STRING =>
+           Array(new SmartSemicolonAutoEditStrategy(partitioning), new ScalaAutoIndentStrategy(partitioning, getProject, sourceViewer, new JdtPreferenceProvider(getProject)), new MultiLineStringAutoEditStrategy(partitioning, ScalaPlugin.prefStore))
          case IJavaPartitions.JAVA_STRING =>
             Array(new SmartSemicolonAutoEditStrategy(partitioning), new JavaStringAutoIndentStrategy(partitioning), new StringAutoEditStrategy(ScalaPlugin.prefStore))
          case IJavaPartitions.JAVA_CHARACTER | IDocument.DEFAULT_CONTENT_TYPE =>

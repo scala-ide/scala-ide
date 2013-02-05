@@ -123,4 +123,11 @@ class LiteralAutoEditStrategyTest extends AutoEditStrategyTests(
   def remove_whole_character_literal() {
     test(input = """ '''^ """, expectedOutput = """ ^ """, operation = Remove("'''"))
   }
+
+  // the following tests belong to multi-line string literals
+
+  @Test
+  def auto_close_multi_line_string_literal() {
+    test(input = " \"\"^ ", expectedOutput = " \"\"\"^\"\"\" ", operation = Add("\""))
+  }
 }
