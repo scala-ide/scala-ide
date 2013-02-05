@@ -1,24 +1,36 @@
 package scala.tools.eclipse.debug.model
 
-import com.sun.jdi.ReferenceType
 import scala.actors.Actor
+import scala.collection.JavaConverters.asScalaBufferConverter
 import scala.tools.eclipse.debug.BaseDebuggerActor
-import com.sun.jdi.event.ClassPrepareEvent
-import scala.tools.eclipse.logging.HasLogger
-import com.sun.jdi.request.ClassPrepareRequest
 import scala.tools.eclipse.debug.PoisonPill
+import scala.tools.eclipse.debug.ScalaDebugPlugin
+import scala.tools.eclipse.debug.preferences.DebuggerPreferences
+import scala.tools.eclipse.logging.HasLogger
+
+import com.sun.jdi.Location
+import com.sun.jdi.Method
+import com.sun.jdi.ReferenceType
+import com.sun.jdi.event.ClassPrepareEvent
 
 object ScalaDebugCache {
 
-  private final val outerTypeNameRegex = """([^\$]*)(\$.*)?""".r
+  private final val OuterTypeNameRegex = """([^\$]*)(\$.*)?""".r
+
+  /** Types that we should never step into, nor in anything called from their methods. */
+  private final val HiddenTypes = Set(
+    "java.lang.ClassLoader",
+    "scala.runtime.BoxesRunTime")
 
   /** Return the the name of the lowest (outer) type containing the type with the given name (everything before the first '$').
    */
   private[model] def extractOuterTypeName(typeName: String) = typeName match {
-    case outerTypeNameRegex(outerTypeName, nestedTypeName) =>
+    case OuterTypeNameRegex(outerTypeName, nestedTypeName) =>
       outerTypeName
   }
 
+  private lazy val prefStore = ScalaDebugPlugin.plugin.getPreferenceStore()
+		  
   def apply(debugTarget: ScalaDebugTarget, scalaDebugTargetActor: BaseDebuggerActor): ScalaDebugCache = {
     val debugCache = new ScalaDebugCache(debugTarget) {
       val actor = new ScalaDebugCacheActor(this, debugTarget, scalaDebugTargetActor)
@@ -31,7 +43,7 @@ object ScalaDebugCache {
 
 /** A cache used to keep the list of nested classes of a outer class.
  *  It is used by for the line breakpoints and step-over.
- *  
+ *
  *  Most of the methods are synchronous calls made to the underlying actor.
  */
 abstract class ScalaDebugCache(val debugTarget: ScalaDebugTarget) extends HasLogger {
@@ -59,7 +71,7 @@ abstract class ScalaDebugCache(val debugTarget: ScalaDebugTarget) extends HasLog
   /** Adds the given actor as a listener for class prepare events in the debugged VM,
    *  for types which are nested under the same outer type as the type withe the given name.
    *  The event is sent as a ClassPrepareEvent to the actor.
-   *  
+   *
    *  Does nothing if the actor has already been added for the same outer type.
    */
   def addClassPrepareEventListener(listener: Actor, typeName: String) {
@@ -68,12 +80,138 @@ abstract class ScalaDebugCache(val debugTarget: ScalaDebugTarget) extends HasLog
 
   /** Removes the given actor as being a listener for class prepare events in the debugged VM,
    *  for types which are nested under the same outer type as the type with the given name.
-   *  
+   *
    *  Does nothing if the actor was not registered as a listener for the outer type of the type with the given name.
    */
   def removeClassPrepareEventListener(listener: Actor, typeName: String) {
     actor !? RemoveClassPrepareEventListener(listener, extractOuterTypeName(typeName))
   }
+
+  private var typeCache = Map[ReferenceType, TypeCache]()
+  private val typeCacheLock = new Object()
+
+  /** Return the method containing the actual code of the anon function, if it is contained
+   *  in the given range, <code>None</code> otherwise.
+   */
+  def getAnonFunctionsInRange(refType: ReferenceType, range: Range): Option[Method] = {
+    getCachedAnonFunction(refType).filter(method => range.contains(method.location.lineNumber))
+  }
+ 
+  /** Return the method containing the actual code of the anon function.
+   */
+  def getAnonFunction(refType: ReferenceType): Option[Method] = {
+    getCachedAnonFunction(refType)
+  }
+
+  /** Return true if it is a filtered location. */
+  def isTransparentLocation(location: Location): Boolean = {
+    getCachedMethodFlags(location.method()).isTransparent
+  }
+
+  /** Is this location opaque? Returns `true` for all locations in which the
+   *  debugger should not stop. It won't stop in anything below this call either (any
+   *  methods called by methods at this location).
+   */
+  def isOpaqueLocation(location: Location): Boolean = {
+    getCachedMethodFlags(location.method()).isOpaque
+  }
+
+  /** Returns the anon function for the given type, if it exists. The cache is checked
+   *  before doing the actual search.
+   */
+  private def getCachedAnonFunction(refType: ReferenceType): Option[Method] = {
+    typeCacheLock synchronized {
+      typeCache get refType match {
+        case None =>
+          val anonFunction = findAnonFunction(refType)
+          typeCache = typeCache + ((refType, TypeCache(Some(anonFunction), Map())))
+          anonFunction
+        case Some(TypeCache(Some(cachedMethod), _)) =>
+          cachedMethod
+        case Some(cache @ TypeCache(None, _)) =>
+          val anonFunction = findAnonFunction(refType)
+          typeCache = typeCache + ((refType, cache.copy(anonMethod = Some(anonFunction))))
+          anonFunction
+      }
+    }
+  }
+
+  /** Returns the anon function for the given type, if it exists.
+   */
+  private def findAnonFunction(refType: ReferenceType): Option[Method] = {
+    // TODO: check super type at some point
+    import scala.collection.JavaConverters._
+    val methods = refType.methods.asScala.filter(method => !method.isBridge && method.name.startsWith("apply"))
+
+    methods.size match {
+      case 1 =>
+        // one non bridge apply method, just use it
+        methods.headOption
+      case 2 =>
+        // this is more complex.
+        // the compiler may have 'forgotten' to flag the 'apply' as a bridge method,
+        // or both the 'apply' and the 'apply$__$sp' contains the actual code
+
+        // if the 'apply' and the 'apply$__$sp' contains the same code, we are in the optimization case, the 'apply' method
+        // will be used, otherwise, the 'apply$__$sp" will be used.
+        val applyMethod = methods.find(_.name == "apply")
+        val applySpMethod = methods.find(_.name.startsWith("apply$"))
+        (applyMethod, applySpMethod) match {
+          case (Some(m1), Some(m2)) if sameBytecode(m1, m2) => applyMethod
+          case (Some(_), Some(_)) => applySpMethod
+          case (Some(_), None) => applyMethod
+          case (None, _) => applySpMethod
+        }
+      case _ =>
+        // doesn't contain apply methods, so it is not an anonFunction
+        None
+    }
+  }
+
+  /** Returns the flags for the given method. The cache is checked
+   *  before doing the actual computation.
+   */
+  private def getCachedMethodFlags(method: Method): MethodFlags = {
+    typeCacheLock synchronized {
+      val refType = method.declaringType()
+      typeCache get refType match {
+        case None =>
+          val methodFlags = createMethodFlags(method)
+          typeCache = typeCache + ((refType, TypeCache(None, Map((method, methodFlags)))))
+          methodFlags
+        case Some(cache) =>
+          cache.methods get method match {
+            case None =>
+              val methodFlags = createMethodFlags(method)
+              typeCache = typeCache + ((refType, cache.copy(methods = cache.methods + ((method, methodFlags)))))
+              methodFlags
+            case Some(methodFlags) =>
+              methodFlags
+          }
+      }
+    }
+  }
+
+  /** Create the flags for the given method.
+   */
+  private def createMethodFlags(method: Method): MethodFlags = {
+    val typeName = method.declaringType.name
+    val hidden = HiddenTypes(typeName)
+
+    // TODO: use better pattern matching
+    val transparentMethod = (hidden
+      || typeName.startsWith("scala.collection")
+      || typeName.startsWith("scala.runtime")
+      || method.isBridge()
+      || MethodClassifier.values.exists { flag => prefStore.getBoolean(DebuggerPreferences.BASE_FILTER + flag.toString) && MethodClassifier.is(flag, method) }
+      || (typeName.contains("$$anonfun$")) && !getCachedAnonFunction(method.declaringType).exists(_ == method))
+
+    val opaqueMethod = hidden || method.isConstructor()
+
+    MethodFlags(transparentMethod, opaqueMethod)
+  }
+
+  private def sameBytecode(m1: Method, m2: Method): Boolean = m1.bytecodes.sameElements(m2.bytecodes)
 
   def dispose() {
     actor ! PoisonPill
@@ -97,10 +235,10 @@ protected[debug] class ScalaDebugCacheActor(debugCache: ScalaDebugCache, debugTa
     case LoadedNestedTypes(outerTypeName) =>
       reply(LoadedNestedTypesAnswer(getLoadedNestedTypes(outerTypeName)))
     case AddClassPrepareEventListener(actor, outerTypeName) =>
-      registerClassPreparedEventListener(actor, outerTypeName)
+      addClassPreparedEventListener(actor, outerTypeName)
       reply(true)
     case RemoveClassPrepareEventListener(actor, outerTypeName) =>
-      deregisterClassPreparedEventListener(actor, outerTypeName)
+      removeClassPreparedEventListener(actor, outerTypeName)
       reply(true)
   }
 
@@ -149,16 +287,16 @@ protected[debug] class ScalaDebugCacheActor(debugCache: ScalaDebugCache, debugTa
       val name = refType.name
       name.startsWith(outerTypeName) && (name.length == nameLength || name.charAt(nameLength) == '$')
     }
-    
+
     import scala.collection.JavaConverters._
     val types = debugTarget.virtualMachine.allClasses().asScala.filter(nestedTypeFilter).toSet
-    
+
     val cache = new NestedTypesCache(types, Set())
     nestedTypesCache = nestedTypesCache + ((outerTypeName, cache))
     cache
   }
 
-  private def registerClassPreparedEventListener(listener: Actor, outerTypeName: String) {
+  private def addClassPreparedEventListener(listener: Actor, outerTypeName: String) {
     val cache = nestedTypesCache.get(outerTypeName) match {
       case Some(cache) =>
         cache
@@ -168,10 +306,10 @@ protected[debug] class ScalaDebugCacheActor(debugCache: ScalaDebugCache, debugTa
     nestedTypesCache = nestedTypesCache + ((outerTypeName, cache.copy(listeners = cache.listeners + listener)))
   }
 
-  private def deregisterClassPreparedEventListener(listener: Actor, outerTypeName: String) {
+  private def removeClassPreparedEventListener(listener: Actor, outerTypeName: String) {
     val cache = nestedTypesCache.get(outerTypeName) match {
       case Some(cache) =>
-      nestedTypesCache = nestedTypesCache + ((outerTypeName, cache.copy(listeners = cache.listeners - listener)))
+        nestedTypesCache = nestedTypesCache + ((outerTypeName, cache.copy(listeners = cache.listeners - listener)))
       case None =>
     }
   }
@@ -185,3 +323,6 @@ protected[debug] class ScalaDebugCacheActor(debugCache: ScalaDebugCache, debugTa
 }
 
 case class NestedTypesCache(types: Set[ReferenceType], listeners: Set[Actor])
+
+case class TypeCache(anonMethod: Option[Option[Method]] = None, methods: Map[Method, MethodFlags])
+case class MethodFlags(isTransparent: Boolean, isOpaque: Boolean)
