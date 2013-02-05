@@ -9,7 +9,6 @@ import scala.tools.eclipse.debug.model.JdiRequestFactory
 import org.eclipse.debug.core.DebugEvent
 import com.sun.jdi.event.{ StepEvent, ClassPrepareEvent, BreakpointEvent }
 import com.sun.jdi.request.{ StepRequest, EventRequest }
-import scala.tools.eclipse.debug.model.StepFilters
 import scala.tools.eclipse.debug.BaseDebuggerActor
 import scala.tools.eclipse.debug.model.ScalaDebugCache
 import com.sun.jdi.ReferenceType
@@ -51,11 +50,11 @@ object ScalaStepOver {
         typeName + "$$anonfun$"
       }
       
-      val loadedAnonFunctionsInRange = debugTarget.cache.getLoadedNestedTypes(typeName).filter(_.name().startsWith(nestedAnonFuncPrefix)).flatMap(debugTarget.stepFilters.anonFunctionsInRange(_, range)).toBuffer
+      val loadedAnonFunctionsInRange = debugTarget.cache.getLoadedNestedTypes(typeName).filter(_.name().startsWith(nestedAnonFuncPrefix)).flatMap(debugTarget.cache.getAnonFunctionsInRange(_, range)).toBuffer
 
       // if we are in an anonymous function, add the method
       if (typeName.contains("$$anonfun$")) {
-        loadedAnonFunctionsInRange ++= debugTarget.stepFilters.findAnonFunction(location.declaringType)
+        loadedAnonFunctionsInRange ++= debugTarget.cache.getAnonFunction(location.declaringType)
       }
 
       requests ++= loadedAnonFunctionsInRange.map(JdiRequestFactory.createMethodEntryBreakpoint(_, scalaStackFrame.thread))
@@ -88,7 +87,7 @@ private[command] abstract class ScalaStepOverActor(debugTarget: ScalaDebugTarget
     case classPrepareEvent: ClassPrepareEvent =>
       for {
         range <- rangeOpt
-        method <- debugTarget.stepFilters.anonFunctionsInRange(classPrepareEvent.referenceType, range)
+        method <- debugTarget.cache.getAnonFunctionsInRange(classPrepareEvent.referenceType, range)
       } {
         val breakpoint = JdiRequestFactory.createMethodEntryBreakpoint(method, thread)
         requests += breakpoint
@@ -98,7 +97,7 @@ private[command] abstract class ScalaStepOverActor(debugTarget: ScalaDebugTarget
       reply(false)
     // JDI event triggered when a step has been performed
     case stepEvent: StepEvent =>
-      reply(if (!debugTarget.stepFilters.isTransparentLocation(stepEvent.location)) {
+      reply(if (!debugTarget.cache.isTransparentLocation(stepEvent.location)) {
         terminate
         thread.suspendedFromScala(DebugEvent.STEP_OVER)
         true
