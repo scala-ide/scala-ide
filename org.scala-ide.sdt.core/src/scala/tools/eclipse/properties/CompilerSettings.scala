@@ -215,8 +215,14 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
         //Make sure project is rebuilt
         javaProject.getProject().build(IncrementalProjectBuilder.CLEAN_BUILD, null)
       case other =>
-        None // We're a Preference page!
-      //TODO - Figure out who needs to rebuild
+        // rebuild all Scala projects that use global settings
+        val plugin = ScalaPlugin.plugin
+
+        for {
+          p <- (plugin.workspaceRoot.getProjects())
+          scalaProject <- plugin.asScalaProject(p)
+          if !scalaProject.usesProjectSettings
+        } scalaProject.underlying.build(IncrementalProjectBuilder.CLEAN_BUILD, null)
     }
   }
 
