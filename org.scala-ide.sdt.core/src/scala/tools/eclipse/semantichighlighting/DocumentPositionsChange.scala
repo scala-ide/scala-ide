@@ -3,7 +3,6 @@ package scala.tools.eclipse.semantichighlighting
 import scala.tools.eclipse.jface.text.EmptyRegion
 
 import org.eclipse.jface.text.IRegion
-
 import org.eclipse.jface.text.Position
 import org.eclipse.jface.text.Region
 

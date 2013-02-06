@@ -155,7 +155,7 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor { sel
     if(semanticHighlightingPresenter == null) {
       val editorProxy = TextPresentationEditorHighlighter(this)
       val positionsFactory = HighlightedPosition(semanticHighlightingPreferences) _
-      semanticHighlightingPresenter = new Presenter(editorProxy, positionsFactory, semanticHighlightingPreferences)
+      semanticHighlightingPresenter = new Presenter(getInteractiveCompilationUnit, editorProxy, positionsFactory, semanticHighlightingPreferences)
       semanticHighlightingPresenter.initialize()
     }  
   }

@@ -8,8 +8,9 @@ import scala.tools.eclipse.InteractiveCompilationUnit
 import org.eclipse.core.runtime.Status
 
 /** This interface expose the minimal amount of functionality needed by the semantic highlighting 
- *  component to apply the presentation styles in a text editor. This is needed for isolating all 
- *  UI logic so that it can be easily tested in a headless environment.
+ *  component to apply the presentation styles in a text editor.
+ *  
+ *  @note This is needed for isolating all UI logic so that it can be tested in a headless environment.
  */
 trait TextPresentationHighlighter {
   def sourceViewer: ISourceViewer
@@ -17,6 +18,6 @@ trait TextPresentationHighlighter {
   def initialize(reconciler: Job, positionCategory: String): Unit
   def dispose(): Unit
   
-  /** Triggers an update of the editor's `TextPresentation` based on the passed `damage` region.*/
-  def updateTextPresentation(damage: IRegion): IStatus
+  /** Triggers an update of the editor's `TextPresentation` based on region computed from the passed `positionsChange`.*/
+  def updateTextPresentation(positionsChange: DocumentPositionsChange): Unit
 }

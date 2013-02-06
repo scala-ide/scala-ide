@@ -87,8 +87,8 @@ class SemanticHighlightingPositionsTest {
   }
 
   private def createSemanticHighlightingPresenter(): Unit = {
-    editor = EditorStub(unit, sourceView)
-    presenter = new Presenter(editor, PositionFactory(preferences), preferences)
+    editor = EditorStub(sourceView)
+    presenter = new Presenter(unit, editor, PositionFactory(preferences), preferences)
     presenter.initialize()
   }
 
@@ -100,7 +100,7 @@ class SemanticHighlightingPositionsTest {
   }
   
   private def findAllMarkersIn(code: String): List[Match] = 
-    MarkerRegex.findAllIn(testCode).matchData.toList
+    MarkerRegex.findAllIn(code).matchData.toList
 
   private def runTest(edit: Edit)(code: String): Unit = {
     setTestCode(code)
@@ -217,7 +217,7 @@ class SemanticHighlightingPositionsTest {
 
 object SemanticHighlightingPositionsTest {
 
-  class EditorStub(override val getInteractiveCompilationUnit: InteractiveCompilationUnit, override val sourceViewer: ISourceViewer) extends TextPresentationHighlighter with InteractiveCompilationUnitEditor {
+  class EditorStub(override val sourceViewer: ISourceViewer) extends TextPresentationHighlighter {
     @volatile private var reconciler: Job = _
     @volatile var positionCategory: String = _
 
@@ -232,13 +232,15 @@ object SemanticHighlightingPositionsTest {
     def reconcileNow(): Unit = {
       // `Job.run` is protected, but when we subclass it in `Presenter$Reconciler` we make the `run` method public, which is really useful for running the reconciler within the same thread of the test.
       reconciler.asInstanceOf[{ def run(monitor: IProgressMonitor): IStatus }].run(new NullProgressMonitor)
+      // Sleeping to give some time to the `DocumentPositions` actor to add/remove positions to the document.   
+      Thread.sleep(200)
     }
 
-    override def updateTextPresentation(damage: IRegion): IStatus = Status.OK_STATUS
+    override def updateTextPresentation(positionsChange: DocumentPositionsChange): Unit = ()
   }
 
   object EditorStub {
-    def apply(unit: InteractiveCompilationUnit, sourceViewer: ISourceViewer): EditorStub = new EditorStub(unit, sourceViewer)
+    def apply(sourceViewer: ISourceViewer): EditorStub = new EditorStub(sourceViewer)
   }
 
   class PositionFactory(preferences: Preferences) extends (List[SymbolInfo] => immutable.HashSet[Position]) {
@@ -255,5 +257,4 @@ object SemanticHighlightingPositionsTest {
   object PositionFactory {
     def apply(implicit preferences: Preferences): PositionFactory = new PositionFactory(preferences)
   }
-
 }

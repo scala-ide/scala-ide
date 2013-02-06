@@ -48,9 +48,9 @@ import org.eclipse.swt.custom.StyleRange
 
 /** Represents a colored position in the editor.
   *
-  * This class is thread-safe. Thread-safety is ensured by synchronizing accesses to all `Position`'s members. This is 
-  * needed because an instance of this class is usually shared across different threads, and hence atomicity of operations 
-  * must be ensured. 
+  * @note This class is thread-safe. Thread-safety is ensured by synchronizing accesses to all `Position`'s members. 
+  *       Thread-safety is required because instances of this class are usually shared across different threads, and 
+  *       hence atomicity of operations must be ensured. 
   */
 private class HighlightedPosition(
   offset: Int,
