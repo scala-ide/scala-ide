@@ -1,5 +1,8 @@
 package scala.tools.eclipse.semantichighlighting.classifier
 
+import org.eclipse.jface.text.IRegion
+import org.eclipse.jface.text.Region
+
 object RegionParser {
 
   /**
@@ -23,11 +26,11 @@ object RegionParser {
    * are handled as there were no escape sign. This means that the String `$a\$b$`
    * is treated as  `$a$b$`.
    */
-  def getRegions(text: String, delimiter: Char = '$'): Map[Region, String] = {
+  def getRegions(text: String, delimiter: Char = '$'): Map[IRegion, String] = {
     val sb = new StringBuilder
     var curPos = 0
     var offset = 0
-    var regions = Map.empty[Region, String]
+    var regions = Map.empty[IRegion, String]
 
     while (curPos < text.length) {
       text.charAt(curPos) match {
@@ -43,7 +46,7 @@ object RegionParser {
             val start = curPos-sb.length
             val label = sb.substring(1, sb.length).trim
             sb.clear()
-            regions += (Region(start-offset, curPos-start+1) -> label)
+            regions += (new Region(start-offset, curPos-start+1) -> label)
           }
         case _ =>
           if (!sb.isEmpty)

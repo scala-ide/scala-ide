@@ -8,9 +8,12 @@ import scala.tools.eclipse.ScalaProject
 import scala.tools.eclipse.util.EclipseUtils
 import scala.tools.eclipse.ScalaPlugin
 import org.junit.After
+import org.eclipse.core.runtime.NullProgressMonitor
+import org.eclipse.jface.text.IRegion
 
 class AbstractSymbolClassifierTest {
-
+  import AbstractSymbolClassifierTest._
+  
   protected val simulator = new EclipseUserSimulator
   
   private var project: ScalaProject = _
@@ -28,15 +31,15 @@ class AbstractSymbolClassifierTest {
   }
   
   protected def checkSymbolClassification(source: String, locationTemplate: String, regionTagToSymbolType: Map[String, SymbolType]) {
-    val expectedRegionToSymbolNameMap: Map[Region, String] = RegionParser.getRegions(locationTemplate)
-    val expectedRegionsAndSymbols: List[(Region, SymbolType)] =
+    val expectedRegionToSymbolNameMap: Map[IRegion, String] = RegionParser.getRegions(locationTemplate)
+    val expectedRegionsAndSymbols: List[(IRegion, SymbolType)] =
       expectedRegionToSymbolNameMap.mapValues(regionTagToSymbolType).toList sortBy regionOffset
-    val actualRegionsAndSymbols: List[(Region, SymbolType)] =
+    val actualRegionsAndSymbols: List[(IRegion, SymbolType)] =
       classifySymbols(source, expectedRegionToSymbolNameMap.keySet) sortBy regionOffset
 
     if (expectedRegionsAndSymbols != actualRegionsAndSymbols) {
       val sb = new StringBuffer
-      def displayRegions(regionToSymbolInfoMap: List[(Region, SymbolType)]) = {
+      def displayRegions(regionToSymbolInfoMap: List[(IRegion, SymbolType)]) = {
         regionToSymbolInfoMap.toList.sortBy(regionOffset) map {
           case (region, symbolType) =>
             "  " + region + " '" + region.of(source) + "' " + symbolType
@@ -51,7 +54,7 @@ class AbstractSymbolClassifierTest {
     }
   }
 
-  private def classifySymbols(source: String, restrictToRegions: Set[Region]): List[(Region, SymbolType)] = {
+  private def classifySymbols(source: String, restrictToRegions: Set[IRegion]): List[(IRegion, SymbolType)] = {
     val sourceFile = new BatchSourceFile("", source)
     project.withPresentationCompiler { compiler =>
       // first load the source
@@ -60,7 +63,7 @@ class AbstractSymbolClassifierTest {
       dummy.get
     
       // then run classification
-      val symbolInfos: List[SymbolInfo] = SymbolClassifier.classifySymbols(sourceFile, compiler, useSyntacticHints = true)
+      val symbolInfos: List[SymbolInfo] = new SymbolClassification(sourceFile, compiler, useSyntacticHints = true).classifySymbols(new NullProgressMonitor)
       for {
         SymbolInfo(symbolType, regions, deprecated) <- symbolInfos
         region <- regions
@@ -69,6 +72,16 @@ class AbstractSymbolClassifierTest {
     }(orElse = Nil)
   }.distinct sortBy regionOffset
 
-  private def regionOffset(regionAndSymbolType: (Region, SymbolType)) = regionAndSymbolType._1.offset
+  private def regionOffset(regionAndSymbolType: (IRegion, SymbolType)) = regionAndSymbolType._1.getOffset
+}
 
+object AbstractSymbolClassifierTest {
+  private class RegionOps(region: IRegion) {
+    def intersects(other: IRegion): Boolean = 
+      !(other.getOffset >= region.getOffset + region.getLength || other.getOffset + other.getLength - 1 < region.getOffset)
+      
+    def of(s: String): String = s.slice(region.getOffset, region.getOffset + region.getLength)
+  }
+  
+  private implicit def region2regionOps(region: IRegion): RegionOps = new RegionOps(region)
 }

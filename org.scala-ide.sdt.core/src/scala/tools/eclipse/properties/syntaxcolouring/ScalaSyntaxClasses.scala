@@ -79,14 +79,6 @@ object ScalaSyntaxClasses {
   val ITALIC_SUFFIX = ".italic"
   val UNDERLINE_SUFFIX = ".underline"
 
-  val ALL_SUFFIXES = List(ENABLED_SUFFIX, FOREGROUND_COLOUR_SUFFIX, BACKGROUND_COLOUR_SUFFIX,
-    BACKGROUND_COLOUR_ENABLED_SUFFIX, BOLD_SUFFIX, ITALIC_SUFFIX, UNDERLINE_SUFFIX)
-
-  val ALL_KEYS = (for {
-    syntaxClass <- ALL_SYNTAX_CLASSES
-    suffix <- ALL_SUFFIXES
-  } yield syntaxClass.baseName + suffix).toSet
-
   val ENABLE_SEMANTIC_HIGHLIGHTING = "syntaxColouring.semantic.enabled"
     
   val USE_SYNTACTIC_HINTS = "syntaxColouring.semantic.useSyntacticHints"
