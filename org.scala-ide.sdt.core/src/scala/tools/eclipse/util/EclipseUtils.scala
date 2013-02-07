@@ -87,14 +87,14 @@ object EclipseUtils {
   }
 
   /**
-   * Create and schedule a job with the given name. Default values for scheduling rules and priority are taken
+   * Create a job with the given name. Default values for scheduling rules and priority are taken
    * from the `Job` implementation.
    *
    * @param rule The scheduling rule
-   * @param priority The job priority (defaults to Job.LONG, the lowest priority job there is)
+   * @param priority The job priority (defaults to Job.LONG, like the platform `Job` class)
    * @return The job
    */
-  def scheduleJob(name: String, rule: ISchedulingRule = null, priority: Int = Job.LONG)(f: IProgressMonitor => IStatus): Job = {
+  def prepareJob(name: String, rule: ISchedulingRule = null, priority: Int = Job.LONG)(f: IProgressMonitor => IStatus): Job = {
     val job = new Job(name) {
       override def run(monitor: IProgressMonitor): IStatus = f(monitor)
     }
@@ -102,6 +102,19 @@ object EclipseUtils {
     job.setPriority(priority)
     job.schedule()
     job
+  }
+
+  /** Create and schedule a job with the given name. Default values for scheduling rules and priority are taken
+   *  from the `Job` implementation.
+   *
+   *  @param rule The scheduling rule
+   *  @param priority The job priority (defaults to Job.LONG, like the platform `Job` class)
+   *  @return The job
+   */
+  def scheduleJob(name: String, rule: ISchedulingRule = null, priority: Int = Job.LONG)(f: IProgressMonitor => IStatus): Job = {
+    val j = prepareJob(name, rule, priority)(f)
+    j.schedule()
+    j
   }
 
   def computeSelectedResources(selection: IStructuredSelection): List[IResource] =
