@@ -18,6 +18,10 @@ import scala.tools.eclipse.EclipseUserSimulator
 import scala.tools.eclipse.ScalaProject
 import scala.tools.eclipse.properties.CompilerSettings
 import scala.tools.eclipse.testsetup.SDTTestUtils
+import scala.tools.eclipse.util.EclipseUtils
+import org.eclipse.core.runtime.Status
+import org.eclipse.core.runtime.jobs.IJobChangeEvent
+import org.eclipse.core.runtime.jobs.JobChangeAdapter
 
 object ClasspathTests extends TestProjectSetup("classpath")
 
@@ -425,13 +429,34 @@ class ClasspathTests {
     scalaProject.javaProject.setRawClasspath(newRawClasspath, new NullProgressMonitor)
     checkMarkers(expectedWarnings, expectedErrors, scalaProject)
   }
-  
-  /**
-   * Check the number of classpath errors and warnings attached to the project. It does *not* look for normal Scala problem markers,
-   * only for classpath markers.
+
+  /** Check the number of classpath errors and warnings attached to the project. It does *not* look for normal Scala problem markers,
+   *  only for classpath markers.
    */
-  private def checkMarkers(expectedNbOfWarningMarker: Int, expectedNbOfErrorMarker: Int, scalaProject: ScalaProject= project) {
-    def countMarkers(): (Int, Int) = {
+  private def checkMarkers(expectedNbOfWarningMarker: Int, expectedNbOfErrorMarker: Int, scalaProject: ScalaProject = project) {
+    // check the classpathValid state
+    assertEquals("Unexpected classpath validity state", expectedNbOfErrorMarker == 0, scalaProject.isClasspathValid())
+
+    var actualMarkers = (0, 0)
+    SDTTestUtils.waitUntil(10000) {
+      actualMarkers = collectMarkers(scalaProject)
+      actualMarkers == (expectedNbOfErrorMarker, expectedNbOfWarningMarker)
+    }
+
+    val (nbOfErrorMarker, nbOfWarningMarker) = actualMarkers
+    // after TIMEOUT, we didn't get the expected value
+    assertEquals("Unexpected nb of warning markers", expectedNbOfWarningMarker, nbOfWarningMarker)
+    assertEquals("Unexpected nb of error markers", expectedNbOfErrorMarker, nbOfErrorMarker)
+  }
+
+  private def collectMarkers(scalaProject: ScalaProject): (Int, Int) = {
+    @volatile var actualMarkers: (Int, Int) = (0, 0)
+
+    // We need to use a job when counting markers because classpath markers are themselves added in a job
+    // By using the project as a scheduling rule, we are forced to wait until the classpath marker job has
+    // finished. Otherwise, there's a race condition between the classpath validator job (that removes old
+    // markers and adds new ones) and this thread, that might read between the delete and the add
+    def countMarkersJob() = EclipseUtils.prepareJob("CheckMarkersJob", project.underlying) { monitor =>
       // count the markers on the project
       var nbOfWarningMarker = 0
       var nbOfErrorMarker = 0
@@ -442,18 +467,23 @@ class ClasspathTests {
           case IMarker.SEVERITY_WARNING => nbOfWarningMarker += 1
           case _                        =>
         }
-      (nbOfErrorMarker, nbOfWarningMarker)
+      actualMarkers = (nbOfErrorMarker, nbOfWarningMarker)
+      Status.OK_STATUS
     }
 
-    // check the classpathValid state
-    assertEquals("Unexpected classpath validity state", expectedNbOfErrorMarker == 0, scalaProject.isClasspathValid())
+    @volatile var jobDone = false
+    object jobListener extends JobChangeAdapter {
+      override def done(event: IJobChangeEvent) {
+        jobDone = true
+      }
+    }
 
-    SDTTestUtils.waitUntil(5000)(countMarkers == (expectedNbOfErrorMarker, expectedNbOfWarningMarker))
+    val job = countMarkersJob()
+    job.addJobChangeListener(jobListener)
+    job.schedule()
 
-    val (nbOfErrorMarker, nbOfWarningMarker) = countMarkers
-    // after TIMEOUT, we didn't get the expected value
-    assertEquals("Unexpected nb of warning markers", expectedNbOfWarningMarker, nbOfWarningMarker)
-    assertEquals("Unexpected nb of error markers", expectedNbOfErrorMarker, nbOfErrorMarker)
+    SDTTestUtils.waitUntil(10000) { jobDone }
+    actualMarkers
   }
 
   private def newLibraryEntry(name: String, shortScalaVersion: String = ScalaPlugin.plugin.shortScalaVer): IClasspathEntry = {
