@@ -20,6 +20,11 @@ object PresentationCompilerTest extends testsetup.TestProjectSetup("pc") with Cu
 class PresentationCompilerTest {
   import PresentationCompilerTest._
 
+  @Before
+  def reset() {
+    project.resetPresentationCompiler()
+  }
+
   @Test
   def creatingOverrideIndicator_ShouldNotReportError_t1000531() {
     // when
