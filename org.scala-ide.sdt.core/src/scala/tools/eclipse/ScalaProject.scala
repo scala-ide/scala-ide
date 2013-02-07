@@ -140,7 +140,6 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
         Xexperimental, 
         future, 
         Ylogcp,
-        Xmigration28, 
         pluginSetting,
         pluginsDir,
         YpresentationDebug, 
@@ -479,16 +478,33 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
   private def buildManagerInitialize: String =
     storage.getString(SettingConverterUtil.convertNameToProperty(properties.ScalaPluginSettings.buildManager.name))
 
+  /** Does this project use project-specific compiler settings? */
+  def usesProjectSettings: Boolean =
+    projectSpecificStorage.getBoolean(SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE)
+
+  /** Return a the project-specific preference store. This does not take into account the
+   *  user-preference whether to use project-specific compiler settings or not.
+   *
+   *  @note This can't be a `val` or a `def`, because of the way `PropertyStore` is implemented.
+   *  @see  #1001241.
+   *  @see `storage` for a method that decides based on user preference
+   */
+  def projectSpecificStorage: IPreferenceStore = {
+    new PropertyStore(underlying, ScalaPlugin.prefStore, plugin.pluginId)
+  }
+
   /** Return the current project preference store.
    *
    *  The returned store won't track changes happening in the background, so it represents a
    *  snapshot of this project's settings.
    *
+   *  @note This can't be a `val` or a `def`, because of the way `PropertyStore` is implemented.
    *  @see the half-broken implementation of `PropertyStore`
+   *  @see  #1001241.
    */
   def storage: IPreferenceStore = {
     val workspaceStore = ScalaPlugin.prefStore
-    val projectStore = new PropertyStore(underlying, workspaceStore, plugin.pluginId)
+    val projectStore = projectSpecificStorage
     val useProjectSettings = projectStore.getBoolean(SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE)
 
     if (useProjectSettings) projectStore else workspaceStore

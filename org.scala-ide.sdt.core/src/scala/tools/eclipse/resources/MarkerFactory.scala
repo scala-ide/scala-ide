@@ -47,11 +47,11 @@ abstract class MarkerFactory(markerType: String) {
     * @param msg      The text message displayed by the marker. Note, the passed message is truncated to 21000 chars.
     * @param pos      The source position for the marker.
     */
-  def create(resource: IResource, severity: Int, msg: String, pos: MarkerFactory.Position): Unit = 
-    createMarkerInWorkspaceAndApply(resource) { marker =>
-      update(marker, severity, msg)
-      setPos(marker, pos)
-    }
+  def create(resource: IResource, severity: Int, msg: String, pos: MarkerFactory.Position): Unit = {
+    val marker = resource.createMarker(markerType)
+    update(marker, severity, msg)
+    setPos(marker, pos)
+  }
 
   private def update(marker: IMarker, severity: Int, msg: String): IMarker = {
     marker.setAttribute(IMarker.SEVERITY, severity)
@@ -78,10 +78,5 @@ abstract class MarkerFactory(markerType: String) {
       marker.setAttribute(IMarker.LINE_NUMBER, position.line)
     }
     marker
-  }
-  
-  private def createMarkerInWorkspaceAndApply(resource: IResource)(f: IMarker => Unit): Unit = workspaceRunnableIn(resource.getWorkspace) { _ => 
-    val marker = resource.createMarker(markerType)
-    f(marker)
   }
 }

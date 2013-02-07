@@ -39,6 +39,7 @@ object ScalaDebugTarget extends HasLogger {
       override val companionActor = ScalaDebugTargetActor(threadStartRequest, threadDeathRequest, this)
       override val breakpointManager: ScalaDebugBreakpointManager = ScalaDebugBreakpointManager(this)
       override val eventDispatcher: ScalaJdiEventDispatcher = ScalaJdiEventDispatcher(virtualMachine, companionActor)
+      override val cache: ScalaDebugCache = ScalaDebugCache(this, companionActor)
     }
 
     launch.addDebugTarget(debugTarget)
@@ -66,8 +67,6 @@ object ScalaDebugTarget extends HasLogger {
  * This class is thread safe. Instances have be created through its companion object.
  */
 abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine, launch: ILaunch, process: IProcess, allowDisconnect: Boolean, allowTerminate: Boolean) extends ScalaDebugElement(null) with IDebugTarget with HasLogger {
-
-  val stepFilters = new StepFilters
 
   // Members declared in org.eclipse.debug.core.IBreakpointListener
 
@@ -134,6 +133,7 @@ abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine, lau
   private[debug] val eventDispatcher: ScalaJdiEventDispatcher
   private[debug] val breakpointManager: ScalaDebugBreakpointManager
   private[debug] val companionActor: BaseDebuggerActor
+  private[debug] val cache: ScalaDebugCache
 
   /**
    * Initialize the dependent components
@@ -308,6 +308,7 @@ abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine, lau
     running = false
     eventDispatcher.dispose()
     breakpointManager.dispose()
+    cache.dispose()
     disposeThreads()
     fireTerminateEvent()
   }

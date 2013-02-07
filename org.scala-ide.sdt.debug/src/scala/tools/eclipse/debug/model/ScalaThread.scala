@@ -162,7 +162,8 @@ abstract class ScalaThread private (target: ScalaDebugTarget, private[model] val
    * Set the this object internal states to suspended.
    * FOR THE COMPANION ACTOR ONLY.
    */
-  private[model] def suspend(eventDetail: Int) { 
+  private[model] def suspend(eventDetail: Int) {
+    // FIXME: `threadRef.frames` should handle checked exception `IncompatibleThreadStateException`
     stackFrames= threadRef.frames.asScala.map(ScalaStackFrame(this, _)).toList
     suspended = true
     fireSuspendEvent(eventDetail)
@@ -184,6 +185,8 @@ abstract class ScalaThread private (target: ScalaDebugTarget, private[model] val
    * FOR THE COMPANION ACTOR ONLY.
    */
   private[model] def rebindScalaStackFrames() {
+    // FIXME: `threadRef.frames` should handle checked exception `IncompatibleThreadStateException`
+    // FIXME: Should check that `threadRef.frames == stackFrames` before zipping
     threadRef.frames.asScala.zip(stackFrames).foreach {
       case (jdiStackFrame, scalaStackFrame) => scalaStackFrame.rebind(jdiStackFrame)
     }    
@@ -234,6 +237,7 @@ private[model] class ScalaThreadActor private(thread: ScalaThread) extends BaseD
           try {
             import scala.collection.JavaConverters._
             // invoke the method
+            // FIXME: Doesn't handle checked exceptions `InvalidTypeException, ClassNotLoadedException, IncompatibleThreadStateException, InvocationException`
             val result = objectReference.invokeMethod(thread.threadRef, method, args.asJava, ObjectReference.INVOKE_SINGLE_THREADED)
             // update the stack frames
             thread.rebindScalaStackFrames()
@@ -251,6 +255,7 @@ private[model] class ScalaThreadActor private(thread: ScalaThread) extends BaseD
           try {
             import scala.collection.JavaConverters._
             // invoke the method
+            // FIXME: Doesn't handle checked exceptions `InvalidTypeException, ClassNotLoadedException, IncompatibleThreadStateException, InvocationException`
             val result = classType.invokeMethod(thread.threadRef, method, args.asJava, ObjectReference.INVOKE_SINGLE_THREADED)
             // update the stack frames
             thread.rebindScalaStackFrames()
