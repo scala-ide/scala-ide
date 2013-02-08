@@ -2,28 +2,13 @@ package scala.tools.eclipse.semantichighlighting.classifier
 
 import org.eclipse.jface.text.IRegion
 
-case class SymbolInfo(symbolType: SymbolType, regions: List[IRegion], deprecated: Boolean)
+case class SymbolInfo(symbolType: SymbolTypes.SymbolType, regions: List[IRegion], deprecated: Boolean)
 
-sealed trait SymbolType
 
-object SymbolTypes {
-
-  case object Annotation extends SymbolType
-  case object CaseClass extends SymbolType
-  case object CaseObject extends SymbolType
-  case object Class extends SymbolType
-  case object LazyLocalVal extends SymbolType
-  case object LazyTemplateVal extends SymbolType
-  case object LocalVar extends SymbolType
-  case object LocalVal extends SymbolType
-  case object Method extends SymbolType
-  case object Param extends SymbolType
-  case object Object extends SymbolType
-  case object Package extends SymbolType
-  case object TemplateVar extends SymbolType
-  case object TemplateVal extends SymbolType
-  case object Trait extends SymbolType
-  case object Type extends SymbolType
-  case object TypeParameter extends SymbolType
-
+object SymbolTypes extends Enumeration {
+  type SymbolType = Value
+  
+  val Annotation, CaseClass, CaseObject, Class , LazyLocalVal, 
+      LazyTemplateVal , LocalVar, LocalVal, Method, Param, Object, 
+      Package, TemplateVar, TemplateVal, Trait, Type, TypeParameter = Value
 }

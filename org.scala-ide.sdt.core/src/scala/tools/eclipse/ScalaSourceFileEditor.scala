@@ -16,10 +16,10 @@ import scala.tools.eclipse.markoccurrences.Occurrences
 import scala.tools.eclipse.markoccurrences.ScalaOccurrencesFinder
 import scala.tools.eclipse.properties.syntaxcolouring.ScalaSyntaxClasses
 import scala.tools.eclipse.semantichighlighting.Presenter
-import scala.tools.eclipse.semantichighlighting.ui.HighlightedPosition
 import scala.tools.eclipse.semantichighlighting.ui.TextPresentationEditorHighlighter
 import scala.tools.eclipse.semicolon.ShowInferredSemicolonsAction
 import scala.tools.eclipse.semicolon.ShowInferredSemicolonsBundle
+import scala.tools.eclipse.ui.DisplayThread
 import scala.tools.eclipse.ui.SurroundSelectionStrategy
 import scala.tools.eclipse.util.EclipseUtils
 import scala.tools.eclipse.util.EditorUtils
@@ -151,18 +151,17 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor { sel
 
   private def isScalaSemanticHighlightingEnabled(): Boolean = semanticHighlightingPreferences.isEnabled()
 
-  protected def installScalaSemanticHighlighting(): Unit = {
+  protected def installScalaSemanticHighlighting(forceRefresh: Boolean): Unit = {
     if(semanticHighlightingPresenter == null) {
-      val editorProxy = TextPresentationEditorHighlighter(this)
-      val positionsFactory = HighlightedPosition(semanticHighlightingPreferences) _
-      semanticHighlightingPresenter = new Presenter(editorProxy, positionsFactory, semanticHighlightingPreferences)
-      semanticHighlightingPresenter.initialize()
+      val presentationHighlighter = TextPresentationEditorHighlighter(this, semanticHighlightingPreferences)
+      semanticHighlightingPresenter = new Presenter(getInteractiveCompilationUnit, presentationHighlighter, semanticHighlightingPreferences, DisplayThread)
+      semanticHighlightingPresenter.initialize(forceRefresh)
     }  
   }
 
-  protected def uninstallScalaSemanticHighlighting(): Unit = {
+  protected def uninstallScalaSemanticHighlighting(removesHighlights: Boolean): Unit = {
     if(semanticHighlightingPresenter != null) {
-      semanticHighlightingPresenter.dispose()
+      semanticHighlightingPresenter.dispose(removesHighlights)
       semanticHighlightingPresenter = null
     }
   }
@@ -260,7 +259,7 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor { sel
   override def dispose() {
     super.dispose()
     scalaPrefStore.removePropertyChangeListener(preferenceListener)
-    uninstallScalaSemanticHighlighting()
+    uninstallScalaSemanticHighlighting(removesHighlights = false)
   }
 
   /** Return the `InformationPresenter` used to display the type of the selected expression.*/
@@ -322,7 +321,7 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor { sel
     refactoring.RefactoringMenu.fillQuickMenu(this)
 
     if(isScalaSemanticHighlightingEnabled())
-      installScalaSemanticHighlighting()
+      installScalaSemanticHighlighting(forceRefresh = false) // relies on the Java reconciler to refresh the highlights
 
     getSourceViewer match {
       case sourceViewer: ITextViewerExtension =>
@@ -336,8 +335,8 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor { sel
       case ShowInferredSemicolonsAction.PREFERENCE_KEY =>
         getAction(ShowInferredSemicolonsAction.ACTION_ID).asInstanceOf[IUpdate].update()
       case ScalaSyntaxClasses.ENABLE_SEMANTIC_HIGHLIGHTING =>
-        if(isScalaSemanticHighlightingEnabled) installScalaSemanticHighlighting()
-        else uninstallScalaSemanticHighlighting()
+        if(isScalaSemanticHighlightingEnabled) installScalaSemanticHighlighting(forceRefresh = true)
+        else uninstallScalaSemanticHighlighting(removesHighlights = true)
       case _ =>
         if (affectsTextPresentation(event)) {
           // those events will trigger a UI change
@@ -381,7 +380,7 @@ object ScalaSourceFileEditor {
       new DefaultInformationControl(shell, true)
   }
 
-  /** A thread-safe object for keeping track of `IJavaReconcilingListener`.*/
+  /** A thread-safe object for keeping track of Java reconciling listeners.*/
   private class ReconcilingListeners extends IJavaReconcilingListener {
     private val reconcilingListeners = new ArrayBuffer[IJavaReconcilingListener] with SynchronizedBuffer[IJavaReconcilingListener]
 

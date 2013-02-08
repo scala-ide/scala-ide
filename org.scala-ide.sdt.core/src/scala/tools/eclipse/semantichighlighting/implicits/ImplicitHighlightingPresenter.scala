@@ -28,7 +28,6 @@ import org.eclipse.swt.SWT
 import org.eclipse.ui.editors.text.EditorsUI
 import org.eclipse.ui.part.FileEditorInput
 import scala.tools.eclipse.util.AnnotationUtils
-import scala.tools.eclipse.semantichighlighting.implicits.ColorManager
 import scala.tools.eclipse.semantic.SemanticAction
 import scala.tools.eclipse.properties.ImplicitsPreferencePage
 import org.eclipse.jface.text.Region

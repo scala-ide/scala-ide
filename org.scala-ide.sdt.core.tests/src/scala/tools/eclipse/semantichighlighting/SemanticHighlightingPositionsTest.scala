@@ -12,7 +12,6 @@ import scala.tools.eclipse.ui.InteractiveCompilationUnitEditor
 import scala.tools.eclipse.util.EclipseUtils
 import scala.util.matching.Regex
 import scala.util.matching.Regex.Match
-
 import org.eclipse.core.internal.filebuffers.SynchronizableDocument
 import org.eclipse.core.runtime.IStatus
 import org.eclipse.core.runtime.IProgressMonitor
@@ -22,12 +21,14 @@ import org.eclipse.core.runtime.jobs.Job
 import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.IRegion
-import org.eclipse.jface.text.Position
 import org.eclipse.jface.text.source.ISourceViewer
 import org.junit.{ Before, Test }
 import org.junit.After
 import org.junit.Assert
 import org.mockito.Mockito._
+import scala.tools.eclipse.util.CurrentThread
+import scala.tools.eclipse.semantichighlighting.classifier.SymbolTypes
+import org.eclipse.jface.text.Region
 
 class SemanticHighlightingPositionsTest {
   import SemanticHighlightingPositionsTest._
@@ -41,13 +42,17 @@ class SemanticHighlightingPositionsTest {
   private var sourceView: ISourceViewer = _
   private var document: IDocument = _
 
-  private var preferences: Preferences = _
+  private val preferences: Preferences = {
+    val store = mock(classOf[IPreferenceStore])
+    when(store.getBoolean(ScalaSyntaxClasses.USE_SYNTACTIC_HINTS)).thenReturn(true)
+    new Preferences(store)
+  }
+
+  private var editor: TextPresentationStub = _
+  private var presenter: Presenter = _
 
   private var testCode: String = _
   private var unit: ScalaCompilationUnit = _
-
-  private var editor: EditorStub = _
-  private var presenter: Presenter = _
 
   @Before
   def createProject() {
@@ -64,12 +69,8 @@ class SemanticHighlightingPositionsTest {
   @Before
   def setupMocks() {
     sourceView = mock(classOf[ISourceViewer])
-    document = new SynchronizableDocument
+    document = mock(classOf[IDocument])
     when(sourceView.getDocument()).thenReturn(document)
-
-    val store = mock(classOf[IPreferenceStore])
-    when(store.getBoolean(ScalaSyntaxClasses.USE_SYNTACTIC_HINTS)).thenReturn(true)
-    preferences = new Preferences(store)
   }
 
   trait Edit {
@@ -87,27 +88,27 @@ class SemanticHighlightingPositionsTest {
   }
 
   private def createSemanticHighlightingPresenter(): Unit = {
-    editor = EditorStub(unit, sourceView)
-    presenter = new Presenter(editor, PositionFactory(preferences), preferences)
-    presenter.initialize()
+    editor = TextPresentationStub(sourceView)
+    presenter = new Presenter(unit, editor, preferences, CurrentThread)
+    presenter.initialize(forceRefresh = false)
   }
 
-  private def currentlyHighlightedPositionsInDocument(): Array[Position] = {
-    val highlighedPositions = document.getPositions(editor.positionCategory)
+  private def positionsInRegion(region: Region): List[Position] = {
+    val positions = editor.positionsTracker.positionsInRegion(region)
     // We clone the `highlightedPositions` because the semantic highlighting component works by 
     // performing side-effect on the document's positions each time the reconciler is triggered.
-    highlighedPositions.map(pos => new Position(pos.getOffset(), pos.getLength()))
+    positions.map(pos => new Position(pos.getOffset, pos.getLength, pos.kind, pos.deprecated))
   }
-  
-  private def findAllMarkersIn(code: String): List[Match] = 
-    MarkerRegex.findAllIn(testCode).matchData.toList
+
+  private def findAllMarkersIn(code: String): List[Match] =
+    MarkerRegex.findAllIn(code).matchData.toList
 
   private def runTest(edit: Edit)(code: String): Unit = {
     setTestCode(code)
 
     createSemanticHighlightingPresenter()
 
-    val highlightedBeforeEdition = currentlyHighlightedPositionsInDocument()
+    val highlightedBeforeEdition = positionsInRegion(new Region(0, code.length))
 
     val markers = findAllMarkersIn(testCode)
 
@@ -130,7 +131,7 @@ class SemanticHighlightingPositionsTest {
       // merge together the shifted positions and any additional position that is expected to be created by the edit
       val merged = (edit.newPositions ++ positions)
       // Sort the position. This is needed because position's added to the document are expected to be sorted. 
-      val sorted = merged.sorted(Presenter.PositionsByOffset)
+      val sorted = merged.sorted
       sorted
     }
 
@@ -145,7 +146,7 @@ class SemanticHighlightingPositionsTest {
     // This will trigger semantic highlighting computation, which in turn will update the document's positions (sequential execution!) 
     editor.reconcileNow()
 
-    val highlightedAfterEdition = currentlyHighlightedPositionsInDocument().toList
+    val highlightedAfterEdition = positionsInRegion(new Region(0, currentTestCode.length))
 
     Assert.assertEquals(expectedHighlightedPositionsAfterEdition.size, highlightedAfterEdition.size)
     Assert.assertEquals(expectedHighlightedPositionsAfterEdition, highlightedAfterEdition)
@@ -177,7 +178,7 @@ class SemanticHighlightingPositionsTest {
 
   @Test
   def new_highlighted_positions_are_reported() {
-    runTest(AddText("val bar = 2", List(new Position(17, 3)))) {
+    runTest(AddText("val bar = 2", List(new Position(17, 3, SymbolTypes.TemplateVal, deprecated = false)))) {
       """
         |class A {
         |  /*^*/
@@ -217,43 +218,27 @@ class SemanticHighlightingPositionsTest {
 
 object SemanticHighlightingPositionsTest {
 
-  class EditorStub(override val getInteractiveCompilationUnit: InteractiveCompilationUnit, override val sourceViewer: ISourceViewer) extends TextPresentationHighlighter with InteractiveCompilationUnitEditor {
+  class TextPresentationStub(override val sourceViewer: ISourceViewer) extends TextPresentationHighlighter {
     @volatile private var reconciler: Job = _
-    @volatile var positionCategory: String = _
+    @volatile var positionsTracker: PositionsTracker = _
 
-    override def initialize(reconciler: Job, positionCategory: String): Unit = {
+    override def initialize(reconciler: Job, positionsTracker: PositionsTracker): Unit = {
       this.reconciler = reconciler
-      this.positionCategory = positionCategory
+      this.positionsTracker = positionsTracker
       reconcileNow()
     }
 
-    override def dispose(): Unit = {}
+    override def dispose(): Unit = ()
 
     def reconcileNow(): Unit = {
       // `Job.run` is protected, but when we subclass it in `Presenter$Reconciler` we make the `run` method public, which is really useful for running the reconciler within the same thread of the test.
       reconciler.asInstanceOf[{ def run(monitor: IProgressMonitor): IStatus }].run(new NullProgressMonitor)
     }
 
-    override def updateTextPresentation(damage: IRegion): IStatus = Status.OK_STATUS
+    override def updateTextPresentation(damage: IRegion): Unit = ()
   }
 
-  object EditorStub {
-    def apply(unit: InteractiveCompilationUnit, sourceViewer: ISourceViewer): EditorStub = new EditorStub(unit, sourceViewer)
+  object TextPresentationStub {
+    def apply(sourceViewer: ISourceViewer): TextPresentationStub = new TextPresentationStub(sourceViewer)
   }
-
-  class PositionFactory(preferences: Preferences) extends (List[SymbolInfo] => immutable.HashSet[Position]) {
-    def apply(symbolInfos: List[SymbolInfo]): immutable.HashSet[Position] = {
-      // FIXME: This is duplicated logic, should be reusing HighlightedPosition, but it can't at the moment because it contains some UI logic...
-      (for {
-        SymbolInfo(symbolType, regions, isDeprecated) <- symbolInfos
-        region <- regions
-        if region.getLength > 0
-      } yield new Position(region.getOffset, region.getLength))(collection.breakOut)
-    }
-  }
-
-  object PositionFactory {
-    def apply(implicit preferences: Preferences): PositionFactory = new PositionFactory(preferences)
-  }
-
 }

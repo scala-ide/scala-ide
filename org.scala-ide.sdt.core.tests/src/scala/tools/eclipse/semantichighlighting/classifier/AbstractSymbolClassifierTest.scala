@@ -10,6 +10,7 @@ import scala.tools.eclipse.ScalaPlugin
 import org.junit.After
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.jface.text.IRegion
+import scala.tools.eclipse.semantichighlighting.classifier.SymbolTypes.SymbolType
 
 class AbstractSymbolClassifierTest {
   import AbstractSymbolClassifierTest._

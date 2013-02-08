@@ -1,123 +1,173 @@
 package scala.tools.eclipse.semantichighlighting
 
-import scala.collection.immutable
 import scala.tools.eclipse.InteractiveCompilationUnit
 import scala.tools.eclipse.logging.HasLogger
 import scala.tools.eclipse.semantichighlighting.classifier.SymbolClassification
-import scala.tools.eclipse.semantichighlighting.classifier.SymbolInfo
-import scala.tools.eclipse.ui.InteractiveCompilationUnitEditor
+import scala.tools.eclipse.ui.UIThread
 
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.core.runtime.IStatus
 import org.eclipse.core.runtime.Status
 import org.eclipse.core.runtime.jobs.Job
-import org.eclipse.jface.text.Position
-import org.eclipse.jface.text.source.ISourceViewer
+import org.eclipse.jface.text.DocumentEvent
+import org.eclipse.jface.text.IDocument
+import org.eclipse.jface.text.IDocumentListener
+import org.eclipse.jface.text.IPositionUpdater
+import org.eclipse.jface.text.IRegion
+import org.eclipse.jface.text.ITextInputListener
 
-/** This class is responsible of coordinating the correct initialization of the different components needed to perform semantic highlighting.
+/** This class is responsible of coordinating the correct initialization of the different components
+  * needed to perform semantic highlighting.
   *
-  * Specifically, a reconciler job is created so that the symbols' classification is performed asynchronously wrt to the component that
-  * triggers sematic highlighting (which, in its current state, is the `JavaReconciler`. Have a look at
-  * `scala.tools.eclipse.semantichighlighting.ui.ScalaTextPresentationProxy` for the details of how semantic highlighting is hooked in the
-  * java reconciler).
+  * @note This class is thread-safe.
   *
-  * This class is thread-safe.
-  *
-  * @param editorProxy Responsible of updating the text presentation in the editor and responds to reconciliations events.
-  * @param positionFactory Factory for semantically highlighted positions.
-  * @param preferences Semantic Highlighting user's preferences.
+  * @param compilationUnit         The compilation unit on which semantic highlighting is performed.
+  * @param presentationHighlighter Responsible of updating the editor's text presentation.
+  * @param preferences             Semantic Highlighting user's preferences.
+  * @param uiThread                Allows to run code in the UI Thread.
   */
-class Presenter(editorProxy: TextPresentationHighlighter with InteractiveCompilationUnitEditor, positionsFactory: Presenter.PositionsFactory, preferences: Preferences) {
+class Presenter(
+  compilationUnit: InteractiveCompilationUnit,
+  presentationHighlighter: TextPresentationHighlighter,
+  preferences: Preferences,
+  uiThread: UIThread) extends HasLogger { self =>
+  import Presenter._
 
   private val reconciler = {
-    val job = new Reconciler(editorProxy.getInteractiveCompilationUnit)
+    val job = new Reconciler(compilationUnit)
+    // job.setSystem(true) // TODO: uncomment this once we trust the reconciler job can't be lost 
     job.setPriority(Job.DECORATE)
     job
   }
 
-  /** Keep tracks of document's events and responsible for updating the highlighted position in the document.*/
-  private val documentProxy = new DocumentProxy(editorProxy.sourceViewer, reconciler, getPositionCategory)
+  /** Keep tracks of the highlighted positions in the editor.*/
+  private val positionsTracker = new PositionsTracker
 
-  /** True if method `initialize` was called, false otherwise.
-    * Guarded by initializationLock
-    */
-  private var initialized: Boolean = false
+  private val documentSwapListener = new DocumentSwapListener(self, reconciler)
+  private val documentContentListener = new DocumentContentListener(reconciler)
+  private val positionUpdater = new PositionUpdater(positionsTracker)
 
-  /** Lock used to protect initialization/disposal of this instance. */
-  private val initializationLock: AnyRef = new Object
+  /** Should be called right after creating an instance of `this` class. 
+   *  
+   *  @param forceRefresh Force a semantic reconciler run during initialization.
+   */
+  def initialize(forceRefresh: Boolean): Unit = {
+    presentationHighlighter.initialize(reconciler, positionsTracker)
+    Option(presentationHighlighter.sourceViewer) foreach { sv =>
+      sv.addTextInputListener(documentSwapListener)
+      manageDocument(sv.getDocument)
+    }
+    if(forceRefresh) refresh()
+  }
 
-  /** Should be called right after creating an instance of `this` class. */
-  def initialize(): Unit = initializationLock.synchronized {
-    try {
-      documentProxy.initialize()
-      editorProxy.initialize(reconciler, getPositionCategory)
-    } finally {
-      initialized = true
+  private def manageDocument(document: IDocument): Unit = {
+    if (document != null) {
+      document.addPositionUpdater(positionUpdater)
+      document.addDocumentListener(documentContentListener)
     }
   }
 
-  /** Stop any reconciling job that may be currently executing and unregister all editor/document's listeners. */
-  def dispose(): Unit = initializationLock.synchronized {
-    if (initialized) {
-      try {
-        reconciler.cancel()
-        documentProxy.dispose()
-        editorProxy.dispose()
-      } finally {
-        initialized = false
-      }
+  private def releaseDocument(document: IDocument): Unit = {
+    if (document != null) {
+      document.removePositionUpdater(positionUpdater)
+      document.removeDocumentListener(documentContentListener)
     }
   }
 
-  /** Returns a different category for each opened editor (because a different instance of `this` class is
-    * created for each opened editor). The reason for this is that the the document's model holds a map from
-    * categories to positions, hence for performance reasons (i.e., reducing the number of positions to check
-    * when the document is changed) it makes sense to have a different categories for each opened editor.
-    */
-  private def getPositionCategory: String = toString
+  /** Stop any reconciling job that may be currently executing and unregister all 
+   *  editor/document's listeners. 
+   *
+   *  @param removesHighlights Force removal of highlightes postions in the editor.  
+   */
+  def dispose(removesHighlights: Boolean): Unit = {
+    reconciler.cancel()
+    // invalidate the text presentation before disposing `presentationHighlighter` (because it 
+    // contains the logic for applying the styles).
+    if (removesHighlights) removesAllHighlightings()
+    presentationHighlighter.dispose()
+    Option(presentationHighlighter.sourceViewer) foreach { sv => releaseDocument(sv.getDocument) }
+  }
+
+  /** Refresh the highlightings */
+  private def refresh(): Unit = { reconciler.schedule() }
+
+  /** Removes all highlightings.
+   *  @note Must be called from within the UI Thread
+   */
+  private def removesAllHighlightings(): Unit = {
+    positionsTracker.dispose()
+    Option(presentationHighlighter.sourceViewer) foreach (_.invalidateTextPresentation())
+  }
 
   /** A background job that performs semantic highlighting.
     *
-    * This class is thread-safe.
+    * @note This class is thread-safe.
     */
   private class Reconciler(scu: InteractiveCompilationUnit) extends Job("semantic highlighting") with HasLogger {
 
     override def run(monitor: IProgressMonitor): IStatus = {
+      if (monitor.isCanceled()) Status.CANCEL_STATUS
+      else performSemanticHighlighting(monitor)
+    }
+
+    private def performSemanticHighlighting(monitor: IProgressMonitor): IStatus = {
       scu.withSourceFile { (sourceFile, compiler) =>
+        positionsTracker.startComputingNewPositions()
         val symbolInfos =
           try new SymbolClassification(sourceFile, compiler, preferences.isUseSyntacticHintsEnabled()).classifySymbols(monitor)
           catch {
-            case e =>
+            case e: Exception =>
               logger.error("Error performing semantic highlighting", e)
               Nil
           }
-        if (monitor.isCanceled()) Status.CANCEL_STATUS
-        else {
-          val positions = positionsFactory(symbolInfos)
-          val sortedPositions = positions.toList.sorted(Presenter.PositionsByOffset)
-          val positionsChange = documentProxy.createDocumentPositionsChange(sortedPositions)
+        val newPositions = Position.from(symbolInfos)
+        val positionsChange = positionsTracker.createPositionsChange(newPositions)
+        val damagedRegion = positionsChange.affectedRegion()
 
-          if (monitor.isCanceled()) Status.CANCEL_STATUS
-          else positionsChange map (updateTextPresentation(_)) getOrElse Status.OK_STATUS
+        // if the positions held by the `positionsTracker` have changed, then 
+        // it's useless to proceed because the `newPositions` have computed on a  
+        // not up-to-date compilation unit. Let the next reconciler run take care 
+        // of re-computing the positions with the up-to-date content.
+        if (damagedRegion.getLength > 0 && !positionsTracker.isPositionsChanged) {
+          val sortedPositions = newPositions.sorted.toArray
+          runPositionsUpdateInUiThread(sortedPositions, damagedRegion)
+          Job.ASYNC_FINISH
         }
+        else Status.OK_STATUS
       }(Status.OK_STATUS)
     }
 
-    private def updateTextPresentation(positionsChange: DocumentPositionsChange): IStatus = {
-      val damage = positionsChange.createRegionChange()
-      if (damage.getLength > 0) {
-        documentProxy.updateDocumentPositions(positionsChange)
-        editorProxy.updateTextPresentation(damage)
+    private def runPositionsUpdateInUiThread(newPositions: Array[Position], damagedRegion: IRegion): Unit = uiThread.asyncExec {
+      try {
+        setThread(uiThread.get)
+        if (!positionsTracker.isPositionsChanged) {
+          positionsTracker.swapPositions(newPositions)
+          presentationHighlighter.updateTextPresentation(damagedRegion)
+        }
       }
-      else Status.OK_STATUS
+      catch { case e: Exception => () }
+      finally done(Status.OK_STATUS)
     }
   }
 }
 
-object Presenter {
-  object PositionsByOffset extends Ordering[Position] {
-    override def compare(x: Position, y: Position): Int = x.getOffset() - y.getOffset()
+private object Presenter {
+  class DocumentSwapListener(presenter: Presenter, reconciler: Job) extends ITextInputListener {
+    override def inputDocumentAboutToBeChanged(oldInput: IDocument, newInput: IDocument): Unit = {
+      reconciler.cancel()
+      presenter.releaseDocument(oldInput)
+    }
+    override def inputDocumentChanged(oldInput: IDocument, newInput: IDocument): Unit =
+      presenter.manageDocument(newInput)
   }
 
-  type PositionsFactory = List[SymbolInfo] => immutable.HashSet[Position]
+  class DocumentContentListener(reconciler: Job) extends IDocumentListener {
+    override def documentAboutToBeChanged(event: DocumentEvent): Unit = reconciler.cancel()
+    override def documentChanged(event: DocumentEvent): Unit = ()
+  }
+
+  class PositionUpdater(positionsTracker: PositionsTracker) extends IPositionUpdater with HasLogger {
+    override def update(event: DocumentEvent): Unit =
+      positionsTracker.updatePositions(event)
+  }
 }

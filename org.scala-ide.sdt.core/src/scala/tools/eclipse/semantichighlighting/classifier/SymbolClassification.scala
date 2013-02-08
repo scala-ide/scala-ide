@@ -117,12 +117,8 @@ class SymbolClassification(protected val sourceFile: SourceFile, val global: Sca
     getNameRegion(pos) flatMap { region =>
       val text = RegionOps.of(region, sourceFile.content)
       val symName = sym.nameString
-      if (symName.startsWith(text) || text == "`" + symName + "`")
-        Some(region)
-      else {
-        logger.debug("couldn't find region for: " + symName + " at: " + pos.line)
-        None
-      }
+      if (symName.startsWith(text) || text == "`" + symName + "`") Some(region)
+      else None
     }
 
   private def getNameRegion(pos: Position): Option[IRegion] =
