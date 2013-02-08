@@ -10,13 +10,19 @@ import scala.tools.eclipse.properties.EditorPreferencePage
 class LiteralAutoEditStrategy(prefStore: IPreferenceStore) extends IAutoEditStrategy {
 
   def customizeDocumentCommand(document: IDocument, command: DocumentCommand) {
+
+    val isAutoEscapeSignEnabled = prefStore.getBoolean(
+        EditorPreferencePage.P_ENABLE_AUTO_ESCAPE_SIGN)
+    val isAutoRemoveEscapedSignEnabled = prefStore.getBoolean(
+        EditorPreferencePage.P_ENABLE_AUTO_REMOVE_ESCAPED_SIGN)
+
     def ch(i: Int, c: Char) = {
       val o = command.offset + i
       o >= 0 && o < document.getLength && document.getChar(o) == c
     }
 
     def addClosingLiteral() {
-      if (ch(-1, '"') || ch(-1, ''') || ch(0, '"') || ch(0, ''')) {
+      if (ch(-1, '"') || ch(-1, ''') || ch(0, '"') || ch(0, ''') || ch(-2, ''')) {
         return
       }
       command.caretOffset = command.offset + 1
@@ -25,13 +31,25 @@ class LiteralAutoEditStrategy(prefStore: IPreferenceStore) extends IAutoEditStra
     }
 
     def removeLiteral() {
-      if ((ch(0, '"') && ch(1, '"')) || (ch(0, ''') && ch(1, '''))) {
+      def isEscapeSequence(i: Int) =
+        """btnfr"'\""".contains(document.getChar(command.offset + i))
+
+      if (ch(-1, '\\') && isEscapeSequence(0)) {
         command.length = 2
-      }
+        command.offset -= 1
+      } else if (ch(0, '\\') && isEscapeSequence(1)) {
+        if (ch(1, ''')) {
+          if (ch(2, ''')) {
+            command.length = 2
+          }
+        } else
+          command.length = 2
+      } else if ((ch(0, '"') && ch(1, '"')) || (ch(0, ''') && ch(1, ''')))
+        command.length = 2
     }
 
     def removeEscapedSign() {
-      if (ch(-1, '\\') && (ch(0, ''') || ch(0, '\\'))) {
+      if (ch(-1, '\\')) {
         command.length = 2
         command.offset -= 1
       }
@@ -47,8 +65,6 @@ class LiteralAutoEditStrategy(prefStore: IPreferenceStore) extends IAutoEditStra
 
       if (ch(0, ''') && isCharFilled)
         jumpOverClosingLiteral()
-      else if (!ch(-1, '\\') && ch(-2, '''))
-        command.text = "\\'"
     }
 
     def handleEscapeSign() {
@@ -64,22 +80,19 @@ class LiteralAutoEditStrategy(prefStore: IPreferenceStore) extends IAutoEditStra
     }
 
     def customizeLiteral() {
-      val isAutoEscapeEnabled = prefStore.getBoolean(
-          EditorPreferencePage.P_ENABLE_AUTO_ESCAPE_LITERALS)
-
       command.text match {
-        case "\\" if isAutoEscapeEnabled => handleEscapeSign()
-        case "'"                         => handleClosingLiteral()
-        case "" if isAutoEscapeEnabled   => removeEscapedSign()
-        case _                           =>
+        case "\\" if isAutoEscapeSignEnabled      => handleEscapeSign()
+        case "'"                                  => handleClosingLiteral()
+        case "" if isAutoRemoveEscapedSignEnabled => removeEscapedSign()
+        case _                                    =>
       }
     }
 
     def customizeChar() {
       command.text match {
-        case "\"" | "'" => addClosingLiteral()
-        case ""         => removeLiteral()
-        case _          =>
+        case "\"" | "'"                           => addClosingLiteral()
+        case "" if isAutoRemoveEscapedSignEnabled => removeLiteral()
+        case _                                    =>
       }
     }
 
@@ -101,7 +114,7 @@ class LiteralAutoEditStrategy(prefStore: IPreferenceStore) extends IAutoEditStra
       return
     }
 
-    val isCharacterLiteral = (ch(-1, ''') || ch(-1, '\\')) && (ch(0, ''') || ch(0, '\\'))
+    val isCharacterLiteral = ch(-1, ''') && ch(0, ''')
     val isMultiLineStringLiteral = ch(-2, '"') && ch(-1, '"')
 
     /*

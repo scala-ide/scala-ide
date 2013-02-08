@@ -3,28 +3,50 @@ package scala.tools.eclipse.ui
 import scala.tools.eclipse.properties.EditorPreferencePage
 
 import org.eclipse.jface.preference.IPreferenceStore
-import org.eclipse.jface.text.{ DocumentCommand, IAutoEditStrategy, IDocument }
+import org.eclipse.jface.text.{ DocumentCommand, IAutoEditStrategy, IDocument, TextUtilities }
 
 /**
  * Applies several auto edit actions if one adds ore removes a sign inside of
  * a string.
  */
-class StringAutoEditStrategy(prefStore: IPreferenceStore) extends IAutoEditStrategy {
+class StringAutoEditStrategy(partitioning: String, prefStore: IPreferenceStore) extends IAutoEditStrategy {
 
   def customizeDocumentCommand(document: IDocument, command: DocumentCommand) {
 
-    val isAutoEscapeEnabled = prefStore.getBoolean(
+    val isAutoEscapeLiteralEnabled = prefStore.getBoolean(
         EditorPreferencePage.P_ENABLE_AUTO_ESCAPE_LITERALS)
+    val isAutoEscapeSignEnabled = prefStore.getBoolean(
+        EditorPreferencePage.P_ENABLE_AUTO_ESCAPE_SIGN)
+    val isAutoRemoveEscapedSignEnabled = prefStore.getBoolean(
+        EditorPreferencePage.P_ENABLE_AUTO_REMOVE_ESCAPED_SIGN)
 
     def ch(i: Int, c: Char) = {
       val o = command.offset + i
       o >= 0 && o < document.getLength && document.getChar(o) == c
     }
 
-    def removeClosingLiteral() {
-      if (ch(-1, '\\') && (ch(0, '"') || ch(0, '\\'))) {
+    def isStringTerminated = {
+      val partition = TextUtilities.getPartition(document, partitioning, command.offset, true)
+      val endPos = partition.getOffset() + partition.getLength() - 1
+      val isStringTerminated = document.getChar(endPos) == '"'
+      val isTerminationEscaped = document.getChar(endPos - 1) == '\\'
+      isStringTerminated && !isTerminationEscaped
+    }
+
+    def removeEscapedSign() {
+      def isEscapeSequence(i: Int) =
+        """btnfr"'\""".contains(document.getChar(command.offset + i))
+
+      if (ch(-1, '\\') && isEscapeSequence(0)) {
         command.length = 2
         command.offset -= 1
+      } else if (ch(0, '\\') && isEscapeSequence(1)) {
+        if (ch(1, '"')) {
+          if (isStringTerminated) {
+            command.length = 2
+          }
+        } else
+          command.length = 2
       }
     }
 
@@ -36,7 +58,7 @@ class StringAutoEditStrategy(prefStore: IPreferenceStore) extends IAutoEditStrat
     def handleClosingLiteral() {
       if (ch(0, '"') && ch(-1, '"') && !ch(-2, '\\'))
         jumpOverClosingLiteral()
-      else if (isAutoEscapeEnabled) {
+      else if (isAutoEscapeLiteralEnabled && isStringTerminated) {
         if (ch(-1, '\\')) {
           if (ch(-2, '\\'))
             command.text = "\\\""
@@ -65,10 +87,10 @@ class StringAutoEditStrategy(prefStore: IPreferenceStore) extends IAutoEditStrat
     }
 
     command.text match {
-      case "\\" if isAutoEscapeEnabled => handleEscapeSign()
-      case "\""                        => handleClosingLiteral()
-      case "" if isAutoEscapeEnabled   => removeClosingLiteral()
-      case _                           =>
+      case "\\" if isAutoEscapeSignEnabled      => handleEscapeSign()
+      case "\""                                 => handleClosingLiteral()
+      case "" if isAutoRemoveEscapedSignEnabled => removeEscapedSign()
+      case _                                    =>
     }
   }
 

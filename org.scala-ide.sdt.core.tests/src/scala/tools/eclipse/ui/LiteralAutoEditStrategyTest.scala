@@ -13,14 +13,21 @@ object LiteralAutoEditStrategyTest {
   def enableAutoEscape(enable: Boolean) {
     when(prefStore.getBoolean(EditorPreferencePage.P_ENABLE_AUTO_ESCAPE_LITERALS)).thenReturn(enable)
   }
+  def enable(property: String, enable: Boolean) {
+    when(prefStore.getBoolean(property)).thenReturn(enable)
+  }
 }
 
 class LiteralAutoEditStrategyTest extends AutoEditStrategyTests(
     new LiteralAutoEditStrategy(LiteralAutoEditStrategyTest.prefStore)) {
 
+  import LiteralAutoEditStrategyTest._
+  import scala.tools.eclipse.properties.EditorPreferencePage._
+
   @Before
   def startUp() {
-    LiteralAutoEditStrategyTest.enableAutoEscape(true)
+    enable(P_ENABLE_AUTO_ESCAPE_SIGN, true)
+    enable(P_ENABLE_AUTO_REMOVE_ESCAPED_SIGN, true)
   }
 
   @Test
@@ -88,7 +95,7 @@ class LiteralAutoEditStrategyTest extends AutoEditStrategyTests(
 
   @Test
   def not_remove_escaped_character_literal_if_feature_deactivated() {
-    LiteralAutoEditStrategyTest.enableAutoEscape(false)
+    enable(P_ENABLE_AUTO_REMOVE_ESCAPED_SIGN, false)
     test(input = """ '\'^' """, expectedOutput = """ '\^' """, operation = Remove("'"))
   }
 
@@ -99,7 +106,7 @@ class LiteralAutoEditStrategyTest extends AutoEditStrategyTests(
 
   @Test
   def no_auto_escape_backslash_if_feature_deactivated() {
-    LiteralAutoEditStrategyTest.enableAutoEscape(false)
+    enable(P_ENABLE_AUTO_ESCAPE_SIGN, false)
     test(input = """ '^' """, expectedOutput = """ '\^' """, operation = Add("\\"))
   }
 
@@ -115,13 +122,58 @@ class LiteralAutoEditStrategyTest extends AutoEditStrategyTests(
 
   @Test
   def not_remove_escape_backslash_if_feature_deactivated() {
-    LiteralAutoEditStrategyTest.enableAutoEscape(false)
+    enable(P_ENABLE_AUTO_REMOVE_ESCAPED_SIGN, false)
     test(input = """ '\\^' """, expectedOutput = """ '\^' """, operation = Remove("\\"))
   }
 
   @Test
   def remove_whole_character_literal() {
     test(input = """ '''^ """, expectedOutput = """ ^ """, operation = Remove("'''"))
+  }
+
+  @Test
+  def remove_escaped_sign() {
+    """btnfr"'\""" foreach { c =>
+      test(input = """ '\%c^' """ format c, expectedOutput = """ '^' """, operation = Remove(c.toString))
+    }
+  }
+
+  @Test
+  def not_remove_escaped_sign_if_feature_deactivated() {
+    enable(P_ENABLE_AUTO_REMOVE_ESCAPED_SIGN, false)
+    """btnfr"'\""" foreach { c =>
+      test(input = """ '\%c^' """ format c, expectedOutput = """ '\^' """, operation = Remove(c.toString))
+    }
+  }
+
+  @Test
+  def remove_escaped_sign_with_caret_on_backslash() {
+    """btnfr"'\""" foreach { c =>
+      test(input = """ '\^%c' """ format c, expectedOutput = """ '^' """, operation = Remove("\\"))
+    }
+  }
+
+  @Test
+  def not_remove_escaped_sign_on_backslash_if_feature_deactivated() {
+    enable(P_ENABLE_AUTO_REMOVE_ESCAPED_SIGN, false)
+    """btnfr"'\""" foreach { c =>
+      test(input = """ '\^%c' """ format c, expectedOutput = """ '^%c' """ format c, operation = Remove("\\"))
+    }
+  }
+
+  @Test
+  def not_remove_escaped_char_literal_if_it_is_not_terminated() {
+    test(input = """ '\^'; """, expectedOutput = """ '^'; """, operation = Remove("\\"))
+  }
+
+  @Test
+  def not_remove_escaped_char_literal_if_it_is_not_terminated_and_last_sign_is_the_literal() {
+    test(input = """ '\^'""", expectedOutput = """ '^'""", operation = Remove("\\"))
+  }
+
+  @Test
+  def not_add_escaped_char_literal_if_it_is_not_terminated() {
+    test(input = """ 'n^ """, expectedOutput = """ 'n'^ """, operation = Add("'"))
   }
 
   // the following tests belong to multi-line string literals

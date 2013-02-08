@@ -1,10 +1,10 @@
 package scala.tools.eclipse.ui
 
-import org.eclipse.jface.text.{ Document, DocumentCommand, IAutoEditStrategy }
+import scala.tools.eclipse.lexical.ScalaDocumentPartitioner
+
+import org.eclipse.jface.text.{ Document, DocumentCommand, IAutoEditStrategy, IDocument }
 import org.junit.Assert._
 import org.junit.ComparisonFailure
-import org.eclipse.jface.text.IDocument
-import scala.tools.eclipse.lexical.ScalaDocumentPartitioner
 
 object AutoEditStrategyTests {
   class TestCommand(cOffset: Int, cLength: Int, cText: String, cCaretOffset: Int, cShiftsCaret: Boolean, cDoIt: Boolean) extends DocumentCommand {
