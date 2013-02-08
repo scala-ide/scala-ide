@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Scala Plugin Spy
 Bundle-SymbolicName: org.scala-ide.sdt.spy;singleton:=true
-Bundle-Version: 3.0.0.qualifier
+Bundle-Version: 4.0.0.qualifier
 Bundle-Vendor: Scala IDE
 Bundle-ActivationPolicy: lazy
 Bundle-Localization: plugin
