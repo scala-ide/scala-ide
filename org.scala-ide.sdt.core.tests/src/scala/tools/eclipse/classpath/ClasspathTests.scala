@@ -22,6 +22,8 @@ import scala.tools.eclipse.util.EclipseUtils
 import org.eclipse.core.runtime.Status
 import org.eclipse.core.runtime.jobs.IJobChangeEvent
 import org.eclipse.core.runtime.jobs.JobChangeAdapter
+import scala.tools.eclipse.SettingConverterUtil
+import scala.tools.eclipse.properties.ScalaPluginSettings
 
 object ClasspathTests extends TestProjectSetup("classpath")
 
@@ -61,6 +63,11 @@ class ClasspathTests {
     setRawClasspathAndCheckMarkers(baseRawClasspath, 0, 0)
   }
   
+  @After
+  def resetPreferences() {
+    project.storage.setToDefault(SettingConverterUtil.convertNameToProperty(ScalaPluginSettings.withVersionClasspathValidator.name))
+  }
+  
   /**
    * The scala library is defined as part of the eclipse container in the classpath (default case)
    */
@@ -77,6 +84,23 @@ class ClasspathTests {
     setRawClasspathAndCheckMarkers(baseRawClasspath :+ newLibraryEntry("specs2_%s.2-0.12.3.jar".format(majorMinor)), expectedWarnings = 0, expectedErrors = 1)
   }
 
+  /** Library would be detected as incompatible, but the check has been turned off.
+   */
+  @Test
+  def binaryIncompatibleLibraryWithPreferenceFalse() {
+    project.storage.setValue(SettingConverterUtil.convertNameToProperty(ScalaPluginSettings.withVersionClasspathValidator.name), false)
+    val majorMinor = getIncompatibleScalaVersion
+    setRawClasspathAndCheckMarkers(baseRawClasspath :+ newLibraryEntry("specs2_%s.2-0.12.3.jar".format(majorMinor)), expectedWarnings = 0, expectedErrors = 0)
+  }
+  
+  /** Check that no incompatibility is reported for low value version (< 2.8.0)
+   */
+  @Test
+  def lowVersionLibrary() {
+    project.storage.setValue(SettingConverterUtil.convertNameToProperty(ScalaPluginSettings.withVersionClasspathValidator.name), false)
+    setRawClasspathAndCheckMarkers(baseRawClasspath :+ newLibraryEntry("specs2_2.7.8-0.12.3.jar"), expectedWarnings = 0, expectedErrors = 0)
+  }
+  
   /** Major binary-incompatible library on the classpath, with short version in the name
    */
   @Test

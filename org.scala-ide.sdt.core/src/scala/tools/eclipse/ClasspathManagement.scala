@@ -31,6 +31,7 @@ import java.io.File
 import org.eclipse.jdt.internal.core.JavaProject
 import scala.tools.eclipse.resources.MarkerFactory
 import scala.tools.eclipse.util.EclipseUtils
+import org.osgi.framework.Version
 
 /** The Scala classpath broken down in the JDK, Scala library and user library.
  *
@@ -74,11 +75,31 @@ case class ScalaClasspath(val jdkPaths: Seq[IPath], // JDK classpath
  */
 case class ScalaLibrary(location: IPath, version: Option[String], isProject: Boolean)
 
+/** Companion object with constants and helper functions.
+ */
+object ClasspathManagement {
+  val crossCompiledRegex = """.*_(2\.\d+(\.\d*)?)(-.*)?.jar""".r
+
+  val minimalVersionChecked = new Version(2, 8, 0)
+
+  /** Checks if the given version is compatible with the current Scala version.
+   *  Checks major.minor for version >= 2.8.0.
+   */
+  def isCompatibleVersion(version: String) = {
+    val osgiVersion = new Version(version)
+
+    (minimalVersionChecked.compareTo(osgiVersion) > 0) || plugin.isCompatibleVersion(Some(osgiVersion.toString()))
+  }
+
+}
+
 /** Scala project classpath management. This class is responsible for breaking down the classpath in
  *  JDK entries, Scala library entries, and user entries. It also validates the classpath and
  *  manages the classpath error markers for the given Scala project.
  */
 trait ClasspathManagement extends HasLogger { self: ScalaProject =>
+
+  import ClasspathManagement._
 
   /** Return the Scala classpath breakdown for the managed project. */
   def scalaClasspath: ScalaClasspath = {
@@ -277,8 +298,16 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
   }
 
   private def checkClasspath() {
-    // look for all package fragment roots containing instances of scala.Predef
-    val errors = validateScalaLibrary(scalaLibraries) ++ validateBinaryVersionsOnClasspath()
+    // check the version of Scala library used, and if enabled, the Scala compatibility of the other jars.
+    val withVersionClasspathValidator =
+      storage.getBoolean(SettingConverterUtil.convertNameToProperty(properties.ScalaPluginSettings.withVersionClasspathValidator.name))
+    val errors =
+      validateScalaLibrary(scalaLibraries) ++
+        (if (withVersionClasspathValidator) {
+          validateBinaryVersionsOnClasspath()
+        } else {
+          Seq()
+        })
     updateClasspathMarkers(errors)
     classpathHasBeenChecked = true
   }
@@ -377,17 +406,13 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
   }
 
   private def validateBinaryVersionsOnClasspath(): Seq[(Int, String)] = {
-    def roundUp(version: String) =
-      if (version.count(_ == '.') < 2) version + ".0" else version
-
-    val crossCompiled = """.*_(2\.\d+(\.\d*)?)(-.*)?.jar""".r
     val entries = scalaClasspath.userCp
     val errors = mutable.ListBuffer[(Int, String)]()
 
     for (entry <- entries) {
       entry.lastSegment() match {
-        case crossCompiled(version, _, _) if !plugin.isCompatibleVersion(Some(roundUp(version))) =>
-          errors += ((IMarker.SEVERITY_ERROR, "%s is cross-compiled with an incompatible version of Scala (%s)".format(entry.lastSegment, version)))
+        case crossCompiledRegex(version, _, _) if !isCompatibleVersion(version) =>
+          errors += ((IMarker.SEVERITY_ERROR, "%s is cross-compiled with an incompatible version of Scala (%s). In case of errorneous report, this check can be disabled in the compiler preference page.".format(entry.lastSegment, version)))
         case _ =>
           // ignore libraries that aren't cross compiled/are compatible
       }
