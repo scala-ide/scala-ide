@@ -1,9 +1,10 @@
 package scala.tools.eclipse.ui
 
+import scala.tools.eclipse.lexical.ScalaPartitions
 import scala.tools.eclipse.logging.HasLogger
 
 import org.eclipse.jdt.ui.text.IJavaPartitions
-import org.eclipse.jface.text.{DefaultIndentLineAutoEditStrategy, DocumentCommand, IDocument, TextUtilities}
+import org.eclipse.jface.text.{ DefaultIndentLineAutoEditStrategy, DocumentCommand, IDocument, TextUtilities }
 
 /** An auto-edit strategy for Scaladoc and multiline comments that does the following:
  *
@@ -76,15 +77,20 @@ class CommentAutoIndentStrategy(partitioning: String) extends DefaultIndentLineA
     (doc.get(lineInfo.getOffset, endOfWS - lineInfo.getOffset), doc.get(endOfWS, lineInfo.getOffset + lineInfo.getLength() - endOfWS))
   }
 
-  /** Heuristics for when to close a scaladoc. Returns `true` when the offset is inside a scaladoc
-   *  that runs to the end of the document. This handles nested comments pretty well because
-   *  it uses the Scala document partitioner.
+  /** Heuristics for when to close a Scaladoc. Returns `true` when the offset is inside a Scaladoc
+   *  that runs to the end of the document or to the beginning of a Scaladoc code block. This
+   *  handles nested comments pretty well because it uses the Scala document partitioner.
    */
   private def shouldCloseDocComment(doc: IDocument, offset: Int): Boolean = {
+    def isCodeBlock(pos: Int) = {
+      val p = TextUtilities.getPartition(doc, partitioning, pos, true)
+      p.getType() == ScalaPartitions.SCALADOC_CODE_BLOCK
+    }
+
     val partition = TextUtilities.getPartition(doc, partitioning, offset, true)
     val partitionEnd = partition.getOffset() + partition.getLength()
     (scaladocPartitions(partition.getType())
-      && partitionEnd == doc.getLength())
+      && (partitionEnd == doc.getLength() || isCodeBlock(partitionEnd)))
   }
 
   private val scaladocPartitions = Set(IJavaPartitions.JAVA_DOC, IJavaPartitions.JAVA_MULTI_LINE_COMMENT)
