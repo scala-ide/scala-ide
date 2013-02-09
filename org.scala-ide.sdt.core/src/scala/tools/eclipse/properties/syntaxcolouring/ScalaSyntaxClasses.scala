@@ -99,11 +99,21 @@ object ScalariformToSyntaxClass {
 
   // TODO: Distinguish inside from outside of CDATA; distinguish XML tag and attribute name
 
+  /**
+   * If one wants to tokenize source code by Scalariform, one probably also needs to translate the
+   * token to a format the UI-Classes of Eclipse can understand. If this the case than this method
+   * should be used.
+   *
+   * Because Scalariform does not treat all token the way the IDE needs them, for some of them they
+   * are replaced with a different kind of token.
+   */
   def apply(token: Token): ScalaSyntaxClass = token.tokenType match {
     case LPAREN | RPAREN | LBRACE | RBRACE | LBRACKET | RBRACKET => ScalaSyntaxClasses.BRACKET
     case STRING_LITERAL => ScalaSyntaxClasses.STRING
     case TRUE | FALSE | NULL => ScalaSyntaxClasses.KEYWORD
     case RETURN => ScalaSyntaxClasses.RETURN
+    /* `requires` is not a keyword anymore, translation to default content type */
+    case REQUIRES => ScalaSyntaxClasses.DEFAULT
     case t if t.isKeyword => ScalaSyntaxClasses.KEYWORD
     case LINE_COMMENT => ScalaSyntaxClasses.SINGLE_LINE_COMMENT
     case MULTILINE_COMMENT if token.isScalaDocComment => ScalaSyntaxClasses.SCALADOC
