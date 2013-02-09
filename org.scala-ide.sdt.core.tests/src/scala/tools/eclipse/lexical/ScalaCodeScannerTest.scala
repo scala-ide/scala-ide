@@ -119,4 +119,9 @@ class ScalaCodeScannerTest {
     tokenize("'symbol") === Seq((SYMBOL, 0, 7))
   }
 
+  @Test
+  def requires_is_no_keyword() {
+    tokenize("requires") === Seq((DEFAULT, 0, 8))
+  }
+
 }
