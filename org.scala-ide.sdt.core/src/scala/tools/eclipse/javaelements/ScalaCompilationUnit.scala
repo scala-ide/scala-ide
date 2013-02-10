@@ -131,12 +131,12 @@ trait ScalaCompilationUnit extends Openable
    */
   def addToIndexer(indexer : ScalaSourceIndexer) {
     if (scalaProject.hasScalaNature) {
-      try doWithSourceFile { (source, compiler) =>
+      doWithSourceFile { (source, compiler) =>
         compiler.withParseTree(source) { tree =>
-          new compiler.IndexBuilderTraverser(indexer).traverse(tree)
+          compiler.askOption { () =>
+            new compiler.IndexBuilderTraverser(indexer).traverse(tree)
+          }
         }
-      } catch {
-        case ex: Throwable => logger.error("Compiler crash during indexing of %s".format(getResource()), ex)
       }
     }
   }
