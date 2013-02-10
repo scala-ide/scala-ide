@@ -109,7 +109,7 @@ class TemplateValTest extends AbstractSymbolClassifierTest {
       """,
       Map("TVAL" -> TemplateVal, "PARA" -> Param))
   }
-  
+
   @Test
   def class_params_passed_into_super_constructor_as_expression() {
     checkSymbolClassification("""
@@ -119,7 +119,7 @@ class TemplateValTest extends AbstractSymbolClassifierTest {
       """,
       Map("PARA" -> Param))
   }
-  
+
   @Test
   def self_references_with_ascription() {
     checkSymbolClassification("""

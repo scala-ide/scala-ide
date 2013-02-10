@@ -55,7 +55,7 @@ class StringInterpolationTest extends AbstractSymbolClassifierTest {
           ),
       '@')
   }
-  
+
   @Test
   def all_parts_of_identifiers_in_expression_is_styled {
     checkSymbolInfoClassification("""

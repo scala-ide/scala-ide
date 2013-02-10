@@ -18,7 +18,7 @@ class OpenExternalFile private (file: File) extends Listener with HasLogger {
   import scala.util.control.Exception.catching
 
   def handleEvent(e: Event): Unit = open()
-  
+
   def open(): Unit = {
     val parentLocation = file.getParent
     var fileStore = EFS.getLocalFileSystem().getStore(new Path(parentLocation));
@@ -31,7 +31,7 @@ class OpenExternalFile private (file: File) extends Listener with HasLogger {
       val page = win.getActivePage
 
       catching(classOf[PartInitException]) {
-        // After opening the file, if any change occurs to the file a 
+        // After opening the file, if any change occurs to the file a
         // popup will ask the user to refresh the resource.
         IDE.openInternalEditorOnFileStore(page, fileStore)
       }

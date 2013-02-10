@@ -18,7 +18,7 @@ class Position (
 
   /** Lock used to protect concurrent access to `this` instance.*/
   private val lock: AnyRef = new Object
-  
+
   def shouldStyle = lock.synchronized { deprecated || inInterpolatedString }
 
   override def hashCode(): Int = lock.synchronized { super.hashCode() }

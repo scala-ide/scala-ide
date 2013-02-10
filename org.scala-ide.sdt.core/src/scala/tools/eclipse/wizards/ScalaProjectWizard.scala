@@ -30,7 +30,7 @@ class ScalaProjectWizard extends {
   pageTwo.setTitle("Scala Settings")
   pageTwo.setDescription("Define the Scala build settings.")
 }
-  
+
 class NewScalaProjectWizardPageOne extends NewJavaProjectWizardPageOne {
   override def getDefaultClasspathEntries() : Array[IClasspathEntry] =
     (JavaCore.newContainerEntry(Path.fromPortableString(ScalaPlugin.plugin.scalaLibId)) +=: ArrayBuffer(super.getDefaultClasspathEntries : _*)).toArray
@@ -75,6 +75,6 @@ class NewScalaProjectWizardPageTwo(pageOne : NewJavaProjectWizardPageOne) extend
 object NewScalaProjectWizardPageTwoUtils extends ReflectionUtils {
   val jccpClazz = classOf[JavaCapabilityConfigurationPage]
   val getBuildPathsBlockMethod = getDeclaredMethod(jccpClazz, "getBuildPathsBlock")
-  
+
   def getBuildPathsBlock(jccp : JavaCapabilityConfigurationPage) = getBuildPathsBlockMethod.invoke(jccp).asInstanceOf[BuildPathsBlock]
 }

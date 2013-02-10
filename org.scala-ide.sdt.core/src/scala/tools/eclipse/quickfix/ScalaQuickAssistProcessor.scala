@@ -56,7 +56,7 @@ class ScalaQuickAssistProcessor extends org.eclipse.jdt.ui.text.java.IQuickAssis
         RenameProposal,
         ExtractMethodProposal).par.filter(_.isValidProposal).seq
     } catch {
-      case e: Exception => 
+      case e: Exception =>
         logger.debug("Exception when building quick assist list: " + e.getMessage, e)
         List()
     }

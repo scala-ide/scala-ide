@@ -6,7 +6,7 @@ import org.junit.Test
 
 class CreateMethodTests {
   import QuickFixesTests._
-   
+
     @Test def createMethod {
     withQuickFixes("createmethod/CreateMethod.scala")(
         "Create method 'easy1(String, Int)' in type 'OtherClass'",
@@ -43,5 +43,5 @@ class CreateMethodTests {
         "Create method 'complex6(Any)' in type 'OtherClass'"
     )
   }
-  
+
 }

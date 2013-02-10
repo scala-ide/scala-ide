@@ -30,13 +30,13 @@ trait ScalaJavaMapper extends ScalaAnnotationHelper with SymbolNameUtil with Has
 
   /** Return the Java Element corresponding to the given Scala Symbol, looking in the
    *  given project list
-   * 
+   *
    *  If the symbol exists in several projects, it returns one of them.
    */
   def getJavaElement(sym: Symbol, projects: IJavaProject*): Option[IJavaElement] = {
     assert(sym ne null)
     if (sym == NoSymbol) return None
-    
+
     def matchesMethod(meth: IMethod): Boolean = {
       import Signature._
       askOption { () =>
@@ -64,7 +64,7 @@ trait ScalaJavaMapper extends ScalaAnnotationHelper with SymbolNameUtil with Has
           def isConcreteGetterOrSetter: Boolean = isGetterOrSetter && !sym.isDeferred
           if (sym.isMethod && !isConcreteGetterOrSetter) ownerClass.getMethods.find(matchesMethod)
           else {
-            val fieldName = 
+            val fieldName =
               if(self.nme.isLocalName(sym.name)) self.nme.localToGetter(sym.name.toTermName)
               else sym.name
 
@@ -73,10 +73,10 @@ trait ScalaJavaMapper extends ScalaAnnotationHelper with SymbolNameUtil with Has
         case _ => None
     }
   }
-  
+
   /** Return the Java Element corresponding to the given Scala Symbol, looking in the
    *  all existing Java projects.
-   *  
+   *
    *  If the symbol exists in several projects, it returns one of them.
    */
   def getJavaElement(sym: Symbol): Option[IJavaElement] = {
@@ -91,42 +91,42 @@ trait ScalaJavaMapper extends ScalaAnnotationHelper with SymbolNameUtil with Has
     else
       // protected entities need to be exposed as public to match scala compiler's behavior.
       jdtMods = jdtMods | ClassFileConstants.AccPublic
-    
+
     if(owner.hasFlag(Flags.ABSTRACT) || owner.hasFlag(Flags.DEFERRED))
       jdtMods = jdtMods | ClassFileConstants.AccAbstract
 
     if(owner.isFinal || owner.hasFlag(Flags.MODULE))
       jdtMods = jdtMods | ClassFileConstants.AccFinal
-    
+
     if(owner.isTrait)
       jdtMods = jdtMods | ClassFileConstants.AccInterface
-    
+
     /** Handle Scala's annotations that have to be mapped into Java modifiers */
     def mapScalaAnnotationsIntoJavaModifiers(): Int = {
       var mod = 0
       if(hasTransientAnn(owner)) {
         mod = mod | ClassFileConstants.AccTransient
       }
-      
+
       if(hasVolatileAnn(owner)) {
         mod = mod | ClassFileConstants.AccVolatile
       }
-      
+
       if(hasNativeAnn(owner)) {
         mod = mod | ClassFileConstants.AccNative
       }
-      
+
       if(hasStrictFPAnn(owner)) {
         mod = mod | ClassFileConstants.AccStrictfp
       }
-      
+
       if(hasDeprecatedAnn(owner)) {
         mod = mod | ClassFileConstants.AccDeprecated
       }
-      
+
       mod
     }
-      
+
     jdtMods | mapScalaAnnotationsIntoJavaModifiers()
   }
 
@@ -140,23 +140,23 @@ trait ScalaJavaMapper extends ScalaAnnotationHelper with SymbolNameUtil with Has
     else
       // protected entities need to be exposed as public to match scala compiler's behavior.
       jdtMods = jdtMods | ClassFileConstants.AccPublic
-    
+
     if(owner.hasFlag(Flags.ABSTRACT) || owner.hasFlag(Flags.DEFERRED))
       jdtMods = jdtMods | ClassFileConstants.AccAbstract
 
     if(owner.isFinal || owner.hasFlag(Flags.MODULE))
       jdtMods = jdtMods | ClassFileConstants.AccFinal
-    
+
     if(owner.isTrait)
       jdtMods = jdtMods | ClassFileConstants.AccInterface
-    
+
     jdtMods
   }
 
   /** Returns the fully-qualified name for the passed symbol (it expects the symbol to be a type).*/
   def mapType(s: Symbol): String = mapType(s, javaClassName(_))
 
-  /** Returns the simple name for the passed symbol (it expects the symbol to be a type).*/ 
+  /** Returns the simple name for the passed symbol (it expects the symbol to be a type).*/
   def mapSimpleType(s: Symbol): String = mapType(s, javaSimpleName(_))
 
   private def mapType(symbolType: Symbol, symbolType2StringName: Symbol => String): String = {
@@ -198,8 +198,8 @@ trait ScalaJavaMapper extends ScalaAnnotationHelper with SymbolNameUtil with Has
         base
     }
   }
-  
-  
+
+
   def mapParamTypePackageName(t : Type) : String = {
     if (t.typeSymbolDirect.isTypeParameter)
       ""
@@ -218,7 +218,7 @@ trait ScalaJavaMapper extends ScalaAnnotationHelper with SymbolNameUtil with Has
       case _ => false
     }
   }
-  
+
   def mapParamTypeName(t : Type) : String = {
     if (t.typeSymbolDirect.isTypeParameter)
       t.typeSymbolDirect.name.toString
@@ -231,7 +231,7 @@ trait ScalaJavaMapper extends ScalaAnnotationHelper with SymbolNameUtil with Has
         mapTypeName(t.typeSymbol)
     }
   }
-  
+
   def mapParamTypeSignature(t : Type) : String = {
     val objectSig = "Ljava.lang.Object;"
     if (t.typeSymbolDirect.isTypeParameter)
@@ -285,15 +285,15 @@ trait ScalaJavaMapper extends ScalaAnnotationHelper with SymbolNameUtil with Has
       if (sym == NoSymbol || sym.owner.hasFlag(Flags.PACKAGE))
         Nil
       else {
-        val owner = sym.owner 
+        val owner = sym.owner
         val name0 = owner.simpleName.toString
         val name = if (owner.isModuleClass) name0+"$" else name0
         name :: enclosing(owner)
       }
-        
+
     enclosing(sym).reverse
   }
-  
+
   /** Return the enclosing package. Correctly handle the empty package, by returning
    *  the empty string, instead of <empty>.
    */

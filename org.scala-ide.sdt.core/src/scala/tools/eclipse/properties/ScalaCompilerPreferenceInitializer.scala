@@ -17,15 +17,15 @@ import scala.tools.eclipse.util.Utils
  * Preferences to their default values.
  */
 class ScalaCompilerPreferenceInitializer extends AbstractPreferenceInitializer {
-  
+
   /** Actually initializes preferences */
   def initializeDefaultPreferences() : Unit = {
     Utils.tryExecute {
       val node = new DefaultScope().getNode(ScalaPlugin.plugin.pluginId)
       val store = ScalaPlugin.plugin.getPluginPreferences
-      
+
       def defaultPreference(s: Settings#Setting) {
-      	val preferenceName = convertNameToProperty(s.name)
+        val preferenceName = convertNameToProperty(s.name)
         val default = s match {
             case bs : Settings#BooleanSetting => "false"
             case is : Settings#IntSetting => is.default.toString

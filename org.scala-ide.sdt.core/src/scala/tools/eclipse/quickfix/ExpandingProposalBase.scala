@@ -12,7 +12,7 @@ import org.eclipse.jface.text.Position
 import scala.util.matching.Regex
 import scala.tools.eclipse.semantichighlighting.implicits.ImplicitHighlightingPresenter
 
-class ExpandingProposalBase(msg: String, displayString: String, pos: Position) 
+class ExpandingProposalBase(msg: String, displayString: String, pos: Position)
   extends BasicCompletionProposal(relevance = 100, displayString = displayString + msg) {
 
   /**

@@ -40,7 +40,7 @@ case class CreateMethodProposal(fullyQualifiedEnclosingType: Option[String], met
       }).flatten.getOrElse("Any")
     })("Any")
   }
-  
+
   private val (targetSourceFile, className, targetIsOtherClass) = fullyQualifiedEnclosingType match {
     case Some(otherClass) =>
       val info = new MissingMemberInfo(compilationUnit, otherClass, method, pos, sourceAst.get)
@@ -63,7 +63,7 @@ case class CreateMethodProposal(fullyQualifiedEnclosingType: Option[String], met
     }
     case None => (Nil, None)
   }
-  private val parametersWithSimpleName = for (parameterList <- rawParameters) 
+  private val parametersWithSimpleName = for (parameterList <- rawParameters)
     yield for ((name, tpe) <- parameterList) yield
       (name, tpe.substring(tpe.lastIndexOf('.') + 1))
   private val parameters = ParameterListUniquifier.uniquifyParameterNames(parametersWithSimpleName)

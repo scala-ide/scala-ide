@@ -6,5 +6,4 @@ object Loggable {
   trait A {
     class B
   }
-}  
- 
+}

@@ -26,7 +26,7 @@ import scala.tools.eclipse.buildmanager.sbtintegration._
 object SbtBuilderTest extends TestProjectSetup("builder") with CustomAssertion
 object depProject extends TestProjectSetup("builder-sub")
 object closedProject extends TestProjectSetup("closed-project-test") {
-  
+
   def closeProject() {
     project.underlying.close(null)
   }
@@ -145,7 +145,7 @@ class SbtBuilderTest {
     val Seq(prjClient, prjLib) = createProjects("client", "library")
     val packLib = createSourcePackage("scala")(prjLib)
     val baseRawClasspath= prjClient.javaProject.getRawClasspath()
-    
+
     /* The classpath, with the eclipse scala container removed. */
     def cleanRawClasspath = for (
       classpathEntry <- baseRawClasspath if classpathEntry.getPath().toPortableString() != "org.scala-ide.sdt.launching.SCALA_CONTAINER"
@@ -158,13 +158,13 @@ class SbtBuilderTest {
     prjLib.underlying.build(IncrementalProjectBuilder.FULL_BUILD, new NullProgressMonitor)
 
     Assert.assertTrue("Found Scala library", prjClient.scalaClasspath.scalaLib.isDefined)
-    
+
     val expectedLib = plugin.workspaceRoot.findMember("/library/bin").getLocation
     Assert.assertEquals("Unexpected Scala lib", expectedLib, prjClient.scalaClasspath.scalaLib.get)
     deleteProjects(prjClient, prjLib)
   }
 
-  @Test def checkClosedProject() { 
+  @Test def checkClosedProject() {
     closedProject.closeProject()
     Assert.assertEquals("exportedDependencies", Nil, closedProject.project.exportedDependencies)
     Assert.assertEquals("sourceFolders", Nil, closedProject.project.sourceFolders)

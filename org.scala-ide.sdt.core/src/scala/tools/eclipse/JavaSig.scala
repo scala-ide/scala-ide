@@ -8,41 +8,41 @@ trait JavaSig { pc: ScalaPresentationCompiler =>
   /*
    * An utility class that allows to extract information from the `symbol`'s java signature.
    * If the passed `symbol` does not need a Java signature, empty values are returned.
-   * 
+   *
    * @example Given the following method declaration:
    * {{{ def foo[T <: Foo, U <: ArrayList[_ >: Class[T]]](u: U, t: T):T  = t }}}
-   * 
+   *
    * The following are the values computed by JavaSignatureConverter:
    * {{{
-   * 	sig <- <T:LFoo;U:Ljava.util.ArrayList<-Ljava.lang.Class<TT;>;>;>(TU;TT;)TT;
-   * 	paramsCount <- 2
-   * 	paramsType <- [[U], [T]]
-   * 	paramsTypeSig <-  [TU;, TT;]
-   * 	typeVars <- [T, U]
-   * 	typeParamsSig <- [T:LFoo;, U:Ljava.util.ArrayList<-Ljava.lang.Class<TT;>;>;]
-   * 	typeParamsBounds <- [[LFoo;], [Ljava.util.ArrayList<-Ljava.lang.Class<TT;>;>;]]
-   * 	typeParamsBoundsReadable <- [[Foo], [java.util.ArrayList<? super java.lang.Class<T>>]]
-   * 	returnTypeSig <- TT;
-   * 	returnType <- T
-   * 	exceptionTypes <- []
+   *   sig <- <T:LFoo;U:Ljava.util.ArrayList<-Ljava.lang.Class<TT;>;>;>(TU;TT;)TT;
+   *   paramsCount <- 2
+   *   paramsType <- [[U], [T]]
+   *   paramsTypeSig <-  [TU;, TT;]
+   *   typeVars <- [T, U]
+   *   typeParamsSig <- [T:LFoo;, U:Ljava.util.ArrayList<-Ljava.lang.Class<TT;>;>;]
+   *   typeParamsBounds <- [[LFoo;], [Ljava.util.ArrayList<-Ljava.lang.Class<TT;>;>;]]
+   *   typeParamsBoundsReadable <- [[Foo], [java.util.ArrayList<? super java.lang.Class<T>>]]
+   *   returnTypeSig <- TT;
+   *   returnType <- T
+   *   exceptionTypes <- []
    * }}}
    *
    * @example Given the following method declaration:
    * {{{ def foo[U <: List[Array[String]]](u: U, s: Int):U  = u }}}
-   * 
+   *
    * The following are the values computed by JavaSignatureConverter:
    * {{{
-   * 	sig <- <U:Lscala.collection.immutable.List<[Ljava.lang.String;>;>(TU;I)TU;
-   * 	paramsCount <- 2
-   * 	paramsType <- [[U], [i, n, t]]
-   * 	paramsTypeSig <- [TU;, I]
-   * 	typeVars <- [U]
-   * 	typeParamsSig <- [U:Lscala.collection.immutable.List<[Ljava.lang.String;>;]
-   * 	typeParamsBounds <- [[Lscala.collection.immutable.List<[Ljava.lang.String;>;]]
-   * 	typeParamsBoundsReadable <- [[scala.collection.immutable.List<java.lang.String[]>]]
-   * 	returnTypeSig <- TU;
-   * 	returnType <- U
-   * 	expceptionTypes <- []
+   *   sig <- <U:Lscala.collection.immutable.List<[Ljava.lang.String;>;>(TU;I)TU;
+   *   paramsCount <- 2
+   *   paramsType <- [[U], [i, n, t]]
+   *   paramsTypeSig <- [TU;, I]
+   *   typeVars <- [U]
+   *   typeParamsSig <- [U:Lscala.collection.immutable.List<[Ljava.lang.String;>;]
+   *   typeParamsBounds <- [[Lscala.collection.immutable.List<[Ljava.lang.String;>;]]
+   *   typeParamsBoundsReadable <- [[scala.collection.immutable.List<java.lang.String[]>]]
+   *   returnTypeSig <- TU;
+   *   returnType <- U
+   *   expceptionTypes <- []
    * }}}
    */
   class JavaSignature(symbol: Symbol) {

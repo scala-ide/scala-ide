@@ -12,12 +12,12 @@ import scala.tools.eclipse.logging.HasLogger
 import scala.tools.refactoring.implementations.AddImportStatement
 
 case class ImportCompletionProposal(val importName: String) extends IJavaCompletionProposal with HasLogger {
-  
+
   /**
    * Fixed relevance at 100 for now.
    */
   def getRelevance = 100
-  
+
   /**
    * Inserts the proposed completion into the given document.
    *
@@ -34,18 +34,18 @@ case class ImportCompletionProposal(val importName: String) extends IJavaComplet
       }
     }
   }
-  
+
   /**
    * Inserts the proposed completion into the given document.
    *
    * @param document the document into which to insert the proposed completion
    */
   private def applyByASTTransformation(document: IDocument) {
-    
+
     EditorHelpers.withScalaFileAndSelection { (scalaSourceFile, textSelection) =>
-    
+
       val changes = scalaSourceFile.withSourceFile { (sourceFile, compiler) =>
-       
+
          val r = new compiler.Response[compiler.Tree]
          compiler.askLoadedTyped(sourceFile, r)
          (r.get match {
@@ -58,15 +58,15 @@ case class ImportCompletionProposal(val importName: String) extends IJavaComplet
                refactoring.addImport(scalaSourceFile.file, importName)
              }
          }) getOrElse Nil
-        
+
       }(Nil)
-      
+
       EditorHelpers.applyChangesToFileWhileKeepingSelection(document, textSelection, scalaSourceFile.file, changes)
-      
+
       None
     }
   }
-  
+
   /**
    * Inserts the proposed completion into the given document. (text based transformation)
    *
@@ -79,14 +79,14 @@ case class ImportCompletionProposal(val importName: String) extends IJavaComplet
     val text = document.get
     var insertIndex = 0
     val packageIndex = text.indexOf("package", insertIndex)
-    var preInsert = "" 
-    
+    var preInsert = ""
+
     if (packageIndex != -1) {
       // Insert on the line after the last package declaration, with a line of whitespace first if needed
       var nextLineIndex = text.indexOf(lineDelimiter, packageIndex) + 1
       var nextLineEndIndex = text.indexOf(lineDelimiter, nextLineIndex)
       var nextLine = text.substring(nextLineIndex, nextLineEndIndex).trim()
-      
+
       // scan to see if package declaration is not multi-line
       while (nextLine.startsWith("package")) {
         nextLineIndex = text.indexOf(lineDelimiter, nextLineIndex) + 1
@@ -107,11 +107,11 @@ case class ImportCompletionProposal(val importName: String) extends IJavaComplet
       // Insert at the top of the file
       insertIndex = 0
     }
-    
+
     // Insert the import as the third line in the file... RISKY AS HELL :D
     document.replace(insertIndex, 0, preInsert + "import " + importName + lineDelimiter);
   }
-  
+
   /**
    * Returns the new selection after the proposal has been applied to
    * the given document in absolute document coordinates. If it returns
@@ -126,7 +126,7 @@ case class ImportCompletionProposal(val importName: String) extends IJavaComplet
    * @return the new selection in absolute document coordinates
    */
   def getSelection(document: IDocument): Point = null
-  
+
 
   /**
    * Returns optional additional information about the proposal. The additional information will
@@ -139,17 +139,17 @@ case class ImportCompletionProposal(val importName: String) extends IJavaComplet
    * @return the additional information or <code>null</code>
    */
   def getAdditionalProposalInfo(): String = null
-  
+
 
   /**
    * Returns the string to be displayed in the list of completion proposals.
    *
    * @return the string to be displayed
-   * 
+   *
    * @see ICompletionProposalExtension6#getStyledDisplayString()
    */
   def getDisplayString(): String = "Import " + importName
-    
+
 
   /**
    * Returns the image to be displayed in the list of completion proposals.
@@ -159,7 +159,7 @@ case class ImportCompletionProposal(val importName: String) extends IJavaComplet
    */
   def getImage(): Image = JavaUI.getSharedImages().getImage(ISharedImages.IMG_OBJS_IMPDECL)
 
-  
+
   /**
    * Returns optional context information associated with this proposal.
    * The context information will automatically be shown if the proposal

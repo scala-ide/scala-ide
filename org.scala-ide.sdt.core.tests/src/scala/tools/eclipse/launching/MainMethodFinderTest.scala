@@ -44,7 +44,7 @@ class MainMethodFinderTest {
         |}
         |
         |object OuterWithGoodMain {
-        |  def main(args: Array[String]) {} 
+        |  def main(args: Array[String]) {}
         |}
         |
         |class ClassWithGoodMain {

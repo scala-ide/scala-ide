@@ -17,24 +17,24 @@ abstract class ScalaVariable(target: ScalaDebugTarget) extends ScalaDebugElement
 
   // Members declared in org.eclipse.debug.core.model.IVariable
 
-  final override def getValue(): IValue = 
+  final override def getValue(): IValue =
     wrapJDIException("Exception while retrieving variable's value") { doGetValue() }
 
-  final override def getName(): String = 
+  final override def getName(): String =
     wrapJDIException("Exception while retrieving variable's name") { doGetName() }
 
   final override def getReferenceTypeName(): String =
     wrapJDIException("Exception while retrieving variable's reference type name") { doGetReferenceTypeName() }
 
   override def hasValueChanged: Boolean = false // TODO: need real logic
-  
+
   protected def doGetValue(): IValue
   protected def doGetName(): String
   protected def doGetReferenceTypeName(): String
 }
 
 class ScalaThisVariable(underlying: ObjectReference, stackFrame: ScalaStackFrame) extends ScalaVariable(stackFrame.getDebugTarget) {
-  
+
   // Members declared in org.eclipse.debug.core.model.IVariable
 
   override protected def doGetName: String = "this"
@@ -48,7 +48,7 @@ class ScalaLocalVariable(underlying: LocalVariable, stackFrame: ScalaStackFrame)
 
   override protected def doGetName(): String = underlying.name
   override protected def doGetReferenceTypeName(): String = underlying.typeName
-  
+
   // fetching the value for local variables cannot be delayed because the underlying stackframe element may become invalid at any time
   override protected def doGetValue: IValue = ScalaValue(stackFrame.stackFrame.getValue(underlying), getDebugTarget)
 }

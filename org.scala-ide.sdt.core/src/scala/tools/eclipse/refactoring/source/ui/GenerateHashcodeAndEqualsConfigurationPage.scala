@@ -26,7 +26,7 @@ import org.eclipse.swt.widgets.TableItem
 trait GenerateHashcodeAndEqualsConfigurationPageGenerator {
 
   this: ClassParameterDrivenIdeRefactoring =>
-    
+
   import refactoring._
   /**
    * Wizard page for the GenerateHashcodeAndEquals refactoring.
@@ -36,15 +36,15 @@ trait GenerateHashcodeAndEqualsConfigurationPageGenerator {
       selectedParamsObs: List[String] => Unit,
       callSuperObs: Boolean => Unit,
       keepExistingEqualityMethodsObs: Boolean => Unit) extends UserInputWizardPage("Generate hashCode and equals") {
-  
+
     val headerLabelText: String = "Select the class parameters to include in the hashCode() and equals() methods"
-    
+
     def createControl(parent: Composite) {
       initializeDialogUnits(parent)
-      
+
       val composite = new Composite(parent, SWT.NONE)
       composite.setLayout(new GridLayout(2, false))
-      
+
       prepResult.existingEqualityMethods match {
         case Nil => // nothing to do
         case ms => {
@@ -58,65 +58,65 @@ trait GenerateHashcodeAndEqualsConfigurationPageGenerator {
           existingLabel.setText("Found existing " + implStr + " for " + existingMethodNames)
           val existingLabelGridData = new GridData(SWT.LEFT, SWT.CENTER, false, false, 2, 1)
           existingLabel.setLayoutData(existingLabelGridData)
-          
+
           val keepOrReplaceLabel = new Label(composite, SWT.WRAP)
           keepOrReplaceLabel.setText("Do you want to keep or replace the existing " + implStr + "?")
           val keepOrReplaceLabelGridData = new GridData(SWT.LEFT, SWT.CENTER, false, false, 2, 1)
           keepOrReplaceLabel.setLayoutData(keepOrReplaceLabelGridData)
-          
+
           val keepSelectionGroup = new Group(composite, SWT.NONE)
           keepSelectionGroup.setLayout(new FillLayout)
           val keepSelectionGroupGridData = new GridData(SWT.CENTER, SWT.CENTER, true, false, 1, 1)
           keepSelectionGroup.setLayoutData(keepSelectionGroupGridData)
-          
+
           val keepBtn = new Button(keepSelectionGroup, SWT.RADIO)
           keepBtn setText "Keep"
-          
+
           val replaceBtn = new Button(keepSelectionGroup, SWT.RADIO)
           replaceBtn setText "Replace"
-          
+
           keepBtn setSelection true
           keepExistingEqualityMethodsObs(true)
-                      
-          keepBtn addSelectionListener { () => 
+
+          keepBtn addSelectionListener { () =>
             keepBtn setSelection true
             replaceBtn setSelection false
             keepExistingEqualityMethodsObs(true)
           }
-          
+
           replaceBtn setSelection false
           replaceBtn addSelectionListener { () =>
               replaceBtn setSelection true
               keepBtn setSelection false
               keepExistingEqualityMethodsObs(false)
           }
-          
+
         }
       }
-      
+
       val paramSelectionLabel = new Label(composite, SWT.WRAP)
       paramSelectionLabel.setText(headerLabelText)
-      
+
       val paramSelectLabelGridData = new GridData(SWT.LEFT, SWT.CENTER, false, false, 2, 1)
       paramSelectionLabel.setLayoutData(paramSelectLabelGridData)
-      
+
       val paramTable = new Table(composite, SWT.CHECK | SWT.BORDER)
       val paramTableGridData = new GridData(SWT.FILL, SWT.FILL, true, true, 1, 2)
       paramTable.setLayoutData(paramTableGridData)
-      
+
       val tableItems = prepResult.classParams.map { case (param, _) =>
         val tableItem = new TableItem(paramTable, SWT.NONE)
         tableItem.setText(param.nameString)
         tableItem
       }
-      
+
       def updateSelectedParams() {
         val checkedParams = tableItems.filter(_.getChecked).map(_.getText)
         selectedParamsObs(checkedParams)
       }
-      
+
       paramTable addSelectionListener { () => updateSelectedParams() }
-      
+
       val selectAllButton = new Button(composite, SWT.NONE)
       selectAllButton.setText("Select all")
       val selectAllButtonGridData = new GridData(SWT.CENTER, SWT.CENTER, false, false, 1, 1)
@@ -125,7 +125,7 @@ trait GenerateHashcodeAndEqualsConfigurationPageGenerator {
         tableItems.foreach(_.setChecked(true))
         updateSelectedParams()
       }
-      
+
       val deselectAllButton = new Button(composite, SWT.NONE)
       deselectAllButton.setText("Deselect all")
       val deselectAllButtonGridData = new GridData(SWT.CENTER, SWT.CENTER, false, false, 1, 1)
@@ -134,16 +134,16 @@ trait GenerateHashcodeAndEqualsConfigurationPageGenerator {
         tableItems.foreach(_.setChecked(false))
         updateSelectedParams()
       }
-      
+
       val superCallButton = new Button(composite, SWT.CHECK)
       superCallButton.setText("Insert calls to super")
       superCallButton addMouseListener { () => callSuperObs(superCallButton.getSelection) }
-      
+
       val superCallButtonGridData = new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 1, 1)
       superCallButton.setLayoutData(superCallButtonGridData)
-      
+
       setControl(composite)
     }
-    
+
   }
 }
