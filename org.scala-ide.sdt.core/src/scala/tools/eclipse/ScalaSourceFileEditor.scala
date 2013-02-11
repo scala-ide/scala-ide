@@ -325,10 +325,11 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor { sel
       case PreferenceConstants.EDITOR_MARK_OCCURRENCES =>
       // swallow the event. We don't want 'mark occurrences' to be linked to the Java editor preference
       case EditorPreferencePage.P_ENABLE_MARK_OCCURRENCES =>
-        if (event.getNewValue().equals("true")) {
-          installOccurrencesFinder(true)
-        } else {
-          uninstallOccurrencesFinder()
+        (event.getNewValue: Any) match {
+          case true =>
+            installOccurrencesFinder(true)
+          case _ =>
+            uninstallOccurrencesFinder()
         }
       case _ =>
         if (affectsTextPresentation(event)) {
