@@ -27,7 +27,7 @@ import scala.tools.nsc.util.SourceFile
  * name and there are no trees for the getter yet (added by phase lazyvals). We need
  * to return the accessor, who can later be classified as `lazy`.
  */
-trait SafeSymbol extends CompilerAccess with PimpedTrees {
+private[classifier] trait SafeSymbol extends CompilerAccess with PimpedTrees {
 
   val global: ScalaPresentationCompiler
 

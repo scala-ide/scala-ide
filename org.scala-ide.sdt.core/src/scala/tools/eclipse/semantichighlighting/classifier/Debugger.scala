@@ -3,7 +3,7 @@ package scala.tools.eclipse.semantichighlighting.classifier
 /**
  * Debugging info about the symbols
  */
-trait SymbolClassificationDebugger { self: SymbolClassification =>
+private[classifier] trait SymbolClassificationDebugger { self: SymbolClassification =>
 
   import global._
 

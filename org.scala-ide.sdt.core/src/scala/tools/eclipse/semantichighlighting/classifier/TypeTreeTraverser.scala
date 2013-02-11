@@ -3,7 +3,7 @@ package scala.tools.eclipse.semantichighlighting.classifier
 import scala.tools.eclipse.javaelements.ScalaCompilationUnit
 import scala.collection.mutable.ListBuffer
 
-trait TypeTreeTraverser {
+private[classifier] trait TypeTreeTraverser {
   val global: tools.nsc.Global
 
   import global._
