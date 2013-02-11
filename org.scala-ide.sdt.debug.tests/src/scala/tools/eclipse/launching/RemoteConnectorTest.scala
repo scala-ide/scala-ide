@@ -25,6 +25,7 @@ import org.junit.Before
 import org.junit.BeforeClass
 import org.junit.Test
 import scala.tools.eclipse.debug.EclipseDebugEvent
+import org.junit.Ignore
 
 object RemoteConnectorTest extends TestProjectSetup("debug", bundleName = "org.scala-ide.sdt.debug.tests") with ScalaDebugRunningTest {
   import ScalaDebugTestSession._
@@ -149,6 +150,7 @@ object RemoteConnectorTest extends TestProjectSetup("debug", bundleName = "org.s
 /**
  * Test using the Scala remote connectors to debug applications
  */
+@Ignore("Enable it once #1001464 is fixed")
 class RemoteConnectorTest {
 
   import RemoteConnectorTest._
