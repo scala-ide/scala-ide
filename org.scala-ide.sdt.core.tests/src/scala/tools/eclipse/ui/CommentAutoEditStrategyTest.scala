@@ -533,4 +533,21 @@ class CommentAutoEditStrategyTest {
     test(input, expectedOutput)
   }
 
+  @Test
+  def docComment_close_before_code_blocks() {
+    val input =
+      """
+      /**^
+      /** {{{ }}} */
+      """
+    val expectedOutput =
+      """
+      /**
+       * ^
+       */
+      /** {{{ }}} */
+      """
+    test(input, expectedOutput)
+  }
+
 }
