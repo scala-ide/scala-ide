@@ -11,6 +11,7 @@ import org.eclipse.ui.menus.UIElement
 import org.eclipse.jface.util.PropertyChangeEvent
 import scala.tools.eclipse.semantichighlighting.implicits.PropertyChangeListenerProxy
 import org.eclipse.core.commands.AbstractHandler
+import scala.tools.eclipse.util.SWTUtils
 
 /** Base handler for a toggle command linked to a platform preference.
  *
@@ -18,8 +19,8 @@ import org.eclipse.core.commands.AbstractHandler
  */
 abstract class AbstractToggleHandler(commandId: String, preferenceId: String) extends AbstractHandler with IElementUpdater {
 
- private def pluginStore: IPreferenceStore = ScalaPlugin.plugin.getPreferenceStore
- 
+  private def pluginStore: IPreferenceStore = ScalaPlugin.plugin.getPreferenceStore
+
   /** Call when the button is push.
    */
   def execute(event: ExecutionEvent): Object = {
@@ -42,21 +43,20 @@ abstract class AbstractToggleHandler(commandId: String, preferenceId: String) ex
 
   private def toggle(): Boolean = {
     val newValue = !pluginStore.getBoolean(preferenceId)
-    pluginStore.setValue(preferenceId, newValue.toString)
+    pluginStore.setValue(preferenceId, newValue)
     newValue
+  }
+
+  // listen change on the property regardless the source of the change (preferences page, widget linked to the handler)
+  private val _listener = SWTUtils.fnToPropertyChangeListener {
+    event =>
+      if (event.getProperty() == preferenceId) {
+        refresh()
+      }
   }
 
   PropertyChangeListenerProxy(_listener, pluginStore).autoRegister()
   
-  // listen change on the property regardless the source of the change (preferences page, widget linked to the handler)
-  private val _listener = new IPropertyChangeListener {
-    def propertyChange(event: PropertyChangeEvent) {
-      if (event.getProperty() == preferenceId) {
-        refresh()
-      }
-    }
-  }
-
   private def refresh() {
     val service = PlatformUI.getWorkbench().getService(classOf[ICommandService]).asInstanceOf[ICommandService]
     service.refreshElements(commandId, null)
