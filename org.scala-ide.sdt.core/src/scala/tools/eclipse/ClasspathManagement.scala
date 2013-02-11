@@ -75,22 +75,32 @@ case class ScalaClasspath(val jdkPaths: Seq[IPath], // JDK classpath
  */
 case class ScalaLibrary(location: IPath, version: Option[String], isProject: Boolean)
 
-/** Companion object with constants and helper functions.
+/** Extractor which return the Scala version of a jar, if it is *not* compatible with the version
+ *  of Scala the platform is running on.
  */
-object ClasspathManagement {
-  val crossCompiledRegex = """.*_(2\.\d+(\.\d*)?)(-.*)?.jar""".r
-
-  val minimalVersionChecked = new Version(2, 8, 0)
-
-  /** Checks if the given version is compatible with the current Scala version.
+object IncompatibleVersion {
+  
+  private val CrossCompiledRegex = """.*_(2\.\d+(\.\d*)?)(-.*)?.jar""".r
+      
+  private val minimalVersionChecked = new Version(2, 8, 0)
+  
+  /** Checks if the version extracted by the regex is compatible with the current Scala version.
    *  Checks major.minor for version >= 2.8.0.
    */
-  def isCompatibleVersion(version: String) = {
+  private def isCompatibleVersion(version: String) = {
     val osgiVersion = new Version(version)
-
+    
     (minimalVersionChecked.compareTo(osgiVersion) > 0) || plugin.isCompatibleVersion(Some(osgiVersion.toString()))
   }
-
+  
+  def unapply(fileName: String): Option[String] = {
+    fileName match {
+      case CrossCompiledRegex(version, _, _) if !isCompatibleVersion(version) =>
+        Some(version)
+      case _ =>
+        None
+    }
+  }
 }
 
 /** Scala project classpath management. This class is responsible for breaking down the classpath in
@@ -98,8 +108,6 @@ object ClasspathManagement {
  *  manages the classpath error markers for the given Scala project.
  */
 trait ClasspathManagement extends HasLogger { self: ScalaProject =>
-
-  import ClasspathManagement._
 
   /** Return the Scala classpath breakdown for the managed project. */
   def scalaClasspath: ScalaClasspath = {
@@ -411,7 +419,7 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
 
     for (entry <- entries) {
       entry.lastSegment() match {
-        case crossCompiledRegex(version, _, _) if !isCompatibleVersion(version) =>
+        case IncompatibleVersion(version) =>
           errors += ((IMarker.SEVERITY_ERROR, "%s is cross-compiled with an incompatible version of Scala (%s). In case of errorneous report, this check can be disabled in the compiler preference page.".format(entry.lastSegment, version)))
         case _ =>
           // ignore libraries that aren't cross compiled/are compatible
