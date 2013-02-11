@@ -2,7 +2,7 @@
 <feature
       id="org.scala-ide.sdt.weaving.feature"
       label="JDT Weaving for Scala"
-      version="3.0.0.qualifier"
+      version="4.0.0.qualifier"
       provider-name="scala-ide.org">
 
    <description>
