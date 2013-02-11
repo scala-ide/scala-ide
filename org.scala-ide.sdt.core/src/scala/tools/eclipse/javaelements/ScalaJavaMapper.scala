@@ -148,24 +148,25 @@ trait ScalaJavaMapper extends ScalaAnnotationHelper with SymbolNameUtil with Has
   /** Returns the simple name for the passed symbol (it expects the symbol to be a type).*/ 
   def mapSimpleType(s: Symbol): String = mapType(s, javaSimpleName(_))
 
-  private def mapType(symbolType: Symbol, symbolType2StringName: Symbol => String) : String = {
+  private def mapType(symbolType: Symbol, symbolType2StringName: Symbol => String) : String = askOption { () =>
     val normalizedSymbol = 
       if(symbolType == null || symbolType == NoSymbol || symbolType.isRefinementClass || symbolType.owner.isRefinementClass || 
          symbolType == definitions.AnyRefClass || symbolType == definitions.AnyClass) 
         definitions.ObjectClass
       else symbolType
-    normalizedSymbol match {
-      case definitions.UnitClass    => "void"
-      case definitions.BooleanClass => "boolean"
-      case definitions.ByteClass    => "byte"
-      case definitions.ShortClass   => "short"
-      case definitions.IntClass     => "int"
-      case definitions.LongClass    => "long"
-      case definitions.FloatClass   => "float"
-      case definitions.DoubleClass  => "double"
-      case n => symbolType2StringName(n)
-    }
-  }
+
+      normalizedSymbol match {
+        case definitions.UnitClass    => "void"
+        case definitions.BooleanClass => "boolean"
+        case definitions.ByteClass    => "byte"
+        case definitions.ShortClass   => "short"
+        case definitions.IntClass     => "int"
+        case definitions.LongClass    => "long"
+        case definitions.FloatClass   => "float"
+        case definitions.DoubleClass  => "double"
+        case n                        => symbolType2StringName(n)
+      }
+    } getOrElse("unknown")
 
   /** Map a Scala `Type` that '''does not take type parameters''' into its
    *  Java representation.
