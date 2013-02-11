@@ -133,6 +133,14 @@
           </execution>
         </executions>
         <configuration>
+          <args>
+            <arg>-deprecation</arg>
+            <arg>-feature</arg>
+            <arg>-unchecked</arg>
+            <arg>-Xlint</arg>
+            <arg>-Xlog-reflective-calls</arg>
+            <arg>-Ywarn-adapted-args</arg>
+          </args>
           <jvmArgs>
             <jvmArg>-Xms512m</jvmArg>
             <jvmArg>-Xmx1024m</jvmArg>
