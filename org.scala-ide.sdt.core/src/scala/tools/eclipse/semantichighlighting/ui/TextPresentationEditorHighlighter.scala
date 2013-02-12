@@ -23,11 +23,13 @@ import org.eclipse.jface.util.PropertyChangeEvent
 import org.eclipse.swt.custom.StyleRange
 
 /** This class is responsible of:
-  * - Triggering the semantic highlighting reconciler job as soon as the [[org.eclipse.jdt.internal.ui.text.JavaReconciler]]
-  * has finished reconciling the compilation unit opened in the `editor`.
-  * - Updating the editor's presentation with the up-to-date styles.
+ *  
+  * - Triggering the semantic highlighting job as soon as the [[org.eclipse.jdt.internal.ui.text.JavaReconciler]]
+  * has finished reconciling the opened compilation unit.
+  * 
+  * - Updating the editor's text presentation with the up-to-date semantic highlighting styles.
   *
-  * @note This class assumes to be accessed always within the UI Thread.
+  * @note All accesses to this class are confined to the UI Thread.
   */
 private class TextPresentationEditorHighlighter(editor: ScalaSourceFileEditor, preferences: Preferences) extends TextPresentationHighlighter {
   import TextPresentationEditorHighlighter._
@@ -35,13 +37,13 @@ private class TextPresentationEditorHighlighter(editor: ScalaSourceFileEditor, p
   @volatile private var highlightingOnReconciliationListener: IJavaReconcilingListener = _
   @volatile private var textPresentationChangeListener: ApplyHighlightingTextPresentationChanges = _
 
-  override def initialize(reconciler: Job, positionsTracker: PositionsTracker): Unit = {
-    highlightingOnReconciliationListener = new PerformSemanticHighlightingOnReconcilation(reconciler)
-    textPresentationChangeListener = new ApplyHighlightingTextPresentationChanges(reconciler, positionsTracker, preferences)
+  override def initialize(semanticHighlightingJob: Job, positionsTracker: PositionsTracker): Unit = {
+    highlightingOnReconciliationListener = new PerformSemanticHighlightingOnReconcilation(semanticHighlightingJob)
+    textPresentationChangeListener = new ApplyHighlightingTextPresentationChanges(semanticHighlightingJob, positionsTracker, preferences)
 
     Option(preferences.store) foreach (_.addPropertyChangeListener(textPresentationChangeListener))
     Option(editor) foreach (_.addReconcilingListener(highlightingOnReconciliationListener))
-    Option(sourceViewer) foreach (_.prependTextPresentationListener(textPresentationChangeListener))
+    Option(sourceViewer) foreach (_.addTextPresentationListener(textPresentationChangeListener))
   }
 
   override def dispose(): Unit = {
@@ -72,20 +74,20 @@ object TextPresentationEditorHighlighter {
 
   def apply(editor: ScalaSourceFileEditor, preferences: Preferences): TextPresentationHighlighter = new TextPresentationEditorHighlighter(editor, preferences)
 
-  private class PerformSemanticHighlightingOnReconcilation(reconciler: Job) extends IJavaReconcilingListener {
+  private class PerformSemanticHighlightingOnReconcilation(semanticHighlightingJob: Job) extends IJavaReconcilingListener {
     override def aboutToBeReconciled(): Unit = ()
     override def reconciled(ast: CompilationUnit, forced: Boolean, progressMonitor: IProgressMonitor): Unit = {
-      /* There is no need to call `reconciler.cancel()` here because in the document we register a listener that
-       * already cancels the current reconciler run whenever the document is about to be changed. And `this` 
-       * reconciling listener always gets executed '''after''' the aforementioned document listener (check 
+      /* There is no need to call `semanticHighlightingJob.cancel()` here because the document has a listener that
+       * already cancels the ongoing semantic highlighting job whenever the document is about to be changed. And `this` 
+       * reconciling listener always gets executed '''after''' the aforementioned listener (check 
        * [[scala.tools.eclipse.semantichighlighting.Presenter$DocumentContentListener]] for more details).
        * 
-       * Furthermore, a new semantic highlighting reconciler run is only scheduled if the current reconciling was
-       * not cancelled. If it was cancelled, this usually means that the editor was closed, or the document was change.
+       * Furthermore, a new semantic highlighting job run is only scheduled if the ongoing reconciliation has not been 
+       * cancelled. If it was cancelled, this usually means that the editor was closed, or the document was change.
        * In the editor was closed, there is clearly no need for reconciling. While, if the document changed, then the 
        * compilation unit will be soon reconciled again.
        */
-      if (!progressMonitor.isCanceled()) reconciler.schedule()
+      if (!progressMonitor.isCanceled()) semanticHighlightingJob.schedule()
     }
   }
 
@@ -93,7 +95,7 @@ object TextPresentationEditorHighlighter {
     *
     * @note Mind that the implementation needs to be blazing fast because `applyTextPresentation` is called at '''every'''
     * keystroke (and, often, more than once). If it takes more than a few milliseconds to execute, users will perceive
-    * the slowdown when typing.
+    * the slow-down when typing.
     *
     * @param positionsTracker Holds the semantic positions that needs to be colored in the editor.
     * @param preferences      The user's preferences.
@@ -121,11 +123,11 @@ object TextPresentationEditorHighlighter {
 
       val positions = positionsTracker.positionsInRegion(damagedRegion)
       val styles: Array[StyleRange] = {
-        (for {
-          pos <- positions
-          style = semanticCategory2style(pos.kind)
-          if style.enabled
-        } yield style.style(pos))(collection.breakOut)
+        for {
+          position <- positions
+          style = semanticCategory2style(position.kind)
+          if style.enabled && !position.isDeleted()
+        } yield style.style(position)
       }
 
       textPresentation.replaceStyleRanges(styles)

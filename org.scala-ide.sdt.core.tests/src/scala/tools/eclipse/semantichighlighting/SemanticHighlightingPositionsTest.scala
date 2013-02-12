@@ -1,34 +1,32 @@
 package scala.tools.eclipse.semantichighlighting
 
-import scala.collection.immutable
 import scala.tools.eclipse.EclipseUserSimulator
-import scala.tools.eclipse.InteractiveCompilationUnit
 import scala.tools.eclipse.ScalaPlugin
 import scala.tools.eclipse.ScalaProject
 import scala.tools.eclipse.javaelements.ScalaCompilationUnit
+import scala.tools.eclipse.jface.text.EmptyRegion
 import scala.tools.eclipse.properties.syntaxcolouring.ScalaSyntaxClasses
-import scala.tools.eclipse.semantichighlighting.classifier.SymbolInfo
+import scala.tools.eclipse.semantichighlighting.classifier.SymbolTypes
 import scala.tools.eclipse.ui.InteractiveCompilationUnitEditor
+import scala.tools.eclipse.util.CurrentThread
 import scala.tools.eclipse.util.EclipseUtils
 import scala.util.matching.Regex
 import scala.util.matching.Regex.Match
+
 import org.eclipse.core.internal.filebuffers.SynchronizableDocument
-import org.eclipse.core.runtime.IStatus
 import org.eclipse.core.runtime.IProgressMonitor
+import org.eclipse.core.runtime.IStatus
 import org.eclipse.core.runtime.NullProgressMonitor
-import org.eclipse.core.runtime.Status
 import org.eclipse.core.runtime.jobs.Job
 import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.IRegion
+import org.eclipse.jface.text.Region
 import org.eclipse.jface.text.source.ISourceViewer
 import org.junit.{ Before, Test }
 import org.junit.After
 import org.junit.Assert
 import org.mockito.Mockito._
-import scala.tools.eclipse.util.CurrentThread
-import scala.tools.eclipse.semantichighlighting.classifier.SymbolTypes
-import org.eclipse.jface.text.Region
 
 class SemanticHighlightingPositionsTest {
   import SemanticHighlightingPositionsTest._
@@ -53,6 +51,7 @@ class SemanticHighlightingPositionsTest {
 
   private var testCode: String = _
   private var unit: ScalaCompilationUnit = _
+  private var compilationUnitEditor: InteractiveCompilationUnitEditor = mock(classOf[InteractiveCompilationUnitEditor])
 
   @Before
   def createProject() {
@@ -69,7 +68,7 @@ class SemanticHighlightingPositionsTest {
   @Before
   def setupMocks() {
     sourceView = mock(classOf[ISourceViewer])
-    document = mock(classOf[IDocument])
+    document = new SynchronizableDocument
     when(sourceView.getDocument()).thenReturn(document)
   }
 
@@ -84,25 +83,41 @@ class SemanticHighlightingPositionsTest {
     testCode = code.stripMargin
     val emptyPkg = simulator.createPackage("")
     unit = simulator.createCompilationUnit(emptyPkg, "A.scala", testCode).asInstanceOf[ScalaCompilationUnit]
+    when(compilationUnitEditor.getInteractiveCompilationUnit).thenReturn(unit)
     document.set(testCode)
   }
 
   private def createSemanticHighlightingPresenter(): Unit = {
     editor = TextPresentationStub(sourceView)
-    presenter = new Presenter(unit, editor, preferences, CurrentThread)
+    presenter = new Presenter(compilationUnitEditor, editor, preferences, CurrentThread)
     presenter.initialize(forceRefresh = false)
   }
 
   private def positionsInRegion(region: Region): List[Position] = {
-    val positions = editor.positionsTracker.positionsInRegion(region)
-    // We clone the `highlightedPositions` because the semantic highlighting component works by 
-    // performing side-effect on the document's positions each time the reconciler is triggered.
-    positions.map(pos => new Position(pos.getOffset, pos.getLength, pos.kind, pos.deprecated))
+    val positions = editor.positionsTracker.positionsInRegion(region).filterNot(_.isDeleted())
+    // We clone the `positions` because the semantic highlighting component works by performing side-effects 
+    // on the existing positions. And, the `runTest`, expects the returned positions to not change.   
+    positions.map(pos => new Position(pos.getOffset, pos.getLength, pos.kind, pos.deprecated)).toList
   }
 
   private def findAllMarkersIn(code: String): List[Match] =
     MarkerRegex.findAllIn(code).matchData.toList
 
+  /** Test that semantic highlighting positions are correctly created for the passed `code` before
+    * and after performing the `edit`. It also checks that the damaged region caused by the `edit`
+    * is the smallest contiguous region that includes all positions affected by the `edit`.
+    *
+    * The passed `code` should contain at least one, and at most two, `Marker`.
+    *
+    * - One `Marker`: the new text carried by the `edit` should replace the `Marker` in
+    *                the passed `code`.
+    *
+    * - Two `Marker`'s: the new text carried by the `edit` should replace the whole text contained
+    *                  within the two `Marker`s in the passed `code`.
+    *
+    * @param edit The edit action to perform on the passed `code`.
+    * @param code The test code.
+    */
   private def runTest(edit: Edit)(code: String): Unit = {
     setTestCode(code)
 
@@ -135,8 +150,13 @@ class SemanticHighlightingPositionsTest {
       sorted
     }
 
+    def editTestCode(offset: Int, length: Int, newText: String): Unit = {
+      document.replace(start, length, edit.newText) // triggers the IUpdatePosition listener
+      unit.getBuffer().replace(start, length, edit.newText) // needed by the semantic highlighting reconciler
+    }
+
     // perform edit
-    unit.getBuffer().replace(start, length, edit.newText)
+    editTestCode(start, length, edit.newText)
 
     // checks edit's postcondition
     val currentTestCode = unit.getContents.mkString
@@ -146,8 +166,13 @@ class SemanticHighlightingPositionsTest {
     // This will trigger semantic highlighting computation, which in turn will update the document's positions (sequential execution!) 
     editor.reconcileNow()
 
+    val newPositions = positionsInRegion(new Region(start, edit.newText.length()))
+    val affectedRegion = PositionsChange(newPositions, Nil).affectedRegion()
+
     val highlightedAfterEdition = positionsInRegion(new Region(0, currentTestCode.length))
 
+    Assert.assertEquals("Wrong start of damaged region", affectedRegion.getOffset(), editor.damagedRegion.getOffset())
+    Assert.assertEquals("Wrong length of damaged region", affectedRegion.getLength(), editor.damagedRegion.getLength())
     Assert.assertEquals(expectedHighlightedPositionsAfterEdition.size, highlightedAfterEdition.size)
     Assert.assertEquals(expectedHighlightedPositionsAfterEdition, highlightedAfterEdition)
   }
@@ -199,7 +224,6 @@ class SemanticHighlightingPositionsTest {
         |}
       """
     }
-
   }
 
   @Test
@@ -214,6 +238,18 @@ class SemanticHighlightingPositionsTest {
       """
     }
   }
+
+  @Test
+  def correctly_compute_damagedRegion_whenDeletingText() {
+    runTest(RemoveText) {
+      """
+        |object A {
+        |  /*^*/def f = 0
+        |  /*^*/class C
+        |}
+      """
+    }
+  }
 }
 
 object SemanticHighlightingPositionsTest {
@@ -221,6 +257,7 @@ object SemanticHighlightingPositionsTest {
   class TextPresentationStub(override val sourceViewer: ISourceViewer) extends TextPresentationHighlighter {
     @volatile private var reconciler: Job = _
     @volatile var positionsTracker: PositionsTracker = _
+    @volatile var damagedRegion: IRegion = _
 
     override def initialize(reconciler: Job, positionsTracker: PositionsTracker): Unit = {
       this.reconciler = reconciler
@@ -231,11 +268,12 @@ object SemanticHighlightingPositionsTest {
     override def dispose(): Unit = ()
 
     def reconcileNow(): Unit = {
+      damagedRegion = EmptyRegion
       // `Job.run` is protected, but when we subclass it in `Presenter$Reconciler` we make the `run` method public, which is really useful for running the reconciler within the same thread of the test.
       reconciler.asInstanceOf[{ def run(monitor: IProgressMonitor): IStatus }].run(new NullProgressMonitor)
     }
 
-    override def updateTextPresentation(damage: IRegion): Unit = ()
+    override def updateTextPresentation(damage: IRegion): Unit = damagedRegion = damage
   }
 
   object TextPresentationStub {

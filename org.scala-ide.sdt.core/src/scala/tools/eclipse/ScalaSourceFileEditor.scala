@@ -76,6 +76,7 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor { sel
   private val preferenceListener: IPropertyChangeListener = handlePreferenceStoreChanged _
   private val reconcilingListeners: ReconcilingListeners = new ScalaSourceFileEditor.ReconcilingListeners
 
+  @volatile
   private var semanticHighlightingPresenter: semantichighlighting.Presenter = _
   private def semanticHighlightingPreferences = semantichighlighting.Preferences(scalaPrefStore)
   
@@ -154,7 +155,7 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor { sel
   protected def installScalaSemanticHighlighting(forceRefresh: Boolean): Unit = {
     if(semanticHighlightingPresenter == null) {
       val presentationHighlighter = TextPresentationEditorHighlighter(this, semanticHighlightingPreferences)
-      semanticHighlightingPresenter = new Presenter(getInteractiveCompilationUnit, presentationHighlighter, semanticHighlightingPreferences, DisplayThread)
+      semanticHighlightingPresenter = new Presenter(this, presentationHighlighter, semanticHighlightingPreferences, DisplayThread)
       semanticHighlightingPresenter.initialize(forceRefresh)
     }  
   }
