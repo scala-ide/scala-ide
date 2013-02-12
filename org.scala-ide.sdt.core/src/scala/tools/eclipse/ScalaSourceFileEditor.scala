@@ -65,6 +65,8 @@ import org.eclipse.ui.texteditor.IWorkbenchActionDefinitionIds
 import org.eclipse.ui.texteditor.SourceViewerDecorationSupport
 import org.eclipse.ui.texteditor.TextOperationAction
 import scala.tools.eclipse.util.EclipseUtils
+import org.eclipse.jdt.ui.PreferenceConstants
+import scala.tools.eclipse.properties.EditorPreferencePage
 
 
 class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor { self =>
@@ -72,6 +74,7 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor { sel
 
   private var occurrenceAnnotations: Set[Annotation] = Set()
   private var occurrencesFinder: ScalaOccurrencesFinder = _  
+  private var occurencesFinderInstalled = false
   private val preferenceListener: IPropertyChangeListener = handlePreferenceStoreChanged _
   private lazy val selectionListener = new ISelectionListener() {
     def selectionChanged(part: IWorkbenchPart, selection: ISelection) {
@@ -160,15 +163,17 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor { sel
   override def updateOccurrenceAnnotations(selection: ITextSelection, astRoot: CompilationUnit): Unit = {
     askForOccurrencesUpdate(selection)
   }
+
+  /** Returns the annotation model of the current document provider.
+   */
+  private def getAnnotationModelOpt: Option[IAnnotationModel] = {
+    for {
+      documentProvider <- Option(getDocumentProvider)
+      annotationModel <- Option(documentProvider.getAnnotationModel(getEditorInput))
+    } yield annotationModel
+  }
   
   private def performOccurrencesUpdate(selection: ITextSelection, documentLastModified: Long) {
-    def getAnnotationModelOpt: Option[IAnnotationModel] = {
-      for {
-        documentProvider <- Option(getDocumentProvider)
-        annotationModel <- Option(documentProvider.getAnnotationModel(getEditorInput))
-      } yield annotationModel
-    }
-
     val annotations = getAnnotations(selection, getInteractiveCompilationUnit, documentLastModified)
     for(annotationModel <- getAnnotationModelOpt) annotationModel.withLock {
       annotationModel.replaceAnnotations(occurrenceAnnotations, annotations)
@@ -221,13 +226,27 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor { sel
   }
 
   override def installOccurrencesFinder(forceUpdate: Boolean) {
-    super.installOccurrencesFinder(forceUpdate)
-    getEditorSite.getPage.addPostSelectionListener(selectionListener)
+    if (!occurencesFinderInstalled) {
+      super.installOccurrencesFinder(forceUpdate)
+      getEditorSite.getPage.addPostSelectionListener(selectionListener)
+      occurencesFinderInstalled = true
+    }
   }
 
   override def uninstallOccurrencesFinder() {
+    occurencesFinderInstalled = false
     getEditorSite.getPage.removePostSelectionListener(selectionListener)
     super.uninstallOccurrencesFinder
+    removeScalaOccurrenceAnnotations()
+  }
+  
+  /** Clear the existing Mark Occurrences annotations.
+   */
+  def removeScalaOccurrenceAnnotations() {
+    for (annotationModel <- getAnnotationModelOpt) annotationModel.withLock {
+      annotationModel.replaceAnnotations(occurrenceAnnotations, Map())
+      occurrenceAnnotations = Set()
+    }
   }
 
   override def dispose() {
@@ -303,6 +322,15 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor { sel
     event.getProperty match {
       case ShowInferredSemicolonsAction.PREFERENCE_KEY =>
         getAction(ShowInferredSemicolonsAction.ACTION_ID).asInstanceOf[IUpdate].update()
+      case PreferenceConstants.EDITOR_MARK_OCCURRENCES =>
+      // swallow the event. We don't want 'mark occurrences' to be linked to the Java editor preference
+      case EditorPreferencePage.P_ENABLE_MARK_OCCURRENCES =>
+        (event.getNewValue: Any) match {
+          case true =>
+            installOccurrencesFinder(true)
+          case _ =>
+            uninstallOccurrencesFinder()
+        }
       case _ =>
         if (affectsTextPresentation(event)) {
           // those events will trigger a UI change
@@ -311,6 +339,9 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor { sel
           super.handlePreferenceStoreChanged(event)
         }
     }
+
+  override def isMarkingOccurrences =
+    scalaPrefStore.getBoolean(EditorPreferencePage.P_ENABLE_MARK_OCCURRENCES)
 
   override def configureSourceViewerDecorationSupport(support: SourceViewerDecorationSupport) {
     super.configureSourceViewerDecorationSupport(support)
