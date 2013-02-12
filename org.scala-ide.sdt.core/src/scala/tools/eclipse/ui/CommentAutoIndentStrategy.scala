@@ -34,8 +34,11 @@ class CommentAutoIndentStrategy(partitioning: String) extends DefaultIndentLineA
           val isScaladoc = rest.length > 2 && rest.charAt(2) == '*'
 
           /* Returns the white space indentation count */
-          def commentTextIndentation(i: Int) =
-            rest.drop(i + docStarSize).takeWhile(c => c == ' ' || c == '\t').size
+          def commentTextIndentation(i: Int) = {
+            val lineInfo = doc.getLineInformationOfOffset(cmd.offset)
+            val signsBetweenSpacesAndCursor = cmd.offset - lineInfo.getOffset() - indent.length()
+            rest.take(signsBetweenSpacesAndCursor).drop(i + docStarSize).takeWhile(_ == ' ').size
+          }
 
           val textIndent = {
             val indent =

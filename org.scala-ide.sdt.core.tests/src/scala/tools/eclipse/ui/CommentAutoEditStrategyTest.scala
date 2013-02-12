@@ -533,4 +533,18 @@ class CommentAutoEditStrategyTest {
     test(input, expectedOutput)
   }
 
+  @Test
+  def docComment_no_additional_indent_on_break_line_before_spaces() {
+    val input =
+      """
+      /**^ abc */
+      """
+    val expectedOutput =
+      """
+      /**
+       * ^ abc */
+      """
+    test(input, expectedOutput)
+  }
+
 }
