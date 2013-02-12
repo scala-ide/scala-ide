@@ -32,6 +32,8 @@ class ScalaReconcilingStrategy(scEditor: ScalaEditor) extends IReconcilingStrate
   override def reconcile(partition: IRegion) {
     scUnit.scalaProject.doWithPresentationCompiler(_.flushScheduledReloads())
     val errors = scUnit.reconcile(document.get)
+    // we only update the edited compilation unit
+    scEditor.updateErrorAnnotations(errors)
   }
 
   override def initialReconcile() {
