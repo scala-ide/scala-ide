@@ -5,8 +5,11 @@ import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer
 import org.eclipse.jface.preference.{ FieldEditorPreferencePage, BooleanFieldEditor }
 import org.eclipse.ui.{ IWorkbenchPreferencePage, IWorkbench }
 import EditorPreferencePage._
+import org.eclipse.swt.SWT
+import org.eclipse.swt.widgets.Label
+import org.eclipse.swt.layout.GridData
 
-class EditorPreferencePage extends FieldEditorPreferencePage with IWorkbenchPreferencePage {
+class EditorPreferencePage extends FieldEditorPreferencePage(FieldEditorPreferencePage.GRID) with IWorkbenchPreferencePage {
 
   setPreferenceStore(ScalaPlugin.plugin.getPreferenceStore)
 
@@ -15,8 +18,12 @@ class EditorPreferencePage extends FieldEditorPreferencePage with IWorkbenchPref
     addField(new BooleanFieldEditor(P_ENABLE_SMART_BRACES, "Automatically surround selection with {braces}", getFieldEditorParent))
     addField(new BooleanFieldEditor(P_ENABLE_SMART_PARENS, "Automatically surround selection with (parenthesis)", getFieldEditorParent))
     addField(new BooleanFieldEditor(P_ENABLE_SMART_QUOTES, "Automatically surround selection with \"quotes\"", getFieldEditorParent))
-
+    
+    new Label(getFieldEditorParent, SWT.SEPARATOR | SWT.HORIZONTAL).setLayoutData(new GridData(GridData.FILL_HORIZONTAL))
     addField(new BooleanFieldEditor(P_ENABLE_AUTO_CLOSING_BRACES, "Enable auto closing braces when editing an existing line", getFieldEditorParent))
+    
+    new Label(getFieldEditorParent, SWT.SEPARATOR | SWT.HORIZONTAL).setLayoutData(new GridData(GridData.FILL_HORIZONTAL))
+    addField(new BooleanFieldEditor(P_ENABLE_MARK_OCCURRENCES, "Mark Occurences of the selected element in the current file", getFieldEditorParent))
   }
 
   def init(workbench: IWorkbench) {}
@@ -31,6 +38,8 @@ object EditorPreferencePage {
   final val P_ENABLE_SMART_QUOTES = BASE + "smartQuotes"
 
   final val P_ENABLE_AUTO_CLOSING_BRACES = BASE + "autoClosingBrace"
+  
+  final val P_ENABLE_MARK_OCCURRENCES = BASE + "markOccurences"
 }
 
 class DebugPreferenceInitializer extends AbstractPreferenceInitializer {
@@ -43,5 +52,7 @@ class DebugPreferenceInitializer extends AbstractPreferenceInitializer {
     store.setDefault(P_ENABLE_SMART_QUOTES, false)
 
     store.setDefault(P_ENABLE_AUTO_CLOSING_BRACES, true)
+    
+    store.setDefault(P_ENABLE_MARK_OCCURRENCES, false)
   }
 }
