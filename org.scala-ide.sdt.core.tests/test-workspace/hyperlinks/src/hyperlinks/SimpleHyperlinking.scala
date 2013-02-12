@@ -13,5 +13,6 @@ class SimpleHyperlinking {
     val x: String/*^*/ = "Hello, world"
     val Some/*^*/(x): Option/*^*/[Int] = Some(10)
     classOf[String/*^*/]
+    val str = s"Hello, $arr/*^*/"
   }
 }
