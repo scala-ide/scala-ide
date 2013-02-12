@@ -31,5 +31,6 @@
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.debug.SuppressBreakpointMarkerUpdaterAspect"/>
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.debug.JDIModelPresentationAspect"/>
 <aspect name="scala.tools.eclipse.contribution.weaving.pde.ui.PluginImportAspect"/>
+<aspect name="scala.tools.eclipse.contribution.weaving.jdt.launching.JUnitLaunchConfigurationTabAspect"/>
 </aspects>
 </aspectj>
