@@ -3,7 +3,7 @@ package scala.tools.eclipse.ui
 import scala.tools.eclipse.logging.HasLogger
 
 import org.eclipse.jdt.ui.text.IJavaPartitions
-import org.eclipse.jface.text.{DefaultIndentLineAutoEditStrategy, DocumentCommand, IDocument, TextUtilities}
+import org.eclipse.jface.text.{ DefaultIndentLineAutoEditStrategy, DocumentCommand, IDocument, TextUtilities }
 
 /** An auto-edit strategy for Scaladoc and multiline comments that does the following:
  *
@@ -87,13 +87,24 @@ class CommentAutoIndentStrategy(partitioning: String) extends DefaultIndentLineA
     (indent, rest, restAfterCaret)
   }
 
-  /** Heuristics for when to close a scaladoc. Returns `true` when the offset is inside a scaladoc
-   *  that runs to the end of the document. This handles nested comments pretty well because
-   *  it uses the Scala document partitioner.
+  /** Heuristics for when to close a Scaladoc. Returns `true` when the offset is
+   *  inside a Scaladoc that runs to the end of the document or if the line
+   *  containing the end of the Scaladoc section contains a quotation mark. This
+   *  handles nested comments pretty well because it uses the Scala document
+   *  partitioner.
    */
   private def shouldCloseDocComment(doc: IDocument, offset: Int): Boolean = {
+    def isProbablyString = {
+      val p = TextUtilities.getPartition(doc, partitioning, offset, true)
+      val start = doc.getLineInformationOfOffset(p.getOffset()).getOffset()
+      val end = p.getOffset() + p.getLength() - start
+
+      val containsSingleQuote = doc.get(start, end).reverse.exists(_ == '"')
+      scaladocPartitions(p.getType()) && containsSingleQuote
+    }
+
     val partition = TextUtilities.getPartition(doc, partitioning, doc.getLength() - 1, true)
-    scaladocPartitions(partition.getType())
+    scaladocPartitions(partition.getType()) || isProbablyString
   }
 
   private val scaladocPartitions = Set(IJavaPartitions.JAVA_DOC, IJavaPartitions.JAVA_MULTI_LINE_COMMENT)

@@ -602,4 +602,21 @@ class CommentAutoEditStrategyTest {
     test(input, expectedOutput)
   }
 
+  @Test
+  def docComment_close_before_string_containing_closing_comment() {
+    val input =
+      """
+      /**^
+      val str = " */"
+      """
+    val expectedOutput =
+      """
+      /**
+       * ^
+       */
+      val str = " */"
+      """
+    test(input, expectedOutput)
+  }
+
 }
