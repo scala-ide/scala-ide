@@ -101,6 +101,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
         initializeCompilerSettings(settings, isPCSetting(settings))
         val pc = new ScalaPresentationCompiler(ScalaProject.this, settings)
         logger.debug("Presentation compiler classpath: " + pc.classPath)
+        pc.askOption(() => pc.initializeRequiredSymbols())
         Some(pc)
       } catch {
         case ex @ MissingRequirementError(required) =>

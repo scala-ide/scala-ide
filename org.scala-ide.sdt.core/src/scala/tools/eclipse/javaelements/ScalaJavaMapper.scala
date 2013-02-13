@@ -15,7 +15,19 @@ import org.eclipse.jdt.core._
 import org.eclipse.jdt.internal.core.JavaModelManager
 import org.eclipse.core.runtime.Path
 
-trait ScalaJavaMapper extends ScalaAnnotationHelper with SymbolNameUtil with HasLogger { self : ScalaPresentationCompiler => 
+trait ScalaJavaMapper extends ScalaAnnotationHelper with SymbolNameUtil with HasLogger { self : ScalaPresentationCompiler =>
+
+  private[eclipse] def initializeRequiredSymbols() {
+    import definitions._
+    Set(UnitClass,
+      BooleanClass,
+      ByteClass,
+      ShortClass,
+      IntClass,
+      LongClass,
+      FloatClass,
+      DoubleClass).foreach(_.initialize)
+  }
 
   /** Return the Java Element corresponding to the given Scala Symbol, looking in the
    *  given project list
@@ -148,12 +160,13 @@ trait ScalaJavaMapper extends ScalaAnnotationHelper with SymbolNameUtil with Has
   /** Returns the simple name for the passed symbol (it expects the symbol to be a type).*/ 
   def mapSimpleType(s: Symbol): String = mapType(s, javaSimpleName(_))
 
-  private def mapType(symbolType: Symbol, symbolType2StringName: Symbol => String) : String = {
-    val normalizedSymbol = 
-      if(symbolType == null || symbolType == NoSymbol || symbolType.isRefinementClass || symbolType.owner.isRefinementClass || 
-         symbolType == definitions.AnyRefClass || symbolType == definitions.AnyClass) 
+  private def mapType(symbolType: Symbol, symbolType2StringName: Symbol => String): String = {
+    val normalizedSymbol =
+      if (symbolType == null || symbolType == NoSymbol || symbolType.isRefinementClass || symbolType.owner.isRefinementClass ||
+        symbolType == definitions.AnyRefClass || symbolType == definitions.AnyClass)
         definitions.ObjectClass
       else symbolType
+
     normalizedSymbol match {
       case definitions.UnitClass    => "void"
       case definitions.BooleanClass => "boolean"
@@ -163,7 +176,7 @@ trait ScalaJavaMapper extends ScalaAnnotationHelper with SymbolNameUtil with Has
       case definitions.LongClass    => "long"
       case definitions.FloatClass   => "float"
       case definitions.DoubleClass  => "double"
-      case n => symbolType2StringName(n)
+      case n                        => symbolType2StringName(n)
     }
   }
 
