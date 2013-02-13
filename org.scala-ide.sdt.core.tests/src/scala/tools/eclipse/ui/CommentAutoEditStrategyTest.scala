@@ -549,4 +549,57 @@ class CommentAutoEditStrategyTest {
     test(input, expectedOutput)
   }
 
+  @Test
+  def docComment_close_before_comment_with_code_blocks() {
+    val input =
+      """
+      /**^
+      /** {{{ }}} */
+      """
+    val expectedOutput =
+      """
+      /**
+       * ^
+       */
+      /** {{{ }}} */
+      """
+    test(input, expectedOutput)
+  }
+
+  @Test
+  def docComment_no_close_before_code_blocks() {
+    val input =
+      """
+      /**^ {{{ }}} */
+      """
+    val expectedOutput =
+      """
+      /**
+       * ^ {{{ }}} */
+      """
+    test(input, expectedOutput)
+  }
+
+  @Test
+  def docComment_no_close_between_code_blocks() {
+    val input =
+      """
+      /**
+       * {{{ }}}
+       * ^
+       * {{{ }}}
+       */
+      """
+    val expectedOutput =
+      """
+      /**
+       * {{{ }}}
+       * $
+       * ^
+       * {{{ }}}
+       */
+      """
+    test(input, expectedOutput)
+  }
+
 }

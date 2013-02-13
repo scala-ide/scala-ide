@@ -92,10 +92,8 @@ class CommentAutoIndentStrategy(partitioning: String) extends DefaultIndentLineA
    *  it uses the Scala document partitioner.
    */
   private def shouldCloseDocComment(doc: IDocument, offset: Int): Boolean = {
-    val partition = TextUtilities.getPartition(doc, partitioning, offset, true)
-    val partitionEnd = partition.getOffset() + partition.getLength()
-    (scaladocPartitions(partition.getType())
-      && partitionEnd == doc.getLength())
+    val partition = TextUtilities.getPartition(doc, partitioning, doc.getLength() - 1, true)
+    scaladocPartitions(partition.getType())
   }
 
   private val scaladocPartitions = Set(IJavaPartitions.JAVA_DOC, IJavaPartitions.JAVA_MULTI_LINE_COMMENT)
