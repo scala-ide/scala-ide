@@ -1,8 +1,10 @@
 package scala.tools.eclipse.ui
 
 import scala.tools.eclipse.logging.HasLogger
+import scala.tools.eclipse.properties.EditorPreferencePage
 
 import org.eclipse.jdt.ui.text.IJavaPartitions
+import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.jface.text.{ DefaultIndentLineAutoEditStrategy, DocumentCommand, IDocument, TextUtilities }
 
 /** An auto-edit strategy for Scaladoc and multiline comments that does the following:
@@ -13,14 +15,18 @@ import org.eclipse.jface.text.{ DefaultIndentLineAutoEditStrategy, DocumentComma
  *  - allows to enlarge a comment block without adding a star to the following line
  *    by pressing enter on an empty line
  */
-class CommentAutoIndentStrategy(partitioning: String) extends DefaultIndentLineAutoEditStrategy with HasLogger {
+class CommentAutoIndentStrategy(prefStore: IPreferenceStore, partitioning: String) extends DefaultIndentLineAutoEditStrategy with HasLogger {
 
   override def customizeDocumentCommand(doc: IDocument, cmd: DocumentCommand) {
     if (cmd.offset == -1 || doc.getLength() == 0) return // don't spend time on invalid docs
 
     try {
       if (cmd.length == 0 && cmd.text != null && TextUtilities.endsWith(doc.getLegalLineDelimiters(), cmd.text) != -1) {
-        val shouldClose = shouldCloseDocComment(doc, cmd.offset)
+        val shouldClose = {
+          val isAutoClosingEnabled = prefStore.getBoolean(
+              EditorPreferencePage.P_ENABLE_AUTO_CLOSING_COMMENTS)
+          isAutoClosingEnabled && shouldCloseDocComment(doc, cmd.offset)
+        }
 
         val (indent, rest, restAfterCaret) = breakLine(doc, cmd.offset)
         val buf = new StringBuilder(cmd.text)

@@ -1,14 +1,30 @@
 package scala.tools.eclipse.ui
 
 import scala.tools.eclipse.lexical.ScalaDocumentPartitioner
+import scala.tools.eclipse.properties.EditorPreferencePage
 
 import org.eclipse.jdt.ui.text.IJavaPartitions
-import org.eclipse.jface.text.{Document, IDocument}
-import org.junit.{ComparisonFailure, Test}
+import org.eclipse.jface.preference.IPreferenceStore
+import org.eclipse.jface.text.{ Document, IDocument }
+import org.junit.{ Before, ComparisonFailure, Test }
+import org.mockito.Mockito._
 
 import AutoEditStrategyTests.TestCommand
 
 class CommentAutoEditStrategyTest {
+
+  val prefStore = mock(classOf[IPreferenceStore])
+
+  import EditorPreferencePage._
+
+  def enable(property: String, enable: Boolean) {
+    when(prefStore.getBoolean(property)).thenReturn(enable)
+  }
+
+  @Before
+  def startUp() {
+    enable(P_ENABLE_AUTO_CLOSING_COMMENTS, true)
+  }
 
   /**
    * Tests if the input string is equal to the expected output.
@@ -41,7 +57,7 @@ class CommentAutoEditStrategyTest {
 
     val doc = createDocument(input)
     val cmd = createTestCommand(input)
-    val strategy = new CommentAutoIndentStrategy(IJavaPartitions.JAVA_PARTITIONING)
+    val strategy = new CommentAutoIndentStrategy(prefStore, IJavaPartitions.JAVA_PARTITIONING)
 
     strategy.customizeDocumentCommand(doc, cmd)
 
@@ -67,6 +83,21 @@ class CommentAutoEditStrategyTest {
     if (expected != actual) {
       throw new ComparisonFailure("", expected, actual)
     }
+  }
+
+  @Test
+  def no_close_on_deactiveted_feature() {
+    enable(P_ENABLE_AUTO_CLOSING_COMMENTS, false)
+    val input =
+      """
+      /**^
+      """
+    val expectedOutput =
+      """
+      /**
+       * ^
+      """
+    test(input, expectedOutput)
   }
 
   @Test

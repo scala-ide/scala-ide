@@ -21,6 +21,7 @@ class EditorPreferencePage extends FieldEditorPreferencePage(FieldEditorPreferen
     
     new Label(getFieldEditorParent, SWT.SEPARATOR | SWT.HORIZONTAL).setLayoutData(new GridData(GridData.FILL_HORIZONTAL))
     addField(new BooleanFieldEditor(P_ENABLE_AUTO_CLOSING_BRACES, "Enable auto closing braces when editing an existing line", getFieldEditorParent))
+    addField(new BooleanFieldEditor(P_ENABLE_AUTO_CLOSING_COMMENTS, "Automatically close multi line comments and Scaladoc", getFieldEditorParent))
     
     new Label(getFieldEditorParent, SWT.SEPARATOR | SWT.HORIZONTAL).setLayoutData(new GridData(GridData.FILL_HORIZONTAL))
     addField(new BooleanFieldEditor(P_ENABLE_MARK_OCCURRENCES, "Mark Occurences of the selected element in the current file", getFieldEditorParent))
@@ -38,6 +39,7 @@ object EditorPreferencePage {
   final val P_ENABLE_SMART_QUOTES = BASE + "smartQuotes"
 
   final val P_ENABLE_AUTO_CLOSING_BRACES = BASE + "autoClosingBrace"
+  final val P_ENABLE_AUTO_CLOSING_COMMENTS = BASE + "autoClosingComments"
   
   final val P_ENABLE_MARK_OCCURRENCES = BASE + "markOccurences"
 }
@@ -52,6 +54,7 @@ class DebugPreferenceInitializer extends AbstractPreferenceInitializer {
     store.setDefault(P_ENABLE_SMART_QUOTES, false)
 
     store.setDefault(P_ENABLE_AUTO_CLOSING_BRACES, true)
+    store.setDefault(P_ENABLE_AUTO_CLOSING_COMMENTS, true)
     
     store.setDefault(P_ENABLE_MARK_OCCURRENCES, false)
   }
