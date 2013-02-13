@@ -22,7 +22,7 @@ class CommentAutoIndentStrategy(partitioning: String) extends DefaultIndentLineA
       if (cmd.length == 0 && cmd.text != null && TextUtilities.endsWith(doc.getLegalLineDelimiters(), cmd.text) != -1) {
         val shouldClose = shouldCloseDocComment(doc, cmd.offset)
 
-        val (indent, rest) = breakLine(doc, cmd.offset)
+        val (indent, rest, restAfterCaret) = breakLine(doc, cmd.offset)
         val buf = new StringBuilder(cmd.text)
         buf.append(indent)
 
@@ -53,8 +53,13 @@ class CommentAutoIndentStrategy(partitioning: String) extends DefaultIndentLineA
           buf.append(" " * textIndent)
 
           if (shouldClose) {
+            if (restAfterCaret.nonEmpty) {
+              buf.append(restAfterCaret)
+              cmd.addCommand(cmd.offset, restAfterCaret.length(), "", null)
+            }
+
             // we want the caret before the closing comment
-            cmd.caretOffset = cmd.offset + buf.length
+            cmd.caretOffset = cmd.offset + buf.length - restAfterCaret.length()
             buf append ("\n"+indent)
             buf append (if (isDocStart) " */" else "*/")
             cmd.shiftsCaret = false
@@ -69,14 +74,17 @@ class CommentAutoIndentStrategy(partitioning: String) extends DefaultIndentLineA
     }
   }
 
-  /** Return the whitespace prefix (indentation) and the rest of the line
-   *  for the given offset.
+  /** Return the whitespace prefix (indentation), the rest of the line
+   *  for the given offset and also the rest of the line after the caret position.
    */
-  private def breakLine(doc: IDocument, offset: Int): (String, String) = {
+  private def breakLine(doc: IDocument, offset: Int): (String, String, String) = {
     // indent up to the previous line
     val lineInfo = doc.getLineInformationOfOffset(offset)
     val endOfWS = findEndOfWhiteSpace(doc, lineInfo.getOffset(), offset)
-    (doc.get(lineInfo.getOffset, endOfWS - lineInfo.getOffset), doc.get(endOfWS, lineInfo.getOffset + lineInfo.getLength() - endOfWS))
+    val indent = doc.get(lineInfo.getOffset, endOfWS - lineInfo.getOffset)
+    val rest = doc.get(endOfWS, lineInfo.getOffset + lineInfo.getLength() - endOfWS)
+    val restAfterCaret = doc.get(offset, lineInfo.getOffset() - offset + lineInfo.getLength())
+    (indent, rest, restAfterCaret)
   }
 
   /** Heuristics for when to close a scaladoc. Returns `true` when the offset is inside a scaladoc

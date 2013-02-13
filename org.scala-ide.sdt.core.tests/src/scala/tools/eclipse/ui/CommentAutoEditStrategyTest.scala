@@ -44,7 +44,19 @@ class CommentAutoEditStrategyTest {
     val strategy = new CommentAutoIndentStrategy(IJavaPartitions.JAVA_PARTITIONING)
 
     strategy.customizeDocumentCommand(doc, cmd)
-    doc.replace(cmd.offset, 0, cmd.text)
+
+    /**
+     * Because `cmd.getCommandIterator()` returns a raw type and because the type
+     * of the underlying instances belong to a inner private static Java class it
+     * seems to be impossible to access it from Scala. Thus, the code is accessed
+     * via Reflection.
+     */
+    import collection.JavaConverters._
+    for (e <- cmd.getCommandIterator().asScala.toList.reverse) {
+      val m = e.getClass().getMethod("execute", classOf[IDocument])
+      m.setAccessible(true)
+      m.invoke(e, doc)
+    }
 
     val offset = if (cmd.caretOffset > 0) cmd.caretOffset else cmd.offset + cmd.text.length()
     doc.replace(offset, 0, "^")
@@ -248,31 +260,6 @@ class CommentAutoEditStrategyTest {
       class Foo {
         /**
          * ^*/
-        def foo() {
-        }
-        /** */
-        def bar
-      }
-      """
-    test(input, expectedOutput)
-  }
-
-  @Test
-  def openDocComment_at_beginning() {
-    val input =
-      """
-      /**^class Foo {
-        def foo() {
-        }
-        /** */
-        def bar
-      }
-      """
-    val expectedOutput =
-      """
-      /**
-       * ^
-       */class Foo {
         def foo() {
         }
         /** */
@@ -543,6 +530,21 @@ class CommentAutoEditStrategyTest {
       """
       /**
        * ^ abc */
+      """
+    test(input, expectedOutput)
+  }
+
+  @Test
+  def docComment_wrap_text_after_cursor_on_automatically_closed_comment() {
+    val input =
+      """
+      /** a^ b
+      """
+    val expectedOutput =
+      """
+      /** a
+       *  ^ b
+       */
       """
     test(input, expectedOutput)
   }
