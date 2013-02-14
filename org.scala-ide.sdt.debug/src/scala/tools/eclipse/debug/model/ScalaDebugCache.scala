@@ -3,6 +3,7 @@ package scala.tools.eclipse.debug.model
 import scala.actors.Actor
 import scala.collection.JavaConverters.asScalaBufferConverter
 import scala.tools.eclipse.debug.BaseDebuggerActor
+import scala.tools.eclipse.debug.BaseDebuggerActor._
 import scala.tools.eclipse.debug.PoisonPill
 import scala.tools.eclipse.debug.ScalaDebugPlugin
 import scala.tools.eclipse.debug.preferences.DebuggerPreferences
@@ -14,7 +15,6 @@ import com.sun.jdi.ReferenceType
 import com.sun.jdi.event.ClassPrepareEvent
 
 object ScalaDebugCache {
-
   private final val OuterTypeNameRegex = """([^\$]*)(\$.*)?""".r
 
   /** Types that we should never step into, nor in anything called from their methods. */
@@ -59,9 +59,12 @@ abstract class ScalaDebugCache(val debugTarget: ScalaDebugTarget) extends HasLog
    */
   def getLoadedNestedTypes(typeName: String): Set[ReferenceType] = {
     val outerTypeName = extractOuterTypeName(typeName)
-    actor !? LoadedNestedTypes(outerTypeName) match {
-      case LoadedNestedTypesAnswer(types) =>
+    syncSend(actor, LoadedNestedTypes(outerTypeName)) match {
+      case Some(LoadedNestedTypesAnswer(types)) =>
         types
+      case None =>
+        logger.info("TIMEOUT waiting for debug cache actor in getLoadedNestedTypes")
+        Set()
       case unknown =>
         logger.error("Unknown return value to LoadedNestedTypes message: %s".format(unknown))
         Set()
@@ -72,19 +75,25 @@ abstract class ScalaDebugCache(val debugTarget: ScalaDebugTarget) extends HasLog
    *  for types which are nested under the same outer type as the type withe the given name.
    *  The event is sent as a ClassPrepareEvent to the actor.
    *
+   *  This method is synchronous. Once this method returns, all subsequent ClassPrepareEvents
+   *  will be sent to the listener actor.
+   *
    *  Does nothing if the actor has already been added for the same outer type.
    */
   def addClassPrepareEventListener(listener: Actor, typeName: String) {
-    actor !? AddClassPrepareEventListener(listener, extractOuterTypeName(typeName))
+    syncSend(actor, AddClassPrepareEventListener(listener, extractOuterTypeName(typeName)))
   }
 
   /** Removes the given actor as being a listener for class prepare events in the debugged VM,
    *  for types which are nested under the same outer type as the type with the given name.
    *
    *  Does nothing if the actor was not registered as a listener for the outer type of the type with the given name.
+   *
+   *  This method is asynchronous. There might be residual ClassPrepareEvents being
+   *  sent to this listener.
    */
   def removeClassPrepareEventListener(listener: Actor, typeName: String) {
-    actor !? RemoveClassPrepareEventListener(listener, extractOuterTypeName(typeName))
+    actor ! RemoveClassPrepareEventListener(listener, extractOuterTypeName(typeName))
   }
 
   private var typeCache = Map[ReferenceType, TypeCache]()
@@ -255,8 +264,9 @@ protected[debug] class ScalaDebugCacheActor(debugCache: ScalaDebugCache, debugTa
         // store the new type
         nestedTypesCache = nestedTypesCache + ((topLevelTypeName, cache.copy(types = cache.types + refType)))
         // dispatch to listeners
-        cache.listeners.foreach {
-          a => a !? event
+        cache.listeners.foreach { a => 
+          if (syncSend(a, event).isEmpty)
+            logger.info("TIMOUT waiting for the listener actor in `classLoaded`")
         }
       case None =>
         logger.warn("Received ClassPrepareEvent for not expected type: %s".format(refType.name()))

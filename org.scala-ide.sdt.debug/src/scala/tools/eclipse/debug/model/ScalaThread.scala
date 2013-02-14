@@ -34,6 +34,7 @@ object ScalaThread {
  */
 abstract class ScalaThread private (target: ScalaDebugTarget, private[model] val threadRef: ThreadReference) extends ScalaDebugElement(target) with IThread {
   import ScalaThreadActor._
+  import BaseDebuggerActor._
 
   // Members declared in org.eclipse.debug.core.model.IStep
 
@@ -123,7 +124,7 @@ abstract class ScalaThread private (target: ScalaDebugTarget, private[model] val
    *  or [[ScalaObjectReference.invokeMethod(String, String, ScalaThread, ScalaValue*)]] instead.
    */
   def invokeMethod(objectReference: ObjectReference, method: Method, args: Value*): Value = {
-    processMethodInvocationResult(companionActor !? InvokeMethod(objectReference, method, args.toList))
+    processMethodInvocationResult(syncSend(companionActor, InvokeMethod(objectReference, method, args.toList)))
   }
 
   /** Invoke the given static method on the given type with the given arguments.
@@ -132,17 +133,18 @@ abstract class ScalaThread private (target: ScalaDebugTarget, private[model] val
    *  Use [[ScalaClassType.invokeMethod(String, ScalaThread,ScalaValue*)]] instead.
    */
   def invokeStaticMethod(classType: ClassType, method: Method, args: Value*): Value = {
-    processMethodInvocationResult(companionActor !? InvokeStaticMethod(classType, method, args.toList))
+    processMethodInvocationResult(syncSend(companionActor, InvokeStaticMethod(classType, method, args.toList)))
   }
 
-  private def processMethodInvocationResult(res: Any): Value = res match {
+  private def processMethodInvocationResult(res: Option[Any]): Value = if (res.isDefined) res.get match {
     case Right(null) =>
       null
     case Right(res: Value) =>
       res
     case Left(e: Exception) =>
       throw e
-  }
+  } else
+    null
 
   /**
    * release all resources
