@@ -15,9 +15,7 @@ import com.sun.jdi.StackFrame
 object ScalaStackFrame {
   
   def apply(thread: ScalaThread, stackFrame: StackFrame): ScalaStackFrame = {
-    val scalaStackFrame= new ScalaStackFrame(thread, stackFrame)
-    scalaStackFrame.fireCreationEvent()
-    scalaStackFrame
+    new ScalaStackFrame(thread, stackFrame)
   }
 
   // regexp for JNI signature
@@ -122,7 +120,7 @@ class ScalaStackFrame private (val thread: ScalaThread, @volatile var stackFrame
 
   // ---
 
-  val variables: Seq[ScalaVariable] = {
+  lazy val variables: Seq[ScalaVariable] = {
     import scala.collection.JavaConverters._
     val visibleVariables = try {
       stackFrame.visibleVariables.asScala.map(new ScalaLocalVariable(_, this))
