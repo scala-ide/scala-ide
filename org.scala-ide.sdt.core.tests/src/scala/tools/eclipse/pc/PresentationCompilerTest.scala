@@ -13,6 +13,7 @@ import org.mockito.Matchers._
 import org.mockito.Mockito._
 import scala.tools.eclipse.hyperlink.HyperlinkTester
 import scala.tools.eclipse.testsetup.CustomAssertion
+import scala.tools.eclipse.testsetup.TestProjectSetup
 
 object PresentationCompilerTest extends testsetup.TestProjectSetup("pc") with CustomAssertion with HyperlinkTester
 
@@ -52,6 +53,8 @@ class PresentationCompilerTest {
   }
 
   @Test
+  // garillot: deactivated pending copy of test architecture
+  @Ignore("Enable this test once headless triggering of Reconciler is possible")
   def freshFileReportsErrors() {
     val contentsWithErrors = """
 package t1001094
