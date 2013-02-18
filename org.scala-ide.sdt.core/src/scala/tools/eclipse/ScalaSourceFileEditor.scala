@@ -76,7 +76,7 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor { sel
   private val preferenceListener: IPropertyChangeListener = handlePreferenceStoreChanged _
   private val reconcilingListeners: ReconcilingListeners = new ScalaSourceFileEditor.ReconcilingListeners
 
-  @volatile
+  /**@note Current implementation assumes that all accesses to this member should be confined to the UI Thread */
   private var semanticHighlightingPresenter: semantichighlighting.Presenter = _
   private def semanticHighlightingPreferences = semantichighlighting.Preferences(scalaPrefStore)
   
@@ -336,6 +336,8 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor { sel
       case ShowInferredSemicolonsAction.PREFERENCE_KEY =>
         getAction(ShowInferredSemicolonsAction.ACTION_ID).asInstanceOf[IUpdate].update()
       case ScalaSyntaxClasses.ENABLE_SEMANTIC_HIGHLIGHTING =>
+        // This preference can be changed only via the preference dialog, hence the below block 
+        // is ensured to be always run within the UI Thread. Check the JavaDoc of `handlePreferenceStoreChanged`
         if(isScalaSemanticHighlightingEnabled) installScalaSemanticHighlighting(forceRefresh = true)
         else uninstallScalaSemanticHighlighting(removesHighlights = true)
       case _ =>
