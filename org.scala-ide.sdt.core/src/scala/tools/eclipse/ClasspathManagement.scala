@@ -75,11 +75,15 @@ case class ScalaClasspath(val jdkPaths: Seq[IPath], // JDK classpath
  */
 case class ScalaLibrary(location: IPath, version: Option[String], isProject: Boolean)
 
-/** Extractor which return the Scala version of a jar, if it is *not* compatible with the version
+/** Extractor which return the Scala version of a jar, if it is '''not''' compatible with the version
  *  of Scala the platform is running on.
  */
 object IncompatibleVersion {
   
+  /**
+   * Regex accepting filename of the format: name_2.xx.xx-version.jar.
+   * It is used to extract the `2.xx.xx` section.
+   */
   private val CrossCompiledRegex = """.*_(2\.\d+(\.\d*)?)(-.*)?.jar""".r
       
   private val minimalVersionChecked = new Version(2, 8, 0)
