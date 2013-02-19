@@ -43,7 +43,9 @@ private class TextPresentationEditorHighlighter(editor: ScalaSourceFileEditor, p
 
     Option(preferences.store) foreach (_.addPropertyChangeListener(textPresentationChangeListener))
     Option(editor) foreach (_.addReconcilingListener(highlightingOnReconciliationListener))
-    Option(sourceViewer) foreach (_.addTextPresentationListener(textPresentationChangeListener))
+    // it's important to prepend the listener or semantic highlighting coloring will hide the style applied for hyperlinking when the
+    // user hovers on a semantically highlighted binding.
+    Option(sourceViewer) foreach (_.prependTextPresentationListener(textPresentationChangeListener))
   }
 
   override def dispose(): Unit = {
