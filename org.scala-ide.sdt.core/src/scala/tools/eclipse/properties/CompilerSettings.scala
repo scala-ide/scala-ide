@@ -41,7 +41,9 @@ trait ScalaPluginPreferencePage extends HasLogger {
       for (setting <- b.userSettings) {
         val name = SettingConverterUtil.convertNameToProperty(setting.name)
         val isDefault = setting match {
-          case bs: Settings#BooleanSetting     => bs.value == false
+          case bs: Settings#BooleanSetting     =>
+            // use the store default if it is defined: e.i. it is not a sbt/scalac preference
+            bs.value == store.getDefaultBoolean(name)
           case is: Settings#IntSetting         => is.value == is.default
           case ss: Settings#StringSetting      => ss.value == ss.default
           case ms: Settings#MultiStringSetting => ms.value == Nil
