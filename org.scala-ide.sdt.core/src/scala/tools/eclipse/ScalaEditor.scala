@@ -11,9 +11,8 @@ import org.eclipse.jdt.ui.text.IJavaPartitions
 import scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.IScalaEditor
 import scala.tools.eclipse.lexical._
 import scala.tools.eclipse.ui.InteractiveCompilationUnitEditor
-import scala.tools.eclipse.ui.DecoratedInteractiveEditor
 
-trait ScalaEditor extends IScalaEditor with ISourceViewerEditor with InteractiveCompilationUnitEditor with DecoratedInteractiveEditor{
+trait ScalaEditor extends IScalaEditor with ISourceViewerEditor with InteractiveCompilationUnitEditor {
 
   def createDocumentPartitioner = new ScalaDocumentPartitioner
 
