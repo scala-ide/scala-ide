@@ -20,8 +20,7 @@ object EditorUtils {
   def openEditorAndApply[T](element: IJavaElement)(editor: IEditorPart => T): T =
     editor(org.eclipse.jdt.ui.JavaUI.openInEditor(element))
 
-  /** Return the compilation unit open in the given editor.
-   */
+  /** Return the compilation unit open in the given editor.*/
   def getEditorCompilationUnit(editor: ITextEditor): Option[InteractiveCompilationUnit] = {
     editor match {
       case icuEditor: InteractiveCompilationUnitEditor =>

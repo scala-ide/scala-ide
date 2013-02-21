@@ -1,20 +1,21 @@
 package scala.tools.eclipse.semantichighlighting.classifier
 
 import scala.tools.eclipse.util.CollectionUtil
-
 import scalariform.lexer.{ScalaLexer, Token}
 import scalariform.parser._
 import scalariform.utils.Range
+import org.eclipse.jface.text.Region
+import org.eclipse.jface.text.IRegion
 
 // Symbol information derived by purely syntactic means, via Scalariform's parser, because it (appears) 
 // difficult to get this out scalac trees
 case class SyntacticInfo(
-  namedArgs: Set[Region],
-  forVals: Set[Region],
-  maybeSelfRefs: Set[Region],
-  maybeClassOfs: Set[Region],
-  annotations: Set[Region], 
-  packages: Set[Region]
+  namedArgs: Set[IRegion],
+  forVals: Set[IRegion],
+  maybeSelfRefs: Set[IRegion],
+  maybeClassOfs: Set[IRegion],
+  annotations: Set[IRegion], 
+  packages: Set[IRegion]
 )
 
 object SyntacticInfo {
@@ -25,29 +26,33 @@ object SyntacticInfo {
     parser.safeParse(parser.compilationUnitOrScript) map { (_, tokens) }
   }
 
-  private implicit def range2Region(range: Range): Region = Region(range.offset, range.length)
+  private class RangeOps(range: Range) {
+    def toRegion: IRegion = new Region(range.offset, range.length)
+  }
+
+  private implicit def range2Region(range: Range): RangeOps = new RangeOps(range)
 
   def noSyntacticInfo = SyntacticInfo(Set(), Set(), Set(), Set(), Set(), Set())
   
   def getSyntacticInfo(source: String): SyntacticInfo = {
-    var namedArgs: Set[Region] = Set()
-    var forVals: Set[Region] = Set()
-    var maybeSelfRefs: Set[Region] = Set()
-    var maybeClassOfs: Set[Region] = Set()
-    var annotations: Set[Region] = Set()
-    var packages: Set[Region] = Set()
+    var namedArgs: Set[IRegion] = Set()
+    var forVals: Set[IRegion] = Set()
+    var maybeSelfRefs: Set[IRegion] = Set()
+    var maybeClassOfs: Set[IRegion] = Set()
+    var annotations: Set[IRegion] = Set()
+    var packages: Set[IRegion] = Set()
 
     def scan(astNode: AstNode) {
       astNode match {
         case Argument(Expr(List(EqualsExpr(List(CallExpr(None, id, None, Nil, None)), _, _)))) =>
-          namedArgs += id.range
+          namedArgs += id.range.toRegion
         case Generator(_, Expr(List(GeneralTokens(List(id)))), _, _, _) =>
-          forVals += id.range
+          forVals += id.range.toRegion
         case Generator(_, generatorPattern, _, _, _) =>
           generatorPattern.tokens.find(_.tokenType.isId) map { token =>
             val text = token.text
             if (!text.startsWith("`") && !text(0).isUpper)
-              forVals += token.range
+              forVals += token.range.toRegion
           }
         case StatSeq(Some((selfRefExpr, _)), _, _) =>
           def findAscriptionExpr(ast: AstNode): Option[AscriptionExpr] = {
@@ -69,12 +74,12 @@ object SyntacticInfo {
             selfRefToken <- selfRefTokenOpt
             text = selfRefToken.text
             token <- astNode.tokens.filter { token => token.text == text || token.text == "`" + text + "`" }
-          } maybeSelfRefs += token.range
+          } maybeSelfRefs += token.range.toRegion
         case ann @ Annotation(_, annotationType, _, _) =>
           val tokens = annotationType.tokens.filter(_.tokenType.isId)
           val (pkges, annotation) = CollectionUtil.splitAtLast(tokens)
-          pkges.foreach(packages += _.range)
-          annotation foreach ( annotations += _.range)
+          pkges.foreach(packages += _.range.toRegion)
+          annotation foreach ( annotations += _.range.toRegion)
         case _ =>
       }
       astNode.immediateChildren.foreach(scan)
@@ -83,7 +88,7 @@ object SyntacticInfo {
     for ((cu, tokens) <- safeParse(source)) {
       scan(cu)
       for (token <- tokens if token.text == "classOf")
-        maybeClassOfs += token.range
+        maybeClassOfs += token.range.toRegion
     }
 
     SyntacticInfo(namedArgs, forVals, maybeSelfRefs, maybeClassOfs, annotations, packages)

@@ -17,15 +17,6 @@ import scala.tools.eclipse.contribution.weaving.jdt.IScalaCompilationUnit;
 @SuppressWarnings("restriction")
 public privileged aspect ScalaEditorPreferencesAspect {
 
-  pointcut isSemanticHighlightingEnabled() :
-    execution(boolean JavaEditor.isSemanticHighlightingEnabled());
-  
-  boolean around(IScalaEditor editor) :
-    isSemanticHighlightingEnabled() && target(editor) {
-    // Disable Java semantic highlighting for Scala source
-    return false;
-  }
-
   pointcut getAssists(IInvocationContext context, IProblemLocation[] locations):
     execution(IJavaCompletionProposal[] QuickAssistProcessor.getAssists(IInvocationContext, IProblemLocation[])) && args(context, locations) ||
     execution(IJavaCompletionProposal[] AdvancedQuickAssistProcessor.getAssists(IInvocationContext, IProblemLocation[])) && args(context, locations) ||
