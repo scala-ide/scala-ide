@@ -105,7 +105,6 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings)
       for ((s,c) <- reloadees) sourceFileUpdate(s,c)
       val reloadFiles = reloadees.flatMap {case (s,c) => sourceFiles.get(s)}
       askReload(reloadFiles,res)
-      res.get
     }
     res
   }

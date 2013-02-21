@@ -4,6 +4,7 @@ import org.eclipse.jface.text.source.IAnnotationModel
 import org.eclipse.jface.text.source.IAnnotationModelExtension
 import org.eclipse.jdt.internal.ui.javaeditor.CompilationUnitDocumentProvider.ProblemAnnotation
 import org.eclipse.jdt.core.compiler.IProblem
+import scala.collection.breakOut
 import scala.collection.JavaConverters
 import scala.tools.eclipse.util.SWTUtils
 import org.eclipse.jface.text.Position
@@ -16,7 +17,6 @@ trait DecoratedInteractiveEditor extends ISourceViewerEditor {
   /** Return the annotation model associated with the current document. */
   private def annotationModel: IAnnotationModelExtended = getDocumentProvider.getAnnotationModel(getEditorInput).asInstanceOf[IAnnotationModelExtended]
 
-  @volatile
   private var previousAnnotations = List[ProblemAnnotation]()
 
   /**
@@ -24,16 +24,16 @@ trait DecoratedInteractiveEditor extends ISourceViewerEditor {
    */
 
   def updateErrorAnnotations(errors: List[IProblem]) {
-    val newAnnotations = for (e <- errors) yield {
+    val newAnnotations: Map[ProblemAnnotation, Position] = (for (e <- errors) yield {
       val annotation = new ProblemAnnotation(e, null) // no compilation unit
       val position = new Position(e.getSourceStart, e.getSourceEnd - e.getSourceStart + 1)
       (annotation, position)
-    }
+    })(breakOut)
 
     import JavaConverters._
-    val newMap = newAnnotations.toMap.asJava
+    val newMap = newAnnotations.asJava
     annotationModel.replaceAnnotations(previousAnnotations.toArray, newMap)
-    previousAnnotations = newAnnotations.unzip._1
+    previousAnnotations = newAnnotations.keys.toList
 
     // This shouldn't be necessary in @dragos' opinion. But see #84 and
     // http://stackoverflow.com/questions/12507620/race-conditions-in-annotationmodel-error-annotations-lost-in-reconciler
