@@ -2,32 +2,29 @@ package scala.tools.eclipse.semantichighlighting.classifier
 
 import scala.tools.eclipse.semantichighlighting.classifier.SymbolTypes._
 import scala.tools.nsc.util.RangePosition
+import org.eclipse.jface.text.IRegion
+import scala.tools.nsc.util.SourceFile
 
-trait SymbolTests { self: SymbolClassification =>
-
+private[classifier] trait SymbolTests { self: SymbolClassification =>
+  import SymbolTests.region2regionOps
   import global._
 
   def posToSym(pos: Position): Option[Symbol] = {
-    val t = locateTree(pos) 
+    val t = locateTree(pos)
     if (t.hasSymbol) safeSymbol(t).headOption.map(_._1) else None
   }
-  
+
   private lazy val forValSymbols: Set[Symbol] = for {
     region <- syntacticInfo.forVals
-    pos = rangePosition(region)
+    pos = region.toRangePosition(sourceFile)
     symbol <- posToSym(pos)
   } yield symbol
 
-  private def rangePosition(region: Region): RangePosition = {
-    val Region(offset, length) = region
-    new RangePosition(sourceFile, offset, offset, offset + length - 1)
-  }
-
   private def classifyTerm(sym: Symbol): SymbolType = {
-    
-    lazy val isCaseModule = 
-      global.askOption( () => sym.companionClass.isCaseClass).getOrElse(false)
-    
+
+    lazy val isCaseModule =
+      global.askOption(() => sym.companionClass.isCaseClass).getOrElse(false)
+
     import sym._
     if (isPackage)
       Package
@@ -35,8 +32,8 @@ trait SymbolTests { self: SymbolClassification =>
       if (isLocal) LazyLocalVal else LazyTemplateVal
     else if (isSetter)
       TemplateVar
-    else if (isGetter) 
-      if(hasSetter(sym)) TemplateVar else TemplateVal
+    else if (isGetter)
+      if (hasSetter(sym)) TemplateVar else TemplateVal
     else if (isSourceMethod)
       Method
     else if (isModule) {
@@ -77,8 +74,8 @@ trait SymbolTests { self: SymbolClassification =>
   }
 
   /** Check if a setter exists for the passed getter {{{sym}}}.
-   * @precondition sym.isGetter
-   */
+    * @precondition sym.isGetter
+    */
   private def hasSetter(sym: Symbol): Boolean = {
     assert(sym.isGetter)
     global.askOption(() => sym.setter(sym.owner) != NoSymbol).getOrElse(false)
@@ -109,5 +106,15 @@ trait SymbolTests { self: SymbolClassification =>
     else
       throw new AssertionError("Unknown symbol type: " + sym)
   }
+}
 
+private object SymbolTests {
+  private class RegionOps(region: IRegion) {
+    def toRangePosition(sourceFile: SourceFile): RangePosition = {
+      val offset = region.getOffset
+      val length = region.getLength
+      new RangePosition(sourceFile, offset, offset, offset + length - 1)
+    }
+  }
+  private implicit def region2regionOps(region: IRegion): RegionOps = new RegionOps(region)
 }

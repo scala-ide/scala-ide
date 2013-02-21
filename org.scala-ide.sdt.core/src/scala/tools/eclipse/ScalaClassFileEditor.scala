@@ -58,4 +58,6 @@ class ScalaClassFileEditor extends ClassFileEditor with ScalaEditor {
     // getInputJavaElement always returns the right value
     getInputJavaElement().asInstanceOf[InteractiveCompilationUnit]
   }
+
+  override protected def installSemanticHighlighting(): Unit = { /* Never install the Java semantic highlighting engine on a Scala Editor*/ }
 }

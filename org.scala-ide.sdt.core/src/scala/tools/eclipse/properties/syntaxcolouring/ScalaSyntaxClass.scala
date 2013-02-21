@@ -12,6 +12,7 @@ import org.eclipse.jface.text._
 import org.eclipse.jface.preference.PreferenceConverter
 import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.jdt.internal.ui.JavaPlugin
+import scala.tools.eclipse.util.SWTUtils
 
 case class ScalaSyntaxClass(displayName: String, baseName: String, canBeDisabled: Boolean = false) {
 
@@ -53,14 +54,22 @@ case class ScalaSyntaxClass(displayName: String, baseName: String, canBeDisabled
   def getStyleInfo(preferenceStore: IPreferenceStore): StyleInfo = {
     val colourManager = JavaPlugin.getDefault.getJavaTextTools.getColorManager
 
-    val backgroundOpt =
+    val foregroundColorPref = preferenceStore getColor foregroundColourKey
+    var foregroundColor: Color = null
+    var backgroundOpt: Option[Color] = None
+
+    // FIXME: Blocking on the UI thread is bad. I'm pretty sure we can avoid this, but some refactoring is in needed. Basically, the 
+    //        different SyntaxClasses should be created by the editor right after checking if semantic highlighting is enabled, that 
+    //        way you know you are running inside the UI Thread. Re #1001489.
+    SWTUtils.syncExec {
+      foregroundColor = colourManager.getColor(foregroundColorPref)
       if (preferenceStore getBoolean backgroundColourEnabledKey)
-        Some(colourManager.getColor(preferenceStore getColor backgroundColourKey))
-      else
-        None
+        backgroundOpt = Option(colourManager.getColor(preferenceStore getColor backgroundColourKey))
+    }
+
     StyleInfo(
       preferenceStore getBoolean enabledKey,
-      colourManager.getColor(preferenceStore getColor foregroundColourKey),
+      foregroundColor,
       backgroundOpt,
       preferenceStore getBoolean boldKey,
       preferenceStore getBoolean italicKey,
