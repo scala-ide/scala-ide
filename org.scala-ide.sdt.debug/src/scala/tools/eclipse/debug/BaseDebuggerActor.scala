@@ -132,7 +132,7 @@ trait BaseDebuggerActor extends Actor with HasLogger {
     // exception do not provide any meaningful information, hence we simply swallow it.
     case vme: VMDisconnectedException => ()
     case e: Exception =>
-      logger.debug("Shutting down " + this + " because of", e)
+      eclipseLog.error("Shutting down " + this + " because of", e)
       val reason = UncaughtException(this, Some("Unhandled exception while actor %s was still running.".format(this)), Some(sender), Thread.currentThread(), e)
       exit(reason)
   }
