@@ -26,8 +26,12 @@ import scala.tools.eclipse.logging.HasLogger
  * compilation unit. When the editor (respectively the IWorkbenchPart) is closed,
  * the SemanticHighlightingPresenter is removed.
  *
+ * Deprecating this class since only the implicit highlighting component is using it, and I'm quite convinced that implicit highlighting 
+ * should be enabled via the editor, just like we do for semantic highlighting.
+ * 
  * @author Mirko Stocker
  */
+@deprecated("This is not needed and should be removed the moment implicit highlighting is hooked in the editor","2.1.0")
 class SemanticHighlightingReconciliation extends HasLogger {
 
   private case class SemanticDecorationManagers(actions: List[SemanticAction])
@@ -72,10 +76,7 @@ class SemanticHighlightingReconciliation extends HasLogger {
         if scu == compilationUnit
       } yield {
         page.addPartListener(new UnregisteringPartListener(scu))
-        val semanticActions = List(
-            new ImplicitHighlightingPresenter(scalaEditor.sourceViewer), 
-            new SemanticHighlightingAnnotationsManager(scalaEditor.sourceViewer)
-        )
+        val semanticActions = List(new ImplicitHighlightingPresenter(scalaEditor.sourceViewer))
         SemanticDecorationManagers(semanticActions)
       }
     presenters.headOption

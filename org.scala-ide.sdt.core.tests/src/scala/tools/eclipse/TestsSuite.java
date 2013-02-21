@@ -26,6 +26,7 @@ import scala.tools.eclipse.sbtbuilder.ScalaCompilerClasspathTest;
 import scala.tools.eclipse.sbtbuilder.ScalaJavaDepTest;
 import scala.tools.eclipse.sbtbuilder.TodoBuilderTest;
 import scala.tools.eclipse.semantic.ImplicitsHighlightingTest;
+import scala.tools.eclipse.semantichighlighting.SemanticHighlightingPositionsTest;
 import scala.tools.eclipse.semantichighlighting.classifier.SymbolClassifierTestSuite;
 import scala.tools.eclipse.structurebuilder.StructureBuilderTest;
 import scala.tools.eclipse.ui.UITestSuite;
@@ -66,6 +67,7 @@ import scala.tools.eclipse.wizards.QualifiedNameSupportTest;
   ScalaJavaDepTest.class, 
   TodoBuilderTest.class,
   ImplicitsHighlightingTest.class,
+  SemanticHighlightingPositionsTest.class,
   SymbolClassifierTestSuite.class,
   StructureBuilderTest.class,
   UITestSuite.class,
