@@ -5,6 +5,7 @@
 
 package scala.tools.eclipse;
 
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jface.text.formatter.MultiPassContentFormatter
 import org.eclipse.jface.util.PropertyChangeEvent
 import scala.tools.eclipse.semicolon.InferredSemicolonPainter
@@ -19,6 +20,8 @@ import org.eclipse.jdt.internal.ui.text.javadoc.JavaDocAutoIndentStrategy
 import org.eclipse.jdt.ui.text.{ JavaSourceViewerConfiguration, IJavaPartitions }
 import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.jface.text.{ IAutoEditStrategy, IDocument, ITextHover }
+import org.eclipse.jface.text.reconciler.IReconciler
+import org.eclipse.jface.text.reconciler.MonoReconciler
 import org.eclipse.jface.text.formatter.ContentFormatter
 import org.eclipse.jface.text.contentassist.ContentAssistant
 import org.eclipse.jface.text.contentassist.IContentAssistant
@@ -41,8 +44,10 @@ import org.eclipse.jface.text.DefaultTextHover
 import scala.tools.eclipse.javaelements.ScalaCompilationUnit
 import scala.tools.eclipse.ui.CommentAutoIndentStrategy
 import org.eclipse.jface.text.hyperlink.URLHyperlinkDetector
+import scala.tools.eclipse.reconciler.ScalaReconcilingStrategy
 
-class ScalaSourceViewerConfiguration(store: IPreferenceStore, scalaPreferenceStore: IPreferenceStore, editor: ITextEditor)
+
+class ScalaSourceViewerConfiguration(store: IPreferenceStore, scalaPreferenceStore: IPreferenceStore, editor: ScalaEditor)
    extends JavaSourceViewerConfiguration(JavaPlugin.getDefault.getJavaTextTools.getColorManager, store, editor, IJavaPartitions.JAVA_PARTITIONING) {
 
   private val codeHighlightingScanners = {
@@ -77,6 +82,14 @@ class ScalaSourceViewerConfiguration(store: IPreferenceStore, scalaPreferenceSto
     )
   }
 
+  override def getReconciler(sourceViewer: ISourceViewer): IReconciler = {
+    val reconciler = new MonoReconciler(new ScalaReconcilingStrategy(editor), /*isIncremental = */ false)
+    reconciler.setDelay(500)
+    reconciler.install(sourceViewer)
+    reconciler.setProgressMonitor(new NullProgressMonitor())
+    reconciler
+  }
+
   override def getPresentationReconciler(sourceViewer: ISourceViewer): ScalaPresentationReconciler = {
     val reconciler = new ScalaPresentationReconciler()
     reconciler.setDocumentPartitioning(getConfiguredDocumentPartitioning(sourceViewer))
@@ -87,7 +100,7 @@ class ScalaSourceViewerConfiguration(store: IPreferenceStore, scalaPreferenceSto
       reconciler.setRepairer(dr, partitionType)
     }
     reconciler
- }
+  }
 
    override def getTextHover(sv: ISourceViewer, contentType: String, stateMask: Int) = {
 //     new ScalaHover(getCodeAssist _)

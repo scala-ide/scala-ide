@@ -48,14 +48,14 @@ trait ScalaCompilationUnit extends Openable
   override def scalaProject = ScalaPlugin.plugin.getScalaProject(getJavaProject.getProject)
 
   val file : AbstractFile
-  
+
   override def sourceFile(contents: Array[Char]): SourceFile = new BatchSourceFile(file, contents)
 
   override def workspaceFile: IFile = getUnderlyingResource.asInstanceOf[IFile]
 
   override def bufferChanged(e : BufferChangedEvent) {
     if (!e.getBuffer.isClosed)
-      scalaProject.doWithPresentationCompiler(_.askReload(this, getContents))
+      scalaProject.doWithPresentationCompiler(_.scheduleReload(this, getContents))
 
     super.bufferChanged(e)
   }
