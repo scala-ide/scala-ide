@@ -39,7 +39,12 @@ do
     if [ $DEBUG ]; then
         echo $m
     fi
-    echo "$(git log -1 --format='%aD  - %an%n  * %b' $m)"
+    # we want the author of the merge branch, not the one of the merge
+    # commit
+    realAuthorName=$(git log -1 --format='%an' $m^2)
+    mergeDate=$(git log -1 --format='%aD' $m)
+    echo -e "$mergeDate - $realAuthorName\n"
+    echo "$(git log -1 --format='  * %b' $m)"
 
     # $(git rev-list --parents -n 1 $m) is the set of direct parents of
     # the merge commits (plus the merge commit itself)
