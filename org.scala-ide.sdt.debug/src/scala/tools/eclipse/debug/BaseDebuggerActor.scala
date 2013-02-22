@@ -5,8 +5,8 @@ import scala.actors.Exit
 import scala.actors.UncaughtException
 import scala.collection.mutable.Stack
 import scala.tools.eclipse.logging.HasLogger
-
 import com.sun.jdi.VMDisconnectedException
+import scala.tools.eclipse.ScalaPlugin
 
 /** A generic message to inform that an actor should terminate. */
 object PoisonPill
@@ -135,5 +135,24 @@ trait BaseDebuggerActor extends Actor with HasLogger {
       logger.debug("Shutting down " + this + " because of", e)
       val reason = UncaughtException(this, Some("Unhandled exception while actor %s was still running.".format(this)), Some(sender), Thread.currentThread(), e)
       exit(reason)
+  }
+}
+
+object BaseDebuggerActor {
+  val TIMEOUT = 500 // ms
+
+  /** A timed send with a default timeout. */
+  val syncSend = timedSend(TIMEOUT) _
+
+  /** Synchronoous message send with timeout. If the plugin is configured to run without timeouts,
+   *  it blocks until a reply is received.
+   *
+   *  @see ScalaPlugin.noTimeoutMode
+   */
+  def timedSend(timeout: Int)(a: Actor, msg: Any): Option[Any] = {
+    if (ScalaPlugin.plugin.noTimeoutMode)
+      Some(a !? msg)
+    else
+      a !? (timeout, msg)
   }
 }
