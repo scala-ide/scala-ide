@@ -1,6 +1,9 @@
 package scala.tools.eclipse.debug
 
 import com.sun.jdi.{ Method, AbsentInformationException, ReferenceType, Location }
+import com.sun.jdi.VMDisconnectedException
+import com.sun.jdi.ObjectCollectedException
+import com.sun.jdi.VMOutOfMemoryException
 
 object JDIUtil {
 
@@ -34,4 +37,19 @@ object JDIUtil {
         })
   }
 
+  import scala.util.control.Exception
+  import Exception.Catch
+
+  /** Catch the usual VM exceptions and return a default value.
+   *
+   *  It catches VMDisconnectedException, ObjectCollectedException, VMOutOfMemoryException
+   *
+   *  @note This method only catches non-checked exceptions. Combine with other
+   *        catchers using the `or` combinator.
+   */
+  def safeVmCalls[A](defaultValue: A): Catch[A] =
+    Exception.failAsValue(
+      classOf[VMDisconnectedException],
+      classOf[ObjectCollectedException],
+      classOf[VMOutOfMemoryException])(defaultValue)
 }

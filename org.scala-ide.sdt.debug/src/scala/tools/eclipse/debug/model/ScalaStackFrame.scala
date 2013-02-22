@@ -2,15 +2,15 @@ package scala.tools.eclipse.debug.model
 
 import scala.collection.JavaConverters.asScalaBufferConverter
 import scala.reflect.NameTransformer
-
 import org.eclipse.debug.core.model.IRegisterGroup
 import org.eclipse.debug.core.model.IStackFrame
 import org.eclipse.debug.core.model.IThread
 import org.eclipse.debug.core.model.IVariable
-
 import com.sun.jdi.AbsentInformationException
 import com.sun.jdi.Method
 import com.sun.jdi.StackFrame
+import com.sun.jdi.InvalidStackFrameException
+import com.sun.jdi.NativeMethodException
 
 object ScalaStackFrame {
   
@@ -92,8 +92,8 @@ class ScalaStackFrame private (val thread: ScalaThread, @volatile var stackFrame
 
   override def getCharEnd(): Int = -1
   override def getCharStart(): Int = -1
-  override def getLineNumber(): Int = stackFrame.location.lineNumber // TODO: cache data ?
-  override def getName(): String = stackFrame.location.declaringType.name // TODO: cache data ?
+  override def getLineNumber(): Int = safeStackFrameCalls(-1) { stackFrame.location.lineNumber }// TODO: cache data ?
+  override def getName(): String = safeStackFrameCalls("Error retrieving name") { stackFrame.location.declaringType.name } // TODO: cache data ?
   override def getRegisterGroups(): Array[IRegisterGroup] = ???
   override def getThread(): IThread = thread
   override def getVariables(): Array[IVariable] = variables.toArray // TODO: need real logic
@@ -120,7 +120,11 @@ class ScalaStackFrame private (val thread: ScalaThread, @volatile var stackFrame
 
   // ---
 
-  lazy val variables: Seq[ScalaVariable] = {
+  import scala.tools.eclipse.debug.JDIUtil._
+  import scala.util.control.Exception
+  import Exception.Catch
+
+  lazy val variables: Seq[ScalaVariable] = safeStackFrameCalls(Nil) {
     import scala.collection.JavaConverters._
     val visibleVariables = try {
       stackFrame.visibleVariables.asScala.map(new ScalaLocalVariable(_, this))
@@ -136,8 +140,8 @@ class ScalaStackFrame private (val thread: ScalaThread, @volatile var stackFrame
     }
   }
 
-  //FIXME: Should handle checked exception `AbsentInformationException`
-  def getSourceName(): String = stackFrame.location.sourceName
+  def getSourceName(): String =
+    safeStackFrameCalls("Source name not available")(stackFrame.location.sourceName)
   
   /**
    * Return the source path based on source name and the package.
@@ -153,7 +157,8 @@ class ScalaStackFrame private (val thread: ScalaThread, @volatile var stackFrame
     }
   }
 
-  def getMethodFullName(): String = getFullName(stackFrame.location.method)
+  def getMethodFullName(): String = 
+    safeStackFrameCalls("Error retrieving full name") { getFullName(stackFrame.location.method) }
 
   /** Set the current stack frame to `newStackFrame`. The `ScalaStackFrame.variables` don't need 
     *  to be recomputed because a variable (i.e., a `ScalaLocalVariable`) always uses the latest 
@@ -164,4 +169,11 @@ class ScalaStackFrame private (val thread: ScalaThread, @volatile var stackFrame
     stackFrame = newStackFrame
   }
 
+  /** Wrap calls to the underlying VM stack frame to handle exceptions gracefully. */
+  private def safeStackFrameCalls[A](defaultValue: A): Catch[A] =
+    (safeVmCalls(defaultValue)
+      or Exception.failAsValue(
+        classOf[InvalidStackFrameException],
+        classOf[AbsentInformationException],
+        classOf[NativeMethodException])(defaultValue))
 }
