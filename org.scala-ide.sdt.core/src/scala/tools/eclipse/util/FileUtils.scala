@@ -62,7 +62,7 @@ object FileUtils {
   
   def clearTasks(file : IFile, monitor : IProgressMonitor) =
     try {
-      workspaceRunnableIn(file.getWorkspace, monitor)(m => file.deleteMarkers(IJavaModelMarker.TASK_MARKER, true, IResource.DEPTH_INFINITE))
+      workspaceRunnableIn(file.getWorkspace, monitor) { m => file.deleteMarkers(plugin.taskMarkerId, true, IResource.DEPTH_INFINITE) }
     } catch {
       case _ : ResourceException =>
     }
@@ -75,7 +75,7 @@ object FileUtils {
 
   def task(file: IFile, tag: String, msg: String, priority: String, offset: Int, length: Int, line: Int, monitor: IProgressMonitor) =
     workspaceRunnableIn(file.getWorkspace, monitor) { m =>
-      val mrk = file.createMarker(IJavaModelMarker.TASK_MARKER)
+      val mrk = file.createMarker(plugin.taskMarkerId)
       val values = new Array[AnyRef](taskMarkerAttributeNames.length)
 
       val prioNum = priority match {
