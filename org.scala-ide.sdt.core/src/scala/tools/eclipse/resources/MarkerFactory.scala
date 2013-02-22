@@ -62,12 +62,7 @@ abstract class MarkerFactory(markerType: String) {
     val maxMarkerLen = 21000
     val trimmedMsg = msg.take(maxMarkerLen)
 
-    val attrValue = trimmedMsg.map {
-      case '\n' | '\r' => ' '
-      case c => c
-    }
-
-    marker.setAttribute(IMarker.MESSAGE, attrValue)
+    marker.setAttribute(IMarker.MESSAGE, trimmedMsg)
     marker
   }
 
