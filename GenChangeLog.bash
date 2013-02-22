@@ -5,7 +5,7 @@
 # makes many assumptions on how github works, mainly that all changes are    #
 # made through pull requests.                                                #
 #                                                                            #
-# It dadopts something akin to the standard SVN changelog format. The merge  #
+# It adopts something akin to the standard SVN changelog format. The merge  #
 # commit log (the pull request message) is used as a content string, and the #
 # logs for the branch are grepped to find a mention of something looking     #
 # like "fixes #1001234", indicating this commit fixes an Assembla ticket.    #
