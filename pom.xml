@@ -163,6 +163,9 @@
           <version>0.1.0</version>
         </dependency>
       </dependencies>
+      <properties>
+        <scala.version>2.9.2</scala.version>
+      </properties>
       <build>
         <plugins>
           <plugin>
