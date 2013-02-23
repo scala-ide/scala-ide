@@ -869,6 +869,12 @@
       description="Debug Scala JUnit Test"
       id="org.eclipse.shortcut.scala.junit.debug"
       name="Debug Scala JUnit Test" />
+    <command
+          categoryId="scala.tools.eclipse.category"
+          description="Toggle Mark Occurences"
+          id="org.scala-ide.sdt.core.toggleMarkOccurences"
+          name="Toggle Mark Occurrences">
+    </command>
   </extension>
 
   <extension point="org.eclipse.ui.bindings">
@@ -1315,6 +1321,10 @@
           class="scala.tools.eclipse.actions.OpenImplicitCommand"
           commandId="scala.tools.eclipse.editor.OpenImplicit">
     </handler>
+    <handler
+          class="scala.tools.eclipse.markoccurrences.ToggleMarkOccurrencesHandler"
+          commandId="org.scala-ide.sdt.core.toggleMarkOccurences">
+    </handler>
  </extension>
  <extension
        point="org.eclipse.ui.menus">
@@ -1326,6 +1336,12 @@
                 commandId="org.scala-ide.sdt.core.commands.ToggleImplicitsDisplay"
                 icon="icons/full/elcl16/implicit_co.gif"
                 id="org.scala-ide.sdt.core.toolbar.ToggleImplicitsDisplay"
+                style="toggle">
+          </command>
+          <command
+                commandId="org.scala-ide.sdt.core.toggleMarkOccurences"
+                icon="icons/full/etool16/mark_occurrences.png"
+                id="org.scala-ide.sdt.core.toolbar.ToggleMarkOccurences"
                 style="toggle">
           </command>
        </toolbar>

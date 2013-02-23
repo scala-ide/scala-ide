@@ -22,7 +22,8 @@ Require-Bundle:
  org.eclipse.ui.ide,
  org.eclipse.ui.workbench.texteditor,
  org.eclipse.jdt.debug.ui,
- org.aspectj.runtime
+ org.aspectj.runtime,
+ org.eclipse.jdt.junit.core
 Eclipse-SupplementBundle: 
  org.eclipse.core.resources,
  org.eclipse.debug.core,
@@ -31,7 +32,8 @@ Eclipse-SupplementBundle:
  org.eclipse.jdt.launching,
  org.eclipse.jdt.ui,
  org.eclipse.pde.ui,
- org.eclipse.jdt.groovy.core
+ org.eclipse.jdt.groovy.core,
+ org.eclipse.jdt.junit
 Bundle-ActivationPolicy: lazy
 Export-Package: 
  scala.tools.eclipse.contribution.weaving.jdt,
@@ -52,8 +54,10 @@ Export-Package:
  scala.tools.eclipse.contribution.weaving.jdt.ui.actions,
  scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor,
  scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.formatter,
- scala.tools.eclipse.contribution.weaving.pde.ui
+ scala.tools.eclipse.contribution.weaving.pde.ui,
+ scala.tools.eclipse.contribution.weaving.jdt.launching
 Bundle-RequiredExecutionEnvironment: J2SE-1.5
 Import-Package: org.eclipse.equinox.frameworkadmin,
  org.eclipse.equinox.internal.simpleconfigurator.manipulator,
- org.eclipse.equinox.simpleconfigurator.manipulator
+ org.eclipse.equinox.simpleconfigurator.manipulator,
+ org.eclipse.jdt.junit.launcher
