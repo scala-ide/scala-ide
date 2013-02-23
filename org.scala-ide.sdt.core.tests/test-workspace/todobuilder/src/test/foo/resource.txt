@@ -1,0 +1,2 @@
+# This file exists only to trigger the Java builder
+# (resources are copied to the output directory through the JDT builder)

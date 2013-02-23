@@ -5,30 +5,24 @@
 
 package scala.tools.eclipse.util
 
-
-import scala.collection.JavaConversions._
+import scala.tools.eclipse.ScalaPlugin.plugin
+import scala.tools.eclipse.util.EclipseUtils.workspaceRunnableIn
+import scala.tools.nsc.io.AbstractFile
 
 import org.eclipse.core.filebuffers.FileBuffers
 import org.eclipse.core.internal.resources.ResourceException
-import org.eclipse.core.resources.{ IFile, IMarker, IResource }
-import org.eclipse.core.runtime.{ IProgressMonitor }
-import org.eclipse.jdt.core.{ IJavaModelMarker, JavaCore }
+import org.eclipse.core.resources.IFile
+import org.eclipse.core.resources.IMarker
+import org.eclipse.core.resources.IResource
+import org.eclipse.core.resources.ResourcesPlugin
+import org.eclipse.core.runtime.IProgressMonitor
+import org.eclipse.core.runtime.Path
+import org.eclipse.jdt.core.IJavaModelMarker
+import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jdt.core.compiler.IProblem
 import org.eclipse.jdt.internal.core.builder.JavaBuilder
-import org.eclipse.jface.text.{ ITextViewer, Position, TextPresentation }
-import org.eclipse.jface.text.contentassist.ICompletionProposal
-import org.eclipse.swt.widgets.Display
-import org.eclipse.ui.{ IWorkbenchPage, PlatformUI }
-import org.eclipse.ui.ide.IDE
-import org.eclipse.core.resources.ResourcesPlugin
-import org.eclipse.core.runtime.Path
-
-import scala.tools.nsc.io.AbstractFile
-import scala.tools.eclipse.ScalaPlugin
-import scala.tools.eclipse.util.EclipseUtils._
 
 object FileUtils {
-  import ScalaPlugin.plugin
   
   def toIFile(file: AbstractFile): Option[IFile] = file match {
     case null => None
@@ -62,7 +56,7 @@ object FileUtils {
   
   def clearTasks(file : IFile, monitor : IProgressMonitor) =
     try {
-      workspaceRunnableIn(file.getWorkspace, monitor)(m => file.deleteMarkers(IJavaModelMarker.TASK_MARKER, true, IResource.DEPTH_INFINITE))
+      workspaceRunnableIn(file.getWorkspace, monitor) { m => file.deleteMarkers(plugin.taskMarkerId, true, IResource.DEPTH_INFINITE) }
     } catch {
       case _ : ResourceException =>
     }
@@ -75,7 +69,7 @@ object FileUtils {
 
   def task(file: IFile, tag: String, msg: String, priority: String, offset: Int, length: Int, line: Int, monitor: IProgressMonitor) =
     workspaceRunnableIn(file.getWorkspace, monitor) { m =>
-      val mrk = file.createMarker(IJavaModelMarker.TASK_MARKER)
+      val mrk = file.createMarker(plugin.taskMarkerId)
       val values = new Array[AnyRef](taskMarkerAttributeNames.length)
 
       val prioNum = priority match {
