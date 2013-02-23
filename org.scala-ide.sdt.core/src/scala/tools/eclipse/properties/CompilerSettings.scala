@@ -26,6 +26,7 @@ import scala.tools.nsc.CompilerCommand
 import org.eclipse.jface.fieldassist._
 import org.eclipse.jface.bindings.keys.KeyStroke
 import scala.tools.eclipse.logging.HasLogger
+import scala.tools.eclipse.buildmanager.ProjectsCleanJob
 
 trait ScalaPluginPreferencePage extends HasLogger {
   self: PreferencePage with EclipseSettings =>
@@ -41,7 +42,9 @@ trait ScalaPluginPreferencePage extends HasLogger {
       for (setting <- b.userSettings) {
         val name = SettingConverterUtil.convertNameToProperty(setting.name)
         val isDefault = setting match {
-          case bs: Settings#BooleanSetting     => bs.value == false
+          case bs: Settings#BooleanSetting     =>
+            // use the store default if it is defined: e.i. it is not a sbt/scalac preference
+            bs.value == store.getDefaultBoolean(name)
           case is: Settings#IntSetting         => is.value == is.default
           case ss: Settings#StringSetting      => ss.value == ss.default
           case ms: Settings#MultiStringSetting => ms.value == Nil
@@ -207,13 +210,13 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
 
   /** Check who needs to rebuild with new compiler flags */
   private def buildIfNecessary() = {
-    getElement() match {
+    val projects: Seq[IProject] = getElement() match {
       case project: IProject =>
         //Make sure project is rebuilt
-        project.build(IncrementalProjectBuilder.CLEAN_BUILD, null)
+        Seq(project)
       case javaProject: IJavaProject =>
         //Make sure project is rebuilt
-        javaProject.getProject().build(IncrementalProjectBuilder.CLEAN_BUILD, null)
+        Seq(javaProject.getProject())
       case other =>
         // rebuild all Scala projects that use global settings
         val plugin = ScalaPlugin.plugin
@@ -222,8 +225,10 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
           p <- (plugin.workspaceRoot.getProjects())
           scalaProject <- plugin.asScalaProject(p)
           if !scalaProject.usesProjectSettings
-        } scalaProject.underlying.build(IncrementalProjectBuilder.CLEAN_BUILD, null)
+        } yield scalaProject.underlying
     }
+
+    ProjectsCleanJob(projects).schedule()
   }
 
   // Eclipse PropertyPage API

@@ -18,6 +18,12 @@ import scala.tools.eclipse.EclipseUserSimulator
 import scala.tools.eclipse.ScalaProject
 import scala.tools.eclipse.properties.CompilerSettings
 import scala.tools.eclipse.testsetup.SDTTestUtils
+import scala.tools.eclipse.util.EclipseUtils
+import org.eclipse.core.runtime.Status
+import org.eclipse.core.runtime.jobs.IJobChangeEvent
+import org.eclipse.core.runtime.jobs.JobChangeAdapter
+import scala.tools.eclipse.SettingConverterUtil
+import scala.tools.eclipse.properties.ScalaPluginSettings
 
 object ClasspathTests extends TestProjectSetup("classpath")
 
@@ -57,6 +63,11 @@ class ClasspathTests {
     setRawClasspathAndCheckMarkers(baseRawClasspath, 0, 0)
   }
   
+  @After
+  def resetPreferences() {
+    project.storage.setToDefault(SettingConverterUtil.convertNameToProperty(ScalaPluginSettings.withVersionClasspathValidator.name))
+  }
+  
   /**
    * The scala library is defined as part of the eclipse container in the classpath (default case)
    */
@@ -73,6 +84,23 @@ class ClasspathTests {
     setRawClasspathAndCheckMarkers(baseRawClasspath :+ newLibraryEntry("specs2_%s.2-0.12.3.jar".format(majorMinor)), expectedWarnings = 0, expectedErrors = 1)
   }
 
+  /** Library would be detected as incompatible, but the check has been turned off.
+   */
+  @Test
+  def binaryIncompatibleLibraryWithPreferenceFalse() {
+    project.storage.setValue(SettingConverterUtil.convertNameToProperty(ScalaPluginSettings.withVersionClasspathValidator.name), false)
+    val majorMinor = getIncompatibleScalaVersion
+    setRawClasspathAndCheckMarkers(baseRawClasspath :+ newLibraryEntry("specs2_%s.2-0.12.3.jar".format(majorMinor)), expectedWarnings = 0, expectedErrors = 0)
+  }
+  
+  /** Check that no incompatibility is reported for low value version (< 2.8.0)
+   */
+  @Test
+  def lowVersionLibrary() {
+    project.storage.setValue(SettingConverterUtil.convertNameToProperty(ScalaPluginSettings.withVersionClasspathValidator.name), false)
+    setRawClasspathAndCheckMarkers(baseRawClasspath :+ newLibraryEntry("specs2_2.7.8-0.12.3.jar"), expectedWarnings = 0, expectedErrors = 0)
+  }
+  
   /** Major binary-incompatible library on the classpath, with short version in the name
    */
   @Test
@@ -425,13 +453,34 @@ class ClasspathTests {
     scalaProject.javaProject.setRawClasspath(newRawClasspath, new NullProgressMonitor)
     checkMarkers(expectedWarnings, expectedErrors, scalaProject)
   }
-  
-  /**
-   * Check the number of classpath errors and warnings attached to the project. It does *not* look for normal Scala problem markers,
-   * only for classpath markers.
+
+  /** Check the number of classpath errors and warnings attached to the project. It does *not* look for normal Scala problem markers,
+   *  only for classpath markers.
    */
-  private def checkMarkers(expectedNbOfWarningMarker: Int, expectedNbOfErrorMarker: Int, scalaProject: ScalaProject= project) {
-    def countMarkers(): (Int, Int) = {
+  private def checkMarkers(expectedNbOfWarningMarker: Int, expectedNbOfErrorMarker: Int, scalaProject: ScalaProject = project) {
+    // check the classpathValid state
+    assertEquals("Unexpected classpath validity state", expectedNbOfErrorMarker == 0, scalaProject.isClasspathValid())
+
+    var actualMarkers = (0, 0)
+    SDTTestUtils.waitUntil(10000) {
+      actualMarkers = collectMarkers(scalaProject)
+      actualMarkers == (expectedNbOfErrorMarker, expectedNbOfWarningMarker)
+    }
+
+    val (nbOfErrorMarker, nbOfWarningMarker) = actualMarkers
+    // after TIMEOUT, we didn't get the expected value
+    assertEquals("Unexpected nb of warning markers", expectedNbOfWarningMarker, nbOfWarningMarker)
+    assertEquals("Unexpected nb of error markers", expectedNbOfErrorMarker, nbOfErrorMarker)
+  }
+
+  private def collectMarkers(scalaProject: ScalaProject): (Int, Int) = {
+    @volatile var actualMarkers: (Int, Int) = (0, 0)
+
+    // We need to use a job when counting markers because classpath markers are themselves added in a job
+    // By using the project as a scheduling rule, we are forced to wait until the classpath marker job has
+    // finished. Otherwise, there's a race condition between the classpath validator job (that removes old
+    // markers and adds new ones) and this thread, that might read between the delete and the add
+    def countMarkersJob() = EclipseUtils.prepareJob("CheckMarkersJob", project.underlying) { monitor =>
       // count the markers on the project
       var nbOfWarningMarker = 0
       var nbOfErrorMarker = 0
@@ -442,18 +491,23 @@ class ClasspathTests {
           case IMarker.SEVERITY_WARNING => nbOfWarningMarker += 1
           case _                        =>
         }
-      (nbOfErrorMarker, nbOfWarningMarker)
+      actualMarkers = (nbOfErrorMarker, nbOfWarningMarker)
+      Status.OK_STATUS
     }
 
-    // check the classpathValid state
-    assertEquals("Unexpected classpath validity state", expectedNbOfErrorMarker == 0, scalaProject.isClasspathValid())
+    @volatile var jobDone = false
+    object jobListener extends JobChangeAdapter {
+      override def done(event: IJobChangeEvent) {
+        jobDone = true
+      }
+    }
 
-    SDTTestUtils.waitUntil(5000)(countMarkers == (expectedNbOfErrorMarker, expectedNbOfWarningMarker))
+    val job = countMarkersJob()
+    job.addJobChangeListener(jobListener)
+    job.schedule()
 
-    val (nbOfErrorMarker, nbOfWarningMarker) = countMarkers
-    // after TIMEOUT, we didn't get the expected value
-    assertEquals("Unexpected nb of warning markers", expectedNbOfWarningMarker, nbOfWarningMarker)
-    assertEquals("Unexpected nb of error markers", expectedNbOfErrorMarker, nbOfErrorMarker)
+    SDTTestUtils.waitUntil(10000) { jobDone }
+    actualMarkers
   }
 
   private def newLibraryEntry(name: String, shortScalaVersion: String = ScalaPlugin.plugin.shortScalaVer): IClasspathEntry = {

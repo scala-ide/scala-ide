@@ -15,6 +15,8 @@ import scala.tools.eclipse.debug.command.ScalaStepReturn
 import scala.actors.Future
 import scala.tools.eclipse.debug.BaseDebuggerActor
 import com.sun.jdi.ClassType
+import scala.tools.eclipse.debug.JDIUtil._
+import com.sun.jdi.VMCannotBeModifiedException
 
 class ThreadNotSuspendedException extends Exception
 
@@ -34,6 +36,7 @@ object ScalaThread {
  */
 abstract class ScalaThread private (target: ScalaDebugTarget, private[model] val threadRef: ThreadReference) extends ScalaDebugElement(target) with IThread {
   import ScalaThreadActor._
+  import BaseDebuggerActor._
 
   // Members declared in org.eclipse.debug.core.model.IStep
 
@@ -53,7 +56,7 @@ abstract class ScalaThread private (target: ScalaDebugTarget, private[model] val
   override def isSuspended: Boolean = suspended // TODO: need real logic
 
   override def resume(): Unit = resumeFromScala(DebugEvent.CLIENT_REQUEST)
-  override def suspend(): Unit = {
+  override def suspend(): Unit = safeThreadCalls(()) {
     threadRef.suspend()
     suspendedFromScala(DebugEvent.CLIENT_REQUEST)
   }
@@ -63,13 +66,8 @@ abstract class ScalaThread private (target: ScalaDebugTarget, private[model] val
   override def getBreakpoints: Array[IBreakpoint] = Array.empty // TODO: need real logic
 
   override def getName: String = {
-    try {
-      name = threadRef.name
-    } catch {
-      case e: ObjectCollectedException =>
-        name = "<garbage collected>"
-      case e: VMDisconnectedException =>
-        name = "<disconnected>"
+    name = safeThreadCalls("Error retrieving name") {
+      threadRef.name
     }
     name
   }
@@ -100,12 +98,8 @@ abstract class ScalaThread private (target: ScalaDebugTarget, private[model] val
   
   protected[debug] val companionActor: BaseDebuggerActor
 
-  val isSystemThread: Boolean = {
-    try Option(threadRef.threadGroup).exists(_.name == "system")
-    catch {
-      // some thread get created when a program terminates, and connection already closed
-      case e: VMDisconnectedException => false
-    }
+  val isSystemThread: Boolean = safeThreadCalls(false) {
+    Option(threadRef.threadGroup).exists(_.name == "system")
   }
 
   def suspendedFromScala(eventDetail: Int): Unit = companionActor ! SuspendedFromScala(eventDetail)
@@ -123,7 +117,7 @@ abstract class ScalaThread private (target: ScalaDebugTarget, private[model] val
    *  or [[ScalaObjectReference.invokeMethod(String, String, ScalaThread, ScalaValue*)]] instead.
    */
   def invokeMethod(objectReference: ObjectReference, method: Method, args: Value*): Value = {
-    processMethodInvocationResult(companionActor !? InvokeMethod(objectReference, method, args.toList))
+    processMethodInvocationResult(syncSend(companionActor, InvokeMethod(objectReference, method, args.toList)))
   }
 
   /** Invoke the given static method on the given type with the given arguments.
@@ -132,17 +126,18 @@ abstract class ScalaThread private (target: ScalaDebugTarget, private[model] val
    *  Use [[ScalaClassType.invokeMethod(String, ScalaThread,ScalaValue*)]] instead.
    */
   def invokeStaticMethod(classType: ClassType, method: Method, args: Value*): Value = {
-    processMethodInvocationResult(companionActor !? InvokeStaticMethod(classType, method, args.toList))
+    processMethodInvocationResult(syncSend(companionActor, InvokeStaticMethod(classType, method, args.toList)))
   }
 
-  private def processMethodInvocationResult(res: Any): Value = res match {
+  private def processMethodInvocationResult(res: Option[Any]): Value = if (res.isDefined) res.get match {
     case Right(null) =>
       null
     case Right(res: Value) =>
       res
     case Left(e: Exception) =>
       throw e
-  }
+  } else
+    null
 
   /**
    * release all resources
@@ -162,7 +157,7 @@ abstract class ScalaThread private (target: ScalaDebugTarget, private[model] val
    * Set the this object internal states to suspended.
    * FOR THE COMPANION ACTOR ONLY.
    */
-  private[model] def suspend(eventDetail: Int) {
+  private[model] def suspend(eventDetail: Int) = safeThreadCalls(()) {
     // FIXME: `threadRef.frames` should handle checked exception `IncompatibleThreadStateException`
     stackFrames= threadRef.frames.asScala.map(ScalaStackFrame(this, _)).toList
     suspended = true
@@ -184,14 +179,22 @@ abstract class ScalaThread private (target: ScalaDebugTarget, private[model] val
    * TO BE USED ONLY IF THE NUMBER OF FRAMES MATCHES
    * FOR THE COMPANION ACTOR ONLY.
    */
-  private[model] def rebindScalaStackFrames() {
-    // FIXME: `threadRef.frames` should handle checked exception `IncompatibleThreadStateException`
+  private[model] def rebindScalaStackFrames(): Unit = safeThreadCalls(()) {
     // FIXME: Should check that `threadRef.frames == stackFrames` before zipping
     threadRef.frames.asScala.zip(stackFrames).foreach {
       case (jdiStackFrame, scalaStackFrame) => scalaStackFrame.rebind(jdiStackFrame)
     }    
   }
 
+  import scala.util.control.Exception
+  import Exception.Catch
+
+  /** Wrap calls to the underlying VM thread reference to handle exceptions gracefully. */
+  private def safeThreadCalls[A](defaultValue: A): Catch[A] =
+    (safeVmCalls(defaultValue)
+      or Exception.failAsValue(
+        classOf[IllegalThreadStateException],
+        classOf[VMCannotBeModifiedException])(defaultValue))
 }
 
 private[model] object ScalaThreadActor {
