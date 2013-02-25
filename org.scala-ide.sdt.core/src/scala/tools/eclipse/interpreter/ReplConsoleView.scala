@@ -166,7 +166,7 @@ class ReplConsoleView extends ViewPart {
   }
   
   private def setStarted {
-    val settings = ScalaPlugin.defaultScalaSettings
+    val settings = ScalaPlugin.defaultScalaSettings()
     scalaProject.initializeCompilerSettings(settings, _ => true)
     // TODO ? move into ScalaPlugin.getScalaProject or ScalaProject.classpath
     var cp = settings.classpath.value
