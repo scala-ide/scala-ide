@@ -133,7 +133,7 @@ class ScalaSourceViewerConfiguration(store: IPreferenceStore, scalaPreferenceSto
       val partitioning = getConfiguredDocumentPartitioning(sourceViewer)
       contentType match {
          case IJavaPartitions.JAVA_DOC | IJavaPartitions.JAVA_MULTI_LINE_COMMENT | ScalaPartitions.SCALADOC_CODE_BLOCK =>
-           Array(new CommentAutoIndentStrategy(partitioning))
+           Array(new CommentAutoIndentStrategy(ScalaPlugin.prefStore, partitioning))
          case IJavaPartitions.JAVA_STRING =>
             Array(new SmartSemicolonAutoEditStrategy(partitioning), new JavaStringAutoIndentStrategy(partitioning))
          case IJavaPartitions.JAVA_CHARACTER | IDocument.DEFAULT_CONTENT_TYPE =>
