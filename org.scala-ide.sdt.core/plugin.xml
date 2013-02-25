@@ -399,6 +399,17 @@
       <super type="org.eclipse.jdt.core.problem"/>
       <persistent value="true"/>
    </extension>
+   <extension
+         id="task"
+         name="Scala task"
+         point="org.eclipse.core.resources.markers">
+      <super
+            type="org.eclipse.jdt.core.task">
+      </super>
+      <persistent
+            value="true">
+      </persistent>
+   </extension>
 
    <extension
          point="org.eclipse.ui.editors.annotationTypes">

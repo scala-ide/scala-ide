@@ -96,7 +96,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
   private val presentationCompiler = new Cached[Option[ScalaPresentationCompiler]] {
     override def create() = {
       try {
-        val settings = ScalaPlugin.defaultScalaSettings
+        val settings = ScalaPlugin.defaultScalaSettings()
         settings.printtypes.tryToSet(Nil)
         initializeCompilerSettings(settings, isPCSetting(settings))
         val pc = new ScalaPresentationCompiler(ScalaProject.this, settings)
@@ -156,6 +156,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
     logger.debug("failedCompilerInitialization: " + msg)
     import org.eclipse.jface.dialogs.MessageDialog
     synchronized {
+      // FIXME: What's the purpose of having an `asyncExex` in a synchronized block?
       if (!plugin.headlessMode && !messageShowed) {
         messageShowed = true
         asyncExec {
@@ -438,25 +439,44 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
     // save the current preferences state, so we don't go through the logic of the workspace
     // or project-specific settings for each setting in turn.
     val currentStorage = storage
-    for (
-      box <- IDESettings.shownSettings(settings);
-      setting <- box.userSettings if filter(setting);
+    for {
+      box <- IDESettings.shownSettings(settings)
+      setting <- box.userSettings if filter(setting)
       value <- Trim(currentStorage.getString(SettingConverterUtil.convertNameToProperty(setting.name)))
-    ) yield (setting, value)
+    } yield (setting, value)
   }
+
   def scalacArguments: Seq[String] = {
-    import ScalaPlugin.{defaultScalaSettings => settings}
+    import ScalaPlugin.defaultScalaSettings
     val encArgs = encoding.toSeq flatMap (Seq("-encoding", _))
-    val shownArgs =
-      for ((setting, value) <- shownSettings(settings, _ => true)) yield {
+
+    val shownArgs = {
+      val defaultSettings = defaultScalaSettings()
+      val userSettings = for ((setting, value) <- shownSettings(defaultSettings, _ => true)) yield {
         initializeSetting(setting, value)
-        setting.unparse
+        setting
       }
-    val extraArgs = settings.splitParams(storage.getString(CompilerSettings.ADDITIONAL_PARAMS))
+
+      /* Here we make sure that the default plugins directory location is part of the returned scalac arguments. 
+       * This is needed to enable continuations, when the user didn't provide an explicit path in the -Xpluginsdir
+       * compiler setting.    
+       */
+      val pluginsDirSetting = {
+        // if the user provided an explicit path for -Xpluginsdir, then it's all good. 
+        if(userSettings.exists(setting => setting.name == defaultSettings.pluginsDir)) None
+        // otherwise, inject the `pluginsDir` setting as defined in `ScalaPlugin.defaultScalaSettings`, i.e., it will 
+        // inject the default location where the continuations.jar can be found. Mind that this location can change 
+        // every time the user updates the Scala IDE.  
+        else Some(defaultSettings.pluginsDir)
+      }
+
+      (pluginsDirSetting.toList ++ userSettings)  map (_.unparse)
+    }
+    val extraArgs = defaultScalaSettings().splitParams(storage.getString(CompilerSettings.ADDITIONAL_PARAMS))
     shownArgs.flatten ++ encArgs ++ extraArgs
   }
 
-  def initializeSetting(setting: Settings#Setting, propValue: String) {
+  private def initializeSetting(setting: Settings#Setting, propValue: String) {
     try {
       setting.tryToSetFromPropertyValue(propValue)
       logger.debug("[%s] initializing %s to %s".format(underlying.getName(), setting.name, setting.value.toString))
@@ -479,7 +499,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
 
     setupCompilerClasspath(settings)
     settings.sourcepath.value = sourceFolders.map(_.toOSString).mkString(pathSeparator)
-    
+
     for ((setting, value) <- shownSettings(settings, filter)) {
       initializeSetting(setting, value)
     }
