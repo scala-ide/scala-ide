@@ -121,4 +121,13 @@ class TestProjectSetup(projectName: String, srcRoot: String = "/%s/src/", val bu
       res.get // wait until unit is typechecked
     }()
   }
+  
+  /** Open the passed `source` and wait until it has been fully typechecked.*/
+  def openAndWaitUntilTypechecked(source: ScalaSourceFile) {
+    val sourcePath = source.getPath()
+    val projectSrcPath = project.underlying.getFullPath() append "src"
+    val path = sourcePath.makeRelativeTo(projectSrcPath)
+    open(path.toOSString())
+    waitUntilTypechecked(source)
+  }
 }
