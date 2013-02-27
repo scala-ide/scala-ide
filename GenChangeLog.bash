@@ -26,16 +26,17 @@ function is_git_merge() {
 }
 
 function grep_for_fixes {
-  # this needs to be very dumb for the old BSD grep of OSX to understand
+    # this needs to be very dumb for the old BSD grep of OSX to understand
     echo $(echo $@ | egrep -oie "fix[A-Za-z]*[ \t]*?#?100[0-9][0-9][0-9][0-9]"|awk '{print $NF}')
 }
 
 # look for the 'pretty' option
 # again, single-letter only because OSX's getopt is limited
-set -- $(getopt p $*)
+set -- $(getopt dp $*)
 while [ $# -gt 0 ]
 do
     case "$1" in
+    (-d) DEBUG=yes;;
     (-p) PRETTY=yes;;
     (--) shift; break;;
     (-*) echo "$0: error - unrecognized option $1" 1>&2; usage; exit 1;;
@@ -99,6 +100,10 @@ do
         logtext=$(git log -1 --format=%B $m)
     fi
     fixes=$(grep_for_fixes $logtext)
+
+    if [ $DEBUG ]; then
+        printf "%s\n" ${fixes[@]}
+    fi
 
     fixesString=""
     if [[ $PRETTY && ! -z $fixes ]]
