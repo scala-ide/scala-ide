@@ -26,8 +26,9 @@ function is_git_merge() {
 }
 
 function grep_for_fixes {
-    # this needs to be very dumb for the old BSD grep of OSX to understand
-    echo $(echo $@ | egrep -oie "fix[A-Za-z]*[ \t]*?#?100[0-9][0-9][0-9][0-9]"|awk '{print $NF}')
+    # this needs to be VERY dumb for the old BSD grep of OSX to
+    # understand
+    echo $(echo $@ | grep -oEe "[Ff][Ii][Xx][[:alpha:]]*?[[:space:]]*?#?100[0-9]{4}"|awk '{print $NF}')
 }
 
 # look for the 'pretty' option
