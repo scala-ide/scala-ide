@@ -16,6 +16,7 @@ DEBUG=""
 function usage() {
     echo "Usage : $0 [-p] <since> <until>"
     echo "    -p : use GNU-style printing"
+    echo "    -d : print debug output    "
 }
 
 function is_git_merge() {
@@ -26,13 +27,13 @@ function is_git_merge() {
 }
 
 function grep_for_fixes {
-    # this needs to be VERY dumb for the old BSD grep of OSX to
-    # understand
+    # This needs to be VERY dumb for the old BSD grep of OSX to
+    # understand. Also, no -i (case-insensitive) mode.
     echo $(echo $@ | grep -oEe "[Ff][Ii][Xx][[:alpha:]]*?[[:space:]]*?#?100[0-9]{4}"|awk '{print $NF}')
 }
 
-# look for the 'pretty' option
-# again, single-letter only because OSX's getopt is limited
+# look for the command line options
+# again, single-letter options only because OSX's getopt is limited
 set -- $(getopt dp $*)
 while [ $# -gt 0 ]
 do
@@ -53,9 +54,6 @@ if [ $DEBUG ]
 then
     echo "I'm going to start from $start"
     echo "I'm going to end at $end"
-fi
-
-if [ $DEBUG ]; then
     echo "GETOPTS:" $PRETTY
 fi
 
@@ -96,33 +94,31 @@ do
         if [ $PRETTY ]; then
             changeLogMsg=$(git log -1 --format='%aD - %an%n  * %s' $m)
         else
-            changeLogMsg=$(git log -1 --format=' - %s' $m)
+            changeLogMsg=$(git log -1 --format='- %s' $m)
         fi
         logtext=$(git log -1 --format=%B $m)
     fi
     fixes=$(grep_for_fixes $logtext)
 
+    fixesString=""
+    # fixesList=${fixeslist%*,}
     if [ $DEBUG ]; then
-        printf "%s\n" ${fixes[@]}
+        printf "%s\n" ${fixes[@]} | paste -sd ',' -
     fi
 
-    fixesString=""
     if [[ $PRETTY && ! -z $fixes ]]
     then
-        # convert this to a list (there is shorter, but less
-        # portable)
-        # see http://stackoverflow.com/q/1252191#1252191
-        fixesList=$(echo $fixes| sed ':a;N;s/\n/\, /;ba')
-        fixesString=$(echo "\n  * FIXES: $fixesList")
+        fixesList=$(printf "%s\n" ${fixes[@]} | paste -sd ',' -)
+        fixesString=$(echo -n "\n  * FIXES: $fixesList")
     else
         if [[ ! -z $fixes ]] ; then
-        fixURLs=$(echo $fixes| sed 's/#\(100[0-9][0-9][0-9][0-9]\)/`#\1 <https:\/\/www.assembla.com\/spaces\/scala-ide\/tickets\/\1>`_/g;:a;N;s/\n/\, /;ba')
+        fixURLs=$(printf "%s\n" ${fixes[@]}| sed 's/#\(100[0-9][0-9][0-9][0-9]\)/:ticket:`\1`/g'|paste -sd ',' -)
         fixesString="($fixURLs)"
         fi
     fi
 
     echo -en "$changeLogMsg"
-    echo -e " $fixesString"
+    echo -en " $fixesString"
 done
 
 
