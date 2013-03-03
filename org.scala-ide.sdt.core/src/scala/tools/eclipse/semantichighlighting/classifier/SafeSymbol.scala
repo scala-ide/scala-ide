@@ -112,6 +112,9 @@ private[classifier] trait SafeSymbol extends CompilerAccess with PimpedTrees {
       val qualiSym = if(hasSourceCodeRepresentation(qualifier)) safeSymbol(qualifier) else Nil
       tpeSym ::: qualiSym
 
+    case SingletonTypeTree(ref) =>
+      safeSymbol(ref)
+
     case _ =>
       // the local variable backing a lazy value is called 'originalName$lzy'. We swap it here for its
       // accessor, otherwise this symbol would fail the test in `getNameRegion`
