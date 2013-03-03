@@ -91,4 +91,20 @@ class TypeTest extends AbstractSymbolClassifierTest {
       Map("TPE" -> Type))
   }
 
+  @Test
+  def singleton_type() {
+    checkSymbolClassification("""
+      object X {
+        def s: Obj.type = null
+      }
+      object Obj
+      """, """
+      object X {
+        def s: $O$.type = null
+      }
+      object Obj
+      """,
+      Map("O" -> Object))
+  }
+
 }
