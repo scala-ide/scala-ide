@@ -181,7 +181,7 @@ class CompletionTests {
     withCompletions("ticket_1000772/CompletionsWithName.scala") { (idx, position, completions) =>
       assertEquals("Only one completion expected at (%d, %d)".format(position.line, position.column), 1, completions.size)
       assertEquals("Expected the following names: %s".format(OracleNames),
-        OracleNames, completions(0).explicitParamNames)
+        OracleNames, completions(0).getParamNames())
     }
   }
 
@@ -228,7 +228,7 @@ class CompletionTests {
         assertEquals("There is only one completion location", 0, index)
         assertTrue("The completion should return java.util", completions.exists(
           _ match {
-            case CompletionProposal(MemberKind.Package, _, "util", _, _, _, _, _, _, _, _, _) =>
+            case CompletionProposal(MemberKind.Package, _, "util", _, _, _, _, _, _, _, _) =>
               true
             case _ =>
               false
