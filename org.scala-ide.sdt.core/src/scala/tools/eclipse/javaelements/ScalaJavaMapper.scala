@@ -59,7 +59,7 @@ trait ScalaJavaMapper extends ScalaAnnotationHelper with SymbolNameUtil with Has
       val fullClassName = mapType(sym)
       val results = projects.map(p => Option(p.findType(fullClassName)))
       results.find(_.isDefined).flatten.headOption
-    } else getJavaElement(sym.owner) match {
+    } else getJavaElement(sym.owner, projects: _*) match {
         case Some(ownerClass: IType) =>
           def isGetterOrSetter: Boolean = sym.isGetter || sym.isSetter
           def isConcreteGetterOrSetter: Boolean = isGetterOrSetter && !sym.isDeferred
