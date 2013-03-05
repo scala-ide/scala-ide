@@ -1,45 +1,56 @@
-package scala.tools.eclipse.ui
+package scala.tools.eclipse
+package ui
 
-import scala.tools.eclipse.ScalaImages
-import scala.tools.eclipse.ScalaWordFinder
-import scala.tools.eclipse.completion.CompletionContext
-import scala.tools.eclipse.completion.CompletionProposal
-import scala.tools.eclipse.completion.MemberKind
-import scala.tools.eclipse.completion.prefixMatches
-import scala.tools.eclipse.refactoring.EditorHelpers
-import scala.tools.eclipse.refactoring.EditorHelpers._
-import scala.tools.refactoring.common.TextChange
-import scala.tools.refactoring.implementations.AddImportStatement
-
+import completion._
+import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.jdt.internal.ui.JavaPlugin
 import org.eclipse.jdt.internal.ui.JavaPluginImages
+import org.eclipse.jdt.internal.ui.text.java.AbstractJavaCompletionProposal.ExitPolicy
 import org.eclipse.jdt.ui.PreferenceConstants
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal
 import org.eclipse.jface.preference.PreferenceConverter
+import org.eclipse.jface.text.contentassist.ICompletionProposalExtension
+import org.eclipse.jface.text.contentassist.ICompletionProposalExtension2
+import org.eclipse.jface.text.contentassist.ICompletionProposalExtension3
+import org.eclipse.jface.text.contentassist.ICompletionProposalExtension5
+import org.eclipse.jface.text.contentassist.ICompletionProposalExtension6
+import org.eclipse.jface.text.contentassist.IContextInformation
+import org.eclipse.jface.text.DefaultInformationControl
 import org.eclipse.jface.text.DocumentEvent
 import org.eclipse.jface.text.IDocument
+import org.eclipse.jface.text.IInformationControlCreator
 import org.eclipse.jface.text.IRegion
 import org.eclipse.jface.text.ITextPresentationListener
 import org.eclipse.jface.text.ITextViewer
 import org.eclipse.jface.text.ITextViewerExtension2
 import org.eclipse.jface.text.ITextViewerExtension4
 import org.eclipse.jface.text.ITextViewerExtension5
-import org.eclipse.jface.text.Position
-import org.eclipse.jface.text.TextPresentation
-import org.eclipse.jface.text.contentassist.ICompletionProposalExtension
-import org.eclipse.jface.text.contentassist.ICompletionProposalExtension2
-import org.eclipse.jface.text.contentassist.ICompletionProposalExtension6
-import org.eclipse.jface.text.contentassist.IContextInformation
 import org.eclipse.jface.text.link._
 import org.eclipse.jface.text.link.LinkedModeUI.ExitFlags
 import org.eclipse.jface.text.link.LinkedModeUI.IExitPolicy
+import org.eclipse.jface.text.Position
+import org.eclipse.jface.text.TextPresentation
+import org.eclipse.jface.text.TextSelection
 import org.eclipse.jface.viewers.ISelectionProvider
 import org.eclipse.jface.viewers.StyledString
-import org.eclipse.swt.SWT
 import org.eclipse.swt.custom.StyleRange
 import org.eclipse.swt.events.VerifyEvent
 import org.eclipse.swt.graphics.Color
+import org.eclipse.swt.graphics.Image
+import org.eclipse.swt.graphics.Point
+import org.eclipse.swt.SWT
 import org.eclipse.ui.texteditor.link.EditorLinkedModeUI
+import refactoring.EditorHelpers._
+import scala.tools.eclipse.completion.CompletionContext
+import scala.tools.eclipse.completion.CompletionProposal
+import scala.tools.eclipse.completion.MemberKind
+import scala.tools.eclipse.completion.prefixMatches
+import scala.tools.eclipse.refactoring.EditorHelpers
+import scala.tools.eclipse.refactoring.EditorHelpers._
+import scala.tools.eclipse.ScalaImages
+import scala.tools.eclipse.ScalaWordFinder
+import scala.tools.refactoring.common.TextChange
+import scala.tools.refactoring.implementations.AddImportStatement
 
 /** A UI class for displaying completion proposals.
  *
@@ -47,10 +58,8 @@ import org.eclipse.ui.texteditor.link.EditorLinkedModeUI
  *  between them.
  */
 class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: ISelectionProvider)
-  extends IJavaCompletionProposal
-  with ICompletionProposalExtension
-  with ICompletionProposalExtension2
-  with ICompletionProposalExtension6 {
+    extends IJavaCompletionProposal with ICompletionProposalExtension with ICompletionProposalExtension2
+    with ICompletionProposalExtension3 with ICompletionProposalExtension5 with ICompletionProposalExtension6 {
 
   import proposal._
   import ScalaCompletionProposal._
@@ -58,7 +67,7 @@ class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: I
   private var cachedStyleRange: StyleRange = null
   private val ScalaProposalCategory = "ScalaProposal"
 
-  override def getRelevance = relevance
+  override def getRelevance: Int = relevance
 
   private lazy val image = {
     import MemberKind._
@@ -77,7 +86,7 @@ class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: I
     }
   }
 
-  override def getImage = image
+  override def getImage: Image = image
 
   /** `getParamNames` is expensive, save this result once computed.
    *
@@ -115,7 +124,7 @@ class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: I
 
   /** A simple display string
    */
-  override def getDisplayString() = display
+  override def getDisplayString(): String = display
 
   /** A display string with grayed out extra details
    */
@@ -128,8 +137,10 @@ class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: I
 
   /** Some additional info (like javadoc ...)
    */
-  override def getAdditionalProposalInfo() = null
-  override def getSelection(d: IDocument) = null
+  override def getAdditionalProposalInfo(): String = null  // Rather the next method is called.
+  override def getAdditionalProposalInfo(monitor: IProgressMonitor): AnyRef = proposal.documentation() orNull
+
+  override def getSelection(d: IDocument): Point = null
   override def apply(d: IDocument) { throw new IllegalStateException("Shouldn't be called") }
 
   override def apply(d: IDocument, trigger: Char, offset: Int) {
@@ -262,6 +273,13 @@ class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: I
     ui.setDoContextInfo(true)
     ui
   }
+
+  // ICompletionProposalExtension3
+  override def getInformationControlCreator: IInformationControlCreator = BrowserControlCreator()
+
+  override def getPrefixCompletionStart(d: IDocument, offset: Int): Int = startPos
+  override def getPrefixCompletionText(d: IDocument, offset: Int): CharSequence = null
+
 
   /** Highlight the part of the text that would be overwritten by the current selection
    */
