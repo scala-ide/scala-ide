@@ -2,26 +2,27 @@ package scala.tools.eclipse
 package ui
 
 import completion._
+import org.eclipse.jdt.ui.PreferenceConstants
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal
-import org.eclipse.jface.text.contentassist.{ ICompletionProposalExtension, ICompletionProposalExtension6, IContextInformation }
+import org.eclipse.jface.text.contentassist.{CompletionProposal => _, _}
 import org.eclipse.swt.graphics.Image
-import org.eclipse.jface.text.IDocument
+import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.jface.viewers.{ISelectionProvider, StyledString}
-import org.eclipse.jface.text.TextSelection
-import org.eclipse.jface.text.ITextViewer
+import org.eclipse.jface.text.{Position, IDocument, TextSelection, ITextViewer, DefaultInformationControl}
+import org.eclipse.jface.text.link._
+import org.eclipse.jface.text.link.LinkedModeUI.{ExitFlags, IExitPolicy}
 import org.eclipse.jdt.internal.ui.JavaPluginImages
 import refactoring.EditorHelpers
 import refactoring.EditorHelpers._
 import scala.tools.refactoring.implementations.AddImportStatement
-import org.eclipse.jface.text.link._
-import org.eclipse.jface.text.Position
 import org.eclipse.ui.texteditor.link.EditorLinkedModeUI
 import org.eclipse.jdt.internal.ui.text.java.AbstractJavaCompletionProposal.ExitPolicy
-import org.eclipse.jface.text.link.LinkedModeUI.IExitPolicy
+import org.eclipse.jdt.internal.ui.JavaPlugin
 import org.eclipse.swt.events.VerifyEvent
-import org.eclipse.jface.text.link.LinkedModeUI.ExitFlags
 import org.eclipse.swt.SWT
 import scala.tools.refactoring.common.TextChange
+import org.eclipse.swt.graphics.Point
+import org.eclipse.jface.text.IInformationControlCreator
 
 
 /** A UI class for displaying completion proposals.
@@ -29,13 +30,14 @@ import scala.tools.refactoring.common.TextChange
  *  It adds parenthesis at the end of a proposal if it has parameters, and places the caret
  *  between them.
  */
-class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: ISelectionProvider) 
-    extends IJavaCompletionProposal with ICompletionProposalExtension with ICompletionProposalExtension6 {
+class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: ISelectionProvider)
+    extends IJavaCompletionProposal with ICompletionProposalExtension
+    with ICompletionProposalExtension3 with ICompletionProposalExtension5 with ICompletionProposalExtension6 {
   
   import proposal._
   import ScalaCompletionProposal._
 
-  def getRelevance = relevance
+  override def getRelevance: Int = relevance
 
   private lazy val image = {
     import MemberKind._
@@ -54,7 +56,7 @@ class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: I
     }
   }
   
-  def getImage = image
+  override def getImage: Image = image
 
   /** `getParamNames` is expensive, save this result once computed.
    *
@@ -84,7 +86,7 @@ class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: I
   val startOfArgumentList = startPos + completion.length + 1
   
   /** The information that is displayed in a small hover window above the completion, showing parameter names and types. */
-  def getContextInformation(): IContextInformation =
+  override def getContextInformation(): IContextInformation =
     if (tooltip.length > 0)
       new ScalaContextInformation(display, tooltip, image, startOfArgumentList)
     else null
@@ -92,12 +94,12 @@ class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: I
   /**
    * A simple display string
    */
-  def getDisplayString() = display
+  override def getDisplayString(): String = display
   
   /**
    * A display string with grayed out extra details
    */
-  def getStyledDisplayString() : StyledString = {
+  override def getStyledDisplayString() : StyledString = {
        val styledString= new StyledString(display)
        if (displayDetail != null && displayDetail.length > 0)
          styledString.append(" - ", StyledString.QUALIFIER_STYLER).append(displayDetail, StyledString.QUALIFIER_STYLER)
@@ -107,11 +109,13 @@ class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: I
   /**
    * Some additional info (like javadoc ...)
    */
-  def getAdditionalProposalInfo() = null
-  def getSelection(d: IDocument) = null
-  def apply(d: IDocument) { throw new IllegalStateException("Shouldn't be called") }
+  override def getAdditionalProposalInfo(): String = null  // Rather the next method is called.
+  override def getAdditionalProposalInfo(monitor: IProgressMonitor): AnyRef = proposal.documentation() orNull
 
-  def apply(d: IDocument, trigger: Char, offset: Int) {
+  override def getSelection(d: IDocument): Point = null
+  override def apply(d: IDocument) { throw new IllegalStateException("Shouldn't be called") }
+
+  override def apply(d: IDocument, trigger: Char, offset: Int) {
 
     withScalaFileAndSelection { (scalaSourceFile, textSelection) =>
 
@@ -144,10 +148,10 @@ class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: I
     }
   }
   
-  def getTriggerCharacters = null
-  def getContextInformationPosition = startOfArgumentList
+  override def getTriggerCharacters: Array[Char] = null
+  override def getContextInformationPosition: Int = startOfArgumentList
   
-  def isValidFor(d: IDocument, pos: Int) = 
+  override def isValidFor(d: IDocument, pos: Int): Boolean = 
     prefixMatches(completion.toArray, d.get.substring(startPos, pos).toArray)
 
   /** Insert a completion proposal, with placeholders for each explicit argument.
@@ -219,6 +223,12 @@ class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: I
     ui
   }
 
+  // ICompletionProposalExtension3
+  override def getInformationControlCreator: IInformationControlCreator = BrowserControlCreator()
+
+  override def getPrefixCompletionStart(d: IDocument, offset: Int): Int = startPos
+  override def getPrefixCompletionText(d: IDocument, offset: Int): CharSequence = null
+
   private val ScalaProposalCategory = "ScalaProposal"
 }
 
@@ -235,6 +245,4 @@ object ScalaCompletionProposal {
   val javaInterfaceImage = JavaPluginImages.get(JavaPluginImages.IMG_OBJS_INTERFACE)
   val javaClassImage = JavaPluginImages.get(JavaPluginImages.IMG_OBJS_CLASS)
   val packageImage = JavaPluginImages.get(JavaPluginImages.IMG_OBJS_PACKAGE)
-  
-  def apply(selectionProvider: ISelectionProvider)(proposal: CompletionProposal) = new ScalaCompletionProposal(proposal, selectionProvider)
-}
+ }
