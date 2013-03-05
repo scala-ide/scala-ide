@@ -60,10 +60,7 @@ class ScalaCompletionProposalComputer extends ScalaCompletions with IJavaComplet
     val region = ScalaWordFinder.findCompletionPoint(chars, position)
     
     val res = findCompletions(region)(position, scu)(sourceFile, compiler)
-    
-    // COMPAT: 2.8 compatiblity. backwards compatible: this compiles both with 2.9 and 2.8
-    import collection.JavaConversions._
-    
-    res.map(ScalaCompletionProposal(context.getViewer().getSelectionProvider)): java.util.List[ICompletionProposal]
+    import scala.collection.JavaConverters._
+    res.map(new ScalaCompletionProposal(_, context.getViewer().getSelectionProvider): ICompletionProposal).asJava
   }
 }

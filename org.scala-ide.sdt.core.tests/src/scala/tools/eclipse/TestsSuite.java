@@ -16,6 +16,7 @@ import scala.tools.eclipse.lexical.LexicalTestsSuite;
 import scala.tools.eclipse.lexical.ScalaDocumentPartitionerTest;
 import scala.tools.eclipse.occurrences.OccurrencesFinderTest;
 import scala.tools.eclipse.pc.PresentationCompilerRefreshTest;
+import scala.tools.eclipse.pc.PresentationCompilerDocTest;
 import scala.tools.eclipse.pc.PresentationCompilerTest;
 import scala.tools.eclipse.sbtbuilder.MultipleErrorsTest;
 import scala.tools.eclipse.sbtbuilder.NestedProjectsTest;
@@ -57,6 +58,7 @@ import scala.tools.eclipse.wizards.QualifiedNameSupportTest;
   LexicalTestsSuite.class,
   PresentationCompilerRefreshTest.class,
   PresentationCompilerTest.class,
+  PresentationCompilerDocTest.class,
   MultipleErrorsTest.class,
   NestedProjectsTest.class,
   OccurrencesFinderTest.class,
