@@ -43,7 +43,7 @@ import org.eclipse.core.resources.IFile
 import org.eclipse.jdt.internal.core.util.Util
 
 
-class ScalaPresentationCompiler(project: ScalaProject, settings: Settings) extends {
+class ScalaPresentationCompiler(val project: ScalaProject, settings: Settings) extends {
   /*
    * Lock object for protecting compiler names. Names are cached in a global `Array[Char]`
    * and concurrent access may lead to overwritten names.
@@ -71,8 +71,8 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings) exten
     val managedFiles = unitOfFile.keySet.toList
     for {
       f <- managedFiles.collect { case ef: EclipseFile => ef }
-      icu <- SourceFileProviderRegistry.getProvider(f.workspacePath).createFrom(f.workspacePath)
-        if icu.exists
+      opticu <- SourceFileProviderRegistry.getProvider(f.workspacePath) map (_.createFrom(f.workspacePath))
+      icu <- opticu
     } yield icu
   }
 

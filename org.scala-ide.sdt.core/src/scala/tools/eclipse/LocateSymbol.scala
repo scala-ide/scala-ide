@@ -31,24 +31,17 @@ import scala.tools.eclipse.sourcefileprovider.SourceFileProviderRegistry
 
 trait LocateSymbol { self : ScalaPresentationCompiler =>
 
-  def locate(sym : Symbol, scu : InteractiveCompilationUnit): Option[(InteractiveCompilationUnit, Int)] = {
-    def find[T, V](arr : Array[T])(f : T => Option[V]) : Option[V] = {
-      for(e <- arr) {
-        f(e) match {
-          case v@Some(_) => return v
-          case None =>
-        }
-      }
-      None
-    }
-    def findClassFile(): Option[ScalaClassFile] = {
+  def findCompilationUnit(sym: Symbol) = {
+    def findClassFile: Option[InteractiveCompilationUnit] = {
       logger.debug("Looking for a classfile for " + sym.fullName)
-      val packName = sym.enclosingPackage.fullName
-      val project = scu.scalaProject.javaProject.asInstanceOf[JavaProject]
-      val pfs = new SearchableEnvironment(project, null: WorkingCopyOwner).nameLookup.findPackageFragments(packName, false)
-      if (pfs eq null) None else find(pfs) { pf =>
-        val top = sym.enclosingTopLevelClass
-        val name = if (sym.owner.isPackageObjectClass) "package$.class" else top.name + (if (top.isModuleClass) "$" else "") + ".class"
+      val packName = sym.enclosingPackageClass.fullName
+      val javaProject = project.javaProject.asInstanceOf[JavaProject]
+      val pfs = new SearchableEnvironment(javaProject, null: WorkingCopyOwner).nameLookup.findPackageFragments(packName, false)
+      if (pfs eq null) None else pfs.toStream flatMap { pf =>
+        val name = ask { () =>
+          val top = sym.enclosingTopLevelClass
+          if (sym.owner.isPackageObjectClass) "package$.class" else top.name + (if (top.isModuleClass) "$" else "") + ".class"
+        }
         logger.debug("Trying out to get " + name)
         val cf = pf.getClassFile(name)
         cf match {
@@ -57,15 +50,15 @@ trait LocateSymbol { self : ScalaPresentationCompiler =>
             Some(classFile)
           case _ => None
         }
-      }
+      } headOption
     }
 
-    def findCompilationUnit(): Option[IPath] = {
+    def findPath: Option[IPath] = {
       logger.info("Looking for a compilation unit for " + sym.fullName)
-      val project = scu.scalaProject.javaProject.asInstanceOf[JavaProject]
-      val nameLookup = new SearchableEnvironment(project, null: WorkingCopyOwner).nameLookup
+      val javaProject = project.javaProject.asInstanceOf[JavaProject]
+      val nameLookup = new SearchableEnvironment(javaProject, null: WorkingCopyOwner).nameLookup
 
-      val name = if (sym.owner.isPackageObject) sym.owner.owner.fullName + ".package" else sym.enclosingTopLevelClass.fullName
+      val name = if (sym.owner.isPackageObject) sym.owner.owner.fullName + ".package" else sym.toplevelClass.fullName
       logger.debug("Looking for compilation unit " + name)
       Option(nameLookup.findCompilationUnit(name)) map (_.getResource().getFullPath())
     }
@@ -74,22 +67,20 @@ trait LocateSymbol { self : ScalaPresentationCompiler =>
       if (sym.sourceFile ne null) {
         val path = new Path(sym.sourceFile.path)
         val root = ResourcesPlugin.getWorkspace().getRoot()
-        root.findFilesForLocation(path) match {
-          case arr: Array[_] if arr.length == 1 => Some(arr(0).getFullPath)
-          case _                                => findCompilationUnit()
+        root.findFilesForLocationURI(path.toFile.toURI) match {
+          case Array(f) => Some(f.getFullPath)
+          case _        => findPath
         }
       } else
-        findCompilationUnit()
+        findPath
 
-    val sourceFile = findSourceFile()
+    findSourceFile.fold(findClassFile) { f =>
+      SourceFileProviderRegistry.getProvider(f) flatMap (_.createFrom(f))
+    }
+  }
 
-    val target =
-      if(sourceFile.isDefined)
-        SourceFileProviderRegistry.getProvider(sourceFile.get).createFrom(sourceFile.get)
-      else
-        findClassFile()
-
-    target flatMap { file =>
+  def locate(sym : Symbol): Option[(InteractiveCompilationUnit, Int)] =
+    findCompilationUnit(sym) flatMap { file =>
       val pos = if (sym.pos eq NoPosition) {
         file.withSourceFile { (f, _) =>
           val pos = new Response[Position]
@@ -100,8 +91,7 @@ trait LocateSymbol { self : ScalaPresentationCompiler =>
 
       pos flatMap { p =>
         if (p eq NoPosition) None
-        else Some(file -> p.point)
+        else Some(file, p.point)
       }
     }
-  }
 }
