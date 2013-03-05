@@ -39,7 +39,7 @@ import scala.tools.nsc.io.VirtualFile
 import scala.tools.nsc.interactive.MissingResponse
 
 
-class ScalaPresentationCompiler(project: ScalaProject, settings: Settings) extends {
+class ScalaPresentationCompiler(val project: ScalaProject, settings: Settings) extends {
   /**
    * Lock object for protecting compiler names. Names are cached in a global `Array[Char]`
    * and concurrent access may lead to overwritten names.
