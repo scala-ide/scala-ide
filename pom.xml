@@ -88,7 +88,8 @@
     <profile>
       <id>scala-2.10.x</id>
       <properties>
-        <scala.version>2.10.0</scala.version>
+        <scala.version>2.10.2-SNAPSHOT</scala.version>
+        <sbinary.version>0.4.1-pretending-SNAPSHOT</sbinary.version>
         <scala.era.major.version>2.10</scala.era.major.version>
         <version.suffix>2_10</version.suffix>
 
