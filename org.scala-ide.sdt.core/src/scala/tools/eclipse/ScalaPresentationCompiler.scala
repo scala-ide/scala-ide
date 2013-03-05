@@ -33,7 +33,7 @@ import scala.tools.nsc.io.VirtualFile
 import scala.tools.nsc.interactive.MissingResponse
 
 
-class ScalaPresentationCompiler(project: ScalaProject, settings: Settings)
+class ScalaPresentationCompiler(val project: ScalaProject, settings: Settings)
   extends Global(settings, new ScalaPresentationCompiler.PresentationReporter, project.underlying.getName)
   with ScalaStructureBuilder
   with ScalaIndexBuilder

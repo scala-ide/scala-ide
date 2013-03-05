@@ -23,9 +23,9 @@ object SourceFileProviderRegistry extends HasLogger {
 
   registerProviders()
 
-  def getProvider(path: IPath): SourceFileProvider = getProvider(FileExtension(path))
+  def getProvider(path: IPath): Option[SourceFileProvider] = getProvider(FileExtension(path))
   
-  private def getProvider(extension: FileExtension): SourceFileProvider = registry get extension
+  private def getProvider(extension: FileExtension): Option[SourceFileProvider] = Option(registry get extension)
 
   private def registerProviders() {
     val extensionPoint = Platform.getExtensionRegistry().getExtensionPoint(EXTENSION_POINT)
