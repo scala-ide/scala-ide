@@ -48,7 +48,7 @@ import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 import org.scalaide.core.compiler._
 import org.scalaide.core.compiler.IScalaPresentationCompiler._
 
-class ScalaPresentationCompiler(project: IScalaProject, settings: Settings) extends {
+class ScalaPresentationCompiler(val project: IScalaProject, settings: Settings) extends {
   /*
    * Lock object for protecting compiler names. Names are cached in a global `Array[Char]`
    * and concurrent access may lead to overwritten names.
