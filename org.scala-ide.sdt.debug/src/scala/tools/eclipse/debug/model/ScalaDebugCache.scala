@@ -35,7 +35,7 @@ object ScalaDebugCache {
     val debugCache = new ScalaDebugCache(debugTarget) {
       val actor = new ScalaDebugCacheActor(this, debugTarget, scalaDebugTargetActor)
     }
-    debugCache.actor.start
+    debugCache.actor.start()
     debugCache
   }
 
@@ -148,9 +148,11 @@ abstract class ScalaDebugCache(val debugTarget: ScalaDebugTarget) extends HasLog
   /** Returns the anon function for the given type, if it exists.
    */
   private def findAnonFunction(refType: ReferenceType): Option[Method] = {
-    // TODO: check super type at some point
+    val allMethods = refType.methods
+
     import scala.collection.JavaConverters._
-    val methods = refType.methods.asScala.filter(method => !method.isBridge && method.name.startsWith("apply"))
+    // TODO: check super type at some point
+    val methods = allMethods.asScala.filter(method => !method.isBridge && method.name.startsWith("apply"))
 
     methods.size match {
       case 1 =>
