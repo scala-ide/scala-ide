@@ -76,33 +76,17 @@ abstract class ScalaValue(val underlying: Value, target: ScalaDebugTarget) exten
 
   override def isAllocated(): Boolean = true // TODO: should always be true with a JVM, to check. ObjectReference#isCollected ?
 
-  final override def getReferenceTypeName(): String = {
-    try doGetReferenceTypeName()
-    catch {
-      case e: RuntimeException => targetRequestFailed("Exception while retrieving reference type name", e)
-    }
-  }
+  final override def getReferenceTypeName(): String =
+    wrapJDIException("Exception while retrieving reference type name") { doGetReferenceTypeName() }
 
-  final override def getValueString(): String = {
-    try doGetValueString()
-    catch {
-      case e: RuntimeException => targetRequestFailed("Exception while retrieving value string", e)
-    }
-  }
+  final override def getValueString(): String =
+    wrapJDIException("Exception while retrieving value string") { doGetValueString() }
 
-  final override def getVariables(): Array[IVariable] = {
-    try doGetVariables()
-    catch {
-      case e: RuntimeException => targetRequestFailed("Exception while retrieving variables", e)
-    }
-  }
+  final override def getVariables(): Array[IVariable] =
+    wrapJDIException("Exception while retrieving variables") { doGetVariables() }
   
-  final override def hasVariables(): Boolean = {
-    try doHasVariables()
-    catch {
-      case e: RuntimeException => targetRequestFailed("Exception while checking if debug element has variables", e)
-    }
-  }
+  final override def hasVariables(): Boolean = 
+    wrapJDIException("Exception while checking if debug element has variables") { doHasVariables() }
 
   protected def doGetReferenceTypeName(): String
   protected def doGetValueString(): String
@@ -125,12 +109,8 @@ class ScalaArrayReference(override val underlying: ArrayReference, target: Scala
   
   override def getVariables(offset: Int, length: Int) : Array[IVariable] = (offset until offset + length).map(new ScalaArrayElementVariable(_, this)).toArray
   
-  override def getSize(): Int = { 
-    try underlying.length
-    catch {
-      case e: RuntimeException => targetRequestFailed("Exception while retrieving size", e)
-    }
-  }
+  override def getSize(): Int = 
+    wrapJDIException("Exception while retrieving size") { underlying.length }
 
   override def getInitialOffset(): Int = 0
 
@@ -195,13 +175,9 @@ class ScalaObjectReference(override val underlying: ObjectReference, target: Sca
   /** Return the string representation of the boxed primitive value.
    *  Should be called only when this is a boxing instance.
    */
-  private def getBoxedPrimitiveValue(): String = {
-    try ScalaDebugModelPresentation.computeDetail(fieldValue("value"))
-    catch {
-      case e: RuntimeException => targetRequestFailed("Exception while retrieving boxed primitive value", e)
-    }
-  }
-  
+  private def getBoxedPrimitiveValue(): String = wrapJDIException("Exception while retrieving boxed primitive value") {
+    ScalaDebugModelPresentation.computeDetail(fieldValue("value"))
+  } 
 }
 
 class ScalaNullValue(target: ScalaDebugTarget) extends ScalaValue(null, target) {

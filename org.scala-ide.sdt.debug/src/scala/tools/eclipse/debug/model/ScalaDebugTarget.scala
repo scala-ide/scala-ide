@@ -235,9 +235,8 @@ abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine, lau
    */
   def objectByName(objectName: String, tryForceLoad: Boolean, thread: ScalaThread): ScalaObjectReference = {
     val moduleClassName = objectName + '$'
-    try classByName(moduleClassName, tryForceLoad: Boolean, thread: ScalaThread).fieldValue("MODULE$").asInstanceOf[ScalaObjectReference]
-    catch {
-      case e: RuntimeException => targetRequestFailed("Exception while retrieving module debug element `" + moduleClassName + "`", e)
+    wrapJDIException("Exception while retrieving module debug element `" + moduleClassName + "`") {
+      classByName(moduleClassName, tryForceLoad: Boolean, thread: ScalaThread).fieldValue("MODULE$").asInstanceOf[ScalaObjectReference]
     }
   }
 

@@ -86,15 +86,13 @@ class ScalaStackFrame private (val thread: ScalaThread, @volatile var stackFrame
   override def getCharEnd(): Int = -1
   override def getCharStart(): Int = -1
   override def getLineNumber(): Int = {
-    try safeStackFrameCalls(-1) { stackFrame.location.lineNumber }// TODO: cache data ?
-    catch {
-      case e: RuntimeException => targetRequestFailed("Exception while retrieving stack frame's line number", e)
+    wrapJDIException("Exception while retrieving stack frame's line number") {
+      safeStackFrameCalls(-1) { stackFrame.location.lineNumber } // TODO: cache data ?
     }
   }
   override def getName(): String = {
-    try safeStackFrameCalls("Error retrieving name") { stackFrame.location.declaringType.name } // TODO: cache data ?
-    catch {
-      case e: RuntimeException => targetRequestFailed("Exception while retrieving stack frame's name", e)
+    wrapJDIException("Exception while retrieving stack frame's name") {
+      safeStackFrameCalls("Error retrieving name") { stackFrame.location.declaringType.name } // TODO: cache data ?
     }
   }
   override def getRegisterGroups(): Array[IRegisterGroup] = ???
@@ -129,11 +127,11 @@ class ScalaStackFrame private (val thread: ScalaThread, @volatile var stackFrame
 
   lazy val variables: Seq[ScalaVariable] = safeStackFrameCalls(Nil) {
     import scala.collection.JavaConverters._
-    val visibleVariables = try {
-      stackFrame.visibleVariables.asScala.map(new ScalaLocalVariable(_, this))
-    } catch {
-      case e: AbsentInformationException => Seq()
-      case r: RuntimeException => targetRequestFailed("Exception while retrieving stack frame's visible variables", r)
+    val visibleVariables = {
+      val catcher = Exception.handling(classOf[AbsentInformationException]) by (_ => Seq.empty) or wrapJDIException("Exception while retrieving stack frame's visible variables") 
+      catcher {
+        stackFrame.visibleVariables.asScala.map(new ScalaLocalVariable(_, this))
+      }
     }
 
     val currentMethod = stackFrame.location.method
@@ -153,7 +151,7 @@ class ScalaStackFrame private (val thread: ScalaThread, @volatile var stackFrame
    * Segments are separated by '/'.
    */
   def getSourcePath(): String = {
-    try {
+    wrapJDIException("Exception while retrieving source path") {
       // we shoudn't use location#sourcePath, as it is platform dependent
       stackFrame.location.declaringType.name.split('.').init match {
         case Array() =>
@@ -161,9 +159,6 @@ class ScalaStackFrame private (val thread: ScalaThread, @volatile var stackFrame
         case packageSegments =>
           packageSegments.mkString("", "/", "/") + getSourceName
       }
-    }
-    catch {
-      case e: RuntimeException => targetRequestFailed("Exception while retrieving source path", e)
     }
   }
 
@@ -174,9 +169,8 @@ class ScalaStackFrame private (val thread: ScalaThread, @volatile var stackFrame
         NameTransformer.decode(method.name),
         getArgumentSimpleNames(method.signature).mkString(", "))
     }
-    try safeStackFrameCalls("Error retrieving full name") { getFullName(stackFrame.location.method) }
-    catch {
-      case e: RuntimeException => targetRequestFailed("Exception while retrieving method's full name", e)
+    wrapJDIException("Exception while retrieving method's full name") {
+      safeStackFrameCalls("Error retrieving full name") { getFullName(stackFrame.location.method) }
     }
   }
 

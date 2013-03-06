@@ -15,6 +15,8 @@ import org.eclipse.jdi.TimeoutException
 import com.sun.jdi.VMDisconnectedException
 import org.eclipse.core.runtime.Status
 import org.eclipse.core.runtime.IStatus
+import scala.util.control.Exception
+import scala.util.control.Exception.Catch
 
 /**
  * Base class for debug elements in the Scala debug model
@@ -47,6 +49,9 @@ abstract class ScalaDebugElement(debugTarget: ScalaDebugTarget) extends DebugEle
 
   // ----
 
+  def wrapJDIException[T](msg: String): Catch[T] = 
+    Exception.handling(classOf[RuntimeException]) by (targetRequestFailed(msg, _))
+
   /**
     * Throws a new debug exception with a status code of `TARGET_REQUEST_FAILED`
     * with the given underlying exception. If the underlying exception is not a JDI
@@ -56,36 +61,23 @@ abstract class ScalaDebugElement(debugTarget: ScalaDebugTarget) extends DebugEle
 	* @param e underlying exception that has occurred
 	* @throws DebugException The exception with a status code of `TARGET_REQUEST_FAILED`
 	*/
-  def targetRequestFailed(message: String, e: RuntimeException): Nothing = {
-    if (e == null || e.getClass().getName().startsWith("com.sun.jdi") || e.isInstanceOf[TimeoutException])
-      throwDebugException(message, DebugException.TARGET_REQUEST_FAILED, e)
+  private def targetRequestFailed(message: String, t: Throwable): Nothing = {
+    if (t == null || t.getClass().getName().startsWith("com.sun.jdi") || t.isInstanceOf[TimeoutException])
+      throw new DebugException(new Status(IStatus.ERROR, ScalaDebugPlugin.id, DebugException.TARGET_REQUEST_FAILED, message, t))
     else
-      throw e
-  }
-
-  /** Throws a debug exception with the given message, error code, and underlying exception.*/
-  private def throwDebugException(message: String, code: Int, e: Throwable): Nothing = {
-    throw new DebugException(new Status(IStatus.ERROR, ScalaDebugPlugin.id, code, message, e))
+      throw t
   }
 }
 
 trait HasFieldValue {
   self: ScalaDebugElement =>
 
-  final protected[model] def referenceType(): ReferenceType = { 
-    try getReferenceType()
-    catch {
-      case e: RuntimeException => targetRequestFailed("Exception while retrieving reference type", e)
-    }
-  }
+  final protected[model] def referenceType(): ReferenceType =
+    wrapJDIException("Exception while retrieving reference type") { getReferenceType() }
 
   /** Return the JDI value for the given field. */
-  final protected[model] def jdiFieldValue(field: Field): Value = { 
-    try getJdiFieldValue(field)
-    catch {
-      case e: RuntimeException => targetRequestFailed("Exception while retrieving JDI field value", e)
-    }
-  }
+  final protected[model] def jdiFieldValue(field: Field): Value =
+    wrapJDIException("Exception while retrieving JDI field value") { getJdiFieldValue(field) }
   
   protected def getReferenceType(): ReferenceType
   protected def getJdiFieldValue(field: Field): Value
@@ -94,18 +86,13 @@ trait HasFieldValue {
    *
    *  @throws IllegalArgumentException if the no field with the given name exists.
    */
-  def fieldValue(fieldName: String): ScalaValue = {
-    try {
-      val field = referenceType().fieldByName(fieldName)
+  def fieldValue(fieldName: String): ScalaValue = wrapJDIException("Exception while retrieving field " + fieldName + " in reference type") {
+    val field = referenceType().fieldByName(fieldName)
       
-      if (field == null) {
-        throw new IllegalArgumentException("Field '%s' doesn't exist for '%s'".format(fieldName, referenceType().name()))
-      }
-      ScalaValue(jdiFieldValue(field), getDebugTarget)
+    if (field == null) {
+      throw new IllegalArgumentException("Field '%s' doesn't exist for '%s'".format(fieldName, referenceType().name()))
     }
-    catch {
-      case e: RuntimeException => targetRequestFailed("Exception while retrieving field " + fieldName + " in reference type", e)
-    }
+    ScalaValue(jdiFieldValue(field), getDebugTarget)
   }
 }
 
@@ -123,7 +110,7 @@ trait HasMethodInvocation {
    *  @throws IllegalArgumentException if no method with given name exists, or more than one.
    */
   def invokeMethod(methodName: String, thread: ScalaThread, args: ScalaValue*): ScalaValue = {
-    try {
+    wrapJDIException("Exception while retrieving method " + methodName + " in reference type") {
       val methods = classType().methodsByName(methodName)
 
       methods.size match {
@@ -135,9 +122,6 @@ trait HasMethodInvocation {
           throw new IllegalArgumentException("More than on method '%s(..)' for '%s'".format(methodName, classType.name()))
       }
     }
-    catch {
-      case e: RuntimeException => targetRequestFailed("Exception while retrieving method " + methodName + " in reference type", e)
-    }
   }
 
   /** Invoke the method with given name and signature, using the given arguments.
@@ -145,16 +129,13 @@ trait HasMethodInvocation {
    *  @throws IllegalArgumentException if no method with given name and signature exists.
    */
   def invokeMethod(methodName: String, methodSignature: String, thread: ScalaThread, args: ScalaValue*): ScalaValue = {
-    try {
+    wrapJDIException("Exception while retrieving method " + methodName + " in reference type") {
       val method = classType().concreteMethodByName(methodName, methodSignature)
 
       if (method == null) {
         throw new IllegalArgumentException("Method '%s%s' doesn't exist for '%s'".format(methodName, methodSignature, classType().name()))
       }
       ScalaValue(jdiInvokeMethod(method, thread, args.map(_.underlying): _*), getDebugTarget)
-    }
-    catch {
-      case e: RuntimeException => targetRequestFailed("Exception while retrieving method " + methodName + " in reference type", e)
     }
   }
 }

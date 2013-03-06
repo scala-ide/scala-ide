@@ -17,26 +17,14 @@ abstract class ScalaVariable(target: ScalaDebugTarget) extends ScalaDebugElement
 
   // Members declared in org.eclipse.debug.core.model.IVariable
 
-  final override def getValue(): IValue = {
-    try doGetValue()
-    catch {
-      case e: RuntimeException => targetRequestFailed("Exception while retrieving variable's value", e)
-    }
-  }
+  final override def getValue(): IValue = 
+    wrapJDIException("Exception while retrieving variable's value") { doGetValue() }
 
-  final override def getName(): String = {
-    try doGetName()
-    catch {
-      case e: RuntimeException => targetRequestFailed("Exception while retrieving variable's name", e)
-    }
-  }
+  final override def getName(): String = 
+    wrapJDIException("Exception while retrieving variable's name") { doGetName() }
 
-  final override def getReferenceTypeName(): String = {
-    try doGetReferenceTypeName()
-    catch {
-      case e: RuntimeException => targetRequestFailed("Exception while retrieving variable's reference type name", e)
-    }
-  }
+  final override def getReferenceTypeName(): String =
+    wrapJDIException("Exception while retrieving variable's reference type name") { doGetReferenceTypeName() }
 
   override def hasValueChanged: Boolean = false // TODO: need real logic
   

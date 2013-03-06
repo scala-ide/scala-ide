@@ -26,16 +26,13 @@ class ScalaLogicalStructureProviders extends ILogicalStructureProvider {
   }
 
   private def isScalaCollection(objectReference: ScalaObjectReference): Boolean = {
-    try {
+    objectReference.wrapJDIException("Exception while checking if passed object reference is a scala collection type") {
       objectReference.referenceType match {
         case classType: ClassType =>
           implements(classType, "scala.collection.TraversableOnce")
         case _ => // TODO: ScalaObjectReference should always reference objects of class type, never of array type. Can we just cast?
           false
       }
-    }
-    catch {
-      case e: RuntimeException => objectReference.targetRequestFailed("Exception while checking if passed object reference is a scala collection type", e)
     }
   }
   
