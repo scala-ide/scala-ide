@@ -55,7 +55,7 @@ abstract class ScalaDebugElement(debugTarget: ScalaDebugTarget) extends DebugEle
   /**
     * Throws a new debug exception with a status code of `TARGET_REQUEST_FAILED`
     * with the given underlying exception. If the underlying exception is not a JDI
-	* exception, the original exception is thrown.
+    * exception, the original exception is thrown.
 	* 
 	* @param message Failure message
 	* @param e underlying exception that has occurred

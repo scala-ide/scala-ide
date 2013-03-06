@@ -86,18 +86,18 @@ class ScalaStackFrame private (val thread: ScalaThread, @volatile var stackFrame
   override def getCharEnd(): Int = -1
   override def getCharStart(): Int = -1
   override def getLineNumber(): Int = {
-    wrapJDIException("Exception while retrieving stack frame's line number") {
-      safeStackFrameCalls(-1) { stackFrame.location.lineNumber } // TODO: cache data ?
+    (safeStackFrameCalls(-1) or wrapJDIException("Exception while retrieving stack frame's line number")) {
+      stackFrame.location.lineNumber // TODO: cache data ?
     }
   }
   override def getName(): String = {
-    wrapJDIException("Exception while retrieving stack frame's name") {
-      safeStackFrameCalls("Error retrieving name") { stackFrame.location.declaringType.name } // TODO: cache data ?
+    (safeStackFrameCalls("Error retrieving name") or wrapJDIException("Exception while retrieving stack frame's name")) {
+      stackFrame.location.declaringType.name // TODO: cache data ?
     }
   }
   override def getRegisterGroups(): Array[IRegisterGroup] = ???
   override def getThread(): IThread = thread
-  override def getVariables(): Array[IVariable] = variables.toArray // TODO: need real logic
+  override def getVariables(): Array[IVariable] = wrapJDIException("Exception while retrieving stack frame's visible variables") { variables.toArray } // TODO: need real logic
   override def hasRegisterGroups(): Boolean = ???
   override def hasVariables(): Boolean = ???
 
@@ -125,11 +125,10 @@ class ScalaStackFrame private (val thread: ScalaThread, @volatile var stackFrame
   import scala.util.control.Exception
   import Exception.Catch
 
-  lazy val variables: Seq[ScalaVariable] = safeStackFrameCalls(Nil) {
+  private lazy val variables: Seq[ScalaVariable] = safeStackFrameCalls(Nil) {
     import scala.collection.JavaConverters._
     val visibleVariables = {
-      val catcher = Exception.handling(classOf[AbsentInformationException]) by (_ => Seq.empty) or wrapJDIException("Exception while retrieving stack frame's visible variables") 
-      catcher {
+      (Exception.handling(classOf[AbsentInformationException]) by (_ => Seq.empty)) {
         stackFrame.visibleVariables.asScala.map(new ScalaLocalVariable(_, this))
       }
     }
@@ -149,6 +148,8 @@ class ScalaStackFrame private (val thread: ScalaThread, @volatile var stackFrame
   /**
    * Return the source path based on source name and the package.
    * Segments are separated by '/'.
+   * 
+   * @throws DebugException
    */
   def getSourcePath(): String = {
     wrapJDIException("Exception while retrieving source path") {
@@ -169,9 +170,7 @@ class ScalaStackFrame private (val thread: ScalaThread, @volatile var stackFrame
         NameTransformer.decode(method.name),
         getArgumentSimpleNames(method.signature).mkString(", "))
     }
-    wrapJDIException("Exception while retrieving method's full name") {
-      safeStackFrameCalls("Error retrieving full name") { getFullName(stackFrame.location.method) }
-    }
+    safeStackFrameCalls("Error retrieving full name") { getFullName(stackFrame.location.method) }
   }
 
   /** Set the current stack frame to `newStackFrame`. The `ScalaStackFrame.variables` don't need 
@@ -184,10 +183,10 @@ class ScalaStackFrame private (val thread: ScalaThread, @volatile var stackFrame
   }
 
   /** Wrap calls to the underlying VM stack frame to handle exceptions gracefully. */
-  private def safeStackFrameCalls[A](defaultValue: A): Catch[A] =
-    (safeVmCalls(defaultValue)
-      or Exception.failAsValue(
-        classOf[InvalidStackFrameException],
-        classOf[AbsentInformationException],
-        classOf[NativeMethodException])(defaultValue))
+  private def safeStackFrameCalls[A](defaultValue: A): Catch[A] = {
+    Exception.failAsValue(
+      classOf[InvalidStackFrameException],
+      classOf[AbsentInformationException],
+      classOf[NativeMethodException])(defaultValue)
+  }
 }

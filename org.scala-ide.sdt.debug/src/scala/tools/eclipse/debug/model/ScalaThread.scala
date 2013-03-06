@@ -63,8 +63,9 @@ abstract class ScalaThread private (target: ScalaDebugTarget, private[model] val
   override def isSuspended: Boolean = suspended // TODO: need real logic
 
   override def resume(): Unit = resumeFromScala(DebugEvent.CLIENT_REQUEST)
-  override def suspend(): Unit = wrapJDIException("Exception while retrieving suspending stack frame") {
-    safeThreadCalls(()) {
+  override def suspend(): Unit = {
+    val catcher = wrapJDIException("Exception while retrieving suspending stack frame") or safeThreadCalls(())
+    catcher {
       threadRef.suspend()
       suspendedFromScala(DebugEvent.CLIENT_REQUEST)
     }
@@ -107,7 +108,7 @@ abstract class ScalaThread private (target: ScalaDebugTarget, private[model] val
   
   protected[debug] val companionActor: BaseDebuggerActor
 
-  val isSystemThread: Boolean = wrapJDIException("Exception while checking if system thread") {
+  val isSystemThread: Boolean = {
     safeThreadCalls(false) { Option(threadRef.threadGroup).exists(_.name == "system") }
   }
 
@@ -166,7 +167,7 @@ abstract class ScalaThread private (target: ScalaDebugTarget, private[model] val
    * Set the this object internal states to suspended.
    * FOR THE COMPANION ACTOR ONLY.
    */
-  private[model] def suspend(eventDetail: Int) = wrapJDIException("Exception while suspending thread") {
+  private[model] def suspend(eventDetail: Int) = {
     safeThreadCalls(()) {
       // FIXME: `threadRef.frames` should handle checked exception `IncompatibleThreadStateException`
       stackFrames = threadRef.frames.asScala.map(ScalaStackFrame(this, _)).toList
