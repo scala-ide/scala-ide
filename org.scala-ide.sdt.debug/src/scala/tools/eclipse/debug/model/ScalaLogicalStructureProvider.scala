@@ -10,29 +10,7 @@ import org.eclipse.debug.core.model.IValue
 
 import com.sun.jdi.ClassType
 
-object ScalaLogicalStructureProvider {
-  
-  def isScalaCollection(objectReference: ScalaObjectReference): Boolean = {
-    objectReference.underlying.referenceType match {
-      case classType: ClassType =>
-        implements(classType, "scala.collection.TraversableOnce")
-      case _ => // TODO: ScalaObjectReference should always reference objects of class type, never of array type. Can we just cast?
-        false
-    }
-  }
-  
-  /**
-   * Checks 'implements' with Java meaning
-   */
-  def implements(classType: ClassType, interfaceName: String): Boolean = {
-    import scala.collection.JavaConverters._
-    classType.allInterfaces.asScala.exists(_.name == interfaceName)
-  }
-  
-}
-
-class ScalaLogicalStructureProvider extends ILogicalStructureProvider {
-  import ScalaLogicalStructureProvider._
+class ScalaLogicalStructureProviders extends ILogicalStructureProvider {
 
   override def getLogicalStructureTypes(value: IValue) : Array[ILogicalStructureType] = {
     value match {
@@ -46,7 +24,28 @@ class ScalaLogicalStructureProvider extends ILogicalStructureProvider {
         Array() // TODO: return fixed empty Array
     }
   }
+
+  private def isScalaCollection(objectReference: ScalaObjectReference): Boolean = {
+    try {
+      objectReference.referenceType match {
+        case classType: ClassType =>
+          implements(classType, "scala.collection.TraversableOnce")
+        case _ => // TODO: ScalaObjectReference should always reference objects of class type, never of array type. Can we just cast?
+          false
+      }
+    }
+    catch {
+      case e: RuntimeException => objectReference.targetRequestFailed("Exception while checking if passed object reference is a scala collection type", e)
+    }
+  }
   
+  /**
+   * Checks 'implements' with Java meaning
+   */
+  private def implements(classType: ClassType, interfaceName: String): Boolean = {
+    import scala.collection.JavaConverters._
+    classType.allInterfaces.asScala.exists(_.name == interfaceName)
+  }
 }
 
 object ScalaCollectionLogicalStructureType extends ILogicalStructureType with HasLogger {
@@ -82,7 +81,7 @@ object ScalaCollectionLogicalStructureType extends ILogicalStructureType with Ha
       }
 
       scalaValue.invokeMethod("toArray", toArraySignature, ScalaDebugger.currentThread, anyManifestObject)
-    } catch {
+    } catch { 
       case e: Exception =>
         // fail gracefully in case of problem
         logger.debug("Failed to compute logical structure for '%s'".format(scalaValue), e)

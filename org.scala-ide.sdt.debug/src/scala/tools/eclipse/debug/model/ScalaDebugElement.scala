@@ -4,14 +4,17 @@ import scala.tools.eclipse.debug.ScalaDebugPlugin
 import scala.tools.eclipse.debug.ScalaDebugger
 import scala.tools.eclipse.debug.ScalaDebugger.modelProvider
 import scala.tools.eclipse.logging.HasLogger
-
 import org.eclipse.debug.core.model.{ITerminate, DebugElement}
-
 import com.sun.jdi.ClassType
 import com.sun.jdi.Field
 import com.sun.jdi.Method
 import com.sun.jdi.ReferenceType
 import com.sun.jdi.Value
+import org.eclipse.debug.core.DebugException
+import org.eclipse.jdi.TimeoutException
+import com.sun.jdi.VMDisconnectedException
+import org.eclipse.core.runtime.Status
+import org.eclipse.core.runtime.IStatus
 
 /**
  * Base class for debug elements in the Scala debug model
@@ -44,27 +47,65 @@ abstract class ScalaDebugElement(debugTarget: ScalaDebugTarget) extends DebugEle
 
   // ----
 
+  /**
+    * Throws a new debug exception with a status code of `TARGET_REQUEST_FAILED`
+    * with the given underlying exception. If the underlying exception is not a JDI
+	* exception, the original exception is thrown.
+	* 
+	* @param message Failure message
+	* @param e underlying exception that has occurred
+	* @throws DebugException The exception with a status code of `TARGET_REQUEST_FAILED`
+	*/
+  def targetRequestFailed(message: String, e: RuntimeException): Nothing = {
+    if (e == null || e.getClass().getName().startsWith("com.sun.jdi") || e.isInstanceOf[TimeoutException])
+      throwDebugException(message, DebugException.TARGET_REQUEST_FAILED, e)
+    else
+      throw e
+  }
+
+  /** Throws a debug exception with the given message, error code, and underlying exception.*/
+  private def throwDebugException(message: String, code: Int, e: Throwable): Nothing = {
+    throw new DebugException(new Status(IStatus.ERROR, ScalaDebugPlugin.id, code, message, e))
+  }
 }
 
 trait HasFieldValue {
   self: ScalaDebugElement =>
 
-  protected[model] def referenceType(): ReferenceType
+  final protected[model] def referenceType(): ReferenceType = { 
+    try getReferenceType()
+    catch {
+      case e: RuntimeException => targetRequestFailed("Exception while retrieving reference type", e)
+    }
+  }
 
-  /** Return the JDI value for the given field.
-   */
-  protected[model] def jdiFieldValue(field: Field): Value
+  /** Return the JDI value for the given field. */
+  final protected[model] def jdiFieldValue(field: Field): Value = { 
+    try getJdiFieldValue(field)
+    catch {
+      case e: RuntimeException => targetRequestFailed("Exception while retrieving JDI field value", e)
+    }
+  }
+  
+  protected def getReferenceType(): ReferenceType
+  protected def getJdiFieldValue(field: Field): Value
 
   /** Return the value of the field with the given name.
    *
    *  @throws IllegalArgumentException if the no field with the given name exists.
    */
   def fieldValue(fieldName: String): ScalaValue = {
-    val field = referenceType().fieldByName(fieldName)
-    if (field == null) {
-      throw new IllegalArgumentException("Field '%s' doesn't exist for '%s'".format(fieldName, referenceType().name()))
+    try {
+      val field = referenceType().fieldByName(fieldName)
+      
+      if (field == null) {
+        throw new IllegalArgumentException("Field '%s' doesn't exist for '%s'".format(fieldName, referenceType().name()))
+      }
+      ScalaValue(jdiFieldValue(field), getDebugTarget)
     }
-    ScalaValue(jdiFieldValue(field), getDebugTarget)
+    catch {
+      case e: RuntimeException => targetRequestFailed("Exception while retrieving field " + fieldName + " in reference type", e)
+    }
   }
 }
 
@@ -82,14 +123,20 @@ trait HasMethodInvocation {
    *  @throws IllegalArgumentException if no method with given name exists, or more than one.
    */
   def invokeMethod(methodName: String, thread: ScalaThread, args: ScalaValue*): ScalaValue = {
-    val methods = classType().methodsByName(methodName)
-    methods.size match {
-      case 0 =>
-        throw new IllegalArgumentException("Method '%s(..)' doesn't exist for '%s'".format(methodName, classType.name()))
-      case 1 =>
-        ScalaValue(jdiInvokeMethod(methods.get(0), thread, args.map(_.underlying): _*), getDebugTarget)
-      case _ =>
-        throw new IllegalArgumentException("More than on method '%s(..)' for '%s'".format(methodName, classType.name()))
+    try {
+      val methods = classType().methodsByName(methodName)
+
+      methods.size match {
+        case 0 =>
+          throw new IllegalArgumentException("Method '%s(..)' doesn't exist for '%s'".format(methodName, classType.name()))
+        case 1 =>
+          ScalaValue(jdiInvokeMethod(methods.get(0), thread, args.map(_.underlying): _*), getDebugTarget)
+        case _ =>
+          throw new IllegalArgumentException("More than on method '%s(..)' for '%s'".format(methodName, classType.name()))
+      }
+    }
+    catch {
+      case e: RuntimeException => targetRequestFailed("Exception while retrieving method " + methodName + " in reference type", e)
     }
   }
 
@@ -98,10 +145,16 @@ trait HasMethodInvocation {
    *  @throws IllegalArgumentException if no method with given name and signature exists.
    */
   def invokeMethod(methodName: String, methodSignature: String, thread: ScalaThread, args: ScalaValue*): ScalaValue = {
-    val method = classType().concreteMethodByName(methodName, methodSignature)
-    if (method == null) {
-      throw new IllegalArgumentException("Method '%s%s' doesn't exist for '%s'".format(methodName, methodSignature, classType().name()))
+    try {
+      val method = classType().concreteMethodByName(methodName, methodSignature)
+
+      if (method == null) {
+        throw new IllegalArgumentException("Method '%s%s' doesn't exist for '%s'".format(methodName, methodSignature, classType().name()))
+      }
+      ScalaValue(jdiInvokeMethod(method, thread, args.map(_.underlying): _*), getDebugTarget)
     }
-    ScalaValue(jdiInvokeMethod(method, thread, args.map(_.underlying): _*), getDebugTarget)
+    catch {
+      case e: RuntimeException => targetRequestFailed("Exception while retrieving method " + methodName + " in reference type", e)
+    }
   }
 }

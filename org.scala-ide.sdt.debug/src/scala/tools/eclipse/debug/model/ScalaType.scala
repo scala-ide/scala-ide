@@ -13,9 +13,9 @@ class ScalaReferenceType(underlying: ReferenceType, debugTarget: ScalaDebugTarge
 
   // Members declared in scala.tools.eclipse.debug.model.HasFieldValue
   
-  protected[model] override def referenceType = underlying
+  protected override def getReferenceType(): ReferenceType = underlying
   
-  protected[model] override def jdiFieldValue(field: Field) = underlying.getValue(field)
+  protected override def getJdiFieldValue(field: Field): Value = underlying.getValue(field)
   
 }
 
@@ -25,9 +25,9 @@ class ScalaClassType(underlying: ClassType, debugTarget: ScalaDebugTarget) exten
   
   // Members declared in scala.tools.eclipse.debug.model.HasMethodInvocation
   
-  protected[model] def classType() = underlying
+  protected[model] def classType(): ClassType = underlying
   
-  protected[model] def jdiInvokeMethod(method: Method, thread: ScalaThread, args: Value*) = thread.invokeStaticMethod(underlying, method, args:_*)
+  protected[model] def jdiInvokeMethod(method: Method, thread: ScalaThread, args: Value*): Value = thread.invokeStaticMethod(underlying, method, args:_*)
   
 }
 

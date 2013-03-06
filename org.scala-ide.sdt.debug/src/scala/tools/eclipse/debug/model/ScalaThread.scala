@@ -17,6 +17,7 @@ import scala.tools.eclipse.debug.BaseDebuggerActor
 import com.sun.jdi.ClassType
 import scala.tools.eclipse.debug.JDIUtil._
 import com.sun.jdi.VMCannotBeModifiedException
+import org.eclipse.debug.core.model.IStackFrame
 
 class ThreadNotSuspendedException extends Exception
 
@@ -45,9 +46,24 @@ abstract class ScalaThread private (target: ScalaDebugTarget, private[model] val
   override def canStepReturn: Boolean = suspended // TODO: need real logic
   override def isStepping: Boolean = ???
 
-  override def stepInto(): Unit = ScalaStepInto(stackFrames.head).step()
-  override def stepOver(): Unit = ScalaStepOver(stackFrames.head).step()
-  override def stepReturn(): Unit = ScalaStepReturn(stackFrames.head).step()
+  override def stepInto(): Unit = {
+    try ScalaStepInto(stackFrames.head).step()
+    catch {
+      case e: RuntimeException => targetRequestFailed("Exception while performing `step into`", e)
+    }
+  }
+  override def stepOver(): Unit = {
+    try ScalaStepOver(stackFrames.head).step()
+    catch {
+      case e: RuntimeException => targetRequestFailed("Exception while performing `step over`", e)
+    }
+  }
+  override def stepReturn(): Unit = {
+    try ScalaStepReturn(stackFrames.head).step()
+    catch {
+      case e: RuntimeException => targetRequestFailed("Exception while performing `step return`", e)
+    }
+  }
 
   // Members declared in org.eclipse.debug.core.model.ISuspendResume
 
@@ -56,9 +72,16 @@ abstract class ScalaThread private (target: ScalaDebugTarget, private[model] val
   override def isSuspended: Boolean = suspended // TODO: need real logic
 
   override def resume(): Unit = resumeFromScala(DebugEvent.CLIENT_REQUEST)
-  override def suspend(): Unit = safeThreadCalls(()) {
-    threadRef.suspend()
-    suspendedFromScala(DebugEvent.CLIENT_REQUEST)
+  override def suspend(): Unit = {
+    try {
+      safeThreadCalls(()) {
+        threadRef.suspend()
+        suspendedFromScala(DebugEvent.CLIENT_REQUEST)
+      }
+    }
+    catch {
+      case e: RuntimeException => targetRequestFailed("Exception while retrieving suspending stack frame", e)
+    }
   }
 
   // Members declared in org.eclipse.debug.core.model.IThread
@@ -66,15 +89,18 @@ abstract class ScalaThread private (target: ScalaDebugTarget, private[model] val
   override def getBreakpoints: Array[IBreakpoint] = Array.empty // TODO: need real logic
 
   override def getName: String = {
-    name = safeThreadCalls("Error retrieving name") {
-      threadRef.name
+    try safeThreadCalls("Error retrieving name") { 
+      name = threadRef.name
+      name
     }
-    name
+    catch {
+      case e: RuntimeException => targetRequestFailed("Exception while retrieving stack frame's name", e)
+    }
   }
 
   override def getPriority: Int = ???
-  override def getStackFrames: Array[org.eclipse.debug.core.model.IStackFrame] = stackFrames.toArray
-  override def getTopStackFrame: org.eclipse.debug.core.model.IStackFrame = stackFrames.headOption.getOrElse(null)
+  override def getStackFrames: Array[IStackFrame] = stackFrames.toArray
+  override def getTopStackFrame: IStackFrame = stackFrames.headOption.getOrElse(null)
   override def hasStackFrames: Boolean = !stackFrames.isEmpty
 
   // ----
@@ -90,7 +116,7 @@ abstract class ScalaThread private (target: ScalaDebugTarget, private[model] val
    * THE VALUE IS MODIFIED ONLY BY THE COMPANION ACTOR, USING METHODS DEFINED LOWER.
    */
   @volatile
-  private var stackFrames= List[ScalaStackFrame]()
+  private var stackFrames: List[ScalaStackFrame] = Nil
 
   // keep the last known name around, for when the vm is not available anymore
   @volatile
@@ -98,8 +124,11 @@ abstract class ScalaThread private (target: ScalaDebugTarget, private[model] val
   
   protected[debug] val companionActor: BaseDebuggerActor
 
-  val isSystemThread: Boolean = safeThreadCalls(false) {
-    Option(threadRef.threadGroup).exists(_.name == "system")
+  val isSystemThread: Boolean = {
+    try safeThreadCalls(false) { Option(threadRef.threadGroup).exists(_.name == "system") }
+    catch {
+      case e: RuntimeException => targetRequestFailed("Exception while checking if system thread", e)
+    }
   }
 
   def suspendedFromScala(eventDetail: Int): Unit = companionActor ! SuspendedFromScala(eventDetail)
@@ -144,7 +173,7 @@ abstract class ScalaThread private (target: ScalaDebugTarget, private[model] val
    */
   def dispose() {
     running = false
-    stackFrames= Nil
+    stackFrames = Nil
     companionActor ! TerminatedFromScala
   }
   
@@ -157,11 +186,16 @@ abstract class ScalaThread private (target: ScalaDebugTarget, private[model] val
    * Set the this object internal states to suspended.
    * FOR THE COMPANION ACTOR ONLY.
    */
-  private[model] def suspend(eventDetail: Int) = safeThreadCalls(()) {
-    // FIXME: `threadRef.frames` should handle checked exception `IncompatibleThreadStateException`
-    stackFrames= threadRef.frames.asScala.map(ScalaStackFrame(this, _)).toList
-    suspended = true
-    fireSuspendEvent(eventDetail)
+  private[model] def suspend(eventDetail: Int) = {
+    try safeThreadCalls(()) {
+      // FIXME: `threadRef.frames` should handle checked exception `IncompatibleThreadStateException`
+      stackFrames = threadRef.frames.asScala.map(ScalaStackFrame(this, _)).toList
+      suspended = true
+      fireSuspendEvent(eventDetail)
+    }
+    catch {
+      case e: RuntimeException => targetRequestFailed("Exception while suspending thread", e)
+    }
   }
 
   /**
@@ -170,7 +204,7 @@ abstract class ScalaThread private (target: ScalaDebugTarget, private[model] val
    */
   private[model] def resume(eventDetail: Int) {
     suspended = false
-    stackFrames= Nil
+    stackFrames = Nil
     fireResumeEvent(eventDetail)
   }
 
