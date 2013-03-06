@@ -232,9 +232,13 @@ abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine, lau
    * 
    * @throws ClassNotLoadedException if the class was not loaded yet.
    * @throws IllegalArgumentException if there is no object of the given name.
+   * @throws DebugException
    */
   def objectByName(objectName: String, tryForceLoad: Boolean, thread: ScalaThread): ScalaObjectReference = {
-    classByName(objectName + '$', tryForceLoad: Boolean, thread: ScalaThread).fieldValue("MODULE$").asInstanceOf[ScalaObjectReference]
+    val moduleClassName = objectName + '$'
+    wrapJDIException("Exception while retrieving module debug element `" + moduleClassName + "`") {
+      classByName(moduleClassName, tryForceLoad: Boolean, thread: ScalaThread).fieldValue("MODULE$").asInstanceOf[ScalaObjectReference]
+    }
   }
 
   /** Return a reference to the type with the given name in the debugged VM.
@@ -245,7 +249,7 @@ abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine, lau
    * 
    * @throws ClassNotLoadedException if the class was not loaded yet.
    */
-  def classByName(typeName: String, tryForceLoad: Boolean, thread: ScalaThread): ScalaReferenceType = {
+  private def classByName(typeName: String, tryForceLoad: Boolean, thread: ScalaThread): ScalaReferenceType = {
     import scala.collection.JavaConverters._
     // TODO: need toList?
     virtualMachine.classesByName(typeName).asScala.toList match {
@@ -315,7 +319,7 @@ abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine, lau
 
   private def disposeThreads() {
      threads.foreach { _.dispose() }
-     threads= Nil
+     threads = Nil
   }
 
   /**
@@ -342,7 +346,7 @@ abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine, lau
    * FOR THE COMPANION ACTOR ONLY.
    */
   private[model] def initializeThreads(t: List[ThreadReference]) {
-    threads= t.map(ScalaThread(this, _))
+    threads = t.map(ScalaThread(this, _))
   }
   
   /**
