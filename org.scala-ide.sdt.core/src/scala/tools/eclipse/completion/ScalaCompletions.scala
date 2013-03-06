@@ -115,11 +115,10 @@ class ScalaCompletions extends HasLogger {
               start,
               simpleName,
               simpleName,
-              "",
               packageName,
               50,
-              HasArgs.NoArgs,
               true,
+              () => List(),
               List(),
               fullyQualifiedName,
               true))

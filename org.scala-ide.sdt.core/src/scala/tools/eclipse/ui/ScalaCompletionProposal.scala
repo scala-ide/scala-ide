@@ -34,9 +34,9 @@ class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: I
   
   import proposal._
   import ScalaCompletionProposal._
-  
+
   def getRelevance = relevance
-  
+
   private lazy val image = {
     import MemberKind._
     
@@ -55,13 +55,22 @@ class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: I
   }
   
   def getImage = image
-  
+
+  /** `getParamNames` is expensive, save this result once computed.
+   *
+   *  @note This field should be lazy to avoid unnecessary computation.
+   */
+  private lazy val explicitParamNames = getParamNames()
+
   /** The string that will be inserted in the document if this proposal is chosen.
    *  It consists of the method name, followed by all explicit parameter sections,
    *  and inside each section the parameter names, delimited by commas.
+   *
+   *  @note This field needs to be lazy because it triggers the potentially expensive
+   *        `getParameterNames` operation.
    */
-  val completionString =
-    if (hasArgs == HasArgs.NoArgs)
+  private lazy val completionString =
+    if (explicitParamNames.isEmpty)
       completion
     else {
       val buffer = new StringBuffer(completion)
@@ -129,17 +138,7 @@ class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: I
     }
         
     selectionProvider match {
-      case viewer: ITextViewer if hasArgs == HasArgs.NonEmptyArgs =>
-        // obtain the relative offset in the screen (this is needed to correctly 
-        // update the caret position when folded comments/imports/classes are
-        // present in the source file.
-        //
-        // Mirko: It doesn't seem to be needed anymore since we use the 
-        //        `applyChangesToFileWhileKeepingSelection`, but it would
-        //        be better if someone else also checked this.
-        //
-        //val viewCaretOffset = viewer.getTextWidget().getCaretOffset()
-        //viewer.getTextWidget().setCaretOffset(viewCaretOffset -1 )
+      case viewer: ITextViewer if explicitParamNames.nonEmpty =>
         addArgumentTemplates(d, viewer)
       case _ => () 
     }

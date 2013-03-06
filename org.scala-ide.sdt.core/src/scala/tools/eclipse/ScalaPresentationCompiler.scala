@@ -32,6 +32,7 @@ import org.eclipse.jdt.core.IMethod
 import scala.tools.nsc.io.VirtualFile
 import scala.tools.nsc.interactive.MissingResponse
 
+
 class ScalaPresentationCompiler(project: ScalaProject, settings: Settings)
   extends Global(settings, new ScalaPresentationCompiler.PresentationReporter, project.underlying.getName)
   with ScalaStructureBuilder
@@ -283,34 +284,34 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings)
     val casePenalty = if (name.take(prefix.length) != prefix.mkString) 50 else 0
     relevance -= casePenalty
 
-    val scalaParamNames = for {
+    val namesAndTypes = for {
       section <- sym.paramss
       if section.nonEmpty && !section.head.isImplicit
-    } yield for (param <- section) yield param.name.toString
+    } yield for (param <- section) yield (param.name.toString, param.tpe.toString)
 
-    val paramNames = if (sym.isJavaDefined && sym.isMethod) {
-      getJavaElement(sym, project.javaProject) collect {
-        case method: IMethod => List(method.getParameterNames.toList)
-      } getOrElse scalaParamNames
-    } else scalaParamNames
+    val (scalaParamNames, paramTypes) = namesAndTypes.map(_.unzip).unzip
 
-    val contextInfo = for {
-      (names, syms) <- paramNames.zip(sym.paramss)
-    } yield for { (name, sym) <- names.zip(syms) } yield "%s: %s".format(name, sym.tpe)
-
-    val contextString = contextInfo.map(_.mkString("(", ", ", ")")).mkString("")
+    // we save this value to make sure it's evaluated in the PC thread
+    // the closure below can be evaluated in any thread
+    val isJavaMethod = sym.isJavaDefined && sym.isMethod
+    val getParamNames = () => {
+      if (isJavaMethod) {
+        getJavaElement(sym, project.javaProject) collect {
+          case method: IMethod => List(method.getParameterNames.toList)
+        } getOrElse scalaParamNames
+      } else scalaParamNames
+    }
 
     import scala.tools.eclipse.completion.HasArgs
     CompletionProposal(kind,
       start,
       name,
       signature,
-      contextString,
       container,
       relevance,
-      HasArgs.from(sym.paramss),
       sym.isJavaDefined,
-      paramNames,
+      getParamNames,
+      paramTypes,
       sym.fullName,
       false)
   }
