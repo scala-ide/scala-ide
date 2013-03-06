@@ -1,7 +1,6 @@
 package scala.tools.eclipse.debug.model
 
 import scala.tools.eclipse.debug.ScalaDebugger
-
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.core.runtime.IStatus
 import org.eclipse.core.runtime.Status
@@ -11,6 +10,7 @@ import org.eclipse.debug.internal.ui.views.variables.IndexedVariablePartition
 import org.eclipse.debug.ui.{ IValueDetailListener, IDebugUIConstants, IDebugModelPresentation, DebugUITools }
 import org.eclipse.jdt.internal.ui.javaeditor.EditorUtility
 import org.eclipse.ui.IEditorInput
+import org.eclipse.jface.viewers.ILabelProviderListener
 
 /**
  * Utility methods for the ScalaDebugModelPresentation class
@@ -74,10 +74,10 @@ class ScalaDebugModelPresentation extends IDebugModelPresentation {
 
   // Members declared in org.eclipse.jface.viewers.IBaseLabelProvider
 
-  override def addListener(x$1: org.eclipse.jface.viewers.ILabelProviderListener): Unit = ???
+  override def addListener(listener: ILabelProviderListener): Unit = ???
   override def dispose(): Unit = {} // TODO: need real logic
-  override def isLabelProperty(x$1: Any, x$2: String): Boolean = ???
-  override def removeListener(x$1: org.eclipse.jface.viewers.ILabelProviderListener): Unit = ???
+  override def isLabelProperty(element: Any, property: String): Boolean = ???
+  override def removeListener(listener: ILabelProviderListener): Unit = ???
 
   // Members declared in org.eclipse.debug.ui.IDebugModelPresentation
 
@@ -88,7 +88,7 @@ class ScalaDebugModelPresentation extends IDebugModelPresentation {
         listener.detailComputed(value, ScalaDebugModelPresentation.computeDetail(value))
         Status.OK_STATUS
       }
-    }.schedule
+    }.schedule()
   }
 
   override def getImage(element: Any): org.eclipse.swt.graphics.Image = {

@@ -294,7 +294,7 @@ class ScalaDebugTestSession(launchConfiguration: ILaunchConfiguration) extends H
   def getLocalVariable(name: String): ScalaValue = {
     assertEquals("Bad state before getLocalVariable", SUSPENDED, state)
     
-    currentStackFrame.variables.find(_.getName == name).get.getValue.asInstanceOf[ScalaValue]
+    currentStackFrame.getVariables.find(_.getName == name).get.getValue.asInstanceOf[ScalaValue]
   }
 
 }
