@@ -50,18 +50,18 @@ object ScalaStackFrame {
   
   // TODO: need unit tests
   def getArgumentSimpleNames(methodSignature: String): List[String] = {
-    val argumentsInMethodSignature(argString)= methodSignature
+    val argumentsInMethodSignature(argString) = methodSignature
     
     def parseArguments(args: String) : List[String] = {
       if (args.isEmpty) {
         Nil
       } else {
-        args.head match {
+        args.charAt(0) match {
           case 'L' =>
-            val typeSignatureLength= args.indexOf(';') + 1
+            val typeSignatureLength = args.indexOf(';') + 1
             getSimpleName(args.substring(0, typeSignatureLength)) +: parseArguments(args.substring(typeSignatureLength))
           case '[' =>
-            val parsedArguments= parseArguments(args.tail)
+            val parsedArguments = parseArguments(args.tail)
             "Array[%s]".format(parsedArguments.head) +: parsedArguments.tail
           case c =>
             getSimpleName(c.toString) +: parseArguments(args.tail)
@@ -70,13 +70,6 @@ object ScalaStackFrame {
     }
     
     parseArguments(argString)
-  }
-
-  def getFullName(method: Method): String = {
-    "%s.%s(%s)".format(
-      getSimpleName(method.declaringType.signature),
-      NameTransformer.decode(method.name),
-      getArgumentSimpleNames(method.signature).mkString(", "))
   }
 }
 
@@ -92,8 +85,16 @@ class ScalaStackFrame private (val thread: ScalaThread, @volatile var stackFrame
 
   override def getCharEnd(): Int = -1
   override def getCharStart(): Int = -1
-  override def getLineNumber(): Int = safeStackFrameCalls(-1) { stackFrame.location.lineNumber }// TODO: cache data ?
-  override def getName(): String = safeStackFrameCalls("Error retrieving name") { stackFrame.location.declaringType.name } // TODO: cache data ?
+  override def getLineNumber(): Int = {
+    wrapJDIException("Exception while retrieving stack frame's line number") {
+      safeStackFrameCalls(-1) { stackFrame.location.lineNumber } // TODO: cache data ?
+    }
+  }
+  override def getName(): String = {
+    wrapJDIException("Exception while retrieving stack frame's name") {
+      safeStackFrameCalls("Error retrieving name") { stackFrame.location.declaringType.name } // TODO: cache data ?
+    }
+  }
   override def getRegisterGroups(): Array[IRegisterGroup] = ???
   override def getThread(): IThread = thread
   override def getVariables(): Array[IVariable] = variables.toArray // TODO: need real logic
@@ -115,7 +116,7 @@ class ScalaStackFrame private (val thread: ScalaThread, @volatile var stackFrame
   override def canResume(): Boolean = true
   override def canSuspend(): Boolean = false
   override def isSuspended(): Boolean = true
-  override def resume(): Unit = thread.resume
+  override def resume(): Unit = thread.resume()
   override def suspend(): Unit = ???
 
   // ---
@@ -126,11 +127,13 @@ class ScalaStackFrame private (val thread: ScalaThread, @volatile var stackFrame
 
   lazy val variables: Seq[ScalaVariable] = safeStackFrameCalls(Nil) {
     import scala.collection.JavaConverters._
-    val visibleVariables = try {
-      stackFrame.visibleVariables.asScala.map(new ScalaLocalVariable(_, this))
-    } catch {
-      case e: AbsentInformationException => Seq()
+    val visibleVariables = {
+      val catcher = Exception.handling(classOf[AbsentInformationException]) by (_ => Seq.empty) or wrapJDIException("Exception while retrieving stack frame's visible variables") 
+      catcher {
+        stackFrame.visibleVariables.asScala.map(new ScalaLocalVariable(_, this))
+      }
     }
+
     val currentMethod = stackFrame.location.method
     if (currentMethod.isNative || currentMethod.isStatic) {
       // 'this' is not available for native and static methods
@@ -148,17 +151,28 @@ class ScalaStackFrame private (val thread: ScalaThread, @volatile var stackFrame
    * Segments are separated by '/'.
    */
   def getSourcePath(): String = {
-    // we shoudn't use location#sourcePath, as it is platform dependent
-    stackFrame.location.declaringType.name.split('.').init match {
-      case Array() =>
-        getSourceName
-      case packageSegments =>
-        packageSegments.mkString("", "/", "/") + getSourceName
+    wrapJDIException("Exception while retrieving source path") {
+      // we shoudn't use location#sourcePath, as it is platform dependent
+      stackFrame.location.declaringType.name.split('.').init match {
+        case Array() =>
+          getSourceName
+        case packageSegments =>
+          packageSegments.mkString("", "/", "/") + getSourceName
+      }
     }
   }
 
-  def getMethodFullName(): String = 
-    safeStackFrameCalls("Error retrieving full name") { getFullName(stackFrame.location.method) }
+  def getMethodFullName(): String = {
+    def getFullName(method: Method): String = {
+      "%s.%s(%s)".format(
+        getSimpleName(method.declaringType.signature),
+        NameTransformer.decode(method.name),
+        getArgumentSimpleNames(method.signature).mkString(", "))
+    }
+    wrapJDIException("Exception while retrieving method's full name") {
+      safeStackFrameCalls("Error retrieving full name") { getFullName(stackFrame.location.method) }
+    }
+  }
 
   /** Set the current stack frame to `newStackFrame`. The `ScalaStackFrame.variables` don't need 
     *  to be recomputed because a variable (i.e., a `ScalaLocalVariable`) always uses the latest 
