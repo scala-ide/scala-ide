@@ -1,6 +1,8 @@
 package scala.tools.eclipse.ui
 
-import org.eclipse.jface.text.{ Document, DocumentCommand, IAutoEditStrategy }
+import scala.tools.eclipse.lexical.ScalaDocumentPartitioner
+
+import org.eclipse.jface.text.{ Document, DocumentCommand, IAutoEditStrategy, IDocument }
 import org.junit.Assert._
 import org.junit.ComparisonFailure
 
@@ -53,10 +55,20 @@ abstract class AutoEditStrategyTests(strategy: IAutoEditStrategy) {
     require(input.count(_ == '^') == 1, "the cursor in the input isn't set correctly")
     require(expectedOutput.count(_ == '^') == 1, "the cursor in the expected output isn't set correctly")
 
-    val rawInput = input.filterNot(_ == '^')
-    val textSize = rawInput.length
+    def createDocument(input: String): IDocument = {
+      val rawInput = input.filterNot(_ == '^')
+      val doc = new Document(rawInput)
+      val partitioner = new ScalaDocumentPartitioner
+
+      doc.setDocumentPartitioner(partitioner)
+      partitioner.connect(doc)
+      doc
+    }
+
+    val doc = createDocument(input)
+    val rawInput = doc.get()
+    val textSize = doc.getLength()
     val textOffset = input.indexOf('^')
-    val doc = new Document(rawInput)
 
     operation match {
       case Remove(declared) =>
