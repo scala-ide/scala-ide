@@ -8,7 +8,6 @@ import org.junit.After
 import org.junit.Test
 import org.junit.Assert._
 import scala.tools.eclipse.debug.model.ScalaDebugModelPresentation
-import scala.tools.eclipse.debug.model.ScalaLogicalStructureProvider
 import scala.tools.eclipse.debug.model.ScalaCollectionLogicalStructureType
 import scala.tools.eclipse.debug.model.ScalaArrayReference
 import org.junit.internal.matchers.StringContains
@@ -116,7 +115,7 @@ class ScalaDebugComputeDetailTest {
 
     assertThat("Wrong type for the logical structure", logicalStructure.getValueString(), StringContains.containsString("Array[Object](3)"))
     
-    val elements= logicalStructure.asInstanceOf[ScalaArrayReference].getVariables
+    val elements = logicalStructure.asInstanceOf[ScalaArrayReference].getVariables()
     assertThat("Wrong value for first element", elements(0).getValue().getValueString(), StringContains.containsString("Integer 4"))
     assertThat("Wrong value for second element", elements(1).getValue().getValueString(), StringContains.containsString("Integer 5"))
     assertThat("Wrong value for third element", elements(2).getValue().getValueString(), StringContains.containsString("Integer 6"))
