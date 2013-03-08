@@ -8,5 +8,5 @@ import org.eclipse.swt.graphics.Point
 import scala.tools.eclipse.refactoring.ExtractMethodAction
 
 object ExtractMethodProposal 
-	extends ProposalRefactoringActionAdapter(
-	    new ExtractMethodAction, "Extract method")
+  extends ProposalRefactoringActionAdapter(
+      new ExtractMethodAction, "Extract method")

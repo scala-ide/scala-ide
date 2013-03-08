@@ -14,17 +14,17 @@ trait JavaSig { pc: ScalaPresentationCompiler =>
    *
    * The following are the values computed by JavaSignatureConverter:
    * {{{
-   * 	sig <- <T:LFoo;U:Ljava.util.ArrayList<-Ljava.lang.Class<TT;>;>;>(TU;TT;)TT;
-   * 	paramsCount <- 2
-   * 	paramsType <- [[U], [T]]
-   * 	paramsTypeSig <-  [TU;, TT;]
-   * 	typeVars <- [T, U]
-   * 	typeParamsSig <- [T:LFoo;, U:Ljava.util.ArrayList<-Ljava.lang.Class<TT;>;>;]
-   * 	typeParamsBounds <- [[LFoo;], [Ljava.util.ArrayList<-Ljava.lang.Class<TT;>;>;]]
-   * 	typeParamsBoundsReadable <- [[Foo], [java.util.ArrayList<? super java.lang.Class<T>>]]
-   * 	returnTypeSig <- TT;
-   * 	returnType <- T
-   * 	exceptionTypes <- []
+   *   sig <- <T:LFoo;U:Ljava.util.ArrayList<-Ljava.lang.Class<TT;>;>;>(TU;TT;)TT;
+   *   paramsCount <- 2
+   *   paramsType <- [[U], [T]]
+   *   paramsTypeSig <-  [TU;, TT;]
+   *   typeVars <- [T, U]
+   *   typeParamsSig <- [T:LFoo;, U:Ljava.util.ArrayList<-Ljava.lang.Class<TT;>;>;]
+   *   typeParamsBounds <- [[LFoo;], [Ljava.util.ArrayList<-Ljava.lang.Class<TT;>;>;]]
+   *   typeParamsBoundsReadable <- [[Foo], [java.util.ArrayList<? super java.lang.Class<T>>]]
+   *   returnTypeSig <- TT;
+   *   returnType <- T
+   *   exceptionTypes <- []
    * }}}
    *
    * @example Given the following method declaration:
@@ -32,17 +32,17 @@ trait JavaSig { pc: ScalaPresentationCompiler =>
    *
    * The following are the values computed by JavaSignatureConverter:
    * {{{
-   * 	sig <- <U:Lscala.collection.immutable.List<[Ljava.lang.String;>;>(TU;I)TU;
-   * 	paramsCount <- 2
-   * 	paramsType <- [[U], [i, n, t]]
-   * 	paramsTypeSig <- [TU;, I]
-   * 	typeVars <- [U]
-   * 	typeParamsSig <- [U:Lscala.collection.immutable.List<[Ljava.lang.String;>;]
-   * 	typeParamsBounds <- [[Lscala.collection.immutable.List<[Ljava.lang.String;>;]]
-   * 	typeParamsBoundsReadable <- [[scala.collection.immutable.List<java.lang.String[]>]]
-   * 	returnTypeSig <- TU;
-   * 	returnType <- U
-   * 	expceptionTypes <- []
+   *   sig <- <U:Lscala.collection.immutable.List<[Ljava.lang.String;>;>(TU;I)TU;
+   *   paramsCount <- 2
+   *   paramsType <- [[U], [i, n, t]]
+   *   paramsTypeSig <- [TU;, I]
+   *   typeVars <- [U]
+   *   typeParamsSig <- [U:Lscala.collection.immutable.List<[Ljava.lang.String;>;]
+   *   typeParamsBounds <- [[Lscala.collection.immutable.List<[Ljava.lang.String;>;]]
+   *   typeParamsBoundsReadable <- [[scala.collection.immutable.List<java.lang.String[]>]]
+   *   returnTypeSig <- TU;
+   *   returnType <- U
+   *   expceptionTypes <- []
    * }}}
    */
   class JavaSignature(symbol: Symbol) {

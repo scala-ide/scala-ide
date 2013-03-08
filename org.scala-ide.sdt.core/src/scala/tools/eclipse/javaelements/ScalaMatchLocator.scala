@@ -428,9 +428,9 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
                case _ =>
              }
           case (id : Ident, pattern : TypeReferencePattern) if !id.symbol.toString.startsWith("package") =>
-            	reportObjectReference(pattern, id.symbol, id.pos)
+              reportObjectReference(pattern, id.symbol, id.pos)
           case (im : Import, pattern : TypeReferencePattern) if !im.expr.symbol.toString.startsWith("package") =>
-            	reportObjectReference(pattern, im.expr.symbol, im.pos)
+              reportObjectReference(pattern, im.expr.symbol, im.pos)
           case (s : Select, pattern) => (s.symbol, pattern) match {
               case (symbol : ModuleSymbol, pattern : TypeReferencePattern) => reportObjectReference(pattern, symbol, s.pos)
               case (symbol : MethodSymbol, pattern : MethodPattern)        => reportValueOrMethodReference(s, pattern)

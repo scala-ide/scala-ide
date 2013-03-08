@@ -10,7 +10,7 @@ import org.eclipse.core.resources.IFile
 import scala.tools.nsc.symtab.Flags
 
 import scala.tools.eclipse.{ ScalaPlugin, ScalaPresentationCompiler,
-	                           ScalaSourceIndexer, SettingConverterUtil }
+                             ScalaSourceIndexer, SettingConverterUtil }
 import scala.tools.eclipse.properties.ScalaPluginSettings
 
 /** Add entries to the JDT index. This class traverses an *unattributed* Scala AST. This

@@ -25,7 +25,7 @@ class ScalaCompilerPreferenceInitializer extends AbstractPreferenceInitializer {
       val store = ScalaPlugin.plugin.getPluginPreferences
 
       def defaultPreference(s: Settings#Setting) {
-      	val preferenceName = convertNameToProperty(s.name)
+        val preferenceName = convertNameToProperty(s.name)
         val default = s match {
             case bs : Settings#BooleanSetting => "false"
             case is : Settings#IntSetting => is.default.toString

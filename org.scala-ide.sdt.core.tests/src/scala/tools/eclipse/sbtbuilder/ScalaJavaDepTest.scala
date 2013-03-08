@@ -128,12 +128,12 @@ class ScalaJavaDepTest {
 package test;
 
 public class J {
-	public static void main(String[] args) {
-		new S().foo("ahoy");
-	}
-	public String bar1(String s) {
-		return s + s;
-	}
+  public static void main(String[] args) {
+    new S().foo("ahoy");
+  }
+  public String bar1(String s) {
+    return s + s;
+  }
 }
 """
 
@@ -141,7 +141,7 @@ public class J {
 package test
 
 class S {
-	def foo1(s:String) { println(new J().bar(s)) }
+  def foo1(s:String) { println(new J().bar(s)) }
 }
 """
 

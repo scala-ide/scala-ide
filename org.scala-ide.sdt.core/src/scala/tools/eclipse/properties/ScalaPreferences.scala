@@ -21,10 +21,10 @@ import scala.tools.eclipse.logging.HasLogger
 
 class ScalaPreferences extends PropertyPage with IWorkbenchPreferencePage with EclipseSettings
   with ScalaPluginPreferencePage with HasLogger {
-	
-	/** Pulls the preference store associated with this plugin */
+
+  /** Pulls the preference store associated with this plugin */
   override def doGetPreferenceStore() : IPreferenceStore = {
-	    ScalaPlugin.prefStore
+      ScalaPlugin.prefStore
   }
 
   override def init(wb : IWorkbench) { }
@@ -37,7 +37,7 @@ class ScalaPreferences extends PropertyPage with IWorkbenchPreferencePage with E
     val composite = {
         //No Outer Composite
         val tmp = new Composite(parent, SWT.NONE)
-	    val layout = new GridLayout(1, false)
+      val layout = new GridLayout(1, false)
         tmp.setLayout(layout)
         val data = new GridData(GridData.FILL)
         data.grabExcessHorizontalSpace = true
@@ -61,7 +61,7 @@ class ScalaPreferences extends PropertyPage with IWorkbenchPreferencePage with E
   }
 
   override def performOk = try {
-  	eclipseBoxes.foreach(_.eSettings.foreach(_.apply()))
+    eclipseBoxes.foreach(_.eSettings.foreach(_.apply()))
     save()
     true
   } catch {

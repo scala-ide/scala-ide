@@ -142,7 +142,7 @@ object ScalaToggleBreakpointAdapterUtils extends ReflectionUtils {
   val createQualifiedTypeNameMethod = getDeclaredMethod(toggleBreakpointAdapterClazz, "createQualifiedTypeName", classOf[IType])
 
   def createQualifiedTypeName(tba : ToggleBreakpointAdapter, tpe : IType) = {
-  	if (tpe.isInstanceOf[ScalaSourceTypeElement])
+    if (tpe.isInstanceOf[ScalaSourceTypeElement])
       tpe.getFullyQualifiedName
     else
       createQualifiedTypeNameMethod.invoke(tba, tpe).asInstanceOf[String]

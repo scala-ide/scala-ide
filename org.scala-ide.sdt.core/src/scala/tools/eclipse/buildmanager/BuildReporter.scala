@@ -25,51 +25,51 @@ abstract class BuildReporter(private[buildmanager] val project0: ScalaProject, s
 
     // Filter out duplicates coming from the Scala compiler
     if (!prob.exists(p => p.pos == pos && p.msg == msg && p.severity == severity)) {
-	    val eclipseSeverity = severity.id match {
-	      case 2 => IMarker.SEVERITY_ERROR
-	      case 1 => IMarker.SEVERITY_WARNING
-	      case 0 => IMarker.SEVERITY_INFO
-	    }
-	
-	    try {
-	      if(pos.isDefined) {
-	        pos.source.file match {
-	          case resource @ EclipseResource(i : IFile) =>
-	            if (!resource.hasExtension("java")) {
-	              BuildProblemMarker.create(i, eclipseSeverity, msg, pos)
-	              prob += new BuildProblem(severity, msg, pos)
-	            } else
-	              logger.info("suppressed error in Java file: %s".format(msg))
-	          case f =>
-	            logger.info("no EclipseResource associated to %s [%s]".format(f.path, f.getClass))
-	            EclipseResource.fromString(f.path, project0.underlying.getFullPath) match {
-	              case Some(i: IFile) =>
-	                // this may happen if a file was compileLate by the build compiler
-	                // for instance, when a source file (on the sourcepath) is newer than the classfile
-	                // the compiler will create PlainFile instances in that case
-	                prob += new BuildProblem(severity, msg, pos)
-	                BuildProblemMarker.create(i, eclipseSeverity, msg, pos)
-	              case _ =>
-	                logger.info("no EclipseResource associated to %s [%s]".format(f.path, f.getClass))
-	                prob += new BuildProblem(severity, msg, NoPosition)
-	                BuildProblemMarker.create(project0.underlying, eclipseSeverity, msg)
-	            }
-	        }
-	      }
-	      else
-	        eclipseSeverity match {
-	          case IMarker.SEVERITY_INFO if (settings0.Ybuildmanagerdebug.value) =>
-		      	  // print only to console, better debugging
-		      	  logger.info("[Buildmanager info] " + msg)
-	          case _ =>
-		      	  prob += new BuildProblem(severity, msg, NoPosition)
-		      	  BuildProblemMarker.create(project0.underlying, eclipseSeverity, msg)
-	        }
-	    } catch {
-	      case ex : UnsupportedOperationException =>
-	        prob += new BuildProblem(severity, msg, NoPosition)
-	        BuildProblemMarker.create(project0.underlying, eclipseSeverity, msg)
-	    }
+      val eclipseSeverity = severity.id match {
+        case 2 => IMarker.SEVERITY_ERROR
+        case 1 => IMarker.SEVERITY_WARNING
+        case 0 => IMarker.SEVERITY_INFO
+      }
+
+      try {
+        if(pos.isDefined) {
+          pos.source.file match {
+            case resource @ EclipseResource(i : IFile) =>
+              if (!resource.hasExtension("java")) {
+                BuildProblemMarker.create(i, eclipseSeverity, msg, pos)
+                prob += new BuildProblem(severity, msg, pos)
+              } else
+                logger.info("suppressed error in Java file: %s".format(msg))
+            case f =>
+              logger.info("no EclipseResource associated to %s [%s]".format(f.path, f.getClass))
+              EclipseResource.fromString(f.path, project0.underlying.getFullPath) match {
+                case Some(i: IFile) =>
+                  // this may happen if a file was compileLate by the build compiler
+                  // for instance, when a source file (on the sourcepath) is newer than the classfile
+                  // the compiler will create PlainFile instances in that case
+                  prob += new BuildProblem(severity, msg, pos)
+                  BuildProblemMarker.create(i, eclipseSeverity, msg, pos)
+                case _ =>
+                  logger.info("no EclipseResource associated to %s [%s]".format(f.path, f.getClass))
+                  prob += new BuildProblem(severity, msg, NoPosition)
+                  BuildProblemMarker.create(project0.underlying, eclipseSeverity, msg)
+              }
+          }
+        }
+        else
+          eclipseSeverity match {
+            case IMarker.SEVERITY_INFO if (settings0.Ybuildmanagerdebug.value) =>
+              // print only to console, better debugging
+              logger.info("[Buildmanager info] " + msg)
+            case _ =>
+              prob += new BuildProblem(severity, msg, NoPosition)
+              BuildProblemMarker.create(project0.underlying, eclipseSeverity, msg)
+          }
+      } catch {
+        case ex : UnsupportedOperationException =>
+          prob += new BuildProblem(severity, msg, NoPosition)
+          BuildProblemMarker.create(project0.underlying, eclipseSeverity, msg)
+      }
     }
   }
 
@@ -90,7 +90,7 @@ abstract class BuildReporter(private[buildmanager] val project0: ScalaProject, s
   }
 
   override def reset() {
-  	super.reset()
-  	prob.clear()
+    super.reset()
+    prob.clear()
   }
 }

@@ -385,7 +385,7 @@ abstract class AbstractNewElementWizardPage extends NewTypeWizardPage(1, "") wit
    * This is needed because the package declaration may be different from the
    * file's location (as in the case of a `package object`).*/
   protected def getPackageNameToInject = !getPackageFragment.isDefaultPackage match {
-  	case true => Some(getPackageFragment.getElementName)
+    case true => Some(getPackageFragment.getElementName)
     case _ => None
   }
 

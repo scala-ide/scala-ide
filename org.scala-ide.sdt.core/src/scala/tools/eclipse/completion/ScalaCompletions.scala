@@ -70,7 +70,7 @@ class ScalaCompletions extends HasLogger {
             case compiler.ScopeMember(sym, tpe, true, _) if !sym.isConstructor && nameMatches(sym) =>
               val completionProposal= compiler.mkCompletionProposal(prefix, start, sym, tpe, false, compiler.NoSymbol)
               if (!isAlreadyListed(completionProposal.fullyQualifiedName, completionProposal.display))
-              	listedTypes.addBinding(completionProposal.fullyQualifiedName, completionProposal)
+                listedTypes.addBinding(completionProposal.fullyQualifiedName, completionProposal)
             case _ =>
           }
         }

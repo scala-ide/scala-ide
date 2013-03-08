@@ -61,19 +61,19 @@ class ScalaQuickFixProcessor extends IQuickFixProcessor with HasLogger {
   def getCorrections(context : IInvocationContext, locations : Array[IProblemLocation]) : Array[IJavaCompletionProposal] =
     context.getCompilationUnit match {
       case ssf : ScalaSourceFile => {
-    	val editor = JavaUI.openInEditor(context.getCompilationUnit)
+      val editor = JavaUI.openInEditor(context.getCompilationUnit)
         var corrections : List[IJavaCompletionProposal] = Nil
         for (location <- locations)
-        	for ((ann, pos) <- getAnnotationsAtOffset(editor, location.getOffset)) {
-         	  val importFix = suggestImportFix(context.getCompilationUnit(), ann.getText)
-         	
-         	  // compute all possible type mismatch quick fixes
-         	  val document = (editor.asInstanceOf[ITextEditor]).getDocumentProvider().getDocument(editor.getEditorInput())
-         	  val typeMismatchFix = suggestTypeMismatchFix(document, ann.getText, pos)
-         	
-         	  // concatenate lists of found quick fixes
+          for ((ann, pos) <- getAnnotationsAtOffset(editor, location.getOffset)) {
+             val importFix = suggestImportFix(context.getCompilationUnit(), ann.getText)
+
+             // compute all possible type mismatch quick fixes
+             val document = (editor.asInstanceOf[ITextEditor]).getDocumentProvider().getDocument(editor.getEditorInput())
+             val typeMismatchFix = suggestTypeMismatchFix(document, ann.getText, pos)
+
+             // concatenate lists of found quick fixes
             corrections = corrections ++ importFix ++ typeMismatchFix
-        	}
+          }
         corrections match {
           case Nil => null
           case l => l.distinct.toArray
@@ -84,18 +84,18 @@ class ScalaQuickFixProcessor extends IQuickFixProcessor with HasLogger {
 
   // XXX is this code duplication? -- check scala.tools.eclipse.util.EditorUtils.getAnnotationsAtOffset
   private def getAnnotationsAtOffsetXXX(part: IEditorPart, offset: Int): List[Annotation] = {
-	  import ScalaQuickFixProcessor._
-	
-	  var ret = List[Annotation]()
-	  val model = JavaUI.getDocumentProvider().getAnnotationModel(part.getEditorInput())
-	  val iter = model.getAnnotationIterator
-	  while (iter.hasNext()) {
-	 	val ann: Annotation = iter.next().asInstanceOf[Annotation]
-	 	val pos = model.getPosition(ann)
-	 	if (isInside(offset, pos.offset, pos.offset + pos.length))
-	 	    ret = ann :: ret
-	  }
-	  return ret
+    import ScalaQuickFixProcessor._
+
+    var ret = List[Annotation]()
+    val model = JavaUI.getDocumentProvider().getAnnotationModel(part.getEditorInput())
+    val iter = model.getAnnotationIterator
+    while (iter.hasNext()) {
+     val ann: Annotation = iter.next().asInstanceOf[Annotation]
+     val pos = model.getPosition(ann)
+     if (isInside(offset, pos.offset, pos.offset + pos.length))
+         ret = ann :: ret
+    }
+    return ret
   }
 
   private
@@ -132,16 +132,16 @@ class ScalaQuickFixProcessor extends IQuickFixProcessor with HasLogger {
     return problemMessage match {
       // extract found and required type
       case typeMismatchError(foundType, requiredType) =>
-    		// utilize type mismatch computer to find quick fixes
+        // utilize type mismatch computer to find quick fixes
         val replacementStringList = TypeMismatchQuickFixProcessor(foundType, requiredType, annotationString)
 
         // map replacements strings into expanding proposals
         replacementStringList map {
           replacementString =>
             // make markers message in form: "... =>replacement"
-          	val markersMessage = annotationString + ImplicitHighlightingPresenter.DisplayStringSeparator + replacementString
-          	// construct a proposal with the appropriate location          	
-          	new ExpandingProposalBase(markersMessage, "Transform expression: ", location)
+            val markersMessage = annotationString + ImplicitHighlightingPresenter.DisplayStringSeparator + replacementString
+            // construct a proposal with the appropriate location
+            new ExpandingProposalBase(markersMessage, "Transform expression: ", location)
         }
       // no match found for the problem message
       case _ => Nil
@@ -151,8 +151,8 @@ class ScalaQuickFixProcessor extends IQuickFixProcessor with HasLogger {
 }
 
 object ScalaQuickFixProcessor {
-	private def isInside(offset: Int, start: Int,end: Int): Boolean = {
-		return offset == start || offset == end || (offset > start && offset < end); // make sure to handle 0-length ranges
+  private def isInside(offset: Int, start: Int,end: Int): Boolean = {
+    return offset == start || offset == end || (offset > start && offset < end); // make sure to handle 0-length ranges
     }
 }
 

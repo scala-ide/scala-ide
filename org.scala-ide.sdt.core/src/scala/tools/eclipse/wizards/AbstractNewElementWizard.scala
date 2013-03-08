@@ -15,7 +15,7 @@ import org.eclipse.jface.viewers.IStructuredSelection
 
 abstract class AbstractNewElementWizard(protected val wizardPage: AbstractNewElementWizardPage)
   extends NewElementWizard {
-	
+
   setWindowTitle("Create a new Scala " + wizardPage.declarationType)
 
   override def addPages(): Unit = {
@@ -40,7 +40,7 @@ abstract class AbstractNewElementWizard(protected val wizardPage: AbstractNewEle
 
   override protected def canRunForked(): Boolean =
     !wizardPage.isEnclosingTypeSelected()
-	
+
   def getCreatedElement(): IJavaElement =
     wizardPage.getCreatedType
 

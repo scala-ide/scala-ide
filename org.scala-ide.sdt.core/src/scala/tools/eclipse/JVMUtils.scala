@@ -40,23 +40,23 @@ trait JVMUtils { self : Global =>
 
   // Provides JType where all special symbols are substituted.
   def encodedJavaType(t : Type) = {
-	def encode(jt : JType) : JType = jt match {
-	  case clazz : JObjectType => {
-	    val name = clazz.getName.split("/").map{NameTransformer encode _}.mkString("/")
-	    new JObjectType(name)
-	  }
-	  case arr : JArrayType => {
-		  val etype = encode(arr.getElementType)
-	 	  if (JType.UNKNOWN == etype) JType.UNKNOWN else new JArrayType(etype)
-	  }
-	  case m : JMethodType => {
-	 	  val ret = encode(m.getReturnType)
-	 	  val argTypes = m.getArgumentTypes.map( encode(_) )
-	 	  if (ret == JType.UNKNOWN || argTypes.exists(_ == JType.UNKNOWN)) JType.UNKNOWN else new JMethodType(ret, argTypes)
-	  }
-	  case _ => jt
+  def encode(jt : JType) : JType = jt match {
+    case clazz : JObjectType => {
+      val name = clazz.getName.split("/").map{NameTransformer encode _}.mkString("/")
+      new JObjectType(name)
     }
-	encode(javaType(t))
+    case arr : JArrayType => {
+      val etype = encode(arr.getElementType)
+       if (JType.UNKNOWN == etype) JType.UNKNOWN else new JArrayType(etype)
+    }
+    case m : JMethodType => {
+       val ret = encode(m.getReturnType)
+       val argTypes = m.getArgumentTypes.map( encode(_) )
+       if (ret == JType.UNKNOWN || argTypes.exists(_ == JType.UNKNOWN)) JType.UNKNOWN else new JMethodType(ret, argTypes)
+    }
+    case _ => jt
+    }
+  encode(javaType(t))
   }
 
   def javaType(s: Symbol): JType =

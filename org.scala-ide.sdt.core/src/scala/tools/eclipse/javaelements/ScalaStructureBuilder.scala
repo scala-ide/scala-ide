@@ -146,8 +146,8 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
           lazy val commonParents = {
             val cps = module.info.baseClasses
             val mps = {
-            	val comp = companionClassOf(module)
-            	if (comp == NoSymbol) List() else comp.info.baseClasses
+              val comp = companionClassOf(module)
+              if (comp == NoSymbol) List() else comp.info.baseClasses
             }
             cps.filter(mps contains)
           }
@@ -276,14 +276,14 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
           if(tpPos.isDefined) {
             val start = tpPos.startOrPoint
             val end = tpPos.endOrPoint
-	        tpElementInfo.setSourceRangeStart0(start)
-	        tpElementInfo.nameStart = start
-	        tpElementInfo.nameEnd = end
-	        tpElementInfo.setSourceRangeEnd0(end)
+          tpElementInfo.setSourceRangeStart0(start)
+          tpElementInfo.nameStart = start
+          tpElementInfo.nameEnd = end
+          tpElementInfo.setSourceRangeEnd0(end)
           }
           else
             logger.debug("type parameter `%s` of `%s` has no position".format(tp.name, sym))
-	
+
           newElements0.put(typeParameter, tpElementInfo)
           typeParameter
         }
@@ -410,7 +410,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
           if(sym hasFlag Flags.TRAIT)
             new ScalaTraitElement(element, name)
           else if (isAnon) {
-        	new ScalaAnonymousClassElement(element, superName)
+          new ScalaAnonymousClassElement(element, superName)
           }
           else
             new ScalaClassElement(element, name, false)
@@ -488,9 +488,9 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
         // make sure classes are completed
         sym.initialize
 
-    	val isSynthetic = sym.hasFlag(Flags.SYNTHETIC)
+      val isSynthetic = sym.hasFlag(Flags.SYNTHETIC)
         val moduleElem = if(sym.isPackageObject)  new ScalaPackageModuleElement(element, m.name.toString, isSynthetic)
-          				 else new ScalaModuleElement(element, m.name.toString, isSynthetic)
+                   else new ScalaModuleElement(element, m.name.toString, isSynthetic)
         resolveDuplicates(moduleElem)
         addChild(moduleElem)
 
