@@ -70,6 +70,7 @@ class FreshFile {
   }
 
   @Test
+  @Ignore
   def implicitConversionFromPackageObjectShouldBeInScope_t1000647() {
     //when
     open("t1000647/foo/package.scala")
