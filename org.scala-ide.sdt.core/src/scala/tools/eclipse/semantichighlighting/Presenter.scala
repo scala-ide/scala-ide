@@ -131,20 +131,22 @@ class Presenter(
 
         if (damagedRegion.getLength > 0) {
           val sortedPositions = newPositions.sorted.toArray
-          runPositionsUpdateInUiThread(sortedPositions, damagedRegion)
-          Job.ASYNC_FINISH
+          /* if the positions held by the `positionsTracker` have changed, then 
+           * it's useless to proceed because the `newPositions` have computed on a  
+           * not up-to-date compilation unit. Let the next reconciler run take care 
+           * of re-computing the correct positions with the up-to-date content. 
+           */
+          if (!positionsTracker.isDirty) {
+            runPositionsUpdateInUiThread(sortedPositions, damagedRegion)
+            Job.ASYNC_FINISH
+          } else Status.OK_STATUS
         }
         else Status.OK_STATUS
       }(Status.OK_STATUS)
     }
 
     private def runPositionsUpdateInUiThread(newPositions: Array[Position], damagedRegion: IRegion): Unit =
-      /* if the positions held by the `positionsTracker` have changed, then 
-       * it's useless to proceed because the `newPositions` have computed on a  
-       * not up-to-date compilation unit. Let the next reconciler run take care 
-       * of re-computing the correct positions with the up-to-date content. 
-       */
-      if (!positionsTracker.isDirty) uiThread.asyncExec {
+      uiThread.asyncExec {
         try {
           setThread(uiThread.get)
           if (!positionsTracker.isDirty) {
