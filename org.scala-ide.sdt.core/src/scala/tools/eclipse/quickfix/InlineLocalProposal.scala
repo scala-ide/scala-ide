@@ -8,6 +8,6 @@ import org.eclipse.swt.graphics.Point
 import scala.tools.eclipse.refactoring.ExtractLocalAction
 import scala.tools.eclipse.refactoring.InlineLocalAction
 
-object InlineLocalProposal 
+object InlineLocalProposal
   extends ProposalRefactoringActionAdapter(
       new InlineLocalAction, "Inline local value")
