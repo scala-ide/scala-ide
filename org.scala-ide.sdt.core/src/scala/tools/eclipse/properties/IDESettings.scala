@@ -27,7 +27,7 @@ object IDESettings {
       Box("Private",
         List(Ynogenericsig, noimports,
              selfInAnnots, Yrecursion, refinementMethodDispatch,
-             Ywarndeadcode, Ybuildmanagerdebug)),
+             Ywarndeadcode)),
       Box("Presentation Compiler",
         List(YpresentationDebug, YpresentationVerbose, YpresentationLog, YpresentationReplay, YpresentationDelay)))
   }
