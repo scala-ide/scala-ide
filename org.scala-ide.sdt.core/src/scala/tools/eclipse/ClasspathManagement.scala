@@ -50,7 +50,7 @@ case class ScalaClasspath(val jdkPaths: Seq[IPath], // JDK classpath
     scalaLib: %s
     usercp: %s
     scalaVersion: %s
-    
+
     """.format(jdkPaths, scalaLib, userCp, scalaVersion)
 
   def scalaLibraryFile: Option[File] =
@@ -66,12 +66,12 @@ case class ScalaClasspath(val jdkPaths: Seq[IPath], // JDK classpath
     toPath(jdkPaths) ++ scalaLibraryFile.toSeq ++ toPath(userCp)
 }
 
-/** A Scala library definition. 
- * 
+/** A Scala library definition.
+ *
  *  @param location  The file-system absolute path to the root of the Scala library
  *  @param version   An option version, retrieved from library.properties, if present
  *  @param isProject Whether the library is provided by a project inside the workspace
- * 
+ *
  */
 case class ScalaLibrary(location: IPath, version: Option[String], isProject: Boolean)
 
@@ -79,24 +79,24 @@ case class ScalaLibrary(location: IPath, version: Option[String], isProject: Boo
  *  of Scala the platform is running on.
  */
 object IncompatibleVersion {
-  
+
   /**
    * Regex accepting filename of the format: name_2.xx.xx-version.jar.
    * It is used to extract the `2.xx.xx` section.
    */
   private val CrossCompiledRegex = """.*_(2\.\d+(\.\d*)?)(-.*)?.jar""".r
-      
+
   private val minimalVersionChecked = new Version(2, 8, 0)
-  
+
   /** Checks if the version extracted by the regex is compatible with the current Scala version.
    *  Checks major.minor for version >= 2.8.0.
    */
   private def isCompatibleVersion(version: String) = {
     val osgiVersion = new Version(version)
-    
+
     (minimalVersionChecked.compareTo(osgiVersion) > 0) || plugin.isCompatibleVersion(Some(osgiVersion.toString()))
   }
-  
+
   def unapply(fileName: String): Option[String] = {
     fileName match {
       case CrossCompiledRegex(version, _, _) if !isCompatibleVersion(version) =>
@@ -119,9 +119,9 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
     val cp = javaClasspath.filterNot(jdkEntries.toSet)
 
     scalaLibraries match {
-      case Seq(ScalaLibrary(pf, version, _), _*) => 
+      case Seq(ScalaLibrary(pf, version, _), _*) =>
         new ScalaClasspath(jdkEntries, Some(pf), cp.filterNot(_ == pf), version)
-      case _ => 
+      case _ =>
         new ScalaClasspath(jdkEntries, None, cp, None)
     }
   }
@@ -130,9 +130,9 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
    *  Each entry is an absolute file-system path.
    */
   @deprecated("Please use `scalaClasspath.fullClasspath instead", "2.1.0")
-  def classpath: Seq[IPath] = 
+  def classpath: Seq[IPath] =
     scalaClasspath.fullClasspath.map(p => new Path(p.getAbsolutePath))
-  
+
   /** Return the classpath entries coming from the JDK.  */
   def jdkPaths: Seq[IPath] = {
     val rawClasspath = javaProject.getRawClasspath()
@@ -151,9 +151,9 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
       }).flatten
   }
 
-  /** Return the fully resolved classpath of this project, including the 
+  /** Return the fully resolved classpath of this project, including the
    *  Scala library and the JDK entries, in the *project-defined order*.
-   *  
+   *
    *  The Scala compiler needs the JDK and Scala library on the bootclasspath,
    *  meaning that during compilation the effective order is with these two
    *  components at the head of the list. This method *does not* move them
@@ -358,7 +358,7 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
           (IMarker.SEVERITY_WARNING, moreThanOneLibraryError(fragmentRoots.map(_.location), compatible = true)) :: Nil
     }
   }
-  
+
   private def moreThanOneLibraryError(libs: Seq[IPath], compatible: Boolean): String = {
     val first =  "More than one scala library found in the build path (%s).".format(libs.mkString(", "))
     if (compatible) first + "This is not an optimal configuration, try to limit to one Scala library in the build path."

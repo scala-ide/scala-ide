@@ -6,7 +6,7 @@
 package scala.tools.eclipse
 
 import scala.reflect.NameTransformer
-import scala.tools.nsc.Global 
+import scala.tools.nsc.Global
 import ch.epfl.lamp.fjbg.{ JArrayType, JMethodType, JObjectType, JType }
 
 trait JVMUtils { self : Global =>
@@ -15,29 +15,29 @@ trait JVMUtils { self : Global =>
     new genJVM.BytecodeUtil {}
 
   def javaName(sym : Symbol) : String = jvmUtil.javaName(sym)
-  
+
   def javaNames(syms : List[Symbol]) : Array[String] = syms.toArray map (s => jvmUtil.javaName(s))
-  
+
   def javaFlags(sym : Symbol) : Int = genJVM.javaFlags(sym)
-  
+
   def javaType(t: Type): JType = t.normalize match {
     case ErrorType | NoType => JType.UNKNOWN
 
     case m : MethodType =>
       val t = m.finalResultType
       new JMethodType(javaType(t), m.paramss.flatMap(_.map(javaType)).toArray)
-      
+
     case p : PolyType =>
       val t = p.finalResultType
       javaType(t)
-    
+
     case r : RefinedType =>
       JObjectType.JAVA_LANG_OBJECT
       //javaType(r.typeSymbol.tpe)
-      
+
     case _ => jvmUtil.javaType(t)
   }
-  
+
   // Provides JType where all special symbols are substituted.
   def encodedJavaType(t : Type) = {
 	def encode(jt : JType) : JType = jt match {
@@ -58,7 +58,7 @@ trait JVMUtils { self : Global =>
     }
 	encode(javaType(t))
   }
-    
+
   def javaType(s: Symbol): JType =
     if (s.isMethod)
       new JMethodType(

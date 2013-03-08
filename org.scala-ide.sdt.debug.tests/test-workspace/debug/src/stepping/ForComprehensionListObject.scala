@@ -3,9 +3,9 @@ package stepping
 object ForComprehensionListObject {
 
   def main(args: Array[String]) {
-    
+
     val l= List(new Object(), "deux", "quatre", "huit")
-    
+
     for (n <- l) {
       n
     }

@@ -31,7 +31,7 @@ object IDESettings {
       Box("Presentation Compiler",
         List(YpresentationDebug, YpresentationVerbose, YpresentationLog, YpresentationReplay, YpresentationDelay)))
   }
-  
+
   def buildManagerSettings: List[Box] =
     List(Box("Build manager", List(buildManager, compileOrder, stopBuildOnErrors, debugIncremental, withVersionClasspathValidator)))
 }

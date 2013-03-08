@@ -1,7 +1,7 @@
 /*
  * Copyright 2010 LAMP/EPFL
  * @author Tim Clendenen
- * 
+ *
  */
 package scala.tools.eclipse.wizards
 
@@ -17,17 +17,17 @@ abstract class AbstractNewElementWizard(protected val wizardPage: AbstractNewEle
   extends NewElementWizard {
 	
   setWindowTitle("Create a new Scala " + wizardPage.declarationType)
-  
+
   override def addPages(): Unit = {
     super.addPages()
     addPage(wizardPage)
     wizardPage.init(getSelection())
   }
-  
+
   override def performFinish(): Boolean = {
 
     val requestAccepted = super.performFinish()
-    
+
     if(requestAccepted) {
       val resource = wizardPage.getModifiedResource()
       if(resource != null) {
@@ -37,13 +37,13 @@ abstract class AbstractNewElementWizard(protected val wizardPage: AbstractNewEle
     }
     requestAccepted
   }
-  
-  override protected def canRunForked(): Boolean = 
+
+  override protected def canRunForked(): Boolean =
     !wizardPage.isEnclosingTypeSelected()
 	
-  def getCreatedElement(): IJavaElement = 
+  def getCreatedElement(): IJavaElement =
     wizardPage.getCreatedType
-  
-  override protected def finishPage(monitor: IProgressMonitor): Unit = 
+
+  override protected def finishPage(monitor: IProgressMonitor): Unit =
     wizardPage.createType(monitor)
 }

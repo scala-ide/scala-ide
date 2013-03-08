@@ -162,15 +162,15 @@ import EclipseRepl._
   * thread. Because the results from executing a line of code depend upon the
   * previous lines, each `EclipseRepl` should be used only by a single entity.
   * Typically that entity is the `Client` passed to the constructor.
-  * 
+  *
   * The default `Builder` calls `Actor.start` as the last step of the
   * `EclipseRepl` constructor.
-  * 
+  *
   * `EclipseRepl` uses `Actor.react`, allowing it to share threads with other
   * `Actor`s. Because the interpreter might take an arbitrary amount of time to
   * calculate results this may have a negative impact on other `Actor`s. The
   * `Actor` API can be used to control thread sharing as needed.
-  * 
+  *
   * These five convenience methods are available: `init`, `exec`, `drop`,
   * `stop`, and `quit`. All they do is send the corresponding request message.
   */

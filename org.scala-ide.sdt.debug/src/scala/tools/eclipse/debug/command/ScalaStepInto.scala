@@ -70,7 +70,7 @@ private[command] abstract class ScalaStepIntoActor(debugTarget: ScalaDebugTarget
               terminate()
               thread.suspendedFromScala(DebugEvent.STEP_INTO)
               true
-            } 
+            }
             else false
           }
 

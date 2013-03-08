@@ -12,7 +12,7 @@ trait HyperlinkTester extends TestProjectSetup {
   protected type VerifyHyperlink = {
     def andCheckAgainst(expectations: List[Link]): Unit
   }
-  
+
   private final val HyperlinkMarker = "/*^*/"
 
   case class Link(text: String*)
@@ -22,8 +22,8 @@ trait HyperlinkTester extends TestProjectSetup {
     val unit = scalaCompilationUnit(path)
     loadTestUnit(unit)
   }
-  
-  /** Load a scala `unit` that contains text markers used 
+
+  /** Load a scala `unit` that contains text markers used
    *  to generate hyperlinking requests to the presentation compiler.
    */
   def loadTestUnit(unit: ScalaSourceFile): VerifyHyperlink = {

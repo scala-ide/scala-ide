@@ -1,7 +1,7 @@
 package scala.tools.eclipse
 package testsetup
 
-import java.io.{ ByteArrayInputStream, File, IOException, InputStream } 
+import java.io.{ ByteArrayInputStream, File, IOException, InputStream }
 import java.net.URL
 
 import org.eclipse.core.resources.{ IFile, IFolder, IProject, IProjectDescription, IWorkspaceRoot, ResourcesPlugin }
@@ -11,11 +11,11 @@ import org.eclipse.jdt.launching.JavaRuntime
 import org.osgi.framework.Bundle
 
 /** A test project, created from scratch.
- * 
+ *
  * @author Miles Sabin
  */
 class SDTTestProject(project : IProject) {
-  val location = project.getLocation.toOSString 
+  val location = project.getLocation.toOSString
 
   val javaProject = JavaCore.create(project)
   addJavaNature
@@ -91,13 +91,13 @@ class SDTTestProject(project : IProject) {
   def addScalaNature() {
     addNature(ScalaPlugin.plugin.natureId)
   }
-  
+
   def addNature(natureId : String) {
     val description = project.getDescription
     description.setNatureIds(natureId +: description.getNatureIds)
     project.setDescription(description, null)
   }
-  
+
   def addToClasspath(entry : IClasspathEntry) {
     javaProject.setRawClasspath(entry +: javaProject.getRawClasspath, null)
   }

@@ -101,7 +101,7 @@ class MainClassVerifierTest {
 
     runTest(mainTypeName, main, times(1))
   }
-  
+
   @Test
   def reportErrorWhenPackageDeclarationInMainTypeDoesntMatchPhysicalLocation2() {
     val sourceLocation = "foo"
@@ -123,7 +123,7 @@ class MainClassVerifierTest {
     val pkg = "foo"
     val mainName = "Main"
     val main = """
-    package %s 
+    package %s
     object %s extends App
     """.format(pkg, mainName)
 
@@ -138,7 +138,7 @@ class MainClassVerifierTest {
     val pkg = "foo"
     val mainName = "Main"
     val main = """
-    package %s 
+    package %s
     object %s extends App
     """.format(pkg, mainName)
 

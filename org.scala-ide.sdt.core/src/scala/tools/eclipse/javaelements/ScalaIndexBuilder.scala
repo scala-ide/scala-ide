@@ -13,25 +13,25 @@ import scala.tools.eclipse.{ ScalaPlugin, ScalaPresentationCompiler,
 	                           ScalaSourceIndexer, SettingConverterUtil }
 import scala.tools.eclipse.properties.ScalaPluginSettings
 
-/** Add entries to the JDT index. This class traverses an *unattributed* Scala AST. This 
+/** Add entries to the JDT index. This class traverses an *unattributed* Scala AST. This
  *  means a tree without symbols or types. However, a tree that was typed may still get here
  *  (usually during reconciliation, after editing and saving a file). That adds some complexity
  *  because the Scala typechecker modifies the tree. One prime example is annotations, which
  *  after type-checking are removed from the tree and placed in the corresponding Symbol.
- *  
+ *
  *  The indexer builds a map from names to documents that mention that name. Names are
  *  categorized (for instance, as method definitions, method references, annotation references, etc.).
- *  
+ *
  *  The indexer is later used by the JDT to narrow the scope of a search. For instance, a search
  *  for test methods would first check the index for documents that have annotation references to
- *  'Test' in 'org.junit', and then pass those documents to the structure builder for  
+ *  'Test' in 'org.junit', and then pass those documents to the structure builder for
  *  precise parsing, where names are actually resolved.
  */
 trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
 
   class IndexBuilderTraverser(indexer : ScalaSourceIndexer) extends Traverser {
     var packageName = new StringBuilder
-    
+
     def addPackageName(p: Tree) {
       p match {
         case i: Ident =>
@@ -41,11 +41,11 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
           packageName.append('.').append(r.name)
       }
     }
-      
+
     def addPackage(p : PackageDef) = {
       if (!packageName.isEmpty) packageName.append('.')
       if (p.name != nme.EMPTY_PACKAGE_NAME && p.name != nme.ROOTPKG) {
-        addPackageName(p.pid)  
+        addPackageName(p.pid)
       }
     }
 
@@ -58,7 +58,7 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
         logger.info("superclass not understood: %s".format(parent))
         "$$NoRef".toCharArray
     }) toArray
-    
+
     /** Add annotations on the given tree. If the tree is not yet typed,
      *  it uses the (unresolved) annotations in the tree (part of modifiers).
      *  If the modifiers are empty, it uses the Symbol for finding them (the type-checker
@@ -67,16 +67,16 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
     def addAnnotations(tree: MemberDef) {
       if (tree.mods.annotations.isEmpty && tree.symbol.isInitialized) // don't force any symbols
         addAnnotations(tree.symbol)
-      else 
+      else
         tree.mods.annotations.foreach(addAnnotationRef)
     }
-    
+
     private def addAnnotations(sym: Symbol) =
-      for { 
+      for {
         ann <- sym.annotations
-        annotationType <- self.askOption(() => ann.atp.toString.toCharArray) 
+        annotationType <- self.askOption(() => ann.atp.toString.toCharArray)
       } indexer.addAnnotationTypeReference(annotationType)
-    
+
     private def addAnnotationRef(tree: Tree) {
       for (t <- tree) t match {
         case New(tpt) =>
@@ -84,7 +84,7 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
         case _ => ()
       }
     }
-      
+
     def addClass(c : ClassDef) {
       indexer.addClassDeclaration(
         mapModifiers(c.mods),
@@ -96,10 +96,10 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
         Array.empty,
         true
       )
-      
+
       addAnnotations(c)
     }
-    
+
     def addModule(m : ModuleDef) {
       indexer.addClassDeclaration(
         mapModifiers(m.mods),
@@ -111,7 +111,7 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
         Array.empty,
         true
       )
-        
+
       indexer.addClassDeclaration(
         mapModifiers(m.mods),
         packageName.toString.toCharArray,
@@ -123,7 +123,7 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
         true
       )
     }
-    
+
     def addVal(v : ValDef) {
       indexer.addMethodDeclaration(
         nme.getterName(v.name).toChars,
@@ -131,7 +131,7 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
         mapType(v.tpt.symbol).toArray,
         Array.empty
       )
-        
+
       if(v.mods.hasFlag(Flags.MUTABLE))
         indexer.addMethodDeclaration(
           nme.getterToSetter(nme.getterName(v.name)).toChars,
@@ -141,12 +141,12 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
         )
       addAnnotations(v)
     }
-    
+
     def addDef(d : DefDef) {
       val name = if(nme.isConstructorName(d.name)) enclClassNames.head else d.name.toChars
-        
+
       val fps = for(vps <- d.vparamss; vp <- vps) yield vp
-        
+
       val paramTypes = fps.map(v => mapType(v.tpt.symbol))
       indexer.addMethodDeclaration(
         name,
@@ -156,7 +156,7 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
       )
       addAnnotations(d)
     }
-    
+
     def addType(td : TypeDef) {
       // We don't care what to add, java doesn't see types anyway.
       indexer.addClassDeclaration(
@@ -170,7 +170,7 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
         true
       )
     }
-     
+
     var enclClassNames = List[Array[Char]]()
 
     override def traverse(tree: Tree): Unit = {
@@ -180,21 +180,21 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
         block
         enclClassNames = old
       }
-      
-      /** Add several method reference in the indexer for the passed [[RefTree]].  
-       * 
-       * Adding method references in the indexer is tricky for methods that have default arguments. 
+
+      /** Add several method reference in the indexer for the passed [[RefTree]].
+       *
+       * Adding method references in the indexer is tricky for methods that have default arguments.
        * The problem is that method entries are encoded as selector '/' Arity, i.e., foo/0 for `foo()`.
-       * 
-       * Hence, `addApproximateMethodReferences` adds {{{22 - minArgsNumber}} method reference entries in 
+       *
+       * Hence, `addApproximateMethodReferences` adds {{{22 - minArgsNumber}} method reference entries in
        * the indexer, for the passed [[RefTree]].
        */
       def addApproximateMethodReferences(tree: RefTree, minArgsNumber: Int = 0): Unit = {
         val maxArgs = 22  // just arbitrary choice.
-        for (i <- minArgsNumber to maxArgs) 
+        for (i <- minArgsNumber to maxArgs)
           indexer.addMethodReference(tree.name.toChars, i)
       }
-      
+
       tree match {
         case pd : PackageDef => addPackage(pd)
         case cd : ClassDef => addClass(cd)
@@ -202,20 +202,20 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
         case vd : ValDef => addVal(vd)
         case td : TypeDef => addType(td)
         case dd : DefDef if dd.name != nme.MIXIN_CONSTRUCTOR => addDef(dd)
-        
+
         case _ =>
       }
-      
+
       tree match {
         case cd : ClassDef => inClass(cd.name.toChars) { super.traverse(tree) }
         case md : ModuleDef => inClass(md.name.append("$").toChars) { super.traverse(tree) }
-        
+
         case Apply(rt : RefTree, args) =>
           addApproximateMethodReferences(rt, args.size)
           super.traverse(tree)
-          
+
         // Partial apply.
-        case Typed(ttree, Function(_, _)) => 
+        case Typed(ttree, Function(_, _)) =>
           ttree match {
             case rt : RefTree =>
               addApproximateMethodReferences(rt)
@@ -224,7 +224,7 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
             case _ =>
           }
           super.traverse(tree)
-          
+
         case rt : RefTree =>
           val name = rt.name.toChars
           indexer.addTypeReference(name)
@@ -232,7 +232,7 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
           if(nme.isSetterName(rt.name)) indexer.addFieldReference(nme.setterToGetter(rt.name).toChars)
           else indexer.addFieldReference(name)
           super.traverse(tree)
-          
+
         case _ => super.traverse(tree)
       }
     }

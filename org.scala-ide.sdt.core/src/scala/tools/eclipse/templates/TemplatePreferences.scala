@@ -1,5 +1,5 @@
 /*
- * 
+ *
  */
 package scala.tools.eclipse.templates
 
@@ -16,7 +16,7 @@ import scala.tools.eclipse.ScalaPlugin
 class TemplatePreferences extends TemplatePreferencePage with IWorkbenchPreferencePage {
 
   override def isShowFormatterSetting() = false
-    
+
   setPreferenceStore(ScalaPlugin.prefStore)
   setTemplateStore(ScalaPlugin.plugin.templateManager.templateStore)
   setContextTypeRegistry(ScalaPlugin.plugin.templateManager.contextTypeRegistry)

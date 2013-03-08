@@ -1,6 +1,6 @@
 package scala.tools.eclipse
 
-import java.{ util => ju } 
+import java.{ util => ju }
 
 import scala.collection.mutable.ArrayBuffer
 
@@ -18,7 +18,7 @@ class TaskScanner(project : ScalaProject) {
       case o => o.split(",").map(_.trim)
     }
   }
-  
+
   lazy val taskTags = getJavaOptions(JavaCore.COMPILER_TASK_TAGS)
   lazy val tagPriority = {
     val taskPriorities = getJavaOptions(JavaCore.COMPILER_TASK_PRIORITIES)
@@ -34,31 +34,31 @@ class TaskScanner(project : ScalaProject) {
         val limit = line.length-tagLen
         val checkStart = Character.isJavaIdentifierPart(tag.charAt(0))
         val checkEnd = Character.isJavaIdentifierPart(tag.charAt(tagLen-1))
-        
+
         while (i >= 0 && i < limit) {
           i = line.indexOf(tag, i)
           if (i >= 0) {
             if ((!checkStart || i == 0 || !Character.isJavaIdentifierPart(line(i-1))) &&
                 (!checkEnd || i+tagLen >= line.length || !Character.isJavaIdentifierPart(line(i+tagLen))))
               tags += ((i, tag))
-           
+
             i += tagLen
           }
         }
       }
-      
+
       val orderedTags = tags.sortBy(_._1)
-      
+
       val starts = orderedTags.map(t => t._1+t._2.length)
       val ends = orderedTags.drop(1).map(_._1) += line.length
       val msgs = (starts zip ends).map({ case (start, end) => (start, line.substring(start, end).trim)}).filter(_._2.length != 0)
-      
+
       (for((start, tag) <- orderedTags) yield {
         val (point, msg) = msgs.find(_._1 > start).getOrElse((start+tag.length, ""))
         Task(tag, msg, tagPriority(tag), new RangePosition(pos.source, offset+start, offset+point, offset+point+msg.length))
       }).toList
     }
-    
+
     val body = if (comment.startsWith("/*")) comment.substring(0, comment.length-2) else comment
     val lines = new ArrayBuffer[(Int, String)]
     var i = 0
@@ -76,7 +76,7 @@ class TaskScanner(project : ScalaProject) {
       }
       i += 1
     }
-    
+
     lines.flatMap({ case (offset, line) => extractTasksFromLine(line, pos.startOrPoint+offset)}).toList
   }
 }

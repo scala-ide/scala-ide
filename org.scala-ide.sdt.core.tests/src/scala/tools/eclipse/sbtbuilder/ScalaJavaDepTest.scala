@@ -25,7 +25,7 @@ class ScalaJavaDepTest {
   def setupWorkspace {
     SDTTestUtils.enableAutoBuild(false)
   }
-  
+
   @Test def testSimpleScalaDep() {
     println("building " + project)
     cleanProject
@@ -37,13 +37,13 @@ class ScalaJavaDepTest {
 
     val problems0 = getProblemMarkers
     assertTrue("Build errors found: " + userFriendlyMarkers(problems0), problems0.isEmpty)
-    
+
     val originalJJava = SDTTestUtils.slurpAndClose(project.underlying.getFile("src/test/J.java").getContents)
     SDTTestUtils.changeContentOfFile(JJavaCU.getResource().getAdapter(classOf[IFile]).asInstanceOf[IFile], changedJJava)
     rebuild(project)
     val problems1 = getProblemMarkers
     assertTrue("One build error expected, got: " + userFriendlyMarkers(problems1), problems1.length == 1) // do more precise matching later
-    
+
     SDTTestUtils.changeContentOfFile(JJavaCU.getResource().getAdapter(classOf[IFile]).asInstanceOf[IFile], originalJJava)
     rebuild(project)
     val problems2 = getProblemMarkers
@@ -62,19 +62,19 @@ class ScalaJavaDepTest {
 
     val problems0 = getProblemMarkers
     assertTrue("Build errors found: " + userFriendlyMarkers(problems0), problems0.isEmpty)
-    
+
     val originalSScala = SDTTestUtils.slurpAndClose(project.underlying.getFile("src/test/S.scala").getContents)
     SDTTestUtils.changeContentOfFile(SScalaCU.getResource().getAdapter(classOf[IFile]).asInstanceOf[IFile], changedSScala)
     rebuild(project)
     val problems1 = getProblemMarkers
     assertTrue("One build error expected: " + userFriendlyMarkers(problems1), problems1.length == 1) // do more precise matching later
-    
+
     SDTTestUtils.changeContentOfFile(SScalaCU.getResource().getAdapter(classOf[IFile]).asInstanceOf[IFile], originalSScala)
     rebuild(project)
     val problems2 = getProblemMarkers
     assertTrue("Build errors found: " + userFriendlyMarkers(problems2), problems2.isEmpty)
-  }  
-  
+  }
+
   def rebuild(prj: ScalaProject) {
     println("building " + prj)
     prj.underlying.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, new NullProgressMonitor)
@@ -88,32 +88,32 @@ class ScalaJavaDepTest {
   @Test def ticket_1000607() {
     val aClass= compilationUnit("ticket_1000607/A.scala")
     val cClass= compilationUnit("ticket_1000607/C.java")
-    
+
     def getProblemMarkers= getProblemMarkersFor(aClass, cClass)
 
     // do a clean build and check the expected error
     cleanProject
     var problems= getProblemMarkers
     assertEquals("One error expected: " + userFriendlyMarkers(problems), 1, problems.size)
-    
+
     // "fix" the scala code
     SDTTestUtils.changeContentOfFile(aClass.getResource().asInstanceOf[IFile], changed_ticket_1000607_A)
-    
+
     // trigger incremental compile
     project.underlying.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, new NullProgressMonitor)
-    
+
     // and check that the error disappeared
     problems= getProblemMarkers
     assertTrue("Unexpected error: " + userFriendlyMarkers(problems), problems.isEmpty)
   }
-    
+
   /**
    * Return the markers for the given compilation units.
    */
   def getProblemMarkersFor(units: ICompilationUnit*): List[IMarker] = {
     units.toList.flatMap(SDTTestUtils.findProblemMarkers)
   }
-  
+
   /**
    * Launch a clean build on the project.
    */
@@ -123,7 +123,7 @@ class ScalaJavaDepTest {
   }
 
   def userFriendlyMarkers(markers: List[IMarker]) = markers.map(_.getAttribute(IMarker.MESSAGE))
-  
+
   lazy val changedJJava = """
 package test;
 
@@ -141,7 +141,7 @@ public class J {
 package test
 
 class S {
-	def foo1(s:String) { println(new J().bar(s)) } 
+	def foo1(s:String) { println(new J().bar(s)) }
 }
 """
 
@@ -155,5 +155,5 @@ trait A {
 
 abstract class B extends A
 """
-  
+
 }

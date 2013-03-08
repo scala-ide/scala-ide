@@ -16,11 +16,11 @@ class ScalaImageDescriptorSelector extends IImageDescriptorSelector {
   } catch {
     case _ : JavaModelException => null
   }
-    
+
   def createCompletionProposalImageDescriptor(proposal : LazyJavaCompletionProposal) : ImageDescriptor = {
     proposal.getJavaElement match {
       case se : ScalaElement => se.getImageDescriptor
       case _ => null
     }
-  } 
+  }
 }

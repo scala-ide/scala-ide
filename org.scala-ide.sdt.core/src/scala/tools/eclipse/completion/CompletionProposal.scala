@@ -2,8 +2,8 @@ package scala.tools.eclipse.completion
 
 object HasArgs extends Enumeration {
   val NoArgs, EmptyArgs, NonEmptyArgs = Value
-  
-  /** Given a list of method's parameters it tells if the method 
+
+  /** Given a list of method's parameters it tells if the method
    * arguments should be adorned with parenthesis. */
   def from(params: List[List[_]]) = params match {
   	case Nil => NoArgs
@@ -12,9 +12,9 @@ object HasArgs extends Enumeration {
   }
 }
 
-/** A completion proposal coming from the Scala compiler. This 
+/** A completion proposal coming from the Scala compiler. This
  *  class holds together data about completion proposals.
- *  
+ *
  *  This class is independent of both the Scala compiler (does not
  *  know about Symbols and Types), and the UI elements used to
  *  display it to the user.

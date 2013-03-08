@@ -8,7 +8,7 @@ import org.eclipse.ltk.core.refactoring.Refactoring
 import org.eclipse.ltk.ui.refactoring.RefactoringWizard
 
 /**
- *  Wraps the `ScalaIdeRefactoring` instance in a wizard and adds 
+ *  Wraps the `ScalaIdeRefactoring` instance in a wizard and adds
  *  the pages from the refactoring to the wizard.
  */
 class ScalaRefactoringWizard(refactoring: ScalaIdeRefactoring, flags: Int = RefactoringWizard.DIALOG_BASED_USER_INTERFACE) extends RefactoringWizard(refactoring, flags) {
@@ -16,4 +16,3 @@ class ScalaRefactoringWizard(refactoring: ScalaIdeRefactoring, flags: Int = Refa
     refactoring.getPages foreach addPage
   }
 }
-  

@@ -13,7 +13,7 @@ import org.eclipse.swt.custom.StyleRange
 
 case class HighlightingStyle(ta: TextAttribute, colorDeprecated: Boolean, enabled: Boolean) {
   lazy val deprecated: TextAttribute = if (colorDeprecated) new TextAttribute(ta.getForeground, ta.getBackground, ta.getStyle | TextAttribute.STRIKETHROUGH, ta.getFont) else ta
-  
+
   def style(position: Position): StyleRange = {
     val textAttribute = if(position.deprecated) deprecated else ta
     val s = textAttribute.getStyle()
@@ -21,7 +21,7 @@ case class HighlightingStyle(ta: TextAttribute, colorDeprecated: Boolean, enable
     val styleRange = new StyleRange(position.getOffset(), position.getLength(), textAttribute.getForeground(), textAttribute.getBackground(), fontStyle)
     styleRange.strikeout = (s & TextAttribute.STRIKETHROUGH) != 0
     styleRange.underline = (s & TextAttribute.UNDERLINE) != 0
-    styleRange  
+    styleRange
   }
 }
 

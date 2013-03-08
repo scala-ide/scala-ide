@@ -23,10 +23,10 @@ class ImplicitsHighlightingTest {
     ScalaPlugin.plugin.getPreferenceStore.setValue(ImplicitsPreferencePage.P_CONVERSIONS_ONLY, false)
   }
 
-  @Test 
+  @Test
   def implicitConversion() {
     withCompilationUnitAndCompiler("implicit-highlighting/Implicits.scala") { (src, compiler) =>
-      
+
       val expected = List(
         "Implicit conversions found: List(1,2) => listToString(List(1,2)) [184, 9]",
         "Implicit conversions found: List(1,2,3) => listToString(List(1,2,3)) [153, 11]"
@@ -36,50 +36,50 @@ class ImplicitsHighlightingTest {
       assertSameLists(expected, actual)
     }
   }
-  
-  @Test 
+
+  @Test
   def implicitConversionsFromPredef() {
     withCompilationUnitAndCompiler("implicit-highlighting/DefaultImplicits.scala") { (src, compiler) =>
- 
+
       val expected = List(
         "Implicit conversions found: 1 => any2ArrowAssoc(1) [46, 1]"
       )
       val actual = implicits(src, compiler)
-      
+
       assertSameLists(expected, actual)
     }
   }
-  
-  @Test 
+
+  @Test
   def implicitArguments() {
     withCompilationUnitAndCompiler("implicit-highlighting/ImplicitArguments.scala") {(src, compiler) =>
-           
+
       val expected = List (
         "Implicit arguments found: takesImplArg => takesImplArg( implicits.ImplicitArguments.s ) [124, 12]"
       )
       val actual = implicits(src, compiler)
 
-      assertSameLists(expected, actual) 
+      assertSameLists(expected, actual)
     }
   }
-        
+
   def withCompilationUnitAndCompiler(path: String)(test: (ScalaPresentationCompiler, ScalaCompilationUnit) => Unit) {
     import ImplicitsHighlightingTest._
-    
+
     val unit = scalaCompilationUnit(path)
-    
+
     project.withSourceFile(unit) { (src, compiler) =>
       val dummy = new Response[Unit]
       compiler.askReload(List(src), dummy)
       dummy.get
-      
+
       val tree =  new Response[compiler.Tree]
       compiler.askType(src, false, tree)
-      tree.get      
+      tree.get
       test(compiler, unit)
     }()
   }
-  
+
   def implicits(compiler: ScalaPresentationCompiler, scu: ScalaCompilationUnit) = {
     val implicits = ImplicitHighlightingPresenter.findAllImplicitConversions(compiler, scu, scu.sourceFile())
     implicits.toList map {

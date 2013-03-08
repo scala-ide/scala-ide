@@ -59,14 +59,14 @@ object EclipseUtils {
     def apply(offset: Int): Char = document.getChar(offset)
 
   }
-  
+
   class PimpedRegion(region: IRegion) {
     def toRangePos(src: SourceFile): Position = {
       val offset = region.getOffset
       new RangePosition(src, offset, offset, offset + region.getLength)
     }
   }
-  
+
   implicit def pimpedRegion(region: IRegion) = new PimpedRegion(region)
 
   implicit def asEclipseTextEdit(edit: TextEdit): EclipseTextEdit =

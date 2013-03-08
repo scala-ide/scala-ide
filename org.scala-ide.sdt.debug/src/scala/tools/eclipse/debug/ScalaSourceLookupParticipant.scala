@@ -8,7 +8,7 @@ import scala.tools.eclipse.debug.model.ScalaStackFrame
  * Scala debugger
  */
 object ScalaSourceLookupParticipant extends AbstractSourceLookupParticipant {
-  
+
   def getSourceName(obj: AnyRef): String = {
     obj match {
       case stackFrame: ScalaStackFrame =>

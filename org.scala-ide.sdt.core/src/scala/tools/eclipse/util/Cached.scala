@@ -40,7 +40,7 @@ trait Cached[T] {
 
     op(e)
   }
-  
+
   /** Is the cached object initialized, at this point in time? */
   def initialized: Boolean = elem.isDefined
 

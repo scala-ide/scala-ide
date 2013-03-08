@@ -33,7 +33,7 @@ object ScalaDebugModelPresentation {
         ???
     }
   }
-  
+
   /** Return the a toString() equivalent for an Array
    */
   private def computeDetail(arrayReference: ScalaArrayReference): String = {
@@ -47,7 +47,7 @@ object ScalaDebugModelPresentation {
       array.getValues.asScala.map(value => computeDetail(ScalaValue(value, arrayReference.getDebugTarget()))).mkString("Array(", ", ", ")")
     }
   }
-  
+
   /** Return the value produced by calling toString() on the object.
    */
   private def computeDetail(objectReference: ScalaObjectReference): String = {
@@ -63,7 +63,7 @@ object ScalaDebugModelPresentation {
         "exception while invoking toString(): %s\n%s".format(e.getMessage(), e.getStackTraceString)
     }
   }
-  
+
 }
 
 /**

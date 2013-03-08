@@ -22,11 +22,11 @@ class SbtInputs(sourceFiles: Seq[File], project: ScalaProject, javaMonitor: SubM
     def cache = CompilerCache.fresh  // May want to explore caching possibilities.
 
     private val allProjects = project +: project.transitiveDependencies.flatMap(plugin.asScalaProject)
-    def analysisMap(f: File): Maybe[Analysis] = 
+    def analysisMap(f: File): Maybe[Analysis] =
       if (f.isFile)
         Maybe.just(Analysis.Empty)
       else
-        allProjects.find(_.sourceOutputFolders.map(_._2.getLocation.toFile) contains f) map (_.buildManager) match { 
+        allProjects.find(_.sourceOutputFolders.map(_._2.getLocation.toFile) contains f) map (_.buildManager) match {
           case Some(sbtManager: EclipseSbtBuildManager) => Maybe.just(sbtManager.latestAnalysis)
           case _ => Maybe.just(Analysis.Empty)
         }

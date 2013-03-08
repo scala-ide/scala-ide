@@ -17,12 +17,12 @@ abstract class BuildReporter(private[buildmanager] val project0: ScalaProject, s
   val prob: ListBuffer[BuildProblem] = ListBuffer.empty
 
   val taskScanner = new TaskScanner(project0)
-  
+
   override def info0(pos : Position, msg : String, severity : Severity, force : Boolean) = {
     severity.count += 1
     if (severity.id > 1)
       buildManager.hasErrors = true
-    
+
     // Filter out duplicates coming from the Scala compiler
     if (!prob.exists(p => p.pos == pos && p.msg == msg && p.severity == severity)) {
 	    val eclipseSeverity = severity.id match {
@@ -30,11 +30,11 @@ abstract class BuildReporter(private[buildmanager] val project0: ScalaProject, s
 	      case 1 => IMarker.SEVERITY_WARNING
 	      case 0 => IMarker.SEVERITY_INFO
 	    }
-	    
+	
 	    try {
 	      if(pos.isDefined) {
 	        pos.source.file match {
-	          case resource @ EclipseResource(i : IFile) => 
+	          case resource @ EclipseResource(i : IFile) =>
 	            if (!resource.hasExtension("java")) {
 	              BuildProblemMarker.create(i, eclipseSeverity, msg, pos)
 	              prob += new BuildProblem(severity, msg, pos)
@@ -43,7 +43,7 @@ abstract class BuildReporter(private[buildmanager] val project0: ScalaProject, s
 	          case f =>
 	            logger.info("no EclipseResource associated to %s [%s]".format(f.path, f.getClass))
 	            EclipseResource.fromString(f.path, project0.underlying.getFullPath) match {
-	              case Some(i: IFile) => 
+	              case Some(i: IFile) =>
 	                // this may happen if a file was compileLate by the build compiler
 	                // for instance, when a source file (on the sourcepath) is newer than the classfile
 	                // the compiler will create PlainFile instances in that case
@@ -66,13 +66,13 @@ abstract class BuildReporter(private[buildmanager] val project0: ScalaProject, s
 		      	  BuildProblemMarker.create(project0.underlying, eclipseSeverity, msg)
 	        }
 	    } catch {
-	      case ex : UnsupportedOperationException => 
+	      case ex : UnsupportedOperationException =>
 	        prob += new BuildProblem(severity, msg, NoPosition)
 	        BuildProblemMarker.create(project0.underlying, eclipseSeverity, msg)
 	    }
     }
   }
-  
+
   override def comment(pos : Position, msg : String) {
     if (pos.isDefined) {
       val tasks = taskScanner.extractTasks(msg, pos)
@@ -88,7 +88,7 @@ abstract class BuildReporter(private[buildmanager] val project0: ScalaProject, s
       }
     }
   }
-  
+
   override def reset() {
   	super.reset()
   	prob.clear()

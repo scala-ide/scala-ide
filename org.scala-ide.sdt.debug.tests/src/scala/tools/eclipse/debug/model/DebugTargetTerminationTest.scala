@@ -83,7 +83,7 @@ object DebugTargetTerminationTest {
       }
     }
   }
-  /**A dummy runtime exception for testing purposes. You should use throw this exception only when testing code that is expected 
+  /**A dummy runtime exception for testing purposes. You should use throw this exception only when testing code that is expected
    * to gracefully recover from generic exceptions.*/
   object ExceptionForTestingPurposes_ThisIsOk extends RuntimeException with scala.util.control.NoStackTrace
 }
@@ -221,7 +221,7 @@ class DebugTargetTerminationTest extends HasLogger {
     val jdiEventDispatcherActor = debugTarget.eventDispatcher.companionActor
 
     checkGracefulTerminationOf(debugTargetActor, jdiEventDispatcherActor) when {
-      //eventQueue.remove happens every 1sec 
+      //eventQueue.remove happens every 1sec
       when(eventQueue.remove(anyLong)).thenThrow(new VMDisconnectedException).thenReturn(null)
     }
   }
@@ -252,8 +252,8 @@ class DebugTargetTerminationTest extends HasLogger {
       // Ensures that the `ScalaJDiEventDispatcher` forwards `dummyEventRequest` to the `testActor`
       debugTarget.eventDispatcher.setActorFor(testActor, dummyEventRequest)
 
-      // The `ScalaJDiEventDispatcher` thread should not dies when an unhandled exception is thrown, hence 
-      // the `testActor` will eventually receive the `eventSet` message the decrease the `latch` counter. 
+      // The `ScalaJDiEventDispatcher` thread should not dies when an unhandled exception is thrown, hence
+      // the `testActor` will eventually receive the `eventSet` message the decrease the `latch` counter.
       when(eventQueue.remove(anyLong)).thenThrow(ExceptionForTestingPurposes_ThisIsOk).thenReturn(eventSet)
     }
     // don't leave the JDI event dispatcher running, otherwise the mocked queue will eat up all

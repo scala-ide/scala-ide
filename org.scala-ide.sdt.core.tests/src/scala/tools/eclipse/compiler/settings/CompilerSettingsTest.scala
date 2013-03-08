@@ -24,12 +24,12 @@ class CompilerSettingsTest {
   @Test
   def failingToBuildSourceThatRequiresContinuationPlugin() {
     val unit = scalaCompilationUnit("cps/CPS.scala")
-    
+
     cleanProject()
     fullProjectBuild()
-    
+
     val errors = allBuildErrorsOf(unit)
-    
+
     assertTrue(errors.nonEmpty)
   }
 
@@ -44,12 +44,12 @@ class CompilerSettingsTest {
   def successfullyBuildingSourceRequiringContinuationPluginEnabled() {
     withContinuationPluginEnabled {
       val unit = scalaCompilationUnit("cps/CPS.scala")
-    
+
       cleanProject()
       fullProjectBuild()
-    
+
       val errors = allBuildErrorsOf(unit)
-    
+
       assertTrue(errors.isEmpty)
     }
   }

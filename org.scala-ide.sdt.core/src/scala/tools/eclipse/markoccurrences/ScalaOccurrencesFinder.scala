@@ -13,22 +13,22 @@ import scala.ref.WeakReference
 
 case class Occurrences(name: String, locations: List[IRegion])
 
-/** Finds all occurrences of a binding in a Scala source file. 
- * 
- * Note that the occurrences index is re-computed only if the document's modification timestamp 
+/** Finds all occurrences of a binding in a Scala source file.
+ *
+ * Note that the occurrences index is re-computed only if the document's modification timestamp
  * has changed.
- * 
+ *
  * This class is thread-safe.
  */
 class ScalaOccurrencesFinder(unit: InteractiveCompilationUnit) extends HasLogger {
   import ScalaOccurrencesFinder._
 
-  /* IMPORTANT: 
-   * In the current implementation, all access to `indexCache` are confined to the Presentation 
-   * Compiler thread (and this is why `indexCache` requires no synchronization policy). 
+  /* IMPORTANT:
+   * In the current implementation, all access to `indexCache` are confined to the Presentation
+   * Compiler thread (and this is why `indexCache` requires no synchronization policy).
    */
   private var indexCache: Option[TimestampedIndex] = None
-  
+
   private def getCachedIndex(lastModified: Long, currentCompiler: ScalaPresentationCompiler): Option[MarkOccurrencesIndex] = indexCache match {
     case Some(TimestampedIndex(`lastModified`, WeakReference(index))) if index.global eq currentCompiler => Some(index)
     case _ =>
@@ -93,7 +93,7 @@ class ScalaOccurrencesFinder(unit: InteractiveCompilationUnit) extends HasLogger
   }
 }
 
-object ScalaOccurrencesFinder {  
+object ScalaOccurrencesFinder {
   private abstract class MarkOccurrencesIndex extends MarkOccurrences with GlobalIndexes
   private case class TimestampedIndex(timestamp: Long, index: WeakReference[MarkOccurrencesIndex])
 }

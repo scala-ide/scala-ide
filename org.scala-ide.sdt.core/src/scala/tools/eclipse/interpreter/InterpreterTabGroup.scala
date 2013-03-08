@@ -59,22 +59,22 @@ class InterpreterMainTab extends JavaLaunchTab with HasLogger {
       if (status.isOK()) {
         val project= ResourcesPlugin.getWorkspace().getRoot().getProject(name)
         if (!project.exists()) {
-          setErrorMessage("Project does not exist") 
+          setErrorMessage("Project does not exist")
           return false
         }
         if (!project.isOpen()) {
-          setErrorMessage("Project is not open"); 
+          setErrorMessage("Project is not open");
           return false
         }
       } else {
-        setErrorMessage("Name does not exist on workspace."); 
+        setErrorMessage("Name does not exist on workspace.");
         return false;
       }
     }
         //TODO - Validate seed script is ok?
     return true;
   }
- 
+
    /* (non-Javadoc)
    * @see org.eclipse.debug.ui.ILaunchConfigurationTab#createControl(org.eclipse.swt.widgets.Composite)
    */
@@ -90,23 +90,23 @@ class InterpreterMainTab extends JavaLaunchTab with HasLogger {
     //createVerticalSpacer(comp, 1);
     //createMainTypeEditor(comp, LauncherMessages.JavaMainTab_Main_cla_ss__4);
     createSeedScriptEditor(comp)
-    setControl(comp);      
+    setControl(comp);
   }
- 
+
   override def getName() = "Main"
-    
+
   var fProjText : Text = _
   var fProjButton : Button = _
-    
+
     /**
    * Creates the widgets for specifying a main type.
-   * 
+   *
    * @param parent the parent composite
    */
   protected def createProjectEditor(parent : Composite) {
     val font= parent.getFont()
     val group= new Group(parent, SWT.NONE)
-    group.setText("Project Setup"); 
+    group.setText("Project Setup");
     var gd = new GridData(GridData.FILL_HORIZONTAL)
     group.setLayoutData(gd)
     val layout = new GridLayout()
@@ -122,14 +122,14 @@ class InterpreterMainTab extends JavaLaunchTab with HasLogger {
         updateLaunchConfigurationDialog()
       }
     })
-    fProjButton = createPushButton(group, "Scala Project", null); 
+    fProjButton = createPushButton(group, "Scala Project", null);
     fProjButton.addSelectionListener(new SelectionAdapter() {
       override def widgetSelected(e : SelectionEvent) {
         handleProjectButtonSelected()
       }
     })
   }
-  
+
   protected def createSeedScriptEditor(parent : Composite) {
     val group = new Group(parent, SWT.NONE)
     group.setText("Interpreter Seed Script")
@@ -146,7 +146,7 @@ class InterpreterMainTab extends JavaLaunchTab with HasLogger {
     val projectName = project.getElementName();
     fProjText.setText(projectName);
   }
-    
+
   /**
    * chooses a project for the type of java launch config that it is
    * @return
@@ -155,8 +155,8 @@ class InterpreterMainTab extends JavaLaunchTab with HasLogger {
 
     val labelProvider= new JavaElementLabelProvider(JavaElementLabelProvider.SHOW_DEFAULT);
     val dialog = new ElementListSelectionDialog(getShell(), labelProvider);
-    dialog.setTitle("Select a Scala Project"); 
-    dialog.setMessage(""); 
+    dialog.setTitle("Select a Scala Project");
+    dialog.setMessage("");
     try {
       val scalaProjects = JavaCore.create(getWorkspaceRoot).getJavaProjects.filter(ScalaPlugin.plugin.isScalaProject).toArray[Object]
       dialog.setElements(scalaProjects)
@@ -170,17 +170,17 @@ class InterpreterMainTab extends JavaLaunchTab with HasLogger {
     if (scalaProject != null) {
       dialog.setInitialSelections((scalaProject :: Nil).toArray);
     }
-    if (dialog.open() == Window.OK) {      
+    if (dialog.open() == Window.OK) {
       return dialog.getFirstResult().asInstanceOf[IJavaProject];
-    }    
-    return null;    
+    }
+    return null;
   }
- 
+
  /**
    * Convenience method to get access to the java model.
    */
   private def getJavaModel() = JavaCore.create(getWorkspaceRoot())
-  
+
   /**
    * Return the IJavaProject corresponding to the project name in the project name
    * text field, or null if the text does not match a project name.
@@ -190,14 +190,14 @@ class InterpreterMainTab extends JavaLaunchTab with HasLogger {
     if (projectName.length() < 1) {
       return null;
     }
-    getJavaModel().getJavaProject(projectName);    
+    getJavaModel().getJavaProject(projectName);
   }
 
   /**
    * Convenience method to get the workspace root.
    */
   protected def getWorkspaceRoot() = ResourcesPlugin.getWorkspace().getRoot();
- 
+
  /* (non-Javadoc)
    * @see org.eclipse.debug.ui.ILaunchConfigurationTab#initializeFrom(org.eclipse.debug.core.ILaunchConfiguration)
    */
@@ -206,7 +206,7 @@ class InterpreterMainTab extends JavaLaunchTab with HasLogger {
     updateSeedScriptFromConfig(config)
     super.initializeFrom(config);
   }
-  
+
   /**
    * updates the project text field form the configuration
    * @param config the configuration we are editing
@@ -214,7 +214,7 @@ class InterpreterMainTab extends JavaLaunchTab with HasLogger {
   private def updateProjectFromConfig(config : ILaunchConfiguration) {
     var projectName = "";
     try {
-      projectName = config.getAttribute(IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME, "");  
+      projectName = config.getAttribute(IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME, "");
     }
     catch {
       case  ce : CoreException =>
@@ -224,16 +224,16 @@ class InterpreterMainTab extends JavaLaunchTab with HasLogger {
       fProjText.setText(projectName)
     }
   }
-  
+
   private def updateSeedScriptFromConfig(config : ILaunchConfiguration) {
     if(seedScriptText != null) {
       seedScriptText.setText(config.getAttribute(InterpreterLaunchConstants.SEED_SCRIPT,""))
     }
   }
-  
+
   /**
    * Maps the config to associated java resource
-   * 
+   *
    * @param config
    */
   protected def mapResources( config : ILaunchConfigurationWorkingCopy)  {
@@ -247,18 +247,18 @@ class InterpreterMainTab extends JavaLaunchTab with HasLogger {
       case  ce : CoreException =>
         setErrorMessage(ce.getStatus().getMessage())
     }
-  }  
- 
- 
+  }
+
+
   /* (non-Javadoc)
    * @see org.eclipse.debug.ui.ILaunchConfigurationTab#performApply(org.eclipse.debug.core.ILaunchConfigurationWorkingCopy)
    */
   override def performApply(config : ILaunchConfigurationWorkingCopy)  {
-    config.setAttribute(IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME, fProjText.getText().trim())     
+    config.setAttribute(IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME, fProjText.getText().trim())
     config.setAttribute(InterpreterLaunchConstants.SEED_SCRIPT, seedScriptText.getText.trim())
     mapResources(config)
   }
- 
+
   /* (non-Javadoc)
    * @see org.eclipse.debug.ui.ILaunchConfigurationTab#setDefaults(org.eclipse.debug.core.ILaunchConfigurationWorkingCopy)
    */

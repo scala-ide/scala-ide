@@ -39,8 +39,8 @@ class CompletionTests {
       tree.get
 
       val contents = unit.getContents
-      // mind that the space in the marker is very important (the presentation compiler 
-      // seems to get lost when the position where completion is asked 
+      // mind that the space in the marker is very important (the presentation compiler
+      // seems to get lost when the position where completion is asked
       val positions = SDTTestUtils.positionsOf(contents, " /*!*/")
       val content = unit.getContents.mkString
 
@@ -54,9 +54,9 @@ class CompletionTests {
         //        val selection = mock(classOf[ISelectionProvider])
 
         /* FIXME:
-         * I would really love to call `completion.computeCompletionProposals`, but for some unclear 
-         * reason that call is not working. Some debugging shows that the position is not right (off by one), 
-         * however, increasing the position makes the computed `wordRegion` wrong... hard to understand where 
+         * I would really love to call `completion.computeCompletionProposals`, but for some unclear
+         * reason that call is not working. Some debugging shows that the position is not right (off by one),
+         * however, increasing the position makes the computed `wordRegion` wrong... hard to understand where
          * the bug is!
         val textViewer = mock(classOf[ITextViewer])
         when(textViewer.getSelectionProvider()).thenReturn(selection)
@@ -83,7 +83,7 @@ class CompletionTests {
 
       var completions = if (!withImportProposal) compl.filter(!_.needImport) else compl
 
-      // remove parens as the compiler trees' printer has been slightly modified in 2.10 
+      // remove parens as the compiler trees' printer has been slightly modified in 2.10
       // (and we need the test to pass for 2.9.0/-1 and 2.8.x as well).
       val completionsNoParens: List[String] = completions.map(c => normalizeCompletion(c.display)).sorted
       val expectedNoParens: List[String] = expectedCompletions(i).map(normalizeCompletion).sorted
@@ -211,7 +211,7 @@ class CompletionTests {
   @Ignore("Enable this test once the ticket is fixed.")
   def t1001014 {
     val oracle = List("xx")
-    
+
     val unit = scalaCompilationUnit("t1001014/F.scala")
     reload(unit)
 

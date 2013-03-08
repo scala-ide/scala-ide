@@ -15,7 +15,7 @@ object ScalaStepReturn {
 
     val companionActor = new ScalaStepReturnActor(scalaStackFrame.getDebugTarget, scalaStackFrame.thread, stepReturnRequest) {
       // TODO: when implementing support without filtering, need to workaround problem reported in Eclipse bug #38744
-      override val scalaStep: ScalaStep = new ScalaStepImpl(this) 
+      override val scalaStep: ScalaStep = new ScalaStepImpl(this)
     }
     companionActor.start()
 
@@ -43,7 +43,7 @@ private[command] abstract class ScalaStepReturnActor(debugTarget: ScalaDebugTarg
           terminate()
           thread.suspendedFromScala(DebugEvent.STEP_RETURN)
           true
-        } 
+        }
         else false
       }
     case ScalaStep.Step => step()    // user step request

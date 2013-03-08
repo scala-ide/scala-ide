@@ -36,19 +36,19 @@ class ScalaQuickFixProcessor extends IQuickFixProcessor with HasLogger {
   private val typeNotFoundError = new Regex("not found: type (.*)")
   private val valueNotFoundError = new Regex("not found: value (.*)")
   private val xxxxxNotFoundError = new Regex("not found: (.*)")
-  
+
   // regex for extracting expected and required type on type mismatch
-  private val typeMismatchError = new Regex("type mismatch;\\s*found\\s*: (\\S*)\\s*required: (.*)") 
-  
+  private val typeMismatchError = new Regex("type mismatch;\\s*found\\s*: (\\S*)\\s*required: (.*)")
+
   /**
    * Checks if the processor has any corrections.
-   * 
+   *
    * Currently this always returns true. At some point it may be worthwhile
    * to expend some effort on implementing this properly to make the plug-in
    * slightly more responsive.
    */
   def hasCorrections(unit : ICompilationUnit, problemId : Int) : Boolean = true
-  
+
   /**
    * Collects corrections or code manipulations for the given context.
    *
@@ -66,13 +66,13 @@ class ScalaQuickFixProcessor extends IQuickFixProcessor with HasLogger {
         for (location <- locations)
         	for ((ann, pos) <- getAnnotationsAtOffset(editor, location.getOffset)) {
          	  val importFix = suggestImportFix(context.getCompilationUnit(), ann.getText)
-         	  
+         	
          	  // compute all possible type mismatch quick fixes
          	  val document = (editor.asInstanceOf[ITextEditor]).getDocumentProvider().getDocument(editor.getEditorInput())
          	  val typeMismatchFix = suggestTypeMismatchFix(document, ann.getText, pos)
-         	  
+         	
          	  // concatenate lists of found quick fixes
-            corrections = corrections ++ importFix ++ typeMismatchFix 
+            corrections = corrections ++ importFix ++ typeMismatchFix
         	}
         corrections match {
           case Nil => null
@@ -81,12 +81,12 @@ class ScalaQuickFixProcessor extends IQuickFixProcessor with HasLogger {
       }
       case _ => null
   }
-  
+
   // XXX is this code duplication? -- check scala.tools.eclipse.util.EditorUtils.getAnnotationsAtOffset
   private def getAnnotationsAtOffsetXXX(part: IEditorPart, offset: Int): List[Annotation] = {
-	  import ScalaQuickFixProcessor._ 
-	  
-	  var ret = List[Annotation]() 
+	  import ScalaQuickFixProcessor._
+	
+	  var ret = List[Annotation]()
 	  val model = JavaUI.getDocumentProvider().getAnnotationModel(part.getEditorInput())
 	  val iter = model.getAnnotationIterator
 	  while (iter.hasNext()) {
@@ -102,7 +102,7 @@ class ScalaQuickFixProcessor extends IQuickFixProcessor with HasLogger {
   def suggestImportFix(compilationUnit : ICompilationUnit, problemMessage : String) : List[IJavaCompletionProposal] = {
     /**
      * Import a type could solve several error message :
-     * 
+     *
      * * "not found : type  Xxxx"
      * * "not found : value Xxxx" in case of java static constant/method like Xxxx.ZZZZ or Xxxx.zzz()
      * * "not found : Xxxx" in case of new Xxxx.eee (IMO (davidB) a better suggestion is to insert (), to have new Xxxx().eeee )
@@ -116,7 +116,7 @@ class ScalaQuickFixProcessor extends IQuickFixProcessor with HasLogger {
         new ImportCompletionProposal(typeFound.getFullyQualifiedName)
       } toList
     }
-    
+
     return problemMessage match {
       case typeNotFoundError(missingType) => suggestImportType(missingType)
       case valueNotFoundError(missingValue) => suggestImportType(missingValue)
@@ -134,20 +134,20 @@ class ScalaQuickFixProcessor extends IQuickFixProcessor with HasLogger {
       case typeMismatchError(foundType, requiredType) =>
     		// utilize type mismatch computer to find quick fixes
         val replacementStringList = TypeMismatchQuickFixProcessor(foundType, requiredType, annotationString)
-        
+
         // map replacements strings into expanding proposals
         replacementStringList map {
-          replacementString =>            
+          replacementString =>
             // make markers message in form: "... =>replacement"
           	val markersMessage = annotationString + ImplicitHighlightingPresenter.DisplayStringSeparator + replacementString
           	// construct a proposal with the appropriate location          	
           	new ExpandingProposalBase(markersMessage, "Transform expression: ", location)
         }
-      // no match found for the problem message  
+      // no match found for the problem message
       case _ => Nil
     }
   }
-  
+
 }
 
 object ScalaQuickFixProcessor {

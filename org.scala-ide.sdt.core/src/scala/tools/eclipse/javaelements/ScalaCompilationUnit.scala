@@ -48,7 +48,7 @@ trait ScalaCompilationUnit extends Openable
   override def scalaProject = ScalaPlugin.plugin.getScalaProject(getJavaProject.getProject)
 
   val file : AbstractFile
-  
+
   override def sourceFile(contents: Array[Char]): SourceFile = new BatchSourceFile(file, contents)
 
   override def workspaceFile: IFile = getUnderlyingResource.asInstanceOf[IFile]
@@ -110,10 +110,10 @@ trait ScalaCompilationUnit extends Openable
     })(false)
   }
 
-    
+
   /** Schedule this unit for reconciliation. This implementation does nothing, subclasses
    *  implement custom behavior. @see ScalaSourceFile
-   * 
+   *
    *  @return A response on which clients can synchronize. The response
    *          only notifies when the unit was added to the managed sources list, *not*
    *          that it was typechecked.
@@ -123,9 +123,9 @@ trait ScalaCompilationUnit extends Openable
     r.set()
     r
   }
-  
+
   /** Index this source file, but only if the project has the Scala nature.
-   * 
+   *
    *  This avoids crashes if the indexer kicks in on a project that has Scala sources
    *  but no Scala library on the classpath.
    */
@@ -140,7 +140,7 @@ trait ScalaCompilationUnit extends Openable
       }
     }
   }
-  
+
   override def getSourceElementAt(pos : Int) : IJavaElement = {
     getChildAt(this, pos) match {
       case smie : ScalaModuleInstanceElement => smie.getParent;
@@ -148,15 +148,15 @@ trait ScalaCompilationUnit extends Openable
       case elem => elem
     }
   }
-  
+
   private def getChildAt(element: IJavaElement, pos: Int): IJavaElement = {
-    /* companion-class can be selected instead of the object in the JDT-'super' 
+    /* companion-class can be selected instead of the object in the JDT-'super'
        implementation and make the private method and fields unreachable.
        To avoid this, we look for deepest element containing the position
      */
-    
+
     def depth(e: IJavaElement): Int = if (e == element || e == null) 0 else (depth(e.getParent()) + 1)
-    
+
     element match {
       case parent: IParent => {
         var resultElement= element
@@ -194,35 +194,35 @@ trait ScalaCompilationUnit extends Openable
       val element = for {
        t <- typedRes.left.toOption
        if t.hasSymbol
-       sym = if (t.symbol.isSetter) t.symbol.getter(t.symbol.owner) else t.symbol 
+       sym = if (t.symbol.isSetter) t.symbol.getter(t.symbol.owner) else t.symbol
        element <- compiler.getJavaElement(sym)
       } yield Array(element: IJavaElement)
-      
+
       val res = element.getOrElse(Array.empty[IJavaElement])
       res
     }(Array.empty[IJavaElement])
   }
-    
-  override def codeComplete(cu : env.ICompilationUnit, unitToSkip : env.ICompilationUnit, position : Int,  
+
+  override def codeComplete(cu : env.ICompilationUnit, unitToSkip : env.ICompilationUnit, position : Int,
                             requestor : CompletionRequestor, owner : WorkingCopyOwner, typeRoot : ITypeRoot, monitor : IProgressMonitor) {
     // This is a no-op. The Scala IDE provides code completions via an extension point
   }
-  
+
   override def reportMatches(matchLocator : MatchLocator, possibleMatch : PossibleMatch) {
     doWithSourceFile { (sourceFile, compiler) =>
       val response = new Response[compiler.Tree]
       compiler.askLoadedTyped(sourceFile, response)
       response.get match {
-        case Left(tree) => 
+        case Left(tree) =>
           compiler.askOption { () =>
             compiler.MatchLocator(this, matchLocator, possibleMatch).traverse(tree)
           }
         case _ => () // no op
       }
-      
+
     }
   }
-  
+
   override def createOverrideIndicators(annotationMap : JMap[_, _]) {
     if (scalaProject.hasScalaNature)
       doWithSourceFile { (sourceFile, compiler) =>
@@ -238,7 +238,7 @@ trait ScalaCompilationUnit extends Openable
         }
       }
   }
-  
+
   override def getImageDescriptor = {
     Option(getCorrespondingResource) map { file =>
       import ScalaImages.{ SCALA_FILE, EXCLUDED_SCALA_FILE }
@@ -246,12 +246,12 @@ trait ScalaCompilationUnit extends Openable
       if (javaProject.isOnClasspath(file)) SCALA_FILE else EXCLUDED_SCALA_FILE
     } orNull
   }
-  
+
   override def getScalaWordFinder() : IScalaWordFinder = ScalaWordFinder
-  
-  def followDeclaration(editor : ITextEditor, selection : ITextSelection): Unit = 
+
+  def followDeclaration(editor : ITextEditor, selection : ITextSelection): Unit =
     followReference(DeclarationHyperlinkDetector(), editor, selection)
-  
+
   def followReference(detectionStrategy: BaseHyperlinkDetector, editor : ITextEditor, selection : ITextSelection): Unit = {
     val region = EditorUtils.textSelection2region(selection)
 
