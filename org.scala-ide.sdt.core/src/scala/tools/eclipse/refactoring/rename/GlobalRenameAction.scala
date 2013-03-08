@@ -13,8 +13,12 @@ import org.eclipse.ltk.core.refactoring.RefactoringStatus
 import scala.tools.eclipse.javaelements.ScalaSourceFile
 import scala.tools.eclipse.refactoring.ui._
 import scala.reflect.internal.util.SourceFile
-import scala.tools.refactoring.analysis.{GlobalIndexes, Indexes, NameValidation}
-import scala.tools.refactoring.common.{ConsoleTracing, InteractiveScalaCompiler, Selections}
+import scala.tools.refactoring.analysis.GlobalIndexes
+import scala.tools.refactoring.analysis.Indexes
+import scala.tools.refactoring.analysis.NameValidation
+import scala.tools.refactoring.common.ConsoleTracing
+import scala.tools.refactoring.common.InteractiveScalaCompiler
+import scala.tools.refactoring.common.Selections
 import scala.tools.refactoring.implementations.Rename
 import scala.tools.refactoring.Refactoring
 

@@ -1,7 +1,9 @@
 package scala.tools.eclipse.javaelements
 
 import org.eclipse.jdt.core.IJavaElement
-import org.eclipse.jdt.internal.core.{ NameLookup, Openable, SelectionRequestor }
+import org.eclipse.jdt.internal.core.NameLookup
+import org.eclipse.jdt.internal.core.Openable
+import org.eclipse.jdt.internal.core.SelectionRequestor
 
 class ScalaSelectionRequestor(nameLookup : NameLookup, openable : Openable) extends SelectionRequestor(nameLookup, openable) {
   override def addElement(elem : IJavaElement) =

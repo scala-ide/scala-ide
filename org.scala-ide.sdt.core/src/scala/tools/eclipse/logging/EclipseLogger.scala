@@ -3,7 +3,8 @@ package scala.tools.eclipse.logging
 import org.eclipse.core.runtime.Status
 import scala.tools.eclipse.ScalaPlugin
 import scala.tools.eclipse.util.SWTUtils
-import org.eclipse.core.runtime.{ ILog, IStatus }
+import org.eclipse.core.runtime.ILog
+import org.eclipse.core.runtime.IStatus
 import scala.util.control.ControlThrowable
 import java.util.concurrent.atomic.AtomicReference
 

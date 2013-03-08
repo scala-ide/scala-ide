@@ -5,7 +5,8 @@ import org.eclipse.core.resources._
 import org.eclipse.core.runtime._
 import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.viewers.IStructuredSelection
-import org.eclipse.text.edits.{ ReplaceEdit, TextEdit => EclipseTextEdit }
+import org.eclipse.text.edits.ReplaceEdit
+import org.eclipse.text.edits.{ TextEdit => EclipseTextEdit }
 import org.eclipse.ui.ide.IDE
 import scalariform.utils.TextEdit
 import org.eclipse.text.edits.{ TextEdit => EclipseTextEdit, _ }

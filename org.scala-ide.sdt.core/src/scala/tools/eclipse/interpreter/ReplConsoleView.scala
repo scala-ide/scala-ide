@@ -11,7 +11,8 @@ import org.eclipse.swt.SWT
 import org.eclipse.swt.widgets.Composite
 import org.eclipse.ui.part.ViewPart
 import org.eclipse.swt.custom.StyledText
-import org.eclipse.swt.widgets.{Label, Caret}
+import org.eclipse.swt.widgets.Label
+import org.eclipse.swt.widgets.Caret
 import org.eclipse.swt.layout.GridData
 import org.eclipse.swt.layout.GridLayout
 import scala.tools.eclipse.ui.CommandField

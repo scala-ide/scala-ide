@@ -4,9 +4,11 @@ import scala.tools.eclipse.properties.syntaxcolouring.ScalaSyntaxClass
 
 import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jface.preference.IPreferenceStore
-import org.eclipse.jface.text.{ Document, TextAttribute }
+import org.eclipse.jface.text.Document
+import org.eclipse.jface.text.TextAttribute
 import org.eclipse.jface.text.rules.Token
-import org.junit.{ ComparisonFailure, Test }
+import org.junit.ComparisonFailure
+import org.junit.Test
 import org.mockito.Mockito._
 
 class ScaladocTokenScannerTest {

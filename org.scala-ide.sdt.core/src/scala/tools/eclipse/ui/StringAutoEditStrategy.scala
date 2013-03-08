@@ -3,7 +3,10 @@ package scala.tools.eclipse.ui
 import scala.tools.eclipse.properties.EditorPreferencePage
 
 import org.eclipse.jface.preference.IPreferenceStore
-import org.eclipse.jface.text.{ DocumentCommand, IAutoEditStrategy, IDocument, TextUtilities }
+import org.eclipse.jface.text.DocumentCommand
+import org.eclipse.jface.text.IAutoEditStrategy
+import org.eclipse.jface.text.IDocument
+import org.eclipse.jface.text.TextUtilities
 
 /**
  * Applies several auto edit actions if one adds ore removes a sign inside of

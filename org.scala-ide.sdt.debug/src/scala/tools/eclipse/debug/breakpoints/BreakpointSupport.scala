@@ -85,7 +85,8 @@ private class BreakpointSupportActor private (
     debugTarget: ScalaDebugTarget,
     typeName: String,
     breakpointRequests: ListBuffer[EventRequest]) extends BaseDebuggerActor {
-  import BreakpointSupportActor.{ Changed, createBreakpointRequest }
+  import BreakpointSupportActor.Changed
+  import BreakpointSupportActor.createBreakpointRequest
 
   /** Return true if the state of the `breakpointRequests` associated to this breakpoint is (or, if not yet loaded, will be) enabled in the VM. */
   private var requestsEnabled = false

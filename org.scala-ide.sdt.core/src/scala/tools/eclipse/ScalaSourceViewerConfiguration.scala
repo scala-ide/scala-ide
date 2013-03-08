@@ -9,33 +9,50 @@ import org.eclipse.jface.text.formatter.MultiPassContentFormatter
 import org.eclipse.jface.util.PropertyChangeEvent
 import scala.tools.eclipse.semicolon.InferredSemicolonPainter
 import org.eclipse.jface.text.ITextViewerExtension2
-import org.eclipse.jdt.core.{ IJavaProject, IJavaElement, ICodeAssist }
+import org.eclipse.jdt.core.IJavaProject
+import org.eclipse.jdt.core.IJavaElement
+import org.eclipse.jdt.core.ICodeAssist
 import org.eclipse.jdt.internal.ui.JavaPlugin
-import org.eclipse.jdt.internal.ui.javaeditor.{ IClassFileEditorInput, ICompilationUnitDocumentProvider, JavaElementHyperlinkDetector }
+import org.eclipse.jdt.internal.ui.javaeditor.IClassFileEditorInput
+import org.eclipse.jdt.internal.ui.javaeditor.ICompilationUnitDocumentProvider
+import org.eclipse.jdt.internal.ui.javaeditor.JavaElementHyperlinkDetector
 import org.eclipse.jdt.internal.ui.text.ContentAssistPreference
-import org.eclipse.jdt.internal.ui.text.java.{ JavaAutoIndentStrategy, JavaStringAutoIndentStrategy, SmartSemicolonAutoEditStrategy }
-import org.eclipse.jdt.internal.ui.text.java.hover.{ AbstractJavaEditorTextHover, BestMatchHover }
+import org.eclipse.jdt.internal.ui.text.java.JavaAutoIndentStrategy
+import org.eclipse.jdt.internal.ui.text.java.JavaStringAutoIndentStrategy
+import org.eclipse.jdt.internal.ui.text.java.SmartSemicolonAutoEditStrategy
+import org.eclipse.jdt.internal.ui.text.java.hover.AbstractJavaEditorTextHover
+import org.eclipse.jdt.internal.ui.text.java.hover.BestMatchHover
 import org.eclipse.jdt.internal.ui.text.javadoc.JavaDocAutoIndentStrategy
-import org.eclipse.jdt.ui.text.{ JavaSourceViewerConfiguration, IJavaPartitions }
+import org.eclipse.jdt.ui.text.JavaSourceViewerConfiguration
+import org.eclipse.jdt.ui.text.IJavaPartitions
 import org.eclipse.jface.preference.IPreferenceStore
-import org.eclipse.jface.text.{ IAutoEditStrategy, IDocument, ITextHover }
+import org.eclipse.jface.text.IAutoEditStrategy
+import org.eclipse.jface.text.IDocument
+import org.eclipse.jface.text.ITextHover
 import org.eclipse.jface.text.formatter.ContentFormatter
 import org.eclipse.jface.text.contentassist.ContentAssistant
 import org.eclipse.jface.text.contentassist.IContentAssistant
 import org.eclipse.jface.text.hyperlink.IHyperlinkDetector
 import org.eclipse.jface.text.presentation.PresentationReconciler
-import org.eclipse.jface.text.rules.{ DefaultDamagerRepairer, RuleBasedScanner, ITokenScanner }
+import org.eclipse.jface.text.rules.DefaultDamagerRepairer
+import org.eclipse.jface.text.rules.RuleBasedScanner
+import org.eclipse.jface.text.rules.ITokenScanner
 import org.eclipse.jface.text.source.ISourceViewer
 import org.eclipse.jface.util.PropertyChangeEvent
-import org.eclipse.ui.texteditor.{ HyperlinkDetectorDescriptor, ITextEditor }
+import org.eclipse.ui.texteditor.HyperlinkDetectorDescriptor
+import org.eclipse.ui.texteditor.ITextEditor
 import org.eclipse.swt.SWT
-import scala.tools.eclipse.ui.{ JdtPreferenceProvider, ScalaAutoIndentStrategy, ScalaIndenter }
+import scala.tools.eclipse.ui.JdtPreferenceProvider
+import scala.tools.eclipse.ui.ScalaAutoIndentStrategy
+import scala.tools.eclipse.ui.ScalaIndenter
 import scala.tools.eclipse.util.ReflectionUtils
 import scala.tools.eclipse.lexical._
 import scala.tools.eclipse.formatter.ScalaFormattingStrategy
 import scala.tools.eclipse.ui.BracketAutoEditStrategy
 import scala.tools.eclipse.properties.syntaxcolouring.ScalaSyntaxClasses
-import scala.tools.eclipse.hyperlink.text.detector.{CompositeHyperlinkDetector, DeclarationHyperlinkDetector, ImplicitHyperlinkDetector}
+import scala.tools.eclipse.hyperlink.text.detector.CompositeHyperlinkDetector
+import scala.tools.eclipse.hyperlink.text.detector.DeclarationHyperlinkDetector
+import scala.tools.eclipse.hyperlink.text.detector.ImplicitHyperlinkDetector
 import scalariform.ScalaVersions
 import org.eclipse.jface.text.DefaultTextHover
 import scala.tools.eclipse.javaelements.ScalaCompilationUnit

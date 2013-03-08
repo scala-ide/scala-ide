@@ -8,22 +8,46 @@ package scala.tools.eclipse
 import org.eclipse.jdt.core.IJavaProject
 import scala.collection.mutable
 import scala.util.control.ControlThrowable
-import org.eclipse.core.resources.{ IFile, IProject, IResourceChangeEvent, IResourceChangeListener, ResourcesPlugin }
-import org.eclipse.core.runtime.{ CoreException, FileLocator, IStatus, Platform, Status }
+import org.eclipse.core.resources.IFile
+import org.eclipse.core.resources.IProject
+import org.eclipse.core.resources.IResourceChangeEvent
+import org.eclipse.core.resources.IResourceChangeListener
+import org.eclipse.core.resources.ResourcesPlugin
+import org.eclipse.core.runtime.CoreException
+import org.eclipse.core.runtime.FileLocator
+import org.eclipse.core.runtime.IStatus
+import org.eclipse.core.runtime.Platform
+import org.eclipse.core.runtime.Status
 import org.eclipse.core.runtime.content.IContentTypeSettings
-import org.eclipse.jdt.core.{ ElementChangedEvent, IElementChangedListener, JavaCore, IJavaElement, IJavaElementDelta, IPackageFragmentRoot }
-import org.eclipse.jdt.internal.core.{ JavaModel, JavaProject, PackageFragment, PackageFragmentRoot }
+import org.eclipse.jdt.core.ElementChangedEvent
+import org.eclipse.jdt.core.IElementChangedListener
+import org.eclipse.jdt.core.JavaCore
+import org.eclipse.jdt.core.IJavaElement
+import org.eclipse.jdt.core.IJavaElementDelta
+import org.eclipse.jdt.core.IPackageFragmentRoot
+import org.eclipse.jdt.internal.core.JavaModel
+import org.eclipse.jdt.internal.core.JavaProject
+import org.eclipse.jdt.internal.core.PackageFragment
+import org.eclipse.jdt.internal.core.PackageFragmentRoot
 import org.eclipse.jdt.internal.core.util.Util
 import org.eclipse.jdt.internal.ui.javaeditor.IClassFileEditorInput
 import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.swt.widgets.Shell
 import org.eclipse.swt.graphics.Color
-import org.eclipse.ui.{ IEditorInput, IFileEditorInput, PlatformUI, IPartListener, IWorkbenchPart, IWorkbenchPage, IPageListener, IEditorPart }
+import org.eclipse.ui.IEditorInput
+import org.eclipse.ui.IFileEditorInput
+import org.eclipse.ui.PlatformUI
+import org.eclipse.ui.IPartListener
+import org.eclipse.ui.IWorkbenchPart
+import org.eclipse.ui.IWorkbenchPage
+import org.eclipse.ui.IPageListener
+import org.eclipse.ui.IEditorPart
 import org.eclipse.ui.part.FileEditorInput
 import org.eclipse.ui.plugin.AbstractUIPlugin
 import util.SWTUtils.asyncExec
 import org.osgi.framework.BundleContext
-import scala.tools.eclipse.javaelements.{ ScalaElement, ScalaSourceFile }
+import scala.tools.eclipse.javaelements.ScalaElement
+import scala.tools.eclipse.javaelements.ScalaSourceFile
 import scala.tools.eclipse.util.OSGiUtils._
 import scala.tools.eclipse.templates.ScalaTemplateManager
 import org.eclipse.jdt.ui.PreferenceConstants

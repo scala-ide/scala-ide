@@ -5,7 +5,8 @@ import scala.tools.eclipse.properties.syntaxcolouring.ScalaSyntaxClass
 
 import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.jface.text.IDocument
-import org.eclipse.jface.text.rules.{ IToken, Token }
+import org.eclipse.jface.text.rules.IToken
+import org.eclipse.jface.text.rules.Token
 
 /**
  * Scans single line strings and divides them into normal string and escape

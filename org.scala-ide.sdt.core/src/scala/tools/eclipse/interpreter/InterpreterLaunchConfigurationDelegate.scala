@@ -7,9 +7,13 @@ package scala.tools.eclipse.interpreter
 
 import java.io.File
 
-import org.eclipse.core.runtime.{ IProgressMonitor, NullProgressMonitor }
-import org.eclipse.debug.core.{ ILaunch, ILaunchConfiguration }
-import org.eclipse.jdt.launching.{ AbstractJavaLaunchConfigurationDelegate, ExecutionArguments, VMRunnerConfiguration }
+import org.eclipse.core.runtime.IProgressMonitor
+import org.eclipse.core.runtime.NullProgressMonitor
+import org.eclipse.debug.core.ILaunch
+import org.eclipse.debug.core.ILaunchConfiguration
+import org.eclipse.jdt.launching.AbstractJavaLaunchConfigurationDelegate
+import org.eclipse.jdt.launching.ExecutionArguments
+import org.eclipse.jdt.launching.VMRunnerConfiguration
 
 import scala.tools.eclipse.ScalaPlugin
 

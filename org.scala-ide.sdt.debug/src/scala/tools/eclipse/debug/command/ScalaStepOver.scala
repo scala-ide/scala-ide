@@ -4,11 +4,16 @@ import scala.Option.option2Iterable
 import scala.collection.JavaConverters.asScalaBufferConverter
 import scala.collection.mutable.ListBuffer
 import scala.tools.eclipse.debug.JDIUtil.methodToLines
-import scala.tools.eclipse.debug.model.{ScalaThread, ScalaStackFrame, ScalaDebugTarget}
+import scala.tools.eclipse.debug.model.ScalaThread
+import scala.tools.eclipse.debug.model.ScalaStackFrame
+import scala.tools.eclipse.debug.model.ScalaDebugTarget
 import scala.tools.eclipse.debug.model.JdiRequestFactory
 import org.eclipse.debug.core.DebugEvent
-import com.sun.jdi.event.{ StepEvent, ClassPrepareEvent, BreakpointEvent }
-import com.sun.jdi.request.{ StepRequest, EventRequest }
+import com.sun.jdi.event.StepEvent
+import com.sun.jdi.event.ClassPrepareEvent
+import com.sun.jdi.event.BreakpointEvent
+import com.sun.jdi.request.StepRequest
+import com.sun.jdi.request.EventRequest
 import scala.tools.eclipse.debug.BaseDebuggerActor
 import scala.tools.eclipse.debug.model.ScalaDebugCache
 import com.sun.jdi.ReferenceType

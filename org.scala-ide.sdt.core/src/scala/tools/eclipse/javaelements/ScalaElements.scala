@@ -8,13 +8,30 @@ package scala.tools.eclipse.javaelements
 import scala.collection.immutable.Seq
 import scala.reflect.NameTransformer
 
-import org.eclipse.jdt.core.{ IField, IJavaElement, IMember, IMethod, IType, ITypeParameter, Flags }
+import org.eclipse.jdt.core.IField
+import org.eclipse.jdt.core.IJavaElement
+import org.eclipse.jdt.core.IMember
+import org.eclipse.jdt.core.IMethod
+import org.eclipse.jdt.core.IType
+import org.eclipse.jdt.core.ITypeParameter
+import org.eclipse.jdt.core.Flags
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants
-import org.eclipse.jdt.internal.core.{
-  BinaryType, JavaElement, JavaElementInfo, LocalVariable, SourceConstructorInfo, SourceField, SourceFieldElementInfo,
-  SourceMethod, SourceMethodElementInfo, SourceMethodInfo, SourceType, SourceTypeElementInfo, OpenableElementInfo, TypeParameterElementInfo }
+import org.eclipse.jdt.internal.core.BinaryType
+import org.eclipse.jdt.internal.core.JavaElement
+import org.eclipse.jdt.internal.core.JavaElementInfo
+import org.eclipse.jdt.internal.core.LocalVariable
+import org.eclipse.jdt.internal.core.SourceConstructorInfo
+import org.eclipse.jdt.internal.core.SourceField
+import org.eclipse.jdt.internal.core.SourceFieldElementInfo
+import org.eclipse.jdt.internal.core.SourceMethod
+import org.eclipse.jdt.internal.core.SourceMethodElementInfo
+import org.eclipse.jdt.internal.core.SourceMethodInfo
+import org.eclipse.jdt.internal.core.SourceType
+import org.eclipse.jdt.internal.core.SourceTypeElementInfo
+import org.eclipse.jdt.internal.core.OpenableElementInfo
+import org.eclipse.jdt.internal.core.TypeParameterElementInfo
 import org.eclipse.jdt.internal.ui.JavaPlugin
-import org.eclipse.jdt.internal.ui.viewsupport.{ JavaElementImageProvider }
+import org.eclipse.jdt.internal.ui.viewsupport.JavaElementImageProvider
 import org.eclipse.jdt.ui.JavaElementImageDescriptor
 import org.eclipse.jface.resource.ImageDescriptor
 import org.eclipse.swt.graphics.Image

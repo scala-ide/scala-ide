@@ -1,6 +1,7 @@
 package scala.tools.eclipse.launching
 
-import java.util.{ List => JList, Map => JMap }
+import java.util.{ List => JList }
+import java.util.{ Map => JMap }
 import scala.tools.eclipse.debug.ScalaDebugPlugin
 import org.eclipse.core.runtime.CoreException
 import org.eclipse.core.runtime.IProgressMonitor

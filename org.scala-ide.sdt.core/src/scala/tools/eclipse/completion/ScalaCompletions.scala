@@ -2,7 +2,10 @@ package scala.tools.eclipse.completion
 import scala.tools.eclipse.javaelements.ScalaCompilationUnit
 import scala.tools.eclipse.ScalaPresentationCompiler
 import scala.reflect.internal.util.SourceFile
-import org.eclipse.jdt.core.search.{SearchEngine, IJavaSearchConstants, SearchPattern, TypeNameRequestor}
+import org.eclipse.jdt.core.search.SearchEngine
+import org.eclipse.jdt.core.search.IJavaSearchConstants
+import org.eclipse.jdt.core.search.SearchPattern
+import org.eclipse.jdt.core.search.TypeNameRequestor
 import org.eclipse.jdt.core.IJavaElement
 import scala.collection.mutable
 import org.eclipse.core.runtime.NullProgressMonitor

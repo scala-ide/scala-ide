@@ -12,17 +12,35 @@ import scala.collection.mutable
 import scala.tools.eclipse.javaelements.ScalaCompilationUnit
 import scala.tools.eclipse.javaelements.ScalaSourceFile
 import scala.tools.eclipse.logging.HasLogger
-import scala.tools.eclipse.properties.{CompilerSettings, IDESettings, PropertyStore}
+import scala.tools.eclipse.properties.CompilerSettings
+import scala.tools.eclipse.properties.IDESettings
+import scala.tools.eclipse.properties.PropertyStore
 import scala.tools.eclipse.ui.PartAdapter
-import scala.tools.eclipse.util.{Cached, EclipseResource, Trim, Utils}
+import scala.tools.eclipse.util.Cached
+import scala.tools.eclipse.util.EclipseResource
+import scala.tools.eclipse.util.Trim
+import scala.tools.eclipse.util.Utils
 import scala.tools.eclipse.util.SWTUtils.asyncExec
-import scala.tools.nsc.{Settings, MissingRequirementError}
+import scala.tools.nsc.Settings
+import scala.tools.nsc.MissingRequirementError
 import scala.reflect.internal.util.BatchSourceFile
 import scala.reflect.internal.util.SourceFile
 
-import org.eclipse.core.resources.{IContainer, IFile, IMarker, IProject, IResource, IResourceProxy, IResourceProxyVisitor}
-import org.eclipse.core.runtime.{IPath, IProgressMonitor, Path, SubMonitor}
-import org.eclipse.jdt.core.{IClasspathEntry, IJavaProject, JavaCore, JavaModelException}
+import org.eclipse.core.resources.IContainer
+import org.eclipse.core.resources.IFile
+import org.eclipse.core.resources.IMarker
+import org.eclipse.core.resources.IProject
+import org.eclipse.core.resources.IResource
+import org.eclipse.core.resources.IResourceProxy
+import org.eclipse.core.resources.IResourceProxyVisitor
+import org.eclipse.core.runtime.IPath
+import org.eclipse.core.runtime.IProgressMonitor
+import org.eclipse.core.runtime.Path
+import org.eclipse.core.runtime.SubMonitor
+import org.eclipse.jdt.core.IClasspathEntry
+import org.eclipse.jdt.core.IJavaProject
+import org.eclipse.jdt.core.JavaCore
+import org.eclipse.jdt.core.JavaModelException
 import org.eclipse.jdt.internal.core.util.Util
 import org.eclipse.ui.IEditorPart
 import org.eclipse.ui.IPartListener

@@ -9,7 +9,8 @@ import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.core.dom.CompilationUnit
 
 import collection.immutable.SortedSet
-import collection.mutable.{ Map => MutMap, Set => MutSet }
+import collection.mutable.{ Map => MutMap }
+import collection.mutable.{ Set => MutSet }
 
 trait ImportSupport extends QualifiedNameSupport with BufferSupport {
   def addImport(qualifiedTypeName: String): String

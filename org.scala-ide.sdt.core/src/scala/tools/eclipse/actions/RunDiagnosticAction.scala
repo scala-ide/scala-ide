@@ -2,8 +2,13 @@ package scala.tools.eclipse
 package actions
 
 import org.eclipse.jface.action.IAction
-import org.eclipse.jface.viewers.{ ISelection, IStructuredSelection }
-import org.eclipse.ui.{ IObjectActionDelegate, IWorkbenchPart, IWorkbenchWindowActionDelegate, IWorkbenchWindow, PlatformUI }
+import org.eclipse.jface.viewers.ISelection
+import org.eclipse.jface.viewers.IStructuredSelection
+import org.eclipse.ui.IObjectActionDelegate
+import org.eclipse.ui.IWorkbenchPart
+import org.eclipse.ui.IWorkbenchWindowActionDelegate
+import org.eclipse.ui.IWorkbenchWindow
+import org.eclipse.ui.PlatformUI
 import scala.tools.eclipse.ScalaPlugin.plugin
 import scala.tools.eclipse.javaelements.JDTUtils
 import scala.tools.eclipse.util.Utils

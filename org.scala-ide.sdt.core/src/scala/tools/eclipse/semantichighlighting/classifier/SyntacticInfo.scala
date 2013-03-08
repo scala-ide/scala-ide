@@ -1,7 +1,8 @@
 package scala.tools.eclipse.semantichighlighting.classifier
 
 import scala.tools.eclipse.util.CollectionUtil
-import scalariform.lexer.{ScalaLexer, Token}
+import scalariform.lexer.ScalaLexer
+import scalariform.lexer.Token
 import scalariform.parser._
 import scalariform.utils.Range
 import org.eclipse.jface.text.Region

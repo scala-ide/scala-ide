@@ -208,7 +208,9 @@ object JUnit4TestFinder {
   private val FILE_NAME_PATTERN = """(.*\.java$)|(.*\.scala$)""".r
 
   def findTestClasses(scu: ScalaSourceFile): List[IType] = scu.withSourceFile { (source, comp) =>
-    import comp.{ ClassDef, Response, Tree }
+    import comp.ClassDef
+    import comp.Response
+    import comp.Tree
     val response = new Response[Tree]
     comp.askParsedEntered(source, keepLoaded = false, response)
 

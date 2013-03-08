@@ -6,18 +6,37 @@
 
 package scala.tools.eclipse.properties
 
-import org.eclipse.core.resources.{ IncrementalProjectBuilder, IProject }
+import org.eclipse.core.resources.IncrementalProjectBuilder
+import org.eclipse.core.resources.IProject
 import org.eclipse.core.runtime.preferences.IEclipsePreferences
 import org.eclipse.jdt.core.IJavaProject
-import org.eclipse.jface.preference.{ PreferencePage, IPersistentPreferenceStore, IPreferenceStore }
-import org.eclipse.ui.{ IWorkbench, IWorkbenchPreferencePage }
+import org.eclipse.jface.preference.PreferencePage
+import org.eclipse.jface.preference.IPersistentPreferenceStore
+import org.eclipse.jface.preference.IPreferenceStore
+import org.eclipse.ui.IWorkbench
+import org.eclipse.ui.IWorkbenchPreferencePage
 import org.eclipse.ui.dialogs.PropertyPage
 import org.eclipse.swt.SWT
-import org.eclipse.swt.events.{ ModifyEvent, ModifyListener, SelectionAdapter, SelectionEvent, SelectionListener }
-import org.eclipse.swt.layout.{ GridData, GridLayout, RowLayout }
-import org.eclipse.swt.widgets.{ Button, Combo, Composite, Group, Label, Control, TabFolder, TabItem, Text }
+import org.eclipse.swt.events.ModifyEvent
+import org.eclipse.swt.events.ModifyListener
+import org.eclipse.swt.events.SelectionAdapter
+import org.eclipse.swt.events.SelectionEvent
+import org.eclipse.swt.events.SelectionListener
+import org.eclipse.swt.layout.GridData
+import org.eclipse.swt.layout.GridLayout
+import org.eclipse.swt.layout.RowLayout
+import org.eclipse.swt.widgets.Button
+import org.eclipse.swt.widgets.Combo
+import org.eclipse.swt.widgets.Composite
+import org.eclipse.swt.widgets.Group
+import org.eclipse.swt.widgets.Label
+import org.eclipse.swt.widgets.Control
+import org.eclipse.swt.widgets.TabFolder
+import org.eclipse.swt.widgets.TabItem
+import org.eclipse.swt.widgets.Text
 import scala.tools.nsc.Settings
-import scala.tools.eclipse.{ ScalaPlugin, SettingConverterUtil }
+import scala.tools.eclipse.ScalaPlugin
+import scala.tools.eclipse.SettingConverterUtil
 import scala.tools.eclipse.util.SWTUtils
 import org.eclipse.jface.fieldassist.FieldDecorationRegistry
 import org.eclipse.jface.fieldassist.ControlDecoration

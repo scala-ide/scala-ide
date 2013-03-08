@@ -10,11 +10,14 @@ import org.eclipse.jdt.ui.JavaUI
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.core.search.IJavaSearchConstants
 import org.eclipse.jdt.internal.codeassist.ISearchRequestor
-import org.eclipse.jdt.internal.compiler.env.{ AccessRestriction }
-import org.eclipse.jdt.internal.core.{ DefaultWorkingCopyOwner, JavaProject }
-import org.eclipse.jdt.internal.ui.text.correction.{ SimilarElement, SimilarElementsRequestor }
+import org.eclipse.jdt.internal.compiler.env.AccessRestriction
+import org.eclipse.jdt.internal.core.DefaultWorkingCopyOwner
+import org.eclipse.jdt.internal.core.JavaProject
+import org.eclipse.jdt.internal.ui.text.correction.SimilarElement
+import org.eclipse.jdt.internal.ui.text.correction.SimilarElementsRequestor
 import org.eclipse.jdt.ui.text.java._
-import org.eclipse.jdt.core.search.{ TypeNameMatch, SearchEngine }
+import org.eclipse.jdt.core.search.TypeNameMatch
+import org.eclipse.jdt.core.search.SearchEngine
 import org.eclipse.jdt.core.IJavaElement
 import org.eclipse.jdt.internal.corext.util.TypeNameMatchCollector
 import org.eclipse.jface.text.source.Annotation
@@ -28,7 +31,8 @@ import scala.tools.eclipse.util.EditorUtils.getAnnotationsAtOffset
 import scala.tools.eclipse.semantichighlighting.implicits.ImplicitHighlightingPresenter
 import scala.tools.eclipse.logging.HasLogger
 import scala.tools.eclipse.quickfix.createmethod.CreateMethodProposal
-import scala.tools.refactoring.implementations.{AddToClass, AddToObject}
+import scala.tools.refactoring.implementations.AddToClass
+import scala.tools.refactoring.implementations.AddToObject
 
 // Scala
 import scala.util.matching.Regex

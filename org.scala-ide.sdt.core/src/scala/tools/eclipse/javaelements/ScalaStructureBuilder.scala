@@ -5,21 +5,38 @@
 
 package scala.tools.eclipse.javaelements
 
-import java.io.{ PrintWriter, StringWriter }
+import java.io.PrintWriter
+import java.io.StringWriter
 import java.util.{ Map => JMap }
 import org.eclipse.core.resources.IFile
-import org.eclipse.jdt.core.{ IAnnotation, ICompilationUnit, IJavaElement, IMemberValuePair, Signature }
+import org.eclipse.jdt.core.IAnnotation
+import org.eclipse.jdt.core.ICompilationUnit
+import org.eclipse.jdt.core.IJavaElement
+import org.eclipse.jdt.core.IMemberValuePair
+import org.eclipse.jdt.core.Signature
 import org.eclipse.jdt.core.compiler.CharOperation
-import org.eclipse.jdt.internal.core.{
-  Annotation => JDTAnnotation, AnnotationInfo => JDTAnnotationInfo, AnnotatableInfo, CompilationUnit => JDTCompilationUnit, ImportContainer,
-  ImportContainerInfo, ImportDeclaration, ImportDeclarationElementInfo, JavaElement, JavaElementInfo,
-  MemberValuePair, OpenableElementInfo, SourceRefElement, TypeParameter, TypeParameterElementInfo}
+import org.eclipse.jdt.internal.core.{ Annotation => JDTAnnotation }
+import org.eclipse.jdt.internal.core.{ AnnotationInfo => JDTAnnotationInfo }
+import org.eclipse.jdt.internal.core.AnnotatableInfo
+import org.eclipse.jdt.internal.core.{ CompilationUnit => JDTCompilationUnit }
+import org.eclipse.jdt.internal.core.ImportContainer
+import org.eclipse.jdt.internal.core.ImportContainerInfo
+import org.eclipse.jdt.internal.core.ImportDeclaration
+import org.eclipse.jdt.internal.core.ImportDeclarationElementInfo
+import org.eclipse.jdt.internal.core.JavaElement
+import org.eclipse.jdt.internal.core.JavaElementInfo
+import org.eclipse.jdt.internal.core.MemberValuePair
+import org.eclipse.jdt.internal.core.OpenableElementInfo
+import org.eclipse.jdt.internal.core.SourceRefElement
+import org.eclipse.jdt.internal.core.TypeParameter
+import org.eclipse.jdt.internal.core.TypeParameterElementInfo
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants
 import org.eclipse.jdt.ui.JavaElementImageDescriptor
 import scala.collection.Map
 import scala.collection.mutable.HashMap
 import scala.tools.nsc.symtab.Flags
-import scala.tools.nsc.util.{ NoPosition, Position }
+import scala.tools.nsc.util.NoPosition
+import scala.tools.nsc.util.Position
 import scala.tools.eclipse.ScalaPresentationCompiler
 import scala.tools.eclipse.util.ReflectionUtils
 
@@ -858,7 +875,8 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
     abstract class Builder extends PackageOwner with ImportContainerOwner with ClassOwner with ModuleOwner with ValOwner with TypeOwner with DefOwner
 
     def setSourceRange(info: ScalaMemberElementInfo, sym: Symbol, annotsPos: Position) {
-      import Math.{ max, min }
+      import Math.max
+      import Math.min
 
       val pos = sym.pos
       val (start, end) =

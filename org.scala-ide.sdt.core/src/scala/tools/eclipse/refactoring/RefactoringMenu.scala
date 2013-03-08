@@ -6,10 +6,15 @@
 package scala.tools.eclipse.refactoring
 
 import org.eclipse.ui.handlers.IHandlerService
-import org.eclipse.ui.commands.{ ICommandService, IHandler }
+import org.eclipse.ui.commands.ICommandService
+import org.eclipse.ui.commands.IHandler
 import org.eclipse.ui.part.EditorPart
 import org.eclipse.core.commands.Command
-import org.eclipse.jface.action.{ Action, IAction, IMenuManager, IMenuListener, ActionContributionItem }
+import org.eclipse.jface.action.Action
+import org.eclipse.jface.action.IAction
+import org.eclipse.jface.action.IMenuManager
+import org.eclipse.jface.action.IMenuListener
+import org.eclipse.jface.action.ActionContributionItem
 import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor
 import org.eclipse.jdt.internal.ui.actions.JDTQuickMenuCreator
 import org.eclipse.jface.action.Separator
