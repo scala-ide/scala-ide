@@ -16,7 +16,6 @@ import org.eclipse.jdt.core.dom.AST
 import org.eclipse.jdt.core.dom.ASTVisitor
 import org.eclipse.jdt.core.dom.ASTNode
 import org.eclipse.jdt.core.dom.SimpleName
-import scala.annotation.target.getter
 import org.eclipse.jdt.core.dom.QualifiedName
 import org.eclipse.jdt.core.dom.MethodInvocation
 import org.eclipse.jdt.core.compiler.IProblem

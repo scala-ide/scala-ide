@@ -640,15 +640,12 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
       // We assume that build manager setting has only single box
       val choice = buildManagerInitialize
       choice match {
-        case "refined" =>
-          logger.info("BM: Refined Build Manager")
-          buildManager0 = new buildmanager.refined.EclipseRefinedBuildManager(this, settings)
         case "sbt"  =>
           logger.info("BM: SBT enhanced Build Manager for " + plugin.scalaVer + " Scala library")
           buildManager0 = new buildmanager.sbtintegration.EclipseSbtBuildManager(this, settings)
         case _ =>
-          logger.info("Invalid build manager choice '" + choice  + "'. Setting to (default) refined build manager")
-          buildManager0 = new buildmanager.refined.EclipseRefinedBuildManager(this, settings)
+          logger.info("Invalid build manager choice '" + choice  + "'. Setting to (default) sbt build manager")
+          buildManager0 = new buildmanager.sbtintegration.EclipseSbtBuildManager(this, settings)
       }
 
       //buildManager0 = new EclipseBuildManager(this, settings)

@@ -188,11 +188,15 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings)
     if (!hasErrors)
       pendingSources.clear
   }
-
-  override def buildingFiles(included: scala.collection.Set[AbstractFile]) {
-    included foreach {
-      case EclipseResource(f : IFile) => clearMarkers(f)
-      case _ =>
+  
+  def buildingFiles(included: scala.collection.Set[AbstractFile]) {
+    for(file <- included) {
+      file match {
+        case EclipseResource(f : IFile) =>
+          FileUtils.clearBuildErrors(f, null)
+          FileUtils.clearTasks(f, null)
+        case _ =>
+      }
     }
   }
 

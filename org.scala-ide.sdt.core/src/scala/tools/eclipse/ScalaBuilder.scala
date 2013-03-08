@@ -14,7 +14,6 @@ import org.eclipse.jdt.internal.core.builder.{ JavaBuilder, State }
 import scala.tools.eclipse.javaelements.JDTUtils
 import scala.tools.eclipse.util.{ FileUtils, ReflectionUtils }
 import scala.tools.eclipse.logging.HasLogger
-import scala.tools.nsc.interactive.RefinedBuildManager
 import org.eclipse.core.runtime.jobs.ISchedulingRule
 
 class ScalaBuilder extends IncrementalProjectBuilder with HasLogger {
@@ -127,9 +126,7 @@ class ScalaBuilder extends IncrementalProjectBuilder with HasLogger {
      *  (since the SBT builder automatically calls the JDT builder internally if there are modified Java sources).
      */
     def shouldRunJavaBuilder: Boolean = {
-      (project.buildManager.isInstanceOf[RefinedBuildManager]
-         || (needToCopyResources && !addedOrUpdated.exists(_.getName().endsWith(plugin.javaFileExtn)))
-      )
+      (needToCopyResources && !addedOrUpdated.exists(_.getName().endsWith(plugin.javaFileExtn)))
     }
     
     // SBT build manager already calls java builder internally

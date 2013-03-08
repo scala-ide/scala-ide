@@ -199,7 +199,7 @@
             <Embed-Directory>lib</Embed-Directory>
             <Embed-StripVersion>true</Embed-StripVersion>
             <Include-Resource>lib=${project.build.directory}/lib</Include-Resource>
-            <Import-Package>!javax.tools.*,!jline.*,!scala.tools.jline.*,!sun.misc,scala.reflect,*</Import-Package>
+            <Import-Package>!javax.script.*,!javax.tools.*,!jline.*,!scala.tools.jline.*,!sun.misc,scala.reflect,*</Import-Package>
           </instructions>
         </configuration>
       </plugin>
