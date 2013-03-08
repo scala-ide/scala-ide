@@ -9,7 +9,6 @@ package scala.tools.eclipse.javaelements
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants
 import scala.tools.nsc.symtab.Flags
 import scala.tools.eclipse.ScalaPresentationCompiler
-import ch.epfl.lamp.fjbg.{ JObjectType, JType }
 import scala.tools.eclipse.logging.HasLogger
 import org.eclipse.jdt.core._
 import org.eclipse.jdt.internal.core.JavaModelManager
@@ -68,7 +67,7 @@ trait ScalaJavaMapper extends ScalaAnnotationHelper with SymbolNameUtil with Has
           if (sym.isMethod && !isConcreteGetterOrSetter) ownerClass.getMethods.find(matchesMethod)
           else {
             val fieldName = 
-              if(self.nme.isLocalName(sym.name)) self.nme.localToGetter(sym.name)
+              if(self.nme.isLocalName(sym.name)) self.nme.localToGetter(sym.name.toTermName)
               else sym.name
 
             ownerClass.getFields.find(_.getElementName == fieldName.toString)
@@ -207,8 +206,7 @@ trait ScalaJavaMapper extends ScalaAnnotationHelper with SymbolNameUtil with Has
     if (t.typeSymbolDirect.isTypeParameter)
       ""
     else {
-      val jt = javaType(t)
-      if (jt.isValueType)
+      if (definitions.isPrimitiveValueType(t))
         ""
       else
         t.typeSymbol.enclosingPackage.fullName
@@ -224,18 +222,13 @@ trait ScalaJavaMapper extends ScalaAnnotationHelper with SymbolNameUtil with Has
   }
 
   def mapParamTypeSignature(t : Type) : String = {
+    val objectSig = "Ljava.lang.Object;"
     if (t.typeSymbolDirect.isTypeParameter)
       "T"+t.typeSymbolDirect.name.toString+";"
-    else if (isScalaSpecialType(t))
-      "Ljava.lang.Object;"
-    else {
-      val jt = javaType(t)
-      val fjt = if (jt == JType.UNKNOWN)
-        JObjectType.JAVA_LANG_OBJECT
-      else
-        jt
-      fjt.getSignature.replace('/', '.')
-    }
+    else if (isScalaSpecialType(t) || t.isErroneous)
+      objectSig
+    else
+      javaType(t).getDescriptor().replace('/', '.')
   }
   
   def mapTypeName(s : Symbol) : String =

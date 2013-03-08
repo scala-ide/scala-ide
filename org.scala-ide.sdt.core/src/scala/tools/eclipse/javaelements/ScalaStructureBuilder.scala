@@ -177,7 +177,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
           val nm = d.name
 
           val fps = d.paramss.flatten
-          val paramNames = Array(fps.map(n => nme.getterName(n.name).toChars) : _*)
+          val paramNames = Array(fps.map(n => nme.getterName(n.name.toTermName).toChars) : _*)
           
           val javaSig = javaSigOf(d)
           
@@ -601,7 +601,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
       }
       
       def addBeanAccessors(sym: Symbol) {
-        var beanName = nme.localToGetter(sym.name).toString.capitalize
+        var beanName = nme.localToGetter(sym.name.toTermName).toString.capitalize
         val ownerInfo = sym.owner.info
         val accessors = List(ownerInfo.decl(GET append beanName), ownerInfo.decl(IS append beanName), ownerInfo.decl(SET append beanName)).filter(_ ne NoSymbol)
         accessors.foreach(addDef)
@@ -672,7 +672,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
          *  parameter types have the same length. A mismatch here will crash the JDT later.
          */
         def paramNames: (Array[Array[Char]]) = {
-          val originalParamNames = fps.map(n => nme.getterName(n.name).toChars)
+          val originalParamNames = fps.map(n => nme.getterName(n.name.toTermName).toChars)
           val res = ((paramsTypeSigs.length - originalParamNames.length ) match {
             case 0 => 
               originalParamNames
