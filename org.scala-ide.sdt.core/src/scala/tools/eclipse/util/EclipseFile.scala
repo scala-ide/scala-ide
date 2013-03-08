@@ -6,11 +6,20 @@
 package scala.tools.eclipse
 package util
 
-import java.io.{ ByteArrayInputStream, ByteArrayOutputStream, File, InputStream, OutputStream }
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
+import java.io.File
+import java.io.InputStream
+import java.io.OutputStream
 import org.eclipse.core.filebuffers.FileBuffers
 import org.eclipse.core.filesystem.URIUtil
-import org.eclipse.core.resources.{ IContainer, IFile, IFolder, IResource, ResourcesPlugin }
-import org.eclipse.core.runtime.{ IPath, Path }
+import org.eclipse.core.resources.IContainer
+import org.eclipse.core.resources.IFile
+import org.eclipse.core.resources.IFolder
+import org.eclipse.core.resources.IResource
+import org.eclipse.core.resources.ResourcesPlugin
+import org.eclipse.core.runtime.IPath
+import org.eclipse.core.runtime.Path
 import scala.tools.nsc.io.AbstractFile
 import scala.tools.eclipse.logging.HasLogger
 

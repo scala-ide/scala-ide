@@ -23,7 +23,8 @@ import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.IRegion
 import org.eclipse.jface.text.Region
 import org.eclipse.jface.text.source.ISourceViewer
-import org.junit.{ Before, Test }
+import org.junit.Before
+import org.junit.Test
 import org.junit.After
 import org.junit.Assert
 import org.mockito.Mockito._

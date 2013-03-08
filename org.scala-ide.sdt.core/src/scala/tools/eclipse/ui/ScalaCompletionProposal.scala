@@ -3,10 +3,13 @@ package ui
 
 import completion._
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal
-import org.eclipse.jface.text.contentassist.{ ICompletionProposalExtension, ICompletionProposalExtension6, IContextInformation }
+import org.eclipse.jface.text.contentassist.ICompletionProposalExtension
+import org.eclipse.jface.text.contentassist.ICompletionProposalExtension6
+import org.eclipse.jface.text.contentassist.IContextInformation
 import org.eclipse.swt.graphics.Image
 import org.eclipse.jface.text.IDocument
-import org.eclipse.jface.viewers.{ISelectionProvider, StyledString}
+import org.eclipse.jface.viewers.ISelectionProvider
+import org.eclipse.jface.viewers.StyledString
 import org.eclipse.jface.text.TextSelection
 import org.eclipse.jface.text.ITextViewer
 import org.eclipse.jdt.internal.ui.JavaPluginImages

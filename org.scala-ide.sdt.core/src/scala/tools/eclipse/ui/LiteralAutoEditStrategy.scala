@@ -1,7 +1,9 @@
 package scala.tools.eclipse.ui
 
 import org.eclipse.jface.preference.IPreferenceStore
-import org.eclipse.jface.text.{ DocumentCommand, IAutoEditStrategy, IDocument }
+import org.eclipse.jface.text.DocumentCommand
+import org.eclipse.jface.text.IAutoEditStrategy
+import org.eclipse.jface.text.IDocument
 import scala.tools.eclipse.properties.EditorPreferencePage
 
 /**

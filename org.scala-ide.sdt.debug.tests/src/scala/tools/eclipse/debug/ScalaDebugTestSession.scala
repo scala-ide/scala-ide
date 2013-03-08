@@ -1,8 +1,14 @@
 package scala.tools.eclipse.debug
 
-import scala.tools.eclipse.debug.model.{ ScalaThread, ScalaStackFrame, ScalaDebugTarget }
-import org.eclipse.core.resources.{ ResourcesPlugin, IFile }
-import org.eclipse.debug.core.{ ILaunchManager, IDebugEventSetListener, DebugPlugin, DebugEvent }
+import scala.tools.eclipse.debug.model.ScalaThread
+import scala.tools.eclipse.debug.model.ScalaStackFrame
+import scala.tools.eclipse.debug.model.ScalaDebugTarget
+import org.eclipse.core.resources.ResourcesPlugin
+import org.eclipse.core.resources.IFile
+import org.eclipse.debug.core.ILaunchManager
+import org.eclipse.debug.core.IDebugEventSetListener
+import org.eclipse.debug.core.DebugPlugin
+import org.eclipse.debug.core.DebugEvent
 import org.eclipse.debug.core.model.IBreakpoint
 import org.eclipse.jdt.debug.core.JDIDebugModel
 import org.eclipse.jdt.debug.core.IJavaLineBreakpoint

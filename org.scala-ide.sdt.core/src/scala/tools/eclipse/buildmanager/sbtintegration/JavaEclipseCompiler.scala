@@ -4,16 +4,19 @@ package sbtintegration
 
 import java.io.File
 import org.eclipse.core.runtime.SubMonitor
-import org.eclipse.core.resources.{ IncrementalProjectBuilder, IProject}
+import org.eclipse.core.resources.IncrementalProjectBuilder
+import org.eclipse.core.resources.IProject
 import scala.tools.eclipse.javaelements.JDTUtils
 import scala.tools.eclipse.util.FileUtils
 import scala.tools.eclipse.contribution.weaving.jdt.jcompiler.BuildManagerStore
 import org.eclipse.jdt.internal.core.JavaModelManager
-import org.eclipse.jdt.internal.core.builder.{ JavaBuilder, State }
+import org.eclipse.jdt.internal.core.builder.JavaBuilder
+import org.eclipse.jdt.internal.core.builder.State
 import org.eclipse.core.resources.IncrementalProjectBuilder.INCREMENTAL_BUILD
 import org.eclipse.core.resources.ResourcesPlugin
 import org.eclipse.core.resources.IResource
-import xsbti.compile.{JavaCompiler, Output}
+import xsbti.compile.JavaCompiler
+import xsbti.compile.Output
 import xsbti.Logger
 
 /** Eclipse Java compiler interface, used by the SBT builder.

@@ -1,6 +1,7 @@
 package scala.tools.eclipse.semantichighlighting
 
-import java.util.Arrays.{ binarySearch, copyOfRange }
+import java.util.Arrays.binarySearch
+import java.util.Arrays.copyOfRange
 
 import scala.collection.mutable
 import scala.tools.eclipse.ScalaPlugin

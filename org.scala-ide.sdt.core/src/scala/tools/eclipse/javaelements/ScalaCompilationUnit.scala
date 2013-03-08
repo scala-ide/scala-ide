@@ -9,7 +9,8 @@ package javaelements
 import java.util.{ Map => JMap }
 import scala.concurrent.SyncVar
 import org.eclipse.core.internal.filebuffers.SynchronizableDocument
-import org.eclipse.core.resources.{ IFile, IResource }
+import org.eclipse.core.resources.IFile
+import org.eclipse.core.resources.IResource
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.jdt.core.{
   BufferChangedEvent, CompletionRequestor, IBuffer, IBufferChangedListener, IJavaElement, IJavaModelStatusConstants,
@@ -18,13 +19,21 @@ import org.eclipse.jdt.internal.compiler.env
 import org.eclipse.jdt.internal.core.{
   BufferManager, CompilationUnitElementInfo, DefaultWorkingCopyOwner, JavaModelStatus, JavaProject, Openable,
   OpenableElementInfo, SearchableEnvironment }
-import org.eclipse.jdt.internal.core.search.matching.{ MatchLocator, PossibleMatch }
+import org.eclipse.jdt.internal.core.search.matching.MatchLocator
+import org.eclipse.jdt.internal.core.search.matching.PossibleMatch
 import org.eclipse.jdt.internal.ui.javaeditor.DocumentAdapter
-import org.eclipse.jface.text.{IRegion, ITextSelection}
+import org.eclipse.jface.text.IRegion
+import org.eclipse.jface.text.ITextSelection
 import scala.tools.nsc.io.AbstractFile
-import scala.reflect.internal.util.{ BatchSourceFile, SourceFile }
-import scala.tools.eclipse.contribution.weaving.jdt.{ IScalaCompilationUnit, IScalaWordFinder }
-import scala.tools.eclipse.{ ScalaImages, ScalaPlugin, ScalaPresentationCompiler, ScalaSourceIndexer, ScalaWordFinder }
+import scala.reflect.internal.util.BatchSourceFile
+import scala.reflect.internal.util.SourceFile
+import scala.tools.eclipse.contribution.weaving.jdt.IScalaCompilationUnit
+import scala.tools.eclipse.contribution.weaving.jdt.IScalaWordFinder
+import scala.tools.eclipse.ScalaImages
+import scala.tools.eclipse.ScalaPlugin
+import scala.tools.eclipse.ScalaPresentationCompiler
+import scala.tools.eclipse.ScalaSourceIndexer
+import scala.tools.eclipse.ScalaWordFinder
 import scala.tools.eclipse.util.ReflectionUtils
 import org.eclipse.jdt.core._
 import org.eclipse.jdt.internal.core.JavaElement

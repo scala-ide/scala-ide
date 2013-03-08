@@ -2,8 +2,10 @@ package scala.tools.eclipse
 package properties
 
 import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer
-import org.eclipse.jface.preference.{ FieldEditorPreferencePage, BooleanFieldEditor }
-import org.eclipse.ui.{ IWorkbenchPreferencePage, IWorkbench }
+import org.eclipse.jface.preference.FieldEditorPreferencePage
+import org.eclipse.jface.preference.BooleanFieldEditor
+import org.eclipse.ui.IWorkbenchPreferencePage
+import org.eclipse.ui.IWorkbench
 import EditorPreferencePage._
 import org.eclipse.swt.SWT
 import org.eclipse.swt.widgets.Label

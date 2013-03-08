@@ -2,17 +2,22 @@ package scala.tools.eclipse
 package refactoring
 package move
 
-import org.eclipse.core.resources.{IFolder, IFile}
+import org.eclipse.core.resources.IFolder
+import org.eclipse.core.resources.IFile
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.jdt.core.IPackageFragment
 import org.eclipse.jdt.internal.corext.refactoring.nls.changes.CreateFileChange
 import org.eclipse.ltk.core.refactoring.resource.MoveResourceChange
-import org.eclipse.ltk.core.refactoring.{RefactoringStatus, CompositeChange}
+import org.eclipse.ltk.core.refactoring.RefactoringStatus
+import org.eclipse.ltk.core.refactoring.CompositeChange
 
 import scala.tools.eclipse.javaelements.ScalaSourceFile
-import scala.tools.eclipse.refactoring.{RefactoringAction, FullProjectIndex}
+import scala.tools.eclipse.refactoring.RefactoringAction
+import scala.tools.eclipse.refactoring.FullProjectIndex
 import scala.tools.refactoring.analysis.GlobalIndexes
-import scala.tools.refactoring.common.{TextChange, NewFileChange, ConsoleTracing}
+import scala.tools.refactoring.common.TextChange
+import scala.tools.refactoring.common.NewFileChange
+import scala.tools.refactoring.common.ConsoleTracing
 import scala.tools.refactoring.implementations.MoveClass
 
 /**

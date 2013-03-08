@@ -8,7 +8,8 @@ package refactoring
 import org.eclipse.jface.action.IAction
 import javaelements.ScalaSourceFile
 import scala.tools.refactoring.analysis.GlobalIndexes
-import scala.tools.refactoring.common.{Change, Selections}
+import scala.tools.refactoring.common.Change
+import scala.tools.refactoring.common.Selections
 import scala.tools.refactoring.implementations.ExtractLocal
 import org.eclipse.ui.PlatformUI
 import scala.tools.refactoring.common.TextChange

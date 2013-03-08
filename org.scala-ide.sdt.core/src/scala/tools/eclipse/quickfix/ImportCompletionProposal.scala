@@ -2,10 +2,13 @@ package scala.tools.eclipse
 package quickfix
 
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal
-import org.eclipse.jdt.ui.{ISharedImages, JavaUI}
+import org.eclipse.jdt.ui.ISharedImages
+import org.eclipse.jdt.ui.JavaUI
 import org.eclipse.jface.text.contentassist.IContextInformation
-import org.eclipse.jface.text.{TextUtilities, IDocument}
-import org.eclipse.swt.graphics.{Point, Image}
+import org.eclipse.jface.text.TextUtilities
+import org.eclipse.jface.text.IDocument
+import org.eclipse.swt.graphics.Point
+import org.eclipse.swt.graphics.Image
 
 import scala.tools.eclipse.refactoring.EditorHelpers
 import scala.tools.eclipse.logging.HasLogger

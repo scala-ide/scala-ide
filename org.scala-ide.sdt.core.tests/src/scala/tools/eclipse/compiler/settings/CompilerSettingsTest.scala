@@ -2,7 +2,8 @@ package scala.tools.eclipse.compiler.settings
 
 import scala.tools.eclipse.testsetup.TestProjectSetup
 import org.junit.Test
-import org.junit.Assert.{ assertTrue, assertFalse }
+import org.junit.Assert.assertTrue
+import org.junit.Assert.assertFalse
 import scala.tools.eclipse.ScalaPlugin
 import scala.tools.eclipse.SettingConverterUtil
 import scala.tools.eclipse.properties.PropertyStore

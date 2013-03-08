@@ -7,10 +7,25 @@ package scala.tools.eclipse.javaelements
 
 import scala.util.control.Breaks._
 
-import org.eclipse.core.resources.{ IFile, IFolder, IProject, IResource, ResourcesPlugin }
-import org.eclipse.core.runtime.{ CoreException, IProgressMonitor, IStatus, Status }
-import org.eclipse.jdt.core.{ IClasspathEntry, IJavaElement, IPackageFragment, IType, JavaCore, JavaModelException }
-import org.eclipse.jdt.internal.core.{ ImportContainerInfo, JavaModelManager, NameLookup, OpenableElementInfo }
+import org.eclipse.core.resources.IFile
+import org.eclipse.core.resources.IFolder
+import org.eclipse.core.resources.IProject
+import org.eclipse.core.resources.IResource
+import org.eclipse.core.resources.ResourcesPlugin
+import org.eclipse.core.runtime.CoreException
+import org.eclipse.core.runtime.IProgressMonitor
+import org.eclipse.core.runtime.IStatus
+import org.eclipse.core.runtime.Status
+import org.eclipse.jdt.core.IClasspathEntry
+import org.eclipse.jdt.core.IJavaElement
+import org.eclipse.jdt.core.IPackageFragment
+import org.eclipse.jdt.core.IType
+import org.eclipse.jdt.core.JavaCore
+import org.eclipse.jdt.core.JavaModelException
+import org.eclipse.jdt.internal.core.ImportContainerInfo
+import org.eclipse.jdt.internal.core.JavaModelManager
+import org.eclipse.jdt.internal.core.NameLookup
+import org.eclipse.jdt.internal.core.OpenableElementInfo
 import org.eclipse.jdt.internal.ui.packageview.PackageExplorerPart
 import org.eclipse.ui.progress.UIJob
 

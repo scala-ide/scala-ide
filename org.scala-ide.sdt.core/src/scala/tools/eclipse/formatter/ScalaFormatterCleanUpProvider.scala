@@ -4,7 +4,8 @@ import org.eclipse.jdt.internal.corext.fix.CodeFormatFix
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.core.refactoring.CompilationUnitChange
 import org.eclipse.jdt.ui.cleanup.ICleanUpFix
-import org.eclipse.jface.text.{ Document, TextUtilities }
+import org.eclipse.jface.text.Document
+import org.eclipse.jface.text.TextUtilities
 import org.eclipse.text.edits.{ TextEdit => JFaceTextEdit, _ }
 import scalariform.formatter.ScalaFormatter
 import scalariform.parser.ScalaParserException

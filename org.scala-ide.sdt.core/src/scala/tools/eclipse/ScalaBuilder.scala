@@ -7,12 +7,22 @@ package scala.tools.eclipse
 
 import scala.collection.mutable.HashSet
 import java.{ lang => jl, util => ju }
-import org.eclipse.core.resources.{ IFile, IncrementalProjectBuilder, IProject, IResource, IResourceDelta, IResourceDeltaVisitor, IResourceVisitor }
-import org.eclipse.core.runtime.{ IProgressMonitor, IPath, SubMonitor }
+import org.eclipse.core.resources.IFile
+import org.eclipse.core.resources.IncrementalProjectBuilder
+import org.eclipse.core.resources.IProject
+import org.eclipse.core.resources.IResource
+import org.eclipse.core.resources.IResourceDelta
+import org.eclipse.core.resources.IResourceDeltaVisitor
+import org.eclipse.core.resources.IResourceVisitor
+import org.eclipse.core.runtime.IProgressMonitor
+import org.eclipse.core.runtime.IPath
+import org.eclipse.core.runtime.SubMonitor
 import org.eclipse.jdt.internal.core.JavaModelManager
-import org.eclipse.jdt.internal.core.builder.{ JavaBuilder, State }
+import org.eclipse.jdt.internal.core.builder.JavaBuilder
+import org.eclipse.jdt.internal.core.builder.State
 import scala.tools.eclipse.javaelements.JDTUtils
-import scala.tools.eclipse.util.{ FileUtils, ReflectionUtils }
+import scala.tools.eclipse.util.FileUtils
+import scala.tools.eclipse.util.ReflectionUtils
 import scala.tools.eclipse.logging.HasLogger
 import org.eclipse.core.runtime.jobs.ISchedulingRule
 

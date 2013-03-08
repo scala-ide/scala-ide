@@ -10,8 +10,11 @@ import org.eclipse.jface.action.IAction
 import javaelements.ScalaSourceFile
 import scala.tools.nsc.symtab.Flags
 import scala.reflect.internal.util.SourceFile
-import scala.tools.refactoring.analysis.{ GlobalIndexes, Indexes }
-import scala.tools.refactoring.common.{ ConsoleTracing, InteractiveScalaCompiler, Selections }
+import scala.tools.refactoring.analysis.GlobalIndexes
+import scala.tools.refactoring.analysis.Indexes
+import scala.tools.refactoring.common.ConsoleTracing
+import scala.tools.refactoring.common.InteractiveScalaCompiler
+import scala.tools.refactoring.common.Selections
 import scala.tools.refactoring.implementations.Rename
 
 /**

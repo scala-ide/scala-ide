@@ -8,10 +8,17 @@ package scala.tools.eclipse
 import scala.collection.immutable.IndexedSeq
 
 import scala.tools.nsc.Global
-import scala.tools.nsc.util.Chars.{ isIdentifierPart, isOperatorPart, CR, LF, FF }
+import scala.tools.nsc.util.Chars.isIdentifierPart
+import scala.tools.nsc.util.Chars.isOperatorPart
+import scala.tools.nsc.util.Chars.CR
+import scala.tools.nsc.util.Chars.LF
+import scala.tools.nsc.util.Chars.FF
 
 import org.eclipse.jdt.core.IBuffer
-import org.eclipse.jface.text.{ BadLocationException, IDocument, IRegion, Region }
+import org.eclipse.jface.text.BadLocationException
+import org.eclipse.jface.text.IDocument
+import org.eclipse.jface.text.IRegion
+import org.eclipse.jface.text.Region
 
 import scala.tools.eclipse.contribution.weaving.jdt.IScalaWordFinder
 

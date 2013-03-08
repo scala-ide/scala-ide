@@ -4,7 +4,19 @@ import scala.collection.JavaConverters.asScalaBufferConverter
 import org.eclipse.debug.core.model.IIndexedValue
 import org.eclipse.debug.core.model.IValue
 import org.eclipse.debug.core.model.IVariable
-import com.sun.jdi.{ VoidValue, Value, StringReference, ShortValue, ObjectReference, LongValue, IntegerValue, FloatValue, DoubleValue, CharValue, ByteValue, BooleanValue, ArrayReference }
+import com.sun.jdi.VoidValue
+import com.sun.jdi.Value
+import com.sun.jdi.StringReference
+import com.sun.jdi.ShortValue
+import com.sun.jdi.ObjectReference
+import com.sun.jdi.LongValue
+import com.sun.jdi.IntegerValue
+import com.sun.jdi.FloatValue
+import com.sun.jdi.DoubleValue
+import com.sun.jdi.CharValue
+import com.sun.jdi.ByteValue
+import com.sun.jdi.BooleanValue
+import com.sun.jdi.ArrayReference
 import com.sun.jdi.ClassType
 import com.sun.jdi.PrimitiveValue
 import com.sun.jdi.Field

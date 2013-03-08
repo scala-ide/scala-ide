@@ -7,14 +7,20 @@ package scala.tools.eclipse
 
 import scala.tools.nsc.interactive.FreshRunReq
 import scala.collection.mutable
-import scala.collection.mutable.{ ArrayBuffer, SynchronizedMap }
+import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.SynchronizedMap
 import org.eclipse.jdt.core.compiler.IProblem
-import org.eclipse.jdt.internal.compiler.problem.{ DefaultProblem, ProblemSeverities }
+import org.eclipse.jdt.internal.compiler.problem.DefaultProblem
+import org.eclipse.jdt.internal.compiler.problem.ProblemSeverities
 import scala.tools.nsc.Settings
-import scala.tools.nsc.interactive.{ Global, InteractiveReporter, Problem }
+import scala.tools.nsc.interactive.Global
+import scala.tools.nsc.interactive.InteractiveReporter
+import scala.tools.nsc.interactive.Problem
 import scala.tools.nsc.io.AbstractFile
 import scala.tools.nsc.reporters.Reporter
-import scala.reflect.internal.util.{ BatchSourceFile, Position, SourceFile }
+import scala.reflect.internal.util.BatchSourceFile
+import scala.reflect.internal.util.Position
+import scala.reflect.internal.util.SourceFile
 import scala.tools.eclipse.javaelements.{
   ScalaCompilationUnit,
   ScalaIndexBuilder,
@@ -23,7 +29,9 @@ import scala.tools.eclipse.javaelements.{
   ScalaStructureBuilder,
   ScalaOverrideIndicatorBuilder
 }
-import scala.tools.eclipse.util.{ Cached, EclipseFile, EclipseResource }
+import scala.tools.eclipse.util.Cached
+import scala.tools.eclipse.util.EclipseFile
+import scala.tools.eclipse.util.EclipseResource
 import scala.tools.eclipse.logging.HasLogger
 import scala.tools.nsc.util.FailedInterrupt
 import scala.tools.nsc.symtab.Flags

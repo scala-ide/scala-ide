@@ -5,11 +5,14 @@
 
 package scala.tools.eclipse
 
-import java.io.{ DataInputStream, InputStream, IOException }
+import java.io.DataInputStream
+import java.io.InputStream
+import java.io.IOException
 import scala.annotation.switch
 import scala.collection.mutable.HashMap
 import org.eclipse.core.runtime.QualifiedName
-import org.eclipse.core.runtime.content.{ IContentDescriber, IContentDescription }
+import org.eclipse.core.runtime.content.IContentDescriber
+import org.eclipse.core.runtime.content.IContentDescription
 import scala.tools.eclipse.logging.HasLogger
 
 object ScalaClassFileDescriber extends HasLogger {
