@@ -6,11 +6,11 @@
 package scala.tools.eclipse
 
 import scala.reflect.NameTransformer
-import scala.tools.nsc.Global 
+import scala.tools.nsc.interactive.Global
 
 trait JVMUtils { self : Global =>
 
-  val dummyBuilder = new genASM.JPlainBuilder(null)
+  lazy val dummyBuilder = self.ask { () => new genASM.JPlainBuilder(null) }
   
   def javaName(sym : Symbol): String = sym.javaBinaryName.toString()
   

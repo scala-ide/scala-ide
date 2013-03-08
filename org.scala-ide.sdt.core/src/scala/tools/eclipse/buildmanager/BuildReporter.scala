@@ -58,9 +58,9 @@ abstract class BuildReporter(private[buildmanager] val project0: ScalaProject, s
 	      }
 	      else
 	        eclipseSeverity match {
-	          case IMarker.SEVERITY_INFO if (settings0.Ybuildmanagerdebug.value) =>
+	          case IMarker.SEVERITY_INFO =>
 		      	  // print only to console, better debugging
-		      	  logger.info("[Buildmanager info] " + msg)
+			  logger.info("[info] " + msg)
 	          case _ =>
 		      	  prob += new BuildProblem(severity, msg, NoPosition)
 		      	  BuildProblemMarker.create(project0.underlying, eclipseSeverity, msg)

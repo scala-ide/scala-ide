@@ -185,7 +185,7 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings)
       pendingSources.clear
   }
   
-  override def buildingFiles(included: scala.collection.Set[AbstractFile]) {
+  def buildingFiles(included: scala.collection.Set[AbstractFile]) {
     for(file <- included) {
       file match {
         case EclipseResource(f : IFile) =>
