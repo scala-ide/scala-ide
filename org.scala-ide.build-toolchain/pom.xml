@@ -13,9 +13,32 @@
   <packaging>pom</packaging>
   <version>4.0.0-SNAPSHOT</version>
 
+  <!-- not working
+  <properties>
+    <main.basedir>${project.parent.basedir}</main.basedir>
+  </properties>
+  -->
+
   <modules>
     <module>../org.scala-ide.scala.library</module>
     <module>../org.scala-ide.scala.compiler</module>
     <module>../org.scala-ide.sbt.full.library</module>
   </modules>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.scalastyle</groupId>
+        <artifactId>scalastyle-maven-plugin</artifactId>
+        <configuration>
+          <verbose>false</verbose>
+          <failOnViolation>true</failOnViolation>
+          <includeTestSourceDirectory>false</includeTestSourceDirectory>
+          <failOnWarning>false</failOnWarning>
+          <sourceDirectory>${basedir}..</sourceDirectory>
+          <configLocation>${basedir}/../scala-ide-style-config.xml</configLocation>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 </project>
