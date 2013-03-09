@@ -23,14 +23,14 @@ import org.eclipse.jdt.core.compiler.IProblem
 import org.eclipse.jdt.internal.core.builder.JavaBuilder
 
 object FileUtils {
-  
+
   def toIFile(file: AbstractFile): Option[IFile] = file match {
     case null => None
     case EclipseResource(file: IFile) => Some(file)
     case abstractFile =>
-      
+
       val file = ResourcesPlugin.getWorkspace.getRoot.getFileForLocation(Path.fromOSString(abstractFile.path))
-      
+
       if (file == null || !file.exists) {
         None
       } else {
@@ -38,7 +38,7 @@ object FileUtils {
       }
   }
 
-  
+
   def length(file : IFile) = {
     val fs = FileBuffers.getFileStoreAtLocation(file.getLocation)
     if (fs != null)
@@ -46,21 +46,21 @@ object FileUtils {
     else
       -1
   }
-  
+
   def clearBuildErrors(file : IFile, monitor : IProgressMonitor) =
     try {
       workspaceRunnableIn(file.getWorkspace, monitor)( m => file.deleteMarkers(plugin.problemMarkerId, true, IResource.DEPTH_INFINITE))
     } catch {
       case _ : ResourceException =>
     }
-  
+
   def clearTasks(file : IFile, monitor : IProgressMonitor) =
     try {
       workspaceRunnableIn(file.getWorkspace, monitor) { m => file.deleteMarkers(plugin.taskMarkerId, true, IResource.DEPTH_INFINITE) }
     } catch {
       case _ : ResourceException =>
     }
-  
+
   def findBuildErrors(file : IResource) : Seq[IMarker] =
     file.findMarkers(plugin.problemMarkerId, true, IResource.DEPTH_INFINITE)
 

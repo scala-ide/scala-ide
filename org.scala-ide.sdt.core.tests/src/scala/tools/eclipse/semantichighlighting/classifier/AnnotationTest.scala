@@ -31,10 +31,10 @@ class AnnotationTest extends AbstractSymbolClassifierTest {
   def fully_qualified_annotation() {
     checkSymbolClassification("""
       @scala.annotation.tailrec
-      class X 
+      class X
       """, """
       @$PKG$.$   PKG  $.$ANNOT$
-      class X 
+      class X
       """,
       Map(
         "ANNOT" -> Annotation,

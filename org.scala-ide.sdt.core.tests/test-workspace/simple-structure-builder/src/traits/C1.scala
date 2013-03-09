@@ -22,23 +22,23 @@ abstract class C[T](_x: Int, _y: T) extends Ordered[String] {
   @BeanProperty var beanVar: Int = 10
 
   // methods
-  def nullaryMethod = 
+  def nullaryMethod =
     (x > 0 && (_y != x))
 
   def method() {
     System.out.println("Hello, world " + x)
     println(x)
   }
-  
+
   @Test
   def annotatedMethod {
-    
+
   }
 
   def curriedMethod(x: Int)(y: Int) = x + y
 
   // modifiers
-  private def nullaryMethod1 = 
+  private def nullaryMethod1 =
     (x > 0 && _y != x)
 
   private[this] def method1() {
@@ -58,13 +58,13 @@ abstract class C[T](_x: Int, _y: T) extends Ordered[String] {
   // types
   type T = List[Int]
   type U[X] >: Null <: Ordered[X]
-  
+
   // poly types
   def map[U >: T](f: T => U) = null
   def takeArray(xs: Array[List[String]]) = null
   def takeArray2(xss: Array[Array[Byte]]) = null
-  
-  
+
+
   // local definitions
   def localClass(x: Int) = {
     val t = "abc"
@@ -74,21 +74,21 @@ abstract class C[T](_x: Int, _y: T) extends Ordered[String] {
       }
     }
   }
-  
+
   def localMethod(x: Int): Int = {
-    def local(y: Long) = 
+    def local(y: Long) =
       x + 1
-      
+
     local(10)
   }
-  
+
   def localVals(x: Int): Long = {
     val y = 10L
     lazy val lz = y + 1
     type LocalT = Int
-    
+
     def foo(x: LocalT) = x
-    
+
     foo(x)
   }
 }

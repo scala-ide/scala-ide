@@ -40,10 +40,10 @@ object ScalaDebugger extends ISelectionListener {
   }
 
   /** Currently selected thread in the debugger UI view.
-    *  
-    * WARNING: 
-    * Mind that this code is by design subject to race-condition, clients accessing this member need to handle the case where the 
-    * value of `currentThread` is not the expected one. Practically, this means that accesses to `currentThread` should always happen 
+    *
+    * WARNING:
+    * Mind that this code is by design subject to race-condition, clients accessing this member need to handle the case where the
+    * value of `currentThread` is not the expected one. Practically, this means that accesses to `currentThread` should always happen
     * within a try..catch block. Failing to do so can cause the whole debug session to shutdown for no good reasons.
     */
   @volatile var currentThread: ScalaThread = null

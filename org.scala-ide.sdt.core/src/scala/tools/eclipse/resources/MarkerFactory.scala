@@ -6,7 +6,7 @@ import org.eclipse.core.resources.IMarker
 import org.eclipse.core.resources.IResource
 import org.eclipse.core.runtime.IProgressMonitor
 
-object MarkerFactory {  
+object MarkerFactory {
   trait Position {
     def isDefined: Boolean = false
     def offset: Int = throw new UnsupportedOperationException("Position.offset")
@@ -37,7 +37,7 @@ abstract class MarkerFactory(markerType: String) {
     *                  [IMarker.SEVERITY_ERROR, IMarker.SEVERITY_WARNING, IMarker.SEVERITY_INFO]
     * @param msg      The text message displayed by the marker. Note, the passed message is truncated to 21000 chars.
     */
-  def create(resource: IResource, severity: Int, msg: String): Unit = 
+  def create(resource: IResource, severity: Int, msg: String): Unit =
     create(resource, severity, msg, MarkerFactory.NoPosition)
 
   /** Create marker with a source position in the Problem view.

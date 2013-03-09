@@ -42,18 +42,18 @@ import org.eclipse.jface.text.contentassist.ICompletionProposal
 
 /** A completion proposal for Java sources. This adds mixed-in concrete members to scope
  *  completions in Java.
- *  
- *  Although the ScalaStructureBuilder reports traits and classes correctly, the Java 
- *  completion proposal is confused by concrete trait members. Specifically, given 
+ *
+ *  Although the ScalaStructureBuilder reports traits and classes correctly, the Java
+ *  completion proposal is confused by concrete trait members. Specifically, given
  *  a Scala trait T with a concrete method 'foo', and a Scala class C that extends T,
  *  all Java classes that extend C won't see 'foo' in the completion proposal. The reason
  *  is that the Java completion proposal won't collect inherited /interface/ methods from
  *  concrete types, considering that all interface methods have to be implemented in one
  *  of the concrete classes seen so far. Obviously, this doesn't hold for concrete
  *  trait members.
- *  
+ *
  *  This class only proposes concrete methods coming from Scala traits.
- * 
+ *
  * The //test comments reference the test cases from <code>ScalaJavaCompletionTests</code>
  */
 class ScalaJavaCompletionProposalComputer extends IJavaCompletionProposalComputer {
@@ -61,12 +61,12 @@ class ScalaJavaCompletionProposalComputer extends IJavaCompletionProposalCompute
   def sessionEnded() {}
   def getErrorMessage() = null
 
-  def computeContextInformation(context: ContentAssistInvocationContext, monitor: IProgressMonitor) = 
+  def computeContextInformation(context: ContentAssistInvocationContext, monitor: IProgressMonitor) =
     javaEmptyList()
-    
+
   def computeCompletionProposals(context: ContentAssistInvocationContext, monitor: IProgressMonitor): java.util.List[ICompletionProposal] = {
     context match {
-      case jc: JavaContentAssistInvocationContext => 
+      case jc: JavaContentAssistInvocationContext =>
         if (ScalaPlugin.plugin.isScalaProject(jc.getProject()))
           jc.getCompilationUnit match {
           case scu: ScalaCompilationUnit => javaEmptyList()
@@ -184,7 +184,7 @@ private class JavaASTVisitor(unit: ICompilationUnit, offset: Int) extends ASTVis
   }
 
   /*
-   * Get the string to complete, and the referenced type form the 
+   * Get the string to complete, and the referenced type form the
    * found enclosing node
    */
   override def endVisit(compilationUnit: CompilationUnit) {
@@ -236,8 +236,8 @@ private class JavaASTVisitor(unit: ICompilationUnit, offset: Int) extends ASTVis
        *   a.ge[caret]
        * is returned an assignment:
        *   a.ge=$missing$;
-       * with '$missing$' being an empty SimpleName.  
-       *   
+       * with '$missing$' being an empty SimpleName.
+       *
        * To find this case, we check the size of the assignment and of the left hand side. If they
        * are equal, it means that the '=' is missing, so it is not an assignment.
        */

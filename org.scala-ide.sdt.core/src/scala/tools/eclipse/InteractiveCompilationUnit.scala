@@ -70,9 +70,9 @@ trait InteractiveCompilationUnit {
    *  ensuring faster response when calling `getProblems`.
    */
   def scheduleReconcile(): Response[Unit]
-  
-  /** Returns a new search name environment for the scala project. 
-   *  
+
+  /** Returns a new search name environment for the scala project.
+   *
    *  @param workingCopyOwner The owner of an this Compilation Unit in working copy mode.
    */
   def newSearchableEnvironment(workingCopyOwner : WorkingCopyOwner = DefaultWorkingCopyOwner.PRIMARY) : SearchableEnvironment = {

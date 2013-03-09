@@ -29,95 +29,95 @@ import org.eclipse.jdt.ui.JavaUI
 
 
 object QuickFixesTests extends TestProjectSetup("quickfix") {
-  
+
   def assertStatusOk(status: IStatus) {
-		if (!status.isOK()) {
-			if (status.getException() == null) {  // find a status with an exception
-				val children = status.getChildren();
-				for (child <- children) {
-					if (child.getException() != null) {
-						throw new CoreException(child);
-					}
-				}
-			}
-		}
-	}
-  
+    if (!status.isOK()) {
+      if (status.getException() == null) {  // find a status with an exception
+        val children = status.getChildren();
+        for (child <- children) {
+          if (child.getException() != null) {
+            throw new CoreException(child);
+          }
+        }
+      }
+    }
+  }
+
   def assertNumberOfProblems(nProblems: Int, problems: Array[IProblem] ) {
     // check if numbers match but we want reasonable error message
-		if (problems.length != nProblems) {
-			val buf= new StringBuffer("Wrong number of problems, is: ")
-			buf.append(problems.length).append(", expected: ").append(nProblems).append('\n')
-			for (problem <- problems) {
-				buf.append(problem).append(" at ")
-				buf.append('[').append(problem.getSourceStart()).append(" ,").append(problem.getSourceEnd()).append(']')
-				buf.append('\n')
-			}
-			
-			assertEquals(buf.toString, nProblems, problems.length)
-		}
-	}
-  
+    if (problems.length != nProblems) {
+      val buf= new StringBuffer("Wrong number of problems, is: ")
+      buf.append(problems.length).append(", expected: ").append(nProblems).append('\n')
+      for (problem <- problems) {
+        buf.append(problem).append(" at ")
+        buf.append('[').append(problem.getSourceStart()).append(" ,").append(problem.getSourceEnd()).append(']')
+        buf.append('\n')
+      }
+
+      assertEquals(buf.toString, nProblems, problems.length)
+    }
+  }
+
 }
 
 class QuickFixesTests {
   import QuickFixesTests._
-  
-  private def withQuickFixes(pathToSource: String)(expectedQuickFixesList: List[List[String]]) {  
+
+  private def withQuickFixes(pathToSource: String)(expectedQuickFixesList: List[List[String]]) {
     // get our compilation unit
     val unit = compilationUnit(pathToSource).asInstanceOf[ScalaCompilationUnit]
-    
+
     // first, 'open' the file by telling the compiler to load it
     project.withSourceFile(unit) { (src, compiler) =>
-      
+
       // do a compiler reload before checking for problems
       val dummy = new Response[Unit]
       compiler.askReload(List(src), dummy)
-      dummy.get   
-      
+      dummy.get
+
       val problems = compiler.problemsOf(unit)
       assertTrue("No problems found.", problems.size > 0)
       assertNumberOfProblems(expectedQuickFixesList.size, problems.toArray)
-    
-    	val editor = JavaUI.openInEditor(unit.getCompilationUnit)
-    	Thread.sleep(5000)
-    	
+
+      val editor = JavaUI.openInEditor(unit.getCompilationUnit)
+      Thread.sleep(5000)
+
       // check each problem quickfix
       for ( (problem, expectedQuickFixes) <- problems zip expectedQuickFixesList) {
-	      // here we will accumulate proposals
-		    var proposals: ArrayList[IJavaCompletionProposal] = new ArrayList()
-      
-		    // get all corrections for the problem
-	      val offset = problem.getSourceStart
-				val length = problem.getSourceEnd + 1 - offset
-				val context= new AssistContext(unit.getCompilationUnit, offset, length)
-	      
-	      val problemLocation: IProblemLocation = new ProblemLocation(problem);	      
-				val status = JavaCorrectionProcessor.collectCorrections(context, Array( problemLocation ), proposals)
-								
-				// assert that status is okay
-				assertStatusOk(status)
-				
-				// get collection of offered quickfix message
-				import scala.collection.JavaConversions._        
-				val corrections: List[String] = (proposals : Buffer[IJavaCompletionProposal]).toList.map( _.getDisplayString )
-				
-				// check all expected quick fixes
-				//assertEquals(expectedQuickFixes.size, corrections.size)
-				// NOTE due to a bug, Scala IDE returns a lot of quick fixes so we skip number comparison
-				for ( quickFix <- expectedQuickFixes  ) {
-				  assertTrue("Quick fix " + quickFix + " was not offered. Offered were: " + corrections.mkString(", "),
-			      corrections contains quickFix )				 
-				}
+        // here we will accumulate proposals
+        var proposals: ArrayList[IJavaCompletionProposal] = new ArrayList()
+
+        // get all corrections for the problem
+        val offset = problem.getSourceStart
+        val length = problem.getSourceEnd + 1 - offset
+        val context= new AssistContext(unit.getCompilationUnit, offset, length)
+
+        val problemLocation: IProblemLocation = new ProblemLocation(problem);
+        val status = JavaCorrectionProcessor.collectCorrections(context, Array( problemLocation ), proposals)
+
+        // assert that status is okay
+        assertStatusOk(status)
+
+        // get collection of offered quickfix message
+        import scala.collection.JavaConversions._
+        val corrections: List[String] = (proposals : Buffer[IJavaCompletionProposal]).toList.map( _.getDisplayString )
+
+        // check all expected quick fixes
+        //assertEquals(expectedQuickFixes.size, corrections.size)
+        // NOTE due to a bug, Scala IDE returns a lot of quick fixes so we skip number comparison
+        for ( quickFix <- expectedQuickFixes  ) {
+          assertTrue("Quick fix " + quickFix + " was not offered. Offered were: " + corrections.mkString(", "),
+            corrections contains quickFix )
+        }
       }
     } ( )
 
   }
-  
+
   val stringPattern = "Transform expression: %s => %s"
-  
+
   @Test
-  def basicTypeMismatchQuickFixes { 
+  def basicTypeMismatchQuickFixes {
     withQuickFixes("typemismatch/Basic.scala")(
       List(
         List(
@@ -176,5 +176,5 @@ class QuickFixesTests {
       )
     )
   }
-  
+
 }

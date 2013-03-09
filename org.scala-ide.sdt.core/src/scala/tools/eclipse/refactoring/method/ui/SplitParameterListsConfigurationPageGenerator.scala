@@ -11,13 +11,13 @@ import scala.tools.refactoring.Refactoring
 trait SplitParameterListsConfigurationPageGenerator extends MethodSignatureRefactoringConfigurationPageGenerator {
 
   this: ScalaIdeRefactoring =>
-    
+
   import refactoring.global._
-  
+
   override type MSRefactoringParameters = List[List[Int]]
-  
+
   override val refactoringCaption = "Split parameter lists"
-  
+
   override def mkConfigPage(method: DefDef, paramsObs: MSRefactoringParameters => Unit) = new SplitParameterListsConfigurationPage(method, paramsObs)
 
   class SplitParameterListsConfigurationPage(
@@ -25,14 +25,14 @@ trait SplitParameterListsConfigurationPageGenerator extends MethodSignatureRefac
     paramsObs: MSRefactoringParameters => Unit) extends MethodSignatureRefactoringConfigurationPage(method, paramsObs) {
 
     override val headerLabelText = "Split parameter lists after the marked parameter"
-    
+
     // If a parameter is selected in the parameter table we disable the
     // merge button and enable the split button if the selected parameter
     // is in a splittable position (not the last parameter in its list).
     override def setBtnStatesForParameter(
-        param: ValDef, 
-        paramsWithSeparators: List[ParamOrSeparator], 
-        splitBtn: Button, 
+        param: ValDef,
+        paramsWithSeparators: List[ParamOrSeparator],
+        splitBtn: Button,
         mergeBtn: Button) {
       mergeBtn.setEnabled(false)
       splitBtn.setEnabled(isInSplitPosition(param, paramsWithSeparators))
@@ -62,13 +62,13 @@ trait SplitParameterListsConfigurationPageGenerator extends MethodSignatureRefac
       val splitPositions = splitterLists.map(splitters => splitters.map(_.splitPosition).sortWith(_ < _)).toList
       splitPositions
     }
-    
+
     // Handles a click of the split button; inserts a separator after the selected parameter.
     override def handleFirstBtn(selection: ParamOrSeparator, paramsWithSeparators: List[ParamOrSeparator]) = selection match {
       case Left(param) if isInSplitPosition(param, paramsWithSeparators) => addSplitPositionAfter(param, paramsWithSeparators)
       case _ => paramsWithSeparators
     }
-    
+
     // Handles a click of the merge button; removes the selected inserted separator.
     override def handleSecondBtn(selection: ParamOrSeparator, paramsWithSeparators: List[ParamOrSeparator]) = selection match {
       case Right(sep: InsertedSeparator) => removeSeparator(sep, paramsWithSeparators)

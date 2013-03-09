@@ -8,14 +8,14 @@ trait Actor {
   import Actor._
 
   type Receive = Actor.Receive
-  
+
   trait MessageDispatcher
 
   def loggable(self: AnyRef)(r: Receive): Receive = null
 
   def someSelf: Some[ActorRef with ScalaActorRef] = Some(null)
-  
-  def optionSelf: Option[ActorRef with ScalaActorRef] = someSelf 
+
+  def optionSelf: Option[ActorRef with ScalaActorRef] = someSelf
 
   implicit def self = someSelf.get
 
@@ -33,7 +33,7 @@ trait Actor {
   protected def receive: Receive
 
   def preStart() {}
-  
+
   def postStop() {}
 
   def preRestart(reason: Throwable, message: Option[Any]) { postStop() }
@@ -41,7 +41,7 @@ trait Actor {
   def postRestart(reason: Throwable) { preStart() }
 
   def unhandled(message: Any) {}
-  
+
   def become(behavior: Receive, discardOld: Boolean = true) { }
 
   def unbecome() { }
@@ -51,7 +51,7 @@ trait Actor {
   def unwatch(subject: ActorRef): ActorRef = self stopsMonitoring subject
 
   private[this] final def apply(msg: Any) {}
-  
+
   private val processingBehavior = receive
 }
 

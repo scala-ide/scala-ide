@@ -80,7 +80,7 @@ object ScalaSyntaxClasses {
   val UNDERLINE_SUFFIX = ".underline"
 
   val ENABLE_SEMANTIC_HIGHLIGHTING = "syntaxColouring.semantic.enabled"
-    
+
   val USE_SYNTACTIC_HINTS = "syntaxColouring.semantic.useSyntacticHints"
 
   val STRIKETHROUGH_DEPRECATED = "syntaxColouring.semantic.strikeDeprecated"

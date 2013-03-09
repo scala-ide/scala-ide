@@ -111,7 +111,7 @@ object EclipseReplTest
   }
 
   val TheOneException = new RuntimeException("TheOne") {
-    // can't prevent actors framework from printing exceptions, 
+    // can't prevent actors framework from printing exceptions,
     // but can at least suppress the useless stack traces...
     setStackTrace(Array.empty[StackTraceElement]) }
 
@@ -240,7 +240,7 @@ object EclipseReplTest
   object Failder extends Initialization
   {
     val settings = new Init { override def toString = "Failder" }
-    override def steal(es:Seq[Expect]) = 
+    override def steal(es:Seq[Expect]) =
       throw new UnsupportedOperationException()
   }
 

@@ -53,13 +53,13 @@ class ScalaMethodVerifierProvider extends IMethodVerifierProvider with HasLogger
         val fileExtension = file.getFullPath().getFileExtension()
 
         /* If it is a Scala source file, then we need to check if the source belongs to a Scala
-         * Project and if that is the case check if the passed `abstractMethod` is a concrete 
+         * Project and if that is the case check if the passed `abstractMethod` is a concrete
          * method defined in a trait.
-         * 
-         * Java sources do not need to be considered because if the `abstractMethod` belongs to 
+         *
+         * Java sources do not need to be considered because if the `abstractMethod` belongs to
          * a Java source, then the method is abstract by definition.
-         * 
-         * Class binaries are also ignored because we know the Scala mix-in phase has been executed. 
+         *
+         * Class binaries are also ignored because we know the Scala mix-in phase has been executed.
          */
         (fileExtension == "scala") && {
           val project = file.getProject
@@ -78,12 +78,12 @@ class ScalaMethodVerifierProvider extends IMethodVerifierProvider with HasLogger
   }
 
   private def getFile(abstractMethod: MethodBinding): Option[IFile] = {
-    /* File name containing the abstractMethod definition. 
+    /* File name containing the abstractMethod definition.
      * Note that the returned path contains includes the project's folder where the file resides. */
     val fileName = Option(abstractMethod.declaringClass.getFileName())
-    
+
     logger.debug("getFile: " + fileName)
-    fileName.map {name => 
+    fileName.map {name =>
       val qualifiedFileName = name.mkString
 
       // File containing the `abstractMethod` definition. From a file we can find the project the file belongs to.
@@ -119,7 +119,7 @@ class ScalaMethodVerifierProvider extends IMethodVerifierProvider with HasLogger
                 false
             }
 
-            // overloading on the return type is not allowed neither on Java nor in Scala, 
+            // overloading on the return type is not allowed neither on Java nor in Scala,
             // which implies that we don't need to compare the method's return type.
             m.encodedName == abstractMethod.selector.mkString && haveSameTpeParams(abstractMethod, m)
           }
@@ -160,7 +160,7 @@ class ScalaMethodVerifierProvider extends IMethodVerifierProvider with HasLogger
         }
 
         val methodOwner = findMethodOwnerSymbol(abstractMethod)
-        // makes sure the symbol has been fully initialized. This is needed for example after a project's clean to ensure 
+        // makes sure the symbol has been fully initialized. This is needed for example after a project's clean to ensure
         // the symbol's flags are correctly set.
         methodOwner.initialize
 

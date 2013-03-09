@@ -3,7 +3,7 @@ package breakpoints
 import Helper._
 
 class Breakpoints {
-  
+
   def simple1() {
     var x = 0
 
@@ -44,7 +44,7 @@ object Breakpoints {
 }
 
 object Helper {
-  
+
   def noop(a: Any) {
   }
 

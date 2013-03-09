@@ -35,7 +35,7 @@ class ScalaLogicalStructureProviders extends ILogicalStructureProvider {
       }
     }
   }
-  
+
   /**
    * Checks 'implements' with Java meaning
    */
@@ -48,11 +48,11 @@ class ScalaLogicalStructureProviders extends ILogicalStructureProvider {
 object ScalaCollectionLogicalStructureType extends ILogicalStructureType with HasLogger {
 
   // Members declared in org.eclipse.debug.core.ILogicalStructureType
-  
+
   override def getDescription(): String = "Flat the Scala collections"
-  
+
   override val getId: String = ScalaDebugPlugin.id + ".logicalstructure.collection"
-  
+
   // Members declared in org.eclipse.debug.core.model.ILogicalStructureTypeDelegate
 
   override def getLogicalStructure(value: IValue): IValue = {
@@ -85,10 +85,10 @@ object ScalaCollectionLogicalStructureType extends ILogicalStructureType with Ha
         scalaValue
     }
   }
-  
+
   override def providesLogicalStructure(value: IValue): Boolean = true // TODO: check that as it is created by the provider, it is never used with other values
-  
+
   // Members declared in org.eclipse.debug.core.model.ILogicalStructureTypeDelegate2
-  
+
   override def getDescription(value: IValue): String = getDescription
 }

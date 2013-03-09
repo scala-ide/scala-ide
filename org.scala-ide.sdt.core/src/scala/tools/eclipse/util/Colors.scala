@@ -13,7 +13,7 @@ import org.eclipse.swt.graphics.{ Color, RGB }
 
 object Colors {
   val noColor = null
-  
+
   val white = rgb(255,255,255)
   val black = rgb(0, 0, 0)
   val ocean = rgb(0,62,133)
@@ -32,6 +32,6 @@ object Colors {
       ret
     }
   }
-  
+
   def rgb(r : Int, g : Int, b : Int) = colorMap(new RGB(r,g,b))
 }

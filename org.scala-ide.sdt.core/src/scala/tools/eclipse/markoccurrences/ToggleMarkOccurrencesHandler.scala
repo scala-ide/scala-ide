@@ -6,7 +6,7 @@ import scala.tools.eclipse.properties.EditorPreferencePage
 
 /**
  * Handler to toggle the Occurrences (shortcut to avoid open Preferences,...)
- * 
+ *
  * @see scala.tools.eclipse.ui.AbstractToggleHandler
  */
 

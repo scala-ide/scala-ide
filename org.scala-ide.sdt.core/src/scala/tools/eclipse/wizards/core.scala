@@ -1,8 +1,8 @@
 /*
  * Copyright 2010 LAMP/EPFL
- * 
+ *
  * @author Tim Clendenen
- * 
+ *
  */
 package scala.tools.eclipse.wizards
 
@@ -34,7 +34,7 @@ class NewPackageObjectWizardPage extends {
   override protected def createTypeNameControls(composite: Composite, nColumns: Int) = {
     // first let `NewTypeWizardPage` create the type name component
     super.createTypeNameControls(composite, nColumns)
-    // then make sure the field is not editable (the type name is automatically derived from the 
+    // then make sure the field is not editable (the type name is automatically derived from the
     // package's name. Look at `packageChanged()` method.
     setTypeName(buildTypeName, false)
     packageChanged()
@@ -42,8 +42,8 @@ class NewPackageObjectWizardPage extends {
 
   // temp file name that is produced for a package object. The file will be
   // renamed to `package.scala` during `NewPackageObjectWizard.performFinish()`.
-  // `package.scala` cannot be used immediately because Eclipse validates 
-  // the name against some JavaConventions (class with static methods) and 
+  // `package.scala` cannot be used immediately because Eclipse validates
+  // the name against some JavaConventions (class with static methods) and
   // we cannot replace it with a ScalaConventions class.
   // TODO: We should really consider implementing our own `NewTypeWizardPage`
   //       to overcome this and other impediments in the wizard.
@@ -59,7 +59,7 @@ class NewPackageObjectWizardPage extends {
 
   private def buildTypeName = {
     // the type's name is derived from the package's name
-    //e.g., if the package name is `foo.bar`, the type name is `bar 
+    //e.g., if the package name is `foo.bar`, the type name is `bar
     getPackageText.split('.').last
   }
 

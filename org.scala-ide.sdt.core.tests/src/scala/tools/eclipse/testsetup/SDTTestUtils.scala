@@ -125,9 +125,9 @@ object SDTTestUtils {
    *
    *  The file must not exist.
    */
-  def addFileToProject(project: IProject, path: String, content: String): IFile = 
+  def addFileToProject(project: IProject, path: String, content: String): IFile =
     addFileToProject(project, path, content.getBytes(project.getDefaultCharset()))
-  
+
   def addFileToProject(project: IProject, path: String, content: Array[Byte]): IFile = {
     val filePath = new Path(path)
     val dirNames = filePath.segments.init // last segment is the file
@@ -192,15 +192,15 @@ object SDTTestUtils {
     }
     stringBuilder.toString
   }
-  
+
   def findMarker(marker: String) = new {
     import org.eclipse.jdt.internal.compiler.env.ICompilationUnit
     def in(unit: ICompilationUnit): Seq[Int] = {
-    	val contents = unit.getContents()
-    	SDTTestUtils.positionsOf(contents, marker)
+      val contents = unit.getContents()
+      SDTTestUtils.positionsOf(contents, marker)
     }
   }
-  
+
   val simulator = new EclipseUserSimulator
 
 

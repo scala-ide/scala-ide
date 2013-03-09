@@ -21,7 +21,7 @@ class SplitParameterListsAction extends RefactoringAction {
         val global = compiler
       }
     }
-    
+
     override var refactoringParameters = List[List[Int]]()
   }
 }
