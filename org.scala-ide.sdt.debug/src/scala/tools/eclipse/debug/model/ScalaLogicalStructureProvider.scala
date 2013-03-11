@@ -10,7 +10,7 @@ import org.eclipse.debug.core.model.IValue
 
 import com.sun.jdi.ClassType
 
-class ScalaLogicalStructureProviders extends ILogicalStructureProvider {
+class ScalaLogicalStructureProvider extends ILogicalStructureProvider {
 
   override def getLogicalStructureTypes(value: IValue) : Array[ILogicalStructureType] = {
     value match {
