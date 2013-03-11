@@ -69,6 +69,7 @@ class FreshFile {
     Assert.assertNotSame("Unexpected clean source", errors1, Nil)
   }
 
+  @Ignore("Enable this once we understand why it spuriously fail #1001588")
   @Test
   def implicitConversionFromPackageObjectShouldBeInScope_t1000647() {
     //when
