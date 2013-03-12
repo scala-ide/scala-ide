@@ -1,16 +1,16 @@
 package scala.tools.eclipse.debug
 
 import scala.tools.eclipse.ScalaPlugin
-
 import org.eclipse.debug.core.model.IDebugModelProvider
 import org.eclipse.jface.viewers.IStructuredSelection
 import org.eclipse.ui.ISelectionListener
 import org.eclipse.ui.PlatformUI
-
 import model.ScalaStackFrame
 import model.ScalaThread
+import scala.tools.eclipse.debug.model.ScalaObjectReference
+import scala.tools.eclipse.logging.HasLogger
 
-object ScalaDebugger extends ISelectionListener {
+object ScalaDebugger extends ISelectionListener with HasLogger {
 
   val classIDebugModelProvider = classOf[IDebugModelProvider]
 
@@ -46,7 +46,28 @@ object ScalaDebugger extends ISelectionListener {
     * value of `currentThread` is not the expected one. Practically, this means that accesses to `currentThread` should always happen 
     * within a try..catch block. Failing to do so can cause the whole debug session to shutdown for no good reasons.
     */
-  @volatile var currentThread: ScalaThread = null
+  @volatile private var currentThread: ScalaThread = null
+  
+  def currentThreadOrFindFirstSuspendedThread(objRef: ScalaObjectReference): ScalaThread = {
+    if(currentThread == null) {
+     logger.info("`currentThread` is null. Now looking for first suspended thread...")
+     val threads = objRef.getDebugTarget.getThreads
+     val suspendedThreads = threads collect { case t: ScalaThread if t.isSuspended => t}
+     if(suspendedThreads.isEmpty) {
+       logger.error("Could not find a suspended thread. This is a bug, please file a bug report at " + ScalaPlugin.IssueTracker)
+       null
+     }
+     else {
+       if(suspendedThreads.length > 1) logger.info {
+         "There is more than one suspended thread. Using the first in the list. If you experience any issue during the " +
+         "current debug session, please file a bug report at " + ScalaPlugin.IssueTracker + " and make sure to mention this " + 
+         "message in the ticket's description."
+       }
+       suspendedThreads(0)
+     }
+    }
+    else currentThread
+  }
 
   def init() {
     if (!ScalaPlugin.plugin.headlessMode) {
