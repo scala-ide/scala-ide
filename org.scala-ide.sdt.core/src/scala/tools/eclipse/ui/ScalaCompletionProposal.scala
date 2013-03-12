@@ -136,9 +136,9 @@ class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: I
      
       None
     }
-        
+
     selectionProvider match {
-      case viewer: ITextViewer if explicitParamNames.nonEmpty =>
+      case viewer: ITextViewer if explicitParamNames.flatten.nonEmpty =>
         addArgumentTemplates(d, viewer)
       case _ => () 
     }
