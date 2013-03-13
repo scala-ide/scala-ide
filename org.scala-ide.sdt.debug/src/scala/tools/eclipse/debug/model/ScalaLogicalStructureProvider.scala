@@ -59,17 +59,18 @@ object ScalaCollectionLogicalStructureType extends ILogicalStructureType with Ha
 
     val scalaValue = value.asInstanceOf[ScalaObjectReference]
 
+    val thread = ScalaDebugger.currentThreadOrFindFirstSuspendedThread(scalaValue)
     try {
       // the way to call toArray on a collection is slightly different between Scala 2.9 and 2.10
       // the base object to use to get the Manisfest and the method signature are different
-      val (manifestObject, toArraySignature) = if (scalaValue.getDebugTarget.is2_10Compatible(ScalaDebugger.currentThread)) {
+      val (manifestObject, toArraySignature) = if (scalaValue.getDebugTarget.is2_10Compatible(thread)) {
         (scalaValue.getDebugTarget().objectByName("scala.reflect.ClassManifestFactory", false, null), "(Lscala/reflect/ClassTag;)Ljava/lang/Object;")
       } else {
         (scalaValue.getDebugTarget().objectByName("scala.reflect.Manifest", false, null), "(Lscala/reflect/ClassManifest;)Ljava/lang/Object;")
       }
 
       // get Manifest.Any, needed to call toArray(..)
-      val anyManifestObject = manifestObject.invokeMethod("Any", ScalaDebugger.currentThread) match {
+      val anyManifestObject = manifestObject.invokeMethod("Any", thread) match {
         case o: ScalaObjectReference =>
           o
         case _ =>
@@ -77,7 +78,7 @@ object ScalaCollectionLogicalStructureType extends ILogicalStructureType with Ha
           throw new Exception("Unexpected return value for Manifest.Any()")
       }
 
-      scalaValue.invokeMethod("toArray", toArraySignature, ScalaDebugger.currentThread, anyManifestObject)
+      scalaValue.invokeMethod("toArray", toArraySignature, thread, anyManifestObject)
     } catch {
       case e: Exception =>
         // fail gracefully in case of problem
