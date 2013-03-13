@@ -52,7 +52,7 @@ object ScalaDebugModelPresentation {
    */
   private def computeDetail(objectReference: ScalaObjectReference): String = {
     try {
-      objectReference.invokeMethod("toString", "()Ljava/lang/String;", ScalaDebugger.currentThread) match {
+      objectReference.invokeMethod("toString", "()Ljava/lang/String;", ScalaDebugger.currentThreadOrFindFirstSuspendedThread(objectReference)) match {
         case s: ScalaStringReference =>
           s.underlying.value
         case n: ScalaNullValue =>
