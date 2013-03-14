@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -e
 
 # run in sequences the different maven calls needed to fully build Scala IDE from scratch
 
@@ -18,45 +18,28 @@ fi
 echo "Running with: mvn ${ARGS}"
 
 # the parent project
+echo "Building parent project in $ROOT_DIR"
 cd ${ROOT_DIR}
 mvn ${ARGS}
 
-RES=$?
-if [ ${RES} != 0 ]
-then
-  exit ${RES}
-fi
-
+echo "Building the toolchain"
 # the toolchain
 cd ${ROOT_DIR}/org.scala-ide.build-toolchain
 mvn ${ARGS}
 
-RES=$?
-if [ ${RES} != 0 ]
-then
-  exit ${RES}
-fi
 
 # set the versions if required
 cd ${ROOT_DIR}
 if [ -n "${SET_VERSIONS}" ]
 then
+  echo "setting versions"
   mvn -Pset-versions exec:java
-  RES=$?
-  if [ ${RES} != 0 ]
-  then
-    exit ${RES}
-  fi
 else
   echo "Not running UpdateScalaIDEManifests."
 fi
 
 # the plugins
+echo "Building plugins"
 cd ${ROOT_DIR}/org.scala-ide.sdt.build
 mvn ${ARGS}
 
-RES=$?
-if [ ${RES} != 0 ]
-then
-  exit ${RES}
-fi
