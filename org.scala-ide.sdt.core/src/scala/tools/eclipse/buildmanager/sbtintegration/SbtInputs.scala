@@ -13,6 +13,7 @@ import sbt.compiler.{AnalyzingCompiler, IC, CompilerCache}
 import sbt.classpath.ClasspathUtilities
 import sbt.{ScalaInstance, ClasspathOptions}
 import ScalaPlugin.plugin
+import sbt.inc.IncOptions
 
 class SbtInputs(sourceFiles: Seq[File], project: ScalaProject, javaMonitor: SubMonitor, scalaProgress: CompileProgress, cacheFile: File, scalaReporter: Reporter, logger: Logger) extends Inputs[Analysis, AnalyzingCompiler] {
   def setup = new Setup[Analysis] {
@@ -32,6 +33,7 @@ class SbtInputs(sourceFiles: Seq[File], project: ScalaProject, javaMonitor: SubM
         }
     def progress = Maybe.just(scalaProgress)
     def reporter = scalaReporter
+    override def incrementalCompilerOptions = IncOptions.toStringMap(IncOptions.Default)
   }
 
   def options = new Options {
