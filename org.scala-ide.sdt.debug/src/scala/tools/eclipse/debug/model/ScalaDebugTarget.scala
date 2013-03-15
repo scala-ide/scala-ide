@@ -393,7 +393,7 @@ private class ScalaDebugTargetActor private (threadStartRequest: ThreadStartRequ
       reply(false)
     case ThreadSuspended(thread, eventDetail) =>
       // forward the event to the right thread
-      debugTarget.getScalaThreads.find(_.threadRef eq thread).get.suspendedFromScala(eventDetail)
+      debugTarget.getScalaThreads.find(_.threadRef == thread).foreach(_.suspendedFromScala(eventDetail))
   }
 
   private def vmStarted() {
