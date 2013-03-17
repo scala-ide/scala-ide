@@ -88,9 +88,17 @@ class LiteralAutoEditStrategy(prefStore: IPreferenceStore) extends IAutoEditStra
       }
     }
 
+    def isEmptyLiteral =
+      ch(0, ''') && ch(1, ''') && !ch(-1, '\\')
+
+    def deleteEmptyLiteral() {
+      command.length = 2
+    }
+
     def customizeChar() {
       command.text match {
         case "\"" | "'"                           => addClosingLiteral()
+        case "" if isEmptyLiteral                 => deleteEmptyLiteral()
         case "" if isAutoRemoveEscapedSignEnabled => removeLiteral()
         case _                                    =>
       }
