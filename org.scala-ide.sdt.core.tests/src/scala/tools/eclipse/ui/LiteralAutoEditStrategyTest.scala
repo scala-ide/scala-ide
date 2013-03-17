@@ -10,9 +10,6 @@ object LiteralAutoEditStrategyTest {
 
   val prefStore = mock(classOf[IPreferenceStore])
 
-  def enableAutoEscape(enable: Boolean) {
-    when(prefStore.getBoolean(EditorPreferencePage.P_ENABLE_AUTO_ESCAPE_LITERALS)).thenReturn(enable)
-  }
   def enable(property: String, enable: Boolean) {
     when(prefStore.getBoolean(property)).thenReturn(enable)
   }
