@@ -42,6 +42,7 @@ class CompletionTests {
       // mind that the space in the marker is very important (the presentation compiler 
       // seems to get lost when the position where completion is asked 
       val positions = SDTTestUtils.positionsOf(contents, " /*!*/")
+      assertTrue("Couldn't find a position for the completion marker. Hint: Did you add a space between the element to complete and the marker?", positions.nonEmpty)
       val content = unit.getContents.mkString
 
       val completion = new ScalaCompletions
