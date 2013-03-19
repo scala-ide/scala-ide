@@ -128,7 +128,7 @@ object TextPresentationEditorHighlighter {
         for {
           position <- positions
           style = semanticCategory2style(position.kind)
-          if style.enabled && !position.isDeleted()
+          if (style.enabled || position.shouldStyle) && !position.isDeleted()
         } yield style.style(position)
       }
 

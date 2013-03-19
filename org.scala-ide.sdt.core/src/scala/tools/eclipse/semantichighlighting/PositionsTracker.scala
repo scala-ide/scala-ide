@@ -125,10 +125,10 @@ private[semantichighlighting] class PositionsTracker extends HasLogger {
         Math.min(index, positions.length)
       }
 
-      val dummyLowerPosition = new Position(region.getOffset, 0, null, false)
+      val dummyLowerPosition = new Position(region.getOffset, 0, null, false, false)
       val lowerIndex = findIndex(dummyLowerPosition)
 
-      val dummyUpperPosition = new Position(region.getOffset + region.getLength, 0, null, false)
+      val dummyUpperPosition = new Position(region.getOffset + region.getLength, 0, null, false, false)
       val upperIndex = findIndex(dummyUpperPosition)
 
       copyOfRange(positions, lowerIndex, upperIndex)
