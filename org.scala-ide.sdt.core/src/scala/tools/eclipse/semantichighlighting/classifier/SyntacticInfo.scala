@@ -84,9 +84,6 @@ object SyntacticInfo {
           annotation foreach ( annotations += _.range.toRegion)
         case StringInterpolation(_, stringPartsAndScala, _) =>
           for ((_, expr) <- stringPartsAndScala) {
-            /* we grab all identifiers which includes methods, even though we don't want them
-             * we'll check that they are variables in SymbolClassification
-             */
             val identifiers = expr.tokens.filter(_.tokenType.isId)
             identifiersInStringInterpolations ++= identifiers.map(_.range.toRegion)
           }

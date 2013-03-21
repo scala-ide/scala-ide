@@ -109,15 +109,24 @@ object TextPresentationEditorHighlighter {
     }
 
     override def propertyChange(event: PropertyChangeEvent): Unit = {
-      for {
-        semanticCategory <- ScalaSyntaxClasses.scalaSemanticCategory.children
-        if event.getProperty().startsWith(semanticCategory.baseName)
-        symType: SymbolTypes.SymbolType <- SymbolTypes.values.find(HighlightingStyle.symbolTypeToSyntaxClass(_) == semanticCategory)
-      } {
+      if (event.getProperty().startsWith(ScalaSyntaxClasses.IDENTIFIER_IN_INTERPOLATED_STRING.baseName + ".")) {
+        val syms: Set[SymbolTypes.SymbolType] = positionsTracker.identifiersInInterpolatedStrings.map(_.kind)(collection.breakOut)
+        invalidateSymTypes(syms.toSeq: _*)
+      } else {
+        for {
+          semanticCategory <- ScalaSyntaxClasses.scalaSemanticCategory.children
+          if event.getProperty().startsWith(semanticCategory.baseName)
+          symType: SymbolTypes.SymbolType <- SymbolTypes.values.find(HighlightingStyle.symbolTypeToSyntaxClass(_) == semanticCategory)
+        } invalidateSymTypes(symType)
+      }
+    }
+    
+    private def invalidateSymTypes(symTypes: SymbolTypes.SymbolType*) {
+      for (symType <- symTypes) {
         semanticCategory2style += symType -> HighlightingStyle(preferences, symType)
         positionsTracker.deletesPositionsOfType(symType)
-        reconciler.schedule()
       }
+      reconciler.schedule()
     }
 
     override def applyTextPresentation(textPresentation: TextPresentation): Unit = {

@@ -33,7 +33,7 @@ object HighlightingStyle {
     val syntaxClass = symbolTypeToSyntaxClass(symbolType)
     val enabled = syntaxClass.getStyleInfo(preferences.store).enabled
     val deprecation = DeprecationStyle(preferences.isStrikethroughDeprecatedDecorationEnabled())
-    val stringInterpolation = StringInterpolationStyle(preferences.isInterpolatedStringVariableDecorationEnabled(), preferences.interpolatedStringTextAttribute())
+    val stringInterpolation = StringInterpolationStyle(preferences.isInterpolatedStringCodeDecorationEnabled(), preferences.interpolatedStringTextAttribute())
     HighlightingStyle(syntaxClass.getTextAttribute(preferences.store), enabled, ScalaSyntaxClasses.DEFAULT.getTextAttribute(preferences.store), deprecation, stringInterpolation)
   }
 

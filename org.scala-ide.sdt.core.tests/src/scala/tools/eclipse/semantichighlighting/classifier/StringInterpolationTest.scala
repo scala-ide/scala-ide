@@ -6,7 +6,7 @@ import org.junit._
 class StringInterpolationTest extends AbstractSymbolClassifierTest {
 
   @Test
-  def variables_in_interpolated_strings_are_marked_inInterpolatedString {
+  def all_kinds_of_identifiers_in_interpolated_strings_are_marked_inInterpolatedString {
     checkSymbolInfoClassification("""
       object A {
         val templateVal = 1
@@ -57,18 +57,24 @@ class StringInterpolationTest extends AbstractSymbolClassifierTest {
   }
   
   @Test
-  def variables_in_blocks_are_marked_but_methods_are_not {
+  def all_parts_of_identifiers_in_expression_is_styled {
     checkSymbolInfoClassification("""
       object A {
         val templateVal = "abc"
+        def someMethod = "abc"
         val str = s"Here is ${templateVal.toUpperCase()}"
+        val str2 = s"$someMethod ${someMethod.toUpperCase}"
       }""", """
       object A {
         val templateVal = "abc"
+        def someMethod = "abc"
         val str = s"Here is ${@ STR_VAL @.@  METHOD @()}"
+        val str2 = s"$@STR_METH@ ${@STR_METH@.@TO_UPPER @}"
       }""",
       Map("STR_VAL" -> SymbolInfo(TemplateVal, Nil, deprecated = false, inInterpolatedString = true),
-          "METHOD" -> SymbolInfo(Method, Nil, deprecated = false, inInterpolatedString = false)),
+          "METHOD" -> SymbolInfo(Method, Nil, deprecated = false, inInterpolatedString = true),
+          "STR_METH" -> SymbolInfo(Method, Nil, deprecated = false, inInterpolatedString = true),
+          "TO_UPPER" -> SymbolInfo(Method, Nil, deprecated = false, inInterpolatedString = true)),
       '@')
   }
 }

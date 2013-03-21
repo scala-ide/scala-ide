@@ -82,6 +82,8 @@ private[semantichighlighting] class PositionsTracker extends HasLogger {
 
     PositionsChange(positionsToAdd.toList, positionsToRemove.toList)
   }
+  
+  def identifiersInInterpolatedStrings = positions.filter(t => t.inInterpolatedString && !t.isDeleted())
 
   /** @note This method must always be called within the UI Thread. */
   def reset(): Unit = {

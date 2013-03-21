@@ -49,7 +49,7 @@ object ScalaSyntaxClasses {
   val TRAIT = ScalaSyntaxClass("Trait", "syntaxColouring.semantic.trait", canBeDisabled = true)
   val TYPE = ScalaSyntaxClass("Type", "syntaxColouring.semantic.type", canBeDisabled = true)
   val TYPE_PARAMETER = ScalaSyntaxClass("Type parameter", "syntaxColouring.semantic.typeParameter", canBeDisabled = true)
-  val VARIABLE_IN_INTERPOLATED_STRING = ScalaSyntaxClass("Variable in interpolated string", "syntaxColouring.semantic.variableInInterpolatedString", hasForegroundColour = false, canBeDisabled = true)
+  val IDENTIFIER_IN_INTERPOLATED_STRING = ScalaSyntaxClass("Identifier in interpolated string", "syntaxColouring.semantic.identifierInInterpolatedString", hasForegroundColour = false, canBeDisabled = true)
 
   case class Category(name: String, children: List[ScalaSyntaxClass])
 
@@ -59,7 +59,7 @@ object ScalaSyntaxClasses {
   val scalaSemanticCategory = Category("Scala (semantic)", List(
     ANNOTATION, CASE_CLASS, CASE_OBJECT, CLASS, LAZY_LOCAL_VAL, LAZY_TEMPLATE_VAL,
     LOCAL_VAL, LOCAL_VAR, METHOD, OBJECT, PACKAGE, PARAM, TEMPLATE_VAL, TEMPLATE_VAR,
-    TRAIT, TYPE, TYPE_PARAMETER, VARIABLE_IN_INTERPOLATED_STRING))
+    TRAIT, TYPE, TYPE_PARAMETER, IDENTIFIER_IN_INTERPOLATED_STRING))
 
   val commentsCategory = Category("Comments", List(
     SINGLE_LINE_COMMENT, MULTI_LINE_COMMENT, SCALADOC, SCALADOC_CODE_BLOCK, SCALADOC_ANNOTATION, SCALADOC_MACRO))

@@ -14,11 +14,11 @@ class Preferences(val store: IPreferenceStore) {
   def isUseSyntacticHintsEnabled(): Boolean =
     store.getBoolean(ScalaSyntaxClasses.USE_SYNTACTIC_HINTS)
     
-  def isInterpolatedStringVariableDecorationEnabled(): Boolean =
-    ScalaSyntaxClasses.VARIABLE_IN_INTERPOLATED_STRING.getStyleInfo(store).enabled
+  def isInterpolatedStringCodeDecorationEnabled(): Boolean =
+    ScalaSyntaxClasses.IDENTIFIER_IN_INTERPOLATED_STRING.getStyleInfo(store).enabled
     
   def interpolatedStringTextAttribute(): TextAttribute =
-    ScalaSyntaxClasses.VARIABLE_IN_INTERPOLATED_STRING.getTextAttribute(store)
+    ScalaSyntaxClasses.IDENTIFIER_IN_INTERPOLATED_STRING.getTextAttribute(store)
 }
 
 object Preferences {

@@ -81,7 +81,7 @@ class SymbolClassification(protected val sourceFile: SourceFile, val global: Sca
         (sym, pos) <- allSymbols
         if sym != NoSymbol
       } {
-        val inInterpolatedString = SymbolTypes.isVariable(getSymbolType(sym)) && syntacticInfo.identifiersInStringInterpolations.contains(getOccurrenceRegion(sym)(pos).orNull)
+        val inInterpolatedString = syntacticInfo.identifiersInStringInterpolations.contains(getOccurrenceRegion(sym)(pos).orNull)
         symAndPos(SymbolGroup(sym, inInterpolatedString)) = pos :: symAndPos(SymbolGroup(sym, inInterpolatedString)) 
       }
       
