@@ -41,6 +41,12 @@ class LiteralAutoEditStrategyTest extends AutoEditStrategyTests(
   }
 
   @Test
+  def remove_string_pair_with_auto_remove_escaped_sign_disabled() {
+    enable(P_ENABLE_AUTO_REMOVE_ESCAPED_SIGN, false)
+    test(input = """ "^" """, expectedOutput = """ ^ """, operation = Remove("\""))
+  }
+
+  @Test
   def no_auto_close_on_existing_string_literal_before_caret() {
     test(input = "\"^", expectedOutput = "\"\"^", operation = Add("\""))
   }

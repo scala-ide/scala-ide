@@ -89,7 +89,7 @@ class LiteralAutoEditStrategy(prefStore: IPreferenceStore) extends IAutoEditStra
     }
 
     def isEmptyLiteral =
-      ch(0, ''') && ch(1, ''') && !ch(-1, '\\')
+      ((ch(0, ''') && ch(1, ''')) || (ch(0, '"') && ch(1, '"'))) && !ch(-1, '\\')
 
     def deleteEmptyLiteral() {
       command.length = 2
