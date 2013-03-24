@@ -310,7 +310,7 @@ class ScalaPartitionTokeniser(text: String) extends TokenTests {
         accept(2)
         if (nesting > 1)
           getMultiLineComment(nesting - 1)
-      case '/' if (ch(1) == '*') =>
+      case '/' if ch(1) == '*' && (ch(-1) != '/' || nesting != 1) =>
         accept(2)
         getMultiLineComment(nesting + 1)
       case '{' if ch(1) == '{' && ch(2) == '{' && contentTypeOpt.exists(_ == JAVA_DOC) =>
