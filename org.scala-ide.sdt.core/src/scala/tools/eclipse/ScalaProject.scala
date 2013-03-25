@@ -15,7 +15,6 @@ import scala.tools.eclipse.logging.HasLogger
 import scala.tools.eclipse.properties.{CompilerSettings, IDESettings, PropertyStore}
 import scala.tools.eclipse.ui.PartAdapter
 import scala.tools.eclipse.util.{Cached, EclipseResource, Trim, Utils}
-import scala.tools.eclipse.util.EclipseUtils.workspaceRunnableIn
 import scala.tools.eclipse.util.SWTUtils.asyncExec
 import scala.tools.nsc.{Settings, MissingRequirementError}
 import scala.tools.nsc.util.BatchSourceFile
@@ -177,36 +176,30 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
   
   /** Does this project have the Scala nature? */
   def hasScalaNature: Boolean = plugin.isScalaProject(underlying)
-  
-  private def settingsError(severity: Int, msg: String, monitor: IProgressMonitor): Unit =
-    workspaceRunnableIn(underlying.getWorkspace, monitor) { m =>
-      val mrk = underlying.createMarker(plugin.settingProblemMarkerId)
-      mrk.setAttribute(IMarker.SEVERITY, severity)
-      mrk.setAttribute(IMarker.MESSAGE, msg)
-    }
+
+  private def settingsError(severity: Int, msg: String, monitor: IProgressMonitor): Unit = {
+    val mrk = underlying.createMarker(plugin.settingProblemMarkerId)
+    mrk.setAttribute(IMarker.SEVERITY, severity)
+    mrk.setAttribute(IMarker.MESSAGE, msg)
+  }
 
   /** Deletes the build problem marker associated to {{{this}}} Scala project. */
-  private def clearBuildProblemMarker(): Unit = 
-    workspaceRunnableIn(underlying.getWorkspace) { m =>
-      if (isUnderlyingValid) {
-        underlying.deleteMarkers(plugin.problemMarkerId, true, IResource.DEPTH_ZERO)
-      }
-    }    
+  private def clearBuildProblemMarker(): Unit =
+    if (isUnderlyingValid) {
+      underlying.deleteMarkers(plugin.problemMarkerId, true, IResource.DEPTH_ZERO)
+    }
+
  
   /** Deletes all build problem markers for all resources in {{{this}}} Scala project. */
   private def clearAllBuildProblemMarkers(): Unit = {
-    workspaceRunnableIn(underlying.getWorkspace) { m =>
-      if (isUnderlyingValid) {
-        underlying.deleteMarkers(plugin.problemMarkerId, true, IResource.DEPTH_INFINITE)
-      }
+    if (isUnderlyingValid) {
+      underlying.deleteMarkers(plugin.problemMarkerId, true, IResource.DEPTH_INFINITE)
     }
   }
 
   private def clearSettingsErrors(): Unit =
-    workspaceRunnableIn(underlying.getWorkspace) { m =>
-      if (isUnderlyingValid) {
-        underlying.deleteMarkers(plugin.settingProblemMarkerId, true, IResource.DEPTH_ZERO)
-      }
+    if (isUnderlyingValid) {
+      underlying.deleteMarkers(plugin.settingProblemMarkerId, true, IResource.DEPTH_ZERO)
     }
 
   

@@ -1,7 +1,5 @@
 package scala.tools.eclipse.resources
 
-import scala.tools.eclipse.util.EclipseUtils.workspaceRunnableIn
-
 import org.eclipse.core.resources.IMarker
 import org.eclipse.core.resources.IResource
 import org.eclipse.core.runtime.IProgressMonitor
