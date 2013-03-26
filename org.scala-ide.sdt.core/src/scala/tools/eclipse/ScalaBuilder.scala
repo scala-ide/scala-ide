@@ -15,11 +15,16 @@ import scala.tools.eclipse.javaelements.JDTUtils
 import scala.tools.eclipse.util.{ FileUtils, ReflectionUtils }
 import scala.tools.eclipse.logging.HasLogger
 import scala.tools.nsc.interactive.RefinedBuildManager
+import org.eclipse.core.runtime.jobs.ISchedulingRule
 
 class ScalaBuilder extends IncrementalProjectBuilder with HasLogger {
   def plugin = ScalaPlugin.plugin
 
   private val scalaJavaBuilder = new GeneralScalaJavaBuilder
+
+  /** Lock only the current project during build. */
+  override def getRule(kind: Int, args: java.util.Map[String,String]): ISchedulingRule =
+    getProject()
   
   override def clean(monitor : IProgressMonitor) {
     super.clean(monitor)
