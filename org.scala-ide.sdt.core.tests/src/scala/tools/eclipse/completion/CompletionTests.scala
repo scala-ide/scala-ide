@@ -42,6 +42,7 @@ class CompletionTests {
       // mind that the space in the marker is very important (the presentation compiler 
       // seems to get lost when the position where completion is asked 
       val positions = SDTTestUtils.positionsOf(contents, " /*!*/")
+      assertTrue("Couldn't find a position for the completion marker. Hint: Did you add a space between the element to complete and the marker?", positions.nonEmpty)
       val content = unit.getContents.mkString
 
       val completion = new ScalaCompletions
@@ -69,7 +70,9 @@ class CompletionTests {
         val completions: List[ICompletionProposal] = completion.computeCompletionProposals(context, monitor).map(_.asInstanceOf[ICompletionProposal]).toList
         */
 
-        body(i, position, completion.findCompletions(wordRegion)(pos + 1, unit)(src, compiler))
+        val completions = completion.findCompletions(wordRegion)(pos + 1, unit)(src, compiler)
+        val sortedCompletions = completions.sortWith((x,y) => x.relevance >= y.relevance)
+        body(i, position, sortedCompletions)
       }
     }()
   }
@@ -247,7 +250,6 @@ class CompletionTests {
           assertEquals("Relevance", "__stringLikeClass", proposals.head.completion)
         case 1 =>
           assertEquals("Relevance", "List", proposals.head.completion)
-          assertEquals("Relevance", "List", proposals(1).completion)
         case _ =>
           assert(false, "Unhandled completion position")
       }
