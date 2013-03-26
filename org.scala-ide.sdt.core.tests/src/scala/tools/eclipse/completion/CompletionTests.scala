@@ -70,7 +70,9 @@ class CompletionTests {
         val completions: List[ICompletionProposal] = completion.computeCompletionProposals(context, monitor).map(_.asInstanceOf[ICompletionProposal]).toList
         */
 
-        body(i, position, completion.findCompletions(wordRegion)(pos + 1, unit)(src, compiler))
+        val completions = completion.findCompletions(wordRegion)(pos + 1, unit)(src, compiler)
+        val sortedCompletions = completions.sortWith((x,y) => x.relevance >= y.relevance)
+        body(i, position, sortedCompletions)
       }
     }()
   }
@@ -248,7 +250,6 @@ class CompletionTests {
           assertEquals("Relevance", "__stringLikeClass", proposals.head.completion)
         case 1 =>
           assertEquals("Relevance", "List", proposals.head.completion)
-          assertEquals("Relevance", "List", proposals(1).completion)
         case _ =>
           assert(false, "Unhandled completion position")
       }
