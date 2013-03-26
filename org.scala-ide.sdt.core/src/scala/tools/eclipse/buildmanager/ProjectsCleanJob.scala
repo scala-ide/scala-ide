@@ -8,6 +8,8 @@ import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.core.runtime.IStatus
 import org.eclipse.core.runtime.Status
 import org.eclipse.core.runtime.SubProgressMonitor
+import org.eclipse.core.runtime.jobs.ISchedulingRule
+import org.eclipse.core.runtime.jobs.MultiRule
 import org.eclipse.ui.progress.IProgressConstants2
 
 /** Job for asynchronously cleaning the passed `projects`.*/
@@ -34,7 +36,7 @@ class ProjectsCleanJob private (projects: Seq[IProject]) {
 
   private def cleanJob: WorkspaceJob = {
     val cleanJob = new DoCleanJob(projects)
-    cleanJob.setRule(ResourcesPlugin.getWorkspace().getRuleFactory().buildRule())
+    cleanJob.setRule(MultiRule.combine(projects.toArray[ISchedulingRule]))
     cleanJob.setUser(true)
     cleanJob.setProperty(IProgressConstants2.SHOW_IN_TASKBAR_ICON_PROPERTY, true)
     cleanJob
