@@ -173,19 +173,31 @@ object EditorHelpers {
    * Enters the editor in the LinkedModeUI with the given list of positions.
    * A position is given as an offset and the length.
    */
-  def enterLinkedModeUi(ps: List[(Int, Int)]) {
+  def enterLinkedModeUi(ps: List[(Int, Int)], selectFirst: Boolean) {
     
     EditorHelpers.doWithCurrentEditor { editor =>
         
       val model = new LinkedModeModel {
         this addGroup new LinkedPositionGroup {
           val document = editor.getDocumentProvider.getDocument(editor.getEditorInput)
-          ps foreach (p => addPosition(new LinkedPosition(document, p._1, p._2)))
+          ps foreach (p => addPosition(new LinkedPosition(document, p._1, p._2, 0)))
         }
         forceInstall
       }
 
-      (new LinkedModeUI(model, editor.getViewer)).enter
+      val viewer = editor.getViewer
+
+      // by default, an entire symbol is selected when entering linked mode; a nicer
+      // behavior when renaming is to leave the cursor/selection as it was, so...
+
+      // save the current selection
+      val priorSelection = viewer.getSelectedRange()
+
+      (new LinkedModeUI(model, viewer)).enter
+
+      // restore the selection unless selecting the first instance of the symbol was desired
+      if (!selectFirst)
+    	  viewer.setSelectedRange(priorSelection.x, priorSelection.y)
     }
   }
 }
