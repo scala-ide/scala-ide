@@ -178,6 +178,16 @@ class ScalaPartitionTokeniserTest {
     """'\123'""" ==> ((JAVA_CHARACTER, 0, 5))
   }
 
+  @Test
+  def single_line_comment_in_multi_line_comment() {
+    """/*//*/ val x = 0""" ==> ((JAVA_MULTI_LINE_COMMENT, 0, 5), (DEFAULT_CONTENT_TYPE, 6, 15))
+  }
+
+  @Test
+  def single_line_comment_in_nested_multi_line_comment() {
+    """/*/*//*/ val s = 0 */*/*/ val p = 0""" ==> ((JAVA_MULTI_LINE_COMMENT, 0, 24), (DEFAULT_CONTENT_TYPE, 25, 34))
+  }
+
 }
 
 object ScalaPartitionTokeniserTest {
