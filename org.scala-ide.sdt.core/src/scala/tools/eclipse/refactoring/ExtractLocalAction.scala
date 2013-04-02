@@ -51,7 +51,7 @@ class ExtractLocalAction extends RefactoringAction {
           List(firstOccurrence, secondOccurrence) map (o => (change.from + o, name.length))
         }
         
-        EditorHelpers.enterLinkedModeUi(occurrences, true)
+        EditorHelpers.enterLinkedModeUi(occurrences, selectFirst = true)
       }      
     }
     

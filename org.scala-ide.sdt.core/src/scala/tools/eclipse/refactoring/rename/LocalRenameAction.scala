@@ -62,7 +62,7 @@ class LocalRenameAction extends RefactoringAction {
         }    
       }
       
-      EditorHelpers.enterLinkedModeUi(positions, false)
+      EditorHelpers.enterLinkedModeUi(positions, selectFirst = false)
     }
     
     createScalaIdeRefactoringForCurrentEditorAndSelection() map { 
