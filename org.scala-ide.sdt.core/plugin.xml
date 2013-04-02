@@ -678,7 +678,7 @@
           adaptable="true"
           id="org.scala-ide.sdt.core.addScalaLibrary"
           nameFilter="*"
-          objectClass="org.eclipse.jdt.core.IJavaProject">
+          objectClass="org.eclipse.core.resources.IProject">
         <action
              class="scala.tools.eclipse.actions.AddScalaLibraryAction"
              enablesFor="+"
@@ -693,13 +693,18 @@
             <objectState name="projectNature" value="org.scala-ide.sdt.core.scalanature"/>
             <objectState name="projectNature" value="ch.epfl.lamp.sdt.core.scalanature"/>
           </or>
-          <objectClass name="org.eclipse.jdt.core.IJavaProject"/>
         </and>
       </visibility>
+        <enablement>
+         	<test
+              property="org.eclipse.core.resources.projectNature"
+              value="org.eclipse.jdt.core.javanature">
+            </test>
+         </enablement>
     </objectContribution>
       <objectContribution
             adaptable="true"
-            objectClass="org.eclipse.jdt.core.IJavaProject"
+            objectClass="org.eclipse.core.resources.IProject"
             nameFilter="*"
             id="org.scala-ide.sdt.core.natures.contribution1">
          <action
@@ -716,14 +721,19 @@
                <objectState name="projectNature" value="org.scala-ide.sdt.core.scalanature"/>
                <objectState name="projectNature" value="ch.epfl.lamp.sdt.core.scalanature"/>
              </or>
-             <objectClass name="org.eclipse.jdt.core.IJavaProject"/>
            </and>
          </visibility>
+         <enablement>
+         	<test
+              property="org.eclipse.core.resources.projectNature"
+              value="org.eclipse.jdt.core.javanature">
+            </test>
+         </enablement>
     </objectContribution>
 
       <objectContribution
             adaptable="true"
-            objectClass="org.eclipse.jdt.core.IJavaProject"
+            objectClass="org.eclipse.core.resources.IProject"
             nameFilter="*"
             id="org.scala-ide.sdt.core.natures.contribution2">
          <action
@@ -742,10 +752,15 @@
                 <objectState name="projectNature" value="org.scala-ide.sdt.core.scalanature"/>
                 <objectState name="projectNature" value="ch.epfl.lamp.sdt.core.scalanature"/>
               </or>
-            </not>
-            <objectClass name="org.eclipse.jdt.core.IJavaProject"/>
+            </not>            
           </and>
          </visibility>
+         <enablement>
+         	<test
+              property="org.eclipse.core.resources.projectNature"
+              value="org.eclipse.jdt.core.javanature">
+            </test>
+         </enablement>
       </objectContribution>
   </extension>
     
