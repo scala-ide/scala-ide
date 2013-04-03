@@ -229,13 +229,9 @@ class CompletionTests {
     withCompletions("ticket_1001207/T1207.scala") {
       (index, position, completions) =>
         assertEquals("There is only one completion location", 0, index)
-        assertTrue("The completion should return java.util", completions.exists(
-          _ match {
-            case CompletionProposal(MemberKind.Package, _, "util", _, _, _, _, _, _, _, _) =>
-              true
-            case _ =>
-              false
-          }))
+        assertTrue("The completion should return java.util", completions.exists {
+          case prop: CompletionProposal => prop.kind == MemberKind.Package && prop.completion == "util"
+        })
     }
   }
 
