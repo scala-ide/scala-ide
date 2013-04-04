@@ -105,7 +105,22 @@ class SymbolClassification(protected val sourceFile: SourceFile, val global: Sca
     val symbolInfosFromSyntax = getSymbolInfosFromSyntax(syntacticInfo, localVars, all)
     if (progressMonitor.isCanceled()) return Nil
 
-    (symbolInfosFromSyntax ++ prunedSymbolInfos).filter(_.regions.nonEmpty).distinct
+    val dynamicSymbolInfos = getDynamicSymbolInfos
+    if (progressMonitor.isCanceled()) return Nil
+
+    (symbolInfosFromSyntax ++ prunedSymbolInfos ++ dynamicSymbolInfos).filter(_.regions.nonEmpty).distinct
+  }
+
+  private def getDynamicSymbolInfos: Seq[SymbolInfo] = {
+    val symbols = unitTree.collect { case t => findDynamicSymbols(t) }.flatten
+
+    def posToRegion(p: Position) = new Region(p.start, p.end - p.start)
+
+    def symbolInfoOf(value: Value) = SymbolInfo(
+        value, symbols collect { case (`value`, r) => posToRegion(r) },
+        deprecated = false, inInterpolatedString = false)
+
+    List(symbolInfoOf(Method), symbolInfoOf(TemplateVar), symbolInfoOf(Param))
   }
 
   private def getSymbolInfo(sym: Symbol, poss: List[Position], inInterpolatedString: Boolean): SymbolInfo = {
