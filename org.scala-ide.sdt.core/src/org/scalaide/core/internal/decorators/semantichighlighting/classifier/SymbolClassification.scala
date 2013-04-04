@@ -59,19 +59,38 @@ class SymbolClassification(protected val sourceFile: SourceFile, val global: Sca
     val rawSymbolInfos: Seq[SymbolInfo] = {
       import global._
 
+      def getSymbolInfo(symbolType: SymbolType, sym: Symbol, region: Option[IRegion]): SymbolInfo = {
+        val inInterpolatedString = region.map(syntacticInfo.identifiersInStringInterpolations).getOrElse(false)
+        // isDeprecated may trigger type completion for annotations
+        val deprecated = sym.annotations.nonEmpty && global.askOption(() => sym.isDeprecated).getOrElse(false)
+        SymbolInfo(symbolType, region.toList, deprecated, inInterpolatedString)
+      }
+
+      def findDynamicInfo(t: Tree): Option[SymbolInfo] = {
+        def posToRegion(p: Position) =
+          new Region(p.start, p.end - p.start)
+
+        findDynamicMethodCall(t) map {
+          case (symbolType, pos) =>
+            val sym = global.askOption(() => t.symbol).getOrElse(NoSymbol)
+            getSymbolInfo(symbolType, sym, Some(posToRegion(pos)))
+        }
+      }
+
       def findSymbolInfo(t: Tree): List[SymbolInfo] =
         safeSymbol(t) collect {
           case (sym, pos) if canSymbolBeReferencedInSource(sym) =>
-            val r = getOccurrenceRegion(sym)(pos).orNull
-            val inInterpolatedString = syntacticInfo.identifiersInStringInterpolations(r)
-            getSymbolInfo(sym, pos, inInterpolatedString)
+            getSymbolInfo(getSymbolType(sym), sym, getOccurrenceRegion(sym)(pos))
         }
 
       var symbolInfos = IndexedSeq.empty[SymbolInfo]
       new Traverser {
         override def traverse(t: Tree): Unit = {
-          if (!progressMonitor.isCanceled() && (t.hasSymbol || t.isType) && isSourceTree(t))
-            symbolInfos ++= findSymbolInfo(t)
+          if (!progressMonitor.isCanceled() && (t.symbol != NoSymbol || t.isType) && isSourceTree(t)) {
+            val ds = findDynamicInfo(t)
+            val xs = if (ds.isEmpty) findSymbolInfo(t) else ds.toList
+            symbolInfos ++= xs
+          }
           super.traverse(t)
         }
       }.traverse(unitTree)
@@ -92,14 +111,6 @@ class SymbolClassification(protected val sourceFile: SourceFile, val global: Sca
     if (progressMonitor.isCanceled()) return Nil
 
     (symbolInfosFromSyntax ++ prunedSymbolInfos).filter(_.regions.nonEmpty).distinct
-  }
-
-  private def getSymbolInfo(sym: Symbol, pos: Position, inInterpolatedString: Boolean): SymbolInfo = {
-    val region = getOccurrenceRegion(sym)(pos).toList
-    // isDeprecated may trigger type completion for annotations
-    val deprecated = sym.annotations.nonEmpty && global.askOption(() => sym.isDeprecated).getOrElse(false)
-    val symbolType = getSymbolType(sym)
-    SymbolInfo(symbolType, region, deprecated, inInterpolatedString)
   }
 
   private def getOccurrenceRegion(sym: Symbol)(pos: Position): Option[IRegion] =
