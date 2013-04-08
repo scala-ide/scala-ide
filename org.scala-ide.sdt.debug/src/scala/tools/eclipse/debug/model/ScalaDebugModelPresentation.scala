@@ -145,7 +145,7 @@ class ScalaDebugModelPresentation extends IDebugModelPresentation {
    */
   def getScalaThreadText(thread: ScalaThread): String = {
     if (thread.isSystemThread)
-      "Deamon System Thread [%s]".format(thread.getName)
+      "Daemon System Thread [%s]".format(thread.getName)
     else
       "Thread [%s]".format(thread.getName)
   }
