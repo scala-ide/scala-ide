@@ -1,6 +1,5 @@
 package implicits
 
 class DefaultImplicits {
-  1 -> 2
-  1 + ""
+  var x : java.lang.Integer = 4
 }
