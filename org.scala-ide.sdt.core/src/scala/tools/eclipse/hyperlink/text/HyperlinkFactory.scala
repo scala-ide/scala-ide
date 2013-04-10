@@ -32,13 +32,11 @@ import scala.tools.eclipse.InteractiveCompilationUnit
 abstract class HyperlinkFactory {
   protected val global: ScalaPresentationCompiler
 
-  def create(createHyperlink: Hyperlink.Factory, scu: InteractiveCompilationUnit, sym: global.Symbol, region: IRegion): Option[IHyperlink] = {
-    global.askOption { () =>
-      global.locate(sym, scu) map {
-        case (f, pos) =>
-          val text = sym.kindString + " " + sym.fullName
-          createHyperlink(f, pos, sym.name.length, text, region)
-      }
-    }.getOrElse(None)
+  def create(createHyperlink: Hyperlink.Factory, sym: global.Symbol, region: IRegion): Option[IHyperlink] = {
+    global.locate(sym) map {
+      case (f, pos) =>
+        val text = sym.kindString + " " + sym.fullName
+        createHyperlink(f, pos, sym.name.length, text, region)
+    }
   }
 }
