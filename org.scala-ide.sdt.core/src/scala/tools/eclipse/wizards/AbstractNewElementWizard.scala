@@ -11,8 +11,6 @@ import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.jdt.core.IJavaElement
 import org.eclipse.jdt.internal.ui.wizards.NewElementWizard
 
-import org.eclipse.jface.viewers.IStructuredSelection
-
 abstract class AbstractNewElementWizard(protected val wizardPage: AbstractNewElementWizardPage)
   extends NewElementWizard {
 	

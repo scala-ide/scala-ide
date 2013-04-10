@@ -93,8 +93,10 @@ trait MuteLowerCaseTypeNameWarning extends AbstractNewElementWizardPage {
   }
 }
 
-class NewClassWizard
-  extends AbstractNewElementWizard(new NewClassWizardPage())
+class NewClassWizard(page: NewClassWizardPage)
+  extends AbstractNewElementWizard(page) {
+  def this() = this(new NewClassWizardPage())
+}
 
 class NewTraitWizard
   extends AbstractNewElementWizard(new NewTraitWizardPage())
