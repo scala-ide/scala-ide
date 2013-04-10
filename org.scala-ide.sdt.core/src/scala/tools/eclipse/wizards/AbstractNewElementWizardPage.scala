@@ -32,13 +32,18 @@ import org.eclipse.jdt.core.{
 import org.eclipse.jdt.core.dom.{ AST, ASTParser, CompilationUnit }
 import org.eclipse.jdt.internal.corext.codemanipulation.StubUtility
 import org.eclipse.jdt.internal.corext.util.JavaModelUtil
-import org.eclipse.jdt.internal.ui.dialogs.StatusInfo
+import org.eclipse.jdt.internal.ui.dialogs.{ StatusInfo, TextFieldNavigationHandler }
+import org.eclipse.jdt.internal.ui.refactoring.contentassist.{ ControlContentAssistHelper, JavaPackageCompletionProcessor }
+import org.eclipse.jdt.internal.ui.util.SWTUtil
 import org.eclipse.jdt.internal.ui.wizards.NewWizardMessages
 import org.eclipse.jdt.internal.ui.wizards.dialogfields.{
   DialogField,
   IDialogFieldListener,
+  IStringButtonAdapter,
   LayoutUtil,
-  SelectionButtonDialogFieldGroup
+  SelectionButtonDialogField,
+  SelectionButtonDialogFieldGroup,
+  StringButtonDialogField
 }
 import org.eclipse.jdt.ui.wizards.NewTypeWizardPage
 import org.eclipse.jface.dialogs.{ Dialog, IDialogSettings }
@@ -51,6 +56,7 @@ import collection.Seq
 import collection.mutable.Buffer
 import scala.tools.eclipse.ScalaPlugin._
 import scala.tools.eclipse.formatter.ScalaFormatterCleanUpProvider
+import scala.tools.eclipse.javaelements.ScalaSourceFile
 import scala.tools.eclipse.logging.HasLogger
 
 abstract class AbstractNewElementWizardPage extends NewTypeWizardPage(1, "") with HasLogger {
@@ -119,6 +125,32 @@ abstract class AbstractNewElementWizardPage extends NewTypeWizardPage(1, "") wit
   def createMainSelected = methodStubButtons.isSelected(0)
   def createConstructorsSelected = methodStubButtons.isSelected(1)
   def createInheritedSelected = methodStubButtons.isSelected(2)
+  
+  private object folderButtonListener extends IDialogFieldListener {
+    def dialogFieldChanged(field: DialogField) {
+      fFolderField.setEnabled(fFolderButton.isSelected())
+      updateFolderPath()
+    }
+  }
+  
+  val fFolderButton= new SelectionButtonDialogField(SWT.CHECK);
+  fFolderButton.setDialogFieldListener(folderButtonListener);
+  fFolderButton.setLabelText("Folder:")
+  fFolderButton.setSelection(false)
+  
+  private object specifyFolderBrowseListener extends IStringButtonAdapter {
+    def changeControlPressed(field: DialogField) {
+      val packageFragment = choosePackage();
+      if (packageFragment != null) fFolderField.setText(packageFragment.getElementName())
+    }
+  }
+  
+  val fFolderField = new StringButtonDialogField(specifyFolderBrowseListener);
+  fFolderField.setEnabled(false)
+  fFolderField.setButtonLabel("Browse...");
+  
+  val fSelectedFolderCompletionProcessor = new JavaPackageCompletionProcessor()
+
 
   protected var createdType: IType = _
 
@@ -126,8 +158,31 @@ abstract class AbstractNewElementWizardPage extends NewTypeWizardPage(1, "") wit
     val jelem = getInitialJavaElement(selection)
     initContainerPage(jelem)
     initTypePage(jelem)
+    initFolder(jelem)
     val dialogSettings = getDialogSettings()
     initializeOptions(dialogSettings)
+  }
+  
+  def initFolder(jelem: IJavaElement): Unit = {
+    jelem match {
+      case scala: ScalaSourceFile =>
+        val packageDeclarations = scala.getCompilationUnit.getPackageDeclarations()
+        packageDeclarations.toList match {
+          case pkgDeclaration :: _ =>
+            val fragment = getPackageFragmentRoot().getPackageFragment(pkgDeclaration.getElementName())
+            setPackageFragment(fragment, true)
+          
+            //if the package doesn't match the folder, set the folder
+            //eg com.test.test2.Class in src/com/tests should have the folder set to com.test
+            val containingFolder = scala.getCompilationUnit.getParent() /*should be IPackageFragment*/ //realpkg.getParent().getParent().asInstanceOf[IPackageFragment]
+            if (pkgDeclaration.getElementName() != containingFolder.getElementName()) {
+              fFolderField.setText(containingFolder.getElementName())
+              fFolderButton.setSelection(true)
+            }
+          case _ =>
+        }
+      case _ =>
+    }
   }
 
   def initializeOptions(dialogSettings: IDialogSettings): Unit
@@ -240,6 +295,7 @@ abstract class AbstractNewElementWizardPage extends NewTypeWizardPage(1, "") wit
     createContainerControls(composite, columns)
     createPackageControls(composite, columns)
     //createEnclosingTypeControls(composite, nColumns)
+    createFolderControls(composite, columns)
 
     createSeparator(composite, columns)
 
@@ -258,8 +314,48 @@ abstract class AbstractNewElementWizardPage extends NewTypeWizardPage(1, "") wit
     Dialog.applyDialogFont(composite)
   }
 
+  protected def createFolderControls(composite: Composite, columns: Int) {
+    val tabGroup = new Composite(composite, SWT.NONE)
+    val layout = new GridLayout()
+    layout.marginWidth = 0
+    layout.marginHeight = 0
+    tabGroup.setLayout(layout)
+    fFolderButton.doFillIntoGrid(tabGroup, 1)
+
+    val gd = new GridData(GridData.FILL_HORIZONTAL)
+    gd.widthHint = getMaxFieldWidth()
+    gd.horizontalSpan = columns - 2
+    val text = fFolderField.getTextControl(composite)
+    text.setLayoutData(gd)
+
+    val button = fFolderField.getChangeControl(composite)
+    val buttonGd = new GridData(GridData.HORIZONTAL_ALIGN_FILL)
+    buttonGd.widthHint = SWTUtil.getButtonWidthHint(button)
+    button.setLayoutData(buttonGd)
+    ControlContentAssistHelper.createTextContentAssistant(text, fSelectedFolderCompletionProcessor) //we really do want java package completion here so it lists folders
+    TextFieldNavigationHandler.install(text)
+  }
+  
+  override protected def packageChanged(): IStatus = {
+    updateFolderPath()
+    super.packageChanged()
+  }
+  
+  private def updateFolderPath(): Unit = {
+    if (!fFolderButton.isSelected()) fFolderField.setText(getPackageText())
+  }
+  override protected def containerChanged(): IStatus = {
+    fSelectedFolderCompletionProcessor.setPackageFragmentRoot(getPackageFragmentRoot()) //TODO: why does ctrl space not show the one without boolean
+    super.containerChanged()
+  }
+  
   protected def makeCreatedType(implicit parentCU: ICompilationUnit) = {
      createdType = parentCU.getType(getGeneratedTypeName)
+  }
+  
+  def getPackageFragmentForFile() = getFolderName match {
+    case Some(folderName) => getPackageFragmentRoot.getPackageFragment(folderName)
+    case None => getPackageFragment
   }
 
   /* (non-Javadoc)
@@ -291,7 +387,7 @@ abstract class AbstractNewElementWizardPage extends NewTypeWizardPage(1, "") wit
 
     implicit val packageFragment = {
       val rt = getPackageFragmentRoot
-      val pf = getPackageFragment
+      val pf = getPackageFragmentForFile
       var p = pf match {
         case ipf: IPackageFragment => ipf
         case _ => rt.getPackageFragment("")
@@ -392,6 +488,8 @@ abstract class AbstractNewElementWizardPage extends NewTypeWizardPage(1, "") wit
   protected def getTypeNameWithoutParameters() = getTypeName.split('[')(0)
 
   override def getCompilationUnitName(typeName: String) = typeName + ".scala"
+  
+  def getFolderName(): Option[String] = if (fFolderButton.isSelected()) Some(fFolderField.getText()) else None
 
   /*
    * Override because getTypeNameWithoutParameters is a private method in 
@@ -404,7 +502,7 @@ abstract class AbstractNewElementWizardPage extends NewTypeWizardPage(1, "") wit
     if (enclosing != null) {
       return enclosing.getResource()
     }
-    val pack = getPackageFragment()
+    val pack = getPackageFragmentForFile()
     if (pack != null) {
       val cuName = getCompilationUnitName(getTypeNameWithoutParameters())
       return pack.getCompilationUnit(cuName).getResource()
@@ -453,4 +551,8 @@ abstract class AbstractNewElementWizardPage extends NewTypeWizardPage(1, "") wit
   
   /** The type's name that is generated by the wizard.*/
   protected def getGeneratedTypeName = getTypeNameWithoutParameters
+  
+  def isDefaultPackage = getPackageText() == ""
+    
+  def getFullyQualifiedName = if (isDefaultPackage) getTypeNameWithoutParameters else getPackageText() + "." + getTypeNameWithoutParameters
 }

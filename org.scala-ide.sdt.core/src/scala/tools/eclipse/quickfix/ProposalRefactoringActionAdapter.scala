@@ -16,7 +16,7 @@ abstract class ProposalRefactoringActionAdapter(
     action: ActionAdapter, 
     displayString: String,
     relevance: Int = 100) 
-	extends IJavaCompletionProposal {
+	extends BasicCompletionProposal(relevance, displayString) {
   
   override def apply(document: IDocument): Unit = {
     // document is not used because the refactoring actions use the current editor
@@ -24,13 +24,6 @@ abstract class ProposalRefactoringActionAdapter(
     action.run(null)
   }
   
-  override def getRelevance = relevance
-  override def getDisplayString(): String = displayString
-  override def getSelection(document: IDocument): Point = null
-  override def getAdditionalProposalInfo(): String = null
-  override def getImage(): Image = null
-  override def getContextInformation: IContextInformation = null
-
   def isValidProposal : Boolean = {
     val ra = action match {
       case refactoringAction: RefactoringAction => refactoringAction

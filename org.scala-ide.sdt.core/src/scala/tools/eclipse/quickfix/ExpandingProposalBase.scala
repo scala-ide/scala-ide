@@ -12,11 +12,8 @@ import org.eclipse.jface.text.Position
 import scala.util.matching.Regex
 import scala.tools.eclipse.semantichighlighting.implicits.ImplicitHighlightingPresenter
 
-class ExpandingProposalBase(msg: String, displayString: String, pos: Position) extends IJavaCompletionProposal {
-  /**
-   * Fixed relevance at 100 for now, this is the maximum value according to IJavaCompletionProposal.
-   */
-  override def getRelevance = 100
+class ExpandingProposalBase(msg: String, displayString: String, pos: Position) 
+  extends BasicCompletionProposal(relevance = 100, displayString = displayString + msg) {
 
   /**
    * Inserts the proposed completion into the given document.
@@ -30,9 +27,4 @@ class ExpandingProposalBase(msg: String, displayString: String, pos: Position) e
     document.replace(pos.getOffset(), pos.getLength(), replacement);
   }
 
-  def getSelection(document: IDocument): Point = null
-  def getAdditionalProposalInfo(): String = null
-  def getDisplayString(): String = displayString + msg
-  def getImage(): Image = null
-  def getContextInformation: IContextInformation = null
 }

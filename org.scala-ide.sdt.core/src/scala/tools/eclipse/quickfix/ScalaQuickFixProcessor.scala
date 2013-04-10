@@ -66,13 +66,14 @@ class ScalaQuickFixProcessor extends IQuickFixProcessor with HasLogger {
         for (location <- locations)
         	for ((ann, pos) <- getAnnotationsAtOffset(editor, location.getOffset)) {
          	  val importFix = suggestImportFix(context.getCompilationUnit(), ann.getText)
+         	  val createClassFix = suggestCreateClassFix(context.getCompilationUnit(), ann.getText)
          	  
          	  // compute all possible type mismatch quick fixes
          	  val document = (editor.asInstanceOf[ITextEditor]).getDocumentProvider().getDocument(editor.getEditorInput())
          	  val typeMismatchFix = suggestTypeMismatchFix(document, ann.getText, pos)
          	  
          	  // concatenate lists of found quick fixes
-            corrections = corrections ++ importFix ++ typeMismatchFix 
+            corrections = corrections ++ importFix ++ typeMismatchFix ++ createClassFix
         	}
         corrections match {
           case Nil => null
@@ -117,13 +118,22 @@ class ScalaQuickFixProcessor extends IQuickFixProcessor with HasLogger {
       } toList
     }
     
-    return problemMessage match {
-      case typeNotFoundError(missingType) => suggestImportType(missingType)
-      case valueNotFoundError(missingValue) => suggestImportType(missingValue)
-      case xxxxxNotFoundError(missing) => suggestImportType(missing)
+    matchTypeNotFound(problemMessage, suggestImportType)
+  }
+  
+  private def matchTypeNotFound(problemMessage: String, suggest: String => List[IJavaCompletionProposal]): List[IJavaCompletionProposal] = {
+    problemMessage match {
+      case typeNotFoundError(missingType) => suggest(missingType)
+      case valueNotFoundError(missingValue) => suggest(missingValue)
+      case xxxxxNotFoundError(missing) => suggest(missing)
       case _ => Nil
     }
   }
+  
+  private def suggestCreateClassFix(compilationUnit : ICompilationUnit, problemMessage : String) : List[IJavaCompletionProposal] = {
+    matchTypeNotFound(problemMessage, missingType => List(CreateClassProposal(missingType, compilationUnit)))
+  }
+  
   private
   def suggestTypeMismatchFix(document : IDocument, problemMessage : String, location: Position) : List[IJavaCompletionProposal] = {
     // get the annotation string
