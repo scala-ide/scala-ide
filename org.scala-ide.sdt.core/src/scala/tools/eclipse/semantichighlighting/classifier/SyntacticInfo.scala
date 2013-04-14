@@ -6,6 +6,7 @@ import scalariform.parser._
 import scalariform.utils.Range
 import org.eclipse.jface.text.Region
 import org.eclipse.jface.text.IRegion
+import scala.tools.eclipse.util.parsing.ScalariformParser
 
 // Symbol information derived by purely syntactic means, via Scalariform's parser, because it (appears) 
 // difficult to get this out scalac trees
@@ -19,12 +20,6 @@ case class SyntacticInfo(
 )
 
 object SyntacticInfo {
-
-  private def safeParse(source: String): Option[(CompilationUnit, List[Token])] = {
-    val tokens = ScalaLexer.tokenise(source, forgiveErrors = true)
-    val parser = new ScalaParser(tokens.toArray)
-    parser.safeParse(parser.compilationUnitOrScript) map { (_, tokens) }
-  }
 
   private class RangeOps(range: Range) {
     def toRegion: IRegion = new Region(range.offset, range.length)
@@ -85,7 +80,7 @@ object SyntacticInfo {
       astNode.immediateChildren.foreach(scan)
     }
 
-    for ((cu, tokens) <- safeParse(source)) {
+    for ((cu, tokens) <- ScalariformParser.safeParse(source)) {
       scan(cu)
       for (token <- tokens if token.text == "classOf")
         maybeClassOfs += token.range.toRegion
