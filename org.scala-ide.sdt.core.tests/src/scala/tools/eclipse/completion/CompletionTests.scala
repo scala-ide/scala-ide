@@ -221,7 +221,7 @@ class CompletionTests {
     runTest("t1001014/F.scala", false)(oracle)
   }
 
-  @Test
+  @Ignore("reactivate as soon as SI-7362 is fixed") @Test
   def t1001207() {
     val unit = scalaCompilationUnit("ticket_1001207/T1207.scala")
     reload(unit)
