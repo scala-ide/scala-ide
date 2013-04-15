@@ -69,9 +69,9 @@ object QuickFixesTests extends TestProjectSetup("quickfix") {
       val problems = compiler.problemsOf(unit)
       assertTrue("No problems found.", problems.size > 0)
       assertNumberOfProblems(expectedQuickFixesList.size, problems.toArray)
-      
+
       val editor = JavaUI.openInEditor(unit.getCompilationUnit)
-      
+
       // check each problem quickfix
       for ((problem, expectedQuickFixes) <- problems zip expectedQuickFixesList) {
         // here we will accumulate proposals
