@@ -52,17 +52,8 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
       }
 
     type OverrideInfo = Int
-//    val overrideInfos = (new collection.mutable.HashMap[Symbol, OverrideInfo]).withDefaultValue(0)
-    // COMPAT: backwards compatible with 2.8. Remove once we drop 2.8 (and use withDefaultValue).
-    val overrideInfos = new collection.mutable.HashMap[Symbol, OverrideInfo] {
-      override def get(key: Symbol) = super.get(key) match {
-        case None => Some(0)
-        case v => v
-      }
-      
-      override def default(sym: Symbol) = 0
-    } 
-    
+    val overrideInfos = (new collection.mutable.HashMap[Symbol, OverrideInfo]).withDefaultValue(0)
+
     def fillOverrideInfos(c : Symbol) {
       if (c ne NoSymbol) {
         val base = c.allOverriddenSymbols
