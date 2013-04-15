@@ -31,7 +31,7 @@ class TodoBuilderTest {
     SDTTestUtils.enableAutoBuild(false)
   }
 
-  @Test def testTODOSearch() {
+  @Ignore("reactivate when SI-7363 is fixed") @Test def testTODOSearch() {
     println("building " + project)
     project.clean(new NullProgressMonitor())
     project.underlying.build(IncrementalProjectBuilder.FULL_BUILD, new NullProgressMonitor)

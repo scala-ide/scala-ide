@@ -42,7 +42,7 @@ class ImplicitsHighlightingTest {
     withCompilationUnitAndCompiler("implicit-highlighting/DefaultImplicits.scala") { (src, compiler) =>
  
       val expected = List(
-        "Implicit conversions found: 1 => any2ArrowAssoc(1) [46, 1]"
+        "Implicit conversions found: 4 => int2Integer(4) [74, 1]"
       )
       val actual = implicits(src, compiler)
       
