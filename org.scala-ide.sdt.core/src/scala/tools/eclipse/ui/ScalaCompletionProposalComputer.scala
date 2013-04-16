@@ -24,7 +24,7 @@ import org.eclipse.swt.graphics.Image
 import org.eclipse.jdt.internal.ui.JavaPluginImages
 import org.eclipse.jface.text.IDocument
 import scala.tools.nsc.symtab.Flags
-import scala.tools.nsc.util.SourceFile
+import scala.reflect.internal.util.SourceFile
 import javaelements.ScalaCompilationUnit
 
 class ScalaCompletionProposalComputer extends ScalaCompletions with IJavaCompletionProposalComputer {

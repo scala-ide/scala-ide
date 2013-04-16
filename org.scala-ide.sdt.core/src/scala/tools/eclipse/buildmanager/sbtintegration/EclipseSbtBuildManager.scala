@@ -4,7 +4,7 @@ package sbtintegration
 
 import scala.tools.nsc.{ Global, Settings }
 import scala.tools.nsc.io.AbstractFile
-import scala.tools.nsc.util.NoPosition
+import scala.reflect.internal.util.NoPosition
 import scala.collection.mutable
 import org.eclipse.core.resources.{ IFile, IMarker }
 import org.eclipse.core.runtime.{ IProgressMonitor, IPath, SubMonitor, Path}

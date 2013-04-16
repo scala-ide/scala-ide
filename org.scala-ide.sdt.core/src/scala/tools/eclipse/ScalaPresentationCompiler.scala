@@ -14,7 +14,7 @@ import scala.tools.nsc.Settings
 import scala.tools.nsc.interactive.{ Global, InteractiveReporter, Problem }
 import scala.tools.nsc.io.AbstractFile
 import scala.tools.nsc.reporters.Reporter
-import scala.tools.nsc.util.{ BatchSourceFile, Position, SourceFile }
+import scala.reflect.internal.util.{ BatchSourceFile, Position, SourceFile }
 import scala.tools.eclipse.javaelements.{
   ScalaCompilationUnit,
   ScalaIndexBuilder,

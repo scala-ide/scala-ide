@@ -22,7 +22,7 @@ import org.eclipse.jdt.internal.core.search.matching.{ MatchLocator, PossibleMat
 import org.eclipse.jdt.internal.ui.javaeditor.DocumentAdapter
 import org.eclipse.jface.text.{IRegion, ITextSelection}
 import scala.tools.nsc.io.AbstractFile
-import scala.tools.nsc.util.{ BatchSourceFile, SourceFile }
+import scala.reflect.internal.util.{ BatchSourceFile, SourceFile }
 import scala.tools.eclipse.contribution.weaving.jdt.{ IScalaCompilationUnit, IScalaWordFinder }
 import scala.tools.eclipse.{ ScalaImages, ScalaPlugin, ScalaPresentationCompiler, ScalaSourceIndexer, ScalaWordFinder }
 import scala.tools.eclipse.util.ReflectionUtils

@@ -4,7 +4,7 @@ import scala.tools.eclipse.testsetup.SDTTestUtils
 import scala.tools.eclipse.javaelements.ScalaCompilationUnit
 import scala.tools.nsc.interactive.Response
 import scala.tools.eclipse.ScalaWordFinder
-import scala.tools.nsc.util.SourceFile
+import scala.reflect.internal.util.SourceFile
 import scala.tools.eclipse.ScalaPresentationCompiler
 import org.eclipse.jface.text.contentassist.ICompletionProposal
 import org.mockito.Mockito._
@@ -14,7 +14,7 @@ import scala.tools.eclipse.testsetup.TestProjectSetup
 import org.eclipse.jdt.core.search.{ SearchEngine, IJavaSearchConstants, IJavaSearchScope, SearchPattern, TypeNameRequestor }
 import org.eclipse.jdt.core.IJavaElement
 import org.junit.Ignore
-import scala.tools.nsc.util.OffsetPosition
+import scala.reflect.internal.util.OffsetPosition
 
 object CompletionTests extends TestProjectSetup("completion")
 
@@ -48,7 +48,7 @@ class CompletionTests {
       for (i <- 0 until positions.size) {
         val pos = positions(i)
 
-        val position = new scala.tools.nsc.util.OffsetPosition(src, pos)
+        val position = new scala.reflect.internal.util.OffsetPosition(src, pos)
         var wordRegion = ScalaWordFinder.findWord(content, position.point)
 
         //        val selection = mock(classOf[ISelectionProvider])

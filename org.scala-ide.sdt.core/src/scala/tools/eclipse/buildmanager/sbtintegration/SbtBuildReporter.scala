@@ -2,8 +2,8 @@ package scala.tools.eclipse.buildmanager.sbtintegration
 
 import scala.collection.mutable
 import scala.tools.eclipse.buildmanager.BuildReporter
-import scala.tools.nsc.util.{ BatchSourceFile, OffsetPosition }
-import scala.tools.nsc.util.{ Position, NoPosition }
+import scala.reflect.internal.util.{ BatchSourceFile, OffsetPosition }
+import scala.reflect.internal.util.{ Position, NoPosition }
 import scala.tools.nsc.reporters.Reporter
 import scala.tools.eclipse.util.EclipseResource
 

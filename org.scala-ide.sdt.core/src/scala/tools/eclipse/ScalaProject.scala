@@ -17,8 +17,8 @@ import scala.tools.eclipse.ui.PartAdapter
 import scala.tools.eclipse.util.{Cached, EclipseResource, Trim, Utils}
 import scala.tools.eclipse.util.SWTUtils.asyncExec
 import scala.tools.nsc.{Settings, MissingRequirementError}
-import scala.tools.nsc.util.BatchSourceFile
-import scala.tools.nsc.util.SourceFile
+import scala.reflect.internal.util.BatchSourceFile
+import scala.reflect.internal.util.SourceFile
 
 import org.eclipse.core.resources.{IContainer, IFile, IMarker, IProject, IResource, IResourceProxy, IResourceProxyVisitor}
 import org.eclipse.core.runtime.{IPath, IProgressMonitor, Path, SubMonitor}

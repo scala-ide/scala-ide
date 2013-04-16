@@ -3,7 +3,7 @@ package scala.tools.eclipse.buildmanager
 import scala.tools.eclipse.{EclipseBuildManager, TaskScanner, ScalaProject}
 import scala.tools.nsc.Settings
 import scala.tools.nsc.reporters.Reporter
-import scala.tools.nsc.util.{ Position, NoPosition }
+import scala.reflect.internal.util.{ Position, NoPosition }
 import scala.tools.eclipse.util.{ EclipseResource, FileUtils}
 import scala.tools.eclipse.logging.HasLogger
 import scala.collection.mutable.ListBuffer
