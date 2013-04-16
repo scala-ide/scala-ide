@@ -15,7 +15,6 @@ import org.eclipse.debug.core.model.IDebugTarget
 import org.eclipse.debug.core.model.IProcess
 import org.eclipse.debug.core.sourcelookup.ISourceLookupDirector
 import org.osgi.framework.Version
-
 import com.sun.jdi.ClassNotLoadedException
 import com.sun.jdi.ThreadReference
 import com.sun.jdi.VirtualMachine
@@ -26,6 +25,8 @@ import com.sun.jdi.event.VMDisconnectEvent
 import com.sun.jdi.event.VMStartEvent
 import com.sun.jdi.request.ThreadDeathRequest
 import com.sun.jdi.request.ThreadStartRequest
+import scala.tools.eclipse.debug.async.RetainedStackManager
+import scala.tools.eclipse.debug.async.RetainedStackManager
 
 object ScalaDebugTarget extends HasLogger {
 
@@ -40,6 +41,7 @@ object ScalaDebugTarget extends HasLogger {
       override val breakpointManager: ScalaDebugBreakpointManager = ScalaDebugBreakpointManager(this)
       override val eventDispatcher: ScalaJdiEventDispatcher = ScalaJdiEventDispatcher(virtualMachine, companionActor)
       override val cache: ScalaDebugCache = ScalaDebugCache(this, companionActor)
+      override val retainedStack = new RetainedStackManager(this)
     }
 
     launch.addDebugTarget(debugTarget)
@@ -134,6 +136,7 @@ abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine, lau
   private[debug] val breakpointManager: ScalaDebugBreakpointManager
   private[debug] val companionActor: BaseDebuggerActor
   private[debug] val cache: ScalaDebugCache
+  val retainedStack: RetainedStackManager
 
   /**
    * Initialize the dependent components
@@ -317,6 +320,7 @@ abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine, lau
     // get the current requests
     import scala.collection.JavaConverters._
     initializeThreads(virtualMachine.allThreads.asScala.toList)
+    retainedStack.start()
     breakpointManager.init()
     fireChangeEvent(DebugEvent.CONTENT)
   }

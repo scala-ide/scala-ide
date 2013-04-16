@@ -12,25 +12,30 @@ import com.sun.jdi.request.StepRequest
 import com.sun.jdi.request.ThreadDeathRequest
 import com.sun.jdi.request.ThreadStartRequest
 
-/**
- * Utility methods used to create JDI request.
- * This object doesn't use any internal field, and is thread safe.
+/** Utility methods used to create JDI request.
+ *  This object doesn't use any internal field, and is thread safe.
  */
 object JdiRequestFactory {
 
-  /**
-   * Create a breakpoint on the first instruction of the method, on the given thread
+  /** Create a breakpoint on the first instruction of the method, on the given thread
    */
   def createMethodEntryBreakpoint(method: Method, thread: ScalaThread): BreakpointRequest = {
-    val breakpointRequest = thread.getDebugTarget.virtualMachine.eventRequestManager.createBreakpointRequest(method.location)
-    breakpointRequest.setSuspendPolicy(EventRequest.SUSPEND_EVENT_THREAD)
+    val breakpointRequest = createMethodEntryBreakpoint(method, thread.getDebugTarget)
     breakpointRequest.addThreadFilter(thread.threadRef)
 
     breakpointRequest
   }
 
-  /**
-   * create a step request on the given thread
+  def createMethodEntryBreakpoint(method: Method, debugTarget: ScalaDebugTarget): BreakpointRequest = {
+    import scala.collection.JavaConverters._
+
+    val breakpointRequest = debugTarget.virtualMachine.eventRequestManager.createBreakpointRequest(method.location)
+    breakpointRequest.setSuspendPolicy(EventRequest.SUSPEND_EVENT_THREAD)
+
+    breakpointRequest
+  }
+
+  /** create a step request on the given thread
    */
   def createStepRequest(size: Int, depth: Int, thread: ScalaThread): StepRequest = {
     val stepOverRequest = thread.getDebugTarget.virtualMachine.eventRequestManager.createStepRequest(thread.threadRef, size, depth)
@@ -38,8 +43,7 @@ object JdiRequestFactory {
     stepOverRequest
   }
 
-  /**
-   * create a class prepare request for the pattern
+  /** create a class prepare request for the pattern
    */
   def createClassPrepareRequest(typeNamePattern: String, debugTarget: ScalaDebugTarget): ClassPrepareRequest = {
     val classPrepareRequest = debugTarget.virtualMachine.eventRequestManager.createClassPrepareRequest
@@ -48,8 +52,7 @@ object JdiRequestFactory {
     classPrepareRequest
   }
 
-  /**
-   * create a line breakpoint at the given line, if available
+  /** create a line breakpoint at the given line, if available
    */
   def createBreakpointRequest(referenceType: ReferenceType, lineNumber: Int, debugTarget: ScalaDebugTarget): Option[BreakpointRequest] = {
     val locations = JDIUtil.referenceTypeToLocations(referenceType)
@@ -64,8 +67,7 @@ object JdiRequestFactory {
     }
   }
 
-  /**
-   * Create thread start request
+  /** Create thread start request
    */
   def createThreadStartRequest(virtualMachine: VirtualMachine): ThreadStartRequest = {
     val threadStartRequest = virtualMachine.eventRequestManager.createThreadStartRequest
@@ -73,8 +75,7 @@ object JdiRequestFactory {
     threadStartRequest
   }
 
-  /**
-   * Create thread death request
+  /** Create thread death request
    */
   def createThreadDeathRequest(virtualMachine: VirtualMachine): ThreadDeathRequest = {
     val threadStartRequest = virtualMachine.eventRequestManager.createThreadDeathRequest
