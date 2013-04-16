@@ -134,10 +134,10 @@ class ScalaMethodVerifierProvider extends IMethodVerifierProvider with HasLogger
           // When looking for the typename, the strategy is different when the type is defined in the
           // the empty package.
           if (packageName.isEmpty())
-            pc.definitions.EmptyPackage.info.member(newTypeName(typeName))
+            pc.rootMirror.EmptyPackage.info.member(newTypeName(typeName))
           else {
             try {
-              pc.definitions.getModule(newTermName(packageName)).info.member(newTypeName(typeName))
+              pc.rootMirror.getModule(newTermName(packageName)).info.member(newTypeName(typeName))
             } catch {
               case _ =>
                 logger.info("Failed to retrieve class symbol for `%s`".format(packageName + "." + typeName))
