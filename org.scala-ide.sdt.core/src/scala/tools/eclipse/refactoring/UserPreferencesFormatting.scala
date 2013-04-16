@@ -27,7 +27,7 @@ trait UserPreferencesFormatting {
     override val spacingAroundMultipleImports: String = {
       for {
         javaProject <- Option(file.getJavaProject)
-        val prefs = FormatterPreferences.getPreferences(javaProject)
+        prefs = FormatterPreferences.getPreferences(javaProject)
         if  prefs(SpaceInsideParentheses)
       } yield " "
     } getOrElse ""

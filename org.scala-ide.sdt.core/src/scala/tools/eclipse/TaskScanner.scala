@@ -6,7 +6,7 @@ import scala.collection.mutable.ArrayBuffer
 
 import org.eclipse.jdt.core.JavaCore
 
-import scala.tools.nsc.util.{ Position, RangePosition }
+import scala.reflect.internal.util.{ Position, RangePosition }
 
 class TaskScanner(project : ScalaProject) {
   import TaskScanner._

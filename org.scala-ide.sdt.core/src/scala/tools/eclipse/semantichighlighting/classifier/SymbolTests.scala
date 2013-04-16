@@ -1,9 +1,9 @@
 package scala.tools.eclipse.semantichighlighting.classifier
 
 import scala.tools.eclipse.semantichighlighting.classifier.SymbolTypes._
-import scala.tools.nsc.util.RangePosition
+import scala.reflect.internal.util.RangePosition
 import org.eclipse.jface.text.IRegion
-import scala.tools.nsc.util.SourceFile
+import scala.reflect.internal.util.SourceFile
 
 private[classifier] trait SymbolTests { self: SymbolClassification =>
   import SymbolTests.region2regionOps
