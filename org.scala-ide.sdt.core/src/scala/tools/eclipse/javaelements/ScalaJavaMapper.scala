@@ -277,7 +277,7 @@ trait ScalaJavaMapper extends ScalaAnnotationHelper with SymbolNameUtil with Has
    *  the empty string, instead of <empty>. */
   def enclosingPackage(sym: Symbol): String = {
     val enclPackage = sym.enclosingPackage
-    if (enclPackage == definitions.EmptyPackage || enclPackage == definitions.RootPackage)
+    if (enclPackage == rootMirror.EmptyPackage || enclPackage == rootMirror.RootPackage)
       ""
     else
       enclPackage.fullName

@@ -7,7 +7,7 @@ import org.eclipse.ltk.core.refactoring.participants.{ CheckConditionsContext, R
 import org.eclipse.ltk.core.refactoring.{ Change, RefactoringStatus }
 import org.eclipse.core.resources.IFile
 import scala.tools.eclipse.javaelements.ScalaSourceFile
-import tools.nsc.util.{ NoPosition, Position, RangePosition }
+import scala.reflect.internal.util.{ NoPosition, Position, RangePosition }
 import org.eclipse.ltk.core.refactoring.CompositeChange
 import scala.tools.eclipse.util.FileUtils
 import scala.tools.refactoring.common.TextChange

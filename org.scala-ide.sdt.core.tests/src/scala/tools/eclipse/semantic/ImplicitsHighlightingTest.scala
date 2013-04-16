@@ -8,7 +8,7 @@ import scala.tools.eclipse.semantichighlighting.implicits.ImplicitHighlightingPr
 import scala.tools.eclipse.testsetup.TestProjectSetup
 import scala.tools.eclipse.ScalaPresentationCompiler
 import scala.tools.nsc.interactive.Response
-import scala.tools.nsc.util.SourceFile
+import scala.reflect.internal.util.SourceFile
 import scala.tools.eclipse.ScalaPlugin
 import scala.tools.eclipse.properties.ImplicitsPreferencePage
 import org.junit.Before

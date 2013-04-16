@@ -9,7 +9,7 @@ import scala.tools.eclipse.util.EclipseUtils
 import scala.tools.eclipse.logging.HasLogger
 import scala.tools.eclipse.ScalaPlugin
 import scala.tools.eclipse.ScalaPresentationCompiler
-import scala.tools.nsc.util.SourceFile
+import scala.reflect.internal.util.SourceFile
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.jdt.core.WorkingCopyOwner
 import org.eclipse.jdt.internal.ui.JavaPlugin

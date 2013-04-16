@@ -9,7 +9,7 @@ import org.eclipse.jdt.core.search.{ SearchMatch, SearchPattern, SearchParticipa
 import org.eclipse.jdt.core.compiler.{ CharOperation => CharOp }
 import org.eclipse.jdt.internal.compiler.ast.{ SingleTypeReference, TypeDeclaration }
 import org.eclipse.jdt.internal.core.search.matching.{ MatchLocator, PossibleMatch }
-import scala.tools.nsc.util.{ RangePosition, Position }
+import scala.reflect.internal.util.{ RangePosition, Position }
 import scala.tools.eclipse.ScalaPresentationCompiler
 import scala.tools.eclipse.util.ReflectionUtils
 import org.eclipse.jdt.internal.core.search.matching.{ PatternLocator, FieldPattern, MethodPattern, TypeReferencePattern, TypeDeclarationPattern, OrPattern }

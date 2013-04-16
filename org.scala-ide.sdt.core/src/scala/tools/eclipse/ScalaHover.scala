@@ -26,7 +26,7 @@ class ScalaHover(val icu: InteractiveCompilationUnit) extends ITextHover {
         def defString(sym: Symbol, tpe: Type): String = {
           // NoType is returned for defining occurrences, in this case we want to display symbol info itself.
           val tpeinfo = if (tpe ne NoType) tpe.widen else sym.info
-          compose(List(sym.hasFlagsToString(Flags.ExplicitFlags), sym.keyString, sym.varianceString + sym.nameString +
+          compose(List(sym.flagString(Flags.ExplicitFlags), sym.keyString, sym.varianceString + sym.nameString +
             sym.infoString(tpeinfo)))
         }
 
