@@ -19,7 +19,7 @@ object ShowInferredSemicolonsAction {
 
   val ACTION_DEFINITION_ID = "scala.tools.eclipse.toggleShowInferredSemicolonsAction"
 
-  def getBundle[T](implicit m: Manifest[T]) = ResourceBundle.getBundle(m.erasure.getName)
+  def getBundle[T](implicit m: Manifest[T]) = ResourceBundle.getBundle(m.runtimeClass.getName)
 
 }
 

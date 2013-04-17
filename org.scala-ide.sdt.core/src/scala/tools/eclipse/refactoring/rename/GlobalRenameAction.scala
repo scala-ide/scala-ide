@@ -12,7 +12,7 @@ import org.eclipse.ltk.core.refactoring.resource.RenameResourceChange
 import org.eclipse.ltk.core.refactoring.RefactoringStatus
 import scala.tools.eclipse.javaelements.ScalaSourceFile
 import scala.tools.eclipse.refactoring.ui._
-import scala.tools.nsc.util.SourceFile
+import scala.reflect.internal.util.SourceFile
 import scala.tools.refactoring.analysis.{GlobalIndexes, Indexes, NameValidation}
 import scala.tools.refactoring.common.{ConsoleTracing, InteractiveScalaCompiler, Selections}
 import scala.tools.refactoring.implementations.Rename

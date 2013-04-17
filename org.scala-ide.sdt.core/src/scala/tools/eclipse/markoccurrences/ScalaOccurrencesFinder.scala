@@ -2,7 +2,7 @@ package scala.tools.eclipse.markoccurrences
 
 import scala.tools.eclipse.InteractiveCompilationUnit
 import scala.tools.eclipse.logging.HasLogger
-import scala.tools.nsc.util.SourceFile
+import scala.reflect.internal.util.SourceFile
 import scala.tools.refactoring.analysis.GlobalIndexes
 import scala.tools.refactoring.implementations.MarkOccurrences
 import org.eclipse.jface.text.IRegion

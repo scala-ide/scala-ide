@@ -3,7 +3,7 @@ package scala.tools.eclipse.semantichighlighting.classifier
 import scala.tools.refactoring.common.CompilerAccess
 import scala.tools.refactoring.common.PimpedTrees
 import scala.tools.eclipse.ScalaPresentationCompiler
-import scala.tools.nsc.util.SourceFile
+import scala.reflect.internal.util.SourceFile
 
 /**
  * Return the Symbols corresponding to this `Tree`, if any.
