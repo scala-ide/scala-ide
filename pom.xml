@@ -69,24 +69,11 @@
   </properties>
 
   <profiles>
-    <profile>
-      <!--- the profile using the default values. Scala 2.9.x -->
-      <id>scala-2.9.x</id>
-      <properties>
-        <scala.version>2.9.3-SNAPSHOT</scala.version>
-        <scala.era.major.version>2.9</scala.era.major.version>
-        <version.suffix>2_09</version.suffix>
-
-        <repo.scala-refactoring>${repo.scala-ide.root}/scala-refactoring-29x</repo.scala-refactoring>
-        <repo.scalariform>${repo.scala-ide.root}/scalariform-29x</repo.scalariform>
-        <repo.typesafe>http://repo.typesafe.com/typesafe/ide-2.9</repo.typesafe>
-      </properties>
-    </profile>
 
     <profile>
       <id>scala-2.10.x</id>
       <properties>
-        <scala.version>2.10.0</scala.version>
+        <scala.version>2.10.2-SNAPSHOT</scala.version>
         <scala.era.major.version>2.10</scala.era.major.version>
         <version.suffix>2_10</version.suffix>
 
