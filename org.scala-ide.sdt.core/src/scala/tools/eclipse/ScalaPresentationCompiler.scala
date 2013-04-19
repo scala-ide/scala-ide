@@ -52,8 +52,7 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings) exten
   with JavaSig
   with JVMUtils
   with LocateSymbol
-  with HasLogger
-  with SymbolsCompatibility { self =>
+  with HasLogger { self =>
 
   def presentationReporter = reporter.asInstanceOf[ScalaPresentationCompiler.PresentationReporter]
   presentationReporter.compiler = this
@@ -156,7 +155,6 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings) exten
             fi.getCause() match {
               case e: TypeError                  => logger.info("TypeError in ask:\n" + e)
               case f: FreshRunReq                => logger.info("FreshRunReq in ask:\n" + f)
-              case e @ InvalidCompanions(c1, c2) => reporter.warning(c1.pos, e.getMessage)
               case m: MissingResponse            => logger.info("MissingResponse in ask. Called from: " + m.getStackTrace().mkString("\n"))
               case e                             => eclipseLog.error("Error during askOption", e)
             }
