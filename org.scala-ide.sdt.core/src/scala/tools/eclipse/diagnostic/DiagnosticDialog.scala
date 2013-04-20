@@ -229,7 +229,7 @@ class DiagnosticDialog(configurer: WeavingStateConfigurer, shell: Shell) extends
     val otherGroup = newGroup("Additional", control, new GridLayout(1, true))
     
     val knownIssuesLink = new Link(otherGroup, SWT.NONE)
-    knownIssuesLink.setText("See list of <a href=\"http://scala-ide.org/docs/user/faq.html#know-issues\">known issues</a>" +
+    knownIssuesLink.setText("See list of <a href=\"http://scala-ide.org/docs/current-user-doc/faq/index.html#Know_Issues\">known issues</a>" +
          " for known problems and workarounds")      
     knownIssuesLink.addListener(SWT.Selection, DiagnosticDialog.linkListener)
     
