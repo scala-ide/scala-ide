@@ -44,12 +44,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
 
   class StructureBuilderTraverser(scu : ScalaCompilationUnit, unitInfo : OpenableElementInfo, newElements0 : JMap[AnyRef, AnyRef], sourceLength : Int) {
     
-    private def companionClassOf(s: Symbol): Symbol =
-      try {
-        s.companionClass
-      } catch {
-        case e: InvalidCompanions => NoSymbol
-      }
+    private def companionClassOf(s: Symbol): Symbol = s.companionClass
 
     type OverrideInfo = Int
     val overrideInfos = (new collection.mutable.HashMap[Symbol, OverrideInfo]).withDefaultValue(0)
