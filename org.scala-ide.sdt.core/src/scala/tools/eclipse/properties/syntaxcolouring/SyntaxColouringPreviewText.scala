@@ -2,6 +2,8 @@ package scala.tools.eclipse.properties.syntaxcolouring
 
 import scala.tools.eclipse.properties.syntaxcolouring.ScalaSyntaxClasses._
 import scalariform.lexer.ScalaLexer
+import scala.tools.eclipse.semantichighlighting.classifier.SymbolTypes
+import scala.tools.eclipse.semantichighlighting.Position
 
 object SyntaxColouringPreviewText {
 
@@ -40,38 +42,50 @@ class Class[T] extends Trait {
     val sym = 'symbol
     return 42
   }
+  @deprecated def deprecatedMethod(param: Int) = ???
+  templateVar = deprecatedMethod(12)
+  val str = s"Here is a $templateV\u0430l, " +
+    s"$templateV\u0430r, $p\u0430ram, $$notAVariable"
 }"""
 
-  case class ColouringLocation(syntaxClass: ScalaSyntaxClass, offset: Int, length: Int)
+  case class ColouringInfo(symbolType: SymbolTypes.SymbolType, deprecated: Boolean = false, inInterpolatedString: Boolean = false)
+  
+  import SymbolTypes._
+  private val identifierToSyntaxClass: Map[String, ColouringInfo] = Map(
+    "foo" -> ColouringInfo(Package),
+    "bar" -> ColouringInfo(Package),
+    "baz" -> ColouringInfo(Package),
+    "Annotation" -> ColouringInfo(Annotation),
+    "Class" -> ColouringInfo(Class),
+    "CaseClass" -> ColouringInfo(CaseClass),
+    "CaseObject" -> ColouringInfo(CaseObject),
+    "Trait" -> ColouringInfo(Trait),
+    "Int" -> ColouringInfo(Class),
+    "method" -> ColouringInfo(Method),
+    "param" -> ColouringInfo(Param),
+    "lazyLocalVal" -> ColouringInfo(LazyLocalVal),
+    "localVal" -> ColouringInfo(LocalVal),
+    "localVar" -> ColouringInfo(LocalVar),
+    "lazyTemplateVal" -> ColouringInfo(LazyTemplateVal),
+    "templateVal" -> ColouringInfo(TemplateVal),
+    "templateVar" -> ColouringInfo(TemplateVar),
+    "T" -> ColouringInfo(TypeParameter),
+    "Type" -> ColouringInfo(Type),
+    "Object" -> ColouringInfo(Object),
+    "sym" -> ColouringInfo(LocalVal),
+    "deprecated" -> ColouringInfo(Annotation),
+    "deprecatedMethod" -> ColouringInfo(Method, deprecated = true),
+    "str" -> ColouringInfo(TemplateVal),
+    "p\u0430ram" -> ColouringInfo(Param, inInterpolatedString = true),
+    "templateV\u0430l" -> ColouringInfo(TemplateVal, inInterpolatedString = true),
+    "templateV\u0430r" -> ColouringInfo(TemplateVar, inInterpolatedString = true)
+    )
 
-  private val identifierToSyntaxClass: Map[String, ScalaSyntaxClass] = Map(
-    "foo" -> PACKAGE,
-    "bar" -> PACKAGE,
-    "baz" -> PACKAGE,
-    "Annotation" -> ANNOTATION,
-    "Class" -> CLASS,
-    "CaseClass" -> CASE_CLASS,
-    "CaseObject" -> CASE_OBJECT,
-    "Trait" -> TRAIT,
-    "Int" -> CLASS,
-    "method" -> METHOD,
-    "param" -> PARAM,
-    "lazyLocalVal" -> LAZY_LOCAL_VAL,
-    "localVal" -> LOCAL_VAL,
-    "localVar" -> LOCAL_VAR,
-    "lazyTemplateVal" -> LAZY_TEMPLATE_VAL,
-    "templateVal" -> TEMPLATE_VAL,
-    "templateVar" -> TEMPLATE_VAR,
-    "T" -> TYPE_PARAMETER,
-    "Type" -> TYPE,
-    "Object" -> OBJECT,
-    "sym" -> LOCAL_VAL)
-
-  val semanticLocations: List[ColouringLocation] =
+  val semanticLocations: List[Position] =
     for {
       token <- ScalaLexer.rawTokenise(previewText, forgiveErrors = true)
       if token.tokenType.isId
-      syntaxClass <- identifierToSyntaxClass get token.text
-    } yield ColouringLocation(syntaxClass, token.offset, token.length)
+      ColouringInfo(symbolType, deprecated, inStringInterpolation) <- identifierToSyntaxClass get token.text
+    } yield new Position(token.offset, token.length, symbolType, deprecated, inStringInterpolation)
 
 }

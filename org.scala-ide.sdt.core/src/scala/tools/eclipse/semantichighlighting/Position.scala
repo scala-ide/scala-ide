@@ -13,10 +13,13 @@ class Position (
   offset: Int,
   length: Int,
   val kind: SymbolTypes.SymbolType,
-  val deprecated: Boolean) extends TextPosition(offset, length) {
+  val deprecated: Boolean,
+  val inInterpolatedString: Boolean) extends TextPosition(offset, length) {
 
   /** Lock used to protect concurrent access to `this` instance.*/
   private val lock: AnyRef = new Object
+  
+  def shouldStyle = lock.synchronized { deprecated || inInterpolatedString }
 
   override def hashCode(): Int = lock.synchronized { super.hashCode() }
 
@@ -27,7 +30,7 @@ class Position (
   override def equals(that: Any): Boolean = that match {
     // This implementation of `equals` is NOT symmetric.
     case that: Position =>
-      lock.synchronized { super.equals(that) && kind == that.kind && deprecated == that.deprecated && isDeleted() == that.isDeleted() }
+      lock.synchronized { super.equals(that) && kind == that.kind && deprecated == that.deprecated && inInterpolatedString == that.inInterpolatedString && isDeleted() == that.isDeleted() }
     case _ => false
   }
 
@@ -55,9 +58,9 @@ object Position {
 
   def from(symbolInfos: List[SymbolInfo]): List[Position] = {
     (for {
-      SymbolInfo(symbolType, regions, isDeprecated) <- symbolInfos
+      SymbolInfo(symbolType, regions, isDeprecated, inInterpolatedString) <- symbolInfos
       region <- regions
       if region.getLength > 0
-    } yield new Position(region.getOffset, region.getLength, symbolType, isDeprecated))
+    } yield new Position(region.getOffset, region.getLength, symbolType, isDeprecated, inInterpolatedString))
   }
 }

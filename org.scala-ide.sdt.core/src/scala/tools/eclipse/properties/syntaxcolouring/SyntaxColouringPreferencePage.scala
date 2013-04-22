@@ -2,10 +2,11 @@ package scala.tools.eclipse.properties.syntaxcolouring
 
 import scala.PartialFunction.condOpt
 import scala.tools.eclipse.properties.syntaxcolouring.ScalaSyntaxClasses._
+import scala.tools.eclipse.semantichighlighting.ui.HighlightingStyle
+import scala.tools.eclipse.semantichighlighting.Preferences
 import scala.tools.eclipse.util.EclipseUtils._
 import scala.tools.eclipse.util.SWTUtils._
 import scala.tools.eclipse._
-
 import org.eclipse.jdt.internal.ui.preferences.OverlayPreferenceStore._
 import org.eclipse.jdt.internal.ui.preferences._
 import org.eclipse.jface.layout.PixelConverter
@@ -20,8 +21,6 @@ import org.eclipse.swt.SWT
 import org.eclipse.ui.dialogs.PreferencesUtil
 import org.eclipse.ui.IWorkbench
 import org.eclipse.ui.IWorkbenchPreferencePage
-
-import SyntaxColouringPreviewText.ColouringLocation
 
 /**
  * @see org.eclipse.jdt.internal.ui.preferences.JavaEditorColoringConfigurationBlock
@@ -361,18 +360,17 @@ class SyntaxColouringPreferencePage extends PreferencePage with IWorkbenchPrefer
         massSetEnablement(true)
         enabledCheckBox.setEnabled(canBeDisabled)
         syntaxBackgroundColorEditor.getButton.setEnabled(backgroundColorEnabled)
+        syntaxForegroundColorEditor.getButton.setEnabled(hasForegroundColour)
       } 
   }
 
   private def updatePreviewerColours() {
     val textWidget = previewer.getTextWidget
-    for (ColouringLocation(syntaxClass, offset, length) <- SyntaxColouringPreviewText.semanticLocations)
-      if (overlayStore.getBoolean(ENABLE_SEMANTIC_HIGHLIGHTING) && overlayStore.getBoolean(syntaxClass.enabledKey)) {
-        val styleRange = syntaxClass.getStyleRange(overlayStore)
-        styleRange.start = offset
-        styleRange.length = length
-        textWidget.setStyleRange(styleRange)
-      } 
+    for (position <- SyntaxColouringPreviewText.semanticLocations) 
+      if (overlayStore.getBoolean(ENABLE_SEMANTIC_HIGHLIGHTING) && (overlayStore.getBoolean(HighlightingStyle.symbolTypeToSyntaxClass(position.kind).enabledKey) || position.shouldStyle)) {
+      val styleRange = HighlightingStyle(Preferences(overlayStore), position.kind).style(position)
+      textWidget.setStyleRange(styleRange)
+    }
   }
 
 }

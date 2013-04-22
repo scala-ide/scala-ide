@@ -2,7 +2,7 @@ package scala.tools.eclipse.semantichighlighting.classifier
 
 import org.eclipse.jface.text.IRegion
 
-case class SymbolInfo(symbolType: SymbolTypes.SymbolType, regions: List[IRegion], deprecated: Boolean)
+case class SymbolInfo(symbolType: SymbolTypes.SymbolType, regions: List[IRegion], deprecated: Boolean, inInterpolatedString: Boolean)
 
 
 object SymbolTypes extends Enumeration {
