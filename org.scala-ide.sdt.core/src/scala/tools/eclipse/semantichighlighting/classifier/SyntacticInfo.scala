@@ -15,7 +15,8 @@ case class SyntacticInfo(
   maybeSelfRefs: Set[IRegion],
   maybeClassOfs: Set[IRegion],
   annotations: Set[IRegion], 
-  packages: Set[IRegion]
+  packages: Set[IRegion],
+  identifiersInStringInterpolations: Set[IRegion]
 )
 
 object SyntacticInfo {
@@ -32,7 +33,7 @@ object SyntacticInfo {
 
   private implicit def range2Region(range: Range): RangeOps = new RangeOps(range)
 
-  def noSyntacticInfo = SyntacticInfo(Set(), Set(), Set(), Set(), Set(), Set())
+  def noSyntacticInfo = SyntacticInfo(Set(), Set(), Set(), Set(), Set(), Set(), Set())
   
   def getSyntacticInfo(source: String): SyntacticInfo = {
     var namedArgs: Set[IRegion] = Set()
@@ -41,6 +42,7 @@ object SyntacticInfo {
     var maybeClassOfs: Set[IRegion] = Set()
     var annotations: Set[IRegion] = Set()
     var packages: Set[IRegion] = Set()
+    var identifiersInStringInterpolations: Set[IRegion] = Set()
 
     def scan(astNode: AstNode) {
       astNode match {
@@ -80,6 +82,11 @@ object SyntacticInfo {
           val (pkges, annotation) = CollectionUtil.splitAtLast(tokens)
           pkges.foreach(packages += _.range.toRegion)
           annotation foreach ( annotations += _.range.toRegion)
+        case StringInterpolation(_, stringPartsAndScala, _) =>
+          for ((_, expr) <- stringPartsAndScala) {
+            val identifiers = expr.tokens.filter(_.tokenType.isId)
+            identifiersInStringInterpolations ++= identifiers.map(_.range.toRegion)
+          }
         case _ =>
       }
       astNode.immediateChildren.foreach(scan)
@@ -91,6 +98,6 @@ object SyntacticInfo {
         maybeClassOfs += token.range.toRegion
     }
 
-    SyntacticInfo(namedArgs, forVals, maybeSelfRefs, maybeClassOfs, annotations, packages)
+    SyntacticInfo(namedArgs, forVals, maybeSelfRefs, maybeClassOfs, annotations, packages, identifiersInStringInterpolations)
   }
 }

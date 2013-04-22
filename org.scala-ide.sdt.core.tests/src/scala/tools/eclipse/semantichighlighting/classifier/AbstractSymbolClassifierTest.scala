@@ -32,18 +32,21 @@ class AbstractSymbolClassifierTest {
   }
   
   protected def checkSymbolClassification(source: String, locationTemplate: String, regionTagToSymbolType: Map[String, SymbolType]) {
-    val expectedRegionToSymbolNameMap: Map[IRegion, String] = RegionParser.getRegions(locationTemplate)
-    val expectedRegionsAndSymbols: List[(IRegion, SymbolType)] =
-      expectedRegionToSymbolNameMap.mapValues(regionTagToSymbolType).toList sortBy regionOffset
-    val actualRegionsAndSymbols: List[(IRegion, SymbolType)] =
-      classifySymbols(source, expectedRegionToSymbolNameMap.keySet) sortBy regionOffset
-
+    checkSymbolInfoClassification(source, locationTemplate, regionTagToSymbolType.mapValues(symbolType => SymbolInfo(symbolType, Nil, deprecated = false, inInterpolatedString = false)))
+  }
+  
+  protected def checkSymbolInfoClassification(source: String, locationTemplate: String, regionTagToSymbolInfo: Map[String, SymbolInfo], delimiter: Char = '$') {
+    val expectedRegionToSymbolNameMap: Map[IRegion, String] = RegionParser.getRegions(locationTemplate, delimiter)
+    val expectedRegionsAndSymbols: List[(IRegion, SymbolInfo)] =
+      expectedRegionToSymbolNameMap.mapValues(regionTagToSymbolInfo).toList sortBy regionOffset
+    val actualRegionsAndSymbols: List[(IRegion, SymbolInfo)] =
+      classifySymbols(source, expectedRegionToSymbolNameMap.keySet).map{case (region, symbolInfo) => (region, symbolInfo.copy(regions = Nil))}.sortBy(regionOffset).distinct
     if (expectedRegionsAndSymbols != actualRegionsAndSymbols) {
       val sb = new StringBuffer
-      def displayRegions(regionToSymbolInfoMap: List[(IRegion, SymbolType)]) = {
+      def displayRegions(regionToSymbolInfoMap: List[(IRegion, SymbolInfo)]) = {
         regionToSymbolInfoMap.toList.sortBy(regionOffset) map {
-          case (region, symbolType) =>
-            "  " + region + " '" + region.of(source) + "' " + symbolType
+          case (region, symbolInfo) =>
+            "  " + region + " '" + region.of(source) + "' " + symbolInfo
         } mkString "\n"
       }
       sb.append("Actual != Expected.\n")
@@ -55,7 +58,7 @@ class AbstractSymbolClassifierTest {
     }
   }
 
-  private def classifySymbols(source: String, restrictToRegions: Set[IRegion]): List[(IRegion, SymbolType)] = {
+  private def classifySymbols(source: String, restrictToRegions: Set[IRegion]): List[(IRegion, SymbolInfo)] = {
     val sourceFile = new BatchSourceFile("", source)
     project.withPresentationCompiler { compiler =>
       // first load the source
@@ -66,14 +69,15 @@ class AbstractSymbolClassifierTest {
       // then run classification
       val symbolInfos: List[SymbolInfo] = new SymbolClassification(sourceFile, compiler, useSyntacticHints = true).classifySymbols(new NullProgressMonitor)
       for {
-        SymbolInfo(symbolType, regions, deprecated) <- symbolInfos
-        region <- regions
+        symbolInfo <- symbolInfos
+        region <- symbolInfo.regions
         if restrictToRegions exists region.intersects
-      } yield (region, symbolType)
+      } yield (region, symbolInfo)
     }(orElse = Nil)
   }.distinct sortBy regionOffset
 
-  private def regionOffset(regionAndSymbolType: (IRegion, SymbolType)) = regionAndSymbolType._1.getOffset
+  private def regionOffset(regionAndSymbolInfo: (IRegion, _)) = regionAndSymbolInfo._1.getOffset
+  
 }
 
 object AbstractSymbolClassifierTest {

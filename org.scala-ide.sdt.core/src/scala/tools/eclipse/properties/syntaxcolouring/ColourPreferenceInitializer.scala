@@ -78,6 +78,7 @@ class ColourPreferenceInitializer extends AbstractPreferenceInitializer {
     setDefaultsForSyntaxClass(PACKAGE, new RGB(0, 110, 4), enabled = false)
     setDefaultsForSyntaxClass(TYPE, new RGB(50, 147, 153), italic = true, enabled = false)
     setDefaultsForSyntaxClass(TYPE_PARAMETER, new RGB(23, 0, 129), underline = true, enabled = false)
+    setDefaultsForSyntaxClass(IDENTIFIER_IN_INTERPOLATED_STRING, new RGB(0, 0, 0), underline = true, enabled = false)
   }  
 
   private def setDefaultsForSyntaxClass(

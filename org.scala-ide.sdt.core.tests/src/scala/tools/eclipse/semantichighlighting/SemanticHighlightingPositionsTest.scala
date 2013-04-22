@@ -97,7 +97,7 @@ class SemanticHighlightingPositionsTest {
     val positions = editor.positionsTracker.positionsInRegion(region).filterNot(_.isDeleted())
     // We clone the `positions` because the semantic highlighting component works by performing side-effects 
     // on the existing positions. And, the `runTest`, expects the returned positions to not change.   
-    positions.map(pos => new Position(pos.getOffset, pos.getLength, pos.kind, pos.deprecated)).toList
+    positions.map(pos => new Position(pos.getOffset, pos.getLength, pos.kind, pos.deprecated, pos.inInterpolatedString)).toList
   }
 
   private def findAllMarkersIn(code: String): List[Match] =
@@ -203,7 +203,7 @@ class SemanticHighlightingPositionsTest {
 
   @Test
   def new_highlighted_positions_are_reported() {
-    runTest(AddText("val bar = 2", List(new Position(17, 3, SymbolTypes.TemplateVal, deprecated = false)))) {
+    runTest(AddText("val bar = 2", List(new Position(17, 3, SymbolTypes.TemplateVal, deprecated = false, inInterpolatedString = false)))) {
       """
         |class A {
         |  /*^*/
