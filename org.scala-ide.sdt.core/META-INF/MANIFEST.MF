@@ -69,7 +69,6 @@ Export-Package:
  scala.tools.eclipse,
  scala.tools.eclipse.actions,
  scala.tools.eclipse.buildmanager,
- scala.tools.eclipse.buildmanager.refined,
  scala.tools.eclipse.buildmanager.sbtintegration,
  scala.tools.eclipse.completion,
  scala.tools.eclipse.diagnostic,

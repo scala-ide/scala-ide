@@ -229,7 +229,7 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
           val name = rt.name.toChars
           indexer.addTypeReference(name)
           indexer.addMethodReference(name, 0)
-          if(nme.isSetterName(rt.name)) indexer.addFieldReference(nme.setterToGetter(rt.name).toChars)
+          if(nme.isSetterName(rt.name)) indexer.addFieldReference(nme.setterToGetter(rt.name.toTermName).toChars)
           else indexer.addFieldReference(name)
           super.traverse(tree)
           

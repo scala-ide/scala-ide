@@ -22,7 +22,7 @@
     <repo.scala-ide.root>http://download.scala-ide.org</repo.scala-ide.root>
 
     <!-- fixed versions -->
-    <sbt.version>0.13.0-SNAPSHOT</sbt.version>
+    <sbt.version>Select a profile</sbt.version>
     <sbinary.version>0.4.1-pretending-SNAPSHOT</sbinary.version>
     <jline.version>0.9.94</jline.version>
     <ivy.version>2.2.0</ivy.version>
@@ -32,7 +32,7 @@
     <mockito.version>1.9.0</mockito.version>
 
     <!-- plugin versions -->
-    <tycho.plugin.version>0.15.0</tycho.plugin.version>
+    <tycho.plugin.version>0.16.0</tycho.plugin.version>
     <scala.plugin.version>3.0.2</scala.plugin.version>
     <aspectj.plugin.version>1.4</aspectj.plugin.version>
     <maven-bunble.plugin.version>2.3.7</maven-bunble.plugin.version>
@@ -71,26 +71,21 @@
   </properties>
 
   <profiles>
-    <profile>
-      <!--- the profile using the default values. Scala 2.9.x -->
-      <id>scala-2.9.x</id>
-      <properties>
-        <scala.version>2.9.3-SNAPSHOT</scala.version>
-        <scala.era.major.version>2.9</scala.era.major.version>
-        <version.suffix>2_09</version.suffix>
-
-        <repo.scala-refactoring>${repo.scala-ide.root}/scala-refactoring-29x</repo.scala-refactoring>
-        <repo.scalariform>${repo.scala-ide.root}/scalariform-29x</repo.scalariform>
-        <repo.typesafe>http://repo.typesafe.com/typesafe/ide-2.9</repo.typesafe>
-      </properties>
-    </profile>
 
     <profile>
       <id>scala-2.10.x</id>
       <properties>
-        <scala.version>2.10.0</scala.version>
+        <scala.version>2.10.2-SNAPSHOT</scala.version>
         <scala.era.major.version>2.10</scala.era.major.version>
         <version.suffix>2_10</version.suffix>
+        <!-- The version is odd, but correct. We need the `SNAPSHOT` in the sbt version
+            because we need to grab the latest Sbt artifacts compiled against the latest
+            Scala 2.10.2-SNAPSHOT.
+            If you want to build the Scala IDE against Scala 2.10.0 or Scala 2.10.1, make
+            sure to pass -Dsbt.version=0.13.0-M1 to the build script (no SNAPSHOT is needed
+            in this case because the Scala version is stable!)
+        -->
+        <sbt.version>0.13.0-M1-SNAPSHOT</sbt.version>
 
         <repo.scala-refactoring>${repo.scala-ide.root}/scala-refactoring-210x</repo.scala-refactoring>
         <repo.scalariform>${repo.scala-ide.root}/scalariform-210x</repo.scalariform>
@@ -104,6 +99,7 @@
         <scala.version>2.11.0-SNAPSHOT</scala.version>
         <scala.era.major.version>2.11</scala.era.major.version>
         <version.suffix>2_11</version.suffix>
+        <sbt.version>0.13.0-SNAPSHOT</sbt.version> <!-- We use Sbt 0.13 master for building against Scala 2.11.0-SNAPSHOT -->
 
         <repo.scala-refactoring>${repo.scala-ide.root}/scala-refactoring-211x</repo.scala-refactoring>
         <repo.scalariform>${repo.scala-ide.root}/scalariform-211x</repo.scalariform>
