@@ -7,8 +7,6 @@ package scala.tools.eclipse
 package javaelements
 
 import java.{ util => ju }
-import ch.epfl.lamp.fjbg.JObjectType
-import ch.epfl.lamp.fjbg.JType
 import scala.collection.mutable.ArrayBuffer
 import scala.tools.nsc.symtab.Flags
 import org.eclipse.jdt.core.Signature
@@ -88,7 +86,7 @@ class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: Sc
       def acceptField(f: compiler.Symbol) = {
         val packageName = enclosingPackage(f).toArray
         val typeName = mapTypeName(f.owner).toArray
-        val name = (if (f.isSetter) compiler.nme.setterToGetter(f.name) else f.name).toString.toArray
+        val name = (if (f.isSetter) compiler.nme.setterToGetter(f.name.toTermName) else f.name).toString.toArray
         Cont(requestor.acceptField(
           packageName,
           typeName,
@@ -132,13 +130,8 @@ class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: Sc
         val parent = ssr.findLocalElement(defn.pos.startOrPoint)
         if (parent != null) {
           val name = if (defn.hasFlag(Flags.PARAM) && defn.hasFlag(Flags.SYNTHETIC)) "_" else defn.name.toString.trim
-          val jtype = compiler.javaType(defn.tpe) match {
-            case jt if jt == JType.UNKNOWN | jt == JType.ADDRESS | jt == JType.REFERENCE => JObjectType.JAVA_LANG_OBJECT
-            case jt => jt
-          }
-
+          val jtype = compiler.javaType(defn.tpe)
           val isMember = defn.owner.isClass
-
           val jdtFlags = mapModifiers(defn)
 
           val localVar = new ScalaLocalVariableElement(
@@ -148,7 +141,7 @@ class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: Sc
             defn.pos.endOrPoint - 1,
             defn.pos.point,
             defn.pos.point + name.length - 1,
-            jtype.getSignature,
+            jtype.getDescriptor(),
             name + " : " + defn.tpe.toString, jdtFlags, isMember)
           Cont(ssr.addElement(localVar))
         } else Cont.Noop
