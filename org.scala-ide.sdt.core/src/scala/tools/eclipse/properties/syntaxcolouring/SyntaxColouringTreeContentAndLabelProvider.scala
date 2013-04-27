@@ -21,6 +21,6 @@ object SyntaxColouringTreeContentAndLabelProvider extends LabelProvider with ITr
 
   override def getText(element: AnyRef) = element match {
     case Category(name, _) => name
-    case ScalaSyntaxClass(displayName, _, _, _) => displayName
+    case ScalaSyntaxClass(displayName, _, _) => displayName
   }
 }
