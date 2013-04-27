@@ -46,7 +46,7 @@ trait ScalaOverrideIndicatorBuilder { self : ScalaPresentationCompiler =>
   case class ScalaIndicator(scu: ScalaCompilationUnit, text: String, base: Symbol, val isOverwrite: Boolean)
     extends source.Annotation(OVERRIDE_ANNOTATION_TYPE, false, text) with IScalaOverrideIndicator {
     def open = {
-      ask { () => locate(base, scu) } map {
+      locate(base) map {
         case (file, pos) =>
           EditorUtility.openInEditor(file, true) match {
             case editor: ITextEditor => editor.selectAndReveal(pos, 0)
