@@ -15,7 +15,7 @@ import scala.tools.eclipse.ScalaPlugin
 /** Base class for Scala completions. No UI dependency, can be safely used in a
  *  headless testing environment.
  *  
- *  @see scala.tools.eclipse.ui.ScalaCompletinProposalComputer
+ *  @see scala.tools.eclipse.ui.ScalaCompletionProposalComputer
  */
 class ScalaCompletions extends HasLogger {
   import org.eclipse.jface.text.IRegion
