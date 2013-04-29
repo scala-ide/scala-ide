@@ -16,6 +16,7 @@ import org.eclipse.core.resources.IMarkerDelta
 import java.util.concurrent.TimeUnit
 import org.eclipse.debug.core.DebugPlugin
 import org.eclipse.core.resources.IMarker
+import scala.tools.eclipse.ScalaLibrary
 
 object ScalaDebugBreakpointTest extends TestProjectSetup("breakpoints", bundleName = "org.scala-ide.sdt.debug.tests") with ScalaDebugRunningTest {
   final val BP_TYPENAME = "breakpoints.Breakpoints"
@@ -248,7 +249,12 @@ class ScalaDebugBreakpointTest {
     try {
       session.runToLine(DI_TYPENAME, 5)
 
-      session.checkStackFrame(DI_TYPENAME + "$delayedInit$body", "apply()Ljava/lang/Object;", 4)
+      project.scalaLibraries match {
+        case Seq(ScalaLibrary(location, Some(ver), isProject), _*) if ver.startsWith("2.11") => 
+          session.checkStackFrame(DI_TYPENAME + "$", "delayedEndpoint$breakpoints$DelayedInit$1()V", 4)
+        case _ =>
+          session.checkStackFrame(DI_TYPENAME + "$delayedInit$body", "apply()Ljava/lang/Object;", 4)
+      }
     } finally {
       bp4.delete
     }
