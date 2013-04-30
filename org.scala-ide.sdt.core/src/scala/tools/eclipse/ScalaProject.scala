@@ -96,7 +96,6 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
     override def create() = {
       try {
         val settings = ScalaPlugin.defaultScalaSettings()
-        settings.printtypes.tryToSet(Nil)
         initializeCompilerSettings(settings, isPCSetting(settings))
         val pc = new ScalaPresentationCompiler(ScalaProject.this, settings)
         logger.debug("Presentation compiler classpath: " + pc.classPath)
