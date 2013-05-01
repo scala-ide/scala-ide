@@ -10,7 +10,7 @@ import scala.tools.nsc.interactive.Global
 
 trait JVMUtils { self : Global =>
 
-  lazy val dummyBuilder = self.ask { () => new genASM.JPlainBuilder(null) }
+  lazy val dummyBuilder = self.ask { () => new genASM.JPlainBuilder(null,false) }
   
   def javaName(sym : Symbol): String = sym.javaBinaryName.toString()
 
