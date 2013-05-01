@@ -130,7 +130,7 @@ class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: Sc
         val parent = ssr.findLocalElement(defn.pos.startOrPoint)
         if (parent != null) {
           val name = if (defn.hasFlag(Flags.PARAM) && defn.hasFlag(Flags.SYNTHETIC)) "_" else defn.name.toString.trim
-          val jtype = compiler.javaType(defn.tpe)
+          val jtype = compiler.javaDescriptor(defn.tpe)
           val isMember = defn.owner.isClass
           val jdtFlags = mapModifiers(defn)
 
@@ -141,7 +141,7 @@ class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: Sc
             defn.pos.endOrPoint - 1,
             defn.pos.point,
             defn.pos.point + name.length - 1,
-            jtype.getDescriptor(),
+            jtype,
             name + " : " + defn.tpe.toString, jdtFlags, isMember)
           Cont(ssr.addElement(localVar))
         } else Cont.Noop

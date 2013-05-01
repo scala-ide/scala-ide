@@ -228,9 +228,38 @@ trait ScalaJavaMapper extends ScalaAnnotationHelper with SymbolNameUtil with Has
     else if (isScalaSpecialType(t) || t.isErroneous)
       objectSig
     else
-      javaType(t).getDescriptor().replace('/', '.')
+      javaDescriptor(t).replace('/', '.')
   }
-  
+
+  import icodes._
+
+  /** Return the descriptor of the given type. A typed descriptor is defined
+   *  by the JVM Specification Section 4.3 (http://docs.oracle.com/javase/specs/vms/se7/html/jvms-4.html#jvms-4.3)
+   *
+   *  Example:
+   *   javaDescriptor(Array[List[Int]]) == "[Lscala/collection/immutable/List;"
+   */
+  private def javaDescriptor(tk: TypeKind): String = {
+    import Signature._
+    (tk: @unchecked) match {
+      case BOOL           => C_BOOLEAN.toString
+      case BYTE           => C_BYTE.toString
+      case SHORT          => C_SHORT.toString
+      case CHAR           => C_CHAR.toString
+      case INT            => C_INT.toString
+      case UNIT           => C_VOID.toString
+      case LONG           => C_LONG.toString
+      case FLOAT          => C_FLOAT.toString
+      case DOUBLE         => C_DOUBLE.toString
+      case REFERENCE(cls) => s"L${cls.javaBinaryName};"
+      case ARRAY(elem)    => s"[${javaDescriptor(elem)}"
+    }
+  }
+
+  def javaDescriptor(t: Type): String =
+    if (t.isErroneous) "Ljava/lang/Object;"
+    else javaDescriptor(toTypeKind(t))
+
   def mapTypeName(s : Symbol) : String =
     if (s == NoSymbol || s.hasFlag(Flags.PACKAGE)) ""
     else {
@@ -255,7 +284,8 @@ trait ScalaJavaMapper extends ScalaAnnotationHelper with SymbolNameUtil with Has
   }
   
   /** Return the enclosing package. Correctly handle the empty package, by returning
-   *  the empty string, instead of <empty>. */
+   *  the empty string, instead of <empty>.
+   */
   def enclosingPackage(sym: Symbol): String = {
     val enclPackage = sym.enclosingPackage
     if (enclPackage == definitions.EmptyPackage || enclPackage == definitions.RootPackage)
