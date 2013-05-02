@@ -13,6 +13,10 @@ object MissingMemberInfoTests extends TestProjectSetup("quickfix")
 
 class MissingMemberInfoTests {
   import MissingMemberInfoTests._
+  
+  private lazy val unit = compilationUnit("createmethod/CreateMethod.scala").asInstanceOf[ScalaCompilationUnit]
+  private lazy val source = new String(unit.getContents)
+  private lazy val ast = ScalariformParser.safeParse(source).get._1
 
   @Test def function2BecomesFunction1() {
     val (parameterList, returnType) = infer("other.higher4")
@@ -33,9 +37,6 @@ class MissingMemberInfoTests {
   }
 
   private def infer(callee: String) = {
-    val unit = compilationUnit("createmethod/CreateMethod.scala").asInstanceOf[ScalaCompilationUnit]
-    val source = new String(unit.getContents)
-    val ast = ScalariformParser.safeParse(source).get._1
     val index = source.indexOf(callee)
     assertNotSame(-1, index)
     MissingMemberInfo.inferFromEnclosingMethod(unit, ast, index)
