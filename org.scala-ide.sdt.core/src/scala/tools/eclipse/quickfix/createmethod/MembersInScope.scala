@@ -15,11 +15,7 @@ object MembersInScope extends HasLogger {
         compiler.askOption { () =>
           val thingsInScope = members.collect {
             case compiler.ScopeMember(sym, tpe, true, _) if sym.isValue =>
-              //TODO: I have a feeling this is the wrong way to do this :)
-              lazy val typeInfo = {
-                val info = sym.infoString(tpe)
-                if (info.contains(": ")) info.drop(info.indexOf(": ") + 2) else info
-              }
+              lazy val typeInfo = tpe.resultType.toString
               
               sym.paramss match {
                 case Nil => //plain value or zero arg method, eg "def method = 0"
