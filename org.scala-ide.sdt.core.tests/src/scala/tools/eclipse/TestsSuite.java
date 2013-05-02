@@ -28,6 +28,7 @@ import scala.tools.eclipse.sbtbuilder.TodoBuilderTest;
 import scala.tools.eclipse.semantic.ImplicitsHighlightingTest;
 import scala.tools.eclipse.semantichighlighting.SemanticHighlightingPositionsTest;
 import scala.tools.eclipse.semantichighlighting.classifier.SymbolClassifierTestSuite;
+import scala.tools.eclipse.structurebuilder.ScalaJavaMapperTest;
 import scala.tools.eclipse.structurebuilder.StructureBuilderTest;
 import scala.tools.eclipse.ui.UITestSuite;
 import scala.tools.eclipse.util.CachedTest;
@@ -70,6 +71,7 @@ import scala.tools.eclipse.wizards.QualifiedNameSupportTest;
   SemanticHighlightingPositionsTest.class,
   SymbolClassifierTestSuite.class,
   StructureBuilderTest.class,
+  ScalaJavaMapperTest.class,
   UITestSuite.class,
   CachedTest.class,
   CollectionUtilTest.class,
