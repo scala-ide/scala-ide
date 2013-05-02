@@ -17,8 +17,7 @@ object MembersInScope extends HasLogger {
             case compiler.ScopeMember(sym, tpe, true, _) if sym.isValue =>
               //TODO: I have a feeling this is the wrong way to do this :)
               lazy val typeInfo = {
-                val tpeinfo = if (tpe ne compiler.NoType) tpe.widen else sym.info
-                val info = sym.infoString(tpeinfo)
+                val info = sym.infoString(tpe)
                 if (info.contains(": ")) info.drop(info.indexOf(": ") + 2) else info
               }
               
