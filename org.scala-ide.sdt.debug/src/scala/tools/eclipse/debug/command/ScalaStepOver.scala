@@ -24,7 +24,7 @@ object ScalaStepOver {
     val debugTarget = scalaStackFrame.getDebugTarget
 
     val location = scalaStackFrame.stackFrame.location
-    
+
     val typeName = location.declaringType.name
 
     val stepOverRequest = JdiRequestFactory.createStepRequest(StepRequest.STEP_LINE, StepRequest.STEP_OVER, scalaStackFrame.thread)
@@ -49,7 +49,7 @@ object ScalaStepOver {
       } else {
         typeName + "$$anonfun$"
       }
-      
+
       val loadedAnonFunctionsInRange = debugTarget.cache.getLoadedNestedTypes(typeName).filter(_.name().startsWith(nestedAnonFuncPrefix)).flatMap(debugTarget.cache.getAnonFunctionsInRange(_, range)).toBuffer
 
       // if we are in an anonymous function, add the method
@@ -81,7 +81,7 @@ private[command] abstract class ScalaStepOverActor(debugTarget: ScalaDebugTarget
   private var enabled = false
 
   override protected def postStart(): Unit = link(thread.companionActor)
-  
+
   override protected def behavior = {
     // JDI event triggered when a class has been loaded
     case classPrepareEvent: ClassPrepareEvent =>
@@ -121,7 +121,7 @@ private[command] abstract class ScalaStepOverActor(debugTarget: ScalaDebugTarget
     enable()
     thread.resumeFromScala(scalaStep, DebugEvent.STEP_OVER)
   }
-  
+
   private def terminate() {
     disable()
     poison()

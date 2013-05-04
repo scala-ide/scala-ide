@@ -34,7 +34,7 @@ abstract class ScalaDebugElement(debugTarget: ScalaDebugTarget) extends DebugEle
         super.getAdapter(adapter)
     }
   }
-  
+
   override def getDebugTarget: ScalaDebugTarget = debugTarget
 
   // Members declared in org.eclipse.debug.core.model.IDebugElement
@@ -49,14 +49,14 @@ abstract class ScalaDebugElement(debugTarget: ScalaDebugTarget) extends DebugEle
 
   // ----
 
-  def wrapJDIException[T](msg: String): Catch[T] = 
+  def wrapJDIException[T](msg: String): Catch[T] =
     Exception.handling(classOf[RuntimeException]) by (targetRequestFailed(msg, _))
 
   /**
     * Throws a new debug exception with a status code of `TARGET_REQUEST_FAILED`
     * with the given underlying exception. If the underlying exception is not a JDI
     * exception, the original exception is thrown.
-    * 
+    *
     * @param message Failure message
     * @param e underlying exception that has occurred
     * @throws DebugException The exception with a status code of `TARGET_REQUEST_FAILED`
@@ -78,7 +78,7 @@ trait HasFieldValue {
   /** Return the JDI value for the given field. */
   final protected[model] def jdiFieldValue(field: Field): Value =
     wrapJDIException("Exception while retrieving JDI field value") { getJdiFieldValue(field) }
-  
+
   protected def getReferenceType(): ReferenceType
   protected def getJdiFieldValue(field: Field): Value
 
@@ -89,7 +89,7 @@ trait HasFieldValue {
    */
   def fieldValue(fieldName: String): ScalaValue = wrapJDIException("Exception while retrieving field " + fieldName + " in reference type") {
     val field = referenceType().fieldByName(fieldName)
-      
+
     if (field == null) {
       throw new IllegalArgumentException("Field '%s' doesn't exist for '%s'".format(fieldName, referenceType().name()))
     }

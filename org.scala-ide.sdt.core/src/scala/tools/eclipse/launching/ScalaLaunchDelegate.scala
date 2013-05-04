@@ -32,7 +32,7 @@ class ScalaLaunchDelegate extends AbstractJavaLaunchConfigurationDelegate {
 			return
 			
 		try {
-			monitor.subTask(LaunchingMessages.JavaLocalApplicationLaunchConfigurationDelegate_Verifying_launch_attributes____1) 
+			monitor.subTask(LaunchingMessages.JavaLocalApplicationLaunchConfigurationDelegate_Verifying_launch_attributes____1)
 							
 			val mainTypeName = verifyMainTypeName(configuration)
 			val runner = getVMRunner(configuration, mode)
@@ -86,7 +86,7 @@ class ScalaLaunchDelegate extends AbstractJavaLaunchConfigurationDelegate {
 			
 		    // check for cancellation
 			if (monitor.isCanceled()) return
-			monitor.subTask(LaunchingMessages.JavaLocalApplicationLaunchConfigurationDelegate_Creating_source_locator____2) 
+			monitor.subTask(LaunchingMessages.JavaLocalApplicationLaunchConfigurationDelegate_Creating_source_locator____2)
 			// set the default source locator if required
 			setDefaultSourceLocator(launch, configuration)
 			monitor.worked(1)

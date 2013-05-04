@@ -42,7 +42,7 @@ class TemplateVarTest extends AbstractSymbolClassifierTest {
       """,
       Map("TVAR" -> TemplateVar, "PARA" -> Param))
   }
-   
+
   @Test
   def import_template_var() {
     checkSymbolClassification("""
@@ -54,7 +54,7 @@ class TemplateVarTest extends AbstractSymbolClassifierTest {
         """,
       Map("TVAR" -> TemplateVar))
   }
-  
+
    @Test
   def structural_type_with_template_var() {
      checkSymbolClassification("""
@@ -72,5 +72,5 @@ class TemplateVarTest extends AbstractSymbolClassifierTest {
       """,
       Map("TVL" -> TemplateVal, "TVR" -> TemplateVar))
    }
- 
+
 }

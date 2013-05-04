@@ -10,15 +10,15 @@ import com.sun.jdi.connect.Connector.Argument
 object SocketConnectorScala {
     /** Configuration key for the 'allow termination of remote VM' option */
   final val AllowTerminateKey = "org.eclipse.jdt.launching.ALLOW_TERMINATE"
-    
+
   /** Configuration key for the port number */
   final val PortKey = "port"
-    
+
   /** Configuration key for the hostname */
   final val HostnameKey = "hostname"
 
   final val DefaultPort = 8000
-  
+
   /* magic names */
   final val SocketListenName = "com.sun.jdi.SocketListen"
   final val SocketAttachName = "com.sun.jdi.SocketAttach"
@@ -29,7 +29,7 @@ object SocketConnectorScala {
    */
   def allowTerminate(launch: ILaunch):Boolean =
     launch.getLaunchConfiguration().getAttribute(AllowTerminateKey, false)
-  
+
 }
 
 /**
@@ -37,7 +37,7 @@ object SocketConnectorScala {
  */
 trait SocketConnectorScala extends IVMConnector {
   import SocketConnectorScala._
-  
+
   /**
    * Return the JDI connector be used by this VM connector.
    */

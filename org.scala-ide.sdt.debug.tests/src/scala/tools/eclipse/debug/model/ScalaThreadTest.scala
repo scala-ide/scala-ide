@@ -136,7 +136,7 @@ class ScalaThreadTest {
    */
   @Test(timeout = 2000)
   def getStackFramesFreeze() {
-    
+
     val jdiThread = mock(classOf[ThreadReference])
 
     val thread = createThread(jdiThread)

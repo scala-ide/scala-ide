@@ -123,7 +123,7 @@ class ScalaJavaMapperTest {
 }
 
 /** This class is a function of 2 parameters, compiler and a compiler.Type.
- *  It is needed because path dependent type as parameters are not allowed 
+ *  It is needed because path dependent type as parameters are not allowed
  *  in anonymous functions.
  */
 trait TypeTest {

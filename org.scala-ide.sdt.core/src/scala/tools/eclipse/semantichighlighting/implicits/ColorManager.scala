@@ -15,9 +15,9 @@ private[implicits] class ColorManager private () {
   def dispose() {
     for (c <- colorTable.values) c.dispose()
   }
-  
+
 }
 
-private[implicits] object ColorManager {  
+private[implicits] object ColorManager {
   lazy val colorManager: ColorManager = new ColorManager
 }

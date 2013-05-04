@@ -119,7 +119,7 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
       useProjectSettingsWidget.get.save
     }
     additionalParamsWidget.save()
-    
+
     //This has to come later, as we need to make sure the useProjectSettingsWidget's values make it into
     //the final save.
     save(userBoxes, preferenceStore0)
@@ -255,8 +255,8 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
         }
       case None => //don't need to check
     }
-    
-    logger.info(eclipseBoxes.exists { box => 
+
+    logger.info(eclipseBoxes.exists { box =>
       logger.info(box.eSettings.find(_.isChanged).toString)
       box.eSettings.exists(_.isChanged)
     }.toString)
@@ -264,7 +264,7 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
     //check all our other settings
     additionalParamsWidget.isChanged || super.isChanged
   }
-  
+
   override def performDefaults {
     super.performDefaults
     additionalParamsWidget.reset
@@ -392,22 +392,22 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
       decoration.setDescriptionText(errorIndicator.getDescription())
       decoration
     }
-    
+
     def isChanged: Boolean =
       originalValue != additionalCompParams
 
     def save() {
       preferenceStore0.setValue(CompilerSettings.ADDITIONAL_PARAMS, additionalCompParams)
     }
-    
+
     def reset() {
       additionalParametersControl.setText(preferenceStore0.getDefaultString(CompilerSettings.ADDITIONAL_PARAMS))
     }
-    
+
     def setEnabled(value: Boolean) {
       additionalParametersControl.setEnabled(value)
     }
-  }  
+  }
 }
 
 object CompilerSettings {

@@ -19,13 +19,13 @@ import java.io.File
  * features that we currently use/need (which, in practice, are not that many).
  */
 private[logging] abstract class Log4JFacade {
-  
+
   private final val config: Log4JConfig = new Log4JConfig(this)
-  
+
   private var _logFile: File = _
-  
-  def logFile: File = synchronized { _logFile } 
-  
+
+  def logFile: File = synchronized { _logFile }
+
   protected def logFileName: String
 
   def configure(logOutputLocation: String, preferredLogLevel: Level.Value) {

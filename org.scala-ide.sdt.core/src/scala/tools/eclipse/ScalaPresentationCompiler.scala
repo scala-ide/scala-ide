@@ -125,7 +125,7 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings)
 
   /** Ask with a default timeout. Keep around for compatibility with the m2 release. */
   def askOption[A](op: () => A): Option[A] = askOption(op, 10000)
-  
+
   /** Perform `op' on the compiler thread. Catch all exceptions, and return
    *  None if an exception occured. TypeError and FreshRunReq are printed to
    *  stdout, all the others are logged in the platform error log.
@@ -187,7 +187,7 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings)
         val newF = new BatchSourceFile(f.file, content)
         synchronized { sourceFiles(scu) = newF }
 
-        // avoid race condition by looking up the source file, as someone else 
+        // avoid race condition by looking up the source file, as someone else
         // might have swapped it in the meantime
         askReload(List(sourceFiles(scu)), res)
       case None =>

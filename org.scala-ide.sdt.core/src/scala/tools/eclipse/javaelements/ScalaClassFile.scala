@@ -43,17 +43,17 @@ class ScalaClassFile(parent : PackageFragment, name : String, sourceFile : Strin
       }
     }
   }
-  
+
   override def codeSelect(offset : Int, length : Int, owner : WorkingCopyOwner) : Array[IJavaElement] =
     codeSelect(this, offset, length, owner)
-  
-  def getContents() = Option(getSourceMapper) flatMap 
+
+  def getContents() = Option(getSourceMapper) flatMap
     {mapper => Option(mapper.findSource(getType, getSourceFileName))} getOrElse Array.empty
-    
+
   override lazy val file : AbstractFile = new VirtualFile(getSourceFileName, getSourceFilePath)
-  
+
   def getSourceFileName() = sourceFile
-  
+
   def getSourceFilePath() = {
     val tpe = getType
     val pkgFrag = tpe.getPackageFragment.asInstanceOf[PackageFragment]
@@ -75,7 +75,7 @@ class ScalaClassFile(parent : PackageFragment, name : String, sourceFile : Strin
   }
 
   override def getType() : IType = new ScalaBinaryType(getTypeName)
-  
+
   def getMainTypeName() : Array[Char] =
     Util.getNameWithoutJavaLikeExtension(getElementName).toCharArray
 
@@ -84,19 +84,19 @@ class ScalaClassFile(parent : PackageFragment, name : String, sourceFile : Strin
     if(lastDollar == -1 || lastDollar != name.length-1)
       super.getTypeName
     else {
-      val lastDollar0 = name.lastIndexOf('$', lastDollar-1) 
+      val lastDollar0 = name.lastIndexOf('$', lastDollar-1)
       if (lastDollar0 > -1) Util.localTypeName(name, lastDollar0, name.length()) else name
     }
   }
 
   def getFileName() : Array[Char] = getPath.toString.toCharArray
-    
+
   override def validateExistence(underlyingResource : IResource) : IStatus = {
 	if ((underlyingResource ne null) && !underlyingResource.isAccessible) newDoesNotExistStatus() else JavaModelStatus.VERIFIED_OK
   }
 
   def currentProblems: List[IProblem] = Nil
-    
+
   def closeBuffer0() = super.closeBuffer()
   def closing0(info : AnyRef) = super.closing(info)
   def createElementInfo0() = super.createElementInfo()
@@ -106,7 +106,7 @@ class ScalaClassFile(parent : PackageFragment, name : String, sourceFile : Strin
   def validateExistence0(underlying : IResource) : IStatus = validateExistence(underlying)
   def hasBuffer0() : Boolean = super.hasBuffer()
   def openBuffer0(pm : IProgressMonitor, info : Object) = super.openBuffer(pm, info)
-  def resourceExists0(underlyingResource : IResource) = super.resourceExists(underlyingResource) 
+  def resourceExists0(underlyingResource : IResource) = super.resourceExists(underlyingResource)
   def openAncestors0(newElements : JHashMap[_, _], monitor : IProgressMonitor) { super.openAncestors(newElements, monitor) }
   def getHandleMementoDelimiter0() = super.getHandleMementoDelimiter()
   def isSourceElement0() : Boolean = super.isSourceElement()

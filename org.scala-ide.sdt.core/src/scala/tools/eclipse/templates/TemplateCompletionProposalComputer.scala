@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package scala.tools.eclipse.templates
 
@@ -29,10 +29,10 @@ import org.eclipse.jdt.internal.ui.JavaPlugin;
 
 import org.eclipse.jdt.internal.ui.text.template.contentassist.TemplateEngine;
 
-//Default ctor to make it instantiatable via the extension mechanism. 
+//Default ctor to make it instantiatable via the extension mechanism.
 //TODO clean up import
 class TemplateCompletionProposalComputer extends IJavaCompletionProposalComputer {
-  
+
     /** The wrapped processor. */
     private
     val _processor = new ScalaTemplateCompletionProcessor(ScalaPlugin.plugin.templateManager)
@@ -97,7 +97,7 @@ class TemplateCompletionProposalComputer extends IJavaCompletionProposalComputer
 //    /* (non-Javadoc)
 //     * @see org.eclipse.jdt.internal.ui.text.java.TemplateCompletionProposalComputer#computeCompletionEngine(org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext)
 //     */
-//    protected 
+//    protected
 //    def computeCompletionEngine(context : JavaContentAssistInvocationContext) : TemplateEngine = {
 //      try {
 //        TextUtilities.getContentType(context.getDocument(), IJavaPartitions.JAVA_PARTITIONING, context.getInvocationOffset(), true) match {

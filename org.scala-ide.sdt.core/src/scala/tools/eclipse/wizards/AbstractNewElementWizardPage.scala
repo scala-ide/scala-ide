@@ -1,8 +1,8 @@
 /*
  * Copyright 2010 LAMP/EPFL
- * 
+ *
  * @author Tim Clendenen
- * 
+ *
  */
 package scala.tools.eclipse.wizards
 
@@ -125,30 +125,30 @@ abstract class AbstractNewElementWizardPage extends NewTypeWizardPage(1, "") wit
   def createMainSelected = methodStubButtons.isSelected(0)
   def createConstructorsSelected = methodStubButtons.isSelected(1)
   def createInheritedSelected = methodStubButtons.isSelected(2)
-  
+
   private object folderButtonListener extends IDialogFieldListener {
     def dialogFieldChanged(field: DialogField) {
       fFolderField.setEnabled(fFolderButton.isSelected())
       updateFolderPath()
     }
   }
-  
+
   val fFolderButton= new SelectionButtonDialogField(SWT.CHECK);
   fFolderButton.setDialogFieldListener(folderButtonListener);
   fFolderButton.setLabelText("Folder:")
   fFolderButton.setSelection(false)
-  
+
   private object specifyFolderBrowseListener extends IStringButtonAdapter {
     def changeControlPressed(field: DialogField) {
       val packageFragment = choosePackage();
       if (packageFragment != null) fFolderField.setText(packageFragment.getElementName())
     }
   }
-  
+
   val fFolderField = new StringButtonDialogField(specifyFolderBrowseListener);
   fFolderField.setEnabled(false)
   fFolderField.setButtonLabel("Browse...");
-  
+
   val fSelectedFolderCompletionProcessor = new JavaPackageCompletionProcessor()
 
 
@@ -162,7 +162,7 @@ abstract class AbstractNewElementWizardPage extends NewTypeWizardPage(1, "") wit
     val dialogSettings = getDialogSettings()
     initializeOptions(dialogSettings)
   }
-  
+
   def initFolder(jelem: IJavaElement): Unit = {
     jelem match {
       case scala: ScalaSourceFile =>
@@ -171,7 +171,7 @@ abstract class AbstractNewElementWizardPage extends NewTypeWizardPage(1, "") wit
           case pkgDeclaration :: _ =>
             val fragment = getPackageFragmentRoot().getPackageFragment(pkgDeclaration.getElementName())
             setPackageFragment(fragment, true)
-          
+
             //if the package doesn't match the folder, set the folder
             //eg com.test.test2.Class in src/com/tests should have the folder set to com.test
             val containingFolder = scala.getCompilationUnit.getParent() /*should be IPackageFragment*/ //realpkg.getParent().getParent().asInstanceOf[IPackageFragment]
@@ -241,7 +241,7 @@ abstract class AbstractNewElementWizardPage extends NewTypeWizardPage(1, "") wit
       fModifierStatus, fSuperClassStatus,
       fSuperInterfacesStatus)
 
-    // the mode severe status will be displayed and the OK button 
+    // the mode severe status will be displayed and the OK button
     // enabled/disabled.
     updateStatus(status);
   }
@@ -277,7 +277,7 @@ abstract class AbstractNewElementWizardPage extends NewTypeWizardPage(1, "") wit
     val buttonGroup = methodStubButtons.getSelectionButtonsGroup(composite)
     LayoutUtil.setHorizontalSpan(buttonGroup, columns - 1)
   }
-  
+
   /*
    * Override to pick the UI components relevant for a Scala elements
    */
@@ -335,12 +335,12 @@ abstract class AbstractNewElementWizardPage extends NewTypeWizardPage(1, "") wit
     ControlContentAssistHelper.createTextContentAssistant(text, fSelectedFolderCompletionProcessor) //we really do want java package completion here so it lists folders
     TextFieldNavigationHandler.install(text)
   }
-  
+
   override protected def packageChanged(): IStatus = {
     updateFolderPath()
     super.packageChanged()
   }
-  
+
   private def updateFolderPath(): Unit = {
     if (!fFolderButton.isSelected()) fFolderField.setText(getPackageText())
   }
@@ -348,11 +348,11 @@ abstract class AbstractNewElementWizardPage extends NewTypeWizardPage(1, "") wit
     fSelectedFolderCompletionProcessor.setPackageFragmentRoot(getPackageFragmentRoot()) //TODO: why does ctrl space not show the one without boolean
     super.containerChanged()
   }
-  
+
   protected def makeCreatedType(implicit parentCU: ICompilationUnit) = {
      createdType = parentCU.getType(getGeneratedTypeName)
   }
-  
+
   def getPackageFragmentForFile() = getFolderName match {
     case Some(folderName) => getPackageFragmentRoot.getPackageFragment(folderName)
     case None => getPackageFragment
@@ -463,11 +463,11 @@ abstract class AbstractNewElementWizardPage extends NewTypeWizardPage(1, "") wit
       reconcile(cu = cu)
 
       if (monitor.isCanceled) throw new InterruptedException()
-      
+
       val formatter= new ScalaFormatterCleanUpProvider()
       val textChange= formatter.createCleanUp(cu).createChange(monitor)
       textChange.perform(monitor)
-      
+
       cu.commitWorkingCopy(true, new SubProgressMonitor(monitor, 1))
       parentCU.discardWorkingCopy
     } catch {
@@ -476,25 +476,25 @@ abstract class AbstractNewElementWizardPage extends NewTypeWizardPage(1, "") wit
       monitor done
     }
   }
-  
-  /** Return the package declaration used in the resources created by the wizard. 
-   * This is needed because the package declaration may be different from the 
+
+  /** Return the package declaration used in the resources created by the wizard.
+   * This is needed because the package declaration may be different from the
    * file's location (as in the case of a `package object`).*/
   protected def getPackageNameToInject = !getPackageFragment.isDefaultPackage match {
   	case true => Some(getPackageFragment.getElementName)
     case _ => None
   }
-  
+
   protected def getTypeNameWithoutParameters() = getTypeName.split('[')(0)
 
   override def getCompilationUnitName(typeName: String) = typeName + ".scala"
-  
+
   def getFolderName(): Option[String] = if (fFolderButton.isSelected()) Some(fFolderField.getText()) else None
 
   /*
-   * Override because getTypeNameWithoutParameters is a private method in 
+   * Override because getTypeNameWithoutParameters is a private method in
    * superclass
-   * 
+   *
    * @see org.eclipse.jdt.ui.wizards.NewTypeWizardPage#getModifiedResource()
    */
   override def getModifiedResource(): IResource = {
@@ -548,11 +548,11 @@ abstract class AbstractNewElementWizardPage extends NewTypeWizardPage(1, "") wit
     }
     status
   }
-  
+
   /** The type's name that is generated by the wizard.*/
   protected def getGeneratedTypeName = getTypeNameWithoutParameters
-  
+
   def isDefaultPackage = getPackageText() == ""
-    
+
   def getFullyQualifiedName = if (isDefaultPackage) getTypeNameWithoutParameters else getPackageText() + "." + getTypeNameWithoutParameters
 }

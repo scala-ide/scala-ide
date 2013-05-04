@@ -11,7 +11,7 @@ import org.eclipse.ui.PlatformUI
 object ProgressHelpers {
 
   def shell = PlatformUI.getWorkbench.getActiveWorkbenchWindow.getShell
-  
+
   def runInUiJob(block: (IProgressMonitor, Shell) => IStatus) {
     new UIJob("Refactoring") {
       def runInUIThread(pm: IProgressMonitor): IStatus = {
@@ -19,22 +19,22 @@ object ProgressHelpers {
       }
     }.schedule
   }
-    
+
   def runInProgressDialogBlockUi(block: IProgressMonitor => Unit) {
     runInProgressDialog(block, fork = false)
   }
-    
+
   def runInProgressDialogNonblocking(block: IProgressMonitor => Unit) {
     runInProgressDialog(block, fork = true)
   }
 
   private def runInProgressDialog(block: IProgressMonitor => Unit, fork: Boolean) {
-    
+
     val runnable = new IRunnableWithProgress {
       def run(pm: IProgressMonitor) = block(pm)
     }
-    
+
     val dialog = new ProgressMonitorDialog(shell)
     dialog.run(fork, true /*cancelable*/, runnable)
-  } 
+  }
 }

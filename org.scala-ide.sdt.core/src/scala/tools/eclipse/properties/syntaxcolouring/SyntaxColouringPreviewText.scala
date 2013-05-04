@@ -49,7 +49,7 @@ class Class[T] extends Trait {
 }"""
 
   case class ColouringInfo(symbolType: SymbolTypes.SymbolType, deprecated: Boolean = false, inInterpolatedString: Boolean = false)
-  
+
   import SymbolTypes._
   private val identifierToSyntaxClass: Map[String, ColouringInfo] = Map(
     "foo" -> ColouringInfo(Package),

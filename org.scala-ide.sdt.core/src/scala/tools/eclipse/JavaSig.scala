@@ -8,10 +8,10 @@ trait JavaSig { pc: ScalaPresentationCompiler =>
   /*
    * An utility class that allows to extract information from the `symbol`'s java signature.
    * If the passed `symbol` does not need a Java signature, empty values are returned.
-   * 
+   *
    * @example Given the following method declaration:
    * {{{ def foo[T <: Foo, U <: ArrayList[_ >: Class[T]]](u: U, t: T):T  = t }}}
-   * 
+   *
    * The following are the values computed by JavaSignatureConverter:
    * {{{
    * 	sig <- <T:LFoo;U:Ljava.util.ArrayList<-Ljava.lang.Class<TT;>;>;>(TU;TT;)TT;
@@ -29,7 +29,7 @@ trait JavaSig { pc: ScalaPresentationCompiler =>
    *
    * @example Given the following method declaration:
    * {{{ def foo[U <: List[Array[String]]](u: U, s: Int):U  = u }}}
-   * 
+   *
    * The following are the values computed by JavaSignatureConverter:
    * {{{
    * 	sig <- <U:Lscala.collection.immutable.List<[Ljava.lang.String;>;>(TU;I)TU;

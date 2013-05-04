@@ -17,5 +17,5 @@ object ForComprehensionListString2 {
 }
 
 class ForComprehensionListString2{
-  
+
 }

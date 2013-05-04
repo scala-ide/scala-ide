@@ -24,12 +24,12 @@ import scala.tools.eclipse.logging.HasLogger
 
 class ScalaToggleBreakpointAdapter extends ToggleBreakpointAdapter with HasLogger { self =>
   import ScalaToggleBreakpointAdapterUtils._
-  
+
   /** Implementation of the breakpoint toggler. This method relies on the JDT being able
    *  to find the corresponding JDT element for the given selection.
-   *  
-   *  TODO: Rewrite using the presentation compiler, without failing for unknown elements 
-   *  (unknown to the JDT, such as inner objects inside objects). Breakpoints could be set 
+   *
+   *  TODO: Rewrite using the presentation compiler, without failing for unknown elements
+   *  (unknown to the JDT, such as inner objects inside objects). Breakpoints could be set
    *  by giving only the line number.
    */
   private def toggleLineBreakpointsImpl(part : IWorkbenchPart, selection : ISelection) {
@@ -41,12 +41,12 @@ class ScalaToggleBreakpointAdapter extends ToggleBreakpointAdapter with HasLogge
             return Status.CANCEL_STATUS
           try {
             report(null, part)
-            val sel = 
+            val sel =
               if(!selection.isInstanceOf[IStructuredSelection])
                 translateToMembers(part, selection)
               else
                 selection
-            
+
               if(sel.isInstanceOf[IStructuredSelection]) {
                 val member = sel.asInstanceOf[IStructuredSelection].getFirstElement.asInstanceOf[IMember]
                 val tpe =
@@ -58,7 +58,7 @@ class ScalaToggleBreakpointAdapter extends ToggleBreakpointAdapter with HasLogge
                 logger.info("setting breakpoint on mbr: %s, tpe: %s [%s]".format(member, tpe.getFullyQualifiedName, tpe.getClass))
                 val tname = {
                   val qtname = createQualifiedTypeName(self, tpe)
-                  val emptyPackagePrefix = "<empty>." 
+                  val emptyPackagePrefix = "<empty>."
                   if (qtname startsWith emptyPackagePrefix) qtname.substring(emptyPackagePrefix.length) else qtname
                 }
                 val resource = BreakpointUtils.getBreakpointResource(tpe)
@@ -93,14 +93,14 @@ class ScalaToggleBreakpointAdapter extends ToggleBreakpointAdapter with HasLogge
           return Status.OK_STATUS
         }
       }
-    
+
     job.setSystem(true)
     job.schedule
   }
 
   /** Toggle a breakpoint for the given selection. This method relies on the JDT
    *  being able to find the Java Element corresponding to this selection.
-   *  
+   *
    *  TODO: Rewrite to use the presentation compiler for finding the position.
    */
   override def toggleBreakpoints(part : IWorkbenchPart, selection : ISelection) {
@@ -124,7 +124,7 @@ class ScalaToggleBreakpointAdapter extends ToggleBreakpointAdapter with HasLogge
         logger.info("Unknown selection when toggling breakpoint: " + selection)
     }
   }
-  
+
   override def toggleLineBreakpoints(part : IWorkbenchPart, selection : ISelection) {
     toggleLineBreakpointsImpl(part, selection)
   }
@@ -133,7 +133,7 @@ class ScalaToggleBreakpointAdapter extends ToggleBreakpointAdapter with HasLogge
 object ScalaToggleBreakpointAdapterUtils extends ReflectionUtils {
   val toggleBreakpointAdapterClazz = classOf[ToggleBreakpointAdapter]
   val createQualifiedTypeNameMethod = getDeclaredMethod(toggleBreakpointAdapterClazz, "createQualifiedTypeName", classOf[IType])
-  
+
   def createQualifiedTypeName(tba : ToggleBreakpointAdapter, tpe : IType) = {
   	if (tpe.isInstanceOf[ScalaSourceTypeElement])
       tpe.getFullyQualifiedName

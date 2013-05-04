@@ -17,6 +17,6 @@ object DisplayThread extends UIThread {
       override def run() { f }
     }
   }
-  
+
   override def get: Thread = Display.getDefault.getThread()
 }

@@ -80,45 +80,45 @@ class ClassTest extends AbstractSymbolClassifierTest {
         """,
       Map("CL" -> Class))
   }
-  
+
   @Test
   @Ignore("Packages' symbol seem to take a TransparentPosition, why?")
   def import_a_renamed_class() {
     checkSymbolClassification("""
       import scala.concurrent.{Lock => LOCK}
-      
+
       object Foo {
         var lock: LOCK = _
-      }  
+      }
         """, """
       import $PKG$.$   PKG  $.{$CL$ => LOCK}
-        
+
       object Foo {
         var lock: LOCK = _
-      }  
+      }
         """,
       Map("CL" -> Class, "PKG" -> Package))
   }
-  
+
   @Test
   @Ignore("The renamed class doesn't have a symbol and the current classification strategy needs the symbol's name.")
   def import_a_renamed_class_and_color_it() {
     checkSymbolClassification("""
       import scala.concurrent.{ Lock => Alock }
-      
+
       object Foo {
         def foo( f: Alock ) {}
-      }  
+      }
         """, """
       import $PKG$.$   PKG  $.{ $C1$ => $ C2$ }
-      
+
       object Foo {
         def foo( f: $ C2$ ) {}
-      }  
+      }
         """,
       Map("C1" -> Class, "PKG" -> Package, "C2" -> Class))
   }
-  
+
    @Test
   def import_symbol_which_is_both_a_class_and_an_object() {
     checkSymbolClassification("""
@@ -145,7 +145,7 @@ class ClassTest extends AbstractSymbolClassifierTest {
       """,
       Map("CLS" -> Class))
   }
-  
+
   @Test
   @Ignore("does not work until presentation compiler stores more information in the AST (ticket #1001334)")
   def default_arguments() {
