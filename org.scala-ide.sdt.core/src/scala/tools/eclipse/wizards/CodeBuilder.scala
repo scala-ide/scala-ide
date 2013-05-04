@@ -16,7 +16,7 @@ trait CodeBuilder {
 
   import CodeBuilder._
   import BufferSupport._
-	
+
   val imports: ImportSupport
   val buffer: Buffer
 
@@ -62,14 +62,14 @@ trait CodeBuilder {
   }
 
   def addConstructorArgs(args: Args) {
-	
-	val ns = if(args.as.nonEmpty)eval(args) else ""
-	val nb = lhm.get("name").get.asInstanceOf[NameBufferSupport]
-	lhm.put("name", new NameBufferSupport(nb, ns))
-	
-	val e = if(args.as.nonEmpty)eval(ParenList(args.as.map (a => a.n))) else ""
-	val eb = lhm.get("extends").get.asInstanceOf[ExtendsBufferSupport]
-	lhm.put("extends", new ExtendsBufferSupport(eb, e))
+
+  val ns = if(args.as.nonEmpty)eval(args) else ""
+  val nb = lhm.get("name").get.asInstanceOf[NameBufferSupport]
+  lhm.put("name", new NameBufferSupport(nb, ns))
+
+  val e = if(args.as.nonEmpty)eval(ParenList(args.as.map (a => a.n))) else ""
+  val eb = lhm.get("extends").get.asInstanceOf[ExtendsBufferSupport]
+  lhm.put("extends", new ExtendsBufferSupport(eb, e))
   }
 
   def createElementDeclaration(name: String, superTypes: List[String],
@@ -95,7 +95,7 @@ trait CodeBuilder {
 }
 
 object CodeBuilder {
-	
+
   import BufferSupport._
 
   def apply(packageName: String, superTypes: List[String], buffer: Buffer): CodeBuilder = {
@@ -108,43 +108,43 @@ object CodeBuilder {
 
   private class NameBufferSupport(val name: String, val cons: String)
     extends BufferSupport {
-	
-	def this(name: String) {
-	  this(name, "")
-	}
-	
-	def this(buffer: NameBufferSupport, cons: String) {
-	  this(buffer.name, cons)
-	  offset = buffer.offset
-	  length = buffer.length
-	}
-	
-	protected def contents(implicit ld: String) = name + cons
+
+  def this(name: String) {
+    this(name, "")
+  }
+
+  def this(buffer: NameBufferSupport, cons: String) {
+    this(buffer.name, cons)
+    offset = buffer.offset
+    length = buffer.length
+  }
+
+  protected def contents(implicit ld: String) = name + cons
   }
 
   private class ExtendsBufferSupport(
       val superTypes: List[String], val cons: String)
     extends BufferSupport {
 
-	def this(superTypes: List[String]) {
-	  this(superTypes, "")
-	}
-	
-	def this(buffer: ExtendsBufferSupport, cons: String) {
-	  this(buffer.superTypes, cons)
-	  offset = buffer.offset
-	  length = buffer.length
-	}
-	
+  def this(superTypes: List[String]) {
+    this(superTypes, "")
+  }
+
+  def this(buffer: ExtendsBufferSupport, cons: String) {
+    this(buffer.superTypes, cons)
+    offset = buffer.offset
+    length = buffer.length
+  }
+
     import templates._
-	
-	protected def contents(implicit ld: String) = {
-	  val t = typeTemplate(superTypes)
-	  val a = t.split(" ")
-	  if(a.length > 1)
-	    a(2) = a(2) + cons
-	  a.mkString(" ")
-	}
+
+  protected def contents(implicit ld: String) = {
+    val t = typeTemplate(superTypes)
+    val a = t.split(" ")
+    if(a.length > 1)
+      a(2) = a(2) + cons
+    a.mkString(" ")
+  }
   }
 
   sealed abstract class Part
@@ -152,7 +152,7 @@ object CodeBuilder {
   case class Type(val n: Name) extends Part
   case class TypeParam(val n: Name, val b: TypeBounds) extends Part
   case class TypeBounds(val lo: Type = NothingBound, val hi: Type = AnyBound,
-  		                val view: Option[Type] = None) extends Part
+                      val view: Option[Type] = None) extends Part
   case class TypeParams(val tp: Option[List[TypeParam]]) extends Part
   case class Value(val s: String) extends Part
   case class Mods(val s: Option[String]) extends Part
@@ -163,7 +163,7 @@ object CodeBuilder {
   class ParamNames(val pn: List[Name]) extends ParenList(pn)
   class Args(val as: List[Arg]) extends ParenList(as)
   case class Func(val mods: Mods, val name: Name, val typeParams: TypeParams,
-		          val args: Args, val result: Result) extends Part
+              val args: Args, val result: Result) extends Part
   case class ConsBody(val pn: ParamNames) extends Part
   case class AuxCons(val args: Args, val body: ConsBody) extends Part
 
@@ -172,20 +172,20 @@ object CodeBuilder {
 
   def eval(p: Part): String = p match {
     case Type(n)                => eval(n)
-	case TypeParam(n,b)         => eval(n) + eval(b)
-	case TypeBounds(l,h,v)      => " >: " + eval(l) + " <: "+ eval(h)
-	case TypeParams(o)          => o.map(_.map(t => eval(t))
-			                        .mkString("[", ", ", "]")).getOrElse("")
-	case Value(s)               => s
-	case Mods(o)                => o.map(m => m + " ").getOrElse("")
-	case Name(s)                => s
-	case AuxCons(a,b)           => "def this" + eval(a) + " { " +eval(b)+ " }"
-	case ConsBody(pn)           => "this" + eval(pn)
-	case ParenList(ps)          => ps.map(eval) mkString("(", ", ", ")")
-	case Arg(n,t)               => eval(n) + ": " + eval(t)
-	case Result(t,v)            => ": " + eval(t) + " = { " + eval(v) + " }"
-	case Func(m,n,t,a,r)        => eval(m) + "def " + eval(n) + eval(t) +
-	                               eval(a) + eval(r)
+  case TypeParam(n,b)         => eval(n) + eval(b)
+  case TypeBounds(l,h,v)      => " >: " + eval(l) + " <: "+ eval(h)
+  case TypeParams(o)          => o.map(_.map(t => eval(t))
+                              .mkString("[", ", ", "]")).getOrElse("")
+  case Value(s)               => s
+  case Mods(o)                => o.map(m => m + " ").getOrElse("")
+  case Name(s)                => s
+  case AuxCons(a,b)           => "def this" + eval(a) + " { " +eval(b)+ " }"
+  case ConsBody(pn)           => "this" + eval(pn)
+  case ParenList(ps)          => ps.map(eval) mkString("(", ", ", ")")
+  case Arg(n,t)               => eval(n) + ": " + eval(t)
+  case Result(t,v)            => ": " + eval(t) + " = { " + eval(v) + " }"
+  case Func(m,n,t,a,r)        => eval(m) + "def " + eval(n) + eval(t) +
+                                 eval(a) + eval(r)
   }
 
   def toOption[A](in: A)(guard: => Boolean = (in != null)) =
@@ -208,7 +208,7 @@ object CodeBuilder {
   }
 
   def convertSignature(s: String) = {
-	s(0) match {
+  s(0) match {
       case 'Z' => "scala.Boolean"
       case 'B' => "scala.Byte"
       case 'C' => "scala.Char"

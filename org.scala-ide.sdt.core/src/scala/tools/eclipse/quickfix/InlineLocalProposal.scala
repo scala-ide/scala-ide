@@ -9,5 +9,5 @@ import scala.tools.eclipse.refactoring.ExtractLocalAction
 import scala.tools.eclipse.refactoring.InlineLocalAction
 
 object InlineLocalProposal 
-	extends ProposalRefactoringActionAdapter(
-	    new InlineLocalAction, "Inline local value")
+  extends ProposalRefactoringActionAdapter(
+      new InlineLocalAction, "Inline local value")

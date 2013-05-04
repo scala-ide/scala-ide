@@ -16,7 +16,7 @@ abstract class ProposalRefactoringActionAdapter(
     action: ActionAdapter, 
     displayString: String,
     relevance: Int = 100) 
-	extends BasicCompletionProposal(relevance, displayString) {
+  extends BasicCompletionProposal(relevance, displayString) {
   
   override def apply(document: IDocument): Unit = {
     // document is not used because the refactoring actions use the current editor
@@ -31,8 +31,8 @@ abstract class ProposalRefactoringActionAdapter(
     }
     ra.createScalaIdeRefactoringForCurrentEditorAndSelection match {
       // TODO not sure if this null here is very safe
-    	case Some(refactoring) => !refactoring.checkInitialConditions(new NullProgressMonitor).hasWarning
-    	case None	=> false
+      case Some(refactoring) => !refactoring.checkInitialConditions(new NullProgressMonitor).hasWarning
+      case None  => false
     }
   }
   

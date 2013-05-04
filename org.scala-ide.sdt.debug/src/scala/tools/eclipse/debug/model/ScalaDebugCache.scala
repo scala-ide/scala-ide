@@ -30,7 +30,7 @@ object ScalaDebugCache {
   }
 
   private lazy val prefStore = ScalaDebugPlugin.plugin.getPreferenceStore()
-		
+
   def apply(debugTarget: ScalaDebugTarget, scalaDebugTargetActor: BaseDebuggerActor): ScalaDebugCache = {
     val debugCache = new ScalaDebugCache(debugTarget) {
       val actor = new ScalaDebugCacheActor(this, debugTarget, scalaDebugTargetActor)

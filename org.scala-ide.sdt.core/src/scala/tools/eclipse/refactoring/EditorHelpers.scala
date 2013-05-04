@@ -197,7 +197,7 @@ object EditorHelpers {
 
       // restore the selection unless selecting the first instance of the symbol was desired
       if (!selectFirst)
-    	  viewer.setSelectedRange(priorSelection.x, priorSelection.y)
+        viewer.setSelectedRange(priorSelection.x, priorSelection.y)
     }
   }
 }

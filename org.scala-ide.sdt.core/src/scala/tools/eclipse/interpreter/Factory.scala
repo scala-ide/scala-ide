@@ -23,13 +23,13 @@ import org.eclipse.ui.console.IConsoleFactory
  */
 class Factory extends IConsoleFactory {
   override def openConsole() = {
-	val p = Factory.getCurrentProject
-	
-	p match {
-      case Some(project: IProject) => 	
-	    Factory.openConsoleInProject(project)
+  val p = Factory.getCurrentProject
+
+  p match {
+      case Some(project: IProject) =>
+      Factory.openConsoleInProject(project)
       case None =>
-	    val shell = new Shell
+      val shell = new Shell
         MessageDialog.openInformation(shell, "Scala Development Tools", "Must have a currently opened Scala or Java Project")
     }
   }
@@ -40,7 +40,7 @@ object Factory {
   val SCALA_INTERPRETER_LAUNCH_ID = "scala.interpreter"
 
   def openConsoleInProject(project: IProject) = {
-	openConsoleInProjectFromTarget(project, None)
+  openConsoleInProjectFromTarget(project, None)
   }
 
   def openConsoleInProjectFromTarget(project: IProject, target: Option[IJavaElement]) = {
@@ -74,7 +74,7 @@ object Factory {
 
     import org.eclipse.debug.ui.DebugUITools
     import org.eclipse.debug.core.ILaunchManager
-    DebugUITools.launch(workingCopy, ILaunchManager.RUN_MODE)	
+    DebugUITools.launch(workingCopy, ILaunchManager.RUN_MODE)
   }
 
   def getCurrentProject() = {

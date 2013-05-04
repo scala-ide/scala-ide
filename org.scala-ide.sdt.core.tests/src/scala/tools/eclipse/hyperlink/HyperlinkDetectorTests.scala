@@ -49,9 +49,9 @@ class HyperlinkDetectorTests {
   @Test
   def bug1000560() {
     val oracle = List(Link("object bug1000560.Outer"),
-    			      Link("value bug1000560.Outer.bbb"),
-    			      Link("value bug1000560.Outer.a"),
-    			      Link("object bug1000560.Outer")
+                Link("value bug1000560.Outer.bbb"),
+                Link("value bug1000560.Outer.a"),
+                Link("object bug1000560.Outer")
   )
 
     loadTestUnit("bug1000560/Test1.scala").andCheckAgainst(oracle)

@@ -9,5 +9,5 @@ import scala.tools.eclipse.refactoring.ExtractLocalAction
 import scala.tools.eclipse.refactoring.ExpandCaseClassBindingAction
 
 object ExpandCaseClassBindingProposal
-	extends ProposalRefactoringActionAdapter(
-	    new ExpandCaseClassBindingAction, "Expand case class binding")
+  extends ProposalRefactoringActionAdapter(
+      new ExpandCaseClassBindingAction, "Expand case class binding")

@@ -71,7 +71,7 @@ class ScalaClassFile(parent : PackageFragment, name : String, sourceFile : Strin
 
   class ScalaBinaryType(name : String) extends BinaryType(this, name) {
     lazy val mirror = ScalaClassFile.this.getChildren.find(_.getElementName == name) map (_.asInstanceOf[IType])
-	override def exists = mirror.isDefined
+  override def exists = mirror.isDefined
   }
 
   override def getType() : IType = new ScalaBinaryType(getTypeName)
@@ -92,7 +92,7 @@ class ScalaClassFile(parent : PackageFragment, name : String, sourceFile : Strin
   def getFileName() : Array[Char] = getPath.toString.toCharArray
 
   override def validateExistence(underlyingResource : IResource) : IStatus = {
-	if ((underlyingResource ne null) && !underlyingResource.isAccessible) newDoesNotExistStatus() else JavaModelStatus.VERIFIED_OK
+  if ((underlyingResource ne null) && !underlyingResource.isAccessible) newDoesNotExistStatus() else JavaModelStatus.VERIFIED_OK
   }
 
   def currentProblems: List[IProblem] = Nil
