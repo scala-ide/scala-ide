@@ -1,4 +1,4 @@
-package 1000531
+package t1000531
 
 class A[B] extends java.lang.Iterable[B] {
   import scala.collection.JavaConversions._
