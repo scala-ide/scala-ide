@@ -14,7 +14,7 @@ import org.eclipse.jface.wizard.WizardDialog
 case class CreateClassProposal(className: String, compilationUnit: ICompilationUnit)
   extends BasicCompletionProposal(
     relevance = 90, //relevance should be less than ImportCompletionProposal since import quick fix should be first
-    displayString = s"Create class '$className'",
+    displayString = "Create class '"+className+"'",
     image = ScalaImages.NEW_CLASS.createImage()) {
 
   override def apply(document: IDocument): Unit = {

@@ -262,8 +262,8 @@ trait ScalaJavaMapper extends ScalaAnnotationHelper with SymbolNameUtil with Has
       case LONG           => C_LONG.toString
       case FLOAT          => C_FLOAT.toString
       case DOUBLE         => C_DOUBLE.toString
-      case REFERENCE(cls) => s"L${cls.javaBinaryName};"
-      case ARRAY(elem)    => s"[${javaDescriptor(elem)}"
+      case REFERENCE(cls) => "L"+cls.javaBinaryName+";"
+      case ARRAY(elem)    => "["+javaDescriptor(elem)
     }
   }
 
