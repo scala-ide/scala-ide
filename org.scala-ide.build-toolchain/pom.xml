@@ -18,4 +18,13 @@
     <module>../org.scala-ide.scala.compiler</module>
     <module>../org.scala-ide.sbt.full.library</module>
   </modules>
+
+  <!--<build>
+    <plugins>
+      <plugin>
+        <groupId>org.scalastyle</groupId>
+        <artifactId>scalastyle-maven-plugin</artifactId>
+      </plugin>
+    </plugins>
+  </build>-->
 </project>

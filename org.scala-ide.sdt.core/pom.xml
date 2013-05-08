@@ -83,6 +83,11 @@
           </execution>
         </executions>
       </plugin>
+      
+<!--      <plugin>
+        <groupId>org.scalastyle</groupId>
+        <artifactId>scalastyle-maven-plugin</artifactId>
+      </plugin>-->
     </plugins>
   </build>
 </project>

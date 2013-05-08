@@ -214,6 +214,14 @@
     </repository>
   </repositories>
 
+  <pluginRepositories>
+    <pluginRepository>
+      <id>sonatype.snapshot</id>
+      <name>Sonatype maven snapshot repository</name>
+      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+    </pluginRepository>
+  </pluginRepositories>
+
   <dependencyManagement>
     <dependencies>
       <!-- toolchain, Scala library -->
@@ -445,17 +453,28 @@
           <artifactId>maven-clean-plugin</artifactId>
           <version>${maven-clean.plugin.version}</version>
         </plugin>
+        
+        <!-- Scalastyle configuration -->
         <plugin>
           <groupId>org.scalastyle</groupId>
           <artifactId>scalastyle-maven-plugin</artifactId>
-          <version>0.2.0</version>
+          <version>0.2.1-SNAPSHOT</version>
           <configuration>
             <verbose>false</verbose>
             <failOnViolation>true</failOnViolation>
-            <includeTestSourceDirectory>false</includeTestSourceDirectory>
+            <includeTestSourceDirectory>true</includeTestSourceDirectory>
             <failOnWarning>false</failOnWarning>
-            <sourceDirectory>${basedir}</sourceDirectory>
-            <configLocation>${basedir}/scala-ide-style-config.xml</configLocation>
+            <sourceDirectories>
+              <dir>org.scala-ide.sdt.core/src</dir>
+              <dir>org.scala-ide.sdt.debug/src</dir>
+            </sourceDirectories>
+            <testSourceDirectories>
+              <dir>org.scala-ide.sdt.core.tests/src</dir>
+              <dir>org.scala-ide.sdt.core.tests/test-workspace</dir>
+              <dir>org.scala-ide.sdt.debug.tests/src</dir>
+              <dir>org.scala-ide.sdt.debug.tests/test-workspace</dir>
+            </testSourceDirectories>
+            <configLocation>scala-ide-style-config.xml</configLocation>
           </configuration>
           <executions>
             <execution>
@@ -465,9 +484,9 @@
             </execution>
           </executions>
         </plugin>
+        
       </plugins>
     </pluginManagement>
   </build>
-
 
 </project>

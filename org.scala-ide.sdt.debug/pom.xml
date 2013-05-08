@@ -32,4 +32,13 @@
       </dependencies>
     </profile>
   </profiles>
+  
+  <!--<build>
+    <plugins>
+      <plugin>
+        <groupId>org.scalastyle</groupId>
+        <artifactId>scalastyle-maven-plugin</artifactId>
+      </plugin>
+    </plugins>
+  </build>-->
 </project>
