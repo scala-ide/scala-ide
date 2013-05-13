@@ -114,7 +114,7 @@ Export-Package:
 Bundle-RequiredExecutionEnvironment: J2SE-1.5
 Bundle-ClassPath: .,
  target/lib/miglayout-3.7.4.jar,
- target/lib/log4j-1.2.16.jar
+ target/lib/log4j-1.2.17.jar
 Eclipse-ExtensibleAPI: 
  true
 
