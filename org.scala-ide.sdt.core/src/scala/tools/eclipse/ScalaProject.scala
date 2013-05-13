@@ -202,9 +202,9 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
     }
 
   
-  /** The direct dependencies of this project. It only returns existing projects. */
+  /** The direct dependencies of this project. It only returns opened projects. */
   def directDependencies: Seq[IProject] = 
-    underlying.getReferencedProjects.filter(_.exists)
+    underlying.getReferencedProjects.filter(_.isOpen)
 
   /** All direct and indirect dependencies of this project.
    * 
