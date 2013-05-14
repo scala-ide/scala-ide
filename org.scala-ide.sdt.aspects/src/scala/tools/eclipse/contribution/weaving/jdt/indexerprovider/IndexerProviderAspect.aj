@@ -32,8 +32,15 @@ public aspect IndexerProviderAspect {
           ScalaJDTWeavingPlugin.logException(t);
         }
       }
-    } else {
+    } else if (!isScalaArtifact(path)) {
       proceed(document, indexPath);
     }
+  }
+
+  private boolean isScalaArtifact(String path) {
+    return path.endsWith(".class")
+        && (path.endsWith("$.class")          // top-level object
+            || path.endsWith("$class.class")  // trait implementation class
+            || path.contains("$anon"));       // anonymous class or function
   }
 }
