@@ -12,6 +12,6 @@ Require-Bundle: org.scala-ide.scala.library,
  org.aspectj.weaver,
  org.eclipse.equinox.weaving.aspectj,
  org.eclipse.pde.core;resolution:=optional,
- org.junit
+ org.junit4
 Export-Package: 
  scala.tools.eclipse.testsetup
