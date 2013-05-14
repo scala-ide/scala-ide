@@ -30,7 +30,26 @@ class ScalaClassFile(parent : PackageFragment, name : String, sourceFile : Strin
 
   def reconcile(contents: String): List[IProblem] = Nil
 
-  def getCorrespondingElement(element : IJavaElement) : Option[IJavaElement] = {
+  /** Return the corresponding element in the source-based JDT elements.
+   *
+   *  This method returns the correct java element when there is an attached source file
+   *  for this class file. For example, when `element` is an inner type, like `TypeSymbol`,
+   *  the elements look like this:
+   *
+   *  `Symbols$TypeSymbol.class` as an instance of a ScalaClassFile
+   *  `TypeSymbol` as an instance of ScalaBinaryType, pointing to the corresponing classfile
+   *
+   *  when an editor is open, and attached sources are found, the java element hierarchy
+   *  (created by the structure builder based on the source file) is:
+   *
+   *  ScalaSourceFile("Symbols.scala") / `Symbols` / `TypeSymbol`
+   *
+   *  This method (on `ScalaClassFile`) maps back the `ScalaBinaryType` to the correct inner element
+   *  `TypeSymbol`.
+   *
+   *  @note This method is called by `EditorsUI.revealInEditor`.
+   */
+  def getCorrespondingElement(element: IJavaElement): Option[IJavaElement] = {
     if (!validateExistence(resource).isOK)
       None
     else {
@@ -39,7 +58,12 @@ class ScalaClassFile(parent : PackageFragment, name : String, sourceFile : Strin
         None
       else {
         val tpe = element.getElementType
-        getChildren.find(e => e.getElementName == name && e.getElementType == tpe)
+        val enclosingType = if (tpe == IJavaElement.TYPE) element else Option(element.getAncestor(IJavaElement.TYPE)).getOrElse(element)
+        val tpe1 = allTypes.find(_.getElementName == enclosingType.getElementName)
+        if (tpe == IJavaElement.TYPE)
+          tpe1
+        else
+          tpe1.flatMap(_.getChildren.find(e => e.getElementName == name && e.getElementType == tpe))
       }
     }
   }
@@ -69,22 +93,31 @@ class ScalaClassFile(parent : PackageFragment, name : String, sourceFile : Strin
       Util.toCharArrays(getPackage.names)
   }
 
-  class ScalaBinaryType(name : String) extends BinaryType(this, name) {
-    lazy val mirror = ScalaClassFile.this.getChildren.find(_.getElementName == name) map (_.asInstanceOf[IType])
-	override def exists = mirror.isDefined
+  lazy val allTypes: Seq[IType] = {
+    getChildren().toList flatMap { elem: IJavaElement =>
+      if (elem.getElementType() == IJavaElement.TYPE) elem.asInstanceOf[IType] +: elem.asInstanceOf[IType].getTypes()
+      else Seq[IType]()
+    }
   }
 
-  override def getType() : IType = new ScalaBinaryType(getTypeName)
-  
-  def getMainTypeName() : Array[Char] =
+  class ScalaBinaryType(name: String) extends BinaryType(this, name) {
+    lazy val mirror = {
+      allTypes.find(t => t.exists && (t.getElementName == name))
+    }
+    override def exists = mirror.isDefined
+  }
+
+  override def getType(): IType = new ScalaBinaryType(getTypeName)
+
+  def getMainTypeName(): Array[Char] =
     Util.getNameWithoutJavaLikeExtension(getElementName).toCharArray
 
-  override def getTypeName() : String = {
+  override def getTypeName(): String = {
     val lastDollar = name.lastIndexOf('$')
-    if(lastDollar == -1 || lastDollar != name.length-1)
+    if (lastDollar == -1 || lastDollar != name.length - 1)
       super.getTypeName
     else {
-      val lastDollar0 = name.lastIndexOf('$', lastDollar-1) 
+      val lastDollar0 = name.lastIndexOf('$', lastDollar - 1)
       if (lastDollar0 > -1) Util.localTypeName(name, lastDollar0, name.length()) else name
     }
   }
