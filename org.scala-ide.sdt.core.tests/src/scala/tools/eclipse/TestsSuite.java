@@ -3,6 +3,7 @@ package scala.tools.eclipse;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
+import scala.tools.eclipse.buildmanager.ProjectsCleanJobTest;
 import scala.tools.eclipse.classpath.ClasspathTests;
 import scala.tools.eclipse.compiler.settings.CompilerSettingsTest;
 import scala.tools.eclipse.compiler.settings.ContinuationPluginSettingsTest;
@@ -42,6 +43,7 @@ import scala.tools.eclipse.wizards.QualifiedNameSupportTest;
  */
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
+  ProjectsCleanJobTest.class,
   ClasspathTests.class,
   CompilerSettingsTest.class,
   ContinuationPluginSettingsTest.class,
