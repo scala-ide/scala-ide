@@ -76,11 +76,9 @@ private[classifier] trait SafeSymbol extends CompilerAccess with PimpedTrees {
         else List((sym1, pos))
       }).flatten
 
-    case AppliedTypeTree(tpe, args) if isTupleOrFunctionLiteral(tpe) =>
-      args.flatMap(safeSymbol)
-
     case AppliedTypeTree(tpe, args) =>
-      (tpe :: args).flatMap(safeSymbol)
+      if(!hasSourceCodeRepresentation(tpe)) args.flatMap(safeSymbol)
+      else (tpe :: args).flatMap(safeSymbol)
 
     case tpe @ SelectFromTypeTree(qualifier, _) =>
       global.askOption(() => tpe.symbol -> tpe.namePosition).toList ::: safeSymbol(qualifier)
@@ -132,9 +130,6 @@ private[classifier] trait SafeSymbol extends CompilerAccess with PimpedTrees {
 
   private def isStructuralType(ts: List[Tree]): Boolean =
     ts.size == 1
-
-  private def isTupleOrFunctionLiteral(tpt: Tree): Boolean =
-    tpt.toString.matches(""".*scala\.(Tuple|Function).*""") && !hasSourceCodeRepresentation(tpt)
 
   private def isContextBound(args: List[Tree]): Boolean =
     args.size == 1 && !hasSourceCodeRepresentation(args.head)

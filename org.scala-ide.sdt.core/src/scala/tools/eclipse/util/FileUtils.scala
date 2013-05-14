@@ -49,14 +49,14 @@ object FileUtils {
   
   def clearBuildErrors(file : IFile, monitor : IProgressMonitor) =
     try {
-      workspaceRunnableIn(file.getWorkspace, monitor)( m => file.deleteMarkers(plugin.problemMarkerId, true, IResource.DEPTH_INFINITE))
+      file.deleteMarkers(plugin.problemMarkerId, true, IResource.DEPTH_INFINITE)
     } catch {
       case _ : ResourceException =>
     }
   
   def clearTasks(file : IFile, monitor : IProgressMonitor) =
     try {
-      workspaceRunnableIn(file.getWorkspace, monitor) { m => file.deleteMarkers(plugin.taskMarkerId, true, IResource.DEPTH_INFINITE) }
+      file.deleteMarkers(plugin.taskMarkerId, true, IResource.DEPTH_INFINITE)
     } catch {
       case _ : ResourceException =>
     }
@@ -67,27 +67,26 @@ object FileUtils {
   def hasBuildErrors(file : IResource) : Boolean =
     file.findMarkers(plugin.problemMarkerId, true, IResource.DEPTH_INFINITE).exists(_.getAttribute(IMarker.SEVERITY) == IMarker.SEVERITY_ERROR)
 
-  def task(file: IFile, tag: String, msg: String, priority: String, offset: Int, length: Int, line: Int, monitor: IProgressMonitor) =
-    workspaceRunnableIn(file.getWorkspace, monitor) { m =>
-      val mrk = file.createMarker(plugin.taskMarkerId)
-      val values = new Array[AnyRef](taskMarkerAttributeNames.length)
+  def task(file: IFile, tag: String, msg: String, priority: String, offset: Int, length: Int, line: Int, monitor: IProgressMonitor) = {
+    val mrk = file.createMarker(plugin.taskMarkerId)
+    val values = new Array[AnyRef](taskMarkerAttributeNames.length)
 
-      val prioNum = priority match {
-        case JavaCore.COMPILER_TASK_PRIORITY_HIGH => IMarker.PRIORITY_HIGH
-        case JavaCore.COMPILER_TASK_PRIORITY_LOW  => IMarker.PRIORITY_LOW
-        case _                                    => IMarker.PRIORITY_NORMAL
-      }
-
-      values(0) = tag + " " + msg
-      values(1) = Integer.valueOf(prioNum)
-      values(2) = Integer.valueOf(IProblem.Task)
-      values(3) = Integer.valueOf(offset)
-      values(4) = Integer.valueOf(offset + length + 1)
-      values(5) = Integer.valueOf(line)
-      values(6) = java.lang.Boolean.valueOf(false)
-      values(7) = JavaBuilder.SOURCE_ID
-      mrk.setAttributes(taskMarkerAttributeNames, values);
+    val prioNum = priority match {
+      case JavaCore.COMPILER_TASK_PRIORITY_HIGH => IMarker.PRIORITY_HIGH
+      case JavaCore.COMPILER_TASK_PRIORITY_LOW  => IMarker.PRIORITY_LOW
+      case _                                    => IMarker.PRIORITY_NORMAL
     }
+
+    values(0) = tag + " " + msg
+    values(1) = Integer.valueOf(prioNum)
+    values(2) = Integer.valueOf(IProblem.Task)
+    values(3) = Integer.valueOf(offset)
+    values(4) = Integer.valueOf(offset + length + 1)
+    values(5) = Integer.valueOf(line)
+    values(6) = java.lang.Boolean.valueOf(false)
+    values(7) = JavaBuilder.SOURCE_ID
+    mrk.setAttributes(taskMarkerAttributeNames, values);
+  }
 
   private val taskMarkerAttributeNames = Array(
     IMarker.MESSAGE,
