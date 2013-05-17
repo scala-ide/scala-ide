@@ -5,7 +5,7 @@ import scala.tools.eclipse.ui.AbstractToggleHandler
 
 /**
  * Handler to toggle the Implicits Display (shortcut to avoid open Preferences,...)
- * 
+ *
  * @see scala.tools.eclipse.ui.AbstractToggleHandler
  */
 

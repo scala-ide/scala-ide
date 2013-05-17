@@ -32,12 +32,12 @@ trait ScalaElement extends JavaElement with IScalaElement {
   def getLabelText(flags : Long) : String = labelName
   def getImageDescriptor : ImageDescriptor = null
   def isVisible = true
-  
+
   override def getCompilationUnit() = {
     val cu = super.getCompilationUnit()
     if (cu != null) cu else new CompilationUnitAdapter(getClassFile().asInstanceOf[ScalaClassFile])
   }
-    
+
   override def getAncestor(ancestorType : Int) : IJavaElement = {
     val ancestor = super.getAncestor(ancestorType)
     if (ancestor != null)
@@ -59,17 +59,17 @@ class ScalaSourceTypeElement(parent : JavaElement, name : String)
     val tpe = element.getElementType
     getChildren.find(e => e.getElementName == name && e.getElementType == tpe)
   }
-  
+
   override def getType(typeName : String) : IType = {
     val tpe = super.getType(typeName)
     getCorrespondingElement(tpe).getOrElse(tpe).asInstanceOf[IType]
   }
-  
+
   override def getField(fieldName : String) : IField = {
     val field = super.getField(fieldName)
     getCorrespondingElement(field).getOrElse(field).asInstanceOf[IField]
   }
-  
+
   override def getMethod(selector : String, parameterTypeSignatures : Array[String]) : IMethod = {
     val method = super.getMethod(selector, parameterTypeSignatures)
     getCorrespondingElement(method).getOrElse(method).asInstanceOf[IMethod]
@@ -134,8 +134,8 @@ class ScalaValElement(parent : JavaElement, name: String, display : String)
       ScalaImages.PROTECTED_VAL
     else
       ScalaImages.PRIVATE_VAL
-  }  
-} 
+  }
+}
 
 class ScalaVarElement(parent : JavaElement, name: String, display : String)
   extends SourceField(parent, name) with ScalaFieldElement {
@@ -146,7 +146,7 @@ class ScalaTypeElement(parent : JavaElement, name : String, display : String)
   extends SourceField(parent, name) with ScalaFieldElement {
   override def getLabelText(flags : Long) = display
   override def getImageDescriptor = ScalaImages.SCALA_TYPE
-} 
+}
 
 class ScalaLocalVariableElement(
   parent : JavaElement, name : String,
@@ -197,31 +197,31 @@ object ScalaMemberElementInfo extends ReflectionUtils {
     getDeclaredField(jeiClazz, "children")
     true
   } catch {
-    case _ : NoSuchFieldException => false 
+    case _ : NoSuchFieldException => false
   }
   val addChildMethod = if (hasChildrenField) getDeclaredMethod(jeiClazz, "addChild", classOf[IJavaElement]) else null
 }
 
 trait SourceRefScalaElementInfo extends JavaElementInfo {
   import ScalaMemberElementInfo._
-  
+
   def getDeclarationSourceStart0 : Int = getDeclarationSourceStartMethod.invoke(this).asInstanceOf[Integer].intValue
   def getDeclarationSourceEnd0 : Int = getDeclarationSourceEndMethod.invoke(this).asInstanceOf[Integer].intValue
   def setSourceRangeStart0(start : Int) : Unit = setSourceRangeStartMethod.invoke(this, new Integer(start))
   def setSourceRangeEnd0(end : Int) : Unit = setSourceRangeEndMethod.invoke(this, new Integer(end))
 }
 
-trait ScalaMemberElementInfo extends SourceRefScalaElementInfo { 
+trait ScalaMemberElementInfo extends SourceRefScalaElementInfo {
   import ScalaMemberElementInfo._
   import java.lang.Integer
-  
+
   def addChild0(child : IJavaElement) : Unit
 
   def setFlags0(flags : Int) = setFlagsMethod.invoke(this, new Integer(flags))
   def getNameSourceStart0 : Int = getNameSourceStartMethod.invoke(this).asInstanceOf[Integer].intValue
   def getNameSourceEnd0 : Int = getNameSourceEndMethod.invoke(this).asInstanceOf[Integer].intValue
-  def setNameSourceStart0(start : Int) = setNameSourceStartMethod.invoke(this, new Integer(start)) 
-  def setNameSourceEnd0(end : Int) = setNameSourceEndMethod.invoke(this, new Integer(end)) 
+  def setNameSourceStart0(start : Int) = setNameSourceStartMethod.invoke(this, new Integer(start))
+  def setNameSourceEnd0(end : Int) = setNameSourceEndMethod.invoke(this, new Integer(end))
 }
 
 trait AuxChildrenElementInfo extends JavaElementInfo {
@@ -230,7 +230,7 @@ trait AuxChildrenElementInfo extends JavaElementInfo {
   var auxChildren : Array[IJavaElement] = if (hasChildrenField) null else new Array(0)
 
   override def getChildren = if (hasChildrenField) super.getChildren else auxChildren
-  
+
   def addChild0(child : IJavaElement) : Unit =
     if (hasChildrenField)
       addChildMethod.invoke(this, child)
@@ -248,7 +248,7 @@ class TypeParameterScalaElementInfo extends TypeParameterElementInfo with Source
 
 class ScalaElementInfo extends SourceTypeElementInfo with ScalaMemberElementInfo with HasTypeParameters {
   import ScalaMemberElementInfo._
-  
+
   override def addChild0(child : IJavaElement) : Unit = {
     if (hasChildrenField)
       addChildMethod.invoke(this, child)
@@ -257,7 +257,7 @@ class ScalaElementInfo extends SourceTypeElementInfo with ScalaMemberElementInfo
     else if (!children.contains(child))
       children = children ++ Seq(child)
   }
-  
+
   override def setHandle(handle : IType) = super.setHandle(handle)
   override def setSuperclassName(superclassName : Array[Char]) = super.setSuperclassName(superclassName)
   override def setSuperInterfaceNames(superInterfaceNames : Array[Array[Char]]) = super.setSuperInterfaceNames(superInterfaceNames)
@@ -291,21 +291,21 @@ class ScalaSourceFieldElementInfo extends SourceFieldElementInfo with ScalaMembe
 }
 
 class LazyToplevelClass(unit : ScalaCompilationUnit, name : String) extends SourceType(unit, name) with IType with ScalaElement {
-  
-  /** I rewrote this method from the previous implementation, to what I believe was the initial intention. 
+
+  /** I rewrote this method from the previous implementation, to what I believe was the initial intention.
    *  The commented line is the original, in case this causes any problems.
-   *  
+   *
    *  TODO: Revisit this once there is a better structure builder.
    */
   lazy val mirror: Option[ScalaSourceTypeElement] = {
 //    unit.getElementInfo.asInstanceOf[OpenableElementInfo].getChildren.find(e => e.getElementName == name).map(_.asInstanceOf[ScalaSourceTypeElement])
     unit.getElementInfo match {
-      case openable: OpenableElementInfo => 
+      case openable: OpenableElementInfo =>
         openable.getChildren.find(e => e.getElementType == IJavaElement.TYPE && e.getElementName == name) map (_.asInstanceOf[ScalaSourceTypeElement])
       case _ => None
     }
   }
-  
+
   override def isAnonymous = false
   override def isLocal = false
   override def isEnum = false

@@ -37,15 +37,15 @@ object TypeOfExpressionProvider extends IInformationProvider {
   }
 
   def getInformation(textViewer: ITextViewer, region: IRegion): String = {
-    
+
     EditorUtility.getActiveEditorJavaInput match {
       case scu: ScalaCompilationUnit =>
         scu.withSourceFile { (src, compiler) =>
           import compiler._
-          
-          def typeInfo(tpe: Type): String = 
+
+          def typeInfo(tpe: Type): String =
             Option(tpe).map(_.toString).getOrElse(null)
-          
+
           val response = new Response[Tree]
           askTypeAt(region.toRangePos(src), response)
           (for {
@@ -55,7 +55,7 @@ object TypeOfExpressionProvider extends IInformationProvider {
               typeInfo(rhs.tpe)
             case DefDef(_, _, _, _, _, rhs) =>
               typeInfo(rhs.tpe)
-            case _ => 
+            case _ =>
               typeInfo(t.tpe)
           }).getOrElse(null)
         }(null)

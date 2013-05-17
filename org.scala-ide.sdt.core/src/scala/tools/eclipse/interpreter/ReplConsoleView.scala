@@ -81,21 +81,21 @@ class ReplConsoleView extends ViewPart {
         if (req.isInstanceOf[Settings]) setStopped
         }}
   })
-   
+
   def interpret(text:String) {
     if (isStopped)
       setStarted
     repl.exec(text)
   }
-    
+
   private object stopReplAction extends Action("Terminate") {
-    setToolTipText("Erase History and Terminate") 
-    
+    setToolTipText("Erase History and Terminate")
+
     import IInternalDebugUIConstants._
     setImageDescriptor(DebugPluginImages.getImageDescriptor(IMG_LCL_TERMINATE))
     setDisabledImageDescriptor(DebugPluginImages.getImageDescriptor(IMG_DLCL_TERMINATE))
     setHoverImageDescriptor(DebugPluginImages.getImageDescriptor(IMG_LCL_TERMINATE))
-    
+
     override def run() {
       repl.drop()
       // TODO: uncomment to fix #1000816
@@ -103,37 +103,37 @@ class ReplConsoleView extends ViewPart {
       setStopped
     }
   }
-    
+
   private object clearConsoleAction extends Action("Clear Output") {
     setToolTipText("Clear Output")
     setImageDescriptor(ConsolePluginImages.getImageDescriptor(IInternalConsoleConstants.IMG_ELCL_CLEAR));
     setDisabledImageDescriptor(ConsolePluginImages.getImageDescriptor(IInternalConsoleConstants.IMG_DLCL_CLEAR));
-    setHoverImageDescriptor(ConsolePluginImages.getImageDescriptor(IConsoleConstants.IMG_LCL_CLEAR));   
-    
+    setHoverImageDescriptor(ConsolePluginImages.getImageDescriptor(IConsoleConstants.IMG_LCL_CLEAR));
+
     override def run() {
       textWidget.setText("")
       setEnabled(false)
     }
   }
-  
+
   private object relaunchAction extends Action("Relaunch Interpreter") {
     setToolTipText("Relaunch Interpreter and Replay History")
-    
-    import IInternalDebugUIConstants._    
+
+    import IInternalDebugUIConstants._
     setImageDescriptor(DebugPluginImages.getImageDescriptor(IMG_ELCL_TERMINATE_AND_RELAUNCH))
     setDisabledImageDescriptor(DebugPluginImages.getImageDescriptor(IMG_DLCL_TERMINATE_AND_RELAUNCH))
     setHoverImageDescriptor(DebugPluginImages.getImageDescriptor(IMG_ELCL_TERMINATE_AND_RELAUNCH))
-    
+
     override def run() {
       clearConsoleAction.run
       setStarted
-    }  
+    }
   }
-  
+
   object replayAction extends Action("Replay Interpreter History") {
     setToolTipText("Reset Interpreter and Replay All Commands")
-    
-    import IInternalDebugUIConstants._    
+
+    import IInternalDebugUIConstants._
     setImageDescriptor(DebugPluginImages.getImageDescriptor(IMG_ELCL_RESTART))
     setDisabledImageDescriptor(DebugPluginImages.getImageDescriptor(IMG_DLCL_RESTART))
     setHoverImageDescriptor(DebugPluginImages.getImageDescriptor(IMG_ELCL_RESTART))
@@ -142,19 +142,19 @@ class ReplConsoleView extends ViewPart {
       displayError("\n------ Resetting Interpreter and Replaying Command History ------\n")
       setStarted
     }
-  }  
-  
+  }
+
   object refreshOnRebuildAction extends Action("Replay History on Project Rebuild", IAction.AS_CHECK_BOX) with BuildSuccessListener {
     setToolTipText("Replay History on Project Rebuild")
-    
+
     setImageDescriptor(ScalaImages.REFRESH_REPL_TOOLBAR)
     setHoverImageDescriptor(ScalaImages.REFRESH_REPL_TOOLBAR)
-    
+
     override def run() {
       if (isChecked) scalaProject addBuildSuccessListener this
       else scalaProject removeBuildSuccessListener this
     }
-    
+
     def buildSuccessful() {
       util.SWTUtils asyncExec {
         if (!isStopped) {
@@ -164,7 +164,7 @@ class ReplConsoleView extends ViewPart {
       }
     }
   }
-  
+
   private def setStarted {
     val settings = ScalaPlugin.defaultScalaSettings()
     scalaProject.initializeCompilerSettings(settings, _ => true)
@@ -191,7 +191,7 @@ class ReplConsoleView extends ViewPart {
     isStopped = true
 
     stopReplAction.setEnabled(false)
-    
+
     setContentDescription("<terminated> " + getContentDescription)
   }
 
@@ -306,35 +306,35 @@ class ReplConsoleView extends ViewPart {
     val project = ResourcesPlugin.getWorkspace().getRoot().getProject(selectedProjectName)
     ReplConsoleView.makeActive(project, workbenchPage)
   }
-    
+
   /**
    * Create the interpreter UI
    */
   private def createInterpreterPartControl(parent: Composite) {
-    
+
     codeBgColor = new Color(parent.getDisplay, 230, 230, 230)   // light gray
     codeFgColor = new Color(parent.getDisplay, 64, 0, 128)      // eggplant
     errorFgColor = new Color(parent.getDisplay, 128, 0, 64)     // maroon
-    
+
     val panel = new Composite(parent, SWT.NONE)
     panel.setLayout(new GridLayout(2, false)) //two columns grid
-     
+
     // 1st row
     textWidget = new StyledText(panel, SWT.BORDER | SWT.H_SCROLL | SWT.V_SCROLL)
     textWidget.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1)) // span two columns
     textWidget.setEditable(false)
     textWidget.setCaret(new Caret(textWidget, SWT.NONE))
-    
-    
-    val editorFont = JFaceResources.getFont(PreferenceConstants.EDITOR_TEXT_FONT)    
+
+
+    val editorFont = JFaceResources.getFont(PreferenceConstants.EDITOR_TEXT_FONT)
     textWidget.setFont(editorFont) // java editor font
-    
+
     // 2nd row
     val inputLabel = new Label(panel, SWT.NULL)
     inputLabel.setText("Evaluate:")
-    
+
     inputField = new CommandField(panel, SWT.BORDER | SWT.SINGLE) {
-      override protected def helpText = "<type an expression>" 
+      override protected def helpText = "<type an expression>"
       setEvaluator(new scala.tools.eclipse.ui.CommandField.Evaluator {
         override def eval(command: String) {
           interpret(command)
@@ -343,7 +343,7 @@ class ReplConsoleView extends ViewPart {
     }
     inputField.setFont(editorFont)
     inputField.setLayoutData(new GridData(GridData.FILL_HORIZONTAL))
-     
+
     val toolbarManager = getViewSite.getActionBars.getToolBarManager
     toolbarManager.add(replayAction)
     toolbarManager.add(new Separator)
@@ -353,9 +353,9 @@ class ReplConsoleView extends ViewPart {
     toolbarManager.add(clearConsoleAction)
     toolbarManager.add(new Separator)
     toolbarManager.add(refreshOnRebuildAction)
-    
+
     setPartName("Scala Interpreter (" + projectName + ")")
-    
+
     // Register the interpreter for the project
     scalaProject= ScalaPlugin.plugin.getScalaProject(ResourcesPlugin.getWorkspace().getRoot().getProject(projectName))
     stopReplAction.run()
@@ -384,32 +384,32 @@ class ReplConsoleView extends ViewPart {
   private def displayOutput(text: String) {
     appendText(text, null, null, SWT.NORMAL)
   }
-  
+
   private def displayError(text: String) {
     appendText(text, errorFgColor, null, SWT.NORMAL)
   }
-  
+
   private def appendText(text: String, fgColor: Color, bgColor: Color, fontStyle: Int, insertNewline: Boolean = false) {
     val lastOffset = textWidget.getCharCount
     val oldLastLine = textWidget.getLineCount
-    
-    val outputStr = 
+
+    val outputStr =
       if (insertNewline) "\n" + text.stripLineEnd + "\n\n"
       else text
 
-    textWidget.append(outputStr)        
+    textWidget.append(outputStr)
     textWidget.setStyleRange(new StyleRange(lastOffset, outputStr.length, fgColor, null, fontStyle))
-    
+
     val lastLine = textWidget.getLineCount
     if (bgColor != null)
       textWidget.setLineBackground(oldLastLine - 1, lastLine - oldLastLine, bgColor)
     textWidget.setTopIndex(textWidget.getLineCount - 1)
     textWidget.setStyleRange(new StyleRange(lastOffset, outputStr.length, fgColor, bgColor, fontStyle))
 
-    
+
     clearConsoleAction.setEnabled(true)
   }
-  
+
   override def dispose() {
     view = null
     if (projectName == null) {
@@ -420,9 +420,9 @@ class ReplConsoleView extends ViewPart {
       codeBgColor.dispose
       codeFgColor.dispose
       errorFgColor.dispose
-    
+
       repl.quit()
-      
+
       scalaProject removeBuildSuccessListener refreshOnRebuildAction
     }
   }

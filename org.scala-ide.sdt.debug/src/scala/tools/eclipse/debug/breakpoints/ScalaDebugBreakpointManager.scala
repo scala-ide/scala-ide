@@ -56,7 +56,7 @@ class ScalaDebugBreakpointManager private (/*public field only for testing purpo
     DebugPlugin.getDefault.getBreakpointManager.removeBreakpointListener(this)
     companionActor ! PoisonPill
   }
-  
+
   /**
    * Test support method.
    * Wait for a dummy event to be processed, to indicate that all previous events
@@ -76,7 +76,7 @@ private[debug] object ScalaDebugBreakpointManagerActor {
   case class BreakpointChanged(breakpoint: IBreakpoint, delta: IMarkerDelta)
 
   private final val JdtDebugUID = "org.eclipse.jdt.debug"
-    
+
   def apply(debugTarget: ScalaDebugTarget): Actor = {
     val actor = new ScalaDebugBreakpointManagerActor(debugTarget)
     actor.start()

@@ -23,13 +23,13 @@ class MethodTest extends AbstractSymbolClassifierTest {
       object A {
         {
           def `method` = 42
-          `method` 
+          `method`
         }
       }""", """
       object A {
         {
           def $ METH $ = 42
-          $ METH $ 
+          $ METH $
         }
       }""",
       Map("METH" -> Method))
@@ -81,7 +81,7 @@ class MethodTest extends AbstractSymbolClassifierTest {
       }""",
       Map("METH" -> Method))
   }
-  
+
   @Test
   def test_synthetic_function_param() {
     checkSymbolClassification("""

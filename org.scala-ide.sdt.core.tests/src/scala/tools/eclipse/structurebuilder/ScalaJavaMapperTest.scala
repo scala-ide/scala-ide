@@ -118,12 +118,12 @@ class ScalaJavaMapperTest {
       compiler.askOption { () =>
         f(compiler)(target.symbol.info.finalResultType)
       }
-    }(throw new NoSuchElementException(s"Could not find target element in $src"))
+    }(throw new NoSuchElementException("Could not find target element in "+src))
   }
 }
 
 /** This class is a function of 2 parameters, compiler and a compiler.Type.
- *  It is needed because path dependent type as parameters are not allowed 
+ *  It is needed because path dependent type as parameters are not allowed
  *  in anonymous functions.
  */
 trait TypeTest {

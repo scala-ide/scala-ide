@@ -7,6 +7,6 @@ import org.eclipse.swt.graphics.Image
 import org.eclipse.swt.graphics.Point
 import scala.tools.eclipse.refactoring.ExtractLocalAction
 
-object ExtractLocalProposal 
-	extends ProposalRefactoringActionAdapter(
-	    new ExtractLocalAction, "Extract to local value")
+object ExtractLocalProposal
+  extends ProposalRefactoringActionAdapter(
+      new ExtractLocalAction, "Extract to local value")

@@ -10,7 +10,7 @@ import org.eclipse.jface.text.IDocumentListener
 import org.eclipse.jface.text.IDocument
 
 class MockDocument(private var s: String) extends IDocument {
- 
+
   def getChar(offset: Int): Char = s.charAt(offset)
 
   def getLength(): Int = s.length

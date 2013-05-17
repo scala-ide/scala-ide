@@ -33,7 +33,7 @@ trait PluginLogConfigurator extends AbstractUIPlugin {
   }
 
   /**
-   * Configure logging, and install a listener which will forward all 
+   * Configure logging, and install a listener which will forward all
    * log events sent to the Eclipse Logger to the plug-in's logger.
    */
   private def configure() {
@@ -45,5 +45,5 @@ trait PluginLogConfigurator extends AbstractUIPlugin {
     assert(eclipseLogListener == null)
     val pluginLogger = LogManager.getLogger(getBundle.getSymbolicName)
     eclipseLogListener = new EclipseLogListener(getLog, pluginLogger)
-  } 
+  }
 }

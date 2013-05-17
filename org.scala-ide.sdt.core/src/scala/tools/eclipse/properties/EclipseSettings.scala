@@ -145,7 +145,7 @@ trait EclipseSettings {
       control.addModifyListener(ModifyListenerSing)
     }
 
-    /* If you change anything in this class, please read the comment in the implementation of 
+    /* If you change anything in this class, please read the comment in the implementation of
      * `ScalaPlugin.defaultScalaSettings`
      */
 
@@ -169,7 +169,7 @@ trait EclipseSettings {
     }
 
     def values: List[String] = control.getText().split(',').flatMap(Trim(_)).toList
-    
+
     def isChanged = setting.value != values
     def reset() { control.setText("") }
     def apply() { setting.value = values }

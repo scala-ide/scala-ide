@@ -11,7 +11,7 @@ import scala.tools.eclipse.util.EclipseResource
  */
 private[sbtintegration] class SbtBuildReporter(underlying: BuildReporter) extends xsbti.ExtendedReporter {
   val probs = new mutable.ArrayBuffer[xsbti.Problem]
-  
+
   def reset() = {
     underlying.reset
     probs.clear()

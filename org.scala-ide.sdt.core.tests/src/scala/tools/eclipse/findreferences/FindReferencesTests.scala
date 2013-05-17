@@ -86,7 +86,7 @@ class FindReferencesTests extends FindReferencesTester with HasLogger {
   private def runTest(source: String, marker: String, expected: TestResult): Unit = {
     // Set up
     val unit = projectSetup.scalaCompilationUnit(source)
-    // FIXME: This should not be necessary, but if not done then tests randomly fail: 
+    // FIXME: This should not be necessary, but if not done then tests randomly fail:
     //        "scala.tools.nsc.interactive.NoSuchUnitError: no unit found for file XXX"
     projectSetup.reload(unit)
     if (typeCheckUnitBeforeRunningTest) projectSetup.waitUntilTypechecked(unit)
@@ -172,7 +172,7 @@ class FindReferencesTests extends FindReferencesTester with HasLogger {
     val expected = fieldVal("Referred.aVal") isReferencedBy method("Referring.anotherMethod") and method("Referring.yetAnotherMethod")
     runTest("bug1000067_3", "FindReferencesOfClassFieldVal.scala", expected)
   }
-  
+
   @Test
   def findReferencesOfClassFieldLazyVal() {
     val expected = fieldVal("Foo.x") isReferencedBy method("Bar.meth")

@@ -22,29 +22,29 @@ import xsbti.Logger
  */
 class JavaEclipseCompiler(project: IProject, monitor: SubMonitor) extends JavaCompiler {
   private val scalaJavaBuilder = new GeneralScalaJavaBuilder
-  
+
   def plugin = ScalaPlugin.plugin
-  
+
   def compile(sources: Array[File], classpath: Array[File], output: Output, options: Array[String], log: Logger) {
     val scalaProject = plugin.getScalaProject(project)
-    
+
     val allSourceFiles = scalaProject.allSourceFiles()
     val depends = scalaProject.directDependencies
     if (allSourceFiles.exists(FileUtils.hasBuildErrors(_)))
       depends.toArray
     else {
       ensureProject
-      
+
       // refresh output directories, since SBT removes classfiles that the Eclipse
       // Java compiler expects to find
       for (folder <- scalaProject.outputFolders) {
         val container = ResourcesPlugin.getWorkspace().getRoot().getFolder(folder)
         container.refreshLocal(IResource.DEPTH_INFINITE, null)
       }
-      
+
       BuildManagerStore.INSTANCE.setJavaSourceFilesToCompile(sources, project)
-      try       
-        scalaJavaBuilder.build(INCREMENTAL_BUILD, new java.util.HashMap(), monitor) 
+      try
+        scalaJavaBuilder.build(INCREMENTAL_BUILD, new java.util.HashMap(), monitor)
       finally
         BuildManagerStore.INSTANCE.setJavaSourceFilesToCompile(null, project)
 
@@ -61,7 +61,7 @@ class JavaEclipseCompiler(project: IProject, monitor: SubMonitor) extends JavaCo
       JDTUtils.refreshPackageExplorer
     }
   }
-    
+
   def ensureProject = {
     if (scalaJavaBuilder.getProject == null)
       scalaJavaBuilder.setProject0(project)

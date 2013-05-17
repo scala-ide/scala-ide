@@ -21,7 +21,7 @@ import junit.framework.Assert
  * Test for test cases requiring nested projects (one project root is a subfolder of an other project)
  */
 object NestedProjectsTest extends TestProjectSetup("nested-parent") {
-  
+
   final val scalaProjectName= "nested-scala"
 
   /**
@@ -40,7 +40,7 @@ object NestedProjectsTest extends TestProjectSetup("nested-parent") {
     }
     ScalaPlugin.plugin.getScalaProject(workspace.getRoot.getProject(scalaProjectName))
   }
-  
+
   lazy val scalaSrcPackageRoot: IPackageFragmentRoot = {
     scalaProject.javaProject.findPackageFragmentRoot(new Path("/" + scalaProjectName + "/src"))
   }
@@ -58,13 +58,13 @@ class NestedProjectsTest {
     // clean the nested project
     scalaProject.underlying.build(IncrementalProjectBuilder.CLEAN_BUILD, new NullProgressMonitor)
     scalaProject.underlying.build(IncrementalProjectBuilder.FULL_BUILD, new NullProgressMonitor)
-    
+
     // update and recompile Java_01.java
     val compilationUnit= scalaSrcPackageRoot.getPackageFragment("test").getCompilationUnit("Java_01.java")
     SDTTestUtils.changeContentOfFile(compilationUnit.getResource().asInstanceOf[IFile], changed_test_Java_01)
-    
+
     scalaProject.underlying.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, new NullProgressMonitor)
-    
+
     // if the compilation failed, the class file was not generated
     val classFile= scalaProject.underlying.getFile("bin/test/Java_01.class")
     assertTrue("Missing class file", classFile.exists())

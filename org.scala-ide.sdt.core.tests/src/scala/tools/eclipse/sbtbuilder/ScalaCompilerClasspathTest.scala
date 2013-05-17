@@ -24,12 +24,12 @@ class ScalaCompilerClasspathTest {
   import ScalaCompilerClasspathTest._
 
   val baseRawClasspath= project.javaProject.getRawClasspath()
-  
+
   @Before
   def setupWorkspace {
     SDTTestUtils.enableAutoBuild(false)
   }
-  
+
   @Test def testWithoutCompilerOnClasspath() {
     println("building " + project)
     project.clean(new NullProgressMonitor())
@@ -40,7 +40,7 @@ class ScalaCompilerClasspathTest {
     println("problem: %s: %s".format(unit, errors.toList))
     Assert.assertTrue("Single compiler error expected", errors.length == 1)
   }
-  
+
   @Test def testWithCompilerOnClasspath() {
     println("building " + project)
     project.clean(new NullProgressMonitor())

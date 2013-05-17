@@ -69,7 +69,7 @@ class ScalaDebugTargetTest {
    */
   @Test(timeout = 2000)
   def getThreadsFreeze() {
-    
+
     val debugTarget= createDebugTarget
 
     debugTarget.companionActor ! mock(classOf[VMDeathEvent])

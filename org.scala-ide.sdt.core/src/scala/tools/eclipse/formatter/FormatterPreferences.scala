@@ -26,7 +26,7 @@ object FormatterPreferences {
   implicit def prefStore2PimpedPrefStore(preferenceStore: IPreferenceStore) = new PimpedPreferenceStore(preferenceStore)
 
   class PimpedPreferenceStore(preferenceStore: IPreferenceStore) {
-    
+
     def apply(pref: PreferenceDescriptor[Boolean]) = preferenceStore.getBoolean(pref.eclipseKey)
 
     def apply(pref: PreferenceDescriptor[Int]) = preferenceStore.getInt(pref.eclipseKey)

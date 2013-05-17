@@ -21,7 +21,7 @@ import scala.tools.eclipse.InteractiveCompilationUnit
  *      scu.withSourceFile({ (sourceFile, compiler) =>
  *        // hard-wire the compiler instance in our hyperlink factory
  *        object DeclarationHyperlinkFactory extends HyperlinkFactory {
- *          protected val global: compiler.type = compiler 
+ *          protected val global: compiler.type = compiler
  *        }
  *        // now compiler.Symbol and DeclarationHyperlinkFactory.Symbol are the same type
  *        // because `global` has the singleton type `compiler.type`.

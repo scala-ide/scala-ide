@@ -23,16 +23,16 @@ trait ExtractTraitConfigurationPageGenerator {
 
   // This gives us access to refactoring.global
   this: ScalaIdeRefactoring =>
-    
+
   import refactoring.global._
-  
+
   def mkConfigPage(
-      extractableMembers: List[ValOrDefDef], 
-      selectedMembersObs: List[ValOrDefDef] => Unit, 
+      extractableMembers: List[ValOrDefDef],
+      selectedMembersObs: List[ValOrDefDef] => Unit,
       extractedNameObs: String => Unit) = {
     new ExtractTraitConfigurationPage(extractableMembers, selectedMembersObs, extractedNameObs)
   }
-  
+
   /**
    * The wizard page for ExtractTrait
    * @param extractableMembers The members that can be extracted.
@@ -100,7 +100,7 @@ trait ExtractTraitConfigurationPageGenerator {
       nameColumn.setLabelProvider(new ColumnLabelProvider() {
         override def getText(element: Any): String = element match {
           case v @ ValDef(_, name, tpt, _) => {
-            val varType = if(v.symbol.isMutable) {"var "} else {"val "} 
+            val varType = if(v.symbol.isMutable) {"var "} else {"val "}
             varType + name.toString.trim + ": " + tpt.symbol.nameString
           }
           case DefDef(_, name, tparams, vparamss, tpt, _) =>

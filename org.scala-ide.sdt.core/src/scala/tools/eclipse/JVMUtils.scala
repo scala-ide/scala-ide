@@ -11,6 +11,6 @@ trait JVMUtils { self : Global =>
   def javaName(sym : Symbol): String = sym.javaBinaryName.toString()
 
   def javaNames(syms : List[Symbol]): Array[String] = syms.toArray map (s => javaName(s))
-  
+
   def javaFlags(sym : Symbol) : Int = genASM.javaFlags(sym)
 }
