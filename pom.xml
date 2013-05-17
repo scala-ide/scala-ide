@@ -213,6 +213,14 @@
     </repository>
   </repositories>
 
+  <pluginRepositories>
+    <pluginRepository>
+      <id>sonatype.snapshot</id>
+      <name>Sonatype maven snapshot repository</name>
+      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+    </pluginRepository>
+  </pluginRepositories>
+
   <dependencyManagement>
     <dependencies>
       <!-- toolchain, Scala library -->
@@ -438,6 +446,35 @@
         <plugin>
           <artifactId>maven-clean-plugin</artifactId>
           <version>${maven-clean.plugin.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.scalastyle</groupId>
+          <artifactId>scalastyle-maven-plugin</artifactId>
+          <version>0.2.1-SNAPSHOT</version>
+          <configuration>
+            <verbose>false</verbose>
+            <failOnViolation>true</failOnViolation>
+            <includeTestSourceDirectory>true</includeTestSourceDirectory>
+            <failOnWarning>false</failOnWarning>
+            <sourceDirectories>
+              <dir>org.scala-ide.sdt.core/src</dir>
+              <dir>org.scala-ide.sdt.debug/src</dir>
+            </sourceDirectories>
+            <testSourceDirectories>
+              <dir>org.scala-ide.sdt.core.tests/src</dir>
+              <dir>org.scala-ide.sdt.core.tests/test-workspace</dir>
+              <dir>org.scala-ide.sdt.debug.tests/src</dir>
+              <dir>org.scala-ide.sdt.debug.tests/test-workspace</dir>
+            </testSourceDirectories>
+            <configLocation>scala-ide-style-config.xml</configLocation>
+          </configuration>
+          <executions>
+            <execution>
+              <goals>
+                <goal>check</goal>
+              </goals>
+            </execution>
+          </executions>
         </plugin>
       </plugins>
     </pluginManagement>
