@@ -44,12 +44,16 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings)
     private var savedTotal = 0
     private var throttledMessages = 0
   
-    // Direct copy of the mechanism in the refined build managers
     override def startUnit(phaseName: String, unitPath: String) {
+      def unitIPath: IPath = Path.fromOSString(unitPath)
+
+      // dirty-hack for ticket #1001595 until Sbt provides a better API for tracking sources recompiled by the incremental compiler
+      if(phaseName == "parser") FileUtils.toIFile(unitIPath).foreach(clearMarkers)
+
+      // What follows is a direct copy of the mechanism in the refined build managers
       throttledMessages += 1
       if (throttledMessages == 10) {
         throttledMessages = 0
-        val unitIPath: IPath = Path.fromOSString(unitPath)
         val projectPath = project.javaProject.getProject.getLocation
         monitor.subTask("phase " + phaseName + " for " + unitIPath.makeRelativeTo(projectPath))
       }
@@ -186,13 +190,14 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings)
   }
   
   private def buildingFiles(included: scala.collection.Set[AbstractFile]) {
-    for(file <- included) {
-      file match {
-        case r @ EclipseResource(f : IFile) =>
-          FileUtils.clearBuildErrors(f, null)
-          FileUtils.clearTasks(f, null)
-        case _ =>
-      }
+    included foreach {
+      case EclipseResource(f : IFile) => clearMarkers(f)
+      case _ =>
     }
+  }
+  
+  private def clearMarkers(f: IFile): Unit = {
+    FileUtils.clearBuildErrors(f, null)
+    FileUtils.clearTasks(f, null)
   }
 }
