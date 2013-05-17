@@ -125,7 +125,7 @@ class ScalaClassFile(parent : PackageFragment, name : String, sourceFile : Strin
   def getFileName() : Array[Char] = getPath.toString.toCharArray
 
   override def validateExistence(underlyingResource : IResource) : IStatus = {
-	if ((underlyingResource ne null) && !underlyingResource.isAccessible) newDoesNotExistStatus() else JavaModelStatus.VERIFIED_OK
+  if ((underlyingResource ne null) && !underlyingResource.isAccessible) newDoesNotExistStatus() else JavaModelStatus.VERIFIED_OK
   }
 
   def currentProblems: List[IProblem] = Nil

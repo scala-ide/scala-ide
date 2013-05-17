@@ -6,16 +6,16 @@
 package scala.tools.eclipse.wizards
 
 object BufferSupport {
-	
+
   type Buffer = {
     def append(s: String): Unit
     def getLength(): Int
-	def replace(offset: Int, length: Int, text: String): Unit
-	def getContents(): String
+  def replace(offset: Int, length: Int, text: String): Unit
+  def getContents(): String
   }
 
   implicit protected[wizards] def stringBuilderToBuffer(bldr: StringBuilder) =
-	  new BuilderAdapter(bldr)
+    new BuilderAdapter(bldr)
 }
 
 trait BufferSupport {
@@ -29,16 +29,16 @@ trait BufferSupport {
 
   def writeTo(buffer: Buffer)(implicit ld: String) {
     val s = contents
-	
+
     if(offset == -1) {
-	  offset = buffer.getLength
-	  buffer.append(s)
-	}
-	else {
-	  buffer.replace(offset, length, s)
-	}
-	
-	length = s.length
+    offset = buffer.getLength
+    buffer.append(s)
+  }
+  else {
+    buffer.replace(offset, length, s)
+  }
+
+  length = s.length
   }
 }
 
@@ -67,9 +67,9 @@ trait QualifiedNameSupport extends SuperTypeSupport {
   type Parameters = List[String]
 
   private val toScalaParameters = (c: Char) => c != '['
-	
+
   private val toJavaParameters = (c: Char) => c != '<'
-	
+
   private val splitOffParameters = (s: String) =>
     if(s.contains('['))
       s span toScalaParameters
@@ -80,14 +80,14 @@ trait QualifiedNameSupport extends SuperTypeSupport {
 
   private val removeBrackets = (s: String) =>
     if(s.size > 2) s.slice(1, s.length-1) else ""
-    	
+
   private val makeList = (s: String) =>
     if(s.length > 0) s.split(',').toList else Nil
 
   private val listOf = makeList compose removeBrackets
 
   val withoutPackage = (st: SuperType) => {
-	val st3 = if(st._3.nonEmpty) st._3.mkString("[",",","]") else ""
+  val st3 = if(st._3.nonEmpty) st._3.mkString("[",",","]") else ""
     st._2 + st3
   }
 
@@ -106,18 +106,18 @@ trait QualifiedNameSupport extends SuperTypeSupport {
   }
 
   val packageOf = (typeDeclaration: String) => {
-	val (pn, tn) = packageAndTypeNameOf(typeDeclaration)
-	pn
+  val (pn, tn) = packageAndTypeNameOf(typeDeclaration)
+  pn
   }
 
   val typeNameOf = (typeDeclaration: String) => {
-	val (pn, tn) = packageAndTypeNameOf(typeDeclaration)
-	tn
+  val (pn, tn) = packageAndTypeNameOf(typeDeclaration)
+  tn
   }
 
   val parametersOf = (typeDeclaration: String) => {
-	val (packageAndType, params) = splitOffParameters(typeDeclaration)
-	listOf(params)
+  val (packageAndType, params) = splitOffParameters(typeDeclaration)
+  listOf(params)
   }
 
   val packageAndTypeNameOf = (typeDeclaration: String) => {

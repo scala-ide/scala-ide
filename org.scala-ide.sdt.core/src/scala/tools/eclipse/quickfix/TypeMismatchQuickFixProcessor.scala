@@ -11,7 +11,7 @@ import java.util.regex.Pattern
  * the result is a list of strings which should replace the annotation string
  */
 object TypeMismatchQuickFixProcessor extends
-	((String, String, String) => List[String]) {
+  ((String, String, String) => List[String]) {
 
   /** list containing all type mismatch quick fix cases that this object should go through */
   val cases: List[TypeMismatchQuickFixCase] =
@@ -50,11 +50,11 @@ object TypeMismatchQuickFixProcessor extends
   def apply(foundType: String, requiredType: String, annotationString: String): List[String] =
     // go through all cases and collect lists of replacement strings
     (List[String]() /: cases) {
-    	case (list, ftrtc:FoundToRequiredTypeCase) => {
-	       list ++ ftrtc.apply(foundType, requiredType, annotationString)
-    	}
-  	}
-	
+      case (list, ftrtc:FoundToRequiredTypeCase) => {
+         list ++ ftrtc.apply(foundType, requiredType, annotationString)
+      }
+    }
+
 }
 
 /** trait marking all type mismatch quick fix cases */
@@ -66,12 +66,12 @@ trait TypeMismatchQuickFixCase
  */
 abstract class SimpleFormatQuickFixCase(formatStrings: List[String]) extends TypeMismatchQuickFixCase {
   def apply(listOfInjectStrings: Seq[String]*) =
-		for (
-	    // iterate through all sequences of strings to inject
-	    injectString <- listOfInjectStrings;
-	    // iterate through all given format
-	    formatString <- formatStrings
-	    // yield a string when inject strings are applied to the format string
+    for (
+      // iterate through all sequences of strings to inject
+      injectString <- listOfInjectStrings;
+      // iterate through all given format
+      formatString <- formatStrings
+      // yield a string when inject strings are applied to the format string
     ) yield { formatString.format( injectString:_* ) }
 }
 
@@ -98,25 +98,25 @@ case class FoundToRequiredTypeCase(formatStrings: List[String],
       if (
         // fold all groups and compare them - capturing group count must be the same for both patterns
         (true /: (1 to foundMatcher.groupCount()) ) {
-        	case (false, _) => false
-        	case (result, ind) => foundMatcher.group(ind) == requiredMatcher.group(ind)
-      	}
+          case (false, _) => false
+          case (result, ind) => foundMatcher.group(ind) == requiredMatcher.group(ind)
+        }
       ) {
         // get annotation matcher
         val annotationMatcher = annotationExtract.matcher(annotationString)
         // check if find can pass (only single match is expected)
         if (annotationMatcher.find) {
-	        // get injection strings
-	        val injectStrings =
-	          for (ind <- 1 to annotationMatcher.groupCount()) yield { annotationMatcher.group(ind) }
-	        // apply them to the format string
-	        super.apply(injectStrings)
+          // get injection strings
+          val injectStrings =
+            for (ind <- 1 to annotationMatcher.groupCount()) yield { annotationMatcher.group(ind) }
+          // apply them to the format string
+          super.apply(injectStrings)
         // in case annotation matcher cannot find
         } else Nil
       }
       // in case groups don't match
       else Nil
-  	// in case matchers fail
+    // in case matchers fail
     } else Nil
   }
 }

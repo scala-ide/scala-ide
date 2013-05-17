@@ -18,7 +18,7 @@ trait ImportSupport extends QualifiedNameSupport with BufferSupport {
 }
 
 object ImportSupport {
-	
+
   def apply(packageName: String): ImportSupport = {
     new ImportSupportImpl(Set("scala", "java.lang", packageName))
   }
@@ -26,34 +26,34 @@ object ImportSupport {
   private class ImportSupportImpl(ignoredKeys: Set[String])
     extends ImportSupport {
 
-	val importMap: MutMap[String, MutSet[String]] = MutMap.empty
-	
-	def addImport(qualifiedTypeName: String): String = {
-	  val (key, value) = packageAndTypeNameOf(qualifiedTypeName)
-	  importMap.getOrElseUpdate(key, MutSet(value)) + value
-	  value
-	}
+  val importMap: MutMap[String, MutSet[String]] = MutMap.empty
 
-	def addImports(qualifiedTypeNames: Seq[String]) {
-	  qualifiedTypeNames foreach addImport
-	}
-	
-	def getImports = {
+  def addImport(qualifiedTypeName: String): String = {
+    val (key, value) = packageAndTypeNameOf(qualifiedTypeName)
+    importMap.getOrElseUpdate(key, MutSet(value)) + value
+    value
+  }
 
-	  def toBuilder(v: MutSet[String]): String = v.toList match {
-	    case List(x) => x
-	    case List(values @ _*) => values.toSet.mkString("{ ", ", ", " }")
-	  }
-	
-	  def thatAreImplicit(key: String) = !ignoredKeys.contains(key)
-	
-	  def concatKeyWithNames(kv: (String, String)) = kv._1 + "." + kv._2
-	
-	  importMap.filterKeys(thatAreImplicit).
-	    mapValues(toBuilder).toList.map(concatKeyWithNames)
-	}
-	
-	protected def contents(implicit ld: String) =
-		templates.importsTemplate(getImports)
+  def addImports(qualifiedTypeNames: Seq[String]) {
+    qualifiedTypeNames foreach addImport
+  }
+
+  def getImports = {
+
+    def toBuilder(v: MutSet[String]): String = v.toList match {
+      case List(x) => x
+      case List(values @ _*) => values.toSet.mkString("{ ", ", ", " }")
+    }
+
+    def thatAreImplicit(key: String) = !ignoredKeys.contains(key)
+
+    def concatKeyWithNames(kv: (String, String)) = kv._1 + "." + kv._2
+
+    importMap.filterKeys(thatAreImplicit).
+      mapValues(toBuilder).toList.map(concatKeyWithNames)
+  }
+
+  protected def contents(implicit ld: String) =
+    templates.importsTemplate(getImports)
   }
 }

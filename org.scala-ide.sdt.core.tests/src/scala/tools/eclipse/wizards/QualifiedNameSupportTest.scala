@@ -8,7 +8,7 @@ package scala.tools.eclipse.wizards
 import org.junit.{Test, Assert}
 
 class QualifiedNameSupportTest extends QualifiedNameSupport {
-	
+
   import Assert._
 
   private val Test_Data = "scala.collection.immutable.Set[T]"

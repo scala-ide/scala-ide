@@ -256,7 +256,7 @@ trait ScalaCompilationUnit extends Openable
     val region = EditorUtils.textSelection2region(selection)
 
     Option(detectionStrategy.detectHyperlinks(editor, region, canShowMultipleHyperlinks = false)) match {
-      case Some(Array(first, _*)) => first.open	
+      case Some(Array(first, _*)) => first.open
       case _ => ()
     }
   }

@@ -12,7 +12,7 @@ import scala.tools.eclipse.ui.OpenExternalFile
 
 class RunDiagnosticAction extends IObjectActionDelegate with IWorkbenchWindowActionDelegate {
   private var parentWindow: IWorkbenchWindow = null
-	
+
   val RUN_DIAGNOSTICS = "org.scala-ide.sdt.ui.runDiag.action"
   val REPORT_BUG      = "org.scala-ide.sdt.ui.reportBug.action"
   val OPEN_LOG_FILE   = "org.scala-ide.sdt.ui.openLogFile.action"

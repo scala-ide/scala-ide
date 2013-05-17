@@ -36,7 +36,7 @@ class ScalaMoveParticipant extends MoveParticipant {
 
         if(targetPackage == null) {
           val msg = "Could not find the target package for "+ destination.getFullPath +". Scala source files will not " +
-          		"be refactored."
+              "be refactored."
           return RefactoringStatus.createWarningStatus(msg)
         }
 

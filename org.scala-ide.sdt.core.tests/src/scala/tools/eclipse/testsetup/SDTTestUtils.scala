@@ -196,8 +196,8 @@ object SDTTestUtils {
   def findMarker(marker: String) = new {
     import org.eclipse.jdt.internal.compiler.env.ICompilationUnit
     def in(unit: ICompilationUnit): Seq[Int] = {
-    	val contents = unit.getContents()
-    	SDTTestUtils.positionsOf(contents, marker)
+      val contents = unit.getContents()
+      SDTTestUtils.positionsOf(contents, marker)
     }
   }
 
