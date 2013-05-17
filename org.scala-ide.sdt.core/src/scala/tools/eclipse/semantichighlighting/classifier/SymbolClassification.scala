@@ -30,8 +30,8 @@ private object SymbolClassification {
     TemplateVal -> Set(Type),
     Object -> Set(CaseClass)
   )
-    
-  
+
+
 }
 
 class SymbolClassification(protected val sourceFile: SourceFile, val global: ScalaPresentationCompiler, useSyntacticHints: Boolean)
@@ -39,7 +39,7 @@ class SymbolClassification(protected val sourceFile: SourceFile, val global: Sca
 
   import SymbolClassification._
   import global.{ Symbol, Position, NoSymbol }
-  
+
   def compilationUnitOfFile(f: AbstractFile) = global.unitOfFile.get(f)
 
   protected lazy val syntacticInfo =
@@ -49,12 +49,12 @@ class SymbolClassification(protected val sourceFile: SourceFile, val global: Sca
 
   private def canSymbolBeReferencedInSource(sym: Symbol): Boolean = {
     def isSyntheticMethodParam(sym: Symbol): Boolean = sym.isSynthetic && sym.isValueParameter
-    
-    !sym.isAnonymousFunction && 
+
+    !sym.isAnonymousFunction &&
     !sym.isAnonymousClass &&
     !isSyntheticMethodParam(sym)
   }
-  
+
   def classifySymbols(progressMonitor: IProgressMonitor): List[SymbolInfo] = {
     if(progressMonitor.isCanceled()) return Nil
 
@@ -82,9 +82,9 @@ class SymbolClassification(protected val sourceFile: SourceFile, val global: Sca
         if sym != NoSymbol
       } {
         val inInterpolatedString = syntacticInfo.identifiersInStringInterpolations.contains(getOccurrenceRegion(sym)(pos).orNull)
-        symAndPos(SymbolGroup(sym, inInterpolatedString)) = pos :: symAndPos(SymbolGroup(sym, inInterpolatedString)) 
+        symAndPos(SymbolGroup(sym, inInterpolatedString)) = pos :: symAndPos(SymbolGroup(sym, inInterpolatedString))
       }
-      
+
       if (progressMonitor.isCanceled()) Nil
       else {
         (for {
@@ -97,19 +97,19 @@ class SymbolClassification(protected val sourceFile: SourceFile, val global: Sca
 
     val prunedSymbolInfos = prune(rawSymbolInfos)
     if (progressMonitor.isCanceled()) return Nil
-    
+
     val all: Set[IRegion] = rawSymbolInfos.flatMap(_.regions).toSet
     if (progressMonitor.isCanceled()) return Nil
 
     val localVars: Set[IRegion] = rawSymbolInfos.collect { case SymbolInfo(LocalVar, regions, _, _) => regions }.flatten.toSet
     if (progressMonitor.isCanceled()) return Nil
-    
+
     val symbolInfosFromSyntax = getSymbolInfosFromSyntax(syntacticInfo, localVars, all)
     if (progressMonitor.isCanceled()) return Nil
 
     (symbolInfosFromSyntax ++ prunedSymbolInfos) filter { _.regions.nonEmpty } distinct
   }
-  
+
   private def getSymbolInfo(sym: Symbol, poss: List[Position], inInterpolatedString: Boolean): SymbolInfo = {
     val regions = poss.flatMap(getOccurrenceRegion(sym)).toList
     // isDeprecated may trigger type completion for annotations
@@ -147,7 +147,7 @@ class SymbolClassification(protected val sourceFile: SourceFile, val global: Sca
   }
 
   private def prune(rawSymbolInfos: Seq[SymbolInfo]): Seq[SymbolInfo] = {
-    def findRegionsWithSymbolType(symbolType: SymbolType): Set[IRegion] = 
+    def findRegionsWithSymbolType(symbolType: SymbolType): Set[IRegion] =
       rawSymbolInfos.collect { case SymbolInfo(`symbolType`, regions, _, _) => regions }.flatten.toSet
 
     val symbolTypeToRegion: Map[SymbolType, Set[IRegion]] = {
@@ -161,7 +161,7 @@ class SymbolClassification(protected val sourceFile: SourceFile, val global: Sca
       }
     }
 
-    def pruneMisidentifiedSymbols(symbolInfo: SymbolInfo): SymbolInfo = 
+    def pruneMisidentifiedSymbols(symbolInfo: SymbolInfo): SymbolInfo =
       symbolTypeToRegion.get(symbolInfo.symbolType) match {
         case Some(regionsToRemove) => symbolInfo.copy(regions = symbolInfo.regions filterNot regionsToRemove)
         case None => symbolInfo

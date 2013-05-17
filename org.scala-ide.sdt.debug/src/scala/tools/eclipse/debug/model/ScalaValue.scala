@@ -15,7 +15,7 @@ import com.sun.jdi.ReferenceType
 object ScalaValue {
 
   /**
-   * Returns the given JDI value wrapped 
+   * Returns the given JDI value wrapped
    */
   def apply(value: Value, target: ScalaDebugTarget): ScalaValue = {
     value match {
@@ -84,8 +84,8 @@ abstract class ScalaValue(val underlying: Value, target: ScalaDebugTarget) exten
 
   final override def getVariables(): Array[IVariable] =
     wrapJDIException("Exception while retrieving variables") { doGetVariables() }
-  
-  final override def hasVariables(): Boolean = 
+
+  final override def hasVariables(): Boolean =
     wrapJDIException("Exception while checking if debug element has variables") { doHasVariables() }
 
   protected def doGetReferenceTypeName(): String
@@ -101,15 +101,15 @@ class ScalaArrayReference(override val underlying: ArrayReference, target: Scala
   protected override def doGetReferenceTypeName(): String = "scala.Array"
   protected override def doGetValueString(): String = "%s(%d) (id=%d)".format(ScalaStackFrame.getSimpleName(underlying.referenceType.signature), getSize, underlying.uniqueID)
   protected override def doGetVariables(): Array[IVariable] = getVariables(0, getSize)
-  protected override def doHasVariables(): Boolean = getSize > 0 
-  
+  protected override def doHasVariables(): Boolean = getSize > 0
+
   // Members declared in org.eclipse.debug.core.model.IIndexedValue
-  
+
   override def getVariable(offset: Int) : IVariable = new ScalaArrayElementVariable(offset, this)
-  
+
   override def getVariables(offset: Int, length: Int) : Array[IVariable] = (offset until offset + length).map(new ScalaArrayElementVariable(_, this)).toArray
-  
-  override def getSize(): Int = 
+
+  override def getSize(): Int =
     wrapJDIException("Exception while retrieving size") { underlying.length }
 
   override def getInitialOffset(): Int = 0
@@ -160,15 +160,15 @@ class ScalaObjectReference(override val underlying: ObjectReference, target: Sca
   protected override def doHasVariables(): Boolean = !referenceType.allFields.isEmpty
 
   // Members declared in scala.tools.eclipse.debug.model.HasFieldValue
-  
+
   protected override def getReferenceType: ReferenceType = underlying.referenceType()
-  
+
   protected override def getJdiFieldValue(field: Field): Value = underlying.getValue(field)
-  
+
   // Members declared in scala.tools.eclipse.debug.model.HasMethodInvocation
-  
+
   protected[model] override def classType: ClassType = referenceType.asInstanceOf[ClassType]
-  
+
   protected[model] def jdiInvokeMethod(method: Method, thread: ScalaThread, args: Value*): Value = thread.invokeMethod(underlying, method, args:_*)
 
   // -----
@@ -178,7 +178,7 @@ class ScalaObjectReference(override val underlying: ObjectReference, target: Sca
    */
   private def getBoxedPrimitiveValue(): String = {
     ScalaDebugModelPresentation.computeDetail(fieldValue("value"))
-  } 
+  }
 }
 
 class ScalaNullValue(target: ScalaDebugTarget) extends ScalaValue(null, target) {

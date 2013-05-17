@@ -27,18 +27,18 @@ import org.eclipse.core.runtime.IPath
 
 
 class ScalaSourceFileProvider extends SourceFileProvider {
-  override def createFrom(path: IPath): Option[InteractiveCompilationUnit] = 
+  override def createFrom(path: IPath): Option[InteractiveCompilationUnit] =
     ScalaSourceFile.createFromPath(path.toString)
 }
 
 object ScalaSourceFile {
   val handleFactory = new HandleFactory
-  
+
   def createFromPath(path : String) : Option[ScalaSourceFile] = {
     if (!path.endsWith(".scala"))
       None
     else {
-      val openable = handleFactory.createOpenable(path, null) 
+      val openable = handleFactory.createOpenable(path, null)
       openable match {
         case ssf : ScalaSourceFile => Some(ssf)
         case _ => None
@@ -47,13 +47,13 @@ object ScalaSourceFile {
   }
 }
 
-class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCopyOwner : WorkingCopyOwner) 
+class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCopyOwner : WorkingCopyOwner)
   extends JDTCompilationUnit(fragment, elementName, workingCopyOwner) with ScalaCompilationUnit with IScalaSourceFile {
 
   override def getMainTypeName : Array[Char] =
     getElementName.substring(0, getElementName.length - ".scala".length).toCharArray()
 
-  /** Schedule this source file for reconciliation. Add the file to 
+  /** Schedule this source file for reconciliation. Add the file to
    *  the loaded files managed by the presentation compiler.
    */
   override def scheduleReconcile(): Response[Unit] = {
@@ -61,13 +61,13 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
     val res = scalaProject.withSourceFile(this) { (sf, compiler) =>
       compiler.askReload(this, getContents)
     } ()
-    
+
     this.reconcile(
         ICompilationUnit.NO_AST,
         false /* don't force problem detection */,
         null /* use primary owner */,
         null /* no progress monitor */);
-    
+
     res
   }
 
@@ -78,7 +78,7 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
       astLevel : Int,
       reconcileFlags : Int,
       workingCopyOwner : WorkingCopyOwner,
-      monitor : IProgressMonitor) : org.eclipse.jdt.core.dom.CompilationUnit = {    
+      monitor : IProgressMonitor) : org.eclipse.jdt.core.dom.CompilationUnit = {
     ReconciliationParticipantsExtensionPoint.runBefore(this, monitor, workingCopyOwner)
     val result = super.reconcile(ICompilationUnit.NO_AST, reconcileFlags, workingCopyOwner, monitor)
     ReconciliationParticipantsExtensionPoint.runAfter(this, monitor, workingCopyOwner)
@@ -99,7 +99,7 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
   override def codeSelect(offset : Int, length : Int, workingCopyOwner : WorkingCopyOwner) : Array[IJavaElement] =
     codeSelect(this, offset, length, workingCopyOwner)
 
-  override lazy val file : AbstractFile = { 
+  override lazy val file : AbstractFile = {
     val res = try { getCorrespondingResource } catch { case _: JavaModelException => null }
     res match {
       case f : IFile => new EclipseFile(f)
@@ -116,9 +116,9 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
   override def currentProblems(): List[IProblem] = withSourceFile { (src, compiler) =>
     compiler.problemsOf(this)
   } (List())
-  
+
   override def getType(name : String) : IType = new LazyToplevelClass(this, name)
-  
+
   override def getContents() : Array[Char] = {
     // in the following case, super#getContents() logs an exception for no good reason
     if (getBufferManager().getBuffer(this) == null && getResource().getLocation() == null && getResource().getLocationURI() == null) {
@@ -132,7 +132,7 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
     compiler.askToDoFirst(this)
     reload()
   }
-  
+
   /** Ask the compiler to reload {{{this}}} source. */
   final def reload(): Unit = scalaProject.doWithPresentationCompiler { _.askReload(this, getContents) }
 

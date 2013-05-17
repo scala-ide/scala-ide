@@ -12,7 +12,7 @@ import java.util.regex.Pattern
  */
 object TypeMismatchQuickFixProcessor extends
 	((String, String, String) => List[String]) {
-  
+
   /** list containing all type mismatch quick fix cases that this object should go through */
   val cases: List[TypeMismatchQuickFixCase] =
     List(
@@ -39,7 +39,7 @@ object TypeMismatchQuickFixProcessor extends
 //        Pattern.compile("(?:java\\.lang\\.)([a-zA-Z&&[^\\(\\)]]+)\\(.*\\)"), Pattern.compile("Option\\[(.*)\\]"), Pattern.compile("^(.*)$")
 //      )
     )
-  
+
   /**
    * apply method for getting list of replacement strings
    * @param foundType extracted found type string
@@ -54,18 +54,18 @@ object TypeMismatchQuickFixProcessor extends
 	       list ++ ftrtc.apply(foundType, requiredType, annotationString)
     	}
   	}
-	  
+	
 }
 
 /** trait marking all type mismatch quick fix cases */
 trait TypeMismatchQuickFixCase
 
-/** 
+/**
  * class which is to be inherited if quick fix simply injects a sequence of strings into a format strings of
  * form "... %s... %s..."
  */
 abstract class SimpleFormatQuickFixCase(formatStrings: List[String]) extends TypeMismatchQuickFixCase {
-  def apply(listOfInjectStrings: Seq[String]*) = 
+  def apply(listOfInjectStrings: Seq[String]*) =
 		for (
 	    // iterate through all sequences of strings to inject
 	    injectString <- listOfInjectStrings;
@@ -75,12 +75,12 @@ abstract class SimpleFormatQuickFixCase(formatStrings: List[String]) extends Typ
     ) yield { formatString.format( injectString:_* ) }
 }
 
-/** 
+/**
  * class which checks whether found type string and required type string match - it does by
  * capturing all groups according to the found and required patterns and compares them for match -
  * if all match, the replacement is proceeded by extracting inject strings from the annotation pattern
  * and applying them to SimpleFormatQuickFixCase
- * 
+ *
  * found and required patterns should extract the same number of groups
  * annotation string should extract required number of groups to feed the given format string
  */
@@ -90,12 +90,12 @@ case class FoundToRequiredTypeCase(formatStrings: List[String],
     // get matchers
     val foundMatcher = found.matcher(foundType)
     val requiredMatcher = required.matcher(requiredType)
-    
+
     // if both matched
     // NOTE (we expect only a single match)
     if (foundMatcher.find && requiredMatcher.find) {
       // check if all groups match
-      if ( 
+      if (
         // fold all groups and compare them - capturing group count must be the same for both patterns
         (true /: (1 to foundMatcher.groupCount()) ) {
         	case (false, _) => false

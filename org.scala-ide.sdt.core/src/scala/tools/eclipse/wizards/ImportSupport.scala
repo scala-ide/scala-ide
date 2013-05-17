@@ -1,7 +1,7 @@
 /*
  * Copyright 2010 LAMP/EPFL
  * @author Tim Clendenen
- * 
+ *
  */
 package scala.tools.eclipse.wizards
 
@@ -23,7 +23,7 @@ object ImportSupport {
     new ImportSupportImpl(Set("scala", "java.lang", packageName))
   }
 
-  private class ImportSupportImpl(ignoredKeys: Set[String]) 
+  private class ImportSupportImpl(ignoredKeys: Set[String])
     extends ImportSupport {
 
 	val importMap: MutMap[String, MutSet[String]] = MutMap.empty
@@ -33,7 +33,7 @@ object ImportSupport {
 	  importMap.getOrElseUpdate(key, MutSet(value)) + value
 	  value
 	}
-  
+
 	def addImports(qualifiedTypeNames: Seq[String]) {
 	  qualifiedTypeNames foreach addImport
 	}
@@ -44,16 +44,16 @@ object ImportSupport {
 	    case List(x) => x
 	    case List(values @ _*) => values.toSet.mkString("{ ", ", ", " }")
 	  }
-	   
+	
 	  def thatAreImplicit(key: String) = !ignoredKeys.contains(key)
-	  
+	
 	  def concatKeyWithNames(kv: (String, String)) = kv._1 + "." + kv._2
-	   
+	
 	  importMap.filterKeys(thatAreImplicit).
 	    mapValues(toBuilder).toList.map(concatKeyWithNames)
 	}
 	
-	protected def contents(implicit ld: String) = 
+	protected def contents(implicit ld: String) =
 		templates.importsTemplate(getImports)
   }
 }

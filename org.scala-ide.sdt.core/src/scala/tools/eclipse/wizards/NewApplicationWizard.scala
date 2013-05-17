@@ -27,7 +27,7 @@ object NewApplicationWizard {
   private val TEMPLATE_WITHOUT_APP =
     """object %s {
       |  def main(args: Array[String]) {
-      |    
+      |
       |  }
       |}""".stripMargin
 
@@ -95,7 +95,7 @@ class NewApplicationWizard extends BasicNewResourceWizard with HasLogger {
     case None => true
     case Some(pkg) =>
       tryExecute(createApplication(page.getApplicationName, pkg)).getOrElse(false)
-  }    
+  }
 
   private def openInEditor(file: IFile) = {
     selectAndReveal(file)

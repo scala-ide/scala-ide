@@ -18,6 +18,6 @@ class ScalaRetargettableActionAdapterFactory extends IAdapterFactory {
     else
       null
 
-  override def getAdapterList : Array[Class[_]] = 
+  override def getAdapterList : Array[Class[_]] =
     Array(classOf[IRunToLineTarget], classOf[IToggleBreakpointsTarget])
 }

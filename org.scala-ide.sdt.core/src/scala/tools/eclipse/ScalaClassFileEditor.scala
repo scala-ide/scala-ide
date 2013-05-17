@@ -40,7 +40,7 @@ class ScalaClassFileEditor extends ClassFileEditor with ScalaEditor {
         case _ => super.getCorrespondingElement(element)
     }
   }
-  
+
     override protected def createActions() {
     super.createActions()
     val openAction = new Action {

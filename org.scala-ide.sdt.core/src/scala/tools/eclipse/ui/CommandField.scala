@@ -43,7 +43,7 @@ class CommandField(parent: Composite, style: Int) extends StyledText(parent, sty
 
     private def appendHistory(expr: String) {
       history += expr
-      // every time a new command is pushed in the history, the 
+      // every time a new command is pushed in the history, the
       // currently tracked history position (used for history navigation
       // via ARROW_UP/DOWN keys) is resetted.
       resetHistoryPos()
@@ -93,17 +93,17 @@ class CommandField(parent: Composite, style: Int) extends StyledText(parent, sty
     }
   }
 
-  /** Handles the display of a help text message that should describe the kind 
+  /** Handles the display of a help text message that should describe the kind
    * of input that `CommandField` expects.
    * When the input field gains the focus, the help text is automatically hidden.
-   * The help text message is re-displayed when the field is empty and it lose the 
+   * The help text message is re-displayed when the field is empty and it lose the
    * focus.
-   * 
+   *
    *  Clients of `CommandField` can change the default help message as follows:
-   *  
+   *
    *   val inputField = new CommandField(panel, SWT.BORDER | SWT.SINGLE) {
    *                        override protected def helpText = "<type an expression>"
-   *                    } 
+   *                    }
    */
   private class FieldHelpText(textWidget: StyledText, helpText: String) {
     private lazy val codeBgColor = new Color(parent.getDisplay, 150, 150, 150) // gray

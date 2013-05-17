@@ -14,16 +14,16 @@ import scala.tools.eclipse.util.Utils
 /**
  * The implementation for the org.scala-ide.sdt.core.reconciliationParticipants
  * extension points which gets the registered extensions and invokes them.
- * 
- * The runBefore and runAfter methods are themselves invoked by the 
+ *
+ * The runBefore and runAfter methods are themselves invoked by the
  * ScalaSourceFile.reconcile method.
- * 
+ *
  * @author Mirko Stocker
  */
 object ReconciliationParticipantsExtensionPoint extends HasLogger {
-  
+
   final val PARTICIPANTS_ID = "org.scala-ide.sdt.core.reconciliationParticipants"
-    
+
   lazy val extensions: List[ReconciliationParticipant] = {
     val configs = Platform.getExtensionRegistry.getConfigurationElementsFor(PARTICIPANTS_ID).toList
 
@@ -35,7 +35,7 @@ object ReconciliationParticipantsExtensionPoint extends HasLogger {
       case Some(p: ReconciliationParticipant) => p
     }
   }
-  
+
   def runBefore(scu: ScalaCompilationUnit, monitor: IProgressMonitor, workingCopyOwner: WorkingCopyOwner) {
     extensions foreach { extension =>
       Utils.tryExecute {
@@ -43,7 +43,7 @@ object ReconciliationParticipantsExtensionPoint extends HasLogger {
       }
     }
   }
-  
+
   def runAfter(scu: ScalaCompilationUnit, monitor: IProgressMonitor, workingCopyOwner: WorkingCopyOwner) {
     extensions foreach { extension =>
       Utils.tryExecute {

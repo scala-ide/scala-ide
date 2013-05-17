@@ -16,7 +16,7 @@ class TypeParameterTest extends AbstractSymbolClassifierTest {
       }""",
       Map("TPARAM" -> TypeParameter))
   }
-  
+
   @Test
   def method_type_param() {
     checkSymbolClassification("""

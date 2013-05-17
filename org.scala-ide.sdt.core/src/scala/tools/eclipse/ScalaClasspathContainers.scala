@@ -15,8 +15,8 @@ import org.eclipse.swt.widgets.Composite
 
 abstract class ScalaClasspathContainerInitializer(desc : String) extends ClasspathContainerInitializer {
   def entries : Array[IClasspathEntry]
-  
-  def initialize(containerPath : IPath, project : IJavaProject) = 
+
+  def initialize(containerPath : IPath, project : IJavaProject) =
     JavaCore.setClasspathContainer(containerPath, Array(project), Array(new IClasspathContainer {
       def getPath = containerPath
       def getClasspathEntries = entries
@@ -68,10 +68,10 @@ abstract class ScalaClasspathContainerPage(id : String, name : String, title : S
 
 class ScalaCompilerClasspathContainerPage extends
   ScalaClasspathContainerPage(
-    ScalaPlugin.plugin.scalaCompilerId, 
+    ScalaPlugin.plugin.scalaCompilerId,
     "ScalaCompilerContainerPage",
     "Scala Compiler Container",
-    "Scala compiler container") 
+    "Scala compiler container")
 
 class ScalaLibraryClasspathContainerPage extends
   ScalaClasspathContainerPage(ScalaPlugin.plugin.scalaLibId,

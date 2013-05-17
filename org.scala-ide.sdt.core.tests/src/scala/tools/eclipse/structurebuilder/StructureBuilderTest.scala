@@ -340,7 +340,7 @@ class StructureBuilderTest {
     // verify
     verify(requestor, times(0)).acceptProblem(any())
   }
-  
+
   @Test
   def javaCodeReferenceInnerClasses_t1000678_2() {
     //when
@@ -359,7 +359,7 @@ class StructureBuilderTest {
     // verify
     verify(requestor, times(0)).acceptProblem(any())
   }
-  
+
   @Test
   def javaCodeReferenceInnerClassOfModule_t1000678_3() {
     //when
@@ -382,7 +382,7 @@ class StructureBuilderTest {
   @Test
   def javaCodeCannotReferenceModuleInnerInAModule_t1000678_4() {
     val expectedProblem = "Pb(70) B cannot be resolved or is not a field"
-    
+
     //when
     val owner = new WorkingCopyOwner() {
       override def getProblemRequestor(unit: org.eclipse.jdt.core.ICompilationUnit): IProblemRequestor =
@@ -400,7 +400,7 @@ class StructureBuilderTest {
     // this will trigger the java reconciler so that the problems will be reported to the `requestor`
     unit.getWorkingCopy(owner, new NullProgressMonitor)
   }
-  
+
   @Test
   def javaCodeCanCallStaticForwardersOfScalaModule_t1000678_5() {
     //when
@@ -419,7 +419,7 @@ class StructureBuilderTest {
     // verify
     verify(requestor, times(0)).acceptProblem(any())
   }
-  
+
   @Test
   def javaCodeCanCallStaticForwardersOfScalaModule_t1000678_6() {
     //when
@@ -438,7 +438,7 @@ class StructureBuilderTest {
     // verify
     verify(requestor, times(0)).acceptProblem(any())
   }
-  
+
   @Test
   def javaCodeReferenceInnerClassOfModule_t1000678_7() {
     //when
@@ -457,7 +457,7 @@ class StructureBuilderTest {
     // verify
     verify(requestor, times(0)).acceptProblem(any())
   }
-  
+
   @Test
   def javaCodeReferenceInnerTraitsOfModule_t1000678_8() {
     //when
@@ -476,7 +476,7 @@ class StructureBuilderTest {
     // verify
     verify(requestor, times(0)).acceptProblem(any())
   }
-  
+
   @Test
   def javaCodeReferenceClassesInsideTrait_t1000678_9() {
     //when
@@ -495,7 +495,7 @@ class StructureBuilderTest {
     // verify
     verify(requestor, times(0)).acceptProblem(any())
   }
-  
+
   @Test
   def javaCodeCannotInstantiateScalaClassesInsideTrait_t1000678_10() {
     val expectedProblem = "Pb(23) Illegal enclosing instance specification for type Loggable.A.B"
@@ -511,7 +511,7 @@ class StructureBuilderTest {
           }
         }
     }
-    
+
     // then
     // this will trigger the java reconciler so that the problems will be reported to the `requestor`
     unit.getWorkingCopy(owner, new NullProgressMonitor)
@@ -525,7 +525,7 @@ class StructureBuilderTest {
     // verify
     assertEquals(T1000711TestOracle.expectedFragment, jdtStructure)
   }
-  
+
   @Test
   def throwsAnnotationOfClassConstructorsAndMethodsAreAvailableInJava_t100105() {
     //when
@@ -536,7 +536,7 @@ class StructureBuilderTest {
     when(owner.getProblemRequestor(any())).thenReturn(requestor)
 
     val unit = compilationUnit("t1001005/Caller.java")
-    
+
     // then
     // this will trigger the java reconciler so that the problems will be reported to the `requestor`
     unit.getWorkingCopy(owner, new NullProgressMonitor)
@@ -544,7 +544,7 @@ class StructureBuilderTest {
     // verify
     verify(requestor, times(0)).acceptProblem(any())
   }
-  
+
   @Test
   def throwsAnnotationOfTraitMethodsAreAvailableInJava_t1000707() {
     //when
@@ -555,7 +555,7 @@ class StructureBuilderTest {
     when(owner.getProblemRequestor(any())).thenReturn(requestor)
 
     val unit = compilationUnit("t1000707/Bar.java")
-    
+
     // then
     // this will trigger the java reconciler so that the problems will be reported to the `requestor`
     unit.getWorkingCopy(owner, new NullProgressMonitor)
@@ -563,7 +563,7 @@ class StructureBuilderTest {
     // verify
     verify(requestor, times(0)).acceptProblem(any())
   }
-  
+
   @Test
   def throwsAnnotationOfTraitMethodsAreAvailableInJava_t1000800() {
     //when
@@ -574,11 +574,11 @@ class StructureBuilderTest {
     when(owner.getProblemRequestor(any())).thenReturn(requestor)
 
     val unit = compilationUnit("t1000800/ThrowingClass.java")
-    
+
     // then
     // this will trigger the java reconciler so that the problems will be reported to the `requestor`
     unit.getWorkingCopy(owner, new NullProgressMonitor)
-   
+
     // verify
     verify(requestor, times(0)).acceptProblem(any())
   }

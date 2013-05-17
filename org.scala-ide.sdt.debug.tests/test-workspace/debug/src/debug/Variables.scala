@@ -17,16 +17,16 @@ object Variables {
     val j = List(4, 5, 6)
     val k = Array(One("one"), 1, true)
     val l = NullToString
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+
+
+
+
+
+
+
+
+
+
     noop(None)
   }
 

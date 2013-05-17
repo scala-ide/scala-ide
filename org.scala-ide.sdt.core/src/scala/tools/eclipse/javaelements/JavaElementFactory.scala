@@ -19,28 +19,28 @@ object JavaElementFactory extends ReflectionUtils {
   private val parentField = getDeclaredField(classOf[JavaElement], "parent")
   private val (sreiCtor, pdCtor) =
     privileged {
-      val sreiCtor0 = 
+      val sreiCtor0 =
         Class.forName("org.eclipse.jdt.internal.core.SourceRefElementInfo").
           getDeclaredConstructor().asInstanceOf[Constructor[AnyRef]]
       val pdCtor0 =
         Class.forName("org.eclipse.jdt.internal.core.PackageDeclaration").
           getDeclaredConstructor(classOf[CompilationUnit], classOf[String]).asInstanceOf[Constructor[AnyRef]]
-  
+
       sreiCtor0.setAccessible(true)
       pdCtor0.setAccessible(true)
-      
+
       (sreiCtor0, pdCtor0)
     }
-  
+
   def createSourceRefElementInfo : JavaElementInfo =
     sreiCtor.newInstance().asInstanceOf[JavaElementInfo]
-  
+
   def createSourceType(parent : JavaElement, name : String) =
     stCtor.newInstance(parent, name).asInstanceOf[SourceType]
-                                                                                         
+
   def createPackageDeclaration(cu : CompilationUnit, name : String) =
     pdCtor.newInstance(cu, name).asInstanceOf[SourceRefElement]
-  
+
   def createImportContainer(parent : JavaElement) = {
     parent match {
       case cu : CompilationUnit =>
@@ -54,7 +54,7 @@ object JavaElementFactory extends ReflectionUtils {
 
   def createImportDeclaration(parent : IImportContainer, name : String, isWildcard : Boolean) =
     idCtor.newInstance(parent, name, boolean2Boolean(isWildcard)).asInstanceOf[ImportDeclaration]
-  
+
   def setParent(child : JavaElement, parent : JavaElement) {
     parentField.set(child, parent)
   }
