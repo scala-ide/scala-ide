@@ -47,8 +47,8 @@ class ScalaSourceViewerConfiguration(store: IPreferenceStore, scalaPreferenceSto
 
   private val codeHighlightingScanners = {
     val scalaCodeScanner = new ScalaCodeScanner(getColorManager, scalaPreferenceStore, ScalaVersions.DEFAULT)
-    val singleLineCommentScanner = new SingleTokenScanner(ScalaSyntaxClasses.SINGLE_LINE_COMMENT, getColorManager, scalaPreferenceStore)
-    val multiLineCommentScanner = new SingleTokenScanner(ScalaSyntaxClasses.MULTI_LINE_COMMENT, getColorManager, scalaPreferenceStore)
+    val singleLineCommentScanner = new ScalaCommentScanner(ScalaSyntaxClasses.SINGLE_LINE_COMMENT, ScalaSyntaxClasses.TASK_TAG, getColorManager, scalaPreferenceStore, store)
+    val multiLineCommentScanner = new ScalaCommentScanner(ScalaSyntaxClasses.MULTI_LINE_COMMENT, ScalaSyntaxClasses.TASK_TAG, getColorManager, scalaPreferenceStore, store)
     val scaladocScanner = new ScaladocTokenScanner(ScalaSyntaxClasses.SCALADOC, ScalaSyntaxClasses.SCALADOC_ANNOTATION, ScalaSyntaxClasses.SCALADOC_MACRO, getColorManager, scalaPreferenceStore)
     val scaladocCodeBlockScanner = new SingleTokenScanner(ScalaSyntaxClasses.SCALADOC_CODE_BLOCK, getColorManager, scalaPreferenceStore)
     val stringScanner = new StringTokenScanner(ScalaSyntaxClasses.ESCAPE_SEQUENCE, ScalaSyntaxClasses.STRING, getColorManager, scalaPreferenceStore)
