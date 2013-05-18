@@ -24,10 +24,6 @@ object IDESettings {
              Xexperimental, future, XlogImplicits,
              noassertions, nouescape, plugin, disable,
              require, pluginsDir, Xwarnfatal)),
-      Box("Private",
-        List(Ynogenericsig, noimports,
-             selfInAnnots, Yrecursion, refinementMethodDispatch,
-             Ywarndeadcode)),
       Box("Presentation Compiler",
         List(YpresentationDebug, YpresentationVerbose, YpresentationLog, YpresentationReplay, YpresentationDelay)))
   }
