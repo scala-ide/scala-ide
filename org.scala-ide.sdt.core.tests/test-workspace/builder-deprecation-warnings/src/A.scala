@@ -1,4 +1,4 @@
 object A {
   val b = new B()
-  b.a
+  println(b.a)
 }
