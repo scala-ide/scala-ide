@@ -37,25 +37,29 @@ import java.util.concurrent.atomic.AtomicReference
 class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings)
   extends EclipseBuildManager with HasLogger {
   
-  var monitor: SubMonitor = _
+  private var monitor: SubMonitor = _
   
-  class SbtProgress extends CompileProgress {
+  private class SbtProgress extends CompileProgress {
     private var lastWorked = 0
     private var savedTotal = 0
     private var throttledMessages = 0
   
-    // Direct copy of the mechanism in the refined build managers
-    def startUnit(phaseName: String, unitPath: String) {
+    override def startUnit(phaseName: String, unitPath: String) {
+      def unitIPath: IPath = Path.fromOSString(unitPath)
+
+      // dirty-hack for ticket #1001595 until Sbt provides a better API for tracking sources recompiled by the incremental compiler
+      if(phaseName == "parser") FileUtils.toIFile(unitIPath).foreach(clearMarkers)
+
+      // What follows is a direct copy of the mechanism in the refined build managers
       throttledMessages += 1
       if (throttledMessages == 10) {
         throttledMessages = 0
-        val unitIPath: IPath = Path.fromOSString(unitPath)
         val projectPath = project.javaProject.getProject.getLocation
         monitor.subTask("phase " + phaseName + " for " + unitIPath.makeRelativeTo(projectPath))
       }
     }
     
-    def advance(current: Int, total: Int): Boolean = 
+    override def advance(current: Int, total: Int): Boolean = 
        if (monitor.isCanceled) {
         false
       } else {
@@ -72,29 +76,29 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings)
       }
   }
   
-  val pendingSources = new mutable.HashSet[IFile]
+  private val pendingSources = new mutable.HashSet[IFile]
 
-  val sbtLogger = new xsbti.Logger {
-    def error(msg: F0[String]) = logger.error(msg())
-    def warn(msg: F0[String]) = logger.warn(msg())
-    def info(msg: F0[String]) = logger.info(msg())
-    def debug(msg: F0[String]) = logger.debug(msg())
-    def trace(exc: F0[Throwable]) = logger.error("", exc())
+  private val sbtLogger = new xsbti.Logger {
+    override def error(msg: F0[String]) = logger.error(msg())
+    override def warn(msg: F0[String]) = logger.warn(msg())
+    override def info(msg: F0[String]) = logger.info(msg())
+    override def debug(msg: F0[String]) = logger.debug(msg())
+    override def trace(exc: F0[Throwable]) = logger.error("", exc())
   }
 
-  val buildReporter = new BuildReporter(project, settings0) {
+  private val buildReporter = new BuildReporter(project, settings0) {
     val buildManager = EclipseSbtBuildManager.this
   }
-  lazy val sbtReporter: xsbti.Reporter = new SbtBuildReporter(buildReporter)
+  private lazy val sbtReporter: xsbti.Reporter = new SbtBuildReporter(buildReporter)
 
-  implicit def toFile(files: mutable.Set[AbstractFile]): Seq[File] = files.map(_.file).toSeq
-  implicit def toFile(files: scala.collection.Set[AbstractFile]): Seq[File] = files.map(_.file).toSeq
+  private implicit def toFile(files: mutable.Set[AbstractFile]): Seq[File] = files.map(_.file).toSeq
+  private implicit def toFile(files: scala.collection.Set[AbstractFile]): Seq[File] = files.map(_.file).toSeq
   
   
   private val sources: mutable.Set[AbstractFile] = mutable.Set.empty
 
   /** Add the given source files to the managed build process. */
-  def addSourceFiles(files: scala.collection.Set[AbstractFile]) {
+  private def addSourceFiles(files: scala.collection.Set[AbstractFile]) {
     if (!files.isEmpty) {
       sources ++= files
       runCompiler(sources)
@@ -102,7 +106,7 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings)
   }
 
   /** Remove the given files from the managed build process. */
-  def removeFiles(files: scala.collection.Set[AbstractFile]) {
+  private def removeFiles(files: scala.collection.Set[AbstractFile]) {
     if (!files.isEmpty)
       sources --= files
   }
@@ -110,7 +114,7 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings)
   /** The given files have been modified by the user. Recompile
    *  them and their dependent files.
    */
-  def update(added: scala.collection.Set[AbstractFile], removed: scala.collection.Set[AbstractFile]) {
+  private def update(added: scala.collection.Set[AbstractFile], removed: scala.collection.Set[AbstractFile]) {
     logger.info("update files: " + added)
     if (!added.isEmpty || !removed.isEmpty) {
       buildingFiles(added)
@@ -133,37 +137,37 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings)
     analysis foreach setCached
   }
 
-  val cached = new AtomicReference[SoftReference[Analysis]]
-  def setCached(a: Analysis): Analysis = {
+  private val cached = new AtomicReference[SoftReference[Analysis]]
+  private def setCached(a: Analysis): Analysis = {
    cached set new SoftReference[Analysis](a); a
   }
-  def latestAnalysis: Analysis = Option(cached.get) flatMap (ref => Option(ref.get)) getOrElse setCached(IC.readAnalysis(cacheFile))
+  private[sbtintegration] def latestAnalysis: Analysis = Option(cached.get) flatMap (ref => Option(ref.get)) getOrElse setCached(IC.readAnalysis(cacheFile))
     
-  val cachePath = project.underlying.getFile(".cache")
-  def cacheFile = cachePath.getLocation.toFile
+  private val cachePath = project.underlying.getFile(".cache")
+  private def cacheFile = cachePath.getLocation.toFile
 
 
   /** Not supported */
-  def loadFrom(file: AbstractFile, toFile: String => AbstractFile) : Boolean = true
+  private def loadFrom(file: AbstractFile, toFile: String => AbstractFile) : Boolean = true
   
   /** Not supported */
-  def saveTo(file: AbstractFile, fromFile: AbstractFile => String) {}
+  private def saveTo(file: AbstractFile, fromFile: AbstractFile => String) {}
 
   /** Not supported */
-  val compiler: Global = null
-  var depFile: IFile = null
+  private val compiler: Global = null
+  override var depFile: IFile = null
   
-  def clean(implicit monitor: IProgressMonitor) {
+  override def clean(implicit monitor: IProgressMonitor) {
     cachePath.refreshLocal(IResource.DEPTH_ZERO, null)
     cachePath.delete(true, false, monitor)
     // refresh explorer
   }
-  def invalidateAfterLoad: Boolean = true
+  override def invalidateAfterLoad: Boolean = true
 
   
   private def unbuilt: Set[AbstractFile] = Set.empty // TODO: this should be taken care of
   
-  def build(addedOrUpdated : Set[IFile], removed : Set[IFile], pm: SubMonitor) {
+  override def build(addedOrUpdated : Set[IFile], removed : Set[IFile], pm: SubMonitor) {
     buildReporter.reset()
     pendingSources ++= addedOrUpdated
     val removedFiles = removed.map(EclipseResource(_) : AbstractFile)
@@ -185,14 +189,15 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings)
       pendingSources.clear
   }
   
-  def buildingFiles(included: scala.collection.Set[AbstractFile]) {
-    for(file <- included) {
-      file match {
-        case EclipseResource(f : IFile) =>
-          FileUtils.clearBuildErrors(f, null)
-          FileUtils.clearTasks(f, null)
-        case _ =>
-      }
+  private def buildingFiles(included: scala.collection.Set[AbstractFile]) {
+    included foreach {
+      case EclipseResource(f : IFile) => clearMarkers(f)
+      case _ =>
     }
+  }
+  
+  private def clearMarkers(f: IFile): Unit = {
+    FileUtils.clearBuildErrors(f, null)
+    FileUtils.clearTasks(f, null)
   }
 }
