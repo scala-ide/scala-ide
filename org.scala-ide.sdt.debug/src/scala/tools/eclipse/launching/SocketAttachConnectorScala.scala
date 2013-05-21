@@ -49,7 +49,8 @@ class SocketAttachConnectorScala extends VMConnectorAdapter with SocketConnector
     try {
       // connect and create the debug session
       val virtualMachine = connector.attach(arguments)
-      ScalaDebugTarget(virtualMachine, launch, null, allowDisconnect = true, allowTerminate(launch))
+      val target = ScalaDebugTarget(virtualMachine, launch, null, allowDisconnect = true, allowTerminate(launch))
+      target.attached() // tell the debug target to initialize
     } catch {
       case e: TimeoutException =>
         throw ScalaDebugPlugin.wrapInCoreException("Unable to connect to the remote VM", e)
