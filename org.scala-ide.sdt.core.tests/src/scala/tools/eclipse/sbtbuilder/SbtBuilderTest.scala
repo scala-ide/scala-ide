@@ -23,6 +23,8 @@ import org.eclipse.core.runtime.Path
 import org.eclipse.jdt.core.JavaCore
 import scala.tools.eclipse.buildmanager.sbtintegration._
 
+import scala.tools.nsc.Settings
+
 object SbtBuilderTest extends TestProjectSetup("builder") with CustomAssertion
 object depProject extends TestProjectSetup("builder-sub")
 object closedProject extends TestProjectSetup("closed-project-test") {
@@ -147,9 +149,7 @@ class SbtBuilderTest {
     val baseRawClasspath= prjClient.javaProject.getRawClasspath()
 
     /* The classpath, with the eclipse scala container removed. */
-    def cleanRawClasspath = for (
-      classpathEntry <- baseRawClasspath if classpathEntry.getPath().toPortableString() != "org.scala-ide.sdt.launching.SCALA_CONTAINER"
-    ) yield classpathEntry
+    def cleanRawClasspath = baseRawClasspath.filterNot(_.getPath().toPortableString() == "org.scala-ide.sdt.launching.SCALA_CONTAINER")
 
     prjClient.javaProject.setRawClasspath(cleanRawClasspath, null)
     addToClasspath(prjClient, JavaCore.newProjectEntry(prjLib.underlying.getFullPath, true))
@@ -161,6 +161,60 @@ class SbtBuilderTest {
 
     val expectedLib = plugin.workspaceRoot.findMember("/library/bin").getLocation
     Assert.assertEquals("Unexpected Scala lib", expectedLib, prjClient.scalaClasspath.scalaLib.get)
+    deleteProjects(prjClient, prjLib)
+  }
+
+  /** Test that the JDK and Scala library end up in the bootclasspaths arguments for
+   *  scalac.
+   *
+   *  - We test that the `-javabootclasspath` and `-bootclasspath` are correctly set
+   *  by `ScalaProject.scalacArguments`.
+   *  - we test that a build *fails* with a non-existent Scala library (Sbt adds its
+   *  own processing of arguments that might add a working default)
+   *  - we do *not* test that a different JDK is honored by Sbt (couldn't find a way to
+   *  fake a JDK install), but we do test that the JDK is put in `-javabootclasspath`.
+   */
+  @Test def bootLibrariesAreOnClasspath() {
+    import SDTTestUtils._
+    import ScalaPlugin.plugin
+
+    val Seq(prjClient, prjLib) = createProjects("client", "library")
+    val packLib = createSourcePackage("scala")(prjLib)
+    val baseRawClasspath = prjClient.javaProject.getRawClasspath()
+
+    // The classpath, with the eclipse scala container removed
+    def cleanRawClasspath = baseRawClasspath.filterNot(_.getPath().toPortableString() == "org.scala-ide.sdt.launching.SCALA_CONTAINER")
+
+    // add a fake Scala library
+    prjClient.javaProject.setRawClasspath(cleanRawClasspath, null)
+    addToClasspath(prjClient, JavaCore.newProjectEntry(prjLib.underlying.getFullPath, true))
+
+    // add a source file
+    val packA = createSourcePackage("test")(prjClient)
+    val unitA = packA.createCompilationUnit("A.scala", """class A { println("hello") }""", true, null)
+
+    // build the fake Scala library
+    packLib.createCompilationUnit("Predef.scala", "package scala; class Predef", true, null)
+    prjLib.underlying.build(IncrementalProjectBuilder.FULL_BUILD, new NullProgressMonitor)
+
+    Assert.assertTrue("Found Scala library", prjClient.scalaClasspath.scalaLib.isDefined)
+
+    val ScalaClasspath(jdkPaths, scalaLib, _, _) = prjClient.scalaClasspath
+    val args = prjClient.scalacArguments
+
+    // parsing back these arguments should give back the same libraries
+    val settings = new Settings()
+    settings.processArguments(args.toList, true)
+
+    Assert.assertEquals("Java bootclasspath is correct", settings.javabootclasspath.value, jdkPaths.mkString(java.io.File.pathSeparator))
+    Assert.assertEquals("Scala bootclasspath is correct", settings.bootclasspath.value, scalaLib.get.toString)
+
+    // now test that the build fails with the fake Scala library
+    prjClient.underlying.build(IncrementalProjectBuilder.CLEAN_BUILD, new NullProgressMonitor)
+    prjClient.underlying.build(IncrementalProjectBuilder.FULL_BUILD, new NullProgressMonitor)
+    val markers = prjClient.underlying.findMarkers(IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER, true, IResource.DEPTH_INFINITE)
+    Assert.assertTrue("Errors expected, but none found", markers.nonEmpty)
+
     deleteProjects(prjClient, prjLib)
   }
 
