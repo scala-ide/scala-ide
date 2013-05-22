@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Scala Debug Plugin
 Bundle-SymbolicName: org.scala-ide.sdt.debug;singleton:=true
-Bundle-Version: 3.0.0.qualifier
+Bundle-Version: 3.0.1.qualifier
 Bundle-Vendor: scala-ide.org
 Bundle-ActivationPolicy: lazy
 Bundle-Localization: plugin
