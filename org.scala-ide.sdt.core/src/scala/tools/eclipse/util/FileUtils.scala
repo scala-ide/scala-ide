@@ -8,7 +8,6 @@ package scala.tools.eclipse.util
 import scala.tools.eclipse.ScalaPlugin.plugin
 import scala.tools.eclipse.util.EclipseUtils.workspaceRunnableIn
 import scala.tools.nsc.io.AbstractFile
-
 import org.eclipse.core.filebuffers.FileBuffers
 import org.eclipse.core.internal.resources.ResourceException
 import org.eclipse.core.resources.IFile
@@ -21,6 +20,7 @@ import org.eclipse.jdt.core.IJavaModelMarker
 import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jdt.core.compiler.IProblem
 import org.eclipse.jdt.internal.core.builder.JavaBuilder
+import org.eclipse.core.runtime.IPath
 
 object FileUtils {
   
@@ -28,14 +28,15 @@ object FileUtils {
     case null => None
     case EclipseResource(file: IFile) => Some(file)
     case abstractFile =>
-      
-      val file = ResourcesPlugin.getWorkspace.getRoot.getFileForLocation(Path.fromOSString(abstractFile.path))
-      
-      if (file == null || !file.exists) {
-        None
-      } else {
-        Some(file)
-      }
+      val path = Path.fromOSString(abstractFile.path)
+      toIFile(path)
+  }
+  
+  def toIFile(path: IPath): Option[IFile] = {
+    val file = ResourcesPlugin.getWorkspace.getRoot.getFileForLocation(path)
+
+    if (file == null || !file.exists) None
+    else Some(file)
   }
 
   
