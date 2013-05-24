@@ -25,6 +25,11 @@ case class ScalaSyntaxClass(displayName: String, baseName: String, canBeDisabled
   def boldKey = baseName + BOLD_SUFFIX
   def italicKey = baseName + ITALIC_SUFFIX
   def underlineKey = baseName + UNDERLINE_SUFFIX
+
+  /** Secondary constructor for backward compatibility with 3.x.
+   */
+  def this(_displayName: String, _baseName: String, _canBeDisabled: Boolean) =
+    this(_displayName, _baseName, _canBeDisabled, true)
   
   def getTextAttribute(preferenceStore: IPreferenceStore): TextAttribute = {
     val styleInfo = getStyleInfo(preferenceStore)
