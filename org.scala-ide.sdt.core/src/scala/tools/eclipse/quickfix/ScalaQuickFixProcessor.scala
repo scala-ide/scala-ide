@@ -27,6 +27,8 @@ import scala.tools.eclipse.util.FileUtils
 import scala.tools.eclipse.util.EditorUtils.getAnnotationsAtOffset
 import scala.tools.eclipse.semantichighlighting.implicits.ImplicitHighlightingPresenter
 import scala.tools.eclipse.logging.HasLogger
+import scala.tools.eclipse.quickfix.createmethod.CreateMethodProposal
+import scala.tools.refactoring.implementations.{AddToClass, AddToObject}
 
 // Scala
 import scala.util.matching.Regex
@@ -36,6 +38,8 @@ class ScalaQuickFixProcessor extends IQuickFixProcessor with HasLogger {
   private val typeNotFoundError = new Regex("not found: type (.*)")
   private val valueNotFoundError = new Regex("not found: value (.*)")
   private val xxxxxNotFoundError = new Regex("not found: (.*)")
+  private val valueNotAMember = "value (.*) is not a member of (.*)".r
+  private val valueNotAMemberOfObject = "value (.*) is not a member of object (.*)".r
   
   // regex for extracting expected and required type on type mismatch
   private val typeMismatchError = new Regex("type mismatch;\\s*found\\s*: (\\S*)\\s*required: (.*)") 
@@ -72,8 +76,14 @@ class ScalaQuickFixProcessor extends IQuickFixProcessor with HasLogger {
          	  val document = (editor.asInstanceOf[ITextEditor]).getDocumentProvider().getDocument(editor.getEditorInput())
          	  val typeMismatchFix = suggestTypeMismatchFix(document, ann.getText, pos)
          	  
+         	  val createMethodFix = suggestCreateMethodFix(context.getCompilationUnit(), ann.getText, pos)
+         	  
          	  // concatenate lists of found quick fixes
-            corrections = corrections ++ importFix ++ typeMismatchFix ++ createClassFix
+            corrections = corrections ++ 
+              importFix ++ 
+              typeMismatchFix ++ 
+              createClassFix ++ 
+              createMethodFix
         	}
         corrections match {
           case Nil => null
@@ -82,6 +92,17 @@ class ScalaQuickFixProcessor extends IQuickFixProcessor with HasLogger {
       }
       case _ => null
   }
+  
+  private def suggestCreateMethodFix(compilationUnit: ICompilationUnit, problemMessage : String, pos: Position): List[IJavaCompletionProposal] = {
+    val possibleMatch = problemMessage match {
+      case valueNotAMemberOfObject(member, theType) => List(CreateMethodProposal(Some(theType), member, AddToObject, compilationUnit, pos))
+      case valueNotAMember(member, theType) => List(CreateMethodProposal(Some(theType), member, AddToClass, compilationUnit, pos))
+      case valueNotFoundError(member) => List(CreateMethodProposal(None, member, AddToClass, compilationUnit, pos))
+      case _ => Nil
+    }
+    possibleMatch.filter(_.isApplicable)
+  }
+
   
   // XXX is this code duplication? -- check scala.tools.eclipse.util.EditorUtils.getAnnotationsAtOffset
   private def getAnnotationsAtOffsetXXX(part: IEditorPart, offset: Int): List[Annotation] = {

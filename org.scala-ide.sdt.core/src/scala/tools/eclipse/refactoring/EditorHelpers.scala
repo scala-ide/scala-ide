@@ -30,6 +30,9 @@ import org.eclipse.jface.text.link.LinkedPosition
 import org.eclipse.jface.text.link.LinkedModeUI
 import scala.tools.refactoring.common.TextChange
 import scala.tools.eclipse.util.EditorUtils
+import org.eclipse.jdt.internal.ui.javaeditor.EditorUtility
+import org.eclipse.ui.part.FileEditorInput
+import org.eclipse.jdt.ui.JavaUI
 
 object EditorHelpers {
    
@@ -198,6 +201,15 @@ object EditorHelpers {
       // restore the selection unless selecting the first instance of the symbol was desired
       if (!selectFirst)
     	  viewer.setSelectedRange(priorSelection.x, priorSelection.y)
+    }
+  }
+  
+  def findOrOpen(file: IFile): Option[IDocument] = {
+    for (window <- activeWorkbenchWindow) yield {
+      val page = window.getActivePage()
+      val part = Option(page.findEditor(new FileEditorInput(file))).getOrElse(EditorUtility.openInEditor(file, true))
+      page.bringToTop(part)
+      JavaUI.getDocumentProvider().getDocument(part.getEditorInput());
     }
   }
 }
