@@ -37,9 +37,8 @@ class MissingMemberInfo(compilationUnit: ICompilationUnit, val fullyQualifiedNam
       for (members <- membersInScope.get.left.toOption) yield {
         compiler.askOption { () =>
           val elements = members.collect {
-            case compiler.ScopeMember(sym, tpe, true, _) if !sym.isConstructor && sym.decodedName == className =>
-              compiler.getJavaElement(tpe.typeSymbol).map(_.getParent)
-            case _ => None
+            case compiler.ScopeMember(sym, tpe, true, _) if !sym.isConstructor && sym.decodedName.equalsIgnoreCase( className) =>
+              compiler.getJavaElement(tpe.typeSymbol, scu.getJavaProject).map(_.getParent)
           }
           elements.flatten.toSet
         }

@@ -1,14 +1,13 @@
 package scala.tools.eclipse.quickfix.createmethod
 
+import scala.reflect.internal.util.RangePosition
 import scala.tools.eclipse.javaelements.ScalaCompilationUnit
 import scala.tools.eclipse.javaelements.ScalaSourceFile
-import scala.tools.eclipse.logging.HasLogger
 import scala.tools.eclipse.refactoring.EditorHelpers
 import scala.tools.eclipse.util.parsing.ScalariformParser
 import scala.tools.eclipse.util.parsing.ScalariformUtils
 import scala.tools.refactoring.implementations.AddMethod
 import scala.tools.refactoring.implementations.AddMethodTarget
-
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.internal.ui.JavaPluginImages
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal
@@ -26,6 +25,22 @@ case class CreateMethodProposal(fullyQualifiedEnclosingType: Option[String], met
   private val sourceAst = ScalariformParser.safeParse(sourceFile.getSource()).map(_._1)
   private val methodNameOffset = pos.offset + pos.length - method.length
 
+  private def typeAtRange(start: Int, end: Int): String = {
+    compilationUnit.asInstanceOf[ScalaCompilationUnit].withSourceFile((srcFile, compiler) => {
+      compiler.askOption(() => {
+        val length = end - start
+        val context = compiler.doLocateContext(new RangePosition(srcFile, start, start, start + length-1))
+        val tree = compiler.locateTree(new RangePosition(srcFile, start, start, start + length-1))
+        val typer = compiler.analyzer.newTyper(context)
+        val typedTree = typer.typed(tree)
+        val tpe = typedTree.tpe.resultType.underlying
+        if (tpe.isError) None
+        else if (tpe.toString == "Null") Some("AnyRef") //there must be a better condition
+        else Some(tpe.toString) //do we want tpe.isError? tpe.isErroneous?
+      }).flatten.getOrElse("Any")
+    })("Any")
+  }
+  
   private val (targetSourceFile, className, targetIsOtherClass) = fullyQualifiedEnclosingType match {
     case Some(otherClass) =>
       val info = new MissingMemberInfo(compilationUnit, otherClass, method, pos, sourceAst.get)
@@ -39,23 +54,8 @@ case class CreateMethodProposal(fullyQualifiedEnclosingType: Option[String], met
 
   private val (rawParameters: ParameterList, rawReturnType: ReturnType) = sourceAst match {
     case Some(ast) => {
-      /*
-       * Ideally, we would just ask the compiler "what is the type at position x", 
-       * where x is each expression being passed in to our unknown method.
-       * Unfortunately, at least right now, it can't give that to us.
-       * You can verify this by writing "someObject.unknownMethod(someObject)", and
-       * hovering over the "someObject" being passed to "unknownMethod". You'll get nothing.
-       * 
-       * Instead, what we do is ask the compiler for everything that's in scope,
-       * filter it down to vals/vars/methods that take no parameters, and for each parameter
-       * we try to get the type from that list. This works if you have, eg, "a.b(c, d, e)".
-       * We make no attempt if you have a chained expression like "a.b(c.toString)".
-       */
       val scu = compilationUnit.asInstanceOf[ScalaCompilationUnit]
-      val inScope = MembersInScope.getValVarAndZeroArgMethods(scu, pos.offset)
-      val identifiersToType = inScope.map{case InScope(name: String, tpe: String) => (name, tpe)}.toMap
-
-      val paramsAfterMethod = ScalariformUtils.getParameters(ast, methodNameOffset, identifiersToType)
+      val paramsAfterMethod = ScalariformUtils.getParameters(ast, methodNameOffset, typeAtRange)
       paramsAfterMethod match {
         case Nil => MissingMemberInfo.inferFromEnclosingMethod(scu, ast, pos.offset)
         case list => (list, None)

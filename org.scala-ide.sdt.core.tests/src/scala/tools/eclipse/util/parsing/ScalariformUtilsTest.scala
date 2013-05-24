@@ -36,12 +36,18 @@ class A {
 """
     val ast = parse(source)
     val offsetOf = offsetFinder(source) _
-    val identifiersToType = Map("a" -> "ClassA")
-    val parameterList = ScalariformUtils.getParameters(ast, offsetOf("method"), identifiersToType)
-    val expected = List(List("a" -> "ClassA", "arg" -> "Int"), List("arg" -> "String", "named" -> "Char"), List("arg" -> "Any", "c" -> "Any"))
+    val typeAtRange = (_: Int, _: Int) match {
+      case (41, 42) => "ClassA" //a
+      case (44, 45) => "Int" //1
+      case (47, 50) => "String" //"b"
+      case (60, 63) => "Char" //'c'
+      case (65, 75) => "String" //a.toString
+      case (77, 78) => "Any" //c
+    }
+    val parameterList = ScalariformUtils.getParameters(ast, offsetOf("method"), typeAtRange)
+    val expected = List(List("a" -> "ClassA", "arg" -> "Int"), List("arg" -> "String", "named" -> "Char"), List("arg" -> "String", "c" -> "Any"))
     assertEquals(expected, parameterList)
   }
-  
 
   @Test def enclosingClassForMethodInvocation {
     val source = """

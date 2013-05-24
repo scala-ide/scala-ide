@@ -29,12 +29,18 @@ class CreateMethodTests {
         "Create method 'infix3(String)' in type 'OtherClass'",
         "Create method 'infix4(String)' in type 'OtherClass'",
         "Create method 'infix5(String, Int, OtherClass)' in type 'OtherClass'",
-        "Create method 'infix6(String, Int, OtherClass, Any)' in type 'OtherClass'",
+        "Create method 'infix6(String, Int, OtherClass, Double)' in type 'OtherClass'",
         "Create method 'namedinfix1(Int, OtherClass, String)' in type 'OtherClass'",
         "Create method 'namedinfix2(String)(Int, OtherClass)(String)' in type 'OtherClass'",
         "Create method 'selfinfix1(Int, String)'",
         "Create method 'selfinfix2(Int, String)(OtherClass, String, Int)'",
-        "Create method 'compound1()' in type 'OtherClass'"
+        "Create method 'compound1()' in type 'OtherClass'",
+        "Create method 'complex1(List[Double])' in type 'OtherClass'",
+        "Create method 'complex2(List[Int])' in type 'OtherClass'",
+        "Create method 'complex3(List[Int], List[List[Int]])(Boolean)' in type 'OtherClass'",
+        "Create method 'complex4(Any)' in type 'OtherClass'",
+        "Create method 'complex5(Any)' in type 'OtherClass'",
+        "Create method 'complex6(Any)' in type 'OtherClass'"
     )
   }
   

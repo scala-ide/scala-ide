@@ -29,48 +29,43 @@ object ScalariformUtils {
   /*
    * get parameter types and try to give them names too
    * it will do that if the method is invoked with a named parameter
-   * eg: method(someString="a")
-   * or if you are passing in a variable
-   * eg: method(someString)
+   * eg: method(someString = "a")
+   * or if you are passing in an unqualified identifier without invoking anything on it
+   * eg: method(someString), or method(someMethod)
    * this will not name literals, unknownMethod("a") is just named "arg"
    * it will also not name compound statements, eg method(someString.length) will be named "arg"
    * warning: does NOT give back unique names, you must do that yourself
    */
-  def getParameters(source: AstNode, methodNameOffset: Int, identifiersToType: Map[String, String]) = {
-
-    def getType(identifier: String) = identifiersToType.get(identifier).getOrElse("Any")
-
+  def getParameters(source: AstNode, methodNameOffset: Int, typeAtRange: (Int, Int) => String) = {
     def createParameter(exprContents: List[ExprElement]): (String, String) = {
+      
+      def getType(contents: List[ExprElement]): String = {
+        val tokens = (for (expr <- contents) yield expr.tokens).flatten
+        if (tokens.isEmpty) return "Any"
+        
+        val startToken = tokens.minBy(_.offset)
+        val start = startToken.offset
+        val endToken = tokens.maxBy(token => token.offset + token.length)
+        val end = endToken.offset + endToken.length
+        typeAtRange(start, end)
+      }
+      
       val (name, tpe) = exprContents match {
         //exprDotOpt must be None so we don't match a.unknownMethod(other.existingMethod)
-        //otherwise we'd look up "existingMethod", which is problematic if the containing
-        //class has a "def existingMethod"
         case List(CallExpr(/*exprDotOpt*/ None, id, _, _, _)) if id.tokenType.isId =>
-          (id.text, getType(id.text))
-
-        //literal value, eg a.method(3, "abc"), we generate "arg: Int, arg1: String"
-        case List(GeneralTokens(List(token))) if token.tokenType.isLiteral =>
-          ("arg", literalType(token.tokenType))
+          (id.text, getType(exprContents))
 
         //named parameter, eg a.method(aaa = 3, bbb = ccc)
         case List(EqualsExpr(List(CallExpr(_, name, _, _, _)), Token(EQUALS, _, _, _), Expr(List(contents)))) =>
-          contents match {
-            //with literal, eg (aaa = 3)
-            case GeneralTokens(List(value)) =>
-              (name.getText, if (value.tokenType.isLiteral) literalType(value.tokenType) else getType(name.getText))
-              
-            //with single expression, eg (bbb = ccc)
-            case CallExpr(_, value, _, _, _) =>
-              (name.getText, getType(value.getText))
-              
-            case _ => ("arg", "Any")
-          }
+          (name.getText, getType(List(contents)))
 
-        case _ => ("arg", "Any")
+        case _ =>
+          ("arg", getType(exprContents))
       }
+      
       (name, tpe)
     }
-
+    
     val parameters: Option[List[List[(String, String)]]] = toStream(source).collectFirst {
       //infix expression, eg
       //other method "abc"
@@ -172,16 +167,6 @@ object ScalariformUtils {
     toStream(source).collectFirst {
       case CallExpr(_, id, _, newLineOptsAndArgumentExprss: List[(Option[Token], ArgumentExprs)], _) if argPosition(newLineOptsAndArgumentExprss).isDefined => MethodCallInfo(id.offset, id.length, argPosition(newLineOptsAndArgumentExprss).get)
     }
-  }
-
-  private def literalType(literal: TokenType) = literal match {
-    case CHARACTER_LITERAL => "Char"
-    case INTEGER_LITERAL => "Int"
-    case FLOATING_POINT_LITERAL => "Double"
-    case STRING_LITERAL | STRING_PART => "String"
-    case SYMBOL_LITERAL => "Symbol"
-    case TRUE | FALSE => "Boolean"
-    case NULL => "AnyRef"
   }
 
   /*

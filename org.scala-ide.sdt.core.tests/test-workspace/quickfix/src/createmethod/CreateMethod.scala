@@ -43,7 +43,7 @@ class CreateMethod {
   other infix3("a") //Create method 'infix3(String)' in type 'OtherClass'
   other infix4 ("a") //Create method 'infix4(String)' in type 'OtherClass'
   other infix5 ("a", 3, other) //Create method 'infix5(String, Int, OtherClass)' in type 'OtherClass'
-  other infix6 ("a", 3, other, other.existingMethod) //Create method 'infix6(String, Int, OtherClass, Any)' in type 'OtherClass'
+  other infix6 ("a", 3, other, other.existingMethod) //Create method 'infix6(String, Int, OtherClass, Double)' in type 'OtherClass'
   
   //infix with named parameters & multiple argument lists
   other namedinfix1 (aaa=3, bbb = other, "a") //Create method 'namedinfix1(Int, OtherClass, String)' in type 'OtherClass'
@@ -55,6 +55,19 @@ class CreateMethod {
  
   //compound statements on lhs
   List(other)(0).compound1 //Create method 'compound1()' in type 'OtherClass'
+  
+  //get the proper type for complex expressions
+  other.complex1(list.map(_.toDouble)) //Create method 'complex1(List[Double])' in type 'OtherClass'
+  other.complex2(named = list ++ list) //Create method 'complex2(List[Int])' in type 'OtherClass'
+  other.complex3(list, list.map(num => List(num)))(abc = list.isEmpty) //Create method 'complex3(List[Int], List[List[Int]])(Boolean)' in type 'OtherClass'
+  
+  //these don't work yet, due to a problem with the compiler, we get the type <error> and fall back to displaying "Any"
+  other.complex4("a" * 3) //should be: Create method 'complex4(String)' in type 'OtherClass'
+  other.complex5(list + "a") //should be: Create method 'complex5(String)' in type 'OtherClass'
+  import scala.collection.JavaConversions._
+  import scala.collection.JavaConverters._
+  val javaList = list.asJava
+  other.complex6(javaList.map(_ * 2)) //should be: Create method 'complex6(List[Int])' in type 'OtherClass'
   
   //shouldn't show up for assignment, we're not automatically testing this though
   //other.assign1 = "asdf"
@@ -69,5 +82,5 @@ object RedHerring {
    * This is here to disable that, meaning all of these results should be from
    * the primary way of finding the target class, the compiler scope information.
    */
-  class OtherClass
+  //class OtherClass
 }
