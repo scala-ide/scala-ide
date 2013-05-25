@@ -23,7 +23,7 @@ import scala.tools.eclipse.ui.DisplayThread
 import scala.tools.eclipse.ui.SurroundSelectionStrategy
 import scala.tools.eclipse.util.EclipseUtils
 import scala.tools.eclipse.util.EditorUtils
-import scala.tools.eclipse.util.RichAnnotationModel.annotationModel2RichAnnotationModel
+import scala.tools.eclipse.util.RichAnnotationModel._
 import scala.tools.eclipse.util.SWTUtils
 import scala.tools.eclipse.util.SWTUtils.fnToPropertyChangeListener
 import scala.tools.eclipse.util.Utils

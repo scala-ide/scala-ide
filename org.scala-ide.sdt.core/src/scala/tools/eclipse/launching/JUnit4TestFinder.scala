@@ -27,7 +27,6 @@ import org.eclipse.core.runtime.SubMonitor
 import org.eclipse.jdt.internal.junit.launcher.ITestFinder
 import scala.tools.eclipse.ScalaProject
 import scala.tools.eclipse.javaelements.ScalaSourceFile
-import scala.tools.eclipse.util.Utils.any2optionable
 import org.eclipse.jdt.core.IMember
 import org.eclipse.jdt.core.IPackageFragmentRoot
 import scala.tools.eclipse.logging.HasLogger
@@ -211,6 +210,7 @@ object JUnit4TestFinder {
     import comp.ClassDef
     import comp.Response
     import comp.Tree
+    import scala.tools.eclipse.util.Utils._
     val response = new Response[Tree]
     comp.askParsedEntered(source, keepLoaded = false, response)
 

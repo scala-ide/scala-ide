@@ -64,6 +64,17 @@ trait MethodSignatureRefactoringConfigurationPageGenerator {
   // Generates the wizard.
   def mkConfigPage(method: DefDef, paramsObs: MSRefactoringParameters => Unit): UserInputWizardPage
 
+  private object ImplicitConversions {
+    import scala.language.implicitConversions
+
+    /** Converts a function to an ``MouseAdapter`` whose ``mouseUp`` method is called */
+    implicit def mouseUpListener(f: () => Unit): MouseAdapter = new MouseAdapter {
+      override def mouseUp(me: MouseEvent) {
+        f()
+      }
+    }
+  }
+
   /**
    * Generic wizard page for method signature refactorings.
    * Consists of:
@@ -92,15 +103,6 @@ trait MethodSignatureRefactoringConfigurationPageGenerator {
       val methodProvider: () => List[ParamOrSeparator] = () => paramsWithSeparators
       // the currently selected item in the parameter table
       var selection: ParamOrSeparator = Right(OriginalSeparator(0))
-
-      type SelectedParamHandler = ParamOrSeparator => Unit
-
-      // Convenience implicit conversion of SelectedParamHandlers to MouseListeners
-      implicit def partial2MouseUpListener(f: SelectedParamHandler): MouseListener = new MouseAdapter {
-        override def mouseUp(me: MouseEvent) {
-          f(selection)
-        }
-      }
 
       val composite = new Composite(parent, SWT.NONE)
 
@@ -168,21 +170,19 @@ trait MethodSignatureRefactoringConfigurationPageGenerator {
         paramsObs(parameters)
       }
 
-      // listener for the first button, delegates to handleFirstBtn
-      val firstBtnListener: SelectedParamHandler = selection => {
+      import ImplicitConversions._
+
+      firstBtn addMouseListener { () =>
         paramsWithSeparators = handleFirstBtn(selection, paramsWithSeparators)
         updateParamsAndSeparators
         setBtnStatesForSelection(selection)
       }
-      firstBtn.addMouseListener(firstBtnListener)
 
-      // listener for the second button, delegates to handleSecondBtn
-      val secondBtnListener: SelectedParamHandler = selection => {
+      secondBtn addMouseListener { () =>
         paramsWithSeparators = handleSecondBtn(selection, paramsWithSeparators)
         updateParamsAndSeparators
         setBtnStatesForSelection(selection)
       }
-      secondBtn.addMouseListener(secondBtnListener)
 
       setControl(composite)
     }

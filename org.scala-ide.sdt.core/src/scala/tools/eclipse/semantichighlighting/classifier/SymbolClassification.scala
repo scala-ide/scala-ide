@@ -11,7 +11,7 @@ import scala.reflect.internal.util.SourceFile
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.jface.text.IRegion
 import org.eclipse.jface.text.Region
-import scala.tools.eclipse.jface.text.RegionOps
+import scala.tools.eclipse.jface.text.RegionOps._
 
 private object SymbolClassification {
   private val debug = false
@@ -122,7 +122,7 @@ class SymbolClassification(protected val sourceFile: SourceFile, val global: Sca
 
   private def getOccurrenceRegion(sym: Symbol)(pos: Position): Option[IRegion] =
     getNameRegion(pos) flatMap { region =>
-      val text = RegionOps.of(region, sourceFile.content)
+      val text = region of sourceFile.content
       val symName = sym.nameString
       if (symName.startsWith(text) || text == "`" + symName + "`") Some(region)
       else None

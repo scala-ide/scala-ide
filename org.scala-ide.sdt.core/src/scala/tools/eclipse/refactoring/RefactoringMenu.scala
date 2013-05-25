@@ -35,11 +35,12 @@ protected[eclipse] object RefactoringMenu {
     val ContextMenu = Value("org.eclipse.jdt.ui.refactoring.menu")
     val CommandsCategory = Value("scala.tools.eclipse.refactoring.commands.refactoring")
     val CommandsMethodSignatureCategory = Value("scala.tools.eclipse.refactoring.commands.methodsignature")
-    type Id = Value; implicit def toString(id: Id.Value) = id.toString
+
+    type Id = Value
   }
 
   def fillContextMenu(menu: IMenuManager, editor: EditorPart): Unit = {
-    val refactorSubmenu = Option(menu.findMenuUsingPath(Id.ContextMenu))
+    val refactorSubmenu = Option(menu.findMenuUsingPath(Id.ContextMenu.toString()))
     /* Add actions in a listener to refill every time RefactorActionGroup's listener empties it for us: */
     refactorSubmenu foreach {
       _.addMenuListener(new IMenuListener() {
@@ -56,7 +57,7 @@ protected[eclipse] object RefactoringMenu {
      * binding for the context submenu, so the binding does not show up in the context menu. To
      * show the binding to the user, we add the quick menu command to the context submenu, but
      * not to the quick menu (see fillFromPluginXml below). */
-    handlerService(editor).activateHandler(Id.QuickMenu, handler)
+    handlerService(editor).activateHandler(Id.QuickMenu.toString(), handler)
   }
 
   private def fillFromPluginXml(menu: IMenuManager, editor: EditorPart, all: Boolean): Unit = {
@@ -65,8 +66,8 @@ protected[eclipse] object RefactoringMenu {
 
     val service = commandService(editor)
     val categories = {
-      val refactoringCategory = service.getCategory(Id.CommandsCategory)
-      val methodSignatureCategory = service.getCategory(Id.CommandsMethodSignatureCategory)
+      val refactoringCategory = service.getCategory(Id.CommandsCategory.toString())
+      val methodSignatureCategory = service.getCategory(Id.CommandsMethodSignatureCategory.toString())
       List(refactoringCategory, methodSignatureCategory)
     }
 

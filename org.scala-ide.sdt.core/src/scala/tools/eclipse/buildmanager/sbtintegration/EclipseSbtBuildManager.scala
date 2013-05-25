@@ -103,8 +103,9 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings)
   }
   private lazy val sbtReporter: xsbti.Reporter = new SbtBuildReporter(buildReporter)
 
-  private implicit def toFile(files: mutable.Set[AbstractFile]): Seq[File] = files.map(_.file).toSeq
-  private implicit def toFile(files: scala.collection.Set[AbstractFile]): Seq[File] = files.map(_.file).toSeq
+  private implicit class FileHelper(files: scala.collection.Set[AbstractFile]) {
+    def asJFiles: Seq[File] = files.map(_.file).toSeq
+  }
 
 
   private val sources: mutable.Set[AbstractFile] = mutable.Set.empty
@@ -113,7 +114,7 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings)
   private def addSourceFiles(files: scala.collection.Set[AbstractFile]) {
     if (!files.isEmpty) {
       sources ++= files
-      runCompiler(sources)
+      runCompiler(sources.asJFiles)
     }
   }
 
@@ -132,7 +133,7 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings)
       buildingFiles(added)
       removeFiles(removed)
       sources ++= added
-      runCompiler(sources)
+      runCompiler(sources.asJFiles)
     }
   }
 

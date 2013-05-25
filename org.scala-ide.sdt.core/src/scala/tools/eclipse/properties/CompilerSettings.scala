@@ -337,7 +337,7 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
 
   // LUC_B: it would be nice to have this widget behave like the other 'EclipseSettings', to avoid unnecessary custom code
   class AdditionalParametersWidget {
-    import SWTUtils._
+    import scala.tools.eclipse.util.SWTUtils._
 
     var additionalParametersControl: Text = _
     var additionalCompParams = originalValue

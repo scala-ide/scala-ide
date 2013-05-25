@@ -15,7 +15,10 @@ import org.eclipse.jface.util.PropertyChangeEvent
 import org.eclipse.swt.events._
 import scala.tools.eclipse.ui.DisplayThread
 
+// TODO move out implicit conversions to a separate module?
 object SWTUtils {
+
+  import scala.language.implicitConversions
 
   @deprecated("3.0.0", "Use scala.tools.eclipse.ui.DisplayThread.asyncExec")
   def asyncExec(f: => Unit) {
@@ -31,6 +34,7 @@ object SWTUtils {
     def modifyText(e: ModifyEvent) = f(e)
   }
 
+  // TODO this method is unused. remove?
   implicit def fnToValListener(f: VerifyEvent => Unit) = new VerifyListener {
     def verifyText(e: VerifyEvent) = f(e)
   }
@@ -64,9 +68,7 @@ object SWTUtils {
       def doubleClick(event: DoubleClickEvent) { p(event) }
     }
 
-  implicit def control2PimpedControl(control: Control): PimpedControl = new PimpedControl(control)
-
-  class PimpedControl(control: Control) {
+  implicit class PimpedControl(control: Control) {
 
     def onKeyReleased(p: KeyEvent => Any) {
       control.addKeyListener(new KeyAdapter {

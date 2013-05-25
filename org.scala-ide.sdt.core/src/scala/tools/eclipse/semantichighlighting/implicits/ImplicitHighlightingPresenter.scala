@@ -4,7 +4,6 @@ import java.util.Collections
 import scala.tools.eclipse.javaelements.ScalaCompilationUnit
 import scala.tools.eclipse.properties.ImplicitsPreferencePage._
 import scala.tools.eclipse.reconciliation.ReconciliationParticipant
-import scala.tools.eclipse.util.Utils.any2optionable
 import scala.tools.eclipse.util.EclipseUtils
 import scala.tools.eclipse.logging.HasLogger
 import scala.tools.eclipse.ScalaPlugin
@@ -101,7 +100,8 @@ class ImplicitHighlightingPresenter(sourceViewer: ISourceViewer) extends Semanti
     }
   }
 
-  private def refresh() =
+  private def refresh() = {
+    import scala.tools.eclipse.util.Utils._
     for {
       page <- EclipseUtils.getWorkbenchPages
       editorReference <- page.getEditorReferences
@@ -109,6 +109,7 @@ class ImplicitHighlightingPresenter(sourceViewer: ISourceViewer) extends Semanti
       compilationUnit <- Option(JavaPlugin.getDefault.getWorkingCopyManager.getWorkingCopy(editorInput))
       scu <- compilationUnit.asInstanceOfOpt[ScalaCompilationUnit]
     } apply(scu)
+  }
 
   private def pluginStore: IPreferenceStore = ScalaPlugin.plugin.getPreferenceStore
 

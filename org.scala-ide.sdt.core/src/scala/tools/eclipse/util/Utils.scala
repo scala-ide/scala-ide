@@ -42,7 +42,8 @@ object Utils extends HasLogger {
     }
   }
 
-  class WithAsInstanceOfOpt(obj: AnyRef) {
+  implicit class WithAsInstanceOfOpt(obj: AnyRef) {
+    // TODO replace Manifest with TypeTag
     import scala.reflect.Manifest // this is needed for 2.8 compatibility
     def asInstanceOfOpt[B](implicit m: Manifest[B]): Option[B] =
       if (Manifest.singleType(obj) <:< m)
@@ -50,7 +51,5 @@ object Utils extends HasLogger {
       else
         None
   }
-
-  implicit def any2optionable(obj: AnyRef): WithAsInstanceOfOpt = new WithAsInstanceOfOpt(obj)
 
 }
