@@ -23,7 +23,7 @@ class ScalaStructureSelectEnclosingAction(editor: ScalaSourceFileEditor, selecti
         try new AstSelector(source)
         catch { case _: ScalaParserException => return }
     }
-    previousAstSelector = Some(source, astSelector)
+    previousAstSelector = Some(source -> astSelector)
 
     val selection = editor.getSelectionProvider.getSelection.asInstanceOf[ITextSelection]
     val selectionRange = Range(selection.getOffset, selection.getLength)

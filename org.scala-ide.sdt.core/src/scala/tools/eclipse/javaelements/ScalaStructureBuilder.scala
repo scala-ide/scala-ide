@@ -468,7 +468,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
           parentTree map { tree =>
               val start0 = tree.pos.point
               (start0, start0-1)
-          } getOrElse (-1,-1) // undefined
+          } getOrElse (-1 -> -1) // undefined
         }
 
         classElemInfo.setNameSourceStart0(start)

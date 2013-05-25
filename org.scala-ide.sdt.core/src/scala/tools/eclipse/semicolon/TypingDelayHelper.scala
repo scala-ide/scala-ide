@@ -44,7 +44,7 @@ class TypingDelayHelper {
    */
   def scheduleCallback(f: => Any) = withLock(lock) {
     val timeToFireEvent = new Date(System.currentTimeMillis + DELAY)
-    nextScheduledEventOpt = Some(timeToFireEvent, () => f)
+    nextScheduledEventOpt = Some((timeToFireEvent, () => f))
     condition.signal()
     SchedulerThread.interrupt()
   }

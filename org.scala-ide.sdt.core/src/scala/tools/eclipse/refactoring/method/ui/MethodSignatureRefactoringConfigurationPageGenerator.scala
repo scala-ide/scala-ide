@@ -299,7 +299,7 @@ trait MethodSignatureRefactoringConfigurationPageGenerator {
   protected def addSplitPositionAfter(param: ValDef, paramsWithSeparators: List[ParamOrSeparator]): List[ParamOrSeparator] = {
     def computePos(paramListIndex: Int, posCounter: Int, m: List[ParamOrSeparator]): Option[(Int, Int)] = m match {
       case Nil => None
-      case Left(p)::ms if p == param => Some(paramListIndex, posCounter + 1)
+      case Left(p)::ms if p == param => Some((paramListIndex, posCounter + 1))
       case Left(_)::ms => computePos(paramListIndex, posCounter + 1, ms)
       case Right(OriginalSeparator(_))::ms => computePos(paramListIndex + 1, 0, ms)
       case Right(InsertedSeparator(_, _))::ms => computePos(paramListIndex, posCounter, ms)

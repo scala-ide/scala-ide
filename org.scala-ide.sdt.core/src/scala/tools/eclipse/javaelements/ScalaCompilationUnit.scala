@@ -143,7 +143,7 @@ trait ScalaCompilationUnit extends Openable
    */
   override def scheduleReconcile(): Response[Unit] = {
     val r = (new Response[Unit])
-    r.set()
+    r.set(())
     r
   }
 
