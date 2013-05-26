@@ -191,4 +191,9 @@ class LiteralAutoEditStrategyTest extends AutoEditStrategyTests(
   def auto_close_multi_line_string_literal() {
     test(input = " \"\"^ ", expectedOutput = " \"\"\"^\"\"\" ", operation = Add("\""))
   }
+
+  @Test
+  def not_add_closing_string_literal_if_it_occurs_before_text() {
+    test(input = """ ^text """, expectedOutput = """ "^text """, operation = Add("\""))
+  }
 }
