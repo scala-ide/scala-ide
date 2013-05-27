@@ -3,7 +3,6 @@ package scala.tools.eclipse.lexical
 import scala.tools.eclipse.properties.syntaxcolouring.ScalaSyntaxClass
 
 import org.eclipse.jdt.core.JavaCore
-import org.eclipse.jdt.ui.text.IColorManager
 import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.jface.text.rules.{ ICharacterScanner, IRule, IToken, IWordDetector, RuleBasedScanner, Token }
 import org.eclipse.jface.util.PropertyChangeEvent
@@ -31,7 +30,6 @@ import org.eclipse.jface.util.PropertyChangeEvent
 class ScalaCommentScanner(
     syntaxClass: ScalaSyntaxClass,
     taskTagClass: ScalaSyntaxClass,
-    val colorManager: IColorManager,
     val preferenceStore: IPreferenceStore,
     javaPreferenceStore: IPreferenceStore
 ) extends RuleBasedScanner with AbstractScalaScanner {
