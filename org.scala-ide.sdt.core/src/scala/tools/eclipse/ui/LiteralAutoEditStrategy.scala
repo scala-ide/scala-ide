@@ -22,7 +22,11 @@ class LiteralAutoEditStrategy(prefStore: IPreferenceStore) extends IAutoEditStra
     }
 
     def addClosingLiteral() {
-      if (ch(-1, '"') || ch(-1, ''') || ch(0, '"') || ch(0, ''') || ch(-2, ''')) {
+      def isIdentStart = {
+        val o = command.offset
+        o < document.getLength() && Character.isJavaIdentifierStart(document.getChar(o))
+      }
+      if (ch(-1, '"') || ch(-1, ''') || ch(0, '"') || ch(0, ''') || ch(-2, ''') || isIdentStart) {
         return
       }
       command.caretOffset = command.offset + 1
