@@ -52,7 +52,7 @@ class ScalaSourceViewerConfiguration(store: IPreferenceStore, scalaPreferenceSto
     val scalaCodeScanner = new ScalaCodeScanner(scalaPreferenceStore, ScalaVersions.DEFAULT)
     val singleLineCommentScanner = new ScalaCommentScanner(ScalaSyntaxClasses.SINGLE_LINE_COMMENT, ScalaSyntaxClasses.TASK_TAG, scalaPreferenceStore, store)
     val multiLineCommentScanner = new ScalaCommentScanner(ScalaSyntaxClasses.MULTI_LINE_COMMENT, ScalaSyntaxClasses.TASK_TAG, scalaPreferenceStore, store)
-    val scaladocScanner = new ScaladocTokenScanner(ScalaSyntaxClasses.SCALADOC, ScalaSyntaxClasses.SCALADOC_ANNOTATION, ScalaSyntaxClasses.SCALADOC_MACRO, scalaPreferenceStore)
+    val scaladocScanner = new ScaladocTokenScanner(ScalaSyntaxClasses.SCALADOC, ScalaSyntaxClasses.SCALADOC_ANNOTATION, ScalaSyntaxClasses.SCALADOC_MACRO, ScalaSyntaxClasses.TASK_TAG, scalaPreferenceStore, store)
     val scaladocCodeBlockScanner = new SingleTokenScanner(ScalaSyntaxClasses.SCALADOC_CODE_BLOCK, scalaPreferenceStore)
     val stringScanner = new StringTokenScanner(ScalaSyntaxClasses.ESCAPE_SEQUENCE, ScalaSyntaxClasses.STRING, scalaPreferenceStore)
     val characterScanner = new StringTokenScanner(ScalaSyntaxClasses.ESCAPE_SEQUENCE, ScalaSyntaxClasses.CHARACTER, scalaPreferenceStore)

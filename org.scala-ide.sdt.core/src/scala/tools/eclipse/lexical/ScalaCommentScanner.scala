@@ -97,7 +97,12 @@ class ScalaCommentScanner(
  * Its up to the word matchers to decide if a word matches and, in this case,
  * which token is associated with that word.
  *
- * If `matcher` doesn't provide a token for a given word `defaultToken` is used.
+ * If `matcher` doesn't provide a token for a given word then `defaultToken` is
+ * used.
+ *
+ * This class is inspired by [[org.eclipse.jdt.internal.ui.text.CombinedWordRule]],
+ * which can't be reused because it triggers the loading of UI classes and therefore
+ * would prevent testing.
  */
 private class CombinedWordRule(
     detector: IWordDetector,
@@ -161,7 +166,7 @@ private class WordMatcher {
   }
 
   /**
-   * Checks is a given word can be matched by this matcher and returns the token
+   * Checks if a given word can be matched by this matcher and returns the token
    * associated with this word if that is the case.
    *
    * The value of [[isCaseSensitve]] is considered during the word check.
