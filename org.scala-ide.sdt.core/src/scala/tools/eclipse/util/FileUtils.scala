@@ -23,7 +23,7 @@ import org.eclipse.jdt.internal.core.builder.JavaBuilder
 import org.eclipse.core.runtime.IPath
 
 object FileUtils {
-  
+
   def toIFile(file: AbstractFile): Option[IFile] = file match {
     case null => None
     case EclipseResource(file: IFile) => Some(file)
@@ -31,7 +31,7 @@ object FileUtils {
       val path = Path.fromOSString(abstractFile.path)
       toIFile(path)
   }
-  
+
   def toIFile(path: IPath): Option[IFile] = {
     val file = ResourcesPlugin.getWorkspace.getRoot.getFileForLocation(path)
 
@@ -39,7 +39,7 @@ object FileUtils {
     else Some(file)
   }
 
-  
+
   def length(file : IFile) = {
     val fs = FileBuffers.getFileStoreAtLocation(file.getLocation)
     if (fs != null)
@@ -47,21 +47,21 @@ object FileUtils {
     else
       -1
   }
-  
+
   def clearBuildErrors(file : IFile, monitor : IProgressMonitor) =
     try {
       file.deleteMarkers(plugin.problemMarkerId, true, IResource.DEPTH_INFINITE)
     } catch {
       case _ : ResourceException =>
     }
-  
+
   def clearTasks(file : IFile, monitor : IProgressMonitor) =
     try {
       file.deleteMarkers(plugin.taskMarkerId, true, IResource.DEPTH_INFINITE)
     } catch {
       case _ : ResourceException =>
     }
-  
+
   def findBuildErrors(file : IResource) : Seq[IMarker] =
     file.findMarkers(plugin.problemMarkerId, true, IResource.DEPTH_INFINITE)
 

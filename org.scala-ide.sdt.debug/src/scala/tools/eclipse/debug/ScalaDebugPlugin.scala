@@ -9,11 +9,11 @@ import org.eclipse.core.runtime.IStatus
 
 object ScalaDebugPlugin {
   @volatile var plugin: ScalaDebugPlugin = _
-  
+
   def id = plugin.getBundle().getSymbolicName()
-  
+
   def wrapInCoreException(message: String, e: Throwable) = new CoreException(wrapInErrorStatus(message, e))
-  
+
   def wrapInErrorStatus(message: String, e: Throwable) = new Status(IStatus.ERROR, ScalaDebugPlugin.id, message, e)
 
 }
@@ -30,7 +30,7 @@ class ScalaDebugPlugin extends AbstractUIPlugin with IStartup {
     try super.stop(context)
     finally ScalaDebugPlugin.plugin = null
   }
-  
+
   /*
    * TODO: to move in start when launching a Scala application trigger the activation of this plugin.
    */

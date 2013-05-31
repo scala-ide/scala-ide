@@ -4,7 +4,7 @@ import java.io.IOException
 import java.net.SocketException
 
 class Callee @throws(classOf[InstantiationException]) () {
-  
+
   @throws(classOf[NoSuchFieldException])
   def this(i: Int) {
     this()

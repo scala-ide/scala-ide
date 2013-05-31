@@ -81,7 +81,7 @@ class ScalaJdiEventDispatcher private (virtualMachine: VirtualMachine, protected
 private[model] object ScalaJdiEventDispatcherActor {
   case class SetActorFor(actor: Actor, request: EventRequest)
   case class UnsetActorFor(request: EventRequest)
-  
+
   def apply(scalaDebugTargetActor: Actor): ScalaJdiEventDispatcherActor = {
     val actor = new ScalaJdiEventDispatcherActor(scalaDebugTargetActor)
     actor.start()
@@ -98,7 +98,7 @@ private class ScalaJdiEventDispatcherActor private (scalaDebugTargetActor: Actor
   import ScalaJdiEventDispatcherActor._
 
   /** event request to actor map */
-  private var eventActorMap = Map[EventRequest, Actor]()  
+  private var eventActorMap = Map[EventRequest, Actor]()
 
   override protected def postStart(): Unit = link(scalaDebugTargetActor)
 
@@ -120,7 +120,7 @@ private class ScalaJdiEventDispatcherActor private (scalaDebugTargetActor: Actor
 
     /* Cannot use the eventSet directly. The JDI specification says it should implement java.util.Set,
      * but the eclipse implementation doesn't.
-     * 
+     *
      * see eclipse bug #383625 */
     // forward each event to the interested actor
     eventSet.eventIterator.asScala.foreach {
@@ -138,7 +138,7 @@ private class ScalaJdiEventDispatcherActor private (scalaDebugTargetActor: Actor
         }
     }
 
-    // Message sent upon completion of the `futures`. This message is used to modify `this` actor's behavior.   
+    // Message sent upon completion of the `futures`. This message is used to modify `this` actor's behavior.
     object FutureComputed
 
     // Change the actor's behavior to wait for the `futures` to complete
@@ -148,18 +148,18 @@ private class ScalaJdiEventDispatcherActor private (scalaDebugTargetActor: Actor
     val it = futures.iterator
     loopWhile(it.hasNext) {
       val future = it.next
-      //FIXME: If any of the actor sitting behind the future dies, it could prevent the `ScalaJdiEventDispatcherActor` to 
-      //       resume and effectively blocking the whole application! Unfortunately, it doesn't look like there is an easy 
-      //       fix (changing the future into synchronous calls doesn't look like a good idea, as it's hard to know in advance 
+      //FIXME: If any of the actor sitting behind the future dies, it could prevent the `ScalaJdiEventDispatcherActor` to
+      //       resume and effectively blocking the whole application! Unfortunately, it doesn't look like there is an easy
+      //       fix (changing the future into synchronous calls doesn't look like a good idea, as it's hard to know in advance
       //       what would be the right timeout value to set). (ticket #1001311)
-      future.inputChannel.react { 
+      future.inputChannel.react {
         case result: Boolean => staySuspended |= result
       }
     }.andThen {
       try if (!staySuspended) eventSet.resume()
       finally ScalaJdiEventDispatcherActor.this ! FutureComputed
     }
-    // Warning: Any code inserted here is never executed (it is effectively dead/unreachable code), because the above 
+    // Warning: Any code inserted here is never executed (it is effectively dead/unreachable code), because the above
     //          `loopWhile` never returns normally (i.e., it always throws an exception!).
   }
 }

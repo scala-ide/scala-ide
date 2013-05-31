@@ -15,7 +15,7 @@ class ScalaDeclarationHyperlinkComputer extends HasLogger {
   def findHyperlinks(icu: InteractiveCompilationUnit, wordRegion: IRegion): Option[List[IHyperlink]] = {
     findHyperlinks(icu, wordRegion, wordRegion)
   }
-  
+
   def findHyperlinks(icu: InteractiveCompilationUnit, wordRegion: IRegion, mappedRegion: IRegion): Option[List[IHyperlink]] = {
     /** In 2.9 ClazzTag was called ClassTag. Source-compatibility hack */
     implicit def compatClazzTag(com: ScalaPresentationCompiler) = new {
@@ -25,7 +25,7 @@ class ScalaDeclarationHyperlinkComputer extends HasLogger {
       object DeclarationHyperlinkFactory extends HyperlinkFactory {
         protected val global: compiler.type = compiler
       }
-      
+
       if (mappedRegion == null || mappedRegion.getLength == 0)
         None
       else {

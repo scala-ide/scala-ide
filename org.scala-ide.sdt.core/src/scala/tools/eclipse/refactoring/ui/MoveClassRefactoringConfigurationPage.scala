@@ -26,7 +26,7 @@ class MoveClassRefactoringConfigurationPage(
     val pf = javaProject.findPackageFragment(resourceToMove.getParent().getFullPath())
     pf.getElementName()
   }
-  
+
   private var destinationField: TreeViewer = _
   private var moveSelectedClass: Button = _
 
@@ -124,10 +124,10 @@ class MoveClassRefactoringConfigurationPage(
         status.addFatalError("Select a package.")
       case Some(pkg) if pkg.getElementName == originatingPackage =>
         status.addFatalError("Selected element is already in this package.")
-      case _ => 
+      case _ =>
     }
-    
-    
+
+
     // warn if the selected impl is a sealed class!
     setPageComplete(status)
   }

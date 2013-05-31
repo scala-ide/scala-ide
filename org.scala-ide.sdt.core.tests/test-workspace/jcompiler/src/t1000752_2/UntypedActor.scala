@@ -2,7 +2,7 @@ package t1000752_2
 
 abstract class UntypedActor extends Actor {
   trait Procedure[+T]
-  
+
   @throws(classOf[Exception])
   def onReceive(message: Any): Unit
 

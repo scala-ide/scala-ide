@@ -385,9 +385,9 @@ object FormatterPreferencePage {
   val SCALARIFORM_DOC_URL = "http://mdr.github.com/scalariform/"
 
   val SPACES_PREVIEW_TEXT = """class ClassName[T](name: String) {
-  
+
   println("hello"+name+"world")
-  
+
   stack.pop() should equal (2)
 
   x match {
@@ -398,7 +398,7 @@ object FormatterPreferencePage {
 """
 
   val INDENT_PREVIEW_TEXT = """package foo {
-class Bar(param: Int) 
+class Bar(param: Int)
 extends Foo with Baz {
   def method(s: String,
 n: Int) = {
@@ -418,7 +418,7 @@ n: Int) = {
 <bar/>
  <baz  attr= "value" />
 </foo>
-for (n <- 1 to 10) 
+for (n <- 1 to 10)
  n match {
   case _ => 42
 }
@@ -439,9 +439,9 @@ else {
 """
 
   val SCALADOC_PREVIEW_TEXT = """/**
- * Multiline Scaladoc 
+ * Multiline Scaladoc
  * comment
- */ 
+ */
  class A
 """
 

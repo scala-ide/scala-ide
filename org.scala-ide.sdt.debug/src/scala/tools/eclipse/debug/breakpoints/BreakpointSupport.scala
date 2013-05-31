@@ -34,9 +34,9 @@ private[debug] object BreakpointSupport {
   final val ATTR_VM_REQUESTS_ENABLED = "org.scala-ide.sdt.debug.breakpoint.vm_enabled"
 
   /** Create the breakpoint support actor.
-   *  
-   *  @note `BreakpointSupportActor` instances are created only by the `ScalaDebugBreakpointManagerActor`, hence 
-   *        any uncaught exception that may occur during initialization (i.e., in `BreakpointSupportActor.apply`) 
+   *
+   *  @note `BreakpointSupportActor` instances are created only by the `ScalaDebugBreakpointManagerActor`, hence
+   *        any uncaught exception that may occur during initialization (i.e., in `BreakpointSupportActor.apply`)
    *        will be caught by the `ScalaDebugBreakpointManagerActor` default exceptions' handler.
    */
   def apply(breakpoint: IBreakpoint, debugTarget: ScalaDebugTarget): Actor = {
@@ -50,7 +50,7 @@ private object BreakpointSupportActor {
 
   def apply(breakpoint: IBreakpoint, debugTarget: ScalaDebugTarget): Actor = {
     val typeName= breakpoint.typeName
-    
+
     val breakpointRequests   = createBreakpointsRequests(breakpoint, typeName, debugTarget)
 
     val actor = new BreakpointSupportActor(breakpoint, debugTarget, typeName, ListBuffer(breakpointRequests: _*))
@@ -128,7 +128,7 @@ private class BreakpointSupportActor private (
     val eventRequestManager = debugTarget.virtualMachine.eventRequestManager
 
     debugTarget.cache.removeClassPrepareEventListener(this, typeName)
-    
+
     breakpointRequests.foreach { request =>
       eventRequestManager.deleteEventRequest(request)
       eventDispatcher.unsetActorFor(request)

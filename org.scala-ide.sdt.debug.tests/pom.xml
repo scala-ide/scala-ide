@@ -88,6 +88,19 @@
         </executions>
       </plugin>
 
+      <!-- Scalastyle -->
+      <plugin>
+        <groupId>org.scalastyle</groupId>
+        <artifactId>scalastyle-maven-plugin</artifactId>
+        <configuration>
+          <sourceDirectories>
+            <dir>src</dir>
+            <dir>test-workspace</dir>
+          </sourceDirectories>
+          <configLocation>../org.scala-ide.sdt.core/scala-ide-style-config.xml</configLocation>
+        </configuration>
+      </plugin>
+
     </plugins>
   </build>
 </project>

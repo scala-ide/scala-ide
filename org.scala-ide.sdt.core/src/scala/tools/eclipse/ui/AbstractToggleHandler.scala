@@ -56,7 +56,7 @@ abstract class AbstractToggleHandler(commandId: String, preferenceId: String) ex
   }
 
   PropertyChangeListenerProxy(_listener, pluginStore).autoRegister()
-  
+
   private def refresh() {
     val service = PlatformUI.getWorkbench().getService(classOf[ICommandService]).asInstanceOf[ICommandService]
     service.refreshElements(commandId, null)

@@ -156,17 +156,17 @@ object ImplicitHighlightingPresenter {
         val eol = txt.indexOf('\n')
         if (eol > -1) eol else txt.length
       } else txt.length
-      
+
       new Position(start, end)
     }
 
     def mkImplicitConversionAnnotation(t: ApplyImplicitView) = {
-      val txt = new String(sourceFile.content, t.pos.startOrPoint, math.max(0, t.pos.endOrPoint - t.pos.startOrPoint)).trim()      
+      val txt = new String(sourceFile.content, t.pos.startOrPoint, math.max(0, t.pos.endOrPoint - t.pos.startOrPoint)).trim()
       val pos = mkPosition(t.pos, txt)
       val region = new Region(pos.offset, pos.getLength)
       val annotation = new ImplicitConversionAnnotation(() => ImplicitHyperlinkFactory.create(Hyperlink.withText("Open Implicit"), scu, t.symbol, region),
           "Implicit conversions found: " + txt + DisplayStringSeparator + t.fun.symbol.name + "(" + txt + ")")
-      
+
       (annotation, pos)
     }
 

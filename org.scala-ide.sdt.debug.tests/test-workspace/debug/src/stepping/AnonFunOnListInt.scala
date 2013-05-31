@@ -11,11 +11,11 @@ object AnonFunOnListInt {
     l.foreach(noop(_))
 
     l.find(_ == 3)
-      
+
     l.map(ret(_))
 
     l.foldLeft(0)(_ + ret(_))
-    
+
     l foreach { i =>
       noop(i)
     }

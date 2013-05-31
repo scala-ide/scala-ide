@@ -11,7 +11,7 @@ object MultipleErrorsTest extends testsetup.TestProjectSetup("builder-errors")
 
 class MultipleErrorsTest {
   import MultipleErrorsTest._
-    
+
   @Before
   def setupWorkspace {
     SDTTestUtils.enableAutoBuild(false)

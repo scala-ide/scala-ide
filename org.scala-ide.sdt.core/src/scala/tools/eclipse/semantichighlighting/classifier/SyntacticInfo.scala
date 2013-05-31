@@ -8,14 +8,14 @@ import org.eclipse.jface.text.Region
 import org.eclipse.jface.text.IRegion
 import scala.tools.eclipse.util.parsing.ScalariformParser
 
-// Symbol information derived by purely syntactic means, via Scalariform's parser, because it (appears) 
+// Symbol information derived by purely syntactic means, via Scalariform's parser, because it (appears)
 // difficult to get this out scalac trees
 case class SyntacticInfo(
   namedArgs: Set[IRegion],
   forVals: Set[IRegion],
   maybeSelfRefs: Set[IRegion],
   maybeClassOfs: Set[IRegion],
-  annotations: Set[IRegion], 
+  annotations: Set[IRegion],
   packages: Set[IRegion],
   identifiersInStringInterpolations: Set[IRegion]
 )
@@ -29,7 +29,7 @@ object SyntacticInfo {
   private implicit def range2Region(range: Range): RangeOps = new RangeOps(range)
 
   def noSyntacticInfo = SyntacticInfo(Set(), Set(), Set(), Set(), Set(), Set(), Set())
-  
+
   def getSyntacticInfo(source: String): SyntacticInfo = {
     var namedArgs: Set[IRegion] = Set()
     var forVals: Set[IRegion] = Set()

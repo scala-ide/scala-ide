@@ -16,7 +16,7 @@ case class HighlightingStyle(styledTextAttribute: TextAttribute, enabled: Boolea
   val ta = if (enabled) styledTextAttribute else unstyledTextAttribute
   lazy val deprecatedTextAttribute: TextAttribute = deprecation.buildTextAttribute(ta)
   lazy val interpolationTextAttribute: TextAttribute = interpolation.buildTextAttribute(ta)
-  
+
   def style(position: Position): StyleRange = {
     val textAttribute = if (position.deprecated) deprecatedTextAttribute else if (position.inInterpolatedString) interpolationTextAttribute else ta
     val s = textAttribute.getStyle()
@@ -24,7 +24,7 @@ case class HighlightingStyle(styledTextAttribute: TextAttribute, enabled: Boolea
     val styleRange = new StyleRange(position.getOffset(), position.getLength(), textAttribute.getForeground(), textAttribute.getBackground(), fontStyle)
     styleRange.strikeout = (s & TextAttribute.STRIKETHROUGH) != 0
     styleRange.underline = (s & TextAttribute.UNDERLINE) != 0
-    styleRange  
+    styleRange
   }
 }
 

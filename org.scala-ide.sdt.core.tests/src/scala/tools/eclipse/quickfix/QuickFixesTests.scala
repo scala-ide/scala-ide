@@ -49,7 +49,7 @@ object QuickFixesTests extends TestProjectSetup("quickfix") {
       assertEquals(buf.toString, nProblems, problems.length)
     }
   }
-  
+
   def withQuickFixes(pathToSource: String)(expectedQuickFixes: String*) {
     withManyQuickFixesPerLine(pathToSource)(expectedQuickFixes.map(List(_)).toList)
   }

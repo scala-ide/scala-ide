@@ -42,7 +42,7 @@ case class JavaIndicator(scu: ScalaCompilationUnit,
 
 trait ScalaOverrideIndicatorBuilder { self : ScalaPresentationCompiler =>
   import ScalaOverrideIndicatorBuilder.OVERRIDE_ANNOTATION_TYPE
-  
+
   case class ScalaIndicator(scu: ScalaCompilationUnit, text: String, base: Symbol, val isOverwrite: Boolean)
     extends source.Annotation(OVERRIDE_ANNOTATION_TYPE, false, text) with IScalaOverrideIndicator {
     def open = {
@@ -55,7 +55,7 @@ trait ScalaOverrideIndicatorBuilder { self : ScalaPresentationCompiler =>
       }
     }
   }
-  
+
   class OverrideIndicatorBuilderTraverser(scu : ScalaCompilationUnit, annotationMap : JMap[AnyRef, AnyRef]) extends Traverser with HasLogger {
     override def traverse(tree: Tree): Unit = {
       tree match {
@@ -65,7 +65,7 @@ trait ScalaOverrideIndicatorBuilder { self : ScalaPresentationCompiler =>
               val isOverwrite = base.isDeferred && !defn.symbol.isDeferred
               val text = (if (isOverwrite) "implements " else "overrides ") + base.fullName
               val position = new JFacePosition(defn.pos.startOrPoint, 0)
-  
+
               if (base.isJavaDefined) {
                 val packageName = base.enclosingPackage.fullName
                 val typeNames = enclosingTypeNames(base).mkString(".")
@@ -76,11 +76,11 @@ trait ScalaOverrideIndicatorBuilder { self : ScalaPresentationCompiler =>
               } else annotationMap.put(ScalaIndicator(scu, text, base, isOverwrite), position)
             }
           } catch {
-            case ex: Throwable => eclipseLog.error("Error creating override indicators for %s".format(scu.file.path), ex) 
+            case ex: Throwable => eclipseLog.error("Error creating override indicators for %s".format(scu.file.path), ex)
           }
         case _ =>
       }
-  
+
       super.traverse(tree)
     }
   }

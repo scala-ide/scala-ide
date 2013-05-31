@@ -44,9 +44,9 @@ private[semantichighlighting] class PositionsTracker extends HasLogger {
     */
   def createPositionsChange(newPositions: List[Position]): PositionsChange = {
     /* Filtering out deleted positions here is important, failing to do so can cause half-colored identifiers.
-     * The reason is that deleted positions should not be considered when computing the damaged region that is 
-     * used to invalidate the text presentation. Failing to do so can result in the computed damaged region to 
-     * partially remove a keyword's coloring style.   
+     * The reason is that deleted positions should not be considered when computing the damaged region that is
+     * used to invalidate the text presentation. Failing to do so can result in the computed damaged region to
+     * partially remove a keyword's coloring style.
      */
     val existingPositions = positions.filterNot(_.isDeleted())
     val existingPositionsByOffset = existingPositions.groupBy(_.getOffset)
@@ -82,7 +82,7 @@ private[semantichighlighting] class PositionsTracker extends HasLogger {
 
     PositionsChange(positionsToAdd.toList, positionsToRemove.toList)
   }
-  
+
   def identifiersInInterpolatedStrings = positions.filter(t => t.inInterpolatedString && !t.isDeleted())
 
   /** @note This method must always be called within the UI Thread. */
@@ -118,7 +118,7 @@ private[semantichighlighting] class PositionsTracker extends HasLogger {
   def positionsInRegion(region: IRegion): Array[Position] = {
     if (region.getLength() == 0 || positions.length == 0) Array.empty[Position]
     else {
-      // `positions` are sorted so here we first find the lower and upper index. 
+      // `positions` are sorted so here we first find the lower and upper index.
       // This matters for large files, i.e., when `positions` is > 10K
       def findIndex(position: Position): Int = {
         /* @see java.util.Arrays.binarySearch documentation.*/
