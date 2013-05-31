@@ -83,8 +83,9 @@
             If you want to build the Scala IDE against Scala 2.10.0 or Scala 2.10.1, make
             sure to pass -Dsbt.version=0.13.0-M2 to the build script (no SNAPSHOT is needed
             in this case because the Scala version is stable!)
-        -->
         <sbt.version>0.13.0-M2-SNAPSHOT</sbt.version>
+        -->
+        <sbt.version>0.13.0-Beta1-SNAPSHOT</sbt.version> <!-- We use Sbt 0.13 master because of source-incompatible changes in master -->
 
         <repo.scala-refactoring>${repo.scala-ide.root}/scala-refactoring-210x</repo.scala-refactoring>
         <repo.scalariform>${repo.scala-ide.root}/scalariform-210x</repo.scalariform>
@@ -98,7 +99,7 @@
         <scala.version>2.11.0-SNAPSHOT</scala.version>
         <scala.era.major.version>2.11</scala.era.major.version>
         <version.suffix>2_11</version.suffix>
-        <sbt.version>0.13.0-SNAPSHOT</sbt.version> <!-- We use Sbt 0.13 master for building against Scala 2.11.0-SNAPSHOT -->
+        <sbt.version>0.13.0-Beta1-SNAPSHOT</sbt.version> <!-- We use Sbt 0.13 master for building against Scala 2.11.0-SNAPSHOT -->
 
         <repo.scala-refactoring>${repo.scala-ide.root}/scala-refactoring-211x</repo.scala-refactoring>
         <repo.scalariform>${repo.scala-ide.root}/scalariform-211x</repo.scalariform>
