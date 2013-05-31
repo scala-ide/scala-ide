@@ -444,6 +444,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
 
     val shownArgs = {
       val defaultSettings = defaultScalaSettings()
+      setupCompilerClasspath(defaultSettings)
       val userSettings = for ((setting, value) <- shownSettings(defaultSettings, _ => true)) yield {
         initializeSetting(setting, value)
         setting
@@ -455,14 +456,16 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
        */
       val pluginsDirSetting = {
         // if the user provided an explicit path for -Xpluginsdir, then it's all good.
-        if(userSettings.exists(setting => setting.name == defaultSettings.pluginsDir)) None
+        if (userSettings.exists(setting => setting.name == defaultSettings.pluginsDir)) None
         // otherwise, inject the `pluginsDir` setting as defined in `ScalaPlugin.defaultScalaSettings`, i.e., it will
         // inject the default location where the continuations.jar can be found. Mind that this location can change
         // every time the user updates the Scala IDE.
         else Some(defaultSettings.pluginsDir)
       }
 
-      (pluginsDirSetting.toList ++ userSettings)  map (_.unparse)
+      val classpathSettings = List(defaultSettings.javabootclasspath, defaultSettings.bootclasspath)
+
+      (classpathSettings ++ pluginsDirSetting.toList ++ userSettings) map (_.unparse)
     }
     val extraArgs = defaultScalaSettings().splitParams(storage.getString(CompilerSettings.ADDITIONAL_PARAMS))
     shownArgs.flatten ++ encArgs ++ extraArgs
