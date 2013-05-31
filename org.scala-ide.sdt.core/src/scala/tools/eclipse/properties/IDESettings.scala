@@ -20,14 +20,14 @@ object IDESettings {
         List(deprecation, g, optimise, target, unchecked,
              pluginOptions, nospecialization, verbose, explaintypes, nowarn)),
       Box("Advanced",
-    	List(checkInit, Xchecknull, elidebelow,
+      List(checkInit, Xchecknull, elidebelow,
              Xexperimental, future, XlogImplicits,
              noassertions, nouescape, plugin, disable,
              require, pluginsDir, Xwarnfatal)),
       Box("Presentation Compiler",
         List(YpresentationDebug, YpresentationVerbose, YpresentationLog, YpresentationReplay, YpresentationDelay)))
   }
-  
+
   def buildManagerSettings: List[Box] =
     List(Box("Build manager", List(buildManager, compileOrder, stopBuildOnErrors, debugIncremental, withVersionClasspathValidator)))
 }

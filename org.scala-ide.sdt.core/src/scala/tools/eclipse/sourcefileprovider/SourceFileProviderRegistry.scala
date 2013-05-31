@@ -14,17 +14,17 @@ object SourceFileProviderRegistry extends HasLogger {
 
   private object FileExtension {
     def apply(path: IPath): FileExtension = new FileExtension(path.getFileExtension())
-  }  
-    
+  }
+
   private case class FileExtension(extension: String)
 
-  // Note: The map has to be thread-safe, since it can potentially be accessed by different threads at the same time  
-  private val registry: ConcurrentMap[FileExtension, SourceFileProvider] = new ConcurrentHashMap 
+  // Note: The map has to be thread-safe, since it can potentially be accessed by different threads at the same time
+  private val registry: ConcurrentMap[FileExtension, SourceFileProvider] = new ConcurrentHashMap
 
   registerProviders()
 
   def getProvider(path: IPath): SourceFileProvider = getProvider(FileExtension(path))
-  
+
   private def getProvider(extension: FileExtension): SourceFileProvider = registry get extension
 
   private def registerProviders() {
@@ -39,18 +39,18 @@ object SourceFileProviderRegistry extends HasLogger {
         val provider = config.createExecutableExtension("class").asInstanceOf[SourceFileProvider]
         registerProvider(config.getAttribute("file_extension"), provider)
       } catch {
-        case e: CoreException => 
+        case e: CoreException =>
           eclipseLog.error("Failed to register source file provider for extension point: " + extension, e)
       }
     }
   }
-  
+
   private def registerProvider(fileExtension: String, provider: SourceFileProvider): Unit = {
     val extension = FileExtension(fileExtension)
     if(registry containsKey extension) eclipseLog.warn("Source file provider for file extension `%s` already exists. Registration of `%s` will hence be ignored.".format(fileExtension, provider))
     else registry put (extension, provider)
   }
-  
-  // Note: we may need to implement the `IRegistryEventListener` if we want to support plugins that are started on the fly. This can be easily done 
+
+  // Note: we may need to implement the `IRegistryEventListener` if we want to support plugins that are started on the fly. This can be easily done
   //       via `Platform.getExtensionRegistry().addListener(...)`
 }

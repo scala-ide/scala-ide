@@ -18,7 +18,7 @@ class ColourPreferenceInitializer extends AbstractPreferenceInitializer {
       doInitializeDefaultPreferences()
     }
   }
-  
+
   private def doInitializeDefaultPreferences() {
     val scalaPrefStore = ScalaPlugin.prefStore
 
@@ -79,7 +79,7 @@ class ColourPreferenceInitializer extends AbstractPreferenceInitializer {
     setDefaultsForSyntaxClass(TYPE, new RGB(50, 147, 153), italic = true, enabled = false)
     setDefaultsForSyntaxClass(TYPE_PARAMETER, new RGB(23, 0, 129), underline = true, enabled = false)
     setDefaultsForSyntaxClass(IDENTIFIER_IN_INTERPOLATED_STRING, new RGB(0, 0, 0), underline = true, enabled = false)
-  }  
+  }
 
   private def setDefaultsForSyntaxClass(
     syntaxClass: ScalaSyntaxClass,

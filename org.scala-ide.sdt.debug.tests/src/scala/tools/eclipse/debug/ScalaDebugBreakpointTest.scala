@@ -250,7 +250,7 @@ class ScalaDebugBreakpointTest {
       session.runToLine(DI_TYPENAME, 5)
 
       project.scalaLibraries match {
-        case Seq(ScalaLibrary(location, Some(ver), isProject), _*) if ver.startsWith("2.11") => 
+        case Seq(ScalaLibrary(location, Some(ver), isProject), _*) if ver.startsWith("2.11") =>
           session.checkStackFrame(DI_TYPENAME + "$", "delayedEndpoint$breakpoints$DelayedInit$1()V", 4)
         case _ =>
           session.checkStackFrame(DI_TYPENAME + "$delayedInit$body", "apply()Ljava/lang/Object;", 4)

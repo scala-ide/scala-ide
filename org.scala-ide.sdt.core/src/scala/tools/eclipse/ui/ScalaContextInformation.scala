@@ -4,10 +4,10 @@ import org.eclipse.jface.text.contentassist.{IContextInformation,IContextInforma
 import org.eclipse.swt.graphics.Image
 
 class ScalaContextInformation(
-    display: String, info: String, image: Image, pos: Int) 
-    extends IContextInformation 
+    display: String, info: String, image: Image, pos: Int)
+    extends IContextInformation
     with IContextInformationExtension {
-  
+
   def getContextDisplayString() = display
   def getImage() = image
   def getInformationDisplayString() = info

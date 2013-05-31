@@ -14,27 +14,27 @@ import scala.tools.eclipse.semantichighlighting.classifier.SymbolTypes.SymbolTyp
 
 class AbstractSymbolClassifierTest {
   import AbstractSymbolClassifierTest._
-  
+
   protected val simulator = new EclipseUserSimulator
-  
+
   private var project: ScalaProject = _
-  
+
   @Before
   def createProject() {
     project = simulator.createProjectInWorkspace("symbols-classification", true)
   }
-  
+
   @After
   def deleteProject() {
-    EclipseUtils.workspaceRunnableIn(ScalaPlugin.plugin.workspaceRoot.getWorkspace) { _ => 
+    EclipseUtils.workspaceRunnableIn(ScalaPlugin.plugin.workspaceRoot.getWorkspace) { _ =>
       project.underlying.delete(true, null)
     }
   }
-  
+
   protected def checkSymbolClassification(source: String, locationTemplate: String, regionTagToSymbolType: Map[String, SymbolType]) {
     checkSymbolInfoClassification(source, locationTemplate, regionTagToSymbolType.mapValues(symbolType => SymbolInfo(symbolType, Nil, deprecated = false, inInterpolatedString = false)))
   }
-  
+
   protected def checkSymbolInfoClassification(source: String, locationTemplate: String, regionTagToSymbolInfo: Map[String, SymbolInfo], delimiter: Char = '$') {
     val expectedRegionToSymbolNameMap: Map[IRegion, String] = RegionParser.getRegions(locationTemplate, delimiter)
     val expectedRegionsAndSymbols: List[(IRegion, SymbolInfo)] =
@@ -65,7 +65,7 @@ class AbstractSymbolClassifierTest {
       val dummy = new compiler.Response[Unit]
       compiler.askReload(List(sourceFile), dummy)
       dummy.get
-    
+
       // then run classification
       val symbolInfos: List[SymbolInfo] = new SymbolClassification(sourceFile, compiler, useSyntacticHints = true).classifySymbols(new NullProgressMonitor)
       for {
@@ -77,16 +77,16 @@ class AbstractSymbolClassifierTest {
   }.distinct sortBy regionOffset
 
   private def regionOffset(regionAndSymbolInfo: (IRegion, _)) = regionAndSymbolInfo._1.getOffset
-  
+
 }
 
 object AbstractSymbolClassifierTest {
   private class RegionOps(region: IRegion) {
-    def intersects(other: IRegion): Boolean = 
+    def intersects(other: IRegion): Boolean =
       !(other.getOffset >= region.getOffset + region.getLength || other.getOffset + other.getLength - 1 < region.getOffset)
-      
+
     def of(s: String): String = s.slice(region.getOffset, region.getOffset + region.getLength)
   }
-  
+
   private implicit def region2regionOps(region: IRegion): RegionOps = new RegionOps(region)
 }

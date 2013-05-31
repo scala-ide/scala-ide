@@ -50,7 +50,7 @@ trait ReflectionUtils {
       field.setAccessible(true)
       field
     }
-  
+
   def privileged[T](body : => T) = {
     try {
       AccessController.doPrivileged(new PrivilegedAction[T] {

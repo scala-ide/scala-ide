@@ -21,13 +21,13 @@ import scala.tools.eclipse.util.EclipseUtils._
 import scala.tools.eclipse.javaelements.ScalaJavaMapper
 import scala.tools.nsc.MissingRequirementError
 
-/* This class can be eliminated in favour of JavaApplicationLaunch shortcut as soon as 
+/* This class can be eliminated in favour of JavaApplicationLaunch shortcut as soon as
  * the JDTs method search works correctly for Scala.
  */
 
 /**
  * This class extends the Java Launch functionality and overrides the sections that
- * require finding the main method as well as finding and creating new launch 
+ * require finding the main method as well as finding and creating new launch
  * configurations.
  */
 class ScalaLaunchShortcut extends JavaLaunchShortcut {
@@ -44,7 +44,7 @@ class ScalaLaunchShortcut extends JavaLaunchShortcut {
   }
 
   /**
-   * Given that the element name for a Scala module appends a $ the java based method can not be re-used.  It is 
+   * Given that the element name for a Scala module appends a $ the java based method can not be re-used.  It is
    * largely re-implemented here with the appropriate element name made available.
    */
   override def createConfiguration(t: IType): ILaunchConfiguration = {
@@ -58,9 +58,9 @@ class ScalaLaunchShortcut extends JavaLaunchShortcut {
   }
 
   /**
-   * Finds and returns an <b>existing</b> configuration to re-launch for the given type,   
+   * Finds and returns an <b>existing</b> configuration to re-launch for the given type,
    * or <code>null</code> if there is no existing configuration.
-   * 
+   *
    * @return a configuration to use for launching the given type or <code>null</code> if none
    */
   override def findLaunchConfiguration(t: IType, configType: ILaunchConfigurationType): ILaunchConfiguration = {
@@ -82,7 +82,7 @@ class ScalaLaunchShortcut extends JavaLaunchShortcut {
         candidateConfigs += launchConfig
     }
 
-    //Return matched configurations or null if none exist                         
+    //Return matched configurations or null if none exist
     val candidateCount = candidateConfigs.toArray.length
     if (candidateCount == 1)
       candidateConfigs(0)
@@ -97,7 +97,7 @@ class ScalaLaunchShortcut extends JavaLaunchShortcut {
    * or <code>null</code> to cancel. Default implementation opens a selection dialog that allows
    * the user to choose one of the specified launch configurations.  Returns the chosen configuration,
    * or <code>null</code> if the user cancels.
-   * 
+   *
    * @param configList list of configurations to choose from
    * @return configuration to launch or <code>null</code> to cancel
    */
@@ -127,7 +127,7 @@ class ScalaLaunchShortcut extends JavaLaunchShortcut {
    */
   private def getLaunchManager =
     DebugPlugin.getDefault.getLaunchManager
-    
+
   private def fullyQualifiedName(t: IType) = {
     val nm = t.getFullyQualifiedName
     if (nm.endsWith("$"))
@@ -137,7 +137,7 @@ class ScalaLaunchShortcut extends JavaLaunchShortcut {
   }
 
   /**
-   * Required to have the new launch configuration be placed as a Scala Launch configuration instead of a Java 
+   * Required to have the new launch configuration be placed as a Scala Launch configuration instead of a Java
    * Launch Configuration
    */
   override def getConfigurationType =
@@ -176,8 +176,8 @@ object ScalaLaunchShortcut {
           import definitions._
 
           def isTopLevelModule(cdef: Tree) = comp.askOption ( () =>
-             cdef.isInstanceOf[ModuleDef] && 
-             cdef.symbol.isModule         && 
+             cdef.isInstanceOf[ModuleDef] &&
+             cdef.symbol.isModule         &&
              cdef.symbol.owner.isPackageClass
           ).getOrElse(false)
 

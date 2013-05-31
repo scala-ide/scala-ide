@@ -10,7 +10,7 @@ import org.eclipse.swt.events._
 import scala.tools.eclipse.ui.DisplayThread
 
 object SWTUtils {
-  
+
   @deprecated("3.0.0", "Use scala.tools.eclipse.ui.DisplayThread.asyncExec")
   def asyncExec(f: => Unit) {
     DisplayThread.asyncExec(f)
@@ -20,7 +20,7 @@ object SWTUtils {
   def syncExec(f: => Unit) {
     DisplayThread.syncExec(f)
   }
-  
+
   implicit def fnToModifyListener(f: ModifyEvent => Unit): ModifyListener = new ModifyListener {
     def modifyText(e: ModifyEvent) = f(e)
   }
@@ -38,7 +38,7 @@ object SWTUtils {
     new SelectionAdapter() {
       override def widgetSelected(e: SelectionEvent) { p() }
     }
-  
+
   implicit def noArgFnToMouseUpListener(f: () => Any): MouseAdapter = new MouseAdapter {
     override def mouseUp(me: MouseEvent) = f()
   }

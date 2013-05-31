@@ -35,8 +35,8 @@ class ScalaLaunchableTester extends PropertyTester {
 
   /**
    * Determines if the Scala element contains main method(s).
-   * 
-   * @param element the element to check for the method 
+   *
+   * @param element the element to check for the method
    * @return true if a method is found in the element, false otherwise
    */
   private def hasMain(element: IJavaElement): Boolean = {
@@ -50,8 +50,8 @@ class ScalaLaunchableTester extends PropertyTester {
 
   /**
    * Determines if the Scala element is in a source that contains one (or more) runnable JUnit test class.
-   * 
-   * @param element the element to check for the method 
+   *
+   * @param element the element to check for the method
    * @return true if one or more JUnit test classes are found in the element, false otherwise
    */
   private def canLaunchAsJUnit(element: IJavaElement): Boolean = {
@@ -69,9 +69,9 @@ class ScalaLaunchableTester extends PropertyTester {
 
   /**
    * Method runs the tests defined from extension points for Run As... and Debug As... menu items.
-   * Currently this test optimistically considers everything not a source file. In this context we 
+   * Currently this test optimistically considers everything not a source file. In this context we
    * consider an optimistic approach to mean that the test will always return true.
-   * 
+   *
    * There are many reasons for the optimistic choice some of them are outlined below.
    * <ul>
    * <li>Performance (in terms of time needed to display menu) cannot be preserved. To know what to allow

@@ -24,8 +24,8 @@ object PoisonPill
   * the actor is guaranteed to execute `preExit` before terminating.
   */
 trait BaseDebuggerActor extends Actor with HasLogger {
-  // Always send an `Exit` message when a linked actor terminates. Be aware that if you change this, 
-  // you'll have to revisit the whole system behavior, as the system relies on `Exit` messages for 
+  // Always send an `Exit` message when a linked actor terminates. Be aware that if you change this,
+  // you'll have to revisit the whole system behavior, as the system relies on `Exit` messages for
   // graceful termination of all linked actors.
   trapExit = true
 
@@ -127,8 +127,8 @@ trait BaseDebuggerActor extends Actor with HasLogger {
   }
 
   override def exceptionHandler: Behavior = {
-    // Given we have a highly asynchronous system, `VMDisconnectedException` can happen simply because the user has stopped a debug session 
-    // while some debug actor was executing some logic that requires the underline virtual machine to be up and running. These sort of 
+    // Given we have a highly asynchronous system, `VMDisconnectedException` can happen simply because the user has stopped a debug session
+    // while some debug actor was executing some logic that requires the underline virtual machine to be up and running. These sort of
     // exception do not provide any meaningful information, hence we simply swallow it.
     case vme: VMDisconnectedException => ()
     case e: Exception =>

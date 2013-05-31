@@ -10,17 +10,17 @@ import java.util.concurrent.atomic.AtomicReference
 /** Use the `EclipseLogger` when you want to communicate with the user. Messages logged
  *  through the `EclipseLogger` are persisted in the Error Log.
  *
- *  This class is meant to be thread-safe, but it isn't because of a possible race condition existing 
- *  in the Eclipse Logger. Indeed, the call to `ScalaPlugin.plugin.getLog()` isn't thread-safe, but 
- *  there is really nothing we can do about it. The issue is that the `logs` map accessed in 
+ *  This class is meant to be thread-safe, but it isn't because of a possible race condition existing
+ *  in the Eclipse Logger. Indeed, the call to `ScalaPlugin.plugin.getLog()` isn't thread-safe, but
+ *  there is really nothing we can do about it. The issue is that the `logs` map accessed in
  *  [[org.eclipse.core.internal.runtime.InternalPlatform.getLog(bundle)]] is not synchronized.
- *  
- *  Mantainers should evolve this class by keeping in mind that the `EclipseLogger` will be 
- *  accessed by different threads at the same time, so it is important to keep this class lock-free, 
+ *
+ *  Mantainers should evolve this class by keeping in mind that the `EclipseLogger` will be
+ *  accessed by different threads at the same time, so it is important to keep this class lock-free,
  *  and thread-safe (or maybe a better wording would be: as much thread-safe as it can be).
- *  And that is actually the main motivation for using an [[java.util.concurrent.atomic.AtomicReference]] 
- *  for `lastCrash`. Also, note that declaring `lastCrash` as volatile (instead of using a 
- *  [[java.util.concurrent.atomic.AtomicReference]]) would have made this class less correct (because 
+ *  And that is actually the main motivation for using an [[java.util.concurrent.atomic.AtomicReference]]
+ *  for `lastCrash`. Also, note that declaring `lastCrash` as volatile (instead of using a
+ *  [[java.util.concurrent.atomic.AtomicReference]]) would have made this class less correct (because
  *  volatile fields don't offer atomic operations such as `getAndSet`).
  */
 private[logging] object EclipseLogger extends Logger {
@@ -76,7 +76,7 @@ private[logging] object EclipseLogger extends Logger {
       if (oldValue != t) {
         logInUiThread(severity, message, t)
         t match {
-          // `ControlThrowable` should never (ever!) be caught by user code. If that happens, generate extra noise. 
+          // `ControlThrowable` should never (ever!) be caught by user code. If that happens, generate extra noise.
           case ce: ControlThrowable =>
             logInUiThread(IStatus.ERROR, "Incorrectly logged ControlThrowable: " + ce.getClass.getSimpleName + "(" + ce.getMessage + ")", t)
           case _ => () // do nothing

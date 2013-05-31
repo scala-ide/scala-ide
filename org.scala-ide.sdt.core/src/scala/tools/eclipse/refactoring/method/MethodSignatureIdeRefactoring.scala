@@ -11,7 +11,7 @@ import org.eclipse.ltk.ui.refactoring.RefactoringWizardPage
 
 /**
  * Abstract refactoring that contains common functionality of method signature
- * refactorings. 
+ * refactorings.
  */
 abstract class MethodSignatureIdeRefactoring(refactoringName: String, start: Int, end: Int, file: ScalaSourceFile)
   extends IndexedIdeRefactoring(refactoringName, start, end, file) {
@@ -22,12 +22,12 @@ abstract class MethodSignatureIdeRefactoring(refactoringName: String, start: Int
   trait IndexedMethodSignatureRefactoring extends MethodSignatureRefactoring with GlobalIndexes with Indexed
 
   val refactoring: IndexedMethodSignatureRefactoring
-  
+
   type MSRefactoringParameters = refactoring.RefactoringParameters
 
   // Parameters will be set from the wizard page
   var refactoringParameters: MSRefactoringParameters
-  
+
   // The selected DefDef that will be refactored
   private[method] def defdefOrError: Either[refactoring.PreparationError, refactoring.global.DefDef] = preparationResult.right.map(_.defdef)
 
@@ -37,4 +37,4 @@ abstract class MethodSignatureIdeRefactoring(refactoringName: String, start: Int
     case Left(error) => Nil
     case Right(defdef) => mkConfigPage(defdef, refactoringParameters_=)::Nil
   }
-} 
+}

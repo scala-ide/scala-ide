@@ -104,7 +104,7 @@ object ScalaStackFrameTest {
 }
 
 class ScalaStackFrameTest {
-  
+
   import ScalaStackFrameTest._
 
   @Before
@@ -267,7 +267,7 @@ class ScalaStackFrameTest {
 
     assertEquals("Bad full method name", "TypeName.methodName(Boolean, Array[Int], Float, SomeTypeA, Array[Array[SomeTypeB]])", scalaStackFrame.getMethodFullName)
   }
-  
+
   @Test
   def getFullMethodNameWithEncoding() {
     val scalaThread = mock(classOf[ScalaThread])
@@ -278,13 +278,13 @@ class ScalaStackFrameTest {
 
     assertEquals("Bad full method name", "TypeName.:+-?()", scalaStackFrame.getMethodFullName)
   }
-  
+
   @Test
   def getVariableNonStaticMethod() {
     import scala.collection.JavaConverters._
-    
+
     val scalaThread = mock(classOf[ScalaThread])
-    
+
     val jdiStackFrame = mock(classOf[StackFrame])
     val jdiLocation = mock(classOf[Location])
     when(jdiStackFrame.location).thenReturn(jdiLocation)
@@ -295,22 +295,22 @@ class ScalaStackFrameTest {
     when(jdiStackFrame.visibleVariables).thenReturn(List(jdiLocalVariable, jdiLocalVariable, jdiLocalVariable, jdiLocalVariable).asJava)
 
     val scalaStackFrame = ScalaStackFrame(scalaThread, jdiStackFrame)
-    
+
     val variables= scalaStackFrame.getVariables
-    
+
     assertEquals("Bad number of variables", 5, variables.length)
     assertTrue("Bad type for 'this'", variables.head.isInstanceOf[ScalaThisVariable])
     variables.tail.foreach {v =>
       assertTrue("Bad local variable type", v.isInstanceOf[ScalaLocalVariable])
     }
   }
-  
+
   @Test
   def getVariableStaticMethod() {
     import scala.collection.JavaConverters._
-    
+
     val scalaThread = mock(classOf[ScalaThread])
-    
+
     val jdiStackFrame = mock(classOf[StackFrame])
     val jdiLocation = mock(classOf[Location])
     when(jdiStackFrame.location).thenReturn(jdiLocation)
@@ -321,9 +321,9 @@ class ScalaStackFrameTest {
     when(jdiStackFrame.visibleVariables).thenReturn(List(jdiLocalVariable, jdiLocalVariable, jdiLocalVariable).asJava)
 
     val scalaStackFrame = ScalaStackFrame(scalaThread, jdiStackFrame)
-    
+
     val variables= scalaStackFrame.getVariables
-    
+
     assertEquals("Bad number of variables", 3, variables.length)
     variables.foreach {v =>
       assertTrue("Bad local variable type", v.isInstanceOf[ScalaLocalVariable])
@@ -333,9 +333,9 @@ class ScalaStackFrameTest {
   @Test
   def getVariableNativeMethod() {
     import scala.collection.JavaConverters._
-    
+
     val scalaThread = mock(classOf[ScalaThread])
-    
+
     val jdiStackFrame = mock(classOf[StackFrame])
     val jdiLocation = mock(classOf[Location])
     when(jdiStackFrame.location).thenReturn(jdiLocation)
@@ -346,9 +346,9 @@ class ScalaStackFrameTest {
     when(jdiStackFrame.visibleVariables).thenReturn(List(jdiLocalVariable, jdiLocalVariable, jdiLocalVariable).asJava)
 
     val scalaStackFrame = ScalaStackFrame(scalaThread, jdiStackFrame)
-    
+
     val variables= scalaStackFrame.getVariables
-    
+
     assertEquals("Bad number of variables", 3, variables.length)
     variables.foreach {v =>
       assertTrue("Bad local variable type", v.isInstanceOf[ScalaLocalVariable])
@@ -356,45 +356,45 @@ class ScalaStackFrameTest {
   }
 
   // Signature reading tests
-  
+
   @Test
   def BooleanSignatureParsing() {
     assertEquals("Wrong name", "Boolean", ScalaStackFrame.getSimpleName("Z"))
   }
-  
+
   @Test
   def ByteSignatureParsing() {
     assertEquals("Wrong name", "Byte", ScalaStackFrame.getSimpleName("B"))
   }
-  
+
   @Test
   def CharSignatureParsing() {
     assertEquals("Wrong name", "Char", ScalaStackFrame.getSimpleName("C"))
   }
-  
+
   @Test
   def DoubleSignatureParsing() {
     assertEquals("Wrong name", "Double", ScalaStackFrame.getSimpleName("D"))
   }
-  
+
   @Test
   def FloatSignatureParsing() {
     assertEquals("Wrong name", "Float", ScalaStackFrame.getSimpleName("F"))
   }
-  
+
   @Test
   def IntegerSignatureParsing() {
     assertEquals("Wrong name", "Int", ScalaStackFrame.getSimpleName("I"))
   }
-  
+
   @Test
   def LongSignatureParsing() {
     assertEquals("Wrong name", "Long", ScalaStackFrame.getSimpleName("J"))
   }
-  
+
   @Test
   def ShortSignatureParsing() {
     assertEquals("Wrong name", "Short", ScalaStackFrame.getSimpleName("S"))
   }
-  
+
 }

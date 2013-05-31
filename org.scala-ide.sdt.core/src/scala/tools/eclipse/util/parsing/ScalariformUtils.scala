@@ -38,18 +38,18 @@ object ScalariformUtils {
    */
   def getParameters(source: AstNode, methodNameOffset: Int, typeAtRange: (Int, Int) => String) = {
     def createParameter(exprContents: List[ExprElement]): (String, String) = {
-      
+
       def getType(contents: List[ExprElement]): String = {
         val tokens = (for (expr <- contents) yield expr.tokens).flatten
         if (tokens.isEmpty) return "Any"
-        
+
         val startToken = tokens.minBy(_.offset)
         val start = startToken.offset
         val endToken = tokens.maxBy(token => token.offset + token.length)
         val end = endToken.offset + endToken.length
         typeAtRange(start, end)
       }
-      
+
       val (name, tpe) = exprContents match {
         //exprDotOpt must be None so we don't match a.unknownMethod(other.existingMethod)
         case List(CallExpr(/*exprDotOpt*/ None, id, _, _, _)) if id.tokenType.isId =>
@@ -62,10 +62,10 @@ object ScalariformUtils {
         case _ =>
           ("arg", getType(exprContents))
       }
-      
+
       (name, tpe)
     }
-    
+
     val parameters: Option[List[List[(String, String)]]] = toStream(source).collectFirst {
       //infix expression, eg
       //other method "abc"

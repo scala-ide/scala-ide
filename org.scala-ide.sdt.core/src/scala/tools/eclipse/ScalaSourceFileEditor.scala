@@ -75,7 +75,7 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor { sel
   import ScalaSourceFileEditor._
 
   private var occurrenceAnnotations: Set[Annotation] = Set()
-  private var occurrencesFinder: ScalaOccurrencesFinder = _  
+  private var occurrencesFinder: ScalaOccurrencesFinder = _
   private var occurencesFinderInstalled = false
   private val preferenceListener: IPropertyChangeListener = handlePreferenceStoreChanged _
   private val reconcilingListeners: ReconcilingListeners = new ScalaSourceFileEditor.ReconcilingListeners
@@ -83,7 +83,7 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor { sel
   /**@note Current implementation assumes that all accesses to this member should be confined to the UI Thread */
   private var semanticHighlightingPresenter: semantichighlighting.Presenter = _
   private def semanticHighlightingPreferences = semantichighlighting.Preferences(scalaPrefStore)
-  
+
   private lazy val selectionListener = new ISelectionListener() {
     def selectionChanged(part: IWorkbenchPart, selection: ISelection) {
       selection match {
@@ -93,7 +93,7 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor { sel
     }
   }
   private lazy val tpePresenter = {
-    val infoPresenter = new InformationPresenter(controlCreator) 
+    val infoPresenter = new InformationPresenter(controlCreator)
     infoPresenter.install(getSourceViewer)
     infoPresenter.setInformationProvider(actions.TypeOfExpressionProvider, IDocument.DEFAULT_CONTENT_TYPE)
     infoPresenter
@@ -101,7 +101,7 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor { sel
 
   setPartName("Scala Editor")
   scalaPrefStore.addPropertyChangeListener(preferenceListener)
-  
+
   def scalaPrefStore = ScalaPlugin.prefStore
   def javaPrefStore = getPreferenceStore
 
@@ -139,7 +139,7 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor { sel
     setAction(ShowInferredSemicolonsAction.ACTION_ID, showInferredSemicolons)
 
     val openAction = new Action {
-      private def scalaCompilationUnit: Option[ScalaCompilationUnit] = 
+      private def scalaCompilationUnit: Option[ScalaCompilationUnit] =
         Option(getInteractiveCompilationUnit) map (_.asInstanceOf[ScalaCompilationUnit])
 
       override def run {
@@ -161,7 +161,7 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor { sel
       val presentationHighlighter = TextPresentationEditorHighlighter(this, semanticHighlightingPreferences)
       semanticHighlightingPresenter = new Presenter(this, presentationHighlighter, semanticHighlightingPreferences, DisplayThread)
       semanticHighlightingPresenter.initialize(forceRefresh)
-    }  
+    }
   }
 
   protected def uninstallScalaSemanticHighlighting(removesHighlights: Boolean): Unit = {
@@ -200,7 +200,7 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor { sel
       annotationModel <- Option(documentProvider.getAnnotationModel(getEditorInput))
     } yield annotationModel
   }
-  
+
   private def performOccurrencesUpdate(selection: ITextSelection, documentLastModified: Long) {
     val annotations = getAnnotations(selection, getInteractiveCompilationUnit, documentLastModified)
     for(annotationModel <- getAnnotationModelOpt) annotationModel.withLock {
@@ -222,12 +222,12 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor { sel
 
   private def askForOccurrencesUpdate(selection: ITextSelection) {
 
-    if (selection.getLength < 0 || selection.getOffset < 0) 
+    if (selection.getLength < 0 || selection.getOffset < 0)
       return
-    
+
     if (getDocumentProvider == null || !isActiveEditor)
       return
-    
+
     val lastModified = getSourceViewer.getDocument match {
       case document: IDocumentExtension4 =>
         document.getModificationStamp
@@ -267,7 +267,7 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor { sel
     super.uninstallOccurrencesFinder
     removeScalaOccurrenceAnnotations()
   }
-  
+
   /** Clear the existing Mark Occurrences annotations.
    */
   def removeScalaOccurrenceAnnotations() {
@@ -290,7 +290,7 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor { sel
     super.editorContextMenuAboutToShow(menu)
 
     def groupMenuItemsByGroupId(items: Seq[IContributionItem]) = {
-      // the different groups (as indicated by separators) and 
+      // the different groups (as indicated by separators) and
       // contributions in a menu are originally just a flat list
       items.foldLeft(Nil: List[(String, List[IContributionItem])]) {
 
@@ -322,10 +322,10 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor { sel
 
       // and provide our own organize imports instead
       mm.appendToGroup("importGroup", new refactoring.OrganizeImportsAction { setText("Organize Imports") })
-      
+
       // add GenerateHashcodeAndEquals and IntroductProductN source generators
-      mm.appendToGroup("generateGroup", new refactoring.source.GenerateHashcodeAndEqualsAction { 
-        setText("Generate hashCode() and equals()...") 
+      mm.appendToGroup("generateGroup", new refactoring.source.GenerateHashcodeAndEqualsAction {
+        setText("Generate hashCode() and equals()...")
       })
       mm.appendToGroup("generateGroup", new refactoring.source.IntroduceProductNTraitAction {
         setText("Introduce ProductN trait...")
@@ -367,7 +367,7 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor { sel
         }
 
       case ScalaSyntaxClasses.ENABLE_SEMANTIC_HIGHLIGHTING =>
-        // This preference can be changed only via the preference dialog, hence the below block 
+        // This preference can be changed only via the preference dialog, hence the below block
         // is ensured to be always run within the UI Thread. Check the JavaDoc of `handlePreferenceStoreChanged`
         if(isScalaSemanticHighlightingEnabled) installScalaSemanticHighlighting(forceRefresh = true)
         else uninstallScalaSemanticHighlighting(removesHighlights = true)
@@ -412,9 +412,9 @@ object ScalaSourceFileEditor {
   private val SCALA_EDITOR_SCOPE = "scala.tools.eclipse.scalaEditorScope"
 
   private val OCCURRENCE_ANNOTATION = "org.eclipse.jdt.ui.occurrences"
-    
+
   private object controlCreator extends AbstractReusableInformationControlCreator {
-    override def doCreateInformationControl(shell: Shell) = 
+    override def doCreateInformationControl(shell: Shell) =
       new DefaultInformationControl(shell, true)
   }
 
@@ -424,11 +424,11 @@ object ScalaSourceFileEditor {
 
     /** Return a snapshot of the currently registered `reconcilingListeners`. This is useful to avoid concurrency hazards when iterating on the `reconcilingListeners`. */
     private def currentReconcilingListeners: List[IJavaReconcilingListener] = reconcilingListeners.toList
-  
-    override def aboutToBeReconciled(): Unit = 
+
+    override def aboutToBeReconciled(): Unit =
       for(listener <- currentReconcilingListeners) listener.aboutToBeReconciled()
 
-    override def reconciled(ast: CompilationUnit, forced: Boolean, progressMonitor: IProgressMonitor): Unit = 
+    override def reconciled(ast: CompilationUnit, forced: Boolean, progressMonitor: IProgressMonitor): Unit =
       for(listener <- currentReconcilingListeners) listener.reconciled(ast, forced, progressMonitor)
 
     def addReconcileListener(listener: IJavaReconcilingListener): Unit = reconcilingListeners += listener

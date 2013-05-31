@@ -45,10 +45,10 @@ class CaseClassTest extends AbstractSymbolClassifierTest {
   def case_class_pattern_match() {
     checkSymbolClassification("""
       object X {
-        val Some(x) = Some(42)  
+        val Some(x) = Some(42)
       }""", """
       object X {
-        val $CC$(x) = Some(42)  
+        val $CC$(x) = Some(42)
       }""",
       Map("CC" -> CaseClass))
   }

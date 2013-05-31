@@ -31,9 +31,9 @@ class OrganizeImportsPreferencesPage extends PropertyPage with IWorkbenchPrefere
   private var allEnableDisableControls: Set[Control] = Set()
 
   case class AnalyzerSetting(enabled: Boolean, severity: Int)
-  
-  private val fieldEditors = collection.mutable.ListBuffer[FieldEditor]() 
-  
+
+  private val fieldEditors = collection.mutable.ListBuffer[FieldEditor]()
+
   override def init(workbench: IWorkbench) {
     isWorkbenchPage = true
   }
@@ -47,22 +47,22 @@ class OrganizeImportsPreferencesPage extends PropertyPage with IWorkbenchPrefere
       case _ => scalaPrefStore
     })
   }
-  
+
   def addNewFieldEditorWrappedInComposite[T <: FieldEditor](parent: Composite)(f: Composite => T): T = {
-    
+
     val composite = new Composite(parent, SWT.NONE)
 
     val fieldEditor = f(composite)
-    
+
     fieldEditor.setPreferenceStore(getPreferenceStore)
     fieldEditor.load
-    
+
     if(isWorkbenchPage) {
       composite.setLayoutData(new CC().grow.wrap)
     } else {
       composite.setLayoutData(new CC().spanX(2).grow.wrap)
-    }    
-    
+    }
+
     fieldEditor
   }
 
@@ -77,7 +77,7 @@ class OrganizeImportsPreferencesPage extends PropertyPage with IWorkbenchPrefere
     else
       new AC().index(0).grow(0).index(1).grow(0).index(2).grow(0).index(3).grow
     control.setLayout(new MigLayout(new LC().insetsAll("0").fill, new AC(), rowConstraints))
-    
+
     if (!isWorkbenchPage) {
 
       val projectSpecificButton = new Button(control, SWT.CHECK | SWT.WRAP)
@@ -100,19 +100,19 @@ class OrganizeImportsPreferencesPage extends PropertyPage with IWorkbenchPrefere
       val horizontalLine = new Label(control, SWT.SEPARATOR | SWT.HORIZONTAL)
       horizontalLine.setLayoutData(new CC().spanX(2).grow.wrap)
     }
-    
-    fieldEditors += addNewFieldEditorWrappedInComposite(parent = control) { parent => 
+
+    fieldEditors += addNewFieldEditorWrappedInComposite(parent = control) { parent =>
       new ListEditor(groupsKey, "Define the sorting order of import statements.", parent) {
-        
+
         allEnableDisableControls += getListControl(parent)
         allEnableDisableControls += getButtonBoxControl(parent)
-        
+
         def createList(items: Array[String]) = items.mkString("$")
-        
+
         def parseString(stringList: String) = stringList.split("\\$")
-  
+
         def getNewInputObject(): String = {
-          
+
           val dlg = new InputDialog(Display.getCurrent().getActiveShell(), "", "Enter a package name:", "", new IInputValidator { def isValid(text: String) = null });
           if (dlg.open() == Window.OK) {
             dlg.getValue()
@@ -122,7 +122,7 @@ class OrganizeImportsPreferencesPage extends PropertyPage with IWorkbenchPrefere
         }
       }
     }
-    
+
     fieldEditors += addNewFieldEditorWrappedInComposite(parent = control) { parent =>
       val options = Array(
           Array("one import statement per importee", ExpandImports.toString),
@@ -134,22 +134,22 @@ class OrganizeImportsPreferencesPage extends PropertyPage with IWorkbenchPrefere
         allEnableDisableControls ++= getRadioBoxControl(parent).getChildren
       }
     }
-    
-    fieldEditors += addNewFieldEditorWrappedInComposite(parent = control) { parent => 
+
+    fieldEditors += addNewFieldEditorWrappedInComposite(parent = control) { parent =>
       new ListEditor(wildcardsKey, "Always use wilcard imports when importing from these packages and objects:", parent) {
-        
+
         getDownButton.setVisible(false)
         getUpButton.setVisible(false)
-        
+
         allEnableDisableControls += getListControl(parent)
         allEnableDisableControls += getButtonBoxControl(parent)
-        
+
         def createList(items: Array[String]) = items.mkString("$")
-        
+
         def parseString(stringList: String) = stringList.split("\\$")
-  
+
         def getNewInputObject(): String = {
-          
+
           val dlg = new InputDialog(Display.getCurrent().getActiveShell(), "", "Enter a fully qualified package or type name:", "", new IInputValidator { def isValid(text: String) = null });
           if (dlg.open() == Window.OK) {
             dlg.getValue()
@@ -159,8 +159,8 @@ class OrganizeImportsPreferencesPage extends PropertyPage with IWorkbenchPrefere
         }
       }
     }
-    
-    fieldEditors += addNewFieldEditorWrappedInComposite(parent = control) { parent => 
+
+    fieldEditors += addNewFieldEditorWrappedInComposite(parent = control) { parent =>
       new BooleanFieldEditor(omitScalaPackage, "Omit the scala package prefix", parent) {
         allEnableDisableControls += getChangeControl(parent)
       }
@@ -177,7 +177,7 @@ class OrganizeImportsPreferencesPage extends PropertyPage with IWorkbenchPrefere
     super.performDefaults()
     fieldEditors.foreach(_.loadDefault)
   }
-  
+
   override def performOk() = {
     super.performOk()
     fieldEditors.foreach(_.store)
@@ -190,15 +190,15 @@ object OrganizeImportsPreferences extends Enumeration {
   val PREFIX = "organizeimports"
   val USE_PROJECT_SPECIFIC_SETTINGS_KEY = PREFIX + ".useProjectSpecificSettings"
   val PAGE_ID = "scala.tools.eclipse.properties.OrganizeImportsPreferencesPage"
-  
+
   val ExpandImports = Value("expand")
   val CollapseImports = Value("collapse")
   val PreserveExistingGroups = Value("preserve")
-    
+
   val groupsKey         = PREFIX +".groups"
   val wildcardsKey      = PREFIX +".wildcards"
   val expandCollapseKey = PREFIX +".expandcollapse"
-  
+
   val omitScalaPackage = PREFIX +".scalapackage"
 
   private def getPreferenceStore(project: IProject): IPreferenceStore = {
@@ -207,40 +207,40 @@ object OrganizeImportsPreferences extends Enumeration {
     val useProjectSettings = projectStore.getBoolean(USE_PROJECT_SPECIFIC_SETTINGS_KEY)
     val prefStore = if (useProjectSettings) projectStore else ScalaPlugin.prefStore
     prefStore
-  }  
-  
+  }
+
   def getGroupsForProject(project: IProject) = {
     getPreferenceStore(project).getString(groupsKey).split("\\$")
   }
-  
+
   def shouldOmitScalaPackage(project: IProject) = {
     getPreferenceStore(project).getBoolean(omitScalaPackage)
   }
-  
+
   def getWildcardImportsForProject(project: IProject) = {
     getPreferenceStore(project).getString(wildcardsKey).split("\\$")
   }
-  
+
   def getOrganizeImportStrategy(project: IProject) = {
     getPreferenceStore(project).getString(expandCollapseKey) match {
       case x if x == ExpandImports.toString => ExpandImports
-      case x if x == CollapseImports.toString => CollapseImports 
+      case x if x == CollapseImports.toString => CollapseImports
       case x if x == PreserveExistingGroups.toString => PreserveExistingGroups
     }
   }
 }
 
 class OrganizeImportsPreferencesInitializer extends AbstractPreferenceInitializer {
-  
+
   /** Actually initializes preferences */
   def initializeDefaultPreferences() : Unit = {
-    
+
     Utils.tryExecute {
       val node = new DefaultScope().getNode(ScalaPlugin.plugin.pluginId)
-      node.put(OrganizeImportsPreferences.omitScalaPackage, "false")      
-      node.put(OrganizeImportsPreferences.groupsKey, "java$scala$org$com")      
-      node.put(OrganizeImportsPreferences.wildcardsKey, "scalaz$scalaz.Scalaz")      
-      node.put(OrganizeImportsPreferences.expandCollapseKey, OrganizeImportsPreferences.ExpandImports.toString)      
+      node.put(OrganizeImportsPreferences.omitScalaPackage, "false")
+      node.put(OrganizeImportsPreferences.groupsKey, "java$scala$org$com")
+      node.put(OrganizeImportsPreferences.wildcardsKey, "scalaz$scalaz.Scalaz")
+      node.put(OrganizeImportsPreferences.expandCollapseKey, OrganizeImportsPreferences.ExpandImports.toString)
     }
   }
 }

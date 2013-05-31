@@ -15,7 +15,7 @@ import org.junit.Assert
 import org.junit.Test
 
 object deprecationWarningsProject extends TestProjectSetup("builder-deprecation-warnings") {
-  // enable deprecation warnings for this project 
+  // enable deprecation warnings for this project
   val storage = deprecationWarningsProject.project.projectSpecificStorage.asInstanceOf[PropertyStore]
   storage.setValue(SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE, true)
   storage.setValue("deprecation", "true")
@@ -38,7 +38,7 @@ class DeprecationWarningsTests {
       |class B {
       |  @deprecated
       |  var a = 2
-      |  
+      |
       |  var c = 2
       |}
       """.stripMargin

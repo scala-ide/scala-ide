@@ -26,7 +26,7 @@ class A {
     assertNotSame(-1, offset)
     offset
   }
-  
+
   @Test def getParametersWithMultiArgListAndNamed {
     val source = """
 class A {
@@ -90,14 +90,14 @@ class A {
     assertFalse(ScalariformUtils.isEqualsCallWithoutParameterList(ast, offsetOf("unknown3")))
     assertFalse(ScalariformUtils.isEqualsCallWithoutParameterList(ast, offsetOf("unknown4")))
   }
-  
+
 
   private def callingInfo(beginningOfCall: String, source: String) = {
     val offsetOf = offsetFinder(source) _
     val ast = parse(source)
     (ScalariformUtils.callingOffsetAndLength(ast, offsetOf(beginningOfCall)).get, offsetOf)
   }
-  
+
   @Test def simpleCallOnSelf {
     val source = """
 class A {
@@ -108,7 +108,7 @@ class A {
     val (callInfo, offsetOf) = callingInfo("method1", source)
     assertEquals(MethodCallInfo(offsetOf("map"), "map".length, ArgPosition(0, 0, None)), callInfo)
   }
-  
+
   @Test def namedCallInfoOnSelf {
     val source = """
 class A {
@@ -119,7 +119,7 @@ class A {
     val (callInfo, offsetOf) = callingInfo("method1", source)
     assertEquals(MethodCallInfo(offsetOf("map"), "map".length, ArgPosition(0, 0, Some("f"))), callInfo)
   }
-  
+
   @Test def multipleArgumentListsCallingSelf {
     val source = """
 class A {
@@ -130,7 +130,7 @@ class A {
     val (callInfo, offsetOf) = callingInfo("method1", source)
     assertEquals(MethodCallInfo(offsetOf("higherOrderFunction"), "higherOrderFunction".length, ArgPosition(3, 0, Some("func"))), callInfo)
   }
-  
+
   @Test def callingOnOther {
     val source = """
 class A {
@@ -141,7 +141,7 @@ class A {
     val (callInfo, offsetOf) = callingInfo("other", source)
     assertEquals(MethodCallInfo(offsetOf("map"), "map".length, ArgPosition(0, 0, None)), callInfo)
   }
-  
+
   @Test def namedCallingOnOther {
     val source = """
 class A {

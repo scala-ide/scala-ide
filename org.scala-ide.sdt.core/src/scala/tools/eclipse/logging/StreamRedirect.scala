@@ -7,7 +7,7 @@ private[logging] object StreamRedirect {
 
   private final val defaultStdOut: PrintStream = System.out
   private final val defaultStdErr: PrintStream = System.err
-  
+
   private var isStdOutRedirected = false
   private var isStdErrRedirected = false
 
@@ -20,7 +20,7 @@ private[logging] object StreamRedirect {
       isStdOutRedirected = true
     }
   }
-  
+
   def disableRedirectStdOutput(): Unit = synchronized {
     if(isStdOutRedirected) {
       System.setOut(defaultStdOut)
@@ -38,7 +38,7 @@ private[logging] object StreamRedirect {
       isStdErrRedirected = true
     }
   }
-  
+
   def disableRedirectStdError(): Unit = synchronized {
     if(isStdErrRedirected) {
       System.setErr(defaultStdErr)
@@ -47,7 +47,7 @@ private[logging] object StreamRedirect {
     }
   }
 
-  private def redirect(to: Any => Unit): PrintStream = 
+  private def redirect(to: Any => Unit): PrintStream =
     new PrintStream(new Redirect(to), /*autoFlush = */true)
 
   private class Redirect(to: Any => Unit) extends OutputStream {
@@ -56,7 +56,7 @@ private[logging] object StreamRedirect {
     }
 
     override def write(b: Array[Byte], off: Int, len: Int) {
-      val str = new String(b, off, len).trim 
+      val str = new String(b, off, len).trim
       if (str.length > 0)
         to(str);
     }

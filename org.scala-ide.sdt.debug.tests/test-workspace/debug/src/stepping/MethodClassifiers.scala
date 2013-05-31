@@ -53,7 +53,7 @@ class ConcreteClass extends BaseTrait {
 
 
 class MethodClassifiers {
-    
+
   def mainTest() {
     val d = new Defaults()
 

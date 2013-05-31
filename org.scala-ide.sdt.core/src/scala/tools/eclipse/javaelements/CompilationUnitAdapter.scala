@@ -22,19 +22,19 @@ import org.eclipse.jdt.internal.core.PackageDeclaration
 
 class CompilationUnitAdapter(classFile : ScalaClassFile) extends Openable(classFile.getParent.asInstanceOf[JavaElement]) with ICompilationUnit with env.ICompilationUnit {
   override def getAdapter(adapter : Class[_]) : AnyRef = (classFile : IAdaptable).getAdapter(adapter)
-  
+
   override def equals(o : Any) = classFile.equals(o)
   override def hashCode() = classFile.hashCode()
-  
+
   def getFileName() : Array[Char] = classFile.getFileName()
   def getContents() : Array[Char] = classFile.getContents()
   def getMainTypeName() : Array[Char] = classFile.getMainTypeName()
   def getPackageName() : Array[Array[Char]] = classFile.getPackageName()
-  
+
   override def getHandleMementoDelimiter() : Char = classFile.getHandleMementoDelimiter0()
   override def getHandleFromMemento(token : String, memento : MementoTokenizer, owner : WorkingCopyOwner) : IJavaElement =
     classFile.getHandleFromMemento(token, memento, owner)
-  
+
   override def bufferChanged(e : BufferChangedEvent) { classFile.bufferChanged(e) }
   override def buildStructure(info : OpenableElementInfo, pm : IProgressMonitor, newElements : JMap[_, _], underlyingResource : IResource) : Boolean =
     classFile.buildStructure(info, pm, newElements, underlyingResource)
@@ -63,12 +63,12 @@ class CompilationUnitAdapter(classFile : ScalaClassFile) extends Openable(classF
   override def isSourceElement() : Boolean = classFile.isSourceElement0()
   override def openBuffer(pm : IProgressMonitor, info : Object) : IBuffer = classFile.openBuffer0(pm, info)
   override def resource() : IResource = classFile.resource()
-  override def resource(root : PackageFragmentRoot) : IResource = classFile.resource(root) 
-  override def resourceExists(underlyingResource : IResource) : Boolean = classFile.resourceExists0(underlyingResource) 
+  override def resource(root : PackageFragmentRoot) : IResource = classFile.resource(root)
+  override def resourceExists(underlyingResource : IResource) : Boolean = classFile.resourceExists0(underlyingResource)
   override def getPackageFragmentRoot() : PackageFragmentRoot = classFile.getPackageFragmentRoot()
   override def validateExistence(underlyingResource : IResource) : IStatus = classFile.validateExistence0(underlyingResource)
   override def openAncestors(newElements : JHashMap[_, _], monitor : IProgressMonitor) { classFile.openAncestors0(newElements, monitor) }
-  
+
   override def exists() = classFile.exists()
   override def getAncestor(ancestorType : Int) : IJavaElement = classFile.getAncestor(ancestorType)
   override def getAttachedJavadoc(monitor : IProgressMonitor) : String = classFile.getAttachedJavadoc(monitor)
@@ -87,10 +87,10 @@ class CompilationUnitAdapter(classFile : ScalaClassFile) extends Openable(classF
   override def getUnderlyingResource() : IResource = classFile.getUnderlyingResource()
   override def isReadOnly() : Boolean = classFile.isReadOnly()
   override def isStructureKnown() : Boolean = classFile.isStructureKnown()
-  
+
   override def getChildren() : Array[IJavaElement] = classFile.getChildren()
   override def hasChildren() : Boolean = classFile.hasChildren()
-  
+
   override def close() { classFile.close() }
   override def findRecommendedLineSeparator() : String = classFile.findRecommendedLineSeparator()
   override def getBuffer() : IBuffer = classFile.getBuffer()
@@ -100,10 +100,10 @@ class CompilationUnitAdapter(classFile : ScalaClassFile) extends Openable(classF
   override def makeConsistent(progress : IProgressMonitor) { classFile.makeConsistent(progress) }
   override def open(progress : IProgressMonitor) { classFile.open(progress) }
   override def save(progress : IProgressMonitor, force : Boolean) { classFile.save(progress, force) }
-  
+
   def getSource() : String = classFile.getSource()
   def getSourceRange() : ISourceRange = classFile.getSourceRange()
-  
+
   def codeComplete(offset : Int, requestor : ICodeCompletionRequestor) { classFile.codeComplete(offset, requestor) }
   def codeComplete(offset : Int, requestor : ICompletionRequestor) { classFile.codeComplete(offset, requestor) }
   def codeComplete(offset : Int, requestor : CompletionRequestor) { classFile.codeComplete(offset, requestor) }
@@ -113,7 +113,7 @@ class CompilationUnitAdapter(classFile : ScalaClassFile) extends Openable(classF
   def codeComplete(offset : Int, requestor : CompletionRequestor, owner : WorkingCopyOwner, monitor : IProgressMonitor) { classFile.codeComplete(offset, requestor, owner, monitor) }
   def codeSelect(offset : Int, length : Int) : Array[IJavaElement] = classFile.codeSelect(offset, length)
   def codeSelect(offset : Int, length : Int, owner : WorkingCopyOwner) : Array[IJavaElement] = classFile.codeSelect(offset, length, owner)
-  
+
   def findPrimaryType() : IType = classFile.findPrimaryType()
   def getElementAt(position : Int) : IJavaElement = classFile.getElementAt(position)
   def getWorkingCopy(owner : WorkingCopyOwner, monitor : IProgressMonitor) : ICompilationUnit = classFile.getWorkingCopy(owner, monitor)
@@ -138,12 +138,12 @@ class CompilationUnitAdapter(classFile : ScalaClassFile) extends Openable(classF
   def reconcile() : Array[IMarker] = throw new UnsupportedOperationException
   def reconcile(forceProblemDetection : Boolean, monitor : IProgressMonitor) { throw new UnsupportedOperationException }
   def restore() { throw new UnsupportedOperationException }
-  
+
   def copy(container : IJavaElement, sibling : IJavaElement, rename : String, replace : Boolean, monitor : IProgressMonitor) { throw new UnsupportedOperationException }
   def delete(force : Boolean, monitor : IProgressMonitor) { throw new UnsupportedOperationException }
   def move(container : IJavaElement, sibling : IJavaElement, rename : String, replace : Boolean, monitor : IProgressMonitor) { throw new UnsupportedOperationException }
   def rename(name : String, replace : Boolean, monitor : IProgressMonitor) { throw new UnsupportedOperationException }
-  
+
   def applyTextEdit(edit : TextEdit, monitor : IProgressMonitor) : UndoEdit = throw new UnsupportedOperationException
   def becomeWorkingCopy(problemRequestor : IProblemRequestor, monitor : IProgressMonitor) { classFile.becomeWorkingCopy(problemRequestor, null, monitor) }
   def becomeWorkingCopy(monitor : IProgressMonitor) { classFile.becomeWorkingCopy(null, null, monitor) }
@@ -203,7 +203,7 @@ object CompilationUnitAdapter {
     override def getCorrespondingResource: IResource = throw new UnsupportedOperationException
     override def getAttachedJavadoc(monitor: IProgressMonitor): String = throw new UnsupportedOperationException
     override def getAncestor(ancestorType: Int): IJavaElement = throw new UnsupportedOperationException
-    
+
     override def getAdapter(adapter: Class[_]): AnyRef = throw new UnsupportedOperationException
   }
 }

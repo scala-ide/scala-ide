@@ -32,4 +32,20 @@
       </dependencies>
     </profile>
   </profiles>
+
+  <build>
+    <plugins>
+      <!-- Scalastyle -->
+      <plugin>
+        <groupId>org.scalastyle</groupId>
+        <artifactId>scalastyle-maven-plugin</artifactId>
+        <configuration>
+          <sourceDirectories>
+            <dir>src</dir>
+          </sourceDirectories>
+          <configLocation>../org.scala-ide.sdt.core/scala-ide-style-config.xml</configLocation>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 </project>

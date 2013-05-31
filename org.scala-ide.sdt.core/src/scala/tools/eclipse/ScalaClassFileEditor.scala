@@ -40,16 +40,16 @@ class ScalaClassFileEditor extends ClassFileEditor with ScalaEditor {
         case _ => super.getCorrespondingElement(element)
     }
   }
-  
+
     override protected def createActions() {
     super.createActions()
     val openAction = new Action {
-	  override def run {
-	    Option(getInputJavaElement) map (_.asInstanceOf[ScalaCompilationUnit]) foreach { scu =>
-	      scu.followDeclaration(ScalaClassFileEditor.this, getSelectionProvider.getSelection.asInstanceOf[ITextSelection])
-	    }
+    override def run {
+      Option(getInputJavaElement) map (_.asInstanceOf[ScalaCompilationUnit]) foreach { scu =>
+        scu.followDeclaration(ScalaClassFileEditor.this, getSelectionProvider.getSelection.asInstanceOf[ITextSelection])
       }
-	}
+      }
+  }
     openAction.setActionDefinitionId(IJavaEditorActionDefinitionIds.OPEN_EDITOR)
     setAction("OpenEditor", openAction)
   }

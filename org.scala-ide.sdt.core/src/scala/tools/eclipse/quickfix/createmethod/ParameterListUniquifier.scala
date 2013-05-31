@@ -4,7 +4,7 @@ import scala.collection.mutable
 
 object ParameterListUniquifier {
   private val MaxUniqueNames = 999
-  
+
   def uniquifyParameterNames(parameters: ParameterList) = {
     val paramNames = mutable.Set[String]()
     def uniqueNameFor(name: String) = {
@@ -16,7 +16,7 @@ object ParameterListUniquifier {
       paramNames.add(uniqueName)
       uniqueName
     }
-    for (parameterList <- parameters) yield 
+    for (parameterList <- parameters) yield
       for ((name, tpe) <- parameterList) yield
         ((uniqueNameFor(name), tpe))
   }

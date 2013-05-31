@@ -47,7 +47,7 @@ class ObjectTest extends AbstractSymbolClassifierTest {
     """,
       Map("OBJ" -> Object))
   }
-  
+
   @Test
   @Ignore
   def import_all_members_of_an_object() {

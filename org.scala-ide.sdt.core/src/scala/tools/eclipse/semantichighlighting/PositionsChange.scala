@@ -21,7 +21,7 @@ case class PositionsChange(toAdd: List[Position], toRemove: List[Position]) {
 
   /** Computes the smallest contiguous region that includes all changed positions.
     * @note Because the held ``Position`` are mutable, the computed affected region
-    *       could be different for successive calls. 
+    *       could be different for successive calls.
     *       Hence, don't turn this into a lazy value.
     *
     * @return The smallest contiguous region that includes all changed positions.

@@ -50,7 +50,7 @@ class ProjectsCleanJobTest {
       RuntimeLog.addLogListener(logListener)
 
       // The actual code that we want to test. Here we want to make sure that the scheduling of a clean job doesn't throw an exception.
-      // This code is run asynchronously. 
+      // This code is run asynchronously.
       ProjectsCleanJob(Seq(prjB.underlying)).schedule()
 
       latch.await() // wait until the clean job is finished (or an exception is thrown)

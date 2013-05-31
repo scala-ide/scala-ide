@@ -23,5 +23,5 @@ class MergeParameterListsAction extends RefactoringAction {
     }
 
     override var refactoringParameters = List[Int]()
-  } 
+  }
 }

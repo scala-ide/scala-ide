@@ -17,7 +17,7 @@ import com.sun.jdi.VirtualMachine
  * Extends the Java debugger launcher, but use the Scala debug model instead of the Java one.
  */
 class StandardVMScalaDebugger(vm: IVMInstall) extends StandardVMDebugger(vm) {
-  
+
   override def createDebugTarget(unusedConfiguration: VMRunnerConfiguration, launch: ILaunch, unusedPort: Int, process: IProcess, virtualMachine: VirtualMachine): IDebugTarget = {
     ScalaDebugTarget(virtualMachine, launch, process, allowDisconnect= false, allowTerminate= true)
   }
