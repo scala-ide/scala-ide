@@ -45,7 +45,7 @@ class ScalaDebugComputeDetailTest {
    */
   @Test
   def computeDetailObject() {
-    session = new ScalaDebugTestSession(file("Variables.launch"))
+    session = ScalaDebugTestSession(file("Variables.launch"))
 
     session.runToLine(TYPENAME_VARIABLES + "$", 30)
 
@@ -61,7 +61,7 @@ class ScalaDebugComputeDetailTest {
    */
   @Test
   def computeDetailArrayOfMixedElements() {
-    session = new ScalaDebugTestSession(file("Variables.launch"))
+    session = ScalaDebugTestSession(file("Variables.launch"))
 
     session.runToLine(TYPENAME_VARIABLES + "$", 30)
 
@@ -77,7 +77,7 @@ class ScalaDebugComputeDetailTest {
    */
   @Test
   def computeDetailNullReference() {
-    session = new ScalaDebugTestSession(file("Variables.launch"))
+    session = ScalaDebugTestSession(file("Variables.launch"))
 
     session.runToLine(TYPENAME_VARIABLES + "$", 30)
 
@@ -93,7 +93,7 @@ class ScalaDebugComputeDetailTest {
    */
   @Test
   def checkVersionAvailable() {
-    session = new ScalaDebugTestSession(file("HelloWorld.launch"))
+    session = ScalaDebugTestSession(file("HelloWorld.launch"))
 
     session.runToLine(TYPENAME_HELLOWORLD + "$", 7)
 
@@ -105,7 +105,7 @@ class ScalaDebugComputeDetailTest {
    */
   @Test
   def logicalStructureStringList() {
-    session = new ScalaDebugTestSession(file("Variables.launch"))
+    session = ScalaDebugTestSession(file("Variables.launch"))
 
     session.runToLine(TYPENAME_VARIABLES + "$", 30)
 
