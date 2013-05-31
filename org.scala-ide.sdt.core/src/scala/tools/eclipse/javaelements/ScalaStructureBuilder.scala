@@ -65,7 +65,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
      * Returns a type name for an untyped tree which the JDT should be able to consume,
      * in particular org.eclipse.jdt.internal.compiler.parser.TypeConverter
      */
-    def unresolvedType(tree: Tree): String = "null-Type"
+    def unresolvedType: String = "null-Type"
 
     trait Owner {self =>
       def parent : Owner
@@ -507,13 +507,13 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
         val parentTree = m.impl.parents.head
         val superclassType = parentTree.tpe
         val superclassName = (if (superclassType ne null) superclassType.typeSymbol.fullName
-          else unresolvedType(parentTree)).toCharArray
+          else unresolvedType).toCharArray
         moduleElemInfo.setSuperclassName(superclassName)
 
         val interfaceTrees = m.impl.parents.drop(1)
         val interfaceNames = interfaceTrees.map { t =>
           val tpe = t.tpe
-          (if (tpe ne null) tpe.typeSymbol.fullName else unresolvedType(t)).toCharArray
+          (if (tpe ne null) tpe.typeSymbol.fullName else unresolvedType).toCharArray
         }
         moduleElemInfo.setSuperInterfaceNames(interfaceNames.toArray)
 
