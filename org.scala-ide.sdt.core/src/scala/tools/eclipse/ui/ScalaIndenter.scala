@@ -20,8 +20,7 @@ import org.eclipse.jdt.internal.ui.text.JavaHeuristicScanner
 import org.eclipse.jdt.internal.ui.text.Symbols
 import org.eclipse.jdt.internal.corext.util.CodeFormatterUtil
 import org.eclipse.jdt.ui.PreferenceConstants
-import java.lang.Math.min
-import scala.collection.mutable.Map
+import scala.collection.mutable
 import scala.annotation.tailrec
 import scala.tools.eclipse.ScalaPlugin
 import scala.tools.eclipse.formatter.FormatterPreferences
@@ -31,9 +30,9 @@ import scala.util.control.Exception
 
 // TODO Move this out into a new file
 trait PreferenceProvider {
-  private val preferences = Map.empty[String, String]
+  private val preferences = mutable.Map.empty[String, String]
 
-  def updateCache: Unit
+  def updateCache(): Unit
 
   def put(key: String, value: String) {
     preferences(key) = value
@@ -423,7 +422,7 @@ class ScalaIndenter(
     var measured = 0
     var chars = reference.length()
     var i = 0
-    while (i < min(indentLength, chars)) {
+    while (i < math.min(indentLength, chars)) {
       val ch = reference.charAt(i)
       ch match {
         case '\t' =>
