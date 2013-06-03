@@ -78,7 +78,7 @@ abstract class AutoEditStrategyTests(strategy: IAutoEditStrategy) {
     }
 
     val cmd = operation match {
-      case Add(s)    => new TestCommand(textOffset, s.length, s, -1, true, true)
+      case Add(s)    => new TestCommand(textOffset, 0, s, -1, true, true)
       case Remove(s) => new TestCommand(textOffset - s.length, s.length, "", -1, true, true)
     }
 

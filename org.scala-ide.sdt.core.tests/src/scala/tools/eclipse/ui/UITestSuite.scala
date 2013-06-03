@@ -5,7 +5,7 @@ import org.junit.runners.Suite
 
 @RunWith(classOf[Suite])
 @Suite.SuiteClasses(Array(
-//  classOf[TestScalaIndenter],
+  classOf[ScalaAutoIndentStrategyTest],
   classOf[BracketAutoEditStrategyTest],
   classOf[CommentAutoEditStrategyTest],
   classOf[LiteralAutoEditStrategyTest],
