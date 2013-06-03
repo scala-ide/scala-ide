@@ -18,7 +18,7 @@ object ScalaDebugSteppingTest extends TestProjectSetup("debug", bundleName = "or
 
   var initialized = false
 
-  def initDebugSession(launchConfigurationName: String): ScalaDebugTestSession = new ScalaDebugTestSession(file(launchConfigurationName + ".launch"))
+  def initDebugSession(launchConfigurationName: String): ScalaDebugTestSession = ScalaDebugTestSession(file(launchConfigurationName + ".launch"))
 
   @AfterClass
   def deleteProject() {
