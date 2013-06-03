@@ -13,7 +13,8 @@ import org.eclipse.jface.text.source
 import scala.tools.eclipse.contribution.weaving.jdt.IScalaOverrideIndicator
 import org.eclipse.ui.texteditor.ITextEditor
 import org.eclipse.jdt.internal.ui.javaeditor.EditorUtility
-import scala.tools.eclipse.{ ScalaPresentationCompiler, ScalaPlugin }
+import scala.tools.eclipse.ScalaPresentationCompiler
+import scala.tools.eclipse.ScalaPlugin
 import scala.tools.eclipse.logging.HasLogger
 
 object ScalaOverrideIndicatorBuilder {

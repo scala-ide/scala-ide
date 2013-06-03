@@ -1,11 +1,24 @@
 package scala.tools.eclipse.properties
 
 import scala.tools.nsc.Settings
-import scala.tools.eclipse.{ SettingConverterUtil }
-import org.eclipse.swt.widgets.{ Button, Combo, Composite, Control, Event, Group, Label, Listener, Text }
-import org.eclipse.swt.layout.{ GridData, GridLayout }
+import scala.tools.eclipse.SettingConverterUtil
+import org.eclipse.swt.widgets.Button
+import org.eclipse.swt.widgets.Combo
+import org.eclipse.swt.widgets.Composite
+import org.eclipse.swt.widgets.Control
+import org.eclipse.swt.widgets.Event
+import org.eclipse.swt.widgets.Group
+import org.eclipse.swt.widgets.Label
+import org.eclipse.swt.widgets.Listener
+import org.eclipse.swt.widgets.Text
+import org.eclipse.swt.layout.GridData
+import org.eclipse.swt.layout.GridLayout
 import org.eclipse.swt.SWT
-import org.eclipse.swt.events.{ ModifyEvent, ModifyListener, SelectionAdapter, SelectionEvent, SelectionListener }
+import org.eclipse.swt.events.ModifyEvent
+import org.eclipse.swt.events.ModifyListener
+import org.eclipse.swt.events.SelectionAdapter
+import org.eclipse.swt.events.SelectionEvent
+import org.eclipse.swt.events.SelectionListener
 import org.eclipse.jface.preference.IPreferenceStore
 import scala.tools.eclipse.util.Trim
 

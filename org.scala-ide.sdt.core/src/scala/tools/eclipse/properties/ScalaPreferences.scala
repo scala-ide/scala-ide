@@ -6,17 +6,22 @@
 
 package scala.tools.eclipse.properties
 
-import org.eclipse.jface.preference.{ PreferencePage, IPreferenceStore }
-import org.eclipse.ui.{ IWorkbenchPreferencePage, IWorkbench }
+import org.eclipse.jface.preference.PreferencePage
+import org.eclipse.jface.preference.IPreferenceStore
+import org.eclipse.ui.IWorkbenchPreferencePage
+import org.eclipse.ui.IWorkbench
 import org.eclipse.ui.dialogs.PropertyPage
-import org.eclipse.swt.widgets.{ Composite, Control, Group }
-import org.eclipse.swt.layout.{ GridLayout, GridData }
+import org.eclipse.swt.widgets.Composite
+import org.eclipse.swt.widgets.Control
+import org.eclipse.swt.widgets.Group
+import org.eclipse.swt.layout.GridLayout
+import org.eclipse.swt.layout.GridData
 import org.eclipse.swt.SWT
 import org.eclipse.jdt.core.IJavaProject
 import org.eclipse.core.resources.IProject
 import scala.tools.eclipse.ScalaPlugin
 import scala.tools.nsc.Settings
-import scala.tools.eclipse.{SettingConverterUtil }
+import scala.tools.eclipse.SettingConverterUtil
 import scala.tools.eclipse.logging.HasLogger
 
 class ScalaPreferences extends PropertyPage with IWorkbenchPreferencePage with EclipseSettings

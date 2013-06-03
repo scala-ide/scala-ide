@@ -1,18 +1,33 @@
 package scala.tools.eclipse.refactoring
 package ui
 
-import org.eclipse.core.resources.{ResourcesPlugin, IResource}
-import org.eclipse.jdt.core.{JavaCore, IPackageFragmentRoot, IPackageFragment, IJavaProject}
+import org.eclipse.core.resources.ResourcesPlugin
+import org.eclipse.core.resources.IResource
+import org.eclipse.jdt.core.JavaCore
+import org.eclipse.jdt.core.IPackageFragmentRoot
+import org.eclipse.jdt.core.IPackageFragment
+import org.eclipse.jdt.core.IJavaProject
 import org.eclipse.jdt.internal.ui.refactoring.reorg.CreateTargetQueries
 import org.eclipse.jdt.ui.JavaElementLabelProvider
-import org.eclipse.jface.viewers.{ViewerFilter, Viewer, TreeViewer, StructuredSelection, SelectionChangedEvent, IStructuredSelection, ISelectionChangedListener}
+import org.eclipse.jface.viewers.ViewerFilter
+import org.eclipse.jface.viewers.Viewer
+import org.eclipse.jface.viewers.TreeViewer
+import org.eclipse.jface.viewers.StructuredSelection
+import org.eclipse.jface.viewers.SelectionChangedEvent
+import org.eclipse.jface.viewers.IStructuredSelection
+import org.eclipse.jface.viewers.ISelectionChangedListener
 import org.eclipse.ltk.core.refactoring.RefactoringStatus
 import org.eclipse.ltk.ui.refactoring.UserInputWizardPage
-import org.eclipse.swt.events.{SelectionEvent, SelectionAdapter}
-import org.eclipse.swt.layout.{GridLayout, GridData}
-import org.eclipse.swt.widgets.{Label, Composite, Button}
+import org.eclipse.swt.events.SelectionEvent
+import org.eclipse.swt.events.SelectionAdapter
+import org.eclipse.swt.layout.GridLayout
+import org.eclipse.swt.layout.GridData
+import org.eclipse.swt.widgets.Label
+import org.eclipse.swt.widgets.Composite
+import org.eclipse.swt.widgets.Button
 import org.eclipse.swt.SWT
-import org.eclipse.ui.model.{WorkbenchViewerComparator, BaseWorkbenchContentProvider}
+import org.eclipse.ui.model.WorkbenchViewerComparator
+import org.eclipse.ui.model.BaseWorkbenchContentProvider
 import scala.tools.eclipse.ScalaPlugin
 
 class MoveClassRefactoringConfigurationPage(

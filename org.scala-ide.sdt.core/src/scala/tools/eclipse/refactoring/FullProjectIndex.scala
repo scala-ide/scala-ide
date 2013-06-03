@@ -4,7 +4,9 @@ package refactoring
 import java.util.regex.Pattern
 import org.eclipse.core.resources.IResource
 import org.eclipse.core.runtime.IProgressMonitor
-import org.eclipse.search.core.text.{TextSearchRequestor, TextSearchMatchAccess, TextSearchEngine}
+import org.eclipse.search.core.text.TextSearchRequestor
+import org.eclipse.search.core.text.TextSearchMatchAccess
+import org.eclipse.search.core.text.TextSearchEngine
 import org.eclipse.search.ui.text.FileTextSearchScope
 import scala.tools.eclipse.ScalaProject
 import scala.tools.eclipse.javaelements.ScalaSourceFile

@@ -5,7 +5,8 @@
 
 package scala.tools.eclipse
 
-import org.eclipse.jdt.core.{ ICompilationUnit, IJavaElement }
+import org.eclipse.jdt.core.ICompilationUnit
+import org.eclipse.jdt.core.IJavaElement
 import org.eclipse.jdt.internal.ui.javaeditor.ClassFileEditor
 import org.eclipse.jdt.ui.text.JavaSourceViewerConfiguration
 import org.eclipse.jface.text.source.SourceViewerConfiguration
@@ -13,7 +14,8 @@ import org.eclipse.jface.action.Action
 import org.eclipse.jface.text.ITextSelection
 import org.eclipse.jdt.ui.actions.IJavaEditorActionDefinitionIds
 
-import scala.tools.eclipse.javaelements.{ScalaClassFile, ScalaCompilationUnit}
+import scala.tools.eclipse.javaelements.ScalaClassFile
+import scala.tools.eclipse.javaelements.ScalaCompilationUnit
 
 class ScalaClassFileEditor extends ClassFileEditor with ScalaEditor {
   override def createJavaSourceViewerConfiguration : JavaSourceViewerConfiguration =

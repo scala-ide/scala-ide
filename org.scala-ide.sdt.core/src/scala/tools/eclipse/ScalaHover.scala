@@ -6,7 +6,9 @@
 package scala.tools.eclipse
 
 import org.eclipse.jdt.core.ICodeAssist
-import org.eclipse.jface.text.{ ITextViewer, IRegion, ITextHover }
+import org.eclipse.jface.text.ITextViewer
+import org.eclipse.jface.text.IRegion
+import org.eclipse.jface.text.ITextHover
 
 import scala.tools.nsc.symtab.Flags
 import scala.tools.eclipse.util.EclipseUtils._

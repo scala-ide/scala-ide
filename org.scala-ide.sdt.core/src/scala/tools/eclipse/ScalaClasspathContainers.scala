@@ -6,10 +6,16 @@
 
 package scala.tools.eclipse
 
-import org.eclipse.core.runtime.{ IPath, Path }
-import org.eclipse.jdt.core.{ ClasspathContainerInitializer, IClasspathContainer, IJavaProject, JavaCore, IClasspathEntry }
+import org.eclipse.core.runtime.IPath
+import org.eclipse.core.runtime.Path
+import org.eclipse.jdt.core.ClasspathContainerInitializer
+import org.eclipse.jdt.core.IClasspathContainer
+import org.eclipse.jdt.core.IJavaProject
+import org.eclipse.jdt.core.JavaCore
+import org.eclipse.jdt.core.IClasspathEntry
 import org.eclipse.jdt.internal.ui.JavaPluginImages
-import org.eclipse.jdt.ui.wizards.{ NewElementWizardPage, IClasspathContainerPage }
+import org.eclipse.jdt.ui.wizards.NewElementWizardPage
+import org.eclipse.jdt.ui.wizards.IClasspathContainerPage
 import org.eclipse.swt.SWT
 import org.eclipse.swt.widgets.Composite
 

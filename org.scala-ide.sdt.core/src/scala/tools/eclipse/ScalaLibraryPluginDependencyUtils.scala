@@ -5,13 +5,18 @@
 
 package scala.tools.eclipse
 
-import org.eclipse.core.resources.{ IFile, IProject }
-import org.eclipse.core.runtime.{ Path, NullProgressMonitor }
+import org.eclipse.core.resources.IFile
+import org.eclipse.core.resources.IProject
+import org.eclipse.core.runtime.Path
+import org.eclipse.core.runtime.NullProgressMonitor
 
-import org.eclipse.ui.{ IFileEditorInput, PlatformUI }
+import org.eclipse.ui.IFileEditorInput
+import org.eclipse.ui.PlatformUI
 import org.eclipse.ui.part.FileEditorInput
 
-import org.eclipse.pde.core.plugin.{ IPluginModelBase, IPluginBase, IPluginImport }
+import org.eclipse.pde.core.plugin.IPluginModelBase
+import org.eclipse.pde.core.plugin.IPluginBase
+import org.eclipse.pde.core.plugin.IPluginImport
 import org.eclipse.pde.internal.ui.editor.plugin.ManifestEditor
 import org.eclipse.pde.internal.ui.IPDEUIConstants
 import org.eclipse.pde.internal.core.WorkspacePluginModelManager

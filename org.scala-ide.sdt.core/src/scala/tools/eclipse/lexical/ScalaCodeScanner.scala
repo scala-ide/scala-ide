@@ -5,9 +5,11 @@ import scala.tools.eclipse.properties.syntaxcolouring._
 
 import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.jface.text.IDocument
-import org.eclipse.jface.text.rules.{ IToken, Token }
+import org.eclipse.jface.text.rules.IToken
+import org.eclipse.jface.text.rules.Token
 
-import scalariform.{ ScalaVersion, ScalaVersions }
+import scalariform.ScalaVersion
+import scalariform.ScalaVersions
 import scalariform.lexer.{ ScalaLexer, Token => ScalariformToken, Tokens }
 import scalariform.lexer.Tokens._
 

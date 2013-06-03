@@ -4,7 +4,8 @@ import scala.tools.eclipse.debug.ScalaDebugPlugin
 import scala.tools.eclipse.debug.ScalaDebugger
 import scala.tools.eclipse.debug.ScalaDebugger.modelProvider
 import scala.tools.eclipse.logging.HasLogger
-import org.eclipse.debug.core.model.{ITerminate, DebugElement}
+import org.eclipse.debug.core.model.ITerminate
+import org.eclipse.debug.core.model.DebugElement
 import com.sun.jdi.ClassType
 import com.sun.jdi.Field
 import com.sun.jdi.Method

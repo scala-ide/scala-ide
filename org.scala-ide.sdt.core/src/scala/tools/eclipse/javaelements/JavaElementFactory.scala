@@ -7,8 +7,15 @@ package scala.tools.eclipse.javaelements
 
 import java.lang.reflect.Constructor
 
-import org.eclipse.jdt.core.{ ICompilationUnit, IImportContainer }
-import org.eclipse.jdt.internal.core.{ CompilationUnit, ImportContainer, ImportDeclaration, JavaElement, JavaElementInfo, SourceType, SourceRefElement }
+import org.eclipse.jdt.core.ICompilationUnit
+import org.eclipse.jdt.core.IImportContainer
+import org.eclipse.jdt.internal.core.CompilationUnit
+import org.eclipse.jdt.internal.core.ImportContainer
+import org.eclipse.jdt.internal.core.ImportDeclaration
+import org.eclipse.jdt.internal.core.JavaElement
+import org.eclipse.jdt.internal.core.JavaElementInfo
+import org.eclipse.jdt.internal.core.SourceType
+import org.eclipse.jdt.internal.core.SourceRefElement
 
 import scala.tools.eclipse.util.ReflectionUtils
 

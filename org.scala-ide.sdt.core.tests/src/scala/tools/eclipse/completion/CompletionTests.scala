@@ -11,7 +11,11 @@ import org.mockito.Mockito._
 import org.junit.Assert._
 import org.junit.Test
 import scala.tools.eclipse.testsetup.TestProjectSetup
-import org.eclipse.jdt.core.search.{ SearchEngine, IJavaSearchConstants, IJavaSearchScope, SearchPattern, TypeNameRequestor }
+import org.eclipse.jdt.core.search.SearchEngine
+import org.eclipse.jdt.core.search.IJavaSearchConstants
+import org.eclipse.jdt.core.search.IJavaSearchScope
+import org.eclipse.jdt.core.search.SearchPattern
+import org.eclipse.jdt.core.search.TypeNameRequestor
 import org.eclipse.jdt.core.IJavaElement
 import org.junit.Ignore
 import scala.reflect.internal.util.OffsetPosition

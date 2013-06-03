@@ -3,7 +3,8 @@ package scala.tools.eclipse
 import org.eclipse.jface.text.source.SourceViewer
 import org.eclipse.ui.editors.text.EditorsUI
 import org.eclipse.ui.texteditor.ChainedPreferenceStore
-import org.eclipse.jface.util.{ IPropertyChangeListener, PropertyChangeEvent }
+import org.eclipse.jface.util.IPropertyChangeListener
+import org.eclipse.jface.util.PropertyChangeEvent
 import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.Document
 import lexical.ScalaDocumentPartitioner

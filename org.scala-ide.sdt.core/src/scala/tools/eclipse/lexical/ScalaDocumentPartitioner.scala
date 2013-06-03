@@ -3,7 +3,8 @@ package scala.tools.eclipse.lexical
 import org.eclipse.jface.text._
 import org.eclipse.jface.text.IDocument.DEFAULT_CONTENT_TYPE
 import scala.collection.mutable.ListBuffer
-import scala.math.{ max, min }
+import scala.math.max
+import scala.math.min
 
 class ScalaDocumentPartitioner(conservative: Boolean = false) extends IDocumentPartitioner with IDocumentPartitionerExtension with IDocumentPartitionerExtension2 {
 

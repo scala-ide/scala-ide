@@ -3,8 +3,10 @@ package scala.tools.eclipse.lexical
 import org.eclipse.jdt.ui.text.IJavaPartitions._
 import org.eclipse.jface.text._
 import org.eclipse.jface.text.IDocument.DEFAULT_CONTENT_TYPE
-import scala.annotation.{ switch, tailrec }
-import scala.collection.mutable.{ Stack, ListBuffer }
+import scala.annotation.switch
+import scala.annotation.tailrec
+import scala.collection.mutable.Stack
+import scala.collection.mutable.ListBuffer
 import scala.tools.eclipse.lexical.ScalaPartitions._
 import scala.xml.parsing.TokenTests
 

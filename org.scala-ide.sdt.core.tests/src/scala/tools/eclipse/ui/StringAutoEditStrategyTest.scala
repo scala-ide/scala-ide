@@ -2,7 +2,8 @@ package scala.tools.eclipse.ui
 
 import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.jface.text.IDocumentExtension3
-import org.junit.{ Before, Test }
+import org.junit.Before
+import org.junit.Test
 import org.mockito.Mockito._
 
 object StringAutoEditStrategyTest {

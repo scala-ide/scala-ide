@@ -7,7 +7,10 @@ import org.eclipse.core.runtime.Status
 import org.eclipse.core.runtime.jobs.Job
 import org.eclipse.debug.core.model.IValue
 import org.eclipse.debug.internal.ui.views.variables.IndexedVariablePartition
-import org.eclipse.debug.ui.{ IValueDetailListener, IDebugUIConstants, IDebugModelPresentation, DebugUITools }
+import org.eclipse.debug.ui.IValueDetailListener
+import org.eclipse.debug.ui.IDebugUIConstants
+import org.eclipse.debug.ui.IDebugModelPresentation
+import org.eclipse.debug.ui.DebugUITools
 import org.eclipse.jdt.internal.ui.javaeditor.EditorUtility
 import org.eclipse.ui.IEditorInput
 import org.eclipse.jface.viewers.ILabelProviderListener

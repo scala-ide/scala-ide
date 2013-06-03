@@ -1,6 +1,9 @@
 package scala.tools.eclipse.debug
 
-import com.sun.jdi.{ Method, AbsentInformationException, ReferenceType, Location }
+import com.sun.jdi.Method
+import com.sun.jdi.AbsentInformationException
+import com.sun.jdi.ReferenceType
+import com.sun.jdi.Location
 import com.sun.jdi.VMDisconnectedException
 import com.sun.jdi.ObjectCollectedException
 import com.sun.jdi.VMOutOfMemoryException

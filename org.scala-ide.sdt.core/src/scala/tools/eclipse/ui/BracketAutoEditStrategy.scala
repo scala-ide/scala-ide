@@ -3,7 +3,9 @@ package scala.tools.eclipse.ui
 import scala.tools.eclipse.properties.EditorPreferencePage
 
 import org.eclipse.jface.preference.IPreferenceStore
-import org.eclipse.jface.text.{ DocumentCommand, IAutoEditStrategy, IDocument }
+import org.eclipse.jface.text.DocumentCommand
+import org.eclipse.jface.text.IAutoEditStrategy
+import org.eclipse.jface.text.IDocument
 
 /**
  * Automatically applies several auto edit actions when a user enters or removes

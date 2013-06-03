@@ -114,5 +114,5 @@
  <check level="warning" class="org.scalastyle.scalariform.PublicMethodsHaveTypeChecker" enabled="false"/>
  <check level="warning" class="org.scalastyle.file.NewLineAtEofChecker" enabled="false"/>
  <check level="warning" class="org.scalastyle.scalariform.NotImplementedErrorUsage" enabled="false" />
- <check level="warning" class="org.scalastyle.scalariform.BlockImportChecker" enabled="false"/>
+ <check level="error" class="org.scalastyle.scalariform.BlockImportChecker" enabled="true"/>
 </scalastyle>

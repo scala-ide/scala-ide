@@ -5,7 +5,8 @@
  */
 package scala.tools.eclipse.wizards
 
-import org.junit.{Test, Assert}
+import org.junit.Test
+import org.junit.Assert
 
 class QualifiedNameSupportTest extends QualifiedNameSupport {
 
