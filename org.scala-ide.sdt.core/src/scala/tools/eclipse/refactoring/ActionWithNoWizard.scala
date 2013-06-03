@@ -5,7 +5,9 @@
 package scala.tools.eclipse
 package refactoring
 
-import org.eclipse.core.runtime.{Status, IStatus, IProgressMonitor}
+import org.eclipse.core.runtime.Status
+import org.eclipse.core.runtime.IStatus
+import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.jface.action.IAction
 import org.eclipse.ui.progress.UIJob
 import org.eclipse.ui.PlatformUI

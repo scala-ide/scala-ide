@@ -1,7 +1,8 @@
 package scala.tools.eclipse.lexical
 import org.eclipse.jface.text._
 import org.eclipse.jface.text.rules._
-import scala.annotation.{ switch, tailrec }
+import scala.annotation.switch
+import scala.annotation.tailrec
 import org.eclipse.swt.SWT
 import scala.tools.eclipse.properties.syntaxcolouring.ScalaSyntaxClass
 import scala.tools.eclipse.properties.syntaxcolouring.ScalaSyntaxClasses._

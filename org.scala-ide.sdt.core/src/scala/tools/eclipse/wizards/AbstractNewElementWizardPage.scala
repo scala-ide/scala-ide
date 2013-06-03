@@ -29,11 +29,15 @@ import org.eclipse.jdt.core.{
   Signature,
   WorkingCopyOwner
 }
-import org.eclipse.jdt.core.dom.{ AST, ASTParser, CompilationUnit }
+import org.eclipse.jdt.core.dom.AST
+import org.eclipse.jdt.core.dom.ASTParser
+import org.eclipse.jdt.core.dom.CompilationUnit
 import org.eclipse.jdt.internal.corext.codemanipulation.StubUtility
 import org.eclipse.jdt.internal.corext.util.JavaModelUtil
-import org.eclipse.jdt.internal.ui.dialogs.{ StatusInfo, TextFieldNavigationHandler }
-import org.eclipse.jdt.internal.ui.refactoring.contentassist.{ ControlContentAssistHelper, JavaPackageCompletionProcessor }
+import org.eclipse.jdt.internal.ui.dialogs.StatusInfo
+import org.eclipse.jdt.internal.ui.dialogs.TextFieldNavigationHandler
+import org.eclipse.jdt.internal.ui.refactoring.contentassist.ControlContentAssistHelper
+import org.eclipse.jdt.internal.ui.refactoring.contentassist.JavaPackageCompletionProcessor
 import org.eclipse.jdt.internal.ui.util.SWTUtil
 import org.eclipse.jdt.internal.ui.wizards.NewWizardMessages
 import org.eclipse.jdt.internal.ui.wizards.dialogfields.{
@@ -46,11 +50,13 @@ import org.eclipse.jdt.internal.ui.wizards.dialogfields.{
   StringButtonDialogField
 }
 import org.eclipse.jdt.ui.wizards.NewTypeWizardPage
-import org.eclipse.jface.dialogs.{ Dialog, IDialogSettings }
+import org.eclipse.jface.dialogs.Dialog
+import org.eclipse.jface.dialogs.IDialogSettings
 import org.eclipse.jface.resource.ImageDescriptor
 import org.eclipse.jface.viewers.IStructuredSelection
 import org.eclipse.swt.SWT
-import org.eclipse.swt.layout.{ GridData, GridLayout }
+import org.eclipse.swt.layout.GridData
+import org.eclipse.swt.layout.GridLayout
 import org.eclipse.swt.widgets.Composite
 import collection.Seq
 import collection.mutable.Buffer

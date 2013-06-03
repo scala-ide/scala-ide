@@ -3,15 +3,23 @@ package buildmanager
 package sbtintegration
 
 import java.io.File
-import java.net.{URL, URLClassLoader}
-import java.util.zip.{ZipEntry, ZipFile}
+import java.net.URL
+import java.net.URLClassLoader
+import java.util.zip.ZipEntry
+import java.util.zip.ZipFile
 import org.eclipse.core.runtime.SubMonitor
-import xsbti.{Maybe, Logger, Reporter}
+import xsbti.Maybe
+import xsbti.Logger
+import xsbti.Reporter
 import xsbti.compile._
-import sbt.inc.{Analysis, Locate}
-import sbt.compiler.{AnalyzingCompiler, IC, CompilerCache}
+import sbt.inc.Analysis
+import sbt.inc.Locate
+import sbt.compiler.AnalyzingCompiler
+import sbt.compiler.IC
+import sbt.compiler.CompilerCache
 import sbt.classpath.ClasspathUtilities
-import sbt.{ScalaInstance, ClasspathOptions}
+import sbt.ScalaInstance
+import sbt.ClasspathOptions
 import ScalaPlugin.plugin
 import sbt.inc.IncOptions
 

@@ -1,6 +1,7 @@
 package scala.tools.eclipse.ui
 
-import org.eclipse.jface.text.contentassist.{IContextInformation,IContextInformationExtension}
+import org.eclipse.jface.text.contentassist.IContextInformation
+import org.eclipse.jface.text.contentassist.IContextInformationExtension
 import org.eclipse.swt.graphics.Image
 
 class ScalaContextInformation(

@@ -5,7 +5,10 @@ import scala.tools.eclipse.properties.EditorPreferencePage
 
 import org.eclipse.jdt.ui.text.IJavaPartitions
 import org.eclipse.jface.preference.IPreferenceStore
-import org.eclipse.jface.text.{ DefaultIndentLineAutoEditStrategy, DocumentCommand, IDocument, TextUtilities }
+import org.eclipse.jface.text.DefaultIndentLineAutoEditStrategy
+import org.eclipse.jface.text.DocumentCommand
+import org.eclipse.jface.text.IDocument
+import org.eclipse.jface.text.TextUtilities
 
 /** An auto-edit strategy for Scaladoc and multiline comments that does the following:
  *

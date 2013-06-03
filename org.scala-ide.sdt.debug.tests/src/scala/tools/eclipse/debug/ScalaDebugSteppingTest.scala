@@ -1,7 +1,9 @@
 package scala.tools.eclipse.debug
 
 import scala.tools.eclipse.testsetup.TestProjectSetup
-import org.junit.{ Test, Before, After }
+import org.junit.Test
+import org.junit.Before
+import org.junit.After
 import org.eclipse.core.resources.IncrementalProjectBuilder
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.junit.Ignore

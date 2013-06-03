@@ -6,15 +6,21 @@
 package scala.tools.eclipse.javaelements
 
 import java.util.{ HashMap => JHashMap, Map => JMap }
-import org.eclipse.core.resources.{ IFile, IResource }
+import org.eclipse.core.resources.IFile
+import org.eclipse.core.resources.IResource
 import org.eclipse.core.runtime.IProgressMonitor
-import org.eclipse.jdt.core.{ IBuffer, ICompilationUnit, IJavaElement, IType, WorkingCopyOwner }
+import org.eclipse.jdt.core.IBuffer
+import org.eclipse.jdt.core.ICompilationUnit
+import org.eclipse.jdt.core.IJavaElement
+import org.eclipse.jdt.core.IType
+import org.eclipse.jdt.core.WorkingCopyOwner
 import org.eclipse.jdt.core.compiler.IProblem
 import org.eclipse.jdt.internal.core.util.HandleFactory
 import org.eclipse.jdt.internal.core.{ BufferManager, CompilationUnit => JDTCompilationUnit, OpenableElementInfo, PackageFragment }
 import org.eclipse.jdt.internal.corext.util.JavaModelUtil
 import org.eclipse.swt.widgets.Display
-import scala.tools.nsc.io.{ AbstractFile, VirtualFile }
+import scala.tools.nsc.io.AbstractFile
+import scala.tools.nsc.io.VirtualFile
 import scala.tools.eclipse.contribution.weaving.jdt.IScalaSourceFile
 import scala.tools.eclipse.util.EclipseFile
 import org.eclipse.jdt.core.compiler.CharOperation

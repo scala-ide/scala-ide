@@ -1,10 +1,14 @@
 package scala.tools.eclipse
 package refactoring.move
 
-import org.eclipse.core.resources.{IFolder, IFile}
+import org.eclipse.core.resources.IFolder
+import org.eclipse.core.resources.IFile
 import org.eclipse.core.runtime.IProgressMonitor
-import org.eclipse.ltk.core.refactoring.participants.{MoveParticipant, CheckConditionsContext}
-import org.eclipse.ltk.core.refactoring.{RefactoringStatus, CompositeChange, Change}
+import org.eclipse.ltk.core.refactoring.participants.MoveParticipant
+import org.eclipse.ltk.core.refactoring.participants.CheckConditionsContext
+import org.eclipse.ltk.core.refactoring.RefactoringStatus
+import org.eclipse.ltk.core.refactoring.CompositeChange
+import org.eclipse.ltk.core.refactoring.Change
 import org.eclipse.ui.PlatformUI
 
 import scala.tools.eclipse.javaelements.ScalaSourceFile

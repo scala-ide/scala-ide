@@ -5,10 +5,20 @@ import org.eclipse.jdt.core.IJavaProject
 import org.eclipse.jdt.core.JavaCore
 import org.eclipse.core.runtime.FileLocator
 import org.eclipse.core.runtime.Platform
-import java.io.{ ByteArrayInputStream, File, IOException, InputStream }
-import org.eclipse.core.resources.{ IContainer, IFile, IFolder, IProject, IProjectDescription, ResourcesPlugin }
-import org.eclipse.core.runtime.{ IPath, Path }
-import scala.tools.eclipse.util.{ OSGiUtils, EclipseUtils }
+import java.io.ByteArrayInputStream
+import java.io.File
+import java.io.IOException
+import java.io.InputStream
+import org.eclipse.core.resources.IContainer
+import org.eclipse.core.resources.IFile
+import org.eclipse.core.resources.IFolder
+import org.eclipse.core.resources.IProject
+import org.eclipse.core.resources.IProjectDescription
+import org.eclipse.core.resources.ResourcesPlugin
+import org.eclipse.core.runtime.IPath
+import org.eclipse.core.runtime.Path
+import scala.tools.eclipse.util.OSGiUtils
+import scala.tools.eclipse.util.EclipseUtils
 import scala.reflect.internal.util.SourceFile
 import scala.collection.mutable
 import scala.util.matching.Regex

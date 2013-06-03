@@ -4,7 +4,9 @@ import scala.tools.eclipse.properties.syntaxcolouring._
 import scala.tools.eclipse.properties.syntaxcolouring.ScalaSyntaxClasses._
 import scala.tools.eclipse.testsetup.SDTTestUtils
 
-import org.junit.{ ComparisonFailure, Ignore, Test }
+import org.junit.ComparisonFailure
+import org.junit.Ignore
+import org.junit.Test
 
 import scalariform.ScalaVersions
 

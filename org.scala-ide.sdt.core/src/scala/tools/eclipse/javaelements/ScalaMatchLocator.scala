@@ -5,14 +5,28 @@
 
 package scala.tools.eclipse.javaelements
 
-import org.eclipse.jdt.core.search.{ SearchMatch, SearchPattern, SearchParticipant, TypeDeclarationMatch, TypeReferenceMatch, MethodReferenceMatch, FieldReferenceMatch }
+import org.eclipse.jdt.core.search.SearchMatch
+import org.eclipse.jdt.core.search.SearchPattern
+import org.eclipse.jdt.core.search.SearchParticipant
+import org.eclipse.jdt.core.search.TypeDeclarationMatch
+import org.eclipse.jdt.core.search.TypeReferenceMatch
+import org.eclipse.jdt.core.search.MethodReferenceMatch
+import org.eclipse.jdt.core.search.FieldReferenceMatch
 import org.eclipse.jdt.core.compiler.{ CharOperation => CharOp }
-import org.eclipse.jdt.internal.compiler.ast.{ SingleTypeReference, TypeDeclaration }
-import org.eclipse.jdt.internal.core.search.matching.{ MatchLocator, PossibleMatch }
-import scala.reflect.internal.util.{ RangePosition, Position }
+import org.eclipse.jdt.internal.compiler.ast.SingleTypeReference
+import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration
+import org.eclipse.jdt.internal.core.search.matching.MatchLocator
+import org.eclipse.jdt.internal.core.search.matching.PossibleMatch
+import scala.reflect.internal.util.RangePosition
+import scala.reflect.internal.util.Position
 import scala.tools.eclipse.ScalaPresentationCompiler
 import scala.tools.eclipse.util.ReflectionUtils
-import org.eclipse.jdt.internal.core.search.matching.{ PatternLocator, FieldPattern, MethodPattern, TypeReferencePattern, TypeDeclarationPattern, OrPattern }
+import org.eclipse.jdt.internal.core.search.matching.PatternLocator
+import org.eclipse.jdt.internal.core.search.matching.FieldPattern
+import org.eclipse.jdt.internal.core.search.matching.MethodPattern
+import org.eclipse.jdt.internal.core.search.matching.TypeReferencePattern
+import org.eclipse.jdt.internal.core.search.matching.TypeDeclarationPattern
+import org.eclipse.jdt.internal.core.search.matching.OrPattern
 import org.eclipse.jdt.core.IJavaElement
 
 //FIXME should report all and let matcher to the selection OR only report matcher interest (pre select by type) OR ...

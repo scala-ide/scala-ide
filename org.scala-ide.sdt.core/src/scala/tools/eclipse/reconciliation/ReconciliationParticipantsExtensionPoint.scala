@@ -5,7 +5,8 @@ package scala.tools.eclipse
 package reconciliation
 
 import org.eclipse.core.runtime.CoreException
-import org.eclipse.core.runtime.{Platform, IProgressMonitor}
+import org.eclipse.core.runtime.Platform
+import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.jdt.core.WorkingCopyOwner
 import scala.tools.eclipse.javaelements.ScalaCompilationUnit
 import scala.tools.eclipse.logging.HasLogger

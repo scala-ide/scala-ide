@@ -1,12 +1,14 @@
 package scala.tools.eclipse
 package actions
 
-import org.eclipse.core.resources.{ IProject }
+import org.eclipse.core.resources.IProject
 import org.eclipse.core.runtime.IAdaptable
 import org.eclipse.jface.action.IAction
-import org.eclipse.jface.viewers.{ ISelection, IStructuredSelection }
+import org.eclipse.jface.viewers.ISelection
+import org.eclipse.jface.viewers.IStructuredSelection
 import org.eclipse.core.runtime.Platform
-import org.eclipse.ui.{ IObjectActionDelegate, IWorkbenchPart }
+import org.eclipse.ui.IObjectActionDelegate
+import org.eclipse.ui.IWorkbenchPart
 import ScalaPlugin.plugin
 import scala.tools.eclipse.util.EclipseUtils._
 

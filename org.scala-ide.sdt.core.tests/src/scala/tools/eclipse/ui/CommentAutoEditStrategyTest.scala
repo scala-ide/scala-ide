@@ -5,8 +5,11 @@ import scala.tools.eclipse.properties.EditorPreferencePage
 
 import org.eclipse.jdt.ui.text.IJavaPartitions
 import org.eclipse.jface.preference.IPreferenceStore
-import org.eclipse.jface.text.{ Document, IDocument }
-import org.junit.{ Before, ComparisonFailure, Test }
+import org.eclipse.jface.text.Document
+import org.eclipse.jface.text.IDocument
+import org.junit.Before
+import org.junit.ComparisonFailure
+import org.junit.Test
 import org.mockito.Mockito._
 
 import AutoEditStrategyTests.TestCommand

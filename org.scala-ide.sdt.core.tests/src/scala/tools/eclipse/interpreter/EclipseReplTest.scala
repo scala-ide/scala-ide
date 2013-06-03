@@ -1,7 +1,8 @@
 package scala.tools.eclipse.interpreter
 
 import org.junit.Assert._
-import org.junit.{Test,Ignore}
+import org.junit.Test
+import org.junit.Ignore
 import scala.tools.nsc.interpreter.Results._
 import EclipseRepl._
 import EclipseReplTest._
