@@ -1,12 +1,20 @@
 package scala.tools.eclipse.lexical
 
-import org.junit.Test
+import scala.tools.eclipse.properties.syntaxcolouring.ScalaSyntaxClass
+
+import org.eclipse.jdt.core.JavaCore
+import org.eclipse.jface.preference.IPreferenceStore
+import org.eclipse.jface.text.{ Document, TextAttribute }
+import org.eclipse.jface.text.rules.Token
+import org.junit.{ ComparisonFailure, Test }
+import org.mockito.Mockito._
 
 class ScaladocTokenScannerTest {
 
   var scaladocAtt: String = _
   var annotationAtt: String = _
   var macroAtt: String = _
+  var taskTagAtt: String = _
 
   /**
    * Tokenizes Scaladoc content. The complete input is handled as Scaladoc
@@ -33,26 +41,85 @@ class ScaladocTokenScannerTest {
    * last element is its length.
    */
   def tokenize(str: String, offset: Int, length: Int): Seq[(String, Int, Int)] = {
-    val scanner = new ScaladocTokenizer {}
+    val scaladocClass = mock(classOf[ScalaSyntaxClass])
+    val annotationClass = mock(classOf[ScalaSyntaxClass])
+    val macroClass = mock(classOf[ScalaSyntaxClass])
+    val taskTagClass = mock(classOf[ScalaSyntaxClass])
 
-    scaladocAtt = scanner.Scaladoc.toString
-    annotationAtt = scanner.Annotation.toString
-    macroAtt = scanner.Macro.toString
+    val scalaPreferenceStore = mock(classOf[IPreferenceStore])
+    val javaPreferenceStore = mock(classOf[IPreferenceStore])
 
-    val document = new MockDocument(str)
-    val token = scanner.tokenize(document, offset, length) map {
-      case scanner.StyleRange(start, end, style) =>
-        (style.toString, start, end - start)
+    // sample task tags
+    when(javaPreferenceStore.getString(JavaCore.COMPILER_TASK_TAGS)).thenReturn("XXX,TODO")
+
+    val scaladocAtt = mock(classOf[TextAttribute])
+    val annotationAtt = mock(classOf[TextAttribute])
+    val macroAtt = mock(classOf[TextAttribute])
+    val taskTagAtt = mock(classOf[TextAttribute])
+
+    when(scaladocAtt.toString()).thenReturn("scaladocAtt")
+    when(annotationAtt.toString()).thenReturn("annotationAtt")
+    when(macroAtt.toString()).thenReturn("macroAtt")
+    when(taskTagAtt.toString()).thenReturn("taskTagAtt")
+
+    this.scaladocAtt = scaladocAtt.toString()
+    this.annotationAtt = annotationAtt.toString()
+    this.macroAtt = macroAtt.toString()
+    this.taskTagAtt = taskTagAtt.toString()
+
+    when(scaladocClass.getTextAttribute(scalaPreferenceStore)).thenReturn(scaladocAtt)
+    when(annotationClass.getTextAttribute(scalaPreferenceStore)).thenReturn(annotationAtt)
+    when(macroClass.getTextAttribute(scalaPreferenceStore)).thenReturn(macroAtt)
+    when(taskTagClass.getTextAttribute(scalaPreferenceStore)).thenReturn(taskTagAtt)
+
+    val scanner = new ScaladocTokenScanner(
+        scaladocClass,
+        annotationClass,
+        macroClass,
+        taskTagClass,
+        scalaPreferenceStore,
+        javaPreferenceStore)
+
+    val doc = {
+      val rawInput = str.filterNot(_ == '^')
+      val doc = new Document(rawInput)
+      val partitioner = new ScalaDocumentPartitioner
+
+      doc.setDocumentPartitioner(partitioner)
+      partitioner.connect(doc)
+      doc
     }
-    token.toList
+
+    scanner.setRange(doc, offset, length)
+
+    val data = Iterator
+      .continually((scanner.nextToken(), scanner.getTokenOffset(), scanner.getTokenLength()))
+      .takeWhile(_._1 != Token.EOF)
+      .map { case (ta, off, len) => (ta.getData().toString(), off, len) }
+      .toSeq
+
+    /*
+     * The scanner returns a token for each character but we want all consecutive
+     * token of the same type grouped as one single token.
+     */
+    val groupedToken = (Seq(data.head) /: data.tail) {
+      case (token, t @ (scc, off, len)) =>
+        val (sccBefore, offBefore, lenBefore) = token.last
+        if (sccBefore == scc)
+          token.init :+ ((scc, offBefore, lenBefore+len))
+        else
+          token :+ t
+    }
+
+    groupedToken
   }
 
   class Assert_===[A](actual: A) {
     def ===(expected: A) {
       if (actual != expected)
-        throw new AssertionError("""Expected != Actual
-          |Expected: %s
-          |Actual:   %s""".stripMargin.format(expected, actual))
+        throw new ComparisonFailure("actual != expected,",
+          expected.toString(),
+          actual.toString())
     }
   }
   implicit def Assert_===[A](actual: A): Assert_===[A] = new Assert_===(actual)
@@ -76,15 +143,15 @@ class ScaladocTokenScannerTest {
   }
 
   @Test
-  def consecutive_annotations_should_be_handled_as_single_annotation() {
+  def consecutive_annotations_should_not_be_handled_as_single_annotation() {
     val res = tokenize("""/**@pa@pa*/""")
-    res === Seq((scaladocAtt, 0, 3), (annotationAtt, 3, 6), (scaladocAtt, 9, 2))
+    res === Seq((scaladocAtt, 0, 3), (annotationAtt, 3, 3), (scaladocAtt, 6, 5))
   }
 
   @Test
-  def consecutive_macros_should_be_handled_as_single_macro() {
+  def consecutive_macros_should_not_be_handled_as_single_macro() {
     val res = tokenize("""/**$pa$pa*/""")
-    res === Seq((scaladocAtt, 0, 3), (macroAtt, 3, 6), (scaladocAtt, 9, 2))
+    res === Seq((scaladocAtt, 0, 3), (macroAtt, 3, 3), (scaladocAtt, 6, 5))
   }
 
   @Test
@@ -110,18 +177,11 @@ class ScaladocTokenScannerTest {
 
   @Test
   def multiple_macros() {
-    val res = tokenize("""/**$def $def$def*/""")
+    val res = tokenize("""/**$def $def text $def*/""")
     res === Seq(
       (scaladocAtt, 0, 3), (macroAtt, 3, 4), (scaladocAtt, 7, 1),
-      (macroAtt, 8, 8), (scaladocAtt, 16, 2))
-  }
-
-  @Test
-  def consecutive_annotations_or_macros_should_be_highlighted() {
-    val res = tokenize("""/**@param$def@param*/""")
-    res === Seq(
-      (scaladocAtt, 0, 3), (annotationAtt, 3, 6), (macroAtt, 9, 4),
-      (annotationAtt, 13, 6), (scaladocAtt, 19, 2))
+      (macroAtt, 8, 4), (scaladocAtt, 12, 6), (macroAtt, 18, 4),
+      (scaladocAtt, 22, 2))
   }
 
   @Test
@@ -164,6 +224,12 @@ class ScaladocTokenScannerTest {
     res === Seq(
       (scaladocAtt, 11, 3), (annotationAtt, 14, 6), (scaladocAtt, 20, 1),
       (macroAtt, 21, 4), (scaladocAtt, 25, 2))
+  }
+
+  @Test
+  def single_task_tag() {
+    val res = tokenize("/**TODO*/")
+    res === Seq((scaladocAtt, 0, 3), (taskTagAtt, 3, 4), (scaladocAtt, 7, 2))
   }
 
 }

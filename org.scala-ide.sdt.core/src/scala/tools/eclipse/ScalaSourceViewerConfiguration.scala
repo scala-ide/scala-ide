@@ -49,19 +49,19 @@ class ScalaSourceViewerConfiguration(store: IPreferenceStore, scalaPreferenceSto
    extends JavaSourceViewerConfiguration(JavaPlugin.getDefault.getJavaTextTools.getColorManager, store, editor, IJavaPartitions.JAVA_PARTITIONING) {
 
   private val codeHighlightingScanners = {
-    val scalaCodeScanner = new ScalaCodeScanner(getColorManager, scalaPreferenceStore, ScalaVersions.DEFAULT)
-    val singleLineCommentScanner = new SingleTokenScanner(ScalaSyntaxClasses.SINGLE_LINE_COMMENT, getColorManager, scalaPreferenceStore)
-    val multiLineCommentScanner = new SingleTokenScanner(ScalaSyntaxClasses.MULTI_LINE_COMMENT, getColorManager, scalaPreferenceStore)
-    val scaladocScanner = new ScaladocTokenScanner(ScalaSyntaxClasses.SCALADOC, ScalaSyntaxClasses.SCALADOC_ANNOTATION, ScalaSyntaxClasses.SCALADOC_MACRO, getColorManager, scalaPreferenceStore)
-    val scaladocCodeBlockScanner = new SingleTokenScanner(ScalaSyntaxClasses.SCALADOC_CODE_BLOCK, getColorManager, scalaPreferenceStore)
-    val stringScanner = new StringTokenScanner(ScalaSyntaxClasses.ESCAPE_SEQUENCE, ScalaSyntaxClasses.STRING, getColorManager, scalaPreferenceStore)
-    val characterScanner = new StringTokenScanner(ScalaSyntaxClasses.ESCAPE_SEQUENCE, ScalaSyntaxClasses.CHARACTER, getColorManager, scalaPreferenceStore)
-    val multiLineStringScanner = new SingleTokenScanner(ScalaSyntaxClasses.MULTI_LINE_STRING, getColorManager, scalaPreferenceStore)
-    val xmlTagScanner = new XmlTagScanner(getColorManager, scalaPreferenceStore)
-    val xmlCommentScanner = new XmlCommentScanner(getColorManager, scalaPreferenceStore)
-    val xmlCDATAScanner = new XmlCDATAScanner(getColorManager, scalaPreferenceStore)
-    val xmlPCDATAScanner = new SingleTokenScanner(ScalaSyntaxClasses.DEFAULT, getColorManager, scalaPreferenceStore)
-    val xmlPIScanner = new XmlPIScanner(getColorManager, scalaPreferenceStore)
+    val scalaCodeScanner = new ScalaCodeScanner(scalaPreferenceStore, ScalaVersions.DEFAULT)
+    val singleLineCommentScanner = new ScalaCommentScanner(ScalaSyntaxClasses.SINGLE_LINE_COMMENT, ScalaSyntaxClasses.TASK_TAG, scalaPreferenceStore, store)
+    val multiLineCommentScanner = new ScalaCommentScanner(ScalaSyntaxClasses.MULTI_LINE_COMMENT, ScalaSyntaxClasses.TASK_TAG, scalaPreferenceStore, store)
+    val scaladocScanner = new ScaladocTokenScanner(ScalaSyntaxClasses.SCALADOC, ScalaSyntaxClasses.SCALADOC_ANNOTATION, ScalaSyntaxClasses.SCALADOC_MACRO, ScalaSyntaxClasses.TASK_TAG, scalaPreferenceStore, store)
+    val scaladocCodeBlockScanner = new SingleTokenScanner(ScalaSyntaxClasses.SCALADOC_CODE_BLOCK, scalaPreferenceStore)
+    val stringScanner = new StringTokenScanner(ScalaSyntaxClasses.ESCAPE_SEQUENCE, ScalaSyntaxClasses.STRING, scalaPreferenceStore)
+    val characterScanner = new StringTokenScanner(ScalaSyntaxClasses.ESCAPE_SEQUENCE, ScalaSyntaxClasses.CHARACTER, scalaPreferenceStore)
+    val multiLineStringScanner = new SingleTokenScanner(ScalaSyntaxClasses.MULTI_LINE_STRING, scalaPreferenceStore)
+    val xmlTagScanner = new XmlTagScanner(scalaPreferenceStore)
+    val xmlCommentScanner = new XmlCommentScanner(scalaPreferenceStore)
+    val xmlCDATAScanner = new XmlCDATAScanner(scalaPreferenceStore)
+    val xmlPCDATAScanner = new SingleTokenScanner(ScalaSyntaxClasses.DEFAULT, scalaPreferenceStore)
+    val xmlPIScanner = new XmlPIScanner(scalaPreferenceStore)
 
     Map(
       IDocument.DEFAULT_CONTENT_TYPE -> scalaCodeScanner,
