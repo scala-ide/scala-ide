@@ -1,158 +1,81 @@
 package scala.tools.eclipse.lexical
 
-import scala.annotation.tailrec
 import scala.tools.eclipse.properties.syntaxcolouring.ScalaSyntaxClass
 
-import org.eclipse.jdt.ui.text.IColorManager
 import org.eclipse.jface.preference.IPreferenceStore
-import org.eclipse.jface.text.IDocument
-import org.eclipse.jface.text.rules.{ IToken, Token }
+import org.eclipse.jface.text.rules.{ ICharacterScanner, IToken, IWordDetector, Token, WordRule }
 
 /**
- * Scans Scaladoc contents and tokenize them into different style ranges.
+ * Scans Scaladoc content and tokenizes it into different style ranges.
  *
  * This Scanner assumes that anything passed to it is already Scaladoc - it does
  * not search for Scaladoc content inside of arbitrary passed input.
  */
 class ScaladocTokenScanner(
-  scaladocClass: ScalaSyntaxClass,
-  annotationClass: ScalaSyntaxClass,
-  macroClass: ScalaSyntaxClass,
-  val colorManager: IColorManager,
-  val preferenceStore: IPreferenceStore)
-    extends AbstractScalaScanner with ScaladocTokenizer {
+    scaladocClass: ScalaSyntaxClass,
+    annotationClass: ScalaSyntaxClass,
+    macroClass: ScalaSyntaxClass,
+    taskTagClass: ScalaSyntaxClass,
+    preferenceStore: IPreferenceStore,
+    javaPreferenceStore: IPreferenceStore
+) extends ScalaCommentScanner(scaladocClass, taskTagClass, preferenceStore, javaPreferenceStore) {
 
-  private val styles = Map[Style, ScalaSyntaxClass](
-    Scaladoc -> scaladocClass,
-    Annotation -> annotationClass,
-    Macro -> macroClass)
+  private val annotationRule = new ScaladocWordRule(new AnnotationDetector, getToken(scaladocClass), getToken(annotationClass))
+  private val macroRule = new ScaladocWordRule(new MacroDetector, getToken(scaladocClass), getToken(macroClass))
 
-  private var offset: Int = _
-  private var length: Int = _
-  private var ranges: IndexedSeq[StyleRange] = _
-  private var index: Int = _
-
-  def setRange(document: IDocument, offset: Int, length: Int) {
-    this.index = 0
-    this.ranges = tokenize(document, offset, length)
-
-    val sr @ StyleRange(start, end, _) = ranges(index)
-    this.offset = start
-    this.length = sr.length
-  }
-
-  def nextToken(): IToken =
-    if (index >= ranges.size)
-      Token.EOF
-    else {
-      val sr @ StyleRange(start, end, style) = ranges(index)
-      val tok = getToken(styles(style))
-      index += 1
-      offset = start
-      length = sr.length
-      tok
-    }
-
-  def getTokenOffset(): Int = offset
-
-  def getTokenLength(): Int = length
-
+  appendRules(Array(annotationRule, macroRule))
 }
 
 /**
- * Separation of tokenizing logic from the `ScaladocTokenScanner`.
+ * Extends a normal `WordRule` with behavior needed for Scaladoc.
  */
-trait ScaladocTokenizer {
-
-  /** Denotes a set of possible styles for Scaladoc content. */
-  sealed abstract class Style
-  case object Annotation extends Style
-  case object Scaladoc extends Style
-  case object Macro extends Style
+private class ScaladocWordRule(
+    wordDetector: IWordDetector,
+    scaladocToken: IToken,
+    defaultToken: IToken
+) extends WordRule(wordDetector, defaultToken) {
 
   /**
-   * The start index denotes the position BEFORE the first sign of the range
-   * whereas the end index denotes the position AFTER the last sign. This means
-   * that for an arbitrary string the following is true:
+   * Changes the behavior of a `WordRule` in so far that occurrences of characters
+   * that determine a word start (means `WordDetector.isWordStart` returns `true`)
+   * are not treated as a special token in the following cases:
    *
-   * string: Hello World!
-   * start : 0
-   * end   : 12
-   * length: end - start = 12
+   * - The character stands for its own, which means that `WordDetector.isWordPart`
+   *   returns `false` for both the characters predecessor and successor.
+   *   '''Example''': "a @ b" is treated as a normal comment token where "@" is word start
+   *   and "a" and "b" are word parts, but whitespace is no word part.
    *
-   * If a range spans the whole content (as in the example above) the start index
-   * is always 0 whereas the end index is always equal to the length of the input.
+   * - The characters predecessor and successor both return `true` for
+   *   `WordDetector.isWordPart`.
+   *   '''Example''': "a@b" is treated as a normal comment token where "@" is word start
+   *   and "a" and "b" are word parts.
    */
-  case class StyleRange(start: Int, end: Int, style: Style = Scaladoc) {
-    def length: Int = end - start
-  }
+  override def evaluate(scanner: ICharacterScanner): IToken = {
+    scanner.unread()
+    val preToken = scanner.read().toChar
+    val curToken = scanner.read().toChar
 
-  /** Tokenizes a string given by its offset and length in a document. */
-  def tokenize(document: IDocument, offset: Int, length: Int): IndexedSeq[StyleRange] = {
-    val str = document.get(offset, length).toCharArray()
+    if (wordDetector.isWordStart(curToken) && !wordDetector.isWordPart(preToken)) {
+      val succToken = scanner.read().toChar
+      scanner.unread()
 
-    def isNumber(c: Char) = c >= '0' && c <= '9'
-
-    def isAlpha(c: Char) = c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z'
-
-    def isIdent(c: Char) = isAlpha(c) || c == '_' || isNumber(c)
-
-    def styleOf(c: Char) = c match {
-      case '@' => Annotation
-      case '$' => Macro
-      case _   => Scaladoc
-    }
-
-    /* Checks the characters before and after the given index if they are identifiers. */
-    def isScaladocStyleAt(i: Int) =
-      if (i > 0)
-        if (isIdent(str(i - 1)) || i + 1 >= str.length) true
-        else !isIdent(str(i + 1))
-      else i < str.length - 1 && !isIdent(str(i + 1))
-
-    @tailrec
-    def findRanges(i: Int, start: Int, style: Style, xs: IndexedSeq[StyleRange]): IndexedSeq[StyleRange] = {
-      def append = xs :+ StyleRange(start + offset, i + offset, style)
-
-      if (i >= str.length) append
-      else str(i) match {
-        case '@' if !isScaladocStyleAt(i) =>
-          findRanges(i + 1, i, Annotation, append)
-
-        case '$' if !isScaladocStyleAt(i) =>
-          findRanges(i + 1, i, Macro, append)
-
-        case c if !isIdent(c) && style != Scaladoc =>
-          val isNextIndexIdent = i + 1 < str.length && isIdent(str(i + 1))
-          val nextStyle = if (isNextIndexIdent) styleOf(c) else Scaladoc
-          findRanges(i + 1, i, nextStyle, append)
-
-        case _ =>
-          findRanges(i + 1, start, style, xs)
+      if (!wordDetector.isWordPart(succToken))
+        scaladocToken
+      else {
+        scanner.unread()
+        super.evaluate(scanner)
       }
+    } else {
+      scanner.unread()
+      Token.UNDEFINED
     }
-
-    /*
-     * Optimizes away:
-     * - ranges whose length is zero
-     * - consecutive ranges of same type
-     */
-    val optimizedRanges = {
-      val ranges = findRanges(0, 0, Scaladoc, Vector())
-
-      (Vector(ranges.head) /: ranges.tail) {
-        case (ranges, range @ StyleRange(_, nextEnd, nextStyle)) =>
-          val StyleRange(start, end, styleBefore) = ranges.last
-          if (end - start == 0)
-            ranges.init :+ range
-          else if (styleBefore == nextStyle)
-            ranges.init :+ StyleRange(start, nextEnd, styleBefore)
-          else
-            ranges :+ range
-      }
-    }
-
-    optimizedRanges
   }
+}
 
+private class AnnotationDetector extends IdentifierDetector {
+  override def isWordStart(c: Char) = c == '@'
+}
+
+private class MacroDetector extends IdentifierDetector {
+  override def isWordStart(c: Char) = c == '$'
 }

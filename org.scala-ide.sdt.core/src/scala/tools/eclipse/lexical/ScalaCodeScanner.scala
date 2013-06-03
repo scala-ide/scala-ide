@@ -3,7 +3,6 @@ package scala.tools.eclipse.lexical
 import scala.annotation.tailrec
 import scala.tools.eclipse.properties.syntaxcolouring._
 
-import org.eclipse.jdt.ui.text.IColorManager
 import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.rules.{ IToken, Token }
@@ -17,7 +16,6 @@ import scalariform.lexer.Tokens._
  * token.
  */
 class ScalaCodeScanner(
-  val colorManager: IColorManager,
   val preferenceStore: IPreferenceStore,
   val scalaVersion: ScalaVersion)
     extends AbstractScalaScanner with ScalaCodeTokenizer {
