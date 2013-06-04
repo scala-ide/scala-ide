@@ -14,18 +14,6 @@ class RichBreakpoint(bp: IBreakpoint) {
   def lineNumber: Int = {
     bp.getMarker.getAttribute(IMarker.LINE_NUMBER, -1)
   }
-
-  /** Return true if the VM request attribute of this breakpoint is enabled */
-  def vmRequestEnabled: Boolean =
-    bp.getMarker().getAttribute(BreakpointSupport.ATTR_VM_REQUESTS_ENABLED, false)
-
-  /** Set the value of the VM request attribute.
-   *
-   *  This method only sets the marker attribute. It does not have any effect on the
-   *  vm requests used by this breakpoint.
-   */
-  def setVmRequestEnabled(value: Boolean) =
-    bp.getMarker().setAttribute(BreakpointSupport.ATTR_VM_REQUESTS_ENABLED, value)
 }
 
 object RichBreakpoint {

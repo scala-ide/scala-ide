@@ -56,7 +56,7 @@ object RemoteConnectorTest extends TestProjectSetup("debug", bundleName = "org.s
     vmArgs.put(SocketConnectorScala.PortKey, port.toString)
     workingLaunchConfiguration.setAttribute(VmArgsKey, vmArgs)
 
-    new ScalaDebugTestSession(workingLaunchConfiguration)
+    ScalaDebugTestSession(workingLaunchConfiguration)
   }
 
   /**
