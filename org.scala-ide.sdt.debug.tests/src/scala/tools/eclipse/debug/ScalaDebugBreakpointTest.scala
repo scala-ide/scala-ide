@@ -22,7 +22,7 @@ object ScalaDebugBreakpointTest extends TestProjectSetup("breakpoints", bundleNa
 
   var initialized = false
 
-  def initDebugSession(launchConfigurationName: String): ScalaDebugTestSession = new ScalaDebugTestSession(file(launchConfigurationName + ".launch"))
+  def initDebugSession(launchConfigurationName: String): ScalaDebugTestSession = ScalaDebugTestSession(file(launchConfigurationName + ".launch"))
 
   @AfterClass
   def deleteProject() {
@@ -276,4 +276,48 @@ class ScalaDebugBreakpointTest {
     }
   }
 
+  /** Test that if `skipAllBreakpoints` is enabled, no breakpoint request will be honored.*/
+  @Test
+  def skipAllBreakpoints_entails_breakpointsAreNotHonored() {
+    session = initDebugSession("Breakpoints")
+    session.runToLine("breakpoints.Breakpoints", 32) // stop in main
+
+    val bp20 = session.addLineBreakpoint(BP_TYPENAME, 20)
+    val bp26 = session.addLineBreakpoint(BP_TYPENAME, 26)
+    try {
+      session.waitForBreakpointsToBeEnabled(bp20, bp26)
+
+      session.skipAllBreakpoints(true)
+      session.waitForBreakpointsToBeDisabled(bp20)
+      session.waitForBreakpointsToBeDisabled(bp26)
+
+      session.resumeToCompletion()
+    } finally {
+      bp20.delete(); bp26.delete()
+    }
+  }
+
+  /** Test that enabling `skipAllBreakpoints` in the middle of a debug session does indeed disable all existing breakpoints. */
+  @Test
+  def skipAllBreakpointsInTheMiddleOfDebugSession() {
+    session = initDebugSession("Breakpoints")
+    session.runToLine("breakpoints.Breakpoints", 32) // stop in main
+
+    val bp20 = session.addLineBreakpoint(BP_TYPENAME, 20)
+    val bp26 = session.addLineBreakpoint(BP_TYPENAME, 26)
+    try {
+      session.waitForBreakpointsToBeEnabled(bp20, bp26)
+
+      session.resumetoSuspension()
+      session.checkStackFrame(BP_TYPENAME, "fors()V", 20)
+
+      session.skipAllBreakpoints(true)
+      session.waitForBreakpointsToBeDisabled(bp20)
+      session.waitForBreakpointsToBeDisabled(bp26)
+
+      session.resumeToCompletion()
+    } finally {
+      bp20.delete(); bp26.delete()
+    }
+  }
 }

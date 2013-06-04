@@ -41,7 +41,7 @@ class ScalaDebugResumeTest {
   @Test
   def resumeToBreakpoindAndToCompletion() {
 
-    session = new ScalaDebugTestSession(file("ForComprehensionListString.launch"))
+    session = ScalaDebugTestSession(file("ForComprehensionListString.launch"))
 
     session.runToLine(TYPENAME_FC_LS + "$", 9)
 
