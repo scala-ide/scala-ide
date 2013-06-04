@@ -75,12 +75,16 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
       }
     }
 
-    /**
-     * Returns a type name for an untyped tree which the JDT should be able to consume,
-     * in particular org.eclipse.jdt.internal.compiler.parser.TypeConverter
+    /** If the `tree` is defined, returns its type's full name. Otherwise, returns an untyped tree which
+     *  the JDT should be able to consume (in particular org.eclipse.jdt.internal.compiler.parser.TypeConverter).
      */
-    def unresolvedType(tree: Tree): String = "null-Type"
-    
+    def typeNameOf(tree: Option[Tree]): String = {
+      def unresolvedType: String = "null-Type"
+
+      val tpe = tree.flatMap(t => Option(t.tpe))
+      tpe.map(_.typeSymbol.fullName) getOrElse unresolvedType
+    }
+
     trait Owner {self =>
       def parent : Owner
       def jdtOwner = this
@@ -401,7 +405,6 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
         sym.initialize
         
         val name = c.name.toString
-        val parentTree = c.impl.parents.head
         val isAnon = sym.isAnonymousClass
         val superClass = sym.superClass
         val superName = mapType(superClass)
@@ -458,8 +461,11 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
           val start0 = c.pos.point 
           (start0, start0 + name.length - 1)
         } else {
-          val start0 = parentTree.pos.point
-          (start0, start0-1)
+          val parentTree = c.impl.parents.headOption
+          parentTree map { tree =>
+              val start0 = tree.pos.point
+              (start0, start0-1)
+          } getOrElse (-1,-1) // undefined
         }
         
         classElemInfo.setNameSourceStart0(start)
@@ -517,18 +523,13 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
           moduleElemInfo.setSourceRangeEnd0(end)
         }
         newElements0.put(moduleElem, moduleElemInfo)
-        
-        val parentTree = m.impl.parents.head
-        val superclassType = parentTree.tpe
-        val superclassName = (if (superclassType ne null) superclassType.typeSymbol.fullName 
-          else unresolvedType(parentTree)).toCharArray
-        moduleElemInfo.setSuperclassName(superclassName)
-        
+
+        val parentTree = m.impl.parents.headOption
+        val superclassName = typeNameOf(parentTree)
+        moduleElemInfo.setSuperclassName(superclassName.toCharArray)
+
         val interfaceTrees = m.impl.parents.drop(1)
-        val interfaceNames = interfaceTrees.map { t =>
-          val tpe = t.tpe
-          (if (tpe ne null) tpe.typeSymbol.fullName else unresolvedType(t)).toCharArray 
-        }
+        val interfaceNames = interfaceTrees.map { t => typeNameOf(Option(t)).toCharArray }
         moduleElemInfo.setSuperInterfaceNames(interfaceNames.toArray)
 
         fillOverrideInfos(sym)
