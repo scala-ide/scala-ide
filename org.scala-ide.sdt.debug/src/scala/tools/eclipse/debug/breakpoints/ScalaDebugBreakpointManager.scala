@@ -11,8 +11,14 @@ import scala.tools.eclipse.debug.BaseDebuggerActor
 import scala.tools.eclipse.debug.PoisonPill
 
 object ScalaDebugBreakpointManager {
-  /** A debug message used to wait until all required messages have been processed. */
-  object ActorDebug
+  /** A debug message used to wait until all required messages have been processed.
+   *  @note Use this for test purposes only!
+   */
+  case object ActorDebug
+  /** A debug message used to know if the event request associated to the passed `breakpoint` is enabled.
+   *  @note Use this for test purposes only!
+   */
+  case class GetBreakpointRequestState(breakpoint: IBreakpoint)
 
   def apply(debugTarget: ScalaDebugTarget): ScalaDebugBreakpointManager = {
     val companionActor = ScalaDebugBreakpointManagerActor(debugTarget)
@@ -58,14 +64,22 @@ class ScalaDebugBreakpointManager private (/*public field only for testing purpo
   }
   
   /**
-   * Test support method.
    * Wait for a dummy event to be processed, to indicate that all previous events
    * have been processed.
+   *
+   * @note Use this for test purposes only!
    */
   protected[debug] def waitForAllCurrentEvents() {
     companionActor !? ScalaDebugBreakpointManager.ActorDebug
   }
 
+  /** Check if the event request associated to the passed `breakpoint` is enabled/disabled.
+   *
+   *  @return None if the `breakpoint` isn't registered. Otherwise, the enabled state of the associated request is returned, wrapped in a `Some`.
+   *  @note Use this for test purposes only!
+   */
+  protected[debug] def getBreakpointRequestState(breakpoint: IBreakpoint): Option[Boolean] =
+    (companionActor !? ScalaDebugBreakpointManager.GetBreakpointRequestState(breakpoint)).asInstanceOf[Option[Boolean]]
 }
 
 private[debug] object ScalaDebugBreakpointManagerActor {
@@ -126,6 +140,13 @@ private class ScalaDebugBreakpointManagerActor private(debugTarget: ScalaDebugTa
       }
     case ScalaDebugBreakpointManager.ActorDebug =>
       reply(None)
+
+    case msg @ ScalaDebugBreakpointManager.GetBreakpointRequestState(breakpoint) =>
+      breakpoints.get(breakpoint) match {
+        case Some(breakpointSupport) =>
+          reply(Some(breakpointSupport !? msg))
+        case None => reply(None)
+      }
   }
 
   private def createBreakpointSupport(breakpoint: IBreakpoint): Unit = {

@@ -17,6 +17,8 @@ import org.eclipse.debug.core.ILaunchConfiguration
 import scala.tools.eclipse.debug.breakpoints.BreakpointSupport
 import scala.tools.eclipse.debug.model.ScalaValue
 import org.eclipse.jface.viewers.StructuredSelection
+import org.eclipse.jdt.debug.core.IJavaBreakpoint
+import org.junit.Assert
 
 object EclipseDebugEvent {
   def unapply(event: DebugEvent): Option[(Int, AnyRef)] = Some((event.getKind, event.getSource()))
@@ -35,12 +37,18 @@ object ScalaDebugTestSession {
     DebugPlugin.getDefault.addDebugEventListener(debugEventListener)
     debugEventListener
   }
+
+  def apply(launchConfiguration: ILaunchConfiguration): ScalaDebugTestSession = {
+    val session = new ScalaDebugTestSession(launchConfiguration)
+    session.skipAllBreakpoints(false)
+    session
+  }
+
+  def apply(launchConfigurationFile: IFile): ScalaDebugTestSession =
+    apply(DebugPlugin.getDefault.getLaunchManager.getLaunchConfiguration(launchConfigurationFile))
 }
 
-class ScalaDebugTestSession(launchConfiguration: ILaunchConfiguration) extends HasLogger {
-
-  def this(launchConfigurationFile: IFile) = this(DebugPlugin.getDefault.getLaunchManager.getLaunchConfiguration(launchConfigurationFile))
-
+class ScalaDebugTestSession private(launchConfiguration: ILaunchConfiguration) extends HasLogger {
   object State extends Enumeration {
     type State = Value
     val ACTION_REQUESTED, NOT_LAUNCHED, RUNNING, SUSPENDED, TERMINATED = Value
@@ -256,7 +264,13 @@ class ScalaDebugTestSession(launchConfiguration: ILaunchConfiguration) extends H
     if (state ne NOT_LAUNCHED) {
       debugTarget.breakpointManager.waitForAllCurrentEvents()
       waitUntil(15000) {
-        breakpoint.getMarker().getAttribute(BreakpointSupport.ATTR_VM_REQUESTS_ENABLED, !enabled) == enabled
+        debugTarget.breakpointManager.getBreakpointRequestState(breakpoint) match {
+          case Some(state) =>
+            state == enabled
+          case _ =>
+            Assert.fail("No BreakpointSupportActor exist for the passed breakpoint")
+            false
+        }
       }
     }
   }
@@ -299,4 +313,6 @@ class ScalaDebugTestSession(launchConfiguration: ILaunchConfiguration) extends H
     currentStackFrame.getVariables.find(_.getName == name).get.getValue.asInstanceOf[ScalaValue]
   }
 
+  def skipAllBreakpoints(enabled: Boolean): Unit =
+    DebugPlugin.getDefault().getBreakpointManager().setEnabled(!enabled)
 }

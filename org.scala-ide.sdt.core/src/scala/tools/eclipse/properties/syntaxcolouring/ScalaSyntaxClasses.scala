@@ -106,8 +106,6 @@ object ScalariformToSyntaxClass {
     case STRING_LITERAL                                                  => ssc.STRING
     case TRUE | FALSE | NULL                                             => ssc.KEYWORD
     case RETURN                                                          => ssc.RETURN
-    /* `requires` is not a keyword anymore, translation to default content type */
-    case REQUIRES                                                        => ssc.DEFAULT
     case t if t.isKeyword                                                => ssc.KEYWORD
     case LINE_COMMENT                                                    => ssc.SINGLE_LINE_COMMENT
     case MULTILINE_COMMENT if token.isScalaDocComment                    => ssc.SCALADOC
