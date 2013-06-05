@@ -9,7 +9,7 @@ Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Require-Bundle: org.scala-lang.scala-library,
  org.eclipse.equinox.weaving.aspectj,
  org.scala-ide.sdt.core,
- org.junit4
+ org.junit
 Import-Package: scala.tools.eclipse.testsetup
 Bundle-ClassPath: .,
  target/lib/mockito-all-1.9.5.jar

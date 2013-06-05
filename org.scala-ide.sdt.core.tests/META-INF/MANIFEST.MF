@@ -11,7 +11,6 @@ Bundle-ClassPath: .,
 Require-Bundle: org.scala-lang.scala-library,
  org.aspectj.weaver,
  org.eclipse.equinox.weaving.aspectj,
- org.eclipse.pde.core;resolution:=optional,
- org.junit4
+ org.junit
 Export-Package: 
  scala.tools.eclipse.testsetup
