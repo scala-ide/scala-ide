@@ -33,8 +33,17 @@ import scala.tools.nsc.io.VirtualFile
 import scala.tools.nsc.interactive.MissingResponse
 
 
-class ScalaPresentationCompiler(project: ScalaProject, settings: Settings)
-  extends Global(settings, new ScalaPresentationCompiler.PresentationReporter, project.underlying.getName)
+class ScalaPresentationCompiler(project: ScalaProject, settings: Settings) extends {
+  /**
+   * Lock object for protecting compiler names. Names are cached in a global `Array[Char]`
+   * and concurrent access may lead to overwritten names.
+   *
+   * @note This field is EARLY because `newTermName` is hit during construction of the superclass `Global`,
+   *       and the lock object has to be constructed already.
+   */
+  private val nameLock = new Object
+
+} with Global(settings, new ScalaPresentationCompiler.PresentationReporter, project.underlying.getName)
   with ScalaStructureBuilder
   with ScalaIndexBuilder
   with ScalaMatchLocator
@@ -218,6 +227,14 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings)
         sourceFiles.remove(scu)
       }
     }
+  }
+
+  override def newTermName(str: String) = {
+    nameLock synchronized { super.newTermName(str) }
+  }
+
+  override def newTypeName(str: String) = {
+    nameLock synchronized { super.newTypeName(str) }
   }
 
   def withResponse[A](op: Response[A] => Any): Response[A] = {
