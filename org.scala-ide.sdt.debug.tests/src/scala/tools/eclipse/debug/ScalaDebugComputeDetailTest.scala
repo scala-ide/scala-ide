@@ -10,7 +10,7 @@ import org.junit.Assert._
 import scala.tools.eclipse.debug.model.ScalaDebugModelPresentation
 import scala.tools.eclipse.debug.model.ScalaCollectionLogicalStructureType
 import scala.tools.eclipse.debug.model.ScalaArrayReference
-import org.junit.internal.matchers.StringContains
+import org.junit.matchers.JUnitMatchers
 import scala.tools.eclipse.debug.model.ScalaPrimitiveValue
 
 object ScalaDebugComputeDetailTest extends TestProjectSetup("debug", bundleName= "org.scala-ide.sdt.debug.tests") with ScalaDebugRunningTest
@@ -113,12 +113,12 @@ class ScalaDebugComputeDetailTest {
 
     val logicalStructure= ScalaCollectionLogicalStructureType.getLogicalStructure(session.getLocalVariable("j"))
 
-    assertThat("Wrong type for the logical structure", logicalStructure.getValueString(), StringContains.containsString("Array[Object](3)"))
+    assertThat("Wrong type for the logical structure", logicalStructure.getValueString(), JUnitMatchers.containsString("Array[Object](3)"))
 
     val elements = logicalStructure.asInstanceOf[ScalaArrayReference].getVariables()
-    assertThat("Wrong value for first element", elements(0).getValue().getValueString(), StringContains.containsString("Integer 4"))
-    assertThat("Wrong value for second element", elements(1).getValue().getValueString(), StringContains.containsString("Integer 5"))
-    assertThat("Wrong value for third element", elements(2).getValue().getValueString(), StringContains.containsString("Integer 6"))
+    assertThat("Wrong value for first element", elements(0).getValue().getValueString(), JUnitMatchers.containsString("Integer 4"))
+    assertThat("Wrong value for second element", elements(1).getValue().getValueString(), JUnitMatchers.containsString("Integer 5"))
+    assertThat("Wrong value for third element", elements(2).getValue().getValueString(), JUnitMatchers.containsString("Integer 6"))
   }
 
 }
