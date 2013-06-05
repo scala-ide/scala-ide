@@ -26,7 +26,9 @@ trait ScalaJavaMapper extends ScalaAnnotationHelper with SymbolNameUtil with Has
       IntClass,
       LongClass,
       FloatClass,
-      DoubleClass).foreach(_.initialize)
+      DoubleClass,
+      NilModule,
+      ListClass).foreach(_.initialize)
   }
 
   /** Return the Java Element corresponding to the given Scala Symbol, looking in the
