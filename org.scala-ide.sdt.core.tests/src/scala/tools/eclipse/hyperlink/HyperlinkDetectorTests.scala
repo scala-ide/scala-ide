@@ -27,7 +27,8 @@ class HyperlinkDetectorTests {
       Link("type scala.Predef.String"),
       Link("object scala.Some"),
       Link("class scala.Option"),
-      Link("type scala.Predef.String"))
+      Link("type scala.Predef.String"),
+      Link("value hyperlinks.SimpleHyperlinking.arr"))
 
     loadTestUnit("hyperlinks/SimpleHyperlinking.scala").andCheckAgainst(oracle)
   }
