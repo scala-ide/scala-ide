@@ -7,7 +7,7 @@ import scala.tools.eclipse.ScalaPlugin
 import scala.tools.eclipse.ScalaProject
 import scala.tools.eclipse.resources.MarkerFactory.{ Position, NoPosition, RegionPosition }
 
-import scala.tools.nsc.util.{ Position => ScalacPosition }
+import scala.reflect.internal.util.{ Position => ScalacPosition }
 
 /** Factory for creating markers used to report build problems (i.e., compilation errors). */
 object BuildProblemMarker extends MarkerFactory(ScalaPlugin.plugin.problemMarkerId) {

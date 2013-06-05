@@ -20,20 +20,16 @@ object IDESettings {
         List(deprecation, g, optimise, target, unchecked,
              pluginOptions, nospecialization, verbose, explaintypes, nowarn)),
       Box("Advanced",
-    	List(checkInit, Xchecknull, elidebelow,
+      List(checkInit, Xchecknull, elidebelow,
              Xexperimental, future, XlogImplicits,
-             Xmigration28, noassertions, nouescape, plugin, disable,
+             noassertions, nouescape, plugin, disable,
              require, pluginsDir, Xwarnfatal)),
-      Box("Private",
-        List(Ynogenericsig, noimports,
-             selfInAnnots, Yrecursion, refinementMethodDispatch,
-             Ywarndeadcode, Ybuildmanagerdebug)),
       Box("Presentation Compiler",
         List(YpresentationDebug, YpresentationVerbose, YpresentationLog, YpresentationReplay, YpresentationDelay)))
   }
-  
+
   def buildManagerSettings: List[Box] =
-    List(Box("Build manager", List(buildManager, compileOrder, stopBuildOnErrors, debugIncremental)))
+    List(Box("Build manager", List(buildManager, compileOrder, stopBuildOnErrors, debugIncremental, withVersionClasspathValidator)))
 }
 
 object ScalaPluginSettings extends Settings {
@@ -42,4 +38,5 @@ object ScalaPluginSettings extends Settings {
       List("Mixed", "JavaThenScala", "ScalaThenJava"), "Mixed")
   val stopBuildOnErrors = BooleanSetting("-stopBuildOnError", "Stop build if dependent projects have errors.")
   val debugIncremental = BooleanSetting("-debugIncremental", "Explain incremental compilation (sbt builder only)")
+  val withVersionClasspathValidator = BooleanSetting("-withVersionClasspathValidator", "Check Scala compatibility of jars in classpath")
 }

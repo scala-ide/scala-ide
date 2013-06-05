@@ -2,29 +2,27 @@ package scala.tools.eclipse.debug.model
 
 import scala.collection.JavaConverters.asScalaBufferConverter
 import scala.reflect.NameTransformer
-
 import org.eclipse.debug.core.model.IRegisterGroup
 import org.eclipse.debug.core.model.IStackFrame
 import org.eclipse.debug.core.model.IThread
 import org.eclipse.debug.core.model.IVariable
-
 import com.sun.jdi.AbsentInformationException
 import com.sun.jdi.Method
 import com.sun.jdi.StackFrame
+import com.sun.jdi.InvalidStackFrameException
+import com.sun.jdi.NativeMethodException
 
 object ScalaStackFrame {
-  
+
   def apply(thread: ScalaThread, stackFrame: StackFrame): ScalaStackFrame = {
-    val scalaStackFrame= new ScalaStackFrame(thread, stackFrame)
-    scalaStackFrame.fireCreationEvent()
-    scalaStackFrame
+    new ScalaStackFrame(thread, stackFrame)
   }
 
   // regexp for JNI signature
   private val typeSignature = """L([^;]*);""".r
   private val arraySignature = """\[(.*)""".r
   private val argumentsInMethodSignature = """\(([^\)]*)\).*""".r
-  
+
   def getSimpleName(signature: String): String = {
     signature match {
       case typeSignature(typeName) =>
@@ -49,36 +47,29 @@ object ScalaStackFrame {
         "Boolean"
     }
   }
-  
+
   // TODO: need unit tests
   def getArgumentSimpleNames(methodSignature: String): List[String] = {
-    val argumentsInMethodSignature(argString)= methodSignature
-    
+    val argumentsInMethodSignature(argString) = methodSignature
+
     def parseArguments(args: String) : List[String] = {
       if (args.isEmpty) {
         Nil
       } else {
-        args.head match {
+        args.charAt(0) match {
           case 'L' =>
-            val typeSignatureLength= args.indexOf(';') + 1
+            val typeSignatureLength = args.indexOf(';') + 1
             getSimpleName(args.substring(0, typeSignatureLength)) +: parseArguments(args.substring(typeSignatureLength))
           case '[' =>
-            val parsedArguments= parseArguments(args.tail)
+            val parsedArguments = parseArguments(args.tail)
             "Array[%s]".format(parsedArguments.head) +: parsedArguments.tail
           case c =>
             getSimpleName(c.toString) +: parseArguments(args.tail)
         }
       }
     }
-    
-    parseArguments(argString)
-  }
 
-  def getFullName(method: Method): String = {
-    "%s.%s(%s)".format(
-      getSimpleName(method.declaringType.signature),
-      NameTransformer.decode(method.name),
-      getArgumentSimpleNames(method.signature).mkString(", "))
+    parseArguments(argString)
   }
 }
 
@@ -94,8 +85,16 @@ class ScalaStackFrame private (val thread: ScalaThread, @volatile var stackFrame
 
   override def getCharEnd(): Int = -1
   override def getCharStart(): Int = -1
-  override def getLineNumber(): Int = stackFrame.location.lineNumber // TODO: cache data ?
-  override def getName(): String = stackFrame.location.declaringType.name // TODO: cache data ?
+  override def getLineNumber(): Int = {
+    (safeStackFrameCalls(-1) or wrapJDIException("Exception while retrieving stack frame's line number")) {
+      stackFrame.location.lineNumber // TODO: cache data ?
+    }
+  }
+  override def getName(): String = {
+    (safeStackFrameCalls("Error retrieving name") or wrapJDIException("Exception while retrieving stack frame's name")) {
+      stackFrame.location.declaringType.name // TODO: cache data ?
+    }
+  }
   override def getRegisterGroups(): Array[IRegisterGroup] = ???
   override def getThread(): IThread = thread
   override def getVariables(): Array[IVariable] = variables.toArray // TODO: need real logic
@@ -117,47 +116,79 @@ class ScalaStackFrame private (val thread: ScalaThread, @volatile var stackFrame
   override def canResume(): Boolean = true
   override def canSuspend(): Boolean = false
   override def isSuspended(): Boolean = true
-  override def resume(): Unit = thread.resume
+  override def resume(): Unit = thread.resume()
   override def suspend(): Unit = ???
 
   // ---
 
-  val variables: Seq[ScalaVariable] = {
-    import scala.collection.JavaConverters._
-    val visibleVariables = try {
-      stackFrame.visibleVariables.asScala.map(new ScalaLocalVariable(_, this))
-    } catch {
-      case e: AbsentInformationException => Seq()
-    }
-    val currentMethod = stackFrame.location.method
-    if (currentMethod.isNative || currentMethod.isStatic) {
-      // 'this' is not available for native and static methods
-      visibleVariables
-    } else {
-      new ScalaThisVariable(stackFrame.thisObject, this) +: visibleVariables
+  import scala.tools.eclipse.debug.JDIUtil._
+  import scala.util.control.Exception
+  import Exception.Catch
+
+  private lazy val variables: Seq[ScalaVariable] = {
+    (safeStackFrameCalls(Nil) or wrapJDIException("Exception while retrieving stack frame's visible variables")) {
+      import scala.collection.JavaConverters._
+      val visibleVariables = {
+        (Exception.handling(classOf[AbsentInformationException]) by (_ => Seq.empty)) {
+          stackFrame.visibleVariables.asScala.map(new ScalaLocalVariable(_, this))
+        }
+      }
+
+      val currentMethod = stackFrame.location.method
+      if (currentMethod.isNative || currentMethod.isStatic) {
+        // 'this' is not available for native and static methods
+        visibleVariables
+      } else {
+        new ScalaThisVariable(stackFrame.thisObject, this) +: visibleVariables
+      }
     }
   }
 
-  def getSourceName(): String = stackFrame.location.sourceName
-  
+  private def getSourceName(): String =
+    safeStackFrameCalls("Source name not available")(stackFrame.location.sourceName)
+
   /**
    * Return the source path based on source name and the package.
    * Segments are separated by '/'.
+   *
+   * @throws DebugException
    */
   def getSourcePath(): String = {
-    // we shoudn't use location#sourcePath, as it is platform dependent
-    stackFrame.location.declaringType.name.split('.').init match {
-      case Array() =>
-        getSourceName
-      case packageSegments =>
-        packageSegments.mkString("", "/", "/") + getSourceName
+    wrapJDIException("Exception while retrieving source path") {
+      // we shoudn't use location#sourcePath, as it is platform dependent
+      stackFrame.location.declaringType.name.split('.').init match {
+        case Array() =>
+          getSourceName
+        case packageSegments =>
+          packageSegments.mkString("", "/", "/") + getSourceName
+      }
     }
   }
 
-  def getMethodFullName(): String = getFullName(stackFrame.location.method)
+  def getMethodFullName(): String = {
+    def getFullName(method: Method): String = {
+      "%s.%s(%s)".format(
+        getSimpleName(method.declaringType.signature),
+        NameTransformer.decode(method.name),
+        getArgumentSimpleNames(method.signature).mkString(", "))
+    }
+    safeStackFrameCalls("Error retrieving full name") { getFullName(stackFrame.location.method) }
+  }
 
+  /** Set the current stack frame to `newStackFrame`. The `ScalaStackFrame.variables` don't need
+    *  to be recomputed because a variable (i.e., a `ScalaLocalVariable`) always uses the latest
+    *  stack frame to compute its value, as it can be checked by looking at the implementation of
+    *  `ScalaLocalVariable.getValue`
+    */
   def rebind(newStackFrame: StackFrame) {
     stackFrame = newStackFrame
   }
 
+  /** Wrap calls to the underlying VM stack frame to handle exceptions gracefully. */
+  private def safeStackFrameCalls[A](defaultValue: A): Catch[A] =
+    (safeVmCalls(defaultValue)
+      or Exception.failAsValue(
+        classOf[InvalidStackFrameException],
+        classOf[AbsentInformationException],
+        classOf[NativeMethodException])(defaultValue))
 }

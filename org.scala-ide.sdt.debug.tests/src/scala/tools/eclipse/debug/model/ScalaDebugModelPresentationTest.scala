@@ -76,7 +76,7 @@ class ScalaDebugModelPresentationTest {
 
     val scalaThread = createThread(jdiThread)
 
-    assertEquals("Bad display name for Scala system thread", "Deamon System Thread [system thread name]", modelPres.getText(scalaThread))
+    assertEquals("Bad display name for Scala system thread", "Daemon System Thread [system thread name]", modelPres.getText(scalaThread))
   }
 
   @Test

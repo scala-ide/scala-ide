@@ -23,13 +23,13 @@ class MethodTest extends AbstractSymbolClassifierTest {
       object A {
         {
           def `method` = 42
-          `method` 
+          `method`
         }
       }""", """
       object A {
         {
           def $ METH $ = 42
-          $ METH $ 
+          $ METH $
         }
       }""",
       Map("METH" -> Method))
@@ -81,7 +81,7 @@ class MethodTest extends AbstractSymbolClassifierTest {
       }""",
       Map("METH" -> Method))
   }
-  
+
   @Test
   def test_synthetic_function_param() {
     checkSymbolClassification("""
@@ -160,5 +160,19 @@ class MethodTest extends AbstractSymbolClassifierTest {
       }
       """,
       Map("CLS" -> Class))
+  }
+
+  @Test(expected = Predef.classOf[AssertionError])
+  def while_keyword_is_not_treated_as_method() {
+    checkSymbolClassification("""
+      object X {
+        while (false) {}
+      }
+      """, """
+      object X {
+        $MET$ (false) {}
+      }
+      """,
+      Map("MET" -> Method))
   }
 }

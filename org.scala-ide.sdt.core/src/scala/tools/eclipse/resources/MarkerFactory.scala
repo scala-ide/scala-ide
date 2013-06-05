@@ -1,12 +1,10 @@
 package scala.tools.eclipse.resources
 
-import scala.tools.eclipse.util.EclipseUtils.workspaceRunnableIn
-
 import org.eclipse.core.resources.IMarker
 import org.eclipse.core.resources.IResource
 import org.eclipse.core.runtime.IProgressMonitor
 
-object MarkerFactory {  
+object MarkerFactory {
   trait Position {
     def isDefined: Boolean = false
     def offset: Int = throw new UnsupportedOperationException("Position.offset")
@@ -37,7 +35,7 @@ abstract class MarkerFactory(markerType: String) {
     *                  [IMarker.SEVERITY_ERROR, IMarker.SEVERITY_WARNING, IMarker.SEVERITY_INFO]
     * @param msg      The text message displayed by the marker. Note, the passed message is truncated to 21000 chars.
     */
-  def create(resource: IResource, severity: Int, msg: String): Unit = 
+  def create(resource: IResource, severity: Int, msg: String): Unit =
     create(resource, severity, msg, MarkerFactory.NoPosition)
 
   /** Create marker with a source position in the Problem view.
@@ -47,11 +45,11 @@ abstract class MarkerFactory(markerType: String) {
     * @param msg      The text message displayed by the marker. Note, the passed message is truncated to 21000 chars.
     * @param pos      The source position for the marker.
     */
-  def create(resource: IResource, severity: Int, msg: String, pos: MarkerFactory.Position): Unit = 
-    createMarkerInWorkspaceAndApply(resource) { marker =>
-      update(marker, severity, msg)
-      setPos(marker, pos)
-    }
+  def create(resource: IResource, severity: Int, msg: String, pos: MarkerFactory.Position): Unit = {
+    val marker = resource.createMarker(markerType)
+    update(marker, severity, msg)
+    setPos(marker, pos)
+  }
 
   private def update(marker: IMarker, severity: Int, msg: String): IMarker = {
     marker.setAttribute(IMarker.SEVERITY, severity)
@@ -78,10 +76,5 @@ abstract class MarkerFactory(markerType: String) {
       marker.setAttribute(IMarker.LINE_NUMBER, position.line)
     }
     marker
-  }
-  
-  private def createMarkerInWorkspaceAndApply(resource: IResource)(f: IMarker => Unit): Unit = workspaceRunnableIn(resource.getWorkspace) { _ => 
-    val marker = resource.createMarker(markerType)
-    f(marker)
   }
 }

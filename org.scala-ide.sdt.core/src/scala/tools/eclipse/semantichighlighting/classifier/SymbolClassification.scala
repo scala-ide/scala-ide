@@ -1,24 +1,26 @@
 package scala.tools.eclipse.semantichighlighting.classifier
-
 import scala.PartialFunction.condOpt
 import scala.collection.mutable
+import scala.tools.eclipse.ScalaPresentationCompiler
 import scala.tools.eclipse.logging.HasLogger
 import scala.tools.eclipse.semantichighlighting.classifier.SymbolTypes._
-import scala.tools.eclipse.ScalaPresentationCompiler
+import scala.tools.eclipse.util.Utils._
 import scala.tools.nsc.io.AbstractFile
 import scala.tools.nsc.util.RangePosition
-import scala.tools.nsc.util.SourceFile
-import scala.tools.refactoring.common.CompilerAccess
-import scala.tools.refactoring.common.PimpedTrees
-import scala.tools.eclipse.util.Utils._
+import scala.reflect.internal.util.SourceFile
+import org.eclipse.core.runtime.IProgressMonitor
+import org.eclipse.jface.text.IRegion
+import org.eclipse.jface.text.Region
+import scala.tools.eclipse.jface.text.RegionOps
 
-object SymbolClassification {
+private object SymbolClassification {
+  private val debug = false
 
   /**
    *  If a symbol gets classified as more than one type, we give certain types precedence.
    *  Preference is given to map values over the corresponding key.
    */
-  val pruneTable: Map[SymbolType, Set[SymbolType]] = Map(
+  private val pruneTable: Map[SymbolType, Set[SymbolType]] = Map(
     LocalVar -> Set(LazyLocalVal),
     LocalVal -> Set(LocalVar, TemplateVal, TemplateVar, LazyTemplateVal, LazyLocalVal),
     Method -> Set(TemplateVal, TemplateVar, LazyTemplateVal),
@@ -26,9 +28,10 @@ object SymbolClassification {
     CaseClass -> Set(CaseObject),
     Param -> Set(TemplateVal, TemplateVar, LazyTemplateVal),
     TemplateVal -> Set(Type),
-    Object -> Set(CaseClass))
+    Object -> Set(CaseClass)
+  )
 
-  val debug = false
+
 }
 
 class SymbolClassification(protected val sourceFile: SourceFile, val global: ScalaPresentationCompiler, useSyntacticHints: Boolean)
@@ -36,7 +39,7 @@ class SymbolClassification(protected val sourceFile: SourceFile, val global: Sca
 
   import SymbolClassification._
   import global.{ Symbol, Position, NoSymbol }
-  
+
   def compilationUnitOfFile(f: AbstractFile) = global.unitOfFile.get(f)
 
   protected lazy val syntacticInfo =
@@ -46,93 +49,108 @@ class SymbolClassification(protected val sourceFile: SourceFile, val global: Sca
 
   private def canSymbolBeReferencedInSource(sym: Symbol): Boolean = {
     def isSyntheticMethodParam(sym: Symbol): Boolean = sym.isSynthetic && sym.isValueParameter
-    
-    !sym.isAnonymousFunction && 
+
+    !sym.isAnonymousFunction &&
     !sym.isAnonymousClass &&
     !isSyntheticMethodParam(sym)
   }
-  
-  def classifySymbols: List[SymbolInfo] = {
-    val allSymbols: List[(Symbol, Position)] = debugTimed("allSymbols") {
+
+  def classifySymbols(progressMonitor: IProgressMonitor): List[SymbolInfo] = {
+    if(progressMonitor.isCanceled()) return Nil
+
+    val tree = unitTree
+    if(progressMonitor.isCanceled()) return Nil
+
+    val allSymbols: List[(Symbol, Position)] = {
       for {
         t <- unitTree
-        if (t.hasSymbol || t.isType) && isSourceTree(t)
+        if !progressMonitor.isCanceled() && (t.hasSymbol || t.isType) && isSourceTree(t)
         (sym, pos) <- safeSymbol(t)
         if canSymbolBeReferencedInSource(sym)
       } yield (sym, pos)
     }
 
+    if(progressMonitor.isCanceled()) return Nil
+
     if (debug) printSymbolInfo()
 
-    val rawSymbolInfos: Seq[SymbolInfo] = debugTimed("rawSymbolInfos") {
-      val symAndPos = mutable.HashMap[Symbol, List[Position]]()
+    val rawSymbolInfos: Seq[SymbolInfo] = {
+      case class SymbolGroup(symbol: Symbol, inInterpolatedString: Boolean)
+      val symAndPos = mutable.HashMap[SymbolGroup, List[Position]]().withDefaultValue(Nil)
       for {
         (sym, pos) <- allSymbols
         if sym != NoSymbol
-      } symAndPos(sym) = pos :: symAndPos.getOrElse(sym, Nil) 
-      
-      
-      (for {
-        (sym, poss) <- symAndPos
-      } yield getSymbolInfo(sym, poss)).toList
-    }
-    
-    val prunedSymbolInfos = debugTimed("pruned")(prune(rawSymbolInfos))
-    val all: Set[Region] = rawSymbolInfos flatMap (_.regions) toSet
-    val localVars: Set[Region] = rawSymbolInfos.collect { case SymbolInfo(LocalVar, regions, _) => regions }.flatten.toSet
-    val symbolInfosFromSyntax = debugTimed("symbolInfosFromSyntax")(getSymbolInfosFromSyntax(syntacticInfo, localVars, all))
+      } {
+        val inInterpolatedString = syntacticInfo.identifiersInStringInterpolations.contains(getOccurrenceRegion(sym)(pos).orNull)
+        symAndPos(SymbolGroup(sym, inInterpolatedString)) = pos :: symAndPos(SymbolGroup(sym, inInterpolatedString))
+      }
 
-    val res = debugTimed("res")((symbolInfosFromSyntax ++ prunedSymbolInfos) filter { _.regions.nonEmpty } distinct)
-    
-    logger.debug("raw symbols: %d, pruned symbols: %d".format(rawSymbolInfos.size, prunedSymbolInfos.size))
-    res
-  }
-
-  private def getSymbolInfo(sym: Symbol, poss: List[Position]): SymbolInfo = {
-    val regions = poss.flatMap(getOccurrenceRegion(sym)).toList
-    // isDeprecated may trigger type completion for annotations
-    val deprecated = sym.annotations.nonEmpty && global.askOption(() => sym.isDeprecated).getOrElse(false)
-    SymbolInfo(getSymbolType(sym), regions, deprecated)
-  }
-
-  private def getOccurrenceRegion(sym: Symbol)(pos: Position): Option[Region] =
-    getNameRegion(pos) flatMap { region =>
-      val text = region of sourceFile.content
-      val symName = sym.nameString
-      if (symName.startsWith(text) || text == "`" + symName + "`")
-        Some(region)
+      if (progressMonitor.isCanceled()) Nil
       else {
-        logger.debug("couldn't find region for: " + sym + " at: " + pos.line)
-        None
+        (for {
+          (SymbolGroup(sym,inInterpolatedString), poss) <- symAndPos
+        } yield getSymbolInfo(sym, poss, inInterpolatedString)).toList
       }
     }
 
-  private def getNameRegion(pos: Position): Option[Region] =
+    if (progressMonitor.isCanceled()) return Nil
+
+    val prunedSymbolInfos = prune(rawSymbolInfos)
+    if (progressMonitor.isCanceled()) return Nil
+
+    val all: Set[IRegion] = rawSymbolInfos.flatMap(_.regions).toSet
+    if (progressMonitor.isCanceled()) return Nil
+
+    val localVars: Set[IRegion] = rawSymbolInfos.collect { case SymbolInfo(LocalVar, regions, _, _) => regions }.flatten.toSet
+    if (progressMonitor.isCanceled()) return Nil
+
+    val symbolInfosFromSyntax = getSymbolInfosFromSyntax(syntacticInfo, localVars, all)
+    if (progressMonitor.isCanceled()) return Nil
+
+    (symbolInfosFromSyntax ++ prunedSymbolInfos) filter { _.regions.nonEmpty } distinct
+  }
+
+  private def getSymbolInfo(sym: Symbol, poss: List[Position], inInterpolatedString: Boolean): SymbolInfo = {
+    val regions = poss.flatMap(getOccurrenceRegion(sym)).toList
+    // isDeprecated may trigger type completion for annotations
+    val deprecated = sym.annotations.nonEmpty && global.askOption(() => sym.isDeprecated).getOrElse(false)
+    val symbolType = getSymbolType(sym)
+    SymbolInfo(symbolType, regions, deprecated, inInterpolatedString)
+  }
+
+  private def getOccurrenceRegion(sym: Symbol)(pos: Position): Option[IRegion] =
+    getNameRegion(pos) flatMap { region =>
+      val text = RegionOps.of(region, sourceFile.content)
+      val symName = sym.nameString
+      if (symName.startsWith(text) || text == "`" + symName + "`") Some(region)
+      else None
+    }
+
+  private def getNameRegion(pos: Position): Option[IRegion] =
     try
       condOpt(pos) {
-        case rangePosition: RangePosition => Region(rangePosition.start, rangePosition.end - rangePosition.start)
+        case rangePosition: RangePosition => new Region(rangePosition.start, rangePosition.end - rangePosition.start)
       }
     catch {
       case e: Exception => None
     }
 
-  private def getSymbolInfosFromSyntax(syntacticInfo: SyntacticInfo, localVars: Set[Region], all: Set[Region]): List[SymbolInfo] = {
-    val SyntacticInfo(namedArgs, forVals, maybeSelfRefs, maybeClassOfs, annotations, packages, symbols) = syntacticInfo
+  private def getSymbolInfosFromSyntax(syntacticInfo: SyntacticInfo, localVars: Set[IRegion], all: Set[IRegion]): List[SymbolInfo] = {
+    val SyntacticInfo(namedArgs, forVals, maybeSelfRefs, maybeClassOfs, annotations, packages, _) = syntacticInfo
     List(
-      SymbolInfo(LocalVal, forVals toList, deprecated = false),
-      SymbolInfo(Param, namedArgs filterNot localVars toList, deprecated = false),
-      SymbolInfo(TemplateVal, maybeSelfRefs filterNot all toList, deprecated = false),
-      SymbolInfo(Method, maybeClassOfs filterNot all toList, deprecated = false),
-      SymbolInfo(Annotation, annotations filterNot all toList, deprecated = false),
-      SymbolInfo(Package, packages filterNot all toList, deprecated = false),
-      SymbolInfo(Symbol, symbols.toList, deprecated = false))
+      SymbolInfo(LocalVal, forVals toList, deprecated = false, inInterpolatedString = false),
+      SymbolInfo(Param, namedArgs filterNot localVars toList, deprecated = false, inInterpolatedString = false),
+      SymbolInfo(TemplateVal, maybeSelfRefs filterNot all toList, deprecated = false, inInterpolatedString = false),
+      SymbolInfo(Method, maybeClassOfs filterNot all toList, deprecated = false, inInterpolatedString = false),
+      SymbolInfo(Annotation, annotations filterNot all toList, deprecated = false, inInterpolatedString = false),
+      SymbolInfo(Package, packages filterNot all toList, deprecated = false, inInterpolatedString = false))
   }
 
   private def prune(rawSymbolInfos: Seq[SymbolInfo]): Seq[SymbolInfo] = {
-    def findRegionsWithSymbolType(symbolType: SymbolType): Set[Region] = 
-      rawSymbolInfos.collect { case SymbolInfo(`symbolType`, regions, _) => regions }.flatten.toSet
+    def findRegionsWithSymbolType(symbolType: SymbolType): Set[IRegion] =
+      rawSymbolInfos.collect { case SymbolInfo(`symbolType`, regions, _, _) => regions }.flatten.toSet
 
-    val symbolTypeToRegion: Map[SymbolType, Set[Region]] = debugTimed("symbolTypeToRegion") {
+    val symbolTypeToRegion: Map[SymbolType, Set[IRegion]] = {
       // we use `map' instead of the more elegant `mapValue(f)` because the latter is
       // a `view': it applies `f' for each retrieved key, wihtout any caching. This
       // causes quadratic behavior: `findRegionsWithSymbolType` is linear in rawSymbolInfos,
@@ -143,13 +161,13 @@ class SymbolClassification(protected val sourceFile: SourceFile, val global: Sca
       }
     }
 
-    def pruneMisidentifiedSymbols(symbolInfo: SymbolInfo): SymbolInfo = 
+    def pruneMisidentifiedSymbols(symbolInfo: SymbolInfo): SymbolInfo =
       symbolTypeToRegion.get(symbolInfo.symbolType) match {
         case Some(regionsToRemove) => symbolInfo.copy(regions = symbolInfo.regions filterNot regionsToRemove)
         case None => symbolInfo
       }
 
-    debugTimed("pruneMisidentifiedSymbols")(rawSymbolInfos.map(pruneMisidentifiedSymbols))
+    rawSymbolInfos.map(pruneMisidentifiedSymbols)
   }
 
 }

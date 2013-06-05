@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.scala-ide</groupId>
     <artifactId>org.scala-ide.build-toolchain</artifactId>
-    <version>2.1.0-SNAPSHOT</version>
+    <version>4.0.0-SNAPSHOT</version>
     <relativePath>../org.scala-ide.build-toolchain/pom.xml</relativePath>
   </parent>
   <artifactId>org.scala-ide.scala.compiler</artifactId>
@@ -200,7 +200,7 @@
             <Embed-Directory>lib</Embed-Directory>
             <Embed-StripVersion>true</Embed-StripVersion>
             <Include-Resource>lib=${project.build.directory}/lib</Include-Resource>
-            <Import-Package>!jline.*,!scala.tools.jline.*,!sun.misc,scala.reflect,*</Import-Package>
+            <Import-Package>!javax.script.*,!javax.tools.*,!jline.*,!scala.tools.jline.*,!sun.misc,scala.reflect,*</Import-Package>
           </instructions>
         </configuration>
       </plugin>

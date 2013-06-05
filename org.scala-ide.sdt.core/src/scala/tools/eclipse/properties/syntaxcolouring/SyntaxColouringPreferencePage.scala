@@ -2,10 +2,11 @@ package scala.tools.eclipse.properties.syntaxcolouring
 
 import scala.PartialFunction.condOpt
 import scala.tools.eclipse.properties.syntaxcolouring.ScalaSyntaxClasses._
+import scala.tools.eclipse.semantichighlighting.ui.HighlightingStyle
+import scala.tools.eclipse.semantichighlighting.Preferences
 import scala.tools.eclipse.util.EclipseUtils._
 import scala.tools.eclipse.util.SWTUtils._
 import scala.tools.eclipse._
-
 import org.eclipse.jdt.internal.ui.preferences.OverlayPreferenceStore._
 import org.eclipse.jdt.internal.ui.preferences._
 import org.eclipse.jface.layout.PixelConverter
@@ -20,8 +21,6 @@ import org.eclipse.swt.SWT
 import org.eclipse.ui.dialogs.PreferencesUtil
 import org.eclipse.ui.IWorkbench
 import org.eclipse.ui.IWorkbenchPreferencePage
-
-import SyntaxColouringPreviewText.ColouringLocation
 
 /**
  * @see org.eclipse.jdt.internal.ui.preferences.JavaEditorColoringConfigurationBlock
@@ -181,7 +180,7 @@ class SyntaxColouringPreferencePage extends PreferencePage with IWorkbenchPrefer
     enableSemanticHighlightingCheckBox.setText("Enable semantic highlighting")
     enableSemanticHighlightingCheckBox.setLayoutData(new GridData(GridData.FILL_HORIZONTAL))
     enableSemanticHighlightingCheckBox.setSelection(overlayStore.getBoolean(ENABLE_SEMANTIC_HIGHLIGHTING))
-    
+
     extraAccuracyCheckBox = new Button(outerComposite, SWT.CHECK)
     extraAccuracyCheckBox.setText("Use slower but more accurate semantic highlighting")
     extraAccuracyCheckBox.setLayoutData(new GridData(GridData.FILL_HORIZONTAL))
@@ -271,7 +270,7 @@ class SyntaxColouringPreferencePage extends PreferencePage with IWorkbenchPrefer
     updatePreviewerColours()
 
     setUpSelectionListeners()
-    
+
     treeViewer.setSelection(new StructuredSelection(scalaSyntacticCategory))
 
     outerComposite.layout(false)
@@ -325,7 +324,7 @@ class SyntaxColouringPreferencePage extends PreferencePage with IWorkbenchPrefer
         overlayStore.setValue(syntaxClass.underlineKey, underlineCheckBox.getSelection)
     }
   }
-  
+
   private def createPreviewer(parent: Composite): SourceViewer =
     ScalaPreviewerFactory.createPreviewer(parent, overlayStore, SyntaxColouringPreviewText.previewText)
 
@@ -361,18 +360,17 @@ class SyntaxColouringPreferencePage extends PreferencePage with IWorkbenchPrefer
         massSetEnablement(true)
         enabledCheckBox.setEnabled(canBeDisabled)
         syntaxBackgroundColorEditor.getButton.setEnabled(backgroundColorEnabled)
-      } 
+        syntaxForegroundColorEditor.getButton.setEnabled(hasForegroundColour)
+      }
   }
 
   private def updatePreviewerColours() {
     val textWidget = previewer.getTextWidget
-    for (ColouringLocation(syntaxClass, offset, length) <- SyntaxColouringPreviewText.semanticLocations)
-      if (overlayStore.getBoolean(ENABLE_SEMANTIC_HIGHLIGHTING) && overlayStore.getBoolean(syntaxClass.enabledKey)) {
-        val styleRange = syntaxClass.getStyleRange(overlayStore)
-        styleRange.start = offset
-        styleRange.length = length
-        textWidget.setStyleRange(styleRange)
-      } 
+    for (position <- SyntaxColouringPreviewText.semanticLocations)
+      if (overlayStore.getBoolean(ENABLE_SEMANTIC_HIGHLIGHTING) && (overlayStore.getBoolean(HighlightingStyle.symbolTypeToSyntaxClass(position.kind).enabledKey) || position.shouldStyle)) {
+      val styleRange = HighlightingStyle(Preferences(overlayStore), position.kind).style(position)
+      textWidget.setStyleRange(styleRange)
+    }
   }
 
 }

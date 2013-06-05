@@ -1,0 +1,2 @@
+This resource has to be copied to the output folder.
+

@@ -93,7 +93,7 @@ class ScalaThreadTest {
 
     val thread = createThread(jdiThread)
 
-    assertEquals("Bad thread name on VMDisconnectedException", "<disconnected>", thread.getName)
+    assertEquals("Bad thread name on VMDisconnectedException", "Error retrieving name", thread.getName)
   }
 
   @Test
@@ -106,7 +106,7 @@ class ScalaThreadTest {
 
     val thread = createThread(jdiThread)
 
-    assertEquals("Bad thread name", "<garbage collected>", thread.getName)
+    assertEquals("Bad thread name", "Error retrieving name", thread.getName)
   }
 
   /**
@@ -136,7 +136,7 @@ class ScalaThreadTest {
    */
   @Test(timeout = 2000)
   def getStackFramesFreeze() {
-    
+
     val jdiThread = mock(classOf[ThreadReference])
 
     val thread = createThread(jdiThread)

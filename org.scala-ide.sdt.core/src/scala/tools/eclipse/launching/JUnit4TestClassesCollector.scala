@@ -15,7 +15,7 @@ import org.eclipse.jdt.core.IType
   * any "runnable" JUnit test classes. This assumption is of course enforced in the code,
   * have a look at the companion object.
   */
-private[launching] abstract class JUnit4TestClassesCollector {
+private[launching] abstract class JUnit4TestClassesCollector extends HasLogger {
   protected val global: ScalaPresentationCompiler
 
   import global._
@@ -32,8 +32,6 @@ private[launching] abstract class JUnit4TestClassesCollector {
 
   /** Traverse the passed `Tree` and collect all class definitions that can be executed by the JUnit4 runtime. */
   private class JUnit4TestClassesTraverser extends global.Traverser {
-    import JUnit4TestClassesTraverser._
-
     val hits: ListBuffer[ClassDef] = ListBuffer.empty
 
     override def traverse(tree: Tree): Unit = tree match {
@@ -72,19 +70,17 @@ private[launching] abstract class JUnit4TestClassesCollector {
     }
   }
 
-  private object JUnit4TestClassesTraverser extends HasLogger {
-    private lazy val TestAnnotationOpt = getClassSafe("org.junit.Test")
-    private lazy val RunWithAnnotationOpt = getClassSafe("org.junit.runner.RunWith")
+  lazy val TestAnnotationOpt = getClassSafe("org.junit.Test")
+  lazy val RunWithAnnotationOpt = getClassSafe("org.junit.runner.RunWith")
 
-    /** Don't crash if the class is not on the classpath. */
-    private def getClassSafe(fullName: String): Option[Symbol] = {
-      try {
-        Option(definitions.getClass(newTypeName(fullName)))
-      } catch {
-        case _: MissingRequirementError =>
-          logger.info("Type `" + fullName + "` is not available in the project's classpath.")
-          None
-      }
+  /** Don't crash if the class is not on the classpath. */
+  def getClassSafe(fullName: String): Option[Symbol] = {
+    try {
+      Option(rootMirror.getClass(newTypeName(fullName)))
+    } catch {
+      case _: MissingRequirementError =>
+        logger.info("Type `" + fullName + "` is not available in the project's classpath.")
+        None
     }
   }
 }

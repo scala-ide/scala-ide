@@ -16,22 +16,22 @@ import scalariform.formatter.preferences.SpaceInsideParentheses
  */
 trait UserPreferencesFormatting {
   this: ScalaIdeRefactoring =>
-  
+
   /**
    * Refactoring actions should mix in this trait when creating a refactoring instance to
    * automatically pass the user's formatting preferences to the refactoring implementation.
    */
   trait FormattingOverrides {
     this: Refactoring =>
-      
+
     override val spacingAroundMultipleImports: String = {
       for {
         javaProject <- Option(file.getJavaProject)
-        val prefs = FormatterPreferences.getPreferences(javaProject)
+        prefs = FormatterPreferences.getPreferences(javaProject)
         if  prefs(SpaceInsideParentheses)
       } yield " "
     } getOrElse ""
-    
+
     // TODO: Create more overrides here and in the refactoring library.
   }
 }

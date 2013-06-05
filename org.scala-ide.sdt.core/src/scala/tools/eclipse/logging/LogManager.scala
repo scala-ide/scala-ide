@@ -41,7 +41,7 @@ object LogManager extends Log4JFacade with HasLogger {
         ScalaPlugin.plugin.resetAllPresentationCompilers()
     }
   }
-  
+
   override protected def logFileName = "scala-ide.log"
 
   override def configure(logOutputLocation: String, preferredLogLevel: Level.Value) {
@@ -75,20 +75,20 @@ object LogManager extends Log4JFacade with HasLogger {
 
   override def isConsoleAppenderEnabled: Boolean =
     ScalaPlugin.plugin.getPreferenceStore.getBoolean(IsConsoleAppenderEnabled)
-    
+
   private def withoutConsoleRedirects(f: => Unit) {
     try {
       disableRedirectStdOutAndStdErr()
       f
     }
     finally { redirectStdOutAndStdErr() }
-  }  
-    
+  }
+
   private def redirectStdOutAndStdErr() {
     StreamRedirect.redirectStdOutput()
     StreamRedirect.redirectStdError()
   }
-  
+
   private def disableRedirectStdOutAndStdErr() {
     StreamRedirect.disableRedirectStdOutput()
     StreamRedirect.disableRedirectStdError()

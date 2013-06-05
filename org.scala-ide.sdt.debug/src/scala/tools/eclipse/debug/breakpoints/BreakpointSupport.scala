@@ -22,91 +22,55 @@ import com.sun.jdi.request.ClassPrepareRequest
 import com.sun.jdi.VMDisconnectedException
 import com.sun.jdi.request.InvalidRequestStateException
 import scala.tools.eclipse.debug.BaseDebuggerActor
+import scala.tools.eclipse.debug.model.ScalaDebugCache
+import org.eclipse.debug.core.DebugPlugin
 
 private[debug] object BreakpointSupport {
   /** Attribute Type Name */
   final val ATTR_TYPE_NAME = "org.eclipse.jdt.debug.core.typeName"
 
-  /** A boolean marker attribute that indicates whether the JDI requests
-   *  corresponding to this breakpoint are enabled or disabled.
+  /** Create the breakpoint support actor.
+   *
+   *  @note `BreakpointSupportActor` instances are created only by the `ScalaDebugBreakpointManagerActor`, hence
+   *        any uncaught exception that may occur during initialization (i.e., in `BreakpointSupportActor.apply`)
+   *        will be caught by the `ScalaDebugBreakpointManagerActor` default exceptions' handler.
    */
-  final val ATTR_VM_REQUESTS_ENABLED = "org.scala-ide.sdt.debug.breakpoint.vm_enabled"
-
-  /** Create the breakpoint support actor. */
   def apply(breakpoint: IBreakpoint, debugTarget: ScalaDebugTarget): Actor = {
     BreakpointSupportActor(breakpoint, debugTarget)
   }
 }
 
-private[debug] object BreakpointSupportActor {
+private object BreakpointSupportActor {
   // specific events
   case class Changed(delta: IMarkerDelta)
 
-
   def apply(breakpoint: IBreakpoint, debugTarget: ScalaDebugTarget): Actor = {
-    // to be sure to cover all possible nested elements, we use the name of the top level class as base name
-    val topLevelTypeName= breakpoint.typeName.takeWhile(_ != '$')
-    
-    val classPrepareRequests = createClassPrepareRequests(topLevelTypeName, debugTarget)
-    val breakpointRequests   = createBreakpointsRequests(breakpoint, topLevelTypeName, debugTarget)
+    val typeName= breakpoint.typeName
 
-    val actor = new BreakpointSupportActor(breakpoint, debugTarget, classPrepareRequests, ListBuffer(breakpointRequests: _*))
+    val breakpointRequests = createBreakpointsRequests(breakpoint, typeName, debugTarget)
 
-    initializeVMRequests(breakpoint, debugTarget, actor, classPrepareRequests, enabled = true)
-    initializeVMRequests(breakpoint, debugTarget, actor, breakpointRequests, enabled = breakpoint.isEnabled())
-    breakpoint.setVmRequestEnabled(breakpoint.isEnabled())
+    val actor = new BreakpointSupportActor(breakpoint, debugTarget, typeName, ListBuffer(breakpointRequests: _*))
+
+    debugTarget.cache.addClassPrepareEventListener(actor, typeName)
 
     actor.start()
     actor
   }
 
-  /**
-   * Create event requests to tell the VM to notify us when a class (or any of its inner classes) that contain the `breakpoint` is loaded.
-   *  This is needed to set the breakpoint when the class gets loaded (meaning that you don't know at this point if the class has already been loaded or not)
-   */
-  private def createClassPrepareRequests(topLevelTypeName: String, debugTarget: ScalaDebugTarget): Seq[EventRequest] = {
-    val requests = new ListBuffer[EventRequest]
-
-    // class prepare requests for the type and its nested types
-    requests append JdiRequestFactory.createClassPrepareRequest(topLevelTypeName, debugTarget)
-    requests append JdiRequestFactory.createClassPrepareRequest(topLevelTypeName + "$*", debugTarget) // this is important for closures/anon-classes
-
-    requests.toSeq
-  }
-
   /** Create event requests to tell the VM to notify us when it reaches the line for the current `breakpoint` */
-  private def createBreakpointsRequests(breakpoint: IBreakpoint, topLevelTypeName: String, debugTarget: ScalaDebugTarget): Seq[EventRequest] = {
+  private def createBreakpointsRequests(breakpoint: IBreakpoint, typeName: String, debugTarget: ScalaDebugTarget): Seq[EventRequest] = {
     val requests = new ListBuffer[EventRequest]
     val virtualMachine = debugTarget.virtualMachine
 
-    import scala.collection.JavaConverters._
-    // if the type is already loaded, add the breakpoint requests
-    val loadedClasses = virtualMachine.classesByName(topLevelTypeName)
-
-    loadedClasses.asScala.foreach { loadedClass =>
-      val breakpointRequest = createBreakpointRequest(breakpoint, debugTarget, loadedClass)
-      breakpointRequest.foreach { requests append _ }
-
-      // TODO: might be more effective to do the filtering ourselves from 'allClasses'
-      loadedClass.nestedTypes.asScala.foreach {
+    debugTarget.cache.getLoadedNestedTypes(typeName).foreach {
         createBreakpointRequest(breakpoint, debugTarget, _).foreach { requests append _ }
-      }
     }
+
     requests.toSeq
   }
 
   private def createBreakpointRequest(breakpoint: IBreakpoint, debugTarget: ScalaDebugTarget, referenceType: ReferenceType): Option[BreakpointRequest] = {
     JdiRequestFactory.createBreakpointRequest(referenceType, breakpoint.lineNumber, debugTarget)
-  }
-
-  /** Register the actor for each event request, and enable/disbale the request according to the argument.  */
-  private def initializeVMRequests(breakpoint: IBreakpoint, debugTarget: ScalaDebugTarget, actor: Actor, eventRequests: Seq[EventRequest], enabled: Boolean): Unit = {
-    val eventDispatcher = debugTarget.eventDispatcher
-    // enable the requests
-    eventRequests.foreach { eventRequest =>
-      eventDispatcher.setActorFor(actor, eventRequest)
-      eventRequest.setEnabled(enabled)
-    }
   }
 }
 
@@ -116,8 +80,34 @@ private[debug] object BreakpointSupportActor {
  *  - the JDI event queue, when a breakpoint is hit
  *  - the platform, when a breakpoint is changed (for instance, disabled)
  */
-private class BreakpointSupportActor private (breakpoint: IBreakpoint, debugTarget: ScalaDebugTarget, classPrepareRequests: Seq[EventRequest], breakpointRequests: ListBuffer[EventRequest]) extends BaseDebuggerActor {
+private class BreakpointSupportActor private (
+    breakpoint: IBreakpoint,
+    debugTarget: ScalaDebugTarget,
+    typeName: String,
+    breakpointRequests: ListBuffer[EventRequest]) extends BaseDebuggerActor {
   import BreakpointSupportActor.{ Changed, createBreakpointRequest }
+
+  /** Return true if the state of the `breakpointRequests` associated to this breakpoint is (or, if not yet loaded, will be) enabled in the VM. */
+  private var requestsEnabled = false
+
+  private val eventDispatcher = debugTarget.eventDispatcher
+
+  override def postStart(): Unit =  {
+    breakpointRequests.foreach(listenForBreakpointRequest)
+    updateBreakpointRequestState(isEnabled)
+  }
+
+  /** Returns true if the `breakpoint` is enabled and its state should indeed be considered. */
+  private def isEnabled: Boolean = breakpoint.isEnabled() && DebugPlugin.getDefault().getBreakpointManager().isEnabled()
+
+  /** Register `this` actor to receive all notifications from the `eventDispatcher` related to the passed `request`.*/
+  private def listenForBreakpointRequest(request: EventRequest): Unit =
+    eventDispatcher.setActorFor(this, request)
+
+  private def updateBreakpointRequestState(enabled: Boolean): Unit = {
+    breakpointRequests.foreach (_.setEnabled(enabled))
+    requestsEnabled = enabled
+  }
 
   // Manage the events
   override protected def behavior: PartialFunction[Any, Unit] = {
@@ -134,6 +124,8 @@ private class BreakpointSupportActor private (breakpoint: IBreakpoint, debugTarg
       changed(delta)
     case ScalaDebugBreakpointManager.ActorDebug =>
       reply(None)
+    case ScalaDebugBreakpointManager.GetBreakpointRequestState(_) =>
+      reply(requestsEnabled)
   }
 
   /**
@@ -143,7 +135,9 @@ private class BreakpointSupportActor private (breakpoint: IBreakpoint, debugTarg
     val eventDispatcher = debugTarget.eventDispatcher
     val eventRequestManager = debugTarget.virtualMachine.eventRequestManager
 
-    (classPrepareRequests ++ breakpointRequests).foreach { request =>
+    debugTarget.cache.removeClassPrepareEventListener(this, typeName)
+
+    breakpointRequests.foreach { request =>
       eventRequestManager.deleteEventRequest(request)
       eventDispatcher.unsetActorFor(request)
     }
@@ -156,16 +150,7 @@ private class BreakpointSupportActor private (breakpoint: IBreakpoint, debugTarg
    *        breakpoint is disabled.
    */
   private def changed(delta: IMarkerDelta) {
-    if (breakpoint.isEnabled()) {
-      if (!breakpoint.vmRequestEnabled){
-        breakpointRequests foreach { _.enable() }
-        logger.info("enabled " + breakpointRequests)
-      }
-    } else if (breakpoint.vmRequestEnabled) {
-      breakpointRequests foreach { _.disable() }
-      logger.info("disabled " + breakpointRequests)
-    }
-    breakpoint.setVmRequestEnabled(breakpoint.isEnabled())
+    if(isEnabled ^ requestsEnabled) updateBreakpointRequestState(isEnabled)
   }
 
   /** Create the line breakpoint for the newly loaded class.
@@ -175,8 +160,8 @@ private class BreakpointSupportActor private (breakpoint: IBreakpoint, debugTarg
 
     breakpointRequest.foreach { br =>
       breakpointRequests append br
-      debugTarget.eventDispatcher.setActorFor(this, br)
-      br.setEnabled(breakpoint.isEnabled())
+      listenForBreakpointRequest(br)
+      br.setEnabled(requestsEnabled)
     }
   }
 

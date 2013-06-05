@@ -10,29 +10,7 @@ import org.eclipse.debug.core.model.IValue
 
 import com.sun.jdi.ClassType
 
-object ScalaLogicalStructureProvider {
-  
-  def isScalaCollection(objectReference: ScalaObjectReference): Boolean = {
-    objectReference.underlying.referenceType match {
-      case classType: ClassType =>
-        implements(classType, "scala.collection.TraversableOnce")
-      case _ => // TODO: ScalaObjectReference should always reference objects of class type, never of array type. Can we just cast?
-        false
-    }
-  }
-  
-  /**
-   * Checks 'implements' with Java meaning
-   */
-  def implements(classType: ClassType, interfaceName: String): Boolean = {
-    import scala.collection.JavaConverters._
-    classType.allInterfaces.asScala.exists(_.name == interfaceName)
-  }
-  
-}
-
 class ScalaLogicalStructureProvider extends ILogicalStructureProvider {
-  import ScalaLogicalStructureProvider._
 
   override def getLogicalStructureTypes(value: IValue) : Array[ILogicalStructureType] = {
     value match {
@@ -46,34 +24,53 @@ class ScalaLogicalStructureProvider extends ILogicalStructureProvider {
         Array() // TODO: return fixed empty Array
     }
   }
-  
+
+  private def isScalaCollection(objectReference: ScalaObjectReference): Boolean = {
+    objectReference.wrapJDIException("Exception while checking if passed object reference is a scala collection type") {
+      objectReference.referenceType match {
+        case classType: ClassType =>
+          implements(classType, "scala.collection.TraversableOnce")
+        case _ => // TODO: ScalaObjectReference should always reference objects of class type, never of array type. Can we just cast?
+          false
+      }
+    }
+  }
+
+  /**
+   * Checks 'implements' with Java meaning
+   */
+  private def implements(classType: ClassType, interfaceName: String): Boolean = {
+    import scala.collection.JavaConverters._
+    classType.allInterfaces.asScala.exists(_.name == interfaceName)
+  }
 }
 
 object ScalaCollectionLogicalStructureType extends ILogicalStructureType with HasLogger {
 
   // Members declared in org.eclipse.debug.core.ILogicalStructureType
-  
+
   override def getDescription(): String = "Flat the Scala collections"
-  
+
   override val getId: String = ScalaDebugPlugin.id + ".logicalstructure.collection"
-  
+
   // Members declared in org.eclipse.debug.core.model.ILogicalStructureTypeDelegate
 
   override def getLogicalStructure(value: IValue): IValue = {
 
     val scalaValue = value.asInstanceOf[ScalaObjectReference]
 
+    val thread = ScalaDebugger.currentThreadOrFindFirstSuspendedThread(scalaValue)
     try {
       // the way to call toArray on a collection is slightly different between Scala 2.9 and 2.10
       // the base object to use to get the Manisfest and the method signature are different
-      val (manifestObject, toArraySignature) = if (scalaValue.getDebugTarget.is2_10Compatible(ScalaDebugger.currentThread)) {
+      val (manifestObject, toArraySignature) = if (scalaValue.getDebugTarget.is2_10Compatible(thread)) {
         (scalaValue.getDebugTarget().objectByName("scala.reflect.ClassManifestFactory", false, null), "(Lscala/reflect/ClassTag;)Ljava/lang/Object;")
       } else {
         (scalaValue.getDebugTarget().objectByName("scala.reflect.Manifest", false, null), "(Lscala/reflect/ClassManifest;)Ljava/lang/Object;")
       }
 
       // get Manifest.Any, needed to call toArray(..)
-      val anyManifestObject = manifestObject.invokeMethod("Any", ScalaDebugger.currentThread) match {
+      val anyManifestObject = manifestObject.invokeMethod("Any", thread) match {
         case o: ScalaObjectReference =>
           o
         case _ =>
@@ -81,7 +78,7 @@ object ScalaCollectionLogicalStructureType extends ILogicalStructureType with Ha
           throw new Exception("Unexpected return value for Manifest.Any()")
       }
 
-      scalaValue.invokeMethod("toArray", toArraySignature, ScalaDebugger.currentThread, anyManifestObject)
+      scalaValue.invokeMethod("toArray", toArraySignature, thread, anyManifestObject)
     } catch {
       case e: Exception =>
         // fail gracefully in case of problem
@@ -89,10 +86,10 @@ object ScalaCollectionLogicalStructureType extends ILogicalStructureType with Ha
         scalaValue
     }
   }
-  
+
   override def providesLogicalStructure(value: IValue): Boolean = true // TODO: check that as it is created by the provider, it is never used with other values
-  
+
   // Members declared in org.eclipse.debug.core.model.ILogicalStructureTypeDelegate2
-  
+
   override def getDescription(value: IValue): String = getDescription
 }

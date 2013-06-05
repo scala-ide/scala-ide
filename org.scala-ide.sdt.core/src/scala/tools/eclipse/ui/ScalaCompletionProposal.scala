@@ -25,21 +25,21 @@ import scala.tools.refactoring.common.TextChange
 
 
 /** A UI class for displaying completion proposals.
- * 
+ *
  *  It adds parenthesis at the end of a proposal if it has parameters, and places the caret
  *  between them.
  */
-class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: ISelectionProvider) 
+class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: ISelectionProvider)
     extends IJavaCompletionProposal with ICompletionProposalExtension with ICompletionProposalExtension6 {
-  
+
   import proposal._
   import ScalaCompletionProposal._
-  
+
   def getRelevance = relevance
-  
+
   private lazy val image = {
     import MemberKind._
-    
+
     kind match {
       case Def           => defImage
       case Class         => classImage
@@ -53,15 +53,24 @@ class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: I
       case _    => valImage
     }
   }
-  
+
   def getImage = image
-  
+
+  /** `getParamNames` is expensive, save this result once computed.
+   *
+   *  @note This field should be lazy to avoid unnecessary computation.
+   */
+  private lazy val explicitParamNames = getParamNames()
+
   /** The string that will be inserted in the document if this proposal is chosen.
    *  It consists of the method name, followed by all explicit parameter sections,
    *  and inside each section the parameter names, delimited by commas.
+   *
+   *  @note This field needs to be lazy because it triggers the potentially expensive
+   *        `getParameterNames` operation.
    */
-  val completionString =
-    if (hasArgs == HasArgs.NoArgs)
+  private lazy val completionString =
+    if (explicitParamNames.isEmpty)
       completion
     else {
       val buffer = new StringBuffer(completion)
@@ -70,21 +79,21 @@ class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: I
         buffer.append(section.mkString("(", ", ", ")"))
       buffer.toString
     }
-  
+
   /** Position after the opening parenthesis of this proposal */
   val startOfArgumentList = startPos + completion.length + 1
-  
+
   /** The information that is displayed in a small hover window above the completion, showing parameter names and types. */
   def getContextInformation(): IContextInformation =
     if (tooltip.length > 0)
       new ScalaContextInformation(display, tooltip, image, startOfArgumentList)
     else null
- 
+
   /**
    * A simple display string
    */
   def getDisplayString() = display
-  
+
   /**
    * A display string with grayed out extra details
    */
@@ -94,7 +103,7 @@ class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: I
          styledString.append(" - ", StyledString.QUALIFIER_STYLER).append(displayDetail, StyledString.QUALIFIER_STYLER)
       styledString
     }
-  
+
   /**
    * Some additional info (like javadoc ...)
    */
@@ -109,7 +118,7 @@ class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: I
       val completionChange = scalaSourceFile.withSourceFile { (sourceFile, _) =>
         TextChange(sourceFile, startPos, offset, completionString)
       }()
-      
+
       val importStmt = if (needImport) { // add an import statement if required
         scalaSourceFile.withSourceFile { (_, compiler) =>
           val refactoring = new AddImportStatement { val global = compiler }
@@ -118,37 +127,27 @@ class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: I
       } else {
         Nil
       }
-      
+
       // Apply the two changes in one step, if done separately we would need an
       // another `waitLoadedType` to update the positions for the refactoring
       // to work properly.
       EditorHelpers.applyChangesToFileWhileKeepingSelection(
-          d, textSelection, scalaSourceFile.file, completionChange :: importStmt)            
-     
+          d, textSelection, scalaSourceFile.file, completionChange :: importStmt)
+
       None
     }
-        
+
     selectionProvider match {
-      case viewer: ITextViewer if hasArgs == HasArgs.NonEmptyArgs =>
-        // obtain the relative offset in the screen (this is needed to correctly 
-        // update the caret position when folded comments/imports/classes are
-        // present in the source file.
-        //
-        // Mirko: It doesn't seem to be needed anymore since we use the 
-        //        `applyChangesToFileWhileKeepingSelection`, but it would
-        //        be better if someone else also checked this.
-        //
-        //val viewCaretOffset = viewer.getTextWidget().getCaretOffset()
-        //viewer.getTextWidget().setCaretOffset(viewCaretOffset -1 )
+      case viewer: ITextViewer if explicitParamNames.flatten.nonEmpty =>
         addArgumentTemplates(d, viewer)
-      case _ => () 
+      case _ => ()
     }
   }
-  
+
   def getTriggerCharacters = null
   def getContextInformationPosition = startOfArgumentList
-  
-  def isValidFor(d: IDocument, pos: Int) = 
+
+  def isValidFor(d: IDocument, pos: Int) =
     prefixMatches(completion.toArray, d.get.substring(startPos, pos).toArray)
 
   /** Insert a completion proposal, with placeholders for each explicit argument.
@@ -201,7 +200,7 @@ class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: I
     ui.setExitPolicy(new IExitPolicy {
       def doExit(environment: LinkedModeModel, event: VerifyEvent, offset: Int, length: Int) = {
         event.character match {
-          case ';' => 
+          case ';' =>
             // go to the end of the completion proposal
             new ExitFlags(ILinkedModeListener.UPDATE_CARET, !environment.anyPositionContains(offset))
 
@@ -209,7 +208,7 @@ class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: I
             // if we hit enter after opening a brace, it's probably a closure. Exit linked mode
             new ExitFlags(ILinkedModeListener.EXIT_ALL, true)
 
-          case _ => 
+          case _ =>
             // stay in linked mode otherwise
             null
         }
@@ -236,6 +235,6 @@ object ScalaCompletionProposal {
   val javaInterfaceImage = JavaPluginImages.get(JavaPluginImages.IMG_OBJS_INTERFACE)
   val javaClassImage = JavaPluginImages.get(JavaPluginImages.IMG_OBJS_CLASS)
   val packageImage = JavaPluginImages.get(JavaPluginImages.IMG_OBJS_PACKAGE)
-  
+
   def apply(selectionProvider: ISelectionProvider)(proposal: CompletionProposal) = new ScalaCompletionProposal(proposal, selectionProvider)
 }

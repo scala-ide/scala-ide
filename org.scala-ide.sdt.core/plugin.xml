@@ -399,6 +399,17 @@
       <super type="org.eclipse.jdt.core.problem"/>
       <persistent value="true"/>
    </extension>
+   <extension
+         id="task"
+         name="Scala task"
+         point="org.eclipse.core.resources.markers">
+      <super
+            type="org.eclipse.jdt.core.task">
+      </super>
+      <persistent
+            value="true">
+      </persistent>
+   </extension>
 
    <extension
          point="org.eclipse.ui.editors.annotationTypes">
@@ -667,7 +678,7 @@
           adaptable="true"
           id="org.scala-ide.sdt.core.addScalaLibrary"
           nameFilter="*"
-          objectClass="org.eclipse.jdt.core.IJavaProject">
+          objectClass="org.eclipse.core.resources.IProject">
         <action
              class="scala.tools.eclipse.actions.AddScalaLibraryAction"
              enablesFor="+"
@@ -682,13 +693,18 @@
             <objectState name="projectNature" value="org.scala-ide.sdt.core.scalanature"/>
             <objectState name="projectNature" value="ch.epfl.lamp.sdt.core.scalanature"/>
           </or>
-          <objectClass name="org.eclipse.jdt.core.IJavaProject"/>
         </and>
       </visibility>
+        <enablement>
+         	<test
+              property="org.eclipse.core.resources.projectNature"
+              value="org.eclipse.jdt.core.javanature">
+            </test>
+         </enablement>
     </objectContribution>
       <objectContribution
             adaptable="true"
-            objectClass="org.eclipse.jdt.core.IJavaProject"
+            objectClass="org.eclipse.core.resources.IProject"
             nameFilter="*"
             id="org.scala-ide.sdt.core.natures.contribution1">
          <action
@@ -705,14 +721,19 @@
                <objectState name="projectNature" value="org.scala-ide.sdt.core.scalanature"/>
                <objectState name="projectNature" value="ch.epfl.lamp.sdt.core.scalanature"/>
              </or>
-             <objectClass name="org.eclipse.jdt.core.IJavaProject"/>
            </and>
          </visibility>
+         <enablement>
+         	<test
+              property="org.eclipse.core.resources.projectNature"
+              value="org.eclipse.jdt.core.javanature">
+            </test>
+         </enablement>
     </objectContribution>
 
       <objectContribution
             adaptable="true"
-            objectClass="org.eclipse.jdt.core.IJavaProject"
+            objectClass="org.eclipse.core.resources.IProject"
             nameFilter="*"
             id="org.scala-ide.sdt.core.natures.contribution2">
          <action
@@ -731,10 +752,15 @@
                 <objectState name="projectNature" value="org.scala-ide.sdt.core.scalanature"/>
                 <objectState name="projectNature" value="ch.epfl.lamp.sdt.core.scalanature"/>
               </or>
-            </not>
-            <objectClass name="org.eclipse.jdt.core.IJavaProject"/>
+            </not>            
           </and>
          </visibility>
+         <enablement>
+         	<test
+              property="org.eclipse.core.resources.projectNature"
+              value="org.eclipse.jdt.core.javanature">
+            </test>
+         </enablement>
       </objectContribution>
   </extension>
     
@@ -869,6 +895,12 @@
       description="Debug Scala JUnit Test"
       id="org.eclipse.shortcut.scala.junit.debug"
       name="Debug Scala JUnit Test" />
+    <command
+          categoryId="scala.tools.eclipse.category"
+          description="Toggle Mark Occurences"
+          id="org.scala-ide.sdt.core.toggleMarkOccurences"
+          name="Toggle Mark Occurrences">
+    </command>
   </extension>
 
   <extension point="org.eclipse.ui.bindings">
@@ -1315,6 +1347,10 @@
           class="scala.tools.eclipse.actions.OpenImplicitCommand"
           commandId="scala.tools.eclipse.editor.OpenImplicit">
     </handler>
+    <handler
+          class="scala.tools.eclipse.markoccurrences.ToggleMarkOccurrencesHandler"
+          commandId="org.scala-ide.sdt.core.toggleMarkOccurences">
+    </handler>
  </extension>
  <extension
        point="org.eclipse.ui.menus">
@@ -1326,6 +1362,12 @@
                 commandId="org.scala-ide.sdt.core.commands.ToggleImplicitsDisplay"
                 icon="icons/full/elcl16/implicit_co.gif"
                 id="org.scala-ide.sdt.core.toolbar.ToggleImplicitsDisplay"
+                style="toggle">
+          </command>
+          <command
+                commandId="org.scala-ide.sdt.core.toggleMarkOccurences"
+                icon="icons/full/etool16/mark_occurrences.png"
+                id="org.scala-ide.sdt.core.toolbar.ToggleMarkOccurences"
                 style="toggle">
           </command>
        </toolbar>

@@ -92,16 +92,19 @@ class TypeTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  def symbols() {
+  def singleton_type() {
     checkSymbolClassification("""
       object X {
-        val sym = 'symbol
+        def s: Obj.type = null
       }
+      object Obj
       """, """
       object X {
-        val sym = $SYM  $
+        def s: $O$.type = null
       }
+      object Obj
       """,
-      Map("SYM" -> Symbol))
+      Map("O" -> Object))
   }
+
 }

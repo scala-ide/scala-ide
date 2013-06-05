@@ -8,6 +8,20 @@ import scala.collection.mutable.{ Stack, ListBuffer }
 import scala.tools.eclipse.lexical.ScalaPartitions._
 import scala.xml.parsing.TokenTests
 
+/**
+ * The start index as well as the end index denotes the position BEFORE the
+ * first sign of the range. This means that for an arbitrary string the following
+ * is true:
+ *
+ * string: Hello World!
+ * start : 0
+ * end   : 11
+ * length: end - start + 1 = 12
+ *
+ * If a range spans the whole content (as in the example above) the start index
+ * is always 0 whereas the end index is always equal to the length of the input
+ * minus 1.
+ */
 case class ScalaPartitionRegion(contentType: String, start: Int, end: Int) extends ITypedRegion {
   lazy val length = end - start + 1
   def containsPosition(offset: Int) = offset >= start && offset <= end
@@ -27,7 +41,8 @@ object ScalaPartitionTokeniser {
     val tokeniser = new ScalaPartitionTokeniser(text)
     while (tokeniser.tokensRemain) {
       val nextToken = tokeniser.nextToken()
-      tokens += nextToken
+      if (nextToken.length > 0)
+        tokens += nextToken
     }
     tokens.toList
   }
@@ -73,6 +88,15 @@ class ScalaPartitionTokeniser(text: String) extends TokenTests {
         getXmlToken()
       case StringInterpolationState(multiline, embeddedIdentifierNext) =>
         getStringInterpolationToken(multiline, embeddedIdentifierNext)
+      case ScaladocCodeBlockState(nesting) =>
+        accept(3)
+        modeStack.pop()
+        setContentType(SCALADOC_CODE_BLOCK)
+        getCodeBlockComment(nesting)
+      case ScaladocState(nesting) =>
+        modeStack.pop()
+        setContentType(JAVA_DOC)
+        getMultiLineComment(nesting)
     }
 
     val contentType = contentTypeOpt.get
@@ -156,7 +180,7 @@ class ScalaPartitionTokeniser(text: String) extends TokenTests {
         else if (ch(6) == '\'') Some(6)
         else if (ch(7) == '\'') Some(7)
         else None
-      else if (ch(2) == '0')
+      else if (isOctalDigit(ch(2)))
         if (ch(3) == '\'') Some(3)
         else if (ch(4) == '\'') Some(4)
         else if (ch(5) == '\'') Some(5)
@@ -169,6 +193,9 @@ class ScalaPartitionTokeniser(text: String) extends TokenTests {
       Some(2)
     else
       None
+
+  private def isOctalDigit(c: Char): Boolean =
+    c >= '0' && c <= '7'
 
   @tailrec
   private def getStringLit(isInterpolation: Boolean): Unit =
@@ -286,12 +313,35 @@ class ScalaPartitionTokeniser(text: String) extends TokenTests {
       case '/' if (ch(1) == '*') =>
         accept(2)
         getMultiLineComment(nesting + 1)
+      case '{' if ch(1) == '{' && ch(2) == '{' && contentTypeOpt.exists(_ == JAVA_DOC) =>
+        nestIntoScaladocCodeBlockMode(nesting)
       case EOF =>
       case _ =>
         accept()
         getMultiLineComment(nesting)
     }
   }
+
+  @tailrec
+  private def getCodeBlockComment(nesting: Int): Unit =
+    (ch: @switch) match {
+      case '*' if ch(1) == '/' =>
+        accept(2)
+        if (nesting > 1)
+          getCodeBlockComment(nesting - 1)
+        else
+          setContentType(JAVA_DOC)
+      case '/' if ch(1) == '*' =>
+        accept(2)
+        getCodeBlockComment(nesting + 1)
+      case '}' if ch(1) == '}' && ch(2) == '}' =>
+        nestIntoScaladocMode(nesting)
+        accept(3)
+      case EOF =>
+      case _ =>
+        accept()
+        getCodeBlockComment(nesting)
+    }
 
   @tailrec
   private def getSingleLineComment(): Unit =
@@ -328,6 +378,8 @@ class ScalaPartitionTokeniser(text: String) extends TokenTests {
   private case class XmlState(var nesting: Int, var inTag: Option[Boolean]) extends ScannerMode
   private case class ScalaState(var nesting: Int) extends ScannerMode
   private case class StringInterpolationState(multiline: Boolean, var embeddedIdentifierNext: Boolean) extends ScannerMode
+  private case class ScaladocCodeBlockState(val nesting: Int) extends ScannerMode
+  private case class ScaladocState(val nesting: Int) extends ScannerMode
 
   private val modeStack: Stack[ScannerMode] = {
     val stack = new Stack[ScannerMode]
@@ -349,6 +401,14 @@ class ScalaPartitionTokeniser(text: String) extends TokenTests {
 
   private def nestIntoStringInterpolationMode(multiline: Boolean) {
     modeStack.push(StringInterpolationState(multiline, embeddedIdentifierNext = false))
+  }
+
+  private def nestIntoScaladocCodeBlockMode(nesting: Int) {
+    modeStack.push(ScaladocCodeBlockState(nesting))
+  }
+
+  private def nestIntoScaladocMode(nesting: Int) {
+    modeStack.push(ScaladocState(nesting))
   }
 
   private def getXmlToken(): Unit =

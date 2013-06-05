@@ -14,7 +14,7 @@ import scala.tools.nsc.Settings
 import scala.tools.nsc.interactive.{ Global, InteractiveReporter, Problem }
 import scala.tools.nsc.io.AbstractFile
 import scala.tools.nsc.reporters.Reporter
-import scala.tools.nsc.util.{ BatchSourceFile, Position, SourceFile }
+import scala.reflect.internal.util.{ BatchSourceFile, Position, SourceFile }
 import scala.tools.eclipse.javaelements.{
   ScalaCompilationUnit,
   ScalaIndexBuilder,
@@ -32,8 +32,18 @@ import org.eclipse.jdt.core.IMethod
 import scala.tools.nsc.io.VirtualFile
 import scala.tools.nsc.interactive.MissingResponse
 
-class ScalaPresentationCompiler(project: ScalaProject, settings: Settings)
-  extends Global(settings, new ScalaPresentationCompiler.PresentationReporter, project.underlying.getName)
+
+class ScalaPresentationCompiler(project: ScalaProject, settings: Settings) extends {
+  /**
+   * Lock object for protecting compiler names. Names are cached in a global `Array[Char]`
+   * and concurrent access may lead to overwritten names.
+   *
+   * @note This field is EARLY because `newTermName` is hit during construction of the superclass `Global`,
+   *       and the lock object has to be constructed already.
+   */
+  private val nameLock = new Object
+
+} with Global(settings, new ScalaPresentationCompiler.PresentationReporter, project.underlying.getName)
   with ScalaStructureBuilder
   with ScalaIndexBuilder
   with ScalaMatchLocator
@@ -42,8 +52,7 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings)
   with JavaSig
   with JVMUtils
   with LocateSymbol
-  with HasLogger
-  with SymbolsCompatibility { self =>
+  with HasLogger { self =>
 
   def presentationReporter = reporter.asInstanceOf[ScalaPresentationCompiler.PresentationReporter]
   presentationReporter.compiler = this
@@ -125,7 +134,7 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings)
 
   /** Ask with a default timeout. Keep around for compatibility with the m2 release. */
   def askOption[A](op: () => A): Option[A] = askOption(op, 10000)
-  
+
   /** Perform `op' on the compiler thread. Catch all exceptions, and return
    *  None if an exception occured. TypeError and FreshRunReq are printed to
    *  stdout, all the others are logged in the platform error log.
@@ -146,7 +155,6 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings)
             fi.getCause() match {
               case e: TypeError                  => logger.info("TypeError in ask:\n" + e)
               case f: FreshRunReq                => logger.info("FreshRunReq in ask:\n" + f)
-              case e @ InvalidCompanions(c1, c2) => reporter.warning(c1.pos, e.getMessage)
               case m: MissingResponse            => logger.info("MissingResponse in ask. Called from: " + m.getStackTrace().mkString("\n"))
               case e                             => eclipseLog.error("Error during askOption", e)
             }
@@ -188,7 +196,7 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings)
         val newF = new BatchSourceFile(f.file, content)
         synchronized { sourceFiles(scu) = newF }
 
-        // avoid race condition by looking up the source file, as someone else 
+        // avoid race condition by looking up the source file, as someone else
         // might have swapped it in the meantime
         askReload(List(sourceFiles(scu)), res)
       case None =>
@@ -217,6 +225,14 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings)
         sourceFiles.remove(scu)
       }
     }
+  }
+
+  override def newTermName(str: String) = {
+    nameLock synchronized { super.newTermName(str) }
+  }
+
+  override def newTypeName(str: String) = {
+    nameLock synchronized { super.newTypeName(str) }
   }
 
   def withResponse[A](op: Response[A] => Any): Response[A] = {
@@ -283,34 +299,34 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings)
     val casePenalty = if (name.take(prefix.length) != prefix.mkString) 50 else 0
     relevance -= casePenalty
 
-    val scalaParamNames = for {
+    val namesAndTypes = for {
       section <- sym.paramss
       if section.nonEmpty && !section.head.isImplicit
-    } yield for (param <- section) yield param.name.toString
+    } yield for (param <- section) yield (param.name.toString, param.tpe.toString)
 
-    val paramNames = if (sym.isJavaDefined && sym.isMethod) {
-      getJavaElement(sym, project.javaProject) collect {
-        case method: IMethod => List(method.getParameterNames.toList)
-      } getOrElse scalaParamNames
-    } else scalaParamNames
+    val (scalaParamNames, paramTypes) = namesAndTypes.map(_.unzip).unzip
 
-    val contextInfo = for {
-      (names, syms) <- paramNames.zip(sym.paramss)
-    } yield for { (name, sym) <- names.zip(syms) } yield "%s: %s".format(name, sym.tpe)
-
-    val contextString = contextInfo.map(_.mkString("(", ", ", ")")).mkString("")
+    // we save this value to make sure it's evaluated in the PC thread
+    // the closure below can be evaluated in any thread
+    val isJavaMethod = sym.isJavaDefined && sym.isMethod
+    val getParamNames = () => {
+      if (isJavaMethod) {
+        getJavaElement(sym, project.javaProject) collect {
+          case method: IMethod => List(method.getParameterNames.toList)
+        } getOrElse scalaParamNames
+      } else scalaParamNames
+    }
 
     import scala.tools.eclipse.completion.HasArgs
     CompletionProposal(kind,
       start,
       name,
       signature,
-      contextString,
       container,
       relevance,
-      HasArgs.from(sym.paramss),
       sym.isJavaDefined,
-      paramNames,
+      getParamNames,
+      paramTypes,
       sym.fullName,
       false)
   }

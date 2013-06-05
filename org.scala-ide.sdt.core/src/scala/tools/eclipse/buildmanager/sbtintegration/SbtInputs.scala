@@ -13,6 +13,7 @@ import sbt.compiler.{AnalyzingCompiler, IC, CompilerCache}
 import sbt.classpath.ClasspathUtilities
 import sbt.{ScalaInstance, ClasspathOptions}
 import ScalaPlugin.plugin
+import sbt.inc.IncOptions
 
 class SbtInputs(sourceFiles: Seq[File], project: ScalaProject, javaMonitor: SubMonitor, scalaProgress: CompileProgress, cacheFile: File, scalaReporter: Reporter, logger: Logger) extends Inputs[Analysis, AnalyzingCompiler] {
   def setup = new Setup[Analysis] {
@@ -22,20 +23,21 @@ class SbtInputs(sourceFiles: Seq[File], project: ScalaProject, javaMonitor: SubM
     def cache = CompilerCache.fresh  // May want to explore caching possibilities.
 
     private val allProjects = project +: project.transitiveDependencies.flatMap(plugin.asScalaProject)
-    def analysisMap(f: File): Maybe[Analysis] = 
+    def analysisMap(f: File): Maybe[Analysis] =
       if (f.isFile)
         Maybe.just(Analysis.Empty)
       else
-        allProjects.find(_.sourceOutputFolders.map(_._2.getLocation.toFile) contains f) map (_.buildManager) match { 
+        allProjects.find(_.sourceOutputFolders.map(_._2.getLocation.toFile) contains f) map (_.buildManager) match {
           case Some(sbtManager: EclipseSbtBuildManager) => Maybe.just(sbtManager.latestAnalysis)
           case _ => Maybe.just(Analysis.Empty)
         }
     def progress = Maybe.just(scalaProgress)
     def reporter = scalaReporter
+    override def incrementalCompilerOptions = IncOptions.toStringMap(IncOptions.Default)
   }
 
   def options = new Options {
-    def classpath = project.scalaClasspath.fullClasspath.toArray
+    def classpath = project.scalaClasspath.userCp.map(_.toFile.getAbsoluteFile).toArray
     def sources = sourceFiles.toArray
     def output = new MultipleOutput {
       def outputGroups = project.sourceOutputFolders.map {
@@ -67,7 +69,10 @@ class SbtInputs(sourceFiles: Seq[File], project: ScalaProject, javaMonitor: SubM
       val scalaLoader = getClass.getClassLoader
       val scalaInstance = new ScalaInstance(plugin.scalaVer, scalaLoader, libClasses, compilerClasses, reflectClasses.toList, None)
       val compilerInterface = plugin.sbtCompilerInterface map (_.toFile) getOrElse (throw new RuntimeException("compiler-interface not found"))
-      IC.newScalaCompiler(scalaInstance, compilerInterface, ClasspathOptions.boot, logger)
+
+      // prevent Sbt from adding things to the (boot)classpath
+      val cpOptions = new ClasspathOptions(false, false, false, autoBoot = false, filterLibrary = false)
+      IC.newScalaCompiler(scalaInstance, compilerInterface, cpOptions, logger)
     }
   }
 }

@@ -5,8 +5,8 @@ import scala.actors.Exit
 import scala.actors.UncaughtException
 import scala.collection.mutable.Stack
 import scala.tools.eclipse.logging.HasLogger
-
 import com.sun.jdi.VMDisconnectedException
+import scala.tools.eclipse.ScalaPlugin
 
 /** A generic message to inform that an actor should terminate. */
 object PoisonPill
@@ -24,8 +24,8 @@ object PoisonPill
   * the actor is guaranteed to execute `preExit` before terminating.
   */
 trait BaseDebuggerActor extends Actor with HasLogger {
-  // Always send an `Exit` message when a linked actor terminates. Be aware that if you change this, 
-  // you'll have to revisit the whole system behavior, as the system relies on `Exit` messages for 
+  // Always send an `Exit` message when a linked actor terminates. Be aware that if you change this,
+  // you'll have to revisit the whole system behavior, as the system relies on `Exit` messages for
   // graceful termination of all linked actors.
   trapExit = true
 
@@ -127,13 +127,32 @@ trait BaseDebuggerActor extends Actor with HasLogger {
   }
 
   override def exceptionHandler: Behavior = {
-    // Given we have a highly asynchronous system, `VMDisconnectedException` can happen simply because the user has stopped a debug session 
-    // while some debug actor was executing some logic that requires the underline virtual machine to be up and running. These sort of 
+    // Given we have a highly asynchronous system, `VMDisconnectedException` can happen simply because the user has stopped a debug session
+    // while some debug actor was executing some logic that requires the underline virtual machine to be up and running. These sort of
     // exception do not provide any meaningful information, hence we simply swallow it.
     case vme: VMDisconnectedException => ()
     case e: Exception =>
-      logger.debug("Shutting down " + this + " because of", e)
+      eclipseLog.error("Shutting down " + this + " because of", e)
       val reason = UncaughtException(this, Some("Unhandled exception while actor %s was still running.".format(this)), Some(sender), Thread.currentThread(), e)
       exit(reason)
+  }
+}
+
+object BaseDebuggerActor {
+  val TIMEOUT = 500 // ms
+
+  /** A timed send with a default timeout. */
+  val syncSend = timedSend(TIMEOUT) _
+
+  /** Synchronoous message send with timeout. If the plugin is configured to run without timeouts,
+   *  it blocks until a reply is received.
+   *
+   *  @see ScalaPlugin.noTimeoutMode
+   */
+  def timedSend(timeout: Int)(a: Actor, msg: Any): Option[Any] = {
+    if (ScalaPlugin.plugin.noTimeoutMode)
+      Some(a !? msg)
+    else
+      a !? (timeout, msg)
   }
 }

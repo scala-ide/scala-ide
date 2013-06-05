@@ -7,23 +7,20 @@ import org.eclipse.swt.events.{ KeyEvent, KeyAdapter, FocusAdapter, FocusEvent }
 import org.eclipse.jface.util.IPropertyChangeListener
 import org.eclipse.jface.util.PropertyChangeEvent
 import org.eclipse.swt.events._
+import scala.tools.eclipse.ui.DisplayThread
 
 object SWTUtils {
-  
-  /** Asynchronously run `f` on the UI thread.  */
+
+  @deprecated("3.0.0", "Use scala.tools.eclipse.ui.DisplayThread.asyncExec")
   def asyncExec(f: => Unit) {
-    Display.getDefault asyncExec new Runnable {
-      override def run() { f }
-    }
+    DisplayThread.asyncExec(f)
   }
 
-  /** Synchronously run `f` on the UI thread.  */
+  @deprecated("3.0.0", "Use scala.tools.eclipse.ui.DisplayThread.syncExec")
   def syncExec(f: => Unit) {
-    Display.getDefault syncExec new Runnable {
-      override def run() { f }
-    }
+    DisplayThread.syncExec(f)
   }
-  
+
   implicit def fnToModifyListener(f: ModifyEvent => Unit): ModifyListener = new ModifyListener {
     def modifyText(e: ModifyEvent) = f(e)
   }
@@ -41,7 +38,7 @@ object SWTUtils {
     new SelectionAdapter() {
       override def widgetSelected(e: SelectionEvent) { p() }
     }
-  
+
   implicit def noArgFnToMouseUpListener(f: () => Any): MouseAdapter = new MouseAdapter {
     override def mouseUp(me: MouseEvent) = f()
   }

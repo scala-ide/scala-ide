@@ -20,19 +20,19 @@ class RichAnnotationModel(annotationModel: IAnnotationModel) {
   def withLock[T](f: => T): T = annotationModel match {
     case synchronizable: ISynchronizable =>
       synchronizable.getLockObject.synchronized { f }
-    case _ => 
+    case _ =>
       f
   }
-  
+
   def getAnnotations: List[Annotation] =
     annotationModel.getAnnotationIterator collect { case ann: Annotation => ann } toList
 
   def replaceAnnotations(annotations: Iterable[Annotation], replacements: Map[Annotation, Position]) {
     annotationModel.asInstanceOf[IAnnotationModelExtension].replaceAnnotations(annotations.toArray, replacements)
   }
-    
+
   def deleteAnnotations(annotations: Iterable[Annotation]) {
     replaceAnnotations(annotations, Map())
-  }  
+  }
 
 }

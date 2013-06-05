@@ -20,8 +20,7 @@ object EditorUtils {
   def openEditorAndApply[T](element: IJavaElement)(editor: IEditorPart => T): T =
     editor(org.eclipse.jdt.ui.JavaUI.openInEditor(element))
 
-  /** Return the compilation unit open in the given editor.
-   */
+  /** Return the compilation unit open in the given editor.*/
   def getEditorCompilationUnit(editor: ITextEditor): Option[InteractiveCompilationUnit] = {
     editor match {
       case icuEditor: InteractiveCompilationUnitEditor =>
@@ -51,11 +50,11 @@ object EditorUtils {
     annotationsAtOffset
   }
 
-  def textSelection2region(selection: ITextSelection): IRegion = 
+  def textSelection2region(selection: ITextSelection): IRegion =
     new Region(selection.getOffset, selection.getLength)
-  
+
   def getTextSelection(editor: ITextEditor): Option[ITextSelection] = {
-    for{ 
+    for{
       workbenchSite <- Option(editor.getSite)
       provider <- Option(workbenchSite.getSelectionProvider)
       selection <- Option(provider.getSelection)

@@ -6,7 +6,7 @@ import org.eclipse.ui.IWorkbenchPart
 import org.eclipse.jface.action.IAction
 
 class AddScalaLibraryAction extends AbstractPopupAction {
-  def performAction(project: IProject) {  
+  def performAction(project: IProject) {
     Nature.addScalaLibAndSave(project)
   }
 }

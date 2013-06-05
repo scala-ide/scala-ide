@@ -12,8 +12,9 @@ import org.eclipse.jface.text._
 import org.eclipse.jface.preference.PreferenceConverter
 import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.jdt.internal.ui.JavaPlugin
+import scala.tools.eclipse.util.SWTUtils
 
-case class ScalaSyntaxClass(displayName: String, baseName: String, canBeDisabled: Boolean = false) {
+case class ScalaSyntaxClass(displayName: String, baseName: String, canBeDisabled: Boolean = false, hasForegroundColour: Boolean = true) {
 
   import ScalaSyntaxClasses._
 
@@ -25,10 +26,15 @@ case class ScalaSyntaxClass(displayName: String, baseName: String, canBeDisabled
   def italicKey = baseName + ITALIC_SUFFIX
   def underlineKey = baseName + UNDERLINE_SUFFIX
 
+  /** Secondary constructor for backward compatibility with 3.x.
+   */
+  def this(_displayName: String, _baseName: String, _canBeDisabled: Boolean) =
+    this(_displayName, _baseName, _canBeDisabled, true)
+
   def getTextAttribute(preferenceStore: IPreferenceStore): TextAttribute = {
     val styleInfo = getStyleInfo(preferenceStore)
     val style: Int = fullStyle(styleInfo)
-    new TextAttribute(styleInfo.foreground, styleInfo.backgroundOpt.orNull, style)
+    new TextAttribute(styleInfo.foregroundOpt.orNull, styleInfo.backgroundOpt.orNull, style)
   }
 
   def getStyleRange(preferenceStore: IPreferenceStore): StyleRange = {
@@ -42,25 +48,34 @@ case class ScalaSyntaxClass(displayName: String, baseName: String, canBeDisabled
       val StyleInfo(enabled, foregroundColour, backgroundColourOpt, bold, italic, underline) = getStyleInfo(preferenceStore)
       val style = basicStyle(bold, italic)
       styleRange.fontStyle = style
-      styleRange.foreground = foregroundColour
+      styleRange.foreground = foregroundColour.orNull
       styleRange.background = backgroundColourOpt.orNull
       styleRange.underline = underline
       styleRange.underlineColor = styleRange.foreground
     }
 
-  case class StyleInfo(enabled: Boolean, foreground: Color, backgroundOpt: Option[Color], bold: Boolean, italic: Boolean, underline: Boolean)
+  case class StyleInfo(enabled: Boolean, foregroundOpt: Option[Color], backgroundOpt: Option[Color], bold: Boolean, italic: Boolean, underline: Boolean)
 
   def getStyleInfo(preferenceStore: IPreferenceStore): StyleInfo = {
     val colourManager = JavaPlugin.getDefault.getJavaTextTools.getColorManager
 
-    val backgroundOpt =
+    val foregroundColorPref = preferenceStore getColor foregroundColourKey
+    var foregroundColorOpt: Option[Color] = None
+    var backgroundOpt: Option[Color] = None
+
+    // FIXME: Blocking on the UI thread is bad. I'm pretty sure we can avoid this, but some refactoring is in needed. Basically, the
+    //        different SyntaxClasses should be created by the editor right after checking if semantic highlighting is enabled, that
+    //        way you know you are running inside the UI Thread. Re #1001489.
+    SWTUtils.syncExec {
+      if (hasForegroundColour)
+        foregroundColorOpt = Option(colourManager.getColor(foregroundColorPref))
       if (preferenceStore getBoolean backgroundColourEnabledKey)
-        Some(colourManager.getColor(preferenceStore getColor backgroundColourKey))
-      else
-        None
+        backgroundOpt = Option(colourManager.getColor(preferenceStore getColor backgroundColourKey))
+    }
+
     StyleInfo(
       preferenceStore getBoolean enabledKey,
-      colourManager.getColor(preferenceStore getColor foregroundColourKey),
+      foregroundColorOpt,
       backgroundOpt,
       preferenceStore getBoolean boldKey,
       preferenceStore getBoolean italicKey,
@@ -81,4 +96,13 @@ case class ScalaSyntaxClass(displayName: String, baseName: String, canBeDisabled
     style
   }
 
+}
+
+object ScalaSyntaxClass {
+  def unapply(a: AnyRef): Option[(String, String, Boolean)] = a match {
+    case syntaxClass: ScalaSyntaxClass =>
+      Some((syntaxClass.displayName, syntaxClass.baseName, syntaxClass.canBeDisabled))
+    case _ =>
+      None
+  }
 }

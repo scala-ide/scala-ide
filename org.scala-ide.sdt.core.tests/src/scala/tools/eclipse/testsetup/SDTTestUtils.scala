@@ -9,7 +9,7 @@ import java.io.{ ByteArrayInputStream, File, IOException, InputStream }
 import org.eclipse.core.resources.{ IContainer, IFile, IFolder, IProject, IProjectDescription, ResourcesPlugin }
 import org.eclipse.core.runtime.{ IPath, Path }
 import scala.tools.eclipse.util.{ OSGiUtils, EclipseUtils }
-import scala.tools.nsc.util.SourceFile
+import scala.reflect.internal.util.SourceFile
 import scala.collection.mutable
 import scala.util.matching.Regex
 import org.eclipse.jdt.core.ICompilationUnit
@@ -125,9 +125,9 @@ object SDTTestUtils {
    *
    *  The file must not exist.
    */
-  def addFileToProject(project: IProject, path: String, content: String): IFile = 
+  def addFileToProject(project: IProject, path: String, content: String): IFile =
     addFileToProject(project, path, content.getBytes(project.getDefaultCharset()))
-  
+
   def addFileToProject(project: IProject, path: String, content: Array[Byte]): IFile = {
     val filePath = new Path(path)
     val dirNames = filePath.segments.init // last segment is the file
@@ -192,15 +192,15 @@ object SDTTestUtils {
     }
     stringBuilder.toString
   }
-  
+
   def findMarker(marker: String) = new {
     import org.eclipse.jdt.internal.compiler.env.ICompilationUnit
     def in(unit: ICompilationUnit): Seq[Int] = {
-    	val contents = unit.getContents()
-    	SDTTestUtils.positionsOf(contents, marker)
+      val contents = unit.getContents()
+      SDTTestUtils.positionsOf(contents, marker)
     }
   }
-  
+
   val simulator = new EclipseUserSimulator
 
 
@@ -228,6 +228,40 @@ object SDTTestUtils {
     while ((System.currentTimeMillis() < start + timeout) && !cond) {
       Thread.sleep(100)
       cond = pred
+    }
+  }
+
+  /**
+   * Allows to run code that can access the presentation compiler. The code is
+   * executed in a separate project inside of the workspace. The project is created
+   * when this method is called and will be removed when it is left.
+   *
+   * @param testProjectName
+   *        The name of the test project the code should be executed in
+   * @param f
+   *        the function executed inside of the presentation compiler
+   *
+   * @example {{{
+   * testWithCompiler("testproject") { compiler =>
+   *   import compiler._
+   *   // use compiler member
+   * }
+   * }}}
+   */
+  def testWithCompiler[A](testProjectName: String)(f: ScalaPresentationCompiler => A) = {
+    var projectSetup: TestProjectSetup = null
+
+    try {
+      val simulator = new EclipseUserSimulator
+      val scalaProject = simulator.createProjectInWorkspace(testProjectName, withSourceRoot = true)
+
+      projectSetup = new TestProjectSetup(testProjectName) {
+        override lazy val project = scalaProject
+      }
+      projectSetup.project.withPresentationCompiler(c => Option(f(c)))(None)
+    }
+    finally EclipseUtils.workspaceRunnableIn(ScalaPlugin.plugin.workspaceRoot.getWorkspace) { _ =>
+      projectSetup.project.underlying.delete(true, null)
     }
   }
 }

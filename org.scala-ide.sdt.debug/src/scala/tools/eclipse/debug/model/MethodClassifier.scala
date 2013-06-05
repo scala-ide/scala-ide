@@ -4,27 +4,15 @@ import com.sun.jdi.Method
 import scala.tools.eclipse.debug.classfile.ConstantPool
 import scala.tools.eclipse.util.Utils._
 
-object MethodClassifier extends Enumeration {
-  // more classifications may be added, but for the moment these are the ones that make sense in the debugger
-  val Synthetic, Getter, Setter, DefaultGetter, Bridge, TraitConstructor, Forwarder /*, DelayedInit, LazyCompute, LiftedException */ = Value
-}
-
 /** Classifies `scalac` synthetic methods according to their purpose.
- *
- *  May cache results, so do not reuse an instance of this class across debugging
- *  sessions (but *do* reuse it in the same session).
- *
- *  Note: Alternative designs have been explored. Making each flag in the enumeration
- *        a proper class does not play out because it would move detection strategies
- *        in the companion object, preventing caching (like the constant pool)
  *
  *  This class is thread-safe.
  *
- *  TODO: Cache expensive operations (currently `Forwarder` is the most expensive).
+ *  A cache should be used in front of the expensive operations (currently `Forwarder` is the most expensive).
  */
-class MethodClassifier {
-
-  import MethodClassifier._
+object MethodClassifier extends Enumeration {
+  // more classifications may be added, but for the moment these are the ones that make sense in the debugger
+  val Synthetic, Getter, Setter, DefaultGetter, Bridge, TraitConstructor, Forwarder /*, DelayedInit, LazyCompute, LiftedException */ = Value
 
   private val defaultR = """.*\$default\$\d+$""".r
 

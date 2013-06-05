@@ -1,6 +1,7 @@
 package scala.tools.eclipse.launching
 
 import collection.mutable
+import collection.immutable
 import org.eclipse.jdt.core.IJavaElement
 import org.eclipse.core.runtime.IProgressMonitor
 import java.util.{ Set => JSet }
@@ -31,6 +32,7 @@ import org.eclipse.jdt.core.IMember
 import org.eclipse.jdt.core.IPackageFragmentRoot
 import scala.tools.eclipse.logging.HasLogger
 import org.eclipse.jdt.core.IParent
+import scala.tools.eclipse.contribution.weaving.jdt.launching.ISearchMethods
 
 /** A JUnit4 test finder that works for Java and Scala.
  *
@@ -50,7 +52,7 @@ import org.eclipse.jdt.core.IParent
  *  - classes that *don't* define any @Test members, but inherit them, are not found in Scala sources
  *     - this can be worked around by adding `@Test` anywhere in the file, for instance as a comment
  */
-class JUnit4TestFinder extends ITestFinder with HasLogger {
+class JUnit4TestFinder extends ITestFinder with ISearchMethods with HasLogger {
   import JUnit4TestFinder._
 
   override def findTestsInContainer(element: IJavaElement, result: JSet[_], pm: IProgressMonitor): Unit =
@@ -77,6 +79,34 @@ class JUnit4TestFinder extends ITestFinder with HasLogger {
     case _ =>
       logger.info("Unknown element type when looking for tests: %s:%s".format(element.getClass(), element.toString))
       ()
+  }
+
+  override def getTestMethods(javaProject: IJavaProject, tpe: IType): java.util.Set[String] = {
+    import collection.JavaConverters._
+
+    val emptySet = immutable.Set[String]()
+
+    val res = ScalaPlugin.plugin.asScalaProject(javaProject.getProject()) map { scalaProject =>
+      scalaProject.withPresentationCompiler { comp =>
+        import comp._
+        object helper extends JUnit4TestClassesCollector { val global: comp.type = comp }
+
+        def hasTestAnnotation(sym: Symbol) = {
+          sym.initialize
+          helper.TestAnnotationOpt.exists(sym.hasAnnotation)
+        }
+        val fqn = newTypeName(tpe.getFullyQualifiedName())
+
+        askOption { () =>
+          // classes in the empty package are not found in the root mirror
+          val sym = if (fqn.lastPos('.') > -1) rootMirror.getClass(fqn) else rootMirror.EmptyPackageClass.info.member(fqn)
+          sym.annotations
+          sym.info.members.filter(hasTestAnnotation).map(_.originalName.toString).toSet
+        } getOrElse (emptySet)
+      }(emptySet)
+    } getOrElse (emptySet)
+
+    res.asJava
   }
 
   /** This method finds tests in any container, but may be imprecise if `element` is smaller than a source file.

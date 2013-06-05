@@ -7,7 +7,7 @@
   </prerequisites>
   <groupId>org.scala-ide</groupId>
   <artifactId>org.scala-ide.build</artifactId>
-  <version>2.1.0-SNAPSHOT</version>
+  <version>4.0.0-SNAPSHOT</version>
   <description>Default config holder (value, profiles, versions, ...) for the build of Scala IDE for Eclipse</description>
   <packaging>pom</packaging>
 
@@ -24,14 +24,13 @@
     <repo.scala-ide.root>http://download.scala-ide.org</repo.scala-ide.root>
 
     <!-- fixed versions -->
-    <sbt.version>0.13.0-SNAPSHOT</sbt.version>
-    <sbinary.version>0.4.1-SNAPSHOT</sbinary.version>
-    <jline.version>0.9.94</jline.version>
+    <sbt.version>Select a profile</sbt.version>
+    <sbinary.version>0.4.1-pretending-SNAPSHOT</sbinary.version>
+    <jline.version>2.10</jline.version>
     <ivy.version>2.2.0</ivy.version>
     <miglayout.version>3.7.4</miglayout.version>
-    <log4j.version>1.2.16</log4j.version>
-    <junit.version>4.10</junit.version>
-    <mockito.version>1.9.0</mockito.version>
+    <log4j.version>1.2.17</log4j.version>
+    <mockito.version>1.9.5</mockito.version>
 
     <!-- plugin versions -->
     <tycho.plugin.version>0.16.0</tycho.plugin.version>
@@ -56,11 +55,11 @@
     <repo.ajdt>${repo.ajdt.kepler}</repo.ajdt>
 
      <!-- default values, can be overwritten by profiles -->
-     <scala.version>2.9.3-SNAPSHOT</scala.version>
-     <scala.era.major.version>2.9</scala.era.major.version>
+     <scala.version>2.10.0</scala.version>
+     <scala.era.major.version>2.10</scala.era.major.version>
      <scala.library.version>${scala.version}</scala.library.version>
      <sbt.compiled.version>${scala.version}</sbt.compiled.version>
-     <version.suffix>2_09</version.suffix>
+     <version.suffix>2_10</version.suffix>
      <version.tag>local</version.tag>
 
     <!-- the repos containing the Scala dependencies -->
@@ -71,22 +70,22 @@
   </properties>
 
   <profiles>
-    <profile>
-      <!--- the profile using the default values. Scala 2.9.x -->
-      <id>scala-2.9.x</id>
-      <properties>
-        <repo.scala-refactoring>${repo.scala-ide.root}/scala-refactoring-29x</repo.scala-refactoring>
-        <repo.scalariform>${repo.scala-ide.root}/scalariform-29x</repo.scalariform>
-        <repo.typesafe>http://repo.typesafe.com/typesafe/ide-2.9</repo.typesafe>
-      </properties>
-    </profile>
 
     <profile>
       <id>scala-2.10.x</id>
       <properties>
-        <scala.version>2.10.0-SNAPSHOT</scala.version>
+        <scala.version>2.10.2-SNAPSHOT</scala.version>
         <scala.era.major.version>2.10</scala.era.major.version>
         <version.suffix>2_10</version.suffix>
+        <!-- The version is odd, but correct. We need the `SNAPSHOT` in the sbt version
+            because we need to grab the latest Sbt artifacts compiled against the latest
+            Scala 2.10.2-SNAPSHOT.
+            If you want to build the Scala IDE against Scala 2.10.0 or Scala 2.10.1, make
+            sure to pass -Dsbt.version=0.13.0-M2 to the build script (no SNAPSHOT is needed
+            in this case because the Scala version is stable!)
+        <sbt.version>0.13.0-M2-SNAPSHOT</sbt.version>
+        -->
+        <sbt.version>0.13.0-Beta1-SNAPSHOT</sbt.version> <!-- We use Sbt 0.13 master because of source-incompatible changes in master -->
 
         <repo.scala-refactoring>${repo.scala-ide.root}/scala-refactoring-210x</repo.scala-refactoring>
         <repo.scalariform>${repo.scala-ide.root}/scalariform-210x</repo.scalariform>
@@ -100,13 +99,14 @@
         <scala.version>2.11.0-SNAPSHOT</scala.version>
         <scala.era.major.version>2.11</scala.era.major.version>
         <version.suffix>2_11</version.suffix>
+        <sbt.version>0.13.0-Beta1-SNAPSHOT</sbt.version> <!-- We use Sbt 0.13 master for building against Scala 2.11.0-SNAPSHOT -->
 
         <repo.scala-refactoring>${repo.scala-ide.root}/scala-refactoring-211x</repo.scala-refactoring>
         <repo.scalariform>${repo.scala-ide.root}/scalariform-211x</repo.scalariform>
         <repo.typesafe>http://repo.typesafe.com/typesafe/ide-2.11</repo.typesafe>
       </properties>
     </profile>
-    
+
     <profile>
       <!-- Eclipse Juno -->
       <id>eclipse-juno</id>
@@ -171,6 +171,9 @@
           <version>0.1.0</version>
         </dependency>
       </dependencies>
+      <properties>
+        <scala.version>2.9.2</scala.version>
+      </properties>
       <build>
         <plugins>
           <plugin>
@@ -356,11 +359,6 @@
       </dependency>
       <!-- test support -->
       <dependency>
-        <groupId>junit</groupId>
-        <artifactId>junit</artifactId>
-        <version>${junit.version}</version>
-      </dependency>
-      <dependency>
         <groupId>org.mockito</groupId>
         <artifactId>mockito-all</artifactId>
         <version>${mockito.version}</version>
@@ -421,6 +419,11 @@
           <artifactId>tycho-source-plugin</artifactId>
           <version>${tycho.plugin.version}</version>
         </plugin>
+        <plugin>
+          <groupId>org.eclipse.tycho</groupId>
+          <artifactId>tycho-versions-plugin</artifactId>
+          <version>${tycho.plugin.version}</version>
+        </plugin>
         <!-- aspectJ support -->
         <plugin>
           <groupId>org.codehaus.mojo</groupId>
@@ -448,6 +451,35 @@
         <plugin>
           <artifactId>maven-clean-plugin</artifactId>
           <version>${maven-clean.plugin.version}</version>
+        </plugin>
+        <!-- Scalastyle -->
+        <plugin>
+          <groupId>org.scalastyle</groupId>
+          <artifactId>scalastyle-maven-plugin</artifactId>
+          <version>0.3.1</version>
+          <configuration>
+            <inputEncoding>UTF-8</inputEncoding>
+            <verbose>false</verbose>
+            <failOnViolation>true</failOnViolation>
+            <includeTestSourceDirectory>false</includeTestSourceDirectory>
+            <failOnWarning>false</failOnWarning>
+            <sourceDirectories>
+              <dir>org.scala-ide.sdt.core/src</dir>
+              <dir>org.scala-ide.sdt.debug/src</dir>
+              <dir>org.scala-ide.sdt.core.tests/src</dir>
+              <dir>org.scala-ide.sdt.core.tests/test-workspace</dir>
+              <dir>org.scala-ide.sdt.debug.tests/src</dir>
+              <dir>org.scala-ide.sdt.debug.tests/test-workspace</dir>
+            </sourceDirectories>
+            <configLocation>org.scala-ide.sdt.core/scala-ide-style-config.xml</configLocation>
+          </configuration>
+          <executions>
+            <execution>
+              <goals>
+                <goal>check</goal>
+              </goals>
+            </execution>
+          </executions>
         </plugin>
       </plugins>
     </pluginManagement>

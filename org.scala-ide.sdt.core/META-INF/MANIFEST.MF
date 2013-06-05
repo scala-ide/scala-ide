@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Scala Plugin
 Bundle-SymbolicName: org.scala-ide.sdt.core;singleton:=true
-Bundle-Version: 2.1.0.qualifier
+Bundle-Version: 4.0.0.qualifier
 Bundle-Vendor: scala-ide.org
 Bundle-ActivationPolicy: lazy
 Bundle-Localization: plugin
@@ -44,7 +44,6 @@ Require-Bundle:
  org.scala-refactoring.library,
  org.scala-ide.sbt.full.library;bundle-version="[0.13,0.14)",
  scalariform,
- org.junit4;bundle-version="4.5.0",
  org.eclipse.ui.browser;bundle-version="3.3.0"
 Import-Package: 
  com.ibm.icu.text;apply-aspects:=false;org.eclipse.swt.graphics;apply-aspects:=false,
@@ -69,7 +68,6 @@ Export-Package:
  scala.tools.eclipse,
  scala.tools.eclipse.actions,
  scala.tools.eclipse.buildmanager,
- scala.tools.eclipse.buildmanager.refined,
  scala.tools.eclipse.buildmanager.sbtintegration,
  scala.tools.eclipse.completion,
  scala.tools.eclipse.diagnostic,
@@ -79,6 +77,7 @@ Export-Package:
  scala.tools.eclipse.interpreter,
  scala.tools.eclipse.javaelements,
  scala.tools.eclipse.jcompiler,
+ scala.tools.eclipse.jface.text,
  scala.tools.eclipse.launching,
  scala.tools.eclipse.lexical,
  scala.tools.eclipse.logging,
@@ -102,6 +101,7 @@ Export-Package:
  scala.tools.eclipse.semantichighlighting,
  scala.tools.eclipse.semantichighlighting.classifier,
  scala.tools.eclipse.semantichighlighting.implicits,
+ scala.tools.eclipse.semantichighlighting.ui,
  scala.tools.eclipse.semicolon,
  scala.tools.eclipse.sourcefileprovider,
  scala.tools.eclipse.templates,
@@ -112,7 +112,7 @@ Export-Package:
 Bundle-RequiredExecutionEnvironment: J2SE-1.5
 Bundle-ClassPath: .,
  target/lib/miglayout-3.7.4.jar,
- target/lib/log4j-1.2.16.jar
+ target/lib/log4j-1.2.17.jar
 Eclipse-ExtensibleAPI: 
  true
 
