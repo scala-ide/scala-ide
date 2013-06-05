@@ -219,19 +219,6 @@ trait ScalaJavaMapper extends ScalaAnnotationHelper with SymbolNameUtil with Has
     }
   }
 
-  def mapParamTypeName(t : Type) : String = {
-    if (t.typeSymbolDirect.isTypeParameter)
-      t.typeSymbolDirect.name.toString
-    else if (isScalaSpecialType(t))
-      "java.lang.Object"
-    else {
-      if (definitions.isPrimitiveValueType(t))
-        t.toString
-      else
-        mapTypeName(t.typeSymbol)
-    }
-  }
-
   def mapParamTypeSignature(t : Type) : String = {
     val objectSig = "Ljava.lang.Object;"
     if (t.typeSymbolDirect.isTypeParameter)

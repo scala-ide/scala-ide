@@ -6,11 +6,17 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import scala.tools.eclipse.hyperlink.text.detector.ScalaDeclarationHyperlinkComputer
 import scala.tools.eclipse.javaelements.ScalaSourceFile
-
+import scala.tools.eclipse.InteractiveCompilationUnit
+import org.eclipse.jface.text.IRegion
+import scala.tools.eclipse.hyperlink.text.detector.DeclarationHyperlinkDetector
+import scala.tools.eclipse.hyperlink.text.detector.JavaSelectionEngine
+import org.eclipse.jdt.internal.core.Openable
+import org.eclipse.jdt.core.IJavaElement
+import org.eclipse.jdt.core.IType
 
 trait HyperlinkTester extends TestProjectSetup {
-  protected type VerifyHyperlink = {
-    def andCheckAgainst(expectations: List[Link]): Unit
+  trait VerifyHyperlink {
+    def andCheckAgainst(expectations: List[Link], checker: (InteractiveCompilationUnit, IRegion, String, Link) => Unit = checkScalaLinks): Unit
   }
 
   private final val HyperlinkMarker = "/*^*/"
@@ -28,9 +34,9 @@ trait HyperlinkTester extends TestProjectSetup {
    */
   def loadTestUnit(unit: ScalaSourceFile): VerifyHyperlink = {
     reload(unit)
-    new {
+    new VerifyHyperlink {
       /** @param expectations A collection of expected `Link` (test's oracle). */
-      def andCheckAgainst(expectations: List[Link]) = {
+      def andCheckAgainst(expectations: List[Link], checker: (InteractiveCompilationUnit, IRegion, String, Link) => Unit = checkScalaLinks) = {
         val positions = findMarker(HyperlinkMarker).in(unit)
 
         println("checking %d positions".format(positions.size))
@@ -39,19 +45,34 @@ trait HyperlinkTester extends TestProjectSetup {
           val wordRegion = ScalaWordFinder.findWord(unit.getContents, pos)
           val word = new String(unit.getContents.slice(wordRegion.getOffset, wordRegion.getOffset + wordRegion.getLength))
           println("hyperlinking at position %d (%s)".format(pos, word))
-
-          // Execute SUT
-          val resolver = new ScalaDeclarationHyperlinkComputer
-          val maybeLinks = resolver.findHyperlinks(unit, wordRegion)
-
-          // Verify Expectations
-          assertTrue("no links found for `%s`".format(word), maybeLinks.isDefined)
-          val links = maybeLinks.get
-          assertEquals("expected %d link, found %d".format(oracle.text.size, links.size), oracle.text.size, links.size)
-          val linkResults = links map (_.getTypeLabel)
-          assertEquals("text", oracle.text.toList.toString, linkResults.toList.toString)
+          checker(unit, wordRegion, word, oracle)
         }
       }
     }
+  }
+
+  def checkScalaLinks(unit: InteractiveCompilationUnit, wordRegion: IRegion, word: String, oracle: Link) {
+    val resolver = new ScalaDeclarationHyperlinkComputer
+    val maybeLinks = resolver.findHyperlinks(unit, wordRegion)
+
+    // Verify Expectations
+    assertTrue("no links found for `%s`".format(word), maybeLinks.isDefined)
+    val links = maybeLinks.get
+    assertEquals("expected %d link, found %d".format(oracle.text.size, links.size), oracle.text.size, links.size)
+    val linkResults = links map (_.getTypeLabel)
+    assertEquals("text", oracle.text.toList.toString, linkResults.toList.toString)
+  }
+
+  def checkJavaElements(unit: InteractiveCompilationUnit, wordRegion: IRegion, word: String, oracle: Link) {
+    val elements = JavaSelectionEngine.getJavaElements(wordRegion, unit, unit.asInstanceOf[Openable], wordRegion)
+
+    // Verify Expectations
+    assertTrue("no links found for `%s`".format(word), elements.nonEmpty)
+    assertEquals("expected %d link, found %d".format(oracle.text.size, elements.size), oracle.text.size, elements.size)
+    val linkResults = for {
+      e <- elements
+      tpe = e.getAncestor(IJavaElement.TYPE).asInstanceOf[IType]
+    } yield tpe.getFullyQualifiedName() + "." + e.getElementName()
+    assertEquals("text", oracle.text.toList.toString, linkResults.toList.toString)
   }
 }
