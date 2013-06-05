@@ -8,6 +8,7 @@ import org.eclipse.jdt.debug.core.JDIDebugModel
 import org.eclipse.jdt.debug.core.IJavaLineBreakpoint
 import org.eclipse.jdt.internal.debug.core.model.JDIDebugTarget
 import org.hamcrest.CoreMatchers._
+import org.hamcrest.Matcher
 import org.junit.Assert._
 import org.eclipse.debug.core.model.DebugElement
 import scala.tools.eclipse.debug.model.ScalaDebugElement
@@ -140,7 +141,7 @@ class ScalaDebugTestSession private(launchConfiguration: ILaunchConfiguration) e
    * and wait until the application is suspended
    */
   def runToLine[T](typeName: String, breakpointLine: Int, additionalAction: () => T): T = {
-    assertThat("Bad state before runToBreakpoint", state, anyOf(is(NOT_LAUNCHED), is(SUSPENDED)))
+    assertThat("Bad state before runToBreakpoint", state, anyOf[State.Value](is[State.Value](NOT_LAUNCHED), is[State.Value](SUSPENDED)))
 
     val breakpoint = addLineBreakpoint(typeName, breakpointLine)
 
