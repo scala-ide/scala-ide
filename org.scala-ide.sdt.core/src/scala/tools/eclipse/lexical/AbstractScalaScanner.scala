@@ -3,12 +3,9 @@ package scala.tools.eclipse.lexical
 import org.eclipse.jface.text.rules._
 import scala.tools.eclipse.properties.syntaxcolouring.ScalaSyntaxClass
 import org.eclipse.jface.util.PropertyChangeEvent
-import org.eclipse.jdt.ui.text.IColorManager
 import org.eclipse.jface.preference.IPreferenceStore
 
 trait AbstractScalaScanner extends ITokenScanner {
-
-  protected def colorManager: IColorManager
 
   protected def preferenceStore: IPreferenceStore
 

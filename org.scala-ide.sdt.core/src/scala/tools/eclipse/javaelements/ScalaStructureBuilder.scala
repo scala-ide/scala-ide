@@ -38,9 +38,9 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
   }
   
   // We cache these names since they are used for each ValDef during structure building
-  val GET = newTermName("get")
-  val IS  = newTermName("is") 
-  val SET = newTermName("set") 
+  private lazy val GET = nme.get //newTermName("get")
+  private lazy val IS  = newTermName("is")
+  private lazy val SET = newTermName("set")
 
   class StructureBuilderTraverser(scu : ScalaCompilationUnit, unitInfo : OpenableElementInfo, newElements0 : JMap[AnyRef, AnyRef], sourceLength : Int) {
     

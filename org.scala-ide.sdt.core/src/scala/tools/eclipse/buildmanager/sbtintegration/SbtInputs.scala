@@ -37,7 +37,7 @@ class SbtInputs(sourceFiles: Seq[File], project: ScalaProject, javaMonitor: SubM
   }
 
   def options = new Options {
-    def classpath = project.scalaClasspath.fullClasspath.toArray
+    def classpath = project.scalaClasspath.userCp.map(_.toFile.getAbsoluteFile).toArray
     def sources = sourceFiles.toArray
     def output = new MultipleOutput {
       def outputGroups = project.sourceOutputFolders.map {
@@ -69,7 +69,10 @@ class SbtInputs(sourceFiles: Seq[File], project: ScalaProject, javaMonitor: SubM
       val scalaLoader = getClass.getClassLoader
       val scalaInstance = new ScalaInstance(plugin.scalaVer, scalaLoader, libClasses, compilerClasses, reflectClasses.toList, None)
       val compilerInterface = plugin.sbtCompilerInterface map (_.toFile) getOrElse (throw new RuntimeException("compiler-interface not found"))
-      IC.newScalaCompiler(scalaInstance, compilerInterface, ClasspathOptions.boot, logger)
+
+      // prevent Sbt from adding things to the (boot)classpath
+      val cpOptions = new ClasspathOptions(false, false, false, autoBoot = false, filterLibrary = false)
+      IC.newScalaCompiler(scalaInstance, compilerInterface, cpOptions, logger)
     }
   }
 }

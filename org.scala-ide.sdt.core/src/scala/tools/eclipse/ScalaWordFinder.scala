@@ -32,7 +32,17 @@ object ScalaWordFinder extends IScalaWordFinder {
 
   def findWord(buffer : IBuffer, offset : Int) : IRegion =
     findWord(bufferToSeq(buffer), offset)
-    
+
+  /**
+   * Find the word enclosing the given `offset`. `$` is not considered part of
+   * an identifier, even though the Scala Specification allows it. We choose this
+   * tradeoff so the word finder does the right thing in interpolated strings, where
+   * `$` is used as a delimiter:
+   *
+   * {{{ s"Hello, $name" }}}
+   *
+   * Here, the identifier is only `name`.
+   */
   def findWord(document : Seq[Char], offset : Int) : IRegion = {
 
     def find(p : Char => Boolean) : IRegion = {
@@ -69,7 +79,7 @@ object ScalaWordFinder extends IScalaWordFinder {
         null
     }
     
-    val idRegion = find(isIdentifierPart)
+    val idRegion = find(ch => isIdentifierPart(ch) && ch != '$')
     if (idRegion == null || idRegion.getLength == 0)
       find(isOperatorPart)
     else
