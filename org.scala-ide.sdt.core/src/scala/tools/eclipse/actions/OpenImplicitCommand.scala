@@ -14,7 +14,7 @@ import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor
 
 class OpenImplicitCommand extends AbstractHandler with HyperlinkOpenActionStrategy {
   override val detectionStrategy: BaseHyperlinkDetector = ImplicitHyperlinkDetector()
-  
+
   override def execute(event: ExecutionEvent): Object = {
     HandlerUtil.getActiveEditor(event) match {
       case editor: ScalaSourceFileEditor =>

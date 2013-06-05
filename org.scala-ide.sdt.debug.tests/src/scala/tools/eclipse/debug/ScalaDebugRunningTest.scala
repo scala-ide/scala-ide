@@ -27,4 +27,5 @@ trait ScalaDebugRunningTest {
   val TYPENAME_SIMPLE_STEPPING = "stepping.SimpleStepping"
   val TYPENAME_STEP_FILTERS = "stepping.StepFilters"
   val TYPENAME_HELLOWORLD = "debug.HelloWorld"
+  val TYPENAME_SAYHELLOWORLD = "debug.SayHelloWorld"
 }

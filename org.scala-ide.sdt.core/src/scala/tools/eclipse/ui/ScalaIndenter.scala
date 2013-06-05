@@ -135,7 +135,7 @@ class ScalaIndenter(
   private def prefUseTabs = preferencesProvider.getBoolean(ScalaIndenter.INDENT_WITH_TABS)
 
   private def prefTabChar = if (prefUseTabs) JavaCore.TAB else JavaCore.SPACE
-  
+
   private def prefTabSize = preferencesProvider.getInt(ScalaIndenter.TAB_SIZE)
 
   private def prefIndentationSize = preferencesProvider.getInt(ScalaIndenter.INDENT_SIZE)
@@ -720,7 +720,7 @@ class ScalaIndenter(
    */
   def findReferencePosition(offset: Int, danglingElse: Boolean, matchBrace: Boolean, matchParen: Boolean, matchCase: Boolean, matchBracket: Boolean): Int = {
     import JavaHeuristicScanner._
-    
+
     fIndent = 0 // the indentation modification
     fAlign = NOT_FOUND
     fPosition = offset
@@ -791,7 +791,7 @@ class ScalaIndenter(
       // check for an arrow token and increase indentation (handles 'case' and closures)
       case Symbols.TokenGREATERTHAN if scanner.previousToken(fPosition - 1, UNBOUND) == Symbols.TokenEQUAL  =>
           handleScopeIntroduction(offset + 1)
-        
+
       case Symbols.TokenGREATERTHAN |
         Symbols.TokenRBRACKET |
         Symbols.TokenRBRACE =>
@@ -1273,7 +1273,7 @@ class ScalaIndenter(
       case Symbols.TokenGREATERTHAN =>
         fIndent = prefBracketIndent
         return fPosition
-        
+
       case _ =>
         Assert.isTrue(false)
         return -1 // dummy

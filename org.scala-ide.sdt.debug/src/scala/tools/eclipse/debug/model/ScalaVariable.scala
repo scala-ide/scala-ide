@@ -17,36 +17,49 @@ abstract class ScalaVariable(target: ScalaDebugTarget) extends ScalaDebugElement
 
   // Members declared in org.eclipse.debug.core.model.IVariable
 
+  final override def getValue(): IValue =
+    wrapJDIException("Exception while retrieving variable's value") { doGetValue() }
+
+  final override def getName(): String =
+    wrapJDIException("Exception while retrieving variable's name") { doGetName() }
+
+  final override def getReferenceTypeName(): String =
+    wrapJDIException("Exception while retrieving variable's reference type name") { doGetReferenceTypeName() }
+
   override def hasValueChanged: Boolean = false // TODO: need real logic
+
+  protected def doGetValue(): IValue
+  protected def doGetName(): String
+  protected def doGetReferenceTypeName(): String
 }
 
 class ScalaThisVariable(underlying: ObjectReference, stackFrame: ScalaStackFrame) extends ScalaVariable(stackFrame.getDebugTarget) {
-  
+
   // Members declared in org.eclipse.debug.core.model.IVariable
 
-  override def getName: String = "this"
-  override def getReferenceTypeName: String = underlying.referenceType.name
-  override def getValue: IValue = new ScalaObjectReference(underlying, getDebugTarget)
+  override protected def doGetName: String = "this"
+  override protected def doGetReferenceTypeName: String = underlying.referenceType.name
+  override protected def doGetValue: IValue = new ScalaObjectReference(underlying, getDebugTarget)
 }
 
 class ScalaLocalVariable(underlying: LocalVariable, stackFrame: ScalaStackFrame) extends ScalaVariable(stackFrame.getDebugTarget) {
 
   // Members declared in org.eclipse.debug.core.model.IVariable
 
-  override def getName(): String = underlying.name
-  override def getReferenceTypeName(): String = underlying.typeName
-  
+  override protected def doGetName(): String = underlying.name
+  override protected def doGetReferenceTypeName(): String = underlying.typeName
+
   // fetching the value for local variables cannot be delayed because the underlying stackframe element may become invalid at any time
-  override val getValue: IValue = ScalaValue(stackFrame.stackFrame.getValue(underlying), getDebugTarget)
+  override protected def doGetValue: IValue = ScalaValue(stackFrame.stackFrame.getValue(underlying), getDebugTarget)
 }
 
 class ScalaArrayElementVariable(index: Int, arrayReference: ScalaArrayReference) extends ScalaVariable(arrayReference. getDebugTarget) {
 
   // Members declared in org.eclipse.debug.core.model.IVariable
 
-  override def getName(): String = "(%s)".format(index)
-  override def getReferenceTypeName(): String = arrayReference.underlying.referenceType.asInstanceOf[ArrayType].componentTypeName
-  override def getValue(): org.eclipse.debug.core.model.IValue = ScalaValue(arrayReference.underlying.getValue(index), getDebugTarget)
+  override protected def doGetName(): String = "(%s)".format(index)
+  override protected def doGetReferenceTypeName(): String = arrayReference.underlying.referenceType.asInstanceOf[ArrayType].componentTypeName
+  override protected def doGetValue(): IValue = ScalaValue(arrayReference.underlying.getValue(index), getDebugTarget)
 
 }
 
@@ -54,7 +67,7 @@ class ScalaFieldVariable(field: Field, objectReference: ScalaObjectReference) ex
 
   // Members declared in org.eclipse.debug.core.model.IVariable
 
-  override def getName(): String = field.name
-  override def getReferenceTypeName(): String = field.typeName
-  override def getValue(): org.eclipse.debug.core.model.IValue = ScalaValue(objectReference.underlying.getValue(field), getDebugTarget)
+  override protected def doGetName(): String = field.name
+  override protected def doGetReferenceTypeName(): String = field.typeName
+  override protected def doGetValue(): IValue = ScalaValue(objectReference.underlying.getValue(field), getDebugTarget)
 }

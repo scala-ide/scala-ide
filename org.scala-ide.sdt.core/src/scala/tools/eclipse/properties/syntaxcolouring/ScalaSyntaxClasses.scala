@@ -11,6 +11,7 @@ object ScalaSyntaxClasses {
   val SCALADOC_CODE_BLOCK = ScalaSyntaxClass("Scaladoc code block", "syntaxColouring.scaladocCodeBlock")
   val SCALADOC_ANNOTATION = ScalaSyntaxClass("Scaladoc annotation", "syntaxColouring.scaladocAnnotation")
   val SCALADOC_MACRO = ScalaSyntaxClass("Scaladoc macro", "syntaxColouring.scaladocMacro")
+  val TASK_TAG = ScalaSyntaxClass("Task Tag", "syntaxColouring.taskTag")
   val OPERATOR = ScalaSyntaxClass("Operator", "syntaxColouring.operator")
   val KEYWORD = ScalaSyntaxClass("Keywords (excluding 'return')", "syntaxColouring.keyword")
   val RETURN = ScalaSyntaxClass("Keyword 'return'", "syntaxColouring.return")
@@ -49,6 +50,7 @@ object ScalaSyntaxClasses {
   val TRAIT = ScalaSyntaxClass("Trait", "syntaxColouring.semantic.trait", canBeDisabled = true)
   val TYPE = ScalaSyntaxClass("Type", "syntaxColouring.semantic.type", canBeDisabled = true)
   val TYPE_PARAMETER = ScalaSyntaxClass("Type parameter", "syntaxColouring.semantic.typeParameter", canBeDisabled = true)
+  val IDENTIFIER_IN_INTERPOLATED_STRING = ScalaSyntaxClass("Identifier in interpolated string", "syntaxColouring.semantic.identifierInInterpolatedString", hasForegroundColour = false, canBeDisabled = true)
 
   case class Category(name: String, children: List[ScalaSyntaxClass])
 
@@ -58,10 +60,10 @@ object ScalaSyntaxClasses {
   val scalaSemanticCategory = Category("Scala (semantic)", List(
     ANNOTATION, CASE_CLASS, CASE_OBJECT, CLASS, LAZY_LOCAL_VAL, LAZY_TEMPLATE_VAL,
     LOCAL_VAL, LOCAL_VAR, METHOD, OBJECT, PACKAGE, PARAM, TEMPLATE_VAL, TEMPLATE_VAR,
-    TRAIT, TYPE, TYPE_PARAMETER))
+    TRAIT, TYPE, TYPE_PARAMETER, IDENTIFIER_IN_INTERPOLATED_STRING))
 
   val commentsCategory = Category("Comments", List(
-    SINGLE_LINE_COMMENT, MULTI_LINE_COMMENT, SCALADOC, SCALADOC_CODE_BLOCK, SCALADOC_ANNOTATION, SCALADOC_MACRO))
+    SINGLE_LINE_COMMENT, MULTI_LINE_COMMENT, SCALADOC, SCALADOC_CODE_BLOCK, SCALADOC_ANNOTATION, SCALADOC_MACRO, TASK_TAG))
 
   val xmlCategory = Category("XML", List(
     XML_ATTRIBUTE_NAME, XML_ATTRIBUTE_VALUE, XML_ATTRIBUTE_EQUALS, XML_CDATA_BORDER, XML_COMMENT, XML_TAG_DELIMITER,
@@ -80,7 +82,7 @@ object ScalaSyntaxClasses {
   val UNDERLINE_SUFFIX = ".underline"
 
   val ENABLE_SEMANTIC_HIGHLIGHTING = "syntaxColouring.semantic.enabled"
-    
+
   val USE_SYNTACTIC_HINTS = "syntaxColouring.semantic.useSyntacticHints"
 
   val STRIKETHROUGH_DEPRECATED = "syntaxColouring.semantic.strikeDeprecated"
@@ -106,8 +108,6 @@ object ScalariformToSyntaxClass {
     case STRING_LITERAL                                                  => ssc.STRING
     case TRUE | FALSE | NULL                                             => ssc.KEYWORD
     case RETURN                                                          => ssc.RETURN
-    /* `requires` is not a keyword anymore, translation to default content type */
-    case REQUIRES                                                        => ssc.DEFAULT
     case t if t.isKeyword                                                => ssc.KEYWORD
     case LINE_COMMENT                                                    => ssc.SINGLE_LINE_COMMENT
     case MULTILINE_COMMENT if token.isScalaDocComment                    => ssc.SCALADOC

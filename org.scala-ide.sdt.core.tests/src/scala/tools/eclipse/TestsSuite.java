@@ -3,6 +3,7 @@ package scala.tools.eclipse;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
+import scala.tools.eclipse.buildmanager.ProjectsCleanJobTest;
 import scala.tools.eclipse.classpath.ClasspathTests;
 import scala.tools.eclipse.compiler.settings.CompilerSettingsTest;
 import scala.tools.eclipse.compiler.settings.ContinuationPluginSettingsTest;
@@ -17,6 +18,7 @@ import scala.tools.eclipse.lexical.ScalaDocumentPartitionerTest;
 import scala.tools.eclipse.occurrences.OccurrencesFinderTest;
 import scala.tools.eclipse.pc.PresentationCompilerRefreshTest;
 import scala.tools.eclipse.pc.PresentationCompilerTest;
+import scala.tools.eclipse.sbtbuilder.DeprecationWarningsTests;
 import scala.tools.eclipse.sbtbuilder.MultipleErrorsTest;
 import scala.tools.eclipse.sbtbuilder.NestedProjectsTest;
 import scala.tools.eclipse.sbtbuilder.OutputFoldersTest;
@@ -28,6 +30,7 @@ import scala.tools.eclipse.sbtbuilder.TodoBuilderTest;
 import scala.tools.eclipse.semantic.ImplicitsHighlightingTest;
 import scala.tools.eclipse.semantichighlighting.SemanticHighlightingPositionsTest;
 import scala.tools.eclipse.semantichighlighting.classifier.SymbolClassifierTestSuite;
+import scala.tools.eclipse.structurebuilder.ScalaJavaMapperTest;
 import scala.tools.eclipse.structurebuilder.StructureBuilderTest;
 import scala.tools.eclipse.ui.UITestSuite;
 import scala.tools.eclipse.util.CachedTest;
@@ -42,6 +45,7 @@ import scala.tools.eclipse.wizards.QualifiedNameSupportTest;
  */
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
+  ProjectsCleanJobTest.class,
   ClasspathTests.class,
   CompilerSettingsTest.class,
   ContinuationPluginSettingsTest.class,
@@ -63,6 +67,7 @@ import scala.tools.eclipse.wizards.QualifiedNameSupportTest;
   OutputFoldersTest.class,
   ProjectDependenciesTest.class,
   SbtBuilderTest.class,
+  DeprecationWarningsTests.class,
   ScalaCompilerClasspathTest.class,
   ScalaJavaDepTest.class, 
   TodoBuilderTest.class,
@@ -70,6 +75,7 @@ import scala.tools.eclipse.wizards.QualifiedNameSupportTest;
   SemanticHighlightingPositionsTest.class,
   SymbolClassifierTestSuite.class,
   StructureBuilderTest.class,
+  ScalaJavaMapperTest.class,
   UITestSuite.class,
   CachedTest.class,
   CollectionUtilTest.class,

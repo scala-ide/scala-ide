@@ -1,7 +1,7 @@
 package scala.tools.eclipse.completion
 import scala.tools.eclipse.javaelements.ScalaCompilationUnit
 import scala.tools.eclipse.ScalaPresentationCompiler
-import scala.tools.nsc.util.SourceFile
+import scala.reflect.internal.util.SourceFile
 import org.eclipse.jdt.core.search.{SearchEngine, IJavaSearchConstants, SearchPattern, TypeNameRequestor}
 import org.eclipse.jdt.core.IJavaElement
 import scala.collection.mutable
@@ -14,19 +14,19 @@ import scala.tools.eclipse.ScalaPlugin
 
 /** Base class for Scala completions. No UI dependency, can be safely used in a
  *  headless testing environment.
- *  
- *  @see scala.tools.eclipse.ui.ScalaCompletinProposalComputer
+ *
+ *  @see scala.tools.eclipse.ui.ScalaCompletionProposalComputer
  */
 class ScalaCompletions extends HasLogger {
   import org.eclipse.jface.text.IRegion
-  
+
   def findCompletions(region: IRegion)(position: Int, scu: InteractiveCompilationUnit)
                              (sourceFile: SourceFile, compiler: ScalaPresentationCompiler): List[CompletionProposal] = {
-    
+
     val pos = compiler.rangePos(sourceFile, position, position, position)
-    
+
     val start = if (region == null) position else region.getOffset
-    
+
     val typed = new compiler.Response[compiler.Tree]
     compiler.askTypeAt(pos, typed)
     val t1 = typed.get.left.toOption
@@ -36,7 +36,7 @@ class ScalaCompletions extends HasLogger {
     t1 match {
       // completion on select
       case Some(s@compiler.Select(qualifier, name)) if qualifier.pos.isDefined && qualifier.pos.isRange =>
-        val cpos0 = qualifier.pos.end 
+        val cpos0 = qualifier.pos.end
         val cpos = compiler.rangePos(sourceFile, cpos0, cpos0, cpos0)
         compiler.askTypeCompletion(cpos, completed)
       case Some(compiler.Import(expr, _)) =>
@@ -49,16 +49,16 @@ class ScalaCompletions extends HasLogger {
         val cpos = compiler.rangePos(sourceFile, start, start, start)
         compiler.askScopeCompletion(cpos, completed)
     }
-    
+
     val prefix = (if (position <= start) "" else scu.getContents.slice(start, position).mkString.trim).toArray
-    
+
     def nameMatches(sym : compiler.Symbol) = prefixMatches(sym.decodedName.toString.toArray, prefix)
-    
+
     val listedTypes = new mutable.HashMap[String, mutable.Set[CompletionProposal]] with MultiMap[String, CompletionProposal]
-    
-    def isAlreadyListed(fullyQualifiedName: String, display: String) = 
+
+    def isAlreadyListed(fullyQualifiedName: String, display: String) =
       listedTypes.entryExists(fullyQualifiedName, _.display == display)
-      
+
     for (completions <- completed.get.left.toOption) {
       compiler.askOption { () =>
         for (completion <- completions) {
@@ -70,13 +70,13 @@ class ScalaCompletions extends HasLogger {
             case compiler.ScopeMember(sym, tpe, true, _) if !sym.isConstructor && nameMatches(sym) =>
               val completionProposal= compiler.mkCompletionProposal(prefix, start, sym, tpe, false, compiler.NoSymbol)
               if (!isAlreadyListed(completionProposal.fullyQualifiedName, completionProposal.display))
-              	listedTypes.addBinding(completionProposal.fullyQualifiedName, completionProposal)
+                listedTypes.addBinding(completionProposal.fullyQualifiedName, completionProposal)
             case _ =>
           }
         }
       }
     }
-    
+
     // try to find a package name prefixing the word being completed
     val packageName= t1 match {
       case Some(e) if e.pos.isDefined && position > e.pos.startOrPoint =>
@@ -92,9 +92,9 @@ class ScalaCompletions extends HasLogger {
           null
       case _ => null
     }
-    
+
     logger.info("Search for: [" + Option(packageName).map(_.mkString) + "]." + new String(prefix))
-    
+
     if (prefix.length > 0 || packageName != null) {
       // if there is data to work with, look for a type in the classpath
 
@@ -115,11 +115,10 @@ class ScalaCompletions extends HasLogger {
               start,
               simpleName,
               simpleName,
-              "",
               packageName,
               50,
-              HasArgs.NoArgs,
               true,
+              () => List(),
               List(),
               fullyQualifiedName,
               true))
@@ -141,9 +140,9 @@ class ScalaCompletions extends HasLogger {
           else
             IJavaSearchConstants.FORCE_IMMEDIATE_SEARCH),
           null)
-          
+
     }
-    
+
     logger.debug("Added %d new types from classpath".format(listedTypes.size))
     listedTypes.values.flatten.toList
   }

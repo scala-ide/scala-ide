@@ -50,11 +50,11 @@ object EditorUtils {
     annotationsAtOffset
   }
 
-  def textSelection2region(selection: ITextSelection): IRegion = 
+  def textSelection2region(selection: ITextSelection): IRegion =
     new Region(selection.getOffset, selection.getLength)
-  
+
   def getTextSelection(editor: ITextEditor): Option[ITextSelection] = {
-    for{ 
+    for{
       workbenchSite <- Option(editor.getSite)
       provider <- Option(workbenchSite.getSelectionProvider)
       selection <- Option(provider.getSelection)

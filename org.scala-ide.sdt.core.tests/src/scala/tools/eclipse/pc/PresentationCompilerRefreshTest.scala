@@ -16,13 +16,13 @@ class PresentationCompilerRefreshTest {
 
   @Test def removeExistingFileAndChangeReferenceToNewFile() {
     val unitA = scalaCompilationUnit("a/A.scala")
-    
+
     unitA.doWithSourceFile { (sf, comp) =>
       comp.askReload(unitA, unitA.getContents()).get // synchronize with the presentation compiler
     }
-    
+
     assertNoErrors(unitA)
-    
+
     EclipseUtils.workspaceRunnableIn(SDTTestUtils.workspace) { monitor =>
       SDTTestUtils.addFileToProject(project.underlying, "src/b/C.scala", C_scala)
       SDTTestUtils.changeContentOfFile(unitA.getResource().getAdapter(classOf[IFile]).asInstanceOf[IFile], new_A_scala)
@@ -34,7 +34,7 @@ class PresentationCompilerRefreshTest {
 
     assertNoErrors(unitA)
   }
-  
+
   val new_A_scala = """
 package a
 import b._
@@ -43,10 +43,10 @@ class A {
   val b = new C()
 }
 """
-  
+
   val C_scala = """
 package b
-    
+
 class C
-""" 
+"""
 }

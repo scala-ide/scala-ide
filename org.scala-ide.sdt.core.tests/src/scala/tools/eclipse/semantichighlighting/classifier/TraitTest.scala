@@ -24,9 +24,9 @@ class TraitTest extends AbstractSymbolClassifierTest {
   @Test
   def import_scala_trait {
     checkSymbolClassification("""
-      import scala.concurrent.ManagedBlocker
+      import scala.concurrent.Promise
       """, """
-      import scala.concurrent.$   TRAIT    $
+      import scala.concurrent.$TRAIT$
       """,
       Map("TRAIT" -> Trait))
   }

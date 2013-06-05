@@ -17,31 +17,26 @@ import scala.tools.eclipse.util.Utils
  * Preferences to their default values.
  */
 class ScalaCompilerPreferenceInitializer extends AbstractPreferenceInitializer {
-  
+
   /** Actually initializes preferences */
   def initializeDefaultPreferences() : Unit = {
-	  
     Utils.tryExecute {
       val node = new DefaultScope().getNode(ScalaPlugin.plugin.pluginId)
       val store = ScalaPlugin.plugin.getPluginPreferences
-      
+
       def defaultPreference(s: Settings#Setting) {
-      	val preferenceName = convertNameToProperty(s.name)
-          s match {
-            case bs : Settings#BooleanSetting => node.put(preferenceName, "false")
-            case is : Settings#IntSetting => node.put(preferenceName, is.default.toString)
-            case ss : Settings#StringSetting =>
-              val default = 
-                if(preferenceName == "Xpluginsdir")
-                  ScalaPlugin.plugin.defaultPluginsDir getOrElse ss.default
-                else ss.default
-              node.put(preferenceName, default)
-            case ms : Settings#MultiStringSetting => node.put(preferenceName, "")
-            case cs : Settings#ChoiceSetting => node.put(preferenceName, cs.default)
+        val preferenceName = convertNameToProperty(s.name)
+        val default = s match {
+            case bs : Settings#BooleanSetting => "false"
+            case is : Settings#IntSetting => is.default.toString
+            case ss : Settings#StringSetting => ss.default
+            case ms : Settings#MultiStringSetting => ""
+            case cs : Settings#ChoiceSetting => cs.default
           }
+        node.put(preferenceName, default)
       }
 
-      IDESettings.shownSettings(ScalaPlugin.defaultScalaSettings).foreach {_.userSettings.foreach (defaultPreference)}
+      IDESettings.shownSettings(ScalaPlugin.defaultScalaSettings()).foreach {_.userSettings.foreach (defaultPreference)}
       IDESettings.buildManagerSettings.foreach {_.userSettings.foreach(defaultPreference)}
       store.setDefault(convertNameToProperty(ScalaPluginSettings.stopBuildOnErrors.name), true)
       store.setDefault(convertNameToProperty(ScalaPluginSettings.debugIncremental.name), false)

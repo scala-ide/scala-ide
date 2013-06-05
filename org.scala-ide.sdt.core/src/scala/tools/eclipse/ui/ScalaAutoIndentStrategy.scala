@@ -71,14 +71,14 @@ import scala.util.matching.Regex
 
 /**
  * Auto indent strategy sensitive to brackets.
- * 
+ *
  * @param partitioning the document partitioning
  * @param project the project to get formatting preferences from, or null to use default preferences
  * @param viewer the source viewer that this strategy is attached to
  */
 class ScalaAutoIndentStrategy(
     val fPartitioning : String,
-    val fProject : IJavaProject, 
+    val fProject : IJavaProject,
     val fViewer : ISourceViewer,
     val preferencesProvider : PreferenceProvider
   ) extends DefaultIndentLineAutoEditStrategy {
@@ -97,7 +97,7 @@ class ScalaAutoIndentStrategy(
 
   // TODO This could be in a singleton as in the original, but that sucks.
   private var fgScanner = ToolFactory.createScanner(false, false, false, false)
-  
+
   /**
    * Determine the count of brackets within a given area of the document
    */
@@ -105,7 +105,7 @@ class ScalaAutoIndentStrategy(
     var bracketCount = 0
     var ignoreCloseBrackets = pIgnoreCloseBrackets
     var offset = startOffset
-    
+
     while (offset < endOffset) {
       val curr = d.getChar(offset)
       offset += 1
@@ -145,7 +145,7 @@ class ScalaAutoIndentStrategy(
     return bracketCount
   }
 
-  
+
   /**
    * Find the end of a comment
    */
@@ -163,7 +163,7 @@ class ScalaAutoIndentStrategy(
     return endOffset
   }
 
-  
+
   private def getIndentOfLine(d : IDocument, line : Int) : String = {
     if (line > -1) {
       val start = d.getLineOffset(line)
@@ -189,7 +189,7 @@ class ScalaAutoIndentStrategy(
     }
     return endOffset
   }
-  
+
   private def createIndenter(d : IDocument, scanner : JavaHeuristicScanner) : ScalaIndenter = {
     return new ScalaIndenter(d, scanner, fProject, preferencesProvider)
   }
@@ -261,7 +261,7 @@ class ScalaAutoIndentStrategy(
         val toDelete = d.get(lineOffset, c.offset - lineOffset)
         if (indent != null && !indent.toString().equals(toDelete)) {
           c.text = indent.append(c.text).toString()
-          c.length += c.offset - lineOffset          
+          c.length += c.offset - lineOffset
           c.offset = lineOffset
         }
       }
@@ -317,7 +317,7 @@ class ScalaAutoIndentStrategy(
 
         buf.append(TextUtilities.getDefaultLineDelimiter(d))
         val nonWS = findEndOfWhiteSpace(d, start, lineEnd)
-        val reference = 
+        val reference =
           if (nonWS < c.offset && d.getChar(nonWS) == '{')
             new StringBuffer(d.get(start, nonWS - start))
           else
@@ -334,7 +334,7 @@ class ScalaAutoIndentStrategy(
           c.shiftsCaret = false
 
           val nonWS = findEndOfWhiteSpace(d, start, lineEnd)
-          val reference = 
+          val reference =
             if (nonWS < c.offset && d.getChar(nonWS) == '{')
               new StringBuffer(d.get(start, nonWS - start))
             else
@@ -388,9 +388,9 @@ class ScalaAutoIndentStrategy(
           return openingParen + 1
         done = true
       } else {
-  
+
         openingParen = scanner.findOpeningPeer(closingParen - 1, '(', ')');
-  
+
         // no way an expression at the beginning of the document can mean anything
         if (openingParen < 1) {
           done = true
@@ -406,11 +406,11 @@ class ScalaAutoIndentStrategy(
     return -1
   }
 
-  
+
   /**
    * Finds a closing parenthesis to the left of <code>position</code> in document, where that parenthesis is only
    * separated by whitespace from <code>position</code>. If no such parenthesis can be found, <code>position</code> is returned.
-   * 
+   *
    * @param scanner the java heuristic scanner set up on the document
    * @param position the first character position in <code>document</code> to be considered
    * @return the position of a closing parenthesis left to <code>position</code> separated only by whitespace, or <code>position</code> if no parenthesis can be found
@@ -421,10 +421,10 @@ class ScalaAutoIndentStrategy(
 
     if (scanner.previousToken(position - 1, JavaHeuristicScanner.UNBOUND) == Symbols.TokenRPAREN)
       return scanner.getPosition() + 1
-      
+
     return position
   }
-  
+
 
   /**
    * Checks whether the content of <code>document</code> in the range (<code>offset</code>, <code>length</code>)
@@ -465,7 +465,7 @@ class ScalaAutoIndentStrategy(
     return false
   }
 
-  
+
   /**
    * Checks whether the content of <code>document</code> at <code>position</code> looks like an
    * anonymous class definition. <code>position</code> must be to the left of the opening
@@ -488,7 +488,7 @@ class ScalaAutoIndentStrategy(
     return false
   }
 
-  
+
   /**
    * Checks whether <code>position</code> resides in a default (Java) partition of <code>document</code>.
    *
@@ -572,21 +572,21 @@ class ScalaAutoIndentStrategy(
         }
 
       case ASTNode.WHILE_STATEMENT =>
-        val expression = node.asInstanceOf[WhileStatement].getExpression() 
+        val expression = node.asInstanceOf[WhileStatement].getExpression()
         val expressionRegion = createRegion(expression, info.delta)
         val body = node.asInstanceOf[WhileStatement].getBody()
         val bodyRegion = createRegion(body, info.delta)
-  
+
         // between expression and body statement
         if (expressionRegion.getOffset() + expressionRegion.getLength() <= offset && offset + length <= bodyRegion.getOffset())
           return body != null
 
       case ASTNode.FOR_STATEMENT =>
-        val expression = node.asInstanceOf[ForStatement].getExpression() 
+        val expression = node.asInstanceOf[ForStatement].getExpression()
         val expressionRegion = createRegion(expression, info.delta)
         val body = node.asInstanceOf[ForStatement].getBody()
         val bodyRegion = createRegion(body, info.delta)
-  
+
         // between expression and body statement
         if (expressionRegion.getOffset() + expressionRegion.getLength() <= offset && offset + length <= bodyRegion.getOffset())
           return body != null
@@ -599,7 +599,7 @@ class ScalaAutoIndentStrategy(
 
         if (doRegion.getOffset() + doRegion.getLength() <= offset && offset + length <= bodyRegion.getOffset())
           return body != null
-          
+
       case _ =>
         // Do nothing
     }
@@ -607,7 +607,7 @@ class ScalaAutoIndentStrategy(
     return true
   }
 
-  
+
   /**
    * Installs a java partitioner with <code>document</code>.
    *
@@ -738,7 +738,7 @@ class ScalaAutoIndentStrategy(
     */
   }
 
-  
+
   /**
    * Returns the indentation of the line <code>line</code> in <code>document</code>.
    * The returned string may contain pairs of leading slashes that are considered
@@ -765,7 +765,7 @@ class ScalaAutoIndentStrategy(
       val ch = document.getChar(to)
       if (!Character.isWhitespace(ch))
         done = true
-      else 
+      else
         to += 1
     }
 
@@ -779,7 +779,7 @@ class ScalaAutoIndentStrategy(
     return document.get(from, to - from)
   }
 
-  
+
   /**
    * Computes the difference of two indentations and returns the difference in
    * length of current and correct. If the return value is positive, <code>addition</code>
@@ -811,7 +811,7 @@ class ScalaAutoIndentStrategy(
     return diff
   }
 
-  
+
   /**
    * Indents line <code>line</code> in <code>document</code> with <code>indent</code>.
    * Leaves leading comment signs alone.
@@ -854,7 +854,7 @@ class ScalaAutoIndentStrategy(
     document.replace(insert, 0, indent.toString())
   }
 
-  
+
   /**
    * Cuts the visual equivalent of <code>toDelete</code> characters out of the
    * indentation of line <code>line</code> in <code>document</code>. Leaves
@@ -892,7 +892,7 @@ class ScalaAutoIndentStrategy(
 
     document.replace(from, to - from, "")
   }
-  
+
 
   /**
    * Returns the visual length of a given <code>CharSequence</code> taking into
@@ -918,7 +918,7 @@ class ScalaAutoIndentStrategy(
     return size
   }
 
-  
+
   /**
    * Returns the visual length of a given character taking into
    * account the visual tabulator length.
@@ -933,7 +933,7 @@ class ScalaAutoIndentStrategy(
     else
       return 1
   }
-  
+
 
   /**
    * The preference setting for the visual tabulator display.
@@ -942,7 +942,7 @@ class ScalaAutoIndentStrategy(
    */
   private def getVisualTabLengthPreference : Int = CodeFormatterUtil.getTabWidth(fProject)
 
-  
+
   /**
    * The preference setting that tells whether to insert spaces when pressing the Tab key.
    *
@@ -1037,12 +1037,12 @@ class ScalaAutoIndentStrategy(
 
         case Symbols.TokenEOF =>
           return firstPeer
-        
+
         case _ =>
           // keep searching
       }
     }
-    
+
     return 0 // Won't happen
   }
 
@@ -1197,12 +1197,12 @@ class ScalaAutoIndentStrategy(
     }
   }
 
-  
+
   /*
    * @see org.eclipse.jface.text.IAutoIndentStrategy#customizeDocumentCommand(org.eclipse.jface.text.IDocument, org.eclipse.jface.text.DocumentCommand)
    */
   override def customizeDocumentCommand(d : IDocument, c : DocumentCommand) : Unit = {
-    
+
     if (c.doit == false)
       return
 
@@ -1226,7 +1226,7 @@ class ScalaAutoIndentStrategy(
 
   }
 
-  
+
   /**
    * Tells whether the given inserted string represents hitting the Tab key.
    *
@@ -1254,7 +1254,7 @@ class ScalaAutoIndentStrategy(
 
   private def closeBrace : Boolean = fCloseBrace
 
-  private def clearCachedValues : Unit = { 
+  private def clearCachedValues : Unit = {
     preferencesProvider.updateCache
     fIsSmartMode = computeSmartMode
   }
@@ -1297,13 +1297,13 @@ class ScalaAutoIndentStrategy(
 
     return null
   }
-    
+
 
   /**
    * Returns the block balance, i.e. zero if the blocks are balanced at <code>offset</code>, a
    * negative number if there are more closing than opening braces, and a positive number if there
    * are more opening than closing braces.
-   * 
+   *
    * @param document the document
    * @param offset the offset
    * @param partitioning the partitioning
@@ -1330,13 +1330,13 @@ class ScalaAutoIndentStrategy(
       if (end == -1)
         return 1
     }
-    
+
     return 0 // Just needed to keep the compiler happy
   }
 
   private def createRegion(node : ASTNode, delta : Int) : IRegion = {
-    if (node == null) 
-      return null 
+    if (node == null)
+      return null
     else
       return new Region(node.getStartPosition() + delta, node.getLength())
   }

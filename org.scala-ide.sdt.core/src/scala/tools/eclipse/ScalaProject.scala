@@ -15,11 +15,10 @@ import scala.tools.eclipse.logging.HasLogger
 import scala.tools.eclipse.properties.{CompilerSettings, IDESettings, PropertyStore}
 import scala.tools.eclipse.ui.PartAdapter
 import scala.tools.eclipse.util.{Cached, EclipseResource, Trim, Utils}
-import scala.tools.eclipse.util.EclipseUtils.workspaceRunnableIn
 import scala.tools.eclipse.util.SWTUtils.asyncExec
 import scala.tools.nsc.{Settings, MissingRequirementError}
-import scala.tools.nsc.util.BatchSourceFile
-import scala.tools.nsc.util.SourceFile
+import scala.reflect.internal.util.BatchSourceFile
+import scala.reflect.internal.util.SourceFile
 
 import org.eclipse.core.resources.{IContainer, IFile, IMarker, IProject, IResource, IResourceProxy, IResourceProxyVisitor}
 import org.eclipse.core.runtime.{IPath, IProgressMonitor, Path, SubMonitor}
@@ -84,9 +83,9 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
   private var classpathUpdate: Long = IResource.NULL_STAMP
   private var buildManager0: EclipseBuildManager = null
   private var hasBeenBuilt = false
-  
+
   private val buildListeners = new mutable.HashSet[BuildSuccessListener]
-  
+
   private val worbenchPartListener: IPartListener = new ScalaProject.ProjectPartListener(this)
 
   case class InvalidCompilerSettings() extends RuntimeException(
@@ -96,8 +95,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
   private val presentationCompiler = new Cached[Option[ScalaPresentationCompiler]] {
     override def create() = {
       try {
-        val settings = ScalaPlugin.defaultScalaSettings
-        settings.printtypes.tryToSet(Nil)
+        val settings = ScalaPlugin.defaultScalaSettings()
         initializeCompilerSettings(settings, isPCSetting(settings))
         val pc = new ScalaPresentationCompiler(ScalaProject.this, settings)
         logger.debug("Presentation compiler classpath: " + pc.classPath)
@@ -113,7 +111,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
           ex.printStackTrace()
           if (underlying.isOpen)
             failedCompilerInitialization("error initializing Scala compiler")
-          eclipseLog.error(ex)          
+          eclipseLog.error(ex)
           None
       }
     }
@@ -123,7 +121,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
     }
   }
 
-  /** To avoid letting 'this' reference escape during initialization, this method is called right after a 
+  /** To avoid letting 'this' reference escape during initialization, this method is called right after a
    * [[ScalaPlugin]] instance has been fully initialized.
    */
   private def init(): Unit = {
@@ -134,35 +132,36 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
   /** Compiler settings that are honored by the presentation compiler. */
   private def isPCSetting(settings: Settings): Set[Settings#Setting] = {
     import settings.{ plugin => pluginSetting, _ }
-    Set(deprecation, 
-        unchecked, 
-        pluginOptions, 
+    Set(deprecation,
+        unchecked,
+        pluginOptions,
         verbose,
-        Xexperimental, 
-        future, 
+        Xexperimental,
+        future,
         Ylogcp,
         pluginSetting,
         pluginsDir,
-        YpresentationDebug, 
-        YpresentationVerbose, 
-        YpresentationLog, 
-        YpresentationReplay, 
+        YpresentationDebug,
+        YpresentationVerbose,
+        YpresentationLog,
+        YpresentationReplay,
         YpresentationDelay)
   }
-  
+
   private var messageShowed = false
 
   private def failedCompilerInitialization(msg: String) {
     logger.debug("failedCompilerInitialization: " + msg)
     import org.eclipse.jface.dialogs.MessageDialog
     synchronized {
+      // FIXME: What's the purpose of having an `asyncExex` in a synchronized block?
       if (!plugin.headlessMode && !messageShowed) {
         messageShowed = true
         asyncExec {
-          val doAdd = MessageDialog.openQuestion(ScalaPlugin.getShell, "Add Scala library to project classpath?", 
+          val doAdd = MessageDialog.openQuestion(ScalaPlugin.getShell, "Add Scala library to project classpath?",
               ("There was an error initializing the Scala compiler: %s. \n\n"+
-               "The editor compiler will be restarted when the project is cleaned or the classpath is changed.\n\n" + 
-               "Add the Scala library to the classpath of project %s?") 
+               "The editor compiler will be restarted when the project is cleaned or the classpath is changed.\n\n" +
+               "Add the Scala library to the classpath of project %s?")
               .format(msg, underlying.getName))
           if (doAdd) {
             Utils tryExecute {
@@ -173,57 +172,51 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
       }
     }
   }
-  
+
   /** Does this project have the Scala nature? */
   def hasScalaNature: Boolean = plugin.isScalaProject(underlying)
-  
-  private def settingsError(severity: Int, msg: String, monitor: IProgressMonitor): Unit =
-    workspaceRunnableIn(underlying.getWorkspace, monitor) { m =>
-      val mrk = underlying.createMarker(plugin.settingProblemMarkerId)
-      mrk.setAttribute(IMarker.SEVERITY, severity)
-      mrk.setAttribute(IMarker.MESSAGE, msg)
-    }
+
+  private def settingsError(severity: Int, msg: String, monitor: IProgressMonitor): Unit = {
+    val mrk = underlying.createMarker(plugin.settingProblemMarkerId)
+    mrk.setAttribute(IMarker.SEVERITY, severity)
+    mrk.setAttribute(IMarker.MESSAGE, msg)
+  }
 
   /** Deletes the build problem marker associated to {{{this}}} Scala project. */
-  private def clearBuildProblemMarker(): Unit = 
-    workspaceRunnableIn(underlying.getWorkspace) { m =>
-      if (isUnderlyingValid) {
-        underlying.deleteMarkers(plugin.problemMarkerId, true, IResource.DEPTH_ZERO)
-      }
-    }    
- 
+  private def clearBuildProblemMarker(): Unit =
+    if (isUnderlyingValid) {
+      underlying.deleteMarkers(plugin.problemMarkerId, true, IResource.DEPTH_ZERO)
+    }
+
+
   /** Deletes all build problem markers for all resources in {{{this}}} Scala project. */
   private def clearAllBuildProblemMarkers(): Unit = {
-    workspaceRunnableIn(underlying.getWorkspace) { m =>
-      if (isUnderlyingValid) {
-        underlying.deleteMarkers(plugin.problemMarkerId, true, IResource.DEPTH_INFINITE)
-      }
+    if (isUnderlyingValid) {
+      underlying.deleteMarkers(plugin.problemMarkerId, true, IResource.DEPTH_INFINITE)
     }
   }
 
   private def clearSettingsErrors(): Unit =
-    workspaceRunnableIn(underlying.getWorkspace) { m =>
-      if (isUnderlyingValid) {
-        underlying.deleteMarkers(plugin.settingProblemMarkerId, true, IResource.DEPTH_ZERO)
-      }
+    if (isUnderlyingValid) {
+      underlying.deleteMarkers(plugin.settingProblemMarkerId, true, IResource.DEPTH_ZERO)
     }
 
-  
-  /** The direct dependencies of this project. It only returns existing projects. */
-  def directDependencies: Seq[IProject] = 
-    underlying.getReferencedProjects.filter(_.exists)
+
+  /** The direct dependencies of this project. It only returns opened projects. */
+  def directDependencies: Seq[IProject] =
+    underlying.getReferencedProjects.filter(_.isOpen)
 
   /** All direct and indirect dependencies of this project.
-   * 
+   *
    *  Indirect dependencies are considered only if that dependency is exported by the dependent project.
    *  Consider the following dependency graph:
    *     A -> B -> C
-   *     
+   *
    *  transitiveDependencies(C) = {A, B} iff B *exports* the A project in its classpath
    */
   def transitiveDependencies: Seq[IProject] =
     directDependencies ++ (directDependencies flatMap (p => plugin.getScalaProject(p).exportedDependencies))
-  
+
   /** Return the exported dependencies of this project. An exported dependency is
    *  another project this project depends on, and which is exported to downstream
    *  dependencies.
@@ -233,7 +226,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
       if entry.getEntryKind == IClasspathEntry.CPE_PROJECT && entry.isExported
     } yield plugin.workspaceRoot.getProject(entry.getPath().toString)
   }
-    
+
   lazy val javaProject: IJavaProject = JavaCore.create(underlying)
 
   def sourceFolders: Seq[IPath] = {
@@ -243,20 +236,20 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
     } yield resource.getLocation
   }
 
-  /** Return the output folders of this project. Paths are relative to the workspace root, 
+  /** Return the output folders of this project. Paths are relative to the workspace root,
    *  and they are handles only (may not exist).
    */
   def outputFolders: Seq[IPath] =
     sourceOutputFolders map (_._2.getFullPath)
 
   /** The output folder file-system absolute paths. */
-  def outputFolderLocations: Seq[IPath] = 
+  def outputFolderLocations: Seq[IPath] =
     sourceOutputFolders map (_._2.getLocation)
 
   /** Return the source folders and their corresponding output locations
    *  without relying on NameEnvironment. Does not create folders if they
-   *  don't exist already. 
-   *  
+   *  don't exist already.
+   *
    *  @return A sequence of pairs of source folders and their corresponding
    *          output folder.
    */
@@ -272,7 +265,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
 
       val wsroot = plugin.workspaceRoot
       val binPath = wsroot.getFolder(outputLocation)  // may not exist
-      
+
       (source.asInstanceOf[IContainer], binPath)
     }
   }
@@ -280,28 +273,28 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
   private def isUnderlyingValid = (underlying.exists() && underlying.isOpen)
 
   /**
-   * This function checks that the underlying project is closed, if not, return the classpath, otherwise return Nil, 
+   * This function checks that the underlying project is closed, if not, return the classpath, otherwise return Nil,
    * so avoids throwing an exceptions.
    *  @return the classpath or Nil, if the underlying project is closed.
-   */ 
-  private def resolvedClasspath = 
+   */
+  private def resolvedClasspath =
      try {
        if (isUnderlyingValid) {
          javaProject.getResolvedClasspath(true).toList
        } else {
          Nil
        }
-     } catch { 
+     } catch {
        case e: JavaModelException => logger.error(e); Nil
      }
-  
+
   /** Return all source files in the source path. It only returns buildable files (meaning
    *  Java or Scala sources).
    */
   def allSourceFiles(): Set[IFile] = {
     allFilesInSourceDirs() filter (f => plugin.isBuildable(f.getName))
   }
-  
+
   /** Return all the files in the current project. It walks all source entries in the classpath
    *  and respects inclusion and exclusion filters. It returns both buildable files (java or scala)
    *  and all other files in the source path.
@@ -309,23 +302,23 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
   def allFilesInSourceDirs(): Set[IFile] = {
     /** Cache it for the duration of this call */
     lazy val currentSourceOutputFolders = sourceOutputFolders
-    
+
     /** Return the inclusion patterns of `entry` as an Array[Array[Char]], ready for consumption
      *  by the JDT.
-     *  
+     *
      *  @see org.eclipse.jdt.internal.core.ClassPathEntry.fullInclusionPatternChars()
      */
     def fullPatternChars(entry: IClasspathEntry, patterns: Array[IPath]): Array[Array[Char]] = {
-      if (patterns.isEmpty) 
+      if (patterns.isEmpty)
         null
       else {
         val prefixPath = entry.getPath().removeTrailingSeparator();
-        for (pattern <- patterns) 
+        for (pattern <- patterns)
           yield prefixPath.append(pattern).toString().toCharArray();
       }
     }
 
-    /** Logic is copied from existing code ('isExcludedFromProject'). Code is trying to 
+    /** Logic is copied from existing code ('isExcludedFromProject'). Code is trying to
      *  see if the given path is a source or output folder for any source entry in the
      *  classpath of this project.
      */
@@ -339,11 +332,11 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
     }
 
     var sourceFiles = new immutable.HashSet[IFile]
-    
+
     for {
       srcEntry <- javaProject.getResolvedClasspath(true)
       if srcEntry.getEntryKind() == IClasspathEntry.CPE_SOURCE
-      srcFolder = plugin.workspaceRoot.findMember(srcEntry.getPath()) 
+      srcFolder = plugin.workspaceRoot.findMember(srcEntry.getPath())
       if srcFolder ne null
     } {
       val inclusionPatterns = fullPatternChars(srcEntry, srcEntry.getInclusionPatterns())
@@ -357,7 +350,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
               case IResource.FILE =>
                 if (!Util.isExcluded(proxy.requestFullPath(), inclusionPatterns, exclusionPatterns, false))
                   sourceFiles += proxy.requestResource().asInstanceOf[IFile] // must be an IFile, otherwise we wouldn't be here
-                
+
                 false // don't recurse, it's a file anyway
 
               case IResource.FOLDER =>
@@ -370,17 +363,17 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
                     inclusionPatterns != null
                   } else true
                 } else true  // recurse into subfolders
-                
+
               case _ =>
                 true
             }
          }
         }, IResource.NONE)
     }
-    
+
     sourceFiles
   }
-  
+
   private def cleanOutputFolders(implicit monitor: IProgressMonitor) = {
     def delete(container: IContainer, deleteDirs: Boolean)(f: String => Boolean): Unit =
       if (container.exists()) {
@@ -438,25 +431,47 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
     // save the current preferences state, so we don't go through the logic of the workspace
     // or project-specific settings for each setting in turn.
     val currentStorage = storage
-    for (
-      box <- IDESettings.shownSettings(settings);
-      setting <- box.userSettings if filter(setting);
+    for {
+      box <- IDESettings.shownSettings(settings)
+      setting <- box.userSettings if filter(setting)
       value <- Trim(currentStorage.getString(SettingConverterUtil.convertNameToProperty(setting.name)))
-    ) yield (setting, value)
+    } yield (setting, value)
   }
+
   def scalacArguments: Seq[String] = {
-    import ScalaPlugin.{defaultScalaSettings => settings}
+    import ScalaPlugin.defaultScalaSettings
     val encArgs = encoding.toSeq flatMap (Seq("-encoding", _))
-    val shownArgs =
-      for ((setting, value) <- shownSettings(settings, _ => true)) yield {
+
+    val shownArgs = {
+      val defaultSettings = defaultScalaSettings()
+      setupCompilerClasspath(defaultSettings)
+      val userSettings = for ((setting, value) <- shownSettings(defaultSettings, _ => true)) yield {
         initializeSetting(setting, value)
-        setting.unparse
+        setting
       }
-    val extraArgs = settings.splitParams(storage.getString(CompilerSettings.ADDITIONAL_PARAMS))
+
+      /* Here we make sure that the default plugins directory location is part of the returned scalac arguments.
+       * This is needed to enable continuations, when the user didn't provide an explicit path in the -Xpluginsdir
+       * compiler setting.
+       */
+      val pluginsDirSetting = {
+        // if the user provided an explicit path for -Xpluginsdir, then it's all good.
+        if (userSettings.exists(setting => setting.name == defaultSettings.pluginsDir)) None
+        // otherwise, inject the `pluginsDir` setting as defined in `ScalaPlugin.defaultScalaSettings`, i.e., it will
+        // inject the default location where the continuations.jar can be found. Mind that this location can change
+        // every time the user updates the Scala IDE.
+        else Some(defaultSettings.pluginsDir)
+      }
+
+      val classpathSettings = List(defaultSettings.javabootclasspath, defaultSettings.bootclasspath)
+
+      (classpathSettings ++ pluginsDirSetting.toList ++ userSettings) map (_.unparse)
+    }
+    val extraArgs = defaultScalaSettings().splitParams(storage.getString(CompilerSettings.ADDITIONAL_PARAMS))
     shownArgs.flatten ++ encArgs ++ extraArgs
   }
 
-  def initializeSetting(setting: Settings#Setting, propValue: String) {
+  private def initializeSetting(setting: Settings#Setting, propValue: String) {
     try {
       setting.tryToSetFromPropertyValue(propValue)
       logger.debug("[%s] initializing %s to %s".format(underlying.getName(), setting.name, setting.value.toString))
@@ -464,7 +479,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
       case t: Throwable => eclipseLog.error("Unable to set setting '" + setting.name + "' to '" + propValue + "'", t)
     }
   }
-  
+
   def initializeCompilerSettings(settings: Settings, filter: Settings#Setting => Boolean): Unit = {
     // if the workspace project doesn't exist, it is a virtual project used by Eclipse.
     // As such the source folders don't exist.
@@ -473,13 +488,13 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
         logger.debug("Added output folder: " + src + ": " + dst)
         settings.outputDirs.add(EclipseResource(src), EclipseResource(dst))
       }
-    
+
     for(enc <- encoding)
       settings.encoding.value = enc
 
     setupCompilerClasspath(settings)
     settings.sourcepath.value = sourceFolders.map(_.toOSString).mkString(pathSeparator)
-    
+
     for ((setting, value) <- shownSettings(settings, filter)) {
       initializeSetting(setting, value)
     }
@@ -546,9 +561,9 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
       sourceFolders.exists(_ == sourceFolderPath)
     }
   }
-  
+
   /**
-   * Performs `op` on the presentation compiler, if the compiler has been initialized. 
+   * Performs `op` on the presentation compiler, if the compiler has been initialized.
    * Otherwise, do nothing (no exception thrown).
    */
   def doWithPresentationCompiler(op: ScalaPresentationCompiler => Unit): Unit = {
@@ -557,16 +572,16 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
       case None =>
     }
   }
-  
-  def defaultOrElse[T]: T = {  
+
+  def defaultOrElse[T]: T = {
     if (underlying.isOpen)
       failedCompilerInitialization("")
-    
-    throw InvalidCompilerSettings() 
+
+    throw InvalidCompilerSettings()
   }
 
-  /** 
-   * If the presentation compiler has failed to initialize and no `orElse` is specified, 
+  /**
+   * If the presentation compiler has failed to initialize and no `orElse` is specified,
    * the default handler throws an `InvalidCompilerSettings` exception
    * If T = Unit, then doWithPresentationCompiler can be used, which does not throw.
    */
@@ -583,19 +598,19 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
     } {orElse}
   }
 
-  /** Shutdown the presentation compiler, and force a re-initialization but asking to reconcile all 
+  /** Shutdown the presentation compiler, and force a re-initialization but asking to reconcile all
    *  compilation units that were serviced by the previous instance of the PC. Does nothing if
    *  the presentation compiler is not yet initialized.
-   *  
+   *
    *  @return true if the presentation compiler was initialized at the time of this call.
    */
   def resetPresentationCompiler(): Boolean =
     if (presentationCompiler.initialized) {
       val units: Seq[InteractiveCompilationUnit] = withPresentationCompiler(_.compilationUnits)(Nil)
-      
+
       shutDownPresentationCompiler()
-      
-      val existingUnits = units.filter(_.exists) 
+
+      val existingUnits = units.filter(_.exists)
       logger.info("Scheduling for reconcile: " + existingUnits.map(_.file))
       existingUnits.foreach(_.scheduleReconcile())
       true
@@ -620,15 +635,12 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
       // We assume that build manager setting has only single box
       val choice = buildManagerInitialize
       choice match {
-        case "refined" =>
-          logger.info("BM: Refined Build Manager")
-          buildManager0 = new buildmanager.refined.EclipseRefinedBuildManager(this, settings)
         case "sbt"  =>
           logger.info("BM: SBT enhanced Build Manager for " + plugin.scalaVer + " Scala library")
           buildManager0 = new buildmanager.sbtintegration.EclipseSbtBuildManager(this, settings)
         case _ =>
-          logger.info("Invalid build manager choice '" + choice  + "'. Setting to (default) refined build manager")
-          buildManager0 = new buildmanager.refined.EclipseRefinedBuildManager(this, settings)
+          logger.info("Invalid build manager choice '" + choice  + "'. Setting to (default) sbt build manager")
+          buildManager0 = new buildmanager.sbtintegration.EclipseSbtBuildManager(this, settings)
       }
 
       //buildManager0 = new EclipseBuildManager(this, settings)
@@ -638,7 +650,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
 
   /* If true, then it means that all source files have to be reloaded */
   def prepareBuild(): Boolean = if (!hasBeenBuilt) buildManager.invalidateAfterLoad else false
-  
+
   def build(addedOrUpdated: Set[IFile], removed: Set[IFile], monitor: SubMonitor) {
     if (addedOrUpdated.isEmpty && removed.isEmpty)
       return
@@ -650,7 +662,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
     refreshOutputFolders()
 
     // Already performs saving the dependencies
-    
+
     if (!buildManager.hasErrors) {
       // reset presentation compilers of projects that depend on this one
       // since the output directory now contains the up-to-date version of this project
@@ -676,11 +688,11 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
       dependentScalaProject.resetPresentationCompiler()
     }
   }
-  
+
   def addBuildSuccessListener(listener: BuildSuccessListener) {
     buildListeners add listener
   }
-  
+
   def removeBuildSuccessListener(listener: BuildSuccessListener) {
     buildListeners remove listener
   }
@@ -688,7 +700,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
   def clean(implicit monitor: IProgressMonitor) = {
     clearAllBuildProblemMarkers()
     resetClasspathCheck()
-    
+
     if (buildManager0 != null)
       buildManager0.clean(monitor)
     cleanOutputFolders
@@ -705,13 +717,13 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
     resetBuildCompiler()
     resetPresentationCompiler()
   }
-  
+
   def shutDownCompilers() {
     logger.info("shutting down compilers for " + this)
     resetBuildCompiler()
     shutDownPresentationCompiler()
   }
-  
+
   /** Shut down presentation compiler without scheduling a reconcile for open files. */
   private def shutDownPresentationCompiler() {
     presentationCompiler.invalidate()
@@ -724,32 +736,32 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
   def refreshChangedFiles(files: List[IFile]) {
     // transform to batch source files
     val abstractfiles = files.collect {
-      // When a compilation unit is moved (e.g. using the Move refactoring) between packages, 
+      // When a compilation unit is moved (e.g. using the Move refactoring) between packages,
       // an ElementChangedEvent is fired but with the old IFile name. Ignoring the file does
       // not seem to cause any bad effects later on, so we simply ignore these files -- Mirko
       // using an Util class from jdt.internal to read the file, Eclipse doesn't seem to
       // provide an API way to do it -- Luc
       case file if file.exists => new BatchSourceFile(EclipseResource(file), Util.getResourceContentsAsCharArray(file))
     }
-      
+
     withPresentationCompiler {compiler =>
       import compiler._
       // only the files not already managed should be refreshed
       val notLoadedFiles= abstractfiles.filter(compiler.getUnitOf(_).isEmpty)
-            
+
       notLoadedFiles.foreach(file => {
         // call askParsedEntered to force the refresh without loading the file
         val r = new Response[Tree]
         compiler.askParsedEntered(file, false, r)
         r.get.left
       })
-      
+
       // reconcile the opened editors if some files have been refreshed
       if (notLoadedFiles.nonEmpty)
         compiler.compilationUnits.foreach(_.scheduleReconcile())
     }(Nil)
   }
-  
+
   def dispose(): Unit = {
     if(!ScalaPlugin.plugin.headlessMode)
       ScalaPlugin.getWorkbenchWindow map (_.getPartService().removePartListener(worbenchPartListener))

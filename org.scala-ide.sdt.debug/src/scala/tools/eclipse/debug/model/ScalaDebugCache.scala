@@ -30,12 +30,12 @@ object ScalaDebugCache {
   }
 
   private lazy val prefStore = ScalaDebugPlugin.plugin.getPreferenceStore()
-		  
+
   def apply(debugTarget: ScalaDebugTarget, scalaDebugTargetActor: BaseDebuggerActor): ScalaDebugCache = {
     val debugCache = new ScalaDebugCache(debugTarget) {
       val actor = new ScalaDebugCacheActor(this, debugTarget, scalaDebugTargetActor)
     }
-    debugCache.actor.start
+    debugCache.actor.start()
     debugCache
   }
 
@@ -105,7 +105,7 @@ abstract class ScalaDebugCache(val debugTarget: ScalaDebugTarget) extends HasLog
   def getAnonFunctionsInRange(refType: ReferenceType, range: Range): Option[Method] = {
     getCachedAnonFunction(refType).filter(method => range.contains(method.location.lineNumber))
   }
- 
+
   /** Return the method containing the actual code of the anon function.
    */
   def getAnonFunction(refType: ReferenceType): Option[Method] = {
@@ -148,9 +148,11 @@ abstract class ScalaDebugCache(val debugTarget: ScalaDebugTarget) extends HasLog
   /** Returns the anon function for the given type, if it exists.
    */
   private def findAnonFunction(refType: ReferenceType): Option[Method] = {
-    // TODO: check super type at some point
+    val allMethods = refType.methods
+
     import scala.collection.JavaConverters._
-    val methods = refType.methods.asScala.filter(method => !method.isBridge && method.name.startsWith("apply"))
+    // TODO: check super type at some point
+    val methods = allMethods.asScala.filter(method => !method.isBridge && method.name.startsWith("apply"))
 
     methods.size match {
       case 1 =>
@@ -264,7 +266,7 @@ protected[debug] class ScalaDebugCacheActor(debugCache: ScalaDebugCache, debugTa
         // store the new type
         nestedTypesCache = nestedTypesCache + ((topLevelTypeName, cache.copy(types = cache.types + refType)))
         // dispatch to listeners
-        cache.listeners.foreach { a => 
+        cache.listeners.foreach { a =>
           if (syncSend(a, event).isEmpty)
             logger.info("TIMOUT waiting for the listener actor in `classLoaded`")
         }

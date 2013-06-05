@@ -1,8 +1,6 @@
 package scala.tools.eclipse.lexical
 import org.eclipse.jface.text._
 import org.eclipse.jface.text.rules._
-import org.eclipse.jdt.ui.text.IColorManager
-import org.eclipse.jdt.internal.ui.text.CombinedWordRule
 import scala.annotation.{ switch, tailrec }
 import org.eclipse.swt.SWT
 import scala.tools.eclipse.properties.syntaxcolouring.ScalaSyntaxClass
@@ -11,7 +9,7 @@ import scala.tools.eclipse.properties.syntaxcolouring.ScalaSyntaxClasses
 import org.eclipse.jface.util.PropertyChangeEvent
 import org.eclipse.jface.preference.IPreferenceStore
 
-class XmlTagScanner(val colorManager: IColorManager, val preferenceStore: IPreferenceStore) extends AbstractScalaScanner {
+class XmlTagScanner(val preferenceStore: IPreferenceStore) extends AbstractScalaScanner {
   import XmlTagScanner._
 
   var pos: Int = -1

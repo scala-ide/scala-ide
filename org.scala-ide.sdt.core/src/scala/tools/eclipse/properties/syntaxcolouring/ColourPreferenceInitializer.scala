@@ -18,7 +18,7 @@ class ColourPreferenceInitializer extends AbstractPreferenceInitializer {
       doInitializeDefaultPreferences()
     }
   }
-  
+
   private def doInitializeDefaultPreferences() {
     val scalaPrefStore = ScalaPlugin.prefStore
 
@@ -37,6 +37,7 @@ class ColourPreferenceInitializer extends AbstractPreferenceInitializer {
     setDefaultsForSyntaxClass(SCALADOC_CODE_BLOCK, new RGB(63, 95, 191), italic = true)
     setDefaultsForSyntaxClass(SCALADOC_ANNOTATION, new RGB(63, 95, 191), bold = true)
     setDefaultsForSyntaxClass(SCALADOC_MACRO, new RGB(63, 95, 191), bold = true)
+    setDefaultsForSyntaxClass(TASK_TAG, new RGB(127, 159, 191), bold = true)
     setDefaultsForSyntaxClass(KEYWORD, new RGB(127, 0, 85), bold = true)
     setDefaultsForSyntaxClass(STRING, new RGB(42, 0, 255))
     setDefaultsForSyntaxClass(CHARACTER, new RGB(42, 0, 255))
@@ -78,7 +79,8 @@ class ColourPreferenceInitializer extends AbstractPreferenceInitializer {
     setDefaultsForSyntaxClass(PACKAGE, new RGB(0, 110, 4), enabled = false)
     setDefaultsForSyntaxClass(TYPE, new RGB(50, 147, 153), italic = true, enabled = false)
     setDefaultsForSyntaxClass(TYPE_PARAMETER, new RGB(23, 0, 129), underline = true, enabled = false)
-  }  
+    setDefaultsForSyntaxClass(IDENTIFIER_IN_INTERPOLATED_STRING, new RGB(0, 0, 0), underline = true, enabled = false)
+  }
 
   private def setDefaultsForSyntaxClass(
     syntaxClass: ScalaSyntaxClass,

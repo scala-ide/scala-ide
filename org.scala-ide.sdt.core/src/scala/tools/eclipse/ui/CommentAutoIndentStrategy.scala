@@ -1,9 +1,11 @@
 package scala.tools.eclipse.ui
 
 import scala.tools.eclipse.logging.HasLogger
+import scala.tools.eclipse.properties.EditorPreferencePage
 
 import org.eclipse.jdt.ui.text.IJavaPartitions
-import org.eclipse.jface.text.{DefaultIndentLineAutoEditStrategy, DocumentCommand, IDocument, TextUtilities}
+import org.eclipse.jface.preference.IPreferenceStore
+import org.eclipse.jface.text.{ DefaultIndentLineAutoEditStrategy, DocumentCommand, IDocument, TextUtilities }
 
 /** An auto-edit strategy for Scaladoc and multiline comments that does the following:
  *
@@ -13,16 +15,20 @@ import org.eclipse.jface.text.{DefaultIndentLineAutoEditStrategy, DocumentComman
  *  - allows to enlarge a comment block without adding a star to the following line
  *    by pressing enter on an empty line
  */
-class CommentAutoIndentStrategy(partitioning: String) extends DefaultIndentLineAutoEditStrategy with HasLogger {
+class CommentAutoIndentStrategy(prefStore: IPreferenceStore, partitioning: String) extends DefaultIndentLineAutoEditStrategy with HasLogger {
 
   override def customizeDocumentCommand(doc: IDocument, cmd: DocumentCommand) {
     if (cmd.offset == -1 || doc.getLength() == 0) return // don't spend time on invalid docs
 
     try {
       if (cmd.length == 0 && cmd.text != null && TextUtilities.endsWith(doc.getLegalLineDelimiters(), cmd.text) != -1) {
-        val shouldClose = shouldCloseDocComment(doc, cmd.offset)
+        val shouldClose = {
+          val isAutoClosingEnabled = prefStore.getBoolean(
+              EditorPreferencePage.P_ENABLE_AUTO_CLOSING_COMMENTS)
+          isAutoClosingEnabled && shouldCloseDocComment(doc, cmd.offset)
+        }
 
-        val (indent, rest) = breakLine(doc, cmd.offset)
+        val (indent, rest, restAfterCaret) = breakLine(doc, cmd.offset)
         val buf = new StringBuilder(cmd.text)
         buf.append(indent)
 
@@ -34,8 +40,11 @@ class CommentAutoIndentStrategy(partitioning: String) extends DefaultIndentLineA
           val isScaladoc = rest.length > 2 && rest.charAt(2) == '*'
 
           /* Returns the white space indentation count */
-          def commentTextIndentation(i: Int) =
-            rest.drop(i + docStarSize).takeWhile(c => c == ' ' || c == '\t').size
+          def commentTextIndentation(i: Int) = {
+            val lineInfo = doc.getLineInformationOfOffset(cmd.offset)
+            val signsBetweenSpacesAndCursor = cmd.offset - lineInfo.getOffset() - indent.length()
+            rest.take(signsBetweenSpacesAndCursor).drop(i + docStarSize).takeWhile(_ == ' ').size
+          }
 
           val textIndent = {
             val indent =
@@ -50,8 +59,13 @@ class CommentAutoIndentStrategy(partitioning: String) extends DefaultIndentLineA
           buf.append(" " * textIndent)
 
           if (shouldClose) {
+            if (restAfterCaret.nonEmpty) {
+              buf.append(restAfterCaret)
+              cmd.addCommand(cmd.offset, restAfterCaret.length(), "", null)
+            }
+
             // we want the caret before the closing comment
-            cmd.caretOffset = cmd.offset + buf.length
+            cmd.caretOffset = cmd.offset + buf.length - restAfterCaret.length()
             buf append ("\n"+indent)
             buf append (if (isDocStart) " */" else "*/")
             cmd.shiftsCaret = false
@@ -66,25 +80,37 @@ class CommentAutoIndentStrategy(partitioning: String) extends DefaultIndentLineA
     }
   }
 
-  /** Return the whitespace prefix (indentation) and the rest of the line
-   *  for the given offset.
+  /** Return the whitespace prefix (indentation), the rest of the line
+   *  for the given offset and also the rest of the line after the caret position.
    */
-  private def breakLine(doc: IDocument, offset: Int): (String, String) = {
+  private def breakLine(doc: IDocument, offset: Int): (String, String, String) = {
     // indent up to the previous line
     val lineInfo = doc.getLineInformationOfOffset(offset)
     val endOfWS = findEndOfWhiteSpace(doc, lineInfo.getOffset(), offset)
-    (doc.get(lineInfo.getOffset, endOfWS - lineInfo.getOffset), doc.get(endOfWS, lineInfo.getOffset + lineInfo.getLength() - endOfWS))
+    val indent = doc.get(lineInfo.getOffset, endOfWS - lineInfo.getOffset)
+    val rest = doc.get(endOfWS, lineInfo.getOffset + lineInfo.getLength() - endOfWS)
+    val restAfterCaret = doc.get(offset, lineInfo.getOffset() - offset + lineInfo.getLength())
+    (indent, rest, restAfterCaret)
   }
 
-  /** Heuristics for when to close a scaladoc. Returns `true` when the offset is inside a scaladoc
-   *  that runs to the end of the document. This handles nested comments pretty well because
-   *  it uses the Scala document partitioner.
+  /** Heuristics for when to close a Scaladoc. Returns `true` when the offset is
+   *  inside a Scaladoc that runs to the end of the document or if the line
+   *  containing the end of the Scaladoc section contains a quotation mark. This
+   *  handles nested comments pretty well because it uses the Scala document
+   *  partitioner.
    */
   private def shouldCloseDocComment(doc: IDocument, offset: Int): Boolean = {
-    val partition = TextUtilities.getPartition(doc, partitioning, offset, true)
-    val partitionEnd = partition.getOffset() + partition.getLength()
-    (scaladocPartitions(partition.getType())
-      && partitionEnd == doc.getLength())
+    def isProbablyString = {
+      val p = TextUtilities.getPartition(doc, partitioning, offset, true)
+      val start = doc.getLineInformationOfOffset(p.getOffset()).getOffset()
+      val end = p.getOffset() + p.getLength() - start
+
+      val containsSingleQuote = doc.get(start, end).reverse.exists(_ == '"')
+      scaladocPartitions(p.getType()) && containsSingleQuote
+    }
+
+    val partition = TextUtilities.getPartition(doc, partitioning, doc.getLength() - 1, true)
+    scaladocPartitions(partition.getType()) || isProbablyString
   }
 
   private val scaladocPartitions = Set(IJavaPartitions.JAVA_DOC, IJavaPartitions.JAVA_MULTI_LINE_COMMENT)

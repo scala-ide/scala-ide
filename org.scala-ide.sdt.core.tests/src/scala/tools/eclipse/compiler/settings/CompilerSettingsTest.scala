@@ -7,34 +7,49 @@ import scala.tools.eclipse.ScalaPlugin
 import scala.tools.eclipse.SettingConverterUtil
 import scala.tools.eclipse.properties.PropertyStore
 import scala.tools.eclipse.properties.CompilerSettings
+import scala.tools.eclipse.javaelements.ScalaSourceFile
 
 object CompilerSettingsTest extends TestProjectSetup("compiler-settings")
 
 class CompilerSettingsTest {
   import CompilerSettingsTest._
-  
+
+  @Test
+  def presentation_compiler_report_errors_when_continuations_plugin_is_not_enabled() {
+    val source = scalaCompilationUnit("cps/CPS.scala")
+    openAndWaitUntilTypechecked(source)
+    assertTrue(Option(source.getProblems).toList.nonEmpty)
+  }
+
   @Test
   def failingToBuildSourceThatRequiresContinuationPlugin() {
     val unit = scalaCompilationUnit("cps/CPS.scala")
-    
+
     cleanProject()
     fullProjectBuild()
-    
+
     val errors = allBuildErrorsOf(unit)
-    
+
     assertTrue(errors.nonEmpty)
   }
-  
+
+  @Test
+  def presentation_compiler_does_not_report_errors_when_continuations_plugin_is_enabled(): Unit = withContinuationPluginEnabled {
+    val source = scalaCompilationUnit("cps/CPS.scala")
+    openAndWaitUntilTypechecked(source)
+    assertTrue(Option(source.getProblems).toList.isEmpty)
+  }
+
   @Test
   def successfullyBuildingSourceRequiringContinuationPluginEnabled() {
     withContinuationPluginEnabled {
       val unit = scalaCompilationUnit("cps/CPS.scala")
-    
+
       cleanProject()
       fullProjectBuild()
-    
+
       val errors = allBuildErrorsOf(unit)
-    
+
       assertTrue(errors.isEmpty)
     }
   }

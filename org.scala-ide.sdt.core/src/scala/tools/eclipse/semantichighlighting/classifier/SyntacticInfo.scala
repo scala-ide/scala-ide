@@ -6,25 +6,21 @@ import scalariform.parser._
 import scalariform.utils.Range
 import org.eclipse.jface.text.Region
 import org.eclipse.jface.text.IRegion
+import scala.tools.eclipse.util.parsing.ScalariformParser
 
-// Symbol information derived by purely syntactic means, via Scalariform's parser, because it (appears) 
+// Symbol information derived by purely syntactic means, via Scalariform's parser, because it (appears)
 // difficult to get this out scalac trees
 case class SyntacticInfo(
   namedArgs: Set[IRegion],
   forVals: Set[IRegion],
   maybeSelfRefs: Set[IRegion],
   maybeClassOfs: Set[IRegion],
-  annotations: Set[IRegion], 
-  packages: Set[IRegion]
+  annotations: Set[IRegion],
+  packages: Set[IRegion],
+  identifiersInStringInterpolations: Set[IRegion]
 )
 
 object SyntacticInfo {
-
-  private def safeParse(source: String): Option[(CompilationUnit, List[Token])] = {
-    val tokens = ScalaLexer.tokenise(source, forgiveErrors = true)
-    val parser = new ScalaParser(tokens.toArray)
-    parser.safeParse(parser.compilationUnitOrScript) map { (_, tokens) }
-  }
 
   private class RangeOps(range: Range) {
     def toRegion: IRegion = new Region(range.offset, range.length)
@@ -32,8 +28,8 @@ object SyntacticInfo {
 
   private implicit def range2Region(range: Range): RangeOps = new RangeOps(range)
 
-  def noSyntacticInfo = SyntacticInfo(Set(), Set(), Set(), Set(), Set(), Set())
-  
+  def noSyntacticInfo = SyntacticInfo(Set(), Set(), Set(), Set(), Set(), Set(), Set())
+
   def getSyntacticInfo(source: String): SyntacticInfo = {
     var namedArgs: Set[IRegion] = Set()
     var forVals: Set[IRegion] = Set()
@@ -41,6 +37,7 @@ object SyntacticInfo {
     var maybeClassOfs: Set[IRegion] = Set()
     var annotations: Set[IRegion] = Set()
     var packages: Set[IRegion] = Set()
+    var identifiersInStringInterpolations: Set[IRegion] = Set()
 
     def scan(astNode: AstNode) {
       astNode match {
@@ -80,17 +77,22 @@ object SyntacticInfo {
           val (pkges, annotation) = CollectionUtil.splitAtLast(tokens)
           pkges.foreach(packages += _.range.toRegion)
           annotation foreach ( annotations += _.range.toRegion)
+        case StringInterpolation(_, stringPartsAndScala, _) =>
+          for ((_, expr) <- stringPartsAndScala) {
+            val identifiers = expr.tokens.filter(_.tokenType.isId)
+            identifiersInStringInterpolations ++= identifiers.map(_.range.toRegion)
+          }
         case _ =>
       }
       astNode.immediateChildren.foreach(scan)
     }
 
-    for ((cu, tokens) <- safeParse(source)) {
+    for ((cu, tokens) <- ScalariformParser.safeParse(source)) {
       scan(cu)
       for (token <- tokens if token.text == "classOf")
         maybeClassOfs += token.range.toRegion
     }
 
-    SyntacticInfo(namedArgs, forVals, maybeSelfRefs, maybeClassOfs, annotations, packages)
+    SyntacticInfo(namedArgs, forVals, maybeSelfRefs, maybeClassOfs, annotations, packages, identifiersInStringInterpolations)
   }
 }

@@ -103,7 +103,7 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
 
   import EclipseSetting.toEclipseBox
   /** The settings we can change */
-  lazy val userBoxes = IDESettings.shownSettings(ScalaPlugin.defaultScalaSettings) ++ IDESettings.buildManagerSettings
+  lazy val userBoxes = IDESettings.shownSettings(ScalaPlugin.defaultScalaSettings()) ++ IDESettings.buildManagerSettings
   lazy val eclipseBoxes = userBoxes.map { s => toEclipseBox(s, preferenceStore0) }
 
   /** Pulls the preference store associated with this plugin */
@@ -119,7 +119,7 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
       useProjectSettingsWidget.get.save
     }
     additionalParamsWidget.save()
-    
+
     //This has to come later, as we need to make sure the useProjectSettingsWidget's values make it into
     //the final save.
     save(userBoxes, preferenceStore0)
@@ -255,8 +255,8 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
         }
       case None => //don't need to check
     }
-    
-    logger.info(eclipseBoxes.exists { box => 
+
+    logger.info(eclipseBoxes.exists { box =>
       logger.info(box.eSettings.find(_.isChanged).toString)
       box.eSettings.exists(_.isChanged)
     }.toString)
@@ -264,7 +264,7 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
     //check all our other settings
     additionalParamsWidget.isChanged || super.isChanged
   }
-  
+
   override def performDefaults {
     super.performDefaults
     additionalParamsWidget.reset
@@ -294,24 +294,7 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
       control.redraw
       control.addSelectionListener(new SelectionListener() {
         override def widgetDefaultSelected(e: SelectionEvent) {}
-        override def widgetSelected(e: SelectionEvent) { 
-          handleToggle
-          // Every time we toogle "Use Project Settings", we make sure 
-          // to reset the default value assigned to -Xpluginsdir.  
-          setDefaultPluginsDirValue()
-        }
-        /** This is a ugly (needed) hack to make sure that the default location pointed by 
-         * -Xpluginsdir contain the continuations plugin. If you change this, make sure to 
-         * read the comment in {{{ScalaPlugin.defaultScalaSettings}}}.*/ 
-        private def setDefaultPluginsDirValue() {
-          for(box <- eclipseBoxes;
-              eclipseSetting <- box.eSettings if eclipseSetting.setting.name == "-Xpluginsdir") {
-            eclipseSetting.control match {
-              case t: Text => ScalaPlugin.plugin.defaultPluginsDir.foreach(t.setText(_))
-              case _ => 
-            }
-          }
-        }
+        override def widgetSelected(e: SelectionEvent) { handleToggle }
       })
     }
 
@@ -375,7 +358,7 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
         updateApplyButton()
       }
 
-      val settings = ScalaPlugin.defaultScalaSettings
+      val settings = ScalaPlugin.defaultScalaSettings()
       val proposals = settings.visibleSettings.map(_.name)
 
       val provider = new IContentProposalProvider {
@@ -409,22 +392,22 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
       decoration.setDescriptionText(errorIndicator.getDescription())
       decoration
     }
-    
+
     def isChanged: Boolean =
       originalValue != additionalCompParams
 
     def save() {
       preferenceStore0.setValue(CompilerSettings.ADDITIONAL_PARAMS, additionalCompParams)
     }
-    
+
     def reset() {
       additionalParametersControl.setText(preferenceStore0.getDefaultString(CompilerSettings.ADDITIONAL_PARAMS))
     }
-    
+
     def setEnabled(value: Boolean) {
       additionalParametersControl.setEnabled(value)
     }
-  }  
+  }
 }
 
 object CompilerSettings {

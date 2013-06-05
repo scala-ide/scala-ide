@@ -84,7 +84,7 @@ class Presenter(
     */
   def dispose(removesHighlights: Boolean): Unit = {
     job.cancel()
-    /* invalidate the text presentation before disposing `presentationHighlighter` 
+    /* invalidate the text presentation before disposing `presentationHighlighter`
      * (because `presentationHighlighter` contains the logic for applying the styles). */
     if (removesHighlights) removesAllHighlightings()
     presentationHighlighter.dispose()
@@ -131,20 +131,22 @@ class Presenter(
 
         if (damagedRegion.getLength > 0) {
           val sortedPositions = newPositions.sorted.toArray
-          runPositionsUpdateInUiThread(sortedPositions, damagedRegion)
-          Job.ASYNC_FINISH
+          /* if the positions held by the `positionsTracker` have changed, then
+           * it's useless to proceed because the `newPositions` have computed on a
+           * not up-to-date compilation unit. Let the next reconciler run take care
+           * of re-computing the correct positions with the up-to-date content.
+           */
+          if (!positionsTracker.isDirty) {
+            runPositionsUpdateInUiThread(sortedPositions, damagedRegion)
+            Job.ASYNC_FINISH
+          } else Status.OK_STATUS
         }
         else Status.OK_STATUS
       }(Status.OK_STATUS)
     }
 
     private def runPositionsUpdateInUiThread(newPositions: Array[Position], damagedRegion: IRegion): Unit =
-      /* if the positions held by the `positionsTracker` have changed, then 
-       * it's useless to proceed because the `newPositions` have computed on a  
-       * not up-to-date compilation unit. Let the next reconciler run take care 
-       * of re-computing the correct positions with the up-to-date content. 
-       */
-      if (!positionsTracker.isDirty) uiThread.asyncExec {
+      uiThread.asyncExec {
         try {
           setThread(uiThread.get)
           if (!positionsTracker.isDirty) {
@@ -162,9 +164,9 @@ private object Presenter {
   class DocumentSwapListener(presenter: Presenter, semanticHighlightingJob: Job) extends ITextInputListener with HasLogger {
     override def inputDocumentAboutToBeChanged(oldInput: IDocument, newInput: IDocument): Unit = {
       semanticHighlightingJob.cancel()
-      /* deletes all highlighted positions to avoid wrong colorings in the about to be displayed `newInput` document (the wrong 
-       * colors would be displayed only until the semantic reconciler has a chance to reconcile the swapped compilation unit. 
-       * Though, it makes sense to avoid the colors flickering and that's why `positionsTracker`'s state is reset.) 
+      /* deletes all highlighted positions to avoid wrong colorings in the about to be displayed `newInput` document (the wrong
+       * colors would be displayed only until the semantic reconciler has a chance to reconcile the swapped compilation unit.
+       * Though, it makes sense to avoid the colors flickering and that's why `positionsTracker`'s state is reset.)
        */
       presenter.positionsTracker.reset()
       presenter.releaseDocument(oldInput)

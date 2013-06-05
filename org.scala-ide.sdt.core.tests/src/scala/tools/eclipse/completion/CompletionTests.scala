@@ -4,7 +4,7 @@ import scala.tools.eclipse.testsetup.SDTTestUtils
 import scala.tools.eclipse.javaelements.ScalaCompilationUnit
 import scala.tools.nsc.interactive.Response
 import scala.tools.eclipse.ScalaWordFinder
-import scala.tools.nsc.util.SourceFile
+import scala.reflect.internal.util.SourceFile
 import scala.tools.eclipse.ScalaPresentationCompiler
 import org.eclipse.jface.text.contentassist.ICompletionProposal
 import org.mockito.Mockito._
@@ -14,7 +14,7 @@ import scala.tools.eclipse.testsetup.TestProjectSetup
 import org.eclipse.jdt.core.search.{ SearchEngine, IJavaSearchConstants, IJavaSearchScope, SearchPattern, TypeNameRequestor }
 import org.eclipse.jdt.core.IJavaElement
 import org.junit.Ignore
-import scala.tools.nsc.util.OffsetPosition
+import scala.reflect.internal.util.OffsetPosition
 
 object CompletionTests extends TestProjectSetup("completion")
 
@@ -39,24 +39,25 @@ class CompletionTests {
       tree.get
 
       val contents = unit.getContents
-      // mind that the space in the marker is very important (the presentation compiler 
-      // seems to get lost when the position where completion is asked 
+      // mind that the space in the marker is very important (the presentation compiler
+      // seems to get lost when the position where completion is asked
       val positions = SDTTestUtils.positionsOf(contents, " /*!*/")
+      assertTrue("Couldn't find a position for the completion marker. Hint: Did you add a space between the element to complete and the marker?", positions.nonEmpty)
       val content = unit.getContents.mkString
 
       val completion = new ScalaCompletions
       for (i <- 0 until positions.size) {
         val pos = positions(i)
 
-        val position = new scala.tools.nsc.util.OffsetPosition(src, pos)
+        val position = new scala.reflect.internal.util.OffsetPosition(src, pos)
         var wordRegion = ScalaWordFinder.findWord(content, position.point)
 
         //        val selection = mock(classOf[ISelectionProvider])
 
         /* FIXME:
-         * I would really love to call `completion.computeCompletionProposals`, but for some unclear 
-         * reason that call is not working. Some debugging shows that the position is not right (off by one), 
-         * however, increasing the position makes the computed `wordRegion` wrong... hard to understand where 
+         * I would really love to call `completion.computeCompletionProposals`, but for some unclear
+         * reason that call is not working. Some debugging shows that the position is not right (off by one),
+         * however, increasing the position makes the computed `wordRegion` wrong... hard to understand where
          * the bug is!
         val textViewer = mock(classOf[ITextViewer])
         when(textViewer.getSelectionProvider()).thenReturn(selection)
@@ -69,7 +70,9 @@ class CompletionTests {
         val completions: List[ICompletionProposal] = completion.computeCompletionProposals(context, monitor).map(_.asInstanceOf[ICompletionProposal]).toList
         */
 
-        body(i, position, completion.findCompletions(wordRegion)(pos + 1, unit)(src, compiler))
+        val completions = completion.findCompletions(wordRegion)(pos + 1, unit)(src, compiler)
+        val sortedCompletions = completions.sortWith((x,y) => x.relevance >= y.relevance)
+        body(i, position, sortedCompletions)
       }
     }()
   }
@@ -83,7 +86,7 @@ class CompletionTests {
 
       var completions = if (!withImportProposal) compl.filter(!_.needImport) else compl
 
-      // remove parens as the compiler trees' printer has been slightly modified in 2.10 
+      // remove parens as the compiler trees' printer has been slightly modified in 2.10
       // (and we need the test to pass for 2.9.0/-1 and 2.8.x as well).
       val completionsNoParens: List[String] = completions.map(c => normalizeCompletion(c.display)).sorted
       val expectedNoParens: List[String] = expectedCompletions(i).map(normalizeCompletion).sorted
@@ -181,7 +184,7 @@ class CompletionTests {
     withCompletions("ticket_1000772/CompletionsWithName.scala") { (idx, position, completions) =>
       assertEquals("Only one completion expected at (%d, %d)".format(position.line, position.column), 1, completions.size)
       assertEquals("Expected the following names: %s".format(OracleNames),
-        OracleNames, completions(0).explicitParamNames)
+        OracleNames, completions(0).getParamNames())
     }
   }
 
@@ -211,7 +214,7 @@ class CompletionTests {
   @Ignore("Enable this test once the ticket is fixed.")
   def t1001014 {
     val oracle = List("xx")
-    
+
     val unit = scalaCompilationUnit("t1001014/F.scala")
     reload(unit)
 
@@ -228,7 +231,7 @@ class CompletionTests {
         assertEquals("There is only one completion location", 0, index)
         assertTrue("The completion should return java.util", completions.exists(
           _ match {
-            case CompletionProposal(MemberKind.Package, _, "util", _, _, _, _, _, _, _, _, _) =>
+            case CompletionProposal(MemberKind.Package, _, "util", _, _, _, _, _, _, _, _) =>
               true
             case _ =>
               false
@@ -247,7 +250,6 @@ class CompletionTests {
           assertEquals("Relevance", "__stringLikeClass", proposals.head.completion)
         case 1 =>
           assertEquals("Relevance", "List", proposals.head.completion)
-          assertEquals("Relevance", "List", proposals(1).completion)
         case _ =>
           assert(false, "Unhandled completion position")
       }

@@ -33,7 +33,7 @@ class BaseDebuggerActorTest {
 
   @Test(timeout = 1000)
   def postStartIsAlwaysExecutedBeforeTheActorProcessesTheFirstMessage() {
-    //setting up test 
+    //setting up test
     val latch = new CountDownLatch(1)
     sut = new BaseDebuggerActor {
       override protected def postStart(): Unit = latch.countDown()
@@ -52,7 +52,7 @@ class BaseDebuggerActorTest {
 
   @Test(timeout = 1000)
   def preExitIsAlwaysExecutedBeforeTheActorIsStopped() {
-    //setting up test 
+    //setting up test
     val latch = new CountDownLatch(1)
     sut = new BaseDebuggerActor {
       override protected def behavior: Behavior = new NullPartialFunction // i.e., the exitBehavior is always executed!
@@ -103,7 +103,7 @@ class BaseDebuggerActorTest {
       override def behavior: Behavior = {
         case 'poison =>
           poison() // poisoning an actor forces it to process only termination messages!
-          // hence the `become` call should be ignored. 
+          // hence the `become` call should be ignored.
           become { case _ => fail("You can't heal after being poisoned!") }
       }
 

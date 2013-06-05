@@ -400,9 +400,9 @@ class ScalaValueTest {
     assertEquals("Bad value", "Array[ElementClass](3) (id=65)", scalaValue.getValueString)
     assertTrue("Should have variables", scalaValue.hasVariables)
     assertEquals("Should have 3 variables", 3, scalaValue.getVariables().length)
-    
+
     // methods from IIndexedValue
-    
+
     assertEquals("Should start at 0", 0, scalaValue.getInitialOffset)
     assertEquals("Should have 3 variables", 3, scalaValue.getSize)
     assertEquals("Wrong element 0", "(0)", scalaValue.getVariable(0).getName)
@@ -427,9 +427,9 @@ class ScalaValueTest {
     assertEquals("Bad value", "Array[AClass](0) (id=92)", scalaValue.getValueString)
     assertFalse("Should not have variables", scalaValue.hasVariables)
     assertEquals("Should not have variables", 0, scalaValue.getVariables().length)
-    
+
     // methods from IIndexedValue
-    
+
     assertEquals("Should start at 0", 0, scalaValue.getInitialOffset)
     assertEquals("Should have 3 variables", 0, scalaValue.getSize)
     // not point of testing getVariable(Int) and getVariables(Int, Int)

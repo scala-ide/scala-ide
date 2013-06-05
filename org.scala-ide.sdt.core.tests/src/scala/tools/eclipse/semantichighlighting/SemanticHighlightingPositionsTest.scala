@@ -95,9 +95,9 @@ class SemanticHighlightingPositionsTest {
 
   private def positionsInRegion(region: Region): List[Position] = {
     val positions = editor.positionsTracker.positionsInRegion(region).filterNot(_.isDeleted())
-    // We clone the `positions` because the semantic highlighting component works by performing side-effects 
-    // on the existing positions. And, the `runTest`, expects the returned positions to not change.   
-    positions.map(pos => new Position(pos.getOffset, pos.getLength, pos.kind, pos.deprecated)).toList
+    // We clone the `positions` because the semantic highlighting component works by performing side-effects
+    // on the existing positions. And, the `runTest`, expects the returned positions to not change.
+    positions.map(pos => new Position(pos.getOffset, pos.getLength, pos.kind, pos.deprecated, pos.inInterpolatedString)).toList
   }
 
   private def findAllMarkersIn(code: String): List[Match] =
@@ -145,7 +145,7 @@ class SemanticHighlightingPositionsTest {
       }
       // merge together the shifted positions and any additional position that is expected to be created by the edit
       val merged = (edit.newPositions ++ positions)
-      // Sort the position. This is needed because position's added to the document are expected to be sorted. 
+      // Sort the position. This is needed because position's added to the document are expected to be sorted.
       val sorted = merged.sorted
       sorted
     }
@@ -163,7 +163,7 @@ class SemanticHighlightingPositionsTest {
     if (findAllMarkersIn(currentTestCode).nonEmpty)
       throw new AssertionError("After edition, no marker `%s` should be present in test code:\n%s".format(Marker, currentTestCode))
 
-    // This will trigger semantic highlighting computation, which in turn will update the document's positions (sequential execution!) 
+    // This will trigger semantic highlighting computation, which in turn will update the document's positions (sequential execution!)
     editor.reconcileNow()
 
     val newPositions = positionsInRegion(new Region(start, edit.newText.length()))
@@ -203,7 +203,7 @@ class SemanticHighlightingPositionsTest {
 
   @Test
   def new_highlighted_positions_are_reported() {
-    runTest(AddText("val bar = 2", List(new Position(17, 3, SymbolTypes.TemplateVal, deprecated = false)))) {
+    runTest(AddText("val bar = 2", List(new Position(17, 3, SymbolTypes.TemplateVal, deprecated = false, inInterpolatedString = false)))) {
       """
         |class A {
         |  /*^*/

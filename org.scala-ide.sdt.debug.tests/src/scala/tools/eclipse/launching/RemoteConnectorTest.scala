@@ -56,7 +56,7 @@ object RemoteConnectorTest extends TestProjectSetup("debug", bundleName = "org.s
     vmArgs.put(SocketConnectorScala.PortKey, port.toString)
     workingLaunchConfiguration.setAttribute(VmArgsKey, vmArgs)
 
-    new ScalaDebugTestSession(workingLaunchConfiguration)
+    ScalaDebugTestSession(workingLaunchConfiguration)
   }
 
   /**
@@ -206,6 +206,27 @@ class RemoteConnectorTest {
   }
 
   /**
+   * Check if it is possible to connect to a running VM that did not suspend.
+   */
+  @Test(timeout = 5000)
+  def attachToNonSuspendedRunningVM() {
+    val port = freePort()
+    application = launchInRunMode("HelloWorld listening not suspended", port)
+
+    waitForOpenSocket(port)
+
+    session = initDebugSession("Remote attaching", port)
+    session.launch()
+    val bp1 = session.addLineBreakpoint(TYPENAME_SAYHELLOWORLD, 7)
+    bp1.setEnabled(true)
+
+    application.getProcesses()(0).getStreamsProxy().write("Scala IDE\n")
+
+    session.waitUntilSuspended()
+    session.checkStackFrame(TYPENAME_SAYHELLOWORLD + "$", "main([Ljava/lang/String;)V", 7)
+  }
+
+  /**
    * Check if a VM is able to connect to to a waiting debugger.
    */
   /*
@@ -222,7 +243,7 @@ class RemoteConnectorTest {
 
     // this command actually launch the debugger
     application = session.runToLine(TYPENAME_HELLOWORLD + "$", 6, () => launchInRunMode("HelloWorld attaching", port))
-    
+
     assertEquals("The 'fake' process should have been removed after connection", session.debugTarget.getLaunch().getProcesses().length, 0)
 
     session.checkStackFrame(TYPENAME_HELLOWORLD + "$", "main([Ljava/lang/String;)V", 6)

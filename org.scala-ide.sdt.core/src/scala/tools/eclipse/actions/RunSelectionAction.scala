@@ -23,11 +23,11 @@ class RunSelectionAction extends ActionDelegate with IWorkbenchWindowActionDeleg
     for (editor <- Option(workbenchWindow.getActivePage.getActiveEditor);
         input <- editor.getEditorInput.asInstanceOfOpt[IFileEditorInput];
         textEditor <- editor.asInstanceOfOpt[ITextEditor];
-        selection <- textEditor.getSelectionProvider.getSelection.asInstanceOfOpt[ITextSelection]) 
+        selection <- textEditor.getSelectionProvider.getSelection.asInstanceOfOpt[ITextSelection])
     {
       val project = input.getFile.getProject
       var text = selection.getText
-      
+
       if (text.isEmpty) {
         val provider = textEditor.getDocumentProvider
         provider.connect(input)
@@ -37,12 +37,12 @@ class RunSelectionAction extends ActionDelegate with IWorkbenchWindowActionDeleg
           val lineOffset = document.getLineOffset(selection.getStartLine)
           val lineLength = document.getLineLength(selection.getStartLine)
           text = document.get(lineOffset, lineLength)
-        } 
+        }
         finally {
           provider.disconnect(input)
         }
       }
-             
+
       if (!text.isEmpty) {
         ReplConsoleView.makeVisible(project,workbenchWindow.getActivePage).interpret(text)
       }

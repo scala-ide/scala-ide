@@ -29,11 +29,11 @@ class DeclarationHyperlinkDetector extends BaseHyperlinkDetector with HasLogger 
 
     findHyperlinks(textEditor, icu, wordRegion)
   }
-  
+
   protected def findHyperlinks(textEditor: ITextEditor, icu: InteractiveCompilationUnit, wordRegion: IRegion): List[IHyperlink] = {
     findHyperlinks(textEditor, icu, wordRegion, wordRegion)
   }
-  
+
   protected def findHyperlinks(textEditor: ITextEditor, icu: InteractiveCompilationUnit, wordRegion: IRegion, mappedRegion: IRegion): List[IHyperlink] = {
     resolver.findHyperlinks(icu, wordRegion, mappedRegion) match {
       case None => List()
@@ -51,8 +51,8 @@ class DeclarationHyperlinkDetector extends BaseHyperlinkDetector with HasLogger 
       case Some(hyperlinks) =>
         hyperlinks
     }
-  } 
-  
+  }
+
   private def javaDeclarationHyperlinkComputer(textEditor: ITextEditor, wordRegion: IRegion, icu: InteractiveCompilationUnit, openable: Openable, mappedRegion: IRegion): List[IHyperlink] = {
     try {
       val environment = icu.newSearchableEnvironment()
@@ -63,11 +63,11 @@ class DeclarationHyperlinkDetector extends BaseHyperlinkDetector with HasLogger 
       val elements = requestor.getElements.toList
 
       lazy val qualify = elements.length > 1
-      lazy val openAction = new OpenAction(textEditor.getEditorSite()) // changed from asInstanceOf[JavaEditor] to getEditorSite because 
+      lazy val openAction = new OpenAction(textEditor.getEditorSite()) // changed from asInstanceOf[JavaEditor] to getEditorSite because
       // some editors can be non java editor
       elements.map(new JavaElementHyperlink(wordRegion, openAction, _, qualify))
     } catch {
-      case t: Throwable => 
+      case t: Throwable =>
         logger.debug("Exception while computing hyperlink", t)
         Nil
     }

@@ -14,17 +14,13 @@ trait EclipseSettings {
 
   object EclipseSetting {
     /** Function to map a Scala compiler setting to an Eclipse plugin setting */
-    def apply(setting: Settings#Setting): EclipseSetting = setting match {
+    private def apply(setting: Settings#Setting): EclipseSetting = setting match {
       case setting: Settings#BooleanSetting => new CheckBoxSetting(setting)
       case setting: Settings#IntSetting     => new IntegerSetting(setting)
       case setting: Settings#StringSetting =>
         setting.name match {
-          case "-Ypresentation-log" | "-Ypresentation-replay" =>
-            logger.info("file setting for " + setting.name)
-            new FileSetting(setting)
-          case _ =>
-            logger.info("plain old string setting " + setting.name)
-            new StringSetting(setting)
+          case "-Ypresentation-log" | "-Ypresentation-replay" => new FileSetting(setting)
+          case _ => new StringSetting(setting)
         }
       //    case setting : Settings#PhasesSetting  => new StringSetting(setting) // !!!
       case setting: Settings#MultiStringSetting =>
@@ -89,7 +85,7 @@ trait EclipseSettings {
 
   /** Boolean setting controlled by a checkbox.
    */
-  class CheckBoxSetting(setting: Settings#BooleanSetting)
+  private class CheckBoxSetting(setting: Settings#BooleanSetting)
     extends EclipseSetting(setting) {
     var control: Button = _
 
@@ -109,7 +105,7 @@ trait EclipseSettings {
 
   /** Integer setting editable using a text field.
    */
-  class IntegerSetting(setting: Settings#IntSetting)
+  private class IntegerSetting(setting: Settings#IntSetting)
     extends EclipseSetting(setting) {
     var control: Text = _
 
@@ -137,7 +133,7 @@ trait EclipseSettings {
 
   /** String setting editable using a text field.
    */
-  class StringSetting(setting: Settings#StringSetting)
+  private class StringSetting(setting: Settings#StringSetting)
     extends EclipseSetting(setting) {
     var control: Text = _
     def createControl(page: Composite) {
@@ -149,6 +145,10 @@ trait EclipseSettings {
       control.addModifyListener(ModifyListenerSing)
     }
 
+    /* If you change anything in this class, please read the comment in the implementation of
+     * `ScalaPlugin.defaultScalaSettings`
+     */
+
     def isChanged = setting.value != control.getText
     def reset() { control.setText(setting.default) }
     def apply() { setting.value = control.getText }
@@ -156,7 +156,7 @@ trait EclipseSettings {
 
   /** Multi string setting editable using a text field.
    */
-  class MultiStringSetting(setting: Settings#MultiStringSetting)
+  private class MultiStringSetting(setting: Settings#MultiStringSetting)
     extends EclipseSetting(setting) {
     var control: Text = _
     def createControl(page: Composite) {
@@ -169,7 +169,7 @@ trait EclipseSettings {
     }
 
     def values: List[String] = control.getText().split(',').flatMap(Trim(_)).toList
-    
+
     def isChanged = setting.value != values
     def reset() { control.setText("") }
     def apply() { setting.value = values }
@@ -177,7 +177,7 @@ trait EclipseSettings {
 
   /** Text setting selectable using a drop down combo box.
    */
-  class ComboSetting(setting: Settings#ChoiceSetting)
+  private class ComboSetting(setting: Settings#ChoiceSetting)
     extends EclipseSetting(setting) {
     var control: Combo = _
     def createControl(page: Composite) {
@@ -198,7 +198,7 @@ trait EclipseSettings {
    *  @note Temporary implementation. This one does not have a File dialog, instead
    *       it prefixes the workspace path when the filename is not an absolute path.
    */
-  class FileSetting(setting: Settings#StringSetting)
+  private class FileSetting(setting: Settings#StringSetting)
     extends EclipseSetting(setting) {
     var control: Text = _
     def createControl(page: Composite) {
@@ -207,7 +207,7 @@ trait EclipseSettings {
       val layout = new GridData()
       layout.widthHint = 200
       control.setLayoutData(layout)
-      control.setMessage("Path is relative to the workspace")
+      control.setMessage("Path is absolute or relative to workspace")
       control.addModifyListener(ModifyListenerSing)
     }
 
@@ -216,7 +216,7 @@ trait EclipseSettings {
     def apply() { setting.value = fileName(control.getText) }
   }
 
-  class MultiFileSetting(setting: Settings#MultiStringSetting) extends EclipseSetting(setting) {
+  private class MultiFileSetting(setting: Settings#MultiStringSetting) extends EclipseSetting(setting) {
     var control: Text = _
     def createControl(page: Composite) {
       control = new Text(page, SWT.SINGLE | SWT.BORDER)
@@ -224,7 +224,7 @@ trait EclipseSettings {
       var layout = data
       layout.widthHint = 200
       control.setLayoutData(layout)
-      control.setMessage("Path is relative to the workspace")
+      control.setMessage("Path is absolute or relative to workspace")
       control.addModifyListener(ModifyListenerSing)
     }
 
@@ -240,7 +240,7 @@ trait EclipseSettings {
   /** Return an absolute path denoted by 'name'. If 'name' is already absolute,
    *  it returns 'name', otherwise it prepends the absolute path to the workspace.
    */
-  def fileName(name: String) = {
+  private def fileName(name: String) = {
     import scala.tools.eclipse.ScalaPlugin
     import java.io.File
 

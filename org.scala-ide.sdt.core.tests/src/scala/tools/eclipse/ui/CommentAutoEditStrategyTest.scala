@@ -1,14 +1,30 @@
 package scala.tools.eclipse.ui
 
 import scala.tools.eclipse.lexical.ScalaDocumentPartitioner
+import scala.tools.eclipse.properties.EditorPreferencePage
 
 import org.eclipse.jdt.ui.text.IJavaPartitions
-import org.eclipse.jface.text.{Document, IDocument}
-import org.junit.{ComparisonFailure, Test}
+import org.eclipse.jface.preference.IPreferenceStore
+import org.eclipse.jface.text.{ Document, IDocument }
+import org.junit.{ Before, ComparisonFailure, Test }
+import org.mockito.Mockito._
 
 import AutoEditStrategyTests.TestCommand
 
 class CommentAutoEditStrategyTest {
+
+  val prefStore = mock(classOf[IPreferenceStore])
+
+  import EditorPreferencePage._
+
+  def enable(property: String, enable: Boolean) {
+    when(prefStore.getBoolean(property)).thenReturn(enable)
+  }
+
+  @Before
+  def startUp() {
+    enable(P_ENABLE_AUTO_CLOSING_COMMENTS, true)
+  }
 
   /**
    * Tests if the input string is equal to the expected output.
@@ -41,10 +57,22 @@ class CommentAutoEditStrategyTest {
 
     val doc = createDocument(input)
     val cmd = createTestCommand(input)
-    val strategy = new CommentAutoIndentStrategy(IJavaPartitions.JAVA_PARTITIONING)
+    val strategy = new CommentAutoIndentStrategy(prefStore, IJavaPartitions.JAVA_PARTITIONING)
 
     strategy.customizeDocumentCommand(doc, cmd)
-    doc.replace(cmd.offset, 0, cmd.text)
+
+    /**
+     * Because `cmd.getCommandIterator()` returns a raw type and because the type
+     * of the underlying instances belong to a inner private static Java class it
+     * seems to be impossible to access it from Scala. Thus, the code is accessed
+     * via Reflection.
+     */
+    import collection.JavaConverters._
+    for (e <- cmd.getCommandIterator().asScala.toList.reverse) {
+      val m = e.getClass().getMethod("execute", classOf[IDocument])
+      m.setAccessible(true)
+      m.invoke(e, doc)
+    }
 
     val offset = if (cmd.caretOffset > 0) cmd.caretOffset else cmd.offset + cmd.text.length()
     doc.replace(offset, 0, "^")
@@ -55,6 +83,21 @@ class CommentAutoEditStrategyTest {
     if (expected != actual) {
       throw new ComparisonFailure("", expected, actual)
     }
+  }
+
+  @Test
+  def no_close_on_deactiveted_feature() {
+    enable(P_ENABLE_AUTO_CLOSING_COMMENTS, false)
+    val input =
+      """
+      /**^
+      """
+    val expectedOutput =
+      """
+      /**
+       * ^
+      """
+    test(input, expectedOutput)
   }
 
   @Test
@@ -248,31 +291,6 @@ class CommentAutoEditStrategyTest {
       class Foo {
         /**
          * ^*/
-        def foo() {
-        }
-        /** */
-        def bar
-      }
-      """
-    test(input, expectedOutput)
-  }
-
-  @Test
-  def openDocComment_at_beginning() {
-    val input =
-      """
-      /**^class Foo {
-        def foo() {
-        }
-        /** */
-        def bar
-      }
-      """
-    val expectedOutput =
-      """
-      /**
-       * ^
-       */class Foo {
         def foo() {
         }
         /** */
@@ -529,6 +547,105 @@ class CommentAutoEditStrategyTest {
        *    hello
        *    ^
        */
+      """
+    test(input, expectedOutput)
+  }
+
+  @Test
+  def docComment_no_additional_indent_on_break_line_before_spaces() {
+    val input =
+      """
+      /**^ abc */
+      """
+    val expectedOutput =
+      """
+      /**
+       * ^ abc */
+      """
+    test(input, expectedOutput)
+  }
+
+  @Test
+  def docComment_wrap_text_after_cursor_on_automatically_closed_comment() {
+    val input =
+      """
+      /** a^ b
+      """
+    val expectedOutput =
+      """
+      /** a
+       *  ^ b
+       */
+      """
+    test(input, expectedOutput)
+  }
+
+  @Test
+  def docComment_close_before_comment_with_code_blocks() {
+    val input =
+      """
+      /**^
+      /** {{{ }}} */
+      """
+    val expectedOutput =
+      """
+      /**
+       * ^
+       */
+      /** {{{ }}} */
+      """
+    test(input, expectedOutput)
+  }
+
+  @Test
+  def docComment_no_close_before_code_blocks() {
+    val input =
+      """
+      /**^ {{{ }}} */
+      """
+    val expectedOutput =
+      """
+      /**
+       * ^ {{{ }}} */
+      """
+    test(input, expectedOutput)
+  }
+
+  @Test
+  def docComment_no_close_between_code_blocks() {
+    val input =
+      """
+      /**
+       * {{{ }}}
+       * ^
+       * {{{ }}}
+       */
+      """
+    val expectedOutput =
+      """
+      /**
+       * {{{ }}}
+       * $
+       * ^
+       * {{{ }}}
+       */
+      """
+    test(input, expectedOutput)
+  }
+
+  @Test
+  def docComment_close_before_string_containing_closing_comment() {
+    val input =
+      """
+      /**^
+      val str = " */"
+      """
+    val expectedOutput =
+      """
+      /**
+       * ^
+       */
+      val str = " */"
       """
     test(input, expectedOutput)
   }
