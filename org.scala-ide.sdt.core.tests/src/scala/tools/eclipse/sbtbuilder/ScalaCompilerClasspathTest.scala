@@ -17,13 +17,14 @@ import scala.tools.eclipse.testsetup.SDTTestUtils
 import org.eclipse.core.resources.IFile
 import org.junit.{Ignore, Before, After}
 
-object ScalaCompilerClasspathTest extends testsetup.TestProjectSetup("builder-compiler-classpath")
+object ScalaCompilerClasspathTest extends testsetup.TestProjectSetup("builder-compiler-classpath") {
+  val baseRawClasspath = project.javaProject.getRawClasspath()
+}
 
 class ScalaCompilerClasspathTest {
 
   import ScalaCompilerClasspathTest._
 
-  val baseRawClasspath= project.javaProject.getRawClasspath()
 
   @Before
   def setupWorkspace {
@@ -32,12 +33,15 @@ class ScalaCompilerClasspathTest {
 
   @Test def testWithoutCompilerOnClasspath() {
     println("building " + project)
+    project.javaProject.setRawClasspath(baseRawClasspath, new NullProgressMonitor)
+
     project.clean(new NullProgressMonitor())
+    project.underlying.build(IncrementalProjectBuilder.CLEAN_BUILD, new NullProgressMonitor)
     project.underlying.build(IncrementalProjectBuilder.FULL_BUILD, new NullProgressMonitor)
 
     val unit = compilationUnit("test/CompilerDep.scala")
     val errors = unit.getUnderlyingResource().findMarkers(IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER, true, IResource.DEPTH_INFINITE)
-    println("problem: %s: %s".format(unit, errors.toList))
+    println("problem: %s: %s".format(unit.getResource(), errors.toList))
     Assert.assertTrue("Single compiler error expected", errors.length == 1)
   }
 

@@ -2,12 +2,13 @@ package scala.tools.eclipse.compiler.settings
 
 import scala.tools.eclipse.testsetup.TestProjectSetup
 import org.junit.Test
-import org.junit.Assert.{ assertTrue, assertFalse }
+import org.junit.Assert.{ assertTrue, assertFalse, assertEquals }
 import scala.tools.eclipse.ScalaPlugin
 import scala.tools.eclipse.SettingConverterUtil
 import scala.tools.eclipse.properties.PropertyStore
 import scala.tools.eclipse.properties.CompilerSettings
 import scala.tools.eclipse.javaelements.ScalaSourceFile
+import org.eclipse.core.resources.IMarker
 
 object CompilerSettingsTest extends TestProjectSetup("compiler-settings")
 
@@ -48,9 +49,9 @@ class CompilerSettingsTest {
       cleanProject()
       fullProjectBuild()
 
-      val errors = allBuildErrorsOf(unit)
+      val errors = allBuildErrorsOf(unit).map(_.getAttribute(IMarker.MESSAGE)).toList
 
-      assertTrue(errors.isEmpty)
+      assertEquals("No errors expected", List(), errors)
     }
   }
 
@@ -90,9 +91,9 @@ class CompilerSettingsTest {
     assertTrue("Settings should contain additional parameters: " + project.scalacArguments, project.scalacArguments.contains("-Ylog:typer"))
   }
 
-  private def enableProjectSettings() {
+  private def enableProjectSettings(value: Boolean = true) {
     val projectStore = new PropertyStore(project.underlying, ScalaPlugin.prefStore, ScalaPlugin.plugin.pluginId)
-    projectStore.setValue(SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE, true)
+    projectStore.setValue(SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE, value)
     projectStore.save()
   }
 
@@ -113,6 +114,10 @@ class CompilerSettingsTest {
   }
 
   private def withContinuationPluginEnabled(body: => Unit) {
+    // this setting cannot be set per-project easily, since the `PropertyStore` class
+    // needs a call to .save, but that method is not on the interface. We make sure we're
+    // using workspace settings here
+    enableProjectSettings(false)
     val value = project.storage.getString("P")
     try {
       project.storage.setValue("P", "continuations:enable")

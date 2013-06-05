@@ -2,9 +2,9 @@ package scala.tools.eclipse
 package compiler.settings
 
 import scala.tools.nsc.plugins.Plugin
-
 import org.junit.Test
 import org.junit.Assert
+import java.io.File
 
 object ContinuationPluginSettingsTest {
   private val simulator = new EclipseUserSimulator
@@ -23,14 +23,16 @@ class ContinuationPluginSettingsTest {
 
   @Test
   def loadContinuationsPluginVia_XpluginsdirCompilerSetting() {
-    ScalaPlugin.plugin.defaultPluginsDir.foreach(project.storage.setValue("Xpluginsdir", _))
+    project.storage.setValue("Xpluginsdir", ScalaPlugin.plugin.defaultPluginsDir)
+    project.resetPresentationCompiler()
     val plugins = loadedPlugins(project)
     Assert.assertEquals("Loaded plugins: ", List("continuations"), loadedPlugins(project))
   }
 
   @Test
   def loadContinuationsPluginVia_XpluginCompilerSetting() {
-    ScalaPlugin.plugin.defaultPluginsDir.foreach(project.storage.setValue("Xplugin", _))
+    project.storage.setValue("Xplugin", ScalaPlugin.plugin.defaultPluginsDir + File.separator + "continuations.jar")
+    project.resetPresentationCompiler()
     val plugins = loadedPlugins(project)
     Assert.assertEquals("Loaded plugins: ", List("continuations"), loadedPlugins(project))
   }
