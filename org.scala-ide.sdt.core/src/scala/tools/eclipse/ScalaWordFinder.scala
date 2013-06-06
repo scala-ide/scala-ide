@@ -50,8 +50,8 @@ object ScalaWordFinder extends IScalaWordFinder {
       var end = -1
       
       try {
-        var pos = offset
-        
+        var pos = Math.min(offset - 1, document.size - 1)
+
         while (pos >= 0 && p(document(pos)))
           pos -= 1
         
@@ -66,17 +66,8 @@ object ScalaWordFinder extends IScalaWordFinder {
       } catch {
         case ex : BadLocationException => // Deliberately ignored 
       }
-  
-      if (start >= -1 && end > -1) {
-        if (start == offset && end == offset)
-          new Region(offset, 0)
-        else if (start == offset)
-          new Region(start, end - start)
-        else
-          new Region(start+1, end-start-1)
-      }
-      else 
-        null
+
+      new Region(start + 1, end - start - 1)
     }
     
     val idRegion = find(ch => isIdentifierPart(ch) && ch != '$')
