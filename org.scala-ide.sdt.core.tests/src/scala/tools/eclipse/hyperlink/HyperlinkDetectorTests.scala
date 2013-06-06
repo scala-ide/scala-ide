@@ -11,8 +11,27 @@ import org.junit.Assert.assertTrue
 import org.junit.Ignore
 import org.junit.Test
 import scala.tools.eclipse.hyperlink.text.detector.ScalaDeclarationHyperlinkComputer
+import org.junit.BeforeClass
 
-object HyperlinkDetectorTests extends TestProjectSetup("hyperlinks") with HyperlinkTester
+object HyperlinkDetectorTests extends TestProjectSetup("hyperlinks") with HyperlinkTester {
+  @BeforeClass
+  def initializeSubProject() {
+    SDTTestUtils.enableAutoBuild(false) // make sure no auto-building is happening
+
+    object hyperlinksSubProject extends TestProjectSetup("hyperlinks-sub")
+    hyperlinksSubProject.project // force initialization of this project
+    hyperlinksSubProject.project.underlying.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, new NullProgressMonitor)
+
+    val markers = SDTTestUtils.findProblemMarkers(hyperlinksSubProject.compilationUnit("util/Box.scala")).toList
+    val errorMessages: List[String] = for (p <- markers) yield p.getAttribute(IMarker.MESSAGE).toString
+
+    assertTrue("No build errors expected: " + errorMessages, errorMessages.isEmpty)
+
+    // since auto-building is off, we need to do this manually
+    // and make sure the classpath is up to date
+    project.resetPresentationCompiler()
+  }
+}
 
 class HyperlinkDetectorTests {
   import HyperlinkDetectorTests._
@@ -68,25 +87,17 @@ class HyperlinkDetectorTests {
 
   @Test
   def test1000656() {
-    SDTTestUtils.enableAutoBuild(false)  // make sure no auto-building is happening
-
-    object hyperlinksSubProject extends TestProjectSetup("hyperlinks-sub")
-    hyperlinksSubProject.project        // force initialization of this project
-    hyperlinksSubProject.project.underlying.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, new NullProgressMonitor)
-
-    val markers = SDTTestUtils.findProblemMarkers(hyperlinksSubProject.compilationUnit("util/Box.scala")).toList
-    val errorMessages: List[String] = for (p <- markers) yield p.getAttribute(IMarker.MESSAGE).toString
-
-    println(errorMessages)
-
-    assertTrue("No build errors expected", errorMessages.isEmpty)
-
-    // since auto-building is off, we need to do this manually
-    // and make sure the classpath is up to date
-    project.resetPresentationCompiler()
-
     val oracle = List(Link("type util.Box.myInt"), Link("method util.Full.apply", "object util.Full"))
     loadTestUnit("bug1000656/Client.scala").andCheckAgainst(oracle)
+  }
+
+  @Test @Ignore("This test is flaky because of askTypeAt's issues with overloading. See SI-7548")
+  def testJavaLinks() {
+    val oracle = List(Link("util.JavaMethods.nArray"),
+        Link("util.JavaMethods.nArray"),
+        Link("util.JavaMethods.typeparam"),
+        Link("util.JavaMethods.typeparam2"))
+    loadTestUnit("javalinks/JavaLinks.scala").andCheckAgainst(oracle, checkJavaElements)
   }
 
   @Test

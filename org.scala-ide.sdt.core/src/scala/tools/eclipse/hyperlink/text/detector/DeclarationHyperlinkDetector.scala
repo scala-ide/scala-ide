@@ -17,6 +17,7 @@ import org.eclipse.jdt.internal.core.JavaProject
 import org.eclipse.jdt.internal.core.DefaultWorkingCopyOwner
 import org.eclipse.jdt.internal.core.Openable
 import scala.tools.eclipse.InteractiveCompilationUnit
+import org.eclipse.jdt.core.IJavaElement
 
 class DeclarationHyperlinkDetector extends BaseHyperlinkDetector with HasLogger {
 
@@ -55,12 +56,7 @@ class DeclarationHyperlinkDetector extends BaseHyperlinkDetector with HasLogger 
 
   private def javaDeclarationHyperlinkComputer(textEditor: ITextEditor, wordRegion: IRegion, icu: InteractiveCompilationUnit, openable: Openable, mappedRegion: IRegion): List[IHyperlink] = {
     try {
-      val environment = icu.newSearchableEnvironment()
-      val requestor = new ScalaSelectionRequestor(environment.nameLookup, openable)
-      val engine = new ScalaSelectionEngine(environment, requestor, icu.scalaProject.javaProject.getOptions(true))
-      val offset = mappedRegion.getOffset
-      engine.select(icu, offset, offset + mappedRegion.getLength - 1)
-      val elements = requestor.getElements.toList
+      val elements = JavaSelectionEngine.getJavaElements(wordRegion, icu, openable, mappedRegion)
 
       lazy val qualify = elements.length > 1
       lazy val openAction = new OpenAction(textEditor.getEditorSite()) // changed from asInstanceOf[JavaEditor] to getEditorSite because
@@ -72,9 +68,26 @@ class DeclarationHyperlinkDetector extends BaseHyperlinkDetector with HasLogger 
         Nil
     }
   }
-
 }
 
 object DeclarationHyperlinkDetector {
   def apply(): BaseHyperlinkDetector = new DeclarationHyperlinkDetector
+}
+
+/** Helper object to locate Java elements based on a region */
+object JavaSelectionEngine extends HasLogger {
+ protected[hyperlink] def getJavaElements(wordRegion: IRegion, icu: InteractiveCompilationUnit, openable: Openable, mappedRegion: IRegion): List[IJavaElement] = {
+    try {
+      val environment = icu.newSearchableEnvironment()
+      val requestor = new ScalaSelectionRequestor(environment.nameLookup, openable)
+      val engine = new ScalaSelectionEngine(environment, requestor, icu.scalaProject.javaProject.getOptions(true))
+      val offset = mappedRegion.getOffset
+      engine.select(icu, offset, offset + mappedRegion.getLength - 1)
+      requestor.getElements.toList
+    } catch {
+      case t: Throwable =>
+        logger.debug("Exception while computing hyperlink", t)
+        Nil
+    }
+  }
 }
