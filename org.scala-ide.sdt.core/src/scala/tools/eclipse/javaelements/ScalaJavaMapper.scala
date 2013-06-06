@@ -26,7 +26,9 @@ trait ScalaJavaMapper extends ScalaAnnotationHelper with SymbolNameUtil with Has
       IntClass,
       LongClass,
       FloatClass,
-      DoubleClass).foreach(_.initialize)
+      DoubleClass,
+      NilModule,
+      ListClass).foreach(_.initialize)
   }
 
   /** Return the Java Element corresponding to the given Scala Symbol, looking in the
@@ -220,21 +222,7 @@ trait ScalaJavaMapper extends ScalaAnnotationHelper with SymbolNameUtil with Has
       case _ => false
     }
   }
-  
-  def mapParamTypeName(t : Type) : String = {
-    if (t.typeSymbolDirect.isTypeParameter)
-      t.typeSymbolDirect.name.toString
-    else if (isScalaSpecialType(t))
-      "java.lang.Object"
-    else {
-      val jt = javaType(t)
-      if (jt.isValueType)
-        jt.toString
-      else
-        mapTypeName(t.typeSymbol)
-    }
-  }
-  
+
   def mapParamTypeSignature(t : Type) : String = {
     if (t.typeSymbolDirect.isTypeParameter)
       "T"+t.typeSymbolDirect.name.toString+";"

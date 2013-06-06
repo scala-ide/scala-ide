@@ -109,7 +109,7 @@ class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: Sc
         val packageName = enclosingPackage(m0).toArray
         val typeName = mapTypeName(owner).toArray
         val parameterPackageNames = paramTypes.map(mapParamTypePackageName(_).toArray).toArray
-        val parameterTypeNames = paramTypes.map(mapParamTypeName(_).toArray).toArray
+        val parameterTypeNames = paramTypes.map(mapType(_).toArray).toArray
         val parameterSignatures = paramTypes.map(mapParamTypeSignature(_)).toArray
         Cont(requestor.acceptMethod(
           packageName,
