@@ -307,7 +307,7 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings) exten
 
     val namesAndTypes = for {
       section <- sym.paramss
-      if section.nonEmpty && !section.head.isImplicit
+      if section.isEmpty || !section.head.isImplicit
     } yield for (param <- section) yield (param.name.toString, param.tpe.toString)
 
     val (scalaParamNames, paramTypes) = namesAndTypes.map(_.unzip).unzip
