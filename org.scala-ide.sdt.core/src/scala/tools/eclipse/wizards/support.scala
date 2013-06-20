@@ -7,7 +7,7 @@ package scala.tools.eclipse.wizards
 
 object BufferSupport {
 
-  type Buffer = {
+  trait Buffer {
     def append(s: String): Unit
     def getLength(): Int
   def replace(offset: Int, length: Int, text: String): Unit

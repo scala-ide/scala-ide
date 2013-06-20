@@ -433,7 +433,13 @@ abstract class AbstractNewElementWizardPage extends NewTypeWizardPage(1, "") wit
 
       // generate basic element skeleton
 
-      val buffer = parentCU.getBuffer
+      val buffer = new BufferSupport.Buffer {
+        val underlying = parentCU.getBuffer
+        def append(s: String) = underlying.append(s)
+        def getLength() = underlying.getLength()
+        def replace(offset: Int, length: Int, text: String) = underlying.replace(offset, length, text)
+        def getContents() = underlying.getContents()
+      }
       //start control of buffer
       val cb = CodeBuilder(getPackageNameToInject.getOrElse(""), superTypes, buffer)
       cb.append(commentTemplate(comment(getFileComment _)))
