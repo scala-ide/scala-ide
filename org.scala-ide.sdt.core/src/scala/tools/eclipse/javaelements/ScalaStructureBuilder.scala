@@ -778,7 +778,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
     }
 
     def addAnnotations(sym : Symbol, parentInfo : AnnotatableInfo, parentHandle : JavaElement) : Position =
-      addAnnotations(try { sym.annotations } catch { case _ => Nil }, parentInfo, parentHandle)
+      addAnnotations(try { sym.annotations } catch { case _: Exception => Nil }, parentInfo, parentHandle)
 
     def addAnnotations(annots : List[AnnotationInfo], parentInfo : AnnotatableInfo, parentHandle : JavaElement) : Position = {
       import SourceRefElementInfoUtils._

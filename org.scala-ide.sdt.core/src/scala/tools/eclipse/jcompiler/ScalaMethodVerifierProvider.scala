@@ -140,7 +140,7 @@ class ScalaMethodVerifierProvider extends IMethodVerifierProvider with HasLogger
             try {
               pc.rootMirror.getModule(newTermName(packageName)).info.member(newTypeName(typeName))
             } catch {
-              case _ =>
+              case _: Exception =>
                 logger.info("Failed to retrieve class symbol for `%s`".format(packageName + "." + typeName))
                 NoSymbol
             }

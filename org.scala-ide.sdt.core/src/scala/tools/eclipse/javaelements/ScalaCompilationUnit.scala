@@ -126,7 +126,7 @@ trait ScalaCompilationUnit extends Openable
           logger.info("ignored InterruptedException in build structure")
           false
 
-        case ex =>
+        case ex: Exception =>
           logger.error("Compiler crash while building structure for %s".format(file), ex)
           false
       }
@@ -256,7 +256,7 @@ trait ScalaCompilationUnit extends Openable
             }
           }
         } catch {
-          case ex =>
+          case ex: Exception =>
            logger.error("Exception thrown while creating override indicators for %s".format(sourceFile), ex)
         }
       }

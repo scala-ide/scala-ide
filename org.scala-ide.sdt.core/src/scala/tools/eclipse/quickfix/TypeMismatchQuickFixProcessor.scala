@@ -14,7 +14,7 @@ object TypeMismatchQuickFixProcessor extends
   ((String, String, String) => List[String]) {
 
   /** list containing all type mismatch quick fix cases that this object should go through */
-  val cases: List[TypeMismatchQuickFixCase] =
+  val cases: List[FoundToRequiredTypeCase] =
     List(
       // "type mismatch: List[T] but found List[List[T]]
       FoundToRequiredTypeCase(
@@ -50,7 +50,7 @@ object TypeMismatchQuickFixProcessor extends
   def apply(foundType: String, requiredType: String, annotationString: String): List[String] =
     // go through all cases and collect lists of replacement strings
     (List[String]() /: cases) {
-      case (list, ftrtc:FoundToRequiredTypeCase) => {
+      case (list, ftrtc: FoundToRequiredTypeCase) => {
          list ++ ftrtc.apply(foundType, requiredType, annotationString)
       }
     }
