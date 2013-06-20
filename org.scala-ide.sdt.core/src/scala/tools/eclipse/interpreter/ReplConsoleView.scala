@@ -166,7 +166,7 @@ class ReplConsoleView extends ViewPart {
     }
   }
 
-  private def setStarted {
+  private def setStarted() {
     val settings = ScalaPlugin.defaultScalaSettings()
     scalaProject.initializeCompilerSettings(settings, _ => true)
     // TODO ? move into ScalaPlugin.getScalaProject or ScalaProject.classpath
@@ -187,7 +187,7 @@ class ReplConsoleView extends ViewPart {
     setContentDescription("Scala Interpreter (Project: " + projectName + ")")
   }
 
-  private def setStopped {
+  private def setStopped() {
     repl.stop()
     isStopped = true
 

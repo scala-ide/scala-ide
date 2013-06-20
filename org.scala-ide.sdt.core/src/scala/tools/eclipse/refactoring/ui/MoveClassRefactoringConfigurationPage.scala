@@ -131,7 +131,7 @@ class MoveClassRefactoringConfigurationPage(
     super.setVisible(visible)
   }
 
-  private def validatePage {
+  private def validatePage() {
     val status = new RefactoringStatus
 
     getSelectedPackage match {
@@ -157,7 +157,7 @@ class MoveClassRefactoringConfigurationPage(
     super.getNextPage
   }
 
-  private def initializeRefactoring {
+  private def initializeRefactoring() {
     getSelectedPackage foreach { pkg =>
       setPackageFragment(pkg)
       if (moveSelectedClass != null) {

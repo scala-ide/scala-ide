@@ -18,7 +18,7 @@ object StartupDiagnostics extends HasLogger {
 
   private val weavingState = new WeavingStateConfigurer
 
-  def run {
+  def run() {
     val prefStore = plugin.getPreferenceStore
     val previousVersion = prefStore.getString(INSTALLED_VERSION_KEY)
     val currentVersion = plugin.getBundle.getVersion.toString

@@ -161,7 +161,7 @@ class ScalaBuilder extends IncrementalProjectBuilder with HasLogger {
     }
   }
 
-  def ensureProject = {
+  def ensureProject() {
     if (scalaJavaBuilder.getProject == null)
       scalaJavaBuilder.setProject0(getProject)
   }

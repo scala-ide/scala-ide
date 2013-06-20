@@ -54,7 +54,9 @@ trait ScalaPluginPreferencePage extends HasLogger {
 
   def isChanged: Boolean = eclipseBoxes.exists(_.eSettings.exists(_.isChanged))
 
-  override def performDefaults = eclipseBoxes.foreach(_.eSettings.foreach(_.reset()))
+  override def performDefaults() {
+    eclipseBoxes.foreach(_.eSettings.foreach(_.reset()))
+  }
 
   def save(userBoxes: List[IDESettings.Box], store: IPreferenceStore): Unit = {
     for (b <- userBoxes) {
@@ -88,7 +90,7 @@ trait ScalaPluginPreferencePage extends HasLogger {
 
   // There seems to be a bug in the compiler that appears in runtime (#2296)
   // So updateApply is going to forward to real updateApplyButton
-  def updateApply: Unit
+  def updateApply(): Unit
 }
 
 /** Provides a property page to allow Scala compiler settings to be changed.
@@ -147,7 +149,9 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
     updateApplyButton
   }
 
-  def updateApply = updateApplyButton
+  def updateApply() {
+    updateApplyButton
+  }
 
   /** Updates the apply button with the appropriate enablement. */
   protected override def updateApplyButton(): Unit = {
@@ -284,7 +288,7 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
     additionalParamsWidget.isChanged || super.isChanged
   }
 
-  override def performDefaults {
+  override def performDefaults() {
     super.performDefaults
     additionalParamsWidget.reset
   }
@@ -318,7 +322,7 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
     }
 
     /** Toggles the use of a property page */
-    def handleToggle = {
+    def handleToggle() {
       val selected = control.getSelection
       eclipseBoxes.foreach(_.eSettings.foreach(_.setEnabled(selected)))
       additionalParamsWidget.setEnabled(selected)

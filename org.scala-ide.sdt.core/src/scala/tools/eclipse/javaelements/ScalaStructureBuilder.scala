@@ -114,7 +114,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
 
       def addFunction(f : Function) : Owner = this
 
-      def resetImportContainer {}
+      def resetImportContainer() {}
 
       def addChild(child : JavaElement) =
         elementInfo match {
