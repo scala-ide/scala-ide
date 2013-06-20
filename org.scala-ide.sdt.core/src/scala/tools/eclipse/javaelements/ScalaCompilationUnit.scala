@@ -263,12 +263,13 @@ trait ScalaCompilationUnit extends Openable
   }
 
   override def getImageDescriptor = {
-    Option(getCorrespondingResource) map { file =>
+    val descriptor = Option(getCorrespondingResource) map { file =>
       import ScalaImages.SCALA_FILE
       import ScalaImages.EXCLUDED_SCALA_FILE
       val javaProject = JavaCore.create(scalaProject.underlying)
       if (javaProject.isOnClasspath(file)) SCALA_FILE else EXCLUDED_SCALA_FILE
-    } orNull
+    }
+    descriptor.orNull
   }
 
   override def getScalaWordFinder() : IScalaWordFinder = ScalaWordFinder

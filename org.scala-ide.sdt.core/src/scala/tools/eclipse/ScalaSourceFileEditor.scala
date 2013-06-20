@@ -292,7 +292,7 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor { sel
     def groupMenuItemsByGroupId(items: Seq[IContributionItem]) = {
       // the different groups (as indicated by separators) and
       // contributions in a menu are originally just a flat list
-      items.foldLeft(Nil: List[(String, List[IContributionItem])]) {
+      val groups = items.foldLeft(Nil: List[(String, List[IContributionItem])]) {
 
         // start a new group
         case (others, group: Separator) => (group.getId, Nil) :: others
@@ -303,7 +303,8 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor { sel
         // the menu does not start with a group, this shouldn't happen, but if
         // it does we just skip this element, so it will stay in the menu.
         case (others, _) => others
-      } toMap
+      }
+      groups.toMap
     }
 
     def findJdtSourceMenuManager(items: Seq[IContributionItem]) = {

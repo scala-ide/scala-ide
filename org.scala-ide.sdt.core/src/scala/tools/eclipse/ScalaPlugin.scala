@@ -78,7 +78,7 @@ object ScalaPlugin {
     Option(workbench.getActiveWorkbenchWindow) orElse workbench.getWorkbenchWindows.headOption
   }
 
-  def getShell: Shell = getWorkbenchWindow map (_.getShell) orNull
+  def getShell: Shell = getWorkbenchWindow.map(_.getShell).orNull
 
   def defaultScalaSettings(errorFn: String => Unit = Console.println): Settings = {
     val settings = new Settings(errorFn) {
@@ -356,50 +356,57 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
       val elem = delta.getElement
 
       val processChildren: Boolean = elem.getElementType match {
-        case JAVA_MODEL => true
+        case JAVA_MODEL =>
+          true
+
         case JAVA_PROJECT if isRemoved =>
           disposeProject(elem.getJavaProject.getProject)
           false
 
-        case JAVA_PROJECT if !hasFlag(F_CLOSED) => true
+        case JAVA_PROJECT if !hasFlag(F_CLOSED) =>
+          true
 
         case PACKAGE_FRAGMENT_ROOT =>
-          if (isRemoved || hasFlag(F_REMOVED_FROM_CLASSPATH | F_ADDED_TO_CLASSPATH | F_ARCHIVE_CONTENT_CHANGED)) {
+          val hasContentChanged = isRemoved || hasFlag(F_REMOVED_FROM_CLASSPATH | F_ADDED_TO_CLASSPATH | F_ARCHIVE_CONTENT_CHANGED)
+          if (hasContentChanged) {
             logger.info("package fragment root changed (resetting pres compiler): " + elem.getElementName())
-            asScalaProject(elem.getJavaProject().getProject).foreach(projectsToReset +=)
-            false
-          } else true
+            asScalaProject(elem.getJavaProject().getProject).foreach(projectsToReset += _)
+          }
+          !hasContentChanged
 
         case PACKAGE_FRAGMENT =>
-          if (isAdded || isRemoved) {
+          val hasContentChanged = isAdded || isRemoved
+          if (hasContentChanged) {
             logger.debug("package framgent added or removed" + elem.getElementName())
-            asScalaProject(elem.getJavaProject().getProject).foreach(projectsToReset +=)
-            false // stop recursion, we need to reset the PC anyway
-          } else
-            true
+            asScalaProject(elem.getJavaProject().getProject).foreach(projectsToReset += _)
+          }
+          // stop recursion here, we need to reset the PC anyway
+          !hasContentChanged
 
         // TODO: the check should be done with isInstanceOf[ScalaSourceFile] instead of
         // endsWith(scalaFileExtn), but it is not working for Play 2.0 because of #1000434
         case COMPILATION_UNIT if isChanged && elem.getResource.getName.endsWith(scalaFileExtn) =>
-          val hasChangedContent = hasFlag(IJavaElementDelta.F_CONTENT)
-          if(hasChangedContent)
-            // marked the changed scala files to be refreshed in the presentation compiler if needed
+          val hasContentChanged = hasFlag(IJavaElementDelta.F_CONTENT)
+          if(hasContentChanged)
+            // mark the changed Scala files to be refreshed in the presentation compiler if needed
             changed += elem.asInstanceOf[ICompilationUnit]
           false
+
         case COMPILATION_UNIT if elem.isInstanceOf[ScalaSourceFile] && isRemoved =>
           buff += elem.asInstanceOf[ScalaSourceFile]
           false
 
         case COMPILATION_UNIT if isAdded =>
           logger.debug("added compilation unit " + elem.getElementName())
-          asScalaProject(elem.getJavaProject().getProject).foreach(projectsToReset +=)
+          asScalaProject(elem.getJavaProject().getProject).foreach(projectsToReset += _)
           false
 
-        case _ => false
+        case _ =>
+          false
       }
 
       if (processChildren)
-        delta.getAffectedChildren foreach { findRemovedSources(_) }
+        delta.getAffectedChildren foreach findRemovedSources
     }
     findRemovedSources(event.getDelta)
 

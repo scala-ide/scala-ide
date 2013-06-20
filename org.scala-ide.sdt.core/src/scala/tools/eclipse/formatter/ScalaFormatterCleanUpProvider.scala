@@ -29,7 +29,7 @@ class ScalaFormatterCleanUpProvider extends IFormatterCleanUpProvider {
       catch { case e: ScalaParserException => return null }
 
     val multiEdit = new MultiTextEdit
-    multiEdit.addChildren(edits map asEclipseTextEdit toArray)
+    multiEdit.addChildren(edits.map(asEclipseTextEdit).toArray)
     val change = new CompilationUnitChange("Formatting", cu)
     change.setEdit(multiEdit)
     new CodeFormatFix(change)

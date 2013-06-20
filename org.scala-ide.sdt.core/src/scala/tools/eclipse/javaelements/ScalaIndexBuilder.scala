@@ -51,15 +51,18 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
       }
     }
 
-    def getSuperNames(supers: List[Tree]): Array[Array[Char]] = supers map (_ match {
-      case Ident(id)                           => id.toChars
-      case Select(_, name)                     => name.toChars
-      case AppliedTypeTree(fun: RefTree, args) => fun.name.toChars
-      case tpt @ TypeTree()                    => mapType(tpt.symbol).toCharArray // maybe the tree was typed
-      case parent =>
-        logger.info("superclass not understood: %s".format(parent))
-        "$$NoRef".toCharArray
-    }) toArray
+    def getSuperNames(supers: List[Tree]): Array[Array[Char]] = {
+      val superNames = supers map {
+        case Ident(id)                           => id.toChars
+        case Select(_, name)                     => name.toChars
+        case AppliedTypeTree(fun: RefTree, args) => fun.name.toChars
+        case tpt @ TypeTree()                    => mapType(tpt.symbol).toCharArray // maybe the tree was typed
+        case parent =>
+          logger.info(s"superclass not understood: $parent")
+          "$$NoRef".toCharArray
+      }
+      superNames.toArray
+    }
 
     /** Add annotations on the given tree. If the tree is not yet typed,
      *  it uses the (unresolved) annotations in the tree (part of modifiers).

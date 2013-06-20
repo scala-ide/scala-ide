@@ -19,8 +19,10 @@ object RichAnnotationModel {
         f
     }
 
-    def getAnnotations: List[Annotation] =
-      annotationModel.getAnnotationIterator collect { case ann: Annotation => ann } toList
+    def getAnnotations: List[Annotation] = {
+      val annotations = annotationModel.getAnnotationIterator collect { case ann: Annotation => ann }
+      annotations.toList
+    }
 
     def replaceAnnotations(annotations: Iterable[Annotation], replacements: Map[Annotation, Position]) {
       annotationModel.asInstanceOf[IAnnotationModelExtension].replaceAnnotations(annotations.toArray, replacements)

@@ -473,7 +473,7 @@ abstract class AbstractNewElementWizardPage extends NewTypeWizardPage(1, "") wit
     } catch {
       case ex: JavaModelException => eclipseLog.error(ex)
     } finally {
-      monitor done
+      monitor.done()
     }
   }
 

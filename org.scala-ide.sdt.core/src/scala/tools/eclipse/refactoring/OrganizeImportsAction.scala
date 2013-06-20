@@ -54,10 +54,11 @@ class OrganizeImportsAction extends RefactoringAction with ActionWithNoWizard {
       val typeNotFoundError = "not found: type ([^\\s]+).*".r
       val valueNotFoundError = "not found: value ([^\\s]+)".r
 
-      problems filter (_.isError) map (_.getMessage) collect {
+      val errors = problems filter (_.isError) map (_.getMessage) collect {
         case typeNotFoundError(name) => name
         case valueNotFoundError(name) => name
-      } distinct
+      }
+      errors.distinct
     }
 
     /**
@@ -85,7 +86,7 @@ class OrganizeImportsAction extends RefactoringAction with ActionWithNoWizard {
             }
         }
       }
-      visibleTypes groupBy (_.getSimpleTypeName) values
+      visibleTypes.groupBy(_.getSimpleTypeName).values
     }
 
     /**

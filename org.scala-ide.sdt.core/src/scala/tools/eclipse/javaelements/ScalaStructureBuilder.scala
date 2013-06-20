@@ -156,7 +156,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
               val comp = companionClassOf(module)
               if (comp == NoSymbol) List() else comp.info.baseClasses
             }
-            cps.filter(mps contains)
+            cps.filter(mps.contains)
           }
           /* the setter doesn't show up in members so we inspect the name */
           def conflictsInCommonParent(name: Name) =

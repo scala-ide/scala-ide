@@ -50,8 +50,8 @@ trait FullProjectIndex extends HasLogger {
     import refactoring.global
 
     def allProjectSourceFiles: Seq[String] = {
-      if(hints.isEmpty) {
-        project.allSourceFiles map (_.getFullPath.toString) toSeq
+      if (hints.isEmpty) {
+        project.allSourceFiles.map(_.getFullPath.toString).toSeq
       } else {
         val searchInProject = Array[IResource](project.javaProject.getResource)
         val scope = FileTextSearchScope.newSearchScope(searchInProject, Array("*.scala"), false /*ignore derived resources*/)
@@ -73,12 +73,15 @@ trait FullProjectIndex extends HasLogger {
     }
 
     def collectAllScalaSources(files: Seq[String]): List[SourceFile] = {
-      val allScalaSourceFiles = files flatMap { f =>
-        if(pm.isCanceled)
-          return Nil
-        else
-          ScalaSourceFile.createFromPath(f)
-      } toList
+      val allScalaSourceFiles = {
+        val sourceFiles = files flatMap { f =>
+          if (pm.isCanceled)
+            return Nil
+          else
+            ScalaSourceFile.createFromPath(f)
+        }
+        sourceFiles.toList
+      }
 
       allScalaSourceFiles map { ssf =>
         if(pm.isCanceled)
@@ -147,7 +150,7 @@ trait FullProjectIndex extends HasLogger {
 
     // we need to store the already loaded files so that we don't
     // remove them from the presentation compiler later.
-    val previouslyLoadedFiles = global.unitOfFile.values map (_.source) toList
+    val previouslyLoadedFiles = global.unitOfFile.values.map(_.source).toList
 
     val files = collectAllScalaSources(allProjectSourceFiles)
 
