@@ -72,7 +72,7 @@
         <scala.version>2.10.2-SNAPSHOT</scala.version>
         <scala.era.major.version>2.10</scala.era.major.version>
         <version.suffix>2_10</version.suffix>
-        <repo.scala-ide.dependencies>${repo.scala-ide.root}/nightly-scala-ide-4.0.x-210x</repo.scala-ide.dependencies>
+        <repo.scala-ide.dependencies>${repo.scala-ide.root}/sdk/e37/scala210/nightly/4.0.x/site</repo.scala-ide.dependencies>
       </properties>
     </profile>
 
@@ -82,7 +82,7 @@
         <scala.version>2.11.0-SNAPSHOT</scala.version>
         <scala.era.major.version>2.11</scala.era.major.version>
         <version.suffix>2_11</version.suffix>
-        <repo.scala-ide.dependencies>${repo.scala-ide.root}/nightly-scala-ide-4.0.x-211x</repo.scala-ide.dependencies>
+        <repo.scala-ide.dependencies>${repo.scala-ide.root}/sdk/e37/scala211/nightly/4.0.x/site</repo.scala-ide.dependencies>
       </properties>
     </profile>
 
