@@ -64,15 +64,6 @@
                   <artifactId>log4j</artifactId>
                   <outputDirectory>${project.build.directory}/lib</outputDirectory>
                 </artifactItem>
-<!-- TODO: check this -->
-<!-- add it to the source plugin if we really want this, it is likely not working like that -->
-<!--                <artifactItem>
-                  <groupId>log4j</groupId>
-                  <artifactId>log4j</artifactId>
-                  <version>${log4j.version}</version>
-                  <outputDirectory>${project.build.directory}/lib</outputDirectory>
-                  <classifier>sources</classifier>
-                </artifactItem> -->
                 <artifactItem>
                   <groupId>com.miglayout</groupId>
                   <artifactId>miglayout</artifactId>

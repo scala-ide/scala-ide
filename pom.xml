@@ -13,17 +13,19 @@
 
   <properties>
     <encoding>UTF-8</encoding>
+
     <!-- p2 repositories location -->
     <repo.eclipse.indigo>http://download.eclipse.org/releases/indigo/</repo.eclipse.indigo>
     <repo.eclipse.juno>http://download.eclipse.org/releases/juno</repo.eclipse.juno>
     <repo.ajdt.indigo>http://download.eclipse.org/tools/ajdt/37/update</repo.ajdt.indigo>
     <repo.ajdt.juno>http://download.eclipse.org/tools/ajdt/42/update</repo.ajdt.juno>
     <repo.equinox.launcher>http://www.chuusai.com/eclipse/equinox-weaving-launcher/</repo.equinox.launcher>
+
     <repo.scala-ide.root>http://download.scala-ide.org</repo.scala-ide.root>
+    <!-- P2 repository containing the Scala IDE dependencies (i.e., Scala compiler + library, Sbt, scalariform, scalarefactoring)-->
+    <repo.scala-ide.dependencies>Select a profile</repo.scala-ide.dependencies>
 
     <!-- fixed versions -->
-    <sbt.version>Select a profile</sbt.version>
-    <sbinary.version>0.4.1-pretending-SNAPSHOT</sbinary.version>
     <jline.version>2.10</jline.version>
     <ivy.version>2.2.0</ivy.version>
     <miglayout.version>3.7.4</miglayout.version>
@@ -39,9 +41,7 @@
     <buildnumber-maven.plugin.version>1.1</buildnumber-maven.plugin.version>
     <maven-source.plugin.version>2.1.2</maven-source.plugin.version>
     <maven-clean.plugin.version>2.5</maven-clean.plugin.version>
-
-    <!-- Weaving plugin version, default for Indigo -->
-    <weaving.hook.plugin.version>1.0.200.I20120427-0800</weaving.hook.plugin.version>
+    <scalastyle.plugin.version>0.3.1</scalastyle.plugin.version>
 
     <!-- tycho test related -->
     <tycho.test.OSspecific></tycho.test.OSspecific>
@@ -51,45 +51,28 @@
 
     <!-- dependencies repos, can be overwritten by profiles -->
     <eclipse.codename>indigo</eclipse.codename>
-    <repo.eclipse>${repo.eclipse.indigo}</repo.eclipse>
     <repo.ajdt>${repo.ajdt.indigo}</repo.ajdt>
+    <repo.eclipse>${repo.eclipse.indigo}</repo.eclipse>
 
-     <!-- default values, can be overwritten by profiles -->
-     <scala.version>2.10.0</scala.version>
-     <scala.era.major.version>2.10</scala.era.major.version>
-     <scala.library.version>${scala.version}</scala.library.version>
-     <sbt.compiled.version>${scala.version}</sbt.compiled.version>
-     <version.suffix>2_10</version.suffix>
-     <version.tag>local</version.tag>
-
-    <!-- the repos containing the Scala dependencies -->
-    <repo.scala-refactoring>Select a profile</repo.scala-refactoring>
-    <repo.scalariform>Select a profile</repo.scalariform>
-    <repo.typesafe>Select a profile</repo.typesafe>
+    <!-- Weaving plugin version, default for Indigo (if you are building for Juno, use the `eclipse-juno` profile) -->
+    <weaving.hook.plugin.version>1.0.200.I20120427-0800</weaving.hook.plugin.version>
+     
+    <!-- default values, can be overwritten by profiles -->
+    <scala.version>Select profile</scala.version>
+    <scala.era.major.version>Select profile</scala.era.major.version>
+    <version.suffix>Select profile</version.suffix>
+    <version.tag>local</version.tag>
 
   </properties>
 
   <profiles>
-
     <profile>
       <id>scala-2.10.x</id>
       <properties>
         <scala.version>2.10.2-SNAPSHOT</scala.version>
         <scala.era.major.version>2.10</scala.era.major.version>
         <version.suffix>2_10</version.suffix>
-        <!-- The version is odd, but correct. We need the `SNAPSHOT` in the sbt version
-            because we need to grab the latest Sbt artifacts compiled against the latest
-            Scala 2.10.2-SNAPSHOT.
-            If you want to build the Scala IDE against Scala 2.10.0 or Scala 2.10.1, make
-            sure to pass -Dsbt.version=0.13.0-M2 to the build script (no SNAPSHOT is needed
-            in this case because the Scala version is stable!)
-        <sbt.version>0.13.0-M2-SNAPSHOT</sbt.version>
-        -->
-        <sbt.version>0.13.0-SNAPSHOT</sbt.version> <!-- We use Sbt 0.13 master because of source-incompatible changes in master -->
-
-        <repo.scala-refactoring>${repo.scala-ide.root}/scala-refactoring-210x</repo.scala-refactoring>
-        <repo.scalariform>${repo.scala-ide.root}/scalariform-210x</repo.scalariform>
-        <repo.typesafe>http://repo.typesafe.com/typesafe/ide-2.10</repo.typesafe>
+        <repo.scala-ide.dependencies>${repo.scala-ide.root}/sdk/e37/scala210/nightly/4.0.x/site</repo.scala-ide.dependencies>
       </properties>
     </profile>
 
@@ -99,11 +82,7 @@
         <scala.version>2.11.0-SNAPSHOT</scala.version>
         <scala.era.major.version>2.11</scala.era.major.version>
         <version.suffix>2_11</version.suffix>
-        <sbt.version>0.13.0-SNAPSHOT</sbt.version> <!-- We use Sbt 0.13 master for building against Scala 2.11.0-SNAPSHOT -->
-
-        <repo.scala-refactoring>${repo.scala-ide.root}/scala-refactoring-211x</repo.scala-refactoring>
-        <repo.scalariform>${repo.scala-ide.root}/scalariform-211x</repo.scalariform>
-        <repo.typesafe>http://repo.typesafe.com/typesafe/ide-2.11</repo.typesafe>
+        <repo.scala-ide.dependencies>${repo.scala-ide.root}/sdk/e37/scala211/nightly/4.0.x/site</repo.scala-ide.dependencies>
       </properties>
     </profile>
 
@@ -216,124 +195,6 @@
 
   <dependencyManagement>
     <dependencies>
-      <!-- toolchain, Scala library -->
-      <dependency>
-        <groupId>org.scala-lang</groupId>
-        <artifactId>scala-library</artifactId>
-        <version>${scala.library.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.scala-lang</groupId>
-        <artifactId>scala-swing</artifactId>
-        <version>${scala.library.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.scala-lang</groupId>
-        <artifactId>scala-dbc</artifactId>
-        <version>${scala.library.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.scala-lang</groupId>
-        <artifactId>scala-actors</artifactId>
-        <version>${scala.library.version}</version>
-      </dependency>
-      <!-- toolchain, Scala compiler -->
-      <dependency>
-        <groupId>org.scala-lang</groupId>
-        <artifactId>scala-compiler</artifactId>
-        <version>${scala.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.scala-lang</groupId>
-        <artifactId>scala-reflect</artifactId>
-        <version>${scala.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.scala-lang.plugins</groupId>
-        <artifactId>continuations</artifactId>
-        <version>${scala.version}</version>
-      </dependency>
-      <!-- toolchain, sbt -->
-      <dependency>
-        <groupId>org.scala-sbt</groupId>
-        <artifactId>classpath_${sbt.compiled.version}</artifactId>
-        <version>${sbt.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.scala-sbt</groupId>
-        <artifactId>logging_${sbt.compiled.version}</artifactId>
-        <version>${sbt.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.scala-sbt</groupId>
-        <artifactId>io_${sbt.compiled.version}</artifactId>
-        <version>${sbt.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.scala-sbt</groupId>
-        <artifactId>control_${sbt.compiled.version}</artifactId>
-        <version>${sbt.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.scala-sbt</groupId>
-        <artifactId>classfile_${sbt.compiled.version}</artifactId>
-        <version>${sbt.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.scala-sbt</groupId>
-        <artifactId>process_${sbt.compiled.version}</artifactId>
-        <version>${sbt.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.scala-sbt</groupId>
-        <artifactId>relation_${sbt.compiled.version}</artifactId>
-        <version>${sbt.version}</version>
-      </dependency>
-       <dependency>
-        <groupId>org.scala-sbt</groupId>
-        <artifactId>interface_${sbt.compiled.version}</artifactId>
-        <version>${sbt.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.scala-sbt</groupId>
-        <artifactId>persist_${sbt.compiled.version}</artifactId>
-        <version>${sbt.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.scala-sbt</groupId>
-        <artifactId>api_${sbt.compiled.version}</artifactId>
-        <version>${sbt.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.scala-sbt</groupId>
-        <artifactId>compiler-integration_${sbt.compiled.version}</artifactId>
-        <version>${sbt.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.scala-sbt</groupId>
-        <artifactId>incremental-compiler_${sbt.compiled.version}</artifactId>
-        <version>${sbt.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.scala-sbt</groupId>
-        <artifactId>compile_${sbt.compiled.version}</artifactId>
-        <version>${sbt.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.scala-sbt</groupId>
-        <artifactId>compiler-interface_${sbt.compiled.version}</artifactId>
-        <version>${sbt.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>jline</groupId>
-        <artifactId>jline</artifactId>
-        <version>${jline.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.scala-tools.sbinary</groupId>
-        <artifactId>sbinary_${sbt.compiled.version}</artifactId>
-        <version>${sbinary.version}</version>
-      </dependency>
       <!-- sdt.core dependencies -->
       <dependency>
         <groupId>com.miglayout</groupId>
@@ -359,17 +220,6 @@
     <pluginManagement>
       <!-- define the version of all used plugins, and some default configuration -->
       <plugins>
-        <!-- osgi bundle builder -->
-        <plugin>
-          <groupId>org.apache.felix</groupId>
-          <artifactId>maven-bundle-plugin</artifactId>
-          <version>${maven-bunble.plugin.version}</version>
-          <extensions>true</extensions>
-          <configuration>
-            <unpackBundle>true</unpackBundle>
-            <manifestLocation>${project.build.directory}/META-INF</manifestLocation>
-          </configuration>
-        </plugin>
         <!-- set property value from file -->
         <plugin>
           <groupId>org.kuali.maven.plugins</groupId>
@@ -430,7 +280,7 @@
           <artifactId>buildnumber-maven-plugin</artifactId>
           <version>${buildnumber-maven.plugin.version}</version>
         </plugin>
-        <!-- creating maven source artefact -->
+        <!-- creating maven source artifact -->
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-source-plugin</artifactId>
@@ -444,7 +294,7 @@
         <plugin>
           <groupId>org.scalastyle</groupId>
           <artifactId>scalastyle-maven-plugin</artifactId>
-          <version>0.3.1</version>
+          <version>${scalastyle.plugin.version}</version>
           <configuration>
             <inputEncoding>UTF-8</inputEncoding>
             <verbose>false</verbose>
@@ -472,6 +322,4 @@
       </plugins>
     </pluginManagement>
   </build>
-
-
 </project>

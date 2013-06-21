@@ -18,4 +18,171 @@
     <module>../org.scala-ide.scala.compiler</module>
     <module>../org.scala-ide.sbt.full.library</module>
   </modules>
+  
+  <properties>
+    <scala.library.version>${scala.version}</scala.library.version>
+    <sbt.version>Select a profile</sbt.version>
+    <sbinary.version>0.4.1-pretending-SNAPSHOT</sbinary.version>
+    <sbt.compiled.version>${scala.version}</sbt.compiled.version>
+
+    <!-- the repos containing the Sbt dependencies -->
+    <repo.typesafe>Select a profile</repo.typesafe>
+  </properties>
+
+  <profiles>
+    <profile>
+      <id>scala-2.10.x</id>
+      <properties>
+        <sbt.version>0.13.0-SNAPSHOT</sbt.version> <!-- We use Sbt 0.13 master because of source-incompatible changes in master -->
+
+        <repo.typesafe>http://repo.typesafe.com/typesafe/ide-2.10</repo.typesafe>
+      </properties>
+    </profile>
+
+    <profile>
+      <id>scala-2.11.x</id>
+      <properties>
+        <sbt.version>0.13.0-SNAPSHOT</sbt.version>
+
+        <repo.typesafe>http://repo.typesafe.com/typesafe/ide-2.11</repo.typesafe>
+      </properties>
+    </profile>
+  </profiles>
+
+  <dependencyManagement>
+    <dependencies>
+      <!-- toolchain, Scala library -->
+      <dependency>
+        <groupId>org.scala-lang</groupId>
+        <artifactId>scala-library</artifactId>
+        <version>${scala.library.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.scala-lang</groupId>
+        <artifactId>scala-swing</artifactId>
+        <version>${scala.library.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.scala-lang</groupId>
+        <artifactId>scala-actors</artifactId>
+        <version>${scala.library.version}</version>
+      </dependency>
+      <!-- toolchain, Scala compiler -->
+      <dependency>
+        <groupId>org.scala-lang</groupId>
+        <artifactId>scala-compiler</artifactId>
+        <version>${scala.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.scala-lang</groupId>
+        <artifactId>scala-reflect</artifactId>
+        <version>${scala.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.scala-lang.plugins</groupId>
+        <artifactId>continuations</artifactId>
+        <version>${scala.version}</version>
+      </dependency>
+      <!-- toolchain, sbt -->
+      <dependency>
+        <groupId>org.scala-sbt</groupId>
+        <artifactId>classpath_${sbt.compiled.version}</artifactId>
+        <version>${sbt.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.scala-sbt</groupId>
+        <artifactId>logging_${sbt.compiled.version}</artifactId>
+        <version>${sbt.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.scala-sbt</groupId>
+        <artifactId>io_${sbt.compiled.version}</artifactId>
+        <version>${sbt.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.scala-sbt</groupId>
+        <artifactId>control_${sbt.compiled.version}</artifactId>
+        <version>${sbt.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.scala-sbt</groupId>
+        <artifactId>classfile_${sbt.compiled.version}</artifactId>
+        <version>${sbt.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.scala-sbt</groupId>
+        <artifactId>process_${sbt.compiled.version}</artifactId>
+        <version>${sbt.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.scala-sbt</groupId>
+        <artifactId>relation_${sbt.compiled.version}</artifactId>
+        <version>${sbt.version}</version>
+      </dependency>
+       <dependency>
+        <groupId>org.scala-sbt</groupId>
+        <artifactId>interface_${sbt.compiled.version}</artifactId>
+        <version>${sbt.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.scala-sbt</groupId>
+        <artifactId>persist_${sbt.compiled.version}</artifactId>
+        <version>${sbt.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.scala-sbt</groupId>
+        <artifactId>api_${sbt.compiled.version}</artifactId>
+        <version>${sbt.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.scala-sbt</groupId>
+        <artifactId>compiler-integration_${sbt.compiled.version}</artifactId>
+        <version>${sbt.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.scala-sbt</groupId>
+        <artifactId>incremental-compiler_${sbt.compiled.version}</artifactId>
+        <version>${sbt.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.scala-sbt</groupId>
+        <artifactId>compile_${sbt.compiled.version}</artifactId>
+        <version>${sbt.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.scala-sbt</groupId>
+        <artifactId>compiler-interface_${sbt.compiled.version}</artifactId>
+        <version>${sbt.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>jline</groupId>
+        <artifactId>jline</artifactId>
+        <version>${jline.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.scala-tools.sbinary</groupId>
+        <artifactId>sbinary_${sbt.compiled.version}</artifactId>
+        <version>${sbinary.version}</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+  <build>
+    <pluginManagement>
+      <!-- define the version of all used plugins, and some default configuration -->
+      <plugins>
+        <!-- osgi bundle builder -->
+        <plugin>
+          <groupId>org.apache.felix</groupId>
+          <artifactId>maven-bundle-plugin</artifactId>
+          <version>${maven-bunble.plugin.version}</version>
+          <extensions>true</extensions>
+          <configuration>
+            <unpackBundle>true</unpackBundle>
+            <manifestLocation>${project.build.directory}/META-INF</manifestLocation>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+  </build>
 </project>
