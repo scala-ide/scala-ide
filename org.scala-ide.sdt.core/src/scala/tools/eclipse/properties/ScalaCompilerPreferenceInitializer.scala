@@ -22,7 +22,7 @@ class ScalaCompilerPreferenceInitializer extends AbstractPreferenceInitializer {
   /** Actually initializes preferences */
   def initializeDefaultPreferences() : Unit = {
     Utils.tryExecute {
-      val node = new DefaultScope().getNode(ScalaPlugin.plugin.pluginId)
+      val node = DefaultScope.INSTANCE.getNode(ScalaPlugin.plugin.pluginId)
       val store = ScalaPlugin.plugin.getPluginPreferences
 
       def defaultPreference(s: Settings#Setting) {

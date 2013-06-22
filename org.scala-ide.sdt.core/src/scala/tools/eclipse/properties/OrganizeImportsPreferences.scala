@@ -248,7 +248,7 @@ class OrganizeImportsPreferencesInitializer extends AbstractPreferenceInitialize
   def initializeDefaultPreferences() : Unit = {
 
     Utils.tryExecute {
-      val node = new DefaultScope().getNode(ScalaPlugin.plugin.pluginId)
+      val node = DefaultScope.INSTANCE.getNode(ScalaPlugin.plugin.pluginId)
       node.put(OrganizeImportsPreferences.omitScalaPackage, "false")
       node.put(OrganizeImportsPreferences.groupsKey, "java$scala$org$com")
       node.put(OrganizeImportsPreferences.wildcardsKey, "scalaz$scalaz.Scalaz")

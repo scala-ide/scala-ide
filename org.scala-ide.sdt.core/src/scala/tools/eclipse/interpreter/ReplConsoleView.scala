@@ -1,43 +1,50 @@
 package scala.tools.eclipse
 package interpreter
 
-import org.eclipse.jface.action.Separator
-import org.eclipse.jface.action.Action
+import scala.tools.eclipse.BuildSuccessListener
+import scala.tools.eclipse.ScalaImages
+import scala.tools.eclipse.ScalaPlugin
+import scala.tools.eclipse.ScalaProject
+import scala.tools.eclipse.properties.syntaxcolouring.ScalariformToSyntaxClass
+import scala.tools.eclipse.ui.CommandField
+import scala.tools.eclipse.ui.DisplayThread
+import scala.tools.nsc.Settings
+
+import org.eclipse.core.resources.IProject
+import org.eclipse.core.resources.IResourceChangeEvent
+import org.eclipse.core.resources.IResourceChangeListener
+import org.eclipse.core.resources.IResourceDelta
+import org.eclipse.core.resources.IResourceDeltaVisitor
+import org.eclipse.core.resources.ResourcesPlugin
+import org.eclipse.debug.internal.ui.DebugPluginImages
+import org.eclipse.debug.internal.ui.IInternalDebugUIConstants
+import org.eclipse.jdt.internal.ui.JavaPlugin
 import org.eclipse.jdt.ui.PreferenceConstants
+import org.eclipse.jface.action.Action
+import org.eclipse.jface.action.IAction
+import org.eclipse.jface.action.Separator
 import org.eclipse.jface.resource.JFaceResources
-import org.eclipse.swt.graphics.Color
-import org.eclipse.swt.custom.StyleRange
 import org.eclipse.swt.SWT
-import org.eclipse.swt.widgets.Composite
-import org.eclipse.ui.part.ViewPart
+import org.eclipse.swt.custom.StyleRange
 import org.eclipse.swt.custom.StyledText
-import org.eclipse.swt.widgets.Label
-import org.eclipse.swt.widgets.Caret
+import org.eclipse.swt.events.SelectionEvent
+import org.eclipse.swt.events.SelectionListener
+import org.eclipse.swt.graphics.Color
 import org.eclipse.swt.layout.GridData
 import org.eclipse.swt.layout.GridLayout
-import scala.tools.eclipse.ui.CommandField
-import org.eclipse.debug.internal.ui.IInternalDebugUIConstants
-import org.eclipse.debug.internal.ui.DebugPluginImages
-import org.eclipse.ui.internal.console.IInternalConsoleConstants
+import org.eclipse.swt.widgets.Button
+import org.eclipse.swt.widgets.Caret
+import org.eclipse.swt.widgets.Composite
+import org.eclipse.swt.widgets.Label
+import org.eclipse.swt.widgets.List
+import org.eclipse.ui.IWorkbenchPage
 import org.eclipse.ui.console.IConsoleConstants
 import org.eclipse.ui.internal.console.ConsolePluginImages
-import org.eclipse.jface.action.IAction
-import org.eclipse.jdt.internal.ui.JavaPlugin
-import scala.tools.eclipse.properties.syntaxcolouring.ScalariformToSyntaxClass
+import org.eclipse.ui.internal.console.IInternalConsoleConstants
+import org.eclipse.ui.part.ViewPart
+
+import EclipseRepl.Exec
 import scalariform.lexer.ScalaLexer
-import org.eclipse.swt.widgets.List
-import org.eclipse.swt.widgets.Button
-import org.eclipse.swt.events.SelectionListener
-import org.eclipse.swt.events.SelectionEvent
-import org.eclipse.ui.IWorkbenchPage
-import org.eclipse.core.resources.ResourcesPlugin
-import org.eclipse.core.resources.IResourceChangeListener
-import org.eclipse.core.resources.IResourceChangeEvent
-import org.eclipse.core.resources.IProject
-import org.eclipse.core.resources.IResourceDeltaVisitor
-import org.eclipse.core.resources.IResourceDelta
-import scala.tools.eclipse.util.SWTUtils
-import scala.tools.nsc.Settings
 
 class ReplConsoleView extends ViewPart {
 
@@ -56,7 +63,7 @@ class ReplConsoleView extends ViewPart {
   private lazy val repl = new EclipseRepl(
     // lazy so "project chooser UI" doesn't instantiate
     new EclipseRepl.Client {
-      def run(f: => Unit) = SWTUtils.asyncExec(if (view != null) f)
+      def run(f: => Unit) = DisplayThread.asyncExec(if (view != null) f)
       import EclipseRepl._
       import scala.tools.nsc.interpreter.Results._
 
@@ -157,7 +164,7 @@ class ReplConsoleView extends ViewPart {
     }
 
     def buildSuccessful() {
-      util.SWTUtils asyncExec {
+      DisplayThread.asyncExec {
         if (!isStopped) {
           displayError("\n------ Project Rebuilt, Replaying Command History ------\n")
           setStarted
@@ -234,7 +241,7 @@ class ReplConsoleView extends ViewPart {
       if (event.getDelta() != null) {
         event.getDelta().accept(resourceDeltaVisitor)
         if (resourceDeltaVisitor.isProjectChange) {
-          SWTUtils.asyncExec {
+          DisplayThread.asyncExec {
             refreshProjectList()
           }
         }

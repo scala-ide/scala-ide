@@ -44,7 +44,6 @@ import org.eclipse.ui.IPageListener
 import org.eclipse.ui.IEditorPart
 import org.eclipse.ui.part.FileEditorInput
 import org.eclipse.ui.plugin.AbstractUIPlugin
-import util.SWTUtils.asyncExec
 import org.osgi.framework.BundleContext
 import scala.tools.eclipse.javaelements.ScalaElement
 import scala.tools.eclipse.javaelements.ScalaSourceFile

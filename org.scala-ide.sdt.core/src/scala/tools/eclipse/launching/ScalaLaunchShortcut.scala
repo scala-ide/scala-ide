@@ -58,7 +58,7 @@ class ScalaLaunchShortcut extends JavaLaunchShortcut {
   override def createConfiguration(t: IType): ILaunchConfiguration = {
     val launchInstanceName = t.getElementName
     val configType: ILaunchConfigurationType = getConfigurationType
-    val wc = configType.newInstance(null, getLaunchManager.generateUniqueLaunchConfigurationNameFrom(launchInstanceName))
+    val wc = configType.newInstance(null, getLaunchManager.generateLaunchConfigurationName(launchInstanceName))
     wc.setAttribute(IJavaLaunchConfigurationConstants.ATTR_MAIN_TYPE_NAME, fullyQualifiedName(t))
     wc.setAttribute(IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME, t.getJavaProject.getElementName)
     wc.setMappedResources(Array[IResource](t.getUnderlyingResource))

@@ -44,7 +44,7 @@ private[classifier] trait SymbolClassificationDebugger { self: SymbolClassificat
     printFlag("method", _.isMethod)
     printFlag("module", _.isModule)
     printFlag("package", _.isPackage)
-    printFlag("parameter", _.isParameter)
+    printFlag("valueParameter", _.isValueParameter)
     printFlag("skolem", _.isSkolem)
     printFlag("sourceMethod", _.isSourceMethod)
     printFlag("synthetic", _.isSynthetic)

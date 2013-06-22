@@ -20,12 +20,12 @@ object SWTUtils {
 
   import scala.language.implicitConversions
 
-  @deprecated("3.0.0", "Use scala.tools.eclipse.ui.DisplayThread.asyncExec")
+  @deprecated("Use scala.tools.eclipse.ui.DisplayThread.asyncExec", "3.0.0")
   def asyncExec(f: => Unit) {
     DisplayThread.asyncExec(f)
   }
 
-  @deprecated("3.0.0", "Use scala.tools.eclipse.ui.DisplayThread.syncExec")
+  @deprecated("Use scala.tools.eclipse.ui.DisplayThread.syncExec", "3.0.0")
   def syncExec(f: => Unit) {
     DisplayThread.syncExec(f)
   }

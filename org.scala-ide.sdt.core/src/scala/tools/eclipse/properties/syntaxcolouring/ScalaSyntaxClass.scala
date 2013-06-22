@@ -1,18 +1,16 @@
 package scala.tools.eclipse.properties.syntaxcolouring
 
-import scala.tools.eclipse.properties.syntaxcolouring.ScalaSyntaxClasses._
-import scala.tools.eclipse.util.EclipseUtils._
-import scala.tools.eclipse.ScalaPlugin
-import org.eclipse.jdt.ui.text.IColorManager
+import scala.tools.eclipse.ui.DisplayThread
+import scala.tools.eclipse.util.EclipseUtils.PimpedPreferenceStore
+
+import org.eclipse.jdt.internal.ui.JavaPlugin
+import org.eclipse.jface.preference.IPreferenceStore
+import org.eclipse.jface.text.TextAttribute
 import org.eclipse.swt.SWT
 import org.eclipse.swt.custom.StyleRange
-import org.eclipse.swt.graphics.RGB
 import org.eclipse.swt.graphics.Color
-import org.eclipse.jface.text._
-import org.eclipse.jface.preference.PreferenceConverter
-import org.eclipse.jface.preference.IPreferenceStore
-import org.eclipse.jdt.internal.ui.JavaPlugin
-import scala.tools.eclipse.util.SWTUtils
+
+import ScalaSyntaxClasses._
 
 case class ScalaSyntaxClass(displayName: String, baseName: String, canBeDisabled: Boolean = false, hasForegroundColour: Boolean = true) {
 
@@ -27,6 +25,7 @@ case class ScalaSyntaxClass(displayName: String, baseName: String, canBeDisabled
   def underlineKey = baseName + UNDERLINE_SUFFIX
 
   /** Secondary constructor for backward compatibility with 3.x.
+   *  TODO remove once 3.x compatibility is discarded
    */
   def this(_displayName: String, _baseName: String, _canBeDisabled: Boolean) =
     this(_displayName, _baseName, _canBeDisabled, true)
@@ -66,7 +65,7 @@ case class ScalaSyntaxClass(displayName: String, baseName: String, canBeDisabled
     // FIXME: Blocking on the UI thread is bad. I'm pretty sure we can avoid this, but some refactoring is in needed. Basically, the
     //        different SyntaxClasses should be created by the editor right after checking if semantic highlighting is enabled, that
     //        way you know you are running inside the UI Thread. Re #1001489.
-    SWTUtils.syncExec {
+    DisplayThread.syncExec {
       if (hasForegroundColour)
         foregroundColorOpt = Option(colourManager.getColor(foregroundColorPref))
       if (preferenceStore getBoolean backgroundColourEnabledKey)

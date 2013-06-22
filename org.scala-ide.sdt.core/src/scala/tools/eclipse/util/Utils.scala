@@ -43,13 +43,13 @@ object Utils extends HasLogger {
   }
 
   implicit class WithAsInstanceOfOpt(obj: AnyRef) {
-    // TODO replace Manifest with TypeTag
-    import scala.reflect.Manifest // this is needed for 2.8 compatibility
-    def asInstanceOfOpt[B](implicit m: Manifest[B]): Option[B] =
-      if (Manifest.singleType(obj) <:< m)
-        Some(obj.asInstanceOf[B])
-      else
-        None
+    import scala.reflect.runtime.universe._
+
+    def asInstanceOfOpt[B : TypeTag]: Option[B] = {
+      val m = runtimeMirror(getClass.getClassLoader)
+      val typeOfObj = m.reflect(obj).symbol.toType
+      if (typeOfObj <:< typeOf[B]) Some(obj.asInstanceOf[B]) else None
+    }
   }
 
 }

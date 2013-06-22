@@ -110,7 +110,7 @@ trait FullProjectIndex extends HasLogger {
           None
         } else {
           val r = new global.Response[global.Tree]
-          global.askType(f, forceReload = false /*we just loaded the files*/, r)
+          global.askLoadedTyped(f, r)
           Some(r)
         }
       }

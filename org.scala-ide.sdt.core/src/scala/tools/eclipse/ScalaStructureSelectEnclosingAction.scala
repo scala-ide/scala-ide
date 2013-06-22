@@ -1,6 +1,6 @@
 package scala.tools.eclipse
 
-import org.eclipse.jdt.internal.corext.SourceRange
+import org.eclipse.jdt.core.SourceRange
 import org.eclipse.jdt.internal.ui.javaeditor.selectionactions._
 import org.eclipse.jface.action.Action
 import org.eclipse.jface.text.ITextSelection

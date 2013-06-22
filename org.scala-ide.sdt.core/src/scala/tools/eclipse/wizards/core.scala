@@ -6,6 +6,8 @@
  */
 package scala.tools.eclipse.wizards
 
+import scala.tools.eclipse.ui.DisplayThread
+
 class NewClassWizardPage extends {
   val declarationType = "Class"
 } with AbstractNewElementWizardPage
@@ -119,13 +121,13 @@ class NewPackageObjectWizard
     import scala.tools.eclipse.util.SWTUtils
     import org.eclipse.ltk.core.refactoring.resource.RenameResourceChange
 
-    SWTUtils.asyncExec({
+    DisplayThread.asyncExec {
       val res = wizardPage.getModifiedResource()
       val rename = new RenameResourceChange(res.getFullPath, "package.scala")
 
       val monitor = new org.eclipse.core.runtime.NullProgressMonitor
       rename.perform(monitor)
-    })
+    }
   }
 }
 

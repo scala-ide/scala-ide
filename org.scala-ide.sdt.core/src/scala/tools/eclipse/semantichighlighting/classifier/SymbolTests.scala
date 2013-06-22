@@ -49,7 +49,7 @@ private[classifier] trait SymbolTests { self: SymbolClassification =>
       if (isLocal) {
         if (isVariable)
           LocalVar
-        else if (isParameter && !forValSymbols.contains(sym))
+        else if (isValueParameter && !forValSymbols.contains(sym))
           Param
         else if (isLazy)
           LazyLocalVal
@@ -89,7 +89,7 @@ private[classifier] trait SymbolTests { self: SymbolClassification =>
       CaseClass
     else if (isClass)
       Class
-    else if (isParameter) // isTypeParam?
+    else if (isTypeParameter || isTypeSkolem)
       TypeParameter
     else // isTypeAlias?
       Type

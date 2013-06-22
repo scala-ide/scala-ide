@@ -1,9 +1,10 @@
 package scala.tools.eclipse.semicolon
 
 import java.util.Date
-import java.util.concurrent.locks._
-import scala.tools.eclipse.util.SWTUtils._
-import scala.tools.eclipse.util.ThreadUtils._
+import java.util.concurrent.locks.ReentrantLock
+
+import scala.tools.eclipse.ui.DisplayThread
+import scala.tools.eclipse.util.ThreadUtils.withLock
 
 object TypingDelayHelper {
 
@@ -71,7 +72,7 @@ class TypingDelayHelper {
           if (now.before(nextScheduledTime)) {
             nextScheduledTime.getTime - now.getTime
           } else {
-            asyncExec(callback())
+            DisplayThread.asyncExec(callback())
             nextScheduledEventOpt = None
             0
           }
