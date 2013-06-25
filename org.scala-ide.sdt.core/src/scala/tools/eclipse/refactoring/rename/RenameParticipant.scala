@@ -3,11 +3,15 @@ package refactoring
 package rename
 
 import org.eclipse.core.runtime.IProgressMonitor
-import org.eclipse.ltk.core.refactoring.participants.{ CheckConditionsContext, RenameParticipant => LtkRenameParticipant }
-import org.eclipse.ltk.core.refactoring.{ Change, RefactoringStatus }
+import org.eclipse.ltk.core.refactoring.participants.CheckConditionsContext
+import org.eclipse.ltk.core.refactoring.participants.{ RenameParticipant => LtkRenameParticipant }
+import org.eclipse.ltk.core.refactoring.Change
+import org.eclipse.ltk.core.refactoring.RefactoringStatus
 import org.eclipse.core.resources.IFile
 import scala.tools.eclipse.javaelements.ScalaSourceFile
-import scala.reflect.internal.util.{ NoPosition, Position, RangePosition }
+import scala.reflect.internal.util.NoPosition
+import scala.reflect.internal.util.Position
+import scala.reflect.internal.util.RangePosition
 import org.eclipse.ltk.core.refactoring.CompositeChange
 import scala.tools.eclipse.util.FileUtils
 import scala.tools.refactoring.common.TextChange

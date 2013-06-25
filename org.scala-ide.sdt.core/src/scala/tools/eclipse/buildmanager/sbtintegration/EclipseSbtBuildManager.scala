@@ -2,22 +2,34 @@ package scala.tools.eclipse
 package buildmanager
 package sbtintegration
 
-import scala.tools.nsc.{ Global, Settings }
+import scala.tools.nsc.Global
+import scala.tools.nsc.Settings
 import scala.tools.nsc.io.AbstractFile
 import scala.reflect.internal.util.NoPosition
 import scala.collection.mutable
-import org.eclipse.core.resources.{ IFile, IMarker }
-import org.eclipse.core.runtime.{ IProgressMonitor, IPath, SubMonitor, Path}
+import org.eclipse.core.resources.IFile
+import org.eclipse.core.resources.IMarker
+import org.eclipse.core.runtime.IProgressMonitor
+import org.eclipse.core.runtime.IPath
+import org.eclipse.core.runtime.SubMonitor
+import org.eclipse.core.runtime.Path
 import java.io.File
 import xsbti.compile.CompileProgress
-import xsbti.{ Logger, F0 }
-import sbt.{Process, ClasspathOptions}
-import scala.tools.eclipse.util.{ EclipseResource, FileUtils }
+import xsbti.Logger
+import xsbti.F0
+import sbt.Process
+import sbt.ClasspathOptions
+import scala.tools.eclipse.util.EclipseResource
+import scala.tools.eclipse.util.FileUtils
 import scala.tools.eclipse.properties.ScalaPluginSettings
 import org.eclipse.core.resources.IResource
 import scala.tools.eclipse.logging.HasLogger
-import sbt.inc.{ AnalysisStore, Analysis, FileBasedStore, Incremental }
-import sbt.compiler.{ IC, CompileFailed }
+import sbt.inc.AnalysisStore
+import sbt.inc.Analysis
+import sbt.inc.FileBasedStore
+import sbt.inc.Incremental
+import sbt.compiler.IC
+import sbt.compiler.CompileFailed
 import org.eclipse.core.resources.IProject
 import java.lang.ref.SoftReference
 import java.util.concurrent.atomic.AtomicReference

@@ -2,8 +2,10 @@ package scala.tools.eclipse.buildmanager.sbtintegration
 
 import scala.collection.mutable
 import scala.tools.eclipse.buildmanager.BuildReporter
-import scala.reflect.internal.util.{ BatchSourceFile, OffsetPosition }
-import scala.reflect.internal.util.{ Position, NoPosition }
+import scala.reflect.internal.util.BatchSourceFile
+import scala.reflect.internal.util.OffsetPosition
+import scala.reflect.internal.util.Position
+import scala.reflect.internal.util.NoPosition
 import scala.tools.nsc.reporters.Reporter
 import scala.tools.eclipse.util.EclipseResource
 
@@ -43,7 +45,9 @@ private[sbtintegration] class SbtBuildReporter(underlying: BuildReporter) extend
       override def category() = "compile"
     }
 
-    import xsbti.Severity.{Info, Warn, Error}
+    import xsbti.Severity.Info
+    import xsbti.Severity.Warn
+    import xsbti.Severity.Error
     val scalaPos = toScalaPosition(pos)
     sev match
     {

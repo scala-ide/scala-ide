@@ -38,7 +38,9 @@ class SymbolClassification(protected val sourceFile: SourceFile, val global: Sca
   extends SafeSymbol with TypeTreeTraverser with SymbolClassificationDebugger with SymbolTests with HasLogger {
 
   import SymbolClassification._
-  import global.{ Symbol, Position, NoSymbol }
+  import global.Symbol
+  import global.Position
+  import global.NoSymbol
 
   def compilationUnitOfFile(f: AbstractFile) = global.unitOfFile.get(f)
 

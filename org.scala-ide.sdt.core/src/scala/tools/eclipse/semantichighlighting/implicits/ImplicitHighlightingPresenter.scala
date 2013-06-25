@@ -144,7 +144,10 @@ object ImplicitHighlightingPresenter {
   private def pluginStore: IPreferenceStore = ScalaPlugin.plugin.getPreferenceStore
 
   def findAllImplicitConversions(compiler: ScalaPresentationCompiler, scu: ScalaCompilationUnit, sourceFile: SourceFile) = {
-    import compiler.{ Tree, Traverser, ApplyImplicitView, ApplyToImplicitArgs }
+    import compiler.Tree
+    import compiler.Traverser
+    import compiler.ApplyImplicitView
+    import compiler.ApplyToImplicitArgs
 
     object ImplicitHyperlinkFactory extends HyperlinkFactory {
       protected val global: compiler.type = compiler

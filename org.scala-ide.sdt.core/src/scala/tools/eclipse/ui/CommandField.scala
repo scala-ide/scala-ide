@@ -113,7 +113,8 @@ class CommandField(parent: Composite, style: Int) extends StyledText(parent, sty
 
     maybeShowHelpText()
 
-    import org.eclipse.swt.events.{ FocusListener, FocusEvent }
+    import org.eclipse.swt.events.FocusListener
+    import org.eclipse.swt.events.FocusEvent
     textWidget.addFocusListener(new FocusListener {
       override def focusGained(e: FocusEvent) {
         if (helpTextDisplayed) {

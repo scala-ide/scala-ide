@@ -6,15 +6,23 @@
 package scala.tools.eclipse
 
 import java.util.HashMap
-import org.eclipse.core.runtime.{ CoreException, IProgressMonitor, IStatus, Status }
+import org.eclipse.core.runtime.CoreException
+import org.eclipse.core.runtime.IProgressMonitor
+import org.eclipse.core.runtime.IStatus
+import org.eclipse.core.runtime.Status
 import org.eclipse.core.runtime.jobs.Job
 import org.eclipse.debug.core.DebugPlugin
-import org.eclipse.jdt.core.{ IJavaElement, IMember, IType }
+import org.eclipse.jdt.core.IJavaElement
+import org.eclipse.jdt.core.IMember
+import org.eclipse.jdt.core.IType
 import org.eclipse.jdt.debug.core.JDIDebugModel
-import org.eclipse.jdt.internal.debug.ui.{ BreakpointUtils, JDIDebugUIPlugin }
-import org.eclipse.jdt.internal.debug.ui.actions.{ ActionMessages, ToggleBreakpointAdapter }
+import org.eclipse.jdt.internal.debug.ui.BreakpointUtils
+import org.eclipse.jdt.internal.debug.ui.JDIDebugUIPlugin
+import org.eclipse.jdt.internal.debug.ui.actions.ActionMessages
+import org.eclipse.jdt.internal.debug.ui.actions.ToggleBreakpointAdapter
 import org.eclipse.jface.viewers.IStructuredSelection
-import org.eclipse.jface.text.{ BadLocationException, ITextSelection }
+import org.eclipse.jface.text.BadLocationException
+import org.eclipse.jface.text.ITextSelection
 import org.eclipse.jface.viewers.ISelection
 import org.eclipse.ui.IWorkbenchPart
 import scala.tools.eclipse.util.ReflectionUtils

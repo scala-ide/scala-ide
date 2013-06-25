@@ -1,19 +1,31 @@
 package scala.tools.eclipse.properties
 
-import net.miginfocom.layout.{AC, CC, LC}
+import net.miginfocom.layout.AC
+import net.miginfocom.layout.CC
+import net.miginfocom.layout.LC
 import net.miginfocom.swt.MigLayout
 import org.eclipse.core.resources.IProject
-import org.eclipse.core.runtime.preferences.{AbstractPreferenceInitializer, DefaultScope}
+import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer
+import org.eclipse.core.runtime.preferences.DefaultScope
 import org.eclipse.jdt.core.IJavaProject
 import org.eclipse.jdt.internal.ui.preferences.PreferencesMessages
-import org.eclipse.jface.dialogs.{IInputValidator, InputDialog}
-import org.eclipse.jface.preference.{IPreferenceStore, ListEditor}
+import org.eclipse.jface.dialogs.IInputValidator
+import org.eclipse.jface.dialogs.InputDialog
+import org.eclipse.jface.preference.IPreferenceStore
+import org.eclipse.jface.preference.ListEditor
 import org.eclipse.jface.window.Window
 import org.eclipse.swt.events.SelectionEvent
-import org.eclipse.swt.widgets.{Button, Composite, Control, Display, Label, Link}
+import org.eclipse.swt.widgets.Button
+import org.eclipse.swt.widgets.Composite
+import org.eclipse.swt.widgets.Control
+import org.eclipse.swt.widgets.Display
+import org.eclipse.swt.widgets.Label
+import org.eclipse.swt.widgets.Link
 import org.eclipse.swt.SWT
-import org.eclipse.ui.dialogs.{PreferencesUtil, PropertyPage}
-import org.eclipse.ui.{IWorkbench, IWorkbenchPreferencePage}
+import org.eclipse.ui.dialogs.PreferencesUtil
+import org.eclipse.ui.dialogs.PropertyPage
+import org.eclipse.ui.IWorkbench
+import org.eclipse.ui.IWorkbenchPreferencePage
 import scala.tools.eclipse.util.SWTUtils._
 import scala.tools.eclipse.ScalaPlugin
 import org.eclipse.jface.preference.RadioGroupFieldEditor

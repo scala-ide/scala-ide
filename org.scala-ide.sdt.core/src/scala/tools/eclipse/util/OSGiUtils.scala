@@ -6,7 +6,9 @@
 package scala.tools.eclipse.util
 
 import java.net.URL
-import org.eclipse.core.runtime.{ FileLocator, IPath, Path }
+import org.eclipse.core.runtime.FileLocator
+import org.eclipse.core.runtime.IPath
+import org.eclipse.core.runtime.Path
 import org.osgi.framework.Bundle
 
 object OSGiUtils {

@@ -7,50 +7,50 @@
 package scala.tools.eclipse.wizards
 
 import org.eclipse.core.resources.IResource
-import org.eclipse.core.runtime.{
-  CoreException,
-  FileLocator,
-  IPath,
-  IProgressMonitor,
-  IStatus,
-  NullProgressMonitor,
-  Path,
-  SubProgressMonitor
-}
-import org.eclipse.jdt.core.{
-  Flags,
-  ICompilationUnit,
-  IJavaElement,
-  IPackageFragment,
-  IPackageFragmentRoot,
-  IType,
-  ITypeHierarchy,
-  JavaModelException,
-  Signature,
-  WorkingCopyOwner
-}
-import org.eclipse.jdt.core.dom.{ AST, ASTParser, CompilationUnit }
+import org.eclipse.core.runtime.CoreException
+import org.eclipse.core.runtime.FileLocator
+import org.eclipse.core.runtime.IPath
+import org.eclipse.core.runtime.IProgressMonitor
+import org.eclipse.core.runtime.IStatus
+import org.eclipse.core.runtime.NullProgressMonitor
+import org.eclipse.core.runtime.Path
+import org.eclipse.core.runtime.SubProgressMonitor
+import org.eclipse.jdt.core.Flags
+import org.eclipse.jdt.core.ICompilationUnit
+import org.eclipse.jdt.core.IJavaElement
+import org.eclipse.jdt.core.IPackageFragment
+import org.eclipse.jdt.core.IPackageFragmentRoot
+import org.eclipse.jdt.core.IType
+import org.eclipse.jdt.core.ITypeHierarchy
+import org.eclipse.jdt.core.JavaModelException
+import org.eclipse.jdt.core.Signature
+import org.eclipse.jdt.core.WorkingCopyOwner
+import org.eclipse.jdt.core.dom.AST
+import org.eclipse.jdt.core.dom.ASTParser
+import org.eclipse.jdt.core.dom.CompilationUnit
 import org.eclipse.jdt.internal.corext.codemanipulation.StubUtility
 import org.eclipse.jdt.internal.corext.util.JavaModelUtil
-import org.eclipse.jdt.internal.ui.dialogs.{ StatusInfo, TextFieldNavigationHandler }
-import org.eclipse.jdt.internal.ui.refactoring.contentassist.{ ControlContentAssistHelper, JavaPackageCompletionProcessor }
+import org.eclipse.jdt.internal.ui.dialogs.StatusInfo
+import org.eclipse.jdt.internal.ui.dialogs.TextFieldNavigationHandler
+import org.eclipse.jdt.internal.ui.refactoring.contentassist.ControlContentAssistHelper
+import org.eclipse.jdt.internal.ui.refactoring.contentassist.JavaPackageCompletionProcessor
 import org.eclipse.jdt.internal.ui.util.SWTUtil
 import org.eclipse.jdt.internal.ui.wizards.NewWizardMessages
-import org.eclipse.jdt.internal.ui.wizards.dialogfields.{
-  DialogField,
-  IDialogFieldListener,
-  IStringButtonAdapter,
-  LayoutUtil,
-  SelectionButtonDialogField,
-  SelectionButtonDialogFieldGroup,
-  StringButtonDialogField
-}
+import org.eclipse.jdt.internal.ui.wizards.dialogfields.DialogField
+import org.eclipse.jdt.internal.ui.wizards.dialogfields.IDialogFieldListener
+import org.eclipse.jdt.internal.ui.wizards.dialogfields.IStringButtonAdapter
+import org.eclipse.jdt.internal.ui.wizards.dialogfields.LayoutUtil
+import org.eclipse.jdt.internal.ui.wizards.dialogfields.SelectionButtonDialogField
+import org.eclipse.jdt.internal.ui.wizards.dialogfields.SelectionButtonDialogFieldGroup
+import org.eclipse.jdt.internal.ui.wizards.dialogfields.StringButtonDialogField
 import org.eclipse.jdt.ui.wizards.NewTypeWizardPage
-import org.eclipse.jface.dialogs.{ Dialog, IDialogSettings }
+import org.eclipse.jface.dialogs.Dialog
+import org.eclipse.jface.dialogs.IDialogSettings
 import org.eclipse.jface.resource.ImageDescriptor
 import org.eclipse.jface.viewers.IStructuredSelection
 import org.eclipse.swt.SWT
-import org.eclipse.swt.layout.{ GridData, GridLayout }
+import org.eclipse.swt.layout.GridData
+import org.eclipse.swt.layout.GridLayout
 import org.eclipse.swt.widgets.Composite
 import collection.Seq
 import collection.mutable.Buffer

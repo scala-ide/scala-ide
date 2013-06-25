@@ -9,9 +9,12 @@ import org.eclipse.core.runtime.CoreException
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.core.search.IJavaSearchConstants
 import org.eclipse.jdt.internal.codeassist.ISearchRequestor
-import org.eclipse.jdt.internal.compiler.env.{ AccessRestriction, INameEnvironment }
-import org.eclipse.jdt.internal.core.{ DefaultWorkingCopyOwner, JavaProject }
-import org.eclipse.jdt.internal.ui.text.correction.{ SimilarElement, SimilarElementsRequestor }
+import org.eclipse.jdt.internal.compiler.env.AccessRestriction
+import org.eclipse.jdt.internal.compiler.env.INameEnvironment
+import org.eclipse.jdt.internal.core.DefaultWorkingCopyOwner
+import org.eclipse.jdt.internal.core.JavaProject
+import org.eclipse.jdt.internal.ui.text.correction.SimilarElement
+import org.eclipse.jdt.internal.ui.text.correction.SimilarElementsRequestor
 import org.eclipse.jdt.ui.text.java._
 import org.eclipse.core.resources.IMarker
 import scala.tools.eclipse.javaelements.ScalaSourceFile
@@ -30,7 +33,8 @@ class ScalaQuickAssistProcessor extends org.eclipse.jdt.ui.text.java.IQuickAssis
   override def getAssists(context: IInvocationContext, locations: Array[IProblemLocation]): Array[IJavaCompletionProposal] =
     context.getCompilationUnit match {
       case ssf: ScalaSourceFile => {
-        import scala.tools.eclipse.util.EditorUtils.{openEditorAndApply, getAnnotationsAtOffset}
+        import scala.tools.eclipse.util.EditorUtils.openEditorAndApply
+        import scala.tools.eclipse.util.EditorUtils.getAnnotationsAtOffset
         openEditorAndApply(ssf) { editor =>
           val corrections = {
             for ((ann, pos) <- getAnnotationsAtOffset(editor, context.getSelectionOffset())) yield {

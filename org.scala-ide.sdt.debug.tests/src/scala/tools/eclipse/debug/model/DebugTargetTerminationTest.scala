@@ -89,7 +89,9 @@ object DebugTargetTerminationTest {
 }
 
 class DebugTargetTerminationTest extends HasLogger {
-  import DebugTargetTerminationTest.{ ExceptionForTestingPurposes_ThisIsOk, TerminationListenerActor, LatchTimeout }
+  import DebugTargetTerminationTest.ExceptionForTestingPurposes_ThisIsOk
+  import DebugTargetTerminationTest.TerminationListenerActor
+  import DebugTargetTerminationTest.LatchTimeout
 
   var virtualMachine: VirtualMachine = _
   var eventQueue: EventQueue = _

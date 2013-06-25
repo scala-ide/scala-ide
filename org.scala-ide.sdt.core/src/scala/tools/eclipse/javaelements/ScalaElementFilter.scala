@@ -5,7 +5,8 @@
 
 package scala.tools.eclipse.javaelements
 
-import org.eclipse.jface.viewers.{ Viewer, ViewerFilter }
+import org.eclipse.jface.viewers.Viewer
+import org.eclipse.jface.viewers.ViewerFilter
 
 class ScalaElementFilter extends ViewerFilter {
   def select(viewer : Viewer, parentElement : AnyRef, element : AnyRef) : Boolean =

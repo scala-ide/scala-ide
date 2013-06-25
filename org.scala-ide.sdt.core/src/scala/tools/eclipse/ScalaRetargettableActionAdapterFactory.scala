@@ -6,7 +6,8 @@
 package scala.tools.eclipse
 
 import org.eclipse.core.runtime.IAdapterFactory
-import org.eclipse.debug.ui.actions.{ IRunToLineTarget, IToggleBreakpointsTarget }
+import org.eclipse.debug.ui.actions.IRunToLineTarget
+import org.eclipse.debug.ui.actions.IToggleBreakpointsTarget
 import org.eclipse.jdt.internal.debug.ui.actions.RunToLineAdapter
 
 class ScalaRetargettableActionAdapterFactory extends IAdapterFactory {

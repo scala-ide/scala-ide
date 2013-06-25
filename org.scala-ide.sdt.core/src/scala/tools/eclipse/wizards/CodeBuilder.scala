@@ -6,10 +6,15 @@
  */
 package scala.tools.eclipse.wizards
 
-import org.eclipse.jdt.core.{ Flags, IField, IMethod, IType, ITypeHierarchy,
-    Signature }
+import org.eclipse.jdt.core.Flags
+import org.eclipse.jdt.core.IField
+import org.eclipse.jdt.core.IMethod
+import org.eclipse.jdt.core.IType
+import org.eclipse.jdt.core.ITypeHierarchy
+import org.eclipse.jdt.core.Signature
 
-import scala.collection.mutable.{ HashMap, ListBuffer }
+import scala.collection.mutable.HashMap
+import scala.collection.mutable.ListBuffer
 import scala.reflect.NameTransformer
 
 trait CodeBuilder {

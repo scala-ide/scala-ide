@@ -3,7 +3,8 @@ package scala.tools.eclipse.logging
 import scala.tools.eclipse.util.Trim
 
 private[logging] object StreamRedirect {
-  import java.io.{ OutputStream, PrintStream }
+  import java.io.OutputStream
+  import java.io.PrintStream
 
   private final val defaultStdOut: PrintStream = System.out
   private final val defaultStdErr: PrintStream = System.err

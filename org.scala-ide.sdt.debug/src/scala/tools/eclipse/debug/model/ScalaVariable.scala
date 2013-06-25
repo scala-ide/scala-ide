@@ -1,7 +1,9 @@
 package scala.tools.eclipse.debug.model
 
 import org.eclipse.debug.core.model.IVariable
-import com.sun.jdi.{LocalVariable, Field, ArrayType}
+import com.sun.jdi.LocalVariable
+import com.sun.jdi.Field
+import com.sun.jdi.ArrayType
 import com.sun.jdi.ObjectReference
 import org.eclipse.debug.core.model.IValue
 

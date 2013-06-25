@@ -1,7 +1,9 @@
 package scala.tools.eclipse
 package sbtbuilder
 
-import org.junit.{ Before, Test, Assert }
+import org.junit.Before
+import org.junit.Test
+import org.junit.Assert
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.core.resources.IncrementalProjectBuilder
 

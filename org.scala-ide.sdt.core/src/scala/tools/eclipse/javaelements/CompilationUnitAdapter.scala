@@ -5,19 +5,46 @@
 
 package scala.tools.eclipse.javaelements
 
-import java.util.{ HashMap => JHashMap, Map => JMap }
-import org.eclipse.core.resources.{ IMarker, IResource }
-import org.eclipse.core.runtime.{ IAdaptable, IPath, IProgressMonitor, IStatus }
+import java.util.{ HashMap => JHashMap }
+import java.util.{ Map => JMap }
+import org.eclipse.core.resources.IMarker
+import org.eclipse.core.resources.IResource
+import org.eclipse.core.runtime.IAdaptable
+import org.eclipse.core.runtime.IPath
+import org.eclipse.core.runtime.IProgressMonitor
+import org.eclipse.core.runtime.IStatus
 import org.eclipse.core.runtime.jobs.ISchedulingRule
-import org.eclipse.jdt.core.{
-  BufferChangedEvent, CompletionRequestor, IBuffer, IBufferFactory, ICodeCompletionRequestor, ICompletionRequestor, ICompilationUnit,
-  IImportContainer, IImportDeclaration, IJavaElement, IJavaModel, IJavaProject, IOpenable, IPackageDeclaration,
-  IProblemRequestor, ISourceRange, IType, ITypeRoot, JavaModelException, WorkingCopyOwner }
+import org.eclipse.jdt.core.BufferChangedEvent
+import org.eclipse.jdt.core.CompletionRequestor
+import org.eclipse.jdt.core.IBuffer
+import org.eclipse.jdt.core.IBufferFactory
+import org.eclipse.jdt.core.ICodeCompletionRequestor
+import org.eclipse.jdt.core.ICompletionRequestor
+import org.eclipse.jdt.core.ICompilationUnit
+import org.eclipse.jdt.core.IImportContainer
+import org.eclipse.jdt.core.IImportDeclaration
+import org.eclipse.jdt.core.IJavaElement
+import org.eclipse.jdt.core.IJavaModel
+import org.eclipse.jdt.core.IJavaProject
+import org.eclipse.jdt.core.IOpenable
+import org.eclipse.jdt.core.IPackageDeclaration
+import org.eclipse.jdt.core.IProblemRequestor
+import org.eclipse.jdt.core.ISourceRange
+import org.eclipse.jdt.core.IType
+import org.eclipse.jdt.core.ITypeRoot
+import org.eclipse.jdt.core.JavaModelException
+import org.eclipse.jdt.core.WorkingCopyOwner
 import org.eclipse.jdt.core.dom.CompilationUnit
 import org.eclipse.jdt.internal.compiler.env
-import org.eclipse.jdt.internal.core.{ BufferManager, DefaultWorkingCopyOwner, JavaElement, Openable, OpenableElementInfo, PackageFragmentRoot }
+import org.eclipse.jdt.internal.core.BufferManager
+import org.eclipse.jdt.internal.core.DefaultWorkingCopyOwner
+import org.eclipse.jdt.internal.core.JavaElement
+import org.eclipse.jdt.internal.core.Openable
+import org.eclipse.jdt.internal.core.OpenableElementInfo
+import org.eclipse.jdt.internal.core.PackageFragmentRoot
 import org.eclipse.jdt.internal.core.util.MementoTokenizer
-import org.eclipse.text.edits.{ TextEdit, UndoEdit }
+import org.eclipse.text.edits.TextEdit
+import org.eclipse.text.edits.UndoEdit
 import org.eclipse.jdt.internal.core.PackageDeclaration
 
 class CompilationUnitAdapter(classFile : ScalaClassFile) extends Openable(classFile.getParent.asInstanceOf[JavaElement]) with ICompilationUnit with env.ICompilationUnit {

@@ -1,3 +1,4 @@
+// scalastyle:off block.import.checker
 package bug1000560
 
 object Outer {

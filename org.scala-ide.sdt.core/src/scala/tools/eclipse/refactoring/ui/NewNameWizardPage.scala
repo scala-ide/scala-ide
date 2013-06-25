@@ -4,7 +4,8 @@ package ui
 
 import org.eclipse.jface.dialogs.IMessageProvider
 import org.eclipse.ltk.ui.refactoring.UserInputWizardPage
-import org.eclipse.swt.layout.{GridData, GridLayout}
+import org.eclipse.swt.layout.GridData
+import org.eclipse.swt.layout.GridLayout
 import org.eclipse.swt.widgets.Composite
 import org.eclipse.swt.SWT
 import org.eclipse.ui.PlatformUI

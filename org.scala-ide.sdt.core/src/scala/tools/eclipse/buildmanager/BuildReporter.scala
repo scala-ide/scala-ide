@@ -1,13 +1,18 @@
 package scala.tools.eclipse.buildmanager
 
-import scala.tools.eclipse.{EclipseBuildManager, TaskScanner, ScalaProject}
+import scala.tools.eclipse.EclipseBuildManager
+import scala.tools.eclipse.TaskScanner
+import scala.tools.eclipse.ScalaProject
 import scala.tools.nsc.Settings
 import scala.tools.nsc.reporters.Reporter
-import scala.reflect.internal.util.{ Position, NoPosition }
-import scala.tools.eclipse.util.{ EclipseResource, FileUtils}
+import scala.reflect.internal.util.Position
+import scala.reflect.internal.util.NoPosition
+import scala.tools.eclipse.util.EclipseResource
+import scala.tools.eclipse.util.FileUtils
 import scala.tools.eclipse.logging.HasLogger
 import scala.collection.mutable.ListBuffer
-import org.eclipse.core.resources.{ IFile, IMarker }
+import org.eclipse.core.resources.IFile
+import org.eclipse.core.resources.IMarker
 import org.eclipse.core.runtime.IProgressMonitor
 
 case class BuildProblem(severity: Reporter#Severity, msg: String, pos: Position)

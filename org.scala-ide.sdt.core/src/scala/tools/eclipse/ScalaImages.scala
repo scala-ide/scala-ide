@@ -5,7 +5,8 @@
 
 package scala.tools.eclipse
 
-import java.net.{ MalformedURLException, URL }
+import java.net.MalformedURLException
+import java.net.URL
 
 import org.eclipse.jface.resource.ImageDescriptor
 

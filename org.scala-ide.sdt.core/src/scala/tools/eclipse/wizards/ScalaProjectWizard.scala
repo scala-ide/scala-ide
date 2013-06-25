@@ -7,12 +7,20 @@ package scala.tools.eclipse.wizards
 
 import scala.collection.mutable.ArrayBuffer
 
-import org.eclipse.core.runtime.{ IProgressMonitor, NullProgressMonitor, OperationCanceledException, Path, SubProgressMonitor }
-import org.eclipse.jdt.core.{ IClasspathEntry, JavaCore }
-import org.eclipse.jdt.internal.ui.wizards.{ JavaProjectWizard, NewWizardMessages }
+import org.eclipse.core.runtime.IProgressMonitor
+import org.eclipse.core.runtime.NullProgressMonitor
+import org.eclipse.core.runtime.OperationCanceledException
+import org.eclipse.core.runtime.Path
+import org.eclipse.core.runtime.SubProgressMonitor
+import org.eclipse.jdt.core.IClasspathEntry
+import org.eclipse.jdt.core.JavaCore
+import org.eclipse.jdt.internal.ui.wizards.JavaProjectWizard
+import org.eclipse.jdt.internal.ui.wizards.NewWizardMessages
 import org.eclipse.jdt.internal.ui.wizards.buildpaths.BuildPathsBlock
 import org.eclipse.jdt.ui.PreferenceConstants
-import org.eclipse.jdt.ui.wizards.{ JavaCapabilityConfigurationPage, NewJavaProjectWizardPageOne, NewJavaProjectWizardPageTwo }
+import org.eclipse.jdt.ui.wizards.JavaCapabilityConfigurationPage
+import org.eclipse.jdt.ui.wizards.NewJavaProjectWizardPageOne
+import org.eclipse.jdt.ui.wizards.NewJavaProjectWizardPageTwo
 
 import scala.tools.eclipse.ScalaImages
 import scala.tools.eclipse.ScalaPlugin

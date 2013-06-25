@@ -1,8 +1,10 @@
 package scala.tools.eclipse.debug.model
 
 import scala.collection.JavaConverters.asScalaBufferConverter
-import scala.tools.eclipse.debug.command.{ ScalaStepOver, ScalaStep }
-import org.eclipse.debug.core.model.{ IThread, IBreakpoint }
+import scala.tools.eclipse.debug.command.ScalaStepOver
+import scala.tools.eclipse.debug.command.ScalaStep
+import org.eclipse.debug.core.model.IThread
+import org.eclipse.debug.core.model.IBreakpoint
 import com.sun.jdi.ThreadReference
 import com.sun.jdi.VMDisconnectedException
 import com.sun.jdi.ObjectCollectedException

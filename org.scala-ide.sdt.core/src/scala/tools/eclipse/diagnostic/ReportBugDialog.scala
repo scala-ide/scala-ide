@@ -2,12 +2,19 @@ package scala.tools.eclipse
 
 package diagnostic
 
-import org.eclipse.jface.dialogs.{ Dialog, IDialogConstants }
+import org.eclipse.jface.dialogs.Dialog
+import org.eclipse.jface.dialogs.IDialogConstants
 import org.eclipse.swt.widgets.{ List => SWTList, _ }
-import org.eclipse.swt.layout.{ RowLayout, GridLayout, GridData }
+import org.eclipse.swt.layout.RowLayout
+import org.eclipse.swt.layout.GridLayout
+import org.eclipse.swt.layout.GridData
 import org.eclipse.ui.internal.layout.CellLayout
 import org.eclipse.swt.SWT
-import org.eclipse.swt.events.{ ModifyListener, ModifyEvent, SelectionAdapter, SelectionListener, SelectionEvent }
+import org.eclipse.swt.events.ModifyListener
+import org.eclipse.swt.events.ModifyEvent
+import org.eclipse.swt.events.SelectionAdapter
+import org.eclipse.swt.events.SelectionListener
+import org.eclipse.swt.events.SelectionEvent
 import org.eclipse.core.runtime.Platform
 
 import scala.tools.eclipse.logging.LogManager

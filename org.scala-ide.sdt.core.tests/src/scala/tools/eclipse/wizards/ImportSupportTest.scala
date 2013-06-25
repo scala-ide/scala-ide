@@ -5,7 +5,9 @@
  */
 package scala.tools.eclipse.wizards
 
-import org.junit.{ Test, Assert, Ignore }
+import org.junit.Test
+import org.junit.Assert
+import org.junit.Ignore
 
 class ImportSupportTest {
 
