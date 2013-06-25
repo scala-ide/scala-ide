@@ -119,7 +119,7 @@ class ScalaLaunchDelegate extends AbstractJavaLaunchConfigurationDelegate {
       ScalaPlugin.plugin.asScalaProject(project.getProject) map { scalaProject =>
         val mainClassVerifier = new MainClassVerifier(new UIErrorReporter)
         val status = mainClassVerifier.execute(scalaProject, mainTypeName)
-        status.getCode() == IStatus.OK
+        status.isOK
       } getOrElse false
     }
   }

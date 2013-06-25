@@ -4,8 +4,12 @@ import scala.tools.eclipse.ScalaProject
 import org.eclipse.core.runtime.IStatus
 import org.eclipse.core.runtime.Status
 import scala.tools.eclipse.ScalaPlugin
+import org.eclipse.core.resources.IResource
+import org.eclipse.core.runtime.IPath
 
 object MainClassVerifier {
+  private final val ModuleClassSuffix = "$"
+
   trait ErrorReporter {
     def report(msg: String): Unit
   }
@@ -18,24 +22,41 @@ class MainClassVerifier(reporter: MainClassVerifier.type#ErrorReporter) {
    * @typeName The fully-qualified main type name.
    */
   def execute(project: ScalaProject, mainTypeName: String): IStatus = {
-    // Try to locate the type
-    val element = project.javaProject.findType(mainTypeName)
-
-    // The main type won't be found if the provided ``mainTypeName`` (fully-qualified name) doesn't
-    //  reference an existing type. (this is a workaround for #1000541).
-    if (element == null) {
-      return mainTypeCannotBeLocated(project.underlying.getName, mainTypeName)
-    }
-
-    new Status(IStatus.OK, ScalaPlugin.plugin.pluginId, "")
+    val status = canRunMain(project, mainTypeName)
+    if (!status.isOK) reporter.report(status.getMessage())
+    status
   }
 
-  private def mainTypeCannotBeLocated(projectName: String, mainTypeName: String): IStatus = {
-    val errMsg = ("Cannot locate main type '%s' in project '%s'. For this to work, the package name in " +
-      "the source needs to match the source's physical location.\n" +
-      "Hint: Move the source file containing the main type '%s' in folder '%s'."
-      ).format(mainTypeName, projectName, mainTypeName, mainTypeName.split('.').init.mkString("/"))
-    reporter.report(errMsg)
+  private def canRunMain(project: ScalaProject, mainTypeName: String): IStatus = {
+    val mainClass = findClassFile(project, mainTypeName)
+    def mainModuleClass = findClassFile(project, mainTypeName + MainClassVerifier.ModuleClassSuffix)
+
+    if(mainClass.isEmpty) mainTypeCannotBeLocated(project, mainTypeName)
+    else if (mainModuleClass.isEmpty) new Status(IStatus.ERROR, ScalaPlugin.plugin.pluginId, s"${mainTypeName} needs to be an `object` (it is currently a `class`).")
+    else new Status(IStatus.OK, ScalaPlugin.plugin.pluginId, "")
+  }
+
+  private def findClassFile(project: ScalaProject, mainTypeName: String): Option[IResource] = {
+    val outputLocations = project.outputFolders
+    val classFileName = mainTypeName.replace('.', '/')
+    (for {
+      outputLocation <- outputLocations
+      classFileLocation = outputLocation.append(s"${classFileName}.class")
+      classFile <- Option(ScalaPlugin.plugin.workspaceRoot.findMember(classFileLocation))
+    } yield classFile).headOption
+  }
+
+  private def mainTypeCannotBeLocated(project: ScalaProject, mainTypeName: String): IStatus = {
+    val projectName = project.underlying.getName
+    val sb = new StringBuilder
+    sb append ((s"Cannot locate main type '${mainTypeName}' in project '${projectName}'."))
+    for (mainClassName <- mainTypeName.split('.').lastOption.map(_.mkString)) {
+      sb append {
+        s""" Check your Run Configuration and make sure that the value of \"Main class\" is in sync with the package and type name declared in class '${mainClassName}'."""
+      }
+    }
+
+    val errMsg = sb.toString
     new Status(IStatus.ERROR, ScalaPlugin.plugin.pluginId, errMsg)
   }
 }
