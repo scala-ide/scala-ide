@@ -90,20 +90,35 @@ class MainClassVerifierTest {
         && delegate.finalLaunchCheck(config, ILaunchManager.DEBUG_MODE, new NullProgressMonitor))
   }
 
+  /** Test that an error is reported if the `mainTypeName` is a class (it ought to be an `object`).*/
   @Test
-  def reportErrorWhenPackageDeclarationInMainTypeDoesntMatchPhysicalLocation() {
-    val pkg = "foo"
+  def reportErrorWhenMainIsInScalaClass() {
+    val pkg = ""
     val mainName = "Main"
-    val main = "object %s extends App".format(mainName) // note: no package declaration here!
+    val main = "class %s extends App".format(mainName) // note: need an object, not a class!
 
-    createSource(pkg, mainName, main) // source is created in foo/ (look at the value of `pkg`)
+    createSource(pkg, mainName, main)
     val mainTypeName = mainName // this is the correct fully-qualified name
 
     runTest(mainTypeName, main, times(1))
   }
 
+  /** Test that an error is reported if the `mainTypeName` used to run the code does not match the binary location.*/
   @Test
-  def reportErrorWhenPackageDeclarationInMainTypeDoesntMatchPhysicalLocation2() {
+  def reportErrorWhenPackageDeclarationInMainTypeDoesntMatchBinaryLocation_inEmptyPackage() {
+    val pkg = "foo"
+    val mainName = "Main"
+    val main = "object %s extends App".format(mainName) // note: no package declaration here!
+
+    createSource(pkg, mainName, main) // source is created in foo/ (look at the value of `pkg`)
+    val mainTypeName = pkg + "." + mainName // this is NOT the correct fully-qualified name
+
+    runTest(mainTypeName, main, times(1))
+  }
+
+  /** Test that an error is reported if the `mainTypeName` used to run the code does not match the binary location.*/
+  @Test
+  def reportErrorWhenPackageDeclarationInMainTypeDoesntMatchBinaryLocation_inNonEmptyPackage() {
     val sourceLocation = "foo"
     val pkg = "bar"
     val mainName = "Main"
@@ -113,9 +128,39 @@ class MainClassVerifierTest {
     """.format(pkg, mainName) // note: no package declaration here!
 
     createSource(sourceLocation, mainName, main) // source is created in foo/
-    val mainTypeName = pkg + "." + mainName // this is the correct fully-qualified name
+    val mainTypeName = sourceLocation + "." + mainName // this is NOT the correct fully-qualified name
 
     runTest(mainTypeName, main, times(1))
+  }
+
+  /** Test that no error is reported if the `mainTypeName` used to run the code matches the binary location.*/
+  @Test
+  def doNotReportErrorWhenPackageDeclarationInMainTypeMatchBinaryLocation_inEmptyPackage() {
+    val pkg = "foo"
+    val mainName = "Main"
+    val main = "object %s extends App".format(mainName) // note: no package declaration here!
+
+    createSource(pkg, mainName, main) // source is created in foo/ (look at the value of `pkg`)
+    val mainTypeName = mainName // this is the correct fully-qualified name
+
+    runTest(mainTypeName, main, never())
+  }
+
+  /** Test that no error is reported if the `mainTypeName` used to run the code matches the binary location.*/
+  @Test
+  def doNotReportErrorWhenPackageDeclarationInMainTypeMatchBinaryLocation_inNonEmptyPackage() {
+    val sourceLocation = "foo"
+    val pkg = "bar"
+    val mainName = "Main"
+    val main = """
+      package %s
+      object %s extends App
+    """.format(pkg, mainName)
+
+    createSource(sourceLocation, mainName, main) // source is created in foo/
+    val mainTypeName = pkg + "." + mainName // this is the correct fully-qualified name
+
+    runTest(mainTypeName, main, never())
   }
 
   @Test
