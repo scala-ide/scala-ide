@@ -81,6 +81,24 @@
       </vmConnector>
    </extension>
    <extension
+         point="org.eclipse.ui.views">
+      <view
+            category="org.scala-ide.sdt.core.viewCategory"
+            class="scala.tools.eclipse.debug.views.AsyncDebugView"
+            id="org.scala-ide.sdt.debug.asyncView"
+            name="Async Debugger"
+            restorable="true">
+      </view>
+   </extension>
+   <extension
+         point="org.eclipse.debug.ui.contextViewBindings">
+      <contextViewBinding
+            autoOpen="true"
+            contextId="org.eclipse.debug.ui.debugging"
+            viewId="org.scala-ide.sdt.debug.asyncView">
+      </contextViewBinding>
+   </extension>
+   <extension
          point="org.scala-ide.sdt.core.scalaHoverDebugOverride">
       <overrider
             hoverFactoryClass="org.scalaide.debug.internal.editor.TextHoverFactory">
