@@ -76,7 +76,7 @@ class ScalaToggleBreakpointAdapter extends ToggleBreakpointAdapter with HasLogge
                   DebugPlugin.getDefault().getBreakpointManager.removeBreakpoint(existingBreakpoint, true)
                   return Status.OK_STATUS
                 }
-                val attributes = new HashMap[AnyRef, AnyRef](10)
+                val attributes = new HashMap[String, AnyRef](10)
                 val documentProvider = editor.getDocumentProvider
                 if (documentProvider == null)
                   return Status.CANCEL_STATUS
