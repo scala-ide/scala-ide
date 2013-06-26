@@ -44,16 +44,19 @@
     <maven-source.plugin.version>2.1.2</maven-source.plugin.version>
     <maven-clean.plugin.version>2.5</maven-clean.plugin.version>
 
+    <!-- Weaving plugin version -->
+    <weaving.hook.plugin.version>Select a profile</weaving.hook.plugin.version>
+
     <!-- tycho test related -->
     <tycho.test.OSspecific></tycho.test.OSspecific>
     <!-- Partial workaround against JDT Weaving deadlocks. See #1000317 and the original ticket on https://issuetracker.springsource.com/browse/STS-1445 -->
     <tycho.test.weaving>-XX:+UnlockDiagnosticVMOptions -XX:+UnsyncloadClass -Dosgi.classloader.lock=classname</tycho.test.weaving>
     <tycho.test.jvmArgs>-Xmx1024m -XX:MaxPermSize=256m -Dsdtcore.headless -Dsdtcore.notimeouts ${tycho.test.weaving} ${tycho.test.OSspecific}</tycho.test.jvmArgs>
 
-    <!-- dependencies repos -->
-    <eclipse.codename>juno</eclipse.codename>
-    <repo.eclipse>${repo.eclipse.juno}</repo.eclipse>
-    <repo.ajdt>${repo.ajdt.juno}</repo.ajdt>
+    <!-- dependencies repos, can be overwritten by profiles -->
+    <eclipse.codename>Select a profile</eclipse.codename>
+    <repo.eclipse>Select a profile</repo.eclipse>
+    <repo.ajdt>Select a profile</repo.ajdt>
 
      <!-- default values, can be overwritten by profiles -->
      <scala.version>2.10.0</scala.version>
