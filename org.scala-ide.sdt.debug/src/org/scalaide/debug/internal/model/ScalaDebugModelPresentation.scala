@@ -14,12 +14,19 @@ import org.eclipse.debug.ui.DebugUITools
 import org.eclipse.jdt.internal.ui.javaeditor.EditorUtility
 import org.eclipse.ui.IEditorInput
 import org.eclipse.jface.viewers.ILabelProviderListener
+import scala.tools.eclipse.debug.async.AsyncStackFrame
+import org.eclipse.debug.core.model.IStackFrame
 import org.eclipse.debug.core.model.IVariable
+import org.eclipse.debug.ui.IInstructionPointerPresentation
 import scala.util.Try
+import org.eclipse.ui.IEditorPart
+import org.eclipse.jface.text.source.Annotation
+import org.eclipse.swt.graphics.Image
+import org.eclipse.debug.internal.ui.DebugUIMessages
+import org.eclipse.debug.internal.ui.InstructionPointerAnnotation
 
-/**
- * Utility methods for the ScalaDebugModelPresentation class
- * This object doesn't use any internal field, and is thread safe.
+/** Utility methods for the ScalaDebugModelPresentation class
+ *  This object doesn't use any internal field, and is thread safe.
  */
 object ScalaDebugModelPresentation {
   def computeDetail(value: IValue): String = {
@@ -51,7 +58,7 @@ object ScalaDebugModelPresentation {
     import scala.collection.JavaConverters._
     // There's a bug in the JDI implementation provided by the JDT, calling getValues()
     // on an array of size zero generates a java.lang.IndexOutOfBoundsException
-    val array= arrayReference.underlying
+    val array = arrayReference.underlying
     if (array.length == 0) {
       "Array()"
     } else {
@@ -77,11 +84,10 @@ object ScalaDebugModelPresentation {
 
 }
 
-/**
- * Generate the elements used by the UI.
- * This class doesn't use any internal field, and is thread safe.
+/** Generate the elements used by the UI.
+ *  This class doesn't use any internal field, and is thread safe.
  */
-class ScalaDebugModelPresentation extends IDebugModelPresentation {
+class ScalaDebugModelPresentation extends IDebugModelPresentation with IInstructionPointerPresentation {
 
   // Members declared in org.eclipse.jface.viewers.IBaseLabelProvider
 
@@ -113,13 +119,16 @@ class ScalaDebugModelPresentation extends IDebugModelPresentation {
       case stackFrame: ScalaStackFrame =>
         // TODO: right image depending of state
         DebugUITools.getImage(IDebugUIConstants.IMG_OBJS_STACKFRAME)
-      case variable: ScalaVariable =>
+      case variable: IVariable =>
         // TODO: right image depending on ?
         DebugUITools.getImage(IDebugUIConstants.IMG_OBJS_VARIABLE)
       case variable: IndexedVariablePartition =>
         // variable used to split large arrays
         // TODO: see ScalaVariable before
         DebugUITools.getImage(IDebugUIConstants.IMG_OBJS_VARIABLE)
+      case asyncSF: IStackFrame =>
+        // TODO: right image depending of state
+        DebugUITools.getImage(IDebugUIConstants.IMG_OBJS_STACKFRAME)
 
       case _ => DebugUITools.getImage(IDebugUIConstants.IMG_OBJS_VARIABLE)
     }
@@ -135,6 +144,7 @@ class ScalaDebugModelPresentation extends IDebugModelPresentation {
         getScalaStackFrameText(stackFrame)
       case variable: IVariable =>
         ScalaDebugModelPresentation.textFor(variable)
+      case _ => element.toString
     }
   }
 
@@ -179,4 +189,52 @@ class ScalaDebugModelPresentation extends IDebugModelPresentation {
     })
   }
 
+  // from InstructionPointer
+  def getInstructionPointerAnnotation(editorPart: IEditorPart, frame: IStackFrame): Annotation = {
+    new InstructionPointerAnnotation(frame,
+      IDebugUIConstants.ANNOTATION_TYPE_INSTRUCTION_POINTER_SECONDARY,
+      DebugUIMessages.InstructionPointerAnnotation_1,
+      DebugUITools.getImage(IDebugUIConstants.IMG_OBJS_INSTRUCTION_POINTER))
+  }
+
+  /** Returns an identifier of a <code>org.eclipse.ui.editors.annotationTypes</code> extension used for
+   *  the specified stack frame in the specified editor, or <code>null</code> if a default annotation
+   *  should be used.
+   *
+   *  @param editorPart the editor the debugger has opened
+   *  @param frame the stack frame for which the debugger is displaying
+   *  source
+   *  @return annotation type identifier or <code>null</code>
+   */
+  def getInstructionPointerAnnotationType(editorPart: IEditorPart, frame: IStackFrame): String =
+    IDebugUIConstants.ANNOTATION_TYPE_INSTRUCTION_POINTER_SECONDARY
+
+  /** Returns the instruction pointer image used for the specified stack frame in the specified
+   *  editor, or <code>null</code> if a default image should be used.
+   *  <p>
+   *  By default, the debug platform uses different images for top stack
+   *  frames and non-top stack frames in a thread.
+   *  </p>
+   *  @param editorPart the editor the debugger has opened
+   *  @param frame the stack frame for which the debugger is displaying
+   *  source
+   *  @return image or <code>null</code>
+   */
+  def getInstructionPointerImage(editorPart: IEditorPart, frame: IStackFrame): Image =
+    DebugUITools.getImage(IDebugUIConstants.IMG_OBJS_INSTRUCTION_POINTER)
+
+  /** Returns the text to associate with the instruction pointer annotation used for the
+   *  specified stack frame in the specified editor, or <code>null</code> if a default
+   *  message should be used.
+   *  <p>
+   *  By default, the debug platform uses different images for top stack
+   *  frames and non-top stack frames in a thread.
+   *  </p>
+   *  @param editorPart the editor the debugger has opened
+   *  @param frame the stack frame for which the debugger is displaying
+   *  source
+   *  @return message or <code>null</code>
+   */
+  def getInstructionPointerText(editorPart: IEditorPart, frame: IStackFrame): String =
+    DebugUIMessages.InstructionPointerAnnotation_1
 }

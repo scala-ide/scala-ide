@@ -20,6 +20,37 @@ import scala.tools.eclipse.debug.model.ScalaStackFrame
 import scala.tools.eclipse.debug.model.ScalaVariable
 import org.eclipse.debug.core.model.IVariable
 import org.eclipse.jface.viewers.IStructuredSelection
+import org.eclipse.debug.internal.ui.model.elements.DebugElementLabelProvider
+import org.eclipse.jface.viewers.ITableLabelProvider
+import scala.tools.eclipse.debug.model.ScalaDebugTarget
+import org.eclipse.debug.core.model.IDebugElement
+import org.eclipse.debug.core.DebugPlugin
+import org.eclipse.jface.viewers.IBaseLabelProvider
+import org.eclipse.jface.viewers.LabelProvider
+import org.eclipse.debug.core.model.IStackFrame
+import scala.tools.eclipse.debug.model.ScalaDebugModelPresentation
+import org.eclipse.ui.ISelectionListener
+import org.eclipse.ui.IWorkbenchPart
+import org.eclipse.jface.viewers.ISelection
+import com.sun.jdi.ObjectReference
+import scala.tools.eclipse.debug.model.ScalaObjectReference
+import com.sun.jdi.StackFrame
+import scala.tools.eclipse.debug.async.AsyncStackTrace
+import scala.tools.eclipse.debug.async.AsyncStackFrame
+import scala.tools.eclipse.debug.async.AsyncLocalVariable
+import scala.tools.eclipse.debug.async.AsyncStackFrame
+import org.eclipse.ui.PlatformUI
+import org.eclipse.jface.viewers.ISelectionChangedListener
+import org.eclipse.jface.viewers.SelectionChangedEvent
+import org.eclipse.debug.ui.contexts.AbstractDebugContextProvider
+import org.eclipse.debug.internal.ui.views.variables.VariablesView
+import org.eclipse.jface.viewers.ListViewer
+import org.eclipse.swt.graphics.Image
+import org.eclipse.jface.viewers.TableViewer
+import org.eclipse.jface.viewers.IColorProvider
+import org.eclipse.swt.graphics.Color
+import org.eclipse.swt.widgets.Display
+import scala.tools.eclipse.debug.async.AsyncStackFrame
 
 class AsyncDebugView extends AbstractDebugView with IDebugContextListener with HasLogger {
 
@@ -27,7 +58,7 @@ class AsyncDebugView extends AbstractDebugView with IDebugContextListener with H
   protected def configureToolBar(x$1: org.eclipse.jface.action.IToolBarManager): Unit = {}
   protected def createActions(): Unit = {}
 
-  private var viewer: TreeViewer = _
+  private var viewer: TableViewer = _
 
   /** Creates and returns this view's underlying viewer.
    *  The viewer's control will automatically be hooked
@@ -37,16 +68,92 @@ class AsyncDebugView extends AbstractDebugView with IDebugContextListener with H
    *  @param parent the parent control
    */
   protected def createViewer(parent: Composite): Viewer = {
-    viewer = new TreeViewer(parent, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL | SWT.VIRTUAL)
+    import Utils._
+    //    val fPresentation = new DelegatingModelPresentation()
+    //    val fPresentationContext = new DebugModelPresentationContext(IDebugUIConstants.ID_DEBUG_VIEW, this, fPresentation)
+    //    viewer = new TreeModelViewer(parent,
+    //      SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL | SWT.VIRTUAL,
+    //      fPresentationContext)
+    //viewer.setInput(DebugPlugin.getDefault().getLaunchManager())
+    viewer = new TableViewer(parent, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL | SWT.VIRTUAL)
     viewer.setContentProvider(new StackFrameProvider)
+    viewer.setLabelProvider(new LabelProvider with IColorProvider {
+      override def getText(elem: Object): String = elem match {
+        case AsyncLocalVariable(name, value) => s"$name: ${ScalaDebugModelPresentation.computeDetail(value)}"
+        case AsyncStackFrame(_, location)    => s"$location"
+        case s: IStackFrame                  => s"${s.getName()}:${s.getLineNumber()}"
+        case _                               => elem.toString
+      }
+
+      override def getImage(elem: Object): Image =
+        DebugUITools.getImage(IDebugUIConstants.IMG_OBJS_STACKFRAME)
+
+      def getForeground(element: AnyRef): Color = element match {
+        case AsyncStackFrame(_, location) if location.declaringTypeName.startsWith("scala.") =>
+          Display.getCurrent().getSystemColor(SWT.COLOR_GRAY)
+        case _ =>
+          null
+      }
+      def getBackground(element: AnyRef): Color = null
+    })
+
+    viewer.addSelectionChangedListener(stackFrameSelectionChanged _)
     viewer
   }
 
   override def init(site: IViewSite) {
+    import Utils._
     super.init(site)
     val service = DebugUITools.getDebugContextManager().getContextService(site.getWorkbenchWindow())
+    service.addDebugContextProvider(asyncDebugContextProvider)
+    //    service.addDebugContextListener(this)
 
-    service.addDebugContextListener(this)
+    val selectionService = site.getWorkbenchWindow().getSelectionService()
+    selectionService.addSelectionListener(IDebugUIConstants.ID_VARIABLE_VIEW, variableViewSelectionChanged _)
+  }
+
+  override def dispose() {
+    val service = DebugUITools.getDebugContextManager().getContextService(getSite().getWorkbenchWindow())
+    service.removeDebugContextProvider(asyncDebugContextProvider)
+  }
+
+  def stackFrameSelectionChanged(sce: SelectionChangedEvent) {
+    currentFrame = Option(sce.getSelection())
+    sce.getSelection() match {
+      case se: IStructuredSelection =>
+        logger.debug("Firing debug context changed!")
+        //        val varView = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().findView(IDebugUIConstants.ID_VARIABLE_VIEW)
+        //        varView.getViewSite().getSelectionProvider().setSelection(new ISelection { def isEmpty = true })
+        //        varView.asInstanceOf[VariablesView].getViewer().setSelection(new ISelection { def isEmpty = true })
+        if (!se.isEmpty) asyncDebugContextProvider.fireSelection(se)
+      case _ =>
+        logger.debug("Unknown selection, really?")
+    }
+  }
+
+  def variableViewSelectionChanged(part: IWorkbenchPart, selection: ISelection): Unit = selection match {
+    case structSel: IStructuredSelection =>
+      val elem = structSel.getFirstElement()
+      logger.debug(s"Changing selection to $elem")
+      if (elem ne null)
+        updateAsyncFrame(elem.asInstanceOf[IVariable])
+
+    case _ => logger.info(s"Selection not understood: $selection")
+  }
+
+  def updateAsyncFrame(elem: IVariable): Unit = {
+    val dbgTarget = elem.getDebugTarget().asInstanceOf[ScalaDebugTarget]
+    elem.getValue() match {
+      case ref: ScalaObjectReference =>
+        viewer.setSelection(null, true)
+        dbgTarget.retainedStack.getStackFrameForFuture(ref.underlying) foreach (viewer.setInput)
+      //        val varView = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().findView(IDebugUIConstants.ID_VARIABLE_VIEW)
+      //        varView.asInstanceOf[AbstractDebugView].getViewer().setInput(null)
+
+      case _ =>
+        //        viewer.setInput(null)
+        logger.debug("Unknown value")
+    }
   }
 
   protected def fillContextMenu(x$1: org.eclipse.jface.action.IMenuManager): Unit = {}
@@ -78,7 +185,9 @@ class AsyncDebugView extends AbstractDebugView with IDebugContextListener with H
     def getElements(inputElement: AnyRef): Array[Object] = inputElement match {
       case thread: ScalaThread =>
         thread.getStackFrames.asInstanceOf[Array[Object]]
-      case _ => emptyArray
+      //      case Seq(elems @ _*) => elems.toArray.asInstanceOf[Array[Object]]
+      case AsyncStackTrace(frames) => frames.toArray
+      case _                       => Array(inputElement) // TODO: They say big NO NO
     }
 
     /** Returns the child elements of the given parent element.
@@ -96,7 +205,9 @@ class AsyncDebugView extends AbstractDebugView with IDebugContextListener with H
     def getChildren(parentElement: AnyRef): Array[Object] = parentElement match {
       case frame: ScalaStackFrame =>
         frame.getVariables.asInstanceOf[Array[Object]]
-      case _ => emptyArray
+      case AsyncStackTrace(frames)    => frames.toArray
+      case AsyncStackFrame(locals, _) => locals.toArray
+      case _                          => emptyArray
     }
 
     /** Returns the parent for the given element, or <code>null</code>
@@ -129,8 +240,8 @@ class AsyncDebugView extends AbstractDebugView with IDebugContextListener with H
      *  and <code>false</code> if it has no children
      */
     def hasChildren(element: AnyRef): Boolean = element match {
-      case _: ScalaStackFrame | _: ScalaThread => true
-      case _                                   => false
+      case _: AsyncStackFrame | _: AsyncStackTrace => true
+      case _                                       => false
     }
 
     /** Disposes of this content provider.
@@ -162,7 +273,33 @@ class AsyncDebugView extends AbstractDebugView with IDebugContextListener with H
      *   does not have an input
      */
     def inputChanged(viewer: Viewer, oldInput: AnyRef, newInput: AnyRef): Unit = {
-      logger.debug(s"old: $oldInput / new: $newInput")
+      //      logger.debug(s"old: $oldInput / new: $newInput")
+    }
+  }
+
+  private object asyncDebugContextProvider extends AbstractDebugContextProvider(this) {
+    def fireSelection(se: ISelection) {
+      fire(new DebugContextEvent(this, se, DebugContextEvent.ACTIVATED))
+    }
+
+    override def getActiveContext(): ISelection = {
+      currentFrame.getOrElse(null)
+    }
+  }
+
+  private var currentFrame: Option[ISelection] = None
+}
+
+object Utils {
+  implicit def fnToSelectionListener(f: (IWorkbenchPart, ISelection) => Unit): ISelectionListener = new ISelectionListener {
+    override def selectionChanged(part: IWorkbenchPart, selection: ISelection): Unit = {
+      f(part, selection)
+    }
+  }
+
+  implicit def fnToSelectionChangedListener(f: SelectionChangedEvent => Unit): ISelectionChangedListener = new ISelectionChangedListener {
+    override def selectionChanged(selection: SelectionChangedEvent): Unit = {
+      f(selection)
     }
   }
 }
