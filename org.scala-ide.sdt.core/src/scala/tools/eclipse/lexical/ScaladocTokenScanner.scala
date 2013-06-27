@@ -3,7 +3,11 @@ package scala.tools.eclipse.lexical
 import scala.tools.eclipse.properties.syntaxcolouring.ScalaSyntaxClass
 
 import org.eclipse.jface.preference.IPreferenceStore
-import org.eclipse.jface.text.rules.{ ICharacterScanner, IToken, IWordDetector, Token, WordRule }
+import org.eclipse.jface.text.rules.ICharacterScanner
+import org.eclipse.jface.text.rules.IToken
+import org.eclipse.jface.text.rules.IWordDetector
+import org.eclipse.jface.text.rules.Token
+import org.eclipse.jface.text.rules.WordRule
 
 /**
  * Scans Scaladoc content and tokenizes it into different style ranges.

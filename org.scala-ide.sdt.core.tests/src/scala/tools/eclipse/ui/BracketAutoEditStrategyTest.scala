@@ -3,7 +3,8 @@ package scala.tools.eclipse.ui
 import scala.tools.eclipse.properties.EditorPreferencePage
 
 import org.eclipse.jface.preference.IPreferenceStore
-import org.junit.{ Before, Test }
+import org.junit.Before
+import org.junit.Test
 import org.mockito.Mockito._
 
 object BracketAutoEditStrategyTest {

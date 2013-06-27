@@ -11,7 +11,8 @@ import scala.tools.eclipse.javaelements.ScalaCompilationUnit
 import org.eclipse.jdt.core.IProblemRequestor
 import org.eclipse.jdt.core.WorkingCopyOwner
 import org.eclipse.core.runtime.NullProgressMonitor
-import org.mockito.Mockito.{mock, when}
+import org.mockito.Mockito.mock
+import org.mockito.Mockito.when
 import org.eclipse.core.resources.IFile
 
 /** Base class for setting up tests that depend on a project found in the test-workspace.

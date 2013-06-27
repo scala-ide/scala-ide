@@ -1,12 +1,19 @@
 package scala.tools.eclipse.launching
 
-import org.eclipse.jdt.launching.{AbstractJavaLaunchConfigurationDelegate, JavaRuntime,
-                                  IRuntimeClasspathEntry, VMRunnerConfiguration, ExecutionArguments}
+import org.eclipse.jdt.launching.AbstractJavaLaunchConfigurationDelegate
+import org.eclipse.jdt.launching.JavaRuntime
+import org.eclipse.jdt.launching.IRuntimeClasspathEntry
+import org.eclipse.jdt.launching.VMRunnerConfiguration
+import org.eclipse.jdt.launching.ExecutionArguments
 import scala.tools.eclipse.ScalaPlugin
 import java.io.File
 import com.ibm.icu.text.MessageFormat
-import org.eclipse.core.runtime.{Path, CoreException, IProgressMonitor, NullProgressMonitor}
-import org.eclipse.debug.core.{ILaunch, ILaunchConfiguration}
+import org.eclipse.core.runtime.Path
+import org.eclipse.core.runtime.CoreException
+import org.eclipse.core.runtime.IProgressMonitor
+import org.eclipse.core.runtime.NullProgressMonitor
+import org.eclipse.debug.core.ILaunch
+import org.eclipse.debug.core.ILaunchConfiguration
 import org.eclipse.jdt.internal.launching.LaunchingMessages
 import scala.collection.JavaConversions._
 import scala.collection.mutable

@@ -7,8 +7,8 @@
 package scala.tools.eclipse.wizards
 
 import org.eclipse.jdt.core.ICompilationUnit
-import org.eclipse.jdt.internal.ui.wizards.dialogfields.{ DialogField,
-  SelectionButtonDialogFieldGroup }
+import org.eclipse.jdt.internal.ui.wizards.dialogfields.DialogField
+import org.eclipse.jdt.internal.ui.wizards.dialogfields.SelectionButtonDialogFieldGroup
 
 import org.eclipse.jface.dialogs.IDialogSettings
 

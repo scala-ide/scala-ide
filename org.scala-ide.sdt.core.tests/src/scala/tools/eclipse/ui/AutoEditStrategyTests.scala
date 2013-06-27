@@ -2,7 +2,10 @@ package scala.tools.eclipse.ui
 
 import scala.tools.eclipse.lexical.ScalaDocumentPartitioner
 
-import org.eclipse.jface.text.{ Document, DocumentCommand, IAutoEditStrategy, IDocument }
+import org.eclipse.jface.text.Document
+import org.eclipse.jface.text.DocumentCommand
+import org.eclipse.jface.text.IAutoEditStrategy
+import org.eclipse.jface.text.IDocument
 import org.junit.Assert._
 import org.junit.ComparisonFailure
 

@@ -1,9 +1,15 @@
 package scala.tools.eclipse.util
 
 import org.eclipse.swt.widgets.Display
-import org.eclipse.jface.viewers.{ DoubleClickEvent, IDoubleClickListener, SelectionChangedEvent, ISelectionChangedListener }
+import org.eclipse.jface.viewers.DoubleClickEvent
+import org.eclipse.jface.viewers.IDoubleClickListener
+import org.eclipse.jface.viewers.SelectionChangedEvent
+import org.eclipse.jface.viewers.ISelectionChangedListener
 import org.eclipse.swt.widgets.Control
-import org.eclipse.swt.events.{ KeyEvent, KeyAdapter, FocusAdapter, FocusEvent }
+import org.eclipse.swt.events.KeyEvent
+import org.eclipse.swt.events.KeyAdapter
+import org.eclipse.swt.events.FocusAdapter
+import org.eclipse.swt.events.FocusEvent
 import org.eclipse.jface.util.IPropertyChangeListener
 import org.eclipse.jface.util.PropertyChangeEvent
 import org.eclipse.swt.events._

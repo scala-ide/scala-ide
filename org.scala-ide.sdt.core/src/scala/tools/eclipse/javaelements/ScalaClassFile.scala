@@ -9,14 +9,21 @@ import java.util.{ HashMap => JHashMap }
 
 import scala.tools.eclipse.ScalaImages
 import scala.tools.eclipse.contribution.weaving.jdt.IScalaClassFile
-import scala.tools.nsc.io.{AbstractFile, VirtualFile}
+import scala.tools.nsc.io.AbstractFile
+import scala.tools.nsc.io.VirtualFile
 
 import org.eclipse.core.resources.IResource
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.core.runtime.IStatus
-import org.eclipse.jdt.core.{IJavaElement, IType, WorkingCopyOwner}
-import org.eclipse.jdt.core.compiler.{ CharOperation, IProblem }
-import org.eclipse.jdt.internal.core.{BinaryType, ClassFile, JavaModelStatus, PackageFragment}
+import org.eclipse.jdt.core.IJavaElement
+import org.eclipse.jdt.core.IType
+import org.eclipse.jdt.core.WorkingCopyOwner
+import org.eclipse.jdt.core.compiler.CharOperation
+import org.eclipse.jdt.core.compiler.IProblem
+import org.eclipse.jdt.internal.core.BinaryType
+import org.eclipse.jdt.internal.core.ClassFile
+import org.eclipse.jdt.internal.core.JavaModelStatus
+import org.eclipse.jdt.internal.core.PackageFragment
 import org.eclipse.jdt.internal.core.util.Util
 
 class ScalaClassFile(parent : PackageFragment, name : String, sourceFile : String)

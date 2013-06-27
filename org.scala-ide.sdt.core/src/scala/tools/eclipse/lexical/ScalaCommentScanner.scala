@@ -4,7 +4,12 @@ import scala.tools.eclipse.properties.syntaxcolouring.ScalaSyntaxClass
 
 import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jface.preference.IPreferenceStore
-import org.eclipse.jface.text.rules.{ ICharacterScanner, IRule, IToken, IWordDetector, RuleBasedScanner, Token }
+import org.eclipse.jface.text.rules.ICharacterScanner
+import org.eclipse.jface.text.rules.IRule
+import org.eclipse.jface.text.rules.IToken
+import org.eclipse.jface.text.rules.IWordDetector
+import org.eclipse.jface.text.rules.RuleBasedScanner
+import org.eclipse.jface.text.rules.Token
 import org.eclipse.jface.util.PropertyChangeEvent
 
 /**

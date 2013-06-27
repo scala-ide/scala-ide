@@ -1,6 +1,7 @@
 package scala.tools.eclipse.sourcefileprovider
 
-import java.util.concurrent.{ConcurrentMap, ConcurrentHashMap}
+import java.util.concurrent.ConcurrentMap
+import java.util.concurrent.ConcurrentHashMap
 import org.eclipse.core.runtime.CoreException
 import org.eclipse.core.runtime.IConfigurationElement
 import org.eclipse.core.runtime.IExtension

@@ -9,14 +9,22 @@ package scala.tools.eclipse.launching
 import scala.collection.mutable.ArrayBuffer
 import org.eclipse.core.resources.IResource
 import org.eclipse.core.runtime.IAdaptable
-import org.eclipse.debug.core.{ DebugPlugin, ILaunchConfiguration, ILaunchConfigurationType }
+import org.eclipse.debug.core.DebugPlugin
+import org.eclipse.debug.core.ILaunchConfiguration
+import org.eclipse.debug.core.ILaunchConfigurationType
 import org.eclipse.debug.ui.DebugUITools
-import org.eclipse.jdt.core.{ Flags, IJavaElement, IMethod, IType, Signature }
+import org.eclipse.jdt.core.Flags
+import org.eclipse.jdt.core.IJavaElement
+import org.eclipse.jdt.core.IMethod
+import org.eclipse.jdt.core.IType
+import org.eclipse.jdt.core.Signature
 import org.eclipse.jdt.debug.ui.launchConfigurations.JavaLaunchShortcut
 import org.eclipse.jdt.internal.debug.ui.launcher.LauncherMessages
 import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants
 import org.eclipse.jface.operation.IRunnableContext
-import scala.tools.eclipse.javaelements.{ ScalaModuleElement, ScalaClassElement, ScalaSourceFile }
+import scala.tools.eclipse.javaelements.ScalaModuleElement
+import scala.tools.eclipse.javaelements.ScalaClassElement
+import scala.tools.eclipse.javaelements.ScalaSourceFile
 import scala.tools.eclipse.util.EclipseUtils._
 import scala.tools.eclipse.javaelements.ScalaJavaMapper
 import scala.tools.nsc.MissingRequirementError

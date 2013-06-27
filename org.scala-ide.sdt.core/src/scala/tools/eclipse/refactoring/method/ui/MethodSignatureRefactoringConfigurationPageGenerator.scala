@@ -32,7 +32,8 @@ trait MethodSignatureRefactoringConfigurationPageGenerator {
   // Using this self type we get access to refactoring.global
   this: ScalaIdeRefactoring =>
 
-  import refactoring.global.{DefDef, ValDef}
+  import refactoring.global.DefDef
+  import refactoring.global.ValDef
 
   /**
    * Represents a separator of two parameter lists of in a method signature.

@@ -15,7 +15,9 @@ import org.eclipse.core.resources.IMarker
 
 import scala.tools.eclipse.testsetup.SDTTestUtils
 import org.eclipse.core.resources.IFile
-import org.junit.{Ignore, Before, After}
+import org.junit.Ignore
+import org.junit.Before
+import org.junit.After
 
 object ScalaCompilerClasspathTest extends testsetup.TestProjectSetup("builder-compiler-classpath")
 

@@ -5,7 +5,9 @@ import org.eclipse.core.resources.IMarker
 import scala.tools.eclipse.resources.MarkerFactory
 import scala.tools.eclipse.ScalaPlugin
 import scala.tools.eclipse.ScalaProject
-import scala.tools.eclipse.resources.MarkerFactory.{ Position, NoPosition, RegionPosition }
+import scala.tools.eclipse.resources.MarkerFactory.Position
+import scala.tools.eclipse.resources.MarkerFactory.NoPosition
+import scala.tools.eclipse.resources.MarkerFactory.RegionPosition
 
 import scala.reflect.internal.util.{ Position => ScalacPosition }
 

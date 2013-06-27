@@ -2,7 +2,8 @@ package scala.tools.eclipse.jcompiler
 
 import scala.tools.eclipse.contribution.weaving.jdt.jcompiler.IMethodVerifierProvider
 import org.eclipse.jdt.internal.compiler.lookup.MethodBinding
-import scala.tools.eclipse.{ ScalaPlugin, ScalaPresentationCompiler }
+import scala.tools.eclipse.ScalaPlugin
+import scala.tools.eclipse.ScalaPresentationCompiler
 import org.eclipse.core.runtime.Path
 import org.eclipse.core.resources.ResourcesPlugin
 import scala.tools.eclipse.ScalaProject

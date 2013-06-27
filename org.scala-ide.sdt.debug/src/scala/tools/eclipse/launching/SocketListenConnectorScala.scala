@@ -1,7 +1,8 @@
 package scala.tools.eclipse.launching
 
 import java.io.IOException
-import java.util.{ List => JList, Map => JMap }
+import java.util.{ List => JList }
+import java.util.{ Map => JMap }
 
 import scala.tools.eclipse.debug.ScalaDebugPlugin
 import scala.tools.eclipse.debug.model.ScalaDebugTarget

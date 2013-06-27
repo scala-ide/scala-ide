@@ -1,6 +1,8 @@
 package scala.tools.eclipse
 
-import org.eclipse.core.internal.resources.{ Workspace, Project, File }
+import org.eclipse.core.internal.resources.Workspace
+import org.eclipse.core.internal.resources.Project
+import org.eclipse.core.internal.resources.File
 import org.eclipse.core.runtime.Path
 import org.eclipse.core.resources.IWorkspace
 import org.eclipse.core.runtime.NullProgressMonitor
