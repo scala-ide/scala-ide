@@ -13,8 +13,10 @@ import org.eclipse.jdt.core.{ IJavaProject, IJavaElement, ICodeAssist }
 import org.eclipse.jdt.internal.ui.JavaPlugin
 import org.eclipse.jdt.internal.ui.javaeditor.{ IClassFileEditorInput, ICompilationUnitDocumentProvider, JavaElementHyperlinkDetector }
 import org.eclipse.jdt.internal.ui.text.ContentAssistPreference
-import org.eclipse.jdt.internal.ui.text.java.{ JavaAutoIndentStrategy, JavaStringAutoIndentStrategy, SmartSemicolonAutoEditStrategy }
-import org.eclipse.jdt.internal.ui.text.java.hover.{ AbstractJavaEditorTextHover, BestMatchHover }
+import org.eclipse.jdt.internal.ui.text.java.JavaAutoIndentStrategy
+import org.eclipse.jdt.internal.ui.text.java.SmartSemicolonAutoEditStrategy
+import org.eclipse.jdt.internal.ui.text.java.hover.AbstractJavaEditorTextHover
+import org.eclipse.jdt.internal.ui.text.java.hover.BestMatchHover
 import org.eclipse.jdt.internal.ui.text.javadoc.JavaDocAutoIndentStrategy
 import org.eclipse.jdt.ui.text.{ JavaSourceViewerConfiguration, IJavaPartitions }
 import org.eclipse.jface.preference.IPreferenceStore
@@ -135,7 +137,7 @@ class ScalaSourceViewerConfiguration(store: IPreferenceStore, scalaPreferenceSto
          case IJavaPartitions.JAVA_DOC | IJavaPartitions.JAVA_MULTI_LINE_COMMENT | ScalaPartitions.SCALADOC_CODE_BLOCK =>
            Array(new CommentAutoIndentStrategy(partitioning))
          case IJavaPartitions.JAVA_STRING =>
-            Array(new SmartSemicolonAutoEditStrategy(partitioning), new JavaStringAutoIndentStrategy(partitioning))
+            Array(new SmartSemicolonAutoEditStrategy(partitioning))
          case IJavaPartitions.JAVA_CHARACTER | IDocument.DEFAULT_CONTENT_TYPE =>
             Array(new SmartSemicolonAutoEditStrategy(partitioning), new ScalaAutoIndentStrategy(partitioning, getProject, sourceViewer, new JdtPreferenceProvider(getProject)), new BracketAutoEditStrategy(ScalaPlugin.prefStore))
          case _ =>
