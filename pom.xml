@@ -22,8 +22,10 @@
     <!-- p2 repositories location -->
     <repo.eclipse.indigo>http://download.eclipse.org/releases/indigo/</repo.eclipse.indigo>
     <repo.eclipse.juno>http://download.eclipse.org/releases/juno</repo.eclipse.juno>
+    <repo.eclipse.kepler>http://download.eclipse.org/releases/kepler</repo.eclipse.kepler>
     <repo.ajdt.indigo>http://download.eclipse.org/tools/ajdt/37/update</repo.ajdt.indigo>
     <repo.ajdt.juno>http://download.eclipse.org/tools/ajdt/42/update</repo.ajdt.juno>
+    <repo.ajdt.kepler>http://download.eclipse.org/tools/ajdt/43/update</repo.ajdt.kepler>
     <repo.equinox.launcher>http://www.chuusai.com/eclipse/equinox-weaving-launcher/</repo.equinox.launcher>
     <repo.scala-ide.root>http://download.scala-ide.org</repo.scala-ide.root>
 
@@ -34,7 +36,7 @@
     <mockito.version>1.9.5</mockito.version>
 
     <!-- plugin versions -->
-    <tycho.plugin.version>0.16.0</tycho.plugin.version>
+    <tycho.plugin.version>0.18.0</tycho.plugin.version>
     <scala.plugin.version>3.0.2</scala.plugin.version>
     <aspectj.plugin.version>1.4</aspectj.plugin.version>
     <weaving.hook.plugin.version>1.0.200.v20120524-1707</weaving.hook.plugin.version>
@@ -113,6 +115,20 @@
         <repo.eclipse>${repo.eclipse.juno}</repo.eclipse>
         <repo.ajdt>${repo.ajdt.juno}</repo.ajdt>
         <weaving.hook.plugin.version>1.0.200.v20120524-1707</weaving.hook.plugin.version>
+      </properties>
+    </profile>
+
+    <profile>
+      <!-- Eclipse Kepler -->
+      <!-- This profile was created in case it is needed at some point, but the
+           current goal is to use the Juno profile for both Kepler and Juno compatible
+           binaries -->
+      <id>eclipse-kepler</id>
+      <properties>
+        <eclipse.codename>kepler</eclipse.codename>
+        <repo.eclipse>${repo.eclipse.kepler}</repo.eclipse>
+        <repo.ajdt>${repo.ajdt.kepler}</repo.ajdt>
+        <weaving.hook.plugin.version>1.0.200.v20130327-1442</weaving.hook.plugin.version>
       </properties>
     </profile>
 
