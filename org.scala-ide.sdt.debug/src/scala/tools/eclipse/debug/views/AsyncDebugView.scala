@@ -146,12 +146,14 @@ class AsyncDebugView extends AbstractDebugView with IDebugContextListener with H
     elem.getValue() match {
       case ref: ScalaObjectReference =>
         viewer.setSelection(null, true)
-        dbgTarget.retainedStack.getStackFrameForFuture(ref.underlying) foreach (viewer.setInput)
+        val newInput = dbgTarget.retainedStack.getStackFrameForFuture(ref.underlying).getOrElse(AsyncStackTrace(Nil))
+        logger.debug(s"Setting viewer.input to $newInput")
+        viewer.setInput(newInput)
       //        val varView = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().findView(IDebugUIConstants.ID_VARIABLE_VIEW)
       //        varView.asInstanceOf[AbstractDebugView].getViewer().setInput(null)
 
       case _ =>
-        //        viewer.setInput(null)
+        viewer.setInput(null)
         logger.debug("Unknown value")
     }
   }

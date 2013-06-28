@@ -83,6 +83,7 @@ class RetainedStackManager(debugTarget: ScalaDebugTarget) extends HasLogger {
 
   private val programPoints = List(
     AsyncProgramPoint("scala.concurrent.package$", "future", 0),
+    AsyncProgramPoint("play.api.libs.iteratee.Cont$", "apply", 0),
     AsyncProgramPoint("scala.actors.InternalReplyReactor$class", "$bang", 1))
 
   /** Return the saved stackframes for the given future body (if any). */
