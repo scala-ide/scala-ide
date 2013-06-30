@@ -8,8 +8,12 @@ import scala.tools.eclipse.properties.syntaxcolouring.ScalaSyntaxClass
 import org.eclipse.jface.preference.IPreferenceStore
 
 class SingleTokenScanner(
-  syntaxClass: ScalaSyntaxClass, val preferenceStore: IPreferenceStore)
-  extends AbstractScalaScanner {
+  val preferenceStore: IPreferenceStore, syntaxClass: ScalaSyntaxClass)
+    extends AbstractScalaScanner {
+
+  @deprecated("use primary constructor instead", "4.0")
+  def this(syntaxClass: ScalaSyntaxClass, preferenceStore: IPreferenceStore) =
+    this(preferenceStore, syntaxClass)
 
   private var offset: Int = _
   private var length: Int = _
