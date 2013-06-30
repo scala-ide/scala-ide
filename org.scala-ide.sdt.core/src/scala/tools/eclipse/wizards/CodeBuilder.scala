@@ -302,7 +302,7 @@ object CodeBuilder {
          if(nt.nonEmpty)
          ag =  new Args(nt.init.toList)
          pl =  new ParamNames(pn.dropRight(1) :+ Name("null"))
-      } generatedConstructors + eval(AuxCons(ag, ConsBody(pl)))
+      } generatedConstructors += eval(AuxCons(ag, ConsBody(pl)))
 
       generatedConstructors.map (s => ld+"  " +s+ld).toList.mkString
     }
