@@ -302,7 +302,7 @@ object CodeBuilder {
          if(nt.nonEmpty)
          ag =  new Args(nt.init.toList)
          pl =  new ParamNames(pn.dropRight(1) :+ Name("null"))
-      } generatedConstructors + eval(AuxCons(ag, ConsBody(pl)))
+      } generatedConstructors += eval(AuxCons(ag, ConsBody(pl)))
 
       generatedConstructors.map (s => ld+"  " +s+ld).toList.mkString
     }
@@ -336,7 +336,7 @@ object CodeBuilder {
          nt =  pn zip pt map (nt => Arg(nt._1, nt._2))
          ag =  new Args(nt.toList)
           r =  Result(Type(Name(convertAndAdd(returnType(stm).get))), Value(returnValue(stm).get))
-      } generatedMethods + eval(Func(md,nm,ts,ag,r))
+      } generatedMethods += eval(Func(md,nm,ts,ag,r))
 
       generatedMethods.map (s => ld+"  " +s+ld).toList.mkString
     }
