@@ -37,6 +37,7 @@ object ScalaImages  {
   val REFRESH_REPL_TOOLBAR = create("icons/full/etool16/refresh_interpreter.gif")
 
   val NEW_CLASS = create("icons/full/etool16/newclass_wiz.gif")
+  val CORRECTION_RENAME = create("icons/full/obj16/correction_rename.gif")
 
   private def create(localPath : String) = {
     try {
