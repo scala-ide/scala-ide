@@ -2,11 +2,9 @@ package scala.tools.eclipse.debug.model
 
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
-
 import scala.collection.JavaConverters.seqAsJavaListConverter
 import scala.tools.eclipse.debug.BaseDebuggerActor
 import scala.tools.eclipse.debug.PoisonPill
-
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -16,7 +14,6 @@ import org.mockito.Mockito.mock
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.when
-
 import com.sun.jdi.Location
 import com.sun.jdi.Method
 import com.sun.jdi.ReferenceType
@@ -24,6 +21,7 @@ import com.sun.jdi.VirtualMachine
 import com.sun.jdi.event.ClassPrepareEvent
 import com.sun.jdi.request.ClassPrepareRequest
 import com.sun.jdi.request.EventRequestManager
+import scala.tools.eclipse.testsetup.SDTTestUtils
 
 class ScalaDebugCacheTest {
 
@@ -43,7 +41,8 @@ class ScalaDebugCacheTest {
 
     val (debugCache, classPrepareRequest1, classPrepareRequest2) = initNestedTypesMocks(BaseName, BaseName + "$", BaseName + "$a$b", BaseName + "$Test", BaseName + "$Test2", "test01.a.TestTest", "test01.b.Test", "a." + BaseName)
 
-    assertTrue(debugCache.running)
+    SDTTestUtils.waitUntil(1000)(debugCache.running)
+    assertTrue("The debugger cache is not running", debugCache.running)
 
     val actual = debugCache.getLoadedNestedTypes(BaseName)
 
