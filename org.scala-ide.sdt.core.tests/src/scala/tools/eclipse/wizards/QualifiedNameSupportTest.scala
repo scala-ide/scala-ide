@@ -19,24 +19,24 @@ class QualifiedNameSupportTest extends QualifiedNameSupport {
   @Test
   def createSuperTypeInstance() {
     val st = createSuperType(Test_Data)
-    assertTrue(st._1 == List("scala", "collection", "immutable"))
-    assertTrue(st._2 == "Set")
-    assertTrue(st._3 == List("T"))
+    assertTrue(st.packageName == List("scala", "collection", "immutable"))
+    assertTrue(st.typeName == "Set")
+    assertTrue(st.params == List("T"))
   }
 
   @Test
   def createSuperTypeInstance2() {
     val st = createSuperType(Test_Data4)
-    assertTrue(st._1 == List("scala", "math"))
-    assertTrue(st._2 == "Equiv")
-    assertTrue(st._3 == List("Eee"))
+    assertTrue(st.packageName == List("scala", "math"))
+    assertTrue(st.typeName == "Equiv")
+    assertTrue(st.params == List("Eee"))
   }
 
   @Test
-  def packageAndTypeNameTuple() {
-    val st = packageAndTypeNameOf(Test_Data)
-    assertTrue(st._1 == "scala.collection.immutable")
-    assertTrue(st._2 == "Set")
+  def packageAndTypeNameTuple() = {
+    val (packageName, typeName) = packageAndTypeNameOf(Test_Data)
+    assertTrue(packageName == "scala.collection.immutable")
+    assertTrue(typeName == "Set")
   }
 
   @Test

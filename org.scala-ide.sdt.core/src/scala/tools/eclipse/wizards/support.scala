@@ -13,6 +13,7 @@ object BufferSupport {
     def getContents(): String
   }
 
+  // TODO make `__sb` private once 2.10 support is dropped
   private[wizards] implicit class BuilderAdapter(val __sb: StringBuilder) extends AnyVal {
     def append(s: String): Unit = __sb.append(s)
     def getLength(): Int = __sb.length
@@ -29,9 +30,9 @@ trait BufferSupport {
   var offset = -1
   var length = 0
 
-  protected def contents(implicit ld: String): String
+  protected def contents(implicit lineDelimiter: String): String
 
-  def writeTo(buffer: Buffer)(implicit ld: String) {
+  def writeTo(buffer: Buffer)(implicit lineDelimiter: String) {
     val s = contents
 
     if (offset == -1) {
@@ -50,7 +51,7 @@ trait SuperTypeSupport {
   type TypeName
   type Parameters
 
-  type SuperType = Triple[PackageName, TypeName, Parameters]
+  case class SuperType(packageName: PackageName, typeName: TypeName, params: Parameters)
 }
 
 /**
@@ -82,12 +83,12 @@ trait QualifiedNameSupport extends SuperTypeSupport {
   private val listOf = makeList compose removeBrackets
 
   val withoutPackage = (st: SuperType) => {
-    val st3 = if (st._3.nonEmpty) st._3.mkString("[", ",", "]") else ""
-    st._2 + st3
+    val st3 = if (st.params.nonEmpty) st.params.mkString("[", ",", "]") else ""
+    st.typeName + st3
   }
 
   val withoutParameters = (st: SuperType) => {
-    concat((concat(st._1), st._2))
+    concat((concat(st.packageName), st.typeName))
   }
 
   val removePackage = (typeDeclaration: String) => {
@@ -117,14 +118,12 @@ trait QualifiedNameSupport extends SuperTypeSupport {
 
   val packageAndTypeNameOf = (typeDeclaration: String) => {
     val st = createSuperType(typeDeclaration)
-    (concat(st._1), st._2)
+    (concat(st.packageName), st.typeName)
   }
 
-  def concat(vals: Any, sep: String = ".") = {
-    vals match {
-      case l: List[_] => l.mkString(sep)
-      case (v1, v2) => v1 + sep + v2
-    }
+  def concat(vals: Any, separator: String = "."): String = vals match {
+    case l: List[_] => l.mkString(separator)
+    case (v1, v2)   => v1 + separator + v2
   }
 
   val createSuperType = (typeDeclaration: String) => {
