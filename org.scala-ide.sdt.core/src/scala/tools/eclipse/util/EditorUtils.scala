@@ -1,6 +1,7 @@
 package scala.tools.eclipse.util
 
 import org.eclipse.jdt.core.IJavaElement
+import org.eclipse.jdt.ui.JavaUI
 import org.eclipse.jface.text.IRegion
 import org.eclipse.jface.text.ITextSelection
 import org.eclipse.jface.text.Position
@@ -9,16 +10,14 @@ import org.eclipse.jface.text.source.Annotation
 import org.eclipse.jface.text.source.IAnnotationModelExtension2
 import org.eclipse.ui.IEditorPart
 import org.eclipse.ui.texteditor.ITextEditor
-import scala.collection.JavaConverters.asScalaIteratorConverter
 import scala.tools.eclipse.InteractiveCompilationUnit
-import scala.tools.eclipse.util.Utils.any2optionable
 import scala.tools.eclipse.ui.InteractiveCompilationUnitEditor
 
 // FIXME: This should be merged with merged with {{{scala.tools.eclipse.refactoring.EditorHelpers}}}
 object EditorUtils {
 
   def openEditorAndApply[T](element: IJavaElement)(editor: IEditorPart => T): T =
-    editor(org.eclipse.jdt.ui.JavaUI.openInEditor(element))
+    editor(JavaUI.openInEditor(element))
 
   /** Return the compilation unit open in the given editor.*/
   def getEditorCompilationUnit(editor: ITextEditor): Option[InteractiveCompilationUnit] = {
@@ -31,7 +30,8 @@ object EditorUtils {
   }
 
   def getAnnotationsAtOffset(part: org.eclipse.ui.IEditorPart, offset: Int): Iterator[(Annotation, Position)] = {
-    val model = org.eclipse.jdt.ui.JavaUI.getDocumentProvider.getAnnotationModel(part.getEditorInput)
+    import scala.collection.JavaConverters._
+    val model = JavaUI.getDocumentProvider.getAnnotationModel(part.getEditorInput)
 
     val annotations = model match {
       case null                            => Iterator.empty
@@ -54,7 +54,8 @@ object EditorUtils {
     new Region(selection.getOffset, selection.getLength)
 
   def getTextSelection(editor: ITextEditor): Option[ITextSelection] = {
-    for{
+    import scala.tools.eclipse.util.Utils._
+    for {
       workbenchSite <- Option(editor.getSite)
       provider <- Option(workbenchSite.getSelectionProvider)
       selection <- Option(provider.getSelection)

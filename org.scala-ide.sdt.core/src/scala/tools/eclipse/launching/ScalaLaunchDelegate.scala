@@ -1,12 +1,12 @@
 package scala.tools.eclipse.launching
 
+import scala.collection.mutable
 import org.eclipse.jdt.launching.AbstractJavaLaunchConfigurationDelegate
 import org.eclipse.jdt.launching.JavaRuntime
 import org.eclipse.jdt.launching.IRuntimeClasspathEntry
 import org.eclipse.jdt.launching.VMRunnerConfiguration
 import org.eclipse.jdt.launching.ExecutionArguments
 import scala.tools.eclipse.ScalaPlugin
-import java.io.File
 import com.ibm.icu.text.MessageFormat
 import org.eclipse.core.runtime.Path
 import org.eclipse.core.runtime.CoreException
@@ -14,18 +14,22 @@ import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.debug.core.ILaunch
 import org.eclipse.debug.core.ILaunchConfiguration
-import org.eclipse.jdt.internal.launching.LaunchingMessages
-import scala.collection.JavaConversions._
-import scala.collection.mutable
-import scala.tools.eclipse.ScalaProject
-import org.eclipse.jface.dialogs.MessageDialog
-import scala.tools.eclipse.util.SWTUtils
-import org.eclipse.core.runtime.IPath
-import org.eclipse.jdt.core.IJavaProject
-import org.eclipse.core.runtime.Status
-import org.eclipse.core.runtime.IStatus
+import scala.tools.eclipse.ui.DisplayThread
 import org.eclipse.core.resources.IMarker
-import org.eclipse.debug.core.model.LaunchConfigurationDelegate
+import org.eclipse.core.runtime.IProgressMonitor
+import org.eclipse.core.runtime.IStatus
+import org.eclipse.core.runtime.NullProgressMonitor
+import org.eclipse.core.runtime.Path
+import org.eclipse.debug.core.ILaunch
+import org.eclipse.debug.core.ILaunchConfiguration
+import org.eclipse.jdt.internal.launching.LaunchingMessages
+import org.eclipse.jdt.launching.AbstractJavaLaunchConfigurationDelegate
+import org.eclipse.jdt.launching.ExecutionArguments
+import org.eclipse.jdt.launching.IRuntimeClasspathEntry
+import org.eclipse.jdt.launching.JavaRuntime
+import org.eclipse.jdt.launching.VMRunnerConfiguration
+import org.eclipse.jface.dialogs.MessageDialog
+import scala.collection.JavaConverters
 
 class ScalaLaunchDelegate extends AbstractJavaLaunchConfigurationDelegate {
   /** This code is very heavily inspired from `AbstractJavaLaunchConfigurationDelegate`. */
@@ -58,10 +62,13 @@ class ScalaLaunchDelegate extends AbstractJavaLaunchConfigurationDelegate {
       // VM-specific attributes
       val vmAttributesMap = getVMSpecificAttributesMap(configuration)
 
+      import JavaConverters._
+
       // adding Scala libraries is the only difference compared to the Java Launcher
       // TODO: do we still need this?
       val modifiedAttrMap: mutable.Map[String, Array[String]] =
-        if (vmAttributesMap == null) mutable.Map() else vmAttributesMap.asInstanceOf[java.util.Map[String,Array[String]]]
+        if (vmAttributesMap == null) mutable.Map()
+        else vmAttributesMap.asInstanceOf[java.util.Map[String,Array[String]]].asScala
       val classpath0 = getClasspath(configuration)
       val missingScalaLibraries = toInclude(modifiedAttrMap,
           classpath0.toList, configuration)
@@ -154,7 +161,7 @@ class ScalaLaunchDelegate extends AbstractJavaLaunchConfigurationDelegate {
   }
 
   private class UIErrorReporter extends MainClassVerifier.ErrorReporter {
-    def report(msg: String): Unit = SWTUtils.asyncExec {
+    def report(msg: String): Unit = DisplayThread.asyncExec {
       MessageDialog.openInformation(ScalaPlugin.getShell, "Failed to run Scala Application", msg)
     }
   }

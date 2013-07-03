@@ -81,12 +81,10 @@ class AbstractSymbolClassifierTest {
 }
 
 object AbstractSymbolClassifierTest {
-  private class RegionOps(region: IRegion) {
+  private implicit class RegionOps(region: IRegion) {
     def intersects(other: IRegion): Boolean =
       !(other.getOffset >= region.getOffset + region.getLength || other.getOffset + other.getLength - 1 < region.getOffset)
 
     def of(s: String): String = s.slice(region.getOffset, region.getOffset + region.getLength)
   }
-
-  private implicit def region2regionOps(region: IRegion): RegionOps = new RegionOps(region)
 }

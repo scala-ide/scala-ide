@@ -3,7 +3,6 @@ package scala.tools.eclipse.hyperlink.text.detector
 
 import org.eclipse.jface.text.IRegion
 import org.eclipse.jface.text.hyperlink.IHyperlink
-import scala.Option.option2Iterable
 import scala.tools.eclipse.{ScalaPresentationCompiler => compiler}
 import scala.tools.eclipse.javaelements.ScalaCompilationUnit
 import scala.tools.eclipse.logging.HasLogger
@@ -18,7 +17,7 @@ class ScalaDeclarationHyperlinkComputer extends HasLogger {
 
   def findHyperlinks(icu: InteractiveCompilationUnit, wordRegion: IRegion, mappedRegion: IRegion): Option[List[IHyperlink]] = {
     /** In 2.9 ClazzTag was called ClassTag. Source-compatibility hack */
-    implicit def compatClazzTag(com: ScalaPresentationCompiler) = new {
+    implicit class CompatClazzTag(com: ScalaPresentationCompiler) {
       def ClazzTag = 12 // we really, really hope this constant won't change in 2.9.x
     }
     icu.withSourceFile({ (sourceFile, compiler) =>

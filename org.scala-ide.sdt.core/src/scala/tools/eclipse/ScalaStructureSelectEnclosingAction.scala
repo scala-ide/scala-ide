@@ -1,6 +1,6 @@
 package scala.tools.eclipse
 
-import org.eclipse.jdt.internal.corext.SourceRange
+import org.eclipse.jdt.core.SourceRange
 import org.eclipse.jdt.internal.ui.javaeditor.selectionactions._
 import org.eclipse.jface.action.Action
 import org.eclipse.jface.text.ITextSelection
@@ -23,7 +23,7 @@ class ScalaStructureSelectEnclosingAction(editor: ScalaSourceFileEditor, selecti
         try new AstSelector(source)
         catch { case _: ScalaParserException => return }
     }
-    previousAstSelector = Some(source, astSelector)
+    previousAstSelector = Some(source -> astSelector)
 
     val selection = editor.getSelectionProvider.getSelection.asInstanceOf[ITextSelection]
     val selectionRange = Range(selection.getOffset, selection.getLength)

@@ -27,7 +27,6 @@ import org.eclipse.core.runtime.SubMonitor
 import org.eclipse.jdt.internal.junit.launcher.ITestFinder
 import scala.tools.eclipse.ScalaProject
 import scala.tools.eclipse.javaelements.ScalaSourceFile
-import scala.tools.eclipse.util.Utils.any2optionable
 import org.eclipse.jdt.core.IMember
 import org.eclipse.jdt.core.IPackageFragmentRoot
 import scala.tools.eclipse.logging.HasLogger
@@ -99,7 +98,7 @@ class JUnit4TestFinder extends ITestFinder with ISearchMethods with HasLogger {
 
         askOption { () =>
           // classes in the empty package are not found in the root mirror
-          val sym = if (fqn.lastPos('.') > -1) rootMirror.getClass(fqn) else rootMirror.EmptyPackageClass.info.member(fqn)
+          val sym = if (fqn.lastPos('.') > -1) rootMirror.getClassByName(fqn) else rootMirror.EmptyPackageClass.info.member(fqn)
           sym.annotations
           sym.info.members.filter(hasTestAnnotation).map(_.originalName.toString).toSet
         } getOrElse (emptySet)
@@ -211,6 +210,7 @@ object JUnit4TestFinder {
     import comp.ClassDef
     import comp.Response
     import comp.Tree
+    import scala.tools.eclipse.util.Utils._
     val response = new Response[Tree]
     comp.askParsedEntered(source, keepLoaded = false, response)
 

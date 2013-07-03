@@ -278,7 +278,7 @@ object CodeBuilder {
 
     protected def contents(implicit ld: String) =
       (generatedConstructors map (s => ld+"  " +s+ld)
-        ++= generatedMethods map (s => ld+"  " +s+ld)) mkString
+        ++= generatedMethods map (s => ld+"  " +s+ld)).mkString
 
     def unimplemetedConstructors(typeHierarchy: ITypeHierarchy, newType: IType)
                                 (implicit ld: String) = {
@@ -377,17 +377,14 @@ object templates extends QualifiedNameSupport {
     xs map f reduceLeftOption(_ + _) map newLine getOrElse ""
   }
 
-  def typeTemplate = extendsTemplate compose explicitSuperTypes
+  val typeTemplate: List[String] => String =
+    extendsTemplate compose explicitSuperTypes
 
-  private val explicitSuperTypes = (xs: List[String]) =>
-    xs match {
-      case List(DEFAULT_SUPER_TYPE, rest @ _*) => rest map removePackage toList
-      case List(all @ _*) => all map removePackage toList
-    }
+  private val explicitSuperTypes: List[String] => List[String] = {
+    case DEFAULT_SUPER_TYPE :: rest => rest.map(removePackage)
+    case xs => xs.map(removePackage)
+  }
 
-  private val extendsTemplate = (xs: List[String]) =>
-    xs match {
-      case l: List[_] if(l.nonEmpty) => " extends " + l.mkString(" with ")
-      case _ => ""
-    }
+  private val extendsTemplate: List[String] => String = xs =>
+    if (xs.isEmpty) "" else " extends " + xs.mkString(" with ")
 }

@@ -68,7 +68,8 @@ class MissingMemberInfo(compilationUnit: ICompilationUnit, val fullyQualifiedNam
   }
 
   private def searchForTypes(project: IJavaProject, name: String): List[TypeNameMatch] = {
-    val resultCollector = new java.util.ArrayList[TypeNameMatch] //TODO: move this out and refactor ScalaQuickFixProcessor to use it
+    // TODO: move this out and refactor ScalaQuickFixProcessor to use it
+    val resultCollector = new java.util.ArrayList[TypeNameMatch]
     val scope = SearchEngine.createJavaSearchScope(Array[IJavaElement](project))
     val typesToSearch = Array(name.toArray)
     new SearchEngine().searchAllTypeNames(null, typesToSearch, scope, new TypeNameMatchCollector(resultCollector), IJavaSearchConstants.WAIT_UNTIL_READY_TO_SEARCH, new NullProgressMonitor)
@@ -109,7 +110,7 @@ object MissingMemberInfo {
             t <- typedRes.left.toOption
             tpe <- Option(t.tpe)
             parameter <- getParameter(tpe.paramss)
-            val paramType = parameter.tpe
+            paramType = parameter.tpe
             paramTypeRef = paramType.asInstanceOf[TypeRef]
           } yield {
             val (parameters, returnType) =

@@ -137,10 +137,19 @@ class ScalaQuickFixProcessor extends IQuickFixProcessor with HasLogger {
       val resultCollector = new java.util.ArrayList[TypeNameMatch]
       val scope = SearchEngine.createJavaSearchScope(Array[IJavaElement](compilationUnit.getJavaProject))
       val typesToSearch = Array(missingType.toArray)
-      new SearchEngine().searchAllTypeNames(null, typesToSearch, scope, new TypeNameMatchCollector(resultCollector), IJavaSearchConstants.WAIT_UNTIL_READY_TO_SEARCH, new NullProgressMonitor)
-      resultCollector map { typeFound =>
-        new ImportCompletionProposal(typeFound.getFullyQualifiedName)
-      } toList
+
+      new SearchEngine().searchAllTypeNames(
+          null,
+          typesToSearch,
+          scope,
+          new TypeNameMatchCollector(resultCollector),
+          IJavaSearchConstants.WAIT_UNTIL_READY_TO_SEARCH,
+          new NullProgressMonitor)
+
+      val proposals = resultCollector map { typeName =>
+        new ImportCompletionProposal(typeName.getFullyQualifiedName)
+      }
+      proposals.toList
     }
 
     matchTypeNotFound(problemMessage, suggestImportType)

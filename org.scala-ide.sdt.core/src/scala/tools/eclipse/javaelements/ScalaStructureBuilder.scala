@@ -114,7 +114,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
 
       def addFunction(f : Function) : Owner = this
 
-      def resetImportContainer {}
+      def resetImportContainer() {}
 
       def addChild(child : JavaElement) =
         elementInfo match {
@@ -125,11 +125,11 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
       def modules : Map[Symbol, ScalaElementInfo] = Map.empty
       def classes : Map[Symbol, (ScalaElement, ScalaElementInfo)] = Map.empty
 
-      def complete(treeTraverser: TreeTraverser) {
+      private[ScalaStructureBuilder] def complete(treeTraverser: TreeTraverser) {
         def addModuleInnerClasses(classElem : ScalaElement, classElemInfo : ScalaElementInfo, mInfo: ScalaElementInfo) {
           for(innerClasses <- treeTraverser.moduleInfo2innerClassDefs.get(mInfo); innerClass <- innerClasses) {
             /* The nested classes are exposed as children of the module's companion class. */
-            val classBuilder = new Builder {
+            val classBuilder: Builder = new Builder {
               val parent = self
               val element = classElem
               val elementInfo = classElemInfo
@@ -156,7 +156,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
               val comp = companionClassOf(module)
               if (comp == NoSymbol) List() else comp.info.baseClasses
             }
-            cps.filter(mps contains)
+            cps.filter(mps.contains)
           }
           /* the setter doesn't show up in members so we inspect the name */
           def conflictsInCommonParent(name: Name) =
@@ -468,7 +468,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
           parentTree map { tree =>
               val start0 = tree.pos.point
               (start0, start0-1)
-          } getOrElse (-1,-1) // undefined
+          } getOrElse (-1 -> -1) // undefined
         }
 
         classElemInfo.setNameSourceStart0(start)
@@ -537,7 +537,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
 
         fillOverrideInfos(sym)
 
-        val mb = new Builder {
+        val mb: Builder = new Builder {
           val parent = self
           val element = moduleElem
           val elementInfo = moduleElemInfo
@@ -778,7 +778,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
     }
 
     def addAnnotations(sym : Symbol, parentInfo : AnnotatableInfo, parentHandle : JavaElement) : Position =
-      addAnnotations(try { sym.annotations } catch { case _ => Nil }, parentInfo, parentHandle)
+      addAnnotations(try { sym.annotations } catch { case _: Exception => Nil }, parentInfo, parentHandle)
 
     def addAnnotations(annots : List[AnnotationInfo], parentInfo : AnnotatableInfo, parentHandle : JavaElement) : Position = {
       import SourceRefElementInfoUtils._
@@ -908,7 +908,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
       traverser.traverse(tree, new CompilationUnitBuilder)
     }
 
-    private[this] class TreeTraverser {
+    private[ScalaStructureBuilder] class TreeTraverser {
       /** Holds the sequence of inner classes declared in a module.
        * The map's key refer to the module's symbol (it should really be of type {{{ModuleClassSymbol}}}). */
       val moduleInfo2innerClassDefs = collection.mutable.Map.empty[ScalaElementInfo, List[ClassDef]]

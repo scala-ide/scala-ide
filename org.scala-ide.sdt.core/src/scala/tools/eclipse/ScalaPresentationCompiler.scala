@@ -116,7 +116,7 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings) exten
     val response = new Response[Tree]
     if (self.onCompilerThread)
       throw ScalaPresentationCompiler.InvalidThread("Tried to execute `askType` while inside `ask`")
-    askType(sourceFile, false, response)
+    askLoadedTyped(sourceFile, response)
     response.get
   }
 

@@ -76,7 +76,7 @@ private[launching] abstract class JUnit4TestClassesCollector extends HasLogger {
   /** Don't crash if the class is not on the classpath. */
   def getClassSafe(fullName: String): Option[Symbol] = {
     try {
-      Option(rootMirror.getClass(newTypeName(fullName)))
+      Option(rootMirror.getClassByName(newTypeName(fullName)))
     } catch {
       case _: MissingRequirementError =>
         logger.info("Type `" + fullName + "` is not available in the project's classpath.")

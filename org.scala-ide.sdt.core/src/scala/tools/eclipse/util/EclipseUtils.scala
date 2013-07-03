@@ -35,9 +35,7 @@ import org.eclipse.core.runtime.jobs.ISchedulingRule
 
 object EclipseUtils {
 
-  implicit def adaptableToPimpedAdaptable(adaptable: IAdaptable): PimpedAdaptable = new PimpedAdaptable(adaptable)
-
-  class PimpedAdaptable(adaptable: IAdaptable) {
+  implicit class PimpedAdaptable(adaptable: IAdaptable) {
 
     def adaptTo[T](implicit m: Manifest[T]): T = adaptable.getAdapter(m.runtimeClass).asInstanceOf[T]
 
@@ -45,32 +43,26 @@ object EclipseUtils {
 
   }
 
-  implicit def prefStoreToPimpedPrefStore(preferenceStore: IPreferenceStore): PimpedPreferenceStore = new PimpedPreferenceStore(preferenceStore)
-
-  class PimpedPreferenceStore(preferenceStore: IPreferenceStore) {
+  implicit class PimpedPreferenceStore(preferenceStore: IPreferenceStore) {
 
     def getColor(key: String): RGB = PreferenceConverter.getColor(preferenceStore, key)
 
   }
 
-  implicit def documentToPimpedDocument(document: IDocument): PimpedDocument = new PimpedDocument(document)
-
-  class PimpedDocument(document: IDocument) {
+  implicit class PimpedDocument(document: IDocument) {
 
     def apply(offset: Int): Char = document.getChar(offset)
 
   }
 
-  class PimpedRegion(region: IRegion) {
+  implicit class PimpedRegion(region: IRegion) {
     def toRangePos(src: SourceFile): Position = {
       val offset = region.getOffset
       new RangePosition(src, offset, offset, offset + region.getLength)
     }
   }
 
-  implicit def pimpedRegion(region: IRegion) = new PimpedRegion(region)
-
-  implicit def asEclipseTextEdit(edit: TextEdit): EclipseTextEdit =
+  def asEclipseTextEdit(edit: TextEdit): EclipseTextEdit =
     new ReplaceEdit(edit.position, edit.length, edit.replacement)
 
   /**

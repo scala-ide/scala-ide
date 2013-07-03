@@ -23,11 +23,9 @@ case class SyntacticInfo(
 
 object SyntacticInfo {
 
-  private class RangeOps(range: Range) {
+  private implicit class RangeOps(range: Range) {
     def toRegion: IRegion = new Region(range.offset, range.length)
   }
-
-  private implicit def range2Region(range: Range): RangeOps = new RangeOps(range)
 
   def noSyntacticInfo = SyntacticInfo(Set(), Set(), Set(), Set(), Set(), Set(), Set())
 

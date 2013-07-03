@@ -464,7 +464,7 @@ class ClasspathTests {
     var actualMarkers = (0, 0)
     SDTTestUtils.waitUntil(10000) {
       actualMarkers = collectMarkers(scalaProject)
-      actualMarkers == (expectedNbOfErrorMarker, expectedNbOfWarningMarker)
+      actualMarkers == ((expectedNbOfErrorMarker, expectedNbOfWarningMarker))
     }
 
     val (nbOfErrorMarker, nbOfWarningMarker) = actualMarkers

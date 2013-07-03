@@ -7,15 +7,20 @@ package scala.tools.eclipse.wizards
 
 object BufferSupport {
 
-  type Buffer = {
+  trait Buffer {
     def append(s: String): Unit
     def getLength(): Int
   def replace(offset: Int, length: Int, text: String): Unit
   def getContents(): String
   }
 
-  implicit protected[wizards] def stringBuilderToBuffer(bldr: StringBuilder) =
-    new BuilderAdapter(bldr)
+  private[wizards] implicit class BuilderAdapter(val __sb: StringBuilder) extends AnyVal {
+    def append(s: String): Unit = __sb.append(s)
+    def getLength(): Int = __sb.length
+    def replace(offset: Int, length: Int, text: String): Unit =
+      __sb.replace(offset, length, text)
+    def getContents() = __sb.toString
+  }
 }
 
 trait BufferSupport {
@@ -40,14 +45,6 @@ trait BufferSupport {
 
   length = s.length
   }
-}
-
-private[wizards] class BuilderAdapter(sb: StringBuilder) {
-  def append(s: String): Unit = sb.append(s)
-  def getLength(): Int = sb.length
-  def replace(offset: Int, length: Int, text: String): Unit =
-    sb.replace(offset, length, text)
-  def getContents() = sb.toString
 }
 
 trait SuperTypeSupport {

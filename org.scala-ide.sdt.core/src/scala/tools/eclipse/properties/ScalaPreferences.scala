@@ -73,7 +73,9 @@ class ScalaPreferences extends PropertyPage with IWorkbenchPreferencePage with E
     case ex: Throwable => eclipseLog.error(ex); false
   }
 
-  def updateApply = updateApplyButton
+  def updateApply() {
+    updateApplyButton
+  }
 
   /** Updates the apply button with the appropriate enablement. */
   protected override def updateApplyButton() : Unit = {

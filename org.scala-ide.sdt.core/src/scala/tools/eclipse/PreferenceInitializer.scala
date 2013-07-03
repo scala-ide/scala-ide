@@ -7,7 +7,7 @@ import scala.tools.eclipse.diagnostic.StartupDiagnostics
 class PreferenceInitializer extends AbstractPreferenceInitializer {
 
   def initializeDefaultPreferences(): Unit = {
-    val node = new DefaultScope().getNode("org.scala-ide.sdt.core");
+    val node = DefaultScope.INSTANCE.getNode("org.scala-ide.sdt.core");
     node.putBoolean(StartupDiagnostics.ASK_DIAGNOSTICS, true);
   }
 
