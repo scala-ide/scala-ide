@@ -3,10 +3,8 @@ package scala.tools.eclipse.launching
 import java.io.IOException
 import java.util.{ List => JList }
 import java.util.{ Map => JMap }
-
 import scala.tools.eclipse.debug.ScalaDebugPlugin
 import scala.tools.eclipse.debug.model.ScalaDebugTarget
-
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.core.runtime.IStatus
 import org.eclipse.core.runtime.Status
@@ -17,16 +15,16 @@ import org.eclipse.debug.core.ILaunch
 import org.eclipse.debug.core.model.IProcess
 import org.eclipse.debug.core.model.IStreamsProxy
 import org.eclipse.jdi.Bootstrap
-
 import com.sun.jdi.connect.Connector
 import com.sun.jdi.connect.ListeningConnector
 import com.sun.jdi.connect.TransportTimeoutException
+import org.eclipse.jdt.launching.IVMConnector
 
 /**
  * Listen connector creating a Scala debug session.
  * Added to the platform through extension point.
  */
-class SocketListenConnectorScala extends VMConnectorAdapter with SocketConnectorScala {
+class SocketListenConnectorScala extends IVMConnector with SocketConnectorScala {
   import SocketConnectorScala._
 
   // from scala.tools.eclipse.launching.SocketConnectorScala
@@ -48,7 +46,7 @@ class SocketListenConnectorScala extends VMConnectorAdapter with SocketConnector
 
   override def getName(): String = "Scala debugger (Socket Listen)"
 
-  override def typedConnect(params: JMap[String, String], monitor: IProgressMonitor, launch: ILaunch) {
+  override def connect(params: JMap[String, String], monitor: IProgressMonitor, launch: ILaunch) {
     val arguments = generateArguments(params)
 
     // the port number is needed for the process label. It should be available if we got that far
