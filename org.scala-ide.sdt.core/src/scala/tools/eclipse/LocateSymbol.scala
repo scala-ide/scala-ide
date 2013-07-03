@@ -102,7 +102,7 @@ trait LocateSymbol { self : ScalaPresentationCompiler =>
 
       pos flatMap { p =>
         if (p eq NoPosition) None
-        else Some(file, p.point)
+        else Some(file -> p.point)
       }
     }
   }

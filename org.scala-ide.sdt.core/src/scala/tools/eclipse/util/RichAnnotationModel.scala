@@ -10,29 +10,28 @@ import org.eclipse.jface.text.ISynchronizable
 
 object RichAnnotationModel {
 
-  implicit def annotationModel2RichAnnotationModel(annotationModel: IAnnotationModel): RichAnnotationModel =
-    new RichAnnotationModel(annotationModel)
+  implicit class RichModel(annotationModel: IAnnotationModel) {
 
-}
+    def withLock[T](f: => T): T = annotationModel match {
+      case synchronizable: ISynchronizable =>
+        synchronizable.getLockObject.synchronized { f }
+      case _ =>
+        f
+    }
 
-class RichAnnotationModel(annotationModel: IAnnotationModel) {
+    def getAnnotations: List[Annotation] = {
+      val annotations = annotationModel.getAnnotationIterator collect { case ann: Annotation => ann }
+      annotations.toList
+    }
 
-  def withLock[T](f: => T): T = annotationModel match {
-    case synchronizable: ISynchronizable =>
-      synchronizable.getLockObject.synchronized { f }
-    case _ =>
-      f
-  }
+    def replaceAnnotations(annotations: Iterable[Annotation], replacements: Map[Annotation, Position]) {
+      annotationModel.asInstanceOf[IAnnotationModelExtension].replaceAnnotations(annotations.toArray, replacements)
+    }
 
-  def getAnnotations: List[Annotation] =
-    annotationModel.getAnnotationIterator collect { case ann: Annotation => ann } toList
+    def deleteAnnotations(annotations: Iterable[Annotation]) {
+      replaceAnnotations(annotations, Map())
+    }
 
-  def replaceAnnotations(annotations: Iterable[Annotation], replacements: Map[Annotation, Position]) {
-    annotationModel.asInstanceOf[IAnnotationModelExtension].replaceAnnotations(annotations.toArray, replacements)
-  }
-
-  def deleteAnnotations(annotations: Iterable[Annotation]) {
-    replaceAnnotations(annotations, Map())
   }
 
 }

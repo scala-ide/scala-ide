@@ -126,7 +126,7 @@ trait ScalaCompilationUnit extends Openable
           logger.info("ignored InterruptedException in build structure")
           false
 
-        case ex =>
+        case ex: Exception =>
           logger.error("Compiler crash while building structure for %s".format(file), ex)
           false
       }
@@ -143,7 +143,7 @@ trait ScalaCompilationUnit extends Openable
    */
   override def scheduleReconcile(): Response[Unit] = {
     val r = (new Response[Unit])
-    r.set()
+    r.set(())
     r
   }
 
@@ -256,19 +256,20 @@ trait ScalaCompilationUnit extends Openable
             }
           }
         } catch {
-          case ex =>
+          case ex: Exception =>
            logger.error("Exception thrown while creating override indicators for %s".format(sourceFile), ex)
         }
       }
   }
 
   override def getImageDescriptor = {
-    Option(getCorrespondingResource) map { file =>
+    val descriptor = Option(getCorrespondingResource) map { file =>
       import ScalaImages.SCALA_FILE
       import ScalaImages.EXCLUDED_SCALA_FILE
       val javaProject = JavaCore.create(scalaProject.underlying)
       if (javaProject.isOnClasspath(file)) SCALA_FILE else EXCLUDED_SCALA_FILE
-    } orNull
+    }
+    descriptor.orNull
   }
 
   override def getScalaWordFinder() : IScalaWordFinder = ScalaWordFinder

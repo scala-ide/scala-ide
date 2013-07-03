@@ -3,11 +3,12 @@ package scala.tools.eclipse
 package diagnostic
 
 
-import org.eclipse.jface.dialogs.MessageDialog
-import org.eclipse.jface.dialogs.IDialogConstants
-import util.SWTUtils.asyncExec
-import scala.tools.eclipse.logging.HasLogger
 import scala.tools.eclipse.contribution.weaving.jdt.configuration.WeavingStateConfigurer
+import scala.tools.eclipse.logging.HasLogger
+import scala.tools.eclipse.ui.DisplayThread
+
+import org.eclipse.jface.dialogs.IDialogConstants
+import org.eclipse.jface.dialogs.MessageDialog
 import org.eclipse.ui.PlatformUI
 
 object StartupDiagnostics extends HasLogger {
@@ -18,7 +19,7 @@ object StartupDiagnostics extends HasLogger {
 
   private val weavingState = new WeavingStateConfigurer
 
-  def run {
+  def run() {
     val prefStore = plugin.getPreferenceStore
     val previousVersion = prefStore.getString(INSTALLED_VERSION_KEY)
     val currentVersion = plugin.getBundle.getVersion.toString
@@ -28,7 +29,7 @@ object StartupDiagnostics extends HasLogger {
     logger.info("startup diagnostics: CURRENT version = " + currentVersion)
 
 
-    asyncExec {
+    DisplayThread.asyncExec {
       if (previousVersion != currentVersion) {
         prefStore.setValue(INSTALLED_VERSION_KEY, currentVersion)
 

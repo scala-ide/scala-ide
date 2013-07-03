@@ -88,8 +88,8 @@ class InterpreterLaunchConfigurationDelegate extends AbstractJavaLaunchConfigura
         return;
       }
     }
-    /** Helper method to deal with launch configuration */
-    implicit def pimpConfiguration(configuration : ILaunchConfiguration) = new {
+    /** Helper class to deal with launch configuration */
+    implicit class RichConfiguration(configuration : ILaunchConfiguration) {
       def getAttributeOption(name : String) : Option[String] = {
         configuration.getAttribute(name, "") match {
           case null => None

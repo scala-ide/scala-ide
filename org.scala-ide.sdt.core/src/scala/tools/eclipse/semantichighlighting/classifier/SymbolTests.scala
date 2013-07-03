@@ -6,7 +6,7 @@ import org.eclipse.jface.text.IRegion
 import scala.reflect.internal.util.SourceFile
 
 private[classifier] trait SymbolTests { self: SymbolClassification =>
-  import SymbolTests.region2regionOps
+  import SymbolTests._
   import global._
 
   def posToSym(pos: Position): Option[Symbol] = {
@@ -49,7 +49,7 @@ private[classifier] trait SymbolTests { self: SymbolClassification =>
       if (isLocal) {
         if (isVariable)
           LocalVar
-        else if (isParameter && !forValSymbols.contains(sym))
+        else if (isValueParameter && !forValSymbols.contains(sym))
           Param
         else if (isLazy)
           LazyLocalVal
@@ -89,7 +89,7 @@ private[classifier] trait SymbolTests { self: SymbolClassification =>
       CaseClass
     else if (isClass)
       Class
-    else if (isParameter) // isTypeParam?
+    else if (isTypeParameter || isTypeSkolem)
       TypeParameter
     else // isTypeAlias?
       Type
@@ -109,12 +109,11 @@ private[classifier] trait SymbolTests { self: SymbolClassification =>
 }
 
 private object SymbolTests {
-  private class RegionOps(region: IRegion) {
+  private implicit class RegionOps(val __region: IRegion) extends AnyVal {
     def toRangePosition(sourceFile: SourceFile): RangePosition = {
-      val offset = region.getOffset
-      val length = region.getLength
+      val offset = __region.getOffset
+      val length = __region.getLength
       new RangePosition(sourceFile, offset, offset, offset + length - 1)
     }
   }
-  private implicit def region2regionOps(region: IRegion): RegionOps = new RegionOps(region)
 }

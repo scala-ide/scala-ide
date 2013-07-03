@@ -36,7 +36,7 @@ object JDTUtils {
   private var refreshPending = false
   private val lock = new Object
 
-  def refreshPackageExplorer = {
+  def refreshPackageExplorer() = {
     lock.synchronized{
       if (!refreshPending) {
         refreshPending = true

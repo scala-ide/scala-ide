@@ -11,7 +11,7 @@ import scala.reflect.internal.util.SourceFile
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.jface.text.IRegion
 import org.eclipse.jface.text.Region
-import scala.tools.eclipse.jface.text.RegionOps
+import scala.tools.eclipse.jface.text.RegionOps._
 
 private object SymbolClassification {
   private val debug = false
@@ -109,7 +109,7 @@ class SymbolClassification(protected val sourceFile: SourceFile, val global: Sca
     val symbolInfosFromSyntax = getSymbolInfosFromSyntax(syntacticInfo, localVars, all)
     if (progressMonitor.isCanceled()) return Nil
 
-    (symbolInfosFromSyntax ++ prunedSymbolInfos) filter { _.regions.nonEmpty } distinct
+    (symbolInfosFromSyntax ++ prunedSymbolInfos).filter(_.regions.nonEmpty).distinct
   }
 
   private def getSymbolInfo(sym: Symbol, poss: List[Position], inInterpolatedString: Boolean): SymbolInfo = {
@@ -122,7 +122,7 @@ class SymbolClassification(protected val sourceFile: SourceFile, val global: Sca
 
   private def getOccurrenceRegion(sym: Symbol)(pos: Position): Option[IRegion] =
     getNameRegion(pos) flatMap { region =>
-      val text = RegionOps.of(region, sourceFile.content)
+      val text = region of sourceFile.content
       val symName = sym.nameString
       if (symName.startsWith(text) || text == "`" + symName + "`") Some(region)
       else None
@@ -140,12 +140,12 @@ class SymbolClassification(protected val sourceFile: SourceFile, val global: Sca
   private def getSymbolInfosFromSyntax(syntacticInfo: SyntacticInfo, localVars: Set[IRegion], all: Set[IRegion]): List[SymbolInfo] = {
     val SyntacticInfo(namedArgs, forVals, maybeSelfRefs, maybeClassOfs, annotations, packages, _) = syntacticInfo
     List(
-      SymbolInfo(LocalVal, forVals toList, deprecated = false, inInterpolatedString = false),
-      SymbolInfo(Param, namedArgs filterNot localVars toList, deprecated = false, inInterpolatedString = false),
-      SymbolInfo(TemplateVal, maybeSelfRefs filterNot all toList, deprecated = false, inInterpolatedString = false),
-      SymbolInfo(Method, maybeClassOfs filterNot all toList, deprecated = false, inInterpolatedString = false),
-      SymbolInfo(Annotation, annotations filterNot all toList, deprecated = false, inInterpolatedString = false),
-      SymbolInfo(Package, packages filterNot all toList, deprecated = false, inInterpolatedString = false))
+      SymbolInfo(LocalVal, forVals.toList, deprecated = false, inInterpolatedString = false),
+      SymbolInfo(Param, namedArgs.filterNot(localVars).toList, deprecated = false, inInterpolatedString = false),
+      SymbolInfo(TemplateVal, maybeSelfRefs.filterNot(all).toList, deprecated = false, inInterpolatedString = false),
+      SymbolInfo(Method, maybeClassOfs.filterNot(all).toList, deprecated = false, inInterpolatedString = false),
+      SymbolInfo(Annotation, annotations.filterNot(all).toList, deprecated = false, inInterpolatedString = false),
+      SymbolInfo(Package, packages.filterNot(all).toList, deprecated = false, inInterpolatedString = false))
   }
 
   private def prune(rawSymbolInfos: Seq[SymbolInfo]): Seq[SymbolInfo] = {

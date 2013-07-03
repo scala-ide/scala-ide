@@ -21,10 +21,10 @@ class ScalaHover(val icu: InteractiveCompilationUnit) extends ITextHover {
     val start = region.getOffset
     val end = start + region.getLength
     icu.withSourceFile({ (src, compiler) =>
-      import compiler._
+      import compiler.{stringToTermName => _, stringToTypeName => _, _}
 
       def hoverInfo(t: Tree): Option[String] = askOption { () =>
-        def compose(ss: List[String]): String = ss.filter("" !=).mkString("", " ", "")
+        def compose(ss: List[String]): String = ss.filter(_.nonEmpty).mkString(" ")
         def defString(sym: Symbol, tpe: Type): String = {
           // NoType is returned for defining occurrences, in this case we want to display symbol info itself.
           val tpeinfo = if (tpe ne NoType) tpe.widen else sym.info

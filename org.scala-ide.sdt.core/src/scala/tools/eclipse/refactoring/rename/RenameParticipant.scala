@@ -107,9 +107,9 @@ class RenameParticipant extends LtkRenameParticipant {
    * The refactoring needs to be executed before the file is renamed, otherwise the
    * underlying IFile changes and the refactoring is applied to the old file.
    */
-  override def createPreChange(pm: IProgressMonitor)= change
+  override def createPreChange(pm: IProgressMonitor) = change
 
-  def createChange(pm: IProgressMonitor)= null
+  def createChange(pm: IProgressMonitor) = null
 
   private var classBeingRenamed: Option[(IFile, RangePosition)] = None
 
@@ -140,7 +140,8 @@ class RenameParticipant extends LtkRenameParticipant {
 
         def implDefSameAsFileName(t: ImplDef) = t.name.toString + ".scala" == file.getName
 
-        trees flatMap findTopLevelObjectOrClassDefinition map (_.pos) headOption
+        val positions = trees flatMap findTopLevelObjectOrClassDefinition map (_.pos)
+        positions.headOption
 
       }(None)
     } getOrElse NoPosition

@@ -14,18 +14,14 @@ import scala.tools.eclipse.properties.PropertyStore
 
 object FormatterPreferences {
 
-  implicit def preference2PimpedPreference(preference: PreferenceDescriptor[_]) = new PimpedFormatterPreference(preference)
-
-  class PimpedFormatterPreference(preference: PreferenceDescriptor[_]) {
+  implicit class RichFormatterPreference(preference: PreferenceDescriptor[_]) {
 
     def eclipseKey = PREFIX  + preference.key
 
     def oldEclipseKey = OLD_PREFIX + preference.key
   }
 
-  implicit def prefStore2PimpedPrefStore(preferenceStore: IPreferenceStore) = new PimpedPreferenceStore(preferenceStore)
-
-  class PimpedPreferenceStore(preferenceStore: IPreferenceStore) {
+  implicit class RichPreferenceStore(preferenceStore: IPreferenceStore) {
 
     def apply(pref: PreferenceDescriptor[Boolean]) = preferenceStore.getBoolean(pref.eclipseKey)
 

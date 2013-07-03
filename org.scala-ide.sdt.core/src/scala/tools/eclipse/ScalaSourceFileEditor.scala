@@ -8,12 +8,12 @@ package scala.tools.eclipse
 
 import java.util.ResourceBundle
 
-import scala.Option.option2Iterable
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.SynchronizedBuffer
 import scala.tools.eclipse.javaelements.ScalaCompilationUnit
 import scala.tools.eclipse.markoccurrences.Occurrences
 import scala.tools.eclipse.markoccurrences.ScalaOccurrencesFinder
+import scala.tools.eclipse.properties.EditorPreferencePage
 import scala.tools.eclipse.properties.syntaxcolouring.ScalaSyntaxClasses
 import scala.tools.eclipse.semantichighlighting.Presenter
 import scala.tools.eclipse.semantichighlighting.ui.TextPresentationEditorHighlighter
@@ -23,8 +23,7 @@ import scala.tools.eclipse.ui.DisplayThread
 import scala.tools.eclipse.ui.SurroundSelectionStrategy
 import scala.tools.eclipse.util.EclipseUtils
 import scala.tools.eclipse.util.EditorUtils
-import scala.tools.eclipse.util.RichAnnotationModel.annotationModel2RichAnnotationModel
-import scala.tools.eclipse.util.SWTUtils
+import scala.tools.eclipse.util.RichAnnotationModel.RichModel
 import scala.tools.eclipse.util.SWTUtils.fnToPropertyChangeListener
 import scala.tools.eclipse.util.Utils
 
@@ -61,14 +60,12 @@ import org.eclipse.jface.util.PropertyChangeEvent
 import org.eclipse.jface.viewers.ISelection
 import org.eclipse.swt.widgets.Shell
 import org.eclipse.ui.ISelectionListener
+import org.eclipse.ui.IWorkbenchCommandConstants
 import org.eclipse.ui.IWorkbenchPart
 import org.eclipse.ui.texteditor.IAbstractTextEditorHelpContextIds
 import org.eclipse.ui.texteditor.ITextEditorActionConstants
 import org.eclipse.ui.texteditor.IUpdate
-import org.eclipse.ui.texteditor.IWorkbenchActionDefinitionIds
 import org.eclipse.ui.texteditor.TextOperationAction
-
-import scala.tools.eclipse.properties.EditorPreferencePage
 
 
 class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor { self =>
@@ -110,17 +107,17 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor { sel
 
     val cutAction = new TextOperationAction(bundleForConstructedKeys, "Editor.Cut.", this, ITextOperationTarget.CUT) //$NON-NLS-1$
     cutAction.setHelpContextId(IAbstractTextEditorHelpContextIds.CUT_ACTION)
-    cutAction.setActionDefinitionId(IWorkbenchActionDefinitionIds.CUT)
+    cutAction.setActionDefinitionId(IWorkbenchCommandConstants.EDIT_CUT)
     setAction(ITextEditorActionConstants.CUT, cutAction)
 
     val copyAction = new TextOperationAction(bundleForConstructedKeys, "Editor.Copy.", this, ITextOperationTarget.COPY, true) //$NON-NLS-1$
     copyAction.setHelpContextId(IAbstractTextEditorHelpContextIds.COPY_ACTION)
-    copyAction.setActionDefinitionId(IWorkbenchActionDefinitionIds.COPY)
+    copyAction.setActionDefinitionId(IWorkbenchCommandConstants.EDIT_COPY)
     setAction(ITextEditorActionConstants.COPY, copyAction)
 
     val pasteAction = new TextOperationAction(bundleForConstructedKeys, "Editor.Paste.", this, ITextOperationTarget.PASTE) //$NON-NLS-1$
     pasteAction.setHelpContextId(IAbstractTextEditorHelpContextIds.PASTE_ACTION)
-    pasteAction.setActionDefinitionId(IWorkbenchActionDefinitionIds.PASTE)
+    pasteAction.setActionDefinitionId(IWorkbenchCommandConstants.EDIT_PASTE)
     setAction(ITextEditorActionConstants.PASTE, pasteAction)
 
     val selectionHistory = new SelectionHistory(this)
@@ -292,7 +289,7 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor { sel
     def groupMenuItemsByGroupId(items: Seq[IContributionItem]) = {
       // the different groups (as indicated by separators) and
       // contributions in a menu are originally just a flat list
-      items.foldLeft(Nil: List[(String, List[IContributionItem])]) {
+      val groups = items.foldLeft(Nil: List[(String, List[IContributionItem])]) {
 
         // start a new group
         case (others, group: Separator) => (group.getId, Nil) :: others
@@ -303,7 +300,8 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor { sel
         // the menu does not start with a group, this shouldn't happen, but if
         // it does we just skip this element, so it will stay in the menu.
         case (others, _) => others
-      } toMap
+      }
+      groups.toMap
     }
 
     def findJdtSourceMenuManager(items: Seq[IContributionItem]) = {
@@ -375,7 +373,7 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor { sel
       case _ =>
         if (affectsTextPresentation(event)) {
           // those events will trigger a UI change
-          SWTUtils.asyncExec(super.handlePreferenceStoreChanged(event))
+          DisplayThread.asyncExec(super.handlePreferenceStoreChanged(event))
         } else {
           super.handlePreferenceStoreChanged(event)
         }

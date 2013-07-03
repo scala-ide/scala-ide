@@ -139,9 +139,8 @@ class ScalaSourceViewerConfiguration(store: IPreferenceStore, scalaPreferenceSto
       }
    }
 
-   def getProject: IJavaProject = {
-      getCodeAssist map (_.asInstanceOf[IJavaElement].getJavaProject) orNull
-   }
+  def getProject: IJavaProject =
+    getCodeAssist.map(_.asInstanceOf[IJavaElement].getJavaProject).orNull
 
    /**
     * Replica of JavaSourceViewerConfiguration#getAutoEditStrategies that returns

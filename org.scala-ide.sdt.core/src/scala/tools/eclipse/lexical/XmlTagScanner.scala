@@ -95,7 +95,7 @@ class XmlTagScanner(val preferenceStore: IPreferenceStore) extends AbstractScala
   }
 
   @tailrec
-  private def getXmlName: Unit =
+  private def getXmlName(): Unit =
     (ch: @switch) match {
       case ' ' | '\r' | '\n' | '\t' | EOF | '\'' | '\"' | '>' | '/' | '<' | '=' =>
       case _ =>
@@ -104,7 +104,7 @@ class XmlTagScanner(val preferenceStore: IPreferenceStore) extends AbstractScala
     }
 
   @tailrec
-  private def getWhitespace: Unit =
+  private def getWhitespace(): Unit =
     (ch: @switch) match {
       case ' ' | '\r' | '\n' | '\t' =>
         accept()

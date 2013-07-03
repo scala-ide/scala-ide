@@ -1,12 +1,17 @@
 package scala.tools.eclipse.logging
 
-import org.eclipse.core.runtime.Status
+import java.util.concurrent.atomic.AtomicReference
+
 import scala.tools.eclipse.ScalaPlugin
 import scala.tools.eclipse.util.SWTUtils
 import org.eclipse.core.runtime.ILog
 import org.eclipse.core.runtime.IStatus
+import scala.tools.eclipse.ui.DisplayThread
 import scala.util.control.ControlThrowable
-import java.util.concurrent.atomic.AtomicReference
+
+import org.eclipse.core.runtime.ILog
+import org.eclipse.core.runtime.IStatus
+import org.eclipse.core.runtime.Status
 
 /** Use the `EclipseLogger` when you want to communicate with the user. Messages logged
  *  through the `EclipseLogger` are persisted in the Error Log.
@@ -90,6 +95,6 @@ private[logging] object EclipseLogger extends Logger {
   private def logInUiThread(severity: Int, message: Any, exception: Throwable): Unit = {
     val status = new Status(severity, ScalaPlugin.plugin.getBundle.getSymbolicName, message.toString, exception)
     if (ScalaPlugin.plugin.headlessMode) pluginLogger.log(status)
-    else SWTUtils.asyncExec { pluginLogger.log(status) }
+    else DisplayThread.asyncExec { pluginLogger.log(status) }
   }
 }

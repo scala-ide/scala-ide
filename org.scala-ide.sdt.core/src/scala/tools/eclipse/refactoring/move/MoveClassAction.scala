@@ -117,6 +117,8 @@ class MoveClassAction extends RefactoringAction {
         buildFullProjectIndex(pm, toMove)
       }
 
+      import scala.language.reflectiveCalls
+
       refactoring.index = index
 
       // will be called after the refactoring has finished

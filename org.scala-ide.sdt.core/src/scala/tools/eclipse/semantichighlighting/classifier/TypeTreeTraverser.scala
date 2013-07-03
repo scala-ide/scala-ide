@@ -8,23 +8,22 @@ private[classifier] trait TypeTreeTraverser {
 
   import global._
 
-  implicit def tree2treeWrapper(tree: Tree): TreeWrapper = new TreeWrapper(tree)
-
   /**
    * Monadic wrapper for a Tree. The wrapper is actually very similar
    * to {{{TreeOps}}}, with the difference that is uses the below defined
    * {{{TypeTreeTraverser}}} in place of the standard {{{Traverser}}} to
    * traverse the Tree.
    */
-  class TreeWrapper(tree: Tree) {
+  // TODO is this used?
+  implicit class TreeWrapper(tree: Tree) {
 
     def isType: Boolean = tree match {
       case _: TypTree        => true
       case Bind(name, _)     => name.isTypeName
       case Select(_, name)   => name.isTypeName
       case Ident(name)       => name.isTypeName
-      case Annotated(_, arg) => tree2treeWrapper(arg).isType
-      case DocDef(_, defn)   => tree2treeWrapper(defn).isType
+      case Annotated(_, arg) => arg.isType
+      case DocDef(_, defn)   => defn.isType
       case _                 => false
     }
 

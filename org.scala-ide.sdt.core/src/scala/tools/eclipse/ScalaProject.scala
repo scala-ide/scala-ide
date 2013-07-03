@@ -9,22 +9,21 @@ import java.io.File.pathSeparator
 
 import scala.collection.immutable
 import scala.collection.mutable
-import scala.tools.eclipse.javaelements.ScalaCompilationUnit
+import scala.reflect.internal.util.BatchSourceFile
+import scala.reflect.internal.util.SourceFile
 import scala.tools.eclipse.javaelements.ScalaSourceFile
 import scala.tools.eclipse.logging.HasLogger
 import scala.tools.eclipse.properties.CompilerSettings
 import scala.tools.eclipse.properties.IDESettings
 import scala.tools.eclipse.properties.PropertyStore
+import scala.tools.eclipse.ui.DisplayThread
 import scala.tools.eclipse.ui.PartAdapter
 import scala.tools.eclipse.util.Cached
 import scala.tools.eclipse.util.EclipseResource
 import scala.tools.eclipse.util.Trim
 import scala.tools.eclipse.util.Utils
-import scala.tools.eclipse.util.SWTUtils.asyncExec
-import scala.tools.nsc.Settings
 import scala.tools.nsc.MissingRequirementError
-import scala.reflect.internal.util.BatchSourceFile
-import scala.reflect.internal.util.SourceFile
+import scala.tools.nsc.Settings
 
 import org.eclipse.core.resources.IContainer
 import org.eclipse.core.resources.IFile
@@ -42,11 +41,12 @@ import org.eclipse.jdt.core.IJavaProject
 import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jdt.core.JavaModelException
 import org.eclipse.jdt.internal.core.util.Util
+import org.eclipse.jface.dialogs.MessageDialog
+import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.ui.IEditorPart
 import org.eclipse.ui.IPartListener
 import org.eclipse.ui.IWorkbenchPart
 import org.eclipse.ui.part.FileEditorInput
-import org.eclipse.jface.preference.IPreferenceStore
 
 trait BuildSuccessListener {
   def buildSuccessful(): Unit
@@ -175,7 +175,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
       // FIXME: What's the purpose of having an `asyncExex` in a synchronized block?
       if (!plugin.headlessMode && !messageShowed) {
         messageShowed = true
-        asyncExec {
+        DisplayThread.asyncExec {
           val doAdd = MessageDialog.openQuestion(ScalaPlugin.getShell, "Add Scala library to project classpath?",
               ("There was an error initializing the Scala compiler: %s. \n\n"+
                "The editor compiler will be restarted when the project is cleaned or the classpath is changed.\n\n" +

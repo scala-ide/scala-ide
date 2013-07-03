@@ -33,7 +33,7 @@ import scala.util.control.Exception
 trait PreferenceProvider {
   private val preferences = Map.empty[String, String]
 
-  def updateCache: Unit
+  def updateCache(): Unit
 
   def put(key: String, value: String) {
     preferences(key) = value
@@ -56,7 +56,7 @@ trait PreferenceProvider {
 class JdtPreferenceProvider(val project: IJavaProject) extends PreferenceProvider {
   private def preferenceStore = JavaPlugin.getDefault().getCombinedPreferenceStore()
 
-  def updateCache: Unit = {
+  def updateCache(): Unit = {
     put(PreferenceConstants.EDITOR_CLOSE_BRACES,
       preferenceStore.getBoolean(PreferenceConstants.EDITOR_CLOSE_BRACES).toString)
     put(PreferenceConstants.EDITOR_SMART_TAB,
@@ -1391,7 +1391,7 @@ class ScalaIndenter(
    * and sets the fields <code>fToken, fPreviousPosition</code> and <code>fPosition</code>
    * accordingly.
    */
-  private def nextToken: Unit = {
+  private def nextToken(): Unit = {
     nextToken(fPosition)
   }
 

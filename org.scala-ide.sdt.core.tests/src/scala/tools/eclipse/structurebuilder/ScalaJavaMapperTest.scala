@@ -112,11 +112,11 @@ class ScalaJavaMapperTest {
 
     unit.withSourceFile { (srcFile, compiler) =>
       compiler.askReload(unit, src.toCharArray())
-      val target = (compiler.loadedType(srcFile).left.toOption.get collect {
+      val targets = compiler.loadedType(srcFile).left.toOption.get collect {
         case t: compiler.DefDef if t.name.toString startsWith "target" => t
-      } head)
+      }
       compiler.askOption { () =>
-        f(compiler)(target.symbol.info.finalResultType)
+        f(compiler)(targets.head.symbol.info.finalResultType)
       }
     }(throw new NoSuchElementException(s"Could not find target element in $src"))
   }

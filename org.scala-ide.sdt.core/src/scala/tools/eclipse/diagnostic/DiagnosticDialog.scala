@@ -72,7 +72,7 @@ class DiagnosticDialog(configurer: WeavingStateConfigurer, shell: Shell) extends
       !(currentExcluded.contains(scalaCompletion) || currentExcluded.contains(scalaJavaCompletion))
     }
 
-    override def saveToStore {
+    override def saveToStore() {
       updateValue
       if (value && !getStoredValue) {
         val currentExcluded: Array[String] = PreferenceConstants.getExcludedCompletionProposalCategories
@@ -93,10 +93,10 @@ class DiagnosticDialog(configurer: WeavingStateConfigurer, shell: Shell) extends
     var value: T
     val recommendedVal: T
     def isRecommendedVal: Boolean = value == recommendedVal
-    def saveToStore: Unit // save control contents to the preference store
-    def updateWidget: Unit // set control contents to `value`
-    def updateValue: Unit // set `value` to conents of widget
-    def setToRecommended: Unit // set control contents to the recommended value
+    def saveToStore(): Unit // save control contents to the preference store
+    def updateWidget(): Unit // set control contents to `value`
+    def updateValue(): Unit // set `value` to conents of widget
+    def setToRecommended(): Unit // set control contents to the recommended value
   }
 
   // this horrible class hierarchy is mostly this way because of erasure and the overloaded methods in IPreferenceStore
@@ -105,18 +105,18 @@ class DiagnosticDialog(configurer: WeavingStateConfigurer, shell: Shell) extends
     type T = Int
     var value: Int = prefStore.getInt(keyName)
     var textWidget: Text = null // can't be initialized in the constructor because widget won't have been created yet
-    def saveToStore {
+    def saveToStore() {
       updateValue
       prefStore.setValue(keyName, value)
     }
-    def updateWidget { textWidget.setText(value.toString) }
-    def updateValue {
+    def updateWidget() { textWidget.setText(value.toString) }
+    def updateValue() {
       value = DiagnosticDialog.getIntOrError(textWidget.getText) match {
         case Left(error) => recommendedVal
         case Right(num) => num
       }
     }
-    def setToRecommended { textWidget.setText(recommendedVal.toString) }
+    def setToRecommended() { textWidget.setText(recommendedVal.toString) }
   }
 
   class BoolWidgetData(keyName: String, val recommendedVal: Boolean) extends WidgetData {
@@ -124,13 +124,13 @@ class DiagnosticDialog(configurer: WeavingStateConfigurer, shell: Shell) extends
     var value: Boolean = prefStore.getBoolean(keyName)
     var checkbox: Button = null // can't be initialized in the constructor because widget won't have been created yet
 
-    def saveToStore = {
+    def saveToStore() {
       updateValue
       prefStore.setValue(keyName, value) // code duplication is due to overloading in IPreferenceStore.setValue
     }
-    def updateWidget { checkbox.setSelection(value) }
-    def updateValue { value = checkbox.getSelection }
-    def setToRecommended { checkbox.setSelection(recommendedVal) }
+    def updateWidget() { checkbox.setSelection(value) }
+    def updateValue() { value = checkbox.getSelection }
+    def setToRecommended() { checkbox.setSelection(recommendedVal) }
   }
   // end helper classes
 
