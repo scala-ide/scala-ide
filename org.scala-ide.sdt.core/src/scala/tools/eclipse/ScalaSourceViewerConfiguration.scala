@@ -18,7 +18,6 @@ import org.eclipse.jdt.internal.ui.javaeditor.ICompilationUnitDocumentProvider
 import org.eclipse.jdt.internal.ui.javaeditor.JavaElementHyperlinkDetector
 import org.eclipse.jdt.internal.ui.text.ContentAssistPreference
 import org.eclipse.jdt.internal.ui.text.java.JavaAutoIndentStrategy
-import org.eclipse.jdt.internal.ui.text.java.JavaStringAutoIndentStrategy
 import org.eclipse.jdt.internal.ui.text.java.SmartSemicolonAutoEditStrategy
 import org.eclipse.jdt.internal.ui.text.java.hover.AbstractJavaEditorTextHover
 import org.eclipse.jdt.internal.ui.text.java.hover.BestMatchHover
@@ -156,7 +155,7 @@ class ScalaSourceViewerConfiguration(store: IPreferenceStore, scalaPreferenceSto
          case ScalaPartitions.SCALA_MULTI_LINE_STRING =>
            Array(new SmartSemicolonAutoEditStrategy(partitioning), new ScalaAutoIndentStrategy(partitioning, getProject, sourceViewer, new JdtPreferenceProvider(getProject)), new MultiLineStringAutoEditStrategy(partitioning, ScalaPlugin.prefStore))
          case IJavaPartitions.JAVA_STRING =>
-            Array(new SmartSemicolonAutoEditStrategy(partitioning), new JavaStringAutoIndentStrategy(partitioning), new StringAutoEditStrategy(partitioning, ScalaPlugin.prefStore))
+            Array(new SmartSemicolonAutoEditStrategy(partitioning), new StringAutoEditStrategy(partitioning, ScalaPlugin.prefStore))
          case IJavaPartitions.JAVA_CHARACTER | IDocument.DEFAULT_CONTENT_TYPE =>
             Array(new SmartSemicolonAutoEditStrategy(partitioning), new ScalaAutoIndentStrategy(partitioning, getProject, sourceViewer, new JdtPreferenceProvider(getProject)), new BracketAutoEditStrategy(ScalaPlugin.prefStore), new LiteralAutoEditStrategy(ScalaPlugin.prefStore))
          case _ =>
