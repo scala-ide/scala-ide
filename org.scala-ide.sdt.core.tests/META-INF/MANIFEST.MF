@@ -11,6 +11,6 @@ Bundle-ClassPath: .,
 Require-Bundle: org.scala-ide.scala.library,
  org.aspectj.weaver,
  org.eclipse.equinox.weaving.aspectj,
- org.junit4
+ org.junit
 Export-Package: 
  scala.tools.eclipse.testsetup
