@@ -40,8 +40,8 @@
     <maven-source.plugin.version>2.1.2</maven-source.plugin.version>
     <maven-clean.plugin.version>2.5</maven-clean.plugin.version>
 
-    <!-- Weaving plugin version, default for Indigo -->
-    <weaving.hook.plugin.version>1.0.200.I20120427-0800</weaving.hook.plugin.version>
+    <!-- Weaving plugin version -->
+    <weaving.hook.plugin.version>Select a profile</weaving.hook.plugin.version>
 
     <!-- tycho test related -->
     <tycho.test.OSspecific></tycho.test.OSspecific>
@@ -50,9 +50,9 @@
     <tycho.test.jvmArgs>-Xmx1024m -XX:MaxPermSize=256m -Dsdtcore.headless -Dsdtcore.notimeouts ${tycho.test.weaving} ${tycho.test.OSspecific}</tycho.test.jvmArgs>
 
     <!-- dependencies repos, can be overwritten by profiles -->
-    <eclipse.codename>indigo</eclipse.codename>
-    <repo.eclipse>${repo.eclipse.indigo}</repo.eclipse>
-    <repo.ajdt>${repo.ajdt.indigo}</repo.ajdt>
+    <eclipse.codename>Select a profile</eclipse.codename>
+    <repo.eclipse>Select a profile</repo.eclipse>
+    <repo.ajdt>Select a profile</repo.ajdt>
 
      <!-- default values, can be overwritten by profiles -->
      <scala.version>2.10.0</scala.version>
