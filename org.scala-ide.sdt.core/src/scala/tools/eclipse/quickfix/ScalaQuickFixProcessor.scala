@@ -33,6 +33,7 @@ import scala.tools.eclipse.logging.HasLogger
 import scala.tools.eclipse.quickfix.createmethod.CreateMethodProposal
 import scala.tools.refactoring.implementations.AddToClass
 import scala.tools.refactoring.implementations.AddToObject
+import scala.tools.refactoring.implementations.AddToClosest
 
 // Scala
 import scala.util.matching.Regex
@@ -101,7 +102,7 @@ class ScalaQuickFixProcessor extends IQuickFixProcessor with HasLogger {
     val possibleMatch = problemMessage match {
       case valueNotAMemberOfObject(member, theType) => List(CreateMethodProposal(Some(theType), member, AddToObject, compilationUnit, pos))
       case valueNotAMember(member, theType) => List(CreateMethodProposal(Some(theType), member, AddToClass, compilationUnit, pos))
-      case valueNotFoundError(member) => List(CreateMethodProposal(None, member, AddToClass, compilationUnit, pos))
+      case valueNotFoundError(member) => List(CreateMethodProposal(None, member, AddToClosest(pos.offset), compilationUnit, pos))
       case _ => Nil
     }
     possibleMatch.filter(_.isApplicable)
