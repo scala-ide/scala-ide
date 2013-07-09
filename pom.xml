@@ -238,6 +238,16 @@
       </dependency>
       <dependency>
         <groupId>org.scala-lang</groupId>
+        <artifactId>scala-xml</artifactId>
+        <version>${scala.library.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.scala-lang</groupId>
+        <artifactId>scala-parser-combinators</artifactId>
+        <version>${scala.library.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.scala-lang</groupId>
         <artifactId>scala-swing</artifactId>
         <version>${scala.library.version}</version>
       </dependency>
