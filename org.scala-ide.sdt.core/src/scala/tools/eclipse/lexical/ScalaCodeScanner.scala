@@ -30,7 +30,7 @@ class ScalaCodeScanner(
   private var offset: Int = _
 
   def setRange(document: IDocument, offset: Int, length: Int) {
-    ranges = tokenize(document, offset, length)
+    ranges = tokenize(document.get(), offset, length)
     index = 0
 
     if (!ranges.isEmpty) {
@@ -74,8 +74,13 @@ trait ScalaCodeTokenizer {
   case class Range(start: Int, length: Int, syntaxClass: ScalaSyntaxClass)
 
   /** Tokenizes a string given by its offset and length in a document. */
-  def tokenize(document: IDocument, offset: Int, length: Int): IndexedSeq[Range] = {
-    val source = document.get(offset, length)
+  @deprecated
+  def tokenize(document: IDocument, offset: Int, length: Int): IndexedSeq[Range] = 
+    tokenize(document.get(), offset, length)
+
+  /** Tokenizes a string given by its offset and length in a document. */
+  def tokenize(contents: String, offset: Int, length: Int): IndexedSeq[Range] = {
+    val source = contents.substring(offset, offset + length)
     val token = ScalaLexer.createRawLexer(source, forgiveErrors = true).toIndexedSeq.init
 
     /**

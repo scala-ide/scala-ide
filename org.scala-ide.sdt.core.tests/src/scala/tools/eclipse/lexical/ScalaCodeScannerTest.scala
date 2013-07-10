@@ -39,7 +39,7 @@ class ScalaCodeScannerTest {
     }
 
     val document = new MockDocument(str)
-    val token = scanner.tokenize(document, offset, length) map {
+    val token = scanner.tokenize(document.get(), offset, length) map {
       case scanner.Range(start, length, syntaxClass) =>
         (syntaxClass, start, length)
     }
