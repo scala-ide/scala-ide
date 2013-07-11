@@ -37,6 +37,24 @@ import scala.tools.eclipse.completion.CompletionProposal
 import org.eclipse.jdt.core.IMethod
 import scala.tools.nsc.io.VirtualFile
 import scala.tools.nsc.interactive.MissingResponse
+import scala.tools.nsc.doc.{ScaladocGlobalTrait => _, _}
+import scala.tools.nsc.symtab.BrowsingLoaders
+
+trait ScaladocGlobalTrait extends Global
+   with scala.tools.nsc.doc.ScaladocGlobalTrait { outer =>
+
+  override lazy val loaders = new BrowsingLoaders {
+    val global: outer.type = outer
+
+    // SI-5593 Scaladoc's current strategy is to visit all packages in search of user code that can be documented
+    // therefore, it will rummage through the classpath triggering errors whenever it encounters package objects
+    // that are not in their correct place (see bug for details)
+    // (see also the symmetric comment in s.t.nsc.doc.ScaladocGlobalTrait)
+    override protected def signalError(root: Symbol, ex: Throwable) {
+      log(s"Suppressing error involving $root: $ex")
+    }
+  }
+}
 
 
 class ScalaPresentationCompiler(val project: ScalaProject, settings: Settings) extends {
@@ -50,6 +68,7 @@ class ScalaPresentationCompiler(val project: ScalaProject, settings: Settings) e
   private val nameLock = new Object
 
 } with Global(settings, new ScalaPresentationCompiler.PresentationReporter, project.underlying.getName)
+  with ScaladocGlobalTrait
   with ScalaStructureBuilder
   with ScalaIndexBuilder
   with ScalaMatchLocator
@@ -60,8 +79,6 @@ class ScalaPresentationCompiler(val project: ScalaProject, settings: Settings) e
   with LocateSymbol
   with HasLogger
   with Scaladoc { self =>
-
-  override def forScaladoc = true
 
   def presentationReporter = reporter.asInstanceOf[ScalaPresentationCompiler.PresentationReporter]
   presentationReporter.compiler = this
