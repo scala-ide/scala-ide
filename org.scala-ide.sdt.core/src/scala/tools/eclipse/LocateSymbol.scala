@@ -31,14 +31,15 @@ import scala.tools.eclipse.sourcefileprovider.SourceFileProviderRegistry
 
 trait LocateSymbol { self : ScalaPresentationCompiler =>
 
-  def findCompilationUnit(sym: Symbol) = {
+  def findCompilationUnit(sym: Symbol) : Option[InteractiveCompilationUnit]= {
+
     def findClassFile: Option[InteractiveCompilationUnit] = {
       logger.debug("Looking for a classfile for " + sym.fullName)
       val packName = sym.enclosingPackageClass.fullName
       val javaProject = project.javaProject.asInstanceOf[JavaProject]
       val pfs = new SearchableEnvironment(javaProject, null: WorkingCopyOwner).nameLookup.findPackageFragments(packName, false)
       if (pfs eq null) None else pfs.toStream flatMap { pf =>
-        val name = ask { () =>
+        val name = {
           val top = sym.enclosingTopLevelClass
           if (sym.owner.isPackageObjectClass) "package$.class" else top.name + (if (top.isModuleClass) "$" else "") + ".class"
         }

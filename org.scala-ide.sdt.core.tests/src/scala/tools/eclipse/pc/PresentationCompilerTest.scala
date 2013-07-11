@@ -175,8 +175,8 @@ class FreshFile {
     project.withPresentationCompiler { compiler =>
       import compiler.{ reload => _, parseAndEnter => _, _ }
       import definitions.ListClass
-      val unit = ask { () => findCompilationUnit(ListClass).get }
-      reload(unit)
+      val unit = findCompilationUnit(ListClass).get
+      reload(unit.asInstanceOf[ScalaCompilationUnit])
       parseAndEnter(unit)
       unit.doWithSourceFile { (source, _) =>
         val documented = ask { () =>
@@ -185,7 +185,7 @@ class FreshFile {
           // An alternative would be to check allOverriddenSymbols, but
           // that would require getting sourceFiles for those as well. I'm a bit lazy :)
           ListClass.info.decls filter { sym =>
-            unitOf(source).body exists {
+            getUnitOf(source).get.body exists {
               case DocDef(_, defn: DefTree) if defn.name eq sym.name => true
               case _ => false
             }
