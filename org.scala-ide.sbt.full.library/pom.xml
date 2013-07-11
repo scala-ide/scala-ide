@@ -20,6 +20,26 @@
     </repository>
   </repositories>
 
+  <profiles>
+    <profile>
+      <!--- the profile using the default values. Scala 2.10.x -->
+      <id>scala-2.10.x</id>
+    </profile>
+    <profile>
+      <!--- the profile using the default values. Scala 2.11.x -->
+      <id>scala-2.11.x</id>
+      <dependencies>
+        <dependency>
+          <groupId>org.scala-lang</groupId>
+          <artifactId>scala-xml</artifactId>
+        </dependency>
+        <dependency>
+          <groupId>org.scala-lang</groupId>
+          <artifactId>scala-parser-combinators</artifactId>
+        </dependency>
+      </dependencies>
+    </profile>
+  </profiles>
 
   <dependencies>
     <dependency>

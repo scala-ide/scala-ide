@@ -31,6 +31,54 @@
       <properties>
         <scala.library.third-part>scala-actors</scala.library.third-part>
       </properties>
+      <dependencies>
+        <dependency>
+          <groupId>org.scala-lang</groupId>
+          <artifactId>scala-xml</artifactId>
+        </dependency>
+        <dependency>
+          <groupId>org.scala-lang</groupId>
+          <artifactId>scala-parser-combinators</artifactId>
+        </dependency>
+      </dependencies>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-dependency-plugin</artifactId>
+            <executions>
+              <execution>
+                <!-- add the source jar, to be able to attach the source to the Scala container. And the continuation plug-in -->
+                <id>copy.xml</id>
+                <phase>compile</phase>
+                <goals>
+                  <goal>copy</goal>
+                </goals>
+                <configuration>
+                  <artifactItems>
+                    <artifactItem>
+                      <groupId>org.scala-lang</groupId>
+                      <artifactId>scala-xml</artifactId>
+                      <classifier>sources</classifier>
+                      <type>jar</type>
+                      <destFileName>scala-xml-src.jar</destFileName>
+                    </artifactItem>
+                    <artifactItem>
+                      <groupId>org.scala-lang</groupId>
+                      <artifactId>scala-parser-combinators</artifactId>
+                      <classifier>sources</classifier>
+                      <type>jar</type>
+                      <destFileName>scala-parser-combinators-src.jar</destFileName>
+                    </artifactItem>
+                  </artifactItems>
+                  <stripVersion>true</stripVersion>
+                  <outputDirectory>${project.build.directory}/lib</outputDirectory>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
     </profile>
   </profiles>
 
