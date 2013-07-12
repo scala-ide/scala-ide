@@ -6,6 +6,7 @@ import org.eclipse.jdt.core.JavaCore
 import org.junit.Assert.assertNotNull
 import scala.tools.eclipse.ScalaProject
 import org.eclipse.jdt.core.ICompilationUnit
+import scala.tools.eclipse.InteractiveCompilationUnit
 import scala.tools.eclipse.javaelements.ScalaSourceFile
 import scala.tools.eclipse.javaelements.ScalaCompilationUnit
 import org.eclipse.jdt.core.IProblemRequestor
@@ -79,6 +80,14 @@ class TestProjectSetup(projectName: String, srcRoot: String = "/%s/src/", val bu
     project.withSourceFile(unit) { (src, compiler) =>
       val dummy = new compiler.Response[Unit]
       compiler.askReload(List(src), dummy)
+      dummy.get
+    }()
+  }
+
+  def parseAndEnter(unit: InteractiveCompilationUnit) {
+    project.withSourceFile(unit) { (src, compiler) =>
+      val dummy = new compiler.Response[compiler.Tree]
+      compiler.askParsedEntered(src, false, dummy)
       dummy.get
     }()
   }
