@@ -59,6 +59,7 @@
         <groupId>org.eclipse.tycho</groupId>
         <artifactId>tycho-surefire-plugin</artifactId>
         <configuration>
+          <redirectTestOutputToFile>true</redirectTestOutputToFile>
           <testSuite>${project.artifactId}</testSuite>
           <testClass>scala.tools.eclipse.debug.ScalaDebugTestSuite</testClass>
         </configuration>
