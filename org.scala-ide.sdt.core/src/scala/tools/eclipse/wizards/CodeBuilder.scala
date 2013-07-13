@@ -377,9 +377,6 @@ object templates extends QualifiedNameSupport {
     xs map f reduceLeftOption(_ + _) map newLine getOrElse ""
   }
 
-  val typeTemplate: List[String] => String =
-    extendsTemplate compose explicitSuperTypes
-
   private val explicitSuperTypes: List[String] => List[String] = {
     case DEFAULT_SUPER_TYPE :: rest => rest.map(removePackage)
     case xs => xs.map(removePackage)
@@ -387,4 +384,7 @@ object templates extends QualifiedNameSupport {
 
   private val extendsTemplate: List[String] => String = xs =>
     if (xs.isEmpty) "" else " extends " + xs.mkString(" with ")
+
+  val typeTemplate: List[String] => String =
+    extendsTemplate compose explicitSuperTypes
 }
