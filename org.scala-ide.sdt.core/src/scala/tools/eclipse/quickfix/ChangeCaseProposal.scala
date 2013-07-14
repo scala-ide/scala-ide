@@ -3,10 +3,10 @@ package scala.tools.eclipse.quickfix
 import scala.reflect.internal.util.RangePosition
 import scala.tools.eclipse.ScalaImages
 import scala.tools.eclipse.javaelements.ScalaCompilationUnit
-
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.Position
+import scala.tools.eclipse.completion.RelevanceValues
 
 /*
  * Find another member with the same spelling but different capitalization.
@@ -14,7 +14,7 @@ import org.eclipse.jface.text.Position
  */
 
 case class ChangeCaseProposal(originalName: String, newName: String, pos: Position) extends BasicCompletionProposal(
-  relevance = 95, //should be higher than most others, because you probably want to correct the method/field name rather than create a new one
+  relevance = RelevanceValues.ChangeCaseProposal,
   displayString = s"Change to '${newName}'",
   image = ScalaImages.CORRECTION_RENAME.createImage()) {
 

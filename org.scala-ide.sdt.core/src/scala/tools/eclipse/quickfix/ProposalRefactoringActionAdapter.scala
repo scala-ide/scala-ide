@@ -11,11 +11,12 @@ import scala.tools.eclipse.refactoring.rename.RenameAction
 import scala.tools.eclipse.refactoring.ScalaIdeRefactoring
 import scala.tools.eclipse.logging.HasLogger
 import org.eclipse.core.runtime.NullProgressMonitor
+import scala.tools.eclipse.completion.RelevanceValues
 
 abstract class ProposalRefactoringActionAdapter(
     action: ActionAdapter,
     displayString: String,
-    relevance: Int = 100)
+    relevance: Int = RelevanceValues.ProposalRefactoringActionAdapter)
   extends BasicCompletionProposal(relevance, displayString) {
 
   override def apply(document: IDocument): Unit = {
