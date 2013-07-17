@@ -12,6 +12,7 @@ import org.eclipse.jface.util.IPropertyChangeListener
 import org.eclipse.jface.util.PropertyChangeEvent
 import org.eclipse.swt.widgets.Composite
 
+/** Trait containing common logic used by both the `ScalaSourceFileEditor` and `ScalaClassFileEditor`.*/
 trait ScalaCompilationUnitEditor extends JavaEditor with ScalaEditor {
   /**@note Current implementation assumes that all accesses to this member should be confined to the UI Thread */
   private var semanticHighlightingPresenter: semantichighlighting.Presenter = _
@@ -36,13 +37,13 @@ trait ScalaCompilationUnitEditor extends JavaEditor with ScalaEditor {
 
   protected def installScalaSemanticHighlighting(forceRefresh: Boolean): Unit = {
     if (semanticHighlightingPresenter == null) {
-      val presentationHighlighter = createSemantichHighlighter
+      val presentationHighlighter = createSemanticHighlighter
       semanticHighlightingPresenter = new Presenter(ScalaCompilationUnitEditor.this, presentationHighlighter, semanticHighlightingPreferences, DisplayThread)
       semanticHighlightingPresenter.initialize(forceRefresh)
     }
   }
 
-  def createSemantichHighlighter: TextPresentationHighlighter
+  def createSemanticHighlighter: TextPresentationHighlighter
 
   protected def uninstallScalaSemanticHighlighting(removesHighlights: Boolean): Unit = {
     if (semanticHighlightingPresenter != null) {

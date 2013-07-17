@@ -332,12 +332,8 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationU
   override def isMarkingOccurrences =
     scalaPrefStore.getBoolean(EditorPreferencePage.P_ENABLE_MARK_OCCURRENCES)
 
-  override def createSemantichHighlighter: TextPresentationHighlighter = {
-    def onInit = addReconcilingListener _
-    def onDispose = removeReconcilingListener _
-
-    TextPresentationEditorHighlighter(this, semanticHighlightingPreferences, onInit, onDispose)
-  }
+  override def createSemanticHighlighter: TextPresentationHighlighter =
+    TextPresentationEditorHighlighter(this, semanticHighlightingPreferences, addReconcilingListener _, removeReconcilingListener _)
 
   override def forceSemanticHighlightingOnInstallment: Boolean = false // relies on the Java reconciler to refresh the highlights
 

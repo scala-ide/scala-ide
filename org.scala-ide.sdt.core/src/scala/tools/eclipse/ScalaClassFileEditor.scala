@@ -54,9 +54,8 @@ class ScalaClassFileEditor extends ClassFileEditor with ScalaCompilationUnitEdit
     setAction("OpenEditor", openAction)
   }
 
-  override def createSemantichHighlighter: TextPresentationHighlighter = {
+  override def createSemanticHighlighter: TextPresentationHighlighter =
     TextPresentationEditorHighlighter(this, semanticHighlightingPreferences, _ => (), _ => ())
-  }
 
   override def forceSemanticHighlightingOnInstallment: Boolean = true
 }
