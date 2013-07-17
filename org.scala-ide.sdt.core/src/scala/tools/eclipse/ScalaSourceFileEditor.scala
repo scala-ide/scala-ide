@@ -14,8 +14,7 @@ import scala.tools.eclipse.javaelements.ScalaCompilationUnit
 import scala.tools.eclipse.markoccurrences.Occurrences
 import scala.tools.eclipse.markoccurrences.ScalaOccurrencesFinder
 import scala.tools.eclipse.properties.EditorPreferencePage
-import scala.tools.eclipse.properties.syntaxcolouring.ScalaSyntaxClasses
-import scala.tools.eclipse.semantichighlighting.Presenter
+import scala.tools.eclipse.semantichighlighting.TextPresentationHighlighter
 import scala.tools.eclipse.semantichighlighting.ui.TextPresentationEditorHighlighter
 import scala.tools.eclipse.semicolon.ShowInferredSemicolonsAction
 import scala.tools.eclipse.semicolon.ShowInferredSemicolonsBundle
@@ -24,7 +23,6 @@ import scala.tools.eclipse.ui.SurroundSelectionStrategy
 import scala.tools.eclipse.util.EclipseUtils
 import scala.tools.eclipse.util.EditorUtils
 import scala.tools.eclipse.util.RichAnnotationModel.RichModel
-import scala.tools.eclipse.util.SWTUtils.fnToPropertyChangeListener
 import scala.tools.eclipse.util.Utils
 
 import org.eclipse.core.runtime.IProgressMonitor
@@ -32,7 +30,6 @@ import org.eclipse.core.runtime.Status
 import org.eclipse.core.runtime.jobs.Job
 import org.eclipse.jdt.core.dom.CompilationUnit
 import org.eclipse.jdt.internal.ui.javaeditor.CompilationUnitEditor
-import org.eclipse.jdt.internal.ui.javaeditor.JavaSourceViewer
 import org.eclipse.jdt.internal.ui.javaeditor.selectionactions.SelectionHistory
 import org.eclipse.jdt.internal.ui.javaeditor.selectionactions.StructureSelectHistoryAction
 import org.eclipse.jdt.internal.ui.javaeditor.selectionactions.StructureSelectionAction
@@ -55,7 +52,6 @@ import org.eclipse.jface.text.information.InformationPresenter
 import org.eclipse.jface.text.source.Annotation
 import org.eclipse.jface.text.source.IAnnotationModel
 import org.eclipse.jface.text.source.SourceViewerConfiguration
-import org.eclipse.jface.util.IPropertyChangeListener
 import org.eclipse.jface.util.PropertyChangeEvent
 import org.eclipse.jface.viewers.ISelection
 import org.eclipse.swt.widgets.Shell
@@ -68,18 +64,14 @@ import org.eclipse.ui.texteditor.IUpdate
 import org.eclipse.ui.texteditor.TextOperationAction
 
 
-class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor { self =>
+class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationUnitEditor { self =>
   import ScalaSourceFileEditor._
 
   private var occurrenceAnnotations: Set[Annotation] = Set()
   private var occurrencesFinder: ScalaOccurrencesFinder = _
   private var occurencesFinderInstalled = false
-  private val preferenceListener: IPropertyChangeListener = handlePreferenceStoreChanged _
-  private val reconcilingListeners: ReconcilingListeners = new ScalaSourceFileEditor.ReconcilingListeners
 
-  /**@note Current implementation assumes that all accesses to this member should be confined to the UI Thread */
-  private var semanticHighlightingPresenter: semantichighlighting.Presenter = _
-  private def semanticHighlightingPreferences = semantichighlighting.Preferences(scalaPrefStore)
+  private val reconcilingListeners: ReconcilingListeners = new ScalaSourceFileEditor.ReconcilingListeners
 
   private lazy val selectionListener = new ISelectionListener() {
     def selectionChanged(part: IWorkbenchPart, selection: ISelection) {
@@ -97,10 +89,6 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor { sel
   }
 
   setPartName("Scala Editor")
-  scalaPrefStore.addPropertyChangeListener(preferenceListener)
-
-  def scalaPrefStore = ScalaPlugin.prefStore
-  def javaPrefStore = getPreferenceStore
 
   override protected def createActions() {
     super.createActions()
@@ -149,31 +137,9 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor { sel
     setAction("OpenEditor", openAction)
   }
 
-  override protected def installSemanticHighlighting(): Unit = { /* Never install the Java semantic highlighting engine on a Scala Editor*/ }
-
-  private def isScalaSemanticHighlightingEnabled(): Boolean = semanticHighlightingPreferences.isEnabled()
-
-  protected def installScalaSemanticHighlighting(forceRefresh: Boolean): Unit = {
-    if(semanticHighlightingPresenter == null) {
-      val presentationHighlighter = TextPresentationEditorHighlighter(this, semanticHighlightingPreferences)
-      semanticHighlightingPresenter = new Presenter(this, presentationHighlighter, semanticHighlightingPreferences, DisplayThread)
-      semanticHighlightingPresenter.initialize(forceRefresh)
-    }
-  }
-
-  protected def uninstallScalaSemanticHighlighting(removesHighlights: Boolean): Unit = {
-    if(semanticHighlightingPresenter != null) {
-      semanticHighlightingPresenter.dispose(removesHighlights)
-      semanticHighlightingPresenter = null
-    }
-  }
-
   override protected def initializeKeyBindingScopes() {
     setKeyBindingScopes(Array(SCALA_EDITOR_SCOPE))
   }
-
-  override def createJavaSourceViewerConfiguration: ScalaSourceViewerConfiguration =
-    new ScalaSourceViewerConfiguration(javaPrefStore, scalaPrefStore, this)
 
   override def setSourceViewerConfiguration(configuration: SourceViewerConfiguration) {
     super.setSourceViewerConfiguration(
@@ -182,8 +148,6 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor { sel
         case _ => new ScalaSourceViewerConfiguration(javaPrefStore, scalaPrefStore, this)
       })
   }
-
-  private[eclipse] def sourceViewer: JavaSourceViewer = getSourceViewer.asInstanceOf[JavaSourceViewer]
 
   override def updateOccurrenceAnnotations(selection: ITextSelection, astRoot: CompilationUnit): Unit = {
     askForOccurrencesUpdate(selection)
@@ -274,12 +238,6 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor { sel
     }
   }
 
-  override def dispose() {
-    super.dispose()
-    scalaPrefStore.removePropertyChangeListener(preferenceListener)
-    uninstallScalaSemanticHighlighting(removesHighlights = false)
-  }
-
   /** Return the `InformationPresenter` used to display the type of the selected expression.*/
   def typeOfExpressionPresenter: InformationPresenter = tpePresenter
 
@@ -339,9 +297,6 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor { sel
     occurrencesFinder = new ScalaOccurrencesFinder(getInteractiveCompilationUnit)
     refactoring.RefactoringMenu.fillQuickMenu(this)
 
-    if(isScalaSemanticHighlightingEnabled())
-      installScalaSemanticHighlighting(forceRefresh = false) // relies on the Java reconciler to refresh the highlights
-
     getSourceViewer match {
       case sourceViewer: ITextViewerExtension =>
         sourceViewer.prependVerifyKeyListener(new SurroundSelectionStrategy(getSourceViewer))
@@ -364,12 +319,6 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor { sel
             uninstallOccurrencesFinder()
         }
 
-      case ScalaSyntaxClasses.ENABLE_SEMANTIC_HIGHLIGHTING =>
-        // This preference can be changed only via the preference dialog, hence the below block
-        // is ensured to be always run within the UI Thread. Check the JavaDoc of `handlePreferenceStoreChanged`
-        if(isScalaSemanticHighlightingEnabled) installScalaSemanticHighlighting(forceRefresh = true)
-        else uninstallScalaSemanticHighlighting(removesHighlights = true)
-
       case _ =>
         if (affectsTextPresentation(event)) {
           // those events will trigger a UI change
@@ -383,10 +332,20 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor { sel
   override def isMarkingOccurrences =
     scalaPrefStore.getBoolean(EditorPreferencePage.P_ENABLE_MARK_OCCURRENCES)
 
-  override def getInteractiveCompilationUnit(): InteractiveCompilationUnit = {
-    // getInputJavaElement always returns the right value
-    getInputJavaElement().asInstanceOf[InteractiveCompilationUnit]
+  override def createSemantichHighlighter: TextPresentationHighlighter = {
+    def onInit = addReconcilingListener _
+    def onDispose = removeReconcilingListener _
+
+    TextPresentationEditorHighlighter(this, semanticHighlightingPreferences, onInit, onDispose)
   }
+
+  override def forceSemanticHighlightingOnInstallment: Boolean = false // relies on the Java reconciler to refresh the highlights
+
+  def addReconcilingListener(listener: IJavaReconcilingListener): Unit =
+    reconcilingListeners.addReconcileListener(listener)
+
+  def removeReconcilingListener(listener: IJavaReconcilingListener): Unit =
+    reconcilingListeners.removeReconcileListener(listener)
 
   override def aboutToBeReconciled(): Unit = {
     super.aboutToBeReconciled()
@@ -397,10 +356,6 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaEditor { sel
     super.reconciled(ast, forced, progressMonitor)
     reconcilingListeners.reconciled(ast, forced, progressMonitor)
   }
-
-  def addReconcilingListener(listener: IJavaReconcilingListener): Unit = reconcilingListeners.addReconcileListener(listener)
-
-  def removeReconcilingListener(listener: IJavaReconcilingListener): Unit = reconcilingListeners.removeReconcileListener(listener)
 }
 
 object ScalaSourceFileEditor {
@@ -424,10 +379,10 @@ object ScalaSourceFileEditor {
     private def currentReconcilingListeners: List[IJavaReconcilingListener] = reconcilingListeners.toList
 
     override def aboutToBeReconciled(): Unit =
-      for(listener <- currentReconcilingListeners) listener.aboutToBeReconciled()
+      for (listener <- currentReconcilingListeners) listener.aboutToBeReconciled()
 
     override def reconciled(ast: CompilationUnit, forced: Boolean, progressMonitor: IProgressMonitor): Unit =
-      for(listener <- currentReconcilingListeners) listener.reconciled(ast, forced, progressMonitor)
+      for (listener <- currentReconcilingListeners) listener.reconciled(ast, forced, progressMonitor)
 
     def addReconcileListener(listener: IJavaReconcilingListener): Unit = reconcilingListeners += listener
 
