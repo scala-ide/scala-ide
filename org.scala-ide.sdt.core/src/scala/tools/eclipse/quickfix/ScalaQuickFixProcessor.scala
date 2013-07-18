@@ -82,13 +82,15 @@ class ScalaQuickFixProcessor extends IQuickFixProcessor with HasLogger {
              val typeMismatchFix = suggestTypeMismatchFix(document, ann.getText, pos)
 
              val createMethodFix = suggestCreateMethodFix(context.getCompilationUnit(), ann.getText, pos)
+             val changeMethodCase = suggestChangeMethodCase(context.getCompilationUnit(), ann.getText, pos)
 
              // concatenate lists of found quick fixes
             corrections = corrections ++
               importFix ++
               typeMismatchFix ++
               createClassFix ++
-              createMethodFix
+              createMethodFix ++
+              changeMethodCase
           }
         corrections match {
           case Nil => null
@@ -96,6 +98,14 @@ class ScalaQuickFixProcessor extends IQuickFixProcessor with HasLogger {
         }
       }
       case _ => null
+  }
+
+  private def suggestChangeMethodCase(cu: ICompilationUnit, problemMessage : String, pos: Position): List[IJavaCompletionProposal] = {
+    problemMessage match {
+      case valueNotAMember(value, className) => ChangeCaseProposal.createProposals(cu, pos, value)
+      case valueNotFoundError(member) => ChangeCaseProposal.createProposalsWithCompletion(cu, pos, member)
+      case _ => List()
+    }
   }
 
   private def suggestCreateMethodFix(compilationUnit: ICompilationUnit, problemMessage : String, pos: Position): List[IJavaCompletionProposal] = {
