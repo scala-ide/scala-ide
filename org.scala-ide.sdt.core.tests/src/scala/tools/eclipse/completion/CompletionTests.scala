@@ -259,4 +259,25 @@ class CompletionTests {
       }
     }
   }
+
+  @Test
+  def empty_parens_completion_ticket1001766() {
+    withCompletions("ticket_1001766/Ticket1001766.scala") {
+      (index, position, completions) =>
+        index match {
+        case 0 =>
+          assertTrue("The completion should return the `buz` method name with empty-parens", completions.exists {
+            case CompletionProposal(MemberKind.Def, _, "buz", _, _, _, _, getParamNames, _, _, _) =>
+              getParamNames() == List(Nil) // List(Nil) is how an empty-args list is encoded
+        })
+        case 1 =>
+          assertTrue("The completion should return the `bar` method name with NO empty-parens", completions.exists {
+            case CompletionProposal(MemberKind.Def, _, "bar", _, _, _, _, getParamNames, _, _, _) =>
+              getParamNames() == Nil
+          })
+        case _ =>
+          assert(false, "Unhandled completion position")
+      }
+    }
+  }
 }
