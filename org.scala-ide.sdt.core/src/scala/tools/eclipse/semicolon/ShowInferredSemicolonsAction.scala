@@ -70,5 +70,4 @@ class ShowInferredSemicolonsAction(prefix: String, editor: ITextEditor, preferen
   private def textEditor = super.getTextEditor.asInstanceOf[ScalaSourceFileEditor]
 
   private def viewer = textEditor.sourceViewer
-
 }
