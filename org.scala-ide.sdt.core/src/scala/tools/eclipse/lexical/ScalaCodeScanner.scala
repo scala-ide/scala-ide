@@ -30,7 +30,7 @@ class ScalaCodeScanner(
   private var offset: Int = _
 
   def setRange(document: IDocument, offset: Int, length: Int) {
-    ranges = tokenize(document.get(), offset, length)
+    ranges = tokenize(document.get(offset, length), offset)
     index = 0
 
     if (!ranges.isEmpty) {
@@ -75,13 +75,17 @@ trait ScalaCodeTokenizer {
 
   /** Tokenizes a string given by its offset and length in a document. */
   @deprecated
-  def tokenize(document: IDocument, offset: Int, length: Int): IndexedSeq[Range] = 
-    tokenize(document.get(), offset, length)
+  def tokenize(document: IDocument, offset: Int, length: Int): IndexedSeq[Range] =
+    tokenize(document.get(offset, length))
 
-  /** Tokenizes a string given by its offset and length in a document. */
-  def tokenize(contents: String, offset: Int, length: Int): IndexedSeq[Range] = {
-    val source = contents.substring(offset, offset + length)
-    val token = ScalaLexer.createRawLexer(source, forgiveErrors = true).toIndexedSeq.init
+  /**
+   * Tokenizes a string.
+   *
+   * @param contents - the string to tokenize
+   * @param offset - If `contents` is a snippet within a larger document, use `offset` to indicate it `contents` offset within the larger document so that resultant tokens are properly positioned with respect to the larger document.
+   */
+  def tokenize(contents: String, offset: Int = 0): IndexedSeq[Range] = {
+    val token = ScalaLexer.createRawLexer(contents, forgiveErrors = true).toIndexedSeq.init
 
     /**
      * Heuristic to distinguish the macro keyword from uses as an identifier. To be 100% accurate requires a full parse,
