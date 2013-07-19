@@ -5,21 +5,19 @@
 
 package scala.tools.eclipse
 
-import org.eclipse.jdt.core.ICompilationUnit
-import org.eclipse.jdt.core.IJavaElement
-import org.eclipse.jdt.internal.ui.javaeditor.ClassFileEditor
-import org.eclipse.jdt.ui.text.JavaSourceViewerConfiguration
-import org.eclipse.jface.text.source.SourceViewerConfiguration
-import org.eclipse.jface.action.Action
-import org.eclipse.jface.text.ITextSelection
-import org.eclipse.jdt.ui.actions.IJavaEditorActionDefinitionIds
-
 import scala.tools.eclipse.javaelements.ScalaClassFile
 import scala.tools.eclipse.javaelements.ScalaCompilationUnit
+import scala.tools.eclipse.semantichighlighting.TextPresentationHighlighter
+import scala.tools.eclipse.semantichighlighting.ui.TextPresentationEditorHighlighter
 
-class ScalaClassFileEditor extends ClassFileEditor with ScalaEditor {
-  override def createJavaSourceViewerConfiguration : JavaSourceViewerConfiguration =
-    new ScalaSourceViewerConfiguration(getPreferenceStore, ScalaPlugin.prefStore, this)
+import org.eclipse.jdt.core.IJavaElement
+import org.eclipse.jdt.internal.ui.javaeditor.ClassFileEditor
+import org.eclipse.jdt.ui.actions.IJavaEditorActionDefinitionIds
+import org.eclipse.jface.action.Action
+import org.eclipse.jface.text.ITextSelection
+import org.eclipse.jface.text.source.SourceViewerConfiguration
+
+class ScalaClassFileEditor extends ClassFileEditor with ScalaCompilationUnitEditor {
 
   override def setSourceViewerConfiguration(configuration : SourceViewerConfiguration) {
     super.setSourceViewerConfiguration(
@@ -43,23 +41,21 @@ class ScalaClassFileEditor extends ClassFileEditor with ScalaEditor {
     }
   }
 
-    override protected def createActions() {
+  override protected def createActions() {
     super.createActions()
     val openAction = new Action {
-    override def run {
-      Option(getInputJavaElement) map (_.asInstanceOf[ScalaCompilationUnit]) foreach { scu =>
-        scu.followDeclaration(ScalaClassFileEditor.this, getSelectionProvider.getSelection.asInstanceOf[ITextSelection])
+      override def run {
+        Option(getInputJavaElement) map (_.asInstanceOf[ScalaCompilationUnit]) foreach { scu =>
+         scu.followDeclaration(ScalaClassFileEditor.this, getSelectionProvider.getSelection.asInstanceOf[ITextSelection])
+        }
       }
-      }
-  }
+    }
     openAction.setActionDefinitionId(IJavaEditorActionDefinitionIds.OPEN_EDITOR)
     setAction("OpenEditor", openAction)
   }
 
-  override def getInteractiveCompilationUnit(): InteractiveCompilationUnit = {
-    // getInputJavaElement always returns the right value
-    getInputJavaElement().asInstanceOf[InteractiveCompilationUnit]
-  }
+  override def createSemanticHighlighter: TextPresentationHighlighter =
+    TextPresentationEditorHighlighter(this, semanticHighlightingPreferences, _ => (), _ => ())
 
-  override protected def installSemanticHighlighting(): Unit = { /* Never install the Java semantic highlighting engine on a Scala Editor*/ }
+  override def forceSemanticHighlightingOnInstallment: Boolean = true
 }
