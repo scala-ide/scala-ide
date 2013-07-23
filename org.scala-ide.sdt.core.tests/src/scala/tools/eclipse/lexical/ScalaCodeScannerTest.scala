@@ -83,6 +83,21 @@ class ScalaCodeScannerTest {
   }
 
   @Test
+  def correct_offset() {
+    val str = "return"
+    val offset = 3 // arbitrary non-zero number
+
+    val scanner = new ScalaCodeTokenizer { val scalaVersion = ScalaVersions.DEFAULT }
+    val document = new MockDocument(str)
+    val token = scanner.tokenize(document.get(0, str.length), offset) map {
+      case scanner.Range(start, length, syntaxClass) =>
+        (syntaxClass, start, length)
+    }
+
+    token.toList == Seq((RETURN, 3, 6))
+  }
+
+  @Test
   def return_keyword() {
     tokenize("return") === Seq((RETURN, 0, 6))
   }
