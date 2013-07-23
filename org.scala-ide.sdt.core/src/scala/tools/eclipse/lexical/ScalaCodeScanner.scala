@@ -76,7 +76,7 @@ trait ScalaCodeTokenizer {
   /** Tokenizes a string given by its offset and length in a document. */
   @deprecated
   def tokenize(document: IDocument, offset: Int, length: Int): IndexedSeq[Range] =
-    tokenize(document.get(offset, length))
+    tokenize(document.get(offset, length), offset)
 
   /**
    * Tokenizes a string.
