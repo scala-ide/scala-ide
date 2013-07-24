@@ -25,7 +25,7 @@ object Utils extends HasLogger {
     val res = op
     val end = System.currentTimeMillis
 
-    logger.debug("%s: \t %,3d ms".format(name, end - start))
+    logger.debug(f"$name: \t ${end-start}%,3d ms")
     res
   }
 
@@ -50,6 +50,10 @@ object Utils extends HasLogger {
       val typeOfObj = m.reflect(obj).symbol.toType
       if (typeOfObj <:< typeOf[B]) Some(obj.asInstanceOf[B]) else None
     }
+  }
+
+  implicit class RichRegex(sc: StringContext) {
+    def r = new util.matching.Regex(sc.parts.mkString, sc.parts.tail.map(_ => "x"): _*)
   }
 
 }

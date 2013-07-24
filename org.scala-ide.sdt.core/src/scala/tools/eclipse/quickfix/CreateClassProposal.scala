@@ -1,6 +1,7 @@
 package scala.tools.eclipse.quickfix
 
 import scala.tools.eclipse.ScalaImages
+import scala.tools.eclipse.completion.RelevanceValues
 import scala.tools.eclipse.wizards.NewClassWizard
 import scala.tools.eclipse.wizards.NewClassWizardPage
 
@@ -13,7 +14,7 @@ import org.eclipse.jface.wizard.WizardDialog
 
 case class CreateClassProposal(className: String, compilationUnit: ICompilationUnit)
   extends BasicCompletionProposal(
-    relevance = 90, //relevance should be less than ImportCompletionProposal since import quick fix should be first
+    relevance = RelevanceValues.CreateClassProposal,
     displayString = s"Create class '$className'",
     image = ScalaImages.NEW_CLASS.createImage()) {
 

@@ -9,17 +9,14 @@ import org.eclipse.jface.text.TextUtilities
 import org.eclipse.jface.text.IDocument
 import org.eclipse.swt.graphics.Point
 import org.eclipse.swt.graphics.Image
-
 import scala.tools.eclipse.refactoring.EditorHelpers
 import scala.tools.eclipse.logging.HasLogger
 import scala.tools.refactoring.implementations.AddImportStatement
+import scala.tools.eclipse.completion.RelevanceValues
 
 case class ImportCompletionProposal(val importName: String) extends IJavaCompletionProposal with HasLogger {
 
-  /**
-   * Fixed relevance at 100 for now.
-   */
-  def getRelevance = 100
+  def getRelevance = RelevanceValues.ImportCompletionProposal
 
   /**
    * Inserts the proposed completion into the given document.
