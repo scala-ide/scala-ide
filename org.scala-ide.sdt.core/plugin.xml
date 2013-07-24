@@ -648,6 +648,27 @@
       </visibility>
       </objectContribution>
     <objectContribution
+          adaptable="true"
+          id="org.scala-ide.sdt.core.restartScalaPresentationCompiler"
+          nameFilter="*"
+          objectClass="org.eclipse.core.resources.IProject">
+        <action
+             class="scala.tools.eclipse.actions.RestartPresentationCompilerAction"
+             definitionId="org.scala-ide.sdt.core.action.restartScalaPresentationCompiler"
+             enablesFor="+"
+             id="org.scala-ide.sdt.core.action.restartScalaPresentationCompiler"
+             label="Restart Presentation Compiler"
+             menubarPath="org.scala-ide.sdt.core.popupMenu/content"
+             tooltip="Restart this project's Presentation Compiler">
+        </action>
+        <visibility>
+            <or>
+                <objectState name="projectNature" value="org.scala-ide.sdt.core.scalanature"/>
+                <objectState name="projectNature" value="ch.epfl.lamp.sdt.core.scalanature"/>
+            </or>
+      </visibility>
+    </objectContribution>
+    <objectContribution
       id="org.scala-ide.sdt.ui.interperter.start"
       objectClass="org.eclipse.jdt.core.IJavaElement">
       <action
@@ -896,10 +917,10 @@
       id="org.eclipse.shortcut.scala.junit.debug"
       name="Debug Scala JUnit Test" />
     <command
-          categoryId="scala.tools.eclipse.category"
-          description="Toggle Mark Occurences"
-          id="org.scala-ide.sdt.core.toggleMarkOccurences"
-          name="Toggle Mark Occurrences">
+      categoryId="scala.tools.eclipse.category"
+      description="Toggle Mark Occurences"
+      id="org.scala-ide.sdt.core.toggleMarkOccurences"
+      name="Toggle Mark Occurrences">
     </command>
   </extension>
 
@@ -1283,14 +1304,12 @@
          commandId="scala.tools.eclipse.editor.ShowTypeOfSelection"
          contextId="scala.tools.eclipse.scalaEditorScope"
          schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-         sequence="M2+M1+W T">
-   </key>
+         sequence="M2+M1+W T"/>
    <key
          commandId="scala.tools.eclipse.editor.OpenImplicit"
          contextId="scala.tools.eclipse.scalaEditorScope"
          schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-         sequence="M3+F3">
-   </key>
+         sequence="M3+F3"/>
    </extension>
    <extension point="org.eclipse.ui.bindings"> <!-- Cross-platform bindings -->
    <key
@@ -1308,7 +1327,6 @@
        schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
        contextId="scala.tools.eclipse.scalaEditorScope"
        sequence="M1+M2+X"/>
-
    </extension>
    <extension
          point="org.eclipse.ui.actionSetPartAssociations">
