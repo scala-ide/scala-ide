@@ -1,53 +1,40 @@
 package scala.tools.eclipse.quickfix
 
-// Eclipse
-import org.eclipse.core.runtime.CoreException
-import org.eclipse.core.runtime.NullProgressMonitor
-import org.eclipse.ui.IEditorPart
-import org.eclipse.ui.texteditor.ITextEditor
-import org.eclipse.jdt.internal.ui.javaeditor.CompilationUnitDocumentProvider.ProblemAnnotation
-import org.eclipse.jdt.ui.JavaUI
-import org.eclipse.jdt.core.ICompilationUnit
-import org.eclipse.jdt.core.search.IJavaSearchConstants
-import org.eclipse.jdt.internal.codeassist.ISearchRequestor
-import org.eclipse.jdt.internal.compiler.env.AccessRestriction
-import org.eclipse.jdt.internal.core.DefaultWorkingCopyOwner
-import org.eclipse.jdt.internal.core.JavaProject
-import org.eclipse.jdt.internal.ui.text.correction.SimilarElement
-import org.eclipse.jdt.internal.ui.text.correction.SimilarElementsRequestor
-import org.eclipse.jdt.ui.text.java._
-import org.eclipse.jdt.core.search.TypeNameMatch
-import org.eclipse.jdt.core.search.SearchEngine
-import org.eclipse.jdt.core.IJavaElement
-import org.eclipse.jdt.internal.corext.util.TypeNameMatchCollector
-import org.eclipse.jface.text.source.Annotation
-import org.eclipse.jface.text.Position
-import org.eclipse.jface.text.IDocument
-
-// Scala IDE
 import scala.tools.eclipse.javaelements.ScalaSourceFile
-import scala.tools.eclipse.util.FileUtils
-import scala.tools.eclipse.util.EditorUtils.getAnnotationsAtOffset
-import scala.tools.eclipse.semantichighlighting.implicits.ImplicitHighlightingPresenter
 import scala.tools.eclipse.logging.HasLogger
 import scala.tools.eclipse.quickfix.createmethod.CreateMethodProposal
+import scala.tools.eclipse.semantichighlighting.implicits.ImplicitHighlightingPresenter
+import scala.tools.eclipse.util.EditorUtils
 import scala.tools.refactoring.implementations.AddToClass
-import scala.tools.refactoring.implementations.AddToObject
 import scala.tools.refactoring.implementations.AddToClosest
+import scala.tools.refactoring.implementations.AddToObject
 
-// Scala
-import scala.util.matching.Regex
-import collection.JavaConversions._
+import org.eclipse.core.runtime.NullProgressMonitor
+import org.eclipse.jdt.core.ICompilationUnit
+import org.eclipse.jdt.core.IJavaElement
+import org.eclipse.jdt.core.search.IJavaSearchConstants
+import org.eclipse.jdt.core.search.SearchEngine
+import org.eclipse.jdt.core.search.TypeNameMatch
+import org.eclipse.jdt.internal.corext.util.TypeNameMatchCollector
+import org.eclipse.jdt.ui.JavaUI
+import org.eclipse.jdt.ui.text.java.IInvocationContext
+import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal
+import org.eclipse.jdt.ui.text.java.IProblemLocation
+import org.eclipse.jdt.ui.text.java.IQuickFixProcessor
+import org.eclipse.jface.text.IDocument
+import org.eclipse.jface.text.Position
+import org.eclipse.ui.texteditor.ITextEditor
+
 
 class ScalaQuickFixProcessor extends IQuickFixProcessor with HasLogger {
-  private val typeNotFoundError = new Regex("not found: type (.*)")
-  private val valueNotFoundError = new Regex("not found: value (.*)")
-  private val xxxxxNotFoundError = new Regex("not found: (.*)")
-  private val valueNotAMember = "value (.*) is not a member of (.*)".r
-  private val valueNotAMemberOfObject = "value (.*) is not a member of object (.*)".r
+  private val TypeNotFoundError = "not found: type (.*)".r
+  private val ValueNotFoundError = "not found: value (.*)".r
+  private val XXXXXNotFoundError = "not found: (.*)".r
+  private val ValueNotAMember = "value (.*) is not a member of (.*)".r
+  private val ValueNotAMemberOfObject = "value (.*) is not a member of object (.*)".r
 
   // regex for extracting expected and required type on type mismatch
-  private val typeMismatchError = new Regex("type mismatch;\\s*found\\s*: (\\S*)\\s*required: (.*)")
+  private val TypeMismatchError = """type mismatch;\s*found\s*: (\S*)\s*required: (.*)""".r
 
   /**
    * Checks if the processor has any corrections.
@@ -73,7 +60,7 @@ class ScalaQuickFixProcessor extends IQuickFixProcessor with HasLogger {
       val editor = JavaUI.openInEditor(context.getCompilationUnit)
         var corrections : List[IJavaCompletionProposal] = Nil
         for (location <- locations)
-          for ((ann, pos) <- getAnnotationsAtOffset(editor, location.getOffset)) {
+          for ((ann, pos) <- EditorUtils.getAnnotationsAtOffset(editor, location.getOffset)) {
              val importFix = suggestImportFix(context.getCompilationUnit(), ann.getText)
              val createClassFix = suggestCreateClassFix(context.getCompilationUnit(), ann.getText)
 
@@ -102,41 +89,23 @@ class ScalaQuickFixProcessor extends IQuickFixProcessor with HasLogger {
 
   private def suggestChangeMethodCase(cu: ICompilationUnit, problemMessage : String, pos: Position): List[IJavaCompletionProposal] = {
     problemMessage match {
-      case valueNotAMember(value, className) => ChangeCaseProposal.createProposals(cu, pos, value)
-      case valueNotFoundError(member) => ChangeCaseProposal.createProposalsWithCompletion(cu, pos, member)
+      case ValueNotAMember(value, className) => ChangeCaseProposal.createProposals(cu, pos, value)
+      case ValueNotFoundError(member) => ChangeCaseProposal.createProposalsWithCompletion(cu, pos, member)
       case _ => List()
     }
   }
 
   private def suggestCreateMethodFix(compilationUnit: ICompilationUnit, problemMessage : String, pos: Position): List[IJavaCompletionProposal] = {
     val possibleMatch = problemMessage match {
-      case valueNotAMemberOfObject(member, theType) => List(CreateMethodProposal(Some(theType), member, AddToObject, compilationUnit, pos))
-      case valueNotAMember(member, theType) => List(CreateMethodProposal(Some(theType), member, AddToClass, compilationUnit, pos))
-      case valueNotFoundError(member) => List(CreateMethodProposal(None, member, AddToClosest(pos.offset), compilationUnit, pos))
+      case ValueNotAMemberOfObject(member, theType) => List(CreateMethodProposal(Some(theType), member, AddToObject, compilationUnit, pos))
+      case ValueNotAMember(member, theType) => List(CreateMethodProposal(Some(theType), member, AddToClass, compilationUnit, pos))
+      case ValueNotFoundError(member) => List(CreateMethodProposal(None, member, AddToClosest(pos.offset), compilationUnit, pos))
       case _ => Nil
     }
     possibleMatch.filter(_.isApplicable)
   }
 
-
-  // XXX is this code duplication? -- check scala.tools.eclipse.util.EditorUtils.getAnnotationsAtOffset
-  private def getAnnotationsAtOffsetXXX(part: IEditorPart, offset: Int): List[Annotation] = {
-    import ScalaQuickFixProcessor._
-
-    var ret = List[Annotation]()
-    val model = JavaUI.getDocumentProvider().getAnnotationModel(part.getEditorInput())
-    val iter = model.getAnnotationIterator
-    while (iter.hasNext()) {
-     val ann: Annotation = iter.next().asInstanceOf[Annotation]
-     val pos = model.getPosition(ann)
-     if (isInside(offset, pos.offset, pos.offset + pos.length))
-         ret = ann :: ret
-    }
-    return ret
-  }
-
-  private
-  def suggestImportFix(compilationUnit : ICompilationUnit, problemMessage : String) : List[IJavaCompletionProposal] = {
+  private def suggestImportFix(compilationUnit : ICompilationUnit, problemMessage : String) : List[IJavaCompletionProposal] = {
     /**
      * Import a type could solve several error message :
      *
@@ -157,7 +126,9 @@ class ScalaQuickFixProcessor extends IQuickFixProcessor with HasLogger {
           IJavaSearchConstants.WAIT_UNTIL_READY_TO_SEARCH,
           new NullProgressMonitor)
 
-      val proposals = resultCollector map { typeName =>
+      import scala.collection.JavaConverters._
+
+      val proposals = resultCollector.asScala map { typeName =>
         new ImportCompletionProposal(typeName.getFullyQualifiedName)
       }
       proposals.toList
@@ -168,9 +139,9 @@ class ScalaQuickFixProcessor extends IQuickFixProcessor with HasLogger {
 
   private def matchTypeNotFound(problemMessage: String, suggest: String => List[IJavaCompletionProposal]): List[IJavaCompletionProposal] = {
     problemMessage match {
-      case typeNotFoundError(missingType) => suggest(missingType)
-      case valueNotFoundError(missingValue) => suggest(missingValue)
-      case xxxxxNotFoundError(missing) => suggest(missing)
+      case TypeNotFoundError(missingType) => suggest(missingType)
+      case ValueNotFoundError(missingValue) => suggest(missingValue)
+      case XXXXXNotFoundError(missing) => suggest(missing)
       case _ => Nil
     }
   }
@@ -179,14 +150,13 @@ class ScalaQuickFixProcessor extends IQuickFixProcessor with HasLogger {
     matchTypeNotFound(problemMessage, missingType => List(CreateClassProposal(missingType, compilationUnit)))
   }
 
-  private
-  def suggestTypeMismatchFix(document : IDocument, problemMessage : String, location: Position) : List[IJavaCompletionProposal] = {
+  private def suggestTypeMismatchFix(document : IDocument, problemMessage : String, location: Position) : List[IJavaCompletionProposal] = {
     // get the annotation string
     val annotationString = document.get(location.getOffset, location.getLength)
     // match problem message
     return problemMessage match {
       // extract found and required type
-      case typeMismatchError(foundType, requiredType) =>
+      case TypeMismatchError(foundType, requiredType) =>
         // utilize type mismatch computer to find quick fixes
         val replacementStringList = TypeMismatchQuickFixProcessor(foundType, requiredType, annotationString)
 
@@ -204,10 +174,3 @@ class ScalaQuickFixProcessor extends IQuickFixProcessor with HasLogger {
   }
 
 }
-
-object ScalaQuickFixProcessor {
-  private def isInside(offset: Int, start: Int,end: Int): Boolean = {
-    return offset == start || offset == end || (offset > start && offset < end); // make sure to handle 0-length ranges
-    }
-}
-
