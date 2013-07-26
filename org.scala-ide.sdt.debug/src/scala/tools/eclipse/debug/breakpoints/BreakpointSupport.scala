@@ -34,17 +34,11 @@ import scala.tools.eclipse.debug.evaluation.ScalaEvaluationEngine
 import scala.tools.eclipse.debug.model.ScalaStackFrame
 import org.eclipse.debug.core.model.IVariable
 import scala.tools.eclipse.launching.ScalaLaunchDelegate
-import com.sun.jdi.ByteValue
-import com.sun.jdi.DoubleValue
-import com.sun.jdi.CharValue
-import com.sun.jdi.FloatValue
-import com.sun.jdi.IntegerValue
-import com.sun.jdi.LongValue
-import com.sun.jdi.ShortValue
 import scala.tools.eclipse.ScalaPlugin
 import scala.tools.eclipse.ScalaProject
 import scala.tools.eclipse.javaelements.ScalaCompilationUnit
 import scala.tools.eclipse.javaelements.ScalaSourceFile
+import org.eclipse.debug.core.DebugException
 
 private[debug] object BreakpointSupport {
   /** Attribute Type Name */
@@ -204,67 +198,14 @@ private class BreakpointSupportActor private (
   private def breakpointShouldSuspend(event: BreakpointEvent): Boolean = {
     import scala.collection.JavaConverters._
 
-    def box(primValue: ScalaPrimitiveValue)(implicit thread: ScalaThread): ScalaObjectReference = {
-      def create[T <: AnyVal](typename: String, value: T) = {
-        import scala.collection.JavaConverters._
-        val classObject = debugTarget.classByName(typename, true, thread).asInstanceOf[ScalaClassType]
-        val sig = ScalaEvaluationEngine.constructorJNISig(value)
-        val constructor = classObject.classType.concreteMethodByName("<init>", sig)
-        new ScalaObjectReference(classObject.classType.newInstance(thread.threadRef, constructor, List(primValue.underlying).asJava, ClassType.INVOKE_SINGLE_THREADED), debugTarget)
-      }
-      primValue.underlying match {
-        case v: BooleanValue => create("java.lang.Boolean", v.value)
-        case v: ByteValue => create("java.lang.Byte", v.value)
-        case v: CharValue => create("java.lang.Char", v.value)
-        case v: DoubleValue => create("java.lang.Double", v.value)
-        case v: FloatValue => create("java.lang.Float", v.value)
-        case v: IntegerValue => create("java.lang.Integer", v.value)
-        case v: LongValue => create("java.lang.Long", v.value)
-        case v: ShortValue => create("java.lang.Short", v.value)
-      }
-    }
-
     def bindStackFrame(scalaProject: ScalaProject, evalEngine: ScalaEvaluationEngine, stackFrame: Option[ScalaStackFrame]) {
-//      val location = event.location()
-//      val sourcePath = location.sourcePath()
-//      scalaProject.doWithPresentationCompiler { pc =>
-//        val path = scalaProject.allSourceFiles.find(_.toString().endsWith(sourcePath)).getOrElse(null)
-//        val s = path.getFullPath().toString()
-//        ScalaSourceFile.createFromPath(s) match {
-//          case Some(sf: ScalaSourceFile) => {
-//            val cu = sf.getCompilationUnit.asInstanceOf[ScalaCompilationUnit]
-//            cu.withSourceFile { (src, compiler) =>
-//              val children = cu.getChildren()
-//              val s = children.mkString(",")
-//            } ()
-//          }
-//          case x => {
-//            val t = x
-//            println(x)
-//          }
-//        }
-//      }
-
-
-      for {
-        window <- ScalaPlugin.getWorkbenchWindow
-        page <- window.getPages()
-      }
       for {
         frame <- stackFrame
         variable <- frame.variables
-        if variable.getValue.isInstanceOf[ScalaValue]
-        value = variable.getValue.asInstanceOf[ScalaValue]
-      } {
-        val bindValue = value match {
-          case primitive: ScalaPrimitiveValue => box(primitive)(evalEngine.thread)
-          case _ => value
+        value = variable.getValue
+      } evalEngine.bind(variable.getName, value) {
+          ScalaEvaluationEngine.findType(variable.getName, frame.stackFrame.location(), scalaProject)
         }
-        val assistance = evalEngine.target.objectByName("scala.tools.eclipse.debug.debugged.ReplAssistance", true, evalEngine.thread)
-        val typename = assistance.invokeMethod("getClassName", evalEngine.thread, bindValue).asInstanceOf[ScalaStringReference].underlying.value()
-        val name = if (variable.getName == "this") "this$" else variable.getName
-        evalEngine.bind(name, typename, bindValue, Nil) // FIXME: properly get modifiers
-      }
     }
 
     breakpoint match {
@@ -286,15 +227,16 @@ private class BreakpointSupportActor private (
           }
           result getOrElse false
         } match {
-          case scala.util.Success(r) => {
+          case scala.util.Success(r) =>
             println("success: " + r)
             r
-          }
-          case scala.util.Failure(e) => {
+          case scala.util.Failure(e: DebugException) =>
+            val original = e.getCause()
+            false
+          case scala.util.Failure(e) =>
             val st = e.getStackTrace()
             println(e)
             false
-          }
         }
       }
       case _ => true
