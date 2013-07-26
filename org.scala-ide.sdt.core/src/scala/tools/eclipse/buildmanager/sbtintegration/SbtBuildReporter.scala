@@ -9,7 +9,7 @@ import scala.tools.eclipse.util.EclipseResource
 
 /**  An Sbt Reporter that forwards to an underlying [[BuildReporter]]
  */
-private[sbtintegration] class SbtBuildReporter(underlying: BuildReporter) extends xsbti.ExtendedReporter {
+private[sbtintegration] class SbtBuildReporter(underlying: BuildReporter) extends xsbti.Reporter {
   val probs = new mutable.ArrayBuffer[xsbti.Problem]
   
   def reset() = {
