@@ -251,7 +251,7 @@ abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine, lau
    *
    * @throws ClassNotLoadedException if the class was not loaded yet.
    */
-  private def classByName(typeName: String, tryForceLoad: Boolean, thread: ScalaThread): ScalaReferenceType = {
+  def classByName(typeName: String, tryForceLoad: Boolean, thread: ScalaThread): ScalaReferenceType = {
     import scala.collection.JavaConverters._
     // TODO: need toList?
     virtualMachine.classesByName(typeName).asScala.toList match {
@@ -269,9 +269,8 @@ abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine, lau
   /** Attempt to force load a type, by finding the classloader of `scala.Predef` and calling `loadClass` on it.
    */
   private def forceLoad(typeName: String, thread: ScalaThread): ScalaReferenceType = {
-    val predef = objectByName("scala.Predef", false, null)
-    val classLoader = getClassLoader(predef, thread)
-    classLoader.invokeMethod("loadClass", thread, ScalaValue(typeName, this))
+    val classClass = classByName("java.lang.Class", false, null).asInstanceOf[ScalaClassType]
+    classClass.invokeMethod("forName", "(Ljava/lang/String;)Ljava/lang/Class;", thread, ScalaValue(typeName, this))
     val entities = virtualMachine.classesByName(typeName)
       if (entities.isEmpty()) {
         throw new ClassNotLoadedException(typeName, "Unable to force load")
@@ -283,7 +282,7 @@ abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine, lau
   /** Return the classloader of the given object.
    */
   private def getClassLoader(instance: ScalaObjectReference, thread: ScalaThread): ScalaObjectReference = {
-    val typeClassLoader= instance.underlying.referenceType().classLoader()
+    val typeClassLoader = instance.underlying.referenceType().classLoader()
     if (typeClassLoader == null) {
       // JDI returns null for classLoader() if the classloader is the boot classloader.
       // Fetch the boot classloader by using ClassLoader.getSystemClassLoader()
@@ -372,6 +371,7 @@ abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine, lau
    */
   private[model] def getScalaThreads: List[ScalaThread] = threads
 
+  def findScalaThread(thread: ThreadReference) = threads.find(_.threadRef == thread)
 }
 
 private[model] object ScalaDebugTargetActor {
