@@ -26,6 +26,11 @@ class ScalaCompletions extends HasLogger {
   def findCompletions(region: IRegion)(position: Int, scu: InteractiveCompilationUnit)
                              (sourceFile: SourceFile, compiler: ScalaPresentationCompiler): List[CompletionProposal] = {
 
+    case class UnapplyMember(
+      sym: compiler.Symbol,
+      tpe: compiler.Type,
+      accessible: Boolean) extends compiler.Member
+
     val pos = compiler.rangePos(sourceFile, position, position, position)
 
     val start = if (region == null) position else region.getOffset
@@ -47,6 +52,17 @@ class ScalaCompletions extends HasLogger {
         val cpos0 = expr.pos.endOrPoint
         val cpos = compiler.rangePos(sourceFile, cpos0, cpos0, cpos0)
         compiler.askTypeCompletion(cpos, completed)
+      case Some(compiler.Apply(fun, Nil)) =>
+        val companionSym: compiler.Symbol = fun match {
+          case typeTree @ compiler.TypeTree() =>
+            typeTree.original.symbol
+          case _ =>
+            fun.symbol
+        }
+        if (companionSym ne compiler.NoSymbol) {
+          val companionObjectTpe = compiler.askOption(() => companionSym.tpe, 10000)
+          companionObjectTpe.foreach(tpe => completed set List(UnapplyMember(companionSym, tpe, true)))
+        }
       case _ =>
         // this covers completion on `types`
         val cpos = compiler.rangePos(sourceFile, start, start, start)
@@ -62,20 +78,23 @@ class ScalaCompletions extends HasLogger {
     def isAlreadyListed(fullyQualifiedName: String, display: String) =
       listedTypes.entryExists(fullyQualifiedName, _.display == display)
 
+    def addCompletionProposal(completionProposal: CompletionProposal): Unit =
+       if (!isAlreadyListed(completionProposal.fullyQualifiedName, completionProposal.display))
+         listedTypes.addBinding(completionProposal.fullyQualifiedName, completionProposal)
+
     for (completions <- completed.get.left.toOption) {
       compiler.askOption { () =>
         for (completion <- completions) {
-          completion match {
+          val completionProposal = completion match {
             case compiler.TypeMember(sym, tpe, true, inherited, viaView) if !sym.isConstructor && nameMatches(sym) =>
-              val completionProposal= compiler.mkCompletionProposal(prefix, start, sym, tpe, inherited, viaView)
-              if (!isAlreadyListed(completionProposal.fullyQualifiedName, completionProposal.display))
-                listedTypes.addBinding(completionProposal.fullyQualifiedName, completionProposal)
+              Some(compiler.mkCompletionProposal(prefix, start, sym, tpe, inherited, viaView))
+            case UnapplyMember(sym, tpe, _) =>
+              Some(compiler.mkCompletionProposalForUnapply(start, sym, tpe))
             case compiler.ScopeMember(sym, tpe, true, _) if !sym.isConstructor && nameMatches(sym) =>
-              val completionProposal= compiler.mkCompletionProposal(prefix, start, sym, tpe, false, compiler.NoSymbol)
-              if (!isAlreadyListed(completionProposal.fullyQualifiedName, completionProposal.display))
-                listedTypes.addBinding(completionProposal.fullyQualifiedName, completionProposal)
-            case _ =>
+              Some(compiler.mkCompletionProposal(prefix, start, sym, tpe, false, compiler.NoSymbol))
+            case _ => None
           }
+          completionProposal.foreach(addCompletionProposal)
         }
       }
     }
