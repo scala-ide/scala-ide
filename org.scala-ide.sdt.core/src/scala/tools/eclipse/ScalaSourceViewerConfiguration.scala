@@ -48,7 +48,7 @@ import scala.tools.eclipse.util.ReflectionUtils
 import scala.tools.eclipse.lexical._
 import scala.tools.eclipse.formatter.ScalaFormattingStrategy
 import scala.tools.eclipse.ui.BracketAutoEditStrategy
-import scala.tools.eclipse.properties.syntaxcolouring.ScalaSyntaxClasses
+import scala.tools.eclipse.properties.syntaxcoloring.ScalaSyntaxClasses
 import scala.tools.eclipse.hyperlink.text.detector.CompositeHyperlinkDetector
 import scala.tools.eclipse.hyperlink.text.detector.DeclarationHyperlinkDetector
 import scala.tools.eclipse.hyperlink.text.detector.ImplicitHyperlinkDetector

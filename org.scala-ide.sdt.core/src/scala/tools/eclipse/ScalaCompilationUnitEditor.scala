@@ -1,6 +1,6 @@
 package scala.tools.eclipse
 
-import scala.tools.eclipse.properties.syntaxcolouring.ScalaSyntaxClasses
+import scala.tools.eclipse.properties.syntaxcoloring.ScalaSyntaxClasses
 import scala.tools.eclipse.semantichighlighting.Presenter
 import scala.tools.eclipse.semantichighlighting.TextPresentationHighlighter
 import scala.tools.eclipse.ui.DisplayThread

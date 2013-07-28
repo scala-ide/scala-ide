@@ -1,17 +1,18 @@
-package scala.tools.eclipse.properties.syntaxcolouring
+package scala.tools.eclipse.properties.syntaxcoloring
 
-import scala.tools.eclipse.properties.syntaxcolouring.ScalaSyntaxClasses._
+import scala.tools.eclipse.properties.syntaxcoloring.ScalaSyntaxClasses._
 import scala.tools.eclipse.util.SWTUtils.fnToPropertyChangeListener
 import scala.tools.eclipse.ScalaPlugin
-
 import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer
 import org.eclipse.jdt.internal.ui.JavaPlugin
 import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.jface.resource.StringConverter
 import org.eclipse.jface.util.PropertyChangeEvent
 import org.eclipse.swt.graphics.RGB
+import org.eclipse.core.runtime.Platform
+import org.eclipse.core.runtime.preferences.InstanceScope
 
-class ColourPreferenceInitializer extends AbstractPreferenceInitializer {
+class ColorPreferenceInitializer extends AbstractPreferenceInitializer {
 
   override def initializeDefaultPreferences() {
     if (!ScalaPlugin.plugin.headlessMode) {
@@ -92,12 +93,12 @@ class ColourPreferenceInitializer extends AbstractPreferenceInitializer {
     strikethrough: Boolean = false,
     underline: Boolean = false)(implicit scalaPrefStore: IPreferenceStore) =
     {
-      lazy val WHITE = new RGB(255, 255, 255)
+      val WHITE = new RGB(255, 255, 255)
       scalaPrefStore.setDefault(syntaxClass.enabledKey, enabled)
-      scalaPrefStore.setDefault(syntaxClass.foregroundColourKey, StringConverter.asString(foregroundRGB))
-      val defaultBackgroundColour = StringConverter.asString(backgroundRGBOpt getOrElse WHITE)
-      scalaPrefStore.setDefault(syntaxClass.backgroundColourKey, defaultBackgroundColour)
-      scalaPrefStore.setDefault(syntaxClass.backgroundColourEnabledKey, backgroundRGBOpt.isDefined)
+      scalaPrefStore.setDefault(syntaxClass.foregroundColorKey, StringConverter.asString(foregroundRGB))
+      val defaultBackgroundColor = StringConverter.asString(backgroundRGBOpt getOrElse WHITE)
+      scalaPrefStore.setDefault(syntaxClass.backgroundColorKey, defaultBackgroundColor)
+      scalaPrefStore.setDefault(syntaxClass.backgroundColorEnabledKey, backgroundRGBOpt.isDefined)
       scalaPrefStore.setDefault(syntaxClass.boldKey, bold)
       scalaPrefStore.setDefault(syntaxClass.italicKey, italic)
       scalaPrefStore.setDefault(syntaxClass.underlineKey, underline)

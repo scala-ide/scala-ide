@@ -3,7 +3,7 @@ package scala.tools.eclipse.semantichighlighting.ui
 import scala.collection.immutable
 import scala.tools.eclipse.ScalaCompilationUnitEditor
 import scala.tools.eclipse.logging.HasLogger
-import scala.tools.eclipse.properties.syntaxcolouring.ScalaSyntaxClasses
+import scala.tools.eclipse.properties.syntaxcoloring.ScalaSyntaxClasses
 import scala.tools.eclipse.semantichighlighting.PositionsTracker
 import scala.tools.eclipse.semantichighlighting.Preferences
 import scala.tools.eclipse.semantichighlighting.TextPresentationHighlighter

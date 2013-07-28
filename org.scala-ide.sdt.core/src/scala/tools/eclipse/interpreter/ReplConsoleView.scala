@@ -5,7 +5,7 @@ import scala.tools.eclipse.BuildSuccessListener
 import scala.tools.eclipse.ScalaImages
 import scala.tools.eclipse.ScalaPlugin
 import scala.tools.eclipse.ScalaProject
-import scala.tools.eclipse.properties.syntaxcolouring.ScalariformToSyntaxClass
+import scala.tools.eclipse.properties.syntaxcoloring.ScalariformToSyntaxClass
 import scala.tools.eclipse.ui.CommandField
 import scala.tools.eclipse.ui.DisplayThread
 import scala.tools.nsc.Settings
