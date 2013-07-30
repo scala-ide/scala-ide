@@ -1,4 +1,3 @@
-
 /**
  * @define BaseComment correctly got $BaseVar comment
  */

@@ -40,6 +40,7 @@ import org.eclipse.swt.graphics.Image
 import org.eclipse.swt.graphics.Point
 import org.eclipse.swt.SWT
 import org.eclipse.ui.texteditor.link.EditorLinkedModeUI
+import refactoring.EditorHelpers
 import refactoring.EditorHelpers._
 import scala.tools.eclipse.completion.CompletionContext
 import scala.tools.eclipse.completion.CompletionProposal
@@ -101,8 +102,8 @@ class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: I
    *
    *  @note It triggers the potentially expensive `getParameterNames` operation.
    */
-  def completionString(overwrite: Boolean) = {
-    if (context.contextType == CompletionContext.ImportContext || explicitParamNames.isEmpty || overwrite)
+  def completionString(overwrite: Boolean) =
+    if (explicitParamNames.isEmpty || overwrite)
       completion
     else {
       val buffer = new StringBuffer(completion)
@@ -111,14 +112,13 @@ class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: I
         buffer.append(section.mkString("(", ", ", ")"))
       buffer.toString
     }
-  }
 
   /** Position after the opening parenthesis of this proposal */
   val startOfArgumentList = startPos + completion.length + 1
 
   /** The information that is displayed in a small hover window above the completion, showing parameter names and types. */
   override def getContextInformation(): IContextInformation =
-    if (context.contextType != CompletionContext.ImportContext && tooltip.length > 0)
+    if (tooltip.length > 0)
       new ScalaContextInformation(display, tooltip, image, startOfArgumentList)
     else null
 
@@ -143,7 +143,7 @@ class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: I
   override def getSelection(d: IDocument): Point = null
   override def apply(d: IDocument) { throw new IllegalStateException("Shouldn't be called") }
 
-  override def apply(d: IDocument, trigger: Char, offset: Int) {
+  def apply(d: IDocument, trigger: Char, offset: Int) {
     throw new IllegalStateException("Shouldn't be called")
   }
 
@@ -186,7 +186,7 @@ class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: I
 
     // similar to above, if we're in an apply context, we're not going to show
     // anything in the editor (just doing tooltips)
-    if (context.contextType != CompletionContext.ApplyContext && context.contextType != CompletionContext.ImportContext) {
+    if (context.contextType != CompletionContext.ApplyContext) {
       if (!overwrite) selectionProvider match {
         case viewer: ITextViewer if explicitParamNames.flatten.nonEmpty =>
           addArgumentTemplates(d, viewer, completionFullString)
@@ -199,10 +199,10 @@ class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: I
     }
   }
 
-  override def getTriggerCharacters = null
-  override def getContextInformationPosition = startOfArgumentList
+  def getTriggerCharacters = null
+  def getContextInformationPosition = startOfArgumentList
 
-  override def isValidFor(d: IDocument, pos: Int) =
+  def isValidFor(d: IDocument, pos: Int) =
     prefixMatches(completion.toArray, d.get.substring(startPos, pos).toArray)
 
   /** Insert a completion proposal, with placeholders for each explicit argument.
@@ -234,12 +234,12 @@ class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: I
     }
 
     model.addLinkingListener(new ILinkedModeListener() {
-      override def left(environment: LinkedModeModel, flags: Int) {
+      def left(environment: LinkedModeModel, flags: Int) {
         document.removePositionCategory(ScalaProposalCategory)
       }
 
-      override def suspend(environment: LinkedModeModel) {}
-      override def resume(environment: LinkedModeModel, flags: Int) {}
+      def suspend(environment: LinkedModeModel) {}
+      def resume(environment: LinkedModeModel, flags: Int) {}
     })
 
     model.forceInstall()
@@ -253,7 +253,7 @@ class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: I
     val ui = new EditorLinkedModeUI(model, textViewer)
     ui.setExitPosition(textViewer, startPos + len, 0, Integer.MAX_VALUE)
     ui.setExitPolicy(new IExitPolicy {
-      override def doExit(environment: LinkedModeModel, event: VerifyEvent, offset: Int, length: Int) = {
+      def doExit(environment: LinkedModeModel, event: VerifyEvent, offset: Int, length: Int) = {
         event.character match {
           case ';' =>
             // go to the end of the completion proposal
@@ -362,7 +362,7 @@ class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: I
     }
   }
 
-  override def validate(doc: IDocument, offset: Int, event: DocumentEvent): Boolean = {
+  def validate(doc: IDocument, offset: Int, event: DocumentEvent): Boolean = {
     isValidFor(doc, offset)
   }
 }
@@ -398,4 +398,5 @@ object ScalaCompletionProposal {
   def getForegroundColor(): Color = colorFor(PreferenceConstants.CODEASSIST_REPLACEMENT_FOREGROUND)
 
   def getBackgroundColor(): Color = colorFor(PreferenceConstants.CODEASSIST_REPLACEMENT_BACKGROUND)
-}
+
+ }

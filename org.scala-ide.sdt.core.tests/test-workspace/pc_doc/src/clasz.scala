@@ -1,4 +1,4 @@
 /**
- * This is a todo comment
+ * This is a basic comment
  */
 class /*s*/C/*e*/

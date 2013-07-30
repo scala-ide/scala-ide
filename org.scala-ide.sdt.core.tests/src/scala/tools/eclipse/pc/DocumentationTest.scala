@@ -15,7 +15,7 @@ class PresentationCompilerDocTest {
   @Test
   def basicComment() {
     val expect: Comment => Boolean = { cmt =>
-      existsText(cmt.body, "This is a todo comment")
+      existsText(cmt.body, "This is a basic comment")
     }
     doTest(open("clasz.scala"), expect)
   }

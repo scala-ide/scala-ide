@@ -33,16 +33,20 @@ trait LocateSymbol { self : ScalaPresentationCompiler =>
 
   def findCompilationUnit(sym: Symbol) : Option[InteractiveCompilationUnit]= {
 
+    def enclosingClassForScalaDoc(sym:Symbol): Symbol = {
+      if ((sym.isClass || sym.isModule) && sym.isPackage) sym else sym.enclosingPackageClass
+    }
+
     def findClassFile: Option[InteractiveCompilationUnit] = {
       logger.debug("Looking for a classfile for " + sym.fullName)
-      val packName = sym.enclosingPackageClass.fullName
+      val packName = enclosingClassForScalaDoc(sym).fullName
       val javaProject = project.javaProject.asInstanceOf[JavaProject]
+      val name = ask { () =>
+        val top = sym.enclosingTopLevelClass
+        if (sym.owner.isPackageObjectClass) "package$.class" else top.name + (if (top.isModuleClass) "$" else "") + ".class"
+      }
       val pfs = new SearchableEnvironment(javaProject, null: WorkingCopyOwner).nameLookup.findPackageFragments(packName, false)
       if (pfs eq null) None else pfs.toStream flatMap { pf =>
-        val name = {
-          val top = sym.enclosingTopLevelClass
-          if (sym.owner.isPackageObjectClass) "package$.class" else top.name + (if (top.isModuleClass) "$" else "") + ".class"
-        }
         logger.debug("Trying out to get " + name)
         val cf = pf.getClassFile(name)
         cf match {
