@@ -8,6 +8,7 @@ import scala.tools.eclipse.util.parsing.ScalariformParser
 import scala.tools.eclipse.util.parsing.ScalariformUtils
 import scala.tools.refactoring.implementations.AddMethod
 import scala.tools.refactoring.implementations.AddMethodTarget
+
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.internal.ui.JavaPluginImages
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal

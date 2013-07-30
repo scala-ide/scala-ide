@@ -5,24 +5,24 @@
 package scala.tools.eclipse
 package refactoring
 
-import org.eclipse.core.runtime.Status
-import org.eclipse.core.runtime.IStatus
-import org.eclipse.core.runtime.IProgressMonitor
-import org.eclipse.core.runtime.CoreException
-import org.eclipse.ltk.core.refactoring.RefactoringStatus
-import org.eclipse.ltk.core.refactoring.{ Refactoring => LTKRefactoring }
-import org.eclipse.ltk.core.refactoring.CompositeChange
-import org.eclipse.ltk.ui.refactoring.RefactoringWizardPage
-
+import scala.reflect.internal.util.SourceFile
+import scala.tools.eclipse.ScalaPlugin
+import scala.tools.eclipse.ScalaPresentationCompiler
 import scala.tools.eclipse.javaelements.ScalaSourceFile
 import scala.tools.eclipse.util.FileUtils
-import scala.tools.eclipse.ScalaPresentationCompiler
-import scala.tools.eclipse.ScalaPlugin
-import scala.reflect.internal.util.SourceFile
+import scala.tools.refactoring.MultiStageRefactoring
+import scala.tools.refactoring.common.Change
 import scala.tools.refactoring.common.InteractiveScalaCompiler
 import scala.tools.refactoring.common.TextChange
-import scala.tools.refactoring.common.Change
-import scala.tools.refactoring.MultiStageRefactoring
+
+import org.eclipse.core.runtime.CoreException
+import org.eclipse.core.runtime.IProgressMonitor
+import org.eclipse.core.runtime.IStatus
+import org.eclipse.core.runtime.Status
+import org.eclipse.ltk.core.refactoring.CompositeChange
+import org.eclipse.ltk.core.refactoring.{Refactoring => LTKRefactoring}
+import org.eclipse.ltk.core.refactoring.RefactoringStatus
+import org.eclipse.ltk.ui.refactoring.RefactoringWizardPage
 
 /**
  * This is the abstract base class for all the concrete refactoring instances.

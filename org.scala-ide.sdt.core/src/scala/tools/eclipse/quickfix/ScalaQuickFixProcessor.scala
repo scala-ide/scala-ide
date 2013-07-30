@@ -8,7 +8,6 @@ import scala.tools.eclipse.util.EditorUtils
 import scala.tools.refactoring.implementations.AddToClass
 import scala.tools.refactoring.implementations.AddToClosest
 import scala.tools.refactoring.implementations.AddToObject
-
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.core.IJavaElement
@@ -24,8 +23,13 @@ import org.eclipse.jdt.ui.text.java.IQuickFixProcessor
 import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.Position
 import org.eclipse.ui.texteditor.ITextEditor
+import org.eclipse.jdt.core.IJavaProject
 
 
+/**
+ * Contains quick fixes that can only be applied to compiler errors. If there
+ * are no compilation errors than this component doesn't anything to apply.
+ */
 class ScalaQuickFixProcessor extends IQuickFixProcessor with HasLogger {
   private val TypeNotFoundError = "not found: type (.*)".r
   private val ValueNotFoundError = "not found: value (.*)".r
@@ -78,6 +82,7 @@ class ScalaQuickFixProcessor extends IQuickFixProcessor with HasLogger {
               createClassFix ++
               createMethodFix ++
               changeMethodCase
+
           }
         corrections match {
           case Nil => null
@@ -106,6 +111,8 @@ class ScalaQuickFixProcessor extends IQuickFixProcessor with HasLogger {
   }
 
   private def suggestImportFix(compilationUnit : ICompilationUnit, problemMessage : String) : List[IJavaCompletionProposal] = {
+    import ScalaQuickFixProcessor._
+
     /**
      * Import a type could solve several error message :
      *
@@ -114,24 +121,8 @@ class ScalaQuickFixProcessor extends IQuickFixProcessor with HasLogger {
      * * "not found : Xxxx" in case of new Xxxx.eee (IMO (davidB) a better suggestion is to insert (), to have new Xxxx().eeee )
      */
     def suggestImportType(missingType : String) : List[IJavaCompletionProposal] = {
-      val resultCollector = new java.util.ArrayList[TypeNameMatch]
-      val scope = SearchEngine.createJavaSearchScope(Array[IJavaElement](compilationUnit.getJavaProject))
-      val typesToSearch = Array(missingType.toArray)
-
-      new SearchEngine().searchAllTypeNames(
-          null,
-          typesToSearch,
-          scope,
-          new TypeNameMatchCollector(resultCollector),
-          IJavaSearchConstants.WAIT_UNTIL_READY_TO_SEARCH,
-          new NullProgressMonitor)
-
-      import scala.collection.JavaConverters._
-
-      val proposals = resultCollector.asScala map { typeName =>
-        new ImportCompletionProposal(typeName.getFullyQualifiedName)
-      }
-      proposals.toList
+      val typeNames = searchForTypes(compilationUnit.getJavaProject(), missingType)
+      typeNames map (name => new ImportCompletionProposal(name.getFullyQualifiedName))
     }
 
     matchTypeNotFound(problemMessage, suggestImportType)
@@ -173,4 +164,23 @@ class ScalaQuickFixProcessor extends IQuickFixProcessor with HasLogger {
     }
   }
 
+}
+
+private[quickfix] object ScalaQuickFixProcessor {
+
+  def searchForTypes(project: IJavaProject, name: String): List[TypeNameMatch] = {
+    val resultCollector = new java.util.ArrayList[TypeNameMatch]
+    val scope = SearchEngine.createJavaSearchScope(Array[IJavaElement](project))
+    val typesToSearch = Array(name.toArray)
+    new SearchEngine().searchAllTypeNames(
+        null,
+        typesToSearch,
+        scope,
+        new TypeNameMatchCollector(resultCollector),
+        IJavaSearchConstants.WAIT_UNTIL_READY_TO_SEARCH,
+        new NullProgressMonitor)
+
+    import scala.collection.JavaConverters._
+    resultCollector.asScala.toList
+  }
 }

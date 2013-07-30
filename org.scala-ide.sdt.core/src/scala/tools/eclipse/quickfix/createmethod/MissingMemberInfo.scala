@@ -1,13 +1,12 @@
-package scala.tools.eclipse.quickfix.createmethod
+package scala.tools.eclipse.quickfix
+package createmethod
 
-import scala.collection.JavaConversions._
 import scala.tools.eclipse.javaelements.ScalaCompilationUnit
 import scala.tools.eclipse.logging.HasLogger
 import scala.tools.eclipse.util.parsing.ArgPosition
 import scala.tools.eclipse.util.parsing.MethodCallInfo
 import scala.tools.eclipse.util.parsing.ScalariformUtils
 import scala.tools.nsc.{interactive => compiler}
-
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.core.IJavaElement
@@ -17,10 +16,16 @@ import org.eclipse.jdt.core.search.SearchEngine
 import org.eclipse.jdt.core.search.TypeNameMatch
 import org.eclipse.jdt.internal.corext.util.TypeNameMatchCollector
 import org.eclipse.jface.text.Position
-
 import scalariform.parser.AstNode
 
-class MissingMemberInfo(compilationUnit: ICompilationUnit, val fullyQualifiedName: String, val member: String, pos: Position, source: AstNode) extends HasLogger {
+class MissingMemberInfo(
+    compilationUnit: ICompilationUnit,
+    val fullyQualifiedName: String,
+    val member: String,
+    pos: Position,
+    source: AstNode)
+      extends HasLogger {
+
   val className = classNameFromFullyQualifiedName(fullyQualifiedName)
   lazy val targetElement: Option[IJavaElement] = targetElementFromCompiler.orElse(targetElementFromSearch)
 
@@ -52,6 +57,8 @@ class MissingMemberInfo(compilationUnit: ICompilationUnit, val fullyQualifiedNam
   }
 
   private def targetElementFromSearch: Option[IJavaElement] = {
+    import ScalaQuickFixProcessor._
+
     logger.debug(s"Trying to search for $className to find the fully qualified class $fullyQualifiedName")
     val matchesClassName = searchForTypes(compilationUnit.getJavaProject, className)
     logger.debug(s"Result for className got results: ${matchesClassName.toList}, ${matchesClassName.map(_.getFullyQualifiedName)}")
@@ -65,15 +72,6 @@ class MissingMemberInfo(compilationUnit: ICompilationUnit, val fullyQualifiedNam
     }
     logger.debug(s"Ended up with $bestMatch")
     bestMatch.map(_.getType.getCompilationUnit)
-  }
-
-  private def searchForTypes(project: IJavaProject, name: String): List[TypeNameMatch] = {
-    // TODO: move this out and refactor ScalaQuickFixProcessor to use it
-    val resultCollector = new java.util.ArrayList[TypeNameMatch]
-    val scope = SearchEngine.createJavaSearchScope(Array[IJavaElement](project))
-    val typesToSearch = Array(name.toArray)
-    new SearchEngine().searchAllTypeNames(null, typesToSearch, scope, new TypeNameMatchCollector(resultCollector), IJavaSearchConstants.WAIT_UNTIL_READY_TO_SEARCH, new NullProgressMonitor)
-    resultCollector.toList
   }
 }
 

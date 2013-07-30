@@ -22,16 +22,25 @@ case class CreateClassProposal(className: String, compilationUnit: ICompilationU
     val page = new NewClassWizardPage
     val wizard = new NewClassWizard(page)
     wizard.init(JavaPlugin.getDefault().getWorkbench(), new StructuredSelection(compilationUnit))
+
     val dialog = new WizardDialog(JavaPlugin.getActiveWorkbenchShell(), wizard)
     dialog.create()
-    page.setTypeName(className, /*canBeModified = */ false) //must go after dialog.create since create calls page.createControl which calls createTypeNameControls which actually makes the text field
 
-    if (dialog.open() == Window.OK && wizard.getCreatedElement != null) {
-      val existingClassPackage = compilationUnit.getPackageDeclarations().head.getElementName //there should always be a package declaration
+    // must go after dialog.create since create calls page.createControl which
+    // calls createTypeNameControls which actually makes the text field
+    page.setTypeName(className, /*canBeModified = */ false)
+
+    def existsInDifferentPackage: Boolean = {
+      val existingClassPackage = compilationUnit.getPackageDeclarations().head.getElementName
       val newClassPackage = page.getPackageText()
-      if (existingClassPackage != newClassPackage && !page.isDefaultPackage) { //can't import things from the default package, SLS 9.2
-        ImportCompletionProposal(page.getFullyQualifiedName).apply(document)
-      }
+      // can't import things from the default package, SLS 9.2
+      val canBeImported = !page.isDefaultPackage
+      existingClassPackage != newClassPackage && canBeImported
+    }
+
+    if (dialog.open() == Window.OK && wizard.getCreatedElement != null && existsInDifferentPackage) {
+      ImportCompletionProposal(page.getFullyQualifiedName).apply(document)
     }
   }
+
 }

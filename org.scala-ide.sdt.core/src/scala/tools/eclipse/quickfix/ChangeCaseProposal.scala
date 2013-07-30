@@ -2,11 +2,12 @@ package scala.tools.eclipse.quickfix
 
 import scala.reflect.internal.util.RangePosition
 import scala.tools.eclipse.ScalaImages
+import scala.tools.eclipse.completion.RelevanceValues
 import scala.tools.eclipse.javaelements.ScalaCompilationUnit
+
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.Position
-import scala.tools.eclipse.completion.RelevanceValues
 
 /*
  * Find another member with the same spelling but different capitalization.
