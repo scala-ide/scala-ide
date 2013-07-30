@@ -39,6 +39,8 @@ import scala.tools.eclipse.ScalaProject
 import scala.tools.eclipse.javaelements.ScalaCompilationUnit
 import scala.tools.eclipse.javaelements.ScalaSourceFile
 import org.eclipse.debug.core.DebugException
+import scala.collection.JavaConverters._
+
 
 private[debug] object BreakpointSupport {
   /** Attribute Type Name */
@@ -196,18 +198,7 @@ private class BreakpointSupportActor private (
   }
 
   private def breakpointShouldSuspend(event: BreakpointEvent): Boolean = {
-    import scala.collection.JavaConverters._
-
-    def bindStackFrame(scalaProject: ScalaProject, evalEngine: ScalaEvaluationEngine, stackFrame: Option[ScalaStackFrame]) {
-      for {
-        frame <- stackFrame
-        variable <- frame.variables
-        value = variable.getValue
-      } evalEngine.bind(variable.getName, value) {
-          ScalaEvaluationEngine.findType(variable.getName, frame.stackFrame.location(), scalaProject)
-        }
-    }
-
+    val beQuiet = false
     breakpoint match {
       case cbp: IJavaLineBreakpoint if cbp.isConditionEnabled() && cbp.supportsCondition() => {
         scala.util.Try {
@@ -219,8 +210,10 @@ private class BreakpointSupportActor private (
                 scalaThread <- debugTarget.findScalaThread(event.thread())
                 evalEngine = new ScalaEvaluationEngine(scalaLaunchDelegate.classpath, debugTarget, scalaThread)
                 stackFrames = scalaThread.threadRef.frames.asScala.map(ScalaStackFrame(scalaThread, _)).toList
-                _ = bindStackFrame(scalaLaunchDelegate.scalaProject, evalEngine, stackFrames.headOption)
-                eval <- evalEngine.evaluate(cbp.getCondition())
+                eval <- {
+                  val bindings = ScalaEvaluationEngine.yieldStackFrameBindings(evalEngine, stackFrames.headOption, scalaLaunchDelegate.scalaProject)
+                  evalEngine.evaluate(cbp.getCondition(), beQuiet, bindings)
+                }
                 boolValue <- ScalaEvaluationEngine.booleanValue(eval, scalaThread)
               } yield boolValue
             case _ => None
@@ -232,10 +225,10 @@ private class BreakpointSupportActor private (
             r
           case scala.util.Failure(e: DebugException) =>
             val original = e.getCause()
+            val st = original.getStackTrace()
             false
           case scala.util.Failure(e) =>
             val st = e.getStackTrace()
-            println(e)
             false
         }
       }

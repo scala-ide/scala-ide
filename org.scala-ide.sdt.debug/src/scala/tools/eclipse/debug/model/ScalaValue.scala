@@ -58,7 +58,7 @@ object ScalaValue {
         // TODO : cache one per target
         new ScalaNullValue(target)
       case voidValue: VoidValue =>
-        ??? // TODO: in what cases do we get this value ?
+        new ScalaVoidValue(voidValue, target)
       case _ =>
         ???
     }
@@ -202,4 +202,11 @@ class ScalaNullValue(target: ScalaDebugTarget) extends ScalaValue(null, target) 
   protected override def doGetVariables(): Array[IVariable] = Array() // TODO: cached empty array?
   protected override def doHasVariables(): Boolean = false
 
+}
+
+class ScalaVoidValue(override val underlying: VoidValue, target: ScalaDebugTarget) extends ScalaValue(underlying, target) {
+  protected override def doGetReferenceTypeName(): String = "scala.Unit"
+  protected override def doGetValueString() = ().toString
+  protected override def doGetVariables() = Array()
+  protected override def doHasVariables() = false
 }

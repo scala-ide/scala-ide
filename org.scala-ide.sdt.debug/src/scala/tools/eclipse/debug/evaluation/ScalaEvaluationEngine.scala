@@ -64,6 +64,19 @@ object ScalaEvaluationEngine {
     s"($char)V"
   }
 
+  def yieldStackFrameBindings(evalEngine: ScalaEvaluationEngine, stackFrame: Option[ScalaStackFrame], scalaProject: ScalaProject) = stackFrame match {
+    case Some(frame) =>
+      for {
+        variable <- frame.variables
+        value = variable.getValue
+      } yield {
+        (new evalEngine.ValueBinding(variable.getName, value)) {
+          ScalaEvaluationEngine.findType(variable.getName, frame.stackFrame.location(), scalaProject)
+        }
+      }
+    case _ => Seq()
+  }
+
   // FIXME: optimize
   def findType(localVarName: String, programPosition: Location, scalaProject: ScalaProject): Option[String] = {
     var result: Option[String] = None
@@ -105,13 +118,29 @@ class ScalaEvaluationEngine(classpath: Seq[String], val target: ScalaDebugTarget
     replAssistance.invokeMethod("createRepl", thread, cp).asInstanceOf[ScalaObjectReference]
   }
 
-  def evaluate(expression: String): Option[ScalaObjectReference] = {
-    val expr = ScalaValue(expression, target)
-    val interpResult = repl.invokeMethod("interpret", "(Ljava/lang/String;)Lscala/tools/nsc/interpreter/Results$Result;", thread, List(expr): _*).asInstanceOf[ScalaObjectReference]
-    val interpResultStr = interpResult.invokeMethod("toString", thread).asInstanceOf[ScalaStringReference]
-    (interpResultStr.underlying.value() == "Success") match {
-      case false => None
-      case true => {
+  class ValueBinding(val name: String, val ivalue: IValue)(_tpe: => Option[String]) {
+    lazy val tpe = _tpe
+  }
+
+  def isStale = thread.isTerminated
+
+  def execute(expression: String, beQuiet: Boolean, bindings: Seq[ValueBinding]): Option[String] = {
+    doInterpret(expression, beQuiet, bindings) match {
+      case Some("Success") =>
+        val lastRequest = repl.invokeMethod("lastRequest", thread).asInstanceOf[ScalaObjectReference]
+        val lineRep = lastRequest.invokeMethod("lineRep", thread).asInstanceOf[ScalaObjectReference]
+        val printVar = lineRep.invokeMethod("printName", thread).asInstanceOf[ScalaStringReference]
+        val nil = target.objectByName("scala.collection.immutable.Nil", true, thread)
+        val callOpt = lineRep.invokeMethod("callOpt", thread, printVar, nil).asInstanceOf[ScalaObjectReference]
+        val printValue = callOpt.invokeMethod("getOrElse", thread, ScalaValue(null, target)).asInstanceOf[ScalaStringReference]
+        Some(printValue.underlying.value())
+      case _ => None
+    }
+  }
+
+  def evaluate(expression: String, beQuiet: Boolean, bindings: Seq[ValueBinding]): Option[ScalaObjectReference] = {
+    doInterpret(expression, beQuiet, bindings) match {
+      case Some("Success") => {
         val lastRequest = repl.invokeMethod("lastRequest", thread).asInstanceOf[ScalaObjectReference]
         val lineRep = lastRequest.invokeMethod("lineRep", thread).asInstanceOf[ScalaObjectReference]
         val nil = target.objectByName("scala.collection.immutable.Nil", true, thread)
@@ -119,10 +148,25 @@ class ScalaEvaluationEngine(classpath: Seq[String], val target: ScalaDebugTarget
         val call = callOpt.invokeMethod("getOrElse", thread, ScalaValue(null, target)).asInstanceOf[ScalaObjectReference]
         Some(call)
       }
+      case _ => None
     }
   }
 
-  def bind(varName: String, ivalue: IValue)(tpe: => Option[String]): Boolean = {
+  private def doInterpret(expression: String, beQuiet: Boolean, bindings: Seq[ValueBinding]): Option[String] = {
+    if (!isStale && thread.isSuspended) {
+      for (binding <- bindings)
+        bind(binding.name, binding.ivalue, beQuiet)(binding.tpe)
+
+      val expr = ScalaValue(expression, target)
+      val interpResult =
+        if (beQuiet) repl.invokeMethod("quietRun", thread, List(expr): _*).asInstanceOf[ScalaObjectReference]
+        else repl.invokeMethod("interpret", "(Ljava/lang/String;)Lscala/tools/nsc/interpreter/Results$Result;", thread, List(expr): _*).asInstanceOf[ScalaObjectReference]
+      val interpResultStr = interpResult.invokeMethod("toString", thread).asInstanceOf[ScalaStringReference]
+      Some(interpResultStr.underlying.value())
+    } else None
+  }
+
+  def bind(varName: String, ivalue: IValue, beQuiet: Boolean)(tpe: => Option[String]): Boolean = {
     def box(primValue: ScalaPrimitiveValue): ScalaObjectReference = {
       def create[T <: AnyVal](typename: String, value: T) = {
         import scala.collection.JavaConverters._
@@ -158,7 +202,7 @@ class ScalaEvaluationEngine(classpath: Seq[String], val target: ScalaDebugTarget
             else jdiTypename
         }
         val name = if (varName == "this") "this$" else varName
-        bind(name, typename, bindValue, Nil) // FIXME: properly get modifiers
+        bind(name, typename, bindValue, beQuiet)
         true
       }
       case _ => false
@@ -166,10 +210,14 @@ class ScalaEvaluationEngine(classpath: Seq[String], val target: ScalaDebugTarget
   }
 
   // modifiers can be null
-  def bind(name: String, boundType: String, value: ScalaValue, modifiers: List[String]) {
-    val modifiersValue = createStringList(modifiers)
-    val jdiSig = "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Object;Lscala/collection/immutable/List;)Lscala/tools/nsc/interpreter/Results$Result;"
-    repl.invokeMethod("bind", jdiSig, thread, ScalaValue(name, target), ScalaValue(boundType, target), value, modifiersValue)
+  private def bind(name: String, boundType: String, value: ScalaValue, beQuiet: Boolean) {
+    if (beQuiet)
+      repl.invokeMethod("quietBind", thread, assistance.invokeMethod("createNamedParamClass", thread, ScalaValue(name, target), ScalaValue(boundType, target), value))
+    else {
+      val modifiersValue = target.objectByName("scala.collection.immutable.Nil", true, thread).asInstanceOf[ScalaObjectReference]
+      val jdiSig = "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Object;Lscala/collection/immutable/List;)Lscala/tools/nsc/interpreter/Results$Result;"
+      repl.invokeMethod("bind", jdiSig, thread, ScalaValue(name, target), ScalaValue(boundType, target), value, modifiersValue)
+    }
   }
 
   def createObject(typeName: String): ScalaObjectReference = {
@@ -183,6 +231,13 @@ class ScalaEvaluationEngine(classpath: Seq[String], val target: ScalaDebugTarget
     for (str <- strs)
       lb.invokeMethod("$plus$eq", "(Ljava/lang/Object;)Lscala/collection/mutable/ListBuffer;", thread, ScalaValue(str, target))
     lb.invokeMethod("toList", thread)
+  }
+
+  /* REPLs are shared per thread (in the debugged VM), so you might want to clear the repl's history from time to time. */
+  // TODO: maybe it would be better to just do this automatically when you create a ScalaEvaluationEngine object? The idea being that ScalaEvaluationEngines are lightweight and will be created often instead of cached.
+  // FIXME: this also resets the class loader in a bad way
+  def resetRepl() {
+    repl.invokeMethod("reset", thread)
   }
 
   // FIXME: Not currently working.. Throws an exception
