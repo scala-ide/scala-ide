@@ -1,53 +1,42 @@
 package scala.tools.eclipse
 package quickfix
 
-import org.eclipse.ui.IEditorPart
-import org.eclipse.jface.text.source.Annotation
-import org.eclipse.jdt.internal.ui.javaeditor.CompilationUnitDocumentProvider.ProblemAnnotation
-import org.eclipse.jdt.ui.JavaUI
-import org.eclipse.core.runtime.CoreException
-import org.eclipse.jdt.core.ICompilationUnit
-import org.eclipse.jdt.core.search.IJavaSearchConstants
-import org.eclipse.jdt.internal.codeassist.ISearchRequestor
-import org.eclipse.jdt.internal.compiler.env.AccessRestriction
-import org.eclipse.jdt.internal.compiler.env.INameEnvironment
-import org.eclipse.jdt.internal.core.DefaultWorkingCopyOwner
-import org.eclipse.jdt.internal.core.JavaProject
-import org.eclipse.jdt.internal.ui.text.correction.SimilarElement
-import org.eclipse.jdt.internal.ui.text.correction.SimilarElementsRequestor
-import org.eclipse.jdt.ui.text.java._
-import org.eclipse.core.resources.IMarker
 import scala.tools.eclipse.javaelements.ScalaSourceFile
-import scala.tools.eclipse.util.FileUtils
-import scala.util.matching.Regex
-import org.eclipse.jface.text.Position
-import scala.collection.JavaConversions._
 import scala.tools.eclipse.logging.HasLogger
 
-class ScalaQuickAssistProcessor extends org.eclipse.jdt.ui.text.java.IQuickAssistProcessor with HasLogger {
+import org.eclipse.jdt.core.ICompilationUnit
+import org.eclipse.jdt.ui.text.java.IInvocationContext
+import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal
+import org.eclipse.jdt.ui.text.java.IProblemLocation
+import org.eclipse.jdt.ui.text.java.IQuickAssistProcessor
+import org.eclipse.jface.text.Position
+
+/**
+ * Enables all quick fixes that don't resolve errors in the document. Instead they
+ * just apply refactorings.
+ */
+class ScalaQuickAssistProcessor extends IQuickAssistProcessor with HasLogger {
 
   import ScalaQuickAssistProcessor._
 
   override def hasAssists(context: IInvocationContext): Boolean = true
 
+  /**
+   * Needs to return ``null`` when no assists could be found.
+   */
   override def getAssists(context: IInvocationContext, locations: Array[IProblemLocation]): Array[IJavaCompletionProposal] =
     context.getCompilationUnit match {
-      case ssf: ScalaSourceFile => {
-        import scala.tools.eclipse.util.EditorUtils.openEditorAndApply
-        import scala.tools.eclipse.util.EditorUtils.getAnnotationsAtOffset
+      case ssf: ScalaSourceFile =>
+        import scala.tools.eclipse.util.EditorUtils._
+
         openEditorAndApply(ssf) { editor =>
-          val corrections = {
-            for ((ann, pos) <- getAnnotationsAtOffset(editor, context.getSelectionOffset())) yield {
+          val corrections = getAnnotationsAtOffset(editor, context.getSelectionOffset()) flatMap {
+            case (ann, pos) =>
               suggestAssist(context.getCompilationUnit(), ann.getText, pos)
-            }
-          }.flatten.toList
-          corrections match {
-            case Nil        => null
-            case correction => correction.distinct.toArray
           }
+          if (corrections.isEmpty) null
+          else corrections.toArray.distinct
         }
-      }
-      // The caller expects null to mean "no assists".
       case _ => null
     }
 

@@ -8,26 +8,26 @@ package refactoring
 import java.text.Collator
 import java.util.Comparator
 
+import scala.tools.eclipse.javaelements.LazyToplevelClass
+import scala.tools.eclipse.javaelements.ScalaElement
+import scala.tools.eclipse.javaelements.ScalaSourceFile
+import scala.tools.eclipse.properties.OrganizeImportsPreferences._
+import scala.tools.refactoring.implementations.AddImportStatement
+import scala.tools.refactoring.implementations.OrganizeImports
+
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.jdt.core.IJavaElement
 import org.eclipse.jdt.core.compiler.IProblem
-import org.eclipse.jdt.core.search.TypeNameMatch
-import org.eclipse.jdt.core.search.SearchEngine
 import org.eclipse.jdt.core.search.IJavaSearchConstants
-import org.eclipse.jdt.internal.corext.util.TypeNameMatchCollector
+import org.eclipse.jdt.core.search.SearchEngine
+import org.eclipse.jdt.core.search.TypeNameMatch
 import org.eclipse.jdt.internal.corext.util.QualifiedTypeNameHistory
+import org.eclipse.jdt.internal.corext.util.TypeNameMatchCollector
 import org.eclipse.jdt.internal.ui.actions.ActionMessages
 import org.eclipse.jdt.internal.ui.dialogs.MultiElementListSelectionDialog
 import org.eclipse.jdt.internal.ui.util.TypeNameMatchLabelProvider
 import org.eclipse.jface.action.IAction
 import org.eclipse.jface.window.Window
-
-import scala.tools.eclipse.javaelements.ScalaSourceFile
-import scala.tools.eclipse.javaelements.ScalaElement
-import scala.tools.eclipse.javaelements.LazyToplevelClass
-import scala.tools.eclipse.properties.OrganizeImportsPreferences._
-import scala.tools.refactoring.implementations.OrganizeImports
-import scala.tools.refactoring.implementations.AddImportStatement
 
 /**
  * The Scala implemention of Organize Imports.

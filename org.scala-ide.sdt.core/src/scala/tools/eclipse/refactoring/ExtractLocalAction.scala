@@ -5,14 +5,13 @@
 package scala.tools.eclipse
 package refactoring
 
-import org.eclipse.jface.action.IAction
-import javaelements.ScalaSourceFile
-import scala.tools.refactoring.analysis.GlobalIndexes
-import scala.tools.refactoring.common.Change
-import scala.tools.refactoring.common.Selections
-import scala.tools.refactoring.implementations.ExtractLocal
-import org.eclipse.ui.PlatformUI
 import scala.tools.refactoring.common.TextChange
+import scala.tools.refactoring.implementations.ExtractLocal
+
+import org.eclipse.jface.action.IAction
+import org.eclipse.ui.PlatformUI
+
+import javaelements.ScalaSourceFile
 
 /**
  * From a selected expression, the Extract Local refactoring will create a new
@@ -23,9 +22,11 @@ import scala.tools.refactoring.common.TextChange
  */
 class ExtractLocalAction extends RefactoringAction {
 
-  def createRefactoring(selectionStart: Int, selectionEnd: Int, file: ScalaSourceFile) = new ExtractLocalScalaIdeRefactoring(selectionStart, selectionEnd, file)
+  def createRefactoring(selectionStart: Int, selectionEnd: Int, file: ScalaSourceFile) =
+    new ExtractLocalScalaIdeRefactoring(selectionStart, selectionEnd, file)
 
-  class ExtractLocalScalaIdeRefactoring(start: Int, end: Int, file: ScalaSourceFile) extends ScalaIdeRefactoring("Extract Local", file, start, end) {
+  class ExtractLocalScalaIdeRefactoring(start: Int, end: Int, file: ScalaSourceFile)
+      extends ScalaIdeRefactoring("Extract Local", file, start, end) {
 
     val refactoring = withCompiler( c => new ExtractLocal { val global = c })
 

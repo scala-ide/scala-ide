@@ -1,11 +1,12 @@
 package scala.tools.eclipse.refactoring
 
+import scala.tools.eclipse.ScalaProject
 import scala.tools.eclipse.javaelements.ScalaSourceFile
-import scala.tools.refactoring.analysis.GlobalIndexes
 import scala.tools.refactoring.MultiStageRefactoring
+import scala.tools.refactoring.analysis.GlobalIndexes
+
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.ltk.core.refactoring.RefactoringStatus
-import scala.tools.eclipse.ScalaProject
 
 /**
  * Helper trait that adds an index variable to a refactoring.

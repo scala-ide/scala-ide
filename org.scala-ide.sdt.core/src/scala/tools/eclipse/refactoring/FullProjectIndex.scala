@@ -2,20 +2,21 @@ package scala.tools.eclipse
 package refactoring
 
 import java.util.regex.Pattern
-import org.eclipse.core.resources.IResource
-import org.eclipse.core.runtime.IProgressMonitor
-import org.eclipse.search.core.text.TextSearchRequestor
-import org.eclipse.search.core.text.TextSearchMatchAccess
-import org.eclipse.search.core.text.TextSearchEngine
-import org.eclipse.search.ui.text.FileTextSearchScope
+
+import scala.reflect.internal.util.SourceFile
 import scala.tools.eclipse.ScalaProject
 import scala.tools.eclipse.javaelements.ScalaSourceFile
 import scala.tools.eclipse.logging.HasLogger
-import scala.reflect.internal.util.SourceFile
 import scala.tools.refactoring.MultiStageRefactoring
 import scala.tools.refactoring.analysis.GlobalIndexes
 import scala.tools.refactoring.common.InteractiveScalaCompiler
-import org.eclipse.search.internal.core.text.PatternConstructor
+
+import org.eclipse.core.resources.IResource
+import org.eclipse.core.runtime.IProgressMonitor
+import org.eclipse.search.core.text.TextSearchEngine
+import org.eclipse.search.core.text.TextSearchMatchAccess
+import org.eclipse.search.core.text.TextSearchRequestor
+import org.eclipse.search.ui.text.FileTextSearchScope
 
 /**
  * A trait that can be mixed into refactorings that need an index of the whole

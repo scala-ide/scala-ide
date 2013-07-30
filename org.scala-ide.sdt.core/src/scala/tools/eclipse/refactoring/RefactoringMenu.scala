@@ -5,19 +5,16 @@
  */
 package scala.tools.eclipse.refactoring
 
-import org.eclipse.ui.handlers.IHandlerService
-import org.eclipse.ui.commands.ICommandService
-import org.eclipse.ui.commands.IHandler
-import org.eclipse.ui.part.EditorPart
 import org.eclipse.core.commands.Command
-import org.eclipse.jface.action.Action
-import org.eclipse.jface.action.IAction
-import org.eclipse.jface.action.IMenuManager
-import org.eclipse.jface.action.IMenuListener
-import org.eclipse.jface.action.ActionContributionItem
-import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor
 import org.eclipse.jdt.internal.ui.actions.JDTQuickMenuCreator
+import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor
+import org.eclipse.jface.action.Action
+import org.eclipse.jface.action.IMenuListener
+import org.eclipse.jface.action.IMenuManager
 import org.eclipse.jface.action.Separator
+import org.eclipse.ui.commands.ICommandService
+import org.eclipse.ui.handlers.IHandlerService
+import org.eclipse.ui.part.EditorPart
 
 /**
  * Unfortunately, it seems we cannot simply define a context menu on the Scala source editor via
