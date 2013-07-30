@@ -41,17 +41,17 @@ class ScalaQuickAssistProcessor extends IQuickAssistProcessor with HasLogger {
     }
 
   private def suggestAssist(compilationUnit: ICompilationUnit, problemMessage: String, location: Position): Seq[IJavaCompletionProposal] = {
-    val refactoringSuggestions: Seq[IJavaCompletionProposal] = try {
-      List(
+    val availableAssists = Seq(
         ExtractLocalProposal,
         ExpandCaseClassBindingProposal,
         InlineLocalProposal,
         RenameProposal,
-        ExtractMethodProposal).par.filter(_.isValidProposal).seq
-    } catch {
+        ExtractMethodProposal)
+
+    val refactoringSuggestions = try availableAssists.filter(_.isValidProposal) catch {
       case e: Exception =>
         logger.debug("Exception when building quick assist list: " + e.getMessage, e)
-        List()
+        Seq()
     }
 
     refactoringSuggestions ++
