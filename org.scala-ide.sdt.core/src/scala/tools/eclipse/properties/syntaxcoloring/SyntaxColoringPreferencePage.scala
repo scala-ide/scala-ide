@@ -1,7 +1,7 @@
-package scala.tools.eclipse.properties.syntaxcolouring
+package scala.tools.eclipse.properties.syntaxcoloring
 
 import scala.PartialFunction.condOpt
-import scala.tools.eclipse.properties.syntaxcolouring.ScalaSyntaxClasses._
+import scala.tools.eclipse.properties.syntaxcoloring.ScalaSyntaxClasses._
 import scala.tools.eclipse.semantichighlighting.ui.HighlightingStyle
 import scala.tools.eclipse.semantichighlighting.Preferences
 import scala.tools.eclipse.util.EclipseUtils._
@@ -25,7 +25,7 @@ import org.eclipse.ui.IWorkbenchPreferencePage
 /**
  * @see org.eclipse.jdt.internal.ui.preferences.JavaEditorColoringConfigurationBlock
  */
-class SyntaxColouringPreferencePage extends PreferencePage with IWorkbenchPreferencePage {
+class SyntaxColoringPreferencePage extends PreferencePage with IWorkbenchPreferencePage {
 
   import GridDataHelper._
 
@@ -71,9 +71,9 @@ class SyntaxColouringPreferencePage extends PreferencePage with IWorkbenchPrefer
   private def makeOverlayKeys(syntaxClass: ScalaSyntaxClass): List[OverlayKey] = {
     List(
       new OverlayKey(BOOLEAN, syntaxClass.enabledKey),
-      new OverlayKey(STRING, syntaxClass.foregroundColourKey),
-      new OverlayKey(STRING, syntaxClass.backgroundColourKey),
-      new OverlayKey(BOOLEAN, syntaxClass.backgroundColourEnabledKey),
+      new OverlayKey(STRING, syntaxClass.foregroundColorKey),
+      new OverlayKey(STRING, syntaxClass.backgroundColorKey),
+      new OverlayKey(BOOLEAN, syntaxClass.backgroundColorEnabledKey),
       new OverlayKey(BOOLEAN, syntaxClass.boldKey),
       new OverlayKey(BOOLEAN, syntaxClass.italicKey),
       new OverlayKey(BOOLEAN, syntaxClass.underlineKey))
@@ -114,8 +114,8 @@ class SyntaxColouringPreferencePage extends PreferencePage with IWorkbenchPrefer
   def createTreeViewer(editorComposite: Composite) {
     treeViewer = new TreeViewer(editorComposite, SWT.SINGLE | SWT.BORDER)
 
-    treeViewer.setContentProvider(SyntaxColouringTreeContentAndLabelProvider)
-    treeViewer.setLabelProvider(SyntaxColouringTreeContentAndLabelProvider)
+    treeViewer.setContentProvider(SyntaxColoringTreeContentAndLabelProvider)
+    treeViewer.setLabelProvider(SyntaxColoringTreeContentAndLabelProvider)
 
     // scrollbars and tree indentation guess
     val widthHint = ALL_SYNTAX_CLASSES.map { syntaxClass => convertWidthInCharsToPixels(syntaxClass.displayName.length) }.max +
@@ -267,7 +267,7 @@ class SyntaxColouringPreferencePage extends PreferencePage with IWorkbenchPrefer
       grabExcessVerticalSpace = true,
       widthHint = convertWidthInCharsToPixels(20),
       heightHint = convertHeightInCharsToPixels(12)))
-    updatePreviewerColours()
+    updatePreviewerColors()
 
     setUpSelectionListeners()
 
@@ -279,7 +279,7 @@ class SyntaxColouringPreferencePage extends PreferencePage with IWorkbenchPrefer
 
   private def setUpSelectionListeners() {
     overlayStore.addPropertyChangeListener { event: PropertyChangeEvent =>
-      updatePreviewerColours()
+      updatePreviewerColors()
     }
     enableSemanticHighlightingCheckBox.addSelectionListener { () =>
       overlayStore.setValue(ENABLE_SEMANTIC_HIGHLIGHTING, enableSemanticHighlightingCheckBox.getSelection)
@@ -299,15 +299,15 @@ class SyntaxColouringPreferencePage extends PreferencePage with IWorkbenchPrefer
     }
     foregroundColorButton.addSelectionListener { () =>
       for (syntaxClass <- selectedSyntaxClass)
-        PreferenceConverter.setValue(overlayStore, syntaxClass.foregroundColourKey, syntaxForegroundColorEditor.getColorValue)
+        PreferenceConverter.setValue(overlayStore, syntaxClass.foregroundColorKey, syntaxForegroundColorEditor.getColorValue)
     }
     backgroundColorButton.addSelectionListener { () =>
       for (syntaxClass <- selectedSyntaxClass)
-        PreferenceConverter.setValue(overlayStore, syntaxClass.backgroundColourKey, syntaxBackgroundColorEditor.getColorValue)
+        PreferenceConverter.setValue(overlayStore, syntaxClass.backgroundColorKey, syntaxBackgroundColorEditor.getColorValue)
     }
     backgroundColorEnabledCheckBox.addSelectionListener { () =>
       for (syntaxClass <- selectedSyntaxClass) {
-        overlayStore.setValue(syntaxClass.backgroundColourEnabledKey, backgroundColorEnabledCheckBox.getSelection)
+        overlayStore.setValue(syntaxClass.backgroundColorEnabledKey, backgroundColorEnabledCheckBox.getSelection)
         backgroundColorButton.setEnabled(backgroundColorEnabledCheckBox.getSelection)
       }
     }
@@ -326,7 +326,7 @@ class SyntaxColouringPreferencePage extends PreferencePage with IWorkbenchPrefer
   }
 
   private def createPreviewer(parent: Composite): SourceViewer =
-    ScalaPreviewerFactory.createPreviewer(parent, overlayStore, SyntaxColouringPreviewText.previewText)
+    ScalaPreviewerFactory.createPreviewer(parent, overlayStore, SyntaxColoringPreviewText.previewText)
 
   private def selectedSyntaxClass: Option[ScalaSyntaxClass] = condOpt(treeViewer.getSelection) {
     case SelectedItems(syntaxClass: ScalaSyntaxClass) => syntaxClass
@@ -348,9 +348,9 @@ class SyntaxColouringPreferencePage extends PreferencePage with IWorkbenchPrefer
         massSetEnablement(false)
       else {
         import syntaxClass._
-        syntaxForegroundColorEditor.setColorValue(overlayStore getColor foregroundColourKey)
-        syntaxBackgroundColorEditor.setColorValue(overlayStore getColor backgroundColourKey)
-        val backgroundColorEnabled = overlayStore getBoolean backgroundColourEnabledKey
+        syntaxForegroundColorEditor.setColorValue(overlayStore getColor foregroundColorKey)
+        syntaxBackgroundColorEditor.setColorValue(overlayStore getColor backgroundColorKey)
+        val backgroundColorEnabled = overlayStore getBoolean backgroundColorEnabledKey
         backgroundColorEnabledCheckBox.setSelection(backgroundColorEnabled)
         enabledCheckBox.setSelection(overlayStore getBoolean enabledKey)
         boldCheckBox.setSelection(overlayStore getBoolean boldKey)
@@ -360,13 +360,13 @@ class SyntaxColouringPreferencePage extends PreferencePage with IWorkbenchPrefer
         massSetEnablement(true)
         enabledCheckBox.setEnabled(canBeDisabled)
         syntaxBackgroundColorEditor.getButton.setEnabled(backgroundColorEnabled)
-        syntaxForegroundColorEditor.getButton.setEnabled(hasForegroundColour)
+        syntaxForegroundColorEditor.getButton.setEnabled(hasForegroundColor)
       }
   }
 
-  private def updatePreviewerColours() {
+  private def updatePreviewerColors() {
     val textWidget = previewer.getTextWidget
-    for (position <- SyntaxColouringPreviewText.semanticLocations)
+    for (position <- SyntaxColoringPreviewText.semanticLocations)
       if (overlayStore.getBoolean(ENABLE_SEMANTIC_HIGHLIGHTING) && (overlayStore.getBoolean(HighlightingStyle.symbolTypeToSyntaxClass(position.kind).enabledKey) || position.shouldStyle)) {
       val styleRange = HighlightingStyle(Preferences(overlayStore), position.kind).style(position)
       textWidget.setStyleRange(styleRange)

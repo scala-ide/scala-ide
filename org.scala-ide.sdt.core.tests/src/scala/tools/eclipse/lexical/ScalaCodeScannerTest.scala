@@ -1,7 +1,7 @@
 package scala.tools.eclipse.lexical
 
-import scala.tools.eclipse.properties.syntaxcolouring._
-import scala.tools.eclipse.properties.syntaxcolouring.ScalaSyntaxClasses._
+import scala.tools.eclipse.properties.syntaxcoloring._
+import scala.tools.eclipse.properties.syntaxcoloring.ScalaSyntaxClasses._
 import scala.tools.eclipse.testsetup.SDTTestUtils
 
 import org.junit.ComparisonFailure

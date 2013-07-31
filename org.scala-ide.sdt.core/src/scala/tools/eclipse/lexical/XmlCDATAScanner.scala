@@ -3,7 +3,7 @@ import org.eclipse.jface.text._
 import org.eclipse.jface.text.rules._
 import scala.collection.mutable.ListBuffer
 import org.eclipse.jface.util.PropertyChangeEvent
-import scala.tools.eclipse.properties.syntaxcolouring.ScalaSyntaxClasses._
+import scala.tools.eclipse.properties.syntaxcoloring.ScalaSyntaxClasses._
 import org.eclipse.jface.preference.IPreferenceStore
 
 class XmlCDATAScanner(val preferenceStore: IPreferenceStore) extends AbstractScalaScanner {

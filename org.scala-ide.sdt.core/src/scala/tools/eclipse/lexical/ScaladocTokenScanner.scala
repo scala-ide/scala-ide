@@ -1,6 +1,6 @@
 package scala.tools.eclipse.lexical
 
-import scala.tools.eclipse.properties.syntaxcolouring.ScalaSyntaxClass
+import scala.tools.eclipse.properties.syntaxcoloring.ScalaSyntaxClass
 
 import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.jface.text.rules.ICharacterScanner

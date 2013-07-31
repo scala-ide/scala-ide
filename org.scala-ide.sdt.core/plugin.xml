@@ -56,10 +56,10 @@
       <page class="scala.tools.eclipse.properties.ScalaPreferences"
             name="Scala"
             id="org.scala-ide.sdt.core.preferences"/>
-      <page class="scala.tools.eclipse.properties.syntaxcolouring.SyntaxColouringPreferencePage"
+      <page class="scala.tools.eclipse.properties.syntaxcoloring.SyntaxColoringPreferencePage"
             category="org.scala-ide.sdt.core.preferences"
             name="Syntax Coloring"
-            id="org.scala-ide.sdt.core.properties.syntaxcolouring.SyntaxColouringPreferencePage"/>
+            id="org.scala-ide.sdt.core.properties.syntaxcoloring.SyntaxColoringPreferencePage"/>
       <page
             category="org.scala-ide.sdt.core.preferences"
             class="scala.tools.eclipse.properties.CompilerSettings"
@@ -798,7 +798,7 @@
         id="org.scala-ide.sdt.core.preferences"
         point="org.eclipse.core.runtime.preferences">
      <initializer
-           class="scala.tools.eclipse.properties.syntaxcolouring.ColourPreferenceInitializer">
+           class="scala.tools.eclipse.properties.syntaxcoloring.ColorPreferenceInitializer">
      </initializer>    
      <initializer
            class="scala.tools.eclipse.properties.ScalaCompilerPreferenceInitializer">

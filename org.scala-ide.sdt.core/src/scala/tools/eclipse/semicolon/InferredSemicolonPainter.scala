@@ -13,7 +13,7 @@ import org.eclipse.jface.text._
 
 object InferredSemicolonPainter {
 
-  val SEMICOLON_COLOUR = new Color(Display.getDefault, new RGB(160, 160, 160))
+  val SEMICOLON_COLOR = new Color(Display.getDefault, new RGB(160, 160, 160))
 
 }
 /**
@@ -151,7 +151,7 @@ class InferredSemicolonPainter(textViewer: ITextViewer with ITextViewerExtension
       val fontBaseline = fontMetrics.getAscent + fontMetrics.getLeading
       val baselineDelta = baseline - fontBaseline
       val pos = textWidget.getLocationAtOffset(widgetOffset)
-      gc.setForeground(SEMICOLON_COLOUR)
+      gc.setForeground(SEMICOLON_COLOR)
       gc.drawString(";", pos.x, pos.y + baselineDelta, true)
     }
   }

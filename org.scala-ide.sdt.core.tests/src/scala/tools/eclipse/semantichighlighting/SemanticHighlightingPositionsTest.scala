@@ -5,7 +5,7 @@ import scala.tools.eclipse.ScalaPlugin
 import scala.tools.eclipse.ScalaProject
 import scala.tools.eclipse.javaelements.ScalaCompilationUnit
 import scala.tools.eclipse.jface.text.EmptyRegion
-import scala.tools.eclipse.properties.syntaxcolouring.ScalaSyntaxClasses
+import scala.tools.eclipse.properties.syntaxcoloring.ScalaSyntaxClasses
 import scala.tools.eclipse.semantichighlighting.classifier.SymbolTypes
 import scala.tools.eclipse.ui.InteractiveCompilationUnitEditor
 import scala.tools.eclipse.util.CurrentThread

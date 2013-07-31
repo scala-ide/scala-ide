@@ -1,10 +1,10 @@
-package scala.tools.eclipse.properties.syntaxcolouring
+package scala.tools.eclipse.properties.syntaxcoloring
 
-import scala.tools.eclipse.properties.syntaxcolouring.ScalaSyntaxClasses.Category
+import scala.tools.eclipse.properties.syntaxcoloring.ScalaSyntaxClasses.Category
 
 import org.eclipse.jface.viewers._
 
-object SyntaxColouringTreeContentAndLabelProvider extends LabelProvider with ITreeContentProvider {
+object SyntaxColoringTreeContentAndLabelProvider extends LabelProvider with ITreeContentProvider {
 
   def getElements(inputElement: AnyRef) = ScalaSyntaxClasses.categories.toArray
 
