@@ -114,14 +114,6 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
   /** All Scala error markers. */
   val scalaErrorMarkers = Set(classpathProblemMarkerId, problemMarkerId, settingProblemMarkerId)
 
-  // Retained for backwards compatibility
-  val oldPluginId = "ch.epfl.lamp.sdt.core"
-  val oldLibraryPluginId = "scala.library"
-  val oldNatureId = oldPluginId + ".scalanature"
-  val oldBuilderId = oldPluginId + ".scalabuilder"
-  val oldLaunchId = "ch.epfl.lamp.sdt.launching"
-  val oldScalaLibId = oldLaunchId + "." + scalaLib
-
   val scalaFileExtn = ".scala"
   val javaFileExtn = ".java"
   val jarFileExtn = ".jar"
@@ -269,7 +261,7 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
 
   def isScalaProject(project: IProject): Boolean =
     try {
-      project != null && project.isOpen && (project.hasNature(natureId) || project.hasNature(oldNatureId))
+      project != null && project.isOpen && project.hasNature(natureId)
     } catch {
       case _: CoreException => false
     }

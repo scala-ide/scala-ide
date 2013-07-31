@@ -194,8 +194,7 @@
             <Embed-Dependency>*;scope=compile|runtime;inline=false</Embed-Dependency>
             <_exportcontents>scala.reflect.internal.*;version=${osgi.version.number},
             scala.reflect.*;version=${osgi.version.number},
-            scala.tools.*;version=${osgi.version.number},
-            ch.epfl.lamp.*;version=${osgi.version.number}</_exportcontents>
+            scala.tools.*;version=${osgi.version.number}</_exportcontents>
             <Embed-Directory>lib</Embed-Directory>
             <Embed-StripVersion>true</Embed-StripVersion>
             <Include-Resource>lib=${project.build.directory}/lib</Include-Resource>
