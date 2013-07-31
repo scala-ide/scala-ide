@@ -13,10 +13,17 @@ import org.eclipse.jface.text.rules.Token
  * sequence tokens.
  */
 class StringTokenScanner(
+  val preferenceStore: IPreferenceStore,
   escapeSequenceClass: ScalaSyntaxClass,
-  stringClass: ScalaSyntaxClass,
-  val preferenceStore: IPreferenceStore)
+  stringClass: ScalaSyntaxClass)
     extends AbstractScalaScanner with StringTokenizer {
+
+  @deprecated("use primary constructor instead", "4.0")
+  def this(
+      escapeSequenceClass: ScalaSyntaxClass,
+      stringClass: ScalaSyntaxClass,
+      preferenceStore: IPreferenceStore) =
+    this(preferenceStore, escapeSequenceClass, stringClass)
 
   private var offset: Int = _
   private var length: Int = _

@@ -16,13 +16,23 @@ import org.eclipse.jface.text.rules.WordRule
  * not search for Scaladoc content inside of arbitrary passed input.
  */
 class ScaladocTokenScanner(
+    preferenceStore: IPreferenceStore,
+    javaPreferenceStore: IPreferenceStore,
     scaladocClass: ScalaSyntaxClass,
     annotationClass: ScalaSyntaxClass,
     macroClass: ScalaSyntaxClass,
-    taskTagClass: ScalaSyntaxClass,
-    preferenceStore: IPreferenceStore,
-    javaPreferenceStore: IPreferenceStore
-) extends ScalaCommentScanner(scaladocClass, taskTagClass, preferenceStore, javaPreferenceStore) {
+    taskTagClass: ScalaSyntaxClass)
+      extends ScalaCommentScanner(preferenceStore, javaPreferenceStore, scaladocClass, taskTagClass) {
+
+  @deprecated("use primary constructor instead", "4.0")
+  def this(
+      scaladocClass: ScalaSyntaxClass,
+      annotationClass: ScalaSyntaxClass,
+      macroClass: ScalaSyntaxClass,
+      taskTagClass: ScalaSyntaxClass,
+      preferenceStore: IPreferenceStore,
+      javaPreferenceStore: IPreferenceStore) =
+    this(preferenceStore, javaPreferenceStore, scaladocClass, annotationClass, macroClass, taskTagClass)
 
   private val annotationRule = new ScaladocWordRule(new AnnotationDetector, getToken(scaladocClass), getToken(annotationClass))
   private val macroRule = new ScaladocWordRule(new MacroDetector, getToken(scaladocClass), getToken(macroClass))

@@ -75,12 +75,12 @@ class ScaladocTokenScannerTest {
     when(taskTagClass.getTextAttribute(scalaPreferenceStore)).thenReturn(taskTagAtt)
 
     val scanner = new ScaladocTokenScanner(
+        scalaPreferenceStore,
+        javaPreferenceStore,
         scaladocClass,
         annotationClass,
         macroClass,
-        taskTagClass,
-        scalaPreferenceStore,
-        javaPreferenceStore)
+        taskTagClass)
 
     val doc = {
       val rawInput = str.filterNot(_ == '^')
