@@ -23,8 +23,7 @@ object Nature {
 
   def removeScalaLib(jp: IJavaProject) {
     val scalaLibPath = Path.fromPortableString(plugin.scalaLibId)
-    val oldScalaLibPath = Path.fromPortableString(plugin.oldScalaLibId)
-    val buf = jp.getRawClasspath filter { entry => { val path = entry.getPath ; path != scalaLibPath && path != oldScalaLibPath  } }
+    val buf = jp.getRawClasspath filter (_.getPath!= scalaLibPath)
     jp.setRawClasspath(buf, null)
   }
 
@@ -62,7 +61,7 @@ class Nature extends IProjectNature {
     if (project == null || !project.isOpen)
       return
 
-    updateBuilders(project, List(JavaCore.BUILDER_ID, plugin.oldBuilderId), plugin.builderId)
+    updateBuilders(project, List(JavaCore.BUILDER_ID), plugin.builderId)
 
     Utils tryExecute {
       Nature.addScalaLibAndSave(getProject)
@@ -73,7 +72,7 @@ class Nature extends IProjectNature {
     if (project == null || !project.isOpen)
       return
 
-    updateBuilders(project, List(plugin.builderId, plugin.oldBuilderId), JavaCore.BUILDER_ID)
+    updateBuilders(project, List(plugin.builderId), JavaCore.BUILDER_ID)
 
     Utils tryExecute {
       val jp = JavaCore.create(getProject)
