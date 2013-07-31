@@ -5,34 +5,36 @@
 package scala.tools.eclipse
 package refactoring
 
-import org.eclipse.text.edits.RangeMarker
-import util.FileUtils
-import org.eclipse.jface.text.IRegion
-import scala.tools.refactoring.common.Change
-import scala.tools.nsc.io.AbstractFile
-import org.eclipse.jface.text.IDocument
-import org.eclipse.text.edits.ReplaceEdit
-import org.eclipse.text.edits.MultiTextEdit
-import org.eclipse.ltk.core.refactoring.TextFileChange
-import org.eclipse.ui.PlatformUI
-import org.eclipse.ui.IWorkbenchWindow
-import org.eclipse.ui.IWorkbenchPage
-import org.eclipse.ui.IEditorPart
-import org.eclipse.ui.texteditor.ITextEditor
-import org.eclipse.ui.IFileEditorInput
-import org.eclipse.core.resources.IFile
-import scala.tools.eclipse.ScalaSourceFileEditor
-import org.eclipse.jface.text.ITextSelection
+import scala.tools.eclipse.ISourceViewerEditor
+import scala.tools.eclipse.InteractiveCompilationUnit
 import scala.tools.eclipse.javaelements.ScalaSourceFile
-import org.eclipse.jface.text.link.LinkedModeModel
-import org.eclipse.jface.text.link.LinkedPositionGroup
-import org.eclipse.jface.text.link.LinkedPosition
-import org.eclipse.jface.text.link.LinkedModeUI
-import scala.tools.refactoring.common.TextChange
 import scala.tools.eclipse.util.EditorUtils
+import scala.tools.nsc.io.AbstractFile
+import scala.tools.refactoring.common.TextChange
+
+import org.eclipse.core.resources.IFile
 import org.eclipse.jdt.internal.ui.javaeditor.EditorUtility
-import org.eclipse.ui.part.FileEditorInput
 import org.eclipse.jdt.ui.JavaUI
+import org.eclipse.jface.text.IDocument
+import org.eclipse.jface.text.IRegion
+import org.eclipse.jface.text.ITextSelection
+import org.eclipse.jface.text.link.LinkedModeModel
+import org.eclipse.jface.text.link.LinkedModeUI
+import org.eclipse.jface.text.link.LinkedPosition
+import org.eclipse.jface.text.link.LinkedPositionGroup
+import org.eclipse.ltk.core.refactoring.TextFileChange
+import org.eclipse.text.edits.MultiTextEdit
+import org.eclipse.text.edits.RangeMarker
+import org.eclipse.text.edits.ReplaceEdit
+import org.eclipse.ui.IEditorPart
+import org.eclipse.ui.IFileEditorInput
+import org.eclipse.ui.IWorkbenchPage
+import org.eclipse.ui.IWorkbenchWindow
+import org.eclipse.ui.PlatformUI
+import org.eclipse.ui.part.FileEditorInput
+import org.eclipse.ui.texteditor.ITextEditor
+
+import util.FileUtils
 
 object EditorHelpers {
 

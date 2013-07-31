@@ -5,20 +5,13 @@
 package scala.tools.eclipse
 package refactoring
 
-import org.eclipse.ltk.ui.refactoring.RefactoringWizard
-import org.eclipse.core.resources.IFile
-import org.eclipse.core.runtime.IProgressMonitor
-import org.eclipse.ltk.core.refactoring.Refactoring
-import org.eclipse.ltk.ui.refactoring.RefactoringWizardOpenOperation
-import org.eclipse.jface.viewers.ISelection
-import org.eclipse.jface.action.IAction
-import org.eclipse.ui.IEditorActionDelegate
-import org.eclipse.ui.IWorkbenchWindowActionDelegate
-import org.eclipse.ui.PlatformUI
-import org.eclipse.ltk.core.refactoring.RefactoringStatus
 import scala.tools.eclipse.javaelements.ScalaSourceFile
-import org.eclipse.jface.text.link._
+
+import org.eclipse.jface.action.IAction
+import org.eclipse.ltk.ui.refactoring.RefactoringWizard
+import org.eclipse.ltk.ui.refactoring.RefactoringWizardOpenOperation
 import org.eclipse.swt.widgets.Shell
+import org.eclipse.ui.PlatformUI
 
 /**
  * This is the abstract driver of a refactoring execution: it is the

@@ -1,22 +1,23 @@
 package scala.tools.eclipse
 package quickfix
 
-import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal
+import scala.tools.eclipse.completion.RelevanceValues
+import scala.tools.eclipse.logging.HasLogger
+import scala.tools.eclipse.refactoring.EditorHelpers
+import scala.tools.refactoring.implementations.AddImportStatement
+
 import org.eclipse.jdt.ui.ISharedImages
 import org.eclipse.jdt.ui.JavaUI
-import org.eclipse.jface.text.contentassist.IContextInformation
-import org.eclipse.jface.text.TextUtilities
+import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal
 import org.eclipse.jface.text.IDocument
-import org.eclipse.swt.graphics.Point
+import org.eclipse.jface.text.TextUtilities
+import org.eclipse.jface.text.contentassist.IContextInformation
 import org.eclipse.swt.graphics.Image
-import scala.tools.eclipse.refactoring.EditorHelpers
-import scala.tools.eclipse.logging.HasLogger
-import scala.tools.refactoring.implementations.AddImportStatement
-import scala.tools.eclipse.completion.RelevanceValues
+import org.eclipse.swt.graphics.Point
 
 case class ImportCompletionProposal(val importName: String) extends IJavaCompletionProposal with HasLogger {
 
-  def getRelevance = RelevanceValues.ImportCompletionProposal
+  def getRelevance() = RelevanceValues.ImportCompletionProposal
 
   /**
    * Inserts the proposed completion into the given document.
@@ -148,7 +149,7 @@ case class ImportCompletionProposal(val importName: String) extends IJavaComplet
    *
    * @see ICompletionProposalExtension6#getStyledDisplayString()
    */
-  def getDisplayString(): String = "Import " + importName
+  def getDisplayString(): String = s"Import $importName"
 
 
   /**
@@ -167,5 +168,5 @@ case class ImportCompletionProposal(val importName: String) extends IJavaComplet
    *
    * @return the context information for this proposal or <code>null</code>
    */
-  def getContextInformation: IContextInformation = null
+  def getContextInformation(): IContextInformation = null
 }
