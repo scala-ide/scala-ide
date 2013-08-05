@@ -627,7 +627,6 @@
           objectClass="org.eclipse.core.resources.IProject">
         <action
              class="scala.tools.eclipse.actions.RestartPresentationCompilerAction"
-             definitionId="org.scala-ide.sdt.core.action.restartScalaPresentationCompiler"
              enablesFor="+"
              id="org.scala-ide.sdt.core.action.restartScalaPresentationCompiler"
              label="Restart Presentation Compiler"
