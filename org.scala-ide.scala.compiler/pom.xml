@@ -17,100 +17,12 @@
       <artifactId>scala-compiler</artifactId>
       <optional>true</optional>
     </dependency>
+    <dependency>
+      <groupId>org.scala-lang</groupId>
+      <artifactId>scala-reflect</artifactId>
+      <optional>true</optional>
+    </dependency>
   </dependencies>
-
-  <profiles>
-    <profile>
-      <!--- the profile using the default values. Scala 2.9.x -->
-      <id>scala-2.9.x</id>
-    </profile>
-
-    <profile>
-      <!-- Scala 2.10.x -->
-      <!-- Scala reflect was extracted in a different jar in 2.10 -->
-      <id>scala-2.10.x</id>
-      <dependencies>
-        <dependency>
-          <groupId>org.scala-lang</groupId>
-          <artifactId>scala-reflect</artifactId>
-        </dependency>
-      </dependencies>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-dependency-plugin</artifactId>
-            <executions>
-              <execution>
-                <!-- add the source jar, to be able to attach the source to the Scala container. And the continuation plug-in -->
-                <id>copy.reflect</id>
-                <phase>compile</phase>
-                <goals>
-                  <goal>copy</goal>
-                </goals>
-                <configuration>
-                  <artifactItems>
-                    <artifactItem>
-                      <groupId>org.scala-lang</groupId>
-                      <artifactId>scala-reflect</artifactId>
-                      <classifier>sources</classifier>
-                      <type>jar</type>
-                      <destFileName>scala-reflect-src.jar</destFileName>
-                    </artifactItem>
-                  </artifactItems>
-                  <stripVersion>true</stripVersion>
-                  <outputDirectory>${project.build.directory}/lib</outputDirectory>
-                </configuration>
-              </execution>
-            </executions>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-    
-    <profile>
-      <!-- Scala 2.11.x -->
-      <!-- Scala reflect was extracted in a different jar in 2.11 -->
-      <id>scala-2.11.x</id>
-      <dependencies>
-        <dependency>
-          <groupId>org.scala-lang</groupId>
-          <artifactId>scala-reflect</artifactId>
-        </dependency>
-      </dependencies>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-dependency-plugin</artifactId>
-            <executions>
-              <execution>
-                <!-- add the source jar, to be able to attach the source to the Scala container. And the continuation plug-in -->
-                <id>copy.reflect</id>
-                <phase>compile</phase>
-                <goals>
-                  <goal>copy</goal>
-                </goals>
-                <configuration>
-                  <artifactItems>
-                    <artifactItem>
-                      <groupId>org.scala-lang</groupId>
-                      <artifactId>scala-reflect</artifactId>
-                      <classifier>sources</classifier>
-                      <type>jar</type>
-                      <destFileName>scala-reflect-src.jar</destFileName>
-                    </artifactItem>
-                  </artifactItems>
-                  <stripVersion>true</stripVersion>
-                  <outputDirectory>${project.build.directory}/lib</outputDirectory>
-                </configuration>
-              </execution>
-            </executions>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-  </profiles>
 
   <build>
     <plugins>
@@ -156,6 +68,13 @@
                   <groupId>org.scala-lang.plugins</groupId>
                   <artifactId>continuations</artifactId>
                   <type>jar</type>
+                </artifactItem>
+                <artifactItem>
+                  <groupId>org.scala-lang</groupId>
+                  <artifactId>scala-reflect</artifactId>
+                  <classifier>sources</classifier>
+                  <type>jar</type>
+                  <destFileName>scala-reflect-src.jar</destFileName>
                 </artifactItem>
               </artifactItems>
               <stripVersion>true</stripVersion>

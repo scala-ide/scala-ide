@@ -30,7 +30,6 @@
     <repo.scala-ide.root>http://download.scala-ide.org</repo.scala-ide.root>
 
     <!-- fixed versions -->
-    <ivy.version>2.2.0</ivy.version>
     <miglayout.version>3.7.4</miglayout.version>
     <log4j.version>1.2.17</log4j.version>
     <mockito.version>1.9.5</mockito.version>
@@ -62,7 +61,6 @@
 
      <!-- default values, can be overwritten by profiles -->
      <scala.version>2.10.0</scala.version>
-     <scala.era.major.version>2.10</scala.era.major.version>
      <scala.library.version>${scala.version}</scala.library.version>
      <version.suffix>2_10</version.suffix>
      <version.tag>local</version.tag>
@@ -82,7 +80,6 @@
       <id>scala-2.10.x</id>
       <properties>
         <scala.version>2.10.3-SNAPSHOT</scala.version>
-        <scala.era.major.version>2.10</scala.era.major.version>
         <version.suffix>2_10</version.suffix>
         <sbt.version>0.13.0</sbt.version>
 
@@ -96,7 +93,6 @@
       <id>scala-2.11.x</id>
       <properties>
         <scala.version>2.11.0-SNAPSHOT</scala.version>
-        <scala.era.major.version>2.11</scala.era.major.version>
         <version.suffix>2_11</version.suffix>
         <!-- version here should be 0.13.1, but Zinc artfacts for 0.13.1 haven't been published yet. -->
         <sbt.version>0.13.0</sbt.version>
