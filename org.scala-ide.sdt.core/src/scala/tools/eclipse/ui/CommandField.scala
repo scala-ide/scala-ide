@@ -4,6 +4,7 @@ import org.eclipse.swt.custom.StyledText
 import org.eclipse.swt.widgets.Composite
 import org.eclipse.swt.SWT
 import org.eclipse.swt.graphics.Color
+import org.eclipse.swt.custom.VerifyKeyListener
 
 object CommandField {
   /** Common interface for command evaluator.*/
@@ -17,26 +18,28 @@ object CommandField {
 }
 
 /**
- * An input field that evaluate its content when `ENTER` is hit. The entered
+ * An input field that evaluate its content when `CTRL+ENTER` is hit. The entered
  *  input is passed as it is to the evaluator. By default the evaluator does
  *  nothing (@see class NullEvaluator), but different evaluation strategies can
  *  be plugged via the `setEvaluator` method.
  *
  *  It also provides history of the entered inputs. History is accessible
- *  via ARROW-UP/DOWN keyboards' keys.
+ *  via CTRL + ARROW-UP/DOWN keyboards' keys.
  */
 class CommandField(parent: Composite, style: Int) extends StyledText(parent, style) {
 
   import CommandField.Evaluator
 
-  /**
-   * Listener for keyboards event.
-   * Listened Key events are:
-   *  ENTER      <-> SWT.CR
-   *  ARROW_UP   <-> SWT.ARROW_UP
-   *  ARROW_DOWN <-> SWT.ARROW_DOWN
-   */
-  private class InputFieldListener extends org.eclipse.swt.events.KeyAdapter {
+  protected case class MaskedKeyCode(code: Int, mask: Int) {
+    def apply(e: org.eclipse.swt.events.KeyEvent): Boolean =
+      e.keyCode == code && (e.stateMask & mask) == mask
+  }
+
+  protected val evaluateKey = MaskedKeyCode(SWT.CR, SWT.CTRL)
+  protected val historyUpKey = MaskedKeyCode(SWT.ARROW_UP, SWT.CTRL)
+  protected val historyDownKey = MaskedKeyCode(SWT.ARROW_DOWN, SWT.CTRL)
+
+  private class InputFieldListener extends org.eclipse.swt.events.KeyAdapter with VerifyKeyListener {
     import collection.mutable.ArrayBuffer
     private val history = new ArrayBuffer[String]
     private var pos: Int = _
@@ -54,9 +57,14 @@ class CommandField(parent: Composite, style: Int) extends StyledText(parent, sty
     }
 
     override def keyReleased(e: org.eclipse.swt.events.KeyEvent) {
-      if (e.keyCode == SWT.CR) evaluate(getText)
-      else if (e.keyCode == SWT.ARROW_UP) showPreviousExprFromHistory()
-      else if (e.keyCode == SWT.ARROW_DOWN) showNextExprFromHistory()
+      if (evaluateKey(e)) evaluate(getText)
+      else if (historyUpKey(e)) showPreviousExprFromHistory()
+      else if (historyDownKey(e)) showNextExprFromHistory()
+    }
+
+    override def verifyKey(e: org.eclipse.swt.events.VerifyEvent) {
+      if (evaluateKey(e))
+        e.doit = false
     }
 
     private def evaluate(command: String) {
@@ -149,6 +157,7 @@ class CommandField(parent: Composite, style: Int) extends StyledText(parent, sty
   private var evaluator: Evaluator = new CommandField.NullEvaluator()
 
   addKeyListener(inputFieldListener)
+  addVerifyKeyListener(inputFieldListener)
 
   /** Allows to plug a different evaluation strategy for the typed command. */
   def setEvaluator(_evaluator: Evaluator) { evaluator = _evaluator }
