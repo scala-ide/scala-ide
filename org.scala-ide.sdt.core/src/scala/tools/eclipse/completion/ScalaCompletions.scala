@@ -27,6 +27,9 @@ class ScalaCompletions extends HasLogger {
                              (sourceFile: SourceFile, compiler: ScalaPresentationCompiler): List[CompletionProposal] = {
     val wordStart = region.getOffset
     val wordAtPosition = (if (position <= wordStart) "" else scu.getContents.slice(wordStart, position).mkString.trim).toArray
+
+    compiler.flushScheduledReloads()
+
     val typed = new compiler.Response[compiler.Tree]
     val pos = compiler.rangePos(sourceFile, position, position, position)
     compiler.askTypeAt(pos, typed)
