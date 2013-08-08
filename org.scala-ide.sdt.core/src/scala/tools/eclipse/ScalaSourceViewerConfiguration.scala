@@ -20,6 +20,8 @@ import scala.tools.eclipse.lexical.XmlCDATAScanner
 import scala.tools.eclipse.lexical.XmlCommentScanner
 import scala.tools.eclipse.lexical.XmlPIScanner
 import scala.tools.eclipse.lexical.XmlTagScanner
+import scala.tools.eclipse.properties.syntaxcolouring.{ScalaSyntaxClasses => SSC}
+import scala.tools.eclipse.reconciliation.ScalaReconcilingStrategy
 import scala.tools.eclipse.ui.BracketAutoEditStrategy
 import scala.tools.eclipse.ui.CommentAutoIndentStrategy
 import scala.tools.eclipse.ui.JdtPreferenceProvider
@@ -35,9 +37,6 @@ import org.eclipse.jdt.core.IJavaProject
 import org.eclipse.jdt.internal.ui.JavaPlugin
 import org.eclipse.jdt.internal.ui.javaeditor.IClassFileEditorInput
 import org.eclipse.jdt.internal.ui.javaeditor.ICompilationUnitDocumentProvider
-import org.eclipse.jdt.internal.ui.javaeditor.JavaElementHyperlinkDetector
-import org.eclipse.jdt.internal.ui.text.ContentAssistPreference
-import org.eclipse.jdt.internal.ui.text.java.JavaAutoIndentStrategy
 import org.eclipse.jdt.internal.ui.text.java.SmartSemicolonAutoEditStrategy
 import org.eclipse.jdt.ui.text.IJavaPartitions
 import org.eclipse.jdt.ui.text.JavaSourceViewerConfiguration
@@ -55,14 +54,8 @@ import org.eclipse.jface.text.reconciler.MonoReconciler
 import org.eclipse.jface.text.rules.DefaultDamagerRepairer
 import org.eclipse.jface.text.source.ISourceViewer
 import org.eclipse.jface.util.PropertyChangeEvent
-import org.eclipse.ui.texteditor.ITextEditor
 
 import scalariform.ScalaVersions
-import org.eclipse.jface.text.DefaultTextHover
-import scala.tools.eclipse.javaelements.ScalaCompilationUnit
-import scala.tools.eclipse.ui.CommentAutoIndentStrategy
-import org.eclipse.jface.text.hyperlink.URLHyperlinkDetector
-import scala.tools.eclipse.reconciler.ScalaReconcilingStrategy
 
 class ScalaSourceViewerConfiguration(
   javaPreferenceStore: IPreferenceStore,

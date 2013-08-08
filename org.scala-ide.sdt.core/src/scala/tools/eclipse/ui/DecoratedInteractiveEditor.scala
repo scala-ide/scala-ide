@@ -6,7 +6,6 @@ import org.eclipse.jdt.internal.ui.javaeditor.CompilationUnitDocumentProvider.Pr
 import org.eclipse.jdt.core.compiler.IProblem
 import scala.collection.breakOut
 import scala.collection.JavaConverters.mapAsJavaMapConverter
-import scala.tools.eclipse.util.SWTUtils
 import org.eclipse.jface.text.Position
 import org.eclipse.jface.text.ITextViewerExtension2
 import scala.tools.eclipse.ISourceViewerEditor
@@ -45,9 +44,9 @@ trait DecoratedInteractiveEditor extends ISourceViewerEditor {
                 val taintedBounds : (Int, Int) = ((Int.MaxValue, 0) /: newPositions) {(acc, p1) => (Math.min(acc._1, p1.offset), Math.max(acc._2, end(p1)))}
         val taintedLength = (taintedBounds._2 - taintedBounds._1 +1)
 
-        SWTUtils.asyncExec { presViewer.asInstanceOf[ITextViewerExtension2].invalidateTextPresentation(taintedBounds._1, taintedLength) }
+        DisplayThread.asyncExec { presViewer.asInstanceOf[ITextViewerExtension2].invalidateTextPresentation(taintedBounds._1, taintedLength) }
     } else {
-        SWTUtils.asyncExec { getViewer.invalidateTextPresentation() }
+        DisplayThread.asyncExec { getViewer.invalidateTextPresentation() }
     }
   }
 
