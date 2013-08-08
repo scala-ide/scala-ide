@@ -21,6 +21,14 @@ class PresentationCompilerDocTest {
   }
 
   @Test
+  def packagedComment() {
+    val expect: Comment => Boolean = { cmt =>
+      existsText(cmt.body, "This is a basic comment")
+    }
+    doTest(open("packaged.scala"), expect)
+  }
+
+  @Test
   def variableExpansion() {
     val expect: Comment => Boolean = { cmt =>
       existsText(cmt.body, "correctly got derived comment")
@@ -36,7 +44,20 @@ class PresentationCompilerDocTest {
     doTest(open("inherited.scala"), expect)
   }
 
-  private def doTest(unit: ScalaCompilationUnit, expectation: Comment => Boolean) {
+  @Test
+  def inheritedTwoSourcesDoc() {
+    val expect: Comment => Boolean = { cmt =>
+      existsText(cmt.todo, "implement me")
+    }
+    doTest(open("inherit-2.scala"), expect, List(scalaCompilationUnit("inherit-1.scala")))
+  }
+
+/**
+ * @parameter preload compilation units expected to be loaded by the PC before the test
+ * @parameter unit the compilation unit containing the position mark
+ */
+  private def doTest(unit: ScalaCompilationUnit, expectation: Comment => Boolean, preload: List[ScalaCompilationUnit] = Nil) {
+    for (u <- preload) { reload(u) }
     project.withSourceFile(unit) { (src, compiler) =>
       val pos = docPosition(src, compiler)
       val response = new Response[compiler.Tree]

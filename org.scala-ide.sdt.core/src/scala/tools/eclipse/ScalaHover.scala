@@ -23,11 +23,12 @@ class ScalaHover(val icu: InteractiveCompilationUnit) extends ITextHover with  I
 
   private val NoHoverInfo = "" // could return null, but prefer to return empty (see API of ITextHover).
 
+  @deprecated("Use getHoverInfo2","4.0.0")
   override def getHoverInfo(viewer: ITextViewer, region: IRegion) = null
 
   override def getHoverInfo2(viewer: ITextViewer, region: IRegion): Object =
     icu.withSourceFile({ (src, compiler) =>
-      import compiler._
+      import compiler.{stringToTermName => _, stringToTypeName => _, _}
 
       def hoverInfo(t: Tree): Option[Object] = {
         val askedOpt = askOption { () =>
@@ -41,7 +42,8 @@ class ScalaHover(val icu: InteractiveCompilationUnit) extends ITextHover with  I
             def pre(t: Tree): Type = t match {
               case Apply(fun, _) => pre(fun)
               case Select(qual, _) => qual.tpe
-              case _ => ThisType(tsym.enclClass)
+              case _ if tsym.enclClass ne NoSymbol => ThisType(tsym.enclClass)
+              case _ => NoType
             }
             val pt = pre(t)
             val site = pt.typeSymbol
@@ -62,20 +64,20 @@ class ScalaHover(val icu: InteractiveCompilationUnit) extends ITextHover with  I
       }
 
       val wordPos = region.toRangePos(src)
-      val pos = unitOfFile(src.file).body find {
-        case Apply(fun, _) if fun.pos.endOrPoint == wordPos.end => true
-        case _ => false
-      } map (_.pos) getOrElse wordPos
+       val pos = unitOfFile(src.file).body find {
+         case Apply(fun, _) if fun.pos.isRange && fun.pos.end == wordPos.end => true
+         case _ => false
+       } map (_.pos) getOrElse wordPos
       val resp = new Response[Tree]
       askTypeAt(pos, resp)
       resp.get.left.toOption flatMap hoverInfo getOrElse NoHoverInfo
     }) getOrElse (NoHoverInfo)
 
-  def getHoverRegion(viewer: ITextViewer, offset: Int) = {
+  override def getHoverRegion(viewer: ITextViewer, offset: Int) = {
     ScalaWordFinder.findWord(viewer.getDocument, offset)
   }
 
-  def getHoverControlCreator() = new IInformationControlCreator {
+  override def getHoverControlCreator() = new IInformationControlCreator {
     def createInformationControl(shell: Shell) = new DefaultInformationControl(shell, false)
   }
 }

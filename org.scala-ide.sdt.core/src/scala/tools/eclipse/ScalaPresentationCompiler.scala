@@ -74,8 +74,8 @@ class ScalaPresentationCompiler(val project: ScalaProject, settings: Settings) e
     val managedFiles = unitOfFile.keySet.toList
     for {
       f <- managedFiles.collect { case ef: EclipseFile => ef }
-      opticu <- SourceFileProviderRegistry.getProvider(f.workspacePath) map (_.createFrom(f.workspacePath))
-      icu <- opticu
+      icu <- SourceFileProviderRegistry.getProvider(f.workspacePath).createFrom(f.workspacePath)
+      if icu.exists
     } yield icu
   }
 

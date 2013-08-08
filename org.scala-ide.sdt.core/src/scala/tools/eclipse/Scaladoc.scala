@@ -40,7 +40,9 @@ trait Scaladoc extends MemberLookupBase with CommentFactoryBase { this: ScalaPre
   override def warnNoLink: Boolean = false
   override def findExternalLink(sym: Symbol, name: String): Option[LinkToExternal] = None
 
-  @deprecated("This maintains compatibility with Scala 2.10.x","2.11.0")
+  /**
+   * "This maintains compatibility with Scala 2.10.x"
+   */
   private implicit def toOption(s: => Symbol) : Option[Symbol] = Some(s)
 
   def parsedDocComment(sym: Symbol, site: =>Symbol): Option[Comment] = {

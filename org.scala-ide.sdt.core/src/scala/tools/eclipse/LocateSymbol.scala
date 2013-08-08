@@ -39,23 +39,29 @@ trait LocateSymbol { self : ScalaPresentationCompiler =>
 
     def findClassFile: Option[InteractiveCompilationUnit] = {
       logger.debug("Looking for a classfile for " + sym.fullName)
-      val packName = enclosingClassForScalaDoc(sym).fullName
       val javaProject = project.javaProject.asInstanceOf[JavaProject]
-      val name = ask { () =>
-        val top = sym.enclosingTopLevelClass
-        if (sym.owner.isPackageObjectClass) "package$.class" else top.name + (if (top.isModuleClass) "$" else "") + ".class"
-      }
-      val pfs = new SearchableEnvironment(javaProject, null: WorkingCopyOwner).nameLookup.findPackageFragments(packName, false)
-      if (pfs eq null) None else pfs.toStream flatMap { pf =>
-        logger.debug("Trying out to get " + name)
-        val cf = pf.getClassFile(name)
-        cf match {
-          case classFile : ScalaClassFile =>
-            logger.debug("Found Scala class file: " + classFile.getElementName)
-            Some(classFile)
-          case _ => None
+      val packName = askOption { () => enclosingClassForScalaDoc(sym).fullName }
+      packName.flatMap{ pn =>
+        val name = askOption { () =>
+          val top = sym.enclosingTopLevelClass
+          if (sym.owner.isPackageObjectClass) "package$.class" else top.name + (if (top.isModuleClass) "$" else "") + ".class"
         }
-      } headOption
+
+        name.flatMap { nm =>
+          val pfs = new SearchableEnvironment(javaProject, null: WorkingCopyOwner).nameLookup.findPackageFragments(pn, false)
+
+          if (pfs eq null) None else pfs.toStream flatMap { pf =>
+            logger.debug("Trying out to get " + nm)
+            val cf = pf.getClassFile(nm)
+            cf match {
+              case classFile : ScalaClassFile =>
+                logger.debug("Found Scala class file: " + classFile.getElementName)
+                Some(classFile)
+              case _ => None
+            }
+          } headOption
+        }
+      }
     }
 
     def findPath: Option[IPath] = {
@@ -63,9 +69,13 @@ trait LocateSymbol { self : ScalaPresentationCompiler =>
       val javaProject = project.javaProject.asInstanceOf[JavaProject]
       val nameLookup = new SearchableEnvironment(javaProject, null: WorkingCopyOwner).nameLookup
 
-      val name = if (sym.owner.isPackageObject) sym.owner.owner.fullName + ".package" else sym.toplevelClass.fullName
+      val name = askOption { () =>
+        if (sym.owner.isPackageObject) sym.owner.owner.fullName + ".package" else sym.enclosingTopLevelClass.fullName
+      }
       logger.debug("Looking for compilation unit " + name)
-      Option(nameLookup.findCompilationUnit(name)) map (_.getResource().getFullPath())
+      name.flatMap{ n =>
+        Option(nameLookup.findCompilationUnit(n)) map (_.getResource().getFullPath())
+      }
     }
 
     def findSourceFile(): Option[IPath] =
@@ -80,7 +90,7 @@ trait LocateSymbol { self : ScalaPresentationCompiler =>
         findPath
 
     findSourceFile.fold(findClassFile) { f =>
-      SourceFileProviderRegistry.getProvider(f) flatMap (_.createFrom(f))
+      SourceFileProviderRegistry.getProvider(f).createFrom(f)
     }
   }
 

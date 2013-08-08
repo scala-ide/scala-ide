@@ -53,7 +53,7 @@ case class CompletionProposal(
   paramTypes: List[List[String]],          // parameter types matching parameter names (excluding implicit parameter sections)
   fullyQualifiedName: String, // for Class, Trait, Type, Objects: the fully qualified name
   needImport: Boolean,        // for Class, Trait, Type, Objects: import statement has to be added
-  documentation: () => Option[Object]  // on-demand generate documentation HTML.
+  documentation: () => Option[Object]  // on-demand generated documentation HTML.
 ) {
 
   /** Return the tooltip displayed once a completion has been activated. */

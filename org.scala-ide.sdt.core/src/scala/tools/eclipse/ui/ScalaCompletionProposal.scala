@@ -59,8 +59,8 @@ import scala.tools.refactoring.implementations.AddImportStatement
  *  between them.
  */
 class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: ISelectionProvider)
-    extends IJavaCompletionProposal with ICompletionProposalExtension with ICompletionProposalExtension2
-    with ICompletionProposalExtension3 with ICompletionProposalExtension5 with ICompletionProposalExtension6 {
+    extends IJavaCompletionProposal with ICompletionProposalExtension with ICompletionProposalExtension2 with ICompletionProposalExtension3
+    with ICompletionProposalExtension5 with ICompletionProposalExtension6 {
 
   import proposal._
   import ScalaCompletionProposal._
@@ -79,11 +79,11 @@ class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: I
       case Trait         => traitImage
       case Package       => packageImage
       case PackageObject => packageObjectImage
-      case Object =>
+      case Object        =>
         if (isJava) javaClassImage
         else objectImage
-      case Type => typeImage
-      case _    => valImage
+      case Type          => typeImage
+      case _             => valImage
     }
   }
 
@@ -96,11 +96,11 @@ class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: I
   private lazy val explicitParamNames = getParamNames()
 
   /** The string that will be inserted in the document if this proposal is chosen.
-   *  By default, it consists of the method name, followed by all explicit parameter sections,
-   *  and inside each section the parameter names, delimited by commas. If `overwrite`
-   *  is on, it won't add parameter names
+   *  It consists of the method name, followed by all explicit parameter sections,
+   *  and inside each section the parameter names, delimited by commas.
    *
-   *  @note It triggers the potentially expensive `getParameterNames` operation.
+   *  @note This field needs to be lazy because it triggers the potentially expensive
+   *        `getParameterNames` operation.
    */
   def completionString(overwrite: Boolean) =
     if (explicitParamNames.isEmpty || overwrite)
@@ -163,14 +163,13 @@ class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: I
         }
       }
 
-      val importStmt = if (needImport) { // add an import statement if required
-        scalaSourceFile.withSourceFile { (_, compiler) =>
-          val refactoring = new AddImportStatement { val global = compiler }
-          refactoring.addImport(scalaSourceFile.file, fullyQualifiedName)
-        } getOrElse (Nil)
-      } else {
-        Nil
-      }
+      val importStmt =
+        if (needImport) { // add an import statement if required
+          scalaSourceFile.withSourceFile { (_, compiler) =>
+            val refactoring = new AddImportStatement { val global = compiler }
+            refactoring.addImport(scalaSourceFile.file, fullyQualifiedName)
+          } getOrElse (Nil)
+        } else Nil
 
       changes ++= importStmt
 
@@ -399,4 +398,4 @@ object ScalaCompletionProposal {
 
   def getBackgroundColor(): Color = colorFor(PreferenceConstants.CODEASSIST_REPLACEMENT_BACKGROUND)
 
- }
+}
