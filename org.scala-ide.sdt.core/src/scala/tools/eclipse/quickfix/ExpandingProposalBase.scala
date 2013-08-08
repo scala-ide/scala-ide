@@ -17,10 +17,10 @@ class ExpandingProposalBase(msg: String, displayString: String, pos: Position)
    * @param document the document into which to insert the proposed completion
    */
   def apply(document: IDocument): Unit = {
-    import Utils._
     // We extract the replacement string from the marker's message.
-    val r"(?s).*${ImplicitHighlightingPresenter.DisplayStringSeparator}(.*)$replacement" = msg
-    document.replace(pos.getOffset(), pos.getLength(), replacement);
+    val ReplacementExtractor = s"(?s).*${ImplicitHighlightingPresenter.DisplayStringSeparator}(.*)".r
+    val ReplacementExtractor(replacement) = msg
+    document.replace(pos.getOffset(), pos.getLength(), replacement)
   }
 
 }

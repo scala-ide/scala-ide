@@ -51,9 +51,4 @@ object Utils extends HasLogger {
       if (typeOfObj <:< typeOf[B]) Some(obj.asInstanceOf[B]) else None
     }
   }
-
-  implicit class RichRegex(sc: StringContext) {
-    def r = new util.matching.Regex(sc.parts.mkString, sc.parts.tail.map(_ => "x"): _*)
-  }
-
 }
