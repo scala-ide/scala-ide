@@ -19,6 +19,7 @@ class ScalaDeclarationHyperlinkComputer extends HasLogger {
       object DeclarationHyperlinkFactory extends HyperlinkFactory {
         protected val global: compiler.type = compiler
       }
+      compiler.flushScheduledReloads()
 
       if (mappedRegion == null || mappedRegion.getLength == 0)
         None

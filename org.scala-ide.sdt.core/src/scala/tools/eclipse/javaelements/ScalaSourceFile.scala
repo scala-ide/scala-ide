@@ -101,7 +101,7 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
 
   /* getProblems should be reserved for a Java context, @see getProblems */
   override def reconcile(newContents: String): List[IProblem] =
-    currentProblems.toList
+    currentProblems
 
   override def reconcile(
       astLevel : Int,
