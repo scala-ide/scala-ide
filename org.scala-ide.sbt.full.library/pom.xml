@@ -69,10 +69,10 @@
           <outputDirectory>${project.build.directory}/lib</outputDirectory>
           <instructions>
             <Bundle-SymbolicName>org.scala-ide.sbt.full.library</Bundle-SymbolicName>
-            <Bundle-Name>Sbt Library for Eclipse</Bundle-Name>
-            <Bundle-Version>${sbt.osgi.version}</Bundle-Version>
+            <Bundle-Name>Sbt ${sbt.version} Library for Eclipse</Bundle-Name>
+            <Bundle-Version>${sbt.version}-${version.suffix}-${maven.build.timestamp}</Bundle-Version>
             <Embed-Dependency>*;scope=compile|runtime;inline=false</Embed-Dependency>
-            <_exportcontents>sbt.*;version=${sbt.osgi.version},xsbt.*;version=${sbt.osgi.version},xsbti.*;version=${sbt.osgi.version},sbinary.*;version=${sbt.osgi.version}</_exportcontents>
+            <_exportcontents>sbt.*;version=${sbt.version},xsbt.*;version=${sbt.version},xsbti.*;version=${sbt.version},sbinary.*;version=${sbt.version},jline.*;version=${sbt.version},org.apache.ivy.*;version=2.2.0</_exportcontents>
             <Embed-Directory>lib</Embed-Directory>
             <Embed-StripVersion>true</Embed-StripVersion>
           </instructions>

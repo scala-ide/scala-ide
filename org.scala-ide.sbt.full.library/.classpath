@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry exported="true" kind="lib" path="lib/compiler-interface-precompiled.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/incremental-compiler.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/sbt-interface.jar"/>
+	<classpathentry kind="output" path="classes"/>
+</classpath>

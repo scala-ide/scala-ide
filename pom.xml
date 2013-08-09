@@ -84,7 +84,7 @@
         <scala.version>2.10.3-SNAPSHOT</scala.version>
         <scala.era.major.version>2.10</scala.era.major.version>
         <version.suffix>2_10</version.suffix>
-        <sbt.version>0.13.0-RC5-SNAPSHOT</sbt.version>
+        <sbt.version>0.13.0</sbt.version>
 
         <repo.scala-refactoring>${repo.scala-ide.root}/scala-refactoring-210x</repo.scala-refactoring>
         <repo.scalariform>${repo.scala-ide.root}/scalariform-210x</repo.scalariform>
