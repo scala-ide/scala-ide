@@ -47,28 +47,28 @@ trait Scaladoc extends MemberLookupBase with CommentFactoryBase { this: ScalaPre
 
   def parsedDocComment(sym: Symbol, site: =>Symbol): Option[Comment] = {
     val res =
+
       for (u <- findCompilationUnit(sym)) yield withSourceFile(u) { (source, _) =>
-        def withFragments(syms: List[Symbol], fragments: List[(Symbol, SourceFile)]): Option[(String, String, Position)] =
-          syms match {
-            case Nil =>
-              val response = new Response[(String, String, Position)]
-              askDocComment(sym, source, site, fragments, response)
-              response.get.left.toOption
-            case s :: rest =>
-              findCompilationUnit(s) match {
-                case None =>
-                  withFragments(rest, fragments)
-                case Some(u) =>
-                  withSourceFile(u) { (source, _) =>
-                    withFragments(rest, (s,source)::fragments)
-                  }
-              }
+
+        def listFragments(syms:List[Symbol]): List[(Symbol, SourceFile)] = syms flatMap ((sym) =>
+          findCompilationUnit(sym) match {
+            case None => None
+            case Some(u) => withSourceFile(u){ (source, _) =>
+                Some(sym, source)
+            }
           }
+        )
+
+        def withFragments(fragments: List[(Symbol, SourceFile)]): Option[(String, String, Position)] = {
+          val response = new Response[(String, String, Position)]
+          askDocComment(sym, source, site, fragments, response)
+          response.get.left.toOption
+        }
 
         askOption {
           () => sym::site::sym.allOverriddenSymbols:::site.baseClasses
         } flatMap { fragments =>
-          withFragments(fragments, Nil) flatMap {
+          withFragments(listFragments(fragments)) flatMap {
             case (expanded, raw, pos) if !expanded.isEmpty =>
               askOption { () => parseAtSymbol(expanded, raw, pos, site) }
             case _ =>
