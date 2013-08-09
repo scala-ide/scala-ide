@@ -40,6 +40,8 @@ import scala.tools.eclipse.javaelements.ScalaCompilationUnit
 import scala.tools.eclipse.javaelements.ScalaSourceFile
 import org.eclipse.debug.core.DebugException
 import scala.collection.JavaConverters._
+import scala.reflect.Manifest
+import scala.tools.eclipse.debug.evaluation.ValueBinding
 
 
 private[debug] object BreakpointSupport {
@@ -109,6 +111,78 @@ private class BreakpointSupportActor private (
   private var requestsEnabled = false
 
   private val eventDispatcher = debugTarget.eventDispatcher
+
+  implicit class RichTypeHelper(x: Any) {
+    val cls = x.getClass
+    def ifTypeOf[T](implicit manifest: Manifest[T]): Option[T] =
+      if (manifest.runtimeClass.isAssignableFrom(cls))
+        Some(x.asInstanceOf[T])
+      else None
+  }
+
+  private val conditionalState: Option[ConditionalBreakpointState] = breakpoint match {
+    case jlb: IJavaLineBreakpoint => Some(new ConditionalBreakpointState(jlb))
+    case _ => None
+  }
+
+  private class ConditionalBreakpointState(val breakpoint: IJavaLineBreakpoint) {
+    var isCompiled = false
+
+    val packageName = "scala.eclipse.debug.evaluation.conditional"
+
+    // FIXME: verify that this will always be unique
+    val className = s"${(Option(breakpoint.getTypeName()) getOrElse "")}_Expression_${breakpoint.getLineNumber()}"
+
+    val fullName = s"$packageName.$className"
+
+    val methodName = "eval"
+
+    private def compile(bindings: Seq[ValueBinding], classpath: Seq[String], scalaProject: ScalaProject)(thread: ScalaThread) = {
+      def isGenericType(typename: String) = typename.contains("[")
+      def removeObjectSuffix(tpe: String) = if (tpe.endsWith("$")) tpe.substring(0, tpe.length - 1) else tpe
+      if (!isCompiled) {
+        val assistance = debugTarget.objectByName("scala.tools.eclipse.debug.debugged.ReplAssistance", true, thread)
+        val params = bindings.map { binding =>
+          val typename = {
+            val value = ScalaEvaluationEngine.boxed(binding.value)(thread)
+            val getClassNameResult = assistance.invokeMethod("getClassName", thread, value)
+            val jdiTypename = getClassNameResult.asInstanceOf[ScalaStringReference].underlying.value()
+            if (isGenericType(jdiTypename))
+              binding.tpe getOrElse jdiTypename
+            else jdiTypename
+          }
+          s"${binding.name}: ${(typename)}"
+        }
+        val code = breakpoint.getCondition() //s"""package $packageName\nclass $className { def $methodName(${params.mkString(",")}): Boolean = { ${breakpoint.getCondition()} } }"""
+        val classpathVal = ScalaEvaluationEngine.createStringList(debugTarget, thread, classpath)
+        val compileVal =
+          assistance.invokeMethod(
+            "createEvalMethod", thread,
+            classpathVal,
+            ScalaValue(fullName, debugTarget),
+            ScalaEvaluationEngine.createStringList(debugTarget, thread, params),
+            ScalaValue(breakpoint.getCondition(), debugTarget)
+          )
+        for (compiled <- compileVal.underlying.ifTypeOf[BooleanValue]) {
+          isCompiled = compiled.booleanValue()
+        }
+      }
+
+      isCompiled
+    }
+
+    def eval(stackFrame: ScalaStackFrame, launchDelegate: ScalaLaunchDelegate): Option[ScalaValue] = {
+      val thread = stackFrame.thread
+      val bindings = ScalaEvaluationEngine.yieldStackFrameBindings(Option(stackFrame), launchDelegate.scalaProject)
+      if(compile(bindings, launchDelegate.classpath, launchDelegate.scalaProject)(thread)) {
+        val assistance = debugTarget.objectByName("scala.tools.eclipse.debug.debugged.ReplAssistance", true, thread)
+        val values = bindings.map(vb => ScalaEvaluationEngine.boxed(vb.value)(thread))
+        val params = ScalaEvaluationEngine.createAnyList(debugTarget, stackFrame.thread, values)
+        val result = assistance.invokeMethod("invoke", thread, ScalaValue(fullName, debugTarget), params)
+        Some(result)
+      } else None
+    }
+  }
 
   override def postStart(): Unit =  {
     breakpointRequests.foreach(listenForBreakpointRequest)
@@ -198,38 +272,30 @@ private class BreakpointSupportActor private (
   }
 
   private def breakpointShouldSuspend(event: BreakpointEvent): Boolean = {
-    val beQuiet = false
-    breakpoint match {
-      case cbp: IJavaLineBreakpoint if cbp.isConditionEnabled() && cbp.supportsCondition() => {
-        scala.util.Try {
-          val launch = debugTarget.getLaunch
-          val launchDelegate = launch.getLaunchConfiguration().getPreferredDelegate(Set(launch.getLaunchMode()).asJava)
-          val result = launchDelegate.getDelegate() match {
-            case scalaLaunchDelegate: ScalaLaunchDelegate =>
-              for {
-                scalaThread <- debugTarget.findScalaThread(event.thread())
-                evalEngine = new ScalaEvaluationEngine(scalaLaunchDelegate.classpath, debugTarget, scalaThread)
-                stackFrames = scalaThread.threadRef.frames.asScala.map(ScalaStackFrame(scalaThread, _)).toList
-                eval <- {
-                  val bindings = ScalaEvaluationEngine.yieldStackFrameBindings(evalEngine, stackFrames.headOption, scalaLaunchDelegate.scalaProject)
-                  evalEngine.evaluate(cbp.getCondition(), beQuiet, bindings)
-                }
-                boolValue <- ScalaEvaluationEngine.booleanValue(eval, scalaThread)
-              } yield boolValue
-            case _ => None
-          }
-          result getOrElse false
-        } match {
-          case scala.util.Success(r) =>
-            println("success: " + r)
-            r
-          case scala.util.Failure(e: DebugException) =>
-            val original = e.getCause()
-            val st = original.getStackTrace()
-            false
-          case scala.util.Failure(e) =>
-            val st = e.getStackTrace()
-            false
+    val beQuiet = true
+    conditionalState match {
+      case Some(cs) if cs.breakpoint.isConditionEnabled() && cs.breakpoint.supportsCondition() => scala.util.Try {
+        val launch = debugTarget.getLaunch
+        val result: Option[Boolean] =
+          for {
+            launchDelegate <- launch.getLaunchConfiguration().getPreferredDelegate(Set(launch.getLaunchMode()).asJava).getDelegate().ifTypeOf[ScalaLaunchDelegate]
+            scalaThread <- debugTarget.findScalaThread(event.thread())
+            stackFrames = scalaThread.threadRef.frames.asScala.map(ScalaStackFrame(scalaThread, _)).toList
+            stackFrame <- stackFrames.headOption
+            evalResult <- cs.eval(stackFrame, launchDelegate)
+            primValue <- evalResult.ifTypeOf[ScalaPrimitiveValue]
+            boolValue <- primValue.underlying.ifTypeOf[BooleanValue]
+          } yield boolValue.value()
+        result getOrElse false
+      } match {
+        case scala.util.Success(b) => b
+        case scala.util.Failure(e: DebugException) => {
+          val original = e.getCause()
+          false
+        }
+        case scala.util.Failure(e) => {
+          val st = e.getStackTrace
+          false
         }
       }
       case _ => true

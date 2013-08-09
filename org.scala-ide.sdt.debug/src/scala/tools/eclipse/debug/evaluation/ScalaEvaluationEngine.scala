@@ -39,6 +39,13 @@ import scala.collection.JavaConverters._
 import com.sun.jdi.Location
 
 
+class ValueBinding(_name: String, val value: ScalaValue)(_tpe: => Option[String]) {
+  val name =
+    if (_name == "this") "this$" else _name
+  lazy val tpe =
+    _tpe
+}
+
 object ScalaEvaluationEngine {
   def booleanValue(evaluation: ScalaValue, thread: ScalaThread): Option[Boolean] = {
     evaluation match {
@@ -64,17 +71,67 @@ object ScalaEvaluationEngine {
     s"($char)V"
   }
 
-  def yieldStackFrameBindings(evalEngine: ScalaEvaluationEngine, stackFrame: Option[ScalaStackFrame], scalaProject: ScalaProject) = stackFrame match {
+  def yieldStackFrameBindings(stackFrame: Option[ScalaStackFrame], scalaProject: ScalaProject) = stackFrame match {
     case Some(frame) =>
-      for {
-        variable <- frame.variables
-        value = variable.getValue
-      } yield {
-        (new evalEngine.ValueBinding(variable.getName, value)) {
+      val variables = frame.variables
+      variables map { variable =>
+        val value = variable.getValue match {
+          case sv: ScalaValue => sv
+          case v => ScalaValue(v, frame.getDebugTarget)
+        }
+        (new ValueBinding(variable.getName, value)) {
           ScalaEvaluationEngine.findType(variable.getName, frame.stackFrame.location(), scalaProject)
         }
       }
     case _ => Seq()
+  }
+
+  def boxed(value: ScalaValue)(implicit thread: ScalaThread): ScalaValue = {
+    def box(primValue: ScalaPrimitiveValue): ScalaValue = {
+      def create[T <: AnyVal](typename: String, value: T) = {
+        import scala.collection.JavaConverters._
+        val target = thread.getDebugTarget
+        val classObject = target.classByName(typename, true, thread).asInstanceOf[ScalaClassType]
+        val sig = ScalaEvaluationEngine.constructorJNISig(value)
+        val constructor = classObject.classType.concreteMethodByName("<init>", sig)
+        new ScalaObjectReference(classObject.classType.newInstance(thread.threadRef, constructor, List(primValue.underlying).asJava, ClassType.INVOKE_SINGLE_THREADED), target)
+      }
+      primValue.underlying match {
+        case v: BooleanValue => create("java.lang.Boolean", v.value)
+        case v: ByteValue => create("java.lang.Byte", v.value)
+        case v: CharValue => create("java.lang.Char", v.value)
+        case v: DoubleValue => create("java.lang.Double", v.value)
+        case v: FloatValue => create("java.lang.Float", v.value)
+        case v: IntegerValue => create("java.lang.Integer", v.value)
+        case v: LongValue => create("java.lang.Long", v.value)
+        case v: ShortValue => create("java.lang.Short", v.value)
+      }
+    }
+
+    value match {
+      case primValue: ScalaPrimitiveValue => box(primValue)
+      case _ => value
+    }
+  }
+
+  def createObject(target: ScalaDebugTarget, thread: ScalaThread, typeName: String): ScalaObjectReference = {
+    val classObject = target.classByName(typeName, true, thread).asInstanceOf[ScalaClassType]
+    val constructor = classObject.classType.concreteMethodByName("<init>", "()V")
+    new ScalaObjectReference(classObject.classType.newInstance(thread.threadRef, constructor, List[Value]().asJava, ClassType.INVOKE_SINGLE_THREADED), target)
+  }
+
+   def createAnyList(target: ScalaDebugTarget, thread: ScalaThread, values: Seq[ScalaValue]) = {
+    val lb = createObject(target, thread, "scala.collection.mutable.ListBuffer")
+    for (v <- values)
+      lb.invokeMethod("$plus$eq", "(Ljava/lang/Object;)Lscala/collection/mutable/ListBuffer;", thread, v)
+    lb.invokeMethod("toList", thread).asInstanceOf[ScalaObjectReference]
+  }
+
+  def createStringList(target: ScalaDebugTarget, thread: ScalaThread, strs: Seq[String]) = {
+    val lb = createObject(target, thread, "scala.collection.mutable.ListBuffer")
+    for (str <- strs)
+      lb.invokeMethod("$plus$eq", "(Ljava/lang/Object;)Lscala/collection/mutable/ListBuffer;", thread, ScalaValue(str, target))
+    lb.invokeMethod("toList", thread)
   }
 
   // FIXME: optimize
@@ -118,10 +175,6 @@ class ScalaEvaluationEngine(classpath: Seq[String], val target: ScalaDebugTarget
     replAssistance.invokeMethod("createRepl", thread, cp).asInstanceOf[ScalaObjectReference]
   }
 
-  class ValueBinding(val name: String, val ivalue: IValue)(_tpe: => Option[String]) {
-    lazy val tpe = _tpe
-  }
-
   def isStale = thread.isTerminated
 
   def execute(expression: String, beQuiet: Boolean, bindings: Seq[ValueBinding]): Option[String] = {
@@ -155,7 +208,7 @@ class ScalaEvaluationEngine(classpath: Seq[String], val target: ScalaDebugTarget
   private def doInterpret(expression: String, beQuiet: Boolean, bindings: Seq[ValueBinding]): Option[String] = {
     if (!isStale && thread.isSuspended) {
       for (binding <- bindings)
-        bind(binding.name, binding.ivalue, beQuiet)(binding.tpe)
+        bind(binding.name, binding.value, beQuiet)(binding.tpe)
 
       val expr = ScalaValue(expression, target)
       val interpResult =
@@ -167,42 +220,19 @@ class ScalaEvaluationEngine(classpath: Seq[String], val target: ScalaDebugTarget
   }
 
   def bind(varName: String, ivalue: IValue, beQuiet: Boolean)(tpe: => Option[String]): Boolean = {
-    def box(primValue: ScalaPrimitiveValue): ScalaObjectReference = {
-      def create[T <: AnyVal](typename: String, value: T) = {
-        import scala.collection.JavaConverters._
-        val classObject = target.classByName(typename, true, thread).asInstanceOf[ScalaClassType]
-        val sig = ScalaEvaluationEngine.constructorJNISig(value)
-        val constructor = classObject.classType.concreteMethodByName("<init>", sig)
-        new ScalaObjectReference(classObject.classType.newInstance(thread.threadRef, constructor, List(primValue.underlying).asJava, ClassType.INVOKE_SINGLE_THREADED), target)
-      }
-      primValue.underlying match {
-        case v: BooleanValue => create("java.lang.Boolean", v.value)
-        case v: ByteValue => create("java.lang.Byte", v.value)
-        case v: CharValue => create("java.lang.Char", v.value)
-        case v: DoubleValue => create("java.lang.Double", v.value)
-        case v: FloatValue => create("java.lang.Float", v.value)
-        case v: IntegerValue => create("java.lang.Integer", v.value)
-        case v: LongValue => create("java.lang.Long", v.value)
-        case v: ShortValue => create("java.lang.Short", v.value)
-      }
-    }
-
     def isGenericType(typename: String) = typename.contains("[")
 
     ivalue match {
       case value: ScalaValue => {
-        val bindValue = value match {
-          case primitive: ScalaPrimitiveValue => box(primitive)
-          case _ => value
-        }
+        val bindValue = ScalaEvaluationEngine.boxed(value)(thread).asInstanceOf[ScalaValue]
+        val binding = (new ValueBinding(varName, bindValue))(tpe)
         val typename = {
           val jdiTypename = assistance.invokeMethod("getClassName", thread, bindValue).asInstanceOf[ScalaStringReference].underlying.value()
           if (isGenericType(jdiTypename))
-            tpe getOrElse jdiTypename
+            binding.tpe getOrElse jdiTypename
             else jdiTypename
         }
-        val name = if (varName == "this") "this$" else varName
-        bind(name, typename, bindValue, beQuiet)
+        bind(binding.name, typename, binding.value, beQuiet)
         true
       }
       case _ => false
@@ -220,22 +250,14 @@ class ScalaEvaluationEngine(classpath: Seq[String], val target: ScalaDebugTarget
     }
   }
 
-  def createObject(typeName: String): ScalaObjectReference = {
-    val classObject = target.classByName(typeName, true, thread).asInstanceOf[ScalaClassType]
-    val constructor = classObject.classType.concreteMethodByName("<init>", "()V")
-    new ScalaObjectReference(classObject.classType.newInstance(thread.threadRef, constructor, List[Value]().asJava, ClassType.INVOKE_SINGLE_THREADED), target)
-  }
+  def createObject(typeName: String): ScalaObjectReference =
+    ScalaEvaluationEngine.createObject(target, thread, typeName)
 
-  private def createStringList(strs: Seq[String]) = {
-    val lb = createObject("scala.collection.mutable.ListBuffer")
-    for (str <- strs)
-      lb.invokeMethod("$plus$eq", "(Ljava/lang/Object;)Lscala/collection/mutable/ListBuffer;", thread, ScalaValue(str, target))
-    lb.invokeMethod("toList", thread)
-  }
+  private def createStringList(strs: Seq[String]) =
+    ScalaEvaluationEngine.createStringList(target, thread, strs)
 
   /* REPLs are shared per thread (in the debugged VM), so you might want to clear the repl's history from time to time. */
   // TODO: maybe it would be better to just do this automatically when you create a ScalaEvaluationEngine object? The idea being that ScalaEvaluationEngines are lightweight and will be created often instead of cached.
-  // FIXME: this also resets the class loader in a bad way
   def resetRepl() {
     repl.invokeMethod("reset", thread)
   }
