@@ -94,6 +94,14 @@ trait LocateSymbol { self : ScalaPresentationCompiler =>
     }
   }
 
+  @deprecated("Use locate(sym:Symbol): Option[(InteractiveCompilationUnit, Int)]", "4.0.0")
+  def locate(sym:Symbol, scu:InteractiveCompilationUnit):Option[(InteractiveCompilationUnit, Int)] = {
+    locate(sym) match {
+      case Some((foundScu,_)) if (foundScu != scu) => throw new IllegalArgumentException("locate doesn't support searching for a symbol in a bespoke unit anymore")
+      case optScCouple => optScCouple
+    }
+  }
+
   def locate(sym : Symbol): Option[(InteractiveCompilationUnit, Int)] =
     findCompilationUnit(sym) flatMap { file =>
       val pos = if (sym.pos eq NoPosition) {
