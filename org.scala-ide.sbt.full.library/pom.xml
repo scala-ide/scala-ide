@@ -11,7 +11,7 @@
   <artifactId>org.scala-ide.sbt.full.library</artifactId>
   <packaging>bundle</packaging>
 
-  <!-- extra repository containing the sbt packages --> 
+  <!-- extra repository containing the sbt packages -->
   <repositories>
     <repository>
       <id>typesafe-ide</id>
@@ -39,91 +39,115 @@
         </dependency>
       </dependencies>
     </profile>
-  </profiles>
 
-  <dependencies>
-    <dependency>
-      <groupId>org.scala-sbt</groupId>
-      <artifactId>classpath_${sbt.compiled.version}</artifactId>
-      <optional>true</optional>
-    </dependency>
-    <dependency>
-      <groupId>org.scala-sbt</groupId>
-      <artifactId>logging_${sbt.compiled.version}</artifactId>
-      <optional>true</optional>
-    </dependency>
-    <dependency>
-      <groupId>org.scala-sbt</groupId>
-      <artifactId>io_${sbt.compiled.version}</artifactId>
-      <optional>true</optional>
-    </dependency>
-    <dependency>
-      <groupId>org.scala-sbt</groupId>
-      <artifactId>control_${sbt.compiled.version}</artifactId>
-      <optional>true</optional>
-    </dependency>
-    <dependency>
-      <groupId>org.scala-sbt</groupId>
-      <artifactId>classfile_${sbt.compiled.version}</artifactId>
-      <optional>true</optional>
-    </dependency>
-     <dependency>
-      <groupId>org.scala-sbt</groupId>
-      <artifactId>process_${sbt.compiled.version}</artifactId>
-      <optional>true</optional>
-    </dependency>
-    <dependency>
-      <groupId>org.scala-sbt</groupId>
-      <artifactId>relation_${sbt.compiled.version}</artifactId>
-      <optional>true</optional>
-    </dependency>
-    <dependency>
-      <groupId>org.scala-sbt</groupId>
-      <artifactId>interface_${sbt.compiled.version}</artifactId>
-      <optional>true</optional>
-    </dependency>
-    <dependency>
-      <groupId>org.scala-sbt</groupId>
-      <artifactId>persist_${sbt.compiled.version}</artifactId>
-      <optional>true</optional>
-    </dependency>
-    <dependency>
-      <groupId>org.scala-sbt</groupId>
-      <artifactId>api_${sbt.compiled.version}</artifactId>
-      <optional>true</optional>
-    </dependency>
-    <dependency>
-      <groupId>org.scala-sbt</groupId>
-      <artifactId>compiler-integration_${sbt.compiled.version}</artifactId>
-      <optional>true</optional>
-    </dependency>
-    <dependency>
-      <groupId>org.scala-sbt</groupId>
-      <artifactId>incremental-compiler_${sbt.compiled.version}</artifactId>
-      <optional>true</optional>
-    </dependency>
-    <dependency>
-      <groupId>org.scala-sbt</groupId>
-      <artifactId>compile_${sbt.compiled.version}</artifactId>
-      <optional>true</optional>
-    </dependency>
-    <dependency>
-      <groupId>org.scala-sbt</groupId>
-      <artifactId>compiler-interface_${sbt.compiled.version}</artifactId>
-      <optional>true</optional>
-    </dependency>
-    <!-- all the dependencies necessary for running like sbinary, jline -->
-    <dependency>
-      <groupId>jline</groupId>
-      <artifactId>jline</artifactId>
-      <optional>true</optional>
-    </dependency>    
-    <dependency>
-      <groupId>org.scala-tools.sbinary</groupId>
-      <artifactId>sbinary_${sbt.compiled.version}</artifactId>
-      <optional>true</optional>
-    </dependency>
-  </dependencies>
+    <profile>
+      <id>sbt-new</id>
+      <dependencies>
+        <dependency>
+          <groupId>com.typesafe.sbt</groupId>
+          <artifactId>sbt-interface</artifactId>
+          <optional>true</optional>
+        </dependency>
+        <dependency>
+          <groupId>com.typesafe.sbt</groupId>
+          <artifactId>compiler-interface-precompiled</artifactId>
+          <optional>true</optional>
+        </dependency>
+        <dependency>
+          <groupId>com.typesafe.sbt</groupId>
+          <artifactId>incremental-compiler</artifactId>
+          <optional>true</optional>
+        </dependency>
+      </dependencies>
+    </profile>
+
+    <profile>
+      <id>sbt-legacy</id>
+      <dependencies>
+        <dependency>
+          <groupId>org.scala-sbt</groupId>
+          <artifactId>classpath_${sbt.compiled.version}</artifactId>
+          <optional>true</optional>
+        </dependency>
+        <dependency>
+          <groupId>org.scala-sbt</groupId>
+          <artifactId>logging_${sbt.compiled.version}</artifactId>
+          <optional>true</optional>
+        </dependency>
+        <dependency>
+          <groupId>org.scala-sbt</groupId>
+          <artifactId>io_${sbt.compiled.version}</artifactId>
+          <optional>true</optional>
+        </dependency>
+        <dependency>
+          <groupId>org.scala-sbt</groupId>
+          <artifactId>control_${sbt.compiled.version}</artifactId>
+          <optional>true</optional>
+        </dependency>
+        <dependency>
+          <groupId>org.scala-sbt</groupId>
+          <artifactId>classfile_${sbt.compiled.version}</artifactId>
+          <optional>true</optional>
+        </dependency>
+        <dependency>
+          <groupId>org.scala-sbt</groupId>
+          <artifactId>process_${sbt.compiled.version}</artifactId>
+          <optional>true</optional>
+        </dependency>
+        <dependency>
+          <groupId>org.scala-sbt</groupId>
+          <artifactId>relation_${sbt.compiled.version}</artifactId>
+          <optional>true</optional>
+        </dependency>
+        <dependency>
+          <groupId>org.scala-sbt</groupId>
+          <artifactId>interface_${sbt.compiled.version}</artifactId>
+          <optional>true</optional>
+        </dependency>
+        <dependency>
+          <groupId>org.scala-sbt</groupId>
+          <artifactId>persist_${sbt.compiled.version}</artifactId>
+          <optional>true</optional>
+        </dependency>
+        <dependency>
+          <groupId>org.scala-sbt</groupId>
+          <artifactId>api_${sbt.compiled.version}</artifactId>
+          <optional>true</optional>
+        </dependency>
+        <dependency>
+          <groupId>org.scala-sbt</groupId>
+          <artifactId>compiler-integration_${sbt.compiled.version}</artifactId>
+          <optional>true</optional>
+        </dependency>
+        <dependency>
+          <groupId>org.scala-sbt</groupId>
+          <artifactId>incremental-compiler_${sbt.compiled.version}</artifactId>
+          <optional>true</optional>
+        </dependency>
+        <dependency>
+          <groupId>org.scala-sbt</groupId>
+          <artifactId>compile_${sbt.compiled.version}</artifactId>
+          <optional>true</optional>
+        </dependency>
+        <dependency>
+          <groupId>org.scala-sbt</groupId>
+          <artifactId>compiler-interface_${sbt.compiled.version}</artifactId>
+          <optional>true</optional>
+        </dependency>
+        <!-- all the dependencies necessary for running like sbinary, jline -->
+        <dependency>
+          <groupId>jline</groupId>
+          <artifactId>jline</artifactId>
+          <optional>true</optional>
+        </dependency>
+        <dependency>
+          <groupId>org.scala-tools.sbinary</groupId>
+          <artifactId>sbinary_${sbt.compiled.version}</artifactId>
+          <optional>true</optional>
+        </dependency>
+      </dependencies>
+    </profile>
+  </profiles>
 
   <build>
     <outputDirectory>${basedir}</outputDirectory>
@@ -158,10 +182,9 @@
           <instructions>
             <Bundle-SymbolicName>org.scala-ide.sbt.full.library</Bundle-SymbolicName>
             <Bundle-Name>Sbt ${sbt.version} Library for Eclipse</Bundle-Name>
-            <!-- put a '-' after the sbt.version since it already has a '-scalaide-01' qualifier. Remove it the qualifier is gone. -->
             <Bundle-Version>${sbt.version}-${version.suffix}-${maven.build.timestamp}</Bundle-Version>
             <Embed-Dependency>*;scope=compile|runtime;inline=false</Embed-Dependency>
-            <_exportcontents>sbt.*;version=${sbt.version},xsbt.*;version=${sbt.version},xsbti.*;version=${sbt.version},sbinary.*;version=${sbinary.version},jline.*;version=2.10,org.apache.ivy.*;version=2.2.0</_exportcontents>
+            <_exportcontents>sbt.*;version=${sbt.version},xsbt.*;version=${sbt.version},xsbti.*;version=${sbt.version},sbinary.*;version=${sbt.version},jline.*;version=${sbt.version},org.apache.ivy.*;version=2.2.0</_exportcontents>
             <Embed-Directory>lib</Embed-Directory>
             <Embed-StripVersion>true</Embed-StripVersion>
             <Import-Package>!org.apache.ivy.*,!org.bouncycastle.*,!org.scalatools.testing.*,!com.craft.*,!com.jcraft.*,!sun.misc,!org.apache.commons.vfs,!org.apache.commons.vfs.impl,!org.apache.oro.text,!org.apache.oro.text
