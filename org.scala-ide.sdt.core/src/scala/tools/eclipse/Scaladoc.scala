@@ -180,6 +180,6 @@ trait Scaladoc extends MemberLookupBase with CommentFactoryBase { this: ScalaPre
   class BrowserInput(@BeanProperty val html: String,
                      @BeanProperty val inputElement: Object,
                      @BeanProperty val inputName: String) extends BrowserInformationControlInput(null) {
-    def this(html: String, sym: Symbol) = this(html, getJavaElement(sym).orNull, sym.toString)
+    def this(html: String, sym: Symbol) = this(html, getJavaElement(sym, project.javaProject).orNull, sym.toString)
   }
 }
