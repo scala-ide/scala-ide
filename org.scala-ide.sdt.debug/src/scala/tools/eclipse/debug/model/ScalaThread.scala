@@ -132,7 +132,7 @@ abstract class ScalaThread private (target: ScalaDebugTarget, /*private[model]*/
    *  or [[ScalaObjectReference.invokeMethod(String, String, ScalaThread, ScalaValue*)]] instead.
    */
   def invokeMethod(objectReference: ObjectReference, method: Method, args: Value*): Value = {
-    processMethodInvocationResult(Some(companionActor !? InvokeMethod(objectReference, method, args.toList)))
+    processMethodInvocationResult(syncSend(companionActor, InvokeMethod(objectReference, method, args.toList)))
   }
 
   /** Invoke the given static method on the given type with the given arguments.
@@ -141,7 +141,8 @@ abstract class ScalaThread private (target: ScalaDebugTarget, /*private[model]*/
    *  Use [[ScalaClassType.invokeMethod(String, ScalaThread,ScalaValue*)]] instead.
    */
   def invokeStaticMethod(classType: ClassType, method: Method, args: Value*): Value = {
-    processMethodInvocationResult(Some(companionActor !? InvokeStaticMethod(classType, method, args.toList)))
+    processMethodInvocationResult(syncSend(companionActor, InvokeStaticMethod(classType, method, args.toList)))
+//    processMethodInvocationResult(Some(companionActor !? InvokeStaticMethod(classType, method, args.toList)))
   }
 
   private def processMethodInvocationResult(res: Option[Any]): Value = if (res.isDefined) res.get match {

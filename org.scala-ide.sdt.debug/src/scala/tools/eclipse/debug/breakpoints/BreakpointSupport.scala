@@ -153,7 +153,7 @@ private class BreakpointSupportActor private (
           }
           s"${binding.name}: ${(typename)}"
         }
-        val code = breakpoint.getCondition() //s"""package $packageName\nclass $className { def $methodName(${params.mkString(",")}): Boolean = { ${breakpoint.getCondition()} } }"""
+        val code = breakpoint.getCondition()
         val classpathVal = ScalaEvaluationEngine.createStringList(debugTarget, thread, classpath)
         val compileVal =
           assistance.invokeMethod(
@@ -209,13 +209,11 @@ private class BreakpointSupportActor private (
       reply(false)
     case event: BreakpointEvent =>
       // JDI event triggered when a breakpoint is hit
-      val suspended = event.thread().isSuspended()
       breakpointShouldSuspend(event) match {
         case true =>
           breakpointHit(event.location, event.thread)
           reply(true)
         case false =>
-          event.thread().resume()
           reply(false)
       }
     case Changed(delta) =>
