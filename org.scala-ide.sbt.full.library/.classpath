@@ -1,20 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry exported="true" kind="lib" path="lib/api_2.10.3-SNAPSHOT.jar"/>
-	<classpathentry exported="true" kind="lib" path="lib/classfile_2.10.3-SNAPSHOT.jar"/>
-	<classpathentry exported="true" kind="lib" path="lib/classpath_2.10.3-SNAPSHOT.jar"/>
-	<classpathentry exported="true" kind="lib" path="lib/compile_2.10.3-SNAPSHOT.jar"/>
-	<classpathentry exported="true" kind="lib" path="lib/compiler-integration_2.10.3-SNAPSHOT.jar"/>
-	<classpathentry exported="true" kind="lib" path="lib/compiler-interface_2.10.3-SNAPSHOT.jar"/>
-	<classpathentry exported="true" kind="lib" path="lib/control_2.10.3-SNAPSHOT.jar"/>
-	<classpathentry exported="true" kind="lib" path="lib/incremental-compiler_2.10.3-SNAPSHOT.jar"/>
-	<classpathentry exported="true" kind="lib" path="lib/interface_2.10.3-SNAPSHOT.jar"/>
-	<classpathentry exported="true" kind="lib" path="lib/io_2.10.3-SNAPSHOT.jar"/>
-	<classpathentry exported="true" kind="lib" path="lib/jline.jar"/>
-	<classpathentry exported="true" kind="lib" path="lib/logging_2.10.3-SNAPSHOT.jar"/>
-	<classpathentry exported="true" kind="lib" path="lib/persist_2.10.3-SNAPSHOT.jar"/>
-	<classpathentry exported="true" kind="lib" path="lib/process_2.10.3-SNAPSHOT.jar"/>
-	<classpathentry exported="true" kind="lib" path="lib/relation_2.10.3-SNAPSHOT.jar"/>
-	<classpathentry exported="true" kind="lib" path="lib/sbinary_2.10.3-SNAPSHOT.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/compiler-interface-precompiled.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/incremental-compiler.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/sbt-interface.jar"/>
 	<classpathentry kind="output" path="classes"/>
 </classpath>
