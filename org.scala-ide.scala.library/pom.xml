@@ -12,25 +12,15 @@
   <description>Bundle containing the Scala library</description>
   <packaging>bundle</packaging>
 
-  <properties>
-    <!-- default value for Scala 2.9.x, can be overwritten by profiles -->
-    <scala.library.third-part>scala-dbc</scala.library.third-part>
-  </properties>
 
   <profiles>
     <profile>
       <!--- the profile using the default values. Scala 2.10.x -->
       <id>scala-2.10.x</id>
-      <properties>
-        <scala.library.third-part>scala-actors</scala.library.third-part>
-      </properties>
     </profile>
     <profile>
       <!--- the profile using the default values. Scala 2.11.x -->
       <id>scala-2.11.x</id>
-      <properties>
-        <scala.library.third-part>scala-actors</scala.library.third-part>
-      </properties>
       <dependencies>
         <dependency>
           <groupId>org.scala-lang</groupId>
@@ -96,7 +86,7 @@
     </dependency>
     <dependency>
       <groupId>org.scala-lang</groupId>
-      <artifactId>${scala.library.third-part}</artifactId>
+      <artifactId>scala-actors</artifactId>
       <optional>true</optional>
     </dependency>
   </dependencies>
@@ -132,10 +122,10 @@
                 </artifactItem>
                 <artifactItem>
                   <groupId>org.scala-lang</groupId>
-                  <artifactId>${scala.library.third-part}</artifactId>
+                  <artifactId>scala-actors</artifactId>
                   <classifier>sources</classifier>
                   <type>jar</type>
-                  <destFileName>${scala.library.third-part}-src.jar</destFileName>
+                  <destFileName>scala-actors-src.jar</destFileName>
                 </artifactItem>
               </artifactItems>
               <outputDirectory>${project.build.directory}/lib</outputDirectory>
