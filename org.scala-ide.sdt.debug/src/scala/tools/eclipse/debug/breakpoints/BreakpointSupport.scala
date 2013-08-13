@@ -137,7 +137,7 @@ private class BreakpointSupportActor private (
 
     val methodName = "eval"
 
-    private def compile(bindings: Seq[ValueBinding], classpath: Seq[String], scalaProject: ScalaProject)(thread: ScalaThread) = {
+    private def compile(bindings: Seq[ValueBinding], classpath: Seq[String], scalaProject: ScalaProject)(implicit thread: ScalaThread) = {
       def isGenericType(typename: String) = typename.contains("[")
       def removeObjectSuffix(tpe: String) = if (tpe.endsWith("$")) tpe.substring(0, tpe.length - 1) else tpe
       if (!isCompiled) {
@@ -145,8 +145,7 @@ private class BreakpointSupportActor private (
         val params = bindings.map { binding =>
           val typename = {
             val value = ScalaEvaluationEngine.boxed(binding.value)(thread)
-            val getClassNameResult = assistance.invokeMethod("getClassName", thread, value)
-            val jdiTypename = getClassNameResult.asInstanceOf[ScalaStringReference].underlying.value()
+            val jdiTypename = assistance.getClassName[ScalaStringReference](value).underlying.value()
             if (isGenericType(jdiTypename))
               binding.tpe getOrElse jdiTypename
             else jdiTypename
@@ -170,13 +169,13 @@ private class BreakpointSupportActor private (
     }
 
     def eval(stackFrame: ScalaStackFrame, launchDelegate: ScalaLaunchDelegate): Option[ScalaValue] = {
-      val thread = stackFrame.thread
+      implicit val thread = stackFrame.thread
       val bindings = ScalaEvaluationEngine.yieldStackFrameBindings(Option(stackFrame), launchDelegate.scalaProject)
       if(compile(bindings, launchDelegate.classpath, launchDelegate.scalaProject)(thread)) {
         val assistance = debugTarget.objectByName("scala.tools.eclipse.debug.debugged.ReplAssistance", true, thread)
         val values = bindings.map(vb => ScalaEvaluationEngine.boxed(vb.value)(thread))
         val params = ScalaEvaluationEngine.createAnyList(debugTarget, stackFrame.thread, values)
-        val result = assistance.invokeMethod("invoke", thread, ScalaValue(fullName, debugTarget), params)
+        val result = assistance.invoke[ScalaValue](ScalaValue(fullName, debugTarget), params)
         Some(result)
       } else None
     }

@@ -146,7 +146,7 @@ class ScalaStringReference(override val underlying: StringReference, target: Sca
 
 }
 
-class ScalaObjectReference(override val underlying: ObjectReference, target: ScalaDebugTarget) extends ScalaValue(underlying, target) with HasFieldValue with HasMethodInvocation {
+class ScalaObjectReference(override val underlying: ObjectReference, target: ScalaDebugTarget) extends ScalaValue(underlying, target) with HasFieldValue with HasDynamicMethodInvocation {
   import ScalaValue._
 
   // Members declared in org.eclipse.debug.core.model.IValue
