@@ -45,9 +45,9 @@ abstract class ScalaThread private (target: ScalaDebugTarget, /*private[model]*/
 
   // Members declared in org.eclipse.debug.core.model.IStep
 
-  override def canStepInto: Boolean = isSuspended // TODO: need real logic
-  override def canStepOver: Boolean = isSuspended // TODO: need real logic
-  override def canStepReturn: Boolean = isSuspended // TODO: need real logic
+  override def canStepInto: Boolean = suspended// TODO: need real logic
+  override def canStepOver: Boolean = suspended// TODO: need real logic
+  override def canStepReturn: Boolean = suspended // TODO: need real logic
   override def isStepping: Boolean = ???
 
   override def stepInto(): Unit = {
@@ -62,9 +62,10 @@ abstract class ScalaThread private (target: ScalaDebugTarget, /*private[model]*/
 
   // Members declared in org.eclipse.debug.core.model.ISuspendResume
 
-  override def canResume: Boolean = isSuspended // TODO: need real logic
-  override def canSuspend: Boolean = !isSuspended // TODO: need real logic
-  override def isSuspended: Boolean = threadRef.isSuspended() //suspended // TODO: need real logic
+  override def canResume: Boolean = suspended // TODO: need real logic
+  override def canSuspend: Boolean = !suspended // TODO: need real logic
+  override def isSuspended: Boolean = suspended //suspended // TODO: need real logic
+  def isUnderlyingSuspended: Boolean = threadRef.isSuspended()
 
   override def resume(): Unit = resumeFromScala(DebugEvent.CLIENT_REQUEST)
   override def suspend(): Unit = {
@@ -96,7 +97,7 @@ abstract class ScalaThread private (target: ScalaDebugTarget, /*private[model]*/
 
   // state
   @volatile
-//  private var suspended = false
+  private var suspended = false
   @volatile
   private var running = true
 
@@ -177,6 +178,7 @@ abstract class ScalaThread private (target: ScalaDebugTarget, /*private[model]*/
     (safeThreadCalls(()) or wrapJDIException("Exception while suspending thread")) {
       // FIXME: `threadRef.frames` should handle checked exception `IncompatibleThreadStateException`
       stackFrames = threadRef.frames.asScala.map(ScalaStackFrame(this, _)).toList
+      suspended = true
       fireSuspendEvent(eventDetail)
     }
   }
@@ -186,6 +188,7 @@ abstract class ScalaThread private (target: ScalaDebugTarget, /*private[model]*/
    * FOR THE COMPANION ACTOR ONLY.
    */
   private[model] def resume(eventDetail: Int) {
+    suspended = false
     stackFrames = Nil
     fireResumeEvent(eventDetail)
   }
@@ -250,7 +253,7 @@ private[model] class ScalaThreadActor private(thread: ScalaThread) extends BaseD
       thread.threadRef.resume()
     case InvokeMethod(objectReference, method, args) =>
       reply(
-        if (!thread.isSuspended) {
+        if (!thread.isUnderlyingSuspended) {
           Left(new ThreadNotSuspendedException())
         } else {
           try {
@@ -268,7 +271,7 @@ private[model] class ScalaThreadActor private(thread: ScalaThread) extends BaseD
         })
     case InvokeStaticMethod(classType, method, args) =>
       reply(
-        if (!thread.isSuspended) {
+        if (!thread.isUnderlyingSuspended) {
           Left(new ThreadNotSuspendedException())
         } else {
           try {
