@@ -154,11 +154,9 @@ private class BreakpointSupportActor private (
           s"${binding.name}: ${(typename)}"
         }
         val code = breakpoint.getCondition()
-        val classpathVal = ScalaEvaluationEngine.createStringList(debugTarget, thread, classpath)
         val compileVal =
           assistance.invokeMethod(
             "createEvalMethod", thread,
-            classpathVal,
             ScalaValue(fullName, debugTarget),
             ScalaEvaluationEngine.createStringList(debugTarget, thread, params),
             ScalaValue(breakpoint.getCondition(), debugTarget)

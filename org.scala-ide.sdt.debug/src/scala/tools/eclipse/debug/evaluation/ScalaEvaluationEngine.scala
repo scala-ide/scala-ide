@@ -177,6 +177,7 @@ class ScalaEvaluationEngine(classpath: Seq[String], val target: ScalaDebugTarget
 
   def isStale = thread.isTerminated
 
+  /* Execute the expression and returns what the REPL would print */
   def execute(expression: String, beQuiet: Boolean, bindings: Seq[ValueBinding]): Option[String] = {
     doInterpret(expression, beQuiet, bindings) match {
       case Some("Success") =>
@@ -191,6 +192,7 @@ class ScalaEvaluationEngine(classpath: Seq[String], val target: ScalaDebugTarget
     }
   }
 
+  /* Execute the expression and return the actual resultant value */
   def evaluate(expression: String, beQuiet: Boolean, bindings: Seq[ValueBinding]): Option[ScalaObjectReference] = {
     doInterpret(expression, beQuiet, bindings) match {
       case Some("Success") => {
