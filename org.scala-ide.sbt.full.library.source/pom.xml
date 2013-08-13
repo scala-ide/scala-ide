@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.scala-ide</groupId>
+    <artifactId>org.scala-ide.build-toolchain</artifactId>
+    <version>3.0.3-SNAPSHOT</version>
+    <relativePath>../org.scala-ide.build-toolchain/pom.xml</relativePath>
+  </parent>
+  <artifactId>org.scala-ide.sbt.full.library.source</artifactId>
+  <packaging>bundle</packaging>
+
+  <dependencies>
+    <dependency>
+      <groupId>com.typesafe.sbt</groupId>
+      <artifactId>sbt-interface</artifactId>
+      <version>${sbt.ide.version}</version>
+      <classifier>sources</classifier>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>com.typesafe.sbt</groupId>
+      <artifactId>incremental-compiler</artifactId>
+      <version>${sbt.ide.version}</version>
+      <classifier>sources</classifier>
+      <optional>true</optional>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <configuration>
+          <outputDirectory>${project.build.directory}/src</outputDirectory>
+          <instructions>
+            <Bundle-Vendor>scala-ide.org</Bundle-Vendor>
+            <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
+            <Bundle-Name>Sbt Library Sources for Eclipse</Bundle-Name>
+            <Bundle-Version>${sbt.osgi.version}</Bundle-Version>
+            <!-- This defines the bundle we provide the source for -->
+            <Eclipse-SourceBundle>org.scala-ide.sbt.full.library;version="${sbt.osgi.version}";roots:="."</Eclipse-SourceBundle>
+            <!-- Extract all sources into this bundle -->
+            <Embed-Dependency>classifier=sources;inline=true</Embed-Dependency>
+          </instructions>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>

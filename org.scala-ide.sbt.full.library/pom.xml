@@ -11,15 +11,6 @@
   <artifactId>org.scala-ide.sbt.full.library</artifactId>
   <packaging>bundle</packaging>
 
-  <!-- extra repository containing the sbt packages -->
-  <repositories>
-    <repository>
-      <id>typesafe-ide</id>
-      <name>Typesafe IDE repository</name>
-      <url>${repo.typesafe}</url>
-    </repository>
-  </repositories>
-
   <profiles>
     <profile>
       <!--- the profile using the default values. Scala 2.10.x -->
@@ -49,11 +40,6 @@
     </dependency>
     <dependency>
         <groupId>com.typesafe.sbt</groupId>
-        <artifactId>compiler-interface-precompiled</artifactId>
-        <optional>true</optional>
-    </dependency>
-    <dependency>
-        <groupId>com.typesafe.sbt</groupId>
         <artifactId>incremental-compiler</artifactId>
         <optional>true</optional>
     </dependency>
@@ -68,12 +54,12 @@
         <configuration>
           <outputDirectory>${project.build.directory}/lib</outputDirectory>
           <instructions>
+            <Bundle-Vendor>scala-ide.org</Bundle-Vendor>
             <Bundle-SymbolicName>org.scala-ide.sbt.full.library</Bundle-SymbolicName>
-            <Bundle-Name>Sbt ${sbt.version} Library for Eclipse</Bundle-Name>
-            <Bundle-Version>${sbt.version}-${version.suffix}-${maven.build.timestamp}</Bundle-Version>
-            <Embed-Dependency>*;scope=compile|runtime;inline=false</Embed-Dependency>
+            <Bundle-Name>Sbt Library for Eclipse</Bundle-Name>
+            <Bundle-Version>${sbt.osgi.version}</Bundle-Version>
+            <Embed-Dependency>*;scope=compile|runtime;inline=true</Embed-Dependency>
             <_exportcontents>sbt.*;version=${sbt.version},xsbt.*;version=${sbt.version},xsbti.*;version=${sbt.version},sbinary.*;version=${sbt.version}</_exportcontents>
-            <Embed-Directory>lib</Embed-Directory>
             <Embed-StripVersion>true</Embed-StripVersion>
           </instructions>
         </configuration>

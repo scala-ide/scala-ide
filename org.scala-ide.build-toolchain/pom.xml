@@ -17,9 +17,21 @@
     <sbt.osgi.version>${sbt.version}.${version.tag}-${version.suffix}-${maven.build.timestamp}</sbt.osgi.version>
   </properties>
 
+  <!-- extra repository containing the sbt packages -->
+  <repositories>
+    <repository>
+      <id>typesafe-ide</id>
+      <name>Typesafe IDE repository</name>
+      <url>${repo.typesafe}</url>
+    </repository>
+  </repositories>
+
   <modules>
     <module>../org.scala-ide.scala.library</module>
     <module>../org.scala-ide.scala.compiler</module>
     <module>../org.scala-ide.sbt.full.library</module>
+    <module>../org.scala-ide.sbt.full.library.source</module>
+    <module>../org.scala-ide.sbt.compiler.interface</module>
+    <module>../org.scala-ide.sbt.compiler.interface.source</module>
   </modules>
 </project>

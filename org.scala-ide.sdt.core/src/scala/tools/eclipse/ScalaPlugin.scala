@@ -86,6 +86,7 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
   def compilerPluginId = "org.scala-ide.scala.compiler"
   def libraryPluginId = "org.scala-ide.scala.library"
   def sbtPluginId = "org.scala-ide.sbt.full.library"
+  def sbtCompilerInterfaceId = "org.scala-ide.sbt.compiler.interface"
 
   def wizardPath = pluginId + ".wizards"
   def wizardId(name: String) = wizardPath + ".new" + name
@@ -166,7 +167,8 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
   }
   
   lazy val sbtCompilerBundle = Platform.getBundle(sbtPluginId)
-  lazy val sbtCompilerInterface = allPathsInBundle(sbtCompilerBundle, "/lib", "compiler-interface*.jar").toIterable.headOption
+  lazy val sbtCompilerInterfaceBundle = Platform.getBundle(sbtCompilerInterfaceId)
+  lazy val sbtCompilerInterface = pathInBundle(sbtCompilerInterfaceBundle, "/")
   // Disable for now, until we introduce a way to have multiple scala libraries, compilers available for the builder
   //lazy val sbtScalaLib = pathInBundle(sbtCompilerBundle, "/lib/scala-" + shortScalaVer + "/lib/scala-library.jar")
   //lazy val sbtScalaCompiler = pathInBundle(sbtCompilerBundle, "/lib/scala-" + shortScalaVer + "/lib/scala-compiler.jar")
