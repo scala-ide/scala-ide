@@ -138,7 +138,7 @@ class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: I
     val overwrite = !insertCompletion ^ ((stateMask & SWT.CTRL) != 0)
 
     val completionFullString = completionString(overwrite)
-    withScalaFileAndSelection { (scalaSourceFile, textSelection) =>
+    val importSize = withScalaFileAndSelection { (scalaSourceFile, textSelection) =>
 
       val completionChange = scalaSourceFile.withSourceFile { (sourceFile, _) =>
         val endPos = if (overwrite) startPos + existingIdentifier(d, offset).getLength() else offset
@@ -160,7 +160,7 @@ class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: I
       EditorHelpers.applyChangesToFileWhileKeepingSelection(
         d, textSelection, scalaSourceFile.file, completionChange :: importStmt)
 
-      None
+      importStmt.headOption.map(_.text.length)
     }
 
     if (!overwrite) selectionProvider match {
@@ -169,7 +169,9 @@ class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: I
       case _ => ()
     }
     else
-      EditorHelpers.doWithCurrentEditor(editor => editor.selectAndReveal(startPos + completionFullString.length(), 0))
+      EditorHelpers.doWithCurrentEditor { editor =>
+        editor.selectAndReveal(startPos + completionFullString.length() + importSize.getOrElse(0), 0)
+    }
   }
 
   def getTriggerCharacters = null
