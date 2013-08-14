@@ -45,15 +45,17 @@ class ScalaCompletions extends HasLogger {
           for (completion <- completions) {
             val completionProposal = completion match {
               case compiler.TypeMember(sym, tpe, true, inherited, viaView) if !sym.isConstructor && nameMatches(sym) =>
-                compiler.mkCompletionProposal(prefix, start, sym, tpe, inherited, viaView)
+                Some(compiler.mkCompletionProposal(prefix, start, sym, tpe, inherited, viaView))
               case compiler.ScopeMember(sym, tpe, true, _) if !sym.isConstructor && nameMatches(sym) =>
-                compiler.mkCompletionProposal(prefix, start, sym, tpe, false, compiler.NoSymbol)
-              case _ => null
+                Some(compiler.mkCompletionProposal(prefix, start, sym, tpe, false, compiler.NoSymbol))
+              case _ => None
             }
 
-            if (completionProposal != null &&
-                !isAlreadyListed(completionProposal.fullyQualifiedName, completionProposal.display))
-              listedTypes.addBinding(completionProposal.fullyQualifiedName, completionProposal)
+            completionProposal foreach { proposal =>
+              if (!isAlreadyListed(proposal.fullyQualifiedName, proposal.display)) {
+                listedTypes.addBinding(proposal.fullyQualifiedName, proposal)
+              }
+            }
           }
         }
       }
@@ -75,22 +77,17 @@ class ScalaCompletions extends HasLogger {
       // try and find type in the classpath as well
 
       // first try and determine if there is a package name prefixing the word being completed
-      val packageName = t1 match {
-        case Some(e) if e.pos.isDefined && pos > e.pos.startOrPoint =>
-          val length = pos - e.pos.startOrPoint
-          // get text of tree element, removing all whitespace
-          val content = sourceFile.content.slice(e.pos.startOrPoint, position).filterNot {c => c.isWhitespace}
-          // see if it looks like qualified type reference
-          if (length > prefix.length + 1 && content.find {c => !c.isUnicodeIdentifierPart && c != ','} == None) {
-            content.slice(0, content.length - prefix.length - 1)
-          } else {
-            null
-          }
-        case _ => null
-      }
+      val packageName = for {
+        e <- t1 if (e.pos.isDefined && pos > e.pos.startOrPoint)
+        val length = pos - e.pos.startOrPoint
+        // get text of tree element, removing all whitespace
+        val content = sourceFile.content.slice(e.pos.startOrPoint, position).filterNot {c => c.isWhitespace}
+        // see if it looks like qualified type reference
+        if (length > prefix.length + 1 && content.find {c => !c.isUnicodeIdentifierPart && c != ','} == None)
+      } yield content.slice(0, content.length - prefix.length - 1)
 
-      logger.info(s"Search for: [${Option(packageName).map(_.mkString)}].${prefix.mkString}")
-      if (prefix.length > 0 || packageName != null) {
+      logger.info(s"Search for: [${packageName.map(_.mkString)}].${prefix.mkString}")
+      if (prefix.length > 0 || packageName.isDefined) {
         // requestor receives JDT search results
         val requestor = new TypeNameRequestor() {
           override def acceptType(modifiers: Int, packageNameArray: Array[Char], simpleTypeName: Array[Char],
@@ -121,7 +118,7 @@ class ScalaCompletions extends HasLogger {
 
         // launch the JDT search, for a type in the package, starting with the given prefix
         new SearchEngine().searchAllTypeNames(
-          packageName,
+          packageName.getOrElse(null),
           SearchPattern.R_EXACT_MATCH,
           prefix,
           SearchPattern.R_PREFIX_MATCH,
