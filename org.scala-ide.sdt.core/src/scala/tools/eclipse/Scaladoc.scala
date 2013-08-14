@@ -15,7 +15,9 @@ trait Scaladoc extends MemberLookupBase with CommentFactoryBase { this: ScalaPre
   val global: this.type = this
   import global._
 
-  override def chooseLink(links: List[LinkTo]): LinkTo = links.head
+  // @see the corresponding member in
+  // src/scaladoc/scala/tools/nsc/doc/ScaladocAnalyzer.scala
+  override def chooseLink(links: List[LinkTo]): LinkTo = links.headOption orNull
 
   override def internalLink(sym: Symbol, site: Symbol): Option[LinkTo] = {
     assert(onCompilerThread, "!onCompilerThread")
