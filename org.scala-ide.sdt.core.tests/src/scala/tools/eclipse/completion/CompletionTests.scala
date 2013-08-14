@@ -283,7 +283,6 @@ class CompletionTests {
 
   @Test
   def t1001218() {
-    // completions were not working on method apply foo(/*!*/
     val oraclePos8_14 = List("println(): Unit", "println(Any): Unit")
     val oraclePos10_12 = List("foo(): Int")
     val oraclePos12_12 = List("foo(): Int")
