@@ -280,4 +280,18 @@ class CompletionTests {
       }
     }
   }
+
+  @Test
+  def t1001218() {
+    // completions were not working on method apply foo(/*!*/
+    val oraclePos8_14 = List("println(): Unit", "println(Any): Unit")
+    val oraclePos10_12 = List("foo(): Int")
+    val oraclePos12_12 = List("foo(): Int")
+    val oraclePos18_10 = List("foo(): Int")
+
+    val unit = scalaCompilationUnit("t1001218/A.scala")
+    reload(unit)
+
+    runTest("t1001218/A.scala", false)(oraclePos8_14, oraclePos10_12, oraclePos12_12, oraclePos18_10)
+  }
 }
