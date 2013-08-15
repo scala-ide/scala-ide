@@ -24,7 +24,7 @@
       <dependencies>
         <dependency>
           <groupId>org.scala-lang</groupId>
-          <artifactId>scala-xml</artifactId>
+          <artifactId>scala-xml_${scala.binary.version}</artifactId>
         </dependency>
         <dependency>
           <groupId>org.scala-lang</groupId>
@@ -48,7 +48,7 @@
                   <artifactItems>
                     <artifactItem>
                       <groupId>org.scala-lang</groupId>
-                      <artifactId>scala-xml</artifactId>
+                      <artifactId>scala-xml_${scala.binary.version}</artifactId>
                       <classifier>sources</classifier>
                       <type>jar</type>
                       <destFileName>scala-xml-src.jar</destFileName>
