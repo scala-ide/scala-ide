@@ -147,7 +147,7 @@ class ScalaCompletions extends HasLogger {
             fillTypeCompletions(qualifier.pos.endOrPoint, name.decoded.toArray, qualifier.pos.end + 1)
           case _ =>
             val funName = scu.getContents.slice(fun.pos.startOrPoint, fun.pos.endOrPoint)
-            fillScopeCompletions(fun.pos.endOrPoint, funName, wordStart)
+            fillScopeCompletions(fun.pos.endOrPoint, funName, fun.pos.startOrPoint)
         }
       case _ =>
         fillScopeCompletions(position, wordAtPosition, wordStart)
