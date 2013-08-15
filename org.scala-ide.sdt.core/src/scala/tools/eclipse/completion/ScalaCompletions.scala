@@ -79,9 +79,9 @@ class ScalaCompletions extends HasLogger {
       // first try and determine if there is a package name prefixing the word being completed
       val packageName = for {
         e <- t1 if (e.pos.isDefined && pos > e.pos.startOrPoint)
-        val length = pos - e.pos.startOrPoint
+        length = pos - e.pos.startOrPoint
         // get text of tree element, removing all whitespace
-        val content = sourceFile.content.slice(e.pos.startOrPoint, position).filterNot {c => c.isWhitespace}
+        content = sourceFile.content.slice(e.pos.startOrPoint, position).filterNot {c => c.isWhitespace}
         // see if it looks like qualified type reference
         if (length > prefix.length + 1 && content.find {c => !c.isUnicodeIdentifierPart && c != ','} == None)
       } yield content.slice(0, content.length - prefix.length - 1)
