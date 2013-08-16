@@ -12,6 +12,7 @@ import org.junit.Ignore
 import org.junit.Test
 import scala.tools.eclipse.hyperlink.text.detector.ScalaDeclarationHyperlinkComputer
 import org.junit.BeforeClass
+import scala.tools.eclipse.FlakyTest
 
 object HyperlinkDetectorTests extends TestProjectSetup("hyperlinks") with HyperlinkTester {
   @BeforeClass
@@ -37,7 +38,7 @@ class HyperlinkDetectorTests {
   import HyperlinkDetectorTests._
 
   @Test
-  def simpleHyperlinks() {
+  def simpleHyperlinks() = FlakyTest.retry("simpleHyperlinks", "no links found for `Tpe`") {
     val oracle = List(
       Link("type scala.Predef.Set"),
       Link("type hyperlinks.SimpleHyperlinking.Tpe"),
@@ -53,7 +54,7 @@ class HyperlinkDetectorTests {
   }
   
   @Test
-  def scalaPackageLinks() {
+  def scalaPackageLinks() = FlakyTest.retry("simpleHyperlinks", "expected 2 link, found 1 expected:<2> but was:<1>") {
     val oracle = List(
         Link("method scala.collection.immutable.List.apply", "object scala.collection.immutable.List"),
         Link("object scala.collection.immutable.List"),

@@ -2,15 +2,15 @@ package scala.tools.eclipse.launching
 
 import scala.tools.eclipse.EclipseUserSimulator
 import scala.tools.eclipse.ScalaProject
+import scala.tools.eclipse.FlakyTest
+import scala.tools.eclipse.javaelements.ScalaSourceFile
 import scala.tools.eclipse.testsetup.SDTTestUtils._
 import scala.tools.eclipse.testsetup.SDTTestUtils
 import scala.tools.eclipse.testsetup.TestProjectSetup
 import org.junit.After
 import org.junit.Assert
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
-import scala.tools.eclipse.javaelements.ScalaSourceFile
 
 /** This class checks the functionality behind Run As > JUnit Test, triggered when a user right clicks on a source
   * file in the package explorer and hovers on "Run As". If the source file contains any runnable JUnit4 test class,
@@ -75,7 +75,7 @@ class JUnit4TestFinderTest {
   def project: ScalaProject = projectSetup.project
 
   @Test
-  def findSimpleTestClass() {
+  def findSimpleTestClass() = FlakyTest.retry("findSimpleTestClass") {
     val cu = projectSetup.createSourceFile("test", "MyTest.scala") {
       """
         |package test
@@ -91,7 +91,7 @@ class JUnit4TestFinderTest {
   }
 
   @Test
-  def findSimpleTestClass_inEmptyPackage() {
+  def findSimpleTestClass_inEmptyPackage() =  FlakyTest.retry("findSimpleTestClass_inEmptyPackage", "expected:<Set(MyTest)> but was:<Set()>") {
     val cu = projectSetup.createSourceFile("", "MyTest.scala") {
       """
         |import org.junit.Test
@@ -106,7 +106,7 @@ class JUnit4TestFinderTest {
   }
 
   @Test
-  def findSimpleTestClass_afterTypecheckingSource() {
+  def findSimpleTestClass_afterTypecheckingSource() = FlakyTest.retry("findSimpleTestClass_afterTypecheckingSource") {
     val cu = projectSetup.createSourceFile("test", "MyTest.scala") {
       """
         |package test
@@ -123,7 +123,7 @@ class JUnit4TestFinderTest {
   }
 
   @Test
-  def findTestClass_WhenThereAreParseErrors() {
+  def findTestClass_WhenThereAreParseErrors() = FlakyTest.retry("findTestClass_WhenThereAreParseErrors") {
     val cu = projectSetup.createSourceFile("test", "MyTest.scala") {
       """
         |package test
@@ -139,7 +139,7 @@ class JUnit4TestFinderTest {
   }
 
   @Test
-  def findTestClass_WhenThereAreTypecheckingError() {
+  def findTestClass_WhenThereAreTypecheckingError() = FlakyTest.retry("findTestClass_WhenThereAreTypecheckingError") {
     val cu = projectSetup.createSourceFile("test", "MyTest.scala") {
       """
         |package test
@@ -157,7 +157,7 @@ class JUnit4TestFinderTest {
   }
 
   @Test
-  def findMultipleTestClasses() {
+  def findMultipleTestClasses() = FlakyTest.retry("findMultipleTestClasses") {
     val cu = projectSetup.createSourceFile("test", "MyTest.scala") {
       """
         |package test
@@ -178,7 +178,7 @@ class JUnit4TestFinderTest {
   }
 
   @Test
-  def cannotRunModuleAsJUnitTestClass() {
+  def cannotRunModuleAsJUnitTestClass() = FlakyTest.retry("cannotRunModuleAsJUnitTestClass") {
     val cu = projectSetup.createSourceFile("test", "MyTest.scala") {
       """
         |package test
@@ -194,7 +194,7 @@ class JUnit4TestFinderTest {
   }
 
   @Test
-  def cannotRunTraitAsJUnitTestClass() {
+  def cannotRunTraitAsJUnitTestClass() = FlakyTest.retry("cannotRunTraitAsJUnitTestClass") {
     val cu = projectSetup.createSourceFile("test", "SuperTest.scala") {
       """
         |package test
@@ -210,7 +210,7 @@ class JUnit4TestFinderTest {
   }
 
   @Test
-  def cannotRunAbstractJUnitTestClass() {
+  def cannotRunAbstractJUnitTestClass() = FlakyTest.retry("cannotRunAbstractJUnitTestClass") {
     val cu = projectSetup.createSourceFile("test", "AbstractTest.scala") {
       """
         |package test
@@ -226,7 +226,7 @@ class JUnit4TestFinderTest {
   }
 
   @Test
-  def findTestClass_WhenTestMethodIsDefinedInAbstractParent() {
+  def findTestClass_WhenTestMethodIsDefinedInAbstractParent() = FlakyTest.retry("findTestClass_WhenTestMethodIsDefinedInAbstractParent", "expected:<Set(MyTest)> but was:<Set()>") {
     val cu = projectSetup.createSourceFile("test", "MyTest.scala") {
       """
         |package test
@@ -243,7 +243,7 @@ class JUnit4TestFinderTest {
   }
 
   @Test
-  def findTestClass_InEmptyPackage_WhenTestMethodIsDefinedInAbstractParent() {
+  def findTestClass_InEmptyPackage_WhenTestMethodIsDefinedInAbstractParent() = FlakyTest.retry("findTestClass_InEmptyPackage_WhenTestMethodIsDefinedInAbstractParent", "expected:<Set(MyTest)> but was:<Set()>") {
     projectSetup.createSourceFile("test", "SuperTest.scala") {
       """
         |package test
@@ -265,7 +265,7 @@ class JUnit4TestFinderTest {
   }
 
   @Test
-  def findTestClass_WhenDefinedInAbstractParent_andSeparateCompilationUnit() {
+  def findTestClass_WhenDefinedInAbstractParent_andSeparateCompilationUnit() = FlakyTest.retry("findTestClass_WhenDefinedInAbstractParent_andSeparateCompilationUnit", "expected:<Set(MyTest)> but was:<Set()>") {
     projectSetup.createSourceFile("test", "SuperTest.scala") {
       """
         |package test
@@ -287,7 +287,7 @@ class JUnit4TestFinderTest {
   }
 
   @Test
-  def findTestClass_WhenTestMethodIsDefinedInParentTrait() {
+  def findTestClass_WhenTestMethodIsDefinedInParentTrait() = FlakyTest.retry("findTestClass_WhenTestMethodIsDefinedInParentTrait") {
     val cu = projectSetup.createSourceFile("test", "MyTest.scala") {
       """
         |package test
@@ -304,7 +304,7 @@ class JUnit4TestFinderTest {
   }
 
   @Test
-  def findSimpleTestClass_thatUsesRunWithAnnotation() {
+  def findSimpleTestClass_thatUsesRunWithAnnotation() = FlakyTest.retry("findSimpleTestClass_thatUsesRunWithAnnotation", "expected:<Set(MyTest)> but was:<Set()>") {
     val cu = projectSetup.createSourceFile("test", "MyTest.scala") {
       """
         |package test
@@ -319,7 +319,7 @@ class JUnit4TestFinderTest {
   }
 
   @Test
-  def findSimpleTestClass_thatInheritsRunWithAnnotation_FromParentAbstractClass() {
+  def findSimpleTestClass_thatInheritsRunWithAnnotation_FromParentAbstractClass() = FlakyTest.retry("findSimpleTestClass_thatInheritsRunWithAnnotation_FromParentAbstractClass", "expected:<Set(MyTest)> but was:<Set()>") {
     val cu = projectSetup.createSourceFile("test", "MyTest.scala") {
       """
         |package test
@@ -336,7 +336,7 @@ class JUnit4TestFinderTest {
   }
 
   @Test
-  def findSimpleTestClass_thatInheritsRunWithAnnotation_FromParentTrait() {
+  def findSimpleTestClass_thatInheritsRunWithAnnotation_FromParentTrait() = FlakyTest.retry("findSimpleTestClass_thatInheritsRunWithAnnotation_FromParentTrait") {
     val cu = projectSetup.createSourceFile("test", "MyTest.scala") {
       """
         |package test
@@ -353,7 +353,7 @@ class JUnit4TestFinderTest {
   }
 
   @Test
-  def RunWithAnnotation_NotMeaningfulOnModule() {
+  def RunWithAnnotation_NotMeaningfulOnModule() = FlakyTest.retry("RunWithAnnotation_NotMeaningfulOnModule") {
     val cu = projectSetup.createSourceFile("test", "ModuleTest.scala") {
       """
         |package test
@@ -368,7 +368,7 @@ class JUnit4TestFinderTest {
   }
 
   @Test
-  def RunWithAnnotation_NotMeaningfulOnTrait() {
+  def RunWithAnnotation_NotMeaningfulOnTrait() = FlakyTest.retry("RunWithAnnotation_NotMeaningfulOnTrait") {
     val cu = projectSetup.createSourceFile("test", "TraitTest.scala") {
       """
         |package test
@@ -383,7 +383,7 @@ class JUnit4TestFinderTest {
   }
 
   @Test
-  def RunWithAnnotation_NotMeaningfulOnAbstractClasses() {
+  def RunWithAnnotation_NotMeaningfulOnAbstractClasses() = FlakyTest.retry("RunWithAnnotation_NotMeaningfulOnAbstractClasses") {
     val cu = projectSetup.createSourceFile("test", "AbstractTest.scala") {
       """
         |package test
