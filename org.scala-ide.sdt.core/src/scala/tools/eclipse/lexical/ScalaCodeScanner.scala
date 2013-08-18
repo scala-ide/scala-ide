@@ -91,11 +91,9 @@ trait ScalaCodeTokenizer {
      * which would be too slow, but this is hopefully adequate.
      */
     def isMacro(token: ScalariformToken, pos: Int) =
-      // TODO: remove check when not supporting < 2.10 anymore
-      scalaVersion >= ScalaVersions.Scala_2_10 &&
-        token.tokenType.isId && token.text == "macro" &&
-        findMeaningfulToken(pos + 1, shift = 1).exists(token => token.tokenType.isId) &&
-        findMeaningfulToken(pos - 1, shift = -1).exists(_.tokenType == EQUALS)
+      token.tokenType.isId && token.text == "macro" &&
+      findMeaningfulToken(pos + 1, shift = 1).exists(token => token.tokenType.isId) &&
+      findMeaningfulToken(pos - 1, shift = -1).exists(_.tokenType == EQUALS)
 
     /**
      * Scan forwards or backwards for nearest comment that is neither whitespace nor comment

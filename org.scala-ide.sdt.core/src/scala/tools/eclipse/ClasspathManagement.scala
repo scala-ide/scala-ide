@@ -86,20 +86,9 @@ object IncompatibleVersion {
    */
   private val CrossCompiledRegex = """.*_(2\.\d+(\.\d*)?)(-.*)?.jar""".r
 
-  private val minimalVersionChecked = new Version(2, 8, 0)
-
-  /** Checks if the version extracted by the regex is compatible with the current Scala version.
-   *  Checks major.minor for version >= 2.8.0.
-   */
-  private def isCompatibleVersion(version: String) = {
-    val osgiVersion = new Version(version)
-
-    (minimalVersionChecked.compareTo(osgiVersion) > 0) || plugin.isCompatibleVersion(Some(osgiVersion.toString()))
-  }
-
   def unapply(fileName: String): Option[String] = {
     fileName match {
-      case CrossCompiledRegex(version, _, _) if !isCompatibleVersion(version) =>
+      case CrossCompiledRegex(version, _, _) if !plugin.isCompatibleVersion(Some(new Version(version).toString)) =>
         Some(version)
       case _ =>
         None
@@ -125,13 +114,6 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
         new ScalaClasspath(jdkEntries, None, cp, None)
     }
   }
-
-  /** Return the full classpath of this project.
-   *  Each entry is an absolute file-system path.
-   */
-  @deprecated("Please use `scalaClasspath.fullClasspath instead", "2.1.0")
-  def classpath: Seq[IPath] =
-    scalaClasspath.fullClasspath.map(p => new Path(p.getAbsolutePath))
 
   /** Return the classpath entries coming from the JDK.  */
   def jdkPaths: Seq[IPath] = {
