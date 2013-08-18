@@ -32,17 +32,15 @@ class PresentationCompilerTest {
 
     // then
     project.withSourceFile(unit) { (sourceFile, compiler) =>
-      try {
-        compiler.withStructure(sourceFile, keepLoaded = true) { tree =>
-          compiler.askOption { () =>
-            val overrideIndicatorBuilder = new compiler.OverrideIndicatorBuilderTraverser(unit, new java.util.HashMap) {
-              override val eclipseLog = mockLogger
-            }
-            // if the unit is not kept loaded (i.e., `keepLoaded = false`), then a message
-            // "Error creating override indicators" is reported. That is why this test checks
-            // that no error is reported to the mocked logger.
-            overrideIndicatorBuilder.traverse(tree)
+      compiler.withStructure(sourceFile, keepLoaded = true) { tree =>
+        compiler.askOption { () =>
+          val overrideIndicatorBuilder = new compiler.OverrideIndicatorBuilderTraverser(unit, new java.util.HashMap) {
+            override val eclipseLog = mockLogger
           }
+          // if the unit is not kept loaded (i.e., `keepLoaded = false`), then a message
+          // "Error creating override indicators" is reported. That is why this test checks
+          // that no error is reported to the mocked logger.
+          overrideIndicatorBuilder.traverse(tree)
         }
       }
     }()
