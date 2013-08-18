@@ -98,13 +98,11 @@ class MemoryLeaksTest extends HasLogger {
 
     // then
     compilerProject.project.withSourceFile(unit) { (sourceFile, compiler) =>
-      try {
-        compiler.withStructure(sourceFile, keepLoaded = true) { tree =>
-          compiler.askOption { () =>
-            val overrideIndicatorBuilder = new compiler.OverrideIndicatorBuilderTraverser(unit, new java.util.HashMap)
+      compiler.withStructure(sourceFile, keepLoaded = true) { tree =>
+        compiler.askOption { () =>
+          val overrideIndicatorBuilder = new compiler.OverrideIndicatorBuilderTraverser(unit, new java.util.HashMap)
 
-            overrideIndicatorBuilder.traverse(tree)
-          }
+          overrideIndicatorBuilder.traverse(tree)
         }
       }
     }()

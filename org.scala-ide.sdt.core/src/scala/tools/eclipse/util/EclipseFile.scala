@@ -24,18 +24,11 @@ import scala.tools.nsc.io.AbstractFile
 import scala.tools.eclipse.logging.HasLogger
 
 object EclipseResource extends HasLogger {
-  def apply(r: IResource): EclipseResource[_ <: IResource] = {
-    try {
-      if (r == null)
-        throw new NullPointerException()
-      else if (r.getLocation == null)
-        throw new NullPointerException(r.toString)
-    }
-
-    r match {
-      case file: IFile           => new EclipseFile(file)
-      case container: IContainer => new EclipseContainer(container)
-    }
+  def apply(r: IResource): EclipseResource[_ <: IResource] = r match {
+    case file: IFile                  => new EclipseFile(file)
+    case container: IContainer        => new EclipseContainer(container)
+    case null                         => throw new NullPointerException()
+    case r if r.getLocation() == null => throw new NullPointerException(r.toString)
   }
 
   def unapply(file: AbstractFile): Option[IResource] = file match {
