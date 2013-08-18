@@ -82,15 +82,6 @@ class ScalaOccurrencesFinder(unit: InteractiveCompilationUnit) extends HasLogger
       } getOrElse None
     }(None)
   }
-
-  /** Backported for 2.9 from the 2.10 implementation. TODO: Remove when we drop 2.9 support. */
-  private object WeakReference {
-    /** Optionally returns the referenced value, or `None` if that value no longer exists */
-    def unapply[T <: AnyRef](wr: WeakReference[T]): Option[T] = {
-      val x = wr.underlying.get
-      if (x != null) Some(x) else None
-    }
-  }
 }
 
 object ScalaOccurrencesFinder {

@@ -154,11 +154,8 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
   /**
    * Check if the given version is compatible with the current plug-in version.
    * Check on the major/minor number, discard the maintenance number.
-   * 2.9.1 and 2.9.2-SNAPSHOT are compatible
-   * 2.8.1 and 2.9.0 are no compatible
    */
-  def isCompatibleVersion(version: Option[String]): Boolean =
-    version match {
+  def isCompatibleVersion(version: Option[String]): Boolean = version match {
     case Some(v) =>
       cutVersion(v) == shortScalaVer
     case None =>
