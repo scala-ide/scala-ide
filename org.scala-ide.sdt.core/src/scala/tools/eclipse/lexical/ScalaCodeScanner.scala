@@ -74,7 +74,7 @@ trait ScalaCodeTokenizer {
   case class Range(start: Int, length: Int, syntaxClass: ScalaSyntaxClass)
 
   /** Tokenizes a string given by its offset and length in a document. */
-  @deprecated
+  @deprecated("use ScalaCodeTokenizer.tokenize(String, Int) instead", "4.0")
   def tokenize(document: IDocument, offset: Int, length: Int): IndexedSeq[Range] =
     tokenize(document.get(offset, length), offset)
 
@@ -92,11 +92,9 @@ trait ScalaCodeTokenizer {
      * which would be too slow, but this is hopefully adequate.
      */
     def isMacro(token: ScalariformToken, pos: Int) =
-      // TODO: remove check when not supporting < 2.10 anymore
-      scalaVersion >= ScalaVersions.Scala_2_10 &&
-        token.tokenType.isId && token.text == "macro" &&
-        findMeaningfulToken(pos + 1, shift = 1).exists(token => token.tokenType.isId) &&
-        findMeaningfulToken(pos - 1, shift = -1).exists(_.tokenType == EQUALS)
+      token.tokenType.isId && token.text == "macro" &&
+      findMeaningfulToken(pos + 1, shift = 1).exists(token => token.tokenType.isId) &&
+      findMeaningfulToken(pos - 1, shift = -1).exists(_.tokenType == EQUALS)
 
     /**
      * Scan forwards or backwards for nearest comment that is neither whitespace nor comment

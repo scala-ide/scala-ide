@@ -189,20 +189,8 @@ object ScalaLaunchShortcut {
              cdef.symbol.owner.isPackageClass
           ).getOrElse(false)
 
-          def hasMainMethod(cdef: Tree): Boolean = {
-            // The given symbol is a method with the right name and signature to be a runnable java program.
-            // should be run inside `askOption`
-            def isJavaMainMethod(sym: Symbol) = (sym.name == nme.main) && (sym.info match {
-              case MethodType(p :: Nil, restpe) => isArrayOfSymbol(p.tpe, StringClass) && restpe.typeSymbol == UnitClass
-              case _                            => false
-            })
-            // The given class has a main method.
-            // should be called inside `askOption`
-            // TODO: copied from 2.10.0 'definitions', should be dropped once 2.9 is gone
-            def hasJavaMainMethod(sym: Symbol): Boolean =
-              (sym.tpe member nme.main).alternatives exists isJavaMainMethod
-              comp.askOption { () => hasJavaMainMethod(cdef.symbol) } getOrElse false
-            }
+          def hasMainMethod(cdef: Tree): Boolean =
+            comp.askOption { () => hasJavaMainMethod(cdef.symbol) } getOrElse false
 
           val response = new Response[Tree]
           comp.askParsedEntered(source, keepLoaded = false, response)
