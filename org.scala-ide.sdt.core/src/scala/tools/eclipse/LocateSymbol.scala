@@ -70,7 +70,7 @@ trait LocateSymbol { self : ScalaPresentationCompiler =>
       val nameLookup = new SearchableEnvironment(javaProject, null: WorkingCopyOwner).nameLookup
 
       val name = askOption { () =>
-        if (sym.owner.isPackageObject) sym.owner.owner.fullName + ".package" else sym.enclosingTopLevelClass.fullName
+        if ((sym != NoSymbol) && sym.owner.isPackageObject) sym.owner.owner.fullName + ".package" else sym.enclosingTopLevelClass.fullName
       }
       logger.debug("Looking for compilation unit " + name)
       name.flatMap{ n =>

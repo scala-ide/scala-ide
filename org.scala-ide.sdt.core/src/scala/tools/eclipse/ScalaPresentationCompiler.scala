@@ -328,7 +328,7 @@ class ScalaPresentationCompiler(val project: ScalaProject, settings: Settings) e
       } else scalaParamNames
     }
 
-    val docFun = () => browserInput(sym, sym.enclClass) // TODO: proper site. How?
+    def docFun() = browserInput(sym, sym.enclClass) // TODO: proper site. How?
 
     CompletionProposal(
       kind,
