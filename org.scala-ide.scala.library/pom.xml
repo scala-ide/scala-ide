@@ -27,8 +27,8 @@
           <artifactId>scala-xml_${scala.binary.version}</artifactId>
         </dependency>
         <dependency>
-          <groupId>org.scala-lang</groupId>
-          <artifactId>scala-parser-combinators</artifactId>
+          <groupId>org.scala-lang.modules</groupId>
+          <artifactId>scala-parser-combinators_${scala.binary.version}</artifactId>
         </dependency>
       </dependencies>
       <build>
@@ -54,8 +54,8 @@
                       <destFileName>scala-xml-src.jar</destFileName>
                     </artifactItem>
                     <artifactItem>
-                      <groupId>org.scala-lang</groupId>
-                      <artifactId>scala-parser-combinators</artifactId>
+                      <groupId>org.scala-lang.modules</groupId>
+                      <artifactId>scala-parser-combinators_${scala.binary.version}</artifactId>
                       <classifier>sources</classifier>
                       <type>jar</type>
                       <destFileName>scala-parser-combinators-src.jar</destFileName>
