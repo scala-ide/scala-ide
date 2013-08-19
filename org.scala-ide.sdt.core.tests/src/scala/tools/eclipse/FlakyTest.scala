@@ -3,6 +3,10 @@ package scala.tools.eclipse
 import scala.tools.eclipse.logging.HasLogger
 
 object FlakyTest extends HasLogger {
+  private final val RetryFlakyTests = "retryFlakyTests"
+  private lazy val retryFlakyTests =
+    "true".equalsIgnoreCase(System.getProperty(RetryFlakyTests))
+
   /** Retry to execute the passed `test` up to N `times`.
     *
     * @param methodName The test's method name.
@@ -17,8 +21,7 @@ object FlakyTest extends HasLogger {
         logger.debug(s"Test run number: ${attempt})")
         test
         logger.debug(s"Test `%{testName}` was successful!")
-      }
-      catch {
+      } catch {
         case _: AssertionError if attempt < times => loop(attempt + 1)
         case e: AssertionError                    =>
           logger.debug(s"Bailing out after ${attempt} attempts. The test is failing consistenly, this may actually be a real regression!?")
@@ -30,6 +33,7 @@ object FlakyTest extends HasLogger {
     if(errorMsg.nonEmpty)
       logger.debug(s"""When the test fails, it usually reports the following error: \"${errorMsg}\"""")
 
-    loop(1)
+    if(retryFlakyTests) loop(1)
+    else test
   }
 }
