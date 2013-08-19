@@ -19,6 +19,7 @@
 
   <properties>
     <encoding>UTF-8</encoding>
+    <retryFlakyTests>false</retryFlakyTests>
     <!-- p2 repositories location -->
     <repo.eclipse.indigo>http://download.eclipse.org/releases/indigo/</repo.eclipse.indigo>
     <repo.eclipse.juno>http://download.eclipse.org/releases/juno</repo.eclipse.juno>
@@ -52,7 +53,7 @@
     <tycho.test.OSspecific></tycho.test.OSspecific>
     <!-- Partial workaround against JDT Weaving deadlocks. See #1000317 and the original ticket on https://issuetracker.springsource.com/browse/STS-1445 -->
     <tycho.test.weaving>-XX:+UnlockDiagnosticVMOptions -XX:+UnsyncloadClass -Dosgi.classloader.lock=classname</tycho.test.weaving>
-    <tycho.test.jvmArgs>-Xmx1024m -XX:MaxPermSize=256m -Dsdtcore.headless -Dsdtcore.notimeouts ${tycho.test.weaving} ${tycho.test.OSspecific}</tycho.test.jvmArgs>
+    <tycho.test.jvmArgs>-Xmx1024m -XX:MaxPermSize=256m -Dsdtcore.headless -Dsdtcore.notimeouts -DretryFlakyTests=${retryFlakyTests} ${tycho.test.weaving} ${tycho.test.OSspecific}</tycho.test.jvmArgs>
 
     <!-- dependencies repos, can be overwritten by profiles -->
     <eclipse.codename>Select a profile</eclipse.codename>
@@ -78,6 +79,12 @@
   </properties>
 
   <profiles>
+    <profile>
+      <id>retryFlakyTests</id>
+      <properties>
+        <retryFlakyTests>true</retryFlakyTests>
+      </properties>
+    </profile>
 
     <profile>
       <id>scala-2.10.x</id>
