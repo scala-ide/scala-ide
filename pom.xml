@@ -62,7 +62,7 @@
      <!-- default values, can be overwritten by profiles -->
      <scala.version>2.10.0</scala.version>
      <scala.binary.version>2.10</scala.binary.version>
-     <scala.xml.version>1.0-RC1</scala.xml.version>
+     <scala.xml.version>1.0-RC2</scala.xml.version>
      <scala.library.version>${scala.version}</scala.library.version>
      <version.suffix>2_10</version.suffix>
      <version.tag>local</version.tag>
@@ -236,7 +236,7 @@
         <version>${scala.library.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.scala-lang</groupId>
+        <groupId>org.scala-lang.modules</groupId>
         <artifactId>scala-xml_${scala.binary.version}</artifactId>
         <version>${scala.xml.version}</version>
       </dependency>
