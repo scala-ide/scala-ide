@@ -16,6 +16,7 @@ import org.eclipse.swt.widgets.Shell
 import org.eclipse.jface.text.IInformationControlCreator
 import org.eclipse.jface.text.DefaultInformationControl
 
+import scala.tools.nsc.interactive.CompilerControl
 import scala.tools.nsc.symtab.Flags
 import scala.tools.eclipse.util.EclipseUtils._
 
@@ -64,10 +65,7 @@ class ScalaHover(val icu: InteractiveCompilationUnit) extends ITextHover with IT
       }
 
       val wordPos = region.toRangePos(src)
-      val pos = unitOfFile(src.file).body find {
-         case Apply(fun, _) if fun.pos.isRange && fun.pos.end == wordPos.end => true
-         case _ => false
-       } map (_.pos) getOrElse wordPos
+      val pos = {val pTree = locateTree(wordPos); if (pTree.hasSymbol) pTree.pos else wordPos}
       val resp = new Response[Tree]
       askTypeAt(pos, resp)
       resp.get.left.toOption flatMap hoverInfo getOrElse NoHoverInfo
