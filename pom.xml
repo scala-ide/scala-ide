@@ -63,6 +63,7 @@
      <scala.version>2.10.0</scala.version>
      <scala.binary.version>2.10</scala.binary.version>
      <scala.xml.version>1.0-RC2</scala.xml.version>
+     <scala.parser-combinators.version>1.0-RC1</scala.parser-combinators.version>
      <scala.library.version>${scala.version}</scala.library.version>
      <version.suffix>2_10</version.suffix>
      <version.tag>local</version.tag>
@@ -241,9 +242,9 @@
         <version>${scala.xml.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.scala-lang</groupId>
-        <artifactId>scala-parser-combinators</artifactId>
-        <version>${scala.library.version}</version>
+        <groupId>org.scala-lang.modules</groupId>
+        <artifactId>scala-parser-combinators_${scala.binary.version}</artifactId>
+        <version>${scala.parser-combinators.version}</version>
       </dependency>
       <dependency>
         <groupId>org.scala-lang</groupId>
