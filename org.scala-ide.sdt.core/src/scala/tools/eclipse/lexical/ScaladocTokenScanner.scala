@@ -6,6 +6,7 @@ import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.jface.text.rules.ICharacterScanner
 import org.eclipse.jface.text.rules.IToken
 import org.eclipse.jface.text.rules.IWordDetector
+import org.eclipse.jface.text.rules.SingleLineRule
 import org.eclipse.jface.text.rules.Token
 import org.eclipse.jface.text.rules.WordRule
 
@@ -36,8 +37,9 @@ class ScaladocTokenScanner(
 
   private val annotationRule = new ScaladocWordRule(new AnnotationDetector, getToken(scaladocClass), getToken(annotationClass))
   private val macroRule = new ScaladocWordRule(new MacroDetector, getToken(scaladocClass), getToken(macroClass))
+  private val bracesMacroRule = new SingleLineRule("${", "}", getToken(macroClass))
 
-  appendRules(Array(annotationRule, macroRule))
+  appendRules(Array(annotationRule, bracesMacroRule, macroRule))
 }
 
 /**

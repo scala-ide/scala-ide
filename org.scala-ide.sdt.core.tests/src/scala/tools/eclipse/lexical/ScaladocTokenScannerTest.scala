@@ -116,7 +116,7 @@ class ScaladocTokenScannerTest {
     groupedToken
   }
 
-  class Assert_===[A](actual: A) {
+  implicit class Assert_===[A](actual: A) {
     def ===(expected: A) {
       if (actual != expected)
         throw new ComparisonFailure("actual != expected,",
@@ -124,7 +124,6 @@ class ScaladocTokenScannerTest {
           actual.toString())
     }
   }
-  implicit def Assert_===[A](actual: A): Assert_===[A] = new Assert_===(actual)
 
   @Test
   def no_annotation() {
@@ -232,6 +231,12 @@ class ScaladocTokenScannerTest {
   def single_task_tag() {
     val res = tokenize("/**TODO*/")
     res === Seq((scaladocAtt, 0, 3), (taskTagAtt, 3, 4), (scaladocAtt, 7, 2))
+  }
+
+  @Test
+  def braces_macro() {
+    val res = tokenize("/**${abc}d*/")
+    res === Seq((scaladocAtt, 0, 3), (macroAtt, 3, 6), (scaladocAtt, 9, 3))
   }
 
 }
