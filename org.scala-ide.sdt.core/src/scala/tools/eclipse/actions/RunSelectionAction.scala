@@ -44,7 +44,7 @@ class RunSelectionAction extends ActionDelegate with IWorkbenchWindowActionDeleg
       }
 
       if (!text.isEmpty) {
-        ReplConsoleView.makeVisible(project,workbenchWindow.getActivePage).interpret(text)
+        ReplConsoleView.makeVisible(project,workbenchWindow.getActivePage).evaluate(text)
       }
     }
   }

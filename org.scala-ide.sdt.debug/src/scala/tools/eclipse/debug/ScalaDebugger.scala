@@ -49,7 +49,7 @@ object ScalaDebugger extends ISelectionListener with HasLogger {
   @volatile private var currentThread: ScalaThread = null
 
   def currentThreadOrFindFirstSuspendedThread(objRef: ScalaObjectReference): ScalaThread = {
-    if(currentThread == null) {
+    if(currentThread == null && objRef != null) {
      logger.info("`currentThread` is null. Now looking for first suspended thread...")
      val threads = objRef.getDebugTarget.getThreads
      val suspendedThreads = threads collect { case t: ScalaThread if t.isSuspended => t}

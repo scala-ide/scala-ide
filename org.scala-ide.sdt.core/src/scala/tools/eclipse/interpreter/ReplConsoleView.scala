@@ -46,12 +46,7 @@ import org.eclipse.ui.part.ViewPart
 import EclipseRepl.Exec
 import scalariform.lexer.ScalaLexer
 
-class ReplConsoleView extends ViewPart {
-
-  private var textWidget: StyledText = null
-  private var codeBgColor: Color = null
-  private var codeFgColor: Color = null
-  private var errorFgColor: Color = null
+class ReplConsoleView extends ViewPart with InterpreterConsoleView {
 
   private var projectName: String = ""
   private var scalaProject: ScalaProject = null
@@ -90,7 +85,7 @@ class ReplConsoleView extends ViewPart {
         }}
   })
 
-  def interpret(text:String) {
+  override def evaluate(text:String) {
     if (isStopped)
       setStarted
     repl.exec(text)
@@ -112,7 +107,7 @@ class ReplConsoleView extends ViewPart {
     }
   }
 
-  private object clearConsoleAction extends Action("Clear Output") {
+  protected object clearConsoleAction extends Action("Clear Output") {
     setToolTipText("Clear Output")
     setImageDescriptor(ConsolePluginImages.getImageDescriptor(IInternalConsoleConstants.IMG_ELCL_CLEAR));
     setDisabledImageDescriptor(ConsolePluginImages.getImageDescriptor(IInternalConsoleConstants.IMG_DLCL_CLEAR));
@@ -318,40 +313,8 @@ class ReplConsoleView extends ViewPart {
   /**
    * Create the interpreter UI
    */
-  private def createInterpreterPartControl(parent: Composite) {
-
-    codeBgColor = new Color(parent.getDisplay, 230, 230, 230)   // light gray
-    codeFgColor = new Color(parent.getDisplay, 64, 0, 128)      // eggplant
-    errorFgColor = new Color(parent.getDisplay, 128, 0, 64)     // maroon
-
-    val panel = new Composite(parent, SWT.NONE)
-    panel.setLayout(new GridLayout(2, false)) //two columns grid
-
-    // 1st row
-    textWidget = new StyledText(panel, SWT.BORDER | SWT.H_SCROLL | SWT.V_SCROLL)
-    textWidget.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1)) // span two columns
-    textWidget.setEditable(false)
-    textWidget.setCaret(new Caret(textWidget, SWT.NONE))
-
-
-    val editorFont = JFaceResources.getFont(PreferenceConstants.EDITOR_TEXT_FONT)
-    textWidget.setFont(editorFont) // java editor font
-
-    // 2nd row
-    val inputLabel = new Label(panel, SWT.NULL)
-    inputLabel.setText("Evaluate:")
-
-    inputField = new CommandField(panel, SWT.BORDER | SWT.SINGLE) {
-      override protected def helpText = "<type an expression>"
-      setEvaluator(new scala.tools.eclipse.ui.CommandField.Evaluator {
-        override def eval(command: String) {
-          interpret(command)
-        }
-      })
-    }
-    inputField.setFont(editorFont)
-    inputField.setLayoutData(new GridData(GridData.FILL_HORIZONTAL))
-
+  override def createInterpreterPartControl(parent: Composite) {
+    super.createInterpreterPartControl(parent)
     val toolbarManager = getViewSite.getActionBars.getToolBarManager
     toolbarManager.add(replayAction)
     toolbarManager.add(new Separator)
@@ -372,63 +335,12 @@ class ReplConsoleView extends ViewPart {
 
   override def setFocus() { }
 
-  /**
-   * Display the string with code formatting
-   */
-  private def displayCode(text: String) {
-    if (textWidget.getCharCount != 0) // don't insert a newline if this is the first line of code to be displayed
-      displayOutput("\n")
-    appendText("\n", codeFgColor, codeBgColor, SWT.NORMAL, insertNewline = false)
-    val colorManager = JavaPlugin.getDefault.getJavaTextTools.getColorManager
-    val prefStore = ScalaPlugin.plugin.getPreferenceStore
-    for (token <- ScalaLexer.rawTokenise(text, forgiveErrors = true)) {
-      val textAttribute = ScalariformToSyntaxClass(token).getTextAttribute(prefStore)
-      val bgColor = Option(textAttribute.getBackground) getOrElse codeBgColor
-      appendText(token.text, textAttribute.getForeground, bgColor, textAttribute.getStyle, insertNewline = false)
-    }
-    appendText("\n\n", codeFgColor, codeBgColor, SWT.NORMAL, insertNewline = false)
-  }
-
-  private def displayOutput(text: String) {
-    appendText(text, null, null, SWT.NORMAL)
-  }
-
-  private def displayError(text: String) {
-    appendText(text, errorFgColor, null, SWT.NORMAL)
-  }
-
-  private def appendText(text: String, fgColor: Color, bgColor: Color, fontStyle: Int, insertNewline: Boolean = false) {
-    val lastOffset = textWidget.getCharCount
-    val oldLastLine = textWidget.getLineCount
-
-    val outputStr =
-      if (insertNewline) "\n" + text.stripLineEnd + "\n\n"
-      else text
-
-    textWidget.append(outputStr)
-    textWidget.setStyleRange(new StyleRange(lastOffset, outputStr.length, fgColor, null, fontStyle))
-
-    val lastLine = textWidget.getLineCount
-    if (bgColor != null)
-      textWidget.setLineBackground(oldLastLine - 1, lastLine - oldLastLine, bgColor)
-    textWidget.setTopIndex(textWidget.getLineCount - 1)
-    textWidget.setStyleRange(new StyleRange(lastOffset, outputStr.length, fgColor, bgColor, fontStyle))
-
-
-    clearConsoleAction.setEnabled(true)
-  }
-
   override def dispose() {
     view = null
     if (projectName == null) {
       // elements of the project chooser view
       ResourcesPlugin.getWorkspace().removeResourceChangeListener(resourceChangeListener)
     } else {
-      // elements of the interpreter view
-      codeBgColor.dispose
-      codeFgColor.dispose
-      errorFgColor.dispose
-
       repl.quit()
 
       scalaProject removeBuildSuccessListener refreshOnRebuildAction

@@ -25,7 +25,7 @@ class ScalaClassType(underlying: ClassType, debugTarget: ScalaDebugTarget) exten
 
   // Members declared in scala.tools.eclipse.debug.model.HasMethodInvocation
 
-  protected[model] def classType(): ClassType = underlying
+  def classType(): ClassType = underlying
 
   protected[model] def jdiInvokeMethod(method: Method, thread: ScalaThread, args: Value*): Value = thread.invokeStaticMethod(underlying, method, args:_*)
 

@@ -139,7 +139,7 @@ trait BaseDebuggerActor extends Actor with HasLogger {
 }
 
 object BaseDebuggerActor {
-  val TIMEOUT = 500 // ms
+  val TIMEOUT = 5000 // ms
 
   /** A timed send with a default timeout. */
   val syncSend = timedSend(TIMEOUT) _
