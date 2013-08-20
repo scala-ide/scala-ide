@@ -30,8 +30,13 @@ import org.eclipse.jdt.launching.JavaRuntime
 import org.eclipse.jdt.launching.VMRunnerConfiguration
 import org.eclipse.jface.dialogs.MessageDialog
 import scala.collection.JavaConverters
+import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants
+import scala.tools.eclipse.ScalaProject
 
 class ScalaLaunchDelegate extends AbstractJavaLaunchConfigurationDelegate {
+  var classpath: Seq[String] = _
+  var scalaProject: ScalaProject = _
+
   /** This code is very heavily inspired from `AbstractJavaLaunchConfigurationDelegate`. */
   def launch(configuration: ILaunchConfiguration, mode: String, launch: ILaunch, monitor0: IProgressMonitor) {
 
@@ -59,8 +64,11 @@ class ScalaLaunchDelegate extends AbstractJavaLaunchConfigurationDelegate {
       val vmArgs = getVMArguments(configuration)
       val execArgs = new ExecutionArguments(vmArgs, pgmArgs)
 
+      val scalaCompilerLibrary = ScalaPlugin.plugin.compilerClasses.map(p => List(p.toPortableString()))
+
       // VM-specific attributes
       val vmAttributesMap = getVMSpecificAttributesMap(configuration)
+//      vmAttributesMap.put(IJavaLaunchConfigurationConstants.ATTR_BOOTPATH_PREPEND, vmAttributesMap.get(IJavaLaunchConfigurationConstants.ATTR_BOOTPATH_PREPEND).asInstanceOf[Array[String]] ++ scalaCompilerLibrary.getOrElse(List()))
 
       import JavaConverters._
 
@@ -74,8 +82,7 @@ class ScalaLaunchDelegate extends AbstractJavaLaunchConfigurationDelegate {
           classpath0.toList, configuration)
       // Classpath
       // Add scala libraries that were missed in VM attributes
-      val classpath = (classpath0.toList):::missingScalaLibraries
-
+      classpath = (classpath0.toList):::missingScalaLibraries:::(scalaCompilerLibrary getOrElse List()):::List("/Users/jhaberstro/Typesafe/repl-assistance.jar")
       // Create VM config
       val runConfig = new VMRunnerConfiguration(mainTypeName, classpath.toArray)
       runConfig.setProgramArguments(execArgs.getProgramArgumentsArray())
@@ -131,6 +138,7 @@ class ScalaLaunchDelegate extends AbstractJavaLaunchConfigurationDelegate {
       val project = getJavaProject(configuration)
       val mainTypeName = getMainTypeName(configuration)
       ScalaPlugin.plugin.asScalaProject(project.getProject) map { scalaProject =>
+        this.scalaProject = scalaProject
         val mainClassVerifier = new MainClassVerifier(new UIErrorReporter)
         val status = mainClassVerifier.execute(scalaProject, mainTypeName)
         status.isOK

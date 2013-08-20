@@ -18,6 +18,7 @@ import org.eclipse.core.runtime.Status
 import org.eclipse.core.runtime.IStatus
 import scala.util.control.Exception
 import scala.util.control.Exception.Catch
+import scala.language.dynamics
 
 /**
  * Base class for debug elements in the Scala debug model
@@ -96,6 +97,13 @@ trait HasFieldValue {
     }
     ScalaValue(jdiFieldValue(field), getDebugTarget)
   }
+}
+
+trait HasDynamicMethodInvocation extends HasMethodInvocation with Dynamic {
+  self: ScalaDebugElement =>
+
+  def applyDynamic[R <: ScalaValue](methodName: String)(args: ScalaValue*)(implicit thread: ScalaThread): R =
+    invokeMethod(methodName, thread, args: _*).asInstanceOf[R]
 }
 
 trait HasMethodInvocation {

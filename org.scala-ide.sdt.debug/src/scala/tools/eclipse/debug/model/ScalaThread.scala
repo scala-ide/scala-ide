@@ -21,6 +21,7 @@ import scala.tools.eclipse.debug.JDIUtil._
 import com.sun.jdi.VMCannotBeModifiedException
 import org.eclipse.debug.core.model.IStackFrame
 import com.sun.jdi.IncompatibleThreadStateException
+import com.sun.jdi.ClassObjectReference
 
 class ThreadNotSuspendedException extends Exception
 
@@ -38,14 +39,14 @@ object ScalaThread {
  * A thread in the Scala debug model.
  * This class is thread safe. Instances have be created through its companion object.
  */
-abstract class ScalaThread private (target: ScalaDebugTarget, private[model] val threadRef: ThreadReference) extends ScalaDebugElement(target) with IThread {
+abstract class ScalaThread private (target: ScalaDebugTarget, /*private[model]*/ val threadRef: ThreadReference) extends ScalaDebugElement(target) with IThread {
   import ScalaThreadActor._
   import BaseDebuggerActor._
 
   // Members declared in org.eclipse.debug.core.model.IStep
 
-  override def canStepInto: Boolean = suspended // TODO: need real logic
-  override def canStepOver: Boolean = suspended // TODO: need real logic
+  override def canStepInto: Boolean = suspended// TODO: need real logic
+  override def canStepOver: Boolean = suspended// TODO: need real logic
   override def canStepReturn: Boolean = suspended // TODO: need real logic
   override def isStepping: Boolean = ???
 
@@ -63,7 +64,8 @@ abstract class ScalaThread private (target: ScalaDebugTarget, private[model] val
 
   override def canResume: Boolean = suspended // TODO: need real logic
   override def canSuspend: Boolean = !suspended // TODO: need real logic
-  override def isSuspended: Boolean = suspended // TODO: need real logic
+  override def isSuspended: Boolean = suspended //suspended // TODO: need real logic
+  def isUnderlyingSuspended: Boolean = threadRef.isSuspended()
 
   override def resume(): Unit = resumeFromScala(DebugEvent.CLIENT_REQUEST)
   override def suspend(): Unit = {
@@ -90,6 +92,8 @@ abstract class ScalaThread private (target: ScalaDebugTarget, private[model] val
   override def hasStackFrames: Boolean = !stackFrames.isEmpty
 
   // ----
+
+  def getTopScalaStackFrame: ScalaStackFrame = stackFrames.headOption.getOrElse(null)
 
   // state
   @volatile
@@ -139,6 +143,7 @@ abstract class ScalaThread private (target: ScalaDebugTarget, private[model] val
    */
   def invokeStaticMethod(classType: ClassType, method: Method, args: Value*): Value = {
     processMethodInvocationResult(syncSend(companionActor, InvokeStaticMethod(classType, method, args.toList)))
+//    processMethodInvocationResult(Some(companionActor !? InvokeStaticMethod(classType, method, args.toList)))
   }
 
   private def processMethodInvocationResult(res: Option[Any]): Value = if (res.isDefined) res.get match {
@@ -248,7 +253,7 @@ private[model] class ScalaThreadActor private(thread: ScalaThread) extends BaseD
       thread.threadRef.resume()
     case InvokeMethod(objectReference, method, args) =>
       reply(
-        if (!thread.isSuspended) {
+        if (!thread.isUnderlyingSuspended) {
           Left(new ThreadNotSuspendedException())
         } else {
           try {
@@ -266,7 +271,7 @@ private[model] class ScalaThreadActor private(thread: ScalaThread) extends BaseD
         })
     case InvokeStaticMethod(classType, method, args) =>
       reply(
-        if (!thread.isSuspended) {
+        if (!thread.isUnderlyingSuspended) {
           Left(new ThreadNotSuspendedException())
         } else {
           try {

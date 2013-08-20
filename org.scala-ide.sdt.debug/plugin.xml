@@ -53,7 +53,24 @@
             sourcePathComputerId="org.eclipse.jdt.launching.sourceLookup.javaSourcePathComputer"
             type="org.scala-ide.ew.launcher.JunitLaunchConfig">
       </launchDelegate>
-    </extension>
+   </extension>
+   
+   <extension
+       point="org.eclipse.ui.views">
+     <view
+          allowMultiple="false"
+          id="org.scala-ide.sdt.debug.evaluationView"
+          category="org.scala-ide.sdt.core.viewCategory"
+          class="scala.tools.eclipse.debug.evaluation.EvaluationConsoleView"
+          name="Scala Expression Evaluation"
+          restorable="false">
+     </view>
+     <category
+          id="org.scala-ide.sdt.core.viewCategory"
+          name="Scala">
+    </category>
+   </extension>
+   
    <extension
          point="org.eclipse.ui.preferencePages">
       <page

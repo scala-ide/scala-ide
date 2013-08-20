@@ -125,7 +125,7 @@ class ScalaStackFrame private (val thread: ScalaThread, @volatile var stackFrame
   import scala.util.control.Exception
   import Exception.Catch
 
-  private lazy val variables: Seq[ScalaVariable] = {
+  lazy val variables: Seq[ScalaVariable] = {
     (safeStackFrameCalls(Nil) or wrapJDIException("Exception while retrieving stack frame's visible variables")) {
       import scala.collection.JavaConverters._
       val visibleVariables = {
