@@ -23,12 +23,12 @@
       <id>scala-2.11.x</id>
       <dependencies>
         <dependency>
-          <groupId>org.scala-lang</groupId>
+          <groupId>org.scala-lang.modules</groupId>
           <artifactId>scala-xml_${scala.binary.version}</artifactId>
         </dependency>
         <dependency>
-          <groupId>org.scala-lang</groupId>
-          <artifactId>scala-parser-combinators</artifactId>
+          <groupId>org.scala-lang.modules</groupId>
+          <artifactId>scala-parser-combinators_${scala.binary.version}</artifactId>
         </dependency>
       </dependencies>
       <build>
@@ -47,15 +47,15 @@
                 <configuration>
                   <artifactItems>
                     <artifactItem>
-                      <groupId>org.scala-lang</groupId>
+                      <groupId>org.scala-lang.modules</groupId>
                       <artifactId>scala-xml_${scala.binary.version}</artifactId>
                       <classifier>sources</classifier>
                       <type>jar</type>
                       <destFileName>scala-xml-src.jar</destFileName>
                     </artifactItem>
                     <artifactItem>
-                      <groupId>org.scala-lang</groupId>
-                      <artifactId>scala-parser-combinators</artifactId>
+                      <groupId>org.scala-lang.modules</groupId>
+                      <artifactId>scala-parser-combinators_${scala.binary.version}</artifactId>
                       <classifier>sources</classifier>
                       <type>jar</type>
                       <destFileName>scala-parser-combinators-src.jar</destFileName>
