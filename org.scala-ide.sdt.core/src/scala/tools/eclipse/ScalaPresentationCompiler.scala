@@ -102,7 +102,7 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings) exten
    * Add a compilation unit (CU) to the set of CUs to be Reloaded at the next refresh round.
    * If the CU is unknown by the compiler at scheduling, this is a no-op.
    */
-  def scheduleReload(icu : InteractiveCompilationUnit, contents:Array[Char]) : Unit = {
+  def scheduleReload(icu : InteractiveCompilationUnit, contents:Array[Char] = Array()) : Unit = {
     if (sourceFiles.get(icu).isDefined)
         synchronized { scheduledUnits += ((icu, contents)) }
   }
@@ -239,7 +239,7 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings) exten
    *        map is by a call to 'withSourceFile', which creates a default batch source file.
    *        Come back to this and make it more explicit.
    */
-  def askReload(scu: ScalaCompilationUnit, content: Array[Char]): Response[Unit] = {
+  def askReload(scu: InteractiveCompilationUnit, content: Array[Char]): Response[Unit] = {
     val res = new Response[Unit]
 
     sourceFiles.get(scu) match {
