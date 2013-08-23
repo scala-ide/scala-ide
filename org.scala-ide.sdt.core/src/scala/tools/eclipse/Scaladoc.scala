@@ -45,7 +45,7 @@ trait Scaladoc extends MemberLookupBase with CommentFactoryBase { this: ScalaPre
   /**
    * This maintains compatibility with Scala 2.10.x
    */
-  private implicit def toOption(s: => Symbol) : Option[Symbol] = Some(s)
+  private implicit def toOption(s: Symbol) : Option[Symbol] = Some(s)
 
   def parsedDocComment(sym: Symbol, site: Symbol): Option[Comment] = {
     val res =
@@ -69,8 +69,8 @@ trait Scaladoc extends MemberLookupBase with CommentFactoryBase { this: ScalaPre
 
         askOption {
           () => sym::site::sym.allOverriddenSymbols:::site.baseClasses
-        } flatMap { fragments =>
-          withFragments(listFragments(fragments)) flatMap {
+        } flatMap { syms =>
+          withFragments(listFragments(syms)) flatMap {
             case (expanded, raw, pos) if !expanded.isEmpty =>
               askOption { () => parseAtSymbol(expanded, raw, pos, site) }
             case _ =>
@@ -81,7 +81,7 @@ trait Scaladoc extends MemberLookupBase with CommentFactoryBase { this: ScalaPre
     res.flatten
   }
 
-  def browserInput(sym: Symbol, site: =>Symbol, header: String = ""): Option[BrowserInput] = {
+  def browserInput(sym: Symbol, site: Symbol, header: String = ""): Option[BrowserInput] = {
     logger.info("Computing documentation for: " + sym)
     val comment = parsedDocComment(sym, site)
     logger.info("retrieve documentation result: " + comment)

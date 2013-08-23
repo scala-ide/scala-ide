@@ -8,8 +8,9 @@ package ui
 
 import org.eclipse.swt.SWT
 import org.eclipse.swt.widgets.Shell
-import  org.eclipse.jface.text.{IInformationControlCreator, AbstractReusableInformationControlCreator,
-                              DefaultInformationControl}
+import org.eclipse.jface.text.IInformationControlCreator
+import org.eclipse.jface.text.AbstractReusableInformationControlCreator
+import org.eclipse.jface.text.DefaultInformationControl
 import org.eclipse.jface.action.ToolBarManager
 import org.eclipse.jdt.ui.PreferenceConstants
 import org.eclipse.jdt.internal.ui.text.java.hover.JavadocHover
