@@ -32,14 +32,32 @@ class ScalaSourceFileProvider extends SourceFileProvider {
 }
 
 object ScalaSourceFile {
-  val handleFactory = new HandleFactory
-  
-  def createFromPath(path : String) : Option[ScalaSourceFile] = {
+  @deprecated("If you need a org.eclipse.jdt.internal.core.util.HandleFactory instance, you should simply create one yourself.","3.0.2")
+  def handleFactory = new HandleFactory
+
+  /** Considering [[org.eclipse.jdt.internal.core.util.HandleFactory]] isn't thread-safe, and because
+   *  `ScalaSourceFile#createFromPath` can be called concurrently from different threads, using a
+   *  `ThreadLocal` ensures that a `HandleFactory` instance is never shared across threads.
+   */
+  private val _handleFactory: ThreadLocal[HandleFactory] = new ThreadLocal[HandleFactory] {
+    override protected def initialValue(): HandleFactory = new HandleFactory
+  }
+
+  /** Creates a Scala source file handle if the given resource path points to a scala source.
+   *  The resource path is a path to a Scala source file in the workbench (e.g. /Proj/a/b/c/Foo.scala).
+   *
+   *  @note This assumes that the resource path is the toString() of an `IPath`.
+   *
+   *  @param path Is a path to a Scala source file in the workbench.
+   */
+  def createFromPath(path: String) : Option[ScalaSourceFile] = {
     if (!path.endsWith(".scala"))
       None
     else {
-      val openable = handleFactory.createOpenable(path, null) 
-      openable match {
+      // Always `null` because `handleFactory.createOpenable` is only called to open source files, and the `scope` is not needed for this.
+      val unusedScope = null
+      val source = _handleFactory.get().createOpenable(path, unusedScope)
+      source match {
         case ssf : ScalaSourceFile => Some(ssf)
         case _ => None
       }
