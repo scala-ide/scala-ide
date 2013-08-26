@@ -39,8 +39,7 @@
     <tycho.plugin.version>0.18.0</tycho.plugin.version>
     <scala.plugin.version>3.0.2</scala.plugin.version>
     <aspectj.plugin.version>1.4</aspectj.plugin.version>
-    <weaving.hook.plugin.version>1.0.200.v20120524-1707</weaving.hook.plugin.version>
-    <maven-bunble.plugin.version>2.3.7</maven-bunble.plugin.version>
+    <maven-bundle.plugin.version>2.3.7</maven-bundle.plugin.version>
     <properties-maven.plugin.version>1.1.10</properties-maven.plugin.version>
     <buildnumber-maven.plugin.version>1.1</buildnumber-maven.plugin.version>
     <maven-source.plugin.version>2.1.2</maven-source.plugin.version>
@@ -341,7 +340,7 @@
         <plugin>
           <groupId>org.apache.felix</groupId>
           <artifactId>maven-bundle-plugin</artifactId>
-          <version>${maven-bunble.plugin.version}</version>
+          <version>${maven-bundle.plugin.version}</version>
           <extensions>true</extensions>
           <configuration>
             <unpackBundle>true</unpackBundle>
