@@ -62,7 +62,7 @@
      <!-- default values, can be overwritten by profiles -->
      <scala.version>2.10.0</scala.version>
      <scala.binary.version>2.10</scala.binary.version>
-     <scala.xml.version>1.0-RC2</scala.xml.version>
+     <scala.xml.version>1.0-RC3</scala.xml.version>
      <scala.parser-combinators.version>1.0-RC1</scala.parser-combinators.version>
      <scala.library.version>${scala.version}</scala.library.version>
      <version.suffix>2_10</version.suffix>
