@@ -37,7 +37,7 @@
 
     <!-- plugin versions -->
     <tycho.plugin.version>0.18.0</tycho.plugin.version>
-    <scala.plugin.version>3.0.2</scala.plugin.version>
+    <scala.plugin.version>3.1.5</scala.plugin.version>
     <aspectj.plugin.version>1.4</aspectj.plugin.version>
     <maven-bundle.plugin.version>2.3.7</maven-bundle.plugin.version>
     <properties-maven.plugin.version>1.1.10</properties-maven.plugin.version>
