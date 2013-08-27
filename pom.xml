@@ -31,9 +31,9 @@
 
     <!-- plugin versions -->
     <tycho.plugin.version>0.18.0</tycho.plugin.version>
-    <scala.plugin.version>3.0.2</scala.plugin.version>
+    <scala.plugin.version>3.1.5</scala.plugin.version>
     <aspectj.plugin.version>1.4</aspectj.plugin.version>
-    <maven-bunble.plugin.version>2.3.7</maven-bunble.plugin.version>
+    <maven-bundle.plugin.version>2.3.7</maven-bundle.plugin.version>
     <properties-maven.plugin.version>1.1.10</properties-maven.plugin.version>
     <buildnumber-maven.plugin.version>1.1</buildnumber-maven.plugin.version>
     <maven-source.plugin.version>2.1.2</maven-source.plugin.version>
@@ -56,7 +56,7 @@
      <!-- default values, can be overwritten by profiles -->
      <scala.version>2.10.0</scala.version>
      <scala.binary.version>2.10</scala.binary.version>
-     <scala.xml.version>1.0-RC2</scala.xml.version>
+     <scala.xml.version>1.0-RC3</scala.xml.version>
      <scala.parser-combinators.version>1.0-RC1</scala.parser-combinators.version>
      <scala.library.version>${scala.version}</scala.library.version>
      <version.suffix>2_10</version.suffix>
@@ -437,7 +437,7 @@
         <plugin>
           <groupId>org.apache.felix</groupId>
           <artifactId>maven-bundle-plugin</artifactId>
-          <version>${maven-bunble.plugin.version}</version>
+          <version>${maven-bundle.plugin.version}</version>
           <extensions>true</extensions>
           <configuration>
             <unpackBundle>true</unpackBundle>
