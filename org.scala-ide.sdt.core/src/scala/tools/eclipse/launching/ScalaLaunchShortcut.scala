@@ -6,28 +6,23 @@
 
 package scala.tools.eclipse.launching
 
-import scala.collection.mutable.ArrayBuffer
+import scala.tools.eclipse.javaelements.ScalaSourceFile
+import scala.tools.eclipse.util.EclipseUtils.PimpedAdaptable
+
 import org.eclipse.core.resources.IResource
 import org.eclipse.core.runtime.IAdaptable
 import org.eclipse.debug.core.DebugPlugin
 import org.eclipse.debug.core.ILaunchConfiguration
 import org.eclipse.debug.core.ILaunchConfigurationType
 import org.eclipse.debug.ui.DebugUITools
-import org.eclipse.jdt.core.Flags
 import org.eclipse.jdt.core.IJavaElement
-import org.eclipse.jdt.core.IMethod
 import org.eclipse.jdt.core.IType
-import org.eclipse.jdt.core.Signature
 import org.eclipse.jdt.debug.ui.launchConfigurations.JavaLaunchShortcut
 import org.eclipse.jdt.internal.debug.ui.launcher.LauncherMessages
 import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants
 import org.eclipse.jface.operation.IRunnableContext
-import scala.tools.eclipse.javaelements.ScalaModuleElement
-import scala.tools.eclipse.javaelements.ScalaClassElement
-import scala.tools.eclipse.javaelements.ScalaSourceFile
-import scala.tools.eclipse.util.EclipseUtils._
-import scala.tools.eclipse.javaelements.ScalaJavaMapper
-import scala.tools.nsc.MissingRequirementError
+import org.eclipse.jface.window.Window
+import org.eclipse.ui.dialogs.ElementListSelectionDialog
 
 /* This class can be eliminated in favour of JavaApplicationLaunch shortcut as soon as
  * the JDTs method search works correctly for Scala.
@@ -72,32 +67,47 @@ class ScalaLaunchShortcut extends JavaLaunchShortcut {
    * @return a configuration to use for launching the given type or <code>null</code> if none
    */
   override def findLaunchConfiguration(t: IType, configType: ILaunchConfigurationType): ILaunchConfiguration = {
-    //Get working values / collections
-    val configs: Array[ILaunchConfiguration] = DebugPlugin.getDefault.getLaunchManager.getLaunchConfigurations(configType)
-    val candidateConfigs = new ArrayBuffer[ILaunchConfiguration]
+    findCandidates(t, configType) match {
+      case Nil =>
+        null
+      case c :: Nil =>
+        c
+      case cs =>
+        chooseConfiguration(cs)
+    }
+  }
 
-    //Handle Exceptional cases
-    if (t == null || configType == null)
-      return null
-
-    val projectName: String = t.getJavaProject.getElementName
-
-    //Match existing configurations to the existing list
-    for (launchConfig <- configs) {
-      val lcTypeName: String = launchConfig.getAttribute(IJavaLaunchConfigurationConstants.ATTR_MAIN_TYPE_NAME, "")
-      val lcProjectName: String = launchConfig.getAttribute(IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME, "")
-      if (lcTypeName.equals(fullyQualifiedName(t)) && lcProjectName.equals(projectName))
-        candidateConfigs += launchConfig
+  /** Find or create, and launch a launch configuration for the given type, in
+   *  the specified mode.
+   */
+  override protected def launch(t: IType, mode: String) {
+    val configuration = findCandidates(t, getConfigurationType()) match {
+      case Nil =>
+        createConfiguration(t)
+      case c :: Nil =>
+        c
+      case cs =>
+        chooseConfiguration(cs)
     }
 
-    //Return matched configurations or null if none exist
-    val candidateCount = candidateConfigs.toArray.length
-    if (candidateCount == 1)
-      candidateConfigs(0)
-    else if (candidateCount > 1)
-      chooseConfiguration(candidateConfigs.toList)
-    else
-      null
+    DebugUITools.launch(configuration, mode)
+  }
+
+  /** Find existing launch configurations which match the launch configuration type and the
+   *  given class.
+   */
+  private def findCandidates(t: IType, configType: ILaunchConfigurationType): List[ILaunchConfiguration] = {
+    // Launch configurations for the type
+    val configs = DebugPlugin.getDefault.getLaunchManager.getLaunchConfigurations(configType).toList
+
+    val projectName = t.getJavaProject.getElementName
+
+    // filter for the class and the project
+    configs.filter { launchConfig =>
+      val lcTypeName: String = launchConfig.getAttribute(IJavaLaunchConfigurationConstants.ATTR_MAIN_TYPE_NAME, "")
+      val lcProjectName: String = launchConfig.getAttribute(IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME, "")
+      lcTypeName == fullyQualifiedName(t) && lcProjectName == projectName
+    }
   }
 
   /**
