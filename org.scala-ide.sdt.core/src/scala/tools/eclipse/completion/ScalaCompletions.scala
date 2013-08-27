@@ -32,6 +32,9 @@ class ScalaCompletions extends HasLogger {
     compiler.askTypeAt(pos, typed)
     val t1 = typed.get.left.toOption
 
+    import scala.reflect.runtime.universe._
+    logger.info(showRaw(t1.get))
+
     val listedTypes = new mutable.HashMap[String, mutable.Set[CompletionProposal]] with MultiMap[String, CompletionProposal]
 
     def isAlreadyListed(fullyQualifiedName: String, display: String) =
@@ -137,7 +140,7 @@ class ScalaCompletions extends HasLogger {
     t1 match {
       case Some(compiler.Select(qualifier, name)) if qualifier.pos.isDefined && qualifier.pos.isRange =>
         // completion on qualified type
-        fillTypeCompletions(qualifier.pos.end, name.decoded.toArray, wordStart)
+        fillTypeCompletions(qualifier.pos.end, wordAtPosition, wordStart)
       case Some(compiler.Import(expr, _)) =>
         // completion on `imports`
         fillTypeCompletions(expr.pos.endOrPoint, wordAtPosition, wordStart)
