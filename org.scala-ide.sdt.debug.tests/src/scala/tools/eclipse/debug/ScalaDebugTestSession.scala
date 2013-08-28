@@ -26,6 +26,7 @@ import scala.tools.eclipse.debug.model.ScalaValue
 import org.eclipse.jface.viewers.StructuredSelection
 import org.eclipse.jdt.debug.core.IJavaBreakpoint
 import org.junit.Assert
+import org.eclipse.debug.ui.contexts.DebugContextEvent
 
 object EclipseDebugEvent {
   def unapply(event: DebugEvent): Option[(Int, AnyRef)] = Some((event.getKind, event.getSource()))
@@ -97,7 +98,7 @@ class ScalaDebugTestSession private(launchConfiguration: ILaunchConfiguration) e
     this.synchronized {
       currentStackFrame = stackFrame
       val selection = new StructuredSelection(stackFrame)
-      ScalaDebugger.selectionChanged(null, selection)
+      ScalaDebugger.updateCurrentThread(selection)
       state = SUSPENDED
       logger.info("SUSPENDED at: %s:%d".format(stackFrame.getMethodFullName, stackFrame.getLineNumber))
       this.notify
