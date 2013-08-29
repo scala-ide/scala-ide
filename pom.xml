@@ -208,7 +208,7 @@
           <!-- extra repository containing the build package -->
           <id>typesafe-ide</id>
           <name>Typesafe IDE repository</name>
-          <url>http://repo.typesafe.com/typesafe/ide-2.9</url>
+          <url>http://private-repo.typesafe.com/typesafe/ide-2.9</url>
           <snapshots><enabled>true</enabled></snapshots>
         </repository>
       </repositories>
