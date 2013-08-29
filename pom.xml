@@ -86,7 +86,7 @@
 
         <repo.scala-refactoring>${repo.scala-ide.root}/scala-refactoring-210x</repo.scala-refactoring>
         <repo.scalariform>${repo.scala-ide.root}/scalariform-210x</repo.scalariform>
-        <repo.typesafe>http://repo.typesafe.com/typesafe/ide-2.10</repo.typesafe>
+        <repo.typesafe>http://private-repo.typesafe.com/typesafe/ide-2.10</repo.typesafe>
       </properties>
     </profile>
 
@@ -99,7 +99,7 @@
 
         <repo.scala-refactoring>${repo.scala-ide.root}/scala-refactoring-211x</repo.scala-refactoring>
         <repo.scalariform>${repo.scala-ide.root}/scalariform-211x</repo.scalariform>
-        <repo.typesafe>http://repo.typesafe.com/typesafe/ide-2.11</repo.typesafe>
+        <repo.typesafe>http://private-repo.typesafe.com/typesafe/ide-2.11</repo.typesafe>
       </properties>
     </profile>
 
@@ -321,7 +321,7 @@
           <!-- extra repository containing the build package -->
           <id>typesafe-ide</id>
           <name>Typesafe IDE repository</name>
-          <url>http://repo.typesafe.com/typesafe/ide-2.9</url>
+          <url>http://private-repo.typesafe.com/typesafe/ide-2.9</url>
           <snapshots><enabled>true</enabled></snapshots>
         </repository>
       </repositories>
