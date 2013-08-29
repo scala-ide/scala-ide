@@ -26,6 +26,9 @@ class ScalaCompletions extends HasLogger {
   def findCompletions(region: IRegion)(position: Int, scu: InteractiveCompilationUnit)
                              (sourceFile: SourceFile, compiler: ScalaPresentationCompiler): List[CompletionProposal] = {
 
+
+    compiler.askReload(scu, scu.getContents()).get
+
     val pos = compiler.rangePos(sourceFile, position, position, position)
 
     val start = if (region == null) position else region.getOffset

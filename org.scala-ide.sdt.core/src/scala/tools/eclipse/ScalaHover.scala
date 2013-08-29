@@ -9,6 +9,7 @@ import org.eclipse.jdt.core.ICodeAssist
 import org.eclipse.jface.text.ITextViewer
 import org.eclipse.jface.text.IRegion
 import org.eclipse.jface.text.ITextHover
+import scala.tools.eclipse.javaelements.ScalaCompilationUnit
 
 import scala.tools.nsc.symtab.Flags
 import scala.tools.eclipse.util.EclipseUtils._
@@ -22,6 +23,8 @@ class ScalaHover(val icu: InteractiveCompilationUnit) extends ITextHover {
     val end = start + region.getLength
     icu.withSourceFile({ (src, compiler) =>
       import compiler.{stringToTermName => _, stringToTypeName => _, _}
+
+      compiler.askReload(icu, icu.getContents()).get
 
       def hoverInfo(t: Tree): Option[String] = askOption { () =>
         def compose(ss: List[String]): String = ss.filter(_.nonEmpty).mkString(" ")
