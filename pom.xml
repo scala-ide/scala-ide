@@ -160,7 +160,7 @@
       <id>sbt-legacy</id>
       <properties>
         <sbinary.version>0.4.2-SNAPSHOT</sbinary.version>
-        <sbt.version>0.13.0-RC5-SNAPSHOT</sbt.version>
+        <sbt.version>0.13.0</sbt.version>
         <jline.version>2.10</jline.version>
         <sbt.compiled.version>${scala.version}</sbt.compiled.version>
       </properties>
