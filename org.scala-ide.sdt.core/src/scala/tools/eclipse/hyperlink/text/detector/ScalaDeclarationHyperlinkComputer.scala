@@ -20,7 +20,6 @@ class ScalaDeclarationHyperlinkComputer extends HasLogger {
     implicit class CompatClazzTag(com: ScalaPresentationCompiler) {
       def ClazzTag = 12 // we really, really hope this constant won't change in 2.9.x
     }
-
     icu.withSourceFile({ (sourceFile, compiler) =>
       object DeclarationHyperlinkFactory extends HyperlinkFactory {
         protected val global: compiler.type = compiler

@@ -103,7 +103,7 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings) exten
    * If the CU is unknown by the compiler at scheduling, this is a no-op.
    */
   def scheduleReload(icu : InteractiveCompilationUnit, contents:Array[Char] = Array()) : Unit = {
-    if (sourceFiles.get(icu).isDefined)
+    if (sourceFiles.contains(icu))
         synchronized { scheduledUnits += ((icu, contents)) }
   }
 
@@ -240,13 +240,11 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings) exten
    *        Come back to this and make it more explicit.
    */
   def askReload(scu: InteractiveCompilationUnit, content: Array[Char]): Response[Unit] = {
+    sourceFileUpdate(scu, content)
     val res = new Response[Unit]
 
     sourceFiles.get(scu) match {
       case Some(f) =>
-        val newF = new BatchSourceFile(f.file, content)
-        synchronized { sourceFiles(scu) = newF }
-
         // avoid race condition by looking up the source file, as someone else
         // might have swapped it in the meantime
         askReload(List(sourceFiles(scu)), res)
