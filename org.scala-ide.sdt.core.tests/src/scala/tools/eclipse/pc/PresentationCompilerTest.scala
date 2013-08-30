@@ -31,7 +31,7 @@ class PresentationCompilerTest {
     val mockLogger = mock(classOf[Logger])
 
     // then
-    project.withSourceFile(unit) { (sourceFile, compiler) =>
+    unit.withSourceFile { (sourceFile, compiler) =>
       compiler.withStructure(sourceFile, keepLoaded = true) { tree =>
         compiler.askOption { () =>
           val overrideIndicatorBuilder = new compiler.OverrideIndicatorBuilderTraverser(unit, new java.util.HashMap) {
@@ -109,7 +109,7 @@ class FreshFile {
   }
 
   @Test
-  def psShouldReportTheCorrectCompilationUnitsItKnowsAbout() {
+  def pcShouldReportTheCorrectCompilationUnitsItKnowsAbout() {
     def managedUnits() = project.withPresentationCompiler(_.compilationUnits)()
 
     project.shutDownCompilers()
@@ -126,6 +126,44 @@ class FreshFile {
 
     // now the unit should be managed
     Assert.assertEquals("Presentation compiler should maintain one unit after reload (%s)".format(managedUnits()), 1, managedUnits().size)
+  }
+
+  @Test
+  def pcShouldReportTheCorrectCompilationUnitsOnShutdown() {
+    def managedUnits() = project.withPresentationCompiler(_.compilationUnits)()
+
+    project.shutDownCompilers()
+
+    val cu = scalaCompilationUnit("t1000692/akka/util/ReflectiveAccess.scala")
+    val cu1 = scalaCompilationUnit("t1000658/ThreadPoolConfig.scala")
+
+    Seq(cu, cu1).foreach(_.scheduleReconcile().get)
+
+    Assert.assertEquals("Managed compilation units", Set(cu, cu1), managedUnits().toSet)
+
+    val returned = project.shutDownPresentationCompiler().map(_.compilationUnits).getOrElse(Nil)
+
+    // now the unit should be managed
+    Assert.assertEquals("Presentation compiler should report one unit on shutdown", Set(cu, cu1), returned.toSet)
+  }
+
+  @Test
+  def pcShouldReloadAllUnitsOnReset() {
+    def managedUnits() = project.withPresentationCompiler(_.compilationUnits)()
+
+    project.shutDownCompilers()
+
+    val cu = scalaCompilationUnit("t1000692/akka/util/ReflectiveAccess.scala")
+    val cu1 = scalaCompilationUnit("t1000658/ThreadPoolConfig.scala")
+
+    Seq(cu, cu1).foreach(_.scheduleReconcile().get)
+
+    Assert.assertEquals("Managed compilation units", Set(cu, cu1), managedUnits().toSet)
+
+    project.resetPresentationCompiler()
+
+    // now the unit should be managed
+    Assert.assertEquals("Presentation compiler should report one unit on shutdown", Set(cu, cu1), managedUnits().toSet)
   }
 
   @Test

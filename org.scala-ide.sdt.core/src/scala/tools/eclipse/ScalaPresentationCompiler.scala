@@ -6,9 +6,8 @@
 package scala.tools.eclipse
 
 import scala.tools.nsc.interactive.FreshRunReq
-import scala.collection.mutable
+import scala.collection.concurrent
 import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.SynchronizedMap
 import org.eclipse.jdt.core.compiler.IProblem
 import org.eclipse.jdt.internal.compiler.problem.DefaultProblem
 import org.eclipse.jdt.internal.compiler.problem.ProblemSeverities
@@ -37,10 +36,13 @@ import scala.tools.eclipse.completion.CompletionProposal
 import org.eclipse.jdt.core.IMethod
 import scala.tools.nsc.io.VirtualFile
 import scala.tools.nsc.interactive.MissingResponse
+import scala.tools.eclipse.javaelements.ScalaSourceFile
+import scala.tools.eclipse.sourcefileprovider.SourceFileProviderRegistry
+import org.eclipse.core.runtime.Path
 
 
 class ScalaPresentationCompiler(project: ScalaProject, settings: Settings) extends {
-  /**
+  /*
    * Lock object for protecting compiler names. Names are cached in a global `Array[Char]`
    * and concurrent access may lead to overwritten names.
    *
@@ -63,31 +65,18 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings) exten
   def presentationReporter = reporter.asInstanceOf[ScalaPresentationCompiler.PresentationReporter]
   presentationReporter.compiler = this
 
-  /** A map from compilation units to the BatchSourceFile that the compiler understands.
-   *
-   *  This map is populated by having a default source file created when calling 'apply',
-   *  which currently happens in 'withSourceFile'.
-   */
-  private val sourceFiles = new mutable.HashMap[InteractiveCompilationUnit, SourceFile] {
-    override def default(k: InteractiveCompilationUnit) = {
-      val v = k.sourceFile()
-      ScalaPresentationCompiler.this.synchronized {
-        get(k) match {
-          case Some(v) => v
-          case None    => put(k, v); v
-        }
-      }
-    }
+  def compilationUnits: List[InteractiveCompilationUnit] = {
+    val managedFiles = unitOfFile.keySet.toList
+    for {
+      f <- managedFiles.collect { case ef: EclipseFile => ef }
+      icu <- SourceFileProviderRegistry.getProvider(f.workspacePath).createFrom(f.workspacePath)
+        if icu.exists
+    } yield icu
   }
 
-  /** Return the Scala compilation units that are currently maintained by this presentation compiler.
-   */
-  def compilationUnits: Seq[InteractiveCompilationUnit] = {
-    val managedFiles = unitOfFile.keySet
-    (for {
-      (cu, sourceFile) <- sourceFiles
-      if managedFiles(sourceFile.file)
-    } yield cu).toSeq
+  /** Schedule all units open handled by this presentation compiler for reconciliation.  */
+  def reconcileOpenUnits() {
+    askReload(compilationUnits)
   }
 
   def problemsOf(file: AbstractFile): List[IProblem] = {
@@ -105,12 +94,6 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings) exten
   }
 
   def problemsOf(scu: ScalaCompilationUnit): List[IProblem] = problemsOf(scu.file)
-
-  /** Run the operation on the given compilation unit. If the source file is not yet tracked by
-   *  the presentation compiler, a new BatchSourceFile is created and kept for future reference.
-   */
-  def withSourceFile[T](icu: InteractiveCompilationUnit)(op: (SourceFile, ScalaPresentationCompiler) => T): T =
-    op(sourceFiles(icu), this)
 
   def body(sourceFile: SourceFile): Either[Tree, Throwable] = {
     val response = new Response[Tree]
@@ -184,53 +167,30 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings) exten
    *  If the file has not been 'reloaded' first, it does nothing.
    */
   def askToDoFirst(scu: ScalaCompilationUnit) {
-    sourceFiles.get(scu) foreach askToDoFirst
+    askToDoFirst(scu.sourceFile())
   }
 
-  /** Reload the given compilation unit. If this CU is not tracked by the presentation
-   *  compiler, it's a no-op.
-   *
-   *  TODO: This logic seems broken: the only way to add a source file to the sourceFiles
-   *        map is by a call to 'withSourceFile', which creates a default batch source file.
-   *        Come back to this and make it more explicit.
+  /** Reload the given compilation unit. If the unit is not tracked by the presentation
+   *  compiler, it will be from now on.
    */
   def askReload(scu: ScalaCompilationUnit, content: Array[Char]): Response[Unit] = {
-    val res = new Response[Unit]
-
-    sourceFiles.get(scu) match {
-      case Some(f) =>
-        val newF = new BatchSourceFile(f.file, content)
-        synchronized { sourceFiles(scu) = newF }
-
-        // avoid race condition by looking up the source file, as someone else
-        // might have swapped it in the meantime
-        askReload(List(sourceFiles(scu)), res)
-      case None =>
-        res.set(()) // make sure nobody blocks waiting indefinitely
-    }
-    res
+    withResponse[Unit] { res => askReload(List(scu.sourceFile(content)), res) }
   }
 
-  def filesDeleted(files: List[ScalaCompilationUnit]) {
-    logger.info("files deleted:\n" + (files map (_.getPath) mkString "\n"))
-    synchronized {
-      val srcs = files.map(sourceFiles remove _).foldLeft(List[SourceFile]()) {
-        case (acc, None)    => acc
-        case (acc, Some(f)) => f :: acc
-      }
-      if (!srcs.isEmpty)
-        askFilesDeleted(srcs, new Response[Unit])
-    }
+  /** Atomically load a list of units in the current presentation compiler. */
+  def askReload(units: List[InteractiveCompilationUnit]): Response[Unit] = {
+    withResponse[Unit]{ res => askReload(units.map(_.sourceFile), res) }
   }
 
-  def discardSourceFile(scu: ScalaCompilationUnit) {
-    logger.info("discarding " + scu.getPath)
-    synchronized {
-      sourceFiles.get(scu) foreach { source =>
-        removeUnitOf(source)
-        sourceFiles.remove(scu)
-      }
-    }
+  def filesDeleted(units: List[ScalaCompilationUnit]) {
+    logger.info("files deleted:\n" + (units map (_.getPath) mkString "\n"))
+    if (!units.isEmpty)
+      askFilesDeleted(units.map(_.sourceFile), new Response[Unit])
+  }
+
+  def discardCompilationUnit(scu: ScalaCompilationUnit) {
+    logger.info("discarding " + scu.sourceFile.path)
+    askOption { () => removeUnitOf(scu.sourceFile) }
   }
 
   override def newTermName(str: String) = {

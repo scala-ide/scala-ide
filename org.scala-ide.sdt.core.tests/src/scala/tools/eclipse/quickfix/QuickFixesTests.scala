@@ -59,7 +59,7 @@ object QuickFixesTests extends TestProjectSetup("quickfix") {
     val unit = compilationUnit(pathToSource).asInstanceOf[ScalaCompilationUnit]
 
     // first, 'open' the file by telling the compiler to load it
-    project.withSourceFile(unit) { (src, compiler) =>
+    unit.withSourceFile { (src, compiler) =>
 
       // do a compiler reload before checking for problems
       val dummy = new Response[Unit]

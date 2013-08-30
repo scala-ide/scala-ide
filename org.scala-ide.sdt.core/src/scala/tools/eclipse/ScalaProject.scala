@@ -614,12 +614,6 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
     }
   }
 
-  def withSourceFile[T](scu: InteractiveCompilationUnit)(op: (SourceFile, ScalaPresentationCompiler) => T)(orElse: => T = defaultOrElse): T = {
-    withPresentationCompiler { compiler =>
-      compiler.withSourceFile(scu)(op)
-    } {orElse}
-  }
-
   /** Shutdown the presentation compiler, and force a re-initialization but asking to reconcile all
    *  compilation units that were serviced by the previous instance of the PC. Does nothing if
    *  the presentation compiler is not yet initialized.
@@ -628,13 +622,9 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
    */
   def resetPresentationCompiler(): Boolean =
     if (presentationCompiler.initialized) {
-      val units: Seq[InteractiveCompilationUnit] = withPresentationCompiler(_.compilationUnits)(Nil)
+      val units = shutDownPresentationCompiler().map(_.compilationUnits).getOrElse(Set.empty)
 
-      shutDownPresentationCompiler()
-
-      val existingUnits = units.filter(_.exists)
-      logger.info("Scheduling for reconcile: " + existingUnits.map(_.file))
-      existingUnits.foreach(_.scheduleReconcile())
+      doWithPresentationCompiler { _.askReload(units.toList).get  }
       true
     } else {
       logger.info("[%s] Presentation compiler was not yet initialized, ignoring reset.".format(underlying.getName()))
@@ -746,9 +736,12 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
     shutDownPresentationCompiler()
   }
 
-  /** Shut down presentation compiler without scheduling a reconcile for open files. */
-  private def shutDownPresentationCompiler() {
-    presentationCompiler.invalidate()
+  /** Shut down presentation compiler without scheduling a reconcile for open files.
+   *
+   *  @return The old presentation compiler instance, if any.
+   */
+  def shutDownPresentationCompiler(): Option[ScalaPresentationCompiler] = {
+    presentationCompiler.invalidate().flatten
   }
 
   /**
@@ -757,7 +750,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
    */
   def refreshChangedFiles(files: List[IFile]) {
     // transform to batch source files
-    val abstractfiles = files.collect {
+    val freshSources = files.collect {
       // When a compilation unit is moved (e.g. using the Move refactoring) between packages,
       // an ElementChangedEvent is fired but with the old IFile name. Ignoring the file does
       // not seem to cause any bad effects later on, so we simply ignore these files -- Mirko
@@ -769,7 +762,8 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
     withPresentationCompiler {compiler =>
       import compiler._
       // only the files not already managed should be refreshed
-      val notLoadedFiles= abstractfiles.filter(compiler.getUnitOf(_).isEmpty)
+      val managedFiles = unitOfFile.keySet
+      val notLoadedFiles = freshSources.filter(f => !managedFiles(f.file))
 
       notLoadedFiles.foreach(file => {
         // call askParsedEntered to force the refresh without loading the file
@@ -780,7 +774,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
 
       // reconcile the opened editors if some files have been refreshed
       if (notLoadedFiles.nonEmpty)
-        compiler.compilationUnits.foreach(_.scheduleReconcile())
+        reconcileOpenUnits()
     }(Nil)
   }
 
