@@ -22,10 +22,13 @@ object FlakyTest extends HasLogger {
         test
         logger.debug(s"Test `%{testName}` was successful!")
       } catch {
-        case _: AssertionError if attempt < times => loop(attempt + 1)
-        case e: AssertionError                    =>
-          logger.debug(s"Bailing out after ${attempt} attempts. The test is failing consistenly, this may actually be a real regression!?")
-          throw e
+        case e: Throwable =>
+          if (attempt < times )
+            loop(attempt + 1)
+          else {
+            logger.debug(s"Bailing out after ${attempt} attempts. The test is failing consistenly, this may actually be a real regression!?")
+            throw e
+          }
       }
     }
 
