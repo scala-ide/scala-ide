@@ -25,7 +25,7 @@ import org.eclipse.swt.graphics.TextStyle
 import org.eclipse.swt.graphics.Font
 
 /**
- * A split horizontal split view for enter scala commands and displaying REPL output.
+ * A split horizontal view for enter scala commands and displaying REPL output.
  *
  * This UI component contains a sash form with the top widget being a console-output like text view
  * and the bottom view being an instance of `CommandField` for entering scala expressions.
@@ -47,7 +47,7 @@ trait InterpreterConsoleView { self: ViewPart =>
   }
 
   /** Override to perform some specific work (such as performing evaluation and updating the top output) on scala command evaluation */
-  protected def evaluate(command: String) {}
+  protected def evaluate(command: String)
 
   protected def createInterpreterPartControl(parent: Composite) = {
     display = parent.getDisplay()
@@ -140,5 +140,5 @@ trait InterpreterConsoleView { self: ViewPart =>
     if (errorFgColor != null) errorFgColor.dispose()
   }
 
-  override def setFocus() = {}
+  def setFocus()
 }

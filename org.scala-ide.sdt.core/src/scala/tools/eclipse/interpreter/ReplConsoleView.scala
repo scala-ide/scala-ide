@@ -336,6 +336,7 @@ class ReplConsoleView extends ViewPart with InterpreterConsoleView {
   override def setFocus() { }
 
   override def dispose() {
+    super.dispose()
     view = null
     if (projectName == null) {
       // elements of the project chooser view
