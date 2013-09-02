@@ -1,16 +1,18 @@
 package scala.tools.eclipse.debug
 
 import scala.tools.eclipse.ScalaPlugin
+
 import org.eclipse.debug.core.model.IDebugModelProvider
+import org.eclipse.debug.internal.ui.contexts.DebugContextManager
+import org.eclipse.debug.ui.contexts.DebugContextEvent
+import org.eclipse.debug.ui.contexts.IDebugContextListener
+import org.eclipse.jface.viewers.ISelection
 import org.eclipse.jface.viewers.IStructuredSelection
-import org.eclipse.ui.ISelectionListener
-import org.eclipse.ui.PlatformUI
+
 import model.ScalaStackFrame
 import model.ScalaThread
-import scala.tools.eclipse.debug.model.ScalaObjectReference
-import scala.tools.eclipse.logging.HasLogger
 
-object ScalaDebugger extends ISelectionListener with HasLogger {
+object ScalaDebugger {
 
   val classIDebugModelProvider = classOf[IDebugModelProvider]
 
@@ -20,11 +22,20 @@ object ScalaDebugger extends ISelectionListener with HasLogger {
     }
   }
 
-  // Members declared in org.eclipse.ui.ISelectionListener
+  @volatile private var _currentThread: ScalaThread = null
 
-  override def selectionChanged(part: org.eclipse.ui.IWorkbenchPart, selection: org.eclipse.jface.viewers.ISelection) {
-    // track the currently selected thread, to be able to invoke methods on the VM
-    currentThread = selection match {
+  /**
+   * Currently selected thread in the debugger UI view.
+   *
+   * WARNING:
+   * Mind that this code is by design subject to race-condition, clients accessing this member need to handle the case where the
+   * value of `currentThread` is not the expected one. Practically, this means that accesses to `currentThread` should always happen
+   * within a try..catch block. Failing to do so can cause the whole debug session to shutdown for no good reasons.
+   */
+  def currentThread = _currentThread
+
+  private[debug] def updateCurrentThread(selection: ISelection) {
+    _currentThread = selection match {
       case structuredSelection: IStructuredSelection =>
         structuredSelection.getFirstElement match {
           case scalaThread: ScalaThread =>
@@ -39,40 +50,24 @@ object ScalaDebugger extends ISelectionListener with HasLogger {
     }
   }
 
-  /** Currently selected thread in the debugger UI view.
-    *
-    * WARNING:
-    * Mind that this code is by design subject to race-condition, clients accessing this member need to handle the case where the
-    * value of `currentThread` is not the expected one. Practically, this means that accesses to `currentThread` should always happen
-    * within a try..catch block. Failing to do so can cause the whole debug session to shutdown for no good reasons.
-    */
-  @volatile private var currentThread: ScalaThread = null
-
-  def currentThreadOrFindFirstSuspendedThread(objRef: ScalaObjectReference): ScalaThread = {
-    if(currentThread == null) {
-     logger.info("`currentThread` is null. Now looking for first suspended thread...")
-     val threads = objRef.getDebugTarget.getThreads
-     val suspendedThreads = threads collect { case t: ScalaThread if t.isSuspended => t}
-     if(suspendedThreads.isEmpty) {
-       logger.error("Could not find a suspended thread. This is a bug, please file a bug report at " + ScalaPlugin.IssueTracker)
-       null
-     }
-     else {
-       if(suspendedThreads.length > 1) logger.info {
-         "There is more than one suspended thread. Using the first in the list. If you experience any issue during the " +
-         "current debug session, please file a bug report at " + ScalaPlugin.IssueTracker + " and make sure to mention this " +
-         "message in the ticket's description."
-       }
-       suspendedThreads(0)
-     }
-    }
-    else currentThread
-  }
-
   def init() {
     if (!ScalaPlugin.plugin.headlessMode) {
-      // TODO: really ugly. Need to keep track of current selection per window.
-      PlatformUI.getWorkbench.getWorkbenchWindows.apply(0).getSelectionService.addSelectionListener("org.eclipse.debug.ui.DebugView", this)
+      ScalaDebuggerContextListener.register()
+    }
+  }
+
+  /** `IDebugContextListener` is part of the Eclipse UI code, by extending it in a different
+   *  object, it will not be loaded as soon as `ScalaDebugger` is used.
+   *  This allow to use `ScalaDebugger` even if the application is launched in `headless` mode, like while running tests.
+   */
+  private object ScalaDebuggerContextListener extends IDebugContextListener {
+
+    def register() {
+      DebugContextManager.getDefault().addDebugContextListener(this)
+    }
+
+    override def debugContextChanged(event: DebugContextEvent) {
+      ScalaDebugger.updateCurrentThread(event.getContext())
     }
   }
 }
