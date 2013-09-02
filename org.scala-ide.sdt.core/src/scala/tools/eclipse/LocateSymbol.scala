@@ -44,7 +44,7 @@ trait LocateSymbol { self : ScalaPresentationCompiler =>
       packName.flatMap{ pn =>
         val name = askOption { () =>
           val top = sym.enclosingTopLevelClass
-          if (sym.owner.isPackageObjectClass) "package$.class" else top.name + (if (top.isModuleClass) "$" else "") + ".class"
+          if ((sym != NoSymbol) && sym.owner.isPackageObjectClass) "package$.class" else top.name + (if (top.isModuleClass) "$" else "") + ".class"
         }
 
         name.flatMap { nm =>
