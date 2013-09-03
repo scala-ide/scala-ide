@@ -1,7 +1,7 @@
 package scala.tools.eclipse.semantichighlighting.ui
 
 import scala.collection.immutable
-import scala.tools.eclipse.ScalaSourceFileEditor
+import scala.tools.eclipse.ScalaCompilationUnitEditor
 import scala.tools.eclipse.logging.HasLogger
 import scala.tools.eclipse.properties.syntaxcolouring.ScalaSyntaxClasses
 import scala.tools.eclipse.semantichighlighting.PositionsTracker
@@ -31,7 +31,7 @@ import org.eclipse.swt.custom.StyleRange
   *
   * @note All accesses to this class are confined to the UI Thread.
   */
-private class TextPresentationEditorHighlighter(editor: ScalaSourceFileEditor, preferences: Preferences) extends TextPresentationHighlighter {
+private class TextPresentationEditorHighlighter(editor: ScalaCompilationUnitEditor, preferences: Preferences, onInit: IJavaReconcilingListener => Unit, onDispose: IJavaReconcilingListener => Unit) extends TextPresentationHighlighter {
   import TextPresentationEditorHighlighter._
 
   @volatile private var highlightingOnReconciliationListener: IJavaReconcilingListener = _
@@ -42,21 +42,20 @@ private class TextPresentationEditorHighlighter(editor: ScalaSourceFileEditor, p
     textPresentationChangeListener = new ApplyHighlightingTextPresentationChanges(semanticHighlightingJob, positionsTracker, preferences)
 
     Option(preferences.store) foreach (_.addPropertyChangeListener(textPresentationChangeListener))
-    Option(editor) foreach (_.addReconcilingListener(highlightingOnReconciliationListener))
-    // it's important to prepend the listener or semantic highlighting coloring will hide the style applied for hyperlinking when the 
+    onInit(highlightingOnReconciliationListener)
+    // it's important to prepend the listener or semantic highlighting coloring will hide the style applied for hyperlinking when the
     // user hovers on a semantically highlighted binding.
     Option(sourceViewer) foreach (_.prependTextPresentationListener(textPresentationChangeListener))
   }
 
   override def dispose(): Unit = {
     Option(preferences.store) foreach (_.removePropertyChangeListener(textPresentationChangeListener))
-    Option(editor) foreach (_.removeReconcilingListener(highlightingOnReconciliationListener))
+    onDispose(highlightingOnReconciliationListener)
     Option(sourceViewer) foreach (_.removeTextPresentationListener(textPresentationChangeListener))
   }
 
   override def sourceViewer: JavaSourceViewer = editor.sourceViewer
 
-  /** @inheritdoc */
   override def updateTextPresentation(damage: IRegion): Unit = {
     val textPresentation = createRepairDescription(damage)
     textPresentation match {
@@ -74,7 +73,8 @@ private class TextPresentationEditorHighlighter(editor: ScalaSourceFileEditor, p
 
 object TextPresentationEditorHighlighter {
 
-  def apply(editor: ScalaSourceFileEditor, preferences: Preferences): TextPresentationHighlighter = new TextPresentationEditorHighlighter(editor, preferences)
+  def apply(editor: ScalaCompilationUnitEditor, preferences: Preferences, onInit: IJavaReconcilingListener => Unit, onDispose: IJavaReconcilingListener => Unit): TextPresentationHighlighter =
+    new TextPresentationEditorHighlighter(editor, preferences, onInit, onDispose)
 
   private class PerformSemanticHighlightingOnReconcilation(semanticHighlightingJob: Job) extends IJavaReconcilingListener {
     override def aboutToBeReconciled(): Unit = ()
