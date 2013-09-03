@@ -38,8 +38,7 @@ class ScalaCodeScannerTest {
       val scalaVersion = ScalaVersions.DEFAULT
     }
 
-    val document = new MockDocument(str)
-    val token = scanner.tokenize(document.get(offset, length), offset) map {
+    val token = scanner.tokenize(str.slice(offset, length), offset) map {
       case scanner.Range(start, length, syntaxClass) =>
         (syntaxClass, start, length)
     }
@@ -88,8 +87,7 @@ class ScalaCodeScannerTest {
     val offset = 3 // arbitrary non-zero number
 
     val scanner = new ScalaCodeTokenizer { val scalaVersion = ScalaVersions.DEFAULT }
-    val document = new MockDocument(str)
-    val token = scanner.tokenize(document.get(0, str.length), offset) map {
+    val token = scanner.tokenize(str, offset) map {
       case scanner.Range(start, length, syntaxClass) =>
         (syntaxClass, start, length)
     }
