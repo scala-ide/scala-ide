@@ -59,7 +59,7 @@ object ScalaCollectionLogicalStructureType extends ILogicalStructureType with Ha
 
     val scalaValue = value.asInstanceOf[ScalaObjectReference]
 
-    val thread = ScalaDebugger.currentThreadOrFindFirstSuspendedThread(scalaValue)
+    val thread = ScalaDebugger.currentThread
     try {
       // the way to call toArray on a collection is slightly different between Scala 2.9 and 2.10
       // the base object to use to get the Manisfest and the method signature are different
