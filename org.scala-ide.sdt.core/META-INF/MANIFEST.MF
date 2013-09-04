@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Scala Plugin
 Bundle-SymbolicName: org.scala-ide.sdt.core;singleton:=true
-Bundle-Version: 3.0.1.qualifier
+Bundle-Version: 3.0.2.qualifier
 Bundle-Vendor: scala-ide.org
 Bundle-ActivationPolicy: lazy
 Bundle-Localization: plugin
