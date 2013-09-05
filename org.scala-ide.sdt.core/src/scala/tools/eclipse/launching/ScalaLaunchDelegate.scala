@@ -49,7 +49,7 @@ class ScalaLaunchDelegate extends AbstractJavaLaunchConfigurationDelegate {
       val runner = getVMRunner(configuration, mode)
 
       val workingDir = verifyWorkingDirectory(configuration)
-        val workingDirName = if (workingDir != null) workingDir.getAbsolutePath() else null
+      val workingDirName = if (workingDir != null) workingDir.getAbsolutePath() else null
 
       // Environment variables
       val envp = getEnvironment(configuration)
