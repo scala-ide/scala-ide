@@ -6,7 +6,6 @@
 package scala.tools.eclipse
 
 import java.io.File.pathSeparator
-
 import scala.collection.immutable
 import scala.collection.mutable
 import scala.reflect.internal.util.BatchSourceFile
@@ -24,7 +23,6 @@ import scala.tools.eclipse.util.Trim
 import scala.tools.eclipse.util.Utils
 import scala.tools.nsc.MissingRequirementError
 import scala.tools.nsc.Settings
-
 import org.eclipse.core.resources.IContainer
 import org.eclipse.core.resources.IFile
 import org.eclipse.core.resources.IMarker
@@ -47,6 +45,7 @@ import org.eclipse.ui.IEditorPart
 import org.eclipse.ui.IPartListener
 import org.eclipse.ui.IWorkbenchPart
 import org.eclipse.ui.part.FileEditorInput
+import org.eclipse.jface.preference.IPersistentPreferenceStore
 
 trait BuildSuccessListener {
   def buildSuccessful(): Unit
@@ -554,7 +553,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
    *  @see  #1001241.
    *  @see `storage` for a method that decides based on user preference
    */
-  def projectSpecificStorage: IPreferenceStore = {
+  def projectSpecificStorage: IPersistentPreferenceStore = {
     new PropertyStore(underlying, ScalaPlugin.prefStore, plugin.pluginId)
   }
 

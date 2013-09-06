@@ -8,11 +8,43 @@ import java.io.File
 import org.junit.Ignore
 import org.eclipse.core.resources.IncrementalProjectBuilder
 import org.eclipse.core.runtime.NullProgressMonitor
+import org.osgi.framework.Version
+import org.junit.AfterClass
 
 object ContinuationPluginSettingsTest {
   private val simulator = new EclipseUserSimulator
   lazy val projectName = "test_settings"
-  lazy val project = simulator.createProjectInWorkspace(projectName, false)
+  lazy val project = {
+    val p =simulator.createProjectInWorkspace(projectName, false)
+    val prefs = p.projectSpecificStorage
+    prefs.setValue(SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE, true)
+    prefs.save()
+    p
+  }
+
+  private def setPrefToDefault(key: String) {
+    val prefs = project.projectSpecificStorage
+    prefs.setToDefault(key)
+    prefs.save()
+  }
+
+  private def setPrefValue(key: String, value: String) {
+    val prefs = project.projectSpecificStorage
+    prefs.setValue(key, value)
+    prefs.save()
+  }
+
+  private def setPrefValue(key: String, value: Boolean) {
+    val prefs = project.projectSpecificStorage
+    prefs.setValue(key, value)
+    prefs.save()
+  }
+
+  @AfterClass
+  def deleteTestProject {
+    project.underlying.delete(true, null)
+  }
+
 }
 
 class ContinuationPluginSettingsTest {
@@ -20,16 +52,19 @@ class ContinuationPluginSettingsTest {
 
   @Test
   def continuationsPluginIsAlwaysLoaded() {
-    project.storage.setToDefault("Xpluginsdir")
-    project.storage.setToDefault("Xplugin")
+    setPrefToDefault("Xpluginsdir")
+    setPrefToDefault("Xplugin")
+    forceEnableContinuationForNewerScalaVersion()
+    project.resetPresentationCompiler()
     val plugins = loadedPlugins(project)
     Assert.assertEquals("Loaded plugins: ", List("continuations"), loadedPlugins(project))
   }
 
   @Test
   def loadContinuationsPluginVia_XpluginsdirCompilerSetting() {
-    project.storage.setValue("Xpluginsdir", ScalaPlugin.plugin.defaultPluginsDir)
-    project.storage.setValue("Xplugin", "/doesnotexits")
+    setPrefValue("Xpluginsdir", ScalaPlugin.plugin.defaultPluginsDir)
+    setPrefValue("Xplugin", "/doesnotexits")
+    forceEnableContinuationForNewerScalaVersion()
     project.resetPresentationCompiler()
     val plugins = loadedPlugins(project)
     Assert.assertEquals("Loaded plugins: ", List("continuations"), loadedPlugins(project))
@@ -37,8 +72,9 @@ class ContinuationPluginSettingsTest {
 
   @Test
   def loadContinuationsPluginVia_XpluginCompilerSetting() {
-    project.storage.setValue("Xpluginsdir", "/doesnotexist")
-    project.storage.setValue("Xplugin", ScalaPlugin.plugin.defaultPluginsDir + File.separator + "continuations.jar")
+    setPrefValue("Xpluginsdir", "/doesnotexist")
+    setPrefValue("Xplugin", ScalaPlugin.plugin.defaultPluginsDir + File.separator + "continuations.jar")
+    forceEnableContinuationForNewerScalaVersion()
     project.resetPresentationCompiler()
     val plugins = loadedPlugins(project)
     Assert.assertEquals("Loaded plugins: ", List("continuations"), loadedPlugins(project))
@@ -46,8 +82,9 @@ class ContinuationPluginSettingsTest {
 
   @Test
   def continuationPluginCannotBeLoadedWhen_pluginsDir_pointsToDirectoryThatDoesNotContainContinuationsPluginJar() {
-    project.storage.setValue("Xpluginsdir", "/doesnotexist")
-    project.storage.setValue("Xplugin", "/doesnotexits")
+    setPrefValue("Xpluginsdir", "/doesnotexist")
+    setPrefValue("Xplugin", "/doesnotexits")
+    forceEnableContinuationForNewerScalaVersion()
     project.resetPresentationCompiler()
 
     project.underlying.build(IncrementalProjectBuilder.CLEAN_BUILD, new NullProgressMonitor)
@@ -60,4 +97,10 @@ class ContinuationPluginSettingsTest {
     val plugins = project.withPresentationCompiler(comp => comp.plugins)(List[Plugin]())
     plugins.map(_.name)
   }
+
+  private def forceEnableContinuationForNewerScalaVersion() {
+    if (TestUtil.installedScalaVersionGreaterOrEqualsTo(new Version(2, 11, 0)))
+      setPrefValue("P", "continuations:enable")
+  }
+
 }
