@@ -36,7 +36,6 @@
         <configuration>
           <outputDirectory>${project.build.directory}/src</outputDirectory>
           <instructions>
-            <Bundle-Vendor>scala-ide.org</Bundle-Vendor>
             <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
             <Bundle-Name>Sbt Library Sources for Eclipse</Bundle-Name>
             <Bundle-Version>${sbt.osgi.version}</Bundle-Version>

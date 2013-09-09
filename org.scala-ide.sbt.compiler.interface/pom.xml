@@ -28,7 +28,6 @@
         <configuration>
           <outputDirectory>${project.build.directory}/lib</outputDirectory>
           <instructions>
-            <Bundle-Vendor>scala-ide.org</Bundle-Vendor>
             <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
             <Bundle-Name>Sbt Compiler Interface for Eclipse</Bundle-Name>
             <Bundle-Version>${sbt.osgi.version}</Bundle-Version>
