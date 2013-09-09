@@ -162,7 +162,7 @@
           <instructions>
             <Bundle-Vendor>scala-ide.org</Bundle-Vendor>
             <Bundle-SymbolicName>org.scala-ide.sbt.full.library</Bundle-SymbolicName>
-            <Bundle-Name>Sbt ${sbt.ide.version} Library for Eclipse</Bundle-Name>
+            <Bundle-Name>Sbt Library for Eclipse</Bundle-Name>
             <Bundle-Version>${sbt.version}.${version.tag}-${version.suffix}-${maven.build.timestamp}</Bundle-Version>
             <Embed-Dependency>*;scope=compile|runtime;inline=true</Embed-Dependency>
             <_exportcontents>sbt.*;version=${sbt.version},xsbt.*;version=${sbt.version},xsbti.*;version=${sbt.version},sbinary.*;version=${sbt.version}</_exportcontents>
