@@ -149,25 +149,6 @@
   <build>
     <plugins>
       <plugin>
-        <!-- automatically clean up the generated META-INF folder -->
-        <artifactId>maven-clean-plugin</artifactId>
-        <configuration>
-          <excludeDefaultDirectories>true</excludeDefaultDirectories>
-          <filesets>
-            <fileset>
-              <directory>./</directory>
-              <includes>
-                <include>META-INF/**/*</include>
-                <include>META-INF</include>
-                <include>target/**/*</include>
-                <include>target</include>
-              </includes>
-              <followSymlinks>false</followSymlinks>
-            </fileset>
-          </filesets>
-        </configuration>
-      </plugin>
-      <plugin>
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-bundle-plugin</artifactId>
         <configuration>
