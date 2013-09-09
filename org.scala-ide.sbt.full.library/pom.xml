@@ -146,8 +146,6 @@
             <Embed-Dependency>*;scope=compile|runtime;inline=true</Embed-Dependency>
             <_exportcontents>sbt.*;version=${sbt.version},xsbt.*;version=${sbt.version},xsbti.*;version=${sbt.version},sbinary.*;version=${sbt.version}</_exportcontents>
             <Embed-StripVersion>true</Embed-StripVersion>
-            <Import-Package>!org.apache.ivy.*,!org.bouncycastle.*,!org.scalatools.testing.*,!com.craft.*,!com.jcraft.*,!sun.misc,!org.apache.commons.vfs,!org.apache.commons.vfs.impl,!org.apache.oro.text,!org.apache.oro.text
- .regex,*</Import-Package>
           </instructions>
         </configuration>
       </plugin>
