@@ -110,7 +110,6 @@
             <Bundle-SymbolicName>org.scala-ide.scala.compiler</Bundle-SymbolicName>
             <Bundle-Name>Scala Compiler for Eclipse</Bundle-Name>
             <Bundle-Version>${osgi.version.number}</Bundle-Version>
-            <Bundle-Vendor>scala-ide.org</Bundle-Vendor>
             <Embed-Dependency>*;scope=compile|runtime;inline=false</Embed-Dependency>
             <_exportcontents>scala.reflect.internal.*;version=${osgi.version.number},
             scala.reflect.*;version=${osgi.version.number},

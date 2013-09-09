@@ -178,7 +178,6 @@
             <Bundle-SymbolicName>org.scala-ide.scala.library</Bundle-SymbolicName>
             <Bundle-Name>Scala Library for Eclipse</Bundle-Name>
             <Bundle-Version>${osgi.version.number}</Bundle-Version>
-            <Bundle-Vendor>scala-ide.org</Bundle-Vendor>
             <Embed-Dependency>*;scope=compile|runtime;inline=false</Embed-Dependency>
             <_exportcontents>scala.reflect;version=${osgi.version.number},scala.*;version=${osgi.version.number}</_exportcontents>
             <Embed-Directory>lib</Embed-Directory>
