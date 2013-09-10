@@ -100,7 +100,7 @@ class MainClassVerifierTest {
     createSource(pkg, mainName, main)
     val mainTypeName = mainName // this is the correct fully-qualified name
 
-    runTest(mainTypeName, main, times(1))
+    runTest(mainTypeName, times(1))
   }
 
   /** Test that an error is reported if the `mainTypeName` used to run the code does not match the binary location.*/
@@ -113,7 +113,7 @@ class MainClassVerifierTest {
     createSource(pkg, mainName, main) // source is created in foo/ (look at the value of `pkg`)
     val mainTypeName = pkg + "." + mainName // this is NOT the correct fully-qualified name
 
-    runTest(mainTypeName, main, times(1))
+    runTest(mainTypeName, times(1))
   }
 
   /** Test that an error is reported if the `mainTypeName` used to run the code does not match the binary location.*/
@@ -130,7 +130,7 @@ class MainClassVerifierTest {
     createSource(sourceLocation, mainName, main) // source is created in foo/
     val mainTypeName = sourceLocation + "." + mainName // this is NOT the correct fully-qualified name
 
-    runTest(mainTypeName, main, times(1))
+    runTest(mainTypeName, times(1))
   }
 
   /** Test that no error is reported if the `mainTypeName` used to run the code matches the binary location.*/
@@ -143,7 +143,7 @@ class MainClassVerifierTest {
     createSource(pkg, mainName, main) // source is created in foo/ (look at the value of `pkg`)
     val mainTypeName = mainName // this is the correct fully-qualified name
 
-    runTest(mainTypeName, main, never())
+    runTest(mainTypeName, never())
   }
 
   /** Test that no error is reported if the `mainTypeName` used to run the code matches the binary location.*/
@@ -160,7 +160,7 @@ class MainClassVerifierTest {
     createSource(sourceLocation, mainName, main) // source is created in foo/
     val mainTypeName = pkg + "." + mainName // this is the correct fully-qualified name
 
-    runTest(mainTypeName, main, never())
+    runTest(mainTypeName, never())
   }
 
   @Test
@@ -175,7 +175,7 @@ class MainClassVerifierTest {
     createSource(pkg, mainName, main)
     val mainTypeName = mainName // this is *NOT* the correct fully-qualified name
 
-    runTest(mainTypeName, main, times(1))
+    runTest(mainTypeName, times(1))
   }
 
   @Test
@@ -190,7 +190,7 @@ class MainClassVerifierTest {
     createSource(pkg, mainName, main)
     val mainTypeName = pkg + "." + mainName
 
-    runTest(mainTypeName, main, never())
+    runTest(mainTypeName, never())
   }
 
   @Test
@@ -208,10 +208,10 @@ class MainClassVerifierTest {
     createSource(EmptyPackage, mainName, main)
     val mainTypeName = mainName
 
-    runTest(mainTypeName, main, never())
+    runTest(mainTypeName, never())
   }
 
-  private def runTest(mainTypeName: String, mainContent: String, expectedCallsToErrorReportder: VerificationMode): Unit = {
+  private def runTest(mainTypeName: String, expectedCallsToErrorReportder: VerificationMode): Unit = {
     project.underlying.build(IncrementalProjectBuilder.FULL_BUILD, new NullProgressMonitor)
 
     val reporter = mock(classOf[MainClassVerifier.ErrorReporter])
