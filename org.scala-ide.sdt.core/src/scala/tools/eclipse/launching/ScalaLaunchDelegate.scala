@@ -17,16 +17,18 @@ import scala.collection.JavaConversions._
 import scala.collection.mutable
 import scala.tools.eclipse.ScalaProject
 import org.eclipse.jface.dialogs.MessageDialog
-import scala.tools.eclipse.util.SWTUtils
-import org.eclipse.core.runtime.IPath
-import org.eclipse.jdt.core.IJavaProject
+import scala.collection.JavaConverters
+import org.eclipse.debug.core.DebugPlugin
 import org.eclipse.core.runtime.Status
+import org.eclipse.debug.internal.core.IInternalDebugCoreConstants
+import org.eclipse.jface.dialogs.MessageDialogWithToggle
+import org.eclipse.jface.dialogs.IDialogConstants
 import org.eclipse.core.runtime.IStatus
 import org.eclipse.core.resources.IMarker
-import org.eclipse.debug.core.model.LaunchConfigurationDelegate
+import scala.tools.eclipse.ui.DisplayThread
 
 class ScalaLaunchDelegate extends AbstractJavaLaunchConfigurationDelegate {
-  /** This code is very heavily inspired from `AbstractJavaLaunchConfigurationDelegate`. */
+  /** This code is very heavily inspired from `JavaLaunchDelegate`. */
   def launch(configuration: ILaunchConfiguration, mode: String, launch: ILaunch, monitor0: IProgressMonitor) {
 
     val monitor = if (monitor0 == null) new NullProgressMonitor() else monitor0
@@ -116,16 +118,17 @@ class ScalaLaunchDelegate extends AbstractJavaLaunchConfigurationDelegate {
 
   /** Stop a launch if the main class does not exist. */
   override def finalLaunchCheck(configuration: ILaunchConfiguration, mode: String, monitor: IProgressMonitor): Boolean = {
-    super.finalLaunchCheck(configuration, mode, monitor) && {
-      // verify that the main classfile exists
-      val project = getJavaProject(configuration)
-      val mainTypeName = getMainTypeName(configuration)
-      ScalaPlugin.plugin.asScalaProject(project.getProject) map { scalaProject =>
-        val mainClassVerifier = new MainClassVerifier(new UIErrorReporter)
-        val status = mainClassVerifier.execute(scalaProject, mainTypeName)
-        status.isOK
-      } getOrElse false
-    }
+    // verify that the main classfile exists
+    val project = getJavaProject(configuration)
+    val mainTypeName = getMainTypeName(configuration)
+    ScalaPlugin.plugin.asScalaProject(project.getProject) map { scalaProject =>
+      val mainClassVerifier = new MainClassVerifier
+      val status = mainClassVerifier.execute(scalaProject, mainTypeName, existsProblems(project.getProject))
+      if(!status.isOK) {
+        val reporter = new UIErrorReporter
+        reporter.report(status)
+      } else status.isOK
+    } getOrElse false
   }
 
   private def toInclude(vmMap: mutable.Map[String, Array[String]], classpath: List[String],
@@ -150,9 +153,34 @@ class ScalaLaunchDelegate extends AbstractJavaLaunchConfigurationDelegate {
     bootEntry.toList.map(_.getLocation())
   }
 
-  private class UIErrorReporter extends MainClassVerifier.ErrorReporter {
-    def report(msg: String): Unit = SWTUtils.asyncExec {
-      MessageDialog.openInformation(ScalaPlugin.getShell, "Failed to run Scala Application", msg)
+  // We should replace this with a IStatusHandler - http://help.eclipse.org/juno/index.jsp?topic=%2Forg.eclipse.platform.doc.isv%2Fguide%2Fua_statushandling_sample.htm
+  private class UIErrorReporter {
+    def report(status: IStatus): Boolean = {
+      val latch = new java.util.concurrent.CountDownLatch(1)
+
+      @volatile var continueLaunch = true
+      DisplayThread.asyncExec {
+         try {
+            val dialog = new MessageDialog(
+                ScalaPlugin.getShell,
+                "Detected problem",
+                null,
+                status.getMessage + " Continue launch?",
+                MessageDialog.WARNING,
+                Array(IDialogConstants.YES_LABEL, IDialogConstants.NO_LABEL),
+                1)
+            dialog.open()
+            val returnValue = dialog.getReturnCode()
+            if (returnValue == IDialogConstants.OK_ID) continueLaunch = true
+            else continueLaunch = false
+          }
+          finally {
+            latch.countDown()
+          }
+      }
+
+      latch.await()
+      continueLaunch
     }
   }
 }
