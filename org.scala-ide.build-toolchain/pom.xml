@@ -13,6 +13,9 @@
   <packaging>pom</packaging>
   <version>4.0.0-SNAPSHOT</version>
 
+  <properties>
+    <sbt.osgi.version>${sbt.version}.${version.tag}-${version.suffix}-${maven.build.timestamp}</sbt.osgi.version>
+  </properties>
 
   <!-- extra repository containing the sbt packages -->
   <repositories>

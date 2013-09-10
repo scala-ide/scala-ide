@@ -47,8 +47,7 @@
             <Bundle-Vendor>scala-ide.org</Bundle-Vendor>
             <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
             <Bundle-Name>Sbt Compiler Interface for Eclipse</Bundle-Name>
-            <!-- put a '-' after the sbt.version since it already has a '-scalaide-01' qualifier. Remove it the qualifier is gone. -->
-            <Bundle-Version>${sbt.version}.${version.tag}-${version.suffix}-${maven.build.timestamp}</Bundle-Version>
+            <Bundle-Version>${sbt.osgi.version}</Bundle-Version>
             <Embed-Dependency>*;scope=compile|runtime;inline=true</Embed-Dependency>
             <_exportcontents>xsbt.*;version=${sbt.version}</_exportcontents>
             <Embed-StripVersion>true</Embed-StripVersion>

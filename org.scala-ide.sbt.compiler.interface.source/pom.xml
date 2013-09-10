@@ -50,9 +50,9 @@
           <instructions>
             <Bundle-Name>Sbt Compiler Interface Sources for Eclipse</Bundle-Name>
             <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
-            <Bundle-Version>${sbt.version}.${version.tag}-${version.suffix}-${maven.build.timestamp}</Bundle-Version>
+            <Bundle-Version>${sbt.osgi.version}</Bundle-Version>
             <!-- This defines the bundle we provide the source for -->
-            <Eclipse-SourceBundle>org.scala-ide.sbt.compiler.interface;version="${sbt.version}.${version.tag}-${version.suffix}-${maven.build.timestamp}";roots:="."</Eclipse-SourceBundle>
+            <Eclipse-SourceBundle>org.scala-ide.sbt.compiler.interface;version="${sbt.osgi.version}";roots:="."</Eclipse-SourceBundle>
             <!-- Extract all sources into this bundle -->
             <Embed-Dependency>classifier=sources;inline=true</Embed-Dependency>
           </instructions>
