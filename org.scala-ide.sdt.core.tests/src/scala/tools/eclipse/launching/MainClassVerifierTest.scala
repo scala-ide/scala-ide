@@ -1,27 +1,24 @@
 package scala.tools.eclipse.launching
 
-import scala.tools.eclipse.util.EclipseUtils
-import org.junit.After
-import org.junit.Before
-import scala.tools.eclipse.ScalaProject
 import scala.tools.eclipse.EclipseUserSimulator
 import scala.tools.eclipse.ScalaPlugin
-import org.junit.Test
+import scala.tools.eclipse.ScalaProject
 import scala.tools.eclipse.javaelements.ScalaCompilationUnit
-import org.mockito.Mockito._
-import org.mockito.Matchers.any
-import org.junit.runner.RunWith
-import org.junit.runners.JUnit4
+import scala.tools.eclipse.testsetup.SDTTestUtils
+import scala.tools.eclipse.util.EclipseUtils
+
 import org.eclipse.core.resources.IncrementalProjectBuilder
 import org.eclipse.core.runtime.NullProgressMonitor
-import org.mockito.verification.VerificationMode
-import org.eclipse.debug.core.ILaunchConfiguration
 import org.eclipse.debug.core.DebugPlugin
-import org.junit.Assert
 import org.eclipse.debug.core.ILaunchManager
-import scala.tools.eclipse.testsetup.FileUtils
-import scala.tools.eclipse.testsetup.SDTTestUtils
+import org.junit.After
+import org.junit.Assert
+import org.junit.Before
 import org.junit.Ignore
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.JUnit4
+import org.mockito.Mockito._
 
 @RunWith(classOf[JUnit4])
 class MainClassVerifierTest {
@@ -43,7 +40,7 @@ class MainClassVerifierTest {
     }
   }
 
-  /** This test is ignored becase there is no way to test it without seriously risking impairing the IDE
+  /** This test is ignored because there is no way to test it without seriously risking impairing the IDE
    *
    *  The launcher works by checking if there are build errors, and if yes delegating to a 'status handler'
    *  The status handler displays a dialog and decides whether to proceed or not. If the status handler
@@ -100,12 +97,12 @@ class MainClassVerifierTest {
     createSource(pkg, mainName, main)
     val mainTypeName = mainName // this is the correct fully-qualified name
 
-    runTest(mainTypeName, times(1))
+    runTest(mainTypeName) expectErrors
   }
 
   /** Test that an error is reported if the `mainTypeName` used to run the code does not match the binary location.*/
   @Test
-  def reportErrorWhenPackageDeclarationInMainTypeDoesntMatchBinaryLocation_inEmptyPackage() {
+  def reportNoErrorWhenPackageDeclarationInMainTypeDoesntMatchBinaryLocation_inEmptyPackage() {
     val pkg = "foo"
     val mainName = "Main"
     val main = "object %s extends App".format(mainName) // note: no package declaration here!
@@ -113,12 +110,12 @@ class MainClassVerifierTest {
     createSource(pkg, mainName, main) // source is created in foo/ (look at the value of `pkg`)
     val mainTypeName = pkg + "." + mainName // this is NOT the correct fully-qualified name
 
-    runTest(mainTypeName, times(1))
+    runTest(mainTypeName) expectNoErrors
   }
 
   /** Test that an error is reported if the `mainTypeName` used to run the code does not match the binary location.*/
   @Test
-  def reportErrorWhenPackageDeclarationInMainTypeDoesntMatchBinaryLocation_inNonEmptyPackage() {
+  def reportNoErrorWhenPackageDeclarationInMainTypeDoesntMatchBinaryLocation_inNonEmptyPackage() {
     val sourceLocation = "foo"
     val pkg = "bar"
     val mainName = "Main"
@@ -130,7 +127,7 @@ class MainClassVerifierTest {
     createSource(sourceLocation, mainName, main) // source is created in foo/
     val mainTypeName = sourceLocation + "." + mainName // this is NOT the correct fully-qualified name
 
-    runTest(mainTypeName, times(1))
+    runTest(mainTypeName) expectNoErrors
   }
 
   /** Test that no error is reported if the `mainTypeName` used to run the code matches the binary location.*/
@@ -143,7 +140,7 @@ class MainClassVerifierTest {
     createSource(pkg, mainName, main) // source is created in foo/ (look at the value of `pkg`)
     val mainTypeName = mainName // this is the correct fully-qualified name
 
-    runTest(mainTypeName, never())
+    runTest(mainTypeName) expectNoErrors
   }
 
   /** Test that no error is reported if the `mainTypeName` used to run the code matches the binary location.*/
@@ -160,11 +157,11 @@ class MainClassVerifierTest {
     createSource(sourceLocation, mainName, main) // source is created in foo/
     val mainTypeName = pkg + "." + mainName // this is the correct fully-qualified name
 
-    runTest(mainTypeName, never())
+    runTest(mainTypeName) expectNoErrors
   }
 
   @Test
-  def reportErrorWhenMainClassInLaunchConfigurationIsWrong() {
+  def reportNoErrorWhenMainClassInLaunchConfigurationIsWrong() {
     val pkg = "foo"
     val mainName = "Main"
     val main = """
@@ -175,7 +172,7 @@ class MainClassVerifierTest {
     createSource(pkg, mainName, main)
     val mainTypeName = mainName // this is *NOT* the correct fully-qualified name
 
-    runTest(mainTypeName, times(1))
+    runTest(mainTypeName) expectNoErrors
   }
 
   @Test
@@ -190,7 +187,13 @@ class MainClassVerifierTest {
     createSource(pkg, mainName, main)
     val mainTypeName = pkg + "." + mainName
 
-    runTest(mainTypeName, never())
+    runTest(mainTypeName) expectNoErrors
+  }
+
+  @Test
+  def reportErrorIfProjectHasBuildErrors() {
+    // let's pretend the project has build errors
+    runTest("", hasBuildErrors = true) expectErrors
   }
 
   @Test
@@ -208,18 +211,21 @@ class MainClassVerifierTest {
     createSource(EmptyPackage, mainName, main)
     val mainTypeName = mainName
 
-    runTest(mainTypeName, never())
+    runTest(mainTypeName) expectNoErrors
   }
 
-  private def runTest(mainTypeName: String, expectedCallsToErrorReportder: VerificationMode): Unit = {
-    project.underlying.build(IncrementalProjectBuilder.FULL_BUILD, new NullProgressMonitor)
+  private def runTest(mainTypeName: String, hasBuildErrors: Boolean = false) = new {
+    def expectNoErrors(): Unit = runner(isExpectedStatusOk = true)
 
-    val reporter = mock(classOf[MainClassVerifier.ErrorReporter])
-    val verifier = new MainClassVerifier(reporter)
+    def expectErrors(): Unit = runner(isExpectedStatusOk = false)
 
-    verifier.execute(project, mainTypeName)
+    private def runner(isExpectedStatusOk: Boolean): Unit = {
+      project.underlying.build(IncrementalProjectBuilder.FULL_BUILD, new NullProgressMonitor)
 
-    verify(reporter, expectedCallsToErrorReportder).report(any())
+      val verifier = new MainClassVerifier
+      val status = verifier.execute(project, mainTypeName, hasBuildErrors)
+      Assert.assertEquals(s"Status ${status} doesn't match test expecation", /*expected*/ isExpectedStatusOk, /*actual*/status.isOK)
+    }
   }
 
   private def createSource(pkgName: String, typeName: String, content: String): Unit = {
