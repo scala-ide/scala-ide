@@ -255,6 +255,28 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings) exten
     askShutdown()
   }
 
+  def mkCompletionProposalForUnapply(start: Int, sym: Symbol, tpe: Type): CompletionProposal = {
+    import scala.tools.eclipse.completion.MemberKind._
+
+    val unappyMember: MethodSymbol = tpe.member(TermName("apply")).asMethod
+    val parameters: List[Symbol] = unappyMember.paramss(0)
+    val parameterNames = parameters.map(param => param.nameString)
+    val parameterTypes = unappyMember.tpe.paramTypes.map(_.toString)
+    val completion = parameterNames mkString ", "
+    CompletionProposal(
+        Val,
+        start,
+        completion,
+        s"${sym.decodedName}($completion)",
+        "",
+        100,
+        false,
+        () => Nil, //List(parameterNames),
+        List(parameterTypes),
+        sym.fullName,
+        false)
+  }
+
   /** Add a new completion proposal to the buffer. Skip constructors and accessors.
    *
    *  Computes a very basic relevance metric based on where the symbol comes from
@@ -271,14 +293,15 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings) exten
   def mkCompletionProposal(prefix: Array[Char], start: Int, sym: Symbol, tpe: Type, inherited: Boolean, viaView: Symbol): CompletionProposal = {
     import scala.tools.eclipse.completion.MemberKind._
 
-    val kind = if (sym.isSourceMethod && !sym.hasFlag(Flags.ACCESSOR | Flags.PARAMACCESSOR)) Def
-    else if (sym.isPackage) Package
-    else if (sym.isClass) Class
-    else if (sym.isTrait) Trait
-    else if (sym.isPackageObject) PackageObject
-    else if (sym.isModule) Object
-    else if (sym.isType) Type
-    else Val
+    val kind =
+      if (sym.isSourceMethod && !sym.hasFlag(Flags.ACCESSOR | Flags.PARAMACCESSOR)) Def
+      else if (sym.isPackage) Package
+      else if (sym.isClass) Class
+      else if (sym.isTrait) Trait
+      else if (sym.isPackageObject) PackageObject
+      else if (sym.isModule) Object
+      else if (sym.isType) Type
+      else Val
     val name = sym.decodedName
     val signature =
       if (sym.isMethod) {

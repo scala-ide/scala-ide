@@ -244,6 +244,24 @@ class CompletionTests {
   }
 
   @Test
+  def ticket1001284_1() {
+    val oracle = List("Bar(str, int)")
+    runTest("ticket_1001284/Ticket1001284_1.scala", true)(oracle, oracle, oracle, oracle)
+  }
+
+  @Test
+  def ticket1001284_2() {
+    val oracle = List("Bar(str, int)")
+    runTest("ticket_1001284/Ticket1001284_2.scala", true)(oracle, oracle, oracle, oracle)
+  }
+
+  @Test
+  def ticket1001284_3() {
+    val oracle = List("Bar(str, int)")
+    runTest("ticket_1001284/Ticket1001284_3.scala", true)(oracle, oracle, oracle, oracle)
+  }
+
+  @Test
   def relevanceSortingTests() {
     val unit = scalaCompilationUnit("relevance/RelevanceCompletions.scala")
     reload(unit)
