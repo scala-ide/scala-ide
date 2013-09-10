@@ -110,7 +110,6 @@
             <Bundle-SymbolicName>org.scala-ide.scala.compiler</Bundle-SymbolicName>
             <Bundle-Name>Scala Compiler for Eclipse</Bundle-Name>
             <Bundle-Version>${osgi.version.number}</Bundle-Version>
-            <Bundle-Vendor>scala-ide.org</Bundle-Vendor>
             <Embed-Dependency>*;scope=compile|runtime;inline=false</Embed-Dependency>
             <_exportcontents>scala.reflect.internal.*;version=${osgi.version.number},
             scala.reflect.*;version=${osgi.version.number},
@@ -118,7 +117,7 @@
             <Embed-Directory>lib</Embed-Directory>
             <Embed-StripVersion>true</Embed-StripVersion>
             <Include-Resource>lib=${project.build.directory}/lib</Include-Resource>
-            <Import-Package>!javax.script.*,!javax.tools.*,!jline.*,!scala.tools.jline.*,!sun.misc,scala.reflect,*</Import-Package>
+            <Import-Package>!javax.script,!jline.*,!javax.tools.*,!scala.tools.jline.*,scala.reflect,*</Import-Package>
           </instructions>
         </configuration>
       </plugin>

@@ -8,40 +8,25 @@
     <version>4.0.0-SNAPSHOT</version>
     <relativePath>../org.scala-ide.build-toolchain/pom.xml</relativePath>
   </parent>
-  <artifactId>org.scala-ide.sbt.full.library</artifactId>
+  <artifactId>org.scala-ide.sbt.full.library.source</artifactId>
   <packaging>bundle</packaging>
 
   <profiles>
-    <profile>
-      <!--- the profile using the default values. Scala 2.10.x -->
-      <id>scala-2.10.x</id>
-    </profile>
-    <profile>
-      <!--- the profile using the default values. Scala 2.11.x -->
-      <id>scala-2.11.x</id>
-      <dependencies>
-        <dependency>
-          <groupId>org.scala-lang.modules</groupId>
-          <artifactId>scala-xml_${scala.binary.version}</artifactId>
-        </dependency>
-        <dependency>
-          <groupId>org.scala-lang.modules</groupId>
-          <artifactId>scala-parser-combinators_${scala.binary.version}</artifactId>
-        </dependency>
-      </dependencies>
-    </profile>
-
     <profile>
       <id>sbt-new</id>
       <dependencies>
         <dependency>
           <groupId>com.typesafe.sbt</groupId>
           <artifactId>sbt-interface</artifactId>
+          <version>${sbt.ide.version}</version>
+          <classifier>sources</classifier>
           <optional>true</optional>
         </dependency>
         <dependency>
           <groupId>com.typesafe.sbt</groupId>
           <artifactId>incremental-compiler</artifactId>
+          <version>${sbt.ide.version}</version>
+          <classifier>sources</classifier>
           <optional>true</optional>
         </dependency>
       </dependencies>
@@ -53,79 +38,110 @@
         <dependency>
           <groupId>org.scala-sbt</groupId>
           <artifactId>classpath_${sbt.compiled.version}</artifactId>
+          <version>${sbt.version}</version>
+          <classifier>sources</classifier>
           <optional>true</optional>
         </dependency>
         <dependency>
           <groupId>org.scala-sbt</groupId>
           <artifactId>logging_${sbt.compiled.version}</artifactId>
+          <version>${sbt.version}</version>
+          <classifier>sources</classifier>
           <optional>true</optional>
         </dependency>
         <dependency>
           <groupId>org.scala-sbt</groupId>
           <artifactId>io_${sbt.compiled.version}</artifactId>
+          <version>${sbt.version}</version>
+          <classifier>sources</classifier>
           <optional>true</optional>
         </dependency>
         <dependency>
           <groupId>org.scala-sbt</groupId>
           <artifactId>control_${sbt.compiled.version}</artifactId>
+          <version>${sbt.version}</version>
+          <classifier>sources</classifier>
           <optional>true</optional>
         </dependency>
         <dependency>
           <groupId>org.scala-sbt</groupId>
           <artifactId>classfile_${sbt.compiled.version}</artifactId>
+          <version>${sbt.version}</version>
+          <classifier>sources</classifier>
           <optional>true</optional>
         </dependency>
         <dependency>
           <groupId>org.scala-sbt</groupId>
           <artifactId>process_${sbt.compiled.version}</artifactId>
+          <version>${sbt.version}</version>
+          <classifier>sources</classifier>
           <optional>true</optional>
         </dependency>
         <dependency>
           <groupId>org.scala-sbt</groupId>
           <artifactId>relation_${sbt.compiled.version}</artifactId>
+          <version>${sbt.version}</version>
+          <classifier>sources</classifier>
           <optional>true</optional>
         </dependency>
         <dependency>
           <groupId>org.scala-sbt</groupId>
           <artifactId>interface_${sbt.compiled.version}</artifactId>
+          <version>${sbt.version}</version>
+          <classifier>sources</classifier>
           <optional>true</optional>
         </dependency>
         <dependency>
           <groupId>org.scala-sbt</groupId>
           <artifactId>persist_${sbt.compiled.version}</artifactId>
+          <version>${sbt.version}</version>
+          <classifier>sources</classifier>
           <optional>true</optional>
         </dependency>
         <dependency>
           <groupId>org.scala-sbt</groupId>
           <artifactId>api_${sbt.compiled.version}</artifactId>
+          <version>${sbt.version}</version>
+          <classifier>sources</classifier>
           <optional>true</optional>
         </dependency>
         <dependency>
           <groupId>org.scala-sbt</groupId>
           <artifactId>compiler-integration_${sbt.compiled.version}</artifactId>
+          <version>${sbt.version}</version>
+          <classifier>sources</classifier>
           <optional>true</optional>
         </dependency>
         <dependency>
           <groupId>org.scala-sbt</groupId>
           <artifactId>incremental-compiler_${sbt.compiled.version}</artifactId>
+          <version>${sbt.version}</version>
+          <classifier>sources</classifier>
           <optional>true</optional>
         </dependency>
         <dependency>
           <groupId>org.scala-sbt</groupId>
           <artifactId>compile_${sbt.compiled.version}</artifactId>
+          <version>${sbt.version}</version>
+          <classifier>sources</classifier>
           <optional>true</optional>
         </dependency>
         <!-- all the dependencies necessary for running like sbinary, jline -->
         <dependency>
           <groupId>jline</groupId>
           <artifactId>jline</artifactId>
+          <version>${jline.version}</version>
+          <classifier>sources</classifier>
           <optional>true</optional>
         </dependency>
-        <dependency>
+        <!-- No published sources for sbinary, yet -->
+<!--        <dependency>
           <groupId>org.scala-tools.sbinary</groupId>
           <artifactId>sbinary_${sbt.compiled.version}</artifactId>
+          <classifier>sources</classifier>
           <optional>true</optional>
         </dependency>
+-->
       </dependencies>
     </profile>
   </profiles>
@@ -133,18 +149,18 @@
   <build>
     <plugins>
       <plugin>
-        <!-- generate the MANIFEST.MF file, and create the bundle -->
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-bundle-plugin</artifactId>
         <configuration>
-          <outputDirectory>${project.build.directory}/lib</outputDirectory>
+          <outputDirectory>${project.build.directory}/src</outputDirectory>
           <instructions>
-            <Bundle-SymbolicName>org.scala-ide.sbt.full.library</Bundle-SymbolicName>
-            <Bundle-Name>Sbt Library for Eclipse</Bundle-Name>
+            <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
+            <Bundle-Name>Sbt Library Sources for Eclipse</Bundle-Name>
             <Bundle-Version>${sbt.osgi.version}</Bundle-Version>
-            <Embed-Dependency>*;scope=compile|runtime;inline=true</Embed-Dependency>
-            <_exportcontents>sbt.*;version=${sbt.version},xsbt.*;version=${sbt.version},xsbti.*;version=${sbt.version},sbinary.*;version=${sbt.version}</_exportcontents>
-            <Embed-StripVersion>true</Embed-StripVersion>
+            <!-- This defines the bundle we provide the source for -->
+            <Eclipse-SourceBundle>org.scala-ide.sbt.full.library;version="${sbt.osgi.version}";roots:="."</Eclipse-SourceBundle>
+            <!-- Extract all sources into this bundle -->
+            <Embed-Dependency>classifier=sources;inline=true</Embed-Dependency>
           </instructions>
         </configuration>
       </plugin>
