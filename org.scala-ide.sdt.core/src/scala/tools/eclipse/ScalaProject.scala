@@ -785,4 +785,11 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
   }
 
   override def toString: String = underlying.getName
+
+  override def equals(other: Any): Boolean = other match {
+    case otherSP: ScalaProject => underlying == otherSP.underlying
+    case _ => false
+  }
+
+  override def hashCode(): Int = underlying.hashCode()
 }
