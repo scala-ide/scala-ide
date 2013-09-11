@@ -614,6 +614,11 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
     }
   }
 
+  @deprecated("Use `InteractiveCompilationUnit.withSourceFile instead`", since = "4.0.0")
+  def withSourceFile[T](scu: InteractiveCompilationUnit)(op: (SourceFile, ScalaPresentationCompiler) => T)(orElse: => T = defaultOrElse): T = {
+    scu.withSourceFile(op)(orElse)
+  }
+
   /** Shutdown the presentation compiler, and force a re-initialization but asking to reconcile all
    *  compilation units that were serviced by the previous instance of the PC. Does nothing if
    *  the presentation compiler is not yet initialized.
