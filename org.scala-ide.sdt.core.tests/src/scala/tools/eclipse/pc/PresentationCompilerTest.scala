@@ -67,7 +67,6 @@ class FreshFile {
     Assert.assertNotSame("Unexpected clean source", errors1, Nil)
   }
 
-  @Ignore("Enable this once we understand why it spuriously fail #1001588")
   @Test
   def implicitConversionFromPackageObjectShouldBeInScope_t1000647() {
     //when
@@ -93,8 +92,6 @@ class FreshFile {
     assertNoErrors(unit)
   }
 
-  @Ignore("Ticket #1000692 is fixed (at least it looks like it is working). However this test it is still failing. "+
-      "We decided to look at it and understand why it is not passing only after 2.0 release.")
   @Test
   def notEnoughArgumentsForCconstructorError_ShouldNotBeReported_t1000692() {
     //when
@@ -167,7 +164,6 @@ class FreshFile {
   }
 
   @Test
-  @Ignore("Enable this test once #1000976 is fixed")
   def correctlyTypecheckClassesWithDefaultArguments_t1000976() {
     def openUnitAndTypecheck(path: String): ScalaSourceFile = {
       val unit = scalaCompilationUnit(path).asInstanceOf[ScalaSourceFile]
