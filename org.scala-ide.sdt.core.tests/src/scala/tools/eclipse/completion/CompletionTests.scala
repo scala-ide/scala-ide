@@ -33,7 +33,7 @@ class CompletionTests {
     val unit = compilationUnit(path2source).asInstanceOf[ScalaCompilationUnit]
 
     // first, 'open' the file by telling the compiler to load it
-    project.withSourceFile(unit) { (src, compiler) =>
+    unit.withSourceFile { (src, compiler) =>
       val dummy = new Response[Unit]
       compiler.askReload(List(src), dummy)
       dummy.get

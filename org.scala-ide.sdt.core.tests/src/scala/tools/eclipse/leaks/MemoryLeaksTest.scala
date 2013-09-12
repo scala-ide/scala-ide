@@ -97,7 +97,7 @@ class MemoryLeaksTest extends HasLogger {
     logger.debug("Problems: " + unit.asInstanceOf[ScalaSourceFile].getProblems)
 
     // then
-    compilerProject.project.withSourceFile(unit) { (sourceFile, compiler) =>
+    unit.withSourceFile { (sourceFile, compiler) =>
       compiler.withStructure(sourceFile, keepLoaded = true) { tree =>
         compiler.askOption { () =>
           val overrideIndicatorBuilder = new compiler.OverrideIndicatorBuilderTraverser(unit, new java.util.HashMap)
