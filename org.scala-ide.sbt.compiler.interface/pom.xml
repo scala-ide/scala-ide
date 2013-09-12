@@ -32,7 +32,7 @@
             <Bundle-Name>Sbt Compiler Interface for Eclipse</Bundle-Name>
             <Bundle-Version>${sbt.osgi.version}</Bundle-Version>
             <Embed-Dependency>*;scope=compile|runtime;inline=true</Embed-Dependency>
-            <_exportcontents>xsbt.*;version=${sbt.version}</_exportcontents>
+            <_exportcontents>xsbt.*;version=${sbt.osgi.version}</_exportcontents>
             <Embed-StripVersion>true</Embed-StripVersion>
           </instructions>
         </configuration>
