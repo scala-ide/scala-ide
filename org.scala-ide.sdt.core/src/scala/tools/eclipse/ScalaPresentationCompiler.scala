@@ -39,6 +39,8 @@ import scala.tools.nsc.interactive.MissingResponse
 import scala.tools.eclipse.javaelements.ScalaSourceFile
 import scala.tools.eclipse.sourcefileprovider.SourceFileProviderRegistry
 import org.eclipse.core.runtime.Path
+import org.eclipse.core.resources.IFile
+import org.eclipse.jdt.internal.core.util.Util
 
 
 class ScalaPresentationCompiler(project: ScalaProject, settings: Settings) extends {
@@ -195,6 +197,37 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings) exten
   def discardCompilationUnit(scu: ScalaCompilationUnit) {
     logger.info("discarding " + scu.sourceFile.path)
     askOption { () => removeUnitOf(scu.sourceFile) }
+  }
+
+  /**
+   * Tell the presentation compiler to refresh the given files,
+   * if they are not managed by the presentation compiler already.
+   */
+  def refreshChangedFiles(files: List[IFile]) {
+    // transform to batch source files
+    val freshSources = files.collect {
+      // When a compilation unit is moved (e.g. using the Move refactoring) between packages,
+      // an ElementChangedEvent is fired but with the old IFile name. Ignoring the file does
+      // not seem to cause any bad effects later on, so we simply ignore these files -- Mirko
+      // using an Util class from jdt.internal to read the file, Eclipse doesn't seem to
+      // provide an API way to do it -- Luc
+      case file if file.exists => new BatchSourceFile(EclipseResource(file), Util.getResourceContentsAsCharArray(file))
+    }
+
+    // only the files not already managed should be refreshed
+    val managedFiles = unitOfFile.keySet
+    val notLoadedFiles = freshSources.filter(f => !managedFiles(f.file))
+
+    notLoadedFiles.foreach(file => {
+      // call askParsedEntered to force the refresh without loading the file
+      val r = withResponse[Tree] { askParsedEntered(file, false, _) }
+
+      r.get
+    })
+
+    // reconcile the opened editors if some files have been refreshed
+    if (notLoadedFiles.nonEmpty)
+      reconcileOpenUnits()
   }
 
   override def newTermName(str: String) = {

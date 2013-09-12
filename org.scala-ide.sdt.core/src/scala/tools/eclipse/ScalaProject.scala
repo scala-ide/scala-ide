@@ -624,12 +624,16 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
    *  the presentation compiler is not yet initialized.
    *
    *  @return true if the presentation compiler was initialized at the time of this call.
+   *
+   *  @note This method isn't thread-safe, but plain synchronization can't be added without
+   *        the risk of deadlocks (see #1001875)
    */
   def resetPresentationCompiler(): Boolean =
     if (presentationCompiler.initialized) {
-      val units = shutDownPresentationCompiler().map(_.compilationUnits).getOrElse(Set.empty)
+      val units = shutDownPresentationCompiler().map(_.compilationUnits).getOrElse(Nil)
 
-      doWithPresentationCompiler { _.askReload(units.toList).get  }
+      // if several threads call this method, there might be a lost update
+      doWithPresentationCompiler { _.askReload(units).get  }
       true
     } else {
       logger.info("[%s] Presentation compiler was not yet initialized, ignoring reset.".format(underlying.getName()))
@@ -747,40 +751,6 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
    */
   def shutDownPresentationCompiler(): Option[ScalaPresentationCompiler] = {
     presentationCompiler.invalidate().flatten
-  }
-
-  /**
-   * Tell the presentation compiler to refresh the given files,
-   * if they are not managed by the presentation compiler already.
-   */
-  def refreshChangedFiles(files: List[IFile]) {
-    // transform to batch source files
-    val freshSources = files.collect {
-      // When a compilation unit is moved (e.g. using the Move refactoring) between packages,
-      // an ElementChangedEvent is fired but with the old IFile name. Ignoring the file does
-      // not seem to cause any bad effects later on, so we simply ignore these files -- Mirko
-      // using an Util class from jdt.internal to read the file, Eclipse doesn't seem to
-      // provide an API way to do it -- Luc
-      case file if file.exists => new BatchSourceFile(EclipseResource(file), Util.getResourceContentsAsCharArray(file))
-    }
-
-    withPresentationCompiler {compiler =>
-      import compiler._
-      // only the files not already managed should be refreshed
-      val managedFiles = unitOfFile.keySet
-      val notLoadedFiles = freshSources.filter(f => !managedFiles(f.file))
-
-      notLoadedFiles.foreach(file => {
-        // call askParsedEntered to force the refresh without loading the file
-        val r = new Response[Tree]
-        compiler.askParsedEntered(file, false, r)
-        r.get.left
-      })
-
-      // reconcile the opened editors if some files have been refreshed
-      if (notLoadedFiles.nonEmpty)
-        reconcileOpenUnits()
-    }(Nil)
   }
 
   def dispose(): Unit = {

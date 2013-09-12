@@ -407,7 +407,7 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
         case (project, units) =>
           asScalaProject(project) foreach { p =>
             if (project.isOpen && !projectsToReset(p)) {
-              p.refreshChangedFiles(units.map(_.getResource.asInstanceOf[IFile]))
+              p.doWithPresentationCompiler(_.refreshChangedFiles(units.map(_.getResource.asInstanceOf[IFile])))
             }
           }
       }
