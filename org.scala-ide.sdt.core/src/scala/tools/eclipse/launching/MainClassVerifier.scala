@@ -1,38 +1,44 @@
 package scala.tools.eclipse.launching
 
+import scala.tools.eclipse.ScalaPlugin
 import scala.tools.eclipse.ScalaProject
+
+import org.eclipse.core.resources.IResource
 import org.eclipse.core.runtime.IStatus
 import org.eclipse.core.runtime.Status
-import scala.tools.eclipse.ScalaPlugin
-import org.eclipse.core.resources.IResource
-import org.eclipse.core.runtime.IPath
 
 object MainClassVerifier {
   private final val ModuleClassSuffix = "$"
-
-  trait ErrorReporter {
-    def report(msg: String): Unit
-  }
 }
 
-class MainClassVerifier(reporter: MainClassVerifier.type#ErrorReporter) {
+class MainClassVerifier {
   /**
-   * Verify that the classfile of the fully-qualified {{{mainTypeName}}} can be found.
-   * @project The scala project containing the main type.
-   * @typeName The fully-qualified main type name.
+   * Performs the following checks:
+   *
+   * 1) If the classfile of the fully-qualified `mainTypeName` can be found in the `project`'s output folders, a matching companion classfile
+   *    (which is expected to contain the main method) is also found. If it can't be found, an error is reported (this is done because it means
+   *    the user is trying to run a plain `class`, instead of an `object`).
+   *
+   * 2) If the class of the fully-qualified `mainTypeName` cannot be found, it reports an error if the `project` has build errors. Otherwise, it
+   *    trusts the user's configuration and returns ok (this is the case for instance when the `mainTypeName` comes from a classfile in a JAR).
+   *
+   * @param project      The scala project containing the main type.
+   * @param mainTypeName The fully-qualified main type name.
+   * @param hasBuildErrors True if the passed `project` has build errors, false otherwise.
    */
-  def execute(project: ScalaProject, mainTypeName: String): IStatus = {
-    val status = canRunMain(project, mainTypeName)
-    if (!status.isOK) reporter.report(status.getMessage())
-    status
+  def execute(project: ScalaProject, mainTypeName: String, hasBuildErrors: Boolean): IStatus = {
+    canRunMain(project, mainTypeName, hasBuildErrors)
   }
 
-  private def canRunMain(project: ScalaProject, mainTypeName: String): IStatus = {
+  private def canRunMain(project: ScalaProject, mainTypeName: String, hasBuildErrors: Boolean): IStatus = {
     val mainClass = findClassFile(project, mainTypeName)
     def mainModuleClass = findClassFile(project, mainTypeName + MainClassVerifier.ModuleClassSuffix)
 
-    if(mainClass.isEmpty) mainTypeCannotBeLocated(project, mainTypeName)
-    else if (mainModuleClass.isEmpty) new Status(IStatus.ERROR, ScalaPlugin.plugin.pluginId, s"${mainTypeName} needs to be an `object` (it is currently a `class`).")
+    if (mainClass.nonEmpty && mainModuleClass.isEmpty) new Status(IStatus.ERROR, ScalaPlugin.plugin.pluginId, s"${mainTypeName} needs to be an `object` (it is currently a `class`).")
+    else if (hasBuildErrors) {
+      val msg = s"Project ${project.underlying.getName} contains build errors."
+      new Status(IStatus.ERROR, ScalaPlugin.plugin.pluginId, msg)
+    }
     else new Status(IStatus.OK, ScalaPlugin.plugin.pluginId, "")
   }
 
@@ -44,19 +50,5 @@ class MainClassVerifier(reporter: MainClassVerifier.type#ErrorReporter) {
       classFileLocation = outputLocation.append(s"${classFileName}.class")
       classFile <- Option(ScalaPlugin.plugin.workspaceRoot.findMember(classFileLocation))
     } yield classFile).headOption
-  }
-
-  private def mainTypeCannotBeLocated(project: ScalaProject, mainTypeName: String): IStatus = {
-    val projectName = project.underlying.getName
-    val sb = new StringBuilder
-    sb append ((s"Cannot locate main type '${mainTypeName}' in project '${projectName}'."))
-    for (mainClassName <- mainTypeName.split('.').lastOption.map(_.mkString)) {
-      sb append {
-        s""" Check your Run Configuration and make sure that the value of \"Main class\" is in sync with the package and type name declared in class '${mainClassName}'."""
-      }
-    }
-
-    val errMsg = sb.toString
-    new Status(IStatus.ERROR, ScalaPlugin.plugin.pluginId, errMsg)
   }
 }
