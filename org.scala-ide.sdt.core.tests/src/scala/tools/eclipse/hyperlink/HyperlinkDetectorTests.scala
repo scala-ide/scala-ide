@@ -86,7 +86,7 @@ class HyperlinkDetectorTests {
   }
   
   @Test
-  def test1000656() {
+  def test1000656() = FlakyTest.retry("HyperlinkDetectorTests.test1000656", "expected 1 link, found 0 expected:<1> but was:<0>") {
     val oracle = List(Link("type util.Box.myInt"), Link("method util.Full.apply", "object util.Full"))
     loadTestUnit("bug1000656/Client.scala").andCheckAgainst(oracle)
   }
