@@ -55,8 +55,6 @@
             <_exportcontents>sbt.*;version=${sbt.osgi.version},xsbt.*;version=${sbt.osgi.version},xsbti.*;version=${sbt.osgi.version},sbinary.*;version=${sbt.osgi.version}</_exportcontents>
             <Embed-Directory>lib</Embed-Directory>
             <Embed-StripVersion>true</Embed-StripVersion>
-            <Import-Package>!org.apache.ivy.*,!org.bouncycastle.*,!org.scalatools.testing.*,!com.craft.*,!com.jcraft.*,!sun.misc,!org.apache.commons.vfs,!org.apache.commons.vfs.impl,!org.apache.oro.text,!org.apache.oro.text
- .regex,*</Import-Package>
           </instructions>
         </configuration>
       </plugin>
