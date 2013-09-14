@@ -6,9 +6,9 @@ Bundle-Version: 4.0.0.qualifier
 Bundle-Vendor: scala-ide.org
 Bundle-ActivationPolicy: lazy
 Bundle-Localization: plugin
-Bundle-Activator: 
+Bundle-Activator:
  scala.tools.eclipse.ScalaPlugin
-Require-Bundle: 
+Require-Bundle:
  org.eclipse.core.expressions,
  org.eclipse.core.filesystem,
  org.eclipse.core.resources,
@@ -42,11 +42,9 @@ Require-Bundle:
  org.scala-ide.scala.library,
  org.scala-ide.scala.compiler,
  org.scala-refactoring.library,
- org.scala-ide.sbt.full.library;bundle-version="[0.13,0.14)",
- org.scala-ide.sbt.compiler.interface;bundle-version="[0.13,0.14)",
  scalariform,
  org.eclipse.ui.browser;bundle-version="3.3.0"
-Import-Package: 
+Import-Package:
  com.ibm.icu.text;apply-aspects:=false;org.eclipse.swt.graphics;apply-aspects:=false,
  scala.tools.eclipse.contribution.weaving.jdt;apply-aspects:=false,
  scala.tools.eclipse.contribution.weaving.jdt.builderoptions;apply-aspects:=false,
@@ -65,7 +63,7 @@ Import-Package:
  scala.tools.eclipse.contribution.weaving.jdt.ui.actions;apply-aspects:=false,
  scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor;apply-aspects:=false,
  scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.formatter;apply-aspects:=false
-Export-Package: 
+Export-Package:
  scala.tools.eclipse,
  scala.tools.eclipse.actions,
  scala.tools.eclipse.buildmanager,
@@ -114,7 +112,5 @@ Bundle-RequiredExecutionEnvironment: J2SE-1.5
 Bundle-ClassPath: .,
  target/lib/miglayout-3.7.4.jar,
  target/lib/log4j-1.2.17.jar
-Eclipse-ExtensibleAPI: 
+Eclipse-ExtensibleAPI:
  true
-
-
