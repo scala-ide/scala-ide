@@ -13,6 +13,10 @@
   <packaging>pom</packaging>
   <version>3.0.2-SNAPSHOT</version>
 
+  <properties>
+    <sbt.osgi.version>${sbt.version}.${version.tag}-${version.suffix}-${maven.build.timestamp}</sbt.osgi.version>
+  </properties>
+
   <modules>
     <module>../org.scala-ide.scala.library</module>
     <module>../org.scala-ide.scala.compiler</module>
