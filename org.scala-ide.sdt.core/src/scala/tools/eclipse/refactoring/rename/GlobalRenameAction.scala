@@ -2,8 +2,7 @@
  * Copyright 2005-2010 LAMP/EPFL
  */
 
-package scala.tools.eclipse
-package refactoring
+package scala.tools.eclipse.refactoring
 package rename
 
 import org.eclipse.core.resources.IFile
@@ -29,7 +28,7 @@ import scala.tools.refactoring.Refactoring
  * When a class is renamed that has the same name as the source file,
  * the file is renamed too.
  */
-class GlobalRenameAction extends RefactoringAction {
+class GlobalRenameAction extends RefactoringActionWithWizard {
 
   def createRefactoring(start: Int, end: Int, file: ScalaSourceFile) = new RenameScalaIdeRefactoring(start, end, file)
 

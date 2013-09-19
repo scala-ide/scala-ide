@@ -3,7 +3,7 @@ package quickfix
 
 import scala.tools.eclipse.javaelements.ScalaSourceFile
 import scala.tools.eclipse.logging.HasLogger
-
+import scala.tools.eclipse.util.EditorUtils
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.ui.text.java.IInvocationContext
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal
@@ -27,7 +27,7 @@ class ScalaQuickAssistProcessor extends IQuickAssistProcessor with HasLogger {
   override def getAssists(context: IInvocationContext, locations: Array[IProblemLocation]): Array[IJavaCompletionProposal] =
     context.getCompilationUnit match {
       case ssf: ScalaSourceFile =>
-        import scala.tools.eclipse.util.EditorUtils._
+        import EditorUtils._
 
         openEditorAndApply(ssf) { editor =>
           val corrections = getAnnotationsAtOffset(editor, context.getSelectionOffset()) flatMap {
@@ -41,13 +41,6 @@ class ScalaQuickAssistProcessor extends IQuickAssistProcessor with HasLogger {
     }
 
   private def suggestAssist(compilationUnit: ICompilationUnit, problemMessage: String, location: Position): Seq[IJavaCompletionProposal] = {
-    val availableAssists = Seq(
-        ExtractLocalProposal,
-        ExpandCaseClassBindingProposal,
-        InlineLocalProposal,
-        RenameProposal,
-        ExtractMethodProposal)
-
     val refactoringSuggestions = try availableAssists.filter(_.isValidProposal) catch {
       case e: Exception =>
         logger.debug("Exception when building quick assist list: " + e.getMessage, e)
@@ -67,5 +60,13 @@ object ScalaQuickAssistProcessor {
   private final val ImplicitConversionFound = "(?s)Implicit conversions found: (.*)".r
 
   private final val ImplicitArgFound = "(?s)Implicit arguments found: (.*)".r
+
+  val availableAssists = Seq(
+    ExtractLocalProposal,
+    ExpandCaseClassBindingProposal,
+    InlineLocalProposal,
+    RenameProposal,
+    ExtractMethodProposal
+  )
 }
 

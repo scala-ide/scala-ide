@@ -15,7 +15,7 @@ import scala.tools.refactoring.implementations.InlineLocal
  *
  * The implementation does not show a wizard but directly applies the changes (ActionWithNoWizard trait).
  */
-class InlineLocalAction extends RefactoringAction with ActionWithNoWizard {
+class InlineLocalAction extends RefactoringAction with RefactoringActionWithoutWizard {
 
   def createRefactoring(selectionStart: Int, selectionEnd: Int, file: ScalaSourceFile) =
     new InlineLocalScalaIdeRefactoring(selectionStart, selectionEnd, file)

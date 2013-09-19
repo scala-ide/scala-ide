@@ -1,8 +1,8 @@
-package scala.tools.eclipse.refactoring.method
+package scala.tools.eclipse.refactoring
+package method
 
 import scala.tools.eclipse.javaelements.ScalaSourceFile
 import scala.tools.eclipse.refactoring.method.ui.MergeParameterListsConfigurationPageGenerator
-import scala.tools.eclipse.refactoring.RefactoringAction
 import scala.tools.refactoring.implementations.MergeParameterLists
 
 /**
@@ -10,7 +10,7 @@ import scala.tools.refactoring.implementations.MergeParameterLists
  * The refactoring is applied to the definition of the method as well as to all its usages.
  * This also extends to overridden and partially applied versions of the method.
  */
-class MergeParameterListsAction extends RefactoringAction {
+class MergeParameterListsAction extends RefactoringActionWithWizard {
   def createRefactoring(start: Int, end: Int, file: ScalaSourceFile) = new MergeParameterListsIdeRefactoring(start, end, file)
 
   class MergeParameterListsIdeRefactoring(start: Int, end: Int, f: ScalaSourceFile)

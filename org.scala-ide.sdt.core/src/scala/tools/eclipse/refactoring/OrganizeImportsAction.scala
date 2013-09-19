@@ -40,9 +40,10 @@ import org.eclipse.jface.window.Window
  *    there are ambiguities, the user is prompted to select the correct import.
  *
  */
-class OrganizeImportsAction extends RefactoringAction with ActionWithNoWizard {
+class OrganizeImportsAction extends RefactoringAction with RefactoringActionWithoutWizard {
 
-  def createRefactoring(selectionStart: Int, selectionEnd: Int, file: ScalaSourceFile) = new OrganizeImportsScalaIdeRefactoring(file)
+  def createRefactoring(selectionStart: Int, selectionEnd: Int, file: ScalaSourceFile) =
+    new OrganizeImportsScalaIdeRefactoring(file)
 
   override def run(action: IAction) {
 
