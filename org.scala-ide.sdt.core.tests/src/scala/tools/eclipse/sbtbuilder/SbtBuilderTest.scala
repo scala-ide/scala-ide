@@ -37,7 +37,7 @@ class SbtBuilderTest {
   import SbtBuilderTest._
 
   @Before
-  def setupWorkspace {
+  def setupWorkspace() {
     SDTTestUtils.enableAutoBuild(true)
   }
 

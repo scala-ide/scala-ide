@@ -68,37 +68,37 @@ class EclipseReplTest
     Seq(failures1,failures2,failures3) map Echopreter.editOutput
 
   def unknowns:Seq[Expect] = { // some request messages that aren't recognized
-    val anys = Seq(1, 0.0, true, 'J', null, new Object, new Throwable)
+    val anys = Seq[Any](1, 0.0, true, 'J', null, new Object, new Throwable)
     (anys map {a => Expect(bad(a),Unknown(a))}).flatten ++ quitFromZ }
 
   def multiple(n:Int) :Seq[Seq[Expect]] = { // all the above at once
     val tests = failures++failures++failures ++ // cheap "load balancing"
       (Seq(allTransitions,unknowns,unknowns,unknowns) map Echopreter.steal)
     val stream = Stream.continually(tests.toStream).flatten
-    stream take(n * tests.size) toSeq }
+    stream.take(n * tests.size).toSeq }
 
   // start with the Echopreter testing the state machine ...
 
-  @Test def allTransitions_Echopreter {
+  @Test def allTransitions_Echopreter() {
     test(STScheduler, Echopreter.steal(allTransitions)) }
 
-  @Test def failures_Failpreter {
+  @Test def failures_Failpreter() {
     test(STScheduler, failures :_*) }
 
-  @Test def unknowns_Echopreter {
+  @Test def unknowns_Echopreter() {
     test(STScheduler, Echopreter.steal(unknowns)) }
 
   // next use multiple EclipseRepls in parallel to test the Actor stuff ...
 
-  @Test def multiple_RTPScheduler {
+  @Test def multiple_RTPScheduler() {
     test(RTPScheduler, multiple(6) :_*) }
 
-  @Test def multiple_FJScheduler {
+  @Test def multiple_FJScheduler() {
     test(FJScheduler, multiple(8) :_*) }
 
   // last rerun allTransitions with the real NSC Interpreter ...
 
-  @Test def allTransitions_RealNSC {
+  @Test def allTransitions_RealNSC() {
     test(STScheduler, allTransitions) }
 }
 

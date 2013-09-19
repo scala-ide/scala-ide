@@ -21,9 +21,10 @@ class OutputFoldersTest {
 
   val simulator = new EclipseUserSimulator
 
+  import scala.language.implicitConversions
   implicit def stringsArePaths(str: String): Path = new Path(str)
 
-  @Before def setupBuild {
+  @Before def setupBuild() {
     SDTTestUtils.enableAutoBuild(false)
   }
 

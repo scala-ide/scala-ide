@@ -26,7 +26,7 @@ class TodoBuilderTest {
   import TodoBuilderTest._
 
   @Before
-  def setupWorkspace {
+  def setupWorkspace() {
     SDTTestUtils.enableAutoBuild(false)
   }
 
@@ -40,7 +40,7 @@ class TodoBuilderTest {
       val tasks = unit.getUnderlyingResource().findMarkers(ScalaPlugin.plugin.taskMarkerId, false, IResource.DEPTH_INFINITE)
       println("tasks: %s: %s".format(unit, tasks.toList))
       tasks
-    } flatten
+    }.flatten
 
     Assert.assertTrue("No valid TODO was found", allTasks.exists(p => similarMessage(p.getAttribute(IMarker.MESSAGE).toString)(expectedTODO)))
   }

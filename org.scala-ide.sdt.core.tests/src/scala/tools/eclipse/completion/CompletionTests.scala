@@ -215,7 +215,7 @@ class CompletionTests {
 
   @Test
   @Ignore("Enable this test once the ticket is fixed.")
-  def t1001014 {
+  def t1001014() {
     val oracle = List("xx")
 
     val unit = scalaCompilationUnit("t1001014/F.scala")

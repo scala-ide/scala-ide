@@ -580,7 +580,7 @@ class ScalaDebugSteppingTest {
   }
 
   @Test
-  def StepIntoSkipsForwarder {
+  def StepIntoSkipsForwarder() {
     session = initDebugSession("MethodClassifiers")
     session.runToLine("stepping.MethodClassifiers", 64)
     session.stepInto
@@ -588,7 +588,7 @@ class ScalaDebugSteppingTest {
   }
 
   @Test
-  def StepIntoSkipsForwarderWithParams {
+  def StepIntoSkipsForwarderWithParams() {
     session = initDebugSession("MethodClassifiers")
     session.runToLine("stepping.MethodClassifiers", 67)
     session.stepInto
@@ -596,7 +596,7 @@ class ScalaDebugSteppingTest {
   }
 
   @Test
-  def StepIntoSkipsForwarderWith22Params {
+  def StepIntoSkipsForwarderWith22Params() {
     session = initDebugSession("MethodClassifiers")
     session.runToLine("stepping.MethodClassifiers", 69)
     session.stepInto

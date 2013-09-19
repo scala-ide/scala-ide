@@ -6,7 +6,7 @@ import org.junit._
 class StringInterpolationTest extends AbstractSymbolClassifierTest {
 
   @Test
-  def all_kinds_of_identifiers_in_interpolated_strings_are_marked_inInterpolatedString {
+  def all_kinds_of_identifiers_in_interpolated_strings_are_marked_inInterpolatedString() {
     checkSymbolInfoClassification("""
       object A {
         val templateVal = 1
@@ -57,7 +57,7 @@ class StringInterpolationTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  def all_parts_of_identifiers_in_expression_is_styled {
+  def all_parts_of_identifiers_in_expression_is_styled() {
     checkSymbolInfoClassification("""
       object A {
         val templateVal = "abc"

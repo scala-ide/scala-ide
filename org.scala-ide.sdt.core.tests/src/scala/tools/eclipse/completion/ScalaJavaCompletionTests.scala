@@ -60,7 +60,7 @@ class ScalaJavaCompletionTests {
    * Test the completion when trying to call the method on a reference.
    */
   @Test
-  def ticket1000412_reference {
+  def ticket1000412_reference() {
     val oracle = List(
       noCompletion, // outsideTypeDeclaration
       //allCompletions, // var1
@@ -90,7 +90,7 @@ class ScalaJavaCompletionTests {
    * Test the completion when trying to call the method when the class extends the class containing the method.
    */
   @Test
-  def ticket1000412_extends {
+  def ticket1000412_extends() {
     val oracle = List(
       allCompletions, // var11
       oneCompletion, // var12

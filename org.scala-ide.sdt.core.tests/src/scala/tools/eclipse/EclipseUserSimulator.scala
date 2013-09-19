@@ -60,7 +60,7 @@ class EclipseUserSimulator {
     cu
   }
 
-  def buildWorkspace {
+  def buildWorkspace() {
     import org.eclipse.core.resources.IncrementalProjectBuilder
 
     workspace.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, new NullProgressMonitor())

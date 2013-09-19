@@ -6,7 +6,7 @@ import junit.framework.Assert.assertEquals
 
 class CollectionUtilTest {
   @Test
-  def splitAtHeadAnEmptyList {
+  def splitAtHeadAnEmptyList() {
     // when
     val xs = Nil
 
@@ -19,7 +19,7 @@ class CollectionUtilTest {
   }
 
   @Test
-  def splitAtHeadAListWithOneElement {
+  def splitAtHeadAListWithOneElement() {
     // when
     val xs = List(1)
 
@@ -32,7 +32,7 @@ class CollectionUtilTest {
   }
 
   @Test
-  def splitAtHeadAListWithSeveralElements {
+  def splitAtHeadAListWithSeveralElements() {
     // when
     val xs = List(1, 2, 3, 4)
 
@@ -45,7 +45,7 @@ class CollectionUtilTest {
   }
 
   @Test
-  def splitAtLastAnEmptyList {
+  def splitAtLastAnEmptyList() {
     // when
     val xs = Nil
 
@@ -58,7 +58,7 @@ class CollectionUtilTest {
   }
 
   @Test
-  def splitAtLastAListWithOneElement {
+  def splitAtLastAListWithOneElement() {
     // when
     val xs = List(1)
 
@@ -71,7 +71,7 @@ class CollectionUtilTest {
   }
 
   @Test
-  def splitAtLastAListWithSeveralElements {
+  def splitAtLastAListWithSeveralElements() {
     // when
     val xs = List(1, 2, 3, 4)
 

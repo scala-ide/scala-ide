@@ -88,7 +88,7 @@ class SDTTestProject(project : IProject) {
     folder
   }
 
-  def dispose {
+  def dispose() {
     if (project.exists)
       project.delete(true, true, null)
     else

@@ -6,7 +6,7 @@ class CreateClassTests {
   import QuickFixesTests._
 
   @Test
-  def createClassQuickFixes {
+  def createClassQuickFixes() {
     withQuickFixes("createclass/UsesMissingClass.scala")("Create class 'ThisClassDoesNotExist'")
   }
 }

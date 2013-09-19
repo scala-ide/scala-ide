@@ -15,7 +15,7 @@ class MultipleErrorsTest {
   import MultipleErrorsTest._
 
   @Before
-  def setupWorkspace {
+  def setupWorkspace() {
     SDTTestUtils.enableAutoBuild(false)
   }
 
