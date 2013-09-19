@@ -18,8 +18,6 @@ class ScalaHover(val icu: InteractiveCompilationUnit) extends ITextHover {
   private val NoHoverInfo = "" // could return null, but prefer to return empty (see API of ITextHover).
 
   override def getHoverInfo(viewer: ITextViewer, region: IRegion) = {
-    val start = region.getOffset
-    val end = start + region.getLength
     icu.withSourceFile({ (src, compiler) =>
       import compiler.{stringToTermName => _, stringToTypeName => _, _}
 

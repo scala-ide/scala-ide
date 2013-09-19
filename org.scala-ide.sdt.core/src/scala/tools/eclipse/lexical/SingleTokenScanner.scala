@@ -2,8 +2,6 @@ package scala.tools.eclipse.lexical
 
 import org.eclipse.jface.text._
 import org.eclipse.jface.text.rules._
-import org.eclipse.jface.util.PropertyChangeEvent
-import scala.tools.eclipse.properties.syntaxcolouring.ScalaSyntaxClasses._
 import scala.tools.eclipse.properties.syntaxcolouring.ScalaSyntaxClass
 import org.eclipse.jface.preference.IPreferenceStore
 

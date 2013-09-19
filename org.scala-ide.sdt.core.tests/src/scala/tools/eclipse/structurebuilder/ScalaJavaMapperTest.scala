@@ -3,8 +3,6 @@ package scala.tools.eclipse.structurebuilder
 import org.junit._
 import scala.tools.eclipse.testsetup.SDTTestUtils._
 import org.eclipse.core.resources.IFile
-import org.eclipse.core.runtime.Path
-import scala.tools.eclipse.ScalaProject
 import scala.tools.eclipse.testsetup.TestProjectSetup
 import java.util.NoSuchElementException
 import scala.tools.eclipse.ScalaPresentationCompiler

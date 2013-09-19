@@ -94,8 +94,6 @@ abstract class ScalaThread private (target: ScalaDebugTarget, private[model] val
   // state
   @volatile
   private var suspended = false
-  @volatile
-  private var running = true
 
   /**
    * The current list of stack frames.
@@ -155,7 +153,6 @@ abstract class ScalaThread private (target: ScalaDebugTarget, private[model] val
    * release all resources
    */
   def dispose() {
-    running = false
     stackFrames = Nil
     companionActor ! TerminatedFromScala
   }

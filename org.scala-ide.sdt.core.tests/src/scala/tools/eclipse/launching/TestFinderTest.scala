@@ -20,7 +20,6 @@ class TestFinderTest {
   def project_possibleMatches() {
     val finder = new JUnit4TestFinder
 
-    val result = new mutable.HashSet[IType]
     val possibleMatches = finder.filteredTestResources(project, project.javaProject, new NullProgressMonitor)
     val expected = Set(getResource("/src/packa/TestA.scala"),
       getResource("/src/packa/FakeTest.scala"),
@@ -38,7 +37,6 @@ class TestFinderTest {
   def scala_package_possibleMatches() {
     val finder = new JUnit4TestFinder
 
-    val result = new mutable.HashSet[IType]
     val possibleMatches = finder.filteredTestResources(project, project.javaProject.findPackageFragment("/test-finder/src/packa"), new NullProgressMonitor)
     val expected = Set(getResource("/src/packa/TestA.scala"), getResource("/src/packa/FakeTest.scala"))
     assertEqualsSets("wrong filtered files", expected, possibleMatches.toSet)

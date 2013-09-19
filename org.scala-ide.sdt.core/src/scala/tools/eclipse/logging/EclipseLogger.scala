@@ -74,7 +74,7 @@ private[logging] object EclipseLogger extends Logger {
     error(message, t)
   }
 
-  private def log(severity: Int, message: => Any, t: Throwable = null) {
+  private def log(severity: Int, message: => Any, t: Throwable) {
     if (t == null) logInUiThread(severity, message, t)
     else {
       // this is an optimization to log the exception at most once if the same exception is being re-thrown several times.

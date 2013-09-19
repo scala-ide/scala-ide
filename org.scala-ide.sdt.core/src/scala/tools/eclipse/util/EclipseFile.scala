@@ -85,7 +85,7 @@ abstract class EclipseResource[+R <: IResource] extends AbstractFile {
   def name: String = underlying.getName
 
   def path: String = {
-    var loc = underlying.getLocation
+    val loc = underlying.getLocation
     if (loc eq null)
       throw new NullPointerException("underlying.getLocation == null for: " + underlying)
 

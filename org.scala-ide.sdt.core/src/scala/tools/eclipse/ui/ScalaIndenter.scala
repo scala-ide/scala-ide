@@ -421,7 +421,7 @@ class ScalaIndenter(
   private def stripExceedingChars(reference: StringBuffer, indentLength: Int): StringBuffer = {
     val tabSize = prefTabSize
     var measured = 0
-    var chars = reference.length()
+    val chars = reference.length()
     var i = 0
     while (i < min(indentLength, chars)) {
       val ch = reference.charAt(i)
@@ -1078,8 +1078,8 @@ class ScalaIndenter(
    * that has its own indentation, or the list introduction start.
    */
   private def skipToPreviousListItemOrListStart: Int = {
-    var startLine = fLine
-    var startPosition = fPosition
+    val startLine = fLine
+    val startPosition = fPosition
     while (true) {
       nextToken
 

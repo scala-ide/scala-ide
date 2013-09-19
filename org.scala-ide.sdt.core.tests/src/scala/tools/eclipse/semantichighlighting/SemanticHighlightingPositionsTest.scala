@@ -52,7 +52,8 @@ class SemanticHighlightingPositionsTest {
 
   private var testCode: String = _
   private var unit: ScalaCompilationUnit = _
-  private var compilationUnitEditor: InteractiveCompilationUnitEditor = mock(classOf[InteractiveCompilationUnitEditor])
+  private val compilationUnitEditor: InteractiveCompilationUnitEditor =
+    mock(classOf[InteractiveCompilationUnitEditor])
 
   @Before
   def createProject() {

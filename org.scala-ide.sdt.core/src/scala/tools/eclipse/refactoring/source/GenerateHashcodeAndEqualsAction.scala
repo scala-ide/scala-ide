@@ -26,8 +26,6 @@ class GenerateHashcodeAndEqualsAction extends RefactoringActionWithWizard {
       }
     }
 
-    import refactoring.global.ValDef
-
     override private[source] def configPage(prepResult: refactoring.PreparationResult): RefactoringWizardPage =
       new GenerateHashcodeAndEqualsConfigurationPage(
         prepResult,

@@ -34,14 +34,8 @@ object ContinuationPluginSettingsTest {
     prefs.save()
   }
 
-  private def setPrefValue(key: String, value: Boolean) {
-    val prefs = project.projectSpecificStorage
-    prefs.setValue(key, value)
-    prefs.save()
-  }
-
   @AfterClass
-  def deleteTestProject {
+  def deleteTestProject() {
     project.underlying.delete(true, null)
   }
 
@@ -56,7 +50,7 @@ class ContinuationPluginSettingsTest {
     setPrefToDefault("Xplugin")
     forceEnableContinuationForNewerScalaVersion()
     project.resetPresentationCompiler()
-    val plugins = loadedPlugins(project)
+    loadedPlugins(project)
     Assert.assertEquals("Loaded plugins: ", List("continuations"), loadedPlugins(project))
   }
 
@@ -66,7 +60,7 @@ class ContinuationPluginSettingsTest {
     setPrefValue("Xplugin", "/doesnotexits")
     forceEnableContinuationForNewerScalaVersion()
     project.resetPresentationCompiler()
-    val plugins = loadedPlugins(project)
+    loadedPlugins(project)
     Assert.assertEquals("Loaded plugins: ", List("continuations"), loadedPlugins(project))
   }
 
@@ -76,7 +70,7 @@ class ContinuationPluginSettingsTest {
     setPrefValue("Xplugin", ScalaPlugin.plugin.defaultPluginsDir + File.separator + "continuations.jar")
     forceEnableContinuationForNewerScalaVersion()
     project.resetPresentationCompiler()
-    val plugins = loadedPlugins(project)
+    loadedPlugins(project)
     Assert.assertEquals("Loaded plugins: ", List("continuations"), loadedPlugins(project))
   }
 

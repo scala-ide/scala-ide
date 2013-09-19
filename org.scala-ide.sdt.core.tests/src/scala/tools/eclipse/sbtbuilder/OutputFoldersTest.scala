@@ -35,7 +35,7 @@ class OutputFoldersTest {
     project.javaProject.setOutputLocation(new Path("/%s/other-bin".format(projectName)), null)
     Assert.assertEquals("Default output directory", Seq(new Path("/%s/other-bin".format(projectName))), project.outputFolders)
 
-    val Seq((srcPath, outputPath)) = project.sourceOutputFolders
+    val Seq((srcPath, _)) = project.sourceOutputFolders
     Assert.assertEquals("Source path", new Path("/%s/src".format(projectName)), srcPath.getFullPath())
   }
 
@@ -63,7 +63,6 @@ class OutputFoldersTest {
     val srcMain = new Path("/" +projectName + "/src/main/scala")
     val targetMain = new Path("/" +projectName + "/target/classes")
     val srcTest = new Path("/" +projectName + "/src/test/scala")
-    val targetTest = new Path("/" +projectName + "/target/test-classes")
 
     val project = makeDefaultLayoutProject(projectName)
 

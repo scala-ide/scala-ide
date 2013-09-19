@@ -51,7 +51,6 @@ class ReplConsoleView extends ViewPart with InterpreterConsoleView {
   private var projectName: String = ""
   private var scalaProject: ScalaProject = null
   private var isStopped = true
-  private var inputField: CommandField = null
   private var projectList: List = null
   private var view = this // gets set to null when disposed
 

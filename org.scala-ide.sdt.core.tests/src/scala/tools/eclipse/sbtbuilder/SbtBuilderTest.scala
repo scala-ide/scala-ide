@@ -12,7 +12,6 @@ import scala.tools.eclipse.testsetup.SDTTestUtils
 import org.eclipse.core.resources.IFile
 import org.junit.Ignore
 import org.junit.Before
-import org.mockito.Mockito._
 import org.mockito.Matchers.any
 import org.eclipse.jdt.core.IProblemRequestor
 import org.eclipse.jdt.core.WorkingCopyOwner
@@ -21,7 +20,6 @@ import scala.util.matching.Regex
 import testsetup._
 import org.eclipse.core.runtime.Path
 import org.eclipse.jdt.core.JavaCore
-import scala.tools.eclipse.buildmanager.sbtintegration._
 
 import scala.tools.nsc.Settings
 
@@ -85,7 +83,7 @@ class SbtBuilderTest {
     println("=== Dependency Test === ")
     project.clean(new NullProgressMonitor())
 
-    val problemsDep = rebuild(depProject.project)
+    rebuild(depProject.project)
     val problemsOrig = rebuild(project)
     Assert.assertTrue("Should succeed compilation " + problemsOrig, problemsOrig.isEmpty)
 
@@ -191,7 +189,7 @@ class SbtBuilderTest {
 
     // add a source file
     val packA = createSourcePackage("test")(prjClient)
-    val unitA = packA.createCompilationUnit("A.scala", """class A { println("hello") }""", true, null)
+    packA.createCompilationUnit("A.scala", """class A { println("hello") }""", true, null)
 
     // build the fake Scala library
     packLib.createCompilationUnit("Predef.scala", "package scala; class Predef", true, null)

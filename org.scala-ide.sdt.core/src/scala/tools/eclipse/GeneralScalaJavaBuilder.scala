@@ -3,8 +3,6 @@ package scala.tools.eclipse
 import scala.tools.eclipse.contribution.weaving.jdt.builderoptions.ScalaJavaBuilder
 import org.eclipse.core.resources.IProject
 import org.eclipse.core.internal.resources.BuildConfiguration
-import org.eclipse.core.runtime.Platform
-import java.lang.reflect.InvocationTargetException
 import scala.tools.eclipse.util.ReflectionUtils
 
 /**

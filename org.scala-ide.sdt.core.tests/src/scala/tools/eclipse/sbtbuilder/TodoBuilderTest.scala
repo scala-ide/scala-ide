@@ -12,7 +12,6 @@ import scala.tools.eclipse.testsetup.SDTTestUtils
 import org.eclipse.core.resources.IFile
 import org.junit.Ignore
 import org.junit.Before
-import org.mockito.Mockito._
 import org.mockito.Matchers.any
 import org.eclipse.jdt.core.IProblemRequestor
 import org.eclipse.jdt.core.WorkingCopyOwner

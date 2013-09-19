@@ -2,7 +2,6 @@ package scala.tools.eclipse
 
 import org.eclipse.core.resources.IFile
 import org.eclipse.jdt.core.compiler.IProblem
-import scala.reflect.internal.util.BatchSourceFile
 import scala.reflect.internal.util.SourceFile
 import scala.tools.nsc.interactive.Response
 import scala.tools.nsc.io.AbstractFile

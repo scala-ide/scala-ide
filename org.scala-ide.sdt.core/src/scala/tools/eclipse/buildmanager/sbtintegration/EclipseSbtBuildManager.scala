@@ -110,14 +110,6 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings)
 
   private val sources: mutable.Set[AbstractFile] = mutable.Set.empty
 
-  /** Add the given source files to the managed build process. */
-  private def addSourceFiles(files: scala.collection.Set[AbstractFile]) {
-    if (!files.isEmpty) {
-      sources ++= files
-      runCompiler(sources.asJFiles)
-    }
-  }
-
   /** Remove the given files from the managed build process. */
   private def removeFiles(files: scala.collection.Set[AbstractFile]) {
     if (!files.isEmpty)
@@ -160,14 +152,6 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings)
   private def cacheFile = cachePath.getLocation.toFile
 
 
-  /** Not supported */
-  private def loadFrom(file: AbstractFile, toFile: String => AbstractFile) : Boolean = true
-
-  /** Not supported */
-  private def saveTo(file: AbstractFile, fromFile: AbstractFile => String) {}
-
-  /** Not supported */
-  private val compiler: Global = null
   override var depFile: IFile = null
 
   override def clean(implicit monitor: IProgressMonitor) {

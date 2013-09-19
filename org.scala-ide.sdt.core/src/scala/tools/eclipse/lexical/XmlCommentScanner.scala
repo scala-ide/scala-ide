@@ -1,5 +1,5 @@
 package scala.tools.eclipse.lexical
-import org.eclipse.jface.text._
+
 import org.eclipse.jface.text.rules._
 import scala.tools.eclipse.properties.syntaxcolouring.ScalaSyntaxClasses._
 import org.eclipse.jface.util.PropertyChangeEvent

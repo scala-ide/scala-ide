@@ -6,13 +6,6 @@ import org.junit.Before
 import org.junit.After
 import org.eclipse.core.resources.IncrementalProjectBuilder
 import org.eclipse.core.runtime.NullProgressMonitor
-import org.junit.Ignore
-import org.junit.BeforeClass
-import org.eclipse.debug.core.DebugPlugin
-import org.eclipse.core.runtime.Platform
-import org.eclipse.ui.preferences.ScopedPreferenceStore
-import org.eclipse.core.runtime.preferences.InstanceScope
-import org.junit.Assert
 import scala.tools.eclipse.testsetup.SDTTestUtils
 import org.junit.AfterClass
 

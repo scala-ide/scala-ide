@@ -3,7 +3,6 @@ package scala.tools.eclipse.completion
 import scala.tools.eclipse.testsetup.TestProjectSetup
 import org.junit.Test
 import org.junit.Assert._
-import org.mockito.Mockito._
 import scala.tools.eclipse.testsetup.SDTTestUtils
 import org.eclipse.core.runtime.NullProgressMonitor
 import scala.tools.eclipse.ui.ScalaCompletionProposal

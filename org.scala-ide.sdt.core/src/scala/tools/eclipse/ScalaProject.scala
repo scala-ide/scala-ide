@@ -97,7 +97,6 @@ object ScalaProject {
 class ScalaProject private (val underlying: IProject) extends ClasspathManagement with HasLogger {
   import ScalaPlugin.plugin
 
-  private var classpathUpdate: Long = IResource.NULL_STAMP
   private var buildManager0: EclipseBuildManager = null
   private var hasBeenBuilt = false
 

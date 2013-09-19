@@ -1,9 +1,5 @@
 package scala.tools.eclipse.logging
 
-import java.net.URL
-import scala.util.control.Exception.Catch
-import org.eclipse.core.runtime.IStatus
-import org.eclipse.core.runtime.Status
 import org.eclipse.ui.plugin.AbstractUIPlugin
 import org.osgi.framework.BundleContext
 

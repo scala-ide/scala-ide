@@ -7,7 +7,6 @@ package scala.tools.eclipse.javaelements
 
 import java.lang.reflect.Constructor
 
-import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.core.IImportContainer
 import org.eclipse.jdt.internal.core.CompilationUnit
 import org.eclipse.jdt.internal.core.ImportContainer

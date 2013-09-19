@@ -18,7 +18,6 @@ import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
-import org.mockito.Mockito._
 
 @RunWith(classOf[JUnit4])
 class MainClassVerifierTest {

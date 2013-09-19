@@ -5,10 +5,8 @@ import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.ui.commands.ICommandService
 import org.eclipse.ui.commands.IElementUpdater
 import org.eclipse.ui.PlatformUI
-import org.eclipse.jface.util.IPropertyChangeListener
 import scala.tools.eclipse.ScalaPlugin
 import org.eclipse.ui.menus.UIElement
-import org.eclipse.jface.util.PropertyChangeEvent
 import scala.tools.eclipse.semantichighlighting.implicits.PropertyChangeListenerProxy
 import org.eclipse.core.commands.AbstractHandler
 import scala.tools.eclipse.util.SWTUtils

@@ -7,7 +7,6 @@ import scala.tools.eclipse.ScalaWordFinder
 import scala.reflect.internal.util.SourceFile
 import scala.tools.eclipse.ScalaPresentationCompiler
 import org.eclipse.jface.text.contentassist.ICompletionProposal
-import org.mockito.Mockito._
 import org.junit.Assert._
 import org.junit.Test
 import scala.tools.eclipse.testsetup.TestProjectSetup
@@ -54,7 +53,7 @@ class CompletionTests {
         val pos = positions(i)
 
         val position = new scala.reflect.internal.util.OffsetPosition(src, pos)
-        var wordRegion = ScalaWordFinder.findWord(content, position.point)
+        val wordRegion = ScalaWordFinder.findWord(content, position.point)
 
         //        val selection = mock(classOf[ISelectionProvider])
 
@@ -88,7 +87,7 @@ class CompletionTests {
 
     withCompletions(path2source) { (i, position, compl) =>
 
-      var completions = if (!withImportProposal) compl.filter(!_.needImport) else compl
+      val completions = if (!withImportProposal) compl.filter(!_.needImport) else compl
 
       // remove parens as the compiler trees' printer has been slightly modified in 2.10
       // (and we need the test to pass for 2.9.0/-1 and 2.8.x as well).

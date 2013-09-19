@@ -117,7 +117,6 @@ class NewPackageObjectWizard
 
   /** Rename the `package object` resource's file from `_package.scala` to `package.scala`.*/
   private def renameResource() {
-    import scala.tools.eclipse.util.SWTUtils
     import org.eclipse.ltk.core.refactoring.resource.RenameResourceChange
 
     DisplayThread.asyncExec {
