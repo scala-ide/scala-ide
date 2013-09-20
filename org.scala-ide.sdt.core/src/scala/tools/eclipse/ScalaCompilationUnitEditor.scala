@@ -4,10 +4,11 @@ import scala.tools.eclipse.properties.syntaxcolouring.ScalaSyntaxClasses
 import scala.tools.eclipse.semantichighlighting.Presenter
 import scala.tools.eclipse.semantichighlighting.TextPresentationHighlighter
 import scala.tools.eclipse.ui.DisplayThread
-import scala.tools.eclipse.util.SWTUtils.fnToPropertyChangeListener
+import scala.tools.eclipse.util.SWTUtils
 
 import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor
 import org.eclipse.jdt.internal.ui.javaeditor.JavaSourceViewer
+import org.eclipse.jface.text.source.SourceViewerConfiguration
 import org.eclipse.jface.util.IPropertyChangeListener
 import org.eclipse.jface.util.PropertyChangeEvent
 import org.eclipse.swt.widgets.Composite
@@ -18,12 +19,23 @@ trait ScalaCompilationUnitEditor extends JavaEditor with ScalaEditor {
   private var semanticHighlightingPresenter: semantichighlighting.Presenter = _
   protected def semanticHighlightingPreferences = semantichighlighting.Preferences(scalaPrefStore)
 
-  private val preferenceListener: IPropertyChangeListener = handlePreferenceStoreChanged _
+  private val preferenceListener: IPropertyChangeListener = {
+    import SWTUtils._
+    handlePreferenceStoreChanged _
+  }
 
   scalaPrefStore.addPropertyChangeListener(preferenceListener)
 
   protected def scalaPrefStore = ScalaPlugin.prefStore
   def javaPrefStore = super.getPreferenceStore
+
+  override def setSourceViewerConfiguration(configuration: SourceViewerConfiguration) {
+    super.setSourceViewerConfiguration(
+      configuration match {
+        case svc: ScalaSourceViewerConfiguration => svc
+        case _ => new ScalaSourceViewerConfiguration(javaPrefStore, scalaPrefStore, this)
+      })
+  }
 
   override def createPartControl(parent: Composite) {
     super.createPartControl(parent)

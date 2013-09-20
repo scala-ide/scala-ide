@@ -18,15 +18,15 @@ import org.eclipse.core.resources.IResource
 import xsbti.compile.JavaCompiler
 import xsbti.compile.Output
 import xsbti.Logger
+import scala.tools.eclipse.buildmanager.ClassBuilder
 
 /** Eclipse Java compiler interface, used by the SBT builder.
  *  This class forwards to the internal Eclipse Java compiler, using
  *  reflection to circumvent private/protected modifiers.
  */
-class JavaEclipseCompiler(project: IProject, monitor: SubMonitor) extends JavaCompiler {
-  private val scalaJavaBuilder = new GeneralScalaJavaBuilder
+class JavaEclipseCompiler(p: IProject, monitor: SubMonitor) extends JavaCompiler with ClassBuilder {
 
-  def plugin = ScalaPlugin.plugin
+  def project = p
 
   def compile(sources: Array[File], classpath: Array[File], output: Output, options: Array[String], log: Logger) {
     val scalaProject = plugin.getScalaProject(project)
@@ -51,22 +51,7 @@ class JavaEclipseCompiler(project: IProject, monitor: SubMonitor) extends JavaCo
       finally
         BuildManagerStore.INSTANCE.setJavaSourceFilesToCompile(null, project)
 
-      val modelManager = JavaModelManager.getJavaModelManager
-      val state = modelManager.getLastBuiltState(project, null).asInstanceOf[State]
-      val newState = if (state ne null) state
-        else {
-          ScalaJavaBuilderUtils.initializeBuilder(scalaJavaBuilder, 0, false)
-          StateUtils.newState(scalaJavaBuilder)
-        }
-      StateUtils.tagAsStructurallyChanged(newState)
-      StateUtils.resetStructurallyChangedTypes(newState)
-      modelManager.setLastBuiltState(project, newState)
-      JDTUtils.refreshPackageExplorer
+      refresh()
     }
-  }
-
-  def ensureProject() {
-    if (scalaJavaBuilder.getProject == null)
-      scalaJavaBuilder.setProject0(project)
   }
 }
