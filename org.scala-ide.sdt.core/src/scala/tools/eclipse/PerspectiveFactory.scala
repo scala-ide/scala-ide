@@ -1,9 +1,3 @@
-/*
- * Copyright 2005-2010 LAMP/EPFL
- * @author Sean McDirmid
- */
-// $Id$
-
 package scala.tools.eclipse
 
 import org.eclipse.debug.ui.IDebugUIConstants

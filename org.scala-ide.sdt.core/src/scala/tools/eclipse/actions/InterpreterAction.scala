@@ -1,10 +1,3 @@
-/*
- * Copyright 2005-2010 LAMP/EPFL
- * @author Sean McDirmid
- * @author Josh Suereth
- */
-// $Id$
-
 package scala.tools.eclipse
 package actions
 

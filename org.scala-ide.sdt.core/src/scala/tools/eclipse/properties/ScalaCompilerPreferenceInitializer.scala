@@ -1,9 +1,3 @@
-/*
- * Copyright 2005-2010 LAMP/EPFL
- * @author Josh Suereth
- */
-// $Id$
-
 package scala.tools.eclipse.properties
 
 import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer

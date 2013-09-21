@@ -1,9 +1,3 @@
-/*
- * Copyright 2005-2010 LAMP/EPFL
- * @author Jon Mundorf
- */
-// $Id$
-
 package scala.tools.eclipse.launching
 
 import scala.tools.eclipse.javaelements.ScalaSourceFile
