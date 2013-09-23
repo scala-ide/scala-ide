@@ -72,7 +72,23 @@ trait ScalaCompilationUnit extends Openable
 
   val file : AbstractFile
 
-  override def sourceFile(contents: Array[Char]): SourceFile = new BatchSourceFile(file, contents)
+  /** Lock object for operating on `cachedSourceFile` */
+  private val sourceFileLock = new Object
+
+  // @GuardedBy("sourceFileLock")
+  private var cachedSourceFile: SourceFile = _
+
+  override def sourceFile(contents: Array[Char]): SourceFile = sourceFileLock.synchronized {
+    cachedSourceFile = new BatchSourceFile(file, contents)
+    cachedSourceFile
+  }
+
+  /** Return the most recent source file, or a fresh one based on the underlying file contents. */
+  override def sourceFile(): SourceFile = sourceFileLock.synchronized {
+    if (cachedSourceFile == null)
+      sourceFile(getContents)
+    else cachedSourceFile
+  }
 
   override def workspaceFile: IFile = getUnderlyingResource.asInstanceOf[IFile]
 

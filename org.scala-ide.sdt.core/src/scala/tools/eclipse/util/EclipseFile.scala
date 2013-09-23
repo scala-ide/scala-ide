@@ -92,7 +92,7 @@ abstract class EclipseResource[+R <: IResource] extends AbstractFile {
     loc.toOSString
   }
 
-  def workspacePath: String = underlying.getFullPath.toString
+  def workspacePath: IPath = underlying.getFullPath
 
   def container: AbstractFile = new EclipseContainer(underlying.getParent)
 

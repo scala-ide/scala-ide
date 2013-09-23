@@ -84,7 +84,7 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
    */
   override def scheduleReconcile(): Response[Unit] = {
     // askReload first
-    val res = scalaProject.withSourceFile(this) { (sf, compiler) =>
+    val res = scalaProject.withPresentationCompiler { compiler =>
       compiler.askReload(this, getContents)
     } ()
 
@@ -164,6 +164,6 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
 
   /** Ask the compiler to discard {{{this}}} source. */
   final def discard(): Unit = scalaProject.doWithPresentationCompiler { compiler =>
-    compiler.discardSourceFile(this)
+    compiler.discardCompilationUnit(this)
   }
 }
