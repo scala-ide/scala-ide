@@ -30,105 +30,20 @@
         </dependency>
       </dependencies>
     </profile>
-
-    <profile>
-      <id>sbt-new</id>
-      <dependencies>
-        <dependency>
-          <groupId>com.typesafe.sbt</groupId>
-          <artifactId>sbt-interface</artifactId>
-          <optional>true</optional>
-        </dependency>
-        <dependency>
-          <groupId>com.typesafe.sbt</groupId>
-          <artifactId>incremental-compiler</artifactId>
-          <optional>true</optional>
-        </dependency>
-      </dependencies>
-    </profile>
-
-    <profile>
-      <id>sbt-legacy</id>
-      <dependencies>
-        <dependency>
-          <groupId>org.scala-sbt</groupId>
-          <artifactId>classpath_${sbt.compiled.version}</artifactId>
-          <optional>true</optional>
-        </dependency>
-        <dependency>
-          <groupId>org.scala-sbt</groupId>
-          <artifactId>logging_${sbt.compiled.version}</artifactId>
-          <optional>true</optional>
-        </dependency>
-        <dependency>
-          <groupId>org.scala-sbt</groupId>
-          <artifactId>io_${sbt.compiled.version}</artifactId>
-          <optional>true</optional>
-        </dependency>
-        <dependency>
-          <groupId>org.scala-sbt</groupId>
-          <artifactId>control_${sbt.compiled.version}</artifactId>
-          <optional>true</optional>
-        </dependency>
-        <dependency>
-          <groupId>org.scala-sbt</groupId>
-          <artifactId>classfile_${sbt.compiled.version}</artifactId>
-          <optional>true</optional>
-        </dependency>
-        <dependency>
-          <groupId>org.scala-sbt</groupId>
-          <artifactId>process_${sbt.compiled.version}</artifactId>
-          <optional>true</optional>
-        </dependency>
-        <dependency>
-          <groupId>org.scala-sbt</groupId>
-          <artifactId>relation_${sbt.compiled.version}</artifactId>
-          <optional>true</optional>
-        </dependency>
-        <dependency>
-          <groupId>org.scala-sbt</groupId>
-          <artifactId>interface_${sbt.compiled.version}</artifactId>
-          <optional>true</optional>
-        </dependency>
-        <dependency>
-          <groupId>org.scala-sbt</groupId>
-          <artifactId>persist_${sbt.compiled.version}</artifactId>
-          <optional>true</optional>
-        </dependency>
-        <dependency>
-          <groupId>org.scala-sbt</groupId>
-          <artifactId>api_${sbt.compiled.version}</artifactId>
-          <optional>true</optional>
-        </dependency>
-        <dependency>
-          <groupId>org.scala-sbt</groupId>
-          <artifactId>compiler-integration_${sbt.compiled.version}</artifactId>
-          <optional>true</optional>
-        </dependency>
-        <dependency>
-          <groupId>org.scala-sbt</groupId>
-          <artifactId>incremental-compiler_${sbt.compiled.version}</artifactId>
-          <optional>true</optional>
-        </dependency>
-        <dependency>
-          <groupId>org.scala-sbt</groupId>
-          <artifactId>compile_${sbt.compiled.version}</artifactId>
-          <optional>true</optional>
-        </dependency>
-        <!-- all the dependencies necessary for running like sbinary, jline -->
-        <dependency>
-          <groupId>jline</groupId>
-          <artifactId>jline</artifactId>
-          <optional>true</optional>
-        </dependency>
-        <dependency>
-          <groupId>org.scala-tools.sbinary</groupId>
-          <artifactId>sbinary_${sbt.compiled.version}</artifactId>
-          <optional>true</optional>
-        </dependency>
-      </dependencies>
-    </profile>
   </profiles>
+
+  <dependencies>
+    <dependency>
+        <groupId>com.typesafe.sbt</groupId>
+        <artifactId>sbt-interface</artifactId>
+        <optional>true</optional>
+    </dependency>
+    <dependency>
+        <groupId>com.typesafe.sbt</groupId>
+        <artifactId>incremental-compiler</artifactId>
+        <optional>true</optional>
+    </dependency>
+  </dependencies>
 
   <build>
     <plugins>

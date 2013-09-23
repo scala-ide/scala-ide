@@ -67,7 +67,8 @@
      <scala.library.version>${scala.version}</scala.library.version>
      <version.suffix>2_10</version.suffix>
      <version.tag>local</version.tag>
-     <sbt.version>Select a profile!</sbt.version>
+     <sbt.version>0.13.0</sbt.version>
+     <sbt.ide.version>${sbt.version}-on-${scala.version}-for-IDE-SNAPSHOT</sbt.ide.version>
 
     <!-- the repos containing the Scala dependencies -->
     <repo.scala-refactoring>Select a profile</repo.scala-refactoring>
@@ -132,129 +133,6 @@
         <repo.ajdt>${repo.ajdt.kepler}</repo.ajdt>
         <weaving.hook.plugin.version>1.0.200.v20130327-1442</weaving.hook.plugin.version>
       </properties>
-    </profile>
-
-    <profile>
-      <id>sbt-new</id>
-      <properties>
-        <sbt.version>0.13.0</sbt.version>
-        <sbt.ide.version>${sbt.version}-on-${scala.version}-for-IDE-SNAPSHOT</sbt.ide.version>
-      </properties>
-      <dependencyManagement>
-        <dependencies>
-          <!-- new sbt toolchain -->
-          <dependency>
-            <groupId>com.typesafe.sbt</groupId>
-            <artifactId>sbt-interface</artifactId>
-            <version>${sbt.ide.version}</version>
-          </dependency>
-          <dependency>
-            <groupId>com.typesafe.sbt</groupId>
-            <artifactId>compiler-interface-precompiled</artifactId>
-            <version>${sbt.ide.version}</version>
-          </dependency>
-          <dependency>
-            <groupId>com.typesafe.sbt</groupId>
-            <artifactId>incremental-compiler</artifactId>
-            <version>${sbt.ide.version}</version>
-          </dependency>
-        </dependencies>
-      </dependencyManagement>
-    </profile>
-
-    <profile>
-      <id>sbt-legacy</id>
-      <properties>
-        <sbinary.version>0.4.2-SNAPSHOT</sbinary.version>
-        <sbt.version>0.13.0</sbt.version>
-        <jline.version>2.10</jline.version>
-        <sbt.compiled.version>${scala.version}</sbt.compiled.version>
-      </properties>
-      <dependencyManagement>
-        <dependencies>
-          <!-- old sbt toolchain -->
-          <dependency>
-            <groupId>org.scala-sbt</groupId>
-            <artifactId>classpath_${sbt.compiled.version}</artifactId>
-            <version>${sbt.version}</version>
-          </dependency>
-          <dependency>
-            <groupId>org.scala-sbt</groupId>
-            <artifactId>logging_${sbt.compiled.version}</artifactId>
-            <version>${sbt.version}</version>
-          </dependency>
-          <dependency>
-            <groupId>org.scala-sbt</groupId>
-            <artifactId>io_${sbt.compiled.version}</artifactId>
-            <version>${sbt.version}</version>
-          </dependency>
-          <dependency>
-            <groupId>org.scala-sbt</groupId>
-            <artifactId>control_${sbt.compiled.version}</artifactId>
-            <version>${sbt.version}</version>
-          </dependency>
-          <dependency>
-            <groupId>org.scala-sbt</groupId>
-            <artifactId>classfile_${sbt.compiled.version}</artifactId>
-            <version>${sbt.version}</version>
-          </dependency>
-          <dependency>
-            <groupId>org.scala-sbt</groupId>
-            <artifactId>process_${sbt.compiled.version}</artifactId>
-            <version>${sbt.version}</version>
-          </dependency>
-          <dependency>
-            <groupId>org.scala-sbt</groupId>
-            <artifactId>relation_${sbt.compiled.version}</artifactId>
-            <version>${sbt.version}</version>
-          </dependency>
-          <dependency>
-            <groupId>org.scala-sbt</groupId>
-            <artifactId>interface_${sbt.compiled.version}</artifactId>
-            <version>${sbt.version}</version>
-          </dependency>
-          <dependency>
-            <groupId>org.scala-sbt</groupId>
-            <artifactId>persist_${sbt.compiled.version}</artifactId>
-            <version>${sbt.version}</version>
-          </dependency>
-          <dependency>
-            <groupId>org.scala-sbt</groupId>
-            <artifactId>api_${sbt.compiled.version}</artifactId>
-            <version>${sbt.version}</version>
-          </dependency>
-          <dependency>
-            <groupId>org.scala-sbt</groupId>
-            <artifactId>compiler-integration_${sbt.compiled.version}</artifactId>
-            <version>${sbt.version}</version>
-          </dependency>
-          <dependency>
-            <groupId>org.scala-sbt</groupId>
-            <artifactId>incremental-compiler_${sbt.compiled.version}</artifactId>
-            <version>${sbt.version}</version>
-          </dependency>
-          <dependency>
-            <groupId>org.scala-sbt</groupId>
-            <artifactId>compile_${sbt.compiled.version}</artifactId>
-            <version>${sbt.version}</version>
-          </dependency>
-          <dependency>
-            <groupId>org.scala-sbt</groupId>
-            <artifactId>compiler-interface_${sbt.compiled.version}</artifactId>
-            <version>${sbt.version}</version>
-          </dependency>
-          <dependency>
-            <groupId>jline</groupId>
-            <artifactId>jline</artifactId>
-            <version>${jline.version}</version>
-          </dependency>
-          <dependency>
-            <groupId>org.scala-tools.sbinary</groupId>
-            <artifactId>sbinary_${sbt.compiled.version}</artifactId>
-            <version>${sbinary.version}</version>
-          </dependency>
-        </dependencies>
-      </dependencyManagement>
     </profile>
 
     <profile>
@@ -401,6 +279,22 @@
         <groupId>org.scala-lang.plugins</groupId>
         <artifactId>continuations</artifactId>
         <version>${scala.version}</version>
+      </dependency>
+      <!-- toolchain, sbt -->
+      <dependency>
+        <groupId>com.typesafe.sbt</groupId>
+        <artifactId>sbt-interface</artifactId>
+        <version>${sbt.ide.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.typesafe.sbt</groupId>
+        <artifactId>compiler-interface-precompiled</artifactId>
+        <version>${sbt.ide.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.typesafe.sbt</groupId>
+        <artifactId>incremental-compiler</artifactId>
+        <version>${sbt.ide.version}</version>
       </dependency>
       <!-- sdt.core dependencies -->
       <dependency>
@@ -552,6 +446,4 @@
       </plugins>
     </pluginManagement>
   </build>
-
-
 </project>

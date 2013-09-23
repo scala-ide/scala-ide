@@ -11,29 +11,13 @@
   <artifactId>org.scala-ide.sbt.compiler.interface</artifactId>
   <packaging>bundle</packaging>
 
-  <profiles>
-    <profile>
-      <id>sbt-new</id>
-      <dependencies>
-        <dependency>
-          <groupId>com.typesafe.sbt</groupId>
-          <artifactId>compiler-interface-precompiled</artifactId>
-          <optional>true</optional>
-        </dependency>
-      </dependencies>
-    </profile>
-
-    <profile>
-      <id>sbt-legacy</id>
-      <dependencies>
-        <dependency>
-          <groupId>org.scala-sbt</groupId>
-          <artifactId>compiler-interface_${sbt.compiled.version}</artifactId>
-          <optional>true</optional>
-        </dependency>
-      </dependencies>
-    </profile>
-  </profiles>
+  <dependencies>
+    <dependency>
+      <groupId>com.typesafe.sbt</groupId>
+      <artifactId>compiler-interface-precompiled</artifactId>
+      <optional>true</optional>
+    </dependency>
+  </dependencies>
 
   <build>
     <plugins>
