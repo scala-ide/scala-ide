@@ -90,7 +90,6 @@
       <properties>
         <scala.version>2.10.3-SNAPSHOT</scala.version>
         <version.suffix>2_10</version.suffix>
-        <sbt.version>0.13.0</sbt.version>
 
         <repo.scala-refactoring>${repo.scala-ide.root}/scala-refactoring-210x</repo.scala-refactoring>
         <repo.scalariform>${repo.scala-ide.root}/scalariform-210x</repo.scalariform>
@@ -104,8 +103,6 @@
         <scala.version>2.11.0-SNAPSHOT</scala.version>
         <scala.binary.version>2.11.0-M4</scala.binary.version>
         <version.suffix>2_11</version.suffix>
-        <!-- version here should be 0.13.1, but Zinc artfacts for 0.13.1 haven't been published yet. -->
-        <sbt.version>0.13.0</sbt.version>
 
         <repo.scala-refactoring>${repo.scala-ide.root}/scala-refactoring-211x</repo.scala-refactoring>
         <repo.scalariform>${repo.scala-ide.root}/scalariform-211x</repo.scalariform>
