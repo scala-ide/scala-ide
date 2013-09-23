@@ -10,7 +10,7 @@ ROOT_DIR=${PWD}
 
 if [ -z "$*" ]
 then
-  ARGS="-Pscala-2.10.x -Peclipse-juno -Psbt-new clean install"
+  ARGS="-Pscala-2.10.x -Peclipse-juno clean install"
 else
   ARGS="$*"
 fi
