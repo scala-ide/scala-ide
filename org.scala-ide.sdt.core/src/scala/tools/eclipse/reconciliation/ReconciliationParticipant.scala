@@ -15,7 +15,6 @@ import scala.tools.eclipse.javaelements.ScalaCompilationUnit
  * Registered extenstion points will get called before and after each
  * reconciliation of a compilation unit.
  *
- * @author Mirko Stocker
  */
 trait ReconciliationParticipant {
 

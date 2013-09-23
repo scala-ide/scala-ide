@@ -1,6 +1,5 @@
 /*
  * Copyright 2005-2009 LAMP/EPFL
- * @author David Taylor
  */
 // $Id$
 

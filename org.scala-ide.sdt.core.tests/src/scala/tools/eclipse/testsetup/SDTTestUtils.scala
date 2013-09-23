@@ -32,7 +32,6 @@ import org.eclipse.jdt.core.IClasspathEntry
 
 /** Utility functions for setting up test projects.
  *
- *  @author Miles Sabin
  */
 object SDTTestUtils {
 
