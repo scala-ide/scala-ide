@@ -151,6 +151,10 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings) exten
               case e: TypeError                  => logger.info("TypeError in ask:\n" + e)
               case f: FreshRunReq                => logger.info("FreshRunReq in ask:\n" + f)
               case m: MissingResponse            => logger.info("MissingResponse in ask. Called from: " + m.getStackTrace().mkString("\n"))
+              // This can happen if you ask long queries of the
+              // PC, triggering long sleep() sessions on caller
+              // side.
+              case i: InterruptedException       => logger.debug("InterruptedException in ask:\n" + i)
               case e                             => eclipseLog.error("Error during askOption", e)
             }
             None
