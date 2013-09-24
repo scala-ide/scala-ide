@@ -1,7 +1,3 @@
-/*
- * Copyright 2011 LAMP/EPFL
- */
-
 package scala.tools.eclipse
 package refactoring
 

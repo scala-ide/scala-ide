@@ -1,7 +1,3 @@
-/*
- * Copyright 2005-2010 LAMP/EPFL
- */
-
 package scala.tools.eclipse.refactoring
 
 import org.eclipse.jface.action.Action

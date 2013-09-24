@@ -1,9 +1,3 @@
-/*
- * Copyright 2010 LAMP/EPFL
- *
- * @author Tim Clendenen
- *
- */
 package scala.tools.eclipse.wizards
 
 import org.eclipse.jdt.core.Flags

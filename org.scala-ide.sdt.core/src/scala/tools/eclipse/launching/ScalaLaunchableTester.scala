@@ -1,9 +1,3 @@
-/*
- * Copyright 2005-2010 LAMP/EPFL
- * @author Matthew Farwell
- */
-// $Id$
-
 package scala.tools.eclipse.launching
 
 import org.eclipse.core.expressions.PropertyTester

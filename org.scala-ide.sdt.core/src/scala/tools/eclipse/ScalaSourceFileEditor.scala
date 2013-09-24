@@ -1,9 +1,4 @@
 
-/*
- * Copyright 2005-2010 LAMP/EPFL
- */
-// $Id$
-
 package scala.tools.eclipse
 
 import java.util.ResourceBundle

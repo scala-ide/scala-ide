@@ -1,9 +1,3 @@
-/*
- * Copyright 2005-2009 LAMP/EPFL
- * @author David Taylor
- */
-// $Id$
-
 package scala.tools.eclipse.interpreter
 import org.eclipse.core.resources.IProject
 import org.eclipse.jdt.core.IJavaElement
