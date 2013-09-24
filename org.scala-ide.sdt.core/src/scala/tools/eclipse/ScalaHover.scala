@@ -39,14 +39,15 @@ class ScalaHover(val icu: InteractiveCompilationUnit) extends ITextHover with IT
               sym.infoString(tpe)))
           }
 
-          for (tsym <- Option(t.symbol)) yield {
-            def pre(t: Tree): Type = t match {
-              case Apply(fun, _) => pre(fun)
-              case Select(qual, _) => qual.tpe
-              case _ if tsym.enclClass ne NoSymbol => ThisType(tsym.enclClass)
-              case _ => NoType
-            }
-            val pt = pre(t)
+          def pre(tsym: Symbol, t: Tree): Type = t match {
+            case Apply(fun, _) => pre(tsym, fun)
+            case Select(qual, _) => qual.tpe
+            case _ if tsym.enclClass ne NoSymbol => ThisType(tsym.enclClass)
+            case _ => NoType
+          }
+          for (
+            tsym <- Option(t.symbol);
+            pt <- Option(pre(tsym,t))) yield {
             val site = pt.typeSymbol
             val sym = if(tsym.isCaseApplyOrUnapply) site else tsym
             val header = if (sym.isClass || sym.isModule) sym.nameString else {

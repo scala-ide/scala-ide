@@ -54,12 +54,7 @@ trait Scaladoc extends MemberLookupBase with CommentFactoryBase { this: ScalaPre
       for (u <- findCompilationUnit(sym)) yield withSourceFile(u) { (source, _) =>
 
         def listFragments(syms:List[Symbol]): List[(Symbol, SourceFile)] = syms flatMap ((sym) =>
-          findCompilationUnit(sym) match {
-            case None => None
-            case Some(u) => withSourceFile(u){ (source, _) =>
-                Some(sym, source)
-            }
-          }
+          findCompilationUnit(sym) map {(x) => withSourceFile(u) { (source, _) => (sym,source)}}
         )
 
         def withFragments(fragments: List[(Symbol, SourceFile)]): Option[(String, String, Position)] = {
@@ -185,6 +180,6 @@ class BrowserInput(@BeanProperty val html: String,
                    @BeanProperty val inputElement: Object,
                    @BeanProperty val inputName: String) extends BrowserInformationControlInput(null) {
   @deprecated("use BrowserInput(html:String, sym:IJavaElement), see ScalaJavaMapper.getJavaElement")
-  def this(html: String, sym:Symbol) = this(html, sym, sym.toString)
-  def this(html: String, sym: IJavaElement) = this(html, sym, sym.toString)
+  def this(html: String, sym: Symbol) = this(html, sym, sym.toString)
+  def this(html: String, sym: IJavaElement) = this(html, sym, if (sym != null) sym.toString else "")
 }
