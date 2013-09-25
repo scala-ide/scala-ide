@@ -1,18 +1,19 @@
-package scala.tools.eclipse
-package refactoring.source
+package scala.tools.eclipse.refactoring
+package source
 
-import scala.tools.eclipse.refactoring.RefactoringAction
+import scala.tools.eclipse.javaelements.ScalaSourceFile
 import scala.tools.refactoring.implementations.GenerateHashcodeAndEquals
-import javaelements.ScalaSourceFile
-import ui.GenerateHashcodeAndEqualsConfigurationPageGenerator
+
 import org.eclipse.ltk.ui.refactoring.RefactoringWizardPage
+
+import ui.GenerateHashcodeAndEqualsConfigurationPageGenerator
 
 /**
  * This refactoring that generates hashCode and equals implementations
  * following the recommendations given in chapter 28 of
  * Programming in Scala.
  */
-class GenerateHashcodeAndEqualsAction extends RefactoringAction {
+class GenerateHashcodeAndEqualsAction extends RefactoringActionWithWizard {
 
   def createRefactoring(selectionStart: Int, selectionEnd: Int, file: ScalaSourceFile) = new GenerateHashcodeAndEqualsScalaIdeRefactoring(selectionStart, selectionEnd, file)
 

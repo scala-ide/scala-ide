@@ -9,7 +9,7 @@ import scala.tools.refactoring.implementations.MoveConstructorToCompanionObject
  * apply method of the companion object.
  * The apply method and if necessary the companion object will be generated.
  */
-class MoveConstructorToCompanionObjectAction extends RefactoringAction {
+class MoveConstructorToCompanionObjectAction extends RefactoringActionWithWizard {
 
   def createRefactoring(start: Int, end: Int, file: ScalaSourceFile) = new MoveConstructorToCompanionObjectIdeRefactoring(start, end, file)
 

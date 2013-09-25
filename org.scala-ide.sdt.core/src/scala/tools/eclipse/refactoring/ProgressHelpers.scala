@@ -1,5 +1,4 @@
-package scala.tools.eclipse
-package refactoring
+package scala.tools.eclipse.refactoring
 
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.core.runtime.IStatus

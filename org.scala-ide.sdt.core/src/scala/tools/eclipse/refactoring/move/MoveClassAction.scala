@@ -1,5 +1,4 @@
-package scala.tools.eclipse
-package refactoring
+package scala.tools.eclipse.refactoring
 package move
 
 import org.eclipse.core.resources.IFolder
@@ -12,8 +11,6 @@ import org.eclipse.ltk.core.refactoring.RefactoringStatus
 import org.eclipse.ltk.core.refactoring.CompositeChange
 
 import scala.tools.eclipse.javaelements.ScalaSourceFile
-import scala.tools.eclipse.refactoring.RefactoringAction
-import scala.tools.eclipse.refactoring.FullProjectIndex
 import scala.tools.refactoring.analysis.GlobalIndexes
 import scala.tools.refactoring.common.TextChange
 import scala.tools.refactoring.common.NewFileChange
@@ -29,7 +26,7 @@ import scala.tools.refactoring.implementations.MoveClass
  * like for example when a file is moved by drag&drop in the package explorer.
  *
  */
-class MoveClassAction extends RefactoringAction {
+class MoveClassAction extends RefactoringActionWithWizard {
 
   def createRefactoring(start: Int, end: Int, file: ScalaSourceFile) = new MoveClassScalaIdeRefactoring(start, end, file)
 

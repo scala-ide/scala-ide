@@ -1,5 +1,4 @@
-package scala.tools.eclipse
-package refactoring.move
+package scala.tools.eclipse.refactoring.move
 
 import org.eclipse.core.resources.IFolder
 import org.eclipse.core.resources.IFile

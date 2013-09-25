@@ -9,16 +9,22 @@ import org.eclipse.core.runtime.Status
 import org.eclipse.jface.action.IAction
 
 /**
- * This trait can be mixed in to a RefactoringAction if the refactoring
+ * This trait is a RefactoringAction that can be used if the refactoring
  * should be performed without showing the wizard and the change preview.
  *
- * If an error occurs during preparation, the wizard is shown with the
+ * If an error occurs during preparation, a wizard is shown with the
  * error message.
+ *
+ * In contrast, [[RefactoringActionWithWizard]] can be used if a wizard should
+ * be shown.
  */
-trait ActionWithNoWizard {
-  this: RefactoringAction =>
+trait RefactoringActionWithoutWizard extends RefactoringAction {
 
-  override def run(action: IAction) {
+  /**
+   * Performs the refactoring without showing a wizard. All changes are applied
+   * immediately.
+   */
+  def run(action: IAction) {
     runRefactoringInUiJob()
   }
 
