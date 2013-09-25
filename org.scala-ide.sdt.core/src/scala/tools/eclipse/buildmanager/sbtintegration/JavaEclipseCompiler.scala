@@ -18,15 +18,15 @@ import org.eclipse.core.resources.IResource
 import xsbti.compile.JavaCompiler
 import xsbti.compile.Output
 import xsbti.Logger
-import scala.tools.eclipse.buildmanager.ClassBuilder
+import scala.tools.eclipse.buildmanager.JDTBuilderFacade
 
 /** Eclipse Java compiler interface, used by the SBT builder.
  *  This class forwards to the internal Eclipse Java compiler, using
  *  reflection to circumvent private/protected modifiers.
  */
-class JavaEclipseCompiler(p: IProject, monitor: SubMonitor) extends JavaCompiler with ClassBuilder {
+class JavaEclipseCompiler(p: IProject, monitor: SubMonitor) extends JavaCompiler with JDTBuilderFacade {
 
-  def project = p
+  override def project = p
 
   def compile(sources: Array[File], classpath: Array[File], output: Output, options: Array[String], log: Logger) {
     val scalaProject = plugin.getScalaProject(project)

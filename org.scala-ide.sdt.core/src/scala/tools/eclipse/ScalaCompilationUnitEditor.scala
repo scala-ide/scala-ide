@@ -4,7 +4,7 @@ import scala.tools.eclipse.properties.syntaxcolouring.ScalaSyntaxClasses
 import scala.tools.eclipse.semantichighlighting.Presenter
 import scala.tools.eclipse.semantichighlighting.TextPresentationHighlighter
 import scala.tools.eclipse.ui.DisplayThread
-import scala.tools.eclipse.util.SWTUtils
+import scala.tools.eclipse.util.SWTUtils.fnToPropertyChangeListener
 
 import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor
 import org.eclipse.jdt.internal.ui.javaeditor.JavaSourceViewer
@@ -19,10 +19,7 @@ trait ScalaCompilationUnitEditor extends JavaEditor with ScalaEditor {
   private var semanticHighlightingPresenter: semantichighlighting.Presenter = _
   protected def semanticHighlightingPreferences = semantichighlighting.Preferences(scalaPrefStore)
 
-  private val preferenceListener: IPropertyChangeListener = {
-    import SWTUtils._
-    handlePreferenceStoreChanged _
-  }
+  private val preferenceListener: IPropertyChangeListener = handlePreferenceStoreChanged _
 
   scalaPrefStore.addPropertyChangeListener(preferenceListener)
 

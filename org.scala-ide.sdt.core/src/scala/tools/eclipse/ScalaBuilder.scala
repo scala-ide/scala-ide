@@ -26,11 +26,11 @@ import scala.tools.eclipse.util.FileUtils
 import scala.tools.eclipse.util.ReflectionUtils
 import scala.tools.eclipse.logging.HasLogger
 import org.eclipse.core.runtime.jobs.ISchedulingRule
-import scala.tools.eclipse.buildmanager.ClassBuilder
+import scala.tools.eclipse.buildmanager.JDTBuilderFacade
 
-class ScalaBuilder extends IncrementalProjectBuilder with ClassBuilder with HasLogger {
+class ScalaBuilder extends IncrementalProjectBuilder with JDTBuilderFacade with HasLogger {
 
-  def project = getProject()
+  override def project = getProject()
 
   /** Lock only the current project during build. */
   override def getRule(kind: Int, args: java.util.Map[String,String]): ISchedulingRule =
@@ -144,7 +144,7 @@ class ScalaBuilder extends IncrementalProjectBuilder with ClassBuilder with HasL
     if (allSourceFiles.exists(FileUtils.hasBuildErrors(_)) || !shouldRunJavaBuilder)
       depends.toArray
     else {
-      ensureProject
+      ensureProject()
       val javaDepends = scalaJavaBuilder.build(kind, ignored, subMonitor)
       refresh()
       (Set.empty ++ depends ++ javaDepends).toArray
