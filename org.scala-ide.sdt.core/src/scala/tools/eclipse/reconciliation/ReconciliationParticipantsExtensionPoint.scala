@@ -19,7 +19,6 @@ import scala.tools.eclipse.util.Utils
  * The runBefore and runAfter methods are themselves invoked by the
  * ScalaSourceFile.reconcile method.
  *
- * @author Mirko Stocker
  */
 object ReconciliationParticipantsExtensionPoint extends HasLogger {
 

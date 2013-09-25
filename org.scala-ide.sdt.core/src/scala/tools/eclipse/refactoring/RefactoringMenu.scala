@@ -23,7 +23,6 @@ import org.eclipse.ui.part.EditorPart
  * CompilationUnitEditor. So instead, we add our refactorings to the context and quick menus
  * programmatically after CompilationUnitEditor, using the commands declared in plugin.xml.
  *
- * @author Fabian Steeg <fsteeg@gmail.com>
  */
 protected[eclipse] object RefactoringMenu {
 

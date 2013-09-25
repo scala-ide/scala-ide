@@ -34,8 +34,6 @@ import scala.tools.eclipse.hyperlink.text._
 
 
 /**
- * @author Jin Mingjian
- * @author David Bernard
  *
  */
 class ImplicitHighlightingPresenter(sourceViewer: ISourceViewer) extends SemanticAction with HasLogger {

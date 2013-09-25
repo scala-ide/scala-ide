@@ -1,6 +1,5 @@
 /*
  * Copyright 2005-2010 LAMP/EPFL
- * @author Sean McDirmid
  */
 // $Id$
 
