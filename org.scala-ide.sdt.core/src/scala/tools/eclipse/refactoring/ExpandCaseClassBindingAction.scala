@@ -14,7 +14,7 @@ import scala.tools.refactoring.implementations.ExpandCaseClassBinding
  *
  * Does not show a wizard but directly applies the changes (ActionWithNoWizard trait).
  */
-class ExpandCaseClassBindingAction extends RefactoringAction with ActionWithNoWizard {
+class ExpandCaseClassBindingAction extends RefactoringAction with RefactoringActionWithoutWizard {
 
   def createRefactoring(selectionStart: Int, selectionEnd: Int, file: ScalaSourceFile) =
     new ExpandCaseClassBindingScalaIdeRefactoring(selectionStart, selectionEnd, file)

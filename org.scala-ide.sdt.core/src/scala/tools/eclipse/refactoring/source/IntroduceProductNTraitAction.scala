@@ -1,11 +1,12 @@
-package scala.tools.eclipse
-package refactoring.source
+package scala.tools.eclipse.refactoring
+package source
 
-import scala.tools.eclipse.refactoring.RefactoringAction
+import scala.tools.eclipse.javaelements.ScalaSourceFile
 import scala.tools.refactoring.implementations.IntroduceProductNTrait
-import javaelements.ScalaSourceFile
-import ui.IntroduceProductNTraitConfigurationPageGenerator
+
 import org.eclipse.ltk.ui.refactoring.RefactoringWizardPage
+
+import ui.IntroduceProductNTraitConfigurationPageGenerator
 
 /**
  * This refactoring implements the ProductN trait for a class.
@@ -14,7 +15,7 @@ import org.eclipse.ltk.ui.refactoring.RefactoringWizardPage
  * implementations for hashCode and equals.
  * @see GenerateHashcodeAndEqualsAction
  */
-class IntroduceProductNTraitAction extends RefactoringAction {
+class IntroduceProductNTraitAction extends RefactoringActionWithWizard {
 
   def createRefactoring(selectionStart: Int, selectionEnd: Int, file: ScalaSourceFile) = new GenerateHashcodeAndEqualsScalaIdeRefactoring(selectionStart, selectionEnd, file)
 

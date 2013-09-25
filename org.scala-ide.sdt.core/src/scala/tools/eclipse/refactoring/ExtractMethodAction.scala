@@ -17,7 +17,7 @@ import scala.tools.refactoring.implementations.ExtractMethod
  * The implementation found for example in the JDT offers much more configuration
  * options, for now, we only require the user to provide a name.
  */
-class ExtractMethodAction extends RefactoringAction {
+class ExtractMethodAction extends RefactoringActionWithWizard {
 
   def createRefactoring(selectionStart: Int, selectionEnd: Int, file: ScalaSourceFile) = new ExtractMethodScalaIdeRefactoring(selectionStart, selectionEnd, file)
 

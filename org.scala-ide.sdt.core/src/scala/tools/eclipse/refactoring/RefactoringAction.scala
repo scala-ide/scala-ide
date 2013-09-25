@@ -6,12 +6,12 @@ package scala.tools.eclipse
 package refactoring
 
 import scala.tools.eclipse.javaelements.ScalaSourceFile
-
 import org.eclipse.jface.action.IAction
 import org.eclipse.ltk.ui.refactoring.RefactoringWizard
 import org.eclipse.ltk.ui.refactoring.RefactoringWizardOpenOperation
 import org.eclipse.swt.widgets.Shell
 import org.eclipse.ui.PlatformUI
+import scala.tools.refactoring.common.TextChange
 
 /**
  * This is the abstract driver of a refactoring execution: it is the
@@ -19,6 +19,9 @@ import org.eclipse.ui.PlatformUI
  *
  * Each concrete refactoring action needs to implement the abstract
  * `createRefactoring` method which instantiates a ScalaIdeRefactoring.
+ *
+ * There are two important subclasses called [[RefactoringActionWithWizard]] and
+ * [[RefactoringActionWithoutWizard]] that can be used instead of this class.
  */
 trait RefactoringAction extends ActionAdapter {
 
@@ -58,11 +61,6 @@ trait RefactoringAction extends ActionAdapter {
    * linked mode ui. These refactorings call `enterLinkedModeUi` directly.
    */
   def runRefactoring(wizard: RefactoringWizard, shell: Shell) {
-    (new RefactoringWizardOpenOperation(wizard)).run(shell, "Scala Refactoring")
-  }
-
-  def run(action: IAction) {
-    val shell = PlatformUI.getWorkbench.getActiveWorkbenchWindow.getShell
-    runRefactoring(createWizardForRefactoring(createScalaIdeRefactoringForCurrentEditorAndSelection()), shell)
+    new RefactoringWizardOpenOperation(wizard).run(shell, "Scala Refactoring")
   }
 }
