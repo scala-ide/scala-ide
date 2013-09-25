@@ -67,6 +67,12 @@ Import-Package:
  scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor;apply-aspects:=false,
  scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.formatter;apply-aspects:=false
 Export-Package: 
- scala.tools.eclipse.debug
+ scala.tools.eclipse.debug,
+ scala.tools.eclipse.debug.breakpoints,
+ scala.tools.eclipse.debug.classfile,
+ scala.tools.eclipse.debug.command,
+ scala.tools.eclipse.debug.model,
+ scala.tools.eclipse.debug.preferences,
+ scala.tools.eclipse.launching
 Bundle-RequiredExecutionEnvironment: J2SE-1.5
 
