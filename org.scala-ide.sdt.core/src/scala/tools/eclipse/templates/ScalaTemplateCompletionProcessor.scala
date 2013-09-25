@@ -16,7 +16,6 @@ import org.eclipse.ui.editors.text.templates.ContributionTemplateStore
 /**
  * Group template related information instead of being merged/flatten into ScalaPlugin.
  *
- * @author david.bernard
  */
 class ScalaTemplateManager {
 
@@ -48,7 +47,6 @@ import org.eclipse.swt.graphics.Image
 /**
  * Completion processor used for templates.
  *
- * @author david.bernard
  */
 class ScalaTemplateCompletionProcessor(val tm : ScalaTemplateManager) extends TemplateCompletionProcessor {
 
@@ -83,7 +81,6 @@ import org.eclipse.jface.text.templates.TemplateContextType
 /**
  * Simple TemplateContextType for Scala.
  *
- * @author david.bernard
  * @TODO add context resolver like java editor (near variable of some type,...)
  */
 class ScalaTemplateContextType extends TemplateContextType {
