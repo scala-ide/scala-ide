@@ -77,7 +77,7 @@ class TestProjectSetup(projectName: String, srcRoot: String = "/%s/src/", val bu
 
   def reload(unit: InteractiveCompilationUnit) {
     // first, 'open' the file by telling the compiler to load it
-    unit.withSourceFile { (src, compiler) =>
+    unit.doWithSourceFile { (src, compiler) =>
       val dummy = new compiler.Response[Unit]
       compiler.askReload(List(src), dummy)
       dummy.get
@@ -85,11 +85,11 @@ class TestProjectSetup(projectName: String, srcRoot: String = "/%s/src/", val bu
   }
 
   def parseAndEnter(unit: InteractiveCompilationUnit) {
-    project.withSourceFile(unit) { (src, compiler) =>
+    unit.withSourceFile { (src, compiler) =>
       val dummy = new compiler.Response[compiler.Tree]
       compiler.askParsedEntered(src, false, dummy)
       dummy.get
-    }()
+    }
   }
 
   def findMarker(marker: String) = SDTTestUtils.findMarker(marker)
@@ -124,7 +124,7 @@ class TestProjectSetup(projectName: String, srcRoot: String = "/%s/src/", val bu
   /** Wait until the passed `unit` is entirely typechecked. */
   def waitUntilTypechecked(unit: ScalaCompilationUnit) {
     // give a chance to the background compiler to report the error
-    unit.withSourceFile { (source, compiler) =>
+    unit.doWithSourceFile { (source, compiler) =>
       import scala.tools.nsc.interactive.Response
       val res = new Response[compiler.Tree]
       compiler.askLoadedTyped(source, res)

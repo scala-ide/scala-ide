@@ -51,10 +51,10 @@ trait Scaladoc extends MemberLookupBase with CommentFactoryBase { this: ScalaPre
   def parsedDocComment(sym: Symbol, site: Symbol): Option[Comment] = {
     val res =
 
-      for (u <- findCompilationUnit(sym)) yield withSourceFile(u) { (source, _) =>
+      for (u <- findCompilationUnit(sym)) yield u.withSourceFile { (source, _) =>
 
-        def listFragments(syms:List[Symbol]): List[(Symbol, SourceFile)] = syms flatMap ((sym) =>
-          findCompilationUnit(sym) map {(x) => withSourceFile(u) { (source, _) => (sym,source)}}
+        def listFragments(syms:List[Symbol]): List[(Symbol, SourceFile)] = syms flatMap ((sym:Symbol) =>
+          findCompilationUnit(sym) flatMap {(x) => u.withSourceFile {(source, _) => (sym,source)}}
         )
 
         def withFragments(fragments: List[(Symbol, SourceFile)]): Option[(String, String, Position)] = {
@@ -73,7 +73,7 @@ trait Scaladoc extends MemberLookupBase with CommentFactoryBase { this: ScalaPre
               None
           }
         }
-      }
+      } getOrElse (None)
     res.flatten
   }
 

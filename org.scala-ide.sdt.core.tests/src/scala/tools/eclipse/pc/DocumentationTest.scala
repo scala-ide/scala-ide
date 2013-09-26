@@ -58,7 +58,7 @@ class PresentationCompilerDocTest {
  */
   private def doTest(unit: ScalaCompilationUnit, expectation: Comment => Boolean, preload: List[ScalaCompilationUnit] = Nil) {
     for (u <- preload) { reload(u) }
-    project.withSourceFile(unit) { (src, compiler) =>
+    unit.doWithSourceFile { (src, compiler) =>
       val pos = docPosition(src, compiler)
       val response = new Response[compiler.Tree]
       compiler.askTypeAt(pos, response)
@@ -70,7 +70,7 @@ class PresentationCompilerDocTest {
             case Some(comment) => Assert.assertTrue(s"Expectation failed for $comment", expectation(comment))
           }
       }
-    }()
+    }
   }
 
   val rangeStartMarker = "/*s*/"
