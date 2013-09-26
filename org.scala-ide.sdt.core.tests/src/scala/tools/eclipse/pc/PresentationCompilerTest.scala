@@ -21,7 +21,7 @@ class PresentationCompilerTest {
 
   @Before
   def reset() {
-    project.resetPresentationCompiler()
+    project.presentationCompiler.askRestart()
   }
 
   @Test
@@ -127,7 +127,7 @@ class FreshFile {
 
   @Test
   def pcShouldReportTheCorrectCompilationUnitsOnShutdown() {
-    def managedUnits() = project.withPresentationCompiler(_.compilationUnits)()
+    def managedUnits() = project.withPresentationCompiler(_.compilationUnits)().toSet
 
     project.shutDownCompilers()
 
@@ -136,9 +136,10 @@ class FreshFile {
 
     Seq(cu, cu1).foreach(_.scheduleReconcile().get)
 
-    Assert.assertEquals("Managed compilation units", Set(cu, cu1), managedUnits().toSet)
+    Assert.assertEquals("Managed compilation units", Set(cu, cu1), managedUnits())
 
-    val returned = project.shutDownPresentationCompiler().map(_.compilationUnits).getOrElse(Nil)
+    project.presentationCompiler.askRestart()
+    val returned = managedUnits().toSet
 
     // now the unit should be managed
     Assert.assertEquals("Presentation compiler should report one unit on shutdown", Set(cu, cu1), returned.toSet)
@@ -157,7 +158,7 @@ class FreshFile {
 
     Assert.assertEquals("Managed compilation units", Set(cu, cu1), managedUnits().toSet)
 
-    project.resetPresentationCompiler()
+    project.presentationCompiler.askRestart()
 
     // now the unit should be managed
     Assert.assertEquals("Presentation compiler should report one unit on shutdown", Set(cu, cu1), managedUnits().toSet)

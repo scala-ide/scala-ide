@@ -266,7 +266,7 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
       iProject <- ResourcesPlugin.getWorkspace.getRoot.getProjects
       if iProject.isOpen
       scalaProject <- asScalaProject(iProject)
-    } scalaProject.resetPresentationCompiler()
+    } scalaProject.presentationCompiler.askRestart()
   }
 
   /**
@@ -415,7 +415,7 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
       }
     }
 
-    projectsToReset.foreach(_.resetPresentationCompiler)
+    projectsToReset.foreach(_.presentationCompiler.askRestart())
     if(buff.nonEmpty) {
       buff.toList groupBy (_.getJavaProject.getProject) foreach {
         case (project, srcs) =>
