@@ -49,6 +49,8 @@ class PresentationCompilerTest {
     verify(mockLogger, times(0)).error(any())
   }
 
+  private def managedUnits(): Set[InteractiveCompilationUnit] = project.presentationCompiler(_.compilationUnits.toSet).orNull
+
   @Test
   def freshFileReportsErrors() {
     val contentsWithErrors = """
@@ -107,8 +109,6 @@ class FreshFile {
 
   @Test
   def pcShouldReportTheCorrectCompilationUnitsItKnowsAbout() {
-    def managedUnits() = project.withPresentationCompiler(_.compilationUnits)()
-
     // should be empty
     Assert.assertTrue("Presentation compiler should not maintain any units after a shutdown request", managedUnits().isEmpty)
 
@@ -125,8 +125,6 @@ class FreshFile {
 
   @Test
   def pcShouldReportTheCorrectCompilationUnitsOnShutdown() {
-    def managedUnits() = project.withPresentationCompiler(_.compilationUnits)().toSet
-
     val cu = scalaCompilationUnit("t1000692/akka/util/ReflectiveAccess.scala")
     val cu1 = scalaCompilationUnit("t1000658/ThreadPoolConfig.scala")
 
@@ -143,8 +141,6 @@ class FreshFile {
 
   @Test
   def pcShouldReloadAllUnitsOnReset() {
-    def managedUnits() = project.withPresentationCompiler(_.compilationUnits)()
-
     val cu = scalaCompilationUnit("t1000692/akka/util/ReflectiveAccess.scala")
     val cu1 = scalaCompilationUnit("t1000658/ThreadPoolConfig.scala")
 

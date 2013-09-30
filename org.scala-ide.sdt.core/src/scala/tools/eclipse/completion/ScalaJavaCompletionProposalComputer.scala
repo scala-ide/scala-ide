@@ -108,7 +108,7 @@ class ScalaJavaCompletionProposalComputer extends IJavaCompletionProposalCompute
     val start = invocationOffset - prefix.length
 
     val prj = ScalaPlugin.plugin.getScalaProject(unit.getJavaProject.getProject)
-    val completionProposals = prj.withPresentationCompiler { compiler =>
+    val completionProposals = prj.presentationCompiler { compiler =>
       import compiler._
 
       def mixedInMethod(sym: Symbol): Boolean =
@@ -127,7 +127,7 @@ class ScalaJavaCompletionProposalComputer extends IJavaCompletionProposalCompute
           new ScalaCompletionProposal(prop, selectionProvider)
         }
       }.getOrElse(Nil)
-    }(Nil)
+    } getOrElse (Nil)
 
     import scala.collection.JavaConversions._
 

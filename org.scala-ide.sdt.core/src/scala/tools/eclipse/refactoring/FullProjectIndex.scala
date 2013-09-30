@@ -173,12 +173,11 @@ trait FullProjectIndex extends HasLogger {
       pm.subTask("creating index")
 
       trees flatMap { tree =>
-
-        project.withPresentationCompiler { compiler =>
+        project.presentationCompiler { compiler =>
           compiler.askOption { () =>
             refactoring.CompilationUnitIndex(tree)
           }
-        }()
+        }.flatten.toList
       }
     } else Nil
 

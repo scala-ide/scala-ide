@@ -84,6 +84,7 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
    */
   override def scheduleReconcile(): Response[Unit] = {
     // askReload first
+    // FIXME: Only way to fix this without changing the method's signature is introducing a `NullResponse` object.
     val res = scalaProject.withPresentationCompiler { compiler =>
       compiler.askReload(this, getContents)
     } ()
@@ -160,10 +161,8 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
   }
 
   /** Ask the compiler to reload {{{this}}} source. */
-  final def reload(): Unit = scalaProject.doWithPresentationCompiler { _.askReload(this, getContents) }
+  final def reload(): Unit = scalaProject.presentationCompiler { _.askReload(this, getContents) }
 
   /** Ask the compiler to discard {{{this}}} source. */
-  final def discard(): Unit = scalaProject.doWithPresentationCompiler { compiler =>
-    compiler.discardCompilationUnit(this)
-  }
+  final def discard(): Unit = scalaProject.presentationCompiler { _.discardCompilationUnit(this) }
 }

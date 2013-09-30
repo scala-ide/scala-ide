@@ -58,9 +58,7 @@ trait InteractiveCompilationUnit {
 
   /** Perform a side-effecting operation on the source file, with the current presentation compiler. */
   def doWithSourceFile(op: (SourceFile, ScalaPresentationCompiler) => Unit) {
-    scalaProject.doWithPresentationCompiler { compiler =>
-      op(sourceFile, compiler)
-    }
+    scalaProject.presentationCompiler { op(sourceFile, _) }
   }
 
   /** Perform an operation on the source file, with the current presentation compiler.
@@ -70,7 +68,7 @@ trait InteractiveCompilationUnit {
    *                started because of classpath issues)
    */
   def withSourceFile[T](op: (SourceFile, ScalaPresentationCompiler) => T)(orElse: => T = scalaProject.defaultOrElse): T = {
-    scalaProject.withPresentationCompiler(op(sourceFile, _))(orElse)
+    scalaProject.presentationCompiler(op(sourceFile, _)) getOrElse (orElse)
   }
 
   /** Schedule the unit for reconciliation. Not blocking. Used by the usual Scala editor to signal a need for `askReload`,

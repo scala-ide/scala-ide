@@ -3,6 +3,9 @@ package scala.tools.eclipse
 import scala.tools.eclipse.logging.HasLogger
 import scala.reflect.internal.MissingRequirementError
 import scala.tools.nsc.Settings
+import java.util.concurrent.atomic.AtomicBoolean
+import scala.tools.eclipse.ui.DisplayThread
+import scala.tools.eclipse.util.Utils
 
 /** Holds a reference to the currently 'live' presentation compiler.
   *
@@ -45,7 +48,7 @@ class ScalaPresentationCompilerProxy(project: ScalaProject) extends HasLogger {
   def askRestart(): Unit = { restartNextTime = true }
 
   /** Executes the passed `op` on the presentation compiler. */
-  def apply[U](op: ScalaPresentationCompiler => U): U = {
+  def apply[U](op: ScalaPresentationCompiler => U): Option[U] = {
     def obtainPc(): ScalaPresentationCompiler = {
       pcLock.synchronized {
         /* If `restartNextTime` is set to `true`, either initializing or restarting the presentation compiler is enough to fulfill the contract.
@@ -64,7 +67,7 @@ class ScalaPresentationCompilerProxy(project: ScalaProject) extends HasLogger {
       }
     }
 
-    op(obtainPc())
+    Option(obtainPc()) map op
   }
 
   /** Updates `pc` with a new Presentation Compiler instance.
@@ -126,14 +129,14 @@ class ScalaPresentationCompilerProxy(project: ScalaProject) extends HasLogger {
     }
     catch {
       case ex @ MissingRequirementError(required) =>
-        project.failedCompilerInitialization("could not find a required class: " + required)
+        failedCompilerInitialization("could not find a required class: " + required)
         eclipseLog.error(ex)
         null
       case ex: Throwable =>
         logger.info("Throwable when intializing presentation compiler!!! " + ex.getMessage)
         ex.printStackTrace()
         if (project.underlying.isOpen)
-          project.failedCompilerInitialization("error initializing Scala compiler")
+          failedCompilerInitialization("error initializing Scala compiler")
         eclipseLog.error(ex)
         null
     }
@@ -156,5 +159,26 @@ class ScalaPresentationCompilerProxy(project: ScalaProject) extends HasLogger {
       YpresentationLog,
       YpresentationReplay,
       YpresentationDelay)
+  }
+
+  private val messageShowed: AtomicBoolean = new AtomicBoolean(false)
+
+  // FIXME: This should really be moved somewhere else!
+  private def failedCompilerInitialization(msg: String) {
+    logger.debug("failedCompilerInitialization: " + msg)
+    val messageAlreadyShown = messageShowed.getAndSet(true)
+    if(!messageAlreadyShown && !ScalaPlugin.plugin.headlessMode) {
+      DisplayThread.asyncExec {
+        import org.eclipse.jface.dialogs.MessageDialog
+        val doAdd = MessageDialog.openQuestion(ScalaPlugin.getShell, "Add Scala library to project classpath?",
+          ("There was an error initializing the Scala compiler: %s. \n\n"+
+           "The editor compiler will be restarted when the project is cleaned or the classpath is changed.\n\n" +
+           "Add the Scala library to the classpath of project %s?")
+          .format(msg, project.underlying.getName))
+        if (doAdd) Utils.tryExecute {
+          Nature.addScalaLibAndSave(project.underlying)
+        }
+      }
+    }
   }
 }

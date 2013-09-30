@@ -6,22 +6,20 @@
 package scala.tools.eclipse
 
 import java.io.File.pathSeparator
+
 import scala.collection.immutable
 import scala.collection.mutable
-import scala.reflect.internal.util.BatchSourceFile
 import scala.reflect.internal.util.SourceFile
 import scala.tools.eclipse.javaelements.ScalaSourceFile
 import scala.tools.eclipse.logging.HasLogger
 import scala.tools.eclipse.properties.CompilerSettings
 import scala.tools.eclipse.properties.IDESettings
 import scala.tools.eclipse.properties.PropertyStore
-import scala.tools.eclipse.ui.DisplayThread
 import scala.tools.eclipse.ui.PartAdapter
 import scala.tools.eclipse.util.EclipseResource
 import scala.tools.eclipse.util.Trim
-import scala.tools.eclipse.util.Utils
-import scala.tools.nsc.MissingRequirementError
 import scala.tools.nsc.Settings
+
 import org.eclipse.core.resources.IContainer
 import org.eclipse.core.resources.IFile
 import org.eclipse.core.resources.IMarker
@@ -38,14 +36,12 @@ import org.eclipse.jdt.core.IJavaProject
 import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jdt.core.JavaModelException
 import org.eclipse.jdt.internal.core.util.Util
-import org.eclipse.jface.dialogs.MessageDialog
+import org.eclipse.jface.preference.IPersistentPreferenceStore
 import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.ui.IEditorPart
 import org.eclipse.ui.IPartListener
 import org.eclipse.ui.IWorkbenchPart
 import org.eclipse.ui.part.FileEditorInput
-import org.eclipse.jface.preference.IPersistentPreferenceStore
-import java.util.concurrent.atomic.AtomicBoolean
 
 trait BuildSuccessListener {
   def buildSuccessful(): Unit
@@ -83,7 +79,7 @@ object ScalaProject {
               if (f.getProject == project.underlying &&  f.getName.endsWith(ScalaPlugin.plugin.scalaFileExtn)) {
                 for (ssf <- ScalaSourceFile.createFromPath(f.getFullPath.toString)) {
                   if (project.underlying.isOpen)
-                    project.doWithPresentationCompiler(op(_, ssf)) // so that an exception is not thrown
+                    project.presentationCompiler(op(_, ssf))
                 }
               }
             case _ =>
@@ -105,6 +101,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
 
   private val worbenchPartListener: IPartListener = new ScalaProject.ProjectPartListener(this)
 
+  @deprecated("Don't use or depend on this because it will be removed soon.", since = "4.0.0")
   case class InvalidCompilerSettings() extends RuntimeException(
         "Scala compiler cannot initialize for project: " + underlying.getName +
               ". Please check that your classpath contains the standard Scala library.")
@@ -117,26 +114,6 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
   private def init(): Unit = {
     if(!ScalaPlugin.plugin.headlessMode)
       ScalaPlugin.getWorkbenchWindow map (_.getPartService().addPartListener(worbenchPartListener))
-  }
-
-  private val messageShowed: AtomicBoolean = new AtomicBoolean(false)
-
-  def failedCompilerInitialization(msg: String) {
-    logger.debug("failedCompilerInitialization: " + msg)
-    val messageAlreadyShown = messageShowed.getAndSet(true)
-    if(!messageAlreadyShown && !plugin.headlessMode) {
-      DisplayThread.asyncExec {
-        import org.eclipse.jface.dialogs.MessageDialog
-        val doAdd = MessageDialog.openQuestion(ScalaPlugin.getShell, "Add Scala library to project classpath?",
-          ("There was an error initializing the Scala compiler: %s. \n\n"+
-           "The editor compiler will be restarted when the project is cleaned or the classpath is changed.\n\n" +
-           "Add the Scala library to the classpath of project %s?")
-          .format(msg, underlying.getName))
-        if (doAdd) Utils.tryExecute {
-          Nature.addScalaLibAndSave(underlying)
-        }
-      }
-    }
   }
 
   /** Does this project have the Scala nature? */
@@ -534,17 +511,14 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
   }
 
   /**
-   * Performs `op` on the presentation compiler, if the compiler has been initialized.
+   * Performs `op` on the presentation compiler, if the compiler could be initialized.
    * Otherwise, do nothing (no exception thrown).
    */
-  def doWithPresentationCompiler(op: ScalaPresentationCompiler => Unit): Unit = {
-    presentationCompiler { c => if(c ne null) op(c) }
-  }
+  @deprecated("Use `presentationCompiler.apply` instead", since = "4.0.0")
+  def doWithPresentationCompiler(op: ScalaPresentationCompiler => Unit): Unit = presentationCompiler(op)
 
+  @deprecated("Don't use or depend on this because it will be removed soon.", since = "4.0.0")
   def defaultOrElse[T]: T = {
-    if (underlying.isOpen)
-      failedCompilerInitialization("")
-
     throw InvalidCompilerSettings()
   }
 
@@ -553,11 +527,9 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
    * the default handler throws an `InvalidCompilerSettings` exception
    * If T = Unit, then doWithPresentationCompiler can be used, which does not throw.
    */
+  @deprecated("Use `presentationCompiler.apply` instead", since = "4.0.0")
   def withPresentationCompiler[T](op: ScalaPresentationCompiler => T)(orElse: => T = defaultOrElse): T = {
-    presentationCompiler { c =>
-      if(c ne null) op(c)
-      else orElse
-    }
+    presentationCompiler(op) getOrElse defaultOrElse
   }
 
   @deprecated("Use `InteractiveCompilationUnit.withSourceFile` instead", since = "4.0.0")

@@ -60,7 +60,7 @@ class AbstractSymbolClassifierTest {
 
   private def classifySymbols(source: String, restrictToRegions: Set[IRegion]): List[(IRegion, SymbolInfo)] = {
     val sourceFile = new BatchSourceFile("", source)
-    project.withPresentationCompiler { compiler =>
+    project.presentationCompiler { compiler =>
       // first load the source
       val dummy = new compiler.Response[Unit]
       compiler.askReload(List(sourceFile), dummy)
@@ -73,7 +73,7 @@ class AbstractSymbolClassifierTest {
         region <- symbolInfo.regions
         if restrictToRegions exists region.intersects
       } yield (region, symbolInfo)
-    }(orElse = Nil)
+    } getOrElse Nil
   }.distinct sortBy regionOffset
 
   private def regionOffset(regionAndSymbolInfo: (IRegion, _)) = regionAndSymbolInfo._1.getOffset
