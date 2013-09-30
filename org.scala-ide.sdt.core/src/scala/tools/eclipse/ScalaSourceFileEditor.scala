@@ -141,14 +141,6 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationU
     setKeyBindingScopes(Array(SCALA_EDITOR_SCOPE))
   }
 
-  override def setSourceViewerConfiguration(configuration: SourceViewerConfiguration) {
-    super.setSourceViewerConfiguration(
-      configuration match {
-        case svc: ScalaSourceViewerConfiguration => svc
-        case _ => new ScalaSourceViewerConfiguration(javaPrefStore, scalaPrefStore, this)
-      })
-  }
-
   override def updateOccurrenceAnnotations(selection: ITextSelection, astRoot: CompilationUnit): Unit = {
     askForOccurrencesUpdate(selection)
   }

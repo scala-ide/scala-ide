@@ -560,4 +560,12 @@ abstract class AbstractNewElementWizardPage extends NewTypeWizardPage(1, "") wit
   def isDefaultPackage = getPackageText() == ""
 
   def getFullyQualifiedName = if (isDefaultPackage) getTypeNameWithoutParameters else getPackageText() + "." + getTypeNameWithoutParameters
+
+  protected def initializeIfNotNull(dialogSettings: IDialogSettings)(f: IDialogSettings => Unit) {
+    if (dialogSettings != null) {
+      val section = dialogSettings.getSection(PAGE_NAME)
+      if (section != null)
+        f(section)
+    }
+  }
 }
