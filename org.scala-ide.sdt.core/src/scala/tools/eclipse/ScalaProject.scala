@@ -675,13 +675,14 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
     presentationCompiler.askRestart()
   }
 
-  def shutDownCompilers() {
-    logger.info("shutting down compilers for " + this)
-    resetBuildCompiler()
-    presentationCompiler.shutdown()
-  }
+  /** Should only be called when `this` project is being deleted or closed from the workspace. */
+  private[eclipse] def dispose(): Unit = {
+    def shutDownCompilers() {
+      logger.info("shutting down compilers for " + this)
+      resetBuildCompiler()
+      presentationCompiler.shutdown()
+    }
 
-  def dispose(): Unit = {
     if(!ScalaPlugin.plugin.headlessMode)
       ScalaPlugin.getWorkbenchWindow map (_.getPartService().removePartListener(worbenchPartListener))
     shutDownCompilers()
