@@ -84,12 +84,11 @@ trait FullProjectIndex extends HasLogger {
         sourceFiles.toList
       }
 
-      allScalaSourceFiles map { ssf =>
-        if(pm.isCanceled)
-          return Nil
-        else
-          ssf.withSourceFile { (sourceFile, _) => sourceFile}()
+      val sources: List[SourceFile] = allScalaSourceFiles flatMap { ssf =>
+        if(pm.isCanceled) return Nil
+        else ssf.withSourceFile { (sourceFile, _) => sourceFile}.toList
       }
+      sources
     }
 
     /**

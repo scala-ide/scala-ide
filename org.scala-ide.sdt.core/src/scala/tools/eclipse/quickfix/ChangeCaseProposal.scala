@@ -48,7 +48,7 @@ object ChangeCaseProposal {
           val tpe = typedTree.tpe.resultType.underlying
           if (tpe.isError) Nil else tpe.members.map(_.nameString).toList.distinct
         })
-      })(None)
+      }).flatten
       memberNames.getOrElse(Nil)
     }
 
@@ -66,7 +66,7 @@ object ChangeCaseProposal {
           compiler.askScopeCompletion(new RangePosition(srcFile, offset, offset, offset), completed)
           completed.get.left.getOrElse(Nil).map(_.sym.nameString).distinct
         })
-      })(None)
+      }).flatten
       memberNames.getOrElse(Nil)
     }
 

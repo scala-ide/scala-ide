@@ -142,7 +142,7 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
 
   override def currentProblems(): List[IProblem] = withSourceFile { (src, compiler) =>
     compiler.problemsOf(this)
-  } (List())
+  } getOrElse Nil
 
   override def getType(name : String) : IType = new LazyToplevelClass(this, name)
 

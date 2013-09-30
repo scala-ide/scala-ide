@@ -224,5 +224,5 @@ object JUnit4TestFinder {
       jdtElement <- comp.getJavaElement(cdef.symbol, scu.getJavaProject)
       jdtType <- jdtElement.asInstanceOfOpt[IType]
     } yield jdtType
-  }()
+  } getOrElse Nil
 }

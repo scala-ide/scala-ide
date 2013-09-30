@@ -60,7 +60,7 @@ case class ImportCompletionProposal(val importName: String) extends IJavaComplet
              }
          }) getOrElse Nil
 
-      }(Nil)
+      } getOrElse (Nil)
 
       EditorHelpers.applyChangesToFileWhileKeepingSelection(document, textSelection, scalaSourceFile.file, changes)
 

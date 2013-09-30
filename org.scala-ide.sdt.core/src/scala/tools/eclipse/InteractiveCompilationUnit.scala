@@ -64,11 +64,9 @@ trait InteractiveCompilationUnit {
   /** Perform an operation on the source file, with the current presentation compiler.
    *
    *  @param op The operation to be performed
-   *  @param orElse A recovery option in case the presentation compiler is not available (for instance, if it cannot be
-   *                started because of classpath issues)
    */
-  def withSourceFile[T](op: (SourceFile, ScalaPresentationCompiler) => T)(orElse: => T = scalaProject.defaultOrElse): T = {
-    scalaProject.presentationCompiler(op(sourceFile, _)) getOrElse (orElse)
+  def withSourceFile[T](op: (SourceFile, ScalaPresentationCompiler) => T): Option[T] = {
+    scalaProject.presentationCompiler(op(sourceFile, _))
   }
 
   /** Schedule the unit for reconciliation. Not blocking. Used by the usual Scala editor to signal a need for `askReload`,

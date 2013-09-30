@@ -96,9 +96,9 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings) exten
 
   def problemsOf(scu: ScalaCompilationUnit): List[IProblem] = problemsOf(scu.file)
 
-  @deprecated("Use `InteractiveCompilationUnit.withSourceFile instead`", since = "4.0.0")
+  @deprecated("Use `InteractiveCompilationUnit.withSourceFile` instead", since = "4.0.0")
   def withSourceFile[T](icu: InteractiveCompilationUnit)(op: (SourceFile, ScalaPresentationCompiler) => T): T =
-    icu.withSourceFile(op)()
+    icu.withSourceFile(op) getOrElse (throw new UnsupportedOperationException("Use `InteractiveCompilationUnit.withSourceFile`"))
 
   def body(sourceFile: SourceFile): Either[Tree, Throwable] = {
     val response = new Response[Tree]

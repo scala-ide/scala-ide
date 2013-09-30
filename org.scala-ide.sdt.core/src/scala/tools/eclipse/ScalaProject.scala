@@ -534,7 +534,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
 
   @deprecated("Use `InteractiveCompilationUnit.withSourceFile` instead", since = "4.0.0")
   def withSourceFile[T](scu: InteractiveCompilationUnit)(op: (SourceFile, ScalaPresentationCompiler) => T)(orElse: => T = defaultOrElse): T = {
-    scu.withSourceFile(op)(orElse)
+    scu.withSourceFile(op) getOrElse (orElse)
   }
 
   @deprecated("Use `presentationCompiler.askRestart()` instead", since = "4.0.0")

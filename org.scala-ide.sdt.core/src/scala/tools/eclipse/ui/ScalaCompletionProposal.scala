@@ -143,22 +143,21 @@ class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: I
       val completionChange = scalaSourceFile.withSourceFile { (sourceFile, _) =>
         val endPos = if (overwrite) startPos + existingIdentifier(d, offset).getLength() else offset
         TextChange(sourceFile, startPos, endPos, completionFullString)
-      }()
-
-      val importStmt = if (needImport) { // add an import statement if required
-        scalaSourceFile.withSourceFile { (_, compiler) =>
-          val refactoring = new AddImportStatement { val global = compiler }
-          refactoring.addImport(scalaSourceFile.file, fullyQualifiedName)
-        }(Nil)
-      } else {
-        Nil
       }
+
+      val importStmt =
+        if (needImport) { // add an import statement if required
+          scalaSourceFile.withSourceFile { (_, compiler) =>
+            val refactoring = new AddImportStatement { val global = compiler }
+            refactoring.addImport(scalaSourceFile.file, fullyQualifiedName)
+          } getOrElse (Nil)
+        } else Nil
 
       // Apply the two changes in one step, if done separately we would need an
       // another `waitLoadedType` to update the positions for the refactoring
       // to work properly.
       EditorHelpers.applyChangesToFileWhileKeepingSelection(
-        d, textSelection, scalaSourceFile.file, completionChange :: importStmt)
+        d, textSelection, scalaSourceFile.file, completionChange.toList ::: importStmt)
 
       importStmt.headOption.map(_.text.length)
     }
