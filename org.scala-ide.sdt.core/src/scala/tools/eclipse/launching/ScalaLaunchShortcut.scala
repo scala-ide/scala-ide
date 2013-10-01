@@ -228,7 +228,7 @@ object ScalaLaunchShortcut {
               Nil
           }
 
-        }()
+        } getOrElse Nil
 
       case _ => Nil
     }) getOrElse Nil

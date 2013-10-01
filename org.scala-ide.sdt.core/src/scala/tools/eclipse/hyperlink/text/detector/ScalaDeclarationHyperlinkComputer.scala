@@ -77,7 +77,7 @@ class ScalaDeclarationHyperlinkComputer extends HasLogger {
           }
         }.flatten.headOption
       }
-    })(None)
+    }).flatten
   }
 
 }

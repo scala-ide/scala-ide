@@ -142,7 +142,7 @@ class Presenter(
           } else Status.OK_STATUS
         }
         else Status.OK_STATUS
-      }(Status.OK_STATUS)
+      } getOrElse (Status.OK_STATUS)
     }
 
     private def runPositionsUpdateInUiThread(newPositions: Array[Position], damagedRegion: IRegion): Unit =

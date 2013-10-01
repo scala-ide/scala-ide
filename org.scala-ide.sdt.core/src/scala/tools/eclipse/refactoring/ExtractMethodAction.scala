@@ -29,7 +29,7 @@ class ExtractMethodAction extends RefactoringActionWithWizard {
         val tree = askLoadedAndTypedTreeForFile(sourceFile).left.get
         global.ask(() => GlobalIndex(tree))
       }
-    })()
+    }) getOrElse fail()
 
     var name = ""
 

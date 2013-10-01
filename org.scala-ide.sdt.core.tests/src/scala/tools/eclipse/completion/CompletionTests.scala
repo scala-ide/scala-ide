@@ -78,7 +78,7 @@ class CompletionTests {
         val sortedCompletions = completions.sortWith((x,y) => x.relevance >= y.relevance)
         body(i, position, sortedCompletions)
       }
-    }()
+    }
   }
 
   /**

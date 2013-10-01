@@ -86,7 +86,7 @@ class JUnit4TestFinder extends ITestFinder with ISearchMethods with HasLogger {
     val emptySet = immutable.Set[String]()
 
     val res = ScalaPlugin.plugin.asScalaProject(javaProject.getProject()) map { scalaProject =>
-      scalaProject.withPresentationCompiler { comp =>
+      scalaProject.presentationCompiler { comp =>
         import comp._
         object helper extends JUnit4TestClassesCollector { val global: comp.type = comp }
 
@@ -102,7 +102,7 @@ class JUnit4TestFinder extends ITestFinder with ISearchMethods with HasLogger {
           sym.annotations
           sym.info.members.filter(hasTestAnnotation).map(_.originalName.toString).toSet
         } getOrElse (emptySet)
-      }(emptySet)
+      } getOrElse (emptySet)
     } getOrElse (emptySet)
 
     res.asJava
@@ -224,5 +224,5 @@ object JUnit4TestFinder {
       jdtElement <- comp.getJavaElement(cdef.symbol, scu.getJavaProject)
       jdtType <- jdtElement.asInstanceOfOpt[IType]
     } yield jdtType
-  }()
+  } getOrElse Nil
 }

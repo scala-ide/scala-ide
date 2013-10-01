@@ -42,7 +42,7 @@ class ScalaHover(val icu: InteractiveCompilationUnit) extends ITextHover {
         t <- resp.get.left.toOption;
         hover <- hoverInfo(t)
       ) yield hover) getOrElse NoHoverInfo
-    })(NoHoverInfo)
+    }) getOrElse (NoHoverInfo)
   }
 
   override def getHoverRegion(viewer: ITextViewer, offset: Int) = {

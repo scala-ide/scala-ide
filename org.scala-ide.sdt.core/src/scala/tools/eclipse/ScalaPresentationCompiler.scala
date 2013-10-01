@@ -26,7 +26,6 @@ import scala.tools.eclipse.javaelements.ScalaJavaMapper
 import scala.tools.eclipse.javaelements.ScalaMatchLocator
 import scala.tools.eclipse.javaelements.ScalaStructureBuilder
 import scala.tools.eclipse.javaelements.ScalaOverrideIndicatorBuilder
-import scala.tools.eclipse.util.Cached
 import scala.tools.eclipse.util.EclipseFile
 import scala.tools.eclipse.util.EclipseResource
 import scala.tools.eclipse.logging.HasLogger
@@ -97,9 +96,9 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings) exten
 
   def problemsOf(scu: ScalaCompilationUnit): List[IProblem] = problemsOf(scu.file)
 
-  @deprecated("Use `InteractiveCompilationUnit.withSourceFile instead`", since = "4.0.0")
+  @deprecated("Use `InteractiveCompilationUnit.withSourceFile` instead", since = "4.0.0")
   def withSourceFile[T](icu: InteractiveCompilationUnit)(op: (SourceFile, ScalaPresentationCompiler) => T): T =
-    icu.withSourceFile(op)()
+    icu.withSourceFile(op) getOrElse (throw new UnsupportedOperationException("Use `InteractiveCompilationUnit.withSourceFile`"))
 
   def body(sourceFile: SourceFile): Either[Tree, Throwable] = {
     val response = new Response[Tree]
@@ -389,5 +388,3 @@ object ScalaPresentationCompiler {
     }
   }
 }
-
-

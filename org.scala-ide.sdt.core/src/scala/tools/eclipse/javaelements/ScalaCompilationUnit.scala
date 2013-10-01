@@ -94,7 +94,7 @@ trait ScalaCompilationUnit extends Openable
 
   override def bufferChanged(e : BufferChangedEvent) {
     if (!e.getBuffer.isClosed)
-      scalaProject.doWithPresentationCompiler(_.askReload(this, getContents))
+      scalaProject.presentationCompiler(_.askReload(this, getContents))
 
     super.bufferChanged(e)
   }
@@ -146,7 +146,7 @@ trait ScalaCompilationUnit extends Openable
           logger.error("Compiler crash while building structure for %s".format(file), ex)
           false
       }
-    })(false)
+    }) getOrElse false
   }
 
 
@@ -239,7 +239,7 @@ trait ScalaCompilationUnit extends Openable
 
       val res = element.getOrElse(Array.empty[IJavaElement])
       res
-    }(Array.empty[IJavaElement])
+    } getOrElse (Array.empty[IJavaElement])
   }
 
   override def codeComplete(cu : env.ICompilationUnit, unitToSkip : env.ICompilationUnit, position : Int,

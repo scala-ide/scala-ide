@@ -55,7 +55,6 @@ class ContinuationPluginSettingsTest {
     setPrefToDefault("Xpluginsdir")
     setPrefToDefault("Xplugin")
     forceEnableContinuationForNewerScalaVersion()
-    project.resetPresentationCompiler()
     val plugins = loadedPlugins(project)
     Assert.assertEquals("Loaded plugins: ", List("continuations"), loadedPlugins(project))
   }
@@ -65,7 +64,6 @@ class ContinuationPluginSettingsTest {
     setPrefValue("Xpluginsdir", ScalaPlugin.plugin.defaultPluginsDir)
     setPrefValue("Xplugin", "/doesnotexits")
     forceEnableContinuationForNewerScalaVersion()
-    project.resetPresentationCompiler()
     val plugins = loadedPlugins(project)
     Assert.assertEquals("Loaded plugins: ", List("continuations"), loadedPlugins(project))
   }
@@ -75,7 +73,6 @@ class ContinuationPluginSettingsTest {
     setPrefValue("Xpluginsdir", "/doesnotexist")
     setPrefValue("Xplugin", ScalaPlugin.plugin.defaultPluginsDir + File.separator + "continuations.jar")
     forceEnableContinuationForNewerScalaVersion()
-    project.resetPresentationCompiler()
     val plugins = loadedPlugins(project)
     Assert.assertEquals("Loaded plugins: ", List("continuations"), loadedPlugins(project))
   }
@@ -85,7 +82,6 @@ class ContinuationPluginSettingsTest {
     setPrefValue("Xpluginsdir", "/doesnotexist")
     setPrefValue("Xplugin", "/doesnotexits")
     forceEnableContinuationForNewerScalaVersion()
-    project.resetPresentationCompiler()
 
     project.underlying.build(IncrementalProjectBuilder.CLEAN_BUILD, new NullProgressMonitor)
     project.underlying.build(IncrementalProjectBuilder.FULL_BUILD, new NullProgressMonitor)
@@ -94,13 +90,14 @@ class ContinuationPluginSettingsTest {
   }
 
   private def loadedPlugins(project: ScalaProject): List[String] = {
-    val plugins = project.withPresentationCompiler(comp => comp.plugins)(List[Plugin]())
+    val plugins = project.presentationCompiler(_.plugins) getOrElse Nil
     plugins.map(_.name)
   }
 
   private def forceEnableContinuationForNewerScalaVersion() {
     if (TestUtil.installedScalaVersionGreaterOrEqualsTo(new Version(2, 11, 0)))
       setPrefValue("P", "continuations:enable")
+    project.presentationCompiler.askRestart()
   }
 
 }

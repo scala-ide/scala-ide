@@ -21,7 +21,7 @@ class PresentationCompilerTest {
 
   @Before
   def reset() {
-    project.resetPresentationCompiler()
+    project.presentationCompiler.shutdown()
   }
 
   @Test
@@ -43,11 +43,13 @@ class PresentationCompilerTest {
           overrideIndicatorBuilder.traverse(tree)
         }
       }
-    }()
+    }
 
     // verify
     verify(mockLogger, times(0)).error(any())
   }
+
+  private def managedUnits(): Set[InteractiveCompilationUnit] = project.presentationCompiler(_.compilationUnits.toSet).orNull
 
   @Test
   def freshFileReportsErrors() {
@@ -107,10 +109,6 @@ class FreshFile {
 
   @Test
   def pcShouldReportTheCorrectCompilationUnitsItKnowsAbout() {
-    def managedUnits() = project.withPresentationCompiler(_.compilationUnits)()
-
-    project.shutDownCompilers()
-
     // should be empty
     Assert.assertTrue("Presentation compiler should not maintain any units after a shutdown request", managedUnits().isEmpty)
 
@@ -127,18 +125,15 @@ class FreshFile {
 
   @Test
   def pcShouldReportTheCorrectCompilationUnitsOnShutdown() {
-    def managedUnits() = project.withPresentationCompiler(_.compilationUnits)()
-
-    project.shutDownCompilers()
-
     val cu = scalaCompilationUnit("t1000692/akka/util/ReflectiveAccess.scala")
     val cu1 = scalaCompilationUnit("t1000658/ThreadPoolConfig.scala")
 
     Seq(cu, cu1).foreach(_.scheduleReconcile().get)
 
-    Assert.assertEquals("Managed compilation units", Set(cu, cu1), managedUnits().toSet)
+    Assert.assertEquals("Managed compilation units", Set(cu, cu1), managedUnits())
 
-    val returned = project.shutDownPresentationCompiler().map(_.compilationUnits).getOrElse(Nil)
+    project.presentationCompiler.askRestart()
+    val returned = managedUnits().toSet
 
     // now the unit should be managed
     Assert.assertEquals("Presentation compiler should report one unit on shutdown", Set(cu, cu1), returned.toSet)
@@ -146,10 +141,6 @@ class FreshFile {
 
   @Test
   def pcShouldReloadAllUnitsOnReset() {
-    def managedUnits() = project.withPresentationCompiler(_.compilationUnits)()
-
-    project.shutDownCompilers()
-
     val cu = scalaCompilationUnit("t1000692/akka/util/ReflectiveAccess.scala")
     val cu1 = scalaCompilationUnit("t1000658/ThreadPoolConfig.scala")
 
@@ -157,7 +148,7 @@ class FreshFile {
 
     Assert.assertEquals("Managed compilation units", Set(cu, cu1), managedUnits().toSet)
 
-    project.resetPresentationCompiler()
+    project.presentationCompiler.askRestart()
 
     // now the unit should be managed
     Assert.assertEquals("Presentation compiler should report one unit on shutdown", Set(cu, cu1), managedUnits().toSet)

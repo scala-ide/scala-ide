@@ -6,23 +6,20 @@
 package scala.tools.eclipse
 
 import java.io.File.pathSeparator
+
 import scala.collection.immutable
 import scala.collection.mutable
-import scala.reflect.internal.util.BatchSourceFile
 import scala.reflect.internal.util.SourceFile
 import scala.tools.eclipse.javaelements.ScalaSourceFile
 import scala.tools.eclipse.logging.HasLogger
 import scala.tools.eclipse.properties.CompilerSettings
 import scala.tools.eclipse.properties.IDESettings
 import scala.tools.eclipse.properties.PropertyStore
-import scala.tools.eclipse.ui.DisplayThread
 import scala.tools.eclipse.ui.PartAdapter
-import scala.tools.eclipse.util.Cached
 import scala.tools.eclipse.util.EclipseResource
 import scala.tools.eclipse.util.Trim
-import scala.tools.eclipse.util.Utils
-import scala.tools.nsc.MissingRequirementError
 import scala.tools.nsc.Settings
+
 import org.eclipse.core.resources.IContainer
 import org.eclipse.core.resources.IFile
 import org.eclipse.core.resources.IMarker
@@ -39,13 +36,12 @@ import org.eclipse.jdt.core.IJavaProject
 import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jdt.core.JavaModelException
 import org.eclipse.jdt.internal.core.util.Util
-import org.eclipse.jface.dialogs.MessageDialog
+import org.eclipse.jface.preference.IPersistentPreferenceStore
 import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.ui.IEditorPart
 import org.eclipse.ui.IPartListener
 import org.eclipse.ui.IWorkbenchPart
 import org.eclipse.ui.part.FileEditorInput
-import org.eclipse.jface.preference.IPersistentPreferenceStore
 
 trait BuildSuccessListener {
   def buildSuccessful(): Unit
@@ -83,7 +79,7 @@ object ScalaProject {
               if (f.getProject == project.underlying &&  f.getName.endsWith(ScalaPlugin.plugin.scalaFileExtn)) {
                 for (ssf <- ScalaSourceFile.createFromPath(f.getFullPath.toString)) {
                   if (project.underlying.isOpen)
-                    project.doWithPresentationCompiler(op(_, ssf)) // so that an exception is not thrown
+                    project.presentationCompiler(op(_, ssf))
                 }
               }
             case _ =>
@@ -105,38 +101,12 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
 
   private val worbenchPartListener: IPartListener = new ScalaProject.ProjectPartListener(this)
 
+  @deprecated("Don't use or depend on this because it will be removed soon.", since = "4.0.0")
   case class InvalidCompilerSettings() extends RuntimeException(
         "Scala compiler cannot initialize for project: " + underlying.getName +
               ". Please check that your classpath contains the standard Scala library.")
 
-  private val presentationCompiler = new Cached[Option[ScalaPresentationCompiler]] {
-    override def create() = {
-      try {
-        val settings = ScalaPlugin.defaultScalaSettings()
-        initializeCompilerSettings(settings, isPCSetting(settings))
-        val pc = new ScalaPresentationCompiler(ScalaProject.this, settings)
-        logger.debug("Presentation compiler classpath: " + pc.classPath)
-        pc.askOption(() => pc.initializeRequiredSymbols())
-        Some(pc)
-      } catch {
-        case ex @ MissingRequirementError(required) =>
-          failedCompilerInitialization("could not find a required class: " + required)
-          eclipseLog.error(ex)
-          None
-        case ex: Throwable =>
-          logger.info("Throwable when intializing presentation compiler!!! " + ex.getMessage)
-          ex.printStackTrace()
-          if (underlying.isOpen)
-            failedCompilerInitialization("error initializing Scala compiler")
-          eclipseLog.error(ex)
-          None
-      }
-    }
-
-    override def destroy(compiler: Option[ScalaPresentationCompiler]) {
-      compiler.map(_.destroy())
-    }
-  }
+  val presentationCompiler = new ScalaPresentationCompilerProxy(this)
 
   /** To avoid letting 'this' reference escape during initialization, this method is called right after a
    * [[ScalaPlugin]] instance has been fully initialized.
@@ -144,50 +114,6 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
   private def init(): Unit = {
     if(!ScalaPlugin.plugin.headlessMode)
       ScalaPlugin.getWorkbenchWindow map (_.getPartService().addPartListener(worbenchPartListener))
-  }
-
-  /** Compiler settings that are honored by the presentation compiler. */
-  private def isPCSetting(settings: Settings): Set[Settings#Setting] = {
-    import settings.{ plugin => pluginSetting, _ }
-    Set(deprecation,
-        unchecked,
-        pluginOptions,
-        verbose,
-        Xexperimental,
-        future,
-        Ylogcp,
-        pluginSetting,
-        pluginsDir,
-        YpresentationDebug,
-        YpresentationVerbose,
-        YpresentationLog,
-        YpresentationReplay,
-        YpresentationDelay)
-  }
-
-  private var messageShowed = false
-
-  private def failedCompilerInitialization(msg: String) {
-    logger.debug("failedCompilerInitialization: " + msg)
-    import org.eclipse.jface.dialogs.MessageDialog
-    synchronized {
-      // FIXME: What's the purpose of having an `asyncExex` in a synchronized block?
-      if (!plugin.headlessMode && !messageShowed) {
-        messageShowed = true
-        DisplayThread.asyncExec {
-          val doAdd = MessageDialog.openQuestion(ScalaPlugin.getShell, "Add Scala library to project classpath?",
-              ("There was an error initializing the Scala compiler: %s. \n\n"+
-               "The editor compiler will be restarted when the project is cleaned or the classpath is changed.\n\n" +
-               "Add the Scala library to the classpath of project %s?")
-              .format(msg, underlying.getName))
-          if (doAdd) {
-            Utils tryExecute {
-              Nature.addScalaLibAndSave(underlying)
-            }
-          }
-        }
-      }
-    }
   }
 
   /** Does this project have the Scala nature? */
@@ -585,20 +511,14 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
   }
 
   /**
-   * Performs `op` on the presentation compiler, if the compiler has been initialized.
+   * Performs `op` on the presentation compiler, if the compiler could be initialized.
    * Otherwise, do nothing (no exception thrown).
    */
-  def doWithPresentationCompiler(op: ScalaPresentationCompiler => Unit): Unit = {
-    presentationCompiler {
-      case Some(c) => op(c)
-      case None =>
-    }
-  }
+  @deprecated("Use `presentationCompiler.apply` instead", since = "4.0.0")
+  def doWithPresentationCompiler(op: ScalaPresentationCompiler => Unit): Unit = presentationCompiler(op)
 
+  @deprecated("Don't use or depend on this because it will be removed soon.", since = "4.0.0")
   def defaultOrElse[T]: T = {
-    if (underlying.isOpen)
-      failedCompilerInitialization("")
-
     throw InvalidCompilerSettings()
   }
 
@@ -607,38 +527,21 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
    * the default handler throws an `InvalidCompilerSettings` exception
    * If T = Unit, then doWithPresentationCompiler can be used, which does not throw.
    */
+  @deprecated("Use `presentationCompiler.apply` instead", since = "4.0.0")
   def withPresentationCompiler[T](op: ScalaPresentationCompiler => T)(orElse: => T = defaultOrElse): T = {
-    presentationCompiler {
-      case Some(c) => op(c)
-      case None => orElse
-    }
+    presentationCompiler(op) getOrElse defaultOrElse
   }
 
-  @deprecated("Use `InteractiveCompilationUnit.withSourceFile instead`", since = "4.0.0")
+  @deprecated("Use `InteractiveCompilationUnit.withSourceFile` instead", since = "4.0.0")
   def withSourceFile[T](scu: InteractiveCompilationUnit)(op: (SourceFile, ScalaPresentationCompiler) => T)(orElse: => T = defaultOrElse): T = {
-    scu.withSourceFile(op)(orElse)
+    scu.withSourceFile(op) getOrElse (orElse)
   }
 
-  /** Shutdown the presentation compiler, and force a re-initialization but asking to reconcile all
-   *  compilation units that were serviced by the previous instance of the PC. Does nothing if
-   *  the presentation compiler is not yet initialized.
-   *
-   *  @return true if the presentation compiler was initialized at the time of this call.
-   *
-   *  @note This method isn't thread-safe, but plain synchronization can't be added without
-   *        the risk of deadlocks (see #1001875)
-   */
-  def resetPresentationCompiler(): Boolean =
-    if (presentationCompiler.initialized) {
-      val units = shutDownPresentationCompiler().map(_.compilationUnits).getOrElse(Nil)
-
-      // if several threads call this method, there might be a lost update
-      doWithPresentationCompiler { _.askReload(units).get  }
-      true
-    } else {
-      logger.info("[%s] Presentation compiler was not yet initialized, ignoring reset.".format(underlying.getName()))
-      false
-    }
+  @deprecated("Use `presentationCompiler.askRestart()` instead", since = "4.0.0")
+  def resetPresentationCompiler(): Boolean = {
+    presentationCompiler.askRestart()
+    true
+  }
 
   def buildManager: EclipseBuildManager = {
     if (buildManager0 == null) {
@@ -706,7 +609,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
       dependentScalaProject <- plugin.asScalaProject(prj)
     } {
       logger.debug("[%s] Reset PC of referring project %s".format(this, dependentScalaProject))
-      dependentScalaProject.resetPresentationCompiler()
+      dependentScalaProject.presentationCompiler.askRestart()
     }
   }
 
@@ -736,24 +639,17 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
   protected def resetCompilers(implicit monitor: IProgressMonitor = null) = {
     logger.info("resetting compilers!  project: " + this.toString)
     resetBuildCompiler()
-    resetPresentationCompiler()
+    presentationCompiler.askRestart()
   }
 
-  def shutDownCompilers() {
-    logger.info("shutting down compilers for " + this)
-    resetBuildCompiler()
-    shutDownPresentationCompiler()
-  }
+  /** Should only be called when `this` project is being deleted or closed from the workspace. */
+  private[eclipse] def dispose(): Unit = {
+    def shutDownCompilers() {
+      logger.info("shutting down compilers for " + this)
+      resetBuildCompiler()
+      presentationCompiler.shutdown()
+    }
 
-  /** Shut down presentation compiler without scheduling a reconcile for open files.
-   *
-   *  @return The old presentation compiler instance, if any.
-   */
-  def shutDownPresentationCompiler(): Option[ScalaPresentationCompiler] = {
-    presentationCompiler.invalidate().flatten
-  }
-
-  def dispose(): Unit = {
     if(!ScalaPlugin.plugin.headlessMode)
       ScalaPlugin.getWorkbenchWindow map (_.getPartService().removePartListener(worbenchPartListener))
     shutDownCompilers()

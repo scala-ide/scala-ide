@@ -46,24 +46,24 @@ class RenameAction extends ActionAdapter {
   private def isLocalRename: Boolean = {
 
     val isLocalRename = EditorHelpers.withScalaFileAndSelection { (scalaFile, selected) =>
-      scalaFile.withSourceFile{(file, compiler) =>
+      scalaFile.withSourceFile{(source, compiler) =>
         val refactoring = new Rename with GlobalIndexes {
           val global = compiler
           val index = EmptyIndex
         }
 
-        val selection = refactoring.askLoadedAndTypedTreeForFile(file).left.toOption map { tree =>
+        val selection = refactoring.askLoadedAndTypedTreeForFile(source).left.toOption map { tree =>
           val start = selected.getOffset
           val end = start + selected.getLength
-          new refactoring.FileSelection(file.file, tree, start, end)
+          new refactoring.FileSelection(source.file, tree, start, end)
         }
 
         selection map refactoring.prepare flatMap (_.right.toOption) map {
           case refactoring.PreparationResult(_, isLocal) => isLocal
           case _ => false
         }
-      }()
-    } getOrElse false
+      }
+    }.flatten getOrElse false
 
     isLocalRename
   }
