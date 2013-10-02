@@ -1,8 +1,12 @@
 package scala.tools.eclipse.findreferences
 
-import scala.tools.eclipse.javaelements.SymbolNameUtil
+object FindReferencesTester {
+  final val MODULE_SUFFIX_STRING = "$"
+}
 
 trait FindReferencesTester {
+
+  import FindReferencesTester._
 
   object Element {
     import scala.language.implicitConversions
@@ -29,8 +33,8 @@ trait FindReferencesTester {
   def fieldVal(fullName: String): Element = FieldVal(fullName)
   def clazz(fullName: String): Element = Clazz(fullName)
   def clazzConstructor(classFullName: String, args: List[String] = Nil): Element = Method(constructorFullName(classFullName), args)
-  def module(fullName: String): Element = Module(fullName + SymbolNameUtil.MODULE_SUFFIX_STRING)
-  def moduleConstructor(fullName: String, args: List[String] = Nil): Element = Method(constructorFullName(fullName + SymbolNameUtil.MODULE_SUFFIX_STRING), args)
+  def module(fullName: String): Element = Module(fullName + MODULE_SUFFIX_STRING)
+  def moduleConstructor(fullName: String, args: List[String] = Nil): Element = Method(constructorFullName(fullName + MODULE_SUFFIX_STRING), args)
   def typeAlias(fullName: String): Element = TypeAlias(fullName)
 
   private def constructorFullName(classFullName: String): String = {

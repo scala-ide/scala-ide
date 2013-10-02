@@ -224,7 +224,7 @@ class ClasspathTests {
    * Two scala library defined in the classpath, the eclipse container one, and one incompatible.
    */
   @Test
-  def twoScalaLibrariesWithOneIncompatbile() {
+  def twoScalaLibrariesWithOneIncompatible() {
     setRawClasspathAndCheckMarkers(baseRawClasspath :+ createIncompatibleScalaLibraryEntry(), 0, 1)
   }
 
