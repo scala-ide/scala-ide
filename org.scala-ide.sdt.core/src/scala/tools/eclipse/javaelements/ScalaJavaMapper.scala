@@ -14,7 +14,7 @@ import org.eclipse.jdt.core._
 import org.eclipse.jdt.internal.core.JavaModelManager
 import org.eclipse.core.runtime.Path
 
-trait ScalaJavaMapper extends ScalaAnnotationHelper with SymbolNameUtil with HasLogger { self : ScalaPresentationCompiler =>
+trait ScalaJavaMapper extends ScalaAnnotationHelper with HasLogger { self : ScalaPresentationCompiler =>
 
   private[eclipse] def initializeRequiredSymbols() {
     import definitions._
@@ -156,10 +156,10 @@ trait ScalaJavaMapper extends ScalaAnnotationHelper with SymbolNameUtil with Has
   }
 
   /** Returns the fully-qualified name for the passed symbol (it expects the symbol to be a type).*/
-  def mapType(s: Symbol): String = mapType(s, javaClassName(_))
+  def mapType(s: Symbol): String = mapType(s, _.javaClassName)
 
   /** Returns the simple name for the passed symbol (it expects the symbol to be a type).*/
-  def mapSimpleType(s: Symbol): String = mapType(s, javaSimpleName(_))
+  def mapSimpleType(s: Symbol): String = mapType(s, _.javaSimpleName.toString)
 
   private def mapType(symbolType: Symbol, symbolType2StringName: Symbol => String): String = {
     val normalizedSymbol =

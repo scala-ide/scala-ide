@@ -68,9 +68,9 @@ class ScalaCodeScannerTest {
       val keywords = compiler.nme.keywords map (_.toString) filter isAlpha
       /*
        * Discard some keywords:
-       * - macro - not a keyword in 2.9, in 2.10 only in special places
+       * - macro - only a keyword in special places
        * - return - needs special handling, treated in its own test case
-       * - then - not yet a final keyword in 2.9 or 2.10
+       * - then - not yet a final keyword in 2.10
        */
       val testableKeywords = keywords filterNot Set("macro", "return", "then")
 
