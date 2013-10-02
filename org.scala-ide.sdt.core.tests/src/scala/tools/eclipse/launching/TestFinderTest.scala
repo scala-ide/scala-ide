@@ -20,7 +20,6 @@ class TestFinderTest {
   def project_possibleMatches() {
     val finder = new JUnit4TestFinder
 
-    val result = new mutable.HashSet[IType]
     val possibleMatches = finder.filteredTestResources(project, project.javaProject, new NullProgressMonitor)
     val expected = Set(getResource("/src/packa/TestA.scala"),
       getResource("/src/packa/FakeTest.scala"),
@@ -38,7 +37,6 @@ class TestFinderTest {
   def scala_package_possibleMatches() {
     val finder = new JUnit4TestFinder
 
-    val result = new mutable.HashSet[IType]
     val possibleMatches = finder.filteredTestResources(project, project.javaProject.findPackageFragment("/test-finder/src/packa"), new NullProgressMonitor)
     val expected = Set(getResource("/src/packa/TestA.scala"), getResource("/src/packa/FakeTest.scala"))
     assertEqualsSets("wrong filtered files", expected, possibleMatches.toSet)
@@ -207,6 +205,7 @@ class TestFinderTest {
   private def getResource(absolutePath: String): IResource =
     project.underlying.findMember(absolutePath)
 
+  import scala.language.implicitConversions
   implicit def stringsArePaths(str: String): Path = new Path(str)
 
   def assertEqualsSets[T](msg: String, set1: collection.Set[T], set2: collection.Set[T]) = {

@@ -7,7 +7,6 @@ package scala.tools.eclipse.util
 
 import scala.collection.mutable.LinkedHashMap
 
-import org.eclipse.jface.preference.PreferenceConverter
 import org.eclipse.swt.widgets.Display
 import org.eclipse.swt.graphics.Color
 import org.eclipse.swt.graphics.RGB

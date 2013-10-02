@@ -13,13 +13,13 @@ class CachedTest {
     }
   }
 
-  @Test(expected = classOf[RuntimeException]) def testDeadlock {
+  @Test(expected = classOf[RuntimeException]) def testDeadlock() {
     reentrant { x =>
       x + 1
     }
   }
 
-  @Test def testCorrectInit {
+  @Test def testCorrectInit() {
     val testVal = new Cached[Int] {
       def create() = {
         42

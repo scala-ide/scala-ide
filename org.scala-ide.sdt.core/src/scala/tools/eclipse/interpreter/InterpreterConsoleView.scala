@@ -81,7 +81,6 @@ trait InterpreterConsoleView { self: ViewPart =>
    * Display the string with code formatting
    */
   protected def displayCode(text: String) = displayPadded(codeBgColor) {
-    val colorManager = JavaPlugin.getDefault.getJavaTextTools.getColorManager
     val prefStore = ScalaPlugin.plugin.getPreferenceStore
     for (token <- ScalaLexer.rawTokenise(text, forgiveErrors = true)) {
       val textAttribute = ScalariformToSyntaxClass(token).getTextAttribute(prefStore)

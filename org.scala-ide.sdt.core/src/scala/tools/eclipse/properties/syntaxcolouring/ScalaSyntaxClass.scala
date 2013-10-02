@@ -10,8 +10,6 @@ import org.eclipse.swt.SWT
 import org.eclipse.swt.custom.StyleRange
 import org.eclipse.swt.graphics.Color
 
-import ScalaSyntaxClasses._
-
 case class ScalaSyntaxClass(displayName: String, baseName: String, canBeDisabled: Boolean = false, hasForegroundColour: Boolean = true) {
 
   import ScalaSyntaxClasses._
@@ -42,9 +40,9 @@ case class ScalaSyntaxClass(displayName: String, baseName: String, canBeDisabled
     styleRange
   }
 
-  def populateStyleRange(styleRange: StyleRange, preferenceStore: IPreferenceStore) =
+  def populateStyleRange(styleRange: StyleRange, preferenceStore: IPreferenceStore): Unit =
     if (preferenceStore.getBoolean(enabledKey)) {
-      val StyleInfo(enabled, foregroundColour, backgroundColourOpt, bold, italic, underline) = getStyleInfo(preferenceStore)
+      val StyleInfo(_, foregroundColour, backgroundColourOpt, bold, italic, underline) = getStyleInfo(preferenceStore)
       val style = basicStyle(bold, italic)
       styleRange.fontStyle = style
       styleRange.foreground = foregroundColour.orNull

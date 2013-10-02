@@ -234,7 +234,7 @@ trait EclipseSettings {
     def createControl(page: Composite) {
       control = new Text(page, SWT.SINGLE | SWT.BORDER)
       control.setText(setting.value.mkString(", "))
-      var layout = data
+      val layout = data
       layout.widthHint = 200
       control.setLayoutData(layout)
       control.setMessage("Path is absolute or relative to workspace")

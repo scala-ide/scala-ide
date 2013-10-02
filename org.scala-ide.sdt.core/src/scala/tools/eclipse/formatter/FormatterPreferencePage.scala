@@ -17,13 +17,11 @@ import org.eclipse.jdt.internal.ui.preferences.PreferencesMessages
 import org.eclipse.jdt.ui.PreferenceConstants
 import org.eclipse.jdt.ui.text.IJavaPartitions
 import org.eclipse.jface.dialogs.MessageDialog
-import org.eclipse.jface.preference._
 import org.eclipse.jface.resource.JFaceResources
 import org.eclipse.jface.text._
 import org.eclipse.jface.util._
 import org.eclipse.swt.SWT
 import org.eclipse.swt.events._
-import org.eclipse.swt.layout._
 import org.eclipse.swt.widgets._
 import org.eclipse.ui._
 import org.eclipse.ui.dialogs.PreferencesUtil
@@ -31,11 +29,9 @@ import org.eclipse.ui.dialogs.PropertyPage
 import org.eclipse.ui.editors.text.TextEditor
 import scala.tools.eclipse.ScalaPlugin
 import scala.tools.eclipse.ScalaPreviewerFactory
-import scala.tools.eclipse.ScalaSourceViewerConfiguration
 import scala.tools.eclipse.formatter.FormatterPreferences._
 import scala.tools.eclipse.lexical.ScalaDocumentPartitioner
 import scala.tools.eclipse.properties.PropertyStore
-import scala.tools.eclipse.util.FileUtils._
 import scala.tools.eclipse.util.SWTUtils._
 import scalariform.formatter._
 import scalariform.formatter.preferences._

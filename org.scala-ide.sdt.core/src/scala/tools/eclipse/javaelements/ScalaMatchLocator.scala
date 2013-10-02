@@ -384,8 +384,6 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
   }
 
   class TypeDeclarationLocator(val scu: ScalaCompilationUnit, val matchLocator: MatchLocator, val pattern: TypeDeclarationPattern, val possibleMatch: PossibleMatch) extends MatchLocatorTraverser {
-    import MatchLocatorUtils._
-
     def report(tree: Tree) = tree match {
       case c: ClassDef if c.pos.isDefined =>
         reportTypeDefinition(c.symbol.tpe, c.pos)

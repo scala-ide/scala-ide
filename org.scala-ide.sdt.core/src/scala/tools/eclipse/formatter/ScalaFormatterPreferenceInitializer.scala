@@ -5,7 +5,6 @@ import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer
 import org.eclipse.core.runtime.preferences.DefaultScope
 
 import scala.tools.eclipse.ScalaPlugin
-import scalariform.formatter._
 import scalariform.formatter.preferences._
 
 class ScalaFormatterPreferenceInitializer extends AbstractPreferenceInitializer {

@@ -5,8 +5,6 @@
 
 package scala.tools.eclipse.javaelements
 
-import scala.util.control.Breaks._
-
 import org.eclipse.core.resources.IFile
 import org.eclipse.core.resources.IFolder
 import org.eclipse.core.resources.IProject

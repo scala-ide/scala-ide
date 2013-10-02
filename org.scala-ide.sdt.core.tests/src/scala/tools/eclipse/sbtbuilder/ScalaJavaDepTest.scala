@@ -22,7 +22,7 @@ class ScalaJavaDepTest {
   import ScalaJavaDepTest._
 
   @Before
-  def setupWorkspace {
+  def setupWorkspace() {
     SDTTestUtils.enableAutoBuild(false)
   }
 
@@ -117,7 +117,7 @@ class ScalaJavaDepTest {
   /**
    * Launch a clean build on the project.
    */
-  private def cleanProject: Unit = {
+  private def cleanProject(): Unit = {
     project.underlying.build(IncrementalProjectBuilder.CLEAN_BUILD, new NullProgressMonitor)
     project.underlying.build(IncrementalProjectBuilder.FULL_BUILD, new NullProgressMonitor)
   }

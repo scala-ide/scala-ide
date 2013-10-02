@@ -52,7 +52,8 @@ class SemanticHighlightingPositionsTest {
 
   private var testCode: String = _
   private var unit: ScalaCompilationUnit = _
-  private var compilationUnitEditor: InteractiveCompilationUnitEditor = mock(classOf[InteractiveCompilationUnitEditor])
+  private val compilationUnitEditor: InteractiveCompilationUnitEditor =
+    mock(classOf[InteractiveCompilationUnitEditor])
 
   @Before
   def createProject() {
@@ -256,6 +257,9 @@ class SemanticHighlightingPositionsTest {
 object SemanticHighlightingPositionsTest {
 
   class TextPresentationStub(override val sourceViewer: ISourceViewer) extends TextPresentationHighlighter {
+
+    import scala.language.reflectiveCalls
+
     @volatile private var reconciler: Job = _
     @volatile var positionsTracker: PositionsTracker = _
     @volatile var damagedRegion: IRegion = _

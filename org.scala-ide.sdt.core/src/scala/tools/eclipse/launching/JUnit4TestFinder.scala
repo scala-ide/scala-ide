@@ -7,7 +7,6 @@ import org.eclipse.core.runtime.IProgressMonitor
 import java.util.{ Set => JSet }
 import org.eclipse.jdt.core.IType
 import scala.tools.eclipse.ScalaPlugin
-import scala.tools.eclipse.javaelements.ScalaElement
 import org.eclipse.jdt.core.IPackageFragment
 import org.eclipse.core.resources.IProject
 import org.eclipse.jdt.internal.core.JavaProject

@@ -1,9 +1,6 @@
 package scala.tools.eclipse.launching
 
 import org.eclipse.debug.core.ILaunchConfiguration
-import org.eclipse.debug.core.model.LaunchConfigurationDelegate
-import org.eclipse.debug.core.ILaunch
-import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.jdt.launching.IVMRunner
 
 /**

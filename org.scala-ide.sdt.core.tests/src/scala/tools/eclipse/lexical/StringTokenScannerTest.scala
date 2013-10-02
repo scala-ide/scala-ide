@@ -44,7 +44,7 @@ class StringTokenScannerTest {
     token.toList
   }
 
-  class Assert_===[A](actual: A) {
+  implicit class Assert_===[A](actual: A) {
     def ===(expected: A) {
       if (actual != expected)
         throw new AssertionError("""Expected != Actual
@@ -52,7 +52,6 @@ class StringTokenScannerTest {
           |Actual:   %s""".stripMargin.format(expected, actual))
     }
   }
-  implicit def Assert_===[A](actual: A): Assert_===[A] = new Assert_===(actual)
 
   @Test
   def escape_sequence_at_begin_of_string() {

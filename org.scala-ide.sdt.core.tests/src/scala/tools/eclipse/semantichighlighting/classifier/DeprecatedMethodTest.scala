@@ -6,7 +6,7 @@ import org.junit._
 class DeprecatedMethodTest extends AbstractSymbolClassifierTest {
 
   @Test
-  def deprecated_method {
+  def deprecated_method() {
     checkSymbolInfoClassification("""
       object A {
         @deprecated def deprecatedMethod() = 12

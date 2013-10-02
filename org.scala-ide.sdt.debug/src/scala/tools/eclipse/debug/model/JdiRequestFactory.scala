@@ -21,8 +21,6 @@ object JdiRequestFactory {
    * Create a breakpoint on the first instruction of the method, on the given thread
    */
   def createMethodEntryBreakpoint(method: Method, thread: ScalaThread): BreakpointRequest = {
-    import scala.collection.JavaConverters._
-
     val breakpointRequest = thread.getDebugTarget.virtualMachine.eventRequestManager.createBreakpointRequest(method.location)
     breakpointRequest.setSuspendPolicy(EventRequest.SUSPEND_EVENT_THREAD)
     breakpointRequest.addThreadFilter(thread.threadRef)
@@ -53,7 +51,6 @@ object JdiRequestFactory {
    * create a line breakpoint at the given line, if available
    */
   def createBreakpointRequest(referenceType: ReferenceType, lineNumber: Int, debugTarget: ScalaDebugTarget): Option[BreakpointRequest] = {
-    import scala.collection.JavaConverters._
     val locations = JDIUtil.referenceTypeToLocations(referenceType)
     // TODO: is it possible to have the same line number in multiple locations? need test case
     // see #1001370

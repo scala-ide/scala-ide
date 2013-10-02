@@ -21,7 +21,6 @@ import org.eclipse.swt.SWT
 import scala.tools.eclipse.refactoring.ScalaIdeRefactoring
 import scala.tools.eclipse.ScalaPlugin
 import scala.tools.eclipse.ScalaPreviewerFactory
-import scala.tools.eclipse.refactoring.method.MethodSignatureIdeRefactoring
 
 /**
  * Generates the generic wizard page for method signature refactorings.

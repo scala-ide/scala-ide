@@ -5,8 +5,6 @@ import org.eclipse.jface.text.hyperlink.IHyperlink
 import org.eclipse.ui.texteditor.ITextEditor
 
 import scala.tools.eclipse.InteractiveCompilationUnit
-import scala.tools.eclipse.semantichighlighting.implicits.ImplicitConversionAnnotation
-import scala.tools.eclipse.util.EditorUtils.getAnnotationsAtOffset
 
 private class ImplicitHyperlinkDetector extends BaseHyperlinkDetector {
 

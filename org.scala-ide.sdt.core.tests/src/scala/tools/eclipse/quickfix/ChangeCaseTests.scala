@@ -5,7 +5,7 @@ import org.junit.Test
 class ChangeCaseTests {
   import QuickFixesTests._
 
-  @Test def changeCase {
+  @Test def changeCase() {
     withManyQuickFixesPerLine("changecase/ChangeCase.scala")(
       List(
         List("Change to 'meThod1'",

@@ -5,6 +5,7 @@ import scala.tools.eclipse.javaelements.SymbolNameUtil
 trait FindReferencesTester {
 
   object Element {
+    import scala.language.implicitConversions
     implicit def element2testBuilder(e: Element): TestDef = new TestDef(e)
   }
 

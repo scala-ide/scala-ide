@@ -7,7 +7,6 @@ import scala.tools.eclipse.testsetup.SDTTestUtils
 import scala.tools.eclipse.logging.Logger
 import scala.tools.nsc.interactive.InteractiveReporter
 import org.eclipse.jdt.core.ICompilationUnit
-import org.junit.Assert._
 import org.junit._
 import org.mockito.Matchers._
 import org.mockito.Mockito._

@@ -44,7 +44,6 @@ object ScalaLibraryPluginDependencyUtils {
     manifestEditor.setActivePage(DependenciesPage.PAGE_ID) /* According to AJDT, needed to ensure the model will be updated consistently across the pages.
                                                               See org.eclipse.ajdt.internal.utils.AJDTUtils.getAndPrepareToChangePDEModel */
     val pluginModelBase = manifestEditor.getAggregateModel.asInstanceOf[IPluginModelBase]
-    val pluginBase = pluginModelBase.getPluginBase
 
     editStrategy(pluginModelBase)
 

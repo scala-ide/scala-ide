@@ -319,10 +319,8 @@ protected[debug] class ScalaDebugCacheActor(debugCache: ScalaDebugCache, debugTa
   }
 
   private def removeClassPreparedEventListener(listener: Actor, outerTypeName: String) {
-    val cache = nestedTypesCache.get(outerTypeName) match {
-      case Some(cache) =>
-        nestedTypesCache = nestedTypesCache + ((outerTypeName, cache.copy(listeners = cache.listeners - listener)))
-      case None =>
+    nestedTypesCache.get(outerTypeName) foreach { cache =>
+      nestedTypesCache = nestedTypesCache + ((outerTypeName, cache.copy(listeners = cache.listeners - listener)))
     }
   }
 
