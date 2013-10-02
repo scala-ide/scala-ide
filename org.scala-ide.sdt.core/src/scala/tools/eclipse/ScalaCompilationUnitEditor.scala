@@ -8,6 +8,7 @@ import scala.tools.eclipse.util.SWTUtils.fnToPropertyChangeListener
 
 import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor
 import org.eclipse.jdt.internal.ui.javaeditor.JavaSourceViewer
+import org.eclipse.jface.text.source.SourceViewerConfiguration
 import org.eclipse.jface.util.IPropertyChangeListener
 import org.eclipse.jface.util.PropertyChangeEvent
 import org.eclipse.swt.widgets.Composite
@@ -24,6 +25,14 @@ trait ScalaCompilationUnitEditor extends JavaEditor with ScalaEditor {
 
   protected def scalaPrefStore = ScalaPlugin.prefStore
   def javaPrefStore = super.getPreferenceStore
+
+  override def setSourceViewerConfiguration(configuration: SourceViewerConfiguration) {
+    super.setSourceViewerConfiguration(
+      configuration match {
+        case svc: ScalaSourceViewerConfiguration => svc
+        case _ => new ScalaSourceViewerConfiguration(javaPrefStore, scalaPrefStore, this)
+      })
+  }
 
   override def createPartControl(parent: Composite) {
     super.createPartControl(parent)

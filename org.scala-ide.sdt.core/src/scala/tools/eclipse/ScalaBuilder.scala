@@ -26,22 +26,22 @@ import scala.tools.eclipse.util.FileUtils
 import scala.tools.eclipse.util.ReflectionUtils
 import scala.tools.eclipse.logging.HasLogger
 import org.eclipse.core.runtime.jobs.ISchedulingRule
+import scala.tools.eclipse.buildmanager.JDTBuilderFacade
 
-class ScalaBuilder extends IncrementalProjectBuilder with HasLogger {
-  def plugin = ScalaPlugin.plugin
+class ScalaBuilder extends IncrementalProjectBuilder with JDTBuilderFacade with HasLogger {
 
-  private val scalaJavaBuilder = new GeneralScalaJavaBuilder
+  override def project = getProject()
 
   /** Lock only the current project during build. */
   override def getRule(kind: Int, args: java.util.Map[String,String]): ISchedulingRule =
-    getProject()
+    project
 
   override def clean(monitor : IProgressMonitor) {
     super.clean(monitor)
-    val project = plugin.getScalaProject(getProject)
+    val project = plugin.getScalaProject(this.project)
     project.clean(monitor)
 
-    ensureProject
+    ensureProject()
     scalaJavaBuilder.clean(monitor)
     project.buildManager.clean(monitor)
     JDTUtils.refreshPackageExplorer
@@ -51,7 +51,7 @@ class ScalaBuilder extends IncrementalProjectBuilder with HasLogger {
     import IncrementalProjectBuilder._
     import buildmanager.sbtintegration.EclipseSbtBuildManager
 
-    val project = plugin.getScalaProject(getProject)
+    val project = plugin.getScalaProject(this.project)
     val stopBuildOnErrors =
       project.storage.getBoolean(SettingConverterUtil.convertNameToProperty(properties.ScalaPluginSettings.stopBuildOnErrors.name))
 
@@ -144,26 +144,11 @@ class ScalaBuilder extends IncrementalProjectBuilder with HasLogger {
     if (allSourceFiles.exists(FileUtils.hasBuildErrors(_)) || !shouldRunJavaBuilder)
       depends.toArray
     else {
-      ensureProject
+      ensureProject()
       val javaDepends = scalaJavaBuilder.build(kind, ignored, subMonitor)
-      val modelManager = JavaModelManager.getJavaModelManager
-      val state = modelManager.getLastBuiltState(getProject, null).asInstanceOf[State]
-      val newState = if (state ne null) state
-        else {
-          ScalaJavaBuilderUtils.initializeBuilder(scalaJavaBuilder, 0, false)
-          StateUtils.newState(scalaJavaBuilder)
-        }
-      StateUtils.tagAsStructurallyChanged(newState)
-      StateUtils.resetStructurallyChangedTypes(newState)
-      modelManager.setLastBuiltState(getProject, newState)
-      JDTUtils.refreshPackageExplorer
+      refresh()
       (Set.empty ++ depends ++ javaDepends).toArray
     }
-  }
-
-  def ensureProject() {
-    if (scalaJavaBuilder.getProject == null)
-      scalaJavaBuilder.setProject0(getProject)
   }
 }
 
