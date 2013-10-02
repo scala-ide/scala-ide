@@ -9,7 +9,7 @@ import scala.tools.eclipse.InteractiveCompilationUnit
 private class ImplicitHyperlinkDetector extends BaseHyperlinkDetector {
 
   override protected[detector] def runDetectionStrategy(scu: InteractiveCompilationUnit, textEditor: ITextEditor, currentSelection: IRegion): List[IHyperlink] =
-    findHyperlinkToImplicit(scu, currentSelection.getOffset, textEditor)
+    findHyperlinkToImplicit(currentSelection.getOffset, textEditor)
 
   /**
    * Check if an {{{ImplicitConversionAnnotation}}} at the given {{{offset}}} exists in the
@@ -20,7 +20,7 @@ private class ImplicitHyperlinkDetector extends BaseHyperlinkDetector {
   // FIXME: I quite dislike the current implementation, for the following reasons:
   //        1) We go through all the editor's annotations to find if an implicit conversion is applied at the given {{{offset}}}.
   //        2) Because we use the editor's annotation model, this functionality cannot be tested in a UI-less environment.
-  private def findHyperlinkToImplicit(scu: InteractiveCompilationUnit, offset: Int, editor: ITextEditor): List[IHyperlink] = {
+  private def findHyperlinkToImplicit(offset: Int, editor: ITextEditor): List[IHyperlink] = {
     import scala.tools.eclipse.semantichighlighting.implicits.ImplicitConversionAnnotation
     import scala.tools.eclipse.util.EditorUtils.getAnnotationsAtOffset
 

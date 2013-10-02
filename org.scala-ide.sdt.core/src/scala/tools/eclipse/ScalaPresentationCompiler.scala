@@ -381,9 +381,8 @@ object ScalaPresentationCompiler {
     }
 
     def formatMessage(msg: String) = msg.map {
-      case '\n' => ' '
-      case '\r' => ' '
-      case c    => c
+      case '\n' | '\r' => ' '
+      case c           => c
     }
   }
 }

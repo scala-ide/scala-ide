@@ -113,6 +113,8 @@ object ScalaClassFileDescriber extends HasLogger {
         true
       }
 
+      // FG: turns out it is experimentally very important to do this twice
+      // Beware, test thoroughly before touching.
       if (!skipFieldsOrMethods())
         return None
       if (!skipFieldsOrMethods())

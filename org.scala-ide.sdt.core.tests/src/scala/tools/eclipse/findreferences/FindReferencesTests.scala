@@ -112,7 +112,7 @@ class FindReferencesTests extends FindReferencesTester with HasLogger {
     val element = elements(0).asInstanceOf[JavaElement]
 
     // SUT
-    val matches = SearchOps.findReferences(element, wordRegion)
+    val matches = SearchOps.findReferences(element)
 
     // verify
     val convertedMatches = matches.map(searchMatch => jdtElement2testElement(searchMatch.getElement().asInstanceOf[JavaElement])).toSet

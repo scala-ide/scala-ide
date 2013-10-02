@@ -201,7 +201,7 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
 
           val currentParamTypes = tpe.paramss.flatten
 
-          for (i <- 0 to currentParamTypes.size - 1) {
+          for (i <- 0 until currentParamTypes.size) {
             val tpeBaseClasses = currentParamTypes(i).tpe.baseClasses
             val noMatch = !tpeBaseClasses.exists { bc =>
               val tpe1 = searchedParamTypes(i)

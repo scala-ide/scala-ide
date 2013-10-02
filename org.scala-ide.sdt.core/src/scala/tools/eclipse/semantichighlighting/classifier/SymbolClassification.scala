@@ -59,8 +59,6 @@ class SymbolClassification(protected val sourceFile: SourceFile, val global: Sca
   def classifySymbols(progressMonitor: IProgressMonitor): List[SymbolInfo] = {
     if(progressMonitor.isCanceled()) return Nil
 
-    if(progressMonitor.isCanceled()) return Nil
-
     val allSymbols: List[(Symbol, Position)] = {
       for {
         t <- unitTree
