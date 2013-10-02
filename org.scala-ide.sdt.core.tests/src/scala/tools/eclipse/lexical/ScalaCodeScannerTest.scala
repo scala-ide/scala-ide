@@ -45,7 +45,7 @@ class ScalaCodeScannerTest {
     token.toList
   }
 
-  class Assert_===(actual: Seq[(ScalaSyntaxClass, Int, Int)]) {
+  implicit class Assert_===(actual: Seq[(ScalaSyntaxClass, Int, Int)]) {
     def ===(expected: Seq[(ScalaSyntaxClass, Int, Int)]) {
       val a = actual map { case (syntaxClass, start, length) => (syntaxClass.baseName, start, length) }
       val e = expected map { case (syntaxClass, start, length) => (syntaxClass.baseName, start, length) }
@@ -53,7 +53,6 @@ class ScalaCodeScannerTest {
         throw new ComparisonFailure("", e.toString, a.toString)
     }
   }
-  implicit def Assert_===(actual: Seq[(ScalaSyntaxClass, Int, Int)]): Assert_=== = new Assert_===(actual)
 
   @Test
   def brackets() {

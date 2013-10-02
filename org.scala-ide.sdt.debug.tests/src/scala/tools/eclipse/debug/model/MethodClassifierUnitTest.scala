@@ -200,7 +200,8 @@ class MethodClassifierUnitTest {
     Assert.assertEquals("Setter", expected, MethodClassifier.is(Setter, prepareGetterMock(name)))
   }
 
-  // implicits
+  import scala.language.implicitConversions
+
   implicit def toPath(str: String): IPath = new Path(str)
 
   implicit def toAnswer[A](f: InvocationOnMock => A): Answer[A] = new Answer[A] {

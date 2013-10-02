@@ -6,7 +6,7 @@ import org.junit._
 class TraitTest extends AbstractSymbolClassifierTest {
 
   @Test
-  def basic_trait {
+  def basic_trait() {
     checkSymbolClassification("""
       trait Trait
       trait `Trait2` {
@@ -22,7 +22,7 @@ class TraitTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  def import_scala_trait {
+  def import_scala_trait() {
     checkSymbolClassification("""
       import scala.concurrent.Promise
       """, """
@@ -32,7 +32,7 @@ class TraitTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  def an_imported_java_interface_is_classified_as_a_trait {
+  def an_imported_java_interface_is_classified_as_a_trait() {
     checkSymbolClassification("""
       import java.lang.Runnable
       """, """

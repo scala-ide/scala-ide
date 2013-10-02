@@ -65,6 +65,8 @@ class ProjectsCleanJobTest {
     }
   }
 
+  import scala.language.implicitConversions
+
   private implicit def anonResourceChangeListener(f: IResourceChangeEvent => Unit): IResourceChangeListener = new IResourceChangeListener() {
     override def resourceChanged(event: IResourceChangeEvent): Unit = f(event)
   }

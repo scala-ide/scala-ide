@@ -4,7 +4,6 @@ import scala.collection.mutable
 import scala.tools.eclipse.ScalaPresentationCompiler
 import scala.tools.eclipse.logging.HasLogger
 import scala.tools.eclipse.semantichighlighting.classifier.SymbolTypes._
-import scala.tools.eclipse.util.Utils._
 import scala.tools.nsc.io.AbstractFile
 import scala.tools.nsc.util.RangePosition
 import scala.reflect.internal.util.SourceFile
@@ -60,7 +59,6 @@ class SymbolClassification(protected val sourceFile: SourceFile, val global: Sca
   def classifySymbols(progressMonitor: IProgressMonitor): List[SymbolInfo] = {
     if(progressMonitor.isCanceled()) return Nil
 
-    val tree = unitTree
     if(progressMonitor.isCanceled()) return Nil
 
     val allSymbols: List[(Symbol, Position)] = {

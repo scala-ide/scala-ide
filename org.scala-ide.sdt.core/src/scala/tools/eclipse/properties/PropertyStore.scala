@@ -6,9 +6,7 @@
 package scala.tools.eclipse.properties
 
 import org.eclipse.core.runtime.preferences._
-import org.eclipse.core._
 import org.eclipse.core.runtime._
-import org.eclipse.ui._
 import org.eclipse.jface.preference._
 import org.eclipse.core.resources._
 

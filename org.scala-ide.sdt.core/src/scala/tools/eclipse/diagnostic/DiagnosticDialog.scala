@@ -27,7 +27,6 @@ import scala.tools.eclipse.contribution.weaving.jdt.configuration.WeavingStateCo
 import org.eclipse.ui.PlatformUI
 import org.eclipse.ui.browser.IWorkbenchBrowserSupport
 import scala.tools.eclipse.logging.LogManager
-import scala.tools.eclipse.logging.HasLogger
 
 class DiagnosticDialog(configurer: WeavingStateConfigurer, shell: Shell) extends Dialog(shell) {
 

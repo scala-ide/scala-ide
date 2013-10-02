@@ -4,13 +4,14 @@ import scala.tools.eclipse.EclipseUserSimulator
 import scala.tools.eclipse.ScalaProject
 import scala.tools.eclipse.FlakyTest
 import scala.tools.eclipse.javaelements.ScalaSourceFile
-import scala.tools.eclipse.testsetup.SDTTestUtils._
 import scala.tools.eclipse.testsetup.SDTTestUtils
 import scala.tools.eclipse.testsetup.TestProjectSetup
 import org.junit.After
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
+
+import scala.language.reflectiveCalls
 
 /** This class checks the functionality behind Run As > JUnit Test, triggered when a user right clicks on a source
   * file in the package explorer and hovers on "Run As". If the source file contains any runnable JUnit4 test class,

@@ -6,7 +6,6 @@ import org.eclipse.jdt.core.IJavaProject
 import org.eclipse.jdt.core.IClasspathEntry
 import org.eclipse.jdt.core.JavaCore
 import org.junit.Assert
-import util.EclipseUtils._
 import scala.tools.eclipse.testsetup.SDTTestUtils
 import org.eclipse.core.resources.IncrementalProjectBuilder
 import properties.IDESettings
@@ -79,7 +78,7 @@ class ProjectDependenciesTest {
     Assert.assertEquals("No errors in dependent projects", Seq(), errorsInBAndC)
 
     // fix project A, error in B, no cascading errors in C
-    val errors2 = SDTTestUtils.buildWith(unitA.getResource, "class A(x: Int)", unitsToWatch)
+    SDTTestUtils.buildWith(unitA.getResource, "class A(x: Int)", unitsToWatch)
     Assert.assertEquals("No errors in A", Seq(), SDTTestUtils.getErrorMessages(unitA))
     Assert.assertEquals("No errors in C", Seq(), SDTTestUtils.getErrorMessages(unitC))
     Assert.assertEquals("One error in B", 1, SDTTestUtils.getErrorMessages(unitB).size)

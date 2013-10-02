@@ -209,8 +209,6 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
           val tn = javaSig.returnType.getOrElse(mapType(d.info.finalResultType)).toArray
           defElemInfo.setReturnType(tn)
 
-          val annotsPos = addAnnotations(d, defElemInfo, defElem)
-
           defElemInfo.setFlags0(ClassFileConstants.AccPublic|ClassFileConstants.AccFinal|ClassFileConstants.AccStatic)
 
           val (start, point, end) =
@@ -609,7 +607,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
       }
 
       def addBeanAccessors(sym: Symbol) {
-        var beanName = nme.localToGetter(sym.name.toTermName).toString.capitalize
+        val beanName = nme.localToGetter(sym.name.toTermName).toString.capitalize
         val ownerInfo = sym.owner.info
         val accessors = List(ownerInfo.decl(GET append beanName), ownerInfo.decl(IS append beanName), ownerInfo.decl(SET append beanName)).filter(_ ne NoSymbol)
         accessors.foreach(addDef)
@@ -789,7 +787,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
         if (!annot.pos.isOpaqueRange)
           pos
         else {
-          var name = annot.atp.typeSymbol.nameString
+          val name = annot.atp.typeSymbol.nameString
           val handle = new JDTAnnotation(parentHandle, name)
 
           val info = buildInfoForJavaAnnotation(annot, handle)
@@ -875,9 +873,6 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
     abstract class Builder extends PackageOwner with ImportContainerOwner with ClassOwner with ModuleOwner with ValOwner with TypeOwner with DefOwner
 
     def setSourceRange(info: ScalaMemberElementInfo, sym: Symbol, annotsPos: Position) {
-      import Math.max
-      import Math.min
-
       val pos = sym.pos
       val (start, end) =
         if (pos.isDefined) {

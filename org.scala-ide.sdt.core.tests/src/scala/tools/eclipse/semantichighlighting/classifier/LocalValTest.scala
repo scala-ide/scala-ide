@@ -125,7 +125,7 @@ class LocalValTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  def for_generators {
+  def for_generators() {
     checkSymbolClassification("""
       object A {
         for (nnnnnn <- 1 to 100) println()
@@ -139,7 +139,7 @@ class LocalValTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  def paren_for_generators {
+  def paren_for_generators() {
     checkSymbolClassification("""
       object A {
         for ((nnnnnn) <- 1 to 100) println()
@@ -153,7 +153,7 @@ class LocalValTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  def ascripted_for_generators {
+  def ascripted_for_generators() {
     checkSymbolClassification("""
       object A {
         for (nnnnnn: Int <- 1 to 100) println()
@@ -167,7 +167,7 @@ class LocalValTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  def for_comprehension_cases {
+  def for_comprehension_cases() {
     checkSymbolClassification("""
       object A {
         for (xxxxxx <- "fo") println(xxxxxx)
@@ -183,7 +183,7 @@ class LocalValTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  def more_for_comprehension_cases {
+  def more_for_comprehension_cases() {
     checkSymbolClassification("""
     object A {
       {
@@ -208,7 +208,7 @@ class LocalValTest extends AbstractSymbolClassifierTest {
 
   @Test
   @Ignore
-  def tricky_for_comprehension_classification {
+  def tricky_for_comprehension_classification() {
     checkSymbolClassification("""
       object A {
         for ((CCCCCC) <- "fo") ()

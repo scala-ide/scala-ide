@@ -1,6 +1,5 @@
 package scala.tools.eclipse.semantichighlighting
 
-import scala.tools.eclipse.InteractiveCompilationUnit
 import scala.tools.eclipse.logging.HasLogger
 import scala.tools.eclipse.semantichighlighting.classifier.SymbolClassification
 import scala.tools.eclipse.ui.UIThread

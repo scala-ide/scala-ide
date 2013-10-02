@@ -152,22 +152,6 @@ class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: Sc
         } else Cont.Noop
       }
 
-      def isPrimitiveType(sym: compiler.Symbol) = {
-        import compiler.definitions._
-        sym match {
-          case ByteClass | CharClass | ShortClass | IntClass | LongClass | FloatClass | DoubleClass | UnitClass => true
-          case _ => false
-        }
-      }
-
-      def isSpecialType(sym: compiler.Symbol) = {
-        import compiler.definitions._
-        sym match {
-          case AnyClass | AnyRefClass | AnyValClass | NothingClass | NullClass => true
-          case _ => false
-        }
-      }
-
       val pos = compiler.rangePos(src, actualSelectionStart, actualSelectionStart, actualSelectionEnd + 1)
 
       val typed = new compiler.Response[compiler.Tree]

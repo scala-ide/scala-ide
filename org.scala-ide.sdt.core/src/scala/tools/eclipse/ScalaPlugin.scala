@@ -45,7 +45,6 @@ import org.eclipse.ui.IEditorPart
 import org.eclipse.ui.part.FileEditorInput
 import org.eclipse.ui.plugin.AbstractUIPlugin
 import org.osgi.framework.BundleContext
-import scala.tools.eclipse.javaelements.ScalaElement
 import scala.tools.eclipse.javaelements.ScalaSourceFile
 import scala.tools.eclipse.util.OSGiUtils._
 import scala.tools.eclipse.templates.ScalaTemplateManager
@@ -60,7 +59,6 @@ import scala.tools.eclipse.util.EclipseResource
 import scala.tools.eclipse.logging.PluginLogConfigurator
 import scala.tools.eclipse.util.Trim
 import scala.tools.nsc.Settings
-import scala.tools.eclipse.ui.PartAdapter
 
 object ScalaPlugin {
   final val IssueTracker = "https://www.assembla.com/spaces/scala-ide/support/tickets"

@@ -123,7 +123,7 @@ class SpyView extends ViewPart with HasLogger {
           unit.doWithSourceFile { (source, compiler) =>
             import compiler._
 
-            val tree = typedTreeAtSelection(compiler)(source, editor.asInstanceOf[ITextEditor].getSelectionProvider().getSelection()) match {
+            typedTreeAtSelection(compiler)(source, editor.asInstanceOf[ITextEditor].getSelectionProvider().getSelection()) match {
               case Left(tree) =>
                 import treeBrowsers._
 

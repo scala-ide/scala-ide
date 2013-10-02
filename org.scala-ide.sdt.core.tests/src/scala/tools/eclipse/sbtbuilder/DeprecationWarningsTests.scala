@@ -14,6 +14,8 @@ import org.eclipse.jdt.core.ICompilationUnit
 import org.junit.Assert
 import org.junit.Test
 
+import scala.language.reflectiveCalls
+
 object deprecationWarningsProject extends TestProjectSetup("builder-deprecation-warnings") {
   // enable deprecation warnings for this project
   val storage = deprecationWarningsProject.project.projectSpecificStorage.asInstanceOf[PropertyStore]
@@ -25,7 +27,7 @@ object deprecationWarningsProject extends TestProjectSetup("builder-deprecation-
 class DeprecationWarningsTests {
   private type Warnings = Seq[String]
 
-  @Test def deprecationWarningsDoNotAccumulate_1001595 {
+  @Test def deprecationWarningsDoNotAccumulate_1001595() {
     val expectedDeprecationWarnings = Seq("method a in class B is deprecated")
 
     val unitA = deprecationWarningsProject.compilationUnit("A.scala")

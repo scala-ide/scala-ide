@@ -1,5 +1,4 @@
 package scala.tools.eclipse.completion
-import scala.tools.eclipse.javaelements.ScalaCompilationUnit
 import scala.tools.eclipse.ScalaPresentationCompiler
 import scala.reflect.internal.util.SourceFile
 import org.eclipse.jdt.core.search.SearchEngine
@@ -86,7 +85,7 @@ class ScalaCompletions extends HasLogger {
         // some tree, not empty
         val length= position - e.pos.startOrPoint
         // get the text of the tree element, with all white spaces removed
-        var content= sourceFile.content.slice(e.pos.startOrPoint, position).filterNot((c) => c.isWhitespace)
+        val content= sourceFile.content.slice(e.pos.startOrPoint, position).filterNot((c) => c.isWhitespace)
         // check if it may look like a qualified type reference
         if (length > prefix.length + 1 && content.find((c) => !c.isUnicodeIdentifierPart && c != '.') == None)
           // extract the package qualifier

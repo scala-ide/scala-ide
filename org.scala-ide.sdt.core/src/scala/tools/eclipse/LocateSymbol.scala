@@ -23,7 +23,6 @@ import org.eclipse.jdt.internal.compiler.env.ICompilationUnit
 import org.eclipse.jdt.ui.actions.SelectionDispatchAction
 import org.eclipse.jdt.internal.ui.javaeditor.EditorUtility
 import org.eclipse.jdt.internal.ui.javaeditor.JavaElementHyperlink
-import tools.nsc.symtab.Flags._
 import scala.tools.nsc.io.AbstractFile
 import javaelements.ScalaSourceFile
 import javaelements.ScalaClassFile

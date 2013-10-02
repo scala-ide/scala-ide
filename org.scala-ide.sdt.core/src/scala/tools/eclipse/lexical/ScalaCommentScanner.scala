@@ -51,7 +51,7 @@ class ScalaCommentScanner(
     val taskTags = javaPreferenceStore.getString(JavaCore.COMPILER_TASK_TAGS)
     val isCaseSensitive = JavaCore.ENABLED == javaPreferenceStore.getString(JavaCore.COMPILER_TASK_CASE_SENSITIVE)
     val wm = new WordMatcher
-    var cwr = new CombinedWordRule(new IdentifierDetector, wm, getToken(syntaxClass))
+    val cwr = new CombinedWordRule(new IdentifierDetector, wm, getToken(syntaxClass))
 
     wm.isCaseSensitive = isCaseSensitive
     addTaskTags(wm, taskTags, getToken(taskTagClass))

@@ -26,7 +26,6 @@ import scala.tools.eclipse.javaelements.ScalaJavaMapper
 import scala.tools.eclipse.javaelements.ScalaMatchLocator
 import scala.tools.eclipse.javaelements.ScalaStructureBuilder
 import scala.tools.eclipse.javaelements.ScalaOverrideIndicatorBuilder
-import scala.tools.eclipse.util.Cached
 import scala.tools.eclipse.util.EclipseFile
 import scala.tools.eclipse.util.EclipseResource
 import scala.tools.eclipse.logging.HasLogger
@@ -324,7 +323,6 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings) exten
       } else scalaParamNames
     }
 
-    import scala.tools.eclipse.completion.HasArgs
     CompletionProposal(kind,
       start,
       name,

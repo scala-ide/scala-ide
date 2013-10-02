@@ -1,6 +1,5 @@
 package scala.tools.eclipse.debug
 
-import scala.tools.eclipse.testsetup.TestProjectSetup
 import org.eclipse.ui.preferences.ScopedPreferenceStore
 import org.eclipse.core.runtime.preferences.InstanceScope
 import org.eclipse.debug.core.DebugPlugin

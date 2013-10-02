@@ -338,7 +338,7 @@ class ClasspathTests {
     try {
       val packScala = createSourcePackage("scala")(scalaLibProject)
 
-      val unitA = packScala.createCompilationUnit("Predef.scala", "class Predef", true, null)
+      packScala.createCompilationUnit("Predef.scala", "class Predef", true, null)
 
       setRawClasspathAndCheckMarkers(cleanRawClasspath :+ JavaCore.newProjectEntry(scalaLibProject.underlying.getFullPath, true), 0, 0)
     } finally {

@@ -7,7 +7,6 @@ import scala.tools.eclipse.semantichighlighting.Preferences
 import scala.tools.eclipse.util.EclipseUtils._
 import scala.tools.eclipse.util.SWTUtils._
 import scala.tools.eclipse._
-import org.eclipse.jdt.internal.ui.preferences.OverlayPreferenceStore._
 import org.eclipse.jdt.internal.ui.preferences._
 import org.eclipse.jface.layout.PixelConverter
 import org.eclipse.jface.preference._
@@ -142,7 +141,7 @@ class SyntaxColouringPreferencePage extends PreferencePage with IWorkbenchPrefer
     treeViewer.setInput(new Object)
   }
 
-  private def gridLayout(marginHeight: Int = 5, marginWidth: Int = 5, numColumns: Int = 1): GridLayout = {
+  private def gridLayout(marginHeight: Int, marginWidth: Int, numColumns: Int = 1): GridLayout = {
     val layout = new GridLayout
     layout.marginHeight = marginHeight
     layout.marginWidth = marginWidth

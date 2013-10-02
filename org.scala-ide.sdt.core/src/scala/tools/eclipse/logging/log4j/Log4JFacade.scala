@@ -1,16 +1,10 @@
 package scala.tools.eclipse.logging
 package log4j
 
-import java.net.URL
 import scala.tools.eclipse.logging.Logger
-import org.apache.log4j.spi.HierarchyEventListener
-import org.apache.log4j.Appender
-import org.apache.log4j.Category
-import org.apache.log4j.FileAppender
 import org.apache.log4j.{ Level => Log4JLevel }
 import org.apache.log4j.{ Logger => Log4JLogger }
 import org.apache.log4j.LogManager
-import org.apache.log4j.PropertyConfigurator
 import scala.tools.eclipse.logging.Level
 import java.io.File
 

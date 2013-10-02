@@ -2,10 +2,8 @@ package scala.tools.eclipse.launching
 
 import scala.collection.mutable.ListBuffer
 import scala.tools.eclipse.ScalaPresentationCompiler
-import scala.tools.eclipse.javaelements.ScalaSourceFile
 import scala.tools.eclipse.logging.HasLogger
 import scala.tools.nsc.MissingRequirementError
-import org.eclipse.jdt.core.IType
 
 /** Given the Scala AST of any compilation unit, traverse the AST and collect all top level class
   * definitions that can be executed by the JUnit4 runtime.

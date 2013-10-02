@@ -20,7 +20,7 @@ object StructureBuilderTest extends testsetup.TestProjectSetup("simple-structure
 class StructureBuilderTest {
   import StructureBuilderTest._
 
-  def setupWorkspace {
+  def setupWorkspace() {
     // auto-building is off
     val desc = SDTTestUtils.workspace.getDescription
     desc.setAutoBuilding(false)
@@ -85,7 +85,7 @@ class StructureBuilderTest {
    *  is run again on the document, this time with attributed trees. Type-checked trees
    *  move annotations from the tree to the symbol, hence this test.
    */
-  @Test def testSearchAnnotationsAfterReconcile {
+  @Test def testSearchAnnotationsAfterReconcile() {
     val unit = compilationUnit("annots/ScalaTestSuite.scala")
     unit.becomeWorkingCopy(null)
     unit.getBuffer().append("  ")
@@ -96,7 +96,7 @@ class StructureBuilderTest {
     testSearchIndexAnnotations()
   }
 
-  @Test def junit4TestRunnerSearch {
+  @Test def junit4TestRunnerSearch() {
     val root = compilationUnit("annots/ScalaTestSuite.scala").getJavaProject()
     val finder = new JUnit4TestFinder
     val set = new java.util.HashSet[Object]()

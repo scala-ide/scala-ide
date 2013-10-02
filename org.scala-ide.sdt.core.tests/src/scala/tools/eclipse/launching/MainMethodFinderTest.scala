@@ -2,7 +2,6 @@ package scala.tools.eclipse.launching
 
 import scala.tools.eclipse.EclipseUserSimulator
 import scala.tools.eclipse.ScalaProject
-import scala.tools.eclipse.testsetup.SDTTestUtils._
 import scala.tools.eclipse.testsetup.SDTTestUtils
 import scala.tools.eclipse.testsetup.TestProjectSetup
 

@@ -40,6 +40,9 @@ import scala.tools.eclipse.debug.ScalaDebugTestSession
 import scala.tools.eclipse.debug.EclipseDebugEvent
 import com.sun.jdi.event.VMDisconnectEvent
 
+import scala.language.implicitConversions
+import scala.language.reflectiveCalls
+
 object DebugTargetTerminationTest {
   final val LatchTimeout = 5000L
 

@@ -52,7 +52,7 @@ class ClassfileParser(classFile: File) {
       val descr = pool.getString(reader.nextChar)
       skipAttributes()
       name -> descr
-    }) toMap
+    }).toMap
   }
 
   private def skipAttributes() {
@@ -89,7 +89,7 @@ class ClassfileParser(classFile: File) {
       val descr = pool.getString(reader.nextChar)
 
       name -> MethodDef(name, descr, parseCodeAttribute)
-    }) toMap
+    }).toMap
   }
 }
 

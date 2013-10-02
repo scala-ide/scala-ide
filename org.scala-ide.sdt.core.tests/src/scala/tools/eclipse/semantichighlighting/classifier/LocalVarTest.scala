@@ -92,7 +92,7 @@ class LocalVarTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  def assignment_is_not_classified_as_a_named_argument {
+  def assignment_is_not_classified_as_a_named_argument() {
     checkSymbolClassification("""
 object A {
   {

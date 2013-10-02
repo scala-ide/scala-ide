@@ -23,6 +23,8 @@ import com.sun.jdi.request.ClassPrepareRequest
 import com.sun.jdi.request.EventRequestManager
 import scala.tools.eclipse.testsetup.SDTTestUtils
 
+import scala.language.reflectiveCalls
+
 class ScalaDebugCacheTest {
 
   val toShutdown = scala.collection.mutable.ListBuffer[() => Unit]()

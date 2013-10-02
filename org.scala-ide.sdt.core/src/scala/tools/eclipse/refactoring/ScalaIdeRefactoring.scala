@@ -104,12 +104,11 @@ abstract class ScalaIdeRefactoring(val getName: String, val file: ScalaSourceFil
   }
 
   def checkInitialConditions(pm: IProgressMonitor): RefactoringStatus = new RefactoringStatus {
-    preparationResult().fold(e => addFatalError(e.cause), identity)
+    preparationResult().left.foreach(e => addFatalError(e.cause))
   }
 
-  def checkFinalConditions(pm: IProgressMonitor): RefactoringStatus = {
+  def checkFinalConditions(pm: IProgressMonitor): RefactoringStatus =
     refactoringError map RefactoringStatus.createErrorStatus getOrElse new RefactoringStatus
-  }
 
   /**
    * Converts the (file, from, to) selection into a proper Refactoring selection.

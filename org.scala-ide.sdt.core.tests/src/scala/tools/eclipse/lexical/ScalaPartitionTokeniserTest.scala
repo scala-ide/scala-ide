@@ -2,7 +2,6 @@ package scala.tools.eclipse.lexical
 
 import scala.xml.Elem
 import org.eclipse.jface.text.IDocument
-import org.junit.Assert._
 import org.junit.Test
 import org.junit.Before
 
@@ -14,7 +13,7 @@ class ScalaPartitionTokeniserTest {
   import ScalaPartitionTokeniserTest._
 
   @Test
-  def bug2522 {
+  def bug2522() {
     // 000000000011111111112222222222333333333344444444445
     // 012345678901234567890123456789012345678901234567890
     """def dev = <div class="menu">...</div>""" ==>
@@ -22,14 +21,14 @@ class ScalaPartitionTokeniserTest {
   }
 
   @Test
-  def defaultContent {
+  def defaultContent() {
     // 000000000011111111112222222222333333333344444444445
     // 012345678901234567890123456789012345678901234567890
     """package foo""" ==> ((DEFAULT_CONTENT_TYPE, 0, 10))
   }
 
   @Test
-  def comments {
+  def comments() {
     // 000000000011111111112222222222333333333344444444445
     // 012345678901234567890123456789012345678901234567890
     """package /* comment */ foo // comment""" ==>
@@ -48,7 +47,7 @@ class ScalaPartitionTokeniserTest {
   }
 
   @Test
-  def basicXml {
+  def basicXml() {
     // 000000000011111111112222222222333333333344444444445
     // 012345678901234567890123456789012345678901234567890
     """<foo/>""" ==> ((XML_TAG, 0, 5))
@@ -67,7 +66,7 @@ class ScalaPartitionTokeniserTest {
   }
 
   @Test
-  def strings {
+  def strings() {
     // 000000000011111111112222222222333333333344444444445
     // 012345678901234567890123456789012345678901234567890
     <t>"ordinary string"</t> ==> ((JAVA_STRING, 0, 16));
@@ -78,7 +77,7 @@ class ScalaPartitionTokeniserTest {
   }
 
   @Test
-  def stringInterpolation {
+  def stringInterpolation() {
     // 000000000011111111112222222222333333333344444444445
     // 012345678901234567890123456789012345678901234567890
     <t>s"my name is $name"</t> ==>
@@ -182,6 +181,7 @@ class ScalaPartitionTokeniserTest {
 }
 
 object ScalaPartitionTokeniserTest {
+  import scala.language.implicitConversions
   implicit def string2PimpedString(from: String): PimpedString = new PimpedString(from)
   implicit def element2PimpedString(from: Elem): PimpedString = new PimpedString(from.text)
 
