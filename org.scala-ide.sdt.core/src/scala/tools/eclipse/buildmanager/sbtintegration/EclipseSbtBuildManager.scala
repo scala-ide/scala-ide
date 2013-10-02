@@ -120,13 +120,13 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings)
    *  them and their dependent files.
    */
   private def update(added: scala.collection.Set[AbstractFile], removed: scala.collection.Set[AbstractFile]) {
-    logger.info("update files: " + added)
-    if (!added.isEmpty || !removed.isEmpty) {
-      buildingFiles(added)
-      removeFiles(removed)
-      sources ++= added
-      runCompiler(sources.asJFiles)
-    }
+    if (added.isEmpty && removed.isEmpty)
+      logger.info("No changes in project, running the builder for potential transitive changes.")
+
+    buildingFiles(added)
+    removeFiles(removed)
+    sources ++= added
+    runCompiler(sources.asJFiles)
   }
 
   private def runCompiler(sources: Seq[File]) {
