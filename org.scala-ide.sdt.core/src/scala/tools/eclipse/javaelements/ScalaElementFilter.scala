@@ -1,8 +1,3 @@
-/*
- * Copyright 2005-2010 LAMP/EPFL
- */
-// $Id$
-
 package scala.tools.eclipse.javaelements
 
 import org.eclipse.jface.viewers.Viewer
