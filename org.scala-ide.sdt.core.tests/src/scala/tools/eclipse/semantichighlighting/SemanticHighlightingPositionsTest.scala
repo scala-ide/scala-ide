@@ -141,9 +141,9 @@ class SemanticHighlightingPositionsTest {
       // collect all positions in the document that are expected to still be highlighted after the edition
       val positions = highlightedBeforeEdition.filterNot { _.overlapsWith(start, length) }
       // of the above positions, shift the ones that are affected by the edition
-      val shiftedPositions = positions.map { pos =>
+      positions.foreach { pos =>
+        // mutate position offsets to shift them
         if (pos.getOffset() >= start) pos.setOffset(pos.getOffset() + positionShift)
-        pos
       }
       // merge together the shifted positions and any additional position that is expected to be created by the edit
       val merged = (edit.newPositions ++ positions)
