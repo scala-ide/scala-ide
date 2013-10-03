@@ -153,8 +153,8 @@ class SemanticHighlightingPositionsTest {
     }
 
     def editTestCode(offset: Int, length: Int, newText: String): Unit = {
-      document.replace(start, length, edit.newText) // triggers the IUpdatePosition listener
-      unit.getBuffer().replace(start, length, edit.newText) // needed by the semantic highlighting reconciler
+      document.replace(offset, length, edit.newText) // triggers the IUpdatePosition listener
+      unit.getBuffer().replace(offset, length, edit.newText) // needed by the semantic highlighting reconciler
     }
 
     // perform edit
