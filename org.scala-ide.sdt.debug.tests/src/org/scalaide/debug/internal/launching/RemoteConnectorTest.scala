@@ -52,7 +52,7 @@ object RemoteConnectorTest extends TestProjectSetup("debug", bundleName = "org.s
     val workingLaunchConfiguration = launchConfiguration.getWorkingCopy()
 
     // update the port number
-    val vmArgs = workingLaunchConfiguration.getAttribute(ConnectKey, null: JMap[_, _]).asInstanceOf[JMap[String, String]]
+    val vmArgs = workingLaunchConfiguration.getAttribute(ConnectKey, null: JMap[String, String]).asInstanceOf[JMap[String, String]]
     vmArgs.put(SocketConnectorScala.PortKey, port.toString)
     workingLaunchConfiguration.setAttribute(VmArgsKey, vmArgs)
 
