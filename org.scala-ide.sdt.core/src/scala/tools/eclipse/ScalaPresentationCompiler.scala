@@ -41,7 +41,7 @@ import scala.tools.eclipse.sourcefileprovider.SourceFileProviderRegistry
 import org.eclipse.core.runtime.Path
 import org.eclipse.core.resources.IFile
 import org.eclipse.jdt.internal.core.util.Util
-
+import scala.tools.eclipse.compiler.CompilerApiExtensions
 
 class ScalaPresentationCompiler(project: ScalaProject, settings: Settings) extends {
   /*
@@ -62,6 +62,7 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings) exten
   with JavaSig
   with JVMUtils
   with LocateSymbol
+  with CompilerApiExtensions
   with HasLogger { self =>
 
   def presentationReporter = reporter.asInstanceOf[ScalaPresentationCompiler.PresentationReporter]
@@ -72,7 +73,7 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings) exten
     for {
       f <- managedFiles.collect { case ef: EclipseFile => ef }
       icu <- SourceFileProviderRegistry.getProvider(f.workspacePath).createFrom(f.workspacePath)
-        if icu.exists
+      if icu.exists
     } yield icu
   }
 
@@ -189,7 +190,7 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings) exten
 
   /** Atomically load a list of units in the current presentation compiler. */
   def askReload(units: List[InteractiveCompilationUnit]): Response[Unit] = {
-    withResponse[Unit]{ res => askReload(units.map(_.sourceFile), res) }
+    withResponse[Unit] { res => askReload(units.map(_.sourceFile), res) }
   }
 
   def filesDeleted(units: List[ScalaCompilationUnit]) {
@@ -203,9 +204,8 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings) exten
     askOption { () => removeUnitOf(scu.sourceFile) }
   }
 
-  /**
-   * Tell the presentation compiler to refresh the given files,
-   * if they are not managed by the presentation compiler already.
+  /** Tell the presentation compiler to refresh the given files,
+   *  if they are not managed by the presentation compiler already.
    */
   def refreshChangedFiles(files: List[IFile]) {
     // transform to batch source files
