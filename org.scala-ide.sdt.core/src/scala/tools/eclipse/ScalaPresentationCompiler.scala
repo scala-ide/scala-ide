@@ -20,8 +20,8 @@ import scala.tools.nsc.reporters.Reporter
 import scala.reflect.internal.util.BatchSourceFile
 import scala.reflect.internal.util.Position
 import scala.reflect.internal.util.SourceFile
-import scala.tools.eclipse.completion.CompletionContextType
 import scala.tools.eclipse.completion.CompletionContext
+import scala.tools.eclipse.completion.CompletionContext.CompletionContextType
 import scala.tools.eclipse.javaelements.ScalaCompilationUnit
 import scala.tools.eclipse.javaelements.ScalaIndexBuilder
 import scala.tools.eclipse.javaelements.ScalaJavaMapper

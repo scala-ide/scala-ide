@@ -143,7 +143,7 @@ class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: I
       var changes: List[TextChange] = Nil
 
       // we don't have to change anything for Apply, since the full method is already specified
-      if (context.contextType != ApplyContext) {
+      if (context.contextType != CompletionContext.ApplyContext) {
         scalaSourceFile.withSourceFile { (sourceFile, _) =>
           val endPos = if (overwrite) startPos + existingIdentifier(d, offset).getLength() else offset
           changes :+= TextChange(sourceFile, startPos, endPos, completionFullString)
@@ -172,7 +172,7 @@ class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: I
 
     // similar to above, if we're in an apply context, we're not going to show
     // anything in the editor (just doing tooltips)
-    if (context.contextType != ApplyContext) {
+    if (context.contextType != CompletionContext.ApplyContext) {
       if (!overwrite) selectionProvider match {
         case viewer: ITextViewer if explicitParamNames.flatten.nonEmpty =>
           addArgumentTemplates(d, viewer, completionFullString)

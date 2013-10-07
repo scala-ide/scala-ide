@@ -12,13 +12,16 @@ object HasArgs extends Enumeration {
   }
 }
 
-trait CompletionContextType
-case object DefaultContext extends CompletionContextType
-case object ApplyContext extends CompletionContextType
-
 case class CompletionContext(
-  contextType: CompletionContextType
+  contextType: CompletionContext.CompletionContextType
 )
+
+object CompletionContext {
+  trait CompletionContextType
+  case object DefaultContext extends CompletionContextType
+  case object ApplyContext extends CompletionContextType
+}
+
 
 /** A completion proposal coming from the Scala compiler. This
  *  class holds together data about completion proposals.

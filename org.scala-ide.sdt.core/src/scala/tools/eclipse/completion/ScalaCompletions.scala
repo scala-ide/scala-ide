@@ -13,6 +13,7 @@ import scala.tools.eclipse.InteractiveCompilationUnit
 import scala.collection.mutable.MultiMap
 import scala.tools.eclipse.util.Utils
 import scala.tools.eclipse.ScalaPlugin
+import scala.tools.eclipse.completion.CompletionContext.CompletionContextType
 
 /** Base class for Scala completions. No UI dependency, can be safely used in a
  *  headless testing environment.
@@ -30,7 +31,7 @@ class ScalaCompletions extends HasLogger {
     val pos = compiler.rangePos(sourceFile, position, position, position)
     compiler.askTypeAt(pos, typed)
     val t1 = typed.get.left.toOption
-    var contextType: CompletionContextType = DefaultContext
+    var contextType: CompletionContextType = CompletionContext.DefaultContext
 
     import scala.reflect.runtime.universe._
     logger.info(showRaw(t1.get))
@@ -146,7 +147,7 @@ class ScalaCompletions extends HasLogger {
         // completion on `imports`
         fillTypeCompletions(expr.pos.endOrPoint, wordAtPosition, wordStart)
       case Some(compiler.Apply(fun, _)) =>
-        contextType = ApplyContext
+        contextType = CompletionContext.ApplyContext
         fun match {
           case compiler.Select(qualifier, name) if qualifier.pos.isDefined && qualifier.pos.isRange =>
             fillTypeCompletions(qualifier.pos.endOrPoint, name.decoded.toArray, qualifier.pos.end + 1)
