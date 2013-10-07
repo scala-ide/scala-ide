@@ -37,6 +37,8 @@ import scala.tools.eclipse.completion.CompletionProposal
 import org.eclipse.jdt.core.IMethod
 import scala.tools.nsc.io.VirtualFile
 import scala.tools.nsc.interactive.MissingResponse
+import scala.tools.eclipse.completion.CompletionContextType
+import scala.tools.eclipse.completion.CompletionContext
 
 
 class ScalaPresentationCompiler(project: ScalaProject, settings: Settings) extends {
@@ -268,7 +270,8 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings) exten
    *  TODO We should have a more refined strategy based on the context (inside an import, case
    *       pattern, 'new' call, etc.)
    */
-  def mkCompletionProposal(prefix: Array[Char], start: Int, sym: Symbol, tpe: Type, inherited: Boolean, viaView: Symbol): CompletionProposal = {
+  def mkCompletionProposal(prefix: Array[Char], start: Int, sym: Symbol, tpe: Type,
+    inherited: Boolean, viaView: Symbol): CompletionContextType => CompletionProposal = {
     import scala.tools.eclipse.completion.MemberKind._
 
     val kind = if (sym.isSourceMethod && !sym.hasFlag(Flags.ACCESSOR | Flags.PARAMACCESSOR)) Def
@@ -324,7 +327,9 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings) exten
     }
 
     import scala.tools.eclipse.completion.HasArgs
-    CompletionProposal(kind,
+    contextType => CompletionProposal(
+      kind,
+      CompletionContext(contextType),
       start,
       name,
       signature,

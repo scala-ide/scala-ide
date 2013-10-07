@@ -38,6 +38,7 @@ import org.eclipse.jface.text.ITextViewerExtension2
 import org.eclipse.jface.text.ITextViewerExtension5
 import org.eclipse.jface.text.DocumentEvent
 import org.eclipse.jface.text.IRegion
+import scala.tools.refactoring.common.TextChange
 
 /** A UI class for displaying completion proposals.
  *
@@ -139,11 +140,15 @@ class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: I
 
     val completionFullString = completionString(overwrite)
     val importSize = withScalaFileAndSelection { (scalaSourceFile, textSelection) =>
+      var changes: List[TextChange] = Nil
 
-      val completionChange = scalaSourceFile.withSourceFile { (sourceFile, _) =>
-        val endPos = if (overwrite) startPos + existingIdentifier(d, offset).getLength() else offset
-        TextChange(sourceFile, startPos, endPos, completionFullString)
-      }()
+      // we don't have to change anything for Apply, since the full method is already specified
+      if (context.contextType != ApplyContext) {
+        scalaSourceFile.withSourceFile { (sourceFile, _) =>
+          val endPos = if (overwrite) startPos + existingIdentifier(d, offset).getLength() else offset
+          changes :+= TextChange(sourceFile, startPos, endPos, completionFullString)
+        }()
+      }
 
       val importStmt = if (needImport) { // add an import statement if required
         scalaSourceFile.withSourceFile { (_, compiler) =>
@@ -154,23 +159,29 @@ class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: I
         Nil
       }
 
+      changes ++= importStmt
+
       // Apply the two changes in one step, if done separately we would need an
       // another `waitLoadedType` to update the positions for the refactoring
       // to work properly.
       EditorHelpers.applyChangesToFileWhileKeepingSelection(
-        d, textSelection, scalaSourceFile.file, completionChange :: importStmt)
+        d, textSelection, scalaSourceFile.file, changes)
 
       importStmt.headOption.map(_.text.length)
     }
 
-    if (!overwrite) selectionProvider match {
-      case viewer: ITextViewer if explicitParamNames.flatten.nonEmpty =>
-        addArgumentTemplates(d, viewer, completionFullString)
-      case _ => ()
-    }
-    else
-      EditorHelpers.doWithCurrentEditor { editor =>
-        editor.selectAndReveal(startPos + completionFullString.length() + importSize.getOrElse(0), 0)
+    // similar to above, if we're in an apply context, we're not going to show
+    // anything in the editor (just doing tooltips)
+    if (context.contextType != ApplyContext) {
+      if (!overwrite) selectionProvider match {
+        case viewer: ITextViewer if explicitParamNames.flatten.nonEmpty =>
+          addArgumentTemplates(d, viewer, completionFullString)
+        case _ => ()
+      }
+      else
+        EditorHelpers.doWithCurrentEditor { editor =>
+          editor.selectAndReveal(startPos + completionFullString.length() + importSize.getOrElse(0), 0)
+      }
     }
   }
 

@@ -12,6 +12,14 @@ object HasArgs extends Enumeration {
   }
 }
 
+trait CompletionContextType
+case object DefaultContext extends CompletionContextType
+case object ApplyContext extends CompletionContextType
+
+case class CompletionContext(
+  contextType: CompletionContextType
+)
+
 /** A completion proposal coming from the Scala compiler. This
  *  class holds together data about completion proposals.
  *
@@ -22,7 +30,9 @@ object HasArgs extends Enumeration {
  *  @note Parameter names are retrieved lazily, since the operation is potentially long-running.
  *  @see  ticket #1001560
  */
-case class CompletionProposal(kind: MemberKind.Value,
+case class CompletionProposal(
+  kind: MemberKind.Value,
+  context: CompletionContext,
   startPos: Int,             // position where the 'completion' string should be inserted
   completion: String,        // the string to be inserted in the document
   display: String,           // the display string in the completion list

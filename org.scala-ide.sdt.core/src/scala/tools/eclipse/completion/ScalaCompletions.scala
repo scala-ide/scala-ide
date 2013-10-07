@@ -31,6 +31,7 @@ class ScalaCompletions extends HasLogger {
     val pos = compiler.rangePos(sourceFile, position, position, position)
     compiler.askTypeAt(pos, typed)
     val t1 = typed.get.left.toOption
+    var contextType: CompletionContextType = DefaultContext
 
     import scala.reflect.runtime.universe._
     logger.info(showRaw(t1.get))
@@ -48,9 +49,9 @@ class ScalaCompletions extends HasLogger {
           for (completion <- completions) {
             val completionProposal = completion match {
               case compiler.TypeMember(sym, tpe, true, inherited, viaView) if !sym.isConstructor && nameMatches(sym) =>
-                Some(compiler.mkCompletionProposal(prefix, start, sym, tpe, inherited, viaView))
+                Some(compiler.mkCompletionProposal(prefix, start, sym, tpe, inherited, viaView)(contextType))
               case compiler.ScopeMember(sym, tpe, true, _) if !sym.isConstructor && nameMatches(sym) =>
-                Some(compiler.mkCompletionProposal(prefix, start, sym, tpe, false, compiler.NoSymbol))
+                Some(compiler.mkCompletionProposal(prefix, start, sym, tpe, false, compiler.NoSymbol)(contextType))
               case _ => None
             }
 
@@ -105,6 +106,7 @@ class ScalaCompletions extends HasLogger {
               logger.info(s"Adding type: $fullyQualifiedName")
               listedTypes.addBinding(fullyQualifiedName, CompletionProposal(
                 MemberKind.Object,
+                CompletionContext(contextType),
                 start,
                 simpleName,
                 simpleName,
@@ -145,6 +147,7 @@ class ScalaCompletions extends HasLogger {
         // completion on `imports`
         fillTypeCompletions(expr.pos.endOrPoint, wordAtPosition, wordStart)
       case Some(compiler.Apply(fun, _)) =>
+        contextType = ApplyContext
         fun match {
           case compiler.Select(qualifier, name) if qualifier.pos.isDefined && qualifier.pos.isRange =>
             fillTypeCompletions(qualifier.pos.endOrPoint, name.decoded.toArray, qualifier.pos.end + 1)
