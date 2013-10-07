@@ -1,7 +1,6 @@
 /*
  * Copyright 2010 LAMP/EPFL
  *
- * @author Tim Clendenen
  *
  */
 package scala.tools.eclipse.wizards
@@ -272,7 +271,6 @@ object CodeBuilder {
        with BufferSupport
        with CodeBuilder {
 
-    private val allSuperTypes = superTypes map createSuperType
     private val generatedMethods: ListBuffer[String] = ListBuffer()
     private val generatedConstructors: ListBuffer[String] = ListBuffer()
 

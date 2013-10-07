@@ -15,7 +15,7 @@ class XmlCDATAScanner(val preferenceStore: IPreferenceStore) extends AbstractSca
   private var regionTokens: List[RegionToken] = Nil
 
   def setRange(document: IDocument, offset: Int, length: Int) {
-    var buffer = new ListBuffer[RegionToken]
+    val buffer = new ListBuffer[RegionToken]
     /**
      * Dummy token to sit on top of the stack until the first call to nextToken() removes it
      */

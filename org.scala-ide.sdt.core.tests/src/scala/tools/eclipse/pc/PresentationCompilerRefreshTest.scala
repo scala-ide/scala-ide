@@ -2,8 +2,6 @@ package scala.tools.eclipse.pc
 
 import scala.tools.eclipse._
 import org.junit.Test
-import scala.tools.eclipse.javaelements.ScalaSourceFile
-import org.junit.Assert
 import testsetup.SDTTestUtils
 import org.eclipse.core.resources.IFile
 import scala.tools.eclipse.util.EclipseUtils

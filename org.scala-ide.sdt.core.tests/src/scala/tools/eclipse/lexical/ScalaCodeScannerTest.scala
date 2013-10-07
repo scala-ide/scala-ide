@@ -38,15 +38,14 @@ class ScalaCodeScannerTest {
       val scalaVersion = ScalaVersions.DEFAULT
     }
 
-    val document = new MockDocument(str)
-    val token = scanner.tokenize(document.get(offset, length), offset) map {
+    val token = scanner.tokenize(str.slice(offset, length), offset) map {
       case scanner.Range(start, length, syntaxClass) =>
         (syntaxClass, start, length)
     }
     token.toList
   }
 
-  class Assert_===(actual: Seq[(ScalaSyntaxClass, Int, Int)]) {
+  implicit class Assert_===(actual: Seq[(ScalaSyntaxClass, Int, Int)]) {
     def ===(expected: Seq[(ScalaSyntaxClass, Int, Int)]) {
       val a = actual map { case (syntaxClass, start, length) => (syntaxClass.baseName, start, length) }
       val e = expected map { case (syntaxClass, start, length) => (syntaxClass.baseName, start, length) }
@@ -54,7 +53,6 @@ class ScalaCodeScannerTest {
         throw new ComparisonFailure("", e.toString, a.toString)
     }
   }
-  implicit def Assert_===(actual: Seq[(ScalaSyntaxClass, Int, Int)]): Assert_=== = new Assert_===(actual)
 
   @Test
   def brackets() {
@@ -70,9 +68,9 @@ class ScalaCodeScannerTest {
       val keywords = compiler.nme.keywords map (_.toString) filter isAlpha
       /*
        * Discard some keywords:
-       * - macro - not a keyword in 2.9, in 2.10 only in special places
+       * - macro - only a keyword in special places
        * - return - needs special handling, treated in its own test case
-       * - then - not yet a final keyword in 2.9 or 2.10
+       * - then - not yet a final keyword in 2.10
        */
       val testableKeywords = keywords filterNot Set("macro", "return", "then")
 
@@ -88,8 +86,7 @@ class ScalaCodeScannerTest {
     val offset = 3 // arbitrary non-zero number
 
     val scanner = new ScalaCodeTokenizer { val scalaVersion = ScalaVersions.DEFAULT }
-    val document = new MockDocument(str)
-    val token = scanner.tokenize(document.get(0, str.length), offset) map {
+    val token = scanner.tokenize(str, offset) map {
       case scanner.Range(start, length, syntaxClass) =>
         (syntaxClass, start, length)
     }

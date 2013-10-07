@@ -63,6 +63,8 @@ class SpyView extends ViewPart with HasLogger {
                 buf.append("\n\nsymbol: \t\t%s".format(tree.symbol))
                 for (sym <- Option(tree.symbol) if sym ne NoSymbol)
                   buf.append("\nsymbol.info: \t%s".format(tree.symbol.info))
+
+                buf.append("\n\nUnits: %s".format(compiler.compilationUnits.map(_.workspaceFile).mkString("", "\n", "")))
               }
 
               textArea.append(buf.toString)
@@ -121,7 +123,7 @@ class SpyView extends ViewPart with HasLogger {
           unit.doWithSourceFile { (source, compiler) =>
             import compiler._
 
-            val tree = typedTreeAtSelection(compiler)(source, editor.asInstanceOf[ITextEditor].getSelectionProvider().getSelection()) match {
+            typedTreeAtSelection(compiler)(source, editor.asInstanceOf[ITextEditor].getSelectionProvider().getSelection()) match {
               case Left(tree) =>
                 import treeBrowsers._
 

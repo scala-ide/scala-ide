@@ -2,7 +2,6 @@ package scala.tools.eclipse
 
 import org.eclipse.core.resources.IFile
 import org.eclipse.jdt.core.compiler.IProblem
-import scala.reflect.internal.util.BatchSourceFile
 import scala.reflect.internal.util.SourceFile
 import scala.tools.nsc.interactive.Response
 import scala.tools.nsc.io.AbstractFile
@@ -34,7 +33,12 @@ trait InteractiveCompilationUnit {
   /** Return a compiler `SourceFile` implementation with the given contents. The implementation decides
    *  if this is a batch file or a script/other kind of source file.
    */
-  def sourceFile(contents: Array[Char] = getContents): SourceFile
+  def sourceFile(contents: Array[Char]): SourceFile
+
+  /** Return a `SourceFile` instance. Implementations may decide to cache and reuse old instances.
+   */
+  def sourceFile(): SourceFile =
+    sourceFile(getContents)
 
   /** Reconcile the unit. Return all compilation errors.
    *
@@ -53,7 +57,9 @@ trait InteractiveCompilationUnit {
 
   /** Perform a side-effecting operation on the source file, with the current presentation compiler. */
   def doWithSourceFile(op: (SourceFile, ScalaPresentationCompiler) => Unit) {
-    scalaProject.withSourceFile(this)(op)(())
+    scalaProject.doWithPresentationCompiler { compiler =>
+      op(sourceFile, compiler)
+    }
   }
 
   /** Perform an operation on the source file, with the current presentation compiler.
@@ -63,7 +69,7 @@ trait InteractiveCompilationUnit {
    *                started because of classpath issues)
    */
   def withSourceFile[T](op: (SourceFile, ScalaPresentationCompiler) => T)(orElse: => T = scalaProject.defaultOrElse): T = {
-    scalaProject.withSourceFile(this)(op)(orElse)
+    scalaProject.withPresentationCompiler(op(sourceFile, _))(orElse)
   }
 
   /** Schedule the unit for reconciliation. Not blocking. Used by the usual Scala editor to signal a need for `askReload`,

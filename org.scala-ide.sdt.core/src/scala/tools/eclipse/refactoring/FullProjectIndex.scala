@@ -67,7 +67,7 @@ trait FullProjectIndex extends HasLogger {
         }
 
         val patternForHints = Pattern.compile(hints map Pattern.quote mkString "|")
-        val status = TextSearchEngine.create.search(scope, requestor, patternForHints, pm)
+        TextSearchEngine.create.search(scope, requestor, patternForHints, pm)
 
         result
       }

@@ -1,6 +1,5 @@
 package scala.tools.eclipse.hyperlink.text
 
-import org.eclipse.core.resources.IFile
 import org.eclipse.jdt.internal.ui.javaeditor.EditorUtility
 import org.eclipse.jface.text.IRegion
 import org.eclipse.jface.text.hyperlink.IHyperlink

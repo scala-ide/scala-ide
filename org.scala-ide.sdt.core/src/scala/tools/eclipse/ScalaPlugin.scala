@@ -45,7 +45,6 @@ import org.eclipse.ui.IEditorPart
 import org.eclipse.ui.part.FileEditorInput
 import org.eclipse.ui.plugin.AbstractUIPlugin
 import org.osgi.framework.BundleContext
-import scala.tools.eclipse.javaelements.ScalaElement
 import scala.tools.eclipse.javaelements.ScalaSourceFile
 import scala.tools.eclipse.util.OSGiUtils._
 import scala.tools.eclipse.templates.ScalaTemplateManager
@@ -60,7 +59,6 @@ import scala.tools.eclipse.util.EclipseResource
 import scala.tools.eclipse.logging.PluginLogConfigurator
 import scala.tools.eclipse.util.Trim
 import scala.tools.nsc.Settings
-import scala.tools.eclipse.ui.PartAdapter
 
 object ScalaPlugin {
   final val IssueTracker = "https://www.assembla.com/spaces/scala-ide/support/tickets"
@@ -109,6 +107,7 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
   def compilerPluginId = "org.scala-ide.scala.compiler"
   def libraryPluginId = "org.scala-ide.scala.library"
   def sbtPluginId = "org.scala-ide.sbt.full.library"
+  def sbtCompilerInterfaceId = "org.scala-ide.sbt.compiler.interface"
 
   def wizardPath = pluginId + ".wizards"
   def wizardId(name: String) = wizardPath + ".new" + name
@@ -154,11 +153,11 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
   /**
    * Check if the given version is compatible with the current plug-in version.
    * Check on the major/minor number, discard the maintenance number.
-   * 2.9.1 and 2.9.2-SNAPSHOT are compatible
-   * 2.8.1 and 2.9.0 are no compatible
+   *
+   * For example 2.9.1 and 2.9.2-SNAPSHOT are compatible versions whereas
+   * 2.8.1 and 2.9.0 aren't.
    */
-  def isCompatibleVersion(version: Option[String]): Boolean =
-    version match {
+  def isCompatibleVersion(version: Option[String]): Boolean = version match {
     case Some(v) =>
       cutVersion(v) == shortScalaVer
     case None =>
@@ -189,7 +188,8 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
   }
 
   lazy val sbtCompilerBundle = Platform.getBundle(sbtPluginId)
-  lazy val sbtCompilerInterface = allPathsInBundle(sbtCompilerBundle, "/lib", "compiler-interface*.jar").toIterable.headOption
+  lazy val sbtCompilerInterfaceBundle = Platform.getBundle(sbtCompilerInterfaceId)
+  lazy val sbtCompilerInterface = pathInBundle(sbtCompilerInterfaceBundle, "/")
   // Disable for now, until we introduce a way to have multiple scala libraries, compilers available for the builder
   //lazy val sbtScalaLib = pathInBundle(sbtCompilerBundle, "/lib/scala-" + shortScalaVer + "/lib/scala-library.jar")
   //lazy val sbtScalaCompiler = pathInBundle(sbtCompilerBundle, "/lib/scala-" + shortScalaVer + "/lib/scala-compiler.jar")
@@ -407,7 +407,7 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
         case (project, units) =>
           asScalaProject(project) foreach { p =>
             if (project.isOpen && !projectsToReset(p)) {
-              p.refreshChangedFiles(units.map(_.getResource.asInstanceOf[IFile]))
+              p.doWithPresentationCompiler(_.refreshChangedFiles(units.map(_.getResource.asInstanceOf[IFile])))
             }
           }
       }

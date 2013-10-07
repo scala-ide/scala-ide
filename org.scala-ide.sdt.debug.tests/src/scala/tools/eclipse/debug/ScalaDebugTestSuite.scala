@@ -1,14 +1,11 @@
 package scala.tools.eclipse.debug
 
-import junit.framework.TestSuite
 import org.junit.runners.Suite
 import org.junit.runner.RunWith
 import scala.tools.eclipse.debug.model.ScalaThreadTest
-import scala.tools.eclipse.debug.model.ScalaDebugModelPresentationTest
 import scala.tools.eclipse.debug.model.ScalaStackFrameTest
 import scala.tools.eclipse.debug.model.ScalaValueTest
 import scala.tools.eclipse.debug.model.ScalaDebugTargetTest
-import scala.tools.eclipse.launching.LibraryJarInBootstrapTest
 import scala.tools.eclipse.debug.model.DebugTargetTerminationTest
 import scala.tools.eclipse.debug.model.MethodClassifierUnitTest
 import scala.tools.eclipse.launching.RemoteConnectorTest

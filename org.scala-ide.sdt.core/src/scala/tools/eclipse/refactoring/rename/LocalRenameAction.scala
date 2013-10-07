@@ -2,8 +2,7 @@
  * Copyright 2005-2010 LAMP/EPFL
  */
 
-package scala.tools.eclipse
-package refactoring
+package scala.tools.eclipse.refactoring
 package rename
 
 import org.eclipse.jface.action.IAction
@@ -12,7 +11,7 @@ import scala.tools.refactoring.analysis.GlobalIndexes
 import scala.tools.refactoring.implementations.Rename
 
 /**
- * Supports renaming of identifiers inside a singe file using Eclipse's
+ * Supports renaming of identifiers inside a single file using Eclipse's
  * Linked UI Mode.
  *
  * Should the renaming fail to properly initialize, the GlobalRenameAction

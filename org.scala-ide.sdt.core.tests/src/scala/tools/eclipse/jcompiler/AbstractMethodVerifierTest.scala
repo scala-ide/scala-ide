@@ -31,7 +31,7 @@ object AbstractMethodVerifierTest extends TestProjectSetup("jcompiler") {
       def errors = new {
         def is = are
         def are = new {
-          def reported = {
+          def reported() = {
             //when
             val unit = compilationUnit(path2unit)
 
@@ -57,7 +57,7 @@ object AbstractMethodVerifierTest extends TestProjectSetup("jcompiler") {
 
     class WithExpecteProblems(expectedProblems: Seq[String]) {
       def is = new {
-        def reported = {
+        def reported() = {
           //when
           val problemsCollector = new ProblemsCollector
           val unit = compilationUnit(path2unit)
@@ -93,6 +93,8 @@ object AbstractMethodVerifierTest extends TestProjectSetup("jcompiler") {
 @Ignore("Failing randomly, re-enable when fixed.")
 class AbstractMethodVerifierTest {
   import AbstractMethodVerifierTest._
+
+  import scala.language.reflectiveCalls
 
   @Test
   def javaClassExtendingScalaClassWithConcreteMethodsInSuperTrait_NoErrorIsReportedInJavaEditor_t1000594_pos() {

@@ -11,10 +11,8 @@ import org.eclipse.text.undo.DocumentUndoManagerRegistry
 import org.eclipse.text.edits.{ TextEdit => EclipseTextEdit, _ }
 import org.eclipse.ui.texteditor.ITextEditor
 import scalariform.formatter.ScalaFormatter
-import scalariform.formatter.preferences._
 import scalariform.parser.ScalaParserException
 import scalariform.utils.TextEdit
-import scala.tools.eclipse.properties.PropertyStore
 import scala.tools.eclipse.ScalaPlugin
 import scala.tools.eclipse.util.EclipseUtils._
 import org.eclipse.core.resources.IResource
@@ -32,7 +30,7 @@ class ScalaFormattingStrategy(val editor: ITextEditor) extends IFormattingStrate
 
   def format() {
     val preferences = FormatterPreferences.getPreferences(getProject)
-    var edits =
+    val edits =
       try ScalaFormatter.formatAsEdits(document.get, preferences, Some(getDefaultLineDelimiter(document)))
       catch { case _: ScalaParserException => return }
 

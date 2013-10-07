@@ -70,7 +70,6 @@ abstract class AutoEditStrategyTests(strategy: IAutoEditStrategy) {
 
     val doc = createDocument(input)
     val rawInput = doc.get()
-    val textSize = doc.getLength()
     val textOffset = input.indexOf('^')
 
     operation match {

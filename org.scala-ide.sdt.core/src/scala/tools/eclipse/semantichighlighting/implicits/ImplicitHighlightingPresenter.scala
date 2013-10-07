@@ -3,7 +3,6 @@ package scala.tools.eclipse.semantichighlighting.implicits
 import java.util.Collections
 import scala.tools.eclipse.javaelements.ScalaCompilationUnit
 import scala.tools.eclipse.properties.ImplicitsPreferencePage._
-import scala.tools.eclipse.reconciliation.ReconciliationParticipant
 import scala.tools.eclipse.util.EclipseUtils
 import scala.tools.eclipse.logging.HasLogger
 import scala.tools.eclipse.ScalaPlugin
@@ -34,8 +33,6 @@ import scala.tools.eclipse.hyperlink.text._
 
 
 /**
- * @author Jin Mingjian
- * @author David Bernard
  *
  */
 class ImplicitHighlightingPresenter(sourceViewer: ISourceViewer) extends SemanticAction with HasLogger {

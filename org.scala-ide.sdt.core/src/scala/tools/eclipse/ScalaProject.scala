@@ -6,7 +6,6 @@
 package scala.tools.eclipse
 
 import java.io.File.pathSeparator
-
 import scala.collection.immutable
 import scala.collection.mutable
 import scala.reflect.internal.util.BatchSourceFile
@@ -24,7 +23,6 @@ import scala.tools.eclipse.util.Trim
 import scala.tools.eclipse.util.Utils
 import scala.tools.nsc.MissingRequirementError
 import scala.tools.nsc.Settings
-
 import org.eclipse.core.resources.IContainer
 import org.eclipse.core.resources.IFile
 import org.eclipse.core.resources.IMarker
@@ -47,6 +45,7 @@ import org.eclipse.ui.IEditorPart
 import org.eclipse.ui.IPartListener
 import org.eclipse.ui.IWorkbenchPart
 import org.eclipse.ui.part.FileEditorInput
+import org.eclipse.jface.preference.IPersistentPreferenceStore
 
 trait BuildSuccessListener {
   def buildSuccessful(): Unit
@@ -98,7 +97,6 @@ object ScalaProject {
 class ScalaProject private (val underlying: IProject) extends ClasspathManagement with HasLogger {
   import ScalaPlugin.plugin
 
-  private var classpathUpdate: Long = IResource.NULL_STAMP
   private var buildManager0: EclipseBuildManager = null
   private var hasBeenBuilt = false
 
@@ -432,7 +430,12 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
 
   private def refreshOutputFolders(): Unit = {
     sourceOutputFolders foreach {
-      case (_, binFolder) => binFolder.refreshLocal(IResource.DEPTH_INFINITE, null)
+      case (_, binFolder) =>
+        binFolder.refreshLocal(IResource.DEPTH_INFINITE, null)
+        // make sure the folder is marked as Derived, so we don't see classfiles in Open Resource
+        // but don't set it unless necessary (this might be an expensive operation)
+        if (!binFolder.isDerived && binFolder.exists)
+          binFolder.setDerived(true, null)
     }
   }
 
@@ -549,7 +552,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
    *  @see  #1001241.
    *  @see `storage` for a method that decides based on user preference
    */
-  def projectSpecificStorage: IPreferenceStore = {
+  def projectSpecificStorage: IPersistentPreferenceStore = {
     new PropertyStore(underlying, ScalaPlugin.prefStore, plugin.pluginId)
   }
 
@@ -610,10 +613,9 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
     }
   }
 
+  @deprecated("Use `InteractiveCompilationUnit.withSourceFile instead`", since = "4.0.0")
   def withSourceFile[T](scu: InteractiveCompilationUnit)(op: (SourceFile, ScalaPresentationCompiler) => T)(orElse: => T = defaultOrElse): T = {
-    withPresentationCompiler { compiler =>
-      compiler.withSourceFile(scu)(op)
-    } {orElse}
+    scu.withSourceFile(op)(orElse)
   }
 
   /** Shutdown the presentation compiler, and force a re-initialization but asking to reconcile all
@@ -621,16 +623,16 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
    *  the presentation compiler is not yet initialized.
    *
    *  @return true if the presentation compiler was initialized at the time of this call.
+   *
+   *  @note This method isn't thread-safe, but plain synchronization can't be added without
+   *        the risk of deadlocks (see #1001875)
    */
   def resetPresentationCompiler(): Boolean =
     if (presentationCompiler.initialized) {
-      val units: Seq[InteractiveCompilationUnit] = withPresentationCompiler(_.compilationUnits)(Nil)
+      val units = shutDownPresentationCompiler().map(_.compilationUnits).getOrElse(Nil)
 
-      shutDownPresentationCompiler()
-
-      val existingUnits = units.filter(_.exists)
-      logger.info("Scheduling for reconcile: " + existingUnits.map(_.file))
-      existingUnits.foreach(_.scheduleReconcile())
+      // if several threads call this method, there might be a lost update
+      doWithPresentationCompiler { _.askReload(units).get  }
       true
     } else {
       logger.info("[%s] Presentation compiler was not yet initialized, ignoring reset.".format(underlying.getName()))
@@ -670,9 +672,6 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
   def prepareBuild(): Boolean = if (!hasBeenBuilt) buildManager.invalidateAfterLoad else false
 
   def build(addedOrUpdated: Set[IFile], removed: Set[IFile], monitor: SubMonitor) {
-    if (addedOrUpdated.isEmpty && removed.isEmpty)
-      return
-
     hasBeenBuilt = true
 
     clearBuildProblemMarker()
@@ -742,42 +741,12 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
     shutDownPresentationCompiler()
   }
 
-  /** Shut down presentation compiler without scheduling a reconcile for open files. */
-  private def shutDownPresentationCompiler() {
-    presentationCompiler.invalidate()
-  }
-
-  /**
-   * Tell the presentation compiler to refresh the given files,
-   * if they are not managed by the presentation compiler already.
+  /** Shut down presentation compiler without scheduling a reconcile for open files.
+   *
+   *  @return The old presentation compiler instance, if any.
    */
-  def refreshChangedFiles(files: List[IFile]) {
-    // transform to batch source files
-    val abstractfiles = files.collect {
-      // When a compilation unit is moved (e.g. using the Move refactoring) between packages,
-      // an ElementChangedEvent is fired but with the old IFile name. Ignoring the file does
-      // not seem to cause any bad effects later on, so we simply ignore these files -- Mirko
-      // using an Util class from jdt.internal to read the file, Eclipse doesn't seem to
-      // provide an API way to do it -- Luc
-      case file if file.exists => new BatchSourceFile(EclipseResource(file), Util.getResourceContentsAsCharArray(file))
-    }
-
-    withPresentationCompiler {compiler =>
-      import compiler._
-      // only the files not already managed should be refreshed
-      val notLoadedFiles= abstractfiles.filter(compiler.getUnitOf(_).isEmpty)
-
-      notLoadedFiles.foreach(file => {
-        // call askParsedEntered to force the refresh without loading the file
-        val r = new Response[Tree]
-        compiler.askParsedEntered(file, false, r)
-        r.get.left
-      })
-
-      // reconcile the opened editors if some files have been refreshed
-      if (notLoadedFiles.nonEmpty)
-        compiler.compilationUnits.foreach(_.scheduleReconcile())
-    }(Nil)
+  def shutDownPresentationCompiler(): Option[ScalaPresentationCompiler] = {
+    presentationCompiler.invalidate().flatten
   }
 
   def dispose(): Unit = {
@@ -787,4 +756,11 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
   }
 
   override def toString: String = underlying.getName
+
+  override def equals(other: Any): Boolean = other match {
+    case otherSP: ScalaProject => underlying == otherSP.underlying
+    case _ => false
+  }
+
+  override def hashCode(): Int = underlying.hashCode()
 }

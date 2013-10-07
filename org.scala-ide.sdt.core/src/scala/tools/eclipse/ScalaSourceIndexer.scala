@@ -5,8 +5,6 @@
 
 package scala.tools.eclipse
 
-import org.eclipse.core.resources.ResourcesPlugin
-import org.eclipse.core.runtime.Path
 import org.eclipse.jdt.core.search.SearchDocument
 import org.eclipse.jdt.internal.core.search.indexing.AbstractIndexer
 import scala.tools.eclipse.javaelements.ScalaSourceFile

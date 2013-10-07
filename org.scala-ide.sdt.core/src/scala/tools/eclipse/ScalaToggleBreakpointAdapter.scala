@@ -26,7 +26,6 @@ import org.eclipse.jface.text.ITextSelection
 import org.eclipse.jface.viewers.ISelection
 import org.eclipse.ui.IWorkbenchPart
 import scala.tools.eclipse.util.ReflectionUtils
-import scala.tools.eclipse.javaelements.ScalaClassElement
 import scala.tools.eclipse.javaelements.ScalaSourceTypeElement
 import scala.tools.eclipse.logging.HasLogger
 

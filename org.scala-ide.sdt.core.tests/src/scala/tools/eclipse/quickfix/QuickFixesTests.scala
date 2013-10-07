@@ -59,7 +59,7 @@ object QuickFixesTests extends TestProjectSetup("quickfix") {
     val unit = compilationUnit(pathToSource).asInstanceOf[ScalaCompilationUnit]
 
     // first, 'open' the file by telling the compiler to load it
-    project.withSourceFile(unit) { (src, compiler) =>
+    unit.withSourceFile { (src, compiler) =>
 
       // do a compiler reload before checking for problems
       val dummy = new Response[Unit]
@@ -70,12 +70,12 @@ object QuickFixesTests extends TestProjectSetup("quickfix") {
       assertTrue("No problems found.", problems.size > 0)
       assertNumberOfProblems(expectedQuickFixesList.size, problems.toArray)
 
-      val editor = JavaUI.openInEditor(unit.getCompilationUnit)
+      JavaUI.openInEditor(unit.getCompilationUnit)
 
       // check each problem quickfix
       for ((problem, expectedQuickFixes) <- problems zip expectedQuickFixesList) {
         // here we will accumulate proposals
-        var proposals: ArrayList[IJavaCompletionProposal] = new ArrayList()
+        val proposals: ArrayList[IJavaCompletionProposal] = new ArrayList()
 
         // get all corrections for the problem
         val offset = problem.getSourceStart

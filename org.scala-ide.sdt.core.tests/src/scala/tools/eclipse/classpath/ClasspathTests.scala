@@ -224,7 +224,7 @@ class ClasspathTests {
    * Two scala library defined in the classpath, the eclipse container one, and one incompatible.
    */
   @Test
-  def twoScalaLibrariesWithOneIncompatbile() {
+  def twoScalaLibrariesWithOneIncompatible() {
     setRawClasspathAndCheckMarkers(baseRawClasspath :+ createIncompatibleScalaLibraryEntry(), 0, 1)
   }
 
@@ -338,7 +338,7 @@ class ClasspathTests {
     try {
       val packScala = createSourcePackage("scala")(scalaLibProject)
 
-      val unitA = packScala.createCompilationUnit("Predef.scala", "class Predef", true, null)
+      packScala.createCompilationUnit("Predef.scala", "class Predef", true, null)
 
       setRawClasspathAndCheckMarkers(cleanRawClasspath :+ JavaCore.newProjectEntry(scalaLibProject.underlying.getFullPath, true), 0, 0)
     } finally {

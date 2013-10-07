@@ -8,14 +8,6 @@ import org.junit.AfterClass
 import scala.tools.eclipse.testsetup.TestProjectSetup
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.junit.Test
-import scala.tools.eclipse.util.EclipseUtils
-import java.util.concurrent.CountDownLatch
-import org.eclipse.debug.core.IBreakpointListener
-import org.eclipse.debug.core.model.IBreakpoint
-import org.eclipse.core.resources.IMarkerDelta
-import java.util.concurrent.TimeUnit
-import org.eclipse.debug.core.DebugPlugin
-import org.eclipse.core.resources.IMarker
 import scala.tools.eclipse.ScalaLibrary
 
 object ScalaDebugBreakpointTest extends TestProjectSetup("breakpoints", bundleName = "org.scala-ide.sdt.debug.tests") with ScalaDebugRunningTest {

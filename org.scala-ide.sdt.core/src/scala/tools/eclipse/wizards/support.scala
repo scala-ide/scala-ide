@@ -1,6 +1,5 @@
 /*
  * Copyright 2010 LAMP/EPFL
- * @author Tim Clendenen
  *
  */
 package scala.tools.eclipse.wizards
@@ -10,8 +9,8 @@ object BufferSupport {
   trait Buffer {
     def append(s: String): Unit
     def getLength(): Int
-  def replace(offset: Int, length: Int, text: String): Unit
-  def getContents(): String
+    def replace(offset: Int, length: Int, text: String): Unit
+    def getContents(): String
   }
 
   private[wizards] implicit class BuilderAdapter(val __sb: StringBuilder) extends AnyVal {
@@ -103,18 +102,18 @@ trait QualifiedNameSupport extends SuperTypeSupport {
   }
 
   val packageOf = (typeDeclaration: String) => {
-  val (pn, tn) = packageAndTypeNameOf(typeDeclaration)
-  pn
+    val (pn, _) = packageAndTypeNameOf(typeDeclaration)
+    pn
   }
 
   val typeNameOf = (typeDeclaration: String) => {
-  val (pn, tn) = packageAndTypeNameOf(typeDeclaration)
-  tn
+    val (_, tn) = packageAndTypeNameOf(typeDeclaration)
+    tn
   }
 
   val parametersOf = (typeDeclaration: String) => {
-  val (packageAndType, params) = splitOffParameters(typeDeclaration)
-  listOf(params)
+    val (_, params) = splitOffParameters(typeDeclaration)
+    listOf(params)
   }
 
   val packageAndTypeNameOf = (typeDeclaration: String) => {

@@ -8,7 +8,6 @@ import org.eclipse.jface.text.hyperlink.AbstractHyperlinkDetector
 import org.eclipse.jface.text.hyperlink.IHyperlink
 import org.eclipse.ui.texteditor.ITextEditor
 import scala.tools.eclipse.ScalaWordFinder
-import scala.tools.eclipse.javaelements.ScalaCompilationUnit
 import scala.tools.eclipse.javaelements.ScalaSelectionEngine
 import scala.tools.eclipse.javaelements.ScalaSelectionRequestor
 import scala.tools.eclipse.logging.HasLogger

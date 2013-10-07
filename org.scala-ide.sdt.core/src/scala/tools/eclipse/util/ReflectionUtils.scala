@@ -5,8 +5,6 @@
 
 package scala.tools.eclipse.util
 
-import java.lang.reflect.AccessibleObject
-import java.lang.reflect.Constructor
 import java.security.AccessController
 import java.security.PrivilegedAction
 import java.security.PrivilegedActionException

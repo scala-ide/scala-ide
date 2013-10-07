@@ -7,8 +7,6 @@ import scala.tools.eclipse.util.parsing.ScalariformParser
 import org.junit.Assert._
 import org.junit.Test
 
-import MissingMemberInfoTests.compilationUnit
-
 object MissingMemberInfoTests extends TestProjectSetup("quickfix") {
   private lazy val unit = compilationUnit("createmethod/CreateMethod.scala").asInstanceOf[ScalaCompilationUnit]
   private lazy val source = new String(unit.getContents)

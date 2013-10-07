@@ -19,14 +19,6 @@ import org.eclipse.jface.text.source.SourceViewerConfiguration
 
 class ScalaClassFileEditor extends ClassFileEditor with ScalaCompilationUnitEditor {
 
-  override def setSourceViewerConfiguration(configuration : SourceViewerConfiguration) {
-    super.setSourceViewerConfiguration(
-      configuration match {
-        case svc : ScalaSourceViewerConfiguration => svc
-        case _ => new ScalaSourceViewerConfiguration(getPreferenceStore, ScalaPlugin.prefStore, this)
-      })
-  }
-
   override def getElementAt(offset : Int) : IJavaElement = {
     getInputJavaElement match {
       case scf : ScalaClassFile => scf.getElementAt(offset)

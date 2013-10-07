@@ -23,12 +23,12 @@
       <id>scala-2.11.x</id>
       <dependencies>
         <dependency>
-          <groupId>org.scala-lang</groupId>
-          <artifactId>scala-xml</artifactId>
+          <groupId>org.scala-lang.modules</groupId>
+          <artifactId>scala-xml_${scala.binary.version}</artifactId>
         </dependency>
         <dependency>
-          <groupId>org.scala-lang</groupId>
-          <artifactId>scala-parser-combinators</artifactId>
+          <groupId>org.scala-lang.modules</groupId>
+          <artifactId>scala-parser-combinators_${scala.binary.version}</artifactId>
         </dependency>
       </dependencies>
       <build>
@@ -47,15 +47,15 @@
                 <configuration>
                   <artifactItems>
                     <artifactItem>
-                      <groupId>org.scala-lang</groupId>
-                      <artifactId>scala-xml</artifactId>
+                      <groupId>org.scala-lang.modules</groupId>
+                      <artifactId>scala-xml_${scala.binary.version}</artifactId>
                       <classifier>sources</classifier>
                       <type>jar</type>
                       <destFileName>scala-xml-src.jar</destFileName>
                     </artifactItem>
                     <artifactItem>
-                      <groupId>org.scala-lang</groupId>
-                      <artifactId>scala-parser-combinators</artifactId>
+                      <groupId>org.scala-lang.modules</groupId>
+                      <artifactId>scala-parser-combinators_${scala.binary.version}</artifactId>
                       <classifier>sources</classifier>
                       <type>jar</type>
                       <destFileName>scala-parser-combinators-src.jar</destFileName>
@@ -178,13 +178,12 @@
             <Bundle-SymbolicName>org.scala-ide.scala.library</Bundle-SymbolicName>
             <Bundle-Name>Scala Library for Eclipse</Bundle-Name>
             <Bundle-Version>${osgi.version.number}</Bundle-Version>
-            <Bundle-Vendor>scala-ide.org</Bundle-Vendor>
             <Embed-Dependency>*;scope=compile|runtime;inline=false</Embed-Dependency>
             <_exportcontents>scala.reflect;version=${osgi.version.number},scala.*;version=${osgi.version.number}</_exportcontents>
             <Embed-Directory>lib</Embed-Directory>
             <Embed-StripVersion>true</Embed-StripVersion>
             <Include-Resource>lib=${project.build.directory}/lib</Include-Resource>
-            <Import-Package>!javax.script.*,!sun.misc,*</Import-Package>
+            <Import-Package>!sun.misc,*</Import-Package>
           </instructions>
         </configuration>
       </plugin>

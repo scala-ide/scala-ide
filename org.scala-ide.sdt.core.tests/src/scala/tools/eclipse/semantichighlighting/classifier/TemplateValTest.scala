@@ -6,7 +6,7 @@ import org.junit._
 class TemplateValTest extends AbstractSymbolClassifierTest {
 
   @Test
-  def basic_template_val {
+  def basic_template_val() {
     checkSymbolClassification("""
       object A {
         val xxxxxx = 12
@@ -18,7 +18,7 @@ class TemplateValTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  def set_in_predef_is_a_val {
+  def set_in_predef_is_a_val() {
     checkSymbolClassification("""
       object A {
         Set(1, 2, 3)

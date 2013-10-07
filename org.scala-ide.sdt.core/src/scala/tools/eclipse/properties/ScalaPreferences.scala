@@ -1,12 +1,10 @@
 /*
  * Copyright 2005-2010 LAMP/EPFL
- * @author Sean McDirmid
  */
 // $Id$
 
 package scala.tools.eclipse.properties
 
-import org.eclipse.jface.preference.PreferencePage
 import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.ui.IWorkbenchPreferencePage
 import org.eclipse.ui.IWorkbench
@@ -17,11 +15,7 @@ import org.eclipse.swt.widgets.Group
 import org.eclipse.swt.layout.GridLayout
 import org.eclipse.swt.layout.GridData
 import org.eclipse.swt.SWT
-import org.eclipse.jdt.core.IJavaProject
-import org.eclipse.core.resources.IProject
 import scala.tools.eclipse.ScalaPlugin
-import scala.tools.nsc.Settings
-import scala.tools.eclipse.SettingConverterUtil
 import scala.tools.eclipse.logging.HasLogger
 
 class ScalaPreferences extends PropertyPage with IWorkbenchPreferencePage with EclipseSettings
@@ -35,7 +29,6 @@ class ScalaPreferences extends PropertyPage with IWorkbenchPreferencePage with E
   override def init(wb : IWorkbench) { }
 
   /** Returns the id of what preference page we use */
-  import EclipseSetting.toEclipseBox
   override val eclipseBoxes: List[EclipseSetting.EclipseBox] = Nil
 
   def createContents(parent : Composite) : Control = {

@@ -30,7 +30,6 @@ import org.osgi.framework.Bundle
 
 /** A test project, created from scratch.
  *
- * @author Miles Sabin
  */
 class SDTTestProject(project : IProject) {
   val location = project.getLocation.toOSString
@@ -89,7 +88,7 @@ class SDTTestProject(project : IProject) {
     folder
   }
 
-  def dispose {
+  def dispose() {
     if (project.exists)
       project.delete(true, true, null)
     else

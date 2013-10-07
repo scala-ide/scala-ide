@@ -26,7 +26,6 @@ abstract class ClassParameterDrivenIdeRefactoring(name: String, start: Int, end:
   def refactoringParameters: refactoring.RefactoringParameters =
     refactoring.RefactoringParameters(callSuper, selectByNames(selectedClassParamNames), keepExistingEqualityMethods)
 
-  import refactoring._
   override def getPages: List[RefactoringWizardPage] = preparationResult match {
     case Left(error) => Nil
     case Right(prepResult) => configPage(prepResult)::Nil

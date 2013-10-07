@@ -1,5 +1,4 @@
 package scala.tools.eclipse.completion
-import scala.tools.eclipse.javaelements.ScalaCompilationUnit
 import scala.tools.eclipse.ScalaPresentationCompiler
 import scala.reflect.internal.util.SourceFile
 import org.eclipse.jdt.core.search.SearchEngine

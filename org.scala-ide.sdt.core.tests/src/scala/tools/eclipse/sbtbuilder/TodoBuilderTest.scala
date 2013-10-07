@@ -12,7 +12,6 @@ import scala.tools.eclipse.testsetup.SDTTestUtils
 import org.eclipse.core.resources.IFile
 import org.junit.Ignore
 import org.junit.Before
-import org.mockito.Mockito._
 import org.mockito.Matchers.any
 import org.eclipse.jdt.core.IProblemRequestor
 import org.eclipse.jdt.core.WorkingCopyOwner
@@ -27,7 +26,7 @@ class TodoBuilderTest {
   import TodoBuilderTest._
 
   @Before
-  def setupWorkspace {
+  def setupWorkspace() {
     SDTTestUtils.enableAutoBuild(false)
   }
 
@@ -41,7 +40,7 @@ class TodoBuilderTest {
       val tasks = unit.getUnderlyingResource().findMarkers(ScalaPlugin.plugin.taskMarkerId, false, IResource.DEPTH_INFINITE)
       println("tasks: %s: %s".format(unit, tasks.toList))
       tasks
-    } flatten
+    }.flatten
 
     Assert.assertTrue("No valid TODO was found", allTasks.exists(p => similarMessage(p.getAttribute(IMarker.MESSAGE).toString)(expectedTODO)))
   }

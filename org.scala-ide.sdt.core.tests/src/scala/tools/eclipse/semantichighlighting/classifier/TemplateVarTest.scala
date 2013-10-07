@@ -6,7 +6,7 @@ import org.junit._
 class TemplateVarTest extends AbstractSymbolClassifierTest {
 
   @Test
-  def method {
+  def method() {
     checkSymbolClassification("""
       object A {
         var xxxxxx = 12

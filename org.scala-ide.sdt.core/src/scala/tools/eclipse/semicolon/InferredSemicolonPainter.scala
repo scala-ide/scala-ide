@@ -4,9 +4,7 @@ import scala.math.min
 import scala.tools.eclipse.util.EclipseUtils._
 import scalariform.lexer._
 import scalariform.parser._
-import scalariform.utils.Utils._
 import org.eclipse.swt.widgets.Display
-import org.eclipse.swt.custom._
 import org.eclipse.swt.events._
 import org.eclipse.swt.graphics._
 import org.eclipse.jface.text._

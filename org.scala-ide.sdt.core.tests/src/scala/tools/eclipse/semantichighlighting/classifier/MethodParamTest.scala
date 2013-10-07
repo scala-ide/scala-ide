@@ -38,7 +38,7 @@ class MethodParamTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  def named_arguments {
+  def named_arguments() {
     checkSymbolClassification("""
       object A {
            def foo(ppppppp: String) = 42
@@ -58,7 +58,7 @@ class MethodParamTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  def annotation_arguments {
+  def annotation_arguments() {
     checkSymbolClassification("""
       @SuppressWarnings(value = Array("all"))
       class A
@@ -70,7 +70,7 @@ class MethodParamTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  def case_constructor_arguments {
+  def case_constructor_arguments() {
     checkSymbolClassification("""
       case class Bob(param: Int) {
         Bob(param = 42)

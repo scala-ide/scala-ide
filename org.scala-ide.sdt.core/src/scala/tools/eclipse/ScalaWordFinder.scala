@@ -30,7 +30,7 @@ object ScalaWordFinder extends IScalaWordFinder {
   }
 
   def bufferToSeq(buf : IBuffer) = new IndexedSeq[Char] {
-    override def apply(i : Int) = if (i >= buf.getLength()) '\0' else buf.getChar(i)
+    override def apply(i : Int) = if (i >= buf.getLength()) 0.toChar else buf.getChar(i)
     override def length = buf.getLength
   }
 

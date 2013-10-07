@@ -11,6 +11,7 @@ import scala.tools.eclipse.ScalaPresentationCompiler
 import scala.tools.eclipse.javaelements.ScalaSourceFile
 import scala.tools.eclipse.util.FileUtils
 import scala.tools.refactoring.MultiStageRefactoring
+import scala.tools.refactoring.ParameterlessRefactoring
 import scala.tools.refactoring.common.Change
 import scala.tools.refactoring.common.InteractiveScalaCompiler
 import scala.tools.refactoring.common.TextChange
@@ -57,7 +58,7 @@ abstract class ScalaIdeRefactoring(val getName: String, val file: ScalaSourceFil
   val refactoring: MultiStageRefactoring with InteractiveScalaCompiler
 
   /**
-   * The subclass also needs to provide all the parameters that will
+   * Subclasses have to provide all the parameters that will
    * later be passed to the refactoring library when the refactoring
    * is performed.
    */
@@ -103,12 +104,11 @@ abstract class ScalaIdeRefactoring(val getName: String, val file: ScalaSourceFil
   }
 
   def checkInitialConditions(pm: IProgressMonitor): RefactoringStatus = new RefactoringStatus {
-    preparationResult().fold(e => addFatalError(e.cause), identity)
+    preparationResult().left.foreach(e => addFatalError(e.cause))
   }
 
-  def checkFinalConditions(pm: IProgressMonitor): RefactoringStatus = {
+  def checkFinalConditions(pm: IProgressMonitor): RefactoringStatus =
     refactoringError map RefactoringStatus.createErrorStatus getOrElse new RefactoringStatus
-  }
 
   /**
    * Converts the (file, from, to) selection into a proper Refactoring selection.
@@ -185,4 +185,16 @@ abstract class ScalaIdeRefactoring(val getName: String, val file: ScalaSourceFil
   def fail(msg: String = "Could not get the source file."): Nothing = {
     throw new CoreException(new Status(IStatus.ERROR, ScalaPlugin.plugin.pluginId, msg))
   }
+}
+
+/**
+ * Should be extended by Scala IDE refactorings that mixin
+ * [[import scala.tools.refactoring.ParameterlessRefactoring]].
+ */
+abstract class ParameterlessScalaIdeRefactoring(getName: String, file: ScalaSourceFile, selectionStart: Int, selectionEnd: Int)
+  extends ScalaIdeRefactoring(getName, file, selectionStart, selectionEnd) {
+
+  override val refactoring: MultiStageRefactoring with InteractiveScalaCompiler with ParameterlessRefactoring
+
+  def refactoringParameters = new refactoring.RefactoringParameters
 }

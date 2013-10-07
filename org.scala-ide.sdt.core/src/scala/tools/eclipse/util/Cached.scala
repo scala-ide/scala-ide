@@ -15,7 +15,7 @@ package scala.tools.eclipse.util
  */
 trait Cached[T] {
   private var inProgress = false
-  private var elem: Option[T] = None
+  @volatile private var elem: Option[T] = None
 
   def apply[U](op: T => U): U = {
     val e = synchronized {
@@ -42,9 +42,10 @@ trait Cached[T] {
   }
 
   /** Is the cached object initialized, at this point in time? */
-  def initialized: Boolean = synchronized { elem.isDefined }
+  def initialized: Boolean = elem.isDefined
 
-  def invalidate() {
+  /** Invalidate the cached resource. Return the existing one, if any. */
+  def invalidate(): Option[T] = {
     val oldElem = synchronized {
       val elem0 = elem
       elem = None
@@ -55,6 +56,8 @@ trait Cached[T] {
       case Some(t) => destroy(t)
       case _       =>
     }
+
+    oldElem
   }
 
   /** Should not throw. */

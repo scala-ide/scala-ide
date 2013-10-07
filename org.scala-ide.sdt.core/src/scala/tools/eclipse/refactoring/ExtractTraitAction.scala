@@ -21,7 +21,7 @@ import javaelements.ScalaSourceFile
  * The original class/trait will automatically extend the extracted trait and the
  * extracted trait will have a self-type annotation for the original class/trait.
  */
-class ExtractTraitAction extends RefactoringAction {
+class ExtractTraitAction extends RefactoringActionWithWizard {
 
   def createRefactoring(selectionStart: Int, selectionEnd: Int, file: ScalaSourceFile) = new ExtractTraitScalaIdeRefactoring(selectionStart, selectionEnd, file)
 
