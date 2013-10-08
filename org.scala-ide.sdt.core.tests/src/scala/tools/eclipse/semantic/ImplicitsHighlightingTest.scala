@@ -77,7 +77,7 @@ class ImplicitsHighlightingTest {
       compiler.askType(src, false, tree)
       tree.get
       test(compiler, unit)
-    }()
+    }
   }
 
   def implicits(compiler: ScalaPresentationCompiler, scu: ScalaCompilationUnit) = {

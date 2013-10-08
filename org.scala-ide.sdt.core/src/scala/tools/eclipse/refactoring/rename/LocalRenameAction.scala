@@ -25,13 +25,13 @@ class LocalRenameAction extends RefactoringAction {
 
     def refactoringParameters = ""
 
-    val refactoring = file.withSourceFile((file, compiler) => new Rename with GlobalIndexes {
+    val refactoring = file.withSourceFile((source, compiler) => new Rename with GlobalIndexes {
       val global = compiler
       var index = {
-        val tree = askLoadedAndTypedTreeForFile(file).left.get
+        val tree = askLoadedAndTypedTreeForFile(source).left.get
         global.ask(() => GlobalIndex(tree))
       }
-    })()
+    }) getOrElse fail()
   }
 
   override def run(action: IAction) {

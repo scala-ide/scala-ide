@@ -88,7 +88,7 @@ class MemoryLeaksTest extends HasLogger {
     Assert.assertTrue("Rate of memory consumption is alarming! %.4f".format(b), b < 1.0)
   }
 
-  private def typeCheckWith(unit: ScalaCompilationUnit with ICompilationUnit, src: String) = {
+  private def typeCheckWith(unit: ScalaCompilationUnit with ICompilationUnit, src: String): Unit = {
     unit.becomeWorkingCopy(null)
     unit.getBuffer().setContents(src)
     unit.commitWorkingCopy(true, null) // trigger indexing and structure builder
@@ -105,8 +105,7 @@ class MemoryLeaksTest extends HasLogger {
           overrideIndicatorBuilder.traverse(tree)
         }
       }
-    }()
-
+    }
   }
 
 

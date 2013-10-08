@@ -34,7 +34,6 @@ import scala.tools.eclipse.semantichighlighting.classifier.SymbolClassifierTestS
 import scala.tools.eclipse.structurebuilder.ScalaJavaMapperTest;
 import scala.tools.eclipse.structurebuilder.StructureBuilderTest;
 import scala.tools.eclipse.ui.UITestSuite;
-import scala.tools.eclipse.util.CachedTest;
 import scala.tools.eclipse.util.CollectionUtilTest;
 import scala.tools.eclipse.wizards.ImportSupportTest;
 import scala.tools.eclipse.wizards.QualifiedNameSupportTest;
@@ -78,7 +77,6 @@ import scala.tools.eclipse.wizards.QualifiedNameSupportTest;
   StructureBuilderTest.class,
   ScalaJavaMapperTest.class,
   UITestSuite.class,
-  CachedTest.class,
   CollectionUtilTest.class,
   ImportSupportTest.class,
   QualifiedNameSupportTest.class,

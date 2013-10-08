@@ -22,9 +22,9 @@ class ExpandCaseClassBindingAction extends RefactoringAction with RefactoringAct
   class ExpandCaseClassBindingScalaIdeRefactoring(start: Int, end: Int, file: ScalaSourceFile)
     extends ScalaIdeRefactoring("Expand Case Class Binding", file, start, end) {
 
-    val refactoring = file.withSourceFile((sourceFile, compiler) => new ExpandCaseClassBinding {
+    val refactoring = file.withSourceFile((_, compiler) => new ExpandCaseClassBinding {
       val global = compiler
-    })()
+    }) getOrElse fail()
 
     /**
      * The refactoring does not take any parameters.
