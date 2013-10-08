@@ -155,14 +155,14 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationU
   }
 
   private def performOccurrencesUpdate(selection: ITextSelection, documentLastModified: Long) {
-    val annotations = getAnnotations(selection, getInteractiveCompilationUnit, documentLastModified)
+    val annotations = getAnnotations(selection, documentLastModified)
     for(annotationModel <- getAnnotationModelOpt) annotationModel.withLock {
       annotationModel.replaceAnnotations(occurrenceAnnotations, annotations)
       occurrenceAnnotations = annotations.keySet
     }
   }
 
-  private def getAnnotations(selection: ITextSelection, unit: InteractiveCompilationUnit, documentLastModified: Long): Map[Annotation, Position] = {
+  private def getAnnotations(selection: ITextSelection, documentLastModified: Long): Map[Annotation, Position] = {
     val region = EditorUtils.textSelection2region(selection)
     val occurrences = occurrencesFinder.findOccurrences(region, documentLastModified)
     for {

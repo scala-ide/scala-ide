@@ -44,15 +44,9 @@ class ImplicitHighlightingPresenter(sourceViewer: ISourceViewer) extends Semanti
     def isTemporary(annotation: Annotation) = true
   }
 
-  private def isFontStyleBold = pluginStore.getBoolean(P_BOLD) match {
-    case true => SWT.BOLD
-    case _ => SWT.NORMAL
-  }
+  private def isFontStyleBold = if(pluginStore.getBoolean(P_BOLD)) SWT.BOLD else SWT.NORMAL
 
-  private def isFontStyleItalic = pluginStore.getBoolean(P_ITALIC) match {
-    case true => SWT.ITALIC
-    case _ => SWT.NORMAL
-  }
+  private def isFontStyleItalic = if(pluginStore.getBoolean(P_ITALIC)) SWT.ITALIC else SWT.NORMAL
 
   private lazy val P_COLOR = {
     val lookup = new org.eclipse.ui.texteditor.AnnotationPreferenceLookup()

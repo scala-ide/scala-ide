@@ -55,7 +55,7 @@ class DeclarationHyperlinkDetector extends BaseHyperlinkDetector with HasLogger 
 
   private def javaDeclarationHyperlinkComputer(textEditor: ITextEditor, wordRegion: IRegion, icu: InteractiveCompilationUnit, openable: Openable, mappedRegion: IRegion): List[IHyperlink] = {
     try {
-      val elements = JavaSelectionEngine.getJavaElements(wordRegion, icu, openable, mappedRegion)
+      val elements = JavaSelectionEngine.getJavaElements(icu, openable, mappedRegion)
 
       lazy val qualify = elements.length > 1
       lazy val openAction = new OpenAction(textEditor.getEditorSite()) // changed from asInstanceOf[JavaEditor] to getEditorSite because
@@ -75,7 +75,7 @@ object DeclarationHyperlinkDetector {
 
 /** Helper object to locate Java elements based on a region */
 object JavaSelectionEngine extends HasLogger {
- protected[hyperlink] def getJavaElements(wordRegion: IRegion, icu: InteractiveCompilationUnit, openable: Openable, mappedRegion: IRegion): List[IJavaElement] = {
+ protected[hyperlink] def getJavaElements(icu: InteractiveCompilationUnit, openable: Openable, mappedRegion: IRegion): List[IJavaElement] = {
     try {
       val environment = icu.newSearchableEnvironment()
       val requestor = new ScalaSelectionRequestor(environment.nameLookup, openable)

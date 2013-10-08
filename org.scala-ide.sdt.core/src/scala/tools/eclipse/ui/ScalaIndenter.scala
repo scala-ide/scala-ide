@@ -541,21 +541,16 @@ class ScalaIndenter(
     val maxCopyLength = if (tabSize > 0) minLength - minLength % tabSize else minLength // maximum indent to copy
     stripExceedingChars(buffer, maxCopyLength)
 
+
+    def safeDivision(num: Int, denom: Int): (Int,Int) = if (denom > 0) (num / denom, num % denom) else (0, num)
+
     // add additional indent
     val missing = totalLength - maxCopyLength
     val (tabs, spaces) =
       if (JavaCore.SPACE.equals(prefTabChar)) {
         (0, missing)
-      } else if (JavaCore.TAB.equals(prefTabChar)) {
-        if (tabSize > 0)
-          (missing / tabSize, missing % tabSize)
-        else
-          (0, missing)
-      } else if (DefaultCodeFormatterConstants.MIXED.equals(prefTabChar)) {
-        if (tabSize > 0)
-          (missing / tabSize, missing % tabSize)
-        else
-          (0, missing)
+      } else if (JavaCore.TAB.equals(prefTabChar) || DefaultCodeFormatterConstants.MIXED.equals(prefTabChar)) {
+        safeDivision(missing, tabSize)
       } else {
         Assert.isTrue(false)
         return null
@@ -955,10 +950,8 @@ class ScalaIndenter(
           Symbols.TokenRBRACKET |
           Symbols.TokenGREATERTHAN =>
 
-          if (fToken == Symbols.TokenRPAREN) {
-            if (isInBlock)
+          if (fToken == Symbols.TokenRPAREN && isInBlock)
               mayBeMethodBody = READ_PARENS
-          }
 
           val pos = fPreviousPos
           if (!skipScope)
@@ -1157,13 +1150,12 @@ class ScalaIndenter(
           }
         }
 
-        if ((fToken == Symbols.TokenIDENT && !isGenericStarter) ||
-          fToken == Symbols.TokenQUESTIONMARK ||
-          fToken == Symbols.TokenGREATERTHAN) {
-
-          if (skipScope(Symbols.TokenLESSTHAN, Symbols.TokenGREATERTHAN))
+        if (((fToken == Symbols.TokenIDENT && !isGenericStarter) ||
+            fToken == Symbols.TokenQUESTIONMARK ||
+            fToken == Symbols.TokenGREATERTHAN) &&
+           skipScope(Symbols.TokenLESSTHAN, Symbols.TokenGREATERTHAN))
             return true
-        }
+
         // <> are harder to detect - restore the position if we fail
         fPosition = storedPosition
         fToken = storedToken
@@ -1514,4 +1506,3 @@ class ScalaIndenter(
     return false // Never reaches here
   }
 }
-

@@ -390,10 +390,10 @@ abstract class AbstractNewElementWizardPage extends NewTypeWizardPage(1, "") wit
         case ipf: IPackageFragment => ipf
         case _ => rt.getPackageFragment("")
       }
-      p.exists match {
-        case true => monitor.worked(1)
-        case _ => p = rt.createPackageFragment(pf.getElementName, true,
-          new SubProgressMonitor(monitor, 1))
+      if(p.exists) monitor.worked(1)
+      else {
+        p = rt.createPackageFragment(pf.getElementName, true,
+        new SubProgressMonitor(monitor, 1))
       }
       p
     }
@@ -484,10 +484,9 @@ abstract class AbstractNewElementWizardPage extends NewTypeWizardPage(1, "") wit
   /** Return the package declaration used in the resources created by the wizard.
    * This is needed because the package declaration may be different from the
    * file's location (as in the case of a `package object`).*/
-  protected def getPackageNameToInject = !getPackageFragment.isDefaultPackage match {
-    case true => Some(getPackageFragment.getElementName)
-    case _ => None
-  }
+  protected def getPackageNameToInject =
+    if (!getPackageFragment.isDefaultPackage) Some(getPackageFragment.getElementName)
+    else None
 
   protected def getTypeNameWithoutParameters() = getTypeName.split('[')(0)
 
