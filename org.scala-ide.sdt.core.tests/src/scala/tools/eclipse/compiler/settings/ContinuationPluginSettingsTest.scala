@@ -49,7 +49,6 @@ class ContinuationPluginSettingsTest {
     setPrefToDefault("Xpluginsdir")
     setPrefToDefault("Xplugin")
     forceEnableContinuationForNewerScalaVersion()
-    loadedPlugins(project)
     Assert.assertEquals("Loaded plugins: ", List("continuations"), loadedPlugins(project))
   }
 
@@ -58,7 +57,6 @@ class ContinuationPluginSettingsTest {
     setPrefValue("Xpluginsdir", ScalaPlugin.plugin.defaultPluginsDir)
     setPrefValue("Xplugin", "/doesnotexits")
     forceEnableContinuationForNewerScalaVersion()
-    loadedPlugins(project)
     Assert.assertEquals("Loaded plugins: ", List("continuations"), loadedPlugins(project))
   }
 
@@ -67,7 +65,6 @@ class ContinuationPluginSettingsTest {
     setPrefValue("Xpluginsdir", "/doesnotexist")
     setPrefValue("Xplugin", ScalaPlugin.plugin.defaultPluginsDir + File.separator + "continuations.jar")
     forceEnableContinuationForNewerScalaVersion()
-    loadedPlugins(project)
     Assert.assertEquals("Loaded plugins: ", List("continuations"), loadedPlugins(project))
   }
 
