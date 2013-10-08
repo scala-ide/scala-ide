@@ -1,8 +1,3 @@
-/*
- * Copyright 2010 LAMP/EPFL
- *
- *
- */
 package scala.tools.eclipse.wizards
 
 import scala.tools.eclipse.ui.DisplayThread

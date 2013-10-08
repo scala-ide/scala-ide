@@ -1,7 +1,3 @@
-/*
- * Copyright 2010 LAMP/EPFL
- *
- */
 package scala.tools.eclipse.wizards
 
 object BufferSupport {
