@@ -414,7 +414,12 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
 
   private def refreshOutputFolders(): Unit = {
     sourceOutputFolders foreach {
-      case (_, binFolder) => binFolder.refreshLocal(IResource.DEPTH_INFINITE, null)
+      case (_, binFolder) =>
+        binFolder.refreshLocal(IResource.DEPTH_INFINITE, null)
+        // make sure the folder is marked as Derived, so we don't see classfiles in Open Resource
+        // but don't set it unless necessary (this might be an expensive operation)
+        if (!binFolder.isDerived && binFolder.exists)
+          binFolder.setDerived(true, null)
     }
   }
 
@@ -655,9 +660,6 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
   def prepareBuild(): Boolean = if (!hasBeenBuilt) buildManager.invalidateAfterLoad else false
   
   def build(addedOrUpdated: Set[IFile], removed: Set[IFile], monitor: SubMonitor) {
-    if (addedOrUpdated.isEmpty && removed.isEmpty)
-      return
-
     hasBeenBuilt = true
 
     clearBuildProblemMarker()
