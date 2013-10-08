@@ -102,7 +102,7 @@ class ScalaBuilder extends IncrementalProjectBuilder with JDTBuilderFacade with 
               if (project.directDependencies.exists(hasChanges)) {
                 // reset presentation compilers if a dependency has been rebuilt
                 logger.debug("Resetting presentation compiler for %s due to dependent project change".format(project.underlying.getName()))
-                project.resetPresentationCompiler
+                project.presentationCompiler.askRestart()
 
                 // in theory need to be able to identify the exact dependencies
                 // but this is deeply rooted inside the sbt dependency tracking mechanism

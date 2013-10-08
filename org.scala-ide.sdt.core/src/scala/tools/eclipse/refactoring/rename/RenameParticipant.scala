@@ -143,7 +143,7 @@ class RenameParticipant extends LtkRenameParticipant {
         val positions = trees flatMap findTopLevelObjectOrClassDefinition map (_.pos)
         positions.headOption
 
-      }(None)
+      }.flatten
     } getOrElse NoPosition
   }
 }

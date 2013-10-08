@@ -116,7 +116,7 @@ class ScalaJavaMapperTest {
       compiler.askOption { () =>
         f(compiler)(targets.head.symbol.info.finalResultType)
       }
-    }(throw new NoSuchElementException(s"Could not find target element in $src"))
+    } getOrElse (throw new NoSuchElementException(s"Could not find target element in $src"))
   }
 }
 

@@ -80,7 +80,7 @@ class TestProjectSetup(projectName: String, srcRoot: String = "/%s/src/", val bu
       val dummy = new compiler.Response[Unit]
       compiler.askReload(List(src), dummy)
       dummy.get
-    }()
+    }
   }
 
   def findMarker(marker: String) = SDTTestUtils.findMarker(marker)
@@ -120,7 +120,7 @@ class TestProjectSetup(projectName: String, srcRoot: String = "/%s/src/", val bu
       val res = new Response[compiler.Tree]
       compiler.askLoadedTyped(source, res)
       res.get // wait until unit is typechecked
-    }()
+    }
   }
 
   /** Open the passed `source` and wait until it has been fully typechecked.*/

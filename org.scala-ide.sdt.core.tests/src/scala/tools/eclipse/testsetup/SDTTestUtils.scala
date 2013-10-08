@@ -267,7 +267,7 @@ object SDTTestUtils {
       projectSetup = new TestProjectSetup(testProjectName) {
         override lazy val project = scalaProject
       }
-      projectSetup.project.withPresentationCompiler(c => Option(f(c)))(None)
+      projectSetup.project.presentationCompiler { c => f(c) }
     }
     finally EclipseUtils.workspaceRunnableIn(ScalaPlugin.plugin.workspaceRoot.getWorkspace) { _ =>
       projectSetup.project.underlying.delete(true, null)

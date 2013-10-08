@@ -175,11 +175,11 @@ abstract class ScalaIdeRefactoring(val getName: String, val file: ScalaSourceFil
   }
 
   private [refactoring] def withCompiler[T](f: ScalaPresentationCompiler => T): T = {
-    file.withSourceFile((_, c) => f(c))(fail())
+    file.withSourceFile((_, c) => f(c)) getOrElse fail()
   }
 
   private [refactoring] def withSourceFile[T](f: SourceFile => T): T = {
-    file.withSourceFile((s, _) => f(s))(fail())
+    file.withSourceFile((s, _) => f(s)) getOrElse fail()
   }
 
   def fail(msg: String = "Could not get the source file."): Nothing = {
