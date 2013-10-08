@@ -46,6 +46,7 @@ import org.eclipse.ui.IPartListener
 import org.eclipse.ui.IWorkbenchPart
 import org.eclipse.ui.part.FileEditorInput
 import org.eclipse.jface.preference.IPersistentPreferenceStore
+import java.util.concurrent.atomic.AtomicBoolean
 
 trait BuildSuccessListener {
   def buildSuccessful(): Unit
@@ -164,26 +165,21 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
         YpresentationDelay)
   }
 
-  private var messageShowed = false
+  private val messageShown: AtomicBoolean = new AtomicBoolean(false)
 
   private def failedCompilerInitialization(msg: String) {
     logger.debug("failedCompilerInitialization: " + msg)
-    import org.eclipse.jface.dialogs.MessageDialog
-    synchronized {
-      // FIXME: What's the purpose of having an `asyncExex` in a synchronized block?
-      if (!plugin.headlessMode && !messageShowed) {
-        messageShowed = true
-        DisplayThread.asyncExec {
-          val doAdd = MessageDialog.openQuestion(ScalaPlugin.getShell, "Add Scala library to project classpath?",
-              ("There was an error initializing the Scala compiler: %s. \n\n"+
-               "The editor compiler will be restarted when the project is cleaned or the classpath is changed.\n\n" +
-               "Add the Scala library to the classpath of project %s?")
-              .format(msg, underlying.getName))
-          if (doAdd) {
-            Utils tryExecute {
-              Nature.addScalaLibAndSave(underlying)
-            }
-          }
+    val messageAlreadyShown = messageShown.getAndSet(true)
+    if(!messageAlreadyShown && !plugin.headlessMode) {
+      DisplayThread.asyncExec {
+        import org.eclipse.jface.dialogs.MessageDialog
+        val doAdd = MessageDialog.openQuestion(ScalaPlugin.getShell, "Add Scala library to project classpath?",
+          ("There was an error initializing the Scala compiler: %s. \n\n"+
+           "The editor compiler will be restarted when the project is cleaned or the classpath is changed.\n\n" +
+           "Add the Scala library to the classpath of project %s?")
+          .format(msg, underlying.getName))
+        if (doAdd) Utils.tryExecute {
+          Nature.addScalaLibAndSave(underlying)
         }
       }
     }
