@@ -67,10 +67,8 @@ class ScalaTemplateCompletionProcessor(val tm : ScalaTemplateManager) extends Te
   }
 
   protected override def getRelevance(template : Template, prefix : String) : Int = {
-    (prefix == null || prefix.trim().length == 0) match {
-      case true => 0
-      case false => super.getRelevance(template, prefix)
-    }
+    if (prefix == null || prefix.trim().length == 0) 0
+    else super.getRelevance(template, prefix)
   }
 }
 

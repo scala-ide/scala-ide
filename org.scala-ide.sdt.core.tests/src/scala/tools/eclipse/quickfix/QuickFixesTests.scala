@@ -23,15 +23,14 @@ import org.junit.Assert.assertTrue
 object QuickFixesTests extends TestProjectSetup("quickfix") {
 
   def assertStatusOk(status: IStatus) {
-    if (!status.isOK()) {
-      if (status.getException() == null) { // find a status with an exception
+    if (!status.isOK() && status.getException() == null) {
+      // find a status with an exception
         val children = status.getChildren();
         for (child <- children) {
           if (child.getException() != null) {
             throw new CoreException(child);
           }
         }
-      }
     }
   }
 
@@ -67,7 +66,7 @@ object QuickFixesTests extends TestProjectSetup("quickfix") {
       dummy.get
 
       val problems = compiler.problemsOf(unit)
-      assertTrue("No problems found.", problems.size > 0)
+      assertTrue("No problems found.", problems.nonEmpty)
       assertNumberOfProblems(expectedQuickFixesList.size, problems.toArray)
 
       JavaUI.openInEditor(unit.getCompilationUnit)

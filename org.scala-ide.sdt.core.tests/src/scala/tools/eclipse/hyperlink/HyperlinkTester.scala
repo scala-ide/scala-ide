@@ -66,7 +66,7 @@ trait HyperlinkTester extends TestProjectSetup {
   }
 
   def checkJavaElements(unit: InteractiveCompilationUnit, wordRegion: IRegion, word: String, oracle: Link) {
-    val elements = JavaSelectionEngine.getJavaElements(wordRegion, unit, unit.asInstanceOf[Openable], wordRegion)
+    val elements = JavaSelectionEngine.getJavaElements(unit, unit.asInstanceOf[Openable], wordRegion)
 
     // Verify Expectations
     assertTrue("no links found for `%s`".format(word), elements.nonEmpty)

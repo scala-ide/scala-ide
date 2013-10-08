@@ -200,14 +200,13 @@ object CodeBuilder {
 
   def resultValue(s: String) = {
     s(0) match {
-      case 'V' => ""
-      case 'Z' => "false"
-      case 'S' => "0"
-      case 'I' => "0"
-      case 'J' => "0L"
-      case 'F' => "0.0f"
-      case 'D' => "0.0d"
-      case  _  => "null"
+      case 'V'       => ""
+      case 'Z'       => "false"
+      case 'S' | 'I' => "0"
+      case 'J'       => "0L"
+      case 'F'       => "0.0f"
+      case 'D'       => "0.0d"
+      case  _        => "null"
     }
   }
 
