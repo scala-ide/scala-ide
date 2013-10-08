@@ -1,5 +1,4 @@
 /*
- * @author Eugene Vigdorchik
  */
 package scala.tools.eclipse
 
