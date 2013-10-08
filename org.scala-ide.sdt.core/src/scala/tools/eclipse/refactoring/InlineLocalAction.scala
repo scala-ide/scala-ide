@@ -29,7 +29,7 @@ class InlineLocalAction extends RefactoringAction with RefactoringActionWithoutW
         val tree = askLoadedAndTypedTreeForFile(sourceFile).left.get
         global.ask(() => GlobalIndex(tree))
       }
-    })()
+    }) getOrElse fail()
 
     /**
      * The refactoring does not take any parameters.

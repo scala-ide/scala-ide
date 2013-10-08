@@ -95,9 +95,8 @@ trait LocateSymbol { self : ScalaPresentationCompiler =>
           val pos = new Response[Position]
           askLinkPos(sym, f, pos)
           pos.get.left.toOption
-        } (None)
-      } else
-        Some(sym.pos)
+        }.flatten
+      } else Some(sym.pos)
 
       pos flatMap { p =>
         if (p eq NoPosition) None

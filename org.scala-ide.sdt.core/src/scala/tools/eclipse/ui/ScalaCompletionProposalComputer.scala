@@ -48,7 +48,7 @@ class ScalaCompletionProposalComputer extends ScalaCompletions with IJavaComplet
     context match {
       case jc : JavaContentAssistInvocationContext => jc.getCompilationUnit match {
         case scu : ScalaCompilationUnit =>
-          scu.withSourceFile { findCompletions(position, context, scu) } (javaEmptyList())
+          scu.withSourceFile { findCompletions(position, context, scu) } getOrElse (javaEmptyList())
         case _ => javaEmptyList()
       }
       case _ => javaEmptyList()

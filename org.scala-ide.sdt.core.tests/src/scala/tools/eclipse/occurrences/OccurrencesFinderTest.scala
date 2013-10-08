@@ -31,7 +31,7 @@ class OccurrencesFinderTest {
       val tree =  new Response[compiler.Tree]
       compiler.askType(src, false,tree)
       tree.get
-    }()
+    }
 
     val contents = unit.getContents
     val positions = SDTTestUtils.markersOf(contents, "<")

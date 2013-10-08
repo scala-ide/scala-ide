@@ -100,7 +100,6 @@ object QuickFixesTests extends TestProjectSetup("quickfix") {
             corrections contains quickFix)
         }
       }
-    }()
-
+    }
   }
 }

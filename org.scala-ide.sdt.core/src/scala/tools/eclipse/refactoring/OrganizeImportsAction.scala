@@ -120,7 +120,7 @@ class OrganizeImportsAction extends RefactoringAction with RefactoringActionWith
             val global = compiler
           }
           refactoring.addImports(scalaSourceFile.file, imports map (_.getFullyQualifiedName))
-        }(Nil)
+        } getOrElse (Nil)
       }
 
       EditorHelpers.withCurrentEditor { editor =>

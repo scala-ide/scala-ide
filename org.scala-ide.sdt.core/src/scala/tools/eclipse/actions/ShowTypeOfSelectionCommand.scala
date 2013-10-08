@@ -58,7 +58,7 @@ object TypeOfExpressionProvider extends IInformationProvider {
             case _ =>
               typeInfo(t.tpe)
           }).getOrElse(null)
-        }(null)
+        } orNull
 
       case _ => null
     }
