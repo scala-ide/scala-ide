@@ -39,7 +39,7 @@ case class CreateMethodProposal(fullyQualifiedEnclosingType: Option[String], met
         else if (tpe.toString == "Null") Some("AnyRef") //there must be a better condition
         else Some(tpe.toString) //do we want tpe.isError? tpe.isErroneous?
       }).flatten.getOrElse("Any")
-    })("Any")
+    }) getOrElse ("Any")
   }
 
   private val (targetSourceFile, className, targetIsOtherClass) = fullyQualifiedEnclosingType match {
@@ -89,7 +89,7 @@ case class CreateMethodProposal(fullyQualifiedEnclosingType: Option[String], met
       val changes = scu.withSourceFile { (srcFile, compiler) =>
         val refactoring = new AddMethod { val global = compiler }
         refactoring.addMethod(scalaSourceFile.file, className.get, method, parameters, returnType, target) //if we're here, className should be defined because of the check in isApplicable
-      }(Nil)
+      } getOrElse Nil
 
       for (change <- changes) {
         val edit = new ReplaceEdit(change.from, change.to - change.from, change.text)

@@ -92,8 +92,7 @@ class InterpreterLaunchConfigurationDelegate extends AbstractJavaLaunchConfigura
     implicit class RichConfiguration(configuration : ILaunchConfiguration) {
       def getAttributeOption(name : String) : Option[String] = {
         configuration.getAttribute(name, "") match {
-          case null => None
-          case "" => None
+          case null | "" => None
           case x => Some(x)
         }
       }

@@ -113,6 +113,9 @@ object ScalaClassFileDescriber extends HasLogger {
         true
       }
 
+      // In this binary parser, skipFieldsOrMethods moves the read pointer
+      // by skipping fields/methods definitions in the classfile.
+      // This (at-first-glance) repetition is thus important.
       if (!skipFieldsOrMethods())
         return None
       if (!skipFieldsOrMethods())

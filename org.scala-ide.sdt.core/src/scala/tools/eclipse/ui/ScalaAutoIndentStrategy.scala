@@ -154,10 +154,8 @@ class ScalaAutoIndentStrategy(
     while (offset < endOffset) {
       val curr = d.getChar(offset)
       offset += 1
-      if (curr == '*') {
-        if (offset < endOffset && d.getChar(offset) == '/') {
+      if (curr == '*' && offset < endOffset && d.getChar(offset) == '/') {
           return offset + 1
-        }
       }
     }
     return endOffset
@@ -308,11 +306,10 @@ class ScalaAutoIndentStrategy(
         // copy old content of line behind insertion point to new line
         // unless we think we are inserting an anonymous type definition
 
-        if (c.offset == 0 || computeAnonymousPosition(d, c.offset - 1, fPartitioning, lineEnd) == -1) {
-          if (lineEnd - contentStart > 0) {
+        if ((c.offset == 0 || computeAnonymousPosition(d, c.offset - 1, fPartitioning, lineEnd) == -1)
+            && lineEnd - contentStart > 0) {
             c.length =  lineEnd - c.offset
             buf.append(d.get(contentStart, lineEnd - contentStart).toCharArray())
-          }
         }
 
         buf.append(TextUtilities.getDefaultLineDelimiter(d))
@@ -396,10 +393,8 @@ class ScalaAutoIndentStrategy(
           done = true
         } else {
           // only select insert positions for parenthesis currently embracing the caret
-          if (openingParen <= pos) {
-            if (looksLikeAnonymousClassDef(document, partitioning, scanner, openingParen - 1))
+          if (openingParen <= pos && looksLikeAnonymousClassDef(document, partitioning, scanner, openingParen - 1))
               return closingParen + 1;
-          }
         }
       }
     }
@@ -1220,8 +1215,8 @@ class ScalaAutoIndentStrategy(
       smartIndentAfterNewLine(d, c)
     else if (c.text.length() == 1)
       smartIndentOnKeypress(d, c)
-    else if (c.text.length() > 1 && getPreferenceStore.getBoolean(PreferenceConstants.EDITOR_SMART_PASTE))
-      if (fViewer == null || fViewer.getTextWidget() == null || !fViewer.getTextWidget().getBlockSelection())
+    else if (c.text.length() > 1 && getPreferenceStore.getBoolean(PreferenceConstants.EDITOR_SMART_PASTE) &&
+      (fViewer == null || fViewer.getTextWidget() == null || !fViewer.getTextWidget().getBlockSelection()))
         smartPaste(d, c) // no smart backspace for paste
 
   }

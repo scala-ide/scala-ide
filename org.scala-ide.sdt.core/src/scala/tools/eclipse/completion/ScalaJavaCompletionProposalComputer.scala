@@ -108,7 +108,7 @@ class ScalaJavaCompletionProposalComputer extends IJavaCompletionProposalCompute
     val start = invocationOffset - prefix.length
 
     val prj = ScalaPlugin.plugin.getScalaProject(unit.getJavaProject.getProject)
-    val completionProposals = prj.withPresentationCompiler { compiler =>
+    val completionProposals = prj.presentationCompiler { compiler =>
       import compiler._
 
       def mixedInMethod(sym: Symbol): Boolean =
@@ -128,7 +128,7 @@ class ScalaJavaCompletionProposalComputer extends IJavaCompletionProposalCompute
           new ScalaCompletionProposal(prop, selectionProvider)
         }
       }.getOrElse(Nil)
-    }(Nil)
+    } getOrElse (Nil)
 
     import scala.collection.JavaConversions._
 
@@ -335,7 +335,7 @@ private class JavaASTVisitor(unit: ICompilationUnit, offset: Int) extends ASTVis
   private def lookForIncompleteExpression(expression: Expression): ITypeBinding = {
     if (expression.getStartPosition() + expression.getLength() < offset) { // offset is after the statement
       val traillingString = getTrimmedSourceWithoutComments(expression.getStartPosition() + expression.getLength(), offset)
-      if ("." == traillingString) { // the source between the end of the last statement and the offset contains only a '.'
+      if (traillingString == ".") { // the source between the end of the last statement and the offset contains only a '.'
         expression match {
           case assignment: Assignment => // test: foo2
             return assignment.getLeftHandSide().resolveTypeBinding()

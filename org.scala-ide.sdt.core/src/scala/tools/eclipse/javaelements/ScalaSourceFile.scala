@@ -84,6 +84,8 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
    */
   override def scheduleReconcile(): Response[Unit] = {
     // askReload first
+    // FIXME: Here we are calling a deprecated method (i.e., withPresentationCompiler) because the only way I see to fix
+    //        this without changing this method's signature is introducing a `NullResponse` object.
     val res = scalaProject.withPresentationCompiler { compiler =>
       compiler.askReload(this, getContents)
     } ()
@@ -141,7 +143,7 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
 
   override def currentProblems(): List[IProblem] = withSourceFile { (src, compiler) =>
     compiler.problemsOf(this)
-  } (List())
+  } getOrElse Nil
 
   override def getType(name : String) : IType = new LazyToplevelClass(this, name)
 
@@ -160,10 +162,8 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
   }
 
   /** Ask the compiler to reload {{{this}}} source. */
-  final def reload(): Unit = scalaProject.doWithPresentationCompiler { _.askReload(this, getContents) }
+  final def reload(): Unit = scalaProject.presentationCompiler { _.askReload(this, getContents) }
 
   /** Ask the compiler to discard {{{this}}} source. */
-  final def discard(): Unit = scalaProject.doWithPresentationCompiler { compiler =>
-    compiler.discardCompilationUnit(this)
-  }
+  final def discard(): Unit = scalaProject.presentationCompiler { _.discardCompilationUnit(this) }
 }

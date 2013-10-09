@@ -234,9 +234,8 @@ class InterpreterMainTab extends JavaLaunchTab with HasLogger {
   /**
    * Maps the config to associated java resource
    *
-   * @param config
    */
-  protected def mapResources( config : ILaunchConfigurationWorkingCopy)  {
+  protected def mapResources() {
     try {
       //CONTEXTLAUNCHING
       val javaProject = getScalaProject()
@@ -256,7 +255,7 @@ class InterpreterMainTab extends JavaLaunchTab with HasLogger {
   override def performApply(config : ILaunchConfigurationWorkingCopy)  {
     config.setAttribute(IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME, fProjText.getText().trim())
     config.setAttribute(InterpreterLaunchConstants.SEED_SCRIPT, seedScriptText.getText.trim())
-    mapResources(config)
+    mapResources()
   }
 
   /* (non-Javadoc)

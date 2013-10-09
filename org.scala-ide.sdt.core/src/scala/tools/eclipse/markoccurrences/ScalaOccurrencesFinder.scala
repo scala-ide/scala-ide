@@ -80,7 +80,7 @@ class ScalaOccurrencesFinder(unit: InteractiveCompilationUnit) extends HasLogger
           }
         }
       } getOrElse None
-    }(None)
+    }.flatten
   }
 }
 

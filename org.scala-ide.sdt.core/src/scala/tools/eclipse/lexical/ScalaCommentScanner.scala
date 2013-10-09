@@ -49,7 +49,7 @@ class ScalaCommentScanner(
 
   private val wordMatcher = {
     val taskTags = javaPreferenceStore.getString(JavaCore.COMPILER_TASK_TAGS)
-    val isCaseSensitive = JavaCore.ENABLED == javaPreferenceStore.getString(JavaCore.COMPILER_TASK_CASE_SENSITIVE)
+    val isCaseSensitive = javaPreferenceStore.getString(JavaCore.COMPILER_TASK_CASE_SENSITIVE) == JavaCore.ENABLED
     val wm = new WordMatcher
     val cwr = new CombinedWordRule(new IdentifierDetector, wm, getToken(syntaxClass))
 
@@ -85,7 +85,7 @@ class ScalaCommentScanner(
         wordMatcher.clearWords()
         addTaskTags(wordMatcher, event.getNewValue().toString(), getToken(taskTagClass))
       case JavaCore.COMPILER_TASK_CASE_SENSITIVE =>
-        wordMatcher.isCaseSensitive = JavaCore.ENABLED == event.getNewValue()
+        wordMatcher.isCaseSensitive = event.getNewValue() == JavaCore.ENABLED
       case _ =>
     }
   }

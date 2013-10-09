@@ -21,6 +21,7 @@ import scala.tools.eclipse.debug.JDIUtil._
 import com.sun.jdi.VMCannotBeModifiedException
 import org.eclipse.debug.core.model.IStackFrame
 import com.sun.jdi.IncompatibleThreadStateException
+import scala.tools.eclipse.logging.HasLogger
 
 class ThreadNotSuspendedException extends Exception
 
@@ -38,7 +39,7 @@ object ScalaThread {
  * A thread in the Scala debug model.
  * This class is thread safe. Instances have be created through its companion object.
  */
-abstract class ScalaThread private (target: ScalaDebugTarget, private[model] val threadRef: ThreadReference) extends ScalaDebugElement(target) with IThread {
+abstract class ScalaThread private (target: ScalaDebugTarget, private[model] val threadRef: ThreadReference) extends ScalaDebugElement(target) with IThread with HasLogger {
   import ScalaThreadActor._
   import BaseDebuggerActor._
 
@@ -139,15 +140,20 @@ abstract class ScalaThread private (target: ScalaDebugTarget, private[model] val
     processMethodInvocationResult(syncSend(companionActor, InvokeStaticMethod(classType, method, args.toList)))
   }
 
-  private def processMethodInvocationResult(res: Option[Any]): Value = if (res.isDefined) res.get match {
-    case Right(null) =>
+  private def processMethodInvocationResult(res: Option[Any]): Value = res match {
+    case Some(Right(null)) =>
       null
-    case Right(res: Value) =>
+    case Some(Right(res: Value)) =>
       res
-    case Left(e: Exception) =>
+    case Some(Left(e: Exception)) =>
       throw e
-  } else
-    null
+    case None =>
+      null
+    case Some(v) =>
+      // to make the match exhaustive. Should not happen.
+      logger.error(s"Not recognized method invocation result: $v")
+      null
+  }
 
   /**
    * release all resources

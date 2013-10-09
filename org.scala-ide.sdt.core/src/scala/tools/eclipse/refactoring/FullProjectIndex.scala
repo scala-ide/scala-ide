@@ -84,12 +84,11 @@ trait FullProjectIndex extends HasLogger {
         sourceFiles.toList
       }
 
-      allScalaSourceFiles map { ssf =>
-        if(pm.isCanceled)
-          return Nil
-        else
-          ssf.withSourceFile { (sourceFile, _) => sourceFile}()
+      val sources: List[SourceFile] = allScalaSourceFiles flatMap { ssf =>
+        if(pm.isCanceled) return Nil
+        else ssf.withSourceFile { (sourceFile, _) => sourceFile}.toList
       }
+      sources
     }
 
     /**
@@ -173,12 +172,11 @@ trait FullProjectIndex extends HasLogger {
       pm.subTask("creating index")
 
       trees flatMap { tree =>
-
-        project.withPresentationCompiler { compiler =>
+        project.presentationCompiler { compiler =>
           compiler.askOption { () =>
             refactoring.CompilationUnitIndex(tree)
           }
-        }()
+        }.flatten.toList
       }
     } else Nil
 

@@ -48,7 +48,7 @@ class MissingMemberInfo(
           elements.flatten.toSet
         }
       }
-    }(None)
+    }.flatten
 
     allPossibleTargets.flatten.getOrElse(Set()) match {
       case set if set.size == 1 => set.headOption
@@ -132,7 +132,7 @@ object MissingMemberInfo {
             (parameters, returnType)
           }
         })
-      }(None)
+      }.flatten
       optopt.flatten match {
         case None => Some((Nil, None))
         case some => some

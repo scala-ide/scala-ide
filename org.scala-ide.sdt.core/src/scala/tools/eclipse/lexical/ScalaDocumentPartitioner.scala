@@ -106,14 +106,12 @@ class ScalaDocumentPartitioner(conservative: Boolean = false) extends IDocumentP
 
   def getPartition(offset: Int, preferOpenPartitions: Boolean): ITypedRegion = {
     val region = getPartition(offset)
-    if (preferOpenPartitions)
-      if (region.getOffset == offset && region.getType != IDocument.DEFAULT_CONTENT_TYPE)
-        if (offset > 0) {
-          val previousRegion = getPartition(offset - 1)
-          if (previousRegion.getType == IDocument.DEFAULT_CONTENT_TYPE)
-            return previousRegion
-        }
-    region
+    if (preferOpenPartitions && region.getOffset == offset && region.getType != IDocument.DEFAULT_CONTENT_TYPE && offset > 0) {
+      val previousRegion = getPartition(offset - 1)
+      if (previousRegion.getType == IDocument.DEFAULT_CONTENT_TYPE)
+        previousRegion
+      else region
+    } else region
   }
 
   def computePartitioning(offset: Int, length: Int, includeZeroLengthPartitions: Boolean) = computePartitioning(offset, length)
@@ -136,4 +134,3 @@ object ScalaDocumentPartitioner {
   final val EOF = '\u001A'
 
 }
-

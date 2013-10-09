@@ -22,7 +22,7 @@ object SearchOps {
     searchWorkspaceFor(pattern)
   }
 
-  def findReferences(element: IJavaElement, wordRegion: IRegion): List[SearchMatch] = {
+  def findReferences(element: IJavaElement): List[SearchMatch] = {
     val pattern = SearchPattern.createPattern(element,
       IJavaSearchConstants.REFERENCES,
       SearchUtils.GENERICS_AGNOSTIC_MATCH_RULE)

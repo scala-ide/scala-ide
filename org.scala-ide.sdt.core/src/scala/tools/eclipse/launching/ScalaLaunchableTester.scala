@@ -40,7 +40,7 @@ class ScalaLaunchableTester extends PropertyTester {
    */
   private def hasMain(element: IJavaElement): Boolean = {
     try {
-      ScalaLaunchShortcut.getMainMethods(element).length > 0
+      ScalaLaunchShortcut.getMainMethods(element).nonEmpty
     } catch {
       case e: JavaModelException => false
       case e: CoreException => false

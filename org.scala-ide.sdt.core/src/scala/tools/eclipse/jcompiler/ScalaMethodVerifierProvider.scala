@@ -94,7 +94,7 @@ class ScalaMethodVerifierProvider extends IMethodVerifierProvider with HasLogger
   }
 
   private def isConcreteTraitMethod(abstractMethod: MethodBinding, project: ScalaProject): Boolean = {
-    project.withPresentationCompiler { pc =>
+    project.presentationCompiler { pc =>
       pc.askOption { () =>
         import pc._
         /** Find the method's symbol for the given `abstractMethod` definition. */
@@ -170,7 +170,7 @@ class ScalaMethodVerifierProvider extends IMethodVerifierProvider with HasLogger
         logger.info("`askOption` failed. Check the Presentation Compiler log for more information. %s".format(JDTMethodVerifierCarryOnMsg))
         false
       }
-    } {
+    } getOrElse {
       logger.info("Failed to instantiate Presentation Compiler. %s".format(JDTMethodVerifierCarryOnMsg))
       false
     }
