@@ -33,9 +33,6 @@ class ScalaCompletions extends HasLogger {
     val t1 = typed.get.left.toOption
     var contextType: CompletionContextType = CompletionContext.DefaultContext
 
-    import scala.reflect.runtime.universe._
-    logger.info(showRaw(t1.get))
-
     val listedTypes = new mutable.HashMap[String, mutable.Set[CompletionProposal]] with MultiMap[String, CompletionProposal]
 
     def isAlreadyListed(fullyQualifiedName: String, display: String) =
