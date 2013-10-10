@@ -38,17 +38,25 @@ class ScalaCompletions extends HasLogger {
     def isAlreadyListed(fullyQualifiedName: String, display: String) =
       listedTypes.entryExists(fullyQualifiedName, _.display == display)
 
-    def addCompletions(completed: compiler.Response[List[compiler.Member]], prefix: Array[Char], start: Int) {
-      def nameMatches(sym: compiler.Symbol) = prefixMatches(sym.decodedName.toString.toArray, prefix)
+    def addCompletions(completed: compiler.Response[List[compiler.Member]], matchName: Array[Char],
+      start: Int, prefixMatch: Boolean) {
+      def nameMatches(sym: compiler.Symbol) = {
+        val name = sym.decodedName.toString.toArray
+        if (prefixMatch) {
+          prefixMatches(name, matchName)
+        } else {
+          exactMatches(name, matchName)
+        }
+      }
 
       for (completions <- completed.get.left.toOption) {
         compiler.askOption { () =>
           for (completion <- completions) {
             val completionProposal = completion match {
               case compiler.TypeMember(sym, tpe, true, inherited, viaView) if !sym.isConstructor && nameMatches(sym) =>
-                Some(compiler.mkCompletionProposal(prefix, start, sym, tpe, inherited, viaView)(contextType))
+                Some(compiler.mkCompletionProposal(matchName, start, sym, tpe, inherited, viaView)(contextType))
               case compiler.ScopeMember(sym, tpe, true, _) if !sym.isConstructor && nameMatches(sym) =>
-                Some(compiler.mkCompletionProposal(prefix, start, sym, tpe, false, compiler.NoSymbol)(contextType))
+                Some(compiler.mkCompletionProposal(matchName, start, sym, tpe, false, compiler.NoSymbol)(contextType))
               case _ => None
             }
 
@@ -62,18 +70,18 @@ class ScalaCompletions extends HasLogger {
       }
     }
 
-    def fillTypeCompletions(pos: Int, prefix: Array[Char], start: Int) {
+    def fillTypeCompletions(pos: Int, matchName: Array[Char], start: Int, prefixMatch: Boolean = true) {
       val cpos = compiler.rangePos(sourceFile, pos, pos, pos)
       val completed = new compiler.Response[List[compiler.Member]]
       compiler.askTypeCompletion(cpos, completed)
-      addCompletions(completed, prefix, start)
+      addCompletions(completed, matchName, start, prefixMatch)
     }
 
-    def fillScopeCompletions(pos: Int, prefix: Array[Char], start: Int) {
+    def fillScopeCompletions(pos: Int, matchName: Array[Char], start: Int, prefixMatch: Boolean = true) {
       val cpos = compiler.rangePos(sourceFile, pos, pos, pos)
       val completed = new compiler.Response[List[compiler.Member]]
       compiler.askScopeCompletion(cpos, completed)
-      addCompletions(completed, prefix, start)
+      addCompletions(completed, matchName, start, prefixMatch)
 
       // try and find type in the classpath as well
 
@@ -84,11 +92,11 @@ class ScalaCompletions extends HasLogger {
         // get text of tree element, removing all whitespace
         content = sourceFile.content.slice(e.pos.startOrPoint, position).filterNot {c => c.isWhitespace}
         // see if it looks like qualified type reference
-        if (length > prefix.length + 1 && content.find {c => !c.isUnicodeIdentifierPart && c != ','} == None)
-      } yield content.slice(0, content.length - prefix.length - 1)
+        if (length > matchName.length + 1 && content.find {c => !c.isUnicodeIdentifierPart && c != ','} == None)
+      } yield content.slice(0, content.length - matchName.length - 1)
 
-      logger.info(s"Search for: [${packageName.map(_.mkString)}].${prefix.mkString}")
-      if (prefix.length > 0 || packageName.isDefined) {
+      logger.info(s"Search for: [${packageName.map(_.mkString)}].${matchName.mkString}")
+      if (matchName.length > 0 || packageName.isDefined) {
         // requestor receives JDT search results
         val requestor = new TypeNameRequestor() {
           override def acceptType(modifiers: Int, packageNameArray: Array[Char], simpleTypeName: Array[Char],
@@ -122,8 +130,8 @@ class ScalaCompletions extends HasLogger {
         new SearchEngine().searchAllTypeNames(
           packageName.getOrElse(null),
           SearchPattern.R_EXACT_MATCH,
-          prefix,
-          SearchPattern.R_PREFIX_MATCH,
+          matchName,
+          if (prefixMatch) SearchPattern.R_PREFIX_MATCH else SearchPattern.R_EXACT_MATCH,
           IJavaSearchConstants.TYPE,
           SearchEngine.createJavaSearchScope(Array[IJavaElement](scu.scalaProject.javaProject), true),
           requestor,
@@ -147,10 +155,10 @@ class ScalaCompletions extends HasLogger {
         contextType = CompletionContext.ApplyContext
         fun match {
           case compiler.Select(qualifier, name) if qualifier.pos.isDefined && qualifier.pos.isRange =>
-            fillTypeCompletions(qualifier.pos.endOrPoint, name.decoded.toArray, qualifier.pos.end + 1)
+            fillTypeCompletions(qualifier.pos.endOrPoint, name.decoded.toArray, qualifier.pos.end + 1, false)
           case _ =>
             val funName = scu.getContents.slice(fun.pos.startOrPoint, fun.pos.endOrPoint)
-            fillScopeCompletions(fun.pos.endOrPoint, funName, fun.pos.startOrPoint)
+            fillScopeCompletions(fun.pos.endOrPoint, funName, fun.pos.startOrPoint, false)
         }
       case _ =>
         fillScopeCompletions(position, wordAtPosition, wordStart)
