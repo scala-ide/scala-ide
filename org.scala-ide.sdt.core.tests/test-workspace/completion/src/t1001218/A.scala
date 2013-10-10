@@ -2,6 +2,7 @@ package t1001218
 
 object A {
   def foo(): Int = 123
+  def bar(): Int = 123
 }
 
 class B {
