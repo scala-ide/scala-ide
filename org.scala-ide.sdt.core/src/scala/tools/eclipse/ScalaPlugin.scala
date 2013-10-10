@@ -185,8 +185,6 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
   
   lazy val libClasses = pathInBundle(scalaLibBundle, "/lib/scala-library.jar")
   lazy val libSources = pathInBundle(scalaLibBundle, "/lib/scala-library-src.jar")
-  lazy val dbcClasses = pathInBundle(scalaLibBundle, "/lib/scala-dbc.jar")
-  lazy val dbcSources = pathInBundle(scalaLibBundle, "/lib/scala-dbc-src.jar")
   lazy val swingClasses = pathInBundle(scalaLibBundle, "/lib/scala-swing.jar")
   lazy val swingSources = pathInBundle(scalaLibBundle, "/lib/scala-swing-src.jar")
   

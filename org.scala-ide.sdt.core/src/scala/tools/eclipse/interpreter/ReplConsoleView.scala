@@ -171,7 +171,6 @@ class ReplConsoleView extends ViewPart {
     // TODO ? move into ScalaPlugin.getScalaProject or ScalaProject.classpath
     var cp = settings.classpath.value
     for { opt <- Seq( ScalaPlugin.plugin.swingClasses,
-                      ScalaPlugin.plugin.dbcClasses,
                       ScalaPlugin.plugin.libClasses )
           p <- opt ; s = p.toOSString }
       if(!cp.contains(s))
