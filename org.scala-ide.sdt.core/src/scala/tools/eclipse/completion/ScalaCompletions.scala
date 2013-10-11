@@ -13,7 +13,7 @@ import scala.tools.eclipse.InteractiveCompilationUnit
 import scala.collection.mutable.MultiMap
 import scala.tools.eclipse.util.Utils
 import scala.tools.eclipse.ScalaPlugin
-import scala.tools.eclipse.completion.CompletionContext.CompletionContextType
+import scala.tools.eclipse.completion.CompletionContext.ContextType
 
 /** Base class for Scala completions. No UI dependency, can be safely used in a
  *  headless testing environment.
@@ -31,7 +31,6 @@ class ScalaCompletions extends HasLogger {
     val pos = compiler.rangePos(sourceFile, position, position, position)
     compiler.askTypeAt(pos, typed)
     val t1 = typed.get.left.toOption
-    var contextType: CompletionContextType = CompletionContext.DefaultContext
 
     val listedTypes = new mutable.HashMap[String, mutable.Set[CompletionProposal]] with MultiMap[String, CompletionProposal]
 
@@ -39,7 +38,7 @@ class ScalaCompletions extends HasLogger {
       listedTypes.entryExists(fullyQualifiedName, _.display == display)
 
     def addCompletions(completed: compiler.Response[List[compiler.Member]], matchName: Array[Char],
-      start: Int, prefixMatch: Boolean) {
+      start: Int, prefixMatch: Boolean, contextType: ContextType) {
       def nameMatches(sym: compiler.Symbol) = {
         val name = sym.decodedName.toString.toArray
         if (prefixMatch) {
@@ -70,18 +69,20 @@ class ScalaCompletions extends HasLogger {
       }
     }
 
-    def fillTypeCompletions(pos: Int, matchName: Array[Char], start: Int, prefixMatch: Boolean = true) {
+    def fillTypeCompletions(pos: Int, contextType: ContextType = CompletionContext.DefaultContext,
+      matchName: Array[Char] = wordAtPosition, start: Int = wordStart, prefixMatch: Boolean = true) {
       val cpos = compiler.rangePos(sourceFile, pos, pos, pos)
       val completed = new compiler.Response[List[compiler.Member]]
       compiler.askTypeCompletion(cpos, completed)
-      addCompletions(completed, matchName, start, prefixMatch)
+      addCompletions(completed, matchName, start, prefixMatch, contextType)
     }
 
-    def fillScopeCompletions(pos: Int, matchName: Array[Char], start: Int, prefixMatch: Boolean = true) {
+    def fillScopeCompletions(pos: Int, contextType: ContextType = CompletionContext.DefaultContext,
+      matchName: Array[Char] = wordAtPosition, start: Int = wordStart, prefixMatch: Boolean = true) {
       val cpos = compiler.rangePos(sourceFile, pos, pos, pos)
       val completed = new compiler.Response[List[compiler.Member]]
       compiler.askScopeCompletion(cpos, completed)
-      addCompletions(completed, matchName, start, prefixMatch)
+      addCompletions(completed, matchName, start, prefixMatch, contextType)
 
       // try and find type in the classpath as well
 
@@ -147,21 +148,22 @@ class ScalaCompletions extends HasLogger {
     t1 match {
       case Some(compiler.Select(qualifier, name)) if qualifier.pos.isDefined && qualifier.pos.isRange =>
         // completion on qualified type
-        fillTypeCompletions(qualifier.pos.end, wordAtPosition, wordStart)
+        fillTypeCompletions(qualifier.pos.end)
       case Some(compiler.Import(expr, _)) =>
         // completion on `imports`
-        fillTypeCompletions(expr.pos.endOrPoint, wordAtPosition, wordStart)
+        fillTypeCompletions(expr.pos.endOrPoint)
       case Some(compiler.Apply(fun, _)) =>
-        contextType = CompletionContext.ApplyContext
         fun match {
           case compiler.Select(qualifier, name) if qualifier.pos.isDefined && qualifier.pos.isRange =>
-            fillTypeCompletions(qualifier.pos.endOrPoint, name.decoded.toArray, qualifier.pos.end + 1, false)
+            fillTypeCompletions(qualifier.pos.endOrPoint, CompletionContext.ApplyContext,
+              name.decoded.toArray, qualifier.pos.end + 1, false)
           case _ =>
             val funName = scu.getContents.slice(fun.pos.startOrPoint, fun.pos.endOrPoint)
-            fillScopeCompletions(fun.pos.endOrPoint, funName, fun.pos.startOrPoint, false)
+            fillScopeCompletions(fun.pos.endOrPoint, CompletionContext.ApplyContext, funName,
+              fun.pos.startOrPoint, false)
         }
       case _ =>
-        fillScopeCompletions(position, wordAtPosition, wordStart)
+        fillScopeCompletions(position)
     }
 
     listedTypes.values.flatten.toList

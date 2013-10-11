@@ -21,7 +21,7 @@ import scala.reflect.internal.util.BatchSourceFile
 import scala.reflect.internal.util.Position
 import scala.reflect.internal.util.SourceFile
 import scala.tools.eclipse.completion.CompletionContext
-import scala.tools.eclipse.completion.CompletionContext.CompletionContextType
+import scala.tools.eclipse.completion.CompletionContext.ContextType
 import scala.tools.eclipse.javaelements.ScalaCompilationUnit
 import scala.tools.eclipse.javaelements.ScalaIndexBuilder
 import scala.tools.eclipse.javaelements.ScalaJavaMapper
@@ -271,7 +271,7 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings) exten
    *       pattern, 'new' call, etc.)
    */
   def mkCompletionProposal(prefix: Array[Char], start: Int, sym: Symbol, tpe: Type,
-    inherited: Boolean, viaView: Symbol): CompletionContextType => CompletionProposal = {
+    inherited: Boolean, viaView: Symbol): ContextType => CompletionProposal = {
     import scala.tools.eclipse.completion.MemberKind._
 
     val kind = if (sym.isSourceMethod && !sym.hasFlag(Flags.ACCESSOR | Flags.PARAMACCESSOR)) Def

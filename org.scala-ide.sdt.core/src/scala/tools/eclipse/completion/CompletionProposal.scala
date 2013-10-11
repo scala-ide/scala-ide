@@ -13,13 +13,13 @@ object HasArgs extends Enumeration {
 }
 
 case class CompletionContext(
-  contextType: CompletionContext.CompletionContextType
+  contextType: CompletionContext.ContextType
 )
 
 object CompletionContext {
-  trait CompletionContextType
-  case object DefaultContext extends CompletionContextType
-  case object ApplyContext extends CompletionContextType
+  trait ContextType
+  case object DefaultContext extends ContextType
+  case object ApplyContext extends ContextType
 }
 
 
