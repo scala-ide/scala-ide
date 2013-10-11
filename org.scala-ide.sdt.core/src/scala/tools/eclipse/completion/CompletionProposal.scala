@@ -12,6 +12,11 @@ object HasArgs extends Enumeration {
   }
 }
 
+/** Context related to the invocation of the Completion.
+ *  Can be extended with more context as needed in future
+ *
+ *  @param contextType The type of completion - e.g. Import, method apply
+ *  */
 case class CompletionContext(
   contextType: CompletionContext.ContextType
 )
