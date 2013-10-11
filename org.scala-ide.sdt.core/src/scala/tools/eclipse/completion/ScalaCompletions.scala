@@ -48,14 +48,16 @@ class ScalaCompletions extends HasLogger {
         }
       }
 
+      val context = CompletionContext(contextType)
+
       for (completions <- completed.get.left.toOption) {
         compiler.askOption { () =>
           for (completion <- completions) {
             val completionProposal = completion match {
               case compiler.TypeMember(sym, tpe, true, inherited, viaView) if !sym.isConstructor && nameMatches(sym) =>
-                Some(compiler.mkCompletionProposal(matchName, start, sym, tpe, inherited, viaView)(contextType))
+                Some(compiler.mkCompletionProposal(matchName, start, sym, tpe, inherited, viaView, context))
               case compiler.ScopeMember(sym, tpe, true, _) if !sym.isConstructor && nameMatches(sym) =>
-                Some(compiler.mkCompletionProposal(matchName, start, sym, tpe, false, compiler.NoSymbol)(contextType))
+                Some(compiler.mkCompletionProposal(matchName, start, sym, tpe, false, compiler.NoSymbol, context))
               case _ => None
             }
 
