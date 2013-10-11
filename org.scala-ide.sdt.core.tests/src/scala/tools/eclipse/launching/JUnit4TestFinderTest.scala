@@ -73,329 +73,411 @@ class JUnit4TestFinderTest {
     SDTTestUtils.deleteProjects(project)
   }
 
-  def project: ScalaProject = projectSetup.project
+  private def project: ScalaProject = projectSetup.project
+
+  private def delete(sources: ScalaSourceFile*): Unit = {
+    import scala.util.control.Exception.ignoring
+    sources foreach { source => ignoring(classOf[Throwable]) { source.delete(true, null) } }
+  }
 
   @Test
   def findSimpleTestClass() = FlakyTest.retry("findSimpleTestClass") {
-    val cu = projectSetup.createSourceFile("test", "MyTest.scala") {
-      """
-        |package test
-        |import org.junit.Test
-        |class MyTest {
-        |  @Test
-        |  def test1() {}
-        |}
-      """.stripMargin
-    }
+    var cu: ScalaSourceFile = null
+    try {
+      cu = projectSetup.createSourceFile("test", "MyTest.scala") {
+        """
+          |package test
+          |import org.junit.Test
+          |class MyTest {
+          |  @Test
+          |  def test1() {}
+          |}
+        """.stripMargin
+      }
 
-    runnableJUnitTestClassesIn(cu) matches Set("MyTest")
+      runnableJUnitTestClassesIn(cu) matches Set("MyTest")
+    }
+    finally delete(cu)
   }
 
   @Test
   def findSimpleTestClass_inEmptyPackage() =  FlakyTest.retry("findSimpleTestClass_inEmptyPackage", "expected:<Set(MyTest)> but was:<Set()>") {
-    val cu = projectSetup.createSourceFile("", "MyTest.scala") {
-      """
-        |import org.junit.Test
-        |class MyTest {
-        |  @Test
-        |  def test1() {}
-        |}
-      """.stripMargin
-    }
+    var cu: ScalaSourceFile = null
+    try {
+      cu = projectSetup.createSourceFile("", "MyTest.scala") {
+        """
+          |import org.junit.Test
+          |class MyTest {
+          |  @Test
+          |  def test1() {}
+          |}
+        """.stripMargin
+      }
 
-    runnableJUnitTestClassesIn(cu) matches Set("MyTest")
+      runnableJUnitTestClassesIn(cu) matches Set("MyTest")
+    }
+    finally delete(cu)
   }
 
   @Test
   def findSimpleTestClass_afterTypecheckingSource() = FlakyTest.retry("findSimpleTestClass_afterTypecheckingSource") {
-    val cu = projectSetup.createSourceFile("test", "MyTest.scala") {
-      """
-        |package test
-        |import org.junit.Test
-        |class MyTest {
-        |  @Test
-        |  def test1() {}
-        |}
-      """.stripMargin
-    }
-    projectSetup.waitUntilTypechecked(cu)
+    var cu: ScalaSourceFile = null
+    try {
+      cu = projectSetup.createSourceFile("test", "MyTest.scala") {
+        """
+          |package test
+          |import org.junit.Test
+          |class MyTest {
+          |  @Test
+          |  def test1() {}
+          |}
+        """.stripMargin
+      }
+      projectSetup.waitUntilTypechecked(cu)
 
-    runnableJUnitTestClassesIn(cu) matches Set("MyTest")
+      runnableJUnitTestClassesIn(cu) matches Set("MyTest")
+    }
+    finally delete(cu)
   }
 
   @Test
   def findTestClass_WhenThereAreParseErrors() = FlakyTest.retry("findTestClass_WhenThereAreParseErrors") {
-    val cu = projectSetup.createSourceFile("test", "MyTest.scala") {
-      """
-        |package test
-        |import org.junit.Test
-        |class MyTest {
-        |  @Test
-        |  def test1() {}
-        | // unclosed class
-      """.stripMargin
-    }
+    var cu: ScalaSourceFile = null
+    try {
+      cu = projectSetup.createSourceFile("test", "MyTest.scala") {
+        """
+          |package test
+          |import org.junit.Test
+          |class MyTest {
+          |  @Test
+          |  def test1() {}
+          | // unclosed class
+        """.stripMargin
+      }
 
-    runnableJUnitTestClassesIn(cu) matches Set("MyTest")
+      runnableJUnitTestClassesIn(cu) matches Set("MyTest")
+    }
+    finally delete(cu)
   }
 
   @Test
   def findTestClass_WhenThereAreTypecheckingError() = FlakyTest.retry("findTestClass_WhenThereAreTypecheckingError") {
-    val cu = projectSetup.createSourceFile("test", "MyTest.scala") {
-      """
-        |package test
-        |import org.junit.Test
-        |class MyTest {
-        |  s //unknown identifier
-        |  @Test
-        |  def test1() {}
-        |}
-      """.stripMargin
-    }
-    projectSetup.waitUntilTypechecked(cu)
+    var cu: ScalaSourceFile = null
+    try {
+      cu = projectSetup.createSourceFile("test", "MyTest.scala") {
+        """
+          |package test
+          |import org.junit.Test
+          |class MyTest {
+          |  s //unknown identifier
+          |  @Test
+          |  def test1() {}
+          |}
+        """.stripMargin
+      }
+      projectSetup.waitUntilTypechecked(cu)
 
-    runnableJUnitTestClassesIn(cu) matches Set("MyTest")
+      runnableJUnitTestClassesIn(cu) matches Set("MyTest")
+    }
+    finally delete(cu)
   }
 
   @Test
   def findMultipleTestClasses() = FlakyTest.retry("findMultipleTestClasses") {
-    val cu = projectSetup.createSourceFile("test", "MyTest.scala") {
-      """
-        |package test
-        |import org.junit.Test
-        |class MyTest1 {
-        |  @Test
-        |  def test1() {}
-        |}
-        |
-        |class MyTest2 {
-        |  @Test
-        |  def test1() {}
-        |}
-      """.stripMargin
-    }
+    var cu: ScalaSourceFile = null
+    try {
+      cu = projectSetup.createSourceFile("test", "MyTest.scala") {
+        """
+          |package test
+          |import org.junit.Test
+          |class MyTest1 {
+          |  @Test
+          |  def test1() {}
+          |}
+          |
+          |class MyTest2 {
+          |  @Test
+          |  def test1() {}
+          |}
+        """.stripMargin
+      }
 
-    runnableJUnitTestClassesIn(cu) matches Set("MyTest1", "MyTest2")
+      runnableJUnitTestClassesIn(cu) matches Set("MyTest1", "MyTest2")
+    }
+    finally delete(cu)
   }
 
   @Test
   def cannotRunModuleAsJUnitTestClass() = FlakyTest.retry("cannotRunModuleAsJUnitTestClass") {
-    val cu = projectSetup.createSourceFile("test", "MyTest.scala") {
-      """
-        |package test
-        |import org.junit.Test
-        |object MyTest {
-        |  @Test
-        |  def test1() {}
-        |}
-      """.stripMargin
-    }
+    var cu: ScalaSourceFile = null
+    try {
+      cu = projectSetup.createSourceFile("test", "MyTest.scala") {
+        """
+          |package test
+          |import org.junit.Test
+          |object MyTest {
+          |  @Test
+          |  def test1() {}
+          |}
+        """.stripMargin
+      }
 
-    runnableJUnitTestClassesIn(cu) matches Set.empty
+      runnableJUnitTestClassesIn(cu) matches Set.empty
+    }
+    finally delete(cu)
   }
 
   @Test
   def cannotRunTraitAsJUnitTestClass() = FlakyTest.retry("cannotRunTraitAsJUnitTestClass") {
-    val cu = projectSetup.createSourceFile("test", "SuperTest.scala") {
-      """
-        |package test
-        |import org.junit.Test
-        |trait SuperTest {
-        |  @Test
-        |  def test1() {}
-        |}
-      """.stripMargin
-    }
+    var cu: ScalaSourceFile = null
+    try {
+      cu = projectSetup.createSourceFile("test", "SuperTest.scala") {
+        """
+          |package test
+          |import org.junit.Test
+          |trait SuperTest {
+          |  @Test
+          |  def test1() {}
+          |}
+        """.stripMargin
+      }
 
-    runnableJUnitTestClassesIn(cu) matches Set.empty
+      runnableJUnitTestClassesIn(cu) matches Set.empty
+    }
+    finally delete(cu)
   }
 
   @Test
   def cannotRunAbstractJUnitTestClass() = FlakyTest.retry("cannotRunAbstractJUnitTestClass") {
-    val cu = projectSetup.createSourceFile("test", "AbstractTest.scala") {
-      """
-        |package test
-        |import org.junit.Test
-        |abstract class AbstractTest {
-        |  @Test
-        |  def test1() {}
-        |}
-      """.stripMargin
-    }
+    var cu: ScalaSourceFile = null
+    try {
+      cu = projectSetup.createSourceFile("test", "AbstractTest.scala") {
+        """
+          |package test
+          |import org.junit.Test
+          |abstract class AbstractTest {
+          |  @Test
+          |  def test1() {}
+          |}
+        """.stripMargin
+      }
 
-    runnableJUnitTestClassesIn(cu) matches Set.empty
+      runnableJUnitTestClassesIn(cu) matches Set.empty
+    }
+    finally delete(cu)
   }
 
   @Test
   def findTestClass_WhenTestMethodIsDefinedInAbstractParent() = FlakyTest.retry("findTestClass_WhenTestMethodIsDefinedInAbstractParent", "expected:<Set(MyTest)> but was:<Set()>") {
-    val cu = projectSetup.createSourceFile("test", "MyTest.scala") {
-      """
-        |package test
-        |import org.junit.Test
-        |abstract class SuperTest {
-        |  @Test
-        |  def test1() {}
-        |}
-        |class MyTest extends SuperTest
-      """.stripMargin
-    }
+    var cu: ScalaSourceFile = null
+    try {
+      cu = projectSetup.createSourceFile("test", "MyTest.scala") {
+        """
+          |package test
+          |import org.junit.Test
+          |abstract class SuperTest {
+          |  @Test
+          |  def test1() {}
+          |}
+          |class MyTest extends SuperTest
+        """.stripMargin
+      }
 
-    runnableJUnitTestClassesIn(cu) matches Set("MyTest")
+      runnableJUnitTestClassesIn(cu) matches Set("MyTest")
+    }
+    finally delete(cu)
   }
 
   @Test
   def findTestClass_InEmptyPackage_WhenTestMethodIsDefinedInAbstractParent() = FlakyTest.retry("findTestClass_InEmptyPackage_WhenTestMethodIsDefinedInAbstractParent", "expected:<Set(MyTest)> but was:<Set()>") {
-    projectSetup.createSourceFile("test", "SuperTest.scala") {
-      """
-        |package test
-        |import org.junit.Test
-        |abstract class SuperTest {
-        |  @Test
-        |  def test1() {}
-        |}
-      """.stripMargin
+    var cu1: ScalaSourceFile = null
+    var cu2: ScalaSourceFile = null
+    try {
+      cu1 = projectSetup.createSourceFile("test", "SuperTest.scala") {
+        """
+          |package test
+          |import org.junit.Test
+          |abstract class SuperTest {
+          |  @Test
+          |  def test1() {}
+          |}
+        """.stripMargin
+      }
+      cu2 = projectSetup.createSourceFile("", "MyTest.scala") {
+        """
+          |import test.SuperTest
+          |class MyTest extends SuperTest
+        """.stripMargin
+      }
+      runnableJUnitTestClassesIn(cu2) matches Set("MyTest")
     }
-    val cu = projectSetup.createSourceFile("", "MyTest.scala") {
-      """
-        |import test.SuperTest
-        |class MyTest extends SuperTest
-      """.stripMargin
-    }
-
-    runnableJUnitTestClassesIn(cu) matches Set("MyTest")
+    finally delete(cu1, cu2)
   }
 
   @Test
   def findTestClass_WhenDefinedInAbstractParent_andSeparateCompilationUnit() = FlakyTest.retry("findTestClass_WhenDefinedInAbstractParent_andSeparateCompilationUnit", "expected:<Set(MyTest)> but was:<Set()>") {
-    projectSetup.createSourceFile("test", "SuperTest.scala") {
-      """
-        |package test
-        |import org.junit.Test
-        |abstract class SuperTest {
-        |  @Test
-        |  def test1() {}
-        |}
-      """.stripMargin
-    }
-    val cu = projectSetup.createSourceFile("test", "MyTest.scala") {
-      """
-        |package test
-        |class MyTest extends SuperTest
-      """.stripMargin
-    }
+    var cu1: ScalaSourceFile = null
+    var cu2: ScalaSourceFile = null
+    try {
+      cu1 = projectSetup.createSourceFile("test", "SuperTest.scala") {
+        """
+          |package test
+          |import org.junit.Test
+          |abstract class SuperTest {
+          |  @Test
+          |  def test1() {}
+          |}
+        """.stripMargin
+      }
+      cu2 = projectSetup.createSourceFile("test", "MyTest.scala") {
+        """
+          |package test
+          |class MyTest extends SuperTest
+        """.stripMargin
+      }
 
-    runnableJUnitTestClassesIn(cu) matches Set("MyTest")
+      runnableJUnitTestClassesIn(cu2) matches Set("MyTest")
+    }
+    finally delete(cu1, cu2)
   }
 
   @Test
   def findTestClass_WhenTestMethodIsDefinedInParentTrait() = FlakyTest.retry("findTestClass_WhenTestMethodIsDefinedInParentTrait") {
-    val cu = projectSetup.createSourceFile("test", "MyTest.scala") {
-      """
-        |package test
-        |import org.junit.Test
-        |trait SuperTest {
-        |  @Test
-        |  def test1() {}
-        |}
-        |class MyTest extends SuperTest
-      """.stripMargin
-    }
+    var cu: ScalaSourceFile = null
+    try {
+      cu = projectSetup.createSourceFile("test", "MyTest.scala") {
+        """
+          |package test
+          |import org.junit.Test
+          |trait SuperTest {
+          |  @Test
+          |  def test1() {}
+          |}
+          |class MyTest extends SuperTest
+        """.stripMargin
+      }
 
-    runnableJUnitTestClassesIn(cu) matches Set("MyTest")
+      runnableJUnitTestClassesIn(cu) matches Set("MyTest")
+    }
+    finally delete(cu)
   }
 
   @Test
   def findSimpleTestClass_thatUsesRunWithAnnotation() = FlakyTest.retry("findSimpleTestClass_thatUsesRunWithAnnotation", "expected:<Set(MyTest)> but was:<Set()>") {
-    val cu = projectSetup.createSourceFile("test", "MyTest.scala") {
-      """
-        |package test
-        |import org.junit.runner.RunWith
-        |import org.junit.runners.JUnit4
-        |@RunWith(classOf[JUnit4])
-        |class MyTest
-      """.stripMargin
-    }
+    var cu: ScalaSourceFile = null
+    try {
+      cu = projectSetup.createSourceFile("test", "MyTest.scala") {
+        """
+          |package test
+          |import org.junit.runner.RunWith
+          |import org.junit.runners.JUnit4
+          |@RunWith(classOf[JUnit4])
+          |class MyTest
+        """.stripMargin
+      }
 
-    runnableJUnitTestClassesIn(cu) matches Set("MyTest")
+      runnableJUnitTestClassesIn(cu) matches Set("MyTest")
+    }
+    finally delete(cu)
   }
 
   @Test
   def findSimpleTestClass_thatInheritsRunWithAnnotation_FromParentAbstractClass() = FlakyTest.retry("findSimpleTestClass_thatInheritsRunWithAnnotation_FromParentAbstractClass", "expected:<Set(MyTest)> but was:<Set()>") {
-    val cu = projectSetup.createSourceFile("test", "MyTest.scala") {
-      """
-        |package test
-        |import org.junit.runner.RunWith
-        |import org.junit.runners.JUnit4
-        |@RunWith(classOf[JUnit4])
-        |abstract class SuperTest
-        |
-        |class MyTest extends SuperTest
-      """.stripMargin
-    }
+    var cu: ScalaSourceFile = null
+    try {
+      cu = projectSetup.createSourceFile("test", "MyTest.scala") {
+        """
+          |package test
+          |import org.junit.runner.RunWith
+          |import org.junit.runners.JUnit4
+          |@RunWith(classOf[JUnit4])
+          |abstract class SuperTest
+          |
+          |class MyTest extends SuperTest
+        """.stripMargin
+      }
 
-    runnableJUnitTestClassesIn(cu) matches Set("MyTest")
+      runnableJUnitTestClassesIn(cu) matches Set("MyTest")
+    }
+    finally delete(cu)
   }
 
   @Test
   def findSimpleTestClass_thatInheritsRunWithAnnotation_FromParentTrait() = FlakyTest.retry("findSimpleTestClass_thatInheritsRunWithAnnotation_FromParentTrait") {
-    val cu = projectSetup.createSourceFile("test", "MyTest.scala") {
-      """
-        |package test
-        |import org.junit.runner.RunWith
-        |import org.junit.runners.JUnit4
-        |@RunWith(classOf[JUnit4])
-        |trait SuperTest
-        |
-        |class MyTest extends SuperTest
-      """.stripMargin
-    }
+    var cu: ScalaSourceFile = null
+    try {
+      cu = projectSetup.createSourceFile("test", "MyTest.scala") {
+        """
+          |package test
+          |import org.junit.runner.RunWith
+          |import org.junit.runners.JUnit4
+          |@RunWith(classOf[JUnit4])
+          |trait SuperTest
+          |
+          |class MyTest extends SuperTest
+        """.stripMargin
+      }
 
-    runnableJUnitTestClassesIn(cu) matches Set("MyTest")
+      runnableJUnitTestClassesIn(cu) matches Set("MyTest")
+    }
+    finally delete(cu)
   }
 
   @Test
   def RunWithAnnotation_NotMeaningfulOnModule() = FlakyTest.retry("RunWithAnnotation_NotMeaningfulOnModule") {
-    val cu = projectSetup.createSourceFile("test", "ModuleTest.scala") {
-      """
-        |package test
-        |import org.junit.runner.RunWith
-        |import org.junit.runners.JUnit4
-        |@RunWith(classOf[JUnit4])
-        |object ModuleTest
-      """.stripMargin
-    }
+    var cu: ScalaSourceFile = null
+    try {
+      cu = projectSetup.createSourceFile("test", "ModuleTest.scala") {
+        """
+          |package test
+          |import org.junit.runner.RunWith
+          |import org.junit.runners.JUnit4
+          |@RunWith(classOf[JUnit4])
+          |object ModuleTest
+        """.stripMargin
+      }
 
-    runnableJUnitTestClassesIn(cu) matches Set.empty
+      runnableJUnitTestClassesIn(cu) matches Set.empty
+    }
+    finally delete(cu)
   }
 
   @Test
   def RunWithAnnotation_NotMeaningfulOnTrait() = FlakyTest.retry("RunWithAnnotation_NotMeaningfulOnTrait") {
-    val cu = projectSetup.createSourceFile("test", "TraitTest.scala") {
-      """
-        |package test
-        |import org.junit.runner.RunWith
-        |import org.junit.runners.JUnit4
-        |@RunWith(classOf[JUnit4])
-        |trait TraitTest
-      """.stripMargin
-    }
+    var cu: ScalaSourceFile = null
+    try {
+      cu = projectSetup.createSourceFile("test", "TraitTest.scala") {
+        """
+          |package test
+          |import org.junit.runner.RunWith
+          |import org.junit.runners.JUnit4
+          |@RunWith(classOf[JUnit4])
+          |trait TraitTest
+        """.stripMargin
+      }
 
-    runnableJUnitTestClassesIn(cu) matches Set.empty
+      runnableJUnitTestClassesIn(cu) matches Set.empty
+    }
+    finally delete(cu)
   }
 
   @Test
   def RunWithAnnotation_NotMeaningfulOnAbstractClasses() = FlakyTest.retry("RunWithAnnotation_NotMeaningfulOnAbstractClasses") {
-    val cu = projectSetup.createSourceFile("test", "AbstractTest.scala") {
-      """
-        |package test
-        |import org.junit.runner.RunWith
-        |import org.junit.runners.JUnit4
-        |@RunWith(classOf[JUnit4])
-        |abstract class AbstractTest
-      """.stripMargin
-    }
+    var cu: ScalaSourceFile = null
+    try {
+      cu = projectSetup.createSourceFile("test", "AbstractTest.scala") {
+        """
+          |package test
+          |import org.junit.runner.RunWith
+          |import org.junit.runners.JUnit4
+          |@RunWith(classOf[JUnit4])
+          |abstract class AbstractTest
+        """.stripMargin
+      }
 
-    runnableJUnitTestClassesIn(cu) matches Set.empty
+      runnableJUnitTestClassesIn(cu) matches Set.empty
+    }
+    finally delete(cu)
   }
 
   private def runnableJUnitTestClassesIn(source: ScalaSourceFile) = new {
