@@ -20,10 +20,10 @@ object FlakyTest extends HasLogger {
       try {
         logger.debug(s"Test run number: ${attempt})")
         test
-        logger.debug(s"Test `%{testName}` was successful!")
+        logger.debug(s"Test `${methodName}` was successful!")
       } catch {
         case e: Throwable =>
-          if (attempt < times )
+          if (attempt < times)
             loop(attempt + 1)
           else {
             logger.debug(s"Bailing out after ${attempt} attempts. The test is failing consistenly, this may actually be a real regression!?")
@@ -32,7 +32,7 @@ object FlakyTest extends HasLogger {
       }
     }
 
-    logger.debug(s"About to start executing test `${methodName}`, which is known to be flacky.")
+    logger.debug(s"About to start executing test `${methodName}`, which is known to be flaky.")
     if(errorMsg.nonEmpty)
       logger.debug(s"""When the test fails, it usually reports the following error: \"${errorMsg}\"""")
 
