@@ -20,6 +20,7 @@ import scala.tools.nsc.reporters.Reporter
 import scala.reflect.internal.util.BatchSourceFile
 import scala.reflect.internal.util.Position
 import scala.reflect.internal.util.SourceFile
+import scala.tools.eclipse.completion.CompletionContext
 import scala.tools.eclipse.javaelements.ScalaCompilationUnit
 import scala.tools.eclipse.javaelements.ScalaIndexBuilder
 import scala.tools.eclipse.javaelements.ScalaJavaMapper
@@ -268,7 +269,8 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings) exten
    *  TODO We should have a more refined strategy based on the context (inside an import, case
    *       pattern, 'new' call, etc.)
    */
-  def mkCompletionProposal(prefix: Array[Char], start: Int, sym: Symbol, tpe: Type, inherited: Boolean, viaView: Symbol): CompletionProposal = {
+  def mkCompletionProposal(prefix: Array[Char], start: Int, sym: Symbol, tpe: Type,
+    inherited: Boolean, viaView: Symbol, context: CompletionContext): CompletionProposal = {
     import scala.tools.eclipse.completion.MemberKind._
 
     val kind = if (sym.isSourceMethod && !sym.hasFlag(Flags.ACCESSOR | Flags.PARAMACCESSOR)) Def
@@ -323,7 +325,9 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings) exten
       } else scalaParamNames
     }
 
-    CompletionProposal(kind,
+    CompletionProposal(
+      kind,
+      context,
       start,
       name,
       signature,

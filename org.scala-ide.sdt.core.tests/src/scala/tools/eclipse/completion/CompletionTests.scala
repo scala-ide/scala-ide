@@ -234,7 +234,7 @@ class CompletionTests {
         assertEquals("There is only one completion location", 0, index)
         assertTrue("The completion should return java.util", completions.exists(
           _ match {
-            case CompletionProposal(MemberKind.Package, _, "util", _, _, _, _, _, _, _, _) =>
+            case CompletionProposal(MemberKind.Package, _, _, "util", _, _, _, _, _, _, _, _) =>
               true
             case _ =>
               false
@@ -266,17 +266,30 @@ class CompletionTests {
         index match {
         case 0 =>
           assertTrue("The completion should return the `buz` method name with empty-parens", completions.exists {
-            case CompletionProposal(MemberKind.Def, _, "buz", _, _, _, _, getParamNames, _, _, _) =>
+            case CompletionProposal(MemberKind.Def, _, _, "buz", _, _, _, _, getParamNames, _, _, _) =>
               getParamNames() == List(Nil) // List(Nil) is how an empty-args list is encoded
         })
         case 1 =>
           assertTrue("The completion should return the `bar` method name with NO empty-parens", completions.exists {
-            case CompletionProposal(MemberKind.Def, _, "bar", _, _, _, _, getParamNames, _, _, _) =>
+            case CompletionProposal(MemberKind.Def, _, _, "bar", _, _, _, _, getParamNames, _, _, _) =>
               getParamNames() == Nil
           })
         case _ =>
           assert(false, "Unhandled completion position")
       }
     }
+  }
+
+  @Test
+  def t1001218() {
+    val oraclePos8_14 = List("println(): Unit", "println(Any): Unit")
+    val oraclePos10_12 = List("foo(): Int")
+    val oraclePos12_12 = List("foo(): Int")
+    val oraclePos18_10 = List("foo(): Int")
+
+    val unit = scalaCompilationUnit("t1001218/A.scala")
+    reload(unit)
+
+    runTest("t1001218/A.scala", false)(oraclePos8_14, oraclePos10_12, oraclePos12_12, oraclePos18_10)
   }
 }
