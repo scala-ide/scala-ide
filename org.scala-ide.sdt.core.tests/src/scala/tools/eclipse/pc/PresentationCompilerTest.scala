@@ -172,7 +172,7 @@ class FreshFile {
 
   @Test
   def libraryDocumentation(): Unit =
-    project.withPresentationCompiler { compiler =>
+    project.presentationCompiler { compiler =>
       import compiler.{ reload => _, parseAndEnter => _, _ }
       import definitions.ListClass
       val unit = findCompilationUnit(ListClass).get
@@ -197,7 +197,7 @@ class FreshFile {
                              parsedDocComment(sym, sym.enclClass).isDefined)
         }
       }
-    } {
+    } getOrElse {
       Assert.fail("shouldn't happen")
     }
 
