@@ -157,7 +157,7 @@ class ScalaCompletions extends HasLogger {
         fillTypeCompletions(qualifier.pos.end)
       case Some(compiler.Import(expr, _)) =>
         // completion on `imports`
-        fillTypeCompletions(expr.pos.endOrPoint)
+        fillTypeCompletions(expr.pos.endOrPoint, CompletionContext.ImportContext)
       case Some(compiler.Apply(fun, _)) =>
         fun match {
           case compiler.Select(qualifier, name) if qualifier.pos.isDefined && qualifier.pos.isRange =>

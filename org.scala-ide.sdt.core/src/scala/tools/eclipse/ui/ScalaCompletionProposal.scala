@@ -1,44 +1,45 @@
-package scala.tools.eclipse
-package ui
+package scala.tools.eclipse.ui
 
-import completion._
+import scala.tools.eclipse.ScalaImages
+import scala.tools.eclipse.ScalaWordFinder
+import scala.tools.eclipse.completion.CompletionContext
+import scala.tools.eclipse.completion.CompletionProposal
+import scala.tools.eclipse.completion.MemberKind
+import scala.tools.eclipse.completion.prefixMatches
+import scala.tools.eclipse.refactoring.EditorHelpers
+import scala.tools.eclipse.refactoring.EditorHelpers._
+import scala.tools.refactoring.common.TextChange
+import scala.tools.refactoring.implementations.AddImportStatement
+
+import org.eclipse.jdt.internal.ui.JavaPlugin
+import org.eclipse.jdt.internal.ui.JavaPluginImages
+import org.eclipse.jdt.ui.PreferenceConstants
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal
+import org.eclipse.jface.preference.PreferenceConverter
+import org.eclipse.jface.text.DocumentEvent
+import org.eclipse.jface.text.IDocument
+import org.eclipse.jface.text.IRegion
+import org.eclipse.jface.text.ITextPresentationListener
+import org.eclipse.jface.text.ITextViewer
+import org.eclipse.jface.text.ITextViewerExtension2
+import org.eclipse.jface.text.ITextViewerExtension4
+import org.eclipse.jface.text.ITextViewerExtension5
+import org.eclipse.jface.text.Position
+import org.eclipse.jface.text.TextPresentation
 import org.eclipse.jface.text.contentassist.ICompletionProposalExtension
+import org.eclipse.jface.text.contentassist.ICompletionProposalExtension2
 import org.eclipse.jface.text.contentassist.ICompletionProposalExtension6
 import org.eclipse.jface.text.contentassist.IContextInformation
-import org.eclipse.swt.graphics.Image
-import org.eclipse.jface.text.IDocument
+import org.eclipse.jface.text.link._
+import org.eclipse.jface.text.link.LinkedModeUI.ExitFlags
+import org.eclipse.jface.text.link.LinkedModeUI.IExitPolicy
 import org.eclipse.jface.viewers.ISelectionProvider
 import org.eclipse.jface.viewers.StyledString
-import org.eclipse.jface.text.TextSelection
-import org.eclipse.jface.text.ITextViewer
-import org.eclipse.jdt.internal.ui.JavaPluginImages
-import refactoring.EditorHelpers
-import refactoring.EditorHelpers._
-import scala.tools.refactoring.implementations.AddImportStatement
-import org.eclipse.jface.text.link._
-import org.eclipse.jface.text.Position
-import org.eclipse.ui.texteditor.link.EditorLinkedModeUI
-import org.eclipse.jdt.internal.ui.text.java.AbstractJavaCompletionProposal.ExitPolicy
-import org.eclipse.jface.text.link.LinkedModeUI.IExitPolicy
-import org.eclipse.swt.events.VerifyEvent
-import org.eclipse.jface.text.link.LinkedModeUI.ExitFlags
 import org.eclipse.swt.SWT
-import scala.tools.refactoring.common.TextChange
-import org.eclipse.jface.text.contentassist.ICompletionProposalExtension2
-import org.eclipse.jdt.internal.ui.JavaPlugin
-import org.eclipse.jdt.ui.PreferenceConstants
-import org.eclipse.jface.preference.PreferenceConverter
-import org.eclipse.swt.graphics.Color
-import org.eclipse.jface.text.ITextViewerExtension4
-import org.eclipse.jface.text.TextPresentation
 import org.eclipse.swt.custom.StyleRange
-import org.eclipse.jface.text.ITextPresentationListener
-import org.eclipse.jface.text.ITextViewerExtension2
-import org.eclipse.jface.text.ITextViewerExtension5
-import org.eclipse.jface.text.DocumentEvent
-import org.eclipse.jface.text.IRegion
-import scala.tools.refactoring.common.TextChange
+import org.eclipse.swt.events.VerifyEvent
+import org.eclipse.swt.graphics.Color
+import org.eclipse.ui.texteditor.link.EditorLinkedModeUI
 
 /** A UI class for displaying completion proposals.
  *
@@ -91,8 +92,8 @@ class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: I
    *
    *  @note It triggers the potentially expensive `getParameterNames` operation.
    */
-  def completionString(overwrite: Boolean) =
-    if (explicitParamNames.isEmpty || overwrite)
+  def completionString(overwrite: Boolean) = {
+    if (context.contextType == CompletionContext.ImportContext || explicitParamNames.isEmpty || overwrite)
       completion
     else {
       val buffer = new StringBuffer(completion)
@@ -101,13 +102,14 @@ class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: I
         buffer.append(section.mkString("(", ", ", ")"))
       buffer.toString
     }
+  }
 
   /** Position after the opening parenthesis of this proposal */
   val startOfArgumentList = startPos + completion.length + 1
 
   /** The information that is displayed in a small hover window above the completion, showing parameter names and types. */
   def getContextInformation(): IContextInformation =
-    if (tooltip.length > 0)
+    if (context.contextType != CompletionContext.ImportContext && tooltip.length > 0)
       new ScalaContextInformation(display, tooltip, image, startOfArgumentList)
     else null
 
@@ -173,7 +175,7 @@ class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: I
 
     // similar to above, if we're in an apply context, we're not going to show
     // anything in the editor (just doing tooltips)
-    if (context.contextType != CompletionContext.ApplyContext) {
+    if (context.contextType != CompletionContext.ApplyContext && context.contextType != CompletionContext.ImportContext) {
       if (!overwrite) selectionProvider match {
         case viewer: ITextViewer if explicitParamNames.flatten.nonEmpty =>
           addArgumentTemplates(d, viewer, completionFullString)
