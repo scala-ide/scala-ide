@@ -37,8 +37,7 @@ class ScalaCompletions extends HasLogger {
     def isAlreadyListed(fullyQualifiedName: String, display: String) =
       listedTypes.entryExists(fullyQualifiedName, _.display == display)
 
-    def addCompletions(completed: compiler.Response[List[compiler.Member]], matchName: Array[Char],
-      start: Int, prefixMatch: Boolean, contextType: ContextType) {
+    def addCompletions(completions: List[compiler.Member], matchName: Array[Char], start: Int, prefixMatch: Boolean, contextType: ContextType) {
       def nameMatches(sym: compiler.Symbol) = {
         val name = sym.decodedName.toString.toArray
         if (prefixMatch) {
@@ -48,23 +47,22 @@ class ScalaCompletions extends HasLogger {
         }
       }
 
+
       val context = CompletionContext(contextType)
 
-      for (completions <- completed.get.left.toOption) {
-        compiler.askOption { () =>
-          for (completion <- completions) {
-            val completionProposal = completion match {
-              case compiler.TypeMember(sym, tpe, true, inherited, viaView) if !sym.isConstructor && nameMatches(sym) =>
-                Some(compiler.mkCompletionProposal(matchName, start, sym, tpe, inherited, viaView, context))
-              case compiler.ScopeMember(sym, tpe, true, _) if !sym.isConstructor && nameMatches(sym) =>
-                Some(compiler.mkCompletionProposal(matchName, start, sym, tpe, false, compiler.NoSymbol, context))
-              case _ => None
-            }
+      compiler.askOption { () =>
+        for (completion <- completions) {
+          val completionProposal = completion match {
+            case compiler.TypeMember(sym, tpe, true, inherited, viaView) if !sym.isConstructor && nameMatches(sym) =>
+              Some(compiler.mkCompletionProposal(matchName, start, sym, tpe, inherited, viaView, context))
+            case compiler.ScopeMember(sym, tpe, true, _) if !sym.isConstructor && nameMatches(sym) =>
+              Some(compiler.mkCompletionProposal(matchName, start, sym, tpe, false, compiler.NoSymbol, context))
+            case _ => None
+          }
 
-            completionProposal foreach { proposal =>
-              if (!isAlreadyListed(proposal.fullyQualifiedName, proposal.display)) {
-                listedTypes.addBinding(proposal.fullyQualifiedName, proposal)
-              }
+          completionProposal foreach { proposal =>
+            if (!isAlreadyListed(proposal.fullyQualifiedName, proposal.display)) {
+              listedTypes.addBinding(proposal.fullyQualifiedName, proposal)
             }
           }
         }
@@ -72,20 +70,26 @@ class ScalaCompletions extends HasLogger {
     }
 
     def fillTypeCompletions(pos: Int, contextType: ContextType = CompletionContext.DefaultContext,
-      matchName: Array[Char] = wordAtPosition, start: Int = wordStart, prefixMatch: Boolean = true) {
-      val cpos = compiler.rangePos(sourceFile, pos, pos, pos)
-      val completed = new compiler.Response[List[compiler.Member]]
-      compiler.askTypeCompletion(cpos, completed)
-      addCompletions(completed, matchName, start, prefixMatch, contextType)
+                            matchName: Array[Char] = wordAtPosition, start: Int = wordStart, prefixMatch: Boolean = true) {
+      def typeCompletionsAt(pos: Int): List[compiler.Member] = {
+        val cpos = compiler.rangePos(sourceFile, pos, pos, pos)
+        val completed = new compiler.Response[List[compiler.Member]]
+        compiler.askTypeCompletion(cpos, completed)
+        completed.get.left.toOption.getOrElse(Nil)
+      }
+      addCompletions(typeCompletionsAt(pos), matchName, start, prefixMatch, contextType)
     }
 
     def fillScopeCompletions(pos: Int, contextType: ContextType = CompletionContext.DefaultContext,
-      matchName: Array[Char] = wordAtPosition, start: Int = wordStart, prefixMatch: Boolean = true) {
-      val cpos = compiler.rangePos(sourceFile, pos, pos, pos)
-      val completed = new compiler.Response[List[compiler.Member]]
-      compiler.askScopeCompletion(cpos, completed)
-      addCompletions(completed, matchName, start, prefixMatch, contextType)
+                             matchName: Array[Char] = wordAtPosition, start: Int = wordStart, prefixMatch: Boolean = true) {
+      def scopeCompletionsAt(pos: Int): List[compiler.Member] = {
+        val cpos = compiler.rangePos(sourceFile, pos, pos, pos)
+        val completed = new compiler.Response[List[compiler.Member]]
+        compiler.askScopeCompletion(cpos, completed)
+        completed.get.left.toOption.getOrElse(Nil)
+      }
 
+      addCompletions(scopeCompletionsAt(pos), matchName, start, prefixMatch, contextType)
       // try and find type in the classpath as well
 
       // first try and determine if there is a package name prefixing the word being completed
