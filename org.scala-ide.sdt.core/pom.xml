@@ -162,10 +162,10 @@
                 </artifactItem>
                 <artifactItem>
                   <groupId>org.scala-lang</groupId>
-                  <artifactId>scala-swing</artifactId>
+                  <artifactId>scala-compiler</artifactId>
                   <classifier>sources</classifier>
                   <type>jar</type>
-                  <destFileName>scala-swing-src.jar</destFileName>
+                  <destFileName>scala-compiler-src.jar</destFileName>
                   <outputDirectory>${project.build.directory}/src</outputDirectory>
                 </artifactItem>
               </artifactItems>

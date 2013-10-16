@@ -51,7 +51,7 @@
         <enabled>false</enabled>
       </snapshots>
     </repository>
-     <repository>
+    <repository>
       <id>scala-refactoring</id>
       <name>Scala Refactoring p2 repository</name>
       <layout>p2</layout>
@@ -76,22 +76,18 @@
     <dependency>
       <groupId>org.scala-lang</groupId>
       <artifactId>scala-library</artifactId>
-      <version>${scala.version}</version>
     </dependency>
     <dependency>
       <groupId>org.scala-lang</groupId>
       <artifactId>scala-actors</artifactId>
-      <version>${scala.version}</version>
     </dependency>
     <dependency>
       <groupId>org.scala-lang</groupId>
       <artifactId>scala-compiler</artifactId>
-      <version>${scala.version}</version>
     </dependency>
     <dependency>
       <groupId>org.scala-lang</groupId>
       <artifactId>scala-reflect</artifactId>
-      <version>${scala.version}</version>
     </dependency>
     <dependency>
       <groupId>org.scala-ide</groupId>

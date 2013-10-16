@@ -8,14 +8,12 @@ package scala.tools.eclipse.util
 import java.io.IOException
 import java.net.URL
 
-import scala.tools.eclipse.logging.HasLogger
-
 import org.eclipse.core.runtime.FileLocator
 import org.eclipse.core.runtime.IPath
 import org.eclipse.core.runtime.Path
 import org.osgi.framework.Bundle
 
-object OSGiUtils extends HasLogger {
+object OSGiUtils {
   private def urlToPath(url: URL): IPath = Path.fromOSString(FileLocator.toFileURL(url).getPath)
 
   def pathInBundle(bundle: Bundle, path: String): Option[IPath] = {
