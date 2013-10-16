@@ -1,22 +1,13 @@
-scala-ide-plugin.g8
-===================
+SBT support in Eclipse
+======================
 
-Giger8 template for Eclipse plugins based on the Scala IDE.
+The purpose of this project is to provide good support for SBT projects using a multi step compilation task, like Play projects.
 
-This template produces 5 Eclipse plugins:
-
-* the plugin itself
-* the `plugin.tests` fragment
-* an Eclipse feature
-* an Eclipse source feature
-* an Eclipse update-site
-
-The projects can readily be imported inside Eclipse. Additionally, you have maven `pom` files
-based on Tycho, enabling command line builds.
+The initial goals are to enable importing vanilly SBT projects, driving the build process from Eclipse and provide an output console.
 
 ## Building:
 
-This template uses [plugin-profiles](https://github.com/scala-ide/plugin-profiles) to manage the build. Check its documentation for detailed information. The command to use looks like this:
+This template uses [plugin-profiles](https://github.com/scala-ide/plugin-profiles) to manage the build. Check its documentation for detailed information. A script with good default parameters is provided:
 
-    mvn -Pscala-2.10.x,eclipse-indigo,scala-ide-stable clean install
+    ./build.sh
 
