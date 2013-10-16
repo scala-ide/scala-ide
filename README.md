@@ -11,3 +11,6 @@ This template uses [plugin-profiles](https://github.com/scala-ide/plugin-profile
 
     ./build.sh
 
+# Nightly build:
+
+A nightly build for Juno/Kepler on Scala 2.10.x is available at: http://download.scala-ide.org/plugins/sbt-integration/nightly/e38/2.10.x/site/
