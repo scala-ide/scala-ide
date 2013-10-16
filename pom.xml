@@ -19,7 +19,7 @@
 
   <properties>
     <encoding>UTF-8</encoding>
-    <retryFlakyTests>false</retryFlakyTests>
+    <retryFlakyTests>true</retryFlakyTests>
     <!-- p2 repositories location -->
     <repo.eclipse.indigo>http://download.eclipse.org/releases/indigo/</repo.eclipse.indigo>
     <repo.eclipse.juno>http://download.eclipse.org/releases/juno</repo.eclipse.juno>
