@@ -61,9 +61,6 @@
 
      <!-- default values, can be overwritten by profiles -->
      <scala.version>2.10.0</scala.version>
-     <scala.binary.version>2.10</scala.binary.version>
-     <scala.xml.version>1.0.0-RC5</scala.xml.version>
-     <scala.parser-combinators.version>1.0.0-RC3</scala.parser-combinators.version>
      <scala.library.version>${scala.version}</scala.library.version>
      <version.suffix>2_10</version.suffix>
      <version.tag>local</version.tag>
@@ -102,12 +99,29 @@
       <properties>
         <scala.version>2.11.0-SNAPSHOT</scala.version>
         <scala.binary.version>2.11.0-M5</scala.binary.version>
+        <scala.xml.version>1.0.0-RC5</scala.xml.version>
+        <scala.parser-combinators.version>1.0.0-RC3</scala.parser-combinators.version>
         <version.suffix>2_11</version.suffix>
 
         <repo.scala-refactoring>${repo.scala-ide.root}/scala-refactoring-211x</repo.scala-refactoring>
         <repo.scalariform>${repo.scala-ide.root}/scalariform-211x</repo.scalariform>
         <repo.typesafe>http://private-repo.typesafe.com/typesafe/ide-2.11</repo.typesafe>
       </properties>
+
+      <dependencyManagement>
+        <dependencies>
+          <dependency>
+            <groupId>org.scala-lang.modules</groupId>
+            <artifactId>scala-xml_${scala.binary.version}</artifactId>
+            <version>${scala.xml.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.scala-lang.modules</groupId>
+            <artifactId>scala-parser-combinators_${scala.binary.version}</artifactId>
+            <version>${scala.parser-combinators.version}</version>
+          </dependency>
+        </dependencies>
+      </dependencyManagement>
     </profile>
 
     <profile>
@@ -174,6 +188,12 @@
           <groupId>org.scala-ide</groupId>
           <artifactId>build-tools_2.10</artifactId>
           <version>0.4.0</version>
+        </dependency>
+        <!-- We need the 2.10 Scala library, instead of whatever cross-version we happen to build -->
+        <dependency>
+          <groupId>org.scala-lang</groupId>
+          <artifactId>scala-library</artifactId>
+          <version>2.10.0</version>
         </dependency>
       </dependencies>
       <build>
@@ -272,16 +292,6 @@
         <groupId>org.scala-lang</groupId>
         <artifactId>scala-library</artifactId>
         <version>${scala.library.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.scala-lang.modules</groupId>
-        <artifactId>scala-xml_${scala.binary.version}</artifactId>
-        <version>${scala.xml.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.scala-lang.modules</groupId>
-        <artifactId>scala-parser-combinators_${scala.binary.version}</artifactId>
-        <version>${scala.parser-combinators.version}</version>
       </dependency>
       <dependency>
         <groupId>org.scala-lang</groupId>
