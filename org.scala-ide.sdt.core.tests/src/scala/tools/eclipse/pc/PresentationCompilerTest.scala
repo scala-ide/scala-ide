@@ -100,7 +100,7 @@ class FreshFile {
     val oracle = List(Link("class t1000692.akka.config.ModuleNotAvailableException"))
     //then
     // it is important to ask hyperlinking before reloading!
-    loadTestUnit(unit).andCheckAgainst(oracle)
+    loadTestUnit(unit, forceTypeChecking = false).andCheckAgainst(oracle)
     reload(unit)
     // verify
     assertNoErrors(unit)
