@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<site>
+   <feature url="features/org.scala-ide.sbt.feature_0.0.0.jar" id="org.scala-ide.sbt.feature" version="0.0.0">
+      <category name="org.scala-ide.sbt"/>
+   </feature>
+   <feature url="features/org.scala-ide.sbt.source.feature_0.0.0.jar" id="org.scala-ide.sbt.source.feature" version="0.0.0">
+      <category name="org.scala-ide.sbt-source"/>
+   </feature>
+   <category-def name="org.scala-ide.sbt" label="SBT Integration"/>
+   <category-def name="org.scala-ide.sbt-source" label="SBT Integration Source"/> -->
+</site>

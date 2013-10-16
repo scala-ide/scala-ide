@@ -1,0 +1,38 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: SBT Remote Builder
+Bundle-SymbolicName: org.scala-ide.sbt.core;singleton:=true
+Bundle-Version: 0.1.0.qualifier
+Bundle-Vendor: Scala IDE
+Bundle-ActivationPolicy: lazy
+Bundle-Localization: plugin
+Require-Bundle: 
+ org.eclipse.core.runtime,
+ org.eclipse.debug.ui,
+ org.eclipse.help,
+ org.eclipse.jdt.core;bundle-version="[3.8.0,4.4.0)",
+ org.eclipse.jdt.debug.ui,
+ org.eclipse.jdt.junit,
+ org.eclipse.jdt.launching,
+ org.eclipse.jdt.ui,
+ org.eclipse.jface.text,
+ org.eclipse.ui,
+ org.eclipse.ui.console,
+ org.eclipse.ui.editors,
+ org.eclipse.ui.forms,
+ org.eclipse.ui.ide,
+ org.scala-ide.scala.library,
+ org.scala-ide.scala.compiler,
+ org.eclipse.core.resources
+Import-Package: 
+ scala.tools.eclipse.logging,
+ scala.tools.eclipse.util
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Bundle-ClassPath: .,
+ target/lib/sbt-rc-remote-controller.jar,
+ target/lib/sbt-rc-props.jar,
+ target/lib/akka-actor_2.10.jar,
+ target/lib/config.jar,
+ target/lib/io.jar,
+ target/lib/collections.jar
+Bundle-Activator: org.scalaide.sbt.core.SbtRemotePlugin
