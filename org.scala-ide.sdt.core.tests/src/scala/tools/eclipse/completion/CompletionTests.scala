@@ -292,4 +292,35 @@ class CompletionTests {
 
     runTest("t1001218/A.scala", false)(oraclePos8_14, oraclePos10_12, oraclePos12_12, oraclePos18_10)
   }
+
+  @Test
+  def t1001125() {
+    withCompletions("t1001125/Ticket1001125.scala") {
+      (index, position, completions) =>
+        assertEquals("There is only one completion location", 1, completions.size)
+        assertTrue("The completion should return doNothingWith", completions.exists(
+          _ match {
+            case c:CompletionProposal =>
+              c.kind == MemberKind.Def && c.context == CompletionContext(CompletionContext.ImportContext) && c.completion == "doNothingWith"
+            case _ =>
+              false
+          }))
+    }
+  }
+
+  @Ignore("Enable this when ticket #1001919 is fixed.")
+  @Test
+  def t1001919() {
+    withCompletions("t1001919/Ticket1001919.scala") {
+      (index, position, completions) =>
+        assertEquals("There is only one completion location", 1, completions.size)
+        assertTrue("The completion should return doNothingWith", completions.exists(
+          _ match {
+            case c:CompletionProposal =>
+              c.kind == MemberKind.Def && c.context == CompletionContext(CompletionContext.ImportContext) && c.completion == "doNothingWith"
+            case _ =>
+              false
+          }))
+    }
+  }
 }
