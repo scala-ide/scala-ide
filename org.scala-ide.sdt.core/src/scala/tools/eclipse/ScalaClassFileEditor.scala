@@ -9,13 +9,13 @@ import scala.tools.eclipse.javaelements.ScalaClassFile
 import scala.tools.eclipse.javaelements.ScalaCompilationUnit
 import scala.tools.eclipse.semantichighlighting.TextPresentationHighlighter
 import scala.tools.eclipse.semantichighlighting.ui.TextPresentationEditorHighlighter
-
 import org.eclipse.jdt.core.IJavaElement
 import org.eclipse.jdt.internal.ui.javaeditor.ClassFileEditor
 import org.eclipse.jdt.ui.actions.IJavaEditorActionDefinitionIds
 import org.eclipse.jface.action.Action
 import org.eclipse.jface.text.ITextSelection
 import org.eclipse.jface.text.source.SourceViewerConfiguration
+import org.eclipse.jdt.core.SourceRange
 
 class ScalaClassFileEditor extends ClassFileEditor with ScalaCompilationUnitEditor {
 
@@ -46,8 +46,18 @@ class ScalaClassFileEditor extends ClassFileEditor with ScalaCompilationUnitEdit
     setAction("OpenEditor", openAction)
   }
 
+  override protected def installScalaSemanticHighlighting(forceRefresh: Boolean): Unit =
+    if(hasSourceAttached) super.installScalaSemanticHighlighting(forceRefresh)
+
   override def createSemanticHighlighter: TextPresentationHighlighter =
     TextPresentationEditorHighlighter(this, semanticHighlightingPreferences, _ => (), _ => ())
 
   override def forceSemanticHighlightingOnInstallment: Boolean = true
+
+  private def hasSourceAttached: Boolean = getInputJavaElement match {
+    case scf : ScalaClassFile =>
+      val range = scf.getSourceRange()
+      SourceRange.isAvailable(range)
+    case _ => false
+  }
 }
