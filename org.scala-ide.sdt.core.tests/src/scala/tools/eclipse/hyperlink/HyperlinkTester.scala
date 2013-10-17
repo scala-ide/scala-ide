@@ -26,16 +26,17 @@ trait HyperlinkTester extends TestProjectSetup {
   case class Link(text: String*)
 
   /** Given a source `path`, load the corresponding scala `unit`. */
-  def loadTestUnit(path: String): VerifyHyperlink = {
+  def loadTestUnit(path: String, forceTypeChecking: Boolean = false): VerifyHyperlink = {
     val unit = scalaCompilationUnit(path)
-    loadTestUnit(unit)
+    loadTestUnit(unit, forceTypeChecking)
   }
 
   /** Load a scala `unit` that contains text markers used
    *  to generate hyperlinking requests to the presentation compiler.
    */
-  def loadTestUnit(unit: ScalaSourceFile): VerifyHyperlink = {
+  def loadTestUnit(unit: ScalaSourceFile, forceTypeChecking: Boolean): VerifyHyperlink = {
     reload(unit)
+    if(forceTypeChecking) waitUntilTypechecked(unit)
     new VerifyHyperlink {
       /** @param expectations A collection of expected `Link` (test's oracle). */
       def andCheckAgainst(expectations: List[Link], checker: (InteractiveCompilationUnit, IRegion, String, Link) => Unit = checkScalaLinks) = {

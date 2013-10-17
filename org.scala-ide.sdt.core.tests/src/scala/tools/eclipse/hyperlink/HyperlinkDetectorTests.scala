@@ -107,4 +107,12 @@ class HyperlinkDetectorTests {
 
     loadTestUnit("t1001215/A.scala").andCheckAgainst(oracle)
   }
+
+  @Ignore("Enable this once Scalac ticket SI-7915 is fixed")
+  @Test
+  def t1001921() {
+    val oracle = List(Link("method t1001921.Bar.bar"))
+
+    loadTestUnit("t1001921/Ticket1001921.scala", forceTypeChecking = true).andCheckAgainst(oracle)
+  }
 }
