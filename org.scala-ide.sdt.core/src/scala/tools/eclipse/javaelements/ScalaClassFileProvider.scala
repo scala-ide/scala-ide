@@ -17,15 +17,7 @@ import scala.tools.eclipse.logging.HasLogger
 class ScalaClassFileProvider extends IClassFileProvider with HasLogger {
   override def create(contents : Array[Byte], parent : PackageFragment, name : String) : ClassFile =
     ScalaClassFileDescriber.isScala(new ByteArrayInputStream(contents)) match {
-      case Some(sourceFile) =>
-        val scf = new ScalaClassFile(parent, name, sourceFile)
-        val sourceMapper = parent.getSourceMapper
-        if (sourceMapper == null)
-          null
-        else {
-          val source = sourceMapper.findSource(scf.getType, sourceFile)
-          if (source != null) scf else null
-        }
+      case Some(sourcePath) => new ScalaClassFile(parent, name, sourcePath)
       case _ => null
     }
 
