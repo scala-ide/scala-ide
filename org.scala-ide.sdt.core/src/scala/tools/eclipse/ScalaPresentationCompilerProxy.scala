@@ -46,7 +46,10 @@ final class ScalaPresentationCompilerProxy(project: ScalaProject) extends HasLog
   /** Ask to restart the presentation compiler before processing the next request. */
   def askRestart(): Unit = { restartNextTime = true }
 
-  /** Executes the passed `op` on the presentation compiler. */
+  /** Executes the passed `op` on the presentation compiler.
+   *
+   *  @return `None` if `op` returns `null`, `Some(value)` otherwise.
+   */
   def apply[U](op: ScalaPresentationCompiler => U): Option[U] = {
     def obtainPc(): ScalaPresentationCompiler = {
       pcLock.synchronized {
@@ -66,7 +69,7 @@ final class ScalaPresentationCompilerProxy(project: ScalaProject) extends HasLog
       }
     }
 
-    Option(obtainPc()) map op
+    Option(obtainPc()) flatMap (pc => Option(op(pc)))
   }
 
   /** Updates `pc` with a new Presentation Compiler instance.
