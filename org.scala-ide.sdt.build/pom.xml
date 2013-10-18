@@ -72,18 +72,22 @@
   </repositories>
 
   <dependencies>
-    <!-- because the Scala plugins were build locally in build-toolchain, and
-         are only available in the local maven repository, we need to reference
-         then as maven dependencies -->
+    <!-- POM-first dependencies (Scala OSGi bundles or bnd-ified dependencies  -->
     <dependency>
-      <groupId>org.scala-ide</groupId>
-      <artifactId>org.scala-ide.scala.library</artifactId>
-      <version>${project.version}</version>
+      <groupId>org.scala-lang</groupId>
+      <artifactId>scala-library</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.scala-ide</groupId>
-      <artifactId>org.scala-ide.scala.compiler</artifactId>
-      <version>${project.version}</version>
+      <groupId>org.scala-lang</groupId>
+      <artifactId>scala-actors</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.scala-lang</groupId>
+      <artifactId>scala-compiler</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.scala-lang</groupId>
+      <artifactId>scala-reflect</artifactId>
     </dependency>
     <dependency>
       <groupId>org.scala-ide</groupId>
@@ -105,9 +109,76 @@
       <artifactId>org.scala-ide.sbt.compiler.interface.source</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <!-- Source dependencies -->
+    <dependency>
+      <groupId>org.scala-lang</groupId>
+      <artifactId>scala-library</artifactId>
+      <classifier>sources</classifier>
+      <version>${scala.library.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.scala-lang</groupId>
+      <artifactId>scala-swing</artifactId>
+      <classifier>sources</classifier>
+      <version>${scala.library.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.scala-lang</groupId>
+      <artifactId>scala-actors</artifactId>
+      <classifier>sources</classifier>
+      <version>${scala.library.version}</version>
+    </dependency>
+    <!-- toolchain, Scala compiler -->
+    <dependency>
+      <groupId>org.scala-lang</groupId>
+      <artifactId>scala-compiler</artifactId>
+      <classifier>sources</classifier>
+      <version>${scala.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.scala-lang</groupId>
+      <artifactId>scala-reflect</artifactId>
+      <classifier>sources</classifier>
+      <version>${scala.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.scala-lang.plugins</groupId>
+      <artifactId>continuations</artifactId>
+      <classifier>sources</classifier>
+      <version>${scala.version}</version>
+    </dependency>
   </dependencies>
 
+  <profiles>
+    <profile>
+      <!--- the profile using the default values. Scala 2.11.x -->
+      <id>scala-2.11.x</id>
+      <dependencies>
+        <dependency>
+          <groupId>org.scala-lang.modules</groupId>
+          <artifactId>scala-xml_${scala.binary.version}</artifactId>
+        </dependency>
+        <dependency>
+          <groupId>org.scala-lang.modules</groupId>
+          <artifactId>scala-parser-combinators_${scala.binary.version}</artifactId>
+        </dependency>
 
+        <!-- Source dependencies -->
+        <dependency>
+          <groupId>org.scala-lang.modules</groupId>
+          <artifactId>scala-xml_${scala.binary.version}</artifactId>
+          <classifier>sources</classifier>
+          <version>${scala.xml.version}</version>
+        </dependency>
+        <dependency>
+          <groupId>org.scala-lang.modules</groupId>
+          <artifactId>scala-parser-combinators_${scala.binary.version}</artifactId>
+          <classifier>sources</classifier>
+          <version>${scala.parser-combinators.version}</version>
+        </dependency>
+      </dependencies>
+    </profile>
+  </profiles>
 
   <build>
     <plugins>

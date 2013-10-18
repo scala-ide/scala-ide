@@ -21,12 +21,13 @@ Require-Bundle:
  org.eclipse.ui.editors,
  org.eclipse.ui.forms,
  org.eclipse.ui.ide,
- org.scala-ide.scala.library,
- org.scala-ide.scala.compiler,
+ org.scala-lang.scala-library,
+ org.scala-lang.scala-compiler,
+ org.scala-lang.scala-reflect,
  org.scala-ide.sdt.core
 Import-Package: 
  com.ibm.icu.text;apply-aspects:=false;org.eclipse.swt.graphics;apply-aspects:=false,
  scala.tools.eclipse;apply-aspects:=false,
  scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.formatter;apply-aspects:=false
-Bundle-RequiredExecutionEnvironment: J2SE-1.5
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ClassPath: .

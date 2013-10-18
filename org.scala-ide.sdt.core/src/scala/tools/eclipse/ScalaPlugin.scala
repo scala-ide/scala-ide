@@ -14,7 +14,6 @@ import org.eclipse.core.resources.IResourceChangeEvent
 import org.eclipse.core.resources.IResourceChangeListener
 import org.eclipse.core.resources.ResourcesPlugin
 import org.eclipse.core.runtime.CoreException
-import org.eclipse.core.runtime.FileLocator
 import org.eclipse.core.runtime.IStatus
 import org.eclipse.core.runtime.Platform
 import org.eclipse.core.runtime.Status
@@ -46,7 +45,7 @@ import org.eclipse.ui.part.FileEditorInput
 import org.eclipse.ui.plugin.AbstractUIPlugin
 import org.osgi.framework.BundleContext
 import scala.tools.eclipse.javaelements.ScalaSourceFile
-import scala.tools.eclipse.util.OSGiUtils._
+import scala.tools.eclipse.util.OSGiUtils
 import scala.tools.eclipse.templates.ScalaTemplateManager
 import org.eclipse.jdt.ui.PreferenceConstants
 import org.eclipse.core.resources.IResourceDelta
@@ -104,8 +103,10 @@ object ScalaPlugin {
 
 class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IResourceChangeListener with IElementChangedListener with HasLogger {
   def pluginId = "org.scala-ide.sdt.core"
-  def compilerPluginId = "org.scala-ide.scala.compiler"
-  def libraryPluginId = "org.scala-ide.scala.library"
+  def compilerPluginId = "org.scala-lang.scala-compiler"
+  def libraryPluginId = "org.scala-lang.scala-library"
+  def actorsPluginId = "org.scala-lang.scala-actors"
+  def reflectPluginId = "org.scala-lang.scala-reflect"
   def sbtPluginId = "org.scala-ide.sbt.full.library"
   def sbtCompilerInterfaceId = "org.scala-ide.sbt.compiler.interface"
 
@@ -167,11 +168,12 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
   lazy val scalaVer = scala.util.Properties.scalaPropOrElse("version.number", "(unknown)")
   lazy val shortScalaVer = cutVersion(scalaVer)
 
-  val scalaCompilerBundle = Platform.getBundle(compilerPluginId)
-  val scalaCompilerBundleVersion = scalaCompilerBundle.getVersion()
-  val compilerClasses = pathInBundle(scalaCompilerBundle, "/lib/scala-compiler.jar")
-  val continuationsClasses = pathInBundle(scalaCompilerBundle, "/lib/continuations.jar")
-  val compilerSources = pathInBundle(scalaCompilerBundle, "/lib/scala-compiler-src.jar")
+  lazy val sdtCoreBundle = getBundle()
+  lazy val scalaCompilerBundle = Platform.getBundle(compilerPluginId)
+  lazy val scalaCompilerBundleVersion = scalaCompilerBundle.getVersion()
+  lazy val compilerClasses = OSGiUtils.getBundlePath(scalaCompilerBundle)
+  lazy val continuationsClasses = OSGiUtils.pathInBundle(sdtCoreBundle, "/target/lib/continuations.jar")
+  lazy val compilerSources = OSGiUtils.pathInBundle(sdtCoreBundle, "/target/src/scala-compiler-src.jar")
 
   /** The default location used to load compiler's plugins. The convention is that the continuations.jar
    * plugin should be always loaded, so that a user can enable continuations by only passing
@@ -189,7 +191,7 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
 
   lazy val sbtCompilerBundle = Platform.getBundle(sbtPluginId)
   lazy val sbtCompilerInterfaceBundle = Platform.getBundle(sbtCompilerInterfaceId)
-  lazy val sbtCompilerInterface = pathInBundle(sbtCompilerInterfaceBundle, "/")
+  lazy val sbtCompilerInterface = OSGiUtils.pathInBundle(sbtCompilerInterfaceBundle, "/")
   // Disable for now, until we introduce a way to have multiple scala libraries, compilers available for the builder
   //lazy val sbtScalaLib = pathInBundle(sbtCompilerBundle, "/lib/scala-" + shortScalaVer + "/lib/scala-library.jar")
   //lazy val sbtScalaCompiler = pathInBundle(sbtCompilerBundle, "/lib/scala-" + shortScalaVer + "/lib/scala-compiler.jar")
@@ -204,16 +206,20 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
     }
   }
 
-  lazy val libClasses = pathInBundle(scalaLibBundle, "/lib/scala-library.jar")
-  lazy val libSources = pathInBundle(scalaLibBundle, "/lib/scala-library-src.jar")
-  lazy val swingClasses = pathInBundle(scalaLibBundle, "/lib/scala-swing.jar")
-  lazy val swingSources = pathInBundle(scalaLibBundle, "/lib/scala-swing-src.jar")
+  lazy val scalaActorsBundle = Platform.getBundle(actorsPluginId)
+  lazy val scalaReflectBundle = Platform.getBundle(reflectPluginId)
+
+  lazy val libClasses = OSGiUtils.getBundlePath(scalaLibBundle)
+  lazy val libSources = OSGiUtils.pathInBundle(sdtCoreBundle, "/target/src/scala-library-src.jar")
+
+  lazy val swingClasses = OSGiUtils.pathInBundle(sdtCoreBundle, "/target/lib/scala-swing.jar")
+  lazy val swingSources = OSGiUtils.pathInBundle(sdtCoreBundle, "/target/src/scala-swing-src.jar")
 
   // 2.10 specific libraries
-  lazy val actorsClasses = pathInBundle(scalaLibBundle, "/lib/scala-actors.jar")
-  lazy val actorsSources = pathInBundle(scalaLibBundle, "/lib/scala-actors-src.jar")
-  lazy val reflectClasses = pathInBundle(scalaCompilerBundle, "/lib/scala-reflect.jar")
-  lazy val reflectSources = pathInBundle(scalaCompilerBundle, "/lib/scala-reflect-src.jar")
+  lazy val actorsClasses = OSGiUtils.getBundlePath(Platform.getBundle(actorsPluginId))
+  lazy val actorsSources = OSGiUtils.pathInBundle(sdtCoreBundle, "/target/src/scala-actors-src.jar")
+  lazy val reflectClasses = OSGiUtils.getBundlePath(Platform.getBundle(reflectPluginId))
+  lazy val reflectSources = OSGiUtils.pathInBundle(sdtCoreBundle, "/target/src/scala-reflect-src.jar")
 
   lazy val templateManager = new ScalaTemplateManager()
   lazy val headlessMode = System.getProperty(ScalaPlugin.HeadlessTest) ne null
@@ -422,14 +428,6 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
       }
     }
   }
-
-
-  def bundlePath = Utils.tryExecute {
-    val bundle = getBundle
-    val bpath = bundle.getEntry("/")
-    val rpath = FileLocator.resolve(bpath)
-    rpath.getPath
-  }.getOrElse("unresolved")
 
   /** Is the file buildable by the Scala plugin? In other words, is it a
    *  Java or Scala source file?

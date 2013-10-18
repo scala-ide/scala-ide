@@ -33,10 +33,14 @@ cd ${ROOT_DIR}
 if [ -n "${SET_VERSIONS}" ]
 then
   echo "setting versions"
-  mvn -Pset-versions exec:java
+  mvn ${ARGS} -Pset-versions exec:java
 else
   echo "Not running UpdateScalaIDEManifests."
 fi
+
+# set features.xml
+echo "Setting features.xml"
+(mvn ${ARGS} -Pset-features antrun:run) || exit -1
 
 # the plugins
 echo "Building plugins"

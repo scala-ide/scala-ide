@@ -58,7 +58,7 @@ SUCH DAMAGE.
 
    <requires>
       <import plugin="org.scala-ide.sdt.core"/>
-      <import plugin="org.scala-ide.scala.library"/>
+      <import plugin="org.scala-lang.scala-library"/>
       <import plugin="org.eclipse.equinox.weaving.aspectj"/>
    </requires>
 

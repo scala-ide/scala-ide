@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<site>
-   <feature url="features/org.scala-ide.scala.feature_0.0.0.jar" id="org.scala-ide.scala.feature" version="0.0.0">
-      <category name="scala"/>
-   </feature>
-   <category-def name="scala" label="Scala"/>
-</site>

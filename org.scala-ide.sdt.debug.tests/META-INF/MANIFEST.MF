@@ -5,8 +5,8 @@ Bundle-SymbolicName: org.scala-ide.sdt.debug.tests
 Bundle-Version: 4.0.0.qualifier
 Bundle-Vendor: scala-ide.org
 Fragment-Host: org.scala-ide.sdt.debug
-Bundle-RequiredExecutionEnvironment: J2SE-1.5
-Require-Bundle: org.scala-ide.scala.library,
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Require-Bundle: org.scala-lang.scala-library,
  org.eclipse.equinox.weaving.aspectj,
  org.scala-ide.sdt.core,
  org.junit
