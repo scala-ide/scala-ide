@@ -42,8 +42,7 @@ class DeprecationWarningsTests {
       |  var a = 2
       |
       |  var c = 2
-      |}
-      """.stripMargin
+      |}""".stripMargin
     SDTTestUtils.changeContentOfFile(unitB.getResource().getAdapter(classOf[IFile]).asInstanceOf[IFile], newContentB)
 
     val warningsAfterIncrementalBuild = doBuild(IncrementalProjectBuilder.INCREMENTAL_BUILD) andGetProblemsOf unitA
