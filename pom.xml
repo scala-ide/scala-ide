@@ -9,7 +9,7 @@
   <parent>
     <groupId>org.scala-ide</groupId>
     <artifactId>plugin-profiles</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.2</version>
   </parent>
 
   <groupId>org.scala-ide</groupId>
