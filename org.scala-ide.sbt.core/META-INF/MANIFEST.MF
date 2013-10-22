@@ -21,8 +21,8 @@ Require-Bundle:
  org.eclipse.ui.editors,
  org.eclipse.ui.forms,
  org.eclipse.ui.ide,
- org.scala-ide.scala.library,
- org.scala-ide.scala.compiler,
+ org.scala-lang.scala-library,
+ org.scala-lang.scala-compiler,
  org.eclipse.core.resources
 Import-Package: 
  scala.tools.eclipse.logging,
