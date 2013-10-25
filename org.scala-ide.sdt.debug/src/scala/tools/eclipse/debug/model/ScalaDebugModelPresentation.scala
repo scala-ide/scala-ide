@@ -112,6 +112,8 @@ class ScalaDebugModelPresentation extends IDebugModelPresentation {
         // variable used to split large arrays
         // TODO: see ScalaVariable before
         DebugUITools.getImage(IDebugUIConstants.IMG_OBJS_VARIABLE)
+
+      case _ => DebugUITools.getImage(IDebugUIConstants.IMG_OBJS_VARIABLE)
     }
   }
 
