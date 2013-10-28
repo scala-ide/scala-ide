@@ -6,6 +6,7 @@ import org.eclipse.jdt.core.JavaCore
 import org.junit.Assert.assertNotNull
 import scala.tools.eclipse.ScalaProject
 import org.eclipse.jdt.core.ICompilationUnit
+import scala.tools.eclipse.InteractiveCompilationUnit
 import scala.tools.eclipse.javaelements.ScalaSourceFile
 import scala.tools.eclipse.javaelements.ScalaCompilationUnit
 import org.eclipse.jdt.core.IProblemRequestor
@@ -74,11 +75,19 @@ class TestProjectSetup(projectName: String, srcRoot: String = "/%s/src/", val bu
     new scala.tools.eclipse.EclipseUserSimulator().createCompilationUnit(pack, unitName, contents).asInstanceOf[ScalaSourceFile]
   }
 
-  def reload(unit: ScalaCompilationUnit) {
+  def reload(unit: InteractiveCompilationUnit) {
     // first, 'open' the file by telling the compiler to load it
-    unit.withSourceFile { (src, compiler) =>
+    unit.doWithSourceFile { (src, compiler) =>
       val dummy = new compiler.Response[Unit]
       compiler.askReload(List(src), dummy)
+      dummy.get
+    }
+  }
+
+  def parseAndEnter(unit: InteractiveCompilationUnit) {
+    unit.withSourceFile { (src, compiler) =>
+      val dummy = new compiler.Response[compiler.Tree]
+      compiler.askParsedEntered(src, false, dummy)
       dummy.get
     }
   }
@@ -115,7 +124,7 @@ class TestProjectSetup(projectName: String, srcRoot: String = "/%s/src/", val bu
   /** Wait until the passed `unit` is entirely typechecked. */
   def waitUntilTypechecked(unit: ScalaCompilationUnit) {
     // give a chance to the background compiler to report the error
-    unit.withSourceFile { (source, compiler) =>
+    unit.doWithSourceFile { (source, compiler) =>
       import scala.tools.nsc.interactive.Response
       val res = new Response[compiler.Tree]
       compiler.askLoadedTyped(source, res)

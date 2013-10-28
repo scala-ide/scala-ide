@@ -169,4 +169,36 @@ class FreshFile {
     // verify
     assertNoErrors(unitB)
   }
+
+  @Test
+  def libraryDocumentation(): Unit =
+    project.presentationCompiler { compiler =>
+      import compiler.{ reload => _, parseAndEnter => _, _ }
+      import definitions.ListClass
+      val unit = findCompilationUnit(ListClass).get
+      reload(unit.asInstanceOf[ScalaCompilationUnit])
+      parseAndEnter(unit)
+      unit.doWithSourceFile { (source, _) =>
+        val documented = askOption { () =>
+          // Only check if doc comment is present in the class itself.
+          // This doesn't include symbols that are inherited from documented symbols.
+          // An alternative would be to check allOverriddenSymbols, but
+          // that would require getting sourceFiles for those as well.
+          ListClass.info.decls filter { sym =>
+            getUnitOf(source).get.body exists {
+              case DocDef(_, defn: DefTree) if defn.name eq sym.name => true
+              case _ => false
+            }
+          }
+        }.getOrElse(List.empty)
+        Assert.assertTrue("Couldn't find documented declarations", documented.nonEmpty)
+        for (sym <- documented) {
+           Assert.assertTrue(s"Couldn't retrieve $sym documentation",
+                             parsedDocComment(sym, sym.enclClass).isDefined)
+        }
+      }
+    } getOrElse {
+      Assert.fail("shouldn't happen")
+    }
+
 }

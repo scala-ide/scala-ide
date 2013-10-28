@@ -42,8 +42,7 @@ import org.eclipse.core.runtime.Path
 import org.eclipse.core.resources.IFile
 import org.eclipse.jdt.internal.core.util.Util
 
-
-class ScalaPresentationCompiler(project: ScalaProject, settings: Settings) extends {
+class ScalaPresentationCompiler(val project: ScalaProject, settings: Settings) extends {
   /*
    * Lock object for protecting compiler names. Names are cached in a global `Array[Char]`
    * and concurrent access may lead to overwritten names.
@@ -53,7 +52,8 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings) exten
    */
   private val nameLock = new Object
 
-} with Global(settings, new ScalaPresentationCompiler.PresentationReporter, project.underlying.getName)
+} with ScaladocEnabledGlobal(settings, new ScalaPresentationCompiler.PresentationReporter, project.underlying.getName)
+  with ScaladocGlobalCompatibilityTrait
   with ScalaStructureBuilder
   with ScalaIndexBuilder
   with ScalaMatchLocator
@@ -62,7 +62,10 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings) exten
   with JavaSig
   with JVMUtils
   with LocateSymbol
-  with HasLogger { self =>
+  with HasLogger
+  with Scaladoc { self =>
+
+  override def forScaladoc = true
 
   def presentationReporter = reporter.asInstanceOf[ScalaPresentationCompiler.PresentationReporter]
   presentationReporter.compiler = this
@@ -72,7 +75,7 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings) exten
     for {
       f <- managedFiles.collect { case ef: EclipseFile => ef }
       icu <- SourceFileProviderRegistry.getProvider(f.workspacePath).createFrom(f.workspacePath)
-        if icu.exists
+      if icu.exists
     } yield icu
   }
 
@@ -183,12 +186,13 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings) exten
   /** Reload the given compilation unit. If the unit is not tracked by the presentation
    *  compiler, it will be from now on.
    */
-  def askReload(scu: ScalaCompilationUnit, content: Array[Char]): Response[Unit] = {
+  def askReload(scu: InteractiveCompilationUnit, content: Array[Char]): Response[Unit] = {
     withResponse[Unit] { res => askReload(List(scu.sourceFile(content)), res) }
   }
 
   /** Atomically load a list of units in the current presentation compiler. */
   def askReload(units: List[InteractiveCompilationUnit]): Response[Unit] = {
+    global.clearDocComments()
     withResponse[Unit]{ res => askReload(units.map(_.sourceFile), res) }
   }
 
@@ -325,6 +329,8 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings) exten
       } else scalaParamNames
     }
 
+    def docFun() = askOption{ () => browserInput(sym, tpe.typeSymbol) }.getOrElse(None)
+
     CompletionProposal(
       kind,
       context,
@@ -337,7 +343,8 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings) exten
       getParamNames,
       paramTypes,
       sym.fullName,
-      false)
+      false,
+      docFun)
   }
 
   override def inform(msg: String): Unit =
