@@ -106,10 +106,13 @@
 
 
   <extension point="org.eclipse.core.contenttype.contentTypes">
-    <content-type id="scala.tools.eclipse.scalaSource" name="Scala Source File"
-      base-type="org.eclipse.jdt.core.javaSource"
-      priority="high"
-      file-extensions="scala"/>
+    <content-type
+          base-type="org.eclipse.jdt.core.javaSource"
+          default-charset="UTF-8"
+          file-extensions="scala"
+          id="scala.tools.eclipse.scalaSource"
+          name="Scala Source File"
+          priority="high"/>
     <content-type id="scala.tools.eclipse.scalaClass" name="Scala Class File"
       base-type="org.eclipse.jdt.core.javaClass"
       priority="high"
