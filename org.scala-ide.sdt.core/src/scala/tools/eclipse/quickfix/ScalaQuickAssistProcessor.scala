@@ -10,6 +10,7 @@ import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal
 import org.eclipse.jdt.ui.text.java.IProblemLocation
 import org.eclipse.jdt.ui.text.java.IQuickAssistProcessor
 import org.eclipse.jface.text.Position
+import scala.tools.eclipse.quickfix.explicit.ExplicitReturnType
 
 /**
  * Enables all quick fixes that don't resolve errors in the document. Instead they
@@ -28,7 +29,7 @@ class ScalaQuickAssistProcessor extends IQuickAssistProcessor with HasLogger {
     context.getCompilationUnit match {
       case ssf: ScalaSourceFile =>
         import EditorUtils._
-
+        ExplicitReturnType.suggestsFor(ssf, context.getSelectionOffset).toArray ++
         openEditorAndApply(ssf) { editor =>
           val corrections = getAnnotationsAtOffset(editor, context.getSelectionOffset()) flatMap {
             case (ann, pos) =>
