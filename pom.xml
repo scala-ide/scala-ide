@@ -85,7 +85,7 @@
     <profile>
       <id>scala-2.10.x</id>
       <properties>
-        <scala.version>2.10.3-SNAPSHOT</scala.version>
+        <scala.version>2.10.4-SNAPSHOT</scala.version>
         <version.suffix>2_10</version.suffix>
 
         <repo.scala-refactoring>${repo.scala-ide.root}/scala-refactoring-210x</repo.scala-refactoring>
