@@ -25,6 +25,7 @@ object CompletionContext {
   trait ContextType
   case object DefaultContext extends ContextType
   case object ApplyContext extends ContextType
+  case object NewContext extends ContextType
   case object ImportContext extends ContextType
 }
 

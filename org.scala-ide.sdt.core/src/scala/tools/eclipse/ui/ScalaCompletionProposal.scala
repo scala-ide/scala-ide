@@ -140,12 +140,13 @@ class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: I
     val d: IDocument = viewer.getDocument()
     val overwrite = !insertCompletion ^ ((stateMask & SWT.CTRL) != 0)
 
+    val tooltipsOnly = context.contextType == CompletionContext.NewContext || context.contextType == CompletionContext.ApplyContext
+
     val completionFullString = completionString(overwrite)
     val importSize = withScalaFileAndSelection { (scalaSourceFile, textSelection) =>
       var changes: List[TextChange] = Nil
 
-      // we don't have to change anything for Apply, since the full method is already specified
-      if (context.contextType != CompletionContext.ApplyContext) {
+      if (!tooltipsOnly) {
         scalaSourceFile.withSourceFile { (sourceFile, _) =>
           val endPos = if (overwrite) startPos + existingIdentifier(d, offset).getLength() else offset
           changes :+= TextChange(sourceFile, startPos, endPos, completionFullString)
@@ -173,9 +174,7 @@ class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: I
       importStmt.headOption.map(_.text.length)
     }
 
-    // similar to above, if we're in an apply context, we're not going to show
-    // anything in the editor (just doing tooltips)
-    if (context.contextType != CompletionContext.ApplyContext && context.contextType != CompletionContext.ImportContext) {
+    if (!tooltipsOnly && context.contextType != CompletionContext.ImportContext) {
       if (!overwrite) selectionProvider match {
         case viewer: ITextViewer if explicitParamNames.flatten.nonEmpty =>
           addArgumentTemplates(d, viewer, completionFullString)
