@@ -249,9 +249,7 @@ trait ScalaCompilationUnit extends Openable
 
   override def reportMatches(matchLocator : MatchLocator, possibleMatch : PossibleMatch) {
     doWithSourceFile { (sourceFile, compiler) =>
-      val response = new Response[compiler.Tree]
-      compiler.askLoadedTyped(sourceFile, response)
-      response.get match {
+      compiler.loadedType(sourceFile, true) match {
         case Left(tree) =>
           compiler.askOption { () =>
             compiler.MatchLocator(this, matchLocator, possibleMatch).traverse(tree)
