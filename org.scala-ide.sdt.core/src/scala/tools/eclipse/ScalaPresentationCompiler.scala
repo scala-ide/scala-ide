@@ -45,6 +45,71 @@ import org.eclipse.core.resources.IFile
 import org.eclipse.jdt.internal.core.util.Util
 import scala.tools.eclipse.compiler.CompilerApiExtensions
 
+/**
+ * This hack will be made obsolete once SI-7982 is fixed
+ */
+
+trait UnitRemoval extends Global { self: Global =>
+  def removeUnits(sources: List[SourceFile], response: Response[Unit]) {
+    informIDE("units removed: " + sources)
+    sources foreach (removeUnitOf(_))
+    // no new compiler run
+    respond(response)(())
+  }
+}
+
+trait UnitRemovalWorkItem extends UnitRemoval with scala.tools.nsc.interactive.CompilerControl { self:Global =>
+
+  def customPostWorkItem(item: WorkItem) =
+    if (item.onCompilerThread) item() else scheduler.postWorkItem(item)
+
+  case class RemoveUnits(sources: List[SourceFile], response: Response[Unit]) extends WorkItem {
+    def apply() = removeUnits(sources, response)
+    override def toString = "remove "+sources
+
+    def raiseMissing() = response raise new MissingResponse
+  }
+
+}
+
+trait OptionAsking extends Global { self: Global =>
+  def askOption[A](op: () => A): Option[A]
+}
+
+trait LoadedTypeAdapter extends OptionAsking with UnitRemovalWorkItem { self:Global =>
+
+  /*
+   * TODO : this askLoadedTyped semantics should be pushed in the PC
+   */
+
+  @deprecated("Use loadedType instead.", "4.0.0")
+  def body(sourceFile: SourceFile, keepLoaded: Boolean = false): Either[Tree, Throwable] = loadedType(sourceFile, keepLoaded)
+
+  override def askLoadedTyped(sourceFile: SourceFile, response: Response[Tree]):Unit =
+    askLoadedTyped(sourceFile, false, response)
+
+  def askLoadedTyped(sourceFile: SourceFile, keepLoaded: Boolean, response: Response[Tree]):Unit = {
+    // iff the unit was already loaded (e.g. open buffer) we don't force a final reset controlled by keepLoaded
+    val wasLoaded = askOption{() => getUnit(sourceFile).isDefined}.getOrElse(false)
+    try super.askLoadedTyped(sourceFile, response)
+    finally { if (!wasLoaded && !keepLoaded) {
+      val dummyResponse = new Response[Unit]()
+      customPostWorkItem(RemoveUnits(List(sourceFile), dummyResponse))}}
+  }
+
+  def loadedType(sourceFile: SourceFile, keepLoaded:Boolean = false): Either[Tree, Throwable] = {
+    val response = new Response[Tree]
+    if (self.onCompilerThread)
+      throw ScalaPresentationCompiler.InvalidThread("Tried to execute `askLoadedType` while inside `ask`")
+    askLoadedTyped(sourceFile, keepLoaded, response)
+    response.get
+  }
+
+  /*
+   * END askLoadedTyped semantics
+   */
+}
+
 class ScalaPresentationCompiler(project: ScalaProject, settings: Settings) extends {
   /*
    * Lock object for protecting compiler names. Names are cached in a global `Array[Char]`
@@ -65,7 +130,8 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings) exten
   with JVMUtils
   with LocateSymbol
   with CompilerApiExtensions
-  with HasLogger { self =>
+  with HasLogger
+  with OptionAsking with LoadedTypeAdapter{ self =>
 
   def presentationReporter = reporter.asInstanceOf[ScalaPresentationCompiler.PresentationReporter]
   presentationReporter.compiler = this
@@ -139,22 +205,6 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings) exten
   @deprecated("Use `InteractiveCompilationUnit.withSourceFile` instead", since = "4.0.0")
   def withSourceFile[T](icu: InteractiveCompilationUnit)(op: (SourceFile, ScalaPresentationCompiler) => T): T =
     icu.withSourceFile(op) getOrElse (throw new UnsupportedOperationException("Use `InteractiveCompilationUnit.withSourceFile`"))
-
-  def body(sourceFile: SourceFile): Either[Tree, Throwable] = {
-    val response = new Response[Tree]
-    if (self.onCompilerThread)
-      throw ScalaPresentationCompiler.InvalidThread("Tried to execute `askType` while inside `ask`")
-    askLoadedTyped(sourceFile, response)
-    response.get
-  }
-
-  def loadedType(sourceFile: SourceFile): Either[Tree, Throwable] = {
-    val response = new Response[Tree]
-    if (self.onCompilerThread)
-      throw ScalaPresentationCompiler.InvalidThread("Tried to execute `askLoadedType` while inside `ask`")
-    askLoadedTyped(sourceFile, response)
-    response.get
-  }
 
   def withParseTree[T](sourceFile: SourceFile)(op: Tree => T): T = {
     op(parseTree(sourceFile))

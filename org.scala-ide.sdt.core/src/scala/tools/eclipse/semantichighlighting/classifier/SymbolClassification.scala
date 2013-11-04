@@ -46,7 +46,7 @@ class SymbolClassification(protected val sourceFile: SourceFile, val global: Sca
   protected lazy val syntacticInfo =
     if (useSyntacticHints) SyntacticInfo.getSyntacticInfo(sourceFile.content.mkString) else SyntacticInfo.noSyntacticInfo
 
-  private lazy val unitTree: global.Tree = global.loadedType(sourceFile).fold(identity, _ => global.EmptyTree)
+  private lazy val unitTree: global.Tree = global.loadedType(sourceFile, true).fold(identity, _ => global.EmptyTree)
 
   private def canSymbolBeReferencedInSource(sym: Symbol): Boolean = {
     def isSyntheticMethodParam(sym: Symbol): Boolean = sym.isSynthetic && sym.isValueParameter
