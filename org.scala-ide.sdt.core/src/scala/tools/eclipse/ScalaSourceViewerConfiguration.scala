@@ -103,7 +103,8 @@ class ScalaSourceViewerConfiguration(
 
   override def getReconciler(sourceViewer: ISourceViewer): IReconciler = {
     val reconciler = new MonoReconciler(new ScalaReconcilingStrategy(editor), /*isIncremental = */ false)
-    reconciler.setDelay(500)
+    // FG: I don't know any better that to defer this to the MonoReconciler constructor's default value
+    // reconciler.setDelay(500)
     reconciler.install(sourceViewer)
     reconciler.setProgressMonitor(new NullProgressMonitor())
     reconciler
