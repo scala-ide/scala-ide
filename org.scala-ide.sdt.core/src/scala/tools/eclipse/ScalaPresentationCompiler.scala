@@ -158,7 +158,7 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings) exten
    * Refresh rounds can be triggered by the reconciler, but also interactive requests
    * (e.g. completion)
    */
-  private val scheduledUnits = new mutable.HashMap[InteractiveCompilationUnit,Array[Char]]
+  private val scheduledUnits = new scala.collection.mutable.HashMap[InteractiveCompilationUnit,Array[Char]]
 
   /**
    * Add a compilation unit (CU) to the set of CUs to be Reloaded at the next refresh round.
@@ -166,24 +166,67 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings) exten
    */
   def scheduleReload(icu : InteractiveCompilationUnit, contents:Array[Char]) : Unit = {
     if (compilationUnits.contains(icu))
-        synchronized { scheduledUnits += ((icu, contents)) }
+        scheduledUnits.synchronized { scheduledUnits += ((icu, contents)) }
   }
 
-  /** Reload the scheduled compilation units and reset the set of scheduled reloads.
+  /**
+   * Reload the scheduled compilation units and reset the set of scheduled reloads.
    *  For any CU not tracked by the presentation compiler at schedule time, it's a no-op.
    */
-  def flushScheduledReloads() : Response[Unit]= {
-    val reloadees = scheduledUnits.toList
-    scheduledUnits.clear()
-
+  def flushScheduledReloads(): Response[Unit] = {
     val res = new Response[Unit]
-    if (reloadees.isEmpty) res.set(())
-    else {
-      val reloadFiles = reloadees map { case (s,c) => s.sourceFile(c) }
-      askReload(reloadFiles, res)
-      res.get
+    scheduledUnits.synchronized {
+      val reloadees = scheduledUnits.toList
+
+      if (reloadees.isEmpty) res.set(())
+      else {
+        val reloadFiles = reloadees map { case (s, c) => s.sourceFile(c) }
+        askReload(reloadFiles, res)
+        res.get
+      }
+      scheduledUnits.clear()
     }
     res
+  }
+
+  override def askFilesDeleted(sources: List[SourceFile], response: Response[Unit]) = {
+    flushScheduledReloads()
+    super.askFilesDeleted(sources, response)
+  }
+
+  override def askLinkPos(sym: Symbol, source: SourceFile, response: Response[Position]) = {
+    flushScheduledReloads()
+    super.askLinkPos(sym, source, response)
+  }
+
+  override def askParsedEntered(source: SourceFile, keepLoaded: Boolean, response: Response[Tree]) = {
+    flushScheduledReloads()
+    super.askParsedEntered(source, keepLoaded, response)
+  }
+
+  override def askScopeCompletion(pos: Position, response: Response[List[Member]]) = {
+    flushScheduledReloads()
+    super.askScopeCompletion(pos, response)
+  }
+
+  override def askToDoFirst(source: SourceFile) = {
+    flushScheduledReloads()
+    super.askToDoFirst(source)
+  }
+
+  override def askTypeAt(pos: Position, response: Response[Tree]) = {
+    flushScheduledReloads()
+    super.askTypeAt(pos, response)
+  }
+
+  override def askTypeCompletion(pos: Position, response: Response[List[Member]]) = {
+    flushScheduledReloads()
+    super.askTypeCompletion(pos, response)
+  }
+
+  override def askLoadedTyped(sourceFile: SourceFile, keepLoaded: Boolean, response: Response[Tree]) = {
+    flushScheduledReloads()
+    super.askLoadedTyped(sourceFile, keepLoaded, response)
   }
 
   def problemsOf(file: AbstractFile): List[IProblem] = {
