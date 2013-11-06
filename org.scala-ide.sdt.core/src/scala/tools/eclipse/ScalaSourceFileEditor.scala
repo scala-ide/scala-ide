@@ -76,7 +76,7 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationU
   private lazy val selectionListener = new ISelectionListener() {
     def selectionChanged(part: IWorkbenchPart, selection: ISelection) {
       selection match {
-        case textSel: ITextSelection => askForOccurrencesUpdate(textSel)
+        case textSel: ITextSelection => requireOccurrencesUpdate(textSel)
         case _ =>
       }
     }
@@ -142,7 +142,7 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationU
   }
 
   override def updateOccurrenceAnnotations(selection: ITextSelection, astRoot: CompilationUnit): Unit = {
-    askForOccurrencesUpdate(selection)
+    requireOccurrencesUpdate(selection)
   }
 
   /** Returns the annotation model of the current document provider.
@@ -173,7 +173,7 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationU
     } yield annotation -> position
   }.toMap
 
-  private def askForOccurrencesUpdate(selection: ITextSelection) {
+  private def requireOccurrencesUpdate(selection: ITextSelection) {
 
     if (selection.getLength < 0 || selection.getOffset < 0)
       return
@@ -201,7 +201,7 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationU
     val selectionProvider = getSelectionProvider
     if (selectionProvider != null)
       selectionProvider.getSelection match {
-        case textSel: ITextSelection => askForOccurrencesUpdate(textSel)
+        case textSel: ITextSelection => requireOccurrencesUpdate(textSel)
         case _ =>
       }
   }
