@@ -900,7 +900,11 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
 
     def traverse(tree: Tree) {
       val traverser = new TreeTraverser
-      traverser.traverse(tree, new CompilationUnitBuilder)
+      try traverser.traverse(tree, new CompilationUnitBuilder)
+      catch {
+        case e: Exception =>
+          logger.error(s"Failed building structure of ${scu.sourceFile.file.name}", e)
+      }
     }
 
     private[ScalaStructureBuilder] class TreeTraverser {
