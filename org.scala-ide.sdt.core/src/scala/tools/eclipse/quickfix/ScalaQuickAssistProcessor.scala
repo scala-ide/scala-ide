@@ -66,7 +66,6 @@ object ScalaQuickAssistProcessor {
     ExtractLocalProposal,
     ExpandCaseClassBindingProposal,
     InlineLocalProposal,
-    RenameProposal,
     ExtractMethodProposal
   )
 }
