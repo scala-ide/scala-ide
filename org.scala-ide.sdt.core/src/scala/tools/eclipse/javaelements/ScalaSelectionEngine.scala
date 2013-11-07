@@ -107,13 +107,19 @@ class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: Sc
         val owner = m0.owner
         val isConstructor = m0.isConstructor
         val name = if (isConstructor) owner.name else m0.name
-        val paramTypes = m0.tpe.paramss.flatMap(_.map(_.tpe))
+        val paramTypes = {
+          val paramss = m0.tpe.paramss
+          for {
+            params <- paramss
+            param <- params
+          } yield (param.tpe, param.pos)
+        }
 
         val packageName = enclosingPackage(m0).toArray
         val typeName = mapTypeName(owner).toArray
-        val parameterPackageNames = paramTypes.map(mapParamTypePackageName(_).toArray).toArray
-        val parameterTypeNames = paramTypes.map(mapType(_).toArray).toArray
-        val parameterSignatures = paramTypes.map(mapParamTypeSignature(_)).toArray
+        val parameterPackageNames = paramTypes.map { case (tpe, _) => mapParamTypePackageName(tpe).toArray }.toArray
+        val parameterTypeNames = paramTypes.map { case (tpe, pos) => mapType(tpe, pos).toArray }.toArray
+        val parameterSignatures = paramTypes.map { case (tpe, _) => mapParamTypeSignature(tpe) }.toArray
         Cont(requestor.acceptMethod(
           packageName,
           typeName,

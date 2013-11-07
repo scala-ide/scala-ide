@@ -186,17 +186,17 @@ trait ScalaJavaMapper extends ScalaAnnotationHelper with HasLogger { self : Scal
    *  A special case exists for Scala `Array` since in Java arrays do not take
    *  type parameters.
    */
-  def mapType(tpe: Type): String = {
+  def mapType(tpe: Type, pos: Position): String = {
     val base = mapType(tpe.typeSymbol)
     tpe.typeSymbol match {
       // only the Array class has type parameters. the Array object is non-parametric
       case definitions.ArrayClass =>
-        val paramTypes = tpe.normalize.typeArgs.map(mapType(_)) // normalize is needed when you have `type BitSet = Array[Int]`
-        assert(paramTypes.size == 1, "Expected exactly one type parameter, found %d [%s]".format(paramTypes.size, tpe))
+        val paramTypes = tpe.normalize.typeArgs.map(t => mapType(t, pos)) // normalize is needed when you have `type BitSet = Array[Int]`
+        assert(paramTypes.size == 1, s"Expected exactly one type parameter, found $paramTypes.size [$tpe] at position ${pos.show}")
         paramTypes.head + "[]"
       case _ =>
         if (tpe.typeParams.nonEmpty)
-          logger.debug("mapType(Type) is not expected to be used with a type that has type parameters. (passed type was %s)".format(tpe))
+          logger.debug(s"mapType(Type) is not expected to be used with a type that has type parameters. (passed type was $tpe at position ${pos.show})")
         base
     }
   }
