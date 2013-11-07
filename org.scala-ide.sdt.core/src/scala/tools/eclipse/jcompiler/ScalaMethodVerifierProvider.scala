@@ -111,7 +111,7 @@ class ScalaMethodVerifierProvider extends IMethodVerifierProvider with HasLogger
               // with `abstractMethod` is meaningful
               val paramsTypeSigs =
                 if (javaSig.isDefined) javaSig.paramsType.map(_.mkString)
-                else fps.map(s => mapType(s.info.finalResultType)).toArray
+                else fps.map(s => mapType(s.info.finalResultType, s.pos)).toArray
 
               if (abstractMethod.parameters.length == paramsTypeSigs.size) {
                 val pairedParams = paramsTypeSigs.zip(abstractMethod.parameters.map(_.readableName().mkString))

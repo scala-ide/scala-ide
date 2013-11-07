@@ -46,8 +46,9 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
     def unapply(sym: Symbol): Option[Array[Array[Char]]] = {
       val throwsAnnotations = sym.annotations.filter(_.atp.typeSymbol == definitions.ThrowsClass)
 
-      val typeNames = for(AnnotationInfo(_, List(Literal(Constant(typeName: Type))), _) <- throwsAnnotations)
-        yield mapType(typeName).toCharArray
+      val typeNames = throwsAnnotations collect {
+        case AnnotationInfo(_, List(l @ Literal(Constant(typeName: Type))), _) => mapType(typeName, l.pos).toCharArray
+      }
 
       if(typeNames.isEmpty) None
       else Some(typeNames.toArray)
@@ -206,7 +207,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
           defElemInfo.setArgumentNames(paramNames)
           setExceptionTypeNames(d, defElemInfo)
 
-          val tn = javaSig.returnType.getOrElse(mapType(d.info.finalResultType)).toArray
+          val tn = javaSig.returnType.getOrElse(mapType(d.info.finalResultType, d.pos)).toArray
           defElemInfo.setReturnType(tn)
 
           defElemInfo.setFlags0(ClassFileConstants.AccPublic|ClassFileConstants.AccFinal|ClassFileConstants.AccStatic)
@@ -589,7 +590,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
         setSourceRange(valElemInfo, sym, annotsPos)
         newElements0.put(valElem, valElemInfo)
 
-        val tn = mapType(sym.info).toArray
+        val tn = mapType(sym.info, sym.pos).toArray
         valElemInfo.setTypeName(tn)
 
         // TODO: this is a hack needed until building is rewritten to traverse scopes rather than trees.
@@ -714,7 +715,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
         defElemInfo.setArgumentNames(paramNames)
         setExceptionTypeNames(sym, defElemInfo)
 
-        val tn = javaSig.returnType.getOrElse(mapType(sym.info.finalResultType)).toArray
+        val tn = javaSig.returnType.getOrElse(mapType(sym.info.finalResultType, sym.pos)).toArray
         defElemInfo.setReturnType(tn)
 
         val annotsPos = addAnnotations(sym, defElemInfo, defElem)
