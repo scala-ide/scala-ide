@@ -47,15 +47,23 @@ class ScalaCompletions extends HasLogger {
         }
       }
 
+      def completionFilter(sym: compiler.Symbol, viaView: compiler.Symbol = compiler.NoSymbol,
+        inherited: Option[Boolean] = None) = {
+        if (contextType == CompletionContext.NewContext)
+          sym.isConstructor && viaView == compiler.NoSymbol && !inherited.getOrElse(false)
+        else
+          !sym.isConstructor && nameMatches(sym)
+      }
+
 
       val context = CompletionContext(contextType)
 
       compiler.askOption { () =>
         for (completion <- completions) {
           val completionProposal = completion match {
-            case compiler.TypeMember(sym, tpe, true, inherited, viaView) if !sym.isConstructor && nameMatches(sym) =>
+            case compiler.TypeMember(sym, tpe, true, inherited, viaView) if completionFilter(sym, viaView, Some(inherited)) =>
               Some(compiler.mkCompletionProposal(matchName, start, sym, tpe, inherited, viaView, context))
-            case compiler.ScopeMember(sym, tpe, true, _) if !sym.isConstructor && nameMatches(sym) =>
+            case compiler.ScopeMember(sym, tpe, true, _) if completionFilter(sym) =>
               Some(compiler.mkCompletionProposal(matchName, start, sym, tpe, false, compiler.NoSymbol, context))
             case _ => None
           }
@@ -152,6 +160,9 @@ class ScalaCompletions extends HasLogger {
     }
 
     t1 match {
+      case Some(compiler.New(name)) =>
+        fillTypeCompletions(name.pos.endOrPoint, CompletionContext.NewContext,
+          Array(), name.pos.start, false)
       case Some(compiler.Select(qualifier, name)) if qualifier.pos.isDefined && qualifier.pos.isRange =>
         // completion on qualified type
         fillTypeCompletions(qualifier.pos.end)
@@ -160,6 +171,9 @@ class ScalaCompletions extends HasLogger {
         fillTypeCompletions(expr.pos.endOrPoint, CompletionContext.ImportContext)
       case Some(compiler.Apply(fun, _)) =>
         fun match {
+          case compiler.Select(qualifier: compiler.New, name) =>
+            fillTypeCompletions(qualifier.pos.endOrPoint, CompletionContext.NewContext,
+              Array(), qualifier.pos.start, false)
           case compiler.Select(qualifier, name) if qualifier.pos.isDefined && qualifier.pos.isRange =>
             fillTypeCompletions(qualifier.pos.endOrPoint, CompletionContext.ApplyContext,
               name.decoded.toArray, qualifier.pos.end + 1, false)
