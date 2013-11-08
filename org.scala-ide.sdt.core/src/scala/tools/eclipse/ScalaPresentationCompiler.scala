@@ -189,6 +189,20 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings) exten
     res
   }
 
+  /**
+   * Return the compilation units in the scheduled Reloads table,
+   * removes them from scheduled reloads doing so
+   */
+  def cleanScheduledReloads(): List[SourceFile] = {
+    var reloadees= List[(InteractiveCompilationUnit, Array[Char])]()
+    scheduledUnits.synchronized {
+      reloadees = scheduledUnits.toList
+      scheduledUnits.clear()
+    }
+    if (reloadees.isEmpty) Nil
+    else reloadees map { case (s, c) => s.sourceFile(c) }
+  }
+
   override def askFilesDeleted(sources: List[SourceFile], response: Response[Unit]) = {
     flushScheduledReloads()
     super.askFilesDeleted(sources, response)
@@ -302,6 +316,17 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings) exten
           case Left(v) => Some(v)
         }
     }
+  }
+
+  def askOptionWithReload[A](op: () => A): Option[A] = askOptionWithReload(op, 10000)
+
+  def askOptionWithReload[A](op: () => A, timeout: Int): Option[A] = {
+    val reloadResponse = new Response[Unit]
+    /*
+     *  The ReloadItem is here to bypass the visibility of compiler.reload() methods.
+     */
+    def nuOp = {ReloadItem(cleanScheduledReloads(), reloadResponse); op}
+    askOption(nuOp, timeout)
   }
 
   /** Ask to put scu in the beginning of the list of files to be typechecked.
