@@ -10,6 +10,7 @@ This is the process for committing code into master. There are of course excepti
 4. When the feature or fix is completed you should open a [Pull Request](https://help.github.com/articles/using-pull-requests) on GitHub.
 5. The Pull Request should be reviewed by other maintainers (as many as feasible/practical). Note that the maintainers can consist of outside contributors, both within and outside the [Scala IDE Team](http://scala-ide.org/team). Outside contributors are encouraged to participate in the review process, it is not a closed process.
 6. After the review you should fix the issues as needed, **pushing the changes as additional commits**, iterating until the reviewers give their thumbs up.
+    - If after the review no action is taken from the contributor for more than 2 weeks, the Pull Request will be closed. Of course, you are free to reopen it as soon as you have addressed the reviewers’ comments.
 7. Once the code has passed review, it’s ok to amend commits as it makes sense (see the ‘Creating Commits And Writing Commit Messages’ section below).
 8. The Pull Request can be merged into the master branch.
 9. If the code change needs to be applied to other branches as well, create pull requests against those branches which contain the change after rebasing it onto the respective branch and await successful verification by the continuous integration infrastructure; then merge those pull requests.
