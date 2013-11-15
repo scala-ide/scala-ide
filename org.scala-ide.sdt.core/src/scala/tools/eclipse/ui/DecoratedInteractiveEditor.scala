@@ -9,6 +9,7 @@ import org.eclipse.jdt.core.compiler.IProblem
 import scala.tools.eclipse.util.SWTUtils
 import org.eclipse.jface.text.Position
 import org.eclipse.jface.text.ITextViewerExtension2
+import org.eclipse.jdt.core.ICompilationUnit
 import scala.tools.eclipse.ISourceViewerEditor
 import scala.tools.eclipse.util.RichAnnotationModel._
 
@@ -22,10 +23,9 @@ trait DecoratedInteractiveEditor extends ISourceViewerEditor {
   /**
    * Update annotations on the editor from a list of IProblems
    */
-
-  def updateErrorAnnotations(errors: List[IProblem]) {
+  def updateErrorAnnotations(errors: List[IProblem], cu: ICompilationUnit) {
     val newAnnotations: Map[Annotation, Position] = (for (e <- errors) yield {
-      val annotation = new ProblemAnnotation(e, null) // no compilation unit
+      val annotation = new ProblemAnnotation(e, cu) // no compilation unit
       val position = new Position(e.getSourceStart, e.getSourceEnd - e.getSourceStart + 1)
       (annotation, position)
     })(breakOut)

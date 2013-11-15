@@ -162,21 +162,19 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings) exten
 
   /**
    * Add a compilation unit (CU) to the set of CUs to be Reloaded at the next refresh round.
-   * If the CU is unknown by the compiler at scheduling, this is a no-op.
    */
   def scheduleReload(icu : InteractiveCompilationUnit, contents:Array[Char]) : Unit = {
-    if (compilationUnits.contains(icu))
-        scheduledUnits.synchronized { scheduledUnits += ((icu, contents)) }
+    scheduledUnits.synchronized { scheduledUnits += ((icu, contents)) }
   }
 
   /**
    * Reload the scheduled compilation units and reset the set of scheduled reloads.
-   *  For any CU not tracked by the presentation compiler at schedule time, it's a no-op.
+   *  For any CU unknown by the compiler at reload, this is a no-op.
    */
   def flushScheduledReloads(): Response[Unit] = {
     val res = new Response[Unit]
     scheduledUnits.synchronized {
-      val reloadees = scheduledUnits.toList
+      val reloadees = scheduledUnits filter {(scu) => compilationUnits.contains(scu._1)} toList
 
       if (reloadees.isEmpty) res.set(())
       else {
