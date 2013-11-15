@@ -9,6 +9,7 @@ import org.eclipse.jface.text.reconciler.IReconcilingStrategyExtension
 import org.eclipse.jface.text.reconciler.DirtyRegion
 import org.eclipse.jface.text.source._
 import org.eclipse.jdt.internal.ui.text.java.IJavaReconcilingListener
+import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.ui.texteditor._
 import scala.tools.eclipse.ui.InteractiveCompilationUnitEditor
 import scala.tools.eclipse.util.Utils._
@@ -50,8 +51,12 @@ class ScalaReconcilingStrategy(icuEditor: InteractiveCompilationUnitEditor) exte
     listeningEditor.foreach(_.aboutToBeReconciled())
     icUnit.scalaProject.doWithPresentationCompiler(_.flushScheduledReloads())
     val errors = icUnit.reconcile(document.get)
+
+    // Some features, such as quick fixes, are dependent upon getting an ICompilationUnit there
+    val cu: Option[ICompilationUnit] = icUnit.asInstanceOfOpt[ICompilationUnit]
     // we only update the edited compilation unit
-    icuEditor.updateErrorAnnotations(errors)
+    icuEditor.updateErrorAnnotations(errors, cu.orNull)
+
     // reconciled expects a jdt.core.dom.CompilationUnitEditor as first argument,
     // which ScalaSourceFileEditor and other ICU Editors aren't
     // it is possible we starve Java-Side IReconcilingListeners here
