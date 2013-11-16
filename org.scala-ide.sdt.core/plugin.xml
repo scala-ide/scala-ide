@@ -769,6 +769,9 @@
      <initializer
            class="scala.tools.eclipse.PreferenceInitializer">
      </initializer>
+     <initializer
+           class="scala.tools.eclipse.properties.EditorPreferenceInitializer">
+     </initializer>
   </extension>
 
   <extension point="org.eclipse.core.expressions.propertyTesters">
