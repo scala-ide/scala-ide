@@ -53,7 +53,7 @@ object EditorPreferencePage {
   final val P_ENABLE_MARK_OCCURRENCES = BASE + "markOccurences"
 }
 
-class DebugPreferenceInitializer extends AbstractPreferenceInitializer {
+class EditorPreferenceInitializer extends AbstractPreferenceInitializer {
 
   override def initializeDefaultPreferences() {
     val store = ScalaPlugin.plugin.getPreferenceStore
