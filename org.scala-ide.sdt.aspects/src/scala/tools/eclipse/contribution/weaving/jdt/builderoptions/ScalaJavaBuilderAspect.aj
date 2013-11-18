@@ -19,7 +19,7 @@ import org.eclipse.jdt.internal.core.util.Util;
 @SuppressWarnings("restriction")
 public privileged aspect ScalaJavaBuilderAspect {
   pointcut build() :
-    execution(IProject[] ScalaJavaBuilder.build(int, Map, IProgressMonitor) throws CoreException);
+    execution(IProject[] ScalaJavaBuilder+.build(int, Map, IProgressMonitor) throws CoreException);
   
   pointcut cleanOutputFolders(boolean copyBack) :
     args(copyBack) &&
@@ -38,7 +38,7 @@ public privileged aspect ScalaJavaBuilderAspect {
     cleanOutputFolders(copyBack) &&
     cflow(build()) {
     // Suppress the cleaning behaviour but do the extra resource copying if requested
-    if (copyBack) 
+    if (copyBack)
       for (int i = 0, l = builder.sourceLocations.length; i < l; i++) {
         org.eclipse.jdt.internal.core.builder.ClasspathMultiDirectory sourceLocation = builder.sourceLocations[i];
         Class c = sourceLocation.getClass();
