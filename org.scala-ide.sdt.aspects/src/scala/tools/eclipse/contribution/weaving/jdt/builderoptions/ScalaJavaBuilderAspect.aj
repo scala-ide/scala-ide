@@ -21,7 +21,7 @@ import org.eclipse.jdt.internal.core.util.Util;
 @SuppressWarnings("restriction")
 public privileged aspect ScalaJavaBuilderAspect {
   pointcut build() :
-    execution(IProject[] ScalaJavaBuilder.build(int, Map, IProgressMonitor) throws CoreException);
+    execution(IProject[] ScalaJavaBuilder+.build(int, Map, IProgressMonitor) throws CoreException);
   
   pointcut cleanOutputFolders(boolean copyBack) :
     args(copyBack) &&
