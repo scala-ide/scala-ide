@@ -9,6 +9,7 @@ import org.eclipse.jdt.core.ICodeAssist
 import org.eclipse.jface.text.ITextViewer
 import org.eclipse.jface.text.IRegion
 import org.eclipse.jface.text.ITextHover
+import scala.tools.eclipse.javaelements.ScalaCompilationUnit
 
 import scala.tools.nsc.symtab.Flags
 import scala.tools.eclipse.util.EclipseUtils._
