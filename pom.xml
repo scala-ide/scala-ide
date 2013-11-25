@@ -98,9 +98,9 @@
       <id>scala-2.11.x</id>
       <properties>
         <scala.version>2.11.0-SNAPSHOT</scala.version>
-        <scala.binary.version>2.11.0-M5</scala.binary.version>
-        <scala.xml.version>1.0.0-RC5</scala.xml.version>
-        <scala.parser-combinators.version>1.0.0-RC3</scala.parser-combinators.version>
+        <scala.binary.version>2.11.0-M7</scala.binary.version>
+        <scala.xml.version>1.0.0-RC7</scala.xml.version>
+        <scala.parser-combinators.version>1.0.0-RC5</scala.parser-combinators.version>
         <version.suffix>2_11</version.suffix>
 
         <repo.scala-refactoring>${repo.scala-ide.root}/scala-refactoring-211x</repo.scala-refactoring>
