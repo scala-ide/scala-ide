@@ -23,7 +23,7 @@ object StartupDiagnostics extends HasLogger {
     val prefStore = plugin.getPreferenceStore
     val previousVersion = prefStore.getString(INSTALLED_VERSION_KEY)
     val currentVersion = plugin.getBundle.getVersion.toString
-    val askDiagnostics = prefStore.getBoolean(ASK_DIAGNOSTICS)
+    val suggestDiagnostics = prefStore.getBoolean(ASK_DIAGNOSTICS)
 
     logger.info("startup diagnostics: previous version = " + previousVersion)
     logger.info("startup diagnostics: CURRENT version = " + currentVersion)
@@ -33,7 +33,7 @@ object StartupDiagnostics extends HasLogger {
       if (previousVersion != currentVersion) {
         prefStore.setValue(INSTALLED_VERSION_KEY, currentVersion)
 
-        if (askDiagnostics) {
+        if (suggestDiagnostics) {
             val labels = Array(IDialogConstants.YES_LABEL, IDialogConstants.NO_LABEL, "Never")
             val dialog =
               new MessageDialog(ScalaPlugin.getShell, "Run Scala Setup Diagnostics?",

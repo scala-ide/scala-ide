@@ -34,6 +34,7 @@ import org.eclipse.jdt.core.JavaModelException
 import scala.tools.eclipse.InteractiveCompilationUnit
 import scala.tools.eclipse.sourcefileprovider.SourceFileProvider
 import org.eclipse.core.runtime.IPath
+import org.eclipse.core.runtime.NullProgressMonitor
 
 
 class ScalaSourceFileProvider extends SourceFileProvider {
@@ -99,18 +100,12 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
     res
   }
 
-  override def reconcile(newContents: String): List[IProblem] =
-    getProblems.toList
-
-  override def reconcile(
-      astLevel : Int,
-      reconcileFlags : Int,
-      workingCopyOwner : WorkingCopyOwner,
-      monitor : IProgressMonitor) : org.eclipse.jdt.core.dom.CompilationUnit = {
-    ReconciliationParticipantsExtensionPoint.runBefore(this, monitor, workingCopyOwner)
-    val result = super.reconcile(ICompilationUnit.NO_AST, reconcileFlags, workingCopyOwner, monitor)
-    ReconciliationParticipantsExtensionPoint.runAfter(this, monitor, workingCopyOwner)
-    result
+  /* getProblems should be reserved for a Java context, @see getProblems */
+  override def reconcile(newContents: String): List[IProblem] ={
+    ReconciliationParticipantsExtensionPoint.runBefore(this, new NullProgressMonitor, workingCopyOwner)
+    val probs = currentProblems
+    ReconciliationParticipantsExtensionPoint.runAfter(this, new NullProgressMonitor, workingCopyOwner)
+    probs
   }
 
   override def makeConsistent(

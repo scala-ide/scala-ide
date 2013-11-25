@@ -51,6 +51,8 @@ class PresentationCompilerTest {
   private def managedUnits(): Set[InteractiveCompilationUnit] = project.presentationCompiler(_.compilationUnits.toSet).orNull
 
   @Test
+  // garillot: deactivated pending replication of a platform test architecture
+  @Ignore("Enable this test once headless triggering of Reconciler is possible")
   def freshFileReportsErrors() {
     val contentsWithErrors = """
 package t1001094
