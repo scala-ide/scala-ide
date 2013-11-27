@@ -143,26 +143,30 @@ class SbtBuilderTest {
     import ScalaPlugin.plugin
 
     val Seq(prjClient, prjLib) = createProjects("client", "library")
-    val packLib = createSourcePackage("scala")(prjLib)
-    val baseRawClasspath= prjClient.javaProject.getRawClasspath()
+    try {
+      val packLib = createSourcePackage("scala")(prjLib)
+      val baseRawClasspath = prjClient.javaProject.getRawClasspath()
 
-    /* The classpath, with the eclipse scala container removed. */
-    def cleanRawClasspath = baseRawClasspath.filterNot(_.getPath().toPortableString() == "org.scala-ide.sdt.launching.SCALA_CONTAINER")
+      /* The classpath, with the eclipse scala container removed. */
+      def cleanRawClasspath = baseRawClasspath.filterNot(_.getPath().toPortableString() == "org.scala-ide.sdt.launching.SCALA_CONTAINER")
 
-    prjClient.javaProject.setRawClasspath(cleanRawClasspath, null)
-    addToClasspath(prjClient, JavaCore.newProjectEntry(prjLib.underlying.getFullPath, true))
+      prjClient.javaProject.setRawClasspath(cleanRawClasspath, null)
+      addToClasspath(prjClient, JavaCore.newProjectEntry(prjLib.underlying.getFullPath, true))
 
-    packLib.createCompilationUnit("Predef.scala", "package scala; class Predef", true, null)
-    prjLib.underlying.build(IncrementalProjectBuilder.FULL_BUILD, new NullProgressMonitor)
+      packLib.createCompilationUnit("Predef.scala", "package scala; class Predef", true, null)
+      prjLib.underlying.build(IncrementalProjectBuilder.FULL_BUILD, new NullProgressMonitor)
 
-    Assert.assertTrue("Found Scala library", prjClient.scalaClasspath.scalaLib.isDefined)
+      Assert.assertTrue("Found Scala library", prjClient.scalaClasspath.scalaLib.isDefined)
 
-    val expectedLib = plugin.workspaceRoot.findMember("/library/bin").getLocation
-    Assert.assertEquals("Unexpected Scala lib", expectedLib, prjClient.scalaClasspath.scalaLib.get)
-    deleteProjects(prjClient, prjLib)
+      val expectedLib = plugin.workspaceRoot.findMember("/library/bin").getLocation
+      Assert.assertEquals("Unexpected Scala lib", expectedLib, prjClient.scalaClasspath.scalaLib.get)
+    } finally {
+      deleteProjects(prjClient, prjLib)
+    }
   }
 
-  /** Test that the JDK and Scala library end up in the bootclasspaths arguments for
+  /**
+   * Test that the JDK and Scala library end up in the bootclasspaths arguments for
    *  scalac.
    *
    *  - We test that the `-javabootclasspath` and `-bootclasspath` are correctly set
@@ -177,43 +181,51 @@ class SbtBuilderTest {
     import ScalaPlugin.plugin
 
     val Seq(prjClient, prjLib) = createProjects("client", "library")
-    val packLib = createSourcePackage("scala")(prjLib)
-    val baseRawClasspath = prjClient.javaProject.getRawClasspath()
+    try {
+      val packLib = createSourcePackage("scala")(prjLib)
+      val baseRawClasspath = prjClient.javaProject.getRawClasspath()
 
-    // The classpath, with the eclipse scala container removed
-    def cleanRawClasspath = baseRawClasspath.filterNot(_.getPath().toPortableString() == "org.scala-ide.sdt.launching.SCALA_CONTAINER")
+      // The classpath, with the eclipse scala container removed
+      def cleanRawClasspath = baseRawClasspath.filterNot(_.getPath().toPortableString() == "org.scala-ide.sdt.launching.SCALA_CONTAINER")
 
-    // add a fake Scala library
-    prjClient.javaProject.setRawClasspath(cleanRawClasspath, null)
-    addToClasspath(prjClient, JavaCore.newProjectEntry(prjLib.underlying.getFullPath, true))
+      // add a fake Scala library
+      prjClient.javaProject.setRawClasspath(cleanRawClasspath, null)
+      addToClasspath(prjClient, JavaCore.newProjectEntry(prjLib.underlying.getFullPath, true))
 
-    // add a source file
-    val packA = createSourcePackage("test")(prjClient)
-    packA.createCompilationUnit("A.scala", """class A { println("hello") }""", true, null)
+      // add a source file
+      val packA = createSourcePackage("test")(prjClient)
+      packA.createCompilationUnit("A.scala", """class A { println("hello") }""", true, null)
 
-    // build the fake Scala library
-    packLib.createCompilationUnit("Predef.scala", "package scala; class Predef", true, null)
-    prjLib.underlying.build(IncrementalProjectBuilder.FULL_BUILD, new NullProgressMonitor)
+      // build the fake Scala library
+      packLib.createCompilationUnit("Predef.scala", "package scala; class Predef", true, null)
+      prjLib.underlying.build(IncrementalProjectBuilder.FULL_BUILD, new NullProgressMonitor)
 
-    Assert.assertTrue("Found Scala library", prjClient.scalaClasspath.scalaLib.isDefined)
+      Assert.assertTrue("Found Scala library", prjClient.scalaClasspath.scalaLib.isDefined)
 
-    val ScalaClasspath(jdkPaths, scalaLib, _, _) = prjClient.scalaClasspath
-    val args = prjClient.scalacArguments
+      val ScalaClasspath(jdkPaths, scalaLib, _, _) = prjClient.scalaClasspath
+      val args = prjClient.scalacArguments
 
-    // parsing back these arguments should give back the same libraries
-    val settings = new Settings()
-    settings.processArguments(args.toList, true)
+      // parsing back these arguments should give back the same libraries
+      val settings = new Settings()
+      settings.processArguments(args.toList, true)
 
-    Assert.assertEquals("Java bootclasspath is correct", settings.javabootclasspath.value, jdkPaths.mkString(java.io.File.pathSeparator))
-    Assert.assertEquals("Scala bootclasspath is correct", settings.bootclasspath.value, scalaLib.get.toString)
+      def unify(s: String) = s.replace('\\', '/')
 
-    // now test that the build fails with the fake Scala library
-    prjClient.underlying.build(IncrementalProjectBuilder.CLEAN_BUILD, new NullProgressMonitor)
-    prjClient.underlying.build(IncrementalProjectBuilder.FULL_BUILD, new NullProgressMonitor)
-    val markers = prjClient.underlying.findMarkers(IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER, true, IResource.DEPTH_INFINITE)
-    Assert.assertTrue("Errors expected, but none found", markers.nonEmpty)
+      Assert.assertEquals("Java bootclasspath is correct",
+          unify(settings.javabootclasspath.value),
+          unify(jdkPaths.mkString(java.io.File.pathSeparator)))
+      Assert.assertEquals("Scala bootclasspath is correct",
+          unify(settings.bootclasspath.value),
+          unify(scalaLib.get.toString))
 
-    deleteProjects(prjClient, prjLib)
+      // now test that the build fails with the fake Scala library
+      prjClient.underlying.build(IncrementalProjectBuilder.CLEAN_BUILD, new NullProgressMonitor)
+      prjClient.underlying.build(IncrementalProjectBuilder.FULL_BUILD, new NullProgressMonitor)
+      val markers = prjClient.underlying.findMarkers(IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER, true, IResource.DEPTH_INFINITE)
+      Assert.assertTrue("Errors expected, but none found", markers.nonEmpty)
+    } finally {
+      deleteProjects(prjClient, prjLib)
+    }
   }
 
   @Test def checkClosedProject() {
