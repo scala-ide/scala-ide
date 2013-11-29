@@ -490,7 +490,8 @@ object ScalaPresentationCompiler {
       import prob._
       if (pos.isDefined) {
         val source = pos.source
-        val pos1 = pos.toSingleLine
+        val start = pos.point
+        val end = start + ScalaWordFinder.findWord(source.content, start).getLength() - 1
         val fileName =
           source.file match {
             case EclipseFile(file) =>
@@ -506,10 +507,10 @@ object ScalaPresentationCompiler {
           0,
           new Array[String](0),
           nscSeverityToEclipse(severityLevel),
-          pos1.startOrPoint,
-          math.max(pos1.startOrPoint, pos1.endOrPoint - 1),
-          pos1.line,
-          pos1.column))
+          start,
+          end,
+          pos.line,
+          pos.column))
       } else None
     }
 
