@@ -110,8 +110,13 @@ class ScalaJavaMapperTest {
 
     unit.withSourceFile { (srcFile, compiler) =>
       compiler.askReload(unit, src.toCharArray())
-      val targets = compiler.loadedType(srcFile).left.toOption.get collect {
-        case t: compiler.DefDef if t.name.toString startsWith "target" => t
+      val targets = compiler.loadedType(srcFile) match {
+        case Left(loadedType) =>
+          loadedType.collect {
+            case t: compiler.DefDef if t.name.toString startsWith "target" => t
+          }
+        case Right(e) =>
+          throw e
       }
       compiler.askOption { () =>
         f(compiler)(targets.head.symbol.info.finalResultType)
