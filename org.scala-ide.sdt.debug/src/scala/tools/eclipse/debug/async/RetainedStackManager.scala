@@ -14,6 +14,7 @@ import com.sun.jdi.ThreadReference
 import scala.tools.eclipse.logging.HasLogger
 import scala.tools.eclipse.debug.model.ScalaValue
 import scala.tools.eclipse.util.Utils
+import com.sun.jdi.Method
 
 /** Install breakpoints in key places and collect stack frames.
  *
@@ -68,7 +69,12 @@ class RetainedStackManager(debugTarget: ScalaDebugTarget) extends HasLogger {
   }
 
   private def installMethodBreakpoint(tpe: ReferenceType, app: AsyncProgramPoint) {
-    val method = tpe.allMethods().asScala.find(_.name().startsWith(app.methodName))
+    def isAPP(m: Method): Boolean =
+      (!m.isAbstract()
+          && m.name().startsWith(app.methodName)
+          && !m.name().contains("$default"))
+    
+    val method = tpe.allMethods().asScala.find(isAPP)
     method.foreach { meth =>
       val req = JdiRequestFactory.createMethodEntryBreakpoint(method.get, debugTarget)
       debugTarget.eventDispatcher.setActorFor(actor, req)
@@ -84,6 +90,8 @@ class RetainedStackManager(debugTarget: ScalaDebugTarget) extends HasLogger {
   private val programPoints = List(
     AsyncProgramPoint("scala.concurrent.package$", "future", 0),
     AsyncProgramPoint("play.api.libs.iteratee.Cont$", "apply", 0),
+    AsyncProgramPoint("akka.actor.LocalActorRef", "$bang", 0),
+    AsyncProgramPoint("akka.actor.RepointableActorRef", "$bang", 0),
     AsyncProgramPoint("scala.actors.InternalReplyReactor$class", "$bang", 1))
 
   /** Return the saved stackframes for the given future body (if any). */

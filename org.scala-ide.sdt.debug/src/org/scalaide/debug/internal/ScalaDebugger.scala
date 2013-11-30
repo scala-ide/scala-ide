@@ -46,9 +46,11 @@ object ScalaDebugger {
           case scalaStackFrame: ScalaStackFrame =>
             (scalaStackFrame.thread, scalaStackFrame)
           case _ =>
+            println(s"Don't know the current selection $selection")
             (null, null)
         }
       case _ =>
+        println(s"Don't know the current selection $selection")
         (null, null)
     }
 

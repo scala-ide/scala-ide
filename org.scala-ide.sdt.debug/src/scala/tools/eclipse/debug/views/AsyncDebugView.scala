@@ -60,6 +60,11 @@ class AsyncDebugView extends AbstractDebugView with IDebugContextListener with H
 
   private var viewer: TableViewer = _
 
+  private val greyablePackages = Set("akka.", "scala.")
+  def greyableContext(typeName: String): Boolean =
+    greyablePackages.exists(typeName.startsWith)
+    
+  
   /** Creates and returns this view's underlying viewer.
    *  The viewer's control will automatically be hooked
    *  to display a pop-up menu that other plug-ins may
@@ -89,7 +94,7 @@ class AsyncDebugView extends AbstractDebugView with IDebugContextListener with H
         DebugUITools.getImage(IDebugUIConstants.IMG_OBJS_STACKFRAME)
 
       def getForeground(element: AnyRef): Color = element match {
-        case AsyncStackFrame(_, location) if location.declaringTypeName.startsWith("scala.") =>
+        case AsyncStackFrame(_, location) if greyableContext(location.declaringTypeName) =>
           Display.getCurrent().getSystemColor(SWT.COLOR_GRAY)
         case _ =>
           null
