@@ -114,7 +114,7 @@
                id="org.eclipse.debug.ui.debugActionSet">
             <command
                   commandId="org.scala-ide.sdt.debug.stepMessageOut"
-                  icon="icons/run_interpreter.gif"
+                  icon="icons/bang.png"
                   label="Step Message Out"
                   style="push"
                   tooltip="Step until a message is sent and receives">

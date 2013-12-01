@@ -60,7 +60,7 @@ class AsyncDebugView extends AbstractDebugView with IDebugContextListener with H
 
   private var viewer: TableViewer = _
 
-  private val greyablePackages = Set("akka.", "scala.")
+  private val greyablePackages = Set("akka.", "scala.", "play.")
   def greyableContext(typeName: String): Boolean =
     greyablePackages.exists(typeName.startsWith)
     

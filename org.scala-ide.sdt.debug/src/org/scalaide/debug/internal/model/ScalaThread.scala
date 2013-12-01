@@ -22,6 +22,7 @@ import com.sun.jdi.VMCannotBeModifiedException
 import org.eclipse.debug.core.model.IStackFrame
 import com.sun.jdi.IncompatibleThreadStateException
 import org.scalaide.logging.HasLogger
+import scala.tools.eclipse.debug.async.StepMessageOut
 
 class ThreadNotSuspendedException extends Exception
 
@@ -60,6 +61,10 @@ abstract class ScalaThread private (target: ScalaDebugTarget, private[model] val
     wrapJDIException("Exception while performing `step return`") { ScalaStepReturn(stackFrames.head).step() }
   }
 
+  def stepMessageOut(): Unit = {
+    (new StepMessageOut(getDebugTarget, this)).step
+  }
+  
   // Members declared in org.eclipse.debug.core.model.ISuspendResume
 
   override def canResume: Boolean = suspended // TODO: need real logic
