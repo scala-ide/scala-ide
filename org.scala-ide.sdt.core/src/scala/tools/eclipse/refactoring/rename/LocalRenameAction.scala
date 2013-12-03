@@ -44,7 +44,7 @@ class LocalRenameAction extends RefactoringAction {
         // there's always a selected tree, otherwise
         // the refactoring won't be called.
         selected <- selectedSymbolTree.toList
-        t <- index.occurences(selected.symbol)
+        t <- global.ask(() => index.occurences(selected.symbol))
       } yield {
         val pos = t match {
           case ImportSelectorTree(name, global.EmptyTree) =>
