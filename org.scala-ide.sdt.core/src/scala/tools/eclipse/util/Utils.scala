@@ -1,7 +1,6 @@
 package scala.tools.eclipse.util
 
 import scala.tools.eclipse.logging.HasLogger
-import scala.util.control.Exception
 
 object Utils extends HasLogger {
 
@@ -46,10 +45,19 @@ object Utils extends HasLogger {
   implicit class WithAsInstanceOfOpt(obj: AnyRef) {
     import scala.reflect.runtime.universe._
 
-    def asInstanceOfOpt[B : TypeTag]: Option[B] = if (obj eq null) None else Exception.catching(classOf[Exception]) opt {
-      val m = runtimeMirror(getClass.getClassLoader)
-      val typeOfObj = m.reflect(obj).symbol.toType
-      if (typeOfObj <:< typeOf[B]) Some(obj.asInstanceOf[B]) else None
-    } flatten
+    /** Type-safe cast
+     *
+     * @return None if the cast fails or the object is null, Some[B] otherwise
+     */
+    def asInstanceOfOpt[B: TypeTag]: Option[B] =
+      if (obj eq null)
+        None
+      else try {
+        val m = runtimeMirror(getClass.getClassLoader)
+        val typeOfObj = m.reflect(obj).symbol.toType
+        if (typeOfObj <:< typeOf[B]) Some(obj.asInstanceOf[B]) else None
+      } catch {
+        case _: Exception => None
+      }
   }
 }
