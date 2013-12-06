@@ -101,14 +101,16 @@ class ScalaSourceViewerConfiguration(
     )
   }
 
-  override def getReconciler(sourceViewer: ISourceViewer): IReconciler = {
-    val reconciler = new MonoReconciler(new ScalaReconcilingStrategy(editor), /*isIncremental = */ false)
-    // FG: I don't know any better that to defer this to the MonoReconciler constructor's default value
-    // reconciler.setDelay(500)
-    reconciler.install(sourceViewer)
-    reconciler.setProgressMonitor(new NullProgressMonitor())
-    reconciler
-  }
+  override def getReconciler(sourceViewer: ISourceViewer): IReconciler =
+    if (editor ne null) {
+      val reconciler = new MonoReconciler(new ScalaReconcilingStrategy(editor), /*isIncremental = */ false)
+      // FG: I don't know any better that to defer this to the MonoReconciler constructor's default value
+      // reconciler.setDelay(500)
+      reconciler.install(sourceViewer)
+      reconciler.setProgressMonitor(new NullProgressMonitor())
+      reconciler
+    } else
+      null // the editor is null for the Syntax coloring previewer pane, (so no reconciliation)
 
   override def getPresentationReconciler(sourceViewer: ISourceViewer): ScalaPresentationReconciler = {
     val reconciler = new ScalaPresentationReconciler()

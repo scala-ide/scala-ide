@@ -45,10 +45,19 @@ object Utils extends HasLogger {
   implicit class WithAsInstanceOfOpt(obj: AnyRef) {
     import scala.reflect.runtime.universe._
 
-    def asInstanceOfOpt[B : TypeTag]: Option[B] = {
-      val m = runtimeMirror(getClass.getClassLoader)
-      val typeOfObj = m.reflect(obj).symbol.toType
-      if (typeOfObj <:< typeOf[B]) Some(obj.asInstanceOf[B]) else None
-    }
+    /** Type-safe cast
+     *
+     * @return None if the cast fails or the object is null, Some[B] otherwise
+     */
+    def asInstanceOfOpt[B: TypeTag]: Option[B] =
+      if (obj eq null)
+        None
+      else try {
+        val m = runtimeMirror(getClass.getClassLoader)
+        val typeOfObj = m.reflect(obj).symbol.toType
+        if (typeOfObj <:< typeOf[B]) Some(obj.asInstanceOf[B]) else None
+      } catch {
+        case _: Exception => None
+      }
   }
 }
