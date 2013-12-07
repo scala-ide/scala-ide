@@ -92,6 +92,27 @@
         <repo.scalariform>${repo.scala-ide.root}/scalariform-210x</repo.scalariform>
         <repo.typesafe>http://private-repo.typesafe.com/typesafe/ide-2.10</repo.typesafe>
       </properties>
+
+      <dependencyManagement>
+        <dependencies>
+          <dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-actors</artifactId>
+            <version>${scala.library.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-swing</artifactId>
+            <version>${scala.library.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.scala-lang.plugins</groupId>
+            <artifactId>continuations</artifactId>
+            <version>${scala.version}</version>
+          </dependency>
+        </dependencies>
+      </dependencyManagement>
+
     </profile>
 
     <profile>
@@ -99,8 +120,12 @@
       <properties>
         <scala.version>2.11.0-SNAPSHOT</scala.version>
         <scala.binary.version>2.11.0-M7</scala.binary.version>
-        <scala.xml.version>1.0.0-RC7</scala.xml.version>
-        <scala.parser-combinators.version>1.0.0-RC5</scala.parser-combinators.version>
+        <scala-xml.version.number>1.0.0-RC7</scala-xml.version.number>
+        <scala-parser-combinators.version.number>1.0.0-RC5</scala-parser-combinators.version.number>
+        <scala-continuations-plugin.version.number>1.0.0-RC2</scala-continuations-plugin.version.number>
+        <scala-continuations-library.version.number>1.0.0-RC2</scala-continuations-library.version.number>
+        <scala-swing.version.number>1.0.0-RC2</scala-swing.version.number>
+
         <version.suffix>2_11</version.suffix>
 
         <repo.scala-refactoring>${repo.scala-ide.root}/scala-refactoring-211x</repo.scala-refactoring>
@@ -111,14 +136,34 @@
       <dependencyManagement>
         <dependencies>
           <dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-actors</artifactId>
+            <version>${scala.library.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.scala-lang.modules</groupId>
+            <artifactId>scala-swing_${scala.binary.version}</artifactId>
+            <version>${scala-swing.version.number}</version>
+          </dependency>
+          <dependency>
             <groupId>org.scala-lang.modules</groupId>
             <artifactId>scala-xml_${scala.binary.version}</artifactId>
-            <version>${scala.xml.version}</version>
+            <version>${scala-xml.version.number}</version>
           </dependency>
           <dependency>
             <groupId>org.scala-lang.modules</groupId>
             <artifactId>scala-parser-combinators_${scala.binary.version}</artifactId>
-            <version>${scala.parser-combinators.version}</version>
+            <version>${scala-parser-combinators.version.number}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.scala-lang.plugins</groupId>
+            <artifactId>scala-continuations-plugin_${scala.binary.version}</artifactId>
+            <version>${scala-continuations-plugin.version.number}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.scala-lang.plugins</groupId>
+            <artifactId>scala-continuations-library_${scala.binary.version}</artifactId>
+            <version>${scala-continuations-library.version.number}</version>
           </dependency>
         </dependencies>
       </dependencyManagement>
@@ -293,16 +338,6 @@
         <artifactId>scala-library</artifactId>
         <version>${scala.library.version}</version>
       </dependency>
-      <dependency>
-        <groupId>org.scala-lang</groupId>
-        <artifactId>scala-swing</artifactId>
-        <version>${scala.library.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.scala-lang</groupId>
-        <artifactId>scala-actors</artifactId>
-        <version>${scala.library.version}</version>
-      </dependency>
       <!-- toolchain, Scala compiler -->
       <dependency>
         <groupId>org.scala-lang</groupId>
@@ -312,11 +347,6 @@
       <dependency>
         <groupId>org.scala-lang</groupId>
         <artifactId>scala-reflect</artifactId>
-        <version>${scala.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.scala-lang.plugins</groupId>
-        <artifactId>continuations</artifactId>
         <version>${scala.version}</version>
       </dependency>
       <!-- toolchain, sbt -->

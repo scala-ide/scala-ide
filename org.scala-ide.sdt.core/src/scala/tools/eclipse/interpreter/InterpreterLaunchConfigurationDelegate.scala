@@ -130,7 +130,7 @@ class InterpreterLaunchConfigurationDelegate extends AbstractJavaLaunchConfigura
     }
   }
 
-  /** Retreives the extra classpath needed for the interpreter*/
+  /** Retrieves the extra classpath needed for the interpreter*/
   def toolClassPath = {
     val plugin = ScalaPlugin.plugin
     import plugin._
