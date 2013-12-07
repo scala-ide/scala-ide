@@ -32,20 +32,23 @@ abstract class ScalaClasspathContainerInitializer(desc : String) extends Classpa
 class ScalaLibraryClasspathContainerInitializer extends ScalaClasspathContainerInitializer("Scala Library") {
   val plugin = ScalaPlugin.plugin
   import plugin._
-
-  def entries = List(
-    libClasses.map(classes => JavaCore.newLibraryEntry(classes, libSources.getOrElse(null), null)),
-    swingClasses.map(classes => JavaCore.newLibraryEntry(classes, swingSources.getOrElse(null), null)),
-    actorsClasses.map(classes => JavaCore.newLibraryEntry(classes, actorsSources.getOrElse(null), null)),
-    reflectClasses.map(classes => JavaCore.newLibraryEntry(classes, reflectSources.getOrElse(null), null))
-  ).flatten.toArray
+  def libraryEntries(classes: Option[IPath], sources: Option[IPath]) =
+    classes.map(classes => JavaCore.newLibraryEntry(classes, sources.getOrElse(null), null))
+  def entries = Array(
+    (libClasses, libSources),
+    (reflectClasses, reflectSources),
+    // modules:
+    (actorsClasses, actorsSources),
+    (continuationsLibraryClasses, continuationsLibrarySources),
+    (swingClasses, swingSources)
+  ).map{case (c, s) => libraryEntries(c, s)}
 }
 
 class ScalaCompilerClasspathContainerInitializer extends ScalaClasspathContainerInitializer("Scala Compiler") {
   val plugin = ScalaPlugin.plugin
   import plugin._
 
-  def entries = Array(
+  override def entries = Array(
     JavaCore.newLibraryEntry(compilerClasses.get, compilerSources.getOrElse(null), null)
   )
 }

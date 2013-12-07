@@ -463,7 +463,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
         // if the user provided an explicit path for -Xpluginsdir, then it's all good.
         if (userSettings.exists(setting => setting.name == defaultSettings.pluginsDir)) None
         // otherwise, inject the `pluginsDir` setting as defined in `ScalaPlugin.defaultScalaSettings`, i.e., it will
-        // inject the default location where the continuations.jar can be found. Mind that this location can change
+        // inject the default location where the scala-continuations-plugin.jar can be found. Mind that this location can change
         // every time the user updates the Scala IDE.
         else Some(defaultSettings.pluginsDir)
       }

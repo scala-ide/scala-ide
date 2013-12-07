@@ -159,18 +159,17 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
   lazy val scalaCompilerBundle = Platform.getBundle(compilerPluginId)
   lazy val scalaCompilerBundleVersion = scalaCompilerBundle.getVersion()
   lazy val compilerClasses = OSGiUtils.getBundlePath(scalaCompilerBundle)
-  lazy val continuationsClasses = OSGiUtils.pathInBundle(sdtCoreBundle, "/target/lib/continuations.jar")
   lazy val compilerSources = OSGiUtils.pathInBundle(sdtCoreBundle, "/target/src/scala-compiler-src.jar")
 
-  /** The default location used to load compiler's plugins. The convention is that the continuations.jar
+  /** The default location used to load compiler's plugins. The convention is that the scala-continuations-plugin.jar
    * plugin should be always loaded, so that a user can enable continuations by only passing
    * -P:continuations:enable flag. This matches `scalac` behavior. */
-  def defaultPluginsDir: String = { 
-    Trim(continuationsClasses map { _.removeLastSegments(1).toOSString }) getOrElse {
+  def defaultPluginsDir: String = {
+    Trim(continuationsPluginJar map { _.removeLastSegments(1).toOSString }) getOrElse {
       eclipseLog.warn {
         "Could not locate scalac's default plugins directory. " +
         "If you plan on enabling the continuations plugin, please provide the full path to the directory " +
-        "containing the \"continuations.jar\" plugin in the -XpluginDir compiler setting."
+        "containing the \"scala-continuations-plugin.jar\" plugin in the -XpluginDir compiler setting."
       }
       ""
     }
@@ -193,20 +192,25 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
     }
   }
 
-  lazy val scalaActorsBundle = Platform.getBundle(actorsPluginId)
-  lazy val scalaReflectBundle = Platform.getBundle(reflectPluginId)
-
   lazy val libClasses = OSGiUtils.getBundlePath(scalaLibBundle)
   lazy val libSources = OSGiUtils.pathInBundle(sdtCoreBundle, "/target/src/scala-library-src.jar")
+
+  // 2.10 specific libraries
+  lazy val scalaActorsBundle = Platform.getBundle(actorsPluginId)
+  lazy val actorsClasses = OSGiUtils.getBundlePath(Platform.getBundle(actorsPluginId))
+  lazy val actorsSources = OSGiUtils.pathInBundle(sdtCoreBundle, "/target/src/scala-actors-src.jar")
+
+  lazy val scalaReflectBundle = Platform.getBundle(reflectPluginId)
+  lazy val reflectClasses = OSGiUtils.getBundlePath(Platform.getBundle(reflectPluginId))
+  lazy val reflectSources = OSGiUtils.pathInBundle(sdtCoreBundle, "/target/src/scala-reflect-src.jar")
 
   lazy val swingClasses = OSGiUtils.pathInBundle(sdtCoreBundle, "/target/lib/scala-swing.jar")
   lazy val swingSources = OSGiUtils.pathInBundle(sdtCoreBundle, "/target/src/scala-swing-src.jar")
 
-  // 2.10 specific libraries
-  lazy val actorsClasses = OSGiUtils.getBundlePath(Platform.getBundle(actorsPluginId))
-  lazy val actorsSources = OSGiUtils.pathInBundle(sdtCoreBundle, "/target/src/scala-actors-src.jar")
-  lazy val reflectClasses = OSGiUtils.getBundlePath(Platform.getBundle(reflectPluginId))
-  lazy val reflectSources = OSGiUtils.pathInBundle(sdtCoreBundle, "/target/src/scala-reflect-src.jar")
+  lazy val continuationsPluginJar = OSGiUtils.pathInBundle(sdtCoreBundle, "/target/lib/scala-continuations-plugin.jar")
+  lazy val continuationsLibraryClasses = OSGiUtils.pathInBundle(sdtCoreBundle, "/target/lib/scala-continuations-library.jar")
+  lazy val continuationsLibrarySources = OSGiUtils.pathInBundle(sdtCoreBundle, "/target/src/scala-continuations-library-src.jar")
+
 
   lazy val templateManager = new ScalaTemplateManager()
   lazy val headlessMode = System.getProperty(ScalaPlugin.HeadlessTest) ne null
