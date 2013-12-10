@@ -28,7 +28,15 @@ import org.eclipse.ui.PlatformUI
 import org.eclipse.ui.browser.IWorkbenchBrowserSupport
 import scala.tools.eclipse.logging.LogManager
 
-class DiagnosticDialog(configurer: WeavingStateConfigurer, shell: Shell) extends Dialog(shell) {
+object Diagnostics {
+  val heapSize = Runtime.getRuntime.maxMemory / (1024 * 1024)
+  val recommendedHeap = 1024
+  val insufficientHeap: Boolean = insufficientHeap(heapSize, recommendedHeap)
+  def insufficientHeap(heapSize: Long, recommendedHeap: Long): Boolean =
+    heapSize < recommendedHeap
+}
+
+class DiagnosticDialog(configurer: WeavingStateConfigurer, shell: Shell) extends Dialog(shell) { dialog =>
 
   def this(shell: Shell) = this(new WeavingStateConfigurer, shell)
 
@@ -40,9 +48,6 @@ class DiagnosticDialog(configurer: WeavingStateConfigurer, shell: Shell) extends
            1) save all values
            2) "use other settings" is enabled.
   */
-
-  val heapSize = Runtime.getRuntime.maxMemory / (1024 * 1024)
-  val recommendedHeap = 1024
 
   protected val prefStore: IPreferenceStore = PreferenceConstants.getPreferenceStore
 
@@ -212,9 +217,10 @@ class DiagnosticDialog(configurer: WeavingStateConfigurer, shell: Shell) extends
     heapGroup.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, true))
     heapGroup.setLayout(new GridLayout(1, true))
 
+    import Diagnostics._
     new Label(heapGroup, SWT.LEFT).setText("Current maximum heap size: " + heapSize + "M")
 
-    if (heapSize < recommendedHeap) {
+    if (insufficientHeap) {
       // create the warning label
       val warningLabel = new Label(heapGroup, SWT.LEFT)
       warningLabel.setText("Warning: recommended value is at least " + recommendedHeap + "M")
