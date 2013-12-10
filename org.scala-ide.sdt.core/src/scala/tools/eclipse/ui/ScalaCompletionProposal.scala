@@ -212,10 +212,11 @@ class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: I
     }
 
     if (!tooltipsOnly && context.contextType != CompletionContext.ImportContext) {
-      if (!overwrite) selectionProvider match {
+      if (!overwrite || !doParamsProbablyExist) selectionProvider match {
         case viewer: ITextViewer if explicitParamNames.flatten.nonEmpty =>
           addArgumentTemplates(d, viewer, completionFullString)
-        case _ => ()
+        case _ =>
+          adjustCursorPosition()
       }
       else
         adjustCursorPosition()
