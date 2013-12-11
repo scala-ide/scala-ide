@@ -182,13 +182,13 @@
           <groupId>org.scala-lang.plugins</groupId>
           <artifactId>scala-continuations-plugin_${scala.binary.version}</artifactId>
           <classifier>sources</classifier>
-          <version>${scala-continuations-plugin.version.number}</version>
+          <version>${scala-continuations-plugin.version}</version>
         </dependency>
         <dependency>
           <groupId>org.scala-lang.plugins</groupId>
           <artifactId>scala-continuations-library_${scala.binary.version}</artifactId>
           <classifier>sources</classifier>
-          <version>${scala-continuations-library.version.number}</version>
+          <version>${scala-continuations-library.version}</version>
         </dependency>
         <dependency>
           <groupId>org.scala-lang</groupId>
@@ -200,19 +200,19 @@
           <groupId>org.scala-lang.modules</groupId>
           <artifactId>scala-xml_${scala.binary.version}</artifactId>
           <classifier>sources</classifier>
-          <version>${scala-xml.version.number}</version>
+          <version>${scala-xml.version}</version>
         </dependency>
         <dependency>
           <groupId>org.scala-lang.modules</groupId>
           <artifactId>scala-parser-combinators_${scala.binary.version}</artifactId>
           <classifier>sources</classifier>
-          <version>${scala-parser-combinators.version.number}</version>
+          <version>${scala-parser-combinators.version}</version>
         </dependency>
         <dependency>
           <groupId>org.scala-lang.modules</groupId>
           <artifactId>scala-swing_${scala.binary.version}</artifactId>
           <classifier>sources</classifier>
-          <version>${scala-swing.version.number}</version>
+          <version>${scala-swing.version}</version>
         </dependency>
       </dependencies>
     </profile>
