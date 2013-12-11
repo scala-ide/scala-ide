@@ -162,6 +162,14 @@
                 </artifactItem>
                 <artifactItem>
                   <groupId>org.scala-lang</groupId>
+                  <artifactId>scala-reflect</artifactId>
+                  <classifier>sources</classifier>
+                  <type>jar</type>
+                  <destFileName>scala-reflect-src.jar</destFileName>
+                  <outputDirectory>${project.build.directory}/src</outputDirectory>
+                </artifactItem>
+                <artifactItem>
+                  <groupId>org.scala-lang</groupId>
                   <artifactId>scala-compiler</artifactId>
                   <classifier>sources</classifier>
                   <type>jar</type>
