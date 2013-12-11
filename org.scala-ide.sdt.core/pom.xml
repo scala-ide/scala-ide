@@ -34,12 +34,14 @@
                       <artifactId>continuations</artifactId>
                       <type>jar</type>
                       <destFileName>scala-continuations-plugin.jar</destFileName>
+                      <outputDirectory>${project.build.directory}/lib</outputDirectory>
                     </artifactItem>
                     <artifactItem>
                       <groupId>org.scala-lang</groupId>
                       <artifactId>scala-swing</artifactId>
                       <type>jar</type>
                       <destFileName>scala-swing.jar</destFileName>
+                      <outputDirectory>${project.build.directory}/lib</outputDirectory>
                     </artifactItem>
                     <artifactItem>
                       <groupId>org.scala-lang</groupId>
@@ -47,7 +49,6 @@
                       <classifier>sources</classifier>
                       <type>jar</type>
                       <destFileName>scala-swing-src.jar</destFileName>
-                      <outputDirectory>${project.build.directory}/src</outputDirectory>
                     </artifactItem>
                     <artifactItem>
                       <groupId>org.scala-lang</groupId>
@@ -55,9 +56,9 @@
                       <classifier>sources</classifier>
                       <type>jar</type>
                       <destFileName>scala-actors-src.jar</destFileName>
-                      <outputDirectory>${project.build.directory}/src</outputDirectory>
                     </artifactItem>
                   </artifactItems>
+                  <outputDirectory>${project.build.directory}/src</outputDirectory>
                 </configuration>
               </execution>
             </executions>
@@ -102,7 +103,6 @@
                       <classifier>sources</classifier>
                       <type>jar</type>
                       <destFileName>scala-continuations-library-src.jar</destFileName>
-                      <outputDirectory>${project.build.directory}/src</outputDirectory>
                     </artifactItem>
                     <artifactItem>
                       <groupId>org.scala-lang.modules</groupId>
@@ -110,7 +110,6 @@
                       <classifier>sources</classifier>
                       <type>jar</type>
                       <destFileName>scala-swing-src.jar</destFileName>
-                      <outputDirectory>${project.build.directory}/src</outputDirectory>
                     </artifactItem>
                     <artifactItem>
                       <groupId>org.scala-lang</groupId>
@@ -118,7 +117,6 @@
                       <classifier>sources</classifier>
                       <type>jar</type>
                       <destFileName>scala-actors-src.jar</destFileName>
-                      <outputDirectory>${project.build.directory}/src</outputDirectory>
                     </artifactItem>
                     <artifactItem>
                       <groupId>org.scala-lang.plugins</groupId>
@@ -131,12 +129,14 @@
                       <artifactId>scala-continuations-library_${scala.binary.version}</artifactId>
                       <type>jar</type>
                       <destFileName>scala-continuations-library.jar</destFileName>
+                      <outputDirectory>${project.build.directory}/lib/</outputDirectory>
                     </artifactItem>
                     <artifactItem>
                       <groupId>org.scala-lang.modules</groupId>
                       <artifactId>scala-swing_${scala.binary.version}</artifactId>
                       <type>jar</type>
                       <destFileName>scala-swing.jar</destFileName>
+                      <outputDirectory>${project.build.directory}/lib/</outputDirectory>
                     </artifactItem>
                   </artifactItems>
                   <stripVersion>true</stripVersion>
