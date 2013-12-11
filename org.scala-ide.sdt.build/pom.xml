@@ -79,16 +79,13 @@
     </dependency>
     <dependency>
       <groupId>org.scala-lang</groupId>
-      <artifactId>scala-actors</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.scala-lang</groupId>
       <artifactId>scala-compiler</artifactId>
     </dependency>
     <dependency>
       <groupId>org.scala-lang</groupId>
       <artifactId>scala-reflect</artifactId>
     </dependency>
+
     <dependency>
       <groupId>org.scala-ide</groupId>
       <artifactId>org.scala-ide.sbt.full.library</artifactId>
@@ -109,6 +106,7 @@
       <artifactId>org.scala-ide.sbt.compiler.interface.source</artifactId>
       <version>${project.version}</version>
     </dependency>
+
     <!-- Source dependencies -->
     <dependency>
       <groupId>org.scala-lang</groupId>
@@ -116,19 +114,6 @@
       <classifier>sources</classifier>
       <version>${scala.library.version}</version>
     </dependency>
-    <dependency>
-      <groupId>org.scala-lang</groupId>
-      <artifactId>scala-swing</artifactId>
-      <classifier>sources</classifier>
-      <version>${scala.library.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.scala-lang</groupId>
-      <artifactId>scala-actors</artifactId>
-      <classifier>sources</classifier>
-      <version>${scala.library.version}</version>
-    </dependency>
-    <!-- toolchain, Scala compiler -->
     <dependency>
       <groupId>org.scala-lang</groupId>
       <artifactId>scala-compiler</artifactId>
@@ -141,23 +126,52 @@
       <classifier>sources</classifier>
       <version>${scala.version}</version>
     </dependency>
-    <dependency>
-      <groupId>org.scala-lang.plugins</groupId>
-      <artifactId>continuations</artifactId>
-      <classifier>sources</classifier>
-      <version>${scala.version}</version>
-    </dependency>
   </dependencies>
 
   <profiles>
     <profile>
-      <!--- the profile using the default values. Scala 2.11.x -->
+      <id>scala-2.10.x</id>
+      <dependencies>
+        <dependency>
+          <groupId>org.scala-lang</groupId>
+          <artifactId>scala-actors</artifactId>
+        </dependency>
+
+        <!-- Source dependencies -->
+        <dependency>
+          <groupId>org.scala-lang</groupId>
+          <artifactId>scala-swing</artifactId>
+          <classifier>sources</classifier>
+          <version>${scala.library.version}</version>
+        </dependency>
+        <dependency>
+          <groupId>org.scala-lang.plugins</groupId>
+          <artifactId>continuations</artifactId>
+          <classifier>sources</classifier>
+          <version>${scala.library.version}</version>
+        </dependency>
+        <dependency>
+          <groupId>org.scala-lang</groupId>
+          <artifactId>scala-actors</artifactId>
+          <classifier>sources</classifier>
+          <version>${scala.library.version}</version>
+        </dependency>
+      </dependencies>
+    </profile>
+
+    <profile>
       <id>scala-2.11.x</id>
       <dependencies>
+        <dependency>
+          <groupId>org.scala-lang</groupId>
+          <artifactId>scala-actors</artifactId>
+        </dependency>
+
         <dependency>
           <groupId>org.scala-lang.modules</groupId>
           <artifactId>scala-xml_${scala.binary.version}</artifactId>
         </dependency>
+
         <dependency>
           <groupId>org.scala-lang.modules</groupId>
           <artifactId>scala-parser-combinators_${scala.binary.version}</artifactId>
@@ -165,16 +179,40 @@
 
         <!-- Source dependencies -->
         <dependency>
+          <groupId>org.scala-lang.plugins</groupId>
+          <artifactId>scala-continuations-plugin_${scala.binary.version}</artifactId>
+          <classifier>sources</classifier>
+          <version>${scala-continuations-plugin.version}</version>
+        </dependency>
+        <dependency>
+          <groupId>org.scala-lang.plugins</groupId>
+          <artifactId>scala-continuations-library_${scala.binary.version}</artifactId>
+          <classifier>sources</classifier>
+          <version>${scala-continuations-library.version}</version>
+        </dependency>
+        <dependency>
+          <groupId>org.scala-lang</groupId>
+          <artifactId>scala-actors</artifactId>
+          <classifier>sources</classifier>
+          <version>${scala.library.version}</version>
+        </dependency>
+        <dependency>
           <groupId>org.scala-lang.modules</groupId>
           <artifactId>scala-xml_${scala.binary.version}</artifactId>
           <classifier>sources</classifier>
-          <version>${scala.xml.version}</version>
+          <version>${scala-xml.version}</version>
         </dependency>
         <dependency>
           <groupId>org.scala-lang.modules</groupId>
           <artifactId>scala-parser-combinators_${scala.binary.version}</artifactId>
           <classifier>sources</classifier>
-          <version>${scala.parser-combinators.version}</version>
+          <version>${scala-parser-combinators.version}</version>
+        </dependency>
+        <dependency>
+          <groupId>org.scala-lang.modules</groupId>
+          <artifactId>scala-swing_${scala.binary.version}</artifactId>
+          <classifier>sources</classifier>
+          <version>${scala-swing.version}</version>
         </dependency>
       </dependencies>
     </profile>
