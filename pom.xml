@@ -300,6 +300,11 @@
       </dependency>
       <dependency>
         <groupId>org.scala-lang</groupId>
+        <artifactId>scala-reflect</artifactId>
+        <version>${scala.library.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.scala-lang</groupId>
         <artifactId>scala-actors</artifactId>
         <version>${scala.library.version}</version>
       </dependency>
