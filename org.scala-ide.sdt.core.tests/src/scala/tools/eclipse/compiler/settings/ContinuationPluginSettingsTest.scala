@@ -63,7 +63,7 @@ class ContinuationPluginSettingsTest {
   @Test
   def loadContinuationsPluginVia_XpluginCompilerSetting() {
     setPrefValue("Xpluginsdir", "/doesnotexist")
-    setPrefValue("Xplugin", ScalaPlugin.plugin.defaultPluginsDir + File.separator + "continuations.jar")
+    setPrefValue("Xplugin", ScalaPlugin.plugin.defaultPluginsDir + File.separator + "scala-continuations-plugin.jar")
     forceEnableContinuationForNewerScalaVersion()
     Assert.assertEquals("Loaded plugins: ", List("continuations"), loadedPlugins(project))
   }
