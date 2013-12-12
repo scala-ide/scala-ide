@@ -56,7 +56,7 @@ class ReportBugDialog(shell: Shell) extends Dialog(shell) {
 
     val reportBugLink = new Link(group2, SWT.NONE)
     reportBugLink.setText("and <a href=\"" + ScalaPlugin.IssueTracker + "\">report a bug</a>.")
-    reportBugLink.addListener(SWT.Selection, DiagnosticDialog.linkListener)
+    reportBugLink.addListener(SWT.Selection, new LinkListener())
 
     control
   }
