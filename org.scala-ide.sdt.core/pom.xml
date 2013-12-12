@@ -13,7 +13,60 @@
 
   <profiles>
     <profile>
-      <!--- the profile using the default values. Scala 2.11.x -->
+      <id>scala-2.10.x</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-dependency-plugin</artifactId>
+            <executions>
+              <execution>
+                <!-- add the source jar, to be able to attach the source to the Scala container. And the continuation plug-in -->
+                <id>copy.modules</id>
+                <phase>initialize</phase>
+                <goals>
+                  <goal>copy</goal>
+                </goals>
+                <configuration>
+                  <artifactItems>
+                    <artifactItem>
+                      <groupId>org.scala-lang.plugins</groupId>
+                      <artifactId>continuations</artifactId>
+                      <type>jar</type>
+                      <destFileName>scala-continuations-plugin.jar</destFileName>
+                      <outputDirectory>${project.build.directory}/lib</outputDirectory>
+                    </artifactItem>
+                    <artifactItem>
+                      <groupId>org.scala-lang</groupId>
+                      <artifactId>scala-swing</artifactId>
+                      <type>jar</type>
+                      <destFileName>scala-swing.jar</destFileName>
+                      <outputDirectory>${project.build.directory}/lib</outputDirectory>
+                    </artifactItem>
+                    <artifactItem>
+                      <groupId>org.scala-lang</groupId>
+                      <artifactId>scala-swing</artifactId>
+                      <classifier>sources</classifier>
+                      <type>jar</type>
+                      <destFileName>scala-swing-src.jar</destFileName>
+                    </artifactItem>
+                    <artifactItem>
+                      <groupId>org.scala-lang</groupId>
+                      <artifactId>scala-actors</artifactId>
+                      <classifier>sources</classifier>
+                      <type>jar</type>
+                      <destFileName>scala-actors-src.jar</destFileName>
+                    </artifactItem>
+                  </artifactItems>
+                  <outputDirectory>${project.build.directory}/src</outputDirectory>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
       <id>scala-2.11.x</id>
       <build>
         <plugins>
@@ -43,6 +96,48 @@
                       <classifier>sources</classifier>
                       <type>jar</type>
                       <destFileName>scala-parser-combinators-src.jar</destFileName>
+                    </artifactItem>
+                    <artifactItem>
+                      <groupId>org.scala-lang.plugins</groupId>
+                      <artifactId>scala-continuations-library_${scala.binary.version}</artifactId>
+                      <classifier>sources</classifier>
+                      <type>jar</type>
+                      <destFileName>scala-continuations-library-src.jar</destFileName>
+                    </artifactItem>
+                    <artifactItem>
+                      <groupId>org.scala-lang.modules</groupId>
+                      <artifactId>scala-swing_${scala.binary.version}</artifactId>
+                      <classifier>sources</classifier>
+                      <type>jar</type>
+                      <destFileName>scala-swing-src.jar</destFileName>
+                    </artifactItem>
+                    <artifactItem>
+                      <groupId>org.scala-lang</groupId>
+                      <artifactId>scala-actors</artifactId>
+                      <classifier>sources</classifier>
+                      <type>jar</type>
+                      <destFileName>scala-actors-src.jar</destFileName>
+                    </artifactItem>
+                    <artifactItem>
+                      <groupId>org.scala-lang.plugins</groupId>
+                      <artifactId>scala-continuations-plugin_${scala.binary.version}</artifactId>
+                      <type>jar</type>
+                      <destFileName>scala-continuations-plugin.jar</destFileName>
+                      <outputDirectory>${project.build.directory}/lib/</outputDirectory>
+                    </artifactItem>
+                    <artifactItem>
+                      <groupId>org.scala-lang.plugins</groupId>
+                      <artifactId>scala-continuations-library_${scala.binary.version}</artifactId>
+                      <type>jar</type>
+                      <destFileName>scala-continuations-library.jar</destFileName>
+                      <outputDirectory>${project.build.directory}/lib/</outputDirectory>
+                    </artifactItem>
+                    <artifactItem>
+                      <groupId>org.scala-lang.modules</groupId>
+                      <artifactId>scala-swing_${scala.binary.version}</artifactId>
+                      <type>jar</type>
+                      <destFileName>scala-swing.jar</destFileName>
+                      <outputDirectory>${project.build.directory}/lib/</outputDirectory>
                     </artifactItem>
                   </artifactItems>
                   <stripVersion>true</stripVersion>
@@ -122,42 +217,14 @@
                   <groupId>com.miglayout</groupId>
                   <artifactId>miglayout</artifactId>
                 </artifactItem>
-                <artifactItem>
-                  <groupId>org.scala-lang.plugins</groupId>
-                  <artifactId>continuations</artifactId>
-                  <type>jar</type>
-                  <destFileName>continuations.jar</destFileName>
-                </artifactItem>
-                <artifactItem>
-                  <groupId>org.scala-lang</groupId>
-                  <artifactId>scala-swing</artifactId>
-                  <type>jar</type>
-                  <destFileName>scala-swing.jar</destFileName>
-                </artifactItem>
 
-                <!-- sources for Scala library -->
+                <!-- sources for Scala library and compiler -->
                 <artifactItem>
                   <groupId>org.scala-lang</groupId>
                   <artifactId>scala-library</artifactId>
                   <classifier>sources</classifier>
                   <type>jar</type>
                   <destFileName>scala-library-src.jar</destFileName>
-                  <outputDirectory>${project.build.directory}/src</outputDirectory>
-                </artifactItem>
-                <artifactItem>
-                  <groupId>org.scala-lang</groupId>
-                  <artifactId>scala-swing</artifactId>
-                  <classifier>sources</classifier>
-                  <type>jar</type>
-                  <destFileName>scala-swing-src.jar</destFileName>
-                  <outputDirectory>${project.build.directory}/src</outputDirectory>
-                </artifactItem>
-                <artifactItem>
-                  <groupId>org.scala-lang</groupId>
-                  <artifactId>scala-actors</artifactId>
-                  <classifier>sources</classifier>
-                  <type>jar</type>
-                  <destFileName>scala-actors-src.jar</destFileName>
                   <outputDirectory>${project.build.directory}/src</outputDirectory>
                 </artifactItem>
                 <artifactItem>

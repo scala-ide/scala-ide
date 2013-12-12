@@ -1,10 +1,7 @@
-*.aj text
-*.java text
-*.MF text
-*.properties text
-*.pom text
-*.scala text
-*.xml text
-
-# LF are needed by tests
-* text eol=lf
+*.aj eol=lf
+*.java eol=lf
+*.MF eol=lf
+*.properties eol=lf
+*.pom eol=lf
+*.scala eol=lf
+*.xml eol=lf
