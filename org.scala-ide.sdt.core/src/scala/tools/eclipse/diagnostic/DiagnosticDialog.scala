@@ -2,7 +2,6 @@ package scala.tools.eclipse
 package diagnostic
 
 import org.eclipse.jface.window.Window
-import org.eclipse.jface.dialogs.MessageDialog
 import org.eclipse.jface.dialogs.ErrorDialog
 import org.eclipse.jface.dialogs.Dialog
 import org.eclipse.jface.dialogs.IDialogConstants
@@ -23,10 +22,14 @@ import org.eclipse.jdt.ui.PreferenceConstants
 import org.eclipse.jdt.internal.ui.preferences.PreferencesMessages
 import org.eclipse.jdt.internal.corext.util.Messages
 import org.eclipse.core.runtime.IStatus
+import org.eclipse.core.runtime.Platform
 import scala.tools.eclipse.contribution.weaving.jdt.configuration.WeavingStateConfigurer
 import org.eclipse.ui.PlatformUI
 import org.eclipse.ui.browser.IWorkbenchBrowserSupport
 import scala.tools.eclipse.logging.LogManager
+import scala.tools.eclipse.ui.OpenExternalFile
+import java.io.File
+import java.net.URI
 
 object Diagnostics {
   val heapSize = Runtime.getRuntime.maxMemory / (1024 * 1024)
@@ -34,6 +37,25 @@ object Diagnostics {
   val insufficientHeap: Boolean = insufficientHeap(heapSize, recommendedHeap)
   def insufficientHeap(heapSize: Long, recommendedHeap: Long): Boolean =
     heapSize < recommendedHeap
+
+  def eclipseIni() = {
+    def appendIfNonExistant(what: String)(str: String) = if (str.endsWith(what)) str else str + what
+    val eclipseHome = Option(System.getenv("ECLIPSE_HOME")) map (new File(_))
+    val platformInstallLocation = for {
+      location <- Option(Platform.getInstallLocation)
+      url <- Option(location.getURL)
+      file <- Option(url.getFile)
+    } yield file
+    val osType = Option(System.getenv("OSTYPE")) getOrElse "unknown"
+    def isMac(osType: String) = osType contains "darwin"
+    val suffix = if (isMac(osType)) "Eclipse.app/Contents/MacOS" else ""
+    val files = for {
+      elem <- List(eclipseHome, platformInstallLocation.map(new File(_, suffix)))
+      path <- elem
+      f = new File(path, "eclipse.ini") if f.exists
+    } yield f.toURI
+    files.headOption
+  }
 }
 
 class DiagnosticDialog(configurer: WeavingStateConfigurer, shell: Shell) extends Dialog(shell) { dialog =>
@@ -64,7 +86,7 @@ class DiagnosticDialog(configurer: WeavingStateConfigurer, shell: Shell) extends
 
   protected var boldFont: Font = null
 
-//  protected val markOccurrencesData = new BoolWidgetData(PreferenceConstants.EDITOR_MARK_OCCURRENCES, false)
+  //  protected val markOccurrencesData = new BoolWidgetData(PreferenceConstants.EDITOR_MARK_OCCURRENCES, false)
   protected val completionData = new BoolWidgetData("", true) {
     val scalaCompletion = "org.scala-ide.sdt.core.scala_completions"
     val scalaJavaCompletion = "org.scala-ide.sdt.core.scala_java_completions"
@@ -81,7 +103,7 @@ class DiagnosticDialog(configurer: WeavingStateConfigurer, shell: Shell) extends
       if (value && !getStoredValue) {
         val currentExcluded: Array[String] = PreferenceConstants.getExcludedCompletionProposalCategories
         PreferenceConstants.setExcludedCompletionProposalCategories(
-            currentExcluded.filterNot { cat => cat == scalaCompletion || cat == scalaJavaCompletion })
+          currentExcluded.filterNot { cat => cat == scalaCompletion || cat == scalaJavaCompletion })
       }
     }
   }
@@ -179,8 +201,7 @@ class DiagnosticDialog(configurer: WeavingStateConfigurer, shell: Shell) extends
           updating = true
           widgetDataList foreach { _.setToRecommended }
           updating = false
-        }
-        else {
+        } else {
           updating = true
           widgetDataList foreach { _.updateWidget }
           updating = false
@@ -196,8 +217,8 @@ class DiagnosticDialog(configurer: WeavingStateConfigurer, shell: Shell) extends
     innerGroup.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, true, 2, 1))
 
     // Note: Mark Occurences is now working properly, so it doesn't need to be recommended to be turned off...
-//    val markOccurrencesButton =
-//      newCheckboxButton(innerGroup, "Enable JDT \"Mark Occurrences\" (not recommended)", markOccurrencesData)
+    //    val markOccurrencesButton =
+    //      newCheckboxButton(innerGroup, "Enable JDT \"Mark Occurrences\" (not recommended)", markOccurrencesData)
 
     val completionButton =
       newCheckboxButton(innerGroup, "Use Scala-compatible JDT content assist proposals (recommended)", completionData)
@@ -219,6 +240,7 @@ class DiagnosticDialog(configurer: WeavingStateConfigurer, shell: Shell) extends
 
     import Diagnostics._
     new Label(heapGroup, SWT.LEFT).setText("Current maximum heap size: " + heapSize + "M")
+    val linkListener = new LinkListener(Some(dialog))
 
     if (insufficientHeap) {
       // create the warning label
@@ -233,19 +255,26 @@ class DiagnosticDialog(configurer: WeavingStateConfigurer, shell: Shell) extends
       warningLabel.setFont(boldFont)
 
       val link = new Link(heapGroup, SWT.NONE)
-      link.setText(
-          "See <a href=\"http://wiki.eclipse.org/FAQ_How_do_I_increase_the_heap_size_available_to_Eclipse%3F\">" +
-          "instructions for changing heap size</a>.")
+      val increaseSizeUrl = "http://wiki.eclipse.org/FAQ_How_do_I_increase_the_heap_size_available_to_Eclipse%3F"
+      val eclipseIniText = Diagnostics.eclipseIni() map { f =>
+        """|Please modify your eclipse.ini and then restart eclipse:
+           | <a href="$f">$f</a>""".stripMargin
+      } getOrElse "We weren't able to locate your eclipse.ini"
 
-      link.addListener(SWT.Selection, DiagnosticDialog.linkListener)
+      link.setText(
+        s"""|See <a href="$increaseSizeUrl">instructions for changing heap size</a>.
+            |
+            |$eclipseIniText""".stripMargin)
+
+      link.addListener(SWT.Selection, linkListener)
     }
 
     val otherGroup = newGroup("Additional", control, new GridLayout(1, true))
 
     val knownIssuesLink = new Link(otherGroup, SWT.NONE)
-    knownIssuesLink.setText("See list of <a href=\"http://scala-ide.org/docs/current-user-doc/faq/index.html#Know_Issues\">known issues</a>" +
-         " for known problems and workarounds")
-    knownIssuesLink.addListener(SWT.Selection, DiagnosticDialog.linkListener)
+    val knownIssuesUrl = "http://scala-ide.org/docs/current-user-doc/faq/index.html#Know_Issue"
+    knownIssuesLink.setText(s"""See list of <a href="$knownIssuesUrl">known issues</a> for known problems and workarounds""")
+    knownIssuesLink.addListener(SWT.Selection, linkListener)
 
     errorMessageField = new Text(control, SWT.READ_ONLY | SWT.WRAP)
     errorMessageField.setLayoutData(new GridData(GridData.GRAB_HORIZONTAL | GridData.HORIZONTAL_ALIGN_FILL))
@@ -263,7 +292,7 @@ class DiagnosticDialog(configurer: WeavingStateConfigurer, shell: Shell) extends
       }
     }
 
-//    markOccurrencesButton.addSelectionListener(selectionListener)
+    //    markOccurrencesButton.addSelectionListener(selectionListener)
     autoActivationButton.addSelectionListener(selectionListener)
     completionButton.addSelectionListener(selectionListener)
 
@@ -358,7 +387,7 @@ class DiagnosticDialog(configurer: WeavingStateConfigurer, shell: Shell) extends
   }
 
   def turnWeavingOn() {
-//    JDTWeavingPreferences.setAskToEnableWeaving(false)
+    //    JDTWeavingPreferences.setAskToEnableWeaving(false)
 
     val changeResult: IStatus = configurer.changeWeavingState(true)
 
@@ -367,8 +396,10 @@ class DiagnosticDialog(configurer: WeavingStateConfigurer, shell: Shell) extends
         if (changeResult.getSeverity == IStatus.WARNING)
           "\n\n(Note: weaving status changed, but there were warnings. See the error log for more details.)"
         else ""
-      val restart = MessageDialog.openQuestion(shell, "Restart Eclipse?",
-          "Weaving will be enabled only after restarting the workbench.\n\nRestart now?" + note)
+      val restart = MessageDialog.question("Restart Eclipse?",
+        s"""|Weaving will be enabled only after restarting the workbench.
+            |
+            |Restart now?$note""".stripMargin)
       if (restart)
         PlatformUI.getWorkbench.restart
     } else {
@@ -378,18 +409,18 @@ class DiagnosticDialog(configurer: WeavingStateConfigurer, shell: Shell) extends
 
   def showFailureDialog(result: IStatus) {
     val changeInstructions =
-"""Error: could not enable JDT weaving (see detail below).
-
-To turn on JDT aspect weaving manually:
-   1. Open the file <eclipse-install-dir>/eclipse/configuration/config.ini
-   2. Look for the line "osgi.framework.extensions"
-      a) If it *doesn't* exist, add the line "osgi.framework.extensions=org.eclipse.equinox.weaving.hook"
-      b) If it does exist, append ",org.eclipse.equinox.weaving.hook"
-
-To disable JDT weaving manually, remove "org.eclipse.equinox.weaving.hook" or the entire line "osgi.framework.extensions" as applicable.
-"""
+      """|Error: could not enable JDT weaving (see detail below).
+         |
+         |To turn on JDT aspect weaving manually:
+         |   1. Open the file <eclipse-install-dir>/eclipse/configuration/config.ini
+         |   2. Look for the line "osgi.framework.extensions"
+         |      a) If it *doesn't* exist, add the line "osgi.framework.extensions=org.eclipse.equinox.weaving.hook"
+         |      b) If it does exist, append ",org.eclipse.equinox.weaving.hook"
+         |
+         |To disable JDT weaving manually, remove "org.eclipse.equinox.weaving.hook" or the entire line "osgi.framework.extensions" as applicable.""".stripMargin
     ErrorDialog.openError(shell, "Error enabling JDT weaving", changeInstructions, result);
   }
+
 }
 
 object DiagnosticDialog {
@@ -408,15 +439,21 @@ object DiagnosticDialog {
       }
     }
   }
+}
 
-  object linkListener extends Listener {
-    def handleEvent(e: Event) {
-      try {
+class LinkListener(dialog: Option[Dialog] = None) extends Listener {
+  def handleEvent(e: Event) {
+    try {
+      if (e.text.startsWith("file:/")) {
+        OpenExternalFile(new File(new URI(e.text))).open()
+        dialog.map(_.close())
+      } else {
         val browserSupport = PlatformUI.getWorkbench.getBrowserSupport
         browserSupport.getExternalBrowser.openURL(new java.net.URL(e.text))
-      } catch {
-        case e: Exception => e.printStackTrace
       }
+    } catch {
+      case e: Exception => e.printStackTrace
     }
   }
+
 }

@@ -8,43 +8,18 @@ import scala.tools.eclipse.ui.DisplayThread
 import org.eclipse.ui.PlatformUI
 import org.eclipse.jface.preference.IPreferenceStore
 
-/**
- * The regular IPreferenceStore doesn't allow you to directly know whether
- * a value is set or not so this is a Scala wrapper returning Options.
- */
-object PreferenceStoreWrapper {
-  implicit class PreferenceStoreOps(val store: IPreferenceStore) extends AnyVal {
-    def containsNot(name: String) = !store.contains(name)
-    def booleanOpt(name: String) =
-      if (store.contains(name)) Some(store.getBoolean(name)) else None
-    def stringOpt(name: String) =
-      if (store.contains(name)) Some(store.getString(name)) else None
-    def intOpt(name: String) =
-      if (store.contains(name)) Some(store.getInt(name)) else None
-    def doubleOpt(name: String) =
-      if (store.contains(name)) Some(store.getDouble(name)) else None
-    def floatOpt(name: String) =
-      if (store.contains(name)) Some(store.getFloat(name)) else None
-    def longOpt(name: String) =
-      if (store.contains(name)) Some(store.getLong(name)) else None
-    def booleanOrElse(name: String, default: Boolean) =
-      if (store.contains(name)) store.getBoolean(name) else default
-    def stringOrElse(name: String, default: String) =
-      if (store.contains(name)) store.getString(name) else default
-    def intOrElse(name: String, default: Int) =
-      if (store.contains(name)) store.getInt(name) else default
-    def doubleOrElse(name: String, default: Double) =
-      if (store.contains(name)) store.getDouble(name) else default
-    def floatOrElse(name: String, default: Float) =
-      if (store.contains(name)) store.getFloat(name) else default
-    def longOrElse(name: String, default: Long) =
-      if (store.contains(name)) store.getLong(name) else default
-  }
-}
 
-import org.eclipse.jface.dialogs.IDialogConstants
-import org.eclipse.jface.dialogs.MessageDialog
-import org.eclipse.ui.PlatformUI
+object MessageDialog {
+  import org.eclipse.jface.dialogs.{ MessageDialog => JFMessageDialog }
+  import org.eclipse.swt.widgets.Shell
+  def apply(heading: String, message: String, labels: (Int, String)*) =
+    new JFMessageDialog(ScalaPlugin.getShell, heading, null, message, JFMessageDialog.QUESTION, labels.map(_._2).toArray, 0).open()
+  def confirm(heading: String, message: String) =
+    JFMessageDialog.openConfirm(ScalaPlugin.getShell, heading, message)
+  def question(heading: String, message: String) =
+    JFMessageDialog.openQuestion(ScalaPlugin.getShell, heading, message)
+  val CLOSE_ACTION = -1
+}
 
 object StartupDiagnostics extends HasLogger {
   import ScalaPlugin.plugin
@@ -58,29 +33,33 @@ object StartupDiagnostics extends HasLogger {
     ask && firstInstall && insufficientHeap
 
   def suggestDiagnostics(prefStore: IPreferenceStore): Boolean = {
-    import PreferenceStoreWrapper._
-    val firstInstall = prefStore containsNot INSTALLED_VERSION_KEY
-    val ask = prefStore.booleanOrElse(ASK_DIAGNOSTICS, default = true)
+    val firstInstall = (prefStore getString INSTALLED_VERSION_KEY) == ""
+    val ask = prefStore getBoolean ASK_DIAGNOSTICS
     suggestDiagnostics(Diagnostics.insufficientHeap, firstInstall, ask)
   }
 
-  def run: Unit = {
+  def run() {
+    val YES_ACTION = 0
+    val NO_ACTION = 1
+    val NEVER_ACTION = 2
+    import MessageDialog.CLOSE_ACTION
+
+    val prefStore = plugin.getPreferenceStore
     DisplayThread.asyncExec {
-      val prefStore = plugin.getPreferenceStore
       if (suggestDiagnostics(prefStore)) {
-        val labels = Array(IDialogConstants.YES_LABEL, IDialogConstants.NO_LABEL, "Never")
-        val dialog =
-          new MessageDialog(ScalaPlugin.getShell, "Run Scala Setup Diagnostics?",
-            null, "Upgrade of Scala plugin detected.\n\n" +
-              "Run setup diagnostics to ensure correct plugin settings?",
-            MessageDialog.QUESTION, labels, 0)
-        dialog.open match {
-          case 0 => // user pressed Yes
-            new DiagnosticDialog(weavingState, ScalaPlugin.getShell).open
-          case 2 => // user pressed Never
-            prefStore.setValue(ASK_DIAGNOSTICS, false)
-          case _ => // user pressed close button (-1) or No (1)
-        }
+        import org.eclipse.jface.dialogs.IDialogConstants._
+        MessageDialog(
+          "Run Scala Setup Diagnostics?",
+          """|We detected that some of your settings are not adequate for the Scala IDE plugin.
+             |
+             |Run setup diagnostics to ensure correct plugin settings?""".stripMargin,
+          YES_ACTION -> YES_LABEL, NO_ACTION -> NO_LABEL, NEVER_ACTION -> "Never") match {
+            case YES_ACTION =>
+              new DiagnosticDialog(weavingState, ScalaPlugin.getShell).open
+            case NEVER_ACTION =>
+              prefStore.setValue(ASK_DIAGNOSTICS, false)
+            case NO_ACTION | CLOSE_ACTION =>
+          }
         val currentVersion = plugin.getBundle.getVersion.toString
         prefStore.setValue(INSTALLED_VERSION_KEY, currentVersion)
         ScalaPlugin.plugin.savePluginPreferences // TODO: this method is deprecated, but the solution given in the docs is unclear and is not used by Eclipse itself. -DM
@@ -91,11 +70,10 @@ object StartupDiagnostics extends HasLogger {
 
   private def ensureWeavingIsEnabled(): Unit = {
     if (!weavingState.isWeaving) {
-      val forceWeavingOn = MessageDialog.openConfirm(ScalaPlugin.getShell, "JDT Weaving is disabled",
-        """JDT Weaving is currently disabled. The Scala IDE needs JDT Weaving to be active, or it will not work as expected.
-
-Activate JDT Weaving and restart Eclipse? (Highly Recommended)
-""")
+      val forceWeavingOn = MessageDialog.confirm(
+        "JDT Weaving is disabled",
+        """|JDT Weaving is currently disabled. The Scala IDE needs JDT Weaving to be active, or it will not work as expected.
+           |Activate JDT Weaving and restart Eclipse? (Highly Recommended)""".stripMargin)
 
       if (forceWeavingOn) {
         weavingState.changeWeavingState(true)
