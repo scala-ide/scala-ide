@@ -58,8 +58,8 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
     def possibleMatch: PossibleMatch
 
     override def traverse(tree: Tree): Unit = try {
-      if (tree.pos.isOpaqueRange && tree.pos.isDefined) {
-        report(tree)
+      if (tree.pos.isRange && tree.pos.isDefined) {
+        if(tree.pos.isOpaqueRange) report(tree)
         /* We need to customize the traversal of the Tree to ensure that the `Traverser.currentOwner`
          * gets updated only when a declaration is traversed (have a look at `enclosingDeclaration`).
          * This is done because reference matches are always reported on the enclosing declaration.
