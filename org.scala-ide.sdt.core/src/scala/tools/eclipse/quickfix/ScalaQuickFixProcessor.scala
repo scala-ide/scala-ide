@@ -3,6 +3,7 @@ package scala.tools.eclipse.quickfix
 import scala.tools.eclipse.javaelements.ScalaSourceFile
 import scala.tools.eclipse.logging.HasLogger
 import scala.tools.eclipse.quickfix.createmethod.CreateMethodProposal
+import scala.tools.eclipse.quickfix.migration.ProcedureMigrationProposal
 import scala.tools.eclipse.semantichighlighting.implicits.ImplicitHighlightingPresenter
 import scala.tools.eclipse.util.EditorUtils
 import scala.tools.refactoring.implementations.AddToClass
@@ -36,6 +37,8 @@ class ScalaQuickFixProcessor extends IQuickFixProcessor with HasLogger {
   private val XXXXXNotFoundError = "not found: (.*)".r
   private val ValueNotAMember = "value (.*) is not a member of (.*)".r
   private val ValueNotAMemberOfObject = "value (.*) is not a member of object (.*)".r
+  private val ProcedureSyntaxIsDeprecated = "Procedure syntax is deprecated. Convert procedure `(.*)` to method .*".r
+
 
   // regex for extracting expected and required type on type mismatch
   private val TypeMismatchError = """type mismatch;\s*found\s*: (\S*)\s*required: (.*)""".r
@@ -75,14 +78,16 @@ class ScalaQuickFixProcessor extends IQuickFixProcessor with HasLogger {
              val createMethodFix = suggestCreateMethodFix(context.getCompilationUnit(), ann.getText, pos)
              val changeMethodCase = suggestChangeMethodCase(context.getCompilationUnit(), ann.getText, pos)
 
+             val procedureMigration = suggestProcedureMigration(context.getCompilationUnit(), ann.getText, pos)
+
              // concatenate lists of found quick fixes
             corrections = corrections ++
               importFix ++
               typeMismatchFix ++
               createClassFix ++
               createMethodFix ++
-              changeMethodCase
-
+              changeMethodCase ++
+              procedureMigration
           }
         corrections match {
           case Nil => null
@@ -164,6 +169,12 @@ class ScalaQuickFixProcessor extends IQuickFixProcessor with HasLogger {
     }
   }
 
+  private def suggestProcedureMigration(cu: ICompilationUnit, problemMessage : String, location: Position): List[IJavaCompletionProposal] = {
+    problemMessage match {
+      case ProcedureSyntaxIsDeprecated(name) => List(ProcedureMigrationProposal(name, location))
+      case _ => List()
+    }
+  }
 }
 
 private[quickfix] object ScalaQuickFixProcessor {
