@@ -167,7 +167,7 @@ class CompletionTests {
    */
   @Test
   def ticket1000476() {
-    val oraclePos4_26 = List("ArrayList", "ArrayLister")
+    val oraclePos4_26 = List("ArrayList", "ArrayList", "ArrayLister") // ArrayList also from java.util.Arrays
     val oraclePos6_33 = List("ArrayList")
     val oraclePos11_16 = List("TreeSet")
 
@@ -336,4 +336,37 @@ class CompletionTests {
           }))
     }
   }
+
+  @Test
+  def t1002002() {
+    withCompletions("t1002002/A.scala") {
+      (index, position, completions) =>
+        assertEquals("There is only one completion location", 1, completions.size)
+        assertTrue("The completion should return completion", completions exists {
+            case c: CompletionProposal =>
+              assertTrue("Should need import", c.needImport)
+              assertEquals("test.A.ATestInner", c.fullyQualifiedName)
+              true
+            case a => println(s"Got: $a")
+              false
+        })
+    }
+  }
+
+  @Test
+  def t1002002_2() {
+    withCompletions("t1002002/D.scala") {
+      (index, position, completions) =>
+        assertEquals("There is only one completion location", 1, completions.size)
+        assertTrue("The completion should return completion", completions exists {
+            case c: CompletionProposal =>
+              assertTrue("Should need import", c.needImport)
+              assertEquals("test.A.C.ACTestInner", c.fullyQualifiedName)
+              true
+            case a => println(s"Got: $a")
+              false
+        })
+    }
+  }
+
 }
