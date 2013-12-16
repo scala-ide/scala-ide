@@ -16,9 +16,10 @@ import org.eclipse.core.runtime.Path
 
 trait ScalaJavaMapper extends ScalaAnnotationHelper with HasLogger { self : ScalaPresentationCompiler =>
 
+  @deprecated("Remove this when dropping Scala 2.10 support. See SI-8030")
   private[eclipse] def initializeRequiredSymbols() {
     import definitions._
-    Set(UnitClass,
+    val symbols = Vector(UnitClass,
       BooleanClass,
       ByteClass,
       ShortClass,
@@ -27,7 +28,9 @@ trait ScalaJavaMapper extends ScalaAnnotationHelper with HasLogger { self : Scal
       FloatClass,
       DoubleClass,
       NilModule,
-      ListClass).foreach(_.initialize)
+      ListClass) ++ TupleClass.seq
+
+    symbols.foreach(_.initialize)
   }
 
   /** Return the Java Element corresponding to the given Scala Symbol, looking in the
