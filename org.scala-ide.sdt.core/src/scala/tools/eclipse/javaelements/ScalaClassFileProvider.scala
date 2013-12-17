@@ -54,7 +54,10 @@ class ScalaClassFileProvider extends IClassFileProvider with HasLogger {
   override def isInteresting(classFile: IClassFile): Boolean = {
     if (ScalaPlugin.plugin.isScalaProject(classFile.getJavaProject)) {
       val pfr = ancestorFragmentRoot(classFile)
-      pfr.map(scalaPackageFragments.getOrElse(_, true)).getOrElse(false)
+      // synchronized needed for visibility
+      scalaPackageFragments.synchronized {
+        pfr.map(scalaPackageFragments.getOrElse(_, true)).getOrElse(false)
+      }
     } else
       false
   }
