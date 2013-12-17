@@ -356,7 +356,13 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings) exten
     else if (sym.isModule) Object
     else if (sym.isType) Type
     else Val
-    val name = if (sym.isConstructor) sym.owner.decodedName else sym.decodedName
+
+    val name = if (sym.isConstructor)
+      sym.owner.decodedName
+    else if (sym.hasGetter)
+      (sym.getter: Symbol).decodedName
+    else sym.decodedName
+
     val signature =
       if (sym.isMethod) {
         name +

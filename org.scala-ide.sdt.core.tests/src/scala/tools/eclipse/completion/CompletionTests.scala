@@ -242,7 +242,6 @@ class CompletionTests {
     }
   }
 
-  @Ignore("Ignoring because failing spuriously on 2.11. See #1001973")
   @Test
   def relevanceSortingTests() {
     val unit = scalaCompilationUnit("relevance/RelevanceCompletions.scala")
