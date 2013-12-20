@@ -1510,4 +1510,17 @@
          <!-- END : do we need these? -->
     </kind>
  </extension>
+ <extension
+       point="org.eclipse.ui.decorators">
+    <decorator
+          class="scala.tools.eclipse.ui.ScalaDecorator"
+          id="scala.tools.eclipse.ui.ScalaDecorator"
+          label="Scala Decorations"
+          state="true"
+          lightweight="true">
+       <description>
+          Shows Scala specific icons
+       </description>
+    </decorator>
+ </extension>
 </plugin>
