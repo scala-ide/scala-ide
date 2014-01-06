@@ -76,29 +76,7 @@ object ScalaPlugin {
 
   def getShell: Shell = getWorkbenchWindow.map(_.getShell).orNull
 
-  def defaultScalaSettings(errorFn: String => Unit = Console.println): Settings = {
-    val settings = new Settings(errorFn) {
-      override val pluginsDir = StringSetting("-Xpluginsdir", "path", "Path to search compiler plugins.", "")
-    }
-    /* Setting the location to the plugins folder that contains the continuations plug-in.
-     * - Is this a hack? Yes.
-     * - Can we set this setting's default to be `ScalaPlugin.plugin.defaultPluginsDir`? No.
-     * - Why? Because the `defaultPluginsDir` changes each time the user updates the Scala IDE. Setting it as a
-     *        default would cause existing projects that have continuations enabled to fail compilation because
-     *        the old location (which doesn't exist anymore after upgrading) would end up being set in the
-     *        preference store. Check the implementation of `scala.tools.eclipse.properties.EclipseSetting$StringSetting.reset`.
-     *        Basically, when the user clicks on "Restore defaults" it would cause the current value of `defaultPluginsDir` to
-     *        be stored in the project's preference store.
-     * - And, why can we set this setting's value to be `ScalaPlugin.plugin.defaultPluginsDir` without incurring
-     *   in the above described issue? This works because of the way `scala.tools.eclipse.properties.EclipseSetting.toEclipseBox`
-     *   is currently implemented. `EclipseSetting` is the factory for creating the view components displayed in the Compiler
-     *   preference page. Basically, it uses '''solely''' the preference store to populate the view, hence any value passed in
-     *   the `setting.value` field is overridden. This has the consequence that no value is stored in the preference store for
-     *   the setting -XpluginsDir, which is exactly what we want.
-     */
-    settings.pluginsDir.tryToSetFromPropertyValue(ScalaPlugin.plugin.defaultPluginsDir)
-    settings
-  }
+  def defaultScalaSettings(errorFn: String => Unit = Console.println): Settings = new Settings(errorFn)
 }
 
 class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IResourceChangeListener with IElementChangedListener with HasLogger {
@@ -174,20 +152,6 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
   lazy val compilerClasses = OSGiUtils.getBundlePath(scalaCompilerBundle)
   lazy val compilerSources = OSGiUtils.pathInBundle(sdtCoreBundle, "/target/src/scala-compiler-src.jar")
 
-  /** The default location used to load compiler's plugins. The convention is that the scala-continuations-plugin.jar
-   * plugin should be always loaded, so that a user can enable continuations by only passing
-   * -P:continuations:enable flag. This matches `scalac` behavior. */
-  def defaultPluginsDir: String = {
-    Trim(continuationsPluginJar map { _.removeLastSegments(1).toOSString }) getOrElse {
-      eclipseLog.warn {
-        "Could not locate scalac's default plugins directory. " +
-        "If you plan on enabling the continuations plugin, please provide the full path to the directory " +
-        "containing the \"scala-continuations-plugin.jar\" plugin in the -XpluginDir compiler setting."
-      }
-      ""
-    }
-  }
-
   lazy val sbtCompilerBundle = Platform.getBundle(sbtPluginId)
   lazy val sbtCompilerInterfaceBundle = Platform.getBundle(sbtCompilerInterfaceId)
   lazy val sbtCompilerInterface = OSGiUtils.pathInBundle(sbtCompilerInterfaceBundle, "/")
@@ -219,11 +183,6 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
 
   lazy val swingClasses = OSGiUtils.pathInBundle(sdtCoreBundle, "/target/lib/scala-swing.jar")
   lazy val swingSources = OSGiUtils.pathInBundle(sdtCoreBundle, "/target/src/scala-swing-src.jar")
-
-  lazy val continuationsPluginJar = OSGiUtils.pathInBundle(sdtCoreBundle, "/target/lib/scala-continuations-plugin.jar")
-  lazy val continuationsLibraryClasses = OSGiUtils.pathInBundle(sdtCoreBundle, "/target/lib/scala-continuations-library.jar")
-  lazy val continuationsLibrarySources = OSGiUtils.pathInBundle(sdtCoreBundle, "/target/src/scala-continuations-library-src.jar")
-
 
   lazy val templateManager = new ScalaTemplateManager()
   lazy val headlessMode = System.getProperty(ScalaPlugin.HeadlessTest) ne null

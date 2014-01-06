@@ -36,10 +36,9 @@ abstract class ScalaClasspathContainerInitializer(desc : String) extends Classpa
   }
 
   protected def libraryEntries(classes: IPath, sources: Option[IPath]): IClasspathEntry = {
-    val srcs = sources.orNull
-    if(srcs eq null) logger.debug(s"No source attachements for ${classes.lastSegment()}")
+    if(sources.isEmpty) logger.debug(s"No source attachements for ${classes.lastSegment()}")
 
-    JavaCore.newLibraryEntry(classes, sources.getOrElse(null), null)
+    JavaCore.newLibraryEntry(classes, sources.orNull, null)
   }
 }
 
@@ -52,7 +51,6 @@ class ScalaLibraryClasspathContainerInitializer extends ScalaClasspathContainerI
     (reflectClasses, reflectSources),
     // modules:
     (actorsClasses, actorsSources),
-    (continuationsLibraryClasses, continuationsLibrarySources),
     (swingClasses, swingSources)
   ).flatMap { case (c, s) => c map { classes => libraryEntries(classes, s) }}
 }

@@ -1,59 +1,37 @@
 package scala.tools.eclipse.compiler.settings
 
-import scala.tools.eclipse.testsetup.TestProjectSetup
-import org.junit.Test
-import org.junit.Assert._
 import scala.tools.eclipse.ScalaPlugin
 import scala.tools.eclipse.SettingConverterUtil
-import scala.tools.eclipse.properties.PropertyStore
 import scala.tools.eclipse.properties.CompilerSettings
-import scala.tools.eclipse.javaelements.ScalaSourceFile
-import org.eclipse.core.resources.IMarker
+import scala.tools.eclipse.properties.PropertyStore
+import scala.tools.eclipse.testsetup.TestProjectSetup
+import org.junit.Assert._
+import org.junit.Test
+import org.junit.BeforeClass
+import org.junit.AfterClass
+import scala.tools.eclipse.EclipseUserSimulator
+import scala.tools.eclipse.ScalaProject
+import scala.tools.eclipse.util.EclipseUtils
 
-object CompilerSettingsTest extends TestProjectSetup("compiler-settings")
+object CompilerSettingsTest {
+  private val simulator = new EclipseUserSimulator
+  private var project: ScalaProject = _
 
-class CompilerSettingsTest {
-  import CompilerSettingsTest._
-
-  @Test
-  def presentation_compiler_report_errors_when_continuations_plugin_is_not_enabled() {
-    val source = scalaCompilationUnit("cps/CPS.scala")
-    openAndWaitUntilTypechecked(source)
-    assertTrue(Option(source.getProblems).toList.nonEmpty)
+  @BeforeClass
+  def createProject() {
+    project = simulator.createProjectInWorkspace("compiler-settings", true)
   }
 
-  @Test
-  def failingToBuildSourceThatRequiresContinuationPlugin() {
-    val unit = scalaCompilationUnit("cps/CPS.scala")
-
-    cleanProject()
-    fullProjectBuild()
-
-    val errors = allBuildErrorsOf(unit)
-
-    assertTrue(errors.nonEmpty)
-  }
-
-  @Test
-  def presentation_compiler_does_not_report_errors_when_continuations_plugin_is_enabled(): Unit = withContinuationPluginEnabled {
-    val source = scalaCompilationUnit("cps/CPS.scala")
-    openAndWaitUntilTypechecked(source)
-    assertTrue(Option(source.getProblems).toList.isEmpty)
-  }
-
-  @Test
-  def successfullyBuildingSourceRequiringContinuationPluginEnabled() {
-    withContinuationPluginEnabled {
-      val unit = scalaCompilationUnit("cps/CPS.scala")
-
-      cleanProject()
-      fullProjectBuild()
-
-      val errors = allBuildErrorsOf(unit).map(_.getAttribute(IMarker.MESSAGE)).toList
-
-      assertEquals("No errors expected", List(), errors)
+  @AfterClass
+  def deleteProject() {
+    EclipseUtils.workspaceRunnableIn(ScalaPlugin.plugin.workspaceRoot.getWorkspace) { _ =>
+      project.underlying.delete(true, null)
     }
   }
+}
+
+class CompilerSettingsTest {
+  import CompilerSettingsTest.project
 
   @Test
   def workspace_settings_are_correctly_propagated() {
@@ -65,7 +43,8 @@ class CompilerSettingsTest {
 
       setProjectSettings("deprecation", "false")
       assertFalse("Settings should not contain -deprecation: " + project.scalacArguments, project.scalacArguments.contains("-deprecation"))
-    } finally {
+    }
+    finally {
       setWorkspaceSettings("deprecation", "false")
     }
   }
@@ -98,32 +77,18 @@ class CompilerSettingsTest {
   }
 
   /** Set a workspace-wide setting value. For compiler settings, you need to strip the '-', for instance
-   *  call `setWorkspaceSettings("deprecation", ..") instead of "-deprecation"
-   */
+    * call `setWorkspaceSettings("deprecation", ..") instead of "-deprecation"
+    */
   private def setWorkspaceSettings(settingName: String, value: String) {
     ScalaPlugin.prefStore.setValue(settingName, value)
   }
 
   /** Set a project-scoped setting value. For compiler settings, you need to strip the '-', for instance
-   *  call `setWorkspaceSettings("deprecation", ..") instead of "-deprecation"
-   */
+    * call `setWorkspaceSettings("deprecation", ..") instead of "-deprecation"
+    */
   private def setProjectSettings(settingName: String, value: String) {
     val projectStore = new PropertyStore(project.underlying, ScalaPlugin.prefStore, ScalaPlugin.plugin.pluginId)
     projectStore.setValue(settingName, value)
     projectStore.save() // the project store is an in-memory snapshot, needs to be persisted this way
-  }
-
-  private def withContinuationPluginEnabled(body: => Unit) {
-    // this setting cannot be set per-project easily, since the `PropertyStore` class
-    // needs a call to .save, but that method is not on the interface. We make sure we're
-    // using workspace settings here
-    enableProjectSettings(false)
-    val value = project.storage.getString("P")
-    try {
-      project.storage.setValue("P", "continuations:enable")
-      body
-    } finally {
-      project.storage.setValue("P", value)
-    }
   }
 }
