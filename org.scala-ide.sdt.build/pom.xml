@@ -145,12 +145,6 @@
           <version>${scala.library.version}</version>
         </dependency>
         <dependency>
-          <groupId>org.scala-lang.plugins</groupId>
-          <artifactId>continuations</artifactId>
-          <classifier>sources</classifier>
-          <version>${scala.library.version}</version>
-        </dependency>
-        <dependency>
           <groupId>org.scala-lang</groupId>
           <artifactId>scala-actors</artifactId>
           <classifier>sources</classifier>
@@ -178,18 +172,6 @@
         </dependency>
 
         <!-- Source dependencies -->
-        <dependency>
-          <groupId>org.scala-lang.plugins</groupId>
-          <artifactId>scala-continuations-plugin_${scala.binary.version}</artifactId>
-          <classifier>sources</classifier>
-          <version>${scala-continuations-plugin.version}</version>
-        </dependency>
-        <dependency>
-          <groupId>org.scala-lang.plugins</groupId>
-          <artifactId>scala-continuations-library_${scala.binary.version}</artifactId>
-          <classifier>sources</classifier>
-          <version>${scala-continuations-library.version}</version>
-        </dependency>
         <dependency>
           <groupId>org.scala-lang</groupId>
           <artifactId>scala-actors</artifactId>

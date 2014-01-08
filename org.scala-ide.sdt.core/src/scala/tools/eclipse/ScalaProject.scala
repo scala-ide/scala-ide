@@ -397,22 +397,9 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
         setting
       }
 
-      /* Here we make sure that the default plugins directory location is part of the returned scalac arguments.
-       * This is needed to enable continuations, when the user didn't provide an explicit path in the -Xpluginsdir
-       * compiler setting.
-       */
-      val pluginsDirSetting = {
-        // if the user provided an explicit path for -Xpluginsdir, then it's all good.
-        if (userSettings.exists(setting => setting.name == defaultSettings.pluginsDir)) None
-        // otherwise, inject the `pluginsDir` setting as defined in `ScalaPlugin.defaultScalaSettings`, i.e., it will
-        // inject the default location where the scala-continuations-plugin.jar can be found. Mind that this location can change
-        // every time the user updates the Scala IDE.
-        else Some(defaultSettings.pluginsDir)
-      }
-
       val classpathSettings = List(defaultSettings.javabootclasspath, defaultSettings.bootclasspath)
 
-      (classpathSettings ++ pluginsDirSetting.toList ++ userSettings) map (_.unparse)
+      (classpathSettings ++ userSettings) map (_.unparse)
     }
     val extraArgs = defaultScalaSettings().splitParams(storage.getString(CompilerSettings.ADDITIONAL_PARAMS))
     shownArgs.flatten ++ encArgs ++ extraArgs

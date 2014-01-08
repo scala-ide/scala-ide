@@ -34,30 +34,32 @@ abstract class ScalaClasspathContainerInitializer(desc : String) extends Classpa
       def getKind = IClasspathContainer.K_SYSTEM
     }), null)
   }
+
+  protected def libraryEntries(classes: IPath, sources: Option[IPath]): IClasspathEntry = {
+    if(sources.isEmpty) logger.debug(s"No source attachements for ${classes.lastSegment()}")
+
+    JavaCore.newLibraryEntry(classes, sources.orNull, null)
+  }
 }
 
 class ScalaLibraryClasspathContainerInitializer extends ScalaClasspathContainerInitializer("Scala Library") {
   val plugin = ScalaPlugin.plugin
   import plugin._
-  def libraryEntries(classes: Option[IPath], sources: Option[IPath]) =
-    classes.map(classes => JavaCore.newLibraryEntry(classes, sources.getOrElse(null), null))
-  def entries = Array(
+
+  override def entries = Array(
     (libClasses, libSources),
     (reflectClasses, reflectSources),
     // modules:
     (actorsClasses, actorsSources),
-    (continuationsLibraryClasses, continuationsLibrarySources),
     (swingClasses, swingSources)
-  ).flatMap{case (c, s) => libraryEntries(c, s)}
+  ).flatMap { case (c, s) => c map { classes => libraryEntries(classes, s) }}
 }
 
 class ScalaCompilerClasspathContainerInitializer extends ScalaClasspathContainerInitializer("Scala Compiler") {
   val plugin = ScalaPlugin.plugin
   import plugin._
 
-  def entries = Array(
-    JavaCore.newLibraryEntry(compilerClasses.get, compilerSources.getOrElse(null), null)
-  )
+  override def entries = Array(libraryEntries(compilerClasses.get, compilerSources))
 }
 
 abstract class ScalaClasspathContainerPage(id : String, name : String, title : String, desc : String) extends NewElementWizardPage(name) with IClasspathContainerPage {
