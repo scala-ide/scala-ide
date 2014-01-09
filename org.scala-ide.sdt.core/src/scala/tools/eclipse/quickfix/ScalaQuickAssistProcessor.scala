@@ -29,15 +29,17 @@ class ScalaQuickAssistProcessor extends IQuickAssistProcessor with HasLogger {
     context.getCompilationUnit match {
       case ssf: ScalaSourceFile =>
         import EditorUtils._
-        ExplicitReturnType.suggestsFor(ssf, context.getSelectionOffset).toArray ++
-        openEditorAndApply(ssf) { editor =>
+        val assists = openEditorAndApply(ssf) { editor =>
           val corrections = getAnnotationsAtOffset(editor, context.getSelectionOffset()) flatMap {
             case (ann, pos) =>
               suggestAssist(context.getCompilationUnit(), ann.getText, pos)
           }
-          if (corrections.isEmpty) null
-          else corrections.toArray.distinct
+          corrections.toArray.distinct
         }
+        val allAssists = ExplicitReturnType.suggestsFor(ssf, context.getSelectionOffset).toArray ++ assists
+
+        if(allAssists.isEmpty) null
+        else allAssists
       case _ => null
     }
 
