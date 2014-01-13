@@ -42,6 +42,8 @@ class ScalaCompilerPreferenceInitializer extends AbstractPreferenceInitializer {
       store.setDefault(convertNameToProperty(ScalaPluginSettings.relationsDebug.name), false)
       store.setDefault(convertNameToProperty(ScalaPluginSettings.apiDiff.name), false)
       store.setDefault(convertNameToProperty(ScalaPluginSettings.withVersionClasspathValidator.name), true)
+      store.setDefault(convertNameToProperty(ScalaPluginSettings.recompileOnMacroDef.name), true)
+      store.setDefault(convertNameToProperty(ScalaPluginSettings.nameHashing.name), false)
     }
   }
 }

@@ -28,6 +28,7 @@ import sbt.inc.AnalysisStore
 import sbt.inc.Analysis
 import sbt.inc.FileBasedStore
 import sbt.inc.Incremental
+import sbt.inc.IncOptions
 import sbt.compiler.IC
 import sbt.compiler.CompileFailed
 import org.eclipse.core.resources.IProject
@@ -144,7 +145,9 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings)
   private def setCached(a: Analysis): Analysis = {
    cached set new SoftReference[Analysis](a); a
   }
-  private[sbtintegration] def latestAnalysis: Analysis = Option(cached.get) flatMap (ref => Option(ref.get)) getOrElse setCached(IC.readAnalysis(cacheFile))
+  // take by-name argument because we need incOptions only when we have a cache miss
+  private[sbtintegration] def latestAnalysis(incOptions: => IncOptions): Analysis =
+    Option(cached.get) flatMap (ref => Option(ref.get)) getOrElse setCached(IC.readAnalysis(cacheFile, incOptions))
 
   private val cachePath = project.underlying.getFile(".cache")
   private def cacheFile = cachePath.getLocation.toFile
