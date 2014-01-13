@@ -130,8 +130,6 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings)
   }
 
   private def runCompiler(sources: Seq[File]) {
-    System.setProperty(Incremental.incDebugProp,
-      project.storage.getString(SettingConverterUtil.convertNameToProperty(ScalaPluginSettings.debugIncremental.name)))
     val inputs = new SbtInputs(sources.toSeq, project, monitor, new SbtProgress, cacheFile, sbtReporter, sbtLogger)
     val analysis =
       try
