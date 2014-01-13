@@ -36,17 +36,20 @@ class SbtInputs(sourceFiles: Seq[File], project: ScalaProject, javaMonitor: SubM
         Maybe.just(Analysis.Empty)
       else
         allProjects.find(_.sourceOutputFolders.map(_._2.getLocation.toFile) contains f) map (_.buildManager) match {
-          case Some(sbtManager: EclipseSbtBuildManager) => Maybe.just(sbtManager.latestAnalysis)
+          case Some(sbtManager: EclipseSbtBuildManager) => Maybe.just(sbtManager.latestAnalysis(incOptions))
           case _ => Maybe.just(Analysis.Empty)
         }
     def progress = Maybe.just(scalaProgress)
     def reporter = scalaReporter
-    override def incrementalCompilerOptions: java.util.Map[String, String] = {
-      val incOptions = sbt.inc.IncOptions.Default.copy(
-          apiDebug = project.storage.getBoolean(SettingConverterUtil.convertNameToProperty(properties.ScalaPluginSettings.apiDiff.name)),
-          relationsDebug = project.storage.getBoolean(SettingConverterUtil.convertNameToProperty(properties.ScalaPluginSettings.relationsDebug.name)),
-          apiDumpDirectory = None)
+    override def incrementalCompilerOptions: java.util.Map[String, String] =
       sbt.inc.IncOptions.toStringMap(incOptions)
+
+    private def incOptions: sbt.inc.IncOptions = {
+      sbt.inc.IncOptions.Default.
+        withApiDebug(project.storage.getBoolean(SettingConverterUtil.convertNameToProperty(properties.ScalaPluginSettings.apiDiff.name))).
+        withRelationsDebug(project.storage.getBoolean(SettingConverterUtil.convertNameToProperty(properties.ScalaPluginSettings.relationsDebug.name))).
+        withRecompileOnMacroDef(project.storage.getBoolean(SettingConverterUtil.convertNameToProperty(properties.ScalaPluginSettings.recompileOnMacroDef.name))).
+        withNameHashing(project.storage.getBoolean(SettingConverterUtil.convertNameToProperty(properties.ScalaPluginSettings.nameHashing.name)))
     }
   }
 

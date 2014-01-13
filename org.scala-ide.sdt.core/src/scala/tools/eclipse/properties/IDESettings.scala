@@ -35,7 +35,9 @@ object IDESettings {
         stopBuildOnErrors,
         relationsDebug,
         apiDiff,
-        withVersionClasspathValidator)))
+        withVersionClasspathValidator,
+        recompileOnMacroDef,
+        nameHashing)))
 }
 
 object ScalaPluginSettings extends Settings {
@@ -46,4 +48,6 @@ object ScalaPluginSettings extends Settings {
   val relationsDebug = BooleanSetting("-relationsDebug", "Log very detailed information about relations, such as dependencies between source files.")
   val withVersionClasspathValidator = BooleanSetting("-withVersionClasspathValidator", "Check Scala compatibility of jars in classpath")
   val apiDiff = BooleanSetting("-apiDiff", "Log type diffs that trigger additional compilation (slows down builder)")
+  val recompileOnMacroDef = BooleanSetting("-recompileOnMacroDef", "Always recompile all dependencies of a macro def")
+  val nameHashing = BooleanSetting("-nameHashing", "Enable improved (experimental) incremental compilation algorithm")
 }
