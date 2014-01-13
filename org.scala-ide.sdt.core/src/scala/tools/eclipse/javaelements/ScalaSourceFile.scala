@@ -84,12 +84,13 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
    *  the loaded files managed by the presentation compiler.
    */
   override def scheduleReconcile(): Response[Unit] = {
-    // askReload first
-    // FIXME: Here we are calling a deprecated method (i.e., withPresentationCompiler) because the only way I see to fix
-    //        this without changing this method's signature is introducing a `NullResponse` object.
-    val res = scalaProject.withPresentationCompiler { compiler =>
+    val reloaded = scalaProject.presentationCompiler { compiler =>
       compiler.askReload(this, getContents)
-    } ()
+    } getOrElse {
+      val dummy = new Response[Unit]
+      dummy.set(())
+      dummy
+    }
 
     this.reconcile(
         ICompilationUnit.NO_AST,
@@ -97,7 +98,7 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
         null /* use primary owner */,
         null /* no progress monitor */);
 
-    res
+    reloaded
   }
 
   /* getProblems should be reserved for a Java context, @see getProblems */
