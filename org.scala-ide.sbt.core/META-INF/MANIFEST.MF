@@ -29,10 +29,8 @@ Import-Package:
  scala.tools.eclipse.util
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ClassPath: .,
- target/lib/sbt-rc-remote-controller.jar,
- target/lib/sbt-rc-props.jar,
- target/lib/akka-actor_2.10.jar,
- target/lib/config.jar,
+ target/lib/control.jar,
  target/lib/io.jar,
- target/lib/collections.jar
+ target/lib/akka-actor_2.10.jar,
+ target/lib/sbt-rc-remote-controller.jar
 Bundle-Activator: org.scalaide.sbt.core.SbtRemotePlugin

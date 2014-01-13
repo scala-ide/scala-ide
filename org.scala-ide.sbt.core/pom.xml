@@ -27,43 +27,19 @@
               <artifactItems>
                 <artifactItem>
                   <groupId>com.typesafe.sbtrc</groupId>
-                  <artifactId>sbt-rc-props</artifactId>
-                </artifactItem>
-                <artifactItem>
-                  <groupId>com.typesafe.sbtrc</groupId>
                   <artifactId>sbt-rc-remote-controller</artifactId>
-                </artifactItem>
-                <artifactItem>
-                  <groupId>com.typesafe.sbtrc</groupId>
-                  <artifactId>sbt-rc-ui-interface-0-12</artifactId>
-                </artifactItem>
-                <artifactItem>
-                  <groupId>com.typesafe.sbtrc</groupId>
-                  <artifactId>sbt-rc-probe-0-12</artifactId>
-                </artifactItem>
-                <artifactItem>
-                  <groupId>com.typesafe.sbtrc</groupId>
-                  <artifactId>sbt-rc-ui-interface-0-13</artifactId>
-                </artifactItem>
-                <artifactItem>
-                  <groupId>com.typesafe.sbtrc</groupId>
-                  <artifactId>sbt-rc-probe-0-13</artifactId>
                 </artifactItem>
                 <artifactItem>
                   <groupId>com.typesafe.akka</groupId>
                   <artifactId>akka-actor_2.10</artifactId>
                 </artifactItem>
                 <artifactItem>
-                  <groupId>com.typesafe</groupId>
-                  <artifactId>config</artifactId>
+                  <groupId>org.scala-sbt</groupId>
+                  <artifactId>control</artifactId>
                 </artifactItem>
                 <artifactItem>
                   <groupId>org.scala-sbt</groupId>
                   <artifactId>io</artifactId>
-                </artifactItem>
-                <artifactItem>
-                  <groupId>org.scala-sbt</groupId>
-                  <artifactId>collections</artifactId>
                 </artifactItem>
                 <artifactItem>
                  <groupId>org.scala-sbt</groupId>

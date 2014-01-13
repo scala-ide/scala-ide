@@ -4,7 +4,6 @@ import org.eclipse.jface.wizard.WizardPage
 import org.eclipse.swt.widgets.Composite
 import org.eclipse.swt.SWT._
 import java.io.File
-import org.scalaide.sbt.core.SbtRemoteProcess
 import org.eclipse.swt.widgets.Label
 import org.eclipse.swt.layout.GridLayout
 
@@ -29,7 +28,7 @@ class ImportSbtBuildProjectSelectionWizardPage extends WizardPage("projectSelect
     super.setVisible(visible)
     if (visible) {
       val buildRoot = new File(getPreviousPage().asInstanceOf[ImportSbtBuildRootSelectionWizardPage].buildRootEditor.getStringValue())
-      nameLabel.setText(SbtRemoteProcess.getCachedProcessFor(buildRoot).getName())
+//      nameLabel.setText(SbtRemoteProcess.getCachedProcessFor(buildRoot).getName())
       getControl().pack()
     }
   }
