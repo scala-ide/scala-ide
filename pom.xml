@@ -19,43 +19,18 @@
   <packaging>pom</packaging>
 
   <properties>
-    <sbtrc.version>1.0-93069d2b6b47b824c5e5a9efbd72cebaed6ef8db</sbtrc.version>
+    <sbtrc.version>1.0-d5cec89ab0ae1f45d816f379a7896f93ed24d061</sbtrc.version>
     <sbtrc.repo>http://download.scala-ide.org/tmp-luc/sbt-rc/m2repo/</sbtrc.repo>
     <akka.version>2.2.0</akka.version>
     <config.version>1.0.0</config.version>
-    <sbt.version>0.13.0</sbt.version>
-    <sbtlaunch.version>0.13.0</sbtlaunch.version>
+    <sbt.version>0.13.2-M1</sbt.version>
+    <sbtlaunch.version>0.13.2-M1</sbtlaunch.version>
   </properties>
 
   <dependencies>
     <dependency>
       <groupId>com.typesafe.sbtrc</groupId>
-      <artifactId>sbt-rc-props</artifactId>
-      <version>${sbtrc.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.typesafe.sbtrc</groupId>
       <artifactId>sbt-rc-remote-controller</artifactId>
-      <version>${sbtrc.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.typesafe.sbtrc</groupId>
-      <artifactId>sbt-rc-ui-interface-0-12</artifactId>
-      <version>${sbtrc.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.typesafe.sbtrc</groupId>
-      <artifactId>sbt-rc-probe-0-12</artifactId>
-      <version>${sbtrc.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.typesafe.sbtrc</groupId>
-      <artifactId>sbt-rc-ui-interface-0-13</artifactId>
-      <version>${sbtrc.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.typesafe.sbtrc</groupId>
-      <artifactId>sbt-rc-probe-0-13</artifactId>
       <version>${sbtrc.version}</version>
     </dependency>
     <dependency>
@@ -64,18 +39,13 @@
       <version>${akka.version}</version>
     </dependency>
     <dependency>
-      <groupId>com.typesafe</groupId>
-      <artifactId>config</artifactId>
-      <version>${config.version}</version>
-    </dependency>
-    <dependency>
       <groupId>org.scala-sbt</groupId>
-      <artifactId>io</artifactId>
+      <artifactId>control</artifactId>
       <version>${sbt.version}</version>
     </dependency>
     <dependency>
       <groupId>org.scala-sbt</groupId>
-      <artifactId>collections</artifactId>
+      <artifactId>io</artifactId>
       <version>${sbt.version}</version>
     </dependency>
     <dependency>
