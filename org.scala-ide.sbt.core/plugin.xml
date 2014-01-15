@@ -53,13 +53,13 @@
          point="org.eclipse.ui.importWizards">
       <category
             id="org.scalaide.sbt.core.importCategory"
-            name="sbt">
+            name="Sbt">
       </category>
       <wizard
             category="org.scalaide.sbt.core.importCategory"
-            class="org.scalaide.sbt.core.wizard.ImportSbtBuildWizard"
+            class="org.scalaide.sbt.ui.wizard.ProjectBuildImportWizard"
             icon="icons/sample.gif"
-            id="org.scalaide.sbt.core.wizards.ImportSbtBuild"
+            id="org.scalaide.sbt.ui.wizards.ImportSbtBuild"
             name="Import Sbt Build">
          <description>
             Import projects from an sbt build into the workspace
