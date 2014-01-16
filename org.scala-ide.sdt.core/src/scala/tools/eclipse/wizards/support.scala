@@ -34,15 +34,14 @@ trait BufferSupport {
   def writeTo(buffer: Buffer)(implicit ld: String) {
     val s = contents
 
-    if(offset == -1) {
-    offset = buffer.getLength
-    buffer.append(s)
-  }
-  else {
-    buffer.replace(offset, length, s)
-  }
+    if (offset == -1) {
+      offset = buffer.getLength
+      buffer.append(s)
+    } else {
+      buffer.replace(offset, length, s)
+    }
 
-  length = s.length
+    length = s.length
   }
 }
 
@@ -67,23 +66,23 @@ trait QualifiedNameSupport extends SuperTypeSupport {
   private val toJavaParameters = (c: Char) => c != '<'
 
   private val splitOffParameters = (s: String) =>
-    if(s.contains('['))
+    if (s.contains('['))
       s span toScalaParameters
-    else if(s.contains('<'))
+    else if (s.contains('<'))
       s span toJavaParameters
     else
       (s, "")
 
   private val removeBrackets = (s: String) =>
-    if(s.size > 2) s.slice(1, s.length-1) else ""
+    if (s.size > 2) s.slice(1, s.length - 1) else ""
 
   private val makeList = (s: String) =>
-    if(s.length > 0) s.split(',').toList else Nil
+    if (s.length > 0) s.split(',').toList else Nil
 
   private val listOf = makeList compose removeBrackets
 
   val withoutPackage = (st: SuperType) => {
-  val st3 = if(st._3.nonEmpty) st._3.mkString("[",",","]") else ""
+    val st3 = if (st._3.nonEmpty) st._3.mkString("[", ",", "]") else ""
     st._2 + st3
   }
 

@@ -132,7 +132,7 @@ abstract class AbstractNewElementWizardPage extends NewTypeWizardPage(1, "") wit
     }
   }
 
-  val fFolderButton= new SelectionButtonDialogField(SWT.CHECK);
+  val fFolderButton = new SelectionButtonDialogField(SWT.CHECK);
   fFolderButton.setDialogFieldListener(folderButtonListener);
   fFolderButton.setLabelText("Folder:")
   fFolderButton.setSelection(false)
@@ -149,7 +149,6 @@ abstract class AbstractNewElementWizardPage extends NewTypeWizardPage(1, "") wit
   fFolderField.setButtonLabel("Browse...");
 
   val fSelectedFolderCompletionProcessor = new JavaPackageCompletionProcessor()
-
 
   protected var createdType: IType = _
 
@@ -349,7 +348,7 @@ abstract class AbstractNewElementWizardPage extends NewTypeWizardPage(1, "") wit
   }
 
   protected def makeCreatedType(implicit parentCU: ICompilationUnit) = {
-     createdType = parentCU.getType(getGeneratedTypeName)
+    createdType = parentCU.getType(getGeneratedTypeName)
   }
 
   def getPackageFragmentForFile() = getFolderName match {
@@ -390,10 +389,10 @@ abstract class AbstractNewElementWizardPage extends NewTypeWizardPage(1, "") wit
         case ipf: IPackageFragment => ipf
         case _ => rt.getPackageFragment("")
       }
-      if(p.exists) monitor.worked(1)
+      if (p.exists) monitor.worked(1)
       else {
         p = rt.createPackageFragment(pf.getElementName, true,
-        new SubProgressMonitor(monitor, 1))
+          new SubProgressMonitor(monitor, 1))
       }
       p
     }
@@ -468,8 +467,8 @@ abstract class AbstractNewElementWizardPage extends NewTypeWizardPage(1, "") wit
 
       if (monitor.isCanceled) throw new InterruptedException()
 
-      val formatter= new ScalaFormatterCleanUpProvider()
-      val textChange= formatter.createCleanUp(cu).createChange(monitor)
+      val formatter = new ScalaFormatterCleanUpProvider()
+      val textChange = formatter.createCleanUp(cu).createChange(monitor)
       textChange.perform(monitor)
 
       cu.commitWorkingCopy(true, new SubProgressMonitor(monitor, 1))
@@ -481,9 +480,11 @@ abstract class AbstractNewElementWizardPage extends NewTypeWizardPage(1, "") wit
     }
   }
 
-  /** Return the package declaration used in the resources created by the wizard.
+  /**
+   * Return the package declaration used in the resources created by the wizard.
    * This is needed because the package declaration may be different from the
-   * file's location (as in the case of a `package object`).*/
+   * file's location (as in the case of a `package object`).
+   */
   protected def getPackageNameToInject =
     if (!getPackageFragment.isDefaultPackage) Some(getPackageFragment.getElementName)
     else None
