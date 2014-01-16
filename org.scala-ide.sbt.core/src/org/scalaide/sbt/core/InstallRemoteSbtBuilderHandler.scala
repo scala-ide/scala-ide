@@ -29,8 +29,6 @@ class InstallRemoteSbtBuilderHandler extends AbstractHandler{
           switchBuilder(project)
         }
     }
-
-    println("do it")
     null // from javadoc spec
   }
   
