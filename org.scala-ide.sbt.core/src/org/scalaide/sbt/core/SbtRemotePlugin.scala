@@ -29,13 +29,11 @@ class SbtRemotePlugin extends AbstractUIPlugin {
     plugin = this
   }
 
-  /** Returns the location on the file system of the bundled file.
-   */
+  /** Returns the location on the file system of the bundled file. */
   private def fileLocationInBundle(filePath: String): File =
     new File(urlInBundle(filePath).getPath())
 
-  /** Return the URL of the file on the file system of the bundled file.
-   */
+  /** Return the URL of the file on the file system of the bundled file. */
   private def urlInBundle(filePath: String): URL =
     FileLocator.toFileURL(FileLocator.find(getBundle, Path.fromPortableString(filePath), null))
     

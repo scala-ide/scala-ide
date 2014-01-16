@@ -6,8 +6,7 @@ import java.io.FileOutputStream
 
 object SbtrcProperties {
 
-  /** Generate the content of the sbtrc.properties file
-   */
+  /** Generate the content of the sbtrc.properties file */
   def content(version: String, resources: List[String]) = s"""
 [scala]
   version: auto
@@ -28,8 +27,7 @@ object SbtrcProperties {
   maven-central
 """
 
-  /** Create a sbtrc.properties file with the right content, and return its location
-   */
+  /** Create a sbtrc.properties file with the right content, and return its location */
   def generateFile(version: String, resources: List[String]): File = {
 
     val file = File.createTempFile("sbtrc", ".properties")
