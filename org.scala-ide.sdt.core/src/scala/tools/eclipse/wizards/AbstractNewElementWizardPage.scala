@@ -525,7 +525,7 @@ abstract class AbstractNewElementWizardPage extends NewTypeWizardPage(1, "") wit
     if (pack != null) {
 
       val project = pack.getJavaProject
-
+      val scalaProject = plugin.asScalaProject(project.getProject)
       try {
         if (!plugin.isScalaProject(project.getProject)) {
           val msg = project.getElementName + " is not a Scala project"
@@ -540,10 +540,14 @@ abstract class AbstractNewElementWizardPage extends NewTypeWizardPage(1, "") wit
 
       if (!isEnclosingTypeSelected && (status.getSeverity < IStatus.ERROR)) {
         try {
-          val theType = project.findType(pack.getElementName, getGeneratedTypeName)
-          if (theType != null) {
-            status.setError(
-              NewWizardMessages.NewTypeWizardPage_error_TypeNameExists)
+          val doubleDef =
+            scalaProject.flatMap(
+              _.presentationCompiler(compiler =>
+                compiler.askOption { () => compiler.rootMirror.getClassIfDefined(getFullyQualifiedName) != compiler.NoSymbol } ))
+              .flatten.getOrElse(false)
+
+          if (doubleDef) {
+            status.setError(NewWizardMessages.NewTypeWizardPage_error_TypeNameExists)
           }
         } catch {
           case _: JavaModelException =>
