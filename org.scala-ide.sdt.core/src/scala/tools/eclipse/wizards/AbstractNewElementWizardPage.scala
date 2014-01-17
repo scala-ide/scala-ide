@@ -57,6 +57,7 @@ import scala.tools.eclipse.ScalaPlugin._
 import scala.tools.eclipse.formatter.ScalaFormatterCleanUpProvider
 import scala.tools.eclipse.javaelements.ScalaSourceFile
 import scala.tools.eclipse.logging.HasLogger
+import scala.tools.eclipse.ScalaPlugin
 
 abstract class AbstractNewElementWizardPage extends NewTypeWizardPage(1, "") with HasLogger {
 
@@ -303,7 +304,8 @@ abstract class AbstractNewElementWizardPage extends NewTypeWizardPage(1, "") wit
     setSuperClass(DEFAULT_SUPER_TYPE, true)
 
     createSuperInterfacesControls(composite, columns)
-    createMethodStubSelectionControls(composite, columns)
+    // disabled until we can generate code properly
+//    createMethodStubSelectionControls(composite, columns)
     createCommentControls(composite, columns)
     enableCommentControl(true)
 
@@ -437,30 +439,32 @@ abstract class AbstractNewElementWizardPage extends NewTypeWizardPage(1, "") wit
         def replace(offset: Int, length: Int, text: String) = underlying.replace(offset, length, text)
         def getContents() = underlying.getContents()
       }
-      //start control of buffer
-      val cb = CodeBuilder(getPackageNameToInject.getOrElse(""), superTypes, buffer)
-      cb.append(commentTemplate(comment(getFileComment _)))
-      cb.append(packageTemplate(getPackageNameToInject))
-      cb.writeImports // to buffer
-      cb.append(commentTemplate(comment(getTypeComment _)))
-      cb.append(elementModifiers)
-      cb.append(declarationType.toLowerCase)
-      cb.createElementDeclaration(getTypeName, superTypes, buffer)
-      cb.append(bodyStub)
 
-      reconcile(cu = parentCU)
+      val scalaProject = ScalaPlugin.plugin.asScalaProject(parentCU.getJavaProject.getProject).get
 
-      makeCreatedType(parentCU)
+      scalaProject.presentationCompiler { compiler =>
+        compiler.askOption[Unit] { () =>
+          //start control of buffer
+          val cb = CodeBuilder(getPackageNameToInject.getOrElse(""), superTypes, buffer, scalaProject.presentationCompiler)
+          cb.append(commentTemplate(comment(getFileComment _)))
+          cb.append(packageTemplate(getPackageNameToInject))
+          cb.writeImports // to buffer
+          cb.append(commentTemplate(comment(getTypeComment _)))
+          cb.append(elementModifiers)
+          cb.append(declarationType.toLowerCase)
+          cb.createElementDeclaration(getTypeName, superTypes, buffer)
+          cb.append(bodyStub)
 
-      // refine the created type
-      val typeHierarchy = createdType.newSupertypeHierarchy(Array(parentCU),
-        new SubProgressMonitor(monitor, 1))
+          //      reconcile(cu = parentCU)
 
-      cb.finishReWrites(typeHierarchy, createdType)(
-        createConstructorsSelected)(createInheritedSelected)(
-          createMainSelected)
+          makeCreatedType(parentCU)
 
-      //end control of buffer
+          cb.finishReWrites(createdType)(createConstructorsSelected)(createInheritedSelected)(createMainSelected)
+
+          //end control of buffer
+
+        }
+      }
 
       val cu = createdType.getCompilationUnit
       reconcile(cu = cu)

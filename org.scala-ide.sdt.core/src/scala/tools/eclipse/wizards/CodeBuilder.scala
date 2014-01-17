@@ -11,10 +11,10 @@ import org.eclipse.jdt.core.IMethod
 import org.eclipse.jdt.core.IType
 import org.eclipse.jdt.core.ITypeHierarchy
 import org.eclipse.jdt.core.Signature
-
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.ListBuffer
 import scala.reflect.NameTransformer
+import scala.tools.eclipse.ScalaPresentationCompilerProxy
 
 trait CodeBuilder {
 
@@ -23,6 +23,7 @@ trait CodeBuilder {
 
   val imports: ImportSupport
   val buffer: Buffer
+  val compilerProxy: ScalaPresentationCompilerProxy
 
   protected val convertAndAdd = (s: String) => {
     imports.addImport(convertSignature(s))
@@ -37,14 +38,14 @@ trait CodeBuilder {
     imports.writeTo(buffer)
   }
 
-  def finishReWrites(typeHierarchy: ITypeHierarchy, createdType: IType)(createConstructorsSelected: Boolean)(createInheritedSelected: Boolean)(createMainSelected: Boolean)(implicit ld: String) {
+  def finishReWrites(createdType: IType)(createConstructorsSelected: Boolean)(createInheritedSelected: Boolean)(createMainSelected: Boolean)(implicit ld: String) {
     val sb = new StringBuilder
 
     if (createConstructorsSelected)
-      sb.append(unimplemetedConstructors(typeHierarchy, createdType))
+      sb.append(unimplemetedConstructors(createdType))
 
     if (createInheritedSelected)
-      sb.append(unimplemetedMethods(typeHierarchy, createdType))
+      sb.append(unimplemetedMethods(createdType))
 
     if (createMainSelected)
       sb.append(createMain)
@@ -86,19 +87,19 @@ trait CodeBuilder {
   def createMain(implicit ld: String): String =
     ld + "  def main(args: Array[String]): Unit = {  }" + ld
 
-  def unimplemetedConstructors(typeHierarchy: ITypeHierarchy, newType: IType)(implicit ld: String): String
+  def unimplemetedConstructors(newType: IType)(implicit ld: String): String
 
-  def unimplemetedMethods(typeHierarchy: ITypeHierarchy, newType: IType)(implicit ld: String): String
+  def unimplemetedMethods(newType: IType)(implicit ld: String): String
 }
 
 object CodeBuilder {
 
   import BufferSupport._
 
-  def apply(packageName: String, superTypes: List[String], buffer: Buffer): CodeBuilder = {
+  def apply(packageName: String, superTypes: List[String], buffer: Buffer, proxy: ScalaPresentationCompilerProxy): CodeBuilder = {
     val imports = ImportSupport(packageName)
     imports.addImports(superTypes)
-    new CodeBuilderImpl(imports, superTypes, buffer)
+    new CodeBuilderImpl(imports, superTypes, buffer, proxy)
   }
 
   private val lhm: HashMap[String, BufferSupport] = HashMap.empty
@@ -252,10 +253,10 @@ object CodeBuilder {
     }
   }
 
-  private class CodeBuilderImpl(val imports: ImportSupport, superTypes: List[String], val buffer: Buffer)
-                extends QualifiedNameSupport
-                with BufferSupport
-                with CodeBuilder {
+  private class CodeBuilderImpl(val imports: ImportSupport,
+      superTypes: List[String],
+      val buffer: Buffer,
+      val compilerProxy: ScalaPresentationCompilerProxy) extends QualifiedNameSupport with BufferSupport with CodeBuilder {
 
     private val generatedMethods: ListBuffer[String] = ListBuffer()
     private val generatedConstructors: ListBuffer[String] = ListBuffer()
@@ -264,67 +265,46 @@ object CodeBuilder {
       (generatedConstructors map (s => ld + "  " + s + ld)
         ++= generatedMethods map (s => ld + "  " + s + ld)).mkString
 
-    def unimplemetedConstructors(typeHierarchy: ITypeHierarchy, newType: IType)(implicit ld: String) = {
+    /** This code is a translation of the previous attempt (based on JDT Type Hierarchy)
+     *  to auto-generate constructor code. It fails in many ways, but it shows how the
+     *  presentation compiler could be used to do it.
+     */
+    override def unimplemetedConstructors(newType: IType)(implicit ld: String) = {
+
       val astc: ListBuffer[IMethod] = ListBuffer()
 
-      typeHierarchy.getSuperclass(newType).getMethods.foreach { scm =>
-        if (scm.isConstructor)
-          astc += scm
-      }
+      compilerProxy { comp =>
+        val sym = comp.rootMirror.getClassIfDefined(superTypes.head)
+        val ctors = sym.info.members.filter(_.isConstructor).toSeq
 
-      val sastc = astc.sorted(constructorIMethodOrdering)
-      for {
-        stc <- sastc.headOption
-        pn = stc.getParameterNames map (pn => Name(pn))
-        pt = stc.getParameterTypes map (pt => Type(Name(convertAndAdd(pt))))
-        nt = pn zip pt map (nt => Arg(nt._1, nt._2))
-        ag = new Args(nt.toList)
-      } addConstructorArgs(ag)
+        //      val sastc = astc.sorted(constructorIMethodOrdering)
+        for {
+          ctor <- ctors
+          pn = ctor.info.params map (pn => Name(pn.nameString))
+          pt = ctor.info.params map (param => Type(Name(param.info.toString))) //Type(Name(convertAndAdd(pt))))
+          nt = pn zip pt map (nt => Arg(nt._1, nt._2))
+          ag = new Args(nt.toList)
+        } addConstructorArgs(ag)
 
-      for {
-        stc <- sastc
-        pn = stc.getParameterNames.map(pn => Name(pn)).toList
-        pt = stc.getParameterTypes map (pt => Type(Name(convertAndAdd(pt))))
-        nt = pn zip pt map (nt => Arg(nt._1, nt._2))
-        if (nt.nonEmpty)
-        ag = new Args(nt.init.toList)
-        pl = new ParamNames(pn.dropRight(1) :+ Name("null"))
-      } generatedConstructors += eval(AuxCons(ag, ConsBody(pl)))
-
-      generatedConstructors.map(s => ld + "  " + s + ld).toList.mkString
-    }
-
-    def unimplemetedMethods(typeHierarchy: ITypeHierarchy, newType: IType)(implicit ld: String) = {
-      val astm: ListBuffer[IMethod] = ListBuffer()
-      val istm: ListBuffer[IMethod] = ListBuffer()
-      val istf: ListBuffer[IField] = ListBuffer()
-      typeHierarchy getAllSupertypes (newType) foreach { st =>
-        istf ++= st.getFields
-        st.getMethods.foreach { stm =>
-          if (Flags.isAbstract(stm.getFlags) && !similarMethod(stm, astm)
-            && !similarMethod(stm, istm)
-            && !overridenByField(stm, istf))
-            astm += stm
-          else
-            istm += stm
+        for {
+          ctor <- ctors
+          pn = ctor.info.params map (pn => Name(pn.nameString))
+          pt = ctor.info.params map (param => Type(Name(param.info.toString))) //Type(Name(convertAndAdd(pt))))
+          nt = pn zip pt map (nt => Arg(nt._1, nt._2))
+          if (nt.nonEmpty)
+          ag = new Args(nt.init.toList)
+          pl = new ParamNames(pn.dropRight(1) :+ Name("null"))
+        } {
+          println(AuxCons(ag, ConsBody(pl)))
+          generatedConstructors += eval(AuxCons(ag, ConsBody(pl)))
         }
-      }
 
-      for {
-        stm <- astm
-        md = Mods(methodModifiers(stm))
-        nm = Name(NameTransformer.decode(elementName(stm).get))
-        tp = stm.getTypeParameters map (tp => TypeParam(Name(tp.getElementName), TypeBounds()))
-        ts = TypeParams(toOption(tp.toList)(tp.length > 0))
-        pn = stm.getParameterNames map (pn => Name(pn))
-        pt = stm.getParameterTypes map (pt => Type(Name(convertAndAdd(pt))))
-        nt = pn zip pt map (nt => Arg(nt._1, nt._2))
-        ag = new Args(nt.toList)
-        r = Result(Type(Name(convertAndAdd(returnType(stm).get))), Value(returnValue(stm).get))
-      } generatedMethods += eval(Func(md, nm, ts, ag, r))
-
-      generatedMethods.map(s => ld + "  " + s + ld).toList.mkString
+        generatedConstructors.map(s => ld + "  " + s + ld).toList.mkString
+      } getOrElse("")
     }
+
+    /** TODO: Generate stubs for abstract inherited methods */
+    override def unimplemetedMethods(newType: IType)(implicit ld: String): String = ""
   }
 }
 
