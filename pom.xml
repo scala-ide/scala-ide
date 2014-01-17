@@ -65,7 +65,7 @@
      <scala.library.version>${scala.version}</scala.library.version>
      <version.suffix>2_10</version.suffix>
      <version.tag>local</version.tag>
-     <sbt.version>0.13.0</sbt.version>
+     <sbt.version>0.13.1</sbt.version>
      <sbt.ide.version>${sbt.version}-on-${scala.version}-for-IDE-SNAPSHOT</sbt.ide.version>
 
     <!-- the repos containing the Scala dependencies -->
