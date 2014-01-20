@@ -130,7 +130,7 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
     // pre.sym[targs]
   case RefinedType(parents, defs) =>
     // parent1 with ... with parentn { defs }
-  case AnnotatedType(annots, tp, selfsym) =>
+  case AnnotatedType(annots, tp) =>
     // tp @annots
           case _ => PatternLocator.INACCURATE_MATCH
         }
