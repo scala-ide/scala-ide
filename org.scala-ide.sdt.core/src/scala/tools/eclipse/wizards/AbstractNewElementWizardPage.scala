@@ -57,6 +57,7 @@ import scala.tools.eclipse.ScalaPlugin._
 import scala.tools.eclipse.formatter.ScalaFormatterCleanUpProvider
 import scala.tools.eclipse.javaelements.ScalaSourceFile
 import scala.tools.eclipse.logging.HasLogger
+import scala.tools.eclipse.ScalaPlugin
 
 abstract class AbstractNewElementWizardPage extends NewTypeWizardPage(1, "") with HasLogger {
 
@@ -132,7 +133,7 @@ abstract class AbstractNewElementWizardPage extends NewTypeWizardPage(1, "") wit
     }
   }
 
-  val fFolderButton= new SelectionButtonDialogField(SWT.CHECK);
+  val fFolderButton = new SelectionButtonDialogField(SWT.CHECK);
   fFolderButton.setDialogFieldListener(folderButtonListener);
   fFolderButton.setLabelText("Folder:")
   fFolderButton.setSelection(false)
@@ -149,7 +150,6 @@ abstract class AbstractNewElementWizardPage extends NewTypeWizardPage(1, "") wit
   fFolderField.setButtonLabel("Browse...");
 
   val fSelectedFolderCompletionProcessor = new JavaPackageCompletionProcessor()
-
 
   protected var createdType: IType = _
 
@@ -304,7 +304,8 @@ abstract class AbstractNewElementWizardPage extends NewTypeWizardPage(1, "") wit
     setSuperClass(DEFAULT_SUPER_TYPE, true)
 
     createSuperInterfacesControls(composite, columns)
-    createMethodStubSelectionControls(composite, columns)
+    // disabled until we can generate code properly
+//    createMethodStubSelectionControls(composite, columns)
     createCommentControls(composite, columns)
     enableCommentControl(true)
 
@@ -349,7 +350,7 @@ abstract class AbstractNewElementWizardPage extends NewTypeWizardPage(1, "") wit
   }
 
   protected def makeCreatedType(implicit parentCU: ICompilationUnit) = {
-     createdType = parentCU.getType(getGeneratedTypeName)
+    createdType = parentCU.getType(getGeneratedTypeName)
   }
 
   def getPackageFragmentForFile() = getFolderName match {
@@ -390,10 +391,10 @@ abstract class AbstractNewElementWizardPage extends NewTypeWizardPage(1, "") wit
         case ipf: IPackageFragment => ipf
         case _ => rt.getPackageFragment("")
       }
-      if(p.exists) monitor.worked(1)
+      if (p.exists) monitor.worked(1)
       else {
         p = rt.createPackageFragment(pf.getElementName, true,
-        new SubProgressMonitor(monitor, 1))
+          new SubProgressMonitor(monitor, 1))
       }
       p
     }
@@ -438,38 +439,40 @@ abstract class AbstractNewElementWizardPage extends NewTypeWizardPage(1, "") wit
         def replace(offset: Int, length: Int, text: String) = underlying.replace(offset, length, text)
         def getContents() = underlying.getContents()
       }
-      //start control of buffer
-      val cb = CodeBuilder(getPackageNameToInject.getOrElse(""), superTypes, buffer)
-      cb.append(commentTemplate(comment(getFileComment _)))
-      cb.append(packageTemplate(getPackageNameToInject))
-      cb.writeImports // to buffer
-      cb.append(commentTemplate(comment(getTypeComment _)))
-      cb.append(elementModifiers)
-      cb.append(declarationType.toLowerCase)
-      cb.createElementDeclaration(getTypeName, superTypes, buffer)
-      cb.append(bodyStub)
 
-      reconcile(cu = parentCU)
+      val scalaProject = ScalaPlugin.plugin.asScalaProject(parentCU.getJavaProject.getProject).get
 
-      makeCreatedType(parentCU)
+      scalaProject.presentationCompiler { compiler =>
+        compiler.askOption[Unit] { () =>
+          //start control of buffer
+          val cb = CodeBuilder(getPackageNameToInject.getOrElse(""), superTypes, buffer, scalaProject.presentationCompiler)
+          cb.append(commentTemplate(comment(getFileComment _)))
+          cb.append(packageTemplate(getPackageNameToInject))
+          cb.writeImports // to buffer
+          cb.append(commentTemplate(comment(getTypeComment _)))
+          cb.append(elementModifiers)
+          cb.append(declarationType.toLowerCase)
+          cb.createElementDeclaration(getTypeName, superTypes, buffer)
+          cb.append(bodyStub)
 
-      // refine the created type
-      val typeHierarchy = createdType.newSupertypeHierarchy(Array(parentCU),
-        new SubProgressMonitor(monitor, 1))
+          //      reconcile(cu = parentCU)
 
-      cb.finishReWrites(typeHierarchy, createdType)(
-        createConstructorsSelected)(createInheritedSelected)(
-          createMainSelected)
+          makeCreatedType(parentCU)
 
-      //end control of buffer
+          cb.finishReWrites(createdType)(createConstructorsSelected)(createInheritedSelected)(createMainSelected)
+
+          //end control of buffer
+
+        }
+      }
 
       val cu = createdType.getCompilationUnit
       reconcile(cu = cu)
 
       if (monitor.isCanceled) throw new InterruptedException()
 
-      val formatter= new ScalaFormatterCleanUpProvider()
-      val textChange= formatter.createCleanUp(cu).createChange(monitor)
+      val formatter = new ScalaFormatterCleanUpProvider()
+      val textChange = formatter.createCleanUp(cu).createChange(monitor)
       textChange.perform(monitor)
 
       cu.commitWorkingCopy(true, new SubProgressMonitor(monitor, 1))
@@ -481,9 +484,11 @@ abstract class AbstractNewElementWizardPage extends NewTypeWizardPage(1, "") wit
     }
   }
 
-  /** Return the package declaration used in the resources created by the wizard.
+  /**
+   * Return the package declaration used in the resources created by the wizard.
    * This is needed because the package declaration may be different from the
-   * file's location (as in the case of a `package object`).*/
+   * file's location (as in the case of a `package object`).
+   */
   protected def getPackageNameToInject =
     if (!getPackageFragment.isDefaultPackage) Some(getPackageFragment.getElementName)
     else None
@@ -524,7 +529,7 @@ abstract class AbstractNewElementWizardPage extends NewTypeWizardPage(1, "") wit
     if (pack != null) {
 
       val project = pack.getJavaProject
-
+      val scalaProject = plugin.asScalaProject(project.getProject)
       try {
         if (!plugin.isScalaProject(project.getProject)) {
           val msg = project.getElementName + " is not a Scala project"
@@ -539,10 +544,14 @@ abstract class AbstractNewElementWizardPage extends NewTypeWizardPage(1, "") wit
 
       if (!isEnclosingTypeSelected && (status.getSeverity < IStatus.ERROR)) {
         try {
-          val theType = project.findType(pack.getElementName, getGeneratedTypeName)
-          if (theType != null) {
-            status.setError(
-              NewWizardMessages.NewTypeWizardPage_error_TypeNameExists)
+          val doubleDef =
+            scalaProject.flatMap(
+              _.presentationCompiler(compiler =>
+                compiler.askOption { () => compiler.rootMirror.getClassIfDefined(getFullyQualifiedName) != compiler.NoSymbol } ))
+              .flatten.getOrElse(false)
+
+          if (doubleDef) {
+            status.setError(NewWizardMessages.NewTypeWizardPage_error_TypeNameExists)
           }
         } catch {
           case _: JavaModelException =>
