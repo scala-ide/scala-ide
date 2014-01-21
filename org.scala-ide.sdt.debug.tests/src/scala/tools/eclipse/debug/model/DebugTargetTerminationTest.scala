@@ -74,7 +74,7 @@ object DebugTargetTerminationTest {
             actors foreach { actor => assertThat(actor.toString, actor.getState, is(not(State.Terminated))) }
             actors.foreach(link(_))
             linkedActors = actors
-            reply()
+            reply(())
           case Exit(from, reason) =>
             terminatedLinks += from
             if (linkedActors.forall(terminatedLinks contains _)) {
