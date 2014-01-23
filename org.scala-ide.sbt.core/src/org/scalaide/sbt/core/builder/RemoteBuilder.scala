@@ -15,7 +15,7 @@ class RemoteBuilder extends IncrementalProjectBuilder with HasLogger {
     val client = SbtClientProvider.sbtClientFor(getProject().getLocation().toFile())
     
     client.map{ c =>
-      c.requestExecution("compile")
+      c.requestExecution("compile", None)
     }
     
     // TODO: get the compilation result (errors, ...)

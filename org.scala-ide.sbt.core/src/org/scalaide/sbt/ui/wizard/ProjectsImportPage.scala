@@ -50,8 +50,8 @@ import org.eclipse.ui.internal.ide.IDEWorkbenchPlugin
 import org.eclipse.ui.internal.wizards.datatransfer.DataTransferMessages
 import org.scalaide.sbt.core.SbtClientProvider
 import org.scalaide.sbt.ui.actions.withWorkspaceModifyOperation
-import com.typesafe.sbtrc.protocol.MinimalBuildStructure
-import com.typesafe.sbtrc.protocol.ProjectReference
+import sbt.protocol.MinimalBuildStructure
+import sbt.protocol.ProjectReference
 import org.eclipse.jface.window.IShellProvider
 
 object ProjectsImportPage {

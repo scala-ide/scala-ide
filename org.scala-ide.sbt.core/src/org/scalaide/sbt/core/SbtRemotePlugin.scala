@@ -22,7 +22,7 @@ class SbtRemotePlugin extends AbstractUIPlugin {
   import SbtRemotePlugin._
 
   lazy val SbtLaunchJarLocation = fileLocationInBundle("/target/lib/sbt-launch.jar")
-  lazy val sbtProperties = urlOfFileZippedInBundle("sbt-server.properties", "/target/lib/sbt-rc-remote-controller.jar")
+  lazy val sbtProperties = urlOfFileZippedInBundle("sbt-server.properties", "/target/lib/client.jar")
 
   override def start(context: BundleContext) {
     super.start(context)

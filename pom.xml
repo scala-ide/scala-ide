@@ -19,24 +19,33 @@
   <packaging>pom</packaging>
 
   <properties>
-    <sbtrc.version>1.0-d5cec89ab0ae1f45d816f379a7896f93ed24d061</sbtrc.version>
+    <sbtrc.version>1.0-ef211f5a28288817cd44d6f4985acd9b614ce4c5</sbtrc.version>
     <sbtrc.repo>http://download.scala-ide.org/tmp-luc/sbt-rc/m2repo/</sbtrc.repo>
     <akka.version>2.2.0</akka.version>
     <config.version>1.0.0</config.version>
-    <sbt.version>0.13.2-M1</sbt.version>
-    <sbtlaunch.version>0.13.2-M1</sbtlaunch.version>
+    <sbt.version>0.13.2-MSERVER-1</sbt.version>
+    <sbtlaunch.version>0.13.2-MSERVER-1</sbtlaunch.version>
+    <play-lib.version>2.2.1</play-lib.version>
+    <scala-stm.version>0.7</scala-stm.version>
+    <joda-time.version>2.2</joda-time.version>
+    <jackson.version>2.2.2</jackson.version>
   </properties>
 
   <dependencies>
     <dependency>
       <groupId>com.typesafe.sbtrc</groupId>
-      <artifactId>sbt-rc-remote-controller</artifactId>
+      <artifactId>client</artifactId>
       <version>${sbtrc.version}</version>
     </dependency>
     <dependency>
       <groupId>com.typesafe.akka</groupId>
       <artifactId>akka-actor_2.10</artifactId>
       <version>${akka.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.scala-sbt</groupId>
+      <artifactId>launcher-interface</artifactId>
+      <version>${sbt.version}</version>
     </dependency>
     <dependency>
       <groupId>org.scala-sbt</groupId>
@@ -50,10 +59,92 @@
     </dependency>
     <dependency>
       <groupId>org.scala-sbt</groupId>
+      <artifactId>interface</artifactId>
+      <version>${sbt.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.scala-sbt</groupId>
+      <artifactId>collections</artifactId>
+      <version>${sbt.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.scala-sbt</groupId>
       <artifactId>sbt-launch</artifactId>
       <version>${sbtlaunch.version}</version>
     </dependency>
+    <dependency>
+      <groupId>com.typesafe.play</groupId>
+      <artifactId>play-json_2.10</artifactId>
+      <version>${play-lib.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.typesafe.play</groupId>
+      <artifactId>play-iteratees_2.10</artifactId>
+      <version>${play-lib.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.typesafe.play</groupId>
+      <artifactId>play-functional_2.10</artifactId>
+      <version>${play-lib.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.typesafe.play</groupId>
+      <artifactId>play-datacommons_2.10</artifactId>
+      <version>${play-lib.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.scala-stm</groupId>
+      <artifactId>scala-stm_2.10</artifactId>
+      <version>${scala-stm.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>joda-time</groupId>
+      <artifactId>joda-time</artifactId>
+      <version>${joda-time.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-annotations</artifactId>
+      <version>${jackson.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-core</artifactId>
+      <version>${jackson.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <version>${jackson.version}</version>
+    </dependency>
+  </dependencies>
 
+  <modules>
+    <module>org.scala-ide.sbt.core</module>
+    <module>org.scala-ide.sbt.core.tests</module>
+    <module>org.scala-ide.sbt.feature</module>
+    <module>org.scala-ide.sbt.source.feature</module>
+    <module>org.scala-ide.sbt.update-site</module>
+  </modules>
+
+  <repositories>
+    <repository>
+      <id>sbtrc</id>
+      <name>repository with the sbtrc binaries</name>
+      <url>${sbtrc.repo}</url>
+    </repository>
+    <repository>
+      <id>play</id>
+      <name>play repository</name>
+      <url>http://private-repo.typesafe.com/typesafe/maven-releases</url>
+    </repository>
+  </repositories>
+</project>
+    <dependency>
+      <groupId>org.scala-stm</groupId>
+      <artifactId>scala-stm</artifactId>
+      <version>${scala-stm.version}</version>
+    </dependency>
   </dependencies>
 
   <modules>

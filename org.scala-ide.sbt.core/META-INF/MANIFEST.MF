@@ -32,5 +32,17 @@ Bundle-ClassPath: .,
  target/lib/control.jar,
  target/lib/io.jar,
  target/lib/akka-actor_2.10.jar,
- target/lib/sbt-rc-remote-controller.jar
+ target/lib/client.jar,
+ target/lib/collections.jar,
+ target/lib/interface.jar,
+ target/lib/launcher-interface.jar,
+ target/lib/jackson-annotations.jar,
+ target/lib/jackson-core.jar,
+ target/lib/jackson-databind.jar,
+ target/lib/joda-time.jar,
+ target/lib/play-datacommons_2.10.jar,
+ target/lib/play-functional_2.10.jar,
+ target/lib/play-iteratees_2.10.jar,
+ target/lib/play-json_2.10.jar,
+ target/lib/scala-stm_2.10.jar
 Bundle-Activator: org.scalaide.sbt.core.SbtRemotePlugin
