@@ -5,18 +5,16 @@ import scala.tools.eclipse.logging.HasLogger
 import org.eclipse.core.resources.IProject
 import org.eclipse.core.resources.IncrementalProjectBuilder
 import org.eclipse.core.runtime.IProgressMonitor
-import org.scalaide.sbt.core.SbtClientProvider
 import scala.concurrent.ExecutionContext.Implicits.global
+import org.scalaide.sbt.core.SbtBuild
 
 class RemoteBuilder extends IncrementalProjectBuilder with HasLogger {
 
   override def build(kind: Int, args: JMap[String, String], monitor: IProgressMonitor): Array[IProject] = {
     
-    val client = SbtClientProvider.sbtClientFor(getProject().getLocation().toFile())
+    val build = SbtBuild.buildFor(getProject().getLocation().toFile())
     
-    client.map{ c =>
-      c.requestExecution("compile", None)
-    }
+    build.compile(/*TODO: real project name*/"")
     
     // TODO: get the compilation result (errors, ...)
     // TODO: refresh the output folders

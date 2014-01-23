@@ -48,11 +48,11 @@ import org.eclipse.ui.dialogs.WorkingSetGroup
 import org.eclipse.ui.internal.ide.IDEWorkbenchMessages
 import org.eclipse.ui.internal.ide.IDEWorkbenchPlugin
 import org.eclipse.ui.internal.wizards.datatransfer.DataTransferMessages
-import org.scalaide.sbt.core.SbtClientProvider
 import org.scalaide.sbt.ui.actions.withWorkspaceModifyOperation
 import sbt.protocol.MinimalBuildStructure
 import sbt.protocol.ProjectReference
 import org.eclipse.jface.window.IShellProvider
+import org.scalaide.sbt.core.SbtBuild
 
 object ProjectsImportPage {
 
@@ -377,18 +377,12 @@ class ProjectsImportPage(currentSelection: IStructuredSelection) extends WizardD
       val promise = Promise[Seq[ProjectReference]]
 
       import scala.concurrent.ExecutionContext.Implicits.global
-      for (client <- SbtClientProvider.sbtClientFor(directory)) {
-        // FIXME: How to unregister this listener?
-        // FIXME: Likely not a good idea to have the listener registered here. Furthermore, it looks like making this call twice 
-        //        can freeze the UI as no event is sent back and the call to Await.result is definitely not helping. 
-        client.watchBuild {
-          case build: MinimalBuildStructure =>
-            promise.success(build.projects.toList)
-        }
-      }
-      Await.result(promise.future, scala.concurrent.duration.Duration.Inf)
+
+      val projects = SbtBuild.buildFor(directory).projects()
+      Await.result(projects, scala.concurrent.duration.Duration.Inf)
+    } else {
+      Seq.empty
     }
-    else Seq.empty
   }
 
   override def handleEvent(event: Event): Unit = ()
