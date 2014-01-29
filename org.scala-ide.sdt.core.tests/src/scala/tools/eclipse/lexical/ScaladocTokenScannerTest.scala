@@ -51,8 +51,8 @@ class ScaladocTokenScannerTest {
     val scalaPreferenceStore = mock(classOf[IPreferenceStore])
     val javaPreferenceStore = mock(classOf[IPreferenceStore])
 
-    // sample task tags
-    when(javaPreferenceStore.getString(JavaCore.COMPILER_TASK_TAGS)).thenReturn("XXX,TODO")
+    val sampleTaskTags = "XXX,TODO,@todo,$todo,!todo"
+    when(javaPreferenceStore.getString(JavaCore.COMPILER_TASK_TAGS)).thenReturn(sampleTaskTags)
 
     val scaladocAtt = mock(classOf[TextAttribute])
     val annotationAtt = mock(classOf[TextAttribute])
@@ -237,6 +237,12 @@ class ScaladocTokenScannerTest {
   def braces_macro() {
     val res = tokenize("/**${abc}d*/")
     res === Seq((scaladocAtt, 0, 3), (macroAtt, 3, 6), (scaladocAtt, 9, 3))
+  }
+
+  @Test
+  def task_tag_that_starts_with_a_special_sign() {
+    val res = tokenize("/**@todo$todo!todo@param*/")
+    res === Seq((scaladocAtt, 0, 3), (taskTagAtt, 3, 15), (scaladocAtt, 18, 8))
   }
 
 }
