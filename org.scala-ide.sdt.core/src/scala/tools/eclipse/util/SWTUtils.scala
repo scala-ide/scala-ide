@@ -14,6 +14,9 @@ import org.eclipse.jface.util.IPropertyChangeListener
 import org.eclipse.jface.util.PropertyChangeEvent
 import org.eclipse.swt.events._
 import scala.tools.eclipse.ui.DisplayThread
+import org.eclipse.swt.widgets.Composite
+import org.eclipse.jface.preference.BooleanFieldEditor
+import org.eclipse.jface.preference.IPreferenceStore
 
 // TODO move out implicit conversions to a separate module?
 object SWTUtils {
@@ -32,11 +35,6 @@ object SWTUtils {
 
   implicit def fnToModifyListener(f: ModifyEvent => Unit): ModifyListener = new ModifyListener {
     def modifyText(e: ModifyEvent) = f(e)
-  }
-
-  // TODO this method is unused. remove?
-  implicit def fnToValListener(f: VerifyEvent => Unit) = new VerifyListener {
-    def verifyText(e: VerifyEvent) = f(e)
   }
 
   implicit def fnToSelectionAdapter(p: SelectionEvent => Any): SelectionAdapter =
@@ -88,6 +86,25 @@ object SWTUtils {
       })
     }
 
+  }
+
+  /**
+   * This represents a check box that is associated with a preference, a preference
+   * store and a text label. It is automatically loaded with the preference value
+   * from the store. Furthermore, it automatically saves the preference to the
+   * store when its value changes.
+   */
+  class CheckBox(store: IPreferenceStore, preference: String, textLabel: String, parent: Composite)
+      extends BooleanFieldEditor(preference, textLabel, parent) {
+
+    setPreferenceStore(store)
+    load()
+
+    def isChecked: Boolean =
+      getBooleanValue()
+
+    def += (f: SelectionEvent => Unit): Unit =
+      getChangeControl(parent) addSelectionListener { (e: SelectionEvent) => f(e) }
   }
 
 }
