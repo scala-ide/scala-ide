@@ -139,6 +139,7 @@ final class ScalaPresentationCompilerProxy(project: ScalaProject) extends HasLog
         ex.printStackTrace()
         if (project.underlying.isOpen)
           failedCompilerInitialization("error initializing Scala compiler")
+       shutdown()
         eclipseLog.error(ex)
         null
     }
