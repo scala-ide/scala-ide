@@ -174,9 +174,14 @@ trait IndentGuideGenerator {
   def guidesOfRange(startLine: Int, endLine: Int): Seq[Guide] = {
 
     /* indentation depth in number of characters */
-    def indentDepth(text: String) = text
-      .takeWhile(c => c == ' ' || c == '\t')
-      .foldLeft(0)((sum, c) => sum + (if (c == ' ') 1 else indentWidth))
+    def indentDepth(text: String) = {
+      val (sum, _) = text.takeWhile(c => c == ' ' || c == '\t').foldLeft((0, 0)) {
+        case ((sum, len), c) =>
+          val reminder = indentWidth - len % indentWidth
+          if (c == ' ') (sum + 1, len) else (sum + reminder, len + reminder)
+      }
+      sum
+    }
 
     def decreaseFrom(line: Int) =
       Iterator.iterate(line)(_ - 1).takeWhile(_ > 0)
