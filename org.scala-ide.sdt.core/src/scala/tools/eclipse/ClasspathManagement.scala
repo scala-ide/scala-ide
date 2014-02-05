@@ -401,7 +401,7 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
     val entries = scalaClasspath.userCp
     val errors = mutable.ListBuffer[(Int, String)]()
 
-    for (entry <- entries) {
+    for (entry <- entries if entry ne null) {
       entry.lastSegment() match {
         case IncompatibleVersion(version) =>
           errors += ((IMarker.SEVERITY_ERROR, "%s is cross-compiled with an incompatible version of Scala (%s). In case of errorneous report, this check can be disabled in the compiler preference page.".format(entry.lastSegment, version)))
