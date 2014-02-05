@@ -53,13 +53,20 @@ import sbt.protocol.MinimalBuildStructure
 import sbt.protocol.ProjectReference
 import org.eclipse.jface.window.IShellProvider
 import org.scalaide.sbt.core.SbtBuild
+import org.eclipse.core.resources.IResource
+import org.eclipse.core.resources.IProjectDescription
+import org.eclipse.core.resources.IWorkspace
+import scala.tools.eclipse.ScalaPlugin
+import org.eclipse.jdt.ui.PreferenceConstants
+import org.eclipse.jdt.core.JavaCore
+import scala.collection._
 
 object ProjectsImportPage {
 
   /** */
   class ProjectRecord(ref: ProjectReference) {
     /** Location of the sbt build file. */
-    lazy val buildFile = new File(ref.build.getRawPath())
+    lazy val buildRoot = ref.build.getRawPath()
 
     /** project's name */
     def name: String = ref.name
@@ -99,11 +106,6 @@ object ProjectsImportPage {
       */
     @volatile
     var selectedProjects: Seq[ProjectRecord] = Seq.empty
-
-    @volatile
-    private var createdProjects: Seq[IProject] = Seq.empty // TODO: Logic for creating a project still needs to be implemented
-
-    def addCreatedProject(project: IProject): Unit = { createdProjects = createdProjects :+ project }
 
     /** Projects that can be imported in the workspace without conflicts. */
     def importableProjects(): Seq[ProjectRecord] = {
@@ -261,7 +263,8 @@ class ProjectsImportPage(currentSelection: IStructuredSelection) extends WizardD
       val element = event.getElement().asInstanceOf[ProjectRecord]
       if (element.hasConflicts)
         projectsList.setChecked(element, false)
-      setPageComplete(projectsList.getCheckedElements().nonEmpty)
+      model.selectedProjects = projectsList.getCheckedElements().asInstanceOf[Array[ProjectRecord]].to[Seq]
+      setPageComplete(model.selectedProjects.nonEmpty)
     })
 
     projectsList.setInput(this)
@@ -393,51 +396,77 @@ class ProjectsImportPage(currentSelection: IStructuredSelection) extends WizardD
     this.directoryPathField.setFocus()
   }
 
-  // TODO: Create the Eclipse projects 
   def createProjects(): Boolean = {
-//    val selected = projectsList.getCheckedElements().asInstanceOf[Array[ProjectRecord]]
-//
-//    val op = withWorkspaceModifyOperation { monitor =>
-//      try {
-//        monitor.beginTask("", selected.length)
-//        if (monitor.isCanceled()) throw new OperationCanceledException()
-//        selected.foreach(createExistingProject(_, new SubProgressMonitor(monitor, 1)))
-//      }
-//      finally monitor.done()
-//    }
-//
-//    try getContainer().run( /*fork*/ true, /*cancellable*/ true, op)
-//    catch {
-//      case _: InterruptedException => return false
-//      case e: InvocationTargetException =>
-//        val t = e.getTargetException()
-//        val message = DataTransferMessages.WizardExternalProjectImportPage_errorMessage;
-//        val status = t match {
-//          case t: CoreException => t.getStatus()
-//          case t                => new Status(IStatus.ERROR, IDEWorkbenchPlugin.IDE_WORKBENCH, 1, message, t)
-//        }
-//        ErrorDialog.openError(getShell(), message, null, status)
-//        return false
-//    }
-//
+    val selected = model.selectedProjects
+
+    val op = withWorkspaceModifyOperation { monitor =>
+      try {
+        monitor.beginTask("", selected.length)
+        if (monitor.isCanceled()) throw new OperationCanceledException()
+        val createdProjects = selected.map(createExistingProject(_, new SubProgressMonitor(monitor, 1)))
+        addToWorkingSets(createdProjects)
+      } finally monitor.done()
+    }
+
+    try getContainer().run( /*fork*/ true, /*cancellable*/ true, op)
+    catch {
+      case _: InterruptedException => return false
+      case e: InvocationTargetException =>
+        val t = e.getTargetException()
+        val message = DataTransferMessages.WizardExternalProjectImportPage_errorMessage;
+        val status = t match {
+          case t: CoreException => t.getStatus()
+          case t                => new Status(IStatus.ERROR, IDEWorkbenchPlugin.IDE_WORKBENCH, 1, message, t)
+        }
+        ErrorDialog.openError(getShell(), message, null, status)
+        return false
+    }
+
     true
   }
+
+  private def addToWorkingSets(projects: immutable.Seq[IProject]): Unit = {
+    // TODO: make working set support working. sbt-11
+//    lazy val workingSetManager = PlatformUI.getWorkbench().getWorkingSetManager()
 //
-//  private def createExistingProject(record: ProjectRecord, monitor: IProgressMonitor): Unit = {
-//    def addToWorkingSets(project: IProject): Unit = {
-//      lazy val workingSetManager = PlatformUI.getWorkbench().getWorkingSetManager()
-//
-//      for {
-//        workingGroup <- model.workingSetGroup
-//        selectedWorkingSets <- Option(workingGroup.getSelectedWorkingSets)
-//        if selectedWorkingSets.nonEmpty
-//      } workingSetManager.addToWorkingSets(project, selectedWorkingSets)
-//    }
-//
-//    val projectName = record.name
-//    val workspace = ResourcesPlugin.getWorkspace()
-//    val project = workspace.getRoot().getProject(projectName)
-//    model.addCreatedProject(project)
-//    addToWorkingSets(project)
-//  }
+//    for {
+//      workingGroup <- model.workingSetGroup
+//      selectedWorkingSets <- Option(workingGroup.getSelectedWorkingSets)
+//      if selectedWorkingSets.nonEmpty
+//      project <- projects
+//    } workingSetManager.addToWorkingSets(project, selectedWorkingSets)
+  }
+  
+  private def createExistingProject(record: ProjectRecord, monitor: IProgressMonitor): IProject = {
+
+    val projectName = record.name
+    val workspace = ResourcesPlugin.getWorkspace()
+    val project = workspace.getRoot().getProject(projectName)
+    project.create(configureProjectDescription(record, workspace), IResource.NONE, monitor)
+    project.open(monitor)
+    configureProject(project, monitor)
+    project
+  }
+
+  def configureProjectDescription(project: ProjectRecord, workspace: IWorkspace): IProjectDescription = {
+    val description = workspace.newProjectDescription(project.name)
+
+    // TODO: this is wrong, it should be the project root, but we need to get the info through settings
+    description.setLocation(new Path(project.buildRoot))
+
+    description.setNatureIds(Array("org.scala-ide.sdt.core.scalanature", "org.eclipse.jdt.core.javanature"))
+
+    val newBuilderCommand = description.newCommand;
+    newBuilderCommand.setBuilderName("org.scala-ide.sbt.core.remoteBuilder");
+    description.setBuildSpec(Array(newBuilderCommand))
+
+    description
+  }
+
+  def configureProject(project: IProject, monitor: IProgressMonitor) {
+    val javaProject = JavaCore.create(project)
+    // For some reason, using ScalaPlugin$ crashes at runtime. Missing dependency?
+    javaProject.setRawClasspath(PreferenceConstants.getDefaultJRELibrary() :+ JavaCore.newContainerEntry(Path.fromPortableString("org.scala-ide.sdt.launching.SCALA_CONTAINER")), monitor)
+  }
+
 }
