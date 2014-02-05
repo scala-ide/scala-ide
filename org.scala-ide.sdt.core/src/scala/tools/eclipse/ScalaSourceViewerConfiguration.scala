@@ -101,6 +101,13 @@ class ScalaSourceViewerConfiguration(
     )
   }
 
+  override def getTabWidth(sourceViewer: ISourceViewer): Int = {
+    import scala.tools.eclipse.formatter.FormatterPreferences._
+    import scalariform.formatter.preferences._
+
+    scalaPreferenceStore.getInt(IndentSpaces.eclipseKey)
+  }
+
   override def getReconciler(sourceViewer: ISourceViewer): IReconciler =
     if (editor ne null) {
       val reconciler = new MonoReconciler(new ScalaReconcilingStrategy(editor), /*isIncremental = */ false)
