@@ -6,7 +6,7 @@ import scala.concurrent.Future
 import scala.concurrent.Promise
 import scala.tools.eclipse.logging.HasLogger
 import org.eclipse.ui.console.MessageConsoleStream
-import com.typesafe.sbtrc.api.SbtClient
+import sbt.client.SbtClient
 import com.typesafe.sbtrc.client.AbstractSbtServerLocator
 import com.typesafe.sbtrc.client.SimpleConnector
 import org.scalaide.sbt.ui.console.ConsoleProvider
@@ -42,7 +42,7 @@ object SbtClientProvider extends HasLogger {
     promise.future
   }
 
-  import com.typesafe.sbtrc.protocol._
+  import sbt.protocol._
   private def registerEventHandlers(client: SbtClient, out: MessageConsoleStream): Unit = client handleEvents {
     case LogEvent(LogSuccess(msg))        => out.println(s"[success] $msg")
     case LogEvent(LogMessage(level, msg)) => out.println(s"[$level] $msg")

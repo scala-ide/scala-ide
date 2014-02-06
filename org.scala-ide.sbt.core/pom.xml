@@ -27,7 +27,7 @@
               <artifactItems>
                 <artifactItem>
                   <groupId>com.typesafe.sbtrc</groupId>
-                  <artifactId>sbt-rc-remote-controller</artifactId>
+                  <artifactId>client</artifactId>
                 </artifactItem>
                 <artifactItem>
                   <groupId>com.typesafe.akka</groupId>
@@ -42,8 +42,56 @@
                   <artifactId>io</artifactId>
                 </artifactItem>
                 <artifactItem>
+                  <groupId>org.scala-sbt</groupId>
+                  <artifactId>collections</artifactId>
+                </artifactItem>
+                <artifactItem>
+                  <groupId>org.scala-sbt</groupId>
+                  <artifactId>interface</artifactId>
+                </artifactItem>
+                <artifactItem>
+                  <groupId>org.scala-sbt</groupId>
+                  <artifactId>launcher-interface</artifactId>
+                </artifactItem>
+                <artifactItem>
                  <groupId>org.scala-sbt</groupId>
                  <artifactId>sbt-launch</artifactId>
+                </artifactItem>
+                <artifactItem>
+                  <groupId>com.typesafe.play</groupId>
+                  <artifactId>play-json_2.10</artifactId>
+                </artifactItem>
+                <artifactItem>
+                  <groupId>com.typesafe.play</groupId>
+                  <artifactId>play-iteratees_2.10</artifactId>
+                </artifactItem>
+                <artifactItem>
+                  <groupId>com.typesafe.play</groupId>
+                  <artifactId>play-functional_2.10</artifactId>
+                </artifactItem>
+                <artifactItem>
+                  <groupId>com.typesafe.play</groupId>
+                  <artifactId>play-datacommons_2.10</artifactId>
+                </artifactItem>
+                <artifactItem>
+                  <groupId>org.scala-stm</groupId>
+                  <artifactId>scala-stm_2.10</artifactId>
+                </artifactItem>
+                <artifactItem>
+                  <groupId>joda-time</groupId>
+                  <artifactId>joda-time</artifactId>
+                </artifactItem>
+                <artifactItem>
+                  <groupId>com.fasterxml.jackson.core</groupId>
+                  <artifactId>jackson-annotations</artifactId>
+                </artifactItem>
+                <artifactItem>
+                  <groupId>com.fasterxml.jackson.core</groupId>
+                  <artifactId>jackson-core</artifactId>
+                </artifactItem>
+                <artifactItem>
+                  <groupId>com.fasterxml.jackson.core</groupId>
+                  <artifactId>jackson-databind</artifactId>
                 </artifactItem>
               </artifactItems>
               <stripVersion>true</stripVersion>
