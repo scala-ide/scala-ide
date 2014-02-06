@@ -1,11 +1,11 @@
 package org.scalaide.core.completion
 
-import scala.tools.eclipse.testsetup.TestProjectSetup
+import org.scalaide.core.testsetup.TestProjectSetup
 import org.junit.Test
 import org.junit.Assert._
-import scala.tools.eclipse.testsetup.SDTTestUtils
+import org.scalaide.core.testsetup.SDTTestUtils
 import org.eclipse.core.runtime.NullProgressMonitor
-import scala.tools.eclipse.ui.ScalaCompletionProposal
+import org.scalaide.ui.internal.completion.ScalaCompletionProposal
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext
 import org.eclipse.ui.IWorkbenchPage
 import org.eclipse.ui.PlatformUI
@@ -14,8 +14,9 @@ import org.eclipse.ui.part.FileEditorInput
 import org.eclipse.core.resources.IFile
 import org.eclipse.jface.text.ITextViewer
 import org.eclipse.jface.text.ITextOperationTarget
-import scala.tools.eclipse.javaelements.ScalaCompilationUnit
+import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import scala.tools.nsc.interactive.Response
+import org.scalaide.core.internal.completion.ScalaJavaCompletionProposalComputer
 
 object ScalaJavaCompletionTests extends TestProjectSetup("completion")
 

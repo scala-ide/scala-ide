@@ -1,16 +1,17 @@
-package scala.tools.eclipse.semantichighlighting.classifier
+package org.scalaide.core
+package semantichighlighting.classifier
 
 import scala.reflect.internal.util.BatchSourceFile
 import org.junit.Before
-import scala.tools.eclipse.testsetup.TestProjectSetup
-import scala.tools.eclipse.EclipseUserSimulator
-import scala.tools.eclipse.ScalaProject
-import scala.tools.eclipse.util.EclipseUtils
-import scala.tools.eclipse.ScalaPlugin
+import testsetup.TestProjectSetup
+import org.scalaide.core.internal.project.ScalaProject
+import org.scalaide.util.internal.eclipse.EclipseUtils
+import org.scalaide.core.ScalaPlugin
 import org.junit.After
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.jface.text.IRegion
-import scala.tools.eclipse.semantichighlighting.classifier.SymbolTypes.SymbolType
+import org.scalaide.core.internal.decorators.semantichighlighting.classifier._
+import org.scalaide.core.internal.decorators.semantichighlighting.classifier.SymbolTypes._
 
 class AbstractSymbolClassifierTest {
   import AbstractSymbolClassifierTest._

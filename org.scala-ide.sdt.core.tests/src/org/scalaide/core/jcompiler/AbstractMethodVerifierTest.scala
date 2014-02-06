@@ -1,11 +1,12 @@
-package scala.tools.eclipse.jcompiler
+package org.scalaide.core
+package jcompiler
 
+import testsetup.TestProjectSetup
 import org.junit.Assert._
 import org.junit.Test
 import org.eclipse.jdt.internal.ui.JavaPlugin
 import org.eclipse.jface.text.source.IAnnotationModelListener
 import org.eclipse.jface.text.source.IAnnotationModel
-import scala.tools.eclipse.testsetup.TestProjectSetup
 import org.eclipse.core.resources.IncrementalProjectBuilder
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.jdt.internal.ui.viewsupport.IProblemChangedListener

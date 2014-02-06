@@ -1,4 +1,4 @@
-package scala.tools.eclipse
+package org.scalaide.core
 package testsetup
 
 import java.io.ByteArrayInputStream

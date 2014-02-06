@@ -1,4 +1,4 @@
-package scala.tools.eclipse
+package org.scalaide.core
 package sbtbuilder
 
 import org.junit.Test
@@ -6,11 +6,13 @@ import org.eclipse.jdt.core.IJavaProject
 import org.eclipse.jdt.core.IClasspathEntry
 import org.eclipse.jdt.core.JavaCore
 import org.junit.Assert
-import scala.tools.eclipse.testsetup.SDTTestUtils
+import testsetup.SDTTestUtils
 import org.eclipse.core.resources.IncrementalProjectBuilder
-import properties.IDESettings
-import properties.CompilerSettings
+import org.scalaide.ui.internal.preferences.IDESettings
+import org.scalaide.ui.internal.preferences.CompilerSettings
 import org.eclipse.jdt.core.IPackageFragment
+import org.scalaide.util.internal.SettingConverterUtil
+import org.scalaide.ui.internal.preferences.ScalaPluginSettings
 
 class ProjectDependenciesTest {
 
@@ -64,7 +66,7 @@ class ProjectDependenciesTest {
       val unitC = packC.createCompilationUnit("C.scala", "class C(a: A, b: B)", true, null)
 
       // set stopOnBuild to true
-      val stopBuildOnErrors = SettingConverterUtil.convertNameToProperty(properties.ScalaPluginSettings.stopBuildOnErrors.name)
+      val stopBuildOnErrors = SettingConverterUtil.convertNameToProperty(ScalaPluginSettings.stopBuildOnErrors.name)
       ScalaPlugin.plugin.getPreferenceStore.setValue(stopBuildOnErrors, true)
 
       // no errors

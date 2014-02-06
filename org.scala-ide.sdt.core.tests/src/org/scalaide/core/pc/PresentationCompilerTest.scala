@@ -1,17 +1,18 @@
-package scala.tools.eclipse
+package org.scalaide.core
 package pc
 
-import scala.tools.eclipse.javaelements.ScalaCompilationUnit
-import scala.tools.eclipse.javaelements.ScalaSourceFile
-import scala.tools.eclipse.testsetup.SDTTestUtils
-import scala.tools.eclipse.logging.Logger
+import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
+import org.scalaide.core.internal.jdt.model.ScalaSourceFile
+import testsetup.SDTTestUtils
+import org.scalaide.logging.Logger
 import scala.tools.nsc.interactive.InteractiveReporter
 import org.eclipse.jdt.core.ICompilationUnit
 import org.junit._
 import org.mockito.Matchers._
 import org.mockito.Mockito._
-import scala.tools.eclipse.hyperlink.HyperlinkTester
-import scala.tools.eclipse.testsetup.CustomAssertion
+import hyperlink.HyperlinkTester
+import testsetup.CustomAssertion
+import org.scalaide.core.compiler.InteractiveCompilationUnit
 
 object PresentationCompilerTest extends testsetup.TestProjectSetup("pc") with CustomAssertion with HyperlinkTester
 

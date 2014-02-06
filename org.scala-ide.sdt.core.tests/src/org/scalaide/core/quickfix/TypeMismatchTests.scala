@@ -1,4 +1,4 @@
-package scala.tools.eclipse.quickfix
+package org.scalaide.core.quickfix
 
 import org.junit.Test
 

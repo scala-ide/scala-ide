@@ -1,4 +1,4 @@
-package scala.tools.eclipse
+package org.scalaide.core
 package sbtbuilder
 
 import org.junit.Before
@@ -7,7 +7,7 @@ import org.junit.Assert
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.core.resources.IncrementalProjectBuilder
 
-import scala.tools.eclipse.testsetup.SDTTestUtils
+import testsetup.SDTTestUtils
 
 object MultipleErrorsTest extends testsetup.TestProjectSetup("builder-errors")
 

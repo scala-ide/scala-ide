@@ -2,10 +2,11 @@
  * Copyright 2010 LAMP/EPFL
  *
  */
-package scala.tools.eclipse.wizards
+package org.scalaide.core.wizards
 
 import org.junit.Test
 import org.junit.Assert
+import org.scalaide.ui.internal.wizards.QualifiedNameSupport
 
 class QualifiedNameSupportTest extends QualifiedNameSupport {
 

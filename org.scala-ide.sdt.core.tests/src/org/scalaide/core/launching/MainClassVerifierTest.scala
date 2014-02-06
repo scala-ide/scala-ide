@@ -1,12 +1,11 @@
-package scala.tools.eclipse.launching
+package org.scalaide.core
+package launching
 
-import scala.tools.eclipse.EclipseUserSimulator
-import scala.tools.eclipse.ScalaPlugin
-import scala.tools.eclipse.ScalaProject
-import scala.tools.eclipse.javaelements.ScalaCompilationUnit
-import scala.tools.eclipse.testsetup.SDTTestUtils
-import scala.tools.eclipse.util.EclipseUtils
-
+import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.internal.project.ScalaProject
+import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
+import testsetup.SDTTestUtils
+import org.scalaide.util.internal.eclipse.EclipseUtils
 import org.eclipse.core.resources.IncrementalProjectBuilder
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.debug.core.DebugPlugin
@@ -18,8 +17,9 @@ import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
-
 import scala.language.reflectiveCalls
+import org.scalaide.core.internal.launching.ScalaLaunchDelegate
+import org.scalaide.core.internal.launching.MainClassVerifier
 
 @RunWith(classOf[JUnit4])
 class MainClassVerifierTest {

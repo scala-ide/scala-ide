@@ -1,11 +1,12 @@
-package scala.tools.eclipse.opentype
+package org.scalaide.core
+package opentype
 
-import scala.tools.eclipse.testsetup.SDTTestUtils._
+import testsetup.SDTTestUtils._
 import org.junit._
 import org.eclipse.core.runtime.Path
-import scala.tools.eclipse.javaelements.ScalaClassFile
+import org.scalaide.core.internal.jdt.model.ScalaClassFile
 import org.eclipse.jdt.core.IClassFile
-import scala.tools.eclipse.ScalaProject
+import org.scalaide.core.internal.project.ScalaProject
 
 object ScalaBinaryTypeTest {
   var prj: ScalaProject = _

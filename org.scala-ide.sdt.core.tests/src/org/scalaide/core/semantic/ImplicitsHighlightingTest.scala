@@ -1,18 +1,19 @@
-package scala.tools.eclipse.semantic
+package org.scalaide.core
+package semantic
 
 import org.junit.Test
 import org.junit.Assert
 import scala.collection.JavaConversions.mapAsScalaMap
-import scala.tools.eclipse.javaelements.ScalaSourceFile
-import scala.tools.eclipse.semantichighlighting.implicits.ImplicitHighlightingPresenter
-import scala.tools.eclipse.testsetup.TestProjectSetup
-import scala.tools.eclipse.ScalaPresentationCompiler
+import org.scalaide.core.internal.jdt.model.ScalaSourceFile
+import org.scalaide.ui.internal.editor.decorators.implicits.ImplicitHighlightingPresenter
+import testsetup.TestProjectSetup
+import org.scalaide.core.compiler.ScalaPresentationCompiler
 import scala.tools.nsc.interactive.Response
 import scala.reflect.internal.util.SourceFile
-import scala.tools.eclipse.ScalaPlugin
-import scala.tools.eclipse.properties.ImplicitsPreferencePage
+import org.scalaide.core.ScalaPlugin
+import org.scalaide.ui.internal.preferences.ImplicitsPreferencePage
 import org.junit.Before
-import scala.tools.eclipse.javaelements.ScalaCompilationUnit
+import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 
 object ImplicitsHighlightingTest extends TestProjectSetup("implicits-highlighting")
 

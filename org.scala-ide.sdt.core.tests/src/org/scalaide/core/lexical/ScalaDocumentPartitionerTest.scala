@@ -1,10 +1,10 @@
-package scala.tools.eclipse.lexical
+package org.scalaide.core.lexical
 
 import org.junit.Assert._
 import org.junit.Test
 import org.junit.Before
-
 import org.eclipse.jface.text._
+import org.scalaide.core.internal.lexical.ScalaDocumentPartitioner
 
 class ScalaDocumentPartitionerTest {
 

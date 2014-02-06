@@ -1,11 +1,10 @@
-package scala.tools.eclipse.pc
+package org.scalaide.core
+package pc
 
-import scala.tools.eclipse._
 import org.junit.Test
-import testsetup.SDTTestUtils
 import org.eclipse.core.resources.IFile
-import scala.tools.eclipse.util.EclipseUtils
-import scala.tools.eclipse.testsetup._
+import org.scalaide.util.internal.eclipse.EclipseUtils
+import testsetup._
 
 object PresentationCompilerRefreshTest extends TestProjectSetup("pc_refresh") with CustomAssertion
 

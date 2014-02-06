@@ -1,7 +1,9 @@
-package scala.tools.eclipse.quickfix.createmethod
+package org.scalaide.core.quickfix.createmethod
 
 import org.junit.Test
 import org.junit.Assert._
+import org.scalaide.core.internal.quickfix.createmethod.ParameterList
+import org.scalaide.core.internal.quickfix.createmethod.ParameterListUniquifier
 
 class ParameterListUniquifierTest {
   @Test def makeNamesUnique() {

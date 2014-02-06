@@ -1,10 +1,11 @@
-package scala.tools.eclipse.ui
+package org.scalaide.core.ui
 
 import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.jface.text.IDocumentExtension3
 import org.junit.Before
 import org.junit.Test
 import org.mockito.Mockito._
+import org.scalaide.ui.internal.editor.autoedits.StringAutoEditStrategy
 
 object StringAutoEditStrategyTest {
 
@@ -21,7 +22,7 @@ class StringAutoEditStrategyTest extends AutoEditStrategyTests(
         StringAutoEditStrategyTest.prefStore)) {
 
   import StringAutoEditStrategyTest._
-  import scala.tools.eclipse.properties.EditorPreferencePage._
+  import org.scalaide.ui.internal.preferences.EditorPreferencePage._
 
   @Before
   def startUp() {

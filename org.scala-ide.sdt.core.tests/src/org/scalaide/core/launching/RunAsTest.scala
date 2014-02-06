@@ -1,4 +1,4 @@
-package scala.tools.eclipse.launching
+package org.scalaide.core.launching
 
 import org.junit.runner.RunWith
 import org.junit.runners.Suite

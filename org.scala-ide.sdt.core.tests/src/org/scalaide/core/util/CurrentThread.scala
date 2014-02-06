@@ -1,6 +1,6 @@
-package scala.tools.eclipse.util
+package org.scalaide.core.util
 
-import scala.tools.eclipse.ui.UIThread
+import org.scalaide.util.internal.ui.UIThread
 
 object CurrentThread extends UIThread {
   override def asyncExec(f: => Unit): Unit = syncExec(f)

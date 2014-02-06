@@ -1,4 +1,4 @@
-package scala.tools.eclipse
+package org.scalaide.core
 package testsetup
 
 import org.eclipse.jdt.core.IJavaProject
@@ -17,8 +17,8 @@ import org.eclipse.core.resources.IProjectDescription
 import org.eclipse.core.resources.ResourcesPlugin
 import org.eclipse.core.runtime.IPath
 import org.eclipse.core.runtime.Path
-import scala.tools.eclipse.util.OSGiUtils
-import scala.tools.eclipse.util.EclipseUtils
+import org.scalaide.util.internal.eclipse.OSGiUtils
+import org.scalaide.util.internal.eclipse.EclipseUtils
 import scala.reflect.internal.util.SourceFile
 import scala.collection.mutable
 import scala.util.matching.Regex
@@ -29,6 +29,8 @@ import org.eclipse.core.resources.IncrementalProjectBuilder
 import org.eclipse.core.resources.IMarker
 import org.eclipse.jdt.core.IPackageFragment
 import org.eclipse.jdt.core.IClasspathEntry
+import org.scalaide.core.internal.project.ScalaProject
+import org.scalaide.core.compiler.ScalaPresentationCompiler
 
 /** Utility functions for setting up test projects.
  *
@@ -225,7 +227,7 @@ object SDTTestUtils {
     names map (n => simulator.createProjectInWorkspace(n, true))
 
   def deleteProjects(projects: ScalaProject*) {
-    util.EclipseUtils.workspaceRunnableIn(ScalaPlugin.plugin.workspaceRoot.getWorkspace) { _ =>
+    EclipseUtils.workspaceRunnableIn(ScalaPlugin.plugin.workspaceRoot.getWorkspace) { _ =>
       projects foreach (_.underlying.delete(true, null))
     }
   }

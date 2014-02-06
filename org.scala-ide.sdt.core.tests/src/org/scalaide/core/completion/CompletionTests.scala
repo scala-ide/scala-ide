@@ -1,15 +1,15 @@
 package org.scalaide.core.completion
 
-import scala.tools.eclipse.testsetup.SDTTestUtils
-import scala.tools.eclipse.javaelements.ScalaCompilationUnit
+import org.scalaide.core.testsetup.SDTTestUtils
+import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import scala.tools.nsc.interactive.Response
-import scala.tools.eclipse.ScalaWordFinder
+import org.scalaide.util.internal.ScalaWordFinder
 import scala.reflect.internal.util.SourceFile
-import scala.tools.eclipse.ScalaPresentationCompiler
+import org.scalaide.core.compiler.ScalaPresentationCompiler
 import org.eclipse.jface.text.contentassist.ICompletionProposal
 import org.junit.Assert._
 import org.junit.Test
-import scala.tools.eclipse.testsetup.TestProjectSetup
+import org.scalaide.core.testsetup.TestProjectSetup
 import org.eclipse.jdt.core.search.SearchEngine
 import org.eclipse.jdt.core.search.IJavaSearchConstants
 import org.eclipse.jdt.core.search.IJavaSearchScope

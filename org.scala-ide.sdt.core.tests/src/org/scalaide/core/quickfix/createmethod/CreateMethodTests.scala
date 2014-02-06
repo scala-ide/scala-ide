@@ -1,8 +1,7 @@
-package scala.tools.eclipse.quickfix.createmethod
-
-import scala.tools.eclipse.quickfix.QuickFixesTests
+package org.scalaide.core.quickfix.createmethod
 
 import org.junit.Test
+import org.scalaide.core.quickfix.QuickFixesTests
 
 class CreateMethodTests {
   import QuickFixesTests._

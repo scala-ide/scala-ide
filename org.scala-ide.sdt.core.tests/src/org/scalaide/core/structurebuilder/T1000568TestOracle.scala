@@ -1,4 +1,4 @@
-package scala.tools.eclipse.structurebuilder
+package org.scalaide.core.structurebuilder
 
 object T1000568TestOracle extends BaseTestOracle {
   override protected lazy val oracle = """

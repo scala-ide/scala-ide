@@ -1,11 +1,10 @@
-package scala.tools.eclipse.sbtbuilder
+package org.scalaide.core
+package sbtbuilder
 
-import scala.tools.eclipse.SettingConverterUtil
-import scala.tools.eclipse.properties.PropertyStore
-import scala.tools.eclipse.testsetup.SDTTestUtils
-import scala.tools.eclipse.testsetup.TestProjectSetup
-import scala.tools.eclipse.util.FileUtils
-
+import org.scalaide.util.internal.SettingConverterUtil
+import org.scalaide.ui.internal.preferences.PropertyStore
+import testsetup.SDTTestUtils
+import testsetup.TestProjectSetup
 import org.eclipse.core.resources.IFile
 import org.eclipse.core.resources.IMarker
 import org.eclipse.core.resources.IncrementalProjectBuilder
@@ -13,8 +12,8 @@ import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.jdt.core.ICompilationUnit
 import org.junit.Assert
 import org.junit.Test
-
 import scala.language.reflectiveCalls
+import org.scalaide.util.internal.eclipse.FileUtils
 
 object deprecationWarningsProject extends TestProjectSetup("builder-deprecation-warnings") {
   // enable deprecation warnings for this project

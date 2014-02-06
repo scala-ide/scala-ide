@@ -1,10 +1,11 @@
-package scala.tools.eclipse.leaks
+package org.scalaide.core
+package leaks
 
-import scala.tools.eclipse.testsetup.TestProjectSetup
+import testsetup.TestProjectSetup
 import org.junit.Test
-import scala.tools.eclipse.javaelements.ScalaCompilationUnit
-import scala.tools.eclipse.javaelements.ScalaSourceFile
-import scala.tools.eclipse.logging.HasLogger
+import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
+import org.scalaide.core.internal.jdt.model.ScalaSourceFile
+import org.scalaide.logging.HasLogger
 import org.eclipse.jdt.core.ICompilationUnit
 import java.io.PrintWriter
 import java.io.FileOutputStream

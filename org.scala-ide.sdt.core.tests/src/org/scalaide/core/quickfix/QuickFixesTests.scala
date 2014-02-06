@@ -1,11 +1,12 @@
-package scala.tools.eclipse.quickfix
+package org.scalaide.core
+package quickfix
 
 import java.util.ArrayList
 
 import scala.collection.JavaConversions.asScalaBuffer
 import scala.collection.mutable.Buffer
-import scala.tools.eclipse.javaelements.ScalaCompilationUnit
-import scala.tools.eclipse.testsetup.TestProjectSetup
+import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
+import testsetup.TestProjectSetup
 import scala.tools.nsc.interactive.Response
 
 import org.eclipse.core.runtime.CoreException

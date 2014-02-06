@@ -1,8 +1,8 @@
-package scala.tools.eclipse.testsetup
+package org.scalaide.core.testsetup
 
-import scala.tools.eclipse.ScalaProject
+import org.scalaide.core.internal.project.ScalaProject
 import org.eclipse.jdt.core.ICompilationUnit
-import scala.tools.eclipse.javaelements.ScalaSourceFile
+import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import org.junit.Assert._
 
 trait CustomAssertion extends TestProjectSetup {

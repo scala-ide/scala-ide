@@ -1,6 +1,6 @@
-package scala.tools.eclipse.ui
+package org.scalaide.core.ui
 
-import scala.tools.eclipse.lexical.ScalaDocumentPartitioner
+import org.scalaide.core.internal.lexical.ScalaDocumentPartitioner
 
 import org.eclipse.jface.text.Document
 import org.eclipse.jface.text.DocumentCommand

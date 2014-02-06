@@ -1,4 +1,4 @@
-package scala.tools.eclipse.lexical
+package org.scalaide.core.lexical
 
 import org.eclipse.jface.text.IRegion
 import org.eclipse.jface.text.IDocumentPartitioner

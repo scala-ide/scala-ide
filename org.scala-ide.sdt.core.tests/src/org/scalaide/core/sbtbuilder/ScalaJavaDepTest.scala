@@ -1,4 +1,4 @@
-package scala.tools.eclipse
+package org.scalaide.core
 package sbtbuilder
 
 
@@ -9,11 +9,12 @@ import org.eclipse.jdt.core.IJavaModelMarker
 import org.eclipse.core.resources.IResource
 import org.junit.Assert._
 import org.eclipse.core.resources.IMarker
-import scala.tools.eclipse.testsetup.SDTTestUtils
+import testsetup.SDTTestUtils
 import org.eclipse.core.resources.IFile
 import org.junit.Ignore
 import org.junit.Before
 import org.eclipse.jdt.core.ICompilationUnit
+import org.scalaide.core.internal.project.ScalaProject
 
 object ScalaJavaDepTest extends testsetup.TestProjectSetup("scalajavadep")
 

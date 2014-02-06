@@ -1,6 +1,6 @@
-package scala.tools.eclipse.testsetup
+package org.scalaide.core.testsetup
 
-import scala.tools.eclipse.ScalaProject
+import org.scalaide.core.internal.project.ScalaProject
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.core.resources.IncrementalProjectBuilder
 import org.eclipse.jdt.core.ICompilationUnit

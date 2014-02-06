@@ -1,11 +1,12 @@
-package scala.tools.eclipse.interpreter
+package org.scalaide.core.interpreter
 
 import org.junit.Assert._
 import org.junit.Test
 import org.junit.Ignore
 import scala.tools.nsc.interpreter.Results._
-import EclipseRepl._
+import org.scalaide.core.internal.repl.EclipseRepl._
 import EclipseReplTest._
+import org.scalaide.core.internal.repl.EclipseRepl
 
 // This test is not a regular part of org.scalaide.core.TestsSuite because
 // when running under Maven the environment isn't set up quite right for the

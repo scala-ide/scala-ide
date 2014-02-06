@@ -1,11 +1,12 @@
-package scala.tools.eclipse.quickfix.createmethod
+package org.scalaide.core
+package quickfix.createmethod
 
-import scala.tools.eclipse.javaelements.ScalaCompilationUnit
-import scala.tools.eclipse.testsetup.TestProjectSetup
-import scala.tools.eclipse.util.parsing.ScalariformParser
-
+import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
+import testsetup.TestProjectSetup
 import org.junit.Assert._
 import org.junit.Test
+import org.scalaide.util.internal.scalariform.ScalariformParser
+import org.scalaide.core.internal.quickfix.createmethod.MissingMemberInfo
 
 object MissingMemberInfoTests extends TestProjectSetup("quickfix") {
   private lazy val unit = compilationUnit("createmethod/CreateMethod.scala").asInstanceOf[ScalaCompilationUnit]

@@ -1,14 +1,14 @@
-package scala.tools.eclipse.lexical
+package org.scalaide.core
+package lexical
 
-import scala.tools.eclipse.properties.syntaxcolouring._
-import scala.tools.eclipse.properties.syntaxcolouring.ScalaSyntaxClasses._
-import scala.tools.eclipse.testsetup.SDTTestUtils
-
+import org.scalaide.ui.syntax._
+import org.scalaide.ui.syntax.ScalaSyntaxClasses._
+import testsetup.SDTTestUtils
 import org.junit.ComparisonFailure
 import org.junit.Ignore
 import org.junit.Test
-
 import scalariform.ScalaVersions
+import org.scalaide.core.internal.lexical.ScalaCodeTokenizer
 
 class ScalaCodeScannerTest {
 

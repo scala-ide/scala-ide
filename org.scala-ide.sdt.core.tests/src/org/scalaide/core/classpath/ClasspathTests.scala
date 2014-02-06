@@ -1,6 +1,6 @@
 package org.scalaide.core.classpath
 
-import scala.tools.eclipse.testsetup.TestProjectSetup
+import org.scalaide.core.testsetup.TestProjectSetup
 import org.junit.Assert._
 import org.junit.Test
 import org.eclipse.jdt.core.JavaCore
@@ -11,19 +11,19 @@ import org.eclipse.core.runtime.Path
 import org.junit.Before
 import org.eclipse.jdt.core.IClasspathEntry
 import org.eclipse.core.resources.IMarker
-import scala.tools.eclipse.ScalaPlugin
+import org.scalaide.core.ScalaPlugin
 import org.junit.After
 import org.junit.Ignore
-import scala.tools.eclipse.EclipseUserSimulator
-import scala.tools.eclipse.ScalaProject
-import scala.tools.eclipse.properties.CompilerSettings
-import scala.tools.eclipse.testsetup.SDTTestUtils
-import scala.tools.eclipse.util.EclipseUtils
+import org.scalaide.core.EclipseUserSimulator
+import org.scalaide.core.internal.project.ScalaProject
+import org.scalaide.ui.internal.preferences.CompilerSettings
+import org.scalaide.core.testsetup.SDTTestUtils
+import org.scalaide.util.internal.eclipse.EclipseUtils
 import org.eclipse.core.runtime.Status
 import org.eclipse.core.runtime.jobs.IJobChangeEvent
 import org.eclipse.core.runtime.jobs.JobChangeAdapter
-import scala.tools.eclipse.SettingConverterUtil
-import scala.tools.eclipse.properties.ScalaPluginSettings
+import org.scalaide.util.internal.SettingConverterUtil
+import org.scalaide.ui.internal.preferences.ScalaPluginSettings
 
 object ClasspathTests extends TestProjectSetup("classpath")
 

@@ -1,6 +1,6 @@
 package org.scalaide.core
 
-import scala.tools.eclipse.logging.HasLogger
+import org.scalaide.logging.HasLogger
 
 object FlakyTest extends HasLogger {
   private final val RetryFlakyTests = "retryFlakyTests"

@@ -1,7 +1,8 @@
-package scala.tools.eclipse.util
+package org.scalaide.core.util
 
 import org.junit.Test
 import junit.framework.Assert.assertEquals
+import org.scalaide.util.internal.CollectionUtil
 
 
 class CollectionUtilTest {

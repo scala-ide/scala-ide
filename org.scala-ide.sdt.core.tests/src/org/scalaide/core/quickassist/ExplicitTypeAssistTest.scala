@@ -1,4 +1,5 @@
-package scala.tools.eclipse.quickassist
+package org.scalaide.core
+package quickassist
 
 import org.eclipse.jdt.internal.core.util.SimpleDocument
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal
@@ -6,14 +7,11 @@ import org.junit.AfterClass
 import org.junit.Assert
 import org.junit.BeforeClass
 import org.junit.Test
-
 import java.util.ArrayList
-
-import scala.tools.eclipse.EclipseUserSimulator
-import scala.tools.eclipse.ScalaProject
-import scala.tools.eclipse.javaelements.ScalaSourceFile
-import scala.tools.eclipse.quickfix.explicit.ExplicitReturnType
-import scala.tools.eclipse.testsetup.SDTTestUtils
+import org.scalaide.core.internal.project.ScalaProject
+import org.scalaide.core.internal.jdt.model.ScalaSourceFile
+import org.scalaide.core.internal.quickfix.explicit.ExplicitReturnType
+import testsetup.SDTTestUtils
 import scala.util.control.Exception
 
 object ExplicitTypeAssistTest {

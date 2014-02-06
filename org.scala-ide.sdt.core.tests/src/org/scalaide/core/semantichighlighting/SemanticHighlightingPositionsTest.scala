@@ -1,18 +1,16 @@
-package scala.tools.eclipse.semantichighlighting
+package org.scalaide.core
+package semantichighlighting
 
-import scala.tools.eclipse.EclipseUserSimulator
-import scala.tools.eclipse.ScalaPlugin
-import scala.tools.eclipse.ScalaProject
-import scala.tools.eclipse.javaelements.ScalaCompilationUnit
-import scala.tools.eclipse.jface.text.EmptyRegion
-import scala.tools.eclipse.properties.syntaxcolouring.ScalaSyntaxClasses
-import scala.tools.eclipse.semantichighlighting.classifier.SymbolTypes
-import scala.tools.eclipse.ui.InteractiveCompilationUnitEditor
-import scala.tools.eclipse.util.CurrentThread
-import scala.tools.eclipse.util.EclipseUtils
+import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.internal.project.ScalaProject
+import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
+import org.scalaide.util.internal.eclipse.EmptyRegion
+import org.scalaide.ui.syntax.ScalaSyntaxClasses
+import org.scalaide.ui.internal.editor.InteractiveCompilationUnitEditor
+import org.scalaide.core.util.CurrentThread
+import org.scalaide.util.internal.eclipse.EclipseUtils
 import scala.util.matching.Regex
 import scala.util.matching.Regex.Match
-
 import org.eclipse.core.internal.filebuffers.SynchronizableDocument
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.core.runtime.IStatus
@@ -28,6 +26,11 @@ import org.junit.Test
 import org.junit.After
 import org.junit.Assert
 import org.mockito.Mockito._
+import org.scalaide.ui.internal.editor.decorators.semantichighlighting.Preferences
+import org.scalaide.ui.internal.editor.decorators.semantichighlighting.Presenter
+import org.scalaide.ui.internal.editor.decorators.semantichighlighting.TextPresentationHighlighter
+import org.scalaide.core.internal.decorators.semantichighlighting._
+import org.scalaide.core.internal.decorators.semantichighlighting.classifier.SymbolTypes
 
 class SemanticHighlightingPositionsTest {
   import SemanticHighlightingPositionsTest._

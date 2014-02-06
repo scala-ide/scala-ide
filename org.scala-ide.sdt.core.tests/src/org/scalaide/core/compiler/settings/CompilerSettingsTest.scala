@@ -1,17 +1,17 @@
 package org.scalaide.core.compiler.settings
 
-import scala.tools.eclipse.ScalaPlugin
-import scala.tools.eclipse.SettingConverterUtil
-import scala.tools.eclipse.properties.CompilerSettings
-import scala.tools.eclipse.properties.PropertyStore
-import scala.tools.eclipse.testsetup.TestProjectSetup
+import org.scalaide.core.ScalaPlugin
+import org.scalaide.util.internal.SettingConverterUtil
+import org.scalaide.ui.internal.preferences.CompilerSettings
+import org.scalaide.ui.internal.preferences.PropertyStore
+import org.scalaide.core.testsetup.TestProjectSetup
 import org.junit.Assert._
 import org.junit.Test
 import org.junit.BeforeClass
 import org.junit.AfterClass
-import scala.tools.eclipse.EclipseUserSimulator
-import scala.tools.eclipse.ScalaProject
-import scala.tools.eclipse.util.EclipseUtils
+import org.scalaide.core.EclipseUserSimulator
+import org.scalaide.core.internal.project.ScalaProject
+import org.scalaide.util.internal.eclipse.EclipseUtils
 
 object CompilerSettingsTest {
   private val simulator = new EclipseUserSimulator

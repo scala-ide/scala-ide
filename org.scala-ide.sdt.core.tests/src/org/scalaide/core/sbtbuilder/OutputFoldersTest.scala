@@ -1,6 +1,7 @@
-package scala.tools.eclipse.sbtbuilder
+package org.scalaide.core
+package sbtbuilder
+
 import org.junit.Test
-import scala.tools.eclipse.EclipseUserSimulator
 import org.junit.Assert
 import org.eclipse.core.resources.IFolder
 import org.eclipse.core.resources.IContainer
@@ -8,9 +9,9 @@ import org.eclipse.core.runtime.Path
 import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jdt.core.IClasspathEntry
 import org.eclipse.core.runtime.IPath
-import scala.tools.eclipse.ScalaProject
-import scala.tools.eclipse.testsetup.SDTTestUtils
-import scala.tools.eclipse.ScalaPlugin
+import org.scalaide.core.internal.project.ScalaProject
+import testsetup.SDTTestUtils
+import org.scalaide.core.ScalaPlugin
 import org.junit.Before
 
 /** Test simple operations involving the source and output

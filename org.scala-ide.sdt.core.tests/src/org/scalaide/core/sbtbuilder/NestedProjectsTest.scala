@@ -1,17 +1,19 @@
-package scala.tools.eclipse.sbtbuilder
-import scala.tools.eclipse.testsetup.TestProjectSetup
-import scala.tools.eclipse.ScalaProject
+package org.scalaide.core
+package sbtbuilder
+
+import testsetup.TestProjectSetup
+import testsetup.SDTTestUtils
+import org.scalaide.core.internal.project.ScalaProject
 import org.junit.Test
 import org.junit.Assert._
-import scala.tools.eclipse.util.EclipseUtils
+import org.scalaide.util.internal.eclipse.EclipseUtils
 import org.eclipse.core.resources.ResourcesPlugin
-import scala.tools.eclipse.ScalaPlugin
+import org.scalaide.core.ScalaPlugin
 import org.eclipse.core.runtime.Path
 import org.eclipse.jdt.core.JavaCore
 import org.eclipse.core.resources.IncrementalProjectBuilder
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.jdt.core.IPackageFragmentRoot
-import scala.tools.eclipse.testsetup.SDTTestUtils
 import org.eclipse.core.resources.IFile
 import org.eclipse.jdt.core.IJavaModelMarker
 import org.eclipse.core.resources.IResource

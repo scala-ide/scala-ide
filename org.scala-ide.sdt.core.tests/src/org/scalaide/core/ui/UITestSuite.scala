@@ -1,4 +1,4 @@
-package scala.tools.eclipse.ui
+package org.scalaide.core.ui
 
 import org.junit.runner.RunWith
 import org.junit.runners.Suite

@@ -1,4 +1,4 @@
-package scala.tools.eclipse.semantichighlighting.classifier
+package org.scalaide.core.semantichighlighting.classifier
 
 import org.eclipse.jface.text.IRegion
 import org.eclipse.jface.text.Region

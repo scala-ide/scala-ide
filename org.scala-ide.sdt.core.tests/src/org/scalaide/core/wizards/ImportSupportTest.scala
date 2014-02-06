@@ -2,11 +2,12 @@
  * Copyright 2010 LAMP/EPFL
  *
  */
-package scala.tools.eclipse.wizards
+package org.scalaide.core.wizards
 
 import org.junit.Test
 import org.junit.Assert
 import org.junit.Ignore
+import org.scalaide.ui.internal.wizards.ImportSupport
 
 class ImportSupportTest {
 

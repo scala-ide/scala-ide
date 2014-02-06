@@ -1,13 +1,14 @@
-package scala.tools.eclipse.lexical
+package org.scalaide.core.lexical
 
 import scala.xml.Elem
 import org.eclipse.jface.text.IDocument
 import org.junit.Test
 import org.junit.Before
-
-import scala.tools.eclipse.lexical.ScalaPartitions._
+import org.scalaide.core.internal.lexical.ScalaPartitions._
 import org.eclipse.jface.text.IDocument.DEFAULT_CONTENT_TYPE
 import org.eclipse.jdt.ui.text.IJavaPartitions._
+import org.scalaide.core.internal.lexical.ScalaPartitionTokeniser
+import org.scalaide.core.internal.lexical.ScalaPartitionRegion
 
 class ScalaPartitionTokeniserTest {
   import ScalaPartitionTokeniserTest._

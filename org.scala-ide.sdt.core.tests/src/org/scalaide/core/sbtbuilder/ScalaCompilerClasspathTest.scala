@@ -1,4 +1,4 @@
-package scala.tools.eclipse
+package org.scalaide.core
 package sbtbuilder
 
 import org.junit.Test
@@ -13,7 +13,7 @@ import org.eclipse.core.resources.IResource
 import org.junit.Assert
 import org.eclipse.core.resources.IMarker
 
-import scala.tools.eclipse.testsetup.SDTTestUtils
+import testsetup.SDTTestUtils
 import org.eclipse.core.resources.IFile
 import org.junit.Ignore
 import org.junit.Before

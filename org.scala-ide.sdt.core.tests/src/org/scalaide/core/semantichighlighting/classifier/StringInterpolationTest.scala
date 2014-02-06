@@ -1,6 +1,7 @@
-package scala.tools.eclipse.semantichighlighting.classifier
+package org.scalaide.core.semantichighlighting.classifier
 
-import SymbolTypes._
+import org.scalaide.core.internal.decorators.semantichighlighting.classifier.SymbolTypes._
+import org.scalaide.core.internal.decorators.semantichighlighting.classifier.SymbolInfo
 import org.junit._
 
 class StringInterpolationTest extends AbstractSymbolClassifierTest {

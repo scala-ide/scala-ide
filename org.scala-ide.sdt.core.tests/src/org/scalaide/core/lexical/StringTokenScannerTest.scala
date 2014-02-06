@@ -1,6 +1,7 @@
-package scala.tools.eclipse.lexical
+package org.scalaide.core.lexical
 
 import org.junit.Test
+import org.scalaide.core.internal.lexical.StringTokenizer
 
 class StringTokenScannerTest {
 

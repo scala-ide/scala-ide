@@ -1,15 +1,16 @@
-package scala.tools.eclipse.hyperlink
+package org.scalaide.core
+package hyperlink
 
-import scala.tools.eclipse.testsetup.TestProjectSetup
-import scala.tools.eclipse.ScalaWordFinder
+import testsetup.TestProjectSetup
+import org.scalaide.util.internal.ScalaWordFinder
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
-import scala.tools.eclipse.hyperlink.text.detector.ScalaDeclarationHyperlinkComputer
-import scala.tools.eclipse.javaelements.ScalaSourceFile
-import scala.tools.eclipse.InteractiveCompilationUnit
+import org.scalaide.core.hyperlink.detector.ScalaDeclarationHyperlinkComputer
+import org.scalaide.core.internal.jdt.model.ScalaSourceFile
+import org.scalaide.core.compiler.InteractiveCompilationUnit
 import org.eclipse.jface.text.IRegion
-import scala.tools.eclipse.hyperlink.text.detector.DeclarationHyperlinkDetector
-import scala.tools.eclipse.hyperlink.text.detector.JavaSelectionEngine
+import org.scalaide.core.hyperlink.detector.DeclarationHyperlinkDetector
+import org.scalaide.core.hyperlink.detector.JavaSelectionEngine
 import org.eclipse.jdt.internal.core.Openable
 import org.eclipse.jdt.core.IJavaElement
 import org.eclipse.jdt.core.IType

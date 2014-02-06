@@ -1,8 +1,7 @@
-package scala.tools.eclipse.ui
+package org.scalaide.core.ui
 
-import scala.tools.eclipse.lexical.ScalaDocumentPartitioner
-import scala.tools.eclipse.properties.EditorPreferencePage
-
+import org.scalaide.core.internal.lexical.ScalaDocumentPartitioner
+import org.scalaide.ui.internal.preferences.EditorPreferencePage
 import org.eclipse.jdt.ui.text.IJavaPartitions
 import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.jface.text.Document
@@ -11,8 +10,8 @@ import org.junit.Before
 import org.junit.ComparisonFailure
 import org.junit.Test
 import org.mockito.Mockito._
-
 import AutoEditStrategyTests.TestCommand
+import org.scalaide.ui.internal.editor.autoedits.CommentAutoIndentStrategy
 
 class CommentAutoEditStrategyTest {
 

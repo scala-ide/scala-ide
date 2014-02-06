@@ -1,7 +1,7 @@
-package scala.tools.eclipse.ui
+package org.scalaide.core.ui
 
-import scala.tools.eclipse.properties.EditorPreferencePage
-
+import org.scalaide.ui.internal.preferences.EditorPreferencePage
+import org.scalaide.ui.internal.editor.autoedits.BracketAutoEditStrategy
 import org.eclipse.jface.preference.IPreferenceStore
 import org.junit.Before
 import org.junit.Test

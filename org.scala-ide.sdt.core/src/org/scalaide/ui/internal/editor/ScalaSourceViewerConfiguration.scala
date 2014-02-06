@@ -80,7 +80,7 @@ class ScalaSourceViewerConfiguration(
   }
 
   override def getTabWidth(sourceViewer: ISourceViewer): Int = {
-    import scala.tools.eclipse.formatter.FormatterPreferences._
+    import org.scalaide.core.internal.formatter.FormatterPreferences._
     import scalariform.formatter.preferences._
 
     scalaPreferenceStore.getInt(IndentSpaces.eclipseKey)

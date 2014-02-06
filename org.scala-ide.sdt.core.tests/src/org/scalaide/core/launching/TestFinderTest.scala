@@ -1,6 +1,7 @@
-package scala.tools.eclipse.launching
+package org.scalaide.core
+package launching
 
-import scala.tools.eclipse.testsetup.TestProjectSetup
+import testsetup.TestProjectSetup
 import org.junit.Test
 import org.eclipse.jdt.core.IType
 import org.eclipse.core.runtime.NullProgressMonitor
@@ -10,6 +11,7 @@ import collection.JavaConverters._
 import org.eclipse.core.resources.IResource
 import scala.collection.mutable
 import org.junit.ComparisonFailure
+import org.scalaide.core.internal.launching.JUnit4TestFinder
 
 object TestFinderTest extends TestProjectSetup("test-finder")
 

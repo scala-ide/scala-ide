@@ -1,14 +1,14 @@
-package scala.tools.eclipse.launching
+package org.scalaide.core
+package launching
 
-import scala.tools.eclipse.EclipseUserSimulator
-import scala.tools.eclipse.ScalaProject
-import scala.tools.eclipse.testsetup.SDTTestUtils
-import scala.tools.eclipse.testsetup.TestProjectSetup
-
+import org.scalaide.core.internal.project.ScalaProject
+import testsetup.SDTTestUtils
+import testsetup.TestProjectSetup
 import org.junit.After
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
+import org.scalaide.core.internal.launching.ScalaLaunchShortcut
 
 class MainMethodFinderTest {
 

@@ -1,9 +1,10 @@
-package scala.tools.eclipse.util.parsing
+package org.scalaide.core.util.parsing
 
 import org.junit.Test
 import org.junit.Assert._
 import scalariform.parser._
 import scalariform.lexer._
+import org.scalaide.util.internal.scalariform._
 
 class ScalariformUtilsTest {
   @Test def depthFirst() {

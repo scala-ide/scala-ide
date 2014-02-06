@@ -1,4 +1,4 @@
-package scala.tools.eclipse.findreferences
+package org.scalaide.core.findreferences
 
 object FindReferencesTester {
   final val MODULE_SUFFIX_STRING = "$"

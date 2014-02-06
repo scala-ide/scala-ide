@@ -1,6 +1,6 @@
-package scala.tools.eclipse.hyperlink
+package org.scalaide.core.hyperlink
 
-import scala.tools.eclipse.ScalaWordFinder
+import org.scalaide.util.internal.ScalaWordFinder
 import org.eclipse.jface.text.IRegion
 import org.junit.Test
 import org.junit.Assert

@@ -1,4 +1,4 @@
-package scala.tools.eclipse.testsetup
+package org.scalaide.core.testsetup
 
 import java.io._
 

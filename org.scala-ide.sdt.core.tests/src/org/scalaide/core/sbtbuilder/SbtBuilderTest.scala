@@ -1,4 +1,4 @@
-package scala.tools.eclipse
+package org.scalaide.core
 package sbtbuilder
 
 import org.junit.Test
@@ -8,20 +8,20 @@ import org.eclipse.jdt.core.IJavaModelMarker
 import org.eclipse.core.resources.IResource
 import org.junit.Assert
 import org.eclipse.core.resources.IMarker
-import scala.tools.eclipse.testsetup.SDTTestUtils
+import testsetup._
 import org.eclipse.core.resources.IFile
 import org.junit.Ignore
 import org.junit.Before
 import org.mockito.Matchers.any
 import org.eclipse.jdt.core.IProblemRequestor
 import org.eclipse.jdt.core.WorkingCopyOwner
-import scala.tools.eclipse.javaelements.ScalaSourceFile
+import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import scala.util.matching.Regex
-import testsetup._
 import org.eclipse.core.runtime.Path
 import org.eclipse.jdt.core.JavaCore
-
 import scala.tools.nsc.Settings
+import org.scalaide.core.internal.project.ScalaProject
+import org.scalaide.core.internal.project.ScalaClasspath
 
 object SbtBuilderTest extends TestProjectSetup("builder") with CustomAssertion
 object depProject extends TestProjectSetup("builder-sub")

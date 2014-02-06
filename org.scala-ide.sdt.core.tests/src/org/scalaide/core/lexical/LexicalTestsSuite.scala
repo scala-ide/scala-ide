@@ -1,4 +1,4 @@
-package scala.tools.eclipse.lexical
+package org.scalaide.core.lexical
 
 import org.junit.runner.RunWith
 import org.junit.runners.Suite
