@@ -1,4 +1,4 @@
-package scala.tools.eclipse
+package org.scalaide.core
 
 import scala.tools.eclipse.logging.HasLogger
 

@@ -1,4 +1,4 @@
-package scala.tools.eclipse.compiler.settings
+package org.scalaide.core.compiler.settings
 
 import scala.tools.eclipse.ScalaPlugin
 import scala.tools.eclipse.SettingConverterUtil

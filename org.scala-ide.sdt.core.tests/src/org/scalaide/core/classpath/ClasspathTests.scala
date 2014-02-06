@@ -1,4 +1,4 @@
-package scala.tools.eclipse.classpath
+package org.scalaide.core.classpath
 
 import scala.tools.eclipse.testsetup.TestProjectSetup
 import org.junit.Assert._

@@ -1,4 +1,4 @@
-package scala.tools.eclipse
+package org.scalaide.core
 
 import org.eclipse.core.internal.resources.Workspace
 import org.eclipse.core.internal.resources.Project

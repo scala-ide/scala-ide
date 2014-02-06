@@ -1,4 +1,4 @@
-package scala.tools.eclipse.buildmanager
+package org.scalaide.core.buildmanager
 
 import java.util.concurrent.CountDownLatch
 import org.eclipse.core.internal.runtime.RuntimeLog

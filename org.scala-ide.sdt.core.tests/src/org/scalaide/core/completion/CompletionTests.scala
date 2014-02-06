@@ -1,4 +1,4 @@
-package scala.tools.eclipse.completion
+package org.scalaide.core.completion
 
 import scala.tools.eclipse.testsetup.SDTTestUtils
 import scala.tools.eclipse.javaelements.ScalaCompilationUnit
