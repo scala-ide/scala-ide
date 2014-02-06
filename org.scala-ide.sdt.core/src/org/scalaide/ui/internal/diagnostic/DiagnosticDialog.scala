@@ -1,5 +1,4 @@
-package scala.tools.eclipse
-package diagnostic
+package org.scalaide.ui.internal.diagnostic
 
 import org.eclipse.jface.window.Window
 import org.eclipse.jface.dialogs.ErrorDialog
@@ -26,8 +25,8 @@ import org.eclipse.core.runtime.Platform
 import scala.tools.eclipse.contribution.weaving.jdt.configuration.WeavingStateConfigurer
 import org.eclipse.ui.PlatformUI
 import org.eclipse.ui.browser.IWorkbenchBrowserSupport
-import scala.tools.eclipse.logging.LogManager
-import scala.tools.eclipse.ui.OpenExternalFile
+import org.scalaide.logging.LogManager
+import org.scalaide.ui.internal.actions.OpenExternalFile
 import java.io.File
 import java.net.URI
 

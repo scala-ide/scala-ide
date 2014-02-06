@@ -1,15 +1,14 @@
-package scala.tools.eclipse.buildmanager
+package org.scalaide.core.internal.builder
 
 import org.eclipse.core.resources.IResource
 import org.eclipse.core.resources.IMarker
-import scala.tools.eclipse.resources.MarkerFactory
-import scala.tools.eclipse.ScalaPlugin
-import scala.tools.eclipse.ScalaProject
-import scala.tools.eclipse.resources.MarkerFactory.Position
-import scala.tools.eclipse.resources.MarkerFactory.NoPosition
-import scala.tools.eclipse.resources.MarkerFactory.RegionPosition
-
+import org.scalaide.core.resources.MarkerFactory
+import org.scalaide.core.resources.MarkerFactory.Position
+import org.scalaide.core.resources.MarkerFactory.NoPosition
+import org.scalaide.core.resources.MarkerFactory.RegionPosition
+import org.scalaide.core.internal.project.ScalaProject
 import scala.reflect.internal.util.{ Position => ScalacPosition }
+import org.scalaide.core.ScalaPlugin
 
 /** Factory for creating markers used to report build problems (i.e., compilation errors). */
 object BuildProblemMarker extends MarkerFactory(ScalaPlugin.plugin.problemMarkerId) {

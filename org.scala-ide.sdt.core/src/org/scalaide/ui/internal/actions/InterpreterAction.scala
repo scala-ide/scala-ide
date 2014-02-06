@@ -1,10 +1,4 @@
-/*
- * Copyright 2005-2010 LAMP/EPFL
- */
-// $Id$
-
-package scala.tools.eclipse
-package actions
+package org.scalaide.ui.internal.actions
 
 import org.eclipse.jface.action.IAction
 import org.eclipse.ui.IObjectActionDelegate
@@ -31,7 +25,7 @@ class InterpreterAction extends IObjectActionDelegate {
 
     val project = target.get.getJavaProject.getProject
 
-    import scala.tools.eclipse.interpreter.Factory
+    import org.scalaide.ui.internal.repl.Factory
     Factory.openConsoleInProjectFromTarget(project, target)
   }
 

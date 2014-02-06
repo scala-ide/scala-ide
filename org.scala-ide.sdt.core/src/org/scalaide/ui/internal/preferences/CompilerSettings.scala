@@ -1,9 +1,4 @@
-/*
- * Copyright 2005-2010 LAMP/EPFL
- */
-// $Id$
-
-package scala.tools.eclipse.properties
+package org.scalaide.ui.internal.preferences
 
 import org.eclipse.core.resources.IncrementalProjectBuilder
 import org.eclipse.core.resources.IProject
@@ -34,18 +29,18 @@ import org.eclipse.swt.widgets.TabFolder
 import org.eclipse.swt.widgets.TabItem
 import org.eclipse.swt.widgets.Text
 import scala.tools.nsc.Settings
-import scala.tools.eclipse.ScalaPlugin
-import scala.tools.eclipse.SettingConverterUtil
-import scala.tools.eclipse.util.SWTUtils
+import org.scalaide.core.ScalaPlugin
+import org.scalaide.util.internal.SettingConverterUtil
+import org.scalaide.util.internal.eclipse.SWTUtils
 import org.eclipse.jface.fieldassist.FieldDecorationRegistry
 import org.eclipse.jface.fieldassist.ControlDecoration
 import org.eclipse.swt.events.VerifyEvent
 import scala.tools.nsc.CompilerCommand
 import org.eclipse.jface.fieldassist._
 import org.eclipse.jface.bindings.keys.KeyStroke
-import scala.tools.eclipse.logging.HasLogger
-import scala.tools.eclipse.buildmanager.ProjectsCleanJob
 import org.eclipse.jface.dialogs.MessageDialog
+import org.scalaide.logging.HasLogger
+import org.scalaide.core.internal.builder.ProjectsCleanJob
 
 trait ScalaPluginPreferencePage extends HasLogger {
   self: PreferencePage with EclipseSettings =>
@@ -346,7 +341,7 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
 
   // LUC_B: it would be nice to have this widget behave like the other 'EclipseSettings', to avoid unnecessary custom code
   class AdditionalParametersWidget {
-    import scala.tools.eclipse.util.SWTUtils._
+    import org.scalaide.util.internal.eclipse.SWTUtils._
 
     var additionalParametersControl: Text = _
     var additionalCompParams = originalValue

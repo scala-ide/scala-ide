@@ -1,16 +1,11 @@
-/*
- * Copyright 2005-2010 LAMP/EPFL
- */
-// $Id$
-
-package scala.tools.eclipse.properties
+package org.scalaide.ui.internal.preferences
 
 import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer
 import org.eclipse.core.runtime.preferences.DefaultScope
 import scala.tools.nsc.Settings
-import scala.tools.eclipse.ScalaPlugin
-import scala.tools.eclipse.SettingConverterUtil._
-import scala.tools.eclipse.util.Utils
+import org.scalaide.core.ScalaPlugin
+import org.scalaide.util.internal.SettingConverterUtil._
+import org.scalaide.util.internal.Utils
 
 /**
  * This is responsible for initializing Scala Compiler

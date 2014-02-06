@@ -1,25 +1,18 @@
-/*
- * Copyright 2005-2010 LAMP/EPFL
- */
-// $Id$
-
-package scala.tools.eclipse
+package org.scalaide.core.internal.project
 
 import java.io.File.pathSeparator
-
 import scala.collection.immutable
 import scala.collection.mutable
 import scala.reflect.internal.util.SourceFile
-import scala.tools.eclipse.javaelements.ScalaSourceFile
-import scala.tools.eclipse.logging.HasLogger
-import scala.tools.eclipse.properties.CompilerSettings
-import scala.tools.eclipse.properties.IDESettings
-import scala.tools.eclipse.properties.PropertyStore
-import scala.tools.eclipse.ui.PartAdapter
-import scala.tools.eclipse.util.EclipseResource
-import scala.tools.eclipse.util.Trim
+import org.scalaide.core.internal.jdt.model.ScalaSourceFile
+import org.scalaide.logging.HasLogger
+import org.scalaide.ui.internal.preferences.CompilerSettings
+import org.scalaide.ui.internal.preferences.IDESettings
+import org.scalaide.ui.internal.preferences.PropertyStore
+import org.scalaide.ui.internal.actions.PartAdapter
+import org.scalaide.core.resources.EclipseResource
+import org.scalaide.util.internal.Trim
 import scala.tools.nsc.Settings
-
 import org.eclipse.core.resources.IContainer
 import org.eclipse.core.resources.IFile
 import org.eclipse.core.resources.IMarker
@@ -42,6 +35,14 @@ import org.eclipse.ui.IEditorPart
 import org.eclipse.ui.IPartListener
 import org.eclipse.ui.IWorkbenchPart
 import org.eclipse.ui.part.FileEditorInput
+import org.scalaide.core.compiler.ScalaPresentationCompiler
+import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.internal.builder.EclipseBuildManager
+import org.scalaide.core.compiler.ScalaPresentationCompilerProxy
+import org.scalaide.core.compiler.InteractiveCompilationUnit
+import org.scalaide.util.internal.SettingConverterUtil
+import org.scalaide.core.internal.builder
+import org.scalaide.ui.internal.preferences.ScalaPluginSettings
 
 trait BuildSuccessListener {
   def buildSuccessful(): Unit
@@ -452,7 +453,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
   }
 
   private def buildManagerInitialize: String =
-    storage.getString(SettingConverterUtil.convertNameToProperty(properties.ScalaPluginSettings.buildManager.name))
+    storage.getString(SettingConverterUtil.convertNameToProperty(ScalaPluginSettings.buildManager.name))
 
   /** Does this project use project-specific compiler settings? */
   def usesProjectSettings: Boolean =
@@ -547,10 +548,10 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
       choice match {
         case "sbt"  =>
           logger.info("BM: SBT enhanced Build Manager for " + plugin.scalaVer + " Scala library")
-          buildManager0 = new buildmanager.sbtintegration.EclipseSbtBuildManager(this, settings)
+          buildManager0 = new builder.zinc.EclipseSbtBuildManager(this, settings)
         case _ =>
           logger.info("Invalid build manager choice '" + choice  + "'. Setting to (default) sbt build manager")
-          buildManager0 = new buildmanager.sbtintegration.EclipseSbtBuildManager(this, settings)
+          buildManager0 = new builder.zinc.EclipseSbtBuildManager(this, settings)
       }
 
       //buildManager0 = new EclipseBuildManager(this, settings)
@@ -626,7 +627,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
   }
 
   /** Should only be called when `this` project is being deleted or closed from the workspace. */
-  private[eclipse] def dispose(): Unit = {
+  private[core] def dispose(): Unit = {
     def shutDownCompilers() {
       logger.info("shutting down compilers for " + this)
       resetBuildCompiler()

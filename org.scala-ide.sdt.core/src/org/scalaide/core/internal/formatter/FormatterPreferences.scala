@@ -1,4 +1,4 @@
-package scala.tools.eclipse.formatter
+package org.scalaide.core.internal.formatter
 
 import org.eclipse.jdt.core.IJavaProject
 import org.eclipse.core.resources.IProject
@@ -6,11 +6,11 @@ import scalariform.formatter.preferences.IntegerPreferenceDescriptor
 import scalariform.formatter.preferences.BooleanPreferenceDescriptor
 import scalariform.formatter.preferences.FormattingPreferences
 import scalariform.formatter.preferences.AllPreferences
-import scala.tools.eclipse.ScalaPlugin
+import org.scalaide.core.ScalaPlugin
 import scalariform.formatter.preferences.IFormattingPreferences
 import org.eclipse.jface.preference.IPreferenceStore
 import scalariform.formatter.preferences.PreferenceDescriptor
-import scala.tools.eclipse.properties.PropertyStore
+import org.scalaide.ui.internal.preferences.PropertyStore
 
 object FormatterPreferences {
 

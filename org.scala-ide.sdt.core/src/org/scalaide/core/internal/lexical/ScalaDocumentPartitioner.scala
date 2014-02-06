@@ -1,4 +1,4 @@
-package scala.tools.eclipse.lexical
+package org.scalaide.core.internal.lexical
 
 import org.eclipse.jface.text._
 import org.eclipse.jface.text.IDocument.DEFAULT_CONTENT_TYPE
@@ -121,7 +121,7 @@ class ScalaDocumentPartitioner(conservative: Boolean = false) extends IDocumentP
 object ScalaDocumentPartitioner {
 
   import org.eclipse.jdt.ui.text.IJavaPartitions._
-  import scala.tools.eclipse.lexical.ScalaPartitions._
+  import org.scalaide.core.internal.lexical.ScalaPartitions._
 
   private val LEGAL_CONTENT_TYPES = Array[String](
     DEFAULT_CONTENT_TYPE,

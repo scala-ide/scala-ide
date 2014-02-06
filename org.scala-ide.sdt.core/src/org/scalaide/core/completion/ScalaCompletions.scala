@@ -1,5 +1,6 @@
-package scala.tools.eclipse.completion
-import scala.tools.eclipse.ScalaPresentationCompiler
+package org.scalaide.core.completion
+
+import org.scalaide.core.compiler.ScalaPresentationCompiler
 import scala.reflect.internal.util.SourceFile
 import org.eclipse.jdt.core.search.SearchEngine
 import org.eclipse.jdt.core.search.IJavaSearchConstants
@@ -8,17 +9,17 @@ import org.eclipse.jdt.core.search.TypeNameRequestor
 import org.eclipse.jdt.core.IJavaElement
 import scala.collection.mutable
 import org.eclipse.core.runtime.NullProgressMonitor
-import scala.tools.eclipse.logging.HasLogger
-import scala.tools.eclipse.InteractiveCompilationUnit
+import org.scalaide.logging.HasLogger
+import org.scalaide.core.compiler.InteractiveCompilationUnit
 import scala.collection.mutable.MultiMap
-import scala.tools.eclipse.util.Utils
-import scala.tools.eclipse.ScalaPlugin
-import scala.tools.eclipse.completion.CompletionContext.ContextType
+import org.scalaide.util.internal.Utils
+import org.scalaide.core.ScalaPlugin
+import CompletionContext.ContextType
 
 /** Base class for Scala completions. No UI dependency, can be safely used in a
  *  headless testing environment.
  *
- *  @see scala.tools.eclipse.ui.ScalaCompletionProposalComputer
+ *  @see org.scalaide.ui.internal.completion.ScalaCompletionProposalComputer
  */
 class ScalaCompletions extends HasLogger {
   import org.eclipse.jface.text.IRegion

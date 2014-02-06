@@ -1,5 +1,6 @@
-package scala.tools.eclipse.refactoring.source
-package ui
+package org.scalaide.refactoring.internal.source.ui
+
+import org.scalaide.refactoring.internal.source.ClassParameterDrivenIdeRefactoring
 
 trait IntroduceProductNTraitConfigurationPageGenerator extends GenerateHashcodeAndEqualsConfigurationPageGenerator {
 

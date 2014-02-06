@@ -1,4 +1,4 @@
-package scala.tools.eclipse.util
+package org.scalaide.util.internal
 
 object CollectionUtil {
 

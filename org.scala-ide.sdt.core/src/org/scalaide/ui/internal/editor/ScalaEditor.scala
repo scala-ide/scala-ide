@@ -1,16 +1,10 @@
-/*
- * Copyright 2005-2010 LAMP/EPFL
- */
-// $Id$
-
-package scala.tools.eclipse
+package org.scalaide.ui.internal.editor
 
 import org.eclipse.jface.text.rules.FastPartitioner
 import org.eclipse.jface.text.IDocumentPartitioner
 import org.eclipse.jdt.ui.text.IJavaPartitions
 import scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.IScalaEditor
-import scala.tools.eclipse.lexical._
-import scala.tools.eclipse.ui.InteractiveCompilationUnitEditor
+import org.scalaide.core.internal.lexical._
 
 trait ScalaEditor extends IScalaEditor with ISourceViewerEditor with InteractiveCompilationUnitEditor {
 

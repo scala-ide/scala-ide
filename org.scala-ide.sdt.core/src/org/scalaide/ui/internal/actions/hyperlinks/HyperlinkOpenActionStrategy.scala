@@ -1,9 +1,8 @@
-package scala.tools.eclipse.ui.actions
+package org.scalaide.ui.internal.actions.hyperlinks
 
-import scala.tools.eclipse.hyperlink.text.detector.BaseHyperlinkDetector
-import scala.tools.eclipse.javaelements.ScalaCompilationUnit
-import scala.tools.eclipse.util.EditorUtils
-
+import org.scalaide.core.hyperlink.detector.BaseHyperlinkDetector
+import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
+import org.scalaide.util.internal.eclipse.EditorUtils
 import org.eclipse.jdt.internal.ui.javaeditor.EditorUtility
 import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor
 import org.eclipse.jface.text.ITextSelection

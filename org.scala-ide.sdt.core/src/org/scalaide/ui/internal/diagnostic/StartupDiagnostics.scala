@@ -1,12 +1,11 @@
-package scala.tools.eclipse
-
-package diagnostic
+package org.scalaide.ui.internal.diagnostic
 
 import scala.tools.eclipse.contribution.weaving.jdt.configuration.WeavingStateConfigurer
-import scala.tools.eclipse.logging.HasLogger
-import scala.tools.eclipse.ui.DisplayThread
+import org.scalaide.logging.HasLogger
+import org.scalaide.util.internal.ui.DisplayThread
 import org.eclipse.ui.PlatformUI
 import org.eclipse.jface.preference.IPreferenceStore
+import org.scalaide.core.ScalaPlugin
 
 
 object MessageDialog {

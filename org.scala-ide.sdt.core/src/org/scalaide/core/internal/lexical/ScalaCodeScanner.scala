@@ -1,13 +1,11 @@
-package scala.tools.eclipse.lexical
+package org.scalaide.core.internal.lexical
 
 import scala.annotation.tailrec
-import scala.tools.eclipse.properties.syntaxcolouring._
-
+import org.scalaide.ui.syntax._
 import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.rules.IToken
 import org.eclipse.jface.text.rules.Token
-
 import scalariform.ScalaVersion
 import scalariform.ScalaVersions
 import scalariform.lexer.ScalaLexer

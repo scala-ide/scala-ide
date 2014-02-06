@@ -1,71 +1,53 @@
-/*
- * Copyright 2005-2010 LAMP/EPFL
- */
-// $Id$
+package org.scalaide.ui.internal.editor
 
-package scala.tools.eclipse.ui
-
-import org.eclipse.core.runtime.Assert;
-
-import org.eclipse.jface.preference.IPreferenceStore;
-
-import org.eclipse.jface.text.BadLocationException;
-import org.eclipse.jface.text.DefaultIndentLineAutoEditStrategy;
-import org.eclipse.jface.text.Document;
-import org.eclipse.jface.text.DocumentCommand;
-import org.eclipse.jface.text.DocumentRewriteSession;
-import org.eclipse.jface.text.DocumentRewriteSessionType;
-import org.eclipse.jface.text.IDocument;
-import org.eclipse.jface.text.IRegion;
-import org.eclipse.jface.text.ITypedRegion;
-import org.eclipse.jface.text.Region;
-import org.eclipse.jface.text.TextUtilities;
-import org.eclipse.jface.text.rules.FastPartitioner;
+import org.eclipse.core.runtime.Assert
+import org.eclipse.jface.preference.IPreferenceStore
+import org.eclipse.jface.text.BadLocationException
+import org.eclipse.jface.text.DefaultIndentLineAutoEditStrategy
+import org.eclipse.jface.text.Document
+import org.eclipse.jface.text.DocumentCommand
+import org.eclipse.jface.text.DocumentRewriteSession
+import org.eclipse.jface.text.DocumentRewriteSessionType
+import org.eclipse.jface.text.IDocument
+import org.eclipse.jface.text.IRegion
+import org.eclipse.jface.text.ITypedRegion
+import org.eclipse.jface.text.Region
+import org.eclipse.jface.text.TextUtilities
+import org.eclipse.jface.text.rules.FastPartitioner
 import org.eclipse.jface.text.rules.RuleBasedPartitioner
-import org.eclipse.jface.text.source.ISourceViewer;
-
-import org.eclipse.ui.IEditorPart;
-import org.eclipse.ui.IWorkbenchPage;
-
-import org.eclipse.ui.texteditor.ITextEditorExtension3;
-
-import org.eclipse.jdt.core.IJavaProject;
-import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jdt.core.ToolFactory;
-import org.eclipse.jdt.core.compiler.IProblem;
-import org.eclipse.jdt.core.compiler.IScanner;
-import org.eclipse.jdt.core.compiler.ITerminalSymbols;
-import org.eclipse.jdt.core.compiler.InvalidInputException;
-import org.eclipse.jdt.core.dom.AST;
-import org.eclipse.jdt.core.dom.ASTNode;
-import org.eclipse.jdt.core.dom.ASTParser;
-import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.eclipse.jdt.core.dom.DoStatement;
-import org.eclipse.jdt.core.dom.Expression;
-import org.eclipse.jdt.core.dom.ForStatement;
-import org.eclipse.jdt.core.dom.IfStatement;
-import org.eclipse.jdt.core.dom.Statement;
-import org.eclipse.jdt.core.dom.WhileStatement;
-import org.eclipse.jdt.core.formatter.DefaultCodeFormatterConstants;
-
-import org.eclipse.jdt.internal.corext.dom.NodeFinder;
-import org.eclipse.jdt.internal.corext.util.CodeFormatterUtil;
-
-import org.eclipse.jdt.ui.PreferenceConstants;
-import org.eclipse.jdt.ui.text.IJavaPartitions;
-
-import org.eclipse.jdt.internal.ui.JavaPlugin;
-import org.eclipse.jdt.internal.ui.text.JavaHeuristicScanner;
-import org.eclipse.jdt.internal.ui.text.JavaIndenter;
-import org.eclipse.jdt.internal.ui.text.Symbols;
-
-import scala.tools.eclipse.lexical.ScalaDocumentPartitioner
-
+import org.eclipse.jface.text.source.ISourceViewer
+import org.eclipse.ui.IEditorPart
+import org.eclipse.ui.IWorkbenchPage
+import org.eclipse.ui.texteditor.ITextEditorExtension3
+import org.eclipse.jdt.core.IJavaProject
+import org.eclipse.jdt.core.JavaCore
+import org.eclipse.jdt.core.ToolFactory
+import org.eclipse.jdt.core.compiler.IProblem
+import org.eclipse.jdt.core.compiler.IScanner
+import org.eclipse.jdt.core.compiler.ITerminalSymbols
+import org.eclipse.jdt.core.compiler.InvalidInputException
+import org.eclipse.jdt.core.dom.AST
+import org.eclipse.jdt.core.dom.ASTNode
+import org.eclipse.jdt.core.dom.ASTParser
+import org.eclipse.jdt.core.dom.CompilationUnit
+import org.eclipse.jdt.core.dom.DoStatement
+import org.eclipse.jdt.core.dom.Expression
+import org.eclipse.jdt.core.dom.ForStatement
+import org.eclipse.jdt.core.dom.IfStatement
+import org.eclipse.jdt.core.dom.Statement
+import org.eclipse.jdt.core.dom.WhileStatement
+import org.eclipse.jdt.core.formatter.DefaultCodeFormatterConstants
+import org.eclipse.jdt.internal.corext.dom.NodeFinder
+import org.eclipse.jdt.internal.corext.util.CodeFormatterUtil
+import org.eclipse.jdt.ui.PreferenceConstants
+import org.eclipse.jdt.ui.text.IJavaPartitions
+import org.eclipse.jdt.internal.ui.JavaPlugin
+import org.eclipse.jdt.internal.ui.text.JavaHeuristicScanner
+import org.eclipse.jdt.internal.ui.text.JavaIndenter
+import org.eclipse.jdt.internal.ui.text.Symbols
+import org.scalaide.core.internal.lexical.ScalaDocumentPartitioner
 import scala.util.matching.Regex
-
-import org.eclipse.jdt.internal.ui.text.Symbols;
-
-
+import org.eclipse.jdt.internal.ui.text.Symbols
 import scala.util.matching.Regex
 
 

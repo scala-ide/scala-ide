@@ -1,12 +1,11 @@
-package scala.tools.eclipse
-package properties
+package org.scalaide.ui.internal.preferences
 
 import org.eclipse.jface.preference._
 import org.eclipse.ui.IWorkbenchPreferencePage
 import org.eclipse.ui.IWorkbench
 import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer
 import org.eclipse.jface.preference.IPreferenceStore
-import scala.tools.eclipse.ScalaPlugin
+import org.scalaide.core.ScalaPlugin
 import org.eclipse.swt.widgets.Link
 import org.eclipse.swt.widgets.Composite
 import org.eclipse.swt.widgets.Control
@@ -17,7 +16,7 @@ import org.eclipse.ui.dialogs.PreferencesUtil
 
 class ImplicitsPreferencePage extends FieldEditorPreferencePage with IWorkbenchPreferencePage {
   import ImplicitsPreferencePage._
-  import util.SWTUtils._
+  import org.scalaide.util.internal.eclipse.SWTUtils._
 
   setPreferenceStore(ScalaPlugin.plugin.getPreferenceStore)
   setDescription("""

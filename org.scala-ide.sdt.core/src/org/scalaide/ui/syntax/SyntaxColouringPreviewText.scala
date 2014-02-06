@@ -1,9 +1,9 @@
-package scala.tools.eclipse.properties.syntaxcolouring
+package org.scalaide.ui.syntax
 
-import scala.tools.eclipse.properties.syntaxcolouring.ScalaSyntaxClasses._
 import scalariform.lexer.ScalaLexer
-import scala.tools.eclipse.semantichighlighting.classifier.SymbolTypes
-import scala.tools.eclipse.semantichighlighting.Position
+import org.scalaide.core.internal.decorators.semantichighlighting.classifier.SymbolTypes
+import org.scalaide.core.internal.decorators.semantichighlighting.Position
+import ScalaSyntaxClasses._
 
 object SyntaxColouringPreviewText {
 

@@ -1,4 +1,4 @@
-package scala.tools.eclipse.wizards
+package org.scalaide.ui.internal.wizards
 
 import org.eclipse.jdt.core.IPackageFragment
 import org.eclipse.jface.wizard.IWizardPage

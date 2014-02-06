@@ -1,4 +1,4 @@
-package scala.tools.eclipse.refactoring.move
+package org.scalaide.refactoring.internal.move
 
 import org.eclipse.core.resources.IFolder
 import org.eclipse.core.resources.IFile
@@ -9,10 +9,9 @@ import org.eclipse.ltk.core.refactoring.RefactoringStatus
 import org.eclipse.ltk.core.refactoring.CompositeChange
 import org.eclipse.ltk.core.refactoring.Change
 import org.eclipse.ui.PlatformUI
-
-import scala.tools.eclipse.javaelements.ScalaSourceFile
-import scala.tools.eclipse.refactoring.ProgressHelpers
-import scala.tools.eclipse.ScalaPlugin
+import org.scalaide.core.internal.jdt.model.ScalaSourceFile
+import org.scalaide.refactoring.internal.ProgressHelpers
+import org.scalaide.core.ScalaPlugin
 import scala.tools.refactoring.common.TextChange
 
 class ScalaMoveParticipant extends MoveParticipant {

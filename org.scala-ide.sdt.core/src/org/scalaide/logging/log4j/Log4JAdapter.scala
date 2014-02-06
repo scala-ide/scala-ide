@@ -1,6 +1,6 @@
-package scala.tools.eclipse.logging.log4j
+package org.scalaide.logging.log4j
 
-import scala.tools.eclipse.logging.Logger
+import org.scalaide.logging.Logger
 import org.apache.log4j.{Logger => Log4JLogger}
 
 private[log4j] object Log4JAdapter {

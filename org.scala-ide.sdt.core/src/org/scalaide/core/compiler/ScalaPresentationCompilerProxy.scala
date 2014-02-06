@@ -1,11 +1,14 @@
-package scala.tools.eclipse
+package org.scalaide.core.compiler
 
-import scala.tools.eclipse.logging.HasLogger
-import scala.reflect.internal.MissingRequirementError
+import org.scalaide.logging.HasLogger
 import scala.tools.nsc.Settings
 import java.util.concurrent.atomic.AtomicBoolean
-import scala.tools.eclipse.ui.DisplayThread
-import scala.tools.eclipse.util.Utils
+import org.scalaide.util.internal.ui.DisplayThread
+import org.scalaide.util.internal.Utils
+import org.scalaide.core.internal.project.ScalaProject
+import org.scalaide.core.ScalaPlugin
+import scala.reflect.internal.MissingRequirementError
+import org.scalaide.core.internal.project.Nature
 
 /** Holds a reference to the currently 'live' presentation compiler.
   *

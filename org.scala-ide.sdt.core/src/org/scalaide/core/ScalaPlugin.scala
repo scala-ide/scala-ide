@@ -1,9 +1,4 @@
-/*
- * Copyright 2005-2010 LAMP/EPFL
- */
-// $Id$
-
-package scala.tools.eclipse
+package org.scalaide.core
 
 import org.eclipse.jdt.core.IJavaProject
 import scala.collection.mutable
@@ -44,20 +39,22 @@ import org.eclipse.ui.IEditorPart
 import org.eclipse.ui.part.FileEditorInput
 import org.eclipse.ui.plugin.AbstractUIPlugin
 import org.osgi.framework.BundleContext
-import scala.tools.eclipse.javaelements.ScalaSourceFile
-import scala.tools.eclipse.util.OSGiUtils
-import scala.tools.eclipse.templates.ScalaTemplateManager
+import org.scalaide.core.internal.jdt.model.ScalaSourceFile
+import org.scalaide.util.internal.eclipse.OSGiUtils
+import org.scalaide.ui.internal.templates.ScalaTemplateManager
 import org.eclipse.jdt.ui.PreferenceConstants
 import org.eclipse.core.resources.IResourceDelta
-import scala.tools.eclipse.logging.HasLogger
+import org.scalaide.logging.HasLogger
 import org.osgi.framework.Bundle
-import scala.tools.eclipse.util.Utils
+import org.scalaide.util.internal.Utils
 import org.eclipse.jdt.core.ICompilationUnit
 import scala.tools.nsc.io.AbstractFile
-import scala.tools.eclipse.util.EclipseResource
-import scala.tools.eclipse.logging.PluginLogConfigurator
-import scala.tools.eclipse.util.Trim
+import org.scalaide.core.resources.EclipseResource
+import org.scalaide.logging.PluginLogConfigurator
+import org.scalaide.util.internal.Trim
 import scala.tools.nsc.Settings
+import org.scalaide.core.internal.project.ScalaProject
+import org.scalaide.ui.internal.diagnostic
 
 object ScalaPlugin {
   final val IssueTracker = "https://www.assembla.com/spaces/scala-ide/support/tickets"

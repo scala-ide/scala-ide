@@ -1,35 +1,14 @@
-/*
- * Copyright 2005-2010 LAMP/EPFL
- */
-// $Id$
+package org.scalaide.ui.internal.editor
 
-package scala.tools.eclipse
-
-import scala.tools.eclipse.formatter.ScalaFormattingStrategy
-import scala.tools.eclipse.hyperlink.text.detector.CompositeHyperlinkDetector
-import scala.tools.eclipse.hyperlink.text.detector.DeclarationHyperlinkDetector
-import scala.tools.eclipse.hyperlink.text.detector.ImplicitHyperlinkDetector
-import scala.tools.eclipse.javaelements.ScalaCompilationUnit
-import scala.tools.eclipse.lexical.ScalaCodeScanner
-import scala.tools.eclipse.lexical.ScalaCommentScanner
-import scala.tools.eclipse.lexical.ScalaPartitions
-import scala.tools.eclipse.lexical.ScaladocTokenScanner
-import scala.tools.eclipse.lexical.SingleTokenScanner
-import scala.tools.eclipse.lexical.StringTokenScanner
-import scala.tools.eclipse.lexical.XmlCDATAScanner
-import scala.tools.eclipse.lexical.XmlCommentScanner
-import scala.tools.eclipse.lexical.XmlPIScanner
-import scala.tools.eclipse.lexical.XmlTagScanner
-import scala.tools.eclipse.properties.syntaxcolouring.{ScalaSyntaxClasses => SSC}
-import scala.tools.eclipse.reconciliation.ScalaReconcilingStrategy
-import scala.tools.eclipse.ui.BracketAutoEditStrategy
-import scala.tools.eclipse.ui.CommentAutoIndentStrategy
-import scala.tools.eclipse.ui.JdtPreferenceProvider
-import scala.tools.eclipse.ui.LiteralAutoEditStrategy
-import scala.tools.eclipse.ui.MultiLineStringAutoEditStrategy
-import scala.tools.eclipse.ui.ScalaAutoIndentStrategy
-import scala.tools.eclipse.ui.StringAutoEditStrategy
-
+import org.scalaide.core.internal.formatter.ScalaFormattingStrategy
+import org.scalaide.core.hyperlink.detector.CompositeHyperlinkDetector
+import org.scalaide.core.hyperlink.detector.DeclarationHyperlinkDetector
+import org.scalaide.core.hyperlink.detector.ImplicitHyperlinkDetector
+import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
+import org.scalaide.core.internal.lexical._
+import org.scalaide.ui.syntax.{ScalaSyntaxClasses => SSC}
+import org.scalaide.ui.internal.reconciliation.ScalaReconcilingStrategy
+import org.scalaide.ui.internal.editor.autoedits._
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.jdt.core.ICodeAssist
 import org.eclipse.jdt.core.IJavaElement
@@ -54,8 +33,8 @@ import org.eclipse.jface.text.reconciler.MonoReconciler
 import org.eclipse.jface.text.rules.DefaultDamagerRepairer
 import org.eclipse.jface.text.source.ISourceViewer
 import org.eclipse.jface.util.PropertyChangeEvent
-
 import scalariform.ScalaVersions
+import org.scalaide.core.ScalaPlugin
 
 class ScalaSourceViewerConfiguration(
   javaPreferenceStore: IPreferenceStore,
@@ -68,7 +47,6 @@ class ScalaSourceViewerConfiguration(
       IJavaPartitions.JAVA_PARTITIONING) {
 
   private val codeHighlightingScanners = {
-    import scala.tools.eclipse.properties.syntaxcolouring.{ ScalaSyntaxClasses => SSC }
 
     val scalaCodeScanner = new ScalaCodeScanner(scalaPreferenceStore, ScalaVersions.DEFAULT)
     val singleLineCommentScanner = new ScalaCommentScanner(scalaPreferenceStore, javaPreferenceStore, SSC.SINGLE_LINE_COMMENT, SSC.TASK_TAG)

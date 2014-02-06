@@ -1,9 +1,8 @@
-package org.scalaide.editor
+package org.scalaide.ui.editor
 
-import scala.tools.eclipse.ISourceViewerEditor
-import scala.tools.eclipse.InteractiveCompilationUnit
-import scala.tools.eclipse.ui.InteractiveCompilationUnitEditor
-
+import org.scalaide.ui.internal.editor.ISourceViewerEditor
+import org.scalaide.core.compiler.InteractiveCompilationUnit
+import org.scalaide.ui.internal.editor.InteractiveCompilationUnitEditor
 import org.eclipse.jdt.core.compiler.IProblem
 import org.eclipse.jdt.internal.ui.javaeditor.CompilationUnitDocumentProvider.ProblemAnnotation
 import org.eclipse.jface.preference.IPreferenceStore

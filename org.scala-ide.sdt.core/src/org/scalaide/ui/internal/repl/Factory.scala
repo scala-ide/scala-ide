@@ -1,20 +1,16 @@
-/*
- * Copyright 2005-2009 LAMP/EPFL
- */
-// $Id$
+package org.scalaide.ui.internal.repl
 
-package scala.tools.eclipse.interpreter
 import org.eclipse.core.resources.IProject
 import org.eclipse.jdt.core.IJavaElement
 import org.eclipse.jdt.core.IPackageFragment
 import org.eclipse.jdt.core.ITypeRoot
-
 import org.eclipse.ui.PlatformUI
 import org.eclipse.ui.IFileEditorInput
 import org.eclipse.jface.action.IAction
 import org.eclipse.jface.dialogs.MessageDialog
 import org.eclipse.swt.widgets.Shell
 import org.eclipse.ui.console.IConsoleFactory
+import org.scalaide.core.internal.repl.InterpreterLaunchConstants
 
 
 /**

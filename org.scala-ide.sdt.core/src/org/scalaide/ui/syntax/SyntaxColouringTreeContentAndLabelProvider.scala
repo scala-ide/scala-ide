@@ -1,7 +1,6 @@
-package scala.tools.eclipse.properties.syntaxcolouring
+package org.scalaide.ui.syntax
 
-import scala.tools.eclipse.properties.syntaxcolouring.ScalaSyntaxClasses.Category
-
+import org.scalaide.ui.syntax.ScalaSyntaxClasses.Category
 import org.eclipse.jface.viewers._
 
 object SyntaxColouringTreeContentAndLabelProvider extends LabelProvider with ITreeContentProvider {

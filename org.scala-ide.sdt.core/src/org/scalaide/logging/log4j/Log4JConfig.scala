@@ -1,4 +1,4 @@
-package scala.tools.eclipse.logging.log4j
+package org.scalaide.logging.log4j
 
 import org.apache.log4j.{ Level => Log4JLevel }
 import org.apache.log4j.RollingFileAppender

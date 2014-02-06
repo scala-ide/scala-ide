@@ -1,4 +1,4 @@
-package scala.tools.eclipse.logging
+package org.scalaide.logging
 
 import org.eclipse.ui.plugin.AbstractUIPlugin
 import org.osgi.framework.BundleContext

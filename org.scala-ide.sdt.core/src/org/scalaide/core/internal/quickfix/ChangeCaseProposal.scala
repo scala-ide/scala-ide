@@ -1,10 +1,9 @@
-package scala.tools.eclipse.quickfix
+package org.scalaide.core.internal.quickfix
 
 import scala.reflect.internal.util.RangePosition
-import scala.tools.eclipse.ScalaImages
-import scala.tools.eclipse.completion.RelevanceValues
-import scala.tools.eclipse.javaelements.ScalaCompilationUnit
-
+import org.scalaide.ui.internal.ScalaImages
+import org.scalaide.core.completion.RelevanceValues
+import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.Position

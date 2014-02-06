@@ -1,9 +1,4 @@
-/*
- * Copyright 2005-2010 LAMP/EPFL
- */
-// $Id$
-
-package scala.tools.eclipse
+package org.scalaide.ui.internal.editor
 
 import org.eclipse.core.runtime.IAdapterFactory
 import org.eclipse.debug.ui.actions.IRunToLineTarget

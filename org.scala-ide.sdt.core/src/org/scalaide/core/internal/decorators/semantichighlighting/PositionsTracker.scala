@@ -1,13 +1,11 @@
-package scala.tools.eclipse.semantichighlighting
+package org.scalaide.core.internal.decorators.semantichighlighting
 
 import java.util.Arrays.binarySearch
 import java.util.Arrays.copyOfRange
-
 import scala.collection.mutable
-import scala.tools.eclipse.ScalaPlugin
-import scala.tools.eclipse.logging.HasLogger
-import scala.tools.eclipse.semantichighlighting.classifier.SymbolTypes
-
+import org.scalaide.core.ScalaPlugin
+import org.scalaide.logging.HasLogger
+import org.scalaide.core.internal.decorators.semantichighlighting.classifier.SymbolTypes
 import org.eclipse.jface.text.DocumentEvent
 import org.eclipse.jface.text.IRegion
 
@@ -27,7 +25,7 @@ import org.eclipse.jface.text.IRegion
   * discarded (this is ok because a new semantic highlighting job will start as soon as the user pause, and the java
   * reconciler kicks-in).
   */
-private[semantichighlighting] class PositionsTracker extends HasLogger {
+private[scalaide] class PositionsTracker extends HasLogger {
 
   @volatile private var positions: Array[Position] = Array.empty
 

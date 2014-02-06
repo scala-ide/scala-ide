@@ -1,17 +1,12 @@
-/*
- * Copyright 2005-2010 LAMP/EPFL
- */
+package org.scalaide.refactoring.internal
 
-package scala.tools.eclipse
-package refactoring
-
-import scala.tools.eclipse.javaelements.ScalaSourceFile
 import org.eclipse.jface.action.IAction
 import org.eclipse.ltk.ui.refactoring.RefactoringWizard
 import org.eclipse.ltk.ui.refactoring.RefactoringWizardOpenOperation
 import org.eclipse.swt.widgets.Shell
 import org.eclipse.ui.PlatformUI
 import scala.tools.refactoring.common.TextChange
+import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 
 /**
  * This is the abstract driver of a refactoring execution: it is the

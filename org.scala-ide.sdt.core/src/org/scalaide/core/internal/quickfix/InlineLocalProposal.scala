@@ -1,6 +1,6 @@
-package scala.tools.eclipse.quickfix
+package org.scalaide.core.internal.quickfix
 
-import scala.tools.eclipse.refactoring.InlineLocalAction
+import org.scalaide.refactoring.internal.InlineLocalAction
 
 object InlineLocalProposal
   extends ProposalRefactoringActionAdapter(

@@ -1,9 +1,4 @@
-/*
- * Copyright 2005-2010 LAMP/EPFL
- */
-// $Id$
-
-package scala.tools.eclipse
+package org.scalaide.core.internal.jdt.model
 
 import java.io.DataInputStream
 import java.io.InputStream
@@ -13,7 +8,7 @@ import scala.collection.mutable.HashMap
 import org.eclipse.core.runtime.QualifiedName
 import org.eclipse.core.runtime.content.IContentDescriber
 import org.eclipse.core.runtime.content.IContentDescription
-import scala.tools.eclipse.logging.HasLogger
+import org.scalaide.logging.HasLogger
 
 object ScalaClassFileDescriber extends HasLogger {
   final val JAVA_MAGIC = 0xCAFEBABE

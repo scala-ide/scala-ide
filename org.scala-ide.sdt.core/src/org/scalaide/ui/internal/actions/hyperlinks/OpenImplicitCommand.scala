@@ -1,9 +1,8 @@
-package scala.tools.eclipse.actions
+package org.scalaide.ui.internal.actions.hyperlinks
 
-import scala.tools.eclipse.ScalaSourceFileEditor
-import scala.tools.eclipse.hyperlink.text.detector.BaseHyperlinkDetector
-import scala.tools.eclipse.hyperlink.text.detector.ImplicitHyperlinkDetector
-import scala.tools.eclipse.ui.actions.HyperlinkOpenActionStrategy
+import org.scalaide.ui.internal.editor.ScalaSourceFileEditor
+import org.scalaide.core.hyperlink.detector.BaseHyperlinkDetector
+import org.scalaide.core.hyperlink.detector.ImplicitHyperlinkDetector
 import org.eclipse.core.commands.AbstractHandler
 import org.eclipse.core.commands.ExecutionEvent
 import org.eclipse.ui.handlers.HandlerUtil

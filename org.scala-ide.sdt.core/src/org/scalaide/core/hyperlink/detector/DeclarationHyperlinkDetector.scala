@@ -1,4 +1,4 @@
-package scala.tools.eclipse.hyperlink.text.detector
+package org.scalaide.core.hyperlink.detector
 
 import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor
 import org.eclipse.jdt.internal.ui.javaeditor.JavaElementHyperlink
@@ -7,15 +7,14 @@ import org.eclipse.jface.text.IRegion
 import org.eclipse.jface.text.hyperlink.AbstractHyperlinkDetector
 import org.eclipse.jface.text.hyperlink.IHyperlink
 import org.eclipse.ui.texteditor.ITextEditor
-import scala.tools.eclipse.ScalaWordFinder
-import scala.tools.eclipse.javaelements.ScalaSelectionEngine
-import scala.tools.eclipse.javaelements.ScalaSelectionRequestor
-import scala.tools.eclipse.logging.HasLogger
-import scala.tools.eclipse.InteractiveCompilationUnit
+import org.scalaide.util.internal.ScalaWordFinder
+import org.scalaide.core.internal.jdt.search.ScalaSelectionEngine
+import org.scalaide.core.internal.jdt.search.ScalaSelectionRequestor
+import org.scalaide.logging.HasLogger
+import org.scalaide.core.compiler.InteractiveCompilationUnit
 import org.eclipse.jdt.internal.core.JavaProject
 import org.eclipse.jdt.internal.core.DefaultWorkingCopyOwner
 import org.eclipse.jdt.internal.core.Openable
-import scala.tools.eclipse.InteractiveCompilationUnit
 import org.eclipse.jdt.core.IJavaElement
 
 class DeclarationHyperlinkDetector extends BaseHyperlinkDetector with HasLogger {

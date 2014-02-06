@@ -1,4 +1,4 @@
-package scala.tools.eclipse.util
+package org.scalaide.util.internal.eclipse
 
 import scala.collection.JavaConversions._
 import org.eclipse.core.resources._

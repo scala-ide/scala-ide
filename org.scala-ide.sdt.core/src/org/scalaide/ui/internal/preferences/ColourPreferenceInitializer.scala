@@ -1,15 +1,12 @@
-package scala.tools.eclipse.properties.syntaxcolouring
+package org.scalaide.ui.internal.preferences
 
-import scala.tools.eclipse.properties.syntaxcolouring.ScalaSyntaxClasses._
-import scala.tools.eclipse.util.SWTUtils.fnToPropertyChangeListener
-import scala.tools.eclipse.ScalaPlugin
-
+import org.scalaide.core.ScalaPlugin
 import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer
-import org.eclipse.jdt.internal.ui.JavaPlugin
 import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.jface.resource.StringConverter
-import org.eclipse.jface.util.PropertyChangeEvent
 import org.eclipse.swt.graphics.RGB
+import org.scalaide.ui.syntax.ScalaSyntaxClasses._
+import org.scalaide.ui.syntax.ScalaSyntaxClass
 
 class ColourPreferenceInitializer extends AbstractPreferenceInitializer {
 

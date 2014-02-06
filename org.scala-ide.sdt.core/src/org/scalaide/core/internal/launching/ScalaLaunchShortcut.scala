@@ -1,13 +1,7 @@
-/*
- * Copyright 2005-2010 LAMP/EPFL
- */
-// $Id$
+package org.scalaide.core.internal.launching
 
-package scala.tools.eclipse.launching
-
-import scala.tools.eclipse.javaelements.ScalaSourceFile
-import scala.tools.eclipse.util.EclipseUtils.PimpedAdaptable
-
+import org.scalaide.core.internal.jdt.model.ScalaSourceFile
+import org.scalaide.util.internal.eclipse.EclipseUtils.PimpedAdaptable
 import org.eclipse.core.resources.IResource
 import org.eclipse.core.runtime.IAdaptable
 import org.eclipse.debug.core.DebugPlugin

@@ -7,7 +7,7 @@ import scala.tools.nsc.interpreter.Results._
 import EclipseRepl._
 import EclipseReplTest._
 
-// This test is not a regular part of scala.tools.eclipse.TestsSuite because
+// This test is not a regular part of org.scalaide.core.TestsSuite because
 // when running under Maven the environment isn't set up quite right for the
 // Scala Interpreter's special ClassLoader. At least that's my best guess as
 // to the problem so far. Under Maven {new IMain} throws with the message:

@@ -1,22 +1,22 @@
-package scala.tools.eclipse.semantichighlighting
+package org.scalaide.ui.internal.editor.decorators.semantichighlighting
 
-import scala.tools.eclipse.javaelements.ScalaCompilationUnit
-import scala.tools.eclipse.util.Utils._
-import scala.tools.eclipse.util.EclipseUtils
-import scala.tools.eclipse.ScalaSourceFileEditor
+import org.scalaide.util.internal.Utils._
+import org.scalaide.util.internal.eclipse.EclipseUtils
+import org.scalaide.ui.internal.editor.ScalaSourceFileEditor
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.jdt.core.WorkingCopyOwner
 import org.eclipse.ui.part.FileEditorInput
 import org.eclipse.ui.IPartListener
 import org.eclipse.ui.IWorkbenchPart
-import scala.tools.eclipse.semantichighlighting.implicits.ImplicitHighlightingPresenter
+import org.scalaide.ui.internal.editor.decorators.implicits.ImplicitHighlightingPresenter
 import java.util.concurrent.ConcurrentHashMap
-import scala.tools.eclipse.semantic.SemanticAction
-import scala.tools.eclipse.ui.PartAdapter
+import org.scalaide.ui.internal.editor.decorators.SemanticAction
+import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
+import org.scalaide.ui.internal.actions.PartAdapter
 import org.eclipse.jdt.internal.ui.JavaPlugin
 import org.eclipse.ui.IEditorInput
 import org.eclipse.jdt.core.ICompilationUnit
-import scala.tools.eclipse.logging.HasLogger
+import org.scalaide.logging.HasLogger
 
 /**
  * Manages the SemanticHighlightingPresenter instances for the open editors.

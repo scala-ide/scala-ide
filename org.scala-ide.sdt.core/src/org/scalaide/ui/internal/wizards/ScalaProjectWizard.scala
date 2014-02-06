@@ -1,12 +1,6 @@
-/*
- * Copyright 2005-2010 LAMP/EPFL
- */
-// $Id$
-
-package scala.tools.eclipse.wizards
+package org.scalaide.ui.internal.wizards
 
 import scala.collection.mutable.ArrayBuffer
-
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.core.runtime.OperationCanceledException
@@ -21,10 +15,9 @@ import org.eclipse.jdt.ui.PreferenceConstants
 import org.eclipse.jdt.ui.wizards.JavaCapabilityConfigurationPage
 import org.eclipse.jdt.ui.wizards.NewJavaProjectWizardPageOne
 import org.eclipse.jdt.ui.wizards.NewJavaProjectWizardPageTwo
-
-import scala.tools.eclipse.ScalaImages
-import scala.tools.eclipse.ScalaPlugin
-import scala.tools.eclipse.util.ReflectionUtils
+import org.scalaide.core.ScalaPlugin
+import org.scalaide.ui.internal.ScalaImages
+import org.scalaide.util.internal.ReflectionUtils
 
 class ScalaProjectWizard extends {
     val pageOne = new NewScalaProjectWizardPageOne

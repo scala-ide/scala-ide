@@ -1,4 +1,4 @@
-package scala.tools.eclipse.ui
+package org.scalaide.ui.internal.editor.autoedits
 
 import org.eclipse.jface.text.source.ISourceViewer
 import org.eclipse.jface.text.IAutoEditStrategy
@@ -7,8 +7,8 @@ import org.eclipse.jface.text.IDocument
 import org.eclipse.swt.custom.VerifyKeyListener
 import org.eclipse.swt.events.VerifyEvent
 import org.eclipse.jface.util.IPropertyChangeListener
-import scala.tools.eclipse.properties.EditorPreferencePage._
-import scala.tools.eclipse.ScalaPlugin
+import org.scalaide.ui.internal.preferences.EditorPreferencePage._
+import org.scalaide.core.ScalaPlugin
 import org.eclipse.jface.util.PropertyChangeEvent
 
 class SurroundSelectionStrategy(sourceViewer: ISourceViewer) extends VerifyKeyListener with IPropertyChangeListener {

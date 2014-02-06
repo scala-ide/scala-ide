@@ -1,12 +1,8 @@
-/*
- *
- */
-package scala.tools.eclipse.templates
+package org.scalaide.ui.internal.templates
 
-import org.eclipse.ui.IWorkbenchPreferencePage;
-import org.eclipse.ui.texteditor.templates.TemplatePreferencePage;
-
-import scala.tools.eclipse.ScalaPlugin
+import org.eclipse.ui.IWorkbenchPreferencePage
+import org.eclipse.ui.texteditor.templates.TemplatePreferencePage
+import org.scalaide.core.ScalaPlugin
 
 /**
  */

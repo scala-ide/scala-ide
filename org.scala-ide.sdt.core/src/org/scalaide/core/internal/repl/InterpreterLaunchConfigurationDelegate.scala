@@ -1,12 +1,6 @@
-/*
- * Copyright 2005-2010 LAMP/EPFL
- */
-// $Id$
-
-package scala.tools.eclipse.interpreter
+package org.scalaide.core.internal.repl
 
 import java.io.File
-
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.debug.core.ILaunch
@@ -14,8 +8,7 @@ import org.eclipse.debug.core.ILaunchConfiguration
 import org.eclipse.jdt.launching.AbstractJavaLaunchConfigurationDelegate
 import org.eclipse.jdt.launching.ExecutionArguments
 import org.eclipse.jdt.launching.VMRunnerConfiguration
-
-import scala.tools.eclipse.ScalaPlugin
+import org.scalaide.core.ScalaPlugin
 
 /**
  * This launch delegate extends the normal JavaLaunchDelegate with functionality to work for the interpreter.

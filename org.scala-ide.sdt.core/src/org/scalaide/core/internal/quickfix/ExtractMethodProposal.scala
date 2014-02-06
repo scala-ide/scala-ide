@@ -1,6 +1,6 @@
-package scala.tools.eclipse.quickfix
+package org.scalaide.core.internal.quickfix
 
-import scala.tools.eclipse.refactoring.ExtractMethodAction
+import org.scalaide.refactoring.internal.ExtractMethodAction
 
 object ExtractMethodProposal
   extends ProposalRefactoringActionAdapter(

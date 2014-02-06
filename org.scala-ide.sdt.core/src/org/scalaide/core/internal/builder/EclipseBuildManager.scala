@@ -1,9 +1,4 @@
-/*
- * Copyright 2005-2010 LAMP/EPFL
- */
-// $Id$
-
-package scala.tools.eclipse
+package org.scalaide.core.internal.builder
 
 import org.eclipse.core.resources.IFile
 import org.eclipse.core.runtime.IProgressMonitor

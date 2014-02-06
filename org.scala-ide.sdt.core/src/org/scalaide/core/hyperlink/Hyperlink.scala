@@ -1,11 +1,11 @@
-package scala.tools.eclipse.hyperlink.text
+package org.scalaide.core.hyperlink
 
 import org.eclipse.jdt.internal.ui.javaeditor.EditorUtility
 import org.eclipse.jface.text.IRegion
 import org.eclipse.jface.text.hyperlink.IHyperlink
 import org.eclipse.ui.texteditor.ITextEditor
 import org.eclipse.jdt.internal.core.Openable
-import scala.tools.eclipse.InteractiveCompilationUnit
+import org.scalaide.core.compiler.InteractiveCompilationUnit
 
 /** A creator of resolved hyperlinks.
  *

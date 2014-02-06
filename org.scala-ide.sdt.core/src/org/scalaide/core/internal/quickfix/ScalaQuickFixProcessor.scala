@@ -1,10 +1,10 @@
-package scala.tools.eclipse.quickfix
+package org.scalaide.core.internal.quickfix
 
-import scala.tools.eclipse.javaelements.ScalaSourceFile
-import scala.tools.eclipse.logging.HasLogger
-import scala.tools.eclipse.quickfix.createmethod.CreateMethodProposal
-import scala.tools.eclipse.semantichighlighting.implicits.ImplicitHighlightingPresenter
-import scala.tools.eclipse.util.EditorUtils
+import org.scalaide.core.internal.jdt.model.ScalaSourceFile
+import org.scalaide.logging.HasLogger
+import org.scalaide.util.internal.eclipse.EditorUtils
+import org.scalaide.core.internal.quickfix.createmethod.CreateMethodProposal
+import org.scalaide.ui.internal.editor.decorators.implicits.ImplicitHighlightingPresenter
 import scala.tools.refactoring.implementations.AddToClass
 import scala.tools.refactoring.implementations.AddToClosest
 import scala.tools.refactoring.implementations.AddToObject

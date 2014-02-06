@@ -1,17 +1,15 @@
-package scala.tools.eclipse.wizards
+package org.scalaide.ui.internal.wizards
 
 import java.io.StringBufferInputStream
-
 import scala.collection.JavaConversions._
 import scala.collection.mutable.ArrayBuffer
 import scala.tools.nsc.util.Chars._
-import scala.tools.eclipse.formatter.FormatterPreferences
-import scala.tools.eclipse.util.EclipseUtils._
-import scala.tools.eclipse.util.Utils._
-import scala.tools.eclipse.logging.HasLogger
-import scala.tools.eclipse.ScalaPlugin
+import org.scalaide.core.internal.formatter.FormatterPreferences
+import org.scalaide.util.internal.eclipse.EclipseUtils._
+import org.scalaide.util.internal.Utils._
+import org.scalaide.logging.HasLogger
+import org.scalaide.core.ScalaPlugin
 import scalariform.formatter.ScalaFormatter
-
 import org.eclipse.core.resources._
 import org.eclipse.debug.core.DebugPlugin
 import org.eclipse.debug.ui.IDebugUIConstants

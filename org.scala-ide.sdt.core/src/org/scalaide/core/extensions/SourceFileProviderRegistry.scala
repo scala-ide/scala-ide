@@ -1,4 +1,4 @@
-package scala.tools.eclipse.sourcefileprovider
+package org.scalaide.core.extensions
 
 import java.util.concurrent.ConcurrentMap
 import java.util.concurrent.ConcurrentHashMap
@@ -7,7 +7,7 @@ import org.eclipse.core.runtime.IConfigurationElement
 import org.eclipse.core.runtime.IExtension
 import org.eclipse.core.runtime.IExtensionPoint
 import org.eclipse.core.runtime.Platform
-import scala.tools.eclipse.logging.HasLogger
+import org.scalaide.logging.HasLogger
 import org.eclipse.core.runtime.IPath
 
 object SourceFileProviderRegistry extends HasLogger {

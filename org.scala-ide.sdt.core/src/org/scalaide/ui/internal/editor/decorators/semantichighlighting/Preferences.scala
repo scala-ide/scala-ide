@@ -1,6 +1,6 @@
-package scala.tools.eclipse.semantichighlighting
+package org.scalaide.ui.internal.editor.decorators.semantichighlighting
 
-import scala.tools.eclipse.properties.syntaxcolouring.ScalaSyntaxClasses
+import org.scalaide.ui.syntax.ScalaSyntaxClasses
 import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.jface.text.TextAttribute
 

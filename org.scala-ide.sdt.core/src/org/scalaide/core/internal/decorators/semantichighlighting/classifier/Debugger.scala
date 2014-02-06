@@ -1,4 +1,4 @@
-package scala.tools.eclipse.semantichighlighting.classifier
+package org.scalaide.core.internal.decorators.semantichighlighting.classifier
 
 /**
  * Debugging info about the symbols

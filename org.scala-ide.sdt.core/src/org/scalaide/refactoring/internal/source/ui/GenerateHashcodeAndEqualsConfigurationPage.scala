@@ -1,9 +1,8 @@
-package scala.tools.eclipse
-package refactoring.source.ui
+package org.scalaide.refactoring.internal.source
+package ui
 
-import refactoring.source.ClassParameterDrivenIdeRefactoring
-import scala.tools.eclipse.util.SWTUtils.noArgFnToSelectionAdapter
-import scala.tools.eclipse.util.SWTUtils.noArgFnToMouseUpListener
+import org.scalaide.util.internal.eclipse.SWTUtils.noArgFnToSelectionAdapter
+import org.scalaide.util.internal.eclipse.SWTUtils.noArgFnToMouseUpListener
 
 import org.eclipse.ltk.ui.refactoring.UserInputWizardPage
 import org.eclipse.swt.SWT

@@ -1,4 +1,4 @@
-package scala.tools.eclipse.formatter
+package org.scalaide.core.internal.formatter
 
 import org.eclipse.jdt.internal.corext.fix.CodeFormatFix
 import org.eclipse.jdt.core.ICompilationUnit
@@ -11,7 +11,7 @@ import scalariform.formatter.ScalaFormatter
 import scalariform.parser.ScalaParserException
 import scalariform.utils.TextEdit
 import scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.formatter.IFormatterCleanUpProvider
-import scala.tools.eclipse.util.EclipseUtils._
+import org.scalaide.util.internal.eclipse.EclipseUtils._
 import org.eclipse.jdt.internal.ui.javaeditor.DocumentAdapter
 
 class ScalaFormatterCleanUpProvider extends IFormatterCleanUpProvider {

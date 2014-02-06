@@ -1,9 +1,4 @@
-/*
- * Copyright 2010 LAMP/EPFL
- *
- *
- */
-package scala.tools.eclipse.wizards
+package org.scalaide.ui.internal.wizards
 
 import org.eclipse.jdt.core.Flags
 import org.eclipse.jdt.core.IField
@@ -14,7 +9,7 @@ import org.eclipse.jdt.core.Signature
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.ListBuffer
 import scala.reflect.NameTransformer
-import scala.tools.eclipse.ScalaPresentationCompilerProxy
+import org.scalaide.core.compiler.ScalaPresentationCompilerProxy
 
 trait CodeBuilder {
 

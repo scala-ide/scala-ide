@@ -1,12 +1,8 @@
-/*
- * Copyright 2005-2011 LAMP/EPFL
- */
-package scala.tools.eclipse
-package reconciliation
+package org.scalaide.core.extensions
 
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.jdt.core.WorkingCopyOwner
-import scala.tools.eclipse.javaelements.ScalaCompilationUnit
+import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 
 /**
  * The ReconciliationParticipant trait is used by the extension point

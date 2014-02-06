@@ -1,6 +1,6 @@
-package org.scalaide.editor.util
+package org.scalaide.ui.editor.util
 
-import scala.tools.eclipse.ISourceViewerEditor
+import org.scalaide.ui.internal.editor.ISourceViewerEditor
 import org.eclipse.jface.text.ITextViewer
 import org.eclipse.jface.text.link.LinkedModeModel
 import org.eclipse.jface.text.link.LinkedModeUI

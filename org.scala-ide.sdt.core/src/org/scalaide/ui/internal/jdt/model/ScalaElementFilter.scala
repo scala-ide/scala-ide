@@ -1,12 +1,8 @@
-/*
- * Copyright 2005-2010 LAMP/EPFL
- */
-// $Id$
-
-package scala.tools.eclipse.javaelements
+package org.scalaide.ui.internal.jdt.model
 
 import org.eclipse.jface.viewers.Viewer
 import org.eclipse.jface.viewers.ViewerFilter
+import org.scalaide.core.internal.jdt.model.ScalaElement
 
 class ScalaElementFilter extends ViewerFilter {
   def select(viewer : Viewer, parentElement : AnyRef, element : AnyRef) : Boolean =

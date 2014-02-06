@@ -1,9 +1,4 @@
-/*
- * Copyright 2005-2010 LAMP/EPFL
- */
-// $Id$
-
-package scala.tools.eclipse
+package org.scalaide.ui.internal
 
 import org.eclipse.debug.ui.IDebugUIConstants
 import org.eclipse.jdt.ui.JavaUI
@@ -11,6 +6,7 @@ import org.eclipse.ui.IPageLayout
 import org.eclipse.ui.IPerspectiveFactory
 import org.eclipse.ui.console.IConsoleConstants
 import org.eclipse.ui.navigator.resources.ProjectExplorer
+import org.scalaide.core.ScalaPlugin
 
 class PerspectiveFactory extends IPerspectiveFactory {
   def createInitialLayout(layout : IPageLayout) = {

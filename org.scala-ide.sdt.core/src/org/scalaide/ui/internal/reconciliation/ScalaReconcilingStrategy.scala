@@ -1,8 +1,8 @@
-package scala.tools.eclipse.reconciliation
+package org.scalaide.ui.internal.reconciliation
 
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.core.runtime.NullProgressMonitor
-import scala.tools.eclipse.logging.HasLogger
+import org.scalaide.logging.HasLogger
 import org.eclipse.jface.text._
 import org.eclipse.jface.text.reconciler.IReconcilingStrategy
 import org.eclipse.jface.text.reconciler.IReconcilingStrategyExtension
@@ -11,8 +11,8 @@ import org.eclipse.jface.text.source._
 import org.eclipse.jdt.internal.ui.text.java.IJavaReconcilingListener
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.ui.texteditor._
-import scala.tools.eclipse.ui.InteractiveCompilationUnitEditor
-import scala.tools.eclipse.util.Utils._
+import org.scalaide.ui.internal.editor.InteractiveCompilationUnitEditor
+import org.scalaide.util.internal.Utils._
 
 class ScalaReconcilingStrategy(icuEditor: InteractiveCompilationUnitEditor) extends IReconcilingStrategy with IReconcilingStrategyExtension with HasLogger {
 

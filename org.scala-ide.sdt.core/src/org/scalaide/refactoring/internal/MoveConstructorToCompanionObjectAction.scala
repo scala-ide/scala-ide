@@ -1,6 +1,6 @@
-package scala.tools.eclipse.refactoring
+package org.scalaide.refactoring.internal
 
-import scala.tools.eclipse.javaelements.ScalaSourceFile
+import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import scala.tools.refactoring.analysis.GlobalIndexes
 import scala.tools.refactoring.implementations.MoveConstructorToCompanionObject
 

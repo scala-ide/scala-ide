@@ -1,9 +1,4 @@
-/*
- * Copyright 2005-2010 LAMP/EPFL
- */
-// $Id$
-
-package scala.tools.eclipse.javaelements
+package org.scalaide.ui.internal.jdt.model
 
 import java.util.{ Map => JMap }
 import org.eclipse.jdt.ui.JavaUI
@@ -13,9 +8,11 @@ import org.eclipse.jface.text.source
 import scala.tools.eclipse.contribution.weaving.jdt.IScalaOverrideIndicator
 import org.eclipse.ui.texteditor.ITextEditor
 import org.eclipse.jdt.internal.ui.javaeditor.EditorUtility
-import scala.tools.eclipse.ScalaPresentationCompiler
-import scala.tools.eclipse.ScalaPlugin
-import scala.tools.eclipse.logging.HasLogger
+import org.scalaide.core.compiler.ScalaPresentationCompiler
+import org.scalaide.core.ScalaPlugin
+import org.scalaide.logging.HasLogger
+import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
+import org.scalaide.core.internal.jdt.util.JDTUtils
 
 object ScalaOverrideIndicatorBuilder {
   val OVERRIDE_ANNOTATION_TYPE = "org.eclipse.jdt.ui.overrideIndicator"

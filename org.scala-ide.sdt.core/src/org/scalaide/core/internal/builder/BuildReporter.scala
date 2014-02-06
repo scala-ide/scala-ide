@@ -1,23 +1,21 @@
-package scala.tools.eclipse.buildmanager
+package org.scalaide.core.internal.builder
 
-import scala.tools.eclipse.EclipseBuildManager
-import scala.tools.eclipse.TaskScanner
-import scala.tools.eclipse.ScalaProject
 import scala.tools.nsc.Settings
 import scala.tools.nsc.reporters.Reporter
 import scala.reflect.internal.util.Position
 import scala.reflect.internal.util.NoPosition
-import scala.tools.eclipse.util.EclipseResource
-import scala.tools.eclipse.util.FileUtils
-import scala.tools.eclipse.logging.HasLogger
+import org.scalaide.core.resources.EclipseResource
+import org.scalaide.util.internal.eclipse.FileUtils
+import org.scalaide.logging.HasLogger
 import scala.collection.mutable.ListBuffer
 import org.eclipse.core.resources.IFile
 import org.eclipse.core.resources.IMarker
 import org.eclipse.core.runtime.IProgressMonitor
+import org.scalaide.core.internal.project.ScalaProject
 
 case class BuildProblem(severity: Reporter#Severity, msg: String, pos: Position)
 
-abstract class BuildReporter(private[buildmanager] val project0: ScalaProject, settings0: Settings) extends Reporter with HasLogger {
+abstract class BuildReporter(private[builder] val project0: ScalaProject, settings0: Settings) extends Reporter with HasLogger {
   val buildManager: EclipseBuildManager
   val prob: ListBuffer[BuildProblem] = ListBuffer.empty
 

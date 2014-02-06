@@ -1,4 +1,4 @@
-package scala.tools.eclipse.javaelements
+package org.scalaide.core.internal.jdt.model
 
 import scala.tools.eclipse.contribution.weaving.jdt.cuprovider.ICompilationUnitProvider
 import org.eclipse.jdt.core.WorkingCopyOwner

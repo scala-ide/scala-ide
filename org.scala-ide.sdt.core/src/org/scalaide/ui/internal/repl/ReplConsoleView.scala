@@ -1,15 +1,11 @@
-package scala.tools.eclipse
-package interpreter
+package org.scalaide.ui.internal.repl
 
-import scala.tools.eclipse.BuildSuccessListener
-import scala.tools.eclipse.ScalaImages
-import scala.tools.eclipse.ScalaPlugin
-import scala.tools.eclipse.ScalaProject
-import scala.tools.eclipse.properties.syntaxcolouring.ScalariformToSyntaxClass
-import scala.tools.eclipse.ui.CommandField
-import scala.tools.eclipse.ui.DisplayThread
+import org.scalaide.core.internal.project.BuildSuccessListener
+import org.scalaide.ui.internal.ScalaImages
+import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.internal.project.ScalaProject
+import org.scalaide.ui.syntax.ScalariformToSyntaxClass
 import scala.tools.nsc.Settings
-
 import org.eclipse.core.resources.IProject
 import org.eclipse.core.resources.IResourceChangeEvent
 import org.eclipse.core.resources.IResourceChangeListener
@@ -42,9 +38,10 @@ import org.eclipse.ui.console.IConsoleConstants
 import org.eclipse.ui.internal.console.ConsolePluginImages
 import org.eclipse.ui.internal.console.IInternalConsoleConstants
 import org.eclipse.ui.part.ViewPart
-
-import EclipseRepl.Exec
+import org.scalaide.core.internal.repl.EclipseRepl.Exec
 import scalariform.lexer.ScalaLexer
+import org.scalaide.core.internal.repl.EclipseRepl
+import org.scalaide.util.internal.ui.DisplayThread
 
 class ReplConsoleView extends ViewPart with InterpreterConsoleView {
 
@@ -354,7 +351,7 @@ object ReplConsoleView
       throw new org.eclipse.ui.PartInitException("project is not open ("+project.getName+")");
     ScalaPlugin.plugin.getScalaProject(project) // creates if given project isn't already
     val viewPart = page.showView("org.scala-ide.sdt.core.consoleView", project.getName, mode)
-    viewPart.asInstanceOf[interpreter.ReplConsoleView]
+    viewPart.asInstanceOf[ReplConsoleView]
   }
 
   def makeVisible(project: IProject, page: IWorkbenchPage): ReplConsoleView =

@@ -1,4 +1,4 @@
-package scala.tools.eclipse.templates
+package org.scalaide.ui.internal.templates
 
 import java.util.Collections
 import org.eclipse.jface.text.contentassist.ICompletionProposal
@@ -7,7 +7,7 @@ import org.eclipse.jdt.ui.text.java.ContentAssistInvocationContext
 import java.util.Arrays
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposalComputer
-import scala.tools.eclipse.ScalaPlugin
+import org.scalaide.core.ScalaPlugin
 
 // Default ctor to make it instantiable via the extension mechanism.
 class TemplateCompletionProposalComputer extends IJavaCompletionProposalComputer {

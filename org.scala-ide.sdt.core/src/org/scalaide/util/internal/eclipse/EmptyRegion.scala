@@ -1,4 +1,4 @@
-package scala.tools.eclipse.jface.text
+package org.scalaide.util.internal.eclipse
 
 import org.eclipse.jface.text.IRegion
 

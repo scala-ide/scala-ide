@@ -1,9 +1,8 @@
-package scala.tools.eclipse.semantichighlighting
+package org.scalaide.ui.internal.editor.decorators.semantichighlighting
 
-import scala.tools.eclipse.javaelements.ScalaCompilationUnit
-import scala.tools.eclipse.reconciliation.ReconciliationParticipant
-import scala.tools.eclipse.ScalaPlugin
-
+import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
+import org.scalaide.core.extensions.ReconciliationParticipant
+import org.scalaide.core.ScalaPlugin
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.jdt.core.WorkingCopyOwner
 

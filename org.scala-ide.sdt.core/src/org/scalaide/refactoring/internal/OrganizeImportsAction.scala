@@ -1,20 +1,13 @@
-/*
- * Copyright 2005-2010 LAMP/EPFL
- */
-
-package scala.tools.eclipse
-package refactoring
+package org.scalaide.refactoring.internal
 
 import java.text.Collator
 import java.util.Comparator
-
-import scala.tools.eclipse.javaelements.LazyToplevelClass
-import scala.tools.eclipse.javaelements.ScalaElement
-import scala.tools.eclipse.javaelements.ScalaSourceFile
-import scala.tools.eclipse.properties.OrganizeImportsPreferences._
+import org.scalaide.core.internal.jdt.model.LazyToplevelClass
+import org.scalaide.core.internal.jdt.model.ScalaElement
+import org.scalaide.core.internal.jdt.model.ScalaSourceFile
+import org.scalaide.ui.internal.preferences.OrganizeImportsPreferences._
 import scala.tools.refactoring.implementations.AddImportStatement
 import scala.tools.refactoring.implementations.OrganizeImports
-
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.jdt.core.IJavaElement
 import org.eclipse.jdt.core.compiler.IProblem

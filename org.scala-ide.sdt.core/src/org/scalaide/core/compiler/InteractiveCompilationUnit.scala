@@ -1,4 +1,4 @@
-package scala.tools.eclipse
+package org.scalaide.core.compiler
 
 import org.eclipse.core.resources.IFile
 import org.eclipse.jdt.core.compiler.IProblem
@@ -9,6 +9,7 @@ import org.eclipse.jdt.core.WorkingCopyOwner
 import org.eclipse.jdt.internal.core.DefaultWorkingCopyOwner
 import org.eclipse.jdt.internal.core.SearchableEnvironment
 import org.eclipse.jdt.internal.core.JavaProject
+import org.scalaide.core.internal.project.ScalaProject
 
 /** A Scala compilation unit. It can be backed up by a `ScalaCompilationUnit` in usual
  *  Scala projects, or any other implementation (such as a specialized Scala DSL, a

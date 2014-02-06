@@ -1,19 +1,12 @@
-/*
- * Copyright 2005-2010 LAMP/EPFL
- */
-// $Id$
-
-package scala.tools.eclipse
+package org.scalaide.core.internal.project
 
 import org.eclipse.core.resources.IFile
 import org.eclipse.core.resources.IProject
 import org.eclipse.core.runtime.Path
 import org.eclipse.core.runtime.NullProgressMonitor
-
 import org.eclipse.ui.IFileEditorInput
 import org.eclipse.ui.PlatformUI
 import org.eclipse.ui.part.FileEditorInput
-
 import org.eclipse.pde.core.plugin.IPluginModelBase
 import org.eclipse.pde.core.plugin.IPluginBase
 import org.eclipse.pde.core.plugin.IPluginImport
@@ -21,6 +14,7 @@ import org.eclipse.pde.internal.ui.editor.plugin.ManifestEditor
 import org.eclipse.pde.internal.ui.IPDEUIConstants
 import org.eclipse.pde.internal.core.WorkspacePluginModelManager
 import org.eclipse.pde.internal.ui.editor.plugin.DependenciesPage
+import org.scalaide.core.ScalaPlugin
 
 /**
  * Adds or removes 'org.scala-ide.scala.library' as a required plug-in for an Eclipse plug-in project.

@@ -1,10 +1,9 @@
-package scala.tools.eclipse.refactoring
+package org.scalaide.refactoring.internal
 
-import scala.tools.eclipse.ScalaProject
-import scala.tools.eclipse.javaelements.ScalaSourceFile
+import org.scalaide.core.internal.project.ScalaProject
+import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import scala.tools.refactoring.MultiStageRefactoring
 import scala.tools.refactoring.analysis.GlobalIndexes
-
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.ltk.core.refactoring.RefactoringStatus
 

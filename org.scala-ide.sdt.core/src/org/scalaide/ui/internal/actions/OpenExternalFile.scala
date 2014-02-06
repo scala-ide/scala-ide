@@ -1,4 +1,4 @@
-package scala.tools.eclipse.ui
+package org.scalaide.ui.internal.actions
 
 import org.eclipse.core.filesystem.EFS
 import org.eclipse.core.runtime.Path
@@ -6,7 +6,7 @@ import org.eclipse.ui.PartInitException
 import org.eclipse.ui.ide.IDE
 import java.io.File
 import org.eclipse.swt.widgets.Listener
-import scala.tools.eclipse.logging.HasLogger
+import org.scalaide.logging.HasLogger
 import org.eclipse.swt.widgets.Event
 import org.eclipse.ui.PlatformUI
 

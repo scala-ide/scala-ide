@@ -1,9 +1,4 @@
-/*
- * Copyright 2005-2010 LAMP/EPFL
- */
-// $Id$
-
-package scala.tools.eclipse
+package org.scalaide.core.internal.builder
 
 import scala.collection.mutable.HashSet
 import java.{ lang => jl }
@@ -21,12 +16,13 @@ import org.eclipse.core.runtime.SubMonitor
 import org.eclipse.jdt.internal.core.JavaModelManager
 import org.eclipse.jdt.internal.core.builder.JavaBuilder
 import org.eclipse.jdt.internal.core.builder.State
-import scala.tools.eclipse.javaelements.JDTUtils
-import scala.tools.eclipse.util.FileUtils
-import scala.tools.eclipse.util.ReflectionUtils
-import scala.tools.eclipse.logging.HasLogger
+import org.scalaide.util.internal.eclipse.FileUtils
+import org.scalaide.util.internal.ReflectionUtils
+import org.scalaide.logging.HasLogger
 import org.eclipse.core.runtime.jobs.ISchedulingRule
-import scala.tools.eclipse.buildmanager.JDTBuilderFacade
+import org.scalaide.core.internal.jdt.util.JDTUtils
+import org.scalaide.util.internal.SettingConverterUtil
+import org.scalaide.ui.internal.preferences
 
 class ScalaBuilder extends IncrementalProjectBuilder with JDTBuilderFacade with HasLogger {
 
@@ -49,11 +45,11 @@ class ScalaBuilder extends IncrementalProjectBuilder with JDTBuilderFacade with 
 
   override def build(kind : Int, ignored : ju.Map[String, String], monitor : IProgressMonitor) : Array[IProject] = {
     import IncrementalProjectBuilder._
-    import buildmanager.sbtintegration.EclipseSbtBuildManager
+    import zinc.EclipseSbtBuildManager
 
     val project = plugin.getScalaProject(this.project)
     val stopBuildOnErrors =
-      project.storage.getBoolean(SettingConverterUtil.convertNameToProperty(properties.ScalaPluginSettings.stopBuildOnErrors.name))
+      project.storage.getBoolean(SettingConverterUtil.convertNameToProperty(preferences.ScalaPluginSettings.stopBuildOnErrors.name))
 
     // check the classpath
     if (!project.isClasspathValid()) {

@@ -1,4 +1,4 @@
-package scala.tools.eclipse.quickfix
+package org.scalaide.core.internal.quickfix
 
 package object createmethod {
   type ParameterList = List[List[(String, String)]]

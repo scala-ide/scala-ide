@@ -1,12 +1,12 @@
-package scala.tools.eclipse.logging
+package org.scalaide.logging
 
-import scala.tools.eclipse.logging.log4j.Log4JFacade
-import scala.tools.eclipse.ScalaPlugin
+import org.scalaide.logging.log4j.Log4JFacade
+import org.scalaide.core.ScalaPlugin
 import org.eclipse.jdt.internal.ui.viewsupport.IProblemChangedListener
 import org.eclipse.jface.util.IPropertyChangeListener
 import org.eclipse.jface.util.PropertyChangeEvent
 import org.eclipse.jdt.ui.PreferenceConstants
-import scala.tools.eclipse.util.SWTUtils
+import org.scalaide.util.internal.eclipse.SWTUtils
 import java.io.File
 import org.eclipse.core.resources.ResourcesPlugin
 

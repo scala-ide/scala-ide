@@ -1,4 +1,4 @@
-package scala.tools.eclipse
+package org.scalaide.core
 
 import org.eclipse.jdt.core.compiler.CharOperation
 

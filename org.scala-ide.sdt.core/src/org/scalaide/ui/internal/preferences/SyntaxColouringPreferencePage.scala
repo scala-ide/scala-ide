@@ -1,12 +1,10 @@
-package scala.tools.eclipse.properties.syntaxcolouring
+package org.scalaide.ui.internal.preferences
 
 import scala.PartialFunction.condOpt
-import scala.tools.eclipse.properties.syntaxcolouring.ScalaSyntaxClasses._
-import scala.tools.eclipse.semantichighlighting.ui.HighlightingStyle
-import scala.tools.eclipse.semantichighlighting.Preferences
-import scala.tools.eclipse.util.EclipseUtils._
-import scala.tools.eclipse.util.SWTUtils._
-import scala.tools.eclipse._
+import org.scalaide.ui.internal.editor.decorators.semantichighlighting.HighlightingStyle
+import org.scalaide.ui.internal.editor.decorators.semantichighlighting.Preferences
+import org.scalaide.util.internal.eclipse.EclipseUtils._
+import org.scalaide.util.internal.eclipse.SWTUtils._
 import org.eclipse.jdt.internal.ui.preferences._
 import org.eclipse.jface.layout.PixelConverter
 import org.eclipse.jface.preference._
@@ -15,11 +13,20 @@ import org.eclipse.jface.util.PropertyChangeEvent
 import org.eclipse.jface.viewers._
 import org.eclipse.swt.events.SelectionEvent
 import org.eclipse.swt.layout._
-import org.eclipse.swt.widgets.{ List => _, _ }
+import org.eclipse.swt.widgets.{List => _, _}
 import org.eclipse.swt.SWT
 import org.eclipse.ui.dialogs.PreferencesUtil
 import org.eclipse.ui.IWorkbench
 import org.eclipse.ui.IWorkbenchPreferencePage
+import org.scalaide.core.ScalaPlugin
+import org.scalaide.ui.syntax.ScalaSyntaxClasses._
+import org.eclipse.jdt.internal.ui.preferences.OverlayPreferenceStore.BOOLEAN
+import org.eclipse.jdt.internal.ui.preferences.OverlayPreferenceStore.OverlayKey
+import org.eclipse.jdt.internal.ui.preferences.OverlayPreferenceStore.STRING
+import org.scalaide.ui.syntax.ScalaSyntaxClass
+import org.scalaide.ui.syntax.ScalaSyntaxClasses
+import org.scalaide.ui.syntax.SyntaxColouringPreviewText
+import org.scalaide.ui.syntax.SyntaxColouringTreeContentAndLabelProvider
 
 /**
  * @see org.eclipse.jdt.internal.ui.preferences.JavaEditorColoringConfigurationBlock

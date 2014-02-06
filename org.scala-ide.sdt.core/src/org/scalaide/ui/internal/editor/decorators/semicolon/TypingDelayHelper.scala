@@ -1,10 +1,10 @@
-package scala.tools.eclipse.semicolon
+package org.scalaide.ui.internal.editor.decorators.semicolon
 
 import java.util.Date
 import java.util.concurrent.locks.ReentrantLock
 
-import scala.tools.eclipse.ui.DisplayThread
-import scala.tools.eclipse.util.ThreadUtils.withLock
+import org.scalaide.util.internal.ui.DisplayThread
+import org.scalaide.util.internal.ThreadUtils.withLock
 
 object TypingDelayHelper {
 

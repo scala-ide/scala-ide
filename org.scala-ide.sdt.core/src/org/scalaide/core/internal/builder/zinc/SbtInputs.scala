@@ -1,6 +1,4 @@
-package scala.tools.eclipse
-package buildmanager
-package sbtintegration
+package org.scalaide.core.internal.builder.zinc
 
 import java.io.File
 import java.net.URL
@@ -20,8 +18,11 @@ import sbt.compiler.CompilerCache
 import sbt.classpath.ClasspathUtilities
 import sbt.ScalaInstance
 import sbt.ClasspathOptions
-import ScalaPlugin.plugin
+import org.scalaide.core.ScalaPlugin.plugin
 import sbt.inc.IncOptions
+import org.scalaide.core.internal.project.ScalaProject
+import org.scalaide.util.internal.SettingConverterUtil
+import org.scalaide.ui.internal.preferences
 
 class SbtInputs(sourceFiles: Seq[File], project: ScalaProject, javaMonitor: SubMonitor, scalaProgress: CompileProgress, cacheFile: File, scalaReporter: Reporter, logger: Logger) extends Inputs[Analysis, AnalyzingCompiler] {
   def setup = new Setup[Analysis] {
@@ -43,8 +44,8 @@ class SbtInputs(sourceFiles: Seq[File], project: ScalaProject, javaMonitor: SubM
     def reporter = scalaReporter
     override def incrementalCompilerOptions: java.util.Map[String, String] = {
       val incOptions = sbt.inc.IncOptions.Default.copy(
-          apiDebug = project.storage.getBoolean(SettingConverterUtil.convertNameToProperty(properties.ScalaPluginSettings.apiDiff.name)),
-          relationsDebug = project.storage.getBoolean(SettingConverterUtil.convertNameToProperty(properties.ScalaPluginSettings.relationsDebug.name)),
+          apiDebug = project.storage.getBoolean(SettingConverterUtil.convertNameToProperty(preferences.ScalaPluginSettings.apiDiff.name)),
+          relationsDebug = project.storage.getBoolean(SettingConverterUtil.convertNameToProperty(preferences.ScalaPluginSettings.relationsDebug.name)),
           apiDumpDirectory = None)
       sbt.inc.IncOptions.toStringMap(incOptions)
     }
@@ -66,7 +67,7 @@ class SbtInputs(sourceFiles: Seq[File], project: ScalaProject, javaMonitor: SubM
 
     import CompileOrder._
     import SettingConverterUtil.convertNameToProperty
-    import properties.ScalaPluginSettings.compileOrder
+    import preferences.ScalaPluginSettings.compileOrder
     def order = project.storage.getString(convertNameToProperty(compileOrder.name)) match {
       case "JavaThenScala" => JavaThenScala
       case "ScalaThenJava" => ScalaThenJava
@@ -91,7 +92,7 @@ class SbtInputs(sourceFiles: Seq[File], project: ScalaProject, javaMonitor: SubM
   }
 }
 
-private[sbtintegration] object Locator {
+private[zinc] object Locator {
   val NoClass = new DefinesClass {
     def apply(className: String) = false
   }

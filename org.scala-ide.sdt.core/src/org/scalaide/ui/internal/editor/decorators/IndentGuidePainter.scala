@@ -1,7 +1,7 @@
-package scala.tools.eclipse.ui
+package org.scalaide.ui.internal.editor.decorators
 
-import scala.tools.eclipse.ScalaPlugin
-import scala.tools.eclipse.properties.EditorPreferencePage
+import org.scalaide.core.ScalaPlugin
+import org.scalaide.ui.internal.preferences.EditorPreferencePage
 
 import org.eclipse.jface.preference.PreferenceConverter
 import org.eclipse.jface.text.IPaintPositionManager

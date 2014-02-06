@@ -1,21 +1,15 @@
-/*
- * Copyright 2005-2010 LAMP/EPFL
- */
-
-package scala.tools.eclipse
-package refactoring
+package org.scalaide.refactoring.internal
 
 import scala.reflect.internal.util.SourceFile
-import scala.tools.eclipse.ScalaPlugin
-import scala.tools.eclipse.ScalaPresentationCompiler
-import scala.tools.eclipse.javaelements.ScalaSourceFile
-import scala.tools.eclipse.util.FileUtils
+import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.compiler.ScalaPresentationCompiler
+import org.scalaide.core.internal.jdt.model.ScalaSourceFile
+import org.scalaide.util.internal.eclipse.FileUtils
 import scala.tools.refactoring.MultiStageRefactoring
 import scala.tools.refactoring.ParameterlessRefactoring
 import scala.tools.refactoring.common.Change
 import scala.tools.refactoring.common.InteractiveScalaCompiler
 import scala.tools.refactoring.common.TextChange
-
 import org.eclipse.core.runtime.CoreException
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.core.runtime.IStatus

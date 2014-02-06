@@ -1,6 +1,4 @@
-package scala.tools.eclipse
-
-package diagnostic
+package org.scalaide.ui.internal.diagnostic
 
 import org.eclipse.jface.dialogs.Dialog
 import org.eclipse.jface.dialogs.IDialogConstants
@@ -16,9 +14,9 @@ import org.eclipse.swt.events.SelectionAdapter
 import org.eclipse.swt.events.SelectionListener
 import org.eclipse.swt.events.SelectionEvent
 import org.eclipse.core.runtime.Platform
-
-import scala.tools.eclipse.logging.LogManager
-import scala.tools.eclipse.ui.OpenExternalFile
+import org.scalaide.ui.internal.actions.OpenExternalFile
+import org.scalaide.logging.LogManager
+import org.scalaide.core.ScalaPlugin
 
 
 class ReportBugDialog(shell: Shell) extends Dialog(shell) {

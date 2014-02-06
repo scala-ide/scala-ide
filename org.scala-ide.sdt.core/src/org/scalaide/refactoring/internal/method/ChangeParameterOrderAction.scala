@@ -1,9 +1,9 @@
-package scala.tools.eclipse.refactoring
+package org.scalaide.refactoring.internal
 package method
 
-import scala.tools.eclipse.javaelements.ScalaSourceFile
+import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import scala.tools.refactoring.implementations.ChangeParamOrder
-import scala.tools.eclipse.refactoring.method.ui.ChangeParameterOrderConfigurationPageGenerator
+import org.scalaide.refactoring.internal.method.ui.ChangeParameterOrderConfigurationPageGenerator
 
 /**
  * A method signature refactoring that changes the order of parameters within

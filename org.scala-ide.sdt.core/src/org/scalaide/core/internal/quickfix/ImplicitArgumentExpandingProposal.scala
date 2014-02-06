@@ -1,5 +1,4 @@
-package scala.tools.eclipse
-package quickfix
+package org.scalaide.core.internal.quickfix
 
 import org.eclipse.jface.text.Position
 

@@ -1,5 +1,4 @@
-package scala.tools.eclipse
-package actions
+package org.scalaide.ui.internal.actions
 
 import org.eclipse.core.resources.IProject
 import org.eclipse.core.runtime.IAdaptable
@@ -9,8 +8,8 @@ import org.eclipse.jface.viewers.IStructuredSelection
 import org.eclipse.core.runtime.Platform
 import org.eclipse.ui.IObjectActionDelegate
 import org.eclipse.ui.IWorkbenchPart
-import ScalaPlugin.plugin
-import scala.tools.eclipse.util.EclipseUtils._
+import org.scalaide.core.ScalaPlugin.plugin
+import org.scalaide.util.internal.eclipse.EclipseUtils._
 
 trait AbstractPopupAction extends IObjectActionDelegate {
   private var selectionOption: Option[ISelection] = None

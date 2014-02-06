@@ -1,15 +1,11 @@
-/*
- * Copyright 2005-2010 LAMP/EPFL
- */
-// $Id$
-
-package scala.tools.eclipse
+package org.scalaide.ui.internal
 
 import org.eclipse.core.runtime.FileLocator
 import org.eclipse.core.runtime.Path
 import org.eclipse.core.runtime.Platform
 import org.eclipse.jface.resource.ImageDescriptor
 import org.osgi.framework.Bundle
+import org.scalaide.core.ScalaPlugin
 
 object ScalaImages {
   val MISSING_ICON = ImageDescriptor.getMissingImageDescriptor

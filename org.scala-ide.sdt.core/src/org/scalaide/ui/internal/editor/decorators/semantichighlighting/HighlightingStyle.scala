@@ -1,16 +1,15 @@
-package scala.tools.eclipse.semantichighlighting.ui
+package org.scalaide.ui.internal.editor.decorators.semantichighlighting
 
-import scala.tools.eclipse.properties.syntaxcolouring.ScalaSyntaxClass
-import scala.tools.eclipse.properties.syntaxcolouring.ScalaSyntaxClasses._
-import scala.tools.eclipse.semantichighlighting.Position
-import scala.tools.eclipse.semantichighlighting.Preferences
-import scala.tools.eclipse.semantichighlighting.classifier.SymbolTypes
-import scala.tools.eclipse.semantichighlighting.classifier.SymbolTypes._
+import org.scalaide.ui.syntax.ScalaSyntaxClasses
+import org.scalaide.ui.syntax.ScalaSyntaxClasses._
+import org.scalaide.core.internal.decorators.semantichighlighting.Position
+import org.scalaide.core.internal.decorators.semantichighlighting.classifier.SymbolTypes
+import org.scalaide.core.internal.decorators.semantichighlighting.classifier.SymbolTypes._
 import org.eclipse.jface.text.TextAttribute
 import org.eclipse.swt.SWT
 import org.eclipse.swt.custom.StyleRange
 import org.eclipse.swt.graphics.Font
-import scala.tools.eclipse.properties.syntaxcolouring.ScalaSyntaxClasses
+import org.scalaide.ui.syntax.ScalaSyntaxClass
 
 case class HighlightingStyle(styledTextAttribute: TextAttribute, enabled: Boolean, unstyledTextAttribute: TextAttribute, deprecation: DeprecationStyle, interpolation: StringInterpolationStyle) {
   val ta = if (enabled) styledTextAttribute else unstyledTextAttribute

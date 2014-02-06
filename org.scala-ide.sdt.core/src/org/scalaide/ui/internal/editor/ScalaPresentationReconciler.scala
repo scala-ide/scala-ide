@@ -1,4 +1,4 @@
-package scala.tools.eclipse
+package org.scalaide.ui.internal.editor
 
 import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.IDocument

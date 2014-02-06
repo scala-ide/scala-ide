@@ -1,11 +1,7 @@
-/*
- * Copyright 2005-2010 LAMP/EPFL
- */
+package org.scalaide.refactoring.internal
 
-package scala.tools.eclipse.refactoring
-
-import scala.tools.eclipse.javaelements.ScalaSourceFile
 import scala.tools.refactoring.implementations.ExpandCaseClassBinding
+import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 
 /**
  * A refactoring that expands bindings to case-classes in pattern matches with

@@ -1,8 +1,9 @@
-package scala.tools.eclipse.semantichighlighting
+package org.scalaide.ui.internal.editor.decorators.semantichighlighting
 
 import org.eclipse.core.runtime.jobs.Job
 import org.eclipse.jface.text.IRegion
 import org.eclipse.jface.text.source.ISourceViewer
+import org.scalaide.core.internal.decorators.semantichighlighting.PositionsTracker
 
 /** This interface expose the minimal amount of functionality needed by the semantic highlighting
  *  component to apply the presentation styles in a text editor.

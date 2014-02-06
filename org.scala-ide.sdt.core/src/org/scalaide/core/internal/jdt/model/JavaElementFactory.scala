@@ -1,12 +1,6 @@
-/*
- * Copyright 2005-2010 LAMP/EPFL
- */
-// $Id$
-
-package scala.tools.eclipse.javaelements
+package org.scalaide.core.internal.jdt.model
 
 import java.lang.reflect.Constructor
-
 import org.eclipse.jdt.core.IImportContainer
 import org.eclipse.jdt.internal.core.CompilationUnit
 import org.eclipse.jdt.internal.core.ImportContainer
@@ -15,8 +9,7 @@ import org.eclipse.jdt.internal.core.JavaElement
 import org.eclipse.jdt.internal.core.JavaElementInfo
 import org.eclipse.jdt.internal.core.SourceType
 import org.eclipse.jdt.internal.core.SourceRefElement
-
-import scala.tools.eclipse.util.ReflectionUtils
+import org.scalaide.util.internal.ReflectionUtils
 
 object JavaElementFactory extends ReflectionUtils {
   private val stCtor = getDeclaredConstructor(classOf[SourceType], classOf[JavaElement], classOf[String])

@@ -1,9 +1,7 @@
-package scala.tools.eclipse
-package properties
+package org.scalaide.ui.internal.preferences
 
 import scala.collection.mutable.ListBuffer
-import scala.tools.eclipse.ScalaPlugin
-import scala.tools.eclipse.util.SWTUtils.CheckBox
+import org.scalaide.util.internal.eclipse.SWTUtils.CheckBox
 
 import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer
 import org.eclipse.jface.preference.ColorFieldEditor
@@ -16,6 +14,7 @@ import org.eclipse.swt.widgets.Control
 import org.eclipse.swt.widgets.Group
 import org.eclipse.ui.IWorkbench
 import org.eclipse.ui.IWorkbenchPreferencePage
+import org.scalaide.core.ScalaPlugin
 
 import EditorPreferencePage._
 

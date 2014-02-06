@@ -1,11 +1,6 @@
-/*
- * Copyright 2010 LAMP/EPFL
- *
- *
- */
-package scala.tools.eclipse.wizards
+package org.scalaide.ui.internal.wizards
 
-import scala.tools.eclipse.ui.DisplayThread
+import org.scalaide.util.internal.ui.DisplayThread
 
 class NewClassWizardPage extends {
   val declarationType = "Class"

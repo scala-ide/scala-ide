@@ -1,16 +1,16 @@
-package scala.tools.eclipse.completion
+package org.scalaide.core.internal.completion
 
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposalComputer
 import org.eclipse.jdt.ui.text.java.ContentAssistInvocationContext
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext
-import scala.tools.eclipse.javaelements.ScalaCompilationUnit
+import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import java.util.Collections.{ emptyList => javaEmptyList }
 import org.eclipse.jdt.core._
-import scala.tools.eclipse.ScalaPlugin
 import org.eclipse.jface.text.Document
-import scala.tools.eclipse.ScalaImages
-import scala.tools.eclipse.ui.ScalaCompletionProposal
+import org.scalaide.ui.internal.ScalaImages
+import org.scalaide.ui.internal.completion.ScalaCompletionProposal
 import org.eclipse.jdt.core.dom.ASTParser
 import org.eclipse.jdt.core.dom.AST
 import org.eclipse.jdt.core.dom.ASTVisitor
@@ -36,8 +36,8 @@ import org.eclipse.jdt.internal.compiler.ast.FieldReference
 import org.eclipse.jdt.core.dom.FieldAccess
 import org.eclipse.jdt.core.dom.VariableDeclarationStatement
 import org.eclipse.jdt.core.dom.ClassInstanceCreation
-
 import org.eclipse.jface.text.contentassist.ICompletionProposal
+import org.scalaide.core.completion.CompletionContext
 
 /** A completion proposal for Java sources. This adds mixed-in concrete members to scope
  *  completions in Java.

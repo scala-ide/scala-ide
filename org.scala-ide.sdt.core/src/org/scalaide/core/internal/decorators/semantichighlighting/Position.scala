@@ -1,8 +1,7 @@
-package scala.tools.eclipse.semantichighlighting
+package org.scalaide.core.internal.decorators.semantichighlighting
 
-import scala.tools.eclipse.semantichighlighting.classifier.SymbolInfo
-import scala.tools.eclipse.semantichighlighting.classifier.SymbolTypes
-
+import org.scalaide.core.internal.decorators.semantichighlighting.classifier.SymbolInfo
+import org.scalaide.core.internal.decorators.semantichighlighting.classifier.SymbolTypes
 import org.eclipse.jface.text.{ Position => TextPosition }
 
 /** Represents a semantically colored position in the editor.

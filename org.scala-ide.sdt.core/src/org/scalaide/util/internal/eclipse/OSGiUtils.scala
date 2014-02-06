@@ -1,9 +1,4 @@
-/*
- * Copyright 2005-2010 LAMP/EPFL
- */
-// $Id$
-
-package scala.tools.eclipse.util
+package org.scalaide.util.internal.eclipse
 
 import java.io.IOException
 import java.net.URL

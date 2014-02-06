@@ -1,6 +1,6 @@
-package scala.tools.eclipse.semantichighlighting.classifier
+package org.scalaide.core.internal.decorators.semantichighlighting.classifier
 
-import scala.tools.eclipse.semantichighlighting.classifier.SymbolTypes._
+import org.scalaide.core.internal.decorators.semantichighlighting.classifier.SymbolTypes._
 import scala.reflect.internal.util.RangePosition
 import org.eclipse.jface.text.IRegion
 import scala.reflect.internal.util.SourceFile

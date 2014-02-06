@@ -1,4 +1,4 @@
-package org.scalaide.editor
+package org.scalaide.ui.editor
 
 import org.eclipse.jface.text.DocumentEvent
 import org.eclipse.jface.text.IDocument
@@ -6,7 +6,7 @@ import org.eclipse.jface.text.IDocumentListener
 import org.eclipse.jface.text.IRegion
 import org.eclipse.jface.text.reconciler.DirtyRegion
 import org.eclipse.jface.text.reconciler.IReconcilingStrategy
-import scala.tools.eclipse.logging.HasLogger
+import org.scalaide.logging.HasLogger
 
 class ReconcilingStrategy(sourceEditor: SourceCodeEditor, documentListener: IDocumentListener) extends IReconcilingStrategy with HasLogger {
   private var document: Option[IDocument] = None

@@ -1,4 +1,4 @@
-package scala.tools.eclipse.buildmanager
+package org.scalaide.core.internal.builder
 
 import org.eclipse.core.resources.IProject
 import org.eclipse.core.resources.IncrementalProjectBuilder

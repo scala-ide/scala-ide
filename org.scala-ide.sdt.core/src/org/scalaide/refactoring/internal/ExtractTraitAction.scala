@@ -1,7 +1,6 @@
-package scala.tools.eclipse
-package refactoring
+package org.scalaide.refactoring.internal
 
-import scala.tools.eclipse.refactoring.ui.ExtractTraitConfigurationPageGenerator
+import org.scalaide.refactoring.internal.ui.ExtractTraitConfigurationPageGenerator
 import scala.tools.refactoring.analysis.GlobalIndexes
 import scala.tools.refactoring.common.NewFileChange
 import scala.tools.refactoring.common.TextChange
@@ -13,7 +12,7 @@ import org.eclipse.jdt.internal.corext.refactoring.nls.changes.CreateFileChange
 import org.eclipse.ltk.core.refactoring.{Change => EclipseChange}
 import org.eclipse.ltk.core.refactoring.CompositeChange
 
-import javaelements.ScalaSourceFile
+import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 
 /**
  * The ExtractTrait refactoring extracts members (vals, vars and defs) of a class

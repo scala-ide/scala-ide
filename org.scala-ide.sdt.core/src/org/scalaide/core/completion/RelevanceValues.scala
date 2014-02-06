@@ -1,4 +1,4 @@
-package scala.tools.eclipse.completion
+package org.scalaide.core.completion
 
 object RelevanceValues {
 

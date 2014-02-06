@@ -1,9 +1,10 @@
-package scala.tools.eclipse.refactoring.method
+package org.scalaide.refactoring.internal
+package method
 
-import scala.tools.eclipse.javaelements.ScalaSourceFile
-import scala.tools.eclipse.refactoring.method.ui.MethodSignatureRefactoringConfigurationPageGenerator
-import scala.tools.eclipse.refactoring.Indexed
-import scala.tools.eclipse.refactoring.IndexedIdeRefactoring
+import org.scalaide.core.internal.jdt.model.ScalaSourceFile
+import org.scalaide.refactoring.internal.method.ui.MethodSignatureRefactoringConfigurationPageGenerator
+import org.scalaide.refactoring.internal.Indexed
+import org.scalaide.refactoring.internal.IndexedIdeRefactoring
 import scala.tools.refactoring.analysis.GlobalIndexes
 import scala.tools.refactoring.implementations.MethodSignatureRefactoring
 import org.eclipse.ltk.ui.refactoring.UserInputWizardPage

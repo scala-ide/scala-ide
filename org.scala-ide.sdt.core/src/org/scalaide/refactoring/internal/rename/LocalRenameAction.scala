@@ -1,12 +1,8 @@
-/*
- * Copyright 2005-2010 LAMP/EPFL
- */
-
-package scala.tools.eclipse.refactoring
+package org.scalaide.refactoring.internal
 package rename
 
 import org.eclipse.jface.action.IAction
-import scala.tools.eclipse.javaelements.ScalaSourceFile
+import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import scala.tools.refactoring.analysis.GlobalIndexes
 import scala.tools.refactoring.implementations.Rename
 

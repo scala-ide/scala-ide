@@ -1,9 +1,4 @@
-/*
- * Copyright 2005-2010 LAMP/EPFL
- */
-
-package scala.tools.eclipse
-package refactoring
+package org.scalaide.refactoring.internal
 
 import scala.tools.refactoring.common.TextChange
 import scala.tools.refactoring.implementations.ExtractLocal
@@ -11,7 +6,7 @@ import scala.tools.refactoring.implementations.ExtractLocal
 import org.eclipse.jface.action.IAction
 import org.eclipse.ui.PlatformUI
 
-import javaelements.ScalaSourceFile
+import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 
 /**
  * From a selected expression, the Extract Local refactoring will create a new

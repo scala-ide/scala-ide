@@ -1,11 +1,10 @@
-package scala.tools.eclipse.quickfix.explicit
+package org.scalaide.core.internal.quickfix.explicit
 
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal
-
 import scala.collection.immutable
 import scala.reflect.internal.Chars
-import scala.tools.eclipse.compiler.Token
-import scala.tools.eclipse.javaelements.ScalaSourceFile
+import org.scalaide.core.compiler.Token
+import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import scala.tools.nsc.ast.parser.Tokens
 
 /** A quick fix that adds an explicit return type to a given val or def

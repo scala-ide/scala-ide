@@ -1,13 +1,10 @@
-package scala.tools.eclipse
-package buildmanager
-package sbtintegration
+package org.scalaide.core.internal.builder.zinc
 
 import java.io.File
 import org.eclipse.core.runtime.SubMonitor
 import org.eclipse.core.resources.IncrementalProjectBuilder
 import org.eclipse.core.resources.IProject
-import scala.tools.eclipse.javaelements.JDTUtils
-import scala.tools.eclipse.util.FileUtils
+import org.scalaide.util.internal.eclipse.FileUtils
 import scala.tools.eclipse.contribution.weaving.jdt.jcompiler.BuildManagerStore
 import org.eclipse.jdt.internal.core.JavaModelManager
 import org.eclipse.jdt.internal.core.builder.JavaBuilder
@@ -18,7 +15,7 @@ import org.eclipse.core.resources.IResource
 import xsbti.compile.JavaCompiler
 import xsbti.compile.Output
 import xsbti.Logger
-import scala.tools.eclipse.buildmanager.JDTBuilderFacade
+import org.scalaide.core.internal.builder.JDTBuilderFacade
 
 /** Eclipse Java compiler interface, used by the SBT builder.
  *  This class forwards to the internal Eclipse Java compiler, using

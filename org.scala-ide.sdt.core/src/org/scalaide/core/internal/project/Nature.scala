@@ -1,9 +1,4 @@
-/*
- * Copyright 2005-2010 LAMP/EPFL
- */
-// $Id$
-
-package scala.tools.eclipse
+package org.scalaide.core.internal.project
 
 import scala.collection.mutable.ArrayBuffer
 import org.eclipse.core.resources.ICommand
@@ -15,8 +10,8 @@ import org.eclipse.jdt.core.IJavaProject
 import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jdt.launching.JavaRuntime
 import org.eclipse.core.runtime.Path
-import ScalaPlugin.plugin
-import scala.tools.eclipse.util.Utils
+import org.scalaide.core.ScalaPlugin.plugin
+import org.scalaide.util.internal.Utils
 
 object Nature {
 

@@ -1,13 +1,8 @@
-/*
- * Copyright 2005-2010 LAMP/EPFL
- */
-// $Id$
-
-package scala.tools.eclipse.javaelements
+package org.scalaide.core.internal.jdt.model
 
 import java.util.{ HashMap => JHashMap }
 
-import scala.tools.eclipse.ScalaImages
+import org.scalaide.ui.internal.ScalaImages
 import scala.tools.eclipse.contribution.weaving.jdt.IScalaClassFile
 import scala.tools.nsc.io.AbstractFile
 import scala.tools.nsc.io.VirtualFile

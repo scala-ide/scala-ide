@@ -1,4 +1,4 @@
-package scala.tools.eclipse.ui.actions
+package org.scalaide.ui.internal.actions.hyperlinks
 
 import scala.tools.eclipse.contribution.weaving.jdt.ui.actions.IOpenActionProvider
 import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor

@@ -1,10 +1,9 @@
-package scala.tools.eclipse.formatter
+package org.scalaide.core.internal.formatter
 
 import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer
 import org.eclipse.core.runtime.preferences.DefaultScope
-
-import scala.tools.eclipse.ScalaPlugin
+import org.scalaide.core.ScalaPlugin
 import scalariform.formatter.preferences._
 
 class ScalaFormatterPreferenceInitializer extends AbstractPreferenceInitializer {

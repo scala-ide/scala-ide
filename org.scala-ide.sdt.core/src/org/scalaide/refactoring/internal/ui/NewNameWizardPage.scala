@@ -1,6 +1,4 @@
-package scala.tools.eclipse
-package refactoring
-package ui
+package org.scalaide.refactoring.internal.ui
 
 import org.eclipse.jface.dialogs.IMessageProvider
 import org.eclipse.ltk.ui.refactoring.UserInputWizardPage

@@ -1,7 +1,6 @@
-package scala.tools.eclipse.ui
+package org.scalaide.ui.internal.explorer
 
-import scala.tools.eclipse.ScalaImages
-
+import org.scalaide.ui.internal.ScalaImages
 import org.eclipse.core.internal.resources.File
 import org.eclipse.jface.viewers.DecorationContext
 import org.eclipse.jface.viewers.IDecoration

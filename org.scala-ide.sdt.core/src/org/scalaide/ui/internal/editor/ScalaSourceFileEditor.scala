@@ -1,30 +1,22 @@
-
-/*
- * Copyright 2005-2010 LAMP/EPFL
- */
-// $Id$
-
-package scala.tools.eclipse
+package org.scalaide.ui.internal.editor
 
 import java.util.ResourceBundle
-
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.SynchronizedBuffer
-import scala.tools.eclipse.javaelements.ScalaCompilationUnit
-import scala.tools.eclipse.markoccurrences.Occurrences
-import scala.tools.eclipse.markoccurrences.ScalaOccurrencesFinder
-import scala.tools.eclipse.properties.EditorPreferencePage
-import scala.tools.eclipse.semantichighlighting.TextPresentationHighlighter
-import scala.tools.eclipse.semantichighlighting.ui.TextPresentationEditorHighlighter
-import scala.tools.eclipse.semicolon.ShowInferredSemicolonsAction
-import scala.tools.eclipse.semicolon.ShowInferredSemicolonsBundle
-import scala.tools.eclipse.ui.DisplayThread
-import scala.tools.eclipse.ui.SurroundSelectionStrategy
-import scala.tools.eclipse.util.EclipseUtils
-import scala.tools.eclipse.util.EditorUtils
-import scala.tools.eclipse.util.RichAnnotationModel.RichModel
-import scala.tools.eclipse.util.Utils
-
+import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
+import org.scalaide.core.internal.decorators.markoccurrences.Occurrences
+import org.scalaide.core.internal.decorators.markoccurrences.ScalaOccurrencesFinder
+import org.scalaide.ui.internal.preferences.EditorPreferencePage
+import org.scalaide.ui.internal.editor.decorators.semantichighlighting.TextPresentationHighlighter
+import org.scalaide.ui.internal.editor.decorators.semantichighlighting.TextPresentationEditorHighlighter
+import org.scalaide.ui.internal.editor.decorators.semicolon.ShowInferredSemicolonsAction
+import org.scalaide.ui.internal.editor.decorators.semicolon.ShowInferredSemicolonsBundle
+import org.scalaide.util.internal.ui.DisplayThread
+import org.scalaide.ui.internal.editor.autoedits.SurroundSelectionStrategy
+import org.scalaide.util.internal.eclipse.EclipseUtils
+import org.scalaide.util.internal.eclipse.EditorUtils
+import org.scalaide.util.internal.eclipse.RichAnnotationModel.RichModel
+import org.scalaide.util.internal.Utils
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.core.runtime.Status
 import org.eclipse.core.runtime.jobs.Job
@@ -62,6 +54,9 @@ import org.eclipse.ui.texteditor.IAbstractTextEditorHelpContextIds
 import org.eclipse.ui.texteditor.ITextEditorActionConstants
 import org.eclipse.ui.texteditor.IUpdate
 import org.eclipse.ui.texteditor.TextOperationAction
+import org.scalaide.ui.internal.actions
+import org.scalaide.core.ScalaPlugin
+import org.scalaide.refactoring
 
 
 class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationUnitEditor { self =>
@@ -115,7 +110,7 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationU
     setAction(StructureSelectionAction.HISTORY, historyAction)
     selectionHistory.setHistoryAction(historyAction)
 
-    val selectEnclosingAction = new ScalaStructureSelectEnclosingAction(this, selectionHistory)
+    val selectEnclosingAction = new actions.ScalaStructureSelectEnclosingAction(this, selectionHistory)
     selectEnclosingAction.setActionDefinitionId(IJavaEditorActionDefinitionIds.SELECT_ENCLOSING)
     setAction(StructureSelectionAction.ENCLOSING, selectEnclosingAction)
 
@@ -269,25 +264,25 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationU
       blacklist.flatMap(groups.get).flatten.foreach(mm.remove)
 
       // and provide our own organize imports instead
-      mm.appendToGroup("importGroup", new refactoring.OrganizeImportsAction { setText("Organize Imports") })
+      mm.appendToGroup("importGroup", new refactoring.internal.OrganizeImportsAction { setText("Organize Imports") })
 
       // add GenerateHashcodeAndEquals and IntroductProductN source generators
-      mm.appendToGroup("generateGroup", new refactoring.source.GenerateHashcodeAndEqualsAction {
+      mm.appendToGroup("generateGroup", new refactoring.internal.source.GenerateHashcodeAndEqualsAction {
         setText("Generate hashCode() and equals()...")
       })
-      mm.appendToGroup("generateGroup", new refactoring.source.IntroduceProductNTraitAction {
+      mm.appendToGroup("generateGroup", new refactoring.internal.source.IntroduceProductNTraitAction {
         setText("Introduce ProductN trait...")
       })
 
     }
 
-    refactoring.RefactoringMenu.fillContextMenu(menu, this)
+    refactoring.internal.RefactoringMenu.fillContextMenu(menu, this)
   }
 
   override def createPartControl(parent: org.eclipse.swt.widgets.Composite) {
     super.createPartControl(parent)
     occurrencesFinder = new ScalaOccurrencesFinder(getInteractiveCompilationUnit)
-    refactoring.RefactoringMenu.fillQuickMenu(this)
+    refactoring.internal.RefactoringMenu.fillQuickMenu(this)
 
     getSourceViewer match {
       case sourceViewer: ITextViewerExtension =>

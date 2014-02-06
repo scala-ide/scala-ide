@@ -1,8 +1,8 @@
-package scala.tools.eclipse.semantichighlighting
+package org.scalaide.ui.internal.editor.decorators.semantichighlighting
 
-import scala.tools.eclipse.logging.HasLogger
-import scala.tools.eclipse.semantichighlighting.classifier.SymbolClassification
-import scala.tools.eclipse.ui.UIThread
+import org.scalaide.logging.HasLogger
+import org.scalaide.core.internal.decorators.semantichighlighting.classifier.SymbolClassification
+import org.scalaide.util.internal.ui.UIThread
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.core.runtime.IStatus
 import org.eclipse.core.runtime.Status
@@ -13,7 +13,8 @@ import org.eclipse.jface.text.IDocumentListener
 import org.eclipse.jface.text.IPositionUpdater
 import org.eclipse.jface.text.IRegion
 import org.eclipse.jface.text.ITextInputListener
-import scala.tools.eclipse.ui.InteractiveCompilationUnitEditor
+import org.scalaide.ui.internal.editor.InteractiveCompilationUnitEditor
+import org.scalaide.core.internal.decorators.semantichighlighting.{ PositionsTracker, Position }
 
 /** This class is responsible of coordinating the correct initialization of the different components
   * needed to perform semantic highlighting in an editor.

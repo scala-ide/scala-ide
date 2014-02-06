@@ -1,13 +1,10 @@
-package scala.tools.eclipse.ui
+package org.scalaide.ui.internal.completion
 
-import scala.tools.eclipse.ScalaImages
-import scala.tools.eclipse.ScalaWordFinder
-import scala.tools.eclipse.completion.CompletionContext
-import scala.tools.eclipse.completion.CompletionProposal
-import scala.tools.eclipse.completion.MemberKind
-import scala.tools.eclipse.completion.prefixMatches
-import scala.tools.eclipse.refactoring.EditorHelpers
-import scala.tools.eclipse.refactoring.EditorHelpers._
+import org.scalaide.ui.internal.ScalaImages
+import org.scalaide.util.internal.ScalaWordFinder
+import org.scalaide.core.completion._
+import org.scalaide.refactoring.internal.EditorHelpers
+import org.scalaide.refactoring.internal.EditorHelpers._
 import scala.tools.refactoring.common.TextChange
 import scala.tools.refactoring.implementations.AddImportStatement
 

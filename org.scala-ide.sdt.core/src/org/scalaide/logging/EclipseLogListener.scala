@@ -1,4 +1,4 @@
-package scala.tools.eclipse.logging
+package org.scalaide.logging
 
 import org.eclipse.core.runtime.ILogListener
 import org.eclipse.core.runtime.ILog

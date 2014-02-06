@@ -1,6 +1,6 @@
-package scala.tools.eclipse.javaelements
+package org.scalaide.core.internal.jdt.model
 
-import scala.tools.eclipse.ScalaPresentationCompiler
+import org.scalaide.core.compiler.ScalaPresentationCompiler
 
 trait ScalaAnnotationHelper { self: ScalaPresentationCompiler =>
 

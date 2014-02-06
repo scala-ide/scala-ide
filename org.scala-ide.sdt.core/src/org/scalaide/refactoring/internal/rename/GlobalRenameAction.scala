@@ -1,16 +1,12 @@
-/*
- * Copyright 2005-2010 LAMP/EPFL
- */
-
-package scala.tools.eclipse.refactoring
+package org.scalaide.refactoring.internal
 package rename
 
 import org.eclipse.core.resources.IFile
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.ltk.core.refactoring.resource.RenameResourceChange
 import org.eclipse.ltk.core.refactoring.RefactoringStatus
-import scala.tools.eclipse.javaelements.ScalaSourceFile
-import scala.tools.eclipse.refactoring.ui._
+import org.scalaide.core.internal.jdt.model.ScalaSourceFile
+import org.scalaide.refactoring.internal.ui._
 import scala.reflect.internal.util.SourceFile
 import scala.tools.refactoring.analysis.GlobalIndexes
 import scala.tools.refactoring.analysis.Indexes

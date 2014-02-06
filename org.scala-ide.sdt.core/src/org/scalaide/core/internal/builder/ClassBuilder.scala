@@ -1,11 +1,9 @@
-package scala.tools.eclipse.buildmanager
+package org.scalaide.core.internal.builder
 
-import scala.tools.eclipse.GeneralScalaJavaBuilder
-import scala.tools.eclipse.ScalaJavaBuilderUtils
-import scala.tools.eclipse.ScalaPlugin
-import scala.tools.eclipse.StateUtils
-import scala.tools.eclipse.javaelements.JDTUtils
-
+import org.scalaide.core.internal.jdt.builder.GeneralScalaJavaBuilder
+import org.scalaide.core.internal.jdt.builder.ScalaJavaBuilderUtils
+import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.internal.jdt.util.JDTUtils
 import org.eclipse.core.resources.IProject
 import org.eclipse.jdt.internal.core.JavaModelManager
 import org.eclipse.jdt.internal.core.builder.State

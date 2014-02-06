@@ -1,15 +1,19 @@
-/*
- *
- */
-package scala.tools.eclipse.templates
+package org.scalaide.ui.internal.templates
 
 import org.eclipse.jdt.internal.ui.JavaPluginImages
-
-
-import scala.tools.eclipse.ScalaPlugin
-
 import org.eclipse.ui.editors.text.templates.ContributionContextTypeRegistry
 import org.eclipse.ui.editors.text.templates.ContributionTemplateStore
+
+import org.eclipse.jface.text.IRegion
+import org.eclipse.jface.text.ITextViewer
+import org.eclipse.jface.text.templates.Template
+import org.eclipse.jface.text.templates.TemplateCompletionProcessor
+import org.eclipse.jface.text.templates.TemplateContextType
+import org.eclipse.swt.graphics.Image
+
+import org.eclipse.jface.text.templates.GlobalTemplateVariables
+import org.eclipse.jface.text.templates.TemplateContextType
+import org.scalaide.core.ScalaPlugin
 
 //TODO multi-line Template aren't indented
 
@@ -36,13 +40,6 @@ class ScalaTemplateManager {
 
   def makeTemplateCompletionProcessor() = new ScalaTemplateCompletionProcessor(this)
 }
-
-import org.eclipse.jface.text.IRegion
-import org.eclipse.jface.text.ITextViewer
-import org.eclipse.jface.text.templates.Template
-import org.eclipse.jface.text.templates.TemplateCompletionProcessor
-import org.eclipse.jface.text.templates.TemplateContextType
-import org.eclipse.swt.graphics.Image
 
 /**
  * Completion processor used for templates.
@@ -71,9 +68,6 @@ class ScalaTemplateCompletionProcessor(val tm : ScalaTemplateManager) extends Te
     else super.getRelevance(template, prefix)
   }
 }
-
-import org.eclipse.jface.text.templates.GlobalTemplateVariables
-import org.eclipse.jface.text.templates.TemplateContextType
 
 
 /**

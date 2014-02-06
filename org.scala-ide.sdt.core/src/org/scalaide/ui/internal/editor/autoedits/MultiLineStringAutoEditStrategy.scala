@@ -1,4 +1,4 @@
-package scala.tools.eclipse.ui
+package org.scalaide.ui.internal.editor.autoedits
 
 import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.jface.text.DocumentCommand

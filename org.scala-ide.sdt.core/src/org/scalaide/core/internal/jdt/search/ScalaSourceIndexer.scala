@@ -1,15 +1,10 @@
-/*
- * Copyright 2005-2010 LAMP/EPFL
- */
-// $Id$
-
-package scala.tools.eclipse
+package org.scalaide.core.internal.jdt.search
 
 import org.eclipse.jdt.core.search.SearchDocument
 import org.eclipse.jdt.internal.core.search.indexing.AbstractIndexer
-import scala.tools.eclipse.javaelements.ScalaSourceFile
+import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import scala.tools.eclipse.contribution.weaving.jdt.indexerprovider.IIndexerFactory
-import scala.tools.eclipse.logging.HasLogger
+import org.scalaide.logging.HasLogger
 
 class ScalaSourceIndexerFactory extends IIndexerFactory {
   override def createIndexer(document : SearchDocument) = new ScalaSourceIndexer(document);

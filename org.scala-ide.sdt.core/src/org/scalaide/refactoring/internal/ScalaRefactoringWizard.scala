@@ -1,8 +1,4 @@
-/*
- * Copyright 2005-2010 LAMP/EPFL
- */
-
-package scala.tools.eclipse.refactoring
+package org.scalaide.refactoring.internal
 
 import org.eclipse.ltk.ui.refactoring.RefactoringWizard
 

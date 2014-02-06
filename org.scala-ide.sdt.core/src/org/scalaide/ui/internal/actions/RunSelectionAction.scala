@@ -1,5 +1,4 @@
-package scala.tools.eclipse
-package actions
+package org.scalaide.ui.internal.actions
 
 import org.eclipse.jface.action.IAction
 import org.eclipse.jface.text.ITextSelection
@@ -8,8 +7,8 @@ import org.eclipse.ui.texteditor.ITextEditor
 import org.eclipse.ui.IWorkbenchWindow
 import org.eclipse.ui.IWorkbenchWindowActionDelegate
 import org.eclipse.ui.IFileEditorInput
-import interpreter.ReplConsoleView
-import util.Utils._
+import org.scalaide.ui.internal.repl.ReplConsoleView
+import org.scalaide.util.internal.Utils._
 
 class RunSelectionAction extends ActionDelegate with IWorkbenchWindowActionDelegate {
   var workbenchWindow: IWorkbenchWindow = null

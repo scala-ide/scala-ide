@@ -1,4 +1,4 @@
-package scala.tools.eclipse.refactoring
+package org.scalaide.refactoring.internal
 package move
 
 import org.eclipse.core.resources.IFolder
@@ -10,7 +10,7 @@ import org.eclipse.ltk.core.refactoring.resource.MoveResourceChange
 import org.eclipse.ltk.core.refactoring.RefactoringStatus
 import org.eclipse.ltk.core.refactoring.CompositeChange
 
-import scala.tools.eclipse.javaelements.ScalaSourceFile
+import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import scala.tools.refactoring.analysis.GlobalIndexes
 import scala.tools.refactoring.common.TextChange
 import scala.tools.refactoring.common.NewFileChange

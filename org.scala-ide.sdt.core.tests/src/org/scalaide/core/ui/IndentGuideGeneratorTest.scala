@@ -1,8 +1,9 @@
-package scala.tools.eclipse.ui
+package org.scalaide.core.ui
 
 import org.eclipse.jface.text.Document
 import org.junit.ComparisonFailure
 import org.junit.Test
+import IndentGuideGeneratorTest.FullRange
 
 object IndentGuideGeneratorTest {
 

@@ -1,8 +1,7 @@
-package scala.tools.eclipse.launching
+package org.scalaide.core.internal.launching
 
-import scala.tools.eclipse.ScalaPlugin
-import scala.tools.eclipse.ScalaProject
-
+import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.internal.project.ScalaProject
 import org.eclipse.core.resources.IResource
 import org.eclipse.core.runtime.IStatus
 import org.eclipse.core.runtime.Status

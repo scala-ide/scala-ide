@@ -1,17 +1,17 @@
-package scala.tools.eclipse.buildmanager.sbtintegration
+package org.scalaide.core.internal.builder.zinc
 
 import scala.collection.mutable
-import scala.tools.eclipse.buildmanager.BuildReporter
+import org.scalaide.core.internal.builder.BuildReporter
 import scala.reflect.internal.util.BatchSourceFile
 import scala.reflect.internal.util.OffsetPosition
 import scala.reflect.internal.util.Position
 import scala.reflect.internal.util.NoPosition
 import scala.tools.nsc.reporters.Reporter
-import scala.tools.eclipse.util.EclipseResource
+import org.scalaide.core.resources.EclipseResource
 
 /**  An Sbt Reporter that forwards to an underlying [[BuildReporter]]
  */
-private[sbtintegration] class SbtBuildReporter(underlying: BuildReporter) extends xsbti.Reporter {
+private[zinc] class SbtBuildReporter(underlying: BuildReporter) extends xsbti.Reporter {
   val probs = new mutable.ArrayBuffer[xsbti.Problem]
 
   override def reset() = {

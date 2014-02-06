@@ -1,4 +1,4 @@
-package scala.tools.eclipse.formatter
+package org.scalaide.core.internal.formatter
 
 import org.eclipse.core.resources.IProject
 import org.eclipse.core.runtime.IAdaptable
@@ -13,8 +13,8 @@ import org.eclipse.ui.texteditor.ITextEditor
 import scalariform.formatter.ScalaFormatter
 import scalariform.parser.ScalaParserException
 import scalariform.utils.TextEdit
-import scala.tools.eclipse.ScalaPlugin
-import scala.tools.eclipse.util.EclipseUtils._
+import org.scalaide.core.ScalaPlugin
+import org.scalaide.util.internal.eclipse.EclipseUtils._
 import org.eclipse.core.resources.IResource
 
 class ScalaFormattingStrategy(val editor: ITextEditor) extends IFormattingStrategy with IFormattingStrategyExtension {

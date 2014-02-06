@@ -1,16 +1,17 @@
-package scala.tools.eclipse.semantichighlighting.classifier
+package org.scalaide.core.internal.decorators.semantichighlighting.classifier
+
 import scala.PartialFunction.condOpt
 import scala.collection.mutable
-import scala.tools.eclipse.ScalaPresentationCompiler
-import scala.tools.eclipse.logging.HasLogger
-import scala.tools.eclipse.semantichighlighting.classifier.SymbolTypes._
+import org.scalaide.core.compiler.ScalaPresentationCompiler
+import org.scalaide.logging.HasLogger
+import org.scalaide.core.internal.decorators.semantichighlighting.classifier.SymbolTypes._
 import scala.tools.nsc.io.AbstractFile
 import scala.tools.nsc.util.RangePosition
 import scala.reflect.internal.util.SourceFile
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.jface.text.IRegion
 import org.eclipse.jface.text.Region
-import scala.tools.eclipse.jface.text.RegionOps._
+import org.scalaide.util.internal.eclipse.RegionOps._
 
 private object SymbolClassification {
   private val debug = false

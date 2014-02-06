@@ -1,4 +1,4 @@
-package scala.tools.eclipse.lexical
+package org.scalaide.core.internal.lexical
 
 import org.eclipse.jdt.ui.text.IJavaPartitions._
 import org.eclipse.jface.text._
@@ -7,7 +7,7 @@ import scala.annotation.switch
 import scala.annotation.tailrec
 import scala.collection.mutable.Stack
 import scala.collection.mutable.ListBuffer
-import scala.tools.eclipse.lexical.ScalaPartitions._
+import org.scalaide.core.internal.lexical.ScalaPartitions._
 import scala.xml.parsing.TokenTests
 
 /**

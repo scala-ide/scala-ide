@@ -1,7 +1,7 @@
-package scala.tools.eclipse.sourcefileprovider
+package org.scalaide.core.extensions
 
 import org.eclipse.core.runtime.IPath
-import scala.tools.eclipse.InteractiveCompilationUnit
+import org.scalaide.core.compiler.InteractiveCompilationUnit
 
 trait SourceFileProvider {
   /** Create a compilation unit for the passed workspace `path`.*/

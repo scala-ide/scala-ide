@@ -1,4 +1,4 @@
-package scala.tools.eclipse.launching
+package org.scalaide.core.internal.launching
 
 import org.eclipse.jdt.junit.launcher.JUnitLaunchShortcut
 import org.eclipse.jdt.core.IJavaElement

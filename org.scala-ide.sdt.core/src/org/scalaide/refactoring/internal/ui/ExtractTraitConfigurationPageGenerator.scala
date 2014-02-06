@@ -1,4 +1,4 @@
-package scala.tools.eclipse.refactoring.ui
+package org.scalaide.refactoring.internal.ui
 
 import org.eclipse.ltk.ui.refactoring.UserInputWizardPage
 import org.eclipse.swt.widgets.Composite
@@ -14,7 +14,7 @@ import org.eclipse.jface.viewers.ColumnLabelProvider
 import org.eclipse.jface.viewers.ISelectionChangedListener
 import org.eclipse.jface.viewers.SelectionChangedEvent
 import org.eclipse.jface.viewers.IStructuredSelection
-import scala.tools.eclipse.refactoring.ScalaIdeRefactoring
+import org.scalaide.refactoring.internal.ScalaIdeRefactoring
 
 /**
  * Generates the wizard page for a ExtractTrait refactoring.

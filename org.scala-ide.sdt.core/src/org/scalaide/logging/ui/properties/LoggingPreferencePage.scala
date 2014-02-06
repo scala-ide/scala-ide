@@ -1,10 +1,9 @@
-package scala.tools.eclipse.logging.ui.properties
+package org.scalaide.logging.ui.properties
 
-import scala.tools.eclipse.logging.Level
-import scala.tools.eclipse.logging.LogManager
-import scala.tools.eclipse.ui.OpenExternalFile
-import scala.tools.eclipse.ScalaPlugin
-
+import org.scalaide.logging.Level
+import org.scalaide.logging.LogManager
+import org.scalaide.ui.internal.actions.OpenExternalFile
+import org.scalaide.core.ScalaPlugin
 import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer
 import org.eclipse.jface.preference.BooleanFieldEditor
 import org.eclipse.jface.preference.ComboFieldEditor

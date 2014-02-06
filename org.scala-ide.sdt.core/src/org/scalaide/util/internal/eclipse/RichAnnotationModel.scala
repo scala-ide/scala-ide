@@ -1,4 +1,4 @@
-package scala.tools.eclipse.util
+package org.scalaide.util.internal.eclipse
 
 import org.eclipse.jface.text.source.AnnotationModel
 import org.eclipse.jface.text.source.Annotation

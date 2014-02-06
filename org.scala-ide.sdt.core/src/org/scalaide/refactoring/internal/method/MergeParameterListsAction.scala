@@ -1,8 +1,8 @@
-package scala.tools.eclipse.refactoring
+package org.scalaide.refactoring.internal
 package method
 
-import scala.tools.eclipse.javaelements.ScalaSourceFile
-import scala.tools.eclipse.refactoring.method.ui.MergeParameterListsConfigurationPageGenerator
+import org.scalaide.core.internal.jdt.model.ScalaSourceFile
+import org.scalaide.refactoring.internal.method.ui.MergeParameterListsConfigurationPageGenerator
 import scala.tools.refactoring.implementations.MergeParameterLists
 
 /**

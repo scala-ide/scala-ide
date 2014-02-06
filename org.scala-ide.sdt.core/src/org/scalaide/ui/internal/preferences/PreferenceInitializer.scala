@@ -1,8 +1,8 @@
-package scala.tools.eclipse
+package org.scalaide.ui.internal.preferences
 
 import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer
 import org.eclipse.core.runtime.preferences.DefaultScope
-import scala.tools.eclipse.diagnostic.StartupDiagnostics
+import org.scalaide.ui.internal.diagnostic.StartupDiagnostics
 
 class PreferenceInitializer extends AbstractPreferenceInitializer {
 

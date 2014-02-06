@@ -1,15 +1,9 @@
-/*
- * Copyright 2005-2010 LAMP/EPFL
- */
-// $Id$
-
-package scala.tools.eclipse.javaelements
-
+package org.scalaide.core.internal.jdt.model
 
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants
 import scala.tools.nsc.symtab.Flags
-import scala.tools.eclipse.ScalaPresentationCompiler
-import scala.tools.eclipse.logging.HasLogger
+import org.scalaide.core.compiler.ScalaPresentationCompiler
+import org.scalaide.logging.HasLogger
 import org.eclipse.jdt.core._
 import org.eclipse.jdt.internal.core.JavaModelManager
 import org.eclipse.core.runtime.Path
@@ -17,7 +11,7 @@ import org.eclipse.core.runtime.Path
 trait ScalaJavaMapper extends ScalaAnnotationHelper with HasLogger { self : ScalaPresentationCompiler =>
 
   @deprecated("Remove this when dropping Scala 2.10 support. See SI-8030")
-  private[eclipse] def initializeRequiredSymbols() {
+  private[core] def initializeRequiredSymbols() {
     import definitions._
     val symbols = Vector(UnitClass,
       BooleanClass,

@@ -1,4 +1,4 @@
-package scala.tools.eclipse.util
+package org.scalaide.util.internal.eclipse
 
 import org.eclipse.swt.widgets.Display
 import org.eclipse.jface.viewers.DoubleClickEvent
@@ -13,22 +13,22 @@ import org.eclipse.swt.events.FocusEvent
 import org.eclipse.jface.util.IPropertyChangeListener
 import org.eclipse.jface.util.PropertyChangeEvent
 import org.eclipse.swt.events._
-import scala.tools.eclipse.ui.DisplayThread
 import org.eclipse.swt.widgets.Composite
 import org.eclipse.jface.preference.BooleanFieldEditor
 import org.eclipse.jface.preference.IPreferenceStore
+import org.scalaide.util.internal.ui.DisplayThread
 
 // TODO move out implicit conversions to a separate module?
 object SWTUtils {
 
   import scala.language.implicitConversions
 
-  @deprecated("Use scala.tools.eclipse.ui.DisplayThread.asyncExec", "3.0.0")
+  @deprecated("Use org.scalaide.util.internal.ui.DisplayThread.asyncExec", "3.0.0")
   def asyncExec(f: => Unit) {
     DisplayThread.asyncExec(f)
   }
 
-  @deprecated("Use scala.tools.eclipse.ui.DisplayThread.syncExec", "3.0.0")
+  @deprecated("Use org.scalaide.util.internal.ui.DisplayThread.syncExec", "3.0.0")
   def syncExec(f: => Unit) {
     DisplayThread.syncExec(f)
   }

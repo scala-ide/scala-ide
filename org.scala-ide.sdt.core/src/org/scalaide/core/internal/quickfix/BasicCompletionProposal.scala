@@ -1,4 +1,4 @@
-package scala.tools.eclipse.quickfix
+package org.scalaide.core.internal.quickfix
 
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal
 import org.eclipse.jface.text.IDocument
@@ -12,7 +12,7 @@ import org.eclipse.swt.graphics.Point
  * @param relevance
  *        Denotes at which position in among all available entries this entry occurs.
  *        A higher value means a better position. For a better overview on the current
- *        ordering, this value should be stored in [[scala.tools.eclipse.completion.RelevanceValues]].
+ *        ordering, this value should be stored in [[org.scalaide.core.completion.RelevanceValues]].
  * @param displayString
  *        A text of explanation shown in the completion proposal.
  * @param image

@@ -1,4 +1,4 @@
-package scala.tools.eclipse.launching
+package org.scalaide.core.internal.launching
 
 import scala.collection.mutable
 import org.eclipse.core.runtime.SubProgressMonitor
@@ -11,7 +11,7 @@ import org.eclipse.jdt.internal.junit.JUnitCorePlugin
 import org.eclipse.jdt.core.dom.IAnnotationBinding
 import org.eclipse.jdt.core.dom.ITypeBinding
 import scala.annotation.tailrec
-import scala.tools.eclipse.logging.HasLogger
+import org.scalaide.logging.HasLogger
 
 /** This class re-implements the logic of {{{org.eclipse.jdt.internal.junit.launcher.JUnit4TestFinder}}}, with one
  *  limitation:

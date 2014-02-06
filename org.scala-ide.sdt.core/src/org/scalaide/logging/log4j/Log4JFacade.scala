@@ -1,11 +1,11 @@
-package scala.tools.eclipse.logging
-package log4j
+package org.scalaide.logging.log4j
 
-import scala.tools.eclipse.logging.Logger
+import org.scalaide.logging.Logger
 import org.apache.log4j.{ Level => Log4JLevel }
 import org.apache.log4j.{ Logger => Log4JLogger }
 import org.apache.log4j.LogManager
-import scala.tools.eclipse.logging.Level
+import org.scalaide.logging.Level
+import org.scalaide.logging.log4j
 import java.io.File
 
 /**

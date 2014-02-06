@@ -1,4 +1,4 @@
-package scala.tools.eclipse.properties
+package org.scalaide.ui.internal.preferences
 
 import net.miginfocom.layout.AC
 import net.miginfocom.layout.CC
@@ -26,11 +26,11 @@ import org.eclipse.ui.dialogs.PreferencesUtil
 import org.eclipse.ui.dialogs.PropertyPage
 import org.eclipse.ui.IWorkbench
 import org.eclipse.ui.IWorkbenchPreferencePage
-import scala.tools.eclipse.util.SWTUtils._
-import scala.tools.eclipse.ScalaPlugin
+import org.scalaide.util.internal.eclipse.SWTUtils._
+import org.scalaide.util.internal.Utils
+import org.scalaide.core.ScalaPlugin
 import org.eclipse.jface.preference.RadioGroupFieldEditor
 import org.eclipse.jface.preference.FieldEditor
-import scala.tools.eclipse.util.Utils
 import org.eclipse.jface.preference.BooleanFieldEditor
 
 

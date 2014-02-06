@@ -1,9 +1,8 @@
-package scala.tools.eclipse.refactoring.source
+package org.scalaide.refactoring.internal.source
 
-import scala.tools.eclipse.javaelements.ScalaSourceFile
-import scala.tools.eclipse.refactoring.ScalaIdeRefactoring
+import org.scalaide.core.internal.jdt.model.ScalaSourceFile
+import org.scalaide.refactoring.internal.ScalaIdeRefactoring
 import scala.tools.refactoring.implementations.ClassParameterDrivenSourceGeneration
-
 import org.eclipse.ltk.ui.refactoring.RefactoringWizardPage
 
 /**

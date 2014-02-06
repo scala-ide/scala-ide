@@ -1,16 +1,13 @@
-package scala.tools.eclipse
-package refactoring
+package org.scalaide.refactoring.internal
 
 import java.util.regex.Pattern
-
 import scala.reflect.internal.util.SourceFile
-import scala.tools.eclipse.ScalaProject
-import scala.tools.eclipse.javaelements.ScalaSourceFile
-import scala.tools.eclipse.logging.HasLogger
+import org.scalaide.core.internal.project.ScalaProject
+import org.scalaide.core.internal.jdt.model.ScalaSourceFile
+import org.scalaide.logging.HasLogger
 import scala.tools.refactoring.MultiStageRefactoring
 import scala.tools.refactoring.analysis.GlobalIndexes
 import scala.tools.refactoring.common.InteractiveScalaCompiler
-
 import org.eclipse.core.resources.IResource
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.search.core.text.TextSearchEngine

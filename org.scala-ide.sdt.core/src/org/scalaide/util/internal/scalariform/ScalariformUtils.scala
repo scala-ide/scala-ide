@@ -1,4 +1,4 @@
-package scala.tools.eclipse.util.parsing
+package org.scalaide.util.internal.scalariform
 
 import scalariform.parser._
 import scalariform.lexer._

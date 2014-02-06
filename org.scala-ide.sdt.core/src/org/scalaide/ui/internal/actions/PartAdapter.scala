@@ -1,4 +1,4 @@
-package scala.tools.eclipse.ui
+package org.scalaide.ui.internal.actions
 
 import org.eclipse.ui.IPartListener
 import org.eclipse.ui.IWorkbenchPart

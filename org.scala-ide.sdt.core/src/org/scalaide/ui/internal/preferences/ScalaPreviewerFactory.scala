@@ -1,4 +1,4 @@
-package scala.tools.eclipse
+package org.scalaide.ui.internal.preferences
 
 import org.eclipse.jface.text.source.SourceViewer
 import org.eclipse.ui.editors.text.EditorsUI
@@ -7,7 +7,7 @@ import org.eclipse.jface.util.IPropertyChangeListener
 import org.eclipse.jface.util.PropertyChangeEvent
 import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.Document
-import lexical.ScalaDocumentPartitioner
+import org.scalaide.core.internal.lexical.ScalaDocumentPartitioner
 import org.eclipse.jdt.ui.text.IJavaPartitions
 import org.eclipse.jface.text.IDocumentPartitioner
 import org.eclipse.swt.SWT
@@ -18,8 +18,8 @@ import org.eclipse.swt.widgets.Control
 import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.jface.text.TextUtilities
 import java.util.HashMap
-
 import org.eclipse.swt.widgets.Composite
+import org.scalaide.ui.internal.editor.ScalaSourceViewerConfiguration
 
 object ScalaPreviewerFactory {
 

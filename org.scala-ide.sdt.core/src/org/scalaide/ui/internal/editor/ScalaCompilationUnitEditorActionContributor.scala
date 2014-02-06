@@ -1,9 +1,9 @@
-package scala.tools.eclipse.actions
+package org.scalaide.ui.internal.editor
 
 import org.eclipse.ui.texteditor.ITextEditor
 import org.eclipse.ui.IEditorPart
 import org.eclipse.jdt.internal.ui.javaeditor.CompilationUnitEditorActionContributor
-import scala.tools.eclipse.semicolon.ShowInferredSemicolonsAction
+import org.scalaide.ui.internal.editor.decorators.semicolon.ShowInferredSemicolonsAction
 
 class ScalaCompilationUnitEditorActionContributor extends CompilationUnitEditorActionContributor {
 

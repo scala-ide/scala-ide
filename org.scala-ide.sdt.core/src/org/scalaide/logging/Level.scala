@@ -1,4 +1,4 @@
-package scala.tools.eclipse.logging
+package org.scalaide.logging
 
 /** Available log levels. */
 object Level extends Enumeration {

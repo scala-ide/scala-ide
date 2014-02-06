@@ -1,4 +1,4 @@
-package scala.tools.eclipse.refactoring
+package org.scalaide.refactoring.internal
 
 import org.eclipse.jface.action.IAction
 import org.eclipse.ui.PlatformUI

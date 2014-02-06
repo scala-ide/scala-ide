@@ -1,8 +1,8 @@
-package scala.tools.eclipse.semantichighlighting.classifier
+package org.scalaide.core.internal.decorators.semantichighlighting.classifier
 
 import scala.tools.refactoring.common.CompilerAccess
 import scala.tools.refactoring.common.PimpedTrees
-import scala.tools.eclipse.ScalaPresentationCompiler
+import org.scalaide.core.compiler.ScalaPresentationCompiler
 import scala.reflect.internal.util.SourceFile
 
 /**

@@ -1,6 +1,4 @@
-package scala.tools.eclipse
-package refactoring
-package ui
+package org.scalaide.refactoring.internal.ui
 
 import org.eclipse.swt.events.ModifyEvent
 import org.eclipse.swt.events.ModifyListener

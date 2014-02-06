@@ -1,7 +1,7 @@
-package scala.tools.eclipse.refactoring.method.ui
+package org.scalaide.refactoring.internal.method.ui
 
 import org.eclipse.swt.widgets.Button
-import scala.tools.eclipse.refactoring.ScalaIdeRefactoring
+import org.scalaide.refactoring.internal.ScalaIdeRefactoring
 import scala.tools.refactoring.Refactoring
 
 

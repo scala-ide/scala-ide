@@ -1,18 +1,10 @@
-/*
- * Copyright 2005-2010 LAMP/EPFL
- */
-// $Id$
-
-package scala.tools.eclipse
-package javaelements
+package org.scalaide.core.internal.jdt.model
 
 import java.io.ByteArrayInputStream
-
 import scala.collection.mutable.WeakHashMap
-import scala.tools.eclipse.ScalaClassFileDescriber
-import scala.tools.eclipse.ScalaPlugin
+import org.scalaide.core.ScalaPlugin
 import scala.tools.eclipse.contribution.weaving.jdt.cfprovider.IClassFileProvider
-import scala.tools.eclipse.logging.HasLogger
+import org.scalaide.logging.HasLogger
 
 import org.eclipse.jdt.core.IClassFile
 import org.eclipse.jdt.core.IJavaElement

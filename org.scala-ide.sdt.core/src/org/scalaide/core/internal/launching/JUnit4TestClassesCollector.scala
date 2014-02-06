@@ -1,8 +1,8 @@
-package scala.tools.eclipse.launching
+package org.scalaide.core.internal.launching
 
 import scala.collection.mutable.ListBuffer
-import scala.tools.eclipse.ScalaPresentationCompiler
-import scala.tools.eclipse.logging.HasLogger
+import org.scalaide.core.compiler.ScalaPresentationCompiler
+import org.scalaide.logging.HasLogger
 import scala.tools.nsc.MissingRequirementError
 
 /** Given the Scala AST of any compilation unit, traverse the AST and collect all top level class

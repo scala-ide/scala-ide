@@ -1,9 +1,4 @@
-/*
- * Copyright 2005-2010 LAMP/EPFL
- */
-// $Id$
-
-package scala.tools.eclipse
+package org.scalaide.core.compiler
 
 import scala.tools.nsc.interactive.FreshRunReq
 import scala.collection.concurrent
@@ -22,29 +17,30 @@ import scala.tools.nsc.reporters.Reporter
 import scala.reflect.internal.util.BatchSourceFile
 import scala.reflect.internal.util.Position
 import scala.reflect.internal.util.SourceFile
-import scala.tools.eclipse.completion.CompletionContext
-import scala.tools.eclipse.javaelements.ScalaCompilationUnit
-import scala.tools.eclipse.javaelements.ScalaIndexBuilder
-import scala.tools.eclipse.javaelements.ScalaJavaMapper
-import scala.tools.eclipse.javaelements.ScalaMatchLocator
-import scala.tools.eclipse.javaelements.ScalaStructureBuilder
-import scala.tools.eclipse.javaelements.ScalaOverrideIndicatorBuilder
-import scala.tools.eclipse.util.EclipseFile
-import scala.tools.eclipse.util.EclipseResource
-import scala.tools.eclipse.logging.HasLogger
+import org.scalaide.core.completion.CompletionContext
+import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
+import org.scalaide.core.internal.jdt.search.ScalaIndexBuilder
+import org.scalaide.core.internal.jdt.model.ScalaJavaMapper
+import org.scalaide.core.internal.jdt.search.ScalaMatchLocator
+import org.scalaide.core.internal.jdt.model.ScalaStructureBuilder
+import org.scalaide.ui.internal.jdt.model.ScalaOverrideIndicatorBuilder
+import org.scalaide.core.resources.EclipseFile
+import org.scalaide.core.resources.EclipseResource
+import org.scalaide.logging.HasLogger
 import scala.tools.nsc.util.FailedInterrupt
 import scala.tools.nsc.symtab.Flags
-import scala.tools.eclipse.completion.CompletionProposal
+import org.scalaide.core.completion.CompletionProposal
 import org.eclipse.jdt.core.IMethod
 import scala.tools.nsc.io.VirtualFile
 import scala.tools.nsc.interactive.MissingResponse
-import scala.tools.eclipse.javaelements.ScalaSourceFile
-import scala.tools.eclipse.sourcefileprovider.SourceFileProviderRegistry
+import org.scalaide.core.internal.jdt.model.ScalaSourceFile
+import org.scalaide.core.extensions.SourceFileProviderRegistry
 import org.eclipse.core.runtime.Path
 import org.eclipse.core.resources.IFile
 import org.eclipse.jdt.internal.core.util.Util
-import scala.tools.eclipse.compiler.CompilerApiExtensions
-
+import org.scalaide.core.internal.project.ScalaProject
+import org.scalaide.core.ScalaPlugin
+import org.scalaide.util.internal.ScalaWordFinder
 
 class ScalaPresentationCompiler(project: ScalaProject, settings: Settings) extends {
   /*
@@ -345,7 +341,7 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings) exten
    */
   def mkCompletionProposal(prefix: Array[Char], start: Int, sym: Symbol, tpe: Type,
     inherited: Boolean, viaView: Symbol, context: CompletionContext): CompletionProposal = {
-    import scala.tools.eclipse.completion.MemberKind._
+    import org.scalaide.core.completion.MemberKind._
 
     val kind = if (sym.isSourceMethod && !sym.hasFlag(Flags.ACCESSOR | Flags.PARAMACCESSOR)) Def
     else if (sym.isPackage) Package

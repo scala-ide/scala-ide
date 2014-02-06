@@ -3,7 +3,7 @@
  * are made available under the terms of the Scala License which accompanies this distribution, and
  * is available at http://www.scala-lang.org/node/146
  */
-package scala.tools.eclipse.refactoring
+package org.scalaide.refactoring.internal
 
 import org.eclipse.core.commands.Command
 import org.eclipse.jdt.internal.ui.actions.JDTQuickMenuCreator
@@ -24,7 +24,7 @@ import org.eclipse.ui.part.EditorPart
  * programmatically after CompilationUnitEditor, using the commands declared in plugin.xml.
  *
  */
-protected[eclipse] object RefactoringMenu {
+protected[scalaide] object RefactoringMenu {
 
   private object Id extends Enumeration {
     val QuickMenu = Value("scala.tools.eclipse.refactoring.commands.quickMenu")

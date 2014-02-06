@@ -1,17 +1,11 @@
-/*
- * Copyright 2005-2010 LAMP/EPFL
- */
+package org.scalaide.refactoring.internal
 
-package scala.tools.eclipse
-package refactoring
-
-import scala.tools.eclipse.ISourceViewerEditor
-import scala.tools.eclipse.InteractiveCompilationUnit
-import scala.tools.eclipse.javaelements.ScalaSourceFile
-import scala.tools.eclipse.util.EditorUtils
+import org.scalaide.ui.internal.editor.ISourceViewerEditor
+import org.scalaide.core.compiler.InteractiveCompilationUnit
+import org.scalaide.core.internal.jdt.model.ScalaSourceFile
+import org.scalaide.util.internal.eclipse.EditorUtils
 import scala.tools.nsc.io.AbstractFile
 import scala.tools.refactoring.common.TextChange
-
 import org.eclipse.core.resources.IFile
 import org.eclipse.jdt.internal.ui.javaeditor.EditorUtility
 import org.eclipse.jdt.ui.JavaUI
@@ -33,8 +27,7 @@ import org.eclipse.ui.IWorkbenchWindow
 import org.eclipse.ui.PlatformUI
 import org.eclipse.ui.part.FileEditorInput
 import org.eclipse.ui.texteditor.ITextEditor
-
-import util.FileUtils
+import org.scalaide.util.internal.eclipse.FileUtils
 
 object EditorHelpers {
 

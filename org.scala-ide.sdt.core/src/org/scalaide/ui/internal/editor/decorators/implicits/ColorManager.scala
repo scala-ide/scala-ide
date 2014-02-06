@@ -1,4 +1,4 @@
-package scala.tools.eclipse.semantichighlighting.implicits
+package org.scalaide.ui.internal.editor.decorators.implicits
 
 import org.eclipse.swt.graphics.Color
 import org.eclipse.swt.graphics.RGB

@@ -1,8 +1,7 @@
-package scala.tools.eclipse.properties.syntaxcolouring
+package org.scalaide.ui.syntax
 
-import scala.tools.eclipse.ui.DisplayThread
-import scala.tools.eclipse.util.EclipseUtils.PimpedPreferenceStore
-
+import org.scalaide.util.internal.ui.DisplayThread
+import org.scalaide.util.internal.eclipse.EclipseUtils.PimpedPreferenceStore
 import org.eclipse.jdt.internal.ui.JavaPlugin
 import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.jface.text.TextAttribute

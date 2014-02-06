@@ -1,14 +1,12 @@
-package scala.tools.eclipse.logging
+package org.scalaide.logging
 
 import java.util.concurrent.atomic.AtomicReference
-
-import scala.tools.eclipse.ScalaPlugin
-import scala.tools.eclipse.util.SWTUtils
+import org.scalaide.core.ScalaPlugin
+import org.scalaide.util.internal.eclipse.SWTUtils
 import org.eclipse.core.runtime.ILog
 import org.eclipse.core.runtime.IStatus
-import scala.tools.eclipse.ui.DisplayThread
+import org.scalaide.util.internal.ui.DisplayThread
 import scala.util.control.ControlThrowable
-
 import org.eclipse.core.runtime.ILog
 import org.eclipse.core.runtime.IStatus
 import org.eclipse.core.runtime.Status

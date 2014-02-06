@@ -1,9 +1,4 @@
-/*
- * Copyright 2005-2010 LAMP/EPFL
- */
-// $Id$
-
-package scala.tools.eclipse.javaelements
+package org.scalaide.core.internal.jdt.model
 
 import java.util.{ HashMap => JHashMap }
 import java.util.{ Map => JMap }
@@ -26,13 +21,13 @@ import org.eclipse.swt.widgets.Display
 import scala.tools.nsc.io.AbstractFile
 import scala.tools.nsc.io.VirtualFile
 import scala.tools.eclipse.contribution.weaving.jdt.IScalaSourceFile
-import scala.tools.eclipse.util.EclipseFile
+import org.scalaide.core.resources.EclipseFile
 import org.eclipse.jdt.core.compiler.CharOperation
 import scala.tools.nsc.interactive.Response
-import scala.tools.eclipse.reconciliation.ReconciliationParticipantsExtensionPoint
+import org.scalaide.core.extensions.ReconciliationParticipantsExtensionPoint
+import org.scalaide.core.extensions.SourceFileProvider
 import org.eclipse.jdt.core.JavaModelException
-import scala.tools.eclipse.InteractiveCompilationUnit
-import scala.tools.eclipse.sourcefileprovider.SourceFileProvider
+import org.scalaide.core.compiler.InteractiveCompilationUnit
 import org.eclipse.core.runtime.IPath
 import org.eclipse.core.runtime.NullProgressMonitor
 

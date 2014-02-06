@@ -1,16 +1,12 @@
-/*
- * Copyright 2005-2011 LAMP/EPFL
- */
-package scala.tools.eclipse
-package reconciliation
+package org.scalaide.core.extensions
 
 import org.eclipse.core.runtime.CoreException
 import org.eclipse.core.runtime.Platform
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.jdt.core.WorkingCopyOwner
-import scala.tools.eclipse.javaelements.ScalaCompilationUnit
-import scala.tools.eclipse.logging.HasLogger
-import scala.tools.eclipse.util.Utils
+import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
+import org.scalaide.logging.HasLogger
+import org.scalaide.util.internal.Utils
 
 /**
  * The implementation for the org.scala-ide.sdt.core.reconciliationParticipants

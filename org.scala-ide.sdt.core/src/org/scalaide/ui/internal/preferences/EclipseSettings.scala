@@ -1,7 +1,7 @@
-package scala.tools.eclipse.properties
+package org.scalaide.ui.internal.preferences
 
 import scala.tools.nsc.Settings
-import scala.tools.eclipse.SettingConverterUtil
+import org.scalaide.util.internal.SettingConverterUtil
 import org.eclipse.swt.widgets.Button
 import org.eclipse.swt.widgets.Combo
 import org.eclipse.swt.widgets.Composite
@@ -20,7 +20,8 @@ import org.eclipse.swt.events.SelectionAdapter
 import org.eclipse.swt.events.SelectionEvent
 import org.eclipse.swt.events.SelectionListener
 import org.eclipse.jface.preference.IPreferenceStore
-import scala.tools.eclipse.util.Trim
+import org.scalaide.util.internal.Trim
+import org.scalaide.core.ScalaPlugin
 
 trait EclipseSettings {
   self: ScalaPluginPreferencePage =>
@@ -254,7 +255,7 @@ trait EclipseSettings {
    *  it returns 'name', otherwise it prepends the absolute path to the workspace.
    */
   private def fileName(name: String) = {
-    import scala.tools.eclipse.ScalaPlugin
+    import org.scalaide.core.ScalaPlugin
     import java.io.File
 
     val f = new File(name)

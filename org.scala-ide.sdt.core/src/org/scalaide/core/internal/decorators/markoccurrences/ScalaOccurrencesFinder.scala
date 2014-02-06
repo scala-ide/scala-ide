@@ -1,14 +1,14 @@
-package scala.tools.eclipse.markoccurrences
+package org.scalaide.core.internal.decorators.markoccurrences
 
-import scala.tools.eclipse.InteractiveCompilationUnit
-import scala.tools.eclipse.logging.HasLogger
+import org.scalaide.core.compiler.InteractiveCompilationUnit
+import org.scalaide.logging.HasLogger
 import scala.reflect.internal.util.SourceFile
 import scala.tools.refactoring.analysis.GlobalIndexes
 import scala.tools.refactoring.implementations.MarkOccurrences
 import org.eclipse.jface.text.IRegion
 import org.eclipse.jface.text.Region
-import scala.tools.eclipse.util.Utils
-import scala.tools.eclipse.ScalaPresentationCompiler
+import org.scalaide.util.internal.Utils
+import org.scalaide.core.compiler.ScalaPresentationCompiler
 import scala.ref.WeakReference
 
 case class Occurrences(name: String, locations: List[IRegion])

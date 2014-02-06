@@ -1,7 +1,7 @@
-package scala.tools.eclipse
+package org.scalaide.ui.internal.editor
 
 import scala.tools.eclipse.contribution.weaving.jdt.spellingengineprovider.ISpellingEngineProvider
-import scala.tools.eclipse.lexical.ScalaPartitions._
+import org.scalaide.core.internal.lexical.ScalaPartitions._
 
 import org.eclipse.jdt.internal.ui.text.spelling.SpellingEngine
 

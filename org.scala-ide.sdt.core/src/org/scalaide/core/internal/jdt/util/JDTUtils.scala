@@ -1,9 +1,4 @@
-/*
- * Copyright 2005-2010 LAMP/EPFL
- */
-// $Id$
-
-package scala.tools.eclipse.javaelements
+package org.scalaide.core.internal.jdt.util
 
 import org.eclipse.core.resources.IFile
 import org.eclipse.core.resources.IFolder
@@ -26,9 +21,8 @@ import org.eclipse.jdt.internal.core.NameLookup
 import org.eclipse.jdt.internal.core.OpenableElementInfo
 import org.eclipse.jdt.internal.ui.packageview.PackageExplorerPart
 import org.eclipse.ui.progress.UIJob
-
-import scala.tools.eclipse.ScalaPlugin
-import scala.tools.eclipse.util.ReflectionUtils
+import org.scalaide.core.ScalaPlugin
+import org.scalaide.util.internal.ReflectionUtils
 
 object JDTUtils {
   private var refreshPending = false

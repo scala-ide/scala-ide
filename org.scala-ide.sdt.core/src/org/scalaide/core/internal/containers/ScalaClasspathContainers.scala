@@ -1,10 +1,4 @@
-/*
- * Copyright 2005-2010 LAMP/EPFL
- */
-
-// $Id$
-
-package scala.tools.eclipse
+package org.scalaide.core.internal.containers
 
 import org.eclipse.core.runtime.IPath
 import org.eclipse.core.runtime.Path
@@ -18,7 +12,8 @@ import org.eclipse.jdt.ui.wizards.NewElementWizardPage
 import org.eclipse.jdt.ui.wizards.IClasspathContainerPage
 import org.eclipse.swt.SWT
 import org.eclipse.swt.widgets.Composite
-import scala.tools.eclipse.logging.HasLogger
+import org.scalaide.logging.HasLogger
+import org.scalaide.core.ScalaPlugin
 
 abstract class ScalaClasspathContainerInitializer(desc : String) extends ClasspathContainerInitializer with HasLogger {
   def entries : Array[IClasspathEntry]

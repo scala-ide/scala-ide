@@ -1,4 +1,4 @@
-package scala.tools.eclipse
+package org.scalaide.core.internal.project
 
 import scala.collection.mutable
 import org.eclipse.jdt.core.IPackageFragmentRoot
@@ -13,7 +13,7 @@ import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.core.runtime.jobs.Job
 import org.eclipse.core.resources.IResource
 import org.eclipse.core.runtime.Status
-import ScalaPlugin.plugin
+import org.scalaide.core.ScalaPlugin.plugin
 import org.eclipse.core.runtime.IPath
 import org.eclipse.jdt.core.IClasspathEntry
 import org.eclipse.jdt.launching.JavaRuntime
@@ -26,12 +26,15 @@ import org.eclipse.jdt.internal.core.JavaModelManager
 import org.eclipse.core.runtime.Path
 import scala.util.control.Exception._
 import org.eclipse.jdt.core.JavaModelException
-import scala.tools.eclipse.logging.HasLogger
+import org.scalaide.logging.HasLogger
 import java.io.File
 import org.eclipse.jdt.internal.core.JavaProject
-import scala.tools.eclipse.resources.MarkerFactory
-import scala.tools.eclipse.util.EclipseUtils
+import org.scalaide.core.resources.MarkerFactory
+import org.scalaide.util.internal.eclipse.EclipseUtils
 import org.osgi.framework.Version
+import org.scalaide.core.ScalaPlugin
+import org.scalaide.util.internal.SettingConverterUtil
+import org.scalaide.ui.internal.preferences.ScalaPluginSettings
 
 /** The Scala classpath broken down in the JDK, Scala library and user library.
  *
@@ -292,7 +295,7 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
   private def checkClasspath() {
     // check the version of Scala library used, and if enabled, the Scala compatibility of the other jars.
     val withVersionClasspathValidator =
-      storage.getBoolean(SettingConverterUtil.convertNameToProperty(properties.ScalaPluginSettings.withVersionClasspathValidator.name))
+      storage.getBoolean(SettingConverterUtil.convertNameToProperty(ScalaPluginSettings.withVersionClasspathValidator.name))
     val errors =
       validateScalaLibrary(scalaLibraries) ++
         (if (withVersionClasspathValidator) {

@@ -1,4 +1,4 @@
-package org.scalaide.editor
+package org.scalaide.ui.editor
 
 import org.eclipse.core.resources.IFile
 import org.eclipse.ui.IEditorInput

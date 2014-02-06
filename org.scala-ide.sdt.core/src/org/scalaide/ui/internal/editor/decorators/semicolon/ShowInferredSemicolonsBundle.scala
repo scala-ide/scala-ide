@@ -1,4 +1,4 @@
-package scala.tools.eclipse.semicolon
+package org.scalaide.ui.internal.editor.decorators.semicolon
 
 import java.util.ListResourceBundle
 

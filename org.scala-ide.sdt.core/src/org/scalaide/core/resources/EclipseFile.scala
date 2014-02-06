@@ -1,10 +1,4 @@
-/*
- * Copyright 2005-2010 LAMP/EPFL
- */
-// $Id$
-
-package scala.tools.eclipse
-package util
+package org.scalaide.core.resources
 
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
@@ -21,7 +15,7 @@ import org.eclipse.core.resources.ResourcesPlugin
 import org.eclipse.core.runtime.IPath
 import org.eclipse.core.runtime.Path
 import scala.tools.nsc.io.AbstractFile
-import scala.tools.eclipse.logging.HasLogger
+import org.scalaide.logging.HasLogger
 
 object EclipseResource extends HasLogger {
   def apply(r: IResource): EclipseResource[_ <: IResource] = r match {

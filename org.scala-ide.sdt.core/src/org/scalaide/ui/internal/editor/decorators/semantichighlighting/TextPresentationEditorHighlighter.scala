@@ -1,15 +1,12 @@
-package scala.tools.eclipse.semantichighlighting.ui
+package org.scalaide.ui.internal.editor.decorators.semantichighlighting
 
 import scala.collection.immutable
-import scala.tools.eclipse.ScalaCompilationUnitEditor
-import scala.tools.eclipse.logging.HasLogger
-import scala.tools.eclipse.properties.syntaxcolouring.ScalaSyntaxClasses
-import scala.tools.eclipse.semantichighlighting.PositionsTracker
-import scala.tools.eclipse.semantichighlighting.Preferences
-import scala.tools.eclipse.semantichighlighting.TextPresentationHighlighter
-import scala.tools.eclipse.semantichighlighting.classifier.SymbolTypes
-import scala.tools.eclipse.util.withDocument
-
+import org.scalaide.ui.internal.editor.ScalaCompilationUnitEditor
+import org.scalaide.logging.HasLogger
+import org.scalaide.ui.syntax.ScalaSyntaxClasses
+import org.scalaide.core.internal.decorators.semantichighlighting.PositionsTracker
+import org.scalaide.core.internal.decorators.semantichighlighting.classifier.SymbolTypes
+import org.scalaide.util.internal.eclipse.withDocument
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.core.runtime.jobs.Job
 import org.eclipse.jdt.core.dom.CompilationUnit
@@ -21,6 +18,7 @@ import org.eclipse.jface.text.TextPresentation
 import org.eclipse.jface.util.IPropertyChangeListener
 import org.eclipse.jface.util.PropertyChangeEvent
 import org.eclipse.swt.custom.StyleRange
+import org.scalaide.ui.internal.editor.ScalaCompilationUnitEditor
 
 /** This class is responsible of:
  *
@@ -82,7 +80,7 @@ object TextPresentationEditorHighlighter {
       /* There is no need to call `semanticHighlightingJob.cancel()` here because the document has a listener that
        * already cancels the ongoing semantic highlighting job whenever the document is about to be changed. And `this`
        * reconciling listener always gets executed '''after''' the aforementioned listener (check
-       * [[scala.tools.eclipse.semantichighlighting.Presenter$DocumentContentListener]] for more details).
+       * [[org.scalaide.ui.internal.editors.decorators.semantichighlighting.Presenter$DocumentContentListener]] for more details).
        *
        * Furthermore, a new semantic highlighting job run is only scheduled if the ongoing reconciliation has not been
        * cancelled. If it was cancelled, this usually means that the editor was closed, or the document was change.

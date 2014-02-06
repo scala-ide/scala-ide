@@ -1,14 +1,13 @@
-package scala.tools.eclipse.quickfix.createmethod
+package org.scalaide.core.internal.quickfix.createmethod
 
 import scala.reflect.internal.util.RangePosition
-import scala.tools.eclipse.javaelements.ScalaCompilationUnit
-import scala.tools.eclipse.javaelements.ScalaSourceFile
-import scala.tools.eclipse.refactoring.EditorHelpers
-import scala.tools.eclipse.util.parsing.ScalariformParser
-import scala.tools.eclipse.util.parsing.ScalariformUtils
+import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
+import org.scalaide.core.internal.jdt.model.ScalaSourceFile
+import org.scalaide.refactoring.internal.EditorHelpers
+import org.scalaide.util.internal.scalariform.ScalariformParser
+import org.scalaide.util.internal.scalariform.ScalariformUtils
 import scala.tools.refactoring.implementations.AddMethod
 import scala.tools.refactoring.implementations.AddMethodTarget
-
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.internal.ui.JavaPluginImages
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal

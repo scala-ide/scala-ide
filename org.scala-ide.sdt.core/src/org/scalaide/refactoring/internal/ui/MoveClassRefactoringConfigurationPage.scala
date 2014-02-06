@@ -1,5 +1,4 @@
-package scala.tools.eclipse.refactoring
-package ui
+package org.scalaide.refactoring.internal.ui
 
 import org.eclipse.core.resources.ResourcesPlugin
 import org.eclipse.core.resources.IResource
@@ -28,7 +27,7 @@ import org.eclipse.swt.widgets.Button
 import org.eclipse.swt.SWT
 import org.eclipse.ui.model.WorkbenchViewerComparator
 import org.eclipse.ui.model.BaseWorkbenchContentProvider
-import scala.tools.eclipse.ScalaPlugin
+import org.scalaide.core.ScalaPlugin
 
 class MoveClassRefactoringConfigurationPage(
   resourceToMove: IResource,

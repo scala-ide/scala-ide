@@ -1,4 +1,4 @@
-package scala.tools.eclipse.formatter
+package org.scalaide.ui.internal.preferences
 
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -27,15 +27,14 @@ import org.eclipse.ui._
 import org.eclipse.ui.dialogs.PreferencesUtil
 import org.eclipse.ui.dialogs.PropertyPage
 import org.eclipse.ui.editors.text.TextEditor
-import scala.tools.eclipse.ScalaPlugin
-import scala.tools.eclipse.ScalaPreviewerFactory
-import scala.tools.eclipse.formatter.FormatterPreferences._
-import scala.tools.eclipse.lexical.ScalaDocumentPartitioner
-import scala.tools.eclipse.properties.PropertyStore
-import scala.tools.eclipse.util.SWTUtils._
+import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.internal.formatter.FormatterPreferences
+import org.scalaide.core.internal.formatter.FormatterPreferences._
+import org.scalaide.core.internal.lexical.ScalaDocumentPartitioner
+import org.scalaide.util.internal.eclipse.SWTUtils._
 import scalariform.formatter._
 import scalariform.formatter.preferences._
-import scala.tools.eclipse.logging.HasLogger
+import org.scalaide.logging.HasLogger
 
 class FormatterPreferencePage extends PropertyPage with IWorkbenchPreferencePage with HasLogger {
   import FormatterPreferencePage._

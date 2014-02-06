@@ -1,10 +1,4 @@
-/*
- * Copyright 2005-2010 LAMP/EPFL
- */
-// $Id$
-
-package scala.tools.eclipse
-package javaelements
+package org.scalaide.core.internal.jdt.model
 
 import java.util.{ Map => JMap }
 import scala.concurrent.SyncVar
@@ -43,22 +37,23 @@ import scala.reflect.internal.util.BatchSourceFile
 import scala.reflect.internal.util.SourceFile
 import scala.tools.eclipse.contribution.weaving.jdt.IScalaCompilationUnit
 import scala.tools.eclipse.contribution.weaving.jdt.IScalaWordFinder
-import scala.tools.eclipse.ScalaImages
-import scala.tools.eclipse.ScalaPlugin
-import scala.tools.eclipse.ScalaPresentationCompiler
-import scala.tools.eclipse.ScalaSourceIndexer
-import scala.tools.eclipse.ScalaWordFinder
-import scala.tools.eclipse.util.ReflectionUtils
+import org.scalaide.ui.internal.ScalaImages
+import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.compiler.ScalaPresentationCompiler
+import org.scalaide.core.internal.jdt.search.ScalaSourceIndexer
+import org.scalaide.util.internal.ScalaWordFinder
+import org.scalaide.util.internal.ReflectionUtils
 import org.eclipse.jdt.core._
 import org.eclipse.jdt.internal.core.JavaElement
 import org.eclipse.jdt.internal.core.SourceRefElement
-import scala.tools.eclipse.logging.HasLogger
+import org.scalaide.logging.HasLogger
 import scala.tools.nsc.interactive.Response
 import org.eclipse.jface.text.source.ISourceViewer
-import scala.tools.eclipse.hyperlink.text.detector.DeclarationHyperlinkDetector
+import org.scalaide.core.hyperlink.detector.DeclarationHyperlinkDetector
 import org.eclipse.ui.texteditor.ITextEditor
-import scala.tools.eclipse.hyperlink.text.detector.BaseHyperlinkDetector
-import scala.tools.eclipse.util.EditorUtils
+import org.scalaide.core.hyperlink.detector.BaseHyperlinkDetector
+import org.scalaide.util.internal.eclipse.EditorUtils
+import org.scalaide.core.compiler.InteractiveCompilationUnit
 
 trait ScalaCompilationUnit extends Openable
   with env.ICompilationUnit

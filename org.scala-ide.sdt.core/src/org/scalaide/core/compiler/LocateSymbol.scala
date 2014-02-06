@@ -1,9 +1,4 @@
-/*
- * Copyright 2005-2010 LAMP/EPFL
- */
-// $Id$
-
-package scala.tools.eclipse
+package org.scalaide.core.compiler
 
 import org.eclipse.core.resources.ResourcesPlugin
 import org.eclipse.core.runtime.Path
@@ -24,10 +19,10 @@ import org.eclipse.jdt.ui.actions.SelectionDispatchAction
 import org.eclipse.jdt.internal.ui.javaeditor.EditorUtility
 import org.eclipse.jdt.internal.ui.javaeditor.JavaElementHyperlink
 import scala.tools.nsc.io.AbstractFile
-import javaelements.ScalaSourceFile
-import javaelements.ScalaClassFile
+import org.scalaide.core.internal.jdt.model.ScalaSourceFile
+import org.scalaide.core.internal.jdt.model.ScalaClassFile
 import org.eclipse.core.runtime.IPath
-import scala.tools.eclipse.sourcefileprovider.SourceFileProviderRegistry
+import org.scalaide.core.extensions.SourceFileProviderRegistry
 
 trait LocateSymbol { self : ScalaPresentationCompiler =>
 

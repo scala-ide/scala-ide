@@ -1,15 +1,9 @@
-/*
- * Copyright 2005-2010 LAMP/EPFL
- */
-// $Id$
+package org.scalaide.ui.internal.editor
 
-package scala.tools.eclipse
-
-import scala.tools.eclipse.javaelements.ScalaClassFile
-import scala.tools.eclipse.javaelements.ScalaCompilationUnit
-import scala.tools.eclipse.semantichighlighting.TextPresentationHighlighter
-import scala.tools.eclipse.semantichighlighting.ui.TextPresentationEditorHighlighter
-
+import org.scalaide.core.internal.jdt.model.ScalaClassFile
+import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
+import org.scalaide.ui.internal.editor.decorators.semantichighlighting.TextPresentationHighlighter
+import org.scalaide.ui.internal.editor.decorators.semantichighlighting.TextPresentationEditorHighlighter
 import org.eclipse.jdt.core.IJavaElement
 import org.eclipse.jdt.internal.ui.javaeditor.ClassFileEditor
 import org.eclipse.jdt.ui.actions.IJavaEditorActionDefinitionIds

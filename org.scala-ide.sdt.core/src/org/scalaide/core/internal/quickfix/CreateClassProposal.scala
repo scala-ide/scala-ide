@@ -1,10 +1,9 @@
-package scala.tools.eclipse.quickfix
+package org.scalaide.core.internal.quickfix
 
-import scala.tools.eclipse.ScalaImages
-import scala.tools.eclipse.completion.RelevanceValues
-import scala.tools.eclipse.wizards.NewClassWizard
-import scala.tools.eclipse.wizards.NewClassWizardPage
-
+import org.scalaide.ui.internal.ScalaImages
+import org.scalaide.core.completion.RelevanceValues
+import org.scalaide.ui.internal.wizards.NewClassWizard
+import org.scalaide.ui.internal.wizards.NewClassWizardPage
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.internal.ui.JavaPlugin
 import org.eclipse.jface.text.IDocument

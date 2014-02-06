@@ -1,15 +1,15 @@
-package scala.tools.eclipse.ui
+package org.scalaide.ui.internal.actions
 
 import org.eclipse.core.commands.ExecutionEvent
 import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.ui.commands.ICommandService
 import org.eclipse.ui.commands.IElementUpdater
 import org.eclipse.ui.PlatformUI
-import scala.tools.eclipse.ScalaPlugin
+import org.scalaide.core.ScalaPlugin
 import org.eclipse.ui.menus.UIElement
-import scala.tools.eclipse.semantichighlighting.implicits.PropertyChangeListenerProxy
+import org.scalaide.ui.internal.editor.decorators.implicits.PropertyChangeListenerProxy
 import org.eclipse.core.commands.AbstractHandler
-import scala.tools.eclipse.util.SWTUtils
+import org.scalaide.util.internal.eclipse.SWTUtils
 
 /** Base handler for a toggle command linked to a platform preference.
  *

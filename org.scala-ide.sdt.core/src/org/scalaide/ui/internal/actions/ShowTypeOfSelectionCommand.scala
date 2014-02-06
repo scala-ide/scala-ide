@@ -1,17 +1,17 @@
-package scala.tools.eclipse.actions
+package org.scalaide.ui.internal.actions
 
-import scala.tools.eclipse.ScalaSourceFileEditor
+import org.scalaide.ui.internal.editor.ScalaSourceFileEditor
 import org.eclipse.core.commands.AbstractHandler
 import org.eclipse.core.commands.ExecutionEvent
 import org.eclipse.jface.text.ITextSelection
 import org.eclipse.ui.handlers.HandlerUtil
 import org.eclipse.jdt.internal.ui.javaeditor.EditorUtility
-import scala.tools.eclipse.javaelements.ScalaCompilationUnit
+import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import org.eclipse.jface.text.information.IInformationProvider
 import org.eclipse.jface.text.ITextViewer
 import org.eclipse.jface.text.Region
 import org.eclipse.jface.text.IRegion
-import scala.tools.eclipse.util.EclipseUtils._
+import org.scalaide.util.internal.eclipse.EclipseUtils._
 
 class ShowTypeOfSelectionCommand extends AbstractHandler {
 

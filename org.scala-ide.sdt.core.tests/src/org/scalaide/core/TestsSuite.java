@@ -51,7 +51,7 @@ import org.scalaide.core.wizards.QualifiedNameSupportTest;
   // ScalaJavaCompletionTests.class, FIXME: Uncomment as soon as this regression is fixed.
   FindReferencesTests.class,
   HyperlinkDetectorTests.class,
-  //scala.tools.eclipse.interpreter.EclipseReplTest.class, // see comments there
+  //org.scalaide.core.interpreter.EclipseReplTest.class, // see comments there
   AbstractMethodVerifierTest.class,
   MainClassVerifierTest.class,
   ScalaDocumentPartitionerTest.class,

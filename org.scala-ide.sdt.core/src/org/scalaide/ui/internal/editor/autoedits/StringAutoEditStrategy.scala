@@ -1,7 +1,6 @@
-package scala.tools.eclipse.ui
+package org.scalaide.ui.internal.editor.autoedits
 
-import scala.tools.eclipse.properties.EditorPreferencePage
-
+import org.scalaide.ui.internal.preferences.EditorPreferencePage
 import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.jface.text.DocumentCommand
 import org.eclipse.jface.text.IAutoEditStrategy

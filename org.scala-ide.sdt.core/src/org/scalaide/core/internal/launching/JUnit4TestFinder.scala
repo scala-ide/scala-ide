@@ -1,4 +1,4 @@
-package scala.tools.eclipse.launching
+package org.scalaide.core.internal.launching
 
 import collection.mutable
 import collection.immutable
@@ -6,7 +6,7 @@ import org.eclipse.jdt.core.IJavaElement
 import org.eclipse.core.runtime.IProgressMonitor
 import java.util.{ Set => JSet }
 import org.eclipse.jdt.core.IType
-import scala.tools.eclipse.ScalaPlugin
+import org.scalaide.core.ScalaPlugin
 import org.eclipse.jdt.core.IPackageFragment
 import org.eclipse.core.resources.IProject
 import org.eclipse.jdt.internal.core.JavaProject
@@ -24,13 +24,13 @@ import org.eclipse.jdt.internal.junit.JUnitMessages
 import org.eclipse.core.runtime.SubProgressMonitor
 import org.eclipse.core.runtime.SubMonitor
 import org.eclipse.jdt.internal.junit.launcher.ITestFinder
-import scala.tools.eclipse.ScalaProject
-import scala.tools.eclipse.javaelements.ScalaSourceFile
+import org.scalaide.core.internal.project.ScalaProject
+import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import org.eclipse.jdt.core.IMember
 import org.eclipse.jdt.core.IPackageFragmentRoot
-import scala.tools.eclipse.logging.HasLogger
 import org.eclipse.jdt.core.IParent
 import scala.tools.eclipse.contribution.weaving.jdt.launching.ISearchMethods
+import org.scalaide.logging.HasLogger
 
 /** A JUnit4 test finder that works for Java and Scala.
  *
@@ -127,7 +127,7 @@ class JUnit4TestFinder extends ITestFinder with ISearchMethods with HasLogger {
       pm.done()
   }
 
-  private[launching] def filteredTestResources(prj: ScalaProject, element: IJavaElement, progress: IProgressMonitor): Seq[IResource] = {
+  private[core] def filteredTestResources(prj: ScalaProject, element: IJavaElement, progress: IProgressMonitor): Seq[IResource] = {
     val candidates = element match {
       case project: IJavaProject => prj.allSourceFiles.toSeq
       case _                     => Seq(element.getResource)
@@ -209,7 +209,7 @@ object JUnit4TestFinder {
     import comp.ClassDef
     import comp.Response
     import comp.Tree
-    import scala.tools.eclipse.util.Utils._
+    import org.scalaide.util.internal.Utils._
     val response = new Response[Tree]
     comp.askParsedEntered(source, keepLoaded = false, response)
 

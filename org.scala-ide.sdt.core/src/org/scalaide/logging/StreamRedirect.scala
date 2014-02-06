@@ -1,6 +1,6 @@
-package scala.tools.eclipse.logging
+package org.scalaide.logging
 
-import scala.tools.eclipse.util.Trim
+import org.scalaide.util.internal.Trim
 
 private[logging] object StreamRedirect {
   import java.io.OutputStream

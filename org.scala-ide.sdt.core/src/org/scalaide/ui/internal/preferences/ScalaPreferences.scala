@@ -1,9 +1,4 @@
-/*
- * Copyright 2005-2010 LAMP/EPFL
- */
-// $Id$
-
-package scala.tools.eclipse.properties
+package org.scalaide.ui.internal.preferences
 
 import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.ui.IWorkbenchPreferencePage
@@ -15,8 +10,8 @@ import org.eclipse.swt.widgets.Group
 import org.eclipse.swt.layout.GridLayout
 import org.eclipse.swt.layout.GridData
 import org.eclipse.swt.SWT
-import scala.tools.eclipse.ScalaPlugin
-import scala.tools.eclipse.logging.HasLogger
+import org.scalaide.logging.HasLogger
+import org.scalaide.core.ScalaPlugin
 
 class ScalaPreferences extends PropertyPage with IWorkbenchPreferencePage with EclipseSettings
   with ScalaPluginPreferencePage with HasLogger {

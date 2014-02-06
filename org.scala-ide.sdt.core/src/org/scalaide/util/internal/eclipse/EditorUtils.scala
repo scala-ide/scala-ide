@@ -1,4 +1,4 @@
-package scala.tools.eclipse.util
+package org.scalaide.util.internal.eclipse
 
 import org.eclipse.jdt.core.IJavaElement
 import org.eclipse.jdt.ui.JavaUI
@@ -10,8 +10,8 @@ import org.eclipse.jface.text.source.Annotation
 import org.eclipse.jface.text.source.IAnnotationModelExtension2
 import org.eclipse.ui.IEditorPart
 import org.eclipse.ui.texteditor.ITextEditor
-import scala.tools.eclipse.InteractiveCompilationUnit
-import scala.tools.eclipse.ui.InteractiveCompilationUnitEditor
+import org.scalaide.core.compiler.InteractiveCompilationUnit
+import org.scalaide.ui.internal.editor.InteractiveCompilationUnitEditor
 
 // FIXME: This should be merged with merged with [[scala.tools.eclipse.refactoring.EditorHelpers]]
 object EditorUtils {
@@ -54,7 +54,7 @@ object EditorUtils {
     new Region(selection.getOffset, selection.getLength)
 
   def getTextSelection(editor: ITextEditor): Option[ITextSelection] = {
-    import scala.tools.eclipse.util.Utils._
+    import org.scalaide.util.internal.Utils._
     for {
       workbenchSite <- Option(editor.getSite)
       provider <- Option(workbenchSite.getSelectionProvider)

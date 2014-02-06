@@ -1,4 +1,4 @@
-package scala.tools.eclipse.ui
+package org.scalaide.ui.internal.editor
 
 import org.eclipse.jface.text.source.Annotation
 import org.eclipse.jface.text.source.IAnnotationModel
@@ -6,12 +6,12 @@ import org.eclipse.jface.text.source.IAnnotationModelExtension
 import org.eclipse.jdt.internal.ui.javaeditor.CompilationUnitDocumentProvider.ProblemAnnotation
 import scala.collection.breakOut
 import org.eclipse.jdt.core.compiler.IProblem
-import scala.tools.eclipse.util.SWTUtils
+import org.scalaide.util.internal.eclipse.SWTUtils
+import org.scalaide.util.internal.eclipse.RichAnnotationModel._
 import org.eclipse.jface.text.Position
 import org.eclipse.jface.text.ITextViewerExtension2
 import org.eclipse.jdt.core.ICompilationUnit
-import scala.tools.eclipse.ISourceViewerEditor
-import scala.tools.eclipse.util.RichAnnotationModel._
+import org.scalaide.util.internal.ui.DisplayThread
 
 trait DecoratedInteractiveEditor extends ISourceViewerEditor {
 

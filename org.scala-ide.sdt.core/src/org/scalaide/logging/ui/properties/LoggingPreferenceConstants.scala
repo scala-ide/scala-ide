@@ -1,4 +1,4 @@
-package scala.tools.eclipse.logging.ui.properties
+package org.scalaide.logging.ui.properties
 
 private[logging] object LoggingPreferenceConstants {
   private final val Prefix = "scala.tools.eclipse.logging.ui.properties."

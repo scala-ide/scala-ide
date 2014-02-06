@@ -1,19 +1,11 @@
-/*
- * Copyright 2005-2010 LAMP/EPFL
- */
-// $Id$
-
-package scala.tools.eclipse.javaelements
+package org.scalaide.core.internal.jdt.search
 
 import org.eclipse.core.resources.IFile
 
 import scala.tools.nsc.symtab.Flags
 
-import scala.tools.eclipse.ScalaPlugin
-import scala.tools.eclipse.ScalaPresentationCompiler
-import scala.tools.eclipse.ScalaSourceIndexer
-import scala.tools.eclipse.SettingConverterUtil
-import scala.tools.eclipse.properties.ScalaPluginSettings
+import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.compiler.ScalaPresentationCompiler
 
 /** Add entries to the JDT index. This class traverses an *unattributed* Scala AST. This
  *  means a tree without symbols or types. However, a tree that was typed may still get here

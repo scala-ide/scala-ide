@@ -1,4 +1,4 @@
-package scala.tools.eclipse.javaelements
+package org.scalaide.core.internal.jdt.search
 
 import org.eclipse.jdt.core.IJavaElement
 import org.eclipse.jdt.internal.core.NameLookup

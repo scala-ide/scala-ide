@@ -1,9 +1,4 @@
-/*
- * Copyright 2005-2010 LAMP/EPFL
- */
-// $Id$
-
-package scala.tools.eclipse.util
+package org.scalaide.util.internal
 
 import java.security.AccessController
 import java.security.PrivilegedAction

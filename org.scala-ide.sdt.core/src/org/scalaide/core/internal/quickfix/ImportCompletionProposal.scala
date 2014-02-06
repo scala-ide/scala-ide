@@ -1,11 +1,9 @@
-package scala.tools.eclipse
-package quickfix
+package org.scalaide.core.internal.quickfix
 
-import scala.tools.eclipse.completion.RelevanceValues
-import scala.tools.eclipse.logging.HasLogger
-import scala.tools.eclipse.refactoring.EditorHelpers
+import org.scalaide.core.completion.RelevanceValues
+import org.scalaide.logging.HasLogger
+import org.scalaide.refactoring.internal.EditorHelpers
 import scala.tools.refactoring.implementations.AddImportStatement
-
 import org.eclipse.jdt.ui.ISharedImages
 import org.eclipse.jdt.ui.JavaUI
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal

@@ -1,11 +1,9 @@
-package scala.tools.eclipse.refactoring
+package org.scalaide.refactoring.internal
 package source
 
-import scala.tools.eclipse.javaelements.ScalaSourceFile
+import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import scala.tools.refactoring.implementations.GenerateHashcodeAndEquals
-
 import org.eclipse.ltk.ui.refactoring.RefactoringWizardPage
-
 import ui.GenerateHashcodeAndEqualsConfigurationPageGenerator
 
 /**

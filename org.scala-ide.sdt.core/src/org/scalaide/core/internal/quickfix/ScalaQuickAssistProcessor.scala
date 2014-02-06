@@ -1,16 +1,15 @@
-package scala.tools.eclipse
-package quickfix
+package org.scalaide.core.internal.quickfix
 
-import scala.tools.eclipse.javaelements.ScalaSourceFile
-import scala.tools.eclipse.logging.HasLogger
-import scala.tools.eclipse.util.EditorUtils
+import org.scalaide.core.internal.jdt.model.ScalaSourceFile
+import org.scalaide.logging.HasLogger
+import org.scalaide.util.internal.eclipse.EditorUtils
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.ui.text.java.IInvocationContext
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal
 import org.eclipse.jdt.ui.text.java.IProblemLocation
 import org.eclipse.jdt.ui.text.java.IQuickAssistProcessor
 import org.eclipse.jface.text.Position
-import scala.tools.eclipse.quickfix.explicit.ExplicitReturnType
+import org.scalaide.core.internal.quickfix.explicit.ExplicitReturnType
 
 /**
  * Enables all quick fixes that don't resolve errors in the document. Instead they

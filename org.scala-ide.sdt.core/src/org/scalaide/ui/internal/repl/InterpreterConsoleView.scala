@@ -1,8 +1,7 @@
-package scala.tools.eclipse.interpreter
+package org.scalaide.ui.internal.repl
 
-import scala.tools.eclipse.ScalaPlugin
-import scala.tools.eclipse.properties.syntaxcolouring.ScalariformToSyntaxClass
-import scala.tools.eclipse.ui.CommandField
+import org.scalaide.core.ScalaPlugin
+import org.scalaide.ui.syntax.ScalariformToSyntaxClass
 import org.eclipse.jdt.internal.ui.JavaPlugin
 import org.eclipse.jdt.ui.PreferenceConstants
 import org.eclipse.jface.action.Action
@@ -40,7 +39,7 @@ trait InterpreterConsoleView { self: ViewPart =>
   protected def createCommandField(parent: Composite, suggestedStyles: Seq[Int]): CommandField = {
     new CommandField(parent, suggestedStyles.reduce((l, r) => l | r)) {
       override protected def helpText = "<type an expression>\tCTRL+ENTER to evaluate"
-      setEvaluator(new scala.tools.eclipse.ui.CommandField.Evaluator {
+      setEvaluator(new CommandField.Evaluator {
         override def eval(command: String) = evaluate(command)
       })
     }

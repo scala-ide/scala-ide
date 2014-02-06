@@ -1,15 +1,15 @@
-package scala.tools.eclipse.jcompiler
+package org.scalaide.core.internal.jdt.compiler
 
 import scala.tools.eclipse.contribution.weaving.jdt.jcompiler.IMethodVerifierProvider
 import org.eclipse.jdt.internal.compiler.lookup.MethodBinding
-import scala.tools.eclipse.ScalaPlugin
-import scala.tools.eclipse.ScalaPresentationCompiler
+import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.compiler.ScalaPresentationCompiler
 import org.eclipse.core.runtime.Path
 import org.eclipse.core.resources.ResourcesPlugin
-import scala.tools.eclipse.ScalaProject
+import org.scalaide.core.internal.project.ScalaProject
 import org.eclipse.core.resources.IProject
-import scala.tools.eclipse.logging.HasLogger
-import scala.tools.eclipse.util.Utils
+import org.scalaide.logging.HasLogger
+import org.scalaide.util.internal.Utils
 import org.eclipse.ui.IEditorInput
 import org.eclipse.ui.IFileEditorInput
 import org.eclipse.core.resources.IFile

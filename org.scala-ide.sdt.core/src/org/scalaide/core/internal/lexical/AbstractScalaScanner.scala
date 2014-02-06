@@ -1,7 +1,7 @@
-package scala.tools.eclipse.lexical
+package org.scalaide.core.internal.lexical
 
 import org.eclipse.jface.text.rules._
-import scala.tools.eclipse.properties.syntaxcolouring.ScalaSyntaxClass
+import org.scalaide.ui.syntax.ScalaSyntaxClass
 import org.eclipse.jface.util.PropertyChangeEvent
 import org.eclipse.jface.preference.IPreferenceStore
 

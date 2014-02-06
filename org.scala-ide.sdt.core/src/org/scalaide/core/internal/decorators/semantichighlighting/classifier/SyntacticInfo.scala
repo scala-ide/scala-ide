@@ -1,13 +1,13 @@
-package scala.tools.eclipse.semantichighlighting.classifier
+package org.scalaide.core.internal.decorators.semantichighlighting.classifier
 
-import scala.tools.eclipse.util.CollectionUtil
+import org.scalaide.util.internal.CollectionUtil
 import scalariform.lexer.ScalaLexer
 import scalariform.lexer.Token
 import scalariform.parser._
 import scalariform.utils.Range
 import org.eclipse.jface.text.Region
 import org.eclipse.jface.text.IRegion
-import scala.tools.eclipse.util.parsing.ScalariformParser
+import org.scalaide.util.internal.scalariform.ScalariformParser
 
 // Symbol information derived by purely syntactic means, via Scalariform's parser, because it (appears)
 // difficult to get this out scalac trees

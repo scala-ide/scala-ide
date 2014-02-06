@@ -1,9 +1,4 @@
-/*
- * Copyright 2005-2010 LAMP/EPFL
- */
-// $Id$
-
-package scala.tools.eclipse
+package org.scalaide.util.internal
 
 /** Utility to unify how we convert settings to preference names */
 object SettingConverterUtil {

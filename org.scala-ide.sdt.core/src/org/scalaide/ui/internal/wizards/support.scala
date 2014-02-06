@@ -1,8 +1,4 @@
-/*
- * Copyright 2010 LAMP/EPFL
- *
- */
-package scala.tools.eclipse.wizards
+package org.scalaide.ui.internal.wizards
 
 object BufferSupport {
 

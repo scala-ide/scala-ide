@@ -1,4 +1,4 @@
-package scala.tools.eclipse.ui
+package org.scalaide.ui.internal.completion
 
 import org.eclipse.jface.text.contentassist.IContextInformation
 import org.eclipse.jface.text.contentassist.IContextInformationExtension

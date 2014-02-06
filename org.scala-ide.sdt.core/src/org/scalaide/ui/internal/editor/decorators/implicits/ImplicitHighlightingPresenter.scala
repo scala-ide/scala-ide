@@ -1,12 +1,12 @@
-package scala.tools.eclipse.semantichighlighting.implicits
+package org.scalaide.ui.internal.editor.decorators.implicits
 
 import java.util.Collections
-import scala.tools.eclipse.javaelements.ScalaCompilationUnit
-import scala.tools.eclipse.properties.ImplicitsPreferencePage._
-import scala.tools.eclipse.util.EclipseUtils
-import scala.tools.eclipse.logging.HasLogger
-import scala.tools.eclipse.ScalaPlugin
-import scala.tools.eclipse.ScalaPresentationCompiler
+import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
+import org.scalaide.ui.internal.preferences.ImplicitsPreferencePage._
+import org.scalaide.util.internal.eclipse.EclipseUtils
+import org.scalaide.logging.HasLogger
+import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.compiler.ScalaPresentationCompiler
 import scala.reflect.internal.util.SourceFile
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.jdt.core.WorkingCopyOwner
@@ -25,11 +25,13 @@ import org.eclipse.jface.util.PropertyChangeEvent
 import org.eclipse.swt.SWT
 import org.eclipse.ui.editors.text.EditorsUI
 import org.eclipse.ui.part.FileEditorInput
-import scala.tools.eclipse.util.AnnotationUtils
-import scala.tools.eclipse.semantic.SemanticAction
-import scala.tools.eclipse.properties.ImplicitsPreferencePage
+import org.scalaide.util.internal.eclipse.AnnotationUtils
+import org.scalaide.ui.internal.editor.decorators.SemanticAction
+import org.scalaide.ui.internal.preferences.ImplicitsPreferencePage
 import org.eclipse.jface.text.Region
-import scala.tools.eclipse.hyperlink.text._
+import org.scalaide.core.hyperlink.detector._
+import org.scalaide.core.hyperlink.HyperlinkFactory
+import org.scalaide.core.hyperlink.Hyperlink
 
 
 /**
@@ -92,7 +94,7 @@ class ImplicitHighlightingPresenter(sourceViewer: ISourceViewer) extends Semanti
   }
 
   private def refresh() = {
-    import scala.tools.eclipse.util.Utils._
+    import org.scalaide.util.internal.Utils._
     for {
       page <- EclipseUtils.getWorkbenchPages
       editorReference <- page.getEditorReferences

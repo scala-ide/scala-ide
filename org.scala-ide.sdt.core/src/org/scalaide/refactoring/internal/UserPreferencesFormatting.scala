@@ -1,11 +1,6 @@
-/*
- * Copyright 2012 LAMP/EPFL
- */
+package org.scalaide.refactoring.internal
 
-package scala.tools.eclipse
-package refactoring
-
-import scala.tools.eclipse.formatter.FormatterPreferences
+import org.scalaide.core.internal.formatter.FormatterPreferences
 import scala.tools.refactoring.Refactoring
 
 import scalariform.formatter.preferences.SpaceInsideParentheses

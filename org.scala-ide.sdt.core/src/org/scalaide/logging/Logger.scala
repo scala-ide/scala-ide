@@ -1,4 +1,4 @@
-package scala.tools.eclipse.logging
+package org.scalaide.logging
 
 /** Defines the contract for implementing a Logger.*/
 trait Logger {

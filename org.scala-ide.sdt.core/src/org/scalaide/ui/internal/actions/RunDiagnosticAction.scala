@@ -1,5 +1,4 @@
-package scala.tools.eclipse
-package actions
+package org.scalaide.ui.internal.actions
 
 import org.eclipse.jface.action.IAction
 import org.eclipse.jface.viewers.ISelection
@@ -7,9 +6,10 @@ import org.eclipse.ui.IObjectActionDelegate
 import org.eclipse.ui.IWorkbenchPart
 import org.eclipse.ui.IWorkbenchWindowActionDelegate
 import org.eclipse.ui.IWorkbenchWindow
-import scala.tools.eclipse.util.Utils
-import scala.tools.eclipse.logging.LogManager
-import scala.tools.eclipse.ui.OpenExternalFile
+import org.scalaide.util.internal.Utils
+import org.scalaide.logging.LogManager
+import org.scalaide.ui.internal.diagnostic
+import org.scalaide.core.ScalaPlugin
 
 class RunDiagnosticAction extends IObjectActionDelegate with IWorkbenchWindowActionDelegate {
   private var parentWindow: IWorkbenchWindow = null

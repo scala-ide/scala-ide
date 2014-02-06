@@ -1,4 +1,4 @@
-package scala.tools.eclipse.quickfix
+package org.scalaide.core.internal.quickfix
 
 // Java imports
 import java.util.regex.Pattern

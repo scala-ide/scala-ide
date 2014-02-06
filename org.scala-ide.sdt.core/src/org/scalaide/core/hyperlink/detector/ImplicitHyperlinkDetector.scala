@@ -1,10 +1,9 @@
-package scala.tools.eclipse.hyperlink.text.detector
+package org.scalaide.core.hyperlink.detector
 
 import org.eclipse.jface.text.IRegion
 import org.eclipse.jface.text.hyperlink.IHyperlink
 import org.eclipse.ui.texteditor.ITextEditor
-
-import scala.tools.eclipse.InteractiveCompilationUnit
+import org.scalaide.core.compiler.InteractiveCompilationUnit
 
 private class ImplicitHyperlinkDetector extends BaseHyperlinkDetector {
 
@@ -21,8 +20,8 @@ private class ImplicitHyperlinkDetector extends BaseHyperlinkDetector {
   //        1) We go through all the editor's annotations to find if an implicit conversion is applied at the given {{{offset}}}.
   //        2) Because we use the editor's annotation model, this functionality cannot be tested in a UI-less environment.
   private def findHyperlinkToImplicit(offset: Int, editor: ITextEditor): List[IHyperlink] = {
-    import scala.tools.eclipse.semantichighlighting.implicits.ImplicitConversionAnnotation
-    import scala.tools.eclipse.util.EditorUtils.getAnnotationsAtOffset
+    import org.scalaide.ui.internal.editor.decorators.implicits.ImplicitConversionAnnotation
+    import org.scalaide.util.internal.eclipse.EditorUtils.getAnnotationsAtOffset
 
     var hyperlinks = List[IHyperlink]()
 

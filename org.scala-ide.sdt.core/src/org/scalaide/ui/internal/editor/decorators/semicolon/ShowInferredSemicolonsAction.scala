@@ -1,6 +1,6 @@
-package scala.tools.eclipse.semicolon
+package org.scalaide.ui.internal.editor.decorators.semicolon
 
-import scala.tools.eclipse.ScalaSourceFileEditor
+import org.scalaide.ui.internal.editor.ScalaSourceFileEditor
 import org.eclipse.ui.texteditor._
 import java.util.ResourceBundle
 import org.eclipse.core.runtime.Assert
@@ -10,6 +10,8 @@ import org.eclipse.jface.text.IPainter
 import org.eclipse.jface.text.ITextViewer
 import org.eclipse.jface.text.ITextViewerExtension2
 import org.eclipse.jface.text.WhitespaceCharacterPainter
+
+import ShowInferredSemicolonsAction._
 
 object ShowInferredSemicolonsAction {
 
@@ -22,8 +24,6 @@ object ShowInferredSemicolonsAction {
   def getBundle[T](implicit m: Manifest[T]) = ResourceBundle.getBundle(m.runtimeClass.getName)
 
 }
-
-import ShowInferredSemicolonsAction._
 
 class ShowInferredSemicolonsAction(prefix: String, editor: ITextEditor, preferenceStore: IPreferenceStore)
   extends TextEditorAction(getBundle[ShowInferredSemicolonsBundle], prefix, editor, IAction.AS_CHECK_BOX) {

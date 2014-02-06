@@ -1,11 +1,10 @@
-package scala.tools.eclipse.quickfix
-package createmethod
+package org.scalaide.core.internal.quickfix.createmethod
 
-import scala.tools.eclipse.javaelements.ScalaCompilationUnit
-import scala.tools.eclipse.logging.HasLogger
-import scala.tools.eclipse.util.parsing.ArgPosition
-import scala.tools.eclipse.util.parsing.MethodCallInfo
-import scala.tools.eclipse.util.parsing.ScalariformUtils
+import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
+import org.scalaide.logging.HasLogger
+import org.scalaide.util.internal.scalariform.ArgPosition
+import org.scalaide.util.internal.scalariform.MethodCallInfo
+import org.scalaide.util.internal.scalariform.ScalariformUtils
 import scala.tools.nsc.{interactive => compiler}
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.jdt.core.ICompilationUnit
@@ -17,6 +16,7 @@ import org.eclipse.jdt.core.search.TypeNameMatch
 import org.eclipse.jdt.internal.corext.util.TypeNameMatchCollector
 import org.eclipse.jface.text.Position
 import scalariform.parser.AstNode
+import org.scalaide.core.internal.quickfix.ScalaQuickFixProcessor
 
 class MissingMemberInfo(
     compilationUnit: ICompilationUnit,

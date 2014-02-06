@@ -1,5 +1,4 @@
-package scala.tools.eclipse
-package compiler
+package org.scalaide.core.compiler
 
 import scala.collection.mutable.ArrayBuffer
 import scala.tools.nsc.ast.parser.Tokens

@@ -1,6 +1,6 @@
-package scala.tools.eclipse.quickfix
+package org.scalaide.core.internal.quickfix
 
-import scala.tools.eclipse.refactoring.ExpandCaseClassBindingAction
+import org.scalaide.refactoring.internal.ExpandCaseClassBindingAction
 
 object ExpandCaseClassBindingProposal
   extends ProposalRefactoringActionAdapter(

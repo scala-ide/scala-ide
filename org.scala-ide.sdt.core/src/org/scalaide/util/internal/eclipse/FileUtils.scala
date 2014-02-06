@@ -1,15 +1,10 @@
-/*
- * Copyright 2005-2010 LAMP/EPFL
- */
-// $Id$
+package org.scalaide.util.internal.eclipse
 
-package scala.tools.eclipse.util
-
-import scala.tools.eclipse.ScalaPlugin.plugin
-import scala.tools.eclipse.util.EclipseUtils.workspaceRunnableIn
+import org.scalaide.core.ScalaPlugin.plugin
+import org.scalaide.util.internal.eclipse.EclipseUtils.workspaceRunnableIn
 import scala.tools.nsc.io.AbstractFile
 import org.eclipse.core.filebuffers.FileBuffers
-import org.eclipse.core.internal.resources.ResourceException
+import org.scalaide.core.resources.EclipseResource
 import org.eclipse.core.resources.IFile
 import org.eclipse.core.resources.IMarker
 import org.eclipse.core.resources.IResource
@@ -21,6 +16,7 @@ import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jdt.core.compiler.IProblem
 import org.eclipse.jdt.internal.core.builder.JavaBuilder
 import org.eclipse.core.runtime.IPath
+import org.eclipse.core.internal.resources.ResourceException
 
 object FileUtils {
 

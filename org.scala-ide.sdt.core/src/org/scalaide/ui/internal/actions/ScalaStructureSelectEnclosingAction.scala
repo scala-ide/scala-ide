@@ -1,13 +1,14 @@
-package scala.tools.eclipse
+package org.scalaide.ui.internal.actions
 
 import org.eclipse.jdt.core.SourceRange
 import org.eclipse.jdt.internal.ui.javaeditor.selectionactions._
 import org.eclipse.jface.action.Action
 import org.eclipse.jface.text.ITextSelection
-
 import scalariform.parser.ScalaParserException
 import scalariform.astselect.AstSelector
 import scalariform.utils.Range
+import org.scalaide.ui.internal.editor.ScalaSourceFileEditor
+
 /**
  * A Scala-aware replacement for {@link org.eclipse.jdt.internal.ui.javaeditor.selectionactions.StructureSelectEnclosingAction}.
  */

@@ -1,11 +1,7 @@
-/*
- * Copyright 2005-2010 LAMP/EPFL
- */
+package org.scalaide.refactoring.internal
 
-package scala.tools.eclipse.refactoring
-
-import scala.tools.eclipse.javaelements.ScalaSourceFile
-import scala.tools.eclipse.refactoring.ui.NewNameWizardPage
+import org.scalaide.core.internal.jdt.model.ScalaSourceFile
+import org.scalaide.refactoring.internal.ui.NewNameWizardPage
 import scala.tools.refactoring.analysis.GlobalIndexes
 import scala.tools.refactoring.analysis.NameValidation
 import scala.tools.refactoring.implementations.ExtractMethod

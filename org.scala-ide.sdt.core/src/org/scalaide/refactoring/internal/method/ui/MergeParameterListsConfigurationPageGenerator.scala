@@ -1,8 +1,8 @@
-package scala.tools.eclipse.refactoring.method.ui
+package org.scalaide.refactoring.internal.method.ui
 
 import org.eclipse.swt.widgets.Button
-import scala.tools.eclipse.refactoring.ScalaIdeRefactoring
 import scala.tools.refactoring.Refactoring
+import org.scalaide.refactoring.internal.ScalaIdeRefactoring
 
 /**
  * Generates the wizard page for a MergeParameterLists refactoring.

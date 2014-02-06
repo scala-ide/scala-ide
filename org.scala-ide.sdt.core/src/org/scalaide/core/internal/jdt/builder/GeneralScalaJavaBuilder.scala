@@ -1,9 +1,9 @@
-package scala.tools.eclipse
+package org.scalaide.core.internal.jdt.builder
 
 import scala.tools.eclipse.contribution.weaving.jdt.builderoptions.ScalaJavaBuilder
 import org.eclipse.core.resources.IProject
 import org.eclipse.core.internal.resources.BuildConfiguration
-import scala.tools.eclipse.util.ReflectionUtils
+import org.scalaide.util.internal.ReflectionUtils
 
 /**
  *

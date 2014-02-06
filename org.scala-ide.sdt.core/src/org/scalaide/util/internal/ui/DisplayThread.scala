@@ -1,4 +1,4 @@
-package scala.tools.eclipse.ui
+package org.scalaide.util.internal.ui
 
 import org.eclipse.swt.widgets.Display
 

@@ -1,4 +1,4 @@
-package scala.tools.eclipse.ui
+package org.scalaide.ui.internal.repl
 
 import org.eclipse.swt.custom.StyledText
 import org.eclipse.swt.widgets.Composite

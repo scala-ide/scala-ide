@@ -1,14 +1,7 @@
-/*
- * Copyright 2005-2010 LAMP/EPFL
- */
-// $Id$
-
-package scala.tools.eclipse
-package ui
+package org.scalaide.ui.internal.completion
 
 import scala.collection.mutable
-import completion.ScalaCompletions
-
+import org.scalaide.core.completion.ScalaCompletions
 import org.eclipse.jface.viewers.ISelectionProvider
 import org.eclipse.jface.text.TextSelection
 import org.eclipse.jface.text.contentassist.ICompletionProposal
@@ -26,7 +19,9 @@ import org.eclipse.jdt.internal.ui.JavaPluginImages
 import org.eclipse.jface.text.IDocument
 import scala.tools.nsc.symtab.Flags
 import scala.reflect.internal.util.SourceFile
-import javaelements.ScalaCompilationUnit
+import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
+import org.scalaide.core.compiler.ScalaPresentationCompiler
+import org.scalaide.util.internal.ScalaWordFinder
 
 class ScalaCompletionProposalComputer extends ScalaCompletions with IJavaCompletionProposalComputer {
   def sessionStarted() {}

@@ -1,11 +1,11 @@
-package scala.tools.eclipse.util
+package org.scalaide.util.internal.eclipse
 
 import org.eclipse.jface.text.source.ISourceViewer
 import org.eclipse.jface.text.source.IAnnotationModel
 import org.eclipse.jface.text.ISynchronizable
 import org.eclipse.jface.text.Position
 import org.eclipse.jface.text.source.Annotation
-import scala.tools.eclipse.util.RichAnnotationModel._
+import org.scalaide.util.internal.eclipse.RichAnnotationModel._
 
 object AnnotationUtils {
 

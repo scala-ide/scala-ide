@@ -1,4 +1,4 @@
-package scala.tools.eclipse.quickfix.createmethod
+package org.scalaide.core.internal.quickfix.createmethod
 
 import scala.collection.mutable
 

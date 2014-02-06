@@ -1,9 +1,4 @@
-/*
- * Copyright 2005-2010 LAMP/EPFL
- */
-// $Id$
-
-package scala.tools.eclipse.interpreter
+package org.scalaide.core.internal.repl
 
 object InterpreterLaunchConstants {
   val PACKAGE_IMPORT = "scala.interpreter.package.import"

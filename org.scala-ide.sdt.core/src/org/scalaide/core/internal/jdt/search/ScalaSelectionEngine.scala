@@ -1,10 +1,4 @@
-/*
- * Copyright 2005-2010 LAMP/EPFL
- */
-// $Id$
-
-package scala.tools.eclipse
-package javaelements
+package org.scalaide.core.internal.jdt.search
 
 import java.{ util => ju }
 import scala.collection.mutable.ArrayBuffer
@@ -22,7 +16,10 @@ import org.eclipse.jdt.internal.compiler.env.ICompilationUnit
 import org.eclipse.jdt.internal.compiler.env.AccessRestriction
 import org.eclipse.jdt.internal.core.JavaElement
 import org.eclipse.jdt.internal.core.SearchableEnvironment
-import scala.tools.eclipse.logging.HasLogger
+import org.scalaide.logging.HasLogger
+import org.scalaide.core.compiler.InteractiveCompilationUnit
+import org.scalaide.util.internal.ScalaWordFinder
+import org.scalaide.core.internal.jdt.model.ScalaLocalVariableElement
 
 class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: ScalaSelectionRequestor, settings: ju.Map[_, _]) extends Engine(settings) with ISearchRequestor with HasLogger {
 

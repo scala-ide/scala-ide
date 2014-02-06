@@ -1,9 +1,4 @@
-/*
- * Copyright 2010 LAMP/EPFL
- *
- *
- */
-package scala.tools.eclipse.wizards
+package org.scalaide.ui.internal.wizards
 
 import org.eclipse.core.resources.IResource
 import org.eclipse.core.runtime.CoreException
@@ -53,11 +48,11 @@ import org.eclipse.swt.layout.GridLayout
 import org.eclipse.swt.widgets.Composite
 import collection.Seq
 import collection.mutable.Buffer
-import scala.tools.eclipse.ScalaPlugin._
-import scala.tools.eclipse.formatter.ScalaFormatterCleanUpProvider
-import scala.tools.eclipse.javaelements.ScalaSourceFile
-import scala.tools.eclipse.logging.HasLogger
-import scala.tools.eclipse.ScalaPlugin
+import org.scalaide.core.ScalaPlugin._
+import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.internal.formatter.ScalaFormatterCleanUpProvider
+import org.scalaide.core.internal.jdt.model.ScalaSourceFile
+import org.scalaide.logging.HasLogger
 
 abstract class AbstractNewElementWizardPage extends NewTypeWizardPage(1, "") with HasLogger {
 

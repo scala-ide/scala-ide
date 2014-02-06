@@ -1,4 +1,4 @@
-package scala.tools.eclipse.lexical
+package org.scalaide.core.internal.lexical
 
 /**
  * @see org.eclipse.jdt.ui.text.IJavaPartitions

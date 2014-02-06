@@ -1,4 +1,4 @@
-package org.scalaide.editor.util
+package org.scalaide.ui.editor.util
 
 import org.eclipse.jface.text.TypedRegion
 import org.eclipse.jface.text.IRegion
@@ -12,7 +12,7 @@ object RegionHelper {
 
     /** Checks if the given position is contained in this region.
      *  This check is inclusive. If this region has offset 5, and length 3, it will return
-     *  true for 5, 6, 7 and 8. 
+     *  true for 5, 6, 7 and 8.
      */
     def containsPositionInclusive(offset: Int): Boolean = {
       if (region.getLength() == 0) {

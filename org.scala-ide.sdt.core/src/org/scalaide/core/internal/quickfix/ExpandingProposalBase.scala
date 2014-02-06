@@ -1,10 +1,8 @@
-package scala.tools.eclipse
-package quickfix
+package org.scalaide.core.internal.quickfix
 
-import scala.tools.eclipse.completion.RelevanceValues
-import scala.tools.eclipse.semantichighlighting.implicits.ImplicitHighlightingPresenter
-import scala.tools.eclipse.util.Utils
-
+import org.scalaide.core.completion.RelevanceValues
+import org.scalaide.ui.internal.editor.decorators.implicits.ImplicitHighlightingPresenter
+import org.scalaide.util.internal.Utils
 import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.Position
 

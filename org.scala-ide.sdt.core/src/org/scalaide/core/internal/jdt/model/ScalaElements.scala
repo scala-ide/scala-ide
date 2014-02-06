@@ -1,9 +1,4 @@
-/*
- * Copyright 2005-2010 LAMP/EPFL
- */
-// $Id$
-
-package scala.tools.eclipse.javaelements
+package org.scalaide.core.internal.jdt.model
 
 import scala.collection.immutable.Seq
 import scala.reflect.NameTransformer
@@ -36,10 +31,10 @@ import org.eclipse.jdt.ui.JavaElementImageDescriptor
 import org.eclipse.jface.resource.ImageDescriptor
 import org.eclipse.swt.graphics.Image
 
-import scala.tools.eclipse.ScalaImages
+import org.scalaide.ui.internal.ScalaImages
 import scala.tools.eclipse.contribution.weaving.jdt.IScalaElement
 import scala.tools.eclipse.contribution.weaving.jdt.ui.IMethodOverrideInfo
-import scala.tools.eclipse.util.ReflectionUtils
+import org.scalaide.util.internal.ReflectionUtils
 
 trait ScalaElement extends JavaElement with IScalaElement {
   def getElementInfo : AnyRef

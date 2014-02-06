@@ -1,9 +1,5 @@
-/*
- * Copyright 2005-2010 LAMP/EPFL
- */
-// $Id$
+package org.scalaide.core.internal.launching
 
-package scala.tools.eclipse.launching;
 import org.eclipse.debug.ui._
 import org.eclipse.debug.ui.sourcelookup._
 import org.eclipse.jdt.debug.ui.launchConfigurations._

@@ -1,6 +1,6 @@
-package scala.tools.eclipse.util
+package org.scalaide.util.internal
 
-import scala.tools.eclipse.logging.HasLogger
+import org.scalaide.logging.HasLogger
 
 object Utils extends HasLogger {
 

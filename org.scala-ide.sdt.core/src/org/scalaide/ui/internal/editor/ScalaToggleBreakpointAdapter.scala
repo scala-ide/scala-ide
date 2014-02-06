@@ -1,9 +1,4 @@
-/*
- * Copyright 2005-2010 LAMP/EPFL
- */
-// $Id$
-
-package scala.tools.eclipse
+package org.scalaide.ui.internal.editor
 
 import java.util.HashMap
 import org.eclipse.core.runtime.CoreException
@@ -25,9 +20,9 @@ import org.eclipse.jface.text.BadLocationException
 import org.eclipse.jface.text.ITextSelection
 import org.eclipse.jface.viewers.ISelection
 import org.eclipse.ui.IWorkbenchPart
-import scala.tools.eclipse.util.ReflectionUtils
-import scala.tools.eclipse.javaelements.ScalaSourceTypeElement
-import scala.tools.eclipse.logging.HasLogger
+import org.scalaide.util.internal.ReflectionUtils
+import org.scalaide.core.internal.jdt.model.ScalaSourceTypeElement
+import org.scalaide.logging.HasLogger
 
 class ScalaToggleBreakpointAdapter extends ToggleBreakpointAdapter with HasLogger { self =>
   import ScalaToggleBreakpointAdapterUtils._

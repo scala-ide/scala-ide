@@ -1,6 +1,5 @@
-package scala.tools.eclipse
-package buildmanager
-package sbtintegration
+package org.scalaide.core.internal.builder
+package zinc
 
 import scala.tools.nsc.Global
 import scala.tools.nsc.Settings
@@ -19,11 +18,11 @@ import xsbti.Logger
 import xsbti.F0
 import sbt.Process
 import sbt.ClasspathOptions
-import scala.tools.eclipse.util.EclipseResource
-import scala.tools.eclipse.util.FileUtils
-import scala.tools.eclipse.properties.ScalaPluginSettings
+import org.scalaide.core.resources.EclipseResource
+import org.scalaide.util.internal.eclipse.FileUtils
+import org.scalaide.ui.internal.preferences.ScalaPluginSettings
 import org.eclipse.core.resources.IResource
-import scala.tools.eclipse.logging.HasLogger
+import org.scalaide.logging.HasLogger
 import sbt.inc.AnalysisStore
 import sbt.inc.Analysis
 import sbt.inc.FileBasedStore
@@ -33,6 +32,8 @@ import sbt.compiler.CompileFailed
 import org.eclipse.core.resources.IProject
 import java.lang.ref.SoftReference
 import java.util.concurrent.atomic.AtomicReference
+import org.scalaide.core.internal.project.ScalaProject
+import org.scalaide.core.internal.builder.EclipseBuildManager
 
 /** An Eclipse builder using the Sbt engine.
  *
@@ -43,7 +44,7 @@ import java.util.concurrent.atomic.AtomicReference
  *
  *  The classpath is handled by delegating to the underlying project. That means
  *  a valid Scala library has to exist on the classpath, but it's not limited to
- *  being called 'scala-library.jar': @see [[scala.tools.eclipse.ClasspathManagement]] for
+ *  being called 'scala-library.jar': @see [[org.scalaide.core.internal.project.ClasspathManagement]] for
  *  how the library is resolved (it can be any jar or even an existing dependent project).
  */
 class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings)
@@ -144,7 +145,7 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings)
   private def setCached(a: Analysis): Analysis = {
    cached set new SoftReference[Analysis](a); a
   }
-  private[sbtintegration] def latestAnalysis: Analysis = Option(cached.get) flatMap (ref => Option(ref.get)) getOrElse setCached(IC.readAnalysis(cacheFile))
+  private[zinc] def latestAnalysis: Analysis = Option(cached.get) flatMap (ref => Option(ref.get)) getOrElse setCached(IC.readAnalysis(cacheFile))
 
   private val cachePath = project.underlying.getFile(".cache")
   private def cacheFile = cachePath.getLocation.toFile

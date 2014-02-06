@@ -1,9 +1,4 @@
-/*
- * Copyright 2011 LAMP/EPFL
- */
-
-package scala.tools.eclipse
-package refactoring
+package org.scalaide.refactoring.internal
 
 import org.eclipse.core.runtime.Status
 import org.eclipse.jface.action.IAction

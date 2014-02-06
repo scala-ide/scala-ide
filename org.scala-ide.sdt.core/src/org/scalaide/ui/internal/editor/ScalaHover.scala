@@ -1,18 +1,14 @@
-/*
- * Copyright 2005-2010 LAMP/EPFL
- */
-// $Id$
-
-package scala.tools.eclipse
+package org.scalaide.ui.internal.editor
 
 import org.eclipse.jdt.core.ICodeAssist
 import org.eclipse.jface.text.ITextViewer
 import org.eclipse.jface.text.IRegion
 import org.eclipse.jface.text.ITextHover
-import scala.tools.eclipse.javaelements.ScalaCompilationUnit
-
+import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import scala.tools.nsc.symtab.Flags
-import scala.tools.eclipse.util.EclipseUtils._
+import org.scalaide.util.internal.ScalaWordFinder
+import org.scalaide.util.internal.eclipse.EclipseUtils._
+import org.scalaide.core.compiler.InteractiveCompilationUnit
 
 class ScalaHover(val icu: InteractiveCompilationUnit) extends ITextHover {
 

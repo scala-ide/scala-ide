@@ -1,8 +1,7 @@
-package scala.tools.eclipse.ui
+package org.scalaide.ui.internal.editor.autoedits
 
-import scala.tools.eclipse.logging.HasLogger
-import scala.tools.eclipse.properties.EditorPreferencePage
-
+import org.scalaide.logging.HasLogger
+import org.scalaide.ui.internal.preferences.EditorPreferencePage
 import org.eclipse.jdt.ui.text.IJavaPartitions
 import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.jface.text.DefaultIndentLineAutoEditStrategy

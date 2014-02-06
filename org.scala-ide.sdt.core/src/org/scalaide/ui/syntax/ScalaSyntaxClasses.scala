@@ -1,4 +1,4 @@
-package scala.tools.eclipse.properties.syntaxcolouring
+package org.scalaide.ui.syntax
 
 import scalariform.lexer.Tokens._
 import scalariform.lexer._
@@ -91,7 +91,7 @@ object ScalaSyntaxClasses {
 
 object ScalariformToSyntaxClass {
 
-  import scala.tools.eclipse.properties.syntaxcolouring.{ ScalaSyntaxClasses => ssc }
+  import org.scalaide.ui.syntax.{ ScalaSyntaxClasses => ssc }
 
   // TODO: Distinguish inside from outside of CDATA; distinguish XML tag and attribute name
 

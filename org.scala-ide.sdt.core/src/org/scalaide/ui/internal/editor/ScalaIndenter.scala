@@ -1,12 +1,6 @@
-/*
- * Copyright 2005-2010 LAMP/EPFL
- */
-// $Id$
-
-package scala.tools.eclipse.ui
+package org.scalaide.ui.internal.editor
 
 import scalariform.formatter.preferences._
-
 import org.eclipse.core.runtime.Assert
 import org.eclipse.jface.text.BadLocationException
 import org.eclipse.jface.text.IDocument
@@ -23,10 +17,9 @@ import org.eclipse.jdt.ui.PreferenceConstants
 import java.lang.Math.min
 import scala.collection.mutable.Map
 import scala.annotation.tailrec
-import scala.tools.eclipse.ScalaPlugin
-import scala.tools.eclipse.formatter.FormatterPreferences
+import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.internal.formatter.FormatterPreferences
 import scalariform.formatter.preferences.IndentSpaces
-
 import scala.util.control.Exception
 
 // TODO Move this out into a new file

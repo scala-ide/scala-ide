@@ -1,4 +1,4 @@
-package scala.tools.eclipse.launching
+package org.scalaide.core.internal.launching
 
 import scala.collection.mutable
 import org.eclipse.jdt.launching.AbstractJavaLaunchConfigurationDelegate
@@ -6,7 +6,7 @@ import org.eclipse.jdt.launching.JavaRuntime
 import org.eclipse.jdt.launching.IRuntimeClasspathEntry
 import org.eclipse.jdt.launching.VMRunnerConfiguration
 import org.eclipse.jdt.launching.ExecutionArguments
-import scala.tools.eclipse.ScalaPlugin
+import org.scalaide.core.ScalaPlugin
 import com.ibm.icu.text.MessageFormat
 import org.eclipse.core.runtime.Path
 import org.eclipse.core.runtime.CoreException
@@ -14,7 +14,7 @@ import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.debug.core.ILaunch
 import org.eclipse.debug.core.ILaunchConfiguration
-import scala.tools.eclipse.ui.DisplayThread
+import org.scalaide.util.internal.ui.DisplayThread
 import org.eclipse.core.resources.IMarker
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.core.runtime.IStatus

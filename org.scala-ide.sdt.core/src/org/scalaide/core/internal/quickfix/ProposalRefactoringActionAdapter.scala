@@ -1,10 +1,9 @@
-package scala.tools.eclipse.quickfix
+package org.scalaide.core.internal.quickfix
 
-import scala.tools.eclipse.completion.RelevanceValues
-import scala.tools.eclipse.refactoring.ActionAdapter
-import scala.tools.eclipse.refactoring.RefactoringAction
-import scala.tools.eclipse.refactoring.rename.RenameAction
-
+import org.scalaide.core.completion.RelevanceValues
+import org.scalaide.refactoring.internal.ActionAdapter
+import org.scalaide.refactoring.internal.RefactoringAction
+import org.scalaide.refactoring.internal.rename.RenameAction
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.jface.text.IDocument
 

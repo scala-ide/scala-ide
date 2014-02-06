@@ -1,4 +1,4 @@
-package scala.tools.eclipse.ui
+package org.scalaide.util.internal.ui
 
 trait UIThread {
   /** Asynchronously run `f` on the UI thread.  */

@@ -1,4 +1,4 @@
-package scala.tools.eclipse.resources
+package org.scalaide.core.resources
 
 import org.eclipse.core.resources.IMarker
 import org.eclipse.core.resources.IResource

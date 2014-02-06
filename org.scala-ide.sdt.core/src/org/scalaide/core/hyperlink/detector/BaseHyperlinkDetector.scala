@@ -1,19 +1,19 @@
-package scala.tools.eclipse.hyperlink.text.detector
+package org.scalaide.core.hyperlink.detector
 
 import org.eclipse.jface.text.IRegion
 import org.eclipse.jface.text.ITextViewer
 import org.eclipse.jface.text.hyperlink.AbstractHyperlinkDetector
 import org.eclipse.jface.text.hyperlink.IHyperlink
 import org.eclipse.ui.texteditor.ITextEditor
-import scala.tools.eclipse.InteractiveCompilationUnit
-import scala.tools.eclipse.util.EditorUtils
+import org.scalaide.core.compiler.InteractiveCompilationUnit
+import org.scalaide.util.internal.eclipse.EditorUtils
 import scala.concurrent.ExecutionContext.Implicits._
 import scala.concurrent.future
 import scala.concurrent.Await
 import scala.concurrent.duration._
 import java.util.concurrent.TimeoutException
-import scala.tools.eclipse.ScalaPlugin
-import scala.tools.eclipse.logging.HasLogger
+import org.scalaide.core.ScalaPlugin
+import org.scalaide.logging.HasLogger
 
 abstract class BaseHyperlinkDetector extends AbstractHyperlinkDetector with HasLogger {
   val TIMEOUT = if (ScalaPlugin.plugin.noTimeoutMode) Duration.Inf else 500.millis

@@ -1,10 +1,9 @@
-package org.scalaide.editor
+package org.scalaide.ui.editor
 
 import scala.reflect.io.AbstractFile
-import scala.tools.eclipse.InteractiveCompilationUnit
-import scala.tools.eclipse.util.EclipseResource
+import org.scalaide.core.compiler.InteractiveCompilationUnit
+import org.scalaide.core.resources.EclipseResource
 import scala.tools.nsc.interactive.Response
-
 import org.eclipse.core.resources.IFile
 import org.eclipse.jface.text.IDocument
 

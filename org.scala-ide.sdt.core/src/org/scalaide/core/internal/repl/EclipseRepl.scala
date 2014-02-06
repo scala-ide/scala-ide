@@ -1,12 +1,9 @@
-package scala.tools.eclipse.interpreter
+package org.scalaide.core.internal.repl
 
 import scala.actors.Actor
 import scala.collection.mutable.ListBuffer
 import scala.tools.nsc.interpreter.Results.Result
 import scala.tools.nsc.Settings
-
-// Unit tests found in org.scala-ide.sdt.core.tests/src:
-//   scala.tools.eclipse.interpreter.EclipseReplTest
 
 /** An `EclipseRepl` is a simple Finite State Machine with 4 states based on
   * whether the REPL is running/not and whether the history `isEmpty`/not.

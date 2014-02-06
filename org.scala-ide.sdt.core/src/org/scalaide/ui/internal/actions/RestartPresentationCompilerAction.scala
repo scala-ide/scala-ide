@@ -1,7 +1,7 @@
-package scala.tools.eclipse.actions
+package org.scalaide.ui.internal.actions
 
 import org.eclipse.core.resources.IProject
-import scala.tools.eclipse.ScalaPlugin
+import org.scalaide.core.ScalaPlugin
 
 class RestartPresentationCompilerAction extends AbstractPopupAction {
   override def performAction(project: IProject): Unit = {

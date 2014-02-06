@@ -1,8 +1,7 @@
-package scala.tools.eclipse.semantichighlighting
+package org.scalaide.core.internal.decorators.semantichighlighting
 
 import scala.annotation.tailrec
-import scala.tools.eclipse.jface.text.EmptyRegion
-
+import org.scalaide.util.internal.eclipse.EmptyRegion
 import org.eclipse.jface.text.IRegion
 import org.eclipse.jface.text.Region
 

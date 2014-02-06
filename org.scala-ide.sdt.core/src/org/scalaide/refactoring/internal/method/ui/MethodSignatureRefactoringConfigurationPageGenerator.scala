@@ -1,4 +1,4 @@
-package scala.tools.eclipse.refactoring.method.ui
+package org.scalaide.refactoring.internal.method.ui
 
 import org.eclipse.jface.viewers.ColumnLabelProvider
 import org.eclipse.jface.viewers.ISelectionChangedListener
@@ -18,9 +18,9 @@ import org.eclipse.swt.widgets.Button
 import org.eclipse.swt.widgets.Composite
 import org.eclipse.swt.widgets.Label
 import org.eclipse.swt.SWT
-import scala.tools.eclipse.refactoring.ScalaIdeRefactoring
-import scala.tools.eclipse.ScalaPlugin
-import scala.tools.eclipse.ScalaPreviewerFactory
+import org.scalaide.refactoring.internal.ScalaIdeRefactoring
+import org.scalaide.core.ScalaPlugin
+import org.scalaide.ui.internal.preferences.ScalaPreviewerFactory
 
 /**
  * Generates the generic wizard page for method signature refactorings.

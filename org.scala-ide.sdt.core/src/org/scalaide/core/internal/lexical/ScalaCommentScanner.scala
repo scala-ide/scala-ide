@@ -1,7 +1,6 @@
-package scala.tools.eclipse.lexical
+package org.scalaide.core.internal.lexical
 
-import scala.tools.eclipse.properties.syntaxcolouring.ScalaSyntaxClass
-
+import org.scalaide.ui.syntax.ScalaSyntaxClass
 import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.jface.text.rules.ICharacterScanner

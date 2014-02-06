@@ -1,7 +1,7 @@
-package scala.tools.eclipse.quickfix
-package explicit
+package org.scalaide.core.internal.quickfix.explicit
 
 import org.eclipse.jface.text.IDocument
+import org.scalaide.core.internal.quickfix.BasicCompletionProposal
 
 /** A generic completion proposal that inserts text at a given offset.
  */

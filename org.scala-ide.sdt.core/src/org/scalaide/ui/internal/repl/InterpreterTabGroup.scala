@@ -1,9 +1,4 @@
-/*
- * Copyright 2005-2010 LAMP/EPFL
- */
-// $Id$
-
-package scala.tools.eclipse.interpreter
+package org.scalaide.ui.internal.repl
 
 import org.eclipse.debug.ui._
 import org.eclipse.debug.ui.sourcelookup._
@@ -21,8 +16,9 @@ import org.eclipse.jface.window._
 import org.eclipse.ui.dialogs._
 import org.eclipse.core.runtime._
 import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants
-import scala.tools.eclipse.ScalaPlugin
-import scala.tools.eclipse.logging.HasLogger
+import org.scalaide.core.ScalaPlugin
+import org.scalaide.logging.HasLogger
+import org.scalaide.core.internal.repl.InterpreterLaunchConstants
 
 /**
  * This defines the configuration UI for a scala interpeter launch configuration.
