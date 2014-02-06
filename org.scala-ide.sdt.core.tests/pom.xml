@@ -71,7 +71,7 @@
             <configuration>
               <redirectTestOutputToFile>true</redirectTestOutputToFile>
               <testSuite>${project.artifactId}</testSuite>
-              <testClass>scala.tools.eclipse.leaks.MemoryLeaksTest</testClass>
+              <testClass>org.scalaide.core.leaks.MemoryLeaksTest</testClass>
             </configuration>
           </plugin>
         </plugins>
@@ -117,7 +117,7 @@
         <configuration>
           <redirectTestOutputToFile>true</redirectTestOutputToFile>
           <testSuite>${project.artifactId}</testSuite>
-          <testClass>scala.tools.eclipse.TestsSuite</testClass>
+          <testClass>org.scalaide.core.TestsSuite</testClass>
         </configuration>
       </plugin>
       <plugin>

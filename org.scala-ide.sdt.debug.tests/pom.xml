@@ -61,7 +61,7 @@
         <configuration>
           <redirectTestOutputToFile>true</redirectTestOutputToFile>
           <testSuite>${project.artifactId}</testSuite>
-          <testClass>scala.tools.eclipse.debug.ScalaDebugTestSuite</testClass>
+          <testClass>org.scalaide.debug.internal.ScalaDebugTestSuite</testClass>
         </configuration>
       </plugin>
 
