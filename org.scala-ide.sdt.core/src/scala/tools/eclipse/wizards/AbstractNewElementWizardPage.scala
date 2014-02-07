@@ -399,8 +399,7 @@ abstract class AbstractNewElementWizardPage extends NewTypeWizardPage(1, "") wit
       p
     }
 
-    implicit val ld = StubUtility.getLineDelimiterUsed(
-      packageFragment.getJavaProject)
+    implicit val ld = StubUtility.getLineDelimiterUsed(packageFragment.getJavaProject)
     val typeName = getTypeNameWithoutParameters
     val cuName = getCompilationUnitName(typeName)
 
