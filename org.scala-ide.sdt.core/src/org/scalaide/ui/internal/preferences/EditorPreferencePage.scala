@@ -60,6 +60,7 @@ class EditorPreferencePage extends PreferencePage with IWorkbenchPreferencePage 
 
     val highlighting = group("Highlighting", base)
     checkBox(P_ENABLE_MARK_OCCURRENCES, "Mark Occurences of the selected element in the current file", highlighting)
+    checkBox(P_SHOW_INFERRED_SEMICOLONS, "Show inferred semicolons", highlighting)
   }
 
   private def group(text: String, parent: Composite): Group = {
@@ -109,6 +110,7 @@ object EditorPreferencePage {
   final val P_ENABLE_AUTO_REMOVE_ESCAPED_SIGN = BASE + "autoRemoveEscapedSign"
 
   final val P_ENABLE_MARK_OCCURRENCES = BASE + "markOccurences"
+  final val P_SHOW_INFERRED_SEMICOLONS = BASE + "showInferredSemicolons"
 
   final val INDENT_GUIDE_ENABLE = BASE + "indentGuideEnable"
   final val INDENT_GUIDE_COLOR = BASE + "indentGuideColor"
@@ -130,6 +132,8 @@ class EditorPreferenceInitializer extends AbstractPreferenceInitializer {
     store.setDefault(P_ENABLE_AUTO_REMOVE_ESCAPED_SIGN, false)
 
     store.setDefault(P_ENABLE_MARK_OCCURRENCES, false)
+    // TODO This preference is added in 4.0. Delete the former preference once support for the former release is dropped.
+    store.setDefault(P_SHOW_INFERRED_SEMICOLONS, store.getBoolean("actions.showInferredSemicolons"))
 
     store.setDefault(INDENT_GUIDE_ENABLE, false)
     store.setDefault(INDENT_GUIDE_COLOR, "72,72,72")

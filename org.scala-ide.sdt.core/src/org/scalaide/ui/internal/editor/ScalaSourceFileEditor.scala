@@ -9,8 +9,6 @@ import org.scalaide.core.internal.decorators.markoccurrences.ScalaOccurrencesFin
 import org.scalaide.ui.internal.preferences.EditorPreferencePage
 import org.scalaide.ui.internal.editor.decorators.semantichighlighting.TextPresentationHighlighter
 import org.scalaide.ui.internal.editor.decorators.semantichighlighting.TextPresentationEditorHighlighter
-import org.scalaide.ui.internal.editor.decorators.semicolon.ShowInferredSemicolonsAction
-import org.scalaide.ui.internal.editor.decorators.semicolon.ShowInferredSemicolonsBundle
 import org.scalaide.util.internal.ui.DisplayThread
 import org.scalaide.ui.internal.editor.autoedits.SurroundSelectionStrategy
 import org.scalaide.util.internal.eclipse.EclipseUtils
@@ -113,10 +111,6 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationU
     val selectEnclosingAction = new actions.ScalaStructureSelectEnclosingAction(this, selectionHistory)
     selectEnclosingAction.setActionDefinitionId(IJavaEditorActionDefinitionIds.SELECT_ENCLOSING)
     setAction(StructureSelectionAction.ENCLOSING, selectEnclosingAction)
-
-    val showInferredSemicolons = new ShowInferredSemicolonsAction(ShowInferredSemicolonsBundle.PREFIX, this, ScalaPlugin.prefStore)
-    showInferredSemicolons.setActionDefinitionId(ShowInferredSemicolonsAction.ACTION_DEFINITION_ID)
-    setAction(ShowInferredSemicolonsAction.ACTION_ID, showInferredSemicolons)
 
     val openAction = new Action {
       private def scalaCompilationUnit: Option[ScalaCompilationUnit] =
@@ -293,9 +287,6 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationU
 
   override def handlePreferenceStoreChanged(event: PropertyChangeEvent) = {
     event.getProperty match {
-      case ShowInferredSemicolonsAction.PREFERENCE_KEY =>
-        getAction(ShowInferredSemicolonsAction.ACTION_ID).asInstanceOf[IUpdate].update()
-
       case PreferenceConstants.EDITOR_MARK_OCCURRENCES =>
       // swallow the event. We don't want 'mark occurrences' to be linked to the Java editor preference
       case EditorPreferencePage.P_ENABLE_MARK_OCCURRENCES =>
@@ -308,7 +299,7 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationU
 
       case _ =>
         if (affectsTextPresentation(event)) {
-          // those events will trigger a UI change
+          // those events will trigger an UI change
           DisplayThread.asyncExec(super.handlePreferenceStoreChanged(event))
         } else {
           super.handlePreferenceStoreChanged(event)

@@ -6,7 +6,6 @@ import org.scalaide.util.internal.eclipse.SWTUtils.fnToPropertyChangeListener
 import org.scalaide.ui.internal.editor.decorators.IndentGuidePainter
 import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor
 import org.eclipse.jdt.internal.ui.javaeditor.JavaSourceViewer
-import org.eclipse.jface.text.ITextViewerExtension2
 import org.eclipse.jface.text.source.SourceViewerConfiguration
 import org.eclipse.jface.util.IPropertyChangeListener
 import org.eclipse.jface.util.PropertyChangeEvent
@@ -14,6 +13,7 @@ import org.eclipse.swt.widgets.Composite
 import org.scalaide.ui.internal.editor.decorators.semantichighlighting
 import org.scalaide.core.compiler.InteractiveCompilationUnit
 import org.scalaide.core.ScalaPlugin
+import org.scalaide.ui.internal.editor.decorators.semicolon.InferredSemicolonPainter
 
 /** Trait containing common logic used by both the `ScalaSourceFileEditor` and `ScalaClassFileEditor`.*/
 trait ScalaCompilationUnitEditor extends JavaEditor with ScalaEditor {
@@ -39,11 +39,10 @@ trait ScalaCompilationUnitEditor extends JavaEditor with ScalaEditor {
   override def createPartControl(parent: Composite) {
     super.createPartControl(parent)
 
-    sourceViewer match {
-      case e: ITextViewerExtension2 =>
-        e.addPainter(new IndentGuidePainter(e))
-      case _ =>
-    }
+    val sv = sourceViewer
+    val painter = Seq(new IndentGuidePainter(sv), new InferredSemicolonPainter(sv))
+    painter foreach sv.addPainter
+
 
     if (isScalaSemanticHighlightingEnabled)
       installScalaSemanticHighlighting(forceSemanticHighlightingOnInstallment)
