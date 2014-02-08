@@ -72,7 +72,9 @@ abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine, lau
 
   // Members declared in org.eclipse.debug.core.IBreakpointListener
 
-  override def breakpointAdded(breakponit: IBreakpoint): Unit = ???
+//  override def breakpointAdded(breakponit: IBreakpoint): Unit = println("breakpointAdded")
+  override def breakpointAdded(breakponit: IBreakpoint): Unit = breakpointManager.breakpointAdded(breakponit)
+  
   override def breakpointChanged(breakpoint: IBreakpoint, delta: IMarkerDelta): Unit = ???
   override def breakpointRemoved(breakpoint: IBreakpoint, delta: IMarkerDelta): Unit = ???
 

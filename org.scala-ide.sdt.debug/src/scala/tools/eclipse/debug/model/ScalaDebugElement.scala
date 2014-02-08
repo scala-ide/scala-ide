@@ -18,6 +18,8 @@ import org.eclipse.core.runtime.Status
 import org.eclipse.core.runtime.IStatus
 import scala.util.control.Exception
 import scala.util.control.Exception.Catch
+import org.eclipse.jdt.debug.core.IJavaDebugTarget
+import scala.tools.eclipse.debug.command.RunToLineAdapter
 
 /**
  * Base class for debug elements in the Scala debug model
@@ -31,6 +33,8 @@ abstract class ScalaDebugElement(debugTarget: ScalaDebugTarget) extends DebugEle
     adapter match {
       case ScalaDebugger.classIDebugModelProvider =>
         modelProvider
+      case ScalaDebugger.classIJavaDebugTarget  =>
+        new RunToLineAdapter
       case _ =>
         super.getAdapter(adapter)
     }
