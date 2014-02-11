@@ -11,11 +11,11 @@ import org.scalaide.sbt.core.SbtBuild
 class RemoteBuilder extends IncrementalProjectBuilder with HasLogger {
 
   override def build(kind: Int, args: JMap[String, String], monitor: IProgressMonitor): Array[IProject] = {
-    
-    val build = SbtBuild.buildFor(getProject().getLocation().toFile())
-    
-    build.compile(/*TODO: real project name*/"")
-    
+    val project = getProject()
+    val build = SbtBuild.buildFor(project.getLocation().toFile())
+
+    build.compile(project)
+
     // TODO: get the compilation result (errors, ...)
     // TODO: refresh the output folders
 

@@ -3,12 +3,13 @@ package org.scalaide.sbt.core
 import java.io.File
 import java.util.concurrent.locks.ReentrantReadWriteLock
 
-import scala.collection._
+import scala.collection.immutable
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.Promise
 import scala.tools.eclipse.logging.HasLogger
 
+import org.eclipse.core.resources.IProject
 import org.eclipse.ui.console.MessageConsole
 import org.scalaide.sbt.ui.console.ConsoleProvider
 
@@ -192,10 +193,9 @@ class SbtBuild private (buildRoot: File, console: MessageConsole) extends HasLog
   
   /** Triggers the compilation of the given project.
    */
-  def compile(project: String) {
-    /*TODO: request compilation for the right project. sbt-9*/
+  def compile(project: IProject) {
     withReadLock {
-      buildData.sbtClient.foreach(_.requestExecution("compile", None))
+      buildData.sbtClient.foreach(_.requestExecution(s"${project.getName}/compile", None))
     }
   }
 
