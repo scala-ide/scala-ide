@@ -62,8 +62,8 @@
      <!-- default values, can be overwritten by profiles -->
      <scala.version>2.10.0</scala.version>
      <scala.binary.version>2.10</scala.binary.version>
-     <scala.xml.version>1.0-RC3</scala.xml.version>
-     <scala.parser-combinators.version>1.0-RC1</scala.parser-combinators.version>
+     <scala.xml.version>1.0.0-RC5</scala.xml.version>
+     <scala.parser-combinators.version>1.0.0-RC3</scala.parser-combinators.version>
      <scala.library.version>${scala.version}</scala.library.version>
      <version.suffix>2_10</version.suffix>
      <version.tag>local</version.tag>
@@ -101,7 +101,7 @@
       <id>scala-2.11.x</id>
       <properties>
         <scala.version>2.11.0-SNAPSHOT</scala.version>
-        <scala.binary.version>2.11.0-M4</scala.binary.version>
+        <scala.binary.version>2.11.0-M5</scala.binary.version>
         <version.suffix>2_11</version.suffix>
 
         <repo.scala-refactoring>${repo.scala-ide.root}/scala-refactoring-211x</repo.scala-refactoring>
@@ -172,13 +172,10 @@
       <dependencies>
         <dependency>
           <groupId>org.scala-ide</groupId>
-          <artifactId>build-tools_2.9.2</artifactId>
-          <version>0.1.0</version>
+          <artifactId>build-tools_2.10</artifactId>
+          <version>0.4.0</version>
         </dependency>
       </dependencies>
-      <properties>
-        <scala.version>2.9.2</scala.version>
-      </properties>
       <build>
         <plugins>
           <plugin>
@@ -196,6 +193,10 @@
             <configuration>
               <classpathScope>compile</classpathScope>
               <mainClass>org.scalaide.buildtools.UpdateScalaIDEManifests</mainClass>
+              <arguments>
+                <argument>${scala.version}</argument>
+                <argument>${settings.localRepository}</argument>
+              </arguments>
             </configuration>
           </plugin>
         </plugins>
@@ -205,12 +206,45 @@
           <!-- extra repository containing the build package -->
           <id>typesafe-ide</id>
           <name>Typesafe IDE repository</name>
-          <url>http://private-repo.typesafe.com/typesafe/ide-2.9</url>
+          <url>http://private-repo.typesafe.com/typesafe/ide-2.10</url>
           <snapshots><enabled>true</enabled></snapshots>
         </repository>
       </repositories>
     </profile>
 
+    <profile>
+      <id>set-features</id>
+      <properties>
+        <sdt.feature.dir>org.scala-ide.sdt.feature</sdt.feature.dir>
+        <sdt.source.feature.dir>org.scala-ide.sdt.source.feature</sdt.source.feature.dir>
+      </properties>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-antrun-plugin</artifactId>
+            <version>1.7</version>
+            <executions>
+              <execution>
+                <id>default-cli</id>
+                <configuration>
+                  <target>
+                    <copy file="${sdt.feature.dir}/resources/feature-${version.suffix}.xml"
+                        tofile="${sdt.feature.dir}/feature.xml"
+                        overwrite="true" />
+                    <copy file="${sdt.source.feature.dir}/resources/feature-${version.suffix}.xml"
+                        tofile="${sdt.source.feature.dir}/feature.xml"
+                        overwrite="true" />
+                  </target>
+                </configuration>
+                <goals>
+                  <goal>run</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
   </profiles>
 
   <repositories>

@@ -10,7 +10,7 @@
   </parent>
   <artifactId>org.scala-ide.sdt.feature</artifactId>
   <packaging>eclipse-feature</packaging>
-  
+
   <build>
     <plugins>
       <plugin>

@@ -12,11 +12,15 @@ import org.eclipse.jdt.internal.ui.JavaPluginImages
 import org.eclipse.jdt.ui.wizards.{ NewElementWizardPage, IClasspathContainerPage }
 import org.eclipse.swt.SWT
 import org.eclipse.swt.widgets.Composite
+import scala.tools.eclipse.logging.HasLogger
 
-abstract class ScalaClasspathContainerInitializer(desc : String) extends ClasspathContainerInitializer {
+abstract class ScalaClasspathContainerInitializer(desc : String) extends ClasspathContainerInitializer with HasLogger {
   def entries : Array[IClasspathEntry]
-  
-  def initialize(containerPath : IPath, project : IJavaProject) = 
+
+  def initialize(containerPath : IPath, project : IJavaProject) = {
+    logger.info(s"Initializing classpath container $desc: ${ScalaPlugin.plugin.libClasses}")
+    logger.info(s"Initializing classpath container $desc with sources: ${ScalaPlugin.plugin.libSources}")
+
     JavaCore.setClasspathContainer(containerPath, Array(project), Array(new IClasspathContainer {
       def getPath = containerPath
       def getClasspathEntries = entries
@@ -29,7 +33,7 @@ class ScalaLibraryClasspathContainerInitializer extends ScalaClasspathContainerI
   val plugin = ScalaPlugin.plugin
   import plugin._
 
-  val entries = List(
+  def entries = List(
     libClasses.map(classes => JavaCore.newLibraryEntry(classes, libSources.getOrElse(null), null)),
     swingClasses.map(classes => JavaCore.newLibraryEntry(classes, swingSources.getOrElse(null), null)),
     actorsClasses.map(classes => JavaCore.newLibraryEntry(classes, actorsSources.getOrElse(null), null)),
@@ -41,7 +45,7 @@ class ScalaCompilerClasspathContainerInitializer extends ScalaClasspathContainer
   val plugin = ScalaPlugin.plugin
   import plugin._
 
-  val entries = Array(
+  def entries = Array(
     JavaCore.newLibraryEntry(compilerClasses.get, compilerSources.getOrElse(null), null)
   )
 }

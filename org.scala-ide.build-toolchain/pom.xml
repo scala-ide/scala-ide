@@ -27,8 +27,6 @@
   </repositories>
 
   <modules>
-    <module>../org.scala-ide.scala.library</module>
-    <module>../org.scala-ide.scala.compiler</module>
     <module>../org.scala-ide.sbt.full.library</module>
     <module>../org.scala-ide.sbt.full.library.source</module>
     <module>../org.scala-ide.sbt.compiler.interface</module>
