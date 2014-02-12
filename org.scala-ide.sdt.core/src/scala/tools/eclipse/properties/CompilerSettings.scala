@@ -45,6 +45,7 @@ import org.eclipse.jface.fieldassist._
 import org.eclipse.jface.bindings.keys.KeyStroke
 import scala.tools.eclipse.logging.HasLogger
 import scala.tools.eclipse.buildmanager.ProjectsCleanJob
+import org.eclipse.jface.dialogs.MessageDialog
 
 trait ScalaPluginPreferencePage extends HasLogger {
   self: PreferencePage with EclipseSettings =>
@@ -250,7 +251,12 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
         } yield scalaProject.underlying
     }
 
-    ProjectsCleanJob(projects).schedule()
+    val result = MessageDialog.openConfirm(getShell(), "Compiler settings changed",
+        "The compiler settings have changed. A full rebuild is required for " +
+        "changes to take effect. Shall all projects be cleaned now?")
+
+    if (result)
+      ProjectsCleanJob(projects).schedule()
   }
 
   // Eclipse PropertyPage API
