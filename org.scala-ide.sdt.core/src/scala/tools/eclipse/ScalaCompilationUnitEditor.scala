@@ -4,10 +4,12 @@ import scala.tools.eclipse.properties.syntaxcolouring.ScalaSyntaxClasses
 import scala.tools.eclipse.semantichighlighting.Presenter
 import scala.tools.eclipse.semantichighlighting.TextPresentationHighlighter
 import scala.tools.eclipse.ui.DisplayThread
+import scala.tools.eclipse.ui.IndentGuidePainter
 import scala.tools.eclipse.util.SWTUtils.fnToPropertyChangeListener
 
 import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor
 import org.eclipse.jdt.internal.ui.javaeditor.JavaSourceViewer
+import org.eclipse.jface.text.ITextViewerExtension2
 import org.eclipse.jface.text.source.SourceViewerConfiguration
 import org.eclipse.jface.util.IPropertyChangeListener
 import org.eclipse.jface.util.PropertyChangeEvent
@@ -36,6 +38,12 @@ trait ScalaCompilationUnitEditor extends JavaEditor with ScalaEditor {
 
   override def createPartControl(parent: Composite) {
     super.createPartControl(parent)
+
+    sourceViewer match {
+      case e: ITextViewerExtension2 =>
+        e.addPainter(new IndentGuidePainter(e))
+      case _ =>
+    }
 
     if (isScalaSemanticHighlightingEnabled)
       installScalaSemanticHighlighting(forceSemanticHighlightingOnInstallment)
