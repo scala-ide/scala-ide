@@ -27,6 +27,13 @@ abstract class ScalaClasspathContainerInitializer(desc : String) extends Classpa
       def getDescription = desc+" [" + scala.util.Properties.scalaPropOrElse("version.number", "(unknown)")+"]"
       def getKind = IClasspathContainer.K_SYSTEM
     }), null)
+  }
+
+  protected def libraryEntries(classes: IPath, sources: Option[IPath]): IClasspathEntry = {
+    if(sources.isEmpty) logger.debug(s"No source attachements for ${classes.lastSegment()}")
+
+    JavaCore.newLibraryEntry(classes, sources.orNull, null)
+  }
 }
 
 class ScalaLibraryClasspathContainerInitializer extends ScalaClasspathContainerInitializer("Scala Library") {
@@ -39,16 +46,15 @@ class ScalaLibraryClasspathContainerInitializer extends ScalaClasspathContainerI
     (reflectClasses, reflectSources),
     // modules:
     (actorsClasses, actorsSources),
-    (continuationsLibraryClasses, continuationsLibrarySources),
     (swingClasses, swingSources)
-  ).map{case (c, s) => libraryEntries(c, s)}
+  ).flatMap { case (c, s) => c map { classes => libraryEntries(classes, s) }}
 }
 
 class ScalaCompilerClasspathContainerInitializer extends ScalaClasspathContainerInitializer("Scala Compiler") {
   val plugin = ScalaPlugin.plugin
   import plugin._
 
-  override def entries = Array(
+  def entries = Array(
     JavaCore.newLibraryEntry(compilerClasses.get, compilerSources.getOrElse(null), null)
   )
 }

@@ -30,13 +30,6 @@
                 <configuration>
                   <artifactItems>
                     <artifactItem>
-                      <groupId>org.scala-lang.plugins</groupId>
-                      <artifactId>continuations</artifactId>
-                      <type>jar</type>
-                      <destFileName>scala-continuations-plugin.jar</destFileName>
-                      <outputDirectory>${project.build.directory}/lib</outputDirectory>
-                    </artifactItem>
-                    <artifactItem>
                       <groupId>org.scala-lang</groupId>
                       <artifactId>scala-swing</artifactId>
                       <type>jar</type>
@@ -98,13 +91,6 @@
                       <destFileName>scala-parser-combinators-src.jar</destFileName>
                     </artifactItem>
                     <artifactItem>
-                      <groupId>org.scala-lang.plugins</groupId>
-                      <artifactId>scala-continuations-library_${scala.binary.version}</artifactId>
-                      <classifier>sources</classifier>
-                      <type>jar</type>
-                      <destFileName>scala-continuations-library-src.jar</destFileName>
-                    </artifactItem>
-                    <artifactItem>
                       <groupId>org.scala-lang.modules</groupId>
                       <artifactId>scala-swing_${scala.binary.version}</artifactId>
                       <classifier>sources</classifier>
@@ -117,20 +103,6 @@
                       <classifier>sources</classifier>
                       <type>jar</type>
                       <destFileName>scala-actors-src.jar</destFileName>
-                    </artifactItem>
-                    <artifactItem>
-                      <groupId>org.scala-lang.plugins</groupId>
-                      <artifactId>scala-continuations-plugin_${scala.binary.version}</artifactId>
-                      <type>jar</type>
-                      <destFileName>scala-continuations-plugin.jar</destFileName>
-                      <outputDirectory>${project.build.directory}/lib/</outputDirectory>
-                    </artifactItem>
-                    <artifactItem>
-                      <groupId>org.scala-lang.plugins</groupId>
-                      <artifactId>scala-continuations-library_${scala.binary.version}</artifactId>
-                      <type>jar</type>
-                      <destFileName>scala-continuations-library.jar</destFileName>
-                      <outputDirectory>${project.build.directory}/lib/</outputDirectory>
                     </artifactItem>
                     <artifactItem>
                       <groupId>org.scala-lang.modules</groupId>
