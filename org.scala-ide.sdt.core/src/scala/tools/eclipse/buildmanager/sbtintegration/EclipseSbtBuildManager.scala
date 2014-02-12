@@ -114,7 +114,7 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings)
   /** The given files have been modified by the user. Recompile
    *  them and their dependent files.
    */
-  override def update(added: scala.collection.Set[AbstractFile], removed: scala.collection.Set[AbstractFile]) {
+  def update(added: scala.collection.Set[AbstractFile], removed: scala.collection.Set[AbstractFile]) {
     if (added.isEmpty && removed.isEmpty)
       logger.info("No changes in project, running the builder for potential transitive changes.")
 
