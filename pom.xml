@@ -37,7 +37,7 @@
     <diffutils.version>1.2.1</diffutils.version>
 
     <!-- plugin versions -->
-    <tycho.plugin.version>0.18.1</tycho.plugin.version>
+    <tycho.plugin.version>0.19.0</tycho.plugin.version>
     <scala.plugin.version>3.1.5</scala.plugin.version>
     <aspectj.plugin.version>1.4</aspectj.plugin.version>
     <maven-bundle.plugin.version>2.3.7</maven-bundle.plugin.version>
