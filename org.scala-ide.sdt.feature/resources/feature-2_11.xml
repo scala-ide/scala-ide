@@ -2,7 +2,7 @@
 <feature
       id="org.scala-ide.sdt.feature"
       label="Scala IDE for Eclipse"
-      version="3.0.3.qualifier"
+      version="3.0.4.qualifier"
       provider-name="scala-ide.org"
       plugin="org.scala-ide.sdt.core">
 
