@@ -83,6 +83,7 @@
     <plugins>
       <plugin>
         <!-- automatically clean up the sources which are unpacked for the memory test -->
+        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-clean-plugin</artifactId>
         <configuration>
           <filesets>
