@@ -119,7 +119,7 @@ class ScalaJavaCompletionProposalComputer extends IJavaCompletionProposalCompute
           !sym.isPrivate)
 
       compiler.askOption { () =>
-        val currentClass = rootMirror.getClass(newTypeName(referencedTypeName))
+        val currentClass = rootMirror.getClassByName(newTypeName(referencedTypeName))
         val proposals = currentClass.info.members.filter(mixedInMethod).toList
 
         for (sym <- proposals if sym.name.startsWith(prefix)) yield {
