@@ -56,7 +56,8 @@ object ScalaDebugger {
     }
   }
 
-  /** `IDebugContextListener` is part of the Eclipse UI code, by extending it in a different
+  /**
+   * `IDebugContextListener` is part of the Eclipse UI code, by extending it in a different
    *  object, it will not be loaded as soon as `ScalaDebugger` is used.
    *  This allow to use `ScalaDebugger` even if the application is launched in `headless` mode, like while running tests.
    */
