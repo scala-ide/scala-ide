@@ -117,8 +117,15 @@ class ScalaCompletions extends HasLogger {
           override def acceptType(modifiers: Int, packageNameArray: Array[Char], simpleTypeName: Array[Char],
             enclosingTypeName: Array[Array[Char]], path: String) {
             val packageName = new String(packageNameArray)
-            val simpleName = new String(simpleTypeName)
-            val fullyQualifiedName = (if (packageName.length > 0) packageName + '.' else "") + simpleName
+            def stripEndingDollar(str: String) = if (str.endsWith("$")) str.init else str
+            val enclosingName = for {
+              chars <- enclosingTypeName
+              name = new String(chars) if name != "package$"
+            } yield stripEndingDollar(name)
+            def addDots(parts: Seq[String]) = parts filter (_.nonEmpty) mkString "."
+            val packageWithEnclosing = addDots(packageName +: enclosingName)
+            val simpleName = stripEndingDollar(new String(simpleTypeName))
+            val fullyQualifiedName = addDots(packageName +: enclosingName :+ simpleName)
 
             logger.info(s"Found type: $fullyQualifiedName")
 
@@ -130,7 +137,7 @@ class ScalaCompletions extends HasLogger {
                 start,
                 simpleName,
                 simpleName,
-                packageName,
+                packageWithEnclosing,
                 50,
                 true,
                 () => List(),

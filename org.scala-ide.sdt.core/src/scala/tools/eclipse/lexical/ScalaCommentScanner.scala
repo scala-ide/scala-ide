@@ -51,7 +51,7 @@ class ScalaCommentScanner(
     val taskTags = javaPreferenceStore.getString(JavaCore.COMPILER_TASK_TAGS)
     val isCaseSensitive = javaPreferenceStore.getString(JavaCore.COMPILER_TASK_CASE_SENSITIVE) == JavaCore.ENABLED
     val wm = new WordMatcher
-    val cwr = new CombinedWordRule(new IdentifierDetector, wm, getToken(syntaxClass))
+    val cwr = new CombinedWordRule(new IdentifierDetector, wm)
 
     wm.isCaseSensitive = isCaseSensitive
     addTaskTags(wm, taskTags, getToken(taskTagClass))
@@ -110,8 +110,8 @@ class ScalaCommentScanner(
  * Its up to the word matchers to decide if a word matches and, in this case,
  * which token is associated with that word.
  *
- * If `matcher` doesn't provide a token for a given word then `defaultToken` is
- * used.
+ * If `matcher` doesn't provide a token for a given word then [[org.eclipse.jface.text.rules.Token.UNDEFINED]]
+ * is used.
  *
  * This class is inspired by [[org.eclipse.jdt.internal.ui.text.CombinedWordRule]],
  * which can't be reused because it triggers the loading of UI classes and therefore
@@ -119,8 +119,7 @@ class ScalaCommentScanner(
  */
 private class CombinedWordRule(
     detector: IWordDetector,
-    matcher: WordMatcher,
-    defaultToken: IToken
+    matcher: WordMatcher
 ) extends IRule {
 
   def evaluate(scanner: ICharacterScanner): IToken = {
@@ -132,8 +131,11 @@ private class CombinedWordRule(
           .mkString
       scanner.unread()
       val tok = matcher.evaluate(word)
-      if (tok.isUndefined()) defaultToken
-      else tok
+      if (!tok.isUndefined()) tok
+      else {
+        for (_ <- word) scanner.unread()
+        Token.UNDEFINED
+      }
     } else {
       scanner.unread()
       Token.UNDEFINED
@@ -193,8 +195,11 @@ private class WordMatcher {
  * which can't be reused because it is private.
  */
 private class IdentifierDetector extends IWordDetector {
+
+  private val specialSigns = """$@!%&*+-<=>?\^|~/""".toSet
+
   def isWordStart(c: Char) =
-    c != '$' && Character.isJavaIdentifierStart(c)
+    Character.isJavaIdentifierStart(c) || specialSigns(c)
 
   def isWordPart(c: Char) =
     c != '$' && Character.isJavaIdentifierPart(c)

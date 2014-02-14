@@ -11,10 +11,10 @@ import org.eclipse.jdt.core.IMethod
 import org.eclipse.jdt.core.IType
 import org.eclipse.jdt.core.ITypeHierarchy
 import org.eclipse.jdt.core.Signature
-
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.ListBuffer
 import scala.reflect.NameTransformer
+import scala.tools.eclipse.ScalaPresentationCompilerProxy
 
 trait CodeBuilder {
 
@@ -23,6 +23,7 @@ trait CodeBuilder {
 
   val imports: ImportSupport
   val buffer: Buffer
+  val compilerProxy: ScalaPresentationCompilerProxy
 
   protected val convertAndAdd = (s: String) => {
     imports.addImport(convertSignature(s))
@@ -33,53 +34,44 @@ trait CodeBuilder {
     this
   }
 
-  def writeImports(implicit ld: String) {
+  def writeImports(implicit lineDelimiter: String) {
     imports.writeTo(buffer)
   }
 
-  def finishReWrites(typeHierarchy: ITypeHierarchy, createdType: IType)
-                    (createConstructorsSelected: Boolean)
-                    (createInheritedSelected: Boolean)
-                    (createMainSelected: Boolean)(implicit ld: String) {
+  def finishReWrites(createdType: IType)(createConstructorsSelected: Boolean)(createInheritedSelected: Boolean)(createMainSelected: Boolean)(implicit lineDelimiter: String) {
     val sb = new StringBuilder
 
-    if(createConstructorsSelected)
-      sb.append(unimplemetedConstructors(typeHierarchy, createdType))
+    if (createConstructorsSelected)
+      sb.append(unimplemetedConstructors(createdType))
 
-    if(createInheritedSelected)
-      sb.append(unimplemetedMethods(typeHierarchy, createdType))
+    if (createInheritedSelected)
+      sb.append(unimplemetedMethods(createdType))
 
-    if(createMainSelected)
+    if (createMainSelected)
       sb.append(createMain)
 
     val idx = buffer.getContents.indexOf(templates.bodyStub)
-    buffer.replace(idx, templates.bodyStub.length, " {" + ld + sb + ld + "}")
+    buffer.replace(idx, templates.bodyStub.length, s" {$lineDelimiter$sb$lineDelimiter}")
 
     // order matters here
     List("extends", "name") foreach { s =>
-      lhm.get(s) match {
-          case Some(x) => x.writeTo(buffer)
-          case _ =>
-      }
+      lhm.get(s) foreach (_.writeTo(buffer))
     }
     writeImports
   }
 
   def addConstructorArgs(args: Args) {
+    val ns = if (args.as.nonEmpty) eval(args) else ""
+    val nb = lhm.get("name").get.asInstanceOf[NameBufferSupport]
+    lhm.put("name", new NameBufferSupport(nb, ns))
 
-  val ns = if(args.as.nonEmpty)eval(args) else ""
-  val nb = lhm.get("name").get.asInstanceOf[NameBufferSupport]
-  lhm.put("name", new NameBufferSupport(nb, ns))
-
-  val e = if(args.as.nonEmpty)eval(ParenList(args.as.map (a => a.n))) else ""
-  val eb = lhm.get("extends").get.asInstanceOf[ExtendsBufferSupport]
-  lhm.put("extends", new ExtendsBufferSupport(eb, e))
+    val e = if (args.as.nonEmpty) eval(ParenList(args.as.map(a => a.n))) else ""
+    val eb = lhm.get("extends").get.asInstanceOf[ExtendsBufferSupport]
+    lhm.put("extends", new ExtendsBufferSupport(eb, e))
   }
 
-  def createElementDeclaration(name: String, superTypes: List[String],
-                               buffer: Buffer)(implicit ld: String) {
-
-    val nameBuffer = new NameBufferSupport(" " +name)
+  def createElementDeclaration(name: String, superTypes: List[String], buffer: Buffer)(implicit lineDelimiter: String) {
+    val nameBuffer = new NameBufferSupport(" " + name)
     lhm.put("name", nameBuffer)
     nameBuffer.writeTo(buffer)
 
@@ -88,117 +80,97 @@ trait CodeBuilder {
     extendsBuffer.writeTo(buffer)
   }
 
-  def createMain(implicit ld: String): String =
-    ld + "  def main(args: Array[String]): Unit = {  }" + ld
+  def createMain(implicit lineDelimiter: String): String =
+    s"$lineDelimiter  def main(args: Array[String]): Unit = {  }$lineDelimiter"
 
-  def unimplemetedConstructors(typeHierarchy: ITypeHierarchy, newType: IType)
-                              (implicit ld: String): String
+  def unimplemetedConstructors(newType: IType)(implicit lineDelimiter: String): String
 
-  def unimplemetedMethods(typeHierarchy: ITypeHierarchy, newType: IType)
-                         (implicit ld: String): String
+  def unimplemetedMethods(newType: IType)(implicit lineDelimiter: String): String
 }
 
 object CodeBuilder {
 
   import BufferSupport._
 
-  def apply(packageName: String, superTypes: List[String], buffer: Buffer): CodeBuilder = {
+  def apply(packageName: String, superTypes: List[String], buffer: Buffer, proxy: ScalaPresentationCompilerProxy): CodeBuilder = {
     val imports = ImportSupport(packageName)
     imports.addImports(superTypes)
-    new CodeBuilderImpl(imports, superTypes, buffer)
+    new CodeBuilderImpl(imports, superTypes, buffer, proxy)
   }
 
   private val lhm: HashMap[String, BufferSupport] = HashMap.empty
 
-  private class NameBufferSupport(val name: String, val cons: String)
-    extends BufferSupport {
+  private class NameBufferSupport(val name: String, val cons: String = "") extends BufferSupport {
 
-  def this(name: String) {
-    this(name, "")
+    def this(buffer: NameBufferSupport, cons: String) {
+      this(buffer.name, cons)
+      offset = buffer.offset
+      length = buffer.length
+    }
+
+    protected def contents(implicit lineDelimiter: String) = name + cons
   }
 
-  def this(buffer: NameBufferSupport, cons: String) {
-    this(buffer.name, cons)
-    offset = buffer.offset
-    length = buffer.length
-  }
+  private class ExtendsBufferSupport(val superTypes: List[String], val cons: String = "") extends BufferSupport {
 
-  protected def contents(implicit ld: String) = name + cons
-  }
-
-  private class ExtendsBufferSupport(
-      val superTypes: List[String], val cons: String)
-    extends BufferSupport {
-
-  def this(superTypes: List[String]) {
-    this(superTypes, "")
-  }
-
-  def this(buffer: ExtendsBufferSupport, cons: String) {
-    this(buffer.superTypes, cons)
-    offset = buffer.offset
-    length = buffer.length
-  }
+    def this(buffer: ExtendsBufferSupport, cons: String) {
+      this(buffer.superTypes, cons)
+      offset = buffer.offset
+      length = buffer.length
+    }
 
     import templates._
 
-  protected def contents(implicit ld: String) = {
-    val t = typeTemplate(superTypes)
-    val a = t.split(" ")
-    if(a.length > 1)
-      a(2) = a(2) + cons
-    a.mkString(" ")
-  }
+    protected def contents(implicit lineDelimiter: String) = {
+      val t = typeTemplate(superTypes)
+      val a = t.split(" ")
+      if (a.length > 1)
+        a(2) = a(2) + cons
+      a.mkString(" ")
+    }
   }
 
   sealed abstract class Part
 
-  case class Type(val n: Name) extends Part
-  case class TypeParam(val n: Name, val b: TypeBounds) extends Part
-  case class TypeBounds(val lo: Type = NothingBound, val hi: Type = AnyBound,
-                      val view: Option[Type] = None) extends Part
-  case class TypeParams(val tp: Option[List[TypeParam]]) extends Part
-  case class Value(val s: String) extends Part
-  case class Mods(val s: Option[String]) extends Part
-  case class Name(val s: String) extends Part
-  case class Arg(val n: Name, val t: Type) extends Part
-  case class Result(val t: Type, val v: Value) extends Part
-  case class ParenList(val ps: List[Part]) extends Part
+  case class Type(n: Name) extends Part
+  case class TypeParam(n: Name, b: TypeBounds) extends Part
+  case class TypeBounds(lo: Type = NothingBound, hi: Type = AnyBound, view: Option[Type] = None) extends Part
+  case class TypeParams(tp: Option[List[TypeParam]]) extends Part
+  case class Value(s: String) extends Part
+  case class Mods(s: Option[String]) extends Part
+  case class Name(s: String) extends Part
+  case class Arg(n: Name, t: Type) extends Part
+  case class Result(t: Type, v: Value) extends Part
+  case class ParenList(ps: List[Part]) extends Part
   class ParamNames(val pn: List[Name]) extends ParenList(pn)
   class Args(val as: List[Arg]) extends ParenList(as)
-  case class Func(val mods: Mods, val name: Name, val typeParams: TypeParams,
-              val args: Args, val result: Result) extends Part
-  case class ConsBody(val pn: ParamNames) extends Part
-  case class AuxCons(val args: Args, val body: ConsBody) extends Part
+  case class Func(mods: Mods, name: Name, typeParams: TypeParams, args: Args, result: Result) extends Part
+  case class ConsBody(pn: ParamNames) extends Part
+  case class AuxCons(args: Args, body: ConsBody) extends Part
 
   object AnyBound extends Type(Name("Any"))
   object NothingBound extends Type(Name("Nothing"))
 
   def eval(p: Part): String = p match {
-    case Type(n)                => eval(n)
-  case TypeParam(n,b)         => eval(n) + eval(b)
-  case TypeBounds(l,h,v)      => " >: " + eval(l) + " <: "+ eval(h)
-  case TypeParams(o)          => o.map(_.map(t => eval(t))
-                              .mkString("[", ", ", "]")).getOrElse("")
-  case Value(s)               => s
-  case Mods(o)                => o.map(m => m + " ").getOrElse("")
-  case Name(s)                => s
-  case AuxCons(a,b)           => "def this" + eval(a) + " { " +eval(b)+ " }"
-  case ConsBody(pn)           => "this" + eval(pn)
-  case ParenList(ps)          => ps.map(eval) mkString("(", ", ", ")")
-  case Arg(n,t)               => eval(n) + ": " + eval(t)
-  case Result(t,v)            => ": " + eval(t) + " = { " + eval(v) + " }"
-  case Func(m,n,t,a,r)        => eval(m) + "def " + eval(n) + eval(t) +
-                                 eval(a) + eval(r)
+    case Type(n)             => eval(n)
+    case TypeParam(n, b)     => eval(n) + eval(b)
+    case TypeBounds(l, h, v) => " >: " + eval(l) + " <: " + eval(h)
+    case TypeParams(o)       => o.map(_.map(t => eval(t)).mkString("[", ", ", "]")).getOrElse("")
+    case Value(s)            => s
+    case Mods(o)             => o.map(m => m + " ").getOrElse("")
+    case Name(s)             => s
+    case AuxCons(a, b)       => "def this" + eval(a) + " { " + eval(b) + " }"
+    case ConsBody(pn)        => "this" + eval(pn)
+    case ParenList(ps)       => ps.map(eval) mkString ("(", ", ", ")")
+    case Arg(n, t)           => eval(n) + ": " + eval(t)
+    case Result(t, v)        => ": " + eval(t) + " = { " + eval(v) + " }"
+    case Func(m, n, t, a, r) => eval(m) + "def " + eval(n) + eval(t) + eval(a) + eval(r)
   }
 
-  def toOption[A](in: A)(guard: => Boolean = (in != null)) =
-    in match {
-      case x if(guard) => Some(x)
-      case _ => None
-    }
+  def toOption[A](in: A)(guard: => Boolean = (in != null)): Option[A] =
+    if (guard) Some(in) else None
 
-  def resultValue(s: String) = {
+  def resultValue(s: String): String = {
     s(0) match {
       case 'V'       => ""
       case 'Z'       => "false"
@@ -206,12 +178,12 @@ object CodeBuilder {
       case 'J'       => "0L"
       case 'F'       => "0.0f"
       case 'D'       => "0.0d"
-      case  _        => "null"
+      case _         => "null"
     }
   }
 
-  def convertSignature(s: String) = {
-  s(0) match {
+  def convertSignature(s: String): String = {
+    s(0) match {
       case 'Z' => "scala.Boolean"
       case 'B' => "scala.Byte"
       case 'C' => "scala.Char"
@@ -230,7 +202,7 @@ object CodeBuilder {
 
   private val methodModifiers = (k: IMethod) => {
     val s = Flags.toString(k.getFlags & ~Flags.AccPublic & ~Flags.AccAbstract)
-    toOption(s) {s.length > 0 } map (_ + " ")
+    toOption(s) { s.length > 0 } map (_ + " ")
   }
 
   private def elementName(k: IMethod) = toOption(k.getElementName)()
@@ -242,9 +214,9 @@ object CodeBuilder {
   private def similarMethod(ma: IMethod, xs: ListBuffer[IMethod]): Boolean = {
     def similar(m: IMethod) = {
       ma.getElementName == m.getElementName &&
-      ma.getNumberOfParameters == m.getNumberOfParameters &&
-      (ma.getParameterTypes.mkString == m.getParameterTypes.mkString ||
-       ma.getParameterNames.mkString == m.getParameterNames.mkString)
+        ma.getNumberOfParameters == m.getNumberOfParameters &&
+        (ma.getParameterTypes.mkString == m.getParameterTypes.mkString ||
+          ma.getParameterNames.mkString == m.getParameterNames.mkString)
     }
     xs exists similar
   }
@@ -253,125 +225,91 @@ object CodeBuilder {
     xs exists (_.getElementName == ma.getElementName)
   }
 
-  private val constructorIMethodOrdering = new math.Ordering[IMethod] {
-    def compare(x: IMethod, y: IMethod) = {
-      (x.getNumberOfParameters, y.getNumberOfParameters) match {
-        case (l, r) if l > r => -1
-        case (l, r) if l < r =>  1
-        case _ =>  0
-      }
-    }
+  private val constructorIMethodOrdering = new Ordering[IMethod] {
+    def compare(x: IMethod, y: IMethod) =
+      y.getNumberOfParameters - x.getNumberOfParameters
   }
 
-  private class CodeBuilderImpl(val imports: ImportSupport,
-                                        superTypes: List[String],
-                                        val buffer: Buffer)
-    extends QualifiedNameSupport
-       with BufferSupport
-       with CodeBuilder {
+  private class CodeBuilderImpl(val imports: ImportSupport, superTypes: List[String], val buffer: Buffer, val compilerProxy: ScalaPresentationCompilerProxy)
+      extends QualifiedNameSupport with BufferSupport with CodeBuilder {
 
     private val generatedMethods: ListBuffer[String] = ListBuffer()
     private val generatedConstructors: ListBuffer[String] = ListBuffer()
 
-    protected def contents(implicit ld: String) =
-      (generatedConstructors map (s => ld+"  " +s+ld)
-        ++= generatedMethods map (s => ld+"  " +s+ld)).mkString
+    protected def contents(implicit lineDelimiter: String): String =
+      withDelimiterToString(generatedConstructors) + withDelimiterToString(generatedMethods)
 
-    def unimplemetedConstructors(typeHierarchy: ITypeHierarchy, newType: IType)
-                                (implicit ld: String) = {
+    /** This code is a translation of the previous attempt (based on JDT Type Hierarchy)
+     *  to auto-generate constructor code. It fails in many ways, but it shows how the
+     *  presentation compiler could be used to do it.
+     */
+    override def unimplemetedConstructors(newType: IType)(implicit lineDelimiter: String) = {
 
       val astc: ListBuffer[IMethod] = ListBuffer()
 
-      typeHierarchy.getSuperclass(newType).getMethods.foreach { scm =>
-        if(scm.isConstructor)
-          astc += scm
-      }
+      compilerProxy { comp =>
+        val sym = comp.rootMirror.getClassIfDefined(superTypes.head)
+        val ctors = sym.info.members.filter(_.isConstructor).toSeq
 
-      val sastc = astc.sorted(constructorIMethodOrdering)
-      for {
-        stc <- sastc.headOption
-         pn =  stc.getParameterNames map (pn => Name(pn))
-         pt =  stc.getParameterTypes map (pt => Type(Name(convertAndAdd(pt))))
-         nt =  pn zip pt map (nt => Arg(nt._1, nt._2))
-         ag =  new Args(nt.toList)
-      } addConstructorArgs(ag)
+        //      val sastc = astc.sorted(constructorIMethodOrdering)
+        for {
+          ctor <- ctors
+          pn = ctor.info.params map (pn => Name(pn.nameString))
+          pt = ctor.info.params map (param => Type(Name(param.info.toString))) //Type(Name(convertAndAdd(pt))))
+          nt = pn zip pt map (nt => Arg(nt._1, nt._2))
+          ag = new Args(nt.toList)
+        } addConstructorArgs(ag)
 
-      for {
-        stc <- sastc
-         pn =  stc.getParameterNames.map (pn => Name(pn)).toList
-         pt =  stc.getParameterTypes map (pt => Type(Name(convertAndAdd(pt))))
-         nt =  pn zip pt map (nt => Arg(nt._1, nt._2))
-         if(nt.nonEmpty)
-         ag =  new Args(nt.init.toList)
-         pl =  new ParamNames(pn.dropRight(1) :+ Name("null"))
-      } generatedConstructors += eval(AuxCons(ag, ConsBody(pl)))
-
-      generatedConstructors.map (s => ld+"  " +s+ld).toList.mkString
-    }
-
-    def unimplemetedMethods(typeHierarchy: ITypeHierarchy, newType: IType)
-                           (implicit ld: String) = {
-
-      val astm: ListBuffer[IMethod] = ListBuffer()
-      val istm: ListBuffer[IMethod] = ListBuffer()
-      val istf: ListBuffer[IField] = ListBuffer()
-      typeHierarchy getAllSupertypes(newType) foreach { st =>
-        istf ++= st.getFields
-        st.getMethods.foreach { stm =>
-          if(Flags.isAbstract(stm.getFlags) && !similarMethod(stm, astm)
-                                            && !similarMethod(stm, istm)
-                                            && !overridenByField(stm, istf))
-            astm += stm
-          else
-            istm += stm
+        for {
+          ctor <- ctors
+          pn = ctor.info.params map (pn => Name(pn.nameString))
+          pt = ctor.info.params map (param => Type(Name(param.info.toString))) //Type(Name(convertAndAdd(pt))))
+          nt = pn zip pt map (nt => Arg(nt._1, nt._2))
+          if (nt.nonEmpty)
+          ag = new Args(nt.init.toList)
+          pl = new ParamNames(pn.dropRight(1) :+ Name("null"))
+        } {
+          println(AuxCons(ag, ConsBody(pl)))
+          generatedConstructors += eval(AuxCons(ag, ConsBody(pl)))
         }
-      }
-
-      for {
-        stm <- astm
-         md =  Mods(methodModifiers(stm))
-         nm =  Name(NameTransformer.decode(elementName(stm).get))
-         tp =  stm.getTypeParameters map (tp => TypeParam(Name(tp.getElementName),TypeBounds()))
-         ts =  TypeParams(toOption(tp.toList)(tp.length > 0))
-         pn =  stm.getParameterNames map (pn => Name(pn))
-         pt =  stm.getParameterTypes map (pt => Type(Name(convertAndAdd(pt))))
-         nt =  pn zip pt map (nt => Arg(nt._1, nt._2))
-         ag =  new Args(nt.toList)
-          r =  Result(Type(Name(convertAndAdd(returnType(stm).get))), Value(returnValue(stm).get))
-      } generatedMethods += eval(Func(md,nm,ts,ag,r))
-
-      generatedMethods.map (s => ld+"  " +s+ld).toList.mkString
+        withDelimiterToString(generatedConstructors)
+      } getOrElse("")
     }
+
+    /** TODO: Generate stubs for abstract inherited methods */
+    override def unimplemetedMethods(newType: IType)(implicit lineDelimiter: String): String = ""
+
+    private def withDelimiterToString(seq: Seq[String])(implicit lineDelimiter: String): String =
+      seq.map(str => s"$lineDelimiter  $str$lineDelimiter").mkString
   }
 }
 
 object templates extends QualifiedNameSupport {
 
-  type LineDelimiter = String
-
   val DEFAULT_SUPER_TYPE = "scala.AnyRef"
 
-  def newLine(implicit ld: LineDelimiter): (String => String) =
-    (s: String) => s + ld
+  def newLine(implicit lineDelimiter: String): (String => String) =
+    (s: String) => s + lineDelimiter
 
-  def bodyStub(implicit ld: LineDelimiter) = " {"+ld+ld+"}"
+  def bodyStub(implicit lineDelimiter: String): String =
+    s" {$lineDelimiter$lineDelimiter}"
 
-  def newLines(implicit ld: LineDelimiter): (String => String) =
-    (s: String) => s + ld + ld
+  def newLines(implicit lineDelimiter: String): (String => String) =
+    (s: String) => s + lineDelimiter + lineDelimiter
 
-  def packageTemplate(opt: Option[String])(implicit ld: LineDelimiter): String = {
-    val g = (s: String) => "package " + s
+  def packageTemplate(opt: Option[String])(implicit lineDelimiter: String): String = {
+    val g = (s: String) => s"package $s"
     val f = newLines compose g
     opt map f getOrElse ""
   }
 
-  def commentTemplate(opt: Option[String])(implicit ld: LineDelimiter): String =
-    opt map newLine getOrElse("")
+  def commentTemplate(opt: Option[String])(implicit lineDelimiter: String): String =
+    opt map newLine getOrElse ""
 
-  def importsTemplate(xs: List[String])(implicit ld: LineDelimiter): String = {
-    val g = (s: String) => "import " + s
+  def importsTemplate(xs: List[String])(implicit lineDelimiter: String): String = {
+    val g = (s: String) => s"import $s"
     val f = g compose newLine compose removeParameters
-    xs map f reduceLeftOption(_ + _) map newLine getOrElse ""
+    xs map f reduceLeftOption (_ + _) map newLine getOrElse ""
   }
 
   private val explicitSuperTypes: List[String] => List[String] = {

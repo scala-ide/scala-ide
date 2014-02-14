@@ -52,6 +52,7 @@ final class ScalaPresentationCompilerProxy(project: ScalaProject) extends HasLog
    */
   def apply[U](op: ScalaPresentationCompiler => U): Option[U] = {
     def obtainPc(): ScalaPresentationCompiler = {
+      var unitsToReload: List[InteractiveCompilationUnit] = Nil
       pcLock.synchronized {
         /* If `restartNextTime` is set to `true`, either initializing or restarting the presentation compiler is enough to fulfill the contract.
          * This also guarantees that if a `askRestart` call happens while `initialize` or `restart` is executed, the presentation compiler will
@@ -63,10 +64,22 @@ final class ScalaPresentationCompilerProxy(project: ScalaProject) extends HasLog
         restartNextTime = false
 
         if (pc eq null) initialize()
-        else if (shouldRestart) restart()
-
-        pc
+        else if (shouldRestart) {
+          // Before restarting, keep track of the compilation units managed by the current presentation compiler
+          unitsToReload = Option(pc).map(_.compilationUnits).getOrElse(Nil)
+          logger.debug("Restarting presentation compiler. The following units will be reloaded: " + unitsToReload)
+          restart()
+        }
       }
+      /* If the pc was restarted, reload all units managed by the old pc.
+       * This is done outside of the synchronized block to prevent deadlocking (see #1002003).
+       *
+       * However, by doing so we are introducing a race-condition: the compilation units that were managed by the former presentation compiler
+       * may not be loaded in the new presentation compiler. This can happen if a concurrent presentation compiler restart request is handled
+       * before the current presentation compiler was given a change to load the `unitsToReload`.
+       */
+      if((pc ne null) && unitsToReload.nonEmpty) pc.askReload(unitsToReload).get
+      pc
     }
 
     Option(obtainPc()) flatMap (pc => Option(op(pc)))
@@ -87,16 +100,12 @@ final class ScalaPresentationCompilerProxy(project: ScalaProject) extends HasLog
     finally isInitializing = false
   }
 
-  /** Shutdown the presentation compiler, and force a re-initialization but asking to reconcile all
-    * compilation units that were serviced by the previous instance of the presentation compiler.
-    */
+  /** Shutdown the presentation compiler, and force a re-initialization. */
   private def restart(): Unit = pcLock.synchronized {
     val oldPc = pc
     shutdown()
     assert(pc eq null, "There must be a race-condition if the presentation compiler instance isn't `null` right after calling `shutdown`.")
-    val units = Option(oldPc).map(_.compilationUnits).getOrElse(Nil)
     initialize()
-    pc.askReload(units).get
   }
 
   /** Shutdown the presentation compiler '''without''' scheduling a reconcile for the opened files.
@@ -139,6 +148,7 @@ final class ScalaPresentationCompilerProxy(project: ScalaProject) extends HasLog
         ex.printStackTrace()
         if (project.underlying.isOpen)
           failedCompilerInitialization("error initializing Scala compiler")
+       shutdown()
         eclipseLog.error(ex)
         null
     }

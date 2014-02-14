@@ -105,28 +105,19 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
       addAnnotations(c)
     }
 
-    def addModule(m : ModuleDef) {
-      indexer.addClassDeclaration(
-        mapModifiers(m.mods),
-        packageName.toString.toCharArray,
-        m.name.append("$").toChars,
-        enclClassNames.reverse.toArray,
-        Array.empty,
-        getSuperNames(m.impl.parents),
-        Array.empty,
-        true
-      )
-
-      indexer.addClassDeclaration(
-        mapModifiers(m.mods),
-        packageName.toString.toCharArray,
-        m.name.toChars,
-        Array.empty,
-        Array.empty,
-        Array.empty,
-        Array.empty,
-        true
-      )
+    def addModule(m: ModuleDef) {
+      val moduleName = m.name
+      List(moduleName, moduleName.append('$')) foreach { name =>
+        indexer.addClassDeclaration(
+          mapModifiers(m.mods),
+          packageName.toString.toCharArray,
+          name.toChars,
+          enclClassNames.reverse.toArray,
+          Array.empty,
+          getSuperNames(m.impl.parents),
+          Array.empty,
+          true)
+      }
     }
 
     def addVal(v : ValDef) {

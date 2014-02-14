@@ -40,10 +40,8 @@ object ImportSupport {
 
   def getImports = {
 
-    def toBuilder(v: MutSet[String]): String = v.toList match {
-      case List(x) => x
-      case List(values @ _*) => values.toSet.mkString("{ ", ", ", " }")
-    }
+    def toBuilder(set: MutSet[String]): String =
+      if (set.size == 1) set.head else set.mkString("{ ", ", ", " }")
 
     def thatAreImplicit(key: String) = !ignoredKeys.contains(key)
 
@@ -53,7 +51,7 @@ object ImportSupport {
       mapValues(toBuilder).toList.map(concatKeyWithNames)
   }
 
-  protected def contents(implicit ld: String) =
+  protected def contents(implicit lineDelimiter: String) =
     templates.importsTemplate(getImports)
   }
 }

@@ -63,9 +63,6 @@ private[classifier] trait SymbolClassificationDebugger { self: SymbolClassificat
 //    }
     for (annotation <- sym.annotations) {
       print(pad(" @-" + annotation, 95))
-      val atp = annotation.atp
-      val sym = atp.selfsym
-      print(pad(" " + sym, 35))
       println()
     }
   }

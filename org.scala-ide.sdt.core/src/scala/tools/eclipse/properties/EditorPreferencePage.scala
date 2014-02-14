@@ -1,38 +1,97 @@
 package scala.tools.eclipse
 package properties
 
+import scala.collection.mutable.ListBuffer
+import scala.tools.eclipse.ScalaPlugin
+import scala.tools.eclipse.util.SWTUtils.CheckBox
+
 import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer
-import org.eclipse.jface.preference.FieldEditorPreferencePage
-import org.eclipse.jface.preference.BooleanFieldEditor
-import org.eclipse.ui.IWorkbenchPreferencePage
-import org.eclipse.ui.IWorkbench
-import EditorPreferencePage._
+import org.eclipse.jface.preference.ColorFieldEditor
+import org.eclipse.jface.preference.PreferencePage
 import org.eclipse.swt.SWT
-import org.eclipse.swt.widgets.Label
 import org.eclipse.swt.layout.GridData
+import org.eclipse.swt.layout.GridLayout
+import org.eclipse.swt.widgets.Composite
+import org.eclipse.swt.widgets.Control
+import org.eclipse.swt.widgets.Group
+import org.eclipse.ui.IWorkbench
+import org.eclipse.ui.IWorkbenchPreferencePage
 
-class EditorPreferencePage extends FieldEditorPreferencePage(FieldEditorPreferencePage.GRID) with IWorkbenchPreferencePage {
+import EditorPreferencePage._
 
-  setPreferenceStore(ScalaPlugin.plugin.getPreferenceStore)
+class EditorPreferencePage extends PreferencePage with IWorkbenchPreferencePage {
 
-  override def createFieldEditors() {
-    addField(new BooleanFieldEditor(P_ENABLE_SMART_BRACKETS, "Automatically surround selection with [brackets]", getFieldEditorParent))
-    addField(new BooleanFieldEditor(P_ENABLE_SMART_BRACES, "Automatically surround selection with {braces}", getFieldEditorParent))
-    addField(new BooleanFieldEditor(P_ENABLE_SMART_PARENS, "Automatically surround selection with (parenthesis)", getFieldEditorParent))
-    addField(new BooleanFieldEditor(P_ENABLE_SMART_QUOTES, "Automatically surround selection with \"quotes\"", getFieldEditorParent))
+  private val store = ScalaPlugin.prefStore
 
-    new Label(getFieldEditorParent, SWT.SEPARATOR | SWT.HORIZONTAL).setLayoutData(new GridData(GridData.FILL_HORIZONTAL))
-    addField(new BooleanFieldEditor(P_ENABLE_AUTO_CLOSING_BRACES, "Enable auto closing braces when editing an existing line", getFieldEditorParent))
-    addField(new BooleanFieldEditor(P_ENABLE_AUTO_CLOSING_COMMENTS, "Automatically close multi line comments and Scaladoc", getFieldEditorParent))
-    addField(new BooleanFieldEditor(P_ENABLE_AUTO_ESCAPE_LITERALS, "Automatically escape \" signs in string literals", getFieldEditorParent))
-    addField(new BooleanFieldEditor(P_ENABLE_AUTO_ESCAPE_SIGN, "Automatically escape \\ signs in string and character literals", getFieldEditorParent))
-    addField(new BooleanFieldEditor(P_ENABLE_AUTO_REMOVE_ESCAPED_SIGN, "Automatically remove complete escaped sign in\nstring and character literals", getFieldEditorParent))
+  private val preferencesToSave = ListBuffer[() => Unit]()
 
-    new Label(getFieldEditorParent, SWT.SEPARATOR | SWT.HORIZONTAL).setLayoutData(new GridData(GridData.FILL_HORIZONTAL))
-    addField(new BooleanFieldEditor(P_ENABLE_MARK_OCCURRENCES, "Mark Occurences of the selected element in the current file", getFieldEditorParent))
+  override def performOk(): Boolean = {
+    preferencesToSave foreach (_())
+    super.performOk()
   }
 
-  def init(workbench: IWorkbench) {}
+  override def init(workbench: IWorkbench): Unit = {}
+
+  override def createContents(parent: Composite): Control = {
+    setPreferenceStore(store)
+
+    val base = new Composite(parent, SWT.NONE)
+    base.setLayout(new GridLayout(1, true))
+    base.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true))
+
+    createSettingsGroup(base)
+    createIndentGuideGroup(base)
+
+    base
+  }
+
+  private def createSettingsGroup(base: Composite): Unit = {
+    val surround = group("Automatically surround selection", base)
+    checkBox(P_ENABLE_SMART_BRACKETS, "With [brackets]", surround)
+    checkBox(P_ENABLE_SMART_BRACES, "With {braces}", surround)
+    checkBox(P_ENABLE_SMART_PARENS, "With (parenthesis)", surround)
+    checkBox(P_ENABLE_SMART_QUOTES, "With \"quotes\"", surround)
+
+    val typing = group("Typing", base)
+    checkBox(P_ENABLE_AUTO_CLOSING_BRACES, "Enable auto closing braces when editing an existing line", typing)
+    checkBox(P_ENABLE_AUTO_CLOSING_COMMENTS, "Automatically close multi line comments and Scaladoc", typing)
+    checkBox(P_ENABLE_AUTO_ESCAPE_LITERALS, "Automatically escape \" signs in string literals", typing)
+    checkBox(P_ENABLE_AUTO_ESCAPE_SIGN, "Automatically escape \\ signs in string and character literals", typing)
+    checkBox(P_ENABLE_AUTO_REMOVE_ESCAPED_SIGN, "Automatically remove complete escaped sign in string and character literals", typing)
+
+    val highlighting = group("Highlighting", base)
+    checkBox(P_ENABLE_MARK_OCCURRENCES, "Mark Occurences of the selected element in the current file", highlighting)
+  }
+
+  private def group(text: String, parent: Composite): Group = {
+    val g = new Group(parent, SWT.NONE)
+    g.setText(text)
+    g.setLayout(new GridLayout(1, true))
+    g.setLayoutData(new GridData(SWT.FILL, SWT.DEFAULT, true, false))
+    g
+  }
+
+  private def checkBox(preference: String, labelText: String, parent: Composite): CheckBox = {
+    val b = new CheckBox(store, preference, labelText, parent)
+    preferencesToSave += { () => b.store() }
+    b
+  }
+
+  private def createIndentGuideGroup(base: Composite): Unit = {
+    val indentGuide = group("Indent Guide", base)
+    val enable = checkBox(INDENT_GUIDE_ENABLE, "Enable the indent guide", indentGuide)
+    val color = new Composite(indentGuide, SWT.NONE)
+    val c = new ColorFieldEditor(INDENT_GUIDE_COLOR, "Color:", color)
+
+    c.setPreferenceStore(store)
+    c.load()
+    preferencesToSave += { () => c.store() }
+
+    def enableControls(b: Boolean) = c.setEnabled(b, color)
+
+    enable += (_ => enableControls(enable.isChecked))
+    enableControls(enable.isChecked)
+  }
 
 }
 
@@ -51,6 +110,9 @@ object EditorPreferencePage {
   final val P_ENABLE_AUTO_REMOVE_ESCAPED_SIGN = BASE + "autoRemoveEscapedSign"
 
   final val P_ENABLE_MARK_OCCURRENCES = BASE + "markOccurences"
+
+  final val INDENT_GUIDE_ENABLE = BASE + "indentGuideEnable"
+  final val INDENT_GUIDE_COLOR = BASE + "indentGuideColor"
 }
 
 class EditorPreferenceInitializer extends AbstractPreferenceInitializer {
@@ -69,5 +131,8 @@ class EditorPreferenceInitializer extends AbstractPreferenceInitializer {
     store.setDefault(P_ENABLE_AUTO_REMOVE_ESCAPED_SIGN, false)
 
     store.setDefault(P_ENABLE_MARK_OCCURRENCES, false)
+
+    store.setDefault(INDENT_GUIDE_ENABLE, false)
+    store.setDefault(INDENT_GUIDE_COLOR, "72,72,72")
   }
 }

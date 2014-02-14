@@ -84,12 +84,13 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
    *  the loaded files managed by the presentation compiler.
    */
   override def scheduleReconcile(): Response[Unit] = {
-    // askReload first
-    // FIXME: Here we are calling a deprecated method (i.e., withPresentationCompiler) because the only way I see to fix
-    //        this without changing this method's signature is introducing a `NullResponse` object.
-    val res = scalaProject.withPresentationCompiler { compiler =>
+    val reloaded = scalaProject.presentationCompiler { compiler =>
       compiler.askReload(this, getContents)
-    } ()
+    } getOrElse {
+      val dummy = new Response[Unit]
+      dummy.set(())
+      dummy
+    }
 
     this.reconcile(
         ICompilationUnit.NO_AST,
@@ -97,7 +98,7 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
         null /* use primary owner */,
         null /* no progress monitor */);
 
-    res
+    reloaded
   }
 
   /* getProblems should be reserved for a Java context, @see getProblems */
@@ -106,6 +107,17 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
     val probs = currentProblems
     ReconciliationParticipantsExtensionPoint.runAfter(this, new NullProgressMonitor, workingCopyOwner)
     probs
+  }
+
+
+  override def reconcile(
+      astLevel : Int,
+      reconcileFlags : Int,
+      workingCopyOwner : WorkingCopyOwner,
+      monitor : IProgressMonitor) : org.eclipse.jdt.core.dom.CompilationUnit = {
+    /* This explicit call to super matters, presumably exercised
+      through AspectJ. See #1002016. */
+    super.reconcile(ICompilationUnit.NO_AST, reconcileFlags, workingCopyOwner, monitor)
   }
 
   override def makeConsistent(

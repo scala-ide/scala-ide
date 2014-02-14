@@ -277,7 +277,9 @@ trait ScalaCompilationUnit extends Openable
   }
 
   override def getImageDescriptor = {
-    val descriptor = Option(getCorrespondingResource) map { file =>
+    import scala.util.control.Exception
+
+    val descriptor = Exception.catching(classOf[JavaModelException]).opt(getCorrespondingResource) map { file =>
       import ScalaImages.SCALA_FILE
       import ScalaImages.EXCLUDED_SCALA_FILE
       val javaProject = JavaCore.create(scalaProject.underlying)
