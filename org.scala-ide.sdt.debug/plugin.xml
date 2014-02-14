@@ -80,4 +80,40 @@
             id="org.scala-ide.sdt.debug.socketListenConnector">
       </vmConnector>
    </extension>
+   
+   
+   <extension
+         point="org.eclipse.ui.editors">
+      <editor
+            name="Scala Editor"
+            default="true"
+            icon="icons/full/obj16/scu_obj.gif"
+            extensions="scala"
+            contributorClass="scala.tools.eclipse.actions.ScalaCompilationUnitEditorActionContributor"
+            class="scala.tools.eclipse.ScalaSourceFileEditor"
+            symbolicFontName="org.eclipse.jdt.ui.editors.textfont"
+            id="scala.tools.eclipse.ScalaSourceFileEditor">
+            <contentTypeBinding contentTypeId="scala.tools.eclipse.scalaSource"/>
+      </editor>
+      <editor
+            name="Scala Class File Viewer"
+            default="true"
+            icon="icons/full/obj16/sclassf_obj.gif"
+            contributorClass="org.eclipse.jdt.internal.ui.javaeditor.ClassFileEditorActionContributor"
+            class="scala.tools.eclipse.ScalaClassFileEditor"
+            symbolicFontName="org.eclipse.jdt.ui.editors.textfont"
+            id="scala.tools.eclipse.ScalaClassFileEditor">
+            <contentTypeBinding contentTypeId="scala.tools.eclipse.scalaClass"/>
+      </editor>
+   </extension>
+   
+   <extension point="org.eclipse.core.runtime.adapters">
+     <factory
+       class="scala.tools.eclipse.debug.command.ScalaRetargettableActionAdapterFactory"
+       adaptableType="scala.tools.eclipse.ScalaSourceFileEditor">
+       <adapter type="org.eclipse.debug.ui.actions.IRunToLineTarget"/>
+       <adapter type="org.eclipse.debug.ui.actions.IToggleBreakpointsTarget"/>
+     </factory>
+   </extension>
+   
 </plugin>

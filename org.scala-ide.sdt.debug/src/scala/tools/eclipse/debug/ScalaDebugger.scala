@@ -1,20 +1,20 @@
 package scala.tools.eclipse.debug
 
 import scala.tools.eclipse.ScalaPlugin
-
 import org.eclipse.debug.core.model.IDebugModelProvider
 import org.eclipse.debug.internal.ui.contexts.DebugContextManager
 import org.eclipse.debug.ui.contexts.DebugContextEvent
 import org.eclipse.debug.ui.contexts.IDebugContextListener
 import org.eclipse.jface.viewers.ISelection
 import org.eclipse.jface.viewers.IStructuredSelection
-
 import model.ScalaStackFrame
 import model.ScalaThread
+import org.eclipse.jdt.debug.core.IJavaDebugTarget
 
 object ScalaDebugger {
 
   val classIDebugModelProvider = classOf[IDebugModelProvider]
+  val classIJavaDebugTarget = classOf[IJavaDebugTarget]
 
   val modelProvider = new IDebugModelProvider {
     def getModelIdentifiers() = {
@@ -56,7 +56,8 @@ object ScalaDebugger {
     }
   }
 
-  /** `IDebugContextListener` is part of the Eclipse UI code, by extending it in a different
+  /**
+   * `IDebugContextListener` is part of the Eclipse UI code, by extending it in a different
    *  object, it will not be loaded as soon as `ScalaDebugger` is used.
    *  This allow to use `ScalaDebugger` even if the application is launched in `headless` mode, like while running tests.
    */

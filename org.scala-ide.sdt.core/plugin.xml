@@ -197,22 +197,6 @@
       </editorContribution>
    </extension>
 
-   <extension point="org.eclipse.core.runtime.adapters">
-     <factory
-       class="scala.tools.eclipse.ScalaRetargettableActionAdapterFactory"
-       adaptableType="scala.tools.eclipse.ScalaSourceFileEditor">
-       <adapter type="org.eclipse.debug.ui.actions.IRunToLineTarget"/>
-       <adapter type="org.eclipse.debug.ui.actions.IToggleBreakpointsTarget"/>
-     </factory>
-   </extension>
-   <extension point="org.eclipse.core.runtime.adapters">
-     <factory
-       class="scala.tools.eclipse.ScalaRetargettableActionAdapterFactory"
-       adaptableType="scala.tools.eclipse.ScalaClassFileEditor">
-       <adapter type="org.eclipse.debug.ui.actions.IRunToLineTarget"/>
-       <adapter type="org.eclipse.debug.ui.actions.IToggleBreakpointsTarget"/>
-     </factory>
-   </extension>
    <!-- end of extensions for breakpoints -->
    
 

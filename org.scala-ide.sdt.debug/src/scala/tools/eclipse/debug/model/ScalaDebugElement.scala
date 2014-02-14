@@ -18,6 +18,8 @@ import org.eclipse.core.runtime.Status
 import org.eclipse.core.runtime.IStatus
 import scala.util.control.Exception
 import scala.util.control.Exception.Catch
+import org.eclipse.jdt.debug.core.IJavaDebugTarget
+import scala.tools.eclipse.debug.command.RunToLineAdapter
 
 /**
  * Base class for debug elements in the Scala debug model
@@ -31,6 +33,8 @@ abstract class ScalaDebugElement(debugTarget: ScalaDebugTarget) extends DebugEle
     adapter match {
       case ScalaDebugger.classIDebugModelProvider =>
         modelProvider
+      case ScalaDebugger.classIJavaDebugTarget =>
+        new RunToLineAdapter
       case _ =>
         super.getAdapter(adapter)
     }
@@ -54,14 +58,14 @@ abstract class ScalaDebugElement(debugTarget: ScalaDebugTarget) extends DebugEle
     Exception.handling(classOf[RuntimeException]) by (targetRequestFailed(msg, _))
 
   /**
-    * Throws a new debug exception with a status code of `TARGET_REQUEST_FAILED`
-    * with the given underlying exception. If the underlying exception is not a JDI
-    * exception, the original exception is thrown.
-    *
-    * @param message Failure message
-    * @param e underlying exception that has occurred
-    * @throws DebugException The exception with a status code of `TARGET_REQUEST_FAILED`
-    */
+   * Throws a new debug exception with a status code of `TARGET_REQUEST_FAILED`
+   * with the given underlying exception. If the underlying exception is not a JDI
+   * exception, the original exception is thrown.
+   *
+   * @param message Failure message
+   * @param e underlying exception that has occurred
+   * @throws DebugException The exception with a status code of `TARGET_REQUEST_FAILED`
+   */
   private def targetRequestFailed(message: String, t: Throwable): Nothing = {
     if (t == null || t.getClass().getName().startsWith("com.sun.jdi") || t.isInstanceOf[TimeoutException])
       throw new DebugException(new Status(IStatus.ERROR, ScalaDebugPlugin.id, DebugException.TARGET_REQUEST_FAILED, message, t))
@@ -83,7 +87,8 @@ trait HasFieldValue {
   protected def getReferenceType(): ReferenceType
   protected def getJdiFieldValue(field: Field): Value
 
-  /** Return the value of the field with the given name.
+  /**
+   * Return the value of the field with the given name.
    *
    *  @throws IllegalArgumentException if the no field with the given name exists.
    *  @throws DebugException
@@ -103,11 +108,13 @@ trait HasMethodInvocation {
 
   protected[model] def classType(): ClassType
 
-  /** Invoke the given method.
+  /**
+   * Invoke the given method.
    */
   protected[model] def jdiInvokeMethod(method: Method, thread: ScalaThread, args: Value*): Value
 
-  /** Invoke the method with given name, using the given arguments.
+  /**
+   * Invoke the method with given name, using the given arguments.
    *
    *  @throws IllegalArgumentException if no method with given name exists, or more than one.
    *  @throws DebugException
@@ -127,7 +134,8 @@ trait HasMethodInvocation {
     }
   }
 
-  /** Invoke the method with given name and signature, using the given arguments.
+  /**
+   * Invoke the method with given name and signature, using the given arguments.
    *
    *  @throws IllegalArgumentException if no method with given name and signature exists.
    *  @throws DebugException
