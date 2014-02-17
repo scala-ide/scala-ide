@@ -976,160 +976,6 @@
 
   <!-- refactoring -->
 
-  <extension
-         point="org.eclipse.ui.actionSets">
-      <actionSet
-            label="Scala"
-            description="Scala Actions"
-            visible="false"
-            id="scala.tools.eclipse.refactoring.CodingActionSet">
-         <menu
-               id="scala.tools.eclipse.refactoring.refactoringMenu"
-               label="Refactor"
-               path="edit">
-            <separator name="scala.tools.eclipse.refactoring.refactoringGroup"/>
-            <separator name="scala.tools.eclipse.refactoring.quickfixGroup"/>
-            <separator name="scala.tools.eclipse.refactoring.methodSignatureGroup"/>
-         </menu>
-         <action
-               class="org.scalaide.refactoring.internal.method.SplitParameterListsAction"
-               definitionId="scala.tools.eclipse.refactoring.method.command.SplitParameterLists"
-               id="scala.tools.eclipse.refactoring.method.splitParameterListsAction"
-               label="Split parameter lists"
-               menubarPath="scala.tools.eclipse.refactoring.refactoringMenu/scala.tools.eclipse.refactoring.methodSignatureGroup"
-               tooltip="Split parameter lists">
-         </action>
-         <action
-               class="org.scalaide.refactoring.internal.method.MergeParameterListsAction"
-               definitionId="scala.tools.eclipse.refactoring.method.command.MergeParameterLists"
-               id="scala.tools.eclipse.refactoring.method.mergeParameterListsAction"
-               label="Merge parameter lists"
-               menubarPath="scala.tools.eclipse.refactoring.refactoringMenu/scala.tools.eclipse.refactoring.methodSignatureGroup"
-               tooltip="Merge parameter lists">
-         </action>
-         <action
-               class="org.scalaide.refactoring.internal.method.ChangeParameterOrderAction"
-               definitionId="scala.tools.eclipse.refactoring.method.command.ChangeParameterOrder"
-               id="scala.tools.eclipse.refactoring.method.changeParameterOrderAction"
-               label="Change parameter order"
-               menubarPath="scala.tools.eclipse.refactoring.refactoringMenu/scala.tools.eclipse.refactoring.methodSignatureGroup"
-               tooltip="Change parameter order">
-         </action>
-         <action
-               class="org.scalaide.refactoring.internal.MoveConstructorToCompanionObjectAction"
-               definitionId="scala.tools.eclipse.refactoring.command.MoveConstructorToCompanionObject"
-               id="scala.tools.eclipse.refactoring.moveConstructorToCompanionObjectAction"
-               label="Move constructor to companion object"
-               menubarPath="scala.tools.eclipse.refactoring.refactoringMenu/scala.tools.eclipse.refactoring.sourceGeneratorGroup"
-               tooltip="Move constructor to companion object">
-         </action>
-         <action
-               class="org.scalaide.refactoring.internal.ExtractTraitAction"
-               definitionId="scala.tools.eclipse.refactoring.command.ExtractTrait"
-               id="scala.tools.eclipse.refactoring.extractTraitAction"
-               label="Extract trait"
-               menubarPath="scala.tools.eclipse.refactoring.refactoringMenu/scala.tools.eclipse.refactoring.sourceGeneratorGroup"
-               tooltip="Extract trait">
-         </action>
-         <action
-               class="org.scalaide.refactoring.internal.move.MoveClassAction"
-               definitionId="scala.tools.eclipse.refactoring.command.MoveClass"
-               id="scala.tools.eclipse.refactoring.moveClassAction"
-               label="Move Class/Object/Trait"
-               menubarPath="scala.tools.eclipse.refactoring.refactoringMenu/scala.tools.eclipse.refactoring.sourceGeneratorGroup"
-               tooltip="Move Class/Object/Trait">
-            <!--<enablement>
-               <objectClass
-                     name="org.eclipse.jface.text.TextSelection">
-               </objectClass>
-            </enablement>-->
-         </action>
-         <action
-               class="org.scalaide.refactoring.internal.ExtractMethodAction"
-               definitionId="scala.tools.eclipse.refactoring.command.ExtractMethod"
-               id="scala.tools.eclipse.refactoring.extractMethodAction"
-               label="Extract Method"
-               menubarPath="scala.tools.eclipse.refactoring.refactoringMenu/scala.tools.eclipse.refactoring.sourceGeneratorGroup"
-               tooltip="Extract Method">
-            <enablement>
-               <objectClass
-                     name="org.eclipse.jface.text.TextSelection">
-               </objectClass>
-            </enablement>
-         </action>
-         <action
-               class="org.scalaide.refactoring.internal.ExtractLocalAction"
-               definitionId="scala.tools.eclipse.refactoring.command.ExtractLocal"
-               id="scala.tools.eclipse.refactoring.extractLocalAction"
-               label="Extract Local"
-               menubarPath="scala.tools.eclipse.refactoring.refactoringMenu/scala.tools.eclipse.refactoring.sourceGeneratorGroup"
-               tooltip="Extract Local">
-            <enablement>
-               <objectClass
-                     name="org.eclipse.jface.text.TextSelection">
-               </objectClass>
-            </enablement>
-         </action>
-           <action
-               class="org.scalaide.refactoring.internal.InlineLocalAction"
-               definitionId="scala.tools.eclipse.refactoring.command.InlineLocal"
-               id="scala.tools.eclipse.refactoring.inlineLocalAction"
-               label="Inline Local"
-               menubarPath="scala.tools.eclipse.refactoring.refactoringMenu/scala.tools.eclipse.refactoring.sourceGeneratorGroup"
-               tooltip="Inline Local">
-            <enablement>
-               <objectClass
-                     name="org.eclipse.jface.text.TextSelection">
-               </objectClass>
-            </enablement>
-         </action>
-           <action
-               class="org.scalaide.refactoring.internal.OrganizeImportsAction"
-               definitionId="scala.tools.eclipse.refactoring.command.OrganizeImports"
-               id="scala.tools.eclipse.refactoring.organizeImportsAction"
-               label="Organize Imports"
-               menubarPath="scala.tools.eclipse.refactoring.refactoringMenu/scala.tools.eclipse.refactoring.sourceGeneratorGroup"
-               tooltip="Organize Imports">
-         </action>
-         <action
-               class="org.scalaide.refactoring.internal.rename.RenameAction"
-               definitionId="scala.tools.eclipse.refactoring.command.Rename"
-               id="scala.tools.eclipse.refactoring.renameAction"
-               label="Rename"
-               menubarPath="scala.tools.eclipse.refactoring.refactoringMenu/scala.tools.eclipse.refactoring.sourceGeneratorGroup"
-               tooltip="Rename">
-            <enablement>
-               <objectClass
-                     name="org.eclipse.jface.text.TextSelection">
-               </objectClass>
-            </enablement>
-         </action>
-         <action
-               class="org.scalaide.refactoring.internal.ExpandCaseClassBindingAction"
-               definitionId="scala.tools.eclipse.refactoring.command.ExpandCaseClassBinding"
-               id="scala.tools.eclipse.refactoring.expandCaseClassBindingAction"
-               label="Expand Case Class Binding"
-               menubarPath="scala.tools.eclipse.refactoring.refactoringMenu/scala.tools.eclipse.refactoring.quickfixGroup"
-               tooltip="Expand Case Class Binding">
-            <enablement>
-               <objectClass
-                     name="org.eclipse.jface.text.TextSelection">
-               </objectClass>
-            </enablement>
-         </action>
-         <action
-               class="org.scalaide.ui.internal.actions.RunSelectionAction"
-               definitionId="scala.tools.eclipse.interpreter.RunSelection"
-               disabledIcon="icons/full/dtool16/run_interpreter.gif"
-               hoverIcon="icons/full/etool16/run_interpreter.gif"
-               icon="icons/full/etool16/run_interpreter.gif"
-               id="scala.tools.eclipse.interpreter.runSelectionAction"
-               label="Run Selection in Scala Interpreter"
-               toolbarPath="org.eclipse.debug.ui.launchActionSet/debug"
-               tooltip="Run Selection in Scala Interpreter">
-         </action>         
-     </actionSet>
-   </extension>
 
   <extension
       point="org.eclipse.ui.commands">
@@ -1141,58 +987,62 @@
          description="Method Signature Refactorings"
          id="scala.tools.eclipse.refactoring.commands.methodsignature"
          name="Method Signature Refactoring - Scala"/>
+   <category
+         id="org.scalaide.ui.menu"
+         name="Menu - Scala">
+   </category>
       <command
-         name="Refactor Quick Menu"
-         description="Shows the refactor quick menu"
-         categoryId="scala.tools.eclipse.refactoring.commands.refactoring"
-         id="scala.tools.eclipse.refactoring.commands.quickMenu"/>
+            categoryId="org.scalaide.ui.menu"
+            description="Shows the refactor quick menu"
+            id="org.scalaide.ui.menu.quickMenu"
+            name="Refactor Quick Menu"/>
       <command
          categoryId="scala.tools.eclipse.refactoring.commands.methodsignature"
-         id="scala.tools.eclipse.refactoring.method.command.SplitParameterLists"
+         id="org.scalaide.refactoring.SplitParameterLists"
          name="Split parameter lists" />
       <command
          categoryId="scala.tools.eclipse.refactoring.commands.methodsignature"
-         id="scala.tools.eclipse.refactoring.method.command.MergeParameterLists"
+         id="org.scalaide.refactoring.MergeParameterLists"
          name="Merge parameter lists" />
       <command
          categoryId="scala.tools.eclipse.refactoring.commands.methodsignature"
-         id="scala.tools.eclipse.refactoring.method.command.ChangeParameterOrder"
+         id="org.scalaide.refactoring.ChangeParameterOrder"
          name="Change parameter order" />
       <command
          categoryId="scala.tools.eclipse.refactoring.commands.refactoring"
-         id="scala.tools.eclipse.refactoring.command.MoveConstructorToCompanionObject"
+         id="org.scalaide.refactoring.MoveConstructorToCompanionObject"
          name="Move constructor to companion object" />
       <command
          categoryId="scala.tools.eclipse.refactoring.commands.refactoring"
-         id="scala.tools.eclipse.refactoring.command.ExtractTrait"
+         id="org.scalaide.refactoring.ExtractTrait"
          name="Extract Trait" />
       <command
          categoryId="scala.tools.eclipse.refactoring.commands.refactoring"
-         id="scala.tools.eclipse.refactoring.command.MoveClass"
+         id="org.scalaide.refactoring.MoveClass"
          name="Move Class/Object/Trait"/>
       <command
          categoryId="scala.tools.eclipse.refactoring.commands.refactoring"
-         id="scala.tools.eclipse.refactoring.command.ExtractMethod"
+         id="org.scalaide.refactoring.ExtractMethod"
          name="Extract Method"/>
       <command
          categoryId="scala.tools.eclipse.refactoring.commands.refactoring"
-         id="scala.tools.eclipse.refactoring.command.ExtractLocal"
+         id="org.scalaide.refactoring.ExtractLocal"
          name="Extract Local"/>
       <command
          categoryId="scala.tools.eclipse.refactoring.commands.refactoring"
-         id="scala.tools.eclipse.refactoring.command.InlineLocal"
+         id="org.scalaide.refactoring.InlineLocal"
          name="Inline Local"/>
       <command
          categoryId="scala.tools.eclipse.refactoring.commands.refactoring"
-         id="scala.tools.eclipse.refactoring.command.OrganizeImports"
+         id="org.scalaide.refactoring.OrganizeImports"
          name="Organize Imports"/>
       <command
          categoryId="scala.tools.eclipse.refactoring.commands.refactoring"
-         id="scala.tools.eclipse.refactoring.command.Rename"
+         id="org.scalaide.refactoring.Rename"
          name="Rename"/>
       <command
          categoryId="scala.tools.eclipse.refactoring.commands.refactoring"
-         id="scala.tools.eclipse.refactoring.command.ExpandCaseClassBinding"
+         id="org.scalaide.refactoring.ExpandCaseClassBinding"
          name="Expand Case Class Binding"/>
       <command
          categoryId="scala.tools.eclipse.category"
@@ -1228,27 +1078,27 @@
    <!-- Bindings to be replaced with Mac bindings like in the JDT (see http://dev.eclipse.org/viewcvs/viewvc.cgi/org.eclipse.jdt.ui/plugin.xml) -->
    <sequenceModifier find="M2+M3" replace="M1+M3" platforms="cocoa,carbon" />
    <key
-         commandId="scala.tools.eclipse.refactoring.commands.quickMenu"
+         commandId="org.scalaide.ui.menu.quickMenu"
          schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
          contextId="scala.tools.eclipse.scalaEditorScope"
          sequence="M2+M3+T"/> 
    <key
-   		 commandId="scala.tools.eclipse.refactoring.command.ExtractMethod"
+   		 commandId="org.scalaide.refactoring.ExtractMethod"
    		 schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
    		 contextId="scala.tools.eclipse.scalaEditorScope"
    		 sequence="M2+M3+M"/>
    <key
-   		 commandId="scala.tools.eclipse.refactoring.command.ExtractLocal"
+   		 commandId="org.scalaide.refactoring.ExtractLocal"
    		 schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
    		 contextId="scala.tools.eclipse.scalaEditorScope"
    		 sequence="M2+M3+L"/>
    <key
-   		 commandId="scala.tools.eclipse.refactoring.command.InlineLocal"
+   		 commandId="org.scalaide.refactoring.InlineLocal"
    		 schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
    		 contextId="scala.tools.eclipse.scalaEditorScope"
    		 sequence="M2+M3+I"/>
    <key
-   		 commandId="scala.tools.eclipse.refactoring.command.Rename"
+   		 commandId="org.scalaide.refactoring.Rename"
    		 schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
    		 contextId="scala.tools.eclipse.scalaEditorScope"
    		 sequence="M2+M3+R"/>
@@ -1265,7 +1115,7 @@
    </extension>
    <extension point="org.eclipse.ui.bindings"> <!-- Cross-platform bindings -->
    <key
-   		 commandId="scala.tools.eclipse.refactoring.command.OrganizeImports"
+   		 commandId="org.scalaide.refactoring.OrganizeImports"
    		 schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
    		 contextId="scala.tools.eclipse.scalaEditorScope"
    		 sequence="M1+M2+O"/>
@@ -1320,6 +1170,54 @@
     <handler
           class="org.scalaide.ui.internal.editor.decorators.markoccurrences.ToggleMarkOccurrencesHandler"
           commandId="org.scala-ide.sdt.core.toggleMarkOccurences">
+    </handler>
+    <handler
+          class="org.scalaide.refactoring.internal.ExpandCaseClassBinding"
+          commandId="org.scalaide.refactoring.ExpandCaseClassBinding">
+    </handler>
+    <handler
+          class="org.scalaide.refactoring.internal.method.ChangeParameterOrder"
+          commandId="org.scalaide.refactoring.ChangeParameterOrder">
+    </handler>
+    <handler
+          class="org.scalaide.refactoring.internal.method.MergeParameterLists"
+          commandId="org.scalaide.refactoring.MergeParameterLists">
+    </handler>
+    <handler
+          class="org.scalaide.refactoring.internal.method.SplitParameterLists"
+          commandId="org.scalaide.refactoring.SplitParameterLists">
+    </handler>
+    <handler
+          class="org.scalaide.refactoring.internal.rename.Rename"
+          commandId="org.scalaide.refactoring.Rename">
+    </handler>
+    <handler
+          class="org.scalaide.refactoring.internal.OrganizeImports"
+          commandId="org.scalaide.refactoring.OrganizeImports">
+    </handler>
+    <handler
+          class="org.scalaide.refactoring.internal.InlineLocal"
+          commandId="org.scalaide.refactoring.InlineLocal">
+    </handler>
+    <handler
+          class="org.scalaide.refactoring.internal.ExtractLocal"
+          commandId="org.scalaide.refactoring.ExtractLocal">
+    </handler>
+    <handler
+          class="org.scalaide.refactoring.internal.ExtractMethod"
+          commandId="org.scalaide.refactoring.ExtractMethod">
+    </handler>
+    <handler
+          class="org.scalaide.refactoring.internal.move.MoveClass"
+          commandId="org.scalaide.refactoring.MoveClass">
+    </handler>
+    <handler
+          class="org.scalaide.refactoring.internal.ExtractTrait"
+          commandId="org.scalaide.refactoring.ExtractTrait">
+    </handler>
+    <handler
+          class="org.scalaide.refactoring.internal.MoveConstructorToCompanionObject"
+          commandId="org.scalaide.refactoring.MoveConstructorToCompanionObject">
     </handler>
  </extension>
  <extension
@@ -1401,6 +1299,94 @@
              </with>
           </visibleWhen>
        </command>
+    </menuContribution>
+    <menuContribution
+          allPopups="false"
+          locationURI="menu:org.eclipse.ui.main.menu?after=edit">
+       <menu
+             id="org.scalaide.refactoring.menu"
+             label="Refactor">
+          <command
+                commandId="org.scalaide.refactoring.ExpandCaseClassBinding"
+                label="Expand Case Class Binding"
+                style="push"
+                tooltip="Expand Case Class Binding">
+          </command>
+          <separator
+                name="org.scalaide.refactoring.separator.methodSignatureGroup"
+                visible="true">
+          </separator>
+          <command
+                commandId="org.scalaide.refactoring.ChangeParameterOrder"
+                label="Change parameter order"
+                style="push"
+                tooltip="Change parameter order">
+          </command>
+          <command
+                commandId="org.scalaide.refactoring.MergeParameterLists"
+                label="Merge parameter lists"
+                style="push"
+                tooltip="Merge parameter lists">
+          </command>
+          <command
+                commandId="org.scalaide.refactoring.SplitParameterLists"
+                label="Split parameter lists"
+                style="push"
+                tooltip="Split parameter lists">
+          </command>
+          <separator
+                name="org.scalaide.refactoring.separator.sourceGeneratorGroup"
+                visible="true">
+          </separator>
+          <command
+                commandId="org.scalaide.refactoring.Rename"
+                label="Rename"
+                style="push"
+                tooltip="Rename">
+          </command>
+          <command
+                commandId="org.scalaide.refactoring.OrganizeImports"
+                label="Organize Imports"
+                style="push"
+                tooltip="Organize Imports">
+          </command>
+          <command
+                commandId="org.scalaide.refactoring.InlineLocal"
+                label="Inline Local"
+                style="push"
+                tooltip="Inline Local">
+          </command>
+          <command
+                commandId="org.scalaide.refactoring.ExtractLocal"
+                label="Extract Local"
+                style="push"
+                tooltip="Extract Local">
+          </command>
+          <command
+                commandId="org.scalaide.refactoring.ExtractMethod"
+                label="Extract Method"
+                style="push"
+                tooltip="Extract Method">
+          </command>
+          <command
+                commandId="org.scalaide.refactoring.MoveClass"
+                label="Move Class/Object/Trait"
+                style="push"
+                tooltip="Move Class/Object/Trait">
+          </command>
+          <command
+                commandId="org.scalaide.refactoring.ExtractTrait"
+                label="Extract Trait"
+                style="push"
+                tooltip="Extract Trait">
+          </command>
+          <command
+                commandId="org.scalaide.refactoring.MoveConstructorToCompanionObject"
+                label="Move constructor to companion object"
+                style="push"
+                tooltip="Move constructor to companion object">
+          </command>
+       </menu>
     </menuContribution>
  </extension>  
   
