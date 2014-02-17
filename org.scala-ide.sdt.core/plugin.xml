@@ -772,6 +772,9 @@
      <initializer
            class="org.scalaide.ui.internal.preferences.EditorPreferenceInitializer">
      </initializer>
+     <initializer
+           class="org.scalaide.ui.internal.migration.MigrationPreferenceInitializer">
+     </initializer>
   </extension>
 
   <extension point="org.eclipse.core.expressions.propertyTesters">
