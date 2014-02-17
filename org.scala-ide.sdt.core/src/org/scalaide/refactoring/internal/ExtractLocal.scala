@@ -3,10 +3,9 @@ package org.scalaide.refactoring.internal
 import scala.tools.refactoring.common.TextChange
 import scala.tools.refactoring.implementations
 
-import org.eclipse.jface.action.IAction
 import org.eclipse.ui.PlatformUI
-
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
+import org.scalaide.util.internal.eclipse.EditorUtils
 
 /**
  * From a selected expression, the Extract Local refactoring will create a new
@@ -38,9 +37,9 @@ class ExtractLocal extends RefactoringExecutor {
      * names in the generated change.
      */
     def doInlineExtraction(change: TextChange, name: String) {
-      EditorHelpers.doWithCurrentEditor { editor =>
+      EditorUtils.doWithCurrentEditor { editor =>
 
-        EditorHelpers.applyRefactoringChangeToEditor(change, editor)
+        EditorUtils.applyRefactoringChangeToEditor(change, editor)
 
         val occurrences = {
           val firstOccurrence  = change.text.indexOf(name)
@@ -48,7 +47,7 @@ class ExtractLocal extends RefactoringExecutor {
           List(firstOccurrence, secondOccurrence) map (o => (change.from + o, name.length))
         }
 
-        EditorHelpers.enterLinkedModeUi(occurrences, selectFirst = true)
+        EditorUtils.enterLinkedModeUi(occurrences, selectFirst = true)
       }
     }
 
