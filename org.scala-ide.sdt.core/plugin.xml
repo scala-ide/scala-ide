@@ -774,6 +774,13 @@
            namespace="scala.tools.eclipse.launching"
            properties="hasMain,canLaunchAsJUnit"
            type="org.eclipse.core.runtime.IAdaptable"/>
+     <propertyTester
+           class="org.scalaide.ui.internal.editor.TextSelectionTester"
+           id="org.scalaide.ui.internal.editor.TextSelectionTester"
+           namespace="org.scalaide.ui.internal.editor"
+           properties="nonEmpty"
+           type="org.eclipse.jface.text.ITextSelection">
+     </propertyTester>
   </extension>
 
   <extension point="org.eclipse.debug.ui.launchShortcuts">
@@ -1201,10 +1208,28 @@
     <handler
           class="org.scalaide.refactoring.internal.ExtractLocal"
           commandId="org.scalaide.refactoring.ExtractLocal">
+       <enabledWhen>
+          <with
+                variable="selection">
+             <test
+                   property="org.scalaide.ui.internal.editor.nonEmpty"
+                   value="true">
+             </test>
+          </with>
+       </enabledWhen>
     </handler>
     <handler
           class="org.scalaide.refactoring.internal.ExtractMethod"
           commandId="org.scalaide.refactoring.ExtractMethod">
+       <enabledWhen>
+          <with
+                variable="selection">
+             <test
+                   property="org.scalaide.ui.internal.editor.nonEmpty"
+                   value="true">
+             </test>
+          </with>
+       </enabledWhen>
     </handler>
     <handler
           class="org.scalaide.refactoring.internal.move.MoveClass"
