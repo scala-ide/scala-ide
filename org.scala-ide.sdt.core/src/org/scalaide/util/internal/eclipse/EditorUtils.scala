@@ -13,7 +13,7 @@ import org.eclipse.ui.texteditor.ITextEditor
 import org.scalaide.core.compiler.InteractiveCompilationUnit
 import org.scalaide.ui.internal.editor.InteractiveCompilationUnitEditor
 
-// FIXME: This should be merged with merged with [[scala.tools.eclipse.refactoring.EditorHelpers]]
+// FIXME: This should be merged with [[org.scalaide.refactoring.internal.EditorHelpers]]
 object EditorUtils {
 
   def openEditorAndApply[T](element: IJavaElement)(editor: IEditorPart => T): T =

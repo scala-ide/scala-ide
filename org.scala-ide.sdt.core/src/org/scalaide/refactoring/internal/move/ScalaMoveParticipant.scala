@@ -45,8 +45,8 @@ class ScalaMoveParticipant extends MoveParticipant {
         ScalaSourceFile.createFromPath(resourceToMove.getFullPath.toOSString) map { scalaSourceFile =>
 
           val moveRefactoring = {
-            val action = new MoveClassAction
-            new action.MoveClassScalaIdeRefactoring(/*selection is unimportant: */ 0, 0, scalaSourceFile)
+            val refactoring = new MoveClass
+            new refactoring.MoveClassScalaIdeRefactoring(/*selection is unimportant: */ 0, 0, scalaSourceFile)
           }
 
           var initialConditions: Option[RefactoringStatus] = None

@@ -1,36 +1,31 @@
 package org.scalaide.refactoring.internal
 package rename
 
+import scala.tools.refactoring.analysis.GlobalIndexes
+import scala.tools.refactoring.analysis.NameValidation
+import scala.tools.refactoring.implementations
+
 import org.eclipse.core.resources.IFile
 import org.eclipse.core.runtime.IProgressMonitor
-import org.eclipse.ltk.core.refactoring.resource.RenameResourceChange
 import org.eclipse.ltk.core.refactoring.RefactoringStatus
+import org.eclipse.ltk.core.refactoring.resource.RenameResourceChange
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
-import org.scalaide.refactoring.internal.ui._
-import scala.reflect.internal.util.SourceFile
-import scala.tools.refactoring.analysis.GlobalIndexes
-import scala.tools.refactoring.analysis.Indexes
-import scala.tools.refactoring.analysis.NameValidation
-import scala.tools.refactoring.common.ConsoleTracing
-import scala.tools.refactoring.common.InteractiveScalaCompiler
-import scala.tools.refactoring.common.Selections
-import scala.tools.refactoring.implementations.Rename
-import scala.tools.refactoring.Refactoring
+import org.scalaide.refactoring.internal.FullProjectIndex
+import org.scalaide.refactoring.internal.RefactoringExecutorWithWizard
+import org.scalaide.refactoring.internal.ScalaIdeRefactoring
+import org.scalaide.refactoring.internal.ui.NewNameWizardPage
 
 /**
- * Renames using a wizard and a change preview. This action is used
- * for all global rename refactorings and also from the RenameParticipant.
+ * This refactoring is used for all global rename refactorings and also from
+ * the RenameParticipant.
  *
  * When a class is renamed that has the same name as the source file,
  * the file is renamed too.
  */
-class GlobalRenameAction extends RefactoringActionWithWizard {
+class GlobalRename extends RefactoringExecutorWithWizard {
 
   def createRefactoring(start: Int, end: Int, file: ScalaSourceFile) = new RenameScalaIdeRefactoring(start, end, file)
 
-  /**
-   * The actual refactoring instance that is used by the RefactoringAction.
-   */
   class RenameScalaIdeRefactoring(start: Int, end: Int, file: ScalaSourceFile)
     extends ScalaIdeRefactoring("Rename", file, start, end) with FullProjectIndex {
 
@@ -41,7 +36,7 @@ class GlobalRenameAction extends RefactoringActionWithWizard {
     def refactoringParameters = name
 
     val refactoring = withCompiler { compiler =>
-      new Rename with GlobalIndexes with NameValidation {
+      new implementations.Rename with GlobalIndexes with NameValidation {
         val global = compiler
 
         /* The initial index is empty, it will be filled during the initialization
@@ -56,9 +51,6 @@ class GlobalRenameAction extends RefactoringActionWithWizard {
      */
     var cleanup = () => ()
 
-    /* (non-Javadoc)
-     * @see scala.tools.eclipse.refactoring.ScalaIdeRefactoring#checkInitialConditions(org.eclipse.core.runtime.IProgressMonitor)
-     */
     override def checkInitialConditions(pm: IProgressMonitor): RefactoringStatus = {
 
       val status = super.checkInitialConditions(pm)

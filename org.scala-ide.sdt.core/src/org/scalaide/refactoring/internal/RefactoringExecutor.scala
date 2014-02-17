@@ -15,10 +15,10 @@ import org.scalaide.core.internal.jdt.model.ScalaSourceFile
  * Each concrete refactoring action needs to implement the abstract
  * `createRefactoring` method which instantiates a ScalaIdeRefactoring.
  *
- * There are two important subclasses called [[RefactoringActionWithWizard]] and
- * [[RefactoringActionWithoutWizard]] that can be used instead of this class.
+ * There are two important subclasses called [[RefactoringExecutorWithWizard]] and
+ * [[RefactoringExecutorWithoutWizard]] that can be used instead of this class.
  */
-trait RefactoringAction extends ActionAdapter {
+trait RefactoringExecutor extends RefactoringHandler {
 
   /**
    * This factory method needs to be implemented by subclasses to

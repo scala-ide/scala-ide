@@ -1,7 +1,7 @@
 package org.scalaide.core.internal.quickfix
 
-import org.scalaide.refactoring.internal.ExtractMethodAction
+import org.scalaide.refactoring.internal.ExtractMethod
 
 object ExtractMethodProposal
-  extends ProposalRefactoringActionAdapter(
-      new ExtractMethodAction, "Extract method")
+  extends ProposalRefactoringHandlerAdapter(
+      new ExtractMethod, "Extract method")

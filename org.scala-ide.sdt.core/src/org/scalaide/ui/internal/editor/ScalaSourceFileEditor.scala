@@ -1,20 +1,10 @@
 package org.scalaide.ui.internal.editor
 
 import java.util.ResourceBundle
+
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.SynchronizedBuffer
-import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
-import org.scalaide.core.internal.decorators.markoccurrences.Occurrences
-import org.scalaide.core.internal.decorators.markoccurrences.ScalaOccurrencesFinder
-import org.scalaide.ui.internal.preferences.EditorPreferencePage
-import org.scalaide.ui.internal.editor.decorators.semantichighlighting.TextPresentationHighlighter
-import org.scalaide.ui.internal.editor.decorators.semantichighlighting.TextPresentationEditorHighlighter
-import org.scalaide.util.internal.ui.DisplayThread
-import org.scalaide.ui.internal.editor.autoedits.SurroundSelectionStrategy
-import org.scalaide.util.internal.eclipse.EclipseUtils
-import org.scalaide.util.internal.eclipse.EditorUtils
-import org.scalaide.util.internal.eclipse.RichAnnotationModel.RichModel
-import org.scalaide.util.internal.Utils
+
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.core.runtime.Status
 import org.eclipse.core.runtime.jobs.Job
@@ -41,7 +31,6 @@ import org.eclipse.jface.text.Position
 import org.eclipse.jface.text.information.InformationPresenter
 import org.eclipse.jface.text.source.Annotation
 import org.eclipse.jface.text.source.IAnnotationModel
-import org.eclipse.jface.text.source.SourceViewerConfiguration
 import org.eclipse.jface.util.PropertyChangeEvent
 import org.eclipse.jface.viewers.ISelection
 import org.eclipse.swt.widgets.Shell
@@ -52,10 +41,25 @@ import org.eclipse.ui.texteditor.IAbstractTextEditorHelpContextIds
 import org.eclipse.ui.texteditor.ITextEditorActionConstants
 import org.eclipse.ui.texteditor.IUpdate
 import org.eclipse.ui.texteditor.TextOperationAction
-import org.scalaide.ui.internal.actions
 import org.scalaide.core.ScalaPlugin
-import org.scalaide.refactoring
-import org.eclipse.swt.SWT
+import org.scalaide.core.internal.decorators.markoccurrences.Occurrences
+import org.scalaide.core.internal.decorators.markoccurrences.ScalaOccurrencesFinder
+import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
+import org.scalaide.refactoring.internal.OrganizeImports
+import org.scalaide.refactoring.internal.RefactoringHandler
+import org.scalaide.refactoring.internal.RefactoringMenu
+import org.scalaide.refactoring.internal.source.GenerateHashcodeAndEquals
+import org.scalaide.refactoring.internal.source.IntroduceProductNTrait
+import org.scalaide.ui.internal.actions
+import org.scalaide.ui.internal.editor.autoedits.SurroundSelectionStrategy
+import org.scalaide.ui.internal.editor.decorators.semantichighlighting.TextPresentationEditorHighlighter
+import org.scalaide.ui.internal.editor.decorators.semantichighlighting.TextPresentationHighlighter
+import org.scalaide.ui.internal.preferences.EditorPreferencePage
+import org.scalaide.util.internal.Utils
+import org.scalaide.util.internal.eclipse.EclipseUtils
+import org.scalaide.util.internal.eclipse.EditorUtils
+import org.scalaide.util.internal.eclipse.RichAnnotationModel.RichModel
+import org.scalaide.util.internal.ui.DisplayThread
 
 
 class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationUnitEditor { self =>
@@ -257,30 +261,30 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationU
 
       val groups = groupMenuItemsByGroupId(mm.getItems)
 
-      // these two contributions won't work on Scala files, so we remove them
+      // these contributions won't work on Scala files, so we remove them
       val blacklist = List("codeGroup", "importGroup", "generateGroup", "externalizeGroup")
       blacklist.flatMap(groups.get).flatten.foreach(mm.remove)
 
+      def action(h: RefactoringHandler, text: String) = new Action {
+        setText(text)
+        override def run(): Unit = h.perform()
+      }
+
       // and provide our own organize imports instead
-      mm.appendToGroup("importGroup", new refactoring.internal.OrganizeImportsAction { setText("Organize Imports") })
+      mm.appendToGroup("importGroup", action(new OrganizeImports, "Organize Imports"))
 
       // add GenerateHashcodeAndEquals and IntroductProductN source generators
-      mm.appendToGroup("generateGroup", new refactoring.internal.source.GenerateHashcodeAndEqualsAction {
-        setText("Generate hashCode() and equals()...")
-      })
-      mm.appendToGroup("generateGroup", new refactoring.internal.source.IntroduceProductNTraitAction {
-        setText("Introduce ProductN trait...")
-      })
-
+      mm.appendToGroup("generateGroup", action(new GenerateHashcodeAndEquals, "Generate hashCode() and equals()..."))
+      mm.appendToGroup("generateGroup", action(new IntroduceProductNTrait, "Introduce ProductN trait..."))
     }
 
-    refactoring.internal.RefactoringMenu.fillContextMenu(menu, this)
+    RefactoringMenu.fillContextMenu(menu, this)
   }
 
   override def createPartControl(parent: org.eclipse.swt.widgets.Composite) {
     super.createPartControl(parent)
     occurrencesFinder = new ScalaOccurrencesFinder(getInteractiveCompilationUnit)
-    refactoring.internal.RefactoringMenu.fillQuickMenu(this)
+    RefactoringMenu.fillQuickMenu(this)
 
     getSourceViewer match {
       case sourceViewer: ITextViewerExtension =>

@@ -1,7 +1,7 @@
 package org.scalaide.core.internal.quickfix
 
-import org.scalaide.refactoring.internal.ExpandCaseClassBindingAction
+import org.scalaide.refactoring.internal.ExpandCaseClassBinding
 
 object ExpandCaseClassBindingProposal
-  extends ProposalRefactoringActionAdapter(
-      new ExpandCaseClassBindingAction, "Expand case class binding")
+  extends ProposalRefactoringHandlerAdapter(
+      new ExpandCaseClassBinding, "Expand case class binding")

@@ -26,58 +26,52 @@ import org.eclipse.ui.part.EditorPart
  */
 protected[scalaide] object RefactoringMenu {
 
-  private object Id extends Enumeration {
-    val QuickMenu = Value("scala.tools.eclipse.refactoring.commands.quickMenu")
-    val ContextMenu = Value("org.eclipse.jdt.ui.refactoring.menu")
-    val CommandsCategory = Value("scala.tools.eclipse.refactoring.commands.refactoring")
-    val CommandsMethodSignatureCategory = Value("scala.tools.eclipse.refactoring.commands.methodsignature")
-
-    type Id = Value
+  private object Id {
+    val QuickMenu = "org.scalaide.ui.menu.quickMenu"
+    val ContextMenu = "org.eclipse.jdt.ui.refactoring.menu"
+    val CommandsCategory = "org.scalaide.ui.menu.refactoring"
+    val CommandsMethodSignatureCategory = "org.scalaide.ui.menu.refactoring.methodsignature"
   }
 
   def fillContextMenu(menu: IMenuManager, editor: EditorPart): Unit = {
-    val refactorSubmenu = Option(menu.findMenuUsingPath(Id.ContextMenu.toString()))
+    val refactorSubmenu = Option(menu.findMenuUsingPath(Id.ContextMenu))
     /* Add actions in a listener to refill every time RefactorActionGroup's listener empties it for us: */
     refactorSubmenu foreach {
       _.addMenuListener(new IMenuListener() {
-        def menuAboutToShow(menu: IMenuManager): Unit = fillFromPluginXml(menu, editor, true)
+        def menuAboutToShow(menu: IMenuManager): Unit = fillFromPluginXml(menu, editor)
       })
     }
   }
 
   def fillQuickMenu(editor: JavaEditor): Unit = {
     val handler = new JDTQuickMenuCreator(editor) {
-      protected def fillMenu(menu: IMenuManager): Unit = fillFromPluginXml(menu, editor, false)
+      protected def fillMenu(menu: IMenuManager): Unit = fillFromPluginXml(menu, editor)
     }.createHandler
-    /* Activating our handler here enables the binding specified in plugin.xml, but clears the
-     * binding for the context submenu, so the binding does not show up in the context menu. To
-     * show the binding to the user, we add the quick menu command to the context submenu, but
-     * not to the quick menu (see fillFromPluginXml below). */
-    handlerService(editor).activateHandler(Id.QuickMenu.toString(), handler)
+
+    handlerService(editor).activateHandler(Id.QuickMenu, handler)
   }
 
-  private def fillFromPluginXml(menu: IMenuManager, editor: EditorPart, all: Boolean): Unit = {
+  private def fillFromPluginXml(menu: IMenuManager, editor: EditorPart): Unit = {
 
     menu.removeAll
 
     val service = commandService(editor)
     val categories = {
-      val refactoringCategory = service.getCategory(Id.CommandsCategory.toString())
-      val methodSignatureCategory = service.getCategory(Id.CommandsMethodSignatureCategory.toString())
+      val refactoringCategory = service.getCategory(Id.CommandsCategory)
+      val methodSignatureCategory = service.getCategory(Id.CommandsMethodSignatureCategory)
       List(refactoringCategory, methodSignatureCategory)
     }
+
+    val refactoringCommandsDefinedInPluginXml =
+      service.getDefinedCommands filter {
+        command => categories contains command.getCategory
+      }
 
     for(category <- categories)
       menu.add(new Separator(category.getId))
 
     for (command <- refactoringCommandsDefinedInPluginXml)
       menu.appendToGroup(command.getCategory.getId, wrapped(command))
-
-    def refactoringCommandsDefinedInPluginXml = {
-      val refactoringCommands = service.getDefinedCommands.filter((command: Command) =>
-        (categories contains command.getCategory) && (all || command.getId != Id.QuickMenu.toString))
-      refactoringCommands
-    }
 
     def wrapped(command: Command) = new Action {
       setActionDefinitionId(command.getId) // adds the key binding defined for command in plugin.xml

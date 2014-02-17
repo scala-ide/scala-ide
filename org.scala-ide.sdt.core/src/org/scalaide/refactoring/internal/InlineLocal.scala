@@ -2,7 +2,7 @@ package org.scalaide.refactoring.internal
 
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import scala.tools.refactoring.analysis.GlobalIndexes
-import scala.tools.refactoring.implementations.InlineLocal
+import scala.tools.refactoring.implementations
 
 /**
  * The Inline Local -- also known as Inline Temp -- refactoring is the dual to Extract Local.
@@ -11,7 +11,7 @@ import scala.tools.refactoring.implementations.InlineLocal
  *
  * The implementation does not show a wizard but directly applies the changes (ActionWithNoWizard trait).
  */
-class InlineLocalAction extends RefactoringAction with RefactoringActionWithoutWizard {
+class InlineLocal extends RefactoringExecutor with RefactoringExecutorWithoutWizard {
 
   def createRefactoring(selectionStart: Int, selectionEnd: Int, file: ScalaSourceFile) =
     new InlineLocalScalaIdeRefactoring(selectionStart, selectionEnd, file)
@@ -19,7 +19,7 @@ class InlineLocalAction extends RefactoringAction with RefactoringActionWithoutW
   class InlineLocalScalaIdeRefactoring(start: Int, end: Int, file: ScalaSourceFile)
       extends ScalaIdeRefactoring("Inline Local", file, start, end) {
 
-    val refactoring = file.withSourceFile((sourceFile, compiler) => new InlineLocal with GlobalIndexes {
+    val refactoring = file.withSourceFile((sourceFile, compiler) => new implementations.InlineLocal with GlobalIndexes {
       val global = compiler
       val index = {
         val tree = askLoadedAndTypedTreeForFile(sourceFile).left.get
