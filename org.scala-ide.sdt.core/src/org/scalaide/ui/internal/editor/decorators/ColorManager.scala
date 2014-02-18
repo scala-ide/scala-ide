@@ -1,11 +1,11 @@
-package org.scalaide.ui.internal.editor.decorators.implicits
+package org.scalaide.ui.internal.editor.decorators
 
 import org.eclipse.swt.graphics.Color
 import org.eclipse.swt.graphics.RGB
 import org.eclipse.swt.widgets.Display
 import scala.collection.mutable
 
-private[implicits] class ColorManager private () {
+private[decorators] class ColorManager private () {
 
   private val colorTable = mutable.Map.empty[RGB, Color]
 
@@ -18,6 +18,6 @@ private[implicits] class ColorManager private () {
 
 }
 
-private[implicits] object ColorManager {
+private[decorators] object ColorManager {
   lazy val colorManager: ColorManager = new ColorManager
 }

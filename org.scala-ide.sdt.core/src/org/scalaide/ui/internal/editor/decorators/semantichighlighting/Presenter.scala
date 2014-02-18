@@ -1,8 +1,5 @@
 package org.scalaide.ui.internal.editor.decorators.semantichighlighting
 
-import org.scalaide.logging.HasLogger
-import org.scalaide.core.internal.decorators.semantichighlighting.classifier.SymbolClassification
-import org.scalaide.util.internal.ui.UIThread
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.core.runtime.IStatus
 import org.eclipse.core.runtime.Status
@@ -13,8 +10,12 @@ import org.eclipse.jface.text.IDocumentListener
 import org.eclipse.jface.text.IPositionUpdater
 import org.eclipse.jface.text.IRegion
 import org.eclipse.jface.text.ITextInputListener
+import org.scalaide.core.internal.decorators.semantichighlighting.Position
+import org.scalaide.core.internal.decorators.semantichighlighting.PositionsTracker
+import org.scalaide.core.internal.decorators.semantichighlighting.classifier.SymbolClassification
+import org.scalaide.logging.HasLogger
 import org.scalaide.ui.internal.editor.InteractiveCompilationUnitEditor
-import org.scalaide.core.internal.decorators.semantichighlighting.{ PositionsTracker, Position }
+import org.scalaide.util.internal.ui.UIThread
 
 /** This class is responsible of coordinating the correct initialization of the different components
   * needed to perform semantic highlighting in an editor.

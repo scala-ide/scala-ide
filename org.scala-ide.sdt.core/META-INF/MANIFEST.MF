@@ -118,6 +118,7 @@ Export-Package:
  org.scalaide.ui.internal.editor,
  org.scalaide.ui.internal.editor.autoedits,
  org.scalaide.ui.internal.editor.decorators,
+ org.scalaide.ui.internal.editor.decorators.custom,
  org.scalaide.ui.internal.editor.decorators.implicits,
  org.scalaide.ui.internal.editor.decorators.markoccurrences,
  org.scalaide.ui.internal.editor.decorators.semantichighlighting,
