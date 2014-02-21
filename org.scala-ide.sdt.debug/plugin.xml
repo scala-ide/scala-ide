@@ -57,9 +57,9 @@
    <extension
          point="org.eclipse.ui.preferencePages">
       <page
-            category="org.scala-ide.sdt.core.preferences"
+            category="org.scalaide.ui.preferences"
             class="org.scalaide.debug.internal.preferences.DebuggerPreferences"
-            id="org.scala-ide.sdt.debug.preferences"
+            id="org.scalaide.ui.preferences.debug"
             name="Debug">
       </page>
    </extension>

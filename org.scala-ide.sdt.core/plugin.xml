@@ -7,47 +7,59 @@
          point="org.eclipse.ui.propertyPages">
       <page
             class="org.scalaide.ui.internal.preferences.CompilerSettings"
-            id="org.scala-ide.sdt.core.properties.compilerPropertyPage"
+            id="org.scalaide.ui.preferences.compiler"
             name="Scala Compiler">
          <filter
                name="nature"
-               value="org.scala-ide.sdt.core.scalanature"/>
+               value="org.scala-ide.sdt.core.scalanature">
+         </filter>
          <enabledWhen>
-         <or> <instanceof value="org.eclipse.jdt.core.IJavaProject"/>
-              <instanceof value="org.eclipse.core.resources.IProject"/>
-         </or>
+            <or>
+               <instanceof
+                     value="org.eclipse.jdt.core.IJavaProject">
+               </instanceof>
+               <instanceof
+                     value="org.eclipse.core.resources.IProject">
+               </instanceof>
+            </or>
          </enabledWhen>
       </page>
-   </extension>
-   <extension
-         point="org.eclipse.ui.propertyPages">
       <page
             class="org.scalaide.ui.internal.preferences.FormatterPreferencePage"
-            id="scala.tools.eclipse.formatter.FormatterPropertyPage"
+            id="org.scalaide.ui.preferences.editor.formatter"
             name="Scala Formatter">
          <filter
                name="nature"
-               value="org.scala-ide.sdt.core.scalanature"/>
+               value="org.scala-ide.sdt.core.scalanature">
+         </filter>
          <enabledWhen>
-         <or> <instanceof value="org.eclipse.jdt.core.IJavaProject"/>
-              <instanceof value="org.eclipse.core.resources.IProject"/>
-         </or>
+            <or>
+               <instanceof
+                     value="org.eclipse.jdt.core.IJavaProject">
+               </instanceof>
+               <instanceof
+                     value="org.eclipse.core.resources.IProject">
+               </instanceof>
+            </or>
          </enabledWhen>
       </page>
-   </extension>
-      <extension
-         point="org.eclipse.ui.propertyPages">
       <page
             class="org.scalaide.ui.internal.preferences.OrganizeImportsPreferencesPage"
-            id="scala.tools.eclipse.properties.OrganizeImportsPreferencesPage"
+            id="org.scalaide.ui.preferences.editor.organizeImports"
             name="Scala Organize Imports">
          <filter
                name="nature"
-               value="org.scala-ide.sdt.core.scalanature"/>
+               value="org.scala-ide.sdt.core.scalanature">
+         </filter>
          <enabledWhen>
-         <or> <instanceof value="org.eclipse.jdt.core.IJavaProject"/>
-              <instanceof value="org.eclipse.core.resources.IProject"/>
-         </or>
+            <or>
+               <instanceof
+                     value="org.eclipse.jdt.core.IJavaProject">
+               </instanceof>
+               <instanceof
+                     value="org.eclipse.core.resources.IProject">
+               </instanceof>
+            </or>
          </enabledWhen>
       </page>
    </extension>
@@ -55,51 +67,51 @@
    <extension point="org.eclipse.ui.preferencePages">
       <page class="org.scalaide.ui.internal.preferences.ScalaPreferences"
             name="Scala"
-            id="org.scala-ide.sdt.core.preferences"/>
-      <page class="org.scalaide.ui.internal.preferences.SyntaxColouringPreferencePage"
-            category="org.scala-ide.sdt.core.preferences"
+            id="org.scalaide.ui.preferences"/>
+      <page class="org.scalaide.ui.internal.preferences.SyntaxColoringPreferencePage"
+            category="org.scalaide.ui.preferences.editor"
             name="Syntax Coloring"
-            id="org.scala-ide.sdt.core.properties.syntaxcolouring.SyntaxColouringPreferencePage"/>
+            id="org.scalaide.ui.preferences.editor.highlighting"/>
       <page
-            category="org.scala-ide.sdt.core.preferences"
+            category="org.scalaide.ui.preferences"
             class="org.scalaide.ui.internal.preferences.CompilerSettings"
-            id="org.scala-ide.sdt.core.preferences.CompilerPreferences"
+            id="org.scalaide.ui.preferences.compiler"
             name="Compiler">
       </page>
       <page
-            category="org.scala-ide.sdt.core.preferences"
+            category="org.scalaide.ui.preferences.editor"
             class="org.scalaide.ui.internal.preferences.FormatterPreferencePage"
-            id="scala.tools.eclipse.formatter.FormatterPreferencePage"
+            id="org.scalaide.ui.preferences.editor.formatter"
             name="Formatter">
       </page>
       <page
-            category="org.scala-ide.sdt.core.preferences"
+            category="org.scalaide.ui.preferences.editor"
             class="org.scalaide.ui.internal.templates.TemplatePreferences"
-            id="org.scala-ide.sdt.core.preferences.Templates"
+            id="org.scalaide.ui.preferences.editor.templates"
             name="Templates">
       </page>
       <page
-            category="org.scala-ide.sdt.core.preferences"
+            category="org.scalaide.ui.preferences.editor"
             class="org.scalaide.ui.internal.preferences.OrganizeImportsPreferencesPage"
-            id="scala.tools.eclipse.properties.OrganizeImportsPreferencesPage"
+            id="org.scalaide.ui.preferences.editor.organizeImports"
             name="Organize Imports">
       </page>
       <page
-            category="org.scala-ide.sdt.core.preferences"
+            category="org.scalaide.ui.preferences.editor"
             class="org.scalaide.ui.internal.preferences.ImplicitsPreferencePage"
-            id="org.scala-ide.sdt.core.properties.Implicits"
+            id="org.scalaide.ui.preferences.editor.implicits"
             name="Implicits">
       </page>
       <page
-            category="org.scala-ide.sdt.core.preferences"
-            class="org.scalaide.logging.ui.properties.LoggingPreferencePage"
-            id="org.scala-ide.sdt.core.properties.Logging"
+            category="org.scalaide.ui.preferences"
+            class="org.scalaide.logging.ui.preferences.LoggingPreferencePage"
+            id="org.scalaide.ui.preferences.logging"
             name="Logging">
       </page>
       <page
-            category="org.scala-ide.sdt.core.preferences"
+            category="org.scalaide.ui.preferences"
             class="org.scalaide.ui.internal.preferences.EditorPreferencePage"
-            id="org.scala-ide.sdt.core.editor"
+            id="org.scalaide.ui.preferences.editor"
             name="Editor">
       </page>      
    </extension>
@@ -746,7 +758,6 @@
    </extension>
 
   <extension
-        id="org.scala-ide.sdt.core.preferences"
         point="org.eclipse.core.runtime.preferences">
      <initializer
            class="org.scalaide.ui.internal.preferences.ColourPreferenceInitializer">
@@ -764,7 +775,7 @@
            class="org.scalaide.ui.internal.preferences.ImplicitsPagePreferenceInitializer">
      </initializer>
      <initializer
-           class="org.scalaide.logging.ui.properties.LoggingPreferencePageInitializer">
+           class="org.scalaide.logging.ui.preferences.LoggingPreferencePageInitializer">
      </initializer>
      <initializer
            class="org.scalaide.ui.internal.preferences.PreferenceInitializer">
