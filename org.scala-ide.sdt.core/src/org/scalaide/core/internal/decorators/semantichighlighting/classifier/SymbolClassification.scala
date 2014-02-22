@@ -14,7 +14,6 @@ import org.eclipse.jface.text.Region
 import org.scalaide.util.internal.eclipse.RegionOps._
 
 private object SymbolClassification {
-  private val debug = false
 
   /**
    *  If a symbol gets classified as more than one type, we give certain types precedence.
@@ -31,11 +30,10 @@ private object SymbolClassification {
     Object -> Set(CaseClass)
   )
 
-
 }
 
 class SymbolClassification(protected val sourceFile: SourceFile, val global: ScalaPresentationCompiler, useSyntacticHints: Boolean)
-  extends SafeSymbol with TypeTreeTraverser with SymbolClassificationDebugger with SymbolTests with HasLogger {
+  extends SafeSymbol with TypeTreeTraverser with SymbolTests with HasLogger {
 
   import SymbolClassification._
   import global.Symbol
@@ -70,8 +68,6 @@ class SymbolClassification(protected val sourceFile: SourceFile, val global: Sca
     }
 
     if(progressMonitor.isCanceled()) return Nil
-
-    if (debug) printSymbolInfo()
 
     val rawSymbolInfos: Seq[SymbolInfo] = {
       case class SymbolGroup(symbol: Symbol, inInterpolatedString: Boolean)
