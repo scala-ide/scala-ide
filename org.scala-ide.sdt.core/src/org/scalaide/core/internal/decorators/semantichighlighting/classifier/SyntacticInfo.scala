@@ -10,7 +10,7 @@ import org.eclipse.jface.text.IRegion
 import org.scalaide.util.internal.scalariform.ScalariformParser
 
 // Symbol information derived by purely syntactic means, via Scalariform's parser, because it (appears)
-// difficult to get this out scalac trees
+// difficult to get this out of scalac trees
 case class SyntacticInfo(
   namedArgs: Set[IRegion],
   forVals: Set[IRegion],
