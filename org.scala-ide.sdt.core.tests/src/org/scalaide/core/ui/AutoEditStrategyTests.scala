@@ -1,13 +1,17 @@
 package org.scalaide.core.ui
 
 import org.scalaide.core.internal.lexical.ScalaDocumentPartitioner
-
 import org.eclipse.jface.text.Document
 import org.eclipse.jface.text.DocumentCommand
 import org.eclipse.jface.text.IAutoEditStrategy
 import org.eclipse.jface.text.IDocument
 import org.junit.Assert._
 import org.junit.ComparisonFailure
+import org.mockito.Mockito._
+import org.eclipse.jface.preference.IPreferenceStore
+import org.eclipse.jdt.ui.text.IJavaPartitions
+import org.scalaide.core.internal.lexical.ScalaPartitions
+import org.eclipse.jface.text.IDocumentExtension3
 
 object AutoEditStrategyTests {
   class TestCommand(cOffset: Int, cLength: Int, cText: String, cCaretOffset: Int, cShiftsCaret: Boolean, cDoIt: Boolean) extends DocumentCommand {
@@ -28,9 +32,30 @@ object AutoEditStrategyTests {
     assertEquals("Bad resulting doit", doit, command.doit)
   }
 
+  val prefStore = mock(classOf[IPreferenceStore])
+
+  def enable(property: String, enable: Boolean) {
+    when(prefStore.getBoolean(property)).thenReturn(enable)
+  }
 }
 
 abstract class AutoEditStrategyTests(strategy: IAutoEditStrategy) {
+
+  /**
+   * Creates the following DSL for a test:
+   * {{{
+   * @Test
+   * def test() {
+   *   "object A^" becomes "object AB^" after Add("B")
+   * }
+   * }}}
+   */
+  implicit class StringAsTest(input: String) {
+    def becomes(expectedOutput: String) = input -> expectedOutput
+  }
+  implicit class TestExecutor(testData: (String, String)) {
+    def after(operation: Operation) = test(testData._1, testData._2, operation)
+  }
 
   import AutoEditStrategyTests._
 
@@ -63,7 +88,8 @@ abstract class AutoEditStrategyTests(strategy: IAutoEditStrategy) {
       val doc = new Document(rawInput)
       val partitioner = new ScalaDocumentPartitioner
 
-      doc.setDocumentPartitioner(partitioner)
+      doc.setDocumentPartitioner(IJavaPartitions.JAVA_PARTITIONING, partitioner)
+      doc.setDocumentPartitioner(IDocumentExtension3.DEFAULT_PARTITIONING, partitioner)
       partitioner.connect(doc)
       doc
     }
@@ -75,19 +101,35 @@ abstract class AutoEditStrategyTests(strategy: IAutoEditStrategy) {
     operation match {
       case Remove(declared) =>
         val actual = rawInput.substring(textOffset - declared.length, textOffset)
-        require(declared == actual, "removeable content does not equal the declared content")
+        require(declared == actual, "removeable content does not equal to the declared content")
       case _ =>
     }
 
     val cmd = operation match {
-      case Add(s)    => new TestCommand(textOffset, s.length, s, -1, true, true)
+      case Add(s)    => new TestCommand(textOffset, 0, s, -1, true, true)
       case Remove(s) => new TestCommand(textOffset - s.length, s.length, "", -1, true, true)
     }
 
     strategy.customizeDocumentCommand(doc, cmd)
+
     operation match {
-      case Add(s)    => doc.replace(cmd.offset, 0, cmd.text)
-      case Remove(s) => doc.replace(cmd.offset, cmd.length, "")
+      case Add(s) =>
+        import collection.JavaConverters._
+        val cmds = cmd.getCommandIterator().asScala.toList.reverse
+
+        /**
+         * Because `cmd.getCommandIterator()` returns a raw type and because the type
+         * of the underlying instances belong to a inner private static Java class it
+         * seems to be impossible to access it from Scala. Thus, the code is accessed
+         * via Reflection.
+         */
+        for (c <- cmds) {
+          val m = c.getClass().getMethod("execute", classOf[IDocument])
+          m.setAccessible(true)
+          m.invoke(c, doc)
+        }
+      case Remove(s) =>
+        doc.replace(cmd.offset, cmd.length, "")
     }
 
     val offset = if (cmd.caretOffset > 0) cmd.caretOffset else cmd.offset + cmd.text.length

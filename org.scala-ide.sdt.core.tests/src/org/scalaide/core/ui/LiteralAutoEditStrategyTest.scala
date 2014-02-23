@@ -1,26 +1,14 @@
 package org.scalaide.core.ui
 
-import org.scalaide.ui.internal.preferences.EditorPreferencePage
-import org.eclipse.jface.preference.IPreferenceStore
 import org.junit.Before
 import org.junit.Test
-import org.mockito.Mockito._
 import org.scalaide.ui.internal.editor.autoedits.LiteralAutoEditStrategy
+import org.scalaide.ui.internal.preferences.EditorPreferencePage._
 
-object LiteralAutoEditStrategyTest {
-
-  val prefStore = mock(classOf[IPreferenceStore])
-
-  def enable(property: String, enable: Boolean) {
-    when(prefStore.getBoolean(property)).thenReturn(enable)
-  }
-}
+import AutoEditStrategyTests._
 
 class LiteralAutoEditStrategyTest extends AutoEditStrategyTests(
-    new LiteralAutoEditStrategy(LiteralAutoEditStrategyTest.prefStore)) {
-
-  import LiteralAutoEditStrategyTest._
-  import org.scalaide.ui.internal.preferences.EditorPreferencePage._
+    new LiteralAutoEditStrategy(prefStore)) {
 
   @Before
   def startUp() {

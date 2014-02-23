@@ -1,20 +1,13 @@
 package org.scalaide.core.ui
 
-import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.jface.text.IDocumentExtension3
 import org.junit.Test
-import org.mockito.Mockito._
 import org.scalaide.ui.internal.editor.autoedits.MultiLineStringAutoEditStrategy
-
-object MultiLineStringAutoEditStrategyTest {
-
-  val prefStore = mock(classOf[IPreferenceStore])
-}
 
 class MultiLineStringAutoEditStrategyTest extends AutoEditStrategyTests(
     new MultiLineStringAutoEditStrategy(
         IDocumentExtension3.DEFAULT_PARTITIONING,
-        MultiLineStringAutoEditStrategyTest.prefStore)) {
+        AutoEditStrategyTests.prefStore)) {
 
   @Test
   def remove_multi_line_string() {
