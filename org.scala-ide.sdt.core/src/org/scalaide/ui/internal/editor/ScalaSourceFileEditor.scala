@@ -55,6 +55,7 @@ import org.eclipse.ui.texteditor.TextOperationAction
 import org.scalaide.ui.internal.actions
 import org.scalaide.core.ScalaPlugin
 import org.scalaide.refactoring
+import org.eclipse.swt.SWT
 
 
 class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationUnitEditor { self =>
@@ -107,6 +108,9 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationU
     historyAction.setActionDefinitionId(IJavaEditorActionDefinitionIds.SELECT_LAST)
     setAction(StructureSelectionAction.HISTORY, historyAction)
     selectionHistory.setHistoryAction(historyAction)
+
+    // disable Java indent logic, which is otherwise invoked when the tab key is entered
+    setAction("IndentOnTab", null)
 
     val selectEnclosingAction = new actions.ScalaStructureSelectEnclosingAction(this, selectionHistory)
     selectEnclosingAction.setActionDefinitionId(IJavaEditorActionDefinitionIds.SELECT_ENCLOSING)

@@ -153,7 +153,7 @@ class ScalaSourceViewerConfiguration(
       case ScalaPartitions.SCALA_MULTI_LINE_STRING =>
         Array(
           new SmartSemicolonAutoEditStrategy(partitioning),
-          new ScalaAutoIndentStrategy(partitioning, getProject, sourceViewer, prefProvider),
+          new MultiLineStringAutoIndentStrategy(partitioning, ScalaPlugin.prefStore),
           new MultiLineStringAutoEditStrategy(partitioning, ScalaPlugin.prefStore))
 
       case IJavaPartitions.JAVA_STRING =>

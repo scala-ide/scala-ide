@@ -37,6 +37,10 @@ object AutoEditStrategyTests {
   def enable(property: String, enable: Boolean) {
     when(prefStore.getBoolean(property)).thenReturn(enable)
   }
+
+  def setIntPref(property: String, value: Int) {
+    when(prefStore.getInt(property)).thenReturn(value)
+  }
 }
 
 abstract class AutoEditStrategyTests(strategy: IAutoEditStrategy) {
