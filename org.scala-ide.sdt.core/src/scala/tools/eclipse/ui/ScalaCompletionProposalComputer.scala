@@ -24,7 +24,7 @@ import org.eclipse.swt.graphics.Image
 import org.eclipse.jdt.internal.ui.JavaPluginImages
 import org.eclipse.jface.text.IDocument
 import scala.tools.nsc.symtab.Flags
-import scala.tools.nsc.util.SourceFile
+import scala.reflect.internal.util.SourceFile
 import javaelements.ScalaCompilationUnit
 
 class ScalaCompletionProposalComputer extends ScalaCompletions with IJavaCompletionProposalComputer {
@@ -61,7 +61,6 @@ class ScalaCompletionProposalComputer extends ScalaCompletions with IJavaComplet
     
     val res = findCompletions(region)(position, scu)(sourceFile, compiler)
     
-    // COMPAT: 2.8 compatiblity. backwards compatible: this compiles both with 2.9 and 2.8
     import collection.JavaConversions._
     
     res.map(ScalaCompletionProposal(context.getViewer().getSelectionProvider)): java.util.List[ICompletionProposal]

@@ -17,8 +17,8 @@ import scala.tools.eclipse.ui.PartAdapter
 import scala.tools.eclipse.util.{Cached, EclipseResource, Trim, Utils}
 import scala.tools.eclipse.util.SWTUtils.asyncExec
 import scala.tools.nsc.{Settings, MissingRequirementError}
-import scala.tools.nsc.util.BatchSourceFile
-import scala.tools.nsc.util.SourceFile
+import scala.reflect.internal.util.BatchSourceFile
+import scala.reflect.internal.util.SourceFile
 
 import org.eclipse.core.resources.{IContainer, IFile, IMarker, IProject, IResource, IResourceProxy, IResourceProxyVisitor}
 import org.eclipse.core.runtime.{IPath, IProgressMonitor, Path, SubMonitor}
@@ -455,22 +455,9 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
         setting
       }
 
-      /* Here we make sure that the default plugins directory location is part of the returned scalac arguments. 
-       * This is needed to enable continuations, when the user didn't provide an explicit path in the -Xpluginsdir
-       * compiler setting.    
-       */
-      val pluginsDirSetting = {
-        // if the user provided an explicit path for -Xpluginsdir, then it's all good.
-        if (userSettings.exists(setting => setting.name == defaultSettings.pluginsDir)) None
-        // otherwise, inject the `pluginsDir` setting as defined in `ScalaPlugin.defaultScalaSettings`, i.e., it will
-        // inject the default location where the continuations.jar can be found. Mind that this location can change
-        // every time the user updates the Scala IDE.
-        else Some(defaultSettings.pluginsDir)
-      }
-
       val classpathSettings = List(defaultSettings.javabootclasspath, defaultSettings.bootclasspath)
 
-      (classpathSettings ++ pluginsDirSetting.toList ++ userSettings) map (_.unparse)
+      (classpathSettings ++ userSettings) map (_.unparse)
     }
     val extraArgs = defaultScalaSettings().splitParams(storage.getString(CompilerSettings.ADDITIONAL_PARAMS))
     shownArgs.flatten ++ encArgs ++ extraArgs
@@ -640,15 +627,12 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
       // We assume that build manager setting has only single box
       val choice = buildManagerInitialize
       choice match {
-        case "refined" =>
-          logger.info("BM: Refined Build Manager")
-          buildManager0 = new buildmanager.refined.EclipseRefinedBuildManager(this, settings)
         case "sbt"  =>
           logger.info("BM: SBT enhanced Build Manager for " + plugin.scalaVer + " Scala library")
           buildManager0 = new buildmanager.sbtintegration.EclipseSbtBuildManager(this, settings)
         case _ =>
-          logger.info("Invalid build manager choice '" + choice  + "'. Setting to (default) refined build manager")
-          buildManager0 = new buildmanager.refined.EclipseRefinedBuildManager(this, settings)
+          logger.info("Invalid build manager choice '" + choice  + "'. Setting to (default) sbt build manager")
+          buildManager0 = new buildmanager.sbtintegration.EclipseSbtBuildManager(this, settings)
       }
 
       //buildManager0 = new EclipseBuildManager(this, settings)

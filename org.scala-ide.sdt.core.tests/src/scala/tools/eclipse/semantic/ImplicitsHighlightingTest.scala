@@ -8,7 +8,7 @@ import scala.tools.eclipse.semantichighlighting.implicits.ImplicitHighlightingPr
 import scala.tools.eclipse.testsetup.TestProjectSetup
 import scala.tools.eclipse.ScalaPresentationCompiler
 import scala.tools.nsc.interactive.Response
-import scala.tools.nsc.util.SourceFile
+import scala.reflect.internal.util.SourceFile
 import scala.tools.eclipse.ScalaPlugin
 import scala.tools.eclipse.properties.ImplicitsPreferencePage
 import org.junit.Before
@@ -42,7 +42,7 @@ class ImplicitsHighlightingTest {
     withCompilationUnitAndCompiler("implicit-highlighting/DefaultImplicits.scala") { (src, compiler) =>
  
       val expected = List(
-        "Implicit conversions found: 1 => any2ArrowAssoc(1) [46, 1]"
+        "Implicit conversions found: 4 => int2Integer(4) [74, 1]"
       )
       val actual = implicits(src, compiler)
       

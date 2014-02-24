@@ -9,7 +9,7 @@ import java.io.{ ByteArrayInputStream, File, IOException, InputStream }
 import org.eclipse.core.resources.{ IContainer, IFile, IFolder, IProject, IProjectDescription, ResourcesPlugin }
 import org.eclipse.core.runtime.{ IPath, Path }
 import scala.tools.eclipse.util.{ OSGiUtils, EclipseUtils }
-import scala.tools.nsc.util.SourceFile
+import scala.reflect.internal.util.SourceFile
 import scala.collection.mutable
 import scala.util.matching.Regex
 import org.eclipse.jdt.core.ICompilationUnit

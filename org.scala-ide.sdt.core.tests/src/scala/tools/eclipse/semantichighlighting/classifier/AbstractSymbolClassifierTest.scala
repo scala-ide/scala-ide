@@ -1,6 +1,6 @@
 package scala.tools.eclipse.semantichighlighting.classifier
 
-import scala.tools.nsc.util.BatchSourceFile
+import scala.reflect.internal.util.BatchSourceFile
 import org.junit.Before
 import scala.tools.eclipse.testsetup.TestProjectSetup
 import scala.tools.eclipse.EclipseUserSimulator

@@ -4,7 +4,7 @@ package sbtintegration
 
 import scala.tools.nsc.{ Global, Settings }
 import scala.tools.nsc.io.AbstractFile
-import scala.tools.nsc.util.NoPosition
+import scala.reflect.internal.util.NoPosition
 import scala.collection.mutable
 import org.eclipse.core.resources.{ IFile, IMarker }
 import org.eclipse.core.runtime.{ IProgressMonitor, IPath, SubMonitor, Path}
@@ -114,7 +114,7 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings)
   /** The given files have been modified by the user. Recompile
    *  them and their dependent files.
    */
-  override def update(added: scala.collection.Set[AbstractFile], removed: scala.collection.Set[AbstractFile]) {
+  def update(added: scala.collection.Set[AbstractFile], removed: scala.collection.Set[AbstractFile]) {
     if (added.isEmpty && removed.isEmpty)
       logger.info("No changes in project, running the builder for potential transitive changes.")
 
@@ -188,11 +188,15 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings)
     if (!hasErrors)
       pendingSources.clear
   }
-
-  override def buildingFiles(included: scala.collection.Set[AbstractFile]) {
-    included foreach {
-      case EclipseResource(f : IFile) => clearMarkers(f)
-      case _ =>
+  
+  def buildingFiles(included: scala.collection.Set[AbstractFile]) {
+    for(file <- included) {
+      file match {
+        case EclipseResource(f : IFile) =>
+          FileUtils.clearBuildErrors(f, null)
+          FileUtils.clearTasks(f, null)
+        case _ =>
+      }
     }
   }
 

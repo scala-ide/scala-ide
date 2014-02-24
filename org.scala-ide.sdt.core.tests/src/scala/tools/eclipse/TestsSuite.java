@@ -6,7 +6,6 @@ import org.junit.runners.Suite;
 import scala.tools.eclipse.buildmanager.ProjectsCleanJobTest;
 import scala.tools.eclipse.classpath.ClasspathTests;
 import scala.tools.eclipse.compiler.settings.CompilerSettingsTest;
-import scala.tools.eclipse.compiler.settings.ContinuationPluginSettingsTest;
 import scala.tools.eclipse.completion.CompletionTests;
 import scala.tools.eclipse.findreferences.FindReferencesTests;
 import scala.tools.eclipse.hyperlink.HyperlinkDetectorTests;
@@ -31,6 +30,7 @@ import scala.tools.eclipse.sbtbuilder.TodoBuilderTest;
 import scala.tools.eclipse.semantic.ImplicitsHighlightingTest;
 import scala.tools.eclipse.semantichighlighting.SemanticHighlightingPositionsTest;
 import scala.tools.eclipse.semantichighlighting.classifier.SymbolClassifierTestSuite;
+import scala.tools.eclipse.structurebuilder.ScalaJavaMapperTest;
 import scala.tools.eclipse.structurebuilder.StructureBuilderTest;
 import scala.tools.eclipse.ui.UITestSuite;
 import scala.tools.eclipse.util.CachedTest;
@@ -48,7 +48,6 @@ import scala.tools.eclipse.wizards.QualifiedNameSupportTest;
   ProjectsCleanJobTest.class,
   ClasspathTests.class,
   CompilerSettingsTest.class,
-  ContinuationPluginSettingsTest.class,
   CompletionTests.class,
   RunAsTest.class,
   // ScalaJavaCompletionTests.class, FIXME: Uncomment as soon as this regression is fixed.
@@ -75,6 +74,7 @@ import scala.tools.eclipse.wizards.QualifiedNameSupportTest;
   SemanticHighlightingPositionsTest.class,
   SymbolClassifierTestSuite.class,
   StructureBuilderTest.class,
+  ScalaJavaMapperTest.class,
   UITestSuite.class,
   CachedTest.class,
   CollectionUtilTest.class,

@@ -32,7 +32,7 @@ object ScalaLibraryPluginDependencyUtils {
     getExistingScalaLibraryImport(pluginModelBase) foreach pluginModelBase.getPluginBase.remove)
 
   private def getExistingScalaLibraryImport(pluginModelBase: IPluginModelBase): Array[IPluginImport] =
-    pluginModelBase.getPluginBase.getImports filter { Set(ScalaPlugin.plugin.libraryPluginId, ScalaPlugin.plugin.oldLibraryPluginId) contains _.getId }
+    pluginModelBase.getPluginBase.getImports filter { ScalaPlugin.plugin.libraryPluginId == _.getId }
 
   private def editPlugin(project: IProject, editStrategy: IPluginModelBase => Unit) {
     val (manifestEditor, alreadyOpen) = findOrOpenManifestEditor(project)

@@ -44,25 +44,11 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
 
   class StructureBuilderTraverser(scu : ScalaCompilationUnit, unitInfo : OpenableElementInfo, newElements0 : JMap[AnyRef, AnyRef], sourceLength : Int) {
     
-    private def companionClassOf(s: Symbol): Symbol =
-      try {
-        s.companionClass
-      } catch {
-        case e: InvalidCompanions => NoSymbol
-      }
+    private def companionClassOf(s: Symbol): Symbol = s.companionClass
 
     type OverrideInfo = Int
-//    val overrideInfos = (new collection.mutable.HashMap[Symbol, OverrideInfo]).withDefaultValue(0)
-    // COMPAT: backwards compatible with 2.8. Remove once we drop 2.8 (and use withDefaultValue).
-    val overrideInfos = new collection.mutable.HashMap[Symbol, OverrideInfo] {
-      override def get(key: Symbol) = super.get(key) match {
-        case None => Some(0)
-        case v => v
-      }
-      
-      override def default(sym: Symbol) = 0
-    } 
-    
+    val overrideInfos = (new collection.mutable.HashMap[Symbol, OverrideInfo]).withDefaultValue(0)
+
     def fillOverrideInfos(c : Symbol) {
       if (c ne NoSymbol) {
         val base = c.allOverriddenSymbols
@@ -182,7 +168,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
           val nm = d.name
 
           val fps = d.paramss.flatten
-          val paramNames = Array(fps.map(n => nme.getterName(n.name).toChars) : _*)
+          val paramNames = Array(fps.map(n => nme.getterName(n.name.toTermName).toChars) : _*)
           
           val javaSig = javaSigOf(d)
           
@@ -606,7 +592,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
       }
       
       def addBeanAccessors(sym: Symbol) {
-        var beanName = nme.localToGetter(sym.name).toString.capitalize
+        var beanName = nme.localToGetter(sym.name.toTermName).toString.capitalize
         val ownerInfo = sym.owner.info
         val accessors = List(ownerInfo.decl(GET append beanName), ownerInfo.decl(IS append beanName), ownerInfo.decl(SET append beanName)).filter(_ ne NoSymbol)
         accessors.foreach(addDef)
@@ -677,7 +663,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
          *  parameter types have the same length. A mismatch here will crash the JDT later.
          */
         def paramNames: (Array[Array[Char]]) = {
-          val originalParamNames = fps.map(n => nme.getterName(n.name).toChars)
+          val originalParamNames = fps.map(n => nme.getterName(n.name.toTermName).toChars)
           val res = ((paramsTypeSigs.length - originalParamNames.length ) match {
             case 0 => 
               originalParamNames

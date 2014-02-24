@@ -7,7 +7,7 @@ import scala.tools.eclipse.semantichighlighting.classifier.SymbolTypes._
 import scala.tools.eclipse.util.Utils._
 import scala.tools.nsc.io.AbstractFile
 import scala.tools.nsc.util.RangePosition
-import scala.tools.nsc.util.SourceFile
+import scala.reflect.internal.util.SourceFile
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.jface.text.IRegion
 import org.eclipse.jface.text.Region

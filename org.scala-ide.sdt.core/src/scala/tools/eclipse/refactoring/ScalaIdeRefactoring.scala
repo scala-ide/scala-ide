@@ -13,7 +13,7 @@ import scala.tools.eclipse.javaelements.ScalaSourceFile
 import scala.tools.eclipse.util.FileUtils
 import scala.tools.eclipse.ScalaPresentationCompiler
 import scala.tools.eclipse.ScalaPlugin
-import scala.tools.nsc.util.SourceFile
+import scala.reflect.internal.util.SourceFile
 import scala.tools.refactoring.common.InteractiveScalaCompiler
 import scala.tools.refactoring.common.{TextChange, Change}
 import scala.tools.refactoring.MultiStageRefactoring

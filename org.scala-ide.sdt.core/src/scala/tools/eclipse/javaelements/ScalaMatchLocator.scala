@@ -9,7 +9,7 @@ import org.eclipse.jdt.core.search.{ SearchMatch, SearchPattern, SearchParticipa
 import org.eclipse.jdt.core.compiler.{ CharOperation => CharOp }
 import org.eclipse.jdt.internal.compiler.ast.{ SingleTypeReference, TypeDeclaration }
 import org.eclipse.jdt.internal.core.search.matching.{ MatchLocator, PossibleMatch }
-import scala.tools.nsc.util.{ RangePosition, Position }
+import scala.reflect.internal.util.{ RangePosition, Position }
 import scala.tools.eclipse.ScalaPresentationCompiler
 import scala.tools.eclipse.util.ReflectionUtils
 import org.eclipse.jdt.internal.core.search.matching.{ PatternLocator, FieldPattern, MethodPattern, TypeReferencePattern, TypeDeclarationPattern, OrPattern }
@@ -44,13 +44,13 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
     def possibleMatch: PossibleMatch
     
     override def traverse(tree: Tree): Unit = try {
-      if (tree.pos.isOpaqueRange && tree.pos.isDefined) {
-        report(tree)
-        /* We need to customize the traversal of the Tree to ensure that the `Traverser.currentOwner` 
-         * gets updated only when a declaration is traversed (have a look at `enclosingDeclaration`). 
+      if (tree.pos.isRange && tree.pos.isDefined) {
+        if(tree.pos.isOpaqueRange) report(tree)
+        /* We need to customize the traversal of the Tree to ensure that the `Traverser.currentOwner`
+         * gets updated only when a declaration is traversed (have a look at `enclosingDeclaration`).
          * This is done because reference matches are always reported on the enclosing declaration.
          * Ideally, we should create a Traverser subclass and move this ad-hoc logic there.*/
-        tree match { 
+        tree match {
          case ClassDef(mods, name, tparams, impl) if tree.symbol.isAnonymousClass => 
            traverseTrees(mods.annotations); traverseTrees(tparams); traverse(impl)
          case TypeDef(mods, name, tparams, rhs) if !tree.symbol.isAliasType =>
@@ -130,7 +130,7 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
     // pre.sym[targs]
   case RefinedType(parents, defs) =>
     // parent1 with ... with parentn { defs }
-  case AnnotatedType(annots, tp, selfsym) =>
+  case AnnotatedType(annots, tp) =>
     // tp @annots
           case _ => PatternLocator.INACCURATE_MATCH
         }

@@ -9,7 +9,7 @@ package rename
 import org.eclipse.jface.action.IAction
 import javaelements.ScalaSourceFile
 import scala.tools.nsc.symtab.Flags
-import scala.tools.nsc.util.SourceFile
+import scala.reflect.internal.util.SourceFile
 import scala.tools.refactoring.analysis.{ GlobalIndexes, Indexes }
 import scala.tools.refactoring.common.{ ConsoleTracing, InteractiveScalaCompiler, Selections }
 import scala.tools.refactoring.implementations.Rename

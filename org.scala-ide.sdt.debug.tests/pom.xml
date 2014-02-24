@@ -3,7 +3,7 @@
   <parent>
     <groupId>org.scala-ide</groupId>
     <artifactId>org.scala-ide.sdt.build</artifactId>
-    <version>3.0.3-SNAPSHOT</version>
+    <version>3.0.4-SNAPSHOT</version>
     <relativePath>../org.scala-ide.sdt.build/pom.xml</relativePath>
   </parent>
   <artifactId>org.scala-ide.sdt.debug.tests</artifactId>
@@ -33,12 +33,8 @@
 
   <dependencies>
     <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-    </dependency>
-    <dependency>
       <groupId>org.mockito</groupId>
-      <artifactId>mockito-all</artifactId>
+      <artifactId>mockito-core</artifactId>
     </dependency>
   </dependencies>
     
@@ -63,6 +59,7 @@
         <groupId>org.eclipse.tycho</groupId>
         <artifactId>tycho-surefire-plugin</artifactId>
         <configuration>
+          <redirectTestOutputToFile>true</redirectTestOutputToFile>
           <testSuite>${project.artifactId}</testSuite>
           <testClass>scala.tools.eclipse.debug.ScalaDebugTestSuite</testClass>
         </configuration>

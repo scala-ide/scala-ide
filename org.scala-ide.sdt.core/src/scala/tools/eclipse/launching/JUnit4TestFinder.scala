@@ -99,7 +99,7 @@ class JUnit4TestFinder extends ITestFinder with ISearchMethods with HasLogger {
 
         askOption { () =>
           // classes in the empty package are not found in the root mirror
-          val sym = if (fqn.lastPos('.') > -1) definitions.getClass(fqn) else definitions.EmptyPackageClass.info.member(fqn)
+          val sym = if (fqn.lastPos('.') > -1) rootMirror.getClassByName(fqn) else rootMirror.EmptyPackageClass.info.member(fqn)
           sym.annotations
           sym.info.members.filter(hasTestAnnotation).map(_.originalName.toString).toSet
         } getOrElse (emptySet)

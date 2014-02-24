@@ -13,52 +13,54 @@
 
   <groupId>org.scala-ide</groupId>
   <artifactId>org.scala-ide.build</artifactId>
-  <version>3.0.3-SNAPSHOT</version>
+  <version>3.0.4-SNAPSHOT</version>
   <description>Default config holder (value, profiles, versions, ...) for the build of Scala IDE for Eclipse</description>
   <packaging>pom</packaging>
 
   <properties>
     <encoding>UTF-8</encoding>
+    <retryFlakyTests>true</retryFlakyTests>
     <!-- p2 repositories location -->
     <repo.eclipse.indigo>http://download.eclipse.org/releases/indigo/</repo.eclipse.indigo>
     <repo.eclipse.juno>http://download.eclipse.org/releases/juno</repo.eclipse.juno>
+    <repo.eclipse.kepler>http://download.eclipse.org/releases/kepler</repo.eclipse.kepler>
     <repo.ajdt.indigo>http://download.eclipse.org/tools/ajdt/37/update</repo.ajdt.indigo>
     <repo.ajdt.juno>http://download.eclipse.org/tools/ajdt/42/update</repo.ajdt.juno>
+    <repo.ajdt.kepler>http://download.eclipse.org/tools/ajdt/43/update</repo.ajdt.kepler>
     <repo.equinox.launcher>http://www.chuusai.com/eclipse/equinox-weaving-launcher/</repo.equinox.launcher>
     <repo.scala-ide.root>http://download.scala-ide.org</repo.scala-ide.root>
 
     <!-- fixed versions -->
-    <ivy.version>2.2.0</ivy.version>
     <miglayout.version>3.7.4</miglayout.version>
     <log4j.version>1.2.17</log4j.version>
-    <junit.version>4.10</junit.version>
     <mockito.version>1.9.5</mockito.version>
 
     <!-- plugin versions -->
-    <tycho.plugin.version>0.16.0</tycho.plugin.version>
-    <scala.plugin.version>3.0.2</scala.plugin.version>
+    <tycho.plugin.version>0.19.0</tycho.plugin.version>
+    <scala.plugin.version>3.1.5</scala.plugin.version>
     <aspectj.plugin.version>1.4</aspectj.plugin.version>
-    <weaving.hook.plugin.version>1.0.200.v20120524-1707</weaving.hook.plugin.version>
-    <maven-bunble.plugin.version>2.3.7</maven-bunble.plugin.version>
+    <maven-bundle.plugin.version>2.3.7</maven-bundle.plugin.version>
     <properties-maven.plugin.version>1.1.10</properties-maven.plugin.version>
     <buildnumber-maven.plugin.version>1.1</buildnumber-maven.plugin.version>
     <maven-source.plugin.version>2.1.2</maven-source.plugin.version>
     <maven-clean.plugin.version>2.5</maven-clean.plugin.version>
 
+    <!-- Weaving plugin version -->
+    <weaving.hook.plugin.version>Select a profile</weaving.hook.plugin.version>
+
     <!-- tycho test related -->
     <tycho.test.OSspecific></tycho.test.OSspecific>
     <!-- Partial workaround against JDT Weaving deadlocks. See #1000317 and the original ticket on https://issuetracker.springsource.com/browse/STS-1445 -->
     <tycho.test.weaving>-XX:+UnlockDiagnosticVMOptions -XX:+UnsyncloadClass -Dosgi.classloader.lock=classname</tycho.test.weaving>
-    <tycho.test.jvmArgs>-Xmx1024m -XX:MaxPermSize=256m -Dsdtcore.headless -Dsdtcore.notimeouts ${tycho.test.weaving} ${tycho.test.OSspecific}</tycho.test.jvmArgs>
+    <tycho.test.jvmArgs>-Xmx1024m -XX:MaxPermSize=256m -Dsdtcore.headless -Dsdtcore.notimeouts -DretryFlakyTests=${retryFlakyTests} ${tycho.test.weaving} ${tycho.test.OSspecific}</tycho.test.jvmArgs>
 
-    <!-- dependencies repos -->
-    <eclipse.codename>juno</eclipse.codename>
-    <repo.eclipse>${repo.eclipse.juno}</repo.eclipse>
-    <repo.ajdt>${repo.ajdt.juno}</repo.ajdt>
+    <!-- dependencies repos, can be overwritten by profiles -->
+    <eclipse.codename>Select a profile</eclipse.codename>
+    <repo.eclipse>Select a profile</repo.eclipse>
+    <repo.ajdt>Select a profile</repo.ajdt>
 
      <!-- default values, can be overwritten by profiles -->
      <scala.version>2.10.0</scala.version>
-     <scala.era.major.version>2.10</scala.era.major.version>
      <scala.library.version>${scala.version}</scala.library.version>
      <version.suffix>2_10</version.suffix>
      <version.tag>local</version.tag>
@@ -73,34 +75,81 @@
   </properties>
 
   <profiles>
+    <profile>
+      <id>retryFlakyTests</id>
+      <properties>
+        <retryFlakyTests>true</retryFlakyTests>
+      </properties>
+    </profile>
 
     <profile>
       <id>scala-2.10.x</id>
       <properties>
-        <scala.version>2.10.3-SNAPSHOT</scala.version>
-        <scala.era.major.version>2.10</scala.era.major.version>
+        <scala.version>2.10.4-SNAPSHOT</scala.version>
         <version.suffix>2_10</version.suffix>
-        <sbt.version>0.13.0</sbt.version>
 
         <repo.scala-refactoring>${repo.scala-ide.root}/scala-refactoring-210x</repo.scala-refactoring>
         <repo.scalariform>${repo.scala-ide.root}/scalariform-210x</repo.scalariform>
         <repo.typesafe>http://private-repo.typesafe.com/typesafe/ide-2.10</repo.typesafe>
       </properties>
+
+      <dependencyManagement>
+        <dependencies>
+          <dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-actors</artifactId>
+            <version>${scala.library.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-swing</artifactId>
+            <version>${scala.library.version}</version>
+          </dependency>
+        </dependencies>
+      </dependencyManagement>
+
     </profile>
 
     <profile>
       <id>scala-2.11.x</id>
       <properties>
         <scala.version>2.11.0-SNAPSHOT</scala.version>
-        <scala.era.major.version>2.11</scala.era.major.version>
+        <scala.binary.version>2.11.0-M7</scala.binary.version>
+        <scala-xml.version>1.0.0-RC7</scala-xml.version>
+        <scala-parser-combinators.version>1.0.0-RC5</scala-parser-combinators.version>
+        <scala-swing.version>1.0.0-RC2</scala-swing.version>
+
         <version.suffix>2_11</version.suffix>
-        <!-- version here should be 0.13.1, but Zinc artfacts for 0.13.1 haven't been published yet. -->
-        <sbt.version>0.13.0</sbt.version>
 
         <repo.scala-refactoring>${repo.scala-ide.root}/scala-refactoring-211x</repo.scala-refactoring>
         <repo.scalariform>${repo.scala-ide.root}/scalariform-211x</repo.scalariform>
         <repo.typesafe>http://private-repo.typesafe.com/typesafe/ide-2.11</repo.typesafe>
       </properties>
+
+      <dependencyManagement>
+        <dependencies>
+          <dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-actors</artifactId>
+            <version>${scala.library.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.scala-lang.modules</groupId>
+            <artifactId>scala-swing_${scala.binary.version}</artifactId>
+            <version>${scala-swing.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.scala-lang.modules</groupId>
+            <artifactId>scala-xml_${scala.binary.version}</artifactId>
+            <version>${scala-xml.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.scala-lang.modules</groupId>
+            <artifactId>scala-parser-combinators_${scala.binary.version}</artifactId>
+            <version>${scala-parser-combinators.version}</version>
+          </dependency>
+        </dependencies>
+      </dependencyManagement>
     </profile>
 
     <profile>
@@ -111,6 +160,20 @@
         <repo.eclipse>${repo.eclipse.juno}</repo.eclipse>
         <repo.ajdt>${repo.ajdt.juno}</repo.ajdt>
         <weaving.hook.plugin.version>1.0.200.v20120524-1707</weaving.hook.plugin.version>
+      </properties>
+    </profile>
+
+    <profile>
+      <!-- Eclipse Kepler -->
+      <!-- This profile was created in case it is needed at some point, but the
+           current goal is to use the Juno profile for both Kepler and Juno compatible
+           binaries -->
+      <id>eclipse-kepler</id>
+      <properties>
+        <eclipse.codename>kepler</eclipse.codename>
+        <repo.eclipse>${repo.eclipse.kepler}</repo.eclipse>
+        <repo.ajdt>${repo.ajdt.kepler}</repo.ajdt>
+        <weaving.hook.plugin.version>1.0.200.v20130327-1442</weaving.hook.plugin.version>
       </properties>
     </profile>
 
@@ -134,6 +197,7 @@
               <configuration>
                 <dependencies>
                   <dependency>
+                    <groupId>org.eclipse.jdt</groupId>
                     <artifactId>org.eclipse.jdt.launching.macosx</artifactId>
                     <type>eclipse-plugin</type>
                   </dependency>
@@ -151,13 +215,16 @@
       <dependencies>
         <dependency>
           <groupId>org.scala-ide</groupId>
-          <artifactId>build-tools_2.9.2</artifactId>
-          <version>0.1.0</version>
+          <artifactId>build-tools_2.10</artifactId>
+          <version>0.4.0</version>
+        </dependency>
+        <!-- We need the 2.10 Scala library, instead of whatever cross-version we happen to build -->
+        <dependency>
+          <groupId>org.scala-lang</groupId>
+          <artifactId>scala-library</artifactId>
+          <version>2.10.0</version>
         </dependency>
       </dependencies>
-      <properties>
-        <scala.version>2.9.2</scala.version>
-      </properties>
       <build>
         <plugins>
           <plugin>
@@ -175,6 +242,10 @@
             <configuration>
               <classpathScope>compile</classpathScope>
               <mainClass>org.scalaide.buildtools.UpdateScalaIDEManifests</mainClass>
+              <arguments>
+                <argument>${scala.version}</argument>
+                <argument>${settings.localRepository}</argument>
+              </arguments>
             </configuration>
           </plugin>
         </plugins>
@@ -184,12 +255,46 @@
           <!-- extra repository containing the build package -->
           <id>typesafe-ide</id>
           <name>Typesafe IDE repository</name>
-          <url>http://repo.typesafe.com/typesafe/ide-2.9</url>
+          <url>http://private-repo.typesafe.com/typesafe/ide-2.10</url>
           <snapshots><enabled>true</enabled></snapshots>
         </repository>
       </repositories>
     </profile>
 
+    <profile>
+      <id>set-features</id>
+      <properties>
+        <sdt.feature.dir>org.scala-ide.sdt.feature</sdt.feature.dir>
+        <sdt.source.feature.dir>org.scala-ide.sdt.source.feature</sdt.source.feature.dir>
+      </properties>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-antrun-plugin</artifactId>
+            <version>1.7</version>
+            <executions>
+              <execution>
+                <id>default-cli</id>
+                <configuration>
+                  <target>
+                    <copy file="${sdt.feature.dir}/resources/feature-${version.suffix}.xml"
+                        tofile="${sdt.feature.dir}/feature.xml"
+                        overwrite="true" />
+                    <copy file="${sdt.source.feature.dir}/resources/feature-${version.suffix}.xml"
+                        tofile="${sdt.source.feature.dir}/feature.xml"
+                        overwrite="true" />
+                  </target>
+                </configuration>
+                <goals>
+                  <goal>run</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
   </profiles>
 
   <repositories>
@@ -220,17 +325,7 @@
       </dependency>
       <dependency>
         <groupId>org.scala-lang</groupId>
-        <artifactId>scala-swing</artifactId>
-        <version>${scala.library.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.scala-lang</groupId>
-        <artifactId>scala-dbc</artifactId>
-        <version>${scala.library.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.scala-lang</groupId>
-        <artifactId>scala-actors</artifactId>
+        <artifactId>scala-reflect</artifactId>
         <version>${scala.library.version}</version>
       </dependency>
       <!-- toolchain, Scala compiler -->
@@ -242,11 +337,6 @@
       <dependency>
         <groupId>org.scala-lang</groupId>
         <artifactId>scala-reflect</artifactId>
-        <version>${scala.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.scala-lang.plugins</groupId>
-        <artifactId>continuations</artifactId>
         <version>${scala.version}</version>
       </dependency>
       <!-- toolchain, sbt -->
@@ -278,15 +368,22 @@
       </dependency>
       <!-- test support -->
       <dependency>
-        <groupId>junit</groupId>
-        <artifactId>junit</artifactId>
-        <version>${junit.version}</version>
-      </dependency>
-      <dependency>
         <groupId>org.mockito</groupId>
         <artifactId>mockito-all</artifactId>
         <version>${mockito.version}</version>
         <scope>compile</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.mockito</groupId>
+        <artifactId>mockito-core</artifactId>
+        <version>${mockito.version}</version>
+        <scope>compile</scope>
+        <exclusions>
+          <exclusion>
+            <groupId>org.hamcrest</groupId>
+            <artifactId>hamcrest-core</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
     </dependencies>
   </dependencyManagement>
@@ -299,7 +396,7 @@
         <plugin>
           <groupId>org.apache.felix</groupId>
           <artifactId>maven-bundle-plugin</artifactId>
-          <version>${maven-bunble.plugin.version}</version>
+          <version>${maven-bundle.plugin.version}</version>
           <extensions>true</extensions>
           <configuration>
             <unpackBundle>true</unpackBundle>
@@ -373,12 +470,11 @@
           <version>${maven-source.plugin.version}</version>
         </plugin>
         <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-clean-plugin</artifactId>
           <version>${maven-clean.plugin.version}</version>
         </plugin>
       </plugins>
     </pluginManagement>
   </build>
-
-
 </project>

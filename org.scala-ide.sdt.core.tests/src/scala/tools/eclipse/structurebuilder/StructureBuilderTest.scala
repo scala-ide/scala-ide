@@ -122,7 +122,7 @@ class StructureBuilderTest {
 
   /** Test the structure as seen by the JDT. Use the JDT API to
    *  retrieve the package `traits' and compare the toString output. */
-  @Test def testStructure() {
+  @Test def testStructure() = FlakyTest.retry("testStructure", "expected:<...ction.immutable.List[<java.lang.String>][])") {
     // when
     val fragment = srcPackageRoot.getPackageFragment("traits")
     // then

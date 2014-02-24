@@ -3,7 +3,7 @@ package scala.tools.eclipse.buildmanager
 import scala.tools.eclipse.{EclipseBuildManager, TaskScanner, ScalaProject}
 import scala.tools.nsc.Settings
 import scala.tools.nsc.reporters.Reporter
-import scala.tools.nsc.util.{ Position, NoPosition }
+import scala.reflect.internal.util.{ Position, NoPosition }
 import scala.tools.eclipse.util.{ EclipseResource, FileUtils}
 import scala.tools.eclipse.logging.HasLogger
 import scala.collection.mutable.ListBuffer
@@ -58,9 +58,9 @@ abstract class BuildReporter(private[buildmanager] val project0: ScalaProject, s
 	      }
 	      else
 	        eclipseSeverity match {
-	          case IMarker.SEVERITY_INFO if (settings0.Ybuildmanagerdebug.value) =>
+	          case IMarker.SEVERITY_INFO =>
 		      	  // print only to console, better debugging
-		      	  logger.info("[Buildmanager info] " + msg)
+			  logger.info("[info] " + msg)
 	          case _ =>
 		      	  prob += new BuildProblem(severity, msg, NoPosition)
 		      	  BuildProblemMarker.create(project0.underlying, eclipseSeverity, msg)
