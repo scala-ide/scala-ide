@@ -7,7 +7,7 @@ Bundle-Vendor: scala-ide.org
 Bundle-ActivationPolicy: lazy
 Bundle-Localization: plugin
 Bundle-Activator: 
- scala.tools.eclipse.debug.ScalaDebugPlugin
+ org.scalaide.debug.internal.ScalaDebugPlugin
 Require-Bundle: 
  org.eclipse.core.expressions,
  org.eclipse.core.filesystem,
@@ -69,12 +69,12 @@ Import-Package:
  scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor;apply-aspects:=false,
  scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.formatter;apply-aspects:=false
 Export-Package: 
- scala.tools.eclipse.debug,
- scala.tools.eclipse.debug.breakpoints,
- scala.tools.eclipse.debug.classfile,
- scala.tools.eclipse.debug.command,
- scala.tools.eclipse.debug.model,
- scala.tools.eclipse.debug.preferences,
- scala.tools.eclipse.launching
+ org.scalaide.debug.internal,
+ org.scalaide.debug.internal.breakpoints,
+ org.scalaide.debug.internal.classfile,
+ org.scalaide.debug.internal.command,
+ org.scalaide.debug.internal.launching,
+ org.scalaide.debug.internal.model,
+ org.scalaide.debug.internal.preferences
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 

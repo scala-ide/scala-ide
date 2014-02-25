@@ -13,4 +13,4 @@ Require-Bundle: org.scala-lang.scala-library,
  org.eclipse.equinox.weaving.aspectj,
  org.junit
 Export-Package: 
- scala.tools.eclipse.testsetup
+ org.scalaide.core.testsetup

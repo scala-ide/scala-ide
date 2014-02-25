@@ -14,12 +14,11 @@ import org.eclipse.ui.PlatformUI
 import org.eclipse.ui.part.ViewPart
 import org.eclipse.ui.plugin.AbstractUIPlugin
 import org.eclipse.ui.texteditor.ITextEditor
-
 import scala.reflect.internal.util.SourceFile
-import scala.tools.eclipse.InteractiveCompilationUnit
-import scala.tools.eclipse.ScalaPresentationCompiler
-import scala.tools.eclipse.logging.HasLogger
-import scala.tools.eclipse.ui.InteractiveCompilationUnitEditor
+import org.scalaide.logging.HasLogger
+import org.scalaide.ui.internal.editor.InteractiveCompilationUnitEditor
+import org.scalaide.core.compiler.ScalaPresentationCompiler
+import org.scalaide.core.compiler.InteractiveCompilationUnit
 
 class SpyView extends ViewPart with HasLogger {
   private var textArea: Text = _

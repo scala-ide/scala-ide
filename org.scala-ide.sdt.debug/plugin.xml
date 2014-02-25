@@ -4,27 +4,27 @@
    <extension
          point="org.eclipse.debug.ui.debugModelPresentations">
       <debugModelPresentation
-            class="scala.tools.eclipse.debug.model.ScalaDebugModelPresentation"
+            class="org.scalaide.debug.internal.model.ScalaDebugModelPresentation"
             id="org.scala-ide.sdt.debug">
       </debugModelPresentation>
    </extension>
    <extension
          point="org.eclipse.ui.startup">
       <startup
-            class="scala.tools.eclipse.debug.ScalaDebugPlugin">
+            class="org.scalaide.debug.internal.ScalaDebugPlugin">
       </startup>
    </extension>
    <extension
          point="org.eclipse.debug.core.logicalStructureProviders">
       <logicalStructureProvider
-            class="scala.tools.eclipse.debug.model.ScalaLogicalStructureProvider"
+            class="org.scalaide.debug.internal.model.ScalaLogicalStructureProvider"
             modelIdentifier="org.scala-ide.sdt.debug">
       </logicalStructureProvider>
    </extension>
    <extension
          point="org.eclipse.debug.core.launchDelegates">
       <launchDelegate
-            delegate="scala.tools.eclipse.launching.ScalaApplicationLaunchConfigurationDelegate"
+            delegate="org.scalaide.debug.internal.launching.ScalaApplicationLaunchConfigurationDelegate"
             delegateDescription="The Scala JVM Launcher supports debugging of local Scala using the new Scala debugger"
             id="scala.application.new"
             modes="debug"
@@ -34,7 +34,7 @@
             type="scala.application">
       </launchDelegate>
       <launchDelegate
-            delegate="scala.tools.eclipse.launching.ScalaEclipseApplicationLaunchConfigurationDelegate"
+            delegate="org.scalaide.debug.internal.launching.ScalaEclipseApplicationLaunchConfigurationDelegate"
             delegateDescription="The Scala JVM Launcher supports debugging of Eclipse Scala using the new Scala debugger"
             id="scala.eclipse.application.new"
             modes="debug"
@@ -44,7 +44,7 @@
             type="org.scala-ide.ew.launcher.RuntimeWorkbench">
       </launchDelegate>
       <launchDelegate
-            delegate="scala.tools.eclipse.launching.ScalaEclipseJUnitLaunchConfigurationDelegate"
+            delegate="org.scalaide.debug.internal.launching.ScalaEclipseJUnitLaunchConfigurationDelegate"
             delegateDescription="The Scala JVM Launcher supports debugging of JUnit Eclipse Scala using the new Scala debugger"
             id="scala.junit.eclipse.application.new"
             modes="debug"
@@ -58,7 +58,7 @@
          point="org.eclipse.ui.preferencePages">
       <page
             category="org.scala-ide.sdt.core.preferences"
-            class="scala.tools.eclipse.debug.preferences.DebuggerPreferences"
+            class="org.scalaide.debug.internal.preferences.DebuggerPreferences"
             id="org.scala-ide.sdt.debug.preferences"
             name="Debug">
       </page>
@@ -66,17 +66,17 @@
    <extension
          point="org.eclipse.core.runtime.preferences">
       <initializer
-            class="scala.tools.eclipse.debug.preferences.DebugerPreferencesInitializer">
+            class="org.scalaide.debug.internal.preferences.DebugerPreferencesInitializer">
       </initializer>
    </extension>
    <extension
          point="org.eclipse.jdt.launching.vmConnectors">
       <vmConnector
-            class="scala.tools.eclipse.launching.SocketAttachConnectorScala"
+            class="org.scalaide.debug.internal.launching.SocketAttachConnectorScala"
             id="org.scala-ide.sdt.debug.socketAttachConnector">
       </vmConnector>
       <vmConnector
-            class="scala.tools.eclipse.launching.SocketListenConnectorScala"
+            class="org.scalaide.debug.internal.launching.SocketListenConnectorScala"
             id="org.scala-ide.sdt.debug.socketListenConnector">
       </vmConnector>
    </extension>

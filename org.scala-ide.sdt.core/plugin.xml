@@ -6,7 +6,7 @@
    <extension
          point="org.eclipse.ui.propertyPages">
       <page
-            class="scala.tools.eclipse.properties.CompilerSettings"
+            class="org.scalaide.ui.internal.preferences.CompilerSettings"
             id="org.scala-ide.sdt.core.properties.compilerPropertyPage"
             name="Scala Compiler">
          <filter
@@ -22,7 +22,7 @@
    <extension
          point="org.eclipse.ui.propertyPages">
       <page
-            class="scala.tools.eclipse.formatter.FormatterPreferencePage"
+            class="org.scalaide.ui.internal.preferences.FormatterPreferencePage"
             id="scala.tools.eclipse.formatter.FormatterPropertyPage"
             name="Scala Formatter">
          <filter
@@ -38,7 +38,7 @@
       <extension
          point="org.eclipse.ui.propertyPages">
       <page
-            class="scala.tools.eclipse.properties.OrganizeImportsPreferencesPage"
+            class="org.scalaide.ui.internal.preferences.OrganizeImportsPreferencesPage"
             id="scala.tools.eclipse.properties.OrganizeImportsPreferencesPage"
             name="Scala Organize Imports">
          <filter
@@ -53,52 +53,52 @@
    </extension>
    
    <extension point="org.eclipse.ui.preferencePages">
-      <page class="scala.tools.eclipse.properties.ScalaPreferences"
+      <page class="org.scalaide.ui.internal.preferences.ScalaPreferences"
             name="Scala"
             id="org.scala-ide.sdt.core.preferences"/>
-      <page class="scala.tools.eclipse.properties.syntaxcolouring.SyntaxColouringPreferencePage"
+      <page class="org.scalaide.ui.internal.preferences.SyntaxColouringPreferencePage"
             category="org.scala-ide.sdt.core.preferences"
             name="Syntax Coloring"
             id="org.scala-ide.sdt.core.properties.syntaxcolouring.SyntaxColouringPreferencePage"/>
       <page
             category="org.scala-ide.sdt.core.preferences"
-            class="scala.tools.eclipse.properties.CompilerSettings"
+            class="org.scalaide.ui.internal.preferences.CompilerSettings"
             id="org.scala-ide.sdt.core.preferences.CompilerPreferences"
             name="Compiler">
       </page>
       <page
             category="org.scala-ide.sdt.core.preferences"
-            class="scala.tools.eclipse.formatter.FormatterPreferencePage"
+            class="org.scalaide.ui.internal.preferences.FormatterPreferencePage"
             id="scala.tools.eclipse.formatter.FormatterPreferencePage"
             name="Formatter">
       </page>
       <page
             category="org.scala-ide.sdt.core.preferences"
-            class="scala.tools.eclipse.templates.TemplatePreferences"
+            class="org.scalaide.ui.internal.templates.TemplatePreferences"
             id="org.scala-ide.sdt.core.preferences.Templates"
             name="Templates">
       </page>
       <page
             category="org.scala-ide.sdt.core.preferences"
-            class="scala.tools.eclipse.properties.OrganizeImportsPreferencesPage"
+            class="org.scalaide.ui.internal.preferences.OrganizeImportsPreferencesPage"
             id="scala.tools.eclipse.properties.OrganizeImportsPreferencesPage"
             name="Organize Imports">
       </page>
       <page
             category="org.scala-ide.sdt.core.preferences"
-            class="scala.tools.eclipse.properties.ImplicitsPreferencePage"
+            class="org.scalaide.ui.internal.preferences.ImplicitsPreferencePage"
             id="org.scala-ide.sdt.core.properties.Implicits"
             name="Implicits">
       </page>
       <page
             category="org.scala-ide.sdt.core.preferences"
-            class="scala.tools.eclipse.logging.ui.properties.LoggingPreferencePage"
+            class="org.scalaide.logging.ui.properties.LoggingPreferencePage"
             id="org.scala-ide.sdt.core.properties.Logging"
             name="Logging">
       </page>
       <page
             category="org.scala-ide.sdt.core.preferences"
-            class="scala.tools.eclipse.properties.EditorPreferencePage"
+            class="org.scalaide.ui.internal.preferences.EditorPreferencePage"
             id="org.scala-ide.sdt.core.editor"
             name="Editor">
       </page>      
@@ -114,7 +114,7 @@
       base-type="org.eclipse.jdt.core.javaClass"
       priority="high"
       file-extensions="class">
-      <describer class="scala.tools.eclipse.ScalaClassFileDescriber"/>
+      <describer class="org.scalaide.core.internal.jdt.model.ScalaClassFileDescriber"/>
     </content-type>
   </extension>
 
@@ -125,8 +125,8 @@
             default="true"
             icon="icons/full/obj16/scu_obj.gif"
             extensions="scala"
-            contributorClass="scala.tools.eclipse.actions.ScalaCompilationUnitEditorActionContributor"
-            class="scala.tools.eclipse.ScalaSourceFileEditor"
+            contributorClass="org.scalaide.ui.internal.editor.ScalaCompilationUnitEditorActionContributor"
+            class="org.scalaide.ui.internal.editor.ScalaSourceFileEditor"
             symbolicFontName="org.eclipse.jdt.ui.editors.textfont"
             id="scala.tools.eclipse.ScalaSourceFileEditor">
             <contentTypeBinding contentTypeId="scala.tools.eclipse.scalaSource"/>
@@ -136,7 +136,7 @@
             default="true"
             icon="icons/full/obj16/sclassf_obj.gif"
             contributorClass="org.eclipse.jdt.internal.ui.javaeditor.ClassFileEditorActionContributor"
-            class="scala.tools.eclipse.ScalaClassFileEditor"
+            class="org.scalaide.ui.internal.editor.ScalaClassFileEditor"
             symbolicFontName="org.eclipse.jdt.ui.editors.textfont"
             id="scala.tools.eclipse.ScalaClassFileEditor">
             <contentTypeBinding contentTypeId="scala.tools.eclipse.scalaClass"/>
@@ -199,16 +199,16 @@
 
    <extension point="org.eclipse.core.runtime.adapters">
      <factory
-       class="scala.tools.eclipse.ScalaRetargettableActionAdapterFactory"
-       adaptableType="scala.tools.eclipse.ScalaSourceFileEditor">
+       class="org.scalaide.ui.internal.editor.ScalaRetargettableActionAdapterFactory"
+       adaptableType="org.scalaide.ui.internal.editor.ScalaSourceFileEditor">
        <adapter type="org.eclipse.debug.ui.actions.IRunToLineTarget"/>
        <adapter type="org.eclipse.debug.ui.actions.IToggleBreakpointsTarget"/>
      </factory>
    </extension>
    <extension point="org.eclipse.core.runtime.adapters">
      <factory
-       class="scala.tools.eclipse.ScalaRetargettableActionAdapterFactory"
-       adaptableType="scala.tools.eclipse.ScalaClassFileEditor">
+       class="org.scalaide.ui.internal.editor.ScalaRetargettableActionAdapterFactory"
+       adaptableType="org.scalaide.ui.internal.editor.ScalaClassFileEditor">
        <adapter type="org.eclipse.debug.ui.actions.IRunToLineTarget"/>
        <adapter type="org.eclipse.debug.ui.actions.IToggleBreakpointsTarget"/>
      </factory>
@@ -230,21 +230,21 @@
          label="Run Setup Diagnostics"
          menubarPath="org_scala-ide_sdt_ui_menu/diagnostics"
          tooltip="Verify that Scala configuration is correct"
-         class="scala.tools.eclipse.actions.RunDiagnosticAction"
+         class="org.scalaide.ui.internal.actions.RunDiagnosticAction"
          enablesFor="*">
        </action>
        <action id="org.scala-ide.sdt.ui.reportBug.action"
          label="Report a Bug"
          menubarPath="org_scala-ide_sdt_ui_menu/additions"
          tooltip="Report a bug in the Scala Development Tools"
-         class="scala.tools.eclipse.actions.RunDiagnosticAction"
+         class="org.scalaide.ui.internal.actions.RunDiagnosticAction"
          enablesFor="*">
        </action>
        <action id="org.scala-ide.sdt.ui.openLogFile.action"
          label="Open the Log"
          menubarPath="org_scala-ide_sdt_ui_menu/additions"
          tooltip="Open the Log file in an editor"
-         class="scala.tools.eclipse.actions.RunDiagnosticAction"
+         class="org.scalaide.ui.internal.actions.RunDiagnosticAction"
          enablesFor="*">
        </action>       
      </actionSet>
@@ -282,7 +282,7 @@
    </extension>
    <extension point="org.eclipse.ui.perspectives">
       <perspective
-            class="scala.tools.eclipse.PerspectiveFactory"
+            class="org.scalaide.ui.internal.PerspectiveFactory"
             name="Scala"
             icon="icons/full/eview16/sperspective.gif"
             id="org.scala-ide.sdt.core.perspective">
@@ -295,7 +295,7 @@
             name="Scala Wizards"/>
       <wizard
             icon="icons/full/etool16/newsprj_wiz.gif"
-            class="scala.tools.eclipse.wizards.ScalaProjectWizard"
+            class="org.scalaide.ui.internal.wizards.ScalaProjectWizard"
             finalPerspective="org.scala-ide.sdt.core.perspective"
             category="org.scala-ide.sdt.core.wizards"
             project="true"
@@ -304,7 +304,7 @@
             <description>Create a Scala project</description>
       </wizard>
       <wizard
-            class="scala.tools.eclipse.wizards.NewClassWizard"
+            class="org.scalaide.ui.internal.wizards.NewClassWizard"
             icon="icons/full/etool16/newclass_wiz.gif"
             finalPerspective="org.scala-ide.sdt.core.perspective"
             category="org.scala-ide.sdt.core.wizards"
@@ -315,7 +315,7 @@
             <selection class="java.lang.Object"/>
       </wizard>
       <wizard
-            class="scala.tools.eclipse.wizards.NewObjectWizard"
+            class="org.scalaide.ui.internal.wizards.NewObjectWizard"
             icon="icons/full/etool16/newobject_wiz.gif"
             finalPerspective="org.scala-ide.sdt.core.perspective"
             category="org.scala-ide.sdt.core.wizards"
@@ -326,7 +326,7 @@
             <selection class="java.lang.Object"/>
       </wizard>
       <wizard
-            class="scala.tools.eclipse.wizards.NewPackageObjectWizard"
+            class="org.scalaide.ui.internal.wizards.NewPackageObjectWizard"
             icon="icons/full/etool16/newpackage_object_wiz.png"
             finalPerspective="org.scala-ide.sdt.core.perspective"
             category="org.scala-ide.sdt.core.wizards"
@@ -337,7 +337,7 @@
             <selection class="java.lang.Object"/>
       </wizard>
       <wizard
-            class="scala.tools.eclipse.wizards.NewTraitWizard"
+            class="org.scalaide.ui.internal.wizards.NewTraitWizard"
             icon="icons/full/etool16/newtrait_wiz.gif"
             finalPerspective="org.scala-ide.sdt.core.perspective"
             category="org.scala-ide.sdt.core.wizards"
@@ -348,7 +348,7 @@
             <selection class="java.lang.Object"/>
       </wizard>
       <wizard
-            class="scala.tools.eclipse.wizards.NewApplicationWizard"
+            class="org.scalaide.ui.internal.wizards.NewApplicationWizard"
             icon="icons/full/etool16/scala_app.gif"
             finalPerspective="org.scala-ide.sdt.core.perspective"
             category="org.scala-ide.sdt.core.wizards"
@@ -456,11 +456,11 @@
     <extension
          point="org.eclipse.jdt.core.classpathContainerInitializer">
       <classpathContainerInitializer
-            class="scala.tools.eclipse.ScalaCompilerClasspathContainerInitializer"
+            class="org.scalaide.core.internal.containers.ScalaCompilerClasspathContainerInitializer"
             id="org.scala-ide.sdt.launching.SCALA_COMPILER_CONTAINER">
       </classpathContainerInitializer>
       <classpathContainerInitializer
-            class="scala.tools.eclipse.ScalaLibraryClasspathContainerInitializer"
+            class="org.scalaide.core.internal.containers.ScalaLibraryClasspathContainerInitializer"
             id="org.scala-ide.sdt.launching.SCALA_CONTAINER">
       </classpathContainerInitializer>
    </extension>
@@ -468,18 +468,18 @@
       <classpathContainerPage
          id="org.scala-ide.sdt.launching.SCALA_COMPILER_CONTAINER"
          name="Scala Compiler"
-         class="scala.tools.eclipse.ScalaCompilerClasspathContainerPage">
+         class="org.scalaide.core.internal.containers.ScalaCompilerClasspathContainerPage">
       </classpathContainerPage>
       <classpathContainerPage
          id="org.scala-ide.sdt.launching.SCALA_CONTAINER"
          name="Scala Library"
-         class="scala.tools.eclipse.ScalaLibraryClasspathContainerPage">
+         class="org.scalaide.core.internal.containers.ScalaLibraryClasspathContainerPage">
       </classpathContainerPage>
    </extension>
    <extension point = "org.eclipse.debug.core.launchConfigurationTypes">
      <launchConfigurationType
            id="scala.application"
-           delegate="scala.tools.eclipse.launching.ScalaLaunchDelegate"
+           delegate="org.scalaide.core.internal.launching.ScalaLaunchDelegate"
            delegateDescription="The Scala JVM Launcher supports running and debugging of local Scala applications compiled to the JVM"
            delegateName="Scala JVM Launcher"
            modes="run, debug"
@@ -490,7 +490,7 @@
      </launchConfigurationType>
      <launchConfigurationType
            id="scala.interpreter"
-           delegate="scala.tools.eclipse.interpreter.InterpreterLaunchConfigurationDelegate"
+           delegate="org.scalaide.core.internal.repl.InterpreterLaunchConfigurationDelegate"
            delegateName="Scala Interpreter Launcher"
            delegateDescription="The Scala Interpreter launcher supports running and debugging code through a Read-Eval-Print loop"
            modes="run,debug"
@@ -514,12 +514,12 @@
    <extension point="org.eclipse.debug.ui.launchConfigurationTabGroups">
     <launchConfigurationTabGroup
         type="scala.application"
-        class="scala.tools.eclipse.launching.ApplicationTabGroup"
+        class="org.scalaide.core.internal.launching.ApplicationTabGroup"
         id="scala.application.tabGroup">
     </launchConfigurationTabGroup>
     <launchConfigurationTabGroup
         type="scala.interpreter"
-        class="scala.tools.eclipse.interpreter.InterpreterTabGroup"
+        class="org.scalaide.ui.internal.repl.InterpreterTabGroup"
         id="scala.interpreter.tabGroup">
         <launchMode
               mode="run"
@@ -536,7 +536,7 @@
          name="Scala Nature"
          point="org.eclipse.core.resources.natures">
       <runtime>
-         <run class="scala.tools.eclipse.Nature"/>
+         <run class="org.scalaide.core.internal.project.Nature"/>
       </runtime>
       <builder id="org.scala-ide.sdt.core.scalabuilder"/>
       <requires-nature id="org.eclipse.jdt.core.javanature"/>
@@ -545,7 +545,7 @@
          name="Scala Builder"
          point="org.eclipse.core.resources.builders">
       <builder hasNature="true">
-         <run class="scala.tools.eclipse.ScalaBuilder"/>
+         <run class="org.scalaide.core.internal.builder.ScalaBuilder"/>
       </builder>
    </extension>
    <extension
@@ -593,7 +593,7 @@
       id="scala.tools.eclipse.javaelements.ScalaElementFilter"
       name="Scala element filter"
       description="Prevents Scala elements which are artefacts of the Scala to Java encoding from appearing in the Package Explorer"
-      class="scala.tools.eclipse.javaelements.ScalaElementFilter"
+      class="org.scalaide.ui.internal.jdt.model.ScalaElementFilter"
       enabled="true"/>
   </extension>
 
@@ -626,7 +626,7 @@
           nameFilter="*"
           objectClass="org.eclipse.core.resources.IProject">
         <action
-             class="scala.tools.eclipse.actions.RestartPresentationCompilerAction"
+             class="org.scalaide.ui.internal.actions.RestartPresentationCompilerAction"
              enablesFor="+"
              id="org.scala-ide.sdt.core.action.restartScalaPresentationCompiler"
              label="Restart Presentation Compiler"
@@ -641,7 +641,7 @@
       id="org.scala-ide.sdt.ui.interperter.start"
       objectClass="org.eclipse.jdt.core.IJavaElement">
       <action
-        class="scala.tools.eclipse.actions.InterpreterAction"
+        class="org.scalaide.ui.internal.actions.InterpreterAction"
         enablesFor="1"
         menubarPath="org.scala-ide.sdt.core.popupMenu/content"
         icon="icons/full/etool16/scala_app.gif"
@@ -667,7 +667,7 @@
           nameFilter="*"
           objectClass="org.eclipse.core.resources.IProject">
         <action
-             class="scala.tools.eclipse.actions.AddScalaLibraryAction"
+             class="org.scalaide.ui.internal.actions.AddScalaLibraryAction"
              enablesFor="+"
              id="org.scala-ide.sdt.core.action.addScalaLibrary"
              label="Add Scala Library to Build Path"
@@ -690,7 +690,7 @@
             nameFilter="*"
             id="org.scala-ide.sdt.core.natures.contribution1">
          <action
-               class="scala.tools.eclipse.actions.ToggleScalaNatureAction"
+               class="org.scalaide.ui.internal.actions.ToggleScalaNatureAction"
                enablesFor="+"
                id="org.scala-ide.sdt.core.natures.ToggleNatureAction"
                label="Remove Scala Nature"
@@ -714,7 +714,7 @@
             nameFilter="*"
             id="org.scala-ide.sdt.core.natures.contribution2">
          <action
-               class="scala.tools.eclipse.actions.ToggleScalaNatureAction"
+               class="org.scalaide.ui.internal.actions.ToggleScalaNatureAction"
                enablesFor="+"
                id="org.scala-ide.sdt.core.natures.ToggleNatureAction"
                icon="icons/full/etool16/newsprj_wiz.gif"
@@ -740,7 +740,7 @@
   <extension
          point="org.eclipse.ui.console.consoleFactories">
       <consoleFactory
-            class="scala.tools.eclipse.interpreter.Factory"
+            class="org.scalaide.ui.internal.repl.Factory"
             icon="icons/full/etool16/scala_app.gif"
             label="Scala Console"/>
    </extension>
@@ -749,34 +749,34 @@
         id="org.scala-ide.sdt.core.preferences"
         point="org.eclipse.core.runtime.preferences">
      <initializer
-           class="scala.tools.eclipse.properties.syntaxcolouring.ColourPreferenceInitializer">
+           class="org.scalaide.ui.internal.preferences.ColourPreferenceInitializer">
      </initializer>    
      <initializer
-           class="scala.tools.eclipse.properties.ScalaCompilerPreferenceInitializer">
+           class="org.scalaide.ui.internal.preferences.ScalaCompilerPreferenceInitializer">
      </initializer>
      <initializer
-           class="scala.tools.eclipse.formatter.ScalaFormatterPreferenceInitializer">
+           class="org.scalaide.core.internal.formatter.ScalaFormatterPreferenceInitializer">
      </initializer>
      <initializer
-           class="scala.tools.eclipse.properties.OrganizeImportsPreferencesInitializer">
+           class="org.scalaide.ui.internal.preferences.OrganizeImportsPreferencesInitializer">
      </initializer>
      <initializer
-           class="scala.tools.eclipse.properties.ImplicitsPagePreferenceInitializer">
+           class="org.scalaide.ui.internal.preferences.ImplicitsPagePreferenceInitializer">
      </initializer>
      <initializer
-           class="scala.tools.eclipse.logging.ui.properties.LoggingPreferencePageInitializer">
+           class="org.scalaide.logging.ui.properties.LoggingPreferencePageInitializer">
      </initializer>
      <initializer
-           class="scala.tools.eclipse.PreferenceInitializer">
+           class="org.scalaide.ui.internal.preferences.PreferenceInitializer">
      </initializer>
      <initializer
-           class="scala.tools.eclipse.properties.EditorPreferenceInitializer">
+           class="org.scalaide.ui.internal.preferences.EditorPreferenceInitializer">
      </initializer>
   </extension>
 
   <extension point="org.eclipse.core.expressions.propertyTesters">
      <propertyTester
-           class="scala.tools.eclipse.launching.ScalaLaunchableTester"
+           class="org.scalaide.core.internal.launching.ScalaLaunchableTester"
            id="scala.tools.eclipse.launching.ScalaLaunchableTester"
            namespace="scala.tools.eclipse.launching"
            properties="hasMain,canLaunchAsJUnit"
@@ -785,7 +785,7 @@
 
   <extension point="org.eclipse.debug.ui.launchShortcuts">
     <shortcut
-      class="scala.tools.eclipse.launching.ScalaLaunchShortcut"
+      class="org.scalaide.core.internal.launching.ScalaLaunchShortcut"
       icon="icons/full/obj16/scu_obj.gif"
       id="org.eclipse.shortcut.scala"
       label="Scala Application"
@@ -808,7 +808,7 @@
             label="Scala JUnit Test"
             icon="$nl$/icons/full/obj16/julaunch.gif"
             helpContextId="org.eclipse.jdt.junit.launch_shortcut"
-            class="scala.tools.eclipse.launching.ScalaJUnitLaunchShortcut"
+            class="org.scalaide.core.internal.launching.ScalaJUnitLaunchShortcut"
             modes="run, debug"
             id="org.eclipse.shortcut.scala.junit">
          <contextualLaunch>
@@ -899,51 +899,51 @@
 
   <extension point="org.scala-ide.sdt.core.sourcefileprovider">
     <provider
-      class="scala.tools.eclipse.javaelements.ScalaSourceFileProvider"
+      class="org.scalaide.core.internal.jdt.model.ScalaSourceFileProvider"
       file_extension="scala">
     </provider>
   </extension>
 
   <extension point="org.scala-ide.sdt.aspects.cuprovider">
     <provider
-      class="scala.tools.eclipse.javaelements.ScalaCompilationUnitProvider"
+      class="org.scalaide.core.internal.jdt.model.ScalaCompilationUnitProvider"
       file_extension="scala">
     </provider>
   </extension>
 
   <extension point="org.scala-ide.sdt.aspects.cfprovider">
-    <provider class="scala.tools.eclipse.javaelements.ScalaClassFileProvider" />
+    <provider class="org.scalaide.core.internal.jdt.model.ScalaClassFileProvider" />
   </extension>
 
   <extension point="org.scala-ide.sdt.aspects.indexerprovider">
-    <provider class="scala.tools.eclipse.ScalaSourceIndexerFactory" />
+    <provider class="org.scalaide.core.internal.jdt.search.ScalaSourceIndexerFactory" />
   </extension>
 
   <extension point="org.scala-ide.sdt.aspects.spellingengineprovider">
-    <provider class="scala.tools.eclipse.ScalaSpellingEngineProvider" />
+    <provider class="org.scalaide.ui.internal.editor.ScalaSpellingEngineProvider" />
   </extension> 
   
   <extension point="org.scala-ide.sdt.aspects.openactionprovider">
-    <provider class="scala.tools.eclipse.ui.actions.OpenActionProvider" />
+    <provider class="org.scalaide.ui.internal.actions.hyperlinks.OpenActionProvider" />
   </extension> 
 
   <extension point="org.scala-ide.sdt.aspects.formatterCleanUp">
-    <provider class="scala.tools.eclipse.formatter.ScalaFormatterCleanUpProvider" />
+    <provider class="org.scalaide.core.internal.formatter.ScalaFormatterCleanUpProvider" />
   </extension>
 
   <extension point="org.scala-ide.sdt.aspects.method_verifier">
-    <provider class="scala.tools.eclipse.jcompiler.ScalaMethodVerifierProvider" />
+    <provider class="org.scalaide.core.internal.jdt.compiler.ScalaMethodVerifierProvider" />
   </extension>
   
   <extension point="org.scala-ide.sdt.aspects.imagedescriptorselector">
     <selector
-      class="scala.tools.eclipse.javaelements.ScalaImageDescriptorSelector">
+      class="org.scalaide.ui.internal.jdt.model.ScalaImageDescriptorSelector">
     </selector>
   </extension>
   <extension
         point="org.eclipse.jdt.ui.quickFixProcessors">
      <quickFixProcessor
-           class="scala.tools.eclipse.quickfix.ScalaQuickFixProcessor"
+           class="org.scalaide.core.internal.quickfix.ScalaQuickFixProcessor"
            id="scala-plugin.quickFixProcessor1">
         <enablement>
           <with variable="projectNatures">
@@ -959,7 +959,7 @@
  <extension
        point="org.eclipse.jdt.ui.quickAssistProcessors">
     <quickAssistProcessor
-          class="scala.tools.eclipse.quickfix.ScalaQuickAssistProcessor"
+          class="org.scalaide.core.internal.quickfix.ScalaQuickAssistProcessor"
           id="org.scala-ide.sdt.core.quickAssistProcessor"
           name="Scala Quick Assist Processor">
         <enablement>
@@ -992,7 +992,7 @@
             <separator name="scala.tools.eclipse.refactoring.methodSignatureGroup"/>
          </menu>
          <action
-               class="scala.tools.eclipse.refactoring.method.SplitParameterListsAction"
+               class="org.scalaide.refactoring.internal.method.SplitParameterListsAction"
                definitionId="scala.tools.eclipse.refactoring.method.command.SplitParameterLists"
                id="scala.tools.eclipse.refactoring.method.splitParameterListsAction"
                label="Split parameter lists"
@@ -1000,7 +1000,7 @@
                tooltip="Split parameter lists">
          </action>
          <action
-               class="scala.tools.eclipse.refactoring.method.MergeParameterListsAction"
+               class="org.scalaide.refactoring.internal.method.MergeParameterListsAction"
                definitionId="scala.tools.eclipse.refactoring.method.command.MergeParameterLists"
                id="scala.tools.eclipse.refactoring.method.mergeParameterListsAction"
                label="Merge parameter lists"
@@ -1008,7 +1008,7 @@
                tooltip="Merge parameter lists">
          </action>
          <action
-               class="scala.tools.eclipse.refactoring.method.ChangeParameterOrderAction"
+               class="org.scalaide.refactoring.internal.method.ChangeParameterOrderAction"
                definitionId="scala.tools.eclipse.refactoring.method.command.ChangeParameterOrder"
                id="scala.tools.eclipse.refactoring.method.changeParameterOrderAction"
                label="Change parameter order"
@@ -1016,7 +1016,7 @@
                tooltip="Change parameter order">
          </action>
          <action
-               class="scala.tools.eclipse.refactoring.MoveConstructorToCompanionObjectAction"
+               class="org.scalaide.refactoring.internal.MoveConstructorToCompanionObjectAction"
                definitionId="scala.tools.eclipse.refactoring.command.MoveConstructorToCompanionObject"
                id="scala.tools.eclipse.refactoring.moveConstructorToCompanionObjectAction"
                label="Move constructor to companion object"
@@ -1024,7 +1024,7 @@
                tooltip="Move constructor to companion object">
          </action>
          <action
-               class="scala.tools.eclipse.refactoring.ExtractTraitAction"
+               class="org.scalaide.refactoring.internal.ExtractTraitAction"
                definitionId="scala.tools.eclipse.refactoring.command.ExtractTrait"
                id="scala.tools.eclipse.refactoring.extractTraitAction"
                label="Extract trait"
@@ -1032,7 +1032,7 @@
                tooltip="Extract trait">
          </action>
          <action
-               class="scala.tools.eclipse.refactoring.move.MoveClassAction"
+               class="org.scalaide.refactoring.internal.move.MoveClassAction"
                definitionId="scala.tools.eclipse.refactoring.command.MoveClass"
                id="scala.tools.eclipse.refactoring.moveClassAction"
                label="Move Class/Object/Trait"
@@ -1045,7 +1045,7 @@
             </enablement>-->
          </action>
          <action
-               class="scala.tools.eclipse.refactoring.ExtractMethodAction"
+               class="org.scalaide.refactoring.internal.ExtractMethodAction"
                definitionId="scala.tools.eclipse.refactoring.command.ExtractMethod"
                id="scala.tools.eclipse.refactoring.extractMethodAction"
                label="Extract Method"
@@ -1058,7 +1058,7 @@
             </enablement>
          </action>
          <action
-               class="scala.tools.eclipse.refactoring.ExtractLocalAction"
+               class="org.scalaide.refactoring.internal.ExtractLocalAction"
                definitionId="scala.tools.eclipse.refactoring.command.ExtractLocal"
                id="scala.tools.eclipse.refactoring.extractLocalAction"
                label="Extract Local"
@@ -1071,7 +1071,7 @@
             </enablement>
          </action>
            <action
-               class="scala.tools.eclipse.refactoring.InlineLocalAction"
+               class="org.scalaide.refactoring.internal.InlineLocalAction"
                definitionId="scala.tools.eclipse.refactoring.command.InlineLocal"
                id="scala.tools.eclipse.refactoring.inlineLocalAction"
                label="Inline Local"
@@ -1084,7 +1084,7 @@
             </enablement>
          </action>
            <action
-               class="scala.tools.eclipse.refactoring.OrganizeImportsAction"
+               class="org.scalaide.refactoring.internal.OrganizeImportsAction"
                definitionId="scala.tools.eclipse.refactoring.command.OrganizeImports"
                id="scala.tools.eclipse.refactoring.organizeImportsAction"
                label="Organize Imports"
@@ -1092,7 +1092,7 @@
                tooltip="Organize Imports">
          </action>
          <action
-               class="scala.tools.eclipse.refactoring.rename.RenameAction"
+               class="org.scalaide.refactoring.internal.rename.RenameAction"
                definitionId="scala.tools.eclipse.refactoring.command.Rename"
                id="scala.tools.eclipse.refactoring.renameAction"
                label="Rename"
@@ -1105,7 +1105,7 @@
             </enablement>
          </action>
          <action
-               class="scala.tools.eclipse.refactoring.ExpandCaseClassBindingAction"
+               class="org.scalaide.refactoring.internal.ExpandCaseClassBindingAction"
                definitionId="scala.tools.eclipse.refactoring.command.ExpandCaseClassBinding"
                id="scala.tools.eclipse.refactoring.expandCaseClassBindingAction"
                label="Expand Case Class Binding"
@@ -1118,7 +1118,7 @@
             </enablement>
          </action>
          <action
-               class="scala.tools.eclipse.actions.RunSelectionAction"
+               class="org.scalaide.ui.internal.actions.RunSelectionAction"
                definitionId="scala.tools.eclipse.interpreter.RunSelection"
                disabledIcon="icons/full/dtool16/run_interpreter.gif"
                hoverIcon="icons/full/etool16/run_interpreter.gif"
@@ -1294,7 +1294,7 @@
   <extension
       point="org.eclipse.ui.editors.templates">
     <contextType
-        class="scala.tools.eclipse.templates.ScalaTemplateContextType"
+        class="org.scalaide.ui.internal.templates.ScalaTemplateContextType"
         id="org.scala-ide.sdt.core.templates"
         name="Scala">
     </contextType>
@@ -1306,19 +1306,19 @@
  <extension
        point="org.eclipse.ui.handlers">
     <handler
-          class="scala.tools.eclipse.semantichighlighting.implicits.ToggleImplicitsDisplayHandler"
+          class="org.scalaide.ui.internal.editor.decorators.implicits.ToggleImplicitsDisplayHandler"
           commandId="org.scala-ide.sdt.core.commands.ToggleImplicitsDisplay">
     </handler>
     <handler
-          class="scala.tools.eclipse.actions.ShowTypeOfSelectionCommand"
+          class="org.scalaide.ui.internal.actions.ShowTypeOfSelectionCommand"
           commandId="scala.tools.eclipse.editor.ShowTypeOfSelection">
     </handler>
     <handler
-          class="scala.tools.eclipse.actions.OpenImplicitCommand"
+          class="org.scalaide.ui.internal.actions.hyperlinks.OpenImplicitCommand"
           commandId="scala.tools.eclipse.editor.OpenImplicit">
     </handler>
     <handler
-          class="scala.tools.eclipse.markoccurrences.ToggleMarkOccurrencesHandler"
+          class="org.scalaide.ui.internal.editor.decorators.markoccurrences.ToggleMarkOccurrencesHandler"
           commandId="org.scala-ide.sdt.core.toggleMarkOccurences">
     </handler>
  </extension>
@@ -1408,7 +1408,7 @@
    id="scala.tools.eclipse.TemplateCompletionProposalComputer"
    name="Template Completion Proposal Computer">
    <javaCompletionProposalComputer
-      class="scala.tools.eclipse.templates.TemplateCompletionProposalComputer"
+      class="org.eclipse.jdt.internal.ui.text.java.TemplateCompletionProposalComputer"
       categoryId="org.eclipse.jdt.ui.templateProposalCategory">
       <partition type="__dftl_partition_content_type"/>
    </javaCompletionProposalComputer>
@@ -1427,7 +1427,7 @@
        point="org.eclipse.jdt.ui.javaCompletionProposalComputer">
     <javaCompletionProposalComputer
           categoryId="org.scala-ide.sdt.core.scala_completions"
-          class="scala.tools.eclipse.ui.ScalaCompletionProposalComputer">
+          class="org.scalaide.ui.internal.completion.ScalaCompletionProposalComputer">
        <partition
              type="__dftl_partition_content_type">
        </partition>
@@ -1439,7 +1439,7 @@
     <view
           allowMultiple="true"
           category="org.scala-ide.sdt.core.viewCategory"
-          class="scala.tools.eclipse.interpreter.ReplConsoleView"
+          class="org.scalaide.ui.internal.repl.ReplConsoleView"
           icon="icons/full/etool16/scala_app.gif"
           id="org.scala-ide.sdt.core.consoleView"
           name="Scala Interpreter"
@@ -1465,7 +1465,7 @@
     <javaCompletionProposalComputer
           activate="false"
           categoryId="org.scala-ide.sdt.core.scala_java_completions"
-          class="scala.tools.eclipse.completion.ScalaJavaCompletionProposalComputer">
+          class="org.scalaide.core.internal.completion.ScalaJavaCompletionProposalComputer">
        <partition
              type="__dftl_partition_content_type">
        </partition>
@@ -1474,7 +1474,7 @@
  <extension
        point="org.scala-ide.sdt.core.reconciliationParticipants">
     <participant
-          class="scala.tools.eclipse.semantichighlighting.SemanticHighlightingReconciliationParticipant"
+          class="org.scalaide.ui.internal.editor.decorators.semantichighlighting.SemanticHighlightingReconciliationParticipant"
           id="org.scala-ide.sdt.core.SemanticHighlightingPresenter"
           name="Semantic Highlighting">
     </participant>
@@ -1482,7 +1482,7 @@
  <extension
        point="org.eclipse.ltk.core.refactoring.moveParticipants">
     <moveParticipant
-          class="scala.tools.eclipse.refactoring.move.ScalaMoveParticipant"
+          class="org.scalaide.refactoring.internal.move.ScalaMoveParticipant"
           id="org.scala-ide.sdt.core.moveParticipant"
           name="Scala Move Participant">
        <enablement>
@@ -1500,7 +1500,7 @@
     <kind
           displayName="Scala JUnit 4"
           id="org.scala-ide.sdt.core.junit"
-          finderClass="scala.tools.eclipse.launching.JUnit4TestFinder"
+          finderClass="org.scalaide.core.internal.launching.JUnit4TestFinder"
           loaderPluginId="org.eclipse.jdt.junit4.runtime"
           loaderClass="org.eclipse.jdt.internal.junit4.runner.JUnit4TestLoader">
          <runtimeClasspathEntry pluginId="org.eclipse.jdt.junit4.runtime" />
@@ -1513,7 +1513,7 @@
  <extension
        point="org.eclipse.ui.decorators">
     <decorator
-          class="scala.tools.eclipse.ui.ScalaDecorator"
+          class="org.scalaide.ui.internal.explorer.ScalaDecorator"
           id="scala.tools.eclipse.ui.ScalaDecorator"
           label="Scala Decorations"
           state="true"
