@@ -24,7 +24,7 @@ abstract class CompilationUnit(override val workspaceFile: IFile) extends Intera
   /** no-op */
   override def scheduleReconcile(): Response[Unit] = {
     val r = new Response[Unit]
-    r.set()
+    r.set(())
     r
   }
 }
