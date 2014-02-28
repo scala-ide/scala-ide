@@ -19,12 +19,12 @@
   <packaging>pom</packaging>
 
   <properties>
-    <sbtrc.version>1.0-ef211f5a28288817cd44d6f4985acd9b614ce4c5</sbtrc.version>
+    <sbtrc.version>1.0-60fbc51c669ab30a2864f056706e5535a516cccb</sbtrc.version>
     <sbtrc.repo>http://download.scala-ide.org/tmp-luc/sbt-rc/m2repo/</sbtrc.repo>
     <akka.version>2.2.0</akka.version>
     <config.version>1.0.0</config.version>
-    <sbt.version>0.13.2-MSERVER-1</sbt.version>
-    <sbtlaunch.version>0.13.2-MSERVER-1</sbtlaunch.version>
+    <sbt.version>0.13.2-M2</sbt.version>
+    <sbtlaunch.version>0.13.2-M2</sbtlaunch.version>
     <play-lib.version>2.2.1</play-lib.version>
     <scala-stm.version>0.7</scala-stm.version>
     <joda-time.version>2.2</joda-time.version>

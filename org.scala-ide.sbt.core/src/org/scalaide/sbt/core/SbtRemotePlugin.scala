@@ -5,7 +5,6 @@ import org.eclipse.core.runtime.FileLocator
 import org.eclipse.core.runtime.Path
 import org.eclipse.ui.plugin.AbstractUIPlugin
 import org.osgi.framework.BundleContext
-import scala.tools.eclipse.util.OSGiUtils
 import org.eclipse.core.runtime.IPath
 import java.net.URL
 import java.util.zip.ZipFile

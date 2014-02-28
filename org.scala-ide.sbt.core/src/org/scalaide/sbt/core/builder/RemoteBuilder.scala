@@ -1,7 +1,7 @@
 package org.scalaide.sbt.core.builder
 
 import java.util.{ Map => JMap }
-import scala.tools.eclipse.logging.HasLogger
+import org.scalaide.logging.HasLogger
 import org.eclipse.core.resources.IProject
 import org.eclipse.core.resources.IncrementalProjectBuilder
 import org.eclipse.core.runtime.IProgressMonitor

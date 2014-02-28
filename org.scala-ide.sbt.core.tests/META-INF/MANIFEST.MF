@@ -9,6 +9,6 @@ Bundle-RequiredExecutionEnvironment: J2SE-1.5
 Require-Bundle: org.scala-lang.scala-library,
  org.eclipse.equinox.weaving.aspectj,
  org.junit
-Import-Package: scala.tools.eclipse.testsetup,
- org.aspectj.weaver.loadtime.definition
+Import-Package: org.aspectj.weaver.loadtime.definition,
+ org.scalaide.core.testsetup
 Bundle-ClassPath: .
