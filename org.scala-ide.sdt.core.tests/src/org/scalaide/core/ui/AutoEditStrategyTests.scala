@@ -41,6 +41,16 @@ object AutoEditStrategyTests {
   def setIntPref(property: String, value: Int) {
     when(prefStore.getInt(property)).thenReturn(value)
   }
+
+  def enabled(property: String)(f: => Unit) = {
+    enable(property, true)
+    f
+  }
+
+  def disabled(property: String)(f: => Unit) = {
+    enable(property, false)
+    f
+  }
 }
 
 abstract class AutoEditStrategyTests(strategy: IAutoEditStrategy) {
@@ -83,13 +93,15 @@ abstract class AutoEditStrategyTests(strategy: IAutoEditStrategy) {
    * white spaces. If this is the case then a $ sign must be set to the position
    * after the expected number of white spaces.
    */
-  def test(input: String, expectedOutput: String, operation: Operation) {
+  def test(input: String, expectedOutput: String, operation: Operation): Unit = {
     require(input.count(_ == '^') == 1, "the cursor in the input isn't set correctly")
     require(expectedOutput.count(_ == '^') == 1, "the cursor in the expected output isn't set correctly")
 
-    def createDocument(input: String): IDocument = {
-      val rawInput = input.filterNot(_ == '^')
-      val doc = new Document(rawInput)
+    val inputWithoutDollarSigns = input.filterNot(_ == '$')
+    val textOffset = inputWithoutDollarSigns.indexOf('^')
+    val doc = {
+      val inputWithoutCursor = inputWithoutDollarSigns.filterNot(_ == '^')
+      val doc = new Document(inputWithoutCursor)
       val partitioner = new ScalaDocumentPartitioner
 
       doc.setDocumentPartitioner(IJavaPartitions.JAVA_PARTITIONING, partitioner)
@@ -98,13 +110,9 @@ abstract class AutoEditStrategyTests(strategy: IAutoEditStrategy) {
       doc
     }
 
-    val doc = createDocument(input)
-    val rawInput = doc.get()
-    val textOffset = input.indexOf('^')
-
     operation match {
       case Remove(declared) =>
-        val actual = rawInput.substring(textOffset - declared.length, textOffset)
+        val actual = doc.get().substring(textOffset - declared.length, textOffset)
         require(declared == actual, "removeable content does not equal to the declared content")
       case _ =>
     }

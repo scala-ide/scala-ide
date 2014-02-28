@@ -190,11 +190,14 @@ class ScalaSourceViewerConfiguration(
         Array(
           new SmartSemicolonAutoEditStrategy(partitioning),
           new ScalaAutoIndentStrategy(partitioning, getProject, sourceViewer, prefProvider),
+          new AutoIndentStrategy(ScalaPlugin.prefStore),
           new BracketAutoEditStrategy(ScalaPlugin.prefStore),
           new LiteralAutoEditStrategy(ScalaPlugin.prefStore))
 
       case _ =>
-        Array(new ScalaAutoIndentStrategy(partitioning, getProject, sourceViewer, prefProvider))
+        Array(
+            new ScalaAutoIndentStrategy(partitioning, getProject, sourceViewer, prefProvider),
+            new AutoIndentStrategy(ScalaPlugin.prefStore))
     }
   }
 

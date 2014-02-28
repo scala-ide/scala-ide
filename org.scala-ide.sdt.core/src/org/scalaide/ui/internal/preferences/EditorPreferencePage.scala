@@ -59,7 +59,8 @@ class EditorPreferencePage extends PreferencePage with IWorkbenchPreferencePage 
     checkBox(P_ENABLE_AUTO_REMOVE_ESCAPED_SIGN, "Automatically remove complete escaped sign in string and character literals", typing)
 
     val indent = group("Indentation", base)
-    checkBox(P_ENABLE_AUTO_INDENT_MULTI_LINE_STRING, "Automatically indent multi line string literals", indent)
+    checkBox(P_ENABLE_AUTO_INDENT_ON_TAB, "Enable auto indent when tab is pressed", indent)
+    checkBox(P_ENABLE_AUTO_INDENT_MULTI_LINE_STRING, "Enable auto indent for multi line string literals", indent)
     checkBox(P_ENABLE_AUTO_STRIP_MARGIN_IN_MULTI_LINE_STRING, "Automatically add strip margins when multi line string starts with a |", indent)
 
     val highlighting = group("Highlighting", base)
@@ -112,6 +113,7 @@ object EditorPreferencePage {
   final val P_ENABLE_AUTO_ESCAPE_LITERALS = BASE + "autoEscapeLiterals"
   final val P_ENABLE_AUTO_ESCAPE_SIGN = BASE + "autoEscapeSign"
   final val P_ENABLE_AUTO_REMOVE_ESCAPED_SIGN = BASE + "autoRemoveEscapedSign"
+  final val P_ENABLE_AUTO_INDENT_ON_TAB = BASE + "autoIndent"
   final val P_ENABLE_AUTO_INDENT_MULTI_LINE_STRING = BASE + "autoIndentMultiLineString"
   final val P_ENABLE_AUTO_STRIP_MARGIN_IN_MULTI_LINE_STRING = BASE + "autoStringMarginInMultiLineString"
 
@@ -136,6 +138,7 @@ class EditorPreferenceInitializer extends AbstractPreferenceInitializer {
     store.setDefault(P_ENABLE_AUTO_ESCAPE_LITERALS, false)
     store.setDefault(P_ENABLE_AUTO_ESCAPE_SIGN, false)
     store.setDefault(P_ENABLE_AUTO_REMOVE_ESCAPED_SIGN, false)
+    store.setDefault(P_ENABLE_AUTO_INDENT_ON_TAB, true)
     store.setDefault(P_ENABLE_AUTO_INDENT_MULTI_LINE_STRING, false)
     store.setDefault(P_ENABLE_AUTO_STRIP_MARGIN_IN_MULTI_LINE_STRING, false)
 

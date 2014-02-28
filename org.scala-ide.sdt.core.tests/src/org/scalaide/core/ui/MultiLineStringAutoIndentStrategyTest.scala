@@ -1,16 +1,14 @@
 package org.scalaide.core.ui
 
+import org.eclipse.jface.text.IDocumentExtension3
 import org.junit.Before
 import org.junit.Test
-import org.scalaide.core.internal.lexical.ScalaPartitions
+import org.scalaide.core.internal.formatter.FormatterPreferences._
 import org.scalaide.ui.internal.editor.autoedits.MultiLineStringAutoIndentStrategy
 import org.scalaide.ui.internal.preferences.EditorPreferencePage._
+
 import AutoEditStrategyTests._
-import org.eclipse.jface.text.IDocumentExtension3
-
-import org.scalaide.core.internal.formatter.FormatterPreferences._
-
-import scalariform.formatter.preferences.IndentSpaces
+import scalariform.formatter.preferences._
 
 class MultiLineStringAutoIndentStrategyTest extends AutoEditStrategyTests(
     new MultiLineStringAutoIndentStrategy(
@@ -27,16 +25,11 @@ class MultiLineStringAutoIndentStrategyTest extends AutoEditStrategyTests(
   def startup(): Unit = {
     enable(P_ENABLE_AUTO_INDENT_MULTI_LINE_STRING, true)
     enable(P_ENABLE_AUTO_STRIP_MARGIN_IN_MULTI_LINE_STRING, true)
-    setIntPref(IndentSpaces.eclipseKey, 4)
-  }
-
-  def disable(property: String)(f: => Unit) = {
-    enable(property, false)
-    f
+    setIntPref(IndentSpaces.eclipseKey, 2)
   }
 
   @Test
-  def no_indent_when_feature_not_enabled() = disable(P_ENABLE_AUTO_INDENT_MULTI_LINE_STRING) { """
+  def no_indent_when_feature_not_enabled() = disabled(P_ENABLE_AUTO_INDENT_MULTI_LINE_STRING) { """
     |val str = ```text^```
     |""".mls becomes """
     |val str = ```text
@@ -81,7 +74,7 @@ class MultiLineStringAutoIndentStrategyTest extends AutoEditStrategyTests(
     |""".mls after newline
 
   @Test
-  def no_extra_indent_on_tab_when_feature_not_enabled() = disable(P_ENABLE_AUTO_INDENT_MULTI_LINE_STRING) { """
+  def no_extra_indent_on_tab_when_feature_not_enabled() = disabled(P_ENABLE_AUTO_INDENT_MULTI_LINE_STRING) { """
     |val str = ```text
     |    more text
     |^```
@@ -93,36 +86,42 @@ class MultiLineStringAutoIndentStrategyTest extends AutoEditStrategyTests(
   }
 
   @Test
-  def indent_by_same_depth_as_previous_line_when_tab_is_hit() = """
+  def indent_to_same_depth_as_previous_line_when_tab_is_hit() = """
     |val str = ```text
     |    more text
-    |^```
+    |^
+    |```
     |""".mls becomes """
     |val str = ```text
     |    more text
-    |    ^```
+    |    ^
+    |```
     |""".mls after tab
 
   @Test
-  def indent_by_same_depth_when_previous_line_contains_tabs() = """
+  def indent_to_same_depth_when_previous_line_contains_tabs() = """
     |val str = ```text
     |\t\tmore text
-    |    ^```
+    |    ^
+    |```
     |""".mls becomes """
     |val str = ```text
     |\t\tmore text
-    |\t\t^```
+    |    ^
+    |```
     |""".mls after tab
 
   @Test
   def indent_to_same_depth_as_previous_line_when_tab_is_hit_but_current_line_contains_whitespace() = """
     |val str = ```text
     |      more text
-    |   ^```
+    |   ^
+    |```
     |""".mls becomes """
     |val str = ```text
     |      more text
-    |      ^```
+    |      ^
+    |```
     |""".mls after tab
 
   @Test
@@ -159,7 +158,7 @@ class MultiLineStringAutoIndentStrategyTest extends AutoEditStrategyTests(
     |""".mls after tab
 
   @Test
-  def add_no_strip_margin_when_auto_indent_is_disabled_while_strip_margin_feature_is_enabled() = disable(P_ENABLE_AUTO_INDENT_MULTI_LINE_STRING) { """
+  def add_no_strip_margin_when_auto_indent_is_disabled_while_strip_margin_feature_is_enabled() = disabled(P_ENABLE_AUTO_INDENT_MULTI_LINE_STRING) { """
     |val str = ```|text^```
     |""".mls becomes """
     |val str = ```|text
@@ -168,7 +167,7 @@ class MultiLineStringAutoIndentStrategyTest extends AutoEditStrategyTests(
   }
 
   @Test
-  def add_no_strip_margin_when_feature_disabled() = disable(P_ENABLE_AUTO_STRIP_MARGIN_IN_MULTI_LINE_STRING) { """
+  def add_no_strip_margin_when_feature_disabled() = disabled(P_ENABLE_AUTO_STRIP_MARGIN_IN_MULTI_LINE_STRING) { """
     |val str = ```|text^```
     |""".mls becomes """
     |val str = ```|text
@@ -177,7 +176,7 @@ class MultiLineStringAutoIndentStrategyTest extends AutoEditStrategyTests(
   }
 
   @Test
-  def add_no_strip_margin_when_feature_disabled_but_strip_margin_exists() = disable(P_ENABLE_AUTO_STRIP_MARGIN_IN_MULTI_LINE_STRING) { """
+  def add_no_strip_margin_when_feature_disabled_but_strip_margin_exists() = disabled(P_ENABLE_AUTO_STRIP_MARGIN_IN_MULTI_LINE_STRING) { """
     |val str = ```|text
     |             |^
     |             |```.stripMargin

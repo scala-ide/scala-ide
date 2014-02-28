@@ -12,6 +12,7 @@ import org.junit.runners.Suite
   classOf[StringAutoEditStrategyTest],
   classOf[MultiLineStringAutoEditStrategyTest],
   classOf[IndentGuideGeneratorTest],
-  classOf[MultiLineStringAutoIndentStrategyTest]
+  classOf[MultiLineStringAutoIndentStrategyTest],
+  classOf[AutoIndentStrategyTest]
 ))
 class UITestSuite

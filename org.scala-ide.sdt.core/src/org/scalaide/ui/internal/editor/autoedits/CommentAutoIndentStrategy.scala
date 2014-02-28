@@ -17,7 +17,7 @@ import org.eclipse.jface.text.TextUtilities
  *  - allows to enlarge a comment block without adding a star to the following line
  *    by pressing enter on an empty line
  */
-class CommentAutoIndentStrategy(prefStore: IPreferenceStore, partitioning: String) extends DefaultIndentLineAutoEditStrategy with HasLogger {
+class CommentAutoIndentStrategy(prefStore: IPreferenceStore, partitioning: String) extends AutoIndentStrategy(prefStore) with HasLogger {
 
   override def customizeDocumentCommand(doc: IDocument, cmd: DocumentCommand) {
     if (cmd.offset == -1 || doc.getLength() == 0) return // don't spend time on invalid docs
@@ -80,19 +80,6 @@ class CommentAutoIndentStrategy(prefStore: IPreferenceStore, partitioning: Strin
         // don't break typing under any circumstances
         eclipseLog.warn("Error in scaladoc autoedit", e)
     }
-  }
-
-  /** Return the whitespace prefix (indentation), the rest of the line
-   *  for the given offset and also the rest of the line after the caret position.
-   */
-  private def breakLine(doc: IDocument, offset: Int): (String, String, String) = {
-    // indent up to the previous line
-    val lineInfo = doc.getLineInformationOfOffset(offset)
-    val endOfWS = findEndOfWhiteSpace(doc, lineInfo.getOffset(), offset)
-    val indent = doc.get(lineInfo.getOffset, endOfWS - lineInfo.getOffset)
-    val rest = doc.get(endOfWS, lineInfo.getOffset + lineInfo.getLength() - endOfWS)
-    val restAfterCaret = doc.get(offset, lineInfo.getOffset() - offset + lineInfo.getLength())
-    (indent, rest, restAfterCaret)
   }
 
   /** Heuristics for when to close a Scaladoc. Returns `true` when the offset is
