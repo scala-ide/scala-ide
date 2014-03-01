@@ -92,6 +92,35 @@ abstract class AutoEditStrategyTests(strategy: IAutoEditStrategy) {
    * Sometimes it can happen that the input or output must contain trailing
    * white spaces. If this is the case then a $ sign must be set to the position
    * after the expected number of white spaces.
+   *
+   * In the following there comes an explanation on how [[org.eclipse.jface.text.DocumentCommand]]
+   * works, whose logic is rather complex. Because of the complexity and also because
+   * of missing comprehensive documentation the following is based on reading and
+   * debugging the source code, it must not be correct:
+   *
+   * - The `doit` field is updated by the logic that sends the command to the auto
+   *   edit strategies. It is set to true when a command is considered to be handled,
+   *   i.e. it should not be changed again. The test suite doesn't consider this.
+   * - The `offset`, `length` and `text` fields should be clear.
+   * - The `caretOffset` is initially set to -1 and has to be set to a different
+   *   value when it should be considered. This field is strongly coupled to
+   *   `fCommands` which are only considered when `caretOffset` is >= 0. When
+   *   `caretOffset` is not changed the cursor is automatically shifted (and when
+   *   `shiftsCaret` is set to true, which is initially set to true).
+   * - `fCommands` hold a list of commands that should be executed in addition to
+   *   the outer command. It is anough to access `getCommandIterator` to iterate
+   *   over the command and all of its subcommands. When a command is added to the
+   *   outer command and `caretOffset` is changed as well, one probably also wants
+   *   to set `shiftCaret` to false. Otherwise the caret position is shifted by the
+   *   length of the inserted text of the subcommand.
+   * - `getCommandIterator` returns the commands in LIFO, with exception of the
+   *   outer command which is always the first one.
+   * - One command is used for all auto edit trategies, this means that a auto
+   *   edit strategy always needs to consider that a command could be modified by
+   *   a auto edit strategy that is invoked earlier.
+   * - It is possible to create an auto edit strategy inside of another auto edit
+   *   strategy and add it to the text editor. It will be invoked by the text
+   *   editor later but I suggest not to use this 'feature'.
    */
   def test(input: String, expectedOutput: String, operation: Operation): Unit = {
     require(input.count(_ == '^') == 1, "the cursor in the input isn't set correctly")
