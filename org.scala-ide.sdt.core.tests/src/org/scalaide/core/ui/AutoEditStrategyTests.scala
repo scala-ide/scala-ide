@@ -1,35 +1,25 @@
 package org.scalaide.core.ui
 
-import org.scalaide.core.internal.lexical.ScalaDocumentPartitioner
+import org.eclipse.jdt.ui.text.IJavaPartitions
+import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.jface.text.Document
 import org.eclipse.jface.text.DocumentCommand
 import org.eclipse.jface.text.IAutoEditStrategy
 import org.eclipse.jface.text.IDocument
-import org.junit.Assert._
+import org.eclipse.jface.text.IDocumentExtension3
 import org.junit.ComparisonFailure
 import org.mockito.Mockito._
-import org.eclipse.jface.preference.IPreferenceStore
-import org.eclipse.jdt.ui.text.IJavaPartitions
-import org.scalaide.core.internal.lexical.ScalaPartitions
-import org.eclipse.jface.text.IDocumentExtension3
+import org.scalaide.core.internal.lexical.ScalaDocumentPartitioner
 
 object AutoEditStrategyTests {
-  class TestCommand(cOffset: Int, cLength: Int, cText: String, cCaretOffset: Int, cShiftsCaret: Boolean, cDoIt: Boolean) extends DocumentCommand {
+
+  class TestCommand(cOffset: Int, cLength: Int, cText: String, cCaretOffset: Int) extends DocumentCommand {
     caretOffset = cCaretOffset
-    doit = cDoIt
+    doit = true
     length = cLength
     offset = cOffset
     text = cText
-    shiftsCaret = cShiftsCaret
-  }
-
-  def checkCommand(offset: Int, length: Int, text: String, caretOffset: Int, shiftsCaret: Boolean, doit: Boolean, command: DocumentCommand) {
-    assertEquals("Bad resulting offset", offset, command.offset)
-    assertEquals("Bad resulting lenght", length, command.length)
-    assertEquals("Bad resulting text", text, command.text)
-    assertEquals("Bad resulting carretOffset", caretOffset, command.caretOffset)
-    assertEquals("Bad resulting shiftsCaret", shiftsCaret, command.shiftsCaret)
-    assertEquals("Bad resulting doit", doit, command.doit)
+    shiftsCaret = true
   }
 
   val prefStore = mock(classOf[IPreferenceStore])
@@ -147,8 +137,8 @@ abstract class AutoEditStrategyTests(strategy: IAutoEditStrategy) {
     }
 
     val cmd = operation match {
-      case Add(s)    => new TestCommand(textOffset, 0, s, -1, true, true)
-      case Remove(s) => new TestCommand(textOffset - s.length, s.length, "", -1, true, true)
+      case Add(s)    => new TestCommand(textOffset, 0, s, -1)
+      case Remove(s) => new TestCommand(textOffset - s.length, s.length, "", -1)
     }
 
     strategy.customizeDocumentCommand(doc, cmd)
