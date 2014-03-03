@@ -4,7 +4,7 @@ import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import org.scalaide.refactoring.internal.ui.NewNameWizardPage
 import scala.tools.refactoring.analysis.GlobalIndexes
 import scala.tools.refactoring.analysis.NameValidation
-import scala.tools.refactoring.implementations.ExtractMethod
+import scala.tools.refactoring.implementations
 
 /**
  * Extracts a series of statements into a new method, passing the needed
@@ -13,13 +13,13 @@ import scala.tools.refactoring.implementations.ExtractMethod
  * The implementation found for example in the JDT offers much more configuration
  * options, for now, we only require the user to provide a name.
  */
-class ExtractMethodAction extends RefactoringActionWithWizard {
+class ExtractMethod extends RefactoringExecutorWithWizard {
 
   def createRefactoring(selectionStart: Int, selectionEnd: Int, file: ScalaSourceFile) = new ExtractMethodScalaIdeRefactoring(selectionStart, selectionEnd, file)
 
   class ExtractMethodScalaIdeRefactoring(start: Int, end: Int, file: ScalaSourceFile) extends ScalaIdeRefactoring("Extract Method", file, start, end) {
 
-    val refactoring = file.withSourceFile((sourceFile, compiler) => new ExtractMethod with GlobalIndexes with NameValidation {
+    val refactoring = file.withSourceFile((sourceFile, compiler) => new implementations.ExtractMethod with GlobalIndexes with NameValidation {
       val global = compiler
       val index = {
         val tree = askLoadedAndTypedTreeForFile(sourceFile).left.get

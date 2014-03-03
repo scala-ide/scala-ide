@@ -2,12 +2,9 @@ package org.scalaide.refactoring.internal
 
 import java.text.Collator
 import java.util.Comparator
-import org.scalaide.core.internal.jdt.model.LazyToplevelClass
-import org.scalaide.core.internal.jdt.model.ScalaElement
-import org.scalaide.core.internal.jdt.model.ScalaSourceFile
-import org.scalaide.ui.internal.preferences.OrganizeImportsPreferences._
-import scala.tools.refactoring.implementations.AddImportStatement
-import scala.tools.refactoring.implementations.OrganizeImports
+
+import scala.tools.refactoring.implementations
+
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.jdt.core.IJavaElement
 import org.eclipse.jdt.core.compiler.IProblem
@@ -19,8 +16,12 @@ import org.eclipse.jdt.internal.corext.util.TypeNameMatchCollector
 import org.eclipse.jdt.internal.ui.actions.ActionMessages
 import org.eclipse.jdt.internal.ui.dialogs.MultiElementListSelectionDialog
 import org.eclipse.jdt.internal.ui.util.TypeNameMatchLabelProvider
-import org.eclipse.jface.action.IAction
 import org.eclipse.jface.window.Window
+import org.scalaide.core.internal.jdt.model.LazyToplevelClass
+import org.scalaide.core.internal.jdt.model.ScalaElement
+import org.scalaide.core.internal.jdt.model.ScalaSourceFile
+import org.scalaide.ui.internal.preferences.OrganizeImportsPreferences._
+import org.scalaide.util.internal.eclipse.EditorUtils
 
 /**
  * The Scala implemention of Organize Imports.
@@ -33,12 +34,12 @@ import org.eclipse.jface.window.Window
  *    there are ambiguities, the user is prompted to select the correct import.
  *
  */
-class OrganizeImportsAction extends RefactoringAction with RefactoringActionWithoutWizard {
+class OrganizeImports extends RefactoringExecutorWithoutWizard {
 
   def createRefactoring(selectionStart: Int, selectionEnd: Int, file: ScalaSourceFile) =
     new OrganizeImportsScalaIdeRefactoring(file)
 
-  override def run(action: IAction) {
+  override def perform(): Unit = {
 
     /**
      * Returns an array of all the types that are missing in the source file.
@@ -88,7 +89,7 @@ class OrganizeImportsAction extends RefactoringAction with RefactoringActionWith
      * true is returned as well to signal that no further processing needs to be attempted.
      */
     def allProblemsFixed = {
-      EditorHelpers.withCurrentScalaSourceFile { file =>
+      EditorUtils.withCurrentScalaSourceFile { file =>
         Option(file.getProblems).map(_.isEmpty) getOrElse true
       } getOrElse true // no editor? then we are in trouble and can abort anyway
     }
@@ -109,22 +110,22 @@ class OrganizeImportsAction extends RefactoringAction with RefactoringActionWith
        */
       def createChanges(scalaSourceFile: ScalaSourceFile, imports: Iterable[TypeNameMatch], pm: IProgressMonitor) = {
         scalaSourceFile.withSourceFile { (sourceFile, compiler) =>
-          val refactoring = new AddImportStatement {
+          val refactoring = new implementations.AddImportStatement {
             val global = compiler
           }
           refactoring.addImports(scalaSourceFile.file, imports map (_.getFullyQualifiedName))
         } getOrElse (Nil)
       }
 
-      EditorHelpers.withCurrentEditor { editor =>
+      EditorUtils.withCurrentEditor { editor =>
 
         pm.subTask("Waiting for the compiler to finish..")
 
-        EditorHelpers.withScalaSourceFileAndSelection { (scalaSourceFile, textSelection) =>
+        EditorUtils.withScalaSourceFileAndSelection { (scalaSourceFile, textSelection) =>
           pm.subTask("Applying the changes.")
           val changes = createChanges(scalaSourceFile, imports, pm)
           val document = editor.getDocumentProvider.getDocument(editor.getEditorInput)
-          EditorHelpers.applyChangesToFileWhileKeepingSelection(document, textSelection, scalaSourceFile.file, changes)
+          EditorUtils.applyChangesToFileWhileKeepingSelection(document, textSelection, scalaSourceFile.file, changes)
           None
         }
       }
@@ -197,7 +198,7 @@ class OrganizeImportsAction extends RefactoringAction with RefactoringActionWith
       iterate(missingTypes, 3)
     }
 
-    EditorHelpers.withCurrentScalaSourceFile { file =>
+    EditorUtils.withCurrentScalaSourceFile { file =>
       getMissingTypeErrorsFromFile(file) match {
         case missingTypes if missingTypes.isEmpty =>
           // continue with organizing imports
@@ -216,7 +217,7 @@ class OrganizeImportsAction extends RefactoringAction with RefactoringActionWith
 
     lazy val compilationUnitHasProblems = file.getProblems != null && file.getProblems.exists(_.isError)
 
-    val refactoring = withCompiler( c => new OrganizeImports with FormattingOverrides { val global = c })
+    val refactoring = withCompiler( c => new implementations.OrganizeImports with FormattingOverrides { val global = c })
 
     override def checkInitialConditions(pm: IProgressMonitor) = {
       val status = super.checkInitialConditions(pm)

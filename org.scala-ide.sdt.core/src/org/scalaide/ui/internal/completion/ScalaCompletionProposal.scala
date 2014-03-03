@@ -3,11 +3,8 @@ package org.scalaide.ui.internal.completion
 import org.scalaide.ui.internal.ScalaImages
 import org.scalaide.util.internal.ScalaWordFinder
 import org.scalaide.core.completion._
-import org.scalaide.refactoring.internal.EditorHelpers
-import org.scalaide.refactoring.internal.EditorHelpers._
 import scala.tools.refactoring.common.TextChange
 import scala.tools.refactoring.implementations.AddImportStatement
-
 import org.eclipse.jdt.internal.ui.JavaPlugin
 import org.eclipse.jdt.internal.ui.JavaPluginImages
 import org.eclipse.jdt.ui.PreferenceConstants
@@ -37,6 +34,7 @@ import org.eclipse.swt.custom.StyleRange
 import org.eclipse.swt.events.VerifyEvent
 import org.eclipse.swt.graphics.Color
 import org.eclipse.ui.texteditor.link.EditorLinkedModeUI
+import org.scalaide.util.internal.eclipse.EditorUtils
 
 /** A UI class for displaying completion proposals.
  *
@@ -174,7 +172,7 @@ class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: I
     }
 
     val completionFullString = completionString(overwrite, doParamsProbablyExist)
-    val importSize = withScalaFileAndSelection { (scalaSourceFile, textSelection) =>
+    val importSize = EditorUtils.withScalaFileAndSelection { (scalaSourceFile, textSelection) =>
       var changes: List[TextChange] = Nil
 
       if (!tooltipsOnly) {
@@ -198,13 +196,13 @@ class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: I
       // Apply the two changes in one step, if done separately we would need an
       // another `waitLoadedType` to update the positions for the refactoring
       // to work properly.
-      EditorHelpers.applyChangesToFileWhileKeepingSelection(
+      EditorUtils.applyChangesToFileWhileKeepingSelection(
         d, textSelection, scalaSourceFile.file, changes)
 
       importStmt.headOption.map(_.text.length)
     }
 
-    def adjustCursorPosition() = EditorHelpers.doWithCurrentEditor { editor =>
+    def adjustCursorPosition() = EditorUtils.doWithCurrentEditor { editor =>
       editor.selectAndReveal(startPos + completionFullString.length() + importSize.getOrElse(0), 0)
     }
 

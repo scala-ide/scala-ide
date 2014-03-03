@@ -1,12 +1,11 @@
 package org.scalaide.refactoring.internal
 
 import scala.tools.refactoring.common.TextChange
-import scala.tools.refactoring.implementations.ExtractLocal
+import scala.tools.refactoring.implementations
 
-import org.eclipse.jface.action.IAction
 import org.eclipse.ui.PlatformUI
-
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
+import org.scalaide.util.internal.eclipse.EditorUtils
 
 /**
  * From a selected expression, the Extract Local refactoring will create a new
@@ -15,7 +14,7 @@ import org.scalaide.core.internal.jdt.model.ScalaSourceFile
  *
  * Extract Local also uses Eclipse's linked UI mode.
  */
-class ExtractLocalAction extends RefactoringAction {
+class ExtractLocal extends RefactoringExecutor {
 
   def createRefactoring(selectionStart: Int, selectionEnd: Int, file: ScalaSourceFile) =
     new ExtractLocalScalaIdeRefactoring(selectionStart, selectionEnd, file)
@@ -23,14 +22,14 @@ class ExtractLocalAction extends RefactoringAction {
   class ExtractLocalScalaIdeRefactoring(start: Int, end: Int, file: ScalaSourceFile)
       extends ScalaIdeRefactoring("Extract Local", file, start, end) {
 
-    val refactoring = withCompiler( c => new ExtractLocal { val global = c })
+    val refactoring = withCompiler( c => new implementations.ExtractLocal { val global = c })
 
     val name = "extractedLocalValue"
 
     def refactoringParameters = name
   }
 
-  override def run(action: IAction) {
+  override def perform(): Unit = {
 
     /**
      * Inline extracting is implemented by extracting to a new name
@@ -38,9 +37,9 @@ class ExtractLocalAction extends RefactoringAction {
      * names in the generated change.
      */
     def doInlineExtraction(change: TextChange, name: String) {
-      EditorHelpers.doWithCurrentEditor { editor =>
+      EditorUtils.doWithCurrentEditor { editor =>
 
-        EditorHelpers.applyRefactoringChangeToEditor(change, editor)
+        EditorUtils.applyRefactoringChangeToEditor(change, editor)
 
         val occurrences = {
           val firstOccurrence  = change.text.indexOf(name)
@@ -48,7 +47,7 @@ class ExtractLocalAction extends RefactoringAction {
           List(firstOccurrence, secondOccurrence) map (o => (change.from + o, name.length))
         }
 
-        EditorHelpers.enterLinkedModeUi(occurrences, selectFirst = true)
+        EditorUtils.enterLinkedModeUi(occurrences, selectFirst = true)
       }
     }
 
