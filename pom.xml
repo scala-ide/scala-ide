@@ -19,7 +19,7 @@
   <packaging>pom</packaging>
 
   <properties>
-    <sbtrc.version>1.0-60fbc51c669ab30a2864f056706e5535a516cccb</sbtrc.version>
+    <sbtrc.version>1.0-2ed540099de878afad149a1b86d395ab13f92f53</sbtrc.version>
     <sbtrc.repo>http://download.scala-ide.org/tmp-luc/sbt-rc/m2repo/</sbtrc.repo>
     <akka.version>2.2.0</akka.version>
     <config.version>1.0.0</config.version>
