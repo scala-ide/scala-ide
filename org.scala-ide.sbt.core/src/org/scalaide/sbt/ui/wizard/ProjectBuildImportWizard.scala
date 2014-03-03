@@ -26,4 +26,7 @@ class ProjectBuildImportWizard extends Wizard with IImportWizard {
     mainPage = new ProjectsImportPage(currentSelection)
     addPage(mainPage)
   }
+
+  // to have a progress bar, instead of busy cursor only.
+  override def needsProgressMonitor = true
 }
