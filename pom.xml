@@ -37,7 +37,7 @@
     <diffutils.version>1.2.1</diffutils.version>
 
     <!-- plugin versions -->
-    <tycho.plugin.version>0.18.1</tycho.plugin.version>
+    <tycho.plugin.version>0.19.0</tycho.plugin.version>
     <scala.plugin.version>3.1.5</scala.plugin.version>
     <aspectj.plugin.version>1.4</aspectj.plugin.version>
     <maven-bundle.plugin.version>2.3.7</maven-bundle.plugin.version>
@@ -198,6 +198,7 @@
               <configuration>
                 <dependencies>
                   <dependency>
+                    <groupId>org.eclipse.jdt</groupId>
                     <artifactId>org.eclipse.jdt.launching.macosx</artifactId>
                     <type>eclipse-plugin</type>
                   </dependency>
@@ -270,6 +271,7 @@
       <build>
         <plugins>
           <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-antrun-plugin</artifactId>
             <version>1.7</version>
             <executions>
@@ -469,6 +471,7 @@
           <version>${maven-source.plugin.version}</version>
         </plugin>
         <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-clean-plugin</artifactId>
           <version>${maven-clean.plugin.version}</version>
         </plugin>
