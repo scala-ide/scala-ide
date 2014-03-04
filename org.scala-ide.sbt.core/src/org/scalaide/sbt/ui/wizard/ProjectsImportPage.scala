@@ -59,11 +59,16 @@ import org.eclipse.core.resources.IWorkspace
 import org.eclipse.jdt.ui.PreferenceConstants
 import org.eclipse.jdt.core.JavaCore
 import scala.collection._
+import org.scalaide.sbt.core.SbtProjectSupport
+import scala.concurrent.duration._
+import scala.concurrent.Future
+
+import scala.concurrent.ExecutionContext.Implicits.global
 
 object ProjectsImportPage {
 
   /** */
-  class ProjectRecord(ref: ProjectReference) {
+  class ProjectRecord(val build: SbtBuild, val ref: ProjectReference) {
     /** Location of the sbt build file. */
     lazy val buildRoot = ref.build.getRawPath()
 
@@ -90,8 +95,8 @@ object ProjectsImportPage {
   }
 
   /** Holds information about the current state of the UI.
-    * @param selectedProjects
-    */
+   *  @param selectedProjects
+   */
   private class Model {
 
     private lazy val workspaceProjects: Seq[IProject] = IDEWorkbenchPlugin.getPluginWorkspace().getRoot().getProjects().toList
@@ -101,8 +106,8 @@ object ProjectsImportPage {
     var workingSetGroup: Option[WorkingSetGroup] = None
 
     /** Projects selected by the user that will be imported in the workspace. Note that
-      * the intersection of `selectedProjects` and `workspaceProjects` should be empty.
-      */
+     *  the intersection of `selectedProjects` and `workspaceProjects` should be empty.
+     */
     @volatile
     var selectedProjects: Seq[ProjectRecord] = Seq.empty
 
@@ -117,10 +122,10 @@ object ProjectsImportPage {
     }
 
     /** Determine if the project with the given name is in the current workspace.
-      *
-      * @param projectName The project name to check
-      * @return true if the project with the given name is in this workspace
-      */
+     *
+     *  @param projectName The project name to check
+     *  @return true if the project with the given name is in this workspace
+     */
     private def isProjectInWorkspace(projectName: String): Boolean = workspaceProjects.exists(_.getName == projectName)
   }
 }
@@ -195,8 +200,7 @@ class ProjectsImportPage(currentSelection: IStructuredSelection) extends WizardD
       if (e.detail == SWT.TRAVERSE_RETURN) {
         e.doit = false
         updateProjectsList(directoryPathField.getText().trim())
-      }
-      else ()
+      } else ()
     })
 
     directoryPathField.addSelectionListener(onWidgetSelected { _ =>
@@ -338,14 +342,12 @@ class ProjectsImportPage(currentSelection: IStructuredSelection) extends WizardD
             monitor.worked(50)
             monitor.subTask(DataTransferMessages.WizardProjectsImportPage_ProcessingMessage)
             val projects = collectProjectsReferencesFromDirectory(directory, monitor)
-            model.selectedProjects = projects.map(ref => new ProjectRecord(ref))
-          }
-          else monitor.worked(60)
+            model.selectedProjects = projects
+          } else monitor.worked(60)
           monitor.done()
         }
       })
-    }
-    catch {
+    } catch {
       case e: InvocationTargetException => IDEWorkbenchPlugin.log(e.getMessage(), e)
       case e: InterruptedException      => () //FIXME: Should at least set current thread status interrupted?
     }
@@ -358,8 +360,7 @@ class ProjectsImportPage(currentSelection: IStructuredSelection) extends WizardD
       if (project.hasConflicts) {
         displayWarning = true
         projectsList.setGrayed(project, true)
-      }
-      else projectsList.setChecked(project, true)
+      } else projectsList.setChecked(project, true)
     }
 
     if (displayWarning)
@@ -373,15 +374,19 @@ class ProjectsImportPage(currentSelection: IStructuredSelection) extends WizardD
 
   }
 
-  private def collectProjectsReferencesFromDirectory(directory: File, monitor: IProgressMonitor): Seq[ProjectReference] = {
+  private def collectProjectsReferencesFromDirectory(directory: File, monitor: IProgressMonitor): Seq[ProjectRecord] = {
     if (!monitor.isCanceled()) {
       monitor.subTask(NLS.bind(DataTransferMessages.WizardProjectsImportPage_CheckingMessage, directory.getPath()))
       val promise = Promise[Seq[ProjectReference]]
 
       import scala.concurrent.ExecutionContext.Implicits.global
 
+      val build = SbtBuild.buildFor(directory)
       val projects = SbtBuild.buildFor(directory).projects()
-      Await.result(projects, scala.concurrent.duration.Duration.Inf)
+      val projectRecords = projects.map {
+        _.map(new ProjectRecord(build, _))
+      }
+      Await.result(projectRecords, scala.concurrent.duration.Duration.Inf)
     } else {
       Seq.empty
     }
@@ -398,13 +403,16 @@ class ProjectsImportPage(currentSelection: IStructuredSelection) extends WizardD
   def createProjects(): Boolean = {
     val selected = model.selectedProjects
 
-    val op = withWorkspaceModifyOperation { monitor =>
-      try {
-        monitor.beginTask("", selected.length)
-        if (monitor.isCanceled()) throw new OperationCanceledException()
-        val createdProjects = selected.map(createExistingProject(_, new SubProgressMonitor(monitor, 1)))
-        addToWorkingSets(createdProjects)
-      } finally monitor.done()
+    val op = new IRunnableWithProgress() {
+      override def run(monitor: IProgressMonitor): Unit = {
+        try {
+          monitor.beginTask("", selected.length)
+          if (monitor.isCanceled()) throw new OperationCanceledException()
+          val createdProjects = selected.map(r => SbtProjectSupport.createWorkspaceProject(r.build, r.ref.name, "org.scala-ide.sbt.core.remoteBuilder", monitor))
+          Await.result(Future.sequence(createdProjects), 20.seconds)
+          ResourcesPlugin.getWorkspace().save(true, monitor)
+        } finally monitor.done()
+      }
     }
 
     try getContainer().run( /*fork*/ true, /*cancellable*/ true, op)
@@ -426,46 +434,14 @@ class ProjectsImportPage(currentSelection: IStructuredSelection) extends WizardD
 
   private def addToWorkingSets(projects: immutable.Seq[IProject]): Unit = {
     // TODO: make working set support working. sbt-11
-//    lazy val workingSetManager = PlatformUI.getWorkbench().getWorkingSetManager()
-//
-//    for {
-//      workingGroup <- model.workingSetGroup
-//      selectedWorkingSets <- Option(workingGroup.getSelectedWorkingSets)
-//      if selectedWorkingSets.nonEmpty
-//      project <- projects
-//    } workingSetManager.addToWorkingSets(project, selectedWorkingSets)
-  }
-  
-  private def createExistingProject(record: ProjectRecord, monitor: IProgressMonitor): IProject = {
-
-    val projectName = record.name
-    val workspace = ResourcesPlugin.getWorkspace()
-    val project = workspace.getRoot().getProject(projectName)
-    project.create(configureProjectDescription(record, workspace), IResource.NONE, monitor)
-    project.open(monitor)
-    configureProject(project, monitor)
-    project
-  }
-
-  def configureProjectDescription(project: ProjectRecord, workspace: IWorkspace): IProjectDescription = {
-    val description = workspace.newProjectDescription(project.name)
-
-    // TODO: this is wrong, it should be the project root, but we need to get the info through settings
-    description.setLocation(new Path(project.buildRoot))
-
-    description.setNatureIds(Array("org.scala-ide.sdt.core.scalanature", "org.eclipse.jdt.core.javanature"))
-
-    val newBuilderCommand = description.newCommand;
-    newBuilderCommand.setBuilderName("org.scala-ide.sbt.core.remoteBuilder");
-    description.setBuildSpec(Array(newBuilderCommand))
-
-    description
-  }
-
-  def configureProject(project: IProject, monitor: IProgressMonitor) {
-    val javaProject = JavaCore.create(project)
-    // For some reason, using ScalaPlugin$ crashes at runtime. Missing dependency?
-    javaProject.setRawClasspath(PreferenceConstants.getDefaultJRELibrary() :+ JavaCore.newContainerEntry(Path.fromPortableString("org.scala-ide.sdt.launching.SCALA_CONTAINER")), monitor)
+    //    lazy val workingSetManager = PlatformUI.getWorkbench().getWorkingSetManager()
+    //
+    //    for {
+    //      workingGroup <- model.workingSetGroup
+    //      selectedWorkingSets <- Option(workingGroup.getSelectedWorkingSets)
+    //      if selectedWorkingSets.nonEmpty
+    //      project <- projects
+    //    } workingSetManager.addToWorkingSets(project, selectedWorkingSets)
   }
 
 }
