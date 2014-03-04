@@ -87,7 +87,7 @@ object EditorHelpers {
     }
   }
 
-  def createTextFileChange(file: IFile, fileChanges: List[TextChange]): TextFileChange = {
+  def createTextFileChange(file: IFile, fileChanges: List[TextChange], saveAfter: Boolean = true): TextFileChange = {
     new TextFileChange(file.getName(), file) {
 
       val fileChangeRootEdit = new MultiTextEdit
@@ -96,6 +96,7 @@ object EditorHelpers {
         new ReplaceEdit(change.from, change.to - change.from, change.text)
       } foreach fileChangeRootEdit.addChild
 
+      if (saveAfter) setSaveMode(TextFileChange.LEAVE_DIRTY)
       setEdit(fileChangeRootEdit)
     }
   }
@@ -108,8 +109,9 @@ object EditorHelpers {
    * @param textSelection The currently selected area of the document.
    * @param file The file that we're currently editing (the document alone isn't enough because we need to get an IFile).
    * @param changes The changes that should be applied.
+   * @param saveAfter Whether files should be saved after changes
    */
-  def applyChangesToFileWhileKeepingSelection(document: IDocument, textSelection: ITextSelection, file: AbstractFile, changes: List[TextChange])  {
+  def applyChangesToFileWhileKeepingSelection(document: IDocument, textSelection: ITextSelection, file: AbstractFile, changes: List[TextChange], saveAfter: Boolean = true)  {
 
     def selectionIsInManipulatedRegion(region: IRegion): Boolean = {
       val (regionStart, regionEnd) = {
@@ -122,7 +124,7 @@ object EditorHelpers {
     }
 
     FileUtils.toIFile(file) foreach { f =>
-      createTextFileChange(f, changes).getEdit match {
+      createTextFileChange(f, changes, saveAfter).getEdit match {
         // we know that it is a MultiTextEdit because we created it above
         case edit: MultiTextEdit =>
 
