@@ -1,20 +1,13 @@
 package org.scalaide.ui.internal.editor.decorators
 
-import org.scalaide.core.ScalaPlugin
-import org.scalaide.ui.internal.preferences.EditorPreferencePage
-
 import org.eclipse.jface.preference.PreferenceConverter
-import org.eclipse.jface.text.IPaintPositionManager
-import org.eclipse.jface.text.IPainter
 import org.eclipse.jface.text.source.ISourceViewer
-import org.eclipse.jface.util.IPropertyChangeListener
-import org.eclipse.jface.util.PropertyChangeEvent
 import org.eclipse.swt.SWT
 import org.eclipse.swt.events.PaintEvent
-import org.eclipse.swt.events.PaintListener
 import org.eclipse.swt.graphics.Color
 import org.eclipse.swt.graphics.GC
 import org.eclipse.swt.widgets.Display
+import org.scalaide.ui.internal.preferences.EditorPreferencePage
 
 /**
  * Contains the UI-related code of the indent guide component.
@@ -28,8 +21,9 @@ import org.eclipse.swt.widgets.Display
  * This component watches the preference store to find out whether its configuration
  * has changed.
  */
-class IndentGuidePainter(viewer: ISourceViewer) extends AnyRef
-    with IPainter with PaintListener with IPropertyChangeListener with IndentGuideGenerator {
+class IndentGuidePainter(viewer: ISourceViewer)
+    extends EditorPainter(viewer, EditorPreferencePage.INDENT_GUIDE_ENABLE)
+    with IndentGuideGenerator {
 
   private object config {
     final val LineStyle = SWT.LINE_DOT
@@ -41,36 +35,14 @@ class IndentGuidePainter(viewer: ISourceViewer) extends AnyRef
     final val GuideShift = 2
   }
 
-  private val widget = viewer.getTextWidget()
-  private val store = ScalaPlugin.prefStore
   /** The width of a space in pixel */
   private val spaceWidth = withGC { _.getAdvanceWidth(' ') }
 
-  private var isActive = false
-  private var enabled = false
-  private var color: Color = null
+  private var color: Color = _
 
-  loadPreferences()
+  override def paintByReason(reason: Int): Unit = {}
 
-  override def paint(reason: Int): Unit = {
-    if (!isActive) {
-      isActive = true
-      store.addPropertyChangeListener(this)
-      widget.addPaintListener(this)
-      widget.redraw()
-    }
-  }
-
-  override def deactivate(redraw: Boolean): Unit = {
-    if (isActive) {
-      isActive = false
-      widget.removePaintListener(this)
-    }
-  }
-
-  override def paintControl(e: PaintEvent): Unit = {
-    if (!enabled) return
-
+  override def paintByEvent(e: PaintEvent): Unit = {
     val (y, h, gc) = (e.y, e.height, e.gc)
     val startLine = widget.getLineIndex(y)
     val endLine = widget.getLineIndex(y + h - 1)
@@ -89,24 +61,16 @@ class IndentGuidePainter(viewer: ISourceViewer) extends AnyRef
     guidesOfRange(startLine, endLine) foreach drawLine
   }
 
-  override def setPositionManager(manager: IPaintPositionManager): Unit = {}
-
   override def dispose(): Unit = {
     if (color != null)
       color.dispose()
-  }
-
-  override def propertyChange(e: PropertyChangeEvent): Unit = {
-    loadPreferences()
-    widget.redraw()
   }
 
   override def textOfLine(line: Int): String = widget.getLine(line)
   override def lineCount: Int = widget.getLineCount()
   override def indentWidth: Int = widget.getTabs()
 
-  private def loadPreferences(): Unit = {
-    enabled = store.getBoolean(EditorPreferencePage.INDENT_GUIDE_ENABLE)
+  override def loadPreferences(): Unit = {
     val rgb = PreferenceConverter.getColor(store, EditorPreferencePage.INDENT_GUIDE_COLOR)
     if (color != null)
       color.dispose()

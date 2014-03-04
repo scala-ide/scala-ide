@@ -8,10 +8,13 @@ import org.eclipse.swt.widgets.Display
 import org.eclipse.swt.events._
 import org.eclipse.swt.graphics._
 import org.eclipse.jface.text._
+import org.scalaide.ui.internal.editor.decorators.EditorPainter
+import org.eclipse.jface.text.source.ISourceViewer
+import org.scalaide.ui.internal.preferences.EditorPreferencePage
 
 object InferredSemicolonPainter {
 
-  val SEMICOLON_COLOUR = new Color(Display.getDefault, new RGB(160, 160, 160))
+  val SEMICOLON_COLOR = new Color(Display.getDefault, new RGB(160, 160, 160))
 
 }
 /**
@@ -21,52 +24,31 @@ object InferredSemicolonPainter {
  *
  * @see org.eclipse.jface.text.WhitespaceCharacterPainter
  */
-class InferredSemicolonPainter(textViewer: ITextViewer with ITextViewerExtension5)
-  extends IPainter with PaintListener with IDocumentListener {
+class InferredSemicolonPainter(textViewer: ISourceViewer with ITextViewerExtension5)
+    extends EditorPainter(textViewer, EditorPreferencePage.P_SHOW_INFERRED_SEMICOLONS) with IDocumentListener {
 
   import InferredSemicolonPainter._
 
   private val typingDelayHelper: TypingDelayHelper = new TypingDelayHelper
 
-  private var installed = false
+  private var inferredSemis: List[Token] = findInferredSemis
 
-  private var inferredSemis: List[Token] = Nil
-
-  def dispose() {
-    val doc = textViewer.getDocument
-    if (installed && doc != null)
-      doc.removeDocumentListener(this)
+  override def dispose(): Unit = {
     typingDelayHelper.stop()
   }
 
-  def paint(reason: Int) {
+  override def loadPreferences(): Unit = {}
+
+  override def paintByReason(reason: Int): Unit = {
     val doc = textViewer.getDocument
-    if (!installed && doc != null) {
-      textWidget.addPaintListener(this)
-      doc.addDocumentListener(this)
-      installed = true
-      inferredSemis = findInferredSemis
-      textWidget.redraw()
-    } else if (reason == IPainter.TEXT_CHANGE && true) {
-      val lineRegion = doc.getLineInformationOfOffset(textViewer.widgetOffset2ModelOffset(textWidget.getCaretOffset))
+
+    if (reason == IPainter.TEXT_CHANGE) {
+      val lineRegion = doc.getLineInformationOfOffset(textViewer.widgetOffset2ModelOffset(widget.getCaretOffset))
       val widgetOffset = textViewer.modelOffset2WidgetOffset(lineRegion.getOffset)
-      val charCount = textWidget.getCharCount
+      val charCount = widget.getCharCount
       val redrawLength = min(lineRegion.getLength, charCount - widgetOffset)
       if (widgetOffset >= 0 && redrawLength > 0)
-        textWidget.redrawRange(widgetOffset, redrawLength, true);
-    } else
-      textWidget.redraw()
-  }
-
-  def deactivate(redraw: Boolean) {
-    if (installed) {
-      textWidget.removePaintListener(this)
-      val document = textViewer.getDocument
-      if (document != null)
-        document.removeDocumentListener(this)
-      installed = false
-      if (redraw)
-        textWidget.redraw()
+        widget.redrawRange(widgetOffset, redrawLength, true);
     }
   }
 
@@ -76,7 +58,7 @@ class InferredSemicolonPainter(textViewer: ITextViewer with ITextViewerExtension
     inferredSemis = updateInferredSemis(event)
     typingDelayHelper.scheduleCallback {
       inferredSemis = findInferredSemis
-      textWidget.redraw()
+      widget.redraw()
     }
   }
 
@@ -103,19 +85,16 @@ class InferredSemicolonPainter(textViewer: ITextViewer with ITextViewerExtension
       case e: ScalaParserException => Nil
     }
 
-  def setPositionManager(manager: IPaintPositionManager) {}
+  override def paintByEvent(event: PaintEvent): Unit = {
+    val startLine = scala.math.max(widget.getLineIndex(event.y), 0)
+    val endLine = scala.math.min(widget.getLineIndex(event.y + event.height - 1) + 1, widget.getLineCount - 1)
 
-  def paintControl(event: PaintEvent) {
-    val startLine = scala.math.max(textWidget.getLineIndex(event.y), 0)
-    val endLine = scala.math.min(textWidget.getLineIndex(event.y + event.height - 1) + 1, textWidget.getLineCount - 1)
-    if (startLine <= endLine && startLine < textWidget.getLineCount) {
-      val modelStart = textViewer.widgetOffset2ModelOffset(textWidget.getOffsetAtLine(startLine))
-      val modelEnd = textViewer.widgetOffset2ModelOffset(textWidget.getOffsetAtLine(endLine))
+    if (startLine <= endLine && startLine < widget.getLineCount) {
+      val modelStart = textViewer.widgetOffset2ModelOffset(widget.getOffsetAtLine(startLine))
+      val modelEnd = textViewer.widgetOffset2ModelOffset(widget.getOffsetAtLine(endLine))
       drawCharRange(event.gc, modelStart, modelEnd)
     }
   }
-
-  private def textWidget = textViewer.getTextWidget
 
   private def getBestPositionToDraw(token: Token, document: IDocument): Int = {
     var pos = token.offset
@@ -144,12 +123,12 @@ class InferredSemicolonPainter(textViewer: ITextViewer with ITextViewerExtension
   private def drawSemicolon(gc: GC, modelOffset: Int) {
     val widgetOffset = textViewer.modelOffset2WidgetOffset(modelOffset)
     if (widgetOffset >= 0) {
-      val baseline = textWidget.getBaseline(widgetOffset)
+      val baseline = widget.getBaseline(widgetOffset)
       val fontMetrics = gc.getFontMetrics
       val fontBaseline = fontMetrics.getAscent + fontMetrics.getLeading
       val baselineDelta = baseline - fontBaseline
-      val pos = textWidget.getLocationAtOffset(widgetOffset)
-      gc.setForeground(SEMICOLON_COLOUR)
+      val pos = widget.getLocationAtOffset(widgetOffset)
+      gc.setForeground(SEMICOLON_COLOR)
       gc.drawString(";", pos.x, pos.y + baselineDelta, true)
     }
   }
