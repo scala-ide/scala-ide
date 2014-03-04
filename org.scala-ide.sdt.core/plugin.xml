@@ -1195,6 +1195,12 @@
             id="org.scalaide.core.handler.showInferredSemicolons"
             name="Show inferred semicolons">
       </command>
+      <command
+            categoryId="scala.tools.eclipse.category"
+            description="Show Indent Guide"
+            id="org.scalaide.core.handler.indentGuide"
+            name="Show Indent Guide">
+      </command>
 </extension>
 
    <extension point="org.eclipse.ui.contexts">
@@ -1306,6 +1312,10 @@
           class="org.scalaide.ui.internal.editor.decorators.semicolon.ShowInferredSemicolonsHandler"
           commandId="org.scalaide.core.handler.showInferredSemicolons">
     </handler>
+    <handler
+          class="org.scalaide.ui.internal.editor.decorators.indentguide.IndentGuideHandler"
+          commandId="org.scalaide.core.handler.indentGuide">
+    </handler>
  </extension>
  <extension
        point="org.eclipse.ui.menus">
@@ -1332,6 +1342,12 @@
                 commandId="org.scalaide.core.handler.showInferredSemicolons"
                 icon="icons/show_inferred_semicolons.png"
                 label="Show inferred semicolons"
+                style="toggle">
+          </command>
+          <command
+                commandId="org.scalaide.core.handler.indentGuide"
+                icon="icons/indent_guide.png"
+                label="Show Indent Guide"
                 style="toggle">
           </command>
        </toolbar>

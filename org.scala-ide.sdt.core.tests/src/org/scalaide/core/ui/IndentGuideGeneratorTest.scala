@@ -4,7 +4,7 @@ import org.eclipse.jface.text.Document
 import org.junit.ComparisonFailure
 import org.junit.Test
 import IndentGuideGeneratorTest.FullRange
-import org.scalaide.ui.internal.editor.decorators.IndentGuideGenerator
+import org.scalaide.ui.internal.editor.decorators.indentguide.IndentGuideGenerator
 
 object IndentGuideGeneratorTest {
 

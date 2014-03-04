@@ -1,4 +1,4 @@
-package org.scalaide.ui.internal.editor.decorators
+package org.scalaide.ui.internal.editor.decorators.indentguide
 
 import org.eclipse.jface.preference.PreferenceConverter
 import org.eclipse.jface.text.source.ISourceViewer
@@ -7,6 +7,7 @@ import org.eclipse.swt.events.PaintEvent
 import org.eclipse.swt.graphics.Color
 import org.eclipse.swt.graphics.GC
 import org.eclipse.swt.widgets.Display
+import org.scalaide.ui.internal.editor.decorators.EditorPainter
 import org.scalaide.ui.internal.preferences.EditorPreferencePage
 
 /**

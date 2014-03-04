@@ -3,7 +3,7 @@ package org.scalaide.ui.internal.editor
 import org.scalaide.ui.syntax.ScalaSyntaxClasses
 import org.scalaide.util.internal.ui.DisplayThread
 import org.scalaide.util.internal.eclipse.SWTUtils.fnToPropertyChangeListener
-import org.scalaide.ui.internal.editor.decorators.IndentGuidePainter
+import org.scalaide.ui.internal.editor.decorators.indentguide.IndentGuidePainter
 import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor
 import org.eclipse.jdt.internal.ui.javaeditor.JavaSourceViewer
 import org.eclipse.jface.text.source.SourceViewerConfiguration
