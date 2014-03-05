@@ -2,9 +2,15 @@ package org.scalaide.sbt.ui.wizard
 
 import java.io.File
 import java.lang.reflect.InvocationTargetException
+
+import scala.collection._
 import scala.collection.immutable.Seq
 import scala.concurrent.Await
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 import scala.concurrent.Promise
+import scala.concurrent.duration._
+
 import org.eclipse.core.resources.IProject
 import org.eclipse.core.resources.ResourcesPlugin
 import org.eclipse.core.runtime.CoreException
@@ -14,7 +20,6 @@ import org.eclipse.core.runtime.IStatus
 import org.eclipse.core.runtime.OperationCanceledException
 import org.eclipse.core.runtime.Path
 import org.eclipse.core.runtime.Status
-import org.eclipse.core.runtime.SubProgressMonitor
 import org.eclipse.jface.dialogs.Dialog
 import org.eclipse.jface.dialogs.ErrorDialog
 import org.eclipse.jface.dialogs.IMessageProvider
@@ -38,32 +43,19 @@ import org.eclipse.swt.layout.GridLayout
 import org.eclipse.swt.widgets.Button
 import org.eclipse.swt.widgets.Combo
 import org.eclipse.swt.widgets.Composite
+import org.eclipse.swt.widgets.Control
 import org.eclipse.swt.widgets.DirectoryDialog
 import org.eclipse.swt.widgets.Event
 import org.eclipse.swt.widgets.Group
 import org.eclipse.swt.widgets.Label
-import org.eclipse.ui.PlatformUI
 import org.eclipse.ui.dialogs.WizardDataTransferPage
 import org.eclipse.ui.dialogs.WorkingSetGroup
-import org.eclipse.ui.internal.ide.IDEWorkbenchMessages
 import org.eclipse.ui.internal.ide.IDEWorkbenchPlugin
 import org.eclipse.ui.internal.wizards.datatransfer.DataTransferMessages
-import org.scalaide.sbt.ui.actions.withWorkspaceModifyOperation
-import sbt.protocol.MinimalBuildStructure
-import sbt.protocol.ProjectReference
-import org.eclipse.jface.window.IShellProvider
 import org.scalaide.sbt.core.SbtBuild
-import org.eclipse.core.resources.IResource
-import org.eclipse.core.resources.IProjectDescription
-import org.eclipse.core.resources.IWorkspace
-import org.eclipse.jdt.ui.PreferenceConstants
-import org.eclipse.jdt.core.JavaCore
-import scala.collection._
 import org.scalaide.sbt.core.SbtProjectSupport
-import scala.concurrent.duration._
-import scala.concurrent.Future
 
-import scala.concurrent.ExecutionContext.Implicits.global
+import sbt.protocol.ProjectReference
 
 object ProjectsImportPage {
 
@@ -162,6 +154,7 @@ class ProjectsImportPage(currentSelection: IStructuredSelection) extends WizardD
 
     createProjectsRoot(workArea)
     createProjectsList(workArea)
+    createBuilderGroup(workArea)
     createWorkingSetGroup(workArea)
     Dialog.applyDialogFont(workArea)
   }
@@ -177,7 +170,7 @@ class ProjectsImportPage(currentSelection: IStructuredSelection) extends WizardD
     projectGroup.setLayoutData(new GridData(GridData.FILL_HORIZONTAL))
 
     // new project from directory radio button
-    val projectsLabel = new Label(projectGroup, SWT.BORDER)
+    val projectsLabel = new Label(projectGroup, SWT.NONE)
     projectsLabel.setText(DataTransferMessages.WizardProjectsImportPage_RootSelectTitle)
 
     // project location entry combo
@@ -314,10 +307,45 @@ class ProjectsImportPage(currentSelection: IStructuredSelection) extends WizardD
     setButtonLayoutData(refresh)
   }
 
+  private def createBuilderGroup(workArea: Composite): Unit = {
+    // UI group not wired to anything. Used to show that the internal sbt builder will be used
+    val group = new Group(workArea, SWT.NONE)
+    group.setFont(workArea.getFont());
+    group.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
+    group.setLayout(new GridLayout(1, false));
+    val internalBuilderButton = new Button(group, SWT.CHECK)
+    internalBuilderButton.setText("Use internal sbt builder")
+    internalBuilderButton.setSelection(true)
+    internalBuilderButton.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false))
+    group.setText("Builder")
+
+    setAllDisabled(group)
+  }
+
   private def createWorkingSetGroup(workArea: Composite): Unit = {
     val workingSetIds = Array("org.eclipse.ui.resourceWorkingSetPage",
       "org.eclipse.jdt.ui.JavaWorkingSetPage")
-    model.workingSetGroup = Some(new WorkingSetGroup(workArea, currentSelection, workingSetIds))
+    // TODO: remove the wrapping composite used to disable the working set selection area. sbt-11
+    val composite = new Composite(workArea, SWT.NONE | SWT.FILL)
+    composite.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true,
+      false));
+    val layout = new GridLayout(1, false)
+    layout.marginWidth = 0
+    layout.marginHeight = 0
+    composite.setLayout(layout)
+
+    model.workingSetGroup = Some(new WorkingSetGroup(composite, currentSelection, workingSetIds))
+
+    setAllDisabled(composite)
+  }
+
+  private def setAllDisabled(control: Control) {
+    control match {
+      case composite: Composite =>
+        composite.getChildren().foreach(setAllDisabled(_))
+      case _ =>
+    }
+    control.setEnabled(false)
   }
 
   private def updateProjectsList(path: String): Unit = {
