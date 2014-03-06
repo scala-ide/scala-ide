@@ -1,2 +1,4 @@
 **/.cache
 target/
+org.scala-ide.sdt.feature/feature.xml
+org.scala-ide.sdt.source.feature/feature.xml
