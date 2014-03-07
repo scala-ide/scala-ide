@@ -10,5 +10,6 @@ object SymbolTypes extends Enumeration {
 
   val Annotation, CaseClass, CaseObject, Class , LazyLocalVal,
       LazyTemplateVal , LocalVar, LocalVal, Method, Param, Object,
-      Package, TemplateVar, TemplateVal, Trait, Type, TypeParameter = Value
+      Package, TemplateVar, TemplateVal, Trait, Type, TypeParameter,
+      DynamicSelect, DynamicUpdate, DynamicApply, DynamicApplyNamed = Value
 }

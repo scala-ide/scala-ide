@@ -44,11 +44,14 @@ private[classifier] trait SafeSymbol extends CompilerAccess with PimpedTrees {
    */
   protected def isSourceTree(t: Tree): Boolean = hasSourceCodeRepresentation(t) && !t.pos.isTransparent
 
-  // copy-pasted from scala.reflect.internal.Names because it is only available in 2.11
-  // TODO delete once the code base has moved to 2.11
-  private object TermName {
-    def apply(s: String) = newTermName(s)
-    def unapply(name: TermName): Option[String] = Some(name.toString)
+  private object DynamicName {
+    def unapply(dynamicName: Name): Option[SymbolType] = dynamicName.toString() match {
+      case "selectDynamic"     => Some(DynamicSelect)
+      case "updateDynamic"     => Some(DynamicUpdate)
+      case "applyDynamic"      => Some(DynamicApply)
+      case "applyDynamicNamed" => Some(DynamicApplyNamed)
+      case _                   => None
+    }
   }
 
   /**
@@ -58,11 +61,8 @@ private[classifier] trait SafeSymbol extends CompilerAccess with PimpedTrees {
    */
   protected def findDynamicMethodCall(t: Tree): Option[(SymbolType, Position)] = t match {
 
-    case Apply(Select(_, TermName("selectDynamic" | "updateDynamic")), List(name)) =>
-      Some(TemplateVar -> name.pos)
-
-    case Apply(Select(_, TermName("applyDynamic" | "applyDynamicNamed")), List(name)) =>
-      Some(Method -> name.pos)
+    case Apply(Select(_, DynamicName(sym)), List(name)) =>
+      Some(sym -> name.pos)
 
     case _ =>
       None
