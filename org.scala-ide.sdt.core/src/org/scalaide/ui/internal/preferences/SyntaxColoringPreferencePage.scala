@@ -31,7 +31,7 @@ import org.scalaide.ui.syntax.SyntaxColouringTreeContentAndLabelProvider
 /**
  * @see org.eclipse.jdt.internal.ui.preferences.JavaEditorColoringConfigurationBlock
  */
-class SyntaxColouringPreferencePage extends PreferencePage with IWorkbenchPreferencePage {
+class SyntaxColoringPreferencePage extends PreferencePage with IWorkbenchPreferencePage {
 
   import GridDataHelper._
 

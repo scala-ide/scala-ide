@@ -1,4 +1,4 @@
-package org.scalaide.logging.ui.properties
+package org.scalaide.logging.ui.preferences
 
 import org.scalaide.logging.Level
 import org.scalaide.logging.LogManager

@@ -99,7 +99,7 @@ Export-Package:
  org.scalaide.core.resources,
  org.scalaide.logging,
  org.scalaide.logging.log4j,
- org.scalaide.logging.ui.properties,
+ org.scalaide.logging.ui.preferences,
  org.scalaide.refactoring.internal,
  org.scalaide.refactoring.internal.method,
  org.scalaide.refactoring.internal.method.ui,
