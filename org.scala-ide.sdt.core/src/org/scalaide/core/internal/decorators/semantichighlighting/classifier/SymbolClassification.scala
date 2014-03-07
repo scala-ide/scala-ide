@@ -14,7 +14,6 @@ import org.eclipse.jface.text.Region
 import org.scalaide.util.internal.eclipse.RegionOps._
 
 private object SymbolClassification {
-  private val debug = false
 
   /**
    *  If a symbol gets classified as more than one type, we give certain types precedence.
@@ -31,11 +30,10 @@ private object SymbolClassification {
     Object -> Set(CaseClass)
   )
 
-
 }
 
 class SymbolClassification(protected val sourceFile: SourceFile, val global: ScalaPresentationCompiler, useSyntacticHints: Boolean)
-  extends SafeSymbol with TypeTreeTraverser with SymbolClassificationDebugger with SymbolTests with HasLogger {
+  extends SafeSymbol with TypeTreeTraverser with SymbolTests with HasLogger {
 
   import SymbolClassification._
   import global.Symbol
@@ -58,40 +56,46 @@ class SymbolClassification(protected val sourceFile: SourceFile, val global: Sca
   }
 
   def classifySymbols(progressMonitor: IProgressMonitor): List[SymbolInfo] = {
-    if(progressMonitor.isCanceled()) return Nil
-
-    val allSymbols: List[(Symbol, Position)] = {
-      for {
-        t <- unitTree
-        if !progressMonitor.isCanceled() && (t.hasSymbol || t.isType) && isSourceTree(t)
-        (sym, pos) <- safeSymbol(t)
-        if canSymbolBeReferencedInSource(sym)
-      } yield (sym, pos)
-    }
-
-    if(progressMonitor.isCanceled()) return Nil
-
-    if (debug) printSymbolInfo()
-
     val rawSymbolInfos: Seq[SymbolInfo] = {
-      case class SymbolGroup(symbol: Symbol, inInterpolatedString: Boolean)
-      val symAndPos = mutable.HashMap[SymbolGroup, List[Position]]().withDefaultValue(Nil)
-      for {
-        (sym, pos) <- allSymbols
-        if sym != NoSymbol
-      } {
-        val inInterpolatedString = syntacticInfo.identifiersInStringInterpolations.contains(getOccurrenceRegion(sym)(pos).orNull)
-        symAndPos(SymbolGroup(sym, inInterpolatedString)) = pos :: symAndPos(SymbolGroup(sym, inInterpolatedString))
+      import global._
+
+      def getSymbolInfo(symbolType: SymbolType, sym: Symbol, region: Option[IRegion]): SymbolInfo = {
+        val inInterpolatedString = region.map(syntacticInfo.identifiersInStringInterpolations).getOrElse(false)
+        // isDeprecated may trigger type completion for annotations
+        val deprecated = sym.annotations.nonEmpty && global.askOption(() => sym.isDeprecated).getOrElse(false)
+        SymbolInfo(symbolType, region.toList, deprecated, inInterpolatedString)
       }
 
-      if (progressMonitor.isCanceled()) Nil
-      else {
-        (for {
-          (SymbolGroup(sym,inInterpolatedString), poss) <- symAndPos
-        } yield getSymbolInfo(sym, poss, inInterpolatedString)).toList
+      def findDynamicInfo(t: Tree): Option[SymbolInfo] = {
+        def posToRegion(p: Position) =
+          new Region(p.start, p.end - p.start)
+
+        findDynamicMethodCall(t) map {
+          case (symbolType, pos) =>
+            val sym = global.askOption(() => t.symbol).getOrElse(NoSymbol)
+            getSymbolInfo(symbolType, sym, Some(posToRegion(pos)))
+        }
       }
+
+      def findSymbolInfo(t: Tree): List[SymbolInfo] =
+        safeSymbol(t) collect {
+          case (sym, pos) if canSymbolBeReferencedInSource(sym) =>
+            getSymbolInfo(getSymbolType(sym), sym, getOccurrenceRegion(sym)(pos))
+        }
+
+      var symbolInfos = IndexedSeq.empty[SymbolInfo]
+      new Traverser {
+        override def traverse(t: Tree): Unit = {
+          if (!progressMonitor.isCanceled() && (t.symbol != NoSymbol || t.isType) && isSourceTree(t)) {
+            val ds = findDynamicInfo(t)
+            val xs = if (ds.isEmpty) findSymbolInfo(t) else ds.toList
+            symbolInfos ++= xs
+          }
+          super.traverse(t)
+        }
+      }.traverse(unitTree)
+      symbolInfos
     }
-
     if (progressMonitor.isCanceled()) return Nil
 
     val prunedSymbolInfos = prune(rawSymbolInfos)
@@ -107,14 +111,6 @@ class SymbolClassification(protected val sourceFile: SourceFile, val global: Sca
     if (progressMonitor.isCanceled()) return Nil
 
     (symbolInfosFromSyntax ++ prunedSymbolInfos).filter(_.regions.nonEmpty).distinct
-  }
-
-  private def getSymbolInfo(sym: Symbol, poss: List[Position], inInterpolatedString: Boolean): SymbolInfo = {
-    val regions = poss.flatMap(getOccurrenceRegion(sym)).toList
-    // isDeprecated may trigger type completion for annotations
-    val deprecated = sym.annotations.nonEmpty && global.askOption(() => sym.isDeprecated).getOrElse(false)
-    val symbolType = getSymbolType(sym)
-    SymbolInfo(symbolType, regions, deprecated, inInterpolatedString)
   }
 
   private def getOccurrenceRegion(sym: Symbol)(pos: Position): Option[IRegion] =
