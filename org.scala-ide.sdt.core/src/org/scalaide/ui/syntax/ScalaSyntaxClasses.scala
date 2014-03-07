@@ -59,10 +59,10 @@ object ScalaSyntaxClasses {
 
   case class Category(name: String, children: List[ScalaSyntaxClass])
 
-  val scalaSyntacticCategory = Category("Scala (syntactic)", List(
+  val scalaSyntacticCategory = Category("Syntactic", List(
     BRACKET, KEYWORD, RETURN, MULTI_LINE_STRING, OPERATOR, DEFAULT, STRING, CHARACTER, NUMBER_LITERAL, ESCAPE_SEQUENCE, SYMBOL))
 
-  val scalaSemanticCategory = Category("Scala (semantic)", List(
+  val scalaSemanticCategory = Category("Semantic", List(
     ANNOTATION, CASE_CLASS, CASE_OBJECT, CLASS, LAZY_LOCAL_VAL, LAZY_TEMPLATE_VAL,
     LOCAL_VAL, LOCAL_VAR, METHOD, OBJECT, PACKAGE, PARAM, TEMPLATE_VAL, TEMPLATE_VAR,
     TRAIT, TYPE, TYPE_PARAMETER, IDENTIFIER_IN_INTERPOLATED_STRING))
