@@ -6,7 +6,7 @@
       provider-name="scala-ide.org">
 
    <description url="http://scala-ide.org/">
-      The Scala IDE for Eclipse dev support provides the tools used to develop Scala based eclipse plugins
+      The Scala IDE for Eclipse Development support provides tools used to develop Scala-based Eclipse plugins.
    </description>
 
    <copyright url="http://scala-lang.org/downloads/">
