@@ -6,8 +6,7 @@
   provider-name="scala-ide.org">
 
   <description url="http://scala-ide.org/">
-The Scala IDE for Eclipse provides the tools needed to
-to build Scala programs on the Eclipse Platform.
+    The Scala IDE for Eclipse provides the tools needed to build Scala programs on the Eclipse Platform. This feature provides access (including, e.g. linking) to the IDE plugin's source.
   </description>
 
    <copyright url="http://scala-lang.org/downloads/">
